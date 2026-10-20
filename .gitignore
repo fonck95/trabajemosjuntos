@@ -1,0 +1,4 @@
+site/
+data/secop/raw/
+__pycache__/
+.DS_Store

@@ -1,0 +1,681 @@
+{
+  "nombre": "Red Energética Pública de Yondó (REPY)",
+  "descripcion": "Islas resilientes por edificio coordinadas por un EMS, comunidad energética pública de cuentas oficiales y capa domótica/IoT con Centro de Control Energético y Digital (CCED). La interconexión física en un mismo alimentador de 13,2 kV es una fase posterior que requiere acuerdo con EPM.",
+  "estado_datos": "Dimensionamiento preliminar (prefactibilidad). Consumos supuestos por tipología y análogos verificados (hospital de Simití, FENOGE 2025); se reemplazan por 12 facturas EPM por NIU en la fase 0. Cada frontera solar se limita a ≤100 kW (CREG 174 de 2021).",
+  "parametros": {
+    "rendimiento_kwh_kwp_dia": 3.69,
+    "nubosidad_referencia": 0.3,
+    "eficiencia_ida_vuelta_bess": 0.9,
+    "soc_max": 0.95,
+    "soc_reserva": 0.35,
+    "soc_minimo_isla": 0.08,
+    "soc_alerta_isla": 0.9,
+    "isla_umbral_p2": 0.45,
+    "isla_umbral_p3": 0.7,
+    "tarifa_oficial_cop_kwh": 991.29,
+    "precio_excedentes_cop_kwh": 877,
+    "factor_emision_kgco2_kwh": 0.126,
+    "diesel_l_kwh": 0.3,
+    "_fuentes": {
+      "rendimiento_kwh_kwp_dia": "Global Solar Atlas PVOUT 1.602 kWh/kWp·año × 0,84 por pérdidas locales = 1.346 kWh/kWp·año (valor de diseño P50)",
+      "tarifa_oficial_cop_kwh": "EPM, tarifas octubre 2026, oficial NT1 propiedad EPM",
+      "precio_excedentes_cop_kwh": "Crédito 1:1 para AGPE ≤100 kW: tarifa − Cv (114,28) ≈ 877 COP/kWh (CREG 174/2021 mod. CREG 101 072/2025)",
+      "factor_emision_kgco2_kwh": "Factor de emisión del SIN (supuesto, verificar con UPME del año)"
+    }
+  },
+  "perfiles": {
+    "oficina": [
+      0.15,
+      0.15,
+      0.15,
+      0.15,
+      0.15,
+      0.18,
+      0.35,
+      0.8,
+      1,
+      1,
+      1,
+      1,
+      0.85,
+      0.95,
+      1,
+      1,
+      0.9,
+      0.55,
+      0.3,
+      0.2,
+      0.18,
+      0.15,
+      0.15,
+      0.15
+    ],
+    "hospital": [
+      0.7,
+      0.68,
+      0.66,
+      0.66,
+      0.68,
+      0.72,
+      0.8,
+      0.92,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0.98,
+      0.95,
+      0.92,
+      0.88,
+      0.84,
+      0.8,
+      0.76,
+      0.72
+    ],
+    "colegio": [
+      0.06,
+      0.06,
+      0.06,
+      0.06,
+      0.06,
+      0.2,
+      0.85,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0.9,
+      0.9,
+      0.85,
+      0.5,
+      0.25,
+      0.1,
+      0.08,
+      0.06,
+      0.06,
+      0.06,
+      0.06,
+      0.06
+    ],
+    "alumbrado": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      0.9,
+      0.1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.6,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "alumbrado_tele": [
+      0.6,
+      0.6,
+      0.6,
+      0.6,
+      0.6,
+      0.7,
+      0.1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0.6,
+      1,
+      1,
+      0.9,
+      0.75,
+      0.6
+    ],
+    "bombeo": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "bombeo_dr": [
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.4,
+      0.9,
+      2.2,
+      2.6,
+      2.7,
+      2.7,
+      2.7,
+      2.6,
+      2.4,
+      2,
+      0.9,
+      0.4,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3
+    ],
+    "policia": [
+      0.8,
+      0.8,
+      0.8,
+      0.8,
+      0.8,
+      0.8,
+      0.85,
+      0.95,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0.95,
+      0.92,
+      0.9,
+      0.88,
+      0.85,
+      0.82,
+      0.8
+    ],
+    "datos": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "deporte": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.2,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.3,
+      0.4,
+      0.5,
+      0.7,
+      0.9,
+      1,
+      1,
+      1,
+      0.8,
+      0.2,
+      0.05
+    ],
+    "cultura": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.1,
+      0.6,
+      1,
+      1,
+      1,
+      1,
+      0.9,
+      1,
+      1,
+      1,
+      1,
+      0.9,
+      0.6,
+      0.3,
+      0.1,
+      0.05,
+      0.05,
+      0.05
+    ],
+    "cuidado": [
+      0.6,
+      0.58,
+      0.56,
+      0.56,
+      0.58,
+      0.7,
+      0.85,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0.95,
+      0.9,
+      0.85,
+      0.8,
+      0.72,
+      0.66,
+      0.62
+    ]
+  },
+  "nodos": [
+    {
+      "id": "alcaldia",
+      "nombre": "Palacio Municipal + CCED",
+      "corto": "Alcaldía + CCED",
+      "perfil": "oficina",
+      "kwh_mes": 8000,
+      "pv_kwp": 50,
+      "prioridad": 2,
+      "isla": true,
+      "ahorro_domotica": 0.2,
+      "pos": [
+        0,
+        -9
+      ],
+      "dim": [
+        10,
+        7.5,
+        7
+      ],
+      "forma": "palacio",
+      "nota": "Incluye atención ciudadana y la Secretaría de Planeación, TIC y Desarrollo Territorial, que alojaría el CCED."
+    },
+    {
+      "id": "ccd",
+      "nombre": "Centro de datos CCED (carga crítica)",
+      "corto": "CCED",
+      "perfil": "datos",
+      "kwh_mes": 2200,
+      "pv_kwp": 0,
+      "prioridad": 1,
+      "isla": true,
+      "ahorro_domotica": 0,
+      "pos": [
+        5.5,
+        -9
+      ],
+      "dim": [
+        0,
+        0,
+        0
+      ],
+      "forma": "virtual",
+      "nota": "Servidores, red y monitoreo 24/7 (≈3 kW continuos)."
+    },
+    {
+      "id": "hospital",
+      "nombre": "E.S.E. Hospital Héctor Abad Gómez",
+      "corto": "Hospital",
+      "perfil": "hospital",
+      "kwh_mes": 25000,
+      "pv_kwp": 100,
+      "prioridad": 1,
+      "isla": true,
+      "ahorro_domotica": 0.12,
+      "pos": [
+        -17,
+        -15
+      ],
+      "dim": [
+        15,
+        5,
+        11
+      ],
+      "forma": "hospital",
+      "nota": "Ancla de la microrred: urgencias, hospitalización, laboratorio y cadena de frío. Consumo análogo al hospital de Simití (≈25.000 kWh/mes, FENOGE 2025). Solar limitada a 100 kW para conectarse sin estudio y acreditar excedentes 1:1."
+    },
+    {
+      "id": "policia",
+      "nombre": "Estación de Policía",
+      "corto": "Policía",
+      "perfil": "policia",
+      "kwh_mes": 3000,
+      "pv_kwp": 15,
+      "prioridad": 1,
+      "isla": true,
+      "ahorro_domotica": 0.1,
+      "pos": [
+        12,
+        -14
+      ],
+      "dim": [
+        7,
+        4.5,
+        6
+      ],
+      "forma": "policia"
+    },
+    {
+      "id": "bomberos",
+      "nombre": "Cuerpo de Bomberos",
+      "corto": "Bomberos",
+      "perfil": "policia",
+      "kwh_mes": 1500,
+      "pv_kwp": 10,
+      "prioridad": 1,
+      "isla": true,
+      "ahorro_domotica": 0.1,
+      "pos": [
+        18,
+        -6
+      ],
+      "dim": [
+        6,
+        4.5,
+        6
+      ],
+      "forma": "bomberos"
+    },
+    {
+      "id": "ptap",
+      "nombre": "Acueducto: captación, PTAP y EBAR (Aguas y Aseo de Yondó, 2 fronteras)",
+      "corto": "Acueducto · PTAP",
+      "perfil": "bombeo",
+      "perfil_dr": "bombeo_dr",
+      "kwh_mes": 30000,
+      "pv_kwp": 150,
+      "prioridad": 1,
+      "isla": true,
+      "ahorro_domotica": 0.08,
+      "pos": [
+        21,
+        9
+      ],
+      "dim": [
+        8,
+        3.5,
+        7
+      ],
+      "forma": "ptap",
+      "nota": "Dos fronteras de 75 kWp (captación y PTAP). Tarifa ESPD de EPM 1.090 COP/kWh. Con tanques, el bombeo se desplaza a horas solares.",
+      "tarifa": 1090.41
+    },
+    {
+      "id": "ie_led",
+      "nombre": "I.E. Luis Eduardo Díaz (sede principal)",
+      "corto": "I.E. Luis E. Díaz",
+      "perfil": "colegio",
+      "kwh_mes": 4000,
+      "pv_kwp": 30,
+      "prioridad": 3,
+      "isla": false,
+      "ahorro_domotica": 0.2,
+      "pos": [
+        -4,
+        12
+      ],
+      "dim": [
+        14,
+        4,
+        7
+      ],
+      "forma": "colegio"
+    },
+    {
+      "id": "ie_prim",
+      "nombre": "I.E. Luis Eduardo Díaz (sección primaria)",
+      "corto": "I.E. primaria",
+      "perfil": "colegio",
+      "kwh_mes": 4000,
+      "pv_kwp": 25,
+      "prioridad": 3,
+      "isla": false,
+      "ahorro_domotica": 0.2,
+      "pos": [
+        9,
+        13
+      ],
+      "dim": [
+        10,
+        4,
+        6
+      ],
+      "forma": "colegio"
+    },
+    {
+      "id": "parque_edu",
+      "nombre": "Parque Educativo",
+      "corto": "Parque Educativo",
+      "perfil": "cultura",
+      "kwh_mes": 2000,
+      "pv_kwp": 12,
+      "prioridad": 3,
+      "isla": false,
+      "ahorro_domotica": 0.2,
+      "pos": [
+        -12,
+        3
+      ],
+      "dim": [
+        7,
+        4,
+        6
+      ],
+      "forma": "cultura"
+    },
+    {
+      "id": "cultura",
+      "nombre": "Casa de la Cultura y Biblioteca Pública",
+      "corto": "Casa de la Cultura",
+      "perfil": "cultura",
+      "kwh_mes": 2000,
+      "pv_kwp": 12,
+      "prioridad": 2,
+      "isla": true,
+      "ahorro_domotica": 0.2,
+      "pos": [
+        -6,
+        -1
+      ],
+      "dim": [
+        7,
+        5,
+        6
+      ],
+      "forma": "cultura",
+      "nota": "Refugio climático y punto de conexión ciudadana durante emergencias."
+    },
+    {
+      "id": "coliseo",
+      "nombre": "Coliseo Benito Arias",
+      "corto": "Coliseo",
+      "perfil": "deporte",
+      "kwh_mes": 2400,
+      "pv_kwp": 45,
+      "prioridad": 3,
+      "isla": false,
+      "ahorro_domotica": 0.25,
+      "pos": [
+        -20,
+        9
+      ],
+      "dim": [
+        12,
+        6,
+        9
+      ],
+      "forma": "coliseo",
+      "nota": "Cubierta grande: gran productor de excedentes en el día."
+    },
+    {
+      "id": "cpsam",
+      "nombre": "CPSAM y Centro Vida Cañitas Sabias",
+      "corto": "CPSAM",
+      "perfil": "cuidado",
+      "kwh_mes": 3200,
+      "pv_kwp": 20,
+      "prioridad": 2,
+      "isla": true,
+      "ahorro_domotica": 0.12,
+      "pos": [
+        -27,
+        -3
+      ],
+      "dim": [
+        8,
+        3.5,
+        7
+      ],
+      "forma": "cuidado"
+    },
+    {
+      "id": "alumbrado",
+      "nombre": "Alumbrado público (≈1.000 luminarias LED, inventario por verificar)",
+      "corto": "Alumbrado",
+      "perfil": "alumbrado",
+      "perfil_domotica": "alumbrado_tele",
+      "kwh_mes": 21600,
+      "pv_kwp": 0,
+      "prioridad": 3,
+      "isla": false,
+      "ahorro_domotica": 0,
+      "pos": [
+        0,
+        4
+      ],
+      "dim": [
+        0,
+        0,
+        0
+      ],
+      "forma": "alumbrado",
+      "nota": "1.000 × 60 W × 12 h. La telegestión atenúa de madrugada. El inventario real y el contrato de AP están por verificar."
+    }
+  ],
+  "bess": [
+    {
+      "id": "bess_hospital",
+      "nodo": "hospital",
+      "kwh": 400,
+      "kw": 150
+    },
+    {
+      "id": "bess_ptap",
+      "nodo": "ptap",
+      "kwh": 150,
+      "kw": 75
+    },
+    {
+      "id": "bess_centro",
+      "nodo": "alcaldia",
+      "kwh": 120,
+      "kw": 60
+    },
+    {
+      "id": "bess_policia",
+      "nodo": "policia",
+      "kwh": 30,
+      "kw": 15
+    },
+    {
+      "id": "bess_bomberos",
+      "nodo": "bomberos",
+      "kwh": 20,
+      "kw": 10
+    },
+    {
+      "id": "bess_cultura",
+      "nodo": "cultura",
+      "kwh": 20,
+      "kw": 10
+    },
+    {
+      "id": "bess_cpsam",
+      "nodo": "cpsam",
+      "kwh": 30,
+      "kw": 15
+    }
+  ],
+  "genset": {
+    "nodo": "hospital",
+    "kw": 150,
+    "nota": "Planta diésel existente o reemplazo por planta dual a gas; queda como último respaldo."
+  },
+  "conexion": {
+    "pos": [
+      -30,
+      -20
+    ],
+    "nombre": "S/E Yondó (EPM, 10 MVA, 34,5/13,2 kV) ← 2 circuitos de 34,5 kV desde S/E Barranca"
+  }
+}

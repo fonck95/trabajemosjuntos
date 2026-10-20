@@ -1,0 +1,104 @@
+{
+  "ficha": {
+    "nombre": "E.S.E. Hospital Héctor Abad Gómez de Yondó",
+    "nit": "800014884",
+    "nivel": "Nivel 1, municipal; una sola sede (barrio José Domingo Oliveros), en uso desde enero de 1989",
+    "capacidad": "9 camas (5 adultos, 2 pediátricas, 2 TPR), 4 camillas de observación, 13 consultorios, 2 de urgencias, sala de partos y 3 ambulancias básicas (REPS, nov-2022)",
+    "riesgo": "Riesgo fiscal alto en 2013–2016 y 2019; desde 2023 en el Anexo 1 (Programa de Saneamiento Fiscal y Financiero viabilizado o en trámite)",
+    "aseguramiento": "93,4 % del régimen subsidiado está en Savia Salud (EPS intervenida); 6,6 % en Nueva EPS (BDUA, oct-2026)",
+    "poblacion_2028": 23157
+  },
+  "contrapartida_esc": { "min": 300, "med": 1000, "max": 2500 },
+  "fuentes": [
+    {
+      "id": "sgr", "slot": 1, "corto": "Regalías SGR",
+      "nombre": "Regalías del municipio (Asignaciones Directas e Inversión Local, bienio 2027–2028)",
+      "min": 1000, "med": 3000, "max": 5500,
+      "uso": "Red eléctrica del hospital (reformulación del proyecto RETIE estancado desde 2017), baterías y tableros de cargas críticas, reposición de equipos.",
+      "requisito": "Proyecto en MGA radicado en SUIFP-SGR con requisitos sectoriales de MinSalud; aprobación del municipio (asignaciones directas).",
+      "calendario": "Presupuesto bienal 2027–2028 a finales de 2026; radicar en 2027 para aprobar en el primer semestre de 2028.",
+      "base": "Asignaciones directas 2025–2026: $34.178 M; anticipadas $15.162 M; inversión local $7.336 M (MinHacienda). Desde 2012, solo 2 de unos 118 proyectos SGR de Yondó fueron para el hospital."
+    },
+    {
+      "id": "pmids", "slot": 2, "corto": "PMIDS + Gobernación",
+      "nombre": "Plan Maestro de Inversiones en Infraestructura y Dotación en Salud (PMIDS) + cofinanciación de la Gobernación de Antioquia",
+      "min": 700, "med": 2300, "max": 4000,
+      "uso": "Adecuación de infraestructura y dotación biomédica; puerta para PGN y regalías departamentales.",
+      "requisito": "Iniciativa registrada por el municipio ante la Secretaría Seccional de Salud; estudio de vulnerabilidad sísmica (ya existe, 2024); cumplir la Res. 1633 de 2025 (Hospital Seguro, Verde e Inteligente).",
+      "calendario": "Tramo de mediano plazo 2027–2029; actualización obligatoria del PMIDS en el primer semestre de 2028 por el nuevo gobernador.",
+      "base": "Ley 2294 de 2023, art. 164; Res. 2373 de 2025; Res. 592 de 2026. La Gobernación cofinanció infraestructura por $729 M promedio por proyecto en 2024 y $2.322 M en 2025; dotación por $716–737 M."
+    },
+    {
+      "id": "minsalud", "slot": 3, "corto": "MinSalud (PGN)",
+      "nombre": "Cofinanciación de MinSalud con Presupuesto General de la Nación",
+      "min": 0, "med": 3000, "max": 13500,
+      "uso": "Reforzamiento estructural o reposición según el estudio de vulnerabilidad de 2024.",
+      "requisito": "Concepto técnico de viabilidad (Res. 485 de 2025, modificada por la 1211 y la 1519 de 2025). La E.S.E. puede presentar el proyecto directamente.",
+      "calendario": "Ventanilla abierta; las vigencias futuras 2026–2030 del CONPES 4169 no incluyen a Yondó, así que hay que buscar adición o un nuevo CONPES con el gobierno 2026–2030.",
+      "base": "CONPES 4169: $3,02 billones para 102 sedes; Santa Bárbara (Antioquia) recibió $13.500 M para reforzamiento."
+    },
+    {
+      "id": "oxi", "slot": 4, "corto": "Obras por Impuestos",
+      "nombre": "Obras por Impuestos (Yondó es PDET y ZOMAC)",
+      "min": 500, "med": 1800, "max": 4000,
+      "uso": "Dotación biomédica, ambulancia medicalizada y sistema solar del hospital.",
+      "requisito": "Proyecto viabilizado por MinSalud o MinEnergía, la ART y el DNP, y un contribuyente que lo financie (Ecopetrol opera Casabe y es el mayor contribuyente del mecanismo).",
+      "calendario": "Convocatorias anuales de la ART; inscribir el proyecto en el banco de OxI en 2027.",
+      "base": "Ya existe un proyecto departamental de dotación biomédica PDET que incluye a Yondó ($14.686 M según la SSSA; $44.059 M según el DNP)."
+    },
+    {
+      "id": "fenoge", "slot": 5, "corto": "FENOGE",
+      "nombre": "FENOGE / ConEnergía: hospital solar y eficiente",
+      "min": 700, "med": 2100, "max": 3150,
+      "uso": "Solar + baterías + aires inverter, iluminación LED y refrigeración eficiente en el hospital.",
+      "requisito": "Solicitud de entidad territorial (certificado de planeación, Marco Fiscal, indicadores Ley 358/617). ConEnergía focaliza municipios PDET.",
+      "calendario": "Programas continuos de FENOGE y MinEnergía; preparar la solicitud con la línea base de 2027.",
+      "base": "Hospital de Simití (misma subregión PDET): 230 kWp por $3.152 M, cubre el 100 % del consumo. Hospitales FENOGE 2025: $0,7–2,1 mil M y ahorros de $67–200 M al año."
+    },
+    {
+      "id": "mintic", "slot": 6, "corto": "MinTIC / telesalud",
+      "nombre": "MinTIC y telesalud: conectividad, IoT hospitalario y telemedicina",
+      "min": 100, "med": 400, "max": 900,
+      "uso": "Enlace dedicado, monitoreo IoT de la cadena de frío y la energía, telemedicina como prestador remisor (Res. 2654 de 2019).",
+      "requisito": "Cofinanciación FUTIC de Ciudades y Territorios Inteligentes (cubre IoT, nube, capacitación; no plataformas propias) y programa departamental de telemedicina.",
+      "calendario": "Máxima Velocidad 2026 (reto territorios inteligentes) y convocatorias de MinTIC 2027.",
+      "base": "Yondó tiene 3,56 accesos fijos a internet por 100 habitantes (2025), frente a 26,1 en Antioquia. La Gobernación entregó kits de telemedicina en 36 municipios; Yondó no aparece."
+    },
+    {
+      "id": "saneamiento", "slot": 7, "corto": "Saneamiento",
+      "nombre": "Saneamiento y liquidez: art. 155 y 156 de la Ley 2294, CISA, PSFF",
+      "min": 0, "med": 500, "max": 1500,
+      "uso": "Liberar caja de la E.S.E. para contrapartidas: excedentes de aportes patronales, condonación condicionada a inversión en infraestructura, venta de cartera a CISA.",
+      "requisito": "El art. 156 exige invertir lo condonado en infraestructura, dotación o suministros de IPS públicas.",
+      "calendario": "Urgente: el plazo del art. 156 vence hacia mayo de 2027 (cuatro años desde la vigencia de la ley).",
+      "base": "Ley 2294 de 2023, arts. 155, 156 y 331. Antioquia asignó $53.835 M en 2024 a E.S.E. en saneamiento."
+    },
+    {
+      "id": "findeter", "slot": 8, "corto": "Findeter",
+      "nombre": "Findeter: redescuento con tasa compensada para infraestructura en salud",
+      "min": 0, "med": 0, "max": 2000,
+      "uso": "Crédito para completar el cierre financiero de obra o dotación.",
+      "requisito": "Concepto técnico territorial; al estar en saneamiento, informar a MinHacienda y demostrar capacidad de endeudamiento (difícil hoy para la E.S.E.).",
+      "calendario": "Ventanilla abierta; concepto de MinSalud en 20 días hábiles (Res. 2316 de 2025).",
+      "base": "Res. 2316 de 2025. Solo es realista si el saneamiento avanza."
+    }
+  ],
+  "proyecto": {
+    "nombre": "Hospital Héctor Abad Gómez: seguro, verde e inteligente (Res. 1633 de 2025)",
+    "componentes": [
+      { "componente": "Reforzamiento estructural y adecuaciones según el estudio de vulnerabilidad de 2024", "valor": 3000, "certeza": "S", "fuente": "Por definir con los resultados del estudio; referencia: Santa Bárbara $13.500 M (reforzamiento completo)" },
+      { "componente": "Red eléctrica interna, tableros y transferencias (reformulación del BPIN 2017058930013)", "valor": 1800, "certeza": "S", "fuente": "El proyecto original de $5.483 M está en formulación desde 2017; se propone reformularlo con alcance medido" },
+      { "componente": "Solar 100 kWp (cubierta + marquesina) y baterías LFP de 400 kWh", "valor": 970, "certeza": "S", "fuente": "Precios del presupuesto de la microrred (docs/05)" },
+      { "componente": "Eficiencia: aires inverter, LED, refrigeración y BMS del hospital", "valor": 400, "certeza": "S", "fuente": "Componente típico de los hospitales FENOGE 2025" },
+      { "componente": "Telesalud, enlace dedicado e IoT de la cadena de frío", "valor": 450, "certeza": "S", "fuente": "Kits de telemedicina, red interna y sensores" },
+      { "componente": "Reposición de dotación biomédica", "valor": 1000, "certeza": "V", "fuente": "Proyectos devueltos a MGA por $965 M y $1.000 M (2021–2022)" },
+      { "componente": "Ambulancia medicalizada (TAM)", "valor": 650, "certeza": "S", "fuente": "Proyecto de 2024 devuelto a MGA; TAB promedio $597 M (Gobernación, 2021)" },
+      { "componente": "Puesto de salud con solar aislada en San Miguel del Tigre", "valor": 1200, "certeza": "S", "fuente": "El corregimiento no tiene sede inscrita en REPS; base para los Equipos Básicos de Salud" }
+    ]
+  },
+  "bloques": [
+    { "tag": "La ficha", "titulo": "Un hospital pequeño con finanzas frágiles", "html": "<ul class=\"tight\"><li>Nivel 1, una sede de 1989, 9 camas y 3 ambulancias.</li><li>Riesgo fiscal alto en 2013–2016 y 2019; en saneamiento fiscal desde entonces.</li><li>El 93,4 % de sus pacientes subsidiados está en una EPS intervenida.</li><li>Recibe del municipio unos $1.400 M al año en convenios (PIC, oferta, emergencias), que son operación, no inversión.</li></ul>" },
+    { "tag": "Los relojes de 2028", "titulo": "Cinco plazos que coinciden", "html": "<ul class=\"tight\"><li><b>may-2027</b>: vence el art. 156 (condonación para invertir) y se aprueba el PND 2026–2030.</li><li><b>31-oct-2027</b>: elecciones locales.</li><li><b>1-ene-2028</b>: nuevo alcalde y nuevo gobernador.</li><li><b>31-mar-2028</b>: plazo para designar gerente de la E.S.E. (Ley 1797, art. 20).</li><li><b>1-abr-2028</b>: nuevo ciclo del PIC; <b>jun-2028</b>: actualización del PMIDS.</li></ul>" },
+    { "tag": "Lo que no se puede repetir", "titulo": "Proyectos que se quedaron en la MGA", "html": "<ul class=\"tight\"><li>Red eléctrica RETIE por $5.483 M: en formulación desde 2017.</li><li>Dos reposiciones de equipos ($965 M y $1.000 M): devueltas a la MGA.</li><li>Ambulancias TAB y TAM (2024): devueltas a la MGA.</li><li>Solo 2 de unos 118 proyectos de regalías de Yondó fueron para el hospital desde 2012.</li></ul>" }
+  ]
+}

@@ -1,0 +1,215 @@
+{
+  "fases": [
+    {
+      "id": "f0",
+      "nombre": "Fase 0 · Preparar el terreno (nov 2026 – dic 2027)",
+      "slot": 7
+    },
+    {
+      "id": "f1",
+      "nombre": "Fase 1 · Primeros 100 días (ene – abr 2028)",
+      "slot": 2
+    },
+    {
+      "id": "f2",
+      "nombre": "Fase 2 · Financiar y ejecutar el núcleo (2028 – 2029)",
+      "slot": 1
+    },
+    {
+      "id": "f3",
+      "nombre": "Fase 3 · Escalar y sostener (2030 – 2031)",
+      "slot": 3
+    }
+  ],
+  "anios": [
+    {
+      "label": "2026",
+      "t": 0.0
+    },
+    {
+      "label": "2027",
+      "t": 0.18
+    },
+    {
+      "label": "2028",
+      "t": 0.42
+    },
+    {
+      "label": "2029",
+      "t": 0.66
+    },
+    {
+      "label": "2030",
+      "t": 0.82
+    },
+    {
+      "label": "2031",
+      "t": 1.0
+    }
+  ],
+  "hitos": [
+    {
+      "fase": "f0",
+      "fecha": "dic 2026",
+      "titulo": "Inventario público de estudios",
+      "detalle": "Ficha de cada uno de los {N_EST} estudios y consultorías registrados en SECOP desde 2008, más los del archivo físico: qué se pagó, qué producto existe, si sigue vigente y qué falta para construir.",
+      "compuerta": "No se contrata ningún estudio nuevo si existe uno de menos de cinco años que se pueda actualizar.",
+      "responsable": "Secretaría de Planeación + Personería + veeduría ciudadana"
+    },
+    {
+      "fase": "f0",
+      "fecha": "mar 2027",
+      "titulo": "Línea base energética medida",
+      "detalle": "Doce facturas de cada cuenta oficial (alcaldía, E.S.E., Aguas y Aseo, instituciones educativas, alumbrado) y auditoría energética de nivel 1 en los diez edificios de mayor consumo.",
+      "compuerta": "Ningún sistema solar o de baterías se dimensiona con consumos supuestos.",
+      "responsable": "Secretaría de Infraestructura + E.S.E."
+    },
+    {
+      "fase": "f0",
+      "fecha": "jun 2027",
+      "titulo": "Núcleo crítico radicado",
+      "detalle": "Proyecto del núcleo crítico (hospital + acueducto + CCED) formulado en MGA con base en proyecto tipo, radicado en el SUIFP-SGR y registrado como iniciativa en el Plan Maestro de Inversiones en Salud (PMIDS) de Antioquia.",
+      "compuerta": "Debe existir número BPIN y radicado ante la Gobernación; 'en elaboración' no cuenta.",
+      "responsable": "Planeación + gerencia E.S.E."
+    },
+    {
+      "fase": "f0",
+      "fecha": "sep 2027",
+      "titulo": "Pacto público de candidatos",
+      "detalle": "Los candidatos a la alcaldía firman ante notaría y veeduría: mantener el banco de proyectos, licitar por defecto, pagar la formulación por producto y continuar el núcleo crítico.",
+      "compuerta": "Se publica quién firmó y quién no.",
+      "responsable": "Veedurías, Concejo, organizaciones sociales"
+    },
+    {
+      "fase": "f1",
+      "fecha": "ene 2028",
+      "titulo": "Empalme con banco de proyectos",
+      "detalle": "El gobierno saliente entrega el banco de proyectos completo (planos, MGA, presupuestos, estado). El nuevo alcalde designa gerente de la E.S.E. con plan de gestión que incluye metas de energía y telesalud.",
+      "compuerta": "Acta de empalme con inventario firmado; plan de gestión de la E.S.E. con indicadores energéticos.",
+      "responsable": "Alcalde entrante + Junta Directiva E.S.E."
+    },
+    {
+      "fase": "f1",
+      "fecha": "abr 2028",
+      "titulo": "Plan de Desarrollo 2028–2031 con fuentes",
+      "detalle": "Cada meta estratégica del plan queda amarrada a un proyecto del banco y a una fuente identificada (SGR, PMIDS y MinSalud, Obras por Impuestos, FENOGE, MinTIC, recursos propios).",
+      "compuerta": "Ninguna meta estratégica sin fuente identificada.",
+      "responsable": "Alcaldía + Concejo + Consejo Territorial de Planeación"
+    },
+    {
+      "fase": "f2",
+      "fecha": "jun 2028",
+      "titulo": "Cierre financiero Fase A",
+      "detalle": "Asignaciones directas del SGR aprobadas, cofinanciación de MinSalud o la Gobernación comprometida y, si aplica, convenio de Obras por Impuestos firmado con el contribuyente.",
+      "compuerta": "Certificados de disponibilidad y convenios firmados antes de abrir cualquier proceso.",
+      "responsable": "Hacienda + Planeación"
+    },
+    {
+      "fase": "f2",
+      "fecha": "sep 2028",
+      "titulo": "Licitación con pliegos tipo",
+      "detalle": "Licitación pública para obra y suministro con pliegos tipo de Colombia Compra Eficiente; interventoría por concurso de méritos independiente.",
+      "compuerta": "Al menos tres oferentes habilitados; si no, se revisan los requisitos antes de adjudicar.",
+      "responsable": "Secretaría General / contratación"
+    },
+    {
+      "fase": "f2",
+      "fecha": "jun 2029",
+      "titulo": "Núcleo crítico operando",
+      "detalle": "Hospital, acueducto y CCED con solar, baterías y operación en isla. El tablero público muestra generación, consumo y ahorro en tiempo real.",
+      "compuerta": "Prueba de isla de 24 horas certificada por la interventoría.",
+      "responsable": "Contratista + interventoría + E.S.E."
+    },
+    {
+      "fase": "f3",
+      "fecha": "mar 2030",
+      "titulo": "Ahorro verificado",
+      "detalle": "Medición y verificación del ahorro de la Fase A con protocolo IPMVP frente a la línea base de 2027.",
+      "compuerta": "Si el ahorro medido es menor al 80 % del proyectado, se corrige antes de ampliar.",
+      "responsable": "Interventoría + CCED"
+    },
+    {
+      "fase": "f3",
+      "fecha": "2030",
+      "titulo": "Fases B y C + fondo de ahorros",
+      "detalle": "Ampliación a los demás edificios y telegestión del alumbrado. Un acuerdo municipal destina el ahorro en facturas a un fondo que paga mantenimiento y nuevas fases.",
+      "compuerta": "Acuerdo municipal aprobado que blinda el destino del ahorro.",
+      "responsable": "Concejo + Hacienda"
+    },
+    {
+      "fase": "f3",
+      "fecha": "dic 2031",
+      "titulo": "Entrega sin borrón y cuenta nueva",
+      "detalle": "Informe público de resultados y banco de proyectos actualizado para el gobierno 2032–2035.",
+      "compuerta": "Banco de proyectos publicado y auditado por la Personería.",
+      "responsable": "Alcaldía saliente"
+    }
+  ],
+  "reglas": [
+    "Ningún estudio o diseño sin fuente identificada para la obra (cupo, carta de intención o convocatoria abierta).",
+    "Las OPS de formulación se pagan por producto: proyecto radicado, viabilizado o financiado; no por meses de servicio.",
+    "Antes de contratar, usar los proyectos tipo del DNP y los estudios que ya existen.",
+    "Todo estudio pagado se publica completo (planos, presupuesto, MGA) en el banco abierto dentro de los 30 días siguientes.",
+    "Licitación con pliegos tipo por defecto; la administración delegada exige justificación técnica pública.",
+    "Toda inversión energética lleva medición y verificación y un tablero público de datos.",
+    "La veeduría ciudadana tiene acceso permanente al banco de proyectos y al tablero del CCED."
+  ],
+  "portafolio": [
+    {
+      "nombre": "Red Energética Pública de Yondó (microrred + domótica + CCED)",
+      "alcance": "Solar en 13 sedes (469 kWp), baterías en 7 sedes críticas (770 kWh), medición, domótica, EMS y 10 sedes rurales. Ver docs/05.",
+      "ejecutor": "Municipio con E.S.E. y Aguas y Aseo; licitación con pliegos tipo",
+      "fuentes": "SGR (Incentivo a la Producción, \"Territorios energéticos\"), OxI, FENOGE, MinTIC, Findeter",
+      "fase": "2027–2030",
+      "valor": 7204
+    },
+    {
+      "nombre": "Hospital Héctor Abad Gómez seguro, verde e inteligente",
+      "alcance": "Reforzamiento según estudio sísmico 2024, red eléctrica, telesalud, dotación, ambulancia TAM y puesto de salud en San Miguel del Tigre. No incluye la solar ni la eficiencia, ya contadas en la red energética. Ver docs/06.",
+      "ejecutor": "E.S.E. (presenta directo a MinSalud) y municipio",
+      "fuentes": "PMIDS + Gobernación, MinSalud (PGN), SGR, OxI, saneamiento (Ley 2294)",
+      "fase": "2027–2029",
+      "valor": 8100
+    },
+    {
+      "nombre": "Rescate de obras con brecha físico-financiera",
+      "alcance": "Auditoría técnica independiente y plan de terminación de seis proyectos por $77.704 M comprometidos (vivienda con la EDU, Ye de Marley, Caño Don Juan, parque San Luis Beltrán, pavimento de San Miguel del Tigre).",
+      "ejecutor": "Municipio con acompañamiento del DNP (SMSCE) y la Contraloría",
+      "fuentes": "Recursos propios; reclamación de garantías",
+      "fase": "2026–2028",
+      "valor": 600
+    },
+    {
+      "nombre": "Agua: terminar el Plan Maestro y construir la PTAR",
+      "alcance": "Reactivar los estudios del Plan Maestro (56 % de avance, \"inactivo\") y pasar a la fase de inversión: PTAR del casco urbano y agua apta en la zona rural (IRCA rural 82–97). El valor de inversión sale del Plan Maestro.",
+      "ejecutor": "Aguas y Aseo de Yondó",
+      "fuentes": "SGR, Plan Departamental de Aguas, Findeter",
+      "fase": "2027–2031",
+      "valor": 1800
+    },
+    {
+      "nombre": "Banco de proyectos abierto y tablero de contratación",
+      "alcance": "Inventario público de los 124 estudios, fichas con planos y presupuestos, tablero SECOP en tiempo real y seguimiento de las compuertas de la hoja de ruta.",
+      "ejecutor": "Secretaría de Planeación, TIC y Desarrollo Territorial",
+      "fuentes": "MinTIC (Máxima Velocidad, datos abiertos) y recursos propios",
+      "fase": "2026–2027",
+      "valor": 350
+    },
+    {
+      "nombre": "Conectividad institucional y rural",
+      "alcance": "Fibra o radioenlaces entre sedes públicas, Zona Digital urbana y energía para los 4 Centros Digitales de San Miguel del Tigre. Yondó tiene 3,56 accesos fijos por 100 habitantes, frente a 26,1 en Antioquia.",
+      "ejecutor": "Municipio con MinTIC",
+      "fuentes": "FUTIC, OxI y SGR",
+      "fase": "2027–2029",
+      "valor": 1200
+    },
+    {
+      "nombre": "Alumbrado público LED con telegestión (completo)",
+      "alcance": "Cambio a LED y telegestión de unas 1.000 luminarias (el inventario real está por verificar); el piloto de 200 nodos ya está en la red energética.",
+      "ejecutor": "Municipio (contrato de AP)",
+      "fuentes": "SGR \"AP con FNCER\", Findeter/BID, impuesto de alumbrado",
+      "fase": "2029–2030",
+      "valor": 2500
+    }
+  ]
+}

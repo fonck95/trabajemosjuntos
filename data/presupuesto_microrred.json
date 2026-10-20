@@ -1,0 +1,241 @@
+{
+  "moneda": "COP constantes 2026",
+  "estado": "Presupuesto de prefactibilidad (clase 4, precisión −30 % / +50 %). Se convierte en presupuesto de factibilidad con cotizaciones de 3 proveedores y facturas reales.",
+  "items": [
+    {
+      "grupo": "Generación",
+      "componente": "Solar en cubiertas (10 sedes, cada frontera ≤100 kW)",
+      "cantidad": 279,
+      "unidad": "kWp",
+      "unitario": 3500000,
+      "fuente": "Rango de mercado 2026 para solar comercial: 2,8–4,0 M COP/kWp (instaladores; ver docs/05)",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Generación",
+      "componente": "Marquesina solar en el parqueadero del hospital",
+      "cantidad": 40,
+      "unidad": "kWp",
+      "unitario": 5000000,
+      "fuente": "Estructura elevada: +40 % sobre cubierta",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Generación",
+      "componente": "Solar en piso en captación y PTAP (2 fronteras de 75 kWp)",
+      "cantidad": 150,
+      "unidad": "kWp",
+      "unitario": 3200000,
+      "fuente": "Montaje en suelo con cerramiento",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Almacenamiento",
+      "componente": "Baterías LFP con inversor híbrido/PCS en 7 sedes críticas",
+      "cantidad": 770,
+      "unidad": "kWh",
+      "unitario": 1400000,
+      "fuente": "BNEF 2025: USD 117/kWh llave en mano en el mundo; en Yondó, 1,0–2,2 M COP/kWh por escala pequeña y logística",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Resiliencia",
+      "componente": "Transferencias automáticas y tableros de cargas críticas",
+      "cantidad": 7,
+      "unidad": "sedes",
+      "unitario": 35000000,
+      "fuente": "Hospital, acueducto, alcaldía/CCED, policía, bomberos, Casa de la Cultura, CPSAM",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Digital (MinTIC)",
+      "componente": "EMS/SCADA de la red, integración y ciberseguridad OT",
+      "cantidad": 1,
+      "unidad": "global",
+      "unitario": 450000000,
+      "fuente": "Rango 300–600 M COP; hospedaje en el acuerdo marco Nube Pública V (vigente hasta mar-2028)",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Digital (MinTIC)",
+      "componente": "Sala del CCED: servidores, pantallas, UPS y tablero ciudadano",
+      "cantidad": 1,
+      "unidad": "global",
+      "unitario": 150000000,
+      "fuente": "Integrable con la Plataforma CTi País (requisito FUTIC)",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Digital (MinTIC)",
+      "componente": "Medición inteligente en cuentas oficiales (clase 0,5S, Modbus/DLMS)",
+      "cantidad": 40,
+      "unidad": "puntos",
+      "unitario": 4000000,
+      "fuente": "2–5 M COP por punto instalado",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Digital (MinTIC)",
+      "componente": "Red LoRaWAN AU915 (pasarelas)",
+      "cantidad": 3,
+      "unidad": "pasarelas",
+      "unitario": 8000000,
+      "fuente": "3–8 M COP por pasarela; banda libre 915–928 MHz",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Digital (MinTIC)",
+      "componente": "Sensores IoT: niveles de tanques, presión, cloro, neveras de vacunas, ocupación",
+      "cantidad": 150,
+      "unidad": "sensores",
+      "unitario": 800000,
+      "fuente": "0,2–1,5 M COP por sensor",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Digital (MinTIC)",
+      "componente": "Domótica BMS (BACnet) en alcaldía y hospital",
+      "cantidad": 2,
+      "unidad": "edificios",
+      "unitario": 150000000,
+      "fuente": "Control de aire acondicionado, iluminación y ocupación",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Digital (MinTIC)",
+      "componente": "Control básico de aires y ocupación en otras sedes",
+      "cantidad": 8,
+      "unidad": "sedes",
+      "unitario": 25000000,
+      "fuente": "Termostatos conectados y relés",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Digital (MinTIC)",
+      "componente": "Piloto de telegestión de alumbrado público",
+      "cantidad": 200,
+      "unidad": "nodos",
+      "unitario": 600000,
+      "fuente": "Nodo Zhaga/NEMA sobre luminaria LED existente",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Digital (MinTIC)",
+      "componente": "Conectividad entre sedes (fibra o radioenlaces, respaldo 4G)",
+      "cantidad": 1,
+      "unidad": "global",
+      "unitario": 250000000,
+      "fuente": "Yondó tiene 4,9 accesos fijos por 100 habitantes (MinTIC 2023-T3)",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Eficiencia",
+      "componente": "Aires inverter, LED interior y variadores en bombas",
+      "cantidad": 1,
+      "unidad": "global",
+      "unitario": 400000000,
+      "fuente": "Los proyectos FENOGE en hospitales incluyen este componente",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Obras",
+      "componente": "Obras eléctricas, refuerzo de cubiertas y dictamen RETIE (Res. 40117/2024)",
+      "cantidad": 1,
+      "unidad": "global",
+      "unitario": 300000000,
+      "fuente": "Incluye inspección estructural",
+      "certeza": "S"
+    },
+    {
+      "grupo": "Rural",
+      "componente": "Solar aislada en 10 sedes rurales y Centros Digitales de San Miguel del Tigre (3 kWp + 10 kWh)",
+      "cantidad": 10,
+      "unidad": "sedes",
+      "unitario": 60000000,
+      "fuente": "Techo del acuerdo marco CCE para 0,5–10 kWp con baterías: 89,5–108 M COP",
+      "certeza": "S"
+    }
+  ],
+  "indirectos": [
+    {
+      "componente": "Ingeniería de detalle (solo con financiación asegurada)",
+      "pct": 0.03
+    },
+    {
+      "componente": "Interventoría técnica, administrativa y financiera",
+      "pct": 0.07
+    },
+    {
+      "componente": "Operación y mantenimiento 3 años + formación de técnicos locales (SENA)",
+      "pct": 0.04
+    },
+    {
+      "componente": "Imprevistos",
+      "pct": 0.05
+    }
+  ],
+  "fases": [
+    {
+      "fase": "Fase A · 2027–2028",
+      "alcance": "Hospital + acueducto + CCED y capa digital base (núcleo crítico)",
+      "pct": 0.55
+    },
+    {
+      "fase": "Fase B · 2029",
+      "alcance": "Alcaldía, policía, bomberos, Casa de la Cultura, CPSAM, colegios y coliseo",
+      "pct": 0.3
+    },
+    {
+      "fase": "Fase C · 2030",
+      "alcance": "Componente rural, telegestión de alumbrado y ajustes",
+      "pct": 0.15
+    }
+  ],
+  "financiacion": [
+    {
+      "fuente": "SGR · Incentivo a la Producción, línea \"Territorios energéticos\" (hasta 8.000 M y 2 proyectos por municipio)",
+      "pct": 0.35
+    },
+    {
+      "fuente": "Obras por Impuestos (Ecopetrol u otro contribuyente; Yondó es PDET/ZOMAC)",
+      "pct": 0.2
+    },
+    {
+      "fuente": "FENOGE · ConEnergía (focaliza municipios PDET)",
+      "pct": 0.15
+    },
+    {
+      "fuente": "PMIDS de Antioquia / MinSalud (componente hospital)",
+      "pct": 0.1
+    },
+    {
+      "fuente": "MinTIC · FUTIC Ciudades y Territorios Inteligentes (IoT, nube, capacitación)",
+      "pct": 0.08
+    },
+    {
+      "fuente": "Recursos propios municipio + E.S.E. + Aguas y Aseo",
+      "pct": 0.07
+    },
+    {
+      "fuente": "Crédito Findeter \"Municipios Territorios Energéticos\" (IBR + 0,7 %, 10 años)",
+      "pct": 0.05
+    }
+  ],
+  "cols": [
+    {
+      "tag": "Cómo funciona",
+      "titulo": "Tres capas en una sola red",
+      "html": "<ul class=\"tight\"><li><b>Física:</b> cada sede genera y consume detrás de su medidor como autogenerador de hasta 100 kW (CREG 174 de 2021), con excedentes acreditados 1:1.</li><li><b>Resiliente:</b> hospital, acueducto, alcaldía/CCED, policía, bomberos, Casa de la Cultura y CPSAM tienen baterías e inversor híbrido; si cae la red, se aíslan y siguen operando.</li><li><b>Coordinada:</b> el EMS reparte prioridades y desplaza cargas. Unir las sedes en un mismo alimentador de 13,2 kV es una fase posterior que requiere acuerdo con EPM.</li></ul>"
+    },
+    {
+      "tag": "Domótica + MinTIC",
+      "titulo": "El CCED decide cada 15 minutos",
+      "html": "<p>Cada medidor y sensor publica por MQTT al Centro de Control Energético y Digital. El EMS decide cuándo cargar baterías, cuándo bombear agua (con sol), qué aires acondicionados subir a 24 °C y cuánto atenuar el alumbrado de madrugada. Los datos se publican en un tablero abierto, que es la contrapartida de transparencia frente a MinTIC.</p>"
+    },
+    {
+      "tag": "Por qué el hospital",
+      "titulo": "La carga ancla que justifica la isla",
+      "html": "<p>Yondó depende de una sola subestación (EPM, 10 MVA) alimentada desde Barrancabermeja. El hospital consume las 24 horas y no puede apagarse; es la carga que mejor aprovecha las baterías y la que abre fuentes de salud. El hospital de Simití, en la misma subregión PDET, ya opera 230 kWp financiados por FENOGE.</p>"
+    }
+  ]
+}
