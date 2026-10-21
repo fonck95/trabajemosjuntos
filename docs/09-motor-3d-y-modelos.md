@@ -64,24 +64,91 @@ Las imágenes de Google y Esri se usan solo como referencia de levantamiento: es
 
 ### Qué produce el generador
 
-- **Capa `existente`:** muros con textura en metros; ventanas con marco y alféizar; puertas; zócalo y bandas de entrepiso; corredores con columnas.
-  - Cubiertas: a dos aguas, a cuatro aguas, a una agua, curvas o planas, con voladizos y texturas de zinc, fibrocemento, termoacústica o teja.
+- **Capa `existente`:**
+  - Muros con textura en metros. En LOD0 los vanos se recortan en el muro y llevan jambas de 12 cm (menos en paños delgados) y un fondo oscuro.
+  - Ventanas con marco, parteluces cada ~0,75 m, travesaño si son altas, vidrio hundido, alféizar y dintel. Las de tipo `reja` llevan barrotes cada 12 cm y dos pletinas; las celosías y calados, un paño de bloque con huecos de 15 cm.
+  - Puertas con marco y hojas de tableros (dos hojas si pasan de 1,3 m) con manija. Los portones de más de 2,6 m son cortinas enrollables de lamas.
+  - Zócalo y bandas de entrepiso, interrumpidos en los vanos y envolviendo las esquinas.
+  - Corredores y estructuras abiertas con columnas de basa y capitel, vigas y piso elevado. En corredores anchos no se ponen las columnas que quedarían pegadas a un muro.
+  - Cubiertas a dos aguas, a cuatro aguas, a una agua, curvas o planas, con texturas de zinc, fibrocemento, termoacústica o teja. Llevan:
+    - tapa de alero y tablas de borde;
+    - caballetes en cumbreras y limatesas;
+    - cielo raso bajo el alero en edificios cerrados;
+    - canal redonda en los aleros y bajantes por el muro, que esquivan vanos y tramos tapados;
+    - antepecho con remate en las cubiertas planas.
   - Letreros en relieve con tildes compuestas.
-  - Entorno: rejas, muros, tanques elevados, árboles instanciados, canchas, parqueaderos, astas, torres, plantas eléctricas.
+  - Entorno:
+    - suelos escalonados (predio, zona verde, parqueadero, patio, plaza, andén y cancha, cada uno 2,5 cm sobre el anterior) con sardinel;
+    - rejas con sobrecimiento, parales, pasamanos y barrotes; mallas eslabonadas con tubos y paño transparente; muros con columnetas y remate;
+    - árboles de copa con varios lóbulos en tres verdes (instanciados);
+    - tanques elevados, astas, torres arriostradas y postes con cruceta, aisladores y luminaria (con caja de medidor si la especificación la menciona);
+    - condensadoras de aire acondicionado con ventilador, rejilla y ménsulas (o patas si están sobre una losa);
+    - plantas eléctricas.
 - **Capa `adecuaciones`:**
-  - módulos solares instanciados sobre el faldón elegido o en racks sobre losa;
-  - marquesinas solares;
-  - baterías (gabinetes o contenedores de 10 y 20 pies);
-  - inversores, medidor bidireccional, pasarela IoT y ductos;
-  - cargador de vehículo eléctrico;
-  - cubierta nueva cuando hay que reemplazar la existente.
-- **Instancias por capa.** El generador crea las instancias GPU (`EXT_mesh_gpu_instancing`) dentro de cada capa, para que el botón "Hoy / Con el proyecto" pueda apagar una capa completa. La función `instance()` de gltf-transform no sirve aquí porque las mueve a la raíz.
-- **Dos niveles de detalle.** `_lod0` lleva marcos, módulos individuales y barrotes; `_lod1` lleva módulos como planos con textura y rejas simplificadas. Ambos van comprimidos con Draco y tienen copia `.glb.json`.
+  - Módulos de 550 Wp con marco de aluminio, celdas por textura y caja de conexiones, en un solo lote instanciado (`solar/modulos`). Van 14 cm sobre el faldón, sobre rieles de aluminio y anclajes hasta la cubierta (`solar/soportes`). En losa van en racks con patas y lastres.
+  - Marquesinas solares con columnas (placa y dado), vigas, correas bajo cada fila, riostras y canal. Si son bajas (estructura en tierra), llevan dos patas por pórtico.
+  - Baterías: gabinetes con zócalo, dos puertas, manijas, rejillas, señal de riesgo eléctrico y aire acondicionado en el de conversión, o contenedores de 10 y 20 pies con corrugado, puertas, barras de cierre, aires, rejillas, rótulos, caja de cables y baliza. En los dos casos, losa y bolardos.
+  - Inversores de muro con disipadores, pantalla y seccionador de CC.
+  - Cargador de vehículo eléctrico con bahía pintada.
+  - Cubierta nueva cuando hay que reemplazar la existente.
+  - **Conexión** (nodo `adecuaciones/conexion`, ver abajo).
+- **Instancias por capa.** El generador crea las instancias GPU (`EXT_mesh_gpu_instancing`) dentro de cada capa (módulos y árboles), para que el botón "Hoy / Con el proyecto" pueda apagar una capa completa. La función `instance()` de gltf-transform no sirve aquí porque las mueve a la raíz.
+- **Pocas llamadas de dibujo.** Los colores de la especificación van por vértice (`COLOR_0`). Así, todas las superficies del mismo acabado comparten un material:
+  - `pintura`: pañete, zócalos, bandas, puertas, cercas;
+  - `pintura_satin`: letreros y equipos;
+  - `metal_pintado`: marcos, rejas, canales, estructuras;
+  - un material por tipo de muro con textura y uno por tipo de cubierta.
+  - Cada nodo queda con una primitiva por material: entre 33 y 48 llamadas por sede en LOD0 y entre 23 y 34 en LOD1.
+- **Dos niveles de detalle.**
+  - `_lod0` lleva vanos recortados, carpintería, barrotes, canales, bajantes, rieles y codos de los ductos.
+  - `_lod1` (la web lo usa a más de 140 m) lleva los vanos como paneles 4 cm delante del muro, los módulos como planos con textura, rejas simplificadas y ductos más gruesos sin codos.
+  - Los dos van comprimidos con Draco (posiciones de 16 bits) y tienen copia `.glb.json`. Presupuesto medido: LOD0 hasta unos 100 000 triángulos y 300 KB por sede; LOD1 hasta 12 000 triángulos.
+
+#### La conexión eléctrica (`adecuaciones/conexion`)
+
+La ruta de la energía se dibuja en ámbar `#f08a00` y la de datos en violeta `#6250d6` (el `--data` de la web). Los dos colores son algo emisivos para que se lean en la sombra. Los ductos miden 20 cm de diámetro en LOD0 y 24 cm en LOD1, para que se vean a 100 m. Hijos del nodo:
+
+| Nodo | Contenido |
+|---|---|
+| `ruta_potencia` | Ductos de CC desde cada arreglo, ductos de CA y acometida. Detalle en la lista de abajo. |
+| `ruta_datos` | Cable de la pasarela, muro arriba y bajo el alero, hasta la antena. |
+| `punto_conexion` | Tablero general (gris con franja ámbar y señal de riesgo), medidor bidireccional con pantalla, y capacete con aislador cuando la acometida está en la fachada. |
+| `gateway` | Pasarela IoT (franja violeta, antena de látigo) y mástil con antena sobre el borde de la cubierta. |
+
+El recorrido de `ruta_potencia`:
+
+- **Corriente continua.** Sale de cada arreglo y va por la cubierta: primero a lo largo del faldón y luego pendiente abajo, o sobre la cumbrera. Llega al borde y baja por el muro hasta la bandeja de los inversores. Si el arreglo está sobre una estructura abierta, baja por la columna más cercana; si es una marquesina, por una de sus columnas, y sigue enterrado.
+- **Corriente alterna.** Va de los inversores a las baterías y de ahí al tablero, o directo al tablero si no hay baterías. Del tablero sale también al cargador de vehículo eléctrico.
+- **Acometida.** Va del medidor a la red.
+
+Los tramos enterrados se dibujan sobre el suelo, en "L" y paralelos a los muros.
+
+El punto de red sale de la especificación:
+
+- Si hay un `poste` a menos de 40 m de un muro, el tablero va en el muro que lo mira, con acometida subterránea y bajante por el poste.
+- Si no hay poste, el tablero va en la fachada del volumen de los inversores que da a la calle más cercana a los equipos (calles de OpenStreetMap en `data/geo/calles.json`). Ahí lleva acometida con capacete bajo el alero.
+
+La elección queda en `extras.nota` del nodo `conexion`. El nodo también trae en sus `extras` los colores y los puntos.
+
+`manifest.json` trae por sede `conexion: { tablero: [x,y,z], gateway: [x,y,z], red: [x,y,z], nota }`. Son metros en el marco del GLB (x este, y arriba, z sur) y sirven para poner etiquetas en la web.
+
+#### Sin parpadeo: control de caras coplanares
+
+glTF no tiene `polygonOffset`, así que la separación es geométrica:
+
+- **Suelos.** Están escalonados 2,5 cm, desde el predio a 3 cm hasta la cancha a 18 cm, y la pintura va a media altura entre dos niveles. Los bordes de cada nivel se retranquean para que no coincidan con muros.
+- **Fachadas.** Lo adosado a un muro sobresale 2 cm o más y no tiene cara trasera.
+- **Muros tapados.** Los muros, vanos y remates que caen dentro de otro volumen, o detrás de una columna, no se dibujan.
+- **Cubiertas vecinas.** Si dos cubiertas están a la misma altura y sus aleros se solapan, una se levanta 4 u 8 cm y acorta su alero.
+- **Módulos.** Van 14 cm sobre el faldón; los anclajes y lastres entran 2 cm en la cubierta.
+
+`scripts/modelos/check_coplanar.mjs` revisa cada GLB, con sus instancias. Informa los pares de triángulos de mallas o colores distintos que son paralelos (±2°), están a menos de 1 cm y se solapan más de 4 cm² con más de 1 cm de ancho. No cuenta las caras opuestas de una sola cara, las caras inferiores apoyadas en el suelo ni el par `cubierta_actual` reemplazada / `adecuaciones`. También resume triángulos, llamadas de dibujo y peso. Con las especificaciones de octubre de 2026, el área coplanar de las 24 versiones pasó de 5 316 m² a 1 m², repartido en solapes sueltos de menos de 0,3 m², casi siempre de menos de 0,1 m².
 
 ```bash
 cd scripts/modelos
 node build_edificios.mjs                 # todas las sedes → web/models/edificios/ + manifest.json
 node build_edificios.mjs hospital        # solo una
+node check_coplanar.mjs                  # revisa web/models/edificios/*.glb (o las rutas que se le den)
 node render_vista.mjs hospital --orbita 210,30,70 --out /tmp/h.png --capa todo
 ```
 
