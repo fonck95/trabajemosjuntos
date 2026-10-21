@@ -1,0 +1,530 @@
+{
+ "id": "cpsam",
+ "nombre": "Centro Vida 'Cañitas Sabias' (adulto mayor)",
+ "nodo_microrred": "cpsam",
+ "direccion": "Calle 50 # 41-13 (Google)",
+ "lat": 7.008061,
+ "lon": -73.906495,
+ "ubicacion": {
+  "confianza": "alta",
+  "metodo": "borrador"
+ },
+ "fuentes": [],
+ "volumenes": [
+  {
+   "id": "ala_norte",
+   "nombre": "Ala norte: salones y oficinas (parte cerrada)",
+   "centro": [
+    1.38,
+    9.91
+   ],
+   "largo": 27.58,
+   "ancho": 6.57,
+   "rumbo_eje": 95.0,
+   "base": 0,
+   "altura_alero": 4.21,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "S",
+    "pendiente": 13.6,
+    "voladizo": 0.4,
+    "material": "termoacustica",
+    "color": "#e6e8e8"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#ebe8e0",
+    "ventanas": {
+     "tipo": "reja",
+     "ancho": 1.6,
+     "alto": 1.5,
+     "antepecho": 0.9,
+     "separacion": 3.9,
+     "lados": [
+      "S"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "S",
+      "pos": 0.45,
+      "ancho": 1.8,
+      "alto": 2.4
+     },
+     {
+      "lado": "S",
+      "pos": 0.62,
+      "ancho": 1.0,
+      "alto": 2.2
+     }
+    ]
+   }
+  },
+  {
+   "id": "corredor_norte",
+   "nombre": "Corredor norte frente al patio (columnas blancas y viga en celosía)",
+   "centro": [
+    0.65,
+    5.42
+   ],
+   "largo": 11.95,
+   "ancho": 2.5,
+   "rumbo_eje": 95.0,
+   "abierto": true,
+   "sep_columnas": 3.9,
+   "columna": 0.2,
+   "base": 0,
+   "altura_alero": 3.58,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "S",
+    "pendiente": 13.6,
+    "voladizo": 0.4,
+    "material": "termoacustica",
+    "color": "#e6e8e8"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#f0efea"
+   }
+  },
+  {
+   "id": "salon_oeste",
+   "nombre": "Ala oeste: salón múltiple abierto al patio, con muro de reja hacia el occidente",
+   "centro": [
+    -9.53,
+    0.58
+   ],
+   "largo": 13.93,
+   "ancho": 7.48,
+   "rumbo_eje": 5.0,
+   "abierto": true,
+   "sep_columnas": 3.5,
+   "columna": 0.2,
+   "base": 0,
+   "altura_alero": 3.6,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "E",
+    "pendiente": 16.4,
+    "voladizo": 0.4,
+    "material": "termoacustica",
+    "color": "#e6e8e8"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#f0efea"
+   }
+  },
+  {
+   "id": "bloque_sur_oeste",
+   "nombre": "Ala oeste, extremo sur: baños y depósito; acceso desde el porche",
+   "centro": [
+    -10.39,
+    -9.35
+   ],
+   "largo": 6.0,
+   "ancho": 7.48,
+   "rumbo_eje": 5.0,
+   "base": 0,
+   "altura_alero": 3.6,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "E",
+    "pendiente": 16.4,
+    "voladizo": 0.4,
+    "material": "termoacustica",
+    "color": "#e6e8e8"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#ebe8e0",
+    "ventanas": {
+     "tipo": "ventana",
+     "ancho": 1.2,
+     "alto": 0.8,
+     "antepecho": 1.5,
+     "separacion": 3.0,
+     "lados": [
+      "N",
+      "E"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "S",
+      "pos": 0.5,
+      "ancho": 1.8,
+      "alto": 2.4
+     },
+     {
+      "lado": "N",
+      "pos": 0.7,
+      "ancho": 1.0,
+      "alto": 2.2
+     }
+    ]
+   }
+  },
+  {
+   "id": "ala_este",
+   "nombre": "Ala este: cocina, enfermería y oficinas (parte cerrada)",
+   "centro": [
+    11.15,
+    -4.24
+   ],
+   "largo": 19.93,
+   "ancho": 5.65,
+   "rumbo_eje": 5.0,
+   "base": 0,
+   "altura_alero": 4.27,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "O",
+    "pendiente": 15.1,
+    "voladizo": 0.4,
+    "material": "termoacustica",
+    "color": "#e6e8e8"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#ebe8e0",
+    "ventanas": {
+     "tipo": "ventana",
+     "ancho": 1.5,
+     "alto": 1.2,
+     "antepecho": 1.0,
+     "separacion": 3.4,
+     "lados": [
+      "O"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "O",
+      "pos": 0.22,
+      "ancho": 1.0,
+      "alto": 2.4
+     },
+     {
+      "lado": "O",
+      "pos": 0.5,
+      "ancho": 1.0,
+      "alto": 2.4
+     },
+     {
+      "lado": "O",
+      "pos": 0.78,
+      "ancho": 1.0,
+      "alto": 2.4
+     }
+    ]
+   }
+  },
+  {
+   "id": "corredor_este",
+   "nombre": "Corredor este frente al patio (columnas blancas y viga en celosía)",
+   "centro": [
+    7.09,
+    -3.89
+   ],
+   "largo": 19.93,
+   "ancho": 2.5,
+   "rumbo_eje": 5.0,
+   "abierto": true,
+   "sep_columnas": 3.4,
+   "columna": 0.2,
+   "base": 0,
+   "altura_alero": 3.58,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "O",
+    "pendiente": 15.1,
+    "voladizo": 0.4,
+    "material": "termoacustica",
+    "color": "#e6e8e8"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#f0efea"
+   }
+  },
+  {
+   "id": "losa_tanques",
+   "nombre": "Losa con tanques de agua en la esquina noreste (probable)",
+   "centro": [
+    13.84,
+    9.6
+   ],
+   "largo": 5.03,
+   "ancho": 2.7,
+   "rumbo_eje": 5.0,
+   "base": 0,
+   "altura_alero": 6.3,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.3,
+    "material": "concreto",
+    "color": "#d9d6cf"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#ebe8e0"
+   }
+  },
+  {
+   "id": "anexo_norte",
+   "nombre": "Cuarto pequeño adosado al norte (uso desconocido)",
+   "centro": [
+    10.25,
+    14.41
+   ],
+   "largo": 4.1,
+   "ancho": 2.5,
+   "rumbo_eje": 95.0,
+   "base": 0,
+   "altura_alero": 2.8,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.2,
+    "material": "concreto",
+    "color": "#e8e6e0"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#ebe8e0",
+    "puertas": [
+     {
+      "lado": "O",
+      "pos": 0.5,
+      "ancho": 0.9,
+      "alto": 2.1
+     }
+    ]
+   }
+  }
+ ],
+ "elementos": [
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Porche de acceso sobre la Calle 50",
+   "centro": [
+    -10.01,
+    -15.99
+   ],
+   "largo": 6.9,
+   "ancho": 5.2,
+   "rumbo_eje": 95.0,
+   "altura": 3.0,
+   "material": "zinc",
+   "color": "#ced3dc"
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Patio central en placas de concreto",
+   "poligono": [
+    [
+     -6.93,
+     -12.66
+    ],
+    [
+     4.97,
+     -13.71
+    ],
+    [
+     6.49,
+     3.66
+    ],
+    [
+     -5.41,
+     4.7
+    ]
+   ]
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "Reja azul que cierra el patio hacia la calle",
+   "linea": [
+    [
+     -6.93,
+     -12.66
+    ],
+    [
+     4.97,
+     -13.71
+    ]
+   ],
+   "altura": 2.0,
+   "material": "reja",
+   "color": "#558fc5"
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "Muro de reja del salón (costado occidental)",
+   "linea": [
+    [
+     -13.73,
+     -5.9
+    ],
+    [
+     -12.54,
+     7.68
+    ]
+   ],
+   "altura": 3.2,
+   "material": "reja",
+   "color": "#2d434b"
+  },
+  {
+   "tipo": "tanque_elevado",
+   "nombre": "Tanque de agua sobre la losa",
+   "centro": [
+    13.95,
+    10.83
+   ],
+   "altura": 7.8,
+   "diametro": 1.5
+  },
+  {
+   "tipo": "tanque_elevado",
+   "nombre": "Tanque de agua sobre la losa",
+   "centro": [
+    13.74,
+    8.43
+   ],
+   "altura": 7.8,
+   "diametro": 1.5
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "Cerca frente a la Calle 50 (base de ladrillo y postes de concreto con alambre, vista en 2014)",
+   "linea": [
+    [
+     -14.5,
+     -18.57
+    ],
+    [
+     16.0,
+     -22.3
+    ]
+   ],
+   "altura": 2.0,
+   "material": "malla",
+   "color": "#8d8f8c"
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    20.2,
+    -17.6
+   ],
+   "altura": 10,
+   "copa": 7
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    33.2,
+    -12.6
+   ],
+   "altura": 14,
+   "copa": 12
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -19.8,
+    -16.6
+   ],
+   "altura": 9,
+   "copa": 6
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -25.8,
+    5.4
+   ],
+   "altura": 12,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -21.8,
+    24.4
+   ],
+   "altura": 12,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -3.8,
+    21.4
+   ],
+   "altura": 7,
+   "copa": 5
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    0.0,
+    -19.0
+   ],
+   "altura": 10,
+   "copa": 8
+  }
+ ],
+ "adecuaciones": {
+  "kwp_plan": 20,
+  "fv": [
+   {
+    "volumen": "ala_norte",
+    "faldon": "S",
+    "filas": 5,
+    "columnas": 6,
+    "orientacion_modulo": "horizontal"
+   },
+   {
+    "volumen": "ala_este",
+    "faldon": "O",
+    "filas": 2,
+    "columnas": 4,
+    "orientacion_modulo": "vertical"
+   }
+  ],
+  "kwp_factible": 20.9,
+  "bess": {
+   "kwh": 30,
+   "kw": 15,
+   "tipo": "gabinete",
+   "centro": [
+    1.94,
+    15.29
+   ],
+   "largo": 2.3,
+   "ancho": 1.2,
+   "rumbo_eje": 95.0
+  },
+  "inversores": {
+   "n": 2,
+   "kw": 10,
+   "volumen": "ala_norte",
+   "lado": "N",
+   "pos": 0
+  },
+  "domotica": [],
+  "obras_civiles": [],
+  "notas": "borrador"
+ },
+ "incertidumbres": [],
+ "verificacion": {
+  "trace": "data/geo/img/cpsam_trace.png"
+ }
+}

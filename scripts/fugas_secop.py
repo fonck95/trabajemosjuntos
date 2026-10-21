@@ -229,6 +229,55 @@ def es_empresa(nombre):
     return bool(EMPRESA_RE.search(re.sub(r'\s+', ' ', n)))
 
 
+# ----------------------------------------------------------------------------- ajustes para dinero_no_hecho.json (campos nuevos)
+# Transferencias de la alcaldía a entidades de Yondó: además de INTERNAS_RE, grafías mal digitadas de Aguas y Aseo y del hospital
+TRANSF_EXTRA_RE = r'AGUAS (?:Y|&) ASE[OI]|HOSPITAL ?HECT|^ESE HO|^(?:LA )?EMPRESA (?:DE )?SERVICIOS PUBLICOS|EMPRESA SOCIAL DEL ESTADO HOSP'
+DEST_AGUAS_RE = r'AGUAS|SERVICIOS PUBLICOS'
+DEST_HOSP_RE = r'HOSPITAL|^ESE |E ?S ?E\b|SOCIAL DEL ESTADO'
+# Subsidios a las tarifas de servicios públicos (Fondo de Solidaridad y Redistribución del Ingreso): se buscan en el objeto completo
+SUBSIDIO_RE = r'SUBSIDI|SOLIDARIDA|MINIMO VITAL'
+SUBSIDIO_CTX_RE = r'ESTRATOS|SERVICIOS? (?:PUBLICOS|PULICOS|PULBIC|DOMICILIARIOS)|SERVIICIOS|FONDOS? (?:DE )?SOLIDARIDA'
+SUBSIDIO_NO_RE = r'VIVIENDA|REGIMEN SUBSIDIADO|POBLACION POBRE|MEMORIA'
+# Instituciones públicas que no son "nómina paralela" aunque cat() las ponga en OPS
+INST_PUB_RE = r'UNIVERSIDAD|INSTITUTO UNIVERSITARIO|POLITECNICO|GOBERNACION|DEPARTAMENTO DE|DESARROLLO URBANO|ESCUELA SUPERIOR'
+AUNAR_RE = r'A(?:UN|NU)AR? ESFUERZO'
+CREDITO_RE = r'EMPRESTITO|PRESTAMISTA'
+# Planes que no llevan a una obra directa (se restan en el mínimo de "estudios sin obra")
+PLANES_RE = r'PLAN PARCIAL|ORDENAMIENTO|\bEOT\b|\bPBOT\b|PLAN DE GESTION DEL RIESGO|PLAN DE DESARROLLO'
+FECHA_CORTE = '2026-10-21'
+FECHA_RECIENTES = '2025-04-21'  # estudios de los últimos 18 meses: su obra todavía puede no haberse firmado
+# Estudios de la alcaldía que la regla de palabras deja "sin obra", pero cuya obra (o su naturaleza) consta fuera del SECOP de la alcaldía
+OBRA_FUERA = {
+    '14-12-2536297': ('obra_posterior', 'estudios de 18 acueductos rurales (2013)', 'Estudios y diseños de 18 acueductos rurales (2013, convenio con la Empresa de Servicios Públicos, BPIN 2013058930008). '
+                      'Después hubo obras de acueductos veredales ejecutadas por la empresa: BPIN 2013058930013 (tanque y conducción del sistema de veredas) y '
+                      'BPIN 2015058930003 (rehabilitación de acueductos rurales en 8 veredas), ambos terminados (data/comparativa/sgr_fondos.json; '
+                      'docs/anexos/A-gobiernos-2004-2027.md, §8.7).'),
+    '14-12-2536076': ('obra_posterior', 'estudios de 18 acueductos rurales (2013)', 'Segundo registro del mismo convenio de acueductos rurales de 2013 (misma fecha, valor y objeto).'),
+    '14-15-2238279': ('obra_suspendida', 'estudios de la Ciudadela Educativa (2014)', 'Estudios y diseños de la Ciudadela Educativa (2014). Hubo contrato de obra y quedó suspendido: el plan 2020–2023 '
+                      'incluye el "reinicio del contrato de obra de la Ciudadela Educativa" (docs/anexos/A-gobiernos-2004-2027.md, §8.6; data/gobiernos.json).'),
+    '18-15-8305058': ('no_es_estudio_previo', 'seguimiento técnico de proyectos en ejecución (2018)', 'Acompañamiento y seguimiento técnico de proyectos que ya se estaban ejecutando (2017-05893-0003 y otros): '
+                      'no es un estudio previo a una obra.'),
+    '22-15-13170989': ('obra_posterior', 'estudios de servicios públicos para el barrio José Domingo Oliveros (2022)', 'Estudios y diseños para dotar de servicios públicos el barrio José Domingo Oliveros (2022, BPIN 2022058930001). '
+                       'Su obra es el BPIN 2023058930018 (acueducto, alcantarillado y urbanismo en el mismo barrio, ejecutado por Aguas y Aseo; '
+                       'data/comparativa/sgr_fondos.json).'),
+}
+
+
+def posibles_duplicados(d):
+    """Registros de $100 millones o más que coinciden con otro en entidad, fecha de firma, valor y contratista, con objeto parecido."""
+    dup_ids = set()
+    for _, g in d[d.valor >= 1e8].groupby(['ent', 'dia', 'valor']):
+        if len(g) < 2: continue
+        rr = list(g.itertuples())
+        for a_i, a in enumerate(rr):
+            for b in rr[a_i + 1:]:
+                pa, pb = set(re.findall(r'[A-Z]{3,}', a.contratista_n)), set(re.findall(r'[A-Z]{3,}', b.contratista_n))
+                mismo = (a.cid is not None and a.cid == b.cid) or a.contratista_n[:15] == b.contratista_n[:15] or jaccard(pa, pb) >= 0.5
+                if mismo and (jaccard(kw(a.obj), kw(b.obj)) >= 0.4 or a.obj[:60] == b.obj[:60]):
+                    dup_ids.update([a.rid, b.rid])
+    return dup_ids
+
+
 ORG2_RE = re.compile(r'\b(UT|E ?U|BOMBEROS|LABORATORIO|ESTACION DE SERVICIOS?|CENTRO DE|INGENIERIA|INGENIERA DE PROYECTOS?|CONSTRUCCIONES|'
                      r'CONSTRUCTORA|CONSULTORIA|COMERCIALIZADORA|DISTRIBUIDORA|INSPECCIONES|ASISTENCIA MEDICA|OBRAS CIVILES|MANTENIMIENTO|'
                      r'TELECOMUNICACIONES|INFORMATICA|COORPORACION|COLOMBIANA|PROYECTOS)\b')
@@ -366,6 +415,7 @@ def main(D=RAW):
         con = best is not None and bs >= 0.3
         d.at[i, 'est_obra'] = bool(con)
         d.at[i, 'est_sim'] = round(bs, 2)
+        d.at[i, 'est_sim_raw'] = float(bs)
     d['est_sin_obra'] = d['est_evaluado'] & (d['est_obra'] == False)  # noqa: E712
     # "Mixtos": el mismo contrato incluye diseño y construcción (la obra va dentro del contrato, no después)
     MIXTO = (r'(?:ESTUDIOS?|DISENOS?)\b[^.]{0,60}?\b(?:Y|E|ASI COMO)\s+(?:LA |LAS |LOS |EL )?(?:ADECUACION|CONSTRUCCION|CONSTRUCCIONES|EJECUCION DE (?:LAS )?OBRAS|INTERVENTORIAS? Y CONSTRUCCION)'
@@ -527,6 +577,65 @@ def main(D=RAW):
                           'contratista': a.contratista_pub, 'objeto': corto(a.objeto, 200), 'urls': [x.url for x in grupo][:6]})
     fracc.sort(key=lambda x: -x['valor_total'])
 
+    # --- 6b. ajustes para data/comparativa/dinero_no_hecho.json (campos nuevos en "ajustes"; no cambian las cifras ya publicadas)
+    d['dia'] = d.fecha.dt.date
+    dup_ids = posibles_duplicados(d)
+    dd = d.loc[sorted(dup_ids)]
+    d['dup_copia'] = d.index.isin(dd[dd.duplicated(subset=['ent', 'dia', 'valor'], keep='first')].index)  # la segunda copia de cada grupo
+    alc_m = d.ent.eq('ALCALDIA')
+    d['subsidio_tarifas'] = d.obj.str.contains(SUBSIDIO_RE) & d.obj.str.contains(SUBSIDIO_CTX_RE) & ~d.obj.str.contains(SUBSIDIO_NO_RE)
+    d['transf'] = alc_m & (d.interna | d.contratista_n.str.contains(TRANSF_EXTRA_RE) | (d.subsidio_tarifas & d.directa))
+    d['transf_dest'] = None
+    d.loc[d.transf, 'transf_dest'] = 'otras'
+    d.loc[d.transf & d.contratista_n.str.contains(DEST_HOSP_RE), 'transf_dest'] = 'hospital'
+    d.loc[d.transf & (d.contratista_n.str.contains(DEST_AGUAS_RE) | d.subsidio_tarifas), 'transf_dest'] = 'aguas'
+    d['credito'] = d.obj.str.contains(CREDITO_RE)
+    ops0 = d.categoria.eq('OPS / apoyo a la gestión')
+    d['ops_reclas'] = ops0 & (d.transf | d.interna | d.subsidio_tarifas | d.obj.str.match(AUNAR_RE) | d.contratista_n.str.contains(INST_PUB_RE))
+    d['ops_cat2'] = ops0 & ~d.ops_reclas
+    d['ops_aj'] = d.ops_cat2 & ~d.dup_copia
+    d['obra_fuera'] = d.numero_del_contrato.isin(list(OBRA_FUERA))
+    mixto_todos = d.est_evaluado & (d.obj.str.contains('ADMINISTRACION DELEGADA') | (d.obj.str.contains(MIXTO) & ~d.obj.str.contains(PARA)))
+    sim = d['est_sim_raw'].astype(float)
+    d['est_sm_aj'] = d.est_sin_obra & ~d.est_mixto & ~d.obra_fuera                       # estudios sin obra, sin mixtos, ajustados
+    d['est_sm_020'] = d.est_evaluado & (sim < 0.2) & ~mixto_todos & ~d.obra_fuera         # umbral de similitud más laxo (más obras halladas)
+    d['est_sm_040'] = d.est_evaluado & (sim < 0.4) & ~mixto_todos & ~d.obra_fuera         # umbral más exigente
+    d['est_plan'] = d.obj.str.contains(PLANES_RE)
+    d['est_reciente'] = d.fecha >= pd.Timestamp(FECHA_RECIENTES)
+    # base del sobrecosto: compras sin competencia de la alcaldía a terceros (sin OPS, sin estudios sin obra, sin transferencias a entidades
+    # de Yondó ni operaciones de crédito) y procesos competitivos con un solo oferente con el mismo filtro
+    d['base_sc'] = alc_m & d.directa & ~d.ops_cat2 & ~d.est_sm_aj & ~d.transf & ~d.credito
+    d['base_uo'] = alc_m & d.un_oferente & ~d.directa & ~d.ops_cat2 & ~d.est_sm_aj & ~d.transf
+
+    def ajustes(x):
+        oa = x[x.ops_aj]; rc = x[x.ops_reclas]; od = x[x.ops_cat2 & x.dup_copia]
+        sm = x[x.est_sm_aj]; of_ = x[x.obra_fuera & x.est_evaluado]
+        tr = x[x.transf]
+        bsc = x[x.base_sc]; buo = x[x.base_uo]
+        return {
+            'ops': {'n': len(oa), 'valor': r0(oa.valor.sum()), 'valor_sin_competencia': r0(oa[oa.directa].valor.sum()),
+                    'formulacion_n': int(oa.ops_formulacion.sum()), 'formulacion_valor': r0(oa[oa.ops_formulacion].valor.sum()),
+                    'reclasificadas_n': len(rc), 'reclasificadas_valor': r0(rc.valor.sum()), 'reclasificadas_transferencias_valor': r0(rc[rc.transf].valor.sum()),
+                    'duplicados_n': len(od), 'duplicados_valor': r0(od.valor.sum())},
+            'estudios': {'sin_obra_n': len(sm), 'sin_obra_valor': r0(sm.valor.sum()), 'sin_obra_valor_sin_competencia': r0(sm[sm.directa].valor.sum()),
+                         'sin_obra_valor_un_oferente': r0(sm[sm.un_oferente].valor.sum()),
+                         'umbral_020_valor': r0(x[x.est_sm_020].valor.sum()), 'umbral_040_valor': r0(x[x.est_sm_040].valor.sum()),
+                         'planes_valor': r0(sm[sm.est_plan].valor.sum()), 'recientes_valor': r0(sm[sm.est_reciente].valor.sum()),
+                         'central_valor': r0(sm[~sm.est_reciente].valor.sum()),
+                         'minimo_valor': r0(x[x.est_sm_020 & ~x.est_plan & ~x.est_reciente].valor.sum()),
+                         'maximo_valor': r0(max(x[x.est_sm_040].valor.sum(), sm.valor.sum())),
+                         'obra_hallada_fuera_n': len(of_), 'obra_hallada_fuera_valor': r0(of_.valor.sum())},
+            'subsidios_tarifas': {'n': int((tr.subsidio_tarifas).sum()), 'valor': r0(tr[tr.subsidio_tarifas].valor.sum())},
+            'transferencias': {k: {'n': int((tr.transf_dest == k).sum()), 'valor': r0(tr[tr.transf_dest == k].valor.sum()),
+                                   'sin_competencia_valor': r0(tr[(tr.transf_dest == k) & tr.directa].valor.sum()),
+                                   'subsidios_valor': r0(tr[(tr.transf_dest == k) & tr.subsidio_tarifas].valor.sum()),
+                                   'duplicados_valor': r0(tr[(tr.transf_dest == k) & tr.dup_copia].valor.sum())} for k in ('aguas', 'hospital', 'otras')},
+            'base_sobrecosto': {'sin_competencia_valor': r0(bsc.valor.sum()), 'un_oferente_valor': r0(buo.valor.sum()),
+                                'duplicados_valor': r0(bsc[bsc.dup_copia].valor.sum() + buo[buo.dup_copia].valor.sum()),
+                                'credito_excluido_valor': r0(x[x.directa & x.credito & x.ent.eq('ALCALDIA')].valor.sum())},
+            'propios_sin_competencia_sin_ops_valor': r0(x[x.directa & ~x.categoria.eq('OPS / apoyo a la gestión')].valor.sum()),
+        }
+
     # --- 7. métricas por celda
     def bloque(x):
         v = x.valor.sum()
@@ -560,6 +669,7 @@ def main(D=RAW):
             'un_oferente': {'procesos_competitivos_con_dato': len(co), 'un_oferente_n': len(uo), 'un_oferente_valor': r0(uo.valor.sum()),
                             'pct_n': pct(len(uo), len(co)), 'con_ofertas_con_dato': len(cd), 'con_ofertas_un_oferente_n': len(cu), 'con_ofertas_un_oferente_valor': r0(cu.valor.sum())},
             'fraccionamiento_indicios': {'contratos': len(fr), 'valor': r0(fr.valor.sum())},
+            'ajustes': ajustes(x),
         }
 
     gob = {p['id']: p['alcalde'] for p in json.load(open(R / 'data' / 'gobiernos.json'))['periodos']}
@@ -608,17 +718,7 @@ def main(D=RAW):
                      'url': r['url']} for _, r in so.iterrows()]
 
     # Posibles registros duplicados: misma entidad, fecha de firma, valor (≥ $100 millones) y contratista, objeto parecido y distinto número
-    dup_ids = set()
-    d['dia'] = d.fecha.dt.date
-    for _, g in d[d.valor >= 1e8].groupby(['ent', 'dia', 'valor']):
-        if len(g) < 2: continue
-        rr = list(g.itertuples())
-        for a_i, a in enumerate(rr):
-            for b in rr[a_i + 1:]:
-                pa, pb = set(re.findall(r'[A-Z]{3,}', a.contratista_n)), set(re.findall(r'[A-Z]{3,}', b.contratista_n))
-                mismo = (a.cid is not None and a.cid == b.cid) or a.contratista_n[:15] == b.contratista_n[:15] or jaccard(pa, pb) >= 0.5
-                if mismo and (jaccard(kw(a.obj), kw(b.obj)) >= 0.4 or a.obj[:60] == b.obj[:60]):
-                    dup_ids.update([a.rid, b.rid])
+    # (calculados en el paso 6b con posibles_duplicados)
 
     # Convenios y delegada: lista
     conv_list = []
@@ -673,6 +773,26 @@ def main(D=RAW):
                        'pct_sobre_inicial': round(r['pct_adic'], 1), 'prorroga_dias': r0(r['adic_dias']), 'categoria': r['categoria'], 'modalidad': r['modg'],
                        'contratista': r['contratista_pub'], 'objeto': corto(r['objeto'], 200), 'fuente': ('SECOP I (f789-7hwg)' if r['origen'] == 'SECOPI' else 'SECOP II (versiones en rpmr-utcd)'),
                        'pasa_50pct': bool(r['pct_adic'] > 50), 'url': r['url']} for _, r in sel.iterrows()]
+
+    # Listas para dinero_no_hecho.json
+    def fila_est(r):
+        return {'anio': int(r['anio']), 'fecha': str(r['fecha'])[:10], 'valor': r0(r['valor']), 'objeto': corto(r['objeto'], 220),
+                'contratista': r['contratista_pub'], 'modalidad': r['modg'], 'sin_competencia': bool(r['directa']), 'un_oferente': bool(r['un_oferente']),
+                'similitud_maxima_con_una_obra': r['est_sim'], 'plan': bool(r['est_plan']), 'reciente': bool(r['est_reciente']), 'url': r['url']}
+    est_aj_list = [fila_est(r) for _, r in d[d.est_sm_aj & alc_m].sort_values(['anio', 'valor'], ascending=[True, False]).iterrows()]
+    est_fuera_list = [{**fila_est(r), 'motivo': OBRA_FUERA[r['numero_del_contrato']][0], 'etiqueta': OBRA_FUERA[r['numero_del_contrato']][1], 'evidencia': OBRA_FUERA[r['numero_del_contrato']][2]}
+                      for _, r in d[d.obra_fuera & d.est_evaluado].sort_values('anio').iterrows()]
+    rc = d[d.ops_reclas & alc_m].sort_values('valor', ascending=False)
+    ops_rec_list = [{'anio': int(r['anio']), 'valor': r0(r['valor']), 'contratista': r['contratista_pub'],
+                     'motivo': ('subsidio a tarifas de servicios públicos' if r['subsidio_tarifas'] else
+                                'transferencia a otra entidad de Yondó' if r['transf'] else
+                                'convenio para aunar esfuerzos' if re.match(AUNAR_RE, r['obj']) else 'contrato con otra entidad pública'),
+                     'objeto': corto(r['objeto'], 160), 'url': r['url']} for _, r in rc.iterrows()]
+    dup_list = []
+    for (e, dia, v), g in d.loc[sorted(dup_ids)].groupby(['ent', 'dia', 'valor']):
+        dup_list.append({'entidad': ENT_NOMBRE[e], 'anio': int(g.anio.iloc[0]), 'fecha': str(dia), 'valor': r0(v), 'registros': len(g),
+                         'categoria': g.categoria.iloc[0], 'transferencia_interna': bool(g.transf.any()), 'sin_competencia': bool(g.directa.all()),
+                         'contratista': g.contratista_pub.iloc[0], 'numeros': sorted(g.numero_del_contrato.astype(str)), 'objeto': corto(g.objeto.iloc[0], 160)})
 
     # --- 8. verificación frente a las cifras publicadas
     alc = d[(d.ent == 'ALCALDIA') & (d.anio >= 2008)]
@@ -794,6 +914,29 @@ def main(D=RAW):
         'convenios_delegada': conv_list,
         'convenios_resumen_por_periodo': resumen_conv,
         'edu_contratos_derivados_secop2': {'nota': 'Contratos que la propia EDU de Medellín publicó en SECOP II con objeto en Yondó. Los contratos derivados de 2021–2023 no aparecen con "Yondó" en el objeto; hay que pedirlos a la EDU.', 'contratos': edu2},
+        'ajustes_dinero_no_hecho': {
+            'nota': ('Campos que usa scripts/build_dinero_no_hecho.py. No cambian las cifras ya publicadas (5.580 OPS, 124 estudios, 27 con obra, 83 %): '
+                     'las corrigen solo para ese cálculo. En cada bloque por año y periodo están en "ajustes".'),
+            'metodo': {
+                'ops': ('OPS de cat() sin los contratos que no son prestación de servicios de personas o empresas: transferencias a Aguas y Aseo, al hospital '
+                        'u otra entidad de Yondó (también con grafías mal digitadas), subsidios a las tarifas, objetos que empiezan por "aunar esfuerzos" y '
+                        'contratos con universidades u otras instituciones públicas. Además se quita la segunda copia de cada posible registro duplicado.'),
+                'estudios': ('Estudios sin obra posterior hallada en el SECOP de la alcaldía (regla de similitud ≥ 0,30), sin contratos mixtos y sin los '
+                             'estudios cuya obra consta fuera de ese SECOP (lista "estudios_obra_hallada_fuera"). Sensibilidad: umbral de similitud 0,20 '
+                             '(más obras halladas) y 0,40 (menos). "planes" = planes de ordenamiento, parciales, de desarrollo o de gestión del riesgo. '
+                             f'"recientes" = firmados desde el {FECHA_RECIENTES} (18 meses antes del corte): su obra todavía puede no haberse firmado.'),
+                'transferencias': ('Contratos de la alcaldía con Aguas y Aseo, el hospital u otra entidad de Yondó, y subsidios a tarifas aunque el contratista '
+                                   'esté mal registrado. "subsidios_valor": Fondo de Solidaridad y Redistribución del Ingreso, identificados por el objeto completo.'),
+                'base_sobrecosto': ('Valor sin competencia de la alcaldía sin OPS, sin estudios sin obra, sin transferencias a entidades de Yondó y sin '
+                                    'operaciones de crédito (empréstitos), más los procesos competitivos con un solo oferente con el mismo filtro. '
+                                    '"duplicados_valor" = segunda copia de posibles duplicados dentro de esa base.'),
+                'propios_sin_competencia_sin_ops_valor': 'Para Aguas y Aseo y el hospital: lo que contrataron sin competencia, sin OPS (sirve para acotar el sobrecosto de lo que la alcaldía les transfiere).',
+            },
+            'estudios_sin_obra_alcaldia': est_aj_list,
+            'estudios_obra_hallada_fuera': est_fuera_list,
+            'ops_reclasificadas_alcaldia': ops_rec_list,
+            'posibles_duplicados': dup_list,
+        },
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     json.dump(out, open(OUT, 'w'), ensure_ascii=False, indent=1)
