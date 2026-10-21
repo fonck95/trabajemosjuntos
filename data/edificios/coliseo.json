@@ -234,11 +234,11 @@
       "id": "techo_oeste_bajo",
       "nombre": "Cubierta escalonada: franja oeste (la más baja)",
       "centro": [
-        -23.18,
-        -5.4
+        -21.62,
+        -5.44
       ],
       "largo": 33.5,
-      "ancho": 4.0,
+      "ancho": 4.6,
       "rumbo_eje": 347,
       "abierto": true,
       "piso": false,
@@ -264,10 +264,10 @@
       "id": "techo_oeste",
       "nombre": "Cubierta escalonada: franja oeste media",
       "centro": [
-        -15.38,
-        -2.94
+        -13.68,
+        -2.77
       ],
-      "largo": 41.8,
+      "largo": 41.3,
       "ancho": 10.3,
       "rumbo_eje": 347,
       "abierto": true,
@@ -294,8 +294,8 @@
       "id": "techo_centro",
       "nombre": "Cubierta escalonada: nave central (la más alta)",
       "centro": [
-        2.89,
-        1.03
+        4.57,
+        0.44
       ],
       "largo": 44.7,
       "ancho": 25.1,
@@ -324,11 +324,11 @@
       "id": "techo_este",
       "nombre": "Cubierta escalonada: franja este",
       "centro": [
-        20.78,
-        4.9
+        22.6,
+        4.81
       ],
-      "largo": 41.6,
-      "ancho": 9.5,
+      "largo": 42.0,
+      "ancho": 10.0,
       "rumbo_eje": 347,
       "abierto": true,
       "piso": false,
@@ -354,16 +354,16 @@
       "id": "visera_norte",
       "nombre": "Cubierta baja sobre el balcón de la gradería norte",
       "centro": [
-        -1.61,
-        20.1
+        0.04,
+        20.28
       ],
-      "largo": 46.9,
+      "largo": 48.0,
       "ancho": 6.9,
       "rumbo_eje": 77,
       "abierto": true,
       "piso": false,
       "sep_columnas": 4.9,
-      "columna": 0.25,
+      "columna": 0.2,
       "base": 7.0,
       "altura_alero": 10.3,
       "pisos": 1,
@@ -604,12 +604,12 @@
     },
     {
       "id": "anexo_este",
-      "nombre": "Costado este (cuartos de ladrillo y bloque)",
+      "nombre": "Costado este (cuartos de ladrillo rojo y muro de bloque gris)",
       "centro": [
-        24.49,
-        3.5
+        27.73,
+        2.81
       ],
-      "largo": 30.8,
+      "largo": 43.0,
       "ancho": 5.3,
       "rumbo_eje": 347,
       "base": 0,
