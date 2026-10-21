@@ -1,0 +1,709 @@
+{
+ "id": "policia",
+ "nombre": "Estación de Policía Yondó",
+ "nodo_microrred": "policia",
+ "direccion": "Carrera 55A # 46B-45 (directorio de estaciones de la Policía Nacional, agosto de 2026). Manzana entre la Cra. 55A y la Cra. 56, al sur de la Calle 47 (cerrada) y frente al Batallón Energético y Vial N.º 7.",
+ "lat": 7.00488,
+ "lon": -73.91144,
+ "volumenes": [
+  {
+   "id": "a_principal",
+   "nombre": "Bloque principal sobre la Carrera 55A (oficinas y atención; dirección Cra. 55A # 46B-45)",
+   "centro": [
+    7.6,
+    12.3
+   ],
+   "largo": 27.0,
+   "ancho": 9.6,
+   "rumbo_eje": 168,
+   "base": 0,
+   "altura_alero": 4.0,
+   "pisos": 1,
+   "techo": {
+    "tipo": "dos_aguas",
+    "material": "fibrocemento",
+    "color": "#767472",
+    "voladizo": 0.6,
+    "pendiente": 25,
+    "cumbrera": "largo"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#e6e3da",
+    "zocalo": {
+     "color": "#1f4a2a",
+     "altura": 1.0
+    },
+    "ventanas": {
+     "tipo": "reja",
+     "ancho": 1.2,
+     "alto": 1.1,
+     "antepecho": 1.1,
+     "separacion": 3.5,
+     "lados": [
+      "largo"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "E",
+      "pos": 0.72,
+      "ancho": 1.8,
+      "alto": 2.4
+     }
+    ],
+    "corredor": {
+     "lado": "E",
+     "profundidad": 2.4,
+     "sep_columnas": 3.0
+    }
+   }
+  },
+  {
+   "id": "b_sur",
+   "nombre": "Bloque sur sobre la Carrera 55A (probable alojamiento)",
+   "centro": [
+    13.8,
+    -11.8
+   ],
+   "largo": 20.5,
+   "ancho": 10.2,
+   "rumbo_eje": 168,
+   "base": 0,
+   "altura_alero": 3.4,
+   "pisos": 1,
+   "techo": {
+    "tipo": "dos_aguas",
+    "material": "fibrocemento",
+    "color": "#75756f",
+    "voladizo": 0.6,
+    "pendiente": 20,
+    "cumbrera": "largo"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#e6e3da",
+    "zocalo": {
+     "color": "#1f4a2a",
+     "altura": 1.0
+    },
+    "ventanas": {
+     "tipo": "reja",
+     "ancho": 1.2,
+     "alto": 1.1,
+     "antepecho": 1.1,
+     "separacion": 3.5,
+     "lados": [
+      "largo"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "O",
+      "pos": 0.5,
+      "ancho": 1.0,
+      "alto": 2.2
+     }
+    ]
+   }
+  },
+  {
+   "id": "c_oeste",
+   "nombre": "Bloque interior occidental",
+   "centro": [
+    -10.3,
+    8.6
+   ],
+   "largo": 14.0,
+   "ancho": 9.0,
+   "rumbo_eje": 168,
+   "base": 0,
+   "altura_alero": 3.0,
+   "pisos": 1,
+   "techo": {
+    "tipo": "dos_aguas",
+    "material": "fibrocemento",
+    "color": "#777a72",
+    "voladizo": 0.6,
+    "pendiente": 15,
+    "cumbrera": "largo"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#e6e3da",
+    "zocalo": {
+     "color": "#1f4a2a",
+     "altura": 1.0
+    },
+    "ventanas": {
+     "tipo": "reja",
+     "ancho": 1.2,
+     "alto": 1.1,
+     "antepecho": 1.1,
+     "separacion": 3.5,
+     "lados": [
+      "largo"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "S",
+      "pos": 0.5,
+      "ancho": 1.0,
+      "alto": 2.2
+     }
+    ]
+   }
+  },
+  {
+   "id": "d_medio",
+   "nombre": "Anexos bajos entre el bloque occidental y el principal",
+   "centro": [
+    -3.2,
+    9.0
+   ],
+   "largo": 14.0,
+   "ancho": 4.8,
+   "rumbo_eje": 168,
+   "base": 0,
+   "altura_alero": 2.7,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "material": "zinc",
+    "color": "#75706a",
+    "voladizo": 0.6,
+    "pendiente": 8,
+    "caida": "O"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#e6e3da",
+    "zocalo": {
+     "color": "#1f4a2a",
+     "altura": 1.0
+    }
+   }
+  },
+  {
+   "id": "e_frente47",
+   "nombre": "Construcción baja sobre la Calle 47 (cubierta oscura)",
+   "centro": [
+    -8.2,
+    18.3
+   ],
+   "largo": 10.0,
+   "ancho": 3.6,
+   "rumbo_eje": 77,
+   "base": 0,
+   "altura_alero": 2.8,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "material": "zinc",
+    "color": "#3b3634",
+    "voladizo": 0.6,
+    "pendiente": 8,
+    "caida": "N"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#e6e3da",
+    "zocalo": {
+     "color": "#1f4a2a",
+     "altura": 1.0
+    },
+    "ventanas": {
+     "tipo": "reja",
+     "ancho": 1.2,
+     "alto": 1.1,
+     "antepecho": 1.1,
+     "separacion": 3.5,
+     "lados": [
+      "N"
+     ]
+    }
+   }
+  },
+  {
+   "id": "f_noroeste",
+   "nombre": "Bloque de la esquina Calle 47 con Carrera 56 (zócalo verde en 2013)",
+   "centro": [
+    -25.5,
+    10.8
+   ],
+   "largo": 12.5,
+   "ancho": 8.5,
+   "rumbo_eje": 168,
+   "base": 0,
+   "altura_alero": 3.0,
+   "pisos": 1,
+   "techo": {
+    "tipo": "dos_aguas",
+    "material": "fibrocemento",
+    "color": "#9d9c8d",
+    "voladizo": 0.6,
+    "pendiente": 15,
+    "cumbrera": "corto"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#e6e3da",
+    "zocalo": {
+     "color": "#1f4a2a",
+     "altura": 1.0
+    },
+    "ventanas": {
+     "tipo": "reja",
+     "ancho": 1.2,
+     "alto": 1.1,
+     "antepecho": 1.1,
+     "separacion": 3.5,
+     "lados": [
+      "N",
+      "O"
+     ]
+    }
+   }
+  },
+  {
+   "id": "g_suroeste",
+   "nombre": "Bloque suroccidental",
+   "centro": [
+    -9.2,
+    -15.6
+   ],
+   "largo": 16.0,
+   "ancho": 13.5,
+   "rumbo_eje": 78,
+   "base": 0,
+   "altura_alero": 3.0,
+   "pisos": 1,
+   "techo": {
+    "tipo": "dos_aguas",
+    "material": "fibrocemento",
+    "color": "#6c7268",
+    "voladizo": 0.6,
+    "pendiente": 12,
+    "cumbrera": "corto"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#e6e3da",
+    "zocalo": {
+     "color": "#1f4a2a",
+     "altura": 1.0
+    },
+    "ventanas": {
+     "tipo": "reja",
+     "ancho": 1.2,
+     "alto": 1.1,
+     "antepecho": 1.1,
+     "separacion": 3.5,
+     "lados": [
+      "largo"
+     ]
+    }
+   }
+  },
+  {
+   "id": "h_anexo_sur",
+   "nombre": "Anexo sur (cubierta café)",
+   "centro": [
+    -6.0,
+    -24.6
+   ],
+   "largo": 8.0,
+   "ancho": 4.5,
+   "rumbo_eje": 77,
+   "base": 0,
+   "altura_alero": 2.7,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "material": "zinc",
+    "color": "#5d514a",
+    "voladizo": 0.6,
+    "pendiente": 8,
+    "caida": "S"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#e6e3da",
+    "zocalo": {
+     "color": "#1f4a2a",
+     "altura": 1.0
+    }
+   }
+  }
+ ],
+ "elementos": [
+  {
+   "tipo": "zona_verde",
+   "poligono": [
+    [
+     -19,
+     -8
+    ],
+    [
+     3,
+     -6
+    ],
+    [
+     3.5,
+     0.8
+    ],
+    [
+     -17.5,
+     1.6
+    ]
+   ]
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -12.0,
+    -3.0
+   ],
+   "altura": 12,
+   "copa": 11
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -1.0,
+    -5.5
+   ],
+   "altura": 10,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -19.0,
+    -8.0
+   ],
+   "altura": 9,
+   "copa": 7
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -19.5,
+    -20.0
+   ],
+   "altura": 9,
+   "copa": 7
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -21.0,
+    21.0
+   ],
+   "altura": 10,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -12.5,
+    23.5
+   ],
+   "altura": 8,
+   "copa": 6
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    20.5,
+    -4.0
+   ],
+   "altura": 7,
+   "copa": 5
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "vallas de la Policía que cierran la Calle 47 por el occidente (2023)",
+   "linea": [
+    [
+     -23.2,
+     19.1
+    ],
+    [
+     -24.8,
+     25.9
+    ]
+   ],
+   "altura": 1.1,
+   "material": "reja",
+   "color": "#e8e8e2"
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "trinchera de costales verdes (2023)",
+   "linea": [
+    [
+     -21.0,
+     18.2
+    ],
+    [
+     -19.0,
+     18.6
+    ],
+    [
+     -18.7,
+     20.3
+    ]
+   ],
+   "altura": 1.2,
+   "material": "muro",
+   "color": "#31443e"
+  }
+ ],
+ "ubicacion": {
+  "confianza": "media",
+  "metodo": "Se decidió entre dos ubicaciones. (1) El directorio oficial de estaciones de la Policía Nacional (PDF de agosto de 2026) da la dirección Carrera 55A # 46B-45. En Yondó las placas impares de las carreras quedan en el costado occidental (la Secretaría de Planeación, Cra. 55 # 46B-44, y la Alcaldía, Cra. 55 # 46A-16, quedan al oriente de su carrera), así que la sede está en la manzana entre la Cra. 55A y la Cra. 56, al sur de la Calle 47, a unos 45 m de la Calle 46B. (2) Street View confirma el uso policial de ese tramo: en 2013 la Calle 47 está cerrada con vallas entre la Cra. 55 y la Cra. 56, con un camión verde y blanco de la Policía y agentes en un retén frente al Batallón; en 2023 sigue cerrada con vallas verdes y blancas, hay una trinchera de costales verdes en la esquina de la Cra. 56 y camionetas parqueadas adentro. OpenStreetMap marca los dos cierres (barrier=block). Desde el extremo oriental, por el hueco de la Cra. 55A, se alcanza a ver el corredor del bloque principal: antepecho verde, columnas blancas, matas colgantes y cubierta de fibrocemento. (3) Se descartó el conjunto de la Cra. 54 (7.009081, -73.91151) que traía el inventario documental: en noviembre de 2013 estaba recién construido o en obra (polisombra y valla de obra), tiene ventanas grandes hacia la calle, cortinas infantiles y un patio con jardín, sin vallas, retén ni letrero de la Policía; el lugar de Google 'estación de policía' cae al otro lado de la Cra. 54, sobre viviendas, y no coincide con la dirección oficial. No se vio ningún letrero de la estación (la fachada sobre la Cra. 55A no tiene panoramas), por eso la confianza queda en media. La manzana completa se modela como el conjunto de la estación; el bloque principal es el que da a la Cra. 55A."
+ },
+ "fuentes": [
+  {
+   "tipo": "street_view",
+   "pano": "itU9w9UuqMauQIU4jhGtrw",
+   "fecha": "2013-11",
+   "rumbo": 248,
+   "nota": "Calle 47 cerrada con vallas y conos; al fondo, camión de la Policía y agentes en el retén. Por el hueco de la Cra. 55A se ve el corredor del bloque principal (antepecho verde, columnas blancas, cubierta de fibrocemento). Comparación con el modelo."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "itU9w9UuqMauQIU4jhGtrw",
+   "fecha": "2013-11",
+   "rumbo": 252,
+   "nota": "Acercamiento al retén: camión verde y blanco con carpa, agentes de uniforme verde y el corredor con antepecho verde."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "Wnbe7wpQUN0nMpQ0b4j-ww",
+   "fecha": "2013-11",
+   "rumbo": 250,
+   "nota": "Mismo cierre visto 12 m más al oriente; casa roja esquinera de la manzana vecina."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "gpN1P-_PwKNvv5XP6jca_Q",
+   "fecha": "2023-04",
+   "rumbo": 99,
+   "nota": "Calle 47 cerrada en la Cra. 56 con vallas verdes y blancas; trinchera de costales verdes, estructura metálica de garita y camionetas blancas adentro. La casa de dos pisos de la derecha queda al occidente de la Cra. 56 (no es de la estación). Comparación con el modelo."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "fimNS6EzNvp7tIxf19EYDw",
+   "fecha": "2023-04",
+   "rumbo": 112,
+   "nota": "Entrada occidental del cierre de la Calle 47, junto al muro del Batallón."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "Oi8GQzzSARd1LJCl5aqzag",
+   "fecha": "2013-11",
+   "rumbo": 270,
+   "nota": "Conjunto de la Cra. 54 (descartado): edificios de ladrillo nuevos con cubierta azul, malla y concertina."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "FCsMxwz-mmKzROc1s4fvJg",
+   "fecha": "2013-11",
+   "rumbo": 245,
+   "nota": "Conjunto de la Cra. 54 (descartado): portón y patio central con jardín."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "9-5CempmrictwPzZ-xRTXg",
+   "fecha": "2013-11",
+   "rumbo": 290,
+   "nota": "Conjunto de la Cra. 54 (descartado): valla de obra y polisombra en 2013, tanque elevado."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "YfrsP1HNLKQ-mVhNZxSFLA",
+   "fecha": "2013-11",
+   "rumbo": 80,
+   "nota": "Conjunto de la Cra. 54 (descartado): fachada blanca con cortinas infantiles directamente sobre la calle."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Esri World Imagery z19 (0,296 m por píxel; no hay z20 en Yondó)",
+   "nota": "Huella de los ocho bloques, color de las cubiertas, árboles del patio central y franja del corredor oriental del bloque principal."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.policia.gov.co/sites/default/files/descargables/Directorio_policia_programas_estaciones_de_policia.pdf",
+   "nota": "Directorio de estaciones (agosto de 2026): ESTACIÓN DE POLICÍA YONDO, Carrera 55 a # 46 b - 45, Demam.eyondo@policia.gov.co."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.policia.gov.co/directorio/estacion-policia-yondo",
+   "nota": "Ficha del directorio: Departamento de Policía Magdalena Medio, Distrito Uno Barrancabermeja, cuadrante 1, teléfono 317 249 5014 (sin dirección)."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=11-1-68906",
+   "nota": "LPY-009-2011: adecuación y mejoramiento de la estación de Policía ($300 millones, 2011)."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=11-1-75347",
+   "nota": "LPY-026-2011: adecuación de las instalaciones de alojamiento de la estación ($450 millones, 2012)."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-11-3708437",
+   "nota": "SAMC-008-2015: adecuación de infraestructura de la estación ($85 millones)."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-11-8623854",
+   "nota": "SAMC-021-2018: adecuación y mantenimiento de las instalaciones ($39,9 millones)."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-11-11473866",
+   "nota": "SAMC-009 de 2020: adecuación y mantenimiento ($150 millones), quedó en borrador."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-11-10758640",
+   "nota": "Mantenimiento y compra de aires acondicionados de la Alcaldía y la estación de Policía (2020): la estación tiene aires."
+  },
+  {
+   "tipo": "osm",
+   "fuente": "OpenStreetMap (© colaboradores, ODbL)",
+   "nota": "Nombres de la Cra. 55A, Cra. 56 y Calle 47; dos nodos barrier=block que cierran la Calle 47; polígono landuse=military del Batallón Energético y Vial N.º 7 al norte."
+  }
+ ],
+ "adecuaciones": {
+  "kwp_plan": 15,
+  "cubierta_nueva": {
+   "material": "termoacustica",
+   "color": "#e9e7e1",
+   "volumenes": [
+    "a_principal"
+   ]
+  },
+  "fv": [
+   {
+    "volumen": "a_principal",
+    "faldon": "E",
+    "filas": 3,
+    "columnas": 9,
+    "orientacion_modulo": "horizontal"
+   }
+  ],
+  "kwp_factible": 14.85,
+  "bess": {
+   "kwh": 30,
+   "kw": 15,
+   "tipo": "gabinete",
+   "centro": [
+    19.7,
+    0.7
+   ],
+   "largo": 2.3,
+   "ancho": 1.2,
+   "rumbo_eje": 168
+  },
+  "inversores": {
+   "n": 1,
+   "kw": 15,
+   "volumen": "a_principal",
+   "lado": "E",
+   "pos": -11.0
+  },
+  "domotica": [
+   "medidor bidireccional",
+   "pasarela IoT con monitoreo del inversor y de la batería",
+   "transferencia automática a modo isla con cargas prioritarias: radio y comunicaciones, cámaras, iluminación del perímetro, cargue de equipos y una parte de los aires",
+   "control de los aires acondicionados por horario y temperatura",
+   "iluminación LED con sensor de presencia en patios y corredores",
+   "telemedida del consumo para el centro de control de la microrred"
+  ],
+  "obras_civiles": [
+   "cambio de la cubierta de fibrocemento del bloque principal por termoacústica antes del montaje; el fibrocemento viejo puede tener asbesto y debe desmontarlo personal certificado (Ley 1968 de 2019)",
+   "revisión estructural de cerchas y correas del bloque principal antes de cargar 27 módulos (unos 800 kg)",
+   "base de concreto y encerramiento en malla con techo liviano para el gabinete de baterías en el antejardín sur, dentro del perímetro de seguridad",
+   "puesta a tierra, protección contra sobretensiones (DPS), pararrayos y tablero de transferencia",
+   "canalización a la vista desde la cubierta hasta el inversor bajo el corredor",
+   "poda de mantenimiento del árbol del antejardín sur (no talarlo) para que no sombree el extremo sur del arreglo en la mañana"
+  ],
+  "cargador_ve": {
+   "centro": [
+    9.5,
+    29.3
+   ],
+   "rumbo_eje": 77
+  },
+  "notas": "Caben de sobra los 15 kWp del plan. El bloque principal tiene 27 m de cumbrera (norte–sur) y faldones de unos 5,3 m hacia el oriente y el occidente; con retiros de 0,5 m a bordes y cumbrera caben 3 filas × 11 columnas de módulos horizontales por faldón (33 módulos, 18,15 kWp), o unos 36 kWp entre los dos faldones. Se proponen 27 módulos de 550 Wp (3 filas × 9 columnas, en horizontal) sobre el faldón oriental = 14,85 kWp, el 99 % del plan. Se escoge el faldón oriental porque el occidental recibe en la tarde la sombra de los árboles grandes del patio central. Con faldones a 25° hacia el oriente se produce cerca de 10–15 % menos que con un arreglo plano o hacia el sur; si al cambiar la cubierta se baja la pendiente, el rendimiento mejora. El gabinete de baterías (30 kWh / 15 kW) va en el antejardín sur del bloque principal, sobre la Cra. 55A, el único espacio libre que se ve en el satélite, a la sombra del bloque principal en la tarde y a unos 3 m del inversor híbrido, que se cuelga en el muro oriental bajo el corredor. El cargador de vehículo eléctrico (7 kW, para patrullas o motos eléctricas) se propone sobre la Calle 47 cerrada, donde se parquean hoy las camionetas de la Policía; necesita permiso del municipio porque es vía pública. No hace falta marquesina."
+ },
+ "incertidumbres": [
+  "Ubicación: el directorio oficial y la regla de nomenclatura ponen la estación en la manzana occidental de la Cra. 55A, y el cierre policial de la Calle 47 lo confirma, pero no se vio ningún letrero. No se sabe si la Policía ocupa toda la manzana o solo el bloque principal y sus vecinos; algunos bloques del occidente y del sur pueden ser viviendas.",
+  "No hay panoramas sobre la Cra. 55A, la Cra. 56 ni la Calle 46B. La fachada principal solo se alcanza a ver de lejos (65–85 m) por el hueco de la Cra. 55A en 2013; los demás bloques no se ven desde la calle.",
+  "Alturas del bloque principal (alero 4,0 m, pendiente 25°, cumbrera de 6,2 m) estimadas con esa foto lejana: el borde del corredor queda a unos 3,6 m y la cumbrera a 6–6,5 m. El margen de error es de ±0,5 m. Los demás bloques llevan alturas típicas de un piso (2,7–3,4 m) y pendientes supuestas.",
+  "Corredor oriental del bloque principal: en el satélite la franja del corredor solo cubre los 15 m del norte; el generador lo dibuja a todo lo largo. El antepecho verde del corredor no se modela (solo el zócalo).",
+  "Colores: cubiertas muestreadas en el satélite. Muros blancos con zócalo verde por lo que se ve en 2013 en el corredor (verde muestreado #19321e en sombra; se usó #1f4a2a). El blanco de los muros (#e6e3da) es supuesto.",
+  "Ventanas con reja (1,2 × 1,1 m cada 3,5 m), puertas y lados son valores típicos; la única puerta con algún sustento es la del bloque principal hacia la Cra. 55A (a 45 m de la Calle 46B, según la placa).",
+  "Las cubiertas grises se tomaron como fibrocemento; la del frente sobre la Calle 47 y la del anexo sur, oscuras o cafés, como zinc oxidado. Pueden haber cambiado con las adecuaciones de 2015 y 2018.",
+  "La huella sale de un satélite borroso (0,3 m por píxel); la precisión es de ±1 m. Hay un desfase de 2–4 m entre el satélite y las posiciones de los panoramas: en la comparación de 2013 el corredor aparece unos 3° más al norte que en el modelo.",
+  "El conjunto de la Cra. 54 (cubiertas azules, concertina) queda sin identificar; por sus cortinas infantiles y su patio con jardín podría ser un centro infantil o social, no la estación.",
+  "Árboles con posición y tamaño aproximados según el satélite. Vallas y trinchera de la Calle 47 ubicadas con la foto de 2023 y llevadas a la vía del satélite (±3 m). En la foto de 2023 el piso se ve un poco más alto que en el modelo: el panorama puede estar inclinado cerca de 1°.",
+  "No se sabe si hay planta eléctrica, tanque de agua, antena de radio propia o garitas en las esquinas. El contrato de 2020 confirma que hay aires acondicionados, pero no se ven.",
+  "Se desconoce el estado estructural de la cubierta del bloque principal; la carga de los módulos debe verificarse antes de instalarlos."
+ ],
+ "verificacion": {
+  "trace": "data/geo/img/policia_trace.png",
+  "trace_ampliado": "data/geo/img/policia_trace_x3.png",
+  "iteraciones_huella": [
+   "data/geo/img/policia_trace_d1_x3.png",
+   "data/geo/img/policia_trace_d2_x3.png"
+  ],
+  "vistas": [
+   "data/geo/img/policia_sv_itu9_*.jpg",
+   "data/geo/img/policia_sv_wnbe_*.jpg",
+   "data/geo/img/policia_sv_gpn1_*.jpg",
+   "data/geo/img/policia_sv_fimn_*.jpg",
+   "data/geo/img/policia_sv_0rvl_*.jpg"
+  ],
+  "vistas_descartadas_cra54": [
+   "data/geo/img/policia_sv_oi8g_270.jpg",
+   "data/geo/img/policia_sv_fcsm_*.jpg",
+   "data/geo/img/policia_sv_ncx_225.jpg",
+   "data/geo/img/policia_sv_95ce_*.jpg",
+   "data/geo/img/policia_sv_HEK6_172.jpg",
+   "data/geo/img/policia_sv_Yfrs_80.jpg",
+   "data/geo/img/policia_sat_cra54.png"
+  ],
+  "comparaciones": [
+   "data/geo/img/policia_cmp3_comparacion.png",
+   "data/geo/img/policia_cmp3_mezcla.png",
+   "data/geo/img/policia_cmp5_comparacion.png",
+   "data/geo/img/policia_cmp5_mezcla.png"
+  ],
+  "comparaciones_previas": [
+   "data/geo/img/policia_cmp1_mezcla.png",
+   "data/geo/img/policia_cmp2_comparacion.png",
+   "data/geo/img/policia_cmp2_detalle.png",
+   "data/geo/img/policia_cmp4_mezcla.png"
+  ],
+  "orbitas": [
+   "data/geo/img/policia_orbita_v1.png",
+   "data/geo/img/policia_orbita_todo.png",
+   "data/geo/img/policia_orbita_bess.png"
+  ],
+  "notas": "Comparación de 2013 (itU9, rumbo 251, fov 16): el borde del corredor (≈3,6 m), la cumbrera (≈6,2 m) y el antepecho verde (≈1 m) del bloque principal coinciden con la foto; el bloque real aparece unos 2° (≈3 m) más al norte. Comparación de 2023 (gpN1, rumbo 99, fov 45): la casa de dos pisos del frente tapa la estación; las vallas del modelo quedan unos 4° a la derecha y un poco más abajo que las reales, el mismo desfase de unos 3 m entre panoramas y satélite.",
+  "satelite": [
+   "data/geo/img/policia_sat_cra55a.png",
+   "data/geo/img/policia_sat_anc.png",
+   "data/geo/img/policia_g_all.png",
+   "data/geo/img/policia_ov_cra55a.png",
+   "data/geo/img/policia_overview.png"
+  ]
+ }
+}

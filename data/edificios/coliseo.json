@@ -1,0 +1,739 @@
+{
+  "id": "coliseo",
+  "nombre": "Coliseo Benito Arias",
+  "nodo_microrred": "coliseo",
+  "direccion": "Carrera 54 # 50-19 (según Google), entre la Calle 50 (al norte) y el Parque Educativo (al sur)",
+  "lat": 7.006497,
+  "lon": -73.910225,
+  "ubicacion": {
+    "confianza": "alta",
+    "metodo": "La coordenada del inventario cae en el centro de la gran cubierta verde azulada escalonada (unos 53 × 46 m) que está al sur de la Calle 50 y al norte del Parque Educativo; no hubo que corregirla (el centro de la cubierta queda a menos de 0,5 m del ancla). El lugar de Google 'Coliseo Benito Arias' (7.006414, -73.910152) cae dentro de la misma cubierta, unos 11 m al sur del ancla. En Street View de noviembre de 2013 (rumbos ya corregidos) se ve el coliseo en obra desde la Calle 50 (fachada norte), desde la Carrera 54 (costado oeste) y desde la esquina suroeste, con la misma cubierta de franjas escalonadas que muestra el satélite. Prensa de 2013 ubica el lote del Parque Educativo 'al lado del Coliseo Benito Arias', y el contrato SECOP 207-2026 nombra la obra 'Adecuación y mejoramiento Coliseo Benito Arias'. No se vio ningún letrero con el nombre en las vistas de 2013 (el edificio estaba en obra)."
+  },
+  "fuentes": [
+    {
+      "tipo": "street_view",
+      "pano": "cxsjpOIO8Y0Z3zhNePjq6A",
+      "fecha": "2013-11",
+      "rumbo": 167,
+      "nota": "Fachada norte de frente desde la Calle 50: bloque blanco de camerinos con ventanas altas y dos puertas, columnas inclinadas de concreto, balcón de la gradería con baranda verde y la cubierta en cuatro niveles (nave central arriba, franjas laterales y una cubierta baja sobre el balcón). Sirvió para medir alturas y para la comparación 1 (pitch 12, fov 100)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "tAwHY13eUVGhfyghxogeQQ",
+      "fecha": "2013-11",
+      "rumbo": 181,
+      "nota": "Fachada norte desde el noreste de la plaza. Segunda línea para triangular las esquinas del bloque norte y la altura de los aleros (nave central ≈15,3 m, franjas laterales ≈13,3 m, cubierta baja ≈10,3 m)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "ADgEgvjaaYgxCNm0tFs_jA",
+      "fecha": "2013-11",
+      "rumbo": 193,
+      "nota": "Fachada norte y esquina noreste; cuarto de ladrillo rojo en la esquina."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "AIw-oV0omX0cuwJrHD4SfQ",
+      "fecha": "2013-11",
+      "rumbo": 203,
+      "nota": "Esquina noreste en obra; poste de alumbrado solar en el andén de la Calle 50."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "S-seTwcYTW5-EZQ2odOMqQ",
+      "fecha": "2013-11",
+      "rumbo": 212,
+      "nota": "Costado este desde el noreste: cuartos bajos de ladrillo rojo y bloque gris (≈4,1 m) y el borde este de la cubierta, que baja hacia el sur (de ≈13,5 m a ≈6 m)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "nTYipmioRx1rJ1zbZYBAMw",
+      "fecha": "2013-11",
+      "rumbo": 218,
+      "nota": "Costado este y esquina noreste; columna metálica de celosía inclinada en la esquina."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "d2a71dpNFhaURRkXjUSVqg",
+      "fecha": "2013-11",
+      "rumbo": 139,
+      "nota": "Esquina noroeste: fin del bloque blanco y anexo rojo; esquina de la franja oeste de la cubierta."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "8Lplca99ZsiQzUa4Ugdrhg",
+      "fecha": "2013-11",
+      "rumbo": 86,
+      "nota": "Costado oeste desde la Carrera 54: muro de cierre blanco y gris de ≈4,0 m, anexos de ladrillo pintado de rojo en las dos puntas y el borde oeste de la cubierta bajando hacia el sur. Comparación 2 (pitch 10, fov 100)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "zXv5lkB7kaw4YkO8F0qESQ",
+      "fecha": "2013-11",
+      "rumbo": 98,
+      "nota": "Esquina noroeste desde la Carrera 54: escalera de concreto al balcón norte y dos columnas metálicas de celosía inclinadas."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "lKMtWkvHoJHQoZ0Y-v4ftg",
+      "fecha": "2013-11",
+      "rumbo": 109,
+      "nota": "Costado oeste y escalera del noroeste."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "UD9Fguy6mDTI6-6usnjaiw",
+      "fecha": "2013-11",
+      "rumbo": 70,
+      "nota": "Esquina suroeste: anexo rojo de un piso (≈3,5 m), gradería sur de concreto más baja con baranda verde y el alero sur de la cubierta a ≈6–8 m. El lote del Parque Educativo aún estaba vacío."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "gQ3CP30h4r0vsTSAj1Braw",
+      "fecha": "2013-11",
+      "rumbo": 30,
+      "nota": "Desde el sur: los árboles tapan el coliseo; no aporta medidas."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z19 (0,296 m/píxel)",
+      "nota": "Huella de la cubierta: cuatro franjas norte–sur separadas por líneas oscuras (escalones), giradas 13° como la cuadrícula de calles (eje largo a 347°): oeste baja 5,0 × 34,5 m, oeste media 11,3 × 42,8 m, central 26,1 × 45,7 m y este 10,5 × 42,6 m; en total ≈52,9 m (este–oeste) × 45,7 m (norte–sur). Color de la cubierta muestreado #55808c. Al norte, sombra de 2–3 m; al sur, una franja clara de la gradería sur. Al oeste el parqueadero gris y al norte una plaza con piso decorado, posteriores a 2013."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Google satélite z20 (0,148 m/píxel, marca de agua 2026), solo como referencia",
+      "nota": "Misma forma de cubierta en cuatro franjas (color muestreado #6da6bb, más claro por la luz); confirma que la cubierta sigue igual en 2026 y que la plaza norte y el parqueadero existen. La vista oblicua deja ver el muro este blanco."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.datos.gov.co/resource/jbjy-vk9h.json?proveedor_adjudicado=CONSORCIO%20OBRAS%20DEPORTIVAS%20BENITO%20ARIAS",
+      "fecha": "2026-07-02",
+      "nota": "SECOP II, contrato de obra 207-2026 (proceso CO1.BDOS.10167158): 'Adecuación y mejoramiento Coliseo Benito Arias', convenio 25AS122C2759-2025 con el Departamento, Consorcio Obras Deportivas Benito Arias, $563.483.997 de recursos propios, plazo de 4 meses. El detalle de las obras no está en los datos abiertos."
+    },
+    {
+      "tipo": "web",
+      "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10300963",
+      "fecha": "2026-05-15",
+      "nota": "Página del proceso de licitación en SECOP II (precio base $569.831.329). No se pudo leer el pliego (la página pide verificación)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.datos.gov.co/d/mzgh-shtp",
+      "nota": "Regalías (GESPROY), BPIN 2015058930006: 'Adecuación y dotación mobiliaria y tecnológica del Coliseo Benito Arias', $1.105 millones, terminado. BPIN 2014058930006: 'Construcción del parqueadero del Coliseo Benito Arias y de la vía peatonal Calle 49', $642 millones, terminado (ver data/fuentes/proyectos_sgr.csv)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.vanguardia.com/santander/barrancabermeja/2013/02/23/yondo-entre-los-45-municipios-de-antioquia-con-parque-educativo/",
+      "fecha": "2013-02-23",
+      "nota": "El lote del Parque Educativo queda al lado del Coliseo Benito Arias (confirma el vecino del sur)."
+    }
+  ],
+  "adecuaciones": {
+    "kwp_plan": 45,
+    "fv": [
+      {
+        "volumen": "techo_centro",
+        "faldon": "S",
+        "filas": 5,
+        "columnas": 17,
+        "orientacion_modulo": "vertical"
+      }
+    ],
+    "kwp_factible": 46.75,
+    "inversores": {
+      "n": 2,
+      "kw": 20,
+      "volumen": "anexo_suroeste",
+      "lado": "E"
+    },
+    "cargador_ve": {
+      "rumbo_eje": 77,
+      "centro": [
+        -35.42,
+        0.03
+      ]
+    },
+    "domotica": [
+      "medidor bidireccional en la frontera con EPM (autogeneración con entrega de excedentes)",
+      "pasarela IoT (gateway) conectada al Centro de Control Energético y Digital",
+      "telegestión de los reflectores LED de la cancha: encendido solo con reserva o evento, horarios y niveles (entrenamiento o partido) y apagado automático",
+      "sensores de ocupación y temporizadores en camerinos, baños, oficinas y corredores bajo las graderías",
+      "control horario del alumbrado de la plaza norte y del parqueadero",
+      "monitoreo remoto de la generación solar, de los inversores y del consumo por circuito",
+      "alarmas por consumo fuera de horario (luces o equipos encendidos sin uso)"
+    ],
+    "obras_civiles": [
+      "revisión estructural de las cerchas y correas de la nave central por un ingeniero (carga adicional de unos 15 kg/m² en unos 230 m²) antes del montaje",
+      "inspección de la lámina metálica de la nave central (tornillos, traslapos, sellos y corrosión) y coordinación con el contrato 207-2026 de adecuación y mejoramiento del coliseo para no repetir trabajos",
+      "fijación de los rieles con abrazaderas para lámina trapezoidal, sin perforar la lámina o sellando cada perforación",
+      "acceso seguro a la cubierta (de 8 a 15 m de alto): escalera fija con guarda, línea de vida y puntos de anclaje",
+      "puesta a tierra, protecciones contra sobretensiones (DPS) y pararrayos, porque es la estructura más alta del sector",
+      "canalización desde la cubierta hasta el cuarto técnico del costado suroeste, tablero solar y medidor bidireccional",
+      "circuito independiente y punto de carga para vehículo eléctrico en el parqueadero oeste"
+    ],
+    "notas": "Cabe la potencia planeada con mucho margen. Se proponen 85 módulos de 550 Wp (5 filas × 17 columnas, en vertical) = 46,75 kWp, sobre la nave central, que es la franja más alta de la cubierta (alero norte ≈15,3 m, alero sur ≈7,9 m), cae hacia el sur con unos 9° (mira a 167°, casi al sur) y no tiene nada que le dé sombra. Con retiros de 0,5 m a los bordes, en esa sola franja (25,1 × 45,3 m de faldón) caben 19 filas × 20 columnas = 380 módulos (≈209 kWp); la franja este admite unos 119 módulos (≈65 kWp), la oeste media unos 136 (≈75 kWp) y la oeste baja unos 26 (≈14 kWp), aunque estas tres reciben sombra de la nave central en la mañana o en la tarde. El arreglo de 46,75 kWp produciría unos 5.200 kWh/mes, más del doble del consumo supuesto (2.400 kWh/mes): el coliseo sería un generador de excedentes de día, y el alumbrado nocturno de los eventos se seguiría tomando de la red (sin baterías, porque el nodo no es isla en el plan). Cada frontera solar se limita a 100 kW (CREG 174 de 2021), así que la cubierta podría crecer hasta ese tope si la comunidad energética lo necesita. Los árboles más cercanos están a más de 10 m al este y al oeste y no alcanzan a sombrear la nave central. Los dos inversores (2 × 20 kW) van en el muro este del anexo suroeste, por dentro del coliseo y bajo la cubierta, a la sombra todo el día y cerca del transformador de la esquina de la Carrera 54. El cargador de vehículo eléctrico va en el parqueadero oeste, construido con regalías en 2014–2019. No se propone otra cubierta: la lámina es metálica y se ve continua y sin parches en el satélite de 2026; su estado real se revisa en la visita y se coordina con el contrato 207-2026 de adecuación del coliseo, cuyo alcance exacto no se pudo leer."
+  },
+  "incertidumbres": [
+    "Street View solo tiene panoramas de noviembre de 2013, con el coliseo en obra (polisombra, andamios, muros sin pintar). No se encontraron fotos recientes en la web ni en la página de la Alcaldía. Los colores de fachada (blanco, rojo ladrillo, gris concreto) son los de 2013; el contrato 207-2026 de adecuación pudo cambiarlos.",
+    "La huella sale de la cubierta en Esri. Las medidas con Street View (triangulando desde dos panoramas) ubican la cubierta unos 1,5–2 m más al este que Esri; puede ser error de posición de los panoramas o de la imagen. Se dejó la posición de Esri, por eso en las comparaciones la nave central del modelo sobresale un poco a la derecha (oeste) de la foto.",
+    "Alturas medidas por ángulos desde los panoramas (cámara a 2,5 m): aleros norte de la nave central ≈15,3 m, franja este ≈13,5 m, franja oeste media ≈13,2 m, franja oeste baja ≈9,8 m; aleros sur entre ≈6 y ≈8 m. Error probable de ±1 m. Las pendientes hacia el sur (5,5° a 9,7°) salen de los bordes vistos desde el oeste, el noreste y el suroeste.",
+    "La cubierta real es una estructura abierta de cerchas metálicas blancas con espacios de ventilación entre franjas. El generador la representa con franjas inclinadas cerradas en sus costados (color gris oscuro, como el intradós que se ve en las fotos), columnas solo en las esquinas y sin las columnas de celosía inclinadas de las esquinas noreste y noroeste.",
+    "Bajo la nave central hay una cubierta baja (≈10,3 m) sobre el balcón de la gradería norte; su fondo hacia el sur (unos 7 m) es supuesto porque desde arriba la tapa la cubierta alta.",
+    "El interior no se ve: no se conocen la forma ni el número de filas de las graderías, la cancha (se dibujó una múltiple de 32 × 18 m en el centro, color supuesto), los baños y camerinos. La gradería norte se modeló como un bloque de 5,6 m con la losa del balcón a 7 m; la sur, más baja, como un bloque de 3,2 m.",
+    "Las columnas de concreto de la fachada norte son inclinadas en la realidad; el modelo las dibuja verticales (corredor). La baranda verde del balcón y de la gradería sur no se dibujó.",
+    "Los anexos de ladrillo pintado de rojo, el muro oeste y el costado este se midieron desde la calle (≈3,8–4,5 m); su fondo hacia adentro es supuesto (5–6 m). La escalera de concreto de la esquina noroeste no se modeló.",
+    "No se vio letrero con el nombre del coliseo (en 2013 estaba en obra); no se puso letrero.",
+    "Los árboles del este y del oeste se ubicaron en el satélite; su altura (11–13 m) es estimada.",
+    "No se sabe dónde están el tablero general ni la acometida; se supuso un cuarto técnico en el anexo suroeste, cerca del transformador del poste de la esquina de la Carrera 54.",
+    "El consumo de 2.400 kWh/mes es un supuesto por tipología (alumbrado nocturno de eventos); se reemplaza con las facturas de EPM."
+  ],
+  "verificacion": {
+    "trace": "data/geo/img/coliseo_trace.png",
+    "vistas": [
+      "data/geo/img/coliseo_sat.png",
+      "data/geo/img/coliseo_sat45.png",
+      "data/geo/img/coliseo_sat70.png",
+      "data/geo/img/coliseo_sat70_panos.png",
+      "data/geo/img/coliseo_rot.png",
+      "data/geo/img/coliseo_gsat20.png",
+      "data/geo/img/coliseo_overview.png",
+      "data/geo/img/coliseo_sv_cxs_s.jpg",
+      "data/geo/img/coliseo_sv_cxs_techo.jpg",
+      "data/geo/img/coliseo_sv_taw_s.jpg",
+      "data/geo/img/coliseo_sv_adg_s.jpg",
+      "data/geo/img/coliseo_sv_aiw_ssw.jpg",
+      "data/geo/img/coliseo_sv_sse_sw.jpg",
+      "data/geo/img/coliseo_sv_nty_sw.jpg",
+      "data/geo/img/coliseo_sv_d2a_se.jpg",
+      "data/geo/img/coliseo_sv_d2a_techo.jpg",
+      "data/geo/img/coliseo_sv_8lp_e.jpg",
+      "data/geo/img/coliseo_sv_8lp_techo.jpg",
+      "data/geo/img/coliseo_sv_zxv_e.jpg",
+      "data/geo/img/coliseo_sv_lkm_e.jpg",
+      "data/geo/img/coliseo_sv_ud9_ne.jpg",
+      "data/geo/img/coliseo_sv_ud9_e.jpg",
+      "data/geo/img/coliseo_sv_ud9_techo.jpg",
+      "data/geo/img/coliseo_sv_gq3_n.jpg",
+      "data/geo/img/coliseo_cmp1_comparacion.png",
+      "data/geo/img/coliseo_cmp1_mezcla.png",
+      "data/geo/img/coliseo_cmp2_comparacion.png",
+      "data/geo/img/coliseo_cmp2_mezcla.png",
+      "data/geo/img/coliseo_trace_x4.png",
+      "data/geo/img/coliseo_cmp1b_comparacion.png",
+      "data/geo/img/coliseo_cmp1b_mezcla.png",
+      "data/geo/img/coliseo_cmp2b_comparacion.png",
+      "data/geo/img/coliseo_cmp2b_mezcla.png",
+      "data/geo/img/coliseo_orbita_existente.png",
+      "data/geo/img/coliseo_orbita_todo.png",
+      "data/geo/img/coliseo_orbita_lateral_todo.png"
+    ],
+    "nota": "Huella: 3 pasadas de trace.py (la tercera, ampliada ×4 en coliseo_trace_x4.png). Las cuatro franjas de la cubierta se midieron con perfiles de brillo en el marco girado 13° (escalones en u = −21,3, −10,0 y +16,1 m; bordes norte y sur de cada franja) y coinciden con los bordes de la lámina en ±0,5 m; la segunda pasada recortó la gradería sur hasta la franja clara (−25,5 m). Alturas: triangulación con dos panoramas de la Calle 50 (cxsjp y tAwHY13, que coinciden en ±0,4 m para el alero de la nave central a 15,1–15,3 m) y bordes de cubierta vistos desde la Carrera 54 (8Lplca, zXv5), el noreste (S-se) y el suroeste (UD9F). Comparación 1 (cxsjpOIO8Y0Z3zhNePjq6A, rumbo 167, pitch 12, fov 100): coinciden el alero de la nave central, los de las franjas laterales, la losa del balcón a 7 m, el muro blanco de 5,6 m, las ventanas, las dos puertas y el anexo rojo; la nave central del modelo sobresale ≈2 m a la derecha por el desfase Esri–Street View. Se aclaró el color de los costados de las franjas (el material metálico salía negro) y se subió la franja oeste media de 12,1 a 13,2 m en el alero norte (cmp1 → cmp1b). Comparación 2 (8Lplca99ZsiQzUa4Ugdrhg, rumbo 86, pitch 10, fov 100): coinciden el muro oeste de 4 m, los anexos rojos, sus puertas y la caída de la cubierta hacia el sur; se bajó la franja oeste baja a 9,9 m y 5,5° (cmp2 → cmp2b); el borde superior del modelo queda ≈1 m más alto que la foto en la punta norte. Las pendientes de las franjas este y central se ajustaron con alambres proyectados sobre la vista del noreste. Las vistas en órbita con capa 'todo' muestran los 85 módulos apoyados sobre el faldón de la nave central, sin flotar ni atravesar, y el cargador en el parqueadero oeste."
+  },
+  "volumenes": [
+    {
+      "id": "techo_oeste_bajo",
+      "nombre": "Cubierta escalonada: franja oeste (la más baja)",
+      "centro": [
+        -23.18,
+        -5.4
+      ],
+      "largo": 33.5,
+      "ancho": 4.0,
+      "rumbo_eje": 347,
+      "abierto": true,
+      "piso": false,
+      "sep_columnas": 60,
+      "columna": 0.45,
+      "base": 0,
+      "altura_alero": 6.6,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "caida": "S",
+        "pendiente": 5.5,
+        "voladizo": 0.5,
+        "material": "zinc",
+        "color": "#5d8c98"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#6e7268"
+      }
+    },
+    {
+      "id": "techo_oeste",
+      "nombre": "Cubierta escalonada: franja oeste media",
+      "centro": [
+        -15.38,
+        -2.94
+      ],
+      "largo": 41.8,
+      "ancho": 10.3,
+      "rumbo_eje": 347,
+      "abierto": true,
+      "piso": false,
+      "sep_columnas": 60,
+      "columna": 0.45,
+      "base": 0,
+      "altura_alero": 6.9,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "caida": "S",
+        "pendiente": 8.5,
+        "voladizo": 0.5,
+        "material": "zinc",
+        "color": "#5d8c98"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#6e7268"
+      }
+    },
+    {
+      "id": "techo_centro",
+      "nombre": "Cubierta escalonada: nave central (la más alta)",
+      "centro": [
+        2.89,
+        1.03
+      ],
+      "largo": 44.7,
+      "ancho": 25.1,
+      "rumbo_eje": 347,
+      "abierto": true,
+      "piso": false,
+      "sep_columnas": 60,
+      "columna": 0.45,
+      "base": 0,
+      "altura_alero": 7.9,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "caida": "S",
+        "pendiente": 9.3,
+        "voladizo": 0.5,
+        "material": "zinc",
+        "color": "#5d8c98"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#6e7268"
+      }
+    },
+    {
+      "id": "techo_este",
+      "nombre": "Cubierta escalonada: franja este",
+      "centro": [
+        20.78,
+        4.9
+      ],
+      "largo": 41.6,
+      "ancho": 9.5,
+      "rumbo_eje": 347,
+      "abierto": true,
+      "piso": false,
+      "sep_columnas": 60,
+      "columna": 0.45,
+      "base": 0,
+      "altura_alero": 6.3,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "caida": "S",
+        "pendiente": 9.7,
+        "voladizo": 0.5,
+        "material": "zinc",
+        "color": "#5d8c98"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#6e7268"
+      }
+    },
+    {
+      "id": "visera_norte",
+      "nombre": "Cubierta baja sobre el balcón de la gradería norte",
+      "centro": [
+        -1.61,
+        20.1
+      ],
+      "largo": 46.9,
+      "ancho": 6.9,
+      "rumbo_eje": 77,
+      "abierto": true,
+      "piso": false,
+      "sep_columnas": 4.9,
+      "columna": 0.25,
+      "base": 7.0,
+      "altura_alero": 10.3,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "zinc",
+        "color": "#5d8c98"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#c9ccc8"
+      }
+    },
+    {
+      "id": "tribuna_norte",
+      "nombre": "Losa superior de la gradería norte (balcón con baranda)",
+      "centro": [
+        0.65,
+        19.19
+      ],
+      "largo": 44.7,
+      "ancho": 10.5,
+      "rumbo_eje": 77,
+      "abierto": true,
+      "piso": false,
+      "sep_columnas": 5.5,
+      "columna": 0.35,
+      "base": 5.6,
+      "altura_alero": 7.0,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#a9aba4"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#a3a59e"
+      }
+    },
+    {
+      "id": "graderia_norte",
+      "nombre": "Bloque norte: camerinos y oficinas bajo la gradería",
+      "centro": [
+        0.82,
+        18.46
+      ],
+      "largo": 44.7,
+      "ancho": 9.0,
+      "rumbo_eje": 77,
+      "base": 0,
+      "altura_alero": 5.6,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#a9aba4"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#e8e6e2",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 2.2,
+          "alto": 0.8,
+          "antepecho": 1.7,
+          "separacion": 5.5,
+          "lados": [
+            "N"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "N",
+            "pos": 0.25,
+            "ancho": 1.2,
+            "alto": 2.4
+          },
+          {
+            "lado": "N",
+            "pos": 0.77,
+            "ancho": 1.2,
+            "alto": 2.4
+          }
+        ],
+        "corredor": {
+          "lado": "N",
+          "profundidad": 1.5,
+          "sep_columnas": 5.5
+        }
+      }
+    },
+    {
+      "id": "graderia_sur",
+      "nombre": "Bloque sur: gradería baja",
+      "centro": [
+        8.05,
+        -20.21
+      ],
+      "largo": 46.6,
+      "ancho": 8.0,
+      "rumbo_eje": 77,
+      "base": 0,
+      "altura_alero": 3.2,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#d3d1ca"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#c1c1ba",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.5,
+          "alto": 0.6,
+          "antepecho": 1.6,
+          "separacion": 5.5,
+          "lados": [
+            "S"
+          ]
+        }
+      }
+    },
+    {
+      "id": "anexo_noroeste",
+      "nombre": "Anexo noroeste (cuartos de ladrillo pintado de rojo)",
+      "centro": [
+        -26.1,
+        9.68
+      ],
+      "largo": 8.6,
+      "ancho": 5.5,
+      "rumbo_eje": 347,
+      "base": 0,
+      "altura_alero": 4.5,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0.2,
+        "material": "concreto",
+        "color": "#b9b6ad"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#994c47",
+        "puertas": [
+          {
+            "lado": "O",
+            "pos": 0.47,
+            "ancho": 1.2,
+            "alto": 2.3
+          }
+        ],
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.2,
+          "alto": 0.6,
+          "antepecho": 1.8,
+          "separacion": 4.0,
+          "lados": [
+            "N"
+          ]
+        }
+      }
+    },
+    {
+      "id": "muro_oeste",
+      "nombre": "Muro de cierre del costado oeste",
+      "centro": [
+        -24.41,
+        -3.17
+      ],
+      "largo": 17.2,
+      "ancho": 3.0,
+      "rumbo_eje": 347,
+      "base": 0,
+      "altura_alero": 4.0,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#b9b6ad"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#e6e3e1"
+      }
+    },
+    {
+      "id": "anexo_suroeste",
+      "nombre": "Anexo suroeste (cuartos de ladrillo pintado de rojo)",
+      "centro": [
+        -19.74,
+        -16.72
+      ],
+      "largo": 11.3,
+      "ancho": 6.0,
+      "rumbo_eje": 347,
+      "base": 0,
+      "altura_alero": 3.8,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0.2,
+        "material": "concreto",
+        "color": "#b9b6ad"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#994c47",
+        "puertas": [
+          {
+            "lado": "O",
+            "pos": 0.56,
+            "ancho": 1.0,
+            "alto": 2.2
+          }
+        ],
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.2,
+          "alto": 0.6,
+          "antepecho": 1.5,
+          "separacion": 4.0,
+          "lados": [
+            "O",
+            "S"
+          ]
+        }
+      }
+    },
+    {
+      "id": "anexo_este",
+      "nombre": "Costado este (cuartos de ladrillo y bloque)",
+      "centro": [
+        24.49,
+        3.5
+      ],
+      "largo": 30.8,
+      "ancho": 5.3,
+      "rumbo_eje": 347,
+      "base": 0,
+      "altura_alero": 4.1,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0.2,
+        "material": "concreto",
+        "color": "#b9b6ad"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#994c47",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.2,
+          "alto": 0.6,
+          "antepecho": 1.8,
+          "separacion": 6.0,
+          "lados": [
+            "E"
+          ]
+        }
+      }
+    }
+  ],
+  "elementos": [
+    {
+      "tipo": "cancha",
+      "centro": [
+        1.2,
+        -1.88
+      ],
+      "largo": 32.0,
+      "ancho": 18.0,
+      "rumbo_eje": 77
+    },
+    {
+      "tipo": "plaza",
+      "poligono": [
+        [
+          -31.71,
+          17.31
+        ],
+        [
+          23.83,
+          30.13
+        ],
+        [
+          20.57,
+          44.26
+        ],
+        [
+          -34.97,
+          31.44
+        ]
+      ]
+    },
+    {
+      "tipo": "parqueadero",
+      "poligono": [
+        [
+          -34.33,
+          -33.58
+        ],
+        [
+          -25.07,
+          -31.45
+        ],
+        [
+          -35.64,
+          14.35
+        ],
+        [
+          -44.9,
+          12.21
+        ]
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 13,
+      "copa": 12,
+      "centro": [
+        35.52,
+        32.83
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 13,
+      "copa": 12,
+      "centro": [
+        39.87,
+        18.44
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 12,
+      "copa": 10,
+      "centro": [
+        46.62,
+        2.55
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 12,
+      "copa": 11,
+      "centro": [
+        -45.57,
+        1.79
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 11,
+      "copa": 10,
+      "centro": [
+        -42.42,
+        -11.85
+      ]
+    }
+  ]
+}

@@ -7,11 +7,11 @@
   "lon": -73.910559,
   "archivo": "models/edificios/alcaldia_lod0.glb",
   "archivo_lod1": "models/edificios/alcaldia_lod1.glb",
-  "bytes": 119244,
-  "bytes_lod1": 87692,
-  "bytes_sin_comprimir": 1181132,
-  "triangulos": 17472,
-  "triangulos_lod1": 5990,
+  "bytes": 116476,
+  "bytes_lod1": 84656,
+  "bytes_sin_comprimir": 1095280,
+  "triangulos": 16224,
+  "triangulos_lod1": 4622,
   "extensiones": [
    "EXT_mesh_gpu_instancing",
    "KHR_draco_mesh_compression"
@@ -19,7 +19,7 @@
   "nodos_instanciados": 2,
   "tamano": [
    65.8,
-   7.1,
+   6.8,
    132.9
   ],
   "modulos": 92,
@@ -84,7 +84,7 @@
    {
     "tipo": "satelite",
     "fecha": null,
-    "nota": "Huella y cubiertas: bloque largo con cubierta gris (#767672) de -3,75 a +4,75 m del eje, franja del corredor más oscura al oeste (rojiza en el extremo norte y clara entre u=18 y u=31), ala oriental, ala de cubierta clara y alero transversal claro.",
+    "nota": "Huella y cubiertas (medidas en una franja rectificada a 348°, perfiles de brillo cada 4 m): cubierta del bloque largo de v = -3,6 a +4,3…+4,8 m del ancla (con el ala oeste más clara, quiebre de brillo cerca de v = -0,6), corredor oeste de -7,0 a -3,6 m, extremo norte en u ≈ +60 y sur en u ≈ -60,5…-61. Cubierta rojiza en el extremo norte (faldón oeste y corredor, u 44…60) y clara en el corredor entre u 17 y 30; ala oriental gris, ala de cubierta blanca (u 18,5…32,5) y alero transversal claro (u 33…38).",
     "url": null
    },
    {
@@ -116,6 +116,36 @@
     "fecha": null,
     "nota": "2013: adecuación del área administrativa del Palacio Municipal – Secretaría de Planeación, $47.318.142.",
     "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=12-11-1273096"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Verificación: hastial norte de frente. Retroproyectado sobre el plano del hastial: cumbrera ≈5,8 m, muro oeste ≈3,5 m, muro de 5,9 m de ancho con la cumbrera a ≈3,5 m del muro oeste y ≈2,4 m del oriental; el faldón oriental sigue ≈2,4 m más allá del muro (sobre el anexo); primera columna del corredor ≈2 m al oeste del muro, de ≈2,5 m de alto.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=itU9w9UuqMauQIU4jhGtrw&heading=135"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Verificación: frente del anexo norte pegado al hastial, antepecho alto ≈3,0 m y bajo ≈2,4 m hacia el oriente, franja de calados, puerta verde cerca del extremo oriental, dos aires en el hastial (≈2,4 m de alto).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=itU9w9UuqMauQIU4jhGtrw&heading=112"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Verificación independiente desde el noreste: casa amarilla, anexo con puerta verde, hastial y cubierta del corredor.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=tU9s-kmNgyp4Xuw2CN1ZpA&heading=222"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Verificación independiente desde el noreste (más lejos): alturas de la casa amarilla coinciden con el modelo.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=8bm0a8NlEXQZFoH5-SLgHA&heading=213"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Membrete de 2024: Car. 55 No. 46 A 16, barrio Colonia Sur (la dirección sigue vigente).",
+    "url": "https://vlex.com.co/vid/resolucion-no-583-2024-1061800882"
    }
   ]
  },
@@ -127,25 +157,25 @@
   "lon": -73.909143,
   "archivo": "models/edificios/bomberos_lod0.glb",
   "archivo_lod1": "models/edificios/bomberos_lod1.glb",
-  "bytes": 62272,
-  "bytes_lod1": 55292,
-  "bytes_sin_comprimir": 120692,
+  "bytes": 62452,
+  "bytes_lod1": 55432,
+  "bytes_sin_comprimir": 120876,
   "triangulos": 864,
-  "triangulos_lod1": 610,
+  "triangulos_lod1": 612,
   "extensiones": [
    "EXT_mesh_gpu_instancing",
    "KHR_draco_mesh_compression"
   ],
   "nodos_instanciados": 4,
   "tamano": [
-   22.4,
+   30.5,
    7,
    31.6
   ],
-  "modulos": 18,
-  "kwp_modelado": 9.9,
+  "modulos": 19,
+  "kwp_modelado": 10.45,
   "kwp_plan": 10,
-  "kwp_factible": 9.9,
+  "kwp_factible": 10.45,
   "bess": {
    "kwh": 20,
    "kw": 10,
@@ -153,6 +183,12 @@
   },
   "confianza": "baja",
   "fuentes": [
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Fachada completa de la casa blanca en 2013: unos 10,8 m de frente con ventana, puerta y dos ventanas. Desde aquí se triangularon la esquina sur (5,5 m al sur del ancla) y las ventanas. Comparación del modelo corregido.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=M40Q26L167IPXLE5rXuuow&heading=70"
+   },
    {
     "tipo": "street_view",
     "fecha": "2013-11",
@@ -170,6 +206,18 @@
     "fecha": "2013-11",
     "nota": "Desde el norte: casa de ladrillo vecina, puerta de la mitad norte y árbol grande en el antejardín, donde en 2020 aparece la ampliación. Comparación con el modelo.",
     "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=XNtax7Vj1joQX1vC93I3tQ&heading=118"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde el norte, a 32 m: las casas vecinas con remate y un árbol grande tapan la sede; ninguna cubierta sobresale. Comparación con el modelo (revisión independiente).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Oeh8L_s2Zx9Zfx1Om0lSLA&heading=150"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde la esquina suroccidental, a 30 m: la casa amarilla esquinera y sus árboles tapan la sede. Comparación con el modelo (revisión independiente).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=5cqdzG7pmXKOX1a2SPLWbw&heading=32"
    },
    {
     "tipo": "street_view",
@@ -202,6 +250,12 @@
     "url": null
    },
    {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Más nítida que la de Esri, pero corrida 2,7 m al norte respecto a ella; se alineó por correlación. Confirma el largo de la ampliación (14,0 m), su cubierta clara con bordes y una división, y la copa continua de los árboles del antejardín.",
+    "url": null
+   },
+   {
     "tipo": "web",
     "fecha": null,
     "nota": "Convenio CDY 008-2025 del municipio con el Cuerpo de Bomberos Voluntarios de Yondó (NIT 900066409-7). La dirección Cra. 48 # 54-12 viene del registro de proveedor en SECOP II.",
@@ -224,6 +278,18 @@
     "fecha": null,
     "nota": "Regla de nomenclatura: placa par en el costado oriental de las carreras.",
     "url": "https://www.waze.com/discuss/t/como-encontrar-una-direccion-en-colombia/375220"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Registro de proveedores de SECOP II (datos abiertos): Cuerpo de Bomberos Voluntarios de Yondó, dirección CARRERA 48 NO. 54-12, registro creado el 27 de noviembre de 2023.",
+    "url": "https://www.datos.gov.co/resource/qmzu-gj57.json?nit=9000664097"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Contratos de SECOP II con los bomberos (2024–2026): domicilio Carrera 48 54-12, Barrio Central. El lugar de ejecución que figura es la Alcaldía (Cra. 55 # 46A-16), no la sede.",
+    "url": "https://www.datos.gov.co/resource/jbjy-vk9h.json?documento_proveedor=9000664097"
    }
   ]
  },
@@ -235,11 +301,11 @@
   "lon": -73.914452,
   "archivo": "models/edificios/hospital_lod0.glb",
   "archivo_lod1": "models/edificios/hospital_lod1.glb",
-  "bytes": 145760,
-  "bytes_lod1": 93208,
-  "bytes_sin_comprimir": 1965952,
-  "triangulos": 29643,
-  "triangulos_lod1": 8553,
+  "bytes": 152604,
+  "bytes_lod1": 98652,
+  "bytes_sin_comprimir": 1992268,
+  "triangulos": 30051,
+  "triangulos_lod1": 8997,
   "extensiones": [
    "EXT_mesh_gpu_instancing",
    "KHR_draco_mesh_compression"
@@ -277,7 +343,7 @@
     "tipo": "street_view",
     "fecha": "2014-01",
     "nota": "entrada vehicular, portería, culata con letrero y extremo oriental del ala norte; usada en la comparación",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=fYguJtJDVJlC2guYyDTuXg&heading=175"
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=fYguJtJDVJlC2guYyDTuXg&heading=172"
    },
    {
     "tipo": "street_view",
@@ -320,6 +386,30 @@
     "fecha": "2014-01",
     "nota": "acceso desde la vía norte, portería y ambulancia",
     "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=vB9Vhd64frYwmR7RMKqtCg&heading=195"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "fachada norte central (verificación): pórtico pequeño abierto con cuatro columnas blancas, viga de ladrillo a ≈3,2 m y culata con celosía; ventanales de 1,2 a 3,1 m; banda de ladrillo bajo el alero; canal a ≈3,95 m y cumbrera del ala norte a ≈6,4 m",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=iwzLsssk9qZWWQoS8AROgQ&heading=175"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "alas sur y media desde el suroeste (verificación): muros rojos, culata roja pequeña en el remate oeste, corredor de columnas blancas con antepecho rojo; muro bajo pintado de rojo con malla; el predio queda sobre un talud más alto que la vía",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=FiBLH50BxgM-7UFIAl1rwQ&heading=62"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "acercamiento al frente de urgencias (verificación): culata blanca de ≈9 m con letrero en dos líneas, vano de entrada de ≈6,4 × 2,2 m, cubierta a ≈21° con cumbrera a ≈4,7 m; a la derecha, anexo bajo entre el ala norte y el ala oriental",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=fYguJtJDVJlC2guYyDTuXg&heading=172"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "acceso desde el nororiente, vista lejana de la entrada vehicular y el aviso del decálogo",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=DhB07FIUnpM0h1HKPkTyRA&heading=200"
    },
    {
     "tipo": "satelite",
@@ -385,18 +475,18 @@
   "lon": -73.910135,
   "archivo": "models/edificios/parque_edu_lod0.glb",
   "archivo_lod1": "models/edificios/parque_edu_lod1.glb",
-  "bytes": 79204,
-  "bytes_lod1": 70804,
-  "bytes_sin_comprimir": 440608,
-  "triangulos": 4958,
-  "triangulos_lod1": 3140,
+  "bytes": 82968,
+  "bytes_lod1": 74680,
+  "bytes_sin_comprimir": 522240,
+  "triangulos": 6296,
+  "triangulos_lod1": 4514,
   "extensiones": [
    "EXT_mesh_gpu_instancing",
    "KHR_draco_mesh_compression"
   ],
   "nodos_instanciados": 2,
   "tamano": [
-   79.9,
+   77,
    7.3,
    37.7
   ],
@@ -440,13 +530,13 @@
    {
     "tipo": "satelite",
     "fecha": null,
-    "nota": "Huella de la cubierta: bloque oeste de 32 × 9,6 m con pórtico en la punta oeste, espacio oscuro de 5,5 m y bloque este de 16,1 × 25,9 m con un escalón a 8,5 m del borde sur. Cubierta plana verde salvia (muestra #7a917d). Eje de los bloques girado 13° (rumbo 77° el eje este–oeste), igual que la cuadrícula de calles.",
+    "nota": "Huella de la cubierta, medida de nuevo con perfiles de brillo en una imagen girada al eje del edificio (13°): bloque oeste de 32 × 9,6 m (con el corredor) con el pórtico en la punta oeste, espacio oscuro de 5,6 m y bloque este de 16,1 × 26,4 m (borde norte en línea con el del bloque oeste) con un escalón a 8,5 m del borde sur. Cubierta plana verde salvia (muestra #7a917d). Eje de los bloques girado 13° (rumbo 77° el eje este–oeste), igual que la cuadrícula de calles; los bordes norte y oeste no se desvían más de 1°.",
     "url": null
    },
    {
     "tipo": "satelite",
     "fecha": null,
-    "nota": "Se alineó con Esri (desfase de 1,8 m al oeste y 0,9 m al norte). Confirma la misma forma de cubierta, la línea oscura del escalón del bloque este y la línea oscura con franja blanca sobre el bloque oeste.",
+    "nota": "Desfase medido respecto a Esri: unos 1,3 m al oeste y 0,5 m al sur (no 0,9 m al norte, como se anotó al principio). Confirma la misma forma de cubierta, la línea del escalón del bloque este (oscura, porque allí el sol venía del norte) y el espacio oscuro entre los bloques. El sol de Esri viene del sureste y el de Google del noreste: lo que sale oscuro en las dos no es sombra.",
     "url": null
    },
    {
@@ -502,6 +592,24 @@
     "fecha": "2015-02-26",
     "nota": "SECOP: actividades culturales para integrar a la comunidad en torno al Parque Educativo Sueños de Casabe.",
     "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-12-3744669"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Verificación: desde la calle del oeste, a 70 m. Valla del parque y árbol grande; sirve para cruzar la posición del tronco y medir su altura (unos 10,5 m). Comparada con el modelo con la misma cámara.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=8WluyAustQUEul-oC8BcnQ&heading=88"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Verificación: desde el noroeste. El coliseo en obra tapa casi todo el lote; al fondo se ven casas blancas de la escuela. Comparada con el modelo con la misma cámara.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=zXv5lkB7kaw4YkO8F0qESQ&heading=125"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2024-12",
+    "nota": "Acción popular de la Personería de Yondó (requerimientos de noviembre de 2024): los únicos Puntos Vive Digital del municipio son el del Parque Educativo, el de la Biblioteca Pública Municipal María Cano y el del parque principal frente al coliseo.",
+    "url": "https://antioquia.gov.co/images/PDF2/Decisiones%20Judiciales/2025/05/accion-popular.pdf"
    }
   ]
  }

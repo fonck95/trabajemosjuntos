@@ -1,0 +1,2799 @@
+{
+ "titulo": "La plata que no se convirtió en obra, por gobierno (Yondó, 2004–2027)",
+ "generado_por": "scripts/build_dinero_no_hecho.py",
+ "fecha_corte": "2026-10-21",
+ "moneda": "millones de COP constantes de 2026",
+ "deflactor": "IPC DANE, promedio de cada año; 2026 = promedio ene–sep 2026 (158,284; base dic-2018 = 100). Mismo IPC de data/comparativa/panel_anual.json y data/comparativa/costo_no_hacer.json.",
+ "metodo": "Para cada gobierno se suma la plata que no se convirtió en obra en tres niveles de certeza. Hecho: registros oficiales verificables (regalías pagadas por encima del avance físico en GESPROY y saldos de regalías sin aprobar o sin comprometer en CHIP, SICODIS y MinHacienda). Estimado: cálculos con método y rango sobre registros oficiales (estudios sin obra posterior en SECOP, sobrecosto probable por contratar sin competencia, OPS por encima de lo usual, recaudo y tasa retributiva). Contrafactual: lo que pudo pasar con otra decisión (fondos externos no gestionados, ahorro solar y ahorro de regalías); no es plata perdida. Todo va en millones de pesos de 2026: cada valor se deflacta con el IPC del DANE del año en que ocurrió (panel_anual.json). Para no contar dos veces la misma plata: (1) los contratos mixtos de diseño y obra no entran en estudios sin obra; (2) a la base del sobrecosto se le restan las OPS, las transferencias a Aguas y Aseo y al hospital, los estudios sin obra y la plata girada sin avance; (3) de los saldos se toma un solo corte por gobierno; (4) los saldos del Incentivo a la Producción y de la inversión local cuentan como saldos (hecho) y no como fondos no gestionados; (5) Findeter no se suma por ser crédito; (6) los proyectos de regalías hechos con la EDU se cuentan una vez, como plata girada sin avance. \"Sin obra\" = hecho + estimado; las equivalencias dividen ese valor por el costo unitario de 2026. Ninguna cifra señala a personas: describe hechos y oportunidades perdidas.",
+ "como_leer": [
+  "hecho: registro oficial verificable (con enlace o archivo).",
+  "estimado: cálculo con método explícito y rango (min–max).",
+  "contrafactual: lo que pudo pasar con otra decisión; no es plata perdida ni una acusación.",
+  "\"sin_obra\" = total_hecho + total_estimado. Los contrafactuales van aparte.",
+  "Un valor 0 con \"sin_dato\": true significa que no hay datos para medirlo, no que no existió.",
+  "Los items con \"en_total\": false son contexto y no se suman al valor de la fuga."
+ ],
+ "categorias": [
+  {
+   "id": "estudios_sin_obra",
+   "nombre": "Estudios y diseños sin obra posterior",
+   "tipo": "estimado",
+   "descripcion": "Estudios, diseños y consultorías que la alcaldía pagó y que no tienen después, en SECOP, una obra con objeto parecido.",
+   "metodo": "Suma por año de \"estudios.sin_obra_valor_sin_mixtos\" de la alcaldía (fugas_secop.json; regla de similitud de palabras del objeto ≥ 0,30 con obras firmadas el mismo año o después). Se excluyen los contratos mixtos (diseño y obra en el mismo contrato, como el de $11.696 M con la EDU): su obra está adentro o ya se cuenta en \"plata girada sin avance\". Mínimo: se restan los planes de ordenamiento, que no llevan a una obra directa. Es estimado porque la coincidencia por palabras puede fallar en los dos sentidos."
+  },
+  {
+   "id": "girado_sin_avance",
+   "nombre": "Plata girada sin avance físico equivalente",
+   "tipo": "hecho",
+   "descripcion": "Regalías ya pagadas a proyectos cuya obra avanza menos que los pagos (SGR), incluidos los ejecutados con la EDU de Medellín como contratista del municipio.",
+   "metodo": "Por proyecto SGR con ejecutor municipal: valor × (ejecución financiera − ejecución física) / 100, con datos de GESPROY (sgr_fondos.json). Cada proyecto se asigna al gobierno que lo aprobó; como los pagos se reparten en varios años, se deflacta con el IPC promedio desde el año de su primer contrato hasta 2025. Los proyectos de INVÍAS u otras entidades nacionales no se suman al gobierno municipal; se mencionan en el detalle. Para la plata que no es de regalías no hay datos abiertos de avance físico."
+  },
+  {
+   "id": "saldos_regalias",
+   "nombre": "Regalías sin aprobar o sin comprometer",
+   "tipo": "hecho",
+   "descripcion": "Regalías asignadas a Yondó que, en la fecha de corte oficial más cercana al cierre del gobierno, no se habían aprobado en proyectos o no se habían comprometido.",
+   "metodo": "Saldos oficiales de sgr_fondos.json (CHIP, SICODIS y MinHacienda): asignaciones directas, incentivos del Acto Legislativo 04 de 2017 y del Incentivo a la Producción, y Asignación para la Inversión Local. Se toma un solo corte por gobierno (el bienio que cerró en su periodo) para no sumar dos fotos de la misma plata. Un saldo no es plata perdida: pasa al bienio siguiente; mide plata disponible que no se volvió obra a tiempo."
+  },
+  {
+   "id": "sobrecosto_sin_competencia",
+   "nombre": "Sobrecosto probable por contratar sin competencia",
+   "tipo": "estimado",
+   "descripcion": "El valor contratado sin competencia es un hecho registrado en SECOP; lo que se pudo pagar de más por no competir es una estimación con rango (5 %, 10 % y 15 %).",
+   "metodo": "Base por año (alcaldía): valor sin competencia (contratación directa, régimen especial y convenios) menos OPS y menos estudios sin obra ya contados; más los procesos competitivos con un solo oferente. Las transferencias a Aguas y Aseo y al hospital se dejan en la base porque esas entidades vuelven a contratar sin competencia (régimen especial), salvo los convenios para subsidiar tarifas, que no son compras. A la base del gobierno se le restan la plata girada sin avance ya contada y una copia de cada registro duplicado identificado. Sobrecosto = base × 5 % (mínimo), 10 % (central) y 15 % (máximo), según la literatura citada en \"literatura_sobrecosto\"."
+  },
+  {
+   "id": "ops_nomina_paralela",
+   "nombre": "Nómina paralela (OPS) por encima de lo usual",
+   "tipo": "estimado",
+   "descripcion": "Gasto en contratos de prestación de servicios (OPS) por encima del nivel que Yondó mismo tuvo en un año típico.",
+   "metodo": "Referencia: mediana del gasto anual en OPS por habitante de 2012 a 2025 (años con registro completo en SECOP), en pesos de 2026. Exceso de cada año = (OPS del año − referencia × población del año), si es positivo. Rango: con el percentil 75 de esos años como referencia (mínimo) y con el percentil 25 (máximo). No es un tope legal: la ley no fija uno, pero prohíbe usar OPS para funciones permanentes (Corte Constitucional, Sentencia C-614 de 2009)."
+  },
+  {
+   "id": "recaudo_no_cobrado",
+   "nombre": "Recaudo propio que se dejó de cobrar",
+   "tipo": "estimado",
+   "descripcion": "Predial e ICA que Yondó habría recaudado con el esfuerzo de municipios comparables o con un catastro actualizado.",
+   "metodo": "Central: brecha frente a la mediana de 7 comparables (costo_no_hacer.json); es cero en todos los periodos porque Yondó recaudó más por habitante. Máximo: brecha frente al percentil 75 de los comparables y, desde 2021 (catastro desactualizado), el predial adicional con el avalúo por habitante de Puerto Berrío (≈$1.498 M al año, ilustrativo); en predial se toma el mayor de los dos para no sumarlos."
+  },
+  {
+   "id": "costo_vertimientos",
+   "nombre": "Tasa retributiva por verter aguas residuales sin tratar",
+   "tipo": "estimado",
+   "descripcion": "Lo que cuesta cada año, en tasa ambiental, verter al río y las ciénagas las aguas negras del casco urbano sin una PTAR.",
+   "metodo": "Suma de la tasa retributiva estimada con factor regional 1 (costo_no_hacer.json, aguas_residuales); máximo con el caudal medido por la Superservicios en 2019 (hasta 1,98 veces). El valor facturado por Corantioquia no es público."
+  },
+  {
+   "id": "fondos_no_gestionados",
+   "nombre": "Fondos externos no gestionados",
+   "tipo": "contrafactual",
+   "descripcion": "Plata de fondos nacionales o de cooperación que Yondó pudo pedir, como lo hicieron municipios parecidos, y no pidió.",
+   "metodo": "Rangos de sgr_fondos.json repartidos entre gobiernos sin repetir la misma oportunidad: Obras por Impuestos (ventana 2018–2023, un proyecto vial mediano por gobierno como central), MinTIC Centros Digitales, Fondo Adaptación (central 0: no se verificó que Yondó registrara daños en 2010–2011), cooperación internacional (central: una donación pequeña por gobierno), OCAD Paz y FENOGE (2024–2027). Findeter no se suma: es crédito. Los saldos del Incentivo a la Producción y de la Asignación para la Inversión Local van en \"saldos de regalías\" porque ya son de Yondó."
+  },
+  {
+   "id": "ahorro_solar",
+   "nombre": "Ahorro solar no capturado",
+   "tipo": "contrafactual",
+   "descripcion": "Ahorro neto en facturas de energía, hasta 2026, si las 13 sedes públicas del plan (469 kWp) se hubieran puesto solares al empezar el gobierno.",
+   "metodo": "Contrafactual de costo_no_hacer.json, solo solar, neto con valor residual, escenario central y rango alto/bajo. Si el neto es negativo (2008) se registra cero: no habría convenido. Cada gobierno es un escenario aparte; no se suman entre gobiernos."
+  },
+  {
+   "id": "ahorro_regalias",
+   "nombre": "Ahorro de regalías no constituido",
+   "tipo": "contrafactual",
+   "descripcion": "Lo que valdría hoy un fondo local con el 10 % de las regalías directas de 2004–2011, cuando el municipio las manejaba directamente.",
+   "metodo": "Aportes anuales del 10 % (costo_no_hacer.json) que crecen al 3 % real (central) o 4 % (máximo) hasta 2026; mínimo: el aporte sin rendimiento. Desde 2012 el Sistema General de Regalías ahorra a nivel nacional (Fondo de Ahorro y Estabilización) y no aplica."
+  }
+ ],
+ "literatura_sobrecosto": [
+  {
+   "ref": "Titl, V. (2024). Reform of Single-Bidding in Public Procurement: More Competition, Lower Price. IDEA Study 3/2024 (CERGE-EI); versión académica: The One and Only: Single-Bidding in Public Procurement, U.S.E. Working Paper 23-08, Universidad de Utrecht.",
+   "hallazgo": "En Chequia, prohibir la adjudicación de contratos con una sola oferta bajó los precios cerca de 6 % del costo estimado.",
+   "url": "https://idea-en.cerge-ei.cz/files/IDEA_Studie_03_2024_Verejne_zakazky_abstract_EN.pdf ; https://www.uu.nl/sites/default/files/LEG_USE_WP_23-08%20%282%29.pdf",
+   "uso": "piso del rango (5 %)"
+  },
+  {
+   "ref": "OCDE (2014). OECD Foreign Bribery Report: An Analysis of the Crime of Bribery of Foreign Public Officials.",
+   "hallazgo": "En 427 casos de soborno, el soborno promedio fue 10,9 % del valor de la transacción; el 57 % de los casos buscaba ganar contratos públicos.",
+   "url": "https://doi.org/10.1787/9789264226616-en",
+   "uso": "orden de magnitud del valor central (10 %)"
+  },
+  {
+   "ref": "PwC y Ecorys para la Comisión Europea (OLAF) (2013). Identifying and reducing corruption in public procurement in the EU.",
+   "hallazgo": "En contratos con corrupción o con señales de ella (\"casos grises\"), la pérdida pública directa fue 18 % del presupuesto del proyecto, 13 % atribuible a la corrupción.",
+   "url": "https://dspace.library.uu.nl/handle/1874/309580",
+   "uso": "techo del rango (15 %), solo alcanzable si hubiera corrupción"
+  },
+  {
+   "ref": "Szucs, F. (2024). Discretion and Favoritism in Public Procurement. Journal of the European Economic Association 22(1): 117–160.",
+   "hallazgo": "En Hungría, cuando el comprador puede elegir sin subasta abierta los precios suben y ganan contratistas menos productivos y con conexiones políticas.",
+   "url": "https://doi.org/10.1093/jeea/jvad017",
+   "uso": "dirección del efecto"
+  },
+  {
+   "ref": "Gallego, J., Prem, M. y Vargas, J. F. (2021). Inefficient Procurement in Times of Pandemia. SSRN 3600572 (antes: Corruption in the Times of Pandemia, Universidad del Rosario, DT 250, 2020).",
+   "hallazgo": "En Colombia, en 2020 los municipios con más riesgo de corrupción pasaron a contratación no competitiva y subieron el valor de sus contratos; esos contratos tuvieron más sobrecostos.",
+   "url": "https://papers.ssrn.com/abstract=3600572",
+   "uso": "evidencia colombiana de la dirección del efecto"
+  }
+ ],
+ "referencia_ops": {
+  "pesos_2026_por_habitante_al_anio": {
+   "p25": 331644,
+   "mediana": 520491,
+   "p75": 808896
+  },
+  "anios": [
+   2012,
+   2013,
+   2014,
+   2015,
+   2016,
+   2017,
+   2018,
+   2019,
+   2020,
+   2021,
+   2022,
+   2023,
+   2024,
+   2025
+  ],
+  "serie_pesos_2026_por_habitante": {
+   "2008": 7479,
+   "2009": 49175,
+   "2010": 152611,
+   "2011": 603126,
+   "2012": 615480,
+   "2013": 1554160,
+   "2014": 766032,
+   "2015": 1240406,
+   "2016": 937487,
+   "2017": 543795,
+   "2018": 497186,
+   "2019": 544605,
+   "2020": 337723,
+   "2021": 300525,
+   "2022": 464203,
+   "2023": 344648,
+   "2024": 313410,
+   "2025": 211558,
+   "2026": 246698
+  },
+  "nota": "Mediana (central), percentil 75 (mínimo de exceso) y percentil 25 (máximo de exceso) del gasto anual en OPS de la alcaldía por habitante, 2012–2025."
+ },
+ "periodos": [
+  {
+   "id": "2004-2007",
+   "alcalde": "Wilfrido Uzuriaga Aponzá (2005–2007); quién gobernó en 2004 está por verificar",
+   "en_curso": false,
+   "ingresos": 246306.0,
+   "inversion": 228957.0,
+   "regalias": 139231.0,
+   "sgp": 53179.0,
+   "propios": 20541.4,
+   "anios_con_dato_plata": [
+    2004,
+    2005,
+    2006,
+    2007
+   ],
+   "fugas": [
+    {
+     "categoria": "estudios_sin_obra",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "estimado",
+     "detalle": "SECOP no tiene estudios de la alcaldía en estos años (solo 41 contratos en 2007). Sin dato: no significa que no hubo estudios sin obra.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd"
+     ],
+     "sin_dato": true,
+     "con_mixtos": 0.0,
+     "mixtos_excluidos": []
+    },
+    {
+     "categoria": "girado_sin_avance",
+     "valor": 0.0,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "Antes de 2012 no hay registro abierto de proyectos de regalías con avance físico (BPIN): no se puede saber en qué obras terminó cada peso del régimen anterior. Para la plata propia (no regalías) no hay datos abiertos de avance físico: SECOP I no publica pagos y SECOP II no publica avance de obra.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/mzgh-shtp",
+      "docs/01-diagnostico-sectorial.md"
+     ],
+     "sin_dato": true,
+     "no_sumado_ejecutor_nacional": 0.0
+    },
+    {
+     "categoria": "saldos_regalias",
+     "valor": 0.0,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "Antes de 2012 las regalías directas entraban al presupuesto municipal sin bolsas ni bienios: no hay saldos de regalías comparables.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/e624-d9uy",
+      "https://sicodis.dnp.gov.co"
+     ],
+     "sin_dato": true
+    },
+    {
+     "categoria": "sobrecosto_sin_competencia",
+     "valor": 679.5,
+     "min": 339.7,
+     "max": 1019.2,
+     "tipo": "estimado",
+     "detalle": "Solo hay 41 contratos de la alcaldía en SECOP, todos de 2007. Hecho: la alcaldía contrató $6.795 M sin competencia (55,2 % de $12.304 M, pesos de 2026; SECOP). Base para el sobrecosto: $6.795 M. Sobrecosto probable: 10 % (rango 5–15 %). No prueba corrupción: mide el precio de renunciar a la competencia.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "https://idea-en.cerge-ei.cz/files/IDEA_Studie_03_2024_Verejne_zakazky_abstract_EN.pdf",
+      "https://doi.org/10.1787/9789264226616-en",
+      "https://dspace.library.uu.nl/handle/1874/309580"
+     ],
+     "base_hecho": 6794.7,
+     "valor_sin_competencia_hecho": 6794.7,
+     "pct_valor_sin_competencia": 55.2
+    },
+    {
+     "categoria": "ops_nomina_paralela",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "estimado",
+     "detalle": "SECOP no registra OPS de la alcaldía en estos años. Sin dato.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "Corte Constitucional, Sentencia C-614 de 2009"
+     ],
+     "sin_dato": true,
+     "ops_contratos": 0,
+     "ops_valor": 0.0,
+     "ops_formulacion_contratos": 0,
+     "ops_formulacion_valor": 0.0
+    },
+    {
+     "categoria": "recaudo_no_cobrado",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 3314.9,
+     "tipo": "estimado",
+     "detalle": "Frente a la mediana de 7 comparables Yondó recaudó $7.138 M más en predial e ICA (pesos de 2026): no hay rezago. Máximo: brecha con el percentil 75 de los comparables ($3.315 M). La extracción de petróleo no paga ICA por ley (art. 16 del Código de Petróleos; art. 39 de la Ley 14 de 1983): no es recaudo perdido.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (recaudo_potencial)",
+      "https://terridata.dnp.gov.co"
+     ]
+    },
+    {
+     "categoria": "costo_vertimientos",
+     "valor": 130.4,
+     "min": 130.4,
+     "max": 258.5,
+     "tipo": "estimado",
+     "detalle": "Yondó no tiene PTAR: en 2019 vertía 55,34 L/s sin tratar (Superservicios, 2020). Tasa estimada con factor regional 1; con el caudal medido sería hasta 1,98 veces. En 2020 Aguas y Aseo debía $175 M a Corantioquia por tasas desde 2018 (hecho).",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (aguas_residuales)",
+      "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf"
+     ]
+    },
+    {
+     "categoria": "fondos_no_gestionados",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "contrafactual",
+     "detalle": "Sin fondos comparables identificados para estos años.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json"
+     ],
+     "sin_dato": true
+    },
+    {
+     "categoria": "ahorro_solar",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "contrafactual",
+     "detalle": "No calculado: en 2004–2007 la solar costaba aún más que en 2008, cuando instalarla no se habría pagado.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json"
+     ],
+     "sin_dato": true
+    },
+    {
+     "categoria": "ahorro_regalias",
+     "valor": 25427.6,
+     "min": 13923.1,
+     "max": 30967.0,
+     "tipo": "contrafactual",
+     "detalle": "El 10 % de las regalías directas de estos años era $13.923 M de 2026; guardado al 3–4 % real valdría hoy $25.428 M a $30.967 M, y solo sus rendimientos darían $763 M a $1.239 M al año sin tocar el capital.",
+     "items": [
+      {
+       "nombre": "Aporte de 2004 (10 % de $8.944 M corrientes)",
+       "anio": 2004,
+       "valor": 4915.6,
+       "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias)"
+      },
+      {
+       "nombre": "Aporte de 2005 (10 % de $13.333 M corrientes)",
+       "anio": 2005,
+       "valor": 6772.6,
+       "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias)"
+      },
+      {
+       "nombre": "Aporte de 2006 (10 % de $15.063 M corrientes)",
+       "anio": 2006,
+       "valor": 7122.4,
+       "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias)"
+      },
+      {
+       "nombre": "Aporte de 2007 (10 % de $15.213 M corrientes)",
+       "anio": 2007,
+       "valor": 6617.0,
+       "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias)"
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias)",
+      "data/fuentes/serie_fiscal_oec.csv"
+     ]
+    }
+   ],
+   "total_hecho": 0.0,
+   "total_estimado": 809.9,
+   "total_contrafactual": 25427.6,
+   "sin_obra": 809.9,
+   "sin_obra_rango": [
+    470.1,
+    4592.6
+   ],
+   "sin_obra_pct_ingresos": 0.3,
+   "pudo_hacerse": [
+    {
+     "que": "PTAR para el casco urbano (unos 12.000 habitantes)",
+     "costo": 13876.2,
+     "equivalencia": "1 PTAR (costo entre $13.527 M y $30.176 M; sin colectores)",
+     "por_que_no": "El plan 2005–2007 se apoyó en un Plan Maestro de Acueducto y Alcantarillado, pero la planta no se construyó; en 2019 Yondó vertía 55 L/s sin tratar. El 10 % de las regalías de estos cuatro años ($13.923 M de 2026) alcanzaba para pagarla.",
+     "fuente": "data/comparativa/costo_no_hacer.json (costos_unitarios: ptar_12000_hab, PTAR de Tenjo, Corozal y Salónica indexadas); Superservicios 2020: https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf; data/gobiernos.json",
+     "cubierto_con_plata_sin_obra_pct": 5.8,
+     "costo_rango": [
+      13527.1,
+      30175.6
+     ]
+    },
+    {
+     "que": "Fondo local de ahorro con el 10 % de las regalías directas",
+     "costo": 13923.1,
+     "equivalencia": "hoy valdría $25.428 M (3 % real) ≈ 42 aulas escolares dotadas",
+     "por_que_no": "Ninguna norma obligaba a ahorrar regalías directas y no se creó un fondo local, aunque las regalías eran el 56 % de los ingresos.",
+     "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias)",
+     "cubierto_con_plata_sin_obra_pct": null
+    },
+    {
+     "que": "10 aulas dotadas para ampliar la educación media",
+     "costo": 6000.0,
+     "equivalencia": "≈ 10 aulas escolares dotadas",
+     "por_que_no": "La cobertura neta en media era de 14 %: 86 de cada 100 jóvenes de 15–16 años no estaban matriculados en media.",
+     "fuente": "data/comparativa/costo_no_hacer.json (aula_dotada); docs/02-marco-comparativo-2004-2027.md (matriz, MEN)",
+     "cubierto_con_plata_sin_obra_pct": 13.5,
+     "costo_rango": [
+      4000.0,
+      9486.5
+     ]
+    }
+   ],
+   "equivalencias": [
+    {
+     "unidad": "aulas escolares dotadas",
+     "n": 1.3,
+     "costo_unitario": 600.0,
+     "id": "aula_dotada",
+     "rango_n": [
+      0.9,
+      2.0
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "becas universitarias de un año",
+     "n": 46.3,
+     "costo_unitario": 17.5,
+     "id": "beca_universitaria_anual",
+     "rango_n": [
+      23.1,
+      92.5
+     ],
+     "certeza_costo": "supuesto"
+    },
+    {
+     "unidad": "ambulancias medicalizadas",
+     "n": 1.8,
+     "costo_unitario": 449.8,
+     "id": "ambulancia_medicalizada_tam",
+     "rango_n": [
+      1.2,
+      2.0
+     ],
+     "certeza_costo": "hecho"
+    },
+    {
+     "unidad": "viviendas VIS rurales",
+     "n": 6.5,
+     "costo_unitario": 123.7,
+     "id": "vis_rural",
+     "rango_n": [
+      5.1,
+      9.0
+     ],
+     "certeza_costo": "estimado"
+    }
+   ],
+   "fondos_no_gestionados": [],
+   "lectura": "Entraron $246.306 M de 2026, el 57 % por regalías. SECOP casi no tiene contratos de estos años, así que solo se estimaron $810 M sin obra: no es que no haya habido fugas, es que no hay cómo verlas. La oportunidad más clara fue no ahorrar: el 10 % de esas regalías valdría hoy $25.428 M, casi dos PTAR.",
+   "nota": "SECOP casi no tiene registros de estos años (41 contratos de la alcaldía en 2007): un cero aquí es \"sin dato\", no \"sin fugas\"."
+  },
+  {
+   "id": "2008-2011",
+   "alcalde": "Jorge Rodríguez Salcedo",
+   "en_curso": false,
+   "ingresos": 383943.0,
+   "inversion": 383424.0,
+   "regalias": 228729.0,
+   "sgp": 62701.0,
+   "propios": 74385.0,
+   "anios_con_dato_plata": [
+    2008,
+    2009,
+    2010,
+    2011
+   ],
+   "fugas": [
+    {
+     "categoria": "estudios_sin_obra",
+     "valor": 2976.9,
+     "min": 2976.9,
+     "max": 2976.9,
+     "tipo": "estimado",
+     "detalle": "22 estudios o consultorías de la alcaldía sin obra posterior identificable en SECOP, de 27 evaluados (5 con obra).",
+     "items": [
+      {
+       "nombre": "Apoyo insterinstitucional y financiero para el estudip. diseno y diagnostico del acueducto del municipio de Yondo antio… (Aguas y Aseo de Yondó S.A. E.S.P.)",
+       "anio": 2008,
+       "valor": 463.6,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=08-12-136837",
+       "nota": null
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd"
+     ],
+     "con_mixtos": 2976.9,
+     "mixtos_excluidos": []
+    },
+    {
+     "categoria": "girado_sin_avance",
+     "valor": 0.0,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "Antes de 2012 no hay registro abierto de proyectos de regalías con avance físico (BPIN): no se puede saber en qué obras terminó cada peso del régimen anterior. Para la plata propia (no regalías) no hay datos abiertos de avance físico: SECOP I no publica pagos y SECOP II no publica avance de obra.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/mzgh-shtp",
+      "docs/01-diagnostico-sectorial.md"
+     ],
+     "sin_dato": true,
+     "no_sumado_ejecutor_nacional": 0.0
+    },
+    {
+     "categoria": "saldos_regalias",
+     "valor": 0.0,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "Antes de 2012 las regalías directas entraban al presupuesto municipal sin bolsas ni bienios: no hay saldos de regalías comparables.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/e624-d9uy",
+      "https://sicodis.dnp.gov.co"
+     ],
+     "sin_dato": true
+    },
+    {
+     "categoria": "sobrecosto_sin_competencia",
+     "valor": 14053.4,
+     "min": 7026.7,
+     "max": 21080.1,
+     "tipo": "estimado",
+     "detalle": "Hecho: la alcaldía contrató $156.830 M sin competencia (54,8 % de $286.356 M, pesos de 2026; SECOP). Base para el sobrecosto: $140.534 M (se restan $13.319 M de OPS y los estudios sin obra). Incluye $62.345 M transferidos a Aguas y Aseo y al hospital, que esas entidades contratan a su vez por régimen especial. Sobrecosto probable: 10 % (rango 5–15 %). No prueba corrupción: mide el precio de renunciar a la competencia. SECOP está subregistrado en estos años (39 a 205 contratos por año): la base real fue mayor.",
+     "items": [
+      {
+       "nombre": "Base (contrato sin competencia): Construccion ampliacion y rehabilitacion del sistema de alcantarillado para manejo y control de agu… — Aguas y Aseo de Yondó S.A. E.S.P.",
+       "anio": 2009,
+       "valor": 5656.9,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=09-12-170580",
+       "en_total": false
+      },
+      {
+       "nombre": "Base (contrato sin competencia): Apoyo es la construccion del alcantarillado pluvial y reposiscion de alcantarillado sanitario del c… — Aguas y Aseo de Yondó S.A. E.S.P.",
+       "anio": 2009,
+       "valor": 5532.8,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=10-12-284459",
+       "en_total": false
+      },
+      {
+       "nombre": "Base (contrato sin competencia): Apoyo es la construccion de obras complementarias para la optimizacion del acueducto municipal sist… — Aguas y Aseo de Yondó S.A. E.S.P.",
+       "anio": 2009,
+       "valor": 4954.4,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=10-12-284451",
+       "en_total": false
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "https://idea-en.cerge-ei.cz/files/IDEA_Studie_03_2024_Verejne_zakazky_abstract_EN.pdf",
+      "https://doi.org/10.1787/9789264226616-en",
+      "https://dspace.library.uu.nl/handle/1874/309580"
+     ],
+     "base_hecho": 140534.3,
+     "valor_sin_competencia_hecho": 156829.7,
+     "pct_valor_sin_competencia": 54.8
+    },
+    {
+     "categoria": "ops_nomina_paralela",
+     "valor": 1364.1,
+     "min": 0.0,
+     "max": 4481.6,
+     "tipo": "estimado",
+     "detalle": "91 contratos OPS por $13.319 M de 2026, de ellos 7 de formulación de proyectos por $386 M. Referencia: 520.491 pesos de 2026 por habitante al año (mediana 2012–2025; rango 331.644–808.896).",
+     "items": [
+      {
+       "nombre": "OPS 2011: 53 contratos, 51 personas, $9.956 M (603.126 pesos de 2026 por habitante)",
+       "anio": 2011,
+       "valor": 1364.1,
+       "fuente": "data/comparativa/fugas_secop.json (por_anio, Alcaldía, ops); población DANE en data/comparativa/panel_anual.json"
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "Corte Constitucional, Sentencia C-614 de 2009"
+     ],
+     "ops_contratos": 91,
+     "ops_valor": 13318.5,
+     "ops_formulacion_contratos": 7,
+     "ops_formulacion_valor": 386.3
+    },
+    {
+     "categoria": "recaudo_no_cobrado",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "estimado",
+     "detalle": "Frente a la mediana de 7 comparables Yondó recaudó $43.751 M más en predial e ICA (pesos de 2026): no hay rezago. Tampoco hay brecha frente al percentil 75. La extracción de petróleo no paga ICA por ley (art. 16 del Código de Petróleos; art. 39 de la Ley 14 de 1983): no es recaudo perdido.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (recaudo_potencial)",
+      "https://terridata.dnp.gov.co"
+     ]
+    },
+    {
+     "categoria": "costo_vertimientos",
+     "valor": 153.4,
+     "min": 153.4,
+     "max": 304.1,
+     "tipo": "estimado",
+     "detalle": "Yondó no tiene PTAR: en 2019 vertía 55,34 L/s sin tratar (Superservicios, 2020). Tasa estimada con factor regional 1; con el caudal medido sería hasta 1,98 veces. En 2020 Aguas y Aseo debía $175 M a Corantioquia por tasas desde 2018 (hecho).",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (aguas_residuales)",
+      "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf"
+     ]
+    },
+    {
+     "categoria": "fondos_no_gestionados",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 3035.7,
+     "tipo": "contrafactual",
+     "detalle": "Fondo Adaptación con central cero: depende de daños de 2010–2011 que no se verificaron.",
+     "items": [
+      {
+       "nombre": "Fondo Adaptación (ola invernal 2010–2011)",
+       "anio": null,
+       "valor": 0.0,
+       "min": 0.0,
+       "max": 3035.7,
+       "fuente": "https://www.datos.gov.co/d/8yvj-6du4; data/comparativa/sgr_fondos.json"
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json"
+     ]
+    },
+    {
+     "categoria": "ahorro_solar",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "contrafactual",
+     "detalle": "Instalar 469 kWp en 2008 costaba $12.807 M de 2026; habría ahorrado $8.047 M en facturas hasta 2026 (neto con valor residual: −$5.069 M). No se habría pagado: la solar era unas 7 veces más cara que en 2024. Se registra cero.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (contrafactual_solar)"
+     ]
+    },
+    {
+     "categoria": "ahorro_regalias",
+     "valor": 37161.5,
+     "min": 22872.8,
+     "max": 43561.7,
+     "tipo": "contrafactual",
+     "detalle": "El 10 % de las regalías directas de estos años era $22.873 M de 2026; guardado al 3–4 % real valdría hoy $37.162 M a $43.562 M, y solo sus rendimientos darían $1.115 M a $1.742 M al año sin tocar el capital.",
+     "items": [
+      {
+       "nombre": "Aporte de 2008 (10 % de $26.383 M corrientes)",
+       "anio": 2008,
+       "valor": 10412.5,
+       "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias)"
+      },
+      {
+       "nombre": "Aporte de 2009 (10 % de $18.012 M corrientes)",
+       "anio": 2009,
+       "valor": 6623.4,
+       "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias)"
+      },
+      {
+       "nombre": "Aporte de 2010 (10 % de $25.821 M corrientes)",
+       "anio": 2010,
+       "valor": 9013.8,
+       "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias)"
+      },
+      {
+       "nombre": "Aporte de 2011 (10 % de $33.906 M corrientes)",
+       "anio": 2011,
+       "valor": 11111.8,
+       "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias)"
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias)",
+      "data/fuentes/serie_fiscal_oec.csv"
+     ]
+    }
+   ],
+   "total_hecho": 0.0,
+   "total_estimado": 18547.8,
+   "total_contrafactual": 37161.5,
+   "sin_obra": 18547.8,
+   "sin_obra_rango": [
+    10157.0,
+    28842.7
+   ],
+   "sin_obra_pct_ingresos": 4.8,
+   "pudo_hacerse": [
+    {
+     "que": "Vía Yondó–Puerto Berrío en placa huella (71 km, meta del plan 2008–2011)",
+     "costo": 71000.0,
+     "equivalencia": "≈ 71 km de placa huella",
+     "por_que_no": "La vía siguió sin pavimentar (sin avance según la Gobernación en mayo de 2025). La plata sin obra de este gobierno ($18.548 M) alcanzaba para unos 19 km.",
+     "fuente": "data/comparativa/costo_no_hacer.json (km_placa_huella); data/gobiernos.json",
+     "cubierto_con_plata_sin_obra_pct": 26.1,
+     "costo_rango": [
+      57468.0,
+      153324.5
+     ]
+    },
+    {
+     "que": "Fondo local de ahorro con el 10 % de las regalías, en su máximo histórico",
+     "costo": 22872.8,
+     "equivalencia": "hoy valdría $37.162 M ≈ 2,7 PTAR como la que necesita el casco urbano",
+     "por_que_no": "Con regalías en máximos no se creó un ahorro ni una base económica distinta al petróleo.",
+     "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias); data/gobiernos.json",
+     "cubierto_con_plata_sin_obra_pct": null
+    },
+    {
+     "que": "PTAR para el casco urbano",
+     "costo": 13876.2,
+     "equivalencia": "1 PTAR (costo entre $13.527 M y $30.176 M; sin colectores)",
+     "por_que_no": "Siguió pendiente: el plan priorizó vías y redes, y las aguas residuales se siguieron vertiendo sin tratar.",
+     "fuente": "data/comparativa/costo_no_hacer.json (costos_unitarios: ptar_12000_hab, PTAR de Tenjo, Corozal y Salónica indexadas); Superservicios 2020: https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
+     "cubierto_con_plata_sin_obra_pct": 133.7,
+     "costo_rango": [
+      13527.1,
+      30175.6
+     ]
+    }
+   ],
+   "equivalencias": [
+    {
+     "unidad": "km de placa huella",
+     "n": 18.5,
+     "costo_unitario": 1000.0,
+     "id": "km_placa_huella",
+     "rango_n": [
+      8.6,
+      22.9
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "plantas de tratamiento de aguas residuales (PTAR)",
+     "n": 1.3,
+     "costo_unitario": 13876.2,
+     "id": "ptar_12000_hab",
+     "rango_n": [
+      0.6,
+      1.4
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "aulas escolares dotadas",
+     "n": 30.9,
+     "costo_unitario": 600.0,
+     "id": "aula_dotada",
+     "rango_n": [
+      19.6,
+      46.4
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "viviendas VIS rurales",
+     "n": 150.0,
+     "costo_unitario": 123.7,
+     "id": "vis_rural",
+     "rango_n": [
+      117.7,
+      206.6
+     ],
+     "certeza_costo": "estimado"
+    }
+   ],
+   "fondos_no_gestionados": [
+    {
+     "fondo": "Fondo Adaptación (ola invernal 2010–2011)",
+     "desde": 2011,
+     "monto_referencia": 0.0,
+     "min": 0.0,
+     "max": 3035.7,
+     "comparable": "Puerto Nare, ribereño y de tamaño parecido, recibió $1.671 M en 7 intervenciones; Yondó, $30 M en 2. Baja certeza: no se verificó que Yondó registrara daños.",
+     "fuente": "https://www.datos.gov.co/d/8yvj-6du4; data/comparativa/sgr_fondos.json",
+     "suma_en_total": true
+    }
+   ],
+   "lectura": "Fue el gobierno con más regalías del régimen anterior: entraron $383.943 M de 2026. En los pocos contratos que registró SECOP hay $18.548 M sin obra o en sobrecosto probable (≈ 19 km de placa huella). Si hubiera guardado el 10 % de las regalías, hoy Yondó tendría $37.162 M, y la vía a Puerto Berrío siguió sin pavimentar.",
+   "nota": "SECOP está subregistrado (39 a 205 contratos de la alcaldía por año, frente a más de 400 desde 2012): las cifras de contratación son un piso."
+  },
+  {
+   "id": "2012-2015",
+   "alcalde": "Wilfrido Uzuriaga Aponzá (segundo periodo)",
+   "en_curso": false,
+   "ingresos": 413264.0,
+   "inversion": 358898.0,
+   "regalias": 184501.0,
+   "sgp": 70547.0,
+   "propios": 100426.0,
+   "anios_con_dato_plata": [
+    2012,
+    2013,
+    2014,
+    2015
+   ],
+   "fugas": [
+    {
+     "categoria": "estudios_sin_obra",
+     "valor": 4412.2,
+     "min": 4112.5,
+     "max": 4412.2,
+     "tipo": "estimado",
+     "detalle": "20 estudios o consultorías de la alcaldía sin obra posterior identificable en SECOP, de 24 evaluados (2 con obra). Con los contratos mixtos (diseño y obra juntos) serían $7.335 M; no se cuentan porque su obra va dentro del contrato o ya está en 'plata girada sin avance'. Incluye $300 M de planes de ordenamiento: no llevan a una obra, pero se pagaron; el mínimo los resta.",
+     "items": [
+      {
+       "nombre": "Aunar esfuerzos en la realizacion de estudios y disenos y rediseno de los acueductos rurales del municipio de Yondo (Aguas y Aseo de Yondó S.A. E.S.P.)",
+       "anio": 2013,
+       "valor": 2316.3,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-12-2536076",
+       "nota": null
+      },
+      {
+       "nombre": "Consultoria para la elaboracion de estudios y disenos de la ciudadela educativa del municipio de Yondo",
+       "anio": 2014,
+       "valor": 582.6,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-15-2238279",
+       "nota": null
+      },
+      {
+       "nombre": "Aunar esfuerzos para realizar estudios disenos y limpieza de las redes de alcantarillado (Aguas y Aseo de Yondó S.A. E.S.P.)",
+       "anio": 2014,
+       "valor": 355.7,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-12-3065094",
+       "nota": null
+      },
+      {
+       "nombre": "Aunar esfuerzos que permitan la revision y ajuste del esquema de ordenamiento territorial en metas de largo plazo (CORPORACION CIUDADELA EDUCATIVA Y DESARROLLO INTEGRAL DE LA COMUNA 7 DE BARRANCABERMEJA ¿ )",
+       "anio": 2013,
+       "valor": 299.8,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-12-2930532",
+       "nota": "Planes y ordenamiento territorial no llevan a una obra directa: se evalúan por su adopción y uso."
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd"
+     ],
+     "con_mixtos": 7334.9,
+     "mixtos_excluidos": [
+      {
+       "nombre": "Aunar esfuerzoz para elaborar estudios y disenos interventorias y construcciones de obras…",
+       "anio": 2012,
+       "valor": 1699.4,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=13-12-1765393"
+      },
+      {
+       "nombre": "Convenio para los estudiosdisenos de lineas de alcantarilado y agua potable construccion…",
+       "anio": 2012,
+       "valor": 1223.2,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=12-12-1061047"
+      }
+     ]
+    },
+    {
+     "categoria": "girado_sin_avance",
+     "valor": 0.0,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "Ningún proyecto de regalías aprobado en este periodo tiene pagos por encima del avance de obra. Para la plata propia (no regalías) no hay datos abiertos de avance físico: SECOP I no publica pagos y SECOP II no publica avance de obra.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/mzgh-shtp",
+      "docs/01-diagnostico-sectorial.md"
+     ],
+     "no_sumado_ejecutor_nacional": 0.0
+    },
+    {
+     "categoria": "saldos_regalias",
+     "valor": 0.0,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "No hay un saldo oficial al cierre de 2015. El saldo del bienio 2015–2016 se asigna al gobierno siguiente, que lo cerró.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/e624-d9uy",
+      "https://sicodis.dnp.gov.co"
+     ],
+     "sin_dato": true
+    },
+    {
+     "categoria": "sobrecosto_sin_competencia",
+     "valor": 6534.9,
+     "min": 3267.5,
+     "max": 9802.4,
+     "tipo": "estimado",
+     "detalle": "Hecho: la alcaldía contrató $142.343 M sin competencia (55,4 % de $256.782 M, pesos de 2026; SECOP). Base para el sobrecosto: $65.349 M (se restan $72.581 M de OPS y los estudios sin obra). Incluye $56.124 M transferidos a Aguas y Aseo y al hospital, que esas entidades contratan a su vez por régimen especial. Sobrecosto probable: 10 % (rango 5–15 %). No prueba corrupción: mide el precio de renunciar a la competencia.",
+     "items": [
+      {
+       "nombre": "Base (contrato sin competencia): Aunar esfuerzos para la construccion canalizacion del cano colector desde la estacion de bombeo de… — Aguas y Aseo de Yondó S.A. E.S.P.",
+       "anio": 2015,
+       "valor": 7233.7,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-12-3745246",
+       "en_total": false
+      },
+      {
+       "nombre": "Base (contrato sin competencia): Aunar esfuerzos en la construccion e inteventoria del sistema de alcantarillado agua potable y adec… — Aguas y Aseo de Yondó S.A. E.S.P.",
+       "anio": 2013,
+       "valor": 6982.6,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=13-12-1978027",
+       "en_total": false
+      },
+      {
+       "nombre": "Base (contrato sin competencia): Aunar esfuerzos para los estudios disenos construccion e interventoria de sistemas de redes de alca… — Aguas y Aseo de Yondó S.A. E.S.P.",
+       "anio": 2013,
+       "valor": 3178.7,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=13-12-1938471",
+       "en_total": false
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "https://idea-en.cerge-ei.cz/files/IDEA_Studie_03_2024_Verejne_zakazky_abstract_EN.pdf",
+      "https://doi.org/10.1787/9789264226616-en",
+      "https://dspace.library.uu.nl/handle/1874/309580"
+     ],
+     "base_hecho": 65349.1,
+     "valor_sin_competencia_hecho": 142342.9,
+     "pct_valor_sin_competencia": 55.4
+    },
+    {
+     "categoria": "ops_nomina_paralela",
+     "valor": 36480.7,
+     "min": 20490.1,
+     "max": 49578.9,
+     "tipo": "estimado",
+     "detalle": "1.862 contratos OPS por $72.581 M de 2026, de ellos 53 de formulación de proyectos por $1.652 M. Referencia: 520.491 pesos de 2026 por habitante al año (mediana 2012–2025; rango 331.644–808.896). Las OPS pasaron de 91 contratos en 2008–2011 a 1.862: la nómina paralela se volvió estructural.",
+     "items": [
+      {
+       "nombre": "OPS 2012: 568 contratos, 500 personas, $10.383 M (615.480 pesos de 2026 por habitante)",
+       "anio": 2012,
+       "valor": 1602.5,
+       "fuente": "data/comparativa/fugas_secop.json (por_anio, Alcaldía, ops); población DANE en data/comparativa/panel_anual.json"
+      },
+      {
+       "nombre": "OPS 2013: 694 contratos, 503 personas, $26.700 M (1.554.160 pesos de 2026 por habitante)",
+       "anio": 2013,
+       "valor": 17758.4,
+       "fuente": "data/comparativa/fugas_secop.json (por_anio, Alcaldía, ops); población DANE en data/comparativa/panel_anual.json"
+      },
+      {
+       "nombre": "OPS 2014: 305 contratos, 230 personas, $13.402 M (766.032 pesos de 2026 por habitante)",
+       "anio": 2014,
+       "valor": 4296.0,
+       "fuente": "data/comparativa/fugas_secop.json (por_anio, Alcaldía, ops); población DANE en data/comparativa/panel_anual.json"
+      },
+      {
+       "nombre": "OPS 2015: 295 contratos, 210 personas, $22.095 M (1.240.406 pesos de 2026 por habitante)",
+       "anio": 2015,
+       "valor": 12823.8,
+       "fuente": "data/comparativa/fugas_secop.json (por_anio, Alcaldía, ops); población DANE en data/comparativa/panel_anual.json"
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "Corte Constitucional, Sentencia C-614 de 2009"
+     ],
+     "ops_contratos": 1862,
+     "ops_valor": 72581.5,
+     "ops_formulacion_contratos": 53,
+     "ops_formulacion_valor": 1652.3
+    },
+    {
+     "categoria": "recaudo_no_cobrado",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "estimado",
+     "detalle": "Frente a la mediana de 7 comparables Yondó recaudó $65.958 M más en predial e ICA (pesos de 2026): no hay rezago. Tampoco hay brecha frente al percentil 75. La extracción de petróleo no paga ICA por ley (art. 16 del Código de Petróleos; art. 39 de la Ley 14 de 1983): no es recaudo perdido.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (recaudo_potencial)",
+      "https://terridata.dnp.gov.co"
+     ]
+    },
+    {
+     "categoria": "costo_vertimientos",
+     "valor": 177.1,
+     "min": 177.1,
+     "max": 351.1,
+     "tipo": "estimado",
+     "detalle": "Yondó no tiene PTAR: en 2019 vertía 55,34 L/s sin tratar (Superservicios, 2020). Tasa estimada con factor regional 1; con el caudal medido sería hasta 1,98 veces. En 2020 Aguas y Aseo debía $175 M a Corantioquia por tasas desde 2018 (hecho).",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (aguas_residuales)",
+      "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf"
+     ]
+    },
+    {
+     "categoria": "fondos_no_gestionados",
+     "valor": 315.8,
+     "min": 0.0,
+     "max": 1516.1,
+     "tipo": "contrafactual",
+     "detalle": "Solo cooperación internacional, con baja certeza.",
+     "items": [
+      {
+       "nombre": "Cooperación internacional no reembolsable",
+       "anio": null,
+       "valor": 315.8,
+       "min": 0.0,
+       "max": 1516.1,
+       "fuente": "https://www.datos.gov.co/d/2d3i-f9wd; data/comparativa/sgr_fondos.json"
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json"
+     ]
+    },
+    {
+     "categoria": "ahorro_solar",
+     "valor": 1436.2,
+     "min": 359.8,
+     "max": 2666.9,
+     "tipo": "contrafactual",
+     "detalle": "Instalar 469 kWp en 2012 costaba $5.537 M de 2026; habría ahorrado $6.820 M en facturas hasta 2026 (neto con valor residual: $1.436 M; se pagaba sola en 2025).",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (contrafactual_solar)"
+     ]
+    },
+    {
+     "categoria": "ahorro_regalias",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "contrafactual",
+     "detalle": "No aplica: desde 2012 el Sistema General de Regalías ahorra a nivel nacional (Fondo de Ahorro y Estabilización) y el municipio no maneja regalías directas.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json"
+     ],
+     "sin_dato": true
+    }
+   ],
+   "total_hecho": 0.0,
+   "total_estimado": 47604.9,
+   "total_contrafactual": 1752.0,
+   "sin_obra": 47604.9,
+   "sin_obra_rango": [
+    28047.2,
+    64144.6
+   ],
+   "sin_obra_pct_ingresos": 11.5,
+   "pudo_hacerse": [
+    {
+     "que": "Ciudadela Educativa (diseñada en 2014 por $300 M)",
+     "costo": 12198.9,
+     "equivalencia": "≈ 20 aulas escolares dotadas",
+     "por_que_no": "Se diseñó en 2014 y la obra quedó suspendida en el periodo siguiente. Costo: lo previsto en el plan 2016–2019 ($7.090 M de 2016).",
+     "fuente": "data/gobiernos.json; SECOP https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-15-2238279",
+     "cubierto_con_plata_sin_obra_pct": 390.2
+    },
+    {
+     "que": "PTAR para el casco urbano",
+     "costo": 13876.2,
+     "equivalencia": "1 PTAR (costo entre $13.527 M y $30.176 M; sin colectores)",
+     "por_que_no": "Siguió pendiente, y los estudios de acueductos rurales de 2013 ($1.159 M) tampoco tienen obra posterior identificable.",
+     "fuente": "data/comparativa/costo_no_hacer.json (costos_unitarios: ptar_12000_hab, PTAR de Tenjo, Corozal y Salónica indexadas); Superservicios 2020: https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
+     "cubierto_con_plata_sin_obra_pct": 343.1,
+     "costo_rango": [
+      13527.1,
+      30175.6
+     ]
+    },
+    {
+     "que": "Solar en las 13 sedes públicas (469 kWp) instalada en 2012",
+     "costo": 5537.2,
+     "equivalencia": "469 kWp solares en cubiertas",
+     "por_que_no": "No se hizo. Se habría pagado sola en 2025 y a 2026 dejaría $1.436 M netos.",
+     "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_solar)",
+     "cubierto_con_plata_sin_obra_pct": 859.7
+    },
+    {
+     "que": "400 becas universitarias de un año (100 por año) para bachilleres",
+     "costo": 7003.6,
+     "equivalencia": "≈ 400 becas universitarias de un año",
+     "por_que_no": "La cobertura neta en media era de 21,5 %; mientras tanto las OPS pasaron de 91 a 1.862 contratos ($36.481 M por encima de lo usual).",
+     "fuente": "data/comparativa/costo_no_hacer.json (beca_universitaria_anual, supuesto); data/gobiernos.json",
+     "cubierto_con_plata_sin_obra_pct": 679.7
+    }
+   ],
+   "equivalencias": [
+    {
+     "unidad": "aulas escolares dotadas",
+     "n": 79.3,
+     "costo_unitario": 600.0,
+     "id": "aula_dotada",
+     "rango_n": [
+      50.2,
+      119.0
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "plantas de tratamiento de aguas residuales (PTAR)",
+     "n": 3.4,
+     "costo_unitario": 13876.2,
+     "id": "ptar_12000_hab",
+     "rango_n": [
+      1.6,
+      3.5
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "km de placa huella",
+     "n": 47.6,
+     "costo_unitario": 1000.0,
+     "id": "km_placa_huella",
+     "rango_n": [
+      22.0,
+      58.8
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "viviendas VIS rurales",
+     "n": 384.9,
+     "costo_unitario": 123.7,
+     "id": "vis_rural",
+     "rango_n": [
+      302.1,
+      530.2
+     ],
+     "certeza_costo": "estimado"
+    }
+   ],
+   "fondos_no_gestionados": [
+    {
+     "fondo": "Cooperación internacional no reembolsable",
+     "desde": 2004,
+     "monto_referencia": 315.8,
+     "min": 0.0,
+     "max": 1516.1,
+     "comparable": "En el registro de APC solo aparece una donación de Japón para Yondó (2014, US$106.715); la Unión Europea financió proyectos en 5 municipios del Sur de Bolívar (2016, US$1,68 M). Baja certeza.",
+     "fuente": "https://www.datos.gov.co/d/2d3i-f9wd; data/comparativa/sgr_fondos.json",
+     "suma_en_total": true
+    }
+   ],
+   "lectura": "Entraron $413.264 M de 2026. Hay $47.605 M que no se convirtieron en obra según los registros y las estimaciones, sobre todo por la nómina paralela: $36.481 M en OPS por encima de lo usual y $4.412 M en estudios sin obra, como los de la Ciudadela Educativa. Con esa plata alcanzaba para 79 aulas escolares dotadas."
+  },
+  {
+   "id": "2016-2019",
+   "alcalde": "Gibert Cartagena Rojas",
+   "en_curso": false,
+   "ingresos": 343223.0,
+   "inversion": 269943.0,
+   "regalias": 118056.0,
+   "sgp": 71577.0,
+   "propios": 72439.0,
+   "anios_con_dato_plata": [
+    2016,
+    2017,
+    2018,
+    2019
+   ],
+   "fugas": [
+    {
+     "categoria": "estudios_sin_obra",
+     "valor": 3771.7,
+     "min": 2471.9,
+     "max": 3771.7,
+     "tipo": "estimado",
+     "detalle": "23 estudios o consultorías de la alcaldía sin obra posterior identificable en SECOP, de 26 evaluados (3 con obra). Incluye $1.300 M de planes de ordenamiento: no llevan a una obra, pero se pagaron; el mínimo los resta.",
+     "items": [
+      {
+       "nombre": "Prestacion de servicios para la revision general del esquema de ordenamiento territorial- EOT del municipio de Yondo an… (CONSORCIO EOT YONDO 2019)",
+       "anio": 2019,
+       "valor": 1299.8,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-1-199015",
+       "nota": "Planes y ordenamiento territorial no llevan a una obra directa: se evalúan por su adopción y uso."
+      },
+      {
+       "nombre": "Prestacion de servicios de acompanamiento y seguimiento tecnico para la ejecucion de los siguientes proyectos: 2017-058…",
+       "anio": 2018,
+       "valor": 529.0,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-15-8305058",
+       "nota": null
+      },
+      {
+       "nombre": "Consultoria para la elaboracion de los estudios y disenos para la primera fase de ejecucion del proyecto implementacion… (UNION TEMPORAL ESTUDIOS Y DISENOS AGRICOLAS)",
+       "anio": 2019,
+       "valor": 247.0,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-15-9771655",
+       "nota": null
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd"
+     ],
+     "con_mixtos": 3771.7,
+     "mixtos_excluidos": []
+    },
+    {
+     "categoria": "girado_sin_avance",
+     "valor": 150.1,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "2 proyectos de regalías con ejecutor municipal pagaron más de lo que avanzó la obra. No se suman (ejecutor nacional): INVÍAS $5.810 M (BPIN 20181301010478, vías terciarias PDET del OCAD Paz). Para la plata propia (no regalías) no hay datos abiertos de avance físico: SECOP I no publica pagos y SECOP II no publica avance de obra.",
+     "items": [
+      {
+       "nombre": "Construcción en pavimento flexible, redes de acueducto y alcantarillado de la via al CIC y megacolegio del mu…",
+       "anio": 2019,
+       "valor": 108.7,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2018058930089 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 92 % y financiero 98 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2018058930089",
+       "valor_proyecto": 2179.5,
+       "avance_fisico_pct": 92.0,
+       "avance_financiero_pct": 98.0,
+       "edu": false
+      },
+      {
+       "nombre": "Implementación de la estrategia de atención primaria en salud APS, a través del programa \"oportunidad en salu…",
+       "anio": 2019,
+       "valor": 41.4,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2018058930062 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 98 % y financiero 100 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2018058930062",
+       "valor_proyecto": 2577.0,
+       "avance_fisico_pct": 98.0,
+       "avance_financiero_pct": 100.0,
+       "edu": false
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/mzgh-shtp",
+      "docs/01-diagnostico-sectorial.md"
+     ],
+     "no_sumado_ejecutor_nacional": 5809.9
+    },
+    {
+     "categoria": "saldos_regalias",
+     "valor": 23566.8,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "Al cierre de 2016 quedaban $23.567 M de regalías en caja sin comprometer ($21.318 M ni siquiera se habían incorporado al presupuesto). En junio de 2018 el saldo sin aprobar llegó a $47.134 M; buena parte se aprobó en 2019, el año con más aprobaciones de la serie.",
+     "items": [
+      {
+       "nombre": "Asignaciones directas recaudadas y no comprometidas al cierre del bienio 2015–2016 (CHIP)",
+       "anio": 2016,
+       "valor": 23566.8,
+       "fuente": "Asignado: MapaRegalías h6yd-ei3n (asignaciones directas distribuidas). Aprobado: MapaInversiones v4ap-cvae (valor inicial de las fuentes de asignaciones directas de Yondó en sus proyectos). Saldo: CHIP rr3v-r3jc y wtyw-nhcv, 2016-T4.",
+       "cruza_dos_gobiernos": true
+      },
+      {
+       "nombre": "Saldo de asignaciones directas sin aprobar acumulado 2012–junio de 2018 (SICODIS); no se suma: es otra foto de la misma plata",
+       "anio": 2018,
+       "valor": 47134.1,
+       "fuente": "Asignado: MapaRegalías h6yd-ei3n (asignaciones directas distribuidas). Aprobado: MapaInversiones v4ap-cvae (valor inicial de las fuentes de asignaciones directas de Yondó en sus proyectos). Saldo: TerriData (DNP–SICODIS SGR), corte jun-2018. CHIP wtyw-nhcv 2018-T3.",
+       "en_total": false
+      },
+      {
+       "nombre": "SGR presupuestado y sin comprometer a septiembre de 2018 (CHIP); no se suma: es otra foto",
+       "anio": 2018,
+       "valor": 13841.7,
+       "fuente": "Asignado: MapaRegalías h6yd-ei3n (asignaciones directas distribuidas). Aprobado: MapaInversiones v4ap-cvae (valor inicial de las fuentes de asignaciones directas de Yondó en sus proyectos). Saldo: TerriData (DNP–SICODIS SGR), corte jun-2018. CHIP wtyw-nhcv 2018-T3.",
+       "en_total": false
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/e624-d9uy",
+      "https://sicodis.dnp.gov.co"
+     ]
+    },
+    {
+     "categoria": "sobrecosto_sin_competencia",
+     "valor": 2180.4,
+     "min": 1090.2,
+     "max": 3270.6,
+     "tipo": "estimado",
+     "detalle": "Hecho: la alcaldía contrató $73.016 M sin competencia (31,4 % de $232.454 M, pesos de 2026; SECOP). Base para el sobrecosto: $21.804 M (se restan $47.291 M de OPS, los estudios sin obra y $150 M de plata girada sin avance). Incluye $26.610 M transferidos a Aguas y Aseo y al hospital, que esas entidades contratan a su vez por régimen especial. Sobrecosto probable: 10 % (rango 5–15 %). No prueba corrupción: mide el precio de renunciar a la competencia.",
+     "items": [
+      {
+       "nombre": "Base (contrato sin competencia): Aunar esfuerzos para lograr el fortalecimiento en la prestacion de los servicios publicos domicilia… — Aguas y Aseo de Yondó S.A. E.S.P.",
+       "anio": 2019,
+       "valor": 3190.0,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-12-9181410",
+       "en_total": false
+      },
+      {
+       "nombre": "Base (contrato sin competencia): Convenio interadministrativo entre el MPIO de Yondo y la ESE hospital hector abad gomez para la eje… — E.S.E. Hospital Héctor Abad Gómez de Yondó",
+       "anio": 2018,
+       "valor": 2342.7,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-12-8719705",
+       "en_total": false
+      },
+      {
+       "nombre": "Base (contrato sin competencia): Convenio interadministrativo con la empresa de aguas y aseo de Yondo para aunar esfuerzos estrategi… — Aguas y Aseo de Yondó S.A. E.S.P.",
+       "anio": 2019,
+       "valor": 1829.2,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-12-10285373",
+       "en_total": false
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "https://idea-en.cerge-ei.cz/files/IDEA_Studie_03_2024_Verejne_zakazky_abstract_EN.pdf",
+      "https://doi.org/10.1787/9789264226616-en",
+      "https://dspace.library.uu.nl/handle/1874/309580"
+     ],
+     "base_hecho": 21803.8,
+     "valor_sin_competencia_hecho": 73016.2,
+     "pct_valor_sin_competencia": 31.4
+    },
+    {
+     "categoria": "ops_nomina_paralela",
+     "valor": 8495.7,
+     "min": 2340.9,
+     "max": 22288.6,
+     "tipo": "estimado",
+     "detalle": "1.501 contratos OPS por $47.291 M de 2026, de ellos 125 de formulación de proyectos por $2.971 M. Referencia: 520.491 pesos de 2026 por habitante al año (mediana 2012–2025; rango 331.644–808.896).",
+     "items": [
+      {
+       "nombre": "OPS 2016: 321 contratos, 201 personas, $17.066 M (937.487 pesos de 2026 por habitante)",
+       "anio": 2016,
+       "valor": 7591.0,
+       "fuente": "data/comparativa/fugas_secop.json (por_anio, Alcaldía, ops); población DANE en data/comparativa/panel_anual.json"
+      },
+      {
+       "nombre": "OPS 2017: 307 contratos, 189 personas, $10.120 M (543.795 pesos de 2026 por habitante)",
+       "anio": 2017,
+       "valor": 433.7,
+       "fuente": "data/comparativa/fugas_secop.json (por_anio, Alcaldía, ops); población DANE en data/comparativa/panel_anual.json"
+      },
+      {
+       "nombre": "OPS 2019: 387 contratos, 247 personas, $10.637 M (544.605 pesos de 2026 por habitante)",
+       "anio": 2019,
+       "valor": 471.0,
+       "fuente": "data/comparativa/fugas_secop.json (por_anio, Alcaldía, ops); población DANE en data/comparativa/panel_anual.json"
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "Corte Constitucional, Sentencia C-614 de 2009"
+     ],
+     "ops_contratos": 1501,
+     "ops_valor": 47290.6,
+     "ops_formulacion_contratos": 125,
+     "ops_formulacion_valor": 2971.0
+    },
+    {
+     "categoria": "recaudo_no_cobrado",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "estimado",
+     "detalle": "Frente a la mediana de 7 comparables Yondó recaudó $32.889 M más en predial e ICA (pesos de 2026): no hay rezago. Tampoco hay brecha frente al percentil 75. La extracción de petróleo no paga ICA por ley (art. 16 del Código de Petróleos; art. 39 de la Ley 14 de 1983): no es recaudo perdido.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (recaudo_potencial)",
+      "https://terridata.dnp.gov.co"
+     ]
+    },
+    {
+     "categoria": "costo_vertimientos",
+     "valor": 201.9,
+     "min": 201.9,
+     "max": 400.3,
+     "tipo": "estimado",
+     "detalle": "Yondó no tiene PTAR: en 2019 vertía 55,34 L/s sin tratar (Superservicios, 2020). Tasa estimada con factor regional 1; con el caudal medido sería hasta 1,98 veces. En 2020 Aguas y Aseo debía $175 M a Corantioquia por tasas desde 2018 (hecho).",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (aguas_residuales)",
+      "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf"
+     ]
+    },
+    {
+     "categoria": "fondos_no_gestionados",
+     "valor": 9559.2,
+     "min": 4621.7,
+     "max": 22736.1,
+     "tipo": "contrafactual",
+     "detalle": "Obras por Impuestos empezó en 2018; Yondó, con Ecopetrol en su territorio, no tuvo un proyecto vial propio hasta 2024.",
+     "items": [
+      {
+       "nombre": "Obras por Impuestos (proyecto vial propio con una empresa, como Ecopetrol)",
+       "anio": null,
+       "valor": 9243.4,
+       "min": 4621.7,
+       "max": 21220.0,
+       "fuente": "https://www.renovacionterritorio.gov.co/sites/default/files/2025-10/proyectos_2018_2025.pdf; data/comparativa/sgr_fondos.json"
+      },
+      {
+       "nombre": "Cooperación internacional no reembolsable",
+       "anio": null,
+       "valor": 315.8,
+       "min": 0.0,
+       "max": 1516.1,
+       "fuente": "https://www.datos.gov.co/d/2d3i-f9wd; data/comparativa/sgr_fondos.json"
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json"
+     ]
+    },
+    {
+     "categoria": "ahorro_solar",
+     "valor": 1543.2,
+     "min": 789.9,
+     "max": 2424.2,
+     "tipo": "contrafactual",
+     "detalle": "Instalar 469 kWp en 2016 costaba $4.592 M de 2026; habría ahorrado $5.435 M en facturas hasta 2026 (neto con valor residual: $1.543 M; se pagaba sola en 2025).",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (contrafactual_solar)"
+     ]
+    },
+    {
+     "categoria": "ahorro_regalias",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "contrafactual",
+     "detalle": "No aplica: desde 2012 el Sistema General de Regalías ahorra a nivel nacional (Fondo de Ahorro y Estabilización) y el municipio no maneja regalías directas.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json"
+     ],
+     "sin_dato": true
+    }
+   ],
+   "total_hecho": 23716.9,
+   "total_estimado": 14649.7,
+   "total_contrafactual": 11102.4,
+   "sin_obra": 38366.6,
+   "sin_obra_rango": [
+    29821.8,
+    53448.1
+   ],
+   "sin_obra_pct_ingresos": 11.2,
+   "pudo_hacerse": [
+    {
+     "que": "Terminar la Ciudadela Educativa",
+     "costo": 12198.9,
+     "equivalencia": "≈ 20 aulas escolares dotadas",
+     "por_que_no": "Tenía $7.090 M en el plan 2016–2019 y siguió sin terminar.",
+     "fuente": "data/gobiernos.json",
+     "cubierto_con_plata_sin_obra_pct": 314.5
+    },
+    {
+     "que": "Vivienda para reubicar el barrio La Paz",
+     "costo": 20583.4,
+     "equivalencia": "≈ 131 viviendas VIS urbanas",
+     "por_que_no": "Empezó en 2019 y seguía en ejecución en 2026.",
+     "fuente": "data/gobiernos.json",
+     "cubierto_con_plata_sin_obra_pct": 186.4
+    },
+    {
+     "que": "Una vía terciaria por Obras por Impuestos con una empresa del territorio",
+     "costo": 9243.4,
+     "equivalencia": "≈ 9,2 km de placa huella",
+     "por_que_no": "Obras por Impuestos empezó en 2018; Yondó no tuvo proyectos viales propios en el banco de la ART (solo uno de dotación escolar en 2019, $1.169 M).",
+     "fuente": "https://www.renovacionterritorio.gov.co/sites/default/files/2025-10/proyectos_2018_2025.pdf; data/comparativa/sgr_fondos.json",
+     "cubierto_con_plata_sin_obra_pct": 415.1
+    },
+    {
+     "que": "Solar en las 13 sedes públicas (469 kWp) instalada en 2016",
+     "costo": 4592.1,
+     "equivalencia": "469 kWp solares en cubiertas",
+     "por_que_no": "La Ley 1715 de 2014 ya daba incentivos. Se habría pagado sola en 2025 y a 2026 dejaría $1.543 M netos.",
+     "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_solar)",
+     "cubierto_con_plata_sin_obra_pct": 835.5
+    }
+   ],
+   "equivalencias": [
+    {
+     "unidad": "aulas escolares dotadas",
+     "n": 63.9,
+     "costo_unitario": 600.0,
+     "id": "aula_dotada",
+     "rango_n": [
+      40.4,
+      95.9
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "viviendas VIS rurales",
+     "n": 310.2,
+     "costo_unitario": 123.7,
+     "id": "vis_rural",
+     "rango_n": [
+      243.5,
+      427.3
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "km de placa huella",
+     "n": 38.4,
+     "costo_unitario": 1000.0,
+     "id": "km_placa_huella",
+     "rango_n": [
+      17.8,
+      47.4
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "plantas de tratamiento de aguas residuales (PTAR)",
+     "n": 2.8,
+     "costo_unitario": 13876.2,
+     "id": "ptar_12000_hab",
+     "rango_n": [
+      1.3,
+      2.8
+     ],
+     "certeza_costo": "estimado"
+    }
+   ],
+   "fondos_no_gestionados": [
+    {
+     "fondo": "Obras por Impuestos (proyecto vial propio con una empresa, como Ecopetrol)",
+     "desde": 2018,
+     "monto_referencia": 9243.4,
+     "min": 4621.7,
+     "max": 21220.0,
+     "comparable": "Entre 2018 y 2023 Yondó, con Ecopetrol operando en su territorio, solo tuvo un proyecto de dotación escolar en 2019 ($1.169 M); Cantagallo tuvo uno propio de $5.333 M. En 2024 llegó la vía El Paraíso–La Raya–Las Lomas ($52.237 M).",
+     "fuente": "https://www.renovacionterritorio.gov.co/sites/default/files/2025-10/proyectos_2018_2025.pdf; https://www.vanguardia.com/santander/barrancabermeja/2026/01/22/ecopetrol-invertira-cerca-de-42-mil-millones-en-vias-rurales-del-magdalena-medio-antioqueno/; data/comparativa/sgr_fondos.json",
+     "suma_en_total": true
+    },
+    {
+     "fondo": "Cooperación internacional no reembolsable",
+     "desde": 2004,
+     "monto_referencia": 315.8,
+     "min": 0.0,
+     "max": 1516.1,
+     "comparable": "En el registro de APC solo aparece una donación de Japón para Yondó (2014, US$106.715); la Unión Europea financió proyectos en 5 municipios del Sur de Bolívar (2016, US$1,68 M). Baja certeza.",
+     "fuente": "https://www.datos.gov.co/d/2d3i-f9wd; data/comparativa/sgr_fondos.json",
+     "suma_en_total": true
+    }
+   ],
+   "lectura": "Entraron $343.223 M de 2026 y fue el gobierno que más contrató con competencia (69 % del valor). Aun así quedan $38.367 M sin obra: $23.567 M de regalías sin comprometer al cierre de 2016 y $10.676 M entre OPS y sobrecosto probable. La Ciudadela Educativa y la vivienda de La Paz siguieron sin terminar."
+  },
+  {
+   "id": "2020-2023",
+   "alcalde": "Fabián Antonio Echavarría Rangel (renunció en octubre de 2023; alcalde encargado designado por el gobernador)",
+   "en_curso": false,
+   "ingresos": 340358.0,
+   "inversion": 417216.0,
+   "regalias": 105016.0,
+   "sgp": 77807.0,
+   "propios": 86270.0,
+   "anios_con_dato_plata": [
+    2020,
+    2021,
+    2022,
+    2023
+   ],
+   "fugas": [
+    {
+     "categoria": "estudios_sin_obra",
+     "valor": 3524.3,
+     "min": 3524.3,
+     "max": 3524.3,
+     "tipo": "estimado",
+     "detalle": "14 estudios o consultorías de la alcaldía sin obra posterior identificable en SECOP, de 24 evaluados (9 con obra). Con los contratos mixtos (diseño y obra juntos) serían $20.536 M; no se cuentan porque su obra va dentro del contrato o ya está en 'plata girada sin avance'.",
+     "items": [
+      {
+       "nombre": "Contrato interadministrativo de consultoria para la ejecucion de estudios y disenos fase lll destinados a la intervenci… (Empresa de Desarrollo Urbano de Medellín)",
+       "anio": 2021,
+       "valor": 2360.2,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-12-12074873",
+       "nota": null
+      },
+      {
+       "nombre": "Contrato interadministrativo entre el municipio de Yondo y la asociacion de municipios del Magdalena medio antioqueno-… (ASOCIACION DE MUNICIPIOS DEL MGDALENA MEDIO ANTIOQUENO AMMA)",
+       "anio": 2020,
+       "valor": 451.6,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-12-11384294",
+       "nota": null
+      },
+      {
+       "nombre": "Realizar estudios y disenos para la dotacion de servicios el predio urbano localizado en el barrio jose domingo olivero… (UNIVERSIDAD SANTO TOMAS)",
+       "anio": 2022,
+       "valor": 295.7,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=22-15-13170989",
+       "nota": null
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd"
+     ],
+     "con_mixtos": 20536.3,
+     "mixtos_excluidos": [
+      {
+       "nombre": "Contrato interadministrativo de administraciòn delegada para diseños arquitectonicos y tè…",
+       "anio": 2021,
+       "valor": 17012.0,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-12-12574245"
+      }
+     ]
+    },
+    {
+     "categoria": "girado_sin_avance",
+     "valor": 35411.5,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "9 proyectos de regalías con ejecutor municipal pagaron más de lo que avanzó la obra. $34.957 M corresponden a proyectos que el municipio delegó en la EDU de Medellín. Para la plata propia (no regalías) no hay datos abiertos de avance físico: SECOP I no publica pagos y SECOP II no publica avance de obra.",
+     "items": [
+      {
+       "nombre": "Construcción de alternativa de pavimentación y construcción de obras de arte en el corredor vial de la Ye de… (ejecutada con la EDU de Medellín)",
+       "anio": 2021,
+       "valor": 16764.2,
+       "fuente": "GESPROY y MapaInversiones, BPIN 20201301010644 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 61 % y financiero 90 %; data/comparativa/sgr_fondos.json",
+       "bpin": "20201301010644",
+       "valor_proyecto": 69661.6,
+       "avance_fisico_pct": 61.0,
+       "avance_financiero_pct": 90.0,
+       "edu": true
+      },
+      {
+       "nombre": "Construcción de vivienda nueva urbana y rural en los municipios de Puerto Nare Yolombó Yondó Antioquia (ejecutada con la EDU de Medellín)",
+       "anio": 2023,
+       "valor": 7488.3,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2022003050005 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 17 % y financiero 89 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2022003050005",
+       "valor_proyecto": 12345.0,
+       "avance_fisico_pct": 17.0,
+       "avance_financiero_pct": 89.0,
+       "edu": true,
+       "alertas_datos": [
+        "MapaInversiones reporta pagos de 14.281 M, más que el valor aprobado"
+       ]
+      },
+      {
+       "nombre": "Construcción de vivienda nueva rural en sitio propio en el municipio de Yondó Antioquia (ejecutada con la EDU de Medellín)",
+       "anio": 2023,
+       "valor": 5975.4,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2022003050034 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 9 % y financiero 88 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2022003050034",
+       "valor_proyecto": 8978.0,
+       "avance_fisico_pct": 9.0,
+       "avance_financiero_pct": 88.0,
+       "edu": true
+      },
+      {
+       "nombre": "Mejoramiento de vías terciarias mediante la construcción de placa huellas en el sector via Caño Don Juan - no… (ejecutada con la EDU de Medellín)",
+       "anio": 2021,
+       "valor": 3065.4,
+       "fuente": "GESPROY y MapaInversiones, BPIN 20201301010781 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 65 % y financiero 90 %; data/comparativa/sgr_fondos.json",
+       "bpin": "20201301010781",
+       "valor_proyecto": 14776.0,
+       "avance_fisico_pct": 65.0,
+       "avance_financiero_pct": 90.0,
+       "edu": true
+      },
+      {
+       "nombre": "Construcción del parque San Luis Beltrán en el municipio de Yondó Antioquia (ejecutada con la EDU de Medellín)",
+       "anio": 2023,
+       "valor": 862.3,
+       "fuente": "GESPROY y MapaInversiones, BPIN 20211301012365 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 41 % y financiero 76 %; data/comparativa/sgr_fondos.json",
+       "bpin": "20211301012365",
+       "valor_proyecto": 2617.4,
+       "avance_fisico_pct": 41.0,
+       "avance_financiero_pct": 76.0,
+       "edu": true
+      },
+      {
+       "nombre": "Mejoramiento en pavimento flexible en el centro poblado del corregimiento San Miguel del Tigre segunda etapa… (ejecutada con la EDU de Medellín)",
+       "anio": 2023,
+       "valor": 801.2,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2023058930013 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 33 % y financiero 89 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2023058930013",
+       "valor_proyecto": 1519.9,
+       "avance_fisico_pct": 33.0,
+       "avance_financiero_pct": 89.0,
+       "edu": true,
+       "alertas_datos": [
+        "MapaInversiones reporta pagos de 4.235 M, más que el valor aprobado"
+       ]
+      },
+      {
+       "nombre": "Adecuación y mejoramiento de la cancha polideportiva La Residencia Estudiantil del municipio de Yondó",
+       "anio": 2023,
+       "valor": 168.4,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2021058930005 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 84 % y financiero 90 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2021058930005",
+       "valor_proyecto": 3670.6,
+       "avance_fisico_pct": 84.0,
+       "avance_financiero_pct": 90.0,
+       "edu": false,
+       "alertas_datos": [
+        "figura como terminado con 84 % de avance físico"
+       ]
+      },
+      {
+       "nombre": "Construcción de acueducto y alcantarillado obras de adecuación para la dotación de servicios públicos y desar…",
+       "anio": 2023,
+       "valor": 153.9,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2023058930018 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 69 % y financiero 70 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2023058930018",
+       "valor_proyecto": 16349.2,
+       "avance_fisico_pct": 69.0,
+       "avance_financiero_pct": 70.0,
+       "edu": false,
+       "alertas_datos": [
+        "valor distinto entre GESPROY y MapaInversiones (>25 %)"
+       ]
+      },
+      {
+       "nombre": "Construcción de la cancha de fútbol en la vereda Caño Negro del Municipio de Yondó",
+       "anio": 2022,
+       "valor": 132.4,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2019058930074 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 91 % y financiero 100 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2019058930074",
+       "valor_proyecto": 1676.9,
+       "avance_fisico_pct": 91.0,
+       "avance_financiero_pct": 100.0,
+       "edu": false
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/mzgh-shtp",
+      "docs/01-diagnostico-sectorial.md"
+     ],
+     "no_sumado_ejecutor_nacional": 0.0
+    },
+    {
+     "categoria": "saldos_regalias",
+     "valor": 13351.8,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "Al cierre de 2022 quedaban sin comprometer $7.415 M de asignaciones directas, $4.868 M de incentivos del OCAD Paz y $1.069 M de la Asignación para la Inversión Local. Además, $36.759 M comprometidos pasaron sin pagar al bienio siguiente.",
+     "items": [
+      {
+       "nombre": "Asignaciones directas sin comprometer al cierre del bienio 2021–2022 (CHIP)",
+       "anio": 2022,
+       "valor": 7414.8,
+       "fuente": "Asignado: MapaRegalías h6yd-ei3n (asignaciones directas distribuidas). Aprobado: MapaInversiones v4ap-cvae (valor inicial de las fuentes de asignaciones directas de Yondó en sus proyectos). Presupuesto y compromisos: OVCF xr2w-9eg2 y qkv4-ek54, corte dic-2022."
+      },
+      {
+       "nombre": "Incentivos del Acto Legislativo 04 de 2017 que pasaron sin usar a 2023–2024",
+       "anio": 2022,
+       "valor": 4867.9,
+       "fuente": "https://www.datos.gov.co/d/5ka2-and2 (disponibilidad inicial 2023-2024); data/comparativa/sgr_fondos.json"
+      },
+      {
+       "nombre": "Asignación para la Inversión Local sin comprometer, 2021–2022 (CHIP)",
+       "anio": 2022,
+       "valor": 1069.1,
+       "fuente": "https://www.datos.gov.co/d/xr2w-9eg2 y https://www.datos.gov.co/d/qkv4-ek54; data/comparativa/sgr_fondos.json"
+      },
+      {
+       "nombre": "Saldo de asignaciones directas que pasó de 2019–2020 a 2021–2022 (no se suma: es una foto anterior)",
+       "anio": 2020,
+       "valor": 7093.9,
+       "fuente": "Asignado: MapaRegalías h6yd-ei3n (asignaciones directas distribuidas). Aprobado: MapaInversiones v4ap-cvae (valor inicial de las fuentes de asignaciones directas de Yondó en sus proyectos). Saldo: OVCF 5ka2-and2, disponibilidad inicial del presupuesto 2021-2022.",
+       "en_total": false
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/e624-d9uy",
+      "https://sicodis.dnp.gov.co"
+     ]
+    },
+    {
+     "categoria": "sobrecosto_sin_competencia",
+     "valor": 15490.6,
+     "min": 7745.3,
+     "max": 23235.8,
+     "tipo": "estimado",
+     "detalle": "Hecho: la alcaldía contrató $234.558 M sin competencia (83,1 % de $282.350 M, pesos de 2026; SECOP). Base para el sobrecosto: $154.906 M (se restan $29.928 M de OPS, los estudios sin obra, $35.411 M de plata girada sin avance, $3.708 M de subsidios a las tarifas y $8.139 M de un registro duplicado; se suman $1.059 M de procesos competitivos con un solo oferente). Incluye $52.278 M transferidos a Aguas y Aseo y al hospital, que esas entidades contratan a su vez por régimen especial. Sobrecosto probable: 10 % (rango 5–15 %). No prueba corrupción: mide el precio de renunciar a la competencia. En 8 de los 9 procesos competitivos con dato hubo un solo oferente; la EDU concentró el 40 % del valor.",
+     "items": [
+      {
+       "nombre": "Base (contrato sin competencia): Contrato interadministrativo de administraciòn delegada para la adecuaciòn mantenimiento y construc… — Empresa de Desarrollo Urbano de Medellín",
+       "anio": 2021,
+       "valor": 73549.8,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-12-12395865",
+       "en_total": false
+      },
+      {
+       "nombre": "Base (contrato sin competencia): Contrato interadministrativo de administracion delegada para obras para la ejecucion de los proyect… — Empresa de Desarrollo Urbano de Medellín",
+       "anio": 2023,
+       "valor": 18690.6,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=23-12-13761724",
+       "en_total": false
+      },
+      {
+       "nombre": "Base (contrato sin competencia): Contrato interadministrativo de administraciòn delegada para diseños arquitectonicos y tècnicos asì… — Empresa de Desarrollo Urbano de Medellín",
+       "anio": 2021,
+       "valor": 17012.0,
+       "fuente": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-12-12574245",
+       "en_total": false
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "https://idea-en.cerge-ei.cz/files/IDEA_Studie_03_2024_Verejne_zakazky_abstract_EN.pdf",
+      "https://doi.org/10.1787/9789264226616-en",
+      "https://dspace.library.uu.nl/handle/1874/309580"
+     ],
+     "base_hecho": 154905.6,
+     "valor_sin_competencia_hecho": 234557.8,
+     "pct_valor_sin_competencia": 83.1
+    },
+    {
+     "categoria": "ops_nomina_paralela",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 3163.5,
+     "tipo": "estimado",
+     "detalle": "1.251 contratos OPS por $29.928 M de 2026, de ellos 172 de formulación de proyectos por $5.757 M. Referencia: 520.491 pesos de 2026 por habitante al año (mediana 2012–2025; rango 331.644–808.896).",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "Corte Constitucional, Sentencia C-614 de 2009"
+     ],
+     "ops_contratos": 1251,
+     "ops_valor": 29928.2,
+     "ops_formulacion_contratos": 172,
+     "ops_formulacion_valor": 5756.6
+    },
+    {
+     "categoria": "recaudo_no_cobrado",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 4494.6,
+     "tipo": "estimado",
+     "detalle": "Frente a la mediana de 7 comparables Yondó recaudó $25.922 M más en predial e ICA (pesos de 2026): no hay rezago. Máximo: predial con catastro actualizado ($4.495 M en 3 años). La extracción de petróleo no paga ICA por ley (art. 16 del Código de Petróleos; art. 39 de la Ley 14 de 1983): no es recaudo perdido.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (recaudo_potencial)",
+      "https://terridata.dnp.gov.co"
+     ]
+    },
+    {
+     "categoria": "costo_vertimientos",
+     "valor": 224.9,
+     "min": 224.9,
+     "max": 445.9,
+     "tipo": "estimado",
+     "detalle": "Yondó no tiene PTAR: en 2019 vertía 55,34 L/s sin tratar (Superservicios, 2020). Tasa estimada con factor regional 1; con el caudal medido sería hasta 1,98 veces. En 2020 Aguas y Aseo debía $175 M a Corantioquia por tasas desde 2018 (hecho).",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (aguas_residuales)",
+      "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf"
+     ]
+    },
+    {
+     "categoria": "fondos_no_gestionados",
+     "valor": 11329.3,
+     "min": 4790.3,
+     "max": 25096.2,
+     "tipo": "contrafactual",
+     "detalle": "En el OCAD Paz Yondó sí consiguió plata (el problema fue ejecutarla). Lo que faltó fue Obras por Impuestos viales y Centros Digitales. Findeter no se suma (es crédito).",
+     "items": [
+      {
+       "nombre": "Obras por Impuestos (proyecto vial propio con una empresa, como Ecopetrol)",
+       "anio": null,
+       "valor": 9243.4,
+       "min": 4621.7,
+       "max": 21220.0,
+       "fuente": "https://www.renovacionterritorio.gov.co/sites/default/files/2025-10/proyectos_2018_2025.pdf; data/comparativa/sgr_fondos.json"
+      },
+      {
+       "nombre": "MinTIC – Centros Digitales rurales",
+       "anio": null,
+       "valor": 1770.1,
+       "min": 168.6,
+       "max": 2360.1,
+       "fuente": "https://www.datos.gov.co/d/fybg-535s; data/comparativa/sgr_fondos.json"
+      },
+      {
+       "nombre": "Cooperación internacional no reembolsable",
+       "anio": null,
+       "valor": 315.8,
+       "min": 0.0,
+       "max": 1516.1,
+       "fuente": "https://www.datos.gov.co/d/2d3i-f9wd; data/comparativa/sgr_fondos.json"
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json"
+     ]
+    },
+    {
+     "categoria": "ahorro_solar",
+     "valor": 1957.9,
+     "min": 1607.3,
+     "max": 2361.7,
+     "tipo": "contrafactual",
+     "detalle": "Instalar 469 kWp en 2020 costaba $2.799 M de 2026; habría ahorrado $3.692 M en facturas hasta 2026 (neto con valor residual: $1.958 M; se pagaba sola en 2025).",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (contrafactual_solar)"
+     ]
+    },
+    {
+     "categoria": "ahorro_regalias",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "contrafactual",
+     "detalle": "No aplica: desde 2012 el Sistema General de Regalías ahorra a nivel nacional (Fondo de Ahorro y Estabilización) y el municipio no maneja regalías directas.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json"
+     ],
+     "sin_dato": true
+    }
+   ],
+   "total_hecho": 48763.3,
+   "total_estimado": 19239.8,
+   "total_contrafactual": 13287.2,
+   "sin_obra": 68003.1,
+   "sin_obra_rango": [
+    60257.8,
+    83627.4
+   ],
+   "sin_obra_pct_ingresos": 20.0,
+   "pudo_hacerse": [
+    {
+     "que": "Terminar las viviendas contratadas con la EDU (dos proyectos de regalías)",
+     "costo": 13463.7,
+     "equivalencia": "≈ 109 viviendas VIS rurales",
+     "por_que_no": "Al cierre del periodo iban en 9 % y 17 % de obra con 88 % y 89 % de los recursos girados; el DNP alertó en agosto de 2024 alto riesgo de pérdida. Costo: lo girado sin avance equivalente.",
+     "fuente": "data/comparativa/sgr_fondos.json (BPIN 2022003050034 y 2022003050005); docs/01-diagnostico-sectorial.md",
+     "cubierto_con_plata_sin_obra_pct": 505.1
+    },
+    {
+     "que": "Terminar el corredor Ye de Marley–San Francisco (OCAD Paz)",
+     "costo": 16764.2,
+     "equivalencia": "≈ 17 km de placa huella",
+     "por_que_no": "61 % de obra con 90 % de los recursos pagados. Costo: lo girado sin avance equivalente.",
+     "fuente": "data/comparativa/sgr_fondos.json (BPIN 20201301010644)",
+     "cubierto_con_plata_sin_obra_pct": 405.6
+    },
+    {
+     "que": "PTAR para el casco urbano",
+     "costo": 13876.2,
+     "equivalencia": "1 PTAR (costo entre $13.527 M y $30.176 M; sin colectores)",
+     "por_que_no": "Se adoptó el EOT 2022–2035, pero no hay PTAR; la canalización de colectores de las estaciones de bombeo sigue en formulación ($67.640 M, BPIN 20201301010649).",
+     "fuente": "data/comparativa/costo_no_hacer.json (costos_unitarios: ptar_12000_hab, PTAR de Tenjo, Corozal y Salónica indexadas); Superservicios 2020: https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
+     "cubierto_con_plata_sin_obra_pct": 490.1,
+     "costo_rango": [
+      13527.1,
+      30175.6
+     ]
+    },
+    {
+     "que": "Solar en las 13 sedes públicas (469 kWp) instalada en 2020",
+     "costo": 2798.5,
+     "equivalencia": "469 kWp solares en cubiertas",
+     "por_que_no": "Se habría pagado sola en 2025 y a 2026 dejaría $1.958 M netos; FENOGE y la convocatoria de incentivos la podían financiar.",
+     "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_solar)",
+     "cubierto_con_plata_sin_obra_pct": 999.0
+    },
+    {
+     "que": "Centros Digitales en 10 sedes rurales más (MinTIC)",
+     "costo": 1770.1,
+     "equivalencia": "≈ 10 sedes educativas rurales con internet",
+     "por_que_no": "Yondó tiene 4 sedes conectadas, todas en San Miguel del Tigre; sus vecinos, entre 9 y 18.",
+     "fuente": "https://www.datos.gov.co/d/fybg-535s; data/comparativa/sgr_fondos.json",
+     "cubierto_con_plata_sin_obra_pct": 999.0
+    }
+   ],
+   "equivalencias": [
+    {
+     "unidad": "viviendas VIS rurales",
+     "n": 549.8,
+     "costo_unitario": 123.7,
+     "id": "vis_rural",
+     "rango_n": [
+      431.5,
+      757.4
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "plantas de tratamiento de aguas residuales (PTAR)",
+     "n": 4.9,
+     "costo_unitario": 13876.2,
+     "id": "ptar_12000_hab",
+     "rango_n": [
+      2.3,
+      5.0
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "km de placa huella",
+     "n": 68.0,
+     "costo_unitario": 1000.0,
+     "id": "km_placa_huella",
+     "rango_n": [
+      31.5,
+      84.0
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "ambulancias medicalizadas",
+     "n": 151.2,
+     "costo_unitario": 449.8,
+     "id": "ambulancia_medicalizada_tam",
+     "rango_n": [
+      104.6,
+      170.0
+     ],
+     "certeza_costo": "hecho"
+    }
+   ],
+   "fondos_no_gestionados": [
+    {
+     "fondo": "Obras por Impuestos (proyecto vial propio con una empresa, como Ecopetrol)",
+     "desde": 2018,
+     "monto_referencia": 9243.4,
+     "min": 4621.7,
+     "max": 21220.0,
+     "comparable": "Entre 2018 y 2023 Yondó, con Ecopetrol operando en su territorio, solo tuvo un proyecto de dotación escolar en 2019 ($1.169 M); Cantagallo tuvo uno propio de $5.333 M. En 2024 llegó la vía El Paraíso–La Raya–Las Lomas ($52.237 M).",
+     "fuente": "https://www.renovacionterritorio.gov.co/sites/default/files/2025-10/proyectos_2018_2025.pdf; https://www.vanguardia.com/santander/barrancabermeja/2026/01/22/ecopetrol-invertira-cerca-de-42-mil-millones-en-vias-rurales-del-magdalena-medio-antioqueno/; data/comparativa/sgr_fondos.json",
+     "suma_en_total": true
+    },
+    {
+     "fondo": "MinTIC – Centros Digitales rurales",
+     "desde": 2020,
+     "monto_referencia": 1770.1,
+     "min": 168.6,
+     "max": 2360.1,
+     "comparable": "Yondó tiene 4 sedes conectadas; Remedios y San Pablo, 18; Cantagallo, 12 (corte oct-2023).",
+     "fuente": "https://www.datos.gov.co/d/fybg-535s; docs/anexos/D-energia-mintic.md; data/comparativa/sgr_fondos.json",
+     "suma_en_total": true
+    },
+    {
+     "fondo": "Cooperación internacional no reembolsable",
+     "desde": 2004,
+     "monto_referencia": 315.8,
+     "min": 0.0,
+     "max": 1516.1,
+     "comparable": "En el registro de APC solo aparece una donación de Japón para Yondó (2014, US$106.715); la Unión Europea financió proyectos en 5 municipios del Sur de Bolívar (2016, US$1,68 M). Baja certeza.",
+     "fuente": "https://www.datos.gov.co/d/2d3i-f9wd; data/comparativa/sgr_fondos.json",
+     "suma_en_total": true
+    },
+    {
+     "fondo": "Findeter – crédito con tasa compensada",
+     "desde": 1989,
+     "monto_referencia": 5140.7,
+     "min": 5140.7,
+     "max": 10281.4,
+     "comparable": "Capacidad de crédito prudente (20–40 % de los ingresos corrientes de 2024); Yondó no pagó intereses de deuda en 2020–2024. Es crédito: no se suma.",
+     "fuente": "data/fuentes/serie_fiscal_oec.csv; data/comparativa/sgr_fondos.json",
+     "suma_en_total": false
+    },
+    {
+     "fondo": "Incentivo a la Producción del SGR (línea \"Territorios energéticos\", hasta $8.000 M)",
+     "desde": 2017,
+     "monto_referencia": 4867.9,
+     "comparable": "Incentivos del Acto Legislativo 04 de 2017: $4.079 M corrientes pasaron sin usar a 2021–2022 y $3.687 M a 2023–2024. Ya era plata de Yondó: se cuenta en \"saldos de regalías\".",
+     "fuente": "https://www.datos.gov.co/d/e624-d9uy; data/comparativa/sgr_fondos.json",
+     "suma_en_total": false
+    }
+   ],
+   "lectura": "Entraron $340.358 M de 2026 y se invirtió más que nunca, pero $48.763 M quedaron registrados sin convertirse en obra: $35.412 M de regalías pagados por encima del avance de vivienda y vías, casi todo en proyectos delegados en la EDU de Medellín. Con el 82 % contratado sin competencia, el sobrecosto probable suma $15.491 M; en total, $68.003 M alcanzaban para 550 viviendas VIS rurales."
+  },
+  {
+   "id": "2024-2027",
+   "alcalde": "Yerson Antonio Ariza Rivera (coalición \"Yondó Avanza\")",
+   "en_curso": true,
+   "ingresos": 77274.0,
+   "inversion": 71957.0,
+   "regalias": 24455.0,
+   "sgp": 22194.0,
+   "propios": 18337.0,
+   "anios_con_dato_plata": [
+    2024
+   ],
+   "fugas": [
+    {
+     "categoria": "estudios_sin_obra",
+     "valor": 311.0,
+     "min": 311.0,
+     "max": 311.0,
+     "tipo": "estimado",
+     "detalle": "15 estudios o consultorías de la alcaldía sin obra posterior identificable en SECOP, de 23 evaluados (8 con obra).",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd"
+     ],
+     "con_mixtos": 311.0,
+     "mixtos_excluidos": []
+    },
+    {
+     "categoria": "girado_sin_avance",
+     "valor": 485.0,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "4 proyectos de regalías con ejecutor municipal pagaron más de lo que avanzó la obra. Para la plata propia (no regalías) no hay datos abiertos de avance físico: SECOP I no publica pagos y SECOP II no publica avance de obra.",
+     "items": [
+      {
+       "nombre": "Desarrollo del Programa de Alimentación Escolar (PAE): Restaurantes Escolares en Modalidad de Almuerzos y Com…",
+       "anio": 2025,
+       "valor": 299.2,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2025058930001 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 82 % y financiero 90 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2025058930001",
+       "valor_proyecto": 3739.5,
+       "avance_fisico_pct": 82.0,
+       "avance_financiero_pct": 90.0,
+       "edu": false,
+       "alertas_datos": [
+        "valor distinto entre GESPROY y MapaInversiones (>25 %)",
+        "MapaInversiones reporta pagos de 6.768 M, más que el valor aprobado"
+       ]
+      },
+      {
+       "nombre": "Implementación del Programa de Alimentación Escolar - restaurantes escolares en establecimientos educativos d…",
+       "anio": 2024,
+       "valor": 101.5,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2024058930004 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 82 % y financiero 88 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2024058930004",
+       "valor_proyecto": 1735.3,
+       "avance_fisico_pct": 82.0,
+       "avance_financiero_pct": 88.0,
+       "edu": false,
+       "alertas_datos": [
+        "figura como terminado con 82 % de avance físico"
+       ]
+      },
+      {
+       "nombre": "Estudios y diseños para la construcción optimización yo ampliación del acueducto veredal de la zona plana del…",
+       "anio": 2025,
+       "valor": 49.7,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2024058930060 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 27 % y financiero 36 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2024058930060",
+       "valor_proyecto": 581.0,
+       "avance_fisico_pct": 27.0,
+       "avance_financiero_pct": 36.0,
+       "edu": false,
+       "alertas_datos": [
+        "valor distinto entre GESPROY y MapaInversiones (>25 %)",
+        "MapaInversiones reporta pagos de 884 M, más que el valor aprobado"
+       ]
+      },
+      {
+       "nombre": "Servicio de transporte escolar para los estudiantes del área rural del Municipio de Yondó",
+       "anio": 2024,
+       "valor": 34.7,
+       "fuente": "GESPROY y MapaInversiones, BPIN 2024058930003 (https://www.datos.gov.co/d/mzgh-shtp): avance físico 97 % y financiero 99 %; data/comparativa/sgr_fondos.json",
+       "bpin": "2024058930003",
+       "valor_proyecto": 1777.2,
+       "avance_fisico_pct": 97.0,
+       "avance_financiero_pct": 99.0,
+       "edu": false
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/mzgh-shtp",
+      "docs/01-diagnostico-sectorial.md"
+     ],
+     "no_sumado_ejecutor_nacional": 0.0
+    },
+    {
+     "categoria": "saldos_regalias",
+     "valor": 25557.8,
+     "min": null,
+     "max": null,
+     "tipo": "hecho",
+     "detalle": "Periodo en curso: a octubre de 2026 hay $9.569 M de asignaciones directas sin aprobar ($21.099 M en caja), $13.694 M del Incentivo a la Producción (pares: San Pablo aprobó 83 %, Cantagallo 43 %) y $2.295 M de inversión local. El bienio cierra en diciembre de 2026: todavía se puede aprobar.",
+     "items": [
+      {
+       "nombre": "Asignaciones directas sin aprobar en proyectos, bienio 2025–2026 (corte oct-2026, MinHacienda)",
+       "anio": 2026,
+       "valor": 9568.8,
+       "fuente": "MinHacienda e624-d9uy (ADIR + ADAN), corte oct-2026. CHIP OVCF a jun-2026 como contraste."
+      },
+      {
+       "nombre": "Incentivo a la Producción del SGR sin aprobar, 2025–2026 (solo 2,4 % aprobado)",
+       "anio": 2026,
+       "valor": 13694.2,
+       "fuente": "https://www.datos.gov.co/d/e624-d9uy (corte oct-2026); data/comparativa/sgr_fondos.json"
+      },
+      {
+       "nombre": "Asignación para la Inversión Local sin aprobar, 2025–2026",
+       "anio": 2026,
+       "valor": 2294.8,
+       "fuente": "https://www.datos.gov.co/d/e624-d9uy (corte oct-2026); data/comparativa/sgr_fondos.json"
+      },
+      {
+       "nombre": "Asignaciones directas sin comprometer al cierre de 2023–2024 (bienio compartido; no se suma: es una foto anterior)",
+       "anio": 2024,
+       "valor": 5777.8,
+       "fuente": "Asignado: MapaRegalías h6yd-ei3n (asignaciones directas distribuidas). Aprobado: MapaInversiones v4ap-cvae (valor inicial de las fuentes de asignaciones directas de Yondó en sus proyectos). Presupuesto y compromisos: OVCF, corte dic-2024.",
+       "en_total": false
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json",
+      "https://www.datos.gov.co/d/e624-d9uy",
+      "https://sicodis.dnp.gov.co"
+     ]
+    },
+    {
+     "categoria": "sobrecosto_sin_competencia",
+     "valor": 6256.3,
+     "min": 3128.2,
+     "max": 9384.5,
+     "tipo": "estimado",
+     "detalle": "Hecho: la alcaldía contrató $77.533 M sin competencia (83,6 % de $92.739 M, pesos de 2026; SECOP). Base para el sobrecosto: $62.563 M (se restan $16.994 M de OPS, los estudios sin obra, $485 M de plata girada sin avance y $4.113 M de subsidios a las tarifas; se suman $6.933 M de procesos competitivos con un solo oferente). Incluye $19.938 M transferidos a Aguas y Aseo y al hospital, que esas entidades contratan a su vez por régimen especial. Sobrecosto probable: 10 % (rango 5–15 %). No prueba corrupción: mide el precio de renunciar a la competencia. 71 de 102 procesos competitivos tuvieron un solo oferente. Datos de 2024 a octubre de 2026.",
+     "items": [
+      {
+       "nombre": "Base (contrato sin competencia): Realización de acciones para el mantenimiento y mejoramiento de ecosistemas actividades para el cum… — Aguas y Aseo de Yondó S.A. E.S.P.",
+       "anio": 2024,
+       "valor": 5746.3,
+       "fuente": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.6835064&isFromPublicArea=True&isModal=true&asPopupView=true",
+       "en_total": false
+      },
+      {
+       "nombre": "Base (contrato sin competencia): Servicios de apoyo logístico y operativo para la atención integral a los adultos mayores del centro… — asomiguelarcangel",
+       "anio": 2024,
+       "valor": 4612.1,
+       "fuente": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.6127211&isFromPublicArea=True&isModal=true&asPopupView=true",
+       "en_total": false
+      },
+      {
+       "nombre": "Base (contrato sin competencia): Aunar esfuerzos para servicios para apoyar el fortalecimiento del programa para la atención integra… — asomiguelarcangel",
+       "anio": 2025,
+       "valor": 3980.4,
+       "fuente": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8234454&isFromPublicArea=True&isModal=true&asPopupView=true",
+       "en_total": false
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "https://idea-en.cerge-ei.cz/files/IDEA_Studie_03_2024_Verejne_zakazky_abstract_EN.pdf",
+      "https://doi.org/10.1787/9789264226616-en",
+      "https://dspace.library.uu.nl/handle/1874/309580"
+     ],
+     "base_hecho": 62563.1,
+     "valor_sin_competencia_hecho": 77532.6,
+     "pct_valor_sin_competencia": 83.6
+    },
+    {
+     "categoria": "ops_nomina_paralela",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "estimado",
+     "detalle": "875 contratos OPS por $16.994 M de 2026, de ellos 68 de formulación de proyectos por $3.502 M. Referencia: 520.491 pesos de 2026 por habitante al año (mediana 2012–2025; rango 331.644–808.896). 2026 va hasta octubre.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/fugas_secop.json",
+      "https://www.datos.gov.co/d/rpmr-utcd",
+      "Corte Constitucional, Sentencia C-614 de 2009"
+     ],
+     "ops_contratos": 875,
+     "ops_valor": 16994.2,
+     "ops_formulacion_contratos": 68,
+     "ops_formulacion_valor": 3502.0
+    },
+    {
+     "categoria": "recaudo_no_cobrado",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 2243.0,
+     "tipo": "estimado",
+     "detalle": "Frente a la mediana de 7 comparables Yondó recaudó $1.181 M más en predial e ICA (pesos de 2026): no hay rezago. Máximo: brecha con el percentil 75 de los comparables ($1.802 M) y predial con catastro actualizado ($1.498 M en 1 año). Solo 2024 tiene dato comparable; en 2025 el predial subió a $3.044 M (CUIPO). La extracción de petróleo no paga ICA por ley (art. 16 del Código de Petróleos; art. 39 de la Ley 14 de 1983): no es recaudo perdido.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (recaudo_potencial)",
+      "https://terridata.dnp.gov.co"
+     ]
+    },
+    {
+     "categoria": "costo_vertimientos",
+     "valor": 184.0,
+     "min": 184.0,
+     "max": 364.8,
+     "tipo": "estimado",
+     "detalle": "Yondó no tiene PTAR: en 2019 vertía 55,34 L/s sin tratar (Superservicios, 2020). Tasa estimada con factor regional 1; con el caudal medido sería hasta 1,98 veces. En 2020 Aguas y Aseo debía $175 M a Corantioquia por tasas desde 2018 (hecho).",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (aguas_residuales)",
+      "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf"
+     ]
+    },
+    {
+     "categoria": "fondos_no_gestionados",
+     "valor": 22298.8,
+     "min": 752.1,
+     "max": 68138.6,
+     "tipo": "contrafactual",
+     "detalle": "Periodo en curso: el OCAD Paz y FENOGE todavía se pueden gestionar antes de 2027. Findeter no se suma (es crédito).",
+     "items": [
+      {
+       "nombre": "Cooperación internacional no reembolsable",
+       "anio": null,
+       "valor": 315.8,
+       "min": 0.0,
+       "max": 1516.1,
+       "fuente": "https://www.datos.gov.co/d/2d3i-f9wd; data/comparativa/sgr_fondos.json"
+      },
+      {
+       "nombre": "OCAD Paz – Asignación para la Paz (municipios PDET)",
+       "anio": null,
+       "valor": 19945.7,
+       "min": 0.0,
+       "max": 63300.1,
+       "fuente": "https://www.datos.gov.co/d/e624-d9uy (bienio 2025-2026, corte oct-2026); data/comparativa/sgr_fondos.json"
+      },
+      {
+       "nombre": "FENOGE – hospital o sedes públicas con solar",
+       "anio": null,
+       "valor": 2037.3,
+       "min": 752.1,
+       "max": 3322.4,
+       "fuente": "https://fenoge.gov.co/proyectos/conenergia/; data/comparativa/sgr_fondos.json"
+      }
+     ],
+     "fuentes": [
+      "data/comparativa/sgr_fondos.json"
+     ]
+    },
+    {
+     "categoria": "ahorro_solar",
+     "valor": 1052.3,
+     "min": 965.4,
+     "max": 1149.9,
+     "tipo": "contrafactual",
+     "detalle": "Instalar 469 kWp en 2024 costaba $1.822 M de 2026; habría ahorrado $1.446 M en facturas hasta 2026 (neto con valor residual: $1.052 M). Hoy cada año de espera cuesta unos $566 M en facturas.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json (contrafactual_solar)"
+     ]
+    },
+    {
+     "categoria": "ahorro_regalias",
+     "valor": 0.0,
+     "min": 0.0,
+     "max": 0.0,
+     "tipo": "contrafactual",
+     "detalle": "No aplica: desde 2012 el Sistema General de Regalías ahorra a nivel nacional (Fondo de Ahorro y Estabilización) y el municipio no maneja regalías directas.",
+     "items": [],
+     "fuentes": [
+      "data/comparativa/costo_no_hacer.json"
+     ],
+     "sin_dato": true
+    }
+   ],
+   "total_hecho": 26042.8,
+   "total_estimado": 6751.3,
+   "total_contrafactual": 23351.1,
+   "sin_obra": 32794.1,
+   "sin_obra_rango": [
+    29666.0,
+    38346.1
+   ],
+   "sin_obra_pct_ingresos": null,
+   "pudo_hacerse": [
+    {
+     "que": "Aprobar antes de diciembre de 2026 las regalías que ya están asignadas a Yondó",
+     "costo": 25557.8,
+     "equivalencia": "≈ 1,8 PTAR como la que necesita el casco urbano",
+     "por_que_no": "Aún se puede: a octubre de 2026 siguen sin aprobar asignaciones directas, el Incentivo a la Producción y la inversión local del bienio 2025–2026.",
+     "fuente": "https://www.datos.gov.co/d/e624-d9uy (corte oct-2026); data/comparativa/sgr_fondos.json",
+     "cubierto_con_plata_sin_obra_pct": 128.3
+    },
+    {
+     "que": "Red Energética Pública: solar en 13 sedes, baterías en 7 sedes críticas y control (proyecto 1)",
+     "costo": 7204.0,
+     "equivalencia": "469 kWp solares en cubiertas y 770 kWh de baterías; compra 57 % menos energía",
+     "por_que_no": "Aún se puede: cabe en la línea \"Territorios energéticos\" (hasta $8.000 M). El único proyecto de energía presentado en 2025 no cumplió requisitos; cada año de espera cuesta unos $566 M en facturas.",
+     "fuente": "docs/07-portafolio-presupuesto.md; docs/05-microrred-domotica-mintic.md; data/comparativa/costo_no_hacer.json",
+     "cubierto_con_plata_sin_obra_pct": 455.2
+    },
+    {
+     "que": "Terminar los estudios del Plan Maestro y construir la PTAR del casco urbano",
+     "costo": 15676.2,
+     "equivalencia": "≈ 1,1 PTAR como la que necesita el casco urbano",
+     "por_que_no": "Aún se puede empezar: los estudios del Plan Maestro ($2.898 M, 56 %) están \"inactivos\"; terminarlos cuesta unos $1.800 M y son requisito de la PTAR.",
+     "fuente": "docs/07-portafolio-presupuesto.md; data/comparativa/costo_no_hacer.json (costos_unitarios: ptar_12000_hab, PTAR de Tenjo, Corozal y Salónica indexadas); Superservicios 2020: https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
+     "cubierto_con_plata_sin_obra_pct": 209.2,
+     "costo_rango": [
+      15327.1,
+      31975.6
+     ]
+    },
+    {
+     "que": "Hospital seguro, verde e inteligente (red eléctrica, telesalud, ambulancia medicalizada, puesto rural)",
+     "costo": 8100.0,
+     "equivalencia": "≈ 18 ambulancias medicalizadas",
+     "por_que_no": "Aún se puede: la red eléctrica del hospital ($5.483 M) está en formulación desde 2017; la ventana de financiación es 2027–2029.",
+     "fuente": "docs/06-hospital-2028-financiacion.md; docs/07-portafolio-presupuesto.md",
+     "cubierto_con_plata_sin_obra_pct": 404.9
+    },
+    {
+     "que": "Auditoría técnica y plan de terminación de las obras con brecha",
+     "costo": 600.0,
+     "equivalencia": "protege $35.412 M ya girados",
+     "por_que_no": "Aún se puede: busca recuperar o terminar $35.412 M de regalías girados sin avance equivalente en proyectos aprobados en 2020–2023.",
+     "fuente": "docs/07-portafolio-presupuesto.md; data/comparativa/sgr_fondos.json",
+     "cubierto_con_plata_sin_obra_pct": 999.0
+    }
+   ],
+   "equivalencias": [
+    {
+     "unidad": "plantas de tratamiento de aguas residuales (PTAR)",
+     "n": 2.4,
+     "costo_unitario": 13876.2,
+     "id": "ptar_12000_hab",
+     "rango_n": [
+      1.1,
+      2.4
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "ambulancias medicalizadas",
+     "n": 72.9,
+     "costo_unitario": 449.8,
+     "id": "ambulancia_medicalizada_tam",
+     "rango_n": [
+      50.5,
+      82.0
+     ],
+     "certeza_costo": "hecho"
+    },
+    {
+     "unidad": "aulas escolares dotadas",
+     "n": 54.7,
+     "costo_unitario": 600.0,
+     "id": "aula_dotada",
+     "rango_n": [
+      34.6,
+      82.0
+     ],
+     "certeza_costo": "estimado"
+    },
+    {
+     "unidad": "km de placa huella",
+     "n": 32.8,
+     "costo_unitario": 1000.0,
+     "id": "km_placa_huella",
+     "rango_n": [
+      15.2,
+      40.5
+     ],
+     "certeza_costo": "estimado"
+    }
+   ],
+   "fondos_no_gestionados": [
+    {
+     "fondo": "Cooperación internacional no reembolsable",
+     "desde": 2004,
+     "monto_referencia": 315.8,
+     "min": 0.0,
+     "max": 1516.1,
+     "comparable": "En el registro de APC solo aparece una donación de Japón para Yondó (2014, US$106.715); la Unión Europea financió proyectos en 5 municipios del Sur de Bolívar (2016, US$1,68 M). Baja certeza.",
+     "fuente": "https://www.datos.gov.co/d/2d3i-f9wd; data/comparativa/sgr_fondos.json",
+     "suma_en_total": true
+    },
+    {
+     "fondo": "OCAD Paz – Asignación para la Paz (municipios PDET)",
+     "desde": 2017,
+     "monto_referencia": 19945.7,
+     "min": 0.0,
+     "max": 63300.1,
+     "comparable": "En 2025–2026 el OCAD Paz aprobó $37.669 M para Yondó y $99.346 M para Cantagallo; la central es la mediana de los pares del Sur de Bolívar menos lo de Yondó. Todavía se puede gestionar.",
+     "fuente": "https://www.datos.gov.co/d/e624-d9uy (bienio 2025-2026, corte oct-2026); https://www.datos.gov.co/d/mzgh-shtp; data/comparativa/sgr_fondos.json",
+     "suma_en_total": true
+    },
+    {
+     "fondo": "FENOGE – hospital o sedes públicas con solar",
+     "desde": 2014,
+     "monto_referencia": 2037.3,
+     "min": 752.1,
+     "max": 3322.4,
+     "comparable": "En 2025 FENOGE dejó autosuficiente con 230 kWp el hospital de Simití, en la misma subregión PDET ($3.152 M). En Yondó no se halló ningún proyecto.",
+     "fuente": "https://fenoge.gov.co/proyectos/conenergia/; docs/anexos/D-energia-mintic.md; data/comparativa/sgr_fondos.json",
+     "suma_en_total": true
+    },
+    {
+     "fondo": "Findeter – crédito con tasa compensada",
+     "desde": 1989,
+     "monto_referencia": 5140.7,
+     "min": 5140.7,
+     "max": 10281.4,
+     "comparable": "Capacidad de crédito prudente (20–40 % de los ingresos corrientes de 2024); Yondó no pagó intereses de deuda en 2020–2024. Es crédito: no se suma.",
+     "fuente": "data/fuentes/serie_fiscal_oec.csv; data/comparativa/sgr_fondos.json",
+     "suma_en_total": false
+    },
+    {
+     "fondo": "Incentivo a la Producción del SGR (línea \"Territorios energéticos\", hasta $8.000 M)",
+     "desde": 2017,
+     "monto_referencia": 13694.2,
+     "comparable": "San Pablo aprobó el 83 % de su bolsa 2025–2026, Cantagallo el 43 % y Remedios el 37 %; Yondó el 2,4 %. Ya es plata de Yondó: se cuenta en \"saldos de regalías\".",
+     "fuente": "https://www.datos.gov.co/d/e624-d9uy; data/comparativa/sgr_fondos.json",
+     "suma_en_total": false
+    }
+   ],
+   "lectura": "Periodo en curso (datos parciales a octubre de 2026). Lo más grande no es plata perdida sino plata quieta: $25.558 M de regalías asignadas a Yondó siguen sin aprobar y el bienio cierra en diciembre de 2026. Con eso y con fondos aún disponibles (OCAD Paz, FENOGE) se pueden financiar la red solar pública, el hospital y los estudios de la PTAR.",
+   "nota": "Periodo en curso. Ingresos, inversión, regalías, SGP e impuestos propios solo tienen 2024 completo (operaciones de caja del DNP); la contratación va de enero de 2024 al 20 de octubre de 2026 y los saldos de regalías tienen corte de octubre de 2026."
+  }
+ ],
+ "totales_por_categoria": [
+  {
+   "categoria": "estudios_sin_obra",
+   "nombre": "Estudios y diseños sin obra posterior",
+   "tipo": "estimado",
+   "por_periodo": {
+    "2004-2007": 0.0,
+    "2008-2011": 2976.9,
+    "2012-2015": 4412.2,
+    "2016-2019": 3771.7,
+    "2020-2023": 3524.3,
+    "2024-2027": 311.0
+   },
+   "sumable_entre_gobiernos": true,
+   "total_2004_2026": 14996.1
+  },
+  {
+   "categoria": "girado_sin_avance",
+   "nombre": "Plata girada sin avance físico equivalente",
+   "tipo": "hecho",
+   "por_periodo": {
+    "2004-2007": 0.0,
+    "2008-2011": 0.0,
+    "2012-2015": 0.0,
+    "2016-2019": 150.1,
+    "2020-2023": 35411.5,
+    "2024-2027": 485.0
+   },
+   "sumable_entre_gobiernos": true,
+   "total_2004_2026": 36046.6
+  },
+  {
+   "categoria": "saldos_regalias",
+   "nombre": "Regalías sin aprobar o sin comprometer",
+   "tipo": "hecho",
+   "por_periodo": {
+    "2004-2007": 0.0,
+    "2008-2011": 0.0,
+    "2012-2015": 0.0,
+    "2016-2019": 23566.8,
+    "2020-2023": 13351.8,
+    "2024-2027": 25557.8
+   },
+   "sumable_entre_gobiernos": false,
+   "total_2004_2026": null,
+   "nota": "Son fotos de saldos en fechas distintas: parte de la plata pudo pasar de un gobierno al siguiente."
+  },
+  {
+   "categoria": "sobrecosto_sin_competencia",
+   "nombre": "Sobrecosto probable por contratar sin competencia",
+   "tipo": "estimado",
+   "por_periodo": {
+    "2004-2007": 679.5,
+    "2008-2011": 14053.4,
+    "2012-2015": 6534.9,
+    "2016-2019": 2180.4,
+    "2020-2023": 15490.6,
+    "2024-2027": 6256.3
+   },
+   "sumable_entre_gobiernos": true,
+   "total_2004_2026": 45195.1
+  },
+  {
+   "categoria": "ops_nomina_paralela",
+   "nombre": "Nómina paralela (OPS) por encima de lo usual",
+   "tipo": "estimado",
+   "por_periodo": {
+    "2004-2007": 0.0,
+    "2008-2011": 1364.1,
+    "2012-2015": 36480.7,
+    "2016-2019": 8495.7,
+    "2020-2023": 0.0,
+    "2024-2027": 0.0
+   },
+   "sumable_entre_gobiernos": true,
+   "total_2004_2026": 46340.5
+  },
+  {
+   "categoria": "recaudo_no_cobrado",
+   "nombre": "Recaudo propio que se dejó de cobrar",
+   "tipo": "estimado",
+   "por_periodo": {
+    "2004-2007": 0.0,
+    "2008-2011": 0.0,
+    "2012-2015": 0.0,
+    "2016-2019": 0.0,
+    "2020-2023": 0.0,
+    "2024-2027": 0.0
+   },
+   "sumable_entre_gobiernos": true,
+   "total_2004_2026": 0.0
+  },
+  {
+   "categoria": "costo_vertimientos",
+   "nombre": "Tasa retributiva por verter aguas residuales sin tratar",
+   "tipo": "estimado",
+   "por_periodo": {
+    "2004-2007": 130.4,
+    "2008-2011": 153.4,
+    "2012-2015": 177.1,
+    "2016-2019": 201.9,
+    "2020-2023": 224.9,
+    "2024-2027": 184.0
+   },
+   "sumable_entre_gobiernos": true,
+   "total_2004_2026": 1071.7
+  },
+  {
+   "categoria": "fondos_no_gestionados",
+   "nombre": "Fondos externos no gestionados",
+   "tipo": "contrafactual",
+   "por_periodo": {
+    "2004-2007": 0.0,
+    "2008-2011": 0.0,
+    "2012-2015": 315.8,
+    "2016-2019": 9559.2,
+    "2020-2023": 11329.3,
+    "2024-2027": 22298.8
+   },
+   "sumable_entre_gobiernos": true,
+   "total_2004_2026": 43503.1
+  },
+  {
+   "categoria": "ahorro_solar",
+   "nombre": "Ahorro solar no capturado",
+   "tipo": "contrafactual",
+   "por_periodo": {
+    "2004-2007": 0.0,
+    "2008-2011": 0.0,
+    "2012-2015": 1436.2,
+    "2016-2019": 1543.2,
+    "2020-2023": 1957.9,
+    "2024-2027": 1052.3
+   },
+   "sumable_entre_gobiernos": false,
+   "total_2004_2026": null,
+   "nota": "Cada gobierno es un escenario alternativo (instalar en 2012, o en 2016, o en 2020…): no se suman."
+  },
+  {
+   "categoria": "ahorro_regalias",
+   "nombre": "Ahorro de regalías no constituido",
+   "tipo": "contrafactual",
+   "por_periodo": {
+    "2004-2007": 25427.6,
+    "2008-2011": 37161.5,
+    "2012-2015": 0.0,
+    "2016-2019": 0.0,
+    "2020-2023": 0.0,
+    "2024-2027": 0.0
+   },
+   "sumable_entre_gobiernos": true,
+   "total_2004_2026": 62589.1
+  }
+ ],
+ "costos_unitarios": [
+  {
+   "id": "aula_dotada",
+   "unidad": "aulas escolares dotadas",
+   "nombre": "Aula escolar nueva y dotada",
+   "costo": 600.0,
+   "min": 400.0,
+   "max": 948.7,
+   "certeza": "estimado",
+   "fuente": "MEN/FFIE, I.E. Bienestar Social (Cali), nov-2025: $12.600 M por 14 aulas con comedor, cocina y 22 baterías sanitarias https://www.mineducacion.gov.co/1780/w3-article-426696.html ; costo por m² de colegio 7,6 M (Medellín) y 8,2 M (promedio nacional) según prensa: https://abceconomia.co/2025/11/04/medellin-invierte-26-mil-millones-para-construir-megacolegio/",
+   "nota": "Estimado. Máximo = caso FFIE todo incluido (12.600/14, indexado). Central: un aula con su parte de circulaciones y baterías ocupa unos 80-90 m² brutos; a 5-7,6 M/m² más 40 M de dotación da 400-700 M. El FFIE tiene hallazgos fiscales por sobrecostos por m²; se pide cotizar con el MEN antes de usar."
+  },
+  {
+   "id": "vis_rural",
+   "unidad": "viviendas VIS rurales",
+   "nombre": "Vivienda de interés social rural nueva",
+   "costo": 123.7,
+   "min": 89.8,
+   "max": 157.6,
+   "certeza": "estimado",
+   "fuente": "Proyecto 2022003050034, 100 viviendas rurales en Yondó por $6.801 M (docs/anexos/A-gobiernos-2004-2027.md); Decreto 0585 de 2025: subsidio de vivienda rural en especie hasta 90 SMMLV https://sidn.ramajudicial.gov.co/SIDN/NORMATIVA/TEXTOS_COMPLETOS/5_DECRETOS/DECRETOS%202025/DECRETO%200585%20DE%202025.PDF ; SMMLV 2026 = $1.750.905 (Decreto 1469 de 2025)",
+   "nota": "Estimado. Mínimo = valor contratado en Yondó en 2022 indexado (ese proyecto lleva 9 % de avance físico con 88 % pagado, así que no prueba que alcance). Máximo = tope del subsidio en especie (90 SMMLV). Central = punto medio."
+  },
+  {
+   "id": "km_placa_huella",
+   "unidad": "km de placa huella",
+   "nombre": "Kilómetro de placa huella en vía terciaria",
+   "costo": 1000.0,
+   "min": 809.4,
+   "max": 2159.5,
+   "certeza": "estimado",
+   "fuente": "Gobernación de Antioquia y Comité de Cafeteros (2024): más de $65.000 M para 1 km en cada uno de 89 municipios https://www.elcolombiano.com/antioquia/contruccion-de-placa-huella-en-89-municipios-de-antioquia-LH24237840 ; INVÍAS, programa Colombia Rural (2019): $636.000 por metro de placa huella https://www.centrodemocratico.com/wp-content/uploads/2019/12/INVIAS.pdf ; Gobernación de Nariño (jul-2026): 2 km por $4.319 M https://narino.gov.co/wp-content/uploads/2026/07/Boletin-de-Prensa-N0264-Corredor-rural-de-San-Pablo-mejora-su-transitabilidad-5-07-2026.pdf",
+   "nota": "Estimado. Antioquia 2024 indexado = 809 M/km; INVÍAS 2019 indexado = 982 M/km (solo placa huella); Nariño 2026 con obras de drenaje = 2.160 M/km. Central redondeado a 1.000 M/km. En Yondó, los suelos blandos y las zonas inundables empujan hacia el máximo."
+  },
+  {
+   "id": "ptar_12000_hab",
+   "unidad": "plantas de tratamiento de aguas residuales (PTAR)",
+   "nombre": "Planta de tratamiento de aguas residuales (PTAR) para unos 12.000 habitantes",
+   "costo": 13876.2,
+   "min": 13527.1,
+   "max": 30175.6,
+   "certeza": "estimado",
+   "fuente": "PTAR de Tenjo (El Espectador, 28-sep-2021): más de $9.300 M para más de 12.000 personas, 40 L/s https://www.elespectador.com/bogota/tenjo-estrena-una-de-las-ptar-mas-modernas-de-cundinamarca/ ; PTAR de Corozal (MinVivienda, 4-mar-2024): $67.000 M para 64.214 habitantes https://minvivienda.gov.co/sala-de-prensa/minvivienda-llega-con-buenas-noticias-en-materia-de-agua-para-el-departamento-de-sucre ; PTAR de Salónica, Riofrío (MinVivienda, 13-abr-2022): más de $6.000 M para 3.150 habitantes, con obras de alcantarillado https://minvivienda.gov.co/sala-de-prensa/gobierno-nacional-entrego-ptar-en-riofrio-valle-del-cauca-con-inversion-de-mas-de-6000-millones",
+   "nota": "Estimado: costo por habitante (mediana de los tres casos indexados) × 12.000. No incluye colectores e interceptores; en Yondó el proyecto de canalización de colectores de las estaciones de bombeo figura en formulación por $67.640 M (BPIN 20201301010649). El costo real sale del Plan Maestro (hoy inactivo)."
+  },
+  {
+   "id": "kwp_solar_cubierta",
+   "unidad": "kWp solares en cubiertas",
+   "nombre": "kWp solar instalado en cubierta (sede pública, ≤100 kW)",
+   "costo": 3.5,
+   "min": 2.8,
+   "max": 4.0,
+   "certeza": "supuesto",
+   "fuente": "data/presupuesto_microrred.json (rango de mercado 2026 para solar comercial, docs/05 y docs/anexos/D-energia-mintic.md)",
+   "nota": "Supuesto de prefactibilidad (−30 % / +50 %). Marquesina: 5,0 M/kWp; montaje en piso: 3,2 M/kWp."
+  },
+  {
+   "id": "ambulancia_medicalizada_tam",
+   "unidad": "ambulancias medicalizadas",
+   "nombre": "Ambulancia de transporte asistencial medicalizado (TAM) dotada",
+   "costo": 449.8,
+   "min": 400.0,
+   "max": 650.0,
+   "certeza": "hecho",
+   "fuente": "SECOP II, 5 contratos de compra de una TAM (abr-oct 2026) https://www.datos.gov.co/resource/jbjy-vk9h.json ; docs/06-hospital-2028-financiacion.md (supuesto de $650 M para Yondó)",
+   "nota": "Hecho (mediana de contratos). El máximo toma el supuesto del repositorio para Yondó (650 M), que incluye equipos de cuidado crítico."
+  },
+  {
+   "id": "beca_universitaria_anual",
+   "unidad": "becas universitarias de un año",
+   "nombre": "Beca universitaria anual (sostenimiento y matrícula)",
+   "costo": 17.5,
+   "min": 8.8,
+   "max": 35.0,
+   "certeza": "supuesto",
+   "fuente": "SMMLV 2026 (Decreto 1469 de 2025); subsidio de sostenimiento ICETEX 2026 de $1.306.119 por semestre https://forbes.co/economia-y-finanzas/icetex-girara-apoyos-y-condonaciones-por-259-933-millones-para-estudiantes-con-credito-educativo",
+   "nota": "Supuesto. Central: 1 SMMLV al mes por 10 meses para vivir en Barrancabermeja o Medellín, con matrícula cubierta por la gratuidad en universidad pública. Mínimo: medio SMMLV al mes. Máximo: universidad privada (≈5 SMMLV por semestre) más sostenimiento."
+  },
+  {
+   "id": "vis_urbana",
+   "unidad": "viviendas VIS urbanas",
+   "nombre": "Vivienda de interés social urbana",
+   "costo": 157.6,
+   "min": 82.3,
+   "max": 236.4,
+   "certeza": "estimado",
+   "fuente": "Ley 2294 de 2023, art. 293: tope VIS de 135 SMMLV; vivienda de interés prioritario de 90 SMMLV (Ley 1955 de 2019, art. 85); proyecto 2022003050005, 150 viviendas en Puerto Nare, Yolombó y Yondó por $9.351 M (docs/anexos/A-gobiernos-2004-2027.md)",
+   "nota": "Estimado. Central = 90 SMMLV (valor de una vivienda prioritaria). Máximo = tope VIS (135 SMMLV). Mínimo = valor por vivienda del proyecto regional de 2022 indexado (17 % de avance físico, 89 % de recursos girados)."
+  }
+ ],
+ "limitaciones": [
+  "SECOP casi no tiene contratos de Yondó antes de 2011 (41 de la alcaldía en 2007 y entre 39 y 205 por año en 2008–2011): para 2004–2011 los ceros son \"sin dato\" y las cifras de contratación son un piso.",
+  "La coincidencia estudio → obra se hace por palabras del objeto: hay falsos negativos (obras hechas por la Gobernación, Ecopetrol, Findeter o la EDU con otras palabras) y falsos positivos. Es una agenda de verificación.",
+  "El sobrecosto por contratar sin competencia es una estimación con rango tomado de estudios de otros países y de Colombia; no hay una medición directa de precios para Yondó. Contratar directamente es legal en muchos casos (convenios interadministrativos, OPS, régimen especial).",
+  "Hay 24 registros de SECOP de $100 M o más que parecen duplicados (12 de más por $11.677 M corrientes). El único ubicado en los datos publicados de la alcaldía ($5.407 M en 2020, con Aguas y Aseo) se resta de la base del sobrecosto. Los demás ($6.270 M) no se pueden ubicar por año con fugas_secop.json; si fueran de la alcaldía y sin competencia, el sobrecosto central total bajaría a lo sumo unos $630 M corrientes.",
+  "La referencia de OPS es interna (el propio Yondó en un año típico 2012–2025): mide cuánto se alejó cada gobierno de lo usual, no un estándar nacional, que no existe en datos abiertos. Un cambio en cómo se registraron las OPS en SECOP II puede afectar la comparación.",
+  "Plata girada sin avance solo existe para proyectos de regalías (GESPROY). Para la plata propia y para los convenios con la EDU no hay datos abiertos de avance físico ni de pagos (SECOP I no publica pagos; los anticipos solo constan en el expediente).",
+  "GESPROY y MapaInversiones no coinciden en varios proyectos (ver alertas_datos en sgr_fondos.json); se usa GESPROY. Los proyectos aprobados en 2015, 2019 y 2023 pudieron aprobarse a comienzos del año siguiente (bienios compartidos).",
+  "Los saldos de regalías no son plata perdida: en el SGR pasan al bienio siguiente. Miden plata disponible que no se volvió obra a tiempo, y no se suman entre gobiernos.",
+  "Los fondos externos son contrafactuales con certeza variable (Fondo Adaptación y cooperación, baja); dependen de convocatorias, de terceros (empresas en Obras por Impuestos) y de proyectos bien formulados.",
+  "Los costos unitarios se indexan con el IPC; los costos de construcción subieron más que el IPC en 2021–2023, así que algunas equivalencias pueden quedar altas (cuentan más obras de las que alcanzarían).",
+  "El periodo 2024–2027 está en curso: ingresos solo de 2024, contratación hasta el 20 de octubre de 2026 y saldos a octubre de 2026.",
+  "Las cifras de este archivo heredan las limitaciones de sus insumos: panel_anual.json, fugas_secop.json, sgr_fondos.json y costo_no_hacer.json."
+ ],
+ "notas_legales": [
+  "Este análisis describe hechos registrados y oportunidades perdidas. No acusa a ninguna persona: una investigación no es una condena y toda persona se presume inocente mientras no se le declare culpable (Constitución Política, art. 29).",
+  "Solo se nombra a los alcaldes, como responsables políticos de cada periodo. No se publican nombres ni documentos de personas naturales contratistas ni de otros funcionarios (Ley 1581 de 2012, protección de datos personales).",
+  "La contratación directa es legal en los casos que prevé la ley: prestación de servicios y apoyo a la gestión y convenios interadministrativos (Ley 1150 de 2007, art. 2, num. 4), convenios con entidades sin ánimo de lucro (Decreto 092 de 2017) y régimen especial de las empresas de servicios públicos (Ley 142 de 1994, art. 31) y de las E.S.E. (Ley 100 de 1993, art. 195). El sobrecosto estimado mide el costo probable de no competir, no una ilegalidad.",
+  "Los contratos de prestación de servicios no pueden usarse para funciones permanentes de la entidad (Ley 80 de 1993, art. 32, num. 3; Corte Constitucional, Sentencia C-614 de 2009). El exceso de OPS frente a lo usual es un indicio que debe contrastarse con la planta de personal.",
+  "Los saldos de regalías no se pierden: lo no ejecutado pasa al bienio siguiente (Ley 2056 de 2020). Se muestran como plata que no se convirtió en obra a tiempo.",
+  "La explotación de petróleo no es base del ICA municipal (Decreto 1056 de 1953, Código de Petróleos, art. 16; Ley 14 de 1983, art. 39): no se cuenta como recaudo dejado de cobrar.",
+  "Las alertas de órganos de control (DNP, Procuraduría, Contraloría, Fiscalía) se citan en data/gobiernos.json con su estado procesal; este archivo no las usa para calcular montos."
+ ],
+ "insumos": [
+  "data/comparativa/panel_anual.json",
+  "data/comparativa/fugas_secop.json",
+  "data/comparativa/sgr_fondos.json",
+  "data/comparativa/costo_no_hacer.json",
+  "data/gobiernos.json"
+ ]
+}

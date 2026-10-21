@@ -7,7 +7,7 @@
   "lon": -73.910135,
   "ubicacion": {
     "confianza": "alta",
-    "metodo": "La coordenada del inventario cae en el centro de la cubierta verde de unos 57 × 27 m entre el Coliseo Benito Arias (al norte) y la escuela de ladrillo (al sur); no hubo que corregirla. En Street View de noviembre de 2013 (panorama UD9Fguy6mDTI6-6usnjaiw, mirando al este con el rumbo ya corregido, 88°) se ve el lote vacío con la valla 'Aquí estará nuestro Parque Educativo' delante de la gran ceiba, en la misma línea de la cubierta actual. Las fotos de prensa de la inauguración (marzo de 2015) muestran el pórtico con el letrero 'Sueños de Casabe / Parque Educativo' mirando al oeste, con las cerchas del coliseo a la izquierda (norte), lo que confirma la orientación. Prensa de 2013 ubica el lote 'al lado del Coliseo Benito Arias'."
+    "metodo": "La coordenada del inventario cae en el centro de la cubierta verde de unos 57 × 27 m entre el Coliseo Benito Arias (al norte) y la escuela de ladrillo (al sur); no hubo que corregirla. En Street View de noviembre de 2013 (panorama UD9Fguy6mDTI6-6usnjaiw, mirando al este con el rumbo ya corregido, 88°) se ve el lote vacío con la valla 'Aquí estará nuestro Parque Educativo' delante de la gran ceiba, en la misma línea de la cubierta actual. Las fotos de prensa de la inauguración (marzo de 2015) muestran el pórtico con el letrero 'Sueños de Casabe / Parque Educativo' mirando al oeste, con las cerchas del coliseo a la izquierda (norte), lo que confirma la orientación. Prensa de 2013 ubica el lote 'al lado del Coliseo Benito Arias'. Verificación independiente (octubre de 2026): con el rumbo ya corregido, desde UD9Fguy6mDTI6-6usnjaiw (rumbo 88) y 8WluyAustQUEul-oC8BcnQ (rumbo 88) se lee la valla 'Aquí estará nuestro PARQUE EDUCATIVO que tendrá:' entre el coliseo en obra (a la izquierda, norte) y la escuela de ladrillo (a la derecha, sur); el ancla queda justo detrás, a 58 m de la primera cámara. El tronco del árbol grande, cruzado desde esos dos panoramas, cae a menos de 0,7 m de donde está en el modelo."
   },
   "fuentes": [
     {
@@ -48,12 +48,12 @@
     {
       "tipo": "satelite",
       "fuente": "Esri World Imagery z19 (0,296 m/píxel)",
-      "nota": "Huella de la cubierta: bloque oeste de 32 × 9,6 m con pórtico en la punta oeste, espacio oscuro de 5,5 m y bloque este de 16,1 × 25,9 m con un escalón a 8,5 m del borde sur. Cubierta plana verde salvia (muestra #7a917d). Eje de los bloques girado 13° (rumbo 77° el eje este–oeste), igual que la cuadrícula de calles."
+      "nota": "Huella de la cubierta, medida de nuevo con perfiles de brillo en una imagen girada al eje del edificio (13°): bloque oeste de 32 × 9,6 m (con el corredor) con el pórtico en la punta oeste, espacio oscuro de 5,6 m y bloque este de 16,1 × 26,4 m (borde norte en línea con el del bloque oeste) con un escalón a 8,5 m del borde sur. Cubierta plana verde salvia (muestra #7a917d). Eje de los bloques girado 13° (rumbo 77° el eje este–oeste), igual que la cuadrícula de calles; los bordes norte y oeste no se desvían más de 1°."
     },
     {
       "tipo": "satelite",
       "fuente": "Google satélite z20 (0,148 m/píxel, marca de agua 2026), solo como referencia",
-      "nota": "Se alineó con Esri (desfase de 1,8 m al oeste y 0,9 m al norte). Confirma la misma forma de cubierta, la línea oscura del escalón del bloque este y la línea oscura con franja blanca sobre el bloque oeste."
+      "nota": "Desfase medido respecto a Esri: unos 1,3 m al oeste y 0,5 m al sur (no 0,9 m al norte, como se anotó al principio). Confirma la misma forma de cubierta, la línea del escalón del bloque este (oscura, porque allí el sol venía del norte) y el espacio oscuro entre los bloques. El sol de Esri viene del sureste y el de Google del noreste: lo que sale oscuro en las dos no es sombra."
     },
     {
       "tipo": "web",
@@ -108,20 +108,40 @@
       "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-12-3744669",
       "fecha": "2015-02-26",
       "nota": "SECOP: actividades culturales para integrar a la comunidad en torno al Parque Educativo Sueños de Casabe."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "8WluyAustQUEul-oC8BcnQ",
+      "fecha": "2013-11",
+      "rumbo": 88,
+      "nota": "Verificación: desde la calle del oeste, a 70 m. Valla del parque y árbol grande; sirve para cruzar la posición del tronco y medir su altura (unos 10,5 m). Comparada con el modelo con la misma cámara."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "zXv5lkB7kaw4YkO8F0qESQ",
+      "fecha": "2013-11",
+      "rumbo": 125,
+      "nota": "Verificación: desde el noroeste. El coliseo en obra tapa casi todo el lote; al fondo se ven casas blancas de la escuela. Comparada con el modelo con la misma cámara."
+    },
+    {
+      "tipo": "web",
+      "url": "https://antioquia.gov.co/images/PDF2/Decisiones%20Judiciales/2025/05/accion-popular.pdf",
+      "fecha": "2024-12",
+      "nota": "Acción popular de la Personería de Yondó (requerimientos de noviembre de 2024): los únicos Puntos Vive Digital del municipio son el del Parque Educativo, el de la Biblioteca Pública Municipal María Cano y el del parque principal frente al coliseo."
     }
   ],
   "volumenes": [
     {
       "id": "portico",
-      "nombre": "Pórtico de acceso con el letrero",
+      "nombre": "Pórtico de acceso: viga superior con el letrero (columnas contiguas de 0,25 m forman la viga maciza)",
       "centro": [
-        -27.55,
+        -27.54,
         -0.92
       ],
       "largo": 10.0,
       "ancho": 3.5,
       "rumbo_eje": 347,
-      "base": 0,
+      "base": 2.85,
       "altura_alero": 3.9,
       "pisos": 1,
       "techo": {
@@ -133,19 +153,134 @@
       "fachada": {
         "material": "pañete_pintado",
         "color": "#3f3b3d",
-        "puertas": [
-          {
-            "lado": "O",
-            "pos": 0.5,
-            "ancho": 8.0,
-            "alto": 2.85
-          }
-        ],
         "letrero": {
           "lado": "O",
           "texto": "SUEÑOS DE CASABE",
           "color": "#c9cbc8"
         }
+      },
+      "abierto": true,
+      "sep_columnas": 0.25,
+      "columna": 0.25
+    },
+    {
+      "id": "portico_pilar_n",
+      "nombre": "Pórtico: muro lateral norte (0,27 m de grueso, 3,5 m de fondo)",
+      "centro": [
+        -28.63,
+        3.82
+      ],
+      "largo": 3.5,
+      "ancho": 0.27,
+      "rumbo_eje": 77,
+      "base": 0,
+      "altura_alero": 2.85,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#a9aca6"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#3f3b3d"
+      }
+    },
+    {
+      "id": "portico_pilar_s",
+      "nombre": "Pórtico: muro lateral sur (0,27 m de grueso, 3,5 m de fondo)",
+      "centro": [
+        -26.44,
+        -5.66
+      ],
+      "largo": 3.5,
+      "ancho": 0.27,
+      "rumbo_eje": 77,
+      "base": 0,
+      "altura_alero": 2.85,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#a9aca6"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#3f3b3d"
+      }
+    },
+    {
+      "id": "portico_columna_n",
+      "nombre": "Pórtico: columna de concreto norte",
+      "centro": [
+        -29.2,
+        2.5
+      ],
+      "largo": 0.32,
+      "ancho": 0.32,
+      "rumbo_eje": 77,
+      "base": 0,
+      "altura_alero": 2.85,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#a9aca6"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#9a9d98"
+      }
+    },
+    {
+      "id": "portico_columna_s",
+      "nombre": "Pórtico: columna de concreto sur",
+      "centro": [
+        -27.83,
+        -3.45
+      ],
+      "largo": 0.32,
+      "ancho": 0.32,
+      "rumbo_eje": 77,
+      "base": 0,
+      "altura_alero": 2.85,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#a9aca6"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#9a9d98"
+      }
+    },
+    {
+      "id": "muro_barriles",
+      "nombre": "Pórtico: muro de barriles de colores",
+      "centro": [
+        -28.48,
+        -0.61
+      ],
+      "largo": 4.0,
+      "ancho": 0.45,
+      "rumbo_eje": 347,
+      "base": 0,
+      "altura_alero": 2.75,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#a9aca6"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#685746"
       }
     },
     {
@@ -212,10 +347,10 @@
       "id": "bloque_este",
       "nombre": "Bloque este, parte norte (aulas)",
       "centro": [
-        19.57,
-        5.24
+        19.51,
+        5.48
       ],
-      "largo": 17.4,
+      "largo": 17.9,
       "ancho": 16.1,
       "rumbo_eje": 347,
       "base": 0,
@@ -341,7 +476,7 @@
         -41.6,
         -6.1
       ],
-      "altura": 11.5,
+      "altura": 10.5,
       "copa": 18
     },
     {
@@ -365,11 +500,11 @@
     {
       "tipo": "arbol",
       "centro": [
-        34.25,
-        -10.57
+        29.16,
+        -10.72
       ],
       "altura": 9,
-      "copa": 9
+      "copa": 7
     },
     {
       "tipo": "aire_acondicionado",
@@ -412,7 +547,7 @@
       "medidor bidireccional en la frontera con EPM",
       "pasarela IoT (gateway) conectada al Centro de Control Energético y Digital",
       "control de los aires acondicionados de las aulas TIC: horario, temperatura mínima de 24 °C y apagado con aula vacía",
-      "sensores de ocupación en las cuatro aulas y en la sala del Punto Vive Digital",
+      "sensores de ocupación en las cuatro aulas y en la sala del Punto Vive Digital (la Personería lo ubica en el parque)",
       "apagado programado de computadores y regletas fuera del horario de atención",
       "iluminación LED con sensores en corredores, pórtico y plaza",
       "monitoreo remoto de la generación solar y del inversor"
@@ -425,24 +560,27 @@
       "puesta a tierra, protecciones contra sobretensiones (DPS) y pararrayos",
       "canalización desde la cubierta hasta el tablero general y gabinete con candado para el inversor en el muro norte, que da al paso público frente al coliseo"
     ],
-    "notas": "Cabe la potencia planeada con amplio margen: 22 módulos de 550 Wp (2 filas × 11 columnas, en vertical, inclinados 10° hacia el sur del edificio, rumbo 167°) = 12,1 kWp, sobre la losa del bloque este (16,1 × 17,4 m, unos 4,3 m de alto). Con retiros de 0,5 m a los bordes y filas separadas 2,7 m para que no se sombreen, en esa sola losa caben 6 filas × 13 columnas = 78 módulos (42,9 kWp); la franja sur, más baja, admite 2 filas × 13 = 26 módulos (14,3 kWp), y el bloque oeste unos 34 módulos (18,7 kWp) si se dejan libres los 8 m del lado oeste (sombra de la ceiba en la tarde) y la franja sur (copas de árboles). En total la cubierta admite unos 138 módulos (≈76 kWp). Para cubrir el 100 % del consumo supuesto (2.000 kWh/mes) bastarían 33 módulos (18,2 kWp); con 12,1 kWp se cubre cerca del 67 %. Se escogió el bloque este porque no tiene árboles encima ni cerca: el coliseo, 7 m al norte, solo da sombra temprano o tarde entre mayo y agosto, por eso el arreglo queda centrado y lejos del borde norte. El nodo no tiene baterías en el plan (no es isla), así que no se ubica BESS. El inversor va en el muro norte, a la sombra la mayor parte del año. No hay parqueadero propio (se llega por la plaza de acceso bajo la ceiba), por eso no se propone cargador de vehículo eléctrico."
+    "notas": "Cabe la potencia planeada con amplio margen: 22 módulos de 550 Wp (2 filas × 11 columnas, en vertical, inclinados 10° hacia el sur del edificio, rumbo 167°) = 12,1 kWp, sobre la losa del bloque este (16,1 × 17,9 m, unos 4,3 m de alto). Con retiros de 0,5 m a los bordes y filas separadas 2,7 m para que no se sombreen, en esa sola losa caben 6 filas × 13 columnas = 78 módulos (42,9 kWp); la franja sur, más baja, admite 2 filas × 13 = 26 módulos (14,3 kWp), y el bloque oeste unos 34 módulos (18,7 kWp) si se dejan libres los 8 m del lado oeste (sombra de la ceiba en la tarde) y la franja sur (copas de árboles). En total la cubierta admite unos 138 módulos (≈76 kWp). Para cubrir el 100 % del consumo supuesto (2.000 kWh/mes) bastarían 33 módulos (18,2 kWp); con 12,1 kWp se cubre cerca del 68 %. Se escogió el bloque este porque no tiene árboles encima ni cerca: el coliseo, 7 m al norte, solo da sombra temprano o tarde entre mayo y agosto, por eso el arreglo queda centrado y lejos del borde norte. El nodo no tiene baterías en el plan (no es isla), así que no se ubica BESS. El inversor va en el muro norte, a la sombra la mayor parte del año. No hay parqueadero propio (se llega por la plaza de acceso bajo la ceiba), por eso no se propone cargador de vehículo eléctrico. Recalculado en la verificación: con retiros de 0,5 m, en los 16,1 m útiles de ancho caben 13 columnas de 1,154 m y en los 17,9 m de largo caben 6 filas separadas 2,70 m (2,24 m de módulo inclinado más 0,45 m de paso), es decir 78 módulos; 22 × 0,55 = 12,1 kWp coincide con kwp_factible. El plan no asigna baterías a este nodo (no está en la lista de BESS de data/microrred.json), por eso no se dibuja ninguna."
   },
   "incertidumbres": [
     "Street View solo tiene panoramas de noviembre de 2013, cuando el lote estaba vacío (la obra empezó el 31 de marzo de 2014). No hay panoramas posteriores ni fotos 360 de usuarios. Por eso las comparaciones con Street View solo verifican la ubicación (la ceiba y la valla quedan donde están el pórtico y la plaza); la silueta del pórtico se comparó con la foto de prensa de 2015.",
-    "Alturas: el pórtico mide unos 3,9 m (medido con los barriles de 0,57 m de diámetro en la foto) y unos 10 m de ancho; los bloques se dejaron en 4,3 m porque desde la foto no se ve ninguna cubierta detrás del pórtico (debe ser de menos de unos 4,7 m) y el techo del corredor está a unos 4,4 m. Las sombras en el satélite son coherentes con 4–5 m.",
+    "Alturas: el pórtico mide unos 3,9 m (medido con los barriles de 0,57 m de diámetro en la foto) y unos 10 m de ancho; los bloques se dejaron en 4,3 m porque desde la foto no se ve ninguna cubierta detrás del pórtico (debe ser de menos de unos 4,7 m) y el techo del corredor está a unos 4,4 m. Las sombras en el satélite son coherentes con 4–5 m. En Esri, el pórtico (3,9 m) y el bloque este dejan sombras casi iguales (cerca de 1 m hacia el norte y 0,7 m hacia el oeste), así que los dos miden más o menos lo mismo; ninguna sombra sugiere un segundo piso.",
     "Material de la cubierta: plana y de color verde salvia uniforme. Se asumió losa de concreto con impermeabilizante verde porque la foto del corredor muestra vigas de concreto; podría ser lámina metálica pintada. Hay que confirmarlo en la visita antes de diseñar los soportes.",
     "La franja sur del bloque este se modeló 0,9 m más baja por una línea que se ve clara en Esri y oscura en Google, como un escalón que mira al sur; podría ser solo una canal o el alero de una terraza abierta.",
     "El borde sur del bloque oeste queda bajo copas de árboles; el corredor de 2 m en el costado sur es supuesto (la foto del corredor existe, pero no se sabe en qué lado del edificio está).",
-    "El espacio oscuro de 5,5 m entre los dos bloques puede ser un patio descubierto con piso oscuro o un paso cubierto con pérgola de listones (en la foto del corredor aparecen listones verticales marrones); se modeló como patio.",
+    "El espacio de 5,6 × 11 m entre los dos bloques sale oscuro y algo azulado tanto en Esri (sol del sureste) como en Google (sol del noreste), con bordes rectos y una franja clara en el extremo norte: no es sombra ni un patio de piso claro. Puede ser una cubierta oscura o traslúcida, una pérgola de listones (en la foto del corredor hay listones verticales marrones) o un espejo de agua. Se dejó como patio a nivel de piso; hay que verlo en la visita.",
     "Sobre el bloque oeste hay una línea oscura de 1,3 × 5 m (posible lucernario o vacío) y a 3 m una franja blanca que se interpretó como dos condensadoras de aire acondicionado; no se pudo confirmar.",
     "Ventanas y puertas con tamaños y posiciones típicas: en la foto del corredor solo se ve un muro ciego de bloque gris con una puerta gris oscura y un panel rojo. No se ven aires acondicionados en fachada, tanques ni planta eléctrica.",
-    "El muro de barriles de colores y las rejas negras del pórtico se representan con un portón; el letrero real tiene además 'PARQUE EDUCATIVO' en letras pequeñas debajo y reflectores encima. Tampoco se modelaron la cerca de madera del lado norte del pórtico ni las balizas de luz de la plaza.",
-    "La ceiba (unos 11–12 m de alto y 18 m de copa) se ubicó cruzando dos panoramas de 2013; los otros árboles se estimaron en el satélite. Pudieron cambiar desde entonces.",
+    "El pórtico se armó con una viga de 1,05 m (de 2,85 a 3,9 m), dos muros laterales delgados de 3,5 m de fondo, dos columnas de 0,32 m y el muro de barriles como un panel de un solo color (promedio de los barriles); así coincide con la foto de prensa en ancho, alto, vano, columnas y muro. No se modelaron las rejas negras de los dos vanos, el subtítulo 'PARQUE EDUCATIVO', los reflectores, la cerca de madera del lado norte ni las balizas de la plaza. Como el generador pide al menos 2,2 m de muro en los volúmenes cerrados, la viga es un volumen 'abierto' con columnas contiguas de 0,25 m.",
+    "El árbol grande (la prensa lo llama ceiba; por la copa ancha en sombrilla parece un samán o campano) mide unos 10,5 m de alto, medidos desde dos panoramas de 2013, y unos 18 m de copa; su tronco se cruzó desde UD9 y 8WL. Los otros árboles salen del satélite; el del sureste se corrió 5 m al oeste, donde de verdad está su copa. Pudieron cambiar desde entonces.",
     "No se sabe la fecha de la imagen Esri; Google (2026) muestra la misma forma de cubierta, así que no hay ampliaciones recientes visibles.",
-    "El consumo de 2.000 kWh/mes es un supuesto por tipología; se reemplaza con las facturas de EPM."
+    "El consumo de 2.000 kWh/mes es un supuesto por tipología; se reemplaza con las facturas de EPM.",
+    "A través de los dos vanos del pórtico, en la foto de 2015 se ven rejas y espacio abierto detrás: puede que detrás del pórtico haya un vestíbulo abierto bajo la misma cubierta y que los muros de las aulas empiecen más adentro. La arquitecta describe 'un techo que albergaría las cuatro aulas', así que parte de la huella bajo la cubierta verde puede ser corredor abierto y no aula cerrada.",
+    "La foto del corredor (muro de bloque gris ciego con una puerta gris oscura y un marco rojo; listones y reja verde del otro lado, con prado detrás) parece ser un costado sur, del bloque oeste o de la franja sur del bloque este; si es el del bloque oeste, ese muro casi no tiene ventanas y el corredor mide unos 2,5–3 m, no 2 m.",
+    "A la derecha del pórtico, en la foto de 2015, se ve un edificio blanco con letrero azul y rojo de Vive Digital; por el ángulo queda al sur del bloque oeste, en el predio de la escuela, y no se incluyó en este modelo."
   ],
   "verificacion": {
-    "trace": "data/geo/img/parque_edu_trace.png",
+    "trace": "data/geo/img/parque_edu_trace_v2.png",
     "vistas": [
       "data/geo/img/parque_edu_sat.png",
       "data/geo/img/parque_edu_sat120.png",
@@ -464,8 +602,18 @@
       "data/geo/img/parque_edu_cmp_porticob_comparacion.png",
       "data/geo/img/parque_edu_cmp_porticob_mezcla.png",
       "data/geo/img/parque_edu_orbita_todo.png",
-      "data/geo/img/parque_edu_orbita_planta.png"
+      "data/geo/img/parque_edu_orbita_planta.png",
+      "data/geo/img/parque_edu_v_rot19.png",
+      "data/geo/img/parque_edu_v_rotg20.png",
+      "data/geo/img/parque_edu_trace_v2_x3.png",
+      "data/geo/img/parque_edu_v_ud9_88.jpg",
+      "data/geo/img/parque_edu_v_cmp8wl_comparacion.png",
+      "data/geo/img/parque_edu_v_cmpzxv_comparacion.png",
+      "data/geo/img/parque_edu_v_cmpportico_comparacion.png",
+      "data/geo/img/parque_edu_v_cmpportico_mezcla.png",
+      "data/geo/img/parque_edu_v_orbita_todo.png",
+      "data/geo/img/parque_edu_v_orbita_planta.png"
     ],
-    "nota": "Huella: 3 iteraciones de trace.py (se amplió la franja sur del bloque este hasta el andén claro y se ajustaron los bordes con perfiles de brillo; error ≈ 0,5 m). Comparaciones con la misma cámara: UD9Fguy6mDTI6-6usnjaiw rumbo 88, pitch 5, fov 90 (cmp1 y cmp1b) y 8Lplca99ZsiQzUa4Ugdrhg rumbo 125, pitch 3, fov 90 (cmp2): como en 2013 el lote estaba vacío, solo confirman que el pórtico y la plaza quedan donde estaba la valla y que el tronco de la ceiba coincide (la ceiba se bajó de 13 a 11,5 m y se corrió 1 m). Pórtico contra la foto de El Colombiano de 2015 (cámara en órbita a 9,3 m, a 1,6 m de altura, fov 75,5°): tras ensancharlo de 9,7 a 10 m coinciden ancho, alto (3,9 m) y altura del vano (2,85 m); el letrero del modelo sale más grande que el real."
+    "nota": "Huella: 3 iteraciones de trace.py (se amplió la franja sur del bloque este hasta el andén claro y se ajustaron los bordes con perfiles de brillo; error ≈ 0,5 m). Comparaciones con la misma cámara: UD9Fguy6mDTI6-6usnjaiw rumbo 88, pitch 5, fov 90 (cmp1 y cmp1b) y 8Lplca99ZsiQzUa4Ugdrhg rumbo 125, pitch 3, fov 90 (cmp2): como en 2013 el lote estaba vacío, solo confirman que el pórtico y la plaza quedan donde estaba la valla y que el tronco de la ceiba coincide (la ceiba se bajó de 13 a 11,5 m y se corrió 1 m). Pórtico contra la foto de El Colombiano de 2015 (cámara en órbita a 9,3 m, a 1,6 m de altura, fov 75,5°): tras ensancharlo de 9,7 a 10 m coinciden ancho, alto (3,9 m) y altura del vano (2,85 m); el letrero del modelo sale más grande que el real. Verificación independiente (octubre de 2026): bordes medidos con perfiles de brillo en Esri girado 13°; el borde norte del bloque este estaba 0,5 m corto (9,4 en vez de 9,9 m del eje) y se alargó a 17,9 m; el resto de bordes visibles coincide a menos de 0,3 m. Comparaciones nuevas con la misma cámara: 8WluyAustQUEul-oC8BcnQ rumbo 88 y zXv5lkB7kaw4YkO8F0qESQ rumbo 125 (pitch 5, fov 90): como en 2013 el lote estaba vacío solo confirman la posición del pórtico y del árbol, y bajaron el árbol a 10,5 m. El pórtico se rehízo con viga, muros laterales delgados, columnas y muro de barriles, y se comparó con la foto de El Colombiano (órbita 257°, 0°, 9,3 m, mira en el centro del frente a 1,6 m, fov 75,5): coinciden contorno, vano, columnas y muro de barriles."
   }
 }

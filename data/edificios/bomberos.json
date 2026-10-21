@@ -7,9 +7,16 @@
  "lon": -73.909143,
  "ubicacion": {
   "confianza": "baja",
-  "metodo": "No se encontró la estación con máquina: ni en la web, ni en OpenStreetMap, ni entre los lugares que Google asocia a los 2.100 panoramas del casco urbano. Se ubica la única dirección conocida (Cra. 48 # 54-12, registro de proveedor en SECOP II). Las placas de Street View ponen ese punto unos 12 m al norte de la esquina Cra. 48 / Cl. 54. Por la regla de nomenclatura (placa par en el costado oriental de las carreras) se tomó el costado oriental: la casa blanca de postigos cafés, segunda casa al norte de la esquina. En 2013 no había letrero ni garaje. La huella sale del satélite de enero de 2020."
+  "metodo": "No se encontró una estación con máquina: ni en la web, ni en OpenStreetMap, ni entre los lugares que Google asocia a los 2.100 panoramas del casco urbano. Se ubica la única dirección conocida: Cra. 48 # 54-12, Barrio Central. Así aparece en el registro de proveedores de SECOP II (datos.gov.co, registro creado el 27 de noviembre de 2023) y como domicilio en los convenios del municipio con los bomberos de 2024 a 2026. El correo de contacto de ese registro es una cuenta personal, así que la dirección puede ser una oficina o la casa de un directivo y no una estación con garaje. Por la regla de nomenclatura (placa par en el costado oriental de las carreras) se tomó el costado oriental: la casa blanca de postigos cafés, segunda casa al norte de la esquina, que empieza a unos 14 m del borde de la Cl. 54. La fachada de 2013 se ubicó desde Street View y coincide con el satélite de Esri de enero de 2020 con menos de 0,3 m de diferencia. En 2013 no había letrero ni garaje."
  },
  "fuentes": [
+  {
+   "tipo": "street_view",
+   "pano": "M40Q26L167IPXLE5rXuuow",
+   "fecha": "2013-11",
+   "rumbo": 70,
+   "nota": "Fachada completa de la casa blanca en 2013: unos 10,8 m de frente con ventana, puerta y dos ventanas. Desde aquí se triangularon la esquina sur (5,5 m al sur del ancla) y las ventanas. Comparación del modelo corregido."
+  },
   {
    "tipo": "street_view",
    "pano": "M40Q26L167IPXLE5rXuuow",
@@ -30,6 +37,20 @@
    "fecha": "2013-11",
    "rumbo": 118,
    "nota": "Desde el norte: casa de ladrillo vecina, puerta de la mitad norte y árbol grande en el antejardín, donde en 2020 aparece la ampliación. Comparación con el modelo."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "Oeh8L_s2Zx9Zfx1Om0lSLA",
+   "fecha": "2013-11",
+   "rumbo": 150,
+   "nota": "Desde el norte, a 32 m: las casas vecinas con remate y un árbol grande tapan la sede; ninguna cubierta sobresale. Comparación con el modelo (revisión independiente)."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "5cqdzG7pmXKOX1a2SPLWbw",
+   "fecha": "2013-11",
+   "rumbo": 32,
+   "nota": "Desde la esquina suroccidental, a 30 m: la casa amarilla esquinera y sus árboles tapan la sede. Comparación con el modelo (revisión independiente)."
   },
   {
    "tipo": "street_view",
@@ -63,6 +84,11 @@
    "nota": "Solo a 1,2 m por píxel: no alcanza para fechar la ampliación."
   },
   {
+   "tipo": "satelite",
+   "fuente": "Google (imagen satelital sin fecha publicada, 0,15 m por píxel)",
+   "nota": "Más nítida que la de Esri, pero corrida 2,7 m al norte respecto a ella; se alineó por correlación. Confirma el largo de la ampliación (14,0 m), su cubierta clara con bordes y una división, y la copa continua de los árboles del antejardín."
+  },
+  {
    "tipo": "web",
    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8411374",
    "nota": "Convenio CDY 008-2025 del municipio con el Cuerpo de Bomberos Voluntarios de Yondó (NIT 900066409-7). La dirección Cra. 48 # 54-12 viene del registro de proveedor en SECOP II."
@@ -81,6 +107,16 @@
    "tipo": "web",
    "url": "https://www.waze.com/discuss/t/como-encontrar-una-direccion-en-colombia/375220",
    "nota": "Regla de nomenclatura: placa par en el costado oriental de las carreras."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.datos.gov.co/resource/qmzu-gj57.json?nit=9000664097",
+   "nota": "Registro de proveedores de SECOP II (datos abiertos): Cuerpo de Bomberos Voluntarios de Yondó, dirección CARRERA 48 NO. 54-12, registro creado el 27 de noviembre de 2023."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.datos.gov.co/resource/jbjy-vk9h.json?documento_proveedor=9000664097",
+   "nota": "Contratos de SECOP II con los bomberos (2024–2026): domicilio Carrera 48 54-12, Barrio Central. El lugar de ejecución que figura es la Alcaldía (Cra. 55 # 46A-16), no la sede."
   }
  ],
  "volumenes": [
@@ -88,11 +124,11 @@
    "id": "casa_sur",
    "nombre": "Casa blanca de postigos cafés (mitad sur, cubierta de fibrocemento original)",
    "centro": [
-    3.13,
-    -1.74
+    3.15,
+    -1.84
    ],
    "largo": 6.6,
-   "ancho": 5.7,
+   "ancho": 6.1,
    "rumbo_eje": 78,
    "base": 0,
    "altura_alero": 3.95,
@@ -117,7 +153,7 @@
      "ancho": 1.7,
      "alto": 1.6,
      "antepecho": 1.0,
-     "separacion": 2.8,
+     "separacion": 3.15,
      "lados": [
       "O"
      ]
@@ -128,11 +164,11 @@
    "id": "ampliacion_norte",
    "nombre": "Mitad norte reformada y ampliada hacia la calle (cubierta metálica clara, posterior a 2013)",
    "centro": [
-    -0.74,
-    2.53
+    -0.87,
+    2.65
    ],
-   "largo": 13.0,
-   "ancho": 4.15,
+   "largo": 14.0,
+   "ancho": 4.35,
    "rumbo_eje": 78,
    "base": 0,
    "altura_alero": 3.4,
@@ -192,23 +228,32 @@
    ]
   },
   {
+   "tipo": "arbol",
+   "altura": 7,
+   "copa": 8,
+   "centro": [
+    15.0,
+    3.0
+   ]
+  },
+  {
    "tipo": "zona_verde",
    "poligono": [
     [
-     -7.53,
-     -6.92
+     -7.46,
+     -7.21
     ],
     [
-     0.49,
-     -5.21
+     0.56,
+     -5.5
     ],
     [
-     -0.69,
-     0.36
+     -0.71,
+     0.46
     ],
     [
-     -8.71,
-     -1.34
+     -8.73,
+     -1.24
     ]
    ]
   },
@@ -255,9 +300,9 @@
    {
     "volumen": "ampliacion_norte",
     "faldon": "N",
-    "filas": 2,
-    "columnas": 5,
-    "orientacion_modulo": "horizontal"
+    "filas": 1,
+    "columnas": 11,
+    "orientacion_modulo": "vertical"
    },
    {
     "volumen": "casa_sur",
@@ -274,7 +319,7 @@
     "orientacion_modulo": "vertical"
    }
   ],
-  "kwp_factible": 9.9,
+  "kwp_factible": 10.45,
   "bess": {
    "kwh": 20,
    "kw": 10,
@@ -283,8 +328,8 @@
    "ancho": 1.2,
    "rumbo_eje": 78,
    "centro": [
-    -2.36,
-    -5.0
+    -2.29,
+    -5.34
    ]
   },
   "inversores": {
@@ -292,7 +337,7 @@
    "kw": 10,
    "volumen": "ampliacion_norte",
    "lado": "S",
-   "pos": -1.8
+   "pos": -3.0
   },
   "domotica": [
    "medidor bidireccional",
@@ -304,30 +349,36 @@
   ],
   "obras_civiles": [
    "cambio de la cubierta de fibrocemento de la casa sur por termoacústica antes del montaje; el fibrocemento viejo puede tener asbesto y debe desmontarlo personal certificado (Ley 1968 de 2019)",
-   "revisión estructural de la cubierta metálica y de las correas de la ampliación antes de cargar 10 módulos (unos 300 kg)",
+   "revisión estructural de la cubierta de la ampliación y de sus correas antes de cargar 11 módulos (unos 310 kg sin la estructura)",
    "poda de mantenimiento del mango del antejardín para que no sombree la cubierta ni el faldón occidental en la tarde (no talarlo)",
-   "base de concreto y encerramiento en malla con techo liviano para el gabinete de baterías en el antejardín",
+   "base de concreto y encerramiento en malla con techo liviano para el gabinete de baterías en el antejardín (protege de la lluvia, de la hojarasca y de las ramas del árbol vecino)",
    "puesta a tierra, protección contra sobretensiones (DPS) y tablero de transferencia",
    "canalización a la vista desde las cubiertas hasta el inversor"
   ],
-  "notas": "Caben 18 módulos de 550 Wp = 9,9 kWp, el 99 % de los 10 kWp del plan. Diez van sobre la cubierta metálica de la ampliación norte (2 filas × 5 columnas en horizontal, retiro de 0,5 m o más a todos los bordes) y ocho sobre la casa sur, ya con cubierta termoacústica: 4 en el faldón oriental y 4 en el occidental (1 fila × 4 columnas en vertical en cada uno). La casa sur tiene una pendiente fuerte (28°), que rinde algo menos que una cubierta de 10°. El faldón occidental recibe sombra del mango del antejardín al final de la tarde: hay que podarlo o aceptar una pérdida pequeña. No hay espacio para una marquesina: el antejardín está bajo los árboles y no se conoce patio. El gabinete de baterías (20 kWh / 10 kW) va en el costado sur del antejardín, a la sombra de los árboles y fuera de su copa. El inversor híbrido se cuelga en el tramo expuesto del muro sur de la ampliación, bajo el alero y a la sombra del mango, a unos 4 m del gabinete. No se propone cargador de vehículo eléctrico porque no hay parqueadero confirmado. Si la ampliación es el garaje de la camioneta contra incendios que el municipio compró en 2019, conviene dejar la acometida lista para un cargador de 7 kW."
+  "notas": "Caben 19 módulos de 550 Wp = 10,45 kWp, el 105 % de los 10 kWp del plan. Once van sobre la cubierta clara de la ampliación norte: 1 fila × 11 columnas en vertical (largo útil 13,0 m y ancho inclinado útil 3,4 m, con retiros de 0,5 m a todos los bordes; en horizontal solo caben 10). Ocho van sobre la casa sur, ya con cubierta termoacústica: 4 en el faldón oriental y 4 en el occidental (1 fila × 4 columnas en vertical en cada uno; largo útil 5,1 m y ancho inclinado útil 2,7 m). La casa sur tiene una pendiente fuerte (28°) y sus faldones miran al oriente y al occidente, así que rinden algo menos que la cubierta de 8° de la ampliación. El hastial norte de la casa sur (cumbrera a 5,7 m) puede sombrear el borde sur de la fila de la ampliación cerca del mediodía en diciembre y enero. El faldón occidental recibe sombra del mango del antejardín al final de la tarde: hay que podarlo o aceptar una pérdida pequeña. No hay espacio para una marquesina: el antejardín está bajo los árboles y no se conoce patio. El gabinete de baterías (20 kWh / 10 kW) va en el costado sur del antejardín, a 1,6 m de la fachada y fuera de las ventanas; la copa real del árbol llega casi hasta allí, por eso lleva techo liviano. El inversor híbrido se cuelga en el tramo expuesto del muro sur de la ampliación, bajo el alero, unos 5 m al norte del gabinete. No se propone cargador de vehículo eléctrico porque no hay parqueadero confirmado. Si la ampliación es el garaje de la camioneta contra incendios que el municipio compró en 2019, conviene dejar la acometida lista para un cargador de 7 kW."
  },
  "incertidumbres": [
-  "No se encontró una estación con máquina de bomberos: no aparece en la web, ni en OpenStreetMap, ni entre los lugares de Google de los 2.100 panoramas. Se modela la sede de la dirección registrada en SECOP II. En 2013 era una vivienda sin letrero, y no se confirma que los bomberos funcionen allí hoy.",
-  "Lado de la calle: se tomó el costado oriental (placa par). La casa amarilla esquinera también queda a unos 12 m de la Cl. 54; la sede podría ser ella o la casa de enfrente.",
-  "Ampliación norte: el satélite de enero de 2020 muestra una cubierta metálica clara sobre la mitad norte del predio, que llega casi hasta el andén donde en 2013 había antejardín con un árbol grande. No hay fotos posteriores a 2014. Su altura, la forma de la cubierta (se supuso una agua hacia el norte a 8°), si es cerrada o abierta y el portón del frente son supuestos.",
-  "Casa sur: el alero (3,95 m) y la pendiente (28°) se ajustaron con la foto de 2013 desde dos panoramas. La cubierta y la pintura pudieron cambiar después.",
+  "No se encontró una estación con máquina de bomberos: no aparece en la web, ni en OpenStreetMap, ni entre los lugares de Google de los 2.100 panoramas. Se modela la casa de la dirección registrada en SECOP II. En 2013 era una vivienda sin letrero, el correo del registro es personal y no se confirma que los bomberos funcionen allí hoy.",
+  "Lado de la calle: se tomó el costado oriental (placa par). La regla de placa par al oriente no se pudo comprobar con placas legibles en Street View; la sede podría ser la casa amarilla esquinera o la casa de enfrente.",
+  "Ampliación norte: el satélite de Esri (enero de 2020) y el de Google (sin fecha) muestran una cubierta clara de unos 14,0 m × 4,4 m sobre la mitad norte del predio, que llega a 1,5 m del andén, donde en 2013 había antejardín con un árbol grande. En Google la cubierta tiene bordes claros y una división, como una placa con antepecho, y al sur tiene una franja oscura de 1 m (sombra o separación con la casa sur): podría ser más alta que la casa o de dos pisos. No hay fotos posteriores a 2014. Su altura, la forma de la cubierta (se supuso una agua hacia el norte a 8°), si es cerrada o abierta y el portón del frente son supuestos.",
+  "Casa sur: el alero (3,95 m) y la pendiente (28°) se ajustaron con la foto de 2013. El ancho de 6,1 m sale de la esquina sur triangulada en Street View y del borde de la ampliación en el satélite. La cubierta y la pintura pudieron cambiar después.",
   "La profundidad de la casa (6,6 m) se midió en el satélite con ±0,5 m. El fondo del predio, el patio y las fachadas lateral y posterior no se ven desde la calle.",
-  "Los postigos son de madera café con reja; el generador los dibuja como ventanas de vidrio. Debajo de las ventanas hay rejillas de ventilación que no se modelan.",
-  "Árboles: posición y tamaño aproximados según el satélite de 2020. En 2013 el mango del antejardín era un arbolito.",
-  "Hay un desfase de cerca de 1 m entre el satélite y las posiciones de los panoramas. Se dio prioridad al satélite para la huella.",
-  "No se sabe si hay planta eléctrica, tanque de agua, aires acondicionados o antena de radio.",
+  "Los postigos son de madera café con reja; el generador los dibuja como ventanas de vidrio. Debajo de las ventanas hay rejillas de ventilación que no se modelan. Las ventanas reales no están centradas en la casa sur; el generador las reparte simétricas y quedan corridas hasta 0,6 m.",
+  "Árboles: posición y tamaño aproximados según los satélites; en Google las copas del antejardín forman una sola mancha continua de unos 7 m × 9 m. En 2013 el mango del antejardín era un arbolito. Al oriente, en el patio vecino, hay otro árbol (copa de unos 8 m a 5–9 m del muro oriental de la casa sur); su altura (7 m) es supuesta y puede sombrear el faldón oriental en las primeras horas de la mañana.",
+  "La fachada de 2013 triangulada desde Street View coincide con el satélite de Esri (menos de 0,3 m). Las imágenes de Google y de Bing quedan corridas unos 2,7 m al norte y al sur, respectivamente; se usaron solo alineadas con Esri.",
+  "No se sabe si hay planta eléctrica, aires acondicionados o antena de radio. En la imagen de Google se ve un objeto redondo blanco de 1,2 m en el borde oriental de la casa sur (posible tanque de agua); no se modela.",
   "Se desconoce el estado estructural de las cubiertas. La carga de los módulos debe verificarse antes de instalarlos."
  ],
  "verificacion": {
   "trace": "data/geo/img/bomberos_trace.png",
-  "trace_ampliado": "data/geo/img/bomberos_trace_zoom.png",
+  "trace_ampliado": "data/geo/img/bomberos_vgrid_spec.png",
+  "trace_google_alineado": "data/geo/img/bomberos_vgoogle_al_spec.png",
+  "medicion_en_ejes": [
+   "data/geo/img/bomberos_vrot_esri.png",
+   "data/geo/img/bomberos_vrot_google.png"
+  ],
   "vistas": [
+   "data/geo/img/bomberos_v_*.jpg",
    "data/geo/img/bomberos_sv_m40q_*.jpg",
    "data/geo/img/bomberos_sv_xnta_*.jpg",
    "data/geo/img/bomberos_sv_hxgs_*.jpg",
@@ -335,17 +386,21 @@
    "data/geo/img/bomberos_sv_ypli_150.jpg"
   ],
   "comparaciones": [
-   "data/geo/img/bomberos_cmp1_comparacion.png",
-   "data/geo/img/bomberos_cmp1_mezcla.png",
-   "data/geo/img/bomberos_cmp2_comparacion.png",
-   "data/geo/img/bomberos_cmp2_mezcla.png",
-   "data/geo/img/bomberos_cmp2013b_mezcla.png"
+   "data/geo/img/bomberos_vcmp_m40q_70_comparacion.png",
+   "data/geo/img/bomberos_vcmp_m40q_70_mezcla.png",
+   "data/geo/img/bomberos_vcmp_oeh8_150_mezcla.png",
+   "data/geo/img/bomberos_vcmp_oeh8_zoom.png",
+   "data/geo/img/bomberos_vcmp_5cqd_32_mezcla.png"
   ],
   "orbitas": [
-   "data/geo/img/bomberos_orbita_todo.png",
-   "data/geo/img/bomberos_orbita_todo_alta.png"
+   "data/geo/img/bomberos_vorbita_todo.png",
+   "data/geo/img/bomberos_vorbita_todo_alta.png",
+   "data/geo/img/bomberos_vorbita_todo_este.png"
   ],
   "satelite": [
+   "data/geo/img/bomberos_vgrid40.png",
+   "data/geo/img/bomberos_vgoogle40.png",
+   "data/geo/img/bomberos_vgoogle_al_este.png",
    "data/geo/img/bomberos_sat_bloque.png",
    "data/geo/img/bomberos_wayback_z17.png"
   ]

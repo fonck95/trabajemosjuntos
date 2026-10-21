@@ -1,0 +1,1371 @@
+{
+  "id": "ie_led",
+  "nombre": "I.E. Luis Eduardo Díaz – sede principal",
+  "nodo_microrred": "ie_led",
+  "direccion": "Carrera 45 # 55-56 (directorio oficial del MEN y de la Secretaría de Educación de Antioquia)",
+  "lat": 7.011586,
+  "lon": -73.907442,
+  "ubicacion": {
+    "confianza": "alta",
+    "metodo": "Dirección oficial del MEN (código DANE 105893001685): Carrera 45 # 55-56. El lugar de Google 'IELED' (7.011549, -73.907513) y el punto de OpenStreetMap 'Institución Educativa Luis Eduardo Diaz' (7.011613, -73.907787) caen sobre el mismo claustro. En el satélite Esri (WorldView-2 del 12 de enero de 2020) es un claustro de ladrillo de 72,5 × 60,4 m con dos patios: el occidental con una placa cubierta de techo curvo blanco y el oriental arborizado. En Street View de noviembre de 2013 (rumbos ya corregidos) se ve todo el perímetro: cerca de malla sobre muro bajo de ladrillo con remate verde, aulas de ladrillo pintado de rojo con aleros verdes y cubierta de fibrocemento, corredores con columnas, y en la fachada occidental (entrada principal, sobre la carrera 45) los escudos de Colombia y del colegio y tres astas. En 2013 no se veía un letrero con el nombre. Las calles según OpenStreetMap: calle 55 al norte y carrera 43 al oriente. El ancla queda sobre el ala central, entre los dos patios. Los panoramas quedan unos 5,5 m al norte del satélite (vía sur, vía norte y la torre de tanques triangulada desde tres panoramas); la huella se dejó en el marco del satélite y las comparaciones con fotos se hicieron con una copia del modelo corrida 5,5 m al norte."
+  },
+  "fuentes": [
+    {
+      "tipo": "street_view",
+      "pano": "9FtQdNi0e-XHqkIxMeJXiQ",
+      "fecha": "2013-11",
+      "rumbo": 0,
+      "nota": "fachada sur: pabellón central con culata verde, ventanas altas con reja y aire acondicionado; corredor del ala sur; techo curvo de la placa cubierta detrás. Usada en la comparación modelo-foto"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "9FtQdNi0e-XHqkIxMeJXiQ",
+      "fecha": "2013-11",
+      "rumbo": 8,
+      "nota": "acercamiento al pabellón sur (fov 60): alturas de dintel (≈3,8 m), cumbrera (≈5,7 m) y alero lateral (≈2,9 m) sobre el patio"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "9FtQdNi0e-XHqkIxMeJXiQ",
+      "fecha": "2013-11",
+      "rumbo": 315,
+      "nota": "ala sur hacia el occidente, corredor con columnas rojas; torre de tanques al fondo"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "9FtQdNi0e-XHqkIxMeJXiQ",
+      "fecha": "2013-11",
+      "rumbo": 50,
+      "nota": "ala sur hacia el oriente, nim grande de tronco pintado en el patio sur"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "iGAz5s3aDINI2DR50t91iQ",
+      "fecha": "2013-11",
+      "rumbo": 20,
+      "nota": "ala sur occidental y pabellón; arco de la placa cubierta. Usada en la comparación modelo-foto"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "2uZzvscIed2pkO4zUqN4RA",
+      "fecha": "2013-11",
+      "rumbo": 15,
+      "nota": "esquina suroeste: remate a cuatro aguas con gablete; torre de tanques; poste con la caja del medidor junto a la cerca. Usada en la comparación"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "uughBmr-_zh6fY3CB2KUpg",
+      "fecha": "2013-11",
+      "rumbo": 0,
+      "nota": "muro bajo de ladrillo con remate verde y malla eslabonada; árbol del patio sureste"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "IPC_N3fv17MXbTsMnr9atw",
+      "fecha": "2013-11",
+      "rumbo": 20,
+      "nota": "ala sur oriental: corredor con muro azul con murales y columnas rojas; patio de concreto con jardineras"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "c-dh2Iwr2DOWEer1u6HVgQ",
+      "fecha": "2013-11",
+      "rumbo": 290,
+      "nota": "esquina sureste: remate a cuatro aguas con gablete verde, ventanas con reja"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "Vxl832AV7HI-pXYH5x25SQ",
+      "fecha": "2013-11",
+      "rumbo": 270,
+      "nota": "fachada oriental (carrera 43): faldón largo de fibrocemento, alero verde, corredor con columnas. Usada en la comparación modelo-foto"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "iMB7B34y24WJhGjGiaLOHg",
+      "fecha": "2013-11",
+      "rumbo": 250,
+      "nota": "esquina noreste tras los árboles: corredor y bloque con columnas"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "pKAMuMs5erRRmvHjSZv3DQ",
+      "fecha": "2013-11",
+      "rumbo": 215,
+      "nota": "culata norte del ala oriental (ladrillo rojo, tabla verde) y bloque norte con ventanas altas"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "JFhXQG3pwciUggLb_EpUbw",
+      "fecha": "2013-11",
+      "rumbo": 185,
+      "nota": "bloque norte (calle 55): crujía baja con ventanas altas, cuerpo alto con linternilla, tanque negro y antena; el patio norte está ≈0,9 m más bajo que la calle. Usada en la comparación"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "LwL26k9qOJaZyzS0loJ5Qw",
+      "fecha": "2013-11",
+      "rumbo": 180,
+      "nota": "bloque de muros rojos con ventanas pequeñas al noroeste del bloque norte; arco de la placa al fondo"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "ay4cIkDp3fZABIJNXEEXVQ",
+      "fecha": "2013-11",
+      "rumbo": 170,
+      "nota": "patio norte: bloque rojo, ala norte con alero verde, antena parabólica"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "mV4QTga1sks-yLVwaP1hxA",
+      "fecha": "2013-11",
+      "rumbo": 150,
+      "nota": "kiosco abierto a cuatro aguas, bloque de la esquina noroeste con cubierta clara y culata norte del ala occidental"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "-9pLyB9qUOcLx7_drmkmzA",
+      "fecha": "2013-11",
+      "rumbo": 90,
+      "nota": "fachada occidental (entrada principal): escudos, tres astas, torre de tanques; techo curvo blanco de la placa visible sobre la cubierta. Usada en la comparación"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "HDlz5SWbsuk92r-a571S9A",
+      "fecha": "2013-11",
+      "rumbo": 100,
+      "nota": "fachada occidental hacia el norte: escudos de Colombia, del colegio y uno verde; alero verde con canal"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "dofQLKc04GUawXWcugjB8g",
+      "fecha": "2013-11",
+      "rumbo": 80,
+      "nota": "torre de concreto de dos columnas con dos tanques plásticos azules y caseta blanca"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "MQ5r6hD9QybdFv1mrPLMQg",
+      "fecha": "2013-11",
+      "rumbo": 15,
+      "nota": "torre de tanques desde el suroeste (triangulación) y faldón occidental"
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z19 (WorldView-2, 12 de enero de 2020, resolución 0,5 m, precisión nominal ±10 m)",
+      "nota": "huella, bordes de alero, cumbreras, patios y árboles; cubierta de la placa ya blanca"
+    },
+    {
+      "tipo": "osm",
+      "url": "https://www.openstreetmap.org/#map=19/7.01161/-73.90779",
+      "nota": "punto de la institución y nombres de calles (calle 55, carrera 43)"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.elcolombiano.com/antioquia/inundacion-colegio-yondo-antioquia-LH27205871",
+      "nota": "23 de abril de 2025: aguacero inunda la sede durante la izada de bandera; foto del corredor con piso de tablón cerámico; la Gobernación dice que no hay proyecto radicado para la sede"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-11-8407030",
+      "nota": "SECOP I, IELED-SAMC-001-2018: mantenimiento y adecuaciones de las secciones primaria y secundaria ($26,8 millones)"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-13-9469958",
+      "nota": "SECOP I, MC-011-2019: obra de adecuación de la I.E. Luis Eduardo Díaz y del C.E.R. Casabe Viejo ($15,0 millones)"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-13-8009310",
+      "nota": "SECOP I, MC-015-2018: revisión de diseños estructurales del 'colegio Luis Eduardo Díaz' para licencia de construcción (probablemente la sede nueva, no este claustro)"
+    }
+  ],
+  "volumenes": [
+    {
+      "id": "ala_oeste_sur",
+      "nombre": "Ala oeste, tramo sur (aulas; remate a cuatro aguas)",
+      "centro": [
+        -30.2,
+        -8.7
+      ],
+      "largo": 41.0,
+      "ancho": 9.4,
+      "rumbo_eje": 0,
+      "altura_alero": 3.41,
+      "pisos": 1,
+      "techo": {
+        "tipo": "cuatro_aguas",
+        "pendiente": 23,
+        "voladizo": 1.2,
+        "material": "fibrocemento",
+        "color": "#7b7b77"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 2.4,
+          "alto": 1.4,
+          "antepecho": 1.3,
+          "separacion": 3.6,
+          "lados": [
+            "O",
+            "E"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "O",
+            "pos": 0.22,
+            "ancho": 2.0,
+            "alto": 2.4
+          }
+        ]
+      }
+    },
+    {
+      "id": "ala_oeste_norte",
+      "nombre": "Ala oeste, tramo norte (aulas; culata al norte)",
+      "centro": [
+        -30.2,
+        18.0
+      ],
+      "largo": 23.0,
+      "ancho": 9.4,
+      "rumbo_eje": 0,
+      "altura_alero": 3.41,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 23,
+        "voladizo": 1.2,
+        "material": "fibrocemento",
+        "color": "#7b7b77",
+        "cumbrera": "largo"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 2.4,
+          "alto": 1.4,
+          "antepecho": 1.3,
+          "separacion": 3.6,
+          "lados": [
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ala_este_sur",
+      "nombre": "Ala este, tramo sur (aulas; remate a cuatro aguas)",
+      "centro": [
+        30.05,
+        -8.7
+      ],
+      "largo": 38.8,
+      "ancho": 8.1,
+      "rumbo_eje": 0,
+      "altura_alero": 3.88,
+      "pisos": 1,
+      "techo": {
+        "tipo": "cuatro_aguas",
+        "pendiente": 23,
+        "voladizo": 2.3,
+        "material": "fibrocemento",
+        "color": "#7b7b77"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 2.4,
+          "alto": 1.4,
+          "antepecho": 1.3,
+          "separacion": 3.6,
+          "lados": [
+            "E",
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ala_este_norte",
+      "nombre": "Ala este, tramo norte (aulas; culata al norte)",
+      "centro": [
+        30.05,
+        18.0
+      ],
+      "largo": 23.0,
+      "ancho": 8.1,
+      "rumbo_eje": 0,
+      "altura_alero": 3.88,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 23,
+        "voladizo": 2.3,
+        "material": "fibrocemento",
+        "color": "#7b7b77",
+        "cumbrera": "largo"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 2.4,
+          "alto": 1.4,
+          "antepecho": 1.3,
+          "separacion": 3.6,
+          "lados": [
+            "E"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ala_sur_oeste",
+      "nombre": "Ala sur, tramo occidental (aulas)",
+      "centro": [
+        -15.1,
+        -21.95
+      ],
+      "largo": 30.2,
+      "ancho": 8.1,
+      "rumbo_eje": 90,
+      "altura_alero": 3.88,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 23,
+        "voladizo": 2.3,
+        "material": "fibrocemento",
+        "color": "#7b7b77",
+        "cumbrera": "largo"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 2.4,
+          "alto": 1.4,
+          "antepecho": 1.3,
+          "separacion": 3.6,
+          "lados": [
+            "S",
+            "N"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "S",
+            "pos": 0.2,
+            "ancho": 1.0,
+            "alto": 2.2
+          },
+          {
+            "lado": "S",
+            "pos": 0.5,
+            "ancho": 1.0,
+            "alto": 2.2
+          },
+          {
+            "lado": "S",
+            "pos": 0.8,
+            "ancho": 1.0,
+            "alto": 2.2
+          }
+        ]
+      }
+    },
+    {
+      "id": "ala_sur_este",
+      "nombre": "Ala sur, tramo oriental (aulas)",
+      "centro": [
+        15.02,
+        -21.95
+      ],
+      "largo": 30.05,
+      "ancho": 8.1,
+      "rumbo_eje": 90,
+      "altura_alero": 3.88,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 23,
+        "voladizo": 2.3,
+        "material": "fibrocemento",
+        "color": "#7b7b77",
+        "cumbrera": "largo"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 2.4,
+          "alto": 1.4,
+          "antepecho": 1.3,
+          "separacion": 3.6,
+          "lados": [
+            "S",
+            "N"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "S",
+            "pos": 0.2,
+            "ancho": 1.0,
+            "alto": 2.2
+          },
+          {
+            "lado": "S",
+            "pos": 0.5,
+            "ancho": 1.0,
+            "alto": 2.2
+          },
+          {
+            "lado": "S",
+            "pos": 0.8,
+            "ancho": 1.0,
+            "alto": 2.2
+          }
+        ]
+      }
+    },
+    {
+      "id": "ala_norte",
+      "nombre": "Ala norte (aulas)",
+      "centro": [
+        -0.08,
+        20.2
+      ],
+      "largo": 60.25,
+      "ancho": 7.4,
+      "rumbo_eje": 90,
+      "altura_alero": 3.54,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 23,
+        "voladizo": 1.5,
+        "material": "fibrocemento",
+        "color": "#7b7b77",
+        "cumbrera": "largo"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 2.4,
+          "alto": 1.4,
+          "antepecho": 1.3,
+          "separacion": 3.6,
+          "lados": [
+            "S"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ala_central",
+      "nombre": "Ala central entre patios (aulas)",
+      "centro": [
+        0.95,
+        -0.88
+      ],
+      "largo": 42.15,
+      "ancho": 7.3,
+      "rumbo_eje": 0,
+      "altura_alero": 3.66,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 23,
+        "voladizo": 1.8,
+        "material": "fibrocemento",
+        "color": "#7b7b77",
+        "cumbrera": "largo"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 2.4,
+          "alto": 1.4,
+          "antepecho": 1.3,
+          "separacion": 3.6,
+          "lados": [
+            "E",
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "id": "pabellon_sur",
+      "nombre": "Pabellón sur (culata a dos aguas en el eje central)",
+      "centro": [
+        0.0,
+        -26.12
+      ],
+      "largo": 8.35,
+      "ancho": 11.5,
+      "rumbo_eje": 0,
+      "altura_alero": 3.65,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 20,
+        "voladizo": 2.05,
+        "material": "fibrocemento",
+        "color": "#7b7b77",
+        "cumbrera": "largo"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 2.0,
+          "alto": 1.1,
+          "antepecho": 2.4,
+          "separacion": 2.3,
+          "lados": [
+            "S",
+            "E",
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "id": "corredor_sur_oeste",
+      "nombre": "Corredor sur, tramo occidental",
+      "abierto": true,
+      "centro": [
+        -16.02,
+        -27.0
+      ],
+      "largo": 20.55,
+      "ancho": 2.0,
+      "rumbo_eje": 90,
+      "altura_alero": 2.85,
+      "sep_columnas": 3.6,
+      "columna": 0.3,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 23,
+        "caida": "S",
+        "voladizo": 0.1,
+        "material": "fibrocemento",
+        "color": "#7b7b77"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43"
+      }
+    },
+    {
+      "id": "corredor_sur_este",
+      "nombre": "Corredor sur, tramo oriental",
+      "abierto": true,
+      "centro": [
+        15.72,
+        -27.0
+      ],
+      "largo": 19.95,
+      "ancho": 2.0,
+      "rumbo_eje": 90,
+      "altura_alero": 2.85,
+      "sep_columnas": 3.6,
+      "columna": 0.3,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 23,
+        "caida": "S",
+        "voladizo": 0.1,
+        "material": "fibrocemento",
+        "color": "#7b7b77"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43"
+      }
+    },
+    {
+      "id": "corredor_este",
+      "nombre": "Corredor de la fachada oriental",
+      "abierto": true,
+      "centro": [
+        35.1,
+        -0.25
+      ],
+      "largo": 54.5,
+      "ancho": 2.0,
+      "rumbo_eje": 0,
+      "altura_alero": 2.85,
+      "sep_columnas": 3.6,
+      "columna": 0.3,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 23,
+        "caida": "E",
+        "voladizo": 0.1,
+        "material": "fibrocemento",
+        "color": "#7b7b77"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43"
+      }
+    },
+    {
+      "id": "corredor_patio_este",
+      "nombre": "Corredor norte del patio oriental",
+      "abierto": true,
+      "centro": [
+        15.05,
+        13.8
+      ],
+      "largo": 16.3,
+      "ancho": 3.6,
+      "rumbo_eje": 90,
+      "altura_alero": 2.7,
+      "sep_columnas": 3.6,
+      "columna": 0.3,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 5,
+        "caida": "S",
+        "voladizo": 0.1,
+        "material": "fibrocemento",
+        "color": "#7b7b77"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43"
+      }
+    },
+    {
+      "id": "bloque_norte_bajo",
+      "nombre": "Bloque norte, crujía baja hacia la calle 55",
+      "centro": [
+        14.4,
+        31.75
+      ],
+      "largo": 28.2,
+      "ancho": 4.5,
+      "rumbo_eje": 90,
+      "altura_alero": 3.5,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 24,
+        "caida": "N",
+        "voladizo": 0.5,
+        "material": "fibrocemento",
+        "color": "#7b7b77"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 3.0,
+          "alto": 0.8,
+          "antepecho": 2.0,
+          "separacion": 3.6,
+          "lados": [
+            "N"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bloque_norte_alto",
+      "nombre": "Bloque norte, cuerpo alto con ventanas altas (linternilla)",
+      "centro": [
+        14.4,
+        27.7
+      ],
+      "largo": 28.2,
+      "ancho": 3.6,
+      "rumbo_eje": 90,
+      "altura_alero": 7.0,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 8,
+        "caida": "N",
+        "voladizo": 0.5,
+        "material": "fibrocemento",
+        "color": "#7b7b77"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "celosia",
+          "ancho": 3.0,
+          "alto": 1.0,
+          "antepecho": 5.75,
+          "separacion": 3.6,
+          "lados": [
+            "N"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bloque_noroeste_rojo",
+      "nombre": "Bloque de muros rojos con ventanas altas (lado norte, junto al bloque norte)",
+      "centro": [
+        -8.95,
+        31.45
+      ],
+      "largo": 10.9,
+      "ancho": 7.9,
+      "rumbo_eje": 0,
+      "altura_alero": 3.0,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 5,
+        "caida": "N",
+        "voladizo": 0.4,
+        "material": "fibrocemento",
+        "color": "#b9b8b2"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.6,
+          "alto": 0.6,
+          "antepecho": 2.0,
+          "separacion": 3.2,
+          "lados": [
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "id": "bloque_esquina_noroeste",
+      "nombre": "Bloque de la esquina noroeste (cubierta clara)",
+      "centro": [
+        -33.0,
+        35.5
+      ],
+      "largo": 9.0,
+      "ancho": 8.0,
+      "rumbo_eje": 0,
+      "altura_alero": 2.8,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 12,
+        "caida": "N",
+        "voladizo": 0.5,
+        "material": "fibrocemento",
+        "color": "#b3b2ad"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e4a43"
+      }
+    },
+    {
+      "id": "kiosco",
+      "nombre": "Kiosco abierto del patio norte",
+      "abierto": true,
+      "centro": [
+        -23.2,
+        34.7
+      ],
+      "largo": 8.6,
+      "ancho": 8.3,
+      "rumbo_eje": 0,
+      "altura_alero": 2.7,
+      "sep_columnas": 4.2,
+      "columna": 0.2,
+      "techo": {
+        "tipo": "cuatro_aguas",
+        "pendiente": 22,
+        "voladizo": 0.6,
+        "material": "fibrocemento",
+        "color": "#9c9c97"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#d9d6cf"
+      }
+    }
+  ],
+  "elementos": [
+    {
+      "tipo": "cancha",
+      "nombre": "Placa polideportiva cubierta del patio occidental",
+      "centro": [
+        -14.75,
+        -0.95
+      ],
+      "largo": 27.9,
+      "ancho": 16.4,
+      "rumbo_eje": 0,
+      "superficie": "concreto",
+      "cubierta": true,
+      "altura": 6.0,
+      "material_cubierta": "termoacustica",
+      "color_cubierta": "#e3e5e5"
+    },
+    {
+      "tipo": "zona_verde",
+      "nombre": "Patio oriental arborizado",
+      "poligono": [
+        [
+          6.9,
+          -14.3
+        ],
+        [
+          23.2,
+          -14.3
+        ],
+        [
+          23.2,
+          11.6
+        ],
+        [
+          6.9,
+          11.6
+        ]
+      ]
+    },
+    {
+      "tipo": "anden",
+      "nombre": "Andén frente a la fachada sur",
+      "poligono": [
+        [
+          -36.1,
+          -31.0
+        ],
+        [
+          36.4,
+          -31.0
+        ],
+        [
+          36.4,
+          -28.3
+        ],
+        [
+          -36.1,
+          -28.3
+        ]
+      ]
+    },
+    {
+      "tipo": "patio",
+      "nombre": "Patio de concreto con jardineras (sureste)",
+      "poligono": [
+        [
+          9.0,
+          -39.0
+        ],
+        [
+          24.0,
+          -39.0
+        ],
+        [
+          24.0,
+          -31.0
+        ],
+        [
+          9.0,
+          -31.0
+        ]
+      ]
+    },
+    {
+      "tipo": "cerramiento",
+      "nombre": "Malla eslabonada sobre muro bajo de ladrillo con remate verde",
+      "poligono": [
+        [
+          -48.5,
+          -41.5
+        ],
+        [
+          43.0,
+          -41.5
+        ],
+        [
+          43.0,
+          44.0
+        ],
+        [
+          -48.5,
+          44.0
+        ]
+      ],
+      "altura": 2.4,
+      "material": "malla",
+      "color": "#a3a8ab"
+    },
+    {
+      "tipo": "tanque_elevado",
+      "nombre": "Torre de dos columnas con dos tanques plásticos azules",
+      "centro": [
+        -43.6,
+        -12.6
+      ],
+      "altura": 9.0,
+      "diametro": 2.6
+    },
+    {
+      "tipo": "aire_acondicionado",
+      "nombre": "Aire acondicionado de ventana en la culata del pabellón sur",
+      "centro": [
+        -0.7,
+        -30.55
+      ],
+      "altura": 2.4
+    },
+    {
+      "tipo": "poste",
+      "nombre": "Poste de concreto con la caja del medidor de energía, junto a la cerca sur",
+      "centro": [
+        -34.8,
+        -42.4
+      ],
+      "altura": 9.0
+    },
+    {
+      "tipo": "asta",
+      "centro": [
+        -40.3,
+        1.5
+      ],
+      "altura": 5.5
+    },
+    {
+      "tipo": "asta",
+      "centro": [
+        -40.3,
+        0.8
+      ],
+      "altura": 5.5
+    },
+    {
+      "tipo": "asta",
+      "centro": [
+        -40.3,
+        0.1
+      ],
+      "altura": 5.5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        10.5,
+        7.5
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        16.5,
+        8.0
+      ],
+      "altura": 8,
+      "copa": 6
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        20.5,
+        3.0
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        12.0,
+        -1.0
+      ],
+      "altura": 8,
+      "copa": 6
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        19.0,
+        -6.0
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        11.0,
+        -9.0
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        17.5,
+        -11.0
+      ],
+      "altura": 6,
+      "copa": 4
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        5.5,
+        -35.5
+      ],
+      "altura": 12,
+      "copa": 11
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -8.5,
+        -34.0
+      ],
+      "altura": 8,
+      "copa": 7
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -31.0,
+        -34.0
+      ],
+      "altura": 6,
+      "copa": 6
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -37.5,
+        -33.5
+      ],
+      "altura": 6,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        27.5,
+        -33.5
+      ],
+      "altura": 9,
+      "copa": 8
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        34.0,
+        -35.0
+      ],
+      "altura": 8,
+      "copa": 7
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -39.5,
+        -26.0
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -39.5,
+        -15.0
+      ],
+      "altura": 8,
+      "copa": 6
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -40.0,
+        -1.0
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -40.0,
+        13.0
+      ],
+      "altura": 8,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        39.0,
+        -20.0
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        39.0,
+        -8.0
+      ],
+      "altura": 8,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        39.0,
+        4.0
+      ],
+      "altura": 8,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        39.0,
+        15.0
+      ],
+      "altura": 8,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        39.0,
+        26.0
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -40.0,
+        37.0
+      ],
+      "altura": 9,
+      "copa": 7
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -16.0,
+        36.0
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        8.0,
+        39.0
+      ],
+      "altura": 8,
+      "copa": 7
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        15.0,
+        38.0
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        22.0,
+        36.0
+      ],
+      "altura": 8,
+      "copa": 7
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        32.0,
+        38.0
+      ],
+      "altura": 7,
+      "copa": 5
+    }
+  ],
+  "adecuaciones": {
+    "kwp_plan": 30,
+    "fv": [
+      {
+        "volumen": "ala_sur_oeste",
+        "faldon": "S",
+        "filas": 2,
+        "columnas": 9,
+        "orientacion_modulo": "horizontal"
+      },
+      {
+        "volumen": "ala_sur_este",
+        "faldon": "S",
+        "filas": 2,
+        "columnas": 9,
+        "orientacion_modulo": "horizontal"
+      },
+      {
+        "volumen": "ala_este_sur",
+        "faldon": "E",
+        "filas": 2,
+        "columnas": 10,
+        "orientacion_modulo": "horizontal"
+      }
+    ],
+    "kwp_factible": 30.8,
+    "cubierta_nueva": {
+      "material": "termoacustica",
+      "color": "#e9e7e1",
+      "volumenes": [
+        "ala_sur_oeste",
+        "ala_sur_este",
+        "pabellon_sur",
+        "corredor_sur_oeste",
+        "corredor_sur_este",
+        "ala_este_sur",
+        "ala_este_norte",
+        "corredor_este"
+      ]
+    },
+    "inversores": {
+      "n": 2,
+      "kw": 15,
+      "volumen": "ala_sur_oeste",
+      "lado": "S"
+    },
+    "domotica": [
+      "medidor bidireccional en la frontera con la red (hoy el medidor está en un poste junto a la cerca sur, esquina suroeste)",
+      "gateway IoT conectado al sistema de gestión de la microrred",
+      "sensores de ocupación y luminarias LED en aulas y corredores, con apagado en vacaciones y fines de semana",
+      "control por horario de ventiladores y aires acondicionados (sala del pabellón sur y oficinas)",
+      "telegestión del alumbrado de la placa cubierta y de los patios",
+      "control de la bomba que sube el agua a la torre de tanques, para que trabaje con el sol",
+      "sensor de nivel de agua en el patio sur que avise de inundación y corte circuitos bajos"
+    ],
+    "obras_civiles": [
+      "cambio de la cubierta de fibrocemento por lámina termoacústica en el ala sur, el pabellón sur, el ala oriental y sus corredores (≈1.500 m²) antes de montar los paneles; las demás cubiertas en una segunda etapa. Si el fibrocemento es asbesto-cemento (probable por la edad del edificio), retiro con empresa autorizada y disposición final según la Ley 1968 de 2019",
+      "revisión de cerchas y correas de esas alas y refuerzo donde haga falta para el peso de los paneles (≈15 kg/m²)",
+      "canales y bajantes nuevos al cambiar la cubierta, conectados a un drenaje del patio que sí evacue el agua (la sede se inundó en abril de 2025)",
+      "tablero, canalización desde los inversores (muro sur del ala sur, a la sombra del corredor) hasta el tablero general y el medidor",
+      "puesta a tierra, pararrayos y protecciones contra sobretensiones según RETIE",
+      "línea de vida y anclajes en las cumbreras para mantenimiento seguro"
+    ],
+    "notas": "La potencia planeada cabe en la cubierta real sin marquesina: 2 filas × 9 columnas de módulos horizontales en cada mitad del faldón sur del ala sur (a lado y lado del pabellón central, 36 módulos) y 2 × 10 en el faldón oriental del ala oriental (20 módulos): 56 módulos de 2,28 × 1,13 m (550 Wp) = 30,8 kWp, un poco más que los 30 kWp del plan. Los arreglos dejan 0,5 m a la cumbrera y a las limatesas y se apartan de las limahoyas con las alas oeste y este y con el pabellón. El faldón sur da al patio de formación: el nim grande (≈12 m) y los árboles del patio sur quedan a más de 10 m y su sombra no alcanza los paneles al mediodía; el pabellón sombrea un poco los extremos cercanos a primera y última hora. En el faldón oriental los árboles de la carrera 43 dan sombra solo temprano en la mañana. No se usa la cubierta curva de la placa: es una estructura liviana cuya capacidad no se conoce. El nodo no tiene baterías en el plan; si se agregaran, cabe un gabinete en el patio sur junto al ala sur. No hay parqueadero dentro de la sede (los carros se parquean en la vía), por eso no se propone cargador de vehículo eléctrico. Toda la cubierta es de fibrocemento con aleros y canales verdes; hay que cambiarla antes de montar."
+  },
+  "incertidumbres": [
+    "Street View es de noviembre de 2013. El satélite (enero de 2020) muestra la cubierta curva de la placa ya blanca (en 2013 se veía gris metálica desde el sur) y árboles mucho más grandes; las copas del modelo salen del satélite.",
+    "Los panoramas quedan unos 5,5 m al norte del satélite (precisión nominal de Esri ±10 m). Se respetó el satélite para la huella.",
+    "En el satélite las cumbreras no van centradas: los faldones exteriores son más largos porque cubren corredores (ala sur: cumbrera en y ≈ −20,0; ala norte ≈ 19,1; ala oeste ≈ −29,5; ala central ≈ 0,0). El generador solo hace techos simétricos: se dejaron las cumbreras en el centro de cada ala (corridas 0,7 a 2 m) y los corredores se modelaron con aleros anchos y volúmenes abiertos con columnas.",
+    "Los remates sur de las alas oeste y este son a cuatro aguas con un gablete pequeño; se dibujan como cuatro aguas sin gablete. Los remates norte son culatas (visto en la oeste desde mV4Q y en la este desde pKAM).",
+    "Alturas medidas en Street View con cámara a 2,5 m: el patio sur está ≈0,4 m más alto que la vía sur y el patio norte ≈0,9 m más bajo que la calle 55. El modelo supone terreno plano; las alturas del bloque norte están medidas desde su propio piso.",
+    "Las fachadas hacia los patios no se ven desde la calle: ventanas y corredores de esos lados se dejaron típicos. Las puertas de aulas en el corredor sur y la puerta principal en la fachada occidental (entre los escudos y las astas) tienen posición estimada.",
+    "La culata del pabellón sur tiene esquinas ochavadas (tres caras con ventanas); se modeló como rectángulo.",
+    "La altura de la placa cubierta (clave ≈8 m) se estimó desde el sur y el occidente; no se ven sus columnas ni el piso de la cancha.",
+    "El bloque norte (cuerpo alto con linternilla), el bloque rojo del noroeste, el bloque de la esquina noroeste y el kiosco se ven solo en parte; su uso no se conoce y sus medidas son aproximadas.",
+    "El generador no dibuja canales ni tapas de alero de otro color: los aleros verdes del colegio quedan del color de la cubierta.",
+    "La torre real tiene dos columnas, plataforma y dos tanques plásticos azules; se usa el tanque elevado genérico (≈9 m).",
+    "No se sabe si el fibrocemento es asbesto-cemento ni el estado de la estructura de la cubierta: hay que verificarlo antes de las obras.",
+    "No se vio un letrero con el nombre del colegio en 2013."
+  ],
+  "verificacion": {
+    "trace": "data/geo/img/ie_led_trace.png",
+    "superposicion_muros_y_aleros": [
+      "data/geo/img/ie_led_ovl1.png",
+      "data/geo/img/ie_led_ovl2.png"
+    ],
+    "satelite": [
+      "data/geo/img/ie_led_sat75.png",
+      "data/geo/img/ie_led_crop_all.png",
+      "data/geo/img/ie_led_crop_enh.png",
+      "data/geo/img/ie_led_crop_pab_enh.png",
+      "data/geo/img/ie_led_crop_n_enh.png",
+      "data/geo/img/ie_led_crop_calle_s.png",
+      "data/geo/img/ie_led_crop_calle_n.png",
+      "data/geo/img/ie_led_crop_tanque.png"
+    ],
+    "vistas": [
+      "data/geo/img/ie_led_sv_9FtQ_n.jpg",
+      "data/geo/img/ie_led_sv_9FtQ_pab.jpg",
+      "data/geo/img/ie_led_sv_9FtQ_nw.jpg",
+      "data/geo/img/ie_led_sv_9FtQ_ne.jpg",
+      "data/geo/img/ie_led_sv_iGAz_n.jpg",
+      "data/geo/img/ie_led_sv_2uZz_n.jpg",
+      "data/geo/img/ie_led_sv_uugh_n.jpg",
+      "data/geo/img/ie_led_sv_IPCN_n.jpg",
+      "data/geo/img/ie_led_sv_cdh2_o.jpg",
+      "data/geo/img/ie_led_sv_Vxl8_o.jpg",
+      "data/geo/img/ie_led_sv_iMB7_o.jpg",
+      "data/geo/img/ie_led_sv_pKAM_so.jpg",
+      "data/geo/img/ie_led_sv_JFhX_s.jpg",
+      "data/geo/img/ie_led_sv_LwL2_s.jpg",
+      "data/geo/img/ie_led_sv_ay4c_s.jpg",
+      "data/geo/img/ie_led_sv_mV4Q_s.jpg",
+      "data/geo/img/ie_led_sv_9pLy_e.jpg",
+      "data/geo/img/ie_led_sv_HDlz_e.jpg",
+      "data/geo/img/ie_led_sv_dofQ_e.jpg",
+      "data/geo/img/ie_led_sv_MQ5r_tanque.jpg",
+      "data/geo/img/ie_led_web_elcolombiano_2025.jpg"
+    ],
+    "comparaciones": [
+      "data/geo/img/ie_led_cmp_9FtQ_n_comparacion.png",
+      "data/geo/img/ie_led_cmp_9FtQ_n_mezcla.png",
+      "data/geo/img/ie_led_cmp_iGAz_n_comparacion.png",
+      "data/geo/img/ie_led_cmp_iGAz_n_mezcla.png",
+      "data/geo/img/ie_led_cmp_Vxl8_o_comparacion.png",
+      "data/geo/img/ie_led_cmp_Vxl8_o_mezcla.png",
+      "data/geo/img/ie_led_cmp_JFhX_s_comparacion.png",
+      "data/geo/img/ie_led_cmp_JFhX_s_mezcla.png",
+      "data/geo/img/ie_led_cmp_2uZz_n_comparacion.png",
+      "data/geo/img/ie_led_cmp_2uZz_n_mezcla.png",
+      "data/geo/img/ie_led_cmp_9pLy_e_comparacion.png",
+      "data/geo/img/ie_led_cmp_9pLy_e_mezcla.png"
+    ],
+    "orbitas": [
+      "data/geo/img/ie_led_orbita1.png",
+      "data/geo/img/ie_led_orbita2.png",
+      "data/geo/img/ie_led_orbita_todo.png"
+    ],
+    "notas": "Comparaciones con la misma cámara de sv_pano.py y el modelo corrido 5,5 m al norte y 0,4 m hacia arriba (patio sobre la vía). 9FtQ rumbo 0 e iGAz rumbo 20: culata, cumbrera y aleros del pabellón sur, alero del corredor sur y arco de la placa coinciden. Vxl8 rumbo 270: alero y cumbrera del ala oriental coinciden. 9pLy rumbo 90: alero y cumbrera del ala occidental, astas y torre de tanques coinciden. JFhX rumbo 185: el bloque norte quedaba 0,5 m bajo y sin el cuerpo alto; se subió (crujía baja 3,5 m, cuerpo alto 7,0 m) con las medidas de esa foto y el patio norte 0,9 m bajo la calle; no se repitió ese render por el límite de 10 renders. 2uZz rumbo 15 y 9pLy rumbo 90 se hicieron después de la corrección: esquina suroeste en posición (el gablete no se modela). Órbita con adecuaciones: los 56 módulos quedan apoyados en los faldones, sin cruzar cumbreras ni limahoyas."
+  }
+}

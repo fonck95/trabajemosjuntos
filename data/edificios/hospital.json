@@ -7,7 +7,7 @@
   "lon": -73.914452,
   "ubicacion": {
     "confianza": "alta",
-    "metodo": "Letrero 'E.S.E HOSPITAL HECTOR ABAD GOMEZ' en la culata norte del ala oriental (entrada de urgencias), visto en Street View de enero de 2014 desde el panorama saY4 con rumbo real ≈135° (sureste, no al sur) y desde fYgu con rumbo ≈168°; la misma culata aparece en la foto del blog del hospital (2016). La huella se midió en el satélite Esri (WorldView-2 del 12 de enero de 2020). El ancla (centro del complejo) se mantiene; el punto de OSM y el de Google caen sobre el ala oriental, a unos 20 m al este del ancla."
+    "metodo": "Letrero 'E.S.E / HOSPITAL HECTOR ABAD GOMEZ' en la culata blanca del frente de urgencias (extremo norte del ala oriental), visto en Street View de enero de 2014 desde el panorama saY4 con rumbo real ≈135° (sureste, no al sur) y desde fYgu con rumbo ≈172°; la verificación de octubre de 2026 lo volvió a leer con la herramienta ya corregida. La misma culata aparece en la foto del blog del hospital (2016). La huella se midió en el satélite Esri (WorldView-2 del 12 de enero de 2020). El ancla (centro del complejo) se mantiene; el punto de OSM y el de Google caen sobre el ala oriental, a unos 20 m al este del ancla."
   },
   "volumenes": [
     {
@@ -20,11 +20,11 @@
       "largo": 42.5,
       "ancho": 13.0,
       "rumbo_eje": 90,
-      "altura_alero": 4.0,
+      "altura_alero": 4.3,
       "pisos": 1,
       "techo": {
         "tipo": "cuatro_aguas",
-        "pendiente": 11,
+        "pendiente": 18,
         "voladizo": 0.7,
         "material": "fibrocemento",
         "color": "#85827c"
@@ -39,8 +39,8 @@
         "ventanas": {
           "tipo": "ventana",
           "ancho": 1.4,
-          "alto": 1.5,
-          "antepecho": 1.4,
+          "alto": 1.9,
+          "antepecho": 1.2,
           "separacion": 3.0,
           "lados": [
             "N",
@@ -209,12 +209,12 @@
       "id": "ala_este",
       "nombre": "Ala oriental (urgencias)",
       "centro": [
-        25.95,
+        24.9,
         1.425
       ],
       "largo": 49.15,
-      "ancho": 11.3,
-      "rumbo_eje": 0,
+      "ancho": 11.5,
+      "rumbo_eje": 2,
       "altura_alero": 4.0,
       "pisos": 1,
       "techo": {
@@ -247,20 +247,49 @@
       }
     },
     {
-      "id": "porche_urgencias",
-      "nombre": "Porche de urgencias (frente norte del ala oriental, con letrero)",
+      "id": "anexo_noreste",
+      "nombre": "Anexo bajo entre el ala norte y el ala oriental",
       "centro": [
-        25.95,
-        27.33
+        14.725,
+        21.05
       ],
-      "largo": 11.3,
-      "ancho": 2.65,
-      "rumbo_eje": 90,
-      "altura_alero": 4.03,
+      "largo": 13.0,
+      "ancho": 3.55,
+      "rumbo_eje": 0,
+      "altura_alero": 3.2,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 5,
+        "caida": "E",
+        "voladizo": 0.3,
+        "material": "fibrocemento",
+        "color": "#85827c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#43622a",
+        "zocalo": {
+          "color": "#7a5a4c",
+          "altura": 1.1
+        }
+      }
+    },
+    {
+      "id": "porche_urgencias",
+      "nombre": "Frente de urgencias (culata blanca con letrero y gran vano de entrada, al norte del ala oriental)",
+      "centro": [
+        25.5,
+        27.38
+      ],
+      "largo": 9.0,
+      "ancho": 2.55,
+      "rumbo_eje": 92,
+      "altura_alero": 3.0,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
-        "pendiente": 12,
+        "pendiente": 21,
         "cumbrera": "corto",
         "voladizo": 0.7,
         "material": "fibrocemento",
@@ -269,22 +298,24 @@
       "fachada": {
         "material": "pañete_pintado",
         "color": "#e8ebe6",
-        "zocalo": {
-          "color": "#7a5a4c",
-          "altura": 0.5
-        },
         "puertas": [
           {
             "lado": "N",
             "pos": 0.5,
-            "ancho": 2.5,
-            "alto": 2.7
+            "ancho": 2.0,
+            "alto": 2.2
           },
           {
             "lado": "N",
-            "pos": 0.8,
-            "ancho": 1.8,
-            "alto": 2.7
+            "pos": 0.25,
+            "ancho": 2.0,
+            "alto": 2.2
+          },
+          {
+            "lado": "N",
+            "pos": 0.75,
+            "ancho": 2.0,
+            "alto": 2.2
           }
         ],
         "letrero": {
@@ -298,11 +329,11 @@
       "id": "enlace",
       "nombre": "Conexión entre el bloque central y el ala oriental",
       "centro": [
-        16.4,
+        15.75,
         -2.25
       ],
       "largo": 14.5,
-      "ancho": 7.8,
+      "ancho": 6.5,
       "rumbo_eje": 0,
       "altura_alero": 3.8,
       "pisos": 1,
@@ -324,7 +355,8 @@
     },
     {
       "id": "portico_noroeste",
-      "nombre": "Pórtico de la entrada noroeste",
+      "nombre": "Pórtico abierto de la entrada noroeste (columnas blancas, culata blanca)",
+      "abierto": true,
       "centro": [
         -22.8,
         28.85
@@ -334,6 +366,8 @@
       "rumbo_eje": 90,
       "altura_alero": 4.6,
       "pisos": 1,
+      "columna": 0.5,
+      "sep_columnas": 4.0,
       "techo": {
         "tipo": "dos_aguas",
         "pendiente": 30,
@@ -344,24 +378,13 @@
       },
       "fachada": {
         "material": "pañete_pintado",
-        "color": "#e8ebe6",
-        "zocalo": {
-          "color": "#7a5a4c",
-          "altura": 1.0
-        },
-        "puertas": [
-          {
-            "lado": "N",
-            "pos": 0.5,
-            "ancho": 2.2,
-            "alto": 2.6
-          }
-        ]
+        "color": "#e8ebe6"
       }
     },
     {
       "id": "portico_norte",
-      "nombre": "Pórtico pequeño de la fachada norte",
+      "nombre": "Pórtico abierto pequeño de la fachada norte (columnas blancas, culata con celosía)",
+      "abierto": true,
       "centro": [
         -2.5,
         28.8
@@ -369,27 +392,21 @@
       "largo": 3.0,
       "ancho": 2.5,
       "rumbo_eje": 90,
-      "altura_alero": 3.1,
+      "altura_alero": 4.4,
       "pisos": 1,
+      "columna": 0.25,
+      "sep_columnas": 3.0,
       "techo": {
         "tipo": "dos_aguas",
-        "pendiente": 38,
+        "pendiente": 22,
         "cumbrera": "corto",
-        "voladizo": 0.3,
+        "voladizo": 1.5,
         "material": "fibrocemento",
         "color": "#85827c"
       },
       "fachada": {
         "material": "pañete_pintado",
-        "color": "#e8ebe6",
-        "puertas": [
-          {
-            "lado": "N",
-            "pos": 0.5,
-            "ancho": 1.6,
-            "alto": 2.4
-          }
-        ]
+        "color": "#e8ebe6"
       }
     },
     {
@@ -421,11 +438,11 @@
       "id": "caseta_servicios",
       "nombre": "Caseta de servicios en el patio de máquinas",
       "centro": [
-        15.0,
-        -13.75
+        15.3,
+        -13.45
       ],
-      "largo": 5.5,
-      "ancho": 3.3,
+      "largo": 4.9,
+      "ancho": 3.2,
       "rumbo_eje": 0,
       "altura_alero": 2.8,
       "pisos": 1,
@@ -611,7 +628,7 @@
           -36.0
         ]
       ],
-      "altura": 2.2,
+      "altura": 2.5,
       "material": "malla",
       "color": "#8a8f8c"
     },
@@ -631,9 +648,83 @@
           37.5
         ]
       ],
-      "altura": 2.2,
+      "altura": 2.5,
       "material": "malla",
       "color": "#8a8f8c"
+    },
+    {
+      "tipo": "cerramiento",
+      "nota": "muro bajo de ladrillo bajo la malla",
+      "linea": [
+        [
+          16.3,
+          40.2
+        ],
+        [
+          -8.0,
+          39.3
+        ],
+        [
+          -20.0,
+          36.8
+        ],
+        [
+          -28.5,
+          32.5
+        ],
+        [
+          -34.0,
+          28.0
+        ],
+        [
+          -39.0,
+          19.0
+        ],
+        [
+          -43.0,
+          8.0
+        ],
+        [
+          -45.0,
+          -4.0
+        ],
+        [
+          -46.5,
+          -16.0
+        ],
+        [
+          -48.0,
+          -28.0
+        ],
+        [
+          -49.0,
+          -36.0
+        ]
+      ],
+      "altura": 0.6,
+      "material": "muro",
+      "color": "#8e4b3c"
+    },
+    {
+      "tipo": "cerramiento",
+      "nota": "muro bajo de ladrillo bajo la malla",
+      "linea": [
+        [
+          25.0,
+          40.0
+        ],
+        [
+          30.5,
+          39.8
+        ],
+        [
+          36.5,
+          37.5
+        ]
+      ],
+      "altura": 0.6,
+      "material": "muro",
+      "color": "#8e4b3c"
     },
     {
       "tipo": "arbol",
@@ -773,9 +864,9 @@
         "ala_este",
         "porche_urgencias",
         "enlace",
+        "anexo_noreste",
         "portico_noroeste",
         "portico_norte",
-        "bloque_sureste",
         "caseta_servicios",
         "porteria"
       ]
@@ -785,7 +876,7 @@
       "kw": 150,
       "tipo": "contenedor_20",
       "centro": [
-        33.2,
+        32.0,
         34.0
       ],
       "largo": 6.06,
@@ -808,9 +899,9 @@
       "telegestión de iluminación exterior y del parqueadero"
     ],
     "obras_civiles": [
-      "cambio de toda la cubierta de tejas onduladas de fibrocemento (≈3.100 m²) por lámina termoacústica, empezando por los faldones que llevan paneles (bloque central, ala oriental con su porche y ala media); si el fibrocemento es asbesto-cemento, retiro con empresa autorizada y disposición final según la Ley 1968 de 2019",
+      "cambio de toda la cubierta de tejas onduladas de fibrocemento (≈3.400 m²) por lámina termoacústica, empezando por los faldones que llevan paneles (bloque central, ala oriental con su porche y ala media); si el fibrocemento es asbesto-cemento, retiro con empresa autorizada y disposición final según la Ley 1968 de 2019",
       "revisión de cerchas y correas con el estudio de vulnerabilidad sísmica de 2024 y refuerzo donde haga falta para la carga de paneles (≈15 kg/m²)",
-      "losa de concreto de 6,7 × 3,1 m con drenaje y cerco para el contenedor de baterías en la esquina noreste del patio de ambulancias",
+      "losa de concreto de 6,7 × 3,1 m con drenaje y cerco para el contenedor de baterías en el costado oriental del patio de ambulancias, junto a la reja y a 1 m del borde del bosque",
       "canalización subterránea desde el contenedor y los inversores hasta el tablero general; tablero de transferencia coordinado con la planta diésel existente",
       "puesta a tierra, protección contra rayos (pararrayos) y protecciones DC según RETIE",
       "línea de vida y anclajes en cumbreras para mantenimiento seguro de los paneles"
@@ -822,24 +913,27 @@
       ],
       "rumbo_eje": 0
     },
-    "notas": "La potencia planeada cabe en la cubierta real sin marquesina: 5 filas × 18 columnas en el faldón oriental del bloque central (90 módulos), 4 × 18 en el faldón occidental del ala oriental (72) y 3 × 6 en el faldón sur del ala media (18): 180 módulos de 2,28 × 1,13 m (550 Wp) en posición horizontal = 99,0 kWp, el 99 % de los 100 kWp del plan y dentro del límite de 100 kW para acreditar excedentes 1:1. Se respetan 0,5 m a aleros, cumbreras y a las limahoyas donde el bloque central se cruza con el ala norte. Se eligieron faldones del centro del complejo, lejos del bosque del sur y del oriente: el arreglo del bloque central termina 10 m antes del borde sur para evitar la sombra del bosque al mediodía de diciembre, y el del ala oriental mira al oeste, sin árboles enfrente. El faldón sur del ala media puede recibir sombra del árbol grande del suroeste al final de la tarde. Toda la cubierta es de tejas onduladas de fibrocemento de más de 30 años; por eso se cambia antes de montar. Si no se consigue el cambio de cubierta, la alternativa es una marquesina sobre el patio de ambulancias (20 × 8 m ≈ 48 módulos = 26 kWp), que no alcanza el plan. El contenedor de 20 pies (400 kWh / 150 kW) va en la esquina noreste del patio de ambulancias, junto a la entrada vehicular para su instalación y lejos de las puertas de urgencias; los inversores (2 × 50 kW) van en el muro norte de la conexión entre el bloque central y el ala oriental, que da a un patio interno sombreado. El cargador de vehículo eléctrico (ambulancia o vehículo de servicio) queda en el costado oeste del mismo patio."
+    "notas": "La potencia planeada cabe en la cubierta real sin marquesina: 5 filas × 18 columnas en el faldón oriental del bloque central (90 módulos), 4 × 18 en el faldón occidental del ala oriental (72) y 3 × 6 en el faldón sur del ala media (18): 180 módulos de 2,28 × 1,13 m (550 Wp) en posición horizontal = 99,0 kWp, el 99 % de los 100 kWp del plan y dentro del límite de 100 kW para acreditar excedentes 1:1. Comprobación con retiros de 0,5 m (largo útil = largo − 1,0 m; ancho inclinado útil = (ancho/2)/cos(pendiente) − 1,0 m; paso de 2,30 m por columna y 1,15 m por fila): bloque central 55,1 m → caben 23 columnas y 7,3/cos 10° − 1,0 = 6,41 m → 5 filas (se usan 18 columnas para alejarse del bosque y del cruce con el ala norte); ala oriental 48,15 m → 20 columnas y 5,75/cos 12° − 1,0 = 4,88 m → 4 filas (se usan 18); ala media 26,9 m → 11 columnas y 6,1/cos 11° − 1,0 = 5,21 m → 4 filas (se usan 3 × 6). Se eligieron faldones del centro del complejo, lejos del bosque del sur y del oriente: el arreglo del bloque central termina 7 m antes del muro sur para evitar la sombra del bosque al mediodía de diciembre, y el del ala oriental mira al oeste, sin árboles enfrente. El faldón sur del ala media puede recibir sombra del árbol grande del suroeste al final de la tarde. Toda la cubierta es de tejas onduladas de fibrocemento de más de 30 años; por eso se cambia antes de montar. Si no se consigue el cambio de cubierta, la alternativa es una marquesina sobre el patio de ambulancias (20 × 8 m ≈ 48 módulos = 26 kWp), que no alcanza el plan. El contenedor de 20 pies (400 kWh / 150 kW) va en el costado oriental del patio de ambulancias (x 28,9 a 34,9 m), que en 2020 se ve libre, junto a la entrada vehicular para su instalación, a 1 m del borde del bosque y a 3,4 m del frente de urgencias sin tapar su vano; los inversores (2 × 50 kW) van en el muro norte de la conexión entre el bloque central y el ala oriental, que da a un patio interno sombreado. El cargador de vehículo eléctrico (ambulancia o vehículo de servicio) queda en el costado oeste del mismo patio."
   },
   "incertidumbres": [
-    "Street View es de enero de 2014 y el satélite de enero de 2020. En 2024 se contrató la pintura general de fachadas e interiores y un techo de parqueadero en estructura de acero: los colores actuales pueden ser distintos a los verdes, ladrillo y rojos de 2014, y el techo del parqueadero no se ve en ninguna imagen (se supone en el patio de ambulancias, sin modelar).",
-    "Los panoramas del norte quedan unos 2,5 m más al norte que la vía en el satélite (precisión nominal del satélite ±10 m). La huella se dejó en el marco del satélite; las comparaciones con fotos se hicieron con una copia del modelo corrida 2,5 m al norte y sin la cubierta oscura posterior a 2014.",
+    "Street View es de enero de 2014 y el satélite de enero de 2020. En 2024 se contrató la pintura general de fachadas e interiores y un techo de parqueadero en estructura de acero: los colores actuales pueden ser distintos a los verdes, ladrillo y rojos de 2014, y el techo del parqueadero no se ve en ninguna imagen (se supone en el patio de ambulancias, sin modelar). No se encontraron fotos recientes en la web.",
+    "Los panoramas del norte quedan unos 2,4 m más al norte que la vía en el satélite (se comprobó con la distancia a la fachada norte desde iwzL: 15,6 m medidos en la foto contra 17,4 m según las coordenadas). Además, los panoramas difieren entre sí hasta 1,6 m en sentido este-oeste (el pórtico pequeño sale en x = −3,9 m desde iwzL y en −2,3 m desde saY4; se dejó en −2,5 m). La huella se dejó en el marco del satélite; las comparaciones con fotos se hicieron con una copia del modelo corrida 2,4 m al norte y sin la cubierta oscura posterior a 2014.",
     "Frente al ala norte aparece en 2020 una cubierta casi negra de unos 21 × 6,6 m donde en 2014 había prado con un busto y un aviso. Se modela como cubierta ligera abierta a 3 m; puede ser un bloque cerrado o polisombra sobre parqueadero.",
-    "El alero (4,0 m) y la cumbrera (≈5,3 m) se midieron en la fachada norte; las demás alas no se ven desde la calle y se supusieron iguales. Pendientes de 10 a 12° estimadas; la del ala oriental no se midió directamente.",
-    "En el satélite la cumbrera del ala norte queda unos 1,5 m al norte de su centro y la del bloque central unos 0,7 m al oeste: el generador las pone centradas; la franja sur del ala norte se modeló como galería de una agua. Los remates hacia el oeste de las alas norte y sur son de cuatro aguas pero con faldones más cortos que en el modelo.",
-    "Los dos pórticos de la fachada norte y el porche de urgencias son abiertos, con columnas blancas; el generador los dibuja como cuerpos cerrados blancos con puerta. El letrero real está en la culata, un poco más arriba que en el modelo.",
+    "Alturas: en el ala norte se midieron desde iwzL el canal (≈3,95 m) y la cumbrera (≈6,4 m), lo que da alero de 4,3 m y pendiente de 18° (el levantamiento anterior tenía 4,0 m y 11°). Desde fYgu el extremo oriental del ala norte se ve más bajo (canal ≈3,3 m): puede ser una sección más baja que no se separó. En el ala oriental, desde fYgu no se ve ninguna cubierta por encima del frente de urgencias (cumbrera de 5,1 m o menos), por eso se dejó en 4,0 m y 12°. El bloque central, el ala media y el ala sur no se ven desde la calle: 4,0 m y 10–11° supuestos.",
+    "En el satélite la cumbrera del ala norte está en y ≈ 21,1 m, como en el modelo (la franja sur del ala norte se modeló como galería de una agua); la del bloque central queda unos 0,7 m al oeste de su centro y el generador la pone centrada. Los remates hacia el oeste de las alas norte y sur son de cuatro aguas con faldones cortos (3 a 4 m en vez de 6,5 a 7 m); desde el suroeste (FiBL) se ve una culata roja pequeña en ese remate, lo que sugiere un cuatro aguas con culata que el generador no dibuja.",
+    "Los dos pórticos de la fachada norte se dibujan abiertos (\"abierto\": true), con columnas blancas en las esquinas y una viga bajo la cubierta. En la realidad el pórtico pequeño tiene cuatro columnas delgadas al frente, una viga de ladrillo a 3,2–3,5 m y una culata blanca encima; el modelo deja el vano hasta la viga (4,1–4,4 m), así que se ve más abierto que el real. El pórtico noroeste tiene dos columnas blancas gruesas al frente y viga de ladrillo a ≈4,0 m. El frente de urgencias tiene un vano de ≈6,4 × 2,2 m bajo una culata blanca con aleros a ≈3,0 m y el letrero en la culata: se dibuja como cuerpo cerrado con tres vanos oscuros de 2,0 × 2,2 m para que el letrero quede sobre el muro (en un volumen abierto quedaría flotando). El letrero real va en dos líneas ('E.S.E' arriba) y con letras más pequeñas.",
     "Las cubiertas son tejas onduladas de fibrocemento; por la edad del edificio (antiguo hospital de la Shell de los años 30 y 40, remodelado en 1989) pueden contener asbesto: hay que tomar una muestra de laboratorio antes de intervenir.",
-    "Patios, fachadas hacia los patios, ventanas y puertas que no se ven desde la calle llevan valores típicos. El patrón real de la fachada norte mezcla ventanas altas angostas, ventanales con cuadrícula y puertas; el modelo usa ventanas iguales cada 3 m.",
-    "El bloque sureste de techo rojo, la caseta blanca y los objetos blancos del patio de servicios (posibles tanques de agua y la planta eléctrica) solo se ven en el satélite: alturas y colores de muros supuestos. En la capa de adecuaciones el techo rojo aparece como cubierta nueva porque el generador oculta todas las cubiertas actuales cuando hay cambio de cubierta; ese techo puede conservarse si está bueno.",
+    "Patios, fachadas hacia los patios, ventanas y puertas que no se ven desde la calle llevan valores típicos. La fachada norte tiene ventanales con cuadrícula de 1,2 a 3,1 m, ventanas altas angostas, puertas y una banda horizontal de ladrillo bajo el alero (3,2 a 3,6 m) que el generador no dibuja; el modelo usa ventanas iguales cada 3 m.",
+    "El bloque sureste de techo rojo, la caseta blanca y los objetos blancos del patio de servicios (posibles tanques de agua y la planta eléctrica) solo se ven en el satélite: alturas y colores de muros supuestos. El techo rojo es de zinc y quedó fuera de cubierta_nueva (solo se cambian las cubiertas de fibrocemento), así que se conserva en la vista con el proyecto. La caseta blanca y la portería se suponen de fibrocemento; si son de zinc pintado, deben salir de esa lista.",
     "El kiosco del oeste tenía techo de palma a cuatro aguas en 2014; en 2020 hay una franja clara en el mismo sitio. Se modela como cubierta ligera de una agua.",
-    "La planta diésel existente (contrato de mantenimiento de 2019; la microrred supone 150 kW), el transformador y el tablero general no se ven y no se ubicaron. Tampoco se ubicó con precisión el mástil de radio atirantado de unos 9 m que se ve en 2014 cerca de la entrada vehicular, ni la caseta verde con puerta metálica junto a la reja norte (posible cuarto eléctrico o de bombas).",
+    "La planta diésel existente (contrato de mantenimiento de 2019; la microrred supone 150 kW), el transformador y el tablero general no se ven y no se ubicaron. Tampoco se ubicó con precisión el mástil de radio de celosía que se ve en 2014 delante de la fachada norte (la triangulación entre iwzL y saY4 no dio un punto confiable), ni la caseta verde con puerta metálica junto a la reja norte (posible cuarto eléctrico o de bombas).",
     "Las alturas de los árboles del bosque del sur y del oriente (16 a 18 m) son supuestas; definen hasta dónde llegan los paneles hacia el sur.",
-    "La ubicación del contenedor de baterías es una propuesta en un espacio que se ve libre en 2020; si el techo de parqueadero de 2024 ocupa ese patio, el contenedor puede ir bajo una ampliación de ese techo o en el costado oriental.",
+    "La ubicación del contenedor de baterías es una propuesta en un espacio que se ve libre en 2020; se corrió 1,2 m al oeste para que el contenedor y su losa no invadan el borde del bosque (x ≥ 35 m). Si el techo de parqueadero de 2024 ocupa ese patio, el contenedor puede ir bajo una ampliación de ese techo o en el costado oriental del ala oriental.",
     "Dirección: los documentos del hospital dicen Carrera 58 # 46-236; OpenStreetMap dice Carrera 58 # 47B-50.",
-    "El cerramiento (malla sobre muro bajo de ladrillo en 2014) y el polígono del parqueadero se trazaron de forma aproximada."
+    "El cerramiento es malla de ≈2,5 m sobre un muro bajo de ≈0,6 m (ladrillo a la vista al norte, pintado de rojo al oeste); su trazado y el polígono del parqueadero son aproximados.",
+    "Entre el extremo oriental del ala norte y el ala oriental hay un anexo bajo: en el satélite es una cubierta gris de ≈3,6 × 13 m y desde fYgu un techo a ≈3,3–3,6 m. Su forma de cubierta (una agua hacia el oriente) y su fachada son supuestas. A su lado, una franja blanca (x 17 a 18 m) puede ser un corredor cubierto; no se modeló.",
+    "Desde el suroeste (FiBL, RfES) el predio del hospital queda sobre un talud 1,5 a 2,5 m más alto que la vía; el generador no maneja desniveles y todo queda a un mismo nivel.",
+    "El ala oriental está girada ≈2° respecto al norte (su alero oeste pasa de x ≈ 18,0 m en y = −15 a 19,2 m en y = 22 en el satélite) y se modeló así; en las demás alas el giro medido es menor de 1,5° y se dejaron a 0° y 90°."
   ],
   "verificacion": {
     "trace": "data/geo/img/hospital_trace.png",
@@ -849,6 +943,10 @@
       "data/geo/img/hospital_ovlE.png"
     ],
     "vistas": [
+      "data/geo/img/hospital_v_saY4_135.jpg",
+      "data/geo/img/hospital_v_iwzL_175.jpg",
+      "data/geo/img/hospital_v_fYgu_172z.jpg",
+      "data/geo/img/hospital_v_FiBL_62z.jpg",
       "data/geo/img/hospital_sv_saY4_195f.jpg",
       "data/geo/img/hospital_sv_saY4_135.jpg",
       "data/geo/img/hospital_sv_saY4_150.jpg",
@@ -865,6 +963,10 @@
       "data/geo/img/hospital_zoom.png"
     ],
     "comparaciones": [
+      "data/geo/img/hospital_vcmp8_comparacion.png",
+      "data/geo/img/hospital_vcmp4_comparacion.png",
+      "data/geo/img/hospital_vcmp7_comparacion.png",
+      "data/geo/img/hospital_vcmp2_comparacion.png",
       "data/geo/img/hospital_cmp4_comparacion.png",
       "data/geo/img/hospital_cmp4_mezcla.png",
       "data/geo/img/hospital_cmp3_comparacion.png",
@@ -873,11 +975,10 @@
       "data/geo/img/hospital_cmp7_mezcla.png"
     ],
     "orbitas": [
-      "data/geo/img/hospital_orbita_existente.png",
-      "data/geo/img/hospital_orbita_todo.png",
-      "data/geo/img/hospital_orbita_todo_ne.png"
+      "data/geo/img/hospital_orbita_v_todo.png",
+      "data/geo/img/hospital_orbita_v_existente.png"
     ],
-    "nota": "Comparaciones con la misma cámara de sv_pano.py y el modelo corrido 2,5 m al norte. saY4 rumbo 195: alero, cumbrera, zócalo y pórtico pequeño coinciden (primeras versiones en cmp1 y cmp2: alero 0,3 m bajo y pendiente excesiva, corregidos). fYgu rumbo 175 (cmp3, hecha antes de separar el porche blanco con la misma huella): culata de urgencias y portería coinciden en posición y tamaño. x_4W rumbo 149: el pórtico noroeste pasó de quedar 2 m al oeste y muy grande (cmp5, cmp6) a coincidir (cmp7). La órbita con adecuaciones muestra los 180 módulos apoyados en los faldones, el contenedor sobre su losa y el cargador en el patio."
+    "nota": "Verificación independiente (octubre de 2026), con la misma cámara de sv_pano.py y una copia del modelo corrida 2,4 m al norte: iwzL rumbo 175 (vcmp8, panorama no usado en el levantamiento): alero, ventanales y pórtico pequeño abierto coinciden; la cumbrera del ala norte subió a ≈6,4 m. x_4W rumbo 149 (vcmp4): el pórtico noroeste queda en su sitio y ya se ve abierto; la cubierta del ala norte, que antes casi no asomaba, ahora coincide. fYgu rumbo 175 (vcmp7): el frente de urgencias pasó de 11,3 m a 9,0 m de ancho y de 12° a 21°; la culata coincide en posición y altura. FiBL rumbo 52 (vcmp2, sin correr el modelo): las alas rojas coinciden en rumbo; la foto queda más alta por el talud. saY4 rumbo 135 (vcmp5) se hizo con una versión intermedia del frente de urgencias. Comparaciones del levantamiento anterior: cmp3, cmp4 y cmp7. Después de los renders se pasaron los dos pórticos del norte a volúmenes abiertos (\"abierto\": true, función nueva del generador) y la cubierta nueva quedó solo en los volúmenes de fibrocemento; esa versión se compiló sin avisos (180 módulos = 99 kWp) pero no se volvió a renderizar por el límite de 10 renders: en vcmp4, vcmp8 y las órbitas los pórticos todavía aparecen como cuerpo blanco elevado sobre columnas delgadas y el techo rojo como cubierta nueva."
   },
   "fuentes": [
     {
@@ -898,7 +999,7 @@
       "tipo": "street_view",
       "pano": "fYguJtJDVJlC2guYyDTuXg",
       "fecha": "2014-01",
-      "rumbo": 175,
+      "rumbo": 172,
       "nota": "entrada vehicular, portería, culata con letrero y extremo oriental del ala norte; usada en la comparación"
     },
     {
@@ -949,6 +1050,34 @@
       "fecha": "2014-01",
       "rumbo": 195,
       "nota": "acceso desde la vía norte, portería y ambulancia"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "iwzLsssk9qZWWQoS8AROgQ",
+      "fecha": "2014-01",
+      "rumbo": 175,
+      "nota": "fachada norte central (verificación): pórtico pequeño abierto con cuatro columnas blancas, viga de ladrillo a ≈3,2 m y culata con celosía; ventanales de 1,2 a 3,1 m; banda de ladrillo bajo el alero; canal a ≈3,95 m y cumbrera del ala norte a ≈6,4 m"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "FiBLH50BxgM-7UFIAl1rwQ",
+      "fecha": "2014-01",
+      "rumbo": 62,
+      "nota": "alas sur y media desde el suroeste (verificación): muros rojos, culata roja pequeña en el remate oeste, corredor de columnas blancas con antepecho rojo; muro bajo pintado de rojo con malla; el predio queda sobre un talud más alto que la vía"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "fYguJtJDVJlC2guYyDTuXg",
+      "fecha": "2014-01",
+      "rumbo": 172,
+      "nota": "acercamiento al frente de urgencias (verificación): culata blanca de ≈9 m con letrero en dos líneas, vano de entrada de ≈6,4 × 2,2 m, cubierta a ≈21° con cumbrera a ≈4,7 m; a la derecha, anexo bajo entre el ala norte y el ala oriental"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "DhB07FIUnpM0h1HKPkTyRA",
+      "fecha": "2014-01",
+      "rumbo": 200,
+      "nota": "acceso desde el nororiente, vista lejana de la entrada vehicular y el aviso del decálogo"
     },
     {
       "tipo": "satelite",

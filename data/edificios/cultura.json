@@ -1,0 +1,788 @@
+{
+  "id": "cultura",
+  "nombre": "Biblioteca Pública Municipal María Cano",
+  "nodo_microrred": "cultura",
+  "direccion": "Costado oriental del Parque Educativo Sueños de Casabe, al sur del Coliseo Benito Arias y frente a la cancha abierta. El directorio departamental de bibliotecas (2021) la registra en la Carrera 50 # 43-13, barrio Central; Google la registra como Calle 50 # 43-1. La nomenclatura del sector es inconsistente.",
+  "lat": 7.006156,
+  "lon": -73.909777,
+  "ubicacion": {
+    "confianza": "alta",
+    "metodo": "Se confirmó con fotos recientes de usuarios en Google Maps: la fachada con el letrero «Biblioteca Municipal María Cano», el escudo de Yondó y la placa de María Cano, con el Parque Educativo pegado a la derecha (oeste) de la foto, y la sala de computadores con aire acondicionado y vinilo «Biblioteca Pública». La ficha de Google queda en 7,006166, −73,909780, sobre la cubierta azul de unos 15 × 16,5 m (más un anexo blanco al sur) que se ve en el satélite al oriente del Parque Educativo; la coordenada del inventario no hubo que corregirla. El conflicto del inventario por imágenes (Carrera 55 # 46-30, Colonia Sur) no se sostiene: esa es la zona de la Alcaldía y no hay ninguna foto ni registro que ponga allí la biblioteca. Hay una segunda ficha de Google («Cl. 50 # 53-13», 7,00734, −73,91055) cuya foto principal es este mismo edificio, así que es una ficha duplicada con el pin corrido. El edificio es la obra del proyecto de regalías 2015058930007 (contrato de obra LPY-012-2015, firmado el 24 de noviembre de 2015). No es un anexo del Parque Educativo: es un edificio aparte, separado unos 2 m del bloque este de ese parque."
+  },
+  "fuentes": [
+    {
+      "tipo": "web",
+      "url": "https://www.google.com/maps/place/?q=place_id:ChIJT0aNDr_tQo4RQoiY3R-df7M",
+      "fecha": "sin fecha (posterior a 2017)",
+      "nota": "Foto de usuario de la fachada norte, de frente: dos pisos en pañete blanco, remate volado con intradós inclinado en ambos costados, alero delgado gris oscuro a unos 3,9 m, puerta doble de vidrio oscuro (2,2 × 2,3 m), letrero en letras metálicas gris oscuro «BIBLIOTECA MUNICIPAL / MARÍA CANO» con el escudo encima, placa de María Cano, bajante verde en la esquina oriental, plataforma de baldosa clara a unos 0,5 m con tres escalones y rampas con barandas de acero inoxidable, reflectores y cámaras. Por encima del antepecho asoma la punta de la cubierta a dos aguas. Sirvió para la comparación del modelo (cultura_cmp_fachada_*)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.google.com/maps/place/?q=place_id:ChIJY8Kfmb7tQo4R2gRZglKqZCY",
+      "fecha": "sin fecha (posterior a 2017)",
+      "nota": "Ficha «BIBLIOTECA PUBLICA MUNICIPAL MARIA CANO» (7,0061656, −73,9097798). Foto de la sala de computadores: ventanas altas en banda con vinilo verde, cielo raso blanco y al menos cuatro aires acondicionados minisplit. Foto de la fachada vista desde la plataforma hacia el oriente, con las cubiertas azules del colegio al fondo."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z19 (0,296 m/píxel)",
+      "nota": "Huella medida girando la imagen 13° (rumbo 347°, igual que el Parque Educativo y el coliseo). Bloque principal: cubierta azul (muestra #5679c4) con borde blanco de antepecho, 15,05 × 16,5 m, con una línea de cumbrera clara norte–sur en el centro y la mitad oriental algo más clara (dos aguas). Anexo sur de 16,1 × 9,7 m con cubierta muy clara (#cdd0d3 a #e7e5ea) partida en dos tonos, y un saliente de 1,8 × 2,8 m en la esquina sureste. Franja oscura de 1,8 m al oeste (sombra o muro en sombra) y franja blanca de 1,8 m al norte (la fachada vista de lado o la plataforma)."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Google satélite z20–z21 y Bing z19, solo como referencia",
+      "nota": "Las dos muestran la misma forma: cubierta azul rodeada de antepecho blanco y anexo blanco al sur. Bing está tomada con más inclinación y desplazada unos 5 m; muestra grande la fachada norte blanca."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "UD9Fguy6mDTI6-6usnjaiw",
+      "fecha": "2013-11",
+      "rumbo": 88,
+      "nota": "Desde la carrera, al oeste, a 97 m. Lote vacío con la valla «Aquí estará nuestro Parque Educativo»; detrás está el campo abierto donde hoy queda la biblioteca. La biblioteca no existía (la obra se contrató en noviembre de 2015). Comparación de ubicación."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "hpGMukzTePxxCd-Swzl-iw",
+      "fecha": "2013-11",
+      "rumbo": 188,
+      "nota": "Desde la calle del norte, a 104 m: cancha abierta, graderías con techo de zinc y árboles grandes delante del sitio. Comparación de ubicación."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "nTYipmioRx1rJ1zbZYBAMw",
+      "fecha": "2013-11",
+      "rumbo": 176,
+      "nota": "Desde el norte por el camino junto al coliseo en obra: los árboles tapan el sitio."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "gQ3CP30h4r0vsTSAj1Braw",
+      "fecha": "2013-11",
+      "rumbo": 72,
+      "nota": "Desde el suroeste: la escuela de ladrillo y los árboles tapan el sitio."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "CIHM0ogKEICAgIDEj-3PtgE",
+      "fecha": "2016-10-08",
+      "rumbo": 200,
+      "nota": "Foto 360 de un usuario, de noche, desde el norte de la cancha (119 m): el sitio queda a oscuras detrás del arco. No sirve para el edificio."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "CIHM0ogKEICAgICO8bS33AE",
+      "fecha": "2022-06-12",
+      "rumbo": 200,
+      "nota": "Foto 360 de un usuario en el parque redondo del norte (148 m): los muros azules del parque tapan la vista hacia la biblioteca."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-1-150594",
+      "fecha": "2015-11-24",
+      "nota": "SECOP I, LPY-012-2015: contrato de obra pública para la construcción de la biblioteca pública de Yondó, $1.478.795.590, Consorcio Biblioteca LL. Liquidado."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-15-4337948",
+      "fecha": "2015-11-11",
+      "nota": "SECOP I, CMA-015-2015: interventoría de la obra, $147.879.559, DSIC Desarrollo de Soluciones de Ingeniería y Construcción S.A.S."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-15-3509740",
+      "fecha": "2015-03-11",
+      "nota": "SECOP I, CMA-003-2015: estudios y diseños de la biblioteca, $55.000.000, Ingeniería y Construcción de Proyectos (INCOP)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-9-448811",
+      "fecha": "2018-10-16",
+      "nota": "SECOP I, SASI-019-2018: mobiliario para la Biblioteca María Cano, $50.000.000."
+    },
+    {
+      "tipo": "web",
+      "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7127329",
+      "fecha": "2024-12-12",
+      "nota": "SECOP II, SAMC004-2024: obras de mantenimiento y adecuación de infraestructura cultural, ligadas al proyecto de fortalecimiento del servicio bibliotecario, $205.571.887, 18 días. No dice qué se arregló en la biblioteca."
+    },
+    {
+      "tipo": "web",
+      "url": "https://culturantioquia.gov.co/wp-content/uploads/2022/12/directorio-bibliotecas-publicas-municipales-2021.pdf",
+      "fecha": "2021",
+      "nota": "Directorio departamental: Biblioteca Pública Municipal «María Cano», Carrera 50 No. 43-13, barrio Central; bibliotecaria Cecilia López Forero."
+    },
+    {
+      "tipo": "dato",
+      "archivo": "data/fuentes/proyectos_sgr.csv",
+      "fecha": "2015–2025",
+      "nota": "Proyecto de regalías 2015058930007 «Construcción de una biblioteca pública en el municipio de Yondó»: $2.045 millones, terminado (98 % de ejecución financiera)."
+    }
+  ],
+  "volumenes": [
+    {
+      "id": "zocalo",
+      "nombre": "Placa de piso elevada 0,5 m sobre el terreno",
+      "poligono": [
+        [
+          -5.96,
+          -4.97
+        ],
+        [
+          6.52,
+          -2.09
+        ],
+        [
+          2.8,
+          13.99
+        ],
+        [
+          -9.67,
+          11.11
+        ]
+      ],
+      "base": 0,
+      "altura_alero": 0.5,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#bfaf9e"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#b9b2a6"
+      }
+    },
+    {
+      "id": "plataforma",
+      "nombre": "Plataforma de acceso con escalas y rampas (baldosa clara)",
+      "poligono": [
+        [
+          -11.69,
+          10.64
+        ],
+        [
+          4.87,
+          14.47
+        ],
+        [
+          4.08,
+          17.88
+        ],
+        [
+          -12.48,
+          14.05
+        ]
+      ],
+      "base": 0,
+      "altura_alero": 0.5,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#bfaf9e"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#bfaf9e"
+      }
+    },
+    {
+      "id": "planta_baja",
+      "nombre": "Primer piso: sala general y sala de computadores con aire acondicionado",
+      "centro": [
+        -1.58,
+        4.51
+      ],
+      "largo": 16.5,
+      "ancho": 12.8,
+      "rumbo_eje": 347,
+      "base": 0.5,
+      "altura_alero": 3.9,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#bdbdbd"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#eceef0",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 3.4,
+          "alto": 1.2,
+          "antepecho": 1.9,
+          "separacion": 4.4,
+          "lados": [
+            "E",
+            "O"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "N",
+            "pos": 0.47,
+            "ancho": 2.2,
+            "alto": 2.3
+          }
+        ]
+      }
+    },
+    {
+      "id": "alero_acceso",
+      "nombre": "Alero delgado sobre la entrada",
+      "poligono": [
+        [
+          -9.95,
+          10.99
+        ],
+        [
+          3.11,
+          14.01
+        ],
+        [
+          2.94,
+          14.74
+        ],
+        [
+          -10.12,
+          11.72
+        ]
+      ],
+      "base": 3.6,
+      "altura_alero": 3.9,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#6c6a69"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#6c6a69"
+      }
+    },
+    {
+      "id": "planta_alta",
+      "nombre": "Segundo piso (parte baja, con el letrero)",
+      "centro": [
+        -1.58,
+        4.51
+      ],
+      "largo": 16.5,
+      "ancho": 12.8,
+      "rumbo_eje": 347,
+      "base": 3.9,
+      "altura_alero": 6.1,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#bdbdbd"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#eceef0",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 3.4,
+          "alto": 1.2,
+          "antepecho": 0.9,
+          "separacion": 4.4,
+          "lados": [
+            "E",
+            "O"
+          ]
+        },
+        "letrero": {
+          "lado": "N",
+          "texto": "BIBLIOTECA MUNICIPAL MARÍA CANO",
+          "color": "#3d413e"
+        }
+      }
+    },
+    {
+      "id": "planta_alta_sup",
+      "nombre": "Segundo piso (parte alta, bajo el remate)",
+      "poligono": [
+        [
+          -5.96,
+          -4.97
+        ],
+        [
+          6.52,
+          -2.09
+        ],
+        [
+          2.8,
+          13.99
+        ],
+        [
+          -9.67,
+          11.11
+        ]
+      ],
+      "base": 6.1,
+      "altura_alero": 7.2,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#bdbdbd"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#eceef0"
+      }
+    },
+    {
+      "id": "remate",
+      "nombre": "Cubierta azul a dos aguas escondida tras el remate y el antepecho",
+      "centro": [
+        -1.58,
+        4.51
+      ],
+      "largo": 16.5,
+      "ancho": 15.05,
+      "rumbo_eje": 347,
+      "abierto": true,
+      "columna": 0.2,
+      "base": 7.2,
+      "altura_alero": 7.9,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 8,
+        "cumbrera": "largo",
+        "voladizo": 0,
+        "material": "termoacustica",
+        "color": "#5679c4"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#eceef0"
+      }
+    },
+    {
+      "id": "remate_norte",
+      "nombre": "Remate y antepecho de la fachada principal",
+      "poligono": [
+        [
+          -10.75,
+          10.68
+        ],
+        [
+          3.96,
+          14.07
+        ],
+        [
+          3.91,
+          14.27
+        ],
+        [
+          -10.79,
+          10.87
+        ]
+      ],
+      "base": 7.2,
+      "altura_alero": 8.7,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#e2e3e5"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#eceef0"
+      }
+    },
+    {
+      "id": "remate_sur",
+      "nombre": "Remate y antepecho del costado sur",
+      "poligono": [
+        [
+          -7.07,
+          -5.25
+        ],
+        [
+          7.63,
+          -1.85
+        ],
+        [
+          7.59,
+          -1.66
+        ],
+        [
+          -7.12,
+          -5.05
+        ]
+      ],
+      "base": 7.2,
+      "altura_alero": 8.7,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#e2e3e5"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#eceef0"
+      }
+    },
+    {
+      "id": "volado_este",
+      "nombre": "Volado del costado este (1,1 m)",
+      "poligono": [
+        [
+          6.48,
+          -1.91
+        ],
+        [
+          7.59,
+          -1.66
+        ],
+        [
+          3.96,
+          14.07
+        ],
+        [
+          2.85,
+          13.81
+        ]
+      ],
+      "base": 7.2,
+      "altura_alero": 7.9,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#e2e3e5"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#eceef0"
+      }
+    },
+    {
+      "id": "volado_oeste",
+      "nombre": "Volado del costado oeste (1,1 m)",
+      "poligono": [
+        [
+          -7.12,
+          -5.05
+        ],
+        [
+          -6.0,
+          -4.79
+        ],
+        [
+          -9.63,
+          10.93
+        ],
+        [
+          -10.75,
+          10.68
+        ]
+      ],
+      "base": 7.2,
+      "altura_alero": 7.9,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#e2e3e5"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#eceef0"
+      }
+    },
+    {
+      "id": "antepecho_este",
+      "nombre": "Antepecho del costado este",
+      "poligono": [
+        [
+          7.39,
+          -1.7
+        ],
+        [
+          7.59,
+          -1.66
+        ],
+        [
+          3.96,
+          14.07
+        ],
+        [
+          3.76,
+          14.03
+        ]
+      ],
+      "base": 7.9,
+      "altura_alero": 8.7,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#e2e3e5"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#eceef0"
+      }
+    },
+    {
+      "id": "antepecho_oeste",
+      "nombre": "Antepecho del costado oeste",
+      "poligono": [
+        [
+          -7.12,
+          -5.05
+        ],
+        [
+          -6.92,
+          -5.01
+        ],
+        [
+          -10.55,
+          10.72
+        ],
+        [
+          -10.75,
+          10.68
+        ]
+      ],
+      "base": 7.9,
+      "altura_alero": 8.7,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#e2e3e5"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#eceef0"
+      }
+    },
+    {
+      "id": "anexo_sur",
+      "nombre": "Anexo de un piso al sur (cubierta clara de baja pendiente)",
+      "centro": [
+        0.92,
+        -8.2
+      ],
+      "largo": 15.5,
+      "ancho": 9.4,
+      "rumbo_eje": 77,
+      "base": 0,
+      "altura_alero": 4.3,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 6,
+        "cumbrera": "corto",
+        "voladizo": 0.3,
+        "material": "termoacustica",
+        "color": "#e4e4e6"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#eceef0"
+      }
+    }
+  ],
+  "elementos": [
+    {
+      "tipo": "cerramiento",
+      "linea": [
+        [
+          -1.37,
+          16.62
+        ],
+        [
+          4.08,
+          17.88
+        ],
+        [
+          4.8,
+          14.76
+        ]
+      ],
+      "altura": 1.45,
+      "material": "reja",
+      "color": "#b9bcbf"
+    },
+    {
+      "tipo": "cerramiento",
+      "linea": [
+        [
+          -5.27,
+          15.72
+        ],
+        [
+          -12.48,
+          14.05
+        ]
+      ],
+      "altura": 1.45,
+      "material": "reja",
+      "color": "#b9bcbf"
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "centro": [
+        10.45,
+        -9.7
+      ],
+      "largo": 2.8,
+      "ancho": 1.8,
+      "rumbo_eje": 347,
+      "altura": 3.0,
+      "material": "termoacustica",
+      "color": "#e4e4e6"
+    },
+    {
+      "tipo": "zona_verde",
+      "poligono": [
+        [
+          -6.73,
+          -15.31
+        ],
+        [
+          13.73,
+          -10.58
+        ],
+        [
+          16.12,
+          -20.91
+        ],
+        [
+          -4.34,
+          -25.63
+        ]
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        13.0,
+        10.0
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        10.0,
+        -13.0
+      ],
+      "altura": 6,
+      "copa": 4
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        21.9,
+        -16.0
+      ],
+      "altura": 10,
+      "copa": 8
+    }
+  ],
+  "adecuaciones": {
+    "kwp_plan": 12,
+    "fv": [
+      {
+        "volumen": "remate",
+        "faldon": "E",
+        "filas": 2,
+        "columnas": 6,
+        "orientacion_modulo": "vertical"
+      },
+      {
+        "volumen": "remate",
+        "faldon": "O",
+        "filas": 2,
+        "columnas": 5,
+        "orientacion_modulo": "vertical"
+      }
+    ],
+    "kwp_factible": 12.1,
+    "bess": {
+      "kwh": 20,
+      "kw": 10,
+      "tipo": "gabinete",
+      "centro": [
+        6.43,
+        -14.53
+      ],
+      "largo": 2.3,
+      "ancho": 1.2,
+      "rumbo_eje": 77
+    },
+    "inversores": {
+      "n": 1,
+      "kw": 10,
+      "volumen": "anexo_sur",
+      "lado": "S",
+      "pos": 3.9
+    },
+    "domotica": [
+      "medidor bidireccional en la frontera con EPM",
+      "pasarela IoT (gateway) conectada al Centro de Control Energético y Digital",
+      "control de los aires acondicionados de las salas: horario, temperatura mínima de 24 °C y apagado con la sala vacía",
+      "sensores de ocupación en la sala general, la sala de computadores y las salas del segundo piso",
+      "apagado programado de computadores y regletas fuera del horario de atención",
+      "iluminación LED con sensores en salas, plataforma de acceso y reflectores de fachada",
+      "circuito de cargas esenciales para el modo refugio: un aire acondicionado, iluminación, punto de carga de celulares, internet y cámaras",
+      "monitoreo remoto de la generación solar, del inversor y del estado de carga de la batería"
+    ],
+    "obras_civiles": [
+      "revisión de la estructura de la cubierta azul (correas y amarres) por un ingeniero: carga adicional de unos 15 kg/m²",
+      "fijación de los rieles con ganchos o abrazaderas para la lámina, con sello, sin perforar en los valles de la teja",
+      "limpieza y revisión de las canales que quedan entre la cubierta y el antepecho, para que el agua no se represe con los paneles",
+      "acceso seguro a la cubierta: escalera de gato con guarda y punto de anclaje para línea de vida",
+      "puesta a tierra, protecciones contra sobretensiones (DPS) y pararrayos",
+      "placa de concreto y caseta ventilada con cubierta liviana para el gabinete de baterías en la zona verde del costado sur",
+      "canalización desde la cubierta hasta el tablero general y gabinete con visera para el inversor en el muro sur del anexo"
+    ],
+    "notas": "Cabe la potencia planeada: 22 módulos de 550 Wp = 12,1 kWp, repartidos en los dos faldones de la cubierta azul del bloque principal (2 filas × 6 columnas en el faldón oriental y 2 filas × 5 columnas en el occidental, módulos en vertical siguiendo la pendiente de unos 8°). Cada faldón mide unos 16,5 m a lo largo de la cumbrera y 7,6 m en pendiente; con retiros de 0,5 m a la cumbrera, 0,5 m a los bordes y 0,8 m más junto al antepecho (para su sombra), caben 2 filas × 13 columnas = 26 módulos por faldón, es decir 52 módulos (28,6 kWp) en total si se quisiera ampliar. El anexo sur no se usa porque no se sabe de qué es su cubierta clara ni su estructura. No hay árboles ni tanques que sombreen la cubierta: el bloque es lo más alto del sector después del coliseo, que está a más de 25 m al noroeste. La batería de 20 kWh / 10 kW (gabinete) va en la zona verde detrás del edificio, a 2,5 m del muro sur, lejos de la entrada del público. No hay parqueadero formal (al frente hay un patio de tierra compartido con el coliseo y el Parque Educativo), así que no se propone cargador de vehículo eléctrico. La cubierta se ve en buen estado y es de 2016–2017; no se propone cambiarla."
+  },
+  "incertidumbres": [
+    "Street View solo tiene panoramas de noviembre de 2013, antes de la obra (contratada en noviembre de 2015). Las fotos 360 de usuarios de 2016, 2020 y 2022 no muestran el edificio (de noche, tapado por árboles o por los muros del parque redondo). Por eso la forma y las alturas salen de dos fotos de usuarios en Google Maps (sin fecha) y del satélite; las comparaciones con Street View solo verifican la ubicación.",
+    "Solo se conoce la fachada norte. Los costados este, oeste y sur no aparecen en ninguna foto: las ventanas en banda de los costados se supusieron a partir de la foto interior de la sala de computadores (ventanas altas con vinilo verde), y no se dibujaron puertas traseras.",
+    "Alturas medidas en la foto de frente, con la escala del ancho del remate (15,05 m en el satélite, unos 71 píxeles por metro): plataforma 0,5 m, alero 3,9 m, remate desde unos 7,2 m y antepecho hasta 8,7 m; la cumbrera asoma unos 0,3 m (unos 9,0 m). La foto parece corregida de perspectiva (verticales paralelas), así que la posición de la cámara se estimó (1,6 m de alto, unos 17 m de la fachada).",
+    "El remate volado tiene en la realidad el intradós inclinado (de unos 6,7 m junto al muro a unos 7,6 m en la punta); el modelo lo dibuja plano a 7,2 m. Tampoco se sabe si el vuelo de 1,1 m sigue por todo el largo de los costados; se supuso que sí porque el satélite muestra el mismo ancho de cubierta en todo el bloque.",
+    "Material de la cubierta azul: lámina de color de baja pendiente (unos 8°), escondida tras el antepecho. Se anotó como termoacústica, pero puede ser teja metálica prepintada; hay que confirmarlo en la visita antes de escoger los ganchos de los paneles.",
+    "El anexo sur (16 × 9,7 m) se modeló de un piso (4,3 m) con cubierta clara a dos aguas de baja pendiente, porque su borde se ve corrido hacia el oeste respecto al bloque azul (como corresponde a algo más bajo en una imagen inclinada), su franja de sombra es la mitad de ancha y su cubierta tiene dos tonos partidos en el centro. Podría ser una losa o una terraza a otra altura. El saliente de la esquina sureste (1,8 × 2,8 m) se dibujó como una cubierta liviana a 3 m.",
+    "Inclinación de la imagen satelital: el satélite ve un poco las fachadas norte (franja blanca) y oeste (franja oscura), así que la cubierta puede estar corrida hasta 1,5–2 m hacia el sureste respecto a la base real del edificio. Se dibujó la huella de la cubierta, como pide la especificación.",
+    "El letrero real tiene dos renglones de unos 0,3 m («BIBLIOTECA MUNICIPAL» y «MARÍA CANO») entre 4,6 y 5,4 m, con el escudo encima; el generador lo escribe en un solo renglón algo más alto (5,3–5,8 m).",
+    "Las barandas de acero inoxidable se dibujaron como rejas que arrancan del terreno (1,45 m = 0,95 m sobre la plataforma); las rampas laterales y los tres escalones no se modelaron como tales.",
+    "No se ven las unidades exteriores de los aires acondicionados, tanques de agua ni planta eléctrica; las manchas claras sobre el anexo sur podrían ser equipos. Los árboles se ubicaron en el satélite y la altura es estimada.",
+    "El color del pañete es blanco (en la foto, con luz de cielo nublado, se muestrea #cacbce); en el modelo se usó un blanco más claro para que no se vea gris en sombra.",
+    "No se sabe qué arregló el contrato de mantenimiento de diciembre de 2024 (SAMC004-2024) en la biblioteca.",
+    "El consumo de 2.000 kWh/mes del nodo es un supuesto por tipología; se reemplaza con las facturas de EPM."
+  ],
+  "verificacion": {
+    "trace": "data/geo/img/cultura_trace.png",
+    "vistas": [
+      "data/geo/img/cultura_gmaps_lugar2_foto1.jpg",
+      "data/geo/img/cultura_gmaps_foto1.jpg",
+      "data/geo/img/cultura_gmaps_foto2.jpg",
+      "data/geo/img/cultura_cmp_fachada_comparacion.png",
+      "data/geo/img/cultura_cmp_fachada_mezcla.png",
+      "data/geo/img/cultura_cmp_oeste88_comparacion.png",
+      "data/geo/img/cultura_cmp_norte188_comparacion.png",
+      "data/geo/img/cultura_orbita_todo.png",
+      "data/geo/img/cultura_sat30.png",
+      "data/geo/img/cultura_google_z20.png",
+      "data/geo/img/cultura_bing_z19.png"
+    ]
+  }
+}

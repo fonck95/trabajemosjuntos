@@ -7,7 +7,7 @@
   "lon": -73.910559,
   "ubicacion": {
     "confianza": "alta",
-    "metodo": "Dirección oficial en el membrete de las resoluciones, punto 'townhall' de OpenStreetMap y lugares de Google (Planeación, Tesorería) en la misma manzana. En el satélite es el bloque largo de 118 m que corre paralelo a la Carrera 55 entre la Calle 47 y la Calle 46. En Street View de 2013 se confirma el extremo norte (esquina de la Calle 47 con la Carrera 55): mismo edificio de ladrillo con techo a dos aguas, corredor con columnas hacia el sur y el aviso 'Laboratorio de Paz – Magdalena Medio'. El ancla se movió 1 m al oeste respecto al inventario para quedar en el centro del bloque largo. No hay panoramas sobre la Carrera 55 ni la Calle 46: la fachada principal solo se ve en escorzo desde la esquina."
+    "metodo": "Dirección oficial en el membrete de las resoluciones de 2021 y 2024 (Cra. 55 No. 46A-16, Colonia Sur), punto 'townhall' de OpenStreetMap y lugares de Google (Planeación, Tesorería) en la misma manzana. En el satélite es el bloque largo de unos 120 m que corre paralelo a la Carrera 55, desde la Calle 47 hacia el sur. La verificación de octubre de 2026 confirmó con Street View (rumbo real, vista corregida) que el extremo norte, sobre la Calle 47, es el hastial de ladrillo con el aviso 'Laboratorio de Paz – Magdalena Medio'; al mirar al norte desde el mismo punto se ve el muro del Batallón, como indica OSM. El ancla queda a menos de 1 m del centro del bloque largo. No hay panoramas sobre la Carrera 55 ni sobre la Calle 46: la fachada principal solo se ve en escorzo desde la esquina."
   },
   "fuentes": [
     {
@@ -69,7 +69,7 @@
     {
       "tipo": "satelite",
       "fuente": "Esri World Imagery z19 (WorldView-2 del 12-ene-2020, 0,5 m; precisión declarada 10 m)",
-      "nota": "Huella y cubiertas: bloque largo con cubierta gris (#767672) de -3,75 a +4,75 m del eje, franja del corredor más oscura al oeste (rojiza en el extremo norte y clara entre u=18 y u=31), ala oriental, ala de cubierta clara y alero transversal claro."
+      "nota": "Huella y cubiertas (medidas en una franja rectificada a 348°, perfiles de brillo cada 4 m): cubierta del bloque largo de v = -3,6 a +4,3…+4,8 m del ancla (con el ala oeste más clara, quiebre de brillo cerca de v = -0,6), corredor oeste de -7,0 a -3,6 m, extremo norte en u ≈ +60 y sur en u ≈ -60,5…-61. Cubierta rojiza en el extremo norte (faldón oeste y corredor, u 44…60) y clara en el corredor entre u 17 y 30; ala oriental gris, ala de cubierta blanca (u 18,5…32,5) y alero transversal claro (u 33…38)."
     },
     {
       "tipo": "web",
@@ -104,6 +104,39 @@
       "tipo": "huellas",
       "fuente": "Microsoft Global ML Building Footprints",
       "nota": "Solo como apoyo: su huella del bloque largo está girada unos 3° respecto al satélite."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "itU9w9UuqMauQIU4jhGtrw",
+      "fecha": "2013-11",
+      "rumbo": 135,
+      "nota": "Verificación: hastial norte de frente. Retroproyectado sobre el plano del hastial: cumbrera ≈5,8 m, muro oeste ≈3,5 m, muro de 5,9 m de ancho con la cumbrera a ≈3,5 m del muro oeste y ≈2,4 m del oriental; el faldón oriental sigue ≈2,4 m más allá del muro (sobre el anexo); primera columna del corredor ≈2 m al oeste del muro, de ≈2,5 m de alto."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "itU9w9UuqMauQIU4jhGtrw",
+      "fecha": "2013-11",
+      "rumbo": 112,
+      "nota": "Verificación: frente del anexo norte pegado al hastial, antepecho alto ≈3,0 m y bajo ≈2,4 m hacia el oriente, franja de calados, puerta verde cerca del extremo oriental, dos aires en el hastial (≈2,4 m de alto)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "tU9s-kmNgyp4Xuw2CN1ZpA",
+      "fecha": "2013-11",
+      "rumbo": 222,
+      "nota": "Verificación independiente desde el noreste: casa amarilla, anexo con puerta verde, hastial y cubierta del corredor."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "8bm0a8NlEXQZFoH5-SLgHA",
+      "fecha": "2013-11",
+      "rumbo": 213,
+      "nota": "Verificación independiente desde el noreste (más lejos): alturas de la casa amarilla coinciden con el modelo."
+    },
+    {
+      "tipo": "web",
+      "url": "https://vlex.com.co/vid/resolucion-no-583-2024-1061800882",
+      "nota": "Membrete de 2024: Car. 55 No. 46 A 16, barrio Colonia Sur (la dirección sigue vigente)."
     }
   ],
   "volumenes": [
@@ -111,19 +144,19 @@
       "id": "bloque_principal",
       "nombre": "Bloque largo de oficinas (Palacio Municipal)",
       "centro": [
-        0.51,
-        0.01
+        -0.46,
+        -0.71
       ],
-      "largo": 118.2,
-      "ancho": 6.2,
+      "largo": 119.2,
+      "ancho": 6.0,
       "rumbo_eje": 348,
-      "altura_alero": 4.1,
+      "altura_alero": 3.85,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
         "pendiente": 30,
         "cumbrera": "largo",
-        "voladizo": 1.15,
+        "voladizo": 1.8,
         "material": "fibrocemento",
         "color": "#767672"
       },
@@ -150,7 +183,7 @@
           },
           {
             "lado": "O",
-            "pos": 0.3,
+            "pos": 0.61,
             "ancho": 1.8,
             "alto": 2.4
           }
@@ -158,16 +191,124 @@
       }
     },
     {
+      "id": "corredor_oeste_1",
+      "nombre": "Corredor con columnas de la fachada oeste (tramo sur)",
+      "abierto": true,
+      "centro": [
+        -0.47,
+        -22.18
+      ],
+      "largo": 77.2,
+      "ancho": 3.45,
+      "rumbo_eje": 348,
+      "altura_alero": 2.4,
+      "sep_columnas": 3.0,
+      "columna": 0.15,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 8,
+        "caida": "O",
+        "voladizo": 0.2,
+        "material": "fibrocemento",
+        "color": "#64635e"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#8c96a0"
+      }
+    },
+    {
+      "id": "corredor_oeste_2",
+      "nombre": "Corredor con columnas de la fachada oeste (tramo de cubierta clara en el satélite)",
+      "abierto": true,
+      "centro": [
+        -9.85,
+        21.93
+      ],
+      "largo": 13.0,
+      "ancho": 3.45,
+      "rumbo_eje": 348,
+      "altura_alero": 2.4,
+      "sep_columnas": 3.0,
+      "columna": 0.15,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 8,
+        "caida": "O",
+        "voladizo": 0.2,
+        "material": "fibrocemento",
+        "color": "#cfcfca"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#8c96a0"
+      }
+    },
+    {
+      "id": "corredor_oeste_3",
+      "nombre": "Corredor con columnas de la fachada oeste (tramo central norte)",
+      "abierto": true,
+      "centro": [
+        -12.66,
+        35.14
+      ],
+      "largo": 14.0,
+      "ancho": 3.45,
+      "rumbo_eje": 348,
+      "altura_alero": 2.4,
+      "sep_columnas": 3.0,
+      "columna": 0.15,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 8,
+        "caida": "O",
+        "voladizo": 0.2,
+        "material": "fibrocemento",
+        "color": "#64635e"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#8c96a0"
+      }
+    },
+    {
+      "id": "corredor_oeste_4",
+      "nombre": "Corredor con columnas de la fachada oeste (tramo norte, cubierta rojiza en el satélite de 2020)",
+      "abierto": true,
+      "centro": [
+        -15.67,
+        49.32
+      ],
+      "largo": 15.0,
+      "ancho": 3.45,
+      "rumbo_eje": 348,
+      "altura_alero": 2.4,
+      "sep_columnas": 3.0,
+      "columna": 0.15,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 8,
+        "caida": "O",
+        "voladizo": 0.2,
+        "material": "fibrocemento",
+        "color": "#7d625a"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#8c96a0"
+      }
+    },
+    {
       "id": "anexo_norte",
       "nombre": "Anexo norte (emisora comunitaria, obra del Laboratorio de Paz 2004-2005)",
       "centro": [
-        -3.88,
-        53.36
+        -4.47,
+        53.23
       ],
       "largo": 12.0,
-      "ancho": 7.4,
+      "ancho": 8.6,
       "rumbo_eje": 348,
-      "altura_alero": 2.8,
+      "altura_alero": 2.5,
       "pisos": 1,
       "techo": {
         "tipo": "plano",
@@ -191,7 +332,7 @@
         "puertas": [
           {
             "lado": "N",
-            "pos": 0.5,
+            "pos": 0.2,
             "ancho": 0.9,
             "alto": 2.1
           }
@@ -241,11 +382,11 @@
       "id": "ala_oriental",
       "nombre": "Ala oriental de oficinas",
       "centro": [
-        3.43,
-        25.01
+        2.84,
+        24.88
       ],
       "largo": 19.5,
-      "ancho": 9.9,
+      "ancho": 11.1,
       "rumbo_eje": 348,
       "altura_alero": 3.3,
       "pisos": 1,
@@ -316,10 +457,10 @@
       "material": "zinc",
       "color": "#bdbab2",
       "centro": [
-        4.65,
-        37.28
+        4.06,
+        37.16
       ],
-      "largo": 17.4,
+      "largo": 18.6,
       "ancho": 4.0,
       "rumbo_eje": 78
     },
@@ -541,8 +682,8 @@
       "tipo": "aire_acondicionado",
       "altura": 2.0,
       "centro": [
-        -9.39,
-        58.63
+        -10.37,
+        58.42
       ]
     },
     {
@@ -559,534 +700,6 @@
       "centro": [
         -3.53,
         59.88
-      ]
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#7d625a",
-      "centro": [
-        -16.58,
-        55.16
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#7d625a",
-      "centro": [
-        -15.95,
-        52.2
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#7d625a",
-      "centro": [
-        -15.32,
-        49.24
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#7d625a",
-      "centro": [
-        -14.69,
-        46.28
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#7d625a",
-      "centro": [
-        -14.06,
-        43.32
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -13.43,
-        40.36
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -12.81,
-        37.4
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -12.18,
-        34.44
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -11.55,
-        31.48
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#cfcfca",
-      "centro": [
-        -10.92,
-        28.52
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#cfcfca",
-      "centro": [
-        -10.29,
-        25.56
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#cfcfca",
-      "centro": [
-        -9.66,
-        22.6
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#cfcfca",
-      "centro": [
-        -9.03,
-        19.64
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#cfcfca",
-      "centro": [
-        -8.4,
-        16.68
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -7.77,
-        13.72
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -7.14,
-        10.76
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -6.51,
-        7.8
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -5.88,
-        4.84
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -5.26,
-        1.88
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -4.63,
-        -1.08
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -4.0,
-        -4.04
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -3.37,
-        -7.0
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -2.74,
-        -9.96
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -2.11,
-        -12.92
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -1.48,
-        -15.88
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -0.85,
-        -18.84
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        -0.22,
-        -21.8
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        0.41,
-        -24.76
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        1.04,
-        -27.72
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        1.66,
-        -30.68
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        2.29,
-        -33.64
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        2.92,
-        -36.6
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        3.55,
-        -39.56
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        4.18,
-        -42.52
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        4.81,
-        -45.48
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        5.44,
-        -48.44
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        6.07,
-        -51.4
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.62,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        6.7,
-        -54.36
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#64635e",
-      "centro": [
-        7.33,
-        -57.32
-      ],
-      "largo": 3.23,
-      "ancho": 4.3,
-      "rumbo_eje": 348
-    },
-    {
-      "tipo": "anden",
-      "poligono": [
-        [
-          5.56,
-          -59.34
-        ],
-        [
-          -19.02,
-          56.28
-        ],
-        [
-          -14.81,
-          57.17
-        ],
-        [
-          9.77,
-          -58.45
-        ]
       ]
     },
     {
@@ -1147,8 +760,8 @@
       "telegestión de las luminarias del corredor y del parque"
     ],
     "obras_civiles": [
-      "Cambio de la cubierta de fibrocemento del bloque principal (≈1.170 m²) por panel termoacústico antes de montar los módulos. El retiro lo hace un gestor autorizado, porque puede tener asbesto (la Ley 1968 de 2019 prohibió el asbesto en Colombia).",
-      "En la misma obra se recomienda cambiar también las cubiertas de fibrocemento del ala oriental y de la casa amarilla.",
+      "Cambio de la cubierta de fibrocemento del bloque principal (≈1.330 m² con aleros) por panel termoacústico antes de montar los módulos. El retiro lo hace un gestor autorizado, porque puede tener asbesto (la Ley 1968 de 2019 prohibió el asbesto en Colombia).",
+      "En la misma obra se recomienda cambiar también la cubierta del corredor oeste (≈470 m²), que es la continuación del mismo faldón, y las del ala oriental y la casa amarilla.",
       "Revisión estructural de cerchas y correas, con refuerzo para unos 15 kg/m² adicionales.",
       "Canales y bajantes nuevas; sellos en los pases de cable de la cubierta.",
       "Puesta a tierra, pararrayos y protecciones contra sobretensiones (DPS), coordinados con la antena de la emisora.",
@@ -1161,70 +774,70 @@
         40.1
       ]
     },
-    "notas": "El faldón oeste del bloque principal mide 118 m de largo y 3,6 m de agua útil (de muro a cumbrera, 30°). Allí caben 2 filas × 46 columnas de módulos acostados: 92 × 550 Wp = 50,6 kWp, que cubren el plan de 50 kWp. Quedan 0,6 m libres a la cumbrera y al muro, y casi 2 m al borde del alero. Se eligió el faldón oeste porque el oriental queda bajo árboles de 11–14 m que le dan sombra en la mañana. Al oeste, los almendros del andén (8–10 m) están a 8–10 m y solo dan sombra al final de la tarde en los extremos del arreglo. Cabrían hasta 50 columnas por faldón (100 módulos = 55 kWp en el oeste, 110 kWp en los dos), pero cada frontera solar se limita a 100 kW (CREG 174 de 2021). Con orientación oeste y 30° de inclinación, el arreglo rinde un 10–12 % menos que en una cubierta casi plana. No hace falta marquesina. La cubierta actual es de fibrocemento ondulado: no aguanta el anclaje del soporte ni que caminen sobre ella, y hay que cambiarla antes del montaje. La foto satelital (ene-2020) es anterior a las obras de 2020 y 2024: verificar en sitio si la cubierta ya se cambió. El BESS de 120 kWh / 60 kW (2 gabinetes de baterías y 1 de conversión) va en una losa al oriente del bloque, a la sombra de los árboles y junto a los 2 inversores híbridos de 30 kW, que van en el muro oriental bajo el alero. El cargador de vehículo eléctrico va en el patio de tierra del oriente, donde parquean los vehículos oficiales (entrada por la Calle 47).",
+    "notas": "El faldón oeste del bloque principal mide 119,2 m de largo y 3,46 m de agua sobre los muros (de muro a cumbrera, 30°). Con los retiros, el largo útil es 118,2 m (hasta 51 columnas de módulos acostados de 2,28 m) y el agua útil 2,46 m (2 filas de 1,13 m). Se proponen 2 filas × 46 columnas: 92 × 550 Wp = 50,6 kWp, que cubren el plan de 50 kWp. Quedan 0,6 m libres a la cumbrera y al muro, y el arreglo deja unos 7 m libres en cada extremo. Cabrían hasta 102 módulos por faldón (56,1 kWp en el oeste, 112,2 kWp en los dos), pero cada frontera solar se limita a 100 kW (CREG 174 de 2021). Se eligió el faldón oeste porque el oriental queda bajo árboles de 11–14 m a unos 10 m del muro, que le dan sombra en la mañana. Al oeste, los almendros del andén (8–10 m) están a unos 9 m del muro y solo dan sombra al final de la tarde en los extremos del arreglo. Con orientación oeste y 30° de inclinación, el arreglo rinde un 10–12 % menos que en una cubierta casi plana. No hace falta marquesina. La cubierta actual es de fibrocemento ondulado: no aguanta el anclaje del soporte ni que caminen sobre ella, y hay que cambiarla antes del montaje. La foto satelital (ene-2020) es anterior a las obras de 2020 y 2024: verificar en sitio si la cubierta ya se cambió. El BESS de 120 kWh / 60 kW (2 gabinetes de baterías y 1 de conversión) va en una losa sobre el pasto al oriente del bloque, a unos 4 m del muro y 2,5 m fuera del alero, a la sombra de los árboles y junto a los 2 inversores híbridos de 30 kW, que van en el muro oriental bajo el alero. El cargador de vehículo eléctrico va en el patio de tierra del oriente, donde parquean los vehículos oficiales (entrada por la Calle 47).",
     "cubierta_nueva": {
       "material": "termoacustica",
       "color": "#e9e7e1",
       "volumenes": [
         "bloque_principal",
+        "corredor_oeste_1",
+        "corredor_oeste_2",
+        "corredor_oeste_3",
+        "corredor_oeste_4",
         "ala_oriental",
         "anexo_amarillo"
       ]
     }
   },
   "incertidumbres": [
-    "Street View (todas las fotos de 2013-11) solo cubre el extremo norte, sobre la Calle 47. La fachada oeste se ve en escorzo desde la esquina; la fachada oriental, la mitad sur y las alas del oriente no se ven en ningún panorama.",
-    "Las fotos de Street View quedan corridas entre 1,5 m (itU9…) y unos 5 m (Wnbe…, Xptd…) respecto al satélite. Esri declara 10 m de precisión para esta imagen. Se respetó el satélite para la huella.",
-    "La foto satelital es del 12 de enero de 2020, antes de las obras de mantenimiento de 2020 ($200 millones) y de 2024 ($369 millones). La cubierta, los colores y el corredor pudieron cambiar. El inventario menciona una foto reciente de Google con el corredor pintado de naranja, pero no se pudo verificar.",
-    "Alturas del bloque principal (muro ≈4,1 m, cumbrera ≈5,9 m, pendiente 30°) y ancho del cuerpo de ladrillo (≈6,2 m) medidos en el hastial norte con aires acondicionados, ventana y altura de cámara como referencia. Margen de ±0,4 m y ±4°.",
-    "Dentro de la cubierta del satélite no se sabe con exactitud dónde va el muro de ladrillo. Se centró bajo la cumbrera (que aparece en +0,5 m), con alero de 1,15 m a cada lado.",
-    "El corredor real sigue el faldón oeste con unos 19° hasta columnas de ≈2,5 m. El generador no tiene esa forma: se dibujó con tramos de 'cubierta_ligera' de 6° y columnas cada 3 m. Sobran columnas junto al muro.",
-    "Las alturas y los techos del ala oriental, del ala de cubierta clara y del alero transversal son supuestos: no se ven desde la calle.",
-    "El anexo norte (emisora) se ve solo por el frente. Su largo hacia el sur (12 m) y su ancho (7,4 m) son estimados: el satélite lo tapan árboles.",
+    "Street View (todas las fotos de 2013-11) solo cubre el extremo norte, sobre la Calle 47 y la Carrera 54. La fachada oeste se ve en escorzo desde la esquina; la fachada oriental, la mitad sur y las alas del oriente no se ven en ningún panorama.",
+    "Todos los panoramas de la Calle 47 y la Carrera 54 quedan corridos entre 1,2 m (itU9…) y unos 3–5 m (Wnbe…, tU9s…, 8bm0…) respecto al satélite de Esri, que declara 10 m de precisión: desde ellos el hastial del modelo aparece algo al oriente del real. Se respetó el satélite para la huella y se usaron las fotos solo para medidas relativas (anchos, alturas, posición de la cumbrera).",
+    "La foto satelital es del 12 de enero de 2020, antes de las obras de mantenimiento de 2020 ($200 millones) y de 2024 ($369 millones). La cubierta, los colores y el corredor pudieron cambiar. En el satélite el extremo norte del faldón oeste y del corredor se ve rojizo y un tramo del corredor (u 17–30) se ve claro; en Street View de 2013 todo era fibrocemento gris. Se dejó el bloque gris y se colorearon los tramos del corredor según el satélite.",
+    "Muros del bloque principal (ancho ≈6,0 m, de v = -3,6 a +2,4 m) ubicados con el satélite (quiebre entre corredor y cubierta, borde oriental del alero) y con la retroproyección del hastial desde itU9 (muro de 5,9 m; cumbrera a 3,5 m del muro oeste y 2,4 m del oriental). El levantamiento anterior los tenía 1,0–1,2 m más al oriente.",
+    "La cumbrera real no queda centrada sobre los muros (está ≈0,5 m al oriente del centro) y el faldón oriental sigue ≈2,4 m más allá del muro, mientras el occidental empalma con el corredor. El generador solo hace dos aguas simétricas: se usó un alero de 1,8 m a ambos lados (borde oriental en v ≈ +4,2, como en el satélite) y la cumbrera quedó en el centro de los muros.",
+    "Alturas medidas en el hastial norte desde itU9 y Wnbe: cumbrera 5,4–5,85 m, muro oeste ≈3,5 m, borde del alero oriental ≈3,3 m. Se modeló alero (muro) de 3,85 m, 30° y cumbrera de 5,58 m; margen ±0,4 m y ±4°.",
+    "El corredor real sigue el faldón oeste con unos 25° desde el muro hasta el borde (≈2,0–2,2 m), con columnas delgadas de ≈2,5 m cada ≈3 m. En el modelo, el alero de 1,8 m del bloque cubre la parte alta y cuatro volúmenes abiertos de una agua (8°, borde a 2,4 m) forman la parte baja con la fila exterior de columnas; las columnas interiores quedan dentro del muro.",
+    "Las alturas y los techos del ala oriental, del ala de cubierta clara y del alero transversal son supuestos: no se ven desde la calle. Se pegaron al nuevo muro oriental del bloque (v = +2,4 m).",
+    "No se sabe si el faldón oriental cubre un corredor con columnas a lo largo del bloque: no hay ninguna vista del costado oriental. Solo se modeló el alero.",
+    "El anexo norte (emisora) se ve solo por el frente: va pegado al hastial y llega hasta el pasaje junto a la casa amarilla (8,6 m de frente). Su fondo hacia el sur (12 m) es estimado: el satélite lo tapan árboles. Su antepecho es de ≈3,0 m junto al hastial y baja a ≈2,4 m en el extremo oriental; se modeló a 3,0 m.",
+    "El inventario hablaba de un bloque de 20 × 73 m; el satélite muestra una sola cubierta continua de unos 121 m (con aleros) desde la Calle 47 hacia el sur. Los 20 m de ancho del inventario incluían las alas del oriente.",
     "No se sabe qué funciona en la casa amarilla. Se incluyó porque está en el mismo predio.",
-    "La puerta principal sobre la Carrera 55 (pos 0,30) se supuso frente a la franja clara del corredor y a la Secretaría de Planeación; no se ve en ninguna foto. Solo se vio la puerta de vidrio junto a la esquina noroeste.",
-    "El patrón de ventanas de las fachadas oeste y oriental se estimó con la vista en escorzo de 2013; el de la fachada oriental es supuesto.",
-    "Colores de Street View corregidos por exposición (×1,7, tomando el blanco del aviso). El ladrillo crudo mide ≈#62483e en la foto.",
+    "La puerta principal sobre la Carrera 55 no se ve en ninguna foto. Se ubicó con la placa oficial (46A-16): unos 16 m al norte de la Calle 46A, que llega a la Carrera 55 en u ≈ -30 (pos 0,61). Google ubica la Alcaldía en 46-65 (u ≈ -24) y OSM en u ≈ -3; la Secretaría de Planeación (46B-44) quedaría hacia el extremo norte. Solo se vio la puerta de vidrio junto a la esquina noroeste.",
+    "El patrón de ventanas de la fachada oeste se estimó con la vista en escorzo de 2013; el de la fachada oriental es supuesto. En el hastial norte hay una ventana con reja y alerito que el generador no dibuja (solo pone ventanas por lados completos).",
+    "Colores de Street View corregidos por exposición (×1,7, tomando el blanco del aviso). El ladrillo crudo mide ≈#5c4839–#63504c en la foto.",
     "No se sabe en qué oficina está o estaría el centro de datos (CCED).",
     "Se supone que el fibrocemento es asbesto-cemento por la edad del edificio, de la época del campamento de Ecopetrol. Hay que confirmarlo con laboratorio antes de retirarlo.",
-    "Los árboles se ubicaron con el satélite y con Street View de 2013. Sus alturas se estimaron.",
+    "Los árboles se ubicaron con el satélite y con Street View de 2013. Sus alturas se estimaron; en el satélite hay más copas al oriente y al sur de las que se modelaron.",
     "La antena de la emisora se ubicó por triangulación con dos panoramas. Altura estimada: ≈10 m."
   ],
   "verificacion": {
     "trace": "data/geo/img/alcaldia_trace.png",
-    "trace_detalle": [
-      "data/geo/img/alcaldia_trace_det_0.png",
-      "data/geo/img/alcaldia_trace_det_1.png",
-      "data/geo/img/alcaldia_trace_det_2.png",
-      "data/geo/img/alcaldia_trace_det_3.png"
-    ],
     "vistas": [
+      "data/geo/img/alcaldia_v_itu9_gable.jpg",
+      "data/geo/img/alcaldia_v_itu9_anexo.jpg",
+      "data/geo/img/alcaldia_v_wnbe165.jpg",
+      "data/geo/img/alcaldia_v_wnbe345.jpg",
+      "data/geo/img/alcaldia_v_tu9s.jpg",
+      "data/geo/img/alcaldia_v_8bm0.jpg",
       "data/geo/img/alcaldia_sv_i1.jpg",
-      "data/geo/img/alcaldia_sv_i1z.jpg",
-      "data/geo/img/alcaldia_sv_i3z.jpg",
       "data/geo/img/alcaldia_sv_w1.jpg",
-      "data/geo/img/alcaldia_sv_w1z.jpg",
-      "data/geo/img/alcaldia_sv_c1.jpg",
-      "data/geo/img/alcaldia_sv_c2z.jpg",
-      "data/geo/img/alcaldia_sv_x1.jpg"
+      "data/geo/img/alcaldia_sv_c1.jpg"
     ],
     "comparaciones": [
-      "data/geo/img/alcaldia_cmp_i1_comparacion.png",
-      "data/geo/img/alcaldia_cmp_i1_mezcla.png",
-      "data/geo/img/alcaldia_cmp_w1_comparacion.png",
-      "data/geo/img/alcaldia_cmp_w1_mezcla.png",
-      "data/geo/img/alcaldia_cmp_c1_comparacion.png",
-      "data/geo/img/alcaldia_cmp_c1_mezcla.png"
+      "data/geo/img/alcaldia_v_cmp2_itu9_comparacion.png",
+      "data/geo/img/alcaldia_v_cmp2_itu9_mezcla.png",
+      "data/geo/img/alcaldia_v_cmp2_tu9s_comparacion.png",
+      "data/geo/img/alcaldia_v_cmp2_tu9s_mezcla.png",
+      "data/geo/img/alcaldia_v_cmp_8bm0_comparacion.png"
     ],
     "orbitas": [
-      "data/geo/img/alcaldia_orbita_todo.png",
-      "data/geo/img/alcaldia_orbita_bess.png",
-      "data/geo/img/alcaldia_orbita_oeste.png"
+      "data/geo/img/alcaldia_v_orbita_todo.png"
     ],
-    "satelite_alineado": [
-      "data/geo/img/alcaldia_rot_n.png",
-      "data/geo/img/alcaldia_rot_s.png",
-      "data/geo/img/alcaldia_rot_anexo.png"
-    ]
+    "satelite": [
+      "data/geo/img/alcaldia_v_sat.png",
+      "data/geo/img/alcaldia_v_sat_n.png",
+      "data/geo/img/alcaldia_v_sat_s.png"
+    ],
+    "nota": "Verificación independiente (oct-2026): huella medida en franja rectificada a 348°; silueta comparada con los panoramas tU9s… y 8bm0… (no usados en el levantamiento) y con itU9… a rumbo 135."
   }
 }
