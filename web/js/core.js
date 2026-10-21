@@ -297,7 +297,7 @@ export function solarArray(cols, rows, material, frameMat, tilt = 0.17) {
 // Partículas que viajan por una curva: la densidad y la velocidad codifican la potencia.
 const flowGeo = new THREE.SphereGeometry(1, 10, 8);
 export class Flow {
-  constructor(scene, curve, color, { max = 26, size = 0.16 } = {}) {
+  constructor(scene, curve, color, { max = 26, size = 0.16, tube = 0.05 } = {}) {
     this.curve = curve;
     this.max = max;
     this.size = size;
@@ -306,7 +306,7 @@ export class Flow {
     scene.add(this.mesh);
     this.offsets = Array.from({ length: max }, (_, i) => i / max);
     this.power = 0; this.dir = 1; this.phase = 0;
-    this.tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, 0.05, 6, false), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.28 }));
+    this.tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, tube, 6, false), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.28 }));
     scene.add(this.tube);
     this._m = new THREE.Matrix4(); this._p = new THREE.Vector3(); this._zero = new THREE.Matrix4().makeScale(0, 0, 0);
     this._s = new THREE.Vector3(size, size, size); this._q = new THREE.Quaternion();

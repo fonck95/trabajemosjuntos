@@ -147,7 +147,49 @@ def subst(o):
         return {k: subst(v) for k, v in o.items()}
     return o
 
+# --- Réplicas de las sedes (data/edificios/*.json + web/models/edificios/manifest.json) y calles de OpenStreetMap
+import math
+calles = load('geo/calles.json') if (D / 'geo/calles.json').exists() else {'origen': {'lat': 7.0065, 'lon': -73.9115}, 'calles': [], 'agua': [], 'canos': []}
+lat0, lon0 = calles['origen']['lat'], calles['origen']['lon']
+man_path = R / 'web/models/edificios/manifest.json'
+manifest = {m['id']: m for m in json.loads(man_path.read_text(encoding='utf-8'))} if man_path.exists() else {}
+nodos = {n_['id']: n_ for n_ in mr['nodos']}
+EDIFICIOS = []
+for f in sorted((D / 'edificios').glob('*.json')):
+    s = json.loads(f.read_text(encoding='utf-8'))
+    m = manifest.get(s['id'], {})
+    ad = s.get('adecuaciones', {})
+    vols = s.get('volumenes', [])
+    pisos = max((v.get('pisos', 1) for v in vols), default=1)
+    nodo = nodos.get(s.get('nodo_microrred') or s['id'])
+    EDIFICIOS.append({
+        'id': s['id'], 'nombre': s.get('nombre', s['id']), 'corto': (nodo or {}).get('corto') or s.get('nombre_corto') or s.get('nombre', s['id']),
+        'nodo_microrred': s.get('nodo_microrred'), 'direccion': s.get('direccion'),
+        'lat': s['lat'], 'lon': s['lon'],
+        'x': round((s['lon'] - lon0) * 111320 * math.cos(math.radians(lat0)), 1), 'y': round((s['lat'] - lat0) * 111320, 1),
+        'confianza': (s.get('ubicacion') or {}).get('confianza'),
+        'pisos': f"{len(vols)} volumen{'es' if len(vols) != 1 else ''}, hasta {pisos} piso{'s' if pisos != 1 else ''}",
+        'kwp_plan': ad.get('kwp_plan'), 'kwp_factible': m.get('kwp_modelado', ad.get('kwp_factible')), 'modulos': m.get('modulos'),
+        'bess': ({k: ad['bess'].get(k) for k in ('kwh', 'kw', 'tipo')} if ad.get('bess') else None),
+        'domotica': ad.get('domotica', []), 'obras_civiles': ad.get('obras_civiles', []), 'notas': ad.get('notas'),
+        'incertidumbres': s.get('incertidumbres', []), 'fuentes': m.get('fuentes', []),
+        'archivo': m.get('archivo'), 'archivo_lod1': m.get('archivo_lod1'), 'tamano': m.get('tamano'),
+        'bytes': m.get('bytes'), 'triangulos': m.get('triangulos'),
+    })
+CALLES = calles
+# huellas de edificaciones (contexto urbano): archivo aparte para no engordar data.js
+if (D / 'geo/huellas.json').exists():
+    (R / 'web/models/contexto').mkdir(parents=True, exist_ok=True)
+    (R / 'web/models/contexto/huellas.json').write_text((D / 'geo/huellas.json').read_text(encoding='utf-8'), encoding='utf-8')
+
+# --- Comparativa: plata que no se volvió obra por gobierno y panel anual (data/comparativa/)
+opt = lambda p_: load(p_) if (D / p_).exists() else {}
+DINERO = opt('comparativa/dinero_no_hecho.json')
+_panel = opt('comparativa/panel_anual.json')
+PANEL = {'anios': _panel.get('anios', []), 'indicadores': _panel.get('indicadores', [])} if _panel else {}
+
 out = {
+    'EDIFICIOS': EDIFICIOS, 'CALLES': CALLES, 'DINERO': DINERO, 'PANEL': PANEL,
     'TEXTOS': subst({k: v for k, v in textos.items() if isinstance(v, str)}),
     'SECOP': subst(SECOP), 'EMBUDO': subst(EMBUDO),
     'PERIODOS': subst(per['periodos']), 'AREAS': subst(per['areas']),

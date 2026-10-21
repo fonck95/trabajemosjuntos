@@ -4,159 +4,10 @@
 // fino (celdas solares) en vez de geometría. Salida: web/models/*.glb + manifest.json
 //
 // Uso: cd scripts/modelos && npm install && npm run build
-import * as THREE from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { Document, NodeIO } from '@gltf-transform/core';
-import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
-import { dedup, instance, prune, weld, draco } from '@gltf-transform/functions';
-import draco3d from 'draco3dgltf';
-import { writeFileSync, mkdirSync } from 'node:fs';
-import { deflateSync } from 'node:zlib';
+import { THREE, Part, Builder, baseMaterials as materials, pvMesh, pvArray, bessPart, writeGLB } from './lib.mjs';
+import { writeFileSync } from 'node:fs';
 
 const OUT = new URL('../../web/models/', import.meta.url);
-mkdirSync(OUT, { recursive: true });
-
-// ---------- utilidades
-const lin = (hex) => { const c = new THREE.Color(hex); return [c.r, c.g, c.b]; }; // Color de three ya convierte sRGB → lineal
-
-function png(w, h, px) {
-  const raw = Buffer.alloc((w * 4 + 1) * h);
-  for (let y = 0; y < h; y++) {
-    raw[y * (w * 4 + 1)] = 0;
-    for (let x = 0; x < w; x++) { const [r, g, b, a = 255] = px(x, y); raw.set([r, g, b, a], y * (w * 4 + 1) + 1 + x * 4); }
-  }
-  const crcT = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
-  const crc = (buf) => { let c = 0xffffffff; for (const b of buf) c = crcT[(c ^ b) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
-  const chunk = (type, data) => { const len = Buffer.alloc(4); len.writeUInt32BE(data.length); const td = Buffer.concat([Buffer.from(type), data]); const c = Buffer.alloc(4); c.writeUInt32BE(crc(td)); return Buffer.concat([len, td, c]); };
-  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr.set([8, 6, 0, 0, 0], 8);
-  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
-}
-
-// Acumula geometrías por material y las fusiona en una primitiva por material (menos draw calls)
-class Part {
-  constructor() { this.byMat = new Map(); }
-  add(mat, geo, pos = [0, 0, 0], rot = [0, 0, 0], keepUV = false) {
-    const g = geo.clone();
-    g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(...pos), new THREE.Quaternion().setFromEuler(new THREE.Euler(...rot)), new THREE.Vector3(1, 1, 1)));
-    if (!keepUV) g.deleteAttribute('uv');
-    if (!g.index) { const idx = []; for (let i = 0; i < g.attributes.position.count; i++) idx.push(i); g.setIndex(idx); }
-    if (!this.byMat.has(mat)) this.byMat.set(mat, []);
-    this.byMat.get(mat).push(g);
-    return this;
-  }
-  box(mat, w, h, d, x, y, z, rot) { return this.add(mat, new THREE.BoxGeometry(w, h, d), [x, y + h / 2, z], rot); }
-  cyl(mat, r, h, x, y, z, seg = 16, rot) { return this.add(mat, new THREE.CylinderGeometry(r, r, h, seg), [x, y + h / 2, z], rot); }
-}
-
-class Builder {
-  constructor(name) {
-    this.doc = new Document();
-    this.doc.createBuffer();
-    this.scene = this.doc.createScene(name);
-    this.mats = {};
-    this.tris = 0;
-  }
-  mat(key, { color, rough = 0.8, metal = 0, emissive, tex } = {}) {
-    if (this.mats[key]) return this.mats[key];
-    const m = this.doc.createMaterial(key).setBaseColorFactor([...lin(color), 1]).setRoughnessFactor(rough).setMetallicFactor(metal);
-    if (emissive) m.setEmissiveFactor(lin(emissive));
-    if (tex) m.setBaseColorTexture(this.doc.createTexture(key).setMimeType('image/png').setImage(tex));
-    return (this.mats[key] = m);
-  }
-  geoToPrim(g, mat) {
-    const d = this.doc, buf = d.getRoot().listBuffers()[0];
-    const p = d.createPrimitive().setMaterial(mat);
-    p.setAttribute('POSITION', d.createAccessor().setType('VEC3').setArray(new Float32Array(g.attributes.position.array)).setBuffer(buf));
-    p.setAttribute('NORMAL', d.createAccessor().setType('VEC3').setArray(new Float32Array(g.attributes.normal.array)).setBuffer(buf));
-    if (g.attributes.uv) p.setAttribute('TEXCOORD_0', d.createAccessor().setType('VEC2').setArray(new Float32Array(g.attributes.uv.array)).setBuffer(buf));
-    p.setIndices(d.createAccessor().setType('SCALAR').setArray(new Uint32Array(g.index.array)).setBuffer(buf));
-    this.tris += g.index.count / 3;
-    return p;
-  }
-  partMesh(name, part) {
-    const mesh = this.doc.createMesh(name);
-    for (const [matKey, geos] of part.byMat) mesh.addPrimitive(this.geoToPrim(mergeGeometries(geos, false), this.mats[matKey]));
-    return mesh;
-  }
-  node(name, mesh, t = [0, 0, 0], r = [0, 0, 0], s = [1, 1, 1], parent = this.scene) {
-    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(...r));
-    const n = this.doc.createNode(name).setTranslation(t).setRotation([q.x, q.y, q.z, q.w]).setScale(s);
-    if (mesh) n.setMesh(mesh);
-    parent.addChild(n);
-    return n;
-  }
-}
-
-// ---------- texturas
-const cellsTex = png(128, 256, (x, y) => {
-  // módulo de 6 × 12 celdas monocristalinas con busbars, sobre lámina posterior blanca
-  const cw = 128 / 6, ch = 256 / 12, cx = x % cw, cy = y % ch;
-  if (cx < 0.9 || cy < 0.9) return [150, 156, 162];
-  const corner = (cx < 3 || cx > cw - 3) && (cy < 3 || cy > ch - 3);
-  if (corner) return [150, 156, 162];
-  if ((Math.abs(cx - cw * 0.3) < 0.5 || Math.abs(cx - cw * 0.7) < 0.5)) return [120, 128, 140];
-  const n = ((x * 73856093) ^ (y * 19349663)) % 7;
-  return [14 + n, 22 + n, 48 + n * 2];
-});
-
-function materials(b) {
-  b.mat('concreto', { color: '#ecebe6', rough: 0.88 });
-  b.mat('concreto_oscuro', { color: '#c9c8c2', rough: 0.9 });
-  b.mat('vidrio', { color: '#4f6f82', rough: 0.08, metal: 0.25 });
-  b.mat('aluminio', { color: '#c4c8cb', rough: 0.32, metal: 0.9 });
-  b.mat('acero', { color: '#2b2d30', rough: 0.45, metal: 0.75 });
-  b.mat('cubierta', { color: '#8e938f', rough: 0.85 });
-  b.mat('rojo', { color: '#e3141b', rough: 0.5, emissive: '#3a0003' });
-  b.mat('contenedor', { color: '#eda100', rough: 0.55, metal: 0.35 });
-  b.mat('generador', { color: '#eb6834', rough: 0.5, metal: 0.4 });
-  b.mat('celdas', { color: '#ffffff', rough: 0.22, metal: 0.3, tex: cellsTex });
-  b.mat('blanco', { color: '#f4f4f2', rough: 0.6 });
-  b.mat('lamina', { color: '#2a2f38', rough: 0.6 });
-}
-
-// ---------- módulo fotovoltaico (1,134 × 2,278 m) con marco de aluminio y celdas por textura
-function pvMesh(b, name = 'modulo_fv') {
-  const W = 1.134, L = 2.278, T = 0.035, f = 0.035;
-  const frame = new Part()
-    .box('aluminio', W, T, f, 0, 0, -L / 2 + f / 2).box('aluminio', W, T, f, 0, 0, L / 2 - f / 2)
-    .box('aluminio', f, T, L, -W / 2 + f / 2, 0, 0).box('aluminio', f, T, L, W / 2 - f / 2, 0, 0);
-  const cells = new Part();
-  const top = new THREE.PlaneGeometry(W - 2 * f, L - 2 * f); top.rotateX(-Math.PI / 2);
-  cells.add('celdas', top, [0, T * 0.92, 0], [0, 0, 0], true);
-  cells.box('lamina', W - 2 * f, T * 0.8, L - 2 * f, 0, 0.002, 0);
-  const mesh = b.doc.createMesh(name);
-  for (const part of [frame, cells]) for (const [k, geos] of part.byMat) mesh.addPrimitive(b.geoToPrim(mergeGeometries(geos, false), b.mats[k]));
-  return mesh;
-}
-
-// Arreglo de módulos inclinados 10° (latitud ~7° N) como nodos que luego se convierten en instancias GPU
-function pvArray(b, mesh, parent, cols, rows, origin, tilt = 0.17, gapX = 0.02, gapZ = 0.12) {
-  const W = 1.134 + gapX, L = 2.278 * Math.cos(tilt) + gapZ;
-  for (let c = 0; c < cols; c++) for (let r = 0; r < rows; r++) {
-    const x = origin[0] + (c - (cols - 1) / 2) * W, z = origin[2] + (r - (rows - 1) / 2) * L;
-    b.node(`fv_${c}_${r}`, mesh, [x, origin[1], z], [tilt, 0, 0], [1, 1, 1], parent);
-  }
-}
-
-// ---------- contenedor de baterías (20 pies: 6,06 × 2,59 × 2,44 m)
-function bessPart(detail = true) {
-  const p = new Part(), L = 6.06, H = 2.59, D = 2.44;
-  p.box('contenedor', L, H - 0.12, D, 0, 0.12, 0);
-  p.box('acero', L, 0.12, D, 0, 0, 0);
-  if (detail) {
-    for (let i = 0; i < 20; i++) { const x = -L / 2 + 0.2 + i * ((L - 0.4) / 19); p.box('contenedor', 0.1, H - 0.4, 0.05, x, 0.2, D / 2 + 0.02); p.box('contenedor', 0.1, H - 0.4, 0.05, x, 0.2, -D / 2 - 0.02); }
-    for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) for (const y of [0, H - 0.16]) p.box('acero', 0.18, 0.16, 0.18, x * (L / 2 - 0.09), y, z * (D / 2 - 0.09));
-    // puertas en un extremo con barras de cierre
-    p.box('contenedor', 0.04, H - 0.4, D / 2 - 0.08, L / 2 + 0.02, 0.2, -D / 4).box('contenedor', 0.04, H - 0.4, D / 2 - 0.08, L / 2 + 0.02, 0.2, D / 4);
-    for (const z of [-0.85, -0.35, 0.35, 0.85]) p.cyl('aluminio', 0.025, H - 0.5, L / 2 + 0.07, 0.25, z, 8);
-    // equipo de aire acondicionado y rejillas de ventilación
-    p.box('blanco', 0.9, 0.9, 0.35, -1.6, 0.9, D / 2 + 0.2);
-    p.cyl('acero', 0.3, 0.04, -1.6, 1.35, D / 2 + 0.38, 20, [Math.PI / 2, 0, 0]);
-    for (let i = 0; i < 6; i++) p.box('acero', 0.8, 0.03, 0.06, 1.2, 0.6 + i * 0.12, D / 2 + 0.05);
-    p.box('blanco', 0.6, 0.4, 0.02, 0.2, 1.6, D / 2 + 0.06);
-  }
-  return p;
-}
 
 // ---------- hospital (misma huella que la escena: bloque de 18 × 10 m, dos pisos)
 function buildHospital(detail) {
@@ -243,10 +94,6 @@ function buildPV() {
 }
 
 // ---------- optimización y escritura
-const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({
-  'draco3d.encoder': await draco3d.createEncoderModule(),
-  'draco3d.decoder': await draco3d.createDecoderModule(),
-});
 const manifest = [];
 const jobs = [
   ['hospital_lod0', () => buildHospital(true), 'Hospital Héctor Abad Gómez (detalle completo)'],
@@ -255,17 +102,8 @@ const jobs = [
   ['modulo_fv', buildPV, 'Módulo fotovoltaico de 550 Wp'],
 ];
 for (const [name, fn, title] of jobs) {
-  const b = fn();
-  const doc = b.doc;
-  const raw = await io.writeBinary(doc);
-  await doc.transform(dedup(), instance({ min: 4 }), weld(), prune(), draco({ method: 'edgebreaker', quantizePosition: 14, quantizeNormal: 10, quantizeTexcoord: 12 }));
-  const glb = await io.writeBinary(doc);
-  writeFileSync(new URL(`${name}.glb`, OUT), glb);
-  // copia en base64 para hospedajes que no sirven .glb (el cargador la usa como respaldo)
-  writeFileSync(new URL(`${name}.glb.json`, OUT), JSON.stringify({ glb: Buffer.from(glb).toString('base64') }));
-  const exts = doc.getRoot().listExtensionsUsed().map((e) => e.extensionName);
-  const inst = doc.getRoot().listNodes().filter((n) => n.getExtension('EXT_mesh_gpu_instancing')).length;
-  manifest.push({ id: name, titulo: title, archivo: `models/${name}.glb`, bytes: glb.byteLength, bytes_sin_comprimir: raw.byteLength, triangulos_fuente: Math.round(b.tris), materiales: doc.getRoot().listMaterials().length, extensiones: exts, nodos_instanciados: inst });
-  console.log(`${name}: ${(raw.byteLength / 1024).toFixed(0)} KB → ${(glb.byteLength / 1024).toFixed(0)} KB · ${Math.round(b.tris)} triángulos fuente · ${exts.join(', ')}`);
+  const m = await writeGLB(fn(), OUT, name);
+  manifest.push({ id: name, titulo: title, archivo: `models/${name}.glb`, ...m });
+  console.log(`${name}: ${(m.bytes_sin_comprimir / 1024).toFixed(0)} KB → ${(m.bytes / 1024).toFixed(0)} KB · ${m.triangulos_fuente} triángulos fuente · ${m.extensiones.join(', ')}`);
 }
 writeFileSync(new URL('manifest.json', OUT), JSON.stringify(manifest, null, 1));

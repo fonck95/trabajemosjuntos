@@ -3,8 +3,8 @@
   "id": "hospital_lod0",
   "titulo": "Hospital Héctor Abad Gómez (detalle completo)",
   "archivo": "models/hospital_lod0.glb",
-  "bytes": 49936,
-  "bytes_sin_comprimir": 382896,
+  "bytes": 49956,
+  "bytes_sin_comprimir": 382912,
   "triangulos_fuente": 6126,
   "materiales": 12,
   "extensiones": [
@@ -17,8 +17,8 @@
   "id": "hospital_lod1",
   "titulo": "Hospital Héctor Abad Gómez (nivel de detalle bajo)",
   "archivo": "models/hospital_lod1.glb",
-  "bytes": 33216,
-  "bytes_sin_comprimir": 107640,
+  "bytes": 33344,
+  "bytes_sin_comprimir": 108124,
   "triangulos_fuente": 1358,
   "materiales": 11,
   "extensiones": [
@@ -30,8 +30,8 @@
   "id": "contenedor_bess",
   "titulo": "Contenedor de baterías LFP de 20 pies",
   "archivo": "models/contenedor_bess.glb",
-  "bytes": 5756,
-  "bytes_sin_comprimir": 78228,
+  "bytes": 5772,
+  "bytes_sin_comprimir": 78248,
   "triangulos_fuente": 928,
   "materiales": 4,
   "extensiones": [

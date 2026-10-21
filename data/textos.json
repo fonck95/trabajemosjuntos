@@ -1,52 +1,58 @@
 {
-  "dinero.lede": "La alcaldía registró {TOTAL_ALC} en contratos entre 2008 y 2026. Cada columna muestra cuánto fue a obra, cuánto a órdenes de prestación de servicios (OPS), cuánto a convenios y cuánto a estudios. Toca una columna para ver los contratos más grandes de cada periodo.",
-  "dinero.stamp": "Fuente: SECOP I y II (datos.gov.co, rpmr-utcd), descarga del 20-oct-2026 · {REG_BRUTOS} registros → {REG_LIMPIOS} contratos depurados · 2004–2007 sin registros suficientes",
-  "dinero.metodo": "Método: se excluyen procesos sin firma (convocados, borradores), duplicados de SECOP I por contratista y versiones repetidas de SECOP II (se conserva el mayor valor), y un registro de $1,25 billones claramente mal digitado. La categoría se asigna por tipo de contrato, modalidad y palabras del objeto (scripts/secop_analisis.py). Valores corrientes, sin deflactar.",
-  "periodos.lede": "El mismo tablero para los seis gobiernos desde 2004: desempeño fiscal, desempeño municipal, agua, educación, salud, conectividad y transparencia en la contratación. Cada periodo muestra lo que se hizo, lo que pudo hacerse y no se hizo, y las alertas de los órganos de control.",
-  "periodos.nota": "Normalización 0–100: cada indicador se lleva a una escala donde 100 es el mejor valor posible (o la meta nacional). La columna hueca significa que no hay un dato verificable para ese periodo; no significa cero.",
-  "embudo.lede": "Entre 2008 y 2026 la alcaldía contrató {N_EST} estudios, diseños y consultorías por {V_EST}. Solo en {N_EST_OBRA} ({PCT_EST_OBRA} %) aparece después en SECOP una obra con objeto relacionado, y apenas {N_EST_LIQ} de esas obras figuran liquidadas. A eso se suman {N_OPS_FORM} contratos OPS para planeación y formulación de proyectos ({V_OPS_FORM}).",
-  "embudo.stamp": "La coincidencia estudio → obra se calcula por palabras clave; es un indicio que obliga a revisar expediente por expediente, no una conclusión",
-  "embudo.nota": "Una obra puede haberse ejecutado por otra entidad (Gobernación, Ecopetrol, EDU, Findeter) y no aparecer como contrato de la alcaldía. Por eso cada fila debe cerrarse con el expediente físico y una visita de campo. La lista completa está en data/secop/secop_resumen.json.",
-  "microrred.lede": "Una sola red para todos los edificios públicos: solar en las cubiertas de 13 sedes, baterías en las 7 sedes críticas, la planta del hospital como último respaldo, medición inteligente y domótica controladas desde un Centro de Control Energético y Digital apoyado por MinTIC. Yondó depende de una sola subestación alimentada desde Barrancabermeja. Mueve la hora o la nubosidad, o simula una falla de la red de 24 horas.",
-  "microrred.budgetnote": "El ahorro se calcula con la tarifa oficial supuesta y la simulación de un día típico (nubosidad 30 %). Faltan los beneficios no monetarios: horas de servicio del hospital y del acueducto durante fallas, y datos abiertos de consumo.",
-  "hospital.lede": "En 2028 coinciden tres relojes: un nuevo alcalde que designa gerente de la E.S.E. antes del 31 de marzo, un nuevo gobernador que actualiza el Plan Maestro de Inversiones en Salud (PMIDS) en el primer semestre, y el bienio de regalías 2027–2028. El hospital es la entidad que puede recibir recursos de salud, energía y conectividad a la vez, si llega con proyectos listos.",
-  "hospital.stamp": "Montos en millones de COP, por escenario de gestión; estimados con topes y convocatorias recientes de cada fuente",
-  "hospital.nota": "Ningún monto está asegurado. Cada uno depende de presentar a tiempo un proyecto con viabilidad técnica, predio saneado, licencias y contrapartida. La columna probable supone que el proyecto se formula en 2027, antes del cambio de gobierno.",
-  "ruta.lede": "Cuatro fases y doce compuertas. La regla es simple: ningún estudio se contrata sin fuente de financiación identificada para la obra, y ningún contrato de formulación se paga sin un producto radicado ante quien va a financiar.",
-  "footer": "Atlas Yondó 2028 es una investigación ciudadana con datos abiertos (SECOP, DNP, DANE, MinSalud, MinTIC, ICFES, INS). Las cifras de contratación son exactas respecto a lo publicado en SECOP; las de los proyectos son estimaciones de prefactibilidad y están marcadas como tales. Nada de lo aquí presentado es una acusación: los indicios de ineficiencia deben verificarse con los expedientes. Código y datos en el repositorio del proyecto.",
-  "hallazgos_dinero": [
-    {
-      "tag": "Competencia",
-      "titulo": "La contratación directa se volvió la regla",
-      "texto": "Entre 2020 y 2026, el {PCT_DIR} % del valor contratado por la alcaldía se adjudicó sin concurso de varios oferentes: contratación directa, convenios y régimen especial. En 2016–2019 esa proporción fue del 31 %.",
-      "fuente": "SECOP, modalidad de contratación por contrato."
-    },
-    {
-      "tag": "Administración delegada",
-      "titulo": "{EDU} pasaron por la EDU de Medellín",
-      "texto": "{N_EDU} contratos interadministrativos firmados en 2021 y 2023 entregaron a una empresa de otro municipio la ejecución de vías, escenarios deportivos, diseños y vivienda. La figura es legal, pero traslada la selección de contratistas fuera del control del Concejo y de la veeduría local.",
-      "fuente": "SECOP II, contratos con la Empresa de Desarrollo Urbano de Medellín."
-    },
-    {
-      "tag": "OPS",
-      "titulo": "{N_OPS} contratos de prestación de servicios",
-      "texto": "Desde 2012 la alcaldía firma entre 250 y 690 OPS por año con 170 a 500 personas distintas. Una parte cubre funciones permanentes que deberían estar en planta, y otra se dedica a formular proyectos que no llegan a financiarse.",
-      "fuente": "SECOP, contratos de prestación de servicios y apoyo a la gestión."
-    }
-  ],
-  "rupturas_embudo": [
-    {
-      "titulo": "Estudios sin fuente para la obra",
-      "texto": "Se contrata el diseño antes de saber quién pagará la construcción. Cuando cambia el gobierno, el diseño envejece y se vuelve a contratar."
-    },
-    {
-      "titulo": "Formulación como nómina",
-      "texto": "Las OPS de \"apoyo a la formulación\" se pagan por meses de servicio, no por proyectos radicados y viabilizados. No hay producto que se pueda auditar."
-    },
-    {
-      "titulo": "Sin banco de proyectos vivo",
-      "texto": "Los estudios no quedan en un repositorio público con planos, presupuestos y estado. El siguiente equipo no sabe qué existe y vuelve a empezar."
-    }
-  ],
-  "dinero.entro": "<div class=\"tiles\" style=\"grid-template-columns:repeat(auto-fit,minmax(170px,1fr))\"><div class=\"tile\"><b>{ING_TOTAL}</b><span>ingresos en caja del municipio 2004–2024 (DNP, operaciones efectivas de caja)</span></div><div class=\"tile\"><b>{REG_0411}</b><span>regalías directas giradas 2004–2011 (régimen anterior)</span></div><div class=\"tile\"><b>$215,5 mil M</b><span>regalías distribuidas por el SGR 2012–2024 (MapaRegalías)</span></div><div class=\"tile\"><b>$71,4 mil M</b><span>presupuesto de inversión de regalías 2025–2026 (MinHacienda)</span></div><div class=\"tile\"><b>{SGP_0424}</b><span>Sistema General de Participaciones 2004–2024 (SICODIS)</span></div><div class=\"tile\"><b>$77,7 mil M</b><span>en seis proyectos de regalías con brecha entre obra y pagos</span></div></div><p class=\"note\" style=\"margin-top:10px\">Además de la caja municipal, por el OCAD Paz se aprobaron proyectos ejecutados por Yondó por $46.561 M (2021–2022) y $44.329 M (2023–2024). En total hay 154 proyectos de regalías aprobados con localización en Yondó; 128 los ejecuta el municipio o su empresa de servicios, por unos $351.000 M. El petróleo de los campos de Yondó cayó de 23.120 barriles diarios en 2012 a 10.599 en 2025: la plata de regalías va a seguir bajando.</p>"
+ "dinero.lede": "La alcaldía registró {TOTAL_ALC} en contratos entre 2008 y 2026. Cada columna muestra cuánto fue a obra, cuánto a órdenes de prestación de servicios (OPS), cuánto a convenios y cuánto a estudios. Toca una columna para ver los contratos más grandes de cada periodo.",
+ "dinero.stamp": "Fuente: SECOP I y II (datos.gov.co, rpmr-utcd), descarga del 20-oct-2026 · {REG_BRUTOS} registros → {REG_LIMPIOS} contratos depurados · 2004–2007 sin registros suficientes",
+ "dinero.metodo": "Método: se excluyen procesos sin firma (convocados, borradores), duplicados de SECOP I por contratista y versiones repetidas de SECOP II (se conserva el mayor valor), y un registro de $1,25 billones claramente mal digitado. La categoría se asigna por tipo de contrato, modalidad y palabras del objeto (scripts/secop_analisis.py). Valores corrientes, sin deflactar.",
+ "periodos.lede": "El mismo tablero para los seis gobiernos desde 2004: desempeño fiscal, desempeño municipal, agua, educación, salud, conectividad y transparencia en la contratación. Cada periodo muestra lo que se hizo, lo que pudo hacerse y no se hizo, y las alertas de los órganos de control.",
+ "periodos.nota": "Normalización 0–100: cada indicador se lleva a una escala donde 100 es el mejor valor posible (o la meta nacional). La columna hueca significa que no hay un dato verificable para ese periodo; no significa cero.",
+ "embudo.lede": "Entre 2008 y 2026 la alcaldía contrató {N_EST} estudios, diseños y consultorías por {V_EST}. Solo en {N_EST_OBRA} ({PCT_EST_OBRA} %) aparece después en SECOP una obra con objeto relacionado, y apenas {N_EST_LIQ} de esas obras figuran liquidadas. A eso se suman {N_OPS_FORM} contratos OPS para planeación y formulación de proyectos ({V_OPS_FORM}).",
+ "embudo.stamp": "La coincidencia estudio → obra se calcula por palabras clave; es un indicio que obliga a revisar expediente por expediente, no una conclusión",
+ "embudo.nota": "Una obra puede haberse ejecutado por otra entidad (Gobernación, Ecopetrol, EDU, Findeter) y no aparecer como contrato de la alcaldía. Por eso cada fila debe cerrarse con el expediente físico y una visita de campo. La lista completa está en data/secop/secop_resumen.json.",
+ "microrred.lede": "Una sola red para todos los edificios públicos: solar en las cubiertas de 13 sedes, baterías en las 7 sedes críticas, la planta del hospital como último respaldo, medición inteligente y domótica controladas desde un Centro de Control Energético y Digital apoyado por MinTIC. Yondó depende de una sola subestación alimentada desde Barrancabermeja. Mueve la hora o la nubosidad, o simula una falla de la red de 24 horas.",
+ "microrred.budgetnote": "El ahorro se calcula con la tarifa oficial supuesta y la simulación de un día típico (nubosidad 30 %). Faltan los beneficios no monetarios: horas de servicio del hospital y del acueducto durante fallas, y datos abiertos de consumo.",
+ "hospital.lede": "En 2028 coinciden tres relojes: un nuevo alcalde que designa gerente de la E.S.E. antes del 31 de marzo, un nuevo gobernador que actualiza el Plan Maestro de Inversiones en Salud (PMIDS) en el primer semestre, y el bienio de regalías 2027–2028. El hospital es la entidad que puede recibir recursos de salud, energía y conectividad a la vez, si llega con proyectos listos.",
+ "hospital.stamp": "Montos en millones de COP, por escenario de gestión; estimados con topes y convocatorias recientes de cada fuente",
+ "hospital.nota": "Ningún monto está asegurado. Cada uno depende de presentar a tiempo un proyecto con viabilidad técnica, predio saneado, licencias y contrapartida. La columna probable supone que el proyecto se formula en 2027, antes del cambio de gobierno.",
+ "ruta.lede": "Cuatro fases y doce compuertas. La regla es simple: ningún estudio se contrata sin fuente de financiación identificada para la obra, y ningún contrato de formulación se paga sin un producto radicado ante quien va a financiar.",
+ "footer": "Atlas Yondó 2028 es una investigación ciudadana con datos abiertos (SECOP, DNP, DANE, MinSalud, MinTIC, ICFES, INS). Las cifras de contratación son exactas respecto a lo publicado en SECOP; las de los proyectos son estimaciones de prefactibilidad y están marcadas como tales. Nada de lo aquí presentado es una acusación: los indicios de ineficiencia deben verificarse con los expedientes. Código y datos en el repositorio del proyecto.",
+ "hallazgos_dinero": [
+  {
+   "tag": "Competencia",
+   "titulo": "La contratación directa se volvió la regla",
+   "texto": "Entre 2020 y 2026, el {PCT_DIR} % del valor contratado por la alcaldía se adjudicó sin concurso de varios oferentes: contratación directa, convenios y régimen especial. En 2016–2019 esa proporción fue del 31 %.",
+   "fuente": "SECOP, modalidad de contratación por contrato."
+  },
+  {
+   "tag": "Administración delegada",
+   "titulo": "{EDU} pasaron por la EDU de Medellín",
+   "texto": "{N_EDU} contratos interadministrativos firmados en 2021 y 2023 entregaron a una empresa de otro municipio la ejecución de vías, escenarios deportivos, diseños y vivienda. La figura es legal, pero traslada la selección de contratistas fuera del control del Concejo y de la veeduría local.",
+   "fuente": "SECOP II, contratos con la Empresa de Desarrollo Urbano de Medellín."
+  },
+  {
+   "tag": "OPS",
+   "titulo": "{N_OPS} contratos de prestación de servicios",
+   "texto": "Desde 2012 la alcaldía firma entre 250 y 690 OPS por año con 170 a 500 personas distintas. Una parte cubre funciones permanentes que deberían estar en planta, y otra se dedica a formular proyectos que no llegan a financiarse.",
+   "fuente": "SECOP, contratos de prestación de servicios y apoyo a la gestión."
+  }
+ ],
+ "rupturas_embudo": [
+  {
+   "titulo": "Estudios sin fuente para la obra",
+   "texto": "Se contrata el diseño antes de saber quién pagará la construcción. Cuando cambia el gobierno, el diseño envejece y se vuelve a contratar."
+  },
+  {
+   "titulo": "Formulación como nómina",
+   "texto": "Las OPS de \"apoyo a la formulación\" se pagan por meses de servicio, no por proyectos radicados y viabilizados. No hay producto que se pueda auditar."
+  },
+  {
+   "titulo": "Sin banco de proyectos vivo",
+   "texto": "Los estudios no quedan en un repositorio público con planos, presupuestos y estado. El siguiente equipo no sabe qué existe y vuelve a empezar."
+  }
+ ],
+ "dinero.entro": "<div class=\"tiles\" style=\"grid-template-columns:repeat(auto-fit,minmax(170px,1fr))\"><div class=\"tile\"><b>{ING_TOTAL}</b><span>ingresos en caja del municipio 2004–2024 (DNP, operaciones efectivas de caja)</span></div><div class=\"tile\"><b>{REG_0411}</b><span>regalías directas giradas 2004–2011 (régimen anterior)</span></div><div class=\"tile\"><b>$215,5 mil M</b><span>regalías distribuidas por el SGR 2012–2024 (MapaRegalías)</span></div><div class=\"tile\"><b>$71,4 mil M</b><span>presupuesto de inversión de regalías 2025–2026 (MinHacienda)</span></div><div class=\"tile\"><b>{SGP_0424}</b><span>Sistema General de Participaciones 2004–2024 (SICODIS)</span></div><div class=\"tile\"><b>$77,7 mil M</b><span>en seis proyectos de regalías con brecha entre obra y pagos</span></div></div><p class=\"note\" style=\"margin-top:10px\">Además de la caja municipal, por el OCAD Paz se aprobaron proyectos ejecutados por Yondó por $46.561 M (2021–2022) y $44.329 M (2023–2024). En total hay 154 proyectos de regalías aprobados con localización en Yondó; 128 los ejecuta el municipio o su empresa de servicios, por unos $351.000 M. El petróleo de los campos de Yondó cayó de 23.120 barriles diarios en 2012 a 10.599 en 2025: la plata de regalías va a seguir bajando.</p>",
+ "ciudad.lede": "Cada dependencia pública de la microrred se levantó con imagen satelital, panoramas de Google Street View y fotos recientes: huella medida sobre la cubierta, número de pisos, tipo y material del techo, fachada y entorno. Sobre esa réplica se diseñaron las adecuaciones: cuántos paneles caben de verdad, dónde van las baterías y los inversores, y qué obras hay que hacer antes (por ejemplo, cambiar cubiertas de fibrocemento).",
+ "ciudad.stamp": "Posiciones reales sobre el casco urbano · calles de OpenStreetMap · las fotos de Street View son de 2013–2014 y se contrastaron con el satélite reciente",
+ "ciudad.metodo": "\"kWp que caben\" = módulos de 550 Wp que se pueden acomodar en los faldones reales con retiros de 0,5 m a bordes y cumbrera, sin sombras de árboles o tanques. Cuando la cubierta no alcanza para la potencia del plan se propone una marquesina solar. Las réplicas son de nivel de detalle de anteproyecto: sirven para dimensionar y comunicar, no reemplazan el levantamiento topográfico y estructural que exige el diseño de detalle.",
+ "periodos.stamp": "Cada fajo vale lo mismo · rojo = no se convirtió en obra (registros) · naranja = estimado · hueco = pudo gestionarse y no se hizo",
+ "periodos.cuentanota": "Barra negra: lo que entró en el periodo y se gastó sin una fuga identificable en los registros. Rojo: plata que no se convirtió en obra según registros verificables (estudios sin obra posterior, giros sin avance físico, saldos sin ejecutar). Naranja: estimaciones con rango (por ejemplo, sobrecosto probable por contratar sin competencia). Contorno punteado: lo que pudo entrar o ahorrarse y no se gestionó (fondos externos, recaudo propio, ahorro solar). Toca una fila para ver el detalle.",
+ "periodos.panelnota": "Franjas: periodos de gobierno; la franja roja es el gobierno elegido. ▲▼ comparan el último dato antes del periodo con el último dentro de él; verde = mejoró, rojo = empeoró. Fuentes oficiales en cada gráfico; los vacíos son años sin dato publicado."
 }

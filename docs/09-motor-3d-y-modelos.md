@@ -44,7 +44,55 @@ npm install
 npm run build        # escribe web/models/*.glb y manifest.json
 ```
 
-## 4. Agregar un modelo profesional
+## 4. Réplicas de las sedes reales (`scripts/modelos/build_edificios.mjs`)
+
+Cada dependencia pública de la microrred tiene una réplica 3D construida a partir de un levantamiento con imágenes. Ese levantamiento queda escrito en `data/edificios/<id>.json`, con el formato de `data/edificios/ESPECIFICACION.md`.
+
+### Cómo se levanta un edificio
+
+1. **Ubicación.** Se cruzan la web de la alcaldía, SECOP, OpenStreetMap y los letreros visibles en Street View. Cada sede declara su confianza: alta, media o baja.
+2. **Huella.** Se mide sobre la imagen satelital Esri World Imagery (zoom 19 ≈ 0,30 m por píxel). `scripts/geo/trace.py` superpone los rectángulos medidos sobre el satélite, y se itera hasta que coinciden con los bordes de la cubierta.
+3. **Alturas, cubierta y fachada.** Salen de los panoramas de Google Street View (`scripts/geo/cobertura.py`, `sv_pano.py`). Hay 2.100 panoramas en el casco urbano, casi todos de 2013–2014; se contrastan con el satélite, que es más reciente, y con fotos web.
+4. **Comparación con la foto.** `scripts/modelos/render_vista.mjs` dibuja el modelo desde la misma posición, rumbo y campo visual del panorama. Luego genera una imagen lado a lado y una mezcla al 50 % para corregir siluetas, pendientes, puertas, ventanas y colores.
+5. **Verificación independiente.** Un segundo revisor vuelve a medir y compara con panoramas distintos.
+6. **Adecuaciones del proyecto.** Se diseñan sobre la cubierta real:
+   - cuántos módulos de 550 Wp caben de verdad (con retiros);
+   - dónde van las baterías, los inversores y la domótica;
+   - qué obras previas hacen falta: cambio de cubiertas de fibrocemento, refuerzos, puesta a tierra.
+
+Las imágenes de Google y Esri se usan solo como referencia de levantamiento: están en `data/geo/img/`, que git ignora. En la web cada sede enlaza a su panorama en Google Maps.
+
+### Qué produce el generador
+
+- **Capa `existente`:** muros con textura en metros; ventanas con marco y alféizar; puertas; zócalo y bandas de entrepiso; corredores con columnas.
+  - Cubiertas: a dos aguas, a cuatro aguas, a una agua, curvas o planas, con voladizos y texturas de zinc, fibrocemento, termoacústica o teja.
+  - Letreros en relieve con tildes compuestas.
+  - Entorno: rejas, muros, tanques elevados, árboles instanciados, canchas, parqueaderos, astas, torres, plantas eléctricas.
+- **Capa `adecuaciones`:**
+  - módulos solares instanciados sobre el faldón elegido o en racks sobre losa;
+  - marquesinas solares;
+  - baterías (gabinetes o contenedores de 10 y 20 pies);
+  - inversores, medidor bidireccional, pasarela IoT y ductos;
+  - cargador de vehículo eléctrico;
+  - cubierta nueva cuando hay que reemplazar la existente.
+- **Instancias por capa.** El generador crea las instancias GPU (`EXT_mesh_gpu_instancing`) dentro de cada capa, para que el botón "Hoy / Con el proyecto" pueda apagar una capa completa. La función `instance()` de gltf-transform no sirve aquí porque las mueve a la raíz.
+- **Dos niveles de detalle.** `_lod0` lleva marcos, módulos individuales y barrotes; `_lod1` lleva módulos como planos con textura y rejas simplificadas. Ambos van comprimidos con Draco y tienen copia `.glb.json`.
+
+```bash
+cd scripts/modelos
+node build_edificios.mjs                 # todas las sedes → web/models/edificios/ + manifest.json
+node build_edificios.mjs hospital        # solo una
+node render_vista.mjs hospital --orbita 210,30,70 --out /tmp/h.png --capa todo
+```
+
+### Escena urbana (vista "Sedes reales")
+
+- Las réplicas se ubican en su posición real respecto al centro del casco urbano (7,0065 N; −73,9115 O).
+- Las calles, caños y cuerpos de agua vienen de OpenStreetMap (`scripts/geo/osm_calles.py`, ODbL).
+- Las casas del contexto se extruyen a partir de las huellas de Microsoft Global ML Building Footprints (`scripts/geo/huellas.py`, ODbL), con alturas de uno o dos pisos.
+- La capa de datos MinTIC conecta cada sede con el centro de control en la alcaldía.
+
+## 5. Agregar un modelo profesional
 
 1. Exportar a **glTF binario (.glb)** desde Revit (complemento glTF o vía IFC → Blender), SketchUp, Rhino o Blender, en metros y con +Y arriba.
 2. Optimizar:
@@ -57,7 +105,7 @@ npm run build        # escribe web/models/*.glb y manifest.json
 
 Presupuesto recomendado para que funcione en teléfonos: menos de 300.000 triángulos visibles, menos de 50 llamadas de dibujo y texturas de 2048 px como máximo, en KTX2.
 
-## 5. Diseño y transiciones
+## 6. Diseño y transiciones
 
 - **Estética del logo "¡Trabajemos juntos!"**: titulares en tipografía condensada negra (Anton) que atraviesan un globo de diálogo de contorno rojo, con la cola del globo hacia abajo; pestaña activa con el mismo globo; paleta blanco, negro y rojo en tema claro y oscuro.
 - **GSAP**: el globo se dibuja de izquierda a derecha, el titular entra palabra por palabra, las tarjetas se escalonan, las cifras cuentan hasta su valor, la cámara vuela a su posición, las columnas de datos crecen con retraso escalonado y las vistas se cruzan con un fundido corto. Con "reducir movimiento" activado en el sistema, todo aparece sin animación.

@@ -64,6 +64,7 @@ export function mount(root) {
     if (gsap) gsap.from(current.scale, { x: 0.001, y: 0.001, z: 0.001, duration: 0.8, ease: 'back.out(1.4)', onUpdate: () => st.invalidate(true) });
     st.updateShadows();
     setStats(info, stats(current, info.gltf), nombre);
+    applyLayer();
   }
 
   function applyView() {
@@ -96,10 +97,33 @@ export function mount(root) {
     } catch (e) { estado.textContent = `No se pudo leer ${file.name}: ${e.message}`; }
   }
 
-  // lista de modelos del atlas
+  // lista de modelos del atlas: réplicas de las sedes reales + modelos de componentes
   const lista = q('modelos.lista');
-  fetch(new URL('../../models/manifest.json', import.meta.url)).then((r) => r.json()).then((man) => {
-    lista.innerHTML = man.map((m, i) => `<button type="button" data-i="${i}" aria-pressed="${i === 0}">${m.titulo.replace('Hospital Héctor Abad Gómez', 'Hospital').replace(/\s*\(.*\)/, (x) => x.includes('bajo') ? ' · LOD bajo' : ' · detallado')}</button>`).join('');
+  const capas = document.createElement('div');
+  capas.className = 'seg'; capas.style.marginTop = '8px'; capas.hidden = true; capas.setAttribute('role', 'group'); capas.setAttribute('aria-label', 'Capa');
+  capas.innerHTML = '<button type="button" data-capa="hoy" aria-pressed="false">Hoy</button><button type="button" data-capa="proyecto" aria-pressed="true">Con el proyecto</button>';
+  lista.after(capas);
+  let proyecto = true;
+  const applyLayer = () => {
+    if (!current) return;
+    let has = false;
+    current.traverse((o) => {
+      if (o.name === 'adecuaciones') { has = true; o.visible = proyecto; }
+      if (o.name === 'cubierta_actual' && o.userData.reemplazada) o.visible = !proyecto;
+    });
+    capas.hidden = !has;
+    st.updateShadows();
+  };
+  capas.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    proyecto = b.dataset.capa === 'proyecto';
+    capas.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    applyLayer();
+  }));
+  const getJSON = (u) => fetch(new URL(u, import.meta.url)).then((r) => (r.ok ? r.json() : [])).catch(() => []);
+  Promise.all([getJSON('../../models/edificios/manifest.json'), getJSON('../../models/manifest.json')]).then(([sedes, comp]) => {
+    const man = [...sedes.map((m) => ({ ...m, titulo: m.nombre, corto: m.nombre.replace(/^(E\.S\.E\.|I\.E\.)\s*/, '').split(/[(,–]/)[0].trim() })), ...comp];
+    if (!man.length) throw new Error('vacío');
+    lista.innerHTML = man.map((m, i) => `<button type="button" data-i="${i}" aria-pressed="${i === 0}">${m.corto || m.titulo.replace('Hospital Héctor Abad Gómez', 'Hospital').replace(/\s*\(.*\)/, (x) => x.includes('bajo') ? ' · LOD bajo' : ' · detallado')}</button>`).join('');
     lista.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
       lista.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
       loadUrl(man[+b.dataset.i]);

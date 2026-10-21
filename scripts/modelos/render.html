@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Render de verificación</title>
+<style>html,body{margin:0;background:#cfd9e3;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">
+{ "imports": {
+  "three": "/scripts/modelos/node_modules/three/build/three.module.js",
+  "three/addons/": "/scripts/modelos/node_modules/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<script type="module">
+// Renderiza un GLB de edificio desde una cámara dada (posición de un panorama de Street View o una órbita).
+// Parámetros: glb, cam=x,y,z, look=x,y,z, fov (vertical), w, h, capa=existente|todo
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+const q = new URLSearchParams(location.search);
+const num = (k, d) => (q.has(k) ? q.get(k).split(',').map(Number) : d);
+const W = +(q.get('w') || 1400), H = +(q.get('h') || 900);
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(q.get('fondo') || '#cdd8e3');
+scene.add(new THREE.HemisphereLight('#e6eef6', '#8b8a7c', 1.6));
+const sun = new THREE.DirectionalLight('#fff6e8', 2.2); sun.position.set(30, 60, 20); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, far: 200 });
+scene.add(sun);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshStandardMaterial({ color: q.get('suelo') || '#9a978d', roughness: 1 }));
+ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02; ground.receiveShadow = true; scene.add(ground);
+const [cx, cy, cz] = num('cam', [40, 30, 40]), [lx, ly, lz] = num('look', [0, 3, 0]);
+const camera = new THREE.PerspectiveCamera(+(q.get('fov') || 50), W / H, 0.1, 3000);
+camera.position.set(cx, cy, cz); camera.lookAt(lx, ly, lz);
+const draco = new DRACOLoader().setDecoderPath('/web/vendor/draco/').setDecoderConfig({ type: 'js' });
+const loader = new GLTFLoader().setDRACOLoader(draco);
+loader.load(q.get('glb'), (gltf) => {
+  const root = gltf.scene, capa = q.get('capa') || 'todo';
+  root.traverse((o) => {
+    if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+    if (capa === 'existente' && o.name === 'adecuaciones') o.visible = false;
+    if (capa === 'todo' && o.name === 'cubierta_actual' && o.userData.reemplazada) o.visible = false;
+  });
+  scene.add(root);
+  renderer.render(scene, camera);
+  window.__listo = true;
+}, undefined, (e) => { window.__error = String(e); });
+</script>
+</body>
+</html>

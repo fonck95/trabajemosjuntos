@@ -7,6 +7,7 @@ const scenes = {
   periodos: () => import('./scenes/periodos.js'),
   embudo: () => import('./scenes/embudo.js'),
   microrred: () => import('./scenes/microrred.js'),
+  ciudad: () => import('./scenes/ciudad.js'),
   hospital: () => import('./scenes/hospital.js'),
   ruta: () => import('./scenes/ruta.js'),
   modelos: () => import('./scenes/modelos.js'),

@@ -99,6 +99,8 @@ button.btn.ghost, label.btn.ghost { background: transparent; color: var(--ink); 
 .seg { display: inline-flex; border: 2px solid var(--ink); border-radius: 10px; overflow: hidden; flex-wrap: wrap; }
 .seg button { font: 600 0.8rem var(--f-body); background: transparent; color: var(--ink); border: 0; padding: 6px 11px; cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg.wrap-seg { display: flex; border: 0; gap: 6px; border-radius: 0; overflow: visible; }
+.seg.wrap-seg button { border: 2px solid var(--ink); border-radius: 999px; padding: 4px 10px; font-size: 0.76rem; }
 .read { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .folder .read { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .read div { background: var(--raised); border-radius: 10px; padding: 6px 8px; min-width: 0; }
@@ -180,6 +182,36 @@ a { color: var(--accent); }
   .bubble { --cross: 30px; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+/* comparativa: cifras grandes, barras, equivalencias y panel anual */
+.money-big { display: grid; gap: 8px; margin: 6px 0 10px; }
+.money-big div { border-left: 4px solid var(--ink); padding: 2px 0 2px 10px; }
+.money-big div.bad { border-color: var(--bad); } .money-big div.ghost { border-left-style: dashed; border-color: var(--accent); }
+.money-big b { display: block; font: 400 1.7rem/1.05 var(--f-display); letter-spacing: 0.01em; }
+.money-big .bad b { color: var(--bad); } .money-big span { font-size: 0.78rem; color: var(--muted); }
+svg.cuenta { width: 100%; height: auto; display: block; margin-top: 8px; }
+svg.cuenta g.row { cursor: pointer; } svg.cuenta g.row:hover .per, svg.cuenta g.row.on .per { fill: var(--accent); }
+svg.cuenta .per { font: 400 15px var(--f-display); fill: var(--ink); } svg.cuenta .who { font: 10px var(--f-body); fill: var(--muted); }
+svg.cuenta .b0 { fill: var(--ink); opacity: 0.85; } svg.cuenta .b1 { fill: var(--bad); } svg.cuenta .b2 { fill: var(--warn); }
+svg.cuenta .b3 { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 3; }
+svg.cuenta g.row:not(.on) rect { opacity: 0.55; } svg.cuenta g.row.on rect.b0 { opacity: 0.95; }
+svg.cuenta .v { font: 600 11px var(--f-mono); fill: var(--bad); } svg.cuenta .v2 { font: 11px var(--f-mono); fill: var(--accent); }
+.legend i.hollow { border: 2px dashed var(--accent); box-sizing: border-box; }
+.eqs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 10px 0 16px; }
+.eq { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.eq b { display: block; font: 400 2rem/1 var(--f-display); color: var(--bad); } .eq span { font-size: 0.8rem; color: var(--muted); }
+.eq .icons { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 8px; }
+.eq .icons svg { width: 15px; height: 15px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.eq .icons em { font-size: 0.8rem; color: var(--muted); }
+.cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.cols2 h4 { margin: 0 0 6px; }
+.sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 12px; }
+.spark p { margin: 0; font-size: 0.82rem; line-height: 1.25; } .spark .src { font-size: 0.66rem; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+.spark svg { width: 100%; height: auto; display: block; margin: 4px 0 2px; }
+.spark svg path { fill: none; stroke: var(--ink); stroke-width: 1.8; } .spark svg circle { fill: var(--ink); }
+.spark svg .band { fill: var(--line); opacity: 0.25; } .spark svg .band.alt { opacity: 0.12; } .spark svg .band.on { fill: var(--accent); opacity: 0.16; }
+.spark svg text { font: 8px var(--f-mono); fill: var(--muted); }
+.spark .delta { font: 600 0.72rem var(--f-mono); color: var(--muted); } .spark .delta.good { color: var(--good); } .spark .delta.bad { color: var(--bad); }
 </style>
 
 <header class="top">
@@ -193,6 +225,7 @@ a { color: var(--accent); }
       <a href="#periodos" data-view="periodos">Seis gobiernos</a>
       <a href="#embudo" data-view="embudo">Estudio → obra</a>
       <a href="#microrred" data-view="microrred">Microrred</a>
+      <a href="#ciudad" data-view="ciudad">Sedes reales</a>
       <a href="#hospital" data-view="hospital">Hospital 2028</a>
       <a href="#ruta" data-view="ruta">Hoja de ruta</a>
       <a href="#modelos" data-view="modelos">Modelos 3D</a>
@@ -249,19 +282,41 @@ a { color: var(--accent); }
   <section class="view" id="v-periodos" data-view="periodos" hidden>
     <div class="intro">
       <div>
-        <div class="bubble"><p class="eyebrow">Marco comparativo por periodo de gobierno</p><h2>Seis gobiernos, las mismas brechas</h2></div>
+        <div class="bubble"><p class="eyebrow">Marco comparativo 2004–2027 · pesos constantes de 2026</p><h2>Seis gobiernos: la plata que no se volvió obra</h2></div>
         <p class="lede" data-t="periodos.lede"></p>
       </div>
-      <p class="stamp">Altura = desempeño normalizado 0–100 · columna hueca = sin dato verificable</p>
+      <p class="stamp" data-t="periodos.stamp"></p>
     </div>
     <div class="board">
-      <div class="stage" data-scene="periodos"><span class="stage-hint">Toca una columna o el nombre de un periodo</span></div>
+      <div class="stage" data-scene="periodos"><span class="stage-hint">Toca una pila o el nombre de un gobierno</span></div>
       <div class="folder">
-        <div class="card"><h3>Periodo</h3><div class="seg" role="group" aria-label="Periodo" data-slot="periodos.seg"></div></div>
+        <div class="card">
+          <h3>Ver</h3>
+          <div class="ctl">
+            <div class="seg" role="group" aria-label="Modo">
+              <button type="button" data-modo-periodos="plata" aria-pressed="true">La plata</button>
+              <button type="button" data-modo-periodos="indicadores" aria-pressed="false">Indicadores 0–100</button>
+            </div>
+            <div class="seg" role="group" aria-label="Gobierno" data-slot="periodos.seg"></div>
+          </div>
+        </div>
         <div class="card period-detail" data-slot="periodos.detail"></div>
       </div>
     </div>
-    <div class="card"><h3>Matriz de indicadores</h3><div class="tbl-wrap" data-slot="periodos.table"></div><p class="note" data-t="periodos.nota"></p></div>
+    <div class="card">
+      <h3>La cuenta de cada gobierno</h3>
+      <div class="legend" data-slot="periodos.leyenda"></div>
+      <div data-slot="periodos.cuenta"></div>
+      <p class="note" data-t="periodos.cuentanota"></p>
+    </div>
+    <div class="card" data-slot="periodos.pudo"></div>
+    <div class="card">
+      <h3>Panel anual 2004–2026: cómo cambió Yondó con cada gobierno</h3>
+      <div class="seg wrap-seg" role="group" aria-label="Área" data-slot="periodos.areas"></div>
+      <div class="sparks" data-slot="periodos.panel"></div>
+      <p class="note" data-t="periodos.panelnota"></p>
+    </div>
+    <div class="card"><h3>Matriz de indicadores normalizados</h3><div class="tbl-wrap" data-slot="periodos.table"></div><p class="note" data-t="periodos.nota"></p></div>
   </section>
 
   <!-- ======================= EMBUDO ======================= -->
@@ -340,6 +395,39 @@ a { color: var(--accent); }
     <div class="card"><h3>Presupuesto de inversión (COP 2026)</h3><div class="tbl-wrap" data-slot="microrred.budget"></div><p class="note" data-t="microrred.budgetnote"></p></div>
   </section>
 
+  <!-- ======================= SEDES REALES ======================= -->
+  <section class="view" id="v-ciudad" data-view="ciudad" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">Réplicas levantadas con satélite y Street View</p><h2>Las sedes reales, listas para el proyecto</h2></div>
+        <p class="lede" data-t="ciudad.lede"></p>
+      </div>
+      <p class="stamp" data-t="ciudad.stamp"></p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="ciudad"><span class="stage-hint">Toca una sede · arrastra para girar · rueda para acercar</span></div>
+      <div class="folder">
+        <div class="card">
+          <h3>Ver</h3>
+          <div class="ctl">
+            <div class="seg" role="group" aria-label="Estado">
+              <button type="button" data-modo-ciudad="hoy" aria-pressed="false">Hoy</button>
+              <button type="button" data-modo-ciudad="proyecto" aria-pressed="true">Con el proyecto</button>
+            </div>
+            <div class="row">
+              <label for="cd-flujos"><input id="cd-flujos" type="checkbox" checked> Red de datos al centro de control</label>
+              <label for="cd-etiquetas"><input id="cd-etiquetas" type="checkbox" checked> Etiquetas</label>
+            </div>
+          </div>
+        </div>
+        <div class="card"><h3>Sedes</h3><div class="seg wrap-seg" role="group" aria-label="Sede" data-slot="ciudad.lista"></div></div>
+        <div class="card"><div class="tiles" data-slot="ciudad.tiles"></div></div>
+        <div class="card" data-slot="ciudad.ficha"><p class="note">Toca una sede para ver lo que se le instala, las obras previas y cómo se verificó.</p></div>
+      </div>
+    </div>
+    <div class="card"><h3>Lo que cabe de verdad en cada cubierta</h3><div class="tbl-wrap" data-slot="ciudad.tabla"></div><p class="note" data-t="ciudad.metodo"></p></div>
+  </section>
+
   <!-- ======================= HOSPITAL ======================= -->
   <section class="view" id="v-hospital" data-view="hospital" hidden>
     <div class="intro">
@@ -403,7 +491,7 @@ a { color: var(--accent); }
       <div class="folder">
         <div class="card">
           <h3>Modelos del atlas</h3>
-          <div class="seg" role="group" aria-label="Modelo" data-slot="modelos.lista"></div>
+          <div class="seg wrap-seg" role="group" aria-label="Modelo" data-slot="modelos.lista"></div>
           <div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
             <label class="btn" for="md-file">Cargar GLB</label>
             <input id="md-file" type="file" accept=".glb,model/gltf-binary" hidden>
