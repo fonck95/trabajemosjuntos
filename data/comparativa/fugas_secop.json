@@ -35,14 +35,14 @@
   "adiciones": "SECOP I: valor total de adiciones y tiempo adicionado (días + 30 × meses) del conjunto f789-7hwg, unido por número de constancia (hecho registrado). SECOP II: adición en valor = valor mayor menos valor menor entre las versiones del contrato en SECOP Integrado (estimado); prórroga = días adicionados (jbjy-vk9h). \"pct_valor_con_dato\" dice qué parte del valor tiene esa información. \"mas_del_50pct\" cuenta contratos cuya adición supera la mitad del valor inicial.",
   "un_oferente": "Procesos competitivos de SECOP II (mínima cuantía, selección abreviada, licitación o concurso de méritos) en los que solo un proveedor presentó oferta (campo proveedores_unicos_con). Aparte (\"con_ofertas_...\") se cuentan las contrataciones directas o de régimen especial \"con ofertas\", donde una sola oferta es lo esperable. SECOP I no publica el número de oferentes en datos abiertos.",
   "convenios": "Contratos de la categoría \"Convenios / interadministrativos\", más los de la EDU de Medellín y los de administración delegada aunque cat() los ponga en otra categoría (por ejemplo, el de $11.696 millones con la EDU, que cat() clasifica como estudios por incluir diseños). Tipos: administración delegada, interadministrativo con la EDU, con otra entidad pública, con entidad sin ánimo de lucro (Decreto 092 de 2017) y otros.",
-  "concentracion": "Participación de los 10 mayores contratistas en el valor con contratista identificado e índice de Herfindahl-Hirschman (HHI = suma de los cuadrados de las participaciones en %, de 0 a 10.000; más de 2.500 se considera alta concentración). Se identifica al contratista por su documento (NIT sin dígito de verificación) o, si falta, por su nombre. \"hhi_sin_entidades_publicas\" quita a la EDU, Aguas y Aseo, el hospital y otras entidades públicas.",
+  "concentracion": "Participación de los 10 mayores contratistas en el valor con contratista identificado e índice de Herfindahl-Hirschman (HHI = suma de los cuadrados de las participaciones en %, de 0 a 10.000; como referencia, más de 1.500 indica concentración moderada y más de 2.500, alta, según las guías de competencia de EE. UU. de 2010). Se identifica al contratista por su documento (NIT sin dígito de verificación) o, si falta, por su nombre. \"hhi_sin_entidades_publicas\" quita a la EDU, Aguas y Aseo, el hospital y otras entidades públicas.",
   "fraccionamiento": "Contratos de la alcaldía, el concejo y la personería (no se aplica a Aguas y Aseo ni al hospital, que tienen régimen especial y umbrales propios), sin OPS, sin prestación de servicios con persona natural por contratación directa y sin convenios (todos se pueden contratar directamente sin importar el valor), y sin licitaciones ni concursos. Se agrupan los del mismo contratista con objeto parecido (Jaccard ≥ 0,50) firmados dentro de 30 días después del primero. Es indicio si cada contrato queda por debajo del umbral y la suma lo supera. Umbrales: mínima cuantía = 28 salarios mínimos; menor cuantía = 280 salarios mínimos (Ley 1150 de 2007, art. 2, y Ley 1474 de 2011, art. 94). El valor de 28 salarios sale de los datos: el mayor contrato de mínima cuantía de la alcaldía cada año ronda ese valor (ver \"umbral_minima_cuantia_verificacion\").",
   "transferencias_internas": "Contratos cuyo contratista es otra entidad de Yondó (sobre todo la alcaldía con Aguas y Aseo o con el hospital). En las filas \"Todas\" ese dinero cuenta dos veces: una cuando la alcaldía lo transfiere y otra cuando la empresa o el hospital lo contrata. Para un total sin doble conteo, reste \"transferencias_internas.valor\".",
   "valores": "Pesos corrientes de cada año, sin deflactar.",
   "personas": "No se publican nombres ni documentos de personas naturales contratistas. Se nombra al contratista cuando el nombre trae una forma jurídica o de entidad (S.A.S., Ltda., E.S.P., fundación, asociación, consorcio, unión temporal, municipio, etc.) o cuando SECOP lo registra con NIT de persona jurídica y el nombre es una sigla o una razón social evidente. Se quita lo que va entre paréntesis. En la duda, el nombre no se publica."
  },
  "limitaciones": [
-  "SECOP casi no tiene datos de Yondó antes de 2011: 51 contratos en 2007 y entre 39 y 207 por año en 2008–2011 (frente a más de 400 desde 2012). El periodo 2004–2007 no se puede auditar con estos datos y 2008–2011 está subregistrado.",
+  "SECOP casi no tiene datos de Yondó antes de 2011: 51 contratos en 2007 (ninguno de 2004–2006) y entre 39 y 207 por año en 2008–2011, frente a 448 o más por año en 2012–2025 (2026 va hasta octubre: 337). El periodo 2004–2007 no se puede auditar con estos datos y 2008–2011 está subregistrado.",
   "Aguas y Aseo no publicó contratos antes de 2014 (salvo uno en 2011) y casi nada después de 2022; el hospital solo publicó en 2013–2014 y desde 2021. Los vacíos no significan que no hubo contratos.",
   "Las adiciones solo constan para los contratos de SECOP I firmados desde 2017 (conjunto f789-7hwg) y para SECOP II. Para 2008–2016 no hay dato abierto de adiciones: un cero ahí es \"sin dato\", no \"sin adiciones\". Ver \"pct_valor_con_dato\".",
   "En SECOP I el valor publicado es el inicial (sin adiciones); en SECOP II es el de la última versión (con adiciones). Las cifras de valor total heredan esta diferencia del análisis publicado.",
@@ -376,14 +376,14 @@
    "ops_n": 91,
    "ops_formulacion_n": 7,
    "estudios_sin_obra_valor": 1346784306,
-   "estudios_sin_obra_valor_sin_mixtos": 1094564306,
+   "estudios_sin_obra_valor_sin_mixtos": 1346784306,
    "obras_sin_interventoria_valor": 1400000000,
    "delegada_obra_sin_interventoria_valor": 0,
    "un_oferente_n": 0,
    "competitivos_con_dato_oferentes": 0,
    "adm_delegada_valor": 0,
-   "top10_pct": 49.0,
-   "hhi": 428,
+   "top10_pct": 49.3,
+   "hhi": 442,
    "valor_adicionado": 0,
    "pct_valor_con_dato_adiciones": 0.0,
    "fraccionamiento_valor": 187350000
@@ -396,14 +396,14 @@
    "ops_n": 1862,
    "ops_formulacion_n": 53,
    "estudios_sin_obra_valor": 3660235013,
-   "estudios_sin_obra_valor_sin_mixtos": 2209176476,
+   "estudios_sin_obra_valor_sin_mixtos": 2226676476,
    "obras_sin_interventoria_valor": 0,
    "delegada_obra_sin_interventoria_valor": 0,
    "un_oferente_n": 0,
    "competitivos_con_dato_oferentes": 0,
    "adm_delegada_valor": 487200000,
-   "top10_pct": 44.4,
-   "hhi": 503,
+   "top10_pct": 45.2,
+   "hhi": 537,
    "valor_adicionado": 0,
    "pct_valor_con_dato_adiciones": 0.0,
    "fraccionamiento_valor": 514118740
@@ -416,14 +416,14 @@
    "ops_n": 1501,
    "ops_formulacion_n": 125,
    "estudios_sin_obra_valor": 2369039644,
-   "estudios_sin_obra_valor_sin_mixtos": 2219637677,
+   "estudios_sin_obra_valor_sin_mixtos": 2369039644,
    "obras_sin_interventoria_valor": 1498373889,
    "delegada_obra_sin_interventoria_valor": 0,
    "un_oferente_n": 0,
    "competitivos_con_dato_oferentes": 0,
    "adm_delegada_valor": 0,
-   "top10_pct": 46.5,
-   "hhi": 305,
+   "top10_pct": 47.0,
+   "hhi": 317,
    "valor_adicionado": 4087431586,
    "pct_valor_con_dato_adiciones": 62.4,
    "fraccionamiento_valor": 35910580
@@ -436,14 +436,14 @@
    "ops_n": 1251,
    "ops_formulacion_n": 172,
    "estudios_sin_obra_valor": 14130234046,
-   "estudios_sin_obra_valor_sin_mixtos": 2348630205,
+   "estudios_sin_obra_valor_sin_mixtos": 2434452920,
    "obras_sin_interventoria_valor": 9096594235,
    "delegada_obra_sin_interventoria_valor": 82393192336,
    "un_oferente_n": 8,
    "competitivos_con_dato_oferentes": 9,
    "adm_delegada_valor": 96115035788,
-   "top10_pct": 69.3,
-   "hhi": 1860,
+   "top10_pct": 70.6,
+   "hhi": 1959,
    "valor_adicionado": 6942902379,
    "pct_valor_con_dato_adiciones": 100.0,
    "fraccionamiento_valor": 112734000
@@ -940,8 +940,8 @@
     "sin_obra_n": 9,
     "sin_obra_valor": 578784306,
     "pct_valor_sin_obra": 36.7,
-    "sin_obra_mixtos_n": 3,
-    "sin_obra_valor_sin_mixtos": 362564306
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 578784306
    },
    "obras": {
     "n": 12,
@@ -1026,8 +1026,8 @@
     "sin_obra_n": 9,
     "sin_obra_valor": 578784306,
     "pct_valor_sin_obra": 36.7,
-    "sin_obra_mixtos_n": 3,
-    "sin_obra_valor_sin_mixtos": 362564306
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 578784306
    },
    "obras": {
     "n": 12,
@@ -1198,8 +1198,8 @@
     "sin_obra_n": 7,
     "sin_obra_valor": 429500000,
     "pct_valor_sin_obra": 95.6,
-    "sin_obra_mixtos_n": 1,
-    "sin_obra_valor_sin_mixtos": 399500000
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 429500000
    },
    "obras": {
     "n": 23,
@@ -1284,8 +1284,8 @@
     "sin_obra_n": 7,
     "sin_obra_valor": 429500000,
     "pct_valor_sin_obra": 95.6,
-    "sin_obra_mixtos_n": 1,
-    "sin_obra_valor_sin_mixtos": 399500000
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 429500000
    },
    "obras": {
     "n": 23,
@@ -1456,8 +1456,8 @@
     "sin_obra_n": 5,
     "sin_obra_valor": 138500000,
     "pct_valor_sin_obra": 35.2,
-    "sin_obra_mixtos_n": 1,
-    "sin_obra_valor_sin_mixtos": 132500000
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 138500000
    },
    "obras": {
     "n": 31,
@@ -1542,8 +1542,8 @@
     "sin_obra_n": 5,
     "sin_obra_valor": 138500000,
     "pct_valor_sin_obra": 35.2,
-    "sin_obra_mixtos_n": 1,
-    "sin_obra_valor_sin_mixtos": 132500000
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 138500000
    },
    "obras": {
     "n": 30,
@@ -1800,8 +1800,8 @@
     "sin_obra_n": 9,
     "sin_obra_valor": 1604862737,
     "pct_valor_sin_obra": 98.7,
-    "sin_obra_mixtos_n": 3,
-    "sin_obra_valor_sin_mixtos": 165804200
+    "sin_obra_mixtos_n": 2,
+    "sin_obra_valor_sin_mixtos": 171304200
    },
    "obras": {
     "n": 33,
@@ -1886,8 +1886,8 @@
     "sin_obra_n": 9,
     "sin_obra_valor": 1604862737,
     "pct_valor_sin_obra": 98.7,
-    "sin_obra_mixtos_n": 3,
-    "sin_obra_valor_sin_mixtos": 165804200
+    "sin_obra_mixtos_n": 2,
+    "sin_obra_valor_sin_mixtos": 171304200
    },
    "obras": {
     "n": 33,
@@ -2230,8 +2230,8 @@
     "sin_obra_n": 10,
     "sin_obra_valor": 756632992,
     "pct_valor_sin_obra": 80.5,
-    "sin_obra_mixtos_n": 1,
-    "sin_obra_valor_sin_mixtos": 744632992
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 756632992
    },
    "obras": {
     "n": 55,
@@ -2316,8 +2316,8 @@
     "sin_obra_n": 7,
     "sin_obra_valor": 646976676,
     "pct_valor_sin_obra": 100.0,
-    "sin_obra_mixtos_n": 1,
-    "sin_obra_valor_sin_mixtos": 634976676
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 646976676
    },
    "obras": {
     "n": 39,
@@ -3004,8 +3004,8 @@
     "sin_obra_n": 16,
     "sin_obra_valor": 489767516,
     "pct_valor_sin_obra": 83.7,
-    "sin_obra_mixtos_n": 1,
-    "sin_obra_valor_sin_mixtos": 475767516
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 489767516
    },
    "obras": {
     "n": 34,
@@ -3090,8 +3090,8 @@
     "sin_obra_n": 9,
     "sin_obra_valor": 437134316,
     "pct_valor_sin_obra": 100.0,
-    "sin_obra_mixtos_n": 1,
-    "sin_obra_valor_sin_mixtos": 423134316
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 437134316
    },
    "obras": {
     "n": 27,
@@ -3692,8 +3692,8 @@
     "sin_obra_n": 9,
     "sin_obra_valor": 742755440,
     "pct_valor_sin_obra": 37.5,
-    "sin_obra_mixtos_n": 3,
-    "sin_obra_valor_sin_mixtos": 703555440
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 742755440
    },
    "obras": {
     "n": 20,
@@ -3778,8 +3778,8 @@
     "sin_obra_n": 7,
     "sin_obra_valor": 657300000,
     "pct_valor_sin_obra": 100.0,
-    "sin_obra_mixtos_n": 3,
-    "sin_obra_valor_sin_mixtos": 618100000
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 657300000
    },
    "obras": {
     "n": 17,
@@ -4036,8 +4036,8 @@
     "sin_obra_n": 8,
     "sin_obra_valor": 1394805339,
     "pct_valor_sin_obra": 62.0,
-    "sin_obra_mixtos_n": 1,
-    "sin_obra_valor_sin_mixtos": 1298603372
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 1394805339
    },
    "obras": {
     "n": 36,
@@ -4122,8 +4122,8 @@
     "sin_obra_n": 6,
     "sin_obra_valor": 1254605328,
     "pct_valor_sin_obra": 59.4,
-    "sin_obra_mixtos_n": 1,
-    "sin_obra_valor_sin_mixtos": 1158403361
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 1254605328
    },
    "obras": {
     "n": 32,
@@ -4380,8 +4380,8 @@
     "sin_obra_n": 15,
     "sin_obra_valor": 668848889,
     "pct_valor_sin_obra": 96.5,
-    "sin_obra_mixtos_n": 5,
-    "sin_obra_valor_sin_mixtos": 583026174
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 668848889
    },
    "obras": {
     "n": 9,
@@ -4466,8 +4466,8 @@
     "sin_obra_n": 8,
     "sin_obra_valor": 466822715,
     "pct_valor_sin_obra": 95.1,
-    "sin_obra_mixtos_n": 5,
-    "sin_obra_valor_sin_mixtos": 381000000
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 466822715
    },
    "obras": {
     "n": 6,
@@ -7492,8 +7492,8 @@
     "sin_obra_n": 22,
     "sin_obra_valor": 1346784306,
     "pct_valor_sin_obra": 51.4,
-    "sin_obra_mixtos_n": 5,
-    "sin_obra_valor_sin_mixtos": 1094564306
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 1346784306
    },
    "obras": {
     "n": 75,
@@ -7578,8 +7578,8 @@
     "sin_obra_n": 22,
     "sin_obra_valor": 1346784306,
     "pct_valor_sin_obra": 51.4,
-    "sin_obra_mixtos_n": 5,
-    "sin_obra_valor_sin_mixtos": 1094564306
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 1346784306
    },
    "obras": {
     "n": 74,
@@ -7624,9 +7624,9 @@
     "valor": 187350000
    },
    "concentracion": {
-    "contratistas_distintos": 289,
-    "top10_pct": 49.0,
-    "hhi": 428,
+    "contratistas_distintos": 287,
+    "top10_pct": 49.3,
+    "hhi": 442,
     "hhi_sin_entidades_publicas": 299,
     "pct_valor_sin_contratista_identificado": 0.0
    }
@@ -7857,8 +7857,8 @@
     "sin_obra_n": 32,
     "sin_obra_valor": 3845897129,
     "pct_valor_sin_obra": 92.7,
-    "sin_obra_mixtos_n": 4,
-    "sin_obra_valor_sin_mixtos": 2394838592
+    "sin_obra_mixtos_n": 2,
+    "sin_obra_valor_sin_mixtos": 2412338592
    },
    "obras": {
     "n": 200,
@@ -7943,8 +7943,8 @@
     "sin_obra_n": 22,
     "sin_obra_valor": 3660235013,
     "pct_valor_sin_obra": 98.0,
-    "sin_obra_mixtos_n": 4,
-    "sin_obra_valor_sin_mixtos": 2209176476
+    "sin_obra_mixtos_n": 2,
+    "sin_obra_valor_sin_mixtos": 2226676476
    },
    "obras": {
     "n": 165,
@@ -7989,10 +7989,10 @@
     "valor": 514118740
    },
    "concentracion": {
-    "contratistas_distintos": 1049,
-    "top10_pct": 44.4,
-    "hhi": 503,
-    "hhi_sin_entidades_publicas": 172,
+    "contratistas_distintos": 1048,
+    "top10_pct": 45.2,
+    "hhi": 537,
+    "hhi_sin_entidades_publicas": 175,
     "pct_valor_sin_contratista_identificado": 0.0
    }
   },
@@ -8315,8 +8315,8 @@
     "sin_obra_n": 39,
     "sin_obra_valor": 2736738235,
     "pct_valor_sin_obra": 55.6,
-    "sin_obra_mixtos_n": 5,
-    "sin_obra_valor_sin_mixtos": 2587336268
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 2736738235
    },
    "obras": {
     "n": 125,
@@ -8401,8 +8401,8 @@
     "sin_obra_n": 23,
     "sin_obra_valor": 2369039644,
     "pct_valor_sin_obra": 73.5,
-    "sin_obra_mixtos_n": 5,
-    "sin_obra_valor_sin_mixtos": 2219637677
+    "sin_obra_mixtos_n": 0,
+    "sin_obra_valor_sin_mixtos": 2369039644
    },
    "obras": {
     "n": 106,
@@ -8447,9 +8447,9 @@
     "valor": 35910580
    },
    "concentracion": {
-    "contratistas_distintos": 780,
-    "top10_pct": 46.5,
-    "hhi": 305,
+    "contratistas_distintos": 779,
+    "top10_pct": 47.0,
+    "hhi": 317,
     "hhi_sin_entidades_publicas": 287,
     "pct_valor_sin_contratista_identificado": 0.0
    }
@@ -8680,8 +8680,8 @@
     "sin_obra_n": 27,
     "sin_obra_valor": 14609334106,
     "pct_valor_sin_obra": 98.4,
-    "sin_obra_mixtos_n": 6,
-    "sin_obra_valor_sin_mixtos": 2827730265
+    "sin_obra_mixtos_n": 1,
+    "sin_obra_valor_sin_mixtos": 2913552980
    },
    "obras": {
     "n": 48,
@@ -8766,8 +8766,8 @@
     "sin_obra_n": 15,
     "sin_obra_valor": 14130234046,
     "pct_valor_sin_obra": 98.3,
-    "sin_obra_mixtos_n": 6,
-    "sin_obra_valor_sin_mixtos": 2348630205
+    "sin_obra_mixtos_n": 1,
+    "sin_obra_valor_sin_mixtos": 2434452920
    },
    "obras": {
     "n": 30,
@@ -8812,10 +8812,10 @@
     "valor": 112734000
    },
    "concentracion": {
-    "contratistas_distintos": 713,
-    "top10_pct": 69.3,
-    "hhi": 1860,
-    "hhi_sin_entidades_publicas": 200,
+    "contratistas_distintos": 711,
+    "top10_pct": 70.6,
+    "hhi": 1959,
+    "hhi_sin_entidades_publicas": 199,
     "pct_valor_sin_contratista_identificado": 0.0
    }
   },
@@ -8998,10 +8998,10 @@
     "valor": 0
    },
    "concentracion": {
-    "contratistas_distintos": 125,
+    "contratistas_distintos": 126,
     "top10_pct": 33.5,
     "hhi": 214,
-    "hhi_sin_entidades_publicas": 202,
+    "hhi_sin_entidades_publicas": 201,
     "pct_valor_sin_contratista_identificado": 0.0
    }
   },
@@ -9563,9 +9563,9 @@
    "anio": 2021,
    "valor": 11695781126,
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACIÒN DELEGADA PARA DISEÑOS ARQUITECTONICOS Y TÈCNICOS ASÌ COMO LA ADECUACIÒN MANTENIMIENTO Y CONSTRUCCIÒN DE URBANISMO VÌAS Y ESCENARIOS DEPORTIVOS EN EL MUNICIPIO DE YONDÒ- DEPARTAMENTO DE ANTIOQUIA.",
-   "contratista": "EMPRESA DE DESARROLLO URBANO DE MEDELLÌN - EDU",
+   "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
    "similitud_maxima_con_una_obra": 0.1,
-   "nota": "El mismo contrato incluye obra (diseño y construcción). Que no aparezca una obra posterior no significa que no se construyó; hay que revisar las actas de la EDU.",
+   "nota": "El mismo contrato incluye obra (diseño y construcción). Que no aparezca una obra posterior no significa que no se construyó; hay que revisar las actas de recibo.",
    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-12-12574245"
   },
   {
@@ -9573,7 +9573,7 @@
    "anio": 2021,
    "valor": 1622638821,
    "objeto": "CONTRATO INTERADMINISTRATIVO DE CONSULTORIA PARA LA EJECUCION DE ESTUDIOS Y DISENOS FASE LLL DESTINADOS A LA INTERVENCION DE LA VIA LA YE- YONDO CODIGO 62N29-1 EN EL DEPARTAMENTO DE ANTIOQUIA.",
-   "contratista": "EMPRESA DE DESARROLLO URBANO- EDU",
+   "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
    "similitud_maxima_con_una_obra": 0.09,
    "nota": null,
    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-12-12074873"
@@ -9583,7 +9583,7 @@
    "anio": 2013,
    "valor": 1159095600,
    "objeto": "AUNAR ESFUERZOS EN LA REALIZACION DE ESTUDIOS Y DISENOS Y REDISENO DE LOS ACUEDUCTOS RURALES DEL MUNICIPIO DE YONDO",
-   "contratista": "EMPRESA SERVICIOS PUBLICOS DOMICILIARIOS",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "similitud_maxima_con_una_obra": 0.12,
    "nota": null,
    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-12-2536076"
@@ -9603,9 +9603,9 @@
    "anio": 2012,
    "valor": 833558537,
    "objeto": "AUNAR ESFUERZOZ PARA ELABORAR ESTUDIOS Y DISENOS INTERVENTORIAS Y CONSTRUCCIONES DE OBRAS DE LINEAS DE ALCANTARILLADO DE AGUA POTABLE ZONA URBANA Y RURAL",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "similitud_maxima_con_una_obra": 0.13,
-   "nota": "El mismo contrato incluye obra (diseño y construcción). Que no aparezca una obra posterior no significa que no se construyó; hay que revisar las actas de la EDU.",
+   "nota": "El mismo contrato incluye obra (diseño y construcción). Que no aparezca una obra posterior no significa que no se construyó; hay que revisar las actas de recibo.",
    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=13-12-1765393"
   },
   {
@@ -9613,9 +9613,9 @@
    "anio": 2012,
    "valor": 600000000,
    "objeto": "CONVENIO PARA LOS ESTUDIOSDISENOS DE LINEAS DE ALCANTARILADO Y AGUA POTABLE CONSTRUCCION DE LAS OBRAS DE GARANTICEN EN LA ENTREGA EN SU PARTE FINAL DE LAS AGUAS LLUVIAS AL COLECTOR DEL BARRIO EL PARAISO Y CONSTRUCCION DE UNA FASE DEL SISTEMA DE ACUEDUCTO DE LA VEREDA K3 HASTA LA VEREDA K-5 Y ADECUA…",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "similitud_maxima_con_una_obra": 0.1,
-   "nota": "El mismo contrato incluye obra (diseño y construcción). Que no aparezca una obra posterior no significa que no se construyó; hay que revisar las actas de la EDU.",
+   "nota": "El mismo contrato incluye obra (diseño y construcción). Que no aparezca una obra posterior no significa que no se construyó; hay que revisar las actas de recibo.",
    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=12-12-1061047"
   },
   {
@@ -9663,7 +9663,7 @@
    "anio": 2008,
    "valor": 200000000,
    "objeto": "APOYO INSTERINSTITUCIONAL Y FINANCIERO PARA EL ESTUDIP. DISENO Y DIAGNOSTICO DEL ACUEDUCTO DEL MUNICIPIO DE YONDO ANTIOQUIA.",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "similitud_maxima_con_una_obra": 0.11,
    "nota": null,
    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=08-12-136837"
@@ -9673,7 +9673,7 @@
    "anio": 2014,
    "valor": 183168860,
    "objeto": "AUNAR ESFUERZOS PARA REALIZAR ESTUDIOS DISENOS Y LIMPIEZA DE LAS REDES DE ALCANTARILLADO",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS DE ACUEDUCTO ALCANTARILLADO Y ASEO",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "similitud_maxima_con_una_obra": 0.1,
    "nota": null,
    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-12-3065094"
@@ -9718,7 +9718,7 @@
    "tipo": "Administración delegada (convenio)",
    "modalidad": "Contratación directa",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACIÒN DELEGADA PARA LA ADECUACIÒN MANTENIMIENTO Y CONSTRUCCIÒN DE URBANISMO VÌAS Y ESCENARIOS DEPORTIVOS EN EL MUNICIPIO DE YONDÒ- DEPARTAMENTO DE ANTIOQUIA ACORDES AL PLAN DE DESARROLLO ESPERANZA P…",
-   "contratista": "EMPRESA DE DESARROLLO URBANO DE MEDELLÌN - EDU",
+   "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
    "interventoria_mas_parecida": null,
    "nota": "La entidad delegada (EDU, Aguas y Aseo u otra) suele contratar la interventoría por su cuenta; hay que pedirla en su expediente.",
    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-12-12395865"
@@ -9731,7 +9731,7 @@
    "tipo": "Administración delegada (convenio)",
    "modalidad": "Contratación directa",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACION DELEGADA PARA OBRAS PARA LA EJECUCION DE LOS PROYECTOS CON BPIN 2022003050034 CUYO NOMBRE ES CONSTRUCCION DE VIVIENDA NUEVA RURAL EN SITIO PROPIO EN EL MUNICIPIO DE YONDO ANTIOQUIA Y 202200305…",
-   "contratista": "EMPRESA DE DESARROLLO URBANO- E.D.U",
+   "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
    "interventoria_mas_parecida": null,
    "nota": "La entidad delegada (EDU, Aguas y Aseo u otra) suele contratar la interventoría por su cuenta; hay que pedirla en su expediente.",
    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=23-12-13761724"
@@ -9744,7 +9744,7 @@
    "tipo": "Administración delegada (convenio)",
    "modalidad": "Contratación directa",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACIÒN DELEGADA PARA DISEÑOS ARQUITECTONICOS Y TÈCNICOS ASÌ COMO LA ADECUACIÒN MANTENIMIENTO Y CONSTRUCCIÒN DE URBANISMO VÌAS Y ESCENARIOS DEPORTIVOS EN EL MUNICIPIO DE YONDÒ- DEPARTAMENTO DE ANTIOQU…",
-   "contratista": "EMPRESA DE DESARROLLO URBANO DE MEDELLÌN - EDU",
+   "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
    "interventoria_mas_parecida": null,
    "nota": "La entidad delegada (EDU, Aguas y Aseo u otra) suele contratar la interventoría por su cuenta; hay que pedirla en su expediente.",
    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-12-12574245"
@@ -9775,7 +9775,7 @@
    "tipo": "Administración delegada (convenio)",
    "modalidad": "Contratación directa",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACION DELEGADA PARA LA ADECUACION MANTENIMIENTO Y CONSTRUCCION DE VIAS URBANISMO Y ESPACIOS PUBLICOS EN EL MUNICIPIO DE YONDO -DEPARTAMENTO DE ANTIOQUIA.",
-   "contratista": "EMPRESA DE DESARROLLO URBANO- E.D.U",
+   "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
    "interventoria_mas_parecida": {
     "anio": 2023,
     "valor": 27555410,
@@ -9925,7 +9925,7 @@
     "prorroga_dias": 15,
     "categoria": "Convenios / interadministrativos",
     "modalidad": "Contratación directa",
-    "contratista": "EMPRESA DE DESARROLLO URBANO DE MEDELLÌN - EDU",
+    "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
     "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACIÒN DELEGADA PARA LA ADECUACIÒN MANTENIMIENTO Y CONSTRUCCIÒN DE URBANISMO VÌAS Y ESCENARIOS DEPORTIVOS EN EL MUNICIPIO DE YONDÒ- DEPARTAMENTO DE ANTIOQUIA A…",
     "fuente": "SECOP I (f789-7hwg)",
     "pasa_50pct": false,
@@ -9985,7 +9985,7 @@
     "prorroga_dias": 0,
     "categoria": "Convenios / interadministrativos",
     "modalidad": "Contratación directa",
-    "contratista": "AGUAS Y ASEO DE YONDO S.A. E.S.P.",
+    "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
     "objeto": "REALIZACIÓN DE ACCIONES PARA EL MANTENIMIENTO Y MEJORAMIENTO DE ECOSISTEMAS ACTIVIDADES PARA EL CUMPLIMIENTO Y MEJORAMIENTO DE LOS PROCESOS DE LA SECRETARÍA AGROPECUARIA Y MEDIO AMBIENTE EN LA EJECUC…",
     "fuente": "SECOP II (versiones en rpmr-utcd)",
     "pasa_50pct": false,
@@ -10015,7 +10015,7 @@
     "prorroga_dias": 0,
     "categoria": "Convenios / interadministrativos",
     "modalidad": "Contratación directa",
-    "contratista": "AGUAS Y ASEO DE YONDO S.A E.S.P",
+    "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
     "objeto": "AUNAR ESFUERZOS PARA LOGRAR EL FORTALECIMIENTO EN LA PRESTACION DE LOS SERVICIOS PUBLICOS DOMICILIARIOS DE ACUEDUCTO ALCANTARILLADO Y ASEO EN EL MUNICIPIO DE YONDO ANTIOQUIA EN LA VIGENCIA 2019",
     "fuente": "SECOP I (f789-7hwg)",
     "pasa_50pct": false,
@@ -10045,7 +10045,7 @@
     "prorroga_dias": 68,
     "categoria": "Convenios / interadministrativos",
     "modalidad": "Contratación directa",
-    "contratista": "EMPRESA DE AGUAS Y ASEO DE YONDO S.A.S.E.S.P",
+    "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
     "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACION DELEGADA PARA LA EJECUCION Y DESARROLLO DEL PROYECTO:SERVICIO DE RESTAURACION Y RECUPERACION DE ECOSISTEMAS EN EL MUNICIPIO DE YONDO ANTIOQUIA.",
     "fuente": "SECOP I (f789-7hwg)",
     "pasa_50pct": false,
@@ -10075,7 +10075,7 @@
     "prorroga_dias": 13,
     "categoria": "Convenios / interadministrativos",
     "modalidad": "Contratación directa",
-    "contratista": "AGUAS Y ASEO DE YONDO S.A. E.S.P.",
+    "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
     "objeto": "AUNAR ESFUERZOS PARA EL FORTALECIMIENTO DE LOS SERVICIOS PÚBLICOS DOMICILIARIOS MEDIANTE EL APOYO A LAS ACTIVIDADES DE LA SECRETARÍA DE INFRAESTRUCTURA EN LA EJECUCIÓN DEL PROYECTO: 'FORTALECIMIENTO…",
     "fuente": "SECOP II (versiones en rpmr-utcd)",
     "pasa_50pct": false,
@@ -10120,7 +10120,7 @@
     "prorroga_dias": 120,
     "categoria": "Convenios / interadministrativos",
     "modalidad": "Contratación directa",
-    "contratista": "AGUAS Y ASEO DE YONDO S.A",
+    "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
     "objeto": "AUNAR ESFUERZOS PARA LOGRAR EL FORTALECIMIENTO EN LA PRESTACION DE LOS SERVICIOS PUBLICOS DOMICILIARIOS DE ACUEDUCTO ALCANTARILLADO Y ASEO",
     "fuente": "SECOP I (f789-7hwg)",
     "pasa_50pct": false,
@@ -10165,7 +10165,7 @@
     "prorroga_dias": 0,
     "categoria": "Obra",
     "modalidad": "Licitación pública",
-    "contratista": "UNION TEMPORAL  UT PARQUES 2019",
+    "contratista": "UNION TEMPORAL UT PARQUES 2019",
     "objeto": "OBRA PUBLICA PARA LA ADECUACION Y EL MEJORAMIENTO DEL PARQUE CENTRAL DEL MUNICIPIO DE YONDO ANTIOQUIA",
     "fuente": "SECOP I (f789-7hwg)",
     "pasa_50pct": false,
@@ -10259,7 +10259,7 @@
    "hhi_sin_entidades_publicas": 794,
    "top10": [
     {
-     "contratista": "LABORATORIO DE SUELOS PAVIMENTOS  Y CONCRETOS",
+     "contratista": "LABORATORIO DE SUELOS PAVIMENTOS Y CONCRETOS",
      "contratos": 1,
      "valor": 913872751,
      "pct": 18.4
@@ -10376,17 +10376,17 @@
   {
    "periodo": "2008-2011",
    "entidad": "Alcaldía",
-   "contratistas_distintos": 289,
+   "contratistas_distintos": 287,
    "pct_valor_sin_contratista_identificado": 0.0,
-   "top10_pct": 49.0,
-   "hhi": 428,
+   "top10_pct": 49.3,
+   "hhi": 442,
    "hhi_sin_entidades_publicas": 299,
    "top10": [
     {
-     "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS",
-     "contratos": 27,
-     "valor": 19059866756,
-     "pct": 14.5
+     "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
+     "contratos": 29,
+     "valor": 19808785146,
+     "pct": 15.1
     },
     {
      "contratista": "SOCIEDAD VEGA MENESES",
@@ -10395,10 +10395,10 @@
      "pct": 9.8
     },
     {
-     "contratista": "EMPRESA SOCIAL DEL ESTADO HOSPITAL HECTOR ABAD GOMEZ",
-     "contratos": 21,
-     "valor": 7769744334,
-     "pct": 5.9
+     "contratista": "E.S.E. Hospital Héctor Abad Gómez de Yondó",
+     "contratos": 18,
+     "valor": 7437594476,
+     "pct": 5.7
     },
     {
      "contratista": "UNION TEMPORAL OBRAS SAN MIGUEL DEL TIGRE",
@@ -10419,13 +10419,13 @@
      "pct": 3.1
     },
     {
-     "contratista": "INFRAESTRUCTURA LTDA",
+     "contratista": "ACEROS Y CONCRETOS S.A",
      "contratos": 1,
      "valor": 3000000000,
      "pct": 2.3
     },
     {
-     "contratista": "ACEROS Y CONCRETOS S.A",
+     "contratista": "INFRAESTRUCTURA LTDA",
      "contratos": 1,
      "valor": 3000000000,
      "pct": 2.3
@@ -10499,17 +10499,17 @@
   {
    "periodo": "2012-2015",
    "entidad": "Alcaldía",
-   "contratistas_distintos": 1049,
+   "contratistas_distintos": 1048,
    "pct_valor_sin_contratista_identificado": 0.0,
-   "top10_pct": 44.4,
-   "hhi": 503,
-   "hhi_sin_entidades_publicas": 172,
+   "top10_pct": 45.2,
+   "hhi": 537,
+   "hhi_sin_entidades_publicas": 175,
    "top10": [
     {
-     "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS",
-     "contratos": 32,
-     "valor": 26354914228,
-     "pct": 19.9
+     "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
+     "contratos": 33,
+     "valor": 27514009828,
+     "pct": 20.8
     },
     {
      "contratista": "FUSBA",
@@ -10783,17 +10783,17 @@
   {
    "periodo": "2016-2019",
    "entidad": "Alcaldía",
-   "contratistas_distintos": 780,
+   "contratistas_distintos": 779,
    "pct_valor_sin_contratista_identificado": 0.0,
-   "top10_pct": 46.5,
-   "hhi": 305,
+   "top10_pct": 47.0,
+   "hhi": 317,
    "hhi_sin_entidades_publicas": 287,
    "top10": [
     {
-     "contratista": "AGUAS Y ASEO DE YONDO S.A E.S.P",
-     "contratos": 19,
-     "valor": 12738534710,
-     "pct": 8.8
+     "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
+     "contratos": 21,
+     "valor": 13738199778,
+     "pct": 9.5
     },
     {
      "contratista": "CONSORCIO MD",
@@ -10832,15 +10832,9 @@
      "pct": 3.0
     },
     {
-     "contratista": "UNION TEMPORAL  UT PARQUES 2019",
+     "contratista": "UNION TEMPORAL UT PARQUES 2019",
      "contratos": 1,
      "valor": 2918467075,
-     "pct": 2.0
-    },
-    {
-     "contratista": "ESE HOSPITAL HECTOR ABAD GOMEZ",
-     "contratos": 11,
-     "valor": 2906170850,
      "pct": 2.0
     },
     {
@@ -10848,6 +10842,12 @@
      "contratos": 52,
      "valor": 2852559007,
      "pct": 2.0
+    },
+    {
+     "contratista": "E.S.E. Hospital Héctor Abad Gómez de Yondó",
+     "contratos": 10,
+     "valor": 2726334686,
+     "pct": 1.9
     }
    ]
   },
@@ -10996,29 +10996,23 @@
   {
    "periodo": "2020-2023",
    "entidad": "Alcaldía",
-   "contratistas_distintos": 713,
+   "contratistas_distintos": 711,
    "pct_valor_sin_contratista_identificado": 0.0,
-   "top10_pct": 69.3,
-   "hhi": 1860,
-   "hhi_sin_entidades_publicas": 200,
+   "top10_pct": 70.6,
+   "hhi": 1959,
+   "hhi_sin_entidades_publicas": 199,
    "top10": [
     {
-     "contratista": "EMPRESA DE DESARROLLO URBANO DE MEDELLÌN - EDU",
+     "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
      "contratos": 5,
      "valor": 84015831157,
      "pct": 40.4
     },
     {
-     "contratista": "AGUAS Y ASEO DE YONDO S.A. E.S.P",
-     "contratos": 15,
-     "valor": 27652896703,
-     "pct": 13.3
-    },
-    {
-     "contratista": "EMPRESA DE AGUAS Y ASEO DE YONDO  S.A. E.SP",
-     "contratos": 3,
-     "valor": 7654614517,
-     "pct": 3.7
+     "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
+     "contratos": 18,
+     "valor": 35307511220,
+     "pct": 17.0
     },
     {
      "contratista": "SERVICIOS TECNICOS INDUSTRIALES PETROLEROS S..A.S",
@@ -11061,6 +11055,12 @@
      "contratos": 3,
      "valor": 2840577000,
      "pct": 1.4
+    },
+    {
+     "contratista": "E.S.E. Hospital Héctor Abad Gómez de Yondó",
+     "contratos": 13,
+     "valor": 2658142955,
+     "pct": 1.3
     }
    ]
   },
@@ -11138,11 +11138,11 @@
   {
    "periodo": "2020-2023",
    "entidad": "Hospital",
-   "contratistas_distintos": 125,
+   "contratistas_distintos": 126,
    "pct_valor_sin_contratista_identificado": 0.0,
    "top10_pct": 33.5,
    "hhi": 214,
-   "hhi_sin_entidades_publicas": 202,
+   "hhi_sin_entidades_publicas": 201,
    "top10": [
     {
      "contratista": "Persona natural (nombre no publicado)",
@@ -11287,7 +11287,7 @@
    "hhi_sin_entidades_publicas": 779,
    "top10": [
     {
-     "contratista": "AGUAS Y ASEO DE YONDO S.A. E.S.P.",
+     "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
      "contratos": 10,
      "valor": 15837903259,
      "pct": 18.1
@@ -11317,7 +11317,7 @@
      "pct": 3.8
     },
     {
-     "contratista": "EMPRESA SOCIAL DEL ESTADO HOSPITAL HECTOR ABAD GOMEZ",
+     "contratista": "E.S.E. Hospital Héctor Abad Gómez de Yondó",
      "contratos": 9,
      "valor": 2671049670,
      "pct": 3.1
@@ -11500,7 +11500,7 @@
      "pct": 8.8
     },
     {
-     "contratista": "LOGISTICA INTEGRAL DE EVENTOS  SAS",
+     "contratista": "LOGISTICA INTEGRAL DE EVENTOS SAS",
      "contratos": 1,
      "valor": 23872594,
      "pct": 7.8
@@ -11927,7 +11927,7 @@
    "fecha": "2008-10-24",
    "valor": 1787829661,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "APOYO INTERINSTITUCIONAL Y FINANCIERO PARA LA CONSTRUCCION DE LA RED DE DISTRIBUCION Y ACOMETIDAS EN LAS VEREDAS LA CONDOR PUERTO CASABEM PIERTO TOMAS Y LA X-10 EN EL MUNICIPIO DE YONDO ANTIOQUIA.",
    "fuente": "SECOPI",
    "adicion_valor": null,
@@ -11944,7 +11944,7 @@
    "fecha": "2009-02-16",
    "valor": 1999449851,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "APOYO INTERISTITUCIONAL Y FINANCIERO DEL SANEAMIENTO BASICO EN LAS VEREDAS LAS AMERICAS LAGUNA DEL MIEDO LA REPRESA KILOMETRO CINCO LA CONDOR EN EL MUNICIPIO DE YONDO ANTIOQUIA",
    "fuente": "SECOPI",
    "adicion_valor": null,
@@ -11961,7 +11961,7 @@
    "fecha": "2009-02-16",
    "valor": 1000000000,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICIALIARIOS DE YONDO",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "APOYO INTERISTITUCIONAL Y FINANCIERO DEL SANEAMIENTO BASICO EN LAS VEREDAS LAS AMERICAS LAGUNA DEL MIEDO LA REPRESA KILOMETRO CINCO LA CONDOR EN EL MUNICIPIO DE YONDO ANTIOQUIA",
    "fuente": "SECOPI",
    "adicion_valor": null,
@@ -11978,7 +11978,7 @@
    "fecha": "2009-02-18",
    "valor": 2542799000,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONSTRUCCION AMPLIACION Y REHABILITACION DEL SISTEMA DE ALCANTARILLADO PARA MANEJO Y CONTROL DE AGUAS RESIDUALES Y AGUAS LLUVIAS EN EL MUNICIPIO DE YONDO ANTIOQUIA",
    "fuente": "SECOPI",
    "adicion_valor": null,
@@ -11995,7 +11995,7 @@
    "fecha": "2009-09-02",
    "valor": 1184189831,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS DE ACUEDUCTO ALCANTARILLADO Y ASEO DEL MUNICIP",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "APOYO PARA EL MEJORAMIENTO EN LA CONDUCCION Y TRANSPORTE DE AGUA POTABLE CONSTRUCCION Y REHABILITACION DEL SISTEMA DE ALCANTARILLADO EN EL MUNICIPIO DE YONDO ANTIOQUIA",
    "fuente": "SECOPI",
    "adicion_valor": null,
@@ -12012,7 +12012,7 @@
    "fecha": "2009-11-09",
    "valor": 2226992048,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS DE ACUEDUCTO ALCANTARILLADO Y ASEO DEL MUNICIP",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "APOYO ES LA CONSTRUCCION DE OBRAS COMPLEMENTARIAS PARA LA OPTIMIZACION DEL ACUEDUCTO MUNICIPAL SISTEMA VEREDAS EN EL MUNICIPIO DE YONDO",
    "fuente": "SECOPI",
    "adicion_valor": null,
@@ -12029,7 +12029,7 @@
    "fecha": "2009-11-09",
    "valor": 2487000000,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS DE ACUEDUCTO ALCANTARILLADO Y ASEO DEL MUNICIP",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "APOYO ES LA CONSTRUCCION DEL ALCANTARILLADO PLUVIAL Y REPOSISCION DE ALCANTARILLADO SANITARIO DEL CASCO URBANO DEL MUNICIPIO DE YONDO ANTIOQUIA",
    "fuente": "SECOPI",
    "adicion_valor": null,
@@ -12046,7 +12046,7 @@
    "fecha": "2012-05-08",
    "valor": 1225170087,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "AUNAR ESFUERZOS PARA LOGRAR EL FORTALECIMIENTO EN LA PRESTACION DE SERVICIOS PUBLICOS DOMICILIARIOS DE ACUEDUCTO ALCANTARILLADO Y ASEO EN EL MUNICIPIO DE YONDO",
    "fuente": "SECOPI",
    "adicion_valor": null,
@@ -12063,7 +12063,7 @@
    "fecha": "2013-04-22",
    "valor": 3494068883,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "AUNAR ESFUERZOS EN LA CONSTRUCCION E INTEVENTORIA DEL SISTEMA DE ALCANTARILLADO AGUA POTABLE Y ADECUACION DE VIAS DE ACCESO A SECTORES DEL PRADO EN YONDO",
    "fuente": "SECOPI",
    "adicion_valor": null,
@@ -12080,7 +12080,7 @@
    "fecha": "2013-05-22",
    "valor": 1590600000,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIO",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "AUNAR ESFUERZOS PARA LOS ESTUDIOS DISENOS CONSTRUCCION E INTERVENTORIA DE SISTEMAS DE REDES DE ALCANTARILLADO AGUA POTABLE Y ASEO DEL MUNICIPIO DE YONDO ANTIOQUIA",
    "fuente": "SECOPI",
    "adicion_valor": null,
@@ -12097,7 +12097,7 @@
    "fecha": "2015-04-09",
    "valor": 3909840693,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE SERVICIOS PUBLICOS DOMICILIARIOS",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "AUNAR ESFUERZOS PARA LA CONSTRUCCION CANALIZACION DEL CANO COLECTOR DESDE LA ESTACION DE BOMBEO DE LA VICTORIA HASTA LA ESTACION DE BOMBEO DEL BARRIO EL PROGRESO DEL MPIO DE YONDO",
    "fuente": "SECOPI",
    "adicion_valor": null,
@@ -12140,7 +12140,7 @@
    "fecha": "2018-11-21",
    "valor": 1466321000,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "ESE HOSPITAL HECTOR ABAD GOMEZ",
+   "contratista": "E.S.E. Hospital Héctor Abad Gómez de Yondó",
    "objeto": "CONVENIO INTERADMINISTRATIVO ENTRE EL MPIO DE YONDO Y LA ESE HOSPITAL HECTOR ABAD GOMEZ PARA LA EJECUCION DEL PROYECTO IMPLEMENTACION",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12156,7 +12156,7 @@
    "fecha": "2019-03-15",
    "valor": 2066803840,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS Y ASEO DE YONDO S.A E.S.P",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "AUNAR ESFUERZOS PARA LOGRAR EL FORTALECIMIENTO EN LA PRESTACION DE LOS SERVICIOS PUBLICOS DOMICILIARIOS DE ACUEDUCTO ALCANTARILLADO Y ASEO EN EL MUNICIPIO DE YONDO ANTIOQUIA EN LA VIGENCIA 2019",
    "fuente": "SECOPI",
    "adicion_valor": 926000000,
@@ -12173,7 +12173,7 @@
    "fecha": "2019-11-01",
    "valor": 1185163720,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS Y ASEO DE YONDO S.A E.S.P",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONVENIO INTERADMINISTRATIVO CON LA EMPRESA DE AGUAS Y ASEO DE YONDO PARA AUNAR ESFUERZOS ESTRATEGIA QUE LE PERMITE A LA SECRETARIA DE PLANEACION -SECCION ASESORIA AMBIENTAL MEJORAR SU GESTION PARA EL DESARROLLO EFICIENTE DE SUS COMPETENCIAS EN LA EJECUCION D…",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12190,7 +12190,7 @@
    "fecha": "2020-03-03",
    "valor": 1057527608,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS Y ASEO DE YONDO  S.AS. E.S.P",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "REALIZACION DE ESTRATEGIAS QUE LE PERMITE A LA SECRETARIA DE INFRAESTRUCTURA- MEJORAR SU GESTION PARA EL DESARROLLO EFICIENTE DE SUS COMPETENCIAS PARA EL FORTALECIMIENTO CONJUNTO DE LOS SERVICIOS PUBLICOS DOMICILIARIOS DE ACUEDUCTO- ALCANTARILLADO ASEO EN EL…",
    "fuente": "SECOPI",
    "adicion_valor": 200944713,
@@ -12207,7 +12207,7 @@
    "fecha": "2020-03-20",
    "valor": 1190181605,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS Y ASEO DE YONDO  S.AS. E.S.P",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONVENIO ADMINISTRATIVO CON LA EMPRESA DE AGUAS Y ASEO DE YONDO EN LA REALIZACION DE ESTRATEGIAS QUE LE PERMITE A LA SECRETARIA DE PLANEACION - MEJORAR SU GESTION PARA EL DESARROLLO EFICIENTE DE SUS COMPETENCIAS PARA AUNAR ESFUERZOS EN SUBSIDIAR A LOS USUARIO…",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12224,7 +12224,7 @@
    "fecha": "2020-05-14",
    "valor": 5406905304,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS Y ASEO DE YONDO S.A E.S.P",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONVENIO INTERADMINISTRATIVO CON LA EMPRESA DE AGUAS Y ASEO DE YONDO EN LA REALIZACION DE ESTRATEGIAS QUE LE PERMITAN LA IMPLEMENTACION DE PROGRAMAS ESTABLECIDOS EN EL PGIRS PARA EL MANEJO EFICIENTE DE RESIDUOS SOLIDOS Y OBRAS PARA EL RETIRO Y DISPOSICION DE…",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12261,7 +12261,7 @@
    "fecha": "2020-05-14",
    "valor": 5406905304,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA DE AGUAS Y ASEO DE YONDO  S.A. E.SP",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONVENIO INTERADMINISTRATIVO CON LA EMPRESA AGUAS Y ASEO DE YONDO S.A. E.SP. PARA AUNAR ESFUERZOS PARA OBRAS REFORESTACION REALIZACION DE ESTRATEGIAS QUE LE PERMITAN LA IMPLEMENTACION DE PROGRAMAS ESTABLECIDOS EN EL PGIRS PARA EL MANEJO EFICIENTE DE RESIDUOS…",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12314,7 +12314,7 @@
    "fecha": "2021-03-08",
    "valor": 1317214470,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS Y ASEO DE YONDO S.A. E.S.P",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONVENIO INTERADMINSTRATIVO CON LA EMPRESA DE AGUAS Y ASEO DE YONDO PARA AUNAR ESFUERZOS EN SUBSIDIAR A LOS USUARIOS DE LOS ESTRATOS 1.2.3 DE SERVICIOS PUBLICOS DOMICILIARIOS DE ACUEDUCTO- ALCANTARILLADO Y ASEO A TRAVES DEL FONDO DE SOLIDARIDAD Y REDISTRIBUCI…",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12331,7 +12331,7 @@
    "fecha": "2021-05-20",
    "valor": 1622638821,
    "tipo": "Interadministrativo con la EDU",
-   "contratista": "EMPRESA DE DESARROLLO URBANO- EDU",
+   "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE CONSULTORIA PARA LA EJECUCION DE ESTUDIOS Y DISENOS FASE LLL DESTINADOS A LA INTERVENCION DE LA VIA LA YE- YONDO CODIGO 62N29-1 EN EL DEPARTAMENTO DE ANTIOQUIA.",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12347,7 +12347,7 @@
    "fecha": "2021-05-27",
    "valor": 3644875745,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "EMPRESA AGUAS Y ASEO DE YONDO S.A E.S.P",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONVENIO INTERADMINISTRATIVO CON LA EMPRESA AGUAS Y ASEO DE YONDO S.A. E.S.P PARA AUNAR ESFUERZOS EN LIMPIEZA DE CANALES HIDRICOS Y RECUPERACION DE CUERPO DE AGUA ESTRATEGIAS QUE LE PERMITEN LA IMPLEMENTACION EFICIENTE DE PROGRAMAS ESTABLECIDOS PARA LA CONSER…",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12383,7 +12383,7 @@
    "fecha": "2021-09-03",
    "valor": 50565510269,
    "tipo": "Administración delegada",
-   "contratista": "EMPRESA DE DESARROLLO URBANO DE MEDELLÌN - EDU",
+   "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACIÒN DELEGADA PARA LA ADECUACIÒN MANTENIMIENTO Y CONSTRUCCIÒN DE URBANISMO VÌAS Y ESCENARIOS DEPORTIVOS EN EL MUNICIPIO DE YONDÒ- DEPARTAMENTO DE ANTIOQUIA ACORDES AL PLAN DE DESARROLLO ESPERANZA PAZ Y PROGRESO.",
    "fuente": "SECOPI",
    "adicion_valor": 1651878203,
@@ -12399,7 +12399,7 @@
    "fecha": "2021-11-11",
    "valor": 11695781126,
    "tipo": "Administración delegada",
-   "contratista": "EMPRESA DE DESARROLLO URBANO DE MEDELLÌN - EDU",
+   "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACIÒN DELEGADA PARA DISEÑOS ARQUITECTONICOS Y TÈCNICOS ASÌ COMO LA ADECUACIÒN MANTENIMIENTO Y CONSTRUCCIÒN DE URBANISMO VÌAS Y ESCENARIOS DEPORTIVOS EN EL MUNICIPIO DE YONDÒ- DEPARTAMENTO DE ANTIOQUIA.",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12462,7 +12462,7 @@
    "fecha": "2022-08-22",
    "valor": 1076740542,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS & ASEO DE YONDO S.A. E.S.P",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONVENIO INTERADMINISTRATIVO PARA AUNAR ESFUERZO CON LA EMPRESA DE AGUAS Y ASEO DE YONDO CON ACCIONES PARA EL CUMPLIMIENTO DE ACTIVIDADES EN LOS PROGRAMAS Y SUBPROGRAMAS EN EL MARCO DE LAS FUNCIONES DE LA SECRETARIA DE INFARESTRUCTURA DEL MUNICIPIO DE YONDO A…",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12479,7 +12479,7 @@
    "fecha": "2022-09-14",
    "valor": 4605188513,
    "tipo": "Administración delegada",
-   "contratista": "EMPRESA AGUAS Y ASEO DE YONDO S.A. E.S.P",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACION DELEGADA PARA LA EJECUCION DE ACCIONES PARA EL CUMPLIMIENTO DE ACTIVIDADES EN LOS PROGRAMAS Y SUBPROGRAMAS DE LA ASESORIA AGROPECUARIA Y AMBIENTAL DEL MUNICIPIO DE YONDO ANTIOQUIA PARA LA IMPLEMENTACION EFICIENTE…",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12527,7 +12527,7 @@
    "fecha": "2023-05-23",
    "valor": 15819716153,
    "tipo": "Administración delegada",
-   "contratista": "EMPRESA DE DESARROLLO URBANO- E.D.U",
+   "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACION DELEGADA PARA OBRAS PARA LA EJECUCION DE LOS PROYECTOS CON BPIN 2022003050034 CUYO NOMBRE ES CONSTRUCCION DE VIVIENDA NUEVA RURAL EN SITIO PROPIO EN EL MUNICIPIO DE YONDO ANTIOQUIA Y 2022003050005CUYO NOMBRE ES C…",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12543,7 +12543,7 @@
    "fecha": "2023-05-23",
    "valor": 6318380202,
    "tipo": "Administración delegada",
-   "contratista": "EMPRESA DE AGUAS Y ASEO DE YONDO S.A.S.E.S.P",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACION DELEGADA PARA LA EJECUCION Y DESARROLLO DEL PROYECTO:SERVICIO DE RESTAURACION Y RECUPERACION DE ECOSISTEMAS EN EL MUNICIPIO DE YONDO ANTIOQUIA.",
    "fuente": "SECOPI",
    "adicion_valor": 770031359,
@@ -12560,7 +12560,7 @@
    "fecha": "2023-06-16",
    "valor": 1038991424,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS & ASEO DE YONDO S.A. E.S.P.",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONVENIO INTERADMINISTRATIVO PARA AUNAR ESFUERZOS PARA EL FORTALECIMIENTO DE LOS SERVICIOS PUBLICOS DOMICILIARIOS ACTIVIDADES PARA EL CUMPLIMIENTO Y MEJORAMIENTO DE LOS PROCESOS DE LA SECRETARIA DE INFRAESTRUCTURA EN LA EJECUCION Y DESARROLLO DEL PROYECTO:APO…",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12577,7 +12577,7 @@
    "fecha": "2023-06-26",
    "valor": 4312184788,
    "tipo": "Administración delegada",
-   "contratista": "EMPRESA DE DESARROLLO URBANO- E.D.U",
+   "contratista": "Empresa de Desarrollo Urbano de Medellín (EDU)",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACION DELEGADA PARA LA ADECUACION MANTENIMIENTO Y CONSTRUCCION DE VIAS URBANISMO Y ESPACIOS PUBLICOS EN EL MUNICIPIO DE YONDO -DEPARTAMENTO DE ANTIOQUIA.",
    "fuente": "SECOPI",
    "adicion_valor": 0,
@@ -12638,7 +12638,7 @@
    "fecha": "2023-12-20",
    "valor": 376168233,
    "tipo": "Administración delegada",
-   "contratista": "AGUAS Y ASEO DE YONDO S.A. E.S.P.",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "CONTRATO INTERADMINISTRATIVO DE ADMINISTRACIÓN DELEGADA PARA LA EJECUCIÓN Y DESARROLLO DEL PROYECTO: SERVICIO DE RESTAURACIÓN Y RECUPERACIÓN DE ECOSISTEMAS EN EL MUNICIPIO DE YONDÓ ANTIOQUIA.",
    "fuente": "SECOPII",
    "adicion_valor": 0,
@@ -12699,7 +12699,7 @@
    "fecha": "2024-10-04",
    "valor": 5184925727,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS Y ASEO DE YONDO S.A. E.S.P.",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "REALIZACIÓN DE ACCIONES PARA EL MANTENIMIENTO Y MEJORAMIENTO DE ECOSISTEMAS ACTIVIDADES PARA EL CUMPLIMIENTO Y MEJORAMIENTO DE LOS PROCESOS DE LA SECRETARÍA AGROPECUARIA Y MEDIO AMBIENTE EN LA EJECUCIÓN Y DESARROLLO DEL PROYECTO: SERVICIO DE RESTAURACIÓN Y RE…",
    "fuente": "SECOPII",
    "adicion_valor": 1099715001,
@@ -12715,7 +12715,7 @@
    "fecha": "2024-12-16",
    "valor": 1005205439,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS Y ASEO DE YONDO S.A. E.S.P.",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "AUNAR ESFUERZOS PARA EL FORTALECIMIENTO DE LOS SERVICIOS PÚBLICOS DOMICILIARIOS ACTIVIDADES DE LA SECRETARIA DE INFRAESTRUCTURA EN LA EJECUCIÓN DEL PROYECTO: APOYO AL FORTALECIMIENTO EN LA PRESTACIÓN DEL SERVICIO DE ACUEDUCTO ALCANTARILLADO Y ASEO EN EL MUNIC…",
    "fuente": "SECOPII",
    "adicion_valor": 0,
@@ -12746,7 +12746,7 @@
    "fecha": "2025-03-05",
    "valor": 1885384264,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS Y ASEO DE YONDO S.A. E.S.P.",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "AUNAR ESFUERZOS PARA EL FORTALECIMIENTO DE SUBSIDIOS A LOS USUARIOS DE LOS SERVICIOS PUBLICOS DOMICILIARIOS ACTIVIDADES DE LA SECRETARIA DE PLANEACION TICS Y DESARROLLO TERRITORIAL EN LA EJECUCION DEL PROYECTO: Servicio de apoyo financiero para subsidios al c…",
    "fuente": "SECOPII",
    "adicion_valor": 0,
@@ -12792,7 +12792,7 @@
    "fecha": "2025-07-24",
    "valor": 1574450939,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS Y ASEO DE YONDO S.A. E.S.P.",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "AUNAR ESFUERZOS PARA EL FORTALECIMIENTO DE LOS SERVICIOS PÚBLICOS DOMICILIARIOS MEDIANTE EL APOYO A LAS ACTIVIDADES DE LA SECRETARÍA DE INFRAESTRUCTURA EN LA EJECUCIÓN DEL PROYECTO: 'FORTALECIMIENTO EN LA PRESTACIÓN DE LOS SERVICIOS DE ACUEDUCTO ALCANTARILLAD…",
    "fuente": "SECOPII",
    "adicion_valor": 499996051,
@@ -12838,7 +12838,7 @@
    "fecha": "2025-11-07",
    "valor": 2016246867,
    "tipo": "Interadministrativo (otra entidad pública)",
-   "contratista": "AGUAS Y ASEO DE YONDO S.A. E.S.P.",
+   "contratista": "Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)",
    "objeto": "AUNAR ESFUERZOS PARA SUBSIDIAR A LOS USUARIOS DE LOS SERVICIOS PUBLICOS DOMICIALIRIOS ACTIVIDADES DE LA SECRETARIA DE PLANEACIÓN TICS Y DESARROLLO TERRITORIAL EN LA EJECUCIÓN DEL PROYECTO: Proyecto: Servicio de apoyo financiero para subsidios al consumo en lo…",
    "fuente": "SECOPII",
    "adicion_valor": 0,
@@ -13033,7 +13033,7 @@
     "fecha": "2024-08-21",
     "valor": 1642971274,
     "modalidad": "Contratación régimen especial",
-    "contratista": "Persona natural (nombre no publicado)",
+    "contratista": "Nombre no publicado (no se pudo confirmar que sea empresa)",
     "objeto": "MEJORAMIENTO EN PAVIMENTO FLEXIBLE; EN EL CENTRO POBLADO DEL CORREGIMIENTO SAN MIGUEL DEL TIGRE; MUNICIPIO DE YONDÓ - ANTIOQUIA",
     "valor_pagado": 0,
     "anticipo": 0,

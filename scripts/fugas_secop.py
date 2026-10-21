@@ -239,17 +239,37 @@ def sin_parentesis(s):
     return re.sub(r'\(.*?\)|\(.*$', '', str(s)).strip()
 
 
-def nombre_publico(r):
+def publicar_nombre(nombre, tipo_doc):
     """Nombre del contratista solo si es empresa o entidad. Nunca se publica el de una persona natural."""
-    n = sin_parentesis(r['contratista_n'])
+    n = sin_parentesis(norm(nombre or ''))
     if n in SIN_DATO: return 'Sin dato en SECOP'
-    publicar = sin_parentesis(r['nom_raz_social_contratista'])[:90]
+    publicar = re.sub(r'\s+', ' ', sin_parentesis(nombre))[:90]
     if es_empresa(n): return publicar
-    tipo = norm(r.get('tipo_documento_proveedor') or '')
+    tipo = norm(tipo_doc or '')
     if any(t in tipo for t in NATURAL_DOC): return 'Persona natural (nombre no publicado)'
     if ('JURIDICA' in tipo or tipo == 'NIT' or 'SOCIEDAD' in tipo) and ((' ' not in n and len(n) >= 4) or ORG2_RE.search(re.sub(r'[^A-Z0-9& ]', ' ', n))):
         return publicar
     return 'Nombre no publicado (no se pudo confirmar que sea empresa)'
+
+
+# Entidades públicas que aparecen con muchas grafías y documentos mal digitados: se unifican
+CANON = [(r'AGUAS (?:Y|&) ASEO DE YONDO|SERVICIOS PUBLICOS DOMICI', 'D811021151', 'Aguas y Aseo de Yondó S.A. E.S.P. (antes Empresa de Servicios Públicos Domiciliarios; NIT 811021151)'),
+         (r'DESARROLLO URBANO', 'EEDU', 'Empresa de Desarrollo Urbano de Medellín (EDU)'),
+         (r'HOSPITAL HECTOR ABAD', 'EHOSP', 'E.S.E. Hospital Héctor Abad Gómez de Yondó')]
+
+
+def canon(r):
+    n, doc = r['contratista_n'], str(r.get('documento_proveedor') or '')
+    for pat, cid, nombre in CANON:
+        if re.search(pat, n) and 'CEJA' not in n:
+            if cid == 'D811021151' and not ('AGUAS' in n or '811021' in doc or 'YONDO' in n or r['ent'] == 'ALCALDIA'):
+                continue
+            return cid, nombre
+    return None
+
+
+def nombre_publico(r):
+    return publicar_nombre(r['nom_raz_social_contratista'], r.get('tipo_documento_proveedor'))
 
 
 def contratista_id(r):
@@ -310,6 +330,10 @@ def main(D=RAW):
     d['modg'] = d['mod'].map(modg)
     d['cid'] = d.apply(contratista_id, axis=1)
     d['contratista_pub'] = d.apply(nombre_publico, axis=1)
+    cn = d.apply(canon, axis=1)
+    m = cn.notna()
+    d.loc[m, 'cid'] = cn[m].map(lambda t: t[0])
+    d.loc[m, 'contratista_pub'] = cn[m].map(lambda t: t[1])
     # Si un mismo documento aparece con nombre publicable en una fila y sin confirmar en otra, se usa el publicable (nunca para personas naturales)
     ok = d[~d.contratista_pub.str.startswith(('Persona natural', 'Nombre no publicado', 'Sin dato')) & d.cid.notna()]
     mapa = ok.groupby('cid')['contratista_pub'].agg(lambda x: x.value_counts().index[0])
@@ -328,12 +352,10 @@ def main(D=RAW):
     obras_ext = d[(d.categoria == 'Obra') & d.ent.isin(['ALCALDIA', 'AGUAS', 'HOSPITAL']) & ~d.obj.str.contains(r'PRESTACION DE SERVICIOS|APOYO A LA GESTION|^ACCIONES PARA')].copy()
     for o in (obras_alc, obras_ext):
         o['kw'] = o['obj'].map(kw)
-    est_all = d[d.categoria == 'Estudios / consultoría']
-    est = est_all.drop_duplicates(subset=['ent', 'anio', 'valor', 'obj'])  # = drop_duplicates(['anio','valor','obj']) por entidad
+    est = d[d.categoria == 'Estudios / consultoría'].drop_duplicates(subset=['ent', 'anio', 'valor', 'obj'])  # = drop_duplicates(['anio','valor','obj']) por entidad
     d['est_evaluado'] = d.index.isin(est.index)
     d['est_obra'] = None
     d['est_sim'] = None
-    match = {}
     for i, r in est.iterrows():
         pool = obras_alc if r['ent'] == 'ALCALDIA' else obras_ext
         k = kw(r['obj']); best, bs = None, 0
@@ -344,10 +366,12 @@ def main(D=RAW):
         con = best is not None and bs >= 0.3
         d.at[i, 'est_obra'] = bool(con)
         d.at[i, 'est_sim'] = round(bs, 2)
-        match[i] = best if con else None
     d['est_sin_obra'] = d['est_evaluado'] & (d['est_obra'] == False)  # noqa: E712
     # "Mixtos": el mismo contrato incluye diseño y construcción (la obra va dentro del contrato, no después)
-    d['est_mixto'] = d['est_sin_obra'] & d.obj.str.contains(r'CONSTRUCCION|ADECUACION|MANTENIMIENTO|EJECUCION DE OBRAS')
+    MIXTO = (r'(?:ESTUDIOS?|DISENOS?)\b[^.]{0,60}?\b(?:Y|E|ASI COMO)\s+(?:LA |LAS |LOS |EL )?(?:ADECUACION|CONSTRUCCION|CONSTRUCCIONES|EJECUCION DE (?:LAS )?OBRAS|INTERVENTORIAS? Y CONSTRUCCION)'
+             r'|CONSTRUCCION DE LAS OBRAS')
+    PARA = r'(?:ESTUDIOS?|DISENOS?)(?: TECNICOS?| Y DISENOS?| DEFINITIVOS)? PARA (?:LA|EL|LOS|LAS)\b'
+    d['est_mixto'] = d['est_sin_obra'] & (d.obj.str.contains('ADMINISTRACION DELEGADA') | (d.obj.str.contains(MIXTO) & ~d.obj.str.contains(PARA)))
 
     # --- 2. obras > 1.000 millones sin interventoría identificable
     STOP_I = STOP | set('INTERVENTORIA INTEVENTORIA TECNICA TENICA ADMINISTRATIVA ADMINISIKATIVA FINANCIERA FINANCIARA CONTABLE AMBIENTAL SOCIAL '
@@ -451,7 +475,7 @@ def main(D=RAW):
     d['edu'] = d['contratista_n'].str.contains('DESARROLLO URBANO') & ~d['contratista_n'].str.contains('CEJA') & d.ent.eq('ALCALDIA')
     # Administración delegada: el objeto la menciona y no es una OPS de apoyo que solo la nombra como contexto
     d['delegada'] = (d.obj.str.contains('ADMINISTRACION DELEGADA') & ~d.categoria.eq('OPS / apoyo a la gestión')
-                     & ~d.obj.str.contains(r'^PRESTACION DE (LOS )?SERVICIOS|SERVICIOS PROFESIONALES|APOYO A LA GESTION'))
+                     & ~d.obj.str.contains(r'^PRESTACION DE (?:LOS )?SERVICIOS|SERVICIOS PROFESIONALES|APOYO A LA GESTION'))
 
     def tipo_conv(r):
         if r['delegada']: return 'Administración delegada'
@@ -577,8 +601,8 @@ def main(D=RAW):
     so = d[d.est_sin_obra].sort_values('valor', ascending=False).head(15)
     estudios_top = [{'entidad': r['entidad'], 'anio': int(r['anio']), 'valor': r0(r['valor']), 'objeto': corto(r['objeto'], 300),
                      'contratista': r['contratista_pub'], 'similitud_maxima_con_una_obra': r['est_sim'],
-                     'nota': ('El mismo contrato incluye obra (diseño y construcción). Que no aparezca una obra posterior no significa que no se construyó; hay que revisar las actas de la EDU.'
-                              if re.search(r'CONSTRUCCION|ADECUACION|MANTENIMIENTO|EJECUCION DE OBRAS', r['obj']) else
+                     'nota': ('El mismo contrato incluye obra (diseño y construcción). Que no aparezca una obra posterior no significa que no se construyó; hay que revisar las actas de recibo.'
+                              if r['est_mixto'] else
                               ('Planes y ordenamiento territorial no llevan a una obra directa: se evalúan por su adopción y uso.'
                                if re.search(r'ORDENAMIENTO|\bEOT\b|PBOT|PLAN DE DESARROLLO|PLAN MAESTRO|PLAN PARCIAL', r['obj']) else None)),
                      'url': r['url']} for _, r in so.iterrows()]
@@ -629,9 +653,8 @@ def main(D=RAW):
     edu2 = []
     if (Path(D) / 'secop2_edu_yondo.json').exists():
         for r in json.load(open(f'{D}/secop2_edu_yondo.json')):
-            n = norm(r.get('proveedor_adjudicado', ''))
             edu2.append({'fecha': str(r.get('fecha_de_firma', ''))[:10], 'valor': r0(num(r.get('valor_del_contrato'))),
-                         'modalidad': r.get('modalidad_de_contratacion'), 'contratista': (r.get('proveedor_adjudicado') if es_empresa(n) else 'Persona natural (nombre no publicado)'),
+                         'modalidad': r.get('modalidad_de_contratacion'), 'contratista': publicar_nombre(r.get('proveedor_adjudicado'), r.get('tipodocproveedor')),
                          'objeto': corto(r.get('objeto_del_contrato'), 220), 'valor_pagado': r0(num(r.get('valor_pagado'))),
                          'anticipo': r0(num(r.get('valor_de_pago_adelantado'))), 'estado': r.get('estado_contrato')})
 
@@ -676,6 +699,7 @@ def main(D=RAW):
     est_dudoso = d[d['estado_del_proceso'].fillna('').str.contains('Convocado|Borrador|Cancelado|Descartado|Anormalmente', case=False)]
     dup = d.loc[sorted(dup_ids)]
     dup_exceso = dup[dup.duplicated(subset=['ent', 'dia', 'valor'], keep='first')]
+    npa = d.groupby('anio').size().to_dict()
     cobertura = [{'anio': int(a), **{ENT_NOMBRE[e]: int(((d.anio == a) & (d.ent == e)).sum()) for e in ['ALCALDIA', 'AGUAS', 'HOSPITAL', 'OTRO']}} for a in sorted(d.anio.unique())]
     umbral_check = []
     for a, g in d[(d.ent == 'ALCALDIA') & d['mod'].str.contains('MINIMA')].groupby('anio'):
@@ -718,14 +742,16 @@ def main(D=RAW):
             'adiciones': 'SECOP I: valor total de adiciones y tiempo adicionado (días + 30 × meses) del conjunto f789-7hwg, unido por número de constancia (hecho registrado). SECOP II: adición en valor = valor mayor menos valor menor entre las versiones del contrato en SECOP Integrado (estimado); prórroga = días adicionados (jbjy-vk9h). "pct_valor_con_dato" dice qué parte del valor tiene esa información. "mas_del_50pct" cuenta contratos cuya adición supera la mitad del valor inicial.',
             'un_oferente': 'Procesos competitivos de SECOP II (mínima cuantía, selección abreviada, licitación o concurso de méritos) en los que solo un proveedor presentó oferta (campo proveedores_unicos_con). Aparte ("con_ofertas_...") se cuentan las contrataciones directas o de régimen especial "con ofertas", donde una sola oferta es lo esperable. SECOP I no publica el número de oferentes en datos abiertos.',
             'convenios': 'Contratos de la categoría "Convenios / interadministrativos", más los de la EDU de Medellín y los de administración delegada aunque cat() los ponga en otra categoría (por ejemplo, el de $11.696 millones con la EDU, que cat() clasifica como estudios por incluir diseños). Tipos: administración delegada, interadministrativo con la EDU, con otra entidad pública, con entidad sin ánimo de lucro (Decreto 092 de 2017) y otros.',
-            'concentracion': 'Participación de los 10 mayores contratistas en el valor con contratista identificado e índice de Herfindahl-Hirschman (HHI = suma de los cuadrados de las participaciones en %, de 0 a 10.000; más de 2.500 se considera alta concentración). Se identifica al contratista por su documento (NIT sin dígito de verificación) o, si falta, por su nombre. "hhi_sin_entidades_publicas" quita a la EDU, Aguas y Aseo, el hospital y otras entidades públicas.',
+            'concentracion': 'Participación de los 10 mayores contratistas en el valor con contratista identificado e índice de Herfindahl-Hirschman (HHI = suma de los cuadrados de las participaciones en %, de 0 a 10.000; como referencia, más de 1.500 indica concentración moderada y más de 2.500, alta, según las guías de competencia de EE. UU. de 2010). Se identifica al contratista por su documento (NIT sin dígito de verificación) o, si falta, por su nombre. "hhi_sin_entidades_publicas" quita a la EDU, Aguas y Aseo, el hospital y otras entidades públicas.',
             'fraccionamiento': f'Contratos de la alcaldía, el concejo y la personería (no se aplica a Aguas y Aseo ni al hospital, que tienen régimen especial y umbrales propios), sin OPS, sin prestación de servicios con persona natural por contratación directa y sin convenios (todos se pueden contratar directamente sin importar el valor), y sin licitaciones ni concursos. Se agrupan los del mismo contratista con objeto parecido (Jaccard ≥ 0,50) firmados dentro de 30 días después del primero. Es indicio si cada contrato queda por debajo del umbral y la suma lo supera. Umbrales: mínima cuantía = {UMBRAL_MIN_SMMLV} salarios mínimos; menor cuantía = {UMBRAL_MENOR_SMMLV} salarios mínimos (Ley 1150 de 2007, art. 2, y Ley 1474 de 2011, art. 94). El valor de {UMBRAL_MIN_SMMLV} salarios sale de los datos: el mayor contrato de mínima cuantía de la alcaldía cada año ronda ese valor (ver "umbral_minima_cuantia_verificacion").',
             'transferencias_internas': 'Contratos cuyo contratista es otra entidad de Yondó (sobre todo la alcaldía con Aguas y Aseo o con el hospital). En las filas "Todas" ese dinero cuenta dos veces: una cuando la alcaldía lo transfiere y otra cuando la empresa o el hospital lo contrata. Para un total sin doble conteo, reste "transferencias_internas.valor".',
             'valores': 'Pesos corrientes de cada año, sin deflactar.',
             'personas': 'No se publican nombres ni documentos de personas naturales contratistas. Se nombra al contratista cuando el nombre trae una forma jurídica o de entidad (S.A.S., Ltda., E.S.P., fundación, asociación, consorcio, unión temporal, municipio, etc.) o cuando SECOP lo registra con NIT de persona jurídica y el nombre es una sigla o una razón social evidente. Se quita lo que va entre paréntesis. En la duda, el nombre no se publica.',
         },
         'limitaciones': [
-            'SECOP casi no tiene datos de Yondó antes de 2011: 51 contratos en 2007 y entre 39 y 207 por año en 2008–2011 (frente a más de 400 desde 2012). El periodo 2004–2007 no se puede auditar con estos datos y 2008–2011 está subregistrado.',
+            (f'SECOP casi no tiene datos de Yondó antes de 2011: {npa.get(2007, 0)} contratos en 2007 (ninguno de 2004–2006) y entre {min(npa.get(a, 0) for a in range(2008, 2012))} y '
+             f'{max(npa.get(a, 0) for a in range(2008, 2012))} por año en 2008–2011, frente a {min(npa.get(a, 0) for a in range(2012, 2026))} o más por año en 2012–2025 '
+             f'(2026 va hasta octubre: {npa.get(2026, 0)}). El periodo 2004–2007 no se puede auditar con estos datos y 2008–2011 está subregistrado.'),
             'Aguas y Aseo no publicó contratos antes de 2014 (salvo uno en 2011) y casi nada después de 2022; el hospital solo publicó en 2013–2014 y desde 2021. Los vacíos no significan que no hubo contratos.',
             'Las adiciones solo constan para los contratos de SECOP I firmados desde 2017 (conjunto f789-7hwg) y para SECOP II. Para 2008–2016 no hay dato abierto de adiciones: un cero ahí es "sin dato", no "sin adiciones". Ver "pct_valor_con_dato".',
             'En SECOP I el valor publicado es el inicial (sin adiciones); en SECOP II es el de la última versión (con adiciones). Las cifras de valor total heredan esta diferencia del análisis publicado.',
