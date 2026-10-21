@@ -84,6 +84,30 @@
    "fecha": "2023-04",
    "rumbo": 228,
    "nota": "Panorama a 1,06 km al nororiente, en la vía a la Laguna del Miedo. El bosque tapa la planta."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Google, imagen satelital z21 (verificación)",
+   "nota": "Medición de nuevo de las huellas en un marco girado 46° y del contorno de tierra desnuda del claro suroccidental (máscara de vegetación). Corrige la bodega, la construcción del noroccidente y la estructura nueva con su ala, y agrega dos anexos al suroccidente del claro."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Esri World Imagery, metadatos del servicio",
+   "nota": "La fecha de la imagen de Esri en la planta es el 12 de enero de 2020 (consulta identify del servicio World_Imagery)."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "4MQEazVWHrlTvzZEaZDB6w",
+   "fecha": "2014-01",
+   "rumbo": 319,
+   "nota": "Verificación: desde la salida occidental del casco urbano (915 m) solo se ve una loma con rastrojo; la planta no es visible."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "HQ5eNOXg-YI0wt0n1HiEVQ",
+   "fecha": "2014-01",
+   "rumbo": 319,
+   "nota": "Verificación: a 985 m; la subestación y los árboles tapan la loma de la planta."
   }
  ],
  "volumenes": [
@@ -128,7 +152,7 @@
     "tipo": "plano",
     "parapeto": 0.25,
     "material": "concreto",
-    "color": "#3e4844"
+    "color": "#36343f"
    },
    "fachada": {
     "material": "pañete_pintado",
@@ -163,12 +187,12 @@
    "id": "bodega",
    "nombre": "Construcción baja de losa al suroeste de los filtros (bodega o casa de bombas; uso no confirmado)",
    "centro": [
-    -12.32,
-    -4.59
+    -12.85,
+    -3.25
    ],
-   "largo": 6.9,
-   "ancho": 5.5,
-   "rumbo_eje": 46.0,
+   "largo": 6.6,
+   "ancho": 4.6,
+   "rumbo_eje": 136.0,
    "base": 0,
    "altura_alero": 3.0,
    "pisos": 1,
@@ -202,7 +226,7 @@
     "pendiente": 7,
     "voladizo": 0.5,
     "material": "fibrocemento",
-    "color": "#c4c1b7"
+    "color": "#d2cec2"
    },
    "fachada": {
     "material": "pañete_pintado",
@@ -276,11 +300,11 @@
    "id": "edif_no",
    "nombre": "Construcción al noroeste de la caseta (losa clara; uso no confirmado: posible cuarto de cloro o de bombas)",
    "centro": [
-    -8.11,
-    21.71
+    -8.75,
+    21.44
    ],
-   "largo": 4.5,
-   "ancho": 5.5,
+   "largo": 4.8,
+   "ancho": 5.0,
    "rumbo_eje": 46.0,
    "base": 0,
    "altura_alero": 3.0,
@@ -289,7 +313,7 @@
     "tipo": "plano",
     "parapeto": 0.2,
     "material": "concreto",
-    "color": "#a6a49c"
+    "color": "#808186"
    },
    "fachada": {
     "material": "pañete_pintado",
@@ -458,11 +482,11 @@
    "id": "obra_so",
    "nombre": "Estructura de concreto nueva en el claro suroccidental (no aparece en la imagen de enero de 2020; uso no confirmado)",
    "centro": [
-    -58.2,
-    -37.55
+    -57.85,
+    -36.65
    ],
-   "largo": 16.3,
-   "ancho": 14.8,
+   "largo": 14.7,
+   "ancho": 14.5,
    "rumbo_eje": 0,
    "base": 0,
    "altura_alero": 3.0,
@@ -482,14 +506,14 @@
    "id": "obra_so_ala",
    "nombre": "Ala sur de la estructura nueva del claro suroccidental",
    "centro": [
-    -57.25,
-    -47.95
+    -56.45,
+    -46.1
    ],
-   "largo": 7.9,
-   "ancho": 4.5,
+   "largo": 5.9,
+   "ancho": 4.2,
    "rumbo_eje": 90,
    "base": 0,
-   "altura_alero": 2.6,
+   "altura_alero": 3.0,
    "pisos": 1,
    "techo": {
     "tipo": "plano",
@@ -501,6 +525,54 @@
     "material": "pañete_pintado",
     "color": "#9a978f"
    }
+  },
+  {
+   "id": "obra_so_caja",
+   "nombre": "Caja baja de concreto con una abertura redonda, al suroccidente de la estructura nueva (posible pozo o cámara; uso no confirmado)",
+   "centro": [
+    -70.3,
+    -47.6
+   ],
+   "largo": 7.0,
+   "ancho": 4.0,
+   "rumbo_eje": 90,
+   "base": 0,
+   "altura_alero": 1.0,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.15,
+    "material": "concreto",
+    "color": "#a29c92"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#9a978f"
+   }
+  },
+  {
+   "id": "obra_so_caseta",
+   "nombre": "Caseta pequeña de techo claro junto a la caja (posible caseta de obra o de bombas; uso no confirmado)",
+   "centro": [
+    -71.6,
+    -52.15
+   ],
+   "largo": 5.6,
+   "ancho": 3.5,
+   "rumbo_eje": 90,
+   "base": 0,
+   "altura_alero": 2.4,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.1,
+    "material": "concreto",
+    "color": "#d9d6cf"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#b5b1a8"
+   }
   }
  ],
  "elementos": [
@@ -508,47 +580,111 @@
    "tipo": "patio",
    "poligono": [
     [
-     -74,
+     -78.8,
+     -42
+    ],
+    [
+     -76,
+     -36
+    ],
+    [
+     -72,
      -31
     ],
     [
-     -60,
-     -24
-    ],
-    [
-     -45,
-     -23
-    ],
-    [
-     -33,
+     -66,
      -27
     ],
     [
-     -23,
-     -32
+     -56,
+     -24
     ],
     [
-     -22,
-     -46
+     -52,
+     -28
+    ],
+    [
+     -50,
+     -36
+    ],
+    [
+     -45,
+     -38.5
+    ],
+    [
+     -39,
+     -38.5
+    ],
+    [
+     -37,
+     -35
+    ],
+    [
+     -30,
+     -33.5
     ],
     [
      -24,
+     -33.5
+    ],
+    [
+     -17.5,
+     -35
+    ],
+    [
+     -21,
+     -39
+    ],
+    [
+     -23.5,
+     -43
+    ],
+    [
+     -25,
+     -47
+    ],
+    [
+     -23.2,
+     -52
+    ],
+    [
+     -23.5,
      -56
+    ],
+    [
+     -24.8,
+     -60
+    ],
+    [
+     -30,
+     -62
     ],
     [
      -36,
      -60
     ],
     [
-     -58,
-     -59
+     -50,
+     -58.5
     ],
     [
-     -75,
-     -53
+     -58,
+     -58
+    ],
+    [
+     -66.5,
+     -56
+    ],
+    [
+     -69,
+     -54
+    ],
+    [
+     -76.5,
+     -52
     ]
    ],
-   "nota": "claro suroccidental de tierra roja abierto después de 2020 (obra nueva)"
+   "nota": "claro suroccidental de tierra roja abierto después de enero de 2020 (obra nueva); contorno medido en la imagen de Google, sin la isla de rastrojo del norte"
   },
   {
    "tipo": "anden",
@@ -831,6 +967,16 @@
    ],
    "altura": 14,
    "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -43,
+    -31.5
+   ],
+   "altura": 6,
+   "copa": 8,
+   "nota": "isla de rastrojo y arbustos (unos 14 x 10 m) entre el claro y el camino a la planta; altura supuesta"
   }
  ],
  "adecuaciones": {
@@ -839,61 +985,47 @@
    {
     "tipo": "marquesina",
     "centro": [
-     -38.5,
-     -34.5
+     -36.8,
+     -43.6
     ],
-    "largo": 19.8,
+    "largo": 22.0,
     "ancho": 4.65,
     "rumbo_eje": 90,
     "altura": 0.7,
     "filas": 2,
-    "columnas": 17,
+    "columnas": 19,
     "orientacion_modulo": "vertical"
    },
    {
     "tipo": "marquesina",
     "centro": [
-     -38.5,
-     -40.5
+     -36.8,
+     -49.6
     ],
-    "largo": 19.8,
+    "largo": 22.0,
     "ancho": 4.65,
     "rumbo_eje": 90,
     "altura": 0.7,
     "filas": 2,
-    "columnas": 17,
+    "columnas": 19,
     "orientacion_modulo": "vertical"
    },
    {
     "tipo": "marquesina",
     "centro": [
-     -38.5,
-     -46.5
+     -36.8,
+     -55.6
     ],
-    "largo": 19.8,
+    "largo": 22.0,
     "ancho": 4.65,
     "rumbo_eje": 90,
     "altura": 0.7,
     "filas": 2,
-    "columnas": 17,
-    "orientacion_modulo": "vertical"
-   },
-   {
-    "tipo": "marquesina",
-    "centro": [
-     -38.5,
-     -52.5
-    ],
-    "largo": 19.8,
-    "ancho": 4.65,
-    "rumbo_eje": 90,
-    "altura": 0.7,
-    "filas": 2,
-    "columnas": 17,
+    "columnas": 19,
     "orientacion_modulo": "vertical"
    }
   ],
-  "kwp_factible": 74.8,
+  "kwp_factible": 62.7,
   "bess": {
    "kwh": 150,
    "kw": 75,
@@ -908,7 +1040,7 @@
   },
   "inversores": {
    "n": 2,
-   "kw": 33,
+   "kw": 30,
    "volumen": "caseta",
    "lado": "N"
   },
@@ -923,15 +1055,15 @@
    "iluminación LED con fotocelda en patios y vía interna"
   ],
   "obras_civiles": [
-   "adecuación del claro suroccidental cuando termine la obra vecina: nivelación, cunetas, cerramiento en malla de 2 m y bases hincadas o de concreto para las 4 mesas",
-   "franja de poda de 8 a 10 m en los bordes sur y oriental del claro (rastrojo y ramas bajas) para que los árboles no sombreen las mesas, sin talar el bosque protector; consultar a Corantioquia si hace falta permiso",
-   "canalización enterrada desde las mesas hasta la caseta: unos 65 m por el borde del bosque (unos 120 m si se lleva por la vía interna)",
+   "adecuación del claro suroccidental cuando termine la obra vecina: nivelación, cunetas, cerramiento en malla de 2 m y bases hincadas o de concreto para las 3 mesas, dejando un carril de 4 m por el borde norte del claro para llegar a la estructura nueva (hay que despejar unos 2 m del borde sur de la isla de rastrojo)",
+   "control de sombras: medir la altura de los árboles del borde del claro y, si Corantioquia lo permite, descopar o ralear los árboles altos en una franja de 8 a 10 m al sur y al oriente de las mesas; podar solo el rastrojo y las ramas bajas no quita la sombra de árboles de 10 a 14 m",
+   "canalización enterrada desde las mesas hasta la caseta: unos 70 m en línea recta por el borde del bosque (unos 130 m si se lleva por el ramal y la vía interna)",
    "base de concreto con bordillo y techo liviano de sombra para el contenedor de baterías en el patio de entrada, con extintor y detector de humo",
    "revisión y ampliación de la puesta a tierra y del apantallamiento (SIPRA) construido en 2014 para la PTAP y el tanque elevado; protecciones contra sobretensiones (DPS) en corriente continua y alterna",
    "tablero de transferencia y protecciones en la caseta, junto al tablero de control de las bombas",
    "las cubiertas existentes se conservan: la losa del tanque y los tanques de procesos no reciben paneles"
   ],
-  "notas": "El plan asigna 150 kWp al nodo del acueducto, repartidos en dos fronteras de 75 kWp: la captación (bocatoma de la Laguna del Miedo, 2,4 km al noroccidente) y la PTAP. Este modelo cubre la frontera de la PTAP. En la planta no hay techos útiles: la losa del tanque cubre agua para consumo, los floculadores, sedimentadores y filtros son tanques abiertos y la caseta y el cuarto de químicos suman unos 80 m² de fibrocemento en dos niveles, con sombra del bosque en la tarde. Por eso el arreglo va en el piso, en el claro de tierra roja que se abrió después de 2020 al suroccidente (a unos 35 m en línea recta de la planta y 100 m por la vía interna): 4 mesas bajas de 17 columnas × 2 módulos en vertical (19,6 × 4,6 m cada una, inclinadas 5° hacia el sur, borde inferior a 0,7 m y pasillos de 1,4 m) = 136 módulos de 550 Wp = 74,8 kWp, el 100 % de la frontera de la PTAP y el 50 % de los 150 kWp del nodo. Producen unos 8.300 kWh/mes, cerca del 28 % de los 30.000 kWh/mes estimados para captación, PTAP y EBAR. Los 75 kWp de la captación no se modelan aquí. Sombras: hay bosque a unos 5 m al sur y 6 m al oriente de las mesas; sin la franja de poda, la mesa del sur se sombrea al mediodía entre diciembre y enero y la punta oriental en las primeras horas (pérdida estimada de 5 a 8 %). La estructura nueva vecina (3 m de alto) queda al occidente, a 2,4 m, y solo sombrea al final de la tarde. Otras opciones si el claro se necesita para la obra: el claro oriental junto a la vía de acceso (caben unas 3 mesas de 13 columnas, ≈43 kWp) o la losa del tanque (unos 95 módulos, ≈52 kWp, solo con estudio estructural, sin perforar la impermeabilización y dejando libres escotillas y respiraderos). Baterías: 150 kWh / 75 kW en un contenedor de 10 pies en el patio de entrada, a 1,4 m de la punta nororiental del tanque y fuera de la vía; con su propio convertidor de 75 kW. Inversores: 2 de 33 kW en el muro noroccidental de la caseta, a la sombra del bosque. Con los tanques de 1.125 m³ y 350 m³, el bombeo de agua tratada puede correrse a las horas de sol (perfil de bombeo con respuesta de la demanda). No se propone cargador de vehículo eléctrico: la planta no tiene parqueadero."
+  "notas": "El plan asigna 150 kWp al nodo del acueducto, repartidos en dos fronteras de 75 kWp: la captación (bocatoma de la Laguna del Miedo, 2,4 km al noroccidente) y la PTAP. Este modelo cubre la frontera de la PTAP. En la planta no hay techos útiles: la losa del tanque cubre agua para consumo, los floculadores, sedimentadores y filtros son tanques abiertos, y la caseta y el cuarto de químicos suman unos 80 m² de fibrocemento con sombra del bosque. Por eso el arreglo va en el piso, en el claro de tierra roja que se abrió después de enero de 2020 al suroccidente (a unos 30 m en línea recta del tanque y unos 130 m por el ramal y la vía interna). La verificación midió la tierra desnuda en la imagen de Google: al oriente de la estructura nueva queda libre un área de unos 23 × 17 m, porque al norte hay una isla de rastrojo y por ese borde entra el ramal que lleva a la estructura nueva. Caben 3 mesas bajas de 19 columnas × 2 módulos en vertical (22 × 4,65 m cada una, inclinadas 5° hacia el sur, borde inferior a 0,7 m y pasillos de 1,35 m) = 114 módulos de 550 Wp = 62,7 kWp, el 84 % de la frontera de la PTAP y el 42 % de los 150 kWp del nodo. Se deja libre un carril de 4 m por el borde norte del claro para entrar a la estructura nueva; la versión anterior (4 mesas de 17 columnas, 74,8 kWp) ponía la mesa norte sobre el rastrojo y cerraba ese paso. Sombras: el claro es pequeño y está rodeado de bosque. Con árboles de 10 a 14 m (altura supuesta, sin medir) se pierde entre el 21 y el 31 % del sol directo (cálculo hora a hora para todo el año), sobre todo en las primeras horas de la mañana y al final de la tarde; la mesa del sur pierde casi todo el sol directo del mediodía entre noviembre y enero. Con eso, la producción esperada baja de unos 7.000 kWh/mes (sin sombras) a unos 5.200 a 5.800 kWh/mes, entre el 17 y el 19 % de los 30.000 kWh/mes estimados para captación, PTAP y EBAR. Antes del diseño hay que medir los árboles y tramitar el manejo de la franja de sombra con Corantioquia. Los 12 kWp que faltan para completar la frontera pueden ir en el claro oriental junto a la vía de acceso (el levantamiento estimó unas 3 mesas de 13 columnas, ≈43 kWp, pero es zona de tránsito y no se verificaron sombras) o en la losa del tanque (unos 95 módulos, ≈52 kWp, solo con estudio estructural, sin perforar la impermeabilización y dejando libres escotillas y respiraderos). Los 75 kWp de la captación no se modelan aquí. Baterías: 150 kWh / 75 kW en un contenedor de 10 pies en el rincón sur del patio de entrada, a 1,4 m de la punta nororiental del tanque y fuera del final de la vía de acceso, con su propio convertidor de 75 kW. Inversores: 2 de 30 kW en el muro noroccidental de la caseta, a la sombra del bosque (relación CC/CA de 1,05). Con los tanques de 1.125 m³ y 350 m³, el bombeo de agua tratada puede correrse a las horas de sol (perfil de bombeo con respuesta de la demanda). No se propone cargador de vehículo eléctrico: la planta no tiene parqueadero."
  },
  "incertidumbres": [
   "No hay Street View de la planta (el panorama más cercano está a 870 m y el bosque la tapa). Alturas, colores de muros y la torre de aireación salen de las fotos de la Superservicios (2018 y 2020, días nublados) y de las sombras en el satélite.",
@@ -945,8 +1077,12 @@
   "No se ve el cerramiento perimetral ni la acometida eléctrica (transformador y medidor). El contrato de 2014 menciona un totalizador de 3 × 250 A.",
   "La imagen de Google no tiene fecha publicada. La estructura nueva del claro suroccidental y una losa de unos 40 × 15 m que está 130 m al suroriente no existían en enero de 2020 y su uso no está confirmado (pueden ser obras de la optimización del acueducto). La losa del suroriente no se modela.",
   "Se desconoce quién es dueño del claro suroccidental y si se necesita para la obra vecina: el arreglo solar debe coordinarse con Aguas y Aseo de Yondó.",
-  "El bosque se representa con árboles de muestra de 14 a 16 m puestos sobre las copas que se ven en el satélite; la sombra real sobre las mesas debe medirse en sitio.",
-  "El tanque elevado de 350 m³ (240 m al norte-noroccidente) no se incluye en el modelo; no se midió su altura."
+  "El bosque se representa con árboles de muestra de 14 a 16 m puestos sobre las copas que se ven en el satélite, y la isla de rastrojo del claro con un árbol bajo de 6 m. La altura real de los árboles no se midió: el cálculo de sombras sobre las mesas usa 10 y 14 m y debe confirmarse en sitio.",
+  "El tanque elevado de 350 m³ (240 m al norte-noroccidente) no se incluye en el modelo; no se midió su altura.",
+  "La imagen de Google, con la que se midió todo, está corrida unos 1,9 m frente a la de Esri (en Esri la planta queda 0,8 m más al norte y 1,7 m más al occidente). No se sabe cuál de las dos está mejor ubicada.",
+  "Las alturas se comprobaron con las sombras de la imagen de Google (sol del nororiente, a unos 50° de altura, deducido de la sombra del cuarto de químicos): tanque de unos 2,1 m, bodega y estructura nueva de unos 3 m, construcción del noroccidente de unos 2,7 a 3 m. La loma tiene pendiente, así que estas alturas tienen un margen de ±0,5 m.",
+  "La caja con abertura redonda y la caseta pequeña del suroccidente del claro pueden ser parte de la obra de optimización del acueducto (la Superservicios menciona dos pozos y un tanque de compensación); su uso no está confirmado y sus alturas salen de las sombras.",
+  "En las fotos de la Superservicios (2018 y 2020) se ve un mástil alto (pararrayos o antena) junto a la losa del tanque y la baranda azul de la losa; no se modelaron porque no se pudieron ubicar en la imagen satelital y el generador no pone barandas sobre losas."
  ],
  "verificacion": {
   "trace": "data/geo/img/ptap_trace.png",
@@ -958,7 +1094,9 @@
   "vistas": [
    "data/geo/img/ptap_foto_torre2018.jpg",
    "data/geo/img/ptap_sv_lejos1.jpg",
-   "data/geo/img/ptap_sv_lejos2.jpg"
+   "data/geo/img/ptap_sv_lejos2.jpg",
+   "data/geo/img/ptap_v_sv_a.jpg",
+   "data/geo/img/ptap_v_sv_b.jpg"
   ],
   "comparaciones": [
    "data/geo/img/ptap_cmp_torre1_comparacion.png",
@@ -967,12 +1105,15 @@
    "data/geo/img/ptap_cmp_torre3_mezcla.png",
    "data/geo/img/ptap_cmp_cenital1_mezcla.png",
    "data/geo/img/ptap_cmp_cenital2_comparacion.png",
-   "data/geo/img/ptap_cmp_cenital2_mezcla.png"
+   "data/geo/img/ptap_cmp_cenital2_mezcla.png",
+   "data/geo/img/ptap_v_cmp_cenital_mezcla.png",
+   "data/geo/img/ptap_v_cmp_cen_so_mezcla.png"
   ],
   "orbitas": [
    "data/geo/img/ptap_orbita_todo.png",
    "data/geo/img/ptap_orbita_inversores.png",
-   "data/geo/img/ptap_orbita_bess.png"
+   "data/geo/img/ptap_orbita_bess.png",
+   "data/geo/img/ptap_v_orbita_todo.png"
   ],
   "satelite": [
    "data/geo/img/ptap_gctx_z17.png",
@@ -981,8 +1122,13 @@
    "data/geo/img/ptap_rot46_g20.png",
    "data/geo/img/ptap_rot_no.png",
    "data/geo/img/ptap_g19c.png",
-   "data/geo/img/ptap_g19a.png"
+   "data/geo/img/ptap_g19a.png",
+   "data/geo/img/ptap_v_ctx18m.png",
+   "data/geo/img/ptap_v_gplace2.png",
+   "data/geo/img/ptap_v_tqelev.png",
+   "data/geo/img/ptap_v_rot_corr.png",
+   "data/geo/img/ptap_v_so_nuevo.png"
   ],
-  "notas": "Sin Street View, la comparación modelo–foto se hizo con la Imagen 25 del informe de 2018 (cámara puesta a 4,1 m sobre los filtros, a 10 m de la torre, campo de visión de 67°) y con una vista cenital del modelo contra la imagen de Google."
+  "notas": "Sin Street View, la comparación modelo–foto se hizo con la Imagen 25 del informe de 2018 (cámara puesta a 4,1 m sobre los filtros, a 10 m de la torre, campo de visión de 67°) y con una vista cenital del modelo contra la imagen de Google. Verificación independiente (octubre de 2026): se confirmó la ubicación (la coordenada del inventario cae sobre la piscícola, 270 m al nororiente; el tanque elevado queda a 240 m con rumbo 337°, en la misma dirección en que aparece a la izquierda de la torre en la foto de 2018) y se midieron de nuevo las huellas en Google z21. Se corrigieron la bodega (estaba medida con su sombra y con el lado largo al revés), la construcción del noroccidente (0,65 m), la estructura nueva y su ala (estaban 2 m más al sur, sobre su sombra) y se agregaron dos anexos del claro. El arreglo solar se rehízo sobre la tierra desnuda medida (3 mesas, 62,7 kWp) y se calcularon las sombras del bosque. No hay Street View que vea la planta: se probaron 2 panoramas más (915 y 985 m) y la comparación de forma se hizo con vistas cenitales del modelo mezcladas con la imagen de Google."
  }
 }

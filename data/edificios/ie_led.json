@@ -2,12 +2,12 @@
   "id": "ie_led",
   "nombre": "I.E. Luis Eduardo Díaz – sede principal",
   "nodo_microrred": "ie_led",
-  "direccion": "Carrera 45 # 55-56 (directorio oficial del MEN y de la Secretaría de Educación de Antioquia)",
+  "direccion": "Carrera 45 # 55-56, barrio El Progreso (directorio de establecimientos del MEN en datos.gov.co desde 2019; hasta 2018 el mismo directorio decía Carrera 45 # 50-52)",
   "lat": 7.011586,
   "lon": -73.907442,
   "ubicacion": {
     "confianza": "alta",
-    "metodo": "Dirección oficial del MEN (código DANE 105893001685): Carrera 45 # 55-56. El lugar de Google 'IELED' (7.011549, -73.907513) y el punto de OpenStreetMap 'Institución Educativa Luis Eduardo Diaz' (7.011613, -73.907787) caen sobre el mismo claustro. En el satélite Esri (WorldView-2 del 12 de enero de 2020) es un claustro de ladrillo de 72,5 × 60,4 m con dos patios: el occidental con una placa cubierta de techo curvo blanco y el oriental arborizado. En Street View de noviembre de 2013 (rumbos ya corregidos) se ve todo el perímetro: cerca de malla sobre muro bajo de ladrillo con remate verde, aulas de ladrillo pintado de rojo con aleros verdes y cubierta de fibrocemento, corredores con columnas, y en la fachada occidental (entrada principal, sobre la carrera 45) los escudos de Colombia y del colegio y tres astas. En 2013 no se veía un letrero con el nombre. Las calles según OpenStreetMap: calle 55 al norte y carrera 43 al oriente. El ancla queda sobre el ala central, entre los dos patios. Los panoramas quedan unos 5,5 m al norte del satélite (vía sur, vía norte y la torre de tanques triangulada desde tres panoramas); la huella se dejó en el marco del satélite y las comparaciones con fotos se hicieron con una copia del modelo corrida 5,5 m al norte."
+    "metodo": "Confirmada en Street View: desde el panorama -9pLyB9qUOcLx7_drmkmzA (carrera 45, noviembre de 2013) con rumbo real 63–71° se ven, en la reja de la fachada occidental, el escudo de Colombia, un escudo verde, el escudo con la torre petrolera y un sello redondo del colegio en cuyo arco se lee '… LUIS EDUARDO DÍ…'. Coinciden la dirección oficial (código DANE 105893001685, Carrera 45 # 55-56, barrio El Progreso; la institución tiene 2 sedes desde 2019), el lugar de Google 'IELED' (7.011549, -73.907513) y el punto de OpenStreetMap 'Institución Educativa Luis Eduardo Diaz' (7.011613, -73.907787, sobre el ala oeste). La otra sede (La Patria, preescolar y primaria) es otro edificio (data/edificios/ie_prim.json). En el satélite Esri (WorldView-2 del 12 de enero de 2020) es un claustro de unos 72 × 61 m con dos patios: el occidental con una placa cubierta de techo curvo blanco y el oriental arborizado. En Street View se ve el perímetro: cerca de malla sobre muro bajo de ladrillo con remate verde, aulas de ladrillo pintado de rojo con canales verdes y cubierta de fibrocemento, corredores con columnas, la caseta de la entrada occidental, la torre de tanques y tres astas. Calles según OpenStreetMap: carrera 43 al oriente; la calle del norte figura como calle 55 en el levantamiento anterior (en OpenStreetMap la calle 55 llega a la esquina noroeste). El ancla queda sobre el ala central, entre los dos patios. Los panoramas quedan unos 7 m al norte del satélite: el centro de la vía sur está en y ≈ −45,5 y el de la vía norte en y ≈ 46 (marco del satélite), mientras los panoramas de esas vías caen en y ≈ −38,9 y y ≈ 52,3–53,7; con 7 m coinciden en las fotos el alero del ala sur y la cerca. El levantamiento anterior usó 5,5 m (triangulación de la torre de tanques, cuyo techo el satélite ve corrido por la inclinación de la toma). La huella está en el marco del satélite y las comparaciones con fotos se hicieron con una copia del modelo corrida 7 m al norte."
   },
   "fuentes": [
     {
@@ -127,7 +127,7 @@
       "pano": "-9pLyB9qUOcLx7_drmkmzA",
       "fecha": "2013-11",
       "rumbo": 90,
-      "nota": "fachada occidental (entrada principal): escudos, tres astas, torre de tanques; techo curvo blanco de la placa visible sobre la cubierta. Usada en la comparación"
+      "nota": "fachada occidental (entrada principal): escudos, tres astas, torre de tanques; techo curvo de la placa visible sobre la cubierta. Con rumbo 63–71° y zoom: escudo de Colombia, escudo verde, escudo con torre petrolera y sello redondo con '… LUIS EDUARDO DÍ…' (confirma la ubicación)"
     },
     {
       "tipo": "street_view",
@@ -151,9 +151,37 @@
       "nota": "torre de tanques desde el suroeste (triangulación) y faldón occidental"
     },
     {
+      "tipo": "street_view",
+      "pano": "F-dhYYEnTQ5qNr0qzAKD4A",
+      "fecha": "2013-11",
+      "rumbo": 200,
+      "nota": "bloque norte desde la calle del norte: corredor con columnas grises de concreto y cubierta de fibrocemento inclinada hacia la calle, celosías blancas en el muro rojo bajo el corredor, franja de ventanas altas y cubierta superior. Usada en la comparación modelo-foto de la verificación"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "7qDeaxz_9h37ItF_1PZY0g",
+      "fecha": "2013-11",
+      "rumbo": 25,
+      "nota": "ala sur occidental desde la vía sur: canal verde, columnas rojas del corredor y ventanas con reja detrás; limahoya con el pabellón y culata del pabellón a la derecha; arco de la placa al fondo. Usada en la comparación modelo-foto de la verificación (alero ≈3,0 m y cumbrera ≈5,7 m)"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "Qkc94v3AJGaCgZLVt4WbIw",
+      "fecha": "2013-11",
+      "rumbo": 225,
+      "nota": "esquina noreste: culata del ala este con canal verde y, delante, el bloque noreste de muros rojos, columnas grises y cubierta de una agua"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "HDlz5SWbsuk92r-a571S9A",
+      "fecha": "2013-11",
+      "rumbo": 55,
+      "nota": "caseta de ladrillo con cubierta clara a dos aguas en la entrada occidental, junto a la reja; letrero pintado poco legible ('…PORTERÍA'?)"
+    },
+    {
       "tipo": "satelite",
       "fuente": "Esri World Imagery z19 (WorldView-2, 12 de enero de 2020, resolución 0,5 m, precisión nominal ±10 m)",
-      "nota": "huella, bordes de alero, cumbreras, patios y árboles; cubierta de la placa ya blanca"
+      "nota": "huella, bordes de alero, cumbreras, patios, árboles y cerca (perfiles de brillo medidos cada 0,25 m); cubierta de la placa ya blanca"
     },
     {
       "tipo": "osm",
@@ -163,7 +191,7 @@
     {
       "tipo": "web",
       "url": "https://www.elcolombiano.com/antioquia/inundacion-colegio-yondo-antioquia-LH27205871",
-      "nota": "23 de abril de 2025: aguacero inunda la sede durante la izada de bandera; foto del corredor con piso de tablón cerámico; la Gobernación dice que no hay proyecto radicado para la sede"
+      "nota": "23 de abril de 2025: un aguacero inunda 'la sede' durante la izada de bandera y la Gobernación dice que no hay proyecto radicado para la institución. La nota no dice cuál sede; Blu Radio (27 de abril de 2025) ubica las inundaciones en la sede La Patria (primaria), no en este claustro. La foto (niños descalzos en un corredor de tablón) no sirve para esta sede"
     },
     {
       "tipo": "web",
@@ -179,6 +207,16 @@
       "tipo": "web",
       "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-13-8009310",
       "nota": "SECOP I, MC-015-2018: revisión de diseños estructurales del 'colegio Luis Eduardo Díaz' para licencia de construcción (probablemente la sede nueva, no este claustro)"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.datos.gov.co/resource/cfw5-qzt5.json?$where=cod_dane_municipio='05893'",
+      "nota": "directorio de establecimientos educativos (MEN): I.E. Luis Eduardo Díaz, DANE 105893001685, KR 45 55 56, barrio El Progreso, 2 sedes y 2.379 matriculados en 2020"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.bluradio.com/regiones/antioquia/denuncian-que-mas-de-600-estudiantes-podrian-contraer-enfermedades-por-inundaciones-en-yondo-rg10",
+      "nota": "27 de abril de 2025: inundaciones con aguas de alcantarilla en la sede La Patria de la institución (unos 600 estudiantes); no se refiere a este claustro"
     }
   ],
   "volumenes": [
@@ -203,7 +241,7 @@
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43",
+        "color": "#8e5d56",
         "ventanas": {
           "tipo": "reja",
           "ancho": 2.4,
@@ -247,7 +285,7 @@
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43",
+        "color": "#8e5d56",
         "ventanas": {
           "tipo": "reja",
           "ancho": 2.4,
@@ -281,7 +319,7 @@
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43",
+        "color": "#8e5d56",
         "ventanas": {
           "tipo": "reja",
           "ancho": 2.4,
@@ -317,7 +355,7 @@
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43",
+        "color": "#8e5d56",
         "ventanas": {
           "tipo": "reja",
           "ancho": 2.4,
@@ -332,27 +370,27 @@
     },
     {
       "id": "ala_sur_oeste",
-      "nombre": "Ala sur, tramo occidental (aulas)",
+      "nombre": "Ala sur, tramo occidental (aulas; cumbrera en y ≈ −20,3)",
       "centro": [
         -15.1,
-        -21.95
+        -20.3
       ],
       "largo": 30.2,
-      "ancho": 8.1,
+      "ancho": 7.6,
       "rumbo_eje": 90,
-      "altura_alero": 3.88,
+      "altura_alero": 4.29,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
-        "pendiente": 23,
-        "voladizo": 2.3,
+        "pendiente": 19,
+        "voladizo": 1.0,
         "material": "fibrocemento",
         "color": "#7b7b77",
         "cumbrera": "largo"
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43",
+        "color": "#8e5d56",
         "ventanas": {
           "tipo": "reja",
           "ancho": 2.4,
@@ -388,27 +426,27 @@
     },
     {
       "id": "ala_sur_este",
-      "nombre": "Ala sur, tramo oriental (aulas)",
+      "nombre": "Ala sur, tramo oriental (aulas; cumbrera en y ≈ −20,3)",
       "centro": [
         15.02,
-        -21.95
+        -20.3
       ],
       "largo": 30.05,
-      "ancho": 8.1,
+      "ancho": 7.6,
       "rumbo_eje": 90,
-      "altura_alero": 3.88,
+      "altura_alero": 4.29,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
-        "pendiente": 23,
-        "voladizo": 2.3,
+        "pendiente": 19,
+        "voladizo": 1.0,
         "material": "fibrocemento",
         "color": "#7b7b77",
         "cumbrera": "largo"
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43",
+        "color": "#8e5d56",
         "ventanas": {
           "tipo": "reja",
           "ancho": 2.4,
@@ -447,10 +485,10 @@
       "nombre": "Ala norte (aulas)",
       "centro": [
         -0.08,
-        20.2
+        19.6
       ],
       "largo": 60.25,
-      "ancho": 7.4,
+      "ancho": 7.6,
       "rumbo_eje": 90,
       "altura_alero": 3.54,
       "pisos": 1,
@@ -464,7 +502,7 @@
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43",
+        "color": "#8e5d56",
         "ventanas": {
           "tipo": "reja",
           "ancho": 2.4,
@@ -481,25 +519,25 @@
       "id": "ala_central",
       "nombre": "Ala central entre patios (aulas)",
       "centro": [
-        0.95,
-        -0.88
+        0.7,
+        -0.35
       ],
-      "largo": 42.15,
-      "ancho": 7.3,
+      "largo": 38.9,
+      "ancho": 6.9,
       "rumbo_eje": 0,
       "altura_alero": 3.66,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
         "pendiente": 23,
-        "voladizo": 1.8,
+        "voladizo": 1.7,
         "material": "fibrocemento",
         "color": "#7b7b77",
         "cumbrera": "largo"
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43",
+        "color": "#8e5d56",
         "ventanas": {
           "tipo": "reja",
           "ancho": 2.4,
@@ -517,25 +555,25 @@
       "id": "pabellon_sur",
       "nombre": "Pabellón sur (culata a dos aguas en el eje central)",
       "centro": [
-        0.0,
-        -26.12
+        -0.15,
+        -25.65
       ],
-      "largo": 8.35,
-      "ancho": 11.5,
+      "largo": 9.3,
+      "ancho": 11.0,
       "rumbo_eje": 0,
-      "altura_alero": 3.65,
+      "altura_alero": 3.43,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
-        "pendiente": 20,
-        "voladizo": 2.05,
+        "pendiente": 21,
+        "voladizo": 1.45,
         "material": "fibrocemento",
         "color": "#7b7b77",
         "cumbrera": "largo"
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43",
+        "color": "#8e5d56",
         "ventanas": {
           "tipo": "reja",
           "ancho": 2.0,
@@ -552,56 +590,56 @@
     },
     {
       "id": "corredor_sur_oeste",
-      "nombre": "Corredor sur, tramo occidental",
+      "nombre": "Corredor sur, tramo occidental (prolonga el faldón sur del ala hasta el alero en y ≈ −28,2)",
       "abierto": true,
       "centro": [
-        -16.02,
-        -27.0
+        -15.575,
+        -26.15
       ],
-      "largo": 20.55,
-      "ancho": 2.0,
+      "largo": 19.85,
+      "ancho": 3.5,
       "rumbo_eje": 90,
-      "altura_alero": 2.85,
+      "altura_alero": 2.95,
       "sep_columnas": 3.6,
       "columna": 0.3,
       "techo": {
         "tipo": "una_agua",
-        "pendiente": 23,
+        "pendiente": 19,
         "caida": "S",
-        "voladizo": 0.1,
+        "voladizo": 0.3,
         "material": "fibrocemento",
         "color": "#7b7b77"
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43"
+        "color": "#8e5d56"
       }
     },
     {
       "id": "corredor_sur_este",
-      "nombre": "Corredor sur, tramo oriental",
+      "nombre": "Corredor sur, tramo oriental (prolonga el faldón sur del ala hasta el alero en y ≈ −28,2)",
       "abierto": true,
       "centro": [
-        15.72,
-        -27.0
+        15.675,
+        -26.15
       ],
-      "largo": 19.95,
-      "ancho": 2.0,
+      "largo": 20.65,
+      "ancho": 3.5,
       "rumbo_eje": 90,
-      "altura_alero": 2.85,
+      "altura_alero": 2.95,
       "sep_columnas": 3.6,
       "columna": 0.3,
       "techo": {
         "tipo": "una_agua",
-        "pendiente": 23,
+        "pendiente": 19,
         "caida": "S",
-        "voladizo": 0.1,
+        "voladizo": 0.3,
         "material": "fibrocemento",
         "color": "#7b7b77"
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43"
+        "color": "#8e5d56"
       }
     },
     {
@@ -628,7 +666,7 @@
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43"
+        "color": "#8e5d56"
       }
     },
     {
@@ -655,88 +693,80 @@
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43"
+        "color": "#8e5d56"
       }
     },
     {
-      "id": "bloque_norte_bajo",
-      "nombre": "Bloque norte, crujía baja hacia la calle 55",
+      "id": "bloque_norte",
+      "nombre": "Bloque norte (salones con celosías bajo el corredor y franja de ventanas altas)",
       "centro": [
         14.4,
-        31.75
+        29.5
       ],
       "largo": 28.2,
-      "ancho": 4.5,
+      "ancho": 8.2,
       "rumbo_eje": 90,
-      "altura_alero": 3.5,
+      "altura_alero": 4.95,
       "pisos": 1,
       "techo": {
         "tipo": "una_agua",
-        "pendiente": 24,
+        "pendiente": 6,
         "caida": "N",
-        "voladizo": 0.5,
+        "voladizo": 0.4,
         "material": "fibrocemento",
         "color": "#7b7b77"
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43",
-        "ventanas": {
-          "tipo": "ventana",
-          "ancho": 3.0,
-          "alto": 0.8,
-          "antepecho": 2.0,
-          "separacion": 3.6,
-          "lados": [
-            "N"
-          ]
-        }
-      }
-    },
-    {
-      "id": "bloque_norte_alto",
-      "nombre": "Bloque norte, cuerpo alto con ventanas altas (linternilla)",
-      "centro": [
-        14.4,
-        27.7
-      ],
-      "largo": 28.2,
-      "ancho": 3.6,
-      "rumbo_eje": 90,
-      "altura_alero": 7.0,
-      "pisos": 1,
-      "techo": {
-        "tipo": "una_agua",
-        "pendiente": 8,
-        "caida": "N",
-        "voladizo": 0.5,
-        "material": "fibrocemento",
-        "color": "#7b7b77"
-      },
-      "fachada": {
-        "material": "ladrillo_visto",
-        "color": "#8e4a43",
+        "color": "#8e5d56",
         "ventanas": {
           "tipo": "celosia",
           "ancho": 3.0,
-          "alto": 1.0,
-          "antepecho": 5.75,
+          "alto": 0.85,
+          "antepecho": 1.45,
           "separacion": 3.6,
           "lados": [
             "N"
           ]
         }
+      }
+    },
+    {
+      "id": "corredor_norte",
+      "nombre": "Corredor norte del bloque norte (columnas grises de concreto, cubierta inclinada hacia la calle 55)",
+      "abierto": true,
+      "centro": [
+        14.4,
+        35.45
+      ],
+      "largo": 28.2,
+      "ancho": 3.7,
+      "rumbo_eje": 90,
+      "altura_alero": 2.95,
+      "sep_columnas": 3.5,
+      "columna": 0.3,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 16,
+        "caida": "N",
+        "voladizo": 0.4,
+        "material": "fibrocemento",
+        "color": "#7b7b77"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#8d9194"
       }
     },
     {
       "id": "bloque_noroeste_rojo",
       "nombre": "Bloque de muros rojos con ventanas altas (lado norte, junto al bloque norte)",
       "centro": [
-        -8.95,
-        31.45
+        -8.55,
+        29.9
       ],
-      "largo": 10.9,
-      "ancho": 7.9,
+      "largo": 10.4,
+      "ancho": 7.5,
       "rumbo_eje": 0,
       "altura_alero": 3.0,
       "pisos": 1,
@@ -750,7 +780,7 @@
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43",
+        "color": "#8e5d56",
         "ventanas": {
           "tipo": "ventana",
           "ancho": 1.6,
@@ -767,11 +797,11 @@
       "id": "bloque_esquina_noroeste",
       "nombre": "Bloque de la esquina noroeste (cubierta clara)",
       "centro": [
-        -33.0,
-        35.5
+        -32.7,
+        35.55
       ],
-      "largo": 9.0,
-      "ancho": 8.0,
+      "largo": 8.5,
+      "ancho": 5.6,
       "rumbo_eje": 0,
       "altura_alero": 2.8,
       "pisos": 1,
@@ -785,7 +815,7 @@
       },
       "fachada": {
         "material": "ladrillo_visto",
-        "color": "#8e4a43"
+        "color": "#8e5d56"
       }
     },
     {
@@ -793,11 +823,11 @@
       "nombre": "Kiosco abierto del patio norte",
       "abierto": true,
       "centro": [
-        -23.2,
-        34.7
+        -23.95,
+        34.75
       ],
-      "largo": 8.6,
-      "ancho": 8.3,
+      "largo": 7.9,
+      "ancho": 7.5,
       "rumbo_eje": 0,
       "altura_alero": 2.7,
       "sep_columnas": 4.2,
@@ -813,6 +843,71 @@
         "material": "pañete_pintado",
         "color": "#d9d6cf"
       }
+    },
+    {
+      "id": "bloque_noreste",
+      "nombre": "Bloque de la esquina noreste (al norte de la culata del ala este; cubierta clara en 2020)",
+      "centro": [
+        33.0,
+        33.5
+      ],
+      "largo": 7.0,
+      "ancho": 6.5,
+      "rumbo_eje": 0,
+      "altura_alero": 3.2,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 10,
+        "caida": "E",
+        "voladizo": 0.6,
+        "material": "fibrocemento",
+        "color": "#a3a29d"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8e5d56",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 1.6,
+          "alto": 1.2,
+          "antepecho": 1.2,
+          "separacion": 3.2,
+          "lados": [
+            "E",
+            "N"
+          ]
+        }
+      }
+    },
+    {
+      "id": "porteria",
+      "nombre": "Caseta de la entrada occidental (junto a la reja, sobre la carrera 45)",
+      "centro": [
+        -40.55,
+        13.4
+      ],
+      "largo": 6.7,
+      "ancho": 5.4,
+      "rumbo_eje": 90,
+      "altura_alero": 2.7,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 18,
+        "cumbrera": "largo",
+        "voladizo": 0.4,
+        "material": "fibrocemento",
+        "color": "#a79e99"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#8a5b51",
+        "zocalo": {
+          "color": "#e9e7e1",
+          "altura": 0.5
+        }
+      }
     }
   ],
   "elementos": [
@@ -820,15 +915,15 @@
       "tipo": "cancha",
       "nombre": "Placa polideportiva cubierta del patio occidental",
       "centro": [
-        -14.75,
-        -0.95
+        -14.3,
+        -0.65
       ],
-      "largo": 27.9,
-      "ancho": 16.4,
+      "largo": 27.7,
+      "ancho": 17.5,
       "rumbo_eje": 0,
       "superficie": "concreto",
       "cubierta": true,
-      "altura": 6.0,
+      "altura": 6.6,
       "material_cubierta": "termoacustica",
       "color_cubierta": "#e3e5e5"
     },
@@ -903,20 +998,20 @@
       "nombre": "Malla eslabonada sobre muro bajo de ladrillo con remate verde",
       "poligono": [
         [
-          -48.5,
-          -41.5
+          -46.0,
+          -42.0
         ],
         [
-          43.0,
-          -41.5
+          42.7,
+          -42.0
         ],
         [
-          43.0,
-          44.0
+          42.7,
+          41.5
         ],
         [
-          -48.5,
-          44.0
+          -46.0,
+          41.5
         ]
       ],
       "altura": 2.4,
@@ -1123,10 +1218,10 @@
       "tipo": "arbol",
       "centro": [
         -40.0,
-        13.0
+        23.0
       ],
       "altura": 8,
-      "copa": 5
+      "copa": 7
     },
     {
       "tipo": "arbol",
@@ -1185,11 +1280,11 @@
     {
       "tipo": "arbol",
       "centro": [
-        -16.0,
-        36.0
+        -15.5,
+        35.5
       ],
       "altura": 7,
-      "copa": 5
+      "copa": 7
     },
     {
       "tipo": "arbol",
@@ -1221,11 +1316,11 @@
     {
       "tipo": "arbol",
       "centro": [
-        32.0,
-        38.0
+        31.0,
+        40.5
       ],
       "altura": 7,
-      "copa": 5
+      "copa": 4
     }
   ],
   "adecuaciones": {
@@ -1235,21 +1330,21 @@
         "volumen": "ala_sur_oeste",
         "faldon": "S",
         "filas": 2,
-        "columnas": 9,
+        "columnas": 10,
         "orientacion_modulo": "horizontal"
       },
       {
         "volumen": "ala_sur_este",
         "faldon": "S",
         "filas": 2,
-        "columnas": 9,
+        "columnas": 10,
         "orientacion_modulo": "horizontal"
       },
       {
         "volumen": "ala_este_sur",
         "faldon": "E",
         "filas": 2,
-        "columnas": 10,
+        "columnas": 8,
         "orientacion_modulo": "horizontal"
       }
     ],
@@ -1281,38 +1376,45 @@
       "control por horario de ventiladores y aires acondicionados (sala del pabellón sur y oficinas)",
       "telegestión del alumbrado de la placa cubierta y de los patios",
       "control de la bomba que sube el agua a la torre de tanques, para que trabaje con el sol",
-      "sensor de nivel de agua en el patio sur que avise de inundación y corte circuitos bajos"
+      "sensor de nivel de agua en los patios que avise de encharcamientos y corte los circuitos bajos (en abril de 2025 se denunciaron inundaciones en la institución, ubicadas por la prensa en la sede La Patria)"
     ],
     "obras_civiles": [
-      "cambio de la cubierta de fibrocemento por lámina termoacústica en el ala sur, el pabellón sur, el ala oriental y sus corredores (≈1.500 m²) antes de montar los paneles; las demás cubiertas en una segunda etapa. Si el fibrocemento es asbesto-cemento (probable por la edad del edificio), retiro con empresa autorizada y disposición final según la Ley 1968 de 2019",
+      "cambio de la cubierta de fibrocemento por lámina termoacústica en el ala sur con sus corredores, el pabellón sur, el ala oriental y su corredor (≈1.500 m² de cubierta) antes de montar los paneles; las demás cubiertas en una segunda etapa. Si el fibrocemento es asbesto-cemento (probable por la edad del edificio), retiro con empresa autorizada y disposición final según la Ley 1968 de 2019",
       "revisión de cerchas y correas de esas alas y refuerzo donde haga falta para el peso de los paneles (≈15 kg/m²)",
-      "canales y bajantes nuevos al cambiar la cubierta, conectados a un drenaje del patio que sí evacue el agua (la sede se inundó en abril de 2025)",
+      "canales y bajantes nuevos al cambiar la cubierta, conectados a un drenaje de patio que evacue bien el agua",
       "tablero, canalización desde los inversores (muro sur del ala sur, a la sombra del corredor) hasta el tablero general y el medidor",
       "puesta a tierra, pararrayos y protecciones contra sobretensiones según RETIE",
       "línea de vida y anclajes en las cumbreras para mantenimiento seguro"
     ],
-    "notas": "La potencia planeada cabe en la cubierta real sin marquesina: 2 filas × 9 columnas de módulos horizontales en cada mitad del faldón sur del ala sur (a lado y lado del pabellón central, 36 módulos) y 2 × 10 en el faldón oriental del ala oriental (20 módulos): 56 módulos de 2,28 × 1,13 m (550 Wp) = 30,8 kWp, un poco más que los 30 kWp del plan. Los arreglos dejan 0,5 m a la cumbrera y a las limatesas y se apartan de las limahoyas con las alas oeste y este y con el pabellón. El faldón sur da al patio de formación: el nim grande (≈12 m) y los árboles del patio sur quedan a más de 10 m y su sombra no alcanza los paneles al mediodía; el pabellón sombrea un poco los extremos cercanos a primera y última hora. En el faldón oriental los árboles de la carrera 43 dan sombra solo temprano en la mañana. No se usa la cubierta curva de la placa: es una estructura liviana cuya capacidad no se conoce. El nodo no tiene baterías en el plan; si se agregaran, cabe un gabinete en el patio sur junto al ala sur. No hay parqueadero dentro de la sede (los carros se parquean en la vía), por eso no se propone cargador de vehículo eléctrico. Toda la cubierta es de fibrocemento con aleros y canales verdes; hay que cambiarla antes de montar."
+    "notas": "La potencia planeada cabe en la cubierta real sin marquesina. Faldón sur del ala sur (pendiente 19°, aulas de 7,6 m entre muros): ancho inclinado útil = (7,6/2)/cos 19° − 1,0 = 3,02 m → 2 filas de módulos horizontales (2 × 1,13 m + junta = 2,31 m). Largo libre de cada tramo: el occidental va de la limahoya con el ala oeste (x ≈ −28,4 en la fila baja) al pabellón (x ≈ −2,4) y el oriental del pabellón (x ≈ 2,1) a la limahoya con el ala este (x ≈ 27,8); unos 25,7–26 m, o sea ≥ 24,7 m con retiros → 10 columnas (10 × 2,30 m = 23,0 m) por tramo, 40 módulos. Faldón oriental del ala este (pendiente 23°, 8,1 m entre muros): (8,1/2)/cos 23° − 1,0 = 3,40 m → 2 filas; en la fila alta el faldón mide ≈32,5 m (largo útil ≈31,5 m, caben 13 columnas) y se usan 8 (18,4 m), centradas, lejos de los extremos de cuatro aguas → 16 módulos. Total: 56 módulos de 2,28 × 1,13 m (550 Wp) = 30,8 kWp, un poco más que los 30 kWp del plan. Los arreglos quedan a ≥0,8 m de la cumbrera, a ≥1,1 m de las limahoyas y del pabellón y no cruzan aleros. Sombras: el faldón sur mira al patio de formación; el nim grande (≈12 m) y los árboles del patio sur quedan a más de 7 m y al mediodía su sombra no llega a los paneles; temprano en la mañana el nim y el pabellón sombrean el extremo oriental del tramo occidental. En el faldón oriental los árboles de la carrera 43 (7–8 m, con el tronco a unos 3 m del alero) dan sombra hasta media mañana: hay que podarlos o aceptar esa pérdida. Reserva: el faldón sur continúa sobre el corredor (≈4,3 m inclinados): si la estructura del corredor lo permite caben 2 filas × 8 columnas más por tramo (32 módulos, 17,6 kWp); no se cuentan. No se usa la cubierta curva de la placa: es una estructura liviana cuya capacidad no se conoce. El nodo no tiene baterías en el plan; si se agregaran, cabe un gabinete en el patio de concreto del sureste, entre el nim y los árboles de la esquina (x ≈ 14 a 22, y ≈ −38 a −32). No hay parqueadero dentro de la sede (los carros se parquean en la vía), por eso no se propone cargador de vehículo eléctrico. Toda la cubierta es de fibrocemento con canales verdes; hay que cambiarla antes de montar."
   },
   "incertidumbres": [
-    "Street View es de noviembre de 2013. El satélite (enero de 2020) muestra la cubierta curva de la placa ya blanca (en 2013 se veía gris metálica desde el sur) y árboles mucho más grandes; las copas del modelo salen del satélite.",
-    "Los panoramas quedan unos 5,5 m al norte del satélite (precisión nominal de Esri ±10 m). Se respetó el satélite para la huella.",
-    "En el satélite las cumbreras no van centradas: los faldones exteriores son más largos porque cubren corredores (ala sur: cumbrera en y ≈ −20,0; ala norte ≈ 19,1; ala oeste ≈ −29,5; ala central ≈ 0,0). El generador solo hace techos simétricos: se dejaron las cumbreras en el centro de cada ala (corridas 0,7 a 2 m) y los corredores se modelaron con aleros anchos y volúmenes abiertos con columnas.",
-    "Los remates sur de las alas oeste y este son a cuatro aguas con un gablete pequeño; se dibujan como cuatro aguas sin gablete. Los remates norte son culatas (visto en la oeste desde mV4Q y en la este desde pKAM).",
-    "Alturas medidas en Street View con cámara a 2,5 m: el patio sur está ≈0,4 m más alto que la vía sur y el patio norte ≈0,9 m más bajo que la calle 55. El modelo supone terreno plano; las alturas del bloque norte están medidas desde su propio piso.",
-    "Las fachadas hacia los patios no se ven desde la calle: ventanas y corredores de esos lados se dejaron típicos. Las puertas de aulas en el corredor sur y la puerta principal en la fachada occidental (entre los escudos y las astas) tienen posición estimada.",
-    "La culata del pabellón sur tiene esquinas ochavadas (tres caras con ventanas); se modeló como rectángulo.",
-    "La altura de la placa cubierta (clave ≈8 m) se estimó desde el sur y el occidente; no se ven sus columnas ni el piso de la cancha.",
-    "El bloque norte (cuerpo alto con linternilla), el bloque rojo del noroeste, el bloque de la esquina noroeste y el kiosco se ven solo en parte; su uso no se conoce y sus medidas son aproximadas.",
-    "El generador no dibuja canales ni tapas de alero de otro color: los aleros verdes del colegio quedan del color de la cubierta.",
+    "Street View es de noviembre de 2013. El satélite (enero de 2020) muestra la cubierta curva de la placa ya blanca (en 2013 era gris metálica), la cubierta del bloque noreste más clara y árboles mucho más grandes; las copas del modelo salen del satélite.",
+    "Los panoramas quedan unos 7 m al norte del satélite (centro de las vías sur y norte; precisión nominal de Esri ±10 m). La huella está en el marco del satélite. El levantamiento anterior había usado 5,5 m y por eso sus comparaciones ponían la cámara 1,5 m más cerca del edificio.",
+    "Cumbreras medidas en el satélite: ala sur y ≈ −20,3 (no centrada: el faldón sur mide 7,9 m en planta y el norte 4,8 m), ala norte y ≈ 19,2, ala central x ≈ 0,25, ala oeste x ≈ −29,75, ala este x ≈ 30,25. El generador solo hace techos simétricos: el ala sur se modeló como un cuerpo de aulas centrado en su cumbrera más un corredor de una agua con la misma pendiente; en las demás alas la cumbrera del modelo queda a ≤0,45 m de la medida.",
+    "Pendientes: 21° en el pabellón (medida en su culata desde 9FtQ), 19° en el ala sur (sale de la cumbrera del satélite y de las alturas de 7qDe y 9FtQ: alero ≈3,0 m, cumbrera ≈5,6–5,7 m) y 23° en las alas oeste, este y norte (del levantamiento anterior; desde 9pLy el ala oeste da 21–23°). Con estas medidas la cumbrera del ala sur (5,6 m) queda 0,2 m sobre la del ala oeste y asoma una culata pequeña en el cruce que puede no existir.",
+    "Los remates sur de las alas oeste y este son a cuatro aguas con un gablete pequeño; se dibujan como cuatro aguas sin gablete. El remate sureste está tapado por árboles en el satélite y se dejó igual al suroeste. Los remates norte son culatas.",
+    "El modelo supone terreno plano al nivel de la calle. Con el desfase de 7 m, en 7qDe el piso del ala sur queda unos 0,5 m sobre la vía sur; en el norte la base de las columnas del corredor queda casi al nivel de la calle (el levantamiento anterior estimaba el patio norte 0,9 m más bajo). Las alturas del bloque norte se midieron desde la calle.",
+    "Bloque norte: el satélite muestra una cubierta de poca pendiente de y ≈ 25 a 34 y otra más oscura e inclinada hacia la calle hasta y ≈ 37,7; F-dh y JFhX muestran un corredor de columnas grises con celosías en el muro y una franja de ventanas altas sobre su cubierta. Se modeló como bloque alto (alero norte 4,95 m) más corredor abierto (alero 2,95 m, 16°). La caída al norte de la cubierta alta es supuesta; el muro sur del bloque queda 0,7 m sobre la cumbrera del ala norte sin haberlo visto. El generador dibuja una sola fila de ventanas: la franja alta sobre el corredor no aparece.",
+    "Bloque noreste (x 29,8 a 36,3, y 30 a 37): se ve en Qkc9 (2013) con muros rojos, columnas grises y cubierta de una agua; su caída hacia el oriente y su alero (≈3,2 m) son estimados.",
+    "Caseta de la entrada occidental: medidas del satélite (cubierta clara de 7,5 × 6,2 m entre la reja y el ala oeste); el letrero pintado no se lee bien ('…PORTERÍA'?), puede ser portería o tienda escolar.",
+    "El bloque rojo del noroeste, el bloque de la esquina noroeste y el kiosco se ven solo en parte; su uso no se conoce. Sus huellas salen del satélite (el borde occidental del bloque de la esquina está tapado por un árbol).",
+    "Las fachadas hacia los patios no se ven desde la calle: ventanas y corredores de esos lados se dejaron típicos. Las puertas de aulas en el corredor sur y la puerta principal en la fachada occidental (entre los escudos y las astas) tienen posición estimada; la profundidad del corredor sur (3,5 m entre columnas y muro) es estimada.",
+    "La culata del pabellón sur tiene esquinas ochavadas (tres caras con ventanas); se modeló como rectángulo de 11,0 m (ancho medido en 9FtQ).",
+    "La placa cubierta mide 19,0 × 29,7 m en el satélite; su clave se midió en ≈8,5–8,9 m desde 9FtQ y 7qDe (el generador la dibuja con arranque a 6,6 m y flecha de 2,1 m). No se ven sus columnas ni el piso de la cancha.",
+    "La cerca sale del satélite (sombra del muro bajo) y de las distancias en Street View: x −46,0 a 42,7, y −42,0 a 41,5; el lado occidental puede no ser recto (entre −45 y −47,5).",
+    "El color de los muros (#8e5d56) se muestreó en muros al sol en 9FtQ y HDlz; el valor anterior (#8e4a43) era más saturado. El generador no dibuja canales ni tapas de alero de otro color: los canales verdes del colegio quedan del color de la cubierta.",
     "La torre real tiene dos columnas, plataforma y dos tanques plásticos azules; se usa el tanque elevado genérico (≈9 m).",
     "No se sabe si el fibrocemento es asbesto-cemento ni el estado de la estructura de la cubierta: hay que verificarlo antes de las obras.",
-    "No se vio un letrero con el nombre del colegio en 2013."
+    "El nombre del colegio solo se lee en el sello redondo junto a los escudos de la entrada (2013); no se vio un letrero grande."
   ],
   "verificacion": {
     "trace": "data/geo/img/ie_led_trace.png",
     "superposicion_muros_y_aleros": [
-      "data/geo/img/ie_led_ovl1.png",
-      "data/geo/img/ie_led_ovl2.png"
+      "data/geo/img/ie_led_vf_full_spec.png",
+      "data/geo/img/ie_led_vf_n_spec.png",
+      "data/geo/img/ie_led_vf_ne_spec.png",
+      "data/geo/img/ie_led_vf_nw_spec.png"
     ],
     "satelite": [
       "data/geo/img/ie_led_sat75.png",
@@ -1322,7 +1424,12 @@
       "data/geo/img/ie_led_crop_n_enh.png",
       "data/geo/img/ie_led_crop_calle_s.png",
       "data/geo/img/ie_led_crop_calle_n.png",
-      "data/geo/img/ie_led_crop_tanque.png"
+      "data/geo/img/ie_led_crop_tanque.png",
+      "data/geo/img/ie_led_vf_ctx.png",
+      "data/geo/img/ie_led_vf_n.png",
+      "data/geo/img/ie_led_vf_ne_raw2.png",
+      "data/geo/img/ie_led_vf_nw_raw2.png",
+      "data/geo/img/ie_led_vf_w_raw.png"
     ],
     "vistas": [
       "data/geo/img/ie_led_sv_9FtQ_n.jpg",
@@ -1345,9 +1452,24 @@
       "data/geo/img/ie_led_sv_HDlz_e.jpg",
       "data/geo/img/ie_led_sv_dofQ_e.jpg",
       "data/geo/img/ie_led_sv_MQ5r_tanque.jpg",
-      "data/geo/img/ie_led_web_elcolombiano_2025.jpg"
+      "data/geo/img/ie_led_vf_escudos.jpg",
+      "data/geo/img/ie_led_vf_sello.jpg",
+      "data/geo/img/ie_led_vf_sv_Fdh_s.jpg",
+      "data/geo/img/ie_led_vf_sv_7qDe_n.jpg",
+      "data/geo/img/ie_led_vf_sv_Qkc9_so.jpg",
+      "data/geo/img/ie_led_vf_sv_HDlz_ne.jpg",
+      "data/geo/img/ie_led_vf_sv_HDlz_porteria.jpg",
+      "data/geo/img/ie_led_vf_sv_glmj_o.jpg",
+      "data/geo/img/ie_led_vf_sv_PBid_no.jpg",
+      "data/geo/img/ie_led_vf_sv_nXfE_o.jpg"
     ],
     "comparaciones": [
+      "data/geo/img/ie_led_vf_cmp_Fdh_s_despues7_comparacion.png",
+      "data/geo/img/ie_led_vf_cmp_Fdh_s_despues7_mezcla.png",
+      "data/geo/img/ie_led_vf_cmp_7qDe_n_despues7_comparacion.png",
+      "data/geo/img/ie_led_vf_cmp_7qDe_n_despues7_mezcla.png",
+      "data/geo/img/ie_led_vf_cmp_Fdh_s_comparacion.png",
+      "data/geo/img/ie_led_vf_cmp_7qDe_n_antes_comparacion.png",
       "data/geo/img/ie_led_cmp_9FtQ_n_comparacion.png",
       "data/geo/img/ie_led_cmp_9FtQ_n_mezcla.png",
       "data/geo/img/ie_led_cmp_iGAz_n_comparacion.png",
@@ -1362,10 +1484,12 @@
       "data/geo/img/ie_led_cmp_9pLy_e_mezcla.png"
     ],
     "orbitas": [
+      "data/geo/img/ie_led_vf_orbita_existente.png",
+      "data/geo/img/ie_led_vf_orbita_todo.png",
       "data/geo/img/ie_led_orbita1.png",
       "data/geo/img/ie_led_orbita2.png",
       "data/geo/img/ie_led_orbita_todo.png"
     ],
-    "notas": "Comparaciones con la misma cámara de sv_pano.py y el modelo corrido 5,5 m al norte y 0,4 m hacia arriba (patio sobre la vía). 9FtQ rumbo 0 e iGAz rumbo 20: culata, cumbrera y aleros del pabellón sur, alero del corredor sur y arco de la placa coinciden. Vxl8 rumbo 270: alero y cumbrera del ala oriental coinciden. 9pLy rumbo 90: alero y cumbrera del ala occidental, astas y torre de tanques coinciden. JFhX rumbo 185: el bloque norte quedaba 0,5 m bajo y sin el cuerpo alto; se subió (crujía baja 3,5 m, cuerpo alto 7,0 m) con las medidas de esa foto y el patio norte 0,9 m bajo la calle; no se repitió ese render por el límite de 10 renders. 2uZz rumbo 15 y 9pLy rumbo 90 se hicieron después de la corrección: esquina suroeste en posición (el gablete no se modela). Órbita con adecuaciones: los 56 módulos quedan apoyados en los faldones, sin cruzar cumbreras ni limahoyas."
+    "notas": "Verificación independiente (octubre de 2026): huella remedida con perfiles de brillo del satélite z19 (0,296 m/píxel, cada 0,25 m) en todos los volúmenes; comparaciones nuevas con panoramas no usados antes (F-dh rumbo 200 y 7qDe rumbo 25), con la misma cámara de sv_pano.py y el modelo corrido 7 m al norte. 7qDe: el alero y la cumbrera del ala sur, la limahoya con el pabellón y la cerca coinciden; la clave de la placa quedaba ≈0,8 m baja y se subió. F-dh: el corredor norte con columnas, las celosías, el alero del corredor y el borde de la cubierta alta coinciden tras bajar el bloque norte (antes 7,0 m y sin corredor). Los árboles del modelo son los de 2020 y tapan más que en las fotos de 2013. Las comparaciones 'antes' (ie_led_vf_cmp_Fdh_s y ie_led_vf_cmp_7qDe_n_antes, desfase 5,5 m) y las del levantamiento anterior (ie_led_cmp_*) se hicieron con la especificación vieja. Órbita con adecuaciones: 56 módulos en los faldones sur del ala sur (2 × 10 a cada lado del pabellón) y oriental del ala este (2 × 8), sin cruzar cumbreras, limahoyas ni el pabellón."
   }
 }
