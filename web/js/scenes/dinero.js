@@ -1,6 +1,22 @@
 // Escena 3D: matriz periodo × categoría de la contratación registrada en SECOP (2007–2026).
+// Tablero con canto redondeado, ranuras por celda y columnas biseladas cuyo bisel no se deforma al crecer.
 import { THREE, Stage, tokens, onTheme, mat, fmtCOP, fmtN, gsap } from '../core.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { SECOP, TEXTOS } from '../data.js';
+
+// Columna de altura 1 con bisel fijo: el sombreador reubica los vértices del bisel superior según la escala y
+// del objeto (la altura real), así el canto mide lo mismo en una columna baja que en una alta
+const BEV = 0.14;
+function bevelKeep(m) {
+  m.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nobjectNormal.y *= length(modelMatrix[1].xyz);')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nfloat hh = max(length(modelMatrix[1].xyz), 1e-4);\ntransformed.y = (position.y < 0.5 ? min(position.y, 0.5 * hh) : max(hh - (1.0 - position.y), 0.5 * hh)) / hh;');
+  };
+  m.customProgramCacheKey = () => 'columna-bisel';
+  return m;
+}
 
 export function mount(root) {
   const el = root.querySelector('.stage');
@@ -11,10 +27,22 @@ export function mount(root) {
   const GX = 4.2, GZ = 3.2, H = 14;
   const x0 = -((P.length - 1) * GX) / 2, z0 = -((C.length - 1) * GZ) / 2;
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(P.length * GX + 8, C.length * GZ + 8), mat(T.surface));
-  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; S.add(floor);
-  const grid = new THREE.GridHelper(Math.max(P.length * GX, C.length * GZ) + 8, 24, T.line, T.line);
-  grid.position.y = 0.01; S.add(grid);
+  // tablero: losa de 60 cm con canto redondeado (cara superior en y = 0)
+  const floor = new THREE.Mesh(new RoundedBoxGeometry(P.length * GX + 7, 0.6, C.length * GZ + 7, 3, 0.28), mat(T.surface, { roughness: 0.9 }));
+  floor.position.y = -0.3; floor.receiveShadow = true; S.add(floor);
+  // retícula entre celdas: franjas de 4 cm, 5 mm sobre el tablero y con polygonOffset (no titilan)
+  const gx = (i) => x0 + (i - 0.5) * GX, gz = (j) => z0 + (j - 0.5) * GZ, lines = [];
+  for (let i = 0; i <= P.length; i++) lines.push(new THREE.BoxGeometry(0.04, 0.005, gz(C.length) - gz(0) + 1).translate(gx(i), 0.0025, (gz(0) + gz(C.length)) / 2));
+  for (let j = 0; j <= C.length; j++) lines.push(new THREE.BoxGeometry(gx(P.length) - gx(0) + 1, 0.005, 0.04).translate((gx(0) + gx(P.length)) / 2, 0.0025, gz(j)));
+  const grid = new THREE.Mesh(mergeGeometries(lines), new THREE.MeshBasicMaterial({ color: T.line, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }));
+  S.add(grid);
+  // ranuras: una placa biselada bajo cada celda (matriz) o bajo cada pila (instanciadas)
+  const slotMat = mat(T.surface.clone().lerp(T.ink, 0.07), { roughness: 0.75 });
+  const slotGeo = new RoundedBoxGeometry(2.7, 0.06, 2.4, 2, 0.03).translate(0, 0.01, 0);
+  const slots = new THREE.InstancedMesh(slotGeo, slotMat, P.length * C.length), slotsPila = new THREE.InstancedMesh(slotGeo, slotMat, P.length);
+  P.forEach((p, i) => { C.forEach((c, j) => slots.setMatrixAt(i * C.length + j, new THREE.Matrix4().makeTranslation(x0 + i * GX, 0, z0 + j * GZ))); slotsPila.setMatrixAt(i, new THREE.Matrix4().makeTranslation(x0 + i * GX, 0, 0.4)); });
+  slots.receiveShadow = slotsPila.receiveShadow = true; slotsPila.visible = false;
+  S.add(slots, slotsPila);
 
   P.forEach((p, i) => st.label(p.replace('-', '–'), 'lbl-axis', [x0 + i * GX, 0.2, z0 + C.length * GZ + 0.4]));
   const catLabels = C.map((c, j) => st.label(c.corto, 'lbl-axis', [x0 - 4.6, 0.2, z0 + j * GZ]));
@@ -33,12 +61,12 @@ export function mount(root) {
   });
 
   const bars = [];
-  const geo = new THREE.BoxGeometry(1, 1, 1); geo.translate(0, 0.5, 0);
-  const mats = C.map((c, j) => mat(T.s[c.slot - 1], { roughness: 0.6 }));
+  const geo = new RoundedBoxGeometry(2.2, 1, 1.9, 2, BEV); geo.translate(0, 0.5, 0);
+  const mats = C.map((c, j) => bevelKeep(mat(T.s[c.slot - 1], { roughness: 0.5, metalness: 0.05 })));
   P.forEach((p, i) => C.forEach((c, j) => {
     const m = new THREE.Mesh(geo, mats[j]);
     m.position.set(x0 + i * GX, 0, z0 + j * GZ);
-    m.scale.set(2.2, 0.001, 1.9);
+    m.scale.set(1, 0.001, 1);
     m.castShadow = true; m.receiveShadow = true;
     S.add(m);
     const lab = st.label('', 'lbl-val', [0, 0, 0]);
@@ -46,7 +74,7 @@ export function mount(root) {
     st.pickable(m, { onPick: () => pick(b), onEnter: () => { m.material = hi; lab.element.hidden = !b.v; }, onLeave: () => { m.material = mats[j]; lab.element.hidden = !b.show; } });
     bars.push(b);
   }));
-  const hi = mat(T.ink);
+  const hi = bevelKeep(mat(T.ink, { roughness: 0.5 }));
 
   let ent = 'ALCALDIA', med = 'valor', modo = 'matriz';
   const cell = (e, p, c) => SECOP.por_periodo[e]?.[p]?.[c.key] || { n: 0, valor: 0 };
@@ -85,6 +113,7 @@ export function mount(root) {
     }
     ghosts.forEach((g) => { g.g.visible = conIngresos; g.lab.visible = conIngresos; g.lab.element.hidden = !conIngresos; if (!conIngresos) g.target = 0; });
     catLabels.forEach((l) => { l.visible = modo === 'matriz'; l.element.hidden = modo !== 'matriz'; });
+    slots.visible = modo === 'matriz'; slotsPila.visible = modo !== 'matriz';
     // GSAP anima cada columna hacia su nuevo estado; sin GSAP se coloca de inmediato
     bars.forEach((b) => {
       if (!gsap) { b.h = b.target; b.y = b.ty; b.z = b.tz; place(b); return; }
@@ -144,10 +173,10 @@ export function mount(root) {
 
   bars.forEach((b) => { b.h = 0.001; b.y = 0; b.z = z0 + b.j * GZ; place(b); });
   layout();
-  st.freeze(floor); st.freeze(grid);
+  st.freeze(floor); st.freeze(grid); st.freeze(slots); st.freeze(slotsPila);
   onTheme((t) => {
     floor.material.color.copy(t.surface);
-    grid.material.color = t.line;
+    grid.material.color.copy(t.line); slotMat.color.copy(t.surface).lerp(t.ink, 0.07);
     mats.forEach((m, j) => m.color.copy(t.s[C[j].slot - 1]));
     hi.color.copy(t.ink); ghostMat.color.copy(t.ink); ghostFill.color.copy(t.sun);
   });
