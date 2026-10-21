@@ -2,7 +2,10 @@
 
 Investigación abierta sobre **cómo se ha gastado el dinero público en Yondó (Antioquia) desde 2004**, qué hizo y qué dejó de hacer cada gobierno, y **qué proyectos concretos, con presupuesto, pueden financiarse a partir de 2028**, con la E.S.E. Hospital Héctor Abad Gómez como puerta de entrada de los recursos y una red energética pública con domótica apoyada por MinTIC como proyecto bandera.
 
-El repositorio incluye un **atlas 3D interactivo** (Three.js + GSAP) que muestra los hallazgos y los proyectos propuestos: flujos de contratación, comparación entre periodos de gobierno, el embudo estudio → obra, la microrred simulada hora a hora, el hospital como nodo financiero de 2028, la hoja de ruta con compuertas y un **visor de modelos 3D profesionales** (glTF/GLB con Draco, Meshopt y KTX2). El motor dibuja bajo demanda, ajusta la resolución según el rendimiento y comparte un solo contexto WebGL entre vistas (`docs/09`).
+El repositorio incluye un **atlas 3D interactivo** (Three.js + GSAP) que muestra los hallazgos y los proyectos propuestos:
+- **La plata que no se volvió obra, gobierno por gobierno** (pesos constantes de 2026): pilas de billetes con lo que entró, lo que no se convirtió en obra según registros, lo estimado y lo que pudo gestionarse o ahorrarse, con equivalencias en aulas, viviendas, km de placa huella o plantas de tratamiento, y un **panel anual 2004–2026 de 132 indicadores** (`docs/10`).
+- **Las sedes reales**: réplicas 3D de cada dependencia pública levantadas con satélite, Google Street View y fotos, en su posición real sobre el casco urbano, con el conmutador **Hoy / Con el proyecto** que muestra cuántos paneles caben de verdad en cada cubierta, dónde van las baterías y qué obras hay que hacer antes (`docs/09`).
+- Flujos de contratación, el embudo estudio → obra, la microrred simulada hora a hora, el hospital como nodo financiero de 2028, la hoja de ruta con compuertas y un **visor de modelos 3D profesionales** (glTF/GLB con Draco, Meshopt y KTX2). El motor dibuja bajo demanda, ajusta la resolución según el rendimiento y comparte un solo contexto WebGL entre vistas.
 
 ## Hallazgos en cinco líneas
 
@@ -25,20 +28,26 @@ El repositorio incluye un **atlas 3D interactivo** (Three.js + GSAP) que muestra
 | `docs/06-hospital-2028-financiacion.md` | Proyecto 2: el hospital como puerta de entrada de los recursos en 2028 |
 | `docs/07-portafolio-presupuesto.md` | Portafolio priorizado con presupuesto y fuentes |
 | `docs/08-metodologia-fuentes.md` | Método, fuentes, limitaciones y cómo verificar |
-| `docs/09-motor-3d-y-modelos.md` | Motor 3D optimizado, pipeline de modelos GLB y diseño |
+| `docs/09-motor-3d-y-modelos.md` | Motor 3D optimizado, modelos GLB, réplicas de las sedes reales (levantamiento con satélite y Street View) y diseño |
+| `docs/10-dinero-no-hecho-por-gobierno.md` | La plata que no se convirtió en obra en cada gobierno, lo que pudo gestionarse y sus equivalencias en obras |
 | `docs/anexos/` | Cinco informes de investigación con cada dato y su URL: gobiernos, finanzas y regalías, hospital, energía y MinTIC, indicadores sociales |
 | `data/` | Datos estructurados (JSON) que alimentan el atlas y los documentos |
+| `data/comparativa/` | Panel anual 2004–2026, fugas en la contratación (SECOP), regalías y fondos no gestionados, costo de no hacer y la síntesis por gobierno |
+| `data/edificios/` | Levantamiento de cada sede pública (formato en `ESPECIFICACION.md`) |
+| `scripts/geo/` | Herramientas de levantamiento: satélite, cobertura y vistas de Street View, superposición de la huella, calles de OpenStreetMap y huellas de edificaciones |
 | `scripts/` | Descarga y análisis de SECOP, simulación de la microrred, construcción del sitio |
 | `web/` | El atlas 3D (HTML + módulos JavaScript + Three.js + GSAP); `web/models/` modelos GLB; `web/vendor/` decodificadores Draco y Basis |
-| `scripts/modelos/` | Generación y optimización de los modelos GLB (gltf-transform + Draco) |
+| `scripts/modelos/` | Generación y optimización de los modelos GLB (gltf-transform + Draco), réplicas de las sedes (`build_edificios.mjs`) y render de comparación con Street View (`render_vista.mjs`) |
 
 ## Ver el atlas 3D
 
 ```bash
 python3 scripts/build_periodos.py  # matriz de seis gobiernos (data/periodos.json)
 python3 scripts/build_marco_md.py  # regenera docs/02
+python3 scripts/build_panel_anual.py       # panel anual 2004–2026 (data/comparativa/)
+python3 scripts/build_dinero_no_hecho.py   # plata no hecha por gobierno + docs/10
+(cd scripts/modelos && npm install && npm run build && node build_edificios.mjs)  # modelos GLB y réplicas (opcional: ya vienen generados)
 python3 scripts/build_data.py      # genera web/js/data.js desde data/*.json
-(cd scripts/modelos && npm install && npm run build)  # modelos GLB (opcional: ya vienen generados)
 python3 scripts/build_site.py      # empaqueta el sitio autónomo en site/
 cd site && python3 -m http.server 8000
 # abrir http://localhost:8000
@@ -49,7 +58,8 @@ Al hacer *push* a `main`, el flujo `.github/workflows/pages.yml` publica el atla
 ## Reproducir el análisis de contratación
 
 ```bash
-scripts/descargar_secop.sh data/secop/raw          # ~19 MB desde datos.gov.co
+scripts/descargar_secop.sh                         # ~19 MB desde datos.gov.co, por páginas
+python3 scripts/fugas_secop.py                     # fugas por año, periodo y entidad (data/comparativa/)
 python3 scripts/secop_analisis.py data/secop/raw
 mv data/secop/raw/secop_resumen.json data/secop/
 python3 scripts/tablas_secop_md.py                 # tablas en Markdown
@@ -61,6 +71,12 @@ node scripts/verificar_sim.mjs                     # escenarios de la microrred
 1. **Datos abiertos y reproducibles.** Toda cifra tiene fuente; las estimaciones están marcadas como tales.
 2. **Indicios, no acusaciones.** Los patrones de contratación son una agenda de verificación con expedientes; no se nombra a personas naturales.
 3. **Proyectos que no repitan el ciclo.** Ninguna propuesta depende de contratar una nueva consultoría sin fuente para la obra.
+
+## Fuentes de mapas e imágenes
+
+- Calles, caños y cuerpos de agua: © colaboradores de OpenStreetMap (ODbL).
+- Huellas de edificaciones del contexto urbano: Microsoft Global ML Building Footprints (ODbL).
+- Imágenes satelitales (Esri World Imagery) y panoramas de Google Street View: solo se usaron como referencia de levantamiento y **no se publican** (`data/geo/img/` está fuera del repositorio); el atlas enlaza a cada panorama en Google Maps.
 
 ## Licencia
 
