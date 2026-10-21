@@ -1,0 +1,293 @@
+{
+  "id": "parque_edu",
+  "nombre": "Parque Educativo 'Sueños de Casabe'",
+  "nodo_microrred": "parque_edu",
+  "direccion": "Carrera 54 # 48-1 (según Google), al sur del Coliseo Benito Arias",
+  "lat": 7.006133,
+  "lon": -73.910135,
+  "ubicacion": {
+    "confianza": "alta",
+    "metodo": "prueba"
+  },
+  "fuentes": [],
+  "volumenes": [
+    {
+      "id": "portico",
+      "nombre": "Pórtico de acceso con el letrero",
+      "centro": [
+        -27.55,
+        -0.92
+      ],
+      "largo": 9.7,
+      "ancho": 3.5,
+      "rumbo_eje": 347,
+      "base": 0,
+      "altura_alero": 3.9,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#a9aca6"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#3f3b3d",
+        "puertas": [
+          {
+            "lado": "O",
+            "pos": 0.5,
+            "ancho": 8.0,
+            "alto": 2.85
+          }
+        ],
+        "letrero": {
+          "lado": "O",
+          "texto": "SUEÑOS DE CASABE",
+          "color": "#c9cbc8"
+        }
+      }
+    },
+    {
+      "id": "bloque_oeste",
+      "nombre": "Bloque oeste (aulas bajo la cubierta)",
+      "centro": [
+        -10.48,
+        4.05
+      ],
+      "largo": 32.0,
+      "ancho": 7.6,
+      "rumbo_eje": 77,
+      "base": 0,
+      "altura_alero": 4.3,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0.3,
+        "material": "concreto",
+        "color": "#7d927f"
+      },
+      "fachada": {
+        "material": "bloque",
+        "color": "#989c99",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.5,
+          "alto": 1.1,
+          "antepecho": 1.1,
+          "separacion": 4.0,
+          "lados": [
+            "N",
+            "S"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "E",
+            "pos": 0.5,
+            "ancho": 1.8,
+            "alto": 2.4
+          },
+          {
+            "lado": "S",
+            "pos": 0.3,
+            "ancho": 1.0,
+            "alto": 2.4
+          },
+          {
+            "lado": "S",
+            "pos": 0.7,
+            "ancho": 1.0,
+            "alto": 2.4
+          }
+        ],
+        "corredor": {
+          "lado": "S",
+          "profundidad": 2.0,
+          "sep_columnas": 4.0
+        }
+      }
+    },
+    {
+      "id": "bloque_este",
+      "nombre": "Bloque este (aulas)",
+      "centro": [
+        19.57,
+        5.24
+      ],
+      "largo": 17.4,
+      "ancho": 16.1,
+      "rumbo_eje": 347,
+      "base": 0,
+      "altura_alero": 4.3,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0.3,
+        "material": "concreto",
+        "color": "#7d927f"
+      },
+      "fachada": {
+        "material": "bloque",
+        "color": "#989c99",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.5,
+          "alto": 1.1,
+          "antepecho": 1.1,
+          "separacion": 4.0,
+          "lados": [
+            "E",
+            "O"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "O",
+            "pos": 0.5,
+            "ancho": 1.8,
+            "alto": 2.4
+          }
+        ]
+      }
+    },
+    {
+      "id": "bloque_este_sur",
+      "nombre": "Franja sur del bloque este (cubierta más baja)",
+      "centro": [
+        22.49,
+        -7.38
+      ],
+      "largo": 16.1,
+      "ancho": 8.5,
+      "rumbo_eje": 77,
+      "base": 0,
+      "altura_alero": 3.4,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0.2,
+        "material": "concreto",
+        "color": "#7d927f"
+      },
+      "fachada": {
+        "material": "bloque",
+        "color": "#989c99",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.5,
+          "alto": 1.1,
+          "antepecho": 1.1,
+          "separacion": 4.0,
+          "lados": [
+            "S"
+          ]
+        }
+      }
+    }
+  ],
+  "elementos": [
+    {
+      "tipo": "patio",
+      "centro": [
+        9.93,
+        -0.99
+      ],
+      "largo": 26.6,
+      "ancho": 5.5,
+      "rumbo_eje": 347
+    },
+    {
+      "tipo": "plaza",
+      "centro": [
+        -34.76,
+        -2.38
+      ],
+      "largo": 13.0,
+      "ancho": 11.2,
+      "rumbo_eje": 347
+    },
+    {
+      "tipo": "anden",
+      "centro": [
+        -2.73,
+        10.71
+      ],
+      "largo": 57.1,
+      "ancho": 1.9,
+      "rumbo_eje": 77
+    },
+    {
+      "tipo": "anden",
+      "centro": [
+        23.72,
+        -12.74
+      ],
+      "largo": 15.0,
+      "ancho": 2.5,
+      "rumbo_eje": 77
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -42.1,
+        -6.8
+      ],
+      "altura": 11.5,
+      "copa": 18
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        2.14,
+        -2.59
+      ],
+      "altura": 10,
+      "copa": 11
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -17.73,
+        -7.68
+      ],
+      "altura": 9,
+      "copa": 10
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        34.25,
+        -10.57
+      ],
+      "altura": 9,
+      "copa": 9
+    }
+  ],
+  "adecuaciones": {
+    "kwp_plan": 12,
+    "fv": [
+      {
+        "volumen": "bloque_este",
+        "faldon": "plano",
+        "filas": 2,
+        "columnas": 11,
+        "orientacion_modulo": "vertical",
+        "inclinacion": 10,
+        "azimut": 167
+      }
+    ],
+    "kwp_factible": 12.1,
+    "inversores": {
+      "n": 1,
+      "kw": 12,
+      "volumen": "bloque_este",
+      "lado": "N"
+    }
+  },
+  "incertidumbres": [],
+  "verificacion": {
+    "trace": "data/geo/img/parque_edu_trace.png",
+    "vistas": []
+  }
+}
