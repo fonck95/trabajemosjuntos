@@ -9,10 +9,351 @@
   "supuesto": "Valor de diseño o de mercado sin fuente única; se reemplaza con cotización.",
   "contrafactual": "Lo que habría pasado con otra decisión. No es un hecho ni una acusación: sirve para dimensionar."
  },
+ "resumen_principal": [
+  "Fondo de regalías (contrafactual): el 10 % de las regalías 2004-2011 valdría hoy $62.589 M a $74.529 M de 2026; con el valor menor alcanzaría para unas 4,5 PTAR como la que necesita el casco urbano, o 63 km de placa huella, o 104 aulas.",
+  "Solar en las sedes públicas (contrafactual): desde 2008, neto a 2026 de −$5.500 M sin valor residual y −$5.069 M con valor residual; desde 2012, neto a 2026 de $740 M sin valor residual y $1.436 M con valor residual; desde 2016, neto a 2026 de $582 M sin valor residual y $1.543 M con valor residual; desde 2020, neto a 2026 de $732 M sin valor residual y $1.958 M con valor residual; desde 2024, neto a 2026 de −$439 M sin valor residual y $1.052 M con valor residual. Hoy, cada año de espera cuesta unos $566 M en facturas.",
+  "Recaudo (estimado): Frente a la mediana de los siete comparables, Yondó recaudó más predial e ICA por habitante en todos los periodos (años sueltos por debajo de la mediana: predial ninguno; ICA 2004 y 2005). Sumado por periodos, lo dejado de recaudar frente a la mediana es $0 M en predial y $0 M en ICA (pesos de 2026, 2004-2024). Con la meta exigente del percentil 75, la brecha sube a $1.600 M en predial y $3.517 M en ICA. El ICA por barril de Yondó (≈2.006 pesos de 2026, promedio 2014-2024) es unas 3,1 veces el de Cantagallo (≈643). No hay evidencia de un rezago frente a los vecinos: el potencial está en actualizar el catastro (desactualizado desde 2021; con el avalúo por habitante de Puerto Berrío serían ≈$1.498 M más al año) y en revisar con Hacienda las bases nuevas del ICA.",
+  "Aguas residuales (estimado): Con FR = 1, el vertimiento sin tratar le cuesta a Aguas y Aseo unos $63 M al año en tasa retributiva (hasta $124 M si se calcula con el caudal medido). Con el factor regional máximo (5,5) serían varios cientos de millones al año. Una PTAR que remueva 80 % de la carga reduciría la tasa en una proporción parecida. El valor realmente facturado por Corantioquia no es público: hay que pedirlo."
+ ],
  "aviso": "Ninguna cifra de este archivo señala a personas. Los contrafactuales muestran oportunidades, no responsabilidades individuales.",
  "series_usadas": {
   "ipc_dane": {
    "fuente": "https://www.dane.gov.co/files/operaciones/IPC/sep2026/anex-IPC-Indices-sep2026.xlsx (índice base dic-2018 = 100)",
+   "mensual": {
+    "2003": [
+     50.42,
+     50.98,
+     51.51,
+     52.1,
+     52.36,
+     52.33,
+     52.26,
+     52.42,
+     52.53,
+     52.56,
+     52.75,
+     53.07
+    ],
+    "2004": [
+     53.54,
+     54.18,
+     54.71,
+     54.96,
+     55.17,
+     55.51,
+     55.49,
+     55.51,
+     55.67,
+     55.66,
+     55.82,
+     55.99
+    ],
+    "2005": [
+     56.45,
+     57.02,
+     57.46,
+     57.72,
+     57.95,
+     58.18,
+     58.21,
+     58.21,
+     58.46,
+     58.6,
+     58.66,
+     58.7
+    ],
+    "2006": [
+     59.02,
+     59.41,
+     59.83,
+     60.09,
+     60.29,
+     60.48,
+     60.73,
+     60.96,
+     61.14,
+     61.05,
+     61.19,
+     61.33
+    ],
+    "2007": [
+     61.8,
+     62.53,
+     63.29,
+     63.85,
+     64.05,
+     64.12,
+     64.23,
+     64.14,
+     64.2,
+     64.2,
+     64.51,
+     64.82
+    ],
+    "2008": [
+     65.51,
+     66.5,
+     67.04,
+     67.51,
+     68.14,
+     68.73,
+     69.06,
+     69.19,
+     69.06,
+     69.3,
+     69.49,
+     69.8
+    ],
+    "2009": [
+     70.21,
+     70.8,
+     71.15,
+     71.38,
+     71.39,
+     71.35,
+     71.32,
+     71.35,
+     71.28,
+     71.19,
+     71.14,
+     71.2
+    ],
+    "2010": [
+     71.69,
+     72.28,
+     72.46,
+     72.79,
+     72.87,
+     72.95,
+     72.92,
+     73.0,
+     72.9,
+     72.84,
+     72.98,
+     73.45
+    ],
+    "2011": [
+     74.12,
+     74.57,
+     74.77,
+     74.86,
+     75.07,
+     75.31,
+     75.42,
+     75.39,
+     75.62,
+     75.77,
+     75.87,
+     76.19
+    ],
+    "2012": [
+     76.75,
+     77.22,
+     77.31,
+     77.42,
+     77.66,
+     77.72,
+     77.7,
+     77.73,
+     77.96,
+     78.08,
+     77.98,
+     78.05
+    ],
+    "2013": [
+     78.28,
+     78.63,
+     78.79,
+     78.99,
+     79.21,
+     79.39,
+     79.43,
+     79.5,
+     79.73,
+     79.52,
+     79.35,
+     79.56
+    ],
+    "2014": [
+     79.95,
+     80.45,
+     80.77,
+     81.14,
+     81.53,
+     81.61,
+     81.73,
+     81.9,
+     82.01,
+     82.14,
+     82.25,
+     82.47
+    ],
+    "2015": [
+     83.0,
+     83.96,
+     84.45,
+     84.9,
+     85.12,
+     85.21,
+     85.37,
+     85.78,
+     86.39,
+     86.98,
+     87.51,
+     88.05
+    ],
+    "2016": [
+     89.19,
+     90.33,
+     91.18,
+     91.63,
+     92.1,
+     92.54,
+     93.02,
+     92.73,
+     92.68,
+     92.62,
+     92.73,
+     93.11
+    ],
+    "2017": [
+     94.07,
+     95.01,
+     95.46,
+     95.91,
+     96.12,
+     96.23,
+     96.18,
+     96.32,
+     96.36,
+     96.37,
+     96.55,
+     96.92
+    ],
+    "2018": [
+     97.53,
+     98.22,
+     98.45,
+     98.91,
+     99.16,
+     99.31,
+     99.18,
+     99.3,
+     99.47,
+     99.59,
+     99.7,
+     100.0
+    ],
+    "2019": [
+     100.6,
+     101.18,
+     101.62,
+     102.12,
+     102.44,
+     102.71,
+     102.94,
+     103.03,
+     103.26,
+     103.43,
+     103.54,
+     103.8
+    ],
+    "2020": [
+     104.24,
+     104.94,
+     105.53,
+     105.7,
+     105.36,
+     104.97,
+     104.97,
+     104.96,
+     105.29,
+     105.23,
+     105.08,
+     105.48
+    ],
+    "2021": [
+     105.91,
+     106.58,
+     107.12,
+     107.76,
+     108.84,
+     108.78,
+     109.14,
+     109.62,
+     110.04,
+     110.06,
+     110.6,
+     111.41
+    ],
+    "2022": [
+     113.26,
+     115.11,
+     116.26,
+     117.71,
+     118.7,
+     119.31,
+     120.27,
+     121.5,
+     122.63,
+     123.51,
+     124.46,
+     126.03
+    ],
+    "2023": [
+     128.27,
+     130.4,
+     131.77,
+     132.8,
+     133.38,
+     133.78,
+     134.45,
+     135.39,
+     136.11,
+     136.45,
+     137.09,
+     137.72
+    ],
+    "2024": [
+     138.98,
+     140.49,
+     141.48,
+     142.32,
+     142.92,
+     143.38,
+     143.67,
+     143.67,
+     144.02,
+     143.83,
+     144.22,
+     144.88
+    ],
+    "2025": [
+     146.24,
+     147.9,
+     148.68,
+     149.66,
+     150.14,
+     150.3,
+     150.71,
+     150.99,
+     151.48,
+     151.76,
+     151.87,
+     152.27
+    ],
+    "2026": [
+     154.07,
+     155.73,
+     156.94,
+     158.17,
+     158.91,
+     159.53,
+     159.79,
+     160.42,
+     161.0
+    ]
+   },
    "promedio_anual": {
     "2004": 55.184,
     "2005": 57.968,
@@ -39,6 +380,7 @@
     "2026": 158.284
    },
    "base_2026": 158.284,
+   "nota": "Pesos de 2026 = índice promedio de enero a septiembre de 2026. Flujos de cada año se deflactan con el promedio de ese año.",
    "diciembre": {
     "2003": 53.07,
     "2004": 55.99,
@@ -369,6 +711,218 @@
    "fuente": "SECOP II, 42 contratos de compra de una TAB (dic-2025 a oct-2026) https://www.datos.gov.co/resource/jbjy-vk9h.json",
    "nota": "Hecho (mediana de contratos firmados). Referencias locales: TAB de la E.S.E. de Yondó en 2014 = $141,4 M (≈275 M de 2026); Antioquia entregó 14 TAB 4x4 en 2021 por $8.359,4 M (docs/anexos/C-hospital-2028.md).",
    "certeza": "hecho",
+   "referencias": [
+    {
+     "fecha": "2026-10-09",
+     "comprador": "ESE Guamal (Magdalena)",
+     "valor": 320873950
+    },
+    {
+     "fecha": "2026-10-08",
+     "comprador": "ESE San Pedro de Iguaque (Boyacá)",
+     "valor": 271204999
+    },
+    {
+     "fecha": "2026-10-08",
+     "comprador": "Hospital San Rafael de Risaralda (Caldas)",
+     "valor": 297500000
+    },
+    {
+     "fecha": "2026-10-01",
+     "comprador": "Hospital Valle de Tenza, sede Almeida (Boyacá)",
+     "valor": 276000000
+    },
+    {
+     "fecha": "2026-09-30",
+     "comprador": "Hospital de González (Cesar)",
+     "valor": 231457472
+    },
+    {
+     "fecha": "2026-09-16",
+     "comprador": "Hospital San Luis de Gaceno (Boyacá), 4x4",
+     "valor": 425000000
+    },
+    {
+     "fecha": "2026-09-02",
+     "comprador": "Municipio de Pisba (Boyacá)",
+     "valor": 416800000
+    },
+    {
+     "fecha": "2026-08-20",
+     "comprador": "ESE de Segovia (Antioquia), 4x4",
+     "valor": 380000000
+    },
+    {
+     "fecha": "2026-08-19",
+     "comprador": "ESE Guaduas (Cundinamarca)",
+     "valor": 417000000
+    },
+    {
+     "fecha": "2026-08-13",
+     "comprador": "ESE Ramiriquí (Boyacá), 4x4",
+     "valor": 367543740
+    },
+    {
+     "fecha": "2026-07-27",
+     "comprador": "ESE Hospital San Juan de Dios (Santander)",
+     "valor": 324000000
+    },
+    {
+     "fecha": "2026-07-27",
+     "comprador": "ESE Hospital Jorge Julio Guzmán (Putumayo)",
+     "valor": 424000000
+    },
+    {
+     "fecha": "2026-07-01",
+     "comprador": "ESE Funza (Cundinamarca)",
+     "valor": 392000000
+    },
+    {
+     "fecha": "2026-06-22",
+     "comprador": "ESE Florián (Santander)",
+     "valor": 297800000
+    },
+    {
+     "fecha": "2026-06-05",
+     "comprador": "ESE Monguí (Boyacá)",
+     "valor": 352000000
+    },
+    {
+     "fecha": "2026-04-30",
+     "comprador": "ESE Susacón (Boyacá), 4x4",
+     "valor": 323705000
+    },
+    {
+     "fecha": "2026-04-29",
+     "comprador": "Hospital de Aguazul (Casanare)",
+     "valor": 378000000
+    },
+    {
+     "fecha": "2026-04-23",
+     "comprador": "ESE El Carmen de Bolívar",
+     "valor": 304950000
+    },
+    {
+     "fecha": "2026-04-14",
+     "comprador": "Hospital Kennedy, Riofrío (Valle)",
+     "valor": 389900000
+    },
+    {
+     "fecha": "2026-04-13",
+     "comprador": "ESE La Gloria (Cesar)",
+     "valor": 267000000
+    },
+    {
+     "fecha": "2026-04-10",
+     "comprador": "ESE Hatillo de Loba (Bolívar)",
+     "valor": 301000000
+    },
+    {
+     "fecha": "2026-04-08",
+     "comprador": "Municipio de Victoria (Caldas)",
+     "valor": 280000000
+    },
+    {
+     "fecha": "2026-04-01",
+     "comprador": "Hospital San Vicente de Paúl",
+     "valor": 325526172
+    },
+    {
+     "fecha": "2026-03-30",
+     "comprador": "Hospital de La Jagua de Ibirico (Cesar)",
+     "valor": 329038538
+    },
+    {
+     "fecha": "2026-03-27",
+     "comprador": "ESE Achí (Bolívar)",
+     "valor": 372713550
+    },
+    {
+     "fecha": "2026-03-26",
+     "comprador": "Clínica Girón ESE (Santander)",
+     "valor": 247379999
+    },
+    {
+     "fecha": "2026-03-26",
+     "comprador": "Hospital de Guamal (Meta), 4x4",
+     "valor": 295481000
+    },
+    {
+     "fecha": "2026-03-13",
+     "comprador": "Hospital de Miraflores (Boyacá)",
+     "valor": 315190000
+    },
+    {
+     "fecha": "2026-03-10",
+     "comprador": "Hospital de Roncesvalles (Tolima)",
+     "valor": 335000000
+    },
+    {
+     "fecha": "2026-03-06",
+     "comprador": "ESE Sáchica (Boyacá), 4x4",
+     "valor": 397000000
+    },
+    {
+     "fecha": "2026-03-03",
+     "comprador": "Hospital de La Victoria (Valle)",
+     "valor": 370990000
+    },
+    {
+     "fecha": "2026-02-27",
+     "comprador": "Hospital de Cáqueza (Cundinamarca)",
+     "valor": 350000000
+    },
+    {
+     "fecha": "2026-02-18",
+     "comprador": "ESE San Eduardo (Boyacá)",
+     "valor": 260000000
+    },
+    {
+     "fecha": "2026-02-06",
+     "comprador": "Hospital de Yolombó (Antioquia)",
+     "valor": 347294117
+    },
+    {
+     "fecha": "2026-02-04",
+     "comprador": "Hospital Santo Domingo Savio (Santander)",
+     "valor": 337500000
+    },
+    {
+     "fecha": "2026-01-30",
+     "comprador": "ESE Los Santos (Santander)",
+     "valor": 272000000
+    },
+    {
+     "fecha": "2026-01-05",
+     "comprador": "ESE La Uvita (Boyacá)",
+     "valor": 269000000
+    },
+    {
+     "fecha": "2025-12-31",
+     "comprador": "Hospital de Filadelfia (Caldas)",
+     "valor": 297500000
+    },
+    {
+     "fecha": "2025-12-30",
+     "comprador": "Hospital Tomás Uribe (Valle)",
+     "valor": 325000000
+    },
+    {
+     "fecha": "2025-12-29",
+     "comprador": "ESE Arauca",
+     "valor": 284243696
+    },
+    {
+     "fecha": "2025-12-23",
+     "comprador": "Hospital San Vicente de Paúl (Caldas)",
+     "valor": 324850000
+    },
+    {
+     "fecha": "2025-12-22",
+     "comprador": "Hospital Sagrado Corazón (Quindío)",
+     "valor": 331900000
+    }
+   ],
    "fecha_precio": "2026 (referencias de otros años indexadas con IPC DANE promedio anual)"
   },
   {
@@ -381,6 +935,33 @@
    "fuente": "SECOP II, 5 contratos de compra de una TAM (abr-oct 2026) https://www.datos.gov.co/resource/jbjy-vk9h.json ; docs/06-hospital-2028-financiacion.md (supuesto de $650 M para Yondó)",
    "nota": "Hecho (mediana de contratos). El máximo toma el supuesto del repositorio para Yondó (650 M), que incluye equipos de cuidado crítico.",
    "certeza": "hecho",
+   "referencias": [
+    {
+     "fecha": "2026-09-29",
+     "comprador": "Hospital de Aguazul (Casanare)",
+     "valor": 480000000
+    },
+    {
+     "fecha": "2026-09-03",
+     "comprador": "Hospital Reina Sofía, Lérida (Tolima)",
+     "valor": 434000000
+    },
+    {
+     "fecha": "2026-08-27",
+     "comprador": "Hospital de Miraflores (Boyacá)",
+     "valor": 400000000
+    },
+    {
+     "fecha": "2026-06-05",
+     "comprador": "ESE Nuestra Señora del Carmen (Cundinamarca), 4x4",
+     "valor": 449800000
+    },
+    {
+     "fecha": "2026-04-06",
+     "comprador": "Hospital San Rafael, El Espinal (Tolima)",
+     "valor": 451500000
+    }
+   ],
    "fecha_precio": "2026 (referencias de otros años indexadas con IPC DANE promedio anual)"
   },
   {
@@ -437,14 +1018,14 @@
   "pregunta": "Si las 13 sedes públicas del plan (469 kWp solares y 770 kWh de baterías) se hubieran instalado al inicio de cada gobierno, con los costos y tarifas de ese año, ¿cuánto se habría ahorrado neto hasta 2026, en pesos de 2026?",
   "metodo": [
    "Producción: 469 kWp × 3,69 kWh/kWp·día (data/microrred.json, Global Solar Atlas con 16 % de pérdidas) con la misma campana solar de web/js/sim.js.",
-   "Autoconsumo: día típico de 15 minutos por sede, cada una como frontera propia con sus perfiles de consumo (sin domótica ni bombeo diurno). El centro de datos se suma al Palacio Municipal. Las baterías cargan con sobrantes hasta 95 % y descargan hasta la reserva de 35 %.",
-   "Valor de la energía: tarifa EPM oficial nivel 1 (promedio de cada año; acueducto con tarifa ESPD = oficial × 1,10). Excedentes: valen cero antes de 2018 (no había regla para acreditarlos; la creó la CREG 030 de 2018) y tarifa − Cv (88,5 % de la tarifa) desde 2018.",
+   "Autoconsumo: día típico en pasos de 15 minutos por sede, cada una como frontera propia con sus perfiles de consumo (sin domótica ni bombeo diurno). El centro de datos se suma al Palacio Municipal. Las baterías cargan con sobrantes hasta 95 % y descargan hasta la reserva de 35 %.",
+   "Valor de la energía: tarifa EPM oficial nivel 1 (promedio de cada año; acueducto con tarifa ESPD = oficial × 1,10). Excedentes: valen cero antes de 2018 (no había regla para acreditarlos; la creó la CREG 030 de 2018) y la tarifa menos el costo de comercialización (88,5 % de la tarifa) desde 2018.",
    "Costo de instalar cada año: costo de 2026 en Yondó (data/presupuesto_microrred.json: 3,53 M/kWp ponderado y 1,4 M/kWh) × factor IRENA, que dice cuántas veces más caro era instalar ese año que en 2024, medido en pesos de 2026 (costo IRENA en USD de 2024 → USD del año con el IPC de EE. UU. → pesos del año con la TRM → pesos de 2026 con el IPC del DANE). Se suma 10 % de ingeniería e interventoría.",
    "Supuesto clave: la diferencia de precio entre Yondó y el promedio mundial se mantiene constante. Como 2026 se compara con 2024 (último dato IRENA) y los precios siguieron bajando, los costos históricos quedan algo altos: el cálculo es conservador.",
    "Operación y mantenimiento: 1,5 % al año del costo de 2026. Degradación de paneles: 0,5 % al año. Inversores: se reponen al año 12 (10 % del costo solar de ese año). Baterías: vida de 12 años y se reponen al precio de ese año.",
    "Primer año: medio año de operación (contratar e instalar toma unos 6 meses). Horizonte: hasta el 31 de diciembre de 2026, sin descuento (pesos constantes).",
    "Valor residual: vida útil que le queda al equipo en 2026 (paneles 25 años, baterías 12) por lo que costaría reponerlo hoy.",
-   "Rango: 'alto' = costos altos (4,0 M/kWp, 2,2 M/kWh, O&M 2 %, degradación 0,8 %, baterías de 10 años); 'bajo' = costos bajos (2,8 M/kWp, 1,0 M/kWh, O&M 1 %, degradación 0,4 %, baterías de 15 años). En 2008 se usan las dos extrapolaciones de IRENA."
+   "Rango: 'alto' = costos altos (4,0 M/kWp, 2,2 M/kWh, operación 2 %, degradación 0,8 %, baterías de 10 años); 'bajo' = costos bajos (2,8 M/kWp, 1,0 M/kWh, operación 1 %, degradación 0,4 %, baterías de 15 años). En 2008 se usan las dos extrapolaciones de IRENA."
   ],
   "insumos": {
    "kwp": 469,
@@ -1755,7 +2336,8 @@
    "En 2008-2012 las baterías de litio para edificios casi no existían en el mercado; el costo de 2008 se extrapola de la tendencia IRENA. Los resultados con baterías para esos años son ilustrativos.",
    "Las baterías se justifican por resiliencia (hospital, acueducto, fuerza pública); en la factura aportan poco cuando los excedentes se acreditan.",
    "No incluye el beneficio de evitar cortes, el diésel ahorrado ni el CO2 evitado."
-  ]
+  ],
+  "lectura": "Solo solar (469 kWp), pesos de 2026, escenario central: 2008: inversión $12.807 M, ahorro bruto $8.047 M, neto sin valor residual −$5.500 M, neto con valor residual −$5.069 M (rango −$6.443 M a −$2.888 M); 2012: inversión $5.537 M, ahorro bruto $6.820 M, neto sin valor residual $740 M, neto con valor residual $1.436 M (rango $360 M a $2.667 M); 2016: inversión $4.592 M, ahorro bruto $5.435 M, neto sin valor residual $582 M, neto con valor residual $1.543 M (rango $790 M a $2.424 M); 2020: inversión $2.799 M, ahorro bruto $3.692 M, neto sin valor residual $732 M, neto con valor residual $1.958 M (rango $1.607 M a $2.362 M); 2024: inversión $1.822 M, ahorro bruto $1.446 M, neto sin valor residual −$439 M, neto con valor residual $1.052 M (rango $965 M a $1.150 M). En 2008 la solar costaba unas 7 veces lo de 2024 (en pesos de 2026) y la energía era más barata: no se habría pagado a 2026. Instalada en 2012, se habría pagado sola en 2025; instalada en 2016, se habría pagado sola en 2025; instalada en 2020, se habría pagado sola en 2025, y dejaría un activo con años de vida útil. La de 2024 apenas lleva dos años y medio: se pagaría en 2027. Las baterías no se pagan con la factura en ningún año: su valor es mantener prendidos el hospital, el acueducto y la fuerza pública durante los cortes."
  },
  "contrafactual_ahorro_regalias": {
   "tipo": "contrafactual",
@@ -1855,7 +2437,8 @@
     2981.1
    ]
   },
-  "nota": "El Sistema General de Regalías (Ley 1530 de 2012) creó un Fondo de Ahorro y Estabilización nacional; este contrafactual imagina un fondo local adicional. Un fondo así habría dado un ingreso permanente: solo con los rendimientos reales (3-4 % del saldo) se pagaría cada año la cifra de la última fila sin tocar el capital."
+  "nota": "El Sistema General de Regalías (Ley 1530 de 2012) creó un Fondo de Ahorro y Estabilización nacional; este contrafactual imagina un fondo local adicional. Un fondo así habría dado un ingreso permanente: solo con los rendimientos reales (3-4 % del saldo) se pagaría cada año la cifra de la última fila sin tocar el capital.",
+  "lectura": "Entre 2004 y 2011 Yondó recibió $156.675 M corrientes de regalías directas ($367.960 M de 2026). Guardar el 10 % ($36.796 M de 2026) en un fondo con rendimiento real de 3-4 % daría hoy $62.589 M a $74.529 M, y solo los rendimientos pagarían $1.878 M a $2.981 M al año sin tocar el capital."
  },
  "recaudo_potencial": {
   "tipo": "estimado (recaudo real = hecho; recaudo con esfuerzo de referencia = contrafactual)",
@@ -2789,17 +3372,17 @@
    }
   },
   "base_petrolera_ica": [
-   "La extracción de petróleo tiene un trato especial en el ICA: el art. 16 del Código de Petróleos (Decreto 1056 de 1953) y el art. 39 de la Ley 14 de 1983 limitan el impuesto municipal sobre la explotación cuando el municipio recibe regalías. Por eso la producción de Ecopetrol en Casabe no es, por sí misma, base gravable de ICA.",
+   "La extracción de petróleo tiene un trato especial en el ICA: el art. 16 del Código de Petróleos (Decreto 1056 de 1953) exime la explotación de petróleo de impuestos municipales, y el art. 39 de la Ley 14 de 1983 limita el ICA sobre la explotación de recursos no renovables cuando el municipio recibe regalías (docs/anexos/B-finanzas-regalias.md, §5.3). Por eso la producción de Ecopetrol en Casabe no es, por sí misma, base gravable de ICA; su alcance exacto debe confirmarlo la Secretaría de Hacienda.",
    "En CUIPO, el 98 % del ICA de Yondó se clasifica como actividades de servicios (2023-2025): sale sobre todo de contratistas de servicios petroleros (docs/anexos/B-finanzas-regalias.md, §5.3). Cuánto paga directamente Ecopetrol debe pedirse a la Secretaría de Hacienda.",
    "Bases nuevas que conviene revisar con Hacienda: la granja solar La Iguana de Ecopetrol (26 MWp, en Yondó desde dic-2025) y el acuerdo Ecopetrol-Parex de 2026 para Casabe (más actividad de contratistas)."
   ],
-  "lectura": "Frente a la mediana de los siete comparables, Yondó recaudó más predial e ICA por habitante en todos los periodos (años por debajo de la mediana: predial ninguno; ICA [2004, 2005]). Lo 'dejado de recaudar' suma $0 M en predial y $0 M en ICA (pesos de 2026, 2004-2024). Con la meta exigente del percentil 75, la brecha sube a $1.600 M en predial y $3.517 M en ICA. El ICA por barril de Yondó (≈2.006 pesos de 2026, promedio 2014-2024) es unas 3,1 veces el de Cantagallo (≈643). No hay evidencia de un rezago frente a los vecinos: el potencial está en actualizar el catastro (desactualizado desde 2021; con el avalúo por habitante de Puerto Berrío serían ≈$1.498 M más al año) y en revisar con Hacienda las bases nuevas del ICA."
+  "lectura": "Frente a la mediana de los siete comparables, Yondó recaudó más predial e ICA por habitante en todos los periodos (años sueltos por debajo de la mediana: predial ninguno; ICA 2004 y 2005). Sumado por periodos, lo dejado de recaudar frente a la mediana es $0 M en predial y $0 M en ICA (pesos de 2026, 2004-2024). Con la meta exigente del percentil 75, la brecha sube a $1.600 M en predial y $3.517 M en ICA. El ICA por barril de Yondó (≈2.006 pesos de 2026, promedio 2014-2024) es unas 3,1 veces el de Cantagallo (≈643). No hay evidencia de un rezago frente a los vecinos: el potencial está en actualizar el catastro (desactualizado desde 2021; con el avalúo por habitante de Puerto Berrío serían ≈$1.498 M más al año) y en revisar con Hacienda las bases nuevas del ICA."
  },
  "aguas_residuales": {
   "hechos": [
    "Superservicios (evaluación integral de Aguas & Aseo de Yondó, sep-2020): 'el vertimiento se realiza sin tratamiento alguno a cuerpos de agua cercanos a las estaciones de vertimiento, con excepción del cribado y sedimentación' en las estaciones de bombeo. Caudales vertidos en 2019: Progreso 13,52 L/s, Paraíso 16,51, Prado 10,62 y Victoria 14,69 (55,34 L/s en total). https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
    "El mismo informe registra cuentas por pagar a Corantioquia por $175 M con más de 360 días 'desde 2018', por tasa por uso del agua y tasa retributiva, y anota que podría no haberse causado ni pagado lo de 2018 y 2019.",
-   "El Plan de Saneamiento y Manejo de Vertimientos (PSMV) lo aprobó Corantioquia en 2014 por 10 años (vencido en 2024 según ese plazo).",
+   "El Plan de Saneamiento y Manejo de Vertimientos (PSMV) lo aprobó Corantioquia en 2014; las dos tablas del informe le dan 10 y 11 años de vigencia (vencería en 2024-2025).",
    "Yondó no tiene PTAR en 2026 (data/gobiernos.json); los estudios del nuevo Plan Maestro (BPIN 2024058930006) figuran inactivos."
   ],
   "tasa_retributiva": {
@@ -3051,10 +3634,10 @@
    "lectura": "Con FR = 1, el vertimiento sin tratar le cuesta a Aguas y Aseo unos $63 M al año en tasa retributiva (hasta $124 M si se calcula con el caudal medido). Con el factor regional máximo (5,5) serían varios cientos de millones al año. Una PTAR que remueva 80 % de la carga reduciría la tasa en una proporción parecida. El valor realmente facturado por Corantioquia no es público: hay que pedirlo."
   },
   "no_cuantificado": [
-   "Salud: no hay datos públicos de enfermedad diarreica o de piel atribuible al vertimiento en Yondó; atribuir casos exige un estudio epidemiológico.",
-   "Pesca y ciénagas: no hay series de captura ni de calidad del agua del caño receptor y las ciénagas que permitan valorar el daño.",
+   "Salud: no se encontraron datos públicos de enfermedad diarreica o de piel atribuible al vertimiento en Yondó; atribuir casos exige un estudio epidemiológico.",
+   "Pesca y ciénagas: no se encontraron series públicas de captura ni de calidad del agua del caño receptor y las ciénagas que permitan valorar el daño.",
    "Multas y sanciones ambientales: no se encontró un proceso sancionatorio público de Corantioquia contra el prestador.",
-   "Costo de oportunidad de las regalías: los recursos de saneamiento del SGP (≈$2.700 M en 2025, docs/anexos/B) existen, pero no hay un proyecto de PTAR listo para financiar."
+   "Plata disponible sin proyecto: el SGP de agua potable y saneamiento fue de $2.706 M en 2025 (docs/anexos/B, §4.2), pero no hay un proyecto de PTAR con estudios terminados (el Plan Maestro está inactivo), así que esa plata no puede ir a tratamiento."
   ]
  },
  "escala_por_periodo": {
@@ -3878,6 +4461,154 @@
       "cantidad_rango": [
        0.6,
        7.4
+      ]
+     }
+    ]
+   },
+   {
+    "monto": "Predial adicional por año si el avalúo por habitante igualara al de Puerto Berrío (ilustrativo)",
+    "valor_mm_2026": 1498.2,
+    "tipo": "contrafactual",
+    "origen": "recaudo_potencial",
+    "equivale_a": [
+     {
+      "id": "aula_dotada",
+      "unidad": "aula",
+      "nombre": "Aula escolar nueva y dotada",
+      "cantidad_central": 2.5,
+      "cantidad_rango": [
+       1.6,
+       3.7
+      ]
+     },
+     {
+      "id": "km_placa_huella",
+      "unidad": "km",
+      "nombre": "Kilómetro de placa huella en vía terciaria",
+      "cantidad_central": 1.5,
+      "cantidad_rango": [
+       0.7,
+       1.9
+      ]
+     },
+     {
+      "id": "km_pavimento_urbano",
+      "unidad": "km",
+      "nombre": "Kilómetro de vía urbana en pavimento rígido",
+      "cantidad_central": 0.4,
+      "cantidad_rango": [
+       0.3,
+       0.7
+      ]
+     },
+     {
+      "id": "vis_rural",
+      "unidad": "vivienda",
+      "nombre": "Vivienda de interés social rural nueva",
+      "cantidad_central": 12.1,
+      "cantidad_rango": [
+       9.5,
+       16.7
+      ]
+     },
+     {
+      "id": "vis_urbana",
+      "unidad": "vivienda",
+      "nombre": "Vivienda de interés social urbana",
+      "cantidad_central": 9.5,
+      "cantidad_rango": [
+       6.3,
+       18.2
+      ]
+     },
+     {
+      "id": "ptar_12000_hab",
+      "unidad": "planta",
+      "nombre": "Planta de tratamiento de aguas residuales (PTAR) para unos 12.000 habitantes",
+      "cantidad_central": 0.1,
+      "cantidad_rango": [
+       0.0,
+       0.1
+      ]
+     },
+     {
+      "id": "conexion_alcantarillado",
+      "unidad": "vivienda",
+      "nombre": "Conexión domiciliaria de alcantarillado (acometida y caja de inspección)",
+      "cantidad_central": 599.3,
+      "cantidad_rango": [
+       143.0,
+       1498.2
+      ]
+     },
+     {
+      "id": "luminaria_led",
+      "unidad": "luminaria",
+      "nombre": "Luminaria LED de alumbrado público instalada",
+      "cantidad_central": 599.3,
+      "cantidad_rango": [
+       499.4,
+       1338.9
+      ]
+     },
+     {
+      "id": "ambulancia_basica_tab",
+      "unidad": "vehículo",
+      "nombre": "Ambulancia de transporte asistencial básico (TAB) dotada",
+      "cantidad_central": 4.6,
+      "cantidad_rango": [
+       3.5,
+       6.5
+      ]
+     },
+     {
+      "id": "ambulancia_medicalizada_tam",
+      "unidad": "vehículo",
+      "nombre": "Ambulancia de transporte asistencial medicalizado (TAM) dotada",
+      "cantidad_central": 3.3,
+      "cantidad_rango": [
+       2.3,
+       3.7
+      ]
+     },
+     {
+      "id": "puesto_salud_rural",
+      "unidad": "puesto",
+      "nombre": "Puesto de salud rural nuevo y dotado",
+      "cantidad_central": 1.0,
+      "cantidad_rango": [
+       0.8,
+       1.2
+      ]
+     },
+     {
+      "id": "cdi",
+      "unidad": "CDI",
+      "nombre": "Centro de Desarrollo Infantil (CDI) nuevo y dotado, 200-300 niños",
+      "cantidad_central": 0.2,
+      "cantidad_rango": [
+       0.1,
+       0.4
+      ]
+     },
+     {
+      "id": "beca_universitaria_anual",
+      "unidad": "estudiante-año",
+      "nombre": "Beca universitaria anual (sostenimiento y matrícula)",
+      "cantidad_central": 85.6,
+      "cantidad_rango": [
+       42.8,
+       171.1
+      ]
+     },
+     {
+      "id": "km_red_acueducto",
+      "unidad": "km",
+      "nombre": "Kilómetro de red urbana de acueducto (PVC 3-6\", con rotura y reposición de vía y acometidas)",
+      "cantidad_central": 2.7,
+      "cantidad_rango": [
+       1.7,
+       19.6
       ]
      }
     ]

@@ -152,7 +152,7 @@ SECOP_TAB = [  # (fecha, entidad o municipio, valor)
     ("2026-09-30", "Hospital de González (Cesar)", 231457472), ("2026-09-16", "Hospital San Luis de Gaceno (Boyacá), 4x4", 425000000),
     ("2026-09-02", "Municipio de Pisba (Boyacá)", 416800000), ("2026-08-20", "ESE de Segovia (Antioquia), 4x4", 380000000),
     ("2026-08-19", "ESE Guaduas (Cundinamarca)", 417000000), ("2026-08-13", "ESE Ramiriquí (Boyacá), 4x4", 367543740),
-    ("2026-07-27", "ESE Lebrija (Santander)", 324000000), ("2026-07-27", "ESE Putumayo", 424000000),
+    ("2026-07-27", "ESE Hospital San Juan de Dios (Santander)", 324000000), ("2026-07-27", "ESE Hospital Jorge Julio Guzmán (Putumayo)", 424000000),
     ("2026-07-01", "ESE Funza (Cundinamarca)", 392000000), ("2026-06-22", "ESE Florián (Santander)", 297800000),
     ("2026-06-05", "ESE Monguí (Boyacá)", 352000000), ("2026-04-30", "ESE Susacón (Boyacá), 4x4", 323705000),
     ("2026-04-29", "Hospital de Aguazul (Casanare)", 378000000), ("2026-04-23", "ESE El Carmen de Bolívar", 304950000),
@@ -213,6 +213,13 @@ def es(x, d=0):
     """Número con formato de Colombia: punto para miles y coma para decimales."""
     t = f"{x:,.{d}f}"
     return t.replace(",", "§").replace(".", ",").replace("§", ".")
+
+
+def anios_txt(xs):
+    if not xs:
+        return "ninguno"
+    xs = [str(x) for x in xs]
+    return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " y " + xs[-1]
 
 
 def mediana(xs):
@@ -393,6 +400,7 @@ def costos_unitarios():
             "nota": f"Hecho (mediana de contratos firmados). Referencias locales: TAB de la E.S.E. de Yondó en 2014 = $141,4 M (≈{es(idx(tab_yondo_2014, 2014)/1e6)} M de 2026); "
                     "Antioquia entregó 14 TAB 4x4 en 2021 por $8.359,4 M (docs/anexos/C-hospital-2028.md).",
             "certeza": "hecho",
+            "referencias": [{"fecha": f, "comprador": e, "valor": v} for f, e, v in SECOP_TAB],
         },
         {
             "id": "ambulancia_medicalizada_tam", "nombre": "Ambulancia de transporte asistencial medicalizado (TAM) dotada", "unidad": "vehículo",
@@ -401,6 +409,7 @@ def costos_unitarios():
                       "docs/06-hospital-2028-financiacion.md (supuesto de $650 M para Yondó)",
             "nota": "Hecho (mediana de contratos). El máximo toma el supuesto del repositorio para Yondó (650 M), que incluye equipos de cuidado crítico.",
             "certeza": "hecho",
+            "referencias": [{"fecha": f, "comprador": e, "valor": v} for f, e, v in SECOP_TAM],
         },
         {
             "id": "puesto_salud_rural", "nombre": "Puesto de salud rural nuevo y dotado", "unidad": "puesto",
@@ -655,10 +664,10 @@ def contrafactual_solar(micro, presu):
                     "con los costos y tarifas de ese año, ¿cuánto se habría ahorrado neto hasta 2026, en pesos de 2026?",
         "metodo": [
             "Producción: 469 kWp × 3,69 kWh/kWp·día (data/microrred.json, Global Solar Atlas con 16 % de pérdidas) con la misma campana solar de web/js/sim.js.",
-            "Autoconsumo: día típico de 15 minutos por sede, cada una como frontera propia con sus perfiles de consumo (sin domótica ni bombeo diurno). "
+            "Autoconsumo: día típico en pasos de 15 minutos por sede, cada una como frontera propia con sus perfiles de consumo (sin domótica ni bombeo diurno). "
             "El centro de datos se suma al Palacio Municipal. Las baterías cargan con sobrantes hasta 95 % y descargan hasta la reserva de 35 %.",
             "Valor de la energía: tarifa EPM oficial nivel 1 (promedio de cada año; acueducto con tarifa ESPD = oficial × 1,10). "
-            "Excedentes: valen cero antes de 2018 (no había regla para acreditarlos; la creó la CREG 030 de 2018) y tarifa − Cv (88,5 % de la tarifa) desde 2018.",
+            "Excedentes: valen cero antes de 2018 (no había regla para acreditarlos; la creó la CREG 030 de 2018) y la tarifa menos el costo de comercialización (88,5 % de la tarifa) desde 2018.",
             "Costo de instalar cada año: costo de 2026 en Yondó (data/presupuesto_microrred.json: 3,53 M/kWp ponderado y 1,4 M/kWh) × factor IRENA, "
             "que dice cuántas veces más caro era instalar ese año que en 2024, medido en pesos de 2026 (costo IRENA en USD de 2024 → USD del año con el IPC "
             "de EE. UU. → pesos del año con la TRM → pesos de 2026 con el IPC del DANE). Se suma 10 % de ingeniería e interventoría.",
@@ -668,8 +677,8 @@ def contrafactual_solar(micro, presu):
             "(10 % del costo solar de ese año). Baterías: vida de 12 años y se reponen al precio de ese año.",
             "Primer año: medio año de operación (contratar e instalar toma unos 6 meses). Horizonte: hasta el 31 de diciembre de 2026, sin descuento (pesos constantes).",
             "Valor residual: vida útil que le queda al equipo en 2026 (paneles 25 años, baterías 12) por lo que costaría reponerlo hoy.",
-            "Rango: 'alto' = costos altos (4,0 M/kWp, 2,2 M/kWh, O&M 2 %, degradación 0,8 %, baterías de 10 años); 'bajo' = costos bajos "
-            "(2,8 M/kWp, 1,0 M/kWh, O&M 1 %, degradación 0,4 %, baterías de 15 años). En 2008 se usan las dos extrapolaciones de IRENA.",
+            "Rango: 'alto' = costos altos (4,0 M/kWp, 2,2 M/kWh, operación 2 %, degradación 0,8 %, baterías de 10 años); 'bajo' = costos bajos "
+            "(2,8 M/kWp, 1,0 M/kWh, operación 1 %, degradación 0,4 %, baterías de 15 años). En 2008 se usan las dos extrapolaciones de IRENA.",
         ],
         "insumos": {
             "kwp": kwp_tot, "kwh_baterias": kwh_tot,
@@ -960,9 +969,10 @@ def recaudo_potencial(cache):
         "escenario_catastro": escenario_catastro,
         "perfil_2024": perfil,
         "base_petrolera_ica": [
-            "La extracción de petróleo tiene un trato especial en el ICA: el art. 16 del Código de Petróleos (Decreto 1056 de 1953) y el art. 39 de la "
-            "Ley 14 de 1983 limitan el impuesto municipal sobre la explotación cuando el municipio recibe regalías. Por eso la producción de Ecopetrol "
-            "en Casabe no es, por sí misma, base gravable de ICA.",
+            "La extracción de petróleo tiene un trato especial en el ICA: el art. 16 del Código de Petróleos (Decreto 1056 de 1953) exime la "
+            "explotación de petróleo de impuestos municipales, y el art. 39 de la Ley 14 de 1983 limita el ICA sobre la explotación de recursos no "
+            "renovables cuando el municipio recibe regalías (docs/anexos/B-finanzas-regalias.md, §5.3). Por eso la producción de Ecopetrol en Casabe "
+            "no es, por sí misma, base gravable de ICA; su alcance exacto debe confirmarlo la Secretaría de Hacienda.",
             "En CUIPO, el 98 % del ICA de Yondó se clasifica como actividades de servicios (2023-2025): sale sobre todo de contratistas de servicios "
             "petroleros (docs/anexos/B-finanzas-regalias.md, §5.3). Cuánto paga directamente Ecopetrol debe pedirse a la Secretaría de Hacienda.",
             "Bases nuevas que conviene revisar con Hacienda: la granja solar La Iguana de Ecopetrol (26 MWp, en Yondó desde dic-2025) y el acuerdo "
@@ -1029,7 +1039,7 @@ def aguas_residuales(soc):
             "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
             "El mismo informe registra cuentas por pagar a Corantioquia por $175 M con más de 360 días 'desde 2018', por tasa por uso del agua y "
             "tasa retributiva, y anota que podría no haberse causado ni pagado lo de 2018 y 2019.",
-            "El Plan de Saneamiento y Manejo de Vertimientos (PSMV) lo aprobó Corantioquia en 2014 por 10 años (vencido en 2024 según ese plazo).",
+            "El Plan de Saneamiento y Manejo de Vertimientos (PSMV) lo aprobó Corantioquia en 2014; las dos tablas del informe le dan 10 y 11 años de vigencia (vencería en 2024-2025).",
             "Yondó no tiene PTAR en 2026 (data/gobiernos.json); los estudios del nuevo Plan Maestro (BPIN 2024058930006) figuran inactivos.",
         ],
         "tasa_retributiva": {
@@ -1050,11 +1060,11 @@ def aguas_residuales(soc):
                        "la tasa en una proporción parecida. El valor realmente facturado por Corantioquia no es público: hay que pedirlo.",
         },
         "no_cuantificado": [
-            "Salud: no hay datos públicos de enfermedad diarreica o de piel atribuible al vertimiento en Yondó; atribuir casos exige un estudio epidemiológico.",
-            "Pesca y ciénagas: no hay series de captura ni de calidad del agua del caño receptor y las ciénagas que permitan valorar el daño.",
+            "Salud: no se encontraron datos públicos de enfermedad diarreica o de piel atribuible al vertimiento en Yondó; atribuir casos exige un estudio epidemiológico.",
+            "Pesca y ciénagas: no se encontraron series públicas de captura ni de calidad del agua del caño receptor y las ciénagas que permitan valorar el daño.",
             "Multas y sanciones ambientales: no se encontró un proceso sancionatorio público de Corantioquia contra el prestador.",
-            "Costo de oportunidad de las regalías: los recursos de saneamiento del SGP (≈$2.700 M en 2025, docs/anexos/B) existen, pero no hay un "
-            "proyecto de PTAR listo para financiar.",
+            "Plata disponible sin proyecto: el SGP de agua potable y saneamiento fue de $2.706 M en 2025 (docs/anexos/B, §4.2), pero no hay un "
+            "proyecto de PTAR con estudios terminados (el Plan Maestro está inactivo), así que esa plata no puede ir a tratamiento.",
         ],
     }
 
@@ -1107,8 +1117,8 @@ def main():
     prom_bbl = {m: statistics.mean(f[m]["ica_cop_2026_por_barril"] for f in ica_bbl) for m in ("Yondó", "Cantagallo")}
     rec["lectura"] = (
         "Frente a la mediana de los siete comparables, Yondó recaudó más predial e ICA por habitante en todos los periodos "
-        f"(años por debajo de la mediana: predial {bajo['predial'] or 'ninguno'}; ICA {bajo['ica'] or 'ninguno'}). Lo 'dejado de recaudar' "
-        f"suma ${es(tp['predial']['mediana_7']['dejado_de_recaudar_mm_2026_2004_2024'])} M en predial y "
+        f"(años sueltos por debajo de la mediana: predial {anios_txt(bajo['predial'])}; ICA {anios_txt(bajo['ica'])}). Sumado por periodos, lo "
+        f"dejado de recaudar frente a la mediana es ${es(tp['predial']['mediana_7']['dejado_de_recaudar_mm_2026_2004_2024'])} M en predial y "
         f"${es(tp['ica']['mediana_7']['dejado_de_recaudar_mm_2026_2004_2024'])} M en ICA (pesos de 2026, 2004-2024). "
         "Con la meta exigente del percentil 75, la brecha sube a "
         f"${es(tp['predial']['p75_7']['dejado_de_recaudar_mm_2026_2004_2024'])} M en predial y "
@@ -1135,6 +1145,8 @@ def main():
         {"nombre": "Ahorro bruto anual de la solar del plan a tarifas de 2026 (lo que se pierde cada año de espera)",
          "valor_mm": solar["costo_de_esperar_desde_2026"]["ahorro_bruto_anual_solo_solar_cop_2026"] / 1e6, "tipo": "estimado",
          "origen": "contrafactual_solar"},
+        {"nombre": "Predial adicional por año si el avalúo por habitante igualara al de Puerto Berrío (ilustrativo)",
+         "valor_mm": rec["escenario_catastro"]["adicional_anual_mm_2026"], "tipo": "contrafactual", "origen": "recaudo_potencial"},
         {"nombre": "Tasa retributiva acumulada 2004-2026 con FR = 1 (vertimiento sin tratar)", "valor_mm": agua["tasa_retributiva"]["acumulado_2004_2026_fr1_mm_2026"],
          "tipo": "estimado", "origen": "aguas_residuales"},
     ]
@@ -1150,6 +1162,53 @@ def main():
         montos.append({"nombre": f"10 % de las regalías giradas en {nombre}", "valor_mm": reg26 * 0.10, "tipo": "hecho (deflactado)",
                        "origen": "escala_por_periodo"})
 
+    def M(x):
+        return ("−" if x < 0 else "") + f"${es(abs(x) / 1e6)} M"
+
+    res = {f["anio_instalacion"]: f for f in solar["resultados"]}
+    neto24 = res[2024]["solo_solar"]["central"]["neto_hasta_2026_sin_valor_residual"]
+    anual = solar["costo_de_esperar_desde_2026"]["ahorro_bruto_anual_solo_solar_cop_2026"] - solar["costo_de_esperar_desde_2026"]["om_anual_cop_2026"]
+    pago_2024 = 2026 + math.ceil(-neto24 / anual) if neto24 < 0 else 2026
+    lin = []
+    for y in INICIO_GOBIERNO:
+        c = res[y]["solo_solar"]["central"]
+        rg = res[y]["solo_solar"]["rango_neto_con_residual"]
+        lin.append(f"{y}: inversión {M(c['inversion_cop_2026'])}, ahorro bruto {M(c['ahorro_bruto_hasta_2026'])}, neto sin valor residual "
+                   f"{M(c['neto_hasta_2026_sin_valor_residual'])}, neto con valor residual {M(c['neto_hasta_2026_con_valor_residual'])} "
+                   f"(rango {M(rg[0])} a {M(rg[1])})")
+    solar["lectura"] = (
+        "Solo solar (469 kWp), pesos de 2026, escenario central: " + "; ".join(lin) + ". "
+        f"En 2008 la solar costaba unas {es(solar['insumos']['factor_costo_pv_vs_2024']['2008'])} veces lo de 2024 (en pesos de 2026) y la energía era "
+        "más barata: no se habría pagado a 2026. "
+        + "; ".join(f"instalada en {y}, se habría pagado sola en {res[y]['solo_solar']['central']['anio_recuperacion']}"
+                    for y in INICIO_GOBIERNO if res[y]["solo_solar"]["central"]["anio_recuperacion"]).capitalize()
+        + f", y dejaría un activo con años de vida útil. La de 2024 apenas lleva dos años y medio: se pagaría en {pago_2024}. "
+        "Las baterías no se pagan con la "
+        "factura en ningún año: su valor es mantener prendidos el hospital, el acueducto y la fuerza pública durante los cortes."
+    )
+    t = reg["totales"]
+    reg["lectura"] = (
+        f"Entre 2004 y 2011 Yondó recibió ${es(t['regalias_2004_2011_mm_corrientes'])} M corrientes de regalías directas "
+        f"(${es(t['regalias_2004_2011_mm_2026'])} M de 2026). Guardar el 10 % (${es(t['ahorro_10pct_mm_2026_sin_rendimiento'])} M de 2026) en un fondo "
+        f"con rendimiento real de 3-4 % daría hoy ${es(t['valor_fondo_2026_r3_mm'])} M a ${es(t['valor_fondo_2026_r4_mm'])} M, y solo los "
+        f"rendimientos pagarían ${es(t['rendimiento_real_anual_si_se_gastan_solo_los_rendimientos_mm'][0])} M a "
+        f"${es(t['rendimiento_real_anual_si_se_gastan_solo_los_rendimientos_mm'][1])} M al año sin tocar el capital."
+    )
+    cu = {c["id"]: c for c in costos}
+    eq_r3 = t["valor_fondo_2026_r3_mm"] * 1e6
+    resumen = [
+        f"Fondo de regalías (contrafactual): el 10 % de las regalías 2004-2011 valdría hoy ${es(t['valor_fondo_2026_r3_mm'])} M a "
+        f"${es(t['valor_fondo_2026_r4_mm'])} M de 2026; con el valor menor alcanzaría para unas {es(eq_r3 / cu['ptar_12000_hab']['costo_cop_2026'], 1)} PTAR "
+        f"como la que necesita el casco urbano, o {es(eq_r3 / cu['km_placa_huella']['costo_cop_2026'])} km de placa huella, o "
+        f"{es(eq_r3 / cu['aula_dotada']['costo_cop_2026'])} aulas.",
+        "Solar en las sedes públicas (contrafactual): " + "; ".join(
+            f"desde {y}, neto a 2026 de {M(res[y]['solo_solar']['central']['neto_hasta_2026_sin_valor_residual'])} sin valor residual y "
+            f"{M(res[y]['solo_solar']['central']['neto_hasta_2026_con_valor_residual'])} con valor residual" for y in INICIO_GOBIERNO) +
+        f". Hoy, cada año de espera cuesta unos {M(solar['costo_de_esperar_desde_2026']['ahorro_bruto_anual_solo_solar_cop_2026'])} en facturas.",
+        "Recaudo (estimado): " + rec["lectura"],
+        "Aguas residuales (estimado): " + agua["tasa_retributiva"]["lectura"],
+    ]
+
     ipc_anual = {str(y): r(ipc_prom(y), 3) for y in range(2004, 2027)}
     salida = {
         "titulo": "Costo de no hacer, recaudo potencial y equivalencias en obras (Yondó, 2004-2026)",
@@ -1162,10 +1221,13 @@ def main():
             "supuesto": "Valor de diseño o de mercado sin fuente única; se reemplaza con cotización.",
             "contrafactual": "Lo que habría pasado con otra decisión. No es un hecho ni una acusación: sirve para dimensionar.",
         },
+        "resumen_principal": resumen,
         "aviso": "Ninguna cifra de este archivo señala a personas. Los contrafactuales muestran oportunidades, no responsabilidades individuales.",
         "series_usadas": {
             "ipc_dane": {"fuente": "https://www.dane.gov.co/files/operaciones/IPC/sep2026/anex-IPC-Indices-sep2026.xlsx (índice base dic-2018 = 100)",
+                         "mensual": {str(y): v for y, v in IPC_MENSUAL.items()},
                          "promedio_anual": ipc_anual, "base_2026": r(IPC_BASE, 3),
+                         "nota": "Pesos de 2026 = índice promedio de enero a septiembre de 2026. Flujos de cada año se deflactan con el promedio de ese año.",
                          "diciembre": {str(y): IPC_MENSUAL[y][11] for y in range(2003, 2026)},
                          "factor_a_pesos_2026": {str(y): r(IPC_BASE / ipc_prom(y), 4) for y in range(2004, 2027)}},
             "trm_promedio_anual": {"fuente": "https://www.datos.gov.co/resource/32sa-8pi3.json", "valores": {str(k): v for k, v in TRM.items()}},
