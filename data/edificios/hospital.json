@@ -20,11 +20,11 @@
       "largo": 42.5,
       "ancho": 13.0,
       "rumbo_eje": 90,
-      "altura_alero": 3.8,
+      "altura_alero": 4.0,
       "pisos": 1,
       "techo": {
         "tipo": "cuatro_aguas",
-        "pendiente": 15,
+        "pendiente": 11,
         "voladizo": 0.7,
         "material": "fibrocemento",
         "color": "#85827c"
@@ -38,9 +38,9 @@
         },
         "ventanas": {
           "tipo": "ventana",
-          "ancho": 1.5,
-          "alto": 1.2,
-          "antepecho": 1.6,
+          "ancho": 1.4,
+          "alto": 1.5,
+          "antepecho": 1.4,
           "separacion": 3.0,
           "lados": [
             "N",
@@ -50,13 +50,13 @@
         "puertas": [
           {
             "lado": "N",
-            "pos": 0.4,
-            "ancho": 1.8,
+            "pos": 0.364,
+            "ancho": 1.6,
             "alto": 2.4
           },
           {
             "lado": "N",
-            "pos": 0.8,
+            "pos": 0.841,
             "ancho": 2.0,
             "alto": 2.4
           }
@@ -73,7 +73,7 @@
       "largo": 27.45,
       "ancho": 3.3,
       "rumbo_eje": 90,
-      "altura_alero": 3.0,
+      "altura_alero": 3.2,
       "pisos": 1,
       "techo": {
         "tipo": "una_agua",
@@ -102,11 +102,11 @@
       "largo": 56.1,
       "ancho": 14.6,
       "rumbo_eje": 0,
-      "altura_alero": 3.8,
+      "altura_alero": 4.0,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
-        "pendiente": 12,
+        "pendiente": 10,
         "cumbrera": "largo",
         "voladizo": 0.7,
         "material": "fibrocemento",
@@ -142,11 +142,11 @@
       "largo": 27.9,
       "ancho": 12.2,
       "rumbo_eje": 90,
-      "altura_alero": 3.8,
+      "altura_alero": 4.0,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
-        "pendiente": 15,
+        "pendiente": 11,
         "cumbrera": "largo",
         "voladizo": 0.7,
         "material": "fibrocemento",
@@ -179,11 +179,11 @@
       "largo": 27.8,
       "ancho": 14.1,
       "rumbo_eje": 90,
-      "altura_alero": 3.8,
+      "altura_alero": 4.0,
       "pisos": 1,
       "techo": {
         "tipo": "cuatro_aguas",
-        "pendiente": 15,
+        "pendiente": 11,
         "voladizo": 0.7,
         "material": "fibrocemento",
         "color": "#85827c"
@@ -210,16 +210,16 @@
       "nombre": "Ala oriental (urgencias)",
       "centro": [
         25.95,
-        1.42
+        1.425
       ],
       "largo": 49.15,
       "ancho": 11.3,
       "rumbo_eje": 0,
-      "altura_alero": 3.8,
+      "altura_alero": 4.0,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
-        "pendiente": 15,
+        "pendiente": 12,
         "cumbrera": "largo",
         "voladizo": 0.7,
         "material": "fibrocemento",
@@ -240,36 +240,27 @@
           "separacion": 2.6,
           "lados": [
             "E",
-            "O",
-            "N"
+            "O"
           ]
         },
-        "puertas": [
-          {
-            "lado": "N",
-            "pos": 0.42,
-            "ancho": 1.6,
-            "alto": 2.3
-          }
-        ]
+        "puertas": []
       }
     },
     {
       "id": "porche_urgencias",
-      "nombre": "Porche de urgencias con letrero",
+      "nombre": "Porche de urgencias (frente norte del ala oriental, con letrero)",
       "centro": [
         25.95,
-        27.35
+        27.33
       ],
       "largo": 11.3,
-      "ancho": 2.6,
+      "ancho": 2.65,
       "rumbo_eje": 90,
-      "base": 2.9,
-      "altura_alero": 3.8,
+      "altura_alero": 4.03,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
-        "pendiente": 15,
+        "pendiente": 12,
         "cumbrera": "corto",
         "voladizo": 0.7,
         "material": "fibrocemento",
@@ -278,6 +269,24 @@
       "fachada": {
         "material": "pañete_pintado",
         "color": "#e8ebe6",
+        "zocalo": {
+          "color": "#7a5a4c",
+          "altura": 0.5
+        },
+        "puertas": [
+          {
+            "lado": "N",
+            "pos": 0.5,
+            "ancho": 2.5,
+            "alto": 2.7
+          },
+          {
+            "lado": "N",
+            "pos": 0.8,
+            "ancho": 1.8,
+            "alto": 2.7
+          }
+        ],
         "letrero": {
           "lado": "N",
           "texto": "E.S.E HOSPITAL HECTOR ABAD GOMEZ",
@@ -295,11 +304,11 @@
       "largo": 14.5,
       "ancho": 7.8,
       "rumbo_eje": 0,
-      "altura_alero": 3.6,
+      "altura_alero": 3.8,
       "pisos": 1,
       "techo": {
         "tipo": "cuatro_aguas",
-        "pendiente": 15,
+        "pendiente": 12,
         "voladizo": 0.6,
         "material": "fibrocemento",
         "color": "#85827c"
@@ -317,20 +326,19 @@
       "id": "portico_noroeste",
       "nombre": "Pórtico de la entrada noroeste",
       "centro": [
-        -21.0,
-        29.6
+        -22.8,
+        28.85
       ],
-      "largo": 5.0,
-      "ancho": 4.0,
+      "largo": 4.0,
+      "ancho": 2.6,
       "rumbo_eje": 90,
-      "base": 2.6,
-      "altura_alero": 3.5,
+      "altura_alero": 4.75,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
-        "pendiente": 20,
+        "pendiente": 30,
         "cumbrera": "corto",
-        "voladizo": 0.4,
+        "voladizo": 0.5,
         "material": "fibrocemento",
         "color": "#85827c"
       },
@@ -338,39 +346,50 @@
         "material": "pañete_pintado",
         "color": "#e8ebe6",
         "zocalo": {
-          "color": "#9a6a52",
-          "altura": 0.35
-        }
+          "color": "#7a5a4c",
+          "altura": 1.0
+        },
+        "puertas": [
+          {
+            "lado": "N",
+            "pos": 0.5,
+            "ancho": 2.2,
+            "alto": 2.6
+          }
+        ]
       }
     },
     {
       "id": "portico_norte",
       "nombre": "Pórtico pequeño de la fachada norte",
       "centro": [
-        -4.0,
+        -2.5,
         28.8
       ],
-      "largo": 3.6,
+      "largo": 3.0,
       "ancho": 2.5,
       "rumbo_eje": 90,
-      "base": 2.5,
-      "altura_alero": 3.3,
+      "altura_alero": 3.1,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
-        "pendiente": 22,
+        "pendiente": 38,
         "cumbrera": "corto",
-        "voladizo": 0.35,
+        "voladizo": 0.3,
         "material": "fibrocemento",
         "color": "#85827c"
       },
       "fachada": {
         "material": "pañete_pintado",
         "color": "#e8ebe6",
-        "zocalo": {
-          "color": "#9a6a52",
-          "altura": 0.3
-        }
+        "puertas": [
+          {
+            "lado": "N",
+            "pos": 0.5,
+            "ancho": 1.6,
+            "alto": 2.4
+          }
+        ]
       }
     },
     {
@@ -427,10 +446,10 @@
       "id": "porteria",
       "nombre": "Portería de la entrada vehicular",
       "centro": [
-        23.2,
+        23.5,
         39.2
       ],
-      "largo": 2.6,
+      "largo": 2.3,
       "ancho": 2.2,
       "rumbo_eje": 90,
       "altura_alero": 2.5,
@@ -615,14 +634,6 @@
       "altura": 2.2,
       "material": "malla",
       "color": "#8a8f8c"
-    },
-    {
-      "tipo": "antena",
-      "centro": [
-        34.8,
-        24.0
-      ],
-      "altura": 9
     },
     {
       "tipo": "arbol",

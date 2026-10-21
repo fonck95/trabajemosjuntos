@@ -2,14 +2,110 @@
   "id": "alcaldia",
   "nombre": "Palacio Municipal de Yondó (Alcaldía; alojaría el CCED)",
   "nodo_microrred": "alcaldia",
-  "direccion": "Carrera 55 # 46A-16, barrio Colonia Sur (membrete oficial). El extremo norte da a la Calle 47 (placa 'Calle 47 # 54-57' según el inventario).",
+  "direccion": "Carrera 55 # 46A-16, barrio Colonia Sur (membrete oficial de las resoluciones). El extremo norte da a la Calle 47; Google registra además la Alcaldía en Cra. 55 # 46-65 y la Secretaría de Planeación en Cra. 55 # 46B-44.",
   "lat": 7.00471,
   "lon": -73.910559,
   "ubicacion": {
     "confianza": "alta",
-    "metodo": "pendiente"
+    "metodo": "Dirección oficial en el membrete de las resoluciones, punto 'townhall' de OpenStreetMap y lugares de Google (Planeación, Tesorería) en la misma manzana. En el satélite es el bloque largo de 118 m que corre paralelo a la Carrera 55 entre la Calle 47 y la Calle 46. En Street View de 2013 se confirma el extremo norte (esquina de la Calle 47 con la Carrera 55): mismo edificio de ladrillo con techo a dos aguas, corredor con columnas hacia el sur y el aviso 'Laboratorio de Paz – Magdalena Medio'. El ancla se movió 1 m al oeste respecto al inventario para quedar en el centro del bloque largo. No hay panoramas sobre la Carrera 55 ni la Calle 46: la fachada principal solo se ve en escorzo desde la esquina."
   },
-  "fuentes": [],
+  "fuentes": [
+    {
+      "tipo": "street_view",
+      "pano": "itU9w9UuqMauQIU4jhGtrw",
+      "fecha": "2013-11",
+      "rumbo": 150,
+      "nota": "Esquina Calle 47 con Carrera 55: hastial norte del bloque largo, corredor con columnas al oeste, anexo bajo con puerta verde y aires acondicionados. Es la vista que mejor coincide con el modelo."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "itU9w9UuqMauQIU4jhGtrw",
+      "fecha": "2013-11",
+      "rumbo": 140,
+      "nota": "Acercamiento del hastial: ladrillo pintado color salmón, rejilla de ventilación en el triángulo, faldón oeste que sigue sobre el corredor, columnas delgadas gris azulado, ventanas de marco blanco."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "itU9w9UuqMauQIU4jhGtrw",
+      "fecha": "2013-11",
+      "rumbo": 170,
+      "nota": "Corredor de la fachada oeste hacia el sur, almendros en el andén y carros parqueados en la Carrera 55."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "Wnbe7wpQUN0nMpQ0b4j-ww",
+      "fecha": "2013-11",
+      "rumbo": 160,
+      "nota": "Frente norte: hastial de ladrillo y anexo bajo con antepecho y franja de calados; aviso 'Laboratorio de Paz' (emisora comunitaria, obra 2004-2005 con aporte de la Unión Europea); antena y parabólica."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "Wnbe7wpQUN0nMpQ0b4j-ww",
+      "fecha": "2013-11",
+      "rumbo": 185,
+      "nota": "Acercamiento: dos aires acondicionados en el hastial, ventana con reja y alero, alturas medidas con aires y ventana como referencia (alero del muro ≈4,1 m, cumbrera ≈5,9 m)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "C5nta6cjvGMwwbe99Wj6pQ",
+      "fecha": "2013-11",
+      "rumbo": 200,
+      "nota": "Casa amarilla con reja y zócalo de ladrillo, cubierta de fibrocemento a cuatro aguas; detrás el anexo y el hastial."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "C5nta6cjvGMwwbe99Wj6pQ",
+      "fecha": "2013-11",
+      "rumbo": 225,
+      "nota": "Cubierta larga de fibrocemento ondulado gris oscuro vista desde el noreste; puerta verde del anexo y antena."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "Xptd2ovr2wk89k8jg1SEYQ",
+      "fecha": "2013-11",
+      "rumbo": 185,
+      "nota": "Pasaje de unos 2 m entre la casa amarilla y el anexo; el anexo es largo hacia el sur y tiene cubierta baja de fibrocemento."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z19 (WorldView-2 del 12-ene-2020, 0,5 m; precisión declarada 10 m)",
+      "nota": "Huella y cubiertas: bloque largo con cubierta gris (#767672) de -3,75 a +4,75 m del eje, franja del corredor más oscura al oeste (rojiza en el extremo norte y clara entre u=18 y u=31), ala oriental, ala de cubierta clara y alero transversal claro."
+    },
+    {
+      "tipo": "web",
+      "url": "https://vlex.com.co/vid/resolucion-no-139-2021-1038220342",
+      "nota": "Membrete oficial: Cra. 55 No. 46 A 16, barrio Colonia Sur."
+    },
+    {
+      "tipo": "web",
+      "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7105969&isFromPublicArea=True",
+      "nota": "SECOP II SAMC 003-2024: obras de adecuación y mantenimiento del Centro Administrativo, Sociedad Valmo SAS, $368.955.404, dic. 2024. Posterior a la foto satelital."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-11-11091570",
+      "nota": "SECOP I SAMC-005-2020: mantenimiento y adecuación del Centro Administrativo Municipal, J. Falcons SAS, $200.000.000, oct.–dic. 2020."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-11-2712381",
+      "nota": "2014: adecuación de las dependencias del Palacio de la Alcaldía, $34.999.994."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=12-11-1273096",
+      "nota": "2013: adecuación del área administrativa del Palacio Municipal – Secretaría de Planeación, $47.318.142."
+    },
+    {
+      "tipo": "osm",
+      "nota": "Nodo amenity=townhall 'Alcaldía Municipal' sobre la fachada oeste; vías Carrera 55 y Calle 47; estación pluviográfica de Corantioquia en el patio oriental."
+    },
+    {
+      "tipo": "huellas",
+      "fuente": "Microsoft Global ML Building Footprints",
+      "nota": "Solo como apoyo: su huella del bloque largo está girada unos 3° respecto al satélite."
+    }
+  ],
   "volumenes": [
     {
       "id": "bloque_principal",
@@ -65,11 +161,11 @@
       "id": "anexo_norte",
       "nombre": "Anexo norte (emisora comunitaria, obra del Laboratorio de Paz 2004-2005)",
       "centro": [
-        -3.81,
-        55.42
+        -3.88,
+        53.36
       ],
-      "largo": 8.0,
-      "ancho": 8.4,
+      "largo": 12.0,
+      "ancho": 7.4,
       "rumbo_eje": 348,
       "altura_alero": 2.8,
       "pisos": 1,
@@ -418,10 +514,10 @@
     {
       "tipo": "arbol",
       "altura": 11,
-      "copa": 10,
+      "copa": 12,
       "centro": [
-        13.0,
-        3.78
+        10.91,
+        6.41
       ]
     },
     {
@@ -1000,8 +1096,8 @@
       "color": "#8a5a48",
       "linea": [
         [
-          -0.53,
-          60.21
+          -1.51,
+          60.0
         ],
         [
           0.74,
@@ -1017,14 +1113,7 @@
         "volumen": "bloque_principal",
         "faldon": "O",
         "filas": 2,
-        "columnas": 30,
-        "orientacion_modulo": "horizontal"
-      },
-      {
-        "volumen": "bloque_principal",
-        "faldon": "E",
-        "filas": 2,
-        "columnas": 16,
+        "columnas": 46,
         "orientacion_modulo": "horizontal"
       }
     ],
@@ -1048,14 +1137,94 @@
       "lado": "E",
       "pos": -2.9
     },
-    "domotica": [],
-    "obras_civiles": [],
+    "domotica": [
+      "medidor bidireccional en la frontera con EPM",
+      "pasarela IoT conectada al EMS y al CCED",
+      "medición por circuito (aires, cómputo, iluminación)",
+      "control de los aires acondicionados tipo split (horario y consigna de 24–25 °C)",
+      "sensores de ocupación y apagado de luces por oficina",
+      "monitoreo del centro de datos (temperatura, humedad, UPS y puerta)",
+      "telegestión de las luminarias del corredor y del parque"
+    ],
+    "obras_civiles": [
+      "Cambio de la cubierta de fibrocemento del bloque principal (≈1.170 m²) por panel termoacústico antes de montar los módulos. El retiro lo hace un gestor autorizado, porque puede tener asbesto (la Ley 1968 de 2019 prohibió el asbesto en Colombia).",
+      "En la misma obra se recomienda cambiar también las cubiertas de fibrocemento del ala oriental y de la casa amarilla.",
+      "Revisión estructural de cerchas y correas, con refuerzo para unos 15 kg/m² adicionales.",
+      "Canales y bajantes nuevas; sellos en los pases de cable de la cubierta.",
+      "Puesta a tierra, pararrayos y protecciones contra sobretensiones (DPS), coordinados con la antena de la emisora.",
+      "Losa de concreto de unos 4,2 × 1,8 m para el BESS, con cerramiento en malla y bolardos.",
+      "Ducto eléctrico desde la cubierta hasta el tablero general y el cuarto del CCED."
+    ],
     "cargador_ve": {
       "centro": [
-        14.18,
-        43.91
+        15.5,
+        40.1
       ]
     },
-    "notas": "pendiente"
+    "notas": "El faldón oeste del bloque principal mide 118 m de largo y 3,6 m de agua útil (de muro a cumbrera, 30°). Allí caben 2 filas × 46 columnas de módulos acostados: 92 × 550 Wp = 50,6 kWp, que cubren el plan de 50 kWp. Quedan 0,6 m libres a la cumbrera y al muro, y casi 2 m al borde del alero. Se eligió el faldón oeste porque el oriental queda bajo árboles de 11–14 m que le dan sombra en la mañana. Al oeste, los almendros del andén (8–10 m) están a 8–10 m y solo dan sombra al final de la tarde en los extremos del arreglo. Cabrían hasta 50 columnas por faldón (100 módulos = 55 kWp en el oeste, 110 kWp en los dos), pero cada frontera solar se limita a 100 kW (CREG 174 de 2021). Con orientación oeste y 30° de inclinación, el arreglo rinde un 10–12 % menos que en una cubierta casi plana. No hace falta marquesina. La cubierta actual es de fibrocemento ondulado: no aguanta el anclaje del soporte ni que caminen sobre ella, y hay que cambiarla antes del montaje. La foto satelital (ene-2020) es anterior a las obras de 2020 y 2024: verificar en sitio si la cubierta ya se cambió. El BESS de 120 kWh / 60 kW (2 gabinetes de baterías y 1 de conversión) va en una losa al oriente del bloque, a la sombra de los árboles y junto a los 2 inversores híbridos de 30 kW, que van en el muro oriental bajo el alero. El cargador de vehículo eléctrico va en el patio de tierra del oriente, donde parquean los vehículos oficiales (entrada por la Calle 47).",
+    "cubierta_nueva": {
+      "material": "termoacustica",
+      "color": "#e9e7e1",
+      "volumenes": [
+        "bloque_principal",
+        "ala_oriental",
+        "anexo_amarillo"
+      ]
+    }
+  },
+  "incertidumbres": [
+    "Street View (todas las fotos de 2013-11) solo cubre el extremo norte, sobre la Calle 47. La fachada oeste se ve en escorzo desde la esquina; la fachada oriental, la mitad sur y las alas del oriente no se ven en ningún panorama.",
+    "Las fotos de Street View quedan corridas entre 1,5 m (itU9…) y unos 5 m (Wnbe…, Xptd…) respecto al satélite. Esri declara 10 m de precisión para esta imagen. Se respetó el satélite para la huella.",
+    "La foto satelital es del 12 de enero de 2020, antes de las obras de mantenimiento de 2020 ($200 millones) y de 2024 ($369 millones). La cubierta, los colores y el corredor pudieron cambiar. El inventario menciona una foto reciente de Google con el corredor pintado de naranja, pero no se pudo verificar.",
+    "Alturas del bloque principal (muro ≈4,1 m, cumbrera ≈5,9 m, pendiente 30°) y ancho del cuerpo de ladrillo (≈6,2 m) medidos en el hastial norte con aires acondicionados, ventana y altura de cámara como referencia. Margen de ±0,4 m y ±4°.",
+    "Dentro de la cubierta del satélite no se sabe con exactitud dónde va el muro de ladrillo. Se centró bajo la cumbrera (que aparece en +0,5 m), con alero de 1,15 m a cada lado.",
+    "El corredor real sigue el faldón oeste con unos 19° hasta columnas de ≈2,5 m. El generador no tiene esa forma: se dibujó con tramos de 'cubierta_ligera' de 6° y columnas cada 3 m. Sobran columnas junto al muro.",
+    "Las alturas y los techos del ala oriental, del ala de cubierta clara y del alero transversal son supuestos: no se ven desde la calle.",
+    "El anexo norte (emisora) se ve solo por el frente. Su largo hacia el sur (12 m) y su ancho (7,4 m) son estimados: el satélite lo tapan árboles.",
+    "No se sabe qué funciona en la casa amarilla. Se incluyó porque está en el mismo predio.",
+    "La puerta principal sobre la Carrera 55 (pos 0,30) se supuso frente a la franja clara del corredor y a la Secretaría de Planeación; no se ve en ninguna foto. Solo se vio la puerta de vidrio junto a la esquina noroeste.",
+    "El patrón de ventanas de las fachadas oeste y oriental se estimó con la vista en escorzo de 2013; el de la fachada oriental es supuesto.",
+    "Colores de Street View corregidos por exposición (×1,7, tomando el blanco del aviso). El ladrillo crudo mide ≈#62483e en la foto.",
+    "No se sabe en qué oficina está o estaría el centro de datos (CCED).",
+    "Se supone que el fibrocemento es asbesto-cemento por la edad del edificio, de la época del campamento de Ecopetrol. Hay que confirmarlo con laboratorio antes de retirarlo.",
+    "Los árboles se ubicaron con el satélite y con Street View de 2013. Sus alturas se estimaron.",
+    "La antena de la emisora se ubicó por triangulación con dos panoramas. Altura estimada: ≈10 m."
+  ],
+  "verificacion": {
+    "trace": "data/geo/img/alcaldia_trace.png",
+    "trace_detalle": [
+      "data/geo/img/alcaldia_trace_det_0.png",
+      "data/geo/img/alcaldia_trace_det_1.png",
+      "data/geo/img/alcaldia_trace_det_2.png",
+      "data/geo/img/alcaldia_trace_det_3.png"
+    ],
+    "vistas": [
+      "data/geo/img/alcaldia_sv_i1.jpg",
+      "data/geo/img/alcaldia_sv_i1z.jpg",
+      "data/geo/img/alcaldia_sv_i3z.jpg",
+      "data/geo/img/alcaldia_sv_w1.jpg",
+      "data/geo/img/alcaldia_sv_w1z.jpg",
+      "data/geo/img/alcaldia_sv_c1.jpg",
+      "data/geo/img/alcaldia_sv_c2z.jpg",
+      "data/geo/img/alcaldia_sv_x1.jpg"
+    ],
+    "comparaciones": [
+      "data/geo/img/alcaldia_cmp_i1_comparacion.png",
+      "data/geo/img/alcaldia_cmp_i1_mezcla.png",
+      "data/geo/img/alcaldia_cmp_w1_comparacion.png",
+      "data/geo/img/alcaldia_cmp_w1_mezcla.png",
+      "data/geo/img/alcaldia_cmp_c1_comparacion.png",
+      "data/geo/img/alcaldia_cmp_c1_mezcla.png"
+    ],
+    "orbitas": [
+      "data/geo/img/alcaldia_orbita_todo.png",
+      "data/geo/img/alcaldia_orbita_bess.png",
+      "data/geo/img/alcaldia_orbita_oeste.png"
+    ],
+    "satelite_alineado": [
+      "data/geo/img/alcaldia_rot_n.png",
+      "data/geo/img/alcaldia_rot_s.png",
+      "data/geo/img/alcaldia_rot_anexo.png"
+    ]
   }
 }
