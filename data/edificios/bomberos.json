@@ -17,12 +17,12 @@
    "ancho": 5.7,
    "rumbo_eje": 78,
    "base": 0,
-   "altura_alero": 3.7,
+   "altura_alero": 3.9,
    "pisos": 1,
    "techo": {
     "tipo": "dos_aguas",
     "cumbrera": "corto",
-    "pendiente": 22,
+    "pendiente": 34,
     "voladizo": 0.6,
     "material": "fibrocemento",
     "color": "#8a8578"
@@ -51,17 +51,17 @@
    "nombre": "Mitad norte reformada y ampliada hasta la calle (cubierta metálica clara, posterior a 2013)",
    "centro": [
     -0.74,
-    2.5
+    2.53
    ],
    "largo": 13.0,
-   "ancho": 4.2,
+   "ancho": 4.15,
    "rumbo_eje": 78,
    "base": 0,
-   "altura_alero": 3.5,
+   "altura_alero": 3.4,
    "pisos": 1,
    "techo": {
     "tipo": "una_agua",
-    "caida": "S",
+    "caida": "N",
     "pendiente": 8,
     "voladizo": 0.5,
     "material": "zinc",
@@ -88,20 +88,29 @@
  "elementos": [
   {
    "tipo": "arbol",
-   "altura": 7,
-   "copa": 8,
+   "altura": 6.5,
+   "copa": 6.5,
    "centro": [
-    -5.92,
-    -4.84
+    -6.54,
+    -2.92
    ]
   },
   {
    "tipo": "arbol",
-   "altura": 7,
-   "copa": 8,
+   "altura": 6,
+   "copa": 6,
    "centro": [
-    -2.75,
-    -15.92
+    -4.38,
+    -10.64
+   ]
+  },
+  {
+   "tipo": "arbol",
+   "altura": 5.5,
+   "copa": 6,
+   "centro": [
+    -3.03,
+    -17.0
    ]
   },
   {

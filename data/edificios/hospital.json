@@ -1,0 +1,737 @@
+{
+  "id": "hospital",
+  "nombre": "E.S.E. Hospital Héctor Abad Gómez",
+  "nodo_microrred": "hospital",
+  "direccion": "Carrera 58 # 46-236, barrio José Domingo Oliveros",
+  "lat": 7.005415,
+  "lon": -73.914452,
+  "ubicacion": {
+    "confianza": "alta",
+    "metodo": "borrador"
+  },
+  "volumenes": [
+    {
+      "id": "ala_norte",
+      "nombre": "Ala norte (consulta y administración)",
+      "centro": [
+        -8.3,
+        21.05
+      ],
+      "largo": 42.5,
+      "ancho": 13.0,
+      "rumbo_eje": 90,
+      "altura_alero": 3.8,
+      "pisos": 1,
+      "techo": {
+        "tipo": "cuatro_aguas",
+        "pendiente": 15,
+        "voladizo": 0.7,
+        "material": "fibrocemento",
+        "color": "#85827c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#43622a",
+        "zocalo": {
+          "color": "#7a5a4c",
+          "altura": 1.15
+        },
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.5,
+          "alto": 1.2,
+          "antepecho": 1.6,
+          "separacion": 3.0,
+          "lados": [
+            "N",
+            "S"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "N",
+            "pos": 0.4,
+            "ancho": 1.8,
+            "alto": 2.4
+          },
+          {
+            "lado": "N",
+            "pos": 0.8,
+            "ancho": 2.0,
+            "alto": 2.4
+          }
+        ]
+      }
+    },
+    {
+      "id": "galeria_norte",
+      "nombre": "Galería sur del ala norte (hacia el patio noroeste)",
+      "centro": [
+        -15.83,
+        12.9
+      ],
+      "largo": 27.45,
+      "ancho": 3.3,
+      "rumbo_eje": 90,
+      "altura_alero": 3.0,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 10,
+        "caida": "S",
+        "voladizo": 0.35,
+        "material": "fibrocemento",
+        "color": "#85827c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#43622a",
+        "zocalo": {
+          "color": "#7a5a4c",
+          "altura": 1.15
+        }
+      }
+    },
+    {
+      "id": "espina",
+      "nombre": "Bloque central norte-sur (hospitalización, urgencias internas, servicios)",
+      "centro": [
+        5.2,
+        -7.0
+      ],
+      "largo": 56.1,
+      "ancho": 14.6,
+      "rumbo_eje": 0,
+      "altura_alero": 3.8,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 12,
+        "cumbrera": "largo",
+        "voladizo": 0.7,
+        "material": "fibrocemento",
+        "color": "#85827c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#43622a",
+        "zocalo": {
+          "color": "#7a5a4c",
+          "altura": 1.15
+        },
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.2,
+          "alto": 1.3,
+          "antepecho": 1.3,
+          "separacion": 3.5,
+          "lados": [
+            "E",
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ala_media",
+      "nombre": "Ala media oeste",
+      "centro": [
+        -16.05,
+        -3.85
+      ],
+      "largo": 27.9,
+      "ancho": 12.2,
+      "rumbo_eje": 90,
+      "altura_alero": 3.8,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 15,
+        "cumbrera": "largo",
+        "voladizo": 0.7,
+        "material": "fibrocemento",
+        "color": "#85827c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#a8423c",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.2,
+          "alto": 1.3,
+          "antepecho": 1.1,
+          "separacion": 3.5,
+          "lados": [
+            "N",
+            "S",
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ala_sur",
+      "nombre": "Ala sur",
+      "centro": [
+        -16.0,
+        -28.0
+      ],
+      "largo": 27.8,
+      "ancho": 14.1,
+      "rumbo_eje": 90,
+      "altura_alero": 3.8,
+      "pisos": 1,
+      "techo": {
+        "tipo": "cuatro_aguas",
+        "pendiente": 15,
+        "voladizo": 0.7,
+        "material": "fibrocemento",
+        "color": "#85827c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#a8423c",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.2,
+          "alto": 1.3,
+          "antepecho": 1.1,
+          "separacion": 3.5,
+          "lados": [
+            "N",
+            "S",
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ala_este",
+      "nombre": "Ala oriental (urgencias)",
+      "centro": [
+        25.95,
+        1.42
+      ],
+      "largo": 49.15,
+      "ancho": 11.3,
+      "rumbo_eje": 0,
+      "altura_alero": 3.8,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 15,
+        "cumbrera": "largo",
+        "voladizo": 0.7,
+        "material": "fibrocemento",
+        "color": "#85827c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#43622a",
+        "zocalo": {
+          "color": "#7a5a4c",
+          "altura": 1.1
+        },
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.0,
+          "alto": 1.3,
+          "antepecho": 1.2,
+          "separacion": 2.6,
+          "lados": [
+            "E",
+            "O",
+            "N"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "N",
+            "pos": 0.42,
+            "ancho": 1.6,
+            "alto": 2.3
+          }
+        ]
+      }
+    },
+    {
+      "id": "porche_urgencias",
+      "nombre": "Porche de urgencias con letrero",
+      "centro": [
+        25.95,
+        27.35
+      ],
+      "largo": 11.3,
+      "ancho": 2.6,
+      "rumbo_eje": 90,
+      "base": 2.9,
+      "altura_alero": 3.8,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 15,
+        "cumbrera": "corto",
+        "voladizo": 0.7,
+        "material": "fibrocemento",
+        "color": "#85827c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#e8ebe6",
+        "letrero": {
+          "lado": "N",
+          "texto": "E.S.E HOSPITAL HECTOR ABAD GOMEZ",
+          "color": "#5d6a5a"
+        }
+      }
+    },
+    {
+      "id": "enlace",
+      "nombre": "Conexión entre el bloque central y el ala oriental",
+      "centro": [
+        16.4,
+        -2.25
+      ],
+      "largo": 14.5,
+      "ancho": 7.8,
+      "rumbo_eje": 0,
+      "altura_alero": 3.6,
+      "pisos": 1,
+      "techo": {
+        "tipo": "cuatro_aguas",
+        "pendiente": 15,
+        "voladizo": 0.6,
+        "material": "fibrocemento",
+        "color": "#85827c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#43622a",
+        "zocalo": {
+          "color": "#7a5a4c",
+          "altura": 1.1
+        }
+      }
+    },
+    {
+      "id": "portico_noroeste",
+      "nombre": "Pórtico de la entrada noroeste",
+      "centro": [
+        -21.0,
+        29.6
+      ],
+      "largo": 5.0,
+      "ancho": 4.0,
+      "rumbo_eje": 90,
+      "base": 2.6,
+      "altura_alero": 3.5,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 20,
+        "cumbrera": "corto",
+        "voladizo": 0.4,
+        "material": "fibrocemento",
+        "color": "#85827c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#e8ebe6",
+        "zocalo": {
+          "color": "#9a6a52",
+          "altura": 0.35
+        }
+      }
+    },
+    {
+      "id": "portico_norte",
+      "nombre": "Pórtico pequeño de la fachada norte",
+      "centro": [
+        -4.0,
+        28.8
+      ],
+      "largo": 3.6,
+      "ancho": 2.5,
+      "rumbo_eje": 90,
+      "base": 2.5,
+      "altura_alero": 3.3,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 22,
+        "cumbrera": "corto",
+        "voladizo": 0.35,
+        "material": "fibrocemento",
+        "color": "#85827c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#e8ebe6",
+        "zocalo": {
+          "color": "#9a6a52",
+          "altura": 0.3
+        }
+      }
+    },
+    {
+      "id": "bloque_sureste",
+      "nombre": "Bloque sureste de techo rojo",
+      "centro": [
+        23.9,
+        -30.0
+      ],
+      "largo": 12.6,
+      "ancho": 7.1,
+      "rumbo_eje": 68,
+      "altura_alero": 3.2,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 12,
+        "cumbrera": "largo",
+        "voladizo": 0.5,
+        "material": "zinc",
+        "color": "#7a3f44"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#efece4"
+      }
+    },
+    {
+      "id": "caseta_servicios",
+      "nombre": "Caseta de servicios en el patio de máquinas",
+      "centro": [
+        15.0,
+        -13.75
+      ],
+      "largo": 5.5,
+      "ancho": 3.3,
+      "rumbo_eje": 0,
+      "altura_alero": 2.8,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 5,
+        "caida": "O",
+        "voladizo": 0.2,
+        "material": "fibrocemento",
+        "color": "#d8d8d2"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#efece4"
+      }
+    },
+    {
+      "id": "porteria",
+      "nombre": "Portería de la entrada vehicular",
+      "centro": [
+        23.2,
+        39.2
+      ],
+      "largo": 2.6,
+      "ancho": 2.2,
+      "rumbo_eje": 90,
+      "altura_alero": 2.5,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 8,
+        "caida": "N",
+        "voladizo": 0.3,
+        "material": "fibrocemento",
+        "color": "#9b9d98"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#2f6a3a",
+        "zocalo": {
+          "color": "#8a5a44",
+          "altura": 1.1
+        }
+      }
+    }
+  ],
+  "elementos": [
+    {
+      "tipo": "cubierta_ligera",
+      "centro": [
+        3.65,
+        33.5
+      ],
+      "largo": 21.1,
+      "ancho": 6.6,
+      "rumbo_eje": 90,
+      "altura": 3.0,
+      "material": "zinc",
+      "color": "#2f2c33"
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "centro": [
+        -33.7,
+        -3.35
+      ],
+      "largo": 11.9,
+      "ancho": 5.4,
+      "rumbo_eje": 0,
+      "altura": 2.8,
+      "material": "concreto",
+      "color": "#a39a86"
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "centro": [
+        -17.5,
+        -11.5
+      ],
+      "largo": 26.0,
+      "ancho": 2.2,
+      "rumbo_eje": 90,
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#cfcdc6"
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "centro": [
+        -4.9,
+        -15.3
+      ],
+      "largo": 9.5,
+      "ancho": 1.6,
+      "rumbo_eje": 0,
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#cfcdc6"
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "centro": [
+        -4.9,
+        7.2
+      ],
+      "largo": 9.0,
+      "ancho": 1.6,
+      "rumbo_eje": 0,
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#cfcdc6"
+    },
+    {
+      "tipo": "parqueadero",
+      "poligono": [
+        [
+          14.5,
+          29.6
+        ],
+        [
+          34.5,
+          29.6
+        ],
+        [
+          36.0,
+          37.5
+        ],
+        [
+          30.5,
+          39.6
+        ],
+        [
+          14.5,
+          39.6
+        ]
+      ]
+    },
+    {
+      "tipo": "cerramiento",
+      "linea": [
+        [
+          16.3,
+          40.2
+        ],
+        [
+          -8.0,
+          39.3
+        ],
+        [
+          -20.0,
+          36.8
+        ],
+        [
+          -28.5,
+          32.5
+        ],
+        [
+          -34.0,
+          28.0
+        ],
+        [
+          -39.0,
+          19.0
+        ],
+        [
+          -43.0,
+          8.0
+        ],
+        [
+          -45.0,
+          -4.0
+        ],
+        [
+          -46.5,
+          -16.0
+        ],
+        [
+          -48.0,
+          -28.0
+        ],
+        [
+          -49.0,
+          -36.0
+        ]
+      ],
+      "altura": 2.2,
+      "material": "malla",
+      "color": "#8a8f8c"
+    },
+    {
+      "tipo": "cerramiento",
+      "linea": [
+        [
+          25.0,
+          40.0
+        ],
+        [
+          30.5,
+          39.8
+        ],
+        [
+          36.5,
+          37.5
+        ]
+      ],
+      "altura": 2.2,
+      "material": "malla",
+      "color": "#8a8f8c"
+    },
+    {
+      "tipo": "antena",
+      "centro": [
+        34.8,
+        24.0
+      ],
+      "altura": 9
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -38.5,
+        -21.0
+      ],
+      "altura": 12,
+      "copa": 13
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -27.0,
+        6.5
+      ],
+      "altura": 9,
+      "copa": 8
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -18.0,
+        7.5
+      ],
+      "altura": 7,
+      "copa": 5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -11.8,
+        33.0
+      ],
+      "altura": 9,
+      "copa": 7
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -38.0,
+        9.0
+      ],
+      "altura": 9,
+      "copa": 8
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        0.0,
+        -46.0
+      ],
+      "altura": 18,
+      "copa": 14
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        20.0,
+        -45.0
+      ],
+      "altura": 18,
+      "copa": 14
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        -20.0,
+        -46.0
+      ],
+      "altura": 16,
+      "copa": 12
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        43.0,
+        0.0
+      ],
+      "altura": 18,
+      "copa": 13
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        43.0,
+        20.0
+      ],
+      "altura": 18,
+      "copa": 12
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        41.0,
+        -22.0
+      ],
+      "altura": 16,
+      "copa": 12
+    }
+  ],
+  "adecuaciones": {
+    "kwp_plan": 100,
+    "fv": [],
+    "kwp_factible": 0
+  },
+  "incertidumbres": [],
+  "verificacion": {
+    "trace": "data/geo/img/hospital_trace.png",
+    "vistas": []
+  }
+}

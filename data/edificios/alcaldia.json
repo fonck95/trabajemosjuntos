@@ -1,0 +1,1045 @@
+{
+  "id": "alcaldia",
+  "nombre": "Palacio Municipal de Yondó (Alcaldía; alojaría el CCED)",
+  "nodo_microrred": "alcaldia",
+  "direccion": "Carrera 55 # 46A-16, barrio Colonia Sur (membrete oficial). El extremo norte da a la Calle 47 (placa 'Calle 47 # 54-57' según el inventario).",
+  "lat": 7.00471,
+  "lon": -73.910559,
+  "ubicacion": {
+    "confianza": "alta",
+    "metodo": "pendiente"
+  },
+  "fuentes": [],
+  "volumenes": [
+    {
+      "id": "bloque_principal",
+      "nombre": "Bloque largo de oficinas (Palacio Municipal)",
+      "centro": [
+        0.51,
+        0.01
+      ],
+      "largo": 118.2,
+      "ancho": 6.2,
+      "rumbo_eje": 348,
+      "altura_alero": 4.1,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 30,
+        "cumbrera": "largo",
+        "voladizo": 1.15,
+        "material": "fibrocemento",
+        "color": "#767672"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#a17964",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 1.0,
+          "alto": 1.4,
+          "antepecho": 0.8,
+          "separacion": 3.0,
+          "lados": [
+            "O",
+            "E"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "O",
+            "pos": 0.012,
+            "ancho": 1.0,
+            "alto": 2.2
+          },
+          {
+            "lado": "O",
+            "pos": 0.3,
+            "ancho": 1.8,
+            "alto": 2.4
+          }
+        ]
+      }
+    },
+    {
+      "id": "anexo_norte",
+      "nombre": "Anexo norte (emisora comunitaria, obra del Laboratorio de Paz 2004-2005)",
+      "centro": [
+        -3.81,
+        55.42
+      ],
+      "largo": 8.0,
+      "ancho": 8.4,
+      "rumbo_eje": 348,
+      "altura_alero": 2.8,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0.5,
+        "material": "fibrocemento",
+        "color": "#6f706c"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#a17964",
+        "ventanas": {
+          "tipo": "calado",
+          "ancho": 1.5,
+          "alto": 0.35,
+          "antepecho": 2.2,
+          "separacion": 1.7,
+          "lados": [
+            "N"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "N",
+            "pos": 0.5,
+            "ancho": 0.9,
+            "alto": 2.1
+          }
+        ]
+      }
+    },
+    {
+      "id": "anexo_amarillo",
+      "nombre": "Casa amarilla con reja (oficina anexa)",
+      "centro": [
+        5.24,
+        59.28
+      ],
+      "largo": 9.8,
+      "ancho": 8.3,
+      "rumbo_eje": 348,
+      "altura_alero": 2.8,
+      "pisos": 1,
+      "techo": {
+        "tipo": "cuatro_aguas",
+        "pendiente": 18,
+        "voladizo": 0.8,
+        "material": "fibrocemento",
+        "color": "#6f7072"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#d8b43c",
+        "zocalo": {
+          "color": "#8a5a48",
+          "altura": 1.0
+        },
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 1.5,
+          "alto": 1.2,
+          "antepecho": 1.0,
+          "separacion": 2.6,
+          "lados": [
+            "N",
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ala_oriental",
+      "nombre": "Ala oriental de oficinas",
+      "centro": [
+        3.43,
+        25.01
+      ],
+      "largo": 19.5,
+      "ancho": 9.9,
+      "rumbo_eje": 348,
+      "altura_alero": 3.3,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 15,
+        "cumbrera": "largo",
+        "voladizo": 0.5,
+        "material": "fibrocemento",
+        "color": "#73736f"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#a17964",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 1.0,
+          "alto": 1.2,
+          "antepecho": 1.0,
+          "separacion": 3.5,
+          "lados": [
+            "E",
+            "S"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ala_blanca",
+      "nombre": "Oficinas con cubierta clara (costado oriental)",
+      "centro": [
+        11.76,
+        28.83
+      ],
+      "largo": 13.5,
+      "ancho": 8.0,
+      "rumbo_eje": 348,
+      "altura_alero": 3.0,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "pendiente": 8,
+        "caida": "E",
+        "voladizo": 0.4,
+        "material": "termoacustica",
+        "color": "#dcdcd6"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#a17964",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 1.0,
+          "alto": 1.2,
+          "antepecho": 1.0,
+          "separacion": 3.5,
+          "lados": [
+            "E"
+          ]
+        }
+      }
+    }
+  ],
+  "elementos": [
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.8,
+      "material": "zinc",
+      "color": "#bdbab2",
+      "centro": [
+        4.65,
+        37.28
+      ],
+      "largo": 17.4,
+      "ancho": 4.0,
+      "rumbo_eje": 78
+    },
+    {
+      "tipo": "zona_verde",
+      "poligono": [
+        [
+          -22.64,
+          56.02
+        ],
+        [
+          -23.27,
+          58.95
+        ],
+        [
+          -1.26,
+          63.63
+        ],
+        [
+          -0.63,
+          60.69
+        ]
+      ]
+    },
+    {
+      "tipo": "zona_verde",
+      "poligono": [
+        [
+          2.1,
+          -60.38
+        ],
+        [
+          -22.64,
+          56.02
+        ],
+        [
+          -19.41,
+          56.7
+        ],
+        [
+          5.33,
+          -59.7
+        ]
+      ]
+    },
+    {
+      "tipo": "anden",
+      "poligono": [
+        [
+          0.25,
+          -61.29
+        ],
+        [
+          -25.53,
+          60.0
+        ],
+        [
+          -23.58,
+          60.42
+        ],
+        [
+          2.2,
+          -60.87
+        ]
+      ]
+    },
+    {
+      "tipo": "anden",
+      "poligono": [
+        [
+          -25.22,
+          58.54
+        ],
+        [
+          -25.53,
+          60.0
+        ],
+        [
+          10.17,
+          67.59
+        ],
+        [
+          10.48,
+          66.12
+        ]
+      ]
+    },
+    {
+      "tipo": "patio",
+      "poligono": [
+        [
+          18.61,
+          18.27
+        ],
+        [
+          12.16,
+          48.59
+        ],
+        [
+          29.77,
+          52.33
+        ],
+        [
+          36.22,
+          22.01
+        ]
+      ]
+    },
+    {
+      "tipo": "cerramiento",
+      "altura": 0.9,
+      "material": "reja",
+      "color": "#d0d4cf",
+      "linea": [
+        [
+          8.52,
+          65.71
+        ],
+        [
+          -23.27,
+          58.95
+        ],
+        [
+          -16.09,
+          25.21
+        ]
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 10,
+      "copa": 11,
+      "centro": [
+        -24.77,
+        54.03
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 9,
+      "copa": 8,
+      "centro": [
+        -22.0,
+        43.37
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 8,
+      "copa": 7,
+      "centro": [
+        -19.71,
+        32.61
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 9,
+      "copa": 9,
+      "centro": [
+        -2.17,
+        -47.49
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 8,
+      "copa": 7,
+      "centro": [
+        0.88,
+        -57.06
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 14,
+      "copa": 14,
+      "centro": [
+        16.46,
+        -14.9
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 13,
+      "copa": 12,
+      "centro": [
+        21.03,
+        -36.42
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 11,
+      "copa": 10,
+      "centro": [
+        13.0,
+        3.78
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "altura": 11,
+      "copa": 9,
+      "centro": [
+        -0.34,
+        44.91
+      ]
+    },
+    {
+      "tipo": "antena",
+      "altura": 10,
+      "centro": [
+        -4.42,
+        49.67
+      ]
+    },
+    {
+      "tipo": "aire_acondicionado",
+      "altura": 2.0,
+      "centro": [
+        -9.39,
+        58.63
+      ]
+    },
+    {
+      "tipo": "aire_acondicionado",
+      "altura": 2.0,
+      "centro": [
+        -12.33,
+        58.0
+      ]
+    },
+    {
+      "tipo": "aire_acondicionado",
+      "altura": 2.0,
+      "centro": [
+        -3.53,
+        59.88
+      ]
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -16.58,
+        55.16
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -15.95,
+        52.2
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -15.32,
+        49.24
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -14.69,
+        46.28
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -14.06,
+        43.32
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -13.43,
+        40.36
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -12.81,
+        37.4
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -12.18,
+        34.44
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -11.55,
+        31.48
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -10.92,
+        28.52
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -10.29,
+        25.56
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -9.66,
+        22.6
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -9.03,
+        19.64
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -8.4,
+        16.68
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -7.77,
+        13.72
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -7.14,
+        10.76
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -6.51,
+        7.8
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -5.88,
+        4.84
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -5.26,
+        1.88
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -4.63,
+        -1.08
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -4.0,
+        -4.04
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -3.37,
+        -7.0
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -2.74,
+        -9.96
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -2.11,
+        -12.92
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -1.48,
+        -15.88
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -0.85,
+        -18.84
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        -0.22,
+        -21.8
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        0.41,
+        -24.76
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        1.04,
+        -27.72
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        1.66,
+        -30.68
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        2.29,
+        -33.64
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        2.92,
+        -36.6
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        3.55,
+        -39.56
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        4.18,
+        -42.52
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        4.81,
+        -45.48
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        5.44,
+        -48.44
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        6.07,
+        -51.4
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.62,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        6.7,
+        -54.36
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#64635e",
+      "centro": [
+        7.33,
+        -57.32
+      ],
+      "largo": 3.23,
+      "ancho": 4.3,
+      "rumbo_eje": 348
+    },
+    {
+      "tipo": "anden",
+      "poligono": [
+        [
+          5.56,
+          -59.34
+        ],
+        [
+          -19.02,
+          56.28
+        ],
+        [
+          -14.81,
+          57.17
+        ],
+        [
+          9.77,
+          -58.45
+        ]
+      ]
+    }
+  ],
+  "adecuaciones": {
+    "kwp_plan": 50,
+    "fv": [
+      {
+        "volumen": "bloque_principal",
+        "faldon": "O",
+        "filas": 2,
+        "columnas": 30,
+        "orientacion_modulo": "horizontal"
+      },
+      {
+        "volumen": "bloque_principal",
+        "faldon": "E",
+        "filas": 2,
+        "columnas": 16,
+        "orientacion_modulo": "horizontal"
+      }
+    ],
+    "kwp_factible": 50.6,
+    "bess": {
+      "kwh": 120,
+      "kw": 60,
+      "tipo": "gabinete",
+      "largo": 3.6,
+      "ancho": 1.2,
+      "rumbo_eje": 348,
+      "centro": [
+        7.86,
+        -1.4
+      ]
+    },
+    "inversores": {
+      "n": 2,
+      "kw": 30,
+      "volumen": "bloque_principal",
+      "lado": "E",
+      "pos": -2.9
+    },
+    "domotica": [],
+    "obras_civiles": [],
+    "cargador_ve": {
+      "centro": [
+        14.18,
+        43.91
+      ]
+    },
+    "notas": "pendiente"
+  }
+}

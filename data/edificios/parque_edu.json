@@ -7,9 +7,109 @@
   "lon": -73.910135,
   "ubicacion": {
     "confianza": "alta",
-    "metodo": "prueba"
+    "metodo": "La coordenada del inventario cae en el centro de la cubierta verde de unos 57 × 27 m entre el Coliseo Benito Arias (al norte) y la escuela de ladrillo (al sur); no hubo que corregirla. En Street View de noviembre de 2013 (panorama UD9Fguy6mDTI6-6usnjaiw, mirando al este con el rumbo ya corregido, 88°) se ve el lote vacío con la valla 'Aquí estará nuestro Parque Educativo' delante de la gran ceiba, en la misma línea de la cubierta actual. Las fotos de prensa de la inauguración (marzo de 2015) muestran el pórtico con el letrero 'Sueños de Casabe / Parque Educativo' mirando al oeste, con las cerchas del coliseo a la izquierda (norte), lo que confirma la orientación. Prensa de 2013 ubica el lote 'al lado del Coliseo Benito Arias'."
   },
-  "fuentes": [],
+  "fuentes": [
+    {
+      "tipo": "street_view",
+      "pano": "UD9Fguy6mDTI6-6usnjaiw",
+      "fecha": "2013-11",
+      "rumbo": 88,
+      "nota": "Desde la carrera, al oeste. Lote vacío con la valla 'Aquí estará nuestro Parque Educativo' y la gran ceiba; coliseo en obra a la izquierda. Sirvió para ubicar la ceiba (a unos 16 m de la cámara) y comparar el modelo."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "gQ3CP30h4r0vsTSAj1Braw",
+      "fecha": "2013-11",
+      "rumbo": 20,
+      "nota": "Desde el suroeste mirando al norte por la carrera: tronco de la ceiba junto al andén (segunda línea para ubicarla), malla verde de la obra del coliseo y la escuela de ladrillo con corredor al sur del lote."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "gQ3CP30h4r0vsTSAj1Braw",
+      "fecha": "2013-11",
+      "rumbo": 60,
+      "nota": "Escuela vecina al sur (ladrillo, corredor con columnas metálicas), tapada por árboles."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "8Lplca99ZsiQzUa4Ugdrhg",
+      "fecha": "2013-11",
+      "rumbo": 125,
+      "nota": "Desde el noroeste: esquina suroeste del coliseo en obra (cuarto de ladrillo rojo) y, a la derecha, la valla del parque en el lote vacío. Segunda comparación con el modelo."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "1iYYplunY_ECk_lLzM__rA",
+      "fecha": "2013-11",
+      "rumbo": 45,
+      "nota": "Desde la esquina suroeste: zona escolar y árboles que tapan el lote; no se ve el sitio del parque."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z19 (0,296 m/píxel)",
+      "nota": "Huella de la cubierta: bloque oeste de 32 × 9,6 m con pórtico en la punta oeste, espacio oscuro de 5,5 m y bloque este de 16,1 × 25,9 m con un escalón a 8,5 m del borde sur. Cubierta plana verde salvia (muestra #7a917d). Eje de los bloques girado 13° (rumbo 77° el eje este–oeste), igual que la cuadrícula de calles."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Google satélite z20 (0,148 m/píxel, marca de agua 2026), solo como referencia",
+      "nota": "Se alineó con Esri (desfase de 1,8 m al oeste y 0,9 m al norte). Confirma la misma forma de cubierta, la línea oscura del escalón del bloque este y la línea oscura con franja blanca sobre el bloque oeste."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.elcolombiano.com/antioquia/obras/yondo-estrena-su-parque-educativo-DX1437588",
+      "fecha": "2015-03-06",
+      "nota": "Inauguración. La arquitecta Martha Roldán explica que el diseño 'se basó en un techo que albergaría las cuatro aulas' (emprendimiento, maestros, media técnica y digital), junto a la gran ceiba. Foto del pórtico: marco gris muy oscuro (#3f3b3d), letrero en letras metálicas, columnas cilíndricas de concreto (#7b7e77), muro de barriles de colores y rejas negras."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.elcolombiano.com/antioquia/la-tradicion-se-perpetua-en-suenos-de-casabe-NX1440825",
+      "fecha": "2015-03",
+      "nota": "Foto del corredor: muro de bloque de concreto gris a la vista (#989c99), puerta gris oscura (#3c3a3e), panel rojo (#b53231), piso de concreto, reja verde muy oscura (#2f3330) con listones verticales marrones y techo con vigas de concreto a unos 4,4 m."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.vanguardia.com/santander/barrancabermeja/parque-educativo-de-yondo-suenos-de-casabe-abrio-puertas-al-publico-GAvl303225",
+      "fecha": "2015-03-14",
+      "nota": "Obra de la Gobernación de Antioquia por $2.500 millones, ejecutada por el Consorcio CC Educativo; primera piedra el 31 de marzo de 2014. Foto del pórtico."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.vanguardia.com/santander/barrancabermeja/2013/02/23/yondo-entre-los-45-municipios-de-antioquia-con-parque-educativo/",
+      "fecha": "2013-02-23",
+      "nota": "El lote está al lado del Coliseo Benito Arias y a pocos metros de la primaria del colegio Luis Eduardo Díaz."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.elcolombiano.com/antioquia/estado-de-los-parques-educativos-de-antioquia-EH12515331",
+      "fecha": "2020-02-25",
+      "nota": "Según el inventario de junio de 2019, el parque de Yondó funciona pero está entre los 20 con requerimientos de mantenimiento."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.antioquiacritica.com/mentoria-legal-yondo-jornada-gratuita/",
+      "fecha": "2026-09",
+      "nota": "Evento programado en el Parque Educativo Sueños de Casabe el 17 de septiembre de 2026: el edificio sigue en uso."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-13-8376174",
+      "fecha": "2018-09-03",
+      "nota": "SECOP: compra de dos computadores portátiles para el Parque Educativo Sueños de Casabe ($4,9 millones)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-12-11928372",
+      "fecha": "2021-04-13",
+      "nota": "SECOP: apoyo para la conservación de las instalaciones del Parque Educativo, Punto Vive Digital y Biblioteca Municipal (también 20-12-11042645 y 20-12-11286197 de 2020)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-12-3744669",
+      "fecha": "2015-02-26",
+      "nota": "SECOP: actividades culturales para integrar a la comunidad en torno al Parque Educativo Sueños de Casabe."
+    }
+  ],
   "volumenes": [
     {
       "id": "portico",
@@ -18,7 +118,7 @@
         -27.55,
         -0.92
       ],
-      "largo": 9.7,
+      "largo": 10.0,
       "ancho": 3.5,
       "rumbo_eje": 347,
       "base": 0,
@@ -50,7 +150,7 @@
     },
     {
       "id": "bloque_oeste",
-      "nombre": "Bloque oeste (aulas bajo la cubierta)",
+      "nombre": "Bloque oeste (aulas bajo la cubierta plana)",
       "centro": [
         -10.48,
         4.05
@@ -110,7 +210,7 @@
     },
     {
       "id": "bloque_este",
-      "nombre": "Bloque este (aulas)",
+      "nombre": "Bloque este, parte norte (aulas)",
       "centro": [
         19.57,
         5.24
@@ -153,7 +253,7 @@
     },
     {
       "id": "bloque_este_sur",
-      "nombre": "Franja sur del bloque este (cubierta más baja)",
+      "nombre": "Bloque este, franja sur (cubierta más baja)",
       "centro": [
         22.49,
         -7.38
@@ -182,7 +282,15 @@
           "lados": [
             "S"
           ]
-        }
+        },
+        "puertas": [
+          {
+            "lado": "S",
+            "pos": 0.5,
+            "ancho": 1.8,
+            "alto": 2.4
+          }
+        ]
       }
     }
   ],
@@ -230,8 +338,8 @@
     {
       "tipo": "arbol",
       "centro": [
-        -42.1,
-        -6.8
+        -41.6,
+        -6.1
       ],
       "altura": 11.5,
       "copa": 18
@@ -262,6 +370,22 @@
       ],
       "altura": 9,
       "copa": 9
+    },
+    {
+      "tipo": "aire_acondicionado",
+      "centro": [
+        -15.46,
+        1.15
+      ],
+      "altura": 4.35
+    },
+    {
+      "tipo": "aire_acondicionado",
+      "centro": [
+        -15.73,
+        2.32
+      ],
+      "altura": 4.35
     }
   ],
   "adecuaciones": {
@@ -283,11 +407,65 @@
       "kw": 12,
       "volumen": "bloque_este",
       "lado": "N"
-    }
+    },
+    "domotica": [
+      "medidor bidireccional en la frontera con EPM",
+      "pasarela IoT (gateway) conectada al Centro de Control Energético y Digital",
+      "control de los aires acondicionados de las aulas TIC: horario, temperatura mínima de 24 °C y apagado con aula vacía",
+      "sensores de ocupación en las cuatro aulas y en la sala del Punto Vive Digital",
+      "apagado programado de computadores y regletas fuera del horario de atención",
+      "iluminación LED con sensores en corredores, pórtico y plaza",
+      "monitoreo remoto de la generación solar y del inversor"
+    ],
+    "obras_civiles": [
+      "revisión y renovación de la impermeabilización de la losa antes del montaje (la cubierta es de 2015 y el inventario de 2019 reportó requerimientos de mantenimiento)",
+      "concepto de un ingeniero estructural sobre la carga adicional de unos 25 kg/m² en la losa del bloque este",
+      "soportes con contrapeso (lastre) o anclajes sellados para no romper la impermeabilización",
+      "acceso seguro a la cubierta: escalera fija con guarda y punto de anclaje para línea de vida",
+      "puesta a tierra, protecciones contra sobretensiones (DPS) y pararrayos",
+      "canalización desde la cubierta hasta el tablero general y gabinete con candado para el inversor en el muro norte, que da al paso público frente al coliseo"
+    ],
+    "notas": "Cabe la potencia planeada con amplio margen: 22 módulos de 550 Wp (2 filas × 11 columnas, en vertical, inclinados 10° hacia el sur del edificio, rumbo 167°) = 12,1 kWp, sobre la losa del bloque este (16,1 × 17,4 m, unos 4,3 m de alto). Con retiros de 0,5 m a los bordes y filas separadas 2,7 m para que no se sombreen, en esa sola losa caben 6 filas × 13 columnas = 78 módulos (42,9 kWp); la franja sur, más baja, admite 2 filas × 13 = 26 módulos (14,3 kWp), y el bloque oeste unos 34 módulos (18,7 kWp) si se dejan libres los 8 m del lado oeste (sombra de la ceiba en la tarde) y la franja sur (copas de árboles). En total la cubierta admite unos 138 módulos (≈76 kWp). Para cubrir el 100 % del consumo supuesto (2.000 kWh/mes) bastarían 33 módulos (18,2 kWp); con 12,1 kWp se cubre cerca del 67 %. Se escogió el bloque este porque no tiene árboles encima ni cerca: el coliseo, 7 m al norte, solo da sombra temprano o tarde entre mayo y agosto, por eso el arreglo queda centrado y lejos del borde norte. El nodo no tiene baterías en el plan (no es isla), así que no se ubica BESS. El inversor va en el muro norte, a la sombra la mayor parte del año. No hay parqueadero propio (se llega por la plaza de acceso bajo la ceiba), por eso no se propone cargador de vehículo eléctrico."
   },
-  "incertidumbres": [],
+  "incertidumbres": [
+    "Street View solo tiene panoramas de noviembre de 2013, cuando el lote estaba vacío (la obra empezó el 31 de marzo de 2014). No hay panoramas posteriores ni fotos 360 de usuarios. Por eso las comparaciones con Street View solo verifican la ubicación (la ceiba y la valla quedan donde están el pórtico y la plaza); la silueta del pórtico se comparó con la foto de prensa de 2015.",
+    "Alturas: el pórtico mide unos 3,9 m (medido con los barriles de 0,57 m de diámetro en la foto) y unos 10 m de ancho; los bloques se dejaron en 4,3 m porque desde la foto no se ve ninguna cubierta detrás del pórtico (debe ser de menos de unos 4,7 m) y el techo del corredor está a unos 4,4 m. Las sombras en el satélite son coherentes con 4–5 m.",
+    "Material de la cubierta: plana y de color verde salvia uniforme. Se asumió losa de concreto con impermeabilizante verde porque la foto del corredor muestra vigas de concreto; podría ser lámina metálica pintada. Hay que confirmarlo en la visita antes de diseñar los soportes.",
+    "La franja sur del bloque este se modeló 0,9 m más baja por una línea que se ve clara en Esri y oscura en Google, como un escalón que mira al sur; podría ser solo una canal o el alero de una terraza abierta.",
+    "El borde sur del bloque oeste queda bajo copas de árboles; el corredor de 2 m en el costado sur es supuesto (la foto del corredor existe, pero no se sabe en qué lado del edificio está).",
+    "El espacio oscuro de 5,5 m entre los dos bloques puede ser un patio descubierto con piso oscuro o un paso cubierto con pérgola de listones (en la foto del corredor aparecen listones verticales marrones); se modeló como patio.",
+    "Sobre el bloque oeste hay una línea oscura de 1,3 × 5 m (posible lucernario o vacío) y a 3 m una franja blanca que se interpretó como dos condensadoras de aire acondicionado; no se pudo confirmar.",
+    "Ventanas y puertas con tamaños y posiciones típicas: en la foto del corredor solo se ve un muro ciego de bloque gris con una puerta gris oscura y un panel rojo. No se ven aires acondicionados en fachada, tanques ni planta eléctrica.",
+    "El muro de barriles de colores y las rejas negras del pórtico se representan con un portón; el letrero real tiene además 'PARQUE EDUCATIVO' en letras pequeñas debajo y reflectores encima. Tampoco se modelaron la cerca de madera del lado norte del pórtico ni las balizas de luz de la plaza.",
+    "La ceiba (unos 11–12 m de alto y 18 m de copa) se ubicó cruzando dos panoramas de 2013; los otros árboles se estimaron en el satélite. Pudieron cambiar desde entonces.",
+    "No se sabe la fecha de la imagen Esri; Google (2026) muestra la misma forma de cubierta, así que no hay ampliaciones recientes visibles.",
+    "El consumo de 2.000 kWh/mes es un supuesto por tipología; se reemplaza con las facturas de EPM."
+  ],
   "verificacion": {
     "trace": "data/geo/img/parque_edu_trace.png",
-    "vistas": []
+    "vistas": [
+      "data/geo/img/parque_edu_sat.png",
+      "data/geo/img/parque_edu_sat120.png",
+      "data/geo/img/parque_edu_rot_esri.png",
+      "data/geo/img/parque_edu_rot_g.png",
+      "data/geo/img/parque_edu_sv_ud9_e.jpg",
+      "data/geo/img/parque_edu_sv_gq3_n.jpg",
+      "data/geo/img/parque_edu_sv_gq3_ne.jpg",
+      "data/geo/img/parque_edu_sv_8lp_se.jpg",
+      "data/geo/img/parque_edu_sv_1iy_ne.jpg",
+      "data/geo/img/parque_edu_web1.jpg",
+      "data/geo/img/parque_edu_web3.jpg",
+      "data/geo/img/parque_edu_web4.jpg",
+      "data/geo/img/parque_edu_cmp1_comparacion.png",
+      "data/geo/img/parque_edu_cmp1b_comparacion.png",
+      "data/geo/img/parque_edu_cmp1b_mezcla.png",
+      "data/geo/img/parque_edu_cmp2_comparacion.png",
+      "data/geo/img/parque_edu_cmp_portico_comparacion.png",
+      "data/geo/img/parque_edu_cmp_porticob_comparacion.png",
+      "data/geo/img/parque_edu_cmp_porticob_mezcla.png",
+      "data/geo/img/parque_edu_orbita_todo.png",
+      "data/geo/img/parque_edu_orbita_planta.png"
+    ],
+    "nota": "Huella: 3 iteraciones de trace.py (se amplió la franja sur del bloque este hasta el andén claro y se ajustaron los bordes con perfiles de brillo; error ≈ 0,5 m). Comparaciones con la misma cámara: UD9Fguy6mDTI6-6usnjaiw rumbo 88, pitch 5, fov 90 (cmp1 y cmp1b) y 8Lplca99ZsiQzUa4Ugdrhg rumbo 125, pitch 3, fov 90 (cmp2): como en 2013 el lote estaba vacío, solo confirman que el pórtico y la plaza quedan donde estaba la valla y que el tronco de la ceiba coincide (la ceiba se bajó de 13 a 11,5 m y se corrió 1 m). Pórtico contra la foto de El Colombiano de 2015 (cámara en órbita a 9,3 m, a 1,6 m de altura, fov 75,5°): tras ensancharlo de 9,7 a 10 m coinciden ancho, alto (3,9 m) y altura del vano (2,85 m); el letrero del modelo sale más grande que el real."
   }
 }
