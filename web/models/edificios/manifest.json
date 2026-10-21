@@ -1,0 +1,508 @@
+[
+ {
+  "id": "alcaldia",
+  "nombre": "Palacio Municipal de Yondó (Alcaldía; alojaría el CCED)",
+  "nodo_microrred": "alcaldia",
+  "lat": 7.00471,
+  "lon": -73.910559,
+  "archivo": "models/edificios/alcaldia_lod0.glb",
+  "archivo_lod1": "models/edificios/alcaldia_lod1.glb",
+  "bytes": 119244,
+  "bytes_lod1": 87692,
+  "bytes_sin_comprimir": 1181132,
+  "triangulos": 17472,
+  "triangulos_lod1": 5990,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 2,
+  "tamano": [
+   65.8,
+   7.1,
+   132.9
+  ],
+  "modulos": 92,
+  "kwp_modelado": 50.6,
+  "kwp_plan": 50,
+  "kwp_factible": 50.6,
+  "bess": {
+   "kwh": 120,
+   "kw": 60,
+   "tipo": "gabinete"
+  },
+  "confianza": "alta",
+  "fuentes": [
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Esquina Calle 47 con Carrera 55: hastial norte del bloque largo, corredor con columnas al oeste, anexo bajo con puerta verde y aires acondicionados. Es la vista que mejor coincide con el modelo.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=itU9w9UuqMauQIU4jhGtrw&heading=150"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Acercamiento del hastial: ladrillo pintado color salmón, rejilla de ventilación en el triángulo, faldón oeste que sigue sobre el corredor, columnas delgadas gris azulado, ventanas de marco blanco.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=itU9w9UuqMauQIU4jhGtrw&heading=140"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Corredor de la fachada oeste hacia el sur, almendros en el andén y carros parqueados en la Carrera 55.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=itU9w9UuqMauQIU4jhGtrw&heading=170"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Frente norte: hastial de ladrillo y anexo bajo con antepecho y franja de calados; aviso 'Laboratorio de Paz' (emisora comunitaria, obra 2004-2005 con aporte de la Unión Europea); antena y parabólica.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Wnbe7wpQUN0nMpQ0b4j-ww&heading=160"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Acercamiento: dos aires acondicionados en el hastial, ventana con reja y alero, alturas medidas con aires y ventana como referencia (alero del muro ≈4,1 m, cumbrera ≈5,9 m).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Wnbe7wpQUN0nMpQ0b4j-ww&heading=185"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Casa amarilla con reja y zócalo de ladrillo, cubierta de fibrocemento a cuatro aguas; detrás el anexo y el hastial.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=C5nta6cjvGMwwbe99Wj6pQ&heading=200"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Cubierta larga de fibrocemento ondulado gris oscuro vista desde el noreste; puerta verde del anexo y antena.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=C5nta6cjvGMwwbe99Wj6pQ&heading=225"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Pasaje de unos 2 m entre la casa amarilla y el anexo; el anexo es largo hacia el sur y tiene cubierta baja de fibrocemento.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Xptd2ovr2wk89k8jg1SEYQ&heading=185"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Huella y cubiertas: bloque largo con cubierta gris (#767672) de -3,75 a +4,75 m del eje, franja del corredor más oscura al oeste (rojiza en el extremo norte y clara entre u=18 y u=31), ala oriental, ala de cubierta clara y alero transversal claro.",
+    "url": null
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Membrete oficial: Cra. 55 No. 46 A 16, barrio Colonia Sur.",
+    "url": "https://vlex.com.co/vid/resolucion-no-139-2021-1038220342"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SECOP II SAMC 003-2024: obras de adecuación y mantenimiento del Centro Administrativo, Sociedad Valmo SAS, $368.955.404, dic. 2024. Posterior a la foto satelital.",
+    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7105969&isFromPublicArea=True"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SECOP I SAMC-005-2020: mantenimiento y adecuación del Centro Administrativo Municipal, J. Falcons SAS, $200.000.000, oct.–dic. 2020.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-11-11091570"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "2014: adecuación de las dependencias del Palacio de la Alcaldía, $34.999.994.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-11-2712381"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "2013: adecuación del área administrativa del Palacio Municipal – Secretaría de Planeación, $47.318.142.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=12-11-1273096"
+   }
+  ]
+ },
+ {
+  "id": "bomberos",
+  "nombre": "Cuerpo de Bomberos Voluntarios de Yondó (sede de la dirección registrada)",
+  "nodo_microrred": "bomberos",
+  "lat": 7.010066,
+  "lon": -73.909143,
+  "archivo": "models/edificios/bomberos_lod0.glb",
+  "archivo_lod1": "models/edificios/bomberos_lod1.glb",
+  "bytes": 62272,
+  "bytes_lod1": 55292,
+  "bytes_sin_comprimir": 120692,
+  "triangulos": 864,
+  "triangulos_lod1": 610,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 4,
+  "tamano": [
+   22.4,
+   7,
+   31.6
+  ],
+  "modulos": 18,
+  "kwp_modelado": 9.9,
+  "kwp_plan": 10,
+  "kwp_factible": 9.9,
+  "bess": {
+   "kwh": 20,
+   "kw": 10,
+   "tipo": "gabinete"
+  },
+  "confianza": "baja",
+  "fuentes": [
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Fachada occidental de la casa blanca de postigos cafés (sin letrero, sin garaje). Comparación con el modelo.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=M40Q26L167IPXLE5rXuuow&heading=95"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Costado occidental de la Cra. 48 frente a la dirección: viviendas.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=M40Q26L167IPXLE5rXuuow&heading=270"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde el norte: casa de ladrillo vecina, puerta de la mitad norte y árbol grande en el antejardín, donde en 2020 aparece la ampliación. Comparación con el modelo.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=XNtax7Vj1joQX1vC93I3tQ&heading=118"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Esquina en T de la Cra. 48 con la Cl. 54, referencia de la placa 54-12.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=HxGSmgFoe_6ZcS0o-cwNBw&heading=180"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Casa amarilla esquinera con corredor, vecina al sur.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=IkBy3nI9VvXAWi_fzbEhtw&heading=20"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Vista de la cuadra desde el norte.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=yPLiPD1gGIVrpiEz3EUM-w&heading=150"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Huella, cubierta metálica clara de la mitad norte y ampliación hasta la calle, árboles.",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Solo a 1,2 m por píxel: no alcanza para fechar la ampliación.",
+    "url": null
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Convenio CDY 008-2025 del municipio con el Cuerpo de Bomberos Voluntarios de Yondó (NIT 900066409-7). La dirección Cra. 48 # 54-12 viene del registro de proveedor en SECOP II.",
+    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8411374"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SASI-014-2019: el municipio compró una camioneta 4x4 de respuesta rápida con equipo contra incendios de 100 galones para los bomberos (noviembre de 2019).",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-9-459778"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Resolución de la Gobernación (2021) que inscribe a los dignatarios; no trae dirección.",
+    "url": "https://www.antioquia.gov.co/images/PDF2/Resoluciones/2021/03/2021060005143.pdf"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Regla de nomenclatura: placa par en el costado oriental de las carreras.",
+    "url": "https://www.waze.com/discuss/t/como-encontrar-una-direccion-en-colombia/375220"
+   }
+  ]
+ },
+ {
+  "id": "hospital",
+  "nombre": "E.S.E. Hospital Héctor Abad Gómez",
+  "nodo_microrred": "hospital",
+  "lat": 7.005415,
+  "lon": -73.914452,
+  "archivo": "models/edificios/hospital_lod0.glb",
+  "archivo_lod1": "models/edificios/hospital_lod1.glb",
+  "bytes": 145640,
+  "bytes_lod1": 93088,
+  "bytes_sin_comprimir": 1965836,
+  "triangulos": 29643,
+  "triangulos_lod1": 8553,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 4,
+  "tamano": [
+   96,
+   7.6,
+   90.3
+  ],
+  "modulos": 180,
+  "kwp_modelado": 99,
+  "kwp_plan": 100,
+  "kwp_factible": 99,
+  "bess": {
+   "kwh": 400,
+   "kw": 150,
+   "tipo": "contenedor_20"
+  },
+  "confianza": "alta",
+  "fuentes": [
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "fachada norte del ala norte: muro verde, zócalo de ladrillo, ventanas altas, pórtico pequeño blanco; usada en la comparación modelo-foto",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=saY4Jn7Dlc9L08509juZCQ&heading=195"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "culata de urgencias con el letrero del hospital, portería y parqueadero de ambulancias",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=saY4Jn7Dlc9L08509juZCQ&heading=135"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "entrada vehicular, portería, culata con letrero y extremo oriental del ala norte; usada en la comparación",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=fYguJtJDVJlC2guYyDTuXg&heading=175"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "pórtico de la entrada noroeste (culata blanca, banda de ladrillo, columnas); usada en la comparación",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=x_4WLXYIHKGCjqrb9hq4rg&heading=149"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "fachada norte y cubierta de tejas onduladas de fibrocemento",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=RGvxpmaPYvI5IPUGse6Nqw&heading=162"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "esquina noroeste en ladrillo a la vista, alero ancho con canal y bajante verdes",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=5QD9d8wI99kdzK8ToYu-eA&heading=132"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "lado oeste: kiosco con techo de palma y bloques de muros rojos",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=l7a44fb2a7RSYUWk_1lIlg&heading=86"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "kiosco de palma, prado y cerramiento de malla sobre muro bajo de ladrillo",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=m3Sn3nKZFMYxLI6Hv-xIMA&heading=73"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "ala sur vista desde el suroeste, muros rojos",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Y_D5IXa2aczM_BFEG4rNAg&heading=62"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "acceso desde la vía norte, portería y ambulancia",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=vB9Vhd64frYwmR7RMKqtCg&heading=195"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "huella, cumbreras por contraste de faldones, color de cubiertas y elementos posteriores a 2014",
+    "url": null
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "blog de 2016: el hospital ocupa parte del antiguo hospital de la Shell (años 30-40), remodelado y abierto en enero de 1989; foto de las dos entradas con letrero",
+    "url": "https://sebastiangmesehospitalhectorabadgomez.blogspot.com/"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "tesis UIS 2019: NIT 800.014.884-7, dirección Cra 58 # 46-236, servicios (urgencias, hospitalización, laboratorio, imágenes, odontología, farmacia)",
+    "url": "https://noesis.uis.edu.co/items/7029719e-f395-41ca-9a73-4a80e069f79c/full"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "contrato de 2024 (100 millones): pintura general de fachadas e interiores, techo del parqueadero en estructura de acero y consultorios; posterior al satélite",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=24-4-13937196"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "estudio de vulnerabilidad sísmica, patológico y de resistencia (2024, 182,6 millones): revisarlo antes de cargar las cubiertas",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=24-4-13944140"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "adecuación y mantenimiento de la infraestructura física (2020, 733 millones)",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-4-11057200"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "mantenimiento preventivo de la planta eléctrica (2019): el hospital tiene planta diésel",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-4-8880800"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "estudio técnico de instalaciones eléctricas RETIE (2015)",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-4-4051908"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SECOP integrado: contratos del hospital (NIT 800014884) consultados en octubre de 2026",
+    "url": "https://www.datos.gov.co/resource/rpmr-utcd.json?nit_de_la_entidad=800014884"
+   }
+  ]
+ },
+ {
+  "id": "parque_edu",
+  "nombre": "Parque Educativo 'Sueños de Casabe'",
+  "nodo_microrred": "parque_edu",
+  "lat": 7.006133,
+  "lon": -73.910135,
+  "archivo": "models/edificios/parque_edu_lod0.glb",
+  "archivo_lod1": "models/edificios/parque_edu_lod1.glb",
+  "bytes": 79204,
+  "bytes_lod1": 70804,
+  "bytes_sin_comprimir": 440608,
+  "triangulos": 4958,
+  "triangulos_lod1": 3140,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 2,
+  "tamano": [
+   79.9,
+   7.3,
+   37.7
+  ],
+  "modulos": 22,
+  "kwp_modelado": 12.1,
+  "kwp_plan": 12,
+  "kwp_factible": 12.1,
+  "bess": null,
+  "confianza": "alta",
+  "fuentes": [
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde la carrera, al oeste. Lote vacío con la valla 'Aquí estará nuestro Parque Educativo' y la gran ceiba; coliseo en obra a la izquierda. Sirvió para ubicar la ceiba (a unos 16 m de la cámara) y comparar el modelo.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=UD9Fguy6mDTI6-6usnjaiw&heading=88"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde el suroeste mirando al norte por la carrera: tronco de la ceiba junto al andén (segunda línea para ubicarla), malla verde de la obra del coliseo y la escuela de ladrillo con corredor al sur del lote.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=gQ3CP30h4r0vsTSAj1Braw&heading=20"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Escuela vecina al sur (ladrillo, corredor con columnas metálicas), tapada por árboles.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=gQ3CP30h4r0vsTSAj1Braw&heading=60"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde el noroeste: esquina suroeste del coliseo en obra (cuarto de ladrillo rojo) y, a la derecha, la valla del parque en el lote vacío. Segunda comparación con el modelo.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=8Lplca99ZsiQzUa4Ugdrhg&heading=125"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde la esquina suroeste: zona escolar y árboles que tapan el lote; no se ve el sitio del parque.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=1iYYplunY_ECk_lLzM__rA&heading=45"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Huella de la cubierta: bloque oeste de 32 × 9,6 m con pórtico en la punta oeste, espacio oscuro de 5,5 m y bloque este de 16,1 × 25,9 m con un escalón a 8,5 m del borde sur. Cubierta plana verde salvia (muestra #7a917d). Eje de los bloques girado 13° (rumbo 77° el eje este–oeste), igual que la cuadrícula de calles.",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Se alineó con Esri (desfase de 1,8 m al oeste y 0,9 m al norte). Confirma la misma forma de cubierta, la línea oscura del escalón del bloque este y la línea oscura con franja blanca sobre el bloque oeste.",
+    "url": null
+   },
+   {
+    "tipo": "web",
+    "fecha": "2015-03-06",
+    "nota": "Inauguración. La arquitecta Martha Roldán explica que el diseño 'se basó en un techo que albergaría las cuatro aulas' (emprendimiento, maestros, media técnica y digital), junto a la gran ceiba. Foto del pórtico: marco gris muy oscuro (#3f3b3d), letrero en letras metálicas, columnas cilíndricas de concreto (#7b7e77), muro de barriles de colores y rejas negras.",
+    "url": "https://www.elcolombiano.com/antioquia/obras/yondo-estrena-su-parque-educativo-DX1437588"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2015-03",
+    "nota": "Foto del corredor: muro de bloque de concreto gris a la vista (#989c99), puerta gris oscura (#3c3a3e), panel rojo (#b53231), piso de concreto, reja verde muy oscura (#2f3330) con listones verticales marrones y techo con vigas de concreto a unos 4,4 m.",
+    "url": "https://www.elcolombiano.com/antioquia/la-tradicion-se-perpetua-en-suenos-de-casabe-NX1440825"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2015-03-14",
+    "nota": "Obra de la Gobernación de Antioquia por $2.500 millones, ejecutada por el Consorcio CC Educativo; primera piedra el 31 de marzo de 2014. Foto del pórtico.",
+    "url": "https://www.vanguardia.com/santander/barrancabermeja/parque-educativo-de-yondo-suenos-de-casabe-abrio-puertas-al-publico-GAvl303225"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2013-02-23",
+    "nota": "El lote está al lado del Coliseo Benito Arias y a pocos metros de la primaria del colegio Luis Eduardo Díaz.",
+    "url": "https://www.vanguardia.com/santander/barrancabermeja/2013/02/23/yondo-entre-los-45-municipios-de-antioquia-con-parque-educativo/"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2020-02-25",
+    "nota": "Según el inventario de junio de 2019, el parque de Yondó funciona pero está entre los 20 con requerimientos de mantenimiento.",
+    "url": "https://www.elcolombiano.com/antioquia/estado-de-los-parques-educativos-de-antioquia-EH12515331"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2026-09",
+    "nota": "Evento programado en el Parque Educativo Sueños de Casabe el 17 de septiembre de 2026: el edificio sigue en uso.",
+    "url": "https://www.antioquiacritica.com/mentoria-legal-yondo-jornada-gratuita/"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2018-09-03",
+    "nota": "SECOP: compra de dos computadores portátiles para el Parque Educativo Sueños de Casabe ($4,9 millones).",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-13-8376174"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2021-04-13",
+    "nota": "SECOP: apoyo para la conservación de las instalaciones del Parque Educativo, Punto Vive Digital y Biblioteca Municipal (también 20-12-11042645 y 20-12-11286197 de 2020).",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-12-11928372"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2015-02-26",
+    "nota": "SECOP: actividades culturales para integrar a la comunidad en torno al Parque Educativo Sueños de Casabe.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-12-3744669"
+   }
+  ]
+ }
+]

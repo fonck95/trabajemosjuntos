@@ -2,12 +2,12 @@
   "id": "hospital",
   "nombre": "E.S.E. Hospital Héctor Abad Gómez",
   "nodo_microrred": "hospital",
-  "direccion": "Carrera 58 # 46-236, barrio José Domingo Oliveros",
+  "direccion": "Carrera 58 # 46-236, barrio José Domingo Oliveros (dirección del hospital en documentos de 2019; OpenStreetMap registra Carrera 58 # 47B-50)",
   "lat": 7.005415,
   "lon": -73.914452,
   "ubicacion": {
     "confianza": "alta",
-    "metodo": "borrador"
+    "metodo": "Letrero 'E.S.E HOSPITAL HECTOR ABAD GOMEZ' en la culata norte del ala oriental (entrada de urgencias), visto en Street View de enero de 2014 desde el panorama saY4 con rumbo real ≈135° (sureste, no al sur) y desde fYgu con rumbo ≈168°; la misma culata aparece en la foto del blog del hospital (2016). La huella se midió en el satélite Esri (WorldView-2 del 12 de enero de 2020). El ancla (centro del complejo) se mantiene; el punto de OSM y el de Google caen sobre el ala oriental, a unos 20 m al este del ancla."
   },
   "volumenes": [
     {
@@ -332,7 +332,7 @@
       "largo": 4.0,
       "ancho": 2.6,
       "rumbo_eje": 90,
-      "altura_alero": 4.75,
+      "altura_alero": 4.6,
       "pisos": 1,
       "techo": {
         "tipo": "dos_aguas",
@@ -737,12 +737,263 @@
   ],
   "adecuaciones": {
     "kwp_plan": 100,
-    "fv": [],
-    "kwp_factible": 0
+    "fv": [
+      {
+        "volumen": "espina",
+        "faldon": "E",
+        "filas": 5,
+        "columnas": 18,
+        "orientacion_modulo": "horizontal"
+      },
+      {
+        "volumen": "ala_este",
+        "faldon": "O",
+        "filas": 4,
+        "columnas": 18,
+        "orientacion_modulo": "horizontal"
+      },
+      {
+        "volumen": "ala_media",
+        "faldon": "S",
+        "filas": 3,
+        "columnas": 6,
+        "orientacion_modulo": "horizontal"
+      }
+    ],
+    "kwp_factible": 99.0,
+    "cubierta_nueva": {
+      "material": "termoacustica",
+      "color": "#e9e7e1",
+      "volumenes": [
+        "ala_norte",
+        "galeria_norte",
+        "espina",
+        "ala_media",
+        "ala_sur",
+        "ala_este",
+        "porche_urgencias",
+        "enlace",
+        "portico_noroeste",
+        "portico_norte",
+        "bloque_sureste",
+        "caseta_servicios",
+        "porteria"
+      ]
+    },
+    "bess": {
+      "kwh": 400,
+      "kw": 150,
+      "tipo": "contenedor_20",
+      "centro": [
+        33.2,
+        34.0
+      ],
+      "largo": 6.06,
+      "ancho": 2.44,
+      "rumbo_eje": 90
+    },
+    "inversores": {
+      "n": 2,
+      "kw": 50,
+      "volumen": "enlace",
+      "lado": "N"
+    },
+    "domotica": [
+      "medidor bidireccional en la frontera con EPM",
+      "gateway IoT conectado al EMS y al Centro de Control (CCED)",
+      "transferencia automática red / baterías / planta diésel con prioridad a cargas críticas (urgencias, sala de partos, laboratorio, cadena de frío)",
+      "monitoreo de temperatura de neveras de vacunas y medicamentos con alarma",
+      "control y programación de aires acondicionados por zona",
+      "sensores de ocupación y luminarias LED en pasillos y consultorios",
+      "telegestión de iluminación exterior y del parqueadero"
+    ],
+    "obras_civiles": [
+      "cambio de toda la cubierta de tejas onduladas de fibrocemento (≈3.100 m²) por lámina termoacústica, empezando por los faldones que llevan paneles (bloque central, ala oriental con su porche y ala media); si el fibrocemento es asbesto-cemento, retiro con empresa autorizada y disposición final según la Ley 1968 de 2019",
+      "revisión de cerchas y correas con el estudio de vulnerabilidad sísmica de 2024 y refuerzo donde haga falta para la carga de paneles (≈15 kg/m²)",
+      "losa de concreto de 6,7 × 3,1 m con drenaje y cerco para el contenedor de baterías en la esquina noreste del patio de ambulancias",
+      "canalización subterránea desde el contenedor y los inversores hasta el tablero general; tablero de transferencia coordinado con la planta diésel existente",
+      "puesta a tierra, protección contra rayos (pararrayos) y protecciones DC según RETIE",
+      "línea de vida y anclajes en cumbreras para mantenimiento seguro de los paneles"
+    ],
+    "cargador_ve": {
+      "centro": [
+        16.0,
+        33.5
+      ],
+      "rumbo_eje": 0
+    },
+    "notas": "La potencia planeada cabe en la cubierta real sin marquesina: 5 filas × 18 columnas en el faldón oriental del bloque central (90 módulos), 4 × 18 en el faldón occidental del ala oriental (72) y 3 × 6 en el faldón sur del ala media (18): 180 módulos de 2,28 × 1,13 m (550 Wp) en posición horizontal = 99,0 kWp, el 99 % de los 100 kWp del plan y dentro del límite de 100 kW para acreditar excedentes 1:1. Se respetan 0,5 m a aleros, cumbreras y a las limahoyas donde el bloque central se cruza con el ala norte. Se eligieron faldones del centro del complejo, lejos del bosque del sur y del oriente: el arreglo del bloque central termina 10 m antes del borde sur para evitar la sombra del bosque al mediodía de diciembre, y el del ala oriental mira al oeste, sin árboles enfrente. El faldón sur del ala media puede recibir sombra del árbol grande del suroeste al final de la tarde. Toda la cubierta es de tejas onduladas de fibrocemento de más de 30 años; por eso se cambia antes de montar. Si no se consigue el cambio de cubierta, la alternativa es una marquesina sobre el patio de ambulancias (20 × 8 m ≈ 48 módulos = 26 kWp), que no alcanza el plan. El contenedor de 20 pies (400 kWh / 150 kW) va en la esquina noreste del patio de ambulancias, junto a la entrada vehicular para su instalación y lejos de las puertas de urgencias; los inversores (2 × 50 kW) van en el muro norte de la conexión entre el bloque central y el ala oriental, que da a un patio interno sombreado. El cargador de vehículo eléctrico (ambulancia o vehículo de servicio) queda en el costado oeste del mismo patio."
   },
-  "incertidumbres": [],
+  "incertidumbres": [
+    "Street View es de enero de 2014 y el satélite de enero de 2020. En 2024 se contrató la pintura general de fachadas e interiores y un techo de parqueadero en estructura de acero: los colores actuales pueden ser distintos a los verdes, ladrillo y rojos de 2014, y el techo del parqueadero no se ve en ninguna imagen (se supone en el patio de ambulancias, sin modelar).",
+    "Los panoramas del norte quedan unos 2,5 m más al norte que la vía en el satélite (precisión nominal del satélite ±10 m). La huella se dejó en el marco del satélite; las comparaciones con fotos se hicieron con una copia del modelo corrida 2,5 m al norte y sin la cubierta oscura posterior a 2014.",
+    "Frente al ala norte aparece en 2020 una cubierta casi negra de unos 21 × 6,6 m donde en 2014 había prado con un busto y un aviso. Se modela como cubierta ligera abierta a 3 m; puede ser un bloque cerrado o polisombra sobre parqueadero.",
+    "El alero (4,0 m) y la cumbrera (≈5,3 m) se midieron en la fachada norte; las demás alas no se ven desde la calle y se supusieron iguales. Pendientes de 10 a 12° estimadas; la del ala oriental no se midió directamente.",
+    "En el satélite la cumbrera del ala norte queda unos 1,5 m al norte de su centro y la del bloque central unos 0,7 m al oeste: el generador las pone centradas; la franja sur del ala norte se modeló como galería de una agua. Los remates hacia el oeste de las alas norte y sur son de cuatro aguas pero con faldones más cortos que en el modelo.",
+    "Los dos pórticos de la fachada norte y el porche de urgencias son abiertos, con columnas blancas; el generador los dibuja como cuerpos cerrados blancos con puerta. El letrero real está en la culata, un poco más arriba que en el modelo.",
+    "Las cubiertas son tejas onduladas de fibrocemento; por la edad del edificio (antiguo hospital de la Shell de los años 30 y 40, remodelado en 1989) pueden contener asbesto: hay que tomar una muestra de laboratorio antes de intervenir.",
+    "Patios, fachadas hacia los patios, ventanas y puertas que no se ven desde la calle llevan valores típicos. El patrón real de la fachada norte mezcla ventanas altas angostas, ventanales con cuadrícula y puertas; el modelo usa ventanas iguales cada 3 m.",
+    "El bloque sureste de techo rojo, la caseta blanca y los objetos blancos del patio de servicios (posibles tanques de agua y la planta eléctrica) solo se ven en el satélite: alturas y colores de muros supuestos. En la capa de adecuaciones el techo rojo aparece como cubierta nueva porque el generador oculta todas las cubiertas actuales cuando hay cambio de cubierta; ese techo puede conservarse si está bueno.",
+    "El kiosco del oeste tenía techo de palma a cuatro aguas en 2014; en 2020 hay una franja clara en el mismo sitio. Se modela como cubierta ligera de una agua.",
+    "La planta diésel existente (contrato de mantenimiento de 2019; la microrred supone 150 kW), el transformador y el tablero general no se ven y no se ubicaron. Tampoco se ubicó con precisión el mástil de radio atirantado de unos 9 m que se ve en 2014 cerca de la entrada vehicular, ni la caseta verde con puerta metálica junto a la reja norte (posible cuarto eléctrico o de bombas).",
+    "Las alturas de los árboles del bosque del sur y del oriente (16 a 18 m) son supuestas; definen hasta dónde llegan los paneles hacia el sur.",
+    "La ubicación del contenedor de baterías es una propuesta en un espacio que se ve libre en 2020; si el techo de parqueadero de 2024 ocupa ese patio, el contenedor puede ir bajo una ampliación de ese techo o en el costado oriental.",
+    "Dirección: los documentos del hospital dicen Carrera 58 # 46-236; OpenStreetMap dice Carrera 58 # 47B-50.",
+    "El cerramiento (malla sobre muro bajo de ladrillo en 2014) y el polígono del parqueadero se trazaron de forma aproximada."
+  ],
   "verificacion": {
     "trace": "data/geo/img/hospital_trace.png",
-    "vistas": []
-  }
+    "superposicion_muros_y_aleros": [
+      "data/geo/img/hospital_ovl2.png",
+      "data/geo/img/hospital_ovlW.png",
+      "data/geo/img/hospital_ovlE.png"
+    ],
+    "vistas": [
+      "data/geo/img/hospital_sv_saY4_195f.jpg",
+      "data/geo/img/hospital_sv_saY4_135.jpg",
+      "data/geo/img/hospital_sv_saY4_150.jpg",
+      "data/geo/img/hospital_sv_fYgu_175.jpg",
+      "data/geo/img/hospital_sv_x_4W_149.jpg",
+      "data/geo/img/hospital_sv_RGvx_162.jpg",
+      "data/geo/img/hospital_sv_5QD9_132.jpg",
+      "data/geo/img/hospital_sv_l7a4_86.jpg",
+      "data/geo/img/hospital_sv_m3Sn_73.jpg",
+      "data/geo/img/hospital_sv_Y_D5_62.jpg",
+      "data/geo/img/hospital_sv_vB9V_195.jpg",
+      "data/geo/img/hospital_web_blog1.jpg",
+      "data/geo/img/hospital_sat.png",
+      "data/geo/img/hospital_zoom.png"
+    ],
+    "comparaciones": [
+      "data/geo/img/hospital_cmp4_comparacion.png",
+      "data/geo/img/hospital_cmp4_mezcla.png",
+      "data/geo/img/hospital_cmp3_comparacion.png",
+      "data/geo/img/hospital_cmp3_mezcla.png",
+      "data/geo/img/hospital_cmp7_comparacion.png",
+      "data/geo/img/hospital_cmp7_mezcla.png"
+    ],
+    "orbitas": [
+      "data/geo/img/hospital_orbita_existente.png",
+      "data/geo/img/hospital_orbita_todo.png",
+      "data/geo/img/hospital_orbita_todo_ne.png"
+    ],
+    "nota": "Comparaciones con la misma cámara de sv_pano.py y el modelo corrido 2,5 m al norte. saY4 rumbo 195: alero, cumbrera, zócalo y pórtico pequeño coinciden (primeras versiones en cmp1 y cmp2: alero 0,3 m bajo y pendiente excesiva, corregidos). fYgu rumbo 175 (cmp3, hecha antes de separar el porche blanco con la misma huella): culata de urgencias y portería coinciden en posición y tamaño. x_4W rumbo 149: el pórtico noroeste pasó de quedar 2 m al oeste y muy grande (cmp5, cmp6) a coincidir (cmp7). La órbita con adecuaciones muestra los 180 módulos apoyados en los faldones, el contenedor sobre su losa y el cargador en el patio."
+  },
+  "fuentes": [
+    {
+      "tipo": "street_view",
+      "pano": "saY4Jn7Dlc9L08509juZCQ",
+      "fecha": "2014-01",
+      "rumbo": 195,
+      "nota": "fachada norte del ala norte: muro verde, zócalo de ladrillo, ventanas altas, pórtico pequeño blanco; usada en la comparación modelo-foto"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "saY4Jn7Dlc9L08509juZCQ",
+      "fecha": "2014-01",
+      "rumbo": 135,
+      "nota": "culata de urgencias con el letrero del hospital, portería y parqueadero de ambulancias"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "fYguJtJDVJlC2guYyDTuXg",
+      "fecha": "2014-01",
+      "rumbo": 175,
+      "nota": "entrada vehicular, portería, culata con letrero y extremo oriental del ala norte; usada en la comparación"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "x_4WLXYIHKGCjqrb9hq4rg",
+      "fecha": "2014-01",
+      "rumbo": 149,
+      "nota": "pórtico de la entrada noroeste (culata blanca, banda de ladrillo, columnas); usada en la comparación"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "RGvxpmaPYvI5IPUGse6Nqw",
+      "fecha": "2014-01",
+      "rumbo": 162,
+      "nota": "fachada norte y cubierta de tejas onduladas de fibrocemento"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "5QD9d8wI99kdzK8ToYu-eA",
+      "fecha": "2014-01",
+      "rumbo": 132,
+      "nota": "esquina noroeste en ladrillo a la vista, alero ancho con canal y bajante verdes"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "l7a44fb2a7RSYUWk_1lIlg",
+      "fecha": "2014-01",
+      "rumbo": 86,
+      "nota": "lado oeste: kiosco con techo de palma y bloques de muros rojos"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "m3Sn3nKZFMYxLI6Hv-xIMA",
+      "fecha": "2014-01",
+      "rumbo": 73,
+      "nota": "kiosco de palma, prado y cerramiento de malla sobre muro bajo de ladrillo"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "Y_D5IXa2aczM_BFEG4rNAg",
+      "fecha": "2014-01",
+      "rumbo": 62,
+      "nota": "ala sur vista desde el suroeste, muros rojos"
+    },
+    {
+      "tipo": "street_view",
+      "pano": "vB9Vhd64frYwmR7RMKqtCg",
+      "fecha": "2014-01",
+      "rumbo": 195,
+      "nota": "acceso desde la vía norte, portería y ambulancia"
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z19 (WorldView-2, 12-ene-2020, 0,5 m, precisión nominal ±10 m)",
+      "nota": "huella, cumbreras por contraste de faldones, color de cubiertas y elementos posteriores a 2014"
+    },
+    {
+      "tipo": "web",
+      "url": "https://sebastiangmesehospitalhectorabadgomez.blogspot.com/",
+      "nota": "blog de 2016: el hospital ocupa parte del antiguo hospital de la Shell (años 30-40), remodelado y abierto en enero de 1989; foto de las dos entradas con letrero"
+    },
+    {
+      "tipo": "web",
+      "url": "https://noesis.uis.edu.co/items/7029719e-f395-41ca-9a73-4a80e069f79c/full",
+      "nota": "tesis UIS 2019: NIT 800.014.884-7, dirección Cra 58 # 46-236, servicios (urgencias, hospitalización, laboratorio, imágenes, odontología, farmacia)"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=24-4-13937196",
+      "nota": "contrato de 2024 (100 millones): pintura general de fachadas e interiores, techo del parqueadero en estructura de acero y consultorios; posterior al satélite"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=24-4-13944140",
+      "nota": "estudio de vulnerabilidad sísmica, patológico y de resistencia (2024, 182,6 millones): revisarlo antes de cargar las cubiertas"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-4-11057200",
+      "nota": "adecuación y mantenimiento de la infraestructura física (2020, 733 millones)"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-4-8880800",
+      "nota": "mantenimiento preventivo de la planta eléctrica (2019): el hospital tiene planta diésel"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-4-4051908",
+      "nota": "estudio técnico de instalaciones eléctricas RETIE (2015)"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.datos.gov.co/resource/rpmr-utcd.json?nit_de_la_entidad=800014884",
+      "nota": "SECOP integrado: contratos del hospital (NIT 800014884) consultados en octubre de 2026"
+    }
+  ]
 }
