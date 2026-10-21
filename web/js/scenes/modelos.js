@@ -49,7 +49,12 @@ export function mount(root) {
     return c;
   }
 
-  function show(info, nombre) {
+  // puntos de la conexión que exporta el generador (tablero con medidor, gateway IoT, acometida de la red)
+  let cxLabels = [];
+  const CX = [['tablero', 'Tablero + medidor bidireccional', 'pw'], ['gateway', 'Gateway IoT → CCED', 'dt'], ['red', 'Acometida de la red (EPM)', 'pw']];
+  function show(info, nombre, m) {
+    // CSS2DRenderer solo borra el elemento del objeto que se quita, no el de sus hijos
+    cxLabels.forEach((l) => { l.element.remove(); l.removeFromParent(); }); cxLabels = [];
     if (current) { holder.remove(current); if (currentIsFile) disposeObject(current); else current.traverse((o) => { if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose()); }); }
     current = isolate(info.gltf.scene);
     holder.rotation.y = 0;
@@ -69,6 +74,7 @@ export function mount(root) {
     if (gsap) gsap.from(current.scale, { x: 0.001, y: 0.001, z: 0.001, duration: 0.8, ease: 'back.out(1.4)', onUpdate: () => st.invalidate(true) });
     st.updateShadows();
     setStats(info, stats(current, info.gltf), nombre);
+    if (m?.conexion) CX.forEach(([k, t, c]) => { if (m.conexion[k]) cxLabels.push(st.label(t, `lbl-cx ${c}`, m.conexion[k], current)); });
     applyLayer();
   }
 
@@ -86,7 +92,7 @@ export function mount(root) {
     try {
       const info = await loadModel(m.archivo);
       currentIsFile = false;
-      show(info, m.titulo);
+      show(info, m.titulo, m);
       estado.textContent = `${m.titulo}: ${(m.bytes_sin_comprimir / 1024).toFixed(0)} KB sin comprimir → ${(m.bytes / 1024).toFixed(0)} KB con Draco.`;
     } catch (e) { estado.textContent = `No se pudo cargar el modelo: ${e.message}`; }
   }
@@ -117,6 +123,7 @@ export function mount(root) {
       if (o.name === 'cubierta_actual' && o.userData.reemplazada) o.visible = !proyecto;
     });
     capas.hidden = !has;
+    cxLabels.forEach((l) => { l.visible = proyecto; });
     st.updateShadows();
   };
   capas.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
