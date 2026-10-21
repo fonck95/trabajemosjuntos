@@ -1,0 +1,55 @@
+[
+ {
+  "id": "hospital_lod0",
+  "titulo": "Hospital Héctor Abad Gómez (detalle completo)",
+  "archivo": "models/hospital_lod0.glb",
+  "bytes": 49936,
+  "bytes_sin_comprimir": 382896,
+  "triangulos_fuente": 6126,
+  "materiales": 12,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 1
+ },
+ {
+  "id": "hospital_lod1",
+  "titulo": "Hospital Héctor Abad Gómez (nivel de detalle bajo)",
+  "archivo": "models/hospital_lod1.glb",
+  "bytes": 33216,
+  "bytes_sin_comprimir": 107640,
+  "triangulos_fuente": 1358,
+  "materiales": 11,
+  "extensiones": [
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 0
+ },
+ {
+  "id": "contenedor_bess",
+  "titulo": "Contenedor de baterías LFP de 20 pies",
+  "archivo": "models/contenedor_bess.glb",
+  "bytes": 5756,
+  "bytes_sin_comprimir": 78228,
+  "triangulos_fuente": 928,
+  "materiales": 4,
+  "extensiones": [
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 0
+ },
+ {
+  "id": "modulo_fv",
+  "titulo": "Módulo fotovoltaico de 550 Wp",
+  "archivo": "models/modulo_fv.glb",
+  "bytes": 23172,
+  "bytes_sin_comprimir": 27920,
+  "triangulos_fuente": 62,
+  "materiales": 3,
+  "extensiones": [
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 0
+ }
+]

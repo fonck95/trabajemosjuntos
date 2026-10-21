@@ -5,7 +5,7 @@ import { EMBUDO } from '../data.js';
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [0, 14, 36], target: [0, 8, 0], maxDist: 80 });
+  const st = new Stage(el, { cam: [0, 14, 36], target: [0, 8, 0], maxDist: 80, env: false });
   const T = tokens();
   const S = st.scene;
   const E = EMBUDO.etapas;

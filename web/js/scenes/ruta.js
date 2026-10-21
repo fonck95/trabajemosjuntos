@@ -5,7 +5,7 @@ import { RUTA } from '../data.js';
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [0, 64, 92], target: [0, 0, 0], maxDist: 170 });
+  const st = new Stage(el, { cam: [0, 64, 92], target: [0, 0, 0], maxDist: 170, env: false });
   const T = tokens();
   const S = st.scene;
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(700, 500), mat(T.ground)); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; S.add(ground);

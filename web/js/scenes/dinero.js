@@ -1,10 +1,10 @@
 // Escena 3D: matriz periodo × categoría de la contratación registrada en SECOP (2007–2026).
-import { THREE, Stage, tokens, onTheme, mat, fmtCOP, fmtN, reducedMotion } from '../core.js';
+import { THREE, Stage, tokens, onTheme, mat, fmtCOP, fmtN, gsap } from '../core.js';
 import { SECOP, TEXTOS } from '../data.js';
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [26, 24, 34], target: [0, 3, 0], maxDist: 90 });
+  const st = new Stage(el, { cam: [26, 24, 34], target: [0, 3, 0], maxDist: 90, dynamicShadows: true, env: false });
   const T = tokens();
   const S = st.scene;
   const P = SECOP.periodos, C = SECOP.categorias;
@@ -85,14 +85,24 @@ export function mount(root) {
     }
     ghosts.forEach((g) => { g.g.visible = conIngresos; g.lab.visible = conIngresos; g.lab.element.hidden = !conIngresos; if (!conIngresos) g.target = 0; });
     catLabels.forEach((l) => { l.visible = modo === 'matriz'; l.element.hidden = modo !== 'matriz'; });
-    if (reducedMotion) { bars.forEach((b) => { b.h = b.target; b.y = b.ty; b.z = b.tz; place(b); }); ghosts.forEach((g) => { g.h = g.target; placeG(g); }); }
+    // GSAP anima cada columna hacia su nuevo estado; sin GSAP se coloca de inmediato
+    bars.forEach((b) => {
+      if (!gsap) { b.h = b.target; b.y = b.ty; b.z = b.tz; place(b); return; }
+      gsap.to(b, { h: b.target, y: b.ty, z: b.tz, duration: 0.9, ease: 'power3.out', delay: b.i * 0.05 + b.j * 0.025, overwrite: true, onUpdate: () => place(b) });
+    });
+    ghosts.forEach((g) => {
+      if (!gsap) { g.h = g.target; placeG(g); return; }
+      gsap.to(g, { h: g.target, duration: 1.1, ease: 'power2.out', delay: 0.2, overwrite: true, onUpdate: () => placeG(g) });
+    });
+    st.invalidate();
     tilesFor();
   }
   const place = (b) => {
     b.m.scale.y = Math.max(0.001, b.h); b.m.position.y = b.y; b.m.position.z = b.z;
     b.lab.position.set(b.m.position.x, b.y + b.h + 0.7, b.z);
+    st.invalidate();
   };
-  const placeG = (g) => { g.g.scale.y = Math.max(0.001, g.h); g.lab.position.set(g.g.position.x, g.h + 1.2, g.g.position.z); };
+  const placeG = (g) => { g.g.scale.y = Math.max(0.001, g.h); g.lab.position.set(g.g.position.x, g.h + 1.2, g.g.position.z); st.invalidate(); };
 
   const pickEl = root.querySelector('[data-slot="dinero.pick"]');
   function pick(b) {
@@ -132,16 +142,9 @@ export function mount(root) {
   }
   root.querySelector('[data-slot="dinero.findings"]').innerHTML = SECOP.hallazgos.map((h) => `<div class="card"><p class="eyebrow">${h.tag}</p><h3>${h.titulo}</h3><p>${h.texto}</p>${h.fuente ? `<p class="note">${h.fuente}</p>` : ''}</div>`).join('');
 
+  bars.forEach((b) => { b.h = 0.001; b.y = 0; b.z = z0 + b.j * GZ; place(b); });
   layout();
-  bars.forEach((b) => { b.y = b.ty; b.z = b.tz; if (!reducedMotion) { b.h = b.target * 0.15; } place(b); });
-  const ease = (a, b, k) => a + (b - a) * k;
-  st.onFrame((dt) => {
-    const k = Math.min(1, dt * 5);
-    bars.forEach((b) => {
-      if (Math.abs(b.h - b.target) + Math.abs(b.y - b.ty) + Math.abs(b.z - b.tz) > 0.01) { b.h = ease(b.h, b.target, k); b.y = ease(b.y, b.ty, k); b.z = ease(b.z, b.tz, k); place(b); }
-    });
-    ghosts.forEach((g) => { if (Math.abs(g.h - g.target) > 0.01) { g.h = ease(g.h, g.target, k); placeG(g); } });
-  });
+  st.freeze(floor); st.freeze(grid);
   onTheme((t) => {
     floor.material.color.copy(t.surface);
     grid.material.color = t.line;

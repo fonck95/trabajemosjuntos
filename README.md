@@ -2,7 +2,7 @@
 
 Investigación abierta sobre **cómo se ha gastado el dinero público en Yondó (Antioquia) desde 2004**, qué hizo y qué dejó de hacer cada gobierno, y **qué proyectos concretos, con presupuesto, pueden financiarse a partir de 2028**, con la E.S.E. Hospital Héctor Abad Gómez como puerta de entrada de los recursos y una red energética pública con domótica apoyada por MinTIC como proyecto bandera.
 
-El repositorio incluye un **atlas 3D interactivo** (Three.js) que muestra los hallazgos y los proyectos propuestos: flujos de contratación, comparación entre periodos de gobierno, el embudo estudio → obra, la microrred simulada hora a hora, el hospital como nodo financiero de 2028 y la hoja de ruta con compuertas.
+El repositorio incluye un **atlas 3D interactivo** (Three.js + GSAP) que muestra los hallazgos y los proyectos propuestos: flujos de contratación, comparación entre periodos de gobierno, el embudo estudio → obra, la microrred simulada hora a hora, el hospital como nodo financiero de 2028, la hoja de ruta con compuertas y un **visor de modelos 3D profesionales** (glTF/GLB con Draco, Meshopt y KTX2). El motor dibuja bajo demanda, ajusta la resolución según el rendimiento y comparte un solo contexto WebGL entre vistas (`docs/09`).
 
 ## Hallazgos en cinco líneas
 
@@ -25,10 +25,12 @@ El repositorio incluye un **atlas 3D interactivo** (Three.js) que muestra los ha
 | `docs/06-hospital-2028-financiacion.md` | Proyecto 2: el hospital como puerta de entrada de los recursos en 2028 |
 | `docs/07-portafolio-presupuesto.md` | Portafolio priorizado con presupuesto y fuentes |
 | `docs/08-metodologia-fuentes.md` | Método, fuentes, limitaciones y cómo verificar |
+| `docs/09-motor-3d-y-modelos.md` | Motor 3D optimizado, pipeline de modelos GLB y diseño |
 | `docs/anexos/` | Cinco informes de investigación con cada dato y su URL: gobiernos, finanzas y regalías, hospital, energía y MinTIC, indicadores sociales |
 | `data/` | Datos estructurados (JSON) que alimentan el atlas y los documentos |
 | `scripts/` | Descarga y análisis de SECOP, simulación de la microrred, construcción del sitio |
-| `web/` | El atlas 3D (HTML + módulos JavaScript + Three.js) |
+| `web/` | El atlas 3D (HTML + módulos JavaScript + Three.js + GSAP); `web/models/` modelos GLB; `web/vendor/` decodificadores Draco y Basis |
+| `scripts/modelos/` | Generación y optimización de los modelos GLB (gltf-transform + Draco) |
 
 ## Ver el atlas 3D
 
@@ -36,6 +38,7 @@ El repositorio incluye un **atlas 3D interactivo** (Three.js) que muestra los ha
 python3 scripts/build_periodos.py  # matriz de seis gobiernos (data/periodos.json)
 python3 scripts/build_marco_md.py  # regenera docs/02
 python3 scripts/build_data.py      # genera web/js/data.js desde data/*.json
+(cd scripts/modelos && npm install && npm run build)  # modelos GLB (opcional: ya vienen generados)
 python3 scripts/build_site.py      # empaqueta el sitio autónomo en site/
 cd site && python3 -m http.server 8000
 # abrir http://localhost:8000

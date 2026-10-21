@@ -1,0 +1,15 @@
+{
+  "name": "yondo-modelos",
+  "private": true,
+  "type": "module",
+  "description": "Genera y optimiza los modelos GLB del atlas (gltf-transform + Draco + meshoptimizer)",
+  "scripts": { "build": "node build_models.mjs" },
+  "dependencies": {
+    "@gltf-transform/core": "4.1.1",
+    "@gltf-transform/extensions": "4.1.1",
+    "@gltf-transform/functions": "4.1.1",
+    "draco3dgltf": "1.5.7",
+    "meshoptimizer": "0.22.0",
+    "three": "0.160.0"
+  }
+}

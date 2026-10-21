@@ -1,12 +1,13 @@
 // Escena 3D: Red Energética Pública de Yondó. Casco urbano esquemático (no a escala) con cada
 // edificio público, su generación solar, baterías, flujos de energía y la capa digital IoT/MinTIC.
-import { THREE, Stage, tokens, onTheme, mat, box, solarArray, Flow, arc, fmtCOP, fmtN, reducedMotion } from '../core.js';
+import { THREE, Stage, tokens, onTheme, mat, box, solarArray, Flow, arc, fmtCOP, fmtN, reducedMotion, PANEL } from '../core.js';
+import { loadModel, instancedFromModel, instantiate } from '../assets.js';
 import { simulate, STEPS } from '../sim.js';
 import { MICRORRED as M } from '../data.js';
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [40, 48, 62], target: [-3, 0, -1], maxDist: 130 });
+  const st = new Stage(el, { cam: [40, 48, 62], target: [-3, 0, -1], maxDist: 130, env: false });
   const T = tokens();
   const S = st.scene;
   const mats = {
@@ -29,14 +30,16 @@ export function mount(root) {
   const park = box(8, 0.08, 6, mats.tree, 3, 0, -1.5); park.material = mat(0x6f9e6a); S.add(park);
   const church = new THREE.Group(); church.add(box(4, 5, 7, mats.wall)); church.add(box(1.8, 9, 1.8, mats.wall, 0, 0, -3.2));
   church.position.set(9.5, 0, -1); S.add(church);
+  // árboles: dos mallas instanciadas (troncos y copas) en vez de 52 objetos
+  const crowns = new THREE.InstancedMesh(new THREE.SphereGeometry(0.9, 8, 6), mats.tree, 26);
+  const trunks = new THREE.InstancedMesh(new THREE.BoxGeometry(0.25, 1.2, 0.25), mats.trunk, 26);
   for (let i = 0; i < 26; i++) {
-    const t = new THREE.Group();
-    t.add(box(0.25, 1.2, 0.25, mats.trunk));
-    const c = new THREE.Mesh(new THREE.SphereGeometry(0.9, 8, 6), mats.tree); c.position.y = 1.8; c.castShadow = true; t.add(c);
-    const a = i * 2.4;
-    t.position.set(-34 + (i % 13) * 5.2 + Math.sin(a) * 1.2, 0, i < 13 ? 25 : -27 + Math.cos(a));
-    S.add(t);
+    const a = i * 2.4, x = -34 + (i % 13) * 5.2 + Math.sin(a) * 1.2, z = i < 13 ? 25 : -27 + Math.cos(a);
+    crowns.setMatrixAt(i, new THREE.Matrix4().makeTranslation(x, 1.8, z));
+    trunks.setMatrixAt(i, new THREE.Matrix4().makeTranslation(x, 0.6, z));
   }
+  crowns.castShadow = trunks.castShadow = true;
+  S.add(crowns, trunks);
 
   // Edificios públicos
   const nodeObj = {};
@@ -84,7 +87,7 @@ export function mount(root) {
     if (!n.pv_kwp || ['hospital', 'ptap'].includes(n.forma)) return;
     const panels = Math.round(n.pv_kwp / 0.55); // módulos de 550 Wp
     const cols = Math.max(2, Math.min(Math.floor(n.dim[0] / 1.05) - 1, Math.ceil(Math.sqrt(panels * 1.6))));
-    const rows = Math.max(1, Math.min(Math.floor(n.dim[2] / 1.75) - 1, Math.ceil(panels / cols)));
+    const rows = Math.max(1, Math.min(Math.floor(n.dim[2] / (PANEL.l + 0.15)) - 1, Math.ceil(panels / cols)));
     const a = solarArray(cols, rows, mats.pv, null);
     a.position.set(0, (n.forma === 'coliseo' ? n.dim[1] * 0.6 + (n.dim[2] / 2) * 0.35 : n.dim[1]) + 0.05, 0);
     g.add(a);
@@ -131,16 +134,18 @@ export function mount(root) {
     const hgt = b.kwh >= 100 ? 2.4 : 1.4;
     const c = new THREE.Group();
     c.add(box(len, hgt, hgt, mats.bess));
-    const fill = box(len - 0.3, 0.25, hgt + 0.05, mat(T.good, { emissive: T.good, emissiveIntensity: 0.4 }), 0, hgt * 0.4, 0); c.add(fill);
+    const fw = len - 0.3;
+    const fill = box(fw, 0.14, 0.4, mat(T.good, { emissive: T.good, emissiveIntensity: 0.5 }), 0, hgt + 0.02, 0); c.add(fill);
     // contenedores grandes en patio; gabinetes pequeños junto a la fachada lateral de cada sede
     const off = { hospital: [-9, 9.5], alcaldia: [-8, 1], ptap: [-1, -6.5] }[b.nodo] || [n.dim[0] / 2 + 1.4, 0];
     c.position.set(n.pos[0] + off[0], 0, n.pos[1] + off[1]);
     S.add(c);
     if (b.kwh >= 100) st.label(`BESS ${fmtN(b.kwh)} kWh`, 'lbl-small', [0, hgt + 0.8, 0], c);
     st.pickable(c, { onPick: () => { panel.innerHTML = `<h4>Baterías LFP · ${n.nombre}</h4><dl class="kv"><dt>Energía</dt><dd>${fmtN(b.kwh)} kWh</dd><dt>Potencia</dt><dd>${fmtN(b.kw)} kW</dd><dt>Función</dt><dd>Autoconsumo de día, respaldo en falla, recorte de pico nocturno</dd></dl>`; } });
-    return { b, c, fill, len };
+    return { b, c, fill, len, hgt, fw };
   });
   const hosp = M.nodos.find((x) => x.id === 'hospital');
+  const genOn = mat(T.bad, { emissive: T.bad, emissiveIntensity: 0.5 });
   const gen = new THREE.Group(); gen.add(box(3.2, 2, 1.8, mats.gen)); gen.add(box(0.3, 1.2, 0.3, mats.dark, 1.2, 2, 0));
   gen.position.set(hosp.pos[0] - 9, 0, hosp.pos[1] - 4); S.add(gen);
   st.label(`Planta ${M.genset.kw} kW`, 'lbl-small', [0, 3, 0], gen);
@@ -160,13 +165,13 @@ export function mount(root) {
   const brk = st.label('✕ red caída', 'lbl-alert', [(sub.position.x + hub.x) / 2, 7, (sub.position.z + hub.z) / 2]);
 
   // Alumbrado público: postes a lo largo de las vías
-  const lampHeads = [];
-  const headGeo = new THREE.SphereGeometry(0.22, 8, 6);
   const headMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
-  for (let x = -30; x <= 22; x += 6.5) for (const z of [-17.2, -5.2, 6.8]) {
-    const p = box(0.08, 2.6, 0.08, mats.frame, x, 0, z); p.castShadow = false; S.add(p);
-    const hd = new THREE.Mesh(headGeo, headMat); hd.position.set(x, 2.7, z); S.add(hd); lampHeads.push(hd);
-  }
+  const lampPos = [];
+  for (let x = -30; x <= 22; x += 6.5) for (const z of [-17.2, -5.2, 6.8]) lampPos.push([x, z]);
+  const poles = new THREE.InstancedMesh(new THREE.BoxGeometry(0.08, 2.6, 0.08), mats.frame, lampPos.length);
+  const heads = new THREE.InstancedMesh(new THREE.SphereGeometry(0.22, 8, 6), headMat, lampPos.length);
+  lampPos.forEach(([x, z], i) => { poles.setMatrixAt(i, new THREE.Matrix4().makeTranslation(x, 1.3, z)); heads.setMatrixAt(i, new THREE.Matrix4().makeTranslation(x, 2.7, z)); });
+  S.add(poles, heads);
 
   // ===== Simulación y controles
   const q = (s) => root.querySelector(s);
@@ -239,8 +244,9 @@ export function mount(root) {
     gridFlow.set(isla ? 0 : Math.abs(s.grid) / 600 * 1.4, s.grid >= 0 ? 1 : -1);
     gridFlow.visible(!isla && ctl.energy.checked);
     brk.visible = isla; brk.element.hidden = !isla;
-    bessObjs.forEach((o) => { o.fill.scale.x = Math.max(0.02, s.soc); o.fill.position.x = -(o.len - 0.4) * (1 - s.soc) / 2; o.fill.material.color.set(s.soc < 0.25 ? T.bad : s.soc < 0.5 ? T.warn : T.good); o.fill.material.emissive.set(o.fill.material.color); });
-    gen.children[0].material = s.gen > 0 ? mat(T.bad, { emissive: T.bad, emissiveIntensity: 0.5 }) : mats.gen;
+    bessObjs.forEach((o) => { const k = Math.max(0.02, s.soc); o.fill.scale.x = o.fw * k; o.fill.position.x = -o.fw * (1 - k) / 2; o.fill.material.color.set(s.soc < 0.25 ? T.bad : s.soc < 0.5 ? T.warn : T.good); o.fill.material.emissive.set(o.fill.material.color); });
+    gen.children[0].material = s.gen > 0 ? genOn : mats.gen;
+    st.updateShadows();
   }
   const dim = mat(0x555a60, { transparent: true, opacity: 0.45 });
 
@@ -280,10 +286,39 @@ export function mount(root) {
       hour = (hour + dt * 0.8) % 24; acc += dt;
       if (acc > 0.1) { acc = 0; ctl.hour.value = Math.floor(hour * 4); applyHour(); }
     }
-    Object.values(nodeObj).forEach((o) => { o.flow?.update(dt); o.data?.update(dt); });
-    gridFlow.update(dt);
+    let moving = playing;
+    Object.values(nodeObj).forEach((o) => { if (o.flow?.update(dt)) moving = true; if (o.data?.update(dt)) moving = true; });
+    if (gridFlow.update(dt)) moving = true;
     cced.scale.setScalar(1 + 0.15 * Math.sin(performance.now() / 300));
+    return moving || ctl.digital.checked;
   });
+
+  // ---- Modelos GLB: módulos solares reales instanciados, contenedores de baterías y hospital (LOD bajo)
+  (async () => {
+    try {
+      const [pv, bessM, hospM] = await Promise.all(['models/modulo_fv.glb', 'models/contenedor_bess.glb', 'models/hospital_lod1.glb'].map((u) => loadModel(u)));
+      // hospital: modelo de bajo detalle a escala del esquema
+      const ho = nodeObj.hospital;
+      ho.g.children.forEach((c) => { if (c.isMesh || c.isGroup) c.visible = false; });
+      const hm = instantiate(hospM.gltf); hm.scale.setScalar(0.42); hm.position.set(0.6, 0, -0.8);
+      hm.traverse((m) => { if (m.isMesh) m.userData.baseMat = m.material; });
+      ho.g.add(hm);
+      // baterías: contenedor de 20 pies escalado a cada capacidad
+      bessObjs.forEach((o) => {
+        o.c.children[0].visible = false;
+        const cm = instantiate(bessM.gltf); cm.scale.set(o.len / 6.06, o.hgt / 2.59, o.hgt / 2.44); o.c.add(cm);
+      });
+      // solar: cada InstancedMesh provisional se reemplaza por el módulo GLB con las mismas matrices
+      S.updateMatrixWorld(true);
+      const placeholders = [];
+      S.traverse((m) => { if (m.isInstancedMesh && m.userData.solar && m.visible) { let v = true; m.traverseAncestors((a) => { if (!a.visible) v = false; }); if (v) placeholders.push(m); } });
+      const mats4 = [], tmp = new THREE.Matrix4();
+      placeholders.forEach((m) => { for (let i = 0; i < m.count; i++) { m.getMatrixAt(i, tmp); mats4.push(m.matrixWorld.clone().multiply(tmp)); } m.visible = false; });
+      S.add(instancedFromModel(pv.gltf, mats4, PANEL.scale));
+      st.updateShadows();
+    } catch (e) { console.warn('Modelos GLB no disponibles; se mantiene la geometría simple', e); }
+  })();
+  st.freeze(ground); st.freeze(river); st.freeze(crowns); st.freeze(trunks); st.freeze(poles); st.freeze(heads); st.freeze(church);
 
   onTheme((t) => {
     Object.assign(T, t);

@@ -1,11 +1,12 @@
 // Escena 3D: la E.S.E. Hospital Héctor Abad Gómez como nodo energético y financiero de 2028.
 // Las fuentes de recursos son pilares cuya altura es el monto; sus corrientes entran al hospital.
-import { THREE, Stage, tokens, onTheme, mat, box, solarArray, Flow, arc, fmtCOP, fmtN } from '../core.js';
+import { THREE, Stage, tokens, onTheme, mat, box, solarArray, Flow, arc, fmtCOP, fmtN, gsap } from '../core.js';
+import { progressiveLOD } from '../assets.js';
 import { HOSPITAL as Hs, MICRORRED } from '../data.js';
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [8, 44, 58], target: [0, 4, -12], maxDist: 130 });
+  const st = new Stage(el, { cam: [8, 44, 58], target: [0, 4, -12], maxDist: 130, tone: 'aces', exposure: 1.05, dynamicShadows: true });
   const T = tokens();
   const S = st.scene;
   const M = {
@@ -14,37 +15,45 @@ export function mount(root) {
   };
   const ground = new THREE.Mesh(new THREE.CircleGeometry(48, 64), M.ground); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; S.add(ground);
 
-  // Edificio: bloque de hospitalización (2 pisos), urgencias, consulta externa y servicios
-  const H = new THREE.Group(); S.add(H);
-  H.add(box(18, 6, 10, M.wall, 0, 0, 0));
-  H.add(box(18.2, 0.5, 10.2, M.roof, 0, 6, 0));
-  for (let i = 0; i < 8; i++) { H.add(box(1.4, 1.2, 0.1, M.glass, -7.7 + i * 2.2, 1.2, 5.02)); H.add(box(1.4, 1.2, 0.1, M.glass, -7.7 + i * 2.2, 4, 5.02)); }
-  H.add(box(8, 3.6, 7, M.wall, 13, 0, 1.5));
-  H.add(box(6, 0.3, 3, M.roof, 13, 3.6, 6.5));
-  st.label('Urgencias', 'lbl-small', [13, 5, 6.5], H);
-  H.add(box(9, 3.6, 7, M.wall, -13.5, 0, -1));
-  st.label('Consulta externa · telesalud', 'lbl-small', [-13.5, 5, -1], H);
-  H.add(box(6, 3, 5, M.wall, 4, 0, -9));
-  st.label('Servicios: cadena de frío, lavandería, esterilización', 'lbl-small', [4, 4.2, -9], H);
-  st.label('<b>E.S.E. Hospital Héctor Abad Gómez</b>', 'lbl-node', [0, 9.4, 0], H);
-  st.label('H', 'lbl-h', [0, 7.4, 4], H);
-  // Energía: cubierta solar, marquesina, baterías, planta, antena de conectividad
-  const roofPV = solarArray(15, 4, M.pv, null); roofPV.position.set(0, 6.3, 0); H.add(roofPV);
-  const cp = solarArray(16, 2, M.pv, M.frame); cp.position.set(0, 2.8, 13); H.add(cp);
-  [-7, 0, 7].forEach((x) => H.add(box(0.25, 2.8, 0.25, M.frame, x, 0, 13)));
-  st.label('Marquesina solar del parqueadero', 'lbl-small', [0, 4.4, 13], H);
-  const bess = new THREE.Group(); bess.add(box(8, 2.6, 2.6, M.bess)); bess.position.set(-12, 0, 9); H.add(bess);
-  const socBar = box(7.4, 0.35, 2.65, mat(T.good, { emissive: T.good, emissiveIntensity: 0.4 }), 0, 1.1, 0); bess.add(socBar);
-  st.label(`BESS ${fmtN(MICRORRED.bess.find((b) => b.nodo === 'hospital').kwh)} kWh`, 'lbl-small', [0, 3.3, 0], bess);
-  const gen = new THREE.Group(); gen.add(box(3.4, 2.1, 1.9, M.gen)); gen.add(box(0.3, 1.3, 0.3, M.dark, 1.2, 2.1, 0)); gen.position.set(-12, 0, -8); H.add(gen);
-  st.label('Planta de respaldo', 'lbl-small', [0, 3, 0], gen);
-  const mast = new THREE.Group(); mast.add(box(0.2, 10, 0.2, M.dark)); const dish = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2.4), M.frame);
-  dish.rotation.x = -Math.PI / 2.4; dish.position.y = 9; mast.add(dish); mast.position.set(8.5, 6.5, -3.5); H.add(mast);
-  st.label('Nodo de conectividad MinTIC', 'lbl-data', [0, 11, 0], mast);
-  [[-22, 2], [22, -6], [-4, 20], [16, 16], [-20, -14]].forEach(([x, z]) => {
-    const t = new THREE.Group(); t.add(box(0.3, 1.4, 0.3, mat(0x6b4f3a)));
-    const c = new THREE.Mesh(new THREE.SphereGeometry(1.4, 10, 8), M.green); c.position.y = 2.4; c.castShadow = true; t.add(c); t.position.set(x, 0, z); S.add(t);
+  // Marcador de posición liviano mientras llega el modelo GLB (se ve al instante y luego se reemplaza)
+  const proc = new THREE.Group(); S.add(proc);
+  proc.add(box(18, 6, 10, M.wall, 0, 0, 0), box(18.2, 0.5, 10.2, M.roof, 0, 6, 0));
+  for (let i = 0; i < 8; i++) { proc.add(box(1.4, 1.2, 0.1, M.glass, -7.7 + i * 2.2, 1.2, 5.02)); proc.add(box(1.4, 1.2, 0.1, M.glass, -7.7 + i * 2.2, 4, 5.02)); }
+  proc.add(box(8, 3.6, 7, M.wall, 13, 0, 1.5), box(9, 3.6, 7, M.wall, -13.5, 0, -1), box(6, 3, 5, M.wall, 4, 0, -9));
+  const roofPV = solarArray(14, 4, M.pv, null); roofPV.position.set(0, 6.3, 0); proc.add(roofPV);
+  const cp = solarArray(16, 2, M.pv, M.frame); cp.position.set(0, 2.8, 14.5); proc.add(cp);
+  proc.add(box(7.6, 2.6, 2.4, M.bess, -12, 0, 9), box(3.4, 2.1, 1.9, M.gen, -12, 0, -8), box(0.2, 10, 0.2, M.dark, 8.5, 6.5, -3.5));
+
+  // Modelo GLB comprimido con Draco, con dos niveles de detalle (se cambia por distancia de cámara)
+  const status = st.label('Cargando modelo 3D…', 'lbl-small', [0, 1, 18]);
+  const lod = progressiveLOD([{ url: 'models/hospital_lod0.glb', distance: 0 }, { url: 'models/hospital_lod1.glb', distance: 85 }], (o, lv) => {
+    proc.visible = false;
+    status.element.textContent = lv.distance === 0 ? '' : 'Nivel de detalle bajo · cargando el detallado…';
+    st.updateShadows();
   });
+  S.add(lod);
+  st.onFrame(() => { lod.update(st.camera); return false; });
+
+  // Etiquetas y piezas animadas sobre el modelo
+  const tags = new THREE.Group(); S.add(tags);
+  st.label('Urgencias', 'lbl-small', [13, 5, 6.5], tags);
+  st.label('Consulta externa · telesalud', 'lbl-small', [-13.5, 5, -1], tags);
+  st.label('Servicios: cadena de frío, lavandería, esterilización', 'lbl-small', [4, 4.2, -9], tags);
+  st.label('<b>E.S.E. Hospital Héctor Abad Gómez</b>', 'lbl-node', [0, 9.6, 0], tags);
+  st.label('Marquesina solar del parqueadero', 'lbl-small', [0, 4.6, 14.5], tags);
+  st.label(`BESS ${fmtN(MICRORRED.bess.find((b) => b.nodo === 'hospital').kwh)} kWh`, 'lbl-small', [-12, 3.6, 9], tags);
+  st.label('Planta de respaldo', 'lbl-small', [-12, 3, -8], tags);
+  st.label('Nodo de conectividad MinTIC', 'lbl-data', [8.5, 17.5, -3.5], tags);
+  // barra de carga sobre el techo del contenedor de baterías
+  const socW = 7;
+  const socBar = box(socW, 0.12, 0.5, mat(T.good, { emissive: T.good, emissiveIntensity: 0.6 }), -12, 2.78, 9.9); S.add(socBar);
+  const trees = new THREE.InstancedMesh(new THREE.SphereGeometry(1.4, 10, 8), M.green, 5);
+  const trunks = new THREE.InstancedMesh(new THREE.BoxGeometry(0.3, 1.4, 0.3), mat(0x6b4f3a), 5);
+  [[-22, 2], [22, -6], [-4, 22], [18, 18], [-22, -14]].forEach(([x, z], i) => {
+    trees.setMatrixAt(i, new THREE.Matrix4().makeTranslation(x, 2.4, z)); trunks.setMatrixAt(i, new THREE.Matrix4().makeTranslation(x, 0.7, z));
+  });
+  trees.castShadow = trunks.castShadow = true; S.add(trees, trunks);
+  st.freeze(ground); st.freeze(proc);
 
   // Fuentes de financiación: pilares en arco al norte
   const F = Hs.fuentes;
@@ -54,10 +63,11 @@ export function mount(root) {
     const a = Math.PI * (0.12 + (0.76 * i) / Math.max(1, F.length - 1));
     const x = Math.cos(a) * -30, z = -Math.sin(a) * 24 - 6;
     const p = new THREE.Mesh(geo, pillMats[i]); p.position.set(x, 0, z); p.castShadow = true; S.add(p);
-    const lab = st.label('', 'lbl-money', [x, 0, z]);
+    p.scale.y = 0.1;
+    const lab = st.label('', 'lbl-money', [x, 1.4, z]);
     const flow = new Flow(S, arc([x, 1, z], [0, 6.5, -1], 8), T.s[f.slot - 1], { max: 30, size: 0.22 });
     st.pickable(p, { onPick: () => pick(f) });
-    return { f, p, lab, flow, h: 0.1, target: 0.1 };
+    return { f, p, lab, flow, target: 0.1 };
   });
 
   let esc = 'med';
@@ -72,6 +82,9 @@ export function mount(root) {
       // la corriente nace en la cima del pilar
       it.flow.curve.v0.y = it.target; it.flow.curve.updateArcLengths();
       it.flow.tube.geometry.dispose(); it.flow.tube.geometry = new THREE.TubeGeometry(it.flow.curve, 48, 0.05, 6, false);
+      const placeP = () => { it.lab.position.set(it.p.position.x, it.p.scale.y + 1.3, it.p.position.z); st.invalidate(); };
+      if (gsap) gsap.to(it.p.scale, { y: it.target, duration: 1, ease: 'power3.out', delay: items.indexOf(it) * 0.06, overwrite: true, onUpdate: placeP });
+      else { it.p.scale.y = it.target; placeP(); }
     });
     const tot = F.reduce((a, f) => a + f[esc], 0);
     const ctr = Hs.contrapartida_esc[esc];
@@ -103,12 +116,11 @@ export function mount(root) {
   pick(F[0]);
 
   st.onFrame((dt, t) => {
-    items.forEach((it) => {
-      it.h += (it.target - it.h) * Math.min(1, dt * 4);
-      it.p.scale.y = it.h; it.lab.position.set(it.p.position.x, it.h + 1.3, it.p.position.z);
-      it.flow.update(dt);
-    });
-    socBar.scale.x = 0.55 + 0.4 * Math.sin(t * 0.3) ** 2;
+    let moving = false;
+    items.forEach((it) => { if (it.flow.update(dt) !== false) moving = true; });
+    const k = 0.55 + 0.4 * Math.sin(t * 0.3) ** 2;
+    socBar.scale.x = socW * k; socBar.position.x = -12 - (socW * (1 - k)) / 2;
+    return moving;
   });
   onTheme((t) => {
     M.ground.color.copy(t.ground); M.wall.color.copy(t.wall); M.roof.color.copy(t.roof); M.dark.color.copy(t.ink); M.road.color.copy(t.line);

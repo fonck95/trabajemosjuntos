@@ -1,10 +1,10 @@
 // Escena 3D: matriz área × periodo de gobierno. Altura = desempeño normalizado 0–100.
-import { THREE, Stage, tokens, onTheme, mat, fmtN } from '../core.js';
+import { THREE, Stage, tokens, onTheme, mat, fmtN, gsap } from '../core.js';
 import { PERIODOS, AREAS } from '../data.js';
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [42, 28, 40], target: [0, 3, 0], maxDist: 110 });
+  const st = new Stage(el, { cam: [42, 28, 40], target: [0, 3, 0], maxDist: 110, dynamicShadows: true, env: false });
   const T = tokens();
   const S = st.scene;
   const GX = 4, GZ = 3.1, H = 9;
@@ -41,7 +41,7 @@ export function mount(root) {
     if (v == null) {
       obj = new THREE.LineSegments(ghostGeo, ghostMat); obj.position.set(x, 0.6, z);
     } else {
-      obj = new THREE.Mesh(geo, mats[j]); obj.position.set(x, 0, z); obj.scale.set(2, Math.max(0.08, (v / 100) * H), 1.8); obj.castShadow = true;
+      obj = new THREE.Mesh(geo, mats[j]); obj.position.set(x, 0, z); obj.scale.set(2, Math.max(0.08, (v / 100) * H), 1.8); obj.castShadow = true; obj.userData.h = Math.max(0.08, (v / 100) * H);
       const l = st.label(fmtN(v, 0), 'lbl-val', [x, (v / 100) * H + 0.6, z]);
       cells.push({ obj, l, i, j });
     }
@@ -60,6 +60,10 @@ export function mount(root) {
     const p = PERIODOS[i];
     seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.i === i));
     cells.forEach((c) => { if (!c.ghost) { c.obj.material = c.i === i ? mats[c.j] : dimMats[c.j]; c.l.element.hidden = c.i !== i; } });
+    // el periodo elegido crece desde el piso, columna por columna
+    if (gsap) cells.filter((c) => !c.ghost && c.i === i).forEach((c, k) => gsap.fromTo(c.obj.scale, { y: 0.05 }, { y: c.obj.userData.h, duration: 0.8, delay: k * 0.06, ease: 'power3.out', overwrite: true, onUpdate: () => st.invalidate() }));
+    if (gsap) gsap.from(det, { opacity: 0, y: 8, duration: 0.35, ease: 'power2.out' });
+    st.invalidate();
     colLabels.forEach((l, k) => { l.element.style.opacity = k === i ? 1 : 0.5; });
     det.innerHTML = `<h4>${p.id.replace('-', '–')} · ${p.alcalde}</h4>
       <p class="note">${p.plan || ''}</p>
