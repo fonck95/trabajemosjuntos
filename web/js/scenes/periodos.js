@@ -41,10 +41,12 @@ export function mount(root) {
   const steps = [1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000];
   const UNIT = steps.find((u) => maxTot / u <= 75) || 100000;
   const SLAB = { w: 3.2, h: 0.2, d: 1.7, gap: 0.045 };
+  // lo que entró va en gris para que el rojo y el naranja (lo que no se hizo) salten a la vista
+  const baseCol = (t) => t.ink.clone().lerp(t.surface, 0.55);
   const slabGeo = new THREE.BoxGeometry(SLAB.w, SLAB.h, SLAB.d); slabGeo.translate(0, SLAB.h / 2, 0);
   // orden de la pila: lo que entró (con sus fugas encima) y, por fuera de la caja, la plata quieta y lo no gestionado
   const kinds = [
-    { key: 'base', css: 'var(--ink)', mat: mat(T.ink, { roughness: 0.6 }), label: 'Entró y se gastó sin fuga identificada' },
+    { key: 'base', css: 'color-mix(in srgb, var(--ink) 45%, var(--surface))', mat: mat(baseCol(T), { roughness: 0.6 }), label: 'Entró y se gastó sin fuga identificada' },
     { key: 'hecho', css: 'var(--bad)', mat: mat(T.bad, { roughness: 0.5 }), label: 'No se convirtió en obra (registros)' },
     { key: 'estimado', css: 'var(--warn)', mat: mat(T.warn, { roughness: 0.5 }), label: 'Sobrecosto y pérdidas estimadas' },
     { key: 'indicio', css: 'color-mix(in srgb, var(--warn) 45%, transparent)', mat: mat(T.warn, { transparent: true, opacity: 0.45, roughness: 0.5 }), label: 'Indicio por verificar (OPS por encima de lo usual)' },
@@ -94,14 +96,14 @@ export function mount(root) {
   // etiquetas por pila
   const pileLabels = cuentas.map((c, i) => {
     const x = x0 + i * GX, lv = SLAB.h + SLAB.gap;
-    const base = st.label(`<b>${c.p.id.replace('-', '–')}</b><br><small>${short(c.p.alcalde).split(' ').slice(0, 2).join(' ')}</small>`, 'lbl-title', [x, 0.2, 2.6], plata);
+    const base = st.label(`<b>${c.p.id.replace('-', '–')}</b><br><small>${short(c.p.alcalde).split(' ').slice(0, 2).join(' ')}</small>`, 'lbl-title lbl-pila', [x, 0.2, 4.4], plata);
     base.element.style.pointerEvents = 'auto'; base.element.style.cursor = 'pointer'; base.element.addEventListener('click', () => select(i));
     const top = st.label(`${fmtM(c.ingresos)}<small>entró</small>`, 'lbl-money', [x, c.height + 1.2, 0], plata);
-    const red = c.sinObra > 0 ? st.label(`${fmtM(c.sinObra)}<small>sin obra</small>`, 'lbl-val', [x + 2.9, (c.counts.base + (c.counts.hecho + c.counts.estimado) / 2) * lv, 0], plata) : null;
+    const red = c.sinObra > 0 ? st.label(`${fmtM(c.sinObra)} <small>sin obra</small>`, 'lbl-val', [x + 2.9, (c.counts.base + (c.counts.hecho + c.counts.estimado) / 2) * lv, 0], plata) : null;
     if (red) red.element.style.color = 'var(--bad)';
     return { base, top, red };
   });
-  st.label(`1 fajo = ${fmtM(UNIT)} de 2026`, 'lbl-axis', [x0 - 4.2, 0.4, 0], plata);
+  st.label(`1 fajo =<br>${fmtM(UNIT)}<br>de 2026`, 'lbl-axis lbl-val', [x0 - 4.6, 3, 0], plata);
   // zona de selección (invisible) por pila
   const hit = new THREE.MeshBasicMaterial({ visible: false });
   cuentas.forEach((c, i) => { const h = new THREE.Mesh(new THREE.BoxGeometry(SLAB.w + 0.8, Math.max(1, c.height) + 1, SLAB.d + 1), hit); h.position.set(x0 + i * GX, (Math.max(1, c.height) + 1) / 2, 0); plata.add(h); st.pickable(h, { onPick: () => select(i) }); });
@@ -295,7 +297,7 @@ export function mount(root) {
   select(n - 1);
   onTheme((t) => {
     floor.material.color.copy(t.surface); ghostMat.color.copy(t.muted);
-    K.base.mat.color.copy(t.ink); K.hecho.mat.color.copy(t.bad); K.estimado.mat.color.copy(t.warn); K.indicio.mat.color.copy(t.warn); K.quieta.mat.color.copy(t.data); K.contra.mat.color.copy(t.accent);
+    K.base.mat.color.copy(baseCol(t)); K.hecho.mat.color.copy(t.bad); K.estimado.mat.color.copy(t.warn); K.indicio.mat.color.copy(t.warn); K.quieta.mat.color.copy(t.data); K.contra.mat.color.copy(t.accent);
     K.contra.edges?.forEach((e) => e.material.color.copy(t.accent));
     AREAS.forEach((a, j) => { amats[j].color.copy(t.s[a.slot - 1]); dimMats[j].color.copy(t.s[a.slot - 1]); });
   });

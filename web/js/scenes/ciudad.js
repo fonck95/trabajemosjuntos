@@ -5,6 +5,27 @@ import { THREE, Stage, tokens, onTheme, mat, Flow, arc, fmtN, gsap } from '../co
 import { progressiveLOD } from '../assets.js';
 import { EDIFICIOS, CALLES, MICRORRED } from '../data.js';
 
+// cámara inicial que mete todas las sedes urbanas en pantalla (con margen para las etiquetas), mirando desde el
+// sur a ~55° de elevación: busca la distancia y recentra el objetivo sobre la caja proyectada
+function encuadre(urb, cx, cy, el) {
+  const asp = Math.max(0.55, (el.clientWidth || 14) / (el.clientHeight || 10));
+  const c = new THREE.PerspectiveCamera(38, asp, 1, 5000), dir = new THREE.Vector3(-0.2, 0.82, 0.54).normalize();
+  const pts = (urb.length ? urb : [{ x: 0, y: 0 }]).map((e) => new THREE.Vector3(e.x, 8, -e.y));
+  const tgt = new THREE.Vector3(cx, 0, -cy), v = new THREE.Vector3(), right = new THREE.Vector3();
+  const fwd = new THREE.Vector3(-dir.x, 0, -dir.z).normalize(), tanH = Math.tan(THREE.MathUtils.degToRad(19));
+  let D = 300;
+  const place = () => { c.position.copy(tgt).addScaledVector(dir, D); c.lookAt(tgt); c.updateMatrixWorld(); };
+  const box = () => pts.reduce((b, p) => { v.copy(p).project(c); return [Math.min(b[0], v.x), Math.max(b[1], v.x), Math.min(b[2], v.y), Math.max(b[3], v.y)]; }, [1, -1, 1, -1]);
+  for (let it = 0; it < 3; it++) {
+    for (D = 250; D < 1450; D *= 1.04) { place(); const [x0, x1, y0, y1] = box(); if (x0 > -0.8 && x1 < 0.8 && y0 > -0.78 && y1 < 0.72) break; }
+    const [x0, x1, y0, y1] = box();
+    right.setFromMatrixColumn(c.matrixWorld, 0).setY(0).normalize();
+    tgt.addScaledVector(right, ((x0 + x1) / 2) * D * tanH * asp).addScaledVector(fwd, (((y0 + y1) / 2 + 0.03) * D * tanH) / dir.y);
+  }
+  place();
+  return { cam: c.position.toArray(), target: tgt.toArray() };
+}
+
 export function mount(root) {
   const el = root.querySelector('.stage');
   // encuadre inicial: centro y extensión de las sedes levantadas
@@ -13,8 +34,7 @@ export function mount(root) {
   const xs = urb.map((e) => e.x), ys = urb.map((e) => e.y);
   const farR = Math.max(1500, ...EDIFICIOS.map((e) => Math.hypot(e.x, e.y) + 400));
   const cx = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0, cy = ys.length ? (Math.min(...ys) + Math.max(...ys)) / 2 : 0;
-  const ext = xs.length ? Math.max(160, Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) : 600;
-  const st = new Stage(el, { cam: [cx - ext * 0.32, ext * 0.55, -cy + ext * 0.62], target: [cx, 0, -cy], fov: 38, minDist: 25, maxDist: 1500, tone: 'aces', exposure: 1.05 });
+  const st = new Stage(el, { ...encuadre(urb, cx, cy, el), fov: 38, minDist: 25, maxDist: 1500, tone: 'aces', exposure: 1.05 });
   st.camera.far = 5000; st.camera.updateProjectionMatrix();
   const sc = st.sunLight.shadow.camera; Object.assign(sc, { left: -520, right: 520, top: 520, bottom: -520, near: 1, far: 1600 });
   st.sunLight.position.set(260, 520, 180); st.sunLight.shadow.mapSize.set(4096, 4096); st.sunLight.shadow.normalBias = 0.6;
@@ -92,7 +112,24 @@ export function mount(root) {
     st.pickable(g, { onPick: () => select(it) });
     return it;
   });
-  st.onFrame(() => { items.forEach((it) => it.lod?.update(st.camera)); return false; });
+  // etiquetas sin encimarse: de abajo hacia arriba en pantalla, la que choca con una ya puesta sube lo justo
+  const v3 = new THREE.Vector3();
+  function declutter() {
+    const W = el.clientWidth, H = el.clientHeight, placed = [];
+    items.map((it) => {
+      const e = it.lab.element; it.lab.getWorldPosition(v3).project(st.camera);
+      return { e, x: ((v3.x + 1) / 2) * W, y: ((1 - v3.y) / 2) * H, w: e.offsetWidth, h: e.offsetHeight, on: !e.hidden && v3.z < 1 };
+    }).filter((r) => r.on && r.w).sort((a, b) => b.y - a.y).forEach((r) => {
+      let y = r.y;
+      for (let k = 0; k < 10; k++) {
+        const hit = placed.find((p) => Math.abs(p.x - r.x) < (p.w + r.w) / 2 + 4 && Math.abs(p.y - y) < (p.h + r.h) / 2 + 3);
+        if (!hit) break;
+        y = hit.y - (hit.h + r.h) / 2 - 3;
+      }
+      placed.push({ ...r, y }); r.e.style.marginTop = y < r.y - 0.5 ? `${y - r.y}px` : '';
+    });
+  }
+  st.onFrame(() => { items.forEach((it) => it.lod?.update(st.camera)); declutter(); return false; });
 
   // capa de datos MinTIC: cada sede reporta al centro de control (CCED, en la alcaldía)
   const hub = items.find((it) => it.e.id === 'alcaldia') || items[0];
