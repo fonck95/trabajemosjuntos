@@ -181,6 +181,8 @@ for f in sorted((D / 'edificios').glob('*.json')):
                   + [{'tipo': 'marquesina', 'x': a['centro'][0], 'y': a['centro'][1]} for a in ad.get('fv', []) if a.get('tipo') == 'marquesina' and a.get('centro')],
         'archivo': m.get('archivo'), 'archivo_lod1': m.get('archivo_lod1'), 'tamano': m.get('tamano'),
         'bytes': m.get('bytes'), 'triangulos': m.get('triangulos'),
+        # puntos del modelo (metros, y arriba) donde se dibujan el tablero/medidor, el gateway IoT y la acometida
+        'conexion': m.get('conexion'),
     })
 CALLES = calles
 # huellas de edificaciones (contexto urbano): archivo aparte para no engordar data.js

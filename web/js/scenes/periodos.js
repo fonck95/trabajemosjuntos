@@ -12,7 +12,7 @@ const short = (s) => (s || '').split(/[(;]/)[0].trim();
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [6, 16, 50], target: [0, 7, 0], maxDist: 130, dynamicShadows: true, env: false });
+  const st = new Stage(el, { cam: [6, 16, 50], target: [0, 7, 0], maxDist: 200, dynamicShadows: true, env: false, fit: 1 });
   const T = tokens();
   const S = st.scene;
   const D = DINERO?.periodos?.length ? DINERO : null;

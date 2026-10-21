@@ -105,7 +105,8 @@ export function progressiveLOD(levels, onReady) {
   const order = [...levels].sort((a, b) => b.distance - a.distance);
   order.reduce((p, lv) => p.then(async () => {
     const { gltf } = await loadModel(lv.url);
-    lod.addLevel(instantiate(gltf), lv.distance);
+    // histéresis del 15 %: cerca del umbral no salta de un nivel a otro con cada movimiento
+    lod.addLevel(instantiate(gltf), lv.distance, lv.distance ? 0.15 : 0);
     onReady?.(lod, lv);
   }), Promise.resolve()).catch((e) => console.warn('LOD', e));
   return lod;

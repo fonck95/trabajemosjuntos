@@ -10,7 +10,7 @@
 :root {
   --bg: #f2f2ef; --surface: #ffffff; --raised: #f8f8f6; --ink: #111111; --muted: #5a5a56; --line: #dadad4;
   --accent: #e3141b; --accent-fill: #e3141b; --accent-ink: #ffffff; --accent-soft: rgba(227, 20, 27, 0.07);
-  --ground: #e2e4dc; --water: #8aa7b4; --wall: #fbfbf9; --roof: #a3a69f; --sun: #e09b00; --data: #6250d6;
+  --ground: #e2e4dc; --water: #8aa7b4; --wall: #fbfbf9; --roof: #a3a69f; --sun: #e09b00; --data: #6250d6; --power: #b85f00;
   --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
   --good: #0ca30c; --warn: #fab219; --bad: #d03b3b;
   --f-display: "Anton", Impact, "Haettenschweiler", "Arial Narrow Bold", "Arial Black", sans-serif;
@@ -21,13 +21,13 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0d0d0d; --surface: #161616; --raised: #1d1d1d; --ink: #f3f3f0; --muted: #a5a59f; --line: #2e2e2b;
   --accent: #ff4545; --accent-fill: #e3141b; --accent-ink: #ffffff; --accent-soft: rgba(255, 69, 69, 0.1);
-  --ground: #1e211d; --water: #284b58; --wall: #8e9391; --roof: #5c605d; --sun: #f2b533; --data: #9085e9;
+  --ground: #1e211d; --water: #284b58; --wall: #8e9391; --roof: #5c605d; --sun: #f2b533; --data: #9085e9; --power: #f6a23a;
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
   color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #0d0d0d; --surface: #161616; --raised: #1d1d1d; --ink: #f3f3f0; --muted: #a5a59f; --line: #2e2e2b;
   --accent: #ff4545; --accent-fill: #e3141b; --accent-ink: #ffffff; --accent-soft: rgba(255, 69, 69, 0.1);
-  --ground: #1e211d; --water: #284b58; --wall: #8e9391; --roof: #5c605d; --sun: #f2b533; --data: #9085e9;
+  --ground: #1e211d; --water: #284b58; --wall: #8e9391; --roof: #5c605d; --sun: #f2b533; --data: #9085e9; --power: #f6a23a;
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
   color-scheme: dark; }
 * { box-sizing: border-box; }
@@ -123,6 +123,23 @@ svg.mr-chart .now { stroke: var(--accent); stroke-width: 1.5; }
 .lbl-node { background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1.5px solid var(--ink); border-radius: 6px; padding: 2px 6px; font-size: 11px; line-height: 1.25; }
 .lbl-node b { font-weight: 700; } .lbl-node .lv { font-family: var(--f-mono); color: var(--muted); margin-left: 4px; }
 .lbl-node.off { opacity: 0.55; text-decoration: line-through; }
+.lbl-node { transition: opacity 0.25s, border-color 0.2s, box-shadow 0.2s; }
+.lbl-node.hover, .lbl-node.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.lbl-node.on { z-index: 2; } .lbl-node.dim { opacity: 0.38; }
+.lbl-cx { display: flex; align-items: center; gap: 5px; font: 600 10.5px var(--f-mono); background: var(--surface); border: 1.5px solid currentColor; border-radius: 999px; padding: 2px 8px 2px 4px; }
+.lbl-cx::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 25%, transparent); }
+.lbl-cx.pw { color: var(--power); } .lbl-cx.dt { color: var(--data); }
+.nav3d { position: absolute; top: 10px; left: 10px; z-index: 3; display: flex; align-items: center; gap: 2px; max-width: calc(100% - 132px); background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 999px; padding: 3px; font: 600 0.74rem var(--f-mono); }
+.nav3d button { flex: none; min-width: 30px; height: 30px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: var(--ink); font: inherit; cursor: pointer; }
+.nav3d button[data-nav="prev"], .nav3d button[data-nav="next"] { font-size: 1.15rem; line-height: 1; padding: 0 6px; }
+.nav3d button:hover { background: var(--accent-soft); } .nav3d button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.nav3d button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.nav3d-name { min-width: 0; max-width: 230px; padding: 0 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav3d .sep { flex: none; width: 1px; align-self: stretch; margin: 3px 3px; background: var(--line); }
+.leyenda3d { position: absolute; right: 10px; bottom: 10px; z-index: 2; display: grid; gap: 2px; font: 0.68rem/1.45 var(--f-mono); color: var(--ink); background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; pointer-events: none; }
+.leyenda3d i { display: inline-block; vertical-align: middle; margin-right: 7px; }
+.leyenda3d .ln { width: 22px; border-top: 3px dashed var(--data); }
+.leyenda3d .pt { width: 9px; height: 9px; margin-left: 6px; margin-right: 14px; border-radius: 50%; } .leyenda3d .pw { background: var(--power); } .leyenda3d .dt { background: var(--data); }
 .lbl-small { font: 10px var(--f-mono); color: var(--muted); }
 .lbl-geo { font: italic 12px var(--f-body); color: var(--muted); }
 .lbl-data { font: 600 11px var(--f-mono); color: var(--data); }
@@ -177,6 +194,8 @@ a { color: var(--accent); }
   .cols.two { grid-template-columns: minmax(0, 1fr); }
   .read { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lbl-node { font-size: 9.5px; }
+  .nav3d [data-nav-modo], .nav3d .sep, .leyenda3d { display: none; }
+  .nav3d-name { max-width: 120px; }
   .lbl-small, .lbl-geo, .lbl-money small { display: none; }
   .lbl-money { font-size: 10px; padding: 2px 5px; }
   :root { --stroke: 4px; }
@@ -411,7 +430,7 @@ details.fold summary span { color: var(--accent); font-weight: 600; white-space:
       <p class="stamp" data-t="ciudad.stamp"></p>
     </div>
     <div class="board">
-      <div class="stage" data-scene="ciudad"><span class="stage-hint">Toca una sede · arrastra para girar · rueda para acercar</span></div>
+      <div class="stage" data-scene="ciudad"><span class="stage-hint">‹ › o flechas: recorrer sedes · doble clic: acercar · arrastrar: girar · clic derecho: mover</span></div>
       <div class="folder">
         <div class="card">
           <h3>Ver</h3>

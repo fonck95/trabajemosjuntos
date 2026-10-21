@@ -7,3 +7,4 @@ node_modules/
 # Imágenes de referencia (Google Street View / Esri): solo para levantamiento, no se publican
 data/geo/img/
 data/geo/sv_coverage.json
+.claude/worktrees/

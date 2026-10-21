@@ -12,6 +12,9 @@ export { THREE, CSS2DObject };
 
 export const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 export const gsap = window.gsap && !reducedMotion ? window.gsap : null;
+// las animaciones siguen el reloj real: con el suavizado de GSAP, en equipos lentos (cuadros de 0,3–0,5 s) un vuelo
+// de cámara de 1,5 s tardaba más de 20 s y la vista quedaba a medio camino
+gsap?.ticker.lagSmoothing(0);
 
 // Lee los tokens de color de la página para que el 3D siga el tema claro/oscuro.
 export function tokens() {
@@ -76,6 +79,7 @@ class Engine {
     if (s.controls.update()) need = true;
     if (!need) { this.perf.continuous = false; return; }
     if (s.dynamicShadows || s.shadowDirty) { this.renderer.shadowMap.needsUpdate = true; s.shadowDirty = false; }
+    s.adaptDepth();
     this.renderer.render(s.scene, s.camera);
     s.labels.render(s.scene, s.camera);
     s.dirty = false;
@@ -90,13 +94,16 @@ class Engine {
     if (now - p.lastFpsT > 500) {
       p.fps = (p.frames * 1000) / (now - p.lastFpsT); p.frames = 0; p.lastFpsT = now;
       if (now - p.lastChange > 1500) {
-        if (p.ema > 1 / 45 && this.dpr > this.minDpr) { this.dpr = Math.max(this.minDpr, this.dpr - 0.25); this.applyDpr(s); p.lastChange = now; }
-        else if (p.ema < 1 / 57 && this.dpr < this.maxDpr && now - p.lastChange > 4000) { this.dpr = Math.min(this.maxDpr, this.dpr + 0.25); this.applyDpr(s); p.lastChange = now; }
+        // tras dos bajadas deja de subir: alternar resoluciones se ve como un parpadeo
+        if (p.ema > 1 / 45 && this.dpr > this.minDpr) { this.dpr = Math.max(this.minDpr, this.dpr - 0.25); this.applyDpr(s); p.lastChange = now; p.drops = (p.drops || 0) + 1; }
+        else if (p.ema < 1 / 58 && this.dpr < this.maxDpr && (p.drops || 0) < 2 && now - p.lastChange > 10000) { this.dpr = Math.min(this.maxDpr, this.dpr + 0.25); this.applyDpr(s); p.lastChange = now; }
       }
       s.hud?.update(this);
     }
   }
   applyDpr(s) { this.renderer.setPixelRatio(this.dpr); s.resize(); }
+  // Al cambiar el tamaño del lienzo el navegador lo borra: se vuelve a dibujar en el mismo cuadro para que no parpadee
+  redraw(s) { if (this.active !== s || !s.running) return; s.adaptDepth(); this.renderer.render(s.scene, s.camera); s.labels.render(s.scene, s.camera); s.dirty = false; }
 }
 export const engine = new Engine();
 
@@ -104,7 +111,10 @@ const sharedBox = new THREE.BoxGeometry(1, 1, 1);
 
 // ---------------------------------------------------------------- escena de cada vista
 export class Stage {
-  constructor(el, { cam = [30, 26, 34], target = [0, 0, 0], fov = 40, minDist = 8, maxDist = 140, env = true, tone = 'none', exposure = 1, dynamicShadows = false } = {}) {
+  constructor(el, { cam = [30, 26, 34], target = [0, 0, 0], fov = 40, minDist = 8, maxDist = 140, env = true, tone = 'none', exposure = 1, dynamicShadows = false, fit = 0.75 } = {}) {
+    // fit: cuánto se aleja la cámara en pantallas angostas (1 = la escena conserva su ancho; 0,75 = término medio)
+    this.fitExp = fit;
+    this.nearMin = Math.min(0.05, minDist * 0.01);
     const r = engine.ensure();
     this.el = el;
     this.scene = new THREE.Scene();
@@ -128,7 +138,8 @@ export class Stage {
     this.controls.addEventListener('change', () => this.invalidate());
     this.baseOffset = this.camera.position.clone().sub(this.controls.target);
     this.userMoved = false;
-    this.controls.addEventListener('start', () => { this.userMoved = true; });
+    // si la persona toma la cámara, los vuelos en curso se cancelan en vez de pelearle el control
+    this.controls.addEventListener('start', () => { this.userMoved = true; this.stopFlight(); });
     this.frameFns = [];
     this.running = false;
     this.dirty = true;
@@ -155,6 +166,13 @@ export class Stage {
     this.hud = makeHud(el, this);
   }
   isActive() { return engine.active === this; }
+  fitFactor() { return Math.max(1, Math.pow(1.5 / (this.camera.aspect || 1.5), this.fitExp)); }
+  // Plano cercano proporcional a la distancia: con near fijo de 0,1 m y la cámara a 1 km, la precisión de
+  // profundidad cae a ~0,6 m y techos, paneles, ventanas y pisos titilan (z-fighting)
+  adaptDepth() {
+    const n = THREE.MathUtils.clamp(this.camera.position.distanceTo(this.controls.target) * 0.012, this.nearMin, 40);
+    if (Math.abs(n - this.camera.near) > n * 0.08) { this.camera.near = n; this.camera.updateProjectionMatrix(); }
+  }
   invalidate(shadows = false) { this.dirty = true; if (shadows) this.shadowDirty = true; }
   updateShadows() { this.shadowDirty = true; this.dirty = true; }
   resize() {
@@ -164,8 +182,12 @@ export class Stage {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     // en pantallas angostas la cámara se aleja para que la escena quepa
-    if (!this.userMoved && !this.flying) this.camera.position.copy(this.controls.target).add(this.baseOffset.clone().multiplyScalar(Math.max(1, Math.pow(1.5 / this.camera.aspect, 0.75))));
-    if (this.isActive()) engine.renderer.setSize(w, h);
+    if (!this.userMoved && !this.flying) {
+      const off = this.baseOffset.clone().multiplyScalar(this.fitFactor());
+      this.controls.maxDistance = Math.max(this.controls.maxDistance, off.length() * 1.25);
+      this.camera.position.copy(this.controls.target).add(off);
+    }
+    if (this.isActive()) { engine.renderer.setSize(w, h); engine.redraw(this); }
     this.invalidate();
   }
   label(html, cls = '', pos = [0, 0, 0], parent = this.scene) {
@@ -182,21 +204,45 @@ export class Stage {
   start() { engine.attach(this); this.running = true; this.invalidate(true); }
   stop() { this.running = false; }
   // Vuelo de cámara con GSAP; sin GSAP (o con movimiento reducido) salta directo
+  stopFlight() { if (!gsap) return; gsap.killTweensOf(this.camera.position); gsap.killTweensOf(this.controls.target); this._intro?.kill(); this.flying = false; }
   flyTo(pos, target = this.controls.target.toArray(), duration = 1.4) {
     const c = this.camera.position, tg = this.controls.target;
-    if (!gsap) { c.set(...pos); tg.set(...target); this.invalidate(); return; }
+    if (!gsap) { c.set(...pos); tg.set(...target); this.baseOffset.copy(c).sub(tg).divideScalar(this.fitFactor()); this.invalidate(); return; }
+    this.stopFlight();
     this.flying = true;
     gsap.to(c, { x: pos[0], y: pos[1], z: pos[2], duration, ease: 'power3.inOut', onUpdate: () => this.invalidate() });
-    gsap.to(tg, { x: target[0], y: target[1], z: target[2], duration, ease: 'power3.inOut', onUpdate: () => this.invalidate(), onComplete: () => { this.flying = false; } });
+    gsap.to(tg, { x: target[0], y: target[1], z: target[2], duration, ease: 'power3.inOut', onUpdate: () => this.invalidate(), onComplete: () => { this.flying = false; this.baseOffset.copy(c).sub(tg).divideScalar(this.fitFactor()); } });
+  }
+  // Vuela a encuadrar una caja: busca la distancia a la que sus 8 esquinas caben en pantalla con margen (sirve
+  // igual para edificios alargados que para compactos, en pantallas anchas o angostas)
+  frameBox(box, dir, { margin = 0.8, duration = 1.4, ty = 0.35 } = {}) {
+    const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+    const tgt = new THREE.Vector3(c.x, box.min.y + size.y * ty, c.z), d = dir.clone().normalize(), v = new THREE.Vector3();
+    const cam = this.camera.clone(), pts = [];
+    for (let i = 0; i < 8; i++) pts.push(new THREE.Vector3(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z));
+    let D = Math.max(size.length() * 0.25, this.controls.minDistance);
+    for (let k = 0; k < 90; k++, D *= 1.05) {
+      cam.position.copy(tgt).addScaledVector(d, D); cam.lookAt(tgt); cam.updateMatrixWorld();
+      if (pts.every((p) => { v.copy(p).project(cam); return v.z < 1 && Math.abs(v.x) < margin && Math.abs(v.y) < margin; })) break;
+    }
+    this.controls.maxDistance = Math.max(this.controls.maxDistance, D * 1.6);
+    this.flyTo(cam.position.toArray(), tgt.toArray(), duration);
+    return D;
   }
   // Entrada de cámara: parte de más lejos y se acerca a la posición de reposo
   intro() {
     if (!gsap || this.introDone) return;
     this.introDone = true;
-    const rest = this.camera.position.clone(), tg = this.controls.target;
-    const from = rest.clone().sub(tg).multiplyScalar(1.45).add(tg); from.y += 8;
-    this.camera.position.copy(from);
-    this.flyTo(rest.toArray(), tg.toArray(), 1.6);
+    if (this.flying) return; // la escena ya pidió su propio vuelo (por ejemplo, el visor al cargar un modelo)
+    // la posición final se recalcula en cada cuadro con el encuadre vigente: si el contenedor cambia de tamaño
+    // durante la entrada, la cámara termina igual donde debe
+    const tg = this.controls.target, o = { u: 0 };
+    this.flying = true;
+    this._intro = gsap.to(o, { u: 1, duration: 1.6, ease: 'power3.inOut', onUpdate: () => {
+      const k = 1 + 0.45 * (1 - o.u);
+      this.camera.position.copy(tg).addScaledVector(this.baseOffset, this.fitFactor() * k); this.camera.position.y += 8 * (1 - o.u);
+      this.invalidate();
+    }, onComplete: () => { this.flying = false; }, onInterrupt: () => { this.flying = false; } });
   }
   // Congela matrices de objetos estáticos: three deja de recalcularlas en cada cuadro
   freeze(obj) { obj.traverse((o) => { o.updateMatrix(); o.matrixAutoUpdate = false; }); obj.updateMatrixWorld(true); }
@@ -331,6 +377,19 @@ export class Flow {
     this.mesh.instanceMatrix.needsUpdate = true;
     return true;
   }
+}
+
+// Caja de las mallas con volumen (más de minH de alto): deja por fuera pisos planos como parqueaderos y zonas verdes
+export function solidBox(obj, minH = 0.6) {
+  const box = new THREE.Box3(), bb = new THREE.Box3();
+  obj.updateMatrixWorld(true);
+  obj.traverse((o) => {
+    if (!o.isMesh) return;
+    if (o.isInstancedMesh) { o.computeBoundingBox(); bb.copy(o.boundingBox); } else { if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); bb.copy(o.geometry.boundingBox); }
+    bb.applyMatrix4(o.matrixWorld);
+    if (bb.max.y - bb.min.y > minH) box.union(bb);
+  });
+  return box.isEmpty() ? box.setFromObject(obj) : box;
 }
 
 export function arc(a, b, lift = 3) {

@@ -1,6 +1,6 @@
 // Visor de modelos profesionales (glTF 2.0 / GLB): arrastrar y soltar, iluminación física,
 // métricas de costo en GPU y guía del pipeline para llevar modelos BIM/CAD al atlas.
-import { THREE, Stage, engine, tokens, onTheme, fmtN, gsap, disposeObject } from '../core.js';
+import { THREE, Stage, engine, tokens, onTheme, fmtN, gsap, disposeObject, solidBox } from '../core.js';
 import { getLoader, loadModel, parseFile, fit, stats } from '../assets.js';
 
 const GUIA = [
@@ -60,7 +60,12 @@ export function mount(root) {
     const sc = st.sunLight.shadow.camera; sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 0.1; sc.far = R * 6; sc.updateProjectionMatrix();
     st.sunLight.position.set(R * 0.9, R * 1.6, R * 0.7);
     st.controls.maxDistance = R * 8;
-    st.flyTo([R * 1.25, R * 0.8, R * 1.6], [0, size.y * 0.4, 0], 1.3);
+    // se encuadra lo que tiene volumen (edificios, tanques, árboles): los pisos planos del predio (parqueaderos,
+    // zonas verdes) agrandan la caja sin aportar y dejaban el edificio diminuto
+    // los edificios alargados se miran de costado para que el largo use el ancho de la pantalla
+    const sb = solidBox(current), ss = sb.getSize(new THREE.Vector3());
+    const dir = ss.z > ss.x * 1.4 ? new THREE.Vector3(1.7, 0.85, 0.55) : ss.x > ss.z * 1.4 ? new THREE.Vector3(0.55, 0.85, 1.7) : new THREE.Vector3(1.25, 0.8, 1.6);
+    st.frameBox(sb, dir, { margin: 0.8, duration: 1.3 });
     if (gsap) gsap.from(current.scale, { x: 0.001, y: 0.001, z: 0.001, duration: 0.8, ease: 'back.out(1.4)', onUpdate: () => st.invalidate(true) });
     st.updateShadows();
     setStats(info, stats(current, info.gltf), nombre);
