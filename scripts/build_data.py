@@ -157,7 +157,7 @@ nodos = {n_['id']: n_ for n_ in mr['nodos']}
 CORTO = {'alcaldia': 'Alcaldía + CCED', 'hospital': 'Hospital', 'policia': 'Policía', 'bomberos': 'Bomberos', 'ptap': 'Planta de agua (PTAP)',
          'captacion': 'Captación', 'ptap_veredal': 'Planta veredal', 'tanque_elevado': 'Tanque elevado', 'ie_led': 'I.E. L. E. Díaz', 'ie_prim': 'Sede La Patria',
          'ie_megacolegio': 'Megacolegio', 'parque_edu': 'Parque Educativo', 'cultura': 'Biblioteca', 'casa_cultura': 'Casa de la Cultura', 'coliseo': 'Coliseo',
-         'cpsam': 'Centro Vida', 'concejo': 'Concejo', 'registraduria': 'Registraduría', 'aguas_aseo_sede': 'Aguas y Aseo', 'cic': 'CIC'}
+         'cpsam': 'Centro Vida', 'concejo': 'Concejo', 'registraduria': 'Registraduría', 'aguas_aseo_sede': 'Aguas y Aseo', 'cic': 'CIC', 'bienestar_anciano': 'Bienestar del Anciano'}
 EDIFICIOS = []
 for f in sorted((D / 'edificios').glob('*.json')):
     s = json.loads(f.read_text(encoding='utf-8'))
