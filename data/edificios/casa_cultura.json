@@ -1,21 +1,21 @@
 {
  "id": "casa_cultura",
  "nombre": "Casa de la Cultura de Yondó (antiguo teatro municipal)",
- "nodo_microrred": "cultura",
+ "nodo_microrred": null,
  "direccion": "Calle 50 entre carreras 51 y 54, costado sur, frente a la glorieta del parque (fallo judicial de 2023). No se vio placa en la fachada.",
  "lat": 7.007229,
  "lon": -73.91011,
  "ubicacion": {
   "confianza": "alta",
-  "metodo": "Pendón «CASA DE LA CULTURA – YON[DÓ]» colgado en la fachada norte (Street View de agosto de 2014, panorama z3q9…, rumbo real 159°, es decir, mirando al sur desde la Calle 50). El edificio es un salón alto de ladrillo con pilastras, persianas altas y frontones de ventilación: la forma de un teatro, que coincide con el «antiguo teatro municipal, hoy reservado para ser la Casa de la Cultura, Calle 50 entre carreras 51 y 54» del fallo de 2023. La coordenada del inventario que apuntaba a la placa 53-13 (7.007125, -73.910555) cae en otro edificio: una casa de un piso con corredor de columnas de ladrillo, dos lotes al occidente, que Google registra como la biblioteca María Cano. El ancla se puso en el centro de la nave. Se asigna el nodo «cultura» del plan («Casa de la Cultura y Biblioteca Pública»), que no tenía otra sede."
+  "metodo": "Verificación independiente (octubre de 2026): en el panorama z3q9pUmv8mZrHCtqo7mFPg (agosto de 2014, en 7,007511, −73,910242, sobre la Calle 50) mirando con rumbo real 158° (hacia el sur) se lee el pendón «CASA DE LA CULTURA – YON[DÓ]» colgado en la fachada norte; con el panorama qATNxoaJlSXrlCocVfUTcg (rumbo 204°) el pendón queda sobre el mismo muro. El edificio es un salón alto de ladrillo con pilastras, persianas altas y lucarnas de ventilación: la forma de un teatro, que coincide con el «antiguo teatro municipal, hoy reservado para ser la Casa de la Cultura, Calle 50 entre carreras 51 y 54» del fallo de 2023. SECOP registra obras de «restauración, adecuación y dotación» (2007), «adecuación y acondicionamiento» (2013) y «adecuación y mantenimiento… para preservar el patrimonio arquitectónico» (2018) en la Casa de la Cultura, y contratos de logística para muestras teatrales en ella entre 2014 y 2019. La coordenada del inventario (7,007125, −73,910555) y la «Calle 50 # 53-13» vienen de una ficha de Google duplicada de la Biblioteca María Cano con el pin corrido (ver data/edificios/cultura.json); ese punto cae en una casa de un piso con corredor de columnas de ladrillo, dos lotes al occidente. El ancla está en la nave (a 1 m de su centro). No se asigna nodo de la microrred: el nodo «cultura» ya lo usa la Biblioteca María Cano."
  },
  "fuentes": [
   {
    "tipo": "street_view",
    "pano": "z3q9pUmv8mZrHCtqo7mFPg",
    "fecha": "2014-08",
-   "rumbo": 159,
-   "nota": "Fachada norte desde la Calle 50: pendón «CASA DE LA CULTURA – YON[DÓ]» en la bahía 5, puertas, persianas, frontón de la bahía 3. Comparación con el modelo (rumbo 152)."
+   "rumbo": 158,
+   "nota": "Fachada norte desde la Calle 50: pendón «CASA DE LA CULTURA – YON[DÓ]» en las bahías 4 y 5 (leído en la verificación con rumbo real 158°), puertas, persianas y lucarna de la bahía 3."
   },
   {
    "tipo": "street_view",
@@ -106,12 +106,12 @@
    "pano": "KKonjNcnTr_mStpem5lQLQ",
    "fecha": "2014-08",
    "rumbo": 179,
-   "nota": "Edificio de la Calle 50 # 53-13 (un piso, corredor de columnas de ladrillo, cubierta de fibrocemento a cuatro aguas): antigua biblioteca, no es la Casa de la Cultura."
+   "nota": "Casa de un piso con corredor de columnas de ladrillo y cubierta de fibrocemento a cuatro aguas, dos lotes al occidente: allí cae el pin corrido de la ficha de Google de la Biblioteca María Cano («Cl. 50 # 53-13»). No es la Casa de la Cultura."
   },
   {
    "tipo": "satelite",
-   "fuente": "Esri World Imagery z19 (WorldView-2 del 12 de enero de 2020, 0,5 m; precisión declarada de 10 m)",
-   "nota": "Huella y cubierta: borde de cubierta de 37,4 × 16,6 m, cumbrera al centro, sombra de los muros al norte y al occidente, láminas claras en el faldón sur, anexo, kiosco y árboles."
+   "fuente": "Esri World Imagery z19 (WorldView-2 del 12 de enero de 2020, 0,5 m; precisión declarada de 10,16 m según los metadatos de Esri)",
+   "nota": "Huella y cubierta (verificación): sombra de los muros al norte y al occidente, cumbrera marcada por el cambio de tono entre faldones, láminas claras en el faldón sur, anexos, kiosco y árboles. Borde de cubierta de la nave medido en un recorte girado al eje: occidente en −19,2 m, norte en +9,0 m, sur hacia −7,3 m y cumbrera en +1,0 m (marco de 76,5°); eje a 76,5°."
   },
   {
    "tipo": "satelite",
@@ -137,22 +137,53 @@
    "tipo": "web",
    "url": "https://culturantioquia.gov.co/wp-content/uploads/2022/12/responsables-de-cultura-ant-2022.pdf",
    "nota": "Directorio departamental de 2022: Casa de Cultura Municipal de Yondó con coordinador de cultura."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "qATNxoaJlSXrlCocVfUTcg",
+   "fecha": "2014-08",
+   "rumbo": 189,
+   "nota": "Verificación: fachada norte de frente con el pendón y la valla de 2014. Comparación con el modelo: coinciden puertas, alero (8,0 m) y pilastras."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "D3L3_2n1HW_zZyQo7EX13w",
+   "fecha": "2013-11",
+   "rumbo": 38,
+   "nota": "Verificación desde el suroccidente: kiosco, anexo occidental blanco con ventana de reja que llega casi a la fachada sur, hastial occidental liso con ojo de buey y visera (sin pilastras ni persianas). Comparación con el modelo."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "k9TDTDAkXBNbmuxEiMAm2Q",
+   "fecha": "2014-08",
+   "rumbo": 205,
+   "nota": "Verificación desde el nororiente: anexo oriental de tres niveles con una ventana por nivel en la cara norte, cara gris con la entrada; su alero queda más bajo que el de la nave. Comparación con el modelo."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "GXKPZfYtaVy_WNU0zKTXVg",
+   "fecha": "2014-08",
+   "rumbo": 112,
+   "nota": "Hastial occidental liso con visera oxidada, anexo rojo y reja roja que encierra el kiosco por el norte."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-11-8035067",
+   "nota": "SECOP I, contrato 293-2018 ($69.918.165, Unión Temporal Cultural LF, junio–julio de 2018): «adecuación y mantenimiento de las instalaciones de la Casa de la Cultura con el fin de preservar el patrimonio arquitectónico y cultural»."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=12-11-1272827",
+   "nota": "SECOP I, SAMC-004-2012 ($40.095.155, abril–mayo de 2013): «adecuación y acondicionamiento de la infraestructura física de la Casa de la Cultura»."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=07-1-26354",
+   "nota": "SECOP I, LPY-009-07 ($232.120.000, diciembre de 2007 a abril de 2008): «restauración, adecuación y dotación de la Casa de la Cultura»."
   }
  ],
  "adecuaciones": {
-  "bess": {
-   "kwh": 20,
-   "kw": 10,
-   "tipo": "gabinete",
-   "centro": [
-    20.42,
-    -1.5
-   ],
-   "largo": 2.3,
-   "ancho": 1.2,
-   "rumbo_eje": 78
-  },
-  "kwp_plan": 12,
+  "kwp_plan": null,
   "fv": [
    {
     "volumen": "nave",
@@ -165,7 +196,7 @@
   "kwp_factible": 12.1,
   "inversores": {
    "n": 1,
-   "kw": 12,
+   "kw": 10,
    "volumen": "anexo_este",
    "lado": "S",
    "pos": 0.0
@@ -188,29 +219,29 @@
    "control de los aires acondicionados del anexo",
    "control por escenas de la iluminación del salón y del escenario",
    "telegestión de las luminarias del kiosco y de los senderos",
-   "monitoreo del estado de carga de las baterías para operar como refugio climático"
+   "monitoreo remoto de la generación solar y del inversor"
   ],
   "obras_civiles": [
    "retiro de la cubierta de fibrocemento de la nave y de las cuatro lucarnas (unos 660 m²) por personal certificado, porque las láminas viejas pueden tener asbesto (Ley 1968 de 2019), y cambio por lámina termoacústica antes del montaje",
    "revisión de cerchas y correas de la nave para el peso de los módulos (unos 15 kg/m²) y el viento; refuerzo de correas si hace falta",
    "rieles de aluminio anclados a las correas, no a la lámina, con 0,5 m o más de retiro a bordes, cumbrera y lucarnas",
-   "puesta a tierra de rieles y equipos y protección contra rayos: la nave es la construcción más alta de la manzana (10,7 m a la cumbrera)",
-   "canalización desde la cubierta, bajando por el hastial oriental, hasta el tablero del corredor del anexo",
-   "base de concreto, reja de protección, ventilación y extintor para el gabinete de baterías bajo el corredor del anexo"
+   "puesta a tierra de rieles y equipos y protección contra rayos: la nave es la construcción más alta de la manzana (unos 10,8 m a la cumbrera)",
+   "canalización desde la cubierta, bajando por el hastial oriental, hasta el inversor y el tablero bajo el corredor sur del anexo",
+   "poda de los árboles del costado sur antes de instalar los módulos"
   ],
-  "notas": "El arreglo va en el faldón sur de la nave (36,4 × 8,2 m útiles, mira a 168°): 2 filas × 11 columnas de módulos verticales = 22 módulos = 12,1 kWp, igual al plan. Queda centrado entre las lucarnas de las bahías 3 y 9, con 1,2 m de retiro a cada una y 1,8 m al alero y a la cumbrera. Cabe con holgura: descontando lucarnas y retiros, en ese faldón caben unos 66 módulos (36 kWp), por si las facturas muestran más consumo. El faldón norte se deja libre (rinde menos y lo sombrean los árboles de la Calle 50). En 2020 los árboles del lado sur miden 10–12 m y están a 4–8 m del alero: por eso el arreglo va en la parte alta del faldón; hay que podarlos antes de diciembre. La cubierta actual es de fibrocemento con láminas de distinto tono (parches) y no aguanta grapas ni tránsito; la lámina termoacústica, además, baja el calor del salón, útil para el uso como refugio climático. Las baterías del plan (20 kWh / 10 kW) van en un gabinete bajo el corredor sur del anexo, a la sombra y cerca del inversor híbrido de 12 kW y del tablero, en el mismo muro. No hay parqueadero (el lote es prado y senderos), así que no se propone cargador de vehículo eléctrico."
+  "notas": "Esta sede no es un nodo del plan de la microrred: el nodo «cultura» (12 kWp y 20 kWh de baterías) ya está asignado a la Biblioteca María Cano (data/edificios/cultura.json). Para no contar dos veces esa potencia ni esas baterías, aquí no se pone batería ni potencia del plan. Se deja una propuesta solar del mismo tamaño (12,1 kWp) por si la Alcaldía incluye la Casa de la Cultura más adelante. El arreglo va en el faldón sur de la nave (mira a 166°): 2 filas × 11 columnas de módulos verticales = 22 módulos = 12,1 kWp. El generador lo centra en el faldón: queda a 1,8 m del alero y de la cumbrera y a 1,2 m de las lucarnas de las bahías 3 y 9. Cabe con holgura: con 0,5 m de retiro, cada faldón tiene 35,4 m de largo útil y 7,2 m de ancho inclinado útil (3 filas de módulos verticales); las dos lucarnas y sus retiros quitan unos 5,9 m de largo cada una, así que en el faldón sur caben unos 60 módulos (33 kWp), 36 de ellos entre las lucarnas. El faldón norte se deja libre (lo sombrean los árboles de la Calle 50). En 2020 los árboles del lado sur miden 10–12 m y sus copas quedan a unos 5 m del alero: al mediodía su sombra no alcanza el arreglo, pero en las primeras y últimas horas del día (sol por debajo de unos 15°) sí sombrea la fila baja; por eso hay que podarlos. La cubierta actual es de fibrocemento con láminas de distinto tono (parches) y no aguanta grapas ni tránsito; la lámina termoacústica, además, baja el calor del salón. Si la Alcaldía prefiere que el refugio climático de la zona sea este salón y no la biblioteca, el gabinete de 20 kWh del nodo «cultura» cabe bajo el corredor sur del anexo oriental, junto al inversor; no hay que poner baterías en las dos sedes. No hay parqueadero (el lote es prado y senderos), así que no se propone cargador de vehículo eléctrico."
  },
  "volumenes": [
   {
    "id": "nave",
    "nombre": "Nave del antiguo teatro municipal (Casa de la Cultura): salón alto de ladrillo a la vista",
    "centro": [
-    0.05,
-    0.05
+    -0.66,
+    0.87
    ],
    "largo": 36.4,
    "ancho": 15.4,
-   "rumbo_eje": 78,
+   "rumbo_eje": 76.5,
    "base": 0,
    "altura_alero": 8.0,
    "pisos": 1,
@@ -220,13 +251,13 @@
     "pendiente": 20,
     "voladizo": 0.6,
     "material": "fibrocemento",
-    "color": "#948b85"
+    "color": "#948e7c"
    },
    "fachada": {
     "material": "ladrillo_visto",
-    "color": "#dcac88",
+    "color": "#dcbc9c",
     "zocalo": {
-     "color": "#c8c3b9",
+     "color": "#d6d2cc",
      "altura": 0.7
     },
     "puertas": [
@@ -279,12 +310,12 @@
    "id": "persianas_norte",
    "nombre": "Franja de persianas altas de la fachada norte (entre pilastras, bajo el alero)",
    "centro": [
-    -1.57,
-    7.66
+    -2.48,
+    8.43
    ],
    "largo": 36.4,
    "ancho": 0.1,
-   "rumbo_eje": 78,
+   "rumbo_eje": 76.5,
    "base": 5.55,
    "altura_alero": 7.75,
    "pisos": 1,
@@ -293,7 +324,7 @@
    },
    "fachada": {
     "material": "ladrillo_visto",
-    "color": "#dcac88",
+    "color": "#dcbc9c",
     "ventanas": {
      "tipo": "ventana",
      "ancho": 2.4,
@@ -310,12 +341,12 @@
    "id": "persianas_sur",
    "nombre": "Franja de persianas altas de la fachada sur (entre pilastras, bajo el alero)",
    "centro": [
-    1.67,
-    -7.56
+    1.16,
+    -6.69
    ],
    "largo": 36.4,
    "ancho": 0.1,
-   "rumbo_eje": 78,
+   "rumbo_eje": 76.5,
    "base": 5.55,
    "altura_alero": 7.75,
    "pisos": 1,
@@ -324,7 +355,7 @@
    },
    "fachada": {
     "material": "ladrillo_visto",
-    "color": "#dcac88",
+    "color": "#dcbc9c",
     "ventanas": {
      "tipo": "ventana",
      "ancho": 2.4,
@@ -338,46 +369,15 @@
    }
   },
   {
-   "id": "persianas_oeste",
-   "nombre": "Franja de persianas altas del hastial occidental",
-   "centro": [
-    -17.83,
-    -3.75
-   ],
-   "largo": 15.4,
-   "ancho": 0.1,
-   "rumbo_eje": 348,
-   "base": 5.55,
-   "altura_alero": 7.75,
-   "pisos": 1,
-   "techo": {
-    "tipo": "ninguno"
-   },
-   "fachada": {
-    "material": "ladrillo_visto",
-    "color": "#dcac88",
-    "ventanas": {
-     "tipo": "ventana",
-     "ancho": 2.4,
-     "alto": 1.0,
-     "antepecho": 1.0,
-     "separacion": 3.85,
-     "lados": [
-      "largo"
-     ]
-    }
-   }
-  },
-  {
    "id": "pilastras_norte",
-   "nombre": "Pilastras grises de la fachada norte (11 bahías de 3.31 m)",
+   "nombre": "Pilastras grises de la fachada norte (11 bahías de 3,31 m)",
    "centro": [
-    -1.55,
-    7.58
+    -2.46,
+    8.36
    ],
    "largo": 36.95,
    "ancho": 0.6,
-   "rumbo_eje": 78,
+   "rumbo_eje": 76.5,
    "abierto": true,
    "piso": false,
    "columna": 0.55,
@@ -390,19 +390,19 @@
    },
    "fachada": {
     "material": "pañete_pintado",
-    "color": "#c8c3b9"
+    "color": "#c8c2b2"
    }
   },
   {
    "id": "pilastras_sur",
-   "nombre": "Pilastras grises de la fachada sur (11 bahías de 3.31 m)",
+   "nombre": "Pilastras grises de la fachada sur (11 bahías de 3,31 m)",
    "centro": [
-    1.65,
-    -7.48
+    1.14,
+    -6.62
    ],
    "largo": 36.95,
    "ancho": 0.6,
-   "rumbo_eje": 78,
+   "rumbo_eje": 76.5,
    "abierto": true,
    "piso": false,
    "columna": 0.55,
@@ -415,44 +415,19 @@
    },
    "fachada": {
     "material": "pañete_pintado",
-    "color": "#c8c3b9"
-   }
-  },
-  {
-   "id": "pilastras_oeste",
-   "nombre": "Pilastras grises del hastial occidental (4 bahías)",
-   "centro": [
-    -17.75,
-    -3.73
-   ],
-   "largo": 15.95,
-   "ancho": 0.6,
-   "rumbo_eje": 348,
-   "abierto": true,
-   "piso": false,
-   "columna": 0.55,
-   "sep_columnas": 3.987,
-   "base": 0,
-   "altura_alero": 7.95,
-   "pisos": 1,
-   "techo": {
-    "tipo": "ninguno"
-   },
-   "fachada": {
-    "material": "pañete_pintado",
-    "color": "#c8c3b9"
+    "color": "#c8c2b2"
    }
   },
   {
    "id": "lucarna_sur_3",
    "nombre": "Frontón de ventilación con rejilla sobre el faldón sur (bahía 3)",
    "centro": [
-    -8.96,
-    -5.29
+    -9.53,
+    -4.7
    ],
    "largo": 3.2,
    "ancho": 4.4,
-   "rumbo_eje": 348,
+   "rumbo_eje": 346.5,
    "abierto": true,
    "piso": false,
    "columna": 0.12,
@@ -466,7 +441,7 @@
     "pendiente": 21,
     "voladizo": 0.25,
     "material": "fibrocemento",
-    "color": "#948b85"
+    "color": "#948e7c"
    },
    "fachada": {
     "material": "pañete_pintado",
@@ -477,12 +452,12 @@
    "id": "lucarna_norte_3",
    "nombre": "Frontón de ventilación con rejilla sobre el faldón norte (bahía 3)",
    "centro": [
-    -10.36,
-    1.27
+    -11.1,
+    1.82
    ],
    "largo": 3.2,
    "ancho": 4.4,
-   "rumbo_eje": 348,
+   "rumbo_eje": 346.5,
    "abierto": true,
    "piso": false,
    "columna": 0.12,
@@ -496,7 +471,7 @@
     "pendiente": 21,
     "voladizo": 0.25,
     "material": "fibrocemento",
-    "color": "#948b85"
+    "color": "#948e7c"
    },
    "fachada": {
     "material": "pañete_pintado",
@@ -507,12 +482,12 @@
    "id": "lucarna_sur_9",
    "nombre": "Frontón de ventilación con rejilla sobre el faldón sur (bahía 9)",
    "centro": [
-    10.46,
-    -1.16
+    9.78,
+    -0.07
    ],
    "largo": 3.2,
    "ancho": 4.4,
-   "rumbo_eje": 348,
+   "rumbo_eje": 346.5,
    "abierto": true,
    "piso": false,
    "columna": 0.12,
@@ -526,7 +501,7 @@
     "pendiente": 21,
     "voladizo": 0.25,
     "material": "fibrocemento",
-    "color": "#948b85"
+    "color": "#948e7c"
    },
    "fachada": {
     "material": "pañete_pintado",
@@ -537,12 +512,12 @@
    "id": "lucarna_norte_9",
    "nombre": "Frontón de ventilación con rejilla sobre el faldón norte (bahía 9)",
    "centro": [
-    9.07,
-    5.4
+    8.22,
+    6.45
    ],
    "largo": 3.2,
    "ancho": 4.4,
-   "rumbo_eje": 348,
+   "rumbo_eje": 346.5,
    "abierto": true,
    "piso": false,
    "columna": 0.12,
@@ -556,7 +531,7 @@
     "pendiente": 21,
     "voladizo": 0.25,
     "material": "fibrocemento",
-    "color": "#948b85"
+    "color": "#948e7c"
    },
    "fachada": {
     "material": "pañete_pintado",
@@ -565,37 +540,37 @@
   },
   {
    "id": "anexo_este",
-   "nombre": "Anexo oriental de dos pisos (vestíbulo, escalera y salones; fachada oriental pañetada en gris)",
+   "nombre": "Anexo oriental de tres niveles (vestíbulo, escalera y salones); cara norte de ladrillo y cara oriental pañetada en gris",
    "centro": [
-    21.1,
-    4.42
+    20.27,
+    5.79
    ],
    "largo": 9.4,
    "ancho": 6.6,
-   "rumbo_eje": 348,
+   "rumbo_eje": 346.5,
    "base": 0,
-   "altura_alero": 7.6,
+   "altura_alero": 7.0,
    "pisos": 3,
    "techo": {
     "tipo": "cuatro_aguas",
     "pendiente": 20,
     "voladizo": 0.9,
     "material": "fibrocemento",
-    "color": "#948b85"
+    "color": "#948e7c"
    },
    "fachada": {
     "material": "ladrillo_visto",
-    "color": "#dcac88",
+    "color": "#dcbc9c",
     "zocalo": {
-     "color": "#c8c3b9",
+     "color": "#d6d2cc",
      "altura": 0.5
     },
     "ventanas": {
      "tipo": "reja",
      "ancho": 1.6,
      "alto": 0.9,
-     "antepecho": 1.4,
-     "separacion": 3.0,
+     "antepecho": 1.0,
+     "separacion": 4.0,
      "lados": [
       "N",
       "S"
@@ -612,14 +587,14 @@
    "id": "fachada_gris_este",
    "nombre": "Fachada oriental pañetada en gris del anexo, con la entrada de rejas blancas y la escalera",
    "centro": [
-    24.4,
-    5.13
+    23.55,
+    6.59
    ],
    "largo": 9.4,
    "ancho": 0.1,
-   "rumbo_eje": 348,
+   "rumbo_eje": 346.5,
    "base": 0,
-   "altura_alero": 7.45,
+   "altura_alero": 6.9,
    "pisos": 1,
    "techo": {
     "tipo": "ninguno"
@@ -628,7 +603,7 @@
     "material": "pañete_pintado",
     "color": "#9ea3a6",
     "zocalo": {
-     "color": "#c8c3b9",
+     "color": "#d6d2cc",
      "altura": 0.5
     },
     "ventanas": {
@@ -645,32 +620,32 @@
      {
       "lado": "E",
       "pos": 0.351,
-      "ancho": 2.8,
+      "ancho": 2.6,
       "alto": 2.7
      }
     ]
    }
   },
   {
-   "id": "anexo_oeste",
-   "nombre": "Anexo occidental de un piso pegado al hastial (muros rojos al norte, blancos al sur)",
+   "id": "anexo_oeste_norte",
+   "nombre": "Anexo occidental de un piso, mitad norte (muros rojos), pegado al hastial; cubierta a una agua que cae al occidente",
    "centro": [
-    -20.75,
-    -2.84
+    -21.49,
+    -0.53
    ],
-   "largo": 10.0,
-   "ancho": 5.5,
-   "rumbo_eje": 348,
+   "largo": 7.0,
+   "ancho": 4.76,
+   "rumbo_eje": 346.5,
    "base": 0,
    "altura_alero": 3.0,
    "pisos": 1,
    "techo": {
-    "tipo": "dos_aguas",
-    "cumbrera": "corto",
+    "tipo": "una_agua",
+    "caida": "O",
     "pendiente": 15,
-    "voladizo": 0.5,
+    "voladizo": 0.3,
     "material": "fibrocemento",
-    "color": "#948b85"
+    "color": "#948e7c"
    },
    "fachada": {
     "material": "pañete_pintado",
@@ -684,9 +659,49 @@
      "ancho": 1.2,
      "alto": 1.0,
      "antepecho": 1.2,
-     "separacion": 3.0,
+     "separacion": 4.0,
      "lados": [
       "N"
+     ]
+    }
+   }
+  },
+  {
+   "id": "anexo_oeste_sur",
+   "nombre": "Anexo occidental de un piso, mitad sur (muros blancos con ventana de reja), pegado al hastial",
+   "centro": [
+    -19.83,
+    -7.44
+   ],
+   "largo": 7.2,
+   "ancho": 4.76,
+   "rumbo_eje": 346.5,
+   "base": 0,
+   "altura_alero": 3.0,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "O",
+    "pendiente": 15,
+    "voladizo": 0.3,
+    "material": "fibrocemento",
+    "color": "#948e7c"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#d9d9d4",
+    "zocalo": {
+     "color": "#9a9a94",
+     "altura": 0.4
+    },
+    "ventanas": {
+     "tipo": "reja",
+     "ancho": 1.2,
+     "alto": 1.0,
+     "antepecho": 1.2,
+     "separacion": 4.0,
+     "lados": [
+      "S"
      ]
     }
    }
@@ -844,87 +859,94 @@
     -22.06
    ],
    "altura": 7
+  },
+  {
+   "tipo": "cerramiento",
+   "linea": [
+    [
+     -38.31,
+     1.09
+    ],
+    [
+     -20.71,
+     5.31
+    ]
+   ],
+   "altura": 1.1,
+   "material": "reja",
+   "color": "#9a2f2c"
   }
  ],
  "incertidumbres": [
-  "Las fotos de Street View son de 2013 y 2014. No se hallaron fotos web recientes. El satélite de enero de 2020 muestra la misma cubierta, pero no se sabe el uso actual (2026): el pendón de 2014 era provisional y el contrato de patrimonio de 2024 pudo hacer obras.",
-  "Los panoramas quedan unos 3 m al norte de la imagen Esri (Esri declara 10 m de precisión; la huella de Microsoft queda 3,5 m al sur). La huella respeta Esri; las comparaciones con fotos se hicieron con una copia del modelo corrida 3,1 m al norte.",
-  "El ancho de la nave (15,4 m entre muros, cubierta de 16,6 m) sale del satélite; el borde sur se confunde con el prado y con las láminas claras (±0,5 m). Las 11 bahías de 3,31 m sí se ven en las fotos.",
-  "La altura del alero (7,9 m) salió por proporción con las bahías en la vista frontal (±0,3 m) y la pendiente de 20° del faldón visible desde el sur. La cumbrera queda a 10,7 m.",
+  "Las fotos de Street View son de 2013 y 2014. No se hallaron fotos web recientes. El satélite de enero de 2020 muestra la misma cubierta (con láminas claras en el faldón sur, quizá del mantenimiento de 2018). No se sabe el uso actual (2026) ni si el contrato de patrimonio de 2024 hizo obras aquí.",
+  "Esri declara 10 m de precisión. Al triangular el pendón y la puerta central sur, los panoramas de 2014 quedan unos 2,4 m al norte y 1 m al oriente de la imagen Esri, y los de 2013 unos 1,5 m al norte y 1 m al oriente. La huella respeta Esri; las comparaciones con fotos se hicieron con copias del modelo corridas esas distancias (en una carpeta temporal).",
+  "En la verificación se corrió toda la nave, sus pilastras, persianas, lucarnas y los anexos 0,9 m al norte y 0,5 m al occidente, y se giró el eje de 78° a 76,5°, para que la cubierta coincida con la sombra de los muros norte y occidental y con la cumbrera. El borde sur de la cubierta se confunde con las láminas claras y el prado (±0,5 m).",
+  "La altura del alero de la nave (8,0 m) sale de la proporción con las bahías de 3,31 m en la vista frontal y se confirmó con el alto de las puertas (2,6 m) en la vista desde el norte. Con 20° de pendiente, la cumbrera queda a unos 10,8 m.",
   "Las cuatro lucarnas (frontones con rejilla) se ubicaron en las bahías 3 y 9 de cada faldón; su ancho (4,4 m) y su fondo (3,2 m) son estimados.",
-  "El anexo oriental (tres niveles, alero a 7,6 m ± 0,5 m) y el hastial oriental se vieron de lejos y entre árboles; las vistas del oriente y del nororiente no dan la misma altura. La cara gris se modela como una franja pañetada. No se ve el interior.",
+  "El anexo oriental (tres niveles) se vio de lejos y entre árboles. Su alero se bajó a 7,0 m por la comparación desde el nororiente (±0,4 m). La cara gris se modela como una franja pañetada. No se ve el interior.",
+  "El anexo occidental se vio desde el norte (muros rojos, cubierta que cae hacia el occidente) y desde el sur (muros blancos con ventana de reja). Se modela como dos volúmenes de un piso, rojo al norte y blanco al sur, pero no se sabe dónde cambia el color; su extremo sur (a 0,5 m de la fachada sur) sale de dos fotos y del largo de la sombra de la nave en el satélite.",
+  "El hastial occidental es liso: tiene un ojo de buey con visera que el generador no dibuja (no hace ventanas redondas).",
   "Las ventanas pequeñas de las bahías 1 y 2, los aires acondicionados del anexo y las rejas de la entrada no se modelan uno a uno (el generador no permite ventanas sueltas). Las persianas altas se dibujan como una franja de vidrio oscuro y las pilastras como un pórtico de columnas embebidas en el muro.",
-  "El anexo rojo de un piso y el kiosco tienen medidas aproximadas (satélite borroso y árboles). No se sabe si pertenecen a la Casa de la Cultura.",
-  "Los árboles salen del satélite de 2020; en 2013–2014 eran más pequeños, por eso tapan más en el modelo que en las fotos.",
-  "Los colores se muestrearon en fotos con poca luz y se aclararon para compensar la textura de ladrillo del generador.",
+  "La reja roja del kiosco se ve desde el norte; su trazado exacto (unos 2 m al norte del kiosco y del anexo) es aproximado (±1,5 m). No se sabe si el kiosco y el anexo occidental pertenecen a la Casa de la Cultura.",
+  "Los árboles salen del satélite de 2020; en 2013–2014 algunos eran más pequeños, por eso tapan más en el modelo que en las fotos.",
+  "Los colores del ladrillo, las pilastras, el zócalo y la cubierta se ajustaron comparando la foto y el modelo con la misma cámara, en la fachada sur con sol (2013) y en la norte nublada (2014).",
   "No se conoce el estado de cerchas y correas, ni si el fibrocemento tiene asbesto.",
-  "No se vio la placa. La placa 53-13 es del edificio de la antigua biblioteca, dos lotes al occidente."
+  "No se vio la placa. La «Calle 50 # 53-13» del inventario es de una ficha de Google de la biblioteca con el pin corrido."
  ],
  "verificacion": {
   "trace": "data/geo/img/casa_cultura_trace.png",
   "satelite": [
-   "data/geo/img/casa_cultura_sat.png",
-   "data/geo/img/casa_cultura_sat_grid.png",
+   "data/geo/img/casa_cultura_v_overlay2.png",
+   "data/geo/img/casa_cultura_v_overlay_oeste.png",
+   "data/geo/img/casa_cultura_v_rot_nave.png",
    "data/geo/img/casa_cultura_sat_amplio.png",
-   "data/geo/img/casa_cultura_overview.png",
-   "data/geo/img/casa_cultura_bing.png"
+   "data/geo/img/casa_cultura_overview.png"
   ],
   "vistas": [
-   "data/geo/img/casa_cultura_sv_z3q9.jpg",
-   "data/geo/img/casa_cultura_sv_pendon_zoom.jpg",
-   "data/geo/img/casa_cultura_sv_hrdb.jpg",
-   "data/geo/img/casa_cultura_sv_noroeste.jpg",
-   "data/geo/img/casa_cultura_sv_vecino_rojo.jpg",
+   "data/geo/img/casa_cultura_v_pendon.jpg",
+   "data/geo/img/casa_cultura_v_z3q9_157.jpg",
+   "data/geo/img/casa_cultura_v_qatn_189.jpg",
+   "data/geo/img/casa_cultura_v_d3l3_zoom.jpg",
+   "data/geo/img/casa_cultura_v_gxkp.jpg",
+   "data/geo/img/casa_cultura_v_bfde_anexo.jpg",
+   "data/geo/img/casa_cultura_v_k9td_205.jpg",
+   "data/geo/img/casa_cultura_v_cxsj.jpg",
    "data/geo/img/casa_cultura_sv_aiw_alzado.jpg",
-   "data/geo/img/casa_cultura_sv_techo_s.jpg",
-   "data/geo/img/casa_cultura_sv_techo_n.jpg",
-   "data/geo/img/casa_cultura_sv_sureste.jpg",
-   "data/geo/img/casa_cultura_sv_extremo_e.jpg",
-   "data/geo/img/casa_cultura_sv_anexo_e2.jpg",
-   "data/geo/img/casa_cultura_sv_anexo_ne.jpg",
-   "data/geo/img/casa_cultura_sv_suroeste.jpg",
-   "data/geo/img/casa_cultura_sv_kkonj.jpg"
+   "data/geo/img/casa_cultura_sv_noroeste.jpg",
+   "data/geo/img/casa_cultura_sv_anexo_e2.jpg"
   ],
   "comparaciones": [
    {
-    "imagen": "data/geo/img/casa_cultura_cmp_sur_comparacion.png",
-    "pano": "AIw-oV0omX0cuwJrHD4SfQ",
-    "rumbo": 345,
-    "pitch": 3,
-    "fov": 40,
-    "nota": "Primera pasada: pilastras y puertas coinciden; el ladrillo salía oscuro y las persianas (celosía) blancas. Se aclararon los colores y las persianas pasaron a vidrio oscuro; se corrió el poste."
+    "imagen": "data/geo/img/casa_cultura_v_cmp_qatn_comparacion.png",
+    "pano": "qATNxoaJlSXrlCocVfUTcg",
+    "rumbo": 189,
+    "pitch": 8,
+    "fov": 75,
+    "nota": "Verificación (copia corrida 2,4 m al norte): puertas, alero y pilastras coinciden en tamaño y altura. El ladrillo salía más rojo y las pilastras más claras: se ajustaron los colores."
    },
    {
-    "imagen": "data/geo/img/casa_cultura_cmp_norte_comparacion.png",
-    "pano": "z3q9pUmv8mZrHCtqo7mFPg",
-    "rumbo": 152,
+    "imagen": "data/geo/img/casa_cultura_v_cmp_d3l3_comparacion.png",
+    "pano": "D3L3_2n1HW_zZyQo7EX13w",
+    "rumbo": 35,
     "pitch": 8,
     "fov": 90,
-    "nota": "Coinciden las 11 bahías, las cuatro puertas, el frontón de la bahía 3, el alero y el anexo rojo. Falta la ventana pequeña de la bahía 2."
+    "nota": "Verificación: coinciden el kiosco y el hastial occidental. El anexo occidental era todo rojo, a dos aguas y no llegaba al sur: se rehízo (ver la siguiente)."
    },
    {
-    "imagen": "data/geo/img/casa_cultura_cmp_noroeste_comparacion.png",
-    "pano": "MK_ekgCfV7JYYY70xal6Zg",
-    "rumbo": 150,
+    "imagen": "data/geo/img/casa_cultura_v_cmp_k9td_comparacion.png",
+    "pano": "k9TDTDAkXBNbmuxEiMAm2Q",
+    "rumbo": 205,
+    "pitch": 8,
+    "fov": 60,
+    "nota": "Verificación (copia corrida 2,6 m al norte y 0,7 m al oriente): coinciden la cara gris, la esquina con la nave y el hastial oriental; el alero del anexo quedaba unos 0,6 m alto y se bajó a 7,0 m."
+   },
+   {
+    "imagen": "data/geo/img/casa_cultura_v_cmp_d3l3b_mezcla.png",
+    "pano": "D3L3_2n1HW_zZyQo7EX13w",
+    "rumbo": 38,
     "pitch": 6,
-    "fov": 90,
-    "nota": "Coinciden la esquina noroccidental, el hastial y su cumbrera. El anexo rojo era muy largo: se acortó a 5,5 m y el kiosco se ensanchó a 11,6 m."
-   },
-   {
-    "imagen": "data/geo/img/casa_cultura_cmp_este_comparacion.png",
-    "pano": "hpGMukzTePxxCd-Swzl-iw",
-    "rumbo": 296,
-    "pitch": 8,
-    "fov": 45,
-    "nota": "El anexo salía bajo y todo de ladrillo: se subió y se le puso la cara oriental gris con la entrada."
-   },
-   {
-    "imagen": "data/geo/img/casa_cultura_cmp_sureste_comparacion.png",
-    "pano": "S-seTwcYTW5-EZQ2odOMqQ",
-    "rumbo": 25,
-    "pitch": 8,
-    "fov": 70,
-    "nota": "Coinciden la esquina suroriental de la nave y el corredor del anexo; el anexo llegaba 2 m más al oriente de lo real y se recortó a 6,6 m de fondo."
+    "fov": 55,
+    "nota": "Verificación final: el anexo blanco, su ventana de reja, el kiosco, el hastial y las puertas de la fachada sur coinciden."
    },
    {
     "imagen": "data/geo/img/casa_cultura_cmp_sur2_mezcla.png",
@@ -932,22 +954,20 @@
     "rumbo": 345,
     "pitch": 3,
     "fov": 40,
-    "nota": "Segunda pasada: poste, pilastras y puertas superpuestos; persianas y alero quedaban 0,2–0,3 m bajos, por eso el alero final es 8,0 m y las persianas van de 6,55 a 7,5 m."
+    "nota": "Levantamiento: pilastras, puertas, persianas y alero de la fachada sur."
    },
    {
-    "imagen": "data/geo/img/casa_cultura_cmp_noreste_comparacion.png",
-    "pano": "BfDEUDbvmbmP9GGv3ijk7w",
-    "rumbo": 208,
-    "pitch": 10,
-    "fov": 50,
-    "nota": "Coinciden la cara gris, la cara norte del anexo, la unión con la nave y el hastial oriental sobre el anexo. El alero del anexo quedaba unos 0,4 m alto: se bajó a 7,6 m (sin nuevo render, por el límite de 10)."
+    "imagen": "data/geo/img/casa_cultura_cmp_noroeste_comparacion.png",
+    "pano": "MK_ekgCfV7JYYY70xal6Zg",
+    "rumbo": 150,
+    "pitch": 6,
+    "fov": 90,
+    "nota": "Levantamiento: esquina noroccidental, hastial y kiosco."
    }
   ],
   "orbitas": [
-   "data/geo/img/casa_cultura_orbita_existente.png",
-   "data/geo/img/casa_cultura_orbita_todo.png",
-   "data/geo/img/casa_cultura_orbita_bess.png"
+   "data/geo/img/casa_cultura_v_orbita_todo.png"
   ],
-  "nota": "Las comparaciones se hicieron con una copia del modelo con el ancla corrida 3,1 m al norte, para compensar el desfase entre Esri y las posiciones de los panoramas. Las órbitas usan el modelo real. Revisado en órbita: el arreglo queda sobre la cubierta nueva, entre las lucarnas, y el gabinete de baterías queda bajo el corredor sin atravesar muros."
+  "nota": "Verificación independiente de octubre de 2026. Las comparaciones con fotos usan copias del modelo con el ancla corrida para compensar el desfase entre Esri y los panoramas; la órbita usa el modelo real."
  }
 }

@@ -7,7 +7,7 @@
   "lon": -73.908499,
   "ubicacion": {
     "confianza": "alta",
-    "metodo": "La coordenada del inventario cae sobre el bloque del medio del conjunto de aulas al sur del parque principal; no hubo que corregirla. Con el rumbo ya corregido, desde el panorama 4Sp-a8hIjtvm3vWYY8WspA (calle del costado norte, noviembre de 2013) mirando al sur-suroeste (rumbo 195–205) se lee sobre la portada de acceso el letrero pintado 'Institución Educativa Luis Eduardo Díaz – Sección Preescolar y Básica Primaria'. La portada está a unos 9 m de la cámara, en el cerramiento norte, al final del pasillo cubierto que llega al bloque norte, igual que en el satélite. Coinciden el punto 'Sede La Patria' de OSM y el lugar de Google. Esri (WorldView-2 del 12 de enero de 2020) declara una precisión de unos 10 m: la esquina noroeste del bloque norte, triangulada desde dos panoramas de la calle norte, cae a 1–2 m de la huella del satélite; en cambio, los panoramas de la calle oriental quedaron corridos unos 7 m al norte (error del GPS del carro a lo largo de esa calle)."
+    "metodo": "La coordenada del inventario cae sobre el bloque del medio del conjunto de aulas al sur del parque principal; no hubo que corregirla. Con el rumbo ya corregido, desde el panorama 4Sp-a8hIjtvm3vWYY8WspA (calle del costado norte, noviembre de 2013) mirando al sur-suroeste (rumbo 195–205) se lee sobre la portada de acceso el letrero pintado 'Institución Educativa Luis Eduardo Díaz – Sección Preescolar y Básica Primaria'. La portada está a unos 9 m de la cámara, en el cerramiento norte, al final del pasillo cubierto que llega al bloque norte, igual que en el satélite. Coinciden el punto 'Sede La Patria' de OSM y el lugar de Google. Esri (WorldView-2 del 12 de enero de 2020) declara una precisión de unos 10 m: la esquina noroeste del bloque norte, triangulada desde dos panoramas de la calle norte, cae a 1–2 m de la huella del satélite; en cambio, los panoramas de la calle oriental quedaron corridos unos 5–7 m al norte (error del GPS del carro a lo largo de esa calle; confirmado en la verificación con el tanque elevado y la torre desde sKU). Verificación independiente (octubre de 2026): desde 4Sp con rumbo 200 se lee de nuevo el letrero sobre la portada, y la torre aparece en el rumbo esperado desde 4Sp, cxt y U0B."
   },
   "fuentes": [
     {
@@ -67,14 +67,35 @@
       "nota": "Esquina sureste: bodega de ladrillo y cubiertas azules tras los árboles del andén."
     },
     {
+      "tipo": "street_view",
+      "pano": "q-N47hMd-MYT1bi4TgdouA",
+      "fecha": "2013-11",
+      "rumbo": 160,
+      "nota": "Calle norte, frente a la plazoleta (verificación independiente, comparación cmpA). Fachada norte completa del bloque norte: ladrillo, ventanales de reja altos, puertas metálicas azul grisáceo, zócalo gris azulado, cubierta de teja ondulada gris. Confirma la altura de alero y la diferencia alero–cumbrera del modelo; permitió corregir la posición de las puertas y del gran árbol de la plazoleta (tronco triangulado con 6ai en x=−20,2, y=46,7, junto al cerramiento)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "sKU-p4YlcAemntONXpn3HA",
+      "fecha": "2013-11",
+      "rumbo": 255,
+      "nota": "Carrera oriental (verificación independiente, comparación cmpB). Tanque elevado azul (dos tanques sobre columnas de concreto, tope a unos 9–10 m) que no estaba en la especificación, culatas de ladrillo con ventanas altas de persiana y la torre al fondo. Con los rumbos al tanque (248,5°) y a la torre (264°) el panorama queda unos 5 m al sur de su posición publicada; la comparación usa la cámara corregida (x=39,2, y=12,2)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "xlJS7Df4DNVTLrtzhSHfiw",
+      "fecha": "2013-11",
+      "rumbo": 285,
+      "nota": "Columna del tanque elevado con escalera metálica junto a un cuarto pintado de blanco, al oriente de la culata del bloque del medio."
+    },
+    {
       "tipo": "satelite",
       "fuente": "Esri World Imagery z19 (0,296 m/píxel; WorldView-2 del 12 de enero de 2020)",
-      "nota": "Huella de todas las cubiertas medida con perfiles de brillo en un marco girado al eje de los bloques (rumbo 78,5°): bloque norte de 49,4 × 15,9 m con la cumbrera a 5,9 m del borde norte (el resto es el corredor sur), bloque del medio de 49,3 × 14,5 m, bloque sur de 51,9 × 9 m, tres módulos de unión que encierran patios de luz, coliseo de 20,4 × 34,8 m, bloques sureste y bloque azul sur."
+      "nota": "Huella medida de nuevo con perfiles de brillo en un marco girado al eje real de los bloques: rumbo 76° (ajuste de rectas a los bordes de cubierta, error ±0,4°). El levantamiento anterior usaba 78,5°, que dejaba los extremos de los bloques corridos más de 1 m. Bordes de cubierta (alero norte / cumbrera / borde sur, en metros perpendiculares al eje desde el ancla): bloque norte 27,5 / 22,0 / 11,2 (con el corredor) y 49,6 m de largo; bloque del medio 5,9 / 0,1 / −8,4 y 48,9 m; bloque sur −15,5 / −19,3 / −24,3 y 52,4 m. Los módulos de unión van de cubierta a cubierta (del bloque del medio al bloque norte) y encierran tres patios de luz. Coliseo 19,4 × 35,6 m (rumbo 346°), bloque sureste 26 × 8,7 m, bloque azul sureste 12,8 × 13,3 m y bloque azul sur 42,5 × 10,2 m (rumbo 74°). El pasillo de acceso y la portada sí siguen el rumbo 348,5° de la calle norte. Se ven además un paso cubierto claro (con su sombra) que cruza el pasaje entre el bloque del medio y el bloque sur, un pasillo cubierto de unos 4 m de ancho a lo largo del costado oriental del coliseo y el tanque elevado azul junto a la culata oriental del bloque del medio."
     },
     {
       "tipo": "satelite",
       "fuente": "Google satélite z20 (0,148 m/píxel, más reciente que Esri, sin fecha publicada), solo como referencia",
-      "nota": "Alineado con Esri (desfase de 1,5 m al oeste y 2,4 m al norte). Confirma las cumbreras, los hastiales de los módulos de unión y los patios de luz. Diferencias con Esri 2020: el pasillo de acceso tiene ahora cubierta naranja y hay un paso cubierto nuevo que cruza el pasaje entre el bloque del medio y el bloque sur."
+      "nota": "Alineado con Esri (desfase de 1,5 m al oeste y 2,4 m al norte). Confirma las cumbreras, los módulos de unión y los patios de luz. Diferencias con Esri 2020: el pasillo de acceso tiene ahora cubierta naranja. El paso cubierto que cruza el pasaje entre el bloque del medio y el bloque sur ya se ve en Esri 2020 (antes se creía nuevo)."
     },
     {
       "tipo": "web",
@@ -99,12 +120,12 @@
       "id": "bloque_norte",
       "nombre": "Bloque norte de aulas (fachada a la plazoleta)",
       "centro": [
-        -5.76,
-        20.77
+        -5.54,
+        21.29
       ],
-      "largo": 48.4,
-      "ancho": 10.6,
-      "rumbo_eje": 78.5,
+      "largo": 48.55,
+      "ancho": 9.8,
+      "rumbo_eje": 76,
       "base": 0,
       "altura_alero": 4.0,
       "pisos": 1,
@@ -137,19 +158,19 @@
         "puertas": [
           {
             "lado": "N",
-            "pos": 0.69,
+            "pos": 0.73,
             "ancho": 0.9,
             "alto": 2.1
           },
           {
             "lado": "N",
-            "pos": 0.74,
+            "pos": 0.78,
             "ancho": 0.9,
             "alto": 2.1
           },
           {
             "lado": "N",
-            "pos": 0.83,
+            "pos": 0.87,
             "ancho": 0.9,
             "alto": 2.1
           }
@@ -160,12 +181,12 @@
       "id": "corredor_norte",
       "nombre": "Corredor cubierto al sur del bloque norte",
       "centro": [
-        -4.24,
-        13.32
+        -3.27,
+        13.92
       ],
-      "largo": 48.4,
-      "ancho": 4.6,
-      "rumbo_eje": 78.5,
+      "largo": 45.0,
+      "ancho": 5.6,
+      "rumbo_eje": 76,
       "abierto": true,
       "sep_columnas": 3.5,
       "columna": 0.25,
@@ -187,12 +208,12 @@
       "id": "union_1",
       "nombre": "Módulo de unión oeste (entre los bloques norte y del medio)",
       "centro": [
-        -21.34,
-        4.08
+        -21.78,
+        6.11
       ],
-      "largo": 6.7,
-      "ancho": 5.2,
-      "rumbo_eje": 348.5,
+      "largo": 11.8,
+      "ancho": 4.9,
+      "rumbo_eje": 346,
       "altura_alero": 3.6,
       "techo": {
         "tipo": "dos_aguas",
@@ -215,12 +236,12 @@
       "id": "union_2",
       "nombre": "Módulo de unión central",
       "centro": [
-        -4.14,
-        7.58
+        -4.63,
+        10.39
       ],
-      "largo": 6.7,
-      "ancho": 6.5,
-      "rumbo_eje": 348.5,
+      "largo": 11.8,
+      "ancho": 5.65,
+      "rumbo_eje": 346,
       "altura_alero": 3.6,
       "techo": {
         "tipo": "dos_aguas",
@@ -243,12 +264,12 @@
       "id": "union_3",
       "nombre": "Módulo de unión este",
       "centro": [
-        13.05,
-        11.07
+        12.28,
+        14.61
       ],
-      "largo": 6.7,
-      "ancho": 6.4,
-      "rumbo_eje": 348.5,
+      "largo": 11.8,
+      "ancho": 5.8,
+      "rumbo_eje": 346,
       "altura_alero": 3.6,
       "techo": {
         "tipo": "dos_aguas",
@@ -271,12 +292,12 @@
       "id": "ala_este",
       "nombre": "Ala este (cuartos de servicio junto a la carrera)",
       "centro": [
-        22.51,
-        13.25
+        22.11,
+        16.02
       ],
-      "largo": 7.0,
-      "ancho": 3.8,
-      "rumbo_eje": 348.5,
+      "largo": 7.8,
+      "ancho": 4.15,
+      "rumbo_eje": 346,
       "altura_alero": 3.4,
       "techo": {
         "tipo": "dos_aguas",
@@ -309,12 +330,12 @@
       "id": "bloque_medio",
       "nombre": "Bloque del medio de aulas",
       "centro": [
-        -1.28,
-        0.04
+        -1.33,
+        -0.26
       ],
-      "largo": 48.1,
-      "ancho": 9.2,
-      "rumbo_eje": 78.5,
+      "largo": 47.9,
+      "ancho": 10.46,
+      "rumbo_eje": 76,
       "altura_alero": 4.0,
       "pisos": 1,
       "techo": {
@@ -372,15 +393,45 @@
       }
     },
     {
+      "id": "cuarto_tanque",
+      "nombre": "Cuarto blanco junto al tanque elevado (con escalera metálica)",
+      "centro": [
+        22.76,
+        9.18
+      ],
+      "largo": 2.8,
+      "ancho": 2.6,
+      "rumbo_eje": 346,
+      "altura_alero": 2.4,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0.2,
+        "material": "concreto",
+        "color": "#d9d6cf"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#e8e6df",
+        "puertas": [
+          {
+            "lado": "E",
+            "pos": 0.5,
+            "ancho": 0.9,
+            "alto": 2.0
+          }
+        ]
+      }
+    },
+    {
       "id": "corredor_medio",
       "nombre": "Corredor cubierto al sur del bloque del medio",
       "centro": [
-        0.09,
-        -6.72
+        -0.7,
+        -7.01
       ],
-      "largo": 48.1,
-      "ancho": 4.6,
-      "rumbo_eje": 78.5,
+      "largo": 46.45,
+      "ancho": 2.94,
+      "rumbo_eje": 76,
       "abierto": true,
       "sep_columnas": 3.5,
       "columna": 0.25,
@@ -399,15 +450,42 @@
       }
     },
     {
+      "id": "paso_medio_sur",
+      "nombre": "Paso cubierto entre el bloque del medio y el bloque sur",
+      "centro": [
+        0.74,
+        -12.28
+      ],
+      "largo": 8.0,
+      "ancho": 4.5,
+      "rumbo_eje": 346,
+      "abierto": true,
+      "sep_columnas": 3.0,
+      "columna": 0.2,
+      "altura_alero": 3.0,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 8,
+        "cumbrera": "largo",
+        "voladizo": 0.2,
+        "material": "fibrocemento",
+        "color": "#a3a298"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#9c6748"
+      }
+    },
+    {
       "id": "bloque_sur",
       "nombre": "Bloque sur de aulas",
       "centro": [
-        4.68,
-        -19.25
+        4.94,
+        -19.28
       ],
-      "largo": 50.9,
-      "ancho": 7.8,
-      "rumbo_eje": 78.5,
+      "largo": 51.35,
+      "ancho": 7.6,
+      "rumbo_eje": 76,
       "altura_alero": 4.0,
       "pisos": 1,
       "techo": {
@@ -465,15 +543,15 @@
       }
     },
     {
-      "id": "paso_sureste",
-      "nombre": "Paso cubierto hacia el bloque sureste",
+      "id": "pasillo_coliseo",
+      "nombre": "Pasillo cubierto junto al costado oriental del coliseo (del bloque sur hacia el sur)",
       "centro": [
-        3.21,
-        -27.05
+        6.88,
+        -39.47
       ],
-      "largo": 5.7,
-      "ancho": 3.5,
-      "rumbo_eje": 348.5,
+      "largo": 32.5,
+      "ancho": 3.7,
+      "rumbo_eje": 346,
       "abierto": true,
       "sep_columnas": 3.0,
       "columna": 0.2,
@@ -484,7 +562,7 @@
         "cumbrera": "largo",
         "voladizo": 0.2,
         "material": "fibrocemento",
-        "color": "#7e7d7a"
+        "color": "#8b8c88"
       },
       "fachada": {
         "material": "ladrillo_visto",
@@ -495,12 +573,12 @@
       "id": "bloque_sureste",
       "nombre": "Bloque sureste (aulas y servicios)",
       "centro": [
-        17.27,
-        -30.98
+        20.31,
+        -30.59
       ],
-      "largo": 28.5,
-      "ancho": 6.4,
-      "rumbo_eje": 78.5,
+      "largo": 25.0,
+      "ancho": 7.45,
+      "rumbo_eje": 75.5,
       "altura_alero": 3.8,
       "techo": {
         "tipo": "dos_aguas",
@@ -534,12 +612,12 @@
       "id": "bloque_azul_se",
       "nombre": "Bloque de cubierta azul claro (sureste)",
       "centro": [
-        26.79,
-        -43.38
+        26.67,
+        -43.45
       ],
-      "largo": 12.2,
-      "ancho": 12.3,
-      "rumbo_eje": 78.5,
+      "largo": 11.8,
+      "ancho": 12.25,
+      "rumbo_eje": 74.5,
       "altura_alero": 3.5,
       "techo": {
         "tipo": "dos_aguas",
@@ -573,12 +651,12 @@
       "id": "coliseo",
       "nombre": "Coliseo cubierto (placa polideportiva con cubierta curva azul)",
       "centro": [
-        -4.72,
-        -49.54
+        -5.36,
+        -49.58
       ],
-      "largo": 34.0,
-      "ancho": 19.9,
-      "rumbo_eje": 348.5,
+      "largo": 34.75,
+      "ancho": 18.9,
+      "rumbo_eje": 346,
       "abierto": true,
       "sep_columnas": 5.0,
       "columna": 0.35,
@@ -600,12 +678,12 @@
       "id": "bloque_azul_sur",
       "nombre": "Bloque sur de cubierta azul",
       "centro": [
-        22.19,
-        -79.22
+        21.97,
+        -79.06
       ],
-      "largo": 40.9,
-      "ancho": 9.3,
-      "rumbo_eje": 78.5,
+      "largo": 41.45,
+      "ancho": 9.2,
+      "rumbo_eje": 74,
       "altura_alero": 3.5,
       "techo": {
         "tipo": "dos_aguas",
@@ -795,20 +873,20 @@
       "tipo": "patio",
       "poligono": [
         [
-          -21.51,
-          -19.68
+          -21.09,
+          -21.23
         ],
         [
-          28.96,
-          -9.42
+          24.13,
+          -9.96
         ],
         [
-          27.8,
-          -3.73
+          22.41,
+          -3.07
         ],
         [
-          -22.66,
-          -14.0
+          -22.81,
+          -14.34
         ]
       ]
     },
@@ -816,20 +894,20 @@
       "tipo": "patio",
       "poligono": [
         [
-          9.17,
-          -45.08
+          13.29,
+          -53.37
         ],
         [
-          19.46,
-          -42.98
+          22.1,
+          -51.09
         ],
         [
-          17.87,
-          -35.14
+          18.19,
+          -35.99
         ],
         [
-          7.58,
-          -37.24
+          9.38,
+          -38.27
         ]
       ]
     },
@@ -837,11 +915,11 @@
       "tipo": "cancha",
       "largo": 28,
       "ancho": 15,
-      "rumbo_eje": 348.5,
+      "rumbo_eje": 346,
       "superficie": "concreto",
       "centro": [
-        -4.72,
-        -49.54
+        -5.36,
+        -49.58
       ]
     },
     {
@@ -885,8 +963,8 @@
       "altura": 13,
       "copa": 13,
       "centro": [
-        -23.09,
-        43.27
+        -20.2,
+        46.7
       ]
     },
     {
@@ -1004,6 +1082,15 @@
         -26.39,
         4.33
       ]
+    },
+    {
+      "tipo": "tanque_elevado",
+      "centro": [
+        23.1,
+        5.8
+      ],
+      "altura": 9.5,
+      "diametro": 2.4
     }
   ],
   "adecuaciones": {
@@ -1012,12 +1099,12 @@
       {
         "volumen": "bloque_norte",
         "faldon": "S",
-        "filas": 2,
-        "columnas": 23,
-        "orientacion_modulo": "vertical"
+        "filas": 3,
+        "columnas": 16,
+        "orientacion_modulo": "horizontal"
       }
     ],
-    "kwp_factible": 25.3,
+    "kwp_factible": 26.4,
     "cubierta_nueva": {
       "material": "termoacustica",
       "color": "#e2e0da",
@@ -1031,7 +1118,7 @@
         "union_2",
         "union_3",
         "ala_este",
-        "paso_sureste",
+        "pasillo_coliseo",
         "bloque_sureste"
       ]
     },
@@ -1051,7 +1138,7 @@
       "monitoreo remoto de la generación solar y del inversor"
     ],
     "obras_civiles": [
-      "retiro de las tejas de fibrocemento del bloque norte (y luego de los bloques del medio, sur y sureste, sus corredores, el ala este y los módulos de unión) con protocolo para asbesto: muestra de laboratorio, personal certificado, humectación, embalaje y disposición en sitio autorizado (Ley 1968 de 2019)",
+      "retiro de las tejas de fibrocemento del bloque norte (y luego de los bloques del medio, sur y sureste, sus corredores, el ala este, los módulos de unión y el pasillo del coliseo) con protocolo para asbesto: muestra de laboratorio, personal certificado, humectación, embalaje y disposición en sitio autorizado (Ley 1968 de 2019)",
       "cambio de las correas de madera por perfiles metálicos galvanizados y concepto de un ingeniero estructural sobre cerchas y vigas (la prensa reporta una viga en riesgo) y sobre la carga adicional de unos 15 kg/m² del arreglo solar",
       "cubierta nueva termoacústica tipo sándwich con canales y bajantes que lleven el agua lluvia a un drenaje propio y no al alcantarillado sanitario",
       "reparación del cielo raso y anclaje certificado de los ventiladores de techo antes de reabrir las aulas",
@@ -1059,7 +1146,7 @@
       "inversor, tablero y canalizaciones a más de 1,2 m del piso por las inundaciones de hasta 10 cm",
       "línea de vida y punto de anclaje en la cumbrera del bloque norte para el mantenimiento"
     ],
-    "notas": "Cabe la potencia planeada. El arreglo va sobre el faldón sur del bloque norte (mira al sur-sureste, rumbo 168,5°, inclinado 25°): 46 módulos de 550 Wp en 2 filas × 23 columnas, en vertical = 25,3 kWp. Ese faldón mide 48,4 m de largo por 5,85 m de pendiente; con retiros de 0,5 m a la cumbrera, al alero y a las culatas caben 2 filas × 41 columnas = 82 módulos (45,1 kWp), y el faldón norte admite otros 82. El arreglo de 26,5 m queda centrado y deja libres los extremos: el oeste, junto a la torre metálica de 24 m y al gran árbol del costado occidental, y el este, junto a los árboles del andén de la carrera. La sombra delgada de la torre solo cruza el arreglo al final de la tarde. Los árboles de la plazoleta están al norte y no sombrean el faldón sur. Con el rendimiento de diseño del proyecto (3,69 kWh/kWp·día), el arreglo produciría unos 2.840 kWh/mes, cerca del 71 % de los 4.000 kWh/mes del nodo, o del 89 % si la domótica ahorra el 20 %. Para ampliar, el faldón sur del bloque del medio admite unos 60 módulos más en horizontal (33 kWp). Antes de montar hay que cambiar la cubierta: es teja ondulada de fibrocemento, probablemente con asbesto, sobre correas de madera. Una foto de abril de 2026 muestra el cielo raso roto, y la prensa reporta caída de tejas y de un ventilador sobre niños. El nodo no tiene baterías en el plan (no es isla), así que no se ubica BESS. El inversor (25 kW, trifásico) va en el muro sur del bloque norte, bajo el corredor (a la sombra todo el día) y elevado por las inundaciones. No hay parqueadero dentro del colegio (las motos se dejan en la calle, frente a la portada), por eso no se propone cargador de vehículo eléctrico."
+    "notas": "Cabe la potencia planeada, pero con los módulos acostados. El arreglo va sobre el faldón sur del bloque norte (mira al sur-sureste, rumbo 166°, inclinado 25°): 48 módulos de 550 Wp en 3 filas × 16 columnas, en horizontal = 26,4 kWp. Cuentas del faldón (con la huella corregida): el bloque mide 48,55 m de largo y 9,8 m de ancho entre muros; largo útil = 48,55 − 1,0 = 47,55 m; ancho inclinado útil = (9,8/2)/cos 25° − 1,0 = 4,41 m. En vertical (2,28 m a lo largo de la pendiente) solo cabe 1 fila de 42 módulos (23,1 kWp), que no alcanza: por eso el diseño anterior de 2 filas verticales ya no cabe. En horizontal caben 3 filas (3 × 1,13 m más juntas = 3,49 m) × 20 columnas = 60 módulos (33 kWp); el faldón norte admite otros 60. El arreglo de 16 columnas mide unos 36,8 m, queda centrado y deja libres unos 5 m en cada extremo: el oeste, del lado de la torre metálica de 24 m y del gran árbol del costado occidental, y el este, junto a los árboles del andén de la carrera y al tanque elevado. La sombra delgada de la torre solo cruza el arreglo al final de la tarde. Los árboles de la plazoleta están al norte y no sombrean el faldón sur. Con el rendimiento de diseño del proyecto (3,69 kWh/kWp·día) el arreglo produciría unos 2.960 kWh/mes, cerca del 74 % de los 4.000 kWh/mes del nodo, o del 93 % si la domótica ahorra el 20 %. La inclinación de 25° rinde algo menos que una de 10° en esta latitud (pérdida estimada de 4–6 %). Para ampliar, el faldón sur del bloque del medio (47,9 × 10,46 m, 22°: ancho inclinado útil 4,64 m) admite 2 filas verticales × 41 columnas = 82 módulos (45,1 kWp). Antes de montar hay que cambiar la cubierta: es teja ondulada de fibrocemento, probablemente con asbesto, sobre correas de madera. Una foto de abril de 2026 muestra el cielo raso roto, y la prensa reporta caída de tejas y de un ventilador sobre niños. El nodo no tiene baterías en el plan (no es isla), así que no se ubica BESS. El inversor (25 kW, trifásico) va en el muro sur del bloque norte, bajo el corredor (a la sombra todo el día) y elevado por las inundaciones. No hay parqueadero dentro del colegio (las motos se dejan en la calle, frente a la portada), por eso no se propone cargador de vehículo eléctrico."
   },
   "incertidumbres": [
     "El piso del colegio parece estar 0,6–0,7 m por debajo de las calles: desde los panoramas la cámara queda unos 3,2 m por encima de la plazoleta (no 2,5 m). El modelo pone todo a nivel 0; por eso, en las comparaciones desde la calle, la base de los muros del modelo sale más alta que en la foto. Esa diferencia de nivel ayuda a entender las inundaciones.",
@@ -1070,12 +1157,20 @@
     "Los bloques de cubierta azul (sureste y sur) solo se conocen por el satélite; no se confirmó si son del colegio, aunque quedan dentro del mismo cerramiento.",
     "La cubierta de fibrocemento probablemente es de asbesto-cemento (tejas anteriores a la prohibición de 2019). Hay que confirmarlo con una muestra antes de retirarla.",
     "La torre metálica de unos 24 m se ubicó por triangulación (error de ±3 m). No se sabe quién es el dueño ni si tiene puesta a tierra propia.",
-    "Las fotos de Street View son de 2013. Esri es de enero de 2020 y Google parece más reciente: el pasillo de acceso tiene ahora cubierta naranja y hay un paso cubierto sobre el pasaje sur. El modelo sigue a Esri y deja el pasillo gris.",
     "Los colores salen de fotos nubladas y con sombra (ladrillo #6f5944, zócalo #4f5758, puertas #3a4457, cubierta #5e5d5f). En el modelo se aclararon para que, con la luz del render, se parezcan a la foto.",
-    "La ubicación de los árboles se aproximó por las copas del satélite."
+    "La ubicación de los árboles se aproximó por las copas del satélite.",
+    "Las fotos de Street View son de 2013. Esri es de enero de 2020 y Google parece más reciente: el pasillo de acceso tiene ahora cubierta naranja (el modelo lo deja gris, como en Esri). El paso cubierto entre el bloque del medio y el bloque sur se modeló con lo que muestra el satélite (ancho, color claro); su altura (3 m) es típica.",
+    "Rumbo de los bloques corregido de 78,5° a 76° en la verificación; la portada, el cuarto de portería, el pasillo de acceso y el cerramiento norte siguen a 348,5° porque así los muestra el satélite.",
+    "El borde norte de las cubiertas se tomó donde termina la cubierta y empieza la franja oscura (sombra o muro visto en ángulo, de 0,7–0,9 m). Si esa franja fuera parte del alero, los bloques serían unos 0,8 m más anchos hacia el norte.",
+    "El bloque norte quedó de 9,8 m entre muros (la cumbrera medida está a 5,5 m del borde norte de la cubierta) y el corredor sur de 5,6 m. No se ve en Street View dónde termina la cubierta del bloque y empieza la del corredor; la suma de ambos sí coincide con el satélite.",
+    "Bloque sur: la cumbrera medida (−19,3 m) queda 0,6 m al norte del centro de la cubierta; puede tener un alero o corredor más ancho al sur. Se modeló simétrico.",
+    "Tanque elevado: posición por el satélite (mancha azul) y por el rumbo desde dos panoramas; altura (≈ 9,5 m) estimada con el ángulo de elevación. En Street View se ven dos tanques azules; el generador dibuja uno. El cuarto blanco junto a él tiene medidas aproximadas.",
+    "Pasillo cubierto del coliseo: se deduce de la franja clara de 4 m con sombra al occidente y cumbrera visible; su altura (2,6 m) es típica. Entre él y el coliseo hay una franja oscura de 2,7 m que no se pudo interpretar.",
+    "Al suroccidente del bloque azul sur hay una caseta pequeña (≈ 6 × 6 m) que no se modeló porque no se ve en ninguna foto de calle.",
+    "El bloque azul sur tiene un tramo de cubierta azul oscuro (unos 8 m en la mitad oriental); el modelo usa un solo color."
   ],
   "verificacion": {
-    "trace": "data/geo/img/ie_prim_trace.png",
+    "trace": "data/geo/img/ie_prim_x_trace.png",
     "vistas": [
       "data/geo/img/ie_prim_trace_zoom.png",
       "data/geo/img/ie_prim_sat.png",
@@ -1106,8 +1201,20 @@
       "data/geo/img/ie_prim_cmp1b_comparacion.png",
       "data/geo/img/ie_prim_cmp1b_mezcla.png",
       "data/geo/img/ie_prim_orbita_todo.png",
-      "data/geo/img/ie_prim_orbita_existente.png"
+      "data/geo/img/ie_prim_orbita_existente.png",
+      "data/geo/img/ie_prim_x_trace.png",
+      "data/geo/img/ie_prim_x_rot76b.png",
+      "data/geo/img/ie_prim_x_r_surb.png",
+      "data/geo/img/ie_prim_x_letrero.jpg",
+      "data/geo/img/ie_prim_x_qN4_160.jpg",
+      "data/geo/img/ie_prim_x_cmpA_comparacion.png",
+      "data/geo/img/ie_prim_x_cmpA_mezcla.png",
+      "data/geo/img/ie_prim_x_sKU_cmp.jpg",
+      "data/geo/img/ie_prim_x_cmpB_comparacion.png",
+      "data/geo/img/ie_prim_x_xlJ_285.jpg",
+      "data/geo/img/ie_prim_x_6ai_180.jpg",
+      "data/geo/img/ie_prim_x_orbita_todo.png"
     ],
-    "nota": "Huella: 2 iteraciones de trace.py sobre Esri (bordes de cubierta medidos con perfiles de brillo; error ≈ 0,5 m). Comparaciones con la misma cámara de sv_pano.py: 0jR rumbo 140/150 (cmp1, cmp2, cmp1b), 6ai rumbo 160 (cmp3) y LjS rumbo 260 (cmp4). Tras cmp1/cmp2 el alero del bloque norte pasó de 3,0 a 4,0 m y la pendiente de 15° a 25°; tras cmp4 se vio que LjS está corrido 7,6 m al norte y se repitió con la cámara corregida en modo órbita (cmp4b), que llevó el bloque sur a 4,0 m de alero y 13° de pendiente. La portada se angostó a 4 m y el cerramiento norte se alineó con su fachada tras cmp3."
+    "nota": "Huella: 2 iteraciones de trace.py sobre Esri (bordes de cubierta medidos con perfiles de brillo; error ≈ 0,5 m). Comparaciones con la misma cámara de sv_pano.py: 0jR rumbo 140/150 (cmp1, cmp2, cmp1b), 6ai rumbo 160 (cmp3) y LjS rumbo 260 (cmp4). Tras cmp1/cmp2 el alero del bloque norte pasó de 3,0 a 4,0 m y la pendiente de 15° a 25°; tras cmp4 se vio que LjS está corrido 7,6 m al norte y se repitió con la cámara corregida en modo órbita (cmp4b), que llevó el bloque sur a 4,0 m de alero y 13° de pendiente. La portada se angostó a 4 m y el cerramiento norte se alineó con su fachada tras cmp3. Verificación independiente (octubre de 2026): el rumbo de los bloques era 76° y no 78,5° (ajuste de rectas a 8 bordes de cubierta); se rehízo la huella de todos los volúmenes con perfiles de brillo (error ≈ 0,3 m), se giraron el coliseo (346°) y los bloques del sureste (74–75,5°), se agregaron el tanque elevado, el cuarto blanco, el paso cubierto entre el bloque del medio y el sur y el pasillo del coliseo (antes 'paso_sureste', de 6 m), y los módulos de unión pasaron a ir de cubierta a cubierta. Comparaciones nuevas con la misma cámara: q-N47 rumbo 160 (cmpA) y sKU rumbo 255 con la cámara corregida (cmpB). El arreglo solar se rehízo porque con el ancho corregido no caben 2 filas verticales."
   }
 }

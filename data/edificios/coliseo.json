@@ -7,7 +7,7 @@
   "lon": -73.910225,
   "ubicacion": {
     "confianza": "alta",
-    "metodo": "La coordenada del inventario cae en el centro de la gran cubierta verde azulada escalonada (unos 53 × 46 m) que está al sur de la Calle 50 y al norte del Parque Educativo; no hubo que corregirla (el centro de la cubierta queda a menos de 0,5 m del ancla). El lugar de Google 'Coliseo Benito Arias' (7.006414, -73.910152) cae dentro de la misma cubierta, unos 11 m al sur del ancla. En Street View de noviembre de 2013 (rumbos ya corregidos) se ve el coliseo en obra desde la Calle 50 (fachada norte), desde la Carrera 54 (costado oeste) y desde la esquina suroeste, con la misma cubierta de franjas escalonadas que muestra el satélite. Prensa de 2013 ubica el lote del Parque Educativo 'al lado del Coliseo Benito Arias', y el contrato SECOP 207-2026 nombra la obra 'Adecuación y mejoramiento Coliseo Benito Arias'. No se vio ningún letrero con el nombre en las vistas de 2013 (el edificio estaba en obra)."
+    "metodo": "La coordenada del inventario cae dentro de la gran cubierta verde azulada escalonada (unos 53 × 46 m) que está al sur de la Calle 50, al este de la Carrera 54 y al norte del Parque Educativo. No hubo que cambiarla: con la corrección de la cubierta (ver incertidumbres) el centro del techo queda unos 1,8 m al este del ancla, todavía dentro de la huella principal. El lugar de Google 'Coliseo Benito Arias' (7.006414, -73.910152) cae dentro de la misma cubierta. En Street View de noviembre de 2013 (rumbos ya corregidos) se ve el coliseo en obra desde la Calle 50 (fachada norte), desde la Carrera 54 (costado oeste) y desde la Calle 49 (esquina suroeste), con la misma cubierta de franjas escalonadas que muestra el satélite. Desde la Calle 49 (panorama 8WluyAustQUEul-oC8BcnQ, rumbo 84) se lee la valla 'Aquí estará nuestro PARQUE EDUCATIVO' en el lote vacío del sur; la prensa de 2013 ubica ese lote 'al lado del Coliseo Benito Arias'. Los datos abiertos de SECOP II (revisados de nuevo el 21-10-2026) traen el contrato 207-2026 del Municipio de Yondó 'Adecuación y mejoramiento Coliseo Benito Arias', y las regalías financiaron el 'parqueadero del Coliseo Benito Arias y la vía peatonal Calle 49', que por su ubicación corresponden al parqueadero del costado oeste y a la calle del lado sur. No se vio ningún letrero con el nombre en las vistas de 2013 (el edificio estaba en obra)."
   },
   "fuentes": [
     {
@@ -22,7 +22,7 @@
       "pano": "tAwHY13eUVGhfyghxogeQQ",
       "fecha": "2013-11",
       "rumbo": 181,
-      "nota": "Fachada norte desde el noreste de la plaza. Segunda línea para triangular las esquinas del bloque norte y la altura de los aleros (nave central ≈15,3 m, franjas laterales ≈13,3 m, cubierta baja ≈10,3 m)."
+      "nota": "Fachada norte desde el frente de la plaza. Con cxsjp, D3L3 y ADg sirvió para triangular las esquinas de las cubiertas (diferencias de 0,6 m o menos entre pares): alero norte de la nave central ≈15,6 m, franjas este y oeste media ≈13,5 m y cubierta baja (visera) ≈10,3 m."
     },
     {
       "tipo": "street_view",
@@ -95,14 +95,42 @@
       "nota": "Desde el sur: los árboles tapan el coliseo; no aporta medidas."
     },
     {
+      "tipo": "street_view",
+      "pano": "D3L3_2n1HW_zZyQo7EX13w",
+      "fecha": "2013-11",
+      "rumbo": 150,
+      "nota": "Fachada norte y esquina noroeste desde la Calle 50 (verificación independiente, pitch 12, fov 100). Mostró que la cubierta del modelo quedaba ≈2–3 m al oeste de la foto; tras correrla coinciden los aleros de las cuatro franjas, la visera, el bloque blanco y el anexo rojo."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "o0TGBCwk4ZPe1QUcFYc41g",
+      "fecha": "2013-11",
+      "rumbo": 117,
+      "nota": "Esquina noroeste desde la Carrera 54 (verificación independiente, pitch 10, fov 100): coinciden el anexo rojo con su puerta, el muro oeste, el anexo suroeste al fondo y la altura de la cubierta; se ve la gran columna de celosía blanca de la esquina, que el modelo no tiene."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "8WluyAustQUEul-oC8BcnQ",
+      "fecha": "2013-11",
+      "rumbo": 66,
+      "nota": "Esquina suroeste desde la Calle 49 (pitch 8, fov 60): la gradería sur es un graderío de concreto que sube hacia el sur hasta ≈6 m, con balcón y baranda verde a ≈4,5 m en el extremo oeste y un bloque bajo de ≈2,7 m detrás. Con rumbo 84 se lee la valla del Parque Educativo en el lote del sur."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "S-seTwcYTW5-EZQ2odOMqQ",
+      "fecha": "2013-11",
+      "rumbo": 212,
+      "nota": "Con tAwHY y ADg sirvió para triangular la esquina noreste del cuarto rojo del costado este (u≈30,3 m, v≈18,0 m, ≈4 m de alto)."
+    },
+    {
       "tipo": "satelite",
       "fuente": "Esri World Imagery z19 (0,296 m/píxel)",
-      "nota": "Huella de la cubierta: cuatro franjas norte–sur separadas por líneas oscuras (escalones), giradas 13° como la cuadrícula de calles (eje largo a 347°): oeste baja 5,0 × 34,5 m, oeste media 11,3 × 42,8 m, central 26,1 × 45,7 m y este 10,5 × 42,6 m; en total ≈52,9 m (este–oeste) × 45,7 m (norte–sur). Color de la cubierta muestreado #55808c. Al norte, sombra de 2–3 m; al sur, una franja clara de la gradería sur. Al oeste el parqueadero gris y al norte una plaza con piso decorado, posteriores a 2013."
+      "nota": "Huella de la cubierta: cuatro franjas norte–sur separadas por líneas oscuras (escalones), giradas 13° como la cuadrícula de calles (eje largo a 347°). Medidas con perfiles de brillo en el marco girado (incluyen los aleros): oeste baja 4,6 × 34,2 m, oeste media 11,3 × 42,0 m, central 26,2 × 45,8 m y este 11,0 × 42,8 m; en total ≈53 m (este–oeste). Los bordes altos de la cubierta salen corridos 1,1–2,2 m al oeste y hasta 1,2 m al norte por la inclinación de la toma (ver incertidumbres); los elementos bajos (borde del costado este en u≈30,2 m, parqueadero, plaza) sí coinciden con Street View. Color de la cubierta muestreado #547f8b."
     },
     {
       "tipo": "satelite",
       "fuente": "Google satélite z20 (0,148 m/píxel, marca de agua 2026), solo como referencia",
-      "nota": "Misma forma de cubierta en cuatro franjas (color muestreado #6da6bb, más claro por la luz); confirma que la cubierta sigue igual en 2026 y que la plaza norte y el parqueadero existen. La vista oblicua deja ver el muro este blanco."
+      "nota": "Misma forma de cubierta en cuatro franjas (color muestreado #6ba5ba, más claro por la luz); confirma que la cubierta sigue igual en 2026 y que la plaza norte y el parqueadero existen. Es una toma muy oblicua: registrada sobre el suelo, la cubierta aparece unos 5,5 m al sur y 1,5 m al oeste de la de Esri y deja ver el muro este blanco; no sirve para medir la huella."
     },
     {
       "tipo": "web",
@@ -126,6 +154,12 @@
       "url": "https://www.vanguardia.com/santander/barrancabermeja/2013/02/23/yondo-entre-los-45-municipios-de-antioquia-con-parque-educativo/",
       "fecha": "2013-02-23",
       "nota": "El lote del Parque Educativo queda al lado del Coliseo Benito Arias (confirma el vecino del sur)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.datos.gov.co/resource/p6dx-8zbt.json?$where=upper(descripci_n_del_procedimiento)%20like%20'%25BENITO%20ARIAS%25'",
+      "fecha": "2026-10-21",
+      "nota": "SECOP II, procesos: licitación LPY 002-2026 'Adecuación y mejoramiento Coliseo Benito Arias - Departamento' (precio base $569.831.329, estado 'Seleccionado'). La descripción no detalla las obras."
     }
   ],
   "adecuaciones": {
@@ -166,29 +200,30 @@
       "revisión estructural de las cerchas y correas de la nave central por un ingeniero (carga adicional de unos 15 kg/m² en unos 230 m²) antes del montaje",
       "inspección de la lámina metálica de la nave central (tornillos, traslapos, sellos y corrosión) y coordinación con el contrato 207-2026 de adecuación y mejoramiento del coliseo para no repetir trabajos",
       "fijación de los rieles con abrazaderas para lámina trapezoidal, sin perforar la lámina o sellando cada perforación",
-      "acceso seguro a la cubierta (de 8 a 15 m de alto): escalera fija con guarda, línea de vida y puntos de anclaje",
+      "acceso seguro a la cubierta (de 8 a 16 m de alto): escalera fija con guarda, línea de vida y puntos de anclaje",
       "puesta a tierra, protecciones contra sobretensiones (DPS) y pararrayos, porque es la estructura más alta del sector",
       "canalización desde la cubierta hasta el cuarto técnico del costado suroeste, tablero solar y medidor bidireccional",
       "circuito independiente y punto de carga para vehículo eléctrico en el parqueadero oeste"
     ],
-    "notas": "Cabe la potencia planeada con mucho margen. Se proponen 85 módulos de 550 Wp (5 filas × 17 columnas, en vertical) = 46,75 kWp, sobre la nave central, que es la franja más alta de la cubierta (alero norte ≈15,3 m, alero sur ≈7,9 m), cae hacia el sur con unos 9° (mira a 167°, casi al sur) y no tiene nada que le dé sombra. Con retiros de 0,5 m a los bordes, en esa sola franja (25,1 × 45,3 m de faldón) caben 19 filas × 20 columnas = 380 módulos (≈209 kWp); la franja este admite unos 119 módulos (≈65 kWp), la oeste media unos 136 (≈75 kWp) y la oeste baja unos 26 (≈14 kWp), aunque estas tres reciben sombra de la nave central en la mañana o en la tarde. El arreglo de 46,75 kWp produciría unos 5.200 kWh/mes, más del doble del consumo supuesto (2.400 kWh/mes): el coliseo sería un generador de excedentes de día, y el alumbrado nocturno de los eventos se seguiría tomando de la red (sin baterías, porque el nodo no es isla en el plan). Cada frontera solar se limita a 100 kW (CREG 174 de 2021), así que la cubierta podría crecer hasta ese tope si la comunidad energética lo necesita. Los árboles más cercanos están a más de 10 m al este y al oeste y no alcanzan a sombrear la nave central. Los dos inversores (2 × 20 kW) van en el muro este del anexo suroeste, por dentro del coliseo y bajo la cubierta, a la sombra todo el día y cerca del transformador de la esquina de la Carrera 54. El cargador de vehículo eléctrico va en el parqueadero oeste, construido con regalías en 2014–2019. No se propone otra cubierta: la lámina es metálica y se ve continua y sin parches en el satélite de 2026; su estado real se revisa en la visita y se coordina con el contrato 207-2026 de adecuación del coliseo, cuyo alcance exacto no se pudo leer."
+    "notas": "Cabe la potencia planeada con mucho margen. Se proponen 85 módulos de 550 Wp (5 filas × 17 columnas, en vertical) = 46,75 kWp sobre la nave central, que es la franja más alta de la cubierta (alero norte ≈15,6 m, alero sur ≈7,9 m), cae hacia el sur con unos 9,7° (mira a 167°, casi al sur) y no tiene nada que le dé sombra. Con retiros de 0,5 m a los bordes, en esa sola franja (24,7 m de ancho × 45,4 m de faldón inclinado) caben 19 filas × 20 columnas = 380 módulos (≈209 kWp); la franja este admite unos 144 módulos (≈79 kWp), la oeste media unos 136 (≈75 kWp) y la oeste baja unos 42 (≈23 kWp), aunque estas tres reciben sombra de la nave central en la mañana o en la tarde. Con el rendimiento de diseño del proyecto (3,69 kWh por kWp al día) el arreglo de 46,75 kWp produciría unos 5.200 kWh/mes, más del doble del consumo supuesto (2.400 kWh/mes): el coliseo sería un generador de excedentes de día, y el alumbrado nocturno de los eventos se seguiría tomando de la red (sin baterías, porque el nodo no es isla en el plan y no tiene banco asignado en data/microrred.json). Cada frontera solar se limita a 100 kW (CREG 174 de 2021), así que la cubierta podría crecer hasta ese tope si la comunidad energética lo necesita. Los árboles más cercanos están a más de 10 m al este y al oeste y no alcanzan a sombrear la nave central. Los dos inversores (2 × 20 kW) van en el muro este del anexo suroeste, por dentro del coliseo y bajo la cubierta, a la sombra todo el día y cerca del transformador de la esquina de la Carrera 54. El cargador de vehículo eléctrico va en el parqueadero oeste, construido con regalías. No se propone otra cubierta: la lámina es metálica y se ve continua y sin parches en el satélite de 2026; su estado real se revisa en la visita y se coordina con el contrato 207-2026 de adecuación del coliseo, cuyo alcance exacto no se pudo leer."
   },
   "incertidumbres": [
     "Street View solo tiene panoramas de noviembre de 2013, con el coliseo en obra (polisombra, andamios, muros sin pintar). No se encontraron fotos recientes en la web ni en la página de la Alcaldía. Los colores de fachada (blanco, rojo ladrillo, gris concreto) son los de 2013; el contrato 207-2026 de adecuación pudo cambiarlos.",
-    "La huella sale de la cubierta en Esri. Las medidas con Street View (triangulando desde dos panoramas) ubican la cubierta unos 1,5–2 m más al este que Esri; puede ser error de posición de los panoramas o de la imagen. Se dejó la posición de Esri, por eso en las comparaciones la nave central del modelo sobresale un poco a la derecha (oeste) de la foto.",
-    "Alturas medidas por ángulos desde los panoramas (cámara a 2,5 m): aleros norte de la nave central ≈15,3 m, franja este ≈13,5 m, franja oeste media ≈13,2 m, franja oeste baja ≈9,8 m; aleros sur entre ≈6 y ≈8 m. Error probable de ±1 m. Las pendientes hacia el sur (5,5° a 9,7°) salen de los bordes vistos desde el oeste, el noreste y el suroeste.",
-    "La cubierta real es una estructura abierta de cerchas metálicas blancas con espacios de ventilación entre franjas. El generador la representa con franjas inclinadas cerradas en sus costados (color gris oscuro, como el intradós que se ve en las fotos), columnas solo en las esquinas y sin las columnas de celosía inclinadas de las esquinas noreste y noroeste.",
-    "Bajo la nave central hay una cubierta baja (≈10,3 m) sobre el balcón de la gradería norte; su fondo hacia el sur (unos 7 m) es supuesto porque desde arriba la tapa la cubierta alta.",
-    "El interior no se ve: no se conocen la forma ni el número de filas de las graderías, la cancha (se dibujó una múltiple de 32 × 18 m en el centro, color supuesto), los baños y camerinos. La gradería norte se modeló como un bloque de 5,6 m con la losa del balcón a 7 m; la sur, más baja, como un bloque de 3,2 m.",
+    "La cubierta alta se ubicó con Street View y no con Esri. Triangulando seis esquinas desde tres o cuatro panoramas de la Calle 50 (diferencias de 0,6 m o menos entre pares), los aleros norte quedan 1,1–2,2 m más al este y 0,3–1,2 m más al sur que en Esri, mientras que lo bajo (bloque de camerinos, borde del costado este) coincide con Esri en ±0,4 m. Es el desplazamiento por altura de la foto satelital, que no se toma justo desde arriba: lo alto aparece corrido hacia el noroeste. Por eso las franjas se corrieron 1,5–1,8 m al este y 0,25–0,9 m al sur, conservando los anchos de Esri. Los bordes sur, más bajos y que no se ven bien en Street View, pueden tener un error de ±0,7 m.",
+    "Alturas medidas por triangulación (cámara a 2,5 m): alero norte de la nave central ≈15,6 m, franjas este y oeste media ≈13,5 m, visera ≈10,3 m. Los panoramas de frente (cxsjp, tAwHY) dan 0,3–0,5 m menos que el del noroeste (D3L3); se tomó un valor intermedio. La franja oeste baja (≈9,9 m al norte) solo se ve desde la Carrera 54. Los aleros sur (≈6,3–7,9 m) y las pendientes (5,5° a 9,7°) salen de vistas laterales; error probable ±1 m.",
+    "La cubierta real es una estructura abierta de cerchas metálicas blancas con espacios de ventilación entre franjas. El generador la representa con franjas inclinadas cerradas en sus costados (gris oscuro, como el intradós en sombra que se ve en las fotos) y columnas solo en las esquinas. Las columnas metálicas de celosía que se apoyan en los extremos del balcón norte (≈7 m) y suben inclinadas hasta la cubierta no se dibujaron: el generador solo hace torres verticales desde el suelo.",
+    "La cubierta baja (visera, ≈10,3 m) va de lado a lado bajo las tres franjas altas: 48 m, de u = −19,4 a 28,6 m según la triangulación. Su fondo hacia el sur (6,9 m) es supuesto porque desde arriba la tapa la cubierta alta. En los extremos sobresale del balcón y sus columnas quedan al aire; en la realidad cuelga de la estructura metálica.",
+    "El interior no se ve: no se conocen la forma ni el número de filas de las graderías, la cancha (se dibujó una múltiple de 32 × 18 m en el centro, color supuesto), los baños y camerinos. La gradería norte se modeló como un bloque de 5,6 m con la losa del balcón a 7 m. La gradería sur se modeló, según la vista desde la Calle 49, como un graderío de concreto que sube de 1,2 m junto a la cancha a ≈6,1 m hacia el sur (40°) más un bloque bajo de 2,7 m detrás; el balcón con baranda verde a ≈4,5 m del extremo oeste no se dibujó, y se supuso que la gradería sigue igual a todo lo ancho.",
     "Las columnas de concreto de la fachada norte son inclinadas en la realidad; el modelo las dibuja verticales (corredor). La baranda verde del balcón y de la gradería sur no se dibujó.",
-    "Los anexos de ladrillo pintado de rojo, el muro oeste y el costado este se midieron desde la calle (≈3,8–4,5 m); su fondo hacia adentro es supuesto (5–6 m). La escalera de concreto de la esquina noroeste no se modeló.",
+    "Los anexos de ladrillo pintado de rojo y el muro oeste se midieron desde la Carrera 54 (≈3,8–4,5 m); su fondo hacia adentro es supuesto (5–6 m). El costado este se corrigió: la esquina noreste del cuarto rojo (triangulada con tres panoramas en u≈30,3 m, v≈18,0 m, ≈4 m de alto) y el borde que se ve en Esri (u≈30,2 m) muestran que va 3 m más al este de lo que se tenía y llega hasta la gradería sur. Tiene cuartos de ladrillo rojo y un tramo de muro de bloque gris, pero el modelo lo pinta todo rojo; su fondo (5,3 m) es supuesto. La escalera de concreto de la esquina noroeste no se modeló.",
     "No se vio letrero con el nombre del coliseo (en 2013 estaba en obra); no se puso letrero.",
-    "Los árboles del este y del oeste se ubicaron en el satélite; su altura (11–13 m) es estimada.",
+    "Los árboles del este se ubicaron en el satélite. Los dos árboles grandes que en 2013 estaban entre la Carrera 54 y el coliseo ya no aparecen en la imagen satelital (allí quedó el parqueadero), así que los dos árboles del oeste se pasaron a la hilera que está al otro lado de la Carrera 54. Las alturas (11–13 m) son estimadas.",
     "No se sabe dónde están el tablero general ni la acometida; se supuso un cuarto técnico en el anexo suroeste, cerca del transformador del poste de la esquina de la Carrera 54.",
-    "El consumo de 2.400 kWh/mes es un supuesto por tipología (alumbrado nocturno de eventos); se reemplaza con las facturas de EPM."
+    "El consumo de 2.400 kWh/mes es un supuesto por tipología (alumbrado nocturno de eventos); se reemplaza con las facturas de EPM.",
+    "El parqueadero se ajustó al área gris pavimentada que se ve en Esri: unos 12 × 64 m entre la Carrera 54 y el coliseo, desde la calle del sur hasta la plaza norte (posterior a 2013)."
   ],
   "verificacion": {
-    "trace": "data/geo/img/coliseo_trace.png",
+    "trace": "data/geo/img/coliseo_v_trace_c.png",
     "vistas": [
       "data/geo/img/coliseo_sat.png",
       "data/geo/img/coliseo_sat45.png",
@@ -225,9 +260,29 @@
       "data/geo/img/coliseo_cmp2b_mezcla.png",
       "data/geo/img/coliseo_orbita_existente.png",
       "data/geo/img/coliseo_orbita_todo.png",
-      "data/geo/img/coliseo_orbita_lateral_todo.png"
+      "data/geo/img/coliseo_orbita_lateral_todo.png",
+      "data/geo/img/coliseo_v_trace_c_x3.png",
+      "data/geo/img/coliseo_v_rot_grid.png",
+      "data/geo/img/coliseo_v_rot75_panos.png",
+      "data/geo/img/coliseo_v_d3l_s.jpg",
+      "data/geo/img/coliseo_v_cmp_d3l_comparacion.png",
+      "data/geo/img/coliseo_v_cmp_d3l_c_comparacion.png",
+      "data/geo/img/coliseo_v_cmp_d3l_c_mezcla.png",
+      "data/geo/img/coliseo_v_o0t_ese.jpg",
+      "data/geo/img/coliseo_v_cmp_o0t_comparacion.png",
+      "data/geo/img/coliseo_v_o0t_stack.png",
+      "data/geo/img/coliseo_v_8wl_ene.jpg",
+      "data/geo/img/coliseo_v_8wl_valla2.jpg",
+      "data/geo/img/coliseo_v_cmp_8wl_b_comparacion.png",
+      "data/geo/img/coliseo_v_8wl_stack_b.png",
+      "data/geo/img/coliseo_v_cxs_proj_b.png",
+      "data/geo/img/coliseo_v_taw_proj_b.png",
+      "data/geo/img/coliseo_v_cmp_cxs_comparacion.png",
+      "data/geo/img/coliseo_v_cmp_cxs_mezcla.png",
+      "data/geo/img/coliseo_v_orbita_todo.png",
+      "data/geo/img/coliseo_v_orbita_todo_ne.png"
     ],
-    "nota": "Huella: 3 pasadas de trace.py (la tercera, ampliada ×4 en coliseo_trace_x4.png). Las cuatro franjas de la cubierta se midieron con perfiles de brillo en el marco girado 13° (escalones en u = −21,3, −10,0 y +16,1 m; bordes norte y sur de cada franja) y coinciden con los bordes de la lámina en ±0,5 m; la segunda pasada recortó la gradería sur hasta la franja clara (−25,5 m). Alturas: triangulación con dos panoramas de la Calle 50 (cxsjp y tAwHY13, que coinciden en ±0,4 m para el alero de la nave central a 15,1–15,3 m) y bordes de cubierta vistos desde la Carrera 54 (8Lplca, zXv5), el noreste (S-se) y el suroeste (UD9F). Comparación 1 (cxsjpOIO8Y0Z3zhNePjq6A, rumbo 167, pitch 12, fov 100): coinciden el alero de la nave central, los de las franjas laterales, la losa del balcón a 7 m, el muro blanco de 5,6 m, las ventanas, las dos puertas y el anexo rojo; la nave central del modelo sobresale ≈2 m a la derecha por el desfase Esri–Street View. Se aclaró el color de los costados de las franjas (el material metálico salía negro) y se subió la franja oeste media de 12,1 a 13,2 m en el alero norte (cmp1 → cmp1b). Comparación 2 (8Lplca99ZsiQzUa4Ugdrhg, rumbo 86, pitch 10, fov 100): coinciden el muro oeste de 4 m, los anexos rojos, sus puertas y la caída de la cubierta hacia el sur; se bajó la franja oeste baja a 9,9 m y 5,5° (cmp2 → cmp2b); el borde superior del modelo queda ≈1 m más alto que la foto en la punta norte. Las pendientes de las franjas este y central se ajustaron con alambres proyectados sobre la vista del noreste. Las vistas en órbita con capa 'todo' muestran los 85 módulos apoyados sobre el faldón de la nave central, sin flotar ni atravesar, y el cargador en el parqueadero oeste."
+    "nota": "Huella: 3 pasadas de trace.py (la tercera, ampliada ×4 en coliseo_trace_x4.png). Las cuatro franjas de la cubierta se midieron con perfiles de brillo en el marco girado 13° (escalones en u = −21,3, −10,0 y +16,1 m; bordes norte y sur de cada franja) y coinciden con los bordes de la lámina en ±0,5 m; la segunda pasada recortó la gradería sur hasta la franja clara (−25,5 m). Alturas: triangulación con dos panoramas de la Calle 50 (cxsjp y tAwHY13, que coinciden en ±0,4 m para el alero de la nave central a 15,1–15,3 m) y bordes de cubierta vistos desde la Carrera 54 (8Lplca, zXv5), el noreste (S-se) y el suroeste (UD9F). Comparación 1 (cxsjpOIO8Y0Z3zhNePjq6A, rumbo 167, pitch 12, fov 100): coinciden el alero de la nave central, los de las franjas laterales, la losa del balcón a 7 m, el muro blanco de 5,6 m, las ventanas, las dos puertas y el anexo rojo; la nave central del modelo sobresale ≈2 m a la derecha por el desfase Esri–Street View. Se aclaró el color de los costados de las franjas (el material metálico salía negro) y se subió la franja oeste media de 12,1 a 13,2 m en el alero norte (cmp1 → cmp1b). Comparación 2 (8Lplca99ZsiQzUa4Ugdrhg, rumbo 86, pitch 10, fov 100): coinciden el muro oeste de 4 m, los anexos rojos, sus puertas y la caída de la cubierta hacia el sur; se bajó la franja oeste baja a 9,9 m y 5,5° (cmp2 → cmp2b); el borde superior del modelo queda ≈1 m más alto que la foto en la punta norte. Las pendientes de las franjas este y central se ajustaron con alambres proyectados sobre la vista del noreste. Las vistas en órbita con capa 'todo' muestran los 85 módulos apoyados sobre el faldón de la nave central, sin flotar ni atravesar, y el cargador en el parqueadero oeste. Verificación independiente (21-10-2026): (1) ubicación confirmada con la valla del Parque Educativo vista desde la Calle 49 y con SECOP II; (2) la huella de Esri se volvió a medir con perfiles en el marco girado 13° y coincide con lo que tenía la especificación en ±0,5 m, pero la triangulación con Street View mostró que la cubierta alta está corrida en Esri por la inclinación de la toma: se movieron las cuatro franjas y la visera 1,5–1,8 m al este y hasta 0,9 m al sur, la nave central quedó de 24,7 m de ancho y la franja este de 10,2 m, y se subieron un poco las pendientes de la nave central (9,7°) y de la franja oeste media (9,0°); el costado este se corrió 3 m al este y se alargó hasta la gradería sur; la gradería sur pasó de un bloque de 3,2 m a un graderío inclinado con un bloque bajo detrás; los árboles del oeste que caían sobre la vía se pasaron a la hilera real y el parqueadero se ajustó al área pavimentada. (3) Comparaciones con dos panoramas nuevos: D3L3 (rumbo 150) y o0TGB (rumbo 117), más 8Wluy (rumbo 66) para la gradería sur y cxsjp de nuevo para control: después de los cambios coinciden aleros, visera, bloque de camerinos y anexos. (4) Módulos recalculados por franja con retiros; kwp_factible = 85 × 0,55 = 46,75."
   },
   "volumenes": [
     {
@@ -280,7 +335,7 @@
       "techo": {
         "tipo": "una_agua",
         "caida": "S",
-        "pendiente": 8.5,
+        "pendiente": 9.0,
         "voladizo": 0.5,
         "material": "zinc",
         "color": "#5d8c98"
@@ -298,7 +353,7 @@
         0.44
       ],
       "largo": 44.7,
-      "ancho": 25.1,
+      "ancho": 24.7,
       "rumbo_eje": 347,
       "abierto": true,
       "piso": false,
@@ -310,7 +365,7 @@
       "techo": {
         "tipo": "una_agua",
         "caida": "S",
-        "pendiente": 9.3,
+        "pendiente": 9.7,
         "voladizo": 0.5,
         "material": "zinc",
         "color": "#5d8c98"
@@ -324,11 +379,11 @@
       "id": "techo_este",
       "nombre": "Cubierta escalonada: franja este",
       "centro": [
-        22.6,
-        4.81
+        22.5,
+        4.78
       ],
       "largo": 42.0,
-      "ancho": 10.0,
+      "ancho": 10.2,
       "rumbo_eje": 347,
       "abierto": true,
       "piso": false,
@@ -461,26 +516,52 @@
     },
     {
       "id": "graderia_sur",
-      "nombre": "Bloque sur: gradería baja",
+      "nombre": "Gradería sur (graderío de concreto que sube hacia el sur)",
       "centro": [
-        8.05,
-        -20.21
+        7.79,
+        -19.14
       ],
       "largo": 46.6,
-      "ancho": 8.0,
+      "ancho": 5.8,
       "rumbo_eje": 77,
       "base": 0,
-      "altura_alero": 3.2,
+      "altura_alero": 1.2,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "caida": "N",
+        "pendiente": 40,
+        "voladizo": 0,
+        "material": "concreto",
+        "color": "#b4b3ac"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#a9aaa4"
+      }
+    },
+    {
+      "id": "graderia_sur_fondo",
+      "nombre": "Bloque bajo detrás de la gradería sur (pasillo y cuartos)",
+      "centro": [
+        8.69,
+        -23.03
+      ],
+      "largo": 46.6,
+      "ancho": 2.2,
+      "rumbo_eje": 77,
+      "base": 0,
+      "altura_alero": 2.7,
       "pisos": 1,
       "techo": {
         "tipo": "plano",
         "parapeto": 0,
         "material": "concreto",
-        "color": "#d3d1ca"
+        "color": "#c9c8c1"
       },
       "fachada": {
         "material": "pañete_pintado",
-        "color": "#c1c1ba",
+        "color": "#b9b9b2",
         "ventanas": {
           "tipo": "ventana",
           "ancho": 1.5,
@@ -673,20 +754,20 @@
       "tipo": "parqueadero",
       "poligono": [
         [
-          -34.33,
-          -33.58
+          -33.76,
+          -36.02
         ],
         [
-          -25.07,
-          -31.45
+          -22.07,
+          -33.32
         ],
         [
-          -35.64,
-          14.35
+          -36.58,
+          29.53
         ],
         [
-          -44.9,
-          12.21
+          -48.27,
+          26.83
         ]
       ]
     },
@@ -719,20 +800,20 @@
     },
     {
       "tipo": "arbol",
-      "altura": 12,
-      "copa": 11,
+      "altura": 11,
+      "copa": 8,
       "centro": [
-        -45.57,
-        1.79
+        -55.84,
+        -2.63
       ]
     },
     {
       "tipo": "arbol",
       "altura": 11,
-      "copa": 10,
+      "copa": 8,
       "centro": [
-        -42.42,
-        -11.85
+        -50.67,
+        -25.04
       ]
     }
   ]
