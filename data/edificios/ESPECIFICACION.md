@@ -110,6 +110,35 @@ lo convierte en un modelo 3D (GLB) con dos capas: **existente** (réplica del ed
 - `fv[].faldon` elige la cara de la cubierta cuya normal apunta más hacia ese punto cardinal; en techos curvos, `N`/`S` (o `E`/`O`) eligen la mitad de la bóveda.
   En techo plano, `inclinacion` y `azimut` (grados desde el norte hacia donde mira el panel).
 - `kwp_factible` debe ser igual a módulos × 0,55; el generador avisa si no coincide.
+- Detalle que se genera sin pedirlo:
+  - Vanos recortados con jambas, carpintería (marco, parteluces, vidrio hundido; barrotes en `reja`), alféizar y dintel.
+  - Puertas con marco y tableros, y cortina enrollable en portones.
+  - Tapa de alero, caballetes, cielo raso bajo el alero, canal y bajantes, y remate de antepechos.
+  - Columnas con basa y capitel.
+  - Rieles y anclajes de los módulos, y estructura de las marquesinas.
+  - Señales, rejillas y bolardos en las baterías.
+
+  Nada de eso cambia medidas ni posiciones de la especificación. Si una ventana queda tapada por otro volumen o por una columna
+  delante, no se dibuja. Las marquesinas de menos de 1,5 m de `altura` se arman como estructura en tierra, con dos patas por pórtico y 10° si no
+  se indica `inclinacion`.
+- Volúmenes que se tocan o se solapan:
+  - Un muro (o tramo) que cae dentro de otro volumen cerrado no se dibuja, ni sus vanos.
+  - Si dos muros quedan en el mismo plano mirando al mismo lado, se conserva el del volumen que aparece primero en `volumenes`.
+  - Si dos cubiertas vecinas están a la misma altura y sus aleros se solapan, la del volumen posterior se levanta 4 cm (u 8) y su alero se acorta
+    6 cm (o 12), para que no queden coplanares.
+  - Las columnas de corredores anchos que quedarían pegadas a un muro no se ponen, y la viga se apoya en el muro. Las pilastras (volúmenes
+    abiertos angostos) sí se ponen.
+  - Los tramos de `cerramiento` que pasan a menos de 30 cm de un volumen, o por una columna, se cortan.
+- Suelos: cada tipo tiene su altura fija, de la más baja a la más alta: `predio` (3 cm), `zona_verde`, `parqueadero`, `patio`, `plaza`, `anden`
+  y `cancha` (18 cm), cada uno 2,5 cm sobre el anterior. Si dos se superponen, se ve el de más arriba. Los pisos de corredores y pórticos
+  van a 21 cm.
+- Conexión del proyecto (nodo `adecuaciones/conexion`):
+  - La ruta de potencia va en ámbar: arreglos → muro → inversores → baterías → tablero/medidor → red. La de datos va en violeta:
+    pasarela → antena.
+  - Si hay un `poste` a menos de 40 m de un muro, es el punto de conexión a la red. Si no, la acometida va en la fachada del volumen de
+    `inversores.volumen` que da a la calle más cercana a los equipos.
+  - El tablero se pone en el primer tramo de muro libre (sin vanos, bajantes ni columnas delante) cerca de ese punto.
+  - Para que la conexión salga bien, conviene que la especificación traiga los `poste` de la red que se ven en Street View.
 
 ## Herramientas de comparación
 
@@ -118,6 +147,8 @@ lo convierte en un modelo 3D (GLB) con dos capas: **existente** (réplica del ed
   `<out>_comparacion.png` (foto | modelo) y `<out>_mezcla.png` (50 % / 50 %) para comparar siluetas, alturas, pendientes y colores.
 - `node scripts/modelos/render_vista.mjs <id> --orbita AZ,EL,DIST [--mira x,y,z] --out data/geo/img/<id>_orbita.png [--capa existente|todo]` vista aérea.
 - Compila en `data/geo/img/_modelos/<id>/`; la versión final para la web se genera con `cd scripts/modelos && node build_edificios.mjs`.
+- `cd scripts/modelos && node check_coplanar.mjs [carpeta o .glb]` busca caras coplanares que parpadearían (z-fighting) y resume triángulos,
+  llamadas de dibujo y peso de cada GLB. Si una especificación nueva deja muros o cubiertas en el mismo plano, el informe dice dónde.
 
 ## Reglas de calidad
 
