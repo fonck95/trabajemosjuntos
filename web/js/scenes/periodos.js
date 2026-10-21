@@ -244,6 +244,8 @@ export function mount(root) {
     areaSeg.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { area = b.dataset.a; areaSeg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); renderPanel(); }));
   }
   const Y0 = 2004, Y1 = 2026;
+  // fuente abreviada: la entidad y el conjunto de datos, sin URLs ni rutas (el texto completo queda en el título)
+  const srcShort = (f) => { const t = String(f || '').replace(/\(?https?:\/\/[^\s);]+\)?/g, '').replace(/data\/fuentes\/[^\s;,)]+/g, '').split(';')[0].replace(/[\s,(]+$/, '').trim(); return t.length > 90 ? `${t.slice(0, 88)}…` : t; };
   function spark(ind) {
     const W = 220, Hh = 64, padL = 4, padR = 4, padT = 8, padB = 14;
     const pts = Object.entries(ind.serie || {}).map(([y, v]) => [+y, +v]).filter(([y, v]) => y >= Y0 && y <= Y1 && Number.isFinite(v)).sort((a, b) => a[0] - b[0]);
@@ -262,7 +264,7 @@ export function mount(root) {
     } else delta = '<span class="delta">sin dato en el periodo</span>';
     return `<div class="spark"><p><b>${ind.nombre}</b> <span class="note">${ind.unidad || ''}</span></p>
       <svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${ind.nombre}, ${pts[0][0]}–${pts[pts.length - 1][0]}">${bands}<path d="${path}"/>${dots}<text x="${padL}" y="${Hh - 2}">${Y0}</text><text x="${W - padR}" y="${Hh - 2}" text-anchor="end">${Y1}</text></svg>
-      ${delta}<p class="src">${ind.fuente || ''}</p></div>`;
+      ${delta}<p class="src" title="${(ind.fuente || '').replace(/"/g, '&quot;')}">${srcShort(ind.fuente)}</p></div>`;
   }
   function renderPanel() {
     if (!panelEl) return;

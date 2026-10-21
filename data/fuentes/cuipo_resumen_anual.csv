@@ -1,0 +1,41 @@
+anio,periodo_corte,anio_completo,concepto,cuenta,medida,valor_pesos,url
+2023,20231201,sí,recaudo_total,1,recaudo,67223276845.0,https://www.datos.gov.co/d/9axr-9gnb
+2023,20231201,sí,ingresos_corrientes,1.1,recaudo,55526168501.0,https://www.datos.gov.co/d/9axr-9gnb
+2023,20231201,sí,tributarios,1.1.01,recaudo,19768240881.0,https://www.datos.gov.co/d/9axr-9gnb
+2023,20231201,sí,no_tributarios,1.1.02,recaudo,35757927620.0,https://www.datos.gov.co/d/9axr-9gnb
+2023,20231201,sí,transferencias_corrientes,1.1.02.06,recaudo,29032037340.0,https://www.datos.gov.co/d/9axr-9gnb
+2023,20231201,sí,recursos_de_capital,1.2,recaudo,11697108344.0,https://www.datos.gov.co/d/9axr-9gnb
+2023,20231201,sí,compromisos_total,2,compromisos de la vigencia,61220586617.0,https://www.datos.gov.co/d/4f7r-epif
+2023,20231201,sí,funcionamiento,2.1,compromisos de la vigencia,7851960463.0,https://www.datos.gov.co/d/4f7r-epif
+2023,20231201,sí,servicio_deuda,2.2,compromisos de la vigencia,0,https://www.datos.gov.co/d/4f7r-epif
+2023,20231201,sí,inversion,2.3,compromisos de la vigencia,53368626154.0,https://www.datos.gov.co/d/4f7r-epif
+2024,20241201,sí,recaudo_total,1,recaudo,55022884240.0,https://www.datos.gov.co/d/9axr-9gnb
+2024,20241201,sí,ingresos_corrientes,1.1,recaudo,47073309745.0,https://www.datos.gov.co/d/9axr-9gnb
+2024,20241201,sí,tributarios,1.1.01,recaudo,16545423247.0,https://www.datos.gov.co/d/9axr-9gnb
+2024,20241201,sí,no_tributarios,1.1.02,recaudo,30527886498.0,https://www.datos.gov.co/d/9axr-9gnb
+2024,20241201,sí,transferencias_corrientes,1.1.02.06,recaudo,27550849763.0,https://www.datos.gov.co/d/9axr-9gnb
+2024,20241201,sí,recursos_de_capital,1.2,recaudo,7949574495.0,https://www.datos.gov.co/d/9axr-9gnb
+2024,20241201,sí,compromisos_total,2,compromisos de la vigencia,47334676275.0,https://www.datos.gov.co/d/4f7r-epif
+2024,20241201,sí,funcionamiento,2.1,compromisos de la vigencia,8182070806.0,https://www.datos.gov.co/d/4f7r-epif
+2024,20241201,sí,servicio_deuda,2.2,compromisos de la vigencia,0,https://www.datos.gov.co/d/4f7r-epif
+2024,20241201,sí,inversion,2.3,compromisos de la vigencia,39152605469.0,https://www.datos.gov.co/d/4f7r-epif
+2025,20251201,sí,recaudo_total,1,recaudo,65882781768.0,https://www.datos.gov.co/d/9axr-9gnb
+2025,20251201,sí,ingresos_corrientes,1.1,recaudo,55571740393.0,https://www.datos.gov.co/d/9axr-9gnb
+2025,20251201,sí,tributarios,1.1.01,recaudo,18799947929.0,https://www.datos.gov.co/d/9axr-9gnb
+2025,20251201,sí,no_tributarios,1.1.02,recaudo,36771792464.0,https://www.datos.gov.co/d/9axr-9gnb
+2025,20251201,sí,transferencias_corrientes,1.1.02.06,recaudo,32438303823.0,https://www.datos.gov.co/d/9axr-9gnb
+2025,20251201,sí,recursos_de_capital,1.2,recaudo,10311041375.0,https://www.datos.gov.co/d/9axr-9gnb
+2025,20251201,sí,compromisos_total,2,compromisos de la vigencia,56560599136.0,https://www.datos.gov.co/d/4f7r-epif
+2025,20251201,sí,funcionamiento,2.1,compromisos de la vigencia,10992134414.0,https://www.datos.gov.co/d/4f7r-epif
+2025,20251201,sí,servicio_deuda,2.2,compromisos de la vigencia,0,https://www.datos.gov.co/d/4f7r-epif
+2025,20251201,sí,inversion,2.3,compromisos de la vigencia,45568464722.0,https://www.datos.gov.co/d/4f7r-epif
+2026,20260601,no,recaudo_total,1,recaudo,42780170768.0,https://www.datos.gov.co/d/9axr-9gnb
+2026,20260601,no,ingresos_corrientes,1.1,recaudo,29595081291.0,https://www.datos.gov.co/d/9axr-9gnb
+2026,20260601,no,tributarios,1.1.01,recaudo,11169428981.0,https://www.datos.gov.co/d/9axr-9gnb
+2026,20260601,no,no_tributarios,1.1.02,recaudo,18425652310.0,https://www.datos.gov.co/d/9axr-9gnb
+2026,20260601,no,transferencias_corrientes,1.1.02.06,recaudo,17300552289.0,https://www.datos.gov.co/d/9axr-9gnb
+2026,20260601,no,recursos_de_capital,1.2,recaudo,13185089477.0,https://www.datos.gov.co/d/9axr-9gnb
+2026,20260601,no,compromisos_total,2,compromisos de la vigencia,23079080501.0,https://www.datos.gov.co/d/4f7r-epif
+2026,20260601,no,funcionamiento,2.1,compromisos de la vigencia,4900214449.0,https://www.datos.gov.co/d/4f7r-epif
+2026,20260601,no,servicio_deuda,2.2,compromisos de la vigencia,0,https://www.datos.gov.co/d/4f7r-epif
+2026,20260601,no,inversion,2.3,compromisos de la vigencia,18178866052.0,https://www.datos.gov.co/d/4f7r-epif
