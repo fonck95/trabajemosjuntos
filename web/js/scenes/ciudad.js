@@ -11,7 +11,7 @@ export function mount(root) {
   const xs = EDIFICIOS.map((e) => e.x), ys = EDIFICIOS.map((e) => e.y);
   const cx = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0, cy = ys.length ? (Math.min(...ys) + Math.max(...ys)) / 2 : 0;
   const ext = xs.length ? Math.max(120, Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) : 600;
-  const st = new Stage(el, { cam: [cx - ext * 0.45, ext * 0.75, -cy + ext * 0.85], target: [cx, 0, -cy], fov: 38, minDist: 25, maxDist: 1500, tone: 'aces', exposure: 1.05 });
+  const st = new Stage(el, { cam: [cx - ext * 0.32, ext * 0.55, -cy + ext * 0.62], target: [cx, 0, -cy], fov: 38, minDist: 25, maxDist: 1500, tone: 'aces', exposure: 1.05 });
   st.camera.far = 5000; st.camera.updateProjectionMatrix();
   const sc = st.sunLight.shadow.camera; Object.assign(sc, { left: -520, right: 520, top: 520, bottom: -520, near: 1, far: 1600 });
   st.sunLight.position.set(260, 520, 180); st.sunLight.shadow.mapSize.set(4096, 4096); st.sunLight.shadow.normalBias = 0.6;

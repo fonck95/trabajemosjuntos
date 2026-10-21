@@ -43,7 +43,8 @@ export function mount(root) {
   // Etiquetas y piezas animadas sobre el modelo
   const tags = new THREE.Group(); S.add(tags);
   if (REAL) {
-    tags.visible = false;
+    // las etiquetas del modelo esquemático no corresponden a la réplica (CSS2D no hereda la visibilidad del grupo)
+    queueMicrotask(() => tags.children.forEach((o) => { o.visible = false; }));
     st.label('<b>E.S.E. Hospital Héctor Abad Gómez</b><br><small>réplica del edificio real · con el proyecto</small>', 'lbl-node', [0, HY + 4, 0]);
     (REAL.puntos || []).forEach((q) => st.label(q.tipo === 'bess' ? `Baterías ${fmtN(REAL.bess?.kwh || 0)} kWh` : 'Marquesina solar', 'lbl-small', [q.x, 4.5, -q.y]));
   }
