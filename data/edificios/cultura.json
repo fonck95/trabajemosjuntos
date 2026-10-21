@@ -679,11 +679,11 @@
     {
       "tipo": "arbol",
       "centro": [
-        10.0,
+        8.7,
         -13.0
       ],
-      "altura": 6,
-      "copa": 4
+      "altura": 5,
+      "copa": 3
     },
     {
       "tipo": "arbol",
@@ -719,8 +719,8 @@
       "kw": 10,
       "tipo": "gabinete",
       "centro": [
-        6.43,
-        -14.53
+        4.97,
+        -14.86
       ],
       "largo": 2.3,
       "ancho": 1.2,
@@ -731,7 +731,7 @@
       "kw": 10,
       "volumen": "anexo_sur",
       "lado": "S",
-      "pos": 3.9
+      "pos": 2.5
     },
     "domotica": [
       "medidor bidireccional en la frontera con EPM",
