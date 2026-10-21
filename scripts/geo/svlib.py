@@ -17,5 +17,6 @@ def persp(eq, yaw_deg, pitch_deg=8, fov=75, W=1200, H=800):
     p = math.radians(pitch_deg); cp, sp = math.cos(p), math.sin(p)
     y2 = d[...,1]*cp + d[...,2]*sp; z2 = -d[...,1]*sp + d[...,2]*cp
     lonr = np.arctan2(d[...,0], z2) + math.radians(yaw_deg); latr = np.arcsin(np.clip(y2, -1, 1))
-    u = ((lonr/(2*math.pi)) % 1.0) * w; v = (0.5 - latr/math.pi) * h
+    # en los panoramas de Google la columna central corresponde al rumbo del carro (heading): se suma media vuelta
+    u = ((lonr/(2*math.pi) + 0.5) % 1.0) * w; v = (0.5 - latr/math.pi) * h
     return Image.fromarray(eq[np.clip(v.astype(int), 0, h-1), np.clip(u.astype(int), 0, w-1)])
