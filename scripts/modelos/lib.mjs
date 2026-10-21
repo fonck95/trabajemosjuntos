@@ -26,26 +26,31 @@ export function png(w, h, px) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
 }
 
-// Acumula geometrías por material y las fusiona en una primitiva por material (menos draw calls)
+// Acumula geometrías por material y las fusiona en una primitiva por material (menos draw calls).
+// Una clave "material#rrggbb" tiñe la geometría con color por vértice (COLOR_0): así todas las
+// superficies del mismo acabado (pintura, ladrillo, fibrocemento…) comparten un solo material.
 export class Part {
   constructor() { this.byMat = new Map(); }
   get empty() { return this.byMat.size === 0; }
-  add(mat, geo, pos = [0, 0, 0], rot = [0, 0, 0], keepUV = false) {
-    const g = geo.index ? geo.clone() : geo.clone();
+  add(mat, geo, pos = [0, 0, 0], rot = [0, 0, 0], keepUV = true) {
+    const g = geo.clone();
     g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(...pos), new THREE.Quaternion().setFromEuler(new THREE.Euler(...rot)), new THREE.Vector3(1, 1, 1)));
     return this.addRaw(mat, g, keepUV);
   }
-  // Geometría ya transformada (o con matriz arbitraria)
-  addRaw(mat, g, keepUV = false, matrix) {
+  // Geometría ya transformada (o con matriz arbitraria). Las UV se conservan; partMesh las quita a los materiales sin textura.
+  addRaw(mat, g, keepUV = true, matrix) {
     if (matrix) g = g.clone().applyMatrix4(matrix);
+    let col = null;
+    const i = mat.indexOf('#');
+    if (i > 0) { col = lin(mat.slice(i)); mat = mat.slice(0, i); }
     if (!keepUV && g.attributes.uv) g.deleteAttribute('uv');
     if (keepUV && !g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
     if (!g.attributes.normal) g.computeVertexNormals();
-    for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
-    if (!g.index) { const idx = []; for (let i = 0; i < g.attributes.position.count; i++) idx.push(i); g.setIndex(idx); }
-    const key = keepUV ? `${mat}` : mat;
-    if (!this.byMat.has(key)) this.byMat.set(key, []);
-    this.byMat.get(key).push(g);
+    for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv', 'color'].includes(k)) g.deleteAttribute(k);
+    if (col) { const n = g.attributes.position.count, c = new Float32Array(n * 3); for (let k = 0; k < n; k++) c.set(col, 3 * k); g.setAttribute('color', new THREE.Float32BufferAttribute(c, 3)); }
+    if (!g.index) { const idx = []; for (let k = 0; k < g.attributes.position.count; k++) idx.push(k); g.setIndex(idx); }
+    if (!this.byMat.has(mat)) this.byMat.set(mat, []);
+    this.byMat.get(mat).push(g);
     return this;
   }
   box(mat, w, h, d, x, y, z, rot) { return this.add(mat, new THREE.BoxGeometry(w, h, d), [x, y + h / 2, z], rot); }
@@ -75,6 +80,7 @@ export class Builder {
     p.setAttribute('POSITION', d.createAccessor().setType('VEC3').setArray(new Float32Array(g.attributes.position.array)).setBuffer(buf));
     p.setAttribute('NORMAL', d.createAccessor().setType('VEC3').setArray(new Float32Array(g.attributes.normal.array)).setBuffer(buf));
     if (g.attributes.uv) p.setAttribute('TEXCOORD_0', d.createAccessor().setType('VEC2').setArray(new Float32Array(g.attributes.uv.array)).setBuffer(buf));
+    if (g.attributes.color) p.setAttribute('COLOR_0', d.createAccessor().setType('VEC3').setArray(new Float32Array(g.attributes.color.array)).setBuffer(buf));
     p.setIndices(d.createAccessor().setType('SCALAR').setArray(new Uint32Array(g.index.array)).setBuffer(buf));
     this.tris += g.index.count / 3;
     return p;
@@ -83,9 +89,11 @@ export class Builder {
     const mesh = this.doc.createMesh(name);
     for (const [matKey, geos] of part.byMat) {
       const withUV = this.uvMats.has(matKey);
+      const withColor = geos.some((g) => g.attributes.color);
       const gs = geos.map((g) => {
         if (withUV && !g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
         if (!withUV && g.attributes.uv) g.deleteAttribute('uv');
+        if (withColor && !g.attributes.color) g.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 3).fill(1), 3));
         return g;
       });
       if (!this.mats[matKey]) throw new Error(`material sin definir: ${matKey}`);
@@ -141,6 +149,8 @@ export const TEX = {
     let s = 170 + 70 * Math.sin(u * Math.PI); if (v > 0.9) s *= 0.62; s += (hash(Math.floor((x / 128) * 5), Math.floor((y / 128) * 3)) - 0.5) * 40;
     return [s, s, s];
   }),
+  // losa de piso: grano muy suave, sin cuadrícula (se lee igual en tema claro y oscuro)
+  losa: png(64, 64, (x, y) => { const v = 236 + (hash(x, y) - 0.5) * 9 + (hash(x >> 4, y >> 4) - 0.5) * 7; return [v, v, v]; }),
   concreto: png(64, 64, (x, y) => { const v = 225 + (hash(x, y) - 0.5) * 26 + (hash(x >> 3, y >> 3) - 0.5) * 18; return [v, v, v]; }),
   // ladrillo visto: 25 × 7,5 cm con junta de 1 cm (1 m × 1 m)
   ladrillo: png(128, 128, (x, y) => {
@@ -160,6 +170,12 @@ export const TEX = {
   reja: png(64, 64, (x) => { const u = ((x / 64) * 8) % 1; return u < 0.12 ? [210, 210, 210] : [60, 76, 88]; }),
   // cancha: líneas blancas sobre base (se tiñe)
   pasto: png(64, 64, (x, y) => { const v = 200 + (hash(x, y) - 0.5) * 50; return [v, v, v]; }),
+  // malla eslabonada (rombos de 5 cm, alambre opaco y huecos transparentes); 1 m = 4 repeticiones
+  malla: png(64, 64, (x, y) => { const u = (x + y) % 16, v = (x - y + 64) % 16; return u < 2 || v < 2 ? [200, 204, 206, 255] : [0, 0, 0, 0]; }),
+  // cortina enrollable: lamas de 8 cm con sombra en la junta (1 m)
+  persiana: png(8, 128, (x, y) => { const t = ((y / 128) * 12.5) % 1; const v = t < 0.12 ? 120 : t < 0.2 ? 250 : 215 - t * 40; return [v, v, v]; }),
+  // rejilla de ventilación: celosía metálica horizontal (lamas cada 2,5 cm en 20 cm)
+  rejilla: png(8, 64, (x, y) => { const t = ((y / 64) * 8) % 1; const v = t < 0.35 ? 70 : t < 0.5 ? 245 : 200; return [v, v, v]; }),
   asfalto: png(64, 64, (x, y) => { const v = 200 + (hash(x, y) - 0.5) * 40; return [v, v, v]; }),
 };
 
@@ -176,19 +192,25 @@ export function baseMaterials(b) {
   b.mat('celdas', { color: '#ffffff', rough: 0.22, metal: 0.3, tex: TEX.celdas });
   b.mat('blanco', { color: '#f4f4f2', rough: 0.6 });
   b.mat('lamina', { color: '#2a2f38', rough: 0.6 });
+  b.mat('advertencia', { color: '#f4c400', rough: 0.5 });
+  b.mat('negro', { color: '#17191b', rough: 0.6 });
+  b.mat('rejilla', { color: '#c9cdd0', rough: 0.5, metal: 0.4, tex: TEX.rejilla });
 }
 
-// ---------- módulo fotovoltaico (1,134 × 2,278 m) con marco de aluminio y celdas por textura
+// ---------- módulo fotovoltaico (1,134 × 2,278 m) con marco de aluminio y celdas por textura.
+// Origen en la cara inferior del marco: el vidrio queda 3,2 cm arriba y la lámina posterior 1,8 cm
+// más abajo (sin caras coplanares); el marco sobresale 7 mm sobre el vidrio.
 export const MOD = { W: 1.134, L: 2.278, T: 0.035, kwp: 0.55 };
 export function pvMesh(b, name = 'modulo_fv') {
-  const { W, L, T } = MOD, f = 0.035;
+  const { W, L, T } = MOD, f = 0.035, h = T + 0.004;
   const frame = new Part()
-    .box('aluminio', W, T, f, 0, 0, -L / 2 + f / 2).box('aluminio', W, T, f, 0, 0, L / 2 - f / 2)
-    .box('aluminio', f, T, L, -W / 2 + f / 2, 0, 0).box('aluminio', f, T, L, W / 2 - f / 2, 0, 0);
+    .box('aluminio', W, h, f, 0, 0, -L / 2 + f / 2).box('aluminio', W, h, f, 0, 0, L / 2 - f / 2)
+    .box('aluminio', f, h, L - 2 * f, -W / 2 + f / 2, 0, 0).box('aluminio', f, h, L - 2 * f, W / 2 - f / 2, 0, 0);
   const cells = new Part();
   const top = new THREE.PlaneGeometry(W - 2 * f, L - 2 * f); top.rotateX(-Math.PI / 2);
-  cells.add('celdas', top, [0, T * 0.92, 0], [0, 0, 0], true);
-  cells.box('lamina', W - 2 * f, T * 0.8, L - 2 * f, 0, 0.002, 0);
+  cells.add('celdas', top, [0, T - 0.003, 0], [0, 0, 0], true);
+  cells.box('lamina', W - 2 * f, 0.01, L - 2 * f, 0, 0.004, 0);
+  cells.box('lamina', 0.16, 0.025, 0.12, 0, -0.021, -L / 2 + 0.25); // caja de conexiones
   const mesh = b.doc.createMesh(name);
   for (const part of [frame, cells]) for (const [k, geos] of part.byMat) mesh.addPrimitive(b.geoToPrim(mergeGeometries(geos.map((g) => { if (b.uvMats.has(k)) return g; if (g.attributes.uv) g.deleteAttribute('uv'); return g; }), false), b.mats[k]));
   return mesh;
@@ -203,24 +225,53 @@ export function pvArray(b, mesh, parent, cols, rows, origin, tilt = 0.17, gapX =
   }
 }
 
+// Señal de riesgo eléctrico: triángulo amarillo con borde negro, en el plano z = 0 mirando a +z
+export function warnSign(p, size, m) {
+  const tri = (s, z) => { const sh = new THREE.Shape([new THREE.Vector2(-s / 2, -s * 0.29), new THREE.Vector2(s / 2, -s * 0.29), new THREE.Vector2(0, s * 0.58)]); const g = new THREE.ExtrudeGeometry(sh, { depth: 0.006, bevelEnabled: false }); g.translate(0, 0, z); return g; };
+  p.addRaw('negro', tri(size, 0).applyMatrix4(m));
+  p.addRaw('advertencia', tri(size * 0.8, 0.016).applyMatrix4(m));
+  p.addRaw('negro', new THREE.BoxGeometry(size * 0.07, size * 0.22, 0.006).translate(0, 0.0, 0.037).applyMatrix4(m));
+  return p;
+}
+
 // ---------- contenedor de baterías (20 pies: 6,06 × 2,59 × 2,44 m; 10 pies: 2,99 m)
+// Todo lo que va sobre las caras sobresale 2 cm o más para que no parpadee.
 export function bessPart(detail = true, L = 6.06) {
   const p = new Part(), H = 2.59, D = 2.44;
   p.box('contenedor', L, H - 0.12, D, 0, 0.12, 0);
   p.box('acero', L, 0.12, D, 0, 0, 0);
   if (detail) {
+    // costillas del corrugado en los costados largos
     const n = Math.max(6, Math.round(L * 3.3));
-    for (let i = 0; i < n; i++) { const x = -L / 2 + 0.2 + i * ((L - 0.4) / (n - 1)); p.box('contenedor', 0.1, H - 0.4, 0.05, x, 0.2, D / 2 + 0.02); p.box('contenedor', 0.1, H - 0.4, 0.05, x, 0.2, -D / 2 - 0.02); }
-    for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) for (const y of [0, H - 0.16]) p.box('acero', 0.18, 0.16, 0.18, x * (L / 2 - 0.09), y, z * (D / 2 - 0.09));
-    // puertas en un extremo con barras de cierre
-    p.box('contenedor', 0.04, H - 0.4, D / 2 - 0.08, L / 2 + 0.02, 0.2, -D / 4).box('contenedor', 0.04, H - 0.4, D / 2 - 0.08, L / 2 + 0.02, 0.2, D / 4);
-    for (const z of [-0.85, -0.35, 0.35, 0.85]) p.cyl('aluminio', 0.025, H - 0.5, L / 2 + 0.07, 0.25, z, 8);
-    // equipo de aire acondicionado y rejillas de ventilación
-    const ax = -L / 2 + Math.min(1.4, L * 0.25);
-    p.box('blanco', 0.9, 0.9, 0.35, ax, 0.9, D / 2 + 0.2);
-    p.cyl('acero', 0.3, 0.04, ax, 1.35, D / 2 + 0.38, 20, [Math.PI / 2, 0, 0]);
-    for (let i = 0; i < 6; i++) p.box('acero', 0.8, 0.03, 0.06, L / 2 - 1.8, 0.6 + i * 0.12, D / 2 + 0.05);
-    p.box('blanco', 0.6, 0.4, 0.02, L / 2 - 2.6, 1.6, D / 2 + 0.06);
+    for (let i = 0; i < n; i++) { const x = -L / 2 + 0.3 + i * ((L - 0.6) / (n - 1)); for (const s of [1, -1]) p.box('contenedor', 0.1, H - 0.42, 0.05, x, 0.2, s * (D / 2 + 0.02)); }
+    // esquineros (sobresalen 2 cm en las tres caras)
+    for (const [x, z] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) for (const y of [-0.02, H - 0.16]) p.box('acero', 0.2, 0.18, 0.2, x * (L / 2 - 0.08), y, z * (D / 2 - 0.08));
+    // puertas en el extremo +x con bisagras, barras de cierre y manijas
+    for (const s of [-1, 1]) {
+      p.box('contenedor', 0.04, H - 0.42, D / 2 - 0.1, L / 2 + 0.02, 0.2, s * D / 4);
+      for (const y of [0.45, 1.25, 2.05]) p.box('acero', 0.06, 0.12, 0.06, L / 2 + 0.05, y, s * (D / 2 - 0.06));
+    }
+    for (const z of [-0.85, -0.35, 0.35, 0.85]) { p.cyl('aluminio', 0.025, H - 0.5, L / 2 + 0.08, 0.25, z, 8); p.box('acero', 0.04, 0.22, 0.05, L / 2 + 0.1, 1.05, z + 0.06); }
+    p.box('negro', 0.02, H - 0.42, 0.03, L / 2 + 0.045, 0.2, 0);
+    // dos equipos de aire acondicionado en el costado +z, con ventilador y rejilla
+    const big = L > 4, nA = big ? 2 : 1;
+    for (let k = 0; k < nA; k++) {
+      const ax = -L / 2 + (big ? 1.0 : 0.75) + k * 1.3;
+      p.box('blanco', 0.9, 1.1, 0.38, ax, 0.75, D / 2 + 0.24);
+      p.box('rejilla', 0.8, 0.25, 0.02, ax, 0.82, D / 2 + 0.44);
+      p.cyl('negro', 0.3, 0.03, ax, 1.45, D / 2 + 0.45, 20, [Math.PI / 2, 0, 0]);
+      for (const a of [0, Math.PI / 2]) p.box('aluminio', 0.56, 0.025, 0.02, ax, 1.452, D / 2 + 0.475, [0, 0, a]);
+    }
+    // rejillas de ventilación del cuarto de baterías y caja de entrada de cables
+    p.box('rejilla', 0.9, 0.6, 0.02, big ? L / 2 - 1.2 : L / 2 - 0.55, 0.7, D / 2 + 0.065).box('rejilla', 0.9, 0.6, 0.02, -L / 2 + 1.2, 1.6, -D / 2 - 0.065);
+    p.box('acero', 0.6, 0.35, 0.18, L / 2 - 2.4, 0.15, -D / 2 - 0.12);
+    // rótulos: placa del sistema y señales de riesgo eléctrico en puertas y costado
+    p.box('blanco', 0.6, 0.4, 0.02, big ? L / 2 - 2.6 : L / 2 - 0.55, 1.6, D / 2 + 0.075);
+    const m = (x, y, z, ry) => new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, ry, 0)), new THREE.Vector3(1, 1, 1));
+    for (const s of [-1, 1]) warnSign(p, 0.32, m(L / 2 + 0.045, 1.75, s * D / 4, Math.PI / 2));
+    warnSign(p, 0.32, m(big ? L / 2 - 1.8 : 0.05, 1.75, D / 2 + 0.07, 0));
+    // baliza de alarma contra incendio en la cubierta
+    p.cyl('rojo', 0.07, 0.14, L / 2 - 0.4, H, D / 2 - 0.4, 10);
   }
   return p;
 }
@@ -242,7 +293,7 @@ export async function writeGLB(b, dirURL, name, { compress = true, instance: aut
   mkdirSync(dirURL, { recursive: true });
   const raw = await io.writeBinary(doc);
   const steps = [dedup(), ...(autoInstance ? [instance({ min: 3 })] : []), weld(), prune()];
-  if (compress) steps.push(draco({ method: 'edgebreaker', quantizePosition: 14, quantizeNormal: 10, quantizeTexcoord: 12 }));
+  if (compress) steps.push(draco({ method: 'edgebreaker', quantizePosition: 16, quantizeNormal: 10, quantizeTexcoord: 12, quantizeColor: 8 }));
   await doc.transform(...steps);
   const glb = await io.writeBinary(doc);
   writeFileSync(new URL(`${name}.glb`, dirURL), glb);
