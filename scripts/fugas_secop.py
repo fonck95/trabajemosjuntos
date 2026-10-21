@@ -632,6 +632,7 @@ def main(D=RAW):
                                    'duplicados_valor': r0(tr[(tr.transf_dest == k) & tr.dup_copia].valor.sum())} for k in ('aguas', 'hospital', 'otras')},
             'base_sobrecosto': {'sin_competencia_valor': r0(bsc.valor.sum()), 'un_oferente_valor': r0(buo.valor.sum()),
                                 'duplicados_valor': r0(bsc[bsc.dup_copia].valor.sum() + buo[buo.dup_copia].valor.sum()),
+                                'edu_valor': r0(bsc[bsc.edu].valor.sum() + buo[buo.edu].valor.sum()),
                                 'credito_excluido_valor': r0(x[x.directa & x.credito & x.ent.eq('ALCALDIA')].valor.sum())},
             'propios_sin_competencia_sin_ops_valor': r0(x[x.directa & ~x.categoria.eq('OPS / apoyo a la gestión')].valor.sum()),
         }
@@ -929,7 +930,8 @@ def main(D=RAW):
                                    'esté mal registrado. "subsidios_valor": Fondo de Solidaridad y Redistribución del Ingreso, identificados por el objeto completo.'),
                 'base_sobrecosto': ('Valor sin competencia de la alcaldía sin OPS, sin estudios sin obra, sin transferencias a entidades de Yondó y sin '
                                     'operaciones de crédito (empréstitos), más los procesos competitivos con un solo oferente con el mismo filtro. '
-                                    '"duplicados_valor" = segunda copia de posibles duplicados dentro de esa base.'),
+                                    '"duplicados_valor" = segunda copia de posibles duplicados dentro de esa base. "edu_valor" = convenios con la EDU de Medellín '
+                                    'dentro de esa base (empresa pública de otro municipio; sus contratos derivados de 2021–2023 no están en SECOP con el nombre de Yondó).'),
                 'propios_sin_competencia_sin_ops_valor': 'Para Aguas y Aseo y el hospital: lo que contrataron sin competencia, sin OPS (sirve para acotar el sobrecosto de lo que la alcaldía les transfiere).',
             },
             'estudios_sin_obra_alcaldia': est_aj_list,

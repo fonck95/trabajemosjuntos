@@ -614,6 +614,7 @@
      "sin_competencia_valor": 2738950091,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 2922005491
@@ -763,6 +764,7 @@
      "sin_competencia_valor": 2738950091,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 2738950091
@@ -912,6 +914,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 183055400
@@ -1061,6 +1064,7 @@
      "sin_competencia_valor": 7695639735,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 13283046578
@@ -1210,6 +1214,7 @@
      "sin_competencia_valor": 7695639735,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 13283046578
@@ -1359,6 +1364,7 @@
      "sin_competencia_valor": 9904202037,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 26338767593
@@ -1508,6 +1514,7 @@
      "sin_competencia_valor": 9904202037,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 26234481393
@@ -1657,6 +1664,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 104286200
@@ -1806,6 +1814,7 @@
      "sin_competencia_valor": 8401047488,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 11451925087
@@ -1955,6 +1964,7 @@
      "sin_competencia_valor": 8401047488,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 11451925087
@@ -2104,6 +2114,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -2253,6 +2264,7 @@
      "sin_competencia_valor": 10653853589,
      "un_oferente_valor": 0,
      "duplicados_valor": 215000000,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 14021003264
@@ -2402,6 +2414,7 @@
      "sin_competencia_valor": 10653853589,
      "un_oferente_valor": 0,
      "duplicados_valor": 215000000,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 14021003264
@@ -2551,6 +2564,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -2700,6 +2714,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -2849,6 +2864,7 @@
      "sin_competencia_valor": 2001871031,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 7428251092
@@ -2998,6 +3014,7 @@
      "sin_competencia_valor": 2001871031,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 7428251092
@@ -3147,6 +3164,7 @@
      "sin_competencia_valor": 7899926772,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 17698547883
@@ -3296,6 +3314,7 @@
      "sin_competencia_valor": 7899926772,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 17698547883
@@ -3445,6 +3464,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -3594,6 +3614,7 @@
      "sin_competencia_valor": 728474494,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 1800000000
     },
     "propios_sin_competencia_sin_ops_valor": 10805224194
@@ -3743,6 +3764,7 @@
      "sin_competencia_valor": 728474494,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 1800000000
     },
     "propios_sin_competencia_sin_ops_valor": 4459517899
@@ -3892,6 +3914,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 5653011921
@@ -4041,6 +4064,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 690797374
@@ -4190,6 +4214,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 1897000
@@ -4339,6 +4364,7 @@
      "sin_competencia_valor": 1357124313,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 16407629073
@@ -4488,6 +4514,7 @@
      "sin_competencia_valor": 1357124313,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 6853124794
@@ -4637,6 +4664,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 9533904279
@@ -4786,6 +4814,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 20600000
@@ -4935,6 +4964,7 @@
      "sin_competencia_valor": 728570740,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 6138825742
@@ -5084,6 +5114,7 @@
      "sin_competencia_valor": 728570740,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 4080193057
@@ -5233,6 +5264,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 2054082571
@@ -5382,6 +5414,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 4550114
@@ -5531,6 +5564,7 @@
      "sin_competencia_valor": 399272420,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 7441923089
@@ -5680,6 +5714,7 @@
      "sin_competencia_valor": 399272420,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 4388650630
@@ -5829,6 +5864,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 3053272459
@@ -5978,6 +6014,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -6127,6 +6164,7 @@
      "sin_competencia_valor": 347806752,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 5949717452
@@ -6276,6 +6314,7 @@
      "sin_competencia_valor": 347806752,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 2135327752
@@ -6425,6 +6464,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 3814389700
@@ -6574,6 +6614,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -6723,6 +6764,7 @@
      "sin_competencia_valor": 458800000,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 14019523476
@@ -6872,6 +6914,7 @@
      "sin_competencia_valor": 458800000,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 5512324920
@@ -7021,6 +7064,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 8507198556
@@ -7170,6 +7214,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -7319,6 +7364,7 @@
      "sin_competencia_valor": 4266335735,
      "un_oferente_valor": 0,
      "duplicados_valor": 284000000,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 30390085821
@@ -7468,6 +7514,7 @@
      "sin_competencia_valor": 4266335735,
      "un_oferente_valor": 0,
      "duplicados_valor": 284000000,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 18541325335
@@ -7617,6 +7664,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 11848760486
@@ -7766,6 +7814,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -7915,6 +7964,7 @@
      "sin_competencia_valor": 67986312011,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 62261291395,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 82765089264
@@ -8064,6 +8114,7 @@
      "sin_competencia_valor": 67986312011,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 62261291395,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 76853193369
@@ -8213,6 +8264,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 5911351995
@@ -8362,6 +8414,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -8511,6 +8564,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 543900
@@ -8660,6 +8714,7 @@
      "sin_competencia_valor": 6870531177,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 22595179435
@@ -8809,6 +8864,7 @@
      "sin_competencia_valor": 6870531177,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 13179556431
@@ -8958,6 +9014,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 9093117095
@@ -9107,6 +9164,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 322505909
@@ -9256,6 +9314,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -9405,6 +9464,7 @@
      "sin_competencia_valor": 32085721643,
      "un_oferente_valor": 896030149,
      "duplicados_valor": 0,
+     "edu_valor": 20131900941,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 41330361830
@@ -9554,6 +9614,7 @@
      "sin_competencia_valor": 32085721643,
      "un_oferente_valor": 896030149,
      "duplicados_valor": 0,
+     "edu_valor": 20131900941,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 40398965883
@@ -9703,6 +9764,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 15500000
@@ -9852,6 +9914,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 862095947
@@ -10001,6 +10064,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 53800000
@@ -10150,6 +10214,7 @@
      "sin_competencia_valor": 11836831182,
      "un_oferente_valor": 3277043208,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 20422892024
@@ -10299,6 +10364,7 @@
      "sin_competencia_valor": 11836831182,
      "un_oferente_valor": 3277043208,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 19443659364
@@ -10448,6 +10514,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -10597,6 +10664,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 975232660
@@ -10746,6 +10814,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 4000000
@@ -10895,6 +10964,7 @@
      "sin_competencia_valor": 20593035278,
      "un_oferente_valor": 1588628351,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 29233546372
@@ -11044,6 +11114,7 @@
      "sin_competencia_valor": 20593035278,
      "un_oferente_valor": 1588628351,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 28445246967
@@ -11193,6 +11264,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 738599405
@@ -11342,6 +11414,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -11491,6 +11564,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 49700000
@@ -11640,6 +11714,7 @@
      "sin_competencia_valor": 7800933986,
      "un_oferente_valor": 1300958282,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 9395730661
@@ -11789,6 +11864,7 @@
      "sin_competencia_valor": 7800933986,
      "un_oferente_valor": 1300958282,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 9295733685
@@ -11938,6 +12014,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 87746976
@@ -12087,6 +12164,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 12250000
@@ -12238,6 +12316,7 @@
      "sin_competencia_valor": 2738950091,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 2922005491
@@ -12387,6 +12466,7 @@
      "sin_competencia_valor": 2738950091,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 2738950091
@@ -12543,6 +12623,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 183055400
@@ -12699,6 +12780,7 @@
      "sin_competencia_valor": 36654742849,
      "un_oferente_valor": 0,
      "duplicados_valor": 215000000,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 65094742522
@@ -12848,6 +12930,7 @@
      "sin_competencia_valor": 36654742849,
      "un_oferente_valor": 0,
      "duplicados_valor": 215000000,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 64990456322
@@ -13004,6 +13087,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 0
@@ -13160,6 +13244,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 104286200
@@ -13316,6 +13401,7 @@
      "sin_competencia_valor": 11987396610,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 1800000000
     },
     "propios_sin_competencia_sin_ops_valor": 52339652242
@@ -13465,6 +13551,7 @@
      "sin_competencia_valor": 11987396610,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 1800000000
     },
     "propios_sin_competencia_sin_ops_valor": 36439441668
@@ -13621,6 +13708,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 15186916200
@@ -13777,6 +13865,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 690797374
@@ -13933,6 +14022,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 22497000
@@ -14089,6 +14179,7 @@
      "sin_competencia_valor": 1934449912,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 33549989759
@@ -14238,6 +14329,7 @@
      "sin_competencia_valor": 1934449912,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 16116496359
@@ -14394,6 +14486,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 17428943286
@@ -14550,6 +14643,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 4550114
@@ -14706,6 +14800,7 @@
      "sin_competencia_valor": 111208900566,
      "un_oferente_valor": 896030149,
      "duplicados_valor": 284000000,
+     "edu_valor": 82393192336,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 177080716350
@@ -14855,6 +14950,7 @@
      "sin_competencia_valor": 111208900566,
      "un_oferente_valor": 896030149,
      "duplicados_valor": 284000000,
+     "edu_valor": 82393192336,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 148973041018
@@ -15011,6 +15107,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 26868729576
@@ -15167,6 +15264,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 1184601856
@@ -15323,6 +15421,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 54343900
@@ -15479,6 +15578,7 @@
      "sin_competencia_valor": 40230800446,
      "un_oferente_valor": 6166629841,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 59052169057
@@ -15628,6 +15728,7 @@
      "sin_competencia_valor": 40230800446,
      "un_oferente_valor": 6166629841,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 57184640016
@@ -15784,6 +15885,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 826346381
@@ -15940,6 +16042,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 975232660
@@ -16096,6 +16199,7 @@
      "sin_competencia_valor": 0,
      "un_oferente_valor": 0,
      "duplicados_valor": 0,
+     "edu_valor": 0,
      "credito_excluido_valor": 0
     },
     "propios_sin_competencia_sin_ops_valor": 65950000
@@ -19629,7 +19733,7 @@
    "ops": "OPS de cat() sin los contratos que no son prestación de servicios de personas o empresas: transferencias a Aguas y Aseo, al hospital u otra entidad de Yondó (también con grafías mal digitadas), subsidios a las tarifas, objetos que empiezan por \"aunar esfuerzos\" y contratos con universidades u otras instituciones públicas. Además se quita la segunda copia de cada posible registro duplicado.",
    "estudios": "Estudios sin obra posterior hallada en el SECOP de la alcaldía (regla de similitud ≥ 0,30), sin contratos mixtos y sin los estudios cuya obra consta fuera de ese SECOP (lista \"estudios_obra_hallada_fuera\"). Sensibilidad: umbral de similitud 0,20 (más obras halladas) y 0,40 (menos). \"planes\" = planes de ordenamiento, parciales, de desarrollo o de gestión del riesgo. \"recientes\" = firmados desde el 2025-04-21 (18 meses antes del corte): su obra todavía puede no haberse firmado.",
    "transferencias": "Contratos de la alcaldía con Aguas y Aseo, el hospital u otra entidad de Yondó, y subsidios a tarifas aunque el contratista esté mal registrado. \"subsidios_valor\": Fondo de Solidaridad y Redistribución del Ingreso, identificados por el objeto completo.",
-   "base_sobrecosto": "Valor sin competencia de la alcaldía sin OPS, sin estudios sin obra, sin transferencias a entidades de Yondó y sin operaciones de crédito (empréstitos), más los procesos competitivos con un solo oferente con el mismo filtro. \"duplicados_valor\" = segunda copia de posibles duplicados dentro de esa base.",
+   "base_sobrecosto": "Valor sin competencia de la alcaldía sin OPS, sin estudios sin obra, sin transferencias a entidades de Yondó y sin operaciones de crédito (empréstitos), más los procesos competitivos con un solo oferente con el mismo filtro. \"duplicados_valor\" = segunda copia de posibles duplicados dentro de esa base. \"edu_valor\" = convenios con la EDU de Medellín dentro de esa base (empresa pública de otro municipio; sus contratos derivados de 2021–2023 no están en SECOP con el nombre de Yondó).",
    "propios_sin_competencia_sin_ops_valor": "Para Aguas y Aseo y el hospital: lo que contrataron sin competencia, sin OPS (sirve para acotar el sobrecosto de lo que la alcaldía les transfiere)."
   },
   "estudios_sin_obra_alcaldia": [

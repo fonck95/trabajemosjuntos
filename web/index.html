@@ -187,12 +187,15 @@ a { color: var(--accent); }
 .money-big { display: grid; gap: 8px; margin: 6px 0 10px; }
 .money-big div { border-left: 4px solid var(--ink); padding: 2px 0 2px 10px; }
 .money-big div.bad { border-color: var(--bad); } .money-big div.ghost { border-left-style: dashed; border-color: var(--accent); }
+.money-big div.ind { border-color: color-mix(in srgb, var(--warn) 60%, transparent); } .money-big div.quieta { border-color: var(--data); }
+.money-big .ind b, .money-big .quieta b { font-size: 1.25rem; }
 .money-big b { display: block; font: 400 1.7rem/1.05 var(--f-display); letter-spacing: 0.01em; }
 .money-big .bad b { color: var(--bad); } .money-big span { font-size: 0.78rem; color: var(--muted); }
 svg.cuenta { width: 100%; height: auto; display: block; margin-top: 8px; }
 svg.cuenta g.row { cursor: pointer; } svg.cuenta g.row:hover .per, svg.cuenta g.row.on .per { fill: var(--accent); }
 svg.cuenta .per { font: 400 15px var(--f-display); fill: var(--ink); } svg.cuenta .who { font: 10px var(--f-body); fill: var(--muted); }
 svg.cuenta .b0 { fill: var(--ink); opacity: 0.85; } svg.cuenta .b1 { fill: var(--bad); } svg.cuenta .b2 { fill: var(--warn); }
+svg.cuenta .b2i { fill: var(--warn); opacity: 0.45; } svg.cuenta .b4 { fill: var(--data); opacity: 0.55; }
 svg.cuenta .b3 { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 3; }
 svg.cuenta g.row:not(.on) rect { opacity: 0.55; } svg.cuenta g.row.on rect.b0 { opacity: 0.95; }
 svg.cuenta .v { font: 600 11px var(--f-mono); fill: var(--bad); } svg.cuenta .v2 { font: 11px var(--f-mono); fill: var(--accent); }
@@ -205,6 +208,8 @@ svg.cuenta .v { font: 600 11px var(--f-mono); fill: var(--bad); } svg.cuenta .v2
 .eq .icons em { font-size: 0.8rem; color: var(--muted); }
 .cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .cols2 h4 { margin: 0 0 6px; }
+details.fold summary { list-style: none; cursor: pointer; } details.fold summary::-webkit-details-marker { display: none; }
+details.fold summary span { color: var(--accent); font-weight: 600; white-space: nowrap; } details.fold[open] summary span { display: none; }
 .sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 12px; }
 .spark p { margin: 0; font-size: 0.82rem; line-height: 1.25; } .spark .src { font-size: 0.66rem; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
 .spark svg { width: 100%; height: auto; display: block; margin: 4px 0 2px; }

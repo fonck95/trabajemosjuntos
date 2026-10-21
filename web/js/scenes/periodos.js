@@ -28,55 +28,61 @@ export function mount(root) {
   const cuentas = PERIODOS.map((p) => {
     const d = perD(p.id) || {};
     const ingresos = +d.ingresos || 0;
-    const hecho = d.total_hecho ?? sum((d.fugas || []).filter((f) => f.tipo === 'hecho'), (f) => f.valor);
-    const estimado = d.total_estimado ?? sum((d.fugas || []).filter((f) => f.tipo === 'estimado'), (f) => f.valor);
-    const contra = d.total_contrafactual ?? sum((d.fugas || []).filter((f) => f.tipo === 'contrafactual'), (f) => f.valor);
-    return { p, d, ingresos, hecho: Math.min(hecho, ingresos), estimado: Math.min(estimado, Math.max(0, ingresos - hecho)), contra };
+    const tot = (k, tipo) => d[k] ?? sum((d.fugas || []).filter((f) => f.tipo === tipo), (f) => f.valor);
+    const hecho = Math.min(tot('total_hecho', 'hecho'), ingresos);
+    const estimado = Math.min(tot('total_estimado', 'estimado'), Math.max(0, ingresos - hecho));
+    const indicio = Math.min(tot('total_indicio', 'indicio'), Math.max(0, ingresos - hecho - estimado));
+    const quieta = tot('total_plata_quieta', 'plata quieta');
+    const contra = tot('total_contrafactual', 'contrafactual');
+    return { p, d, ingresos, hecho, estimado, indicio, quieta, contra, sinObra: d.sin_obra ?? hecho + estimado };
   });
-  const maxTot = Math.max(1, ...cuentas.map((c) => c.ingresos + c.contra));
+  const maxTot = Math.max(1, ...cuentas.map((c) => c.ingresos + c.quieta + c.contra));
   // un fajo = valor redondo que deja la pila más alta en ~70 fajos
   const steps = [1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000];
   const UNIT = steps.find((u) => maxTot / u <= 75) || 100000;
   const SLAB = { w: 3.2, h: 0.2, d: 1.7, gap: 0.045 };
   const slabGeo = new THREE.BoxGeometry(SLAB.w, SLAB.h, SLAB.d); slabGeo.translate(0, SLAB.h / 2, 0);
+  // orden de la pila: lo que entró (con sus fugas encima) y, por fuera de la caja, la plata quieta y lo no gestionado
   const kinds = [
-    { key: 'base', mat: mat(T.ink, { roughness: 0.6 }), label: 'Entró y se gastó sin fuga identificada' },
-    { key: 'hecho', mat: mat(T.bad, { roughness: 0.5 }), label: 'No se convirtió en obra (registros)' },
-    { key: 'estimado', mat: mat(T.warn, { roughness: 0.5 }), label: 'Sobrecosto y pérdidas estimadas' },
-    { key: 'contra', mat: mat(T.accent, { transparent: true, opacity: 0.18, roughness: 0.4, depthWrite: false }), label: 'Pudo gestionarse o ahorrarse y no se hizo' },
+    { key: 'base', css: 'var(--ink)', mat: mat(T.ink, { roughness: 0.6 }), label: 'Entró y se gastó sin fuga identificada' },
+    { key: 'hecho', css: 'var(--bad)', mat: mat(T.bad, { roughness: 0.5 }), label: 'No se convirtió en obra (registros)' },
+    { key: 'estimado', css: 'var(--warn)', mat: mat(T.warn, { roughness: 0.5 }), label: 'Sobrecosto y pérdidas estimadas' },
+    { key: 'indicio', css: 'color-mix(in srgb, var(--warn) 45%, transparent)', mat: mat(T.warn, { transparent: true, opacity: 0.45, roughness: 0.5 }), label: 'Indicio por verificar (OPS por encima de lo usual)' },
+    { key: 'quieta', css: 'color-mix(in srgb, var(--data) 55%, transparent)', mat: mat(T.data, { transparent: true, opacity: 0.55, roughness: 0.4 }), label: 'Plata quieta: regalías sin aprobar o sin comprometer' },
+    { key: 'contra', css: 'transparent', hollow: true, mat: mat(T.accent, { transparent: true, opacity: 0.18, roughness: 0.4, depthWrite: false }), label: 'Pudo gestionarse o ahorrarse y no se hizo' },
   ];
-  const plan = [];   // [{kind, i, k(index en pila), y}]
+  const K = Object.fromEntries(kinds.map((k) => [k.key, k]));
+  const plan = [];   // [{kind, i, k(index en pila)}]
   cuentas.forEach((c, i) => {
-    const counts = { base: Math.round((c.ingresos - c.hecho - c.estimado) / UNIT), hecho: Math.round(c.hecho / UNIT), estimado: Math.round(c.estimado / UNIT), contra: Math.round(c.contra / UNIT) };
-    if (c.hecho > 0 && !counts.hecho) counts.hecho = 1;
-    if (c.estimado > 0 && !counts.estimado) counts.estimado = 1;
+    const cnt = (v) => Math.round(v / UNIT) || (v > 0 ? 1 : 0);
+    const counts = { hecho: cnt(c.hecho), estimado: cnt(c.estimado), indicio: cnt(c.indicio), quieta: cnt(c.quieta), contra: Math.round(c.contra / UNIT) };
+    counts.base = Math.max(0, Math.round(c.ingresos / UNIT) - counts.hecho - counts.estimado - counts.indicio);
     let k = 0;
-    for (const kind of ['base', 'hecho', 'estimado', 'contra']) for (let j = 0; j < counts[kind]; j++, k++) plan.push({ kind, i, k });
+    for (const kind of ['base', 'hecho', 'estimado', 'indicio', 'quieta', 'contra']) for (let j = 0; j < counts[kind]; j++, k++) plan.push({ kind, i, k });
     c.counts = counts; c.height = k * (SLAB.h + SLAB.gap);
   });
   const meshes = {};
   kinds.forEach((kd) => {
     const cnt = plan.filter((q) => q.kind === kd.key).length;
-    const m = new THREE.InstancedMesh(slabGeo, kd.mat, Math.max(1, cnt)); m.count = cnt; m.castShadow = kd.key !== 'contra'; m.receiveShadow = true;
+    const m = new THREE.InstancedMesh(slabGeo, kd.mat, Math.max(1, cnt)); m.count = cnt; m.castShadow = !kd.hollow && kd.key !== 'quieta'; m.receiveShadow = true;
     meshes[kd.key] = m; plata.add(m);
-    if (kd.key === 'contra') {
+    if (kd.hollow) {
       const edges = new THREE.LineSegments(new THREE.EdgesGeometry(slabGeo), new THREE.LineBasicMaterial({ color: T.accent, transparent: true, opacity: 0.85 }));
-      kd.edges = []; plan.filter((q) => q.kind === 'contra').forEach(() => { const e = edges.clone(); kd.edges.push(e); plata.add(e); });
+      kd.edges = []; plan.filter((q) => q.kind === kd.key).forEach(() => { const e = edges.clone(); kd.edges.push(e); plata.add(e); });
     }
   });
   const m4 = new THREE.Matrix4(), jitter = (i, k) => (((i * 31 + k * 17) % 7) - 3) * 0.035;
   let progress = gsap ? 0 : 1;
   function layoutSlabs() {
-    const idx = { base: 0, hecho: 0, estimado: 0, contra: 0 };
+    const idx = Object.fromEntries(kinds.map((k) => [k.key, 0]));
     plan.forEach((q) => {
       const t = Math.min(1, Math.max(0, progress * (plan.length / 40 + 1) - (q.k / 70) - q.i * 0.05));
       const y = q.k * (SLAB.h + SLAB.gap), drop = (1 - t) * (1 - t) * 18;
       const x = x0 + q.i * GX + jitter(q.i, q.k), z = jitter(q.k, q.i);
       m4.makeRotationY(jitter(q.k + 3, q.i) * 0.4).setPosition(x, y + drop, z);
-      const m = meshes[q.kind];
       if (t <= 0) m4.makeScale(0, 0, 0);
-      m.setMatrixAt(idx[q.kind], m4);
-      if (q.kind === 'contra') { const e = kinds[3].edges[idx.contra]; e.matrixAutoUpdate = false; e.matrix.copy(m4); e.visible = t > 0; }
+      meshes[q.kind].setMatrixAt(idx[q.kind], m4);
+      if (K[q.kind].hollow) { const e = K[q.kind].edges[idx[q.kind]]; e.matrixAutoUpdate = false; e.matrix.copy(m4); e.visible = t > 0; }
       idx[q.kind]++;
     });
     Object.values(meshes).forEach((m) => { m.instanceMatrix.needsUpdate = true; m.computeBoundingSphere(); });
@@ -87,11 +93,11 @@ export function mount(root) {
 
   // etiquetas por pila
   const pileLabels = cuentas.map((c, i) => {
-    const x = x0 + i * GX;
+    const x = x0 + i * GX, lv = SLAB.h + SLAB.gap;
     const base = st.label(`<b>${c.p.id.replace('-', '–')}</b><br><small>${short(c.p.alcalde).split(' ').slice(0, 2).join(' ')}</small>`, 'lbl-title', [x, 0.2, 2.6], plata);
     base.element.style.pointerEvents = 'auto'; base.element.style.cursor = 'pointer'; base.element.addEventListener('click', () => select(i));
     const top = st.label(`${fmtM(c.ingresos)}<small>entró</small>`, 'lbl-money', [x, c.height + 1.2, 0], plata);
-    const red = c.hecho + c.estimado > 0 ? st.label(`${fmtM(c.hecho + c.estimado)}<small>sin obra</small>`, 'lbl-val', [x + 2.9, (c.counts.base + (c.counts.hecho + c.counts.estimado) / 2) * (SLAB.h + SLAB.gap), 0], plata) : null;
+    const red = c.sinObra > 0 ? st.label(`${fmtM(c.sinObra)}<small>sin obra</small>`, 'lbl-val', [x + 2.9, (c.counts.base + (c.counts.hecho + c.counts.estimado) / 2) * lv, 0], plata) : null;
     if (red) red.element.style.color = 'var(--bad)';
     return { base, top, red };
   });
@@ -155,9 +161,13 @@ export function mount(root) {
     cells.forEach((cl) => { if (!cl.ghost) { cl.obj.material = cl.i === i ? amats[cl.j] : dimMats[cl.j]; if (cl.l) cl.l.element.hidden = cl.i !== i; } });
     if (mode === 'indicadores' && gsap) cells.filter((cl) => !cl.ghost && cl.i === i).forEach((cl, k) => gsap.fromTo(cl.obj.scale, { y: 0.05 }, { y: cl.obj.userData.h, duration: 0.8, delay: k * 0.06, ease: 'power3.out', overwrite: true, onUpdate: () => st.invalidate() }));
     pileLabels.forEach((l, k) => { l.base.element.style.opacity = k === i ? 1 : 0.55; });
-    const noObra = c.hecho + c.estimado;
+    const noObra = c.sinObra;
     det.innerHTML = `<h4>${p.id.replace('-', '–')} · ${p.alcalde}</h4>
-      ${D ? `<div class="money-big"><div><b>${fmtM(c.ingresos)}</b><span>entraron (pesos de 2026)</span></div><div class="bad"><b>${fmtM(noObra)}</b><span>no se convirtieron en obra${c.estimado ? ` (${fmtM(c.hecho)} en registros + ${fmtM(c.estimado)} estimado)` : ''}</span></div><div class="ghost"><b>${fmtM(c.contra)}</b><span>pudieron gestionarse o ahorrarse y no se hizo</span></div></div>` : ''}
+      ${D ? `<div class="money-big"><div><b>${fmtM(c.ingresos)}</b><span>entraron${d?.en_curso ? ' (solo años con dato; periodo en curso)' : ''} · pesos de 2026</span></div>
+        <div class="bad"><b>${fmtM(noObra)}</b><span>no se convirtieron en obra${c.estimado ? ` (${fmtM(c.hecho)} en registros + ${fmtM(c.estimado)} estimado)` : ''}${d?.sin_obra_rango ? ` · rango ${fmtM(d.sin_obra_rango[0])}–${fmtM(d.sin_obra_rango[1])}` : ''}</span></div>
+        ${c.indicio ? `<div class="ind"><b>${fmtM(c.indicio)}</b><span>indicio por verificar (no suma en "sin obra")</span></div>` : ''}
+        ${c.quieta ? `<div class="quieta"><b>${fmtM(c.quieta)}</b><span>plata quieta: regalías sin aprobar o sin comprometer al cierre (no es plata perdida)</span></div>` : ''}
+        <div class="ghost"><b>${fmtM(c.contra)}</b><span>pudieron gestionarse o ahorrarse y no se hizo</span></div></div>` : ''}
       ${d?.lectura ? `<p>${d.lectura}</p>` : ''}
       <p class="note">${p.plan || ''}</p>
       <details${D ? '' : ' open'}><summary>Lo que se hizo y lo que faltó</summary>
@@ -177,22 +187,22 @@ export function mount(root) {
   // ---------------------------------------------------------------- la cuenta de cada gobierno (barras SVG)
   const barsEl = root.querySelector('[data-slot="periodos.cuenta"]');
   const legendEl = root.querySelector('[data-slot="periodos.leyenda"]');
-  if (legendEl) legendEl.innerHTML = kinds.map((k, j) => `<span><i class="${j === 3 ? 'hollow' : ''}" style="background:${['var(--ink)', 'var(--bad)', 'var(--warn)', 'transparent'][j]}"></i>${k.label}</span>`).join('');
+  if (legendEl) legendEl.innerHTML = kinds.map((k) => `<span><i class="${k.hollow ? 'hollow' : ''}" style="background:${k.css}"></i>${k.label}</span>`).join('');
   function renderBars() {
     if (!barsEl) return;
     if (!D) { barsEl.innerHTML = '<p class="note">La cuenta por gobierno se está consolidando.</p>'; return; }
-    const W = 760, rowH = 46, lab = 150, maxW = W - lab - 120, sc = maxW / maxTot;
+    const W = 880, rowH = 46, lab = 150, maxW = W - lab - 300, sc = maxW / maxTot;
     const rows = cuentas.map((c, i) => {
-      const y = 10 + i * rowH, w0 = (c.ingresos - c.hecho - c.estimado) * sc, w1 = c.hecho * sc, w2 = c.estimado * sc, w3 = c.contra * sc;
-      const on = i === sel ? ' on' : '';
+      const y = 10 + i * rowH, on = i === sel ? ' on' : '';
+      // dentro de la caja: base, registros, estimado, indicio; por fuera: plata quieta y lo no gestionado
+      const segs = [['b0', c.ingresos - c.hecho - c.estimado - c.indicio], ['b1', c.hecho], ['b2', c.estimado], ['b2i', c.indicio], ['b4', c.quieta], ['b3', c.contra]];
+      let x = lab;
+      const rects = segs.map(([cls, v]) => { const w = Math.max(0, v * sc); const r = w > 0 ? `<rect x="${x + (cls === 'b4' || cls === 'b3' ? 2 : 0)}" y="${cls === 'b3' ? 6 : 4}" width="${Math.max(0, w - (cls === 'b4' || cls === 'b3' ? 2 : 0))}" height="${cls === 'b3' ? 24 : 28}" class="${cls}"><title>${fmtM(v)}</title></rect>` : ''; x += w; return r; }).join('');
       return `<g class="row${on}" data-i="${i}" transform="translate(0,${y})">
         <text x="0" y="16" class="per">${c.p.id.replace('-', '–')}</text><text x="0" y="31" class="who">${short(c.p.alcalde).split(' ').slice(0, 3).join(' ')}</text>
-        <rect x="${lab}" y="4" width="${Math.max(0, w0)}" height="28" class="b0"/>
-        <rect x="${lab + w0}" y="4" width="${Math.max(0, w1)}" height="28" class="b1"/>
-        <rect x="${lab + w0 + w1}" y="4" width="${Math.max(0, w2)}" height="28" class="b2"/>
-        <rect x="${lab + w0 + w1 + w2 + 2}" y="6" width="${Math.max(0, w3 - 2)}" height="24" class="b3"/>
-        <text x="${lab + w0 + w1 + w2 + w3 + 8}" y="17" class="v">${fmtM(c.hecho + c.estimado)} sin obra</text>
-        <text x="${lab + w0 + w1 + w2 + w3 + 8}" y="31" class="v2">${fmtM(c.contra)} sin gestionar</text>
+        ${rects}
+        <text x="${x + 8}" y="17" class="v">${fmtM(c.sinObra)} sin obra${c.d?.sin_obra_pct_ingresos != null ? ` (${fmtN(c.d.sin_obra_pct_ingresos, 1)} %)` : ''}</text>
+        <text x="${x + 8}" y="31" class="v2">${fmtM(c.contra)} sin gestionar${c.quieta ? ` · ${fmtM(c.quieta)} quieta` : ''}</text>
       </g>`;
     }).join('');
     barsEl.innerHTML = `<svg viewBox="0 0 ${W} ${cuentas.length * rowH + 20}" class="cuenta" role="img" aria-label="Por gobierno: lo que entró, lo que no se convirtió en obra y lo que pudo gestionarse">${rows}</svg>`;
@@ -202,6 +212,12 @@ export function mount(root) {
 
   // ---------------------------------------------------------------- lo que se pudo hacer (equivalencias y lista)
   const pudoEl = root.querySelector('[data-slot="periodos.pudo"]');
+  // textos largos: primera frase visible y el resto plegado
+  const plegar = (t) => {
+    t = String(t || ''); if (t.length <= 200) return `<span class="note">${t}</span>`;
+    const cut = t.slice(0, 200).lastIndexOf('. ') > 60 ? t.slice(0, 200).lastIndexOf('. ') + 1 : 180;
+    return `<details class="fold"><summary class="note">${t.slice(0, cut)} <span>Ver más</span></summary><span class="note">${t.slice(cut)}</span></details>`;
+  };
   const ICON = {
     aulas: '<path d="M3 10 12 4l9 6v10H3z"/><path d="M9 20v-6h6v6"/>', vivienda: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
     km: '<path d="M4 20 10 4h4l6 16"/><path d="M12 7v2M12 12v2M12 17v2"/>', ptar: '<circle cx="12" cy="13" r="7"/><path d="M12 3c2 3 3 4.5 3 6a3 3 0 0 1-6 0c0-1.5 1-3 3-6z"/>',
@@ -217,11 +233,11 @@ export function mount(root) {
       const nIcons = Math.min(60, Math.max(1, Math.round(e.n)));
       return `<div class="eq"><b>${fmtN(e.n, e.n < 10 ? 1 : 0)}</b><span>${e.unidad}</span><div class="icons">${Array.from({ length: nIcons }, () => `<svg viewBox="0 0 24 24" aria-hidden="true">${iconFor(e.unidad)}</svg>`).join('')}${e.n > 60 ? '<em>…</em>' : ''}</div></div>`;
     }).join('');
-    const pudo = (d.pudo_hacerse || []).map((x) => `<tr><td><b>${x.que}</b>${x.por_que_no ? `<br><span class="note">${x.por_que_no}</span>` : ''}</td><td class="n">${fmtM(x.costo)}</td><td>${x.equivalencia || ''}</td></tr>`).join('');
+    const pudo = (d.pudo_hacerse || []).map((x) => `<tr><td><b>${x.que}</b>${x.por_que_no ? `<br>${plegar(x.por_que_no)}` : ''}</td><td class="n">${fmtM(x.costo)}</td><td>${x.equivalencia || ''}</td></tr>`).join('');
     const fondos = (d.fondos_no_gestionados || []).map((f) => `<li><b>${f.fondo}</b>${f.desde ? ` (desde ${f.desde})` : ''}: ${typeof f.monto_referencia === 'number' ? fmtM(f.monto_referencia) : f.monto_referencia || ''}${f.comparable ? ` · <span class="note">${f.comparable}</span>` : ''}</li>`).join('');
     const fugas = (d.fugas || []).filter((f) => f.valor).sort((a, b) => b.valor - a.valor).map((f) => {
       const cat = DINERO.categorias?.find((c) => c.id === f.categoria);
-      return `<tr><td>${cat?.nombre || f.categoria}<br><span class="note">${f.detalle || ''}</span></td><td><span class="tag ${f.tipo === 'hecho' ? 'ver' : f.tipo === 'estimado' ? 'est' : 'sup'}">${f.tipo}</span></td><td class="n">${fmtM(f.valor)}${f.min != null && f.max != null ? `<br><span class="note">${fmtM(f.min)}–${fmtM(f.max)}</span>` : ''}</td></tr>`;
+      return `<tr><td>${cat?.nombre || f.categoria}<br>${plegar(f.detalle)}</td><td><span class="tag ${f.tipo === 'hecho' ? 'ver' : f.tipo === 'estimado' || f.tipo === 'indicio' ? 'est' : 'sup'}">${f.tipo}</span></td><td class="n">${fmtM(f.valor)}${f.min != null && f.max != null ? `<br><span class="note">${fmtM(f.min)}–${fmtM(f.max)}</span>` : ''}</td></tr>`;
     }).join('');
     pudoEl.innerHTML = `<h3>${PERIODOS[sel].id.replace('-', '–')}: con la plata que no se volvió obra se habría podido…</h3>
       <div class="eqs">${eq || '<p class="note">Sin equivalencias calculadas.</p>'}</div>
@@ -279,8 +295,8 @@ export function mount(root) {
   select(n - 1);
   onTheme((t) => {
     floor.material.color.copy(t.surface); ghostMat.color.copy(t.muted);
-    kinds[0].mat.color.copy(t.ink); kinds[1].mat.color.copy(t.bad); kinds[2].mat.color.copy(t.warn); kinds[3].mat.color.copy(t.accent);
-    kinds[3].edges?.forEach((e) => e.material.color.copy(t.accent));
+    K.base.mat.color.copy(t.ink); K.hecho.mat.color.copy(t.bad); K.estimado.mat.color.copy(t.warn); K.indicio.mat.color.copy(t.warn); K.quieta.mat.color.copy(t.data); K.contra.mat.color.copy(t.accent);
+    K.contra.edges?.forEach((e) => e.material.color.copy(t.accent));
     AREAS.forEach((a, j) => { amats[j].color.copy(t.s[a.slot - 1]); dimMats[j].color.copy(t.s[a.slot - 1]); });
   });
   return st;

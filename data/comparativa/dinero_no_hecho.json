@@ -42,6 +42,14 @@
    "significa": "órgano que aprueba proyectos de regalías. El OCAD Paz es nacional y aprueba proyectos de municipios PDET."
   },
   {
+   "termino": "Incentivo a la producción",
+   "significa": "parte de las regalías que premia a los municipios productores. Desde el Acto Legislativo 04 de 2017 sus proyectos los aprueba el OCAD Paz; el municipio los formula y presenta. En el registro de MinHacienda aparece como bolsa IPAZ. Aquí se le llama siempre \"incentivo a la producción\"."
+  },
+  {
+   "termino": "EDU de Medellín",
+   "significa": "Empresa de Desarrollo Urbano de Medellín, empresa pública de otro municipio a la que Yondó delegó obras con convenios interadministrativos."
+  },
+  {
    "termino": "OPS",
    "significa": "contrato de prestación de servicios (con una persona o una empresa)."
   },
@@ -56,6 +64,10 @@
   {
    "termino": "Mediana",
    "significa": "el valor del medio: la mitad de los años está por encima y la otra mitad por debajo."
+  },
+  {
+   "termino": "Percentil 25 y percentil 75",
+   "significa": "el valor que deja por debajo a la cuarta parte de los datos (percentil 25) o a las tres cuartas partes (percentil 75). Sirven para dar un rango alrededor de la mediana."
   }
  ],
  "categorias": [
@@ -78,14 +90,14 @@
    "nombre": "Plata quieta: regalías sin comprometer al cierre del bienio",
    "tipo": "plata quieta",
    "descripcion": "Regalías del presupuesto del municipio que, al cierre del último bienio que terminó dentro del gobierno, no se habían comprometido. Es un hecho, pero no es plata perdida: pasa al bienio siguiente. Por eso no se suma a \"sin obra\" ni entre gobiernos.",
-   "metodo": "Una sola regla para todos: el último bienio que cerró dentro del periodo y la misma medida, presupuesto menos compromisos (CHIP): 2017–2018 para 2016–2019 (corte más cercano al cierre con dato abierto: septiembre de 2018, todo el capítulo SGR), 2021–2022 para 2020–2023 y 2023–2024 para 2024–2027 (asignaciones directas, más los incentivos y la inversión local que pasaron sin usar). Se deflacta con el IPC del mes del corte. El bienio 2015–2016 cruza dos gobiernos y se muestra aparte, sin sumarlo a ninguno. El bienio 2025–2026 sigue abierto: se muestra como \"por aprobar\" y no se suma."
+   "metodo": "Una sola regla para todos: el último bienio que cerró dentro del periodo y la misma medida, presupuesto menos compromisos (CHIP): 2017–2018 para 2016–2019 (corte más cercano al cierre con dato abierto: septiembre de 2018, todo el capítulo SGR), 2021–2022 para 2020–2023 y 2023–2024 para 2024–2027 (asignaciones directas, más el incentivo a la producción y la inversión local que pasaron sin usar). Se deflacta con el IPC del mes del corte. El bienio 2015–2016 cruza dos gobiernos y se muestra aparte, sin sumarlo a ninguno, porque en 2016–2019 cerró después otro bienio completo (2017–2018). En 2024–2027 el único bienio cerrado es 2023–2024, que empezó en el gobierno anterior: se usa, con esa advertencia. El bienio 2025–2026 sigue abierto: se muestra como \"por aprobar\" y no se suma."
   },
   {
    "id": "sobrecosto_sin_competencia",
    "nombre": "Costo posible de contratar sin competencia",
    "tipo": "estimado",
    "descripcion": "El valor contratado sin competencia es un hecho registrado en SECOP; lo que se pudo pagar de más por no competir es una estimación con rango (3 %, 6 % y 10 %). No prueba corrupción ni ilegalidad.",
-   "metodo": "Línea 1, compras de la alcaldía a terceros: valor sin competencia (contratación directa, régimen especial y convenios) sin OPS, sin estudios sin obra, sin transferencias a Aguas y Aseo, al hospital u otra entidad de Yondó (incluidos los subsidios a las tarifas) y sin empréstitos; más los procesos competitivos con un solo oferente (fugas_secop.json, ajustes.base_sobrecosto). Se le resta la plata ya contada en \"pagos por delante del avance\". Línea 2, plata transferida: para cada año y entidad, el menor valor entre lo que la alcaldía transfirió a Aguas y Aseo o al hospital (sin subsidios) y lo que esa entidad contrató sin competencia ese año, solo en años con datos de esa entidad en SECOP. Costo = base × 6 % (central). Mínimo: 3 % solo sobre la línea 1, sin la segunda copia de los posibles registros duplicados. Máximo: 10 % sobre las dos líneas."
+   "metodo": "Línea 1, compras de la alcaldía a terceros: valor sin competencia (contratación directa, régimen especial y convenios) sin OPS, sin estudios sin obra, sin transferencias a Aguas y Aseo, al hospital u otra entidad de Yondó (incluidos los subsidios a las tarifas) y sin empréstitos; más los procesos competitivos con un solo oferente (fugas_secop.json, ajustes.base_sobrecosto). Se le resta la plata ya contada en \"pagos por delante del avance\". Línea 2, plata transferida: para cada año y entidad, el menor valor entre lo que la alcaldía transfirió a Aguas y Aseo o al hospital (sin subsidios) y lo que esa entidad contrató sin competencia ese año, solo en años con datos de esa entidad en SECOP. La línea 1 incluye los convenios con la EDU de Medellín, que Yondó escogió sin competencia; la EDU contrató después por su cuenta y no se sabe si con competencia. Costo = base × 6 % (central). Mínimo: 3 % solo sobre la línea 1, sin la EDU y sin la segunda copia de los posibles registros duplicados. Máximo: 10 % sobre las dos líneas."
   },
   {
    "id": "ops_nomina_paralela",
@@ -99,7 +111,7 @@
    "nombre": "Recaudo propio que se dejó de cobrar",
    "tipo": "estimado",
    "descripcion": "Predial e ICA que Yondó habría recaudado con el esfuerzo de municipios comparables o con un catastro actualizado.",
-   "metodo": "Central: brecha frente a la mediana de 7 comparables, sumada por periodo (costo_no_hacer.json); un año por debajo de la mediana se compensa con los años en que Yondó recaudó más. Máximo: brecha frente al percentil 75 de los comparables y, desde 2021 (catastro desactualizado), el predial adicional con el avalúo por habitante de Puerto Berrío (≈$1.498 M al año, ilustrativo); en predial se toma el mayor de los dos."
+   "metodo": "Central: brecha frente a la mediana de 7 comparables, sumada por periodo (costo_no_hacer.json); un año por debajo de la mediana se compensa con los años en que Yondó recaudó más. Máximo: brecha frente al percentil 75 de los comparables y, desde 2021 (catastro desactualizado), el predial adicional con el avalúo por habitante de Puerto Berrío (≈$1.498 M de 2026 al año, ilustrativo); en predial se toma el mayor de los dos."
   },
   {
    "id": "costo_vertimientos",
@@ -287,6 +299,9 @@
      "sin_dato": true,
      "valor_corriente": 0,
      "corte_avance": "2026-10-21",
+     "valor_terminados": 0.0,
+     "valor_en_ejecucion": 0.0,
+     "certeza": "hecho con cálculo: valor × (avance financiero − avance físico) sobre GESPROY a octubre de 2026; el valor en pesos de 2026 depende de cuándo se pagó (rango)",
      "no_sumado_ejecutor_nacional": 0.0
     },
     {
@@ -312,7 +327,7 @@
      "min": 203.8,
      "max": 679.5,
      "tipo": "estimado",
-     "detalle": "Solo hay 41 contratos de la alcaldía en SECOP, todos de 2007. Hecho: la alcaldía contrató $6.795 M sin competencia (55,2 % de $12.304 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $6.795 M; base $6.795 M. Costo posible: 6 % de la base (rango 3–10 %). No prueba corrupción: mide el precio usual de renunciar a la competencia.",
+     "detalle": "Solo hay 41 contratos de la alcaldía en SECOP, todos de 2007. Hecho: la alcaldía contrató $6.795 M sin competencia (55,2 % de $12.304 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $6.795 M; base $6.795 M. Costo posible: 6 % de la base, $408 M; rango 3–10 %. No prueba corrupción: mide el precio usual de renunciar a la competencia.",
      "items": [],
      "fuentes": [
       "data/comparativa/fugas_secop.json",
@@ -324,6 +339,9 @@
      "base_compras_terceros": 6794.7,
      "base_transferencias": 0.0,
      "transferencias_sin_dato": 0.0,
+     "base_edu": 0.0,
+     "costo_compras_terceros": 407.7,
+     "costo_transferencias": 0.0,
      "transferencias_total": 0.0,
      "subsidios_tarifas": 0.0,
      "un_oferente_base": 0.0,
@@ -491,8 +509,8 @@
      "que": "10 aulas dotadas para ampliar la educación media",
      "costo": 6000.0,
      "equivalencia": "≈ 10 aulas escolares dotadas",
-     "por_que_no": "La cobertura neta en media era de 14 %: 86 de cada 100 jóvenes de 15–16 años no estaban matriculados en media.",
-     "fuente": "data/comparativa/costo_no_hacer.json (aula_dotada); docs/02-marco-comparativo-2004-2027.md (matriz, MEN)",
+     "por_que_no": "La cobertura neta en media era de 14 % (promedio 2005–2007, MEN en TerriData): 86 de cada 100 jóvenes de 15–16 años no estaban matriculados en media.",
+     "fuente": "data/comparativa/costo_no_hacer.json (aula_dotada); data/comparativa/panel_anual.json (cob_neta_media, MEN en TerriData)",
      "cubierto_con_plata_sin_obra_pct": 8.5,
      "costo_rango": [
       4000.0,
@@ -838,6 +856,9 @@
      "sin_dato": true,
      "valor_corriente": 0,
      "corte_avance": "2026-10-21",
+     "valor_terminados": 0.0,
+     "valor_en_ejecucion": 0.0,
+     "certeza": "hecho con cálculo: valor × (avance financiero − avance físico) sobre GESPROY a octubre de 2026; el valor en pesos de 2026 depende de cuándo se pagó (rango)",
      "no_sumado_ejecutor_nacional": 0.0
     },
     {
@@ -863,7 +884,7 @@
      "min": 2403.2,
      "max": 8055.8,
      "tipo": "estimado",
-     "detalle": "Hecho: la alcaldía contrató $156.830 M sin competencia (54,8 % de $286.356 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $80.558 M; base $80.558 M. Las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó ($61.920 M, de ellos $650 M de subsidios a las tarifas) no son compras y salen de esa base. Para $61.270 M transferidos en años sin datos de Aguas y Aseo o del hospital en SECOP (2008, 2009, 2010, 2011) no hay dato y no se estima nada. Costo posible: 6 % de la base (rango 3–10 %). No prueba corrupción: mide el precio usual de renunciar a la competencia. El mínimo quita $452 M de posibles registros duplicados no verificados. SECOP está subregistrado en estos años (39 a 205 contratos por año): la base real fue mayor.",
+     "detalle": "Hecho: la alcaldía contrató $156.830 M sin competencia (54,8 % de $286.356 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $80.558 M; base $80.558 M. Las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó ($61.920 M, de ellos $650 M de subsidios a las tarifas) no son compras y salen de esa base. Para $61.270 M transferidos en años sin datos de Aguas y Aseo o del hospital en SECOP (2008, 2009, 2010, 2011) no hay dato y no se estima nada. Costo posible: 6 % de la base, $4.833 M; rango 3–10 %. No prueba corrupción: mide el precio usual de renunciar a la competencia. El mínimo quita $452 M de posibles registros duplicados no verificados. SECOP está subregistrado en estos años (39 a 205 contratos por año): la base real fue mayor.",
      "items": [],
      "fuentes": [
       "data/comparativa/fugas_secop.json",
@@ -875,6 +896,9 @@
      "base_compras_terceros": 80557.9,
      "base_transferencias": 0.0,
      "transferencias_sin_dato": 61269.8,
+     "base_edu": 0.0,
+     "costo_compras_terceros": 4833.5,
+     "costo_transferencias": 0.0,
      "transferencias_total": 61920.2,
      "subsidios_tarifas": 650.5,
      "un_oferente_base": 0.0,
@@ -888,7 +912,7 @@
      "min": 0.0,
      "max": 3495.6,
      "tipo": "indicio",
-     "detalle": "87 contratos OPS por $11.111 M de 2026, de ellos 7 de formulación de proyectos por $386 M. Referencia: 473.553 pesos de 2026 por habitante al año (mediana 2012–2025; rango 274.784–692.217). Suma de los años por encima: $214 M; desviación neta del periodo (los años por debajo restan): −$19.211 M. Se quitaron 4 contratos que la clasificación ponía en OPS pero no son prestación de servicios ($2.208 M: transferencias a Aguas y Aseo o al hospital, subsidios a tarifas y convenios para aunar esfuerzos). Es un indicio para comparar con la planta de personal: los contratistas prestaron servicios. SECOP está incompleto antes de 2012: la comparación con años posteriores no es confiable.",
+     "detalle": "87 contratos OPS por $11.111 M de 2026, de ellos 7 de formulación de proyectos por $386 M. Referencia: 473.553 pesos de 2026 por habitante al año (mediana de Yondó en 2012–2025; rango entre el percentil 25, 274.784, y el 75, 692.217; esos años mezclan SECOP I, hasta 2023, y SECOP II, desde 2024). Suma de los años por encima: $214 M; desviación neta del periodo (los años por debajo restan): −$19.211 M. Se quitaron 4 contratos que la clasificación ponía en OPS pero no son prestación de servicios ($2.208 M: transferencias a Aguas y Aseo o al hospital, subsidios a tarifas y convenios para aunar esfuerzos). Es un indicio para comparar con la planta de personal: los contratistas prestaron servicios. SECOP está incompleto antes de 2012: la comparación con años posteriores no es confiable.",
      "items": [
       {
        "nombre": "OPS 2011: 50 contratos, 51 personas, $8.032 M (486.535 pesos de 2026 por habitante, 1,0 veces la mediana)",
@@ -1051,7 +1075,7 @@
      "que": "Fondo local de ahorro con el 10 % de las regalías, en su máximo histórico (contrafactual)",
      "costo": 22872.8,
      "equivalencia": "hoy valdría $37.162 M, ≈ 2,7 PTAR como la que necesita el casco urbano",
-     "por_que_no": "No se creó un ahorro local ni una base económica distinta al petróleo. Es adicional al ahorro obligatorio del FAEP, cuyo saldo para Yondó no se revisó.",
+     "por_que_no": "No se creó un fondo local de ahorro. Es adicional al ahorro obligatorio del FAEP, cuyo saldo para Yondó no se revisó.",
      "fuente": "data/comparativa/costo_no_hacer.json (contrafactual_ahorro_regalias); data/gobiernos.json",
      "cubierto_con_plata_sin_obra_pct": null
     },
@@ -1125,7 +1149,7 @@
      "monto_referencia": 0.0,
      "min": 0.0,
      "max": 3035.7,
-     "comparable": "Puerto Nare, ribereño y de tamaño parecido, recibió $1.671 M (pesos corrientes de 2012–2018) en 7 intervenciones; Yondó, $30 M en 2. Baja certeza: no se verificó que Yondó registrara daños.",
+     "comparable": "Puerto Nare, ribereño y de tamaño parecido, recibió $1.671 M (pesos corrientes de 2012–2018) en 7 intervenciones; Yondó, $30 M (pesos corrientes) en 2. Baja certeza: no se verificó que Yondó registrara daños.",
      "fuente": "https://www.datos.gov.co/d/8yvj-6du4; data/comparativa/sgr_fondos.json",
      "suma_en_total": true
     }
@@ -1403,6 +1427,9 @@
      ],
      "valor_corriente": 0,
      "corte_avance": "2026-10-21",
+     "valor_terminados": 0.0,
+     "valor_en_ejecucion": 0.0,
+     "certeza": "hecho con cálculo: valor × (avance financiero − avance físico) sobre GESPROY a octubre de 2026; el valor en pesos de 2026 depende de cuándo se pagó (rango)",
      "no_sumado_ejecutor_nacional": 0.0
     },
     {
@@ -1428,7 +1455,7 @@
      "min": 713.8,
      "max": 4051.8,
      "tipo": "estimado",
-     "detalle": "Hecho: la alcaldía contrató $142.343 M sin competencia (55,4 % de $256.782 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $23.794 M; base $23.794 M. Las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó ($57.928 M, de ellos $2.683 M de subsidios a las tarifas) no son compras y salen de esa base. Línea 2: de lo transferido, $16.724 M pudo contratarse sin competencia por esas entidades (acotado por lo que contrataron así ese año). Para $38.521 M transferidos en años sin datos de Aguas y Aseo o del hospital en SECOP (2012, 2013, 2015) no hay dato y no se estima nada. Costo posible: 6 % de la base (rango 3–10 %). No prueba corrupción: mide el precio usual de renunciar a la competencia.",
+     "detalle": "Hecho: la alcaldía contrató $142.343 M sin competencia (55,4 % de $256.782 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $23.794 M; base $23.794 M. Las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó ($57.928 M, de ellos $2.683 M de subsidios a las tarifas) no son compras y salen de esa base. Línea 2: de lo transferido, $16.724 M pudo contratarse sin competencia por esas entidades (acotado por lo que contrataron así ese año). Para $38.521 M transferidos en años sin datos de Aguas y Aseo o del hospital en SECOP (2012, 2013, 2015) no hay dato y no se estima nada. Costo posible: 6 % de la base, $2.431 M ($1.428 M por compras a terceros y $1.003 M por lo transferido); rango 3–10 %. No prueba corrupción: mide el precio usual de renunciar a la competencia.",
      "items": [
       {
        "nombre": "Contrato de referencia de la base (no se afirma sobrecosto en él): Construccion por el sistema de administracion delegada de dieciocho (18) viviendas de interes socia…",
@@ -1449,6 +1476,9 @@
      "base_compras_terceros": 23794.2,
      "base_transferencias": 16724.2,
      "transferencias_sin_dato": 38520.8,
+     "base_edu": 0.0,
+     "costo_compras_terceros": 1427.7,
+     "costo_transferencias": 1003.5,
      "transferencias_total": 57927.8,
      "subsidios_tarifas": 2682.8,
      "un_oferente_base": 0.0,
@@ -1462,7 +1492,7 @@
      "min": 11875.3,
      "max": 38942.3,
      "tipo": "indicio",
-     "detalle": "1.851 contratos OPS por $58.001 M de 2026, de ellos 52 de formulación de proyectos por $1.532 M. Referencia: 473.553 pesos de 2026 por habitante al año (mediana 2012–2025; rango 274.784–692.217). Suma de los años por encima: $25.156 M; desviación neta del periodo (los años por debajo restan): $25.156 M. Se quitaron 9 contratos que la clasificación ponía en OPS pero no son prestación de servicios ($14.091 M: transferencias a Aguas y Aseo o al hospital, subsidios a tarifas y convenios para aunar esfuerzos) y $489 M de registros duplicados. Es un indicio para comparar con la planta de personal: los contratistas prestaron servicios.",
+     "detalle": "1.851 contratos OPS por $58.001 M de 2026, de ellos 52 de formulación de proyectos por $1.532 M. Referencia: 473.553 pesos de 2026 por habitante al año (mediana de Yondó en 2012–2025; rango entre el percentil 25, 274.784, y el 75, 692.217; esos años mezclan SECOP I, hasta 2023, y SECOP II, desde 2024). Suma de los años por encima: $25.156 M; desviación neta del periodo (los años por debajo restan): $25.156 M. Se quitaron 9 contratos que la clasificación ponía en OPS pero no son prestación de servicios ($14.091 M: transferencias a Aguas y Aseo o al hospital, subsidios a tarifas y convenios para aunar esfuerzos) y $489 M de registros duplicados. Es un indicio para comparar con la planta de personal: los contratistas prestaron servicios.",
      "items": [
       {
        "nombre": "OPS 2012: 565 contratos, 500 personas, $9.792 M (580.434 pesos de 2026 por habitante, 1,2 veces la mediana)",
@@ -1601,7 +1631,7 @@
    "sin_obra_comparable_pct_ingresos": 1.0,
    "pudo_hacerse": [
     {
-     "que": "Ciudadela Educativa (diseñada en 2014 por $300 M, pesos corrientes)",
+     "que": "Ciudadela Educativa (diseñada en 2014 por $300 M en pesos corrientes de 2014)",
      "costo": 12198.9,
      "equivalencia": "≈ 20 aulas escolares dotadas",
      "por_que_no": "Se diseñó en 2014 y hubo contrato de obra, que quedó suspendido (el plan 2020–2023 habla de su \"reinicio\"). Costo: lo previsto en el plan 2016–2019 ($7.090 M, pesos corrientes de 2016).",
@@ -1612,7 +1642,7 @@
      "que": "PTAR para el casco urbano",
      "costo": 13876.2,
      "equivalencia": "1 PTAR (costo entre $13.527 M y $30.176 M; sin colectores)",
-     "por_que_no": "Siguió pendiente. Los estudios de 18 acueductos rurales de 2013 ($1.159 M, pesos corrientes) sí tuvieron después obras de acueductos veredales (BPIN 2013058930013 y 2015058930003).",
+     "por_que_no": "Siguió pendiente. Los estudios de 18 acueductos rurales de 2013 ($1.159 M en pesos corrientes de 2013) sí tuvieron después obras de acueductos veredales (BPIN 2013058930013 y 2015058930003).",
      "fuente": "data/comparativa/costo_no_hacer.json (costos_unitarios: ptar_12000_hab, PTAR de Tenjo, Corozal y Salónica indexadas); Superservicios 2020: https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf; docs/anexos/A-gobiernos-2004-2027.md (§8.7)",
      "cubierto_con_plata_sin_obra_pct": 29.4,
      "costo_rango": [
@@ -1632,8 +1662,8 @@
      "que": "400 becas universitarias de un año (100 por año) para bachilleres",
      "costo": 7003.6,
      "equivalencia": "≈ 400 becas universitarias de un año",
-     "por_que_no": "La cobertura neta en media era de 21,5 %.",
-     "fuente": "data/comparativa/costo_no_hacer.json (beca_universitaria_anual, supuesto); data/gobiernos.json",
+     "por_que_no": "La cobertura neta en media fue de 21,5 % en promedio de 2012–2015 (21,4 % en 2015; MEN en TerriData).",
+     "fuente": "data/comparativa/costo_no_hacer.json (beca_universitaria_anual, supuesto); data/comparativa/panel_anual.json (cob_neta_media)",
      "cubierto_con_plata_sin_obra_pct": 58.3
     }
    ],
@@ -2059,6 +2089,9 @@
      ],
      "valor_corriente": 116984651,
      "corte_avance": "2026-10-21",
+     "valor_terminados": 155.8,
+     "valor_en_ejecucion": 0.0,
+     "certeza": "hecho con cálculo: valor × (avance financiero − avance físico) sobre GESPROY a octubre de 2026; el valor en pesos de 2026 depende de cuándo se pagó (rango)",
      "no_sumado_ejecutor_nacional": 5809.9
     },
     {
@@ -2127,7 +2160,7 @@
      "min": 89.9,
      "max": 1635.8,
      "tipo": "estimado",
-     "detalle": "Hecho: la alcaldía contrató $73.016 M sin competencia (31,4 % de $232.454 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $3.176 M; se restan $156 M ya contados en pagos por delante del avance; base $3.020 M. Las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó ($28.873 M, de ellos $6.539 M de subsidios a las tarifas) no son compras y salen de esa base. Línea 2: de lo transferido, $13.182 M pudo contratarse sin competencia por esas entidades (acotado por lo que contrataron así ese año). Para $4.717 M transferidos en años sin datos de Aguas y Aseo o del hospital en SECOP (2016, 2017, 2018, 2019) no hay dato y no se estima nada. Costo posible: 6 % de la base (rango 3–10 %). No prueba corrupción: mide el precio usual de renunciar a la competencia.",
+     "detalle": "Hecho: la alcaldía contrató $73.016 M sin competencia (31,4 % de $232.454 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $3.176 M; se restan $156 M ya contados en pagos por delante del avance; base $3.020 M. Las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó ($28.873 M, de ellos $6.539 M de subsidios a las tarifas) no son compras y salen de esa base. Línea 2: de lo transferido, $13.182 M pudo contratarse sin competencia por esas entidades (acotado por lo que contrataron así ese año). Para $4.717 M transferidos en años sin datos de Aguas y Aseo o del hospital en SECOP (2016, 2017, 2018, 2019) no hay dato y no se estima nada. Costo posible: 6 % de la base, $972 M ($181 M por compras a terceros y $791 M por lo transferido); rango 3–10 %. No prueba corrupción: mide el precio usual de renunciar a la competencia.",
      "items": [],
      "fuentes": [
       "data/comparativa/fugas_secop.json",
@@ -2139,6 +2172,9 @@
      "base_compras_terceros": 3020.3,
      "base_transferencias": 13181.7,
      "transferencias_sin_dato": 4717.2,
+     "base_edu": 0.0,
+     "costo_compras_terceros": 181.2,
+     "costo_transferencias": 790.9,
      "transferencias_total": 28872.7,
      "subsidios_tarifas": 6539.0,
      "un_oferente_base": 0.0,
@@ -2152,7 +2188,7 @@
      "min": 0.0,
      "max": 19491.5,
      "tipo": "indicio",
-     "detalle": "1.492 contratos OPS por $40.207 M de 2026, de ellos 125 de formulación de proyectos por $2.971 M. Referencia: 473.553 pesos de 2026 por habitante al año (mediana 2012–2025; rango 274.784–692.217). Suma de los años por encima: $4.519 M; desviación neta del periodo (los años por debajo restan): $4.507 M. Se quitaron 9 contratos que la clasificación ponía en OPS pero no son prestación de servicios ($7.084 M: transferencias a Aguas y Aseo o al hospital, subsidios a tarifas y convenios para aunar esfuerzos). Es un indicio para comparar con la planta de personal: los contratistas prestaron servicios.",
+     "detalle": "1.492 contratos OPS por $40.207 M de 2026, de ellos 125 de formulación de proyectos por $2.971 M. Referencia: 473.553 pesos de 2026 por habitante al año (mediana de Yondó en 2012–2025; rango entre el percentil 25, 274.784, y el 75, 692.217; esos años mezclan SECOP I, hasta 2023, y SECOP II, desde 2024). Suma de los años por encima: $4.519 M; desviación neta del periodo (los años por debajo restan): $4.507 M. Se quitaron 9 contratos que la clasificación ponía en OPS pero no son prestación de servicios ($7.084 M: transferencias a Aguas y Aseo o al hospital, subsidios a tarifas y convenios para aunar esfuerzos). Es un indicio para comparar con la planta de personal: los contratistas prestaron servicios.",
      "items": [
       {
        "nombre": "OPS 2016: 316 contratos, 201 personas, $12.153 M (667.612 pesos de 2026 por habitante, 1,4 veces la mediana)",
@@ -2312,7 +2348,7 @@
      "que": "Una vía terciaria por Obras por Impuestos (si una empresa contribuyente escogía el proyecto)",
      "costo": 9243.4,
      "equivalencia": "≈ 9,2 km de placa huella (entre 4,3 y 11, según el costo unitario)",
-     "por_que_no": "Obras por Impuestos empezó en 2018. Entre los proyectos aprobados (ART 2018–2025) Yondó solo tuvo uno, de dotación escolar en 2019 ($1.169 M, pesos corrientes).",
+     "por_que_no": "Obras por Impuestos empezó en 2018. Entre los proyectos aprobados (ART 2018–2025) Yondó solo tuvo uno, de dotación escolar en 2019 ($1.169 M en pesos corrientes de 2019).",
      "fuente": "https://www.renovacionterritorio.gov.co/sites/default/files/2025-10/proyectos_2018_2025.pdf; data/comparativa/sgr_fondos.json",
      "cubierto_con_plata_sin_obra_pct": 49.0
     },
@@ -2382,7 +2418,7 @@
      "monto_referencia": 3081.1,
      "min": 0.0,
      "max": 14146.7,
-     "comparable": "Ventana 2018–2023 (2 de 6 años en este gobierno). Entre los proyectos aprobados (ART 2018–2025) Yondó solo tuvo uno, de dotación escolar con Ecopetrol en 2019 ($1.169 M, pesos corrientes de 2019). De 8 municipios comparables, 6 no tuvieron proyecto propio (mediana de los pares: $0 M); Cantagallo tuvo uno de $5.333 M (pesos corrientes). En 2024 llegó la vía El Paraíso–La Raya–Las Lomas ($52.237 M según la ART, pesos corrientes de 2024). Depende de que una empresa escoja el proyecto.",
+     "comparable": "Ventana 2018–2023 (2 de 6 años en este gobierno). Entre los proyectos aprobados (ART 2018–2025) Yondó solo tuvo uno, de dotación escolar con Ecopetrol en 2019 ($1.169 M en pesos corrientes de 2019). De 8 municipios comparables, 6 no tuvieron proyecto propio (mediana de los pares: $0 M); Cantagallo tuvo uno de $5.333 M; San Pablo tuvo uno de $412 M (pesos corrientes). En 2024 llegó la vía El Paraíso–La Raya–Las Lomas ($52.237 M en pesos corrientes de 2024, según la ART). Depende de que una empresa escoja el proyecto.",
      "fuente": "https://www.renovacionterritorio.gov.co/sites/default/files/2025-10/proyectos_2018_2025.pdf; https://www.vanguardia.com/santander/barrancabermeja/2026/01/22/ecopetrol-invertira-cerca-de-42-mil-millones-en-vias-rurales-del-magdalena-medio-antioqueno/; data/comparativa/sgr_fondos.json",
      "suma_en_total": true
     },
@@ -2392,7 +2428,7 @@
      "monto_referencia": 315.8,
      "min": 0.0,
      "max": 1516.1,
-     "comparable": "En el registro de APC solo aparece una donación de Japón para Yondó (2014, US$106.715); la Unión Europea financió proyectos en 5 municipios del Sur de Bolívar (2016, US$1,68 M). Baja certeza.",
+     "comparable": "En el registro de APC solo aparece una donación de Japón para Yondó (2014, US$106.715); la Unión Europea financió proyectos en 5 municipios del Sur de Bolívar (2016, US$1,68 millones). Baja certeza.",
      "fuente": "https://www.datos.gov.co/d/2d3i-f9wd; data/comparativa/sgr_fondos.json",
      "suma_en_total": true
     }
@@ -2595,7 +2631,7 @@
      "min": 25658.2,
      "max": 40458.9,
      "tipo": "hecho",
-     "detalle": "9 proyectos de regalías con ejecutor municipal tienen pagos por encima del avance reportado en GESPROY a octubre de 2026 ($30.434 M en pesos corrientes de cada pago; $35.497 M de 2026). $35.034 M corresponden a proyectos que el municipio delegó en la EDU de Medellín. 7 siguen en ejecución: la brecha puede cerrarse y parte puede ser un anticipo legal. De lo pagado en estos proyectos, $15.836 M en pesos corrientes de 2025–2026 se pagaron en 2025–2026 (MinHacienda), en el gobierno siguiente: la brecha se atribuye al gobierno que aprobó y contrató, no al que pagó. 5 tienen alertas de datos (registros que no coinciden entre GESPROY y MapaInversiones); el mínimo excluye los contradictorios. El proyecto de vivienda 2022003050005 es de tres municipios (Puerto Nare, Yolombó y Yondó; 60 de 150 viviendas en Yondó): el mínimo cuenta solo esa parte. Para la plata propia (no regalías) no hay datos abiertos de avance físico: SECOP I no publica pagos y SECOP II no publica avance de obra.",
+     "detalle": "9 proyectos de regalías con ejecutor municipal tienen pagos por encima del avance reportado en GESPROY a octubre de 2026 ($30.434 M en pesos corrientes de cada pago; $35.497 M de 2026). $35.034 M corresponden a proyectos que el municipio delegó en la EDU de Medellín. $310 M están en proyectos ya terminados, donde la brecha no se cierra con más obra, y $35.187 M en 7 proyectos que siguen en ejecución: ahí la brecha puede cerrarse y parte puede ser un anticipo legal. De lo pagado en estos proyectos, $15.836 M en pesos corrientes de 2025–2026 se pagaron en 2025–2026 (MinHacienda), en el gobierno siguiente: la brecha se atribuye al gobierno que aprobó y contrató, no al que pagó. 5 tienen alertas de datos (registros que no coinciden entre GESPROY y MapaInversiones); el mínimo excluye los contradictorios. El proyecto de vivienda 2022003050005 es de tres municipios (Puerto Nare, Yolombó y Yondó; 60 de 150 viviendas en Yondó): el mínimo cuenta solo esa parte. Para la plata propia (no regalías) no hay datos abiertos de avance físico: SECOP I no publica pagos y SECOP II no publica avance de obra.",
      "items": [
       {
        "nombre": "Construcción de alternativa de pavimentación y construcción de obras de arte en el corredor vial de la Ye de… (EDU de Medellín)",
@@ -2857,6 +2893,9 @@
      ],
      "valor_corriente": 30433904312,
      "corte_avance": "2026-10-21",
+     "valor_terminados": 310.0,
+     "valor_en_ejecucion": 35187.3,
+     "certeza": "hecho con cálculo: valor × (avance financiero − avance físico) sobre GESPROY a octubre de 2026; el valor en pesos de 2026 depende de cuándo se pagó (rango)",
      "no_sumado_ejecutor_nacional": 0.0
     },
     {
@@ -2865,7 +2904,7 @@
      "min": null,
      "max": null,
      "tipo": "plata quieta",
-     "detalle": "Al cierre de 2022 quedaban sin comprometer $7.054 M de asignaciones directas, $4.631 M de incentivos del OCAD Paz y $1.017 M de la Asignación para la Inversión Local. Además, $27.845 M en pesos corrientes de 2022 comprometidos pasaron sin pagar al bienio siguiente.",
+     "detalle": "Al cierre de 2022 quedaban sin comprometer $7.054 M de asignaciones directas, $4.631 M del incentivo a la producción (sus proyectos los aprueba el OCAD Paz) y $1.017 M de la Asignación para la Inversión Local. Además, $27.845 M en pesos corrientes de 2022 comprometidos pasaron sin pagar al bienio siguiente.",
      "items": [
       {
        "nombre": "Asignaciones directas presupuestadas y sin comprometer al cierre del bienio 2021–2022 (CHIP)",
@@ -2878,7 +2917,7 @@
        "medida": "presupuesto − compromisos"
       },
       {
-       "nombre": "Incentivos del OCAD Paz (Acto Legislativo 04 de 2017) que pasaron sin usar a 2023–2024",
+       "nombre": "Incentivo a la producción (lo aprueba el OCAD Paz) que pasó sin usar a 2023–2024",
        "anio": 2022,
        "valor": 4631.2,
        "fuente": "https://www.datos.gov.co/d/5ka2-and2 (disponibilidad inicial 2023-2024); data/comparativa/sgr_fondos.json",
@@ -2919,10 +2958,10 @@
     {
      "categoria": "sobrecosto_sin_competencia",
      "valor": 9146.0,
-     "min": 3373.9,
+     "min": 1142.4,
      "max": 16227.3,
      "tipo": "estimado",
-     "detalle": "Hecho: la alcaldía contrató $234.558 M sin competencia (83,1 % de $282.350 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $153.349 M, de ellos $1.059 M en procesos competitivos con un solo oferente; se restan $35.497 M ya contados en pagos por delante del avance; base $117.851 M. Las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó ($52.278 M, de ellos $5.902 M de subsidios a las tarifas) no son compras y salen de esa base. Línea 2: de lo transferido, $34.582 M pudo contratarse sin competencia por esas entidades (acotado por lo que contrataron así ese año). Para $2.168 M transferidos en años sin datos de Aguas y Aseo o del hospital en SECOP (2020, 2021) no hay dato y no se estima nada. Costo posible: 6 % de la base (rango 3–10 %). No prueba corrupción: mide el precio usual de renunciar a la competencia. El mínimo quita $428 M de posibles registros duplicados no verificados. En 8 de los 9 procesos competitivos con dato de SECOP II hubo un solo oferente (este dato no existe para gobiernos anteriores). Los convenios con la EDU de Medellín ($116.707 M) fueron el 41 % del valor contratado.",
+     "detalle": "Hecho: la alcaldía contrató $234.558 M sin competencia (83,1 % de $282.350 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $153.349 M, de ellos $1.059 M en procesos competitivos con un solo oferente; se restan $35.497 M ya contados en pagos por delante del avance; base $117.851 M. La línea 1 incluye $114.347 M de convenios con la EDU de Medellín, empresa pública de otro municipio que Yondó escogió sin competencia; la EDU contrató después por su cuenta y sus contratos derivados de 2021–2023 no figuran en SECOP con el nombre de Yondó, así que no se sabe si compitieron. El mínimo no cuenta la EDU. Las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó ($52.278 M, de ellos $5.902 M de subsidios a las tarifas) no son compras y salen de esa base. Línea 2: de lo transferido, $34.582 M pudo contratarse sin competencia por esas entidades (acotado por lo que contrataron así ese año). Para $2.168 M transferidos en años sin datos de Aguas y Aseo o del hospital en SECOP (2020, 2021) no hay dato y no se estima nada. Costo posible: 6 % de la base, $9.146 M ($7.071 M por compras a terceros y $2.075 M por lo transferido); rango 3–10 %. No prueba corrupción: mide el precio usual de renunciar a la competencia. El mínimo quita $428 M de posibles registros duplicados no verificados. En 8 de los 9 procesos competitivos con dato de SECOP II hubo un solo oferente (este dato no existe para gobiernos anteriores). Los convenios con la EDU de Medellín ($116.707 M) fueron el 41 % del valor contratado.",
      "items": [
       {
        "nombre": "Contrato de referencia de la base (no se afirma sobrecosto en él): Contrato interadministrativo de administraciòn delegada para la adecuaciòn mantenimiento y construc… — Empresa de Desarrollo Urbano de Medellín (EDU)",
@@ -2959,6 +2998,9 @@
      "base_compras_terceros": 117851.2,
      "base_transferencias": 34582.4,
      "transferencias_sin_dato": 2167.5,
+     "base_edu": 114347.2,
+     "costo_compras_terceros": 7071.1,
+     "costo_transferencias": 2074.9,
      "transferencias_total": 52277.7,
      "subsidios_tarifas": 5901.9,
      "un_oferente_base": 1058.6,
@@ -2972,7 +3014,7 @@
      "min": 0.0,
      "max": 5150.8,
      "tipo": "indicio",
-     "detalle": "1.245 contratos OPS por $27.163 M de 2026, de ellos 171 de formulación de proyectos por $3.690 M. Referencia: 473.553 pesos de 2026 por habitante al año (mediana 2012–2025; rango 274.784–692.217). Suma de los años por encima: $0 M; desviación neta del periodo (los años por debajo restan): −$11.964 M. Se quitaron 6 contratos que la clasificación ponía en OPS pero no son prestación de servicios ($2.765 M: transferencias a Aguas y Aseo o al hospital, subsidios a tarifas y convenios para aunar esfuerzos). Es un indicio para comparar con la planta de personal: los contratistas prestaron servicios.",
+     "detalle": "1.245 contratos OPS por $27.163 M de 2026, de ellos 171 de formulación de proyectos por $3.690 M. Referencia: 473.553 pesos de 2026 por habitante al año (mediana de Yondó en 2012–2025; rango entre el percentil 25, 274.784, y el 75, 692.217; esos años mezclan SECOP I, hasta 2023, y SECOP II, desde 2024). Suma de los años por encima: $0 M; desviación neta del periodo (los años por debajo restan): −$11.964 M. Se quitaron 6 contratos que la clasificación ponía en OPS pero no son prestación de servicios ($2.765 M: transferencias a Aguas y Aseo o al hospital, subsidios a tarifas y convenios para aunar esfuerzos). Es un indicio para comparar con la planta de personal: los contratistas prestaron servicios.",
      "items": [],
      "fuentes": [
       "data/comparativa/fugas_secop.json",
@@ -2995,7 +3037,7 @@
      "min": 0.0,
      "max": 4494.6,
      "tipo": "estimado",
-     "detalle": "Frente a la mediana de 7 comparables Yondó recaudó $25.922 M más en predial e ICA (pesos de 2026, suma del periodo). Máximo: predial con catastro actualizado ($4.495 M en 3 años). La extracción de petróleo no paga ICA por ley (art. 16 del Código de Petróleos; art. 39 de la Ley 14 de 1983): no es recaudo perdido.",
+     "detalle": "Frente a la mediana de 7 comparables Yondó recaudó $25.922 M más en predial e ICA (pesos de 2026, suma del periodo). Máximo ($4.495 M): el predial con catastro actualizado ($4.495 M en 3 años); frente al percentil 75 de los comparables no hay brecha de predial. La extracción de petróleo no paga ICA por ley (art. 16 del Código de Petróleos; art. 39 de la Ley 14 de 1983): no es recaudo perdido.",
      "items": [],
      "fuentes": [
       "data/comparativa/costo_no_hacer.json (recaudo_potencial)",
@@ -3091,7 +3133,7 @@
    "total_contrafactual": 10206.1,
    "sin_obra": 48051.9,
    "sin_obra_rango": [
-    32209.0,
+    29977.5,
     64845.8
    ],
    "categorias_sin_obra_con_dato": "5 de 5",
@@ -3151,7 +3193,7 @@
      "costo_unitario": 123.7,
      "id": "vis_rural",
      "rango_n": [
-      204.4,
+      190.2,
       722.2
      ],
      "certeza_costo": "estimado",
@@ -3163,7 +3205,7 @@
      "costo_unitario": 13876.2,
      "id": "ptar_12000_hab",
      "rango_n": [
-      1.1,
+      1.0,
       4.8
      ],
      "certeza_costo": "estimado",
@@ -3175,7 +3217,7 @@
      "costo_unitario": 1000.0,
      "id": "km_placa_huella",
      "rango_n": [
-      14.9,
+      13.9,
       80.1
      ],
      "certeza_costo": "estimado",
@@ -3187,7 +3229,7 @@
      "costo_unitario": 600.0,
      "id": "aula_dotada",
      "rango_n": [
-      34.0,
+      31.6,
       162.1
      ],
      "certeza_costo": "estimado",
@@ -3201,7 +3243,7 @@
      "monto_referencia": 6162.3,
      "min": 0.0,
      "max": 28293.3,
-     "comparable": "Ventana 2018–2023 (4 de 6 años en este gobierno). Entre los proyectos aprobados (ART 2018–2025) Yondó solo tuvo uno, de dotación escolar con Ecopetrol en 2019 ($1.169 M, pesos corrientes de 2019). De 8 municipios comparables, 6 no tuvieron proyecto propio (mediana de los pares: $0 M); Cantagallo tuvo uno de $5.333 M (pesos corrientes). En 2024 llegó la vía El Paraíso–La Raya–Las Lomas ($52.237 M según la ART, pesos corrientes de 2024). Depende de que una empresa escoja el proyecto.",
+     "comparable": "Ventana 2018–2023 (4 de 6 años en este gobierno). Entre los proyectos aprobados (ART 2018–2025) Yondó solo tuvo uno, de dotación escolar con Ecopetrol en 2019 ($1.169 M en pesos corrientes de 2019). De 8 municipios comparables, 6 no tuvieron proyecto propio (mediana de los pares: $0 M); Cantagallo tuvo uno de $5.333 M; San Pablo tuvo uno de $412 M (pesos corrientes). En 2024 llegó la vía El Paraíso–La Raya–Las Lomas ($52.237 M en pesos corrientes de 2024, según la ART). Depende de que una empresa escoja el proyecto.",
      "fuente": "https://www.renovacionterritorio.gov.co/sites/default/files/2025-10/proyectos_2018_2025.pdf; https://www.vanguardia.com/santander/barrancabermeja/2026/01/22/ecopetrol-invertira-cerca-de-42-mil-millones-en-vias-rurales-del-magdalena-medio-antioqueno/; data/comparativa/sgr_fondos.json",
      "suma_en_total": true
     },
@@ -3211,7 +3253,7 @@
      "monto_referencia": 1770.1,
      "min": 168.6,
      "max": 2360.1,
-     "comparable": "Yondó tiene 4 sedes conectadas; sus 8 comparables, entre 5 y 18 (corte oct-2023). El valor por sede ($142,7 M) es la inversión que registra MinTIC, un estándar del programa, no un costo medido en Yondó.",
+     "comparable": "Yondó tiene 4 sedes conectadas; sus 8 comparables, entre 5 y 18 (corte oct-2023). El valor por sede ($142,7 M, pesos corrientes de 2023) es la inversión que registra MinTIC, un estándar del programa, no un costo medido en Yondó.",
      "fuente": "https://www.datos.gov.co/d/fybg-535s; docs/anexos/D-energia-mintic.md; data/comparativa/sgr_fondos.json",
      "suma_en_total": true
     },
@@ -3221,7 +3263,7 @@
      "monto_referencia": 315.8,
      "min": 0.0,
      "max": 1516.1,
-     "comparable": "En el registro de APC solo aparece una donación de Japón para Yondó (2014, US$106.715); la Unión Europea financió proyectos en 5 municipios del Sur de Bolívar (2016, US$1,68 M). Baja certeza.",
+     "comparable": "En el registro de APC solo aparece una donación de Japón para Yondó (2014, US$106.715); la Unión Europea financió proyectos en 5 municipios del Sur de Bolívar (2016, US$1,68 millones). Baja certeza.",
      "fuente": "https://www.datos.gov.co/d/2d3i-f9wd; data/comparativa/sgr_fondos.json",
      "suma_en_total": true
     },
@@ -3236,15 +3278,15 @@
      "suma_en_total": false
     },
     {
-     "fondo": "Incentivo a la producción del OCAD Paz (bolsa IPAZ; línea \"Territorios energéticos\", hasta $8.000 M)",
+     "fondo": "Incentivo a la producción (lo aprueba el OCAD Paz; bolsa IPAZ en MinHacienda), con la línea \"Territorios energéticos\" (hasta $8.000 M por proyecto, pesos corrientes de 2025)",
      "desde": 2017,
      "monto_referencia": 4631.2,
-     "comparable": "Incentivos del OCAD Paz: $4.079 M (pesos corrientes) pasaron sin usar a 2021–2022 y $3.687 M a 2023–2024. Ya era plata de Yondó: se cuenta como plata quieta.",
+     "comparable": "Del incentivo a la producción pasaron sin usar $4.079 M en pesos corrientes de 2020 a 2021–2022 y $3.687 M en pesos corrientes de 2022 a 2023–2024. Ya era plata de Yondó: se cuenta como plata quieta.",
      "fuente": "https://www.datos.gov.co/d/e624-d9uy; data/comparativa/sgr_fondos.json",
      "suma_en_total": false
     }
    ],
-   "lectura": "Entraron $340.358 M de 2026 y se invirtió más que en cualquier otro gobierno, pero $35.497 M de recursos de proyectos de regalías se pagaron por delante del avance reportado a octubre de 2026, el 99 % en vivienda y vías delegadas en la EDU de Medellín. Con el 83 % contratado sin competencia, el costo posible de no competir suma $9.146 M; en total, $48.052 M sin obra (rango $32.209 M–$64.846 M). Además, al cierre de 2022 quedaban $12.702 M de regalías sin comprometer, que pasaron al bienio siguiente."
+   "lectura": "Entraron $340.358 M de 2026 y se invirtió más que en cualquier otro gobierno, pero $35.497 M de recursos de proyectos de regalías se pagaron por delante del avance reportado a octubre de 2026: el 99 % en proyectos delegados en la EDU de Medellín (vivienda, vías y un parque) y el 99 % en obras que siguen en ejecución, donde la brecha todavía puede cerrarse. Con el 83 % contratado sin competencia, el costo posible de no competir suma $9.146 M; en total, $48.052 M sin obra (rango $29.978 M–$64.846 M). Además, al cierre de 2022 quedaban $12.702 M de regalías sin comprometer, que pasaron al bienio siguiente."
   },
   {
    "id": "2024-2027",
@@ -3585,6 +3627,9 @@
      ],
      "valor_corriente": 126015238,
      "corte_avance": "2026-10-21",
+     "valor_terminados": 139.6,
+     "valor_en_ejecucion": 0.0,
+     "certeza": "hecho con cálculo: valor × (avance financiero − avance físico) sobre GESPROY a octubre de 2026; el valor en pesos de 2026 depende de cuándo se pagó (rango)",
      "no_sumado_ejecutor_nacional": 0.0
     },
     {
@@ -3593,7 +3638,7 @@
      "min": null,
      "max": null,
      "tipo": "plata quieta",
-     "detalle": "Al cierre del bienio 2023–2024 quedaban sin comprometer $5.851 M, casi todo de asignaciones directas. Aparte, y sin sumar: el bienio 2025–2026 sigue abierto y a octubre de 2026 hay $25.558 M por aprobar, $11.864 M que aprueba el municipio y $13.694 M del incentivo a la producción que aprueba el OCAD Paz.",
+     "detalle": "Al cierre del bienio 2023–2024 quedaban sin comprometer $5.851 M, casi todo de asignaciones directas. Ese bienio empezó en 2023, en el gobierno anterior: la mitad de su ejecución le corresponde a él, pero es el único bienio que ha cerrado en este periodo. Aparte, y sin sumar: el bienio 2025–2026 sigue abierto y a octubre de 2026 hay $25.558 M por aprobar, $11.864 M que aprueba el municipio y $13.694 M del incentivo a la producción que aprueba el OCAD Paz.",
      "items": [
       {
        "nombre": "Asignaciones directas presupuestadas y sin comprometer al cierre del bienio 2023–2024 (CHIP)",
@@ -3607,7 +3652,7 @@
        "cruza_dos_gobiernos": true
       },
       {
-       "nombre": "Incentivos del OCAD Paz que pasaron sin usar a 2025–2026",
+       "nombre": "Incentivo a la producción (lo aprueba el OCAD Paz) que pasó sin usar a 2025–2026",
        "anio": 2024,
        "valor": 122.9,
        "fuente": "https://www.datos.gov.co/d/5ka2-and2; data/comparativa/sgr_fondos.json",
@@ -3649,7 +3694,7 @@
        "en_curso": true
       },
       {
-       "nombre": "Incentivo a la producción del OCAD Paz (bolsa IPAZ) sin aprobar, 2025–2026: el municipio formula y presenta, el OCAD Paz (nacional) aprueba",
+       "nombre": "Incentivo a la producción sin aprobar, 2025–2026 (bolsa IPAZ en MinHacienda): el municipio formula y presenta, el OCAD Paz (nacional) aprueba",
        "anio": 2026,
        "valor": 13694.2,
        "fuente": "https://www.datos.gov.co/d/e624-d9uy (corte oct-2026); data/comparativa/sgr_fondos.json",
@@ -3682,7 +3727,7 @@
      "min": 1462.3,
      "max": 5014.4,
      "tipo": "estimado",
-     "detalle": "Hecho: la alcaldía contrató $77.533 M sin competencia (83,6 % de $92.739 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $49.233 M, de ellos $6.607 M en procesos competitivos con un solo oferente; se restan $140 M ya contados en pagos por delante del avance; base $49.094 M. Las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó ($19.938 M, de ellos $6.101 M de subsidios a las tarifas) no son compras y salen de esa base. Línea 2: de lo transferido, $910 M pudo contratarse sin competencia por esas entidades (acotado por lo que contrataron así ese año). Para $10.541 M transferidos en años sin datos de Aguas y Aseo o del hospital en SECOP (2024, 2025, 2026) no hay dato y no se estima nada. Costo posible: 6 % de la base (rango 3–10 %). No prueba corrupción: mide el precio usual de renunciar a la competencia. En 71 de los 102 procesos competitivos con dato de SECOP II hubo un solo oferente (este dato no existe para gobiernos anteriores). Datos de 2024 a octubre de 2026.",
+     "detalle": "Hecho: la alcaldía contrató $77.533 M sin competencia (83,6 % de $92.739 M, pesos de 2026; SECOP). Línea 1, compras a terceros: $49.233 M, de ellos $6.607 M en procesos competitivos con un solo oferente; se restan $140 M ya contados en pagos por delante del avance; base $49.094 M. Las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó ($19.938 M, de ellos $6.101 M de subsidios a las tarifas) no son compras y salen de esa base. Línea 2: de lo transferido, $910 M pudo contratarse sin competencia por esas entidades (acotado por lo que contrataron así ese año). Para $10.541 M transferidos en años sin datos de Aguas y Aseo o del hospital en SECOP (2024, 2025, 2026) no hay dato y no se estima nada. Costo posible: 6 % de la base, $3.000 M ($2.946 M por compras a terceros y $55 M por lo transferido); rango 3–10 %. No prueba corrupción: mide el precio usual de renunciar a la competencia. En 71 de los 102 procesos competitivos con dato de SECOP II hubo un solo oferente (este dato no existe para gobiernos anteriores). Datos de 2024 a octubre de 2026.",
      "items": [
       {
        "nombre": "Contrato de referencia de la base (no se afirma sobrecosto en él): Servicios de apoyo logístico y operativo para la atención integral a los adultos mayores del centro… — Asociación Centro de Bienestar del Anciano y Centro Vida para el Desarrollo del Adulto Mayor San Miguel Arcángel (RUES, Cámara de Comercio de Barrancabermeja, NIT 900108408: https://www.datos.gov.co/d/c82u-588k)",
@@ -3719,6 +3764,9 @@
      "base_compras_terceros": 49093.7,
      "base_transferencias": 910.2,
      "transferencias_sin_dato": 10541.2,
+     "base_edu": 0.0,
+     "costo_compras_terceros": 2945.6,
+     "costo_transferencias": 54.6,
      "transferencias_total": 19937.9,
      "subsidios_tarifas": 6101.0,
      "un_oferente_base": 6607.4,
@@ -3732,7 +3780,7 @@
      "min": 0.0,
      "max": 0.0,
      "tipo": "indicio",
-     "detalle": "874 contratos OPS por $15.006 M de 2026, de ellos 67 de formulación de proyectos por $1.514 M. Referencia: 473.553 pesos de 2026 por habitante al año (mediana 2012–2025; rango 274.784–692.217). Suma de los años por encima: $0 M; desviación neta del periodo (los años por debajo restan): −$16.328 M. Se quitó 1 contrato que la clasificación ponía en OPS pero no es prestación de servicios ($1.988 M: transferencias a Aguas y Aseo o al hospital, subsidios a tarifas y convenios para aunar esfuerzos). Es un indicio para comparar con la planta de personal: los contratistas prestaron servicios. 2026 va hasta octubre. Desde 2024 la alcaldía publica en SECOP II (antes, en SECOP I): un cambio de registro puede afectar la comparación.",
+     "detalle": "874 contratos OPS por $15.006 M de 2026, de ellos 67 de formulación de proyectos por $1.514 M. Referencia: 473.553 pesos de 2026 por habitante al año (mediana de Yondó en 2012–2025; rango entre el percentil 25, 274.784, y el 75, 692.217; esos años mezclan SECOP I, hasta 2023, y SECOP II, desde 2024). Suma de los años por encima: $0 M; desviación neta del periodo (los años por debajo restan): −$16.328 M. Se quitó 1 contrato que la clasificación ponía en OPS pero no es prestación de servicios ($1.988 M: transferencias a Aguas y Aseo o al hospital, subsidios a tarifas y convenios para aunar esfuerzos). Es un indicio para comparar con la planta de personal: los contratistas prestaron servicios. 2026 va hasta octubre. Desde 2024 la alcaldía publica en SECOP II (antes, en SECOP I): un cambio de registro puede afectar la comparación.",
      "items": [],
      "fuentes": [
       "data/comparativa/fugas_secop.json",
@@ -3755,7 +3803,7 @@
      "min": 0.0,
      "max": 2243.0,
      "tipo": "estimado",
-     "detalle": "Frente a la mediana de 7 comparables Yondó recaudó $1.181 M más en predial e ICA (pesos de 2026, suma del periodo). Máximo: brecha con el percentil 75 de los comparables ($1.802 M) y predial con catastro actualizado ($1.498 M en 1 año). Solo 2024 tiene dato comparable; en 2025 el predial subió a $3.044 M (pesos corrientes de 2025, CUIPO). La extracción de petróleo no paga ICA por ley (art. 16 del Código de Petróleos; art. 39 de la Ley 14 de 1983): no es recaudo perdido.",
+     "detalle": "Frente a la mediana de 7 comparables Yondó recaudó $1.181 M más en predial e ICA (pesos de 2026, suma del periodo). Máximo ($2.243 M): en predial, el mayor entre la brecha con el percentil 75 de los comparables ($1.057 M) y el predial con catastro actualizado ($1.498 M en 1 año), más la brecha de ICA con el percentil 75 ($745 M). Solo 2024 tiene dato comparable; en 2025 el predial subió a $3.044 M (pesos corrientes de 2025, CUIPO). La extracción de petróleo no paga ICA por ley (art. 16 del Código de Petróleos; art. 39 de la Ley 14 de 1983): no es recaudo perdido.",
      "items": [],
      "fuentes": [
       "data/comparativa/costo_no_hacer.json (recaudo_potencial)",
@@ -3961,7 +4009,7 @@
      "monto_referencia": 315.8,
      "min": 0.0,
      "max": 1516.1,
-     "comparable": "En el registro de APC solo aparece una donación de Japón para Yondó (2014, US$106.715); la Unión Europea financió proyectos en 5 municipios del Sur de Bolívar (2016, US$1,68 M). Baja certeza.",
+     "comparable": "En el registro de APC solo aparece una donación de Japón para Yondó (2014, US$106.715); la Unión Europea financió proyectos en 5 municipios del Sur de Bolívar (2016, US$1,68 millones). Baja certeza.",
      "fuente": "https://www.datos.gov.co/d/2d3i-f9wd; data/comparativa/sgr_fondos.json",
      "suma_en_total": true
     },
@@ -3996,7 +4044,7 @@
      "suma_en_total": false
     },
     {
-     "fondo": "Incentivo a la producción del OCAD Paz (bolsa IPAZ; línea \"Territorios energéticos\", hasta $8.000 M)",
+     "fondo": "Incentivo a la producción (lo aprueba el OCAD Paz; bolsa IPAZ en MinHacienda), con la línea \"Territorios energéticos\" (hasta $8.000 M por proyecto, pesos corrientes de 2025)",
      "desde": 2017,
      "monto_referencia": 13694.2,
      "comparable": "Pares (bolsa IPAZ 2025–2026, corte oct-2026): Segovia 0,0 %, Puerto Berrío 0,4 %, Puerto Nare 0,4 %, Simití 4,3 %, Barrancabermeja 16,0 %, Remedios 37,3 %, Cantagallo 42,7 %, San Pablo 82,6 %. Mediana 10,2 %, rango 0,0–82,6 %; Yondó 2,4 %. En la mitad de los pares la bolsa está casi sin aprobar: Yondó está por debajo de la mediana, pero no es un caso aislado. Ya es plata asignada a Yondó: se muestra como \"por aprobar\".",
@@ -4291,11 +4339,11 @@
   }
  ],
  "limitaciones": [
-  "SECOP casi no tiene contratos de Yondó antes de 2011 (41 de la alcaldía en 2007 y entre 39 y 205 por año en 2008–2011): para 2004–2011 los ceros son \"sin dato\", las cifras de contratación son un piso y el porcentaje sobre ingresos no es comparable.",
+  "SECOP casi no tiene contratos de Yondó antes de 2012 (41 de la alcaldía en 2007 y entre 39 y 205 por año en 2008–2011, frente a 671 en 2012): para 2004–2011 los ceros son \"sin dato\", las cifras de contratación son un piso y el porcentaje sobre ingresos no es comparable.",
   "La coincidencia estudio → obra se hace por palabras del objeto y solo con las obras del SECOP de la alcaldía: hay falsos negativos (obras hechas por Aguas y Aseo, la Gobernación, Ecopetrol, Findeter o la EDU con otras palabras) y falsos positivos. Se corrigieron a mano cinco casos con evidencia (fugas_secop.json, estudios_obra_hallada_fuera) y se da un rango con umbrales de 0,20 y 0,40. Es una agenda de verificación.",
   "El costo de contratar sin competencia es una estimación con rango tomado de estudios de otros países y de Colombia; no hay una medición directa de precios para Yondó. Contratar directamente es legal en muchos casos (convenios interadministrativos, OPS, régimen especial). Los estudios sobre sobornos y corrupción se citan solo como contexto y no entran en el rango.",
-  "Hay 24 registros de SECOP de $100 M o más que parecen duplicados (misma entidad, fecha, valor y contratista, con objeto parecido): 12 copias de más por $11.677 M corrientes. 12 grupos son de la alcaldía: 2009 $305 M en pesos corrientes de 2009 (otros servicios, transferencia a una entidad de Yondó); 2011 $215 M en pesos corrientes de 2011 (otros servicios); 2012 $120 M en pesos corrientes de 2012 (ops); 2012 $120 M en pesos corrientes de 2012 (ops); 2013 $1.159 M en pesos corrientes de 2013 (estudios, transferencia a una entidad de Yondó); 2013 $2.315 M en pesos corrientes de 2013 (ops, transferencia a una entidad de Yondó); 2014 $292 M en pesos corrientes de 2014 (convenios, transferencia a una entidad de Yondó); 2014 $600 M en pesos corrientes de 2014 (otros servicios); 2015 $161 M en pesos corrientes de 2015 (ops, transferencia a una entidad de Yondó); 2016 $700 M en pesos corrientes de 2016 (convenios, transferencia a una entidad de Yondó); 2020 $5.407 M en pesos corrientes de 2020 (convenios, transferencia a una entidad de Yondó); 2020 $284 M en pesos corrientes de 2020 (convenios). Cómo se tratan: en OPS se quita la segunda copia (mismo contratista, día, valor y objeto); las transferencias ya no entran en la línea 1 del costo de contratar sin competencia; en lo demás la copia se quita solo en el mínimo, porque no se verificó en el expediente que sea el mismo contrato (por ejemplo, los dos registros de $5.407 M de 2020 con Aguas y Aseo tienen constancias distintas, 20-12-10790932 y 20-12-10909779). La lista está en fugas_secop.json, ajustes_dinero_no_hecho.posibles_duplicados.",
-  "La referencia de OPS es interna (el propio Yondó en un año típico 2012–2025): mide cuánto se alejó cada gobierno de lo usual, no un estándar nacional, que no existe en datos abiertos. La serie 2008–2023 es de SECOP I y la de 2024–2026 de SECOP II. La cifra publicada de 5.580 OPS se mantiene por continuidad; para este cálculo se quitaron los contratos que la clasificación ponía en OPS sin serlo (fugas_secop.json, ajustes_dinero_no_hecho.ops_reclasificadas_alcaldia).",
+  "Hay 24 registros de SECOP de $100 M o más que parecen duplicados (misma entidad, fecha, valor y contratista, con objeto parecido): 12 copias de más por $11.677 M corrientes. 12 grupos son de la alcaldía: 2009 $305 M en pesos corrientes de 2009 (otros servicios, transferencia a una entidad de Yondó); 2011 $215 M en pesos corrientes de 2011 (otros servicios); 2012 $120 M en pesos corrientes de 2012 (ops); 2012 $120 M en pesos corrientes de 2012 (ops); 2013 $1.159 M en pesos corrientes de 2013 (estudios, transferencia a una entidad de Yondó); 2013 $2.315 M en pesos corrientes de 2013 (ops, transferencia a una entidad de Yondó); 2014 $292 M en pesos corrientes de 2014 (convenios, transferencia a una entidad de Yondó); 2014 $600 M en pesos corrientes de 2014 (otros servicios); 2015 $161 M en pesos corrientes de 2015 (ops, transferencia a una entidad de Yondó); 2016 $700 M en pesos corrientes de 2016 (convenios, transferencia a una entidad de Yondó); 2020 $5.407 M en pesos corrientes de 2020 (convenios, transferencia a una entidad de Yondó); 2020 $284 M en pesos corrientes de 2020 (convenios). Cómo se tratan: en OPS se quita la segunda copia (mismo contratista, día, valor y objeto); las transferencias ya no entran en la línea 1 del costo de contratar sin competencia; en lo demás la copia se quita solo en el mínimo, porque no se verificó en el expediente que sea el mismo contrato (por ejemplo, los 2 registros de $5.407 M en pesos corrientes de 2020 con Aguas y Aseo de Yondó S.A. E.S.P. tienen constancias distintas, 20-12-10790932 y 20-12-10909779). La lista está en fugas_secop.json, ajustes_dinero_no_hecho.posibles_duplicados.",
+  "La referencia de OPS es interna (el propio Yondó en un año típico 2012–2025): mide cuánto se alejó cada gobierno de lo usual, no un estándar nacional, que no existe en datos abiertos. Hasta 2023 la alcaldía publicó casi todo en SECOP I y desde 2024 en SECOP II: el cambio de sistema puede afectar la comparación. La cifra publicada de 5.580 OPS (2008–2026) se mantiene por continuidad; para este cálculo se quitaron 29 contratos que la clasificación ponía en OPS sin serlo (transferencias, subsidios, convenios para aunar esfuerzos e instituciones públicas) y 2 segundas copias de registros duplicados, y quedan 5.549 (fugas_secop.json, ajustes_dinero_no_hecho.ops_reclasificadas_alcaldia).",
   "Los pagos por delante del avance solo existen para proyectos de regalías (GESPROY). Para la plata propia y para los convenios con la EDU no hay datos abiertos de avance físico ni de pagos (SECOP I no publica pagos; los anticipos solo constan en el expediente). La brecha se mide a octubre de 2026, incluye pagos hechos después de cada gobierno y se atribuye al gobierno que aprobó el proyecto.",
   "GESPROY y MapaInversiones no coinciden en varios proyectos (estado o pagos): se usa GESPROY y el mínimo excluye los contradictorios. El año de aprobación es estimado: los proyectos fechados en 2015, 2019 y 2023 pudieron aprobarse a comienzos del año siguiente (bienios compartidos) y el mínimo los excluye. El valor de cada proyecto es el total de GESPROY y puede incluir cofinanciación.",
   "Los saldos de regalías no son plata perdida: en el SGR pasan al bienio siguiente. Para 2016–2019 no hay dato abierto al cierre de 2018 y se usa el corte de septiembre de 2018, con todo el capítulo SGR; para 2020–2023 y 2024–2027 se usan las asignaciones directas más los incentivos y la inversión local. La medida es la misma (presupuesto menos compromisos), salvo los incentivos, que se miden como plata que pasó sin usar al bienio siguiente.",

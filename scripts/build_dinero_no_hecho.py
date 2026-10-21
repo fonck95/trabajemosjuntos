@@ -47,6 +47,9 @@ GOB = json.load(open(RAIZ / 'data' / 'gobiernos.json', encoding='utf-8'))
 IPC = {int(k): float(v) for k, v in PANEL['ipc'].items()}
 POB = {int(k): float(v) for k, v in PANEL['poblacion'].items()}
 IND = {i['id']: i for i in PANEL['indicadores']}
+COB_MEDIA = IND['cob_neta_media']['serie']                                  # cobertura neta en media (MEN, TerriData)
+COB_MEDIA_0507 = statistics.mean(COB_MEDIA[str(a)] for a in range(2005, 2008))
+COB_MEDIA_1215 = statistics.mean(COB_MEDIA[str(a)] for a in range(2012, 2016))
 IPC_MES = {int(k): v for k, v in CNH['series_usadas']['ipc_dane']['mensual'].items()}
 IPC_BASE = float(CNH['series_usadas']['ipc_dane']['base_2026'])
 
@@ -222,8 +225,12 @@ def eq_texto(valor, id_, con_rango=False):
 SECOP_ALC = {r['anio']: r for r in FUGAS['por_anio'] if r['entidad'] == 'Alcaldía'}
 SECOP_ENT = {(r['entidad'], r['anio']): r for r in FUGAS['por_anio']}
 AJ = FUGAS['ajustes_dinero_no_hecho']
+CIUDADELA = next(e for e in AJ['estudios_obra_hallada_fuera'] if e['motivo'] == 'obra_suspendida')
+ACUED = next(e for e in AJ['estudios_obra_hallada_fuera'] if 'acueductos rurales' in e['etiqueta'])
 RES_ALC = {r['periodo']: r for r in FUGAS['resumen_alcaldia_por_periodo']}
 COBERTURA = {r['anio']: r for r in FUGAS['cobertura_contratos_por_anio']}
+N_ALC_2007 = COBERTURA[2007]['Alcaldía']                                   # contratos de la alcaldía en SECOP en 2007 (el primer año con registros)
+N_ALC_0811 = [COBERTURA[a]['Alcaldía'] for a in range(2008, 2012)]
 PANEL_PER = {p['id']: p for p in PANEL['periodos']}
 SGR_PROY = {p['periodo']: p for p in SGR['proyectos_por_periodo']}
 SGR_AD = {b['bienio']: b for b in SGR['asignaciones_directas']}
@@ -235,6 +242,10 @@ for f in SGR['fondos']:
          else 'FINDETER' if n.startswith('Findeter') else 'ADAPTACION' if n.startswith('Fondo Adaptación') else 'COOPERACION')
     FONDOS[k] = f
 SOLAR = {r['gobierno_que_inicia']: r for r in CNH['contrafactual_solar']['resultados']}
+OXI_PROPIOS = {int(x['anio']): {'anio': int(x['anio']), 'valor': x['valor']} for x in FONDOS['OXI']['yondo_obtuvo']['propios']}
+OXI_2019, OXI_2024 = OXI_PROPIOS[2019], OXI_PROPIOS[2024]
+COOP_USD = FONDOS['COOPERACION']['yondo_obtuvo']['monto_usd']
+COOP_UE_USD = FONDOS['COOPERACION']['comparables'][0]['monto_usd']
 ESPERA_SOLAR = CNH['contrafactual_solar']['costo_de_esperar_desde_2026']['ahorro_bruto_anual_solo_solar_cop_2026'] / 1e6
 AHORRO = {r['anio']: r for r in CNH['contrafactual_ahorro_regalias']['filas']}
 RECAUDO = {r['periodo']: r for r in CNH['recaudo_potencial']['por_periodo']}
@@ -247,6 +258,10 @@ MESES_2026 = 10        # la serie de 2026 es anual; el corte es octubre: se cuen
 
 # proyectos SGR que ejecutó la EDU de Medellín como contratista del municipio (docs/01-diagnostico-sectorial.md, tabla de brechas; anexo A, §8)
 BPIN_EDU = {'20201301010644', '20201301010781', '2022003050005', '2022003050034', '20211301012365', '2023058930013'}
+EDU_PROY = {it['bpin']: it['valor'] for p_ in SGR['proyectos_por_periodo'] for it in p_['items'] if it['bpin'] in BPIN_EDU}
+EDU_CONTRATOS = [c for c in FUGAS['convenios_delegada'] if c['entidad'] == 'Alcaldía' and 'Desarrollo Urbano de Medellín' in c['contratista']]
+EDU_MIXTO = max((c for c in EDU_CONTRATOS if 'DISE' in c['objeto'].upper() and 'DELEGADA' in c['objeto'].upper()), key=lambda c: c['valor'])
+EJ_HECHO = next(it for p_ in SGR['proyectos_por_periodo'] for it in p_['items'] if it['bpin'] == '2022003050034')
 BPIN_EDU_YARUMAL = {'2022003050005', '2022003050034'}   # contrato 134-2023: en 2026 figura a nombre de la E. D. T. de Yarumal (anexo A, §8.3)
 # proyectos de varios municipios que el registro no marca como multimunicipales; parte de Yondó según el anexo A, §8.3
 MULTI_POR_NOMBRE = {'2022003050005': {'municipios': 'Puerto Nare, Yolombó y Yondó', 'parte_yondo': 60 / 150,
@@ -285,10 +300,16 @@ GLOSARIO = [
     ('Bienio', 'periodo de dos años del presupuesto de regalías (Sistema General de Regalías, desde 2012).'),
     ('BPIN', 'número con el que se registra un proyecto de inversión pública.'),
     ('OCAD', 'órgano que aprueba proyectos de regalías. El OCAD Paz es nacional y aprueba proyectos de municipios PDET.'),
+    ('Incentivo a la producción', ('parte de las regalías que premia a los municipios productores. Desde el Acto Legislativo 04 de 2017 sus proyectos los '
+                                   'aprueba el OCAD Paz; el municipio los formula y presenta. En el registro de MinHacienda aparece como bolsa IPAZ. Aquí se '
+                                   'le llama siempre "incentivo a la producción".')),
+    ('EDU de Medellín', 'Empresa de Desarrollo Urbano de Medellín, empresa pública de otro municipio a la que Yondó delegó obras con convenios interadministrativos.'),
     ('OPS', 'contrato de prestación de servicios (con una persona o una empresa).'),
     ('Contratación sin competencia', 'contratación directa, régimen especial o convenios: se escoge al contratista sin que compitan varias ofertas. Es legal en muchos casos.'),
     ('Pagado y avance de obra', 'en los proyectos de regalías, lo que se ha pagado (avance financiero) y lo que se ha construido o entregado (avance físico), en porcentaje.'),
     ('Mediana', 'el valor del medio: la mitad de los años está por encima y la otra mitad por debajo.'),
+    ('Percentil 25 y percentil 75', ('el valor que deja por debajo a la cuarta parte de los datos (percentil 25) o a las tres cuartas partes (percentil 75). '
+                                     'Sirven para dar un rango alrededor de la mediana.')),
 ]
 
 
@@ -324,9 +345,10 @@ CATEGORIAS = [
                      'hecho, pero no es plata perdida: pasa al bienio siguiente. Por eso no se suma a "sin obra" ni entre gobiernos.'),
      'metodo': ('Una sola regla para todos: el último bienio que cerró dentro del periodo y la misma medida, presupuesto menos compromisos (CHIP): 2017–2018 '
                 'para 2016–2019 (corte más cercano al cierre con dato abierto: septiembre de 2018, todo el capítulo SGR), 2021–2022 para 2020–2023 y '
-                '2023–2024 para 2024–2027 (asignaciones directas, más los incentivos y la inversión local que pasaron sin usar). Se deflacta con el IPC del '
-                'mes del corte. El bienio 2015–2016 cruza dos gobiernos y se muestra aparte, sin sumarlo a ninguno. El bienio 2025–2026 sigue abierto: se '
-                'muestra como "por aprobar" y no se suma.')},
+                '2023–2024 para 2024–2027 (asignaciones directas, más el incentivo a la producción y la inversión local que pasaron sin usar). Se deflacta con '
+                'el IPC del mes del corte. El bienio 2015–2016 cruza dos gobiernos y se muestra aparte, sin sumarlo a ninguno, porque en 2016–2019 cerró después '
+                'otro bienio completo (2017–2018). En 2024–2027 el único bienio cerrado es 2023–2024, que empezó en el gobierno anterior: se usa, con esa '
+                'advertencia. El bienio 2025–2026 sigue abierto: se muestra como "por aprobar" y no se suma.')},
     {'id': 'sobrecosto_sin_competencia', 'nombre': 'Costo posible de contratar sin competencia', 'tipo': 'estimado',
      'descripcion': ('El valor contratado sin competencia es un hecho registrado en SECOP; lo que se pudo pagar de más por no competir es una estimación con '
                      'rango (3 %, 6 % y 10 %). No prueba corrupción ni ilegalidad.'),
@@ -335,8 +357,9 @@ CATEGORIAS = [
                 'más los procesos competitivos con un solo oferente (fugas_secop.json, ajustes.base_sobrecosto). Se le resta la plata ya contada en "pagos '
                 'por delante del avance". Línea 2, plata transferida: para cada año y entidad, el menor valor entre lo que la alcaldía transfirió a Aguas y '
                 'Aseo o al hospital (sin subsidios) y lo que esa entidad contrató sin competencia ese año, solo en años con datos de esa entidad en SECOP. '
-                'Costo = base × 6 % (central). Mínimo: 3 % solo sobre la línea 1, sin la segunda copia de los posibles registros duplicados. Máximo: 10 % '
-                'sobre las dos líneas.')},
+                'La línea 1 incluye los convenios con la EDU de Medellín, que Yondó escogió sin competencia; la EDU contrató después por su cuenta y no se '
+                'sabe si con competencia. Costo = base × 6 % (central). Mínimo: 3 % solo sobre la línea 1, sin la EDU y sin la segunda copia de los posibles '
+                'registros duplicados. Máximo: 10 % sobre las dos líneas.')},
     {'id': 'ops_nomina_paralela', 'nombre': 'Gasto en OPS por encima de lo usual en Yondó', 'tipo': 'indicio',
      'descripcion': ('Gasto en contratos de prestación de servicios (OPS) por encima del nivel que Yondó mismo tuvo en un año típico. Los contratistas '
                      'prestaron servicios: el exceso es una alerta para comparar con la planta de personal, no plata sin obra. No se suma a "sin obra".'),
@@ -349,7 +372,8 @@ CATEGORIAS = [
      'descripcion': 'Predial e ICA que Yondó habría recaudado con el esfuerzo de municipios comparables o con un catastro actualizado.',
      'metodo': ('Central: brecha frente a la mediana de 7 comparables, sumada por periodo (costo_no_hacer.json); un año por debajo de la mediana se compensa con '
                 'los años en que Yondó recaudó más. Máximo: brecha frente al percentil 75 de los comparables y, desde 2021 (catastro desactualizado), el '
-                'predial adicional con el avalúo por habitante de Puerto Berrío (≈$1.498 M al año, ilustrativo); en predial se toma el mayor de los dos.')},
+                f"predial adicional con el avalúo por habitante de Puerto Berrío (≈{mm(CATASTRO['adicional_anual_mm_2026'])} de 2026 al año, ilustrativo); en predial "
+                'se toma el mayor de los dos.')},
     {'id': 'costo_vertimientos', 'nombre': 'Tasa retributiva evitable por no tener PTAR', 'tipo': 'estimado',
      'descripcion': ('Parte de la tasa ambiental que se habría evitado con una PTAR. La paga Aguas y Aseo (el prestador del servicio), no la alcaldía; el municipio '
                      'responde por que el servicio se preste.'),
@@ -407,6 +431,10 @@ _ref_years = [a for a in range(2012, 2026) if a in OPS_PC]
 _q = statistics.quantiles([OPS_PC[a] for a in _ref_years], n=4)
 OPS_REF = {'p25': _q[0], 'mediana': statistics.median(OPS_PC[a] for a in _ref_years), 'p75': _q[2]}
 OPS_REF_ORIG = statistics.median(OPS_PC_ORIG[a] for a in _ref_years)
+OPS_PUBLICADAS = sum(r['ops']['n'] for r in SECOP_ALC.values())
+OPS_RECLAS_N = sum(r['ajustes']['ops']['reclasificadas_n'] for r in SECOP_ALC.values())
+OPS_DUP_N = sum(r['ajustes']['ops']['duplicados_n'] for r in SECOP_ALC.values())
+assert OPS_PUBLICADAS == 5580, OPS_PUBLICADAS   # cifra ya publicada (docs/03)
 
 
 # ---------------------------------------------------------------------------
@@ -515,7 +543,7 @@ def saldos(pid):
         items += [
             item('Asignaciones directas presupuestadas y sin comprometer al cierre del bienio 2021–2022 (CHIP)', 2022, a26_mes(b['saldo'], 2022, 12), b['fuente'],
                  valor_corriente=b['saldo'], fecha_corte='2022-12-31', medida='presupuesto − compromisos'),
-            item('Incentivos del OCAD Paz (Acto Legislativo 04 de 2017) que pasaron sin usar a 2023–2024', 2022,
+            item('Incentivo a la producción (lo aprueba el OCAD Paz) que pasó sin usar a 2023–2024', 2022,
                  a26_mes(inc['incentivos_al04_sin_usar_inicio_2023'], 2022, 12), f'https://www.datos.gov.co/d/5ka2-and2 (disponibilidad inicial 2023-2024); {F_SGR}',
                  valor_corriente=inc['incentivos_al04_sin_usar_inicio_2023'], fecha_corte='2022-12-31', medida='disponibilidad inicial del bienio siguiente'),
             item('Asignación para la Inversión Local presupuestada y sin comprometer, 2021–2022 (CHIP)', 2022, a26_mes(ail['sin_comprometer_2021_2022'], 2022, 12),
@@ -525,7 +553,8 @@ def saldos(pid):
         b0 = SGR_AD['2019-2020']
         ctx.append(item('Saldo de asignaciones directas que pasó de 2019–2020 a 2021–2022 (foto anterior; no se suma)', 2020, a26_mes(b0['saldo'], 2020, 12), b0['fuente'],
                         en_total=False, valor_corriente=b0['saldo'], fecha_corte='2020-12-31', medida='disponibilidad inicial del bienio siguiente'))
-        det = (f"Al cierre de 2022 quedaban sin comprometer {mm(items[0]['valor'])} de asignaciones directas, {mm(items[1]['valor'])} de incentivos del OCAD Paz y "
+        det = (f"Al cierre de 2022 quedaban sin comprometer {mm(items[0]['valor'])} de asignaciones directas, {mm(items[1]['valor'])} del incentivo a la producción "
+               f"(sus proyectos los aprueba el OCAD Paz) y "
                f"{mm(items[2]['valor'])} de la Asignación para la Inversión Local. Además, {mmc(b['paso_al_siguiente_bienio_sin_pagar'], 2022)} comprometidos "
                f"pasaron sin pagar al bienio siguiente.")
     elif pid == '2024-2027':
@@ -533,7 +562,7 @@ def saldos(pid):
         items += [
             item('Asignaciones directas presupuestadas y sin comprometer al cierre del bienio 2023–2024 (CHIP)', 2024, a26_mes(b0['saldo'], 2024, 12), b0['fuente'],
                  valor_corriente=b0['saldo'], fecha_corte='2024-12-31', medida='presupuesto − compromisos', cruza_dos_gobiernos=True),
-            item('Incentivos del OCAD Paz que pasaron sin usar a 2025–2026', 2024, a26_mes(inc['incentivos_al04_sin_usar_inicio_2025'], 2024, 12),
+            item('Incentivo a la producción (lo aprueba el OCAD Paz) que pasó sin usar a 2025–2026', 2024, a26_mes(inc['incentivos_al04_sin_usar_inicio_2025'], 2024, 12),
                  f'https://www.datos.gov.co/d/5ka2-and2; {F_SGR}', valor_corriente=inc['incentivos_al04_sin_usar_inicio_2025'], fecha_corte='2024-12-31',
                  medida='disponibilidad inicial del bienio siguiente'),
             item('Asignación para la Inversión Local presupuestada y sin comprometer, 2023–2024 (CHIP)', 2024, a26_mes(ail['sin_comprometer_2023_2024'], 2024, 12),
@@ -546,7 +575,7 @@ def saldos(pid):
                  aprueba='municipio', fecha_corte=CORTE, medida='presupuesto − aprobado', en_curso=True),
             item('Asignación para la Inversión Local sin aprobar, 2025–2026 (la aprueba el municipio)', 2026, ail_sin / 1e6, f'{URL_MINHAC} (corte oct-2026); {F_SGR}',
                  en_total=False, aprueba='municipio', fecha_corte=CORTE, medida='presupuesto − aprobado', en_curso=True),
-            item('Incentivo a la producción del OCAD Paz (bolsa IPAZ) sin aprobar, 2025–2026: el municipio formula y presenta, el OCAD Paz (nacional) aprueba',
+            item('Incentivo a la producción sin aprobar, 2025–2026 (bolsa IPAZ en MinHacienda): el municipio formula y presenta, el OCAD Paz (nacional) aprueba',
                  2026, inc['saldo_sin_aprobar'] / 1e6, f'{URL_MINHAC} (corte oct-2026); {F_SGR}', en_total=False, aprueba='OCAD Paz',
                  fecha_corte=CORTE, medida='presupuesto − aprobado', en_curso=True),
         ]
@@ -554,7 +583,8 @@ def saldos(pid):
         pendiente = {'total': r1(sum(i['valor'] for i in pend_items)), 'aprueba_municipio': r1(pend_items[0]['valor'] + pend_items[1]['valor']),
                      'aprueba_ocad_paz': r1(pend_items[2]['valor']), 'en_caja_asignaciones_directas': r1(b['saldo_en_caja'] / 1e6), 'corte': CORTE,
                      'nota': 'Bienio abierto hasta diciembre de 2026: todavía se puede aprobar. No se suma a la plata quieta ni a "sin obra".'}
-        det = (f"Al cierre del bienio 2023–2024 quedaban sin comprometer {mm(sum(i['valor'] for i in items))}, casi todo de asignaciones directas. "
+        det = (f"Al cierre del bienio 2023–2024 quedaban sin comprometer {mm(sum(i['valor'] for i in items))}, casi todo de asignaciones directas. Ese bienio "
+               f"empezó en 2023, en el gobierno anterior: la mitad de su ejecución le corresponde a él, pero es el único bienio que ha cerrado en este periodo. "
                f"Aparte, y sin sumar: el bienio 2025–2026 sigue abierto y a octubre de 2026 hay {mm(pendiente['total'])} por aprobar, {mm(pendiente['aprueba_municipio'])} "
                f"que aprueba el municipio y {mm(pendiente['aprueba_ocad_paz'])} del incentivo a la producción que aprueba el OCAD Paz.")
     elif pid == '2012-2015':
@@ -614,7 +644,7 @@ def calcular_periodo(pid):
     if rec >= 0.5:
         det += f" {mm(rec)} son estudios de los últimos 18 meses: quedan como pendientes y solo entran en el máximo."
     if pid == '2004-2007':
-        det = 'SECOP no tiene estudios de la alcaldía en estos años (solo 41 contratos en 2007). Sin dato: no significa que no hubo estudios sin obra.'
+        det = f'SECOP no tiene estudios de la alcaldía en estos años (solo {N_ALC_2007} contratos en 2007). Sin dato: no significa que no hubo estudios sin obra.'
     fugas.append(fuga('estudios_sin_obra', est, min(est_min, est), max(est_max, est), det, eitems, [F_FUGAS, URL_SECOP, F_ANEXO_A + ' (§8)'],
                       sin_dato=(pid == '2004-2007'), mixtos_excluidos=r1(mixtos), recientes_pendientes=r1(rec), planes=r1(planes)))
 
@@ -630,8 +660,10 @@ def calcular_periodo(pid):
         if edu:
             det += f" {mm(edu)} corresponden a proyectos que el municipio delegó en la EDU de Medellín."
         ej = [i for i in en_tot if i['en_ejecucion']]
+        v_ej = sum(i['valor'] for i in ej)
         if ej:
-            det += (f" {plural(len(ej), 'sigue', 'siguen')} en ejecución: la brecha puede cerrarse y parte puede ser un anticipo legal.")
+            det += (f" {mm(gsa - v_ej)} están en proyectos ya terminados, donde la brecha no se cierra con más obra, y {mm(v_ej)} en "
+                    f"{plural(len(ej), 'proyecto que sigue', 'proyectos que siguen')} en ejecución: ahí la brecha puede cerrarse y parte puede ser un anticipo legal.")
         p2526 = sum(i['pagado_2025_2026_corriente'] for i in en_tot)
         if p2526 and pid != '2024-2027':
             det += (f" De lo pagado en estos proyectos, {mmc(p2526, '2025–2026')} se pagaron en 2025–2026 (MinHacienda), en el gobierno siguiente: la brecha se "
@@ -656,6 +688,10 @@ def calcular_periodo(pid):
     det += ' Para la plata propia (no regalías) no hay datos abiertos de avance físico: SECOP I no publica pagos y SECOP II no publica avance de obra.'
     fugas.append(fuga('girado_sin_avance', gsa, g['min'], g['max'], det.strip(), gitems, [F_SGR, URL_GESPROY, 'docs/01-diagnostico-sectorial.md', F_ANEXO_A + ' (§8)'],
                       sin_dato=pid in ('2004-2007', '2008-2011'), valor_corriente=round(g['corriente']), corte_avance='2026-10-21',
+                      valor_terminados=r1(sum(i['valor'] for i in gitems if i['en_total'] and not i['en_ejecucion'])),
+                      valor_en_ejecucion=r1(sum(i['valor'] for i in gitems if i['en_total'] and i['en_ejecucion'])),
+                      certeza=('hecho con cálculo: valor × (avance financiero − avance físico) sobre GESPROY a octubre de 2026; el valor en pesos de 2026 '
+                               'depende de cuándo se pagó (rango)'),
                       no_sumado_ejecutor_nacional=r1(sum(v for _, v, _ in otros))))
 
     # --- C. plata quieta (saldos de regalías) --------------------------------
@@ -666,7 +702,7 @@ def calcular_periodo(pid):
                       **({'pendiente_por_aprobar': pendiente} if pendiente else {})))
 
     # --- D. costo posible de contratar sin competencia -----------------------
-    priv = uo_v = dups = sincomp = valor_alc = tr_tot = tr_cov = tr_cov_min = tr_sin = subs = 0.0
+    priv = uo_v = dups = sincomp = valor_alc = tr_tot = tr_cov = tr_sin = subs = edu_b = 0.0
     anios_tr_sin = []
     for a in sec_anios:
         r = SECOP_ALC[a]
@@ -674,6 +710,7 @@ def calcular_periodo(pid):
         priv += a26(bs['sin_competencia_valor'] + bs['un_oferente_valor'], a)
         uo_v += a26(bs['un_oferente_valor'], a)
         dups += a26(bs['duplicados_valor'], a)
+        edu_b += a26(bs['edu_valor'], a)
         sincomp += a26(r['sin_competencia']['valor'], a)
         valor_alc += a26(r['valor'], a)
         subs += a26(r['ajustes']['subsidios_tarifas']['valor'], a)
@@ -687,14 +724,14 @@ def calcular_periodo(pid):
             if er and er['contratos'] >= 5:
                 e_v = er['ajustes']['propios_sin_competencia_sin_ops_valor']
                 tr_cov += a26(min(tval, e_v), a)
-                tr_cov_min += a26(min(tval - t['duplicados_valor'], e_v), a)
             else:
                 tr_sin += a26(tval, a)
                 anios_tr_sin.append(a)
     base1 = max(0.0, priv - gsa)
     base = base1 + tr_cov
     central = base * SOBRECOSTO['central']
-    mn = max(0.0, priv - dups - g['max']) * SOBRECOSTO['min']
+    g_max_no_edu = sum(i['valor_rango'][1] for i in gitems if not i['edu'])
+    mn = max(0.0, priv - dups - edu_b - g_max_no_edu) * SOBRECOSTO['min']   # sin la EDU (y sin su brecha, que va dentro de sus convenios)
     mx = (max(0.0, priv - g['min']) + tr_cov) * SOBRECOSTO['max']
     uo_c = min(central, uo_v * SOBRECOSTO['central'])
     pct_sc = 100 * sincomp / valor_alc if valor_alc else None
@@ -708,6 +745,10 @@ def calcular_periodo(pid):
     det = (f"Hecho: la alcaldía contrató {mm(sincomp)} sin competencia ({fmt(pct_sc, 1)} % de {mm(valor_alc)}, pesos de 2026; SECOP). "
            f"Línea 1, compras a terceros: {mm(priv)}" + (f", de ellos {mm(uo_v)} en procesos competitivos con un solo oferente" if uo_v >= 0.5 else '')
            + (f"; se restan {mm(min(gsa, priv))} ya contados en pagos por delante del avance" if gsa >= 0.5 else '') + f"; base {mm(base1)}.")
+    if edu_b >= 0.5:
+        det += (f" La línea 1 incluye {mm(edu_b)} de convenios con la EDU de Medellín, empresa pública de otro municipio que Yondó escogió sin "
+                f"competencia; la EDU contrató después por su cuenta y sus contratos derivados de 2021–2023 no figuran en SECOP con el nombre de Yondó, "
+                f"así que no se sabe si compitieron. El mínimo no cuenta la EDU.")
     if tr_tot >= 0.5:
         det += (f" Las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó ({mm(tr_tot)}" + (f", de ellos {mm(subs)} de subsidios a las tarifas" if subs >= 0.5 else '')
                 + ') no son compras y salen de esa base.')
@@ -716,11 +757,13 @@ def calcular_periodo(pid):
     if tr_sin >= 0.5:
         det += (f" Para {mm(tr_sin)} transferidos en años sin datos de Aguas y Aseo o del hospital en SECOP ({', '.join(str(x) for x in sorted(set(anios_tr_sin)))}) "
                 f"no hay dato y no se estima nada.")
-    det += (f" Costo posible: 6 % de la base (rango 3–10 %). No prueba corrupción: mide el precio usual de renunciar a la competencia.")
+    det += (f" Costo posible: 6 % de la base, {mm(central)}" + (f" ({mm(base1 * SOBRECOSTO['central'])} por compras a terceros y "
+                                                              f"{mm(tr_cov * SOBRECOSTO['central'])} por lo transferido)" if tr_cov >= 0.5 else '')
+            + "; rango 3–10 %. No prueba corrupción: mide el precio usual de renunciar a la competencia.")
     if dups >= 0.5:
         det += f" El mínimo quita {mm(dups)} de posibles registros duplicados no verificados."
     if pid == '2004-2007':
-        det = 'Solo hay 41 contratos de la alcaldía en SECOP, todos de 2007. ' + det
+        det = f'Solo hay {N_ALC_2007} contratos de la alcaldía en SECOP, todos de 2007. ' + det
     if pid == '2008-2011':
         cob = [COBERTURA[a]['Alcaldía'] for a in range(2008, 2012)]
         det += f' SECOP está subregistrado en estos años ({min(cob)} a {max(cob)} contratos por año): la base real fue mayor.'
@@ -736,6 +779,7 @@ def calcular_periodo(pid):
     fugas.append(fuga('sobrecosto_sin_competencia', central, mn, mx, det, citems,
                       [F_FUGAS, URL_SECOP] + [x['url'].split(' ;')[0] for x in LIT_SOBRECOSTO[:2]],
                       base_hecho=r1(base), base_compras_terceros=r1(base1), base_transferencias=r1(tr_cov), transferencias_sin_dato=r1(tr_sin),
+                      base_edu=r1(edu_b), costo_compras_terceros=r1(base1 * SOBRECOSTO['central']), costo_transferencias=r1(tr_cov * SOBRECOSTO['central']),
                       transferencias_total=r1(tr_tot), subsidios_tarifas=r1(subs), un_oferente_base=r1(uo_v), valor_un_oferente=r1(uo_c),
                       valor_sin_competencia_hecho=r1(sincomp), pct_valor_sin_competencia=r1(pct_sc)))
 
@@ -769,7 +813,8 @@ def calcular_periodo(pid):
                                f"{fmt(v * 1e6 / POB[a] / OPS_REF['mediana'], 1)} veces la mediana)", a, e_c,
                                f'{F_FUGAS} (por_anio, Alcaldía, ajustes.ops); población DANE en {F_PANEL}'))
     det = (f"{fmt(ops_n)} contratos OPS por {mm(ops_val)} de 2026, de ellos {fmt(form_n)} de formulación de proyectos por {mm(form_v)}. "
-           f"Referencia: {fmt(OPS_REF['mediana'])} pesos de 2026 por habitante al año (mediana 2012–2025; rango {fmt(OPS_REF['p25'])}–{fmt(OPS_REF['p75'])}). "
+           f"Referencia: {fmt(OPS_REF['mediana'])} pesos de 2026 por habitante al año (mediana de Yondó en 2012–2025; rango entre el percentil 25, "
+           f"{fmt(OPS_REF['p25'])}, y el 75, {fmt(OPS_REF['p75'])}; esos años mezclan SECOP I, hasta 2023, y SECOP II, desde 2024). "
            f"Suma de los años por encima: {mm(ex['central'])}; desviación neta del periodo (los años por debajo restan): {mm(ex['neto'])}. ") if sec_anios else ''
     if rec_n:
         det += (f"{'Se quitó' if rec_n == 1 else 'Se quitaron'} {plural(rec_n, 'contrato', 'contratos')} que la clasificación ponía en OPS pero no {'es' if rec_n == 1 else 'son'} prestación de servicios ({mm(rec_v)}: transferencias a Aguas y Aseo o al "
@@ -800,9 +845,13 @@ def calcular_periodo(pid):
     if bajos:
         det += (f"En {' y '.join(str(a) for a in sorted(set(bajos)))} el ICA por habitante estuvo por debajo de la mediana; esa brecha se compensa con los años en que "
                 f"recaudó más (la comparación es por periodo, no año por año). ")
-    if p75_pred + p75_ica > 0 or cat_v:
-        det += 'Máximo: ' + ' y '.join(x for x in [f'brecha con el percentil 75 de los comparables ({mm(p75_pred + p75_ica)})' if p75_pred + p75_ica > 0 else '',
-                                                  f"predial con catastro actualizado ({mm(cat_v)} en {len(anios_cat)} año{'s' if len(anios_cat) > 1 else ''})" if cat_v else ''] if x) + '.'
+    if cat_v:
+        cat_t = f"el predial con catastro actualizado ({mm(cat_v)} en {len(anios_cat)} año{'s' if len(anios_cat) > 1 else ''})"
+        det += (f"Máximo ({mm(mx_r)}): " + (f"en predial, el mayor entre la brecha con el percentil 75 de los comparables ({mm(p75_pred)}) y {cat_t}" if p75_pred > 0
+                                            else f"{cat_t}; frente al percentil 75 de los comparables no hay brecha de predial")
+                + (f", más la brecha de ICA con el percentil 75 ({mm(p75_ica)})" if p75_ica > 0 else '') + '.')
+    elif p75_pred + p75_ica > 0:
+        det += f'Máximo: brecha con el percentil 75 de los comparables ({mm(p75_pred + p75_ica)}).'
     else:
         det += 'Tampoco hay brecha frente al percentil 75.'
     if pid == '2024-2027':
@@ -839,17 +888,24 @@ def calcular_periodo(pid):
             fitems.append(item(nombre, None, c, '; '.join(f.get('evidencia', [])[:1]) + f'; {F_SGR}', min=r1(mn_), max=r1(mx_)))
     if pid == '2008-2011':
         f = FONDOS['ADAPTACION']
+        pn = next(c for c in f['comparables'] if c['municipio'] == 'Puerto Nare')
+        yo = f['yondo_obtuvo']
+        n_yo = re.search(r'(\d+) intervenciones', yo['texto'])
         add_fondo('ADAPTACION', 'Fondo Adaptación (ola invernal 2010–2011)', 0, 0, f['monto_referencia_max'] / 1e6 / IPC[2015],
-                  'Puerto Nare, ribereño y de tamaño parecido, recibió $1.671 M (pesos corrientes de 2012–2018) en 7 intervenciones; Yondó, $30 M en 2. Baja certeza: no se verificó que Yondó registrara daños.')
+                  (f"Puerto Nare, ribereño y de tamaño parecido, recibió ${fmt(pn['monto'] / 1e6)} M (pesos corrientes de 2012–2018) en {pn['intervenciones']} "
+                   f"intervenciones; Yondó, ${fmt(yo['monto'] / 1e6)} M (pesos corrientes) en {n_yo.group(1) if n_yo else 'pocas'}. Baja certeza: no se verificó "
+                   f"que Yondó registrara daños."))
     if pid in parte_oxi:
         pares = [c for c in oxi['comparables'] if isinstance(c.get('monto'), (int, float))]
         med_pares = statistics.median(c['monto'] for c in pares)
+        con_proy = sorted((c for c in pares if c['monto']), key=lambda c: -c['monto'])
         add_fondo('OXI', 'Obras por Impuestos (proyecto vial propio, si una empresa contribuyente lo escogía)',
                   oxi['monto_referencia_min'] / 1e6 / f_oxi * parte_oxi[pid], 0, oxi['monto_referencia_max'] / 1e6 / f_oxi * parte_oxi[pid],
                   (f"Ventana 2018–2023 ({'2 de 6 años' if pid == '2016-2019' else '4 de 6 años'} en este gobierno). Entre los proyectos aprobados (ART 2018–2025) Yondó "
-                   f"solo tuvo uno, de dotación escolar con Ecopetrol en 2019 ($1.169 M, pesos corrientes de 2019). De {len(pares)} municipios comparables, "
-                   f"{sum(1 for c in pares if not c['monto'])} no tuvieron proyecto propio (mediana de los pares: {mm(med_pares / 1e6)}); Cantagallo tuvo uno de $5.333 M "
-                   f"(pesos corrientes). En 2024 llegó la vía El Paraíso–La Raya–Las Lomas ($52.237 M según la ART, pesos corrientes de 2024). Depende de que una "
+                   f"solo tuvo uno, de dotación escolar con Ecopetrol en {OXI_2019['anio']} ({mmc(OXI_2019['valor'], OXI_2019['anio'])}). De {len(pares)} municipios "
+                   f"comparables, {sum(1 for c in pares if not c['monto'])} no tuvieron proyecto propio (mediana de los pares: {mm(med_pares / 1e6)}); "
+                   + '; '.join(f"{c['municipio']} tuvo uno de ${fmt(c['monto'] / 1e6)} M" for c in con_proy) + " (pesos corrientes). "
+                   f"En {OXI_2024['anio']} llegó la vía El Paraíso–La Raya–Las Lomas ({mmc(OXI_2024['valor'], OXI_2024['anio'])}, según la ART). Depende de que una "
                    f"empresa escoja el proyecto."), desde=2018)
     if pid == '2020-2023':
         f = FONDOS['MINTIC']
@@ -857,24 +913,30 @@ def calcular_periodo(pid):
         add_fondo('MINTIC', 'MinTIC – Centros Digitales rurales', f['monto_referencia_central'] / 1e6 / IPC[2023], f['monto_referencia_min'] / 1e6 / IPC[2023],
                   f['monto_referencia_max'] / 1e6 / IPC[2023],
                   (f"Yondó tiene {f['yondo_obtuvo']['sedes']} sedes conectadas; sus {len(sedes)} comparables, entre {min(sedes)} y {max(sedes)} (corte oct-2023). "
-                   f"El valor por sede ($142,7 M) es la inversión que registra MinTIC, un estándar del programa, no un costo medido en Yondó."))
+                   f"El valor por sede (${fmt(f['monto_referencia_min'] / 1e6, 1)} M, pesos corrientes de 2023) es la inversión que registra MinTIC, un estándar del "
+                   f"programa, no un costo medido en Yondó."))
     if pid in ('2016-2019', '2020-2023', '2024-2027'):
         f = FONDOS['COOPERACION']
         add_fondo('COOPERACION', 'Cooperación internacional no reembolsable', f['monto_referencia_min'] / 1e6 / IPC[2024], 0, f['monto_referencia_max'] / 1e6 / IPC[2024],
-                  'En el registro de APC solo aparece una donación de Japón para Yondó (2014, US$106.715); la Unión Europea financió proyectos en 5 municipios del Sur de Bolívar (2016, US$1,68 M). Baja certeza.')
+                  (f"En el registro de APC solo aparece una donación de Japón para Yondó (2014, US${fmt(COOP_USD)}); la Unión Europea financió proyectos en 5 "
+                   f"municipios del Sur de Bolívar (2016, US${fmt(COOP_UE_USD / 1e6, 2)} millones). Baja certeza."))
     if pid == '2012-2015':
         f = FONDOS['COOPERACION']
         add_fondo('COOPERACION', 'Cooperación internacional no reembolsable', 0, 0, f['monto_referencia_max'] / 1e6 / IPC[2024],
-                  'Central 0: en 2014 Yondó sí recibió una donación de Japón (US$106.715, vía de la vereda Caño Bodegas; APC). El máximo es la parte de un municipio en un proyecto regional de la Unión Europea.')
+                  (f"Central 0: en 2014 Yondó sí recibió una donación de Japón (US${fmt(COOP_USD)}, vía de la vereda Caño Bodegas; APC). El máximo es la parte de un "
+                   f"municipio en un proyecto regional de la Unión Europea."))
     if pid == '2024-2027':
         f = FONDOS['OCAD_PAZ']
         add_fondo('OCAD_PAZ', 'OCAD Paz – Asignación para la Paz (municipios PDET)', f['monto_referencia_central'] / 1e6 / statistics.mean([IPC[2025], IPC[2026]]),
                   0, f['monto_referencia_max'] / 1e6 / statistics.mean([IPC[2025], IPC[2026]]),
-                  'En 2025–2026 el OCAD Paz aprobó $37.669 M para Yondó y $99.346 M para Cantagallo (pesos corrientes); la central es la mediana de los pares del Sur de Bolívar menos lo de Yondó. Todavía se puede gestionar.')
+                  (f"En 2025–2026 el OCAD Paz aprobó ${fmt(f['yondo_obtuvo']['aprobado_2025_2026'] / 1e6)} M para Yondó y "
+                   f"${fmt(next(c['monto'] for c in f['comparables'] if c['municipio'] == 'Cantagallo') / 1e6)} M para Cantagallo (pesos corrientes); la central es la "
+                   f"mediana de los pares del Sur de Bolívar menos lo de Yondó. Todavía se puede gestionar."))
         f = FONDOS['FENOGE']
         add_fondo('FENOGE', 'FENOGE – hospital o sedes públicas con solar', (f['monto_referencia_min'] + f['monto_referencia_max']) / 2 / 1e6 / IPC[2025],
                   f['monto_referencia_min'] / 1e6 / IPC[2025], f['monto_referencia_max'] / 1e6 / IPC[2025],
-                  'En 2025 FENOGE dejó autosuficiente con 230 kWp el hospital de Simití, en la misma subregión PDET ($3.152 M, pesos corrientes de 2025). En Yondó no se halló ningún proyecto.')
+                  (f"En 2025 FENOGE dejó autosuficiente con 230 kWp el hospital de Simití, en la misma subregión PDET "
+                   f"(${fmt(next(c['monto'] for c in f['comparables'] if c['municipio'] == 'Simití') / 1e6)} M, pesos corrientes de 2025). En Yondó no se halló ningún proyecto."))
     if pid in ('2020-2023', '2024-2027'):
         f = FONDOS['FINDETER']
         flist.append({'fondo': 'Findeter – crédito con tasa compensada', 'desde': f['desde'], 'monto_referencia': r1(f['monto_referencia_min'] / 1e6 / IPC[2024]),
@@ -889,9 +951,10 @@ def calcular_periodo(pid):
         texto_pares = (f"Pares (bolsa IPAZ 2025–2026, corte oct-2026): " + ', '.join(f"{c['municipio']} {fmt(c['pct_aprobado'], 1)} %" for c in sorted(pares, key=lambda c: c['pct_aprobado']))
                        + f". Mediana {fmt(statistics.median(pp), 1)} %, rango {fmt(min(pp), 1)}–{fmt(max(pp), 1)} %; Yondó {fmt(yo_pct, 1)} %. En la mitad de los pares la bolsa está casi sin aprobar: "
                        f"Yondó está por debajo de la mediana, pero no es un caso aislado.")
-        flist.append({'fondo': 'Incentivo a la producción del OCAD Paz (bolsa IPAZ; línea "Territorios energéticos", hasta $8.000 M)', 'desde': f['desde'],
+        flist.append({'fondo': 'Incentivo a la producción (lo aprueba el OCAD Paz; bolsa IPAZ en MinHacienda), con la línea "Territorios energéticos" (hasta $8.000 M por proyecto, pesos corrientes de 2025)', 'desde': f['desde'],
                       'monto_referencia': r1((f['yondo_obtuvo']['incentivos_al04_sin_usar_inicio_2023'] / 1e6 / factor_mes(2022, 12)) if pid == '2020-2023' else f['yondo_obtuvo']['saldo_sin_aprobar'] / 1e6),
-                      'comparable': ('Incentivos del OCAD Paz: $4.079 M (pesos corrientes) pasaron sin usar a 2021–2022 y $3.687 M a 2023–2024. Ya era plata de Yondó: se cuenta como plata quieta.'
+                      'comparable': (f"Del incentivo a la producción pasaron sin usar {mmc(f['yondo_obtuvo']['incentivos_al04_sin_usar_inicio_2021'], 2020)} a 2021–2022 "
+                                     f"y {mmc(f['yondo_obtuvo']['incentivos_al04_sin_usar_inicio_2023'], 2022)} a 2023–2024. Ya era plata de Yondó: se cuenta como plata quieta."
                                      if pid == '2020-2023' else texto_pares + ' Ya es plata asignada a Yondó: se muestra como "por aprobar".'),
                       'fuente': f'{URL_MINHAC}; {F_SGR}', 'suma_en_total': False})
     fv = sum(i['valor'] for i in fitems)
@@ -1030,8 +1093,9 @@ def pudo_hacerse(pid, c):
                              f"obligatorio del FAEP (Ley 209 de 1995), cuyo saldo para Yondó no se revisó.",
                              F_CNH + ' (contrafactual_ahorro_regalias)', so, extra_eq=f"hoy valdría {mm(ah['valor'])} (3 % real), {eq_texto(ah['valor'], 'aula_dotada')}", cubierto=False))
         out.append(item_pudo('10 aulas dotadas para ampliar la educación media', 10 * cu('aula_dotada'), 'aula_dotada',
-                             'La cobertura neta en media era de 14 %: 86 de cada 100 jóvenes de 15–16 años no estaban matriculados en media.',
-                             f"{F_CNH} (aula_dotada); docs/02-marco-comparativo-2004-2027.md (matriz, MEN)", so, [10 * cu_min('aula_dotada'), 10 * cu_max('aula_dotada')]))
+                             (f"La cobertura neta en media era de {fmt(COB_MEDIA_0507)} % (promedio 2005–2007, MEN en TerriData): {fmt(100 - COB_MEDIA_0507)} de cada 100 "
+                              f"jóvenes de 15–16 años no estaban matriculados en media."),
+                             f"{F_CNH} (aula_dotada); {F_PANEL} (cob_neta_media, MEN en TerriData)", so, [10 * cu_min('aula_dotada'), 10 * cu_max('aula_dotada')]))
     elif pid == '2008-2011':
         ah = F['ahorro_regalias']
         km_a, km_b = c['sin_obra_rango'][0] / cu_max('km_placa_huella'), c['sin_obra_rango'][1] / cu_min('km_placa_huella')
@@ -1041,17 +1105,18 @@ def pudo_hacerse(pid, c):
                              f"(entre {fmt(km_a)} y {fmt(km_b)} km, según el costo y el rango).",
                              f"{F_CNH} (km_placa_huella); {F_GOB}", so, [71 * cu_min('km_placa_huella'), 71 * cu_max('km_placa_huella')]))
         out.append(item_pudo('Fondo local de ahorro con el 10 % de las regalías, en su máximo histórico (contrafactual)', ah['min'], None,
-                             'No se creó un ahorro local ni una base económica distinta al petróleo. Es adicional al ahorro obligatorio del FAEP, cuyo saldo para Yondó no se revisó.',
+                             'No se creó un fondo local de ahorro. Es adicional al ahorro obligatorio del FAEP, cuyo saldo para Yondó no se revisó.',
                              F_CNH + ' (contrafactual_ahorro_regalias); ' + F_GOB, so, extra_eq=f"hoy valdría {mm(ah['valor'])}, {eq_texto(ah['valor'], 'ptar_12000_hab')}", cubierto=False))
         out.append(item_pudo('PTAR para el casco urbano', ptar, None,
                              'Siguió pendiente y las aguas residuales se siguieron vertiendo sin tratar.', PTAR_FUENTE, so, rngp, extra_eq=ptar_eq))
     elif pid == '2012-2015':
         ciud = a26(7090e6, 2016)
-        out.append(item_pudo('Ciudadela Educativa (diseñada en 2014 por $300 M, pesos corrientes)', ciud, 'aula_dotada',
+        out.append(item_pudo(f"Ciudadela Educativa (diseñada en {CIUDADELA['anio']} por {mmc(CIUDADELA['valor'], CIUDADELA['anio'])})", ciud, 'aula_dotada',
                              'Se diseñó en 2014 y hubo contrato de obra, que quedó suspendido (el plan 2020–2023 habla de su "reinicio"). Costo: lo previsto en el plan 2016–2019 ($7.090 M, pesos corrientes de 2016).',
                              f"{F_GOB}; {F_ANEXO_A} (§8.6); SECOP https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-15-2238279", so))
         out.append(item_pudo('PTAR para el casco urbano', ptar, None,
-                             'Siguió pendiente. Los estudios de 18 acueductos rurales de 2013 ($1.159 M, pesos corrientes) sí tuvieron después obras de acueductos veredales (BPIN 2013058930013 y 2015058930003).',
+                             (f"Siguió pendiente. Los estudios de 18 acueductos rurales de {ACUED['anio']} ({mmc(ACUED['valor'], ACUED['anio'])}) sí tuvieron después obras "
+                              f"de acueductos veredales (BPIN 2013058930013 y 2015058930003)."),
                              PTAR_FUENTE + f'; {F_ANEXO_A} (§8.7)', so, rngp, extra_eq=ptar_eq))
         if sol:
             ci = sol['solo_solar']['central']
@@ -1059,7 +1124,8 @@ def pudo_hacerse(pid, c):
                                  f"No se hizo. Se habría pagado sola en {ci['anio_recuperacion']} y a 2026 dejaría un beneficio neto de {mm(ci['neto_hasta_2026_con_valor_residual'] / 1e6)}.",
                                  F_CNH + ' (contrafactual_solar)', so, extra_eq='469 kWp solares en cubiertas'))
         out.append(item_pudo('400 becas universitarias de un año (100 por año) para bachilleres', 400 * cu('beca_universitaria_anual'), 'beca_universitaria_anual',
-                             'La cobertura neta en media era de 21,5 %.', f"{F_CNH} (beca_universitaria_anual, supuesto); {F_GOB}", so))
+                             f"La cobertura neta en media fue de {fmt(COB_MEDIA_1215, 1)} % en promedio de 2012–2015 ({fmt(COB_MEDIA['2015'], 1)} % en 2015; MEN en TerriData).",
+                             f"{F_CNH} (beca_universitaria_anual, supuesto); {F_PANEL} (cob_neta_media)", so))
     elif pid == '2016-2019':
         ciud = a26(7090e6, 2016)
         out.append(item_pudo('Terminar la Ciudadela Educativa', ciud, 'aula_dotada', 'Tenía $7.090 M (pesos corrientes de 2016) en el plan 2016–2019 y siguió sin terminar.', F_GOB, so))
@@ -1067,7 +1133,8 @@ def pudo_hacerse(pid, c):
         out.append(item_pudo('Vivienda para reubicar el barrio La Paz', lapaz, 'vis_urbana', 'Empezó en 2019 y seguía en ejecución en 2026.', F_GOB, so))
         oxi = FONDOS['OXI']['monto_referencia_min'] / 1e6 / statistics.mean(IPC[a] for a in range(2018, 2026))
         out.append(item_pudo('Una vía terciaria por Obras por Impuestos (si una empresa contribuyente escogía el proyecto)', oxi, 'km_placa_huella',
-                             'Obras por Impuestos empezó en 2018. Entre los proyectos aprobados (ART 2018–2025) Yondó solo tuvo uno, de dotación escolar en 2019 ($1.169 M, pesos corrientes).',
+                             (f"Obras por Impuestos empezó en 2018. Entre los proyectos aprobados (ART 2018–2025) Yondó solo tuvo uno, de dotación escolar en "
+                              f"{OXI_2019['anio']} ({mmc(OXI_2019['valor'], OXI_2019['anio'])})."),
                              '; '.join(FONDOS['OXI']['evidencia'][:1]) + f'; {F_SGR}', so, con_rango=True))
         if sol:
             ci = sol['solo_solar']['central']
@@ -1164,9 +1231,11 @@ def lectura(pid, c):
         gi = [i for i in c['gsa_items'] if i['en_total']]
         edu = 100 * sum(i['valor'] for i in gi if i['edu']) / F['girado_sin_avance']['valor'] if F['girado_sin_avance']['valor'] else 0
         mas_inv = all(c['inversion'] >= RESULTADOS[p]['inversion'] for p in RESULTADOS)
-        return (f"Entraron {mm(ing)} de 2026{' y se invirtió más que en cualquier otro gobierno' if mas_inv else ''}, pero {mm(F['girado_sin_avance']['valor'])} de "
-                f"recursos de proyectos de regalías se pagaron por delante del avance reportado a octubre de 2026, el {fmt(edu)} % en vivienda y vías delegadas en la EDU "
-                f"de Medellín. Con el {fmt(F['sobrecosto_sin_competencia']['pct_valor_sin_competencia'])} % contratado sin competencia, el costo posible de no competir "
+        gs = F['girado_sin_avance']
+        return (f"Entraron {mm(ing)} de 2026{' y se invirtió más que en cualquier otro gobierno' if mas_inv else ''}, pero {mm(gs['valor'])} de "
+                f"recursos de proyectos de regalías se pagaron por delante del avance reportado a octubre de 2026: el {fmt(edu)} % en proyectos delegados en la EDU "
+                f"de Medellín (vivienda, vías y un parque) y el {pct(gs['valor_en_ejecucion'], gs['valor'])} % en obras que siguen en ejecución, donde la brecha "
+                f"todavía puede cerrarse. Con el {fmt(F['sobrecosto_sin_competencia']['pct_valor_sin_competencia'])} % contratado sin competencia, el costo posible de no competir "
                 f"suma {mm(F['sobrecosto_sin_competencia']['valor'])}; en total, {mm(so)} sin obra (rango {mm(rg[0])}–{mm(rg[1])}). Además, al cierre de 2022 "
                 f"quedaban {mm(F['saldos_regalias']['valor'])} de regalías sin comprometer, que pasaron al bienio siguiente.")
     if pid == '2024-2027':
@@ -1221,7 +1290,7 @@ for g in GOB['periodos']:
                        'la contratación va de enero de 2024 al 20 de octubre de 2026 y las regalías por aprobar tienen corte de octubre de 2026.')
     if pid == '2004-2007':
         ing04 = IND['ingresos_totales']['serie'].get('2004') if 'ingresos_totales' in IND else None
-        per['nota'] = ('SECOP casi no tiene registros de estos años (41 contratos de la alcaldía en 2007): un cero aquí es "sin dato", no "cero pérdidas". '
+        per['nota'] = (f'SECOP casi no tiene registros de estos años ({N_ALC_2007} contratos de la alcaldía en 2007): un cero aquí es "sin dato", no "cero pérdidas". '
                        'Wilfrido Uzuriaga Aponzá gobernó en 2005–2007; quién gobernó en 2004 está por verificar, y los totales del periodo incluyen 2004'
                        + (f' (ingresos de {mm(ing04)} de 2026 y {mm(AHORRO[2004]["valor_2026_r3_mm"])} del fondo de ahorro contrafactual).' if ing04 else '.'))
     if pid == '2008-2011':
@@ -1267,13 +1336,14 @@ def resumen_dups():
         partes.append(f"{x['anio']} {mmc(x['valor'], x['anio']).split(' (')[0]} ({x['categoria'].split(' /')[0].lower()}"
                       + (', transferencia a una entidad de Yondó' if x['transferencia_interna'] else '') + ')')
     otras = [x for x in DUPS if x['entidad'] != 'Alcaldía']
+    ej = max(DUPS_ALC, key=lambda z: z['valor'])
     return (f"Hay {sum(x['registros'] for x in DUPS)} registros de SECOP de $100 M o más que parecen duplicados (misma entidad, fecha, valor y contratista, con objeto "
             f"parecido): {sum(x['registros'] - 1 for x in DUPS)} copias de más por ${fmt(exceso / 1e6)} M corrientes. {len(DUPS_ALC)} grupos son de la alcaldía: "
             + '; '.join(partes) + (f"; {len(otras)} de otras entidades." if otras else '.') +
             ' Cómo se tratan: en OPS se quita la segunda copia (mismo contratista, día, valor y objeto); las transferencias ya no entran en la línea 1 del costo de '
             'contratar sin competencia; en lo demás la copia se quita solo en el mínimo, porque no se verificó en el expediente que sea el mismo contrato '
-            '(por ejemplo, los dos registros de $5.407 M de 2020 con Aguas y Aseo tienen constancias distintas, 20-12-10790932 y 20-12-10909779). La lista está en '
-            'fugas_secop.json, ajustes_dinero_no_hecho.posibles_duplicados.')
+            f"(por ejemplo, los {plural(ej['registros'], 'registro', 'registros')} de {mmc(ej['valor'], ej['anio'])} con {contratista_publicable(ej['contratista']) or 'el mismo contratista'} "
+            f"tienen constancias distintas, {' y '.join(ej['numeros'])}). La lista está en fugas_secop.json, ajustes_dinero_no_hecho.posibles_duplicados.")
 
 
 METODO = (
@@ -1296,11 +1366,18 @@ METODO = (
 
 def limitaciones():
     return [
-        'SECOP casi no tiene contratos de Yondó antes de 2011 (41 de la alcaldía en 2007 y entre 39 y 205 por año en 2008–2011): para 2004–2011 los ceros son "sin dato", las cifras de contratación son un piso y el porcentaje sobre ingresos no es comparable.',
+        (f'SECOP casi no tiene contratos de Yondó antes de 2012 ({N_ALC_2007} de la alcaldía en 2007 y entre {min(N_ALC_0811)} y {max(N_ALC_0811)} por año en '
+         f'2008–2011, frente a {fmt(COBERTURA[2012]["Alcaldía"])} en 2012): para 2004–2011 los ceros son "sin dato", las cifras de contratación son un piso y el '
+         'porcentaje sobre ingresos no es comparable.'),
         'La coincidencia estudio → obra se hace por palabras del objeto y solo con las obras del SECOP de la alcaldía: hay falsos negativos (obras hechas por Aguas y Aseo, la Gobernación, Ecopetrol, Findeter o la EDU con otras palabras) y falsos positivos. Se corrigieron a mano cinco casos con evidencia (fugas_secop.json, estudios_obra_hallada_fuera) y se da un rango con umbrales de 0,20 y 0,40. Es una agenda de verificación.',
         'El costo de contratar sin competencia es una estimación con rango tomado de estudios de otros países y de Colombia; no hay una medición directa de precios para Yondó. Contratar directamente es legal en muchos casos (convenios interadministrativos, OPS, régimen especial). Los estudios sobre sobornos y corrupción se citan solo como contexto y no entran en el rango.',
         resumen_dups(),
-        'La referencia de OPS es interna (el propio Yondó en un año típico 2012–2025): mide cuánto se alejó cada gobierno de lo usual, no un estándar nacional, que no existe en datos abiertos. La serie 2008–2023 es de SECOP I y la de 2024–2026 de SECOP II. La cifra publicada de 5.580 OPS se mantiene por continuidad; para este cálculo se quitaron los contratos que la clasificación ponía en OPS sin serlo (fugas_secop.json, ajustes_dinero_no_hecho.ops_reclasificadas_alcaldia).',
+        ('La referencia de OPS es interna (el propio Yondó en un año típico 2012–2025): mide cuánto se alejó cada gobierno de lo usual, no un estándar nacional, '
+         'que no existe en datos abiertos. Hasta 2023 la alcaldía publicó casi todo en SECOP I y desde 2024 en SECOP II: el cambio de sistema puede afectar la '
+         f'comparación. La cifra publicada de {fmt(OPS_PUBLICADAS)} OPS (2008–2026) se mantiene por continuidad; para este cálculo se quitaron '
+         f'{fmt(OPS_RECLAS_N)} contratos que la clasificación ponía en OPS sin serlo (transferencias, subsidios, convenios para aunar esfuerzos e instituciones '
+         f'públicas) y {fmt(OPS_DUP_N)} segundas copias de registros duplicados, y quedan {fmt(OPS_PUBLICADAS - OPS_RECLAS_N - OPS_DUP_N)} '
+         '(fugas_secop.json, ajustes_dinero_no_hecho.ops_reclasificadas_alcaldia).'),
         'Los pagos por delante del avance solo existen para proyectos de regalías (GESPROY). Para la plata propia y para los convenios con la EDU no hay datos abiertos de avance físico ni de pagos (SECOP I no publica pagos; los anticipos solo constan en el expediente). La brecha se mide a octubre de 2026, incluye pagos hechos después de cada gobierno y se atribuye al gobierno que aprobó el proyecto.',
         'GESPROY y MapaInversiones no coinciden en varios proyectos (estado o pagos): se usa GESPROY y el mínimo excluye los contradictorios. El año de aprobación es estimado: los proyectos fechados en 2015, 2019 y 2023 pudieron aprobarse a comienzos del año siguiente (bienios compartidos) y el mínimo los excluye. El valor de cada proyecto es el total de GESPROY y puede incluir cofinanciación.',
         'Los saldos de regalías no son plata perdida: en el SGR pasan al bienio siguiente. Para 2016–2019 no hay dato abierto al cierre de 2018 y se usa el corte de septiembre de 2018, con todo el capítulo SGR; para 2020–2023 y 2024–2027 se usan las asignaciones directas más los incentivos y la inversión local. La medida es la misma (presupuesto menos compromisos), salvo los incentivos, que se miden como plata que pasó sin usar al bienio siguiente.',
@@ -1407,6 +1484,12 @@ def validar(d):
         sc = next(f for f in p['fugas'] if f['categoria'] == 'sobrecosto_sin_competencia')
         assert sc['base_compras_terceros'] <= sc['valor_sin_competencia_hecho'] + sc['un_oferente_base'] + 0.1, (p['id'], 'base > sin competencia')
         assert abs(sc['valor'] - sc['base_hecho'] * SOBRECOSTO['central']) < 0.2, p['id']
+        assert abs(sc['valor'] - sc['costo_compras_terceros'] - sc['costo_transferencias']) < 0.2, p['id']
+        gs = next(f for f in p['fugas'] if f['categoria'] == 'girado_sin_avance')
+        assert sc['base_edu'] <= sc['base_compras_terceros'] + gs['valor'] + 0.1, (p['id'], 'EDU > línea 1')
+        assert abs(gs['valor'] - (gs.get('valor_terminados') or 0) - (gs.get('valor_en_ejecucion') or 0)) < 0.2, (p['id'], 'girado: terminados + en ejecución')
+        # lo que no es "sin obra" (plata quieta, indicio, contrafactual) no entra en sin_obra
+        assert abs(p['sin_obra'] - sum(f['valor'] for f in p['fugas'] if f['tipo'] in TIPOS_SIN_OBRA)) < 0.25, p['id']
         assert 1 <= len(p['equivalencias']) <= 4, p['id']
         for e in p['equivalencias']:
             assert abs(e['n'] - p['sin_obra'] / e['costo_unitario']) < 0.2 + 0.01 * e['n'], (p['id'], e)
@@ -1465,6 +1548,14 @@ def valor_md(f):
     return fmt(f['valor'])
 
 
+def valor_mm(f):
+    if f.get('no_aplica'):
+        return 'no aplica'
+    if f.get('sin_dato') and not f['valor']:
+        return 's. d.'
+    return mm(f['valor'])
+
+
 def doc_md(d):
     L = []
     L.append('# 10 · La plata que no se convirtió en obra a tiempo, gobierno por gobierno (2004–2027)')
@@ -1479,7 +1570,8 @@ def doc_md(d):
     L.append('Cada gobierno de Yondó recibió una cantidad de plata y la convirtió, en parte, en obras. Aquí se cuenta la parte que **no** se convirtió en obra a tiempo '
              'o que pudo rendir más, y lo que **pudo entrar o ahorrarse** y no se obtuvo. Se separa en cinco niveles que no se mezclan:')
     L.append('')
-    L.append('- **Hecho**: está en un registro oficial que cualquiera puede revisar, o sale de un cálculo directo sobre él. Por ejemplo, recursos de una obra de regalías que va en 9 % de avance con 88 % pagado (GESPROY, octubre de 2026).')
+    L.append('- **Hecho**: está en un registro oficial que cualquiera puede revisar, o sale de un cálculo directo sobre él. Por ejemplo, recursos de una obra de '
+             f"regalías que va en {fmt(EJ_HECHO['ej_fisica'])} % de avance con {fmt(EJ_HECHO['ej_financiera'])} % pagado (GESPROY, octubre de 2026).")
     L.append('- **Estimado**: se calcula con un método explícito sobre registros oficiales y se da con un rango. Por ejemplo, el costo posible de contratar sin competencia.')
     L.append('- **Plata quieta**: regalías sin comprometer al cierre de un bienio. Es un hecho, pero **no es plata perdida**: pasa al bienio siguiente.')
     L.append('- **Indicio**: una alerta para revisar, como el gasto en contratos de prestación de servicios (OPS) por encima de lo usual en Yondó. Los servicios se prestaron.')
@@ -1550,8 +1642,8 @@ def doc_md(d):
             filas.append([CAT_NOMBRE[f['categoria']], f['tipo'], valor_md(f), rango(f), f['detalle'].replace('|', '/')])
         L.append(tabla(filas, ['Categoría', 'Tipo', 'Valor (M)', 'Rango', 'Detalle'], ['l', 'l', 'r', 'r', 'l']))
         L.append('')
-        L.append(f"**Total:** hecho {mm(p['total_hecho']) if not suma_fuga(p, 'girado_sin_avance').get('sin_dato') else 's. d.'} · estimado {mm(p['total_estimado'])} · **sin obra {mm(p['sin_obra'])}** (rango {mm(p['sin_obra_rango'][0])}–{mm(p['sin_obra_rango'][1])}). "
-                 f"Aparte: plata quieta {mm(p['total_plata_quieta'])} · indicio OPS {mm(p['total_indicio'])} · contrafactual {mm(p['total_contrafactual'])}.")
+        L.append(f"**Total:** hecho {valor_mm(suma_fuga(p, 'girado_sin_avance'))} · estimado {mm(p['total_estimado'])} · **sin obra {mm(p['sin_obra'])}** (rango {mm(p['sin_obra_rango'][0])}–{mm(p['sin_obra_rango'][1])}). "
+                 f"Aparte: plata quieta {valor_mm(suma_fuga(p, 'saldos_regalias'))} · indicio OPS {valor_mm(suma_fuga(p, 'ops_nomina_paralela'))} · contrafactual {mm(p['total_contrafactual'])}.")
         L.append('')
         gi = suma_fuga(p, 'girado_sin_avance')['items']
         if gi:
@@ -1566,7 +1658,9 @@ def doc_md(d):
         if p['equivalencias']:
             L.append('**Para dimensionar, el valor central de "sin obra" equivale a:** ' + ' · '.join(
                 f"{fmt(e['n'], 1 if e['n'] < 10 else 0)} {e['unidad']} (entre {fmt(e['rango_n'][0], 1 if e['rango_n'][0] < 10 else 0)} y {fmt(e['rango_n'][1], 1 if e['rango_n'][1] < 10 else 0)}; a {mm(e['costo_unitario'], 1 if e['costo_unitario'] < 100 else 0)} c/u)"
-                for e in p['equivalencias']) + f". De ese valor, {mm(p['total_hecho'])} es hecho y {mm(p['total_estimado'])} estimado.")
+                for e in p['equivalencias'])
+                + (f". De ese valor, {mm(p['total_hecho'])} es hecho y {mm(p['total_estimado'])} estimado." if not suma_fuga(p, 'girado_sin_avance').get('sin_dato')
+                   else '. Todo ese valor es estimado: el hecho no tiene dato en estos años.'))
             L.append('')
         L.append('**Lo que Yondó necesitaba y pudo hacerse' + (' (y aún se puede)' if p['en_curso'] else '') + ':**')
         L.append('')
@@ -1588,9 +1682,14 @@ def doc_md(d):
     L.append('')
     L.append('### Cómo se evita contar dos veces la misma plata')
     L.append('')
-    L.append('1. **Estudios con obra adentro.** Los contratos que incluyen diseño y construcción (como el de $11.696 M, pesos corrientes de 2021, con la EDU) no cuentan como estudios sin obra: su obra va dentro del contrato o ya está en "pagos por delante del avance".')
+    L.append(f'1. **Estudios con obra adentro.** Los contratos que incluyen diseño y construcción (como el de {mmc(EDU_MIXTO["valor"], EDU_MIXTO["anio"])}, con la EDU) '
+             'no cuentan como estudios sin obra: su obra va dentro del contrato o ya está en "pagos por delante del avance".')
     L.append('2. **Costo de contratar sin competencia.** La base es lo que la alcaldía compró a terceros: se le quitan las OPS (tienen su propia categoría), los estudios sin obra, las transferencias a Aguas y Aseo, al hospital y a otras entidades de Yondó (subsidios a las tarifas, pagos por población pobre no afiliada, gastos de operación), los empréstitos y la plata ya contada en pagos por delante del avance. Lo transferido entra en una segunda línea solo hasta lo que esas entidades contrataron sin competencia ese año, y solo en años con datos.')
-    L.append('3. **EDU de Medellín.** Los contratos con la EDU financiaron, entre otros, seis proyectos de regalías cuyo valor total en GESPROY es $77.704 M (pesos corrientes; valor de los proyectos, no de los contratos). Su brecha entre pagos y avance se cuenta una sola vez, en "pagos por delante del avance", y se resta de la base del costo de no competir.')
+    L.append(f'3. **EDU de Medellín.** Con la EDU se firmaron {plural(len(EDU_CONTRATOS), "contrato", "contratos")} por {mmc(sum(c["valor"] for c in EDU_CONTRATOS), "2021–2023")} '
+             f'(SECOP). Esos contratos financiaron, entre otros, {plural(len(EDU_PROY), "proyecto", "proyectos")} de regalías cuyo valor total en GESPROY es '
+             f'${fmt(sum(EDU_PROY.values()) / 1e6)} M (pesos corrientes; valor de los proyectos, no de los contratos, y uno de ellos es de tres municipios). '
+             'Su brecha entre pagos y avance se cuenta una sola vez, en "pagos por delante del avance", y se resta de la base del costo de no competir. El '
+             'resto de los convenios con la EDU queda en la línea 1 de esa base, salvo en el mínimo.')
     L.append('4. **Plata quieta.** Un solo corte por gobierno, con la misma regla (el último bienio que cerró en su periodo) y la misma medida (presupuesto menos compromisos). Los cortes anteriores y el bienio compartido 2015–2016 se muestran como contexto y no se suman. La plata quieta no se suma a "sin obra" ni entre gobiernos.')
     L.append('5. **Fondos.** Los saldos del incentivo a la producción y de la inversión local ya son de Yondó: van como plata quieta o por aprobar, no como fondos no obtenidos. Obras por Impuestos (ventana 2018–2023) se reparte por años entre los dos gobiernos sin repetir la oportunidad. Findeter no se suma porque es crédito.')
     L.append('6. **Recaudo.** En el máximo, el predial con catastro actualizado y la brecha de predial con el percentil 75 no se suman: se toma el mayor.')
