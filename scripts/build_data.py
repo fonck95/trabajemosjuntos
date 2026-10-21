@@ -190,7 +190,17 @@ if (D / 'geo/huellas.json').exists():
 
 # --- Comparativa: plata que no se volvió obra por gobierno y panel anual (data/comparativa/)
 opt = lambda p_: load(p_) if (D / p_).exists() else {}
-DINERO = opt('comparativa/dinero_no_hecho.json')
+_din = opt('comparativa/dinero_no_hecho.json')
+# para la web basta lo que se dibuja: por fuga, los 6 ítems de mayor valor (el JSON completo queda en data/comparativa/)
+def _fuga(f):
+    f = dict(f)
+    if isinstance(f.get('items'), list):
+        f['items'] = sorted(f['items'], key=lambda x: -(x.get('valor') or 0) if isinstance(x, dict) else 0)[:6]
+    f.pop('fuentes_detalle', None)
+    return f
+DINERO = {k: _din[k] for k in ('moneda', 'como_leer', 'categorias', 'limitaciones', 'notas_legales', 'fecha_corte') if k in _din}
+if _din:
+    DINERO['periodos'] = [{**p_, 'fugas': [_fuga(f) for f in p_.get('fugas', [])]} for p_ in _din['periodos']]
 _panel = opt('comparativa/panel_anual.json')
 PANEL = {'anios': _panel.get('anios', []), 'indicadores': _panel.get('indicadores', [])} if _panel else {}
 
