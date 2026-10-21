@@ -469,7 +469,7 @@
       "tipo": "cubierta_ligera",
       "altura": 2.6,
       "material": "fibrocemento",
-      "color": "#64635e",
+      "color": "#7d625a",
       "centro": [
         -16.58,
         55.16
@@ -482,7 +482,7 @@
       "tipo": "cubierta_ligera",
       "altura": 2.62,
       "material": "fibrocemento",
-      "color": "#64635e",
+      "color": "#7d625a",
       "centro": [
         -15.95,
         52.2
@@ -495,7 +495,7 @@
       "tipo": "cubierta_ligera",
       "altura": 2.6,
       "material": "fibrocemento",
-      "color": "#64635e",
+      "color": "#7d625a",
       "centro": [
         -15.32,
         49.24
@@ -508,7 +508,7 @@
       "tipo": "cubierta_ligera",
       "altura": 2.62,
       "material": "fibrocemento",
-      "color": "#64635e",
+      "color": "#7d625a",
       "centro": [
         -14.69,
         46.28
@@ -521,7 +521,7 @@
       "tipo": "cubierta_ligera",
       "altura": 2.6,
       "material": "fibrocemento",
-      "color": "#64635e",
+      "color": "#7d625a",
       "centro": [
         -14.06,
         43.32
@@ -586,7 +586,7 @@
       "tipo": "cubierta_ligera",
       "altura": 2.62,
       "material": "fibrocemento",
-      "color": "#64635e",
+      "color": "#cfcfca",
       "centro": [
         -10.92,
         28.52
@@ -599,7 +599,7 @@
       "tipo": "cubierta_ligera",
       "altura": 2.6,
       "material": "fibrocemento",
-      "color": "#64635e",
+      "color": "#cfcfca",
       "centro": [
         -10.29,
         25.56
@@ -612,7 +612,7 @@
       "tipo": "cubierta_ligera",
       "altura": 2.62,
       "material": "fibrocemento",
-      "color": "#64635e",
+      "color": "#cfcfca",
       "centro": [
         -9.66,
         22.6
@@ -625,7 +625,7 @@
       "tipo": "cubierta_ligera",
       "altura": 2.6,
       "material": "fibrocemento",
-      "color": "#64635e",
+      "color": "#cfcfca",
       "centro": [
         -9.03,
         19.64
@@ -638,7 +638,7 @@
       "tipo": "cubierta_ligera",
       "altura": 2.62,
       "material": "fibrocemento",
-      "color": "#64635e",
+      "color": "#cfcfca",
       "centro": [
         -8.4,
         16.68
@@ -990,6 +990,22 @@
         [
           9.77,
           -58.45
+        ]
+      ]
+    },
+    {
+      "tipo": "cerramiento",
+      "altura": 2.6,
+      "material": "muro",
+      "color": "#8a5a48",
+      "linea": [
+        [
+          -0.53,
+          60.21
+        ],
+        [
+          0.74,
+          60.48
         ]
       ]
     }

@@ -17,13 +17,13 @@
    "ancho": 5.7,
    "rumbo_eje": 78,
    "base": 0,
-   "altura_alero": 3.9,
+   "altura_alero": 3.95,
    "pisos": 1,
    "techo": {
     "tipo": "dos_aguas",
     "cumbrera": "corto",
-    "pendiente": 34,
-    "voladizo": 0.6,
+    "pendiente": 28,
+    "voladizo": 0.5,
     "material": "fibrocemento",
     "color": "#8a8578"
    },
