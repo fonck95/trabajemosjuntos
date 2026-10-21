@@ -173,6 +173,8 @@ for f in sorted((D / 'edificios').glob('*.json')):
         'bess': ({k: ad['bess'].get(k) for k in ('kwh', 'kw', 'tipo')} if ad.get('bess') else None),
         'domotica': ad.get('domotica', []), 'obras_civiles': ad.get('obras_civiles', []), 'notas': ad.get('notas'),
         'incertidumbres': s.get('incertidumbres', []), 'fuentes': m.get('fuentes', []),
+        'puntos': ([{'tipo': 'bess', 'x': ad['bess']['centro'][0], 'y': ad['bess']['centro'][1]}] if (ad.get('bess') or {}).get('centro') else [])
+                  + [{'tipo': 'marquesina', 'x': a['centro'][0], 'y': a['centro'][1]} for a in ad.get('fv', []) if a.get('tipo') == 'marquesina' and a.get('centro')],
         'archivo': m.get('archivo'), 'archivo_lod1': m.get('archivo_lod1'), 'tamano': m.get('tamano'),
         'bytes': m.get('bytes'), 'triangulos': m.get('triangulos'),
     })

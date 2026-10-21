@@ -2,18 +2,23 @@
 // Las fuentes de recursos son pilares cuya altura es el monto; sus corrientes entran al hospital.
 import { THREE, Stage, tokens, onTheme, mat, box, solarArray, Flow, arc, fmtCOP, fmtN, gsap } from '../core.js';
 import { progressiveLOD } from '../assets.js';
-import { HOSPITAL as Hs, MICRORRED } from '../data.js';
+import { HOSPITAL as Hs, MICRORRED, EDIFICIOS } from '../data.js';
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [8, 44, 58], target: [0, 4, -12], maxDist: 130, tone: 'aces', exposure: 1.05, dynamicShadows: true });
+  // Réplica real del hospital (levantada con satélite y Street View) si existe; si no, el modelo esquemático
+  const REAL = EDIFICIOS.find((e) => e.id === 'hospital' && e.archivo);
+  const half = REAL ? Math.max(REAL.tamano[0], REAL.tamano[2]) / 2 : 23, HY = REAL ? REAL.tamano[1] : 8;
+  const RAD = Math.max(30, half * 1.25 + 10), K = RAD / 30;
+  const st = new Stage(el, { cam: [8 * K, 44 * K, 58 * K], target: [0, 4, -12 * K], maxDist: 130 * K, tone: 'aces', exposure: 1.05, dynamicShadows: true });
+  { const c = st.sunLight.shadow.camera; Object.assign(c, { left: -RAD - 12, right: RAD + 12, top: RAD + 12, bottom: -RAD - 12, far: 260 * K }); st.sunLight.position.multiplyScalar(K); }
   const T = tokens();
   const S = st.scene;
   const M = {
     ground: mat(T.ground), wall: mat(T.wall), roof: mat(T.roof), pv: mat(0x1d3557, { roughness: 0.35, metalness: 0.35 }), frame: mat(0x9aa5ad),
     bess: mat(T.s[3]), gen: mat(T.s[1]), dark: mat(T.ink), glass: mat(0x7fa6bd, { roughness: 0.2, metalness: 0.3 }), green: mat(0x6f9e6a), road: mat(T.line),
   };
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(48, 64), M.ground); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; S.add(ground);
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(Math.max(48, RAD + 26), 64), M.ground); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; S.add(ground);
 
   // Marcador de posición liviano mientras llega el modelo GLB (se ve al instante y luego se reemplaza)
   const proc = new THREE.Group(); S.add(proc);
@@ -26,7 +31,8 @@ export function mount(root) {
 
   // Modelo GLB comprimido con Draco, con dos niveles de detalle (se cambia por distancia de cámara)
   const status = st.label('Cargando modelo 3D…', 'lbl-small', [0, 1, 18]);
-  const lod = progressiveLOD([{ url: 'models/hospital_lod0.glb', distance: 0 }, { url: 'models/hospital_lod1.glb', distance: 85 }], (o, lv) => {
+  const levels = REAL ? [{ url: REAL.archivo, distance: 0 }, { url: REAL.archivo_lod1, distance: 110 * K }] : [{ url: 'models/hospital_lod0.glb', distance: 0 }, { url: 'models/hospital_lod1.glb', distance: 85 }];
+  const lod = progressiveLOD(levels, (o, lv) => {
     proc.visible = false;
     status.element.textContent = lv.distance === 0 ? '' : 'Nivel de detalle bajo · cargando el detallado…';
     st.updateShadows();
@@ -36,6 +42,11 @@ export function mount(root) {
 
   // Etiquetas y piezas animadas sobre el modelo
   const tags = new THREE.Group(); S.add(tags);
+  if (REAL) {
+    tags.visible = false;
+    st.label('<b>E.S.E. Hospital Héctor Abad Gómez</b><br><small>réplica del edificio real · con el proyecto</small>', 'lbl-node', [0, HY + 4, 0]);
+    (REAL.puntos || []).forEach((q) => st.label(q.tipo === 'bess' ? `Baterías ${fmtN(REAL.bess?.kwh || 0)} kWh` : 'Marquesina solar', 'lbl-small', [q.x, 4.5, -q.y]));
+  }
   st.label('Urgencias', 'lbl-small', [13, 5, 6.5], tags);
   st.label('Consulta externa · telesalud', 'lbl-small', [-13.5, 5, -1], tags);
   st.label('Servicios: cadena de frío, lavandería, esterilización', 'lbl-small', [4, 4.2, -9], tags);
@@ -46,13 +57,13 @@ export function mount(root) {
   st.label('Nodo de conectividad MinTIC', 'lbl-data', [8.5, 17.5, -3.5], tags);
   // barra de carga sobre el techo del contenedor de baterías
   const socW = 7;
-  const socBar = box(socW, 0.12, 0.5, mat(T.good, { emissive: T.good, emissiveIntensity: 0.6 }), -12, 2.78, 9.9); S.add(socBar);
+  const socBar = box(socW, 0.12, 0.5, mat(T.good, { emissive: T.good, emissiveIntensity: 0.6 }), -12, 2.78, 9.9); if (!REAL) S.add(socBar);
   const trees = new THREE.InstancedMesh(new THREE.SphereGeometry(1.4, 10, 8), M.green, 5);
   const trunks = new THREE.InstancedMesh(new THREE.BoxGeometry(0.3, 1.4, 0.3), mat(0x6b4f3a), 5);
   [[-22, 2], [22, -6], [-4, 22], [18, 18], [-22, -14]].forEach(([x, z], i) => {
     trees.setMatrixAt(i, new THREE.Matrix4().makeTranslation(x, 2.4, z)); trunks.setMatrixAt(i, new THREE.Matrix4().makeTranslation(x, 0.7, z));
   });
-  trees.castShadow = trunks.castShadow = true; S.add(trees, trunks);
+  trees.castShadow = trunks.castShadow = true; if (!REAL) S.add(trees, trunks);
   st.freeze(ground); st.freeze(proc);
 
   // Fuentes de financiación: pilares en arco al norte
@@ -61,11 +72,11 @@ export function mount(root) {
   const geo = new THREE.CylinderGeometry(1.25, 1.25, 1, 28); geo.translate(0, 0.5, 0);
   const items = F.map((f, i) => {
     const a = Math.PI * (0.12 + (0.76 * i) / Math.max(1, F.length - 1));
-    const x = Math.cos(a) * -30, z = -Math.sin(a) * 24 - 6;
+    const x = Math.cos(a) * -RAD, z = -Math.sin(a) * RAD * 0.85 - 6 * K;
     const p = new THREE.Mesh(geo, pillMats[i]); p.position.set(x, 0, z); p.castShadow = true; S.add(p);
     p.scale.y = 0.1;
     const lab = st.label('', 'lbl-money', [x, 1.4, z]);
-    const flow = new Flow(S, arc([x, 1, z], [0, 6.5, -1], 8), T.s[f.slot - 1], { max: 30, size: 0.22 });
+    const flow = new Flow(S, arc([x, 1, z], [0, HY * 0.8, -1], 8 * K), T.s[f.slot - 1], { max: 30, size: 0.22 * Math.sqrt(K), tube: 0.05 * K });
     st.pickable(p, { onPick: () => pick(f) });
     return { f, p, lab, flow, target: 0.1 };
   });
@@ -76,12 +87,12 @@ export function mount(root) {
     const max = Math.max(...F.map((f) => f.max));
     items.forEach((it) => {
       const v = it.f[esc];
-      it.target = 0.3 + (v / max) * 16;
+      it.target = 0.3 + (v / max) * 16 * Math.sqrt(K);
       it.lab.element.innerHTML = `${fmtCOP(v * 1e6)}<small>${it.f.corto}</small>`;
       it.flow.set((v / max) * 1.1, 1);
       // la corriente nace en la cima del pilar
       it.flow.curve.v0.y = it.target; it.flow.curve.updateArcLengths();
-      it.flow.tube.geometry.dispose(); it.flow.tube.geometry = new THREE.TubeGeometry(it.flow.curve, 48, 0.05, 6, false);
+      it.flow.tube.geometry.dispose(); it.flow.tube.geometry = new THREE.TubeGeometry(it.flow.curve, 48, 0.05 * K, 6, false);
       const placeP = () => { it.lab.position.set(it.p.position.x, it.p.scale.y + 1.3, it.p.position.z); st.invalidate(); };
       if (gsap) gsap.to(it.p.scale, { y: it.target, duration: 1, ease: 'power3.out', delay: items.indexOf(it) * 0.06, overwrite: true, onUpdate: placeP });
       else { it.p.scale.y = it.target; placeP(); }
