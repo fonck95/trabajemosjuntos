@@ -1,6 +1,6 @@
 // Visor de modelos profesionales (glTF 2.0 / GLB): arrastrar y soltar, iluminación física,
 // métricas de costo en GPU y guía del pipeline para llevar modelos BIM/CAD al atlas.
-import { THREE, Stage, engine, tokens, onTheme, fmtN, gsap, disposeObject, solidBox } from '../core.js';
+import { THREE, Stage, engine, tokens, onTheme, fmtN, gsap, disposeObject, solidBox, conexionLabels } from '../core.js';
 import { getLoader, loadModel, parseFile, fit, stats } from '../assets.js';
 
 const GUIA = [
@@ -51,7 +51,6 @@ export function mount(root) {
 
   // puntos de la conexión que exporta el generador (tablero con medidor, gateway IoT, acometida de la red)
   let cxLabels = [];
-  const CX = [['tablero', 'Tablero + medidor bidireccional', 'pw'], ['gateway', 'Gateway IoT → CCED', 'dt'], ['red', 'Acometida de la red (EPM)', 'pw']];
   function show(info, nombre, m) {
     // CSS2DRenderer solo borra el elemento del objeto que se quita, no el de sus hijos
     cxLabels.forEach((l) => { l.element.remove(); l.removeFromParent(); }); cxLabels = [];
@@ -74,7 +73,14 @@ export function mount(root) {
     if (gsap) gsap.from(current.scale, { x: 0.001, y: 0.001, z: 0.001, duration: 0.8, ease: 'back.out(1.4)', onUpdate: () => st.invalidate(true) });
     st.updateShadows();
     setStats(info, stats(current, info.gltf), nombre);
-    if (m?.conexion) CX.forEach(([k, t, c]) => { if (m.conexion[k]) cxLabels.push(st.label(t, `lbl-cx ${c}`, m.conexion[k], current)); });
+    cxLabels = conexionLabels(st, m?.conexion, current, (pos) => {
+      // primer plano: afuera del edificio, frente al tablero
+      const p = current.localToWorld(new THREE.Vector3(...pos)), c = solidBox(current).getCenter(new THREE.Vector3());
+      const out = p.clone().sub(c).setY(0);
+      if (out.lengthSq() < 0.01) out.set(0, 0, 1);
+      p.y = Math.max(1, p.y - 1.4);
+      st.closeUp(p, [current], out.normalize(), { dist: 12 });
+    });
     applyLayer();
   }
 

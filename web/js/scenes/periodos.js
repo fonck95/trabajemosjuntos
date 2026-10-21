@@ -12,7 +12,7 @@ const short = (s) => (s || '').split(/[(;]/)[0].trim();
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [6, 16, 50], target: [0, 7, 0], maxDist: 200, dynamicShadows: true, env: false, fit: 1 });
+  const st = new Stage(el, { cam: [6, 16, 50], target: [0, 7, 0], maxDist: 200, dynamicShadows: true, env: false, fit: 1, declutter: ['lbl-money'] });
   const T = tokens();
   const S = st.scene;
   const D = DINERO?.periodos?.length ? DINERO : null;
@@ -142,8 +142,8 @@ export function mount(root) {
     modeBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.modoPeriodos === m)));
     plata.visible = m === 'plata'; ind.visible = m === 'indicadores';
     hideLabels(plata, m === 'plata'); hideLabels(ind, m === 'indicadores');
-    if (m === 'indicadores') { st.flyTo([42, 28, 40], [0, 3, 0], 1.2); select(sel); }
-    else { st.flyTo([6, 16, 50], [0, 7, 0], 1.2); playDrop(); }
+    if (m === 'indicadores') { st.flyTo(st.fitPos([42, 28, 40], [0, 3, 0]), [0, 3, 0], 1.2); select(sel); }
+    else { st.flyTo(st.fitPos([6, 16, 50], [0, 7, 0]), [0, 7, 0], 1.2); playDrop(); }
     root.querySelector('[data-t="periodos.stamp"]')?.replaceChildren(document.createTextNode(m === 'plata' ? `Cada fajo = ${fmtM(UNIT)} de 2026 · rojo = no se convirtió en obra (registros) · naranja = estimado · hueco = pudo gestionarse y no se hizo` : 'Altura = desempeño normalizado 0–100 · columna hueca = sin dato verificable'));
     st.updateShadows();
   }

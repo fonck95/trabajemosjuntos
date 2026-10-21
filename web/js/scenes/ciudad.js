@@ -3,7 +3,7 @@
 // adecuaciones: solar en cubiertas, marquesinas, baterías, inversores, cubiertas nuevas y cargadores.
 // Se recorre sede por sede (‹ ›, flechas del teclado, la lista o doble clic) y cada sede muestra su conexión:
 // tablero con medidor bidireccional, gateway IoT y enlace de datos al centro de control (CCED) en la alcaldía.
-import { THREE, Stage, engine, tokens, onTheme, mat, arc, fmtN, gsap, solidBox } from '../core.js';
+import { THREE, Stage, engine, tokens, onTheme, mat, arc, fmtN, gsap, solidBox, conexionLabels } from '../core.js';
 import { Line2 } from 'three/addons/lines/Line2.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
@@ -66,7 +66,7 @@ export function mount(root) {
   const farR = Math.max(1500, ...lista.map((e) => Math.hypot(e.x, e.y) + 400));
   const cx = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0, cy = ys.length ? (Math.min(...ys) + Math.max(...ys)) / 2 : 0;
   const vista = encuadre(urb, cx, cy);
-  const st = new Stage(el, { ...vista, fov: 38, minDist: 6, maxDist: 1500, fit: 1, tone: 'aces', exposure: 1.05 });
+  const st = new Stage(el, { ...vista, fov: 38, minDist: 6, maxDist: 1500, fit: 1, declutter: true, tone: 'aces', exposure: 1.05 });
   st.camera.far = 5000; st.camera.updateProjectionMatrix();
   // la rueda acerca hacia donde apunta el cursor y el arrastre con clic derecho se desliza sobre el piso
   Object.assign(st.controls, { zoomToCursor: true, screenSpacePanning: false, zoomSpeed: 1.15 });
@@ -153,41 +153,15 @@ export function mount(root) {
     // puntos de la conexión (los exporta el generador en el manifiesto); se muestran con la sede seleccionada
     const cn = e.conexion || {};
     it.gw = new THREE.Vector3(...(cn.gateway || [0, sy + 1.5, 0]));
-    it.cx = [
-      cn.tablero && st.label('Tablero + medidor bidireccional', 'lbl-cx pw', cn.tablero, g),
-      st.label('Gateway IoT → CCED', 'lbl-cx dt', it.gw.toArray(), g),
-      cn.red && st.label('Acometida de la red (EPM)', 'lbl-cx pw', cn.red, g),
-    ].filter(Boolean);
+    it.cx = conexionLabels(st, cn, g, (pos) => acercar(it, pos));
     it.cx.forEach((l) => { l.visible = false; });
     st.pickable(g, { onPick: () => select(it), onEnter: () => it.lab.element.classList.add('hover'), onLeave: () => it.lab.element.classList.remove('hover') });
     return it;
   });
   const caja = (it) => it.caja || (it.caja = it.loaded ? solidBox(it.lod) : new THREE.Box3().setFromObject(it.ph));
 
-  // etiquetas sin encimarse: de abajo hacia arriba en pantalla, la que choca con una ya puesta sube lo justo
   const v3 = new THREE.Vector3();
-  function declutter() {
-    const W = el.clientWidth, H = el.clientHeight, placed = [];
-    // los puntos de conexión de la sede elegida quedan fijos; las etiquetas de sede los esquivan
-    actual?.cx.forEach((l) => {
-      if (!l.visible) return;
-      const e = l.element; l.getWorldPosition(v3).project(st.camera);
-      if (v3.z < 1 && e.offsetWidth) placed.push({ x: ((v3.x + 1) / 2) * W, y: ((1 - v3.y) / 2) * H, w: e.offsetWidth, h: e.offsetHeight });
-    });
-    items.map((it) => {
-      const e = it.lab.element; it.lab.getWorldPosition(v3).project(st.camera);
-      return { e, x: ((v3.x + 1) / 2) * W, y: ((1 - v3.y) / 2) * H, w: e.offsetWidth, h: e.offsetHeight, on: !e.hidden && v3.z < 1 };
-    }).filter((r) => r.on && r.w).sort((a, b) => b.y - a.y).forEach((r) => {
-      let y = r.y;
-      for (let k = 0; k < 10; k++) {
-        const hit = placed.find((p) => Math.abs(p.x - r.x) < (p.w + r.w) / 2 + 4 && Math.abs(p.y - y) < (p.h + r.h) / 2 + 3);
-        if (!hit) break;
-        y = hit.y - (hit.h + r.h) / 2 - 3;
-      }
-      placed.push({ ...r, y }); r.e.style.marginTop = y < r.y - 0.5 ? `${y - r.y}px` : '';
-    });
-  }
-  st.onFrame(() => { items.forEach((it) => it.lod?.update(st.camera)); declutter(); return false; });
+  st.onFrame(() => { items.forEach((it) => it.lod?.update(st.camera)); return false; });
 
   // red de datos MinTIC: cada sede reporta al CCED (alcaldía) por fibra o radio. Trazo de ancho fijo en pantalla
   // (se lee igual de cerca que a 1 km) y guiones que avanzan hacia la alcaldía para que se entienda el sentido
@@ -260,6 +234,15 @@ export function mount(root) {
     if (gsap) gsap.fromTo(anillo.material, { opacity: 0 }, { opacity: 0.95, duration: 0.5, delay: 1, onUpdate: () => st.invalidate() });
   }
 
+  // primer plano de la conexión: afuera, frente al tablero, a ~13 m y con línea de vista libre
+  function acercar(it, pos) {
+    const p = new THREE.Vector3(...pos).add(it.g.position), c = caja(it).getCenter(new THREE.Vector3());
+    const out = p.clone().sub(c).setY(0);
+    if (out.lengthSq() < 1) out.set(0, 0, 1);
+    p.y = Math.max(1, p.y - 1.4);
+    st.closeUp(p, [it.g], out.normalize(), { dist: 13 });
+  }
+
   // barra de recorrido sobre el escenario, teclado y doble clic
   const nav = el.querySelector('.nav3d'), nombre = nav.querySelector('.nav3d-name');
   const paso = (d) => select(items[((actual ? items.indexOf(actual) : d > 0 ? -1 : 0) + d + items.length) % items.length]);
@@ -318,14 +301,17 @@ export function mount(root) {
       <dl class="kv">
         <dt>Solar</dt><dd>${pv}</dd>
         ${e.bess ? `<dt>Baterías</dt><dd>${fmtN(e.bess.kwh)} kWh / ${fmtN(e.bess.kw)} kW${e.bess.tipo ? ` · ${e.bess.tipo.replace('_', ' ')}` : ''}</dd>` : ''}
+        ${e.conexion ? `<dt>Conexión</dt><dd style="white-space:normal">${e.conexion.nota || ''}</dd>` : ''}
         ${n ? `<dt>Consumo</dt><dd>${fmtN(n.kwh_mes)} kWh/mes · prioridad ${n.prioridad}${n.isla ? ' · funciona en isla' : ''}</dd>` : ''}
         ${e.pisos ? `<dt>Edificio</dt><dd>${e.pisos}</dd>` : ''}
       </dl>
+      ${e.conexion ? `<p><b>Cómo se conecta</b></p><ul class="cx-ruta"><li>Paneles → inversores${e.bess ? ' → baterías' : ''} → tablero con medidor bidireccional</li><li>Tablero → ${/poste/i.test(e.conexion.nota || '') ? 'poste de la red de EPM' : 'acometida de EPM en la fachada'}</li><li class="dt">Gateway IoT → enlace de datos al CCED (alcaldía)</li></ul><p><button type="button" class="btn ghost" data-cx-cerca>Ver la conexión de cerca</button></p>` : ''}
       ${e.obras_civiles?.length ? `<p><b>Obras previas</b></p><ul class="tight">${e.obras_civiles.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''}
       ${e.domotica?.length ? `<p><b>Domótica</b></p><p class="note">${e.domotica.join(' · ')}</p>` : ''}
       ${e.notas ? `<p class="note">${e.notas}</p>` : ''}
       ${fuentes.length ? `<p><b>Ver el edificio real</b></p><p>${fuentes.map((f, k) => `<a href="${f.url}" target="_blank" rel="noopener">${f.tipo === 'street_view' ? `Street View${f.fecha ? ` (${f.fecha})` : ''}` : `Fuente ${k + 1}`}</a>`).join(' · ')}</p>` : ''}
       ${e.incertidumbres?.length ? `<details><summary>Lo que no se pudo verificar (${e.incertidumbres.length})</summary><ul class="tight">${e.incertidumbres.map((x) => `<li>${x}</li>`).join('')}</ul></details>` : ''}`;
+    card.querySelector('[data-cx-cerca]')?.addEventListener('click', () => acercar(it, it.e.conexion.tablero));
     if (gsap) gsap.from(card, { opacity: 0, y: 8, duration: 0.35, ease: 'power2.out' });
   }
 

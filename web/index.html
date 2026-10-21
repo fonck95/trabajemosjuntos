@@ -126,9 +126,15 @@ svg.mr-chart .now { stroke: var(--accent); stroke-width: 1.5; }
 .lbl-node { transition: opacity 0.25s, border-color 0.2s, box-shadow 0.2s; }
 .lbl-node.hover, .lbl-node.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .lbl-node.on { z-index: 2; } .lbl-node.dim { opacity: 0.38; }
-.lbl-cx { display: flex; align-items: center; gap: 5px; font: 600 10.5px var(--f-mono); background: var(--surface); border: 1.5px solid currentColor; border-radius: 999px; padding: 2px 8px 2px 4px; }
-.lbl-cx::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 25%, transparent); }
-.lbl-cx.pw { color: var(--power); } .lbl-cx.dt { color: var(--data); }
+.lbl-node.sel { border-color: var(--accent); } .lbl-node.wrap { white-space: normal; max-width: 132px; }
+.lbl-cx { display: grid; gap: 1px; font: 600 10.5px/1.35 var(--f-mono); background: var(--surface); border: 1.5px solid var(--power); border-radius: 8px; padding: 4px 9px 4px 7px; box-shadow: 0 2px 8px color-mix(in srgb, var(--ink) 14%, transparent); }
+.lbl-cx span { display: flex; align-items: center; gap: 6px; }
+.lbl-cx span::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 2.5px color-mix(in srgb, currentColor 25%, transparent); }
+.lbl-cx .pw { color: var(--power); } .lbl-cx .dt { color: var(--data); }
+.lbl-cx:hover { border-color: var(--accent); }
+.cx-ruta { margin: 4px 0 0; padding: 0; list-style: none; font-size: 0.85rem; }
+.cx-ruta li { display: flex; gap: 8px; align-items: baseline; } .cx-ruta li::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--power); transform: translateY(-1px); }
+.cx-ruta li.dt::before { background: var(--data); }
 .nav3d { position: absolute; top: 10px; left: 10px; z-index: 3; display: flex; align-items: center; gap: 2px; max-width: calc(100% - 132px); background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 999px; padding: 3px; font: 600 0.74rem var(--f-mono); }
 .nav3d button { flex: none; min-width: 30px; height: 30px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: var(--ink); font: inherit; cursor: pointer; }
 .nav3d button[data-nav="prev"], .nav3d button[data-nav="next"] { font-size: 1.15rem; line-height: 1; padding: 0 6px; }
@@ -195,8 +201,14 @@ a { color: var(--accent); }
   .read { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lbl-node { font-size: 9.5px; }
   .nav3d [data-nav-modo], .nav3d .sep, .leyenda3d { display: none; }
-  .nav3d-name { max-width: 120px; }
+  /* en el teléfono la barra de recorrido va abajo, a todo el ancho, y reemplaza la ayuda */
+  .nav3d { top: auto; bottom: 10px; right: 10px; max-width: none; justify-content: space-between; }
+  .nav3d-name { flex: 1; max-width: none; text-align: center; }
+  [data-scene="ciudad"] .stage-hint { display: none; }
   .lbl-small, .lbl-geo, .lbl-money small { display: none; }
+  /* La plata en el teléfono: sin la etiqueta lateral de "sin obra" (está en las barras de abajo) y pastillas compactas */
+  [data-scene="periodos"] .lbl-val:not(.lbl-axis) { display: none; }
+  .lbl-pila { font-size: 11px; padding: 2px 5px; } .lbl-pila small { display: none; }
   .lbl-money { font-size: 10px; padding: 2px 5px; }
   :root { --stroke: 4px; }
   .bubble { --cross: 30px; }

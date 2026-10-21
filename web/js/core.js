@@ -82,6 +82,7 @@ class Engine {
     s.adaptDepth();
     this.renderer.render(s.scene, s.camera);
     s.labels.render(s.scene, s.camera);
+    if (s.declutter) s.declutterLabels();
     s.dirty = false;
     this.measure(dt, s);
   }
@@ -111,7 +112,9 @@ const sharedBox = new THREE.BoxGeometry(1, 1, 1);
 
 // ---------------------------------------------------------------- escena de cada vista
 export class Stage {
-  constructor(el, { cam = [30, 26, 34], target = [0, 0, 0], fov = 40, minDist = 8, maxDist = 140, env = true, tone = 'none', exposure = 1, dynamicShadows = false, fit = 0.75 } = {}) {
+  constructor(el, { cam = [30, 26, 34], target = [0, 0, 0], fov = 40, minDist = 8, maxDist = 140, env = true, tone = 'none', exposure = 1, dynamicShadows = false, fit = 0.75, declutter = false } = {}) {
+    // declutter: true (etiquetas .lbl-node) o la lista de clases que se pueden mover
+    this.declutter = declutter === true ? ['lbl-node'] : declutter || null; this._labels = [];
     // fit: cuánto se aleja la cámara en pantallas angostas (1 = la escena conserva su ancho; 0,75 = término medio)
     this.fitExp = fit;
     this.nearMin = Math.min(0.05, minDist * 0.01);
@@ -166,7 +169,37 @@ export class Stage {
     this.hud = makeHud(el, this);
   }
   isActive() { return engine.active === this; }
-  fitFactor() { return Math.max(1, Math.pow(1.5 / (this.camera.aspect || 1.5), this.fitExp)); }
+  // Etiquetas sin encimarse: las fijas (.lbl-cx, .lbl-data, .lbl-alert) quedan donde están; las de nodo
+  // (.lbl-node), de abajo hacia arriba en pantalla, suben lo justo para no chocar con las ya puestas.
+  // Primero se leen todas las medidas y después se escribe: un solo cálculo de diseño por cuadro
+  declutterLabels() {
+    const W = this.el.clientWidth, H = this.el.clientHeight, v = new THREE.Vector3(), fixed = [], movers = [];
+    for (const o of this._labels) {
+      const e = o.element, c = e.classList;
+      if (!e.isConnected || e.hidden || e.style.display === 'none') continue;
+      const fijo = c.contains('lbl-cx') || c.contains('lbl-data') || c.contains('lbl-alert');
+      if (!fijo && !this.declutter.some((k) => c.contains(k))) continue;
+      o.getWorldPosition(v).project(this.camera);
+      if (v.z > 1) continue;
+      const r = { e, x: ((v.x + 1) / 2) * W, y: ((1 - v.y) / 2) * H, w: e.offsetWidth, h: e.offsetHeight };
+      if (r.w) (fijo ? fixed : movers).push(r);
+    }
+    const placed = fixed;
+    movers.sort((a, b) => b.y - a.y).forEach((r) => {
+      let y = r.y;
+      for (let k = 0; k < 12; k++) {
+        const hit = placed.find((p) => Math.abs(p.x - r.x) < (p.w + r.w) / 2 + 4 && Math.abs(p.y - y) < (p.h + r.h) / 2 + 3);
+        if (!hit) break;
+        y = hit.y - (hit.h + r.h) / 2 - 3;
+      }
+      r.dy = y - r.y; placed.push({ ...r, y });
+    });
+    movers.forEach((r) => { r.e.style.marginTop = r.dy < -0.5 ? `${r.dy}px` : ''; });
+  }
+  // usa el tamaño real del contenedor: al montar la escena la cámara todavía no tiene su proporción final
+  fitFactor() { const w = this.el.clientWidth, h = this.el.clientHeight, a = w && h ? w / h : this.camera.aspect || 1.5; return Math.max(1, Math.pow(1.5 / a, this.fitExp)); }
+  // posición de cámara pensada para escritorio, alejada según el ancho del contenedor (para vuelos a vistas fijas)
+  fitPos(pos, target) { const k = this.fitFactor(); return pos.map((v, i) => target[i] + (v - target[i]) * k); }
   // Plano cercano proporcional a la distancia: con near fijo de 0,1 m y la cámara a 1 km, la precisión de
   // profundidad cae a ~0,6 m y techos, paneles, ventanas y pisos titilan (z-fighting)
   adaptDepth() {
@@ -197,6 +230,7 @@ export class Stage {
     const o = new CSS2DObject(div);
     o.position.set(...pos);
     parent.add(o);
+    this._labels.push(o);
     return o;
   }
   // fn(dt, t) devuelve false cuando no necesita redibujar en ese cuadro
@@ -228,6 +262,21 @@ export class Stage {
     this.controls.maxDistance = Math.max(this.controls.maxDistance, D * 1.6);
     this.flyTo(cam.position.toArray(), tgt.toArray(), duration);
     return D;
+  }
+  // Primer plano de un punto con línea de vista libre: prueba rumbos alrededor del preferido (y dos elevaciones)
+  // y descarta los que tapa algo visible de objs (muros, cubiertas, árboles); si todos están tapados, mira desde arriba
+  closeUp(p, objs, pref, { dist = 12, elev = 28, duration = 1.3 } = {}) {
+    const ray = new THREE.Raycaster(), base = Math.atan2(pref.z, pref.x), e0 = THREE.MathUtils.degToRad(elev), d = new THREE.Vector3();
+    const shown = (o) => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+    let best = null;
+    busca: for (const el of [e0, e0 * 1.9]) for (const k of [0, 1, -1, 2, -2, 3, -3, 4]) {
+      const a = base + (k * Math.PI) / 4;
+      d.set(Math.cos(a) * Math.cos(el), Math.sin(el), Math.sin(a) * Math.cos(el));
+      const cam = p.clone().addScaledVector(d, dist);
+      ray.set(cam, d.clone().negate()); ray.far = dist - 1;
+      if (!ray.intersectObjects(objs, true).some((h) => shown(h.object))) { best = cam; break busca; }
+    }
+    this.flyTo((best || p.clone().add(new THREE.Vector3(0.01, dist * 1.4, 0))).toArray(), p.toArray(), duration);
   }
   // Entrada de cámara: parte de más lejos y se acerca a la posición de reposo
   intro() {
@@ -377,6 +426,22 @@ export class Flow {
     this.mesh.instanceMatrix.needsUpdate = true;
     return true;
   }
+}
+
+// Etiquetas de la conexión de una sede. Tablero con medidor bidireccional, gateway IoT y acometida quedan en el
+// mismo punto de la fachada (a 1–3 m): van en una sola etiqueta; el poste de la red, aparte cuando queda lejos.
+// onClick recibe el punto (en el marco del modelo) para acercar la cámara.
+export function conexionLabels(st, cn, parent, onClick) {
+  if (!cn?.tablero) return [];
+  const [tx, ty, tz] = cn.tablero, lejos = cn.red && Math.hypot(cn.red[0] - tx, cn.red[2] - tz) > 5;
+  const make = (html, pos) => {
+    const l = st.label(html, 'lbl-cx', pos, parent);
+    if (onClick) { Object.assign(l.element.style, { pointerEvents: 'auto', cursor: 'zoom-in' }); l.element.title = 'Acercar a la conexión'; l.element.addEventListener('click', () => onClick(pos)); }
+    return l;
+  };
+  const out = [make(`<span class="pw">Tablero + medidor bidireccional</span><span class="dt">Gateway IoT → CCED</span>${cn.red && !lejos ? '<span class="pw">Acometida de la red (EPM)</span>' : ''}`, [tx, ty + 2.4, tz])];
+  if (lejos) out.push(make('<span class="pw">Poste de la red (EPM)</span>', [cn.red[0], cn.red[1] + 1.5, cn.red[2]]));
+  return out;
 }
 
 // Caja de las mallas con volumen (más de minH de alto): deja por fuera pisos planos como parqueaderos y zonas verdes
