@@ -267,19 +267,31 @@ function face(pts, n, u, vd, rot) {
 
 // ---------- volumen: muros, ventanas, puertas, zócalo, entrepisos, corredor, letrero, cubierta
 function volume(b, v, P, detail) {
-  const f = frame(v), base = v.base ?? 0, eave = Math.max(base + 2.2, v.altura_alero ?? base + 3.2) - base;
+  const abierto = !!v.abierto;
+  const f = frame(v), base = v.base ?? 0, eave = Math.max(base + (abierto ? 0.4 : 2.2), v.altura_alero ?? base + 3.2) - base;
   const fa = v.fachada || {}, t = v.techo || { tipo: 'plano' };
   const wk = wallMat(b, fa);
   const L = f.L, A = f.A, pisos = Math.max(1, v.pisos ?? 1), hf = eave / pisos;
   const W = P.walls, M = (g, m) => g.applyMatrix4(m);
+  if (abierto) {
+    // pórtico, corredor o kiosco: columnas en el perímetro (cada ~3,5 m) y viga de amarre bajo la cubierta
+    const sep = v.sep_columnas ?? 3.5, cs = v.columna ?? 0.25;
+    const nL = Math.max(1, Math.round(L / sep)), nA = Math.max(1, Math.round(A / sep));
+    const pts = new Set();
+    for (let i = 0; i <= nL; i++) for (const z of [-A / 2, A / 2]) pts.add(`${(-L / 2 + (i * L) / nL).toFixed(2)},${z.toFixed(2)}`);
+    for (let j = 0; j <= nA; j++) for (const x of [-L / 2, L / 2]) pts.add(`${x.toFixed(2)},${(-A / 2 + (j * A) / nA).toFixed(2)}`);
+    for (const k of pts) { const [x, z] = k.split(',').map(Number); W.addRaw(wk, M(boxG(cs, eave, cs, x - Math.sign(x) * cs / 2, 0, z - Math.sign(z) * cs / 2), f.m)); }
+    for (const [w, d, x, z] of [[L, 0.2, 0, A / 2 - 0.1], [L, 0.2, 0, -A / 2 + 0.1], [0.2, A, L / 2 - 0.1, 0], [0.2, A, -L / 2 + 0.1, 0]]) W.addRaw(wk, M(boxG(w, 0.3, d, x, eave - 0.3, z), f.m));
+    if (v.piso !== false && base === 0) W.addRaw('piso', M(boxG(L, 0.12, A), f.m));
+  }
   // muros con UV en metros
-  for (const [s, S] of Object.entries(f.sides)) {
+  if (!abierto) for (const [s, S] of Object.entries(f.sides)) {
     const c = S.n.clone().multiplyScalar(S.half), l = c.clone().addScaledVector(S.t, -S.len / 2), r = c.clone().addScaledVector(S.t, S.len / 2);
     W.addRaw(wk, M(polyGeo([l, r, r.clone().setY(eave), l.clone().setY(eave)], S.n, S.t, V3(0, 1, 0)), f.m), true);
   }
   if (t.tipo === 'ninguno') W.addRaw(wk, M(boxG(L, 0.15, A, 0, eave - 0.15, 0), f.m), true);
   // zócalo y bandas de entrepiso
-  if (fa.zocalo) { const zk = colorMat(b, 'zocalo', fa.zocalo.color); for (const s of Object.keys(f.sides)) P.walls.addRaw(zk, M(boxG(f.sides[s].len + 0.04, fa.zocalo.altura ?? 0.8, 0.03), sideMatrix(f, s, 0, 0, 0.015))); }
+  if (fa.zocalo && !abierto) { const zk = colorMat(b, 'zocalo', fa.zocalo.color); for (const s of Object.keys(f.sides)) P.walls.addRaw(zk, M(boxG(f.sides[s].len + 0.04, fa.zocalo.altura ?? 0.8, 0.03), sideMatrix(f, s, 0, 0, 0.015))); }
   const bandK = colorMat(b, 'banda', '#' + new THREE.Color(hexOK(fa.color, '#efece4')).multiplyScalar(0.86).getHexString());
   for (let k = 1; k < pisos; k++) for (const s of Object.keys(f.sides)) P.walls.addRaw(bandK, M(boxG(f.sides[s].len + 0.24, 0.2, 0.12), sideMatrix(f, s, 0, k * hf - 0.1, 0.06)));
   // puertas
@@ -292,7 +304,7 @@ function volume(b, v, P, detail) {
     if (detail) for (const [ww, hh, x, y] of [[w + 0.24, 0.12, 0, h], [0.12, h, -w / 2 - 0.06, 0], [0.12, h, w / 2 + 0.06, 0]]) P.walls.addRaw('marco', M(boxG(ww, hh, 0.1, x, y, 0.04), m));
   }
   // ventanas por piso
-  const vn = fa.ventanas;
+  const vn = abierto ? null : fa.ventanas;
   if (vn) {
     const ww = vn.ancho ?? 1.4, wh = vn.alto ?? 1.2, sill = vn.antepecho ?? 1.0, sep = Math.max(ww + 0.4, vn.separacion ?? 3);
     const tipo = vn.tipo || 'ventana';
@@ -326,7 +338,7 @@ function volume(b, v, P, detail) {
     for (let i = 0; i < nC; i++) P.walls.addRaw(wk, M(boxG(0.25, yTop - 0.15, 0.25, -len / 2 + 0.2 + (i * (len - 0.4)) / (nC - 1), 0.15, d - 0.2), sideMatrix(f, s, 0, 0, 0)));
     const rk = t.tipo === 'ninguno' || t.tipo === 'plano' ? roofMat(b, { material: 'concreto' }) : roofMat(b, t);
     const drop = (d + 0.3) * Math.tan(8 * D2R);
-    P.roof.addRaw(rk, M(polyGeo([V3(-len / 2 - 0.2, yTop + 0.15, 0), V3(len / 2 + 0.2, yTop + 0.15, 0), V3(len / 2 + 0.2, yTop + 0.15 - drop, d + 0.3), V3(-len / 2 - 0.2, yTop + 0.15 - drop, d + 0.3)], UP, V3(1, 0, 0), V3(0, 0, 1)), sideMatrix(f, s, 0, 0, 0)), true);
+    P.roofKeep.addRaw(rk, M(polyGeo([V3(-len / 2 - 0.2, yTop + 0.15, 0), V3(len / 2 + 0.2, yTop + 0.15, 0), V3(len / 2 + 0.2, yTop + 0.15 - drop, d + 0.3), V3(-len / 2 - 0.2, yTop + 0.15 - drop, d + 0.3)], UP, V3(1, 0, 0), V3(0, 0, 1)), sideMatrix(f, s, 0, 0, 0)), true);
   }
   // letrero
   const le = fa.letrero;
@@ -361,11 +373,11 @@ function volume(b, v, P, detail) {
   const local = { walls: new Part(), roof: new Part() };
   const PW = P.walls; P.walls = local.walls;
   const faces = roofParts(local.roof, roofMat(b, t));
-  let newRoofFaces = null;
-  if (P.newRoof && P.replace(v)) { const nr = new Part(); const keepWalls = new Part(); P.walls = keepWalls; newRoofFaces = roofParts(nr, roofMat(b, P.newRoofSpec(t))); mergeInto(P.newRoof, nr, f.m); }
+  const replaced = !!(P.newRoof && P.replace(v));
+  if (replaced) { const nr = new Part(); P.walls = new Part(); roofParts(nr, roofMat(b, P.newRoofSpec(t))); mergeInto(P.newRoof, nr, f.m); }
   P.walls = PW;
   mergeInto(P.walls, local.walls, f.m);
-  mergeInto(P.roof, local.roof, f.m);
+  mergeInto(replaced ? P.roof : P.roofKeep, local.roof, f.m);
   return { f, faces: (faces || []).map((q) => ({ ...q, m: f.m })), eave, base };
 }
 function mergeInto(dst, src, m) { for (const [k, gs] of src.byMat) for (const g of gs) dst.addRaw(k, g.applyMatrix4(m), !!g.attributes.uv); }
@@ -442,7 +454,7 @@ function element(b, e, P, detail, tree) {
         for (let i = 0; i < nc; i++) for (const sz of [1, -1]) P.env.addRaw('acero', boxG(0.3, h, 0.3, -f.L / 2 + (i * f.L) / (nc - 1), 0, sz * (f.A / 2 + 0.5)).applyMatrix4(f.m));
         const rp = new Part(), wp = new Part(), rk = roofMat(b, { material: e.material_cubierta || 'zinc', color: e.color_cubierta });
         vault(f.L + 1, f.A + 1, h, { flecha: f.A * 0.12, voladizo: 0.5 }, rp, wp, 'acero', rk);
-        mergeInto(P.roof, rp, f.m);
+        mergeInto(P.roofKeep, rp, f.m);
       }
       return;
     }
@@ -456,7 +468,7 @@ function element(b, e, P, detail, tree) {
       for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) P.env.addRaw('acero', boxG(0.12, h, 0.12, sx * (f.L / 2 - 0.1), 0, sz * (f.A / 2 - 0.1)).applyMatrix4(f.m));
       const rp = new Part(), wp = new Part();
       shed(f.L, f.A, h, { pendiente: 6, voladizo: 0.3 }, rp, wp, 'acero', roofMat(b, { material: e.material || 'zinc', color: e.color }));
-      mergeInto(P.roof, rp, f.m);
+      mergeInto(P.roofKeep, rp, f.m);
       return;
     }
     case 'asta': {
@@ -618,7 +630,7 @@ function build(spec, detail) {
   const cn = ad.cubierta_nueva || (/(cambio|reemplazo|sustituci[oó]n|cambiar|reemplazar)[^.;]{0,40}cubierta|cubierta nueva|nueva cubierta/i.test((ad.obras_civiles || []).join(' ')) ? { material: 'termoacustica' } : null);
   const replaceIds = cn?.volumenes || null;
   const P = {
-    walls: new Part(), roof: new Part(), env: new Part(), newRoof: cn ? new Part() : null,
+    walls: new Part(), roof: new Part(), roofKeep: new Part(), env: new Part(), newRoof: cn ? new Part() : null,
     equip: new Part(), bess: new Part(), solarFlat: new Part(),
     replace: (v) => (replaceIds ? replaceIds.includes(v.id) : ['fibrocemento', 'zinc', undefined].includes(v.techo?.material) && v.techo?.tipo !== 'plano' && v.techo?.tipo !== 'ninguno'),
     newRoofSpec: (t) => ({ ...t, material: cn?.material || 'termoacustica', color: cn?.color || (cn?.material === 'teja_barro' ? '#a5512f' : '#e9e7e1') }),
@@ -639,7 +651,9 @@ function build(spec, detail) {
   root.setExtras({ id: spec.id, lat: spec.lat, lon: spec.lon });
   const ex = b.node('existente', null, [0, 0, 0], [0, 0, 0], [1, 1, 1], root); ex.setExtras({ capa: 'existente' });
   b.node('estructura', b.partMesh(`${spec.id}_estructura`, P.walls), [0, 0, 0], [0, 0, 0], [1, 1, 1], ex);
+  // cubiertas que el proyecto reemplaza (se ocultan con "Con el proyecto") y cubiertas que se conservan
   if (!P.roof.empty) b.node('cubierta_actual', b.partMesh(`${spec.id}_cubierta`, P.roof), [0, 0, 0], [0, 0, 0], [1, 1, 1], ex).setExtras({ capa: 'existente', reemplazada: !!(P.newRoof && !P.newRoof.empty) });
+  if (!P.roofKeep.empty) b.node('cubierta', b.partMesh(`${spec.id}_cubierta_conservada`, P.roofKeep), [0, 0, 0], [0, 0, 0], [1, 1, 1], ex).setExtras({ capa: 'existente' });
   const env = b.node('entorno', P.env.empty ? null : b.partMesh(`${spec.id}_entorno`, P.env), [0, 0, 0], [0, 0, 0], [1, 1, 1], ex);
   if (trees.length) {
     const tm = treeMesh(b);

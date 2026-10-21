@@ -235,9 +235,9 @@
   "lon": -73.914452,
   "archivo": "models/edificios/hospital_lod0.glb",
   "archivo_lod1": "models/edificios/hospital_lod1.glb",
-  "bytes": 145640,
-  "bytes_lod1": 93088,
-  "bytes_sin_comprimir": 1965836,
+  "bytes": 145760,
+  "bytes_lod1": 93208,
+  "bytes_sin_comprimir": 1965952,
   "triangulos": 29643,
   "triangulos_lod1": 8553,
   "extensiones": [

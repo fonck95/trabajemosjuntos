@@ -93,6 +93,9 @@ lo convierte en un modelo 3D (GLB) con dos capas: **existente** (réplica del ed
 
 - `pisos` vale 1 si no se indica (coliseos y bodegas: 1 piso alto). Con 2 o más pisos dibuja bandas de entrepiso.
 - Volúmenes con `poligono`: muros extruidos y techo plano con antepecho; **no** llevan ventanas ni puertas (usar rectángulos siempre que se pueda).
+- `"abierto": true` en un volumen rectangular: pórtico, corredor exento, kiosco o parqueadero cubierto. Lleva columnas en el perímetro
+  (`sep_columnas`, por defecto 3,5 m; `columna`, lado en m, por defecto 0,25) con viga de amarre y la cubierta del volumen; sin muros ni ventanas.
+  Puede tener `base` (por ejemplo, un pórtico sobre una plataforma) y una altura de alero baja.
 - `ventanas.tipo`: `ventana` (vidrio con marco), `vitrina` (vidrio casi de piso a techo), `reja` (vidrio con barrotes), `celosia`/`calado` (bloque de ventilación).
   `lados`: `largo`, `corto`, `todos` o cardinales (`N`, `S`, `E`, `O`). Las ventanas del primer piso no se dibujan sobre las puertas.
 - `puertas[].pos`: 0 = extremo izquierdo y 1 = derecho, **mirando la fachada desde afuera**. Más de 2,6 m de ancho se dibuja como portón metálico.
@@ -102,6 +105,8 @@ lo convierte en un modelo 3D (GLB) con dos capas: **existente** (réplica del ed
   anden, zona_verde, plaza, cubierta_ligera, asta, poste, torre, antena, planta_electrica, aire_acondicionado.
 - `adecuaciones.cubierta_nueva` (opcional): `{ "material": "termoacustica", "color": "#e9e7e1", "volumenes": ["bloque_a"] }`. Si no se indica, pero
   `obras_civiles` menciona un cambio de cubierta, se reemplazan las cubiertas inclinadas de zinc o fibrocemento por termoacústica.
+  Solo los volúmenes reemplazados cambian de cubierta en la vista "Con el proyecto"; las demás cubiertas, las de los corredores y las de los
+  elementos (`cubierta_ligera`, canchas cubiertas) se conservan. Indica `volumenes` explícitamente cuando no todas las cubiertas se cambian.
 - `fv[].faldon` elige la cara de la cubierta cuya normal apunta más hacia ese punto cardinal; en techos curvos, `N`/`S` (o `E`/`O`) eligen la mitad de la bóveda.
   En techo plano, `inclinacion` y `azimut` (grados desde el norte hacia donde mira el panel).
 - `kwp_factible` debe ser igual a módulos × 0,55; el generador avisa si no coincide.
