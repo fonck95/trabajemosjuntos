@@ -385,7 +385,7 @@ function volumePoly(b, v, P) {
   const fa = v.fachada || {}, wk = wallMat(b, fa), base = v.base ?? 0, h = Math.max(0.3, (v.altura_alero ?? 3) - base);
   const shape = new THREE.Shape(v.poligono.map(([x, y]) => new THREE.Vector2(x, y)));
   const g = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false }); g.rotateX(-Math.PI / 2); g.translate(0, base, 0);
-  P.walls.addRaw(wk, g.toNonIndexed(), true);
+  P.walls.addRaw(wk, g.index ? g.toNonIndexed() : g, true);
   if ((v.techo?.tipo ?? 'plano') === 'plano' && (v.techo?.parapeto ?? 0.5) > 0) {
     const pts = v.poligono, pp = v.techo?.parapeto ?? 0.5;
     for (let i = 0; i < pts.length; i++) {

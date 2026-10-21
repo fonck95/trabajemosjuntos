@@ -294,6 +294,463 @@
   ]
  },
  {
+  "id": "casa_cultura",
+  "nombre": "Casa de la Cultura de Yondó (antiguo teatro municipal)",
+  "nodo_microrred": "cultura",
+  "lat": 7.007229,
+  "lon": -73.91011,
+  "archivo": "models/edificios/casa_cultura_lod0.glb",
+  "archivo_lod1": "models/edificios/casa_cultura_lod1.glb",
+  "bytes": 87008,
+  "bytes_lod1": 68912,
+  "bytes_sin_comprimir": 637960,
+  "triangulos": 9086,
+  "triangulos_lod1": 3908,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 2,
+  "tamano": [
+   74,
+   11,
+   43.5
+  ],
+  "modulos": 22,
+  "kwp_modelado": 12.1,
+  "kwp_plan": 12,
+  "kwp_factible": 12.1,
+  "bess": {
+   "kwh": 20,
+   "kw": 10,
+   "tipo": "gabinete"
+  },
+  "confianza": "alta",
+  "fuentes": [
+   {
+    "tipo": "street_view",
+    "fecha": "2014-08",
+    "nota": "Fachada norte desde la Calle 50: pendón «CASA DE LA CULTURA – YON[DÓ]» en la bahía 5, puertas, persianas, frontón de la bahía 3. Comparación con el modelo (rumbo 152).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=z3q9pUmv8mZrHCtqo7mFPg&heading=159"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-08",
+    "nota": "Fachada norte: pendón, puertas de las bahías 3, 6 y 9, frontón de la bahía 9.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=HRDbHOYHf5ytYLuOfw9GvQ&heading=171"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-08",
+    "nota": "Esquina noroccidental: hastial, frontón de la bahía 3, anexo rojo de un piso, ventana de la bahía 2.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=USqZPtYvU_JK_G5Q4iKrCw&heading=130"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-08",
+    "nota": "Hastial occidental de ladrillo, anexo rojo y kiosco abierto con cubierta a cuatro aguas. Comparación con el modelo.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=MK_ekgCfV7JYYY70xal6Zg&heading=150"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-08",
+    "nota": "Esquina nororiental y valla de 2014 «¡Yondó vive el cambio! Nueva zona recreativa, cultural y deportiva».",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=d1sqbqDKMNJ5CwMW0p-f9g&heading=175"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-08",
+    "nota": "Anexo oriental de tres niveles: cara norte de ladrillo, cara oriental pañetada en gris con la entrada, cubierta a cuatro aguas y hastial oriental de la nave.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=BfDEUDbvmbmP9GGv3ijk7w&heading=208"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Alzado frontal de la fachada sur: bahías de 3,31 m, puertas de 1,55 × 2,6 m, zócalo de 0,7 m, persianas entre 6,6 y 7,6 m, alero a 7,9 m, faldón de 20°. Comparación con el modelo.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=AIw-oV0omX0cuwJrHD4SfQ&heading=345"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Fachada sur: frontones de las bahías 3 y 9, puertas de las bahías 3 y 6, ventanas pequeñas en las bahías 1 y 2.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=ADgEgvjaaYgxCNm0tFs_jA&heading=355"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Fachada sur hacia el occidente (esquina suroccidental, 11 bahías) y, con rumbo 25, la esquina suroriental con el anexo y su corredor.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=S-seTwcYTW5-EZQ2odOMqQ&heading=325"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde el oriente: anexo con corredor, cara gris con rejas blancas y escalera, cubierta a cuatro aguas con alero ancho. Comparación con el modelo.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=hpGMukzTePxxCd-Swzl-iw&heading=296"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Anexo desde el suroriente: ventanas del segundo nivel, corredor y persianas altas.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Ah40-8GBBdS-PNxsmjuMyw&heading=300"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Fachada sur en escorzo desde el oriente.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=nTYipmioRx1rJ1zbZYBAMw&heading=292"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Kiosco abierto y cara sur blanca del anexo occidental.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=cxsjpOIO8Y0Z3zhNePjq6A&heading=15"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-08",
+    "nota": "Edificio de la Calle 50 # 53-13 (un piso, corredor de columnas de ladrillo, cubierta de fibrocemento a cuatro aguas): antigua biblioteca, no es la Casa de la Cultura.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=KKonjNcnTr_mStpem5lQLQ&heading=179"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Huella y cubierta: borde de cubierta de 37,4 × 16,6 m, cumbrera al centro, sombra de los muros al norte y al occidente, láminas claras en el faldón sur, anexo, kiosco y árboles.",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Contraste: más borroso; no aporta detalle.",
+    "url": null
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Fallo de 2023 sobre el registro de bienes de interés cultural: «Antiguo teatro municipal hoy en día reservado para ser la Casa de la Cultura Municipal ubicado en la Calle 50 entre Carrera 51 y 54».",
+    "url": "https://portalhistorico.ramajudicial.gov.co/documents/2402643/131680969/FalloC202300313.pdf/45335104-a30d-4ddb-8907-e6cb2cf28f57"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Contrato CO1.PCCNTR.7116320 (diciembre de 2024, $205.571.887, GC Variaciones en Construcciones y Suministros S.A.S.): obras de mantenimiento y adecuación de la infraestructura del patrimonio cultural y del servicio bibliotecario. No dice en qué edificios.",
+    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7127329"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Directorio departamental de 2022: Casa de Cultura Municipal de Yondó con coordinador de cultura.",
+    "url": "https://culturantioquia.gov.co/wp-content/uploads/2022/12/responsables-de-cultura-ant-2022.pdf"
+   }
+  ]
+ },
+ {
+  "id": "coliseo",
+  "nombre": "Coliseo Benito Arias",
+  "nodo_microrred": "coliseo",
+  "lat": 7.006497,
+  "lon": -73.910225,
+  "archivo": "models/edificios/coliseo_lod0.glb",
+  "archivo_lod1": "models/edificios/coliseo_lod1.glb",
+  "bytes": 78520,
+  "bytes_lod1": 66188,
+  "bytes_sin_comprimir": 337068,
+  "triangulos": 4160,
+  "triangulos_lod1": 2396,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 2,
+  "tamano": [
+   96.2,
+   10.9,
+   81.8
+  ],
+  "modulos": 85,
+  "kwp_modelado": 46.75,
+  "kwp_plan": 45,
+  "kwp_factible": 46.75,
+  "bess": null,
+  "confianza": "alta",
+  "fuentes": [
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Fachada norte de frente desde la Calle 50: bloque blanco de camerinos con ventanas altas y dos puertas, columnas inclinadas de concreto, balcón de la gradería con baranda verde y la cubierta en cuatro niveles (nave central arriba, franjas laterales y una cubierta baja sobre el balcón). Sirvió para medir alturas y para la comparación 1 (pitch 12, fov 100).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=cxsjpOIO8Y0Z3zhNePjq6A&heading=167"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Fachada norte desde el noreste de la plaza. Segunda línea para triangular las esquinas del bloque norte y la altura de los aleros (nave central ≈15,3 m, franjas laterales ≈13,3 m, cubierta baja ≈10,3 m).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=tAwHY13eUVGhfyghxogeQQ&heading=181"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Fachada norte y esquina noreste; cuarto de ladrillo rojo en la esquina.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=ADgEgvjaaYgxCNm0tFs_jA&heading=193"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Esquina noreste en obra; poste de alumbrado solar en el andén de la Calle 50.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=AIw-oV0omX0cuwJrHD4SfQ&heading=203"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Costado este desde el noreste: cuartos bajos de ladrillo rojo y bloque gris (≈4,1 m) y el borde este de la cubierta, que baja hacia el sur (de ≈13,5 m a ≈6 m).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=S-seTwcYTW5-EZQ2odOMqQ&heading=212"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Costado este y esquina noreste; columna metálica de celosía inclinada en la esquina.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=nTYipmioRx1rJ1zbZYBAMw&heading=218"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Esquina noroeste: fin del bloque blanco y anexo rojo; esquina de la franja oeste de la cubierta.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=d2a71dpNFhaURRkXjUSVqg&heading=139"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Costado oeste desde la Carrera 54: muro de cierre blanco y gris de ≈4,0 m, anexos de ladrillo pintado de rojo en las dos puntas y el borde oeste de la cubierta bajando hacia el sur. Comparación 2 (pitch 10, fov 100).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=8Lplca99ZsiQzUa4Ugdrhg&heading=86"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Esquina noroeste desde la Carrera 54: escalera de concreto al balcón norte y dos columnas metálicas de celosía inclinadas.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=zXv5lkB7kaw4YkO8F0qESQ&heading=98"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Costado oeste y escalera del noroeste.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=lKMtWkvHoJHQoZ0Y-v4ftg&heading=109"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Esquina suroeste: anexo rojo de un piso (≈3,5 m), gradería sur de concreto más baja con baranda verde y el alero sur de la cubierta a ≈6–8 m. El lote del Parque Educativo aún estaba vacío.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=UD9Fguy6mDTI6-6usnjaiw&heading=70"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde el sur: los árboles tapan el coliseo; no aporta medidas.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=gQ3CP30h4r0vsTSAj1Braw&heading=30"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Huella de la cubierta: cuatro franjas norte–sur separadas por líneas oscuras (escalones), giradas 13° como la cuadrícula de calles (eje largo a 347°): oeste baja 5,0 × 34,5 m, oeste media 11,3 × 42,8 m, central 26,1 × 45,7 m y este 10,5 × 42,6 m; en total ≈52,9 m (este–oeste) × 45,7 m (norte–sur). Color de la cubierta muestreado #55808c. Al norte, sombra de 2–3 m; al sur, una franja clara de la gradería sur. Al oeste el parqueadero gris y al norte una plaza con piso decorado, posteriores a 2013.",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Misma forma de cubierta en cuatro franjas (color muestreado #6da6bb, más claro por la luz); confirma que la cubierta sigue igual en 2026 y que la plaza norte y el parqueadero existen. La vista oblicua deja ver el muro este blanco.",
+    "url": null
+   },
+   {
+    "tipo": "web",
+    "fecha": "2026-07-02",
+    "nota": "SECOP II, contrato de obra 207-2026 (proceso CO1.BDOS.10167158): 'Adecuación y mejoramiento Coliseo Benito Arias', convenio 25AS122C2759-2025 con el Departamento, Consorcio Obras Deportivas Benito Arias, $563.483.997 de recursos propios, plazo de 4 meses. El detalle de las obras no está en los datos abiertos.",
+    "url": "https://www.datos.gov.co/resource/jbjy-vk9h.json?proveedor_adjudicado=CONSORCIO%20OBRAS%20DEPORTIVAS%20BENITO%20ARIAS"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2026-05-15",
+    "nota": "Página del proceso de licitación en SECOP II (precio base $569.831.329). No se pudo leer el pliego (la página pide verificación).",
+    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10300963"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Regalías (GESPROY), BPIN 2015058930006: 'Adecuación y dotación mobiliaria y tecnológica del Coliseo Benito Arias', $1.105 millones, terminado. BPIN 2014058930006: 'Construcción del parqueadero del Coliseo Benito Arias y de la vía peatonal Calle 49', $642 millones, terminado (ver data/fuentes/proyectos_sgr.csv).",
+    "url": "https://www.datos.gov.co/d/mzgh-shtp"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2013-02-23",
+    "nota": "El lote del Parque Educativo queda al lado del Coliseo Benito Arias (confirma el vecino del sur).",
+    "url": "https://www.vanguardia.com/santander/barrancabermeja/2013/02/23/yondo-entre-los-45-municipios-de-antioquia-con-parque-educativo/"
+   }
+  ]
+ },
+ {
+  "id": "cpsam",
+  "nombre": "Centro Vida 'Cañitas Sabias' (adulto mayor)",
+  "nodo_microrred": "cpsam",
+  "lat": 7.008061,
+  "lon": -73.906495,
+  "archivo": "models/edificios/cpsam_lod0.glb",
+  "archivo_lod1": "models/edificios/cpsam_lod1.glb",
+  "bytes": 79952,
+  "bytes_lod1": 61460,
+  "bytes_sin_comprimir": 586632,
+  "triangulos": 8464,
+  "triangulos_lod1": 2502,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 3,
+  "tamano": [
+   63,
+   9.3,
+   50.7
+  ],
+  "modulos": 38,
+  "kwp_modelado": 20.9,
+  "kwp_plan": 20,
+  "kwp_factible": 20.9,
+  "bess": {
+   "kwh": 30,
+   "kw": 15,
+   "tipo": "gabinete"
+  },
+  "confianza": "alta",
+  "fuentes": []
+ },
+ {
+  "id": "cultura",
+  "nombre": "Biblioteca Pública Municipal María Cano",
+  "nodo_microrred": "cultura",
+  "lat": 7.006156,
+  "lon": -73.909777,
+  "archivo": "models/edificios/cultura_lod0.glb",
+  "archivo_lod1": "models/edificios/cultura_lod1.glb",
+  "bytes": 78408,
+  "bytes_lod1": 67228,
+  "bytes_sin_comprimir": 503172,
+  "triangulos": 6088,
+  "triangulos_lod1": 3766,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 3,
+  "tamano": [
+   38.4,
+   11.7,
+   47.5
+  ],
+  "modulos": 22,
+  "kwp_modelado": 12.1,
+  "kwp_plan": 12,
+  "kwp_factible": 12.1,
+  "bess": {
+   "kwh": 20,
+   "kw": 10,
+   "tipo": "gabinete"
+  },
+  "confianza": "alta",
+  "fuentes": [
+   {
+    "tipo": "web",
+    "fecha": "sin fecha (posterior a 2017)",
+    "nota": "Foto de usuario de la fachada norte, de frente: dos pisos en pañete blanco, remate volado con intradós inclinado en ambos costados, alero delgado gris oscuro a unos 3,9 m, puerta doble de vidrio oscuro (2,2 × 2,3 m), letrero en letras metálicas gris oscuro «BIBLIOTECA MUNICIPAL / MARÍA CANO» con el escudo encima, placa de María Cano, bajante verde en la esquina oriental, plataforma de baldosa clara a unos 0,5 m con tres escalones y rampas con barandas de acero inoxidable, reflectores y cámaras. Por encima del antepecho asoma la punta de la cubierta a dos aguas. Sirvió para la comparación del modelo (cultura_cmp_fachada_*).",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJT0aNDr_tQo4RQoiY3R-df7M"
+   },
+   {
+    "tipo": "web",
+    "fecha": "sin fecha (posterior a 2017)",
+    "nota": "Ficha «BIBLIOTECA PUBLICA MUNICIPAL MARIA CANO» (7,0061656, −73,9097798). Foto de la sala de computadores: ventanas altas en banda con vinilo verde, cielo raso blanco y al menos cuatro aires acondicionados minisplit. Foto de la fachada vista desde la plataforma hacia el oriente, con las cubiertas azules del colegio al fondo.",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJY8Kfmb7tQo4R2gRZglKqZCY"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Huella medida girando la imagen 13° (rumbo 347°, igual que el Parque Educativo y el coliseo). Bloque principal: cubierta azul (muestra #5679c4) con borde blanco de antepecho, 15,05 × 16,5 m, con una línea de cumbrera clara norte–sur en el centro y la mitad oriental algo más clara (dos aguas). Anexo sur de 16,1 × 9,7 m con cubierta muy clara (#cdd0d3 a #e7e5ea) partida en dos tonos, y un saliente de 1,8 × 2,8 m en la esquina sureste. Franja oscura de 1,8 m al oeste (sombra o muro en sombra) y franja blanca de 1,8 m al norte (la fachada vista de lado o la plataforma).",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Las dos muestran la misma forma: cubierta azul rodeada de antepecho blanco y anexo blanco al sur. Bing está tomada con más inclinación y desplazada unos 5 m; muestra grande la fachada norte blanca.",
+    "url": null
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde la carrera, al oeste, a 97 m. Lote vacío con la valla «Aquí estará nuestro Parque Educativo»; detrás está el campo abierto donde hoy queda la biblioteca. La biblioteca no existía (la obra se contrató en noviembre de 2015). Comparación de ubicación.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=UD9Fguy6mDTI6-6usnjaiw&heading=88"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde la calle del norte, a 104 m: cancha abierta, graderías con techo de zinc y árboles grandes delante del sitio. Comparación de ubicación.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=hpGMukzTePxxCd-Swzl-iw&heading=188"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde el norte por el camino junto al coliseo en obra: los árboles tapan el sitio.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=nTYipmioRx1rJ1zbZYBAMw&heading=176"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde el suroeste: la escuela de ladrillo y los árboles tapan el sitio.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=gQ3CP30h4r0vsTSAj1Braw&heading=72"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2016-10-08",
+    "nota": "Foto 360 de un usuario, de noche, desde el norte de la cancha (119 m): el sitio queda a oscuras detrás del arco. No sirve para el edificio.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=CIHM0ogKEICAgIDEj-3PtgE&heading=200"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2022-06-12",
+    "nota": "Foto 360 de un usuario en el parque redondo del norte (148 m): los muros azules del parque tapan la vista hacia la biblioteca.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=CIHM0ogKEICAgICO8bS33AE&heading=200"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2015-11-24",
+    "nota": "SECOP I, LPY-012-2015: contrato de obra pública para la construcción de la biblioteca pública de Yondó, $1.478.795.590, Consorcio Biblioteca LL. Liquidado.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-1-150594"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2015-11-11",
+    "nota": "SECOP I, CMA-015-2015: interventoría de la obra, $147.879.559, DSIC Desarrollo de Soluciones de Ingeniería y Construcción S.A.S.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-15-4337948"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2015-03-11",
+    "nota": "SECOP I, CMA-003-2015: estudios y diseños de la biblioteca, $55.000.000, Ingeniería y Construcción de Proyectos (INCOP).",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-15-3509740"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2018-10-16",
+    "nota": "SECOP I, SASI-019-2018: mobiliario para la Biblioteca María Cano, $50.000.000.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-9-448811"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2024-12-12",
+    "nota": "SECOP II, SAMC004-2024: obras de mantenimiento y adecuación de infraestructura cultural, ligadas al proyecto de fortalecimiento del servicio bibliotecario, $205.571.887, 18 días. No dice qué se arregló en la biblioteca.",
+    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7127329"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2021",
+    "nota": "Directorio departamental: Biblioteca Pública Municipal «María Cano», Carrera 50 No. 43-13, barrio Central; bibliotecaria Cecilia López Forero.",
+    "url": "https://culturantioquia.gov.co/wp-content/uploads/2022/12/directorio-bibliotecas-publicas-municipales-2021.pdf"
+   }
+  ]
+ },
+ {
   "id": "hospital",
   "nombre": "E.S.E. Hospital Héctor Abad Gómez",
   "nodo_microrred": "hospital",
@@ -468,6 +925,298 @@
   ]
  },
  {
+  "id": "ie_led",
+  "nombre": "I.E. Luis Eduardo Díaz – sede principal",
+  "nodo_microrred": "ie_led",
+  "lat": 7.011586,
+  "lon": -73.907442,
+  "archivo": "models/edificios/ie_led_lod0.glb",
+  "archivo_lod1": "models/edificios/ie_led_lod1.glb",
+  "bytes": 155016,
+  "bytes_lod1": 86552,
+  "bytes_sin_comprimir": 2996868,
+  "triangulos": 47610,
+  "triangulos_lod1": 7376,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 4,
+  "tamano": [
+   95.5,
+   10,
+   90.4
+  ],
+  "modulos": 56,
+  "kwp_modelado": 30.8,
+  "kwp_plan": 30,
+  "kwp_factible": 30.8,
+  "bess": null,
+  "confianza": "alta",
+  "fuentes": [
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "fachada sur: pabellón central con culata verde, ventanas altas con reja y aire acondicionado; corredor del ala sur; techo curvo de la placa cubierta detrás. Usada en la comparación modelo-foto",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=9FtQdNi0e-XHqkIxMeJXiQ&heading=0"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "acercamiento al pabellón sur (fov 60): alturas de dintel (≈3,8 m), cumbrera (≈5,7 m) y alero lateral (≈2,9 m) sobre el patio",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=9FtQdNi0e-XHqkIxMeJXiQ&heading=8"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "ala sur hacia el occidente, corredor con columnas rojas; torre de tanques al fondo",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=9FtQdNi0e-XHqkIxMeJXiQ&heading=315"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "ala sur hacia el oriente, nim grande de tronco pintado en el patio sur",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=9FtQdNi0e-XHqkIxMeJXiQ&heading=50"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "ala sur occidental y pabellón; arco de la placa cubierta. Usada en la comparación modelo-foto",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=iGAz5s3aDINI2DR50t91iQ&heading=20"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "esquina suroeste: remate a cuatro aguas con gablete; torre de tanques; poste con la caja del medidor junto a la cerca. Usada en la comparación",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=2uZzvscIed2pkO4zUqN4RA&heading=15"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "muro bajo de ladrillo con remate verde y malla eslabonada; árbol del patio sureste",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=uughBmr-_zh6fY3CB2KUpg&heading=0"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "ala sur oriental: corredor con muro azul con murales y columnas rojas; patio de concreto con jardineras",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=IPC_N3fv17MXbTsMnr9atw&heading=20"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "esquina sureste: remate a cuatro aguas con gablete verde, ventanas con reja",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=c-dh2Iwr2DOWEer1u6HVgQ&heading=290"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "fachada oriental (carrera 43): faldón largo de fibrocemento, alero verde, corredor con columnas. Usada en la comparación modelo-foto",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Vxl832AV7HI-pXYH5x25SQ&heading=270"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "esquina noreste tras los árboles: corredor y bloque con columnas",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=iMB7B34y24WJhGjGiaLOHg&heading=250"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "culata norte del ala oriental (ladrillo rojo, tabla verde) y bloque norte con ventanas altas",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=pKAMuMs5erRRmvHjSZv3DQ&heading=215"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "bloque norte (calle 55): crujía baja con ventanas altas, cuerpo alto con linternilla, tanque negro y antena; el patio norte está ≈0,9 m más bajo que la calle. Usada en la comparación",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=JFhXQG3pwciUggLb_EpUbw&heading=185"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "bloque de muros rojos con ventanas pequeñas al noroeste del bloque norte; arco de la placa al fondo",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=LwL26k9qOJaZyzS0loJ5Qw&heading=180"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "patio norte: bloque rojo, ala norte con alero verde, antena parabólica",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=ay4cIkDp3fZABIJNXEEXVQ&heading=170"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "kiosco abierto a cuatro aguas, bloque de la esquina noroeste con cubierta clara y culata norte del ala occidental",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=mV4QTga1sks-yLVwaP1hxA&heading=150"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "fachada occidental (entrada principal): escudos, tres astas, torre de tanques; techo curvo blanco de la placa visible sobre la cubierta. Usada en la comparación",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=-9pLyB9qUOcLx7_drmkmzA&heading=90"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "fachada occidental hacia el norte: escudos de Colombia, del colegio y uno verde; alero verde con canal",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=HDlz5SWbsuk92r-a571S9A&heading=100"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "torre de concreto de dos columnas con dos tanques plásticos azules y caseta blanca",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=dofQLKc04GUawXWcugjB8g&heading=80"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "torre de tanques desde el suroeste (triangulación) y faldón occidental",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=MQ5r6hD9QybdFv1mrPLMQg&heading=15"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "huella, bordes de alero, cumbreras, patios y árboles; cubierta de la placa ya blanca",
+    "url": null
+   },
+   {
+    "tipo": "osm",
+    "fecha": null,
+    "nota": "punto de la institución y nombres de calles (calle 55, carrera 43)",
+    "url": "https://www.openstreetmap.org/#map=19/7.01161/-73.90779"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "23 de abril de 2025: aguacero inunda la sede durante la izada de bandera; foto del corredor con piso de tablón cerámico; la Gobernación dice que no hay proyecto radicado para la sede",
+    "url": "https://www.elcolombiano.com/antioquia/inundacion-colegio-yondo-antioquia-LH27205871"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SECOP I, IELED-SAMC-001-2018: mantenimiento y adecuaciones de las secciones primaria y secundaria ($26,8 millones)",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-11-8407030"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SECOP I, MC-011-2019: obra de adecuación de la I.E. Luis Eduardo Díaz y del C.E.R. Casabe Viejo ($15,0 millones)",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-13-9469958"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SECOP I, MC-015-2018: revisión de diseños estructurales del 'colegio Luis Eduardo Díaz' para licencia de construcción (probablemente la sede nueva, no este claustro)",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-13-8009310"
+   }
+  ]
+ },
+ {
+  "id": "ie_prim",
+  "nombre": "I.E. Luis Eduardo Díaz – sede La Patria (preescolar y primaria)",
+  "nodo_microrred": "ie_prim",
+  "lat": 7.006792,
+  "lon": -73.908499,
+  "archivo": "models/edificios/ie_prim_lod0.glb",
+  "archivo_lod1": "models/edificios/ie_prim_lod1.glb",
+  "bytes": 145876,
+  "bytes_lod1": 91536,
+  "bytes_sin_comprimir": 2356448,
+  "triangulos": 35772,
+  "triangulos_lod1": 10074,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 2,
+  "tamano": [
+   97.8,
+   8,
+   148.4
+  ],
+  "modulos": 46,
+  "kwp_modelado": 25.3,
+  "kwp_plan": 25,
+  "kwp_factible": 25.3,
+  "bess": null,
+  "confianza": "alta",
+  "fuentes": [
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Calle norte. Portada de acceso con cubierta a dos aguas de fibrocemento y el letrero pintado 'Institución Educativa Luis Eduardo Díaz / Sección Preescolar y Básica Primaria' sobre un mural azul claro; portón metálico, muro bajo de ladrillo con malla eslabonada, cuneta, ventas callejeras. Al fondo se ve la torre metálica de unos 24 m.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=4Sp-a8hIjtvm3vWYY8WspA&heading=200"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Portada, cuarto de portería pintado de terracota (ventana con reja), plazoleta con pila y materas de ladrillo y fachada norte del bloque norte detrás de un gran árbol. Comparación cmp3.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=6ai-yuGTFJXmq3GGczi03g&heading=160"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Fachada norte del bloque norte a unos 30 m: un piso de ladrillo a la vista, zócalo gris azulado, puertas metálicas azul grisáceo de unos 2,1 m con calado encima, ventanales de reja metálica casi de piso a alero, cubierta de teja ondulada gris de fibrocemento con culata al oeste. Base de las alturas (alero ≈ 4,0 m sobre el piso del colegio) y de las comparaciones cmp1 y cmp2.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=0jRVodeRBJj4IsOc6krq-g&heading=150"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Esquina noroeste del cerramiento (muro bajo de ladrillo con malla) y camino de tierra por el costado occidental. Con 0jR sirvió para triangular la esquina noroeste del bloque norte (diferencia de 1–2 m con el satélite).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=MyAVc1RgfTSrZ9RrrMFS5g&heading=140"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Desde el occidente: pasillo de acceso con columnas rojizas, bloque norte, torre metálica (triangulada con 4Sp: unos 24 m de alto junto al extremo oeste de los bloques) y la cubierta azul del coliseo al fondo (cumbre ≈ 7,5 m).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=cxt0WCWqqeWhBRCdWgVVIA&heading=130"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Costado oriental: culatas de ladrillo de los bloques con celosías altas, pasaje descubierto entre el bloque del medio y el bloque sur, fachada norte del bloque sur con puertas y murales, cerramiento de ladrillo y malla, cuarto pintado de blanco con escalera metálica.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=xlJS7Df4DNVTLrtzhSHfiw&heading=230"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Culata oriental del bloque sur: ladrillo, zócalo gris azulado de 1,2 m, alero ≈ 4 m y pendiente ≈ 13°. Este panorama está corrido unos 7,6 m al norte: la comparación cmp4b usa la cámara corregida.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=LjSzIO3PXBbdg27p3Cfjvw&heading=260"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Esquina sureste: bodega de ladrillo y cubiertas azules tras los árboles del andén.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Y6pJU4k5FYLiFprulHeX3w&heading=290"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Huella de todas las cubiertas medida con perfiles de brillo en un marco girado al eje de los bloques (rumbo 78,5°): bloque norte de 49,4 × 15,9 m con la cumbrera a 5,9 m del borde norte (el resto es el corredor sur), bloque del medio de 49,3 × 14,5 m, bloque sur de 51,9 × 9 m, tres módulos de unión que encierran patios de luz, coliseo de 20,4 × 34,8 m, bloques sureste y bloque azul sur.",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Alineado con Esri (desfase de 1,5 m al oeste y 2,4 m al norte). Confirma las cumbreras, los hastiales de los módulos de unión y los patios de luz. Diferencias con Esri 2020: el pasillo de acceso tiene ahora cubierta naranja y hay un paso cubierto nuevo que cruza el pasaje entre el bloque del medio y el bloque sur.",
+    "url": null
+   },
+   {
+    "tipo": "web",
+    "fecha": "2026-04-23",
+    "nota": "Un ventilador se desprendió del cielo raso de un aula de preescolar de la I.E. La Patria y golpeó a tres niños; padres denuncian que un mes antes cayó una teja sobre un estudiante de primero, además de filtraciones, inundaciones, baños dañados y una viga en riesgo. La foto muestra el cielo raso roto con teja ondulada de fibrocemento sobre correas de madera y muros de ladrillo.",
+    "url": "https://telemedellin.tv/ventilador-cayo-ninos-de-preescolar-colegio-yondo/"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2025-04-27",
+    "nota": "La sede La Patria atiende unos 600 niños de preescolar a quinto con 24 profesores; cuando llueve, el agua del alcantarillado entra al colegio (hasta 10 cm en aulas y baños). La Alcaldía reconoce redes obsoletas de aguas lluvias y alcantarillado.",
+    "url": "https://www.bluradio.com/regiones/antioquia/denuncian-que-mas-de-600-estudiantes-podrian-contraer-enfermedades-por-inundaciones-en-yondo-rg10"
+   }
+  ]
+ },
+ {
   "id": "parque_edu",
   "nombre": "Parque Educativo 'Sueños de Casabe'",
   "nodo_microrred": "parque_edu",
@@ -610,6 +1359,264 @@
     "fecha": "2024-12",
     "nota": "Acción popular de la Personería de Yondó (requerimientos de noviembre de 2024): los únicos Puntos Vive Digital del municipio son el del Parque Educativo, el de la Biblioteca Pública Municipal María Cano y el del parque principal frente al coliseo.",
     "url": "https://antioquia.gov.co/images/PDF2/Decisiones%20Judiciales/2025/05/accion-popular.pdf"
+   }
+  ]
+ },
+ {
+  "id": "policia",
+  "nombre": "Estación de Policía Yondó",
+  "nodo_microrred": "policia",
+  "lat": 7.00488,
+  "lon": -73.91144,
+  "archivo": "models/edificios/policia_lod0.glb",
+  "archivo_lod1": "models/edificios/policia_lod1.glb",
+  "bytes": 87828,
+  "bytes_lod1": 72272,
+  "bytes_sin_comprimir": 492876,
+  "triangulos": 6552,
+  "triangulos_lod1": 2128,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 2,
+  "tamano": [
+   55.9,
+   7,
+   58.2
+  ],
+  "modulos": 27,
+  "kwp_modelado": 14.85,
+  "kwp_plan": 15,
+  "kwp_factible": 14.85,
+  "bess": {
+   "kwh": 30,
+   "kw": 15,
+   "tipo": "gabinete"
+  },
+  "confianza": "media",
+  "fuentes": [
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Calle 47 cerrada con vallas y conos; al fondo, camión de la Policía y agentes en el retén. Por el hueco de la Cra. 55A se ve el corredor del bloque principal (antepecho verde, columnas blancas, cubierta de fibrocemento). Comparación con el modelo.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=itU9w9UuqMauQIU4jhGtrw&heading=248"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Acercamiento al retén: camión verde y blanco con carpa, agentes de uniforme verde y el corredor con antepecho verde.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=itU9w9UuqMauQIU4jhGtrw&heading=252"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Mismo cierre visto 12 m más al oriente; casa roja esquinera de la manzana vecina.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Wnbe7wpQUN0nMpQ0b4j-ww&heading=250"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2023-04",
+    "nota": "Calle 47 cerrada en la Cra. 56 con vallas verdes y blancas; trinchera de costales verdes, estructura metálica de garita y camionetas blancas adentro. La casa de dos pisos de la derecha queda al occidente de la Cra. 56 (no es de la estación). Comparación con el modelo.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=gpN1P-_PwKNvv5XP6jca_Q&heading=99"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2023-04",
+    "nota": "Entrada occidental del cierre de la Calle 47, junto al muro del Batallón.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=fimNS6EzNvp7tIxf19EYDw&heading=112"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Conjunto de la Cra. 54 (descartado): edificios de ladrillo nuevos con cubierta azul, malla y concertina.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Oi8GQzzSARd1LJCl5aqzag&heading=270"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Conjunto de la Cra. 54 (descartado): portón y patio central con jardín.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=FCsMxwz-mmKzROc1s4fvJg&heading=245"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Conjunto de la Cra. 54 (descartado): valla de obra y polisombra en 2013, tanque elevado.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=9-5CempmrictwPzZ-xRTXg&heading=290"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2013-11",
+    "nota": "Conjunto de la Cra. 54 (descartado): fachada blanca con cortinas infantiles directamente sobre la calle.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=YfrsP1HNLKQ-mVhNZxSFLA&heading=80"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Huella de los ocho bloques, color de las cubiertas, árboles del patio central y franja del corredor oriental del bloque principal.",
+    "url": null
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Directorio de estaciones (agosto de 2026): ESTACIÓN DE POLICÍA YONDO, Carrera 55 a # 46 b - 45, Demam.eyondo@policia.gov.co.",
+    "url": "https://www.policia.gov.co/sites/default/files/descargables/Directorio_policia_programas_estaciones_de_policia.pdf"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Ficha del directorio: Departamento de Policía Magdalena Medio, Distrito Uno Barrancabermeja, cuadrante 1, teléfono 317 249 5014 (sin dirección).",
+    "url": "https://www.policia.gov.co/directorio/estacion-policia-yondo"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "LPY-009-2011: adecuación y mejoramiento de la estación de Policía ($300 millones, 2011).",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=11-1-68906"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "LPY-026-2011: adecuación de las instalaciones de alojamiento de la estación ($450 millones, 2012).",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=11-1-75347"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SAMC-008-2015: adecuación de infraestructura de la estación ($85 millones).",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-11-3708437"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SAMC-021-2018: adecuación y mantenimiento de las instalaciones ($39,9 millones).",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-11-8623854"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SAMC-009 de 2020: adecuación y mantenimiento ($150 millones), quedó en borrador.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-11-11473866"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Mantenimiento y compra de aires acondicionados de la Alcaldía y la estación de Policía (2020): la estación tiene aires.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-11-10758640"
+   }
+  ]
+ },
+ {
+  "id": "ptap",
+  "nombre": "Planta de tratamiento de agua potable municipal (Aguas y Aseo de Yondó)",
+  "nodo_microrred": "ptap",
+  "lat": 7.00919,
+  "lon": -73.932,
+  "archivo": "models/edificios/ptap_lod0.glb",
+  "archivo_lod1": "models/edificios/ptap_lod1.glb",
+  "bytes": 86044,
+  "bytes_lod1": 72672,
+  "bytes_sin_comprimir": 339284,
+  "triangulos": 3341,
+  "triangulos_lod1": 2707,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 5,
+  "tamano": [
+   129.4,
+   9.3,
+   101
+  ],
+  "modulos": 136,
+  "kwp_modelado": 74.8,
+  "kwp_plan": 150,
+  "kwp_factible": 74.8,
+  "bess": {
+   "kwh": 150,
+   "kw": 75,
+   "tipo": "contenedor_10"
+  },
+  "confianza": "alta",
+  "fuentes": [
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Huella de todas las construcciones, medida en un marco girado 46° (el eje de la planta): losa del tanque de 31,3 × 14 m con respiraderos, polisombra oscura sobre los sedimentadores, cubiertas claras de la caseta, torre de aireación, vías internas, claro suroccidental nuevo y tanque elevado 240 m al norte.",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Confirma la planta en 2020, con un desfase de menos de 2 m frente a Google. El claro suroccidental, su estructura y el ramal de vía todavía no existían.",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Imagen borrosa; confirma la planta y el claro de tierra roja.",
+    "url": null
+   },
+   {
+    "tipo": "web",
+    "fecha": "2020",
+    "nota": "Superservicios, evaluación integral 2020 (vigencia 2019): PTAP convencional de 40 L/s, de concreto reforzado, construida en 2003 en la vereda Las Américas; aducción de 3 km desde la Laguna del Miedo; tanque de 1.125 m³ dentro de la planta y tanque elevado de 350 m³ en la parte alta de Las Américas; caseta con laboratorio, cuarto de cloro, bodega y baños. Fotos de la torre de aireación, de los sedimentadores con polisombra, de los filtros y de la losa del tanque con baranda azul.",
+    "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2018-05",
+    "nota": "Superservicios, evaluación integral de octubre de 2018 (fotos del 18 de mayo de 2018, celular Moto G5 Plus, campo de visión horizontal de unos 67°). La Imagen 25 (torre de aireación, cámara de llegada a la derecha y tanque elevado al fondo) se usó para comparar el modelo. Dice que el tanque de la planta es enterrado, de 1.295 m³, y que hay dos módulos de floculación, dos sedimentadores y cuatro filtros.",
+    "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Lugar de Google 'PTAP- Acueducto' (7,010934, −73,930272): queda 270 m al nororiente, sobre las casas de la piscícola junto a la vía. Sirve como referencia de la zona, no como punto exacto.",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJVUk0WNntQo4RKqirGpXuFqc"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Laguna del Miedo (7,021775, −73,949444), la fuente: 2,4 km en línea recta al noroccidente de la planta.",
+    "url": "https://www.google.com/maps/place/?q=place_id:ChIJ1Q12BADvQo4R-pjtf-s3gAc"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2014-10",
+    "nota": "Construcción del apantallamiento contra rayos (SIPRA) de la PTAP y del tanque elevado.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-4-3109331"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2014-11",
+    "nota": "Contador multifuncional, totalizador ABB de 3 × 250 A y transformadores de corriente de 200/5 para la PTAP: da una idea del tamaño de la acometida.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-4-3225278"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2018-09",
+    "nota": "Estudios y diseños para la optimización del acueducto municipal ($1.237 millones). La Superservicios (2020) dice que la optimización incluye dos pozos, un tanque de compensación y un tanque elevado.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-4-8358866"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2022",
+    "nota": "Suministro de material para el lecho filtrante de la PTAP: la planta seguía en operación.",
+    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4421104"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Panorama más cercano (870 m al suroriente). El bosque tapa la planta: no sirve para fachadas.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=hFSyoqecy1eHy2hJjH4FNw&heading=322"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2023-04",
+    "nota": "Panorama a 1,06 km al nororiente, en la vía a la Laguna del Miedo. El bosque tapa la planta.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=leuWUit0RiyPBJT4a_v94Q&heading=228"
    }
   ]
  }

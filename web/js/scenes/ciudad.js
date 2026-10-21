@@ -8,9 +8,12 @@ import { EDIFICIOS, CALLES, MICRORRED } from '../data.js';
 export function mount(root) {
   const el = root.querySelector('.stage');
   // encuadre inicial: centro y extensión de las sedes levantadas
-  const xs = EDIFICIOS.map((e) => e.x), ys = EDIFICIOS.map((e) => e.y);
+  // las sedes rurales (acueducto, a ~2 km) quedan fuera del encuadre inicial; se llega a ellas desde la lista
+  const urb = EDIFICIOS.filter((e) => Math.hypot(e.x, e.y) < 900);
+  const xs = urb.map((e) => e.x), ys = urb.map((e) => e.y);
+  const farR = Math.max(1500, ...EDIFICIOS.map((e) => Math.hypot(e.x, e.y) + 400));
   const cx = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0, cy = ys.length ? (Math.min(...ys) + Math.max(...ys)) / 2 : 0;
-  const ext = xs.length ? Math.max(120, Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) : 600;
+  const ext = xs.length ? Math.max(160, Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) : 600;
   const st = new Stage(el, { cam: [cx - ext * 0.32, ext * 0.55, -cy + ext * 0.62], target: [cx, 0, -cy], fov: 38, minDist: 25, maxDist: 1500, tone: 'aces', exposure: 1.05 });
   st.camera.far = 5000; st.camera.updateProjectionMatrix();
   const sc = st.sunLight.shadow.camera; Object.assign(sc, { left: -520, right: 520, top: 520, bottom: -520, near: 1, far: 1600 });
@@ -20,7 +23,7 @@ export function mount(root) {
   const M = { ground: mat(T.ground), road: mat(T.ground.clone().lerp(T.ink, 0.22), { roughness: 0.95, side: THREE.DoubleSide }), water: mat(T.water, { roughness: 0.25, metalness: 0.1, side: THREE.DoubleSide }), block: mat(T.surface, { roughness: 1 }) };
 
   // terreno, calles (cintas con ancho por jerarquía) y agua desde OpenStreetMap
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(1500, 72), M.ground); ground.rotation.x = -Math.PI / 2; ground.position.y = -0.05; ground.receiveShadow = true; S.add(ground);
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(farR, 96), M.ground); ground.rotation.x = -Math.PI / 2; ground.position.y = -0.05; ground.receiveShadow = true; S.add(ground);
   const ribbon = (lines, y) => {
     const pos = [], idx = [];
     for (const l of lines) {

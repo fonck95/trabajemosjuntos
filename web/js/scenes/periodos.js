@@ -12,12 +12,12 @@ const short = (s) => (s || '').split(/[(;]/)[0].trim();
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [30, 22, 44], target: [0, 8, 0], maxDist: 120, dynamicShadows: true, env: false });
+  const st = new Stage(el, { cam: [6, 16, 50], target: [0, 7, 0], maxDist: 130, dynamicShadows: true, env: false });
   const T = tokens();
   const S = st.scene;
   const D = DINERO?.periodos?.length ? DINERO : null;
   const n = PERIODOS.length;
-  const GX = 5.2, x0 = -((n - 1) * GX) / 2;
+  const GX = 7.2, x0 = -((n - 1) * GX) / 2;
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(n * GX + 10, 30), mat(T.surface)); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; S.add(floor);
   st.freeze(floor);
 
@@ -88,10 +88,10 @@ export function mount(root) {
   // etiquetas por pila
   const pileLabels = cuentas.map((c, i) => {
     const x = x0 + i * GX;
-    const base = st.label(`<b>${c.p.id.replace('-', '–')}</b><small>${short(c.p.alcalde).split(' ').slice(0, 2).join(' ')}</small>`, 'lbl-title', [x, 0.2, 2.6], plata);
+    const base = st.label(`<b>${c.p.id.replace('-', '–')}</b><br><small>${short(c.p.alcalde).split(' ').slice(0, 2).join(' ')}</small>`, 'lbl-title', [x, 0.2, 2.6], plata);
     base.element.style.pointerEvents = 'auto'; base.element.style.cursor = 'pointer'; base.element.addEventListener('click', () => select(i));
     const top = st.label(`${fmtM(c.ingresos)}<small>entró</small>`, 'lbl-money', [x, c.height + 1.2, 0], plata);
-    const red = c.hecho + c.estimado > 0 ? st.label(`${fmtM(c.hecho + c.estimado)}<small>sin obra</small>`, 'lbl-val', [x + 2.4, (c.counts.base + (c.counts.hecho + c.counts.estimado) / 2) * (SLAB.h + SLAB.gap), 0], plata) : null;
+    const red = c.hecho + c.estimado > 0 ? st.label(`${fmtM(c.hecho + c.estimado)}<small>sin obra</small>`, 'lbl-val', [x + 2.9, (c.counts.base + (c.counts.hecho + c.counts.estimado) / 2) * (SLAB.h + SLAB.gap), 0], plata) : null;
     if (red) red.element.style.color = 'var(--bad)';
     return { base, top, red };
   });
@@ -135,7 +135,7 @@ export function mount(root) {
     plata.visible = m === 'plata'; ind.visible = m === 'indicadores';
     hideLabels(plata, m === 'plata'); hideLabels(ind, m === 'indicadores');
     if (m === 'indicadores') { st.flyTo([42, 28, 40], [0, 3, 0], 1.2); select(sel); }
-    else { st.flyTo([30, 22, 44], [0, 8, 0], 1.2); playDrop(); }
+    else { st.flyTo([6, 16, 50], [0, 7, 0], 1.2); playDrop(); }
     root.querySelector('[data-t="periodos.stamp"]')?.replaceChildren(document.createTextNode(m === 'plata' ? `Cada fajo = ${fmtM(UNIT)} de 2026 · rojo = no se convirtió en obra (registros) · naranja = estimado · hueco = pudo gestionarse y no se hizo` : 'Altura = desempeño normalizado 0–100 · columna hueca = sin dato verificable'));
     st.updateShadows();
   }

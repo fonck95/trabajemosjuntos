@@ -154,6 +154,10 @@ lat0, lon0 = calles['origen']['lat'], calles['origen']['lon']
 man_path = R / 'web/models/edificios/manifest.json'
 manifest = {m['id']: m for m in json.loads(man_path.read_text(encoding='utf-8'))} if man_path.exists() else {}
 nodos = {n_['id']: n_ for n_ in mr['nodos']}
+CORTO = {'alcaldia': 'Alcaldía + CCED', 'hospital': 'Hospital', 'policia': 'Policía', 'bomberos': 'Bomberos', 'ptap': 'Planta de agua (PTAP)',
+         'captacion': 'Captación', 'ptap_veredal': 'Planta veredal', 'tanque_elevado': 'Tanque elevado', 'ie_led': 'I.E. L. E. Díaz', 'ie_prim': 'Sede La Patria',
+         'ie_megacolegio': 'Megacolegio', 'parque_edu': 'Parque Educativo', 'cultura': 'Biblioteca', 'casa_cultura': 'Casa de la Cultura', 'coliseo': 'Coliseo',
+         'cpsam': 'Centro Vida', 'concejo': 'Concejo', 'registraduria': 'Registraduría', 'aguas_aseo_sede': 'Aguas y Aseo', 'cic': 'CIC'}
 EDIFICIOS = []
 for f in sorted((D / 'edificios').glob('*.json')):
     s = json.loads(f.read_text(encoding='utf-8'))
@@ -163,7 +167,7 @@ for f in sorted((D / 'edificios').glob('*.json')):
     pisos = max((v.get('pisos', 1) for v in vols), default=1)
     nodo = nodos.get(s.get('nodo_microrred') or s['id'])
     EDIFICIOS.append({
-        'id': s['id'], 'nombre': s.get('nombre', s['id']), 'corto': (nodo or {}).get('corto') or s.get('nombre_corto') or s.get('nombre', s['id']),
+        'id': s['id'], 'nombre': s.get('nombre', s['id']), 'corto': s.get('nombre_corto') or CORTO.get(s['id']) or (nodo or {}).get('corto') or s.get('nombre', s['id']),
         'nodo_microrred': s.get('nodo_microrred'), 'direccion': s.get('direccion'),
         'lat': s['lat'], 'lon': s['lon'],
         'x': round((s['lon'] - lon0) * 111320 * math.cos(math.radians(lat0)), 1), 'y': round((s['lat'] - lat0) * 111320, 1),
