@@ -277,6 +277,7 @@ details.fold summary span { color: var(--accent); font-weight: 600; white-space:
       <a href="#ciudad" data-view="ciudad">Sedes reales</a>
       <a href="#hospital" data-view="hospital">Hospital 2028</a>
       <a href="#torre" data-view="torre">Torre del hospital</a>
+      <a href="#parque" data-view="parque">Parque del relleno</a>
       <a href="#ruta" data-view="ruta">Hoja de ruta</a>
       <a href="#modelos" data-view="modelos">Modelos 3D</a>
     </nav>
@@ -481,6 +482,39 @@ details.fold summary span { color: var(--accent); font-weight: 600; white-space:
   </section>
 
   <!-- ======================= HOSPITAL ======================= -->
+  <!-- ======================= PARQUE DEL RELLENO ======================= -->
+  <section class="view" id="v-parque" data-view="parque" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">Proyecto · Relleno sanitario Las Américas</p><h2>Del relleno a un parque solar, verde y conectado</h2></div>
+        <p class="lede" data-t="parque.lede"></p>
+      </div>
+      <p class="stamp" data-t="parque.stamp"></p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="parque"><span class="stage-hint">Arrastra para girar · rueda para acercar</span></div>
+      <div class="folder">
+        <div class="card">
+          <h3>Ver</h3>
+          <div class="seg" role="group" aria-label="Estado del sitio">
+            <button type="button" data-modo-parque="hoy" aria-pressed="false">Hoy</button>
+            <button type="button" data-modo-parque="parque" aria-pressed="true">Con el parque</button>
+          </div>
+          <div class="tiles" style="margin-top:10px" data-slot="parque.tiles"></div>
+        </div>
+        <div class="card"><h3>El relleno hoy</h3><div data-slot="parque.relleno"></div></div>
+      </div>
+    </div>
+    <div class="cols two">
+      <div class="card"><h3>Energía para hogares de estratos 1 y 2</h3><div data-slot="parque.energia"></div></div>
+      <div class="card"><h3>Programa del parque</h3><div class="tbl-wrap" data-slot="parque.programa"></div></div>
+    </div>
+    <div class="cols two">
+      <div class="card"><h3>Presupuesto por capítulos e ítems</h3><div data-slot="parque.presupuesto"></div></div>
+      <div class="card"><h3>Financiación</h3><div class="tbl-wrap" data-slot="parque.financiacion"></div></div>
+    </div>
+  </section>
+
   <!-- ======================= TORRE DEL HOSPITAL ======================= -->
   <section class="view" id="v-torre" data-view="torre" hidden>
     <div class="intro">

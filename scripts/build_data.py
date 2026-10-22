@@ -235,6 +235,21 @@ if _tdir.exists():
     (R / 'web/data/torre.json').write_text(json.dumps(TORRE, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     print('torre.json', (R / 'web/data/torre.json').stat().st_size // 1024, 'KB')
 
+# --- Parque ecotecnológico sobre el relleno sanitario (data/proyectos/parque_relleno/): archivo aparte para su vista
+_pdir = D / 'proyectos/parque_relleno'
+if _pdir.exists():
+    _pq = {f.stem: json.loads(f.read_text(encoding='utf-8')) for f in sorted(_pdir.glob('*.json'))}
+    PARQUE = {
+        'diagnostico': _sel(_pq.get('diagnostico', {}), ('respuesta_corta', 'sitio', 'estado_legal_y_operacion', 'toneladas', 'clausura_requisitos', 'posclausura', 'alternativa_regional')),
+        'energia': _sel(_pq.get('energia', {}), ('respuesta_corta', 'recurso_solar', 'granja', 'solar_propia_del_parque', 'conexion_a_la_red', 'estratos_1_y_2', 'cobertura_de_hogares', 'ahorro_anual', 'costo_de_la_energia_solar', 'figura_legal')),
+        'programa': _sel(_pq.get('programa', {}), ('idea', 'regla_de_oro', 'inspiracion_proyectos_tipo_dnp', 'componentes', 'usuarios_esperados', 'operacion', 'cronograma_fases')),
+        'presupuesto': _sel(_pq.get('presupuesto', {}), ('clase', 'capitulos', 'costo_directo', 'interventoria', 'gestion_social_y_ambiental', 'imprevistos', 'total', 'total_millones', 'rango_millones', 'por_fase_millones', 'costos_anuales_millones')),
+        'financiacion': _sel(_pq.get('financiacion', {}), ('total_a_financiar_millones', 'principio', 'fuentes', 'mezcla_sugerida_millones', 'compuertas')),
+    }
+    (R / 'web/data').mkdir(parents=True, exist_ok=True)
+    (R / 'web/data/parque.json').write_text(json.dumps(PARQUE, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+    print('parque.json', (R / 'web/data/parque.json').stat().st_size // 1024, 'KB')
+
 # --- Red de distribución: distancias por la vía entre sedes y red propuesta (scripts/geo/red_distancias.py) y su presupuesto
 _dist = opt('red/distancias.json')
 RED = {}

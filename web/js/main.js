@@ -10,6 +10,7 @@ const scenes = {
   ciudad: () => import('./scenes/ciudad.js'),
   hospital: () => import('./scenes/hospital.js'),
   torre: () => import('./scenes/torre.js'),
+  parque: () => import('./scenes/parque.js'),
   ruta: () => import('./scenes/ruta.js'),
   modelos: () => import('./scenes/modelos.js'),
 };
