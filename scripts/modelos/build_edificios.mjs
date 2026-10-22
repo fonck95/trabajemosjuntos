@@ -684,7 +684,7 @@ function volume(b, vi, V, P, detail) {
   if (le?.texto && !abierto) {
     const s = sideFor(f, le.lado), S = f.sides[s], chars = le.texto.length;
     const size = Math.max(0.18, Math.min(0.55, (S.len * 0.8) / Math.max(1, chars * 0.68)));
-    const tg = textGeo(le.texto, size, 0.04);
+    const tg = textGeo(le.texto, size, 0.04, true);
     if (tg) {
       const dd = (vi.ops[s] || []).filter((o) => o.kind === 'puerta');
       const along = dd.length ? dd[0].along : 0;
