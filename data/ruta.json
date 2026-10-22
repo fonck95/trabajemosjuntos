@@ -157,7 +157,7 @@
   "portafolio": [
     {
       "nombre": "Red Energética Pública de Yondó (microrred + domótica + CCED)",
-      "alcance": "Solar de 369 kWp en las demás sedes, baterías de 370 kWh en 6 sedes críticas, medición, domótica, EMS/CCED y 10 sedes rurales. Ya no incluye el nodo del hospital (100 kWp y 400 kWh), que pasa a la torre. Ver docs/05 y docs/07.",
+      "alcance": "Solar de 369 kWp en las demás sedes, baterías de 370 kWh en 6 sedes críticas, medición, domótica, EMS/CCED y 10 sedes rurales. Ya no incluye el nodo del hospital (100 kWp y 400 kWh), que pasa a la torre.",
       "ejecutor": "Municipio con E.S.E. y Aguas y Aseo; licitación con pliegos tipo",
       "fuentes": "SGR (Incentivo a la Producción, \"Territorios energéticos\"), OxI, FENOGE, MinTIC, Findeter",
       "fase": "2027–2030",
@@ -165,7 +165,7 @@
     },
     {
       "nombre": "Torre de servicios de primer nivel del hospital",
-      "alcance": "Torre de 4 pisos sobre el antiguo Centro Vida: urgencias, partos, hospitalización, consulta, rayos X, laboratorio de 24 horas, solar de 100 kWp y baterías de 400 kWh (7 proyectos, P1 a P7; rango $27.363–50.600 M). Reemplaza el refuerzo del edificio actual. Ver docs/11.",
+      "alcance": "Torre de 4 pisos sobre el antiguo Centro Vida: urgencias, partos, hospitalización, consulta, rayos X, laboratorio de 24 horas, solar de 100 kWp y baterías de 400 kWh (7 proyectos, P1 a P7; rango $27.363–50.600 M). Reemplaza el refuerzo del edificio actual.",
       "ejecutor": "E.S.E. (presenta directo a MinSalud) y municipio",
       "fuentes": "MinSalud, SGR (directas, OCAD Paz, inversión local y regional), Gobernación, OxI, FENOGE, MinTIC, crédito",
       "fase": "2026–2030",
@@ -221,7 +221,7 @@
     },
     {
       "nombre": "Parque ecotecnológico Las Américas",
-      "alcance": "Clausura del relleno (licencia vencida en 2023), granja solar de 997 kWp sobre las celdas para un bloque de 50 kWh al mes en 2.236 hogares de estratos 1 y 2, coworking rural, granja y circuito (rango $11.492–24.625 M). Ver docs/12.",
+      "alcance": "Clausura del relleno (licencia vencida en 2023), granja solar de 997 kWp sobre las celdas para un bloque de 50 kWh al mes en 2.236 hogares de estratos 1 y 2, coworking rural, granja y circuito (rango $11.492–24.625 M).",
       "ejecutor": "Municipio y Aguas y Aseo; la granja, una comunidad energética",
       "fuentes": "Tarifa de aseo, SGP y Plan Departamental de Agua, SGR, Colombia Solar o FENOGE, Findeter, deporte, TIC y cultura, Ecopetrol",
       "fase": "2027–2030",
@@ -229,7 +229,7 @@
     },
     {
       "nombre": "Red de distribución de 13,2 kV y fibra",
-      "alcance": "10,066 km de red aérea nueva y fibra que unen 22 puntos, incluidos la torre y el parque, con transformador y medidor bidireccional en 19 sedes (rango $2.075–4.447 M). Ver docs/13.",
+      "alcance": "10,066 km de red aérea nueva y fibra que unen 22 puntos, incluidos la torre y el parque, con transformador y medidor bidireccional en 19 sedes (rango $2.075–4.447 M).",
       "ejecutor": "Municipio con EPM",
       "fuentes": "Por definir",
       "fase": "Posterior, sin fecha",

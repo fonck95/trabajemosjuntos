@@ -225,7 +225,7 @@ td.n, th.n { text-align: right; font-family: var(--f-mono); font-size: 0.8rem; w
   .tbl-wrap:has(> table:not(.fichas) tr > :nth-child(4)) { background: linear-gradient(to left, var(--surface) 35%, transparent) right / 28px 100% no-repeat local, radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 42%, transparent), transparent) right / 12px 100% no-repeat scroll; }
   /* table.fichas: cada fila se apila como una ficha (nombre arriba y debajo cada cifra con su rótulo, tomado de data-th),
      así todas las cifras quedan a la vista sin deslizar; td.ancho ocupa todo el ancho (textos largos) */
-  table.fichas, table.fichas tbody, table.fichas td { display: block; }
+  table.fichas, table.fichas tbody, table.fichas tfoot, table.fichas td { display: block; }
   table.fichas thead { display: none; }
   table.fichas tr { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
   table.fichas td { padding: 0; border: 0; text-align: left; white-space: normal; }

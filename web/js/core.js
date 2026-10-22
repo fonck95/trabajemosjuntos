@@ -349,6 +349,8 @@ export class Stage {
         if (!hit) break;
         y = hit.y - (hit.h + r.h) / 2 - 3;
       }
+      // no se sale por arriba del recuadro (ni se mete bajo el botón «Rendimiento» de la esquina)
+      y = Math.max(y, (r.x + r.w / 2 > W - 150 ? 44 : 4) + r.h / 2);
       r.dy = y - r.y; placed.push({ ...r, y });
     });
     movers.forEach((r) => { r.e.style.marginTop = r.dy < -0.5 ? `${r.dy}px` : ''; });
@@ -409,7 +411,9 @@ export class Stage {
   frameBox(box, dir, { margin = 0.8, duration = 1.4, ty = 0.35 } = {}) {
     const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
     const tgt = new THREE.Vector3(c.x, box.min.y + size.y * ty, c.z), d = dir.clone().normalize(), v = new THREE.Vector3();
+    // la cámara de prueba no recorta por el plano lejano: si no, en pantallas verticales la caja "no cabía" y se iba lejísimos
     const cam = this.camera.clone(), pts = [];
+    cam.far = Math.max(cam.far, 1e6); cam.updateProjectionMatrix();
     for (let i = 0; i < 8; i++) pts.push(new THREE.Vector3(i & 1 ? box.max.x : box.min.x, i & 2 ? box.max.y : box.min.y, i & 4 ? box.max.z : box.min.z));
     let D = Math.max(size.length() * 0.25, this.controls.minDistance);
     for (let k = 0; k < 90; k++, D *= 1.05) {
@@ -417,6 +421,8 @@ export class Stage {
       if (pts.every((p) => { v.copy(p).project(cam); return v.z < 1 && Math.abs(v.x) < margin && Math.abs(v.y) < margin; })) break;
     }
     this.controls.maxDistance = Math.max(this.controls.maxDistance, D * 1.6);
+    const lejos = 2 * D + size.length();
+    if (this.camera.far < lejos) { this.camera.far = lejos; this.camera.updateProjectionMatrix(); }
     this.flyTo(cam.position.toArray(), tgt.toArray(), duration);
     return D;
   }

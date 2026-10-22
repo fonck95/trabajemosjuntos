@@ -106,6 +106,10 @@ SECOP = {
 }
 
 top_est = sorted(estudios, key=lambda e: -e['valor'])[:16]
+# corta en el último espacio antes de n caracteres y termina en «…» (no a mitad de palabra)
+def _corta(t, n):
+    t = ' '.join(str(t).split())
+    return t if len(t) <= n else t[:n].rsplit(' ', 1)[0].rstrip(' ,;:-') + '…'
 EMBUDO = {
     'etapas': [
         {'etapa': 'Estudios, diseños y consultorías', 'n': len(estudios), 'valor': sum(e['valor'] for e in estudios), 'unidad': 'contratos', 'slot': 7,
@@ -117,7 +121,7 @@ EMBUDO = {
     ],
     'ops_formulacion': {'n': sum(x['n'] for x in ops_form), 'valor': sum(x['valor'] for x in ops_form), 'por_periodo': ops_form},
     'rupturas': textos['rupturas_embudo'],
-    'estudios': [{'anio': e['anio'], 'valor': e['valor'], 'objeto': e['objeto'][:180].capitalize(), 'obra': (e['obra_relacionada_probable'] or '')[:110].capitalize() or None,
+    'estudios': [{'anio': e['anio'], 'valor': e['valor'], 'objeto': _corta(e['objeto'], 180).capitalize(), 'obra': _corta(e['obra_relacionada_probable'] or '', 110).capitalize() or None,
                   'anio_obra': e['anio_obra']} for e in top_est],
 }
 
@@ -173,7 +177,7 @@ for f in sorted((D / 'edificios').glob('*.json')):
         'lat': s['lat'], 'lon': s['lon'],
         'x': round((s['lon'] - lon0) * 111320 * math.cos(math.radians(lat0)), 1), 'y': round((s['lat'] - lat0) * 111320, 1),
         'confianza': (s.get('ubicacion') or {}).get('confianza'),
-        'pisos': f"{len(vols)} volumen{'es' if len(vols) != 1 else ''}, hasta {pisos} piso{'s' if pisos != 1 else ''}",
+        'pisos': f"{len(vols)} {'volumen' if len(vols) == 1 else 'volúmenes'}, hasta {pisos} piso{'s' if pisos != 1 else ''}",
         'kwp_plan': ad.get('kwp_plan'), 'kwp_factible': m.get('kwp_modelado', ad.get('kwp_factible')), 'modulos': m.get('modulos'),
         'bess': ({k: ad['bess'].get(k) for k in ('kwh', 'kw', 'tipo')} if ad.get('bess') else None),
         'domotica': ad.get('domotica', []), 'obras_civiles': ad.get('obras_civiles', []), 'notas': ad.get('notas'),

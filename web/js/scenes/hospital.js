@@ -133,9 +133,9 @@ export function mount(root) {
   root.querySelectorAll('[data-esc]').forEach((b) => b.addEventListener('click', () => {
     esc = b.dataset.esc; root.querySelectorAll('[data-esc]').forEach((x) => x.setAttribute('aria-pressed', x === b)); layout();
   }));
-  root.querySelector('[data-slot="hospital.table"]').innerHTML = `<table><thead><tr><th>Fuente</th><th>Para qué</th><th>Calendario</th><th class="n">Conservador</th><th class="n">Probable</th><th class="n">Ambicioso</th></tr></thead>
-    <tbody>${F.map((f) => `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--s${f.slot})"></i> ${f.nombre}</td><td>${limpia(f.uso)}</td><td>${limpia(f.calendario)}</td><td class="n">${fmtCOP(f.min * 1e6)}</td><td class="n">${fmtCOP(f.med * 1e6)}</td><td class="n">${fmtCOP(f.max * 1e6)}</td></tr>`).join('')}</tbody>
-    <tfoot><tr><td colspan="3">Total</td>${['min', 'med', 'max'].map((k) => `<td class="n">${fmtCOP(F.reduce((a, f) => a + f[k], 0) * 1e6)}</td>`).join('')}</tr></tfoot></table>`;
+  root.querySelector('[data-slot="hospital.table"]').innerHTML = `<table class="fichas"><thead><tr><th>Fuente</th><th>Para qué</th><th>Calendario</th><th class="n">Conservador</th><th class="n">Probable</th><th class="n">Ambicioso</th></tr></thead>
+    <tbody>${F.map((f) => `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--s${f.slot})"></i> ${f.nombre}</td><td class="ancho" data-th="Para qué">${limpia(f.uso)}</td><td class="ancho" data-th="Calendario">${limpia(f.calendario)}</td><td class="n" data-th="Conservador">${fmtCOP(f.min * 1e6)}</td><td class="n" data-th="Probable">${fmtCOP(f.med * 1e6)}</td><td class="n" data-th="Ambicioso">${fmtCOP(f.max * 1e6)}</td></tr>`).join('')}</tbody>
+    <tfoot><tr><td colspan="3">Total</td>${[['min', 'Conservador'], ['med', 'Probable'], ['max', 'Ambicioso']].map(([k, t]) => `<td class="n" data-th="${t}">${fmtCOP(F.reduce((a, f) => a + f[k], 0) * 1e6)}</td>`).join('')}</tr></tfoot></table>`;
   root.querySelector('[data-slot="hospital.cols"]').innerHTML = Hs.bloques.map((b) => `<div class="card"><p class="eyebrow">${b.tag}</p><h3>${b.titulo}</h3>${limpia(b.html)}</div>`).join('');
   const fi = Hs.ficha;
   root.querySelector('[data-slot="hospital.ficha"]').innerHTML = `<dl class="kv" style="grid-template-columns:auto minmax(0,1fr)">
