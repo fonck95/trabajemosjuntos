@@ -102,7 +102,8 @@ lo convierte en un modelo 3D (GLB) con dos capas: **existente** (réplica del ed
 - `letrero`: el texto se escribe en mayúsculas con tildes; se centra sobre la primera puerta de ese lado.
 - `elementos`: `cerramiento` acepta `poligono` (cerrado) o `linea` (abierto); `material` `muro` | `reja` | `malla`. `cancha` acepta `superficie: "concreto"`,
   `cubierta: true` con `altura`, `material_cubierta`, `color_cubierta`. Tipos soportados: cerramiento, tanque_elevado, arbol, cancha, parqueadero, patio,
-  anden, zona_verde, plaza, cubierta_ligera, asta, poste, torre, antena, planta_electrica, aire_acondicionado.
+  anden, zona_verde, plaza, cubierta_ligera, asta, poste, torre, antena, planta_electrica, aire_acondicionado, pozo.
+- `pozo`: `{ "tipo": "pozo", "centro": [x,y], "diametro_pulgadas": 8, "rumbo": 90, "nombre": "Pozo 1" }`: pozo profundo con bomba sumergible (losa, revestimiento, cabezal, descarga con cheque y compuerta, manómetro y tablero de arranque con variador bajo cubierta). `rumbo` orienta la descarga (grados desde el norte).
 - `adecuaciones.cubierta_nueva` (opcional): `{ "material": "termoacustica", "color": "#e9e7e1", "volumenes": ["bloque_a"] }`. Si no se indica, pero
   `obras_civiles` menciona un cambio de cubierta, se reemplazan las cubiertas inclinadas de zinc o fibrocemento por termoacústica.
   Solo los volúmenes reemplazados cambian de cubierta en la vista "Con el proyecto"; las demás cubiertas, las de los corredores y las de los
@@ -110,6 +111,7 @@ lo convierte en un modelo 3D (GLB) con dos capas: **existente** (réplica del ed
 - `fv[].faldon` elige la cara de la cubierta cuya normal apunta más hacia ese punto cardinal; en techos curvos, `N`/`S` (o `E`/`O`) eligen la mitad de la bóveda.
   En techo plano, `inclinacion` y `azimut` (grados desde el norte hacia donde mira el panel).
 - `kwp_factible` debe ser igual a módulos × 0,55; el generador avisa si no coincide.
+- `estado` (en un volumen, en un elemento o en toda la especificación): `"existe"` (por defecto), `"demoler"` (se ve en "Hoy" y desaparece "Con el proyecto"; va al nodo `existente/a_demoler` con `extras.demoler`) o `"nuevo"` (obra nueva: solo "Con el proyecto"; va al nodo `adecuaciones/obra_nueva`). Lo que se demuele no tapa muros de la obra nueva ni al revés, así una torre nueva puede ocupar el lugar de las alas que reemplaza. Los arreglos `fv` pueden ir sobre volúmenes nuevos.
 - Detalle que se genera sin pedirlo:
   - Vanos recortados con jambas, carpintería (marco, parteluces, vidrio hundido; barrotes en `reja`), alféizar y dintel.
   - Puertas con marco y tableros, y cortina enrollable en portones.

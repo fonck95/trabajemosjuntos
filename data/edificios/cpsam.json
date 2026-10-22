@@ -662,41 +662,61 @@
     }
   ],
   "adecuaciones": {
-    "kwp_plan": 6,
+    "kwp_plan": 20,
     "fv": [
       {
         "volumen": "ala_norte",
         "faldon": "S",
-        "filas": 2,
+        "filas": 5,
         "columnas": 6,
         "orientacion_modulo": "horizontal"
+      },
+      {
+        "volumen": "ala_este",
+        "faldon": "O",
+        "filas": 2,
+        "columnas": 4,
+        "orientacion_modulo": "vertical"
       }
     ],
-    "kwp_factible": 6.6,
+    "kwp_factible": 20.9,
+    "bess": {
+      "kwh": 30,
+      "kw": 15,
+      "tipo": "gabinete",
+      "centro": [
+        -1.27,
+        15.27
+      ],
+      "largo": 2.3,
+      "ancho": 1.2,
+      "rumbo_eje": 95.0
+    },
     "inversores": {
-      "n": 1,
-      "kw": 6,
+      "n": 2,
+      "kw": 10,
       "volumen": "ala_norte",
       "lado": "N",
       "pos": 0
     },
     "domotica": [
       "medidor bidireccional",
-      "pasarela IoT con monitoreo de los inversores y del consumo, enlazada al centro de control de la microrred",
-      "sin batería propia: los paneles cubren parte del consumo de día; el respaldo del nodo (batería de 30 kWh) queda en el hogar de adultos mayores, que es donde hay carga de noche",
+      "pasarela IoT con monitoreo de los inversores, de la batería y del consumo, enlazada al centro de control de la microrred",
+      "transferencia automática a modo isla con cargas prioritarias: neveras y congeladores de la cocina, enfermería, iluminación, ventiladores del salón y comunicaciones",
       "control por horario y presencia de los ventiladores y luces del salón y de los corredores",
       "alarma de temperatura de las neveras y de la comida",
       "sensor de humo en la cocina y botón de llamada en los baños"
     ],
     "obras_civiles": [
-      "revisión estructural de las cerchas y correas metálicas antes de cargar 12 módulos (unos 350 kg más rieles, cerca de 12 kg por m² en la zona del arreglo); la lámina es de 2018 y en el satélite se ve en buen estado",
+      "revisión estructural de las cerchas y correas metálicas antes de cargar 38 módulos (unos 1.100 kg más rieles, cerca de 12 kg por m²); la lámina es de 2018 y en el satélite se ve en buen estado",
       "fijar los rieles a las correas con tornillería y empaques; si la lámina resulta ser teja termoacústica de PVC, usar ganchos a la estructura y no apoyar el peso sobre la lámina",
       "limpiar y revisar las canales de las limahoyas y del borde del patio, por donde baja toda el agua de la cubierta",
+      "base de concreto, caseta ventilada con techo liviano y malla para el gabinete de baterías en el patio de servicio del norte",
       "alero metálico sobre los inversores: el muro norte recibe sol directo de abril a agosto",
-      "puesta a tierra y protección contra sobretensiones (DPS)",
+      "puesta a tierra, protección contra sobretensiones (DPS) y tablero de transferencia",
       "canalización metálica a la vista por la cubierta y el muro norte"
     ],
-    "notas": "Reparto del nodo cpsam (CPSAM y Centro Vida, 20 kWp y 30 kWh en el plan): la carga de noche está en el hogar de adultos mayores (data/edificios/bienestar_anciano.json, alas occidentales del predio del hospital), que recibe 13,2 kWp y toda la batería; el Centro Vida, que solo abre de día, queda con 12 módulos = 6,6 kWp sin batería (2 filas × 6 columnas en la cara sur del ala norte, la mejor de la cubierta). En total 19,8 kWp. Antes de este reparto se había diseñado aquí un arreglo de 38 módulos (20,9 kWp) con batería, que sigue cabiendo si el plan cambia: Caben 38 módulos de 550 Wp = 20,9 kWp, el 105 % de los 20 kWp del plan. Treinta van en la cara sur de la cubierta del ala norte (5 filas × 6 columnas en horizontal, 13,3°, mirando al sur): el tramo cerrado del ala tiene 27,8 m de largo útil menos 1 m de retiros y 6,97 m de ancho inclinado, o sea 5,97 m útiles, donde entran justo 5 filas de 1,13 m (5,65 m). El arreglo ocupa 13,7 m del centro y queda a más de 0,7 m de las dos limahoyas reales; esa cara es la mejor del edificio y no tiene árboles cerca. Los otros ocho van en la cara oeste del ala este (2 filas × 4 columnas en vertical, 14°, mirando al patio), que rinde unos 5 % menos; allí hay 19 m de largo útil y 5,5 m de ancho inclinado útil. Queda cubierta libre para unos 40 módulos más (resto del ala este y el ala oeste, que mira al oriente) si el nodo crece; el ala oeste recibe sombra de los árboles del caño en la tarde. El bloque con tanques de la esquina noreste puede sombrear un poco el extremo oriental del arreglo norte muy temprano en la mañana. No hace falta marquesina. El gabinete de baterías (30 kWh / 15 kW) va en el patio de servicio del norte, sobre tierra libre a 1,2 m del muro norte y fuera del alero; los dos inversores híbridos de 10 kW se cuelgan en el muro norte con el medidor y la pasarela IoT, a unos 3 m del gabinete. No se propone cargador de vehículo eléctrico: no hay parqueadero (las motos y bicicletas se guardan en el patio); se puede dejar un tomacorriente para motos eléctricas. Ojo con el plan: el nodo cpsam suma el CPSAM y el Centro Vida (3.200 kWh al mes) y la carga nocturna es del CPSAM, que funciona en otra sede. Aquí la batería sirve para mantener la cocina, la enfermería y el salón como refugio fresco durante los cortes; si se quiere respaldar la noche del CPSAM, la batería y parte de los paneles deben ir en su sede, que falta ubicar."
+    "notas": "Caben 38 módulos de 550 Wp = 20,9 kWp, el 105 % de los 20 kWp del plan. Treinta van en la cara sur de la cubierta del ala norte (5 filas × 6 columnas en horizontal, 13,3°, mirando al sur): el tramo cerrado del ala tiene 27,8 m de largo útil menos 1 m de retiros y 6,97 m de ancho inclinado, o sea 5,97 m útiles, donde entran justo 5 filas de 1,13 m (5,65 m). El arreglo ocupa 13,7 m del centro y queda a más de 0,7 m de las dos limahoyas reales; esa cara es la mejor del edificio y no tiene árboles cerca. Los otros ocho van en la cara oeste del ala este (2 filas × 4 columnas en vertical, 14°, mirando al patio), que rinde unos 5 % menos; allí hay 19 m de largo útil y 5,5 m de ancho inclinado útil. Queda cubierta libre para unos 40 módulos más (resto del ala este y el ala oeste, que mira al oriente) si el nodo crece; el ala oeste recibe sombra de los árboles del caño en la tarde. El bloque con tanques de la esquina noreste puede sombrear un poco el extremo oriental del arreglo norte muy temprano en la mañana. No hace falta marquesina. El gabinete de baterías (30 kWh / 15 kW) va en el patio de servicio del norte, sobre tierra libre a 1,2 m del muro norte y fuera del alero; los dos inversores híbridos de 10 kW se cuelgan en el muro norte con el medidor y la pasarela IoT, a unos 3 m del gabinete. No se propone cargador de vehículo eléctrico: no hay parqueadero (las motos y bicicletas se guardan en el patio); se puede dejar un tomacorriente para motos eléctricas. Ojo con el plan: el nodo cpsam suma el CPSAM y el Centro Vida (3.200 kWh al mes) y la carga nocturna es del CPSAM, que funciona en otra sede. Aquí la batería sirve para mantener la cocina, la enfermería y el salón como refugio fresco durante los cortes; si se quiere respaldar la noche del CPSAM, la batería y parte de los paneles deben ir en su sede, que falta ubicar."
   },
   "incertidumbres": [
     "El CPSAM no está aquí: es una sede más antigua (ladrillo rojo y teja de barro en las fotos de 2024; obras en SECOP desde 2012), que según el directorio Puebliando por Antioquia queda en el barrio José Domingo Oliveros. Este edificio es solo el Centro Vida, de uso diurno. El consumo de 3.200 kWh al mes del nodo y su carga nocturna incluyen el CPSAM.",
@@ -716,7 +736,7 @@
     "El GPS de los panoramas de 2014 está unos 2 m al norte respecto a Esri.",
     "No se conoce la acometida eléctrica, el transformador, si hay planta eléctrica o aires acondicionados, ni el estado de la estructura. Hay que verificarlo en una visita antes de diseñar.",
     "La obra de 2023 de $323 millones ('adecuación y mantenimiento del centro para la atención del adulto mayor') pudo cambiar algo del edificio; no se sabe a cuál de los dos centros corresponde.",
-    "El arreglo se redujo a 6,6 kWp sin batería por el reparto del nodo cpsam con el hogar de adultos mayores; el consumo propio del Centro Vida (de día) es una estimación."
+    "El usuario (conocedor del municipio) aclaró que el Centro Vida funcionaba antes en las alas occidentales del predio del hospital y fue reubicado a este edificio, donde hoy se atienden los adultos mayores; por eso el nodo cpsam completo (20 kWp y batería de 30 kWh) se mantiene aquí."
   ],
   "verificacion": {
     "trace": "data/geo/img/cpsam_trace.png",

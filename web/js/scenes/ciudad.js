@@ -201,6 +201,7 @@ export function mount(root) {
         else o.visible = proyecto;
       }
       if (o.name === 'cubierta_actual' && o.userData.reemplazada) o.visible = !proyecto;
+      if (o.userData.demoler) o.visible = !proyecto; // lo que el proyecto demuele
     });
   }
   const modeBtns = root.querySelectorAll('[data-modo-ciudad], [data-nav-modo]');

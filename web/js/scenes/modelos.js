@@ -127,6 +127,7 @@ export function mount(root) {
     current.traverse((o) => {
       if (o.name === 'adecuaciones') { has = true; o.visible = proyecto; }
       if (o.name === 'cubierta_actual' && o.userData.reemplazada) o.visible = !proyecto;
+      if (o.userData.demoler) o.visible = !proyecto;
     });
     capas.hidden = !has;
     cxLabels.forEach((l) => { l.visible = proyecto; });

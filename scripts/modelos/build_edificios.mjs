@@ -925,6 +925,37 @@ function element(b, e, P, detail, V) {
       }
       return;
     }
+    case 'pozo': {
+      // pozo profundo con bomba sumergible ("lapicero"): losa, revestimiento de acero (8" por defecto), cabezal con brida,
+      // descarga con válvula de cheque y de compuerta, manómetro, conduit eléctrico y tablero de arranque con variador
+      // bajo una cubierta pequeña; "rumbo" orienta la descarga
+      const c = at(), D = ((e.diametro_pulgadas ?? 8) * 0.0254) + 0.03, ry = THREE.MathUtils.degToRad(e.rumbo ?? 0);
+      const m = new THREE.Matrix4().compose(V3(c.x, 0, c.z), new THREE.Quaternion().setFromAxisAngle(UP, -ry), V3(1, 1, 1));
+      const add = (k, g, uv = false) => P.env.addRaw(k, g.applyMatrix4(m), uv);
+      add('piso', boxUV(2.2, 0.25, 2.2, 0, 0.03, 0), true);
+      add('metal_pintado#3d4a57', new THREE.CylinderGeometry(D / 2, D / 2, 0.7, detail ? 20 : 8).translate(0, 0.28 + 0.35, 0));
+      add('metal_pintado#2f6db3', new THREE.CylinderGeometry(D / 2 + 0.07, D / 2 + 0.07, 0.06, detail ? 20 : 8).translate(0, 1.0, 0));
+      // descarga horizontal hacia "adelante" (+z local)
+      const y = 0.86, d0 = V3(0, y, 0), d1 = V3(0, y, 1.9);
+      add('metal_pintado#2f6db3', tubeG(V3(0, 1.0, 0), d0, 0.07, 10));
+      add('metal_pintado#2f6db3', tubeG(d0, d1, 0.07, 10));
+      add('metal_pintado#2f6db3', tubeG(d1, V3(0, 0.28, 1.9), 0.07, 10));
+      if (detail) {
+        add('metal_pintado#20262c', boxG(0.24, 0.22, 0.3, 0, y - 0.11, 0.7));          // cheque
+        add('metal_pintado#20262c', boxG(0.22, 0.26, 0.22, 0, y - 0.13, 1.2));         // compuerta
+        add('metal_pintado#c4c8cb', new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8).translate(0, y + 0.26 + 0.05, 1.2));
+        add('pintura_satin#f2f3f3', new THREE.CylinderGeometry(0.07, 0.07, 0.04, 16).rotateX(Math.PI / 2).translate(0, y + 0.3, 0.45));
+        add('metal_pintado#c4c8cb', tubeG(V3(0, y + 0.07, 0.45), V3(0, y + 0.26, 0.45), 0.012, 6));
+      }
+      // tablero de arranque y variador sobre soporte, con cubierta
+      const tx = 1.6;
+      add('metal_pintado#2b2d30', boxG(0.08, 1.9, 0.08, tx - 0.3, 0.28, -0.3)); add('metal_pintado#2b2d30', boxG(0.08, 1.9, 0.08, tx + 0.3, 0.28, -0.3));
+      add('pintura_satin#e9ebec', boxG(0.7, 0.9, 0.3, tx, 1.0, -0.3));
+      if (detail) { add('pintura_satin#2a2f38', boxG(0.2, 0.14, 0.02, tx - 0.15, 1.55, -0.14)); add('metal_pintado#eb6834', boxG(0.1, 0.1, 0.02, tx + 0.18, 1.6, -0.14)); }
+      add('metal_pintado#c4c8cb', boxG(1.3, 0.05, 1.0, tx, 2.3, -0.3));
+      add('metal_pintado#f08a00', tubeG(V3(tx - 0.25, 1.0, -0.3), V3(0.15, 0.3, -0.15), 0.025, 6));   // conduit de fuerza a la bomba
+      return;
+    }
     case 'planta_electrica': {
       const c = at(), l = e.largo ?? 3, hh = e.altura ?? 1.9, w = e.ancho ?? 1.5;
       P.env.addRaw('piso', boxUV(l + 0.6, 0.15, w + 0.6, c.x, 0, c.z), true);
@@ -1359,9 +1390,17 @@ function build(spec, detail) {
     walls: new Part(), roof: new Part(), roofKeep: new Part(), env: new Part(), newRoof: cn ? new Part() : null,
     equip: new Part(), bess: new Part(), solarFlat: new Part(), rack: new Part(), pow: new Part(), dat: new Part(), punto: new Part(), gw: new Part(),
     ground: [], trees: [], poles: [],
-    replace: (v) => (replaceIds ? replaceIds.includes(v.id) : ['fibrocemento', 'zinc', undefined].includes(v.techo?.material) && v.techo?.tipo !== 'plano' && v.techo?.tipo !== 'ninguno'),
+    replace: (v) => estadoDe(v) === 'existe' && (replaceIds ? replaceIds.includes(v.id) : ['fibrocemento', 'zinc', undefined].includes(v.techo?.material) && v.techo?.tipo !== 'plano' && v.techo?.tipo !== 'ninguno'),
     newRoofSpec: (t) => ({ ...t, material: cn?.material || 'termoacustica', color: cn?.color || (cn?.material === 'teja_barro' ? '#a5512f' : '#e9e7e1') }),
   };
+  // estado de cada pieza: "existe" (se conserva), "demoler" (se ve en "Hoy" y desaparece con el proyecto) o "nuevo"
+  // (obra nueva, solo con el proyecto). Cada estado acumula sus muros, cubiertas, entorno y árboles por separado
+  const estadoDe = (o) => o.estado || spec.estado || 'existe';
+  const G = { existe: { walls: P.walls, roof: P.roof, roofKeep: P.roofKeep, env: P.env, trees: P.trees } };
+  for (const k of ['demoler', 'nuevo']) G[k] = { walls: new Part(), roof: new Part(), roofKeep: new Part(), env: new Part(), trees: [] };
+  const usar = (k) => Object.assign(P, G[k] || G.existe);
+  // lo que hoy existe no tapa ni es tapado por la obra nueva, y lo que se demuele no cuenta para la obra nueva
+  const compatibles = (k) => (k === 'nuevo' ? ['existe', 'nuevo'] : k === 'demoler' ? ['existe', 'demoler'] : ['existe']);
   // predio: rectángulo que envuelve todo con 2 m de margen (capa más baja del suelo)
   const xs = [], ys = [];
   const push = (pts) => pts && pts.forEach(([x, y]) => { xs.push(x); ys.push(y); });
@@ -1391,13 +1430,16 @@ function build(spec, detail) {
   });
   const vols = V.map((vi) => {
     try {
-      const r = vi.f ? volume(b, vi, V, P, detail) : volumePoly(b, vi.v, P, detail);
+      const k = estadoDe(vi.v); usar(k);
+      const Vc = V.filter((vj) => compatibles(k).includes(estadoDe(vj.v)));
+      const r = vi.f ? volume(b, vi, Vc, P, detail) : volumePoly(b, vi.v, P, detail);
       vi.ray = r.roofGeos.map((g) => new THREE.Mesh(g, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide })));
       return { id: vi.v.id, vi, ...r };
     } catch (e) { warn.push(`${spec.id}/${vi.v.id}: ${e.message}`); vi.ray = []; return { id: vi.v.id, vi, faces: [] }; }
   });
   P.roofRay = V.flatMap((vi) => vi.ray || []);
-  for (const e of spec.elementos || []) { try { element(b, e, P, detail, V); } catch (err) { warn.push(`${spec.id}/elemento ${e.tipo}: ${err.message}`); } }
+  for (const e of spec.elementos || []) { try { usar(estadoDe(e)); element(b, e, P, detail, V); } catch (err) { warn.push(`${spec.id}/elemento ${e.tipo}: ${err.message}`); } }
+  usar('existe');
 
   const root = b.node(spec.nombre || spec.id, null);
   root.setExtras({ id: spec.id, lat: spec.lat, lon: spec.lon });
@@ -1412,7 +1454,19 @@ function build(spec, detail) {
     instanced(b, 'arboles', tm, P.trees.map((t, i) => { const q = new THREE.Quaternion().setFromAxisAngle(UP, (i * 2.399) % (Math.PI * 2)); return { t: [t.c.x, 0, t.c.z], r: [q.x, q.y, q.z, q.w], s: [t.cp, t.H, t.cp] }; }), env);
   }
 
+  // lo que el proyecto demuele: visible en "Hoy", oculto "Con el proyecto"
+  const grupo = (k, parent, nombre, extras) => {
+    const g = G[k]; if (g.walls.empty && g.roof.empty && g.roofKeep.empty && g.env.empty && !g.trees.length) return;
+    const n = b.node(nombre, null, [0, 0, 0], [0, 0, 0], [1, 1, 1], parent); n.setExtras(extras);
+    if (!g.walls.empty) b.node(`${nombre}_estructura`, b.partMesh(`${spec.id}_${nombre}_estructura`, g.walls), [0, 0, 0], [0, 0, 0], [1, 1, 1], n);
+    for (const part of [g.roof, g.roofKeep].filter((x) => !x.empty)) b.node(`${nombre}_cubierta`, b.partMesh(`${spec.id}_${nombre}_cubierta_${part === g.roof ? 'a' : 'b'}`, part), [0, 0, 0], [0, 0, 0], [1, 1, 1], n);
+    if (!g.env.empty) b.node(`${nombre}_entorno`, b.partMesh(`${spec.id}_${nombre}_entorno`, g.env), [0, 0, 0], [0, 0, 0], [1, 1, 1], n);
+    if (g.trees.length) { const tm = treeMesh(b, detail); instanced(b, `${nombre}_arboles`, tm, g.trees.map((t, i) => { const q = new THREE.Quaternion().setFromAxisAngle(UP, (i * 2.399) % (Math.PI * 2)); return { t: [t.c.x, 0, t.c.z], r: [q.x, q.y, q.z, q.w], s: [t.cp, t.H, t.cp] }; }), n); }
+  };
+  grupo('demoler', ex, 'a_demoler', { capa: 'existente', demoler: true });
+
   const adn = b.node('adecuaciones', null, [0, 0, 0], [0, 0, 0], [1, 1, 1], root); adn.setExtras({ capa: 'adecuaciones' });
+  grupo('nuevo', adn, 'obra_nueva', { capa: 'adecuaciones', nueva: true });
   if (P.newRoof && !P.newRoof.empty) b.node('cubierta_nueva', b.partMesh(`${spec.id}_cubierta_nueva`, P.newRoof), [0, 0, 0], [0, 0, 0], [1, 1, 1], adn).setExtras({ capa: 'adecuaciones' });
   const solar = b.node('solar', null, [0, 0, 0], [0, 0, 0], [1, 1, 1], adn);
   const arrays = [];
