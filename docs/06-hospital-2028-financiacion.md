@@ -1,6 +1,8 @@
 # 06 · Proyecto 2: el hospital como puerta de entrada del dinero en 2028
 
 > Evidencia completa con fuentes en `docs/anexos/C-hospital-2028.md`. Los montos de este documento son **escenarios de gestión**, no recursos asegurados. Datos estructurados en `data/hospital2028.json`; vista **Hospital 2028** del atlas.
+>
+> **Actualización del 22 de octubre de 2026: el hospital ya no se refuerza, se repone.** La propuesta vigente es una torre de servicios de primer nivel sobre el antiguo Centro Vida, de **$37.137 M** (rango $27.363–50.600 M), más $2.613 M de dos proyectos complementarios (`docs/11`). El reforzamiento de la sección 6 se reemplaza por la torre (proyectos P2 y P3) y por la adecuación del edificio actual para administración, archivo, almacén y central de distribución (P8, unos $1.963 M). La solar de 100 kWp y las baterías de 400 kWh van en la torre (P7, $1.734 M, entre marzo de 2029 y enero de 2030), no en el edificio actual en 2027. Los escenarios de la sección 5 siguen como referencia de gestión, pero **para la torre el escenario probable deja una brecha de unos $11.700 M** (ver el final de la sección 5).
 
 ## 1. La tesis
 
@@ -61,28 +63,32 @@ Desde 2012, solo 2 de unos 118 proyectos de regalías de Yondó fueron para el h
 | **Total** | | **3.000** | **13.100** | **34.550** |
 | Contrapartida municipal y de la E.S.E. | | 300 | 1.000 | 2.500 |
 
+**Para la torre** (`docs/11`): con los montos probables de esta tabla para MinSalud ($3.000 M) y Obras por Impuestos ($1.800 M), sin crédito ni aportes de Ecopetrol o cooperación, y con las demás fuentes como en el escenario base de la torre, se reúnen $25.437 M y faltan unos **$11.700 M** de los $37.137 M (cálculo propio, `data/proyectos/torre_hospital/financiacion.json`). La torre se cierra con el escenario base de `docs/11` (MinSalud $12.000 M y regalías $14.037 M, entre otras), con más regalías o partiendo la obra en etapas.
+
 Referencias de cada monto: la Gobernación cofinanció infraestructura en salud por $729 M promedio por proyecto en 2024 y $2.322 M en 2025; el CONPES 4169 asignó $13.500 M a Santa Bárbara para reforzamiento (Yondó no está en ese CONPES); los hospitales solares de FENOGE costaron entre $0,7 y $3,2 mil M; las asignaciones directas de regalías de Yondó para 2025–2026 fueron $34.178 M.
 
-## 6. El proyecto: hospital seguro, verde e inteligente (Res. 1633 de 2025)
+## 6. El proyecto anterior: hospital seguro, verde e inteligente (Res. 1633 de 2025), reemplazado por la torre
 
-| Componente | Valor (M COP) | Certeza |
-|---|---:|---|
-| Reforzamiento estructural y adecuaciones según el estudio de vulnerabilidad de 2024 | 3.000 | Supuesto: se ajusta con los resultados del estudio |
-| Red eléctrica interna, tableros y transferencias (reformular el BPIN de 2017 con alcance medido) | 1.800 | Supuesto |
-| Solar 100 kWp (cubierta + marquesina) y baterías de 400 kWh | 970 | Supuesto (precios del docs/05) |
-| Eficiencia: aires inverter, LED, refrigeración y BMS | 400 | Supuesto |
-| Telesalud, enlace dedicado e IoT de la cadena de frío | 450 | Supuesto |
-| Reposición de dotación biomédica | 1.000 | Verificado: proyectos devueltos de $965 M y $1.000 M |
-| Ambulancia medicalizada (TAM) | 650 | Supuesto |
-| Puesto de salud con solar aislada en San Miguel del Tigre | 1.200 | Supuesto |
-| **Total** | **9.470** | |
+Esta tabla es la propuesta de cuando se pensaba reforzar el edificio actual. **La decisión ahora es reponer** con una torre de primer nivel de $37.137 M (`docs/11`). La última columna dice a dónde pasa cada componente.
 
-La solar, las baterías y la eficiencia del hospital ($1.370 M) son parte también de la Red Energética Pública (`docs/05`); en el portafolio (`docs/07`) se cuentan una sola vez.
+| Componente | Valor (M COP) | Certeza | Con la torre (`docs/11`) |
+|---|---:|---|---|
+| Reforzamiento estructural y adecuaciones según el estudio de vulnerabilidad de 2024 | 3.000 | Supuesto: se ajusta con los resultados del estudio | Se reemplaza por la torre (P2 y P3) y por la adecuación del edificio actual para usos no asistenciales (P8, unos $1.963 M, de ellos $900 M de intervención estructural) |
+| Red eléctrica interna, tableros y transferencias (reformular el BPIN de 2017 con alcance medido) | 1.800 | Supuesto | En la obra de la torre: acometida en media tensión, subestación de 300 kVA, tableros, planta y UPS (P2 y P3) |
+| Solar 100 kWp (cubierta + marquesina) y baterías de 400 kWh | 970 | Supuesto (precios del docs/05) | En la torre (P7, $1.734 M con tablero, BMS, sensores y AIU; marzo de 2029 a enero de 2030), no en el edificio actual |
+| Eficiencia: aires inverter, LED, refrigeración y BMS | 400 | Supuesto | En la obra de la torre (aire acondicionado y LED en P2 y P3; BMS en P7) |
+| Telesalud, enlace dedicado e IoT de la cadena de frío | 450 | Supuesto | P6: sistemas de información, telemedicina y conectividad ($977 M); sensores IoT en P7 |
+| Reposición de dotación biomédica | 1.000 | Verificado: proyectos devueltos de $965 M y $1.000 M | P4: dotación biomédica, mobiliario y puesta en marcha ($3.676 M) |
+| Ambulancia medicalizada (TAM) | 650 | Supuesto | P9 ($650 M) |
+| Puesto de salud con solar aislada en San Miguel del Tigre | 1.200 | Supuesto | No está en los 9 proyectos de la torre: queda pendiente como proyecto aparte |
+| **Total** | **9.470** | | Torre $37.137 M + complementos (P8 y P9) $2.613 M |
+
+Con la torre, la solar, las baterías, el tablero de cargas críticas y el BMS del hospital se cuentan en la torre (P7). El portafolio (`docs/07`) los descuenta de la Red Energética Pública (`docs/05`) para no sumarlos dos veces.
 
 ## 7. Qué debe pasar antes de 2028 para que el dinero llegue
 
 1. **Antes de mayo de 2027**: decidir si la E.S.E. y el municipio usan el art. 156 de la Ley 2294 (condonación invertida en infraestructura) y gestionar con CISA la cartera de Savia Salud y Nueva EPS.
-2. **Primer semestre de 2027**: publicar el resultado del estudio de vulnerabilidad sísmica de 2024 y, con él, definir si se refuerza o se repone.
-3. **Junio de 2027**: radicar en el SUIFP-SGR el proyecto eléctrico + solar del hospital (núcleo de la Fase A) y registrarlo como iniciativa del PMIDS.
-4. **Segundo semestre de 2027**: presentar a MinSalud (Res. 485) el proyecto de infraestructura y dotación; inscribir en el banco de Obras por Impuestos la dotación biomédica y la ambulancia.
+2. **Noviembre de 2026 a marzo de 2027**: publicar el resultado del estudio de vulnerabilidad sísmica de 2024. La propuesta ya es reponer con la torre (`docs/11`); el estudio define cuánto hay que intervenir el edificio actual para su nuevo uso no asistencial (P8).
+3. **Noviembre de 2026 a febrero de 2027**: radicar el proyecto de estudios y diseños de la torre (P1, $1.832 M, con el saldo de regalías 2025–2026 o recursos propios) y registrar la torre como iniciativa del PMIDS (el plazo del primer ciclo venció hacia el 10-oct-2026: hace falta un ajuste que permita la Secretaría Seccional; si no, entra en la actualización del primer semestre de 2028 y la radicación ante MinSalud puede correrse; `docs/11`, sección 8.1). La parte eléctrica y solar del hospital ya no se radica sola en 2027: va dentro de la torre (obra eléctrica en P2 y P3; solar y baterías en P7, de marzo de 2029 a enero de 2030).
+4. **Noviembre de 2027 a abril de 2028**: radicar la torre ante MinSalud (Res. 485: concepto técnico de viabilidad y control especial de oferta) y cerrar la financiación; inscribir en el banco de Obras por Impuestos la dotación (P4) y la ambulancia (P9).
 5. **Enero–marzo de 2028**: el gerente que designe el nuevo alcalde firma un plan de gestión con estas metas y fechas.

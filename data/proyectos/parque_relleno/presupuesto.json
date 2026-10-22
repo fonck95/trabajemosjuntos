@@ -296,9 +296,9 @@
      "item": "Línea aérea nueva de 13,2 kV trifásica (postes de concreto de 12 m, conductor ACSR 2/0) hasta la subestación Yondó, con servidumbre, poda, replanteo e inspección RETIE",
      "cantidad": 2.6,
      "unidad": "km",
-     "precio_unitario": 175000000,
-     "valor": 455000000,
-     "fuente": "data/red/precios_unitarios.json (base de precios del proyecto, con unidades constructivas de la Res. CREG 015 de 2018): APU-06U, red aérea de 13,2 kV con ACSR 2/0 y postes de 12 m, 156,4 M/km (rango 125–203) + GES-SERV, GES-PODA, GES-TOPO y GES-RETIE-KM, 17,3 M/km; redondeado a 175 M/km. Ruta estimada",
+     "precio_unitario": 104047371,
+     "valor": 270523165,
+     "fuente": "data/red/precios_unitarios.json (base de precios de la red ya corregida, con unidades constructivas de la Res. CREG 015 de 2018): la línea va casi toda por zona rural, así que se toma APU-06R (86.747.371 $/km) más servidumbre (10 M/km), poda (3 M/km), topografía (1,8 M/km) e inspección RETIE (2,5 M/km) = 104.047.371 $/km (cálculo propio). Antes se usaba 175 M/km, el km urbano de una versión anterior de la base.",
      "certeza": "calculo_propio",
      "nota": "Si EPM confirma capacidad en la red que alimenta la PTAP, basta una derivación de 0,6–0,8 km (≈105–140 M)."
     },
@@ -330,7 +330,7 @@
      "certeza": "estimacion"
     }
    ],
-   "subtotal": 990000000
+   "subtotal": 805523165
   },
   {
    "capitulo": "5. Parque: edificaciones y servicios (fuera de las celdas)",
@@ -612,28 +612,28 @@
    "subtotal": 2703781825
   }
  ],
- "costo_directo": 13980226845,
+ "costo_directo": 13795750010,
  "interventoria": {
   "porcentaje": 0.07,
-  "valor": 978615879
+  "valor": 965702501
  },
  "gestion_social_y_ambiental": {
   "porcentaje": 0.02,
-  "valor": 279604537
+  "valor": 275915000
  },
  "imprevistos": {
   "porcentaje": 0.1,
-  "valor": 1398022684
+  "valor": 1379575001
  },
- "total": 16636469946,
- "total_millones": 16636.5,
+ "total": 16416942512,
+ "total_millones": 16416.9,
  "rango_millones": [
-  11645.5,
-  24954.7
+  11491.9,
+  24625.4
  ],
  "por_fase_millones": {
   "fase_0_1_estudios_y_clausura": 4194.2,
-  "fase_2_granja_solar_y_conexion": 5822.7,
+  "fase_2_granja_solar_y_conexion": 5603.2,
   "fase_3_parque": 6619.6
  },
  "costos_anuales_millones": {

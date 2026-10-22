@@ -14,7 +14,7 @@
 - **Esa energía alcanza para un bloque solar de 50 kWh al mes para 2.236 hogares de estratos 1 y 2** (el 27 % de los 8.193 hogares de esos estratos que atiende EPM): un ahorro de **$21.352 al mes en estrato 1 (31 % de la factura típica)** y de $26.690 en estrato 2 (22 %). Si reemplaza consumo subsidiado, la Nación deja de pagar unos **$721 millones al año** en subsidios y los hogares se ahorran unos **$608 millones** (cálculo propio).
 - **La figura legal:** una **comunidad energética** de hogares de estratos 1 y 2 (Decreto 2236 de 2023) que actúa como **autogenerador colectivo** (Resolución CREG 101 072 de 2025) y se postula a **Colombia Solar** (Decreto 0972 de 2025 y Resolución 40159 de 2026), que cambia subsidios por paneles.
 - **El parque** pone todo lo que tiene gente **fuera de las celdas y a 30 m o más de las celdas y lagunas que se ven** (la zona de servicios hay que revisarla con apiques antes de diseñar, ver la sección 1.2): coworking de 312 m² con 40 puestos, cafetería y duchas, taller de bicicletas, granja con invernadero, huerta, compostaje y apiario, módulo recreodeportivo, mirador y un circuito de 0,9 km conectado con el pueblo por una ruta ciclista de 3,9 km.
-- **Cuánto cuesta:** unos **$16.636 millones** (rango de prefactibilidad $11.645–24.955 M): $4.194 M para estudios y clausura, $5.823 M para la granja solar y la conexión a EPM, y $6.620 M para el parque.
+- **Cuánto cuesta:** unos **$16.417 millones** (rango de prefactibilidad $11.492–24.625 M): $4.194 M para estudios y clausura, $5.603 M para la granja solar y la conexión a EPM, y $6.620 M para el parque. La línea a EPM va con el precio rural de la base de la red ya corregida (sección 7).
 
 ## 1. Dónde está el relleno y cómo está hoy
 
@@ -148,7 +148,7 @@ No se encontró una prórroga, una licencia nueva ni sanciones publicadas.
 ### 3.3 Conexión a la red de EPM
 
 - **Subestación Yondó de EPM** (10 MVA, 34,5/13,2 kV, en operación desde 2021), en 7,0032 N, 73,9226 O (lugar de Google "Subestación yondo epm", con un patio pequeño de equipos y un edificio en el satélite; hay que confirmarla con EPM): **1,75 km en línea recta** y 4,6 km por vías públicas (cálculo propio).
-- **Línea nueva de 13,2 kV de unos 2,6 km** (estimación, 2,3–2,9 km) o, si EPM confirma capacidad, una derivación de 0,6–0,8 km desde la red que alimenta la PTAP y el tanque elevado (a 350–590 m). OpenStreetMap no tiene las líneas eléctricas: el trazado lo define EPM.
+- **Línea nueva de 13,2 kV de unos 2,6 km** (estimación, 2,3–2,9 km; unos $271 M con el precio rural de la base de la red, sección 7) o, si EPM confirma capacidad, una derivación de 0,6–0,8 km desde la red que alimenta la PTAP y el tanque elevado (a 350–590 m). OpenStreetMap no tiene las líneas eléctricas: el trazado lo define EPM.
 - 1 MW es el 10 % de la capacidad de la subestación; la CREG 174 de 2021 limita la generación distribuida al 50 % del circuito o transformador. De 100 kW a 1 MW aplica el **estudio de conexión simplificado**.
 
 ## 4. El subsidio a los estratos 1 y 2
@@ -270,21 +270,33 @@ Prefactibilidad (clase 4: −30 % / +50 %). Precios unitarios con AIU, de refere
 | 1. Estudios, diseños, plan de clausura y posclausura y trámites | 975,0 |
 | 2. Clausura técnica de las celdas (reconformación, cobertura, canales, lixiviados, gases, monitoreo, humedal) | 2.549,5 |
 | 3. Granja solar de 996,6 kWp (sistema a $2,7 M/kWp, lastres, transformador, caseta, malla, cámaras, batería) | 3.903,0 |
-| 4. Conexión a EPM (línea de 2,6 km a $175 M/km según la base de precios de red del proyecto, reconectador, medición, salida en la subestación si se exige) | 990,0 |
+| 4. Conexión a EPM (línea de 2,6 km, reconectador, medición, salida en la subestación si se exige). La línea va a $104 M/km, el precio rural de la base de la red: ver la nota | 805,5 |
 | 5. Parque: coworking, dotación, conectividad, solar propia, cargadores, agua lluvia, cafetería, taller, portería, mirador, kioscos | 2.589,6 |
 | 6. Granja autosostenible | 269,4 |
 | 7. Circuito, senderos, parqueadero, módulo recreodeportivo, señalización, alumbrado solar, cerramiento y ciclo-infraestructura al pueblo (3,8 km) | 2.703,8 |
-| **Costo directo** | **13.980,2** |
-| Interventoría (7 %) | 978,6 |
-| Gestión social y ambiental (2 %) | 279,6 |
-| Imprevistos (10 %) | 1.398,0 |
-| **Total** | **16.636,5** (rango 11.645–24.955) |
+| **Costo directo** | **13.795,8** |
+| Interventoría (7 %) | 965,7 |
+| Gestión social y ambiental (2 %) | 275,9 |
+| Imprevistos (10 %) | 1.379,6 |
+| **Total** | **16.416,9** (rango 11.492–24.625) |
 
 | Fase | Millones de 2026 |
 |---|---:|
 | 0–1. Estudios y clausura | 4.194,2 |
-| 2. Granja solar y conexión | 5.822,7 |
+| 2. Granja solar y conexión | 5.603,2 |
 | 3. Parque | 6.619,6 |
+
+**Precio de la línea a EPM, corregido.** `presupuesto.json` costeaba la línea de 2,6 km a $175 M/km: el km urbano de una versión anterior de la base de precios de la red (156,4 M/km) más gestión por km, redondeado. La base ya corregida (`data/red/precios_unitarios.json`) da **$152,9 M/km en zona urbana (APU-06U) y $86,7 M/km en zona rural (APU-06R)**. La línea va casi toda por zona rural: la subestación queda a unos 1,3 km del centro y la red cuenta como urbanos solo los km a menos de 1,1 km. Por eso le corresponde el precio rural más servidumbre ($10 M/km), poda ($3 M/km), topografía ($1,8 M/km) y RETIE ($2,5 M/km): **unos $104 M/km** (cálculo propio). La APU rural usa conductor ACSR 1/0 y no 2/0; para los 800 kW de la granja basta, porque son unos 35 A a 13,2 kV. Como control, la red de `docs/13` cobra su tramo rural al parque a unos $115 M/km, con fibra.
+
+| Millones de 2026 | Antes ($175 M/km) | Ahora, con el precio rural ($104 M/km) |
+|---|---:|---:|
+| Línea de 2,6 km | 455,0 | 270,5 (239,3–301,7 para 2,3–2,9 km) |
+| Capítulo 4 | 990,0 | 805,5 |
+| Costo directo | 13.980,2 | 13.795,8 |
+| Total con interventoría, gestión e imprevistos (19 %) | 16.636,5 | 16.416,9 |
+| Fase 2: granja solar y conexión | 5.822,7 | 5.603,2 |
+
+La diferencia es de $219,5 M (1,3 % del total). `presupuesto.json`, `financiacion.json`, este documento, `docs/00` y `docs/07` ya usan el precio rural. Si EPM confirma capacidad en la red que alimenta la PTAP, o si se construye la red de distribución de `docs/13` (que ya incluye el tramo tanque elevado → parque, 0,614 km y $81 M), la línea de 2,6 km no hace falta. No se deben pagar las dos.
 
 **Ojo con la huella de los residuos.** La cobertura del capítulo 2 está calculada para unos 10.000–12.000 m². Si los apiques confirman la huella del Manual de Operaciones (1,85 ha), la clausura técnica pasa de $2.550 M a unos $3.860 M; si llega a unas 4 ha, a unos $7.180 M (cálculo propio). Eso supera el margen de prefactibilidad, por eso la delimitación de residuos va primero.
 
@@ -295,7 +307,7 @@ Prefactibilidad (clase 4: −30 % / +50 %). Precios unitarios con AIU, de refere
 | Fase | Fuentes | Mezcla sugerida (millones) |
 |---|---|---|
 | 0–1. Clausura ($4.194 M) | Provisión de clausura y tarifa de aseo (Decreto 1784, art. 2.3.2.3.17); SGP de agua potable y saneamiento y Plan Departamental de Agua; regalías (reformular el BPIN de la ampliación como clausura con uso futuro) | tarifa 600; SGP y PDA 1.200; SGR 2.394 |
-| 2. Granja solar ($5.823 M) | Colombia Solar o FENOGE (ConEnergía para municipios PDET); SGR, Incentivo a la Producción (hasta $8.000 M y dos proyectos por municipio; en 2025 el único proyecto de Yondó no cumplió); Findeter "Municipios Territorios Energéticos" (IBR + 0,7 %, granjas de 1 MW); obras por impuestos (Yondó es ZOMAC y PDET); o un privado con contrato de compra de energía | Colombia Solar o FENOGE 2.911; SGR 1.747; Findeter o privado 1.165 |
+| 2. Granja solar ($5.603 M) | Colombia Solar o FENOGE (ConEnergía para municipios PDET); SGR, Incentivo a la Producción (hasta $8.000 M y dos proyectos por municipio; en 2025 el único proyecto de Yondó no cumplió); Findeter "Municipios Territorios Energéticos" (IBR + 0,7 %, granjas de 1 MW); obras por impuestos (Yondó es ZOMAC y PDET); o un privado con contrato de compra de energía | Colombia Solar o FENOGE 2.911; SGR 1.747; Findeter o privado 945 |
 | 3. Parque ($6.620 M) | Regalías (y el BPIN 2025058930008 de la vía de acceso como ruta ciclista); MinTIC (Zonas Digitales); Ministerio del Deporte e INDER (proyectos tipo de parque y ciclo-infraestructura); Ecopetrol (inversión social, comunidades energéticas); cooperación internacional; recursos propios | SGR 3.310; deporte, TIC y cultura 1.324; Ecopetrol y cooperación 993; propios 993 |
 
 **Compuertas:** no se licita la granja solar sin delimitar los residuos y sin el concepto de Corantioquia sobre el uso futuro; no se construye nada con gente sin la línea base de biogás; no se cierra el relleno sin el contrato de disposición regional y un plan de contingencia por el puente; cada fuente se radica con su MGA.
@@ -347,7 +359,7 @@ Prefactibilidad (clase 4: −30 % / +50 %). Precios unitarios con AIU, de refere
 **Energía**
 - SUI, reporte "Consolidado Energía por Empresa, Departamento y Municipio" (ele_com_096), Yondó, 2024–2026: http://reportes.sui.gov.co/fabricaReportes/frameSet.jsp?idreporte=ele_com_096
 - EPM, tarifas de octubre de 2026 (Antioquia): https://www.epm.com.co/content/dam/epm/clientes-y-usuarios/energia/tarifas-energia/Tarifas%202026/10.PublicacionTarifasOctubre162026_ANT_OM.pdf
-- Base de precios de red del proyecto (unidades constructivas de la Res. CREG 015 de 2018 y APU propios): `data/red/precios_unitarios.json`, ítems APU-06U, GES-SERV, GES-PODA, GES-TOPO, GES-RETIE-KM y CREG-N2EQ35
+- Base de precios de red del proyecto (unidades constructivas de la Res. CREG 015 de 2018 y APU propios): `data/red/precios_unitarios.json`, ítems APU-06U, APU-06R, GES-SERV, GES-PODA, GES-TOPO, GES-RETIE-KM y CREG-N2EQ35; presupuesto de la red propuesta en `data/red/presupuesto_red.json`
 - Google Maps, lugar "Subestación yondo epm" (7,0031989, −73,9226337), consulta del 22-oct-2026
 - NASA POWER, climatología en el sitio: https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=ALLSKY_SFC_SW_DWN&community=RE&longitude=-73.934&latitude=7.014&format=JSON
 - EPA y NREL, Best Practices for Siting Solar Photovoltaics on MSW Landfills (mayo de 2022), secciones 4.2.2 y 5: https://www.epa.gov/system/files/documents/2022-05/best-practices-siting-solar-photovoltaics-municipal-solid-waste-landfills_051722-pub.pdf

@@ -8,7 +8,7 @@
   "calculo_propio": "operación aritmética sobre datos oficiales, con el método a la vista",
   "estimacion": "supuesto razonado con rango; hay que confirmarlo en campo o con el dueño del dato"
  },
- "total_a_financiar_millones": 16636.5,
+ "total_a_financiar_millones": 16416.9,
  "principio": "Cada fase tiene su fuente: la clausura es obligación del servicio de aseo (tarifa, SGP de agua y saneamiento, Plan Departamental, regalías); la granja solar se paga con recursos energéticos (Colombia Solar, FENOGE, regalías del Incentivo a la Producción, Findeter, obras por impuestos o un privado); el parque, con regalías, cultura, deporte, TIC y cooperación. Ninguna fase depende de contratar una consultoría sin fuente para la obra.",
  "fuentes": [
   {
@@ -171,10 +171,10 @@
    "sgr": 2394
   },
   "fase_2_granja_solar": {
-   "total": 5822.7,
+   "total": 5603.2,
    "colombia_solar_o_fenoge": 2911,
    "sgr_incentivo_produccion": 1747,
-   "findeter_o_privado": 1165
+   "findeter_o_privado": 945.2
   },
   "fase_3_parque": {
    "total": 6619.6,

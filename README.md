@@ -4,7 +4,7 @@ Investigación abierta sobre **cómo se ha gastado el dinero público en Yondó 
 
 El repositorio incluye un **atlas 3D interactivo** (Three.js + GSAP) que muestra los hallazgos y los proyectos propuestos:
 - **La plata que no se volvió obra, gobierno por gobierno** (pesos constantes de 2026): pilas de billetes con lo que entró, lo que no se convirtió en obra según registros, lo estimado y lo que pudo gestionarse o ahorrarse, con equivalencias en aulas, viviendas, km de placa huella o plantas de tratamiento, y un **panel anual 2004–2026 de 132 indicadores** (`docs/10`).
-- **Las sedes reales**: réplicas 3D de cada dependencia pública levantadas con satélite, Google Street View y fotos, en su posición real sobre el casco urbano, con el conmutador **Hoy / Con el proyecto** que muestra cuántos paneles caben de verdad en cada cubierta, dónde van las baterías y qué obras hay que hacer antes. Son 21 sedes, incluido el acueducto rural; se recorren una por una y cada una muestra de cerca cómo se conecta: tablero con medidor bidireccional, gateway IoT, acometida de EPM y enlace de datos al centro de control (`docs/09`).
+- **Las sedes reales**: réplicas 3D de cada dependencia pública levantadas con satélite, Google Street View y fotos, en su posición real sobre el casco urbano, con el conmutador **Hoy / Con el proyecto** que muestra cuántos paneles caben de verdad en cada cubierta, dónde van las baterías y qué obras hay que hacer antes. Son 22 puntos: las sedes públicas, incluido el acueducto rural, más la torre del hospital y el parque del relleno que se proponen; se recorren uno por uno y cada uno muestra de cerca cómo se conecta: tablero con medidor bidireccional, gateway IoT, acometida de EPM y enlace de datos al centro de control (`docs/09`).
 - Flujos de contratación, el embudo estudio → obra, la microrred simulada hora a hora, el hospital como nodo financiero de 2028, la hoja de ruta con compuertas y un **visor de modelos 3D profesionales** (glTF/GLB con Draco, Meshopt y KTX2). El motor dibuja bajo demanda, ajusta la resolución según el rendimiento y comparte un solo contexto WebGL entre vistas.
 
 ## Hallazgos en cinco líneas
@@ -13,7 +13,7 @@ El repositorio incluye un **atlas 3D interactivo** (Three.js + GSAP) que muestra
 - Desde 2020, el **83 %** del valor contratado por la alcaldía se adjudicó **sin competencia** (31 % en 2016–2019).
 - **124 estudios y consultorías** ($24.409 M) desde 2008: solo el **22 %** tiene una obra posterior identificable en SECOP.
 - **$84.016 M** pasaron por la EDU de Medellín (2021–2023); seis proyectos de regalías por $77.704 M tienen brecha entre obra y pagos.
-- En 2028 el hospital puede canalizar entre **$13.100 M y $34.550 M** si llega con proyectos radicados; la Red Energética Pública ($7.204 M) reduce un 57 % la compra de energía de las sedes oficiales.
+- En 2028 el hospital puede canalizar entre **$13.100 M y $34.550 M** si llega con proyectos radicados. La propuesta es una **torre de primer nivel de $37.137 M** (`docs/11`), que supera el escenario ambicioso: con los montos probables le faltan unos $11.700 M. La Red Energética Pública ($5.829 M sin el nodo del hospital, que ahora va en la torre; $7.204 M en docs/05 con él) reduce un 57 % la compra de energía de las sedes oficiales.
 
 ## Qué hay aquí
 
@@ -25,11 +25,14 @@ El repositorio incluye un **atlas 3D interactivo** (Three.js + GSAP) que muestra
 | `docs/03-ciclo-consultorias-ops-secop.md` | Análisis de 10.279 contratos de SECOP: OPS, estudios sin obra, contratación directa, administración delegada |
 | `docs/04-hoja-de-ruta-2026-2031.md` | Fases, compuertas, reglas de oro y metas para romper el ciclo |
 | `docs/05-microrred-domotica-mintic.md` | Proyecto 1: Red Energética Pública de Yondó (diseño, simulación, presupuesto) |
-| `docs/06-hospital-2028-financiacion.md` | Proyecto 2: el hospital como puerta de entrada de los recursos en 2028 |
+| `docs/06-hospital-2028-financiacion.md` | Proyecto 2: el hospital como puerta de entrada de los recursos en 2028 (el proyecto del hospital pasó a la torre de `docs/11`) |
 | `docs/07-portafolio-presupuesto.md` | Portafolio priorizado con presupuesto y fuentes |
 | `docs/08-metodologia-fuentes.md` | Método, fuentes, limitaciones y cómo verificar |
 | `docs/09-motor-3d-y-modelos.md` | Motor 3D optimizado, modelos GLB, réplicas de las sedes reales (levantamiento con satélite y Street View) y diseño |
 | `docs/10-dinero-no-hecho-por-gobierno.md` | La plata que no se convirtió en obra en cada gobierno, lo que pudo gestionarse y sus equivalencias en obras |
+| `docs/11-torre-hospital-nivel-1.md` | Torre de servicios de primer nivel del hospital: norma, programa, dotación, presupuesto de $37.137 M, APU, financiación y 9 proyectos a articular |
+| `docs/12-parque-ecotecnologico-relleno.md` | Clausura del relleno Las Américas y parque ecotecnológico con granja solar de 997 kWp: $16.417 M |
+| `docs/13-red-de-distribucion.md` | Red de distribución de 13,2 kV y fibra entre las sedes: precios, APU, 10,066 km de red nueva y presupuesto de $2.965 M |
 | `docs/anexos/` | Cinco informes de investigación con cada dato y su URL: gobiernos, finanzas y regalías, hospital, energía y MinTIC, indicadores sociales |
 | `data/` | Datos estructurados (JSON) que alimentan el atlas y los documentos |
 | `data/comparativa/` | Panel anual 2004–2026, fugas en la contratación (SECOP), regalías y fondos no gestionados, costo de no hacer y la síntesis por gobierno |

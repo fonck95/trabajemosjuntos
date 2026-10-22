@@ -115,6 +115,8 @@ En un día normal, las cuentas oficiales compran un **57 % menos** de energía q
 | **Costo directo** | **$6.054 M** |
 | Indirectos: ingeniería de detalle 3 %, interventoría 7 %, O&M 3 años 4 %, imprevistos 5 % | $1.150 M |
 | **Inversión total** | **≈ $7.204 M (≈ USD 2,3 M)** |
+
+> **Cambio del 22-oct-2026.** El nodo del hospital (100 kWp, 400 kWh, tablero y BMS; $1.155 M de costo directo) pasa a la torre de servicios de primer nivel (proyecto P7 de `docs/11`), porque el edificio actual deja de ser asistencial. Sin él, este proyecto queda en $5.829 M (`docs/07`, nota 1). Las cifras de energía de la microrred no cambian: el nodo sigue siendo el mismo, solo cambia el edificio donde se instala.
 | Ahorro anual en facturas (simulación × 365) | ≈ $771 M |
 | Retorno simple del proyecto completo | ≈ 9,3 años |
 | Retorno simple del núcleo solar + baterías ($2.735 M) | ≈ 3,5 años |

@@ -15,10 +15,14 @@
 
 | Proyecto | Inversión | Fuente principal |
 |---|---:|---|
-| **Red Energética Pública de Yondó**: solar en 13 sedes, baterías en 7 sedes críticas, domótica y Centro de Control Energético y Digital con MinTIC. Reduce un 57 % la compra de energía y mantiene hospital, acueducto y fuerza pública operando en una falla de 24 horas | $7.204 M | SGR "Territorios energéticos", OxI, FENOGE, MinTIC |
-| **Hospital seguro, verde e inteligente**: puerta de entrada de entre $13.100 M (probable) y $34.550 M (ambicioso) en 2027–2029 | $8.100 M (más lo energético del proyecto anterior) | PMIDS, MinSalud, SGR, OxI |
+| **Red Energética Pública de Yondó**: solar en las sedes públicas, baterías en las sedes críticas, domótica y Centro de Control Energético y Digital con MinTIC. Junto con la solar y las baterías del hospital, que ahora van en la torre, reduce un 57 % la compra de energía y mantiene hospital, acueducto y fuerza pública operando en una falla de 24 horas | $5.829 M (sin el nodo del hospital) | SGR "Territorios energéticos", OxI, FENOGE, MinTIC |
+| **Torre de servicios de primer nivel del hospital**: 4 pisos sobre el antiguo Centro Vida, con urgencias, partos, hospitalización, consulta, rayos X y laboratorio de 24 horas. El edificio actual pasa a administración, archivo, almacén y central de distribución. Son 9 proyectos (7 forman la torre) en 7 fichas MGA; apertura hacia abril de 2030 (`docs/11`). Reemplaza el "hospital seguro, verde e inteligente" de $8.100 M | $37.137 M (rango $27.363–50.600 M), más $2.613 M de dos complementos: adecuar el edificio actual y una ambulancia | MinSalud, regalías, Gobernación, Obras por Impuestos |
+| **Parque ecotecnológico sobre el relleno Las Américas**: clausura del relleno, que opera con la licencia vencida; granja solar de 997 kWp que alcanza para un bloque de 50 kWh al mes en 2.236 hogares de estratos 1 y 2; coworking rural, granja y circuito (`docs/12`) | $16.417 M (rango $11.492–24.625 M) | Tarifa de aseo y SGP, Colombia Solar o FENOGE, SGR, Findeter |
+| **Red de distribución de 13,2 kV y fibra**: 10,066 km de red nueva que unen 22 puntos, incluidos la torre y el parque; fase posterior, con acuerdo de EPM (`docs/13`) | $2.965 M (rango $2.075–4.447 M) | Por definir |
 | Rescate de obras con brecha, banco de proyectos abierto, agua (Plan Maestro y PTAR), conectividad y alumbrado | $6.450 M | SGR, MinTIC, Findeter, recursos propios |
-| **Portafolio total** | **$21.754 M** | 5,5 % del plan plurianual 2024–2027 |
+| **Portafolio total** | **$71.411 M** | 18 % del plan plurianual 2024–2027 |
+
+Las filas están redondeadas; el total sale de las cifras exactas (`docs/07`). Antes el portafolio sumaba $21.754 M. El hospital puede mover entre $13.100 M (probable) y $34.550 M (ambicioso) en 2027–2029 (`docs/06`), pero la torre necesita más: con los montos probables le faltan unos $11.700 M. Esa brecha se cubre con más regalías, con una asignación de MinSalud o partiendo la obra en etapas (`docs/11`).
 
 ## Por qué 2028
 
@@ -35,7 +39,7 @@ Quien llegue con proyectos radicados capta los recursos; quien llegue con ideas 
 
 ## Cómo no repetir el ciclo
 
-Siete reglas y doce compuertas (`docs/04`). Las tres principales:
+Siete reglas, doce hitos de gestión con compuerta y las compuertas propias de la torre, el parque y la red (`docs/04`). Las tres principales:
 
 1. **Ningún estudio sin fuente identificada para la obra.**
 2. **La formulación se paga por producto**: radicado, viabilizado, financiado.

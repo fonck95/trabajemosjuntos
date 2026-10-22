@@ -2,7 +2,7 @@
 
 **Cuánto cuesta cada kilómetro de red para unir las sedes públicas de Yondó: media tensión de 13,2 kV, baja tensión, fibra óptica y canalización subterránea, con sus capítulos (por mayores), sus ítems (por menores) y el análisis de precio de cada ítem principal. Las distancias por las calles se calculan aparte y se cruzan con estos precios en la sección 9.**
 
-> Estado: **prefactibilidad (clase 4: −30 % / +50 %)**, con fecha de corte del 22 de octubre de 2026. Cada cifra dice si es un **dato oficial** (copiado de la fuente), un **dato de mercado** (precio publicado por un comercio, con fecha de consulta), un **cálculo propio** (operación sobre datos oficiales, con el método a la vista) o una **estimación** (supuesto con rango, por confirmar con tres cotizaciones). Todo está en pesos constantes de 2026. Los datos completos están en `data/red/precios_unitarios.json` (214 ítems), `data/red/parametros.json` (cantidades por km), `data/red/apu_red.json` (19 APU) y `data/red/subestacion.json`.
+> Estado: **prefactibilidad (clase 4: −30 % / +50 %)**, con fecha de corte del 22 de octubre de 2026. Cada cifra dice si es un **dato oficial** (copiado de la fuente), un **dato de mercado** (precio publicado por un comercio, con fecha de consulta), un **cálculo propio** (operación sobre datos oficiales, con el método a la vista) o una **estimación** (supuesto con rango, por confirmar con tres cotizaciones). Todo está en pesos constantes de 2026. Los datos completos están en `data/red/precios_unitarios.json` (214 ítems), `data/red/parametros.json` (cantidades por km), `data/red/apu_red.json` (19 APU), `data/red/subestacion.json`, `data/red/distancias.json` (distancias por las calles) y `data/red/presupuesto_red.json` (presupuesto de la red propuesta, sección 9).
 >
 > **Inspirado en los proyectos tipo del DNP.** El DNP no tiene un proyecto tipo de redes de distribución eléctrica ni de fibra óptica (en Minas y Energía solo publica "Celdas solares uso residencial" y "Beneficio de oro"; en TIC, "Zonas digitales", "Implementación de TIC" y "Centro TIC municipal"). Por eso este capítulo toma del proyecto tipo su **forma**: presupuesto por capítulos, análisis de precios unitarios (APU) por ítem, cantidades por unidad de obra y especificaciones de referencia. Y toma las **piezas tipo** de las dos fuentes que en Colombia hacen de "proyecto tipo" para redes: las **unidades constructivas de la CREG** (Resolución 015 de 2018), que son los precios con los que se remunera cada poste, km de cable o transformador en todo el país, y las **estructuras normalizadas de EPM** (normas RA), que dicen exactamente qué lleva cada poste en Antioquia.
 
@@ -14,7 +14,8 @@
 - **Enterrar la red multiplica el costo por siete:** un km de media tensión subterránea con canalización de 4 ductos, cámaras cada 50 m y cable XLPE cuesta **1.124 M** (CREG: 1.183 M). Solo se justifica en cruces, plazas o frente al hospital.
 - **Un transformador trifásico de 75 kVA instalado en poste cuesta unos 46,8 M** y uno monofásico de 25 kVA, 25,3 M. La acometida trifásica de una sede con medidor bidireccional y comunicación, **13,7 M**.
 - **Indirectos:** AIU de 27 % (estimación, rango 24–32 %), interventoría de 8 % (la mediana de 9 contratos de redes en SECOP, 6 de ellos de Yondó, es 7,7 %), ingeniería de detalle de 4 % y trámites con EPM.
-- **La subestación de EPM en Yondó no se pudo ubicar** con evidencia verificable. Se descartaron tres patios eléctricos de Ecopetrol (el más grande, el de la planta de inyección de agua de Casabe, 4 km al norte). Para la red de la microrred no hace falta llegar hasta ella: la red de 13,2 kV de EPM ya pasa por todas las calles. Queda un derecho de petición a EPM (sección 8).
+- **La red propuesta** une 22 puntos (las sedes públicas, la torre del hospital y el parque del relleno) con 21 tramos y **10,066 km de red nueva**: 4,596 km urbanos y 5,47 km rurales. Cuesta **unos $2.965 millones** (cálculo propio, rango $2.075–4.447 M), unos $295 M por km de red con transformadores, acometidas, protecciones, fibra e indirectos; solo la media tensión sale a unos $117 M por km (sección 9).
+- **La subestación de EPM en Yondó no se pudo ubicar** con evidencia verificable. Se descartaron tres patios eléctricos de Ecopetrol (el más grande, el de la planta de inyección de agua de Casabe, 4 km al norte). Para la red de la microrred no hace falta llegar hasta ella: la red de 13,2 kV de EPM ya pasa por todas las calles. Queda un derecho de petición a EPM (sección 8). Ojo: `docs/12` sí usa una ubicación probable, el lugar de Google "Subestación yondo epm" (7,0032 N, −73,9226 O); de ese punto dependen los 2,6 km de línea y los $990 M de conexión del parque. Hay que confirmarlo con EPM.
 
 ### Palabras que se usan
 
@@ -885,6 +886,8 @@ Una verificación independiente (22-oct-2026) repitió la consulta a OpenStreetM
 
 **Confianza: ninguna ubicación confirmada.** Las imágenes del barrido quedaron en `data/geo/img/red_se_*.png` (fuera del repositorio, como todas las imágenes de Google y Esri).
 
+**La ubicación que usa `docs/12`.** El documento del parque del relleno toma como ubicación probable el lugar de Google "Subestación yondo epm", en **7,0032 N, −73,9226 O**, donde el satélite muestra un patio pequeño de equipos y un edificio (`data/proyectos/parque_relleno/energia.json`, consulta del 22-oct-2026). Queda a unos 1,3 km al occidente de la alcaldía, en línea recta (cálculo propio). Ese punto no figura entre los candidatos revisados en esta sección (la búsqueda de etiquetas de Google Maps descrita arriba no lo encontró; se halló después, al preparar `docs/12`) y EPM no lo ha confirmado. De él dependen la línea de unos 2,6 km y los $805,5 M del capítulo de conexión del parque. Las dos lecturas coinciden en lo que hay que hacer: confirmar la ubicación con EPM antes de diseñar cualquier línea.
+
 ### 8.3 Los circuitos de 13,2 kV
 
 - **Casco urbano:** No publicado. EPM no divulga el GIS de sus redes. Los avisos de cortes de 2022, 2025 y 2026 hablan de la "zona urbana y rural" o listan veredas (Rocas de San Francisco, Jabonal, Vietnam, La Rompida 1 y 2, El Totumo, Puerto Nuevo, La Felicidad, El Campo Cimitarra, El Bagre, Cuatro Bocas, Bellavista, El Cedro, El Descanso, Las Lomas, Bocas de San Juan): eso solo confirma que de la subestación salen circuitos que alimentan tanto el casco como las veredas, no su recorrido.
@@ -893,17 +896,87 @@ Una verificación independiente (22-oct-2026) repitió la consulta a OpenStreetM
 
 ### 8.4 Qué cambia para el presupuesto
 
-El nodo "conexion" de data/microrred.json (pos [-30, -20] en la escena) es esquemático y no es la ubicación real. Para la red de la microrred no hace falta llegar a la subestación: la red de 13,2 kV de EPM pasa por todas las calles del casco y cada sede ya tiene acometida. El tramo subestación → troncal solo se costea en la fase de microrred física (un alimentador propio), cuando EPM entregue la ubicación y el punto de conexión aprobado.
+El nodo "conexion" de data/microrred.json (pos [-30, -20] en la escena) es esquemático y no es la ubicación real. Para la red de la microrred no hace falta llegar a la subestación: la red de 13,2 kV de EPM pasa por todas las calles del casco y cada sede ya tiene acometida. El tramo subestación → troncal solo se costea en la fase de microrred física (un alimentador propio), cuando EPM entregue la ubicación y el punto de conexión aprobado. Si EPM confirma el punto que usa `docs/12`, ese tramo arrancaría a unos 1,3 km en línea recta de la alcaldía y se costearía con los precios de la sección 7.
 
 Pendiente: Derecho de petición a EPM (Ley 1755 de 2015): ubicación de la S/E Yondó, diagrama unifilar, número y recorrido de los circuitos 165-1x, capacidad disponible por circuito y transformador para AGPE (CREG 174 de 2021) y planos de las redes de 13,2 kV del casco y hacia la PTAP. Consulta de capacidad disponible en el aplicativo de EPM para generación distribuida (por circuito). Visita de campo con GPS a las salidas de la vía a Barrancabermeja y a la Calle 15.
 
 ## 9. Distancias y presupuesto por tramo
 
-*Este apartado se completará con las distancias medidas por las calles entre las sedes (`data/red/distancias.json`, árbol de red de mínima longitud) y los precios de las secciones 4 a 7.*
+**La red propuesta une 22 puntos con 21 tramos: 10,066 km de red nueva (4,596 km urbanos y 5,47 km rurales) que cuestan unos $2.965 millones** (cálculo propio; $2.964.911.962, rango $2.075.438.373–$4.447.367.943; clase 4). Solo la red de media tensión (capítulos urbano y rural, $1.177.429.869) sale a unos **$117 M por km** ($116.970.978). Con transformadores, acometidas, protecciones, fibra, preliminares e indirectos, la red completa equivale a unos **$295 M por km** ($2.964.911.962 ÷ 10,066 km, cálculo propio). Los datos están en `data/red/distancias.json` y `data/red/presupuesto_red.json`.
 
-| Tramo | Desde | Hasta | Tipo (urbano/rural) | km por calles | Red de MT | BT | Fibra | Canalización | Postes nuevos | Valor por mayores | Detalle por menores |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| … | | | | | | | | | | | |
+**Cómo se midió.** Cada distancia es el camino más corto por las calles de OpenStreetMap más la acometida en línea recta de cada sede a la calle. La red es el árbol de mínima longitud que sale de la alcaldía (CCED). Si se suman los 21 tramos por la vía dan 11,442 km; la red nueva mide menos (10,066 km) porque varios tramos comparten calle y esa calle se cuenta una sola vez. Son urbanos los km a menos de 1,1 km del centro (`scripts/geo/red_distancias.py`).
+
+**Qué no lleva.** No hay red de baja tensión nueva ni canalización: cada sede se conecta con su acometida (APU-11) y la red va aérea. La red subterránea, unas 7 veces más cara por km, solo se justifica en cruces, plazas o frente al hospital. Tampoco lleva la solar ni las baterías, que van en cada sede, ni el enlace hasta la subestación de EPM, que se suma cuando EPM confirme la ubicación (sección 8).
+
+### 9.1 Por mayores
+
+| Capítulo | Cantidad | Valor (pesos de 2026) |
+|---|---|---:|
+| Preliminares, permisos y trámites (topografía, RETIE, servidumbre y poda rural, trámites con EPM) | 10,066 km; 5,47 km rurales | $150.793.800 |
+| Red de media tensión aérea 13,2 kV, zona urbana | 4,596 km × APU-06U | $702.921.748 |
+| Red de media tensión aérea 13,2 kV, zona rural | 5,47 km × APU-06R | $474.508.121 |
+| Transformadores de distribución | 19, uno por sede | $566.048.392 |
+| Acometidas y medición bidireccional | 19 | $259.672.354 |
+| Protección y maniobra | 1 reconectador y 6 seccionalizadores | $275.606.077 |
+| Fibra óptica sobre los mismos postes | 10,67 km, 21 conexiones de sede y el nodo central del CCED | $207.821.157 |
+| **Obra (sin preliminares)** | | **$2.486.577.849** |
+| Ingeniería de detalle (4 % de la obra) | | $99.463.114 |
+| Plan de manejo ambiental, de tráfico y SST (1,5 % del costo directo) | | $29.150.971 |
+| Interventoría (8 % de la obra) | | $198.926.228 |
+| **Indirectos** | | **$327.540.313** |
+| **Total** | | **$2.964.911.962** |
+
+La torre del hospital, el tanque elevado y el parque del relleno no llevan transformador ni acometida en esta red: por eso hay 19 y no 22.
+
+### 9.2 Por tramo (millones de pesos de 2026)
+
+"Red y fibra" es la red de media tensión, la fibra y lo que se paga por km (topografía y RETIE; en zona rural, también servidumbre y poda). "Sede" es el transformador, la acometida con medidor bidireccional y la conexión de fibra. "Total del tramo" suma las dos y el 12 % de ingeniería e interventoría.
+
+| # | Desde | Hasta | km por la vía | km de red nueva | Urbanos | Rurales | Red y fibra | Sede | Total del tramo |
+|---:|---|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | Alcaldía (CCED) | Policía | 0,132 | 0,113 | 0,113 | 0,000 | 19,3 | 41,1 | 67,7 |
+| 2 | Policía | Registraduría | 0,192 | 0,135 | 0,135 | 0,000 | 23,1 | 41,1 | 71,9 |
+| 3 | Policía | Parque Educativo | 0,276 | 0,263 | 0,263 | 0,000 | 45,0 | 41,1 | 96,4 |
+| 4 | Parque Educativo | Biblioteca | 0,069 | 0,055 | 0,055 | 0,000 | 9,4 | 41,1 | 56,6 |
+| 5 | Biblioteca | Coliseo | 0,084 | 0,064 | 0,064 | 0,000 | 10,9 | 41,1 | 58,3 |
+| 6 | Parque Educativo | Casa de la Cultura | 0,297 | 0,235 | 0,235 | 0,000 | 40,2 | 41,1 | 91,1 |
+| 7 | Casa de la Cultura | Aguas y Aseo | 0,168 | 0,109 | 0,109 | 0,000 | 18,6 | 41,1 | 67,0 |
+| 8 | Aguas y Aseo | Concejo | 0,262 | 0,246 | 0,246 | 0,000 | 42,1 | 41,1 | 93,2 |
+| 9 | Concejo | Bomberos | 0,150 | 0,138 | 0,138 | 0,000 | 23,6 | 41,1 | 72,5 |
+| 10 | Casa de la Cultura | I.E. sede La Patria | 0,374 | 0,348 | 0,348 | 0,000 | 59,5 | 41,1 | 112,7 |
+| 11 | I.E. sede La Patria | Centro Vida (adulto mayor) | 0,352 | 0,313 | 0,313 | 0,000 | 53,5 | 41,1 | 106,0 |
+| 12 | Bomberos | I.E. sede principal | 0,412 | 0,399 | 0,399 | 0,000 | 68,2 | 41,1 | 122,5 |
+| 13 | Aguas y Aseo | CIC | 0,423 | 0,383 | 0,383 | 0,000 | 65,5 | 53,0 | 132,7 |
+| 14 | CIC | Megacolegio | 0,348 | 0,196 | 0,196 | 0,000 | 33,5 | 53,0 | 96,9 |
+| 15 | Policía | Hospital | 0,557 | 0,530 | 0,530 | 0,000 | 90,6 | 43,1 | 149,7 |
+| 16 | Hospital | Torre del hospital ¹ | 0,149 | 0,111 | 0,111 | 0,000 | 19,0 | 2,2 | 23,7 |
+| 17 | Hospital | PTAP | 2,707 | 2,574 | 0,958 | 1,616 | 349,2 | 74,7 | 474,7 |
+| 18 | PTAP | Captación (pozos) | 0,124 | 0,111 | 0,000 | 0,111 | 12,7 | 53,0 | 73,6 |
+| 19 | PTAP | Tanque elevado ² | 1,051 | 0,541 | 0,000 | 0,541 | 62,1 | 2,2 | 71,9 |
+| 20 | Tanque elevado | Parque del relleno ³ | 0,639 | 0,614 | 0,000 | 0,614 | 70,4 | 2,2 | 81,3 |
+| 21 | Parque del relleno | PTAP veredal | 2,676 | 2,588 | 0,000 | 2,588 | 296,9 | 53,0 | 391,9 |
+| | **Suma de los 21 tramos** | | **11,442** | **10,066** | **4,596** | **5,470** | **1.413,2** | **830,0** | **2.512,4** |
+| | Costos comunes (no se reparten por tramo) | | | | | | | | 452,5 |
+| | **Total de la red** | | | | | | | | **2.964,9** |
+
+¹ **Hospital → torre (0,111 km).** La torre trae su acometida en media tensión y su subestación de 300 kVA en su propio presupuesto (`docs/11`, ítems 10.01 y 10.02). Aquí solo se cobran la red y la conexión de datos.
+
+² **PTAP → tanque elevado.** Solo telemetría: el tanque se alimenta en baja tensión desde la planta.
+
+³ **Tanque elevado → parque del relleno (0,614 km, $81,3 M).** El centro de transformación del parque (1.000 kVA para los 800 kW de la granja) y su línea a EPM están en el presupuesto del parque (`docs/12`). Este tramo es la misma derivación corta (0,6–0,8 km) que `docs/12` propone como alternativa a la línea de 2,6 km: si se construye con esta red, la línea del parque sobra. No se deben pagar las dos.
+
+**Costos comunes ($452,5 M).** Son las piezas que sirven a toda la red y no se reparten por tramo:
+
+| Pieza | Millones de 2026 |
+|---|---:|
+| Protección y maniobra (reconectador y seccionalizadores) | 275,6 |
+| Nodo central de datos en el CCED (APU-14) | 41,2 |
+| Transformador de 37,5 kVA y acometida de la alcaldía, que es la raíz de la red | 40,9 |
+| Trámites con EPM y certificados RETIE de transformadores y acometidas | 36,4 |
+| Plan de manejo ambiental, de tráfico y SST | 29,2 |
+| Ingeniería e interventoría (12 %) de las tres primeras piezas | 42,9 |
+| Menos el 12 % que el reparto por tramo carga sobre topografía, RETIE, servidumbre y poda, que no llevan indirectos | −13,7 |
+| **Total** | **452,5** |
 
 ## 10. Qué falta y cómo verificar
 

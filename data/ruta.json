@@ -68,7 +68,7 @@
       "fase": "f0",
       "fecha": "jun 2027",
       "titulo": "Núcleo crítico radicado",
-      "detalle": "Proyecto del núcleo crítico (hospital + acueducto + CCED) formulado en MGA con base en proyecto tipo, radicado en el SUIFP-SGR y registrado como iniciativa en el Plan Maestro de Inversiones en Salud (PMIDS) de Antioquia.",
+      "detalle": "Proyecto del núcleo crítico (acueducto + CCED) formulado en MGA con base en proyecto tipo y radicado en el SUIFP-SGR. El hospital entra por la torre: su proyecto de estudios y diseños se radica antes (nov 2026 – feb 2027) y la torre queda registrada como iniciativa en el PMIDS de Antioquia.",
       "compuerta": "Debe existir número BPIN y radicado ante la Gobernación; 'en elaboración' no cuenta.",
       "responsable": "Planeación + gerencia E.S.E."
     },
@@ -116,8 +116,8 @@
       "fase": "f2",
       "fecha": "jun 2029",
       "titulo": "Núcleo crítico operando",
-      "detalle": "Hospital, acueducto y CCED con solar, baterías y operación en isla. El tablero público muestra generación, consumo y ahorro en tiempo real.",
-      "compuerta": "Prueba de isla de 24 horas certificada por la interventoría.",
+      "detalle": "Acueducto y CCED con solar, baterías y operación en isla; el tablero público muestra generación, consumo y ahorro en tiempo real. El hospital se suma cuando abra la torre: su solar y sus baterías se instalan entre marzo de 2029 y enero de 2030.",
+      "compuerta": "Prueba de isla de 24 horas certificada por la interventoría; la del hospital va con la puesta en marcha de la torre (feb – abr 2030).",
       "responsable": "Contratista + interventoría + E.S.E."
     },
     {
@@ -157,19 +157,27 @@
   "portafolio": [
     {
       "nombre": "Red Energética Pública de Yondó (microrred + domótica + CCED)",
-      "alcance": "Solar en 13 sedes (469 kWp), baterías en 7 sedes críticas (770 kWh), medición, domótica, EMS y 10 sedes rurales. Ver docs/05.",
+      "alcance": "Solar de 369 kWp en las demás sedes, baterías de 370 kWh en 6 sedes críticas, medición, domótica, EMS/CCED y 10 sedes rurales. Ya no incluye el nodo del hospital (100 kWp y 400 kWh), que pasa a la torre. Ver docs/05 y docs/07.",
       "ejecutor": "Municipio con E.S.E. y Aguas y Aseo; licitación con pliegos tipo",
       "fuentes": "SGR (Incentivo a la Producción, \"Territorios energéticos\"), OxI, FENOGE, MinTIC, Findeter",
       "fase": "2027–2030",
-      "valor": 7204
+      "valor": 5829.2
     },
     {
-      "nombre": "Hospital Héctor Abad Gómez seguro, verde e inteligente",
-      "alcance": "Reforzamiento según estudio sísmico 2024, red eléctrica, telesalud, dotación, ambulancia TAM y puesto de salud en San Miguel del Tigre. No incluye la solar ni la eficiencia, ya contadas en la red energética. Ver docs/06.",
+      "nombre": "Torre de servicios de primer nivel del hospital",
+      "alcance": "Torre de 4 pisos sobre el antiguo Centro Vida: urgencias, partos, hospitalización, consulta, rayos X, laboratorio de 24 horas, solar de 100 kWp y baterías de 400 kWh (7 proyectos, P1 a P7; rango $27.363–50.600 M). Reemplaza el refuerzo del edificio actual. Ver docs/11.",
       "ejecutor": "E.S.E. (presenta directo a MinSalud) y municipio",
-      "fuentes": "PMIDS + Gobernación, MinSalud (PGN), SGR, OxI, saneamiento (Ley 2294)",
-      "fase": "2027–2029",
-      "valor": 8100
+      "fuentes": "MinSalud, SGR (directas, OCAD Paz, inversión local y regional), Gobernación, OxI, FENOGE, MinTIC, crédito",
+      "fase": "2026–2030",
+      "valor": 37137.3
+    },
+    {
+      "nombre": "Complementos de la torre",
+      "alcance": "Adecuación del edificio actual para administración, archivo, almacén y central de distribución (P8) y ambulancia medicalizada (P9). Con la torre suman 9 proyectos en 7 fichas MGA.",
+      "ejecutor": "E.S.E.",
+      "fuentes": "Gobernación, municipio, E.S.E., OxI",
+      "fase": "2027–2030",
+      "valor": 2612.9
     },
     {
       "nombre": "Rescate de obras con brecha físico-financiera",
@@ -210,6 +218,22 @@
       "fuentes": "SGR \"AP con FNCER\", Findeter/BID, impuesto de alumbrado",
       "fase": "2029–2030",
       "valor": 2500
+    },
+    {
+      "nombre": "Parque ecotecnológico Las Américas",
+      "alcance": "Clausura del relleno (licencia vencida en 2023), granja solar de 997 kWp sobre las celdas para un bloque de 50 kWh al mes en 2.236 hogares de estratos 1 y 2, coworking rural, granja y circuito (rango $11.492–24.625 M). Ver docs/12.",
+      "ejecutor": "Municipio y Aguas y Aseo; la granja, una comunidad energética",
+      "fuentes": "Tarifa de aseo, SGP y Plan Departamental de Agua, SGR, Colombia Solar o FENOGE, Findeter, deporte, TIC y cultura, Ecopetrol",
+      "fase": "2027–2030",
+      "valor": 16416.9
+    },
+    {
+      "nombre": "Red de distribución de 13,2 kV y fibra",
+      "alcance": "10,066 km de red aérea nueva y fibra que unen 22 puntos, incluidos la torre y el parque, con transformador y medidor bidireccional en 19 sedes (rango $2.075–4.447 M). Ver docs/13.",
+      "ejecutor": "Municipio con EPM",
+      "fuentes": "Por definir",
+      "fase": "Posterior, sin fecha",
+      "valor": 2964.9
     }
   ]
 }
