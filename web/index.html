@@ -85,8 +85,9 @@ main { padding-block: 26px 40px; }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; font-family: var(--f-mono); font-size: 0.82rem; text-align: right; }
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.tile { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
-.tile b { display: block; font-family: var(--f-display); font-weight: 400; font-size: 1.75rem; line-height: 1.05; letter-spacing: 0.01em; }
+.tile { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; container-type: inline-size; }
+/* la cifra no se parte ("$16,6 mil M" sin la "M" sola abajo) y su tamaño sigue el ancho de la ficha para que quepa */
+.tile b { display: block; font-family: var(--f-display); font-weight: 400; font-size: clamp(1.15rem, 6vw, 1.75rem); font-size: clamp(1.15rem, 17cqi, 1.75rem); line-height: 1.05; letter-spacing: 0.01em; white-space: nowrap; }
 .tile span { font-size: 0.78rem; color: var(--muted); }
 .ctl { display: grid; gap: 10px; }
 .ctl label { display: grid; gap: 4px; font-size: 0.85rem; }
@@ -180,6 +181,10 @@ svg.mr-chart .now { stroke: var(--accent); stroke-width: 1.5; }
 .lbl-pila { background: color-mix(in srgb, var(--surface) 90%, transparent); padding: 3px 8px; border-radius: 6px; text-align: center; line-height: 1.15; }
 .lbl-money { font: 700 12px var(--f-mono); color: var(--ink); background: var(--surface); border: 2px solid var(--accent); padding: 3px 7px; border-radius: 8px; }
 .lbl-money small { display: block; font: 500 10px var(--f-body); color: var(--muted); }
+/* La plata y Seis gobiernos: cifras de cada pila en renglones; el rótulo corto de periodo es solo para el teléfono */
+[data-scene="dinero"] .lbl-money span { display: block; } [data-scene="dinero"] .lbl-money .ct { font-weight: 500; } [data-scene="dinero"] .lbl-money .nt { font: 500 10px var(--f-body); color: var(--muted); }
+[data-scene="periodos"] .lbl-money small.sin { color: var(--bad); font-weight: 600; } [data-scene="periodos"] .per-c, [data-scene="dinero"] .per-c { display: none; }
+[data-slot="periodos.seg"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 /* ---------- contenido */
 .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
@@ -190,6 +195,18 @@ table { border-collapse: collapse; width: 100%; font-size: 0.85rem; font-variant
 th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { font-family: var(--f-mono); font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 td.n, th.n { text-align: right; font-family: var(--f-mono); font-size: 0.8rem; white-space: nowrap; }
+.nw { white-space: nowrap; } /* montos y rangos de plata que no se parten entre renglones */
+/* tablas en el teléfono: las de cuatro o más columnas se deslizan de lado con columnas legibles y la primera columna
+   queda fija, para no perder de qué fila es cada cifra al llegar a ella; los encabezados de cifras parten en dos renglones */
+@media (max-width: 720px) {
+  th.n { white-space: normal; }
+  .tbl-wrap > table:has(tr > :nth-child(4)) { min-width: 500px; }
+  .tbl-wrap > table:has(tr > :nth-child(5)) { min-width: 600px; }
+  .tbl-wrap > table:has(tr > :nth-child(6)) { min-width: 680px; }
+  .tbl-wrap > table:has(tr > :nth-child(4)) tr > :first-child { position: sticky; left: 0; z-index: 1; max-width: 38vw; background: var(--surface); box-shadow: 6px 0 6px -6px color-mix(in srgb, var(--ink) 40%, transparent); }
+  /* sombra en el borde derecho mientras quede tabla por ver (se tapa al llegar al final) */
+  .tbl-wrap:has(> table tr > :nth-child(4)) { background: linear-gradient(to left, var(--surface) 35%, transparent) right / 28px 100% no-repeat local, radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 42%, transparent), transparent) right / 12px 100% no-repeat scroll; }
+}
 tfoot td { font-weight: 700; border-top: 3px solid var(--ink); }
 .tag { font: 600 0.68rem var(--f-mono); text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 6px; border-radius: 4px; background: var(--raised); border: 1px solid var(--line); color: var(--muted); }
 .tag.ver { color: var(--good); border-color: currentColor; } .tag.est { color: var(--s4); border-color: currentColor; } .tag.sup { color: var(--muted); }
@@ -229,8 +246,17 @@ a { color: var(--accent); }
   .nav3d-name { flex: 1; max-width: none; text-align: center; }
   [data-scene="ciudad"] .stage-hint { display: none; }
   .lbl-small, .lbl-geo, .lbl-money small { display: none; }
-  /* La plata en el teléfono: sin la etiqueta lateral de "sin obra" (está en las barras de abajo) y pastillas compactas */
-  [data-scene="periodos"] .lbl-val:not(.lbl-axis) { display: none; }
+  /* La plata y Seis gobiernos en el teléfono: periodos con rótulo corto, pastillas compactas y sin "sin obra",
+     "1 fajo" ni los nombres de categoría o área en 3D (ya están en la leyenda, las tarjetas y las tablas de abajo) */
+  [data-scene="periodos"] .lbl-fajo, [data-scene="periodos"] .lbl-area, [data-scene="dinero"] .lbl-cat { display: none; }
+  [data-scene="periodos"] .per-l, [data-scene="dinero"] .per-l { display: none; } [data-scene="periodos"] .per-c, [data-scene="dinero"] .per-c { display: inline; }
+  /* tablas de Seis gobiernos: las de tres columnas se leen como fichas; en La plata y Seis gobiernos una sombra en
+     el borde de las tablas que se deslizan de lado avisa que hay más */
+  [data-slot="periodos.pudo"] .tbl-wrap table, [data-slot="periodos.pudo"] .tbl-wrap tbody { display: block; }
+  [data-slot="periodos.pudo"] .tbl-wrap thead { display: none; }
+  [data-slot="periodos.pudo"] .tbl-wrap tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  [data-slot="periodos.pudo"] .tbl-wrap td { padding: 0; border: 0; } [data-slot="periodos.pudo"] .tbl-wrap td:first-child { grid-column: 1 / -1; }
+  #v-periodos .tbl-wrap, #v-dinero .tbl-wrap { background: linear-gradient(to right, var(--surface) 30%, transparent) left / 28px 100% no-repeat local, linear-gradient(to left, var(--surface) 30%, transparent) right / 28px 100% no-repeat local, radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--ink) 22%, transparent), transparent) left / 12px 100% no-repeat scroll, radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 22%, transparent), transparent) right / 12px 100% no-repeat scroll; }
   .lbl-pila { font-size: 11px; padding: 2px 5px; } .lbl-pila small { display: none; }
   .lbl-money { font-size: 10px; padding: 2px 5px; }
   :root { --stroke: 4px; }
@@ -254,6 +280,7 @@ svg.cuenta .b2i { fill: var(--warn); opacity: 0.45; } svg.cuenta .b4 { fill: var
 svg.cuenta .b3 { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 3; }
 svg.cuenta g.row:not(.on) rect { opacity: 0.55; } svg.cuenta g.row.on rect.b0 { opacity: 0.95; }
 svg.cuenta .v { font: 600 11px var(--f-mono); fill: var(--bad); } svg.cuenta .v2 { font: 11px var(--f-mono); fill: var(--accent); }
+#v-periodos svg.cuenta.m .v2 { font-size: 10px; }
 .legend i.hollow { border: 2px dashed var(--accent); box-sizing: border-box; }
 .eqs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 10px 0 16px; }
 .eq { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
@@ -265,6 +292,15 @@ svg.cuenta .v { font: 600 11px var(--f-mono); fill: var(--bad); } svg.cuenta .v2
 .cols2 h4 { margin: 0 0 6px; }
 details.fold summary { list-style: none; cursor: pointer; } details.fold summary::-webkit-details-marker { display: none; }
 details.fold summary span { color: var(--accent); font-weight: 600; white-space: nowrap; } details.fold[open] summary span { display: none; }
+/* señal de que la sección se abre: un triángulo antes del título que gira al abrir; en las barras y el Gantt va antes
+   del nombre (no se agrega a la fila para no mover las barras) y el resumen con "Ver más" ya tiene su propia señal */
+details.fold > summary::before, .barras details.fold > summary > .bar-l::before, .gantt details.fold > summary > .g-n::before {
+  content: ''; display: inline-block; width: 0; height: 0; margin-right: 7px; vertical-align: 0.1em;
+  border-left: 6px solid var(--accent); border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; transition: transform 0.2s;
+}
+details.fold[open] > summary::before, .barras details.fold[open] > summary > .bar-l::before, .gantt details.fold[open] > summary > .g-n::before { transform: rotate(90deg); }
+.barras details.fold > summary::before, .gantt details.fold > summary::before, details.fold > summary.note::before { content: none; }
+details.fold > summary:hover { color: var(--accent); }
 .sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 12px; }
 .spark p { margin: 0; font-size: 0.82rem; line-height: 1.25; } .spark .src { font-size: 0.66rem; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
 .spark svg { width: 100%; height: auto; display: block; margin: 4px 0 2px; }

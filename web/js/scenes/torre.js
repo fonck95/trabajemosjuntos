@@ -22,8 +22,27 @@ const GRUPOS = [
 const grupo = (n) => GRUPOS.find(([re]) => re.test(n)) || [null, '#9aa0a6', 'Otros'];
 const XW = [-13.0, 3.1], XN = [3.1, 9.0];            // franja de servicios y franja del núcleo (marco de la especificación)
 const YP = (piso) => (piso === 4 ? [-7.6, 22.4] : [-19.6, 22.4]);
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const cop = (v) => (v == null || Number.isNaN(+v) ? '—' : fmtCOP(+v));
+const escH = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+// Los textos de los datos citan archivos y carpetas del proyecto ("(programa.json)", "docs/06") que el lector no puede
+// abrir: se quitan las citas entre paréntesis y el resto se nombra en palabras; también "m2" y "m3" pasan a m² y m³
+const FUENTES = { programa: 'el programa', normas: 'la revisión de normas', dotacion: 'la dotación', presupuesto: 'el presupuesto', laboratorio: 'el laboratorio', financiacion: 'la financiación', proyectos: 'los proyectos', microrred: 'la microrred', presupuesto_microrred: 'el presupuesto de la microrred', bienestar_anciano: 'el levantamiento del Centro Vida', hospital: 'el levantamiento del hospital' };
+const JS = String.raw`(?:data\/(?:[\w-]+\/)*)?([\w-]+)\.json`, fuente = (k) => FUENTES[k] || 'el estudio';
+const limpio = (s) => String(s ?? '')
+  .replace(/\bbess_hospital\b/g, 'baterías del hospital')
+  .replace(new RegExp(String.raw`\s*\((?:ver\s+)?${JS}(?:,\s*[^()]*)?\)`, 'gi'), '')       // «(programa.json)», «(programa.json, demoliciones)»
+  .replace(new RegExp(String.raw`[;,]\s*${JS}(?:,\s*[^();]*)?(?=\))`, 'g'), '')             // «(…; programa.json, implantación)», «(…, normas.json)»
+  .replace(new RegExp(String.raw`\(${JS}:\s*`, 'g'), '(')                                     // «(normas.json: se adopta…)»
+  .replace(new RegExp(String.raw`^${JS}:\s*(.)`), (m, k, c) => c.toUpperCase())              // «programa.json: 2 × 5 m³ en cubierta»
+  .replace(new RegExp(String.raw`^${JS},\s*`), (m, k) => `Según ${fuente(k)}, `)
+  .replace(new RegExp(JS, 'g'), (m, k) => fuente(k))
+  .replace(/\s*\((?:ver\s+)?docs\/[\w/.-]+\)/gi, '').replace(/\s*Ver docs\/[\w/.-]+\.?/g, '')
+  .replace(/docs\/0?6\b/g, 'el estudio de financiación').replace(/docs\/[\w/.-]+/g, 'el estudio')
+  .replace(/'([a-z]+(?:_[a-z]+)+)'/g, (m, k) => `«${k.replace(/_/g, ' ')}»`)
+  .replace(/\bde el\b/g, 'del').replace(/\ba el\b/g, 'al')
+  .replace(/\bm2\b/g, 'm²').replace(/\bm3\b/g, 'm³');
+const esc = (s) => escH(limpio(s));   // para textos; los enlaces van con escH
+// montos con espacios que no se parten: "$2 mil M" no queda con la "M" sola en otro renglón
+const cop = (v) => (v == null || Number.isNaN(+v) ? '—' : fmtCOP(+v).replace(/ /g, '\u00a0'));
 
 export function mount(root) {
   const el = root.querySelector('.stage');
@@ -57,12 +76,17 @@ export function mount(root) {
   const gPisos = new THREE.Group(); gPisos.visible = false; S.add(gPisos);
   const pisos = [], zonas = [], labLab = [];
   let D = null, sep = 0, selPiso = null;
+  // la leyenda de colores por servicio solo aplica a «Pisos por servicio»: en los demás modos el modelo no tiene esos colores
+  const leyenda = root.querySelector('[data-slot="torre.leyenda"]');
+  if (leyenda) leyenda.hidden = true;
+  const angosto = () => el.clientWidth < 560;
 
   function aplicar(anim = true) {
     if (torre) torre.traverse((o) => {
       if (o.userData.demoler) o.visible = modo === 'hoy';
       if (o.name === 'adecuaciones') o.visible = modo === 'torre';
     });
+    if (leyenda) leyenda.hidden = modo !== 'pisos';
     const conPisos = modo === 'pisos' || modo === 'laboratorio';
     gPisos.visible = conPisos;
     pisos.forEach((p) => { p.g.visible = modo !== 'laboratorio' || p.piso <= 2; });   // en «Laboratorio» los pisos 3 y 4 tapaban la vista
@@ -76,12 +100,15 @@ export function mount(root) {
   }
   // con los pisos abiertos los árboles de los dos modelos se ocultan: tapaban los servicios del primer piso
   function arboles() { const v = modo !== 'pisos' && modo !== 'laboratorio'; S.traverse((o) => { if (/arboles$/.test(o.name)) o.visible = v; }); }
-  // etiquetas: en «Pisos» el título de cada piso, los servicios grandes y todos los del piso elegido; en «Laboratorio», sus equipos
+  // etiquetas: en «Pisos» el título de cada piso, los servicios grandes y todos los del piso elegido; en «Laboratorio», sus
+  // salas y equipos. En el teléfono no caben: en «Pisos» van los títulos y, al tocar un piso, solo su título y sus servicios
+  // de 20 m² o más (el resto está en la ficha del piso); en «Laboratorio», solo los nombres de las salas analíticas (los
+  // equipos están en la tarjeta del laboratorio)
   function etiquetas() {
-    const conPisos = modo === 'pisos' || modo === 'laboratorio';
-    pisos.forEach((p) => { p.tit.visible = conPisos && (modo === 'pisos' || p.piso === 2); });
-    zonas.forEach((z) => { z.label.visible = conPisos && (modo === 'pisos' ? z.m2 >= 90 || selPiso === z.piso : z.lab && z.piso === 2); });
-    labLab.forEach((l) => { l.visible = modo === 'laboratorio'; });
+    const conPisos = modo === 'pisos' || modo === 'laboratorio', tel = angosto();
+    pisos.forEach((p) => { p.tit.visible = conPisos && (modo === 'pisos' ? !tel || selPiso == null || selPiso === p.piso : p.piso === 2 && !tel); });
+    zonas.forEach((z) => { z.label.visible = conPisos && (modo === 'pisos' ? (tel ? selPiso === z.piso && z.m2 >= 20 : z.m2 >= 90 || selPiso === z.piso) : z.lab && z.piso === 2 && !tel); });
+    labLab.forEach((l) => { l.visible = modo === 'laboratorio' && (!tel || (l.element.classList.contains('lbl-room') && l.userData.fila === 0)); });
     st.invalidate();
   }
   function apilar() {
@@ -230,8 +257,8 @@ export function mount(root) {
     });
     // nombre de cada sala, sobre su piso
     salas.forEach((s) => {
-      const l = st.label(esc(corto(s.n.split(/[,(]/)[0].replace(/\s+y\s+.*$/, '').replace(/^Lavado.*$/i, 'Lavado y autoclave'), 26)), 'lbl-room', [(s.x0 + s.x1) / 2, Y + 0.25, -(s.v0 + s.v1) / 2], g);
-      l.visible = false; labLab.push(l);
+      const l = st.label(esc(corto(s.n.split(/[,(]/)[0].replace(/\s+y\s+.*$/, '').replace(/^Lavado.*$/i, 'Lavado y autoclave'), 34)), 'lbl-room', [(s.x0 + s.x1) / 2, Y + 0.25, -(s.v0 + s.v1) / 2], g);
+      l.visible = false; l.userData.fila = s.fila; labLab.push(l);
     });
     function etiquetaEq(e, x, y, zz) {
       if ((e.precio || 0) < 30e6) return;
@@ -262,7 +289,15 @@ export function mount(root) {
     aplicar(true);
     if (modo === 'laboratorio') {
       const z = zonas.find((zz) => zz.lab && zz.piso === 2);
-      if (z) setTimeout(() => st.closeUp(new THREE.Vector3((XW[0] + XW[1]) / 2, 4.5 + 2.2 * 4.5 + 3, -(z.y0 + z.y1) / 2), [], new THREE.Vector3(-0.45, 0, 1), { dist: 22, elev: 48 }), 350);
+      // se encuadra la caja del laboratorio con el piso 2 ya separado (sep = 2,2): frameBox se aleja lo necesario según el
+      // ancho del recuadro (a 22 m fijos, en el teléfono las etiquetas de los equipos se salían por los dos lados)
+      if (z) {
+        const i2 = pisos.findIndex((p) => p.piso === 2), y = (pisos[i2]?.nivel ?? 4.5) + 2.2 * 4.5 * i2 + 0.35 + 2.2;
+        const caja = new THREE.Box3(new THREE.Vector3(XW[0] - 1, y, -z.y1 - 1), new THREE.Vector3(XW[1] + 1, y + 3, -z.y0 + 1));
+        // en el teléfono se mira desde el occidente y casi desde arriba: el lado largo del laboratorio queda a lo alto
+        const tel = angosto(), dir = tel ? new THREE.Vector3(-0.4, 0.9, 0.1) : new THREE.Vector3(-0.27, 0.74, 0.61);
+        setTimeout(() => st.frameBox(caja, dir, { margin: tel ? 0.95 : 0.72, ty: 0.3 }), 350);
+      }
     } else if (modo === 'pisos') setTimeout(() => st.frameBox(new THREE.Box3(new THREE.Vector3(XW[0] - 8, 0, -24), new THREE.Vector3(XN[1] + 6, 32, 21)), new THREE.Vector3(-0.8, 0.45, 0.55), { margin: 0.85 }), 200);
     else encuadre();
   }));
@@ -282,12 +317,12 @@ export function mount(root) {
     const total = pres.totales?.total_torre ?? pres.totales?.total_cop_2026 ?? pres.total_cop_2026;
     q('tiles').innerHTML = `<div class="tile"><b>${fmtN(tot.m2_construido_torre || 0, 0)}</b><span>m² construidos en ${(pr.resumen_por_piso || []).length} pisos</span></div>
       <div class="tile"><b>${camas ? esc(camas.torre) : '—'}</b><span>camas${consult ? ` · ${esc(consult.torre)} consultorios` : ''}</span></div>
-      <div class="tile"><b>${cop(dot.total_general_cop_2026)}</b><span>dotación y equipamiento</span></div>
+      <div class="tile"><b>${cop(dot.total_general_sin_posible_doble_conteo_cop_2026 ?? dot.total_general_cop_2026)}</b><span>dotación y equipamiento, sin repetir lo que ya va en la obra</span></div>
       <div class="tile"><b>${total ? cop(total) : 'en cálculo'}</b><span>costo total del proyecto</span></div>`;
     // programa por piso
-    q('pisos').innerHTML = `<p class="note">${esc(pr.resumen || '')}</p><table><thead><tr><th>Piso</th><th>Servicios</th><th class="n">m² útiles</th><th class="n">m² construidos</th></tr></thead><tbody>
-      ${(pr.resumen_por_piso || []).map((p) => `<tr><td>${p.piso}</td><td>${esc(p.servicios)}</td><td class="n">${fmtN(p.m2_util, 0)}</td><td class="n">${fmtN(p.m2_construido, 0)}</td></tr>`).join('')}
-      <tr><td></td><td><b>Total torre</b></td><td class="n">${fmtN(tot.m2_util_torre || 0, 0)}</td><td class="n"><b>${fmtN(tot.m2_construido_torre || 0, 0)}</b></td></tr></tbody></table>
+    q('pisos').innerHTML = `<p class="note">${esc(pr.resumen || '')}</p><table><thead><tr><th>Piso y servicios</th><th class="n">m² útiles</th><th class="n">m² construidos</th></tr></thead><tbody>
+      ${(pr.resumen_por_piso || []).map((p) => `<tr><td><b>Piso ${p.piso}</b><br>${esc(p.servicios)}</td><td class="n">${fmtN(p.m2_util, 0)}</td><td class="n">${fmtN(p.m2_construido, 0)}</td></tr>`).join('')}
+      <tr><td><b>Total torre</b></td><td class="n">${fmtN(tot.m2_util_torre || 0, 0)}</td><td class="n"><b>${fmtN(tot.m2_construido_torre || 0, 0)}</b></td></tr></tbody></table>
       ${cap.length ? `<h4 style="margin-top:12px">Capacidad hoy y con la torre</h4><table><thead><tr><th>Recurso</th><th class="n">Hoy</th><th class="n">Torre</th></tr></thead><tbody>${cap.map((c) => `<tr><td>${esc(c.recurso)}</td><td class="n">${esc(c.actual)}</td><td class="n">${esc(c.torre)}</td></tr>`).join('')}</tbody></table>` : ''}
       <p class="note">${esc(pr.uso_del_edificio_actual?.resumen || (typeof pr.uso_del_edificio_actual === 'string' ? pr.uso_del_edificio_actual : ''))}</p>`;
     // norma
@@ -296,22 +331,22 @@ export function mount(root) {
     q('norma').innerHTML = `<p class="note">${esc(no.proyecto_en_breve?.tipologia_res_485 || '')}</p>
       <p>${Object.entries(estados).map(([k, v]) => `<span class="pill">${esc(k)}: ${v}</span>`).join(' ')} de ${ch.length} requisitos del concepto técnico de viabilidad.</p>
       <ol class="tight checklist">${ch.map((c) => `<li><b>${esc(c.numeral)}</b> ${esc(c.requisito)}<br><small class="note">${esc(c.documento_a_producir || '')}${c.responsable ? ` · ${esc(c.responsable)}` : ''}</small></li>`).join('')}</ol>
-      <details class="fold"><summary>Normas que aplican (${(no.normas || []).length})</summary><ul class="tight">${(no.normas || []).map((n) => `<li>${n.url ? `<a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.numero)} de ${n.anio}</a>` : `${esc(n.numero)} de ${n.anio}`}: ${esc(String(n.objeto || '').slice(0, 220))}</li>`).join('')}</ul></details>`;
+      <details class="fold"><summary>Normas que aplican (${(no.normas || []).length})</summary><ul class="tight">${(no.normas || []).map((n) => `<li>${n.url ? `<a href="${escH(n.url)}" target="_blank" rel="noopener">${esc(n.numero)} de ${n.anio}</a>` : `${esc(n.numero)} de ${n.anio}`}: ${esc(String(n.objeto || '').slice(0, 220))}</li>`).join('')}</ul></details>`;
     // dotación
     const dd = d.dotacion || {};
     q('dotacion').innerHTML = `<p class="note">${esc(dd.resumen || '')}</p>
-      <table><thead><tr><th>Servicio</th><th class="n">Piso</th><th class="n">Ítems</th><th class="n">Total</th></tr></thead><tbody>
-      ${(dd.servicios || []).map((s) => `<tr><td><details class="fold"><summary>${esc(s.nombre)}</summary><ul class="tight">${(s.equipos || []).map((e) => `<li>${fmtN(e.cantidad)} × ${esc(e.nombre)}${e.total_cop_2026 ? ` — ${cop(e.total_cop_2026)}` : ''}${e.clase_riesgo ? ` <small class="note">(clase ${esc(e.clase_riesgo)})</small>` : ''}</li>`).join('')}</ul></details></td><td class="n">${esc(s.piso)}</td><td class="n">${fmtN(s.totales?.numero_de_items ?? (s.equipos || []).length)}</td><td class="n">${cop(s.totales?.total_cop_2026)}</td></tr>`).join('')}
-      <tr><td>Equipamiento fijo e industrial (planta, ascensores, gases, aire, autoclave…)</td><td></td><td class="n">${(dd.equipamiento_fijo || []).length}</td><td class="n">${cop(dot.equipamiento_fijo_e_industrial_cop_2026)}</td></tr>
-      <tr><td><b>Total dotación, mobiliario y equipamiento</b></td><td></td><td></td><td class="n"><b>${cop(dot.total_general_cop_2026)}</b></td></tr></tbody></table>
+      <table><thead><tr><th>Servicio</th><th class="n">Ítems</th><th class="n">Total</th></tr></thead><tbody>
+      ${(dd.servicios || []).map((s) => `<tr><td><details class="fold"><summary>${esc(s.nombre)}</summary><ul class="tight">${(s.equipos || []).map((e) => `<li>${fmtN(e.cantidad)} × ${esc(e.nombre)}${e.total_cop_2026 ? ` — ${cop(e.total_cop_2026)}` : ''}${e.clase_riesgo ? ` <small class="note">(clase ${esc(e.clase_riesgo)})</small>` : ''}</li>`).join('')}</ul></details>${s.piso != null ? `<small class="note">${/\by\b|,/.test(s.piso) ? 'Pisos' : 'Piso'} ${esc(s.piso)}</small>` : ''}</td><td class="n">${fmtN(s.totales?.numero_de_items ?? (s.equipos || []).length)}</td><td class="n">${cop(s.totales?.total_cop_2026)}</td></tr>`).join('')}
+      <tr><td>Equipamiento fijo e industrial (planta, ascensores, gases, aire, autoclave…)</td><td class="n">${(dd.equipamiento_fijo || []).length}</td><td class="n">${cop(dot.equipamiento_fijo_e_industrial_cop_2026)}</td></tr>
+      <tr><td><b>Total dotación, mobiliario y equipamiento</b></td><td></td><td class="n"><b>${cop(dot.total_general_cop_2026)}</b></td></tr></tbody></table>
       ${dot.rango_total_general_cop_2026 ? `<p class="note">Rango: ${cop(dot.rango_total_general_cop_2026[0])} a ${cop(dot.rango_total_general_cop_2026[1])}. Sin posibles dobles conteos con la obra: ${cop(dot.total_general_sin_posible_doble_conteo_cop_2026)}.</p>` : ''}`;
     // laboratorio
     const la = d.laboratorio || {}, tm = la.totales_menu || {};
     const tr = (t) => (t ? ['urgencias', 'rutina', 'tamizaje'].map((k) => (t[k] ? `<small><b>${k}</b> ${esc(t[k])}</small>` : '')).filter(Boolean).join('<br>') : '');
     q('laboratorio').innerHTML = `<p class="note">${esc(la.resumen || '')}</p>
       <div class="tiles"><div class="tile"><b>${fmtN(tm.pruebas_en_sitio_mes || 0)}</b><span>pruebas al mes en sitio</span></div><div class="tile"><b>${(la.menu || []).length}</b><span>pruebas en el menú, con tiempos de respuesta</span></div></div>
-      <details class="fold" open><summary>Menú de pruebas y tiempos de respuesta</summary><div class="tbl-wrap"><table><thead><tr><th>Prueba</th><th>Sección · equipo</th><th>Tiempo de respuesta</th><th class="n">Al mes</th></tr></thead><tbody>
-      ${(la.menu || []).map((m) => `<tr><td>${esc(m.prueba)}</td><td><small>${esc(m.seccion)} · ${esc(m.equipo)}</small></td><td>${tr(m.tiempo_respuesta)}</td><td class="n">${fmtN(m.volumen_mes || 0)}</td></tr>`).join('')}
+      <details class="fold"><summary>Menú de pruebas y tiempos de respuesta (${(la.menu || []).length})</summary><div class="tbl-wrap"><table><thead><tr><th>Prueba</th><th>Tiempo de respuesta</th><th class="n">Al mes</th></tr></thead><tbody>
+      ${(la.menu || []).map((m) => `<tr><td>${esc(m.prueba)}<br><small class="note">${esc(m.seccion)} · ${esc(m.equipo)}</small></td><td>${tr(m.tiempo_respuesta)}</td><td class="n">${fmtN(m.volumen_mes || 0)}</td></tr>`).join('')}
       </tbody></table></div></details>
       <details class="fold"><summary>Equipos del laboratorio (${(la.equipos || []).length})</summary><ul class="tight">${(la.equipos || []).map((e) => `<li>${fmtN(e.cantidad)} × ${esc(e.nombre)}${e.capacidad ? ` — ${esc(e.capacidad)}` : ''}${e.uso_pico_pct != null ? ` <small class="note">(uso en hora pico ${fmtN(e.uso_pico_pct, 0)} %)</small>` : ''}${e.modelo_de_compra ? ` <small class="note">· ${esc(e.modelo_de_compra)}</small>` : ''}</li>`).join('')}</ul></details>`;
     // proyecto tipo
@@ -319,7 +354,7 @@ export function mount(root) {
     q('tipo').innerHTML = `<p>${esc(pt.respuesta_corta || '')}</p>
       ${pt.seleccion?.por_que ? `<ul class="tight">${pt.seleccion.por_que.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       ${pt.estetica?.propuesta ? `<p class="note"><b>Estética:</b> ${esc(pt.estetica.propuesta)}</p>` : ''}
-      <details class="fold"><summary>Proyectos tipo revisados (${(pt.proyectos_tipo || []).length})</summary><ul class="tight">${(pt.proyectos_tipo || []).map((p) => `<li>${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.nombre)}</a>` : esc(p.nombre)} <small class="note">${esc(p.fecha || '')}</small></li>`).join('')}</ul></details>`;
+      <details class="fold"><summary>Proyectos tipo revisados (${(pt.proyectos_tipo || []).length})</summary><ul class="tight">${(pt.proyectos_tipo || []).map((p) => `<li>${p.url ? `<a href="${escH(p.url)}" target="_blank" rel="noopener">${esc(p.nombre)}</a>` : esc(p.nombre)} <small class="note">${esc(p.fecha || '')}</small></li>`).join('')}</ul></details>`;
     pintarPresupuesto(d);
     // leyenda de grupos de servicio
     q('leyenda').innerHTML = GRUPOS.map(([, c, n]) => `<span><i style="background:${c}"></i>${n}</span>`).join('');
@@ -352,9 +387,9 @@ export function mount(root) {
       ${Object.keys(ig).length ? `<h4>Otros componentes del proyecto</h4><dl class="kv">${Object.entries(ig).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${cop(v)}</dd>`).join('')}</dl>` : ''}
       <dl class="kv" style="margin-top:10px">${Object.entries(ETQ).filter(([k]) => t[k] != null).map(([k, n]) => `<dt>${k === 'total_torre' ? `<b>${n}</b>` : n}</dt><dd>${k === 'total_torre' ? `<b>${cop(t[k])}</b>` : cop(t[k])}</dd>`).join('')}
         ${t.rango_total_torre ? `<dt>Rango del total</dt><dd>${cop(t.rango_total_torre[0])} a ${cop(t.rango_total_torre[1])}</dd>` : ''}
-        ${m2.costo_total_por_m2_construido_total ? `<dt>Costo total por m² construido (${fmtN(m2.area_construida_total_m2, 1)} m²)</dt><dd>$${fmtN(m2.costo_total_por_m2_construido_total, 0)}</dd><dt>Obra con AIU por m² construido</dt><dd>$${fmtN(m2.valor_obra_por_m2_construido_total, 0)}</dd>${m2.obra_civil_sin_equipamiento_fijo_ni_solar_por_m2_total ? `<dt>Obra civil y redes por m² (sin equipos fijos ni solar)</dt><dd>$${fmtN(m2.obra_civil_sin_equipamiento_fijo_ni_solar_por_m2_total, 0)}</dd>` : ''}` : ''}</dl>
+        ${m2.costo_total_por_m2_construido_total ? `<dt>Costo total por m² construido (${fmtN(m2.area_construida_total_m2, 1)} m²${m2.area_construida_torre_m2 ? `: los ${fmtN(m2.area_construida_torre_m2, 0)} m² de la torre más el bloque técnico, el cuarto de residuos y las casetas de cubierta` : ''})</dt><dd>$${fmtN(m2.costo_total_por_m2_construido_total, 0)}</dd><dt>Obra con AIU por m² construido</dt><dd>$${fmtN(m2.valor_obra_por_m2_construido_total, 0)}</dd>${m2.obra_civil_sin_equipamiento_fijo_ni_solar_por_m2_total ? `<dt>Obra civil y redes por m² (sin equipos fijos ni solar)</dt><dd>$${fmtN(m2.obra_civil_sin_equipamiento_fijo_ni_solar_por_m2_total, 0)}</dd>` : ''}` : ''}</dl>
       ${m2.nota ? `<p class="note">${esc(m2.nota.replace(/'obra_civil[^']*'/, '«Obra civil y redes por m²»'))}</p>` : ''}
-      ${(p.comparacion || []).length ? `<details class="fold"><summary>Comparación con proyectos hospitalarios contratados o viabilizados (${p.comparacion.length})</summary><div class="tbl-wrap"><table><thead><tr><th>Proyecto</th><th class="n">m²</th><th class="n">Valor por m² (2026)</th><th>Frente a la torre</th></tr></thead><tbody>${p.comparacion.map((x) => { const u = String(x.fuente || x.url || '').match(/https?:\/\/\S+/)?.[0]; return `<tr><td>${esc(x.proyecto || x.referencia || x.nombre || '')}<br><small class="note">${esc(x.incluye || '')}${u ? ` · <a href="${esc(u)}" target="_blank" rel="noopener">fuente</a>` : ''}</small></td><td class="n">${x.area_m2 ? fmtN(x.area_m2, 0) : '—'}</td><td class="n">${x.costo_m2_cop_2026 ? `$${fmtN(x.costo_m2_cop_2026, 0)}` : '—'}</td><td><small>${esc(x.relacion_con_la_torre || '')}</small></td></tr>`; }).join('')}</tbody></table></div></details>` : ''}`;
+      ${(p.comparacion || []).length ? `<details class="fold"><summary>Comparación con proyectos hospitalarios contratados o viabilizados (${p.comparacion.length})</summary><div class="tbl-wrap"><table><thead><tr><th>Proyecto</th><th class="n">m²</th><th class="n">Valor por m² (2026)</th><th>Frente a la torre</th></tr></thead><tbody>${p.comparacion.map((x) => { const u = String(x.fuente || x.url || '').match(/https?:\/\/\S+/)?.[0]; return `<tr><td>${esc(x.proyecto || x.referencia || x.nombre || '')}<br><small class="note">${esc(x.incluye || '')}${u ? ` · <a href="${escH(u)}" target="_blank" rel="noopener">fuente</a>` : ''}</small></td><td class="n">${x.area_m2 ? fmtN(x.area_m2, 0) : '—'}</td><td class="n">${x.costo_m2_cop_2026 ? `$${fmtN(x.costo_m2_cop_2026, 0)}` : '—'}</td><td><small>${esc(x.relacion_con_la_torre || '')}</small></td></tr>`; }).join('')}</tbody></table></div></details>` : ''}`;
   }
   function renderAPU(a) {
     const L = a.apus || [];
@@ -390,7 +425,7 @@ export function mount(root) {
       <ul class="tight mezcla-ley">${seg.map(([n, v, c]) => `<li><span class="dot" style="background:${c}"></span>${esc(n)}: <b>${cop(v)}</b> (${fmtN((100 * v) / totM, 0)} %)</li>`).join('')}</ul>
       ${f.escenario_probable_docs06 ? `<p class="note"><b>Con los montos más probables</b> (MinSalud ${cop(f.escenario_probable_docs06.montos?.pgn_minsalud)}, Obras por Impuestos ${cop(f.escenario_probable_docs06.montos?.oxi)}, sin crédito) se reúnen ${cop(f.escenario_probable_docs06.suma)}: faltan <b>${cop(f.escenario_probable_docs06.brecha_frente_a_la_torre)}</b>.</p>` : ''}
       ${matriz(f.matriz_escenario_base_por_proyecto, nombre)}
-      <div class="tbl-wrap"><table><thead><tr><th>Fuente</th><th>Rango posible</th><th class="n">Escenario base</th><th>Probabilidad</th></tr></thead><tbody>${L.map((x) => `<tr><td><details class="fold"><summary>${esc(x.nombre)}</summary><p class="note">${esc(x.requisitos || '')}</p>${x.momento ? `<p class="note"><b>Cuándo:</b> ${esc(x.momento)}</p>` : ''}${x.proyectos_que_financia ? `<p class="note"><b>Financia:</b> ${esc([].concat(x.proyectos_que_financia).join(', '))}</p>` : ''}</details></td><td>${Array.isArray(x.monto_posible_rango) ? `${cop(x.monto_posible_rango[0])} a ${cop(x.monto_posible_rango[1])}` : ''}</td><td class="n">${cop(x.monto_central_escenario_base)}</td><td><small>${esc(String(x.probabilidad || '').split('(')[0])}</small></td></tr>`).join('')}</tbody></table></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Fuente</th><th class="n">Escenario base</th></tr></thead><tbody>${L.map((x) => `<tr><td><details class="fold"><summary>${esc(x.nombre)}</summary><p class="note">${esc(x.requisitos || '')}</p>${x.momento ? `<p class="note"><b>Cuándo:</b> ${esc(x.momento)}</p>` : ''}${x.proyectos_que_financia ? `<p class="note"><b>Financia:</b> ${esc([].concat(x.proyectos_que_financia).join(', '))}</p>` : ''}</details>${x.probabilidad ? `<small class="note">Probabilidad: ${esc(String(x.probabilidad).split('(')[0].trim())}</small>` : ''}</td><td class="n">${cop(x.monto_central_escenario_base)}${Array.isArray(x.monto_posible_rango) ? `<br><small class="note" style="white-space:normal">entre ${cop(x.monto_posible_rango[0])} y ${cop(x.monto_posible_rango[1])}</small>` : ''}</td></tr>`).join('')}</tbody></table></div>
       ${f.escenario_sin_pgn_lectura ? `<p class="note"><b>Sin MinSalud:</b> ${esc(f.escenario_sin_pgn_lectura)}</p>` : ''}`;
   }
   // quién paga cada proyecto en el escenario base (cada fuente se usa una sola vez)
@@ -405,7 +440,7 @@ export function mount(root) {
     const fecha = (s) => { const m = String(s || '').match(/(20\d\d)(?:-(\d\d))?/); return m ? +m[1] + ((+m[2] || 1) - 1) / 12 : null; };
     const A0 = Math.min(2026, ...L.map((x) => Math.floor(fecha(x.inicio) ?? 2026))), A1 = Math.max(2030, ...L.map((x) => Math.floor(fecha(x.fin) ?? 2030))), N = A1 - A0 + 1;
     const anios = Array.from({ length: N }, (_, i) => A0 + i), pct = (t) => ((t - A0) / N) * 100;
-    const fuente = (s) => { const t = String(s || '').split(';')[0].trim(); return t.length > 120 ? `${t.slice(0, 117)}…` : t; };
+    const fuente = (s) => corto(String(s || '').split(';')[0], 120);
     const mga = p.agrupacion_recomendada_fichas_mga;
     return `${p.respuesta_corta ? `<p>${esc(p.respuesta_corta)}</p>` : ''}<div class="gantt"><div class="gantt-head"><span></span><span class="g-bar" style="background-size:${100 / N}% 100%">${anios.map((a) => `<b style="left:${pct(a)}%">${a}</b>`).join('')}</span></div>
       ${L.map((x) => { const a = fecha(x.inicio) ?? A0, b = Math.max(a + 0.08, (fecha(x.fin) ?? a + 0.5) + 1 / 12); return `<details class="fold gantt-row"><summary><span class="g-n"><b>${esc(x.id || x.orden)}</b> ${esc(nom(x))}<br><small class="note">${cop(num(x, 'valor'))} · ${esc(fuente(x.fuente_financiacion))}</small></span><span class="g-bar" style="background-size:${100 / N}% 100%"><i title="${esc(`${x.inicio} a ${x.fin}`)}" style="left:${pct(a)}%;width:${pct(b) - pct(a)}%"></i></span></summary><p class="note">${esc(x.objeto || '')}</p><p class="note">${x.entidad ? `<b>Presenta:</b> ${esc(x.entidad)}<br>` : ''}${x.tipo_concepto_485 ? `<b>Concepto técnico:</b> ${esc(x.tipo_concepto_485)}<br>` : ''}${x.mga ? `<b>MGA:</b> ${esc(typeof x.mga === 'string' ? x.mga : JSON.stringify(x.mga))}<br>` : ''}${(x.dependencias || []).length ? `<b>Requiere:</b> ${esc([].concat(x.dependencias).join('; '))}` : ''}</p></details>`; }).join('')}</div>

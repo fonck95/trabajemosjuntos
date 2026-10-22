@@ -20,7 +20,8 @@ function bevelKeep(m) {
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [26, 24, 34], target: [0, 3, 0], maxDist: 90, dynamicShadows: true, env: false });
+  // declutter: las cifras sobre las columnas y las etiquetas de cada pila suben lo justo para no taparse
+  const st = new Stage(el, { cam: [26, 24, 34], target: [0, 3, 0], maxDist: 90, dynamicShadows: true, env: false, declutter: ['lbl-val', 'lbl-money'] });
   const T = tokens();
   const S = st.scene;
   const P = SECOP.periodos, C = SECOP.categorias;
@@ -44,8 +45,15 @@ export function mount(root) {
   slots.receiveShadow = slotsPila.receiveShadow = true; slotsPila.visible = false;
   S.add(slots, slotsPila);
 
-  P.forEach((p, i) => st.label(p.replace('-', '–'), 'lbl-axis', [x0 + i * GX, 0.2, z0 + C.length * GZ + 0.4]));
-  const catLabels = C.map((c, j) => st.label(c.corto, 'lbl-axis', [x0 - 4.6, 0.2, z0 + j * GZ]));
+  // rótulo de periodo completo y corto («08–11», el que se ve en el teléfono)
+  const perLabels = P.map((p, i) => st.label(`<span class="per-l">${p.replace('-', '–')}</span><span class="per-c">${p.slice(2, 4)}–${p.slice(7, 9)}</span>`, 'lbl-axis', [x0 + i * GX, 0.2, z0 + C.length * GZ + 0.4]));
+  // nombre de cada categoría al final de su fila, alineado a la izquierda: con la cámara desde el frente a la
+  // derecha, las columnas de las filas de adelante quedan a la izquierda y no lo cruzan
+  const catLabels = C.map((c, j) => {
+    const l = st.label(c.corto, 'lbl-axis lbl-cat', [x0 + (P.length - 0.5) * GX, 0.2, z0 + j * GZ]);
+    l.center.set(0, 0.5);
+    return l;
+  });
 
   // Columnas fantasma: ingresos en caja del municipio en cada periodo (OEC, DNP)
   const ghostMat = new THREE.LineBasicMaterial({ color: T.ink, transparent: true, opacity: 0.7 });
@@ -102,17 +110,23 @@ export function mount(root) {
       const cum = P.map(() => 0);
       bars.forEach((b, k) => {
         b.v = vals[k]; b.target = (b.v / max) * H; b.ty = (cum[b.i] / max) * H; b.tz = 0.4; cum[b.i] += b.v;
-        b.lab.element.textContent = `Contratado ${fmtV(tot[b.i])}`;
-        b.show = b.j === C.length - 1 && tot[b.i] > 0; b.lab.element.hidden = !b.show;
+        // cada bloque muestra su categoría al pasar el cursor; el total del periodo va en la etiqueta de la pila
+        b.lab.element.textContent = b.v ? `${b.c.corto}: ${fmtV(b.v)}` : '';
+        b.show = false; b.lab.element.hidden = true;
       });
       ghosts.forEach((g, i) => {
-        g.target = (ing[i] / max) * H;
-        const info = SECOP.ingresos[g.p];
-        g.lab.element.innerHTML = info ? `${fmtCOP(info.valor)}<small>${info.nota}</small>` : '';
+        g.target = (ing[i] / max) * H; g.stack = (tot[i] / max) * H; g.z = conIngresos ? -1.1 : 0.4;
+        const info = conIngresos && SECOP.ingresos[g.p], salvedad = info && info.nota.match(/\(([^)]+)\)/)?.[1];
+        // una sola etiqueta por periodo con lo que entró y lo contratado: así las dos cifras no se tapan; la nota
+        // solo aparece cuando hay una salvedad (por ejemplo, «solo 2024» en el periodo en curso)
+        g.lab.element.innerHTML = `${info ? `<span>Entró ${fmtCOP(info.valor)}</span>` : ''}<span class="ct">${med === 'valor' ? `Contratado ${fmtCOP(tot[i])}` : `${fmtN(tot[i])} contratos`}</span>${salvedad ? `<span class="nt">${salvedad}</span>` : ''}`;
+        g.on = tot[i] > 0 || ing[i] > 0;
       });
     }
-    ghosts.forEach((g) => { g.g.visible = conIngresos; g.lab.visible = conIngresos; g.lab.element.hidden = !conIngresos; if (!conIngresos) g.target = 0; });
+    ghosts.forEach((g) => { const on = modo === 'pila' && g.on; g.g.visible = conIngresos; g.lab.visible = on; g.lab.element.hidden = !on; if (!conIngresos) g.target = 0; });
     catLabels.forEach((l) => { l.visible = modo === 'matriz'; l.element.hidden = modo !== 'matriz'; });
+    // los periodos van al pie de cada pila o al frente de la matriz
+    perLabels.forEach((l) => { l.position.z = modo === 'matriz' ? z0 + C.length * GZ + 0.4 : 2.6; });
     slots.visible = modo === 'matriz'; slotsPila.visible = modo !== 'matriz';
     // GSAP anima cada columna hacia su nuevo estado; sin GSAP se coloca de inmediato
     bars.forEach((b) => {
@@ -131,7 +145,7 @@ export function mount(root) {
     b.lab.position.set(b.m.position.x, b.y + b.h + 0.7, b.z);
     st.invalidate();
   };
-  const placeG = (g) => { g.g.scale.y = Math.max(0.001, g.h); g.lab.position.set(g.g.position.x, g.h + 1.2, g.g.position.z); st.invalidate(); };
+  const placeG = (g) => { g.g.scale.y = Math.max(0.001, g.h); g.lab.position.set(g.g.position.x - 0.1, Math.max(g.h, g.stack || 0) + 1.2, g.z ?? 0.4); st.invalidate(); };
 
   const pickEl = root.querySelector('[data-slot="dinero.pick"]');
   function pick(b) {
@@ -151,8 +165,20 @@ export function mount(root) {
     med = bt.dataset.med; root.querySelectorAll('[data-med]').forEach((x) => x.setAttribute('aria-pressed', x === bt)); layout();
   }));
   root.querySelectorAll('[data-modo]').forEach((bt) => bt.addEventListener('click', () => {
-    modo = bt.dataset.modo; root.querySelectorAll('[data-modo]').forEach((x) => x.setAttribute('aria-pressed', x === bt)); layout();
+    modo = bt.dataset.modo; root.querySelectorAll('[data-modo]').forEach((x) => x.setAttribute('aria-pressed', x === bt)); layout(); encuadre(false);
   }));
+  // Encuadre: la matriz conserva en escritorio la cámara de siempre; en el teléfono (escenario angosto y alto) la
+  // cámara sube para que el tablero ocupe el alto disponible. La fila de pilas se ve más de frente y con aire
+  // arriba y a los lados para las etiquetas
+  function encuadre(primera) {
+    const tel = el.clientWidth < 560;
+    if (modo === 'matriz' && !tel) { if (!primera) st.flyTo(st.fitPos([26, 24, 34], [0, 3, 0]), [0, 3, 0], 1.2); return; }
+    st.resize();
+    // la matriz casi de frente y desde arriba; la fila de pilas con margen a los lados para las etiquetas
+    if (modo === 'matriz') st.frameBox(new THREE.Box3(new THREE.Vector3(x0 - 2.1, 0, z0 - 1.4), new THREE.Vector3(-x0 + 2.1, H * 0.85, -z0 + 2.9)), new THREE.Vector3(0.25, 0.75, 1), { margin: 0.95, duration: 1.2, ty: 0.3 });
+    else if (tel) st.frameBox(new THREE.Box3(new THREE.Vector3(x0 - 4, 0, -3.6), new THREE.Vector3(-x0 + 4, H + 2, 3)), new THREE.Vector3(0.3, 0.45, 1), { margin: 0.94, duration: 1.2, ty: 0.4 });
+    else st.frameBox(new THREE.Box3(new THREE.Vector3(x0 - 2.5, 0, -3.6), new THREE.Vector3(-x0 + 2.5, H + 4, 3)), new THREE.Vector3(0.35, 0.45, 1), { margin: 0.85, duration: 1.2, ty: 0.42 });
+  }
 
   // leyenda, tabla y fichas
   root.querySelector('[data-slot="dinero.legend"]').innerHTML = C.map((c) => `<span><i style="background:var(--s${c.slot})"></i>${c.label}</span>`).join('');
@@ -172,7 +198,7 @@ export function mount(root) {
   root.querySelector('[data-slot="dinero.findings"]').innerHTML = SECOP.hallazgos.map((h) => `<div class="card"><p class="eyebrow">${h.tag}</p><h3>${h.titulo}</h3><p>${h.texto}</p>${h.fuente ? `<p class="note">${h.fuente}</p>` : ''}</div>`).join('');
 
   bars.forEach((b) => { b.h = 0.001; b.y = 0; b.z = z0 + b.j * GZ; place(b); });
-  layout();
+  layout(); encuadre(true);
   st.freeze(floor); st.freeze(grid); st.freeze(slots); st.freeze(slotsPila);
   onTheme((t) => {
     floor.material.color.copy(t.surface);

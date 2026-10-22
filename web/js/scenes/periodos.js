@@ -7,17 +7,24 @@
 import { THREE, Stage, tokens, onTheme, mat, fmtN, gsap } from '../core.js';
 import { PERIODOS, AREAS, DINERO, PANEL } from '../data.js';
 
-const fmtM = (v) => (v == null || Number.isNaN(v) ? '—' : Math.abs(v) >= 1e6 ? `$${fmtN(v / 1e6, 2)} billones` : Math.abs(v) >= 1000 ? `$${fmtN(v / 1000, 1)} mil M` : `$${fmtN(v, 0)} M`);
+// espacios que no se cortan: la «M» no queda sola en otro renglón
+const fmtM = (v) => (v == null || Number.isNaN(v) ? '—' : Math.abs(v) >= 1e6 ? `$${fmtN(v / 1e6, 2)}\u00a0billones` : Math.abs(v) >= 1000 ? `$${fmtN(v / 1000, 1)}\u00a0mil\u00a0M` : `$${fmtN(v, 0)}\u00a0M`);
 const short = (s) => (s || '').split(/[(;]/)[0].trim();
+// en los textos de los datos la unidad no se separa de la cifra («$11.864 M», «$1,5 mil M», «83,6 %»)
+const nb = (t) => String(t ?? '').replace(/(\d) (?:(mil) )?(M|millones|billones|%)(?![\wáéíóúñ])/g, (m, a, b, c) => `${a}\u00a0${b ? `${b}\u00a0` : ''}${c}`);
+// rótulo de periodo: completo en escritorio y corto («04–07») en el teléfono (lo elige el CSS)
+const perHtml = (id) => `<span class="per-l">${id.replace('-', '–')}</span><span class="per-c">${id.slice(2, 4)}–${id.slice(7, 9)}</span>`;
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [6, 16, 50], target: [0, 7, 0], maxDist: 200, dynamicShadows: true, env: false, fit: 1, declutter: ['lbl-money'] });
+  const st = new Stage(el, { cam: [6, 16, 50], target: [0, 7, 0], maxDist: 200, dynamicShadows: true, env: false, fit: 1, declutter: ['lbl-money', 'lbl-pila', 'lbl-val'] });
   const T = tokens();
   const S = st.scene;
   const D = DINERO?.periodos?.length ? DINERO : null;
   const n = PERIODOS.length;
-  const GX = 7.2, x0 = -((n - 1) * GX) / 2;
+  // en el teléfono las pilas van más juntas: la fila cabe a lo ancho y las pilas se ven más altas
+  const angosto = el.clientWidth < 560;
+  const GX = angosto ? 4.6 : 7.2, x0 = -((n - 1) * GX) / 2;
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(n * GX + 10, 30), mat(T.surface)); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; S.add(floor);
   st.freeze(floor);
 
@@ -95,15 +102,14 @@ export function mount(root) {
 
   // etiquetas por pila
   const pileLabels = cuentas.map((c, i) => {
-    const x = x0 + i * GX, lv = SLAB.h + SLAB.gap;
-    const base = st.label(`<b>${c.p.id.replace('-', '–')}</b><br><small>${short(c.p.alcalde).split(' ').slice(0, 2).join(' ')}</small>`, 'lbl-title lbl-pila', [x, 0.2, 4.4], plata);
+    const x = x0 + i * GX;
+    const base = st.label(`<b>${perHtml(c.p.id)}</b><br><small>${short(c.p.alcalde).split(' ').slice(0, 2).join(' ')}</small>`, 'lbl-title lbl-pila', [x, 0.2, 4.4], plata);
     base.element.style.pointerEvents = 'auto'; base.element.style.cursor = 'pointer'; base.element.addEventListener('click', () => select(i));
-    const top = st.label(`${fmtM(c.ingresos)}<small>entró</small>`, 'lbl-money', [x, c.height + 1.2, 0], plata);
-    const red = c.sinObra > 0 ? st.label(`${fmtM(c.sinObra)} <small>sin obra</small>`, 'lbl-val', [x + 2.9, (c.counts.base + (c.counts.hecho + c.counts.estimado) / 2) * lv, 0], plata) : null;
-    if (red) red.element.style.color = 'var(--bad)';
-    return { base, top, red };
+    // lo que no se volvió obra va como segunda línea, en rojo, dentro de la misma caja: no invade la pila vecina
+    const top = st.label(`${fmtM(c.ingresos)}<small>entró</small>${c.sinObra > 0 ? `<small class="sin">${fmtM(c.sinObra)} sin obra</small>` : ''}`, 'lbl-money', [x, c.height + 1.2, 0], plata);
+    return { base, top };
   });
-  st.label(`1 fajo =<br>${fmtM(UNIT)}<br>de 2026`, 'lbl-axis lbl-val', [x0 - 4.6, 3, 0], plata);
+  st.label(`1 fajo =<br>${fmtM(UNIT)}<br>de 2026`, 'lbl-axis lbl-val lbl-fajo', [x0 - 4.6, 3, 0], plata);
   // zona de selección (invisible) por pila
   const hit = new THREE.MeshBasicMaterial({ visible: false });
   cuentas.forEach((c, i) => { const h = new THREE.Mesh(new THREE.BoxGeometry(SLAB.w + 0.8, Math.max(1, c.height) + 1, SLAB.d + 1), hit); h.position.set(x0 + i * GX, (Math.max(1, c.height) + 1) / 2, 0); plata.add(h); st.pickable(h, { onPick: () => select(i) }); });
@@ -128,8 +134,10 @@ export function mount(root) {
     ind.add(obj);
     st.pickable(obj, { onPick: () => { select(i); detailCell(a, p, v); } });
   }));
-  PERIODOS.forEach((p, i) => st.label(p.id.replace('-', '–'), 'lbl-title', [ix0 + i * IX, 0.2, z0 + AREAS.length * GZ - 0.8], ind));
-  AREAS.forEach((a, j) => st.label(a.corto, 'lbl-axis', [ix0 - 3.4, 0.2, z0 + j * GZ], ind));
+  PERIODOS.forEach((p, i) => st.label(perHtml(p.id), 'lbl-title', [ix0 + i * IX, 0.2, z0 + AREAS.length * GZ - 0.8], ind));
+  // nombre del área al final de su fila, alineado a la izquierda: con la cámara de frente y un poco a la derecha,
+  // las columnas de las filas de adelante quedan a su izquierda y no lo cruzan (en el teléfono se oculta)
+  AREAS.forEach((a, j) => { st.label(a.corto, 'lbl-axis lbl-area', [-ix0 + IX / 2 + 0.1, 0.2, z0 + j * GZ], ind).center.set(0, 0.5); });
   // CSS2DRenderer no mira la visibilidad del grupo padre: se apaga cada etiqueta
   const hideLabels = (g, v) => g.traverse((o) => { if (o.isCSS2DObject) o.visible = v; });
   hideLabels(ind, false);
@@ -142,19 +150,33 @@ export function mount(root) {
     modeBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.modoPeriodos === m)));
     plata.visible = m === 'plata'; ind.visible = m === 'indicadores';
     hideLabels(plata, m === 'plata'); hideLabels(ind, m === 'indicadores');
-    if (m === 'indicadores') { st.flyTo(st.fitPos([42, 28, 40], [0, 3, 0]), [0, 3, 0], 1.2); select(sel); }
-    else { st.flyTo(st.fitPos([6, 16, 50], [0, 7, 0]), [0, 7, 0], 1.2); playDrop(); }
+    encuadre();
+    if (m === 'indicadores') select(sel); else playDrop();
     root.querySelector('[data-t="periodos.stamp"]')?.replaceChildren(document.createTextNode(m === 'plata' ? `Cada fajo = ${fmtM(UNIT)} de 2026 · rojo = no se convirtió en obra (registros) · naranja = estimado · hueco = pudo gestionarse y no se hizo` : 'Altura = desempeño normalizado 0–100 · columna hueca = sin dato verificable'));
     st.updateShadows();
   }
   modeBtns.forEach((b) => b.addEventListener('click', () => setMode(b.dataset.modoPeriodos)));
+  // Encuadre de cada modo: la matriz de indicadores centrada, casi de frente en escritorio (con espacio a la derecha
+  // para los nombres de área) y desde más arriba en el teléfono; la plata, con la cámara de siempre en escritorio y
+  // ajustada a la fila de pilas en el teléfono
+  function encuadre() {
+    st.resize();
+    const V = (x, y, z) => new THREE.Vector3(x, y, z);
+    if (mode === 'indicadores') {
+      const zf = z0 + AREAS.length * GZ;
+      st.frameBox(new THREE.Box3(V(ix0 - 1.5, 0, z0 - 1.5), V(-ix0 + (angosto ? 1.5 : 7), H * 0.8, zf)), angosto ? V(0.2, 1.6, 1) : V(0.35, 0.8, 1), { margin: angosto ? 0.94 : 0.82, duration: 1.2, ty: 0.25 });
+    } else if (angosto) {
+      const top = Math.max(...cuentas.map((c) => c.height));
+      st.frameBox(new THREE.Box3(V(x0 - SLAB.w / 2 - 1, 0, -1.5), V(-x0 + SLAB.w / 2 + 1, top + 2.4, 4.6)), V(0.1, 0.25, 1), { margin: 0.96, duration: 1.2, ty: 0.45 });
+    } else st.flyTo(st.fitPos([6, 16, 50], [0, 7, 0]), [0, 7, 0], 1.2);
+  }
 
   // ---------------------------------------------------------------- selector y detalle
   const seg = root.querySelector('[data-slot="periodos.seg"]');
   seg.innerHTML = PERIODOS.map((p, i) => `<button type="button" data-i="${i}" aria-pressed="false">${p.id.replace('-', '–')}</button>`).join('');
   seg.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => select(+b.dataset.i)));
   const det = root.querySelector('[data-slot="periodos.detail"]');
-  const list = (arr) => `<ul class="tight">${(arr || []).map((x) => `<li>${x}</li>`).join('')}</ul>`;
+  const list = (arr) => `<ul class="tight">${(arr || []).map((x) => `<li>${nb(x)}</li>`).join('')}</ul>`;
   let sel = n - 1;
   function select(i) {
     sel = i;
@@ -170,13 +192,13 @@ export function mount(root) {
         ${c.indicio ? `<div class="ind"><b>${fmtM(c.indicio)}</b><span>indicio por verificar (no suma en "sin obra")</span></div>` : ''}
         ${c.quieta ? `<div class="quieta"><b>${fmtM(c.quieta)}</b><span>plata quieta: regalías sin aprobar o sin comprometer al cierre (no es plata perdida)</span></div>` : ''}
         <div class="ghost"><b>${fmtM(c.contra)}</b><span>pudieron gestionarse o ahorrarse y no se hizo</span></div></div>` : ''}
-      ${d?.lectura ? `<p>${d.lectura}</p>` : ''}
-      <p class="note">${p.plan || ''}</p>
+      ${d?.lectura ? `<p>${nb(d.lectura)}</p>` : ''}
+      <p class="note">${nb(p.plan)}</p>
       <details${D ? '' : ' open'}><summary>Lo que se hizo y lo que faltó</summary>
       <p><b>Lo que se hizo</b></p>${list(p.hizo)}
       <p><b>Lo que pudo hacerse y no se hizo</b></p>${list(p.falto)}
       ${p.alertas?.length ? `<p><b>Alertas de control</b></p>${list(p.alertas)}` : ''}
-      ${p.contexto ? `<p class="note">${p.contexto}</p>` : ''}</details>`;
+      ${p.contexto ? `<p class="note">${nb(p.contexto)}</p>` : ''}</details>`;
     if (gsap) gsap.from(det, { opacity: 0, y: 8, duration: 0.35, ease: 'power2.out' });
     renderBars(); renderPudo(); renderPanel();
     st.invalidate();
@@ -190,24 +212,34 @@ export function mount(root) {
   const barsEl = root.querySelector('[data-slot="periodos.cuenta"]');
   const legendEl = root.querySelector('[data-slot="periodos.leyenda"]');
   if (legendEl) legendEl.innerHTML = kinds.map((k) => `<span><i class="${k.hollow ? 'hollow' : ''}" style="background:${k.css}"></i>${k.label}</span>`).join('');
+  // si el ancho cruza el umbral (giro del teléfono, ventana que se angosta), se vuelve a dibujar
+  let angostoBars = null;
+  if (barsEl) new ResizeObserver(() => { const a = barsEl.clientWidth > 0 && barsEl.clientWidth < 560; if (angostoBars !== null && a !== angostoBars) renderBars(); }).observe(barsEl);
   function renderBars() {
     if (!barsEl) return;
     if (!D) { barsEl.innerHTML = '<p class="note">La cuenta por gobierno se está consolidando.</p>'; return; }
-    const W = 880, rowH = 46, lab = 150, maxW = W - lab - 300, sc = maxW / maxTot;
+    // en pantallas angostas cada gobierno ocupa tres renglones (nombre, barra y cifras) dibujados al ancho real,
+    // así el texto conserva su tamaño en vez de encogerse con el dibujo de escritorio
+    angostoBars = barsEl.clientWidth > 0 && barsEl.clientWidth < 560;
+    const W = angostoBars ? Math.round(barsEl.clientWidth) : 880, rowH = angostoBars ? 90 : 46, lab = angostoBars ? 0 : 150;
+    const maxW = angostoBars ? W - 2 : W - lab - 300, sc = maxW / maxTot, by = angostoBars ? 18 : 0;
     const rows = cuentas.map((c, i) => {
       const y = 10 + i * rowH, on = i === sel ? ' on' : '';
       // dentro de la caja: base, registros, estimado, indicio; por fuera: plata quieta y lo no gestionado
       const segs = [['b0', c.ingresos - c.hecho - c.estimado - c.indicio], ['b1', c.hecho], ['b2', c.estimado], ['b2i', c.indicio], ['b4', c.quieta], ['b3', c.contra]];
       let x = lab;
-      const rects = segs.map(([cls, v]) => { const w = Math.max(0, v * sc); const r = w > 0 ? `<rect x="${x + (cls === 'b4' || cls === 'b3' ? 2 : 0)}" y="${cls === 'b3' ? 6 : 4}" width="${Math.max(0, w - (cls === 'b4' || cls === 'b3' ? 2 : 0))}" height="${cls === 'b3' ? 24 : 28}" class="${cls}"><title>${fmtM(v)}</title></rect>` : ''; x += w; return r; }).join('');
-      return `<g class="row${on}" data-i="${i}" transform="translate(0,${y})">
-        <text x="0" y="16" class="per">${c.p.id.replace('-', '–')}</text><text x="0" y="31" class="who">${short(c.p.alcalde).split(' ').slice(0, 3).join(' ')}</text>
-        ${rects}
-        <text x="${x + 8}" y="17" class="v">${fmtM(c.sinObra)} sin obra${c.d?.sin_obra_pct_ingresos != null ? ` (${fmtN(c.d.sin_obra_pct_ingresos, 1)} %)` : ''}</text>
-        <text x="${x + 8}" y="31" class="v2">${fmtM(c.contra)} sin gestionar${c.quieta ? ` · ${fmtM(c.quieta)} quieta` : ''}</text>
-      </g>`;
+      const rects = segs.map(([cls, v]) => { const w = Math.max(0, v * sc); const r = w > 0 ? `<rect x="${x + (cls === 'b4' || cls === 'b3' ? 2 : 0)}" y="${by + (cls === 'b3' ? 6 : 4)}" width="${Math.max(0, w - (cls === 'b4' || cls === 'b3' ? 2 : 0))}" height="${cls === 'b3' ? 24 : 28}" class="${cls}"><title>${fmtM(v)}</title></rect>` : ''; x += w; return r; }).join('');
+      const who = short(c.p.alcalde).split(' ').slice(0, 3).join(' ');
+      const v1 = `${fmtM(c.sinObra)} sin obra${c.d?.sin_obra_pct_ingresos != null ? ` (${fmtN(c.d.sin_obra_pct_ingresos, 1)} %)` : ''}`;
+      const v2 = `${fmtM(c.contra)} sin gestionar${c.quieta ? ` · ${fmtM(c.quieta)} quieta` : ''}`;
+      const txt = angostoBars
+        ? `<text x="0" y="14" class="per">${c.p.id.replace('-', '–')}</text><text x="84" y="14" class="who">${who}</text>
+        ${rects}<text x="0" y="${by + 46}" class="v">${v1}</text><text x="0" y="${by + 60}" class="v2">${v2}</text>`
+        : `<text x="0" y="16" class="per">${c.p.id.replace('-', '–')}</text><text x="0" y="31" class="who">${who}</text>
+        ${rects}<text x="${x + 8}" y="17" class="v">${v1}</text><text x="${x + 8}" y="31" class="v2">${v2}</text>`;
+      return `<g class="row${on}" data-i="${i}" transform="translate(0,${y})">${txt}</g>`;
     }).join('');
-    barsEl.innerHTML = `<svg viewBox="0 0 ${W} ${cuentas.length * rowH + 20}" class="cuenta" role="img" aria-label="Por gobierno: lo que entró, lo que no se convirtió en obra y lo que pudo gestionarse">${rows}</svg>`;
+    barsEl.innerHTML = `<svg viewBox="0 0 ${W} ${cuentas.length * rowH + 20}" class="cuenta${angostoBars ? ' m' : ''}" role="img" aria-label="Por gobierno: lo que entró, lo que no se convirtió en obra y lo que pudo gestionarse">${rows}</svg>`;
     barsEl.querySelectorAll('g.row').forEach((g) => g.addEventListener('click', () => select(+g.dataset.i)));
     if (gsap) gsap.from(barsEl.querySelectorAll('g.row rect'), { attr: { width: 0 }, duration: 0.7, stagger: 0.015, ease: 'power2.out' });
   }
@@ -216,9 +248,13 @@ export function mount(root) {
   const pudoEl = root.querySelector('[data-slot="periodos.pudo"]');
   // textos largos: primera frase visible y el resto plegado
   const plegar = (t) => {
-    t = String(t || ''); if (t.length <= 200) return `<span class="note">${t}</span>`;
-    const cut = t.slice(0, 200).lastIndexOf('. ') > 60 ? t.slice(0, 200).lastIndexOf('. ') + 1 : 180;
-    return `<details class="fold"><summary class="note">${t.slice(0, cut)} <span>Ver más</span></summary><span class="note">${t.slice(cut)}</span></details>`;
+    t = nb(t); if (t.length <= 200) return `<span class="note">${t}</span>`;
+    // se corta al final de una frase o, si no hay, en el último espacio (nunca a mitad de palabra o de cifra)
+    const punto = t.slice(0, 200).lastIndexOf('. ');
+    let cut = punto > 60 ? punto + 1 : t.lastIndexOf(' ', 180);
+    // una cifra no se separa de su unidad («$1.491 M»): el corte retrocede hasta antes de la cifra
+    while (punto <= 60 && cut > 60 && /\d\S*$/.test(t.slice(0, cut))) cut = t.lastIndexOf(' ', cut - 1);
+    return `<details class="fold"><summary class="note">${t.slice(0, cut)}<span>${punto > 60 ? ' ' : '… '}Ver más</span></summary><span class="note">${t.slice(cut)}</span></details>`;
   };
   const ICON = {
     aulas: '<path d="M3 10 12 4l9 6v10H3z"/><path d="M9 20v-6h6v6"/>', vivienda: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
