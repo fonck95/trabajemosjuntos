@@ -1,0 +1,378 @@
+{
+ "id": "torre_hospital_proyectos",
+ "titulo": "Proyectos de inversión que hay que articular para la torre – E.S.E. Hospital Héctor Abad Gómez (Yondó)",
+ "tarea": "T4 – Presupuesto, APU, financiación y proyectos a articular",
+ "fecha_corte": "2026-10-22",
+ "moneda_y_base": "Pesos constantes de 2026 (base: promedio enero-septiembre de 2026 del IPC del DANE; data/fuentes/ipc_dane.csv). Sin inflación futura.",
+ "convenciones": {
+  "dato_oficial": "tomado de la fuente citada (norma, SECOP, Tienda Virtual, DANE, MinHacienda)",
+  "calculo_propio": "operación sobre datos oficiales o supuestos declarados (APU, sumas, conversiones por IPC o salario mínimo)",
+  "estimacion": "supuesto del equipo con rango, a confirmar con cotizaciones y diseños"
+ },
+ "respuesta_corta": "Hay que articular 9 proyectos: 7 forman la torre ($36.536 millones) y 2 la complementan (edificio actual y ambulancia, $2.613 millones). Se pueden presentar en 7 fichas MGA uniendo P2 con P3 (proyecto mixto) y P4 con P5. Lo mínimo para abrir la torre son 3: estudios y diseños (P1), construcción con equipamiento fijo (P2+P3) y dotación con laboratorio (P4+P5).",
+ "proyectos": [
+  {
+   "orden": 1,
+   "id": "P1",
+   "nombre": "Estudios y diseños integrales, formulación y licencia de la torre de primer nivel",
+   "objeto": "Topografía, estudio de suelos, diseños arquitectónico, estructural (grupo IV) y técnicos, presupuesto con APU, Documento de Capacidad Instalada, MGA y licencia de construcción, con interventoría.",
+   "valor": 1803057882,
+   "rango": [
+    1124347746,
+    2660291980
+   ],
+   "fuente_financiacion": "SGR – Asignaciones Directas (saldo 2025-2026) o recursos propios del municipio; apoyo técnico de la Secretaría Seccional de Salud.",
+   "entidad": "Municipio de Yondó (ejecutor) con la E.S.E. Hospital Héctor Abad Gómez",
+   "tipo_concepto_485": "Num. 7.1.9 (estudios y diseños e interventoría como proyecto separado). Con recursos territoriales y menos de 5.000 SMMLV, el concepto lo emite la Secretaría Seccional de Salud de Antioquia (Res. 485, arts. 5 y 6).",
+   "mga": "Sector 19 Salud y Protección Social; programa 1906; producto 1906034 'Estudios de preinversión' (código 190603400).",
+   "dependencias": [
+    "Título del lote",
+    "Certificado de uso del suelo y de riesgo",
+    "Decisión sobre el uso del edificio actual"
+   ],
+   "inicio": "2026-11",
+   "fin": "2027-12"
+  },
+  {
+   "orden": 2,
+   "id": "P2",
+   "nombre": "Demolición del antiguo Centro Vida y construcción de la torre de servicios de primer nivel (infraestructura física y redes)",
+   "objeto": "Retiro de asbesto, demolición, cimentación, estructura NSR-10 grupo IV, muros, cubiertas, acabados hospitalarios, redes hidrosanitarias, contra incendio, eléctricas, de gases y de aire, galería y urbanismo, con interventoría y supervisión técnica independiente.",
+   "valor": 21707365153,
+   "rango": [
+    16708037002,
+    28295358726
+   ],
+   "fuente_financiacion": "MinSalud (PGN) + SGR (directas, incentivo OCAD Paz, inversión regional) + Gobernación de Antioquia + crédito del municipio + recursos propios.",
+   "entidad": "E.S.E. Hospital Héctor Abad Gómez ante MinSalud; Municipio de Yondó para la parte de regalías",
+   "tipo_concepto_485": "Num. 7.1.2 (infraestructura física: reposición con fortalecimiento de capacidad instalada) o num. 7.1.12 (llave en mano). Control especial de oferta (> 5.000 SMMLV): concepto de MinSalud e inclusión en el PMIDS o Plan Bienal (art. 4; num. 7.1.1.6).",
+   "mga": "Sector 19; programa 1906; producto 1906047 'Hospitales de primer nivel de atención construidos' (190604700).",
+   "dependencias": [
+    "P1 terminado (diseños y licencia)",
+    "Documento de Capacidad Instalada concertado",
+    "Registro en el PMIDS",
+    "Cierre financiero"
+   ],
+   "inicio": "2027-11",
+   "fin": "2030-01"
+  },
+  {
+   "orden": 3,
+   "id": "P3",
+   "nombre": "Equipamiento fijo e industrial y sistemas especiales de la torre",
+   "objeto": "Planta eléctrica de 300 kVA, UPS de 60 kVA, 2 ascensores camilleros y 2 montacargas, central de gases, generador de oxígeno PSA, equipos de aire acondicionado y ventilación con presiones, equipo de presión y bomba contra incendio, red de datos, llamado de enfermería, CCTV y detección de incendio.",
+   "valor": 6115223317,
+   "rango": [
+    4274461766,
+    8844141662
+   ],
+   "fuente_financiacion": "Recomendado: dentro del proyecto mixto con P2 (MinSalud o SGR). El generador PSA puede ir por Obras por Impuestos.",
+   "entidad": "E.S.E. Hospital Héctor Abad Gómez",
+   "tipo_concepto_485": "Num. 7.1.5 (equipamiento fijo: listado, 2 cotizaciones de 2 marcas, planos de ubicación) y 7.1.6 b para la red de datos. Cuenta para el umbral de 5.000 SMMLV de infraestructura y equipamiento fijo.",
+   "mga": "Sector 19; programa 1906; producto 1906047 (actividad de equipamiento del proyecto de construcción) o 1906005 'Hospitales de primer nivel de atención dotados' si se presenta aparte.",
+   "dependencias": [
+    "P2 con obra negra y cuartos técnicos listos"
+   ],
+   "inicio": "2028-11",
+   "fin": "2030-01"
+  },
+  {
+   "orden": 4,
+   "id": "P4",
+   "nombre": "Dotación biomédica, mobiliario clínico y puesta en marcha de la torre",
+   "objeto": "Equipos y mobiliario de urgencias, consulta, odontología, rayos X y ecografía, partos, hospitalización, esterilización, vacunación, farmacia, terapias y sala de expansión (dotacion.json), traslado, habilitación y licencias.",
+   "valor": 3649493943,
+   "rango": [
+    2536164453,
+    5336384337
+   ],
+   "fuente_financiacion": "Obras por Impuestos + Gobernación de Antioquia + SGR (inversión local); MinSalud si entra en el proyecto mixto.",
+   "entidad": "E.S.E. Hospital Héctor Abad Gómez",
+   "tipo_concepto_485": "Num. 7.1.6 a (dotación biomédica: listado por servicio, inventario actual, 2 cotizaciones). La dotación de baja complejidad no es de control especial de oferta; la ecografía es de mediana complejidad (normas.json). Con Obras por Impuestos o PGN, concepto de MinSalud.",
+   "mga": "Sector 19; programa 1906; producto 1906005 'Hospitales de primer nivel de atención dotados' (190600500).",
+   "dependencias": [
+    "P2 con 70 % de avance físico (Res. 2373 de 2025)",
+    "Inventario de la dotación actual"
+   ],
+   "inicio": "2029-03",
+   "fin": "2030-04"
+  },
+  {
+   "orden": 5,
+   "id": "P5",
+   "nombre": "Laboratorio clínico de 24 horas con tamizaje (equipos propios, puesta en marcha y comodato de analizadores)",
+   "objeto": "Microscopios, cabina de bioseguridad, centrífugas, neveras, autoclave y toma de muestras; validación de métodos, primer inventario y control de calidad; contrato de comodato pagado con reactivos (hematología, química, inmunoensayo, HbA1c, orina, coagulación, gases, hemocultivos); GeneXpert por el programa nacional de tuberculosis.",
+   "valor": 549376481,
+   "rango": [
+    401462580,
+    742182153
+   ],
+   "fuente_financiacion": "SGR inversión local + recursos propios de la E.S.E.; reactivos con la venta de servicios (≈ $435 millones/año, laboratorio.json).",
+   "entidad": "E.S.E. Hospital Héctor Abad Gómez",
+   "tipo_concepto_485": "Num. 7.1.6 a (dotación) y 7.1.6 b (LIS). Puede ir dentro de P4.",
+   "mga": "Sector 19; programa 1906; producto 1906005.",
+   "dependencias": [
+    "Piso 2 terminado",
+    "LIS (P6)",
+    "Contrato de comodato firmado"
+   ],
+   "inicio": "2029-06",
+   "fin": "2030-03"
+  },
+  {
+   "orden": 6,
+   "id": "P6",
+   "nombre": "Sistemas de información, telemedicina y conectividad de la torre",
+   "objeto": "Computadores, PACS/RIS, digiturno, estación de telemedicina y retinógrafo (dotacion.json); LIS, interoperabilidad con la historia clínica (Ley 2015 de 2020, Res. 866 de 2021), ciberseguridad y capacitación.",
+   "valor": 977186602,
+   "rango": [
+    635153907,
+    1450419298
+   ],
+   "fuente_financiacion": "MinTIC (FUTIC) + SGR + cooperación.",
+   "entidad": "E.S.E. Hospital Héctor Abad Gómez (con el municipio para MinTIC)",
+   "tipo_concepto_485": "Num. 7.1.6 b (dotación TIC con certificación de protección de datos) y 7.1.10 (telesalud como proyecto propio: concepto de pertinencia de MinSalud).",
+   "mga": "Sector 19; programa 1906 (por verificar el producto de telesalud en el catálogo vigente) o sector 23 TIC para la conectividad.",
+   "dependencias": [
+    "Red de voz y datos instalada (P3, ítem 11.01)"
+   ],
+   "inicio": "2029-06",
+   "fin": "2030-03"
+  },
+  {
+   "orden": 7,
+   "id": "P7",
+   "nombre": "Solar de 100 kWp, baterías de 400 kWh y gestión energética de la torre (nodo hospital de la microrred)",
+   "objeto": "Paneles en cubierta y marquesina, baterías con inversor híbrido, tablero de cargas críticas, BMS y sensores IoT, conectados a la microrred municipal (data/microrred.json).",
+   "valor": 1733987081,
+   "rango": [
+    1214325415,
+    2497804773
+   ],
+   "fuente_financiacion": "FENOGE / Con Energía + SGR u Obras por Impuestos (MinEnergía).",
+   "entidad": "Municipio de Yondó o E.S.E., articulado con el proyecto de la Red Energética Pública (docs/05)",
+   "tipo_concepto_485": "Hace parte del equipamiento fijo (num. 7.1.5) si va con MinSalud; con FENOGE o MinEnergía sigue sus propios requisitos.",
+   "mga": "Sector 21 Minas y Energía (producto por verificar en el catálogo vigente).",
+   "dependencias": [
+    "Cubierta de la torre terminada (P2)",
+    "Trámite de conexión con EPM",
+    "Descontar el nodo hospital del proyecto de microrred"
+   ],
+   "inicio": "2029-03",
+   "fin": "2030-01"
+  },
+  {
+   "orden": 8,
+   "id": "P8",
+   "nombre": "Adecuación del edificio actual para administración, archivo, almacén y central de distribución, cocina, lavandería y mantenimiento",
+   "objeto": "Adecuación arquitectónica y de redes de ≈ 1.470 m², intervención estructural para uso no esencial según el estudio de 2024, lavandería industrial, archivo rodante y estantería, con interventoría.",
+   "valor": 1962909650,
+   "rango": [
+    1177745790,
+    3336946405
+   ],
+   "componentes": [
+    {
+     "componente": "Adecuación arquitectónica y de redes para administración, archivo, almacén y central de distribución, cocina, lavandería y mantenimiento",
+     "valor": 661500000,
+     "tipo": "estimacion",
+     "base": "1.470 m² asignados (programa.json, uso_del_edificio_actual) × $450.000/m² (rango $300.000-700.000)"
+    },
+    {
+     "componente": "Intervención estructural para uso no esencial según el estudio de vulnerabilidad de 2024 (no público)",
+     "valor": 900000000,
+     "tipo": "estimacion",
+     "base": "Rango $600-1.800 millones; depende del estudio. En docs/06 se suponían $3.000 millones para reforzar el hospital como edificio asistencial; con la torre, el edificio actual deja de ser grupo IV."
+    },
+    {
+     "componente": "Lavandería industrial (lavadora de 28 kg y secadora de 30 kg)",
+     "valor": 92995000,
+     "tipo": "referencia_secop_ajustada_ipc",
+     "base": "dotacion.json, equipamiento fijo"
+    },
+    {
+     "componente": "Archivo rodante, estantería de almacén y central de distribución con control de temperatura",
+     "valor": 180000000,
+     "tipo": "estimacion",
+     "base": "Estimación"
+    }
+   ],
+   "fuente_financiacion": "Gobernación de Antioquia + municipio + E.S.E. (art. 156 de la Ley 2294 si se usa antes de may-2027).",
+   "entidad": "E.S.E. Hospital Héctor Abad Gómez",
+   "tipo_concepto_485": "Num. 7.1.7 (adecuaciones: tope de 500 SMMLV = $875 millones salvo justificación) y num. 7.1.2.7 / 7.1.4 si incluye reforzamiento.",
+   "mga": "Sector 19; programa 1906; producto 1906007 'Hospitales de primer nivel de atención restaurados' (por verificar si aplica a usos no asistenciales).",
+   "dependencias": [
+    "Traslado de los servicios a la torre (P4)",
+    "Resultados del estudio de vulnerabilidad de 2024"
+   ],
+   "inicio": "2030-05",
+   "fin": "2030-12",
+   "fuera_del_costo_de_la_torre": true
+  },
+  {
+   "orden": 9,
+   "id": "P9",
+   "nombre": "Transporte asistencial: ambulancia medicalizada (TAM) o reposición de ambulancia básica",
+   "objeto": "Vehículo dotado según la NTC 3729; la torre aporta la bahía cubierta de 2 cupos.",
+   "valor": 650000000,
+   "rango": [
+    460000000,
+    750000000
+   ],
+   "fuente_financiacion": "Obras por Impuestos o Gobernación de Antioquia (proyecto tipo DNP de ambulancias).",
+   "entidad": "E.S.E. Hospital Héctor Abad Gómez",
+   "tipo_concepto_485": "Dotación de transporte asistencial: concepto según la fuente (MinSalud con PGN u Obras por Impuestos; Secretaría Seccional con recursos territoriales). El proyecto de 2024 fue devuelto a la MGA: corregirlo con el proyecto tipo DNP.",
+   "mga": "Sector 19; programa 1906 (producto de transporte asistencial por verificar).",
+   "dependencias": [],
+   "inicio": "2027-03",
+   "fin": "2028-06",
+   "fuera_del_costo_de_la_torre": true
+  }
+ ],
+ "agrupacion_recomendada_fichas_mga": [
+  [
+   "P1"
+  ],
+  [
+   "P2",
+   "P3"
+  ],
+  [
+   "P4",
+   "P5"
+  ],
+  [
+   "P6"
+  ],
+  [
+   "P7"
+  ],
+  [
+   "P8"
+  ],
+  [
+   "P9"
+  ]
+ ],
+ "orden_logico": "P1 → (P2 + P3) → P7 y P6 durante la obra → P4 + P5 al 70 % de avance → puesta en marcha → P8. P9 va por su cuenta.",
+ "cronograma_2026_2030": [
+  {
+   "etapa": "0. Gestión previa: titularidad del lote, certificado de uso del suelo y de riesgo por inundación, publicar el estudio de vulnerabilidad de 2024, decidir el uso del edificio actual y registrar la iniciativa en el PMIDS de Antioquia",
+   "inicio": "2026-11",
+   "fin": "2027-03",
+   "meses": 5,
+   "proyecto": "P1"
+  },
+  {
+   "etapa": "1. Formulación y aprobación del proyecto de estudios y diseños (MGA, SGR o recursos propios)",
+   "inicio": "2026-11",
+   "fin": "2027-02",
+   "meses": 4,
+   "proyecto": "P1"
+  },
+  {
+   "etapa": "2. Estudios y diseños integrales con interventoría (Res. 485, num. 7.1.9)",
+   "inicio": "2027-03",
+   "fin": "2027-10",
+   "meses": 8,
+   "proyecto": "P1"
+  },
+  {
+   "etapa": "3. Documento de Capacidad Instalada concertado con MinSalud (Res. 1211 y 1519 de 2025)",
+   "inicio": "2027-04",
+   "fin": "2027-09",
+   "meses": 6,
+   "proyecto": "P1"
+  },
+  {
+   "etapa": "4. Licencia de construcción y aprobaciones",
+   "inicio": "2027-11",
+   "fin": "2027-12",
+   "meses": 2,
+   "proyecto": "P1"
+  },
+  {
+   "etapa": "5. Radicación ante MinSalud (concepto técnico de viabilidad, control especial de oferta), cofinanciación y cierre financiero",
+   "inicio": "2027-11",
+   "fin": "2028-04",
+   "meses": 6,
+   "proyecto": "P2, P3"
+  },
+  {
+   "etapa": "6. Licitación de obra e interventoría",
+   "inicio": "2028-05",
+   "fin": "2028-07",
+   "meses": 3,
+   "proyecto": "P2, P3"
+  },
+  {
+   "etapa": "7. Demolición del antiguo Centro Vida (con retiro de asbesto) y cimentación",
+   "inicio": "2028-08",
+   "fin": "2028-12",
+   "meses": 5,
+   "proyecto": "P2"
+  },
+  {
+   "etapa": "8. Estructura, mampostería, redes y cubierta",
+   "inicio": "2028-11",
+   "fin": "2029-08",
+   "meses": 10,
+   "proyecto": "P2"
+  },
+  {
+   "etapa": "9. Acabados, equipamiento fijo, ascensores, gases, aire, solar y pruebas",
+   "inicio": "2029-05",
+   "fin": "2030-01",
+   "meses": 9,
+   "proyecto": "P2, P3, P7"
+  },
+  {
+   "etapa": "10. Compra e instalación de dotación biomédica, laboratorio y TIC (desde el 70 % de avance de obra, Res. 2373 de 2025)",
+   "inicio": "2029-07",
+   "fin": "2030-02",
+   "meses": 8,
+   "proyecto": "P4, P5, P6"
+  },
+  {
+   "etapa": "11. Puesta en marcha, habilitación y traslado de servicios",
+   "inicio": "2030-02",
+   "fin": "2030-04",
+   "meses": 3,
+   "proyecto": "P4"
+  },
+  {
+   "etapa": "12. Adecuación del edificio actual para administración, archivo y bodega",
+   "inicio": "2030-05",
+   "fin": "2030-12",
+   "meses": 8,
+   "proyecto": "P8"
+  }
+ ],
+ "cronograma_acelerado": "Ruta llave en mano a precio global fijo (Res. 485, num. 7.1.12, agregado por la Res. 1211): se radica con anteproyecto, memorias y Documento de Capacidad Instalada hacia jun-2027; el contratista diseña y construye (diseño 5 meses traslapado con 16 de obra). Apertura posible hacia dic-2029. Riesgo: precio global fijo sin reajuste con un anteproyecto débil; exige estudio del sector y 3 cotizaciones por componente.",
+ "suma_torre": 36535690459,
+ "suma_con_complementarios": 39148600109,
+ "fuentes": [
+  {
+   "nombre": "Catálogo de productos MGA, programa 1906 (códigos tomados de la matriz SGR del Departamento de Norte de Santander, 2024)",
+   "url": "https://administrador.nortedesantander.gov.co/wp-content/uploads/2024/05/MATRIZ_SGR_DEFINITIVA.pdf",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "dato_oficial (verificar en el catálogo vigente del DNP)"
+  },
+  {
+   "nombre": "Res. 485 de 2025 y modificaciones (normas.json)",
+   "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%20485%20de%202025.pdf",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "dato_oficial"
+  },
+  {
+   "nombre": "presupuesto.json y financiacion.json",
+   "url": "data/proyectos/torre_hospital/",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "calculo_propio"
+  }
+ ],
+ "incertidumbres": [
+  "Los códigos de producto MGA de energía, TIC, telesalud y ambulancias no se verificaron en el catálogo vigente.",
+  "Las fechas suponen que P1 se financia con el saldo de regalías 2025-2026 y que MinSalud responde en unos 3-4 meses."
+ ]
+}

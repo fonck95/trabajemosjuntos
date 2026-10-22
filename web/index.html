@@ -134,14 +134,24 @@ svg.mr-chart .now { stroke: var(--accent); stroke-width: 1.5; }
 .leyenda-servicios i { width: 10px; height: 10px; border-radius: 2px; }
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
 .checklist { max-height: 320px; overflow: auto; padding-right: 6px; font-size: 0.85rem; }
-.barras details.fold summary { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) auto; gap: 10px; align-items: center; padding: 4px 0; }
+.barras details.fold summary { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) 6.5em; gap: 10px; align-items: center; padding: 4px 0; }
 .barras .bar { height: 12px; background: var(--line); border-radius: 999px; overflow: hidden; } .barras .bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
 .barras .bar-v { font: 600 0.82rem var(--f-mono); text-align: right; } .barras .bar-l { font-size: 0.88rem; }
 .gantt-head, .gantt-row summary { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr); gap: 10px; align-items: center; }
-.gantt-head { grid-template-columns: minmax(0, 1.3fr) repeat(4, minmax(0, 0.5fr)); font: 600 0.75rem var(--f-mono); color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 4px; }
-.g-bar { position: relative; height: 14px; background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 25%); border-radius: 4px; }
+.gantt-head { font: 600 0.75rem var(--f-mono); color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.gantt-head .g-bar b { position: absolute; top: 0; padding-left: 3px; font-weight: 600; }
+.gantt-row summary { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.g-bar { position: relative; height: 14px; border-radius: 4px; }
 .g-bar i { position: absolute; top: 2px; bottom: 2px; background: var(--accent); border-radius: 4px; }
+/* las barras y el Gantt usan <span> dentro del summary: anula el estilo de "ver más" de details.fold */
+.barras details.fold summary span, .gantt details.fold summary span { white-space: normal; color: inherit; font-weight: inherit; display: block; }
+.barras .bar-l { min-width: 0; overflow-wrap: anywhere; }
+.apu-sel { display: block; } .apu-sel select { display: block; width: 100%; max-width: 100%; margin-top: 4px; }
+@media (max-width: 720px) { .gantt-head, .gantt-row summary { grid-template-columns: minmax(0, 1fr); gap: 4px; } .gantt-head > span:first-child { display: none; } .barras details.fold summary { grid-template-columns: minmax(0, 1fr) auto; } .barras details.fold summary .bar { grid-column: 1 / -1; grid-row: 2; } }
 .g-n { font-size: 0.88rem; }
+.mezcla { display: flex; height: 16px; border-radius: 999px; overflow: hidden; margin: 8px 0; } .mezcla i { display: block; height: 100%; }
+.mezcla-ley { columns: 2; font-size: 0.82rem; } @media (max-width: 720px) { .mezcla-ley { columns: 1; } }
+.g-bar { background-image: linear-gradient(90deg, var(--line) 1px, transparent 1px); background-color: transparent; }
 .lbl-km { font: 700 10px var(--f-mono); color: var(--power); background: var(--surface); border: 1.5px solid var(--power); border-radius: 999px; padding: 1px 6px; transition: opacity 0.2s; } .lbl-km.dim { opacity: 0.3; }
 .lbl-cx:hover { border-color: var(--accent); }
 .cx-ruta { margin: 4px 0 0; padding: 0; list-style: none; font-size: 0.85rem; }
@@ -547,7 +557,7 @@ details.fold summary span { color: var(--accent); font-weight: 600; white-space:
     <div class="card"><h3>Presupuesto por capítulos e ítems</h3><div data-slot="torre.presupuesto"></div></div>
     <div class="cols two">
       <div class="card"><h3>Análisis de precios unitarios (APU)</h3><div data-slot="torre.apu"></div></div>
-      <div class="card"><h3>Fuentes de financiación</h3><div class="tbl-wrap" data-slot="torre.financiacion"></div></div>
+      <div class="card"><h3>Fuentes de financiación</h3><div data-slot="torre.financiacion"></div></div>
     </div>
     <div class="card"><h3>Proyectos que hay que articular</h3><div data-slot="torre.proyectos"></div></div>
     <div class="cols two">

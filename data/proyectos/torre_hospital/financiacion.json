@@ -1,0 +1,453 @@
+{
+ "id": "torre_hospital_financiacion",
+ "titulo": "Fuentes de financiación de la torre de servicios de primer nivel – E.S.E. Hospital Héctor Abad Gómez (Yondó)",
+ "tarea": "T4 – Presupuesto, APU, financiación y proyectos a articular",
+ "fecha_corte": "2026-10-22",
+ "moneda_y_base": "Pesos constantes de 2026 (base: promedio enero-septiembre de 2026 del IPC del DANE; data/fuentes/ipc_dane.csv). Sin inflación futura.",
+ "convenciones": {
+  "dato_oficial": "tomado de la fuente citada (norma, SECOP, Tienda Virtual, DANE, MinHacienda)",
+  "calculo_propio": "operación sobre datos oficiales o supuestos declarados (APU, sumas, conversiones por IPC o salario mínimo)",
+  "estimacion": "supuesto del equipo con rango, a confirmar con cotizaciones y diseños"
+ },
+ "total_a_financiar": {
+  "torre": 36535690459,
+  "torre_millones": 36535.7,
+  "proyectos_complementarios": 2612909650,
+  "total_con_complementarios": 39148600109,
+  "fuente": "presupuesto.json"
+ },
+ "resumen": "La torre ($36.536 millones) no cabe en una sola fuente. En el escenario base la pagan MinSalud ($12.000 millones), las regalías de Yondó (directas $6.736 millones; incentivo para OCAD Paz $5.500; inversión local $1.200), la inversión regional y la Gobernación ($3.800), Obras por Impuestos ($2.500), FENOGE y MinTIC ($1.400), crédito ($1.500), aportes locales ($1.400) y otros ($500). Sin MinSalud, las regalías tendrían que poner ≈ $24.500 millones: posible en el papel (en 2025-2026 Yondó tuvo $57.382 millones de asignaciones directas e inversión local, más $14.025 millones de incentivo para el OCAD Paz), pero exige que el municipio dedique al hospital más de un tercio de sus asignaciones directas del bienio 2027-2028.",
+ "fuentes": [
+  {
+   "id": "sgr_ad",
+   "nombre": "SGR – Asignaciones Directas (incluidas las anticipadas) del Municipio de Yondó como productor de hidrocarburos",
+   "monto_posible_rango": [
+    2000000000,
+    12000000000
+   ],
+   "monto_central_escenario_base": 6735690459,
+   "monto_posible_rango_millones": [
+    2000,
+    12000
+   ],
+   "monto_central_millones": 6735.7,
+   "requisitos": "Proyecto en MGA y en el SUIFP-SGR con los requisitos sectoriales de salud (Acuerdo Único de la Comisión Rectora; normas.json advierte que hay que confirmar si se exige concepto de MinSalud o de la Secretaría Seccional además de la Res. 485). Aprobación del alcalde como entidad beneficiaria.",
+   "momento": "Ya: el saldo 2025-2026 sin aprobar alcanza para P1 (radicar nov-2026 a feb-2027). Bienio 2027-2028: el presupuesto se aprueba hasta el 5-dic-2026; radicar P2 en 2027-2028.",
+   "probabilidad": "alta (depende solo de la decisión del municipio)",
+   "base_del_monto": "Bienio 2025-2026 (MinHacienda, corte oct-2026): Asignaciones Directas $34.178 millones presupuestadas y $26.481 aprobadas; anticipadas $15.162 y $13.290 → saldo sin aprobar ≈ $9.569 millones (cálculo propio). Bienio 2027-2028: el proyecto de ley de presupuesto del SGR (radicado el 2-oct-2026) baja 11 % el total nacional (de $30,96 a $27,54 billones) y asigna $5,37 billones a asignaciones directas; si Yondó baja en la misma proporción, tendría ≈ $28.000-36.000 millones de directas (estimación).",
+   "fuente": "https://www.datos.gov.co/d/g4qj-2p2e ; docs/anexos/B-finanzas-regalias.md (sección 2.4) ; https://www.portafolio.co/economia/gobierno/presupuesto-de-regalias-2027-2028-seria-de-27-54-billones-11-menos-503793 ; https://abceconomia.co/?p=55722",
+   "proyectos_que_financia": [
+    "P1",
+    "P2",
+    "P4"
+   ],
+   "tipo": "calculo_propio sobre dato oficial"
+  },
+  {
+   "id": "sgr_ipaz",
+   "nombre": "SGR – Incentivo a la producción asignado a Yondó para proyectos del OCAD Paz y Asignación para la Paz (municipio PDET)",
+   "monto_posible_rango": [
+    0,
+    12000000000
+   ],
+   "monto_central_escenario_base": 5500000000,
+   "monto_posible_rango_millones": [
+    0,
+    12000
+   ],
+   "monto_central_millones": 5500,
+   "requisitos": "Iniciativa del PATR del PDET Sur de Bolívar (pilar de salud rural; verificar que exista o incluirla), proyecto en MGA y aprobación del OCAD Paz.",
+   "momento": "Convocatorias y sesiones del OCAD Paz en 2027-2028.",
+   "probabilidad": "media",
+   "base_del_monto": "Bienio 2025-2026: incentivo a la producción para OCAD Paz de Yondó $14.025 millones con solo $331 aprobados (saldo ≈ $13.694 millones, cálculo propio); además, Yondó ejecutó $36.228 millones de la Asignación para la Paz en 2025-2026 (vía Ye de Marley-San Francisco). Por verificar si ese saldo ya está comprometido.",
+   "fuente": "docs/anexos/B-finanzas-regalias.md (sección 2.4) ; https://www.datos.gov.co/d/e624-d9uy",
+   "proyectos_que_financia": [
+    "P2",
+    "P3"
+   ],
+   "tipo": "calculo_propio sobre dato oficial"
+  },
+  {
+   "id": "sgr_ail",
+   "nombre": "SGR – Asignación para la Inversión Local (municipios con más necesidades básicas insatisfechas)",
+   "monto_posible_rango": [
+    500000000,
+    2500000000
+   ],
+   "monto_central_escenario_base": 1200000000,
+   "monto_posible_rango_millones": [
+    500,
+    2500
+   ],
+   "monto_central_millones": 1200,
+   "requisitos": "Proyecto en MGA con enfoque en población pobre; aprobación del municipio.",
+   "momento": "2027-2029.",
+   "probabilidad": "media-alta",
+   "base_del_monto": "2025-2026: $7.336 millones presupuestados y $5.117 aprobados (saldo ≈ $2.219 millones, cálculo propio).",
+   "fuente": "docs/anexos/B-finanzas-regalias.md (sección 2.4)",
+   "proyectos_que_financia": [
+    "P4",
+    "P5"
+   ],
+   "tipo": "calculo_propio sobre dato oficial"
+  },
+  {
+   "id": "sgr_air",
+   "nombre": "SGR – Asignación para la Inversión Regional (cuota de la Gobernación de Antioquia y bolsa regional)",
+   "monto_posible_rango": [
+    0,
+    4000000000
+   ],
+   "monto_central_escenario_base": 1500000000,
+   "monto_posible_rango_millones": [
+    0,
+    4000
+   ],
+   "monto_central_millones": 1500,
+   "requisitos": "Proyecto presentado o avalado por la Gobernación de Antioquia; priorización departamental.",
+   "momento": "2027-2028, con el plan de desarrollo departamental 2028-2031.",
+   "probabilidad": "media-baja",
+   "base_del_monto": "En 2023-2024 Yondó ejecutó $7.761 millones de inversión regional (cuota departamental ejecutada por el municipio).",
+   "fuente": "docs/anexos/B-finanzas-regalias.md (sección 2.3)",
+   "proyectos_que_financia": [
+    "P2"
+   ],
+   "tipo": "dato_oficial"
+  },
+  {
+   "id": "sgr_ctei",
+   "nombre": "SGR – Asignación para Ciencia, Tecnología e Innovación",
+   "monto_posible_rango": [
+    0,
+    600000000
+   ],
+   "monto_central_escenario_base": 0,
+   "monto_posible_rango_millones": [
+    0,
+    600
+   ],
+   "monto_central_millones": 0,
+   "requisitos": "Convocatoria de MinCiencias con un aliado académico (por ejemplo, telemedicina o tamizaje molecular en un municipio aislado). No financia la obra.",
+   "momento": "Según convocatorias.",
+   "probabilidad": "baja",
+   "base_del_monto": "No hay convocatoria identificada para esta tipología.",
+   "fuente": "https://minciencias.gov.co (convocatorias SGR-CTeI)",
+   "proyectos_que_financia": [
+    "P5",
+    "P6"
+   ],
+   "tipo": "estimacion"
+  },
+  {
+   "id": "pgn_minsalud",
+   "nombre": "Presupuesto General de la Nación – MinSalud (cofinanciación con concepto técnico de viabilidad, Res. 485 de 2025)",
+   "monto_posible_rango": [
+    0,
+    20000000000
+   ],
+   "monto_central_escenario_base": 12000000000,
+   "monto_posible_rango_millones": [
+    0,
+    20000
+   ],
+   "monto_central_millones": 12000,
+   "requisitos": "Concepto técnico de viabilidad de MinSalud (control especial de oferta), Documento de Capacidad Instalada concertado, inclusión en el PMIDS de Antioquia, MGA, diseños firmados o ruta llave en mano, cofinanciación territorial certificada. La E.S.E. puede presentar el proyecto directamente.",
+   "momento": "Radicar entre nov-2027 y abr-2028; recursos 2028-2029 (o vigencias futuras).",
+   "probabilidad": "media-baja en 2027-2028; media desde 2028 si entra al PMIDS y a un nuevo CONPES",
+   "base_del_monto": "El CONPES 4169 (vigencias futuras 2026-2030 por $3,02 billones para 102 sedes) no incluye a Yondó; Guarne recibió $35.059 millones y Santa Bárbara $13.500 millones. Pero el proyecto de presupuesto 2027 baja la inversión propia de MinSalud de $2,6 a $1,6 billones y debe atender la reconstrucción de hospitales dañados por el terremoto del 10-ago-2026 (≈ $1 billón).",
+   "fuente": "https://consultorsalud.com/wp-content/uploads/2025/11/4169.pdf ; https://www.minuto30.com/amp/presupuesto-salud-2027/1718556/ ; https://www.elcolombiano.com/antioquia/guarne-antioquia-nuevo-hospital-millones-ministerio-de-salud-EG36212125",
+   "proyectos_que_financia": [
+    "P2",
+    "P3",
+    "P4"
+   ],
+   "tipo": "dato_oficial"
+  },
+  {
+   "id": "gobernacion",
+   "nombre": "Gobernación de Antioquia – Secretaría Seccional de Salud (cofinanciación de infraestructura y dotación)",
+   "monto_posible_rango": [
+    700000000,
+    4000000000
+   ],
+   "monto_central_escenario_base": 2300000000,
+   "monto_posible_rango_millones": [
+    700,
+    4000
+   ],
+   "monto_central_millones": 2300,
+   "requisitos": "Proyecto viabilizado por la Secretaría Seccional, contrapartida municipal o de la E.S.E., coherencia con el programa de red (PTRRM) y con el PMIDS.",
+   "momento": "Anual; cambia con el gobernador 2028-2031.",
+   "probabilidad": "media",
+   "base_del_monto": "Cofinanciación promedio por proyecto: infraestructura $729 millones (2024) y $2.322 millones (2025); dotación $716-737 millones (informe SSSA 2026, cálculo propio en docs/anexos/C-hospital-2028.md).",
+   "fuente": "https://www.antioquia.gov.co/Documentos_informes_de_gestion/2026/009.%20MARTA%20CECILIA%20RAM%E2%94%9C%D0%9DREZ%20ORREGO.pdf ; data/hospital2028.json",
+   "proyectos_que_financia": [
+    "P2",
+    "P4",
+    "P8"
+   ],
+   "tipo": "calculo_propio sobre dato oficial"
+  },
+  {
+   "id": "oxi",
+   "nombre": "Obras por Impuestos (Yondó es PDET y ZOMAC)",
+   "monto_posible_rango": [
+    500000000,
+    4500000000
+   ],
+   "monto_central_escenario_base": 2500000000,
+   "monto_posible_rango_millones": [
+    500,
+    4500
+   ],
+   "monto_central_millones": 2500,
+   "requisitos": "Proyecto viabilizado por el ministerio del sector (MinSalud para salud) y registrado en el banco de Obras por Impuestos de la ART; un contribuyente que lo financie. Revisar primero qué recibe Yondó del proyecto departamental PDET de dotación biomédica en ejecución (BPIN 20250214000061) para no duplicar.",
+   "momento": "Convocatorias anuales de la ART; inscribir en 2027-2028.",
+   "probabilidad": "media",
+   "base_del_monto": "Cupo CONFIS 2025: $1,1 billones (Decreto 178 de 2025); en 2025 se aprobaron 137 proyectos por ≈ $1,6 billones. El proyecto PDET de dotación de Antioquia (21 municipios, Yondó incluido) vale $44.059 millones según el DNP.",
+   "fuente": "https://www.ambitojuridico.com/sites/default/files/2025-02/D-178-2025.pdf ; https://www.datos.gov.co/d/cf9k-55fw ; data/hospital2028.json",
+   "proyectos_que_financia": [
+    "P4",
+    "P7",
+    "P9"
+   ],
+   "tipo": "dato_oficial"
+  },
+  {
+   "id": "fenoge",
+   "nombre": "FENOGE / programa Con Energía y MinEnergía (solar, baterías y eficiencia en edificaciones públicas de municipios PDET)",
+   "monto_posible_rango": [
+    600000000,
+    1734000000
+   ],
+   "monto_central_escenario_base": 1000000000,
+   "monto_posible_rango_millones": [
+    600,
+    1734
+   ],
+   "monto_central_millones": 1000,
+   "requisitos": "Solicitud de la entidad territorial con certificado de planeación, línea base de consumo y capacidad de conexión; ejecución directa de FENOGE en algunos programas.",
+   "momento": "Programas continuos; preparar la solicitud con el diseño eléctrico (2027).",
+   "probabilidad": "media",
+   "base_del_monto": "Hospitales FENOGE 2025: 43-128 kWp por $0,7-2,1 mil millones; Simití (misma subregión) 230 kWp por $3.152 millones (docs/anexos/C-hospital-2028.md, sección 8).",
+   "fuente": "https://fenoge.gov.co/proyectos/conenergia/ ; docs/anexos/C-hospital-2028.md",
+   "proyectos_que_financia": [
+    "P7"
+   ],
+   "tipo": "dato_oficial"
+  },
+  {
+   "id": "mintic",
+   "nombre": "MinTIC (cofinanciación FUTIC de territorios inteligentes, conectividad) y programa departamental de telemedicina",
+   "monto_posible_rango": [
+    100000000,
+    900000000
+   ],
+   "monto_central_escenario_base": 400000000,
+   "monto_posible_rango_millones": [
+    100,
+    900
+   ],
+   "monto_central_millones": 400,
+   "requisitos": "Proyecto de conectividad, IoT y telemedicina; habilitación de telemedicina (Res. 2654 de 2019). FUTIC no financia plataformas propias.",
+   "momento": "Convocatorias 2027-2028.",
+   "probabilidad": "media",
+   "base_del_monto": "Rango de docs/06 y data/hospital2028.json ($100-900 millones).",
+   "fuente": "data/hospital2028.json ; docs/anexos/D-energia-mintic.md",
+   "proyectos_que_financia": [
+    "P6"
+   ],
+   "tipo": "estimacion"
+  },
+  {
+   "id": "municipio",
+   "nombre": "Recursos propios del Municipio de Yondó (contrapartida) y aporte del lote",
+   "monto_posible_rango": [
+    500000000,
+    2000000000
+   ],
+   "monto_central_escenario_base": 1000000000,
+   "monto_posible_rango_millones": [
+    500,
+    2000
+   ],
+   "monto_central_millones": 1000,
+   "requisitos": "Certificado de disponibilidad presupuestal y acuerdo del Concejo si compromete vigencias futuras; título del lote a nombre de la E.S.E. o del municipio.",
+   "momento": "2027-2029.",
+   "probabilidad": "alta",
+   "base_del_monto": "Presupuesto inicial 2026 de $45.694 millones; ICA ≈ $7.900 millones/año; SGP de libre inversión $4.205 millones en 2024 (docs/anexos/B-finanzas-regalias.md; data/fuentes/sgp_sicodis.csv).",
+   "fuente": "docs/anexos/B-finanzas-regalias.md ; data/fuentes/sgp_sicodis.csv",
+   "proyectos_que_financia": [
+    "P1",
+    "P2",
+    "P8"
+   ],
+   "tipo": "dato_oficial"
+  },
+  {
+   "id": "ese",
+   "nombre": "Recursos propios de la E.S.E. y saneamiento (art. 156 de la Ley 2294 de 2023: condonación si se invierte en infraestructura)",
+   "monto_posible_rango": [
+    0,
+    1500000000
+   ],
+   "monto_central_escenario_base": 400000000,
+   "monto_posible_rango_millones": [
+    0,
+    1500
+   ],
+   "monto_central_millones": 400,
+   "requisitos": "La E.S.E. está en Programa de Saneamiento Fiscal y Financiero: su aporte es pequeño. El art. 156 vence hacia may-2027.",
+   "momento": "Antes de may-2027 para el art. 156; luego, excedentes de operación.",
+   "probabilidad": "baja-media",
+   "base_del_monto": "Rango de docs/06 ($0-1.500 millones).",
+   "fuente": "https://normograma.supersalud.gov.co/compilacion/docs/ley_2294_2023.htm ; data/hospital2028.json",
+   "proyectos_que_financia": [
+    "P5",
+    "P8"
+   ],
+   "tipo": "estimacion"
+  },
+  {
+   "id": "credito",
+   "nombre": "Crédito: Findeter con tasa compensada para infraestructura y dotación en salud (Res. 2316 de 2025) o IDEA",
+   "monto_posible_rango": [
+    0,
+    5000000000
+   ],
+   "monto_central_escenario_base": 1500000000,
+   "monto_posible_rango_millones": [
+    0,
+    5000
+   ],
+   "monto_central_millones": 1500,
+   "requisitos": "Concepto técnico territorial (MinSalud responde en 20 días hábiles); capacidad de endeudamiento (Ley 358 de 1997). Lo debe tomar el municipio: la E.S.E. está en saneamiento.",
+   "momento": "2028, para el cierre financiero de P2.",
+   "probabilidad": "baja-media",
+   "base_del_monto": "En 2026 Yondó ya paga $1.718,5 millones de servicio de deuda con un instituto de desarrollo departamental (probablemente el IDEA).",
+   "fuente": "https://consultorsalud.com/minsalud-lineamientos-redescuento-findeter/ ; docs/anexos/B-finanzas-regalias.md",
+   "proyectos_que_financia": [
+    "P2"
+   ],
+   "tipo": "dato_oficial"
+  },
+  {
+   "id": "ecopetrol",
+   "nombre": "Ecopetrol – inversión social en su área de influencia (campos Casabe y Llanito) o como contribuyente de Obras por Impuestos",
+   "monto_posible_rango": [
+    0,
+    2000000000
+   ],
+   "monto_central_escenario_base": 300000000,
+   "monto_posible_rango_millones": [
+    0,
+    2000
+   ],
+   "monto_central_millones": 300,
+   "requisitos": "Convenio con Ecopetrol o selección como contribuyente en Obras por Impuestos; alineación con sus programas sociales.",
+   "momento": "Gestión desde 2027.",
+   "probabilidad": "baja",
+   "base_del_monto": "No se encontró ningún proyecto de Ecopetrol dirigido al hospital de Yondó (docs/anexos/C-hospital-2028.md).",
+   "fuente": "docs/anexos/C-hospital-2028.md (sección 3.5)",
+   "proyectos_que_financia": [
+    "P4",
+    "P7"
+   ],
+   "tipo": "estimacion"
+  },
+  {
+   "id": "cooperacion",
+   "nombre": "Cooperación internacional (OPS, bancos de desarrollo, agencias y embajadas; donación de equipos)",
+   "monto_posible_rango": [
+    0,
+    800000000
+   ],
+   "monto_central_escenario_base": 200000000,
+   "monto_posible_rango_millones": [
+    0,
+    800
+   ],
+   "monto_central_millones": 200,
+   "requisitos": "Proyecto con enfoque de hospital seguro y resiliente o de atención primaria rural; contrapartida local.",
+   "momento": "Variable.",
+   "probabilidad": "baja",
+   "base_del_monto": "Sin convocatoria identificada para Yondó.",
+   "fuente": "https://www.paho.org/es/temas/hospitales-seguros",
+   "proyectos_que_financia": [
+    "P4",
+    "P6"
+   ],
+   "tipo": "estimacion"
+  }
+ ],
+ "mezcla_escenario_base": {
+  "sgr_ad": 6735690459,
+  "sgr_ipaz": 5500000000,
+  "sgr_ail": 1200000000,
+  "sgr_air": 1500000000,
+  "sgr_ctei": 0,
+  "pgn_minsalud": 12000000000,
+  "gobernacion": 2300000000,
+  "oxi": 2500000000,
+  "fenoge": 1000000000,
+  "mintic": 400000000,
+  "municipio": 1000000000,
+  "ese": 400000000,
+  "credito": 1500000000,
+  "ecopetrol": 300000000,
+  "cooperacion": 200000000
+ },
+ "mezcla_escenario_base_suma": 36535690459,
+ "escenario_sin_pgn_millones": {
+  "sgr_ipaz": 9000,
+  "sgr_ail": 2000,
+  "sgr_air": 2500,
+  "gobernacion": 3500,
+  "oxi": 3500,
+  "fenoge": 1700,
+  "mintic": 600,
+  "municipio": 1500,
+  "ese": 300,
+  "credito": 900,
+  "ecopetrol": 0,
+  "cooperacion": 0,
+  "pgn_minsalud": 0,
+  "sgr_ctei": 0,
+  "sgr_ad": 11036
+ },
+ "escenario_sin_pgn_suma": 36536000000,
+ "escenario_sin_pgn_lectura": "Cubre la torre solo si el municipio dedica ≈ $11.036 millones de directas y el OCAD Paz aprueba ≈ $9.000 millones. Si no, se puede partir la obra en dos etapas: pisos 1 a 3 con bloque técnico primero (≈ 85 % del valor, porque la cimentación, los núcleos y los equipos se hacen completos) y el piso 4 después. Urgencias, partos, hospitalización, consulta y laboratorio quedarían habilitados en la primera etapa; odontología, terapias y telemedicina seguirían un tiempo en el edificio actual.",
+ "por_proyecto_escenario_base": {
+  "P1": "SGR directas (saldo 2025-2026) o recursos propios del municipio.",
+  "P2": "MinSalud + SGR (directas e incentivo OCAD Paz) + inversión regional + Gobernación + crédito + municipio.",
+  "P3": "MinSalud o SGR dentro del proyecto mixto con P2; el generador PSA puede ir por Obras por Impuestos.",
+  "P4": "Obras por Impuestos + Gobernación + SGR (inversión local).",
+  "P5": "SGR inversión local + E.S.E.; GeneXpert por el programa nacional de tuberculosis; analizadores en comodato.",
+  "P6": "MinTIC + SGR + cooperación.",
+  "P7": "FENOGE / Con Energía + SGR o Obras por Impuestos (MinEnergía).",
+  "P8": "Gobernación + municipio + E.S.E. (art. 156).",
+  "P9": "Obras por Impuestos o Gobernación (proyecto tipo DNP de ambulancias)."
+ },
+ "cambios_frente_a_docs06": [
+  "docs/06 y data/hospital2028.json calculaban un proyecto de $9.470 millones (reforzar y adecuar el hospital actual, energía, telesalud y equipos) con un escenario probable de $13.100 millones para 2027-2029. La torre nueva cuesta $36.536 millones más $2.613 millones de proyectos complementarios: se acerca al escenario ambicioso de docs/06 ($34.550 millones) y lo supera.",
+  "El componente 'reforzamiento y adecuaciones' ($3.000 millones) de docs/06 se reemplaza por la torre (P2-P3) y por la adecuación del edificio actual para usos no asistenciales (P8, ≈ $1.963 millones).",
+  "MinSalud: docs/06 suponía $3.000 millones (probable) y $13.500 millones (ambicioso). Aquí se suben a $12.000 millones en el escenario base porque una reposición de torre es la tipología que MinSalud cofinancia (Guarne, $35.059 millones), pero su probabilidad baja: el presupuesto 2027 recorta la inversión de MinSalud (de $2,6 a $1,6 billones) y el terremoto del 10-ago-2026 compite por esos recursos.",
+  "Regalías: docs/06 suponía $1.000-5.500 millones. Se suben a $6.736 millones de directas más $5.500 millones del incentivo para OCAD Paz, porque la torre sería la inversión principal del bienio y porque se encontró un saldo de ≈ $13.694 millones de ese incentivo sin aprobar en 2025-2026. El bienio 2027-2028 trae 11 % menos a nivel nacional.",
+  "PMIDS: docs/06 señalaba el plazo de remisión de iniciativas hacia el 10-oct-2026. Si no se registró, la torre debe entrar en la actualización obligatoria del primer semestre de 2028 (o en un ajuste que permita la Secretaría Seccional).",
+  "Las fuentes de energía (FENOGE) y TIC (MinTIC) se mantienen en los mismos rangos de docs/06; la solar y las baterías del hospital ahora se instalan en la torre (P7) y no en el edificio actual.",
+  "Findeter: docs/06 lo ponía en $0-2.000 millones; aquí $0-5.000 millones, siempre como deuda del municipio (la E.S.E. está en saneamiento)."
+ ],
+ "compuertas": [
+  "Antes de radicar cualquier proyecto: título del lote, certificado de uso del suelo y de riesgo, disponibilidad de servicios y decisión pública sobre el uso del edificio actual (Res. 485, num. 7.1.2).",
+  "Antes de MinSalud: Documento de Capacidad Instalada concertado y registro en el PMIDS (Res. 1211, 1519 y 2373 de 2025).",
+  "Antes de comprar equipos: 70 % de avance físico de la obra (Res. 2373 de 2025).",
+  "Antes del crédito: certificación de capacidad de endeudamiento del municipio (Ley 358 de 1997)."
+ ],
+ "incertidumbres": [
+  "El presupuesto del SGR 2027-2028 por municipio no está publicado; la cifra de Yondó es una estimación proporcional.",
+  "No se verificó si el saldo del incentivo para OCAD Paz de 2025-2026 ya tiene destino.",
+  "La ley de presupuesto 2027 y el PND 2026-2030 pueden cambiar las líneas de MinSalud y los PMIDS.",
+  "No se revisó el PATR del PDET Sur de Bolívar para confirmar una iniciativa de infraestructura hospitalaria en Yondó.",
+  "Los requisitos sectoriales del SGR para salud deben confirmarse con el Acuerdo Único vigente (normas.json)."
+ ]
+}

@@ -1,0 +1,2735 @@
+{
+ "id": "torre_hospital_apu",
+ "titulo": "Análisis de precios unitarios (APU) de la torre de servicios de primer nivel – E.S.E. Hospital Héctor Abad Gómez (Yondó)",
+ "tarea": "T4 – Presupuesto, APU, financiación y proyectos a articular",
+ "fecha_corte": "2026-10-22",
+ "moneda_y_base": "Pesos constantes de 2026 (base: promedio enero-septiembre de 2026 del IPC del DANE; data/fuentes/ipc_dane.csv). Sin inflación futura.",
+ "convenciones": {
+  "dato_oficial": "tomado de la fuente citada (norma, SECOP, Tienda Virtual, DANE, MinHacienda)",
+  "calculo_propio": "operación sobre datos oficiales o supuestos declarados (APU, sumas, conversiones por IPC o salario mínimo)",
+  "estimacion": "supuesto del equipo con rango, a confirmar con cotizaciones y diseños"
+ },
+ "resumen": "19 APU de los ítems de mayor peso: demolición, retiro de asbesto, excavación, concreto de columnas y de losas, acero, pilotes, mampostería, drywall, pintura epóxica, piso vinílico, cielo raso, ventanería, impermeabilización, red de gases, ductos, salidas eléctricas normal y regulada y punto hidráulico. Los ítems que usan estos APU (directamente o derivados) suman $7.373 millones, el 38 % del costo directo de obra; el resto de lo pesado son suministros de equipos (aire acondicionado, ascensores, baterías, central de gases, planta, red de datos), cuyo precio sale de SECOP o de cotizaciones, como pide la Res. 485 (2 cotizaciones de 2 marcas). AIU de 32,95 % (24 % de administración con la contribución de obra pública, 3 % de imprevistos, 5 % de utilidad e IVA sobre la utilidad).",
+ "metodo": {
+  "estructura": "Cada APU suma materiales (cantidad × (1 + desperdicio) × precio), equipo y herramienta, mano de obra (jornal con prestaciones ÷ rendimiento diario), herramienta menor (5 % de la mano de obra, método SIF) y transporte a Yondó. Luego se aplica el AIU con IVA sobre la utilidad.",
+  "precios_oficiales_de_antioquia": "Base de APU de la Secretaría de Infraestructura Física de la Gobernación de Antioquia, segundo semestre de 2020 (la versión oficial más reciente descargable en antioquia.gov.co; las bases 2024-2025 solo circulan como anexos de procesos y copias de terceros). Se actualiza así: mano de obra con la razón de salarios mínimos 2026/2020 (1.9946) y equipos y materiales con el IPC (1.5054), porque el salario mínimo subió casi el doble desde 2020 y el IPC solo un 51 %.",
+  "precios_2025_2026": "Compras de la Gobernación de Antioquia y otras entidades en la Tienda Virtual del Estado Colombiano (Acuerdo Marco de materiales de construcción y ferretería, zona 3 = Antioquia; datos.gov.co 3hdv-smhz), órdenes 162740 y 162775 (27-mar-2026), 163083 (7-abr-2026) y 152787 (2-oct-2025): cemento, arena, gravilla, estuco, pinturas, tubería, cable, aparatos sanitarios.",
+  "comparacion_idu_epm_invias": "No se usaron como fuente de valores: el IDU (Bogotá) y el INVIAS (APU regionalizados 2026-1) publican sobre todo ítems viales; las páginas de precios de Risaralda y Cali respondieron con error 403 desde este entorno. EPM no publica una lista de precios de edificaciones.",
+  "salario_minimo": {
+   "2026": 1750905,
+   "fuente_2026": "Decreto 1469 de 2025 (dato ya usado en normas.json)",
+   "2020": 877803,
+   "fuente_2020": "Decreto 2360 de 2019"
+  },
+  "mano_de_obra": {
+   "ayudante": {
+    "jornal_con_prestaciones": 117852,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 3.2 (ayudante raso: $33.762 + 75 % de prestaciones), pág. 31 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos 2026/2020 (1.750.905 / 877.803 = 1.9946)",
+    "tipo": "calculo_propio sobre dato oficial"
+   },
+   "oficial": {
+    "jornal_con_prestaciones": 235701,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 3.2 (oficial: $67.524 + 75 % de prestaciones), pág. 31 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos 2026/2020",
+    "tipo": "calculo_propio sobre dato oficial"
+   },
+   "oficial_especializado": {
+    "jornal_con_prestaciones": 285981,
+    "fuente": "Cálculo propio: 2,8 salarios mínimos de 2026 al mes / 30 × 1,75 (factor de prestaciones del método SIF). Electricistas, plomeros, instaladores de vinilo, de gases y de aluminio.",
+    "tipo": "estimacion"
+   },
+   "cuadrilla_concretos": {
+    "jornal_con_prestaciones": 860310,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (cuadrilla de concretos $431.310/día), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos",
+    "tipo": "calculo_propio sobre dato oficial"
+   },
+   "cuadrilla_demoliciones": {
+    "jornal_con_prestaciones": 471404,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (cuadrilla de demoliciones $236.335/día), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos",
+    "tipo": "calculo_propio sobre dato oficial"
+   },
+   "cuadrilla_refuerzo": {
+    "jornal_con_prestaciones": 388908,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 10.1 (cuadrilla de refuerzo $194.976/día), pág. 300 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos",
+    "tipo": "calculo_propio sobre dato oficial"
+   }
+  },
+  "transporte": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+ },
+ "aiu": {
+  "administracion_pct": 24.0,
+  "imprevistos_pct": 3.0,
+  "utilidad_pct": 5.0,
+  "iva_sobre_utilidad_pct": 19.0,
+  "factor_total": 1.3295,
+  "desglose_administracion_pct": {
+   "personal de dirección y control (director, residentes de obra, eléctrico y mecánico, SST, ambiental, social, almacenista, maestro)": 9.0,
+   "servicios, vigilancia, ensayos de laboratorio y papelería": 2.0,
+   "pólizas y garantías": 1.0,
+   "contribución especial de 5 % sobre el valor de los contratos de obra pública (Ley 1106 de 2006, art. 6, prorrogada por la Ley 2272 de 2022): 5 % × 1.3295": 6.65,
+   "estampillas departamentales y municipales (por verificar en las ordenanzas de Antioquia y los acuerdos de Yondó)": 2.5,
+   "impuesto de industria y comercio de Yondó (por verificar)": 0.8,
+   "gastos generales y financieros": 2.05
+  },
+  "tipo": "estimacion",
+  "nota": "El IVA de 19 % se cobra solo sobre la utilidad en contratos de obra (régimen usual de construcción). Las estampillas y el ICA dependen de quién contrate (E.S.E., municipio o Gobernación)."
+ },
+ "apus": [
+  {
+   "id": "APU-01",
+   "item": "Demolición de edificación de un piso (mampostería, estructura de concreto, pisos y cimientos)",
+   "unidad": "m2",
+   "descripcion": "Demolición mecánica y manual de los pabellones del antiguo Centro Vida por metro cuadrado de área construida. Incluye separación de residuos de construcción y demolición (RCD), cargue, transporte a sitio autorizado a 15 km y disposición. No incluye el retiro de la cubierta de fibrocemento (APU-02).",
+   "materiales": [],
+   "subtotal_materiales": 0,
+   "equipo": [
+    {
+     "descripcion": "Retroexcavadora de llantas con martillo",
+     "unidad_tarifa": "hora",
+     "tarifa": 188097,
+     "cantidad": 0.1,
+     "valor": 18810,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (retroexcavadora de llantas $124.950), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "descripcion": "Compresor con martillo neumático",
+     "unidad_tarifa": "día",
+     "tarifa": 69247,
+     "cantidad": 0.04,
+     "valor": 2770,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (compresor con martillo $46.000), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "descripcion": "Equipo de oxicorte (acero de refuerzo y perfiles)",
+     "unidad_tarifa": "día",
+     "tarifa": 35376,
+     "cantidad": 0.04,
+     "valor": 1415,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (equipo de oxicorte $23.500), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    }
+   ],
+   "subtotal_equipo": 22995,
+   "mano_obra": [
+    {
+     "cuadrilla": "Cuadrilla de demoliciones",
+     "composicion": "1 oficial + 4 ayudantes (método SIF)",
+     "jornal_con_prestaciones": 471404,
+     "rendimiento_unidades_por_dia": 15,
+     "valor": 31427,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 y 2.9, pág. 11 y 13 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026; rendimiento propio de 15 m² de edificación por día (estimación)"
+    }
+   ],
+   "subtotal_mano_obra": 31427,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 1571,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Transporte de RCD (1,0 m³ suelto por m² × 15 km) y disposición en sitio autorizado",
+    "peso_kg_por_unidad": null,
+    "tarifa_por_kg": null,
+    "valor": 28977,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (transporte $950/m³-km y disposición $5.000/m³), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC; volumen de 1,0 m³ suelto por m² construido (estimación para muros de ladrillo, piso y cimientos). Res. 1257 de 2021 de MinAmbiente (gestión de RCD)."
+   },
+   "costo_directo": 84970,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 20393,
+    "imprevistos": 2549,
+    "utilidad": 4248,
+    "iva_sobre_utilidad": 807
+   },
+   "precio_unitario_con_aiu": 112967,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "comparacion": {
+    "referencia": "SIF 2020-II: demolición de muros de mampostería $42.657/m² de muro (ítem 2.9) y de estructura de concreto $108.186/m³ (ítem 2.8); por IPC y salario mínimo equivalen a $64.000-$83.000 por m² de muro y $165.000-$215.000 por m³.",
+    "lectura": "Una edificación de un piso tiene ≈ 1 m² de muro y 0,1-0,15 m³ de concreto por m² de planta: el APU cae en el rango esperado."
+   },
+   "uso_en_presupuesto": "Capítulo 1: 890,6 m² (pabellón norte 377,3; pabellón sur 442,0; kiosco 41,7; corredores 29,6; programa.json, implantación)."
+  },
+  {
+   "id": "APU-02",
+   "item": "Retiro de cubierta de teja de fibrocemento con posible asbesto, embalaje y disposición como residuo peligroso",
+   "unidad": "m2",
+   "descripcion": "Retiro manual sin romper ni cortar las tejas, humectación con agua y surfactante, embalaje en doble plástico de 200 micras rotulado, transporte por gestor autorizado y disposición en celda de seguridad. Incluye elementos de protección (overol desechable, respirador con filtro P100), aspiradora con filtro HEPA, monitoreo de fibras y supervisión de seguridad y salud en el trabajo. Ley 1968 de 2019 (prohibición del asbesto); Res. 007 de 2011 del entonces Ministerio de la Protección Social (reglamento de higiene y seguridad del crisotilo); Decreto 1076 de 2015 (residuos peligrosos).",
+   "materiales": [
+    {
+     "insumo": "Plástico de polietileno de 200 micras",
+     "unidad": "m2",
+     "cantidad": 2.2,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 1800,
+     "valor": 4158,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Overol desechable tipo 5/6 para trabajo con asbesto",
+     "unidad": "un",
+     "cantidad": 0.1,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 25000,
+     "valor": 2500,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Par de filtros P100 para respirador de media cara",
+     "unidad": "par",
+     "cantidad": 0.1,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 45000,
+     "valor": 4500,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Agua con surfactante, cinta y rótulos de residuo peligroso",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 800,
+     "valor": 800,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 11958,
+   "equipo": [
+    {
+     "descripcion": "Aspiradora industrial con filtro HEPA",
+     "unidad_tarifa": "día",
+     "tarifa": 120000,
+     "cantidad": 0.025,
+     "valor": 3000,
+     "fuente": "Estimación de alquiler 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "descripcion": "Andamio o plataforma de trabajo en altura",
+     "unidad_tarifa": "día",
+     "tarifa": 50000,
+     "cantidad": 0.03,
+     "valor": 1500,
+     "fuente": "Estimación de alquiler 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "descripcion": "Monitoreo de fibras en aire (muestreo personal y ambiental, laboratorio acreditado)",
+     "unidad_tarifa": "global/800 m²",
+     "tarifa": 6000000,
+     "cantidad": 0.00125,
+     "valor": 7500,
+     "fuente": "Estimación: $6 millones por campaña para 800 m².",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 12000,
+   "mano_obra": [
+    {
+     "cuadrilla": "Cuadrilla capacitada en asbesto y alturas",
+     "composicion": "1 oficial + 3 ayudantes",
+     "jornal_con_prestaciones": 589257,
+     "rendimiento_unidades_por_dia": 40,
+     "valor": 14731,
+     "fuente": "Jornales de esta base; rendimiento de 40 m²/día (estimación)."
+    },
+    {
+     "cuadrilla": "Profesional de seguridad y salud en el trabajo",
+     "composicion": "1 profesional",
+     "jornal_con_prestaciones": 300000,
+     "rendimiento_unidades_por_dia": 40,
+     "valor": 7500,
+     "fuente": "Estimación: $300.000/día."
+    }
+   ],
+   "subtotal_mano_obra": 22231,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 1112,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Transporte especializado y disposición en celda de seguridad (≈ 15 kg de teja por m²)",
+    "peso_kg_por_unidad": 15,
+    "tarifa_por_kg": 2100,
+    "valor": 31500,
+    "fuente": "Estimación: gestor autorizado de residuos peligrosos ≈ $1,5 millones por tonelada dispuesta (rango $0,9-2,5 millones) + transporte ≈ $0,6 millones por tonelada. Confirmar con gestores licenciados por la autoridad ambiental."
+   },
+   "costo_directo": 78801,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 18912,
+    "imprevistos": 2364,
+    "utilidad": 3940,
+    "iva_sobre_utilidad": 749
+   },
+   "precio_unitario_con_aiu": 104766,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "comparacion": {
+    "referencia": "Rango de mercado del retiro de asbesto en Colombia: $60.000-$120.000/m² (estimación).",
+    "lectura": "Si el laboratorio confirma que la teja no tiene asbesto, el retiro baja a ≈ $25.000/m² como RCD común."
+   },
+   "uso_en_presupuesto": "Capítulo 1: 800 m² de teja ondulada (programa.json, demoliciones: ≈ 775 m² en planta con aleros, más la pendiente)."
+  },
+  {
+   "id": "APU-03",
+   "item": "Excavación mecánica en material común para cimentación y cisternas (hasta 3 m), con cargue y retiro",
+   "unidad": "m3",
+   "descripcion": "Excavación con retroexcavadora, perfilado manual de fondos y paredes, cargue, transporte a 15 km y disposición (factor de expansión 1,3). No incluye entibado ni abatimiento del nivel freático (ítem aparte).",
+   "materiales": [],
+   "subtotal_materiales": 0,
+   "equipo": [
+    {
+     "descripcion": "Retroexcavadora de llantas",
+     "unidad_tarifa": "hora",
+     "tarifa": 188097,
+     "cantidad": 0.08,
+     "valor": 15048,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (retroexcavadora de llantas $124.950), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    }
+   ],
+   "subtotal_equipo": 15048,
+   "mano_obra": [
+    {
+     "cuadrilla": "Cuadrilla de perfilado",
+     "composicion": "1 oficial + 2 ayudantes",
+     "jornal_con_prestaciones": 471405,
+     "rendimiento_unidades_por_dia": 30,
+     "valor": 15714,
+     "fuente": "Jornales de esta base; rendimiento de 30 m³/día de perfilado (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 15714,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 786,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Transporte del material excavado (1,3 m³ suelto × 15 km) y disposición",
+    "peso_kg_por_unidad": null,
+    "tarifa_por_kg": null,
+    "valor": 37670,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (tarifas de transporte y disposición), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+   },
+   "costo_directo": 69218,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 16612,
+    "imprevistos": 2077,
+    "utilidad": 3461,
+    "iva_sobre_utilidad": 658
+   },
+   "precio_unitario_con_aiu": 92026,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "comparacion": {
+    "referencia": "SIF 2020-II ítem 4.1.7 (excavación para estructuras con entibado, pág. 44): $30.257/m³ sin transporte; × IPC = $45.548.",
+    "lectura": "El APU suma transporte y disposición a 15 km, que la referencia no incluye."
+   },
+   "uso_en_presupuesto": "Capítulo 2: 625 m³ (dados, vigas de cimentación, fosos de ascensor, cisternas, bloque técnico) y descapote de 390 m³ en el capítulo 1."
+  },
+  {
+   "id": "APU-04",
+   "item": "Concreto de 28 MPa para columnas y muros estructurales (pórticos y núcleos, NSR-10 grupo IV)",
+   "unidad": "m3",
+   "descripcion": "Suministro de concreto premezclado de 28 MPa, formaleta metálica, colocación con balde o bomba, vibrado y curado. El acero se paga aparte (APU-06).",
+   "materiales": [
+    {
+     "insumo": "Concreto premezclado de 28 MPa (4.000 psi) puesto en Yondó",
+     "unidad": "m3",
+     "cantidad": 1.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 700000,
+     "valor": 735000,
+     "fuente": "Estimación: subanálisis SIF 2020 de concreto de 28 MPa ($440.179/m³, ítem 6.2.30, pág. 191) × IPC = $662.645; más transporte desde planta en Barrancabermeja (≈ 15 km por el puente) ≈ $40.000. Chequeo por materiales con precios TVEC 2026: 400 kg de cemento, 0,55 m³ de arena, 0,75 m³ de grava y aditivo ≈ $519.000 + producción, mixer y control ≈ $670.000. Confirmar con 3 cotizaciones de planta.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Curador de concreto tipo antisol blanco",
+     "unidad": "kg",
+     "cantidad": 1.12,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 9702,
+     "valor": 10866,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30, pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "insumo": "Desmoldante para formaleta",
+     "unidad": "l",
+     "cantidad": 0.5,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 9000,
+     "valor": 4500,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 750366,
+   "equipo": [
+    {
+     "descripcion": "Vibrador de concreto",
+     "unidad_tarifa": "día",
+     "tarifa": 80658,
+     "rendimiento": 5.92,
+     "valor": 13625,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (vibrador $53.580), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC; rendimiento SIF 5,92 m³/día",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "descripcion": "Formaleta metálica para columnas y muros",
+     "unidad_tarifa": "día",
+     "tarifa": 96796,
+     "rendimiento": 0.714,
+     "valor": 135569,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (formaleta para concretos $64.300; rendimiento 0,714 m³), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "descripcion": "Bomba de concreto o elevación con winche y balde",
+     "unidad_tarifa": "m3",
+     "tarifa": 25000,
+     "cantidad": 1.0,
+     "valor": 25000,
+     "fuente": "Estimación 2026.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 174194,
+   "mano_obra": [
+    {
+     "cuadrilla": "Cuadrilla de concretos",
+     "composicion": "1 oficial + 5 ayudantes (método SIF)",
+     "jornal_con_prestaciones": 860310,
+     "rendimiento_unidades_por_dia": 2.857,
+     "valor": 301124,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (rendimiento 2,857 m³/día), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos"
+    }
+   ],
+   "subtotal_mano_obra": 301124,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 15056,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [
+    {
+     "descripcion": "Acarreo interno (1,05 m³)",
+     "valor": 12171,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (acarreo interno $7.700/m³), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+    }
+   ],
+   "subtotal_otros": 12171,
+   "transporte": {
+    "descripcion": "Incluido en el precio del material puesto en Yondó (el concreto premezclado ya trae ≈ $40.000/m³ de transporte desde la planta de Barrancabermeja)",
+    "peso_kg_por_unidad": null,
+    "tarifa_por_kg": null,
+    "valor": 0,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 1252911,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 300699,
+    "imprevistos": 37587,
+    "utilidad": 62646,
+    "iva_sobre_utilidad": 11903
+   },
+   "precio_unitario_con_aiu": 1665746,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "comparacion": {
+    "referencia": "SIF 2020-II ítem 6.2.30, concreto de 28 MPa en vigas y columnas: $735.062/m³; × IPC = $1.106.548.",
+    "lectura": "El APU es más alto porque la mano de obra se actualiza con el salario mínimo (que subió casi el doble desde 2020) y no con el IPC."
+   },
+   "uso_en_presupuesto": "Capítulo 3: 160 m³ de columnas (28 columnas de 0,60 × 0,60 m en pisos 1-3 y 20 en el piso 4) y 200 m³ de muros de núcleos; capítulo 2: muros de fosos y cisternas (con aditivo impermeabilizante)."
+  },
+  {
+   "id": "APU-05",
+   "item": "Concreto de 28 MPa para vigas y losa nervada de entrepiso y cubierta",
+   "unidad": "m3",
+   "descripcion": "Concreto premezclado bombeado, formaleta, obra falsa (puntales) y casetón recuperable, vibrado y curado. El acero se paga aparte.",
+   "materiales": [
+    {
+     "insumo": "Concreto premezclado de 28 MPa (4.000 psi) puesto en Yondó",
+     "unidad": "m3",
+     "cantidad": 1.0,
+     "desperdicio_pct": 4.0,
+     "precio_unitario": 700000,
+     "valor": 728000,
+     "fuente": "Estimación: subanálisis SIF 2020 de concreto de 28 MPa ($440.179/m³, ítem 6.2.30, pág. 191) × IPC = $662.645; más transporte desde planta en Barrancabermeja (≈ 15 km por el puente) ≈ $40.000. Chequeo por materiales con precios TVEC 2026: 400 kg de cemento, 0,55 m³ de arena, 0,75 m³ de grava y aditivo ≈ $519.000 + producción, mixer y control ≈ $670.000. Confirmar con 3 cotizaciones de planta.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Curador de concreto tipo antisol blanco",
+     "unidad": "kg",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 9702,
+     "valor": 9702,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30, pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "insumo": "Desmoldante para formaleta",
+     "unidad": "l",
+     "cantidad": 0.4,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 9000,
+     "valor": 3600,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 741302,
+   "equipo": [
+    {
+     "descripcion": "Bomba estacionaria de concreto",
+     "unidad_tarifa": "m3",
+     "tarifa": 35000,
+     "cantidad": 1.0,
+     "valor": 35000,
+     "fuente": "Estimación 2026 (rango $25.000-45.000/m³).",
+     "tipo": "estimacion"
+    },
+    {
+     "descripcion": "Vibrador de concreto",
+     "unidad_tarifa": "día",
+     "tarifa": 80658,
+     "rendimiento": 8.0,
+     "valor": 10082,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (vibrador $53.580), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "descripcion": "Formaleta de placa, obra falsa y casetón recuperable (5 m² de placa por m³)",
+     "unidad_tarifa": "m2 de placa",
+     "tarifa": 28000,
+     "cantidad": 5.0,
+     "valor": 140000,
+     "fuente": "Estimación: alquiler ≈ $28.000/m² de placa por uso de 3 semanas.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 185082,
+   "mano_obra": [
+    {
+     "cuadrilla": "Cuadrilla de concretos",
+     "composicion": "1 oficial + 5 ayudantes",
+     "jornal_con_prestaciones": 860310,
+     "rendimiento_unidades_por_dia": 3.5,
+     "valor": 245803,
+     "fuente": "Método SIF con rendimiento de 3,5 m³/día para placas (estimación)"
+    }
+   ],
+   "subtotal_mano_obra": 245803,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 12290,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [
+    {
+     "descripcion": "Acarreo interno (1,05 m³)",
+     "valor": 12171,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30, pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+    }
+   ],
+   "subtotal_otros": 12171,
+   "transporte": {
+    "descripcion": "Incluido en el precio del material puesto en Yondó (el concreto premezclado ya trae ≈ $40.000/m³ de transporte desde la planta de Barrancabermeja)",
+    "peso_kg_por_unidad": null,
+    "tarifa_por_kg": null,
+    "valor": 0,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 1196648,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 287196,
+    "imprevistos": 35899,
+    "utilidad": 59832,
+    "iva_sobre_utilidad": 11368
+   },
+   "precio_unitario_con_aiu": 1590943,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "comparacion": {
+    "referencia": "SIF 2020-II ítem 6.2.32 (tablero y losa de 28 MPa, puentes): $767.670/m³; × IPC ≈ $1.155.600/m³.",
+    "lectura": "Del mismo orden."
+   },
+   "uso_en_presupuesto": "Capítulo 3: 834 m³ (losa nervada 591 m³ ≈ 0,17 m³/m² y vigas 243 m³ ≈ 0,07 m³/m² sobre 3.477,2 m² de placas)."
+  },
+  {
+   "id": "APU-06",
+   "item": "Acero de refuerzo fy = 420 MPa (grado 60) figurado y amarrado",
+   "unidad": "kg",
+   "descripcion": "Suministro, transporte a Yondó, corte, figurado y amarre de acero corrugado según planos estructurales (NSR-10, capacidad de disipación especial).",
+   "materiales": [
+    {
+     "insumo": "Acero corrugado G-60 (fy = 420 MPa) figurado",
+     "unidad": "kg",
+     "cantidad": 1.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 4600,
+     "valor": 4830,
+     "fuente": "Estimación entre la Base SIF 2020-II (acero G-60 figurado $2.879/kg, ítem 10.1, pág. 300, × IPC = $4.334) y compras TVEC 2025-2026 (varilla #4 × 6 m a $30.520 y $34.247 ≈ $5.100-5.700/kg; varilla #5 × 6 m a $29.265 ≈ $3.100/kg).",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Alambre negro recocido calibre 18",
+     "unidad": "kg",
+     "cantidad": 0.03,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 6050,
+     "valor": 182,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 10.1, pág. 300 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    }
+   ],
+   "subtotal_materiales": 5012,
+   "equipo": [
+    {
+     "descripcion": "Cizalla y dobladora",
+     "unidad_tarifa": "kg",
+     "tarifa": 15,
+     "cantidad": 3.0,
+     "valor": 45,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 10.1 (cizalla 3 × $10), pág. 300 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    }
+   ],
+   "subtotal_equipo": 45,
+   "mano_obra": [
+    {
+     "cuadrilla": "Cuadrilla de refuerzo",
+     "composicion": "1 oficial + 2 ayudantes (método SIF)",
+     "jornal_con_prestaciones": 388908,
+     "rendimiento_unidades_por_dia": 170,
+     "valor": 2288,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 10.1 (rendimiento 170 kg/día), pág. 300 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos"
+    }
+   ],
+   "subtotal_mano_obra": 2288,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 114,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [
+    {
+     "descripcion": "Transporte interno",
+     "valor": 151,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 10.1, pág. 300 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+    }
+   ],
+   "subtotal_otros": 151,
+   "transporte": {
+    "descripcion": "Flete del acero desde Barrancabermeja o Bucaramanga",
+    "peso_kg_por_unidad": 1.05,
+    "tarifa_por_kg": 120,
+    "valor": 126,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 7736,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 1857,
+    "imprevistos": 232,
+    "utilidad": 387,
+    "iva_sobre_utilidad": 73
+   },
+   "precio_unitario_con_aiu": 10285,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "comparacion": {
+    "referencia": "SIF 2020-II ítem 10.1: $4.478/kg; × IPC = $6.741/kg.",
+    "lectura": "Del mismo orden; la diferencia es la mano de obra actualizada con el salario mínimo."
+   },
+   "uso_en_presupuesto": "Capítulos 2 y 3: 217.220 kg (cimentación 57.020 kg y superestructura 160.200 kg; cuantías de 60-220 kg/m³ según elemento, ≈ 62 kg por m² de placa)."
+  },
+  {
+   "id": "APU-07",
+   "item": "Pilote preexcavado de 0,60 m de diámetro en concreto de 28 MPa",
+   "unidad": "ml",
+   "descripcion": "Perforación con piloteadora tipo kelly, camisa de vaciado, concreto tremie y disposición del material. El acero de la canasta se paga en APU-06. La longitud y el número los fija el estudio geotécnico (suelo aluvial del Magdalena: probable perfil D o E y riesgo de licuación).",
+   "materiales": [
+    {
+     "insumo": "Concreto premezclado de 28 MPa (4.000 psi) puesto en Yondó",
+     "unidad": "m3",
+     "cantidad": 0.304,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 700000,
+     "valor": 223440,
+     "fuente": "Estimación: subanálisis SIF 2020 de concreto de 28 MPa ($440.179/m³, ítem 6.2.30, pág. 191) × IPC = $662.645; más transporte desde planta en Barrancabermeja (≈ 15 km por el puente) ≈ $40.000. Chequeo por materiales con precios TVEC 2026: 400 kg de cemento, 0,55 m³ de arena, 0,75 m³ de grava y aditivo ≈ $519.000 + producción, mixer y control ≈ $670.000. Confirmar con 3 cotizaciones de planta.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 223440,
+   "equipo": [
+    {
+     "descripcion": "Piloteadora tipo kelly",
+     "unidad_tarifa": "hora",
+     "tarifa": 597636,
+     "rendimiento": 3.125,
+     "valor": 191244,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10 (piloteadora tipo kelly $397.000; rendimiento 3,125 ml/h), pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "descripcion": "Camisa de vaciado y formaleta",
+     "unidad_tarifa": "ml",
+     "tarifa": 42392,
+     "cantidad": 1.0,
+     "valor": 42392,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10 (camisa de vaciado $28.160/ml), pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "descripcion": "Motobomba sumergible de 2\"",
+     "unidad_tarifa": "día",
+     "tarifa": 88462,
+     "rendimiento": 7.14,
+     "valor": 12390,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10 (motobomba 2\" $58.764), pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "descripcion": "Vibrador",
+     "unidad_tarifa": "día",
+     "tarifa": 80658,
+     "rendimiento": 17.5,
+     "valor": 4609,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (vibrador $53.580), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    }
+   ],
+   "subtotal_equipo": 250635,
+   "mano_obra": [
+    {
+     "cuadrilla": "Cuadrilla de movimiento de tierra",
+     "composicion": "método SIF",
+     "jornal_con_prestaciones": 471404,
+     "rendimiento_unidades_por_dia": 100,
+     "valor": 4714,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10, pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos"
+    },
+    {
+     "cuadrilla": "Cuadrilla de concretos",
+     "composicion": "método SIF",
+     "jornal_con_prestaciones": 860310,
+     "rendimiento_unidades_por_dia": 25,
+     "valor": 34412,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10, pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos"
+    }
+   ],
+   "subtotal_mano_obra": 39126,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 1956,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Transporte y disposición del material de perforación (≈ 0,38 m³ suelto/ml)",
+    "peso_kg_por_unidad": null,
+    "tarifa_por_kg": null,
+    "valor": 11011,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (tarifas), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+   },
+   "costo_directo": 526168,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 126280,
+    "imprevistos": 15785,
+    "utilidad": 26308,
+    "iva_sobre_utilidad": 4999
+   },
+   "precio_unitario_con_aiu": 699540,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "comparacion": {
+    "referencia": "SIF 2020-II ítem 6.1.10 (pilote preexcavado de 21 MPa, D = 0,6 m, con acero): $402.943/ml; sin acero ≈ $366.000; × IPC ≈ $551.000.",
+    "lectura": "Del mismo orden; aquí el concreto es de 28 MPa."
+   },
+   "uso_en_presupuesto": "Capítulo 2: 1.200 ml (≈ 100 pilotes de 12 m bajo 28 dados). Supuesto de prediseño: si el estudio de suelos permite zapatas, este capítulo baja ≈ $500 millones."
+  },
+  {
+   "id": "APU-08",
+   "item": "Muro en bloque de arcilla No. 5 (e = 15 cm) con refuerzo y anclaje a la estructura",
+   "unidad": "m2",
+   "descripcion": "Muro no estructural para zonas húmedas, ductos, cuartos técnicos y fachadas interiores: pega con mortero 1:4, dovelas con varilla de 3/8\" y grouting, refuerzo horizontal y anclajes con junta flexible a la estructura (NSR-10, capítulo A.9, elementos no estructurales en grupo IV).",
+   "materiales": [
+    {
+     "insumo": "Bloque de arcilla No. 5 (≈ 12 × 20 × 33 cm)",
+     "unidad": "un",
+     "cantidad": 13.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 3400,
+     "valor": 46410,
+     "fuente": "Estimación: ladrillo hueco 9 × 20 × 40 cm a $2.863 (Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: ladrillo común horizontal de 3 huecos 9×20×40 (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)) ajustado al tamaño No. 5.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Mortero de pega y pañete 1:4 preparado en obra",
+     "unidad": "m3",
+     "cantidad": 0.018,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 414699,
+     "valor": 7465,
+     "fuente": "Cálculo propio: 350 kg de cemento (7 bultos TVEC 2026) + 1,15 m³ de arena (precio de esta base).",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "insumo": "Varilla de 3/8\" para dovelas",
+     "unidad": "kg",
+     "cantidad": 1.6,
+     "desperdicio_pct": 0,
+     "precio_unitario": 4600,
+     "valor": 7360,
+     "fuente": "Estimación entre la Base SIF 2020-II (acero G-60 figurado $2.879/kg, ítem 10.1, pág. 300, × IPC = $4.334) y compras TVEC 2025-2026 (varilla #4 × 6 m a $30.520 y $34.247 ≈ $5.100-5.700/kg; varilla #5 × 6 m a $29.265 ≈ $3.100/kg).",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Grout para dovelas",
+     "unidad": "m3",
+     "cantidad": 0.006,
+     "desperdicio_pct": 0,
+     "precio_unitario": 625000,
+     "valor": 3750,
+     "fuente": "Estimación: relación SIF 2020 entre 21 y 28 MPa (393.125 / 440.179 = 0,893) aplicada a $700.000.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Refuerzo horizontal tipo escalerilla, anclajes y sello flexible de junta",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 9500,
+     "valor": 9500,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 74485,
+   "equipo": [
+    {
+     "descripcion": "Andamio tubular certificado",
+     "unidad_tarifa": "m2",
+     "tarifa": 2500,
+     "cantidad": 1.0,
+     "valor": 2500,
+     "fuente": "Estimación de alquiler 2026.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 2500,
+   "mano_obra": [
+    {
+     "cuadrilla": "Cuadrilla de mampostería",
+     "composicion": "1 oficial + 1 ayudante",
+     "jornal_con_prestaciones": 353553,
+     "rendimiento_unidades_por_dia": 9,
+     "valor": 39284,
+     "fuente": "Jornales de esta base; rendimiento de 9 m²/día con refuerzo (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 39284,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 1964,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete de bloque y cemento desde Barrancabermeja",
+    "peso_kg_por_unidad": 100,
+    "tarifa_por_kg": 120,
+    "valor": 12000,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 130233,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 31256,
+    "imprevistos": 3907,
+    "utilidad": 6512,
+    "iva_sobre_utilidad": 1237
+   },
+   "precio_unitario_con_aiu": 173145,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 4: 1.557 m² (40 % de los 3.892 m² de muros interiores, estimados con 0,33 ml de muro por m² construido × 3,5 m de altura)."
+  },
+  {
+   "id": "APU-09",
+   "item": "Muro liviano en placa de yeso resistente a humedad, doble cara, con aislamiento acústico",
+   "unidad": "m2",
+   "descripcion": "Muro divisorio en sistema liviano (como el Puesto de Salud Tipo de MinSalud): perfilería galvanizada de 89 mm, una lámina RH de 1/2\" por cara, manta de fibra de vidrio, masillado y cinta. En zonas húmedas se cambia la lámina por fibrocemento.",
+   "materiales": [
+    {
+     "insumo": "Lámina de yeso resistente a humedad (RH) de 1/2\", 1,22 × 2,44 m",
+     "unidad": "un",
+     "cantidad": 0.6719,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 65000,
+     "valor": 45855,
+     "fuente": "Estimación: lámina estándar de 9,5 mm a $42.356 (Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162775 del 27-mar-2026: lámina drywall 122×244×9,5 mm (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162775)); la RH de 12,7 mm cuesta un 40-60 % más.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Paral galvanizado de 89 mm calibre 24",
+     "unidad": "ml",
+     "cantidad": 2.5,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 9500,
+     "valor": 23750,
+     "fuente": "Estimación de mercado 2026 (distribuidores de Medellín).",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Canal galvanizada de 89 mm calibre 24",
+     "unidad": "ml",
+     "cantidad": 0.7,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 8500,
+     "valor": 5950,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Manta de fibra de vidrio de 2 1/2\" para aislamiento acústico",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 14000,
+     "valor": 14700,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Masilla, cinta de malla y tornillería para drywall (2 caras)",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 3462,
+     "valor": 3462,
+     "fuente": "Cálculo propio con precios TVEC: masilla para juntas $52.706/cuñete y cinta de malla $5.294/rollo de 45 m (orden 152787, 2-oct-2025) y tornillo drywall ($1.605-1.901 por 100, orden 162775).",
+     "tipo": "calculo_propio sobre dato oficial"
+    }
+   ],
+   "subtotal_materiales": 93717,
+   "equipo": [
+    {
+     "descripcion": "Andamio rodante",
+     "unidad_tarifa": "m2",
+     "tarifa": 1500,
+     "cantidad": 1.0,
+     "valor": 1500,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 1500,
+   "mano_obra": [
+    {
+     "cuadrilla": "Cuadrilla de construcción en seco",
+     "composicion": "1 oficial + 1 ayudante",
+     "jornal_con_prestaciones": 353553,
+     "rendimiento_unidades_por_dia": 12,
+     "valor": 29463,
+     "fuente": "Jornales de esta base; rendimiento de 12 m²/día (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 29463,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 1473,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete de láminas y perfilería desde Medellín",
+    "peso_kg_por_unidad": 25,
+    "tarifa_por_kg": 250,
+    "valor": 6250,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 132403,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 31777,
+    "imprevistos": 3972,
+    "utilidad": 6620,
+    "iva_sobre_utilidad": 1258
+   },
+   "precio_unitario_con_aiu": 176030,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 4: 2.335 m² (60 % de los muros interiores)."
+  },
+  {
+   "id": "APU-10",
+   "item": "Pintura epóxica antibacterial (2 manos) sobre estuco y sellador, en muros de áreas asistenciales",
+   "unidad": "m2",
+   "descripcion": "Acabado lavable y resistente a desinfectantes que pide la Res. 1633 de 2025 (Anexo 1, num. 3.3.8) en áreas asistenciales: estuco plástico, lijado, sellador epóxico y dos manos de pintura epóxica antibacterial.",
+   "materiales": [
+    {
+     "insumo": "Estuco plástico acrílico, cuñete",
+     "unidad": "cuñete",
+     "cantidad": 0.05,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 60147,
+     "valor": 3158,
+     "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 163083 del 7-abr-2026: estuco acrílico cuñete $60.147 (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=163083)",
+     "tipo": "dato_oficial"
+    },
+    {
+     "insumo": "Sellador o imprimante epóxico de dos componentes",
+     "unidad": "galón",
+     "cantidad": 0.05,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 180000,
+     "valor": 9000,
+     "fuente": "Estimación cercana al epoxi-poliamida de dos componentes a $211.785/galón (Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162775 del 27-mar-2026: epoxi-poliamida (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162775)).",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Pintura epóxica antibacterial tipo 1, color blanco",
+     "unidad": "galón",
+     "cantidad": 0.075,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 196577,
+     "valor": 15480,
+     "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 163083 del 7-abr-2026: pintura epóxica antibacterial tipo 1 blanca $196.577/galón (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=163083)",
+     "tipo": "dato_oficial"
+    },
+    {
+     "insumo": "Lija, catalizador y disolvente",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 1500,
+     "valor": 1500,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 29138,
+   "equipo": [
+    {
+     "descripcion": "Andamio",
+     "unidad_tarifa": "m2",
+     "tarifa": 800,
+     "cantidad": 1.0,
+     "valor": 800,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 800,
+   "mano_obra": [
+    {
+     "cuadrilla": "Cuadrilla de pintura",
+     "composicion": "1 oficial + 1 ayudante",
+     "jornal_con_prestaciones": 353553,
+     "rendimiento_unidades_por_dia": 20,
+     "valor": 17678,
+     "fuente": "Jornales de esta base; rendimiento de 20 m²/día para estuco y 3 manos (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 17678,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 884,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete de pinturas desde Medellín",
+    "peso_kg_por_unidad": 1.0,
+    "tarifa_por_kg": 250,
+    "valor": 250,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 48750,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 11700,
+    "imprevistos": 1462,
+    "utilidad": 2438,
+    "iva_sobre_utilidad": 463
+   },
+   "precio_unitario_con_aiu": 64813,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 6: 5.200 m² (≈ 64 % de los 8.170 m² de muro pintable hasta el cielo raso)."
+  },
+  {
+   "id": "APU-11",
+   "item": "Piso vinílico heterogéneo hospitalario de 2 mm con mediacaña sanitaria y autonivelante",
+   "unidad": "m2",
+   "descripcion": "Vinilo en rollo de tráfico intenso, antibacterial, soldado en caliente, con mediacaña integrada de 10 cm (sin juntas, lavable) sobre mortero autonivelante de 3 mm. Res. 1633 de 2025, Anexo 1, num. 3.3.8 (pisos lisos, lavables y continuos).",
+   "materiales": [
+    {
+     "insumo": "Piso vinílico heterogéneo hospitalario en rollo de 2 mm (tráfico intenso, antibacterial)",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 10.0,
+     "precio_unitario": 125000,
+     "valor": 137500,
+     "fuente": "Estimación de mercado 2026 (producto importado; no aparece en la Tienda Virtual). Confirmar con 2 cotizaciones.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Mortero autonivelante cementicio",
+     "unidad": "kg",
+     "cantidad": 5.0,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 4800,
+     "valor": 24000,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Imprimante para autonivelante",
+     "unidad": "l",
+     "cantidad": 0.15,
+     "desperdicio_pct": 0,
+     "precio_unitario": 20000,
+     "valor": 3000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Adhesivo acrílico para pisos vinílicos",
+     "unidad": "kg",
+     "cantidad": 0.35,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 22000,
+     "valor": 7700,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Cordón de soldadura para vinilo",
+     "unidad": "ml",
+     "cantidad": 1.2,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 1800,
+     "valor": 2160,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Perfil soporte de mediacaña",
+     "unidad": "ml",
+     "cantidad": 0.5,
+     "desperdicio_pct": 0,
+     "precio_unitario": 6000,
+     "valor": 3000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 177360,
+   "equipo": [
+    {
+     "descripcion": "Lijadora de piso, mezcladora y soldadora de vinilo",
+     "unidad_tarifa": "día",
+     "tarifa": 90000,
+     "rendimiento": 30,
+     "valor": 3000,
+     "fuente": "Estimación de alquiler 2026.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 3000,
+   "mano_obra": [
+    {
+     "cuadrilla": "Instalador especializado de vinilo",
+     "composicion": "1 oficial especializado + 1 ayudante",
+     "jornal_con_prestaciones": 403833,
+     "rendimiento_unidades_por_dia": 22,
+     "valor": 18356,
+     "fuente": "Jornales de esta base; rendimiento de 22 m²/día con mediacaña (estimación)."
+    },
+    {
+     "cuadrilla": "Preparación de base y autonivelante",
+     "composicion": "1 oficial + 1 ayudante",
+     "jornal_con_prestaciones": 353553,
+     "rendimiento_unidades_por_dia": 40,
+     "valor": 8839,
+     "fuente": "Rendimiento de 40 m²/día (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 27195,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 1360,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete de vinilo y autonivelante desde Medellín o Bogotá",
+    "peso_kg_por_unidad": 8.5,
+    "tarifa_por_kg": 250,
+    "valor": 2125,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 211040,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 50650,
+    "imprevistos": 6331,
+    "utilidad": 10552,
+    "iva_sobre_utilidad": 2005
+   },
+   "precio_unitario_con_aiu": 280578,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 6: 2.250 m² en áreas asistenciales y corredores; el vinilo conductivo de las salas TPR y procedimientos (180 m²) se presupuesta aparte con un sobrecosto."
+  },
+  {
+   "id": "APU-12",
+   "item": "Cielo raso registrable en fibra mineral de alta higiene 61 × 61 cm con perfilería suspendida y arriostramiento sísmico",
+   "unidad": "m2",
+   "descripcion": "Placas lavables y resistentes a la humedad sobre perfilería T, con cuelgues, ángulo perimetral y arriostramiento sísmico (NSR-10 cap. A.9). Permite registrar ductos, gases y bandejas del entretecho de 1,0-1,2 m.",
+   "materiales": [
+    {
+     "insumo": "Baldosa de cielo raso en fibra mineral de alta higiene 61 × 61 cm",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 55000,
+     "valor": 57750,
+     "fuente": "Estimación: la Tienda Virtual muestra fibra mineral económica a $10.000 por placa (≈ $26.900/m², 19-ago-2026) y de gama alta a $470.000 por caja de 14 placas (≈ $90.200/m², 20-mar-2025); la de alta higiene (lavable, antibacterial) queda en medio.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Perfilería de suspensión T (principal y secundaria)",
+     "unidad": "ml",
+     "cantidad": 3.4,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 4500,
+     "valor": 15300,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Ángulo perimetral",
+     "unidad": "ml",
+     "cantidad": 0.4,
+     "desperdicio_pct": 0,
+     "precio_unitario": 3800,
+     "valor": 1520,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Cuelgue con alambre galvanizado y anclaje",
+     "unidad": "un",
+     "cantidad": 1.2,
+     "desperdicio_pct": 0,
+     "precio_unitario": 2500,
+     "valor": 3000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Arriostramiento sísmico (riostras y separadores)",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 2000,
+     "valor": 2000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 79570,
+   "equipo": [
+    {
+     "descripcion": "Andamio rodante",
+     "unidad_tarifa": "m2",
+     "tarifa": 1000,
+     "cantidad": 1.0,
+     "valor": 1000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 1000,
+   "mano_obra": [
+    {
+     "cuadrilla": "Cuadrilla de cielos",
+     "composicion": "1 oficial + 1 ayudante",
+     "jornal_con_prestaciones": 353553,
+     "rendimiento_unidades_por_dia": 22,
+     "valor": 16071,
+     "fuente": "Rendimiento de 22 m²/día (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 16071,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 804,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete desde Medellín",
+    "peso_kg_por_unidad": 6.0,
+    "tarifa_por_kg": 250,
+    "valor": 1500,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 98945,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 23747,
+    "imprevistos": 2968,
+    "utilidad": 4947,
+    "iva_sobre_utilidad": 940
+   },
+   "precio_unitario_con_aiu": 131547,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 6: 2.500 m²."
+  },
+  {
+   "id": "APU-13",
+   "item": "Ventanería en aluminio anodizado natural con vidrio laminado de seguridad 4+4 mm",
+   "unidad": "m2",
+   "descripcion": "Ventana de serie pesada (fija, proyectante o corrediza), vidrio laminado incoloro u opalizado en baños y consultorios, sello de silicona y anclajes inoxidables. Del proyecto tipo DNP se toma el aluminio natural con vidrio laminado.",
+   "materiales": [
+    {
+     "insumo": "Perfilería de aluminio anodizado natural, serie pesada, fabricada",
+     "unidad": "kg",
+     "cantidad": 4.5,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 38000,
+     "valor": 171000,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Vidrio laminado de seguridad 4+4 mm",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 135000,
+     "valor": 141750,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Accesorios (rodamientos, manijas, felpas, empaques)",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 25000,
+     "valor": 25000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Silicona estructural o sellante",
+     "unidad": "cartucho",
+     "cantidad": 0.6,
+     "desperdicio_pct": 0,
+     "precio_unitario": 28000,
+     "valor": 16800,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Anclajes y tornillería inoxidable",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 6000,
+     "valor": 6000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 360550,
+   "equipo": [],
+   "subtotal_equipo": 0,
+   "mano_obra": [
+    {
+     "cuadrilla": "Fabricación e instalación",
+     "composicion": "1 oficial especializado + 1 ayudante",
+     "jornal_con_prestaciones": 403833,
+     "rendimiento_unidades_por_dia": 6,
+     "valor": 67306,
+     "fuente": "Rendimiento de 6 m²/día (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 67306,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 3365,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete de perfilería y vidrio desde Medellín",
+    "peso_kg_por_unidad": 25,
+    "tarifa_por_kg": 250,
+    "valor": 6250,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 437471,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 104993,
+    "imprevistos": 13124,
+    "utilidad": 21874,
+    "iva_sobre_utilidad": 4156
+   },
+   "precio_unitario_con_aiu": 581618,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 7: 600 m² (≈ 25 % de los 2.407 m² de fachada bruta)."
+  },
+  {
+   "id": "APU-14",
+   "item": "Impermeabilización de cubierta plana con aislamiento térmico y acabado blanco reflectivo",
+   "unidad": "m2",
+   "descripcion": "Limpieza, imprimante asfáltico, mortero de pendiente (5 cm promedio), aislamiento de poliestireno extruido de 50 mm, membrana asfáltica APP de 4 mm y dos manos de recubrimiento elastomérico blanco (reflectividad de 80 % o más, Res. 1633 de 2025, Anexo 2).",
+   "materiales": [
+    {
+     "insumo": "Imprimante asfáltico",
+     "unidad": "l",
+     "cantidad": 0.3,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 15000,
+     "valor": 4500,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Membrana asfáltica APP de 4 mm",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 15.0,
+     "precio_unitario": 42000,
+     "valor": 48300,
+     "fuente": "Estimación con compras TVEC: manto asfáltico autoadhesivo con foil de 3 mm × 10 m² a $426.990 (Gobernación de Antioquia, orden 152787, 2-oct-2025) y rollo a $287.000 (Casanare, 20-may-2026).",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Recubrimiento elastomérico blanco reflectivo (reflectividad ≥ 80 %)",
+     "unidad": "l",
+     "cantidad": 0.8,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 22000,
+     "valor": 17600,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Mortero de pega y pañete 1:4 preparado en obra",
+     "unidad": "m3",
+     "cantidad": 0.05,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 414699,
+     "valor": 20735,
+     "fuente": "Cálculo propio: 350 kg de cemento (7 bultos TVEC 2026) + 1,15 m³ de arena (precio de esta base).",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "insumo": "Aislamiento térmico de poliestireno extruido de 50 mm",
+     "unidad": "m2",
+     "cantidad": 1.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 38000,
+     "valor": 39900,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 131035,
+   "equipo": [
+    {
+     "descripcion": "Soplete y gas",
+     "unidad_tarifa": "m2",
+     "tarifa": 2000,
+     "cantidad": 1.0,
+     "valor": 2000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 2000,
+   "mano_obra": [
+    {
+     "cuadrilla": "Mortero de pendiente",
+     "composicion": "1 oficial + 1 ayudante",
+     "jornal_con_prestaciones": 353553,
+     "rendimiento_unidades_por_dia": 20,
+     "valor": 17678,
+     "fuente": "Rendimiento de 20 m²/día (estimación)."
+    },
+    {
+     "cuadrilla": "Impermeabilización",
+     "composicion": "1 oficial + 1 ayudante",
+     "jornal_con_prestaciones": 353553,
+     "rendimiento_unidades_por_dia": 25,
+     "valor": 14142,
+     "fuente": "Rendimiento de 25 m²/día (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 31820,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 1591,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete de manto y aislamiento desde Medellín",
+    "peso_kg_por_unidad": 8.0,
+    "tarifa_por_kg": 250,
+    "valor": 2000,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 168446,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 40427,
+    "imprevistos": 5053,
+    "utilidad": 8422,
+    "iva_sobre_utilidad": 1600
+   },
+   "precio_unitario_con_aiu": 223948,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 5: 1.158,2 m² (cubierta del piso 4: 648; terraza del piso 3: 259,2; casetas: 107,4; bloque técnico: 125,6; residuos: 18)."
+  },
+  {
+   "id": "APU-15",
+   "item": "Red de gases medicinales en tubería de cobre tipo K desengrasada (oxígeno, aire medicinal y vacío)",
+   "unidad": "ml",
+   "descripcion": "Tubería de cobre para uso médico de 1/2\" a 1\" (promedio), soldadura de plata con purga de nitrógeno, soportería, rotulado y pruebas de presión, fugas, contaminación cruzada y pureza (ISO 7396-1 / NFPA 99 como referencia; ver normas.json sobre la NTC 5318). Los equipos (manifold, compresor, bomba de vacío, cajas y alarmas) van en el ítem de la central de gases (dotacion.json).",
+   "materiales": [
+    {
+     "insumo": "Tubería de cobre tipo K desengrasada para gases medicinales (promedio 1/2\"-1\")",
+     "unidad": "ml",
+     "cantidad": 1.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 62000,
+     "valor": 65100,
+     "fuente": "Estimación: cobre flexible de 1/2\" × 15 m a $707.250 en la Tienda Virtual (Fuerza Aérea, 30-mar-2026 ≈ $47.150/ml); la tubería rígida tipo K desengrasada para uso médico cuesta más.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Accesorios de cobre (codos, tees, uniones)",
+     "unidad": "un",
+     "cantidad": 0.4,
+     "desperdicio_pct": 0,
+     "precio_unitario": 18000,
+     "valor": 7200,
+     "fuente": "Estimación con precios TVEC 2026: unión de cobre 1/2\" $2.017 y codo de 2 1/2\" $20.168 (orden 162775).",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Varilla de soldadura de plata",
+     "unidad": "un",
+     "cantidad": 0.08,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 21916,
+     "valor": 1753,
+     "fuente": "Tienda Virtual del Estado, Alcaldía de Yopal, 20-may-2026: varilla de soldadura de plata a $21.916 (datos.gov.co 3hdv-smhz).",
+     "tipo": "dato_oficial"
+    },
+    {
+     "insumo": "Nitrógeno de purga",
+     "unidad": "ml",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 1500,
+     "valor": 1500,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Soporte (abrazadera y varilla roscada)",
+     "unidad": "un",
+     "cantidad": 0.6,
+     "desperdicio_pct": 0,
+     "precio_unitario": 12000,
+     "valor": 7200,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Rotulado por gas y sentido de flujo",
+     "unidad": "ml",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 1000,
+     "valor": 1000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 83753,
+   "equipo": [
+    {
+     "descripcion": "Equipo de soldadura oxiacetilénica",
+     "unidad_tarifa": "día",
+     "tarifa": 35376,
+     "rendimiento": 15,
+     "valor": 2358,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (equipo de oxicorte $23.500), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "descripcion": "Pruebas y certificación por tercero (prorrateo)",
+     "unidad_tarifa": "ml",
+     "tarifa": 6000,
+     "cantidad": 1.0,
+     "valor": 6000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 8358,
+   "mano_obra": [
+    {
+     "cuadrilla": "Técnico instalador de gases certificado",
+     "composicion": "1 oficial especializado + 1 ayudante",
+     "jornal_con_prestaciones": 403833,
+     "rendimiento_unidades_por_dia": 15,
+     "valor": 26922,
+     "fuente": "Rendimiento de 15 ml/día (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 26922,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 1346,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete de tubería desde Medellín o Bogotá",
+    "peso_kg_por_unidad": 1.2,
+    "tarifa_por_kg": 250,
+    "valor": 300,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 120679,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 28963,
+    "imprevistos": 3620,
+    "utilidad": 6034,
+    "iva_sobre_utilidad": 1146
+   },
+   "precio_unitario_con_aiu": 160442,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 12: 1.100 ml para ≈ 100 tomas (45 de oxígeno, 40 de vacío y 15 de aire medicinal)."
+  },
+  {
+   "id": "APU-16",
+   "item": "Ducto de aire acondicionado y extracción en lámina galvanizada con aislamiento térmico",
+   "unidad": "kg",
+   "descripcion": "Fabricación e instalación de ductos según SMACNA (calibres 24 y 22), aislamiento de fibra de vidrio con foil, sellado de juntas y soportes antisísmicos.",
+   "materiales": [
+    {
+     "insumo": "Lámina galvanizada calibre 24/22 para ductos",
+     "unidad": "kg",
+     "cantidad": 1.0,
+     "desperdicio_pct": 12.0,
+     "precio_unitario": 7500,
+     "valor": 8400,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Fibra de vidrio de 1 1/2\" con foil para ductos",
+     "unidad": "m2",
+     "cantidad": 0.2,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 16000,
+     "valor": 3360,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Sellante, platinas, tornillería y soportes",
+     "unidad": "kg",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 1500,
+     "valor": 1500,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 13260,
+   "equipo": [
+    {
+     "descripcion": "Taller de plegado y corte (prorrateo)",
+     "unidad_tarifa": "kg",
+     "tarifa": 600,
+     "cantidad": 1.0,
+     "valor": 600,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 600,
+   "mano_obra": [
+    {
+     "cuadrilla": "Fabricación e instalación de ductos",
+     "composicion": "1 oficial especializado + 1 ayudante",
+     "jornal_con_prestaciones": 403833,
+     "rendimiento_unidades_por_dia": 60,
+     "valor": 6731,
+     "fuente": "Rendimiento de 60 kg/día (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 6731,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 337,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete de lámina desde Medellín",
+    "peso_kg_por_unidad": 1.1,
+    "tarifa_por_kg": 250,
+    "valor": 275,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 21203,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 5089,
+    "imprevistos": 636,
+    "utilidad": 1060,
+    "iva_sobre_utilidad": 201
+   },
+   "precio_unitario_con_aiu": 28189,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 13: 8.500 kg (≈ 1.600 m² con ducto × 4,5 kg/m² más la extracción de baños)."
+  },
+  {
+   "id": "APU-17",
+   "item": "Salida para tomacorriente normal doble con polo a tierra 20 A en tubería EMT y cable libre de halógenos",
+   "unidad": "un",
+   "descripcion": "Tubería EMT de 3/4\" (6 m promedio desde la bandeja), cable de cobre LSZH 3 × 12 AWG, caja galvanizada, tomacorriente y placa. RETIE (Res. 40117 de 2024 y Res. 40284 de 2026) y NTC 2050.",
+   "materiales": [
+    {
+     "insumo": "Tubo EMT de 3/4\"",
+     "unidad": "ml",
+     "cantidad": 6.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 9818,
+     "valor": 61853,
+     "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: tubo EMT 3/4\" × 3 m a $29.453 (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)",
+     "tipo": "dato_oficial"
+    },
+    {
+     "insumo": "Uniones y conectores EMT",
+     "unidad": "un",
+     "cantidad": 3.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 1800,
+     "valor": 5400,
+     "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162775 del 27-mar-2026: unión de acero 1/2\" para tubo EMT $1.800 (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162775)",
+     "tipo": "dato_oficial"
+    },
+    {
+     "insumo": "Cable de cobre libre de halógenos (HFFR/LSZH) No. 12 AWG",
+     "unidad": "ml",
+     "cantidad": 21.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 2687,
+     "valor": 59248,
+     "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: cable de cobre HFFR LS CT No. 12 AWG $2.687/m (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)",
+     "tipo": "dato_oficial"
+    },
+    {
+     "insumo": "Caja galvanizada 2×4 o 4×4 con suplemento",
+     "unidad": "un",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 4500,
+     "valor": 4500,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Tomacorriente doble con polo a tierra 20 A grado comercial con placa",
+     "unidad": "un",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 15000,
+     "valor": 15000,
+     "fuente": "Estimación con precios TVEC 2026 (tomacorriente $7.086 a $35.294, órdenes 162740 y 162775).",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 146001,
+   "equipo": [
+    {
+     "descripcion": "Andamio",
+     "unidad_tarifa": "un",
+     "tarifa": 1000,
+     "cantidad": 1.0,
+     "valor": 1000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 1000,
+   "mano_obra": [
+    {
+     "cuadrilla": "Electricista",
+     "composicion": "1 oficial especializado + 1 ayudante",
+     "jornal_con_prestaciones": 403833,
+     "rendimiento_unidades_por_dia": 6,
+     "valor": 67306,
+     "fuente": "Rendimiento de 6 salidas/día (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 67306,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 3365,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete de material eléctrico desde Medellín",
+    "peso_kg_por_unidad": 3.0,
+    "tarifa_por_kg": 250,
+    "valor": 750,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 218422,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 52421,
+    "imprevistos": 6553,
+    "utilidad": 10921,
+    "iva_sobre_utilidad": 2075
+   },
+   "precio_unitario_con_aiu": 290392,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 10: 650 salidas."
+  },
+  {
+   "id": "APU-18",
+   "item": "Salida para tomacorriente grado hospitalario del sistema eléctrico esencial (regulada, con tierra aislada)",
+   "unidad": "un",
+   "descripcion": "Igual que APU-17 pero con un conductor adicional de tierra aislada, tomacorriente grado hospitalario y marcación del circuito del sistema esencial (NTC 2050, sección 517; RETIE num. 3.28.3.2).",
+   "materiales": [
+    {
+     "insumo": "Tubo EMT de 3/4\"",
+     "unidad": "ml",
+     "cantidad": 6.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 9818,
+     "valor": 61853,
+     "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: tubo EMT 3/4\" × 3 m a $29.453 (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)",
+     "tipo": "dato_oficial"
+    },
+    {
+     "insumo": "Uniones y conectores EMT",
+     "unidad": "un",
+     "cantidad": 3.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 1800,
+     "valor": 5400,
+     "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162775 del 27-mar-2026: unión de acero para tubo EMT $1.800 (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162775)",
+     "tipo": "dato_oficial"
+    },
+    {
+     "insumo": "Cable de cobre libre de halógenos (HFFR/LSZH) No. 12 AWG",
+     "unidad": "ml",
+     "cantidad": 28.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 2687,
+     "valor": 78998,
+     "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: cable de cobre HFFR LS CT No. 12 AWG $2.687/m (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)",
+     "tipo": "dato_oficial"
+    },
+    {
+     "insumo": "Caja galvanizada 2×4 o 4×4 con suplemento",
+     "unidad": "un",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 4500,
+     "valor": 4500,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Tomacorriente grado hospitalario 20 A (NEMA 5-20R) con placa",
+     "unidad": "un",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 59000,
+     "valor": 59000,
+     "fuente": "Estimación: un tomacorriente GFCI de 20 A cuesta $34.144 (Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: toma GFCI 20 A (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)); el grado hospitalario cuesta más.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Marquilla del circuito y del tablero",
+     "unidad": "un",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 1000,
+     "valor": 1000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_materiales": 210751,
+   "equipo": [
+    {
+     "descripcion": "Andamio",
+     "unidad_tarifa": "un",
+     "tarifa": 1000,
+     "cantidad": 1.0,
+     "valor": 1000,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    }
+   ],
+   "subtotal_equipo": 1000,
+   "mano_obra": [
+    {
+     "cuadrilla": "Electricista",
+     "composicion": "1 oficial especializado + 1 ayudante",
+     "jornal_con_prestaciones": 403833,
+     "rendimiento_unidades_por_dia": 5,
+     "valor": 80767,
+     "fuente": "Rendimiento de 5 salidas/día (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 80767,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 4038,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete de material eléctrico desde Medellín",
+    "peso_kg_por_unidad": 3.5,
+    "tarifa_por_kg": 250,
+    "valor": 875,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 297431,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 71383,
+    "imprevistos": 8923,
+    "utilidad": 14872,
+    "iva_sobre_utilidad": 2826
+   },
+   "precio_unitario_con_aiu": 395435,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 10: 420 salidas (camas, camillas, consultorios, laboratorio, equipos críticos y datos)."
+  },
+  {
+   "id": "APU-19",
+   "item": "Punto hidráulico de agua fría en PVC presión de 1/2\" con válvula de paso",
+   "unidad": "un",
+   "descripcion": "Desde el ramal hasta el aparato (6 m promedio), con accesorios, válvula de paso, regata y resane, y prueba de presión.",
+   "materiales": [
+    {
+     "insumo": "Tubo PVC presión 1/2\" RDE 9-13,5",
+     "unidad": "ml",
+     "cantidad": 6.0,
+     "desperdicio_pct": 5.0,
+     "precio_unitario": 2276,
+     "valor": 14339,
+     "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 152787 del 2-oct-2025: tubo presión RDE 9 PVC 1/2\" $2.159/m (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=152787) × IPC 2025",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "insumo": "Accesorio PVC presión 1/2\" (codo, tee, adaptador)",
+     "unidad": "un",
+     "cantidad": 5.0,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 1200,
+     "valor": 6000,
+     "fuente": "Estimación con el adaptador hembra PVC de 1\" a $1.103 (Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162775 del 27-mar-2026: adaptador hembra 1\" PVC (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162775)).",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Soldadura líquida PVC y limpiador",
+     "unidad": "galón",
+     "cantidad": 0.006,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 193608,
+     "valor": 1162,
+     "fuente": "Tienda Virtual, orden 162775 (27-mar-2026): soldadura PVC 1/8 de galón a $24.201 (llevado a galón).",
+     "tipo": "calculo_propio sobre dato oficial"
+    },
+    {
+     "insumo": "Válvula de paso o registro de 1/2\"",
+     "unidad": "un",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0.0,
+     "precio_unitario": 28000,
+     "valor": 28000,
+     "fuente": "Estimación de mercado 2026.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Cinta de teflón",
+     "unidad": "un",
+     "cantidad": 1.0,
+     "desperdicio_pct": 0,
+     "precio_unitario": 300,
+     "valor": 300,
+     "fuente": "Estimación.",
+     "tipo": "estimacion"
+    },
+    {
+     "insumo": "Mortero para resane de regata",
+     "unidad": "m3",
+     "cantidad": 0.005,
+     "desperdicio_pct": 0,
+     "precio_unitario": 414699,
+     "valor": 2073,
+     "fuente": "Cálculo propio: 350 kg de cemento (7 bultos TVEC 2026) + 1,15 m³ de arena (precio de esta base).",
+     "tipo": "calculo_propio sobre dato oficial"
+    }
+   ],
+   "subtotal_materiales": 51874,
+   "equipo": [],
+   "subtotal_equipo": 0,
+   "mano_obra": [
+    {
+     "cuadrilla": "Plomero",
+     "composicion": "1 oficial especializado + 1 ayudante",
+     "jornal_con_prestaciones": 403833,
+     "rendimiento_unidades_por_dia": 6,
+     "valor": 67306,
+     "fuente": "Rendimiento de 6 puntos/día (estimación)."
+    }
+   ],
+   "subtotal_mano_obra": 67306,
+   "herramienta_menor": {
+    "porcentaje_de_mano_de_obra": 5.0,
+    "valor": 3365,
+    "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
+   },
+   "otros": [],
+   "subtotal_otros": 0,
+   "transporte": {
+    "descripcion": "Flete de tubería desde Medellín",
+    "peso_kg_por_unidad": 2.0,
+    "tarifa_por_kg": 250,
+    "valor": 500,
+    "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
+   },
+   "costo_directo": 123045,
+   "aiu": {
+    "administracion_pct": 24.0,
+    "imprevistos_pct": 3.0,
+    "utilidad_pct": 5.0,
+    "iva_sobre_utilidad_pct": 19.0,
+    "administracion": 29531,
+    "imprevistos": 3691,
+    "utilidad": 6152,
+    "iva_sobre_utilidad": 1169
+   },
+   "precio_unitario_con_aiu": 163588,
+   "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
+   "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
+   "uso_en_presupuesto": "Capítulo 8: 280 puntos (≈ 76 sanitarios, 136 lavamanos, 27 duchas, 14 lavatraperos y pocetas)."
+  }
+ ],
+ "insumos": {
+  "cemento": {
+   "insumo": "Cemento gris de uso general, bulto de 50 kg",
+   "unidad": "bulto",
+   "precio_unitario": 32896,
+   "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: cemento gris 50 kg a $32.896 (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)",
+   "tipo": "dato_oficial",
+   "rango": [
+    32874,
+    44610
+   ]
+  },
+  "arena": {
+   "insumo": "Arena de río o de concreto puesta en obra",
+   "unidad": "m3",
+   "precio_unitario": 160371,
+   "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: arena de río $122.332/m³ (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740); y orden 152787 del 2-oct-2025: arena de concreto $188.235/m³ × IPC 2025; se usa el promedio",
+   "tipo": "calculo_propio sobre dato oficial",
+   "rango": [
+    122332,
+    198410
+   ]
+  },
+  "grava": {
+   "insumo": "Gravilla triturada o lavada de 3/4\"",
+   "unidad": "m3",
+   "precio_unitario": 179810,
+   "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 152787 del 2-oct-2025: gravilla 3/4\" $170.588/m³ (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=152787) × IPC 2025",
+   "tipo": "calculo_propio sobre dato oficial",
+   "rango": [
+    152730,
+    187440
+   ]
+  },
+  "concreto28": {
+   "insumo": "Concreto premezclado de 28 MPa (4.000 psi) puesto en Yondó",
+   "unidad": "m3",
+   "precio_unitario": 700000,
+   "fuente": "Estimación: subanálisis SIF 2020 de concreto de 28 MPa ($440.179/m³, ítem 6.2.30, pág. 191) × IPC = $662.645; más transporte desde planta en Barrancabermeja (≈ 15 km por el puente) ≈ $40.000. Chequeo por materiales con precios TVEC 2026: 400 kg de cemento, 0,55 m³ de arena, 0,75 m³ de grava y aditivo ≈ $519.000 + producción, mixer y control ≈ $670.000. Confirmar con 3 cotizaciones de planta.",
+   "tipo": "estimacion",
+   "rango": [
+    620000,
+    800000
+   ]
+  },
+  "concreto21": {
+   "insumo": "Concreto premezclado de 21 MPa (3.000 psi) puesto en Yondó",
+   "unidad": "m3",
+   "precio_unitario": 625000,
+   "fuente": "Estimación: relación SIF 2020 entre 21 y 28 MPa (393.125 / 440.179 = 0,893) aplicada a $700.000.",
+   "tipo": "estimacion",
+   "rango": [
+    560000,
+    720000
+   ]
+  },
+  "concreto14": {
+   "insumo": "Concreto de 14 MPa para solados",
+   "unidad": "m3",
+   "precio_unitario": 520000,
+   "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.19 (solado 14 MPa), pág. 156 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 por IPC y ajuste a la relación de precios del concreto premezclado (estimación).",
+   "tipo": "estimacion",
+   "rango": [
+    450000,
+    600000
+   ]
+  },
+  "acero": {
+   "insumo": "Acero corrugado G-60 (fy = 420 MPa) figurado",
+   "unidad": "kg",
+   "precio_unitario": 4600,
+   "fuente": "Estimación entre la Base SIF 2020-II (acero G-60 figurado $2.879/kg, ítem 10.1, pág. 300, × IPC = $4.334) y compras TVEC 2025-2026 (varilla #4 × 6 m a $30.520 y $34.247 ≈ $5.100-5.700/kg; varilla #5 × 6 m a $29.265 ≈ $3.100/kg).",
+   "tipo": "estimacion",
+   "rango": [
+    4200,
+    5700
+   ]
+  },
+  "alambre": {
+   "insumo": "Alambre negro recocido calibre 18",
+   "unidad": "kg",
+   "precio_unitario": 6050,
+   "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 10.1, pág. 300 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+   "tipo": "calculo_propio sobre dato oficial"
+  },
+  "antisol": {
+   "insumo": "Curador de concreto tipo antisol blanco",
+   "unidad": "kg",
+   "precio_unitario": 9702,
+   "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30, pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC",
+   "tipo": "calculo_propio sobre dato oficial"
+  },
+  "desmoldante": {
+   "insumo": "Desmoldante para formaleta",
+   "unidad": "l",
+   "precio_unitario": 9000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    7000,
+    12000
+   ]
+  },
+  "bloque5": {
+   "insumo": "Bloque de arcilla No. 5 (≈ 12 × 20 × 33 cm)",
+   "unidad": "un",
+   "precio_unitario": 3400,
+   "fuente": "Estimación: ladrillo hueco 9 × 20 × 40 cm a $2.863 (Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: ladrillo común horizontal de 3 huecos 9×20×40 (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)) ajustado al tamaño No. 5.",
+   "tipo": "estimacion",
+   "rango": [
+    2900,
+    4200
+   ]
+  },
+  "mortero14": {
+   "insumo": "Mortero de pega y pañete 1:4 preparado en obra",
+   "unidad": "m3",
+   "precio_unitario": 414699,
+   "fuente": "Cálculo propio: 350 kg de cemento (7 bultos TVEC 2026) + 1,15 m³ de arena (precio de esta base).",
+   "tipo": "calculo_propio sobre dato oficial"
+  },
+  "drywall_rh": {
+   "insumo": "Lámina de yeso resistente a humedad (RH) de 1/2\", 1,22 × 2,44 m",
+   "unidad": "un",
+   "precio_unitario": 65000,
+   "fuente": "Estimación: lámina estándar de 9,5 mm a $42.356 (Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162775 del 27-mar-2026: lámina drywall 122×244×9,5 mm (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162775)); la RH de 12,7 mm cuesta un 40-60 % más.",
+   "tipo": "estimacion",
+   "rango": [
+    55000,
+    78000
+   ]
+  },
+  "paral89": {
+   "insumo": "Paral galvanizado de 89 mm calibre 24",
+   "unidad": "ml",
+   "precio_unitario": 9500,
+   "fuente": "Estimación de mercado 2026 (distribuidores de Medellín).",
+   "tipo": "estimacion",
+   "rango": [
+    7500,
+    12000
+   ]
+  },
+  "canal89": {
+   "insumo": "Canal galvanizada de 89 mm calibre 24",
+   "unidad": "ml",
+   "precio_unitario": 8500,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    6500,
+    11000
+   ]
+  },
+  "fibra_vidrio": {
+   "insumo": "Manta de fibra de vidrio de 2 1/2\" para aislamiento acústico",
+   "unidad": "m2",
+   "precio_unitario": 14000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    10000,
+    19000
+   ]
+  },
+  "masilla_cinta": {
+   "insumo": "Masilla, cinta de malla y tornillería para drywall (2 caras)",
+   "unidad": "m2",
+   "precio_unitario": 3462,
+   "fuente": "Cálculo propio con precios TVEC: masilla para juntas $52.706/cuñete y cinta de malla $5.294/rollo de 45 m (orden 152787, 2-oct-2025) y tornillo drywall ($1.605-1.901 por 100, orden 162775).",
+   "tipo": "calculo_propio sobre dato oficial"
+  },
+  "estuco": {
+   "insumo": "Estuco plástico acrílico, cuñete",
+   "unidad": "cuñete",
+   "precio_unitario": 60147,
+   "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 163083 del 7-abr-2026: estuco acrílico cuñete $60.147 (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=163083)",
+   "tipo": "dato_oficial",
+   "rango": [
+    52433,
+    60147
+   ]
+  },
+  "epoxica": {
+   "insumo": "Pintura epóxica antibacterial tipo 1, color blanco",
+   "unidad": "galón",
+   "precio_unitario": 196577,
+   "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 163083 del 7-abr-2026: pintura epóxica antibacterial tipo 1 blanca $196.577/galón (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=163083)",
+   "tipo": "dato_oficial",
+   "rango": [
+    170550,
+    211785
+   ]
+  },
+  "primer_epox": {
+   "insumo": "Sellador o imprimante epóxico de dos componentes",
+   "unidad": "galón",
+   "precio_unitario": 180000,
+   "fuente": "Estimación cercana al epoxi-poliamida de dos componentes a $211.785/galón (Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162775 del 27-mar-2026: epoxi-poliamida (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162775)).",
+   "tipo": "estimacion",
+   "rango": [
+    150000,
+    212000
+   ]
+  },
+  "vinilo_t1": {
+   "insumo": "Pintura vinilo tipo 1 para interiores, cuñete de 5 galones",
+   "unidad": "cuñete",
+   "precio_unitario": 158604,
+   "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: pintura vinilo tipo 1 interior cuñete $158.604 (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)",
+   "tipo": "dato_oficial",
+   "rango": [
+    158604,
+    251892
+   ]
+  },
+  "vinilo_hosp": {
+   "insumo": "Piso vinílico heterogéneo hospitalario en rollo de 2 mm (tráfico intenso, antibacterial)",
+   "unidad": "m2",
+   "precio_unitario": 125000,
+   "fuente": "Estimación de mercado 2026 (producto importado; no aparece en la Tienda Virtual). Confirmar con 2 cotizaciones.",
+   "tipo": "estimacion",
+   "rango": [
+    95000,
+    160000
+   ]
+  },
+  "autonivelante": {
+   "insumo": "Mortero autonivelante cementicio",
+   "unidad": "kg",
+   "precio_unitario": 4800,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    3800,
+    6000
+   ]
+  },
+  "adhesivo_vinilo": {
+   "insumo": "Adhesivo acrílico para pisos vinílicos",
+   "unidad": "kg",
+   "precio_unitario": 22000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    16000,
+    28000
+   ]
+  },
+  "cordon": {
+   "insumo": "Cordón de soldadura para vinilo",
+   "unidad": "ml",
+   "precio_unitario": 1800,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    1200,
+    2500
+   ]
+  },
+  "cielo_fm": {
+   "insumo": "Baldosa de cielo raso en fibra mineral de alta higiene 61 × 61 cm",
+   "unidad": "m2",
+   "precio_unitario": 55000,
+   "fuente": "Estimación: la Tienda Virtual muestra fibra mineral económica a $10.000 por placa (≈ $26.900/m², 19-ago-2026) y de gama alta a $470.000 por caja de 14 placas (≈ $90.200/m², 20-mar-2025); la de alta higiene (lavable, antibacterial) queda en medio.",
+   "tipo": "estimacion",
+   "rango": [
+    27000,
+    90000
+   ]
+  },
+  "perfil_t": {
+   "insumo": "Perfilería de suspensión T (principal y secundaria)",
+   "unidad": "ml",
+   "precio_unitario": 4500,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    3500,
+    6000
+   ]
+  },
+  "aluminio": {
+   "insumo": "Perfilería de aluminio anodizado natural, serie pesada, fabricada",
+   "unidad": "kg",
+   "precio_unitario": 38000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    30000,
+    48000
+   ]
+  },
+  "vidrio_lam": {
+   "insumo": "Vidrio laminado de seguridad 4+4 mm",
+   "unidad": "m2",
+   "precio_unitario": 135000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    110000,
+    170000
+   ]
+  },
+  "manto": {
+   "insumo": "Membrana asfáltica APP de 4 mm",
+   "unidad": "m2",
+   "precio_unitario": 42000,
+   "fuente": "Estimación con compras TVEC: manto asfáltico autoadhesivo con foil de 3 mm × 10 m² a $426.990 (Gobernación de Antioquia, orden 152787, 2-oct-2025) y rollo a $287.000 (Casanare, 20-may-2026).",
+   "tipo": "estimacion",
+   "rango": [
+    28700,
+    45000
+   ]
+  },
+  "elastomerico": {
+   "insumo": "Recubrimiento elastomérico blanco reflectivo (reflectividad ≥ 80 %)",
+   "unidad": "l",
+   "precio_unitario": 22000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    16000,
+    30000
+   ]
+  },
+  "xps": {
+   "insumo": "Aislamiento térmico de poliestireno extruido de 50 mm",
+   "unidad": "m2",
+   "precio_unitario": 38000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    30000,
+    48000
+   ]
+  },
+  "imprimante_asf": {
+   "insumo": "Imprimante asfáltico",
+   "unidad": "l",
+   "precio_unitario": 15000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    11000,
+    19000
+   ]
+  },
+  "cobre_k": {
+   "insumo": "Tubería de cobre tipo K desengrasada para gases medicinales (promedio 1/2\"-1\")",
+   "unidad": "ml",
+   "precio_unitario": 62000,
+   "fuente": "Estimación: cobre flexible de 1/2\" × 15 m a $707.250 en la Tienda Virtual (Fuerza Aérea, 30-mar-2026 ≈ $47.150/ml); la tubería rígida tipo K desengrasada para uso médico cuesta más.",
+   "tipo": "estimacion",
+   "rango": [
+    48000,
+    80000
+   ]
+  },
+  "soldadura_plata": {
+   "insumo": "Varilla de soldadura de plata",
+   "unidad": "un",
+   "precio_unitario": 21916,
+   "fuente": "Tienda Virtual del Estado, Alcaldía de Yopal, 20-may-2026: varilla de soldadura de plata a $21.916 (datos.gov.co 3hdv-smhz).",
+   "tipo": "dato_oficial"
+  },
+  "lamina_galv": {
+   "insumo": "Lámina galvanizada calibre 24/22 para ductos",
+   "unidad": "kg",
+   "precio_unitario": 7500,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    6200,
+    9000
+   ]
+  },
+  "aisl_ducto": {
+   "insumo": "Fibra de vidrio de 1 1/2\" con foil para ductos",
+   "unidad": "m2",
+   "precio_unitario": 16000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    12000,
+    21000
+   ]
+  },
+  "emt34": {
+   "insumo": "Tubo EMT de 3/4\"",
+   "unidad": "ml",
+   "precio_unitario": 9818,
+   "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: tubo EMT 3/4\" × 3 m a $29.453 (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)",
+   "tipo": "dato_oficial"
+  },
+  "cable12": {
+   "insumo": "Cable de cobre libre de halógenos (HFFR/LSZH) No. 12 AWG",
+   "unidad": "ml",
+   "precio_unitario": 2687,
+   "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: cable de cobre HFFR LS CT No. 12 AWG $2.687/m (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)",
+   "tipo": "dato_oficial"
+  },
+  "toma_normal": {
+   "insumo": "Tomacorriente doble con polo a tierra 20 A grado comercial con placa",
+   "unidad": "un",
+   "precio_unitario": 15000,
+   "fuente": "Estimación con precios TVEC 2026 (tomacorriente $7.086 a $35.294, órdenes 162740 y 162775).",
+   "tipo": "estimacion",
+   "rango": [
+    8000,
+    35000
+   ]
+  },
+  "toma_hosp": {
+   "insumo": "Tomacorriente grado hospitalario 20 A (NEMA 5-20R) con placa",
+   "unidad": "un",
+   "precio_unitario": 59000,
+   "fuente": "Estimación: un tomacorriente GFCI de 20 A cuesta $34.144 (Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162740 del 27-mar-2026: toma GFCI 20 A (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162740)); el grado hospitalario cuesta más.",
+   "tipo": "estimacion",
+   "rango": [
+    40000,
+    85000
+   ]
+  },
+  "caja_galv": {
+   "insumo": "Caja galvanizada 2×4 o 4×4 con suplemento",
+   "unidad": "un",
+   "precio_unitario": 4500,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    3000,
+    6500
+   ]
+  },
+  "pvc_presion12": {
+   "insumo": "Tubo PVC presión 1/2\" RDE 9-13,5",
+   "unidad": "ml",
+   "precio_unitario": 2276,
+   "fuente": "Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 152787 del 2-oct-2025: tubo presión RDE 9 PVC 1/2\" $2.159/m (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=152787) × IPC 2025",
+   "tipo": "calculo_propio sobre dato oficial"
+  },
+  "valvula12": {
+   "insumo": "Válvula de paso o registro de 1/2\"",
+   "unidad": "un",
+   "precio_unitario": 28000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    18000,
+    45000
+   ]
+  },
+  "accesorio_pvc": {
+   "insumo": "Accesorio PVC presión 1/2\" (codo, tee, adaptador)",
+   "unidad": "un",
+   "precio_unitario": 1200,
+   "fuente": "Estimación con el adaptador hembra PVC de 1\" a $1.103 (Tienda Virtual del Estado Colombiano, Acuerdo Marco de materiales de construcción y ferretería, zona 3 (Antioquia), orden 162775 del 27-mar-2026: adaptador hembra 1\" PVC (https://www.datos.gov.co/resource/3hdv-smhz.json?orden_de_compra=162775)).",
+   "tipo": "estimacion"
+  },
+  "soldadura_pvc": {
+   "insumo": "Soldadura líquida PVC y limpiador",
+   "unidad": "galón",
+   "precio_unitario": 193608,
+   "fuente": "Tienda Virtual, orden 162775 (27-mar-2026): soldadura PVC 1/8 de galón a $24.201 (llevado a galón).",
+   "tipo": "calculo_propio sobre dato oficial"
+  },
+  "polietileno200": {
+   "insumo": "Plástico de polietileno de 200 micras",
+   "unidad": "m2",
+   "precio_unitario": 1800,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    1200,
+    2500
+   ]
+  },
+  "epp_asbesto": {
+   "insumo": "Overol desechable tipo 5/6 para trabajo con asbesto",
+   "unidad": "un",
+   "precio_unitario": 25000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    18000,
+    35000
+   ]
+  },
+  "filtro_p100": {
+   "insumo": "Par de filtros P100 para respirador de media cara",
+   "unidad": "par",
+   "precio_unitario": 45000,
+   "fuente": "Estimación de mercado 2026.",
+   "tipo": "estimacion",
+   "rango": [
+    30000,
+    60000
+   ]
+  }
+ },
+ "equipos_base": {
+  "vibrador": {
+   "tarifa": 80658,
+   "unidad": "día",
+   "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (vibrador $53.580), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+  },
+  "formaleta_col": {
+   "tarifa": 96796,
+   "unidad": "día",
+   "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (formaleta para concretos $64.300; rendimiento 0,714 m³), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+  },
+  "compresor": {
+   "tarifa": 69247,
+   "unidad": "día",
+   "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (compresor con martillo $46.000), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+  },
+  "retro": {
+   "tarifa": 188097,
+   "unidad": "hora",
+   "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (retroexcavadora de llantas $124.950), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+  },
+  "oxicorte": {
+   "tarifa": 35376,
+   "unidad": "día",
+   "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (equipo de oxicorte $23.500), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+  },
+  "piloteadora": {
+   "tarifa": 597636,
+   "unidad": "hora",
+   "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10 (piloteadora tipo kelly $397.000; rendimiento 3,125 ml/h), pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+  },
+  "motobomba": {
+   "tarifa": 88462,
+   "unidad": "día",
+   "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10 (motobomba 2\" $58.764), pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+  },
+  "camisa": {
+   "tarifa": 42392,
+   "unidad": "ml",
+   "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10 (camisa de vaciado $28.160/ml), pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
+  }
+ },
+ "fuentes": [
+  {
+   "nombre": "Gobernación de Antioquia – Base de APU SIF 2020-II (424 págs.)",
+   "url": "https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "dato_oficial"
+  },
+  {
+   "nombre": "Tienda Virtual del Estado Colombiano – compras por ítem (datos.gov.co 3hdv-smhz)",
+   "url": "https://www.datos.gov.co/d/3hdv-smhz",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "dato_oficial",
+   "nota": "Órdenes 162740, 162775, 163083 y 152787 (Gobernación y Departamento de Antioquia, zona 3)."
+  },
+  {
+   "nombre": "data/fuentes/ipc_dane.csv (factores a pesos de 2026)",
+   "url": "https://www.dane.gov.co/files/operaciones/IPC/sep2026/anex-IPC-Indices-sep2026.xlsx",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "dato_oficial"
+  },
+  {
+   "nombre": "Ley 1106 de 2006, art. 6 (contribución de obra pública)",
+   "url": "http://www.secretariasenado.gov.co/senado/basedoc/ley_1106_2006.html",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "dato_oficial"
+  },
+  {
+   "nombre": "Ley 1968 de 2019 (prohibición del asbesto)",
+   "url": "http://www.secretariasenado.gov.co/senado/basedoc/ley_1968_2019.html",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "dato_oficial"
+  },
+  {
+   "nombre": "data/presupuesto_microrred.json (precios de solar, baterías y BMS)",
+   "url": "data/presupuesto_microrred.json",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "estimacion"
+  },
+  {
+   "nombre": "dotacion.json (precios de equipamiento fijo)",
+   "url": "data/proyectos/torre_hospital/dotacion.json",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "calculo_propio"
+  }
+ ],
+ "incertidumbres": [
+  "La base oficial de Antioquia usada es de 2020: la actualización por salario mínimo e IPC no capta cambios de precios relativos (el acero y el cemento subieron más que el IPC en 2021-2022). Se contrasta con compras de 2025-2026 de la Tienda Virtual.",
+  "Los acabados hospitalarios (vinilo, cielo de alta higiene, guardacamillas), la ventanería y los equipos especiales no tienen precio oficial publicado: son estimaciones con rango que deben confirmarse con 2-3 cotizaciones (Res. 485, num. 7.1.1.4 y 7.1.12).",
+  "Los rendimientos de mano de obra que no vienen de la base SIF son supuestos del equipo.",
+  "Los fletes a Yondó son estimaciones; el puente Barrancabermeja-Yondó tuvo cierres en 2026 por socavación."
+ ]
+}
