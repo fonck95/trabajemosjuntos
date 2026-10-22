@@ -10,13 +10,13 @@
   "estimacion": "supuesto del equipo con rango, a confirmar con cotizaciones y diseños"
  },
  "total_a_financiar": {
-  "torre": 36535690459,
-  "torre_millones": 36535.7,
+  "torre": 37137335459,
+  "torre_millones": 37137.3,
   "proyectos_complementarios": 2612909650,
-  "total_con_complementarios": 39148600109,
+  "total_con_complementarios": 39750245109,
   "fuente": "presupuesto.json"
  },
- "resumen": "La torre ($36.536 millones) no cabe en una sola fuente. En el escenario base la pagan MinSalud ($12.000 millones), las regalías de Yondó (directas $6.736 millones; incentivo para OCAD Paz $5.500; inversión local $1.200), la inversión regional y la Gobernación ($3.800), Obras por Impuestos ($2.500), FENOGE y MinTIC ($1.400), crédito ($1.500), aportes locales ($1.400) y otros ($500). Sin MinSalud, las regalías tendrían que poner ≈ $24.500 millones: posible en el papel (en 2025-2026 Yondó tuvo $57.382 millones de asignaciones directas e inversión local, más $14.025 millones de incentivo para el OCAD Paz), pero exige que el municipio dedique al hospital más de un tercio de sus asignaciones directas del bienio 2027-2028.",
+ "resumen": "La torre ($37.137 millones) no cabe en una sola fuente. En el escenario base la pagan MinSalud ($12.000 millones), las regalías de Yondó (directas $7.337 millones; incentivo para OCAD Paz $5.500; inversión local $1.200), la inversión regional y la Gobernación ($3.800), Obras por Impuestos ($2.500), FENOGE y MinTIC ($1.400), crédito ($1.500), aportes locales ($1.400) y otros ($500). Sin MinSalud, las regalías tendrían que poner ≈ $25.137 millones: posible en el papel (en 2025-2026 Yondó tuvo $57.382 millones de asignaciones directas e inversión local, más $14.025 millones de incentivo para el OCAD Paz), pero exige que el municipio dedique al hospital más de un tercio de sus asignaciones directas del bienio 2027-2028. Ojo: esta mezcla es la que cierra la torre, no la más probable. Con los montos probables de docs/06 para MinSalud ($3.000 millones), Obras por Impuestos ($1.800) y crédito ($0) faltan ≈ $11.700 millones, que solo pueden salir de más regalías, de partir la obra en etapas o de un CONPES de MinSalud.",
  "fuentes": [
   {
    "id": "sgr_ad",
@@ -25,12 +25,12 @@
     2000000000,
     12000000000
    ],
-   "monto_central_escenario_base": 6735690459,
+   "monto_central_escenario_base": 7337335459,
    "monto_posible_rango_millones": [
     2000,
     12000
    ],
-   "monto_central_millones": 6735.7,
+   "monto_central_millones": 7337.3,
    "requisitos": "Proyecto en MGA y en el SUIFP-SGR con los requisitos sectoriales de salud (Acuerdo Único de la Comisión Rectora; normas.json advierte que hay que confirmar si se exige concepto de MinSalud o de la Secretaría Seccional además de la Res. 485). Aprobación del alcalde como entidad beneficiaria.",
    "momento": "Ya: el saldo 2025-2026 sin aprobar alcanza para P1 (radicar nov-2026 a feb-2027). Bienio 2027-2028: el presupuesto se aprueba hasta el 5-dic-2026; radicar P2 en 2027-2028.",
    "probabilidad": "alta (depende solo de la decisión del municipio)",
@@ -39,7 +39,8 @@
    "proyectos_que_financia": [
     "P1",
     "P2",
-    "P4"
+    "P4",
+    "P6"
    ],
    "tipo": "calculo_propio sobre dato oficial"
   },
@@ -204,8 +205,8 @@
    "requisitos": "Proyecto viabilizado por el ministerio del sector (MinSalud para salud) y registrado en el banco de Obras por Impuestos de la ART; un contribuyente que lo financie. Revisar primero qué recibe Yondó del proyecto departamental PDET de dotación biomédica en ejecución (BPIN 20250214000061) para no duplicar.",
    "momento": "Convocatorias anuales de la ART; inscribir en 2027-2028.",
    "probabilidad": "media",
-   "base_del_monto": "Cupo CONFIS 2025: $1,1 billones (Decreto 178 de 2025); en 2025 se aprobaron 137 proyectos por ≈ $1,6 billones. El proyecto PDET de dotación de Antioquia (21 municipios, Yondó incluido) vale $44.059 millones según el DNP.",
-   "fuente": "https://www.ambitojuridico.com/sites/default/files/2025-02/D-178-2025.pdf ; https://www.datos.gov.co/d/cf9k-55fw ; data/hospital2028.json",
+   "base_del_monto": "Cupo CONFIS 2025: $1,1 billones (Decreto 178 de 2025); en 2025 se aprobaron 137 proyectos por ≈ $1,6 billones. El proyecto PDET de dotación de Antioquia (21 municipios, Yondó incluido) vale $44.059 millones según el DNP. Yondó (código DANE 05893) está en la lista ZOMAC del Decreto 1650 de 2017, Anexo 2 (verificado en el normograma de la DIAN; verificación V2).",
+   "fuente": "https://www.ambitojuridico.com/sites/default/files/2025-02/D-178-2025.pdf ; https://www.datos.gov.co/d/cf9k-55fw ; https://normograma.dian.gov.co/dian/compilacion/docs/decreto_1650_2017.htm ; data/hospital2028.json",
    "proyectos_que_financia": [
     "P4",
     "P7",
@@ -321,7 +322,7 @@
     5000
    ],
    "monto_central_millones": 1500,
-   "requisitos": "Concepto técnico territorial (MinSalud responde en 20 días hábiles); capacidad de endeudamiento (Ley 358 de 1997). Lo debe tomar el municipio: la E.S.E. está en saneamiento.",
+   "requisitos": "Concepto técnico de la Secretaría Seccional de Salud y concepto de MinSalud (responde en 20 días hábiles), MGA web, diseños y presupuesto con APU, dos cotizaciones por equipo; capacidad de endeudamiento (Ley 358 de 1997). La Res. 2316 permite que una IPS pública en Programa de Saneamiento Fiscal y Financiero se endeude si lo comunica a MinHacienda, pero por la situación de la E.S.E. es más realista que lo tome el municipio.",
    "momento": "2028, para el cierre financiero de P2.",
    "probabilidad": "baja-media",
    "base_del_monto": "En 2026 Yondó ya paga $1.718,5 millones de servicio de deuda con un instituto de desarrollo departamental (probablemente el IDEA).",
@@ -381,7 +382,7 @@
   }
  ],
  "mezcla_escenario_base": {
-  "sgr_ad": 6735690459,
+  "sgr_ad": 7337335459,
   "sgr_ipaz": 5500000000,
   "sgr_ail": 1200000000,
   "sgr_air": 1500000000,
@@ -397,7 +398,80 @@
   "ecopetrol": 300000000,
   "cooperacion": 200000000
  },
- "mezcla_escenario_base_suma": 36535690459,
+ "mezcla_escenario_base_suma": 37137335459,
+ "nota_escenario_base": "El 'escenario base' es la mezcla que cierra el valor de la torre; las asignaciones directas del SGR son el saldo que falta después de las demás fuentes. No es el escenario más probable: ver 'escenario_probable_docs06' (verificación V2).",
+ "escenario_probable_docs06": {
+  "montos": {
+   "sgr_ad": 7337335459,
+   "sgr_ipaz": 5500000000,
+   "sgr_ail": 1200000000,
+   "sgr_air": 1500000000,
+   "sgr_ctei": 0,
+   "pgn_minsalud": 3000000000,
+   "gobernacion": 2300000000,
+   "oxi": 1800000000,
+   "fenoge": 1000000000,
+   "mintic": 400000000,
+   "municipio": 1000000000,
+   "ese": 400000000,
+   "credito": 0,
+   "ecopetrol": 0,
+   "cooperacion": 0
+  },
+  "suma": 25437335459,
+  "brecha_frente_a_la_torre": 11700000000,
+  "lectura": "Con los montos 'probables' de docs/06 para MinSalud ($3.000 millones) y Obras por Impuestos ($1.800 millones), sin crédito ni aportes de Ecopetrol o cooperación, y con las demás fuentes como en el escenario base, faltan ≈ $11.700 millones. Esa brecha se cubre con más regalías (escenario sin MinSalud), con un CONPES o asignación de MinSalud o partiendo la obra en etapas.",
+  "tipo": "calculo_propio"
+ },
+ "matriz_escenario_base_por_proyecto": {
+  "asignacion": {
+   "P6": {
+    "mintic": 400000000,
+    "cooperacion": 200000000,
+    "sgr_ad": 377186602
+   },
+   "P7": {
+    "fenoge": 1000000000,
+    "ecopetrol": 300000000,
+    "oxi": 433987081
+   },
+   "P5": {
+    "ese": 400000000,
+    "sgr_ail": 149376481
+   },
+   "P1": {
+    "sgr_ad": 1832141678
+   },
+   "P4": {
+    "oxi": 2066012919,
+    "sgr_ail": 1050623519,
+    "gobernacion": 559610203
+   },
+   "P3": {
+    "pgn_minsalud": 6171806837
+   },
+   "P2": {
+    "pgn_minsalud": 5828193163,
+    "sgr_ipaz": 5500000000,
+    "sgr_air": 1500000000,
+    "gobernacion": 1740389797,
+    "municipio": 1000000000,
+    "credito": 1500000000,
+    "sgr_ad": 5128007179
+   }
+  },
+  "suma_por_proyecto": {
+   "P6": 977186602,
+   "P7": 1733987081,
+   "P5": 549376481,
+   "P1": 1832141678,
+   "P4": 3676246641,
+   "P3": 6171806837,
+   "P2": 22196590139
+  },
+  "metodo": "Cálculo propio: cada fuente se asigna solo a los proyectos de su lista 'proyectos_que_financia', empezando por los proyectos con menos fuentes posibles (P6, P7, P5, P1, P4, P3 y P2). Cada proyecto queda cubierto y cada fuente se usa una sola vez: no hay doble conteo.",
+  "tipo": "calculo_propio"
+ },
  "escenario_sin_pgn_millones": {
   "sgr_ipaz": 9000,
   "sgr_ail": 2000,
@@ -413,10 +487,10 @@
   "cooperacion": 0,
   "pgn_minsalud": 0,
   "sgr_ctei": 0,
-  "sgr_ad": 11036
+  "sgr_ad": 11637
  },
- "escenario_sin_pgn_suma": 36536000000,
- "escenario_sin_pgn_lectura": "Cubre la torre solo si el municipio dedica ≈ $11.036 millones de directas y el OCAD Paz aprueba ≈ $9.000 millones. Si no, se puede partir la obra en dos etapas: pisos 1 a 3 con bloque técnico primero (≈ 85 % del valor, porque la cimentación, los núcleos y los equipos se hacen completos) y el piso 4 después. Urgencias, partos, hospitalización, consulta y laboratorio quedarían habilitados en la primera etapa; odontología, terapias y telemedicina seguirían un tiempo en el edificio actual.",
+ "escenario_sin_pgn_suma": 37137000000,
+ "escenario_sin_pgn_lectura": "Cubre la torre solo si el municipio dedica ≈ $11.637 millones de directas y el OCAD Paz aprueba ≈ $9.000 millones. Si no, se puede partir la obra en dos etapas: pisos 1 a 3 con bloque técnico primero (≈ 85 % del valor, porque la cimentación, los núcleos y los equipos se hacen completos) y el piso 4 después. Urgencias, partos, hospitalización, consulta y laboratorio quedarían habilitados en la primera etapa; odontología, terapias y telemedicina seguirían un tiempo en el edificio actual.",
  "por_proyecto_escenario_base": {
   "P1": "SGR directas (saldo 2025-2026) o recursos propios del municipio.",
   "P2": "MinSalud + SGR (directas e incentivo OCAD Paz) + inversión regional + Gobernación + crédito + municipio.",
@@ -429,13 +503,14 @@
   "P9": "Obras por Impuestos o Gobernación (proyecto tipo DNP de ambulancias)."
  },
  "cambios_frente_a_docs06": [
-  "docs/06 y data/hospital2028.json calculaban un proyecto de $9.470 millones (reforzar y adecuar el hospital actual, energía, telesalud y equipos) con un escenario probable de $13.100 millones para 2027-2029. La torre nueva cuesta $36.536 millones más $2.613 millones de proyectos complementarios: se acerca al escenario ambicioso de docs/06 ($34.550 millones) y lo supera.",
+  "docs/06 y data/hospital2028.json calculaban un proyecto de $9.470 millones (reforzar y adecuar el hospital actual, energía, telesalud y equipos) con un escenario probable de $13.100 millones para 2027-2029. La torre nueva cuesta $37.137 millones más $2.613 millones de proyectos complementarios: se acerca al escenario ambicioso de docs/06 ($34.550 millones) y lo supera.",
   "El componente 'reforzamiento y adecuaciones' ($3.000 millones) de docs/06 se reemplaza por la torre (P2-P3) y por la adecuación del edificio actual para usos no asistenciales (P8, ≈ $1.963 millones).",
   "MinSalud: docs/06 suponía $3.000 millones (probable) y $13.500 millones (ambicioso). Aquí se suben a $12.000 millones en el escenario base porque una reposición de torre es la tipología que MinSalud cofinancia (Guarne, $35.059 millones), pero su probabilidad baja: el presupuesto 2027 recorta la inversión de MinSalud (de $2,6 a $1,6 billones) y el terremoto del 10-ago-2026 compite por esos recursos.",
-  "Regalías: docs/06 suponía $1.000-5.500 millones. Se suben a $6.736 millones de directas más $5.500 millones del incentivo para OCAD Paz, porque la torre sería la inversión principal del bienio y porque se encontró un saldo de ≈ $13.694 millones de ese incentivo sin aprobar en 2025-2026. El bienio 2027-2028 trae 11 % menos a nivel nacional.",
+  "Regalías: docs/06 suponía $1.000-5.500 millones. Se suben a $7.337 millones de directas más $5.500 millones del incentivo para OCAD Paz, porque la torre sería la inversión principal del bienio y porque se encontró un saldo de ≈ $13.694 millones de ese incentivo sin aprobar en 2025-2026. El bienio 2027-2028 trae 11 % menos a nivel nacional.",
   "PMIDS: docs/06 señalaba el plazo de remisión de iniciativas hacia el 10-oct-2026. Si no se registró, la torre debe entrar en la actualización obligatoria del primer semestre de 2028 (o en un ajuste que permita la Secretaría Seccional).",
   "Las fuentes de energía (FENOGE) y TIC (MinTIC) se mantienen en los mismos rangos de docs/06; la solar y las baterías del hospital ahora se instalan en la torre (P7) y no en el edificio actual.",
-  "Findeter: docs/06 lo ponía en $0-2.000 millones; aquí $0-5.000 millones, siempre como deuda del municipio (la E.S.E. está en saneamiento)."
+  "Findeter: docs/06 lo ponía en $0-2.000 millones; aquí $0-5.000 millones, como deuda del municipio (la Res. 2316 también admite a la E.S.E. en saneamiento si avisa a MinHacienda, pero su caja no lo soporta).",
+  "Coherencia (verificación V2): los montos por fuente del escenario base superan los 'probables' de docs/06 en MinSalud ($12.000 frente a $3.000 millones), Obras por Impuestos ($2.500 frente a $1.800) y crédito ($1.500 frente a $0). Por eso se presenta también el escenario probable de docs/06, con una brecha de ≈ $11.700 millones."
  ],
  "compuertas": [
   "Antes de radicar cualquier proyecto: título del lote, certificado de uso del suelo y de riesgo, disponibilidad de servicios y decisión pública sobre el uso del edificio actual (Res. 485, num. 7.1.2).",

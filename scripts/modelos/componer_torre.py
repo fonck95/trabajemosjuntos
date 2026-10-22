@@ -29,8 +29,8 @@ vol += [
      'fachada': fach_ladrillo({'puertas': [{'lado': 'O', 'pos': (22.4 - 15.0) / 30.0, 'ancho': 2.6, 'alto': 2.8}, {'lado': 'N', 'pos': 0.25, 'ancho': 1.8, 'alto': 2.4}]})},
     {'id': 'torre_sur', 'estado': 'nuevo', 'nombre': 'Torre, pisos 1 a 3, cuerpo sur (vestíbulo, toma de muestras, laboratorio y esterilización)',
      'centro': [-2.2, -13.6], 'largo': 12.0, 'ancho': 21.6, 'rumbo_eje': 0, 'base': 0, 'altura_alero': 12.9, 'pisos': 3, 'techo': techo_plano,
-     # puerta principal en la fachada occidental (y = -6 cae en el cuerpo norte del pórtico; aquí la de servicio al sur)
-     'fachada': fach_ladrillo({'puertas': [{'lado': 'S', 'pos': 0.5, 'ancho': 1.8, 'alto': 2.4}]})},
+     # puerta principal en la fachada occidental, en el vestíbulo (y ≈ -13, programa.json) y la de servicio al pasaje del sur
+     'fachada': fach_ladrillo({'puertas': [{'lado': 'O', 'pos': (-7.6 + 13.0) / 12.0, 'ancho': 3.2, 'alto': 3.0}, {'lado': 'S', 'pos': 0.5, 'ancho': 1.8, 'alto': 2.4}]})},
     {'id': 'torre_piso4', 'estado': 'nuevo', 'nombre': 'Piso 4: terapias, telesalud, odontología y sala de crisis (retrocede 12 m en el sur)',
      'centro': [-2.2, 7.4], 'largo': 30.0, 'ancho': 21.6, 'rumbo_eje': 0, 'base': 12.9, 'altura_alero': 17.1, 'pisos': 1, 'techo': techo_plano,
      'fachada': {'material': 'panel_compuesto', 'color': '#e4e3de', 'panel': {'ancho': 1.2, 'alto': 0.7},
@@ -73,6 +73,9 @@ pat = {p['id']: p for p in prog['implantacion']['patios_y_exteriores']}
 rect = lambda c, L, A: [[c[0] - A / 2, c[1] - L / 2], [c[0] + A / 2, c[1] - L / 2], [c[0] + A / 2, c[1] + L / 2], [c[0] - A / 2, c[1] + L / 2]]
 el += [
     {'tipo': 'parqueadero', 'estado': 'nuevo', 'nombre': 'Patio de urgencias y retorno de ambulancias', 'poligono': pat['patio_urgencias']['poligono']},
+    # salida de las ambulancias: rodean por el norte el árbol del portón (-22; 25) usando ≈ 2 m del patio del hospital (programa.json, accesos)
+    {'tipo': 'parqueadero', 'estado': 'nuevo', 'nombre': 'Salida de ambulancias por el norte del árbol del portón',
+     'poligono': [[-19.0, 24.0], [-16.5, 24.0], [-17.4, 27.6], [-20.0, 29.3], [-25.0, 29.3], [-28.4, 26.6], [-28.0, 24.0], [-25.6, 24.0], [-25.6, 26.0], [-24.0, 27.1], [-21.0, 27.1], [-19.6, 26.0]]},
     {'tipo': 'zona_verde', 'estado': 'nuevo', 'nombre': 'Isla del retorno con la palma trasplantada', 'poligono': rect([-22.25, 13.0], 12.0, 3.5)},
     {'tipo': 'plaza', 'estado': 'nuevo', 'nombre': 'Plaza de los mangos (acceso principal con rampa y escalera)', 'poligono': pat['plaza_principal']['poligono']},
     {'tipo': 'patio', 'estado': 'nuevo', 'nombre': 'Patio norte de luz y ventilación', 'poligono': pat['patio_norte']['poligono']},
@@ -83,11 +86,11 @@ el += [
     {'tipo': 'arbol', 'estado': 'nuevo', 'centro': [-29.0, 6.0], 'altura': 8, 'copa': 6},
     {'tipo': 'arbol', 'estado': 'nuevo', 'centro': [-28.5, -1.5], 'altura': 7, 'copa': 5},
     {'tipo': 'bahia_ambulancias', 'estado': 'nuevo', 'centro': [-16.6, 15.0], 'largo': 13.2, 'ancho': 7.2, 'rumbo_eje': 0, 'cubierta': False},
-    {'tipo': 'marquesina_acceso', 'estado': 'nuevo', 'centro': [-15.6, -6.0], 'largo': 10.0, 'ancho': 5.2, 'rumbo_eje': 0, 'altura': 3.9},
+    {'tipo': 'marquesina_acceso', 'estado': 'nuevo', 'centro': [-15.6, -13.0], 'largo': 10.0, 'ancho': 5.2, 'rumbo_eje': 0, 'altura': 3.9},
     {'tipo': 'puente', 'estado': 'nuevo', 'nombre': 'Galería cerrada de conexión con el hospital actual (3 m, camas y camillas)',
      'desde': [8.6, 4.4], 'hasta': [13.9, 4.4], 'altura': 0.0, 'ancho': 3.0, 'alto': 3.0, 'estructura': 'viga'},
     {'tipo': 'cubierta_ligera', 'estado': 'nuevo', 'nombre': 'Pasaje de servicio cubierto', 'centro': [-5.45, -20.2], 'largo': 28.1, 'ancho': 1.2, 'rumbo_eje': 90, 'altura': 2.9, 'material': 'termoacustica'},
-    {'tipo': 'jardinera', 'estado': 'nuevo', 'centro': [-17.5, -11.0], 'largo': 6.0, 'ancho': 1.4, 'rumbo_eje': 0},
+    {'tipo': 'jardinera', 'estado': 'nuevo', 'centro': [-17.5, -4.5], 'largo': 5.0, 'ancho': 1.4, 'rumbo_eje': 0},
     {'tipo': 'jardinera', 'estado': 'nuevo', 'centro': [-26.0, -11.5], 'largo': 4.0, 'ancho': 1.4, 'rumbo_eje': 90},
     {'tipo': 'banca', 'estado': 'nuevo', 'centros': [[-19.5, -10.5], [-23.0, -12.5], [-26.5, -4.0]], 'rumbo': 90, 'respaldo': True},
     {'tipo': 'luminaria', 'estado': 'nuevo', 'centros': [[-18.5, -1.5], [-25.0, -2.0], [-19.0, -13.0], [-27.0, 18.0], [-27.0, 6.0]], 'rumbo': 90},

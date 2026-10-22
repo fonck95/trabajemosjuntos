@@ -388,8 +388,17 @@ export function mount(root) {
     return `${f.resumen ? `<p class="note">${esc(f.resumen)}</p>` : ''}
       <div class="mezcla">${seg.map(([n, v, c]) => `<i title="${esc(n)}: ${cop(v)}" style="flex:${v};background:${c}"></i>`).join('')}</div>
       <ul class="tight mezcla-ley">${seg.map(([n, v, c]) => `<li><span class="dot" style="background:${c}"></span>${esc(n)}: <b>${cop(v)}</b> (${fmtN((100 * v) / totM, 0)} %)</li>`).join('')}</ul>
+      ${f.escenario_probable_docs06 ? `<p class="note"><b>Con los montos más probables</b> (MinSalud ${cop(f.escenario_probable_docs06.montos?.pgn_minsalud)}, Obras por Impuestos ${cop(f.escenario_probable_docs06.montos?.oxi)}, sin crédito) se reúnen ${cop(f.escenario_probable_docs06.suma)}: faltan <b>${cop(f.escenario_probable_docs06.brecha_frente_a_la_torre)}</b>.</p>` : ''}
+      ${matriz(f.matriz_escenario_base_por_proyecto, nombre)}
       <div class="tbl-wrap"><table><thead><tr><th>Fuente</th><th>Rango posible</th><th class="n">Escenario base</th><th>Probabilidad</th></tr></thead><tbody>${L.map((x) => `<tr><td><details class="fold"><summary>${esc(x.nombre)}</summary><p class="note">${esc(x.requisitos || '')}</p>${x.momento ? `<p class="note"><b>Cuándo:</b> ${esc(x.momento)}</p>` : ''}${x.proyectos_que_financia ? `<p class="note"><b>Financia:</b> ${esc([].concat(x.proyectos_que_financia).join(', '))}</p>` : ''}</details></td><td>${Array.isArray(x.monto_posible_rango) ? `${cop(x.monto_posible_rango[0])} a ${cop(x.monto_posible_rango[1])}` : ''}</td><td class="n">${cop(x.monto_central_escenario_base)}</td><td><small>${esc(String(x.probabilidad || '').split('(')[0])}</small></td></tr>`).join('')}</tbody></table></div>
       ${f.escenario_sin_pgn_lectura ? `<p class="note"><b>Sin MinSalud:</b> ${esc(f.escenario_sin_pgn_lectura)}</p>` : ''}`;
+  }
+  // quién paga cada proyecto en el escenario base (cada fuente se usa una sola vez)
+  function matriz(m, nombre) {
+    if (!m?.asignacion) return '';
+    const P = D?.proyectos?.proyectos || [], nomP = (id) => nom(P.find((x) => x.id === id) || {}) || id;
+    const filas = Object.entries(m.asignacion).sort(([a], [b]) => a.localeCompare(b, 'es', { numeric: true }));
+    return `<details class="fold"><summary>Quién paga cada proyecto (escenario base)</summary><div class="tbl-wrap"><table><thead><tr><th>Proyecto</th><th>Fuentes</th><th class="n">Total</th></tr></thead><tbody>${filas.map(([id, fu]) => `<tr><td><b>${esc(id)}</b> <small>${esc(corto(nomP(id), 60))}</small></td><td><small>${Object.entries(fu).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${esc(nombre(k))} ${cop(v)}`).join(' · ')}</small></td><td class="n">${cop(m.suma_por_proyecto?.[id] ?? Object.values(fu).reduce((a, v) => a + v, 0))}</td></tr>`).join('')}</tbody></table></div>${m.metodo ? `<p class="note">${esc(m.metodo)}</p>` : ''}</details>`;
   }
   function renderProyectos(p) {
     const L = p.proyectos || [];

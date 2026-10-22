@@ -14,7 +14,7 @@
  "proyecto_en_breve": {
   "que_es": "Torre nueva para los servicios asistenciales de primer nivel, en el lote del antiguo Centro Vida (alas occidentales del predio del hospital, ver data/edificios/bienestar_anciano.json), tras demoler esas construcciones. El edificio actual pasa a administración, archivo, bodega y central de distribución.",
   "tipologia_res_485": "Proyecto mixto (infraestructura física + equipamiento fijo + dotación biomédica + TIC). Por definición de la Res. 1211 es 'reposición de infraestructura' (edificación nueva en sustitución de la existente para los servicios asistenciales) con 'fortalecimiento de capacidad instalada'. No es 'obra nueva' en sentido estricto porque el lote ya está intervenido.",
-  "control_especial_de_oferta": "Sí. El art. 4.2 de la Res. 485 hace de control especial de oferta todo proyecto de infraestructura física o de equipamiento fijo de más de 5.000 SMMLV ($8.754.525.000 en 2026, cálculo propio). Solo la obra de la torre vale unos $25.740 millones de 2026 (presupuesto.json, estimación): necesita concepto técnico de MinSalud aunque se pague solo con plata territorial (art. 6.1.1) e inclusión en el Plan Bienal (art. 7.1.1.6).",
+  "control_especial_de_oferta": "Sí. El art. 4.2 de la Res. 485 hace de control especial de oferta todo proyecto de infraestructura física o de equipamiento fijo de más de 5.000 SMMLV ($8.754.525.000 en 2026, cálculo propio). Solo la obra de la torre vale unos $26.228 millones de 2026 (presupuesto.json, estimación): necesita concepto técnico de MinSalud aunque se pague solo con plata territorial (art. 6.1.1) e inclusión en el Plan Bienal (art. 7.1.1.6).",
   "grupo_uso_nsr10": "IV (tiene urgencias)",
   "ocupacion_nsr10": "I-2",
   "categoria_riesgo_incendio_nsr10": "I: el programa (programa.json) quedó en 4 pisos y 3.369,6 m², y para I-2 con más de 1.000 m² la Tabla J.3.3-1 da categoría I desde 4 pisos; la estructura necesita 2 horas de resistencia al fuego (Tabla J.3.4-3)."
@@ -580,7 +580,7 @@
    "numeral": "7.1.1.6",
    "requisito": "Inclusión y aprobación en el Plan Bienal de Inversiones Públicas en Salud si el proyecto es de control especial de oferta (art. 4).",
    "aplica": "sí",
-   "como_lo_cumple_este_proyecto": "La obra de la torre (unos $25.740 millones de 2026, presupuesto.json) supera 5.000 SMMLV ($8.754.525.000, cálculo propio): es de control especial de oferta (art. 4.2) y debe estar en el Plan Bienal.",
+   "como_lo_cumple_este_proyecto": "La obra de la torre (unos $26.228 millones de 2026, presupuesto.json) supera 5.000 SMMLV ($8.754.525.000, cálculo propio): es de control especial de oferta (art. 4.2) y debe estar en el Plan Bienal.",
    "documento_a_producir": "Soporte de inclusión en el Plan Bienal (aplicativo de MinSalud) del periodo de radicación.",
    "responsable": "Secretaría Seccional de Salud de Antioquia",
    "estado": "pendiente"

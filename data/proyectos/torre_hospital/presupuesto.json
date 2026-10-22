@@ -10,7 +10,7 @@
   "estimacion": "supuesto del equipo con rango, a confirmar con cotizaciones y diseños"
  },
  "clase": "Presupuesto de prefactibilidad sobre prediseño (programa.json), clase 4: precisión esperada de −25 % a +35 %. No reemplaza el presupuesto firmado que pide la Res. 485 (num. 7.1.2.10).",
- "resumen": "La torre cuesta $36.536 millones de 2026 (rango $26.894-49.827 millones). La obra (19 capítulos, con AIU de 32,95 %) vale $25.740 millones: $19.361 de costo directo. Por fuera de la obra: estudios, diseños, formulación y licencia $1.803; interventoría $1.802; dotación biomédica, laboratorio, TIC y equipos $5.330; puesta en marcha $250; contingencias $1.566. Valor de obra por m² construido: $7.109.387; costo total por m²: $10.091.060. Aparte quedan la adecuación del edificio actual ($1.963 millones) y una ambulancia medicalizada ($650 millones).",
+ "resumen": "La torre cuesta $37.137 millones de 2026 (rango $27.363-50.600 millones). La obra (19 capítulos, con AIU de 32,95 %) vale $26.228 millones: $19.727 de costo directo. Por fuera de la obra: estudios, diseños, formulación y licencia $1.832; interventoría $1.836; dotación biomédica, laboratorio, TIC y equipos $5.355; puesta en marcha $250; contingencias $1.592. Valor de obra por m² construido: $7.243.986; costo total por m²: $10.257.232. Aparte quedan la adecuación del edificio actual ($1.963 millones) y una ambulancia medicalizada ($650 millones).",
  "supuestos": {
   "programa": "Torre de 4 pisos de programa.json: 3.369,6 m² construidos en la torre, 125,6 m² de bloque técnico, 18 m² de residuos, 107,4 m² de casetas y 144,7 m² de exteriores cubiertos (3.620,6 m² construidos en total).",
   "cantidades": "Cantidades de prediseño con rendimientos por m² escritos en cada ítem ('supuesto_cantidad'). Las fijan los diseños.",
@@ -23,11 +23,13 @@
   },
   "cimentacion": "Pilotes preexcavados (suelo aluvial). Si el estudio de suelos permite zapatas, el capítulo 2 baja ≈ $500-800 millones.",
   "asbesto": "Se presupuesta el retiro de 800 m² de teja como residuo peligroso hasta que un laboratorio confirme si tiene asbesto.",
-  "inflacion": "Pesos constantes de 2026. Para el presupuesto oficial de cada año hay que indexar (la obra se pagaría en 2028-2030)."
+  "inflacion": "Pesos constantes de 2026. Para el presupuesto oficial de cada año hay que indexar (la obra se pagaría en 2028-2030).",
+  "jornada_laboral": "Jornales con la jornada de 42 horas semanales que rige desde el 15-jul-2026 (Ley 2101 de 2021): factor 48/42 sobre la base SIF de 2020 (verificación V2).",
+  "aiu_sobre_equipos": "El AIU completo (32,95 %) se aplica también a los equipos del proyecto P3 (planta, ascensores, aire, gases y sistemas), cuyo precio de dotacion.json ya viene de contratos de suministro con IVA. Es conservador: si P3 se contrata como suministro e instalación aparte, el AIU sobre esos equipos (≈ $1.215 millones) se cambia por la instalación, la coordinación y el IVA ya incluido; el ahorro posible es del orden de $600-1.000 millones (estimación)."
  },
  "control_especial_de_oferta": {
   "umbral_5000_smmlv_cop": 8754525000,
-  "infraestructura_y_equipamiento_fijo_cop": 25740246027,
+  "infraestructura_y_equipamiento_fijo_cop": 26227575050,
   "supera_umbral": true,
   "consecuencia": "Requiere concepto técnico de MinSalud e inclusión en el plan de inversiones (Plan Bienal o PMIDS de Antioquia) (Res. 485, art. 4 y num. 7.1.1.6).",
   "tipo": "calculo_propio"
@@ -44,11 +46,11 @@
      "unidad": "m2",
      "cantidad": 2460.1,
      "supuesto_cantidad": "Lote de intervención de programa.json (2.460,1 m²).",
-     "valor_unitario_costo_directo": 2544,
-     "total_costo_directo": 6258494,
+     "valor_unitario_costo_directo": 2859,
+     "total_costo_directo": 7033426,
      "rango_valor_unitario": [
-      2290,
-      2926
+      2573,
+      3288
      ],
      "tipo_precio": "calculo_propio sobre dato oficial",
      "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 1.2, pág. 2 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 (mano de obra con salario mínimo, equipo y materiales con IPC)",
@@ -156,11 +158,11 @@
      "unidad": "m2",
      "cantidad": 800,
      "supuesto_cantidad": "≈ 800 m² de teja ondulada (programa.json, demoliciones).",
-     "valor_unitario_costo_directo": 78801,
-     "total_costo_directo": 63040800,
+     "valor_unitario_costo_directo": 81011,
+     "total_costo_directo": 64808800,
      "rango_valor_unitario": [
-      66981,
-      94561
+      68859,
+      97213
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-02 en apu.json.",
@@ -173,11 +175,11 @@
      "unidad": "m2",
      "cantidad": 890.6,
      "supuesto_cantidad": "377,3 + 442,0 + 41,7 + 29,6 m² (programa.json, demoliciones).",
-     "valor_unitario_costo_directo": 84970,
-     "total_costo_directo": 75674282,
+     "valor_unitario_costo_directo": 89685,
+     "total_costo_directo": 79873461,
      "rango_valor_unitario": [
-      72224,
-      101964
+      76232,
+      107622
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-01 en apu.json.",
@@ -190,11 +192,11 @@
      "unidad": "m3",
      "cantidad": 30,
      "supuesto_cantidad": "≈ 300 m² de pisos exteriores × 0,10 m.",
-     "valor_unitario_costo_directo": 116664,
-     "total_costo_directo": 3499920,
+     "valor_unitario_costo_directo": 126284,
+     "total_costo_directo": 3788520,
      "rango_valor_unitario": [
-      104998,
-      134164
+      113656,
+      145227
      ],
      "tipo_precio": "calculo_propio sobre dato oficial",
      "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.7, pág. 10 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 (mano de obra con salario mínimo, resto con IPC)",
@@ -206,11 +208,11 @@
      "unidad": "ml",
      "cantidad": 60,
      "supuesto_cantidad": "Tramo de cerramiento interior entre el antiguo Centro Vida y el hospital.",
-     "valor_unitario_costo_directo": 47179,
-     "total_costo_directo": 2830740,
+     "valor_unitario_costo_directo": 50431,
+     "total_costo_directo": 3025860,
      "rango_valor_unitario": [
-      42461,
-      54256
+      45388,
+      57996
      ],
      "tipo_precio": "calculo_propio sobre dato oficial",
      "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.11, pág. 15 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026",
@@ -254,11 +256,11 @@
      "unidad": "m3",
      "cantidad": 390,
      "supuesto_cantidad": "≈ 1.300 m² de prado y patios × 0,30 m.",
-     "valor_unitario_costo_directo": 69218,
-     "total_costo_directo": 26995020,
+     "valor_unitario_costo_directo": 71574,
+     "total_costo_directo": 27913860,
      "rango_valor_unitario": [
-      58835,
-      83062
+      60838,
+      85889
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-03 en apu.json.",
@@ -314,13 +316,13 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 563733156,
+   "subtotal_costo_directo": 571877827,
    "rango_subtotal_costo_directo": [
-    431234798,
-    742501416
+    438219462,
+    752211407
    ],
-   "subtotal_con_aiu": 749483231,
-   "peso_pct": 2.91
+   "subtotal_con_aiu": 760311571,
+   "peso_pct": 2.9
   },
   {
    "codigo": "2",
@@ -333,11 +335,11 @@
      "unidad": "m3",
      "cantidad": 625,
      "supuesto_cantidad": "Dados 149 m³ × 1,3 = 194; vigas 172; fosos 34; cisternas (40 + 30 + 20 m³ útiles) 190; bloque técnico y residuos 35.",
-     "valor_unitario_costo_directo": 69218,
-     "total_costo_directo": 43261250,
+     "valor_unitario_costo_directo": 71574,
+     "total_costo_directo": 44733750,
      "rango_valor_unitario": [
-      58835,
-      83062
+      60838,
+      85889
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-03 en apu.json.",
@@ -382,11 +384,11 @@
      "unidad": "ml",
      "cantidad": 1200,
      "supuesto_cantidad": "≈ 100 pilotes de 12 m (3-4 por dado) bajo 28 dados.",
-     "valor_unitario_costo_directo": 526168,
-     "total_costo_directo": 631401600,
+     "valor_unitario_costo_directo": 532037,
+     "total_costo_directo": 638444400,
      "rango_valor_unitario": [
-      447243,
-      631402
+      452231,
+      638444
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-07 en apu.json.",
@@ -415,11 +417,11 @@
      "unidad": "m2",
      "cantidad": 410,
      "supuesto_cantidad": "Dados 136 + vigas 191 + cisternas 45 + bloque técnico 38 m².",
-     "valor_unitario_costo_directo": 41372,
-     "total_costo_directo": 16962520,
+     "valor_unitario_costo_directo": 43196,
+     "total_costo_directo": 17710360,
      "rango_valor_unitario": [
-      37235,
-      47578
+      38876,
+      49675
      ],
      "tipo_precio": "calculo_propio sobre dato oficial",
      "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.19 (mano de obra), pág. 156 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026; concreto de 14 MPa de esta base",
@@ -431,11 +433,11 @@
      "unidad": "m3",
      "cantidad": 149,
      "supuesto_cantidad": "28 dados de 2,2 × 2,2 × 1,1 m.",
-     "valor_unitario_costo_directo": 1142342,
-     "total_costo_directo": 170208958,
+     "valor_unitario_costo_directo": 1187510,
+     "total_costo_directo": 176938990,
      "rango_valor_unitario": [
-      970991,
-      1370810
+      1009384,
+      1425012
      ],
      "tipo_precio": "calculo_propio (derivado de APU-04)",
      "fuente": "APU-04 con formaleta de cimentación ($25.000/m³) en vez de formaleta de columnas.",
@@ -448,11 +450,11 @@
      "unidad": "m3",
      "cantidad": 112,
      "supuesto_cantidad": "319 ml de vigas de 0,50 × 0,70 m en la retícula de la torre.",
-     "valor_unitario_costo_directo": 1162342,
-     "total_costo_directo": 130182304,
+     "valor_unitario_costo_directo": 1207510,
+     "total_costo_directo": 135241120,
      "rango_valor_unitario": [
-      987991,
-      1394810
+      1026384,
+      1449012
      ],
      "tipo_precio": "calculo_propio (derivado de APU-04)",
      "fuente": "APU-04 con formaleta lateral ($45.000/m³).",
@@ -465,11 +467,11 @@
      "unidad": "m3",
      "cantidad": 85,
      "supuesto_cantidad": "Cisternas de 90 m³ útiles (agua potable, incendio y lluvias) y 3 fosos.",
-     "valor_unitario_costo_directo": 1282911,
-     "total_costo_directo": 109047435,
+     "valor_unitario_costo_directo": 1328079,
+     "total_costo_directo": 112886715,
      "rango_valor_unitario": [
-      1090474,
-      1539493
+      1128867,
+      1593695
      ],
      "tipo_precio": "calculo_propio (derivado de APU-04)",
      "fuente": "APU-04 + aditivo impermeabilizante ($30.000/m³, estimación).",
@@ -482,11 +484,11 @@
      "unidad": "m3",
      "cantidad": 420,
      "supuesto_cantidad": "Bajo los 1.050,8 m² de contrapiso × 0,40 m.",
-     "valor_unitario_costo_directo": 69404,
-     "total_costo_directo": 29149680,
+     "valor_unitario_costo_directo": 69542,
+     "total_costo_directo": 29207640,
      "rango_valor_unitario": [
-      62464,
-      79815
+      62588,
+      79973
      ],
      "tipo_precio": "calculo_propio sobre dato oficial",
      "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 4.2.3, pág. 105 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 + transporte del préstamo a 10 km",
@@ -498,11 +500,11 @@
      "unidad": "m3",
      "cantidad": 210,
      "supuesto_cantidad": "1.050,8 m² × 0,20 m.",
-     "valor_unitario_costo_directo": 164807,
-     "total_costo_directo": 34609470,
+     "valor_unitario_costo_directo": 169858,
+     "total_costo_directo": 35670180,
      "rango_valor_unitario": [
-      148326,
-      189528
+      152872,
+      195337
      ],
      "tipo_precio": "calculo_propio sobre dato oficial",
      "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 5.1.3, pág. 120 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026",
@@ -514,11 +516,11 @@
      "unidad": "m2",
      "cantidad": 1050.8,
      "supuesto_cantidad": "Piso 1 de la torre (907,2), bloque técnico (125,6) y residuos (18).",
-     "valor_unitario_costo_directo": 154361,
-     "total_costo_directo": 162202539,
+     "valor_unitario_costo_directo": 157167,
+     "total_costo_directo": 165151084,
      "rango_valor_unitario": [
-      138925,
-      177515
+      141450,
+      180742
      ],
      "tipo_precio": "calculo_propio sobre dato oficial",
      "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.15 (losa de piso 21 MPa: mano de obra, vibrador, regla y formaleta), pág. 176 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026; concreto de esta base; malla electrosoldada $14.000/m² (estimación con la malla de 1,80 m a $86.011 de la orden TVEC 152787)",
@@ -530,11 +532,11 @@
      "unidad": "kg",
      "cantidad": 57020,
      "supuesto_cantidad": "Dados 149 m³ × 90 kg/m³; vigas 112 × 130; muros de cisternas y fosos 85 × 110; pilotes 1.200 ml × 16,4 kg/ml.",
-     "valor_unitario_costo_directo": 7736,
-     "total_costo_directo": 441106720,
+     "valor_unitario_costo_directo": 8080,
+     "total_costo_directo": 460721600,
      "rango_valor_unitario": [
-      6576,
-      9283
+      6868,
+      9696
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-06 en apu.json.",
@@ -558,13 +560,13 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 1868332476,
+   "subtotal_costo_directo": 1916905839,
    "rango_subtotal_costo_directo": [
-    1575232016,
-    2286872047
+    1616736129,
+    2344929426
    ],
-   "subtotal_con_aiu": 2483948027,
-   "peso_pct": 9.65
+   "subtotal_con_aiu": 2548526313,
+   "peso_pct": 9.72
   },
   {
    "codigo": "3",
@@ -577,11 +579,11 @@
      "unidad": "m3",
      "cantidad": 160,
      "supuesto_cantidad": "28 columnas de 0,60 × 0,60 m × 12,9 m (pisos 1-3) + 20 × 4,2 m (piso 4).",
-     "valor_unitario_costo_directo": 1252911,
-     "total_costo_directo": 200465760,
+     "valor_unitario_costo_directo": 1298079,
+     "total_costo_directo": 207692640,
      "rango_valor_unitario": [
-      1064974,
-      1503493
+      1103367,
+      1557695
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-04 en apu.json.",
@@ -594,11 +596,11 @@
      "unidad": "m3",
      "cantidad": 200,
      "supuesto_cantidad": "≈ 45 ml de muro de 0,30 m × 17,1 m de altura, menos vanos.",
-     "valor_unitario_costo_directo": 1252911,
-     "total_costo_directo": 250582200,
+     "valor_unitario_costo_directo": 1298079,
+     "total_costo_directo": 259615800,
      "rango_valor_unitario": [
-      1064974,
-      1503493
+      1103367,
+      1557695
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-04 en apu.json.",
@@ -611,11 +613,11 @@
      "unidad": "m3",
      "cantidad": 834,
      "supuesto_cantidad": "3.477,2 m² de placas (pisos 2-4, cubiertas y casetas) × 0,24 m³/m².",
-     "valor_unitario_costo_directo": 1196648,
-     "total_costo_directo": 998004432,
+     "valor_unitario_costo_directo": 1233519,
+     "total_costo_directo": 1028754846,
      "rango_valor_unitario": [
-      1017151,
-      1435978
+      1048491,
+      1480223
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-05 en apu.json.",
@@ -628,11 +630,11 @@
      "unidad": "m3",
      "cantidad": 45,
      "supuesto_cantidad": "2 escaleras de 2,40 m × 5 tramos dobles.",
-     "valor_unitario_costo_directo": 1252911,
-     "total_costo_directo": 56380995,
+     "valor_unitario_costo_directo": 1298079,
+     "total_costo_directo": 58413555,
      "rango_valor_unitario": [
-      1064974,
-      1503493
+      1103367,
+      1557695
      ],
      "tipo_precio": "calculo_propio (APU-04)",
      "fuente": "Ver APU-04 (formaleta inclinada equivalente).",
@@ -645,11 +647,11 @@
      "unidad": "kg",
      "cantidad": 160200,
      "supuesto_cantidad": "Columnas 160 m³ × 220 kg/m³; muros 200 × 130; vigas 243 × 170; losas 591 × 90; escaleras 45 × 100.",
-     "valor_unitario_costo_directo": 7736,
-     "total_costo_directo": 1239307200,
+     "valor_unitario_costo_directo": 8080,
+     "total_costo_directo": 1294416000,
      "rango_valor_unitario": [
-      6576,
-      9283
+      6868,
+      9696
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-06 en apu.json.",
@@ -689,13 +691,13 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 2791940587,
+   "subtotal_costo_directo": 2896092841,
    "rango_subtotal_costo_directo": [
-    2363493604,
-    3373376917
+    2451958729,
+    3498391657
    ],
-   "subtotal_con_aiu": 3711885010,
-   "peso_pct": 14.42
+   "subtotal_con_aiu": 3850355432,
+   "peso_pct": 14.68
   },
   {
    "codigo": "4",
@@ -708,11 +710,11 @@
      "unidad": "m2",
      "cantidad": 1557,
      "supuesto_cantidad": "40 % de 3.892 m².",
-     "valor_unitario_costo_directo": 130233,
-     "total_costo_directo": 202772781,
+     "valor_unitario_costo_directo": 136126,
+     "total_costo_directo": 211948182,
      "rango_valor_unitario": [
-      110698,
-      156280
+      115707,
+      163351
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-08 en apu.json.",
@@ -725,11 +727,11 @@
      "unidad": "m2",
      "cantidad": 2335,
      "supuesto_cantidad": "60 % de 3.892 m².",
-     "valor_unitario_costo_directo": 132403,
-     "total_costo_directo": 309161005,
+     "valor_unitario_costo_directo": 136823,
+     "total_costo_directo": 319481705,
      "rango_valor_unitario": [
-      112543,
-      158884
+      116300,
+      164188
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-09 en apu.json.",
@@ -742,11 +744,11 @@
      "unidad": "m2",
      "cantidad": 1800,
      "supuesto_cantidad": "Fachada bruta de 2.407 m² menos 600 m² de ventanas.",
-     "valor_unitario_costo_directo": 171457,
-     "total_costo_directo": 308622600,
+     "valor_unitario_costo_directo": 178953,
+     "total_costo_directo": 322115400,
      "rango_valor_unitario": [
-      145738,
-      205748
+      152110,
+      214744
      ],
      "tipo_precio": "calculo_propio (derivado de APU-08)",
      "fuente": "APU-08 + $30.000/m² de ladrillo prensado a la vista y menor rendimiento (7 m²/día).",
@@ -759,11 +761,11 @@
      "unidad": "m2",
      "cantidad": 4914,
      "supuesto_cantidad": "Bloque (1.557 m² × 2 caras) + cara interior de fachada (1.800 m²).",
-     "valor_unitario_costo_directo": 43803,
-     "total_costo_directo": 215247942,
+     "valor_unitario_costo_directo": 48223,
+     "total_costo_directo": 236967822,
      "rango_valor_unitario": [
-      39423,
-      50373
+      43401,
+      55456
      ],
      "tipo_precio": "calculo_propio sobre dato oficial",
      "fuente": "Mortero de esta base (cemento TVEC 2026) + mano de obra de 12 m²/día + herramienta y andamio.",
@@ -834,13 +836,13 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 1359504328,
+   "subtotal_costo_directo": 1414213109,
    "rango_subtotal_costo_directo": [
-    1128947713,
-    1674851422
+    1176536813,
+    1739416471
    ],
-   "subtotal_con_aiu": 1807461004,
-   "peso_pct": 7.02
+   "subtotal_con_aiu": 1880196328,
+   "peso_pct": 7.17
   },
   {
    "codigo": "5",
@@ -853,11 +855,11 @@
      "unidad": "m2",
      "cantidad": 1158.2,
      "supuesto_cantidad": "Cubierta del piso 4 (648), terraza del piso 3 (259,2), casetas (107,4), bloque técnico (125,6), residuos (18).",
-     "valor_unitario_costo_directo": 168446,
-     "total_costo_directo": 195094157,
+     "valor_unitario_costo_directo": 173218,
+     "total_costo_directo": 200621088,
      "rango_valor_unitario": [
-      143179,
-      202135
+      147235,
+      207862
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-14 en apu.json.",
@@ -929,12 +931,12 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 272514157,
+   "subtotal_costo_directo": 278041088,
    "rango_subtotal_costo_directo": [
-    223894918,
-    338629757
+    228592577,
+    345262768
    ],
-   "subtotal_con_aiu": 362307572,
+   "subtotal_con_aiu": 369655626,
    "peso_pct": 1.41
   },
   {
@@ -948,11 +950,11 @@
      "unidad": "m2",
      "cantidad": 2250,
      "supuesto_cantidad": "Áreas asistenciales y corredores (≈ 73 % de 3.100 m² de piso interior).",
-     "valor_unitario_costo_directo": 211040,
-     "total_costo_directo": 474840000,
+     "valor_unitario_costo_directo": 215119,
+     "total_costo_directo": 484017750,
      "rango_valor_unitario": [
-      179384,
-      253248
+      182851,
+      258143
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-11 en apu.json.",
@@ -965,8 +967,8 @@
      "unidad": "m2",
      "cantidad": 180,
      "supuesto_cantidad": "TPR 48 + reanimación 20 + procedimientos 37 + esterilización 39 + rayos X 24 + otros.",
-     "valor_unitario_costo_directo": 316040,
-     "total_costo_directo": 56887200,
+     "valor_unitario_costo_directo": 320119,
+     "total_costo_directo": 57621420,
      "rango_valor_unitario": [
       260000,
       380000
@@ -1078,11 +1080,11 @@
      "unidad": "m2",
      "cantidad": 5200,
      "supuesto_cantidad": "≈ 64 % de 8.170 m² de muro pintable.",
-     "valor_unitario_costo_directo": 48750,
-     "total_costo_directo": 253500000,
+     "valor_unitario_costo_directo": 51401,
+     "total_costo_directo": 267285200,
      "rango_valor_unitario": [
-      41438,
-      58500
+      43691,
+      61681
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-10 en apu.json.",
@@ -1095,11 +1097,11 @@
      "unidad": "m2",
      "cantidad": 3000,
      "supuesto_cantidad": "Resto del muro pintable.",
-     "valor_unitario_costo_directo": 22860,
-     "total_costo_directo": 68580000,
+     "valor_unitario_costo_directo": 24982,
+     "total_costo_directo": 74946000,
      "rango_valor_unitario": [
-      20574,
-      26289
+      22484,
+      28729
      ],
      "tipo_precio": "calculo_propio sobre dato oficial",
      "fuente": "Estuco y vinilo tipo 1 de la Tienda Virtual (órdenes 163083 y 162740, 2026) + mano de obra de 25 m²/día.",
@@ -1127,11 +1129,11 @@
      "unidad": "m2",
      "cantidad": 2500,
      "supuesto_cantidad": "Corredores, consultorios, hospitalización y áreas administrativas.",
-     "valor_unitario_costo_directo": 98945,
-     "total_costo_directo": 247362500,
+     "valor_unitario_costo_directo": 101354,
+     "total_costo_directo": 253385000,
      "rango_valor_unitario": [
-      84103,
-      118734
+      86151,
+      121625
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-12 en apu.json.",
@@ -1144,11 +1146,11 @@
      "unidad": "m2",
      "cantidad": 450,
      "supuesto_cantidad": "TPR, esterilización, reanimación, aislamientos, laboratorio y rayos X.",
-     "valor_unitario_costo_directo": 135000,
-     "total_costo_directo": 60750000,
+     "valor_unitario_costo_directo": 137401,
+     "total_costo_directo": 61830450,
      "rango_valor_unitario": [
-      101250,
-      182250
+      103051,
+      185491
      ],
      "tipo_precio": "estimacion",
      "fuente": "Estimación: estructura, lámina y juntas (≈ $86.000) + APU-10.",
@@ -1235,13 +1237,13 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 1868119700,
+   "subtotal_costo_directo": 1905285820,
    "rango_subtotal_costo_directo": [
-    1503108600,
-    2352057500
+    1534285400,
+    2395618400
    ],
-   "subtotal_con_aiu": 2483665141,
-   "peso_pct": 9.65
+   "subtotal_con_aiu": 2533077498,
+   "peso_pct": 9.66
   },
   {
    "codigo": "7",
@@ -1254,11 +1256,11 @@
      "unidad": "m2",
      "cantidad": 600,
      "supuesto_cantidad": "≈ 25 % de la fachada bruta.",
-     "valor_unitario_costo_directo": 437471,
-     "total_costo_directo": 262482600,
+     "valor_unitario_costo_directo": 447567,
+     "total_costo_directo": 268540200,
      "rango_valor_unitario": [
-      371850,
-      524965
+      380432,
+      537080
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-13 en apu.json.",
@@ -1458,13 +1460,13 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 1245482600,
+   "subtotal_costo_directo": 1251540200,
    "rango_subtotal_costo_directo": [
-    957360000,
-    1634229000
+    962509200,
+    1641498000
    ],
-   "subtotal_con_aiu": 1655869117,
-   "peso_pct": 6.43
+   "subtotal_con_aiu": 1663922696,
+   "peso_pct": 6.34
   },
   {
    "codigo": "8",
@@ -1477,11 +1479,11 @@
      "unidad": "un",
      "cantidad": 280,
      "supuesto_cantidad": "≈ 76 sanitarios, 136 lavamanos, 27 duchas, 14 lavatraperos y pocetas.",
-     "valor_unitario_costo_directo": 123045,
-     "total_costo_directo": 34452600,
+     "valor_unitario_costo_directo": 133141,
+     "total_costo_directo": 37279480,
      "rango_valor_unitario": [
-      104588,
-      147654
+      113170,
+      159769
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-19 en apu.json.",
@@ -1494,11 +1496,11 @@
      "unidad": "un",
      "cantidad": 75,
      "supuesto_cantidad": "Duchas, lavamanos de hospitalización, TPR, esterilización y laboratorio.",
-     "valor_unitario_costo_directo": 165045,
-     "total_costo_directo": 12378375,
+     "valor_unitario_costo_directo": 175141,
+     "total_costo_directo": 13135575,
      "rango_valor_unitario": [
-      140288,
-      198054
+      148870,
+      210169
      ],
      "tipo_precio": "calculo_propio (derivado de APU-19)",
      "fuente": "APU-19 + CPVC y aislamiento ($42.000, estimación).",
@@ -1811,13 +1813,13 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 906840975,
+   "subtotal_costo_directo": 910425055,
    "rango_subtotal_costo_directo": [
-    677754916,
-    1227093023
+    680801526,
+    1231393848
    ],
-   "subtotal_con_aiu": 1205645076,
-   "peso_pct": 4.68
+   "subtotal_con_aiu": 1210410111,
+   "peso_pct": 4.62
   },
   {
    "codigo": "9",
@@ -1960,7 +1962,7 @@
     866342647
    ],
    "subtotal_con_aiu": 842238250,
-   "peso_pct": 3.27
+   "peso_pct": 3.21
   },
   {
    "codigo": "10",
@@ -2135,11 +2137,11 @@
      "unidad": "un",
      "cantidad": 650,
      "supuesto_cantidad": "≈ 0,19 por m² construido.",
-     "valor_unitario_costo_directo": 218422,
-     "total_costo_directo": 141974300,
+     "valor_unitario_costo_directo": 228518,
+     "total_costo_directo": 148536700,
      "rango_valor_unitario": [
-      185659,
-      262106
+      194240,
+      274222
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-17 en apu.json.",
@@ -2152,11 +2154,11 @@
      "unidad": "un",
      "cantidad": 420,
      "supuesto_cantidad": "Camas, camillas, consultorios, laboratorio y equipos críticos.",
-     "valor_unitario_costo_directo": 297431,
-     "total_costo_directo": 124921020,
+     "valor_unitario_costo_directo": 309546,
+     "total_costo_directo": 130009320,
      "rango_valor_unitario": [
-      252816,
-      356917
+      263114,
+      371455
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-18 en apu.json.",
@@ -2169,14 +2171,14 @@
      "unidad": "un",
      "cantidad": 620,
      "supuesto_cantidad": "≈ 1 por 5 m².",
-     "valor_unitario_costo_directo": 165000,
-     "total_costo_directo": 102300000,
+     "valor_unitario_costo_directo": 175096,
+     "total_costo_directo": 108559520,
      "rango_valor_unitario": [
-      123750,
-      222750
+      131322,
+      236380
      ],
      "tipo_precio": "estimacion",
-     "fuente": "Estimación derivada de APU-17 (menos cable y aparato).",
+     "fuente": "Estimación derivada de APU-17 (menos cable y aparato), con la mano de obra de la jornada de 42 horas.",
      "proyecto": "P2"
     },
     {
@@ -2308,13 +2310,13 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 2333745320,
+   "subtotal_costo_directo": 2351655540,
    "rango_subtotal_costo_directo": [
-    1767948570,
-    3087511540
+    1782546020,
+    3109943500
    ],
-   "subtotal_con_aiu": 3102714403,
-   "peso_pct": 12.05
+   "subtotal_con_aiu": 3126526040,
+   "peso_pct": 11.92
   },
   {
    "codigo": "11",
@@ -2393,7 +2395,7 @@
     502330000
    ],
    "subtotal_con_aiu": 479683600,
-   "peso_pct": 1.86
+   "peso_pct": 1.83
   },
   {
    "codigo": "12",
@@ -2406,11 +2408,11 @@
      "unidad": "ml",
      "cantidad": 1100,
      "supuesto_cantidad": "≈ 100 tomas: 45 de oxígeno, 40 de vacío y 15 de aire.",
-     "valor_unitario_costo_directo": 120679,
-     "total_costo_directo": 132746900,
+     "valor_unitario_costo_directo": 124717,
+     "total_costo_directo": 137188700,
      "rango_valor_unitario": [
-      102577,
-      144815
+      106009,
+      149660
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-15 en apu.json.",
@@ -2451,13 +2453,13 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 570746900,
+   "subtotal_costo_directo": 575188700,
    "rango_subtotal_costo_directo": [
-    426334700,
-    783596500
+    430109900,
+    788926000
    ],
-   "subtotal_con_aiu": 758808004,
-   "peso_pct": 2.95
+   "subtotal_con_aiu": 764713377,
+   "peso_pct": 2.92
   },
   {
    "codigo": "13",
@@ -2487,11 +2489,11 @@
      "unidad": "kg",
      "cantidad": 8500,
      "supuesto_cantidad": "≈ 1.600 m² con ducto × 4,5 kg/m² + extracción de baños.",
-     "valor_unitario_costo_directo": 21203,
-     "total_costo_directo": 180225500,
+     "valor_unitario_costo_directo": 22212,
+     "total_costo_directo": 188802000,
      "rango_valor_unitario": [
-      18023,
-      25444
+      18880,
+      26654
      ],
      "tipo_precio": "calculo_propio (APU)",
      "fuente": "Ver APU-16 en apu.json.",
@@ -2563,13 +2565,13 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 1549825500,
+   "subtotal_costo_directo": 1558402000,
    "rango_subtotal_costo_directo": [
-    1087895500,
-    2412734000
+    1095180000,
+    2423019000
    ],
-   "subtotal_con_aiu": 2060493002,
-   "peso_pct": 8.0
+   "subtotal_con_aiu": 2071895459,
+   "peso_pct": 7.9
   },
   {
    "codigo": "14",
@@ -2634,7 +2636,7 @@
     969945344
    ],
    "subtotal_con_aiu": 1037010000,
-   "peso_pct": 4.03
+   "peso_pct": 3.95
   },
   {
    "codigo": "15",
@@ -2723,15 +2725,32 @@
      "tipo_precio": "estimacion",
      "fuente": "data/presupuesto_microrred.json: sensores IoT a $0,8 millones (rango 0,2-1,5). Se descuentan de los 150 sensores de la microrred.",
      "proyecto": "P7"
+    },
+    {
+     "codigo": "15.06",
+     "descripcion": "Nevera mortuoria de 2 cuerpos con camilla de transporte (depósito de cadáveres del bloque técnico)",
+     "unidad": "un",
+     "cantidad": 1,
+     "supuesto_cantidad": "Una sola vez. Agregada en la verificación V2: dotacion.json la incluyó en el equipamiento fijo en su verificación V1 (Res. 1633, Anexo 1, num. 5.7).",
+     "valor_unitario_costo_directo": 38000000,
+     "total_costo_directo": 38000000,
+     "rango_valor_unitario": [
+      25000000,
+      55000000
+     ],
+     "tipo_precio": "estimacion (dotacion.json)",
+     "fuente": "dotacion.json, equipamiento fijo: 'Nevera mortuoria de 2 cuerpos con camilla de transporte de cadáveres' (estimacion). Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026). Confirmar con 2 cotizaciones de 2 marcas de menos de 6 meses (Res. 485 de 2025, art. 7 sustituido por la Res. 1519 de 2025, num. 7.1.6).",
+     "equipamiento_fijo_res_485": true,
+     "proyecto": "P3"
     }
    ],
-   "subtotal_costo_directo": 482473726,
+   "subtotal_costo_directo": 520473726,
    "rango_subtotal_costo_directo": [
-    310708174,
-    713239279
+    335708174,
+    768239279
    ],
-   "subtotal_con_aiu": 641448819,
-   "peso_pct": 2.49
+   "subtotal_con_aiu": 691969819,
+   "peso_pct": 2.64
   },
   {
    "codigo": "16",
@@ -2870,11 +2889,11 @@
      "unidad": "m2",
      "cantidad": 470,
      "supuesto_cantidad": "Patio de urgencias y retorno (≈ 380 m²), vía y patio de servicio (≈ 90 m²).",
-     "valor_unitario_costo_directo": 206316,
-     "total_costo_directo": 96968520,
+     "valor_unitario_costo_directo": 212494,
+     "total_costo_directo": 99872180,
      "rango_valor_unitario": [
-      185684,
-      237263
+      191245,
+      244368
      ],
      "tipo_precio": "calculo_propio sobre dato oficial",
      "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 7.1.15 (pavimento de concreto, $520.376/m³), pág. 222 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × 0,20 m + base granular del ítem 5.1.3",
@@ -2884,10 +2903,10 @@
      "codigo": "17.04",
      "descripcion": "Andenes, plaza y senderos en concreto con huella podotáctil",
      "unidad": "m2",
-     "cantidad": 380,
-     "supuesto_cantidad": "Plaza de los mangos (≈ 226 m²) y senderos.",
+     "cantidad": 490,
+     "supuesto_cantidad": "Plaza de los mangos (≈ 348 m² con la ampliación al sur hasta la nueva puerta principal, programa.json tras la verificación V1) y senderos (≈ 140 m²).",
      "valor_unitario_costo_directo": 135000,
-     "total_costo_directo": 51300000,
+     "total_costo_directo": 66150000,
      "rango_valor_unitario": [
       101250,
       182250
@@ -2901,15 +2920,15 @@
      "descripcion": "Rampa peatonal al 6 % y escalera exterior de la plaza con pasamanos",
      "unidad": "global",
      "cantidad": 1,
-     "supuesto_cantidad": "Desnivel de ≈ 1,8 m (programa.json).",
-     "valor_unitario_costo_directo": 65000000,
-     "total_costo_directo": 65000000,
+     "supuesto_cantidad": "Rampa en zigzag de ≈ 34 m y desnivel de ≈ 2,0 m (programa.json tras la verificación V1).",
+     "valor_unitario_costo_directo": 75000000,
+     "total_costo_directo": 75000000,
      "rango_valor_unitario": [
-      48750000,
-      87750000
+      56250000,
+      101250000
      ],
      "tipo_precio": "estimacion",
-     "fuente": "Estimación.",
+     "fuente": "Estimación (los pasamanos van en el ítem 7.09).",
      "proyecto": "P2"
     },
     {
@@ -2950,11 +2969,11 @@
      "unidad": "ml",
      "cantidad": 90,
      "supuesto_cantidad": "Frente occidental del lote.",
-     "valor_unitario_costo_directo": 432089,
-     "total_costo_directo": 38888010,
+     "valor_unitario_costo_directo": 453807,
+     "total_costo_directo": 40842630,
      "rango_valor_unitario": [
-      388880,
-      496902
+      408426,
+      521878
      ],
      "tipo_precio": "calculo_propio sobre dato oficial",
      "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 3.3, pág. 32 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026",
@@ -3041,13 +3060,13 @@
      "proyecto": "P2"
     }
    ],
-   "subtotal_costo_directo": 652501530,
+   "subtotal_costo_directo": 682209810,
    "rango_subtotal_costo_directo": [
-    516254430,
-    835797540
+    539264740,
+    874932230
    ],
-   "subtotal_con_aiu": 867500784,
-   "peso_pct": 3.37
+   "subtotal_con_aiu": 906997942,
+   "peso_pct": 3.46
   },
   {
    "codigo": "18",
@@ -3157,7 +3176,7 @@
     81067500
    ],
    "subtotal_con_aiu": 79836475,
-   "peso_pct": 0.31
+   "peso_pct": 0.3
   },
   {
    "codigo": "19",
@@ -3251,27 +3270,27 @@
     1377500000
    ],
    "subtotal_con_aiu": 1306233750,
-   "peso_pct": 5.07
+   "peso_pct": 4.98
   }
  ],
- "costo_directo": 19360846955,
+ "costo_directo": 19727397555,
  "aiu_valores": {
-  "administracion": 4646603269,
-  "imprevistos": 580825409,
-  "utilidad": 968042348,
-  "iva_sobre_utilidad": 183928046,
+  "administracion": 4734575413,
+  "imprevistos": 591821927,
+  "utilidad": 986369878,
+  "iva_sobre_utilidad": 187410277,
   "factor": 1.3295
  },
- "valor_obra": 25740246027,
+ "valor_obra": 26227575050,
  "rango_valor_obra": [
-  20166409422,
-  33723158416
+  20568291654,
+  34323151189
  ],
  "obra_por_proyecto": {
-  "P2_construccion": 19341397458,
-  "P3_equipamiento_fijo_instalado": 4850645819,
+  "P2_construccion": 19778205481,
+  "P3_equipamiento_fijo_instalado": 4901166819,
   "P7_solar_y_gestion_energetica": 1548202750,
-  "nota": "Los ítems marcados 'equipamiento_fijo_res_485' (planta, UPS, ascensores, central de gases, aire, bombas, red de datos, llamado, CCTV, detección) forman el proyecto P3; los del capítulo 19 y el BMS forman el P7. Pueden contratarse dentro de la obra (recomendado) o aparte."
+  "nota": "Los ítems marcados 'equipamiento_fijo_res_485' (planta, UPS, ascensores, central de gases, aire, bombas, red de datos, llamado, CCTV, detección y nevera mortuoria) forman el proyecto P3; los del capítulo 19 y el BMS forman el P7. Pueden contratarse dentro de la obra (recomendado) o aparte."
  },
  "indirectos": [
   {
@@ -3301,10 +3320,10 @@
   {
    "grupo": "Estudios y diseños",
    "concepto": "Diseño arquitectónico, bioclimático y de accesibilidad (planos 1:75-1:125 de la Res. 485, num. 7.1.2.6)",
-   "valor": 514804921,
+   "valor": 524551501,
    "rango": [
-    386103690,
-    720726889
+    393413626,
+    734372101
    ],
    "tipo": "estimacion",
    "fuente": "Estimación: 2,0 % del valor de obra (rango 1,5-2,8 %).",
@@ -3314,10 +3333,10 @@
   {
    "grupo": "Estudios y diseños",
    "concepto": "Diseño estructural NSR-10 grupo IV y de elementos no estructurales",
-   "valor": 180181722,
+   "valor": 183593025,
    "rango": [
-    128701230,
-    257402460
+    131137875,
+    262275750
    ],
    "tipo": "estimacion",
    "fuente": "Estimación: 0,7 % del valor de obra.",
@@ -3327,10 +3346,10 @@
   {
    "grupo": "Estudios y diseños",
    "concepto": "Diseños técnicos: hidrosanitario, contra incendio, eléctrico RETIE y RETILAP, voz y datos, gases medicinales, climatización, ascensores y cálculo de blindaje",
-   "valor": 419843936,
+   "valor": 427641201,
    "rango": [
-    308882952,
-    566285413
+    314730901,
+    577006651
    ],
    "tipo": "estimacion",
    "fuente": "Estimación: 1,6 % del valor de obra + $8 millones del cálculo de blindaje.",
@@ -3340,10 +3359,10 @@
   {
    "grupo": "Estudios y diseños",
    "concepto": "Presupuesto, APU, especificaciones, programación y documentos para contratar",
-   "valor": 77220738,
+   "valor": 78682725,
    "rango": [
-    61776590,
-    100386960
+    62946180,
+    102287543
    ],
    "tipo": "estimacion",
    "fuente": "Estimación: 0,3 % del valor de obra.",
@@ -3353,10 +3372,10 @@
   {
    "grupo": "Estudios y diseños",
    "concepto": "Interventoría de los estudios y diseños",
-   "valor": 105604105,
+   "valor": 107397476,
    "rango": [
-    84483284,
-    137285337
+    85917981,
+    139616719
    ],
    "tipo": "estimacion",
    "fuente": "Estimación: 8 % del valor de los estudios y diseños.",
@@ -3379,10 +3398,10 @@
   {
    "grupo": "Formulación y licencia",
    "concepto": "Licencia de construcción y aprobaciones (impuesto de delineación por verificar en el Estatuto Tributario de Yondó)",
-   "valor": 257402460,
+   "valor": 262275750,
    "rango": [
     0,
-    514804921
+    524551501
    ],
    "tipo": "estimacion",
    "fuente": "Estimación: 1 % del valor de obra (rango 0-2 %; algunas entidades públicas están exentas).",
@@ -3392,10 +3411,10 @@
   {
    "grupo": "Interventoría de obra",
    "concepto": "Interventoría técnica, administrativa, financiera y ambiental de la obra (construcción), con la supervisión técnica independiente de la Ley 1796 de 2016",
-   "valor": 1353897822,
+   "valor": 1384474384,
    "rango": [
-    1160483847,
-    1740725771
+    1186692329,
+    1780038493
    ],
    "tipo": "estimacion",
    "fuente": "Estimación: 7 % del valor de obra con IVA (rango 6-9 %). El proyecto tipo DNP pagó 7,6 % del costo directo (proyecto_tipo.json).",
@@ -3405,10 +3424,10 @@
   {
    "grupo": "Interventoría de obra",
    "concepto": "Interventoría técnica, administrativa, financiera y ambiental de la obra (equipamiento fijo instalado), con la supervisión técnica independiente de la Ley 1796 de 2016",
-   "valor": 339545207,
+   "valor": 343081677,
    "rango": [
-    291038749,
-    436558124
+    294070009,
+    441105014
    ],
    "tipo": "estimacion",
    "fuente": "Estimación: 7 % del valor de obra con IVA (rango 6-9 %). El proyecto tipo DNP pagó 7,6 % del costo directo (proyecto_tipo.json).",
@@ -3443,10 +3462,10 @@
   {
    "grupo": "Dotación",
    "concepto": "Dotación biomédica y mobiliario clínico: urgencias, consulta externa, odontología, imágenes, partos, hospitalización, esterilización, vacunación, farmacia, terapias y sala de expansión",
-   "valor": 3225708517,
+   "valor": 3251187277,
    "rango": [
-    2366164453,
-    4628813485
+    2385893213,
+    4663442245
    ],
    "tipo": "calculo_propio (dotacion.json)",
    "fuente": "dotacion.json, servicios: urgencias, consulta_externa, odontologia, imagenes, partos, hospitalizacion, esterilizacion, vacunacion, farmacia, terapias, expansion_emergencias. 35 ítems con referencia SECOP y el resto estimados con rango.",
@@ -3529,10 +3548,10 @@
   {
    "grupo": "Contingencias",
    "concepto": "Contingencias del P2 (5 %: cantidades de prediseño, cimentación, asbesto, cotizaciones)",
-   "valor": 967069873,
+   "valor": 988910274,
    "rango": [
     0,
-    1934139746
+    1977820548
    ],
    "tipo": "estimacion",
    "fuente": "Estimación: 5 % sobre obra, dotación, equipos, sistemas y puesta en marcha (no sobre estudios ni interventoría). No cubre inflación: los valores están en pesos constantes de 2026.",
@@ -3541,10 +3560,10 @@
   {
    "grupo": "Contingencias",
    "concepto": "Contingencias del P3 (5 %: cantidades de prediseño, cimentación, asbesto, cotizaciones)",
-   "valor": 275032291,
+   "valor": 277558341,
    "rango": [
     0,
-    550064582
+    555116682
    ],
    "tipo": "estimacion",
    "fuente": "Estimación: 5 % sobre obra, dotación, equipos, sistemas y puesta en marcha (no sobre estudios ni interventoría). No cubre inflación: los valores están en pesos constantes de 2026.",
@@ -3553,10 +3572,10 @@
   {
    "grupo": "Contingencias",
    "concepto": "Contingencias del P4 (5 %: cantidades de prediseño, cimentación, asbesto, cotizaciones)",
-   "valor": 173785426,
+   "valor": 175059364,
    "rango": [
     0,
-    347570852
+    350118728
    ],
    "tipo": "estimacion",
    "fuente": "Estimación: 5 % sobre obra, dotación, equipos, sistemas y puesta en marcha (no sobre estudios ni interventoría). No cubre inflación: los valores están en pesos constantes de 2026.",
@@ -3600,33 +3619,33 @@
   }
  ],
  "indirectos_por_grupo": {
-  "Estudios y diseños": 1425655422,
-  "Formulación y licencia": 377402460,
-  "Interventoría de obra": 1801817222,
+  "Estudios y diseños": 1449865928,
+  "Formulación y licencia": 382275750,
+  "Interventoría de obra": 1835930254,
   "Gestión ambiental y social": 45000000,
-  "Dotación": 3225708517,
+  "Dotación": 3251187277,
   "Laboratorio clínico": 523215696,
   "Sistemas de información": 930653907,
   "Equipamiento fijo fuera de la obra": 650000000,
   "Puesta en marcha y habilitación": 250000000,
-  "Contingencias": 1565991208
+  "Contingencias": 1591631597
  },
  "totales": {
-  "costo_directo_obra": 19360846955,
-  "valor_obra_con_aiu": 25740246027,
-  "indirectos_y_otros_componentes": 10795444432,
-  "total_torre": 36535690459,
+  "costo_directo_obra": 19727397555,
+  "valor_obra_con_aiu": 26227575050,
+  "indirectos_y_otros_componentes": 10909760409,
+  "total_torre": 37137335459,
   "rango_total_torre": [
-   26893952869,
-   49826582930
+   27363002420,
+   50599563138
   ],
   "rango_nota": "El rango suma los mínimos y los máximos de cada ítem: es amplio a propósito. Con cotizaciones y diseños se cierra.",
-  "total_torre_millones": 36535.7,
+  "total_torre_millones": 37137.3,
   "por_proyecto": {
-   "P1": 1803057882,
-   "P2": 21707365153,
-   "P3": 6115223317,
-   "P4": 3649493943,
+   "P1": 1832141678,
+   "P2": 22196590139,
+   "P3": 6171806837,
+   "P4": 3676246641,
    "P5": 549376481,
    "P6": 977186602,
    "P7": 1733987081
@@ -3635,25 +3654,27 @@
    "P8_adecuacion_edificio_actual": 1962909650,
    "P9_ambulancia_medicalizada": 650000000
   },
-  "total_con_proyectos_complementarios": 39148600109,
+  "total_con_proyectos_complementarios": 39750245109,
   "tipo": "calculo_propio"
  },
  "costo_m2": {
   "area_construida_torre_m2": 3369.6,
   "area_construida_total_m2": 3620.6,
   "area_con_cubiertas_abiertas_m2": 3765.3,
-  "costo_directo_por_m2_torre": 5745740,
-  "valor_obra_por_m2_torre": 7638962,
-  "valor_obra_por_m2_construido_total": 7109387,
-  "costo_total_por_m2_construido_total": 10091060,
-  "costo_total_por_m2_torre": 10842738,
-  "obra_civil_sin_equipamiento_fijo_ni_solar_por_m2_total": 5342042,
+  "costo_directo_por_m2_torre": 5854522,
+  "valor_obra_por_m2_torre": 7783587,
+  "valor_obra_por_m2_construido_total": 7243986,
+  "costo_total_por_m2_construido_total": 10257232,
+  "costo_total_por_m2_torre": 11021289,
+  "obra_civil_sin_equipamiento_fijo_ni_solar_por_m2_total": 5462687,
   "rango_valor_obra_por_m2_construido_total": [
-   5569908,
-   9314246
+   5680907,
+   9479962
   ],
   "tipo": "calculo_propio",
-  "nota": "El valor de obra por m² incluye ascensores, planta, aire acondicionado, gases, sistemas especiales y la solar con baterías. Sin el equipamiento fijo ni la solar (solo la obra civil y las redes del proyecto P2), el valor baja al indicado en 'obra_civil_sin_equipamiento_fijo_ni_solar_por_m2_total', comparable con los hospitales de primer nivel de la tabla de comparación."
+  "nota": "El valor de obra por m² incluye ascensores, planta, aire acondicionado, gases, sistemas especiales y la solar con baterías. Sin el equipamiento fijo ni la solar (solo la obra civil y las redes del proyecto P2), el valor baja al indicado en 'obra_civil_sin_equipamiento_fijo_ni_solar_por_m2_total', comparable con los hospitales de primer nivel de la tabla de comparación.",
+  "sin_diseños_ni_contingencias_por_m2_total": 9311595,
+  "nota_sin_diseños": "Obra, interventoría, dotación, laboratorio, TIC y puesta en marcha, sin estudios y diseños (P1) ni contingencias: es lo comparable con proyectos 'construidos y dotados' que pagaron los diseños aparte (verificación V2)."
  },
  "comparacion": [
   {
@@ -3663,22 +3684,50 @@
    "valor_original": 885468754,
    "valor_cop_2026": 1460591335,
    "costo_m2_cop_2026": 5417624,
+   "comparar_con": "obra_civil",
    "incluye": "Costo directo con AIU teórico y exteriores; sin dotación ni interventoría",
    "tipo": "dato_oficial ajustado por IPC",
    "fuente": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf (proyecto_tipo.json)",
-   "relacion_con_la_torre": "La obra civil de la torre (P2) cuesta 0.99 veces este valor por m²; la obra completa con equipamiento fijo y solar, 1.31 veces."
+   "relacion_con_la_torre": "La obra civil de la torre (P2) cuesta 1.01 veces este valor por m²; la obra completa con equipamiento fijo y solar, 1.34 veces."
   },
   {
-   "proyecto": "Nueva sede hospitalaria de Monguí (Boyacá), MinSalud: urgencias, hospitalización, partos y laboratorio",
+   "proyecto": "Nueva infraestructura de la E.S.E. Hospital Las Mercedes de Monguí (Boyacá): urgencias, hospitalización, partos y laboratorio",
    "anio_precios": 2025,
    "area_m2": 2400,
-   "valor_original": 13000000000,
-   "valor_cop_2026": 13702754000,
-   "costo_m2_cop_2026": 5709481,
-   "incluye": "'Inversión superior a $13 mil millones'; no dice si incluye dotación",
-   "tipo": "dato_oficial (prensa sectorial) ajustado por IPC",
-   "fuente": "Consultorsalud, 25-jun-2025: https://consultorsalud.com/salud-en-boyaca-minsalud-300-mil-millones/",
-   "relacion_con_la_torre": "La obra civil de la torre (P2) cuesta 0.94 veces este valor por m²; la obra completa con equipamiento fijo y solar, 1.25 veces."
+   "valor_original": 11966541300,
+   "valor_cop_2026": 12613428590,
+   "costo_m2_cop_2026": 5255595,
+   "comparar_con": "obra_civil",
+   "incluye": "Contrato de obra firmado el 16-abr-2025 (20 meses) por $11.966.541.300, adjudicado en SECOP II; sin interventoría ni dotación. El área de 2.400 m² es la que publicó la prensa sectorial con datos de MinSalud. Verificación V2: antes se usaba la 'inversión superior a $13 mil millones' de la prensa.",
+   "tipo": "dato_oficial (SECOP II: valor del contrato) ajustado por IPC; área de prensa sectorial",
+   "fuente": "SECOP II, proceso CO1.NTC.7482028 (datos.gov.co, contratos jbjy-vk9h): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7482028 ; área: Consultorsalud, 25-jun-2025, https://consultorsalud.com/salud-en-boyaca-minsalud-300-mil-millones/",
+   "relacion_con_la_torre": "La obra civil de la torre (P2) cuesta 1.04 veces este valor por m²; la obra completa con equipamiento fijo y solar, 1.38 veces."
+  },
+  {
+   "proyecto": "Nuevo Hospital Sagrado Corazón de Jesús de Quimbaya (Quindío): urgencias, hospitalización, partos, radiología y toma de muestras, 2 pisos",
+   "anio_precios": 2025,
+   "area_m2": 4456,
+   "valor_original": 28274000000,
+   "valor_cop_2026": 29802435892,
+   "costo_m2_cop_2026": 6688159,
+   "comparar_con": "obra_y_dotacion",
+   "incluye": "Proyecto de regalías (AIR 40 %) aprobado por el OCAD Eje Cafetero en julio de 2025, con viabilidad técnica de MinSalud (dic-2024, según la prensa sectorial). Su producto MGA es 'Hospitales de primer nivel de atención construidos y dotados' (BPIN 2024000040010); los estudios y diseños se pagaron aparte en 2020 (BPIN 2019000040001, $838,6 millones). No se publica cuánto es dotación.",
+   "tipo": "dato_oficial (DNP y Mapa de Inversiones) ajustado por IPC",
+   "fuente": "DNP, 25-jul-2025: https://www.dnp.gov.co/Prensa_/Noticias/Paginas/regalias-apuestan-salud-quindio-28-mil-millones-nuevo-hospital-quimbaya.aspx ; DNP Mapa Inversiones, productos (datos.gov.co 8kfp-z3my, BPIN 2024000040010) ; Consultorsalud, 25-jul-2025: https://consultorsalud.com/nuevo-hospital-quindio-servicios-integrales/",
+   "relacion_con_la_torre": "La torre sin diseños ni contingencias (obra, interventoría, dotación y puesta en marcha) cuesta 1.39 veces este valor por m²; solo la obra completa, 1.08 veces."
+  },
+  {
+   "proyecto": "Nuevo hospital de primer nivel de Pasacaballos (Cartagena), tipo C: urgencias, partos, quirófano, hospitalización y consulta",
+   "anio_precios": 2026,
+   "area_m2": 4500,
+   "valor_original": 48372000000,
+   "valor_cop_2026": 48372000000,
+   "costo_m2_cop_2026": 10749333,
+   "comparar_con": "total",
+   "incluye": "Inversión estimada con construcción y dotación, con regalías; en trámite (sin contrato a oct-2026). Solo sirve como referencia de orden de magnitud.",
+   "tipo": "dato_oficial (prensa); proyecto sin contratar",
+   "fuente": "El Universal, 30-jul-2026: https://www.eluniversal.com.co/cartagena/2026/07/30/asi-va-el-proceso-para-financiar-el-nuevo-hospital-de-pasacaballos/ ; El Tiempo (área de 4.500 m²): https://www.eltiempo.com/amp/colombia/otras-ciudades/pasacaballos-en-zona-industrial-de-cartagena-tendra-un-moderno-hospital-de-primer-nivel-y-una-estacion-de-bomberos-3563570",
+   "relacion_con_la_torre": "El costo total de la torre por m² es 0.95 veces este valor."
   },
   {
    "proyecto": "Hospital Santa Catalina de Sena, Sucre (Sucre), Fondo Adaptación: urgencias, consulta, laboratorio, imágenes, partos, hospitalización",
@@ -3687,10 +3736,11 @@
    "valor_original": 5915336410,
    "valor_cop_2026": 9757418392,
    "costo_m2_cop_2026": 4801029,
+   "comparar_con": "obra_civil",
    "incluye": "Obra (la interventoría de $681,7 millones va aparte); edificio bajo",
    "tipo": "dato_oficial (prensa) ajustado por IPC",
    "fuente": "El Universal, 13-oct-2017: https://www.eluniversal.com.co/regional/2017/10/13/comenzara-construccion-del-nuevo-hospital-de-sucre-con-millonaria-inversion/",
-   "relacion_con_la_torre": "La obra civil de la torre (P2) cuesta 1.11 veces este valor por m²; la obra completa con equipamiento fijo y solar, 1.48 veces."
+   "relacion_con_la_torre": "La obra civil de la torre (P2) cuesta 1.14 veces este valor por m²; la obra completa con equipamiento fijo y solar, 1.51 veces."
   },
   {
    "proyecto": "Hospital de Fusagasugá (Cundinamarca), Gobernación: mediana y alta complejidad",
@@ -3699,10 +3749,11 @@
    "valor_original": 231944000000,
    "valor_cop_2026": 231944000000,
    "costo_m2_cop_2026": 9290395,
+   "comparar_con": "total",
    "incluye": "Inversión total anunciada; complejidad mayor que la torre; cifra tomada del extracto del buscador (el artículo respondió con error 403)",
    "tipo": "dato_oficial (prensa); no se pudo abrir el artículo completo (error 403), cifra tomada del extracto del buscador",
    "fuente": "Cambio, sep-2026: https://cambiocolombia.com/contenido-especial/articulo/2026/9/cundinamarca-amplia-su-red-publica-de-salud-con-nuevos-hospitales-y-mas-dotacion-tecnologica",
-   "relacion_con_la_torre": "La obra civil de la torre (P2) cuesta 0.58 veces este valor por m²; la obra completa con equipamiento fijo y solar, 0.77 veces."
+   "relacion_con_la_torre": "El costo total de la torre por m² es 1.10 veces este valor."
   },
   {
    "proyecto": "Reposición del hospital de Guarne (Antioquia), MinSalud, CONPES 4169",
@@ -3745,7 +3796,7 @@
    8126436,
    9751723
   ],
-  "lectura": "El valor de obra por m² de este presupuesto ($7.109.387) cae en el extremo bajo del rango que T1 estimó escalando el proyecto tipo DNP."
+  "lectura": "El valor de obra por m² de este presupuesto ($7.243.986) cae en el extremo bajo del rango que T1 estimó escalando el proyecto tipo DNP."
  },
  "cronograma": [
   {
@@ -3844,10 +3895,10 @@
  "flujo_caja": [
   {
    "anio": 2026,
-   "valor": 72122315,
-   "acumulado": 72122315,
+   "valor": 73285667,
+   "acumulado": 73285667,
    "por_proyecto": {
-    "P1": 72122315,
+    "P1": 73285667,
     "P2": 0,
     "P3": 0,
     "P4": 0,
@@ -3858,10 +3909,10 @@
   },
   {
    "anio": 2027,
-   "valor": 1550629779,
-   "acumulado": 1622752094,
+   "valor": 1575641843,
+   "acumulado": 1648927510,
    "por_proyecto": {
-    "P1": 1550629779,
+    "P1": 1575641843,
     "P2": 0,
     "P3": 0,
     "P4": 0,
@@ -3872,12 +3923,12 @@
   },
   {
    "anio": 2028,
-   "valor": 4827539985,
-   "acumulado": 6450292079,
+   "valor": 4931122538,
+   "acumulado": 6580050048,
    "por_proyecto": {
-    "P1": 180305788,
-    "P2": 4341473031,
-    "P3": 305761166,
+    "P1": 183214168,
+    "P2": 4439318028,
+    "P3": 308590342,
     "P4": 0,
     "P5": 0,
     "P6": 0,
@@ -3886,13 +3937,13 @@
   },
   {
    "anio": 2029,
-   "valor": 24738404969,
-   "acumulado": 31188697048,
+   "valor": 25150627759,
+   "acumulado": 31730677807,
    "por_proyecto": {
     "P1": 0,
-    "P2": 15629302910,
-    "P3": 4892178654,
-    "P4": 2007221669,
+    "P2": 15981544900,
+    "P3": 4937445470,
+    "P4": 2021935653,
     "P5": 247219416,
     "P6": 488593301,
     "P7": 1473889019
@@ -3900,13 +3951,13 @@
   },
   {
    "anio": 2030,
-   "valor": 5346993411,
-   "acumulado": 36535690459,
+   "valor": 5406657652,
+   "acumulado": 37137335459,
    "por_proyecto": {
     "P1": 0,
-    "P2": 1736589212,
-    "P3": 917283498,
-    "P4": 1642272274,
+    "P2": 1775727211,
+    "P3": 925771026,
+    "P4": 1654310988,
     "P5": 302157065,
     "P6": 488593301,
     "P7": 260098062
@@ -3915,7 +3966,7 @@
  ],
  "flujo_caja_nota": "Pesos constantes de 2026 por año de pago, escenario base (apertura en abril de 2030). Para 2029 con la ruta llave en mano, adelantar cada pago ≈ 4 meses.",
  "doble_conteo_resuelto": [
-  "Planta, UPS, ascensores, montacargas, central de gases, aire acondicionado, equipo de presión y bomba contra incendio, red de datos, llamado, CCTV y detección: están en la obra con el precio de dotacion.json y no se suman otra vez en 'equipamiento fijo'. Solo el generador de oxígeno PSA queda como equipamiento fijo fuera de la obra.",
+  "Planta, UPS, ascensores, montacargas, central de gases, aire acondicionado, equipo de presión y bomba contra incendio, red de datos, llamado, CCTV, detección y nevera mortuoria: están en la obra con el precio de dotacion.json y no se suman otra vez en 'equipamiento fijo'. Solo el generador de oxígeno PSA queda como equipamiento fijo fuera de la obra.",
   "La lavandería de dotacion.json va con el edificio actual (P8).",
   "Los analizadores del laboratorio van en comodato: no se suman (laboratorio.json).",
   "PACS/RIS y computadores están en dotacion.json (P6); el software adicional (LIS, interoperabilidad) no repite esos ítems.",
@@ -3944,6 +3995,18 @@
   {
    "nombre": "Ley 1106 de 2006, art. 6 (contribución de obra pública)",
    "url": "http://www.secretariasenado.gov.co/senado/basedoc/ley_1106_2006.html",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "dato_oficial"
+  },
+  {
+   "nombre": "Ley 1738 de 2014, art. 8 (vigencia permanente de la contribución de obra pública)",
+   "url": "http://www.secretariasenado.gov.co/senado/basedoc/ley_1738_2014.html",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "dato_oficial"
+  },
+  {
+   "nombre": "Ley 2101 de 2021 (reducción de la jornada laboral a 42 horas semanales desde el 15-jul-2026)",
+   "url": "http://www.secretariasenado.gov.co/senado/basedoc/ley_2101_2021.html",
    "fecha_consulta": "2026-10-22",
    "tipo": "dato_oficial"
   },
@@ -3989,6 +4052,8 @@
   "La titularidad del lote, el uso del suelo, la amenaza por inundación y la norma del EOT no están verificados (normas.json).",
   "Las estampillas, el ICA y el impuesto de delineación de Yondó no se revisaron.",
   "El estudio de vulnerabilidad de 2024 del edificio actual no es público: el costo de P8 es un supuesto.",
-  "Los precios de los equipos de dotacion.json son en su mayoría estimaciones (35 de 228 ítems con referencia SECOP)."
+  "Los precios de los equipos de dotacion.json son en su mayoría estimaciones (37 de 236 ítems con referencia SECOP).",
+  "Los comparables por m² con cifra oficial son pocos: el área de Monguí sale de la prensa sectorial y no se sabe cuánta dotación trae el proyecto de Quimbaya. Hay que confirmarlos en los pliegos de SECOP II (piden captcha y no se pudieron abrir desde este entorno) y en la MGA del BPIN 2024000040010.",
+  "El AIU completo sobre los equipos de P3 es conservador: contratándolos como suministro e instalación aparte se podrían ahorrar del orden de $600-1.000 millones (ver supuestos.aiu_sobre_equipos)."
  ]
 }

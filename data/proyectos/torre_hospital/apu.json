@@ -9,47 +9,55 @@
   "calculo_propio": "operación sobre datos oficiales o supuestos declarados (APU, sumas, conversiones por IPC o salario mínimo)",
   "estimacion": "supuesto del equipo con rango, a confirmar con cotizaciones y diseños"
  },
- "resumen": "19 APU de los ítems de mayor peso: demolición, retiro de asbesto, excavación, concreto de columnas y de losas, acero, pilotes, mampostería, drywall, pintura epóxica, piso vinílico, cielo raso, ventanería, impermeabilización, red de gases, ductos, salidas eléctricas normal y regulada y punto hidráulico. Los ítems que usan estos APU (directamente o derivados) suman $7.373 millones, el 38 % del costo directo de obra; el resto de lo pesado son suministros de equipos (aire acondicionado, ascensores, baterías, central de gases, planta, red de datos), cuyo precio sale de SECOP o de cotizaciones, como pide la Res. 485 (2 cotizaciones de 2 marcas). AIU de 32,95 % (24 % de administración con la contribución de obra pública, 3 % de imprevistos, 5 % de utilidad e IVA sobre la utilidad).",
+ "resumen": "19 APU de los ítems de mayor peso: demolición, retiro de asbesto, excavación, concreto de columnas y de losas, acero, pilotes, mampostería, drywall, pintura epóxica, piso vinílico, cielo raso, ventanería, impermeabilización, red de gases, ductos, salidas eléctricas normal y regulada y punto hidráulico. Los ítems que usan estos APU (directamente o derivados) suman $7.630 millones, el 39 % del costo directo de obra; el resto de lo pesado son suministros de equipos (aire acondicionado, ascensores, baterías, central de gases, planta, red de datos), cuyo precio sale de SECOP o de cotizaciones, como pide la Res. 485 (2 cotizaciones de 2 marcas). AIU de 32,95 % (24 % de administración con la contribución de obra pública, 3 % de imprevistos, 5 % de utilidad e IVA sobre la utilidad).",
  "metodo": {
   "estructura": "Cada APU suma materiales (cantidad × (1 + desperdicio) × precio), equipo y herramienta, mano de obra (jornal con prestaciones ÷ rendimiento diario), herramienta menor (5 % de la mano de obra, método SIF) y transporte a Yondó. Luego se aplica el AIU con IVA sobre la utilidad.",
-  "precios_oficiales_de_antioquia": "Base de APU de la Secretaría de Infraestructura Física de la Gobernación de Antioquia, segundo semestre de 2020 (la versión oficial más reciente descargable en antioquia.gov.co; las bases 2024-2025 solo circulan como anexos de procesos y copias de terceros). Se actualiza así: mano de obra con la razón de salarios mínimos 2026/2020 (1.9946) y equipos y materiales con el IPC (1.5054), porque el salario mínimo subió casi el doble desde 2020 y el IPC solo un 51 %.",
+  "precios_oficiales_de_antioquia": "Base de APU de la Secretaría de Infraestructura Física de la Gobernación de Antioquia, segundo semestre de 2020 (la versión oficial más reciente descargable en antioquia.gov.co; las bases 2024-2025 solo circulan como anexos de procesos y copias de terceros). Se actualiza así: mano de obra con la razón de salarios mínimos 2026/2020 (1.9946) multiplicada por 48/42 (1.1429) por la jornada de 42 horas semanales que rige desde el 15-jul-2026 (Ley 2101 de 2021; la base de 2020 supone 48 horas), factor total 2.2796; equipos y materiales con el IPC (1.5054), porque el salario mínimo subió casi el doble desde 2020 y el IPC solo un 51 %.",
+  "jornada_laboral": {
+   "horas_semanales_base_sif_2020": 48,
+   "horas_semanales_desde_15_jul_2026": 42,
+   "factor": 1.1429,
+   "fuente": "Ley 2101 de 2021, art. 3 (reducción gradual: 47 h desde jul-2023, 46 h jul-2024, 44 h jul-2025 y 42 h jul-2026): http://www.secretariasenado.gov.co/senado/basedoc/ley_2101_2021.html",
+   "tipo": "calculo_propio sobre dato oficial",
+   "nota": "Verificación V2: la versión anterior actualizaba los jornales solo con el salario mínimo. Con el mismo salario mensual y 12,5 % menos horas, el costo de cada día de 8 horas trabajado sube 14,3 %. La obra se ejecutaría en 2028-2030, ya con 42 horas."
+  },
   "precios_2025_2026": "Compras de la Gobernación de Antioquia y otras entidades en la Tienda Virtual del Estado Colombiano (Acuerdo Marco de materiales de construcción y ferretería, zona 3 = Antioquia; datos.gov.co 3hdv-smhz), órdenes 162740 y 162775 (27-mar-2026), 163083 (7-abr-2026) y 152787 (2-oct-2025): cemento, arena, gravilla, estuco, pinturas, tubería, cable, aparatos sanitarios.",
   "comparacion_idu_epm_invias": "No se usaron como fuente de valores: el IDU (Bogotá) y el INVIAS (APU regionalizados 2026-1) publican sobre todo ítems viales; las páginas de precios de Risaralda y Cali respondieron con error 403 desde este entorno. EPM no publica una lista de precios de edificaciones.",
   "salario_minimo": {
    "2026": 1750905,
-   "fuente_2026": "Decreto 1469 de 2025 (dato ya usado en normas.json)",
+   "fuente_2026": "Decreto 1469 del 29-dic-2025 (dato ya usado en normas.json). El Consejo de Estado lo suspendió provisionalmente y en jul-2026 revocó esa suspensión (Vanguardia, 17-jul-2026: https://www.vanguardia.com/colombia/2026/07/17/consejo-de-estado-revoco-medida-que-suspendia-provisionalmente-decreto-de-salario-minimo-2026/); falta el fallo de fondo",
    "2020": 877803,
    "fuente_2020": "Decreto 2360 de 2019"
   },
   "mano_de_obra": {
    "ayudante": {
-    "jornal_con_prestaciones": 117852,
-    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 3.2 (ayudante raso: $33.762 + 75 % de prestaciones), pág. 31 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos 2026/2020 (1.750.905 / 877.803 = 1.9946)",
+    "jornal_con_prestaciones": 134688,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 3.2 (ayudante raso: $33.762 + 75 % de prestaciones), pág. 31 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos 2026/2020 (1.750.905 / 877.803 = 1.9946) y el ajuste por la jornada de 42 horas semanales de la Ley 2101 de 2021 (48/42 = 1.1429): factor total 2.2796",
     "tipo": "calculo_propio sobre dato oficial"
    },
    "oficial": {
-    "jornal_con_prestaciones": 235701,
-    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 3.2 (oficial: $67.524 + 75 % de prestaciones), pág. 31 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos 2026/2020",
+    "jornal_con_prestaciones": 269373,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 3.2 (oficial: $67.524 + 75 % de prestaciones), pág. 31 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos 2026/2020 y la jornada de 42 horas (factor 2.2796)",
     "tipo": "calculo_propio sobre dato oficial"
    },
    "oficial_especializado": {
-    "jornal_con_prestaciones": 285981,
-    "fuente": "Cálculo propio: 2,8 salarios mínimos de 2026 al mes / 30 × 1,75 (factor de prestaciones del método SIF). Electricistas, plomeros, instaladores de vinilo, de gases y de aluminio.",
+    "jornal_con_prestaciones": 326836,
+    "fuente": "Cálculo propio: 2,8 salarios mínimos de 2026 al mes / 30 × 1,75 (factor de prestaciones del método SIF) × 48/42 (jornada de 42 horas, Ley 2101 de 2021). Electricistas, plomeros, instaladores de vinilo, de gases y de aluminio.",
     "tipo": "estimacion"
    },
    "cuadrilla_concretos": {
-    "jornal_con_prestaciones": 860310,
-    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (cuadrilla de concretos $431.310/día), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos",
+    "jornal_con_prestaciones": 983212,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (cuadrilla de concretos $431.310/día), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos y la jornada de 42 horas (factor 2.2796)",
     "tipo": "calculo_propio sobre dato oficial"
    },
    "cuadrilla_demoliciones": {
-    "jornal_con_prestaciones": 471404,
-    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (cuadrilla de demoliciones $236.335/día), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos",
+    "jornal_con_prestaciones": 538748,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (cuadrilla de demoliciones $236.335/día), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos y la jornada de 42 horas (factor 2.2796)",
     "tipo": "calculo_propio sobre dato oficial"
    },
    "cuadrilla_refuerzo": {
-    "jornal_con_prestaciones": 388908,
-    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 10.1 (cuadrilla de refuerzo $194.976/día), pág. 300 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos",
+    "jornal_con_prestaciones": 444466,
+    "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 10.1 (cuadrilla de refuerzo $194.976/día), pág. 300 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos y la jornada de 42 horas (factor 2.2796)",
     "tipo": "calculo_propio sobre dato oficial"
    }
   },
@@ -65,13 +73,13 @@
    "personal de dirección y control (director, residentes de obra, eléctrico y mecánico, SST, ambiental, social, almacenista, maestro)": 9.0,
    "servicios, vigilancia, ensayos de laboratorio y papelería": 2.0,
    "pólizas y garantías": 1.0,
-   "contribución especial de 5 % sobre el valor de los contratos de obra pública (Ley 1106 de 2006, art. 6, prorrogada por la Ley 2272 de 2022): 5 % × 1.3295": 6.65,
+   "contribución especial de 5 % sobre el valor de los contratos de obra pública sin IVA (Ley 1106 de 2006, art. 6, de vigencia permanente por el art. 8 de la Ley 1738 de 2014): 5 % × 1,32": 6.6,
    "estampillas departamentales y municipales (por verificar en las ordenanzas de Antioquia y los acuerdos de Yondó)": 2.5,
    "impuesto de industria y comercio de Yondó (por verificar)": 0.8,
-   "gastos generales y financieros": 2.05
+   "gastos generales y financieros": 2.1
   },
   "tipo": "estimacion",
-  "nota": "El IVA de 19 % se cobra solo sobre la utilidad en contratos de obra (régimen usual de construcción). Las estampillas y el ICA dependen de quién contrate (E.S.E., municipio o Gobernación)."
+  "nota": "El IVA de 19 % se cobra solo sobre la utilidad en contratos de obra (régimen usual de construcción). La contribución de 5 % se liquida sobre el valor del contrato sin IVA (DIAN, concepto 7086). Las estampillas y el ICA dependen de quién contrate (E.S.E., municipio o Gobernación)."
  },
  "apus": [
   {
@@ -114,17 +122,17 @@
    "mano_obra": [
     {
      "cuadrilla": "Cuadrilla de demoliciones",
-     "composicion": "1 oficial + 4 ayudantes (método SIF)",
-     "jornal_con_prestaciones": 471404,
+     "composicion": "equivale a 1 oficial + 2 ayudantes rasos ($118.167 + 2 × $59.084 en la base SIF 2020)",
+     "jornal_con_prestaciones": 538748,
      "rendimiento_unidades_por_dia": 15,
-     "valor": 31427,
+     "valor": 35917,
      "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 y 2.9, pág. 11 y 13 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026; rendimiento propio de 15 m² de edificación por día (estimación)"
     }
    ],
-   "subtotal_mano_obra": 31427,
+   "subtotal_mano_obra": 35917,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 1571,
+    "valor": 1796,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -136,18 +144,18 @@
     "valor": 28977,
     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (transporte $950/m³-km y disposición $5.000/m³), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC; volumen de 1,0 m³ suelto por m² construido (estimación para muros de ladrillo, piso y cimientos). Res. 1257 de 2021 de MinAmbiente (gestión de RCD)."
    },
-   "costo_directo": 84970,
+   "costo_directo": 89685,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 20393,
-    "imprevistos": 2549,
-    "utilidad": 4248,
-    "iva_sobre_utilidad": 807
+    "administracion": 21524,
+    "imprevistos": 2691,
+    "utilidad": 4484,
+    "iva_sobre_utilidad": 852
    },
-   "precio_unitario_con_aiu": 112967,
+   "precio_unitario_con_aiu": 119236,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "comparacion": {
@@ -238,9 +246,9 @@
     {
      "cuadrilla": "Cuadrilla capacitada en asbesto y alturas",
      "composicion": "1 oficial + 3 ayudantes",
-     "jornal_con_prestaciones": 589257,
+     "jornal_con_prestaciones": 673437,
      "rendimiento_unidades_por_dia": 40,
-     "valor": 14731,
+     "valor": 16836,
      "fuente": "Jornales de esta base; rendimiento de 40 m²/día (estimación)."
     },
     {
@@ -252,10 +260,10 @@
      "fuente": "Estimación: $300.000/día."
     }
    ],
-   "subtotal_mano_obra": 22231,
+   "subtotal_mano_obra": 24336,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 1112,
+    "valor": 1217,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -267,18 +275,18 @@
     "valor": 31500,
     "fuente": "Estimación: gestor autorizado de residuos peligrosos ≈ $1,5 millones por tonelada dispuesta (rango $0,9-2,5 millones) + transporte ≈ $0,6 millones por tonelada. Confirmar con gestores licenciados por la autoridad ambiental."
    },
-   "costo_directo": 78801,
+   "costo_directo": 81011,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 18912,
-    "imprevistos": 2364,
-    "utilidad": 3940,
-    "iva_sobre_utilidad": 749
+    "administracion": 19443,
+    "imprevistos": 2430,
+    "utilidad": 4051,
+    "iva_sobre_utilidad": 770
    },
-   "precio_unitario_con_aiu": 104766,
+   "precio_unitario_con_aiu": 107705,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "comparacion": {
@@ -310,16 +318,16 @@
     {
      "cuadrilla": "Cuadrilla de perfilado",
      "composicion": "1 oficial + 2 ayudantes",
-     "jornal_con_prestaciones": 471405,
+     "jornal_con_prestaciones": 538749,
      "rendimiento_unidades_por_dia": 30,
-     "valor": 15714,
+     "valor": 17958,
      "fuente": "Jornales de esta base; rendimiento de 30 m³/día de perfilado (estimación)."
     }
    ],
-   "subtotal_mano_obra": 15714,
+   "subtotal_mano_obra": 17958,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 786,
+    "valor": 898,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -331,18 +339,18 @@
     "valor": 37670,
     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (tarifas de transporte y disposición), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
    },
-   "costo_directo": 69218,
+   "costo_directo": 71574,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 16612,
-    "imprevistos": 2077,
-    "utilidad": 3461,
-    "iva_sobre_utilidad": 658
+    "administracion": 17178,
+    "imprevistos": 2147,
+    "utilidad": 3579,
+    "iva_sobre_utilidad": 680
    },
-   "precio_unitario_con_aiu": 92026,
+   "precio_unitario_con_aiu": 95158,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "comparacion": {
@@ -422,17 +430,17 @@
    "mano_obra": [
     {
      "cuadrilla": "Cuadrilla de concretos",
-     "composicion": "1 oficial + 5 ayudantes (método SIF)",
-     "jornal_con_prestaciones": 860310,
+     "composicion": "equivale a 1 oficial + 1 ayudante entendido + 4 ayudantes rasos ($431.310/día en la base SIF 2020)",
+     "jornal_con_prestaciones": 983212,
      "rendimiento_unidades_por_dia": 2.857,
-     "valor": 301124,
-     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (rendimiento 2,857 m³/día), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos"
+     "valor": 344141,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.2.30 (rendimiento 2,857 m³/día), pág. 191 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos y la jornada de 42 horas (Ley 2101 de 2021)"
     }
    ],
-   "subtotal_mano_obra": 301124,
+   "subtotal_mano_obra": 344141,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 15056,
+    "valor": 17207,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [
@@ -450,23 +458,23 @@
     "valor": 0,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 1252911,
+   "costo_directo": 1298079,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 300699,
-    "imprevistos": 37587,
-    "utilidad": 62646,
-    "iva_sobre_utilidad": 11903
+    "administracion": 311539,
+    "imprevistos": 38942,
+    "utilidad": 64904,
+    "iva_sobre_utilidad": 12332
    },
-   "precio_unitario_con_aiu": 1665746,
+   "precio_unitario_con_aiu": 1725796,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "comparacion": {
     "referencia": "SIF 2020-II ítem 6.2.30, concreto de 28 MPa en vigas y columnas: $735.062/m³; × IPC = $1.106.548.",
-    "lectura": "El APU es más alto porque la mano de obra se actualiza con el salario mínimo (que subió casi el doble desde 2020) y no con el IPC."
+    "lectura": "El APU es más alto porque la mano de obra se actualiza con el salario mínimo (que subió casi el doble desde 2020) y con la jornada de 42 horas, no con el IPC. Con la misma regla de este presupuesto (mano de obra × 2,2796 y el resto × IPC) el ítem SIF da $1.223.428/m³; el APU queda por encima por el concreto puesto en Yondó y la bomba."
    },
    "uso_en_presupuesto": "Capítulo 3: 160 m³ de columnas (28 columnas de 0,60 × 0,60 m en pisos 1-3 y 20 en el piso 4) y 200 m³ de muros de núcleos; capítulo 2: muros de fosos y cisternas (con aditivo impermeabilizante)."
   },
@@ -541,17 +549,17 @@
    "mano_obra": [
     {
      "cuadrilla": "Cuadrilla de concretos",
-     "composicion": "1 oficial + 5 ayudantes",
-     "jornal_con_prestaciones": 860310,
+     "composicion": "cuadrilla de concretos SIF (≈ 1 oficial + 1 ayudante entendido + 4 ayudantes rasos)",
+     "jornal_con_prestaciones": 983212,
      "rendimiento_unidades_por_dia": 3.5,
-     "valor": 245803,
+     "valor": 280918,
      "fuente": "Método SIF con rendimiento de 3,5 m³/día para placas (estimación)"
     }
    ],
-   "subtotal_mano_obra": 245803,
+   "subtotal_mano_obra": 280918,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 12290,
+    "valor": 14046,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [
@@ -569,18 +577,18 @@
     "valor": 0,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 1196648,
+   "costo_directo": 1233519,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 287196,
-    "imprevistos": 35899,
-    "utilidad": 59832,
-    "iva_sobre_utilidad": 11368
+    "administracion": 296045,
+    "imprevistos": 37006,
+    "utilidad": 61676,
+    "iva_sobre_utilidad": 11718
    },
-   "precio_unitario_con_aiu": 1590943,
+   "precio_unitario_con_aiu": 1639964,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "comparacion": {
@@ -632,17 +640,17 @@
    "mano_obra": [
     {
      "cuadrilla": "Cuadrilla de refuerzo",
-     "composicion": "1 oficial + 2 ayudantes (método SIF)",
-     "jornal_con_prestaciones": 388908,
+     "composicion": "equivale a 1 oficial + 1 ayudante entendido ($118.167 + $76.809 en la base SIF 2020)",
+     "jornal_con_prestaciones": 444466,
      "rendimiento_unidades_por_dia": 170,
-     "valor": 2288,
-     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 10.1 (rendimiento 170 kg/día), pág. 300 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos"
+     "valor": 2615,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 10.1 (rendimiento 170 kg/día), pág. 300 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos y la jornada de 42 horas (Ley 2101 de 2021)"
     }
    ],
-   "subtotal_mano_obra": 2288,
+   "subtotal_mano_obra": 2615,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 114,
+    "valor": 131,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [
@@ -660,23 +668,23 @@
     "valor": 126,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 7736,
+   "costo_directo": 8080,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 1857,
-    "imprevistos": 232,
-    "utilidad": 387,
-    "iva_sobre_utilidad": 73
+    "administracion": 1939,
+    "imprevistos": 242,
+    "utilidad": 404,
+    "iva_sobre_utilidad": 77
    },
-   "precio_unitario_con_aiu": 10285,
+   "precio_unitario_con_aiu": 10742,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "comparacion": {
     "referencia": "SIF 2020-II ítem 10.1: $4.478/kg; × IPC = $6.741/kg.",
-    "lectura": "Del mismo orden; la diferencia es la mano de obra actualizada con el salario mínimo."
+    "lectura": "Del mismo orden; la diferencia es la mano de obra actualizada con el salario mínimo y la jornada de 42 horas (el ítem SIF con esa regla da $7.629/kg)."
    },
    "uso_en_presupuesto": "Capítulos 2 y 3: 217.220 kg (cimentación 57.020 kg y superestructura 160.200 kg; cuantías de 60-220 kg/m³ según elemento, ≈ 62 kg por m² de placa)."
   },
@@ -740,25 +748,25 @@
    "mano_obra": [
     {
      "cuadrilla": "Cuadrilla de movimiento de tierra",
-     "composicion": "método SIF",
-     "jornal_con_prestaciones": 471404,
+     "composicion": "cuadrilla de movimiento de tierra SIF ($236.335/día en 2020)",
+     "jornal_con_prestaciones": 538748,
      "rendimiento_unidades_por_dia": 100,
-     "valor": 4714,
-     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10, pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos"
+     "valor": 5387,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10, pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos y la jornada de 42 horas (Ley 2101 de 2021)"
     },
     {
      "cuadrilla": "Cuadrilla de concretos",
-     "composicion": "método SIF",
-     "jornal_con_prestaciones": 860310,
+     "composicion": "cuadrilla de concretos SIF ($431.310/día en 2020)",
+     "jornal_con_prestaciones": 983212,
      "rendimiento_unidades_por_dia": 25,
-     "valor": 34412,
-     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10, pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos"
+     "valor": 39328,
+     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 6.1.10, pág. 147 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 con la razón de salarios mínimos y la jornada de 42 horas (Ley 2101 de 2021)"
     }
    ],
-   "subtotal_mano_obra": 39126,
+   "subtotal_mano_obra": 44715,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 1956,
+    "valor": 2236,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -770,18 +778,18 @@
     "valor": 11011,
     "fuente": "Gobernación de Antioquia, Secretaría de Infraestructura Física, Base de APU SIF 2020-II, ítem 2.8 (tarifas), pág. 11 de 424 (https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf); llevado a 2026 × IPC"
    },
-   "costo_directo": 526168,
+   "costo_directo": 532037,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 126280,
-    "imprevistos": 15785,
-    "utilidad": 26308,
-    "iva_sobre_utilidad": 4999
+    "administracion": 127689,
+    "imprevistos": 15961,
+    "utilidad": 26602,
+    "iva_sobre_utilidad": 5054
    },
-   "precio_unitario_con_aiu": 699540,
+   "precio_unitario_con_aiu": 707343,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "comparacion": {
@@ -864,16 +872,16 @@
     {
      "cuadrilla": "Cuadrilla de mampostería",
      "composicion": "1 oficial + 1 ayudante",
-     "jornal_con_prestaciones": 353553,
+     "jornal_con_prestaciones": 404061,
      "rendimiento_unidades_por_dia": 9,
-     "valor": 39284,
+     "valor": 44896,
      "fuente": "Jornales de esta base; rendimiento de 9 m²/día con refuerzo (estimación)."
     }
    ],
-   "subtotal_mano_obra": 39284,
+   "subtotal_mano_obra": 44896,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 1964,
+    "valor": 2245,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -885,18 +893,18 @@
     "valor": 12000,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 130233,
+   "costo_directo": 136126,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 31256,
-    "imprevistos": 3907,
-    "utilidad": 6512,
-    "iva_sobre_utilidad": 1237
+    "administracion": 32670,
+    "imprevistos": 4084,
+    "utilidad": 6806,
+    "iva_sobre_utilidad": 1293
    },
-   "precio_unitario_con_aiu": 173145,
+   "precio_unitario_con_aiu": 180979,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 4: 1.557 m² (40 % de los 3.892 m² de muros interiores, estimados con 0,33 ml de muro por m² construido × 3,5 m de altura)."
@@ -975,16 +983,16 @@
     {
      "cuadrilla": "Cuadrilla de construcción en seco",
      "composicion": "1 oficial + 1 ayudante",
-     "jornal_con_prestaciones": 353553,
+     "jornal_con_prestaciones": 404061,
      "rendimiento_unidades_por_dia": 12,
-     "valor": 29463,
+     "valor": 33672,
      "fuente": "Jornales de esta base; rendimiento de 12 m²/día (estimación)."
     }
    ],
-   "subtotal_mano_obra": 29463,
+   "subtotal_mano_obra": 33672,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 1473,
+    "valor": 1684,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -996,18 +1004,18 @@
     "valor": 6250,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 132403,
+   "costo_directo": 136823,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 31777,
-    "imprevistos": 3972,
-    "utilidad": 6620,
-    "iva_sobre_utilidad": 1258
+    "administracion": 32838,
+    "imprevistos": 4105,
+    "utilidad": 6841,
+    "iva_sobre_utilidad": 1300
    },
-   "precio_unitario_con_aiu": 176030,
+   "precio_unitario_con_aiu": 181907,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 4: 2.335 m² (60 % de los muros interiores)."
@@ -1076,16 +1084,16 @@
     {
      "cuadrilla": "Cuadrilla de pintura",
      "composicion": "1 oficial + 1 ayudante",
-     "jornal_con_prestaciones": 353553,
+     "jornal_con_prestaciones": 404061,
      "rendimiento_unidades_por_dia": 20,
-     "valor": 17678,
+     "valor": 20203,
      "fuente": "Jornales de esta base; rendimiento de 20 m²/día para estuco y 3 manos (estimación)."
     }
    ],
-   "subtotal_mano_obra": 17678,
+   "subtotal_mano_obra": 20203,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 884,
+    "valor": 1010,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -1097,18 +1105,18 @@
     "valor": 250,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 48750,
+   "costo_directo": 51401,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 11700,
-    "imprevistos": 1462,
-    "utilidad": 2438,
-    "iva_sobre_utilidad": 463
+    "administracion": 12336,
+    "imprevistos": 1542,
+    "utilidad": 2570,
+    "iva_sobre_utilidad": 488
    },
-   "precio_unitario_con_aiu": 64813,
+   "precio_unitario_con_aiu": 68337,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 6: 5.200 m² (≈ 64 % de los 8.170 m² de muro pintable hasta el cielo raso)."
@@ -1197,24 +1205,24 @@
     {
      "cuadrilla": "Instalador especializado de vinilo",
      "composicion": "1 oficial especializado + 1 ayudante",
-     "jornal_con_prestaciones": 403833,
+     "jornal_con_prestaciones": 461524,
      "rendimiento_unidades_por_dia": 22,
-     "valor": 18356,
+     "valor": 20978,
      "fuente": "Jornales de esta base; rendimiento de 22 m²/día con mediacaña (estimación)."
     },
     {
      "cuadrilla": "Preparación de base y autonivelante",
      "composicion": "1 oficial + 1 ayudante",
-     "jornal_con_prestaciones": 353553,
+     "jornal_con_prestaciones": 404061,
      "rendimiento_unidades_por_dia": 40,
-     "valor": 8839,
+     "valor": 10102,
      "fuente": "Rendimiento de 40 m²/día (estimación)."
     }
    ],
-   "subtotal_mano_obra": 27195,
+   "subtotal_mano_obra": 31080,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 1360,
+    "valor": 1554,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -1226,18 +1234,18 @@
     "valor": 2125,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 211040,
+   "costo_directo": 215119,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 50650,
-    "imprevistos": 6331,
-    "utilidad": 10552,
-    "iva_sobre_utilidad": 2005
+    "administracion": 51629,
+    "imprevistos": 6454,
+    "utilidad": 10756,
+    "iva_sobre_utilidad": 2044
    },
-   "precio_unitario_con_aiu": 280578,
+   "precio_unitario_con_aiu": 286002,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 6: 2.250 m² en áreas asistenciales y corredores; el vinilo conductivo de las salas TPR y procedimientos (180 m²) se presupuesta aparte con un sobrecosto."
@@ -1316,16 +1324,16 @@
     {
      "cuadrilla": "Cuadrilla de cielos",
      "composicion": "1 oficial + 1 ayudante",
-     "jornal_con_prestaciones": 353553,
+     "jornal_con_prestaciones": 404061,
      "rendimiento_unidades_por_dia": 22,
-     "valor": 16071,
+     "valor": 18366,
      "fuente": "Rendimiento de 22 m²/día (estimación)."
     }
    ],
-   "subtotal_mano_obra": 16071,
+   "subtotal_mano_obra": 18366,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 804,
+    "valor": 918,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -1337,18 +1345,18 @@
     "valor": 1500,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 98945,
+   "costo_directo": 101354,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 23747,
-    "imprevistos": 2968,
-    "utilidad": 4947,
-    "iva_sobre_utilidad": 940
+    "administracion": 24325,
+    "imprevistos": 3041,
+    "utilidad": 5068,
+    "iva_sobre_utilidad": 963
    },
-   "precio_unitario_con_aiu": 131547,
+   "precio_unitario_con_aiu": 134751,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 6: 2.500 m²."
@@ -1417,16 +1425,16 @@
     {
      "cuadrilla": "Fabricación e instalación",
      "composicion": "1 oficial especializado + 1 ayudante",
-     "jornal_con_prestaciones": 403833,
+     "jornal_con_prestaciones": 461524,
      "rendimiento_unidades_por_dia": 6,
-     "valor": 67306,
+     "valor": 76921,
      "fuente": "Rendimiento de 6 m²/día (estimación)."
     }
    ],
-   "subtotal_mano_obra": 67306,
+   "subtotal_mano_obra": 76921,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 3365,
+    "valor": 3846,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -1438,18 +1446,18 @@
     "valor": 6250,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 437471,
+   "costo_directo": 447567,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 104993,
-    "imprevistos": 13124,
-    "utilidad": 21874,
-    "iva_sobre_utilidad": 4156
+    "administracion": 107416,
+    "imprevistos": 13427,
+    "utilidad": 22378,
+    "iva_sobre_utilidad": 4252
    },
-   "precio_unitario_con_aiu": 581618,
+   "precio_unitario_con_aiu": 595040,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 7: 600 m² (≈ 25 % de los 2.407 m² de fachada bruta)."
@@ -1528,24 +1536,24 @@
     {
      "cuadrilla": "Mortero de pendiente",
      "composicion": "1 oficial + 1 ayudante",
-     "jornal_con_prestaciones": 353553,
+     "jornal_con_prestaciones": 404061,
      "rendimiento_unidades_por_dia": 20,
-     "valor": 17678,
+     "valor": 20203,
      "fuente": "Rendimiento de 20 m²/día (estimación)."
     },
     {
      "cuadrilla": "Impermeabilización",
      "composicion": "1 oficial + 1 ayudante",
-     "jornal_con_prestaciones": 353553,
+     "jornal_con_prestaciones": 404061,
      "rendimiento_unidades_por_dia": 25,
-     "valor": 14142,
+     "valor": 16162,
      "fuente": "Rendimiento de 25 m²/día (estimación)."
     }
    ],
-   "subtotal_mano_obra": 31820,
+   "subtotal_mano_obra": 36365,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 1591,
+    "valor": 1818,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -1557,18 +1565,18 @@
     "valor": 2000,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 168446,
+   "costo_directo": 173218,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 40427,
-    "imprevistos": 5053,
-    "utilidad": 8422,
-    "iva_sobre_utilidad": 1600
+    "administracion": 41572,
+    "imprevistos": 5197,
+    "utilidad": 8661,
+    "iva_sobre_utilidad": 1646
    },
-   "precio_unitario_con_aiu": 223948,
+   "precio_unitario_con_aiu": 230294,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 5: 1.158,2 m² (cubierta del piso 4: 648; terraza del piso 3: 259,2; casetas: 107,4; bloque técnico: 125,6; residuos: 18)."
@@ -1666,16 +1674,16 @@
     {
      "cuadrilla": "Técnico instalador de gases certificado",
      "composicion": "1 oficial especializado + 1 ayudante",
-     "jornal_con_prestaciones": 403833,
+     "jornal_con_prestaciones": 461524,
      "rendimiento_unidades_por_dia": 15,
-     "valor": 26922,
+     "valor": 30768,
      "fuente": "Rendimiento de 15 ml/día (estimación)."
     }
    ],
-   "subtotal_mano_obra": 26922,
+   "subtotal_mano_obra": 30768,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 1346,
+    "valor": 1538,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -1687,18 +1695,18 @@
     "valor": 300,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 120679,
+   "costo_directo": 124717,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 28963,
-    "imprevistos": 3620,
-    "utilidad": 6034,
-    "iva_sobre_utilidad": 1146
+    "administracion": 29932,
+    "imprevistos": 3742,
+    "utilidad": 6236,
+    "iva_sobre_utilidad": 1185
    },
-   "precio_unitario_con_aiu": 160442,
+   "precio_unitario_con_aiu": 165812,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 12: 1.100 ml para ≈ 100 tomas (45 de oxígeno, 40 de vacío y 15 de aire medicinal)."
@@ -1757,16 +1765,16 @@
     {
      "cuadrilla": "Fabricación e instalación de ductos",
      "composicion": "1 oficial especializado + 1 ayudante",
-     "jornal_con_prestaciones": 403833,
+     "jornal_con_prestaciones": 461524,
      "rendimiento_unidades_por_dia": 60,
-     "valor": 6731,
+     "valor": 7692,
      "fuente": "Rendimiento de 60 kg/día (estimación)."
     }
    ],
-   "subtotal_mano_obra": 6731,
+   "subtotal_mano_obra": 7692,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 337,
+    "valor": 385,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -1778,18 +1786,18 @@
     "valor": 275,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 21203,
+   "costo_directo": 22212,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 5089,
-    "imprevistos": 636,
-    "utilidad": 1060,
-    "iva_sobre_utilidad": 201
+    "administracion": 5331,
+    "imprevistos": 666,
+    "utilidad": 1111,
+    "iva_sobre_utilidad": 211
    },
-   "precio_unitario_con_aiu": 28189,
+   "precio_unitario_con_aiu": 29531,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 13: 8.500 kg (≈ 1.600 m² con ducto × 4,5 kg/m² más la extracción de baños)."
@@ -1868,16 +1876,16 @@
     {
      "cuadrilla": "Electricista",
      "composicion": "1 oficial especializado + 1 ayudante",
-     "jornal_con_prestaciones": 403833,
+     "jornal_con_prestaciones": 461524,
      "rendimiento_unidades_por_dia": 6,
-     "valor": 67306,
+     "valor": 76921,
      "fuente": "Rendimiento de 6 salidas/día (estimación)."
     }
    ],
-   "subtotal_mano_obra": 67306,
+   "subtotal_mano_obra": 76921,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 3365,
+    "valor": 3846,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -1889,18 +1897,18 @@
     "valor": 750,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 218422,
+   "costo_directo": 228518,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 52421,
-    "imprevistos": 6553,
-    "utilidad": 10921,
-    "iva_sobre_utilidad": 2075
+    "administracion": 54844,
+    "imprevistos": 6856,
+    "utilidad": 11426,
+    "iva_sobre_utilidad": 2171
    },
-   "precio_unitario_con_aiu": 290392,
+   "precio_unitario_con_aiu": 303815,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 10: 650 salidas."
@@ -1989,16 +1997,16 @@
     {
      "cuadrilla": "Electricista",
      "composicion": "1 oficial especializado + 1 ayudante",
-     "jornal_con_prestaciones": 403833,
+     "jornal_con_prestaciones": 461524,
      "rendimiento_unidades_por_dia": 5,
-     "valor": 80767,
+     "valor": 92305,
      "fuente": "Rendimiento de 5 salidas/día (estimación)."
     }
    ],
-   "subtotal_mano_obra": 80767,
+   "subtotal_mano_obra": 92305,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 4038,
+    "valor": 4615,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -2010,18 +2018,18 @@
     "valor": 875,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 297431,
+   "costo_directo": 309546,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 71383,
-    "imprevistos": 8923,
-    "utilidad": 14872,
-    "iva_sobre_utilidad": 2826
+    "administracion": 74291,
+    "imprevistos": 9286,
+    "utilidad": 15477,
+    "iva_sobre_utilidad": 2941
    },
-   "precio_unitario_con_aiu": 395435,
+   "precio_unitario_con_aiu": 411541,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 10: 420 salidas (camas, camillas, consultorios, laboratorio, equipos críticos y datos)."
@@ -2100,16 +2108,16 @@
     {
      "cuadrilla": "Plomero",
      "composicion": "1 oficial especializado + 1 ayudante",
-     "jornal_con_prestaciones": 403833,
+     "jornal_con_prestaciones": 461524,
      "rendimiento_unidades_por_dia": 6,
-     "valor": 67306,
+     "valor": 76921,
      "fuente": "Rendimiento de 6 puntos/día (estimación)."
     }
    ],
-   "subtotal_mano_obra": 67306,
+   "subtotal_mano_obra": 76921,
    "herramienta_menor": {
     "porcentaje_de_mano_de_obra": 5.0,
-    "valor": 3365,
+    "valor": 3846,
     "fuente": "Método SIF 2020-II (herramienta menor = 5 % de la mano de obra)"
    },
    "otros": [],
@@ -2121,18 +2129,18 @@
     "valor": 500,
     "fuente": "Fletes a Yondó (estimación): $120/kg para materiales pesados comprados en Barrancabermeja o Bucaramanga (camión de 10 t ≈ $1,2 millones; rango $80-180/kg) y $250/kg para acabados y equipos traídos de Medellín o Bogotá (≈ $2,5 millones por viaje; rango $180-350/kg). Los precios de la Tienda Virtual son de compras en Medellín. Riesgo logístico: el puente Barrancabermeja-Yondó se cerró el 16-mar-2026 por socavación y se reabrió el 20-mar-2026 (El Colombiano); en jun-2026 seguía en riesgo (Vanguardia)."
    },
-   "costo_directo": 123045,
+   "costo_directo": 133141,
    "aiu": {
     "administracion_pct": 24.0,
     "imprevistos_pct": 3.0,
     "utilidad_pct": 5.0,
     "iva_sobre_utilidad_pct": 19.0,
-    "administracion": 29531,
-    "imprevistos": 3691,
-    "utilidad": 6152,
-    "iva_sobre_utilidad": 1169
+    "administracion": 31954,
+    "imprevistos": 3994,
+    "utilidad": 6657,
+    "iva_sobre_utilidad": 1265
    },
-   "precio_unitario_con_aiu": 163588,
+   "precio_unitario_con_aiu": 177011,
    "fuente_precios": "Base de APU SIF 2020-II de la Gobernación de Antioquia (mano de obra × razón de salarios mínimos 2026/2020; equipos y materiales × IPC), compras 2025-2026 de la Tienda Virtual del Estado en la zona 3 (Antioquia) y estimaciones de mercado marcadas en cada línea. Pesos constantes de 2026.",
    "tipo": "calculo_propio (APU) con insumos de fuentes oficiales y estimaciones marcadas",
    "uso_en_presupuesto": "Capítulo 8: 280 puntos (≈ 76 sanitarios, 136 lavamanos, 27 duchas, 14 lavatraperos y pocetas)."
@@ -2708,6 +2716,18 @@
    "tipo": "dato_oficial"
   },
   {
+   "nombre": "Ley 1738 de 2014, art. 8 (vigencia permanente de la contribución de obra pública)",
+   "url": "http://www.secretariasenado.gov.co/senado/basedoc/ley_1738_2014.html",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "dato_oficial"
+  },
+  {
+   "nombre": "Ley 2101 de 2021 (reducción de la jornada laboral a 42 horas semanales desde el 15-jul-2026)",
+   "url": "http://www.secretariasenado.gov.co/senado/basedoc/ley_2101_2021.html",
+   "fecha_consulta": "2026-10-22",
+   "tipo": "dato_oficial"
+  },
+  {
    "nombre": "Ley 1968 de 2019 (prohibición del asbesto)",
    "url": "http://www.secretariasenado.gov.co/senado/basedoc/ley_1968_2019.html",
    "fecha_consulta": "2026-10-22",
@@ -2730,6 +2750,7 @@
   "La base oficial de Antioquia usada es de 2020: la actualización por salario mínimo e IPC no capta cambios de precios relativos (el acero y el cemento subieron más que el IPC en 2021-2022). Se contrasta con compras de 2025-2026 de la Tienda Virtual.",
   "Los acabados hospitalarios (vinilo, cielo de alta higiene, guardacamillas), la ventanería y los equipos especiales no tienen precio oficial publicado: son estimaciones con rango que deben confirmarse con 2-3 cotizaciones (Res. 485, num. 7.1.1.4 y 7.1.12).",
   "Los rendimientos de mano de obra que no vienen de la base SIF son supuestos del equipo.",
-  "Los fletes a Yondó son estimaciones; el puente Barrancabermeja-Yondó tuvo cierres en 2026 por socavación."
+  "Los fletes a Yondó son estimaciones; el puente Barrancabermeja-Yondó tuvo cierres en 2026 por socavación.",
+  "El factor de prestaciones de 75 % viene del método SIF 2020; no se recalculó con la reforma laboral de 2025 (recargos nocturnos y dominicales), que pesa poco en una obra diurna."
  ]
 }

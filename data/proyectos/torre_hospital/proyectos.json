@@ -9,17 +9,17 @@
   "calculo_propio": "operación sobre datos oficiales o supuestos declarados (APU, sumas, conversiones por IPC o salario mínimo)",
   "estimacion": "supuesto del equipo con rango, a confirmar con cotizaciones y diseños"
  },
- "respuesta_corta": "Hay que articular 9 proyectos: 7 forman la torre ($36.536 millones) y 2 la complementan (edificio actual y ambulancia, $2.613 millones). Se pueden presentar en 7 fichas MGA uniendo P2 con P3 (proyecto mixto) y P4 con P5. Lo mínimo para abrir la torre son 3: estudios y diseños (P1), construcción con equipamiento fijo (P2+P3) y dotación con laboratorio (P4+P5).",
+ "respuesta_corta": "Hay que articular 9 proyectos: 7 forman la torre ($37.137 millones) y 2 la complementan (edificio actual y ambulancia, $2.613 millones). Se pueden presentar en 7 fichas MGA uniendo P2 con P3 (proyecto mixto) y P4 con P5. Lo mínimo para abrir la torre son 3: estudios y diseños (P1), construcción con equipamiento fijo (P2+P3) y dotación con laboratorio (P4+P5).",
  "proyectos": [
   {
    "orden": 1,
    "id": "P1",
    "nombre": "Estudios y diseños integrales, formulación y licencia de la torre de primer nivel",
    "objeto": "Topografía, estudio de suelos, diseños arquitectónico, estructural (grupo IV) y técnicos, presupuesto con APU, Documento de Capacidad Instalada, MGA y licencia de construcción, con interventoría.",
-   "valor": 1803057882,
+   "valor": 1832141678,
    "rango": [
-    1124347746,
-    2660291980
+    1142546563,
+    2703510265
    ],
    "fuente_financiacion": "SGR – Asignaciones Directas (saldo 2025-2026) o recursos propios del municipio; apoyo técnico de la Secretaría Seccional de Salud.",
    "entidad": "Municipio de Yondó (ejecutor) con la E.S.E. Hospital Héctor Abad Gómez",
@@ -38,10 +38,10 @@
    "id": "P2",
    "nombre": "Demolición del antiguo Centro Vida y construcción de la torre de servicios de primer nivel (infraestructura física y redes)",
    "objeto": "Retiro de asbesto, demolición, cimentación, estructura NSR-10 grupo IV, muros, cubiertas, acabados hospitalarios, redes hidrosanitarias, contra incendio, eléctricas, de gases y de aire, galería y urbanismo, con interventoría y supervisión técnica independiente.",
-   "valor": 21707365153,
+   "valor": 22196590139,
    "rango": [
-    16708037002,
-    28295358726
+    17102890215,
+    28905222524
    ],
    "fuente_financiacion": "MinSalud (PGN) + SGR (directas, incentivo OCAD Paz, inversión regional) + Gobernación de Antioquia + crédito del municipio + recursos propios.",
    "entidad": "E.S.E. Hospital Héctor Abad Gómez ante MinSalud; Municipio de Yondó para la parte de regalías",
@@ -60,11 +60,11 @@
    "orden": 3,
    "id": "P3",
    "nombre": "Equipamiento fijo e industrial y sistemas especiales de la torre",
-   "objeto": "Planta eléctrica de 300 kVA, UPS de 60 kVA, 2 ascensores camilleros y 2 montacargas, central de gases, generador de oxígeno PSA, equipos de aire acondicionado y ventilación con presiones, equipo de presión y bomba contra incendio, red de datos, llamado de enfermería, CCTV y detección de incendio.",
-   "valor": 6115223317,
+   "objeto": "Planta eléctrica de 300 kVA, UPS de 60 kVA, 2 ascensores camilleros y 2 montacargas, central de gases, generador de oxígeno PSA, equipos de aire acondicionado y ventilación con presiones, equipo de presión y bomba contra incendio, red de datos, llamado de enfermería, CCTV, detección de incendio y nevera mortuoria.",
+   "valor": 6171806837,
    "rango": [
-    4274461766,
-    8844141662
+    4310730526,
+    8926863152
    ],
    "fuente_financiacion": "Recomendado: dentro del proyecto mixto con P2 (MinSalud o SGR). El generador PSA puede ir por Obras por Impuestos.",
    "entidad": "E.S.E. Hospital Héctor Abad Gómez",
@@ -81,10 +81,10 @@
    "id": "P4",
    "nombre": "Dotación biomédica, mobiliario clínico y puesta en marcha de la torre",
    "objeto": "Equipos y mobiliario de urgencias, consulta, odontología, rayos X y ecografía, partos, hospitalización, esterilización, vacunación, farmacia, terapias y sala de expansión (dotacion.json), traslado, habilitación y licencias.",
-   "valor": 3649493943,
+   "valor": 3676246641,
    "rango": [
-    2536164453,
-    5336384337
+    2555893213,
+    5373560973
    ],
    "fuente_financiacion": "Obras por Impuestos + Gobernación de Antioquia + SGR (inversión local); MinSalud si entra en el proyecto mixto.",
    "entidad": "E.S.E. Hospital Héctor Abad Gómez",
@@ -195,6 +195,12 @@
      "valor": 180000000,
      "tipo": "estimacion",
      "base": "Estimación"
+    },
+    {
+     "componente": "Interventoría (7 % de los componentes)",
+     "valor": 128414650,
+     "tipo": "estimacion",
+     "base": "7 % de la suma de los componentes (verificación V2: estaba incluida en el valor pero no en la lista)"
     }
    ],
    "fuente_financiacion": "Gobernación de Antioquia + municipio + E.S.E. (art. 156 de la Ley 2294 si se usa antes de may-2027).",
@@ -349,8 +355,8 @@
   }
  ],
  "cronograma_acelerado": "Ruta llave en mano a precio global fijo (Res. 485, num. 7.1.12, agregado por la Res. 1211): se radica con anteproyecto, memorias y Documento de Capacidad Instalada hacia jun-2027; el contratista diseña y construye (diseño 5 meses traslapado con 16 de obra). Apertura posible hacia dic-2029. Riesgo: precio global fijo sin reajuste con un anteproyecto débil; exige estudio del sector y 3 cotizaciones por componente.",
- "suma_torre": 36535690459,
- "suma_con_complementarios": 39148600109,
+ "suma_torre": 37137335459,
+ "suma_con_complementarios": 39750245109,
  "fuentes": [
   {
    "nombre": "Catálogo de productos MGA, programa 1906 (códigos tomados de la matriz SGR del Departamento de Norte de Santander, 2024)",

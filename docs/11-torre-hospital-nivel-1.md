@@ -12,9 +12,9 @@
 - **Sí hay proyecto tipo, pero pequeño.** MinSalud y el DNP solo tienen proyectos tipo de **puesto o centro de salud** (MinSalud 2017, 128,5 m²; DNP 2018, 320,6 m²). No existe un “hospital de primer nivel tipo”. La torre **se inspira en el proyecto tipo del DNP** (pórticos de concreto modulares, circulación central con aleros, bioclimática de clima cálido, materiales durables, dotación por ambiente) y se escala con las áreas de la Res. 1633.
 - **Qué tiene.** 3.369,6 m² en 4 pisos (más bloque técnico, residuos y exteriores: 3.620,6 m²). **15 camas** (13 generales y 2 habitaciones de parto TPR), 6 camillas de observación, 15 consultorios, 3 unidades odontológicas, rayos X digital, ecografía, laboratorio de 24 horas, vacunación, farmacia, terapias y una sala de expansión de 8 camillas para emergencias. Hoy (REPS 2022) hay 9 camas, 4 camillas y 13 consultorios.
 - **Laboratorio con tamizaje.** 55 pruebas en sitio (unas 5.365 al mes) con tiempos de respuesta definidos: urgencias en 60 minutos o menos, rutina en 4 a 6 horas y tamizaje en 24 a 72 horas, incluidos VPH y tuberculosis por PCR, TSH neonatal, HbA1c, sangre oculta, sífilis, VIH, hepatitis, Chagas, toxoplasma y malaria. Los analizadores van en comodato pagado con reactivos. Hoy el hospital paga **$440 M al año** a un laboratorio externo (SECOP, 2025).
-- **Cuánto cuesta.** **$36.536 M** (rango $26.894 M a $49.827 M). La obra vale $25.740 M con AIU ($19.361 M de costo directo); la dotación, el laboratorio, la TIC y el generador de oxígeno, $5.330 M; estudios, diseños y licencia, $1.803 M; interventoría, $1.802 M; puesta en marcha, $250 M; contingencias, $1.566 M. **$7,11 M de obra por m²** ($5,34 M sin equipos ni solar, parecido al de hospitales de primer nivel recientes).
-- **Quién la paga.** Ninguna fuente sola alcanza. Escenario base: MinSalud $12.000 M, regalías de Yondó $13.436 M, inversión regional y Gobernación $3.800 M, Obras por Impuestos $2.500 M, crédito $1.500 M y el resto entre FENOGE, MinTIC, municipio, E.S.E. y otros. MinSalud es la fuente más incierta: su inversión propia baja de $2,6 a $1,6 billones en 2027 y el terremoto compite por esa plata.
-- **Cuántos proyectos.** **9**: 7 forman la torre y 2 la complementan (adecuar el edificio actual y una ambulancia medicalizada, $2.613 M). Se pueden presentar en 7 fichas MGA. El primero —estudios y diseños, $1.803 M— cabe hoy en las asignaciones directas de regalías 2025-2026 que el municipio todavía no ha aprobado para proyectos (≈ $9.569 M a octubre de 2026, cálculo propio con datos de MinHacienda).
+- **Cuánto cuesta.** **$37.137 M** (rango $27.363 M a $50.600 M). La obra vale $26.228 M con AIU ($19.727 M de costo directo); la dotación, el laboratorio, la TIC y el generador de oxígeno, $5.355 M; estudios, diseños y licencia, $1.832 M; interventoría, $1.836 M; puesta en marcha, $250 M; contingencias, $1.592 M. **$7,24 M de obra por m²** ($5,46 M sin equipos ni solar, casi igual al contrato de obra de Monguí, Boyacá, de 2025, con $5,26 M, y al proyecto tipo del DNP, con $5,42 M). Los jornales ya incluyen la jornada de 42 horas semanales que rige desde julio de 2026.
+- **Quién la paga.** Ninguna fuente sola alcanza. Mezcla que cierra la torre (escenario base): MinSalud $12.000 M, regalías de Yondó $14.037 M, inversión regional y Gobernación $3.800 M, Obras por Impuestos $2.500 M, crédito $1.500 M y el resto entre FENOGE, MinTIC, municipio, E.S.E. y otros. MinSalud es la fuente más incierta: su inversión propia baja de $2,6 a $1,6 billones en 2027 y el terremoto compite por esa plata. Con los montos *probables* de `docs/06` (MinSalud $3.000 M, Obras por Impuestos $1.800 M, sin crédito) faltan $11.700 M.
+- **Cuántos proyectos.** **9**: 7 forman la torre y 2 la complementan (adecuar el edificio actual y una ambulancia medicalizada, $2.613 M). Se pueden presentar en 7 fichas MGA. El primero —estudios y diseños, $1.832 M— cabe hoy en las asignaciones directas de regalías 2025-2026 que el municipio todavía no ha aprobado para proyectos (≈ $9.569 M a octubre de 2026, cálculo propio con datos de MinHacienda).
 - **Cuándo.** Diseños en 2027, radicación ante MinSalud entre noviembre de 2027 y abril de 2028, obra de 18 meses desde agosto de 2028 y apertura hacia **abril de 2030**. Con la modalidad llave en mano (Res. 1211) podría abrir a finales de 2029.
 
 ## 1. Por qué la torre
@@ -41,7 +41,7 @@ La Res. 485 (con el artículo 7 que reescribió la Res. 1519 de 2025) pide estos
 | 7.1.1.3 | Concepto técnico de quien presenta: conveniencia y coherencia con el Programa Territorial de Reorganización, Rediseño y Modernización de Redes de E.S.E. (PTRRM) vigente d… | Verificar que el documento de red de Antioquia contemple a Yondó con los servicios de la torre; si no, pedir su ajuste a la Secretaría Seccional de Salud antes de radicar. | E.S.E. + Secretaría Seccional de Salud de Antioquia |
 | 7.1.1.4 | Certificación de que el presupuesto incluye todas las actividades y cantidades para la ejecución completa y el cierre financiero, con precios verificados como razonables … | Presupuesto con APU propios y precios de referencia del Magdalena Medio (Barrancabermeja / Gobernación de Antioquia), con fecha. | Entidad que presenta |
 | 7.1.1.5 | Certificación de que el personal técnico de la entidad revisó y avala toda la documentación. | Revisión interna (o con apoyo de la Gobernación) antes de radicar. | Entidad que presenta |
-| 7.1.1.6 | Inclusión y aprobación en el Plan Bienal de Inversiones Públicas en Salud si el proyecto es de control especial de oferta (art. 4). | Si la infraestructura o el equipamiento fijo superan 5.000 SMMLV ($8.754.525.000 en 2026, cálculo propio), es de control especial de oferta. Una torre de este tamaño casi seguro lo supera. | Secretaría Seccional de Salud de Antioquia |
+| 7.1.1.6 | Inclusión y aprobación en el Plan Bienal de Inversiones Públicas en Salud si el proyecto es de control especial de oferta (art. 4). | La obra de la torre (unos $26.228 millones de 2026, presupuesto.json) supera 5.000 SMMLV ($8.754.525.000, cálculo propio): es de control especial de oferta (art. 4.2) y debe estar en el Plan Bienal. | Secretaría Seccional de Salud de Antioquia |
 | 7.1.1.7 | Documento que soporte la cofinanciación de fuentes distintas del PGN. | Certificados de disponibilidad, acuerdos o actos de las fuentes (municipio, Gobernación, SGR, Obras por Impuestos, recursos propios de la E.S.E.). | Cada cofinanciador |
 | 7.1.2.1 | Certificado de tradición y libertad del predio (expedido hace menos de 3 meses) o documento equivalente de titularidad. | Establecer quién es dueño del lote del antiguo Centro Vida (¿E.S.E. o municipio?). Si es del municipio, formalizar la transferencia o el título que permita a la E.S.E. construir. | E.S.E. / Secretaría de Hacienda municipal |
 | 7.1.2.2 | Certificado de planeación: cumplimiento del EOT/PBOT (uso del suelo y condiciones urbanísticas) y que el predio no está en riesgo no mitigable. | Yondó está a orillas del Magdalena: pedir explícitamente el concepto de amenaza por inundación del lote y su cota frente a las crecientes. | Secretaría de Planeación de Yondó |
@@ -63,7 +63,7 @@ La Res. 485 (con el artículo 7 que reescribió la Res. 1519 de 2025) pide estos
 | Art. 6 / Art. 5 | Ruta del concepto según la fuente. | Con plata de MinSalud o por Obras por Impuestos: concepto de MinSalud. Solo con plata territorial y por debajo de 5.000 SMMLV: concepto de la Secretaría Seccional de Salud de Antioquia. Con regalías: … | E.S.E. + Gobernación |
 | Res. 1633, art. 4 | Transición del marco técnico. | La torre no tiene licencia, concepto ni obra al 11-ago-2025: se diseña con la Res. 1633 completa. | Arquitecto diseñador |
 
-**Control especial de oferta.** La infraestructura y el equipamiento fijo suman $25.740 M, más que el umbral de 5.000 salarios mínimos ($8.755 M en 2026): el proyecto necesita **concepto de MinSalud** y estar en el plan de inversiones del departamento (Plan Bienal o, desde 2025, el **PMIDS** de Antioquia). Cálculo propio.
+**Control especial de oferta.** La infraestructura y el equipamiento fijo suman $26.228 M, más que el umbral de 5.000 salarios mínimos ($8.755 M en 2026): el proyecto necesita **concepto de MinSalud** y estar en el plan de inversiones del departamento (Plan Bienal o, desde 2025, el **PMIDS** de Antioquia). Cálculo propio.
 
 **Otras normas de diseño** (detalle en `normas.json`): Res. 1633 de 2025 (áreas mínimas, módulo de 1,20 m, corredores de 2,40-2,80 m, climatización por ambiente, adaptación al cambio climático), Res. 3100 de 2019 (estándares de los 13 servicios), NSR-10 títulos A, J y K (sismo, fuego y evacuación: rociadores en todo el edificio), RETIE 2024 y su modificación de 2026 (planta que entra en menos de 10 segundos, UPS en áreas críticas), NTC 2050 sección 517, Índice de Seguridad Hospitalaria de la OPS (reserva de agua y combustible para 72 horas), Res. 591 de 2024 (residuos) y NTC 6047 (accesibilidad).
 
@@ -98,21 +98,21 @@ La Res. 485 (con el artículo 7 que reescribió la Res. 1519 de 2025) pide estos
 
 ## 5. Dotación y laboratorio
 
-La dotación biomédica y el mobiliario clínico suman **$4.269 M** (228 ítems; 35 con precio de referencia de SECOP y el resto estimados con rango). El equipamiento fijo (planta, UPS, ascensores, gases, aire, bombas, redes y sistemas especiales) se presupuesta dentro de la obra con los mismos precios de `dotacion.json` y no se suma dos veces.
+La dotación biomédica y el mobiliario clínico suman **$4.294 M** (236 ítems con el equipamiento fijo; 37 con precio de referencia de SECOP y el resto estimados con rango). El equipamiento fijo (planta, UPS, ascensores, gases, aire, bombas, redes y sistemas especiales) se presupuesta dentro de la obra con los mismos precios de `dotacion.json` y no se suma dos veces.
 
 | Servicio | Valor | Equipos más costosos |
 |---|---:|---|
-| Urgencias de baja complejidad | $516 M | Ventilador de transporte; Bomba de infusión volumétrica |
+| Urgencias de baja complejidad | $519 M | Ventilador de transporte; Bomba de infusión volumétrica |
 | Consulta externa general y especializada, procedimientos menores y promoción y prevención | $368 M | Kit de examen básico; Equipo de órganos de los sentidos de pared |
 | Telemedicina (prestador remisor) | $71 M | Retinógrafo portátil; Estación de telemedicina |
 | Odontología general y radiología odontológica | $201 M | Unidad odontológica completa; Rayos X periapical de pared con radiovisiógrafo |
 | Toma de muestras de laboratorio clínico | $45 M | Nevera de muestras 2-8 °C con registrador de temperatura; Impresora de etiquetas con código de barras y lector |
 | Laboratorio clínico (bienes que compra el hospital) | $357 M | Microscopio binocular con objetivo de inmersión; Cabina de bioseguridad clase II tipo A2 |
 | Imágenes diagnósticas: rayos X digital y ecografía | $675 M | Equipo de rayos X digital fijo con detector plano; Ecógrafo multipropósito con 3 transductores |
-| Atención del parto de baja complejidad y adaptación neonatal | $454 M | Cama de partos multiposición para habitación TPR; Lámpara de techo LED para atención del parto |
-| Hospitalización general de baja complejidad | $391 M | Bomba de infusión volumétrica; Regulador de vacío de pared con frasco |
+| Atención del parto de baja complejidad y adaptación neonatal | $470 M | Cama de partos multiposición para habitación TPR; Lámpara de techo LED para atención del parto |
+| Hospitalización general de baja complejidad | $397 M | Bomba de infusión volumétrica; Regulador de vacío de pared con frasco |
 | Central de esterilización | $365 M | Autoclave de vapor central de carga frontal; Lavadora desinfectora de instrumental |
-| Vacunación con cadena de frío | $53 M | Refrigerador de vacunas precalificado OMS; Registradores de temperatura de 30 días y termómetros digitales |
+| Vacunación con cadena de frío | $54 M | Refrigerador de vacunas precalificado OMS; Registradores de temperatura de 30 días y termómetros digitales |
 | Servicio farmacéutico | $85 M | Refrigerador grado médico para medicamentos; Refrigerador grado médico para urgencias/dispensación |
 | Terapias: fisioterapia y terapia respiratoria | $74 M | Equipo combinado de electroterapia; Banda caminadora terapéutica con pasamanos |
 | Sala de expansión para emergencias y desastres (hospital seguro) | $44 M | Monitor de signos vitales básico; Flujómetro de oxígeno con humidificador para la sala de expansión |
@@ -166,92 +166,94 @@ Presupuesto de prefactibilidad (clase 4: precisión esperada de −25 % a +35 %)
 
 | # | Capítulo | Costo directo | Peso | Con AIU |
 |---|---|---:|---:|---:|
-| 1 | Preliminares, campamento y demolición del antiguo Centro Vida | $564 M | 2,9 % | $749 M |
-| 2 | Movimiento de tierras y cimentación | $1.868 M | 9,7 % | $2.484 M |
-| 3 | Estructura en concreto reforzado (NSR-10, grupo IV, coeficiente de importancia 1,5) | $2.792 M | 14,4 % | $3.712 M |
-| 4 | Mampostería, muros y fachadas | $1.360 M | 7,0 % | $1.807 M |
-| 5 | Cubiertas e impermeabilización | $273 M | 1,4 % | $362 M |
-| 6 | Pisos, acabados hospitalarios y cielos rasos | $1.868 M | 9,7 % | $2.484 M |
-| 7 | Carpintería metálica y de madera, puertas y vidrios | $1.245 M | 6,4 % | $1.656 M |
-| 8 | Instalaciones hidrosanitarias, agua caliente y aguas lluvias | $907 M | 4,7 % | $1.206 M |
-| 9 | Red contra incendio (NSR-10 títulos J y K; NFPA 13, 14 y 20; NTC 2301) | $634 M | 3,3 % | $842 M |
-| 10 | Instalaciones eléctricas, iluminación y sistema eléctrico esencial (RETIE 2024 y 2026, NTC 2050 sección 517, RETILAP) | $2.334 M | 12,1 % | $3.103 M |
-| 11 | Voz, datos y comunicaciones | $361 M | 1,9 % | $480 M |
-| 12 | Gases medicinales | $571 M | 3,0 % | $759 M |
-| 13 | Aire acondicionado y ventilación mecánica (Res. 1633, Cuadro 4) | $1.550 M | 8,0 % | $2.060 M |
+| 1 | Preliminares, campamento y demolición del antiguo Centro Vida | $572 M | 2,9 % | $760 M |
+| 2 | Movimiento de tierras y cimentación | $1.917 M | 9,7 % | $2.549 M |
+| 3 | Estructura en concreto reforzado (NSR-10, grupo IV, coeficiente de importancia 1,5) | $2.896 M | 14,7 % | $3.850 M |
+| 4 | Mampostería, muros y fachadas | $1.414 M | 7,2 % | $1.880 M |
+| 5 | Cubiertas e impermeabilización | $278 M | 1,4 % | $370 M |
+| 6 | Pisos, acabados hospitalarios y cielos rasos | $1.905 M | 9,7 % | $2.533 M |
+| 7 | Carpintería metálica y de madera, puertas y vidrios | $1.252 M | 6,3 % | $1.664 M |
+| 8 | Instalaciones hidrosanitarias, agua caliente y aguas lluvias | $910 M | 4,6 % | $1.210 M |
+| 9 | Red contra incendio (NSR-10 títulos J y K; NFPA 13, 14 y 20; NTC 2301) | $634 M | 3,2 % | $842 M |
+| 10 | Instalaciones eléctricas, iluminación y sistema eléctrico esencial (RETIE 2024 y 2026, NTC 2050 sección 517, RETILAP) | $2.352 M | 11,9 % | $3.127 M |
+| 11 | Voz, datos y comunicaciones | $361 M | 1,8 % | $480 M |
+| 12 | Gases medicinales | $575 M | 2,9 % | $765 M |
+| 13 | Aire acondicionado y ventilación mecánica (Res. 1633, Cuadro 4) | $1.558 M | 7,9 % | $2.072 M |
 | 14 | Ascensores y montacargas | $780 M | 4,0 % | $1.037 M |
-| 15 | Sistemas especiales | $482 M | 2,5 % | $641 M |
+| 15 | Sistemas especiales | $520 M | 2,6 % | $692 M |
 | 16 | Galería de conexión con el edificio actual y pasaje de servicio | $78 M | 0,4 % | $104 M |
-| 17 | Urbanismo, bahía de ambulancias, parqueaderos, cerramiento, bloque técnico y residuos | $653 M | 3,4 % | $868 M |
+| 17 | Urbanismo, bahía de ambulancias, parqueaderos, cerramiento, bloque técnico y residuos | $682 M | 3,5 % | $907 M |
 | 18 | Paisajismo y arborización | $60 M | 0,3 % | $80 M |
-| 19 | Solar fotovoltaica, baterías y conexión con la microrred | $982 M | 5,1 % | $1.306 M |
-| | **Costo directo** | **$19.361 M** | 100 % | |
-| | Administración (24 %) | $4.647 M | | |
-| | Imprevistos (3 %) | $581 M | | |
-| | Utilidad (5 %) e IVA sobre la utilidad (19 %) | $1.152 M | | |
-| | **Valor de la obra** | | | **$25.740 M** |
+| 19 | Solar fotovoltaica, baterías y conexión con la microrred | $982 M | 5,0 % | $1.306 M |
+| | **Costo directo** | **$19.727 M** | 100 % | |
+| | Administración (24 %) | $4.735 M | | |
+| | Imprevistos (3 %) | $592 M | | |
+| | Utilidad (5 %) e IVA sobre la utilidad (19 %) | $1.174 M | | |
+| | **Valor de la obra** | | | **$26.228 M** |
 
-**La administración de 24 % incluye** el personal de dirección (9 %), servicios y ensayos (2 %), pólizas (1 %), la **contribución de 5 % sobre los contratos de obra pública** de la Ley 1106 de 2006 (≈ 6,6 % del costo directo), estampillas (2,5 %, por verificar), ICA de Yondó (0,8 %) y gastos generales (2 %). Estimación.
+**La administración de 24 % incluye** el personal de dirección (9 %), servicios y ensayos (2 %), pólizas (1 %), la **contribución de 5 % sobre los contratos de obra pública** de la Ley 1106 de 2006, permanente desde la Ley 1738 de 2014 (5 % del contrato sin IVA ≈ 6,6 % del costo directo), estampillas (2,5 %, por verificar), ICA de Yondó (0,8 %) y gastos generales (2 %). Estimación.
 
 ### 6.1 Lo que va por fuera de la obra
 
 | Componente | Valor | Cómo se calculó |
 |---|---:|---|
-| Estudios y diseños | $1.426 M | Topografía, geotecnia con análisis de licuación, diseños arquitectónico (2,0 % de la obra), estructural (0,7 %), técnicos (1,6 %), presupuesto (0,3 %) e interventoría de diseños (8 %) |
-| Formulación y licencia | $377 M | Documento de Capacidad Instalada, estudio de mercado y MGA ($120 M) y licencia (1 % de la obra, por verificar) |
-| Interventoría de obra | $1.802 M | 7 % del valor de obra con IVA, con la supervisión técnica independiente de la Ley 1796 de 2016 |
+| Estudios y diseños | $1.450 M | Topografía, geotecnia con análisis de licuación, diseños arquitectónico (2,0 % de la obra), estructural (0,7 %), técnicos (1,6 %), presupuesto (0,3 %) e interventoría de diseños (8 %) |
+| Formulación y licencia | $382 M | Documento de Capacidad Instalada, estudio de mercado y MGA ($120 M) y licencia (1 % de la obra, por verificar) |
+| Interventoría de obra | $1.836 M | 7 % del valor de obra con IVA, con la supervisión técnica independiente de la Ley 1796 de 2016 |
 | Gestión ambiental y social | $45 M | Permiso forestal, plan de manejo ambiental y socialización |
-| Dotación | $3.226 M | `dotacion.json`: todos los servicios menos laboratorio, toma de muestras y TIC |
+| Dotación | $3.251 M | `dotacion.json`: todos los servicios menos laboratorio, toma de muestras y TIC |
 | Laboratorio clínico | $523 M | Equipos propios del laboratorio y la toma de muestras + puesta en marcha (2 meses de reactivos, validación, control externo) |
 | Sistemas de información | $931 M | Computadores, PACS/RIS y telemedicina de `dotacion.json` + LIS, interoperabilidad y ciberseguridad |
 | Equipamiento fijo fuera de la obra | $650 M | Generador de oxígeno PSA (recomendado) |
 | Puesta en marcha y habilitación | $250 M | Traslado, aseo terminal, licencia de rayos X, habilitación en el REPS, capacitación e inventario de 72 h |
-| Contingencias | $1.566 M | 5 % de obra, dotación y equipos (no cubre inflación) |
-| **Total de la torre** | **$36.536 M** | Rango $26.894 M–$49.827 M (suma de mínimos y máximos de cada ítem) |
+| Contingencias | $1.592 M | 5 % de obra, dotación y equipos (no cubre inflación) |
+| **Total de la torre** | **$37.137 M** | Rango $27.363 M–$50.600 M (suma de mínimos y máximos de cada ítem) |
 
 **Para no contar dos veces:** la planta, la UPS, los ascensores, la central de gases, el aire acondicionado, las bombas, la red de datos y los sistemas especiales están en la obra con el mismo precio de `dotacion.json`; los analizadores del laboratorio van en comodato; la lavandería va con el edificio actual; y la solar, las baterías y el BMS de la torre se cuentan aquí, así que el proyecto de la microrred (`data/presupuesto_microrred.json`) debe descontar el nodo hospital.
 
 ### 6.2 ¿Es caro o barato? Comparación por m²
 
-Valor de obra por m² construido: **$7,11 M** (rango $5,57 M–$9,31 M). Sin el equipamiento fijo ni la solar: **$5,34 M**. Costo total por m² (con dotación, diseños, interventoría y contingencias): $10,09 M. Todo sobre los 3.620,6 m² construidos del proyecto (cálculo propio).
+Valor de obra por m² construido: **$7,24 M** (rango $5,68 M–$9,48 M). Sin el equipamiento fijo ni la solar: **$5,46 M**. Costo total por m² (con dotación, diseños, interventoría y contingencias): $10,26 M. Todo sobre los 3.620,6 m² construidos del proyecto (cálculo propio).
 
 | Proyecto | Año | Área | Costo por m² en pesos de 2026 | Qué incluye | Fuente |
 |---|---|---:|---:|---|---|
 | Proyecto tipo DNP-MinSalud de infraestructura básica en salud (puesto o centro de un piso) | 2017 | 270 m² | $5,42 M | Costo directo con AIU teórico y exteriores; sin dotación ni interventoría | [enlace](https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf) |
-| Nueva sede hospitalaria de Monguí (Boyacá), MinSalud: urgencias, hospitalización, partos y laboratorio | 2025 | 2.400 m² | $5,71 M | 'Inversión superior a $13 mil millones'; no dice si incluye dotación | [enlace](https://consultorsalud.com/salud-en-boyaca-minsalud-300-mil-millones/) |
+| Nueva infraestructura de la E.S.E. Hospital Las Mercedes de Monguí (Boyacá): urgencias, hospitalización, partos y laboratorio | 2025 | 2.400 m² | $5,26 M | Contrato de obra firmado el 16-abr-2025 (20 meses) por $11.966.541.300, adjudicado en SECOP II; sin interventoría ni dotación. El área de 2.400 m² es la que publicó la prensa sectorial con datos de MinSalud. Verificación V2: antes se usaba la 'inversión superior a $13 mil millones' de la prensa. | [enlace](https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7482028) |
+| Nuevo Hospital Sagrado Corazón de Jesús de Quimbaya (Quindío): urgencias, hospitalización, partos, radiología y toma de muestras, 2 pisos | 2025 | 4.456 m² | $6,69 M | Proyecto de regalías (AIR 40 %) aprobado por el OCAD Eje Cafetero en julio de 2025, con viabilidad técnica de MinSalud (dic-2024, según la prensa sectorial). Su producto MGA es 'Hospitales de primer nivel de atención construidos y dotados' (BPIN 2024000040010); los estudios y diseños se pagaron aparte en 2020 (BPIN 2019000040001, $838,6 millones). No se publica cuánto es dotación. | [enlace](https://www.dnp.gov.co/Prensa_/Noticias/Paginas/regalias-apuestan-salud-quindio-28-mil-millones-nuevo-hospital-quimbaya.aspx) |
+| Nuevo hospital de primer nivel de Pasacaballos (Cartagena), tipo C: urgencias, partos, quirófano, hospitalización y consulta | 2026 | 4.500 m² | $10,75 M | Inversión estimada con construcción y dotación, con regalías; en trámite (sin contrato a oct-2026). Solo sirve como referencia de orden de magnitud. | [enlace](https://www.eluniversal.com.co/cartagena/2026/07/30/asi-va-el-proceso-para-financiar-el-nuevo-hospital-de-pasacaballos/) |
 | Hospital Santa Catalina de Sena, Sucre (Sucre), Fondo Adaptación: urgencias, consulta, laboratorio, imágenes, partos, hospitalización | 2017 | 2.032 m² | $4,80 M | Obra (la interventoría de $681,7 millones va aparte); edificio bajo | [enlace](https://www.eluniversal.com.co/regional/2017/10/13/comenzara-construccion-del-nuevo-hospital-de-sucre-con-millonaria-inversion/) |
 | Hospital de Fusagasugá (Cundinamarca), Gobernación: mediana y alta complejidad | 2026 | 24.966 m² | $9,29 M | Inversión total anunciada; complejidad mayor que la torre; cifra tomada del extracto del buscador (el artículo respondió con error 403) | [enlace](https://cambiocolombia.com/contenido-especial/articulo/2026/9/cundinamarca-amplia-su-red-publica-de-salud-con-nuevos-hospitales-y-mas-dotacion-tecnologica) |
 | Reposición del hospital de Guarne (Antioquia), MinSalud, CONPES 4169 | 2026 | no publicada | — (total $35.059 M) | Aporte de MinSalud con vigencias futuras hasta 2030; obra de ≈ 19 meses; área no publicada | [enlace](https://www.elcolombiano.com/antioquia/guarne-antioquia-nuevo-hospital-millones-ministerio-de-salud-EG36212125) |
 | Construcción de la infraestructura física de la E.S.E. Álvaro Ramírez González, San Martín (Cesar) | 2024 | no publicada | — (total $34.119 M) | Valor adjudicado en SECOP II (15 meses); área no publicada | [enlace](https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.5438578) |
 | Hospital de Majagual (Sucre): urgencias, consulta, obstetricia, cirugía ambulatoria, laboratorio | 2025 | no publicada | — (total $26.034 M) | Inversión total (Fondo Adaptación, MinSalud, Gobernación, Alcaldía y E.S.E.); 18 meses | [enlace](https://www.elheraldo.co/sucre/2025/10/30/arranca-construccion-de-un-hospital-en-la-mojana-de-sucre/) |
 
-**Lectura.** La obra civil de la torre por m² queda entre la de Santa Catalina de Sena (un edificio bajo, de 2017) y la de Monguí (2025), y muy por debajo de un hospital de mediana y alta complejidad como el de Fusagasugá. Con ascensores, planta, aire acondicionado, gases, sistemas especiales, solar y baterías, sube un 25-50 %. También cae en el extremo bajo del orden de magnitud que se había estimado escalando el proyecto tipo DNP ($7,0–9,8 M por m², `proyecto_tipo.json`). Los totales de Guarne ($35.059 M), San Martín, Cesar ($34.119 M de 2026) y Majagual ($26.034 M de 2026) muestran que un hospital de primer nivel nuevo cuesta hoy entre $25.000 y $40.000 M.
+**Lectura.** Hay dos comparables con cifra oficial y área: el **contrato de obra de Monguí** (SECOP II, 2025: $5,26 M por m²) y el **proyecto de Quimbaya** aprobado por el OCAD con viabilidad de MinSalud (2025: $6,69 M por m², construido y dotado, con los diseños pagados aparte). La obra civil de la torre ($5,46 M) queda 4 % por encima de Monguí y 1 % por encima del proyecto tipo del DNP: es razonable para un edificio de 4 pisos con pilotes en Yondó. Con ascensores, planta, aire acondicionado, gases, sistemas especiales, solar y baterías, la obra completa sube a $7,24 M. Frente a Quimbaya, la torre sin diseños ni contingencias ($9,31 M) es 39 % más cara por m²: la diferencia se explica por los 4 pisos con 2 ascensores camilleros, los pilotes, la solar con baterías ($1.734 M), el laboratorio de 24 horas y la dotación completa; no se sabe cuánta dotación incluye Quimbaya. Pasacaballos (2026, con dotación, sin contratar) da $10,75 M por m², un poco más que el costo total de la torre ($10,26 M). Santa Catalina de Sena (2017, edificio bajo) queda por debajo. El orden de magnitud que se había estimado escalando el proyecto tipo DNP ($7,0–9,8 M por m², `proyecto_tipo.json`) contiene la obra completa. Los totales de Guarne ($35.059 M), San Martín, Cesar ($34.119 M de 2026) y Majagual ($26.034 M de 2026) muestran que un hospital de primer nivel nuevo cuesta hoy entre $25.000 y $40.000 M. Cálculo propio (verificación V2).
 
 ## 7. Análisis de precios unitarios (APU) destacados
 
-`apu.json` trae 19 APU completos. Precios oficiales de Antioquia: la **Base de APU de la Secretaría de Infraestructura Física de la Gobernación (2020-II)**, la más reciente descargable en su sitio, con la mano de obra actualizada por el **salario mínimo** (×1,9946: pasó de $877.803 a $1.750.905) y equipos y materiales por **IPC** (×1,5054); y las **compras de 2025-2026 de la Gobernación de Antioquia en la Tienda Virtual del Estado** (cemento a $32.896 el bulto, pintura epóxica antibacterial a $196.577 el galón, cable libre de halógenos a $2.687 el metro, entre otros). Jornal con prestaciones: ayudante $117.852, oficial $235.701, oficial especializado $285.981 (cálculo propio).
+`apu.json` trae 19 APU completos. Precios oficiales de Antioquia: la **Base de APU de la Secretaría de Infraestructura Física de la Gobernación (2020-II)**, la más reciente descargable en su sitio, con la mano de obra actualizada por el **salario mínimo** (×1,9946: pasó de $877.803 a $1.750.905) y por la **jornada de 42 horas semanales** que rige desde el 15 de julio de 2026 (Ley 2101 de 2021; la base de 2020 suponía 48 horas: ×1,1429, factor total ×2,2796), y equipos y materiales por **IPC** (×1,5054); y las **compras de 2025-2026 de la Gobernación de Antioquia en la Tienda Virtual del Estado** (cemento a $32.896 el bulto, pintura epóxica antibacterial a $196.577 el galón, cable libre de halógenos a $2.687 el metro, entre otros). Jornal con prestaciones: ayudante $134.688, oficial $269.373, oficial especializado $326.836 (cálculo propio).
 
 | APU | Ítem | Unidad | Materiales | Equipo | Mano de obra | Transporte y otros | Costo directo | Con AIU |
 |---|---|---|---:|---:|---:|---:|---:|---:|
-| APU-01 | Demolición de edificación de un piso (mampostería, estructura de concreto, pisos y cimientos) | m2 | $0 | $22.995 | $31.427 | $30.548 | **$84.970** | $112.967 |
-| APU-02 | Retiro de cubierta de teja de fibrocemento con posible asbesto, embalaje y disposición como residuo peligroso | m2 | $11.958 | $12.000 | $22.231 | $32.612 | **$78.801** | $104.766 |
-| APU-03 | Excavación mecánica en material común para cimentación y cisternas (hasta 3 m), con cargue y retiro | m3 | $0 | $15.048 | $15.714 | $38.456 | **$69.218** | $92.026 |
-| APU-04 | Concreto de 28 MPa para columnas y muros estructurales (pórticos y núcleos, NSR-10 grupo IV) | m3 | $750.366 | $174.194 | $301.124 | $27.227 | **$1.252.911** | $1.665.746 |
-| APU-05 | Concreto de 28 MPa para vigas y losa nervada de entrepiso y cubierta | m3 | $741.302 | $185.082 | $245.803 | $24.461 | **$1.196.648** | $1.590.943 |
-| APU-06 | Acero de refuerzo fy = 420 MPa (grado 60) figurado y amarrado | kg | $5.012 | $45 | $2.288 | $391 | **$7.736** | $10.285 |
-| APU-07 | Pilote preexcavado de 0,60 m de diámetro en concreto de 28 MPa | ml | $223.440 | $250.635 | $39.126 | $12.967 | **$526.168** | $699.540 |
-| APU-08 | Muro en bloque de arcilla No. 5 (e = 15 cm) con refuerzo y anclaje a la estructura | m2 | $74.485 | $2.500 | $39.284 | $13.964 | **$130.233** | $173.145 |
-| APU-09 | Muro liviano en placa de yeso resistente a humedad, doble cara, con aislamiento acústico | m2 | $93.717 | $1.500 | $29.463 | $7.723 | **$132.403** | $176.030 |
-| APU-10 | Pintura epóxica antibacterial (2 manos) sobre estuco y sellador, en muros de áreas asistenciales | m2 | $29.138 | $800 | $17.678 | $1.134 | **$48.750** | $64.813 |
-| APU-11 | Piso vinílico heterogéneo hospitalario de 2 mm con mediacaña sanitaria y autonivelante | m2 | $177.360 | $3.000 | $27.195 | $3.485 | **$211.040** | $280.578 |
-| APU-12 | Cielo raso registrable en fibra mineral de alta higiene 61 × 61 cm con perfilería suspendida y arriostramiento sísmico | m2 | $79.570 | $1.000 | $16.071 | $2.304 | **$98.945** | $131.547 |
-| APU-13 | Ventanería en aluminio anodizado natural con vidrio laminado de seguridad 4+4 mm | m2 | $360.550 | $0 | $67.306 | $9.615 | **$437.471** | $581.618 |
-| APU-14 | Impermeabilización de cubierta plana con aislamiento térmico y acabado blanco reflectivo | m2 | $131.035 | $2.000 | $31.820 | $3.591 | **$168.446** | $223.948 |
-| APU-15 | Red de gases medicinales en tubería de cobre tipo K desengrasada (oxígeno, aire medicinal y vacío) | ml | $83.753 | $8.358 | $26.922 | $1.646 | **$120.679** | $160.442 |
-| APU-16 | Ducto de aire acondicionado y extracción en lámina galvanizada con aislamiento térmico | kg | $13.260 | $600 | $6.731 | $612 | **$21.203** | $28.189 |
-| APU-17 | Salida para tomacorriente normal doble con polo a tierra 20 A en tubería EMT y cable libre de halógenos | un | $146.001 | $1.000 | $67.306 | $4.115 | **$218.422** | $290.392 |
-| APU-18 | Salida para tomacorriente grado hospitalario del sistema eléctrico esencial (regulada, con tierra aislada) | un | $210.751 | $1.000 | $80.767 | $4.913 | **$297.431** | $395.435 |
-| APU-19 | Punto hidráulico de agua fría en PVC presión de 1/2" con válvula de paso | un | $51.874 | $0 | $67.306 | $3.865 | **$123.045** | $163.588 |
+| APU-01 | Demolición de edificación de un piso (mampostería, estructura de concreto, pisos y cimientos) | m2 | $0 | $22.995 | $35.917 | $30.773 | **$89.685** | $119.236 |
+| APU-02 | Retiro de cubierta de teja de fibrocemento con posible asbesto, embalaje y disposición como residuo peligroso | m2 | $11.958 | $12.000 | $24.336 | $32.717 | **$81.011** | $107.705 |
+| APU-03 | Excavación mecánica en material común para cimentación y cisternas (hasta 3 m), con cargue y retiro | m3 | $0 | $15.048 | $17.958 | $38.568 | **$71.574** | $95.158 |
+| APU-04 | Concreto de 28 MPa para columnas y muros estructurales (pórticos y núcleos, NSR-10 grupo IV) | m3 | $750.366 | $174.194 | $344.141 | $29.378 | **$1.298.079** | $1.725.796 |
+| APU-05 | Concreto de 28 MPa para vigas y losa nervada de entrepiso y cubierta | m3 | $741.302 | $185.082 | $280.918 | $26.217 | **$1.233.519** | $1.639.964 |
+| APU-06 | Acero de refuerzo fy = 420 MPa (grado 60) figurado y amarrado | kg | $5.012 | $45 | $2.615 | $408 | **$8.080** | $10.742 |
+| APU-07 | Pilote preexcavado de 0,60 m de diámetro en concreto de 28 MPa | ml | $223.440 | $250.635 | $44.715 | $13.247 | **$532.037** | $707.343 |
+| APU-08 | Muro en bloque de arcilla No. 5 (e = 15 cm) con refuerzo y anclaje a la estructura | m2 | $74.485 | $2.500 | $44.896 | $14.245 | **$136.126** | $180.979 |
+| APU-09 | Muro liviano en placa de yeso resistente a humedad, doble cara, con aislamiento acústico | m2 | $93.717 | $1.500 | $33.672 | $7.934 | **$136.823** | $181.907 |
+| APU-10 | Pintura epóxica antibacterial (2 manos) sobre estuco y sellador, en muros de áreas asistenciales | m2 | $29.138 | $800 | $20.203 | $1.260 | **$51.401** | $68.337 |
+| APU-11 | Piso vinílico heterogéneo hospitalario de 2 mm con mediacaña sanitaria y autonivelante | m2 | $177.360 | $3.000 | $31.080 | $3.679 | **$215.119** | $286.002 |
+| APU-12 | Cielo raso registrable en fibra mineral de alta higiene 61 × 61 cm con perfilería suspendida y arriostramiento sísmico | m2 | $79.570 | $1.000 | $18.366 | $2.418 | **$101.354** | $134.751 |
+| APU-13 | Ventanería en aluminio anodizado natural con vidrio laminado de seguridad 4+4 mm | m2 | $360.550 | $0 | $76.921 | $10.096 | **$447.567** | $595.040 |
+| APU-14 | Impermeabilización de cubierta plana con aislamiento térmico y acabado blanco reflectivo | m2 | $131.035 | $2.000 | $36.365 | $3.818 | **$173.218** | $230.294 |
+| APU-15 | Red de gases medicinales en tubería de cobre tipo K desengrasada (oxígeno, aire medicinal y vacío) | ml | $83.753 | $8.358 | $30.768 | $1.838 | **$124.717** | $165.812 |
+| APU-16 | Ducto de aire acondicionado y extracción en lámina galvanizada con aislamiento térmico | kg | $13.260 | $600 | $7.692 | $660 | **$22.212** | $29.531 |
+| APU-17 | Salida para tomacorriente normal doble con polo a tierra 20 A en tubería EMT y cable libre de halógenos | un | $146.001 | $1.000 | $76.921 | $4.596 | **$228.518** | $303.815 |
+| APU-18 | Salida para tomacorriente grado hospitalario del sistema eléctrico esencial (regulada, con tierra aislada) | un | $210.751 | $1.000 | $92.305 | $5.490 | **$309.546** | $411.541 |
+| APU-19 | Punto hidráulico de agua fría en PVC presión de 1/2" con válvula de paso | un | $51.874 | $0 | $76.921 | $4.346 | **$133.141** | $177.011 |
 
 **APU-04 · Concreto de 28 MPa para columnas y muros estructurales (pórticos y núcleos, NSR-10 grupo IV) (m3)**
 
@@ -263,15 +265,15 @@ Valor de obra por m² construido: **$7,11 M** (rango $5,57 M–$9,31 M). Sin el 
 | Vibrador de concreto | rend. 5,92 | $80.658/día | $13.625 | calculo_propio sobre dato oficial |
 | Formaleta metálica para columnas y muros | rend. 0,71 | $96.796/día | $135.569 | calculo_propio sobre dato oficial |
 | Bomba de concreto o elevación con winche y balde | 1,000 | $25.000/m3 | $25.000 | estimacion |
-| Cuadrilla de concretos (1 oficial + 5 ayudantes (método SIF)) | rend. 2,86 m3/día | $860.310/día | $301.124 | cálculo propio |
-| Herramienta menor (5 % de la mano de obra) | | | $15.056 | método SIF |
+| Cuadrilla de concretos (equivale a 1 oficial + 1 ayudante entendido + 4 ayudantes rasos ($431.310/día en la base SIF 2020)) | rend. 2,86 m3/día | $983.212/día | $344.141 | cálculo propio |
+| Herramienta menor (5 % de la mano de obra) | | | $17.207 | método SIF |
 | Acarreo interno (1,05 m³) | | | $12.171 | cálculo propio |
 | Incluido en el precio del material puesto en Yondó (el concreto premezclado ya trae ≈ $40.000/m³ de transporte desde la planta de Barrancabermeja) | | | $0 | estimación |
-| **Costo directo** | | | **$1.252.911** | |
-| AIU (24 % + 3 % + 5 % + IVA del 19 % sobre la utilidad) | | | $412.835 | |
-| **Precio unitario** | | | **$1.665.746** | |
+| **Costo directo** | | | **$1.298.079** | |
+| AIU (24 % + 3 % + 5 % + IVA del 19 % sobre la utilidad) | | | $427.717 | |
+| **Precio unitario** | | | **$1.725.796** | |
 
-*Comparación:* SIF 2020-II ítem 6.2.30, concreto de 28 MPa en vigas y columnas: $735.062/m³; × IPC = $1.106.548. El APU es más alto porque la mano de obra se actualiza con el salario mínimo (que subió casi el doble desde 2020) y no con el IPC.
+*Comparación:* SIF 2020-II ítem 6.2.30, concreto de 28 MPa en vigas y columnas: $735.062/m³; × IPC = $1.106.548. El APU es más alto porque la mano de obra se actualiza con el salario mínimo (que subió casi el doble desde 2020) y con la jornada de 42 horas, no con el IPC. Con la misma regla de este presupuesto (mano de obra × 2,2796 y el resto × IPC) el ítem SIF da $1.223.428/m³; el APU queda por encima por el concreto puesto en Yondó y la bomba.
 
 **APU-06 · Acero de refuerzo fy = 420 MPa (grado 60) figurado y amarrado (kg)**
 
@@ -280,15 +282,15 @@ Valor de obra por m² construido: **$7,11 M** (rango $5,57 M–$9,31 M). Sin el 
 | Acero corrugado G-60 (fy = 420 MPa) figurado | 1,000 kg (+5 %) | $4.600 | $4.830 | estimacion |
 | Alambre negro recocido calibre 18 | 0,030 kg (+0 %) | $6.050 | $182 | calculo_propio sobre dato oficial |
 | Cizalla y dobladora | 3,000 | $15/kg | $45 | calculo_propio sobre dato oficial |
-| Cuadrilla de refuerzo (1 oficial + 2 ayudantes (método SIF)) | rend. 170,00 kg/día | $388.908/día | $2.288 | cálculo propio |
-| Herramienta menor (5 % de la mano de obra) | | | $114 | método SIF |
+| Cuadrilla de refuerzo (equivale a 1 oficial + 1 ayudante entendido ($118.167 + $76.809 en la base SIF 2020)) | rend. 170,00 kg/día | $444.466/día | $2.615 | cálculo propio |
+| Herramienta menor (5 % de la mano de obra) | | | $131 | método SIF |
 | Transporte interno | | | $151 | cálculo propio |
 | Flete del acero desde Barrancabermeja o Bucaramanga | | | $126 | estimación |
-| **Costo directo** | | | **$7.736** | |
-| AIU (24 % + 3 % + 5 % + IVA del 19 % sobre la utilidad) | | | $2.549 | |
-| **Precio unitario** | | | **$10.285** | |
+| **Costo directo** | | | **$8.080** | |
+| AIU (24 % + 3 % + 5 % + IVA del 19 % sobre la utilidad) | | | $2.662 | |
+| **Precio unitario** | | | **$10.742** | |
 
-*Comparación:* SIF 2020-II ítem 10.1: $4.478/kg; × IPC = $6.741/kg. Del mismo orden; la diferencia es la mano de obra actualizada con el salario mínimo.
+*Comparación:* SIF 2020-II ítem 10.1: $4.478/kg; × IPC = $6.741/kg. Del mismo orden; la diferencia es la mano de obra actualizada con el salario mínimo y la jornada de 42 horas (el ítem SIF con esa regla da $7.629/kg).
 
 **APU-11 · Piso vinílico heterogéneo hospitalario de 2 mm con mediacaña sanitaria y autonivelante (m2)**
 
@@ -301,13 +303,13 @@ Valor de obra por m² construido: **$7,11 M** (rango $5,57 M–$9,31 M). Sin el 
 | Cordón de soldadura para vinilo | 1,200 ml (+0 %) | $1.800 | $2.160 | estimacion |
 | Perfil soporte de mediacaña | 0,500 ml (+0 %) | $6.000 | $3.000 | estimacion |
 | Lijadora de piso, mezcladora y soldadora de vinilo | rend. 30,00 | $90.000/día | $3.000 | estimacion |
-| Instalador especializado de vinilo (1 oficial especializado + 1 ayudante) | rend. 22,00 m2/día | $403.833/día | $18.356 | cálculo propio |
-| Preparación de base y autonivelante (1 oficial + 1 ayudante) | rend. 40,00 m2/día | $353.553/día | $8.839 | cálculo propio |
-| Herramienta menor (5 % de la mano de obra) | | | $1.360 | método SIF |
+| Instalador especializado de vinilo (1 oficial especializado + 1 ayudante) | rend. 22,00 m2/día | $461.524/día | $20.978 | cálculo propio |
+| Preparación de base y autonivelante (1 oficial + 1 ayudante) | rend. 40,00 m2/día | $404.061/día | $10.102 | cálculo propio |
+| Herramienta menor (5 % de la mano de obra) | | | $1.554 | método SIF |
 | Flete de vinilo y autonivelante desde Medellín o Bogotá | | | $2.125 | estimación |
-| **Costo directo** | | | **$211.040** | |
-| AIU (24 % + 3 % + 5 % + IVA del 19 % sobre la utilidad) | | | $69.538 | |
-| **Precio unitario** | | | **$280.578** | |
+| **Costo directo** | | | **$215.119** | |
+| AIU (24 % + 3 % + 5 % + IVA del 19 % sobre la utilidad) | | | $70.883 | |
+| **Precio unitario** | | | **$286.002** | |
 
 **APU-02 · Retiro de cubierta de teja de fibrocemento con posible asbesto, embalaje y disposición como residuo peligroso (m2)**
 
@@ -320,21 +322,23 @@ Valor de obra por m² construido: **$7,11 M** (rango $5,57 M–$9,31 M). Sin el 
 | Aspiradora industrial con filtro HEPA | 0,025 | $120.000/día | $3.000 | estimacion |
 | Andamio o plataforma de trabajo en altura | 0,030 | $50.000/día | $1.500 | estimacion |
 | Monitoreo de fibras en aire (muestreo personal y ambiental, laboratorio acreditado) | 0,001 | $6.000.000/global/800 m² | $7.500 | estimacion |
-| Cuadrilla capacitada en asbesto y alturas (1 oficial + 3 ayudantes) | rend. 40,00 m2/día | $589.257/día | $14.731 | cálculo propio |
+| Cuadrilla capacitada en asbesto y alturas (1 oficial + 3 ayudantes) | rend. 40,00 m2/día | $673.437/día | $16.836 | cálculo propio |
 | Profesional de seguridad y salud en el trabajo (1 profesional) | rend. 40,00 m2/día | $300.000/día | $7.500 | cálculo propio |
-| Herramienta menor (5 % de la mano de obra) | | | $1.112 | método SIF |
+| Herramienta menor (5 % de la mano de obra) | | | $1.217 | método SIF |
 | Transporte especializado y disposición en celda de seguridad (≈ 15 kg de teja por m²) | | | $31.500 | estimación |
-| **Costo directo** | | | **$78.801** | |
-| AIU (24 % + 3 % + 5 % + IVA del 19 % sobre la utilidad) | | | $25.965 | |
-| **Precio unitario** | | | **$104.766** | |
+| **Costo directo** | | | **$81.011** | |
+| AIU (24 % + 3 % + 5 % + IVA del 19 % sobre la utilidad) | | | $26.694 | |
+| **Precio unitario** | | | **$107.705** | |
 
 *Comparación:* Rango de mercado del retiro de asbesto en Colombia: $60.000-$120.000/m² (estimación). Si el laboratorio confirma que la teja no tiene asbesto, el retiro baja a ≈ $25.000/m² como RCD común.
 
 ## 8. Fuentes de financiación
 
+La columna *escenario base* es la mezcla que cierra el valor de la torre: las asignaciones directas del SGR son el saldo que falta después de las demás fuentes. No es el escenario más probable (ver abajo).
+
 | Fuente | Rango posible | Escenario base | Probabilidad | Requisito principal | Cuándo |
 |---|---:|---:|---|---|---|
-| SGR – Asignaciones Directas (incluidas las anticipadas) del Municipio de Yondó como productor de hidrocarburos | $2.000 M–$12.000 M | $6.736 M | alta (depende solo de la decisión del municipio) | Proyecto en MGA y en el SUIFP-SGR con los requisitos sectoriales de salud (Acuerdo Único de la Comisión Rectora; normas.json advierte que hay que confirmar si se exige concepto de … | Ya: el saldo 2025-2026 sin aprobar alcanza para P1 (radicar nov-2026 a feb-2027). Bienio 2027-2028: el presupuesto se ap… |
+| SGR – Asignaciones Directas (incluidas las anticipadas) del Municipio de Yondó como productor de hidrocarburos | $2.000 M–$12.000 M | $7.337 M | alta (depende solo de la decisión del municipio) | Proyecto en MGA y en el SUIFP-SGR con los requisitos sectoriales de salud (Acuerdo Único de la Comisión Rectora; normas.json advierte que hay que confirmar si se exige concepto de … | Ya: el saldo 2025-2026 sin aprobar alcanza para P1 (radicar nov-2026 a feb-2027). Bienio 2027-2028: el presupuesto se ap… |
 | SGR – Incentivo a la producción asignado a Yondó para proyectos del OCAD Paz y Asignación para la Paz (municipio PDET) | $0 M–$12.000 M | $5.500 M | media | Iniciativa del PATR del PDET Sur de Bolívar (pilar de salud rural; verificar que exista o incluirla), proyecto en MGA y aprobación del OCAD Paz. | Convocatorias y sesiones del OCAD Paz en 2027-2028. |
 | SGR – Asignación para la Inversión Local (municipios con más necesidades básicas insatisfechas) | $500 M–$2.500 M | $1.200 M | media-alta | Proyecto en MGA con enfoque en población pobre; aprobación del municipio. | 2027-2029. |
 | SGR – Asignación para la Inversión Regional (cuota de la Gobernación de Antioquia y bolsa regional) | $0 M–$4.000 M | $1.500 M | media-baja | Proyecto presentado o avalado por la Gobernación de Antioquia; priorización departamental. | 2027-2028, con el plan de desarrollo departamental 2028-2031. |
@@ -346,10 +350,10 @@ Valor de obra por m² construido: **$7,11 M** (rango $5,57 M–$9,31 M). Sin el 
 | MinTIC (cofinanciación FUTIC de territorios inteligentes, conectividad) y programa departamental de telemedicina | $100 M–$900 M | $400 M | media | Proyecto de conectividad, IoT y telemedicina; habilitación de telemedicina (Res. 2654 de 2019). FUTIC no financia plataformas propias. | Convocatorias 2027-2028. |
 | Recursos propios del Municipio de Yondó (contrapartida) y aporte del lote | $500 M–$2.000 M | $1.000 M | alta | Certificado de disponibilidad presupuestal y acuerdo del Concejo si compromete vigencias futuras; título del lote a nombre de la E.S.E. o del municipio. | 2027-2029. |
 | Recursos propios de la E.S.E. y saneamiento (art. 156 de la Ley 2294 de 2023: condonación si se invierte en infraestructura) | $0 M–$1.500 M | $400 M | baja-media | La E.S.E. está en Programa de Saneamiento Fiscal y Financiero: su aporte es pequeño. El art. 156 vence hacia may-2027. | Antes de may-2027 para el art. 156; luego, excedentes de operación. |
-| Crédito: Findeter con tasa compensada para infraestructura y dotación en salud (Res. 2316 de 2025) o IDEA | $0 M–$5.000 M | $1.500 M | baja-media | Concepto técnico territorial (MinSalud responde en 20 días hábiles); capacidad de endeudamiento (Ley 358 de 1997). Lo debe tomar el municipio: la E.S.E. está en saneamiento. | 2028, para el cierre financiero de P2. |
+| Crédito: Findeter con tasa compensada para infraestructura y dotación en salud (Res. 2316 de 2025) o IDEA | $0 M–$5.000 M | $1.500 M | baja-media | Concepto técnico de la Secretaría Seccional de Salud y concepto de MinSalud (responde en 20 días hábiles), MGA web, diseños y presupuesto con APU, dos cotizaciones por equipo; capa… | 2028, para el cierre financiero de P2. |
 | Ecopetrol – inversión social en su área de influencia (campos Casabe y Llanito) o como contribuyente de Obras por Impuestos | $0 M–$2.000 M | $300 M | baja | Convenio con Ecopetrol o selección como contribuyente en Obras por Impuestos; alineación con sus programas sociales. | Gestión desde 2027. |
 | Cooperación internacional (OPS, bancos de desarrollo, agencias y embajadas; donación de equipos) | $0 M–$800 M | $200 M | baja | Proyecto con enfoque de hospital seguro y resiliente o de atención primaria rural; contrapartida local. | Variable. |
-| **Total** | | **$36.536 M** | | | |
+| **Total** | | **$37.137 M** | | | |
 
 **Datos clave detrás de los montos:**
 
@@ -357,31 +361,46 @@ Valor de obra por m² construido: **$7,11 M** (rango $5,57 M–$9,31 M). Sin el 
 - **SGR – Incentivo a la producción asignado a Yondó para proyectos del OCAD Paz y Asignación para la Paz:** Bienio 2025-2026: incentivo a la producción para OCAD Paz de Yondó $14.025 millones con solo $331 aprobados (saldo ≈ $13.694 millones, cálculo propio); además, Yondó ejecutó $36.228 millones de la Asignación para la Paz en 2025-2026 (vía Ye de Marley-San Francisco). Por verificar si ese saldo ya está comprometido.
 - **Presupuesto General de la Nación – MinSalud:** El CONPES 4169 (vigencias futuras 2026-2030 por $3,02 billones para 102 sedes) no incluye a Yondó; Guarne recibió $35.059 millones y Santa Bárbara $13.500 millones. Pero el proyecto de presupuesto 2027 baja la inversión propia de MinSalud de $2,6 a $1,6 billones y debe atender la reconstrucción de hospitales dañados por el terremoto del 10-ago-2026 (≈ $1 billón).
 - **Gobernación de Antioquia – Secretaría Seccional de Salud:** Cofinanciación promedio por proyecto: infraestructura $729 millones (2024) y $2.322 millones (2025); dotación $716-737 millones (informe SSSA 2026, cálculo propio en docs/anexos/C-hospital-2028.md).
-- **Obras por Impuestos:** Cupo CONFIS 2025: $1,1 billones (Decreto 178 de 2025); en 2025 se aprobaron 137 proyectos por ≈ $1,6 billones. El proyecto PDET de dotación de Antioquia (21 municipios, Yondó incluido) vale $44.059 millones según el DNP.
+- **Obras por Impuestos:** Cupo CONFIS 2025: $1,1 billones (Decreto 178 de 2025); en 2025 se aprobaron 137 proyectos por ≈ $1,6 billones. El proyecto PDET de dotación de Antioquia (21 municipios, Yondó incluido) vale $44.059 millones según el DNP. Yondó (código DANE 05893) está en la lista ZOMAC del Decreto 1650 de 2017, Anexo 2 (verificado en el normograma de la DIAN; verificación V2).
 - **Crédito: Findeter con tasa compensada para infraestructura y dotación en salud:** En 2026 Yondó ya paga $1.718,5 millones de servicio de deuda con un instituto de desarrollo departamental (probablemente el IDEA).
 
-**Si MinSalud no pone nada:** Cubre la torre solo si el municipio dedica ≈ $11.036 millones de directas y el OCAD Paz aprueba ≈ $9.000 millones. Si no, se puede partir la obra en dos etapas: pisos 1 a 3 con bloque técnico primero (≈ 85 % del valor, porque la cimentación, los núcleos y los equipos se hacen completos) y el piso 4 después. Urgencias, partos, hospitalización, consulta y laboratorio quedarían habilitados en la primera etapa; odontología, terapias y telemedicina seguirían un tiempo en el edificio actual.
+**Si MinSalud no pone nada:** Cubre la torre solo si el municipio dedica ≈ $11.637 millones de directas y el OCAD Paz aprueba ≈ $9.000 millones. Si no, se puede partir la obra en dos etapas: pisos 1 a 3 con bloque técnico primero (≈ 85 % del valor, porque la cimentación, los núcleos y los equipos se hacen completos) y el piso 4 después. Urgencias, partos, hospitalización, consulta y laboratorio quedarían habilitados en la primera etapa; odontología, terapias y telemedicina seguirían un tiempo en el edificio actual.
+
+**Escenario probable (coherente con `docs/06`):** Con los montos 'probables' de docs/06 para MinSalud ($3.000 millones) y Obras por Impuestos ($1.800 millones), sin crédito ni aportes de Ecopetrol o cooperación, y con las demás fuentes como en el escenario base, faltan ≈ $11.700 millones. Esa brecha se cubre con más regalías (escenario sin MinSalud), con un CONPES o asignación de MinSalud o partiendo la obra en etapas.
+
+**Quién paga qué proyecto en el escenario base** (cálculo propio: cada fuente va solo a los proyectos que puede financiar y se usa una sola vez):
+
+| Proyecto | Valor | Fuentes |
+|---|---:|---|
+| P1 | $1.832 M | SGR asignaciones directas $1.832 M |
+| P2 | $22.197 M | MinSalud (PGN) $5.828 M; SGR incentivo OCAD Paz $5.500 M; SGR asignaciones directas $5.128 M; Gobernación de Antioquia $1.740 M; SGR inversión regional $1.500 M; Crédito (Findeter o IDEA) $1.500 M; Municipio de Yondó $1.000 M |
+| P3 | $6.172 M | MinSalud (PGN) $6.172 M |
+| P4 | $3.676 M | Obras por Impuestos $2.066 M; SGR inversión local $1.051 M; Gobernación de Antioquia $560 M |
+| P5 | $549 M | E.S.E. $400 M; SGR inversión local $149 M |
+| P6 | $977 M | MinTIC $400 M; SGR asignaciones directas $377 M; Cooperación $200 M |
+| P7 | $1.734 M | FENOGE $1.000 M; Obras por Impuestos $434 M; Ecopetrol $300 M |
 
 ### 8.1 Qué cambió frente a `docs/06-hospital-2028-financiacion.md`
 
-- docs/06 y data/hospital2028.json calculaban un proyecto de $9.470 millones (reforzar y adecuar el hospital actual, energía, telesalud y equipos) con un escenario probable de $13.100 millones para 2027-2029. La torre nueva cuesta $36.536 millones más $2.613 millones de proyectos complementarios: se acerca al escenario ambicioso de docs/06 ($34.550 millones) y lo supera.
+- docs/06 y data/hospital2028.json calculaban un proyecto de $9.470 millones (reforzar y adecuar el hospital actual, energía, telesalud y equipos) con un escenario probable de $13.100 millones para 2027-2029. La torre nueva cuesta $37.137 millones más $2.613 millones de proyectos complementarios: se acerca al escenario ambicioso de docs/06 ($34.550 millones) y lo supera.
 - El componente 'reforzamiento y adecuaciones' ($3.000 millones) de docs/06 se reemplaza por la torre (P2-P3) y por la adecuación del edificio actual para usos no asistenciales (P8, ≈ $1.963 millones).
 - MinSalud: docs/06 suponía $3.000 millones (probable) y $13.500 millones (ambicioso). Aquí se suben a $12.000 millones en el escenario base porque una reposición de torre es la tipología que MinSalud cofinancia (Guarne, $35.059 millones), pero su probabilidad baja: el presupuesto 2027 recorta la inversión de MinSalud (de $2,6 a $1,6 billones) y el terremoto del 10-ago-2026 compite por esos recursos.
-- Regalías: docs/06 suponía $1.000-5.500 millones. Se suben a $6.736 millones de directas más $5.500 millones del incentivo para OCAD Paz, porque la torre sería la inversión principal del bienio y porque se encontró un saldo de ≈ $13.694 millones de ese incentivo sin aprobar en 2025-2026. El bienio 2027-2028 trae 11 % menos a nivel nacional.
+- Regalías: docs/06 suponía $1.000-5.500 millones. Se suben a $7.337 millones de directas más $5.500 millones del incentivo para OCAD Paz, porque la torre sería la inversión principal del bienio y porque se encontró un saldo de ≈ $13.694 millones de ese incentivo sin aprobar en 2025-2026. El bienio 2027-2028 trae 11 % menos a nivel nacional.
 - PMIDS: docs/06 señalaba el plazo de remisión de iniciativas hacia el 10-oct-2026. Si no se registró, la torre debe entrar en la actualización obligatoria del primer semestre de 2028 (o en un ajuste que permita la Secretaría Seccional).
 - Las fuentes de energía (FENOGE) y TIC (MinTIC) se mantienen en los mismos rangos de docs/06; la solar y las baterías del hospital ahora se instalan en la torre (P7) y no en el edificio actual.
-- Findeter: docs/06 lo ponía en $0-2.000 millones; aquí $0-5.000 millones, siempre como deuda del municipio (la E.S.E. está en saneamiento).
+- Findeter: docs/06 lo ponía en $0-2.000 millones; aquí $0-5.000 millones, como deuda del municipio (la Res. 2316 también admite a la E.S.E. en saneamiento si avisa a MinHacienda, pero su caja no lo soporta).
+- Coherencia (verificación V2): los montos por fuente del escenario base superan los 'probables' de docs/06 en MinSalud ($12.000 frente a $3.000 millones), Obras por Impuestos ($2.500 frente a $1.800) y crédito ($1.500 frente a $0). Por eso se presenta también el escenario probable de docs/06, con una brecha de ≈ $11.700 millones.
 
 ## 9. Proyectos a articular
 
-Hay que articular 9 proyectos: 7 forman la torre ($36.536 millones) y 2 la complementan (edificio actual y ambulancia, $2.613 millones). Se pueden presentar en 7 fichas MGA uniendo P2 con P3 (proyecto mixto) y P4 con P5. Lo mínimo para abrir la torre son 3: estudios y diseños (P1), construcción con equipamiento fijo (P2+P3) y dotación con laboratorio (P4+P5).
+Hay que articular 9 proyectos: 7 forman la torre ($37.137 millones) y 2 la complementan (edificio actual y ambulancia, $2.613 millones). Se pueden presentar en 7 fichas MGA uniendo P2 con P3 (proyecto mixto) y P4 con P5. Lo mínimo para abrir la torre son 3: estudios y diseños (P1), construcción con equipamiento fijo (P2+P3) y dotación con laboratorio (P4+P5).
 
 | # | Proyecto | Valor | Rango | Fuente más adecuada | Quién lo presenta | Concepto (Res. 485) | MGA | Depende de | Fechas |
 |---|---|---:|---|---|---|---|---|---|---|
-| P1 | Estudios y diseños integrales, formulación y licencia de la torre de primer nivel | $1.803 M | $1.124 M–$2.660 M | SGR – Asignaciones Directas (saldo 2025-2026) o recursos propios del municipio; apoyo técnico de la Secretaría Seccional de Salud. | Municipio de Yondó (ejecutor) con la E.S.E. Hospital Héctor Abad Gómez | Num. 7.1.9 (estudios y diseños e interventoría como proyecto separado). Con recursos territoriales y menos de 5.000 SMMLV, el concepto lo emite la Secretaría Seccional de Salud de Antioquia (Res. 485, arts. 5 y 6). | Sector 19 Salud y Protección Social; programa 1906; producto 1906034 'Estudios de preinversión' (código 190603400). | Título del lote; Certificado de uso del suelo y de riesgo; Decisión sobre el uso del edificio actual | 2026-11 a 2027-12 |
-| P2 | Demolición del antiguo Centro Vida y construcción de la torre de servicios de primer nivel (infraestructura física y redes) | $21.707 M | $16.708 M–$28.295 M | MinSalud (PGN) + SGR (directas, incentivo OCAD Paz, inversión regional) + Gobernación de Antioquia + crédito del municipio + recursos propios. | E.S.E. Hospital Héctor Abad Gómez ante MinSalud; Municipio de Yondó para la parte de regalías | Num. 7.1.2 (infraestructura física: reposición con fortalecimiento de capacidad instalada) o num. 7.1.12 (llave en mano). Control especial de oferta (> 5.000 SMMLV): concepto de MinSalud e inclusión en el PMIDS o Plan Bienal (art. 4; num. 7.1.1.6). | Sector 19; programa 1906; producto 1906047 'Hospitales de primer nivel de atención construidos' (190604700). | P1 terminado (diseños y licencia); Documento de Capacidad Instalada concertado; Registro en el PMIDS; Cierre financiero | 2027-11 a 2030-01 |
-| P3 | Equipamiento fijo e industrial y sistemas especiales de la torre | $6.115 M | $4.274 M–$8.844 M | Recomendado: dentro del proyecto mixto con P2 (MinSalud o SGR). El generador PSA puede ir por Obras por Impuestos. | E.S.E. Hospital Héctor Abad Gómez | Num. 7.1.5 (equipamiento fijo: listado, 2 cotizaciones de 2 marcas, planos de ubicación) y 7.1.6 b para la red de datos. Cuenta para el umbral de 5.000 SMMLV de infraestructura y equipamiento fijo. | Sector 19; programa 1906; producto 1906047 (actividad de equipamiento del proyecto de construcción) o 1906005 'Hospitales de primer nivel de atención dotados' si se presenta aparte. | P2 con obra negra y cuartos técnicos listos | 2028-11 a 2030-01 |
-| P4 | Dotación biomédica, mobiliario clínico y puesta en marcha de la torre | $3.649 M | $2.536 M–$5.336 M | Obras por Impuestos + Gobernación de Antioquia + SGR (inversión local); MinSalud si entra en el proyecto mixto. | E.S.E. Hospital Héctor Abad Gómez | Num. 7.1.6 a (dotación biomédica: listado por servicio, inventario actual, 2 cotizaciones). La dotación de baja complejidad no es de control especial de oferta; la ecografía es de mediana complejidad (normas.json). Con Obras por Impuestos o PGN, concepto de MinSalud. | Sector 19; programa 1906; producto 1906005 'Hospitales de primer nivel de atención dotados' (190600500). | P2 con 70 % de avance físico (Res. 2373 de 2025); Inventario de la dotación actual | 2029-03 a 2030-04 |
+| P1 | Estudios y diseños integrales, formulación y licencia de la torre de primer nivel | $1.832 M | $1.143 M–$2.704 M | SGR – Asignaciones Directas (saldo 2025-2026) o recursos propios del municipio; apoyo técnico de la Secretaría Seccional de Salud. | Municipio de Yondó (ejecutor) con la E.S.E. Hospital Héctor Abad Gómez | Num. 7.1.9 (estudios y diseños e interventoría como proyecto separado). Con recursos territoriales y menos de 5.000 SMMLV, el concepto lo emite la Secretaría Seccional de Salud de Antioquia (Res. 485, arts. 5 y 6). | Sector 19 Salud y Protección Social; programa 1906; producto 1906034 'Estudios de preinversión' (código 190603400). | Título del lote; Certificado de uso del suelo y de riesgo; Decisión sobre el uso del edificio actual | 2026-11 a 2027-12 |
+| P2 | Demolición del antiguo Centro Vida y construcción de la torre de servicios de primer nivel (infraestructura física y redes) | $22.197 M | $17.103 M–$28.905 M | MinSalud (PGN) + SGR (directas, incentivo OCAD Paz, inversión regional) + Gobernación de Antioquia + crédito del municipio + recursos propios. | E.S.E. Hospital Héctor Abad Gómez ante MinSalud; Municipio de Yondó para la parte de regalías | Num. 7.1.2 (infraestructura física: reposición con fortalecimiento de capacidad instalada) o num. 7.1.12 (llave en mano). Control especial de oferta (> 5.000 SMMLV): concepto de MinSalud e inclusión en el PMIDS o Plan Bienal (art. 4; num. 7.1.1.6). | Sector 19; programa 1906; producto 1906047 'Hospitales de primer nivel de atención construidos' (190604700). | P1 terminado (diseños y licencia); Documento de Capacidad Instalada concertado; Registro en el PMIDS; Cierre financiero | 2027-11 a 2030-01 |
+| P3 | Equipamiento fijo e industrial y sistemas especiales de la torre | $6.172 M | $4.311 M–$8.927 M | Recomendado: dentro del proyecto mixto con P2 (MinSalud o SGR). El generador PSA puede ir por Obras por Impuestos. | E.S.E. Hospital Héctor Abad Gómez | Num. 7.1.5 (equipamiento fijo: listado, 2 cotizaciones de 2 marcas, planos de ubicación) y 7.1.6 b para la red de datos. Cuenta para el umbral de 5.000 SMMLV de infraestructura y equipamiento fijo. | Sector 19; programa 1906; producto 1906047 (actividad de equipamiento del proyecto de construcción) o 1906005 'Hospitales de primer nivel de atención dotados' si se presenta aparte. | P2 con obra negra y cuartos técnicos listos | 2028-11 a 2030-01 |
+| P4 | Dotación biomédica, mobiliario clínico y puesta en marcha de la torre | $3.676 M | $2.556 M–$5.374 M | Obras por Impuestos + Gobernación de Antioquia + SGR (inversión local); MinSalud si entra en el proyecto mixto. | E.S.E. Hospital Héctor Abad Gómez | Num. 7.1.6 a (dotación biomédica: listado por servicio, inventario actual, 2 cotizaciones). La dotación de baja complejidad no es de control especial de oferta; la ecografía es de mediana complejidad (normas.json). Con Obras por Impuestos o PGN, concepto de MinSalud. | Sector 19; programa 1906; producto 1906005 'Hospitales de primer nivel de atención dotados' (190600500). | P2 con 70 % de avance físico (Res. 2373 de 2025); Inventario de la dotación actual | 2029-03 a 2030-04 |
 | P5 | Laboratorio clínico de 24 horas con tamizaje (equipos propios, puesta en marcha y comodato de analizadores) | $549 M | $401 M–$742 M | SGR inversión local + recursos propios de la E.S.E.; reactivos con la venta de servicios (≈ $435 millones/año, laboratorio.json). | E.S.E. Hospital Héctor Abad Gómez | Num. 7.1.6 a (dotación) y 7.1.6 b (LIS). Puede ir dentro de P4. | Sector 19; programa 1906; producto 1906005. | Piso 2 terminado; LIS (P6); Contrato de comodato firmado | 2029-06 a 2030-03 |
 | P6 | Sistemas de información, telemedicina y conectividad de la torre | $977 M | $635 M–$1.450 M | MinTIC (FUTIC) + SGR + cooperación. | E.S.E. Hospital Héctor Abad Gómez (con el municipio para MinTIC) | Num. 7.1.6 b (dotación TIC con certificación de protección de datos) y 7.1.10 (telesalud como proyecto propio: concepto de pertinencia de MinSalud). | Sector 19; programa 1906 (por verificar el producto de telesalud en el catálogo vigente) o sector 23 TIC para la conectividad. | Red de voz y datos instalada (P3, ítem 11.01) | 2029-06 a 2030-03 |
 | P7 | Solar de 100 kWp, baterías de 400 kWh y gestión energética de la torre (nodo hospital de la microrred) | $1.734 M | $1.214 M–$2.498 M | FENOGE / Con Energía + SGR u Obras por Impuestos (MinEnergía). | Municipio de Yondó o E.S.E., articulado con el proyecto de la Red Energética Pública (docs/05) | Hace parte del equipamiento fijo (num. 7.1.5) si va con MinSalud; con FENOGE o MinEnergía sigue sus propios requisitos. | Sector 21 Minas y Energía (producto por verificar en el catálogo vigente). | Cubierta de la torre terminada (P2); Trámite de conexión con EPM; Descontar el nodo hospital del proyecto de microrred | 2029-03 a 2030-01 |
@@ -412,11 +431,11 @@ Hay que articular 9 proyectos: 7 forman la torre ($36.536 millones) y 2 la compl
 
 | Año | Pagos del año | Acumulado | Qué se paga |
 |---|---:|---:|---|
-| 2026 | $72 M | $72 M | Formulación |
-| 2027 | $1.551 M | $1.623 M | Estudios, diseños y formulación |
-| 2028 | $4.828 M | $6.450 M | Cierre de diseños, licencia, inicio de obra (demolición, cimentación) |
-| 2029 | $24.738 M | $31.189 M | Estructura, redes, acabados, equipamiento fijo, solar; inicio de dotación |
-| 2030 | $5.347 M | $36.536 M | Cierre de obra, dotación, laboratorio, TIC y puesta en marcha |
+| 2026 | $73 M | $73 M | Formulación |
+| 2027 | $1.576 M | $1.649 M | Estudios, diseños y formulación |
+| 2028 | $4.931 M | $6.580 M | Cierre de diseños, licencia, inicio de obra (demolición, cimentación) |
+| 2029 | $25.151 M | $31.731 M | Estructura, redes, acabados, equipamiento fijo, solar; inicio de dotación |
+| 2030 | $5.407 M | $37.137 M | Cierre de obra, dotación, laboratorio, TIC y puesta en marcha |
 
 Pesos constantes de 2026: los presupuestos de cada año deben indexarse. La compra de equipos empieza cuando la obra tenga 70 % de avance (Res. 2373 de 2025).
 
@@ -426,7 +445,9 @@ Pesos constantes de 2026: los presupuestos de cada año deben indexarse. La comp
 - La titularidad del lote, el uso del suelo, la amenaza por inundación y la norma del EOT no están verificados (normas.json).
 - Las estampillas, el ICA y el impuesto de delineación de Yondó no se revisaron.
 - El estudio de vulnerabilidad de 2024 del edificio actual no es público: el costo de P8 es un supuesto.
-- Los precios de los equipos de dotacion.json son en su mayoría estimaciones (35 de 228 ítems con referencia SECOP).
+- Los precios de los equipos de dotacion.json son en su mayoría estimaciones (37 de 236 ítems con referencia SECOP).
+- Los comparables por m² con cifra oficial son pocos: el área de Monguí sale de la prensa sectorial y no se sabe cuánta dotación trae el proyecto de Quimbaya. Hay que confirmarlos en los pliegos de SECOP II (piden captcha y no se pudieron abrir desde este entorno) y en la MGA del BPIN 2024000040010.
+- El AIU completo sobre los equipos de P3 es conservador: contratándolos como suministro e instalación aparte se podrían ahorrar del orden de $600-1.000 millones (ver supuestos.aiu_sobre_equipos).
 - El presupuesto del SGR 2027-2028 por municipio no está publicado; la cifra de Yondó es una estimación proporcional.
 - No se verificó si el saldo del incentivo para OCAD Paz de 2025-2026 ya tiene destino.
 - La ley de presupuesto 2027 y el PND 2026-2030 pueden cambiar las líneas de MinSalud y los PMIDS.
@@ -449,7 +470,14 @@ Pesos constantes de 2026: los presupuestos de cada año deben indexarse. La comp
 - Presupuesto de salud 2027 (Minuto30, 9-sep-2026): <https://www.minuto30.com/amp/presupuesto-salud-2027/1718556/>
 - CONPES 4169 (vigencias futuras para 102 sedes hospitalarias): <https://consultorsalud.com/wp-content/uploads/2025/11/4169.pdf>
 - Guarne: aporte de MinSalud de $35.059 M (El Colombiano, 5-may-2026): <https://www.elcolombiano.com/antioquia/guarne-antioquia-nuevo-hospital-millones-ministerio-de-salud-EG36212125>
-- Monguí: sede de 2.400 m² por más de $13.000 M (Consultorsalud, 25-jun-2025): <https://consultorsalud.com/salud-en-boyaca-minsalud-300-mil-millones/>
+- Monguí: contrato de obra de $11.966.541.300 firmado el 16-abr-2025 (SECOP II, CO1.NTC.7482028; datos.gov.co jbjy-vk9h): <https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7482028>
+- Monguí: sede de 2.400 m² (Consultorsalud, 25-jun-2025): <https://consultorsalud.com/salud-en-boyaca-minsalud-300-mil-millones/>
+- Quimbaya: $28.274 M de regalías para un hospital de 4.456 m² (DNP, 25-jul-2025): <https://www.dnp.gov.co/Prensa_/Noticias/Paginas/regalias-apuestan-salud-quindio-28-mil-millones-nuevo-hospital-quimbaya.aspx>
+- Quimbaya: producto MGA 'construidos y dotados', BPIN 2024000040010 (DNP Mapa Inversiones): <https://www.datos.gov.co/d/8kfp-z3my>
+- Pasacaballos: hospital de 4.500 m² por $48.372 M con dotación (El Universal, 30-jul-2026): <https://www.eluniversal.com.co/cartagena/2026/07/30/asi-va-el-proceso-para-financiar-el-nuevo-hospital-de-pasacaballos/>
+- Yondó en la lista ZOMAC (Decreto 1650 de 2017, Anexo 2, código 05893): <https://normograma.dian.gov.co/dian/compilacion/docs/decreto_1650_2017.htm>
+- Ley 2101 de 2021 (jornada de 42 horas desde el 15-jul-2026): <http://www.secretariasenado.gov.co/senado/basedoc/ley_2101_2021.html>
+- Ley 1738 de 2014, art. 8 (vigencia permanente de la contribución de obra pública): <http://www.secretariasenado.gov.co/senado/basedoc/ley_1738_2014.html>
 - Hospital Santa Catalina de Sena, Sucre (El Universal, 13-oct-2017): <https://www.eluniversal.com.co/regional/2017/10/13/comenzara-construccion-del-nuevo-hospital-de-sucre-con-millonaria-inversion/>
 - SECOP II, construcción de la E.S.E. Álvaro Ramírez González (San Martín, Cesar): <https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.5438578>
 - Hospital de Majagual (El Heraldo, 30-oct-2025): <https://www.elheraldo.co/sucre/2025/10/30/arranca-construccion-de-un-hospital-en-la-mojana-de-sucre/>

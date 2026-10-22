@@ -480,6 +480,12 @@
     },
     "puertas": [
      {
+      "lado": "O",
+      "pos": 0.45,
+      "ancho": 3.2,
+      "alto": 3.0
+     },
+     {
       "lado": "S",
       "pos": 0.5,
       "ancho": 1.8,
@@ -1005,6 +1011,61 @@
    ]
   },
   {
+   "tipo": "parqueadero",
+   "estado": "nuevo",
+   "nombre": "Salida de ambulancias por el norte del árbol del portón",
+   "poligono": [
+    [
+     -19.0,
+     24.0
+    ],
+    [
+     -16.5,
+     24.0
+    ],
+    [
+     -17.4,
+     27.6
+    ],
+    [
+     -20.0,
+     29.3
+    ],
+    [
+     -25.0,
+     29.3
+    ],
+    [
+     -28.4,
+     26.6
+    ],
+    [
+     -28.0,
+     24.0
+    ],
+    [
+     -25.6,
+     24.0
+    ],
+    [
+     -25.6,
+     26.0
+    ],
+    [
+     -24.0,
+     27.1
+    ],
+    [
+     -21.0,
+     27.1
+    ],
+    [
+     -19.6,
+     26.0
+    ]
+   ]
+  },
+  {
    "tipo": "zona_verde",
    "estado": "nuevo",
    "nombre": "Isla del retorno con la palma trasplantada",
@@ -1042,11 +1103,11 @@
     ],
     [
      -13.0,
-     -14.0
+     -19.6
     ],
     [
-     -32.25,
-     -14.0
+     -32.95,
+     -19.6
     ],
     [
      -32.0,
@@ -1193,7 +1254,7 @@
    "estado": "nuevo",
    "centro": [
     -15.6,
-    -6.0
+    -13.0
    ],
    "largo": 10.0,
    "ancho": 5.2,
@@ -1236,9 +1297,9 @@
    "estado": "nuevo",
    "centro": [
     -17.5,
-    -11.0
+    -4.5
    ],
-   "largo": 6.0,
+   "largo": 5.0,
    "ancho": 1.4,
    "rumbo_eje": 0
   },
