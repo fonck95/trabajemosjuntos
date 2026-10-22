@@ -120,7 +120,7 @@
   },
   {
    "id": "MAGNETO",
-   "nombre": "Magneto365, salario promedio de un técnico electricista en Colombia ($2.387.083; hasta $4,5 M en Barrancabermeja y zonas petroleras)",
+   "nombre": "Magneto365, salario promedio de un técnico electricista en Colombia ($2.387.083; los más altos, hasta $4,5 M, en Bogotá, Medellín y zonas industriales o petroleras como Barrancabermeja)",
    "entidad": "Magneto365 (portal de empleo)",
    "url": "https://www.magneto365.com/co/preguntas-frecuentes/tecnico-electricista/cual-es-salario-de-un-tecnico-electricista-en-colombia",
    "fecha": "2026-10-22 (consulta)",
@@ -1444,7 +1444,7 @@
    "url": "https://fenixcomercial.com.co/?s=ADSS&post_type=product",
    "fecha_fuente": "2026-10-22",
    "ubicacion_en_fuente": "",
-   "valor_original": "1 km: $14.014.649 + IVA (el carrete de 4 km aparece a $15.810.273, valor atípico que no se usa)",
+   "valor_original": "1 km: $14.014.649 + IVA, \"sin existencia\" el 22-oct-2026 (el carrete de 4 km aparece a $15.810.273, también sin existencia, valor atípico que no se usa)",
    "factor_actualizacion": null,
    "iva": "incluido (19 % sumado al precio publicado)",
    "nota": "Precio de catálogo de un distribuidor; en compras grandes se negocian descuentos del 10–20 %."
@@ -1790,9 +1790,51 @@
    "capitulo": "MT aérea",
    "descripcion": "Poste de concreto octogonal de 12 m y 510 kgf (RA7-035), puesto en planta, con IVA",
    "unidad": "un",
-   "precio_cop_2026": 1250000,
+   "precio_cop_2026": 1050000,
    "rango_cop_2026": [
-    1050000,
+    900000,
+    1300000
+   ],
+   "tipo_dato": "estimacion",
+   "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
+   "fuente_id": "EST",
+   "url": "",
+   "fecha_fuente": "2026-10-22",
+   "ubicacion_en_fuente": "",
+   "valor_original": null,
+   "factor_actualizacion": null,
+   "iva": "incluido",
+   "nota": "Ancla oficial: la SIF 2020 pagó $835.000 por un poste de 12 m de 1.052 kg ($1.256.992 en pesos de 2026 con IPC). El de 510 kgf lleva menos acero: se toma 16 % menos (estimación). El IPC es un techo prudente: el IPP del DANE de minerales no metálicos (división 23, concreto) subió ×1,36 entre 2020 y 2026, menos que el IPC (×1,51). Corrección de la verificación: la versión anterior ponía $1.250.000 con el argumento de que el concreto subió más que el IPC, lo que el IPP del DANE no confirma."
+  },
+  {
+   "codigo": "POSTE-12-750",
+   "capitulo": "MT aérea",
+   "descripcion": "Poste de concreto octogonal de 12 m y 750 kgf, puesto en planta, con IVA",
+   "unidad": "un",
+   "precio_cop_2026": 1150000,
+   "rango_cop_2026": [
+    1000000,
+    1450000
+   ],
+   "tipo_dato": "estimacion",
+   "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
+   "fuente_id": "EST",
+   "url": "",
+   "fecha_fuente": "2026-10-22",
+   "ubicacion_en_fuente": "",
+   "valor_original": null,
+   "factor_actualizacion": null,
+   "iva": "incluido",
+   "nota": "Misma ancla (SIF 2020, poste de 12 m y 1.052 kg, actualizado con IPC): 8 % menos por menor refuerzo (estimación). En la CREG la estructura de retención con poste de 750 kg vale 3 % menos que con poste de 1.050 kg (N2L72 frente a N2L71)."
+  },
+  {
+   "codigo": "POSTE-12-1050",
+   "capitulo": "MT aérea",
+   "descripcion": "Poste de concreto octogonal de 12 m y 1.050 kgf, puesto en planta, con IVA",
+   "unidad": "un",
+   "precio_cop_2026": 1256992,
+   "rango_cop_2026": [
+    1134765.0,
     1600000
    ],
    "tipo_dato": "estimacion",
@@ -1804,49 +1846,7 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "incluido",
-   "nota": "Anclas: la SIF 2020 pagó $835.000 por un poste de 12 m de 1.052 kg ($1.256.992 en pesos de 2026 con IPC); el poste de 510 kgf es más liviano pero el concreto y el acero subieron más que el IPC (IPP de minerales no metálicos ×1,50 desde 2017)."
-  },
-  {
-   "codigo": "POSTE-12-750",
-   "capitulo": "MT aérea",
-   "descripcion": "Poste de concreto octogonal de 12 m y 750 kgf, puesto en planta, con IVA",
-   "unidad": "un",
-   "precio_cop_2026": 1450000,
-   "rango_cop_2026": [
-    1250000,
-    1850000
-   ],
-   "tipo_dato": "estimacion",
-   "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
-   "fuente_id": "EST",
-   "url": "",
-   "fecha_fuente": "2026-10-22",
-   "ubicacion_en_fuente": "",
-   "valor_original": null,
-   "factor_actualizacion": null,
-   "iva": "incluido",
-   "nota": "Misma ancla que el de 510 kgf, +16 % por mayor refuerzo."
-  },
-  {
-   "codigo": "POSTE-12-1050",
-   "capitulo": "MT aérea",
-   "descripcion": "Poste de concreto octogonal de 12 m y 1.050 kgf, puesto en planta, con IVA",
-   "unidad": "un",
-   "precio_cop_2026": 1750000,
-   "rango_cop_2026": [
-    1450000,
-    2200000
-   ],
-   "tipo_dato": "estimacion",
-   "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
-   "fuente_id": "EST",
-   "url": "",
-   "fecha_fuente": "2026-10-22",
-   "ubicacion_en_fuente": "",
-   "valor_original": null,
-   "factor_actualizacion": null,
-   "iva": "incluido",
-   "nota": "Ancla: SIF 2020, poste de 12 m 1.052 kg ($835.000 en 2020)."
+   "nota": "Cálculo sobre dato oficial: SIF 2020, poste de 12 m de 1.052 kg a $835.000 × IPC 2020→2026 (1,50538). Límite bajo del rango: con el IPP de minerales no metálicos (×1,359). La versión anterior ponía $1.750.000, 39 % por encima de su propia ancla."
   },
   {
    "codigo": "POSTE-10-510",
@@ -2815,6 +2815,27 @@
    "nota": "La RA3-026 exige proteger los bujes secundarios."
   },
   {
+   "codigo": "THHN-30",
+   "capitulo": "BT",
+   "descripcion": "Cable de cobre THHN/THWN-2 3/0 AWG",
+   "unidad": "m",
+   "precio_cop_2026": 53000,
+   "rango_cop_2026": [
+    40000,
+    66000
+   ],
+   "tipo_dato": "estimacion",
+   "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
+   "fuente_id": "EST",
+   "url": "",
+   "fecha_fuente": "2026-10-22",
+   "ubicacion_en_fuente": "",
+   "valor_original": null,
+   "factor_actualizacion": null,
+   "iva": "incluido",
+   "nota": "Sin cotización: 2/0 × 1,26 por sección de cobre (85,0 frente a 67,4 mm²)."
+  },
+  {
    "codigo": "THHN-20",
    "capitulo": "BT",
    "descripcion": "Cable de cobre THHN/THWN-2 2/0 AWG",
@@ -3342,12 +3363,12 @@
   {
    "codigo": "FO-DROP",
    "capitulo": "Datos",
-   "descripcion": "Cable de acometida de fibra (drop) de 2 hilos con mensajero, por metro",
+   "descripcion": "Cable de acometida de fibra (drop) figura 8 de 1 hilo G.657A1 con mensajero, por metro",
    "unidad": "m",
-   "precio_cop_2026": 1800,
+   "precio_cop_2026": 415,
    "rango_cop_2026": [
-    1200,
-    2800
+    350,
+    900
    ],
    "tipo_dato": "estimacion",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -3358,7 +3379,7 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "incluido",
-   "nota": "Sin precio publicado; el distribuidor lo vende en carretes de 1 km."
+   "nota": "Precio de mercado: carrete de 2 km a $697.378 + IVA en Fenix Comercial (consulta del 22-oct-2026), es decir $415 por metro con IVA; una acometida GPON usa 1 hilo. Corrección de la verificación: antes se estimaba en $1.800/m diciendo que no había precio publicado."
   },
   {
    "codigo": "FO-PATCH",
@@ -3386,10 +3407,10 @@
    "capitulo": "Datos",
    "descripcion": "Caja o bandeja de terminación óptica de pared con 2 adaptadores (roseta) en la sede",
    "unidad": "un",
-   "precio_cop_2026": 45000,
+   "precio_cop_2026": 22998,
    "rango_cop_2026": [
-    30000,
-    70000
+    18000,
+    45000
    ],
    "tipo_dato": "estimacion",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -3400,7 +3421,7 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "incluido",
-   "nota": ""
+   "nota": "Precio de mercado: roseta con 2 acopladores SC/APC a $19.326 + IVA en Fenix Comercial (22-oct-2026)."
   },
   {
    "codigo": "MO-CAPATAZ",
@@ -3905,7 +3926,7 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Cálculo propio sobre 7 pares obra/interventoría de SECOP: Yondó, electrificación de La Paz, Rompederos, El Amparo, Cimitarra y Barbacoas (2014): 9,5 %; Yondó, redes y acometidas de la vereda Jabonal (2015): 9,1 %; Yondó, redes y acometidas de Puerto Matilde (2016): 8,3 %; Yondó, redes y acometidas de Bellavista (2017): 7,0 %; Santander, redes de MT y BT en varios municipios (2022): 7,7 %; Santander, redes de MT y BT en varios municipios (2023): 6,2 %; Guapotá (Santander), redes de MT y BT (2026): 9,8 %. Mediana 8,3 %; se usa 8 %."
+   "nota": "Cálculo propio sobre 9 pares obra/interventoría de SECOP: Yondó, electrificación de La Paz, Rompederos, El Amparo, Cimitarra y Barbacoas (2014): 9,5 %; Yondó, redes de Bocas de San Francisco, ITE, La Congoja, No te Pases, La Rompida 1 y 2 y La Felicidad (2014): 7,0 %; Yondó, electrificación de Caño Negro y Caño Bonito (2013–2014): 6,6 %; Yondó, redes y acometidas de la vereda Jabonal (2015): 9,1 %; Yondó, redes y acometidas de Puerto Matilde (2016): 8,3 %; Yondó, redes y acometidas de Bellavista (2017): 7,0 %; Santander, redes de MT y BT en varios municipios (2022): 7,7 %; Santander, redes de MT y BT en varios municipios (2023): 6,2 %; Guapotá (Santander), redes de MT y BT (2026): 9,8 %. Mediana 7,7 %; se usa 8 % (redondeo prudente). Las interventorías de Bocas de San Francisco (UT RL) y de La Paz (Grupo Also), ambas de 2014, figuran en SECOP con el mismo valor exacto ($255.351.440); se dejan las dos, pero conviene confirmarlas en los documentos del proceso. Verificación: los dos pares de Yondó de 2013–2014 que faltaban se agregaron desde data/secop/raw/integrado.json."
   },
   {
    "codigo": "IND-ING",
@@ -4124,10 +4145,10 @@
    "capitulo": "Precio instalado (APU)",
    "descripcion": "Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida",
    "unidad": "un",
-   "precio_cop_2026": 2815560,
+   "precio_cop_2026": 2511679,
    "rango_cop_2026": [
-    2252448,
-    3660228
+    2009343,
+    3265183
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4138,17 +4159,17 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Precio total del APU (costo directo $2.200.516 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
+   "nota": "Precio total del APU (costo directo $1.963.016 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
   },
   {
    "codigo": "APU-01b",
    "capitulo": "Precio instalado (APU)",
    "descripcion": "Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales)",
    "unidad": "un",
-   "precio_cop_2026": 3079137,
+   "precio_cop_2026": 2639629,
    "rango_cop_2026": [
-    2463310,
-    4002878
+    2111703,
+    3431518
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4159,17 +4180,17 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Precio total del APU (costo directo $2.406.516 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
+   "nota": "Precio total del APU (costo directo $2.063.016 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
   },
   {
    "codigo": "APU-01c",
    "capitulo": "Precio instalado (APU)",
    "descripcion": "Poste de concreto de 10 m y 510 kgf instalado, sin vestida (red de BT sola)",
    "unidad": "un",
-   "precio_cop_2026": 2486089,
+   "precio_cop_2026": 2447704,
    "rango_cop_2026": [
-    1988871,
-    3231916
+    1958163,
+    3182015
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4180,7 +4201,7 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Precio total del APU (costo directo $1.943.016 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
+   "nota": "Precio total del APU (costo directo $1.913.016 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
   },
   {
    "codigo": "APU-02",
@@ -4229,10 +4250,10 @@
    "capitulo": "Precio instalado (APU)",
    "descripcion": "Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento)",
    "unidad": "un",
-   "precio_cop_2026": 2129084,
+   "precio_cop_2026": 2097455,
    "rango_cop_2026": [
-    1703267,
-    2767809
+    1677964,
+    2726691
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4243,7 +4264,7 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Precio total del APU (costo directo $1.663.997 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
+   "nota": "Precio total del APU (costo directo $1.639.277 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
   },
   {
    "codigo": "APU-04",
@@ -4292,10 +4313,10 @@
    "capitulo": "Precio instalado (APU)",
    "descripcion": "km de red de MT aérea trifásica 13,2 kV en zona urbana: ACSR 2/0 + neutro ACSR 1/0, postes de concreto de 12 m, vano de 40 m",
    "unidad": "km",
-   "precio_cop_2026": 156443882,
+   "precio_cop_2026": 152942069,
    "rango_cop_2026": [
-    125155105,
-    203377046
+    122353655,
+    198824690
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4306,17 +4327,17 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Precio total del APU (costo directo $122.269.544 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
+   "nota": "Precio total del APU (costo directo $119.532.684 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
   },
   {
    "codigo": "APU-06R",
    "capitulo": "Precio instalado (APU)",
    "descripcion": "km de red de MT aérea trifásica 13,2 kV en zona rural (vía a la PTAP, pozos y PTAP veredal): ACSR 1/0 + neutro ACSR 1/0, vano de 80 m",
    "unidad": "km",
-   "precio_cop_2026": 88842181,
+   "precio_cop_2026": 86747371,
    "rango_cop_2026": [
-    71073745,
-    115494835
+    69397897,
+    112771582
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4327,7 +4348,7 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Precio total del APU (costo directo $69.435.077 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
+   "nota": "Precio total del APU (costo directo $67.797.867 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
   },
   {
    "codigo": "APU-07",
@@ -4355,10 +4376,10 @@
    "capitulo": "Precio instalado (APU)",
    "descripcion": "Transformador trifásico de 75 kVA, 13.200/220-127 V, instalado en poste existente con cortacircuitos, DPS, bajante de BT y 2 puestas a tierra",
    "unidad": "un",
-   "precio_cop_2026": 46972083,
+   "precio_cop_2026": 46774767,
    "rango_cop_2026": [
-    37577666,
-    61063708
+    37419814,
+    60807197
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4369,17 +4390,17 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Precio total del APU (costo directo $36.711.280 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
+   "nota": "Precio total del APU (costo directo $36.557.067 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
   },
   {
    "codigo": "APU-08-25",
    "capitulo": "Precio instalado (APU)",
    "descripcion": "Transformador trifásico de 75 kVA — variante 25 kVA monofásico",
    "unidad": "un",
-   "precio_cop_2026": 26549347,
+   "precio_cop_2026": 25326717,
    "rango_cop_2026": [
-    21239478,
-    34514151
+    20261374,
+    32924732
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4390,17 +4411,17 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Monofásico: 1 cortacircuitos, 1 DPS, bajante 3 × 1/0 Cu, percha en vez de collarines (RA3-026); mismo montaje y puestas a tierra."
+   "nota": "Monofásico (RA3-026): 1 cortacircuitos, 1 DPS, 1 estribo y soporte en L, percha en vez de cruceta de 2,4 m y collarines; bajante 3 × 1/0 Cu (104 A a 240 V); mismo montaje y puestas a tierra."
   },
   {
    "codigo": "APU-08-375",
    "capitulo": "Precio instalado (APU)",
    "descripcion": "Transformador trifásico de 75 kVA — variante 37,5 kVA monofásico",
    "unidad": "un",
-   "precio_cop_2026": 28087306,
+   "precio_cop_2026": 27244227,
    "rango_cop_2026": [
-    22469845,
-    36513498
+    21795381,
+    35417495
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4411,17 +4432,17 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Monofásico: 1 cortacircuitos, 1 DPS, bajante 3 × 1/0 Cu, percha en vez de collarines (RA3-026); mismo montaje y puestas a tierra."
+   "nota": "Monofásico (RA3-026): 1 cortacircuitos, 1 DPS, 1 estribo y soporte en L, percha en vez de cruceta de 2,4 m y collarines; bajante 3 × 2/0 Cu (156 A a 240 V; el 1/0 solo admite 150 A); mismo montaje y puestas a tierra."
   },
   {
    "codigo": "APU-08-45",
    "capitulo": "Precio instalado (APU)",
    "descripcion": "Transformador trifásico de 75 kVA — variante 45 kVA trifásico",
    "unidad": "un",
-   "precio_cop_2026": 38591094,
+   "precio_cop_2026": 37191867,
    "rango_cop_2026": [
-    30872875,
-    50168422
+    29753494,
+    48349428
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4432,17 +4453,17 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Igual al APU-08 cambiando el transformador; mismo montaje y puestas a tierra."
+   "nota": "Igual al APU-08 cambiando el transformador y el bajante a 4 × 1/0 Cu (118 A a 220 V); mismo montaje y puestas a tierra."
   },
   {
    "codigo": "APU-08-1125",
    "capitulo": "Precio instalado (APU)",
    "descripcion": "Transformador trifásico de 75 kVA — variante 112,5 kVA trifásico",
    "unidad": "un",
-   "precio_cop_2026": 55716482,
+   "precio_cop_2026": 58871866,
    "rango_cop_2026": [
-    44573185,
-    72431426
+    47097493,
+    76533425
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4453,17 +4474,17 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Igual al APU-08 cambiando el transformador; mismo montaje y puestas a tierra. Para 112,5 kVA EPM puede pedir montaje en estructura doble (RA3-030) y poste de 1.050 kgf: sumar un poste APU-01b y una estructura APU-03."
+   "nota": "Igual al APU-08 cambiando el transformador y el bajante a 2 × 3/0 Cu por fase (295 A a 220 V); mismo montaje y puestas a tierra. Para 112,5 kVA EPM puede pedir montaje en estructura doble (RA3-030) y poste de 1.050 kgf: sumar un poste APU-01b y una estructura APU-03."
   },
   {
    "codigo": "APU-09",
    "capitulo": "Precio instalado (APU)",
    "descripcion": "km de fibra óptica ADSS 24 hilos instalada en postes existentes (zona urbana, vano de 40 m), con herrajes, reservas, empalmes y pruebas",
    "unidad": "km",
-   "precio_cop_2026": 12922991,
+   "precio_cop_2026": 12923326,
    "rango_cop_2026": [
-    10338393,
-    16799888
+    10338661,
+    16800324
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4474,17 +4495,17 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Precio total del APU (costo directo $10.100.032 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
+   "nota": "Precio total del APU (costo directo $10.100.294 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
   },
   {
    "codigo": "APU-09-ADSS",
    "capitulo": "Precio instalado (APU)",
    "descripcion": "km de fibra óptica ADSS 24 hilos instalada en postes existentes (zona urbana — variante ADSS 48 hilos (troncal)",
    "unidad": "km",
-   "precio_cop_2026": 27825099,
+   "precio_cop_2026": 27825435,
    "rango_cop_2026": [
-    22260080,
-    36172629
+    22260348,
+    36173065
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4502,10 +4523,10 @@
    "capitulo": "Precio instalado (APU)",
    "descripcion": "km de fibra óptica ADSS 24 hilos instalada en postes existentes (zona urbana — variante Rural (vano 80 m, 12,5 postes/km)",
    "unidad": "km",
-   "precio_cop_2026": 10079933,
+   "precio_cop_2026": 10080194,
    "rango_cop_2026": [
-    8567943,
-    12095920
+    8568165,
+    12096233
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4607,10 +4628,10 @@
    "capitulo": "Precio instalado (APU)",
    "descripcion": "Conexión de una sede a la red de fibra (GPON): caja de distribución (NAP) con splitter, acometida de fibra de 50 m, roseta, ONU y conexión al tablero de la sede",
    "unidad": "un",
-   "precio_cop_2026": 2281474,
+   "precio_cop_2026": 2152090,
    "rango_cop_2026": [
-    1825179,
-    2965916
+    1721672,
+    2797716
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4621,17 +4642,17 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Precio total del APU (costo directo $1.783.098 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
+   "nota": "Precio total del APU (costo directo $1.681.977 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
   },
   {
    "codigo": "APU-14",
    "capitulo": "Precio instalado (APU)",
    "descripcion": "Nodo central de la red de datos en el CCED (Alcaldía): OLT GPON de 16 puertos, switch industrial capa 3 con 10G, distribuidor de fibra (ODF) y transceptores",
    "unidad": "un",
-   "precio_cop_2026": 41220932,
+   "precio_cop_2026": 41220943,
    "rango_cop_2026": [
-    32976746,
-    53587212
+    32976754,
+    53587225
    ],
    "tipo_dato": "calculo_propio",
    "fuente": "Estimación propia de este documento (ver nota del ítem); reemplazar con 3 cotizaciones",
@@ -4642,7 +4663,7 @@
    "valor_original": null,
    "factor_actualizacion": null,
    "iva": "",
-   "nota": "Precio total del APU (costo directo $32.216.438 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
+   "nota": "Precio total del APU (costo directo $32.216.446 + AIU 27 % + IVA sobre la utilidad). Detalle en data/red/apu_red.json."
   }
  ]
 }

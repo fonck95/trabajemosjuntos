@@ -2,18 +2,18 @@
 
 **Cuánto cuesta cada kilómetro de red para unir las sedes públicas de Yondó: media tensión de 13,2 kV, baja tensión, fibra óptica y canalización subterránea, con sus capítulos (por mayores), sus ítems (por menores) y el análisis de precio de cada ítem principal. Las distancias por las calles se calculan aparte y se cruzan con estos precios en la sección 9.**
 
-> Estado: **prefactibilidad (clase 4: −30 % / +50 %)**, con fecha de corte del 22 de octubre de 2026. Cada cifra dice si es un **dato oficial** (copiado de la fuente), un **dato de mercado** (precio publicado por un comercio, con fecha de consulta), un **cálculo propio** (operación sobre datos oficiales, con el método a la vista) o una **estimación** (supuesto con rango, por confirmar con tres cotizaciones). Todo está en pesos constantes de 2026. Los datos completos están en `data/red/precios_unitarios.json` (213 ítems), `data/red/parametros.json` (cantidades por km), `data/red/apu_red.json` (19 APU) y `data/red/subestacion.json`.
+> Estado: **prefactibilidad (clase 4: −30 % / +50 %)**, con fecha de corte del 22 de octubre de 2026. Cada cifra dice si es un **dato oficial** (copiado de la fuente), un **dato de mercado** (precio publicado por un comercio, con fecha de consulta), un **cálculo propio** (operación sobre datos oficiales, con el método a la vista) o una **estimación** (supuesto con rango, por confirmar con tres cotizaciones). Todo está en pesos constantes de 2026. Los datos completos están en `data/red/precios_unitarios.json` (214 ítems), `data/red/parametros.json` (cantidades por km), `data/red/apu_red.json` (19 APU) y `data/red/subestacion.json`.
 >
 > **Inspirado en los proyectos tipo del DNP.** El DNP no tiene un proyecto tipo de redes de distribución eléctrica ni de fibra óptica (en Minas y Energía solo publica "Celdas solares uso residencial" y "Beneficio de oro"; en TIC, "Zonas digitales", "Implementación de TIC" y "Centro TIC municipal"). Por eso este capítulo toma del proyecto tipo su **forma**: presupuesto por capítulos, análisis de precios unitarios (APU) por ítem, cantidades por unidad de obra y especificaciones de referencia. Y toma las **piezas tipo** de las dos fuentes que en Colombia hacen de "proyecto tipo" para redes: las **unidades constructivas de la CREG** (Resolución 015 de 2018), que son los precios con los que se remunera cada poste, km de cable o transformador en todo el país, y las **estructuras normalizadas de EPM** (normas RA), que dicen exactamente qué lleva cada poste en Antioquia.
 
 ## En pocas palabras
 
-- **Un km de red de media tensión aérea en el casco urbano cuesta unos 156,4 millones** (cálculo propio con insumos estimados; rango 125–203 M), ya con AIU. Lleva 25 postes de 12 m, 4 conductores y sus vientos y puestas a tierra. La suma de las unidades constructivas de la CREG para ese mismo km da 179,3 M, con ingeniería incluida.
-- **En zona rural** (vía a la PTAP, a los pozos y a la PTAP veredal) el km baja a **88,8 M** porque el vano sube de 40 a 80 m (CREG: 103,7 M). Ahí hay que sumar servidumbre y poda: unos 13 M por km (estimación).
-- **La baja tensión trenzada** sobre los mismos postes cuesta **36,7 M por km**, y **la fibra óptica ADSS de 24 hilos** sobre postes existentes, **12,9 M por km** (48 hilos: 27,8 M), más un arriendo de unos $900.668 al año por km si los postes son de EPM (tope regulado por la CRC). Conectar cada sede a la fibra (NAP, acometida y ONU) cuesta 2,3 M y el nodo central del CCED (OLT y switch), 41,2 M.
+- **Un km de red de media tensión aérea en el casco urbano cuesta unos 152,9 millones** (cálculo propio con insumos estimados; rango 122–199 M), ya con AIU. Lleva 25 postes de 12 m, 4 conductores y sus vientos y puestas a tierra. La suma de las unidades constructivas de la CREG para ese mismo km da 179,3 M, con ingeniería incluida.
+- **En zona rural** (vía a la PTAP, a los pozos y a la PTAP veredal) el km baja a **86,7 M** porque el vano sube de 40 a 80 m (CREG: 103,7 M). Ahí hay que sumar servidumbre y poda: unos 13 M por km (estimación).
+- **La baja tensión trenzada** sobre los mismos postes cuesta **36,7 M por km**, y **la fibra óptica ADSS de 24 hilos** sobre postes existentes, **12,9 M por km** (48 hilos: 27,8 M), más un arriendo de unos $900.668 al año por km si los postes son de EPM (tope regulado por la CRC). Conectar cada sede a la fibra (NAP, acometida y ONU) cuesta 2,2 M y el nodo central del CCED (OLT y switch), 41,2 M.
 - **Enterrar la red multiplica el costo por siete:** un km de media tensión subterránea con canalización de 4 ductos, cámaras cada 50 m y cable XLPE cuesta **1.124 M** (CREG: 1.183 M). Solo se justifica en cruces, plazas o frente al hospital.
-- **Un transformador trifásico de 75 kVA instalado en poste cuesta unos 47,0 M** y uno monofásico de 25 kVA, 26,5 M. La acometida trifásica de una sede con medidor bidireccional y comunicación, **13,7 M**.
-- **Indirectos:** AIU de 27 % (estimación, rango 24–32 %), interventoría de 8 % (la mediana de siete contratos de redes en SECOP, cuatro de ellos de Yondó, es 8,3 %), ingeniería de detalle de 4 % y trámites con EPM.
+- **Un transformador trifásico de 75 kVA instalado en poste cuesta unos 46,8 M** y uno monofásico de 25 kVA, 25,3 M. La acometida trifásica de una sede con medidor bidireccional y comunicación, **13,7 M**.
+- **Indirectos:** AIU de 27 % (estimación, rango 24–32 %), interventoría de 8 % (la mediana de 9 contratos de redes en SECOP, 6 de ellos de Yondó, es 7,7 %), ingeniería de detalle de 4 % y trámites con EPM.
 - **La subestación de EPM en Yondó no se pudo ubicar** con evidencia verificable. Se descartaron tres patios eléctricos de Ecopetrol (el más grande, el de la planta de inyección de agua de Casabe, 4 km al norte). Para la red de la microrred no hace falta llegar hasta ella: la red de 13,2 kV de EPM ya pasa por todas las calles. Queda un derecho de petición a EPM (sección 8).
 
 ### Palabras que se usan
@@ -37,12 +37,12 @@ Los capítulos que se usarán por tramo son estos:
 | Capítulo (por mayor) | Unidad | Ítems (por menores) | Precio de referencia (con AIU) |
 |---|---|---|---|
 | 1. Preliminares y gestión | km y global | Topografía y replanteo; trámites con EPM; certificado RETIE; plan de manejo ambiental y de tránsito; servidumbre y poda (rural) | $1.800.000/km + $2.500.000/km + $6.000.000 global |
-| 2. Red de MT aérea 13,2 kV | km | Postes (APU-01/01b), estructuras de suspensión, retención y terminal (APU-02/03/03b), vientos (APU-04), puestas a tierra (APU-05), conductor | Urbana $156.443.882; rural $88.842.181 |
+| 2. Red de MT aérea 13,2 kV | km | Postes (APU-01/01b), estructuras de suspensión, retención y terminal (APU-02/03/03b), vientos (APU-04), puestas a tierra (APU-05), conductor | Urbana $152.942.069; rural $86.747.371 |
 | 3. Protección y maniobra | un | Reconectador, seccionadores, cortacircuitos, DPS, indicadores de falla | Reconectador $74.783.431 (CREG) |
 | 4. Red de MT subterránea | m y km | Canalización (APU-10), cámaras (APU-10b), cable XLPE, transiciones | $1.124.367.176/km |
-| 5. Transformación | un | Transformador instalado según capacidad (APU-08 y variantes) | 25 kVA $26.549.347 a 112,5 kVA $55.716.482 |
+| 5. Transformación | un | Transformador instalado según capacidad (APU-08 y variantes) | 25 kVA $25.326.717 a 112,5 kVA $58.871.866 |
 | 6. Red de BT y acometidas | km y un | Trenzado (APU-07), postes de 10 m si hacen falta (APU-01c), acometida con medidor bidireccional (APU-11) | $36.711.209/km; $13.666.966 por sede |
-| 7. Red de datos | km y un | Fibra ADSS 24 o 48 hilos (APU-09), conexión de cada sede con NAP y ONU (APU-13), nodo central con OLT y switch en el CCED (APU-14) | $12.922.991/km (24 h); $2.281.474 por sede; $41.220.932 el nodo |
+| 7. Red de datos | km y un | Fibra ADSS 24 o 48 hilos (APU-09), conexión de cada sede con NAP y ONU (APU-13), nodo central con OLT y switch en el CCED (APU-14) | $12.923.326/km (24 h); $2.152.090 por sede; $41.220.943 el nodo |
 | 8. Indirectos | % | AIU 27 % (ya dentro de los APU), ingeniería 4 %, PMA 1,5 %, interventoría 8 % | — |
 
 **Regla para un tramo de longitud L (km), medida por las calles:** red de MT = L × precio por km (urbano o rural); postes nuevos = redondeo hacia arriba de L × postes por km + 1; fibra = L × precio por km; canalización = L × 1.000 × precio por metro + una cámara cada 50 m; a eso se suman transformadores y acometidas por sede, los preliminares por km y, al final, ingeniería, trámites e interventoría. Las reglas completas están en `data/red/parametros.json` → `reglas_presupuesto_por_tramo`.
@@ -56,7 +56,7 @@ Los capítulos que se usarán por tramo son estos:
 | Qué lleva cada poste | Normas de construcción de EPM (RA2-001, RA2-003, RA2-004, RA2-011, RA2-021, RA3-026, RA3-029…) | Lista exacta de materiales por estructura y vanos máximos (60 m urbano; 90 m rural) | Oficial |
 | APU de una obra pública de Antioquia | Gobernación de Antioquia, base de APU de la Secretaría de Infraestructura Física, 2020-II, cap. 17 | Rendimientos, jornales y precios de materiales eléctricos de una entidad del departamento | Oficial, actualizado con IPC |
 | Precios de hoy | Homecenter (transformadores) y Fenix Comercial (fibra y equipos de red), 22-oct-2026 | Precios publicados en Colombia en 2026 | Mercado |
-| Interventoría | SECOP I y II (7 contratos de obra con su interventoría) | Porcentaje real pagado | Cálculo propio |
+| Interventoría | SECOP I y II (9 contratos de obra con su interventoría) | Porcentaje real pagado | Cálculo propio |
 
 ## 3. Fuentes y cómo se llevan a pesos de 2026
 
@@ -67,7 +67,7 @@ Los capítulos que se usarán por tramo son estos:
 | Tope de arriendo de postes de la CRC | Pesos de 2023 | IPC | 1,181514 |
 | Homecenter y Fenix | Octubre de 2026 | Ninguna (a Fenix se le suma el IVA del 19 %, porque publica "+ IVA") | 1,00 |
 
-Dos advertencias. **Primera:** los valores de la CREG son los que se reconocen a los operadores de red, que compran a gran escala; sirven de techo de comparación, pero ya incluyen ingeniería y montaje, así que no se les suma AIU. **Segunda:** la CREG valoró los transformadores y los conductores con precios de 2017; el cobre, el acero y el aceite subieron más que el IPP, y por eso el transformador de 25 kVA que la CREG reconoce instalado en $11,0 millones cuesta $11,4 millones solo el equipo en un almacén de 2026.
+Dos advertencias. **Primera:** los valores de la CREG son los que se reconocen a los operadores de red, que compran a gran escala; sirven de techo de comparación, pero ya incluyen ingeniería y montaje, así que no se les suma AIU. **Segunda:** el transformador de 25 kVA que la CREG reconoce instalado en $11,0 millones cuesta $11,4 millones solo el equipo en un almacén de 2026. La brecha no la explica la inflación de los insumos: según el IPP del DANE, la clase "motores, generadores y transformadores eléctricos" (2710) subió ×1,30 entre diciembre de 2017 y 2026, menos que el IPP total (×1,65) con el que aquí se actualiza la CREG. La diferencia está en que la CREG valora compras al por mayor de los operadores de red y el almacén vende al detal. Por eso los transformadores son el ítem que más necesita cotizaciones de fabricante.
 
 ## 4. Precios unitarios de referencia
 
@@ -152,9 +152,9 @@ Los transformadores trifásicos no tienen precio publicado; se estimaron con una
 
 | Código | Insumo | Unidad | Precio 2026 | Rango | Ancla |
 |---|---|---|---|---|---|
-| POSTE-12-510 | Poste de concreto octogonal de 12 m y 510 kgf (RA7-035), puesto en planta, con IVA | un | $1.250.000 | $1.050.000–$1.600.000 | Anclas: la SIF 2020 pagó $835.000 por un poste de 12 m de 1.052 kg ($1.256.992 en pesos de 2026 con IPC); el poste de 510 kgf es más liviano pero el concreto y el acero subieron más que el IPC (IPP de minerales no metálicos… |
-| POSTE-12-750 | Poste de concreto octogonal de 12 m y 750 kgf, puesto en planta, con IVA | un | $1.450.000 | $1.250.000–$1.850.000 | Misma ancla que el de 510 kgf, +16 % por mayor refuerzo. |
-| POSTE-12-1050 | Poste de concreto octogonal de 12 m y 1.050 kgf, puesto en planta, con IVA | un | $1.750.000 | $1.450.000–$2.200.000 | Ancla: SIF 2020, poste de 12 m 1.052 kg ($835.000 en 2020). |
+| POSTE-12-510 | Poste de concreto octogonal de 12 m y 510 kgf (RA7-035), puesto en planta, con IVA | un | $1.050.000 | $900.000–$1.300.000 | Ancla oficial: la SIF 2020 pagó $835.000 por un poste de 12 m de 1.052 kg ($1.256.992 en pesos de 2026 con IPC). El de 510 kgf lleva menos acero: se toma 16 % menos (estimación). El IPC es un techo prudente: el IPP del DANE de… |
+| POSTE-12-750 | Poste de concreto octogonal de 12 m y 750 kgf, puesto en planta, con IVA | un | $1.150.000 | $1.000.000–$1.450.000 | Misma ancla (SIF 2020, poste de 12 m y 1.052 kg, actualizado con IPC): 8 % menos por menor refuerzo (estimación). En la CREG la estructura de retención con poste de 750 kg vale 3 % menos que con poste de 1.050 kg (N2L72 frente… |
+| POSTE-12-1050 | Poste de concreto octogonal de 12 m y 1.050 kgf, puesto en planta, con IVA | un | $1.256.992 | $1.134.765–$1.600.000 | Cálculo sobre dato oficial: SIF 2020, poste de 12 m de 1.052 kg a $835.000 × IPC 2020→2026 (1,50538). Límite bajo del rango: con el IPP de minerales no metálicos (×1,359). La versión anterior ponía $1.750.000, 39 % por encima… |
 | POSTE-10-510 | Poste de concreto de 10 m y 510 kgf, puesto en planta, con IVA | un | $1.000.000 | $800.000–$1.250.000 | Ancla: SIF 2020, poste de 10 m a $670.000 ($1.008.605 con IPC). |
 | CRU-15 | Cruceta angular metálica galvanizada de 1.500 mm (RA7-013) | un | $95.000 | $75.000–$140.000 | Ancla: SIF 2020, cruceta de 1.500 mm a $55.000 ($82.796 con IPC). |
 | CRU-24 | Cruceta angular metálica galvanizada de 2.400 mm (RA7-013) | un | $150.000 | $110.000–$220.000 | Proporcional a la de 1.500 mm por peso de acero. |
@@ -209,7 +209,7 @@ El resto de los herrajes (tirantas, espigos, tuercas de ojo, eslabones, pernos, 
 | TR-MAT | Transporte de materiales menores hasta Yondó | % de materiales | 3 % (2–5 %) | Estimación | — |
 | EQ-HM | Herramienta menor | % de mano de obra | 5 % | Estimación | — |
 
-Los jornales parten del salario mínimo de 2026 ($1.750.905, Decreto 1469 de 2025 y Decreto 0159 de 2026) y de lo que se paga en la zona (un técnico electricista gana en promedio $2,39 M al mes en Colombia y hasta $4,5 M en Barrancabermeja, según Magneto365). El factor prestacional de 1,80 suma seguridad social con ARL de riesgo V (trabajo en altura y con tensión), parafiscales, prestaciones y dotación.
+Los jornales parten del salario mínimo de 2026 ($1.750.905, Decreto 1469 de 2025 y Decreto 0159 de 2026) y de lo que se paga en la zona (un técnico electricista gana en promedio $2,39 M al mes en Colombia, y los mejor pagados, hasta $4,5 M, están en Bogotá, Medellín y zonas petroleras como Barrancabermeja, según Magneto365). El factor prestacional de 1,80 suma seguridad social con ARL de riesgo V (trabajo en altura y con tensión), parafiscales, prestaciones y dotación.
 
 ### 4.6 Preliminares, trámites e indirectos
 
@@ -234,6 +234,8 @@ Los jornales parten del salario mínimo de 2026 ($1.750.905, Decreto 1469 de 202
 | Contrato de obra | Obra | Interventoría | % |
 |---|---|---|---|
 | [Yondó, electrificación de La Paz, Rompederos, El Amparo, Cimitarra y Barbacoas (2014)](https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-1-120659) | $2.696.062.128 | $255.351.440 | 9,5 % |
+| [Yondó, redes de Bocas de San Francisco, ITE, La Congoja, No te Pases, La Rompida 1 y 2 y La Felicidad (2014)](https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-1-120658) | $3.672.156.031 | $255.351.440 | 7,0 % |
+| [Yondó, electrificación de Caño Negro y Caño Bonito (2013–2014)](https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=13-1-107398) | $250.000.000 | $16.500.000 | 6,6 % |
 | [Yondó, redes y acometidas de la vereda Jabonal (2015)](https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-1-144334) | $651.225.171 | $58.966.420 | 9,1 % |
 | [Yondó, redes y acometidas de Puerto Matilde (2016)](https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=16-1-158064) | $228.845.368 | $19.000.000 | 8,3 % |
 | [Yondó, redes y acometidas de Bellavista (2017)](https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=17-1-173703) | $1.095.249.059 | $76.667.434 | 7,0 % |
@@ -241,7 +243,7 @@ Los jornales parten del salario mínimo de 2026 ($1.750.905, Decreto 1469 de 202
 | [Santander, redes de MT y BT en varios municipios (2023)](https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.3685607) | $12.599.562.327 | $781.485.951 | 6,2 % |
 | [Guapotá (Santander), redes de MT y BT (2026)](https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10269210) | $2.717.803.160 | $265.657.432 | 9,8 % |
 
-La mediana es 8,3 %; se usa 8 %. El AIU de 27 % es una estimación: en Antioquia la administración carga, además del residente y las pólizas, la contribución de obra pública del 5 % (Ley 1106 de 2006) y las estampillas, que suman 6 a 9 puntos. Sobre la utilidad se liquida IVA del 19 % (Decreto 1372 de 1992, art. 3).
+La mediana es 7,7 %; se usa 8 %. El AIU de 27 % es una estimación: en Antioquia la administración carga, además del residente y las pólizas, la contribución de obra pública del 5 % (Ley 1106 de 2006) y las estampillas, que suman 6 a 9 puntos. Sobre la utilidad se liquida IVA del 19 % (Decreto 1372 de 1992, art. 3).
 
 ## 5. Supuestos de cantidades por km
 
@@ -251,9 +253,9 @@ La mediana es 8,3 %; se usa 8 %. El AIU de 27 % es una estimación: en Antioquia
 |---|---|---|---|
 | Vano de diseño | 40 m (30–50) | 80 m (70–90) | Estimación; máximos de EPM: 60 m con estructuras RA2-001/RA2-021 y 90 m con RA2-011 (poste de 12 m, 20 % de la tensión de rotura, 7,0 y 6,5 m de distancia a tierra) |
 | Postes por km | 25 (+1 por tramo) | 12,5 (+1 por tramo) | 1.000 m ÷ vano |
-| Postes de retención por km | 5 (uno cada 200 m) | 2 (uno cada 500 m) | Estimación: ángulos de más de 15–20°, cambios de calle y anclajes intermedios |
+| Postes de retención por km | 5 (uno cada 200 m) | 2 (uno cada 500 m) | Estimación: ángulos de más de 15–20°, cambios de calle y anclajes intermedios; todos se costean con la lista de la RA2-004 |
 | Terminales | 2 por tramo | 2 por tramo | RA2-003 |
-| Vientos (retenidas) por km | 6 | 3 | Estimación: 1,2 por retención y 1 por terminal |
+| Vientos (retenidas) por km | 12 | 5,5 | Listas de materiales de EPM (dato oficial): 4 por referencia RA2-004, 1 por ángulo RA2-012 y 1 por terminal RA2-003. Se suponen 2 referencias y 3 ángulos por km urbano, y 1 y 1 por km rural (estimación) |
 | Puestas a tierra por km | 4 | 3 | Estimación: cada 250–330 m y en cada terminal o equipo |
 | Conductores | 3 fases ACSR 2/0 + neutro ACSR 1/0 | 4 × ACSR 1/0 | Neutro inferior de las estructuras de EPM |
 | Factor de conductor | 1,04 | 1,04 | 3 % de flecha y desperdicio + 1 % de puentes y colas |
@@ -308,24 +310,24 @@ Unidad: **un**. Norma: EPM RA7-035 (poste) y RA2-001; empotramiento 10 % de la l
 
 | Componente | Unidad | Cantidad | Precio unitario | Subtotal | Tipo |
 |---|---|---|---|---|---|
-| Poste de concreto octogonal de 12 m y 510 kgf (RA7-035), puesto en planta, con IVA | un | 1 | $1.250.000 | $1.250.000 | Estimación |
+| Poste de concreto octogonal de 12 m y 510 kgf (RA7-035), puesto en planta, con IVA | un | 1 | $1.050.000 | $1.050.000 | Estimación |
 | Material seleccionado (recebo o arena) para relleno, puesto en obra | m3 | 0,350 | $95.000 | $33.250 | Estimación |
 | Esmalte para numeración de postes | gal | 0,100 | $93.000 | $9.300 | Estimación |
-| **Materiales** | | | | **$1.292.550** | |
+| **Materiales** | | | | **$1.092.550** | |
 | Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible | día | 0,125 | $1.800.000 | $225.000 | Estimación |
 | Camioneta 4×4 de cuadrilla con conductor y combustible | día | 0,125 | $380.000 | $47.500 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $234.943 | $11.747 | Estimación |
 | **Equipo** | | | | **$284.247** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $1.292.550 | $38.776 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $42.550 | $1.276 | Estimación |
 | Transporte de un poste de 12 m desde la planta (Santander o Antioquia) hasta Yondó, con cargue y descargue | un | 1,00 | $350.000 | $350.000 | Estimación |
-| **Transporte** | | | | **$388.776** | |
+| **Transporte** | | | | **$351.276** | |
 | Cuadrilla de obra civil: 1 oficial + 4 obreros — excavación del hueco y relleno | día | rinde 5,00 un/día | $567.217 | $113.443 | Estimación |
 | Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes — izado, aplomado y numeración | día | rinde 8,00 un/día | $972.000 | $121.500 | Estimación |
 | **Mano de obra** | | | | **$234.943** | |
-| **Costo directo** | | | | **$2.200.516** | |
-| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $594.139 | Estimación |
-| IVA 19 % sobre la utilidad | | | | $20.905 | Oficial (tarifa) |
-| **Precio unitario total** | **un** | | | **$2.815.560** | Rango $2.252.448–$3.660.228 |
+| **Costo directo** | | | | **$1.963.016** | |
+| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $530.014 | Estimación |
+| IVA 19 % sobre la utilidad | | | | $18.649 | Oficial (tarifa) |
+| **Precio unitario total** | **un** | | | **$2.511.679** | Rango $2.009.343–$3.265.183 |
 
 Contraste: SIF Antioquia 2020, ítem 17.13 (poste 12 m 1.052 kg, STI, sin AIU, actualizado con IPC): **$1.651.658**; CREG N1P3, poste de concreto 12 m urbano de BT instalado (actualizado con IPP): **$1.678.546**.
 
@@ -350,7 +352,7 @@ Unidad: **un**. Norma: EPM RA2-001 (lista de materiales del plano 3 de 4). Supue
 | Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible | día | 0,083 | $1.800.000 | $150.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $162.000 | $8.100 | Estimación |
 | **Equipo** | | | | **$221.433** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $476.500 | $14.295 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $476.500 | $14.295 | Estimación |
 | **Transporte** | | | | **$14.295** | |
 | Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes — armado de la estructura en el poste | día | rinde 6,00 un/día | $972.000 | $162.000 | Estimación |
 | **Mano de obra** | | | | **$162.000** | |
@@ -386,7 +388,7 @@ Unidad: **un**. Norma: EPM RA2-004. Supuestos: Materiales de la lista de EPM; lo
 | Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible | día | 0,167 | $1.800.000 | $300.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $324.000 | $16.200 | Estimación |
 | **Equipo** | | | | **$442.867** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $1.615.000 | $48.450 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $1.615.000 | $48.450 | Estimación |
 | **Transporte** | | | | **$48.450** | |
 | Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes — armado de la estructura de retención | día | rinde 3,00 un/día | $972.000 | $324.000 | Estimación |
 | **Mano de obra** | | | | **$324.000** | |
@@ -415,7 +417,7 @@ Unidad: **un**. Norma: EPM RA6-001 (viento poste 12 m); materiales tomados del �
 | Camioneta 4×4 de cuadrilla con conductor y combustible | día | 0,250 | $380.000 | $95.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $181.361 | $9.068 | Estimación |
 | **Equipo** | | | | **$104.068** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $347.700 | $10.431 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $347.700 | $10.431 | Estimación |
 | **Transporte** | | | | **$10.431** | |
 | Pareja: 1 liniero + 1 ayudante — armado y tensionado | día | rinde 2,00 un/día | $306.000 | $153.000 | Estimación |
 | Cuadrilla de obra civil: 1 oficial + 4 obreros — excavación del anclaje (0,25 días de obrero equivalentes) | día | rinde 20,00 un/día | $567.217 | $28.361 | Estimación |
@@ -444,7 +446,7 @@ Unidad: **un**. Norma: RETIE (Res. 40117 de 2024) y EPM RA6-014/RA6-015 (diseño
 | Camioneta 4×4 de cuadrilla con conductor y combustible | día | 0,125 | $380.000 | $47.500 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $76.500 | $3.825 | Estimación |
 | **Equipo** | | | | **$81.325** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $548.000 | $16.440 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $548.000 | $16.440 | Estimación |
 | **Transporte** | | | | **$16.440** | |
 | Pareja: 1 liniero + 1 ayudante — hincado, soldadura, bajante y medición | día | rinde 4,00 un/día | $306.000 | $76.500 | Estimación |
 | **Mano de obra** | | | | **$76.500** | |
@@ -455,11 +457,11 @@ Unidad: **un**. Norma: RETIE (Res. 40117 de 2024) y EPM RA6-014/RA6-015 (diseño
 
 Contraste: CREG N2L137, puesta a tierra típica de nivel 2 (actualizado con IPP): **$444.757**; CREG Tabla 30, puesta a tierra de nivel 1 (actualizado con IPP): **$253.742**.
 
-Los APU-01b (poste de 750 kgf, $3.079.137), APU-01c (poste de 10 m para BT sola, $2.486.089) y APU-03b (estructura terminal RA2-003, $2.129.084) siguen el mismo esquema y están completos en el JSON.
+Los APU-01b (poste de 750 kgf, $2.639.629), APU-01c (poste de 10 m para BT sola, $2.447.704) y APU-03b (estructura terminal RA2-003, $2.097.455) siguen el mismo esquema y están completos en el JSON.
 
 ### APU-06U · km de red de MT aérea trifásica 13,2 kV en zona urbana: ACSR 2/0 + neutro ACSR 1/0, postes de concreto de 12 m, vano de 40 m
 
-Unidad: **km**. Norma: EPM RA2-001/RA2-003/RA2-004 y RETIE. Supuestos: 25 postes por km: 19 de suspensión (510 kgf), 5 de retención y 1 terminal prorrateado (750 kgf); 6 vientos y 4 puestas a tierra por km; Conductor: 3 fases ACSR 2/0 + neutro ACSR 1/0 × factor 1,04; Tendido de 4 conductores: 0,6 km por día de cuadrilla, con equipo de tendido y grúa canasta la mitad del tiempo; No incluye equipos de protección (reconectador, cortacircuitos de ramal, DPS), que se cuentan por unidad.
+Unidad: **km**. Norma: EPM RA2-001/RA2-003/RA2-004 y RETIE. Supuestos: 25 postes por km: 19 de suspensión (510 kgf), 5 de retención y 1 terminal prorrateado (750 kgf); 12 vientos y 4 puestas a tierra por km; Conductor: 3 fases ACSR 2/0 + neutro ACSR 1/0 × factor 1,04; Tendido de 4 conductores: 0,6 km por día de cuadrilla, con equipo de tendido y grúa canasta la mitad del tiempo; No incluye equipos de protección (reconectador, cortacircuitos de ramal, DPS), que se cuentan por unidad.
 
 | Componente | Unidad | Cantidad | Precio unitario | Subtotal | Tipo |
 |---|---|---|---|---|---|
@@ -468,33 +470,33 @@ Unidad: **km**. Norma: EPM RA2-001/RA2-003/RA2-004 y RETIE. Supuestos: 25 postes
 | Empalmes de tensión y conectores de puentes | un | 8 | $15.000 | $120.000 | Estimación |
 | Marcación de circuito (RA6-020: en derivaciones y cada 2 km) | un | 3 | $15.000 | $45.000 | Estimación |
 | **Materiales** | | | | **$23.877.000** | |
-| APU-01: Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida | un | 19 | $2.200.516 | $41.809.804 | Cálculo propio (costo directo del APU) |
-| APU-01b: Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales) | un | 6 | $2.406.516 | $14.439.096 | Cálculo propio (costo directo del APU) |
+| APU-01: Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida | un | 19 | $1.963.016 | $37.297.304 | Cálculo propio (costo directo del APU) |
+| APU-01b: Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales) | un | 6 | $2.063.016 | $12.378.096 | Cálculo propio (costo directo del APU) |
 | APU-02: Estructura de suspensión trifásica 13,2 kV con neutro inferior, cruceta de 1.500 mm al centro (vestida sobre poste ya instalado) | un | 19 | $874.228 | $16.610.332 | Cálculo propio (costo directo del APU) |
 | APU-03: Estructura de retención (referencia) trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin vientos) | un | 5 | $2.430.317 | $12.151.585 | Cálculo propio (costo directo del APU) |
-| APU-03b: Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento) | un | 1 | $1.663.997 | $1.663.997 | Cálculo propio (costo directo del APU) |
-| APU-04: Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje | un | 6 | $643.560 | $3.861.360 | Cálculo propio (costo directo del APU) |
+| APU-03b: Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento) | un | 1 | $1.639.277 | $1.639.277 | Cálculo propio (costo directo del APU) |
+| APU-04: Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje | un | 12 | $643.560 | $7.722.720 | Cálculo propio (costo directo del APU) |
 | APU-05: Puesta a tierra de estructura o equipo: 1 varilla copperweld de 5/8" × 2,4 m, bajante de Cu 2 AWG, 2 soldaduras exotérmicas, caja de registro y medición | un | 4 | $722.265 | $2.889.060 | Cálculo propio (costo directo del APU) |
-| **APU unitarios que lo componen** | | | | **$93.425.234** | |
+| **APU unitarios que lo componen** | | | | **$90.688.374** | |
 | Equipo de tendido: poleas, malacate, ranas, tensiómetro y pértigas | día | 1,667 | $250.000 | $416.667 | Estimación |
 | Camioneta 4×4 de cuadrilla con conductor y combustible | día | 1,667 | $380.000 | $633.333 | Estimación |
 | Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible | día | 0,833 | $1.800.000 | $1.500.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $1.620.000 | $81.000 | Estimación |
 | **Equipo** | | | | **$2.631.000** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $23.877.000 | $716.310 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $23.877.000 | $716.310 | Estimación |
 | **Transporte** | | | | **$716.310** | |
 | Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes — tendido, tensionado, amarres y puentes de 4 conductores | día | rinde 0,60 km/día | $972.000 | $1.620.000 | Estimación |
 | **Mano de obra** | | | | **$1.620.000** | |
-| **Costo directo** | | | | **$122.269.544** | |
-| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $33.012.776 | Estimación |
-| IVA 19 % sobre la utilidad | | | | $1.161.561 | Oficial (tarifa) |
-| **Precio unitario total** | **km** | | | **$156.443.882** | Rango $125.155.105–$203.377.046 |
+| **Costo directo** | | | | **$119.532.684** | |
+| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $32.273.825 | Estimación |
+| IVA 19 % sobre la utilidad | | | | $1.135.560 | Oficial (tarifa) |
+| **Precio unitario total** | **km** | | | **$152.942.069** | Rango $122.353.655–$198.824.690 |
 
 Contraste: Suma de UC de la CREG para el mismo km (19 N2L70 + 6 N2L72 + N2L84 × 4/3 por el neutro + 4 N2L137), actualizada con IPP; ya incluye ingeniería y montaje: **$179.347.467**; Solo conductor: CREG N2L84 ACSR 2/0 (3 fases) actualizado: **$27.421.745**.
 
 ### APU-06R · km de red de MT aérea trifásica 13,2 kV en zona rural (vía a la PTAP, pozos y PTAP veredal): ACSR 1/0 + neutro ACSR 1/0, vano de 80 m
 
-Unidad: **km**. Norma: EPM RA2-011 (suspensión V-neutro, vano hasta 90 m), RA2-003, RA2-004. Supuestos: 12,5 postes por km: 10,0 de suspensión, 2 de retención y 0,5 terminal prorrateado; 3 vientos y 3 puestas a tierra por km; Se usa la estructura RA2-001 como costo de la suspensión rural (la RA2-011 tiene materiales equivalentes); Tendido: 1,0 km por día; No incluye servidumbre ni poda (ítems GES-SERV y GES-PODA por km).
+Unidad: **km**. Norma: EPM RA2-011 (suspensión V-neutro, vano hasta 90 m), RA2-003, RA2-004. Supuestos: 12,5 postes por km: 10,0 de suspensión, 2 de retención y 0,5 terminal prorrateado; 5,5 vientos y 3 puestas a tierra por km; Se usa la estructura RA2-001 como costo de la suspensión rural (la RA2-011 tiene materiales equivalentes); Tendido: 1,0 km por día; No incluye servidumbre ni poda (ítems GES-SERV y GES-PODA por km).
 
 | Componente | Unidad | Cantidad | Precio unitario | Subtotal | Tipo |
 |---|---|---|---|---|---|
@@ -502,27 +504,27 @@ Unidad: **km**. Norma: EPM RA2-011 (suspensión V-neutro, vano hasta 90 m), RA2-
 | Empalmes y conectores | un | 6 | $15.000 | $90.000 | Estimación |
 | Marcación de circuito | un | 2 | $15.000 | $30.000 | Estimación |
 | **Materiales** | | | | **$20.088.000** | |
-| APU-01: Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida | un | 10 | $2.200.516 | $22.005.160 | Cálculo propio (costo directo del APU) |
-| APU-01b: Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales) | un | 2,5 | $2.406.516 | $6.016.290 | Cálculo propio (costo directo del APU) |
+| APU-01: Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida | un | 10 | $1.963.016 | $19.630.160 | Cálculo propio (costo directo del APU) |
+| APU-01b: Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales) | un | 2,5 | $2.063.016 | $5.157.540 | Cálculo propio (costo directo del APU) |
 | APU-02: Estructura de suspensión trifásica 13,2 kV con neutro inferior, cruceta de 1.500 mm al centro (vestida sobre poste ya instalado) | un | 10 | $874.228 | $8.742.280 | Cálculo propio (costo directo del APU) |
 | APU-03: Estructura de retención (referencia) trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin vientos) | un | 2 | $2.430.317 | $4.860.634 | Cálculo propio (costo directo del APU) |
-| APU-03b: Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento) | un | 0,5 | $1.663.997 | $831.998 | Cálculo propio (costo directo del APU) |
-| APU-04: Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje | un | 3 | $643.560 | $1.930.680 | Cálculo propio (costo directo del APU) |
+| APU-03b: Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento) | un | 0,5 | $1.639.277 | $819.638 | Cálculo propio (costo directo del APU) |
+| APU-04: Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje | un | 5,5 | $643.560 | $3.539.580 | Cálculo propio (costo directo del APU) |
 | APU-05: Puesta a tierra de estructura o equipo: 1 varilla copperweld de 5/8" × 2,4 m, bajante de Cu 2 AWG, 2 soldaduras exotérmicas, caja de registro y medición | un | 3 | $722.265 | $2.166.795 | Cálculo propio (costo directo del APU) |
-| **APU unitarios que lo componen** | | | | **$46.553.837** | |
+| **APU unitarios que lo componen** | | | | **$44.916.627** | |
 | Equipo de tendido: poleas, malacate, ranas, tensiómetro y pértigas | día | 1,000 | $250.000 | $250.000 | Estimación |
 | Camioneta 4×4 de cuadrilla con conductor y combustible | día | 1,000 | $380.000 | $380.000 | Estimación |
 | Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible | día | 0,300 | $1.800.000 | $540.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $972.000 | $48.600 | Estimación |
 | **Equipo** | | | | **$1.218.600** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $20.088.000 | $602.640 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $20.088.000 | $602.640 | Estimación |
 | **Transporte** | | | | **$602.640** | |
 | Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes — tendido, tensionado, amarres y puentes de 4 conductores | día | rinde 1,00 km/día | $972.000 | $972.000 | Estimación |
 | **Mano de obra** | | | | **$972.000** | |
-| **Costo directo** | | | | **$69.435.077** | |
-| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $18.747.471 | Estimación |
-| IVA 19 % sobre la utilidad | | | | $659.633 | Oficial (tarifa) |
-| **Precio unitario total** | **km** | | | **$88.842.181** | Rango $71.073.745–$115.494.835 |
+| **Costo directo** | | | | **$67.797.867** | |
+| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $18.305.424 | Estimación |
+| IVA 19 % sobre la utilidad | | | | $644.080 | Oficial (tarifa) |
+| **Precio unitario total** | **km** | | | **$86.747.371** | Rango $69.397.897–$112.771.582 |
 
 Contraste: Suma de UC de la CREG para el mismo km (N2L70, N2L72, N2L83 × 4/3, N2L137), actualizada con IPP: **$103.656.402**.
 
@@ -543,7 +545,7 @@ Unidad: **km**. Norma: RETIE y normas de EPM para red trenzada (pinzas de suspen
 | Camioneta 4×4 de cuadrilla con conductor y combustible | día | 1,250 | $380.000 | $475.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $1.215.000 | $60.750 | Estimación |
 | **Equipo** | | | | **$848.250** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $25.853.000 | $775.590 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $25.853.000 | $775.590 | Estimación |
 | **Transporte** | | | | **$775.590** | |
 | Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes — tendido del trenzado, pinzas y derivaciones | día | rinde 0,80 km/día | $972.000 | $1.215.000 | Estimación |
 | **Mano de obra** | | | | **$1.215.000** | |
@@ -567,43 +569,43 @@ Unidad: **un**. Norma: EPM RA3-026 y RA2-007 (cortacircuitos en cruceta de 2.400
 | Cruceta angular metálica galvanizada de 2.400 mm (RA7-013) | un | 1 | $150.000 | $150.000 | Estimación |
 | Tiranta (diagonal) de 2.400 mm | un | 1 | $55.000 | $55.000 | Estimación |
 | Soporte en L para cortacircuitos y pararrayos | un | 3 | $12.000 | $36.000 | Estimación |
-| Estribo (derivación) para conexión de cortacircuitos | un | 3 | $15.000 | $45.000 | Estimación |
+| Estribo (derivación) para conexión de cortacircuitos | un | 6 | $15.000 | $90.000 | Estimación |
 | Conector de compresión en C o transversal universal (cobre/aluminio) | un | 9 | $15.000 | $135.000 | Estimación |
 | Cobre 2 AWG para puentes de MT y conexión de DPS | m | 12 | $17.000 | $204.000 | Estimación |
 | Collarín doble o soporte para colgar transformador trifásico | un | 2 | $120.000 | $240.000 | Estimación |
 | Perno espaciador de 15,9 × 254 mm (5/8" × 10") galvanizado | un | 4 | $12.500 | $50.000 | Estimación |
 | Tornillo de máquina de 5/8" × 1½"–2" galvanizado | un | 6 | $5.500 | $33.000 | Estimación |
-| Bajante de BT 4 × 2/0 Cu × 12 m (I = 197 A a 220 V) | m | 48 | $42.000 | $2.016.000 | Estimación |
+| Bajante de BT 4 × 3/0 Cu × 12 m (I = 197 A a 220 V; el 2/0 solo admite 175 A a 75 °C, NTC 2050 tabla 310-16) | m | 48 | $53.000 | $2.544.000 | Estimación |
 | Tubo galvanizado de 3" × 6 m con capacete, unión y cinta bandit (bajante BT) | un | 1 | $480.000 | $480.000 | Estimación |
 | Caja de derivación de acometidas o barraje de BT en poste | un | 1 | $350.000 | $350.000 | Estimación |
 | Cubierta aislante para bujes secundarios (antifraude) | un | 4 | $20.000 | $80.000 | Estimación |
 | Pruebas de puesta en servicio del transformador (relación TTR, aislamiento, aceite) y protocolo | global | 1 | $600.000 | $600.000 | Estimación |
 | Placa o marquilla de identificación de circuito o poste (RA6-020) | un | 1 | $15.000 | $15.000 | Estimación |
-| **Materiales** | | | | **$31.423.447** | |
+| **Materiales** | | | | **$31.996.447** | |
 | APU-05: Puesta a tierra de estructura o equipo: 1 varilla copperweld de 5/8" × 2,4 m, bajante de Cu 2 AWG, 2 soldaduras exotérmicas, caja de registro y medición | un | 2 | $722.265 | $1.444.530 | Cálculo propio (costo directo del APU) |
 | **APU unitarios que lo componen** | | | | **$1.444.530** | |
 | Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible | día | 0,500 | $1.800.000 | $900.000 | Estimación |
 | Camioneta 4×4 de cuadrilla con conductor y combustible | día | 1,000 | $380.000 | $380.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $972.000 | $48.600 | Estimación |
 | **Equipo** | | | | **$1.328.600** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $31.423.447 | $942.703 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $7.183.000 | $215.490 | Estimación |
 | Transporte de un transformador de distribución hasta Yondó | un | 1,00 | $600.000 | $600.000 | Estimación |
-| **Transporte** | | | | **$1.542.703** | |
+| **Transporte** | | | | **$815.490** | |
 | Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes — montaje del transformador, protecciones, bajante y pruebas | día | rinde 1,00 un/día | $972.000 | $972.000 | Estimación |
 | **Mano de obra** | | | | **$972.000** | |
-| **Costo directo** | | | | **$36.711.280** | |
-| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $9.912.045 | Estimación |
-| IVA 19 % sobre la utilidad | | | | $348.757 | Oficial (tarifa) |
-| **Precio unitario total** | **un** | | | **$46.972.083** | Rango $37.577.666–$61.063.708 |
+| **Costo directo** | | | | **$36.557.067** | |
+| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $9.870.408 | Estimación |
+| IVA 19 % sobre la utilidad | | | | $347.292 | Oficial (tarifa) |
+| **Precio unitario total** | **un** | | | **$46.774.767** | Rango $37.419.814–$60.807.197 |
 
 Contraste: CREG N1T14, transformador aéreo trifásico urbano de 75 kVA instalado (actualizado con IPP): **$19.697.797**; CREG N1T18, transformador pedestal de 75 kVA instalado (opción subterránea): **$65.649.439**.
 
 | Variante | Precio total | Rango | Nota |
 |---|---|---|---|
-| 25 kVA monofásico | $26.549.347 | $21.239.478–$34.514.151 | Monofásico: 1 cortacircuitos, 1 DPS, bajante 3 × 1/0 Cu, percha en vez de collarines (RA3-026); mismo montaje y puestas a tierra. CREG N1T5: $11.013.503. |
-| 37,5 kVA monofásico | $28.087.306 | $22.469.845–$36.513.498 | Monofásico: 1 cortacircuitos, 1 DPS, bajante 3 × 1/0 Cu, percha en vez de collarines (RA3-026); mismo montaje y puestas a tierra. CREG N1T6: $11.749.823. |
-| 45 kVA trifásico | $38.591.094 | $30.872.875–$50.168.422 | Igual al APU-08 cambiando el transformador; mismo montaje y puestas a tierra. CREG N1T12: $15.559.909. |
-| 112,5 kVA trifásico | $55.716.482 | $44.573.185–$72.431.426 | Igual al APU-08 cambiando el transformador; mismo montaje y puestas a tierra. Para 112,5 kVA EPM puede pedir montaje en estructura doble (RA3-030) y poste de 1.050 kgf: sumar un poste APU-01b y una estructura APU-03. CREG N1T15: $21.850.750. |
+| 25 kVA monofásico | $25.326.717 | $20.261.374–$32.924.732 | Monofásico (RA3-026): 1 cortacircuitos, 1 DPS, 1 estribo y soporte en L, percha en vez de cruceta de 2,4 m y collarines; bajante 3 × 1/0 Cu (104 A a 240 V); mismo montaje y puestas a tierra. CREG N1T5: $11.013.503. |
+| 37,5 kVA monofásico | $27.244.227 | $21.795.381–$35.417.495 | Monofásico (RA3-026): 1 cortacircuitos, 1 DPS, 1 estribo y soporte en L, percha en vez de cruceta de 2,4 m y collarines; bajante 3 × 2/0 Cu (156 A a 240 V; el 1/0 solo admite 150 A); mismo montaje y puestas a tierra. CREG N1T6: $11.749.823. |
+| 45 kVA trifásico | $37.191.867 | $29.753.494–$48.349.428 | Igual al APU-08 cambiando el transformador y el bajante a 4 × 1/0 Cu (118 A a 220 V); mismo montaje y puestas a tierra. CREG N1T12: $15.559.909. |
+| 112,5 kVA trifásico | $58.871.866 | $47.097.493–$76.533.425 | Igual al APU-08 cambiando el transformador y el bajante a 2 × 3/0 Cu por fase (295 A a 220 V); mismo montaje y puestas a tierra. Para 112,5 kVA EPM puede pedir montaje en estructura doble (RA3-030) y poste de 1.050 kgf: sumar un poste APU-01b y una estructura APU-03. CREG N1T15: $21.850.750. |
 
 ### APU-09 · km de fibra óptica ADSS 24 hilos instalada en postes existentes (zona urbana, vano de 40 m), con herrajes, reservas, empalmes y pruebas
 
@@ -611,37 +613,37 @@ Unidad: **km**. Norma: Buenas prácticas de despliegue aéreo (UIT-T L.26/ IEC 6
 
 | Componente | Unidad | Cantidad | Precio unitario | Subtotal | Tipo |
 |---|---|---|---|---|---|
-| Cable de fibra óptica ADSS G.652D monomodo 24 hilos, span 100 m, en carrete de 4 km (precio con IVA) | m | 1.060 | $6.209 | $6.581.308 | Mercado |
-| Herraje de suspensión tipo J para ADSS Φ 10–15 mm (precio con IVA) | un | 21 | $24.640 | $517.443 | Mercado |
-| Remate preformado (retención) para ADSS span 100 m, Φ 10–11 mm (precio con IVA) | un | 8 | $16.755 | $134.042 | Mercado |
+| Cable de fibra óptica ADSS G.652D monomodo 24 hilos, span 100 m, en carrete de 4 km (precio con IVA) | m | 1.060 | $6.209 | $6.581.540 | Mercado |
+| Herraje de suspensión tipo J para ADSS Φ 10–15 mm (precio con IVA) | un | 21 | $24.640 | $517.440 | Mercado |
+| Remate preformado (retención) para ADSS span 100 m, Φ 10–11 mm (precio con IVA) | un | 8 | $16.755 | $134.040 | Mercado |
 | Fleje de acero inoxidable 304 de 3/4", 0,70 mm (rollo de 30,5 m) (precio con IVA) | m | 34,80 | $4.718 | $164.186 | Mercado |
-| Hebilla de acero inoxidable de 3/4" (paquete de 100) (precio con IVA) | un | 58 | $977 | $56.641 | Mercado |
+| Hebilla de acero inoxidable de 3/4" (paquete de 100) (precio con IVA) | un | 58 | $977 | $56.666 | Mercado |
 | Par de raquetas de reserva para cable ADSS, 12" (precio con IVA) | par | 2 | $93.961 | $187.922 | Mercado |
 | Caja de empalme exterior IP65, aérea, hasta 144 empalmes (precio con IVA) | un | 0,500 | $425.782 | $212.891 | Mercado |
-| Pigtail monomodo SC/UPC simplex de 1 m (precio con IVA) | un | 12 | $4.189 | $50.266 | Mercado |
+| Pigtail monomodo SC/UPC simplex de 1 m (precio con IVA) | un | 12 | $4.189 | $50.268 | Mercado |
 | Marquilla de identificación del cable en cada poste | un | 25 | $15.000 | $375.000 | Estimación |
-| **Materiales** | | | | **$8.279.699** | |
+| **Materiales** | | | | **$8.279.953** | |
 | Camioneta 4×4 de cuadrilla con conductor y combustible | día | 0,833 | $380.000 | $316.667 | Estimación |
 | Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible | día | 0,200 | $1.800.000 | $360.000 | Estimación |
 | Fusionadora de fibra, OTDR, cortadora de precisión y medidor de potencia | día | 0,250 | $450.000 | $112.500 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $745.500 | $37.275 | Estimación |
 | **Equipo** | | | | **$826.442** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $8.279.699 | $248.391 | Estimación |
-| **Transporte** | | | | **$248.391** | |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $8.279.953 | $248.399 | Estimación |
+| **Transporte** | | | | **$248.399** | |
 | Cuadrilla de fibra óptica: 1 empalmador + 1 liniero + 2 ayudantes — tendido, herrajes y marquillas | día | rinde 1,20 km/día | $630.000 | $525.000 | Estimación |
 | Cuadrilla de fibra óptica: 1 empalmador + 1 liniero + 2 ayudantes — empalmes (12 fusiones por km) y pruebas OTDR (0,1 día por km) | día | rinde 2,86 km/día | $630.000 | $220.500 | Estimación |
 | **Mano de obra** | | | | **$745.500** | |
-| **Costo directo** | | | | **$10.100.032** | |
-| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $2.727.009 | Estimación |
-| IVA 19 % sobre la utilidad | | | | $95.950 | Oficial (tarifa) |
-| **Precio unitario total** | **km** | | | **$12.922.991** | Rango $10.338.393–$16.799.888 |
+| **Costo directo** | | | | **$10.100.294** | |
+| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $2.727.080 | Estimación |
+| IVA 19 % sobre la utilidad | | | | $95.953 | Oficial (tarifa) |
+| **Precio unitario total** | **km** | | | **$12.923.326** | Rango $10.338.661–$16.800.324 |
 
 Contraste: CREG N4L93, fibra ADSS en líneas de nivel 4 (actualizado con IPP); referencia alta, incluye trabajo en torres: **$50.087.883**.
 
 | Variante | Precio total | Rango | Nota |
 |---|---|---|---|
-| ADSS 48 hilos (troncal) | $27.825.099 | $22.260.080–$36.172.629 | Cambia el cable al precio por km suelto de 48 hilos (no hay precio confiable de carrete) y duplica las fusiones (12 más por km, 0,25 días de cuadrilla). |
-| Rural (vano 80 m, 12,5 postes/km) | $10.079.933 | — | Estimación: la mitad de herrajes, fleje y marquillas y tendido más rápido; el cable no cambia. |
+| ADSS 48 hilos (troncal) | $27.825.435 | $22.260.348–$36.173.065 | Cambia el cable al precio por km suelto de 48 hilos (no hay precio confiable de carrete) y duplica las fusiones (12 más por km, 0,25 días de cuadrilla). |
+| Rural (vano 80 m, 12,5 postes/km) | $10.080.194 | — | Estimación: la mitad de herrajes, fleje y marquillas y tendido más rápido; el cable no cambia. |
 
 Costo de operación: Arriendo de 25 puntos de apoyo por km en postes de EPM (tope CRC actualizado): **$900.668 al año por km**.
 
@@ -653,25 +655,25 @@ Unidad: **un**. Norma: Arquitectura GPON (UIT-T G.984): OLT en el CCED, splitter
 |---|---|---|---|---|---|
 | Caja de distribución (NAP) exterior para 24 empalmes con 16 acopladores SC/APC (precio con IVA) | un | 1 | $261.679 | $261.679 | Mercado |
 | Splitter PLC 1×8 con conectores SC/APC (precio con IVA) | un | 1 | $140.284 | $140.284 | Mercado |
-| Cable de acometida de fibra (drop) de 2 hilos con mensajero, por metro | m | 55 | $1.800 | $99.000 | Estimación |
-| Caja o bandeja de terminación óptica de pared con 2 adaptadores (roseta) en la sede | un | 1 | $45.000 | $45.000 | Estimación |
+| Cable de acometida de fibra (drop) figura 8 de 1 hilo G.657A1 con mensajero, por metro | m | 55 | $415 | $22.825 | Estimación |
+| Caja o bandeja de terminación óptica de pared con 2 adaptadores (roseta) en la sede | un | 1 | $22.998 | $22.998 | Estimación |
 | ONU (ONT) GPON con 4 puertos Gigabit y WiFi 2,4 GHz (precio con IVA) | un | 1 | $399.416 | $399.416 | Mercado |
 | Cordón de parcheo de fibra monomodo SC/APC–LC de 3 m | un | 2 | $15.000 | $30.000 | Estimación |
-| Pigtail monomodo SC/UPC simplex de 1 m (precio con IVA) | un | 4 | $4.189 | $16.755 | Mercado |
+| Pigtail monomodo SC/UPC simplex de 1 m (precio con IVA) | un | 4 | $4.189 | $16.756 | Mercado |
 | Placa o marquilla de identificación de circuito o poste (RA6-020) | un | 1 | $15.000 | $15.000 | Estimación |
-| **Materiales** | | | | **$1.007.134** | |
+| **Materiales** | | | | **$908.958** | |
 | Camioneta 4×4 de cuadrilla con conductor y combustible | día | 0,500 | $380.000 | $190.000 | Estimación |
 | Fusionadora de fibra, OTDR, cortadora de precisión y medidor de potencia | día | 0,500 | $450.000 | $225.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $315.000 | $15.750 | Estimación |
 | **Equipo** | | | | **$430.750** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $1.007.134 | $30.214 | Estimación |
-| **Transporte** | | | | **$30.214** | |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $908.958 | $27.269 | Estimación |
+| **Transporte** | | | | **$27.269** | |
 | Cuadrilla de fibra óptica: 1 empalmador + 1 liniero + 2 ayudantes — NAP, acometida, fusiones, roseta, ONU y prueba de potencia | día | rinde 2,00 un/día | $630.000 | $315.000 | Estimación |
 | **Mano de obra** | | | | **$315.000** | |
-| **Costo directo** | | | | **$1.783.098** | |
-| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $481.437 | Estimación |
-| IVA 19 % sobre la utilidad | | | | $16.939 | Oficial (tarifa) |
-| **Precio unitario total** | **un** | | | **$2.281.474** | Rango $1.825.179–$2.965.916 |
+| **Costo directo** | | | | **$1.681.977** | |
+| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $454.134 | Estimación |
+| IVA 19 % sobre la utilidad | | | | $15.979 | Oficial (tarifa) |
+| **Precio unitario total** | **un** | | | **$2.152.090** | Rango $1.721.672–$2.797.716 |
 
 ### APU-14 · Nodo central de la red de datos en el CCED (Alcaldía): OLT GPON de 16 puertos, switch industrial capa 3 con 10G, distribuidor de fibra (ODF) y transceptores
 
@@ -682,23 +684,23 @@ Unidad: **un**. Norma: Arquitectura GPON; el EMS/SCADA, los servidores y la UPS 
 | OLT GPON de 16 puertos con 8 uplinks (4 GE + 4 SFP) (precio con IVA) | un | 1 | $18.904.079 | $18.904.079 | Mercado |
 | Switch industrial administrable capa 3, 16 puertos GE + 4 SFP+ 10G (precio con IVA) | un | 1 | $8.484.093 | $8.484.093 | Mercado |
 | Distribuidor de fibra (ODF) 19" para 48 adaptadores LC dúplex, vacío (precio con IVA) | un | 1 | $323.772 | $323.772 | Mercado |
-| Pigtail monomodo SC/UPC simplex de 1 m (precio con IVA) | un | 48 | $4.189 | $201.062 | Mercado |
-| Transceptor SFP 1G LX BiDi monomodo, 20 km (precio con IVA) | un | 4 | $266.199 | $1.064.798 | Mercado |
+| Pigtail monomodo SC/UPC simplex de 1 m (precio con IVA) | un | 48 | $4.189 | $201.072 | Mercado |
+| Transceptor SFP 1G LX BiDi monomodo, 20 km (precio con IVA) | un | 4 | $266.199 | $1.064.796 | Mercado |
 | Cordón de parcheo de fibra monomodo SC/APC–LC de 3 m | un | 10 | $15.000 | $150.000 | Estimación |
 | Placa o marquilla de identificación de circuito o poste (RA6-020) | un | 4 | $15.000 | $60.000 | Estimación |
-| **Materiales** | | | | **$29.187.804** | |
+| **Materiales** | | | | **$29.187.812** | |
 | Fusionadora de fibra, OTDR, cortadora de precisión y medidor de potencia | día | 1,000 | $450.000 | $450.000 | Estimación |
 | Camioneta 4×4 de cuadrilla con conductor y combustible | día | 1,000 | $380.000 | $380.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $1.260.000 | $63.000 | Estimación |
 | **Equipo** | | | | **$893.000** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $29.187.804 | $875.634 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $29.187.812 | $875.634 | Estimación |
 | **Transporte** | | | | **$875.634** | |
 | Cuadrilla de fibra óptica: 1 empalmador + 1 liniero + 2 ayudantes — montaje en rack, fusiones del ODF, configuración y pruebas | día | rinde 0,50 un/día | $630.000 | $1.260.000 | Estimación |
 | **Mano de obra** | | | | **$1.260.000** | |
-| **Costo directo** | | | | **$32.216.438** | |
-| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $8.698.438 | Estimación |
+| **Costo directo** | | | | **$32.216.446** | |
+| Administración 19 % + imprevistos 3 % + utilidad 5 % | | | | $8.698.440 | Estimación |
 | IVA 19 % sobre la utilidad | | | | $306.056 | Oficial (tarifa) |
-| **Precio unitario total** | **un** | | | **$41.220.932** | Rango $32.976.746–$53.587.212 |
+| **Precio unitario total** | **un** | | | **$41.220.943** | Rango $32.976.754–$53.587.225 |
 
 ### APU-10 · Metro de canalización subterránea con 4 ductos PVC de 4" bajo andén, envueltos en concreto, con reposición de andén (sin cámaras)
 
@@ -717,7 +719,7 @@ Unidad: **m**. Norma: RETIE y normas de EPM para canalizaciones (RS-); NTC 2050.
 | Mezcladora de concreto de 1 bulto | día | 0,167 | $90.000 | $15.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $94.536 | $4.727 | Estimación |
 | **Equipo** | | | | **$44.727** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $335.570 | $10.067 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $335.570 | $10.067 | Estimación |
 | Retiro y disposición de sobrantes de excavación | m3 | 0,40 | $85.000 | $34.000 | Estimación |
 | **Transporte** | | | | **$44.067** | |
 | Cuadrilla de obra civil: 1 oficial + 4 obreros — demolición, excavación, ductos, concreto, relleno y reposición | día | rinde 6,00 m/día | $567.217 | $94.536 | Estimación |
@@ -745,7 +747,7 @@ Unidad: **un**. Norma: Normas de EPM para cámaras de redes subterráneas; RETIE
 | Vibrocompactador tipo canguro | día | 0,500 | $150.000 | $75.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $1.134.434 | $56.722 | Estimación |
 | **Equipo** | | | | **$221.722** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $1.922.500 | $57.675 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $1.922.500 | $57.675 | Estimación |
 | Retiro y disposición de sobrantes de excavación | m3 | 3,00 | $85.000 | $255.000 | Estimación |
 | **Transporte** | | | | **$312.675** | |
 | Cuadrilla de obra civil: 1 oficial + 4 obreros — excavación, formaleta, vaciado y relleno | día | rinde 0,50 un/día | $567.217 | $1.134.434 | Estimación |
@@ -777,7 +779,7 @@ Unidad: **km**. Norma: RETIE; normas de EPM para redes subterráneas. Supuestos:
 | Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible | día | 1,000 | $1.800.000 | $1.800.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $3.240.000 | $162.000 | Estimación |
 | **Equipo** | | | | **$4.062.000** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $272.550.000 | $8.176.500 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $272.550.000 | $8.176.500 | Estimación |
 | **Transporte** | | | | **$8.176.500** | |
 | Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes — tendido del cable, terminales y pruebas | día | rinde 0,30 km/día | $972.000 | $3.240.000 | Estimación |
 | **Mano de obra** | | | | **$3.240.000** | |
@@ -790,7 +792,7 @@ Contraste: CREG N2L77 (canalización urbana 4 × 4", por km) + N2L127 (cable XLP
 
 ### APU-11 · Acometida trifásica de BT a una sede (25 m de Cu 3 × 2/0 + N 1/0 + T 4 en tubería) con medida semidirecta y medidor bidireccional con comunicación
 
-Unidad: **un**. Norma: RETIE; normas de medida de EPM; CREG 038 de 2014 (código de medida) y CREG 174 de 2021 (medidor bidireccional del autogenerador). Supuestos: Para sedes de 30–100 kW (corriente de 80–260 A a 220 V); para cargas menores, medida directa (restar los TC y la bornera); 27 m de cable por conductor (25 m + colas); 1,5 días de pareja de liniería.
+Unidad: **un**. Norma: RETIE; normas de medida de EPM; CREG 038 de 2014 (código de medida) y CREG 174 de 2021 (medidor bidireccional del autogenerador). Supuestos: Para sedes de hasta unos 60 kVA (157 A a 220 V): el Cu 2/0 THHN admite 175 A a 75 °C (NTC 2050, tabla 310-16); para sedes mayores se sube a 4/0 o a dos conductores por fase. Para cargas menores, medida directa (restar los TC y la bornera); 27 m de cable por conductor (25 m + colas); 1,5 días de pareja de liniería.
 
 | Componente | Unidad | Cantidad | Precio unitario | Subtotal | Tipo |
 |---|---|---|---|---|---|
@@ -808,7 +810,7 @@ Unidad: **un**. Norma: RETIE; normas de medida de EPM; CREG 038 de 2014 (código
 | Camioneta 4×4 de cuadrilla con conductor y combustible | día | 0,500 | $380.000 | $190.000 | Estimación |
 | Herramienta menor (5 % de la mano de obra) | % | 5 % | $459.000 | $22.950 | Estimación |
 | **Equipo** | | | | **$212.950** | |
-| Transporte de materiales menores hasta Yondó (3 % de los materiales) | % | 3 % | $9.718.000 | $291.540 | Estimación |
+| Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores) | % | 3 % | $9.718.000 | $291.540 | Estimación |
 | **Transporte** | | | | **$291.540** | |
 | Pareja: 1 liniero + 1 ayudante — acometida, celda de medida y conexión | día | rinde 0,67 un/día | $306.000 | $459.000 | Estimación |
 | **Mano de obra** | | | | **$459.000** | |
@@ -823,37 +825,37 @@ Contraste: Rango de 2–5 M COP por punto de medición instalado usado en data/p
 
 | Código | Ítem | Unidad | Precio con AIU | Rango | Referencia CREG actualizada |
 |---|---|---|---|---|---|
-| APU-01 | Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida | un | $2.815.560 | $2.252.448–$3.660.228 | N1P3: $1.678.546 (poste de BT) |
-| APU-01b | Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales) | un | $3.079.137 | $2.463.310–$4.002.878 | — |
-| APU-01c | Poste de concreto de 10 m y 510 kgf instalado, sin vestida (red de BT sola) | un | $2.486.089 | $1.988.871–$3.231.916 | N1P50: $1.339.213 |
+| APU-01 | Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida | un | $2.511.679 | $2.009.343–$3.265.183 | N1P3: $1.678.546 (poste de BT) |
+| APU-01b | Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales) | un | $2.639.629 | $2.111.703–$3.431.518 | — |
+| APU-01c | Poste de concreto de 10 m y 510 kgf instalado, sin vestida (red de BT sola) | un | $2.447.704 | $1.958.163–$3.182.015 | N1P50: $1.339.213 |
 | APU-02 | Estructura de suspensión trifásica 13,2 kV con neutro inferior, cruceta de 1.500 mm al centro (vestida sobre poste ya instalado) | un | $1.118.575 | $894.860–$1.454.147 | N2L70 (con poste): $5.295.904 |
 | APU-03 | Estructura de retención (referencia) trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin vientos) | un | $3.109.591 | $2.487.672–$4.042.468 | N2L72 (con poste): $6.730.657 |
-| APU-03b | Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento) | un | $2.129.084 | $1.703.267–$2.767.809 | — |
+| APU-03b | Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento) | un | $2.097.455 | $1.677.964–$2.726.691 | — |
 | APU-04 | Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje | un | $823.435 | $658.748–$1.070.466 | — |
 | APU-05 | Puesta a tierra de estructura o equipo: 1 varilla copperweld de 5/8" × 2,4 m, bajante de Cu 2 AWG, 2 soldaduras exotérmicas, caja de registro y medición | un | $924.138 | $739.310–$1.201.379 | N2L137: $444.757 |
-| APU-06U | km de red de MT aérea trifásica 13,2 kV en zona urbana: ACSR 2/0 + neutro ACSR 1/0, postes de concreto de 12 m, vano de 40 m | km | $156.443.882 | $125.155.105–$203.377.046 | Suma de UC: $179.347.467 |
-| APU-06R | km de red de MT aérea trifásica 13,2 kV en zona rural (vía a la PTAP, pozos y PTAP veredal): ACSR 1/0 + neutro ACSR 1/0, vano de 80 m | km | $88.842.181 | $71.073.745–$115.494.835 | Suma de UC: $103.656.402 |
+| APU-06U | km de red de MT aérea trifásica 13,2 kV en zona urbana: ACSR 2/0 + neutro ACSR 1/0, postes de concreto de 12 m, vano de 40 m | km | $152.942.069 | $122.353.655–$198.824.690 | Suma de UC: $179.347.467 |
+| APU-06R | km de red de MT aérea trifásica 13,2 kV en zona rural (vía a la PTAP, pozos y PTAP veredal): ACSR 1/0 + neutro ACSR 1/0, vano de 80 m | km | $86.747.371 | $69.397.897–$112.771.582 | Suma de UC: $103.656.402 |
 | APU-07 | km de red de BT trenzada 3 × 1/0 AWG Al + neutro portante 1/0, sobre postes de la red de MT (sin postes nuevos) | km | $36.711.209 | $29.368.967–$47.724.572 | 3 × N1L56: $52.444.272 |
-| APU-08 | Transformador trifásico de 75 kVA, 13.200/220-127 V, instalado en poste existente con cortacircuitos, DPS, bajante de BT y 2 puestas a tierra | un | $46.972.083 | $37.577.666–$61.063.708 | N1T14: $19.697.797 |
-| APU-08 · 25 kVA monofásico | variante | un | $26.549.347 | $21.239.478–$34.514.151 | N1T5: $11.013.503 |
-| APU-08 · 37,5 kVA monofásico | variante | un | $28.087.306 | $22.469.845–$36.513.498 | N1T6: $11.749.823 |
-| APU-08 · 45 kVA trifásico | variante | un | $38.591.094 | $30.872.875–$50.168.422 | N1T12: $15.559.909 |
-| APU-08 · 112,5 kVA trifásico | variante | un | $55.716.482 | $44.573.185–$72.431.426 | N1T15: $21.850.750 |
-| APU-09 | km de fibra óptica ADSS 24 hilos instalada en postes existentes (zona urbana, vano de 40 m), con herrajes, reservas, empalmes y pruebas | km | $12.922.991 | $10.338.393–$16.799.888 | N4L93 (líneas de nivel 4, 57,5–220 kV): $50.087.883 |
-| APU-09 · ADSS 48 hilos (troncal) | variante | km | $27.825.099 | $22.260.080–$36.172.629 | — |
-| APU-09 · Rural (vano 80 m, 12,5 postes/km) | variante | km | $10.079.933 | — | — |
+| APU-08 | Transformador trifásico de 75 kVA, 13.200/220-127 V, instalado en poste existente con cortacircuitos, DPS, bajante de BT y 2 puestas a tierra | un | $46.774.767 | $37.419.814–$60.807.197 | N1T14: $19.697.797 |
+| APU-08 · 25 kVA monofásico | variante | un | $25.326.717 | $20.261.374–$32.924.732 | N1T5: $11.013.503 |
+| APU-08 · 37,5 kVA monofásico | variante | un | $27.244.227 | $21.795.381–$35.417.495 | N1T6: $11.749.823 |
+| APU-08 · 45 kVA trifásico | variante | un | $37.191.867 | $29.753.494–$48.349.428 | N1T12: $15.559.909 |
+| APU-08 · 112,5 kVA trifásico | variante | un | $58.871.866 | $47.097.493–$76.533.425 | N1T15: $21.850.750 |
+| APU-09 | km de fibra óptica ADSS 24 hilos instalada en postes existentes (zona urbana, vano de 40 m), con herrajes, reservas, empalmes y pruebas | km | $12.923.326 | $10.338.661–$16.800.324 | N4L93 (líneas de nivel 4, 57,5–220 kV): $50.087.883 |
+| APU-09 · ADSS 48 hilos (troncal) | variante | km | $27.825.435 | $22.260.348–$36.173.065 | — |
+| APU-09 · Rural (vano 80 m, 12,5 postes/km) | variante | km | $10.080.194 | — | — |
 | APU-10 | Metro de canalización subterránea con 4 ductos PVC de 4" bajo andén, envueltos en concreto, con reposición de andén (sin cámaras) | m | $663.933 | $531.146–$863.112 | N1C8: $304.741 |
 | APU-10b | Cámara de inspección de 1,0 × 1,0 × 1,2 m en concreto reforzado con tapa en ferroconcreto | un | $4.595.108 | $3.676.086–$5.973.640 | N1C2: $6.185.418 |
 | APU-12 | km de red de MT subterránea 13,2 kV: canalización de 4 ductos, cámara cada 50 m y 3 cables monopolares Cu 1/0 XLPE 15 kV, con transiciones aéreo–subterráneas en los extremos | km | $1.124.367.176 | $899.493.741–$1.461.677.329 | N2L77 + N2L127: $1.183.121.360 |
 | APU-11 | Acometida trifásica de BT a una sede (25 m de Cu 3 × 2/0 + N 1/0 + T 4 en tubería) con medida semidirecta y medidor bidireccional con comunicación | un | $13.666.966 | $10.933.573–$17.767.056 | — |
-| APU-13 | Conexión de una sede a la red de fibra (GPON): caja de distribución (NAP) con splitter, acometida de fibra de 50 m, roseta, ONU y conexión al tablero de la sede | un | $2.281.474 | $1.825.179–$2.965.916 | — |
-| APU-14 | Nodo central de la red de datos en el CCED (Alcaldía): OLT GPON de 16 puertos, switch industrial capa 3 con 10G, distribuidor de fibra (ODF) y transceptores | un | $41.220.932 | $32.976.746–$53.587.212 | — |
+| APU-13 | Conexión de una sede a la red de fibra (GPON): caja de distribución (NAP) con splitter, acometida de fibra de 50 m, roseta, ONU y conexión al tablero de la sede | un | $2.152.090 | $1.721.672–$2.797.716 | — |
+| APU-14 | Nodo central de la red de datos en el CCED (Alcaldía): OLT GPON de 16 puertos, switch industrial capa 3 con 10G, distribuidor de fibra (ODF) y transceptores | un | $41.220.943 | $32.976.754–$53.587.225 | — |
 | CREG-N2EQ35 | Reconectador trifásico instalado (punto de acople de la microrred física) | un | $74.783.431 | — | Es el valor CREG |
 | CREG-N2EQ29 | Seccionalizador bajo carga 400 A instalado | un | $33.470.441 | — | Es el valor CREG |
 | CREG-N2EQ12 | Juego de cortacircuitos de ramal instalado | juego | $1.976.698 | — | Es el valor CREG |
 | CREG-N2EQ15 | Juego de DPS de línea instalado | juego | $1.584.653 | — | Es el valor CREG |
 
-**Por qué los APU dan más que la CREG en transformadores y menos en estructuras de media tensión:** la CREG reconoce por cada estructura un valor que incluye ingeniería, montaje y obra civil (un poste de 12 m vestido de suspensión: $5.295.904, frente a $3.934.135 del APU-01 más el APU-02), mientras que los transformadores quedaron con precios de 2017 que el mercado ya superó; además, el municipio compra pocas unidades, al detal y con transporte hasta Yondó. En conjunto, el km urbano queda 13 % por debajo de la suma CREG, que trae la ingeniería incluida; aquí la ingeniería (4 %) se suma aparte.
+**Por qué los APU dan más que la CREG en transformadores y menos en estructuras de media tensión:** la CREG reconoce por cada estructura un valor que incluye ingeniería, montaje y obra civil (un poste de 12 m vestido de suspensión: $5.295.904, frente a $3.630.254 del APU-01 más el APU-02), mientras que en transformadores la CREG valora compras al por mayor de los operadores de red y el municipio compra pocas unidades, al detal y con transporte hasta Yondó (el IPP de transformadores del DANE subió menos que el IPP total desde 2017, así que la brecha no es de inflación). En conjunto, el km urbano queda 15 % por debajo de la suma CREG, que trae la ingeniería incluida; aquí la ingeniería (4 %) se suma aparte.
 
 ## 8. La subestación de EPM y los circuitos de 13,2 kV
 
@@ -863,7 +865,7 @@ Contraste: Rango de 2–5 M COP por punto de medición instalado usado en data/p
 |---|---|---|
 | Capacidad | 1 transformador de 10 MVA, 34,5/13,2 kV, con edificio de control | [EPM, 7-jul-2020](https://www.epm.com.co/clientesyusuarios/noticias-y-novedades/epm-pone-en-marcha-solucion-de-energia-electrica-en-yondo--que-b/) |
 | Alimentación | dos circuitos exclusivos de 34,5 kV desde la subestación Barranca (Barrancabermeja, Santander), que conectan a Yondó con el SIN | EPM, 7-jul-2020 |
-| Redes, inversión y año | 32 km de redes, $15.509 millones corrientes, en operación en 2021 | [EPM, 2021](https://www.epm.com.co/clientesyusuarios/noticias-y-novedades/en-2021-epm-entro-en-operacion-importantes-proyectos-de-infraestructura-de-servicios-publicos/) |
+| Redes, inversión y año | 32 km de redes de interconexión con la S/E Barranca, $15.509 millones corrientes, en operación en 2021 | [EPM, 2021](https://www.epm.com.co/clientesyusuarios/noticias-y-novedades/en-2021-epm-entro-en-operacion-importantes-proyectos-de-infraestructura-de-servicios-publicos/) |
 | Contratistas | JE Jaimes Ingenieros S.A. (obras civiles y adecuaciones de la subestación); Ingeomega S.A.S. (circuitos de alimentación) | EPM, 7-jul-2020 |
 | Código en EPM | 165 (Subestación Yondo, región 1 = Nordeste y Magdalena Medio); los circuitos de 13,2 kV se marcan 165-11 a 165-16 | [EPM, norma RA6-020](https://comercializadorenergia.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA6-020.pdf) |
 | Subestación aguas arriba | Barranca (230/115 kV), Barrancabermeja: 7,0976 N, −73,8950 O | OpenStreetMap, way 1426109682 |
@@ -876,8 +878,10 @@ Se buscó en las notas de EPM, los avisos de cortes de 2022 a 2026, la UPME, Ope
 |---|---|---|
 | Patio eléctrico de la PIA Casabe (planta de inyección de agua de Ecopetrol) | 7,04320 N; −73,91255 O | Es un patio de alta tensión real (dos zonas de equipos y un edificio de 65 × 24 m), junto a la vía Yondó–Barrancabermeja y 4 km al norte del casco; Google lo etiqueta "PIA CASABE" y al sur está la "PTAP CASABE" con tanques y tuberías. Ya existía en enero de 2020 (Esri) con menos equipos. Es infraestructura del campo Casabe, no la S/E de EPM. |
 | Subestación Cóndor 115 kV (industrial, Ecopetrol) | 7,03700 N; −73,93090 O | Así figura en OpenStreetMap (way 1410062152), alimentada en 115 kV desde Barranca; es del campo petrolero. |
-| Patio pequeño en la base de Ecopetrol al sur del casco | 7,00130 N; −73,91375 O | Pórtico y equipos menores dentro de una base industrial (tubería en patio); demasiado pequeño para 10 MVA con edificio de control. |
+| Patio pequeño en la base de Ecopetrol al sur del casco | 7,00130 N; −73,91375 O | Patio de unos 22 × 38 m con pórtico, un transformador sobre losa y una caseta, en el borde occidental del complejo industrial que Google Maps etiqueta "Taller de Subsuelo" y "Equipo Liviano" (base del campo Casabe); en enero de 2020 (Esri) ya estaba lleno de equipos. Por tamaño no se puede descartar (una S/E compacta de 10 MVA cabe en 30 × 40 m), pero por estar dentro de la base se toma como subestación industrial. Verificar en la visita de campo (verificación del 22-oct-2026, imágenes data/geo/img/vr_red_c5_*.png). |
 | Patio de camiones al norte (7,0187, −73,9145) y construcción en la Calle 15 (7,0170, −73,9160) | — | No son instalaciones eléctricas. |
+
+Una verificación independiente (22-oct-2026) repitió la consulta a OpenStreetMap y revisó de nuevo el norte, el noreste y el occidente del casco y el patio del sur con imágenes de Google y de Esri (`data/geo/img/vr_red_*.png`): llega a la misma conclusión. El patio del sur no se puede descartar por tamaño, pero está dentro de la base industrial del campo Casabe.
 
 **Confianza: ninguna ubicación confirmada.** Las imágenes del barrido quedaron en `data/geo/img/red_se_*.png` (fuera del repositorio, como todas las imágenes de Google y Esri).
 
@@ -909,6 +913,22 @@ Pendiente: Derecho de petición a EPM (Ley 1755 de 2015): ubicación de la S/E Y
 4. **AIU real** de los últimos contratos de redes eléctricas de Antioquia en SECOP II (los documentos del proceso están detrás de un captcha y no se pudieron leer de forma automática).
 5. **Jornales de la zona:** confirmar con dos contratistas de Barrancabermeja el salario de linieros y ayudantes.
 
+## Verificación independiente (22 de octubre de 2026)
+
+Se abrieron de nuevo las fuentes y se rehicieron las cuentas. **Coinciden con la fuente:** los 45 valores de la CREG (dic-2017) y sus tablas; el IPP de oferta interna (113,41 en dic-2017 y el promedio de ene–sep 2026, 186,81); los 8 APU de la SIF de 2020 y sus anclas (poste, cruceta, varilla, DPS, caja primaria, concreto y acero); el tope de la CRC ($2.541 en pesos de 2023); los precios de Homecenter y de Fenix; el salario mínimo; las obras e interventorías de SECOP; los vanos y las listas de materiales de EPM, y los datos de la subestación (10 MVA, 32 km, $15.509 millones y código 165). Los archivos se regeneran igual con los scripts.
+
+**Se corrigió:**
+
+1. **Postes:** el de 12 m y 1.050 kgf pasó de $1.750.000 a $1.256.992 (APU oficial de la SIF actualizado con IPC); el de 750 kgf, de $1.450.000 a $1.150.000, y el de 510 kgf, de $1.250.000 a $1.050.000. El argumento anterior (que el concreto subió más que el IPC) lo contradice el IPP del DANE.
+2. **Vientos por km:** de 6 a 12 en zona urbana y de 3 a 5,5 en zona rural, para seguir las listas de materiales de EPM (4 vientos por estructura de referencia RA2-004).
+3. **Interventoría:** se agregaron dos pares de Yondó que faltaban (Bocas de San Francisco, 2014, y Caño Negro y Caño Bonito, 2013–2014). La mediana de los 9 pares es 7,7 %; se sigue usando 8 %.
+4. **Transformadores:** el bajante de BT del de 75 kVA pasa de 4 × 2/0 a 4 × 3/0 (197 A, más de los 175 A que admite el 2/0); cada variante lleva su calibre; el monofásico ya no lleva cruceta de 2,4 m (RA3-026); el trifásico lleva 6 estribos (RA2-007). Se quitó el 3 % de transporte que se cobraba dos veces sobre postes y transformadores.
+5. **Estructura terminal RA2-003:** 2 eslabones (la norma), no 5.
+6. **Fibra:** la acometida (drop) y la roseta sí tienen precio publicado en Fenix ($415/m y $22.998 con IVA); la fibra de 48 hilos figura "sin existencia".
+7. **Textos:** la explicación de la brecha CREG–mercado en transformadores (sección 3), la capacidad de la acometida del APU-11 (hasta unos 60 kVA con Cu 2/0) y la cita de Magneto365.
+
+**Queda pendiente:** cotizar postes, transformadores trifásicos, conductores y medidores; confirmar en los documentos de SECOP las dos interventorías de 2014 con el mismo valor ($255.351.440); y ubicar la subestación con EPM o en campo.
+
 ## Fuentes
 
 - **CREG**: Resolución CREG 015 de 2018 (metodología de remuneración de la distribución), capítulo 14: unidades constructivas (UC). Texto compilado con las modificaciones de la Res. CREG 085 de 2018 y 036 de 2019. Fecha: 2018-01-29 (valores en pesos de diciembre de 2017). <https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_0015_2018.htm>
@@ -922,7 +942,7 @@ Pendiente: Derecho de petición a EPM (Ley 1755 de 2015): ubicación de la S/E Y
 - **Homecenter (Sodimac Colombia)**: Homecenter Colombia, transformadores en aceite tipo poste marca Ecuatran (códigos 790149 y 790148); precio de venta al público. Fecha: 2026-10-22 (consulta). <https://www.homecenter.com.co/homecenter-co/product/790149/transformador-en-aceite-clase-e-monofasico-t-poste-25kva-13200-208-v/790149/>
 - **Fenix Comercial**: Fenix Comercial (distribuidor colombiano de fibra y redes), catálogo en línea: cable ADSS, herrajes, cajas, OLT, ONU y switches; precios "+ IVA". Fecha: 2026-10-22 (consulta). <https://fenixcomercial.com.co/?s=ADSS&post_type=product>
 - **Gobierno nacional (resumen de ConsultorSalud)**: Salario mínimo 2026: $1.750.905 (Decreto 1469 de 2025; tras la suspensión del Consejo de Estado se expidió el Decreto 0159 de 2026 con el mismo valor). Fecha: 2025-12-29. <https://consultorsalud.com/aumento-del-salario-minimo-en-colombia-2026/>
-- **Magneto365 (portal de empleo)**: Salario promedio de un técnico electricista en Colombia ($2.387.083; hasta $4,5 M en Barrancabermeja y zonas petroleras). Fecha: 2026-10-22 (consulta). <https://www.magneto365.com/co/preguntas-frecuentes/tecnico-electricista/cual-es-salario-de-un-tecnico-electricista-en-colombia>
+- **Magneto365 (portal de empleo)**: Salario promedio de un técnico electricista en Colombia ($2.387.083; los más altos, hasta $4,5 M, en Bogotá, Medellín y zonas industriales o petroleras como Barrancabermeja). Fecha: 2026-10-22 (consulta). <https://www.magneto365.com/co/preguntas-frecuentes/tecnico-electricista/cual-es-salario-de-un-tecnico-electricista-en-colombia>
 - **CRC**: Concepto sobre la Res. CRC 7120 de 2023 (art. 4.10.3.1 de la Res. CRC 5050 de 2016): tope de remuneración mensual por punto de apoyo en postes del SDL. Fecha: 2026-06-16 (valores en pesos de 2023). <https://www.crcom.gov.co/sites/default/files/normatividad/2026520163.pdf>
 - **Colombia Compra Eficiente**: SECOP I y II: contratos de obra e interventoría de redes eléctricas (Yondó 2014–2017; Santander 2022–2023; Guapotá 2026). Fecha: 2014–2026. <https://www.datos.gov.co/resource/jbjy-vk9h.json>
 - **DNP**: Catálogo de Proyectos Tipo (consultado): no hay proyecto tipo de redes de distribución; en Minas y Energía solo "Celdas solares uso residencial" y "Beneficio de oro"; en TIC, "Zonas digitales", "Implementación de TIC" y "Centro TIC municipal". Fecha: 2026-10-22 (consulta). <https://proyectostipo.dnp.gov.co/>

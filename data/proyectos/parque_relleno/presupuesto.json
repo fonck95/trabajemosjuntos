@@ -293,22 +293,22 @@
    "capitulo": "4. Conexión a la red de EPM",
    "items": [
     {
-     "item": "Línea aérea nueva de 13,2 kV trifásica (postes de concreto de 12 m, conductor ACSR 2/0) hasta la subestación Yondó",
+     "item": "Línea aérea nueva de 13,2 kV trifásica (postes de concreto de 12 m, conductor ACSR 2/0) hasta la subestación Yondó, con servidumbre, poda, replanteo e inspección RETIE",
      "cantidad": 2.6,
      "unidad": "km",
-     "precio_unitario": 420000000,
-     "valor": 1092000000,
-     "fuente": "Mercado 2026 (350–500 M/km); ruta estimada",
-     "certeza": "estimacion",
-     "nota": "Si EPM confirma capacidad en la red que alimenta la PTAP, basta una derivación de 0,6–0,8 km (≈300 M)."
+     "precio_unitario": 175000000,
+     "valor": 455000000,
+     "fuente": "data/red/precios_unitarios.json (base de precios del proyecto, con unidades constructivas de la Res. CREG 015 de 2018): APU-06U, red aérea de 13,2 kV con ACSR 2/0 y postes de 12 m, 156,4 M/km (rango 125–203) + GES-SERV, GES-PODA, GES-TOPO y GES-RETIE-KM, 17,3 M/km; redondeado a 175 M/km. Ruta estimada",
+     "certeza": "calculo_propio",
+     "nota": "Si EPM confirma capacidad en la red que alimenta la PTAP, basta una derivación de 0,6–0,8 km (≈105–140 M)."
     },
     {
-     "item": "Reconectador y equipo de corte y protección en el punto de conexión",
+     "item": "Reconectador con relé de protección de interconexión, seccionador y DPS en el punto de conexión",
      "cantidad": 1,
      "unidad": "und",
-     "precio_unitario": 165000000,
-     "valor": 165000000,
-     "fuente": "Mercado 2026",
+     "precio_unitario": 110000000,
+     "valor": 110000000,
+     "fuente": "Res. CREG 015 de 2018, UC N2EQ35 (reconectador instalado: 74,8 M de 2026, rango 67–105 M; data/red/precios_unitarios.json) más relé, seccionador y DPS",
      "certeza": "estimacion"
     },
     {
@@ -330,7 +330,7 @@
      "certeza": "estimacion"
     }
    ],
-   "subtotal": 1682000000
+   "subtotal": 990000000
   },
   {
    "capitulo": "5. Parque: edificaciones y servicios (fuera de las celdas)",
@@ -612,28 +612,28 @@
    "subtotal": 2703781825
   }
  ],
- "costo_directo": 14672226845,
+ "costo_directo": 13980226845,
  "interventoria": {
   "porcentaje": 0.07,
-  "valor": 1027055879
+  "valor": 978615879
  },
  "gestion_social_y_ambiental": {
   "porcentaje": 0.02,
-  "valor": 293444537
+  "valor": 279604537
  },
  "imprevistos": {
   "porcentaje": 0.1,
-  "valor": 1467222684
+  "valor": 1398022684
  },
- "total": 17459949946,
- "total_millones": 17459.9,
+ "total": 16636469946,
+ "total_millones": 16636.5,
  "rango_millones": [
-  12222.0,
-  26189.9
+  11645.5,
+  24954.7
  ],
  "por_fase_millones": {
   "fase_0_1_estudios_y_clausura": 4194.2,
-  "fase_2_granja_solar_y_conexion": 6646.2,
+  "fase_2_granja_solar_y_conexion": 5822.7,
   "fase_3_parque": 6619.6
  },
  "costos_anuales_millones": {
@@ -648,6 +648,13 @@
   "ampliar_el_relleno_bpin_2025058930015_millones": 3901.4,
   "operar_el_relleno_promedio_2019_2023_millones_por_anio": 576.2,
   "lectura": "La clausura (fases 0 y 1) cuesta del orden de lo que se pensaba gastar en ampliar el relleno, pero resuelve el problema para siempre y libera el predio para la granja solar y el parque."
+ },
+ "sensibilidad_a_la_huella_de_residuos": {
+  "tipo_dato": "calculo_propio",
+  "base": "Los ítems de cobertura del capítulo 2 (reconformación, arcilla, geomembrana, geodrén, suelo y empradización) suman unos 1.545 M para unos 10.000–12.000 m² de cobertura.",
+  "si_la_huella_es_1_85_ha_millones_capitulo_2": 3856,
+  "si_la_huella_es_4_ha_millones_capitulo_2": 7183,
+  "lectura": "Si los apiques confirman la huella del Manual de Operaciones (1,85 ha) o la zona parda de 2020 alrededor de las celdas (unas 4 ha), la clausura técnica sube mucho más que el margen de prefactibilidad (−30 %/+50 %). Por eso la delimitación de residuos va primero."
  },
  "referencias_de_precios": [
   "data/presupuesto_microrred.json (solar en cubierta 3,5 M/kWp; marquesina 5,0; piso 3,2; baterías 1,4 M/kWh)",

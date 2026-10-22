@@ -104,7 +104,7 @@
    "nombre": "Subestación Yondó de EPM, 10 MVA, 34,5/13,2 kV, alimentada por dos circuitos de 34,5 kV desde la subestación Barranca; en operación desde 2021",
    "lat": 7.0031989,
    "lon": -73.9226337,
-   "ubicacion_fuente": "Lugar de Google 'Subestación yondo epm', verificado en el satélite (patio de equipos y edificio de control)",
+   "ubicacion_fuente": "Lugar de Google 'Subestación yondo epm' (7,0031989, −73,9226337; comprobado de nuevo el 22-oct-2026), con un patio pequeño de equipos y un edificio en el satélite. Ojo: data/red/subestacion.json la da como no ubicada; hay que confirmarla con EPM (derecho de petición) antes de diseñar la línea.",
    "fuente_datos": "docs/anexos/D-energia-mintic.md (EPM, 2020–2021)"
   },
   "distancia_linea_recta_km": {
@@ -134,7 +134,7 @@
    "epm_estrato_2": 1866,
    "essa_estrato_1": 46,
    "total_residencial_epm": 8445,
-   "fecha": "agosto de 2026 (ESSA: 2025)",
+   "fecha": "agosto de 2026 (EPM y ESSA)",
    "tipo_dato": "dato_oficial",
    "fuente": "SUI, reporte 'Consolidado Energía por Empresa, Departamento y Municipio' (ele_com_096), consulta del 22-oct-2026: http://reportes.sui.gov.co/fabricaReportes/frameSet.jsp?idreporte=ele_com_096"
   },
@@ -240,7 +240,8 @@
    "estrato_1": 68722,
    "estrato_2": 119252,
    "tipo_dato": "calculo_propio",
-   "metodo": "consumo promedio × tarifa de octubre de 2026 (subsidiada hasta 173 kWh y plena por encima)"
+   "metodo": "consumo promedio × tarifa de octubre de 2026 (subsidiada hasta 173 kWh y plena por encima)",
+   "nota": "No incluye el cargo fijo de comercialización (CUf) de hasta $9.611 por factura que trae la publicación de EPM; con él, el bloque de 50 kWh ahorra cerca del 27 % de la factura en estrato 1 y del 21 % en estrato 2."
   },
   "costo_anual_subsidios_e1_e2": {
    "valor_millones": 7054.6,
@@ -299,12 +300,12 @@
   "lectura": "El ahorro real queda entre el valor de generación y el valor al CU, según cómo reconozca la regulación la energía colectiva y quién pague el uso de la red."
  },
  "costo_de_la_energia_solar": {
-  "capex_granja_y_conexion_millones": 6534.5,
+  "capex_granja_y_conexion_millones": 5724.8,
   "om_anual_millones": 58.5,
-  "lcoe_6pct_real_25_anios_cop_kwh": 452,
-  "lcoe_sin_costo_financiero_cop_kwh": 254,
+  "lcoe_6pct_real_25_anios_cop_kwh": 402,
+  "lcoe_sin_costo_financiero_cop_kwh": 228,
   "tipo_dato": "calculo_propio",
-  "lectura": "Con crédito al 6 % real la granja produce un poco por encima del componente G (que hoy vale 403,5 $/kWh), pero por debajo del subsidio que reemplaza (564 $/kWh en estrato 1); con recursos no reembolsables cuesta menos de la mitad del subsidio."
+  "lectura": "Con crédito al 6 % real la granja produce a unos 402 $/kWh, casi lo mismo que el componente G (403,5 $/kWh) y por debajo del subsidio que reemplaza (564 $/kWh en estrato 1); con recursos no reembolsables cuesta unos 228 $/kWh, menos de la mitad del subsidio."
  },
  "figura_legal": {
   "recomendada": "Comunidad energética de usuarios de estratos 1 y 2 de Yondó (Ley 2294 de 2023, art. 235; Decreto 2236 de 2023), registrada en el RUCE (Res. MinEnergía 40136 de 2024), que actúa como Autogenerador Colectivo (AC) de hasta 1 MW: la granja es el punto de inyección y cada hogar recibe un Porcentaje de Distribución de Excedentes (PDE) (Res. CREG 101 072 de 2025, arts. 6, 19 y 21; límite de <5 MW y mismo mercado y SDL de EPM, Res. UPME 501 de 2024). El municipio aporta el predio (comodato o derecho de superficie por 25 años) y se postula a Colombia Solar como solución colectiva.",

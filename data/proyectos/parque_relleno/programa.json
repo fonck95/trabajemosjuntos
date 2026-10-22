@@ -8,7 +8,7 @@
   "estimacion": "supuesto razonado con rango; hay que confirmarlo en campo o con el dueño del dato"
  },
  "idea": "Cerrar bien el relleno y convertirlo en un lugar a donde la gente quiera ir: un coworking rural con internet y energía propia a 4 km del pueblo, una granja que enseña a producir y compostar, un circuito para correr y pedalear y, sobre las celdas, una granja solar que baja la factura de los hogares de estratos 1 y 2.",
- "regla_de_oro": "Las instalaciones con gente quedan FUERA de las celdas y a 30 m o más de los residuos y de las lagunas (por biogás y asentamientos); sobre las celdas solo van la granja solar, el pasto y las chimeneas. No se cultiva comida sobre las celdas.",
+ "regla_de_oro": "Las instalaciones con gente quedan FUERA de las celdas y a 30 m o más de los residuos y de las lagunas (por biogás y asentamientos); sobre las celdas solo van la granja solar, el pasto y las chimeneas. No se cultiva comida sobre las celdas. Las distancias se midieron a las celdas, lagunas y humedal dibujados; como la zona de servicios estaba parda en Esri (enero de 2020), los apiques, el georradar y la línea base de biogás deben cubrirla antes de diseñar las edificaciones.",
  "inspiracion_proyectos_tipo_dnp": [
   {
    "proyecto_tipo": "Construcción y dotación de centro TIC municipal (v2.0, 2018)",
@@ -330,7 +330,7 @@
   {
    "fase": "3",
    "anios": "2028–2030",
-   "que": "Coworking, cafetería, taller, granja, circuito, mirador y ruta ciclista al pueblo (fuera de las celdas: puede empezar en paralelo con la clausura)"
+   "que": "Coworking, cafetería, taller, granja, circuito, mirador y ruta ciclista al pueblo (fuera de las celdas: puede empezar en paralelo con la clausura cuando los apiques y la línea base de biogás descarten residuos bajo la zona de servicios)"
   },
   {
    "fase": "posclausura",

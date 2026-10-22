@@ -9,6 +9,7 @@
   "capacidad": "1 transformador de 10 MVA, 34,5/13,2 kV, con edificio de control",
   "alimentacion": "dos circuitos exclusivos de 34,5 kV desde la subestación Barranca (Barrancabermeja, Santander), que conectan a Yondó con el SIN",
   "longitud_redes_km": 32,
+  "longitud_redes_nota": "EPM, 2021: \"interconexión entre las subestaciones Yondó y Barrancabermeja, a través de 32 kilómetros de redes\". Si son los dos circuitos, cada uno tendría unos 16 km, 1,6 veces la distancia en línea recta entre la S/E Barranca y el centro del casco (10,2 km): el trazado da un rodeo, probablemente para cruzar el río (cálculo propio, hipótesis).",
   "inversion_cop_corrientes": 15509000000,
   "entrada_en_operacion": 2021,
   "contratistas_2020": "JE Jaimes Ingenieros S.A. (obras civiles y adecuaciones de la subestación); Ingeomega S.A.S. (circuitos de alimentación)",
@@ -63,10 +64,13 @@
    "nombre": "Patio pequeño en la base de Ecopetrol al sur del casco",
    "lat": 7.0013,
    "lon": -73.91375,
-   "motivo": "Pórtico y equipos menores dentro de una base industrial (tubería en patio); demasiado pequeño para 10 MVA con edificio de control.",
+   "motivo": "Patio de unos 22 × 38 m con pórtico, un transformador sobre losa y una caseta, en el borde occidental del complejo industrial que Google Maps etiqueta \"Taller de Subsuelo\" y \"Equipo Liviano\" (base del campo Casabe); en enero de 2020 (Esri) ya estaba lleno de equipos. Por tamaño no se puede descartar (una S/E compacta de 10 MVA cabe en 30 × 40 m), pero por estar dentro de la base se toma como subestación industrial. Verificar en la visita de campo (verificación del 22-oct-2026, imágenes data/geo/img/vr_red_c5_*.png).",
    "imagenes": [
     "data/geo/img/red_se_cand2_z20.png",
-    "data/geo/img/red_se_cand5_z21.png"
+    "data/geo/img/red_se_cand5_z21.png",
+    "data/geo/img/vr_red_c5_z19.png",
+    "data/geo/img/vr_red_c5_esri2020.png",
+    "data/geo/img/vr_red_c5_mapa_z19.png"
    ]
   },
   {
@@ -96,5 +100,18 @@
   "https://www.epm.com.co/institucional/sala-de-prensa/noticias-y-novedades/interrupciones-energia-epm-antioquia-9-12-diciembre-2025/",
   "https://www.epm.com.co/institucional/sala-de-prensa/noticias-y-novedades/interrupciones-energia-mantenimiento-marzo-21-2025/"
  ],
- "fecha_corte": "2026-10-22"
+ "fecha_corte": "2026-10-22",
+ "verificacion": {
+  "fecha": "2026-10-22",
+  "resultado": "Se mantiene \"no_ubicada\". Revisión independiente: OpenStreetMap (Overpass, 6,95–7,12 N; −73,98 a −73,85) sigue sin subestación de EPM en Yondó; la PIA Casabe aparece así en las etiquetas de Google; el patio del norte (7,0188; −73,9145) es un patio de vehículos y tanques (imagen z20); el patio del sur está dentro de la base industrial del campo Casabe. Se confirmaron en la fuente: 10 MVA y 34,5/13,2 kV y dos circuitos desde la S/E Barranca (EPM, 7-jul-2020), 32 km y $15.509 millones (EPM, 2021) y el código 165 con circuitos MNN-11 a MNN-16 (RA6-020, pág. con la tabla de subestaciones).",
+  "imagenes": [
+   "data/geo/img/vr_red_ne_z17.png",
+   "data/geo/img/vr_red_n_z17.png",
+   "data/geo/img/vr_red_o_z17.png",
+   "data/geo/img/vr_red_c3_z20.png",
+   "data/geo/img/vr_red_c5_z19.png",
+   "data/geo/img/vr_red_c5_esri2020.png",
+   "data/geo/img/vr_red_c5_mapa_z19.png"
+  ]
+ }
 }

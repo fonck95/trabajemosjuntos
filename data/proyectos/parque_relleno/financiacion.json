@@ -8,7 +8,7 @@
   "calculo_propio": "operación aritmética sobre datos oficiales, con el método a la vista",
   "estimacion": "supuesto razonado con rango; hay que confirmarlo en campo o con el dueño del dato"
  },
- "total_a_financiar_millones": 17459.9,
+ "total_a_financiar_millones": 16636.5,
  "principio": "Cada fase tiene su fuente: la clausura es obligación del servicio de aseo (tarifa, SGP de agua y saneamiento, Plan Departamental, regalías); la granja solar se paga con recursos energéticos (Colombia Solar, FENOGE, regalías del Incentivo a la Producción, Findeter, obras por impuestos o un privado); el parque, con regalías, cultura, deporte, TIC y cooperación. Ninguna fase depende de contratar una consultoría sin fuente para la obra.",
  "fuentes": [
   {
@@ -49,7 +49,7 @@
    "para": "Fase 2",
    "monto_millones": [
     3000,
-    6100
+    5800
    ],
    "condiciones": "Postular la granja como solución colectiva para hogares de estratos 1 y 2; contratos de hasta 25 años; seguir las convocatorias de FENOGE (la IA-006-2026 fue cancelada).",
    "certeza": "estimacion",
@@ -71,7 +71,7 @@
    "para": "Fase 2",
    "monto_millones": [
     3000,
-    6100
+    5800
    ],
    "condiciones": "Yondó está entre los 209 municipios beneficiarios; en 2025 su único proyecto no cumplió. Presentar la granja en la próxima convocatoria.",
    "certeza": "estimacion",
@@ -82,9 +82,9 @@
    "para": "Fase 2",
    "monto_millones": [
     2000,
-    6100
+    5800
    ],
-   "condiciones": "El flujo de la granja (valor de generación de unos $540 M/año) alcanza para pagar un crédito de unos $3.000 M a 10 años (cuota de unos $500 M/año con una tasa nominal cercana al 10,5 %); requiere registro como 'municipio energético'.",
+   "condiciones": "Si la energía se vende solo al componente G, la granja deja unos $480 M/año netos de operación ($540 M menos $58 M de mantenimiento): alcanza para un crédito de unos $2.500 M a 10 años con 2 de gracia (cuota de unos $480 M/año en los 8 años de amortización, con una tasa nominal cercana al 10,5 %), no para uno de $3.000 M (cuota de unos $570 M/año). Requiere registro como 'municipio energético'.",
    "certeza": "estimacion",
    "url": "https://www.findeter.gov.co/noticias/comunicados/ministerio-de-minas-y-energia-y-findeter-en-alianza-con-asocapitales-asointermedias-y-fedemunicipios-lanzan-linea-de-financiamiento-para-parques-de-generacion-de-energia"
   },
@@ -104,7 +104,7 @@
    "para": "Fase 2 (alternativa a los recursos públicos)",
    "monto_millones": [
     0,
-    6100
+    5800
    ],
    "condiciones": "El desarrollador invierte y vende la energía (por ejemplo a Ecopetrol o a un comercializador); el municipio cobra canon y negocia una parte para los hogares. Licitar con reglas claras de beneficio social.",
    "certeza": "estimacion"
@@ -171,10 +171,10 @@
    "sgr": 2394
   },
   "fase_2_granja_solar": {
-   "total": 6646.2,
-   "colombia_solar_o_fenoge": 3323,
-   "sgr_incentivo_produccion": 1994,
-   "findeter_o_privado": 1329
+   "total": 5822.7,
+   "colombia_solar_o_fenoge": 2911,
+   "sgr_incentivo_produccion": 1747,
+   "findeter_o_privado": 1165
   },
   "fase_3_parque": {
    "total": 6619.6,

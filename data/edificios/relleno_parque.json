@@ -7,7 +7,7 @@
  "lon": -73.9342,
  "ubicacion": {
   "confianza": "media",
-  "metodo": "No hay un lugar de Google para el relleno. Se ubicó por coincidencia de varias pruebas: (1) la Superservicios (2018, págs. 68–73) lo sitúa a 2 km del casco urbano, en la vereda Las Américas, con cerca de postes y alambre de púas, pozo de lixiviados, chimeneas de piedra y vías internas destapadas; (2) los contratos de SECOP lo asocian con la vía del acueducto y con la torre del tanque elevado (2015: 'construcción de torre para tanque de almacenamiento; tramo de vía y cerramiento del predio del relleno'; BPIN 2025058930008: 'vía de acceso y vías internas del acueducto y relleno'); el tanque elevado está 330 m al sur-suroriente y la PTAP 560 m al sur; (3) el lugar de Google 'Escombrera' (7,015243, −73,934610) queda 140 m al norte, sobre el área de préstamo de material de cobertura; (4) en Esri (enero de 2020) se ve una plataforma parda de unas 3 ha con cuatro piscinas rectangulares oscuras y manchas blancas, y en Google (posterior a 2024) las mismas piscinas con algas, dos plataformas grises de material de cobertura y una vía interna en afirmado nueva (SECOP dic-2024: material triturado para la vía del relleno). No hay Street View ni fotos georreferenciadas. El ancla es el centro del conjunto de celdas y piscinas."
+  "metodo": "No hay un lugar de Google para el relleno. Se ubicó por coincidencia de varias pruebas: (1) la Superservicios (2018, págs. 68–74) lo sitúa a 2 km del casco urbano, en la vereda Las Américas, con cerca de postes y alambre de púas, pozo de lixiviados, chimeneas de piedra y vías internas destapadas; (2) los contratos de SECOP lo asocian con la vía del acueducto y con la torre del tanque elevado (2015: 'construcción de torre para tanque de almacenamiento; tramo de vía y cerramiento del predio del relleno'; BPIN 2025058930008: 'vía de acceso y vías internas del acueducto y relleno'); el tanque elevado está 348 m al sur-suroriente y la PTAP 588 m al sur-suroriente; (3) el lugar de Google 'Escombrera' (7,015243, −73,934610) queda 140 m al norte, sobre el área de préstamo de material de cobertura; (4) en Esri (enero de 2020) se ve una plataforma parda de unas 3 ha con cuatro piscinas rectangulares oscuras y manchas blancas, y en Google (posterior a 2024) las mismas piscinas con algas, dos plataformas grises de material de cobertura y una vía interna en afirmado nueva (SECOP dic-2024: material triturado para la vía del relleno). No hay Street View ni fotos georreferenciadas. El ancla es el centro del conjunto de celdas y piscinas."
  },
  "fuentes": [
   {
@@ -24,7 +24,7 @@
   {
    "tipo": "satelite",
    "fuente": "Esri World Imagery z19 (enero de 2020)",
-   "nota": "Plataforma parda y blanca de unas 3 ha, piscinas oscuras con agua, vía de acceso con cerca por el noroccidente y vía perimetral en arena por el oriente."
+   "nota": "Plataforma parda y blanca de unas 3–4 ha alrededor de las celdas y otra mancha parda de unas 2,7 ha al sur de las lagunas (donde el proyecto ubica los servicios), en total unas 6,6 ha (estimación por color sobre la imagen); piscinas oscuras con agua, vía de acceso con cerca por el noroccidente y vía perimetral en arena por el oriente."
   },
   {
    "tipo": "web",
@@ -1567,7 +1567,8 @@
   },
   {
    "tipo": "arbol",
-   "estado": "existe",
+   "nombre": "Árbol sobre la zona de la cobertura final: se retira en la clausura",
+   "estado": "demoler",
    "centro": [
     68,
     47
@@ -1627,7 +1628,8 @@
   },
   {
    "tipo": "arbol",
-   "estado": "existe",
+   "nombre": "Árbol sobre la zona de la cobertura final: se retira en la clausura",
+   "estado": "demoler",
    "centro": [
     120,
     85
@@ -3700,17 +3702,19 @@
     -79
    ]
   },
-  "notas": "Granja solar sobre las celdas: 1812 módulos de 550 Wp (996.6 kWp DC; 8 inversores de 100 kW = 800 kW AC) en mesas fijas de dos módulos en vertical, inclinadas 10° al sur, a 1,3 m del suelo, con 6,5 m entre filas (sin sombra entre 8:00 y 16:00 el 21 de diciembre). Bloque A (fase 1): 1394 módulos sobre la cobertura final de las celdas visibles (0,86 ha). Bloque B (fase 2): 418 módulos en la zona del nororiente que en enero de 2020 se veía intervenida; se monta solo si los apiques confirman celdas estables o suelo natural. Solar propia del parque: 40 módulos en la cubierta del coworking y 40 en la marquesina del parqueadero (44 kWp, autogeneración aparte, ≤100 kW). kwp_factible = 1892 módulos × 0,55. El BESS de 100 kWh respalda los servicios auxiliares de la granja, el internet y el coworking en cortes de EPM. En el modelo todos los arreglos llevan su ruta de potencia al centro de transformación porque el generador admite un solo grupo de inversores; en la obra, el coworking y la marquesina del parqueadero tienen inversor y medidor propios (frontera aparte). Las instalaciones con gente quedan a 30 m o más de los residuos (coworking 36,5 m del humedal; centro de transformación 30 m de la cobertura)."
+  "notas": "Granja solar sobre las celdas: 1812 módulos de 550 Wp (996.6 kWp DC; 8 inversores de 100 kW = 800 kW AC) en mesas fijas de dos módulos en vertical, inclinadas 10° al sur, a 1,3 m del suelo, con 6,5 m entre filas (sin sombra entre 8:00 y 16:00 el 21 de diciembre). Bloque A (fase 1): 1394 módulos sobre la cobertura final de las celdas visibles (0,86 ha). Bloque B (fase 2): 418 módulos en la zona del nororiente que en enero de 2020 se veía intervenida; se monta solo si los apiques confirman celdas estables o suelo natural. Solar propia del parque: 40 módulos en la cubierta del coworking y 40 en la marquesina del parqueadero (44 kWp, autogeneración aparte, ≤100 kW). kwp_factible = 1892 módulos × 0,55. El BESS de 100 kWh respalda los servicios auxiliares de la granja, el internet y el coworking en cortes de EPM. En el modelo todos los arreglos llevan su ruta de potencia al centro de transformación porque el generador admite un solo grupo de inversores; en la obra, el coworking y la marquesina del parqueadero tienen inversor y medidor propios (frontera aparte). Las instalaciones con gente quedan a 30 m o más de los residuos visibles (celdas y lagunas dibujadas: coworking 36,5 m del humedal; centro de transformación 30 m de la cobertura), pero la zona de servicios estaba parda en Esri (enero de 2020): antes de diseñarla hay que descartar residuos con apiques y medir biogás. Los dos árboles que hoy crecen sobre la zona de la cobertura (68, 47) y (120, 85) se retiran en la clausura."
  },
  "incertidumbres": [
   "La ubicación del relleno se dedujo de documentos y del satélite; no hay foto georreferenciada ni Street View. Confianza media.",
-  "El borde real de los residuos no se conoce: las celdas dibujadas (0,80 ha) son lo visible en Google; el Manual de Operaciones habla de 1,85 ha en cuatro etapas y la zona intervenida en Esri 2020 llega a unas 3 ha. Hay que delimitarla con topografía, apiques y georradar antes de diseñar la cobertura.",
+  "El borde real de los residuos no se conoce: las celdas dibujadas (0,80 ha) son lo visible en Google; el Manual de Operaciones habla de 1,85 ha en cuatro etapas y la zona parda de Esri 2020 alrededor de las celdas llega a unas 3–4 ha. Hay que delimitarla con topografía, apiques y georradar antes de diseñar la cobertura.",
   "Las cuatro piscinas se interpretan como lagunas de lixiviados (la Superservicios en 2018 solo menciona 'un pozo' de recirculación). Podrían ser piscinas de aguas lluvias.",
   "Una nota de Caracol (23-sep-2020) dice que los dos pozos del acueducto se perforaron 'dentro del polígono que otrora ocupara un relleno sanitario' (Las Américas, hace unos 25 años). Ese antiguo botadero no está dibujado: puede estar cerca de la PTAP y debe incluirse en el plan de clausura (Res. 1390 de 2005) y en el monitoreo del agua subterránea.",
   "La caseta de la entrada norte se midió en Google (4 × 3 m); altura, materiales y uso se suponen.",
   "Solo una chimenea de gases es visible (69, −2); las otras dos chimeneas existentes se ubicaron como referencia.",
   "Las alturas del terreno son planas en el modelo; el SRTM da 70–80 m en todo el sitio y unos 74 m en el parque principal.",
-  "La línea de 13,2 kV se dibuja solo en sus primeros postes; la ruta y el punto de conexión los define EPM en el estudio de conexión."
+  "La línea de 13,2 kV se dibuja solo en sus primeros postes; la ruta y el punto de conexión los define EPM en el estudio de conexión.",
+  "En Esri (enero de 2020) también estaba parda una franja de unas 2,7 ha al sur de las lagunas, donde se ubican el coworking, la cafetería, la plazoleta y la granja. Puede ser potrero seco (enero es época seca), tierra removida o residuos regados: hay que incluirla en los apiques, el georradar y la línea base de biogás antes de diseñar las edificaciones; si hay residuos, los servicios se corren hacia el occidente o el sur.",
+  "Las distancias de 30 m o más se midieron a las celdas, lagunas y humedal dibujados, no a la huella real de los residuos, que todavía no se conoce."
  ],
  "verificacion": {
   "trace": "data/geo/img/relleno_parque_trace.png",

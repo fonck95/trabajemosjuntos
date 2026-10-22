@@ -38,10 +38,10 @@
    },
    "retenciones_por_km": 5,
    "terminales_por_tramo": 2,
-   "vientos_por_km": 6,
+   "vientos_por_km": 12,
    "puestas_a_tierra_por_km": 4,
    "tipo_dato": "estimacion",
-   "nota": "Vano de diseño de 40 m en las calles de Yondó (manzanas de 80–100 m, cruces y acometidas); el máximo de la norma es 60 m. Retención (RA2-004) cada 200 m en promedio por ángulos de más de 15–20° y cambios de calle; dos terminales (RA2-003) por tramo; 1,2 vientos por retención; puesta a tierra cada 250 m y en cada terminal o equipo."
+   "nota": "Vano de diseño de 40 m en las calles de Yondó (manzanas de 80–100 m, cruces y acometidas); el máximo de la norma es 60 m. Retención cada 200 m en promedio por ángulos de más de 15–20° y cambios de calle; dos terminales (RA2-003) por tramo; puesta a tierra cada 250 m y en cada terminal o equipo. Vientos según las listas de materiales de EPM (dato oficial: 4 por referencia RA2-004, 1 por ángulo RA2-012 y 1 por terminal RA2-003): de las 5 retenciones por km se suponen 2 referencias y 3 ángulos, es decir 2 × 4 + 3 × 1 + 1 terminal prorrateado = 12 vientos por km. Todas las retenciones se costean con la lista de la RA2-004 (prudente). Corrección de la verificación: la versión anterior ponía 6 vientos por km (1,2 por retención), por debajo de lo que piden las normas de EPM."
   },
   "rural": {
    "vano_m": 80,
@@ -58,10 +58,10 @@
    },
    "retenciones_por_km": 2,
    "terminales_por_tramo": 2,
-   "vientos_por_km": 3,
+   "vientos_por_km": 5.5,
    "puestas_a_tierra_por_km": 3,
    "tipo_dato": "estimacion",
-   "nota": "Vía a la PTAP y a los pozos (vereda Las Américas) y a la PTAP veredal: vano de 80 m (norma: hasta 90 m con poste de 12 m), retención cada 500 m, puesta a tierra cada 330 m (el NESC pide al menos 4 por milla en neutro multiaterrizado)."
+   "nota": "Vía a la PTAP y a los pozos (vereda Las Américas) y a la PTAP veredal: vano de 80 m (norma: hasta 90 m con poste de 12 m), retención cada 500 m (1 referencia RA2-004 con 4 vientos y 1 ángulo con 1 viento por km, más medio terminal: 5,5 vientos por km), puesta a tierra cada 330 m (el NESC pide al menos 4 por milla en neutro multiaterrizado)."
   },
   "factor_conductor": {
    "valor": 1.04,
@@ -345,7 +345,7 @@
     0.062,
     0.0977
    ],
-   "mediana_secop": 0.083,
+   "mediana_secop": 0.0767,
    "tipo_dato": "calculo_propio"
   },
   "ingenieria_detalle": {

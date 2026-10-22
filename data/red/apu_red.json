@@ -26,8 +26,8 @@
      "descripcion": "Poste de concreto octogonal de 12 m y 510 kgf (RA7-035), puesto en planta, con IVA",
      "unidad": "un",
      "cantidad": 1,
-     "precio_unitario": 1250000,
-     "subtotal": 1250000,
+     "precio_unitario": 1050000,
+     "subtotal": 1050000,
      "tipo_dato": "estimacion"
     },
     {
@@ -79,11 +79,11 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
-     "tarifa": 1292550,
-     "subtotal": 38776
+     "tarifa": 42550,
+     "subtotal": 1276
     },
     {
      "codigo_insumo": "TR-POSTE",
@@ -111,28 +111,28 @@
     }
    ],
    "subtotales": {
-    "materiales": 1292550,
+    "materiales": 1092550,
     "componentes_apu": 0,
     "equipo": 284247,
-    "transporte": 388776,
+    "transporte": 351276,
     "mano_de_obra": 234943
    },
-   "costo_directo": 2200516,
+   "costo_directo": 1963016,
    "aiu": {
-    "administracion": 418098,
-    "imprevistos": 66015,
-    "utilidad": 110026,
+    "administracion": 372973,
+    "imprevistos": 58890,
+    "utilidad": 98151,
     "porcentajes": {
      "A": 0.19,
      "I": 0.03,
      "U": 0.05
     }
    },
-   "iva_sobre_utilidad": 20905,
-   "precio_unitario_total": 2815560,
+   "iva_sobre_utilidad": 18649,
+   "precio_unitario_total": 2511679,
    "rango_precio_total": [
-    2252448,
-    3660228
+    2009343,
+    3265183
    ],
    "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
    "comparacion": [
@@ -163,8 +163,8 @@
      "descripcion": "Poste de concreto octogonal de 12 m y 750 kgf, puesto en planta, con IVA",
      "unidad": "un",
      "cantidad": 1,
-     "precio_unitario": 1450000,
-     "subtotal": 1450000,
+     "precio_unitario": 1150000,
+     "subtotal": 1150000,
      "tipo_dato": "estimacion"
     },
     {
@@ -216,11 +216,11 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
-     "tarifa": 1492550,
-     "subtotal": 44776
+     "tarifa": 42550,
+     "subtotal": 1276
     },
     {
      "codigo_insumo": "TR-POSTE",
@@ -248,28 +248,28 @@
     }
    ],
    "subtotales": {
-    "materiales": 1492550,
+    "materiales": 1192550,
     "componentes_apu": 0,
     "equipo": 284247,
-    "transporte": 394776,
+    "transporte": 351276,
     "mano_de_obra": 234943
    },
-   "costo_directo": 2406516,
+   "costo_directo": 2063016,
    "aiu": {
-    "administracion": 457238,
-    "imprevistos": 72195,
-    "utilidad": 120326,
+    "administracion": 391973,
+    "imprevistos": 61890,
+    "utilidad": 103151,
     "porcentajes": {
      "A": 0.19,
      "I": 0.03,
      "U": 0.05
     }
    },
-   "iva_sobre_utilidad": 22862,
-   "precio_unitario_total": 3079137,
+   "iva_sobre_utilidad": 19599,
+   "precio_unitario_total": 2639629,
    "rango_precio_total": [
-    2463310,
-    4002878
+    2111703,
+    3431518
    ],
    "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
    "comparacion": [],
@@ -344,11 +344,11 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
-     "tarifa": 1042550,
-     "subtotal": 31276
+     "tarifa": 42550,
+     "subtotal": 1276
     },
     {
      "codigo_insumo": "TR-POSTE",
@@ -379,25 +379,25 @@
     "materiales": 1042550,
     "componentes_apu": 0,
     "equipo": 284247,
-    "transporte": 381276,
+    "transporte": 351276,
     "mano_de_obra": 234943
    },
-   "costo_directo": 1943016,
+   "costo_directo": 1913016,
    "aiu": {
-    "administracion": 369173,
-    "imprevistos": 58290,
-    "utilidad": 97151,
+    "administracion": 363473,
+    "imprevistos": 57390,
+    "utilidad": 95651,
     "porcentajes": {
      "A": 0.19,
      "I": 0.03,
      "U": 0.05
     }
    },
-   "iva_sobre_utilidad": 18459,
-   "precio_unitario_total": 2486089,
+   "iva_sobre_utilidad": 18174,
+   "precio_unitario_total": 2447704,
    "rango_precio_total": [
-    1988871,
-    3231916
+    1958163,
+    3182015
    ],
    "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
    "comparacion": [
@@ -543,7 +543,7 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
      "tarifa": 476500,
@@ -759,7 +759,7 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
      "tarifa": 1615000,
@@ -871,9 +871,9 @@
      "codigo_insumo": "ESLABON",
      "descripcion": "Eslabón en U de 5/8\"",
      "unidad": "un",
-     "cantidad": 5,
+     "cantidad": 2,
      "precio_unitario": 8000,
-     "subtotal": 40000,
+     "subtotal": 16000,
      "tipo_dato": "estimacion"
     },
     {
@@ -943,11 +943,11 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
-     "tarifa": 871000,
-     "subtotal": 26130
+     "tarifa": 847000,
+     "subtotal": 25410
     }
    ],
    "mano_de_obra": [
@@ -960,28 +960,28 @@
     }
    ],
    "subtotales": {
-    "materiales": 871000,
+    "materiales": 847000,
     "componentes_apu": 0,
     "equipo": 442867,
-    "transporte": 26130,
+    "transporte": 25410,
     "mano_de_obra": 324000
    },
-   "costo_directo": 1663997,
+   "costo_directo": 1639277,
    "aiu": {
-    "administracion": 316159,
-    "imprevistos": 49920,
-    "utilidad": 83200,
+    "administracion": 311463,
+    "imprevistos": 49178,
+    "utilidad": 81964,
     "porcentajes": {
      "A": 0.19,
      "I": 0.03,
      "U": 0.05
     }
    },
-   "iva_sobre_utilidad": 15808,
-   "precio_unitario_total": 2129084,
+   "iva_sobre_utilidad": 15573,
+   "precio_unitario_total": 2097455,
    "rango_precio_total": [
-    1703267,
-    2767809
+    1677964,
+    2726691
    ],
    "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
    "comparacion": [],
@@ -1093,7 +1093,7 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
      "tarifa": 347700,
@@ -1245,7 +1245,7 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
      "tarifa": 548000,
@@ -1305,7 +1305,7 @@
    "norma_referencia": "EPM RA2-001/RA2-003/RA2-004 y RETIE",
    "supuestos": [
     "25 postes por km: 19 de suspensión (510 kgf), 5 de retención y 1 terminal prorrateado (750 kgf)",
-    "6 vientos y 4 puestas a tierra por km",
+    "12 vientos y 4 puestas a tierra por km",
     "Conductor: 3 fases ACSR 2/0 + neutro ACSR 1/0 × factor 1,04",
     "Tendido de 4 conductores: 0,6 km por día de cuadrilla, con equipo de tendido y grúa canasta la mitad del tiempo",
     "No incluye equipos de protección (reconectador, cortacircuitos de ramal, DPS), que se cuentan por unidad"
@@ -1354,8 +1354,8 @@
      "descripcion": "Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida",
      "unidad": "un",
      "cantidad": 19.0,
-     "costo_directo_unitario": 2200516,
-     "subtotal": 41809804,
+     "costo_directo_unitario": 1963016,
+     "subtotal": 37297304,
      "tipo_dato": "calculo_propio"
     },
     {
@@ -1363,8 +1363,8 @@
      "descripcion": "Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales)",
      "unidad": "un",
      "cantidad": 6.0,
-     "costo_directo_unitario": 2406516,
-     "subtotal": 14439096,
+     "costo_directo_unitario": 2063016,
+     "subtotal": 12378096,
      "tipo_dato": "calculo_propio"
     },
     {
@@ -1390,17 +1390,17 @@
      "descripcion": "Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento)",
      "unidad": "un",
      "cantidad": 1.0,
-     "costo_directo_unitario": 1663997,
-     "subtotal": 1663997,
+     "costo_directo_unitario": 1639277,
+     "subtotal": 1639277,
      "tipo_dato": "calculo_propio"
     },
     {
      "codigo_apu": "APU-04",
      "descripcion": "Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje",
      "unidad": "un",
-     "cantidad": 6,
+     "cantidad": 12,
      "costo_directo_unitario": 643560,
-     "subtotal": 3861360,
+     "subtotal": 7722720,
      "tipo_dato": "calculo_propio"
     },
     {
@@ -1450,7 +1450,7 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
      "tarifa": 23877000,
@@ -1468,27 +1468,27 @@
    ],
    "subtotales": {
     "materiales": 23877000,
-    "componentes_apu": 93425234,
+    "componentes_apu": 90688374,
     "equipo": 2631000,
     "transporte": 716310,
     "mano_de_obra": 1620000
    },
-   "costo_directo": 122269544,
+   "costo_directo": 119532684,
    "aiu": {
-    "administracion": 23231213,
-    "imprevistos": 3668086,
-    "utilidad": 6113477,
+    "administracion": 22711210,
+    "imprevistos": 3585981,
+    "utilidad": 5976634,
     "porcentajes": {
      "A": 0.19,
      "I": 0.03,
      "U": 0.05
     }
    },
-   "iva_sobre_utilidad": 1161561,
-   "precio_unitario_total": 156443882,
+   "iva_sobre_utilidad": 1135560,
+   "precio_unitario_total": 152942069,
    "rango_precio_total": [
-    125155105,
-    203377046
+    122353655,
+    198824690
    ],
    "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
    "comparacion": [
@@ -1510,7 +1510,7 @@
    "norma_referencia": "EPM RA2-011 (suspensión V-neutro, vano hasta 90 m), RA2-003, RA2-004",
    "supuestos": [
     "12,5 postes por km: 10,0 de suspensión, 2 de retención y 0,5 terminal prorrateado",
-    "3 vientos y 3 puestas a tierra por km",
+    "5,5 vientos y 3 puestas a tierra por km",
     "Se usa la estructura RA2-001 como costo de la suspensión rural (la RA2-011 tiene materiales equivalentes)",
     "Tendido: 1,0 km por día",
     "No incluye servidumbre ni poda (ítems GES-SERV y GES-PODA por km)"
@@ -1550,8 +1550,8 @@
      "descripcion": "Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida",
      "unidad": "un",
      "cantidad": 10.0,
-     "costo_directo_unitario": 2200516,
-     "subtotal": 22005160,
+     "costo_directo_unitario": 1963016,
+     "subtotal": 19630160,
      "tipo_dato": "calculo_propio"
     },
     {
@@ -1559,8 +1559,8 @@
      "descripcion": "Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales)",
      "unidad": "un",
      "cantidad": 2.5,
-     "costo_directo_unitario": 2406516,
-     "subtotal": 6016290,
+     "costo_directo_unitario": 2063016,
+     "subtotal": 5157540,
      "tipo_dato": "calculo_propio"
     },
     {
@@ -1586,17 +1586,17 @@
      "descripcion": "Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento)",
      "unidad": "un",
      "cantidad": 0.5,
-     "costo_directo_unitario": 1663997,
-     "subtotal": 831998,
+     "costo_directo_unitario": 1639277,
+     "subtotal": 819638,
      "tipo_dato": "calculo_propio"
     },
     {
      "codigo_apu": "APU-04",
      "descripcion": "Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje",
      "unidad": "un",
-     "cantidad": 3,
+     "cantidad": 5.5,
      "costo_directo_unitario": 643560,
-     "subtotal": 1930680,
+     "subtotal": 3539580,
      "tipo_dato": "calculo_propio"
     },
     {
@@ -1646,7 +1646,7 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
      "tarifa": 20088000,
@@ -1664,27 +1664,27 @@
    ],
    "subtotales": {
     "materiales": 20088000,
-    "componentes_apu": 46553837,
+    "componentes_apu": 44916627,
     "equipo": 1218600,
     "transporte": 602640,
     "mano_de_obra": 972000
    },
-   "costo_directo": 69435077,
+   "costo_directo": 67797867,
    "aiu": {
-    "administracion": 13192665,
-    "imprevistos": 2083052,
-    "utilidad": 3471754,
+    "administracion": 12881595,
+    "imprevistos": 2033936,
+    "utilidad": 3389893,
     "porcentajes": {
      "A": 0.19,
      "I": 0.03,
      "U": 0.05
     }
    },
-   "iva_sobre_utilidad": 659633,
-   "precio_unitario_total": 88842181,
+   "iva_sobre_utilidad": 644080,
+   "precio_unitario_total": 86747371,
    "rango_precio_total": [
-    71073745,
-    115494835
+    69397897,
+    112771582
    ],
    "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
    "comparacion": [
@@ -1792,7 +1792,7 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
      "tarifa": 25853000,
@@ -1919,9 +1919,9 @@
      "codigo_insumo": "ESTRIBO",
      "descripcion": "Estribo (derivación) para conexión de cortacircuitos",
      "unidad": "un",
-     "cantidad": 3,
+     "cantidad": 6,
      "precio_unitario": 15000,
-     "subtotal": 45000,
+     "subtotal": 90000,
      "tipo_dato": "estimacion"
     },
     {
@@ -1970,12 +1970,12 @@
      "tipo_dato": "estimacion"
     },
     {
-     "codigo_insumo": "THHN-20",
-     "descripcion": "Bajante de BT 4 × 2/0 Cu × 12 m (I = 197 A a 220 V)",
+     "codigo_insumo": "THHN-30",
+     "descripcion": "Bajante de BT 4 × 3/0 Cu × 12 m (I = 197 A a 220 V; el 2/0 solo admite 175 A a 75 °C, NTC 2050 tabla 310-16)",
      "unidad": "m",
      "cantidad": 48,
-     "precio_unitario": 42000,
-     "subtotal": 2016000,
+     "precio_unitario": 53000,
+     "subtotal": 2544000,
      "tipo_dato": "estimacion"
     },
     {
@@ -2064,11 +2064,11 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
-     "tarifa": 31423447,
-     "subtotal": 942703
+     "tarifa": 7183000,
+     "subtotal": 215490
     },
     {
      "codigo_insumo": "TR-TRAFO",
@@ -2089,28 +2089,28 @@
     }
    ],
    "subtotales": {
-    "materiales": 31423447,
+    "materiales": 31996447,
     "componentes_apu": 1444530,
     "equipo": 1328600,
-    "transporte": 1542703,
+    "transporte": 815490,
     "mano_de_obra": 972000
    },
-   "costo_directo": 36711280,
+   "costo_directo": 36557067,
    "aiu": {
-    "administracion": 6975143,
-    "imprevistos": 1101338,
-    "utilidad": 1835564,
+    "administracion": 6945843,
+    "imprevistos": 1096712,
+    "utilidad": 1827853,
     "porcentajes": {
      "A": 0.19,
      "I": 0.03,
      "U": 0.05
     }
    },
-   "iva_sobre_utilidad": 348757,
-   "precio_unitario_total": 46972083,
+   "iva_sobre_utilidad": 347292,
+   "precio_unitario_total": 46774767,
    "rango_precio_total": [
-    37577666,
-    61063708
+    37419814,
+    60807197
    ],
    "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
    "comparacion": [
@@ -2127,54 +2127,54 @@
     {
      "variante": "25 kVA monofásico",
      "transformador": "TR-25-1F",
-     "costo_directo": 20749783,
-     "precio_unitario_total": 26549347,
+     "costo_directo": 19794230,
+     "precio_unitario_total": 25326717,
      "rango": [
-      21239478,
-      34514151
+      20261374,
+      32924732
      ],
      "referencia_creg": "N1T5",
      "valor_creg_actualizado": 11013503,
-     "nota": "Monofásico: 1 cortacircuitos, 1 DPS, bajante 3 × 1/0 Cu, percha en vez de collarines (RA3-026); mismo montaje y puestas a tierra."
+     "nota": "Monofásico (RA3-026): 1 cortacircuitos, 1 DPS, 1 estribo y soporte en L, percha en vez de cruceta de 2,4 m y collarines; bajante 3 × 1/0 Cu (104 A a 240 V); mismo montaje y puestas a tierra."
     },
     {
      "variante": "37,5 kVA monofásico",
      "transformador": "TR-37-1F",
-     "costo_directo": 21951783,
-     "precio_unitario_total": 28087306,
+     "costo_directo": 21292870,
+     "precio_unitario_total": 27244227,
      "rango": [
-      22469845,
-      36513498
+      21795381,
+      35417495
      ],
      "referencia_creg": "N1T6",
      "valor_creg_actualizado": 11749823,
-     "nota": "Monofásico: 1 cortacircuitos, 1 DPS, bajante 3 × 1/0 Cu, percha en vez de collarines (RA3-026); mismo montaje y puestas a tierra."
+     "nota": "Monofásico (RA3-026): 1 cortacircuitos, 1 DPS, 1 estribo y soporte en L, percha en vez de cruceta de 2,4 m y collarines; bajante 3 × 2/0 Cu (156 A a 240 V; el 1/0 solo admite 150 A); mismo montaje y puestas a tierra."
     },
     {
      "variante": "45 kVA trifásico",
      "transformador": "TR-45-3F",
-     "costo_directo": 30161074,
-     "precio_unitario_total": 38591094,
+     "costo_directo": 29067501,
+     "precio_unitario_total": 37191867,
      "rango": [
-      30872875,
-      50168422
+      29753494,
+      48349428
      ],
      "referencia_creg": "N1T12",
      "valor_creg_actualizado": 15559909,
-     "nota": "Igual al APU-08 cambiando el transformador; mismo montaje y puestas a tierra."
+     "nota": "Igual al APU-08 cambiando el transformador y el bajante a 4 × 1/0 Cu (118 A a 220 V); mismo montaje y puestas a tierra."
     },
     {
      "variante": "112,5 kVA trifásico",
      "transformador": "TR-1125-3F",
-     "costo_directo": 43545511,
-     "precio_unitario_total": 55716482,
+     "costo_directo": 46011618,
+     "precio_unitario_total": 58871866,
      "rango": [
-      44573185,
-      72431426
+      47097493,
+      76533425
      ],
      "referencia_creg": "N1T15",
      "valor_creg_actualizado": 21850750,
-     "nota": "Igual al APU-08 cambiando el transformador; mismo montaje y puestas a tierra. Para 112,5 kVA EPM puede pedir montaje en estructura doble (RA3-030) y poste de 1.050 kgf: sumar un poste APU-01b y una estructura APU-03."
+     "nota": "Igual al APU-08 cambiando el transformador y el bajante a 2 × 3/0 Cu por fase (295 A a 220 V); mismo montaje y puestas a tierra. Para 112,5 kVA EPM puede pedir montaje en estructura doble (RA3-030) y poste de 1.050 kgf: sumar un poste APU-01b y una estructura APU-03."
     }
    ]
   },
@@ -2199,7 +2199,7 @@
      "unidad": "m",
      "cantidad": 1060.0,
      "precio_unitario": 6209,
-     "subtotal": 6581308,
+     "subtotal": 6581540,
      "tipo_dato": "dato_mercado"
     },
     {
@@ -2208,7 +2208,7 @@
      "unidad": "un",
      "cantidad": 21,
      "precio_unitario": 24640,
-     "subtotal": 517443,
+     "subtotal": 517440,
      "tipo_dato": "dato_mercado"
     },
     {
@@ -2217,7 +2217,7 @@
      "unidad": "un",
      "cantidad": 8,
      "precio_unitario": 16755,
-     "subtotal": 134042,
+     "subtotal": 134040,
      "tipo_dato": "dato_mercado"
     },
     {
@@ -2235,7 +2235,7 @@
      "unidad": "un",
      "cantidad": 58,
      "precio_unitario": 977,
-     "subtotal": 56641,
+     "subtotal": 56666,
      "tipo_dato": "dato_mercado"
     },
     {
@@ -2262,7 +2262,7 @@
      "unidad": "un",
      "cantidad": 12.0,
      "precio_unitario": 4189,
-     "subtotal": 50266,
+     "subtotal": 50268,
      "tipo_dato": "dato_mercado"
     },
     {
@@ -2313,11 +2313,11 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
-     "tarifa": 8279699,
-     "subtotal": 248391
+     "tarifa": 8279953,
+     "subtotal": 248399
     }
    ],
    "mano_de_obra": [
@@ -2337,28 +2337,28 @@
     }
    ],
    "subtotales": {
-    "materiales": 8279699,
+    "materiales": 8279953,
     "componentes_apu": 0,
     "equipo": 826442,
-    "transporte": 248391,
+    "transporte": 248399,
     "mano_de_obra": 745500
    },
-   "costo_directo": 10100032,
+   "costo_directo": 10100294,
    "aiu": {
-    "administracion": 1919006,
-    "imprevistos": 303001,
-    "utilidad": 505002,
+    "administracion": 1919056,
+    "imprevistos": 303009,
+    "utilidad": 505015,
     "porcentajes": {
      "A": 0.19,
      "I": 0.03,
      "U": 0.05
     }
    },
-   "iva_sobre_utilidad": 95950,
-   "precio_unitario_total": 12922991,
+   "iva_sobre_utilidad": 95953,
+   "precio_unitario_total": 12923326,
    "rango_precio_total": [
-    10338393,
-    16799888
+    10338661,
+    16800324
    ],
    "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
    "comparacion": [
@@ -2370,18 +2370,18 @@
    "variantes": [
     {
      "variante": "ADSS 48 hilos (troncal)",
-     "costo_directo": 21746854,
-     "precio_unitario_total": 27825099,
+     "costo_directo": 21747116,
+     "precio_unitario_total": 27825435,
      "rango": [
-      22260080,
-      36172629
+      22260348,
+      36173065
      ],
      "nota": "Cambia el cable al precio por km suelto de 48 hilos (no hay precio confiable de carrete) y duplica las fusiones (12 más por km, 0,25 días de cuadrilla)."
     },
     {
      "variante": "Rural (vano 80 m, 12,5 postes/km)",
-     "costo_directo": 7878025,
-     "precio_unitario_total": 10079933,
+     "costo_directo": 7878229,
+     "precio_unitario_total": 10080194,
      "rango": null,
      "nota": "Estimación: la mitad de herrajes, fleje y marquillas y tendido más rápido; el cable no cambia."
     }
@@ -2488,7 +2488,7 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
      "tarifa": 335570,
@@ -2636,7 +2636,7 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
      "tarifa": 1922500,
@@ -2812,7 +2812,7 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
      "tarifa": 272550000,
@@ -2867,7 +2867,7 @@
    "unidad": "un",
    "norma_referencia": "RETIE; normas de medida de EPM; CREG 038 de 2014 (código de medida) y CREG 174 de 2021 (medidor bidireccional del autogenerador)",
    "supuestos": [
-    "Para sedes de 30–100 kW (corriente de 80–260 A a 220 V); para cargas menores, medida directa (restar los TC y la bornera)",
+    "Para sedes de hasta unos 60 kVA (157 A a 220 V): el Cu 2/0 THHN admite 175 A a 75 °C (NTC 2050, tabla 310-16); para sedes mayores se sube a 4/0 o a dos conductores por fase. Para cargas menores, medida directa (restar los TC y la bornera)",
     "27 m de cable por conductor (25 m + colas)",
     "1,5 días de pareja de liniería"
    ],
@@ -2985,7 +2985,7 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
      "tarifa": 9718000,
@@ -3065,11 +3065,11 @@
     },
     {
      "codigo_insumo": "FO-DROP",
-     "descripcion": "Cable de acometida de fibra (drop) de 2 hilos con mensajero, por metro",
+     "descripcion": "Cable de acometida de fibra (drop) figura 8 de 1 hilo G.657A1 con mensajero, por metro",
      "unidad": "m",
      "cantidad": 55,
-     "precio_unitario": 1800,
-     "subtotal": 99000,
+     "precio_unitario": 415,
+     "subtotal": 22825,
      "tipo_dato": "estimacion"
     },
     {
@@ -3077,8 +3077,8 @@
      "descripcion": "Caja o bandeja de terminación óptica de pared con 2 adaptadores (roseta) en la sede",
      "unidad": "un",
      "cantidad": 1,
-     "precio_unitario": 45000,
-     "subtotal": 45000,
+     "precio_unitario": 22998,
+     "subtotal": 22998,
      "tipo_dato": "estimacion"
     },
     {
@@ -3105,7 +3105,7 @@
      "unidad": "un",
      "cantidad": 4,
      "precio_unitario": 4189,
-     "subtotal": 16755,
+     "subtotal": 16756,
      "tipo_dato": "dato_mercado"
     },
     {
@@ -3148,11 +3148,11 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
-     "tarifa": 1007134,
-     "subtotal": 30214
+     "tarifa": 908958,
+     "subtotal": 27269
     }
    ],
    "mano_de_obra": [
@@ -3165,28 +3165,28 @@
     }
    ],
    "subtotales": {
-    "materiales": 1007134,
+    "materiales": 908958,
     "componentes_apu": 0,
     "equipo": 430750,
-    "transporte": 30214,
+    "transporte": 27269,
     "mano_de_obra": 315000
    },
-   "costo_directo": 1783098,
+   "costo_directo": 1681977,
    "aiu": {
-    "administracion": 338789,
-    "imprevistos": 53493,
-    "utilidad": 89155,
+    "administracion": 319576,
+    "imprevistos": 50459,
+    "utilidad": 84099,
     "porcentajes": {
      "A": 0.19,
      "I": 0.03,
      "U": 0.05
     }
    },
-   "iva_sobre_utilidad": 16939,
-   "precio_unitario_total": 2281474,
+   "iva_sobre_utilidad": 15979,
+   "precio_unitario_total": 2152090,
    "rango_precio_total": [
-    1825179,
-    2965916
+    1721672,
+    2797716
    ],
    "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
    "comparacion": [],
@@ -3236,7 +3236,7 @@
      "unidad": "un",
      "cantidad": 48,
      "precio_unitario": 4189,
-     "subtotal": 201062,
+     "subtotal": 201072,
      "tipo_dato": "dato_mercado"
     },
     {
@@ -3245,7 +3245,7 @@
      "unidad": "un",
      "cantidad": 4,
      "precio_unitario": 266199,
-     "subtotal": 1064798,
+     "subtotal": 1064796,
      "tipo_dato": "dato_mercado"
     },
     {
@@ -3297,10 +3297,10 @@
    "transporte": [
     {
      "codigo_insumo": "TR-MAT",
-     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
      "unidad": "%",
      "cantidad": 0.03,
-     "tarifa": 29187804,
+     "tarifa": 29187812,
      "subtotal": 875634
     }
    ],
@@ -3314,15 +3314,15 @@
     }
    ],
    "subtotales": {
-    "materiales": 29187804,
+    "materiales": 29187812,
     "componentes_apu": 0,
     "equipo": 893000,
     "transporte": 875634,
     "mano_de_obra": 1260000
    },
-   "costo_directo": 32216438,
+   "costo_directo": 32216446,
    "aiu": {
-    "administracion": 6121123,
+    "administracion": 6121125,
     "imprevistos": 966493,
     "utilidad": 1610822,
     "porcentajes": {
@@ -3332,10 +3332,10 @@
     }
    },
    "iva_sobre_utilidad": 306056,
-   "precio_unitario_total": 41220932,
+   "precio_unitario_total": 41220943,
    "rango_precio_total": [
-    32976746,
-    53587212
+    32976754,
+    53587225
    ],
    "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
    "comparacion": [],

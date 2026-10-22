@@ -13,8 +13,8 @@
 - **Sobre las celdas cabe una granja solar de 997 kWp** (1.812 módulos de 550 Wp) que produce unos **1,34 GWh al año** (cálculo propio, rango 1,30–1,45 GWh).
 - **Esa energía alcanza para un bloque solar de 50 kWh al mes para 2.236 hogares de estratos 1 y 2** (el 27 % de los 8.193 hogares de esos estratos que atiende EPM): un ahorro de **$21.352 al mes en estrato 1 (31 % de la factura típica)** y de $26.690 en estrato 2 (22 %). Si reemplaza consumo subsidiado, la Nación deja de pagar unos **$721 millones al año** en subsidios y los hogares se ahorran unos **$608 millones** (cálculo propio).
 - **La figura legal:** una **comunidad energética** de hogares de estratos 1 y 2 (Decreto 2236 de 2023) que actúa como **autogenerador colectivo** (Resolución CREG 101 072 de 2025) y se postula a **Colombia Solar** (Decreto 0972 de 2025 y Resolución 40159 de 2026), que cambia subsidios por paneles.
-- **El parque** pone todo lo que tiene gente **fuera de las celdas y a 30 m o más de los residuos**: coworking de 312 m² con 40 puestos, cafetería y duchas, taller de bicicletas, granja con invernadero, huerta, compostaje y apiario, módulo recreodeportivo, mirador y un circuito de 0,9 km conectado con el pueblo por una ruta ciclista de 3,9 km.
-- **Cuánto cuesta:** unos **$17.460 millones** (rango de prefactibilidad $12.222–26.190 M): $4.194 M para estudios y clausura, $6.646 M para la granja solar y la conexión a EPM, y $6.620 M para el parque.
+- **El parque** pone todo lo que tiene gente **fuera de las celdas y a 30 m o más de las celdas y lagunas que se ven** (la zona de servicios hay que revisarla con apiques antes de diseñar, ver la sección 1.2): coworking de 312 m² con 40 puestos, cafetería y duchas, taller de bicicletas, granja con invernadero, huerta, compostaje y apiario, módulo recreodeportivo, mirador y un circuito de 0,9 km conectado con el pueblo por una ruta ciclista de 3,9 km.
+- **Cuánto cuesta:** unos **$16.636 millones** (rango de prefactibilidad $11.645–24.955 M): $4.194 M para estudios y clausura, $5.823 M para la granja solar y la conexión a EPM, y $6.620 M para el parque.
 
 ## 1. Dónde está el relleno y cómo está hoy
 
@@ -24,10 +24,10 @@ No hay un lugar de Google para el relleno ni fotos con coordenadas. Se ubicó cr
 
 | Prueba | Qué dice | Fuente |
 |---|---|---|
-| Superservicios, visita de mayo de 2018 | "Relleno sanitario Las Américas ubicado a 2 kilómetros del municipio de Yondó en la vereda Las Américas, operado por el mismo prestador"; cerca de postes y alambre de púas, chimeneas de piedra, lixiviados que van a un pozo y se recirculan | Evaluación integral, págs. 68–73 |
+| Superservicios, visita de mayo de 2018 | "Relleno sanitario Las Américas ubicado a 2 kilómetros del municipio de Yondó en la vereda Las Américas, operado por el mismo prestador"; cerca de postes y alambre de púas, chimeneas de piedra, lixiviados que van a un pozo y se recirculan | Evaluación integral, págs. 68–74 |
 | Contratos de 2015 y 2025 | "Torre para tanque de almacenamiento de agua potable; tramo de vía y cerramiento del predio del relleno" (2015). "Vía de acceso (Calle 16) y vías internas del acueducto y relleno" (BPIN 2025058930008) | SECOP I; MapaInversiones |
 | Satélite de Google (posterior a 2024) | Dos plataformas grises de material de cobertura, una celda con pasto, cuatro piscinas rectangulares, vía interna en afirmado nueva (en diciembre de 2024 se compró material triturado para la vía del relleno) y una caseta en la entrada norte | Google z19–z20 |
-| Satélite de Esri (enero de 2020) | Plataforma parda y blanca de unas 3 ha con las mismas piscinas llenas de agua oscura | Esri World Imagery |
+| Satélite de Esri (enero de 2020) | Plataforma parda y blanca de unas 3–4 ha con las mismas piscinas llenas de agua oscura, y otra mancha parda de unas 2,7 ha al sur | Esri World Imagery |
 | Lugar de Google "Escombrera" | 140 m al norte, sobre el área de préstamo de material de cobertura | Google Maps |
 
 El sitio queda en **7,0140 N, 73,9342 O**, a **348 m** del tanque elevado del acueducto y a **588 m** de la planta de tratamiento (PTAP) (cálculo propio).
@@ -43,11 +43,14 @@ El sitio queda en **7,0140 N, 73,9342 O**, a **348 m** del tanque elevado del ac
 | Celda norte con pasto (probable celda clausurada de las etapas 1 y 2) | 3.732 m² |
 | **Celdas visibles en total** | **8.026 m² (0,80 ha)** |
 | Etapas del Manual de Operaciones (dato oficial) | 1.840 + 9.483 + 4.243 + 2.893 = 18.459 m² |
-| Zona intervenida en enero de 2020 (estimación) | unas 3 ha |
-| Cuatro piscinas (probables lagunas de lixiviados) | 20×18, 18×16, 13×8 y 8×8 m, giradas 35° |
+| Zona intervenida en enero de 2020 alrededor de las celdas (estimación) | unas 3–4 ha |
+| Mancha parda al sur de las lagunas en enero de 2020, donde van los servicios del parque (estimación) | unas 2,7 ha |
+| Cuatro piscinas (probables lagunas de lixiviados) | 20×18, 18×16, 13×8 y 8×8 m, giradas 35° (816 m² en total) |
 | Chimenea o caja de gases visible | sobre la celda oriental |
 
-La huella real de los residuos está entre 0,8 y 3 ha (estimación). Se define con topografía, apiques y georradar antes de diseñar la cobertura.
+La huella real de los residuos está entre 0,8 y 4 ha (estimación). Se define con topografía, apiques y georradar antes de diseñar la cobertura.
+
+**Ojo con la zona de servicios.** En la imagen de Esri de enero de 2020 también estaba parda la franja al sur de las lagunas, donde este proyecto pone el coworking, la cafetería, la plazoleta y la granja. Puede ser potrero seco (enero es época seca), tierra removida o residuos regados; en Google (después de 2024) ya está empradizada. Los apiques, el georradar y la línea base de biogás tienen que cubrirla antes de diseñar las edificaciones. Si aparecen residuos, la huella llegaría a unas 6,6 ha y los servicios se corren hacia el occidente o el sur.
 
 **Un botadero más viejo.** Noticias Caracol (23 de septiembre de 2020) informó que los dos pozos que hoy abastecen al acueducto se perforaban "dentro del polígono que otrora ocupara un relleno sanitario", el de Las Américas, que funcionó allí hace unos 25 años; Corantioquia suspendió la obra porque no tenía permiso de captación. Ese sitio antiguo no está delimitado y **hay que incluirlo en la clausura** (Resolución 1390 de 2005) y en el monitoreo del agua subterránea.
 
@@ -57,12 +60,12 @@ La huella real de los residuos está entre 0,8 y 3 ha (estimación). Se define c
 |---|---|---|
 | Inicio de operación | 21 de julio de 1999 | Dato oficial, SUI |
 | Licencia inicial | Resolución 130ZF-3106 del 19 de junio de 2008 | Dato oficial, Superservicios 2018, pág. 71 |
-| Prórroga | Resolución 130ZF-1311-6219 del 12 de noviembre de 2013, por 10 años; en 2014 Corantioquia la redujo a 3 años por el área disponible | Dato oficial, ídem |
+| Prórroga | Resolución 130ZF-1311-6219 del 12 de noviembre de 2013, por 10 años; en 2014 Corantioquia la redujo a 3 años por el área disponible (el SUI la registra como 130FZ13115219) | Dato oficial, ídem |
 | Vencimiento | Licencia vigente hasta el **12 de noviembre de 2023**; vida útil hasta el 31 de diciembre de 2023 | Dato oficial, SUI (datos.gov.co wu2p-623h y 84tn-nnhf) |
 | Capacidad | 74.303 m³ (PGIRS) u 81.147 m³ (SUI) | Dato oficial |
 | Toneladas | 167 t/mes en 2018; 3.316 t en 2020 y 3.761 t en 2021 | Dato oficial, Superservicios y SUI |
 | Acumulado 1999–2026 | unas 78.000 t (71.000–84.000) | Estimación |
-| Volumen ocupado | 78.000–130.000 m³: supera la capacidad de diseño | Estimación |
+| Volumen ocupado | 78.000–130.000 m³ solo de residuos (densidad de 1,0 a 0,6 t/m³); con el material de cobertura, 94.000–156.000 m³. Supera la capacidad de diseño | Estimación |
 | Problemas que encontró la Superservicios | sin báscula ni cobertura diaria; gallinazos, insectos y olores; sin permiso de vertimientos; sin monitoreo de agua ni aire; puerta abierta a terceros; "presuntamente operando sin un permiso ambiental vigente" | Dato oficial, págs. 69–74 |
 | Ampliación formulada | BPIN 2025058930015, $3.701 M de 2025 ($3.901 M de 2026), devuelto a MGA | Dato oficial, MapaInversiones |
 | Contratos del relleno | promedio de $576 M al año en 2019–2023 (pesos de 2026), sin contar la nómina | Cálculo propio, SECOP |
@@ -101,7 +104,7 @@ No se encontró una prórroga, una licencia nueva ni sanciones publicadas.
 | Opción | Distancia por vía | Licencia | Comentario |
 |---|---|---|---|
 | **Parque Tecnológico Ambiental San Silvestre** (Veolia), Barrancabermeja | **40,2 km** (OSRM, 44 min) | CAS, Resolución 1121 de 2014, **hasta el 27 de diciembre de 2044** (SUI) | Recomendada. Riesgos: el puente Guillermo Gaviria Correa tuvo socavación y cierres en marzo de 2026 (Vanguardia); organizaciones locales denuncian daños ambientales y Veolia dice que la operación está normalizada (Global Witness) |
-| Rellenos de Rediba y Yerbabuena, Barrancabermeja | similar | CAS, hasta 2044–2045 (SUI) | Rediba tiene una condena penal de su exgerente y la Sentencia T-227 de 2017 |
+| Registros de Rediba y Yerbabuena, Barrancabermeja | — | Misma licencia de la CAS (Resolución 1121 de 2014) que San Silvestre (SUI) | No son otra opción: son registros del mismo relleno, que Veolia le compró a Rediba en 2019 (Global Witness). Rediba tuvo una condena penal de su exgerente y la Sentencia T-227 de 2017 sigue a cargo del operador |
 | Relleno La Tabaca, Puerto Berrío | unos 141 km | vencida el 2 de septiembre de 2021 (SUI) | Descartada |
 
 **Costo de la disposición regional:** unos **$321 M al año** (estimación): 3.900 t/año (3.500–4.300) × [tarifa de disposición de $60.000/t (45.000–80.000) + 20,2 km de tramo excedente a $1.100/t·km (900–1.400)]. Las tarifas reales salen del contrato con el operador y de la metodología de la CRA. Una estación de clasificación y aprovechamiento (proyecto tipo ECA del DNP) y el compostaje bajan las toneladas.
@@ -144,7 +147,7 @@ No se encontró una prórroga, una licencia nueva ni sanciones publicadas.
 
 ### 3.3 Conexión a la red de EPM
 
-- **Subestación Yondó de EPM** (10 MVA, 34,5/13,2 kV, en operación desde 2021), en 7,0032 N, 73,9226 O (lugar de Google verificado en el satélite): **1,75 km en línea recta** y 4,6 km por vías públicas (cálculo propio).
+- **Subestación Yondó de EPM** (10 MVA, 34,5/13,2 kV, en operación desde 2021), en 7,0032 N, 73,9226 O (lugar de Google "Subestación yondo epm", con un patio pequeño de equipos y un edificio en el satélite; hay que confirmarla con EPM): **1,75 km en línea recta** y 4,6 km por vías públicas (cálculo propio).
 - **Línea nueva de 13,2 kV de unos 2,6 km** (estimación, 2,3–2,9 km) o, si EPM confirma capacidad, una derivación de 0,6–0,8 km desde la red que alimenta la PTAP y el tanque elevado (a 350–590 m). OpenStreetMap no tiene las líneas eléctricas: el trazado lo define EPM.
 - 1 MW es el 10 % de la capacidad de la subestación; la CREG 174 de 2021 limita la generación distribuida al 50 % del circuito o transformador. De 100 kW a 1 MW aplica el **estudio de conexión simplificado**.
 
@@ -154,7 +157,7 @@ No se encontró una prórroga, una licencia nueva ni sanciones publicadas.
 
 | Dato | Valor | Tipo y fuente |
 |---|---|---|
-| Usuarios residenciales de EPM en Yondó (agosto de 2026) | **estrato 1: 6.327; estrato 2: 1.866**; estrato 3: 223; total residencial: 8.445. Además, 46 de estrato 1 con ESSA (2025) | Dato oficial, SUI, reporte "Consolidado Energía por Empresa, Departamento y Municipio" |
+| Usuarios residenciales de EPM en Yondó (agosto de 2026) | **estrato 1: 6.327; estrato 2: 1.866**; estrato 3: 223; total residencial: 8.445. Además, 46 de estrato 1 con ESSA | Dato oficial, SUI, reporte "Consolidado Energía por Empresa, Departamento y Municipio" |
 | Consumo promedio por usuario | estrato 1: 161 kWh/mes; estrato 2: 200 kWh/mes | Cálculo propio, seis meses del SUI (dic-2025 a ago-2026) |
 | Consumo de subsistencia | 173 kWh/mes (municipios por debajo de 1.000 m) | Dato oficial, UPME, Resolución 355 de 2004 |
 | Tarifa de EPM, octubre de 2026 | costo unitario 991,29 $/kWh; estrato 1: 427,04 (subsidio de 56,9 %); estrato 2: 533,81 (46,1 %) | Dato oficial, publicación de tarifas de EPM |
@@ -173,6 +176,8 @@ No se encontró una prórroga, una licencia nueva ni sanciones publicadas.
 
 La granja produce el 10,2 % de la energía subsidiada de estratos 1 y 2 en Yondó.
 
+La factura típica no incluye el cargo fijo de comercialización de hasta $9.611 por factura que trae la publicación de EPM. Con él, el ahorro del bloque de 50 kWh baja a cerca del 27 % de la factura en estrato 1 y del 21 % en estrato 2 (sigue dentro del rango de MinEnergía).
+
 ### 4.3 Cuánto se ahorra
 
 | Si la energía... | Valor anual | Tipo |
@@ -184,7 +189,7 @@ La granja produce el 10,2 % de la energía subsidiada de estratos 1 y 2 en Yond�
 
 El ahorro real queda entre $541 M y $1.330 M al año, según cómo reconozca la regulación la energía colectiva y quién pague el uso de la red.
 
-**Costo de producir la energía:** con crédito al 6 % real a 25 años, 452 $/kWh; sin costo financiero (recursos no reembolsables), 254 $/kWh (cálculo propio). En los dos casos es menos de lo que cuesta el subsidio de un kWh de estrato 1 (564 $/kWh).
+**Costo de producir la energía:** con crédito al 6 % real a 25 años, 402 $/kWh (casi lo mismo que el componente de generación, 403,50 $/kWh); sin costo financiero (recursos no reembolsables), 228 $/kWh (cálculo propio). En los dos casos es menos de lo que cuesta el subsidio de un kWh de estrato 1 (564 $/kWh).
 
 ### 4.4 Con qué figura
 
@@ -201,7 +206,7 @@ El ahorro real queda entre $541 M y $1.330 M al año, según cómo reconozca la 
 
 ### 5.1 La regla de oro
 
-**Todo lo que tiene gente queda fuera de las celdas y a 30 m o más de los residuos y de las lagunas** (por el biogás y los asentamientos). Sobre las celdas solo van la granja solar, el pasto y las chimeneas. Las edificaciones llevan losa sobre membrana antigás, ventilación bajo el piso y sensor de metano.
+**Todo lo que tiene gente queda fuera de las celdas y a 30 m o más de los residuos y de las lagunas** (por el biogás y los asentamientos). Sobre las celdas solo van la granja solar, el pasto y las chimeneas. Las edificaciones llevan losa sobre membrana antigás, ventilación bajo el piso y sensor de metano. Las distancias de la tabla se midieron a las celdas, lagunas y humedal dibujados, no a la huella real de los residuos, que todavía no se conoce: por eso la zona de servicios entra en los apiques y en la línea base de biogás (sección 1.2). Los dos árboles que hoy crecen sobre la zona de la cobertura se retiran en la clausura, porque las raíces la dañan.
 
 ### 5.2 Programa
 
@@ -265,21 +270,23 @@ Prefactibilidad (clase 4: −30 % / +50 %). Precios unitarios con AIU, de refere
 | 1. Estudios, diseños, plan de clausura y posclausura y trámites | 975,0 |
 | 2. Clausura técnica de las celdas (reconformación, cobertura, canales, lixiviados, gases, monitoreo, humedal) | 2.549,5 |
 | 3. Granja solar de 996,6 kWp (sistema a $2,7 M/kWp, lastres, transformador, caseta, malla, cámaras, batería) | 3.903,0 |
-| 4. Conexión a EPM (línea de 2,6 km a $420 M/km, reconectador, medición, salida en la subestación si se exige) | 1.682,0 |
+| 4. Conexión a EPM (línea de 2,6 km a $175 M/km según la base de precios de red del proyecto, reconectador, medición, salida en la subestación si se exige) | 990,0 |
 | 5. Parque: coworking, dotación, conectividad, solar propia, cargadores, agua lluvia, cafetería, taller, portería, mirador, kioscos | 2.589,6 |
 | 6. Granja autosostenible | 269,4 |
 | 7. Circuito, senderos, parqueadero, módulo recreodeportivo, señalización, alumbrado solar, cerramiento y ciclo-infraestructura al pueblo (3,8 km) | 2.703,8 |
-| **Costo directo** | **14.672,2** |
-| Interventoría (7 %) | 1.027,1 |
-| Gestión social y ambiental (2 %) | 293,4 |
-| Imprevistos (10 %) | 1.467,2 |
-| **Total** | **17.459,9** (rango 12.222–26.190) |
+| **Costo directo** | **13.980,2** |
+| Interventoría (7 %) | 978,6 |
+| Gestión social y ambiental (2 %) | 279,6 |
+| Imprevistos (10 %) | 1.398,0 |
+| **Total** | **16.636,5** (rango 11.645–24.955) |
 
 | Fase | Millones de 2026 |
 |---|---:|
 | 0–1. Estudios y clausura | 4.194,2 |
-| 2. Granja solar y conexión | 6.646,2 |
+| 2. Granja solar y conexión | 5.822,7 |
 | 3. Parque | 6.619,6 |
+
+**Ojo con la huella de los residuos.** La cobertura del capítulo 2 está calculada para unos 10.000–12.000 m². Si los apiques confirman la huella del Manual de Operaciones (1,85 ha), la clausura técnica pasa de $2.550 M a unos $3.860 M; si llega a unas 4 ha, a unos $7.180 M (cálculo propio). Eso supera el margen de prefactibilidad, por eso la delimitación de residuos va primero.
 
 **Para comparar:** ampliar el relleno (BPIN 2025058930015) costaba unos $3.901 M de 2026 y seguir operándolo, unos $576 M al año. La clausura cuesta del mismo orden que la ampliación, pero resuelve el problema para siempre y libera el predio.
 
@@ -288,7 +295,7 @@ Prefactibilidad (clase 4: −30 % / +50 %). Precios unitarios con AIU, de refere
 | Fase | Fuentes | Mezcla sugerida (millones) |
 |---|---|---|
 | 0–1. Clausura ($4.194 M) | Provisión de clausura y tarifa de aseo (Decreto 1784, art. 2.3.2.3.17); SGP de agua potable y saneamiento y Plan Departamental de Agua; regalías (reformular el BPIN de la ampliación como clausura con uso futuro) | tarifa 600; SGP y PDA 1.200; SGR 2.394 |
-| 2. Granja solar ($6.646 M) | Colombia Solar o FENOGE (ConEnergía para municipios PDET); SGR, Incentivo a la Producción (hasta $8.000 M y dos proyectos por municipio; en 2025 el único proyecto de Yondó no cumplió); Findeter "Municipios Territorios Energéticos" (IBR + 0,7 %, granjas de 1 MW); obras por impuestos (Yondó es ZOMAC y PDET); o un privado con contrato de compra de energía | Colombia Solar o FENOGE 3.323; SGR 1.994; Findeter o privado 1.329 |
+| 2. Granja solar ($5.823 M) | Colombia Solar o FENOGE (ConEnergía para municipios PDET); SGR, Incentivo a la Producción (hasta $8.000 M y dos proyectos por municipio; en 2025 el único proyecto de Yondó no cumplió); Findeter "Municipios Territorios Energéticos" (IBR + 0,7 %, granjas de 1 MW); obras por impuestos (Yondó es ZOMAC y PDET); o un privado con contrato de compra de energía | Colombia Solar o FENOGE 2.911; SGR 1.747; Findeter o privado 1.165 |
 | 3. Parque ($6.620 M) | Regalías (y el BPIN 2025058930008 de la vía de acceso como ruta ciclista); MinTIC (Zonas Digitales); Ministerio del Deporte e INDER (proyectos tipo de parque y ciclo-infraestructura); Ecopetrol (inversión social, comunidades energéticas); cooperación internacional; recursos propios | SGR 3.310; deporte, TIC y cultura 1.324; Ecopetrol y cooperación 993; propios 993 |
 
 **Compuertas:** no se licita la granja solar sin delimitar los residuos y sin el concepto de Corantioquia sobre el uso futuro; no se construye nada con gente sin la línea base de biogás; no se cierra el relleno sin el contrato de disposición regional y un plan de contingencia por el puente; cada fuente se radica con su MGA.
@@ -300,17 +307,17 @@ Prefactibilidad (clase 4: −30 % / +50 %). Precios unitarios con AIU, de refere
 | 0 | 2027 | Topografía, apiques, georradar y línea base ambiental; contrato con el relleno regional; plan de clausura ante Corantioquia; MGA y postulaciones |
 | 1 | 2027–2028 | Traslado de la basura a San Silvestre; clausura técnica |
 | 2 | 2029–2030 | Granja solar, bloque A (unos 0,77 MWp), y conexión a EPM; constitución de la comunidad energética; bloque B si los apiques lo permiten |
-| 3 | 2028–2030 | Coworking, cafetería, taller, granja, circuito, mirador y ruta ciclista (pueden empezar en paralelo con la clausura porque están fuera de las celdas) |
+| 3 | 2028–2030 | Coworking, cafetería, taller, granja, circuito, mirador y ruta ciclista (pueden empezar en paralelo con la clausura porque están fuera de las celdas, cuando los apiques y la línea base de biogás descarten residuos bajo la zona de servicios) |
 | Posclausura | 2028–2048 | Monitoreo y mantenimiento por 20 años como mínimo |
 
 ## 10. Lo que todavía no sabemos
 
 - La ubicación del relleno se dedujo de documentos y del satélite (confianza media): no hay foto georreferenciada.
-- La huella real de los residuos (0,8–3 ha) define cuántos kWp quedan sobre las celdas; el bloque B depende de los apiques.
+- La huella real de los residuos (0,8–4 ha, o hasta 6,6 ha si la mancha parda del sur de 2020 tiene residuos) define cuántos kWp quedan sobre las celdas y dónde pueden ir los servicios; el bloque B depende de los apiques.
 - Las cuatro piscinas se interpretan como lagunas de lixiviados; podrían ser de aguas lluvias.
 - El botadero antiguo de los años noventa no está delimitado; está cerca de los pozos del acueducto según la nota de 2020.
 - El predio del municipio puede no incluir todo el potrero del sur donde van los servicios: hay que revisar el certificado de tradición y el catastro.
-- Las tarifas de disposición regional, la ruta y el costo de la línea de 13,2 kV y la capacidad de la red los definen el operador del relleno y EPM.
+- Las tarifas de disposición regional, la ruta y el costo de la línea de 13,2 kV y la capacidad de la red los definen el operador del relleno y EPM. La ubicación de la subestación sale de un lugar de Google y del satélite; EPM no la ha publicado.
 - Las reglas de Colombia Solar para soluciones colectivas están en reglamentación y los subsidios de la Ley 1117 están prorrogados solo hasta el 30 de junio de 2027.
 - Los consumos por estrato salen de seis meses del SUI; los meses varían por los ciclos de facturación.
 
@@ -340,6 +347,8 @@ Prefactibilidad (clase 4: −30 % / +50 %). Precios unitarios con AIU, de refere
 **Energía**
 - SUI, reporte "Consolidado Energía por Empresa, Departamento y Municipio" (ele_com_096), Yondó, 2024–2026: http://reportes.sui.gov.co/fabricaReportes/frameSet.jsp?idreporte=ele_com_096
 - EPM, tarifas de octubre de 2026 (Antioquia): https://www.epm.com.co/content/dam/epm/clientes-y-usuarios/energia/tarifas-energia/Tarifas%202026/10.PublicacionTarifasOctubre162026_ANT_OM.pdf
+- Base de precios de red del proyecto (unidades constructivas de la Res. CREG 015 de 2018 y APU propios): `data/red/precios_unitarios.json`, ítems APU-06U, GES-SERV, GES-PODA, GES-TOPO, GES-RETIE-KM y CREG-N2EQ35
+- Google Maps, lugar "Subestación yondo epm" (7,0031989, −73,9226337), consulta del 22-oct-2026
 - NASA POWER, climatología en el sitio: https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=ALLSKY_SFC_SW_DWN&community=RE&longitude=-73.934&latitude=7.014&format=JSON
 - EPA y NREL, Best Practices for Siting Solar Photovoltaics on MSW Landfills (mayo de 2022), secciones 4.2.2 y 5: https://www.epa.gov/system/files/documents/2022-05/best-practices-siting-solar-photovoltaics-municipal-solid-waste-landfills_051722-pub.pdf
 - Findeter–MinEnergía, línea "Municipios Territorios Energéticos": https://www.findeter.gov.co/noticias/comunicados/ministerio-de-minas-y-energia-y-findeter-en-alianza-con-asocapitales-asointermedias-y-fedemunicipios-lanzan-linea-de-financiamiento-para-parques-de-generacion-de-energia
