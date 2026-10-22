@@ -133,79 +133,6 @@
       }
     },
     {
-      "id": "ala_media",
-      "nombre": "Ala media oeste",
-      "centro": [
-        -16.05,
-        -3.85
-      ],
-      "largo": 27.9,
-      "ancho": 12.2,
-      "rumbo_eje": 90,
-      "altura_alero": 4.0,
-      "pisos": 1,
-      "techo": {
-        "tipo": "dos_aguas",
-        "pendiente": 11,
-        "cumbrera": "largo",
-        "voladizo": 0.7,
-        "material": "fibrocemento",
-        "color": "#85827c"
-      },
-      "fachada": {
-        "material": "pañete_pintado",
-        "color": "#a8423c",
-        "ventanas": {
-          "tipo": "ventana",
-          "ancho": 1.2,
-          "alto": 1.3,
-          "antepecho": 1.1,
-          "separacion": 3.5,
-          "lados": [
-            "N",
-            "S",
-            "O"
-          ]
-        }
-      }
-    },
-    {
-      "id": "ala_sur",
-      "nombre": "Ala sur",
-      "centro": [
-        -16.0,
-        -28.0
-      ],
-      "largo": 27.8,
-      "ancho": 14.1,
-      "rumbo_eje": 90,
-      "altura_alero": 4.0,
-      "pisos": 1,
-      "techo": {
-        "tipo": "cuatro_aguas",
-        "pendiente": 11,
-        "voladizo": 0.7,
-        "material": "fibrocemento",
-        "color": "#85827c"
-      },
-      "fachada": {
-        "material": "pañete_pintado",
-        "color": "#a8423c",
-        "ventanas": {
-          "tipo": "ventana",
-          "ancho": 1.2,
-          "alto": 1.3,
-          "antepecho": 1.1,
-          "separacion": 3.5,
-          "lados": [
-            "N",
-            "S",
-            "O"
-          ]
-        }
-      }
-    },
-    {
       "id": "ala_este",
       "nombre": "Ala oriental (urgencias)",
       "centro": [
@@ -506,45 +433,6 @@
     {
       "tipo": "cubierta_ligera",
       "centro": [
-        -33.7,
-        -3.35
-      ],
-      "largo": 11.9,
-      "ancho": 5.4,
-      "rumbo_eje": 0,
-      "altura": 2.8,
-      "material": "concreto",
-      "color": "#a39a86"
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "centro": [
-        -17.5,
-        -11.5
-      ],
-      "largo": 26.0,
-      "ancho": 2.2,
-      "rumbo_eje": 90,
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#cfcdc6"
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "centro": [
-        -4.9,
-        -15.3
-      ],
-      "largo": 9.5,
-      "ancho": 1.6,
-      "rumbo_eje": 0,
-      "altura": 2.6,
-      "material": "fibrocemento",
-      "color": "#cfcdc6"
-    },
-    {
-      "tipo": "cubierta_ligera",
-      "centro": [
         -4.9,
         7.2
       ],
@@ -610,22 +498,6 @@
         [
           -43.0,
           8.0
-        ],
-        [
-          -45.0,
-          -4.0
-        ],
-        [
-          -46.5,
-          -16.0
-        ],
-        [
-          -48.0,
-          -28.0
-        ],
-        [
-          -49.0,
-          -36.0
         ]
       ],
       "altura": 2.5,
@@ -683,22 +555,6 @@
         [
           -43.0,
           8.0
-        ],
-        [
-          -45.0,
-          -4.0
-        ],
-        [
-          -46.5,
-          -16.0
-        ],
-        [
-          -48.0,
-          -28.0
-        ],
-        [
-          -49.0,
-          -36.0
         ]
       ],
       "altura": 0.6,
@@ -725,24 +581,6 @@
       "altura": 0.6,
       "material": "muro",
       "color": "#8e4b3c"
-    },
-    {
-      "tipo": "arbol",
-      "centro": [
-        -38.5,
-        -21.0
-      ],
-      "altura": 12,
-      "copa": 13
-    },
-    {
-      "tipo": "arbol",
-      "centro": [
-        -27.0,
-        6.5
-      ],
-      "altura": 9,
-      "copa": 8
     },
     {
       "tipo": "arbol",
@@ -774,29 +612,11 @@
     {
       "tipo": "arbol",
       "centro": [
-        0.0,
-        -46.0
-      ],
-      "altura": 18,
-      "copa": 14
-    },
-    {
-      "tipo": "arbol",
-      "centro": [
         20.0,
         -45.0
       ],
       "altura": 18,
       "copa": 14
-    },
-    {
-      "tipo": "arbol",
-      "centro": [
-        -20.0,
-        -46.0
-      ],
-      "altura": 16,
-      "copa": 12
     },
     {
       "tipo": "arbol",
@@ -842,16 +662,9 @@
         "filas": 4,
         "columnas": 18,
         "orientacion_modulo": "horizontal"
-      },
-      {
-        "volumen": "ala_media",
-        "faldon": "S",
-        "filas": 3,
-        "columnas": 6,
-        "orientacion_modulo": "horizontal"
       }
     ],
-    "kwp_factible": 99.0,
+    "kwp_factible": 89.1,
     "cubierta_nueva": {
       "material": "termoacustica",
       "color": "#e9e7e1",
@@ -859,8 +672,6 @@
         "ala_norte",
         "galeria_norte",
         "espina",
-        "ala_media",
-        "ala_sur",
         "ala_este",
         "porche_urgencias",
         "enlace",
@@ -899,7 +710,7 @@
       "telegestión de iluminación exterior y del parqueadero"
     ],
     "obras_civiles": [
-      "cambio de toda la cubierta de tejas onduladas de fibrocemento (≈3.400 m²) por lámina termoacústica, empezando por los faldones que llevan paneles (bloque central, ala oriental con su porche y ala media); si el fibrocemento es asbesto-cemento, retiro con empresa autorizada y disposición final según la Ley 1968 de 2019",
+      "cambio de toda la cubierta de tejas onduladas de fibrocemento (≈3.400 m²) por lámina termoacústica, empezando por los faldones que llevan paneles (bloque central y ala oriental con su porche); si el fibrocemento es asbesto-cemento, retiro con empresa autorizada y disposición final según la Ley 1968 de 2019",
       "revisión de cerchas y correas con el estudio de vulnerabilidad sísmica de 2024 y refuerzo donde haga falta para la carga de paneles (≈15 kg/m²)",
       "losa de concreto de 6,7 × 3,1 m con drenaje y cerco para el contenedor de baterías en el costado oriental del patio de ambulancias, junto a la reja y a 1 m del borde del bosque",
       "canalización subterránea desde el contenedor y los inversores hasta el tablero general; tablero de transferencia coordinado con la planta diésel existente",
@@ -913,7 +724,7 @@
       ],
       "rumbo_eje": 0
     },
-    "notas": "La potencia planeada cabe en la cubierta real sin marquesina: 5 filas × 18 columnas en el faldón oriental del bloque central (90 módulos), 4 × 18 en el faldón occidental del ala oriental (72) y 3 × 6 en el faldón sur del ala media (18): 180 módulos de 2,28 × 1,13 m (550 Wp) en posición horizontal = 99,0 kWp, el 99 % de los 100 kWp del plan y dentro del límite de 100 kW para acreditar excedentes 1:1. Comprobación con retiros de 0,5 m (largo útil = largo − 1,0 m; ancho inclinado útil = (ancho/2)/cos(pendiente) − 1,0 m; paso de 2,30 m por columna y 1,15 m por fila): bloque central 55,1 m → caben 23 columnas y 7,3/cos 10° − 1,0 = 6,41 m → 5 filas (se usan 18 columnas para alejarse del bosque y del cruce con el ala norte); ala oriental 48,15 m → 20 columnas y 5,75/cos 12° − 1,0 = 4,88 m → 4 filas (se usan 18); ala media 26,9 m → 11 columnas y 6,1/cos 11° − 1,0 = 5,21 m → 4 filas (se usan 3 × 6). Se eligieron faldones del centro del complejo, lejos del bosque del sur y del oriente: el arreglo del bloque central termina 7 m antes del muro sur para evitar la sombra del bosque al mediodía de diciembre, y el del ala oriental mira al oeste, sin árboles enfrente. El faldón sur del ala media puede recibir sombra del árbol grande del suroeste al final de la tarde. Toda la cubierta es de tejas onduladas de fibrocemento de más de 30 años; por eso se cambia antes de montar. Si no se consigue el cambio de cubierta, la alternativa es una marquesina sobre el patio de ambulancias (20 × 8 m ≈ 48 módulos = 26 kWp), que no alcanza el plan. El contenedor de 20 pies (400 kWh / 150 kW) va en el costado oriental del patio de ambulancias (x 28,9 a 34,9 m), que en 2020 se ve libre, junto a la entrada vehicular para su instalación, a 1 m del borde del bosque y a 3,4 m del frente de urgencias sin tapar su vano; los inversores (2 × 50 kW) van en el muro norte de la conexión entre el bloque central y el ala oriental, que da a un patio interno sombreado. El cargador de vehículo eléctrico (ambulancia o vehículo de servicio) queda en el costado oeste del mismo patio."
+    "notas": "La potencia planeada cabe en la cubierta real sin marquesina: 5 filas × 18 columnas en el faldón oriental del bloque central (90 módulos), 4 × 18 en el faldón occidental del ala oriental (72) y 3 × 6 en el faldón sur del ala media (18): 180 módulos de 2,28 × 1,13 m (550 Wp) en posición horizontal = 99,0 kWp, el 99 % de los 100 kWp del plan y dentro del límite de 100 kW para acreditar excedentes 1:1. Comprobación con retiros de 0,5 m (largo útil = largo − 1,0 m; ancho inclinado útil = (ancho/2)/cos(pendiente) − 1,0 m; paso de 2,30 m por columna y 1,15 m por fila): bloque central 55,1 m → caben 23 columnas y 7,3/cos 10° − 1,0 = 6,41 m → 5 filas (se usan 18 columnas para alejarse del bosque y del cruce con el ala norte); ala oriental 48,15 m → 20 columnas y 5,75/cos 12° − 1,0 = 4,88 m → 4 filas (se usan 18); ala media 26,9 m → 11 columnas y 6,1/cos 11° − 1,0 = 5,21 m → 4 filas (se usan 3 × 6). Se eligieron faldones del centro del complejo, lejos del bosque del sur y del oriente: el arreglo del bloque central termina 7 m antes del muro sur para evitar la sombra del bosque al mediodía de diciembre, y el del ala oriental mira al oeste, sin árboles enfrente. El faldón sur del ala media puede recibir sombra del árbol grande del suroeste al final de la tarde. Toda la cubierta es de tejas onduladas de fibrocemento de más de 30 años; por eso se cambia antes de montar. Si no se consigue el cambio de cubierta, la alternativa es una marquesina sobre el patio de ambulancias (20 × 8 m ≈ 48 módulos = 26 kWp), que no alcanza el plan. El contenedor de 20 pies (400 kWh / 150 kW) va en el costado oriental del patio de ambulancias (x 28,9 a 34,9 m), que en 2020 se ve libre, junto a la entrada vehicular para su instalación, a 1 m del borde del bosque y a 3,4 m del frente de urgencias sin tapar su vano; los inversores (2 × 50 kW) van en el muro norte de la conexión entre el bloque central y el ala oriental, que da a un patio interno sombreado. El cargador de vehículo eléctrico (ambulancia o vehículo de servicio) queda en el costado oeste del mismo patio. Integración con el hogar de adultos mayores (CPSAM, data/edificios/bienestar_anciano.json): las dos alas occidentales del predio (antes 'ala_media' y 'ala_sur'), su kiosco, el corredor del patio, el corredor norte–sur del sur, los árboles del costado occidental y sur y el tramo sur del cerramiento occidental se dibujan ahora en ese archivo. Los 18 módulos que había en la cara sur del ala media pasaron al arreglo del hogar, así que el hospital queda con 162 módulos = 89.1 kWp frente a los 100 kWp del plan; faltan unos 11 kWp que habría que buscar en otra cubierta o en marquesina."
   },
   "incertidumbres": [
     "Street View es de enero de 2014 y el satélite de enero de 2020. En 2024 se contrató la pintura general de fachadas e interiores y un techo de parqueadero en estructura de acero: los colores actuales pueden ser distintos a los verdes, ladrillo y rojos de 2014, y el techo del parqueadero no se ve en ninguna imagen (se supone en el patio de ambulancias, sin modelar). No se encontraron fotos recientes en la web.",
@@ -933,7 +744,8 @@
     "El cerramiento es malla de ≈2,5 m sobre un muro bajo de ≈0,6 m (ladrillo a la vista al norte, pintado de rojo al oeste); su trazado y el polígono del parqueadero son aproximados.",
     "Entre el extremo oriental del ala norte y el ala oriental hay un anexo bajo: en el satélite es una cubierta gris de ≈3,6 × 13 m y desde fYgu un techo a ≈3,3–3,6 m. Su forma de cubierta (una agua hacia el oriente) y su fachada son supuestas. A su lado, una franja blanca (x 17 a 18 m) puede ser un corredor cubierto; no se modeló.",
     "Desde el suroeste (FiBL, RfES) el predio del hospital queda sobre un talud 1,5 a 2,5 m más alto que la vía; el generador no maneja desniveles y todo queda a un mismo nivel.",
-    "El ala oriental está girada ≈2° respecto al norte (su alero oeste pasa de x ≈ 18,0 m en y = −15 a 19,2 m en y = 22 en el satélite) y se modeló así; en las demás alas el giro medido es menor de 1,5° y se dejaron a 0° y 90°."
+    "El ala oriental está girada ≈2° respecto al norte (su alero oeste pasa de x ≈ 18,0 m en y = −15 a 19,2 m en y = 22 en el satélite) y se modeló así; en las demás alas el giro medido es menor de 1,5° y se dejaron a 0° y 90°.",
+    "Las alas occidentales del predio son el hogar de adultos mayores (CPSAM) y se modelan aparte en bienestar_anciano.json; el reparto de la acometida y del medidor entre hospital y hogar no se conoce."
   ],
   "verificacion": {
     "trace": "data/geo/img/hospital_trace.png",
