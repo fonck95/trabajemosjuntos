@@ -155,9 +155,8 @@ function stripGeo(a, b, outHint) {
 }
 
 // ---------- texto en relieve con tildes compuestas (la fuente no trae Á, Í, Ñ…). Con `real`, las tildes van sobre la altura
-// real de las mayúsculas de la fuente (CAP × size, medida en la "E"): así lo usan los elementos de obra nueva. Sin `real` se
-// conserva la altura supuesta de 0,72 × size del `letrero` de las réplicas, con la que la tilde aguda queda dentro de la letra
-// (se deja así para que los modelos verificados no cambien; pasar `true` en ese llamado lo corrige)
+// real de las mayúsculas de la fuente (CAP × size, medida en la "E"); todos los letreros la usan. Sin `real` se usa la altura
+// supuesta de 0,72 × size, con la que la tilde aguda quedaba dentro de la letra
 const CAP = (() => { const g = new THREE.ShapeGeometry(font.generateShapes('E', 1)); g.computeBoundingBox(); return g.boundingBox.max.y; })();
 function textGeo(text, size, depth = 0.04, real = false) {
   const data = font.data, sc = size / data.resolution, cap = (real ? CAP : 0.72) * size, kt = real ? 0.75 : 0.9;
