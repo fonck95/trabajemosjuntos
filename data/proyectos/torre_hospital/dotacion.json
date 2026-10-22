@@ -9,7 +9,7 @@
   "estimacion": "supuesto con rango, a confirmar con cotizaciones",
   "calculo_propio": "sumas, medianas y totales hechos en este archivo"
  },
- "resumen": "La dotación biomédica y el mobiliario clínico de la torre suman $4.269 millones de 2026 (rango $3.126 millones a $6.099 millones); de eso, $3.883 millones son ítems de habilitación y el resto son recomendados. El equipamiento fijo e industrial (planta, UPS, ascensores, gases, climatización, agua, llamado, datos, CCTV, incendio, lavandería) suma $4.306 millones, de los cuales $2.355 millones pueden estar ya en el presupuesto de obra. Total general: $8.575 millones. Los analizadores del laboratorio van en comodato (valor de mercado $956 millones, no sumado). Mantenimiento anual estimado: $411 millones. Comparable: la dotación de un primer nivel similar (Montelíbano, 2025) costó $2.927 millones de 2026.",
+ "resumen": "La dotación biomédica y el mobiliario clínico de la torre suman $4.294 millones de 2026 (rango $3.146 millones a $6.133 millones); de eso, $3.908 millones son ítems de habilitación y el resto son recomendados. El equipamiento fijo e industrial (planta, UPS, ascensores, gases, climatización, agua, llamado, datos, CCTV, incendio, nevera mortuoria, lavandería) suma $4.344 millones, de los cuales $2.355 millones pueden estar ya en el presupuesto de obra. Total general: $8.639 millones. Los analizadores del laboratorio van en comodato (valor de mercado $956 millones, no sumado). Mantenimiento anual estimado: $412 millones. Comparable: la dotación de un primer nivel similar (Montelíbano, 2025) costó $2.927 millones de 2026.",
  "supuestos": {
   "capacidad": "Capacidad del programa médico-arquitectónico (programa.json): 15 camas (7 de adultos con 1 aislamiento, 4 pediátricas, 2 de posparto y 2 TPR), 6 puestos de observación, 15 consultorios (incluido telemedicina), 3 unidades odontológicas, 4 cubículos de toma de muestras más toma especial y toma de citologías, 1 sala de rayos X, 1 de ecografía, terapias en el piso 4 y sala de expansión de 8 camillas. Hoy (REPS, nov-2022) hay 9 camas, 4 camillas de observación, 13 consultorios y 2 de urgencias.",
   "reutilizacion": "Se supone dotación nueva para toda la torre. El inventario actual (incluida la reposición de 2023 por $785 millones) debe revisarse: lo que esté en buen estado y con menos de la mitad de su vida útil puede trasladarse y bajar el valor. La Res. 485 pide justificar con el inventario existente (num. 7.1.6 a).",
@@ -471,6 +471,25 @@
       500000,
       1500000
      ]
+    },
+    {
+     "nombre": "Báscula pesa bebés digital (consultorio de urgencias)",
+     "cantidad": 1,
+     "especificacion": "Grado médico, hasta 20 kg, división de 5-10 g.",
+     "clase_riesgo": "IIa",
+     "vida_util_anios": 8,
+     "mantenimiento_anual_pct": 3,
+     "precio_unitario_cop_2026": 900000,
+     "total_cop_2026": 900000,
+     "tipo_precio": "estimacion",
+     "metodo_precio": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026).",
+     "fuente": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026). Confirmar con 2 cotizaciones de 2 marcas de menos de 6 meses (Res. 485 de 2025, art. 7 sustituido por la Res. 1519 de 2025, num. 7.1.6).",
+     "prioridad": "habilitacion",
+     "rango_precio_unitario_cop_2026": [
+      600000,
+      1500000
+     ],
+     "nota": "Verificación V1 (22-oct-2026): faltaba; la Res. 3100 (num. 11.6.1, criterio 23.6) la pide en el consultorio de urgencias cuando se atienden niños."
     }
    ],
    "mobiliario": [
@@ -829,21 +848,40 @@
       250000,
       600000
      ]
+    },
+    {
+     "nombre": "Mesa auxiliar rodante en acero inoxidable (sala de reanimación)",
+     "cantidad": 2,
+     "especificacion": "Una por camilla de reanimación, con entrepaño.",
+     "clase_riesgo": "I",
+     "vida_util_anios": 10,
+     "mantenimiento_anual_pct": 1,
+     "precio_unitario_cop_2026": 1200000,
+     "total_cop_2026": 2400000,
+     "tipo_precio": "estimacion",
+     "metodo_precio": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026).",
+     "fuente": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026). Confirmar con 2 cotizaciones de 2 marcas de menos de 6 meses (Res. 485 de 2025, art. 7 sustituido por la Res. 1519 de 2025, num. 7.1.6).",
+     "prioridad": "habilitacion",
+     "rango_precio_unitario_cop_2026": [
+      800000,
+      2000000
+     ],
+     "nota": "Verificación V1 (22-oct-2026): faltaba; la Res. 3100 (num. 11.6.1, criterio 28.2) la pide en la sala de reanimación."
     }
    ],
    "totales": {
-    "equipos_cop_2026": 350886941,
-    "mobiliario_cop_2026": 165061721,
-    "total_cop_2026": 515948662,
+    "equipos_cop_2026": 351786941,
+    "mobiliario_cop_2026": 167461721,
+    "total_cop_2026": 519248662,
     "rango_total_cop_2026": [
-     363736897,
-     763178261
+     365936897,
+     768678261
     ],
-    "solo_items_de_habilitacion_cop_2026": 408948662,
-    "mantenimiento_anual_cop_2026": 20657018,
-    "reposicion_anual_equivalente_cop_2026": 60973954,
-    "numero_de_items": 45,
-    "unidades": 152
+    "solo_items_de_habilitacion_cop_2026": 412248662,
+    "mantenimiento_anual_cop_2026": 20708018,
+    "reposicion_anual_equivalente_cop_2026": 61326454,
+    "numero_de_items": 47,
+    "unidades": 155
    }
   },
   {
@@ -2683,6 +2721,40 @@
       100000,
       300000
      ]
+    },
+    {
+     "nombre": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)",
+     "cantidad": 1,
+     "especificacion": "Báscula digital grado médico hasta 200 kg; tensiómetro aneroide adulto con brazaletes pediátrico y obeso; fonendoscopio de doble campana; otoscopio y oftalmoscopio con batería recargable.",
+     "clase_riesgo": "IIa",
+     "vida_util_anios": 7,
+     "mantenimiento_anual_pct": 3,
+     "precio_unitario_cop_2026": 3274853,
+     "total_cop_2026": 3274853,
+     "tipo_precio": "referencia_secop_ajustada_ipc",
+     "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (factores: 2025 = 1,054058)",
+     "fuente": "E.S.E. Hospital San Rafael de Concepción (Santander), 2025-06-06, $24.855.200 por 8 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8243247",
+     "prioridad": "habilitacion",
+     "nota": "Verificación V1 (22-oct-2026): para el consultorio de valoración obstétrica del piso 3 (programa.json), que no tenía dotación."
+    },
+    {
+     "nombre": "Camilla ginecológica con estribos, lámpara cuello de cisne y mesa auxiliar (consultorio de valoración obstétrica)",
+     "cantidad": 1,
+     "especificacion": "Tapizado lavable, posiciones de litotomía, portarrollo.",
+     "clase_riesgo": "I",
+     "vida_util_anios": 10,
+     "mantenimiento_anual_pct": 1,
+     "precio_unitario_cop_2026": 4500000,
+     "total_cop_2026": 4500000,
+     "tipo_precio": "estimacion",
+     "metodo_precio": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026).",
+     "fuente": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026). Confirmar con 2 cotizaciones de 2 marcas de menos de 6 meses (Res. 485 de 2025, art. 7 sustituido por la Res. 1519 de 2025, num. 7.1.6).",
+     "prioridad": "habilitacion",
+     "rango_precio_unitario_cop_2026": [
+      3000000,
+      6500000
+     ],
+     "nota": "Verificación V1 (22-oct-2026): el consultorio de 16 m² del Cuadro 98 de la Res. 1633 (triage obstétrico) no tenía camilla ni equipos."
     }
    ],
    "mobiliario": [
@@ -2775,21 +2847,55 @@
       4500000,
       10000000
      ]
+    },
+    {
+     "nombre": "Puesto de trabajo y canecas del consultorio de valoración obstétrica",
+     "cantidad": 1,
+     "especificacion": "Escritorio, silla del profesional, 2 sillas interlocutoras, canecas verde, gris y roja con pedal y guardián.",
+     "clase_riesgo": "I",
+     "vida_util_anios": 10,
+     "mantenimiento_anual_pct": 1,
+     "precio_unitario_cop_2026": 2750000,
+     "total_cop_2026": 2750000,
+     "tipo_precio": "estimacion",
+     "metodo_precio": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026).",
+     "fuente": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026). Confirmar con 2 cotizaciones de 2 marcas de menos de 6 meses (Res. 485 de 2025, art. 7 sustituido por la Res. 1519 de 2025, num. 7.1.6).",
+     "prioridad": "habilitacion",
+     "rango_precio_unitario_cop_2026": [
+      2000000,
+      4000000
+     ],
+     "nota": "Verificación V1 (22-oct-2026): mismo precio que el puesto de trabajo y las canecas de los demás consultorios."
+    },
+    {
+     "nombre": "Camilla de transporte",
+     "cantidad": 1,
+     "especificacion": "Barandas y porta suero.",
+     "clase_riesgo": "I",
+     "vida_util_anios": 10,
+     "mantenimiento_anual_pct": 2,
+     "precio_unitario_cop_2026": 4753907,
+     "total_cop_2026": 4753907,
+     "tipo_precio": "referencia_secop_ajustada_ipc",
+     "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (factores: 2025 = 1,054058)",
+     "fuente": "E.S.E. Hospital San Juan de Dios de Floridablanca, 2025-08-12, $9.020.200 por 2 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8586635",
+     "prioridad": "habilitacion",
+     "nota": "Verificación V1 (22-oct-2026): la Res. 3100 (num. 11.6.4, criterio 20.8.7) pide disponibilidad de camilla con barandas, ruedas y freno dentro del servicio de partos con TPR."
     }
    ],
    "totales": {
-    "equipos_cop_2026": 416524706,
-    "mobiliario_cop_2026": 37800000,
-    "total_cop_2026": 454324706,
+    "equipos_cop_2026": 424299559,
+    "mobiliario_cop_2026": 45303907,
+    "total_cop_2026": 469603466,
     "rango_total_cop_2026": [
-     380317559,
-     566631852
+     393346319,
+     585160612
     ],
-    "solo_items_de_habilitacion_cop_2026": 454324706,
-    "mantenimiento_anual_cop_2026": 17283928,
-    "reposicion_anual_equivalente_cop_2026": 46182138,
-    "numero_de_items": 24,
-    "unidades": 47
+    "solo_items_de_habilitacion_cop_2026": 469603466,
+    "mantenimiento_anual_cop_2026": 17549752,
+    "reposicion_anual_equivalente_cop_2026": 47850365,
+    "numero_de_items": 28,
+    "unidades": 51
    }
   },
   {
@@ -3329,21 +3435,40 @@
       3000000,
       7000000
      ]
+    },
+    {
+     "nombre": "Carro de paro (mueble) adulto-pediátrico para hospitalización",
+     "cantidad": 1,
+     "especificacion": "Cajones con cierre de seguridad, soporte de desfibrilador y de cilindro; comparte el desfibrilador del piso 3.",
+     "clase_riesgo": "I",
+     "vida_util_anios": 10,
+     "mantenimiento_anual_pct": 1,
+     "precio_unitario_cop_2026": 6000000,
+     "total_cop_2026": 6000000,
+     "tipo_precio": "estimacion",
+     "metodo_precio": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026).",
+     "fuente": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026). Confirmar con 2 cotizaciones de 2 marcas de menos de 6 meses (Res. 485 de 2025, art. 7 sustituido por la Res. 1519 de 2025, num. 7.1.6).",
+     "prioridad": "habilitacion",
+     "rango_precio_unitario_cop_2026": [
+      4000000,
+      9000000
+     ],
+     "nota": "Verificación V1 (22-oct-2026): la Res. 3100 (num. 11.4.1, criterio 25.2) exige que hospitalización cuente con carro de paro; el de partos tiene módulo neonatal y queda en las TPR."
     }
    ],
    "totales": {
     "equipos_cop_2026": 128454774,
-    "mobiliario_cop_2026": 262307814,
-    "total_cop_2026": 390762588,
+    "mobiliario_cop_2026": 268307814,
+    "total_cop_2026": 396762588,
     "rango_total_cop_2026": [
-     278357970,
-     566017206
+     282357970,
+     575017206
     ],
-    "solo_items_de_habilitacion_cop_2026": 390762588,
-    "mantenimiento_anual_cop_2026": 9854566,
-    "reposicion_anual_equivalente_cop_2026": 40707472,
-    "numero_de_items": 30,
-    "unidades": 133
+    "solo_items_de_habilitacion_cop_2026": 396762588,
+    "mantenimiento_anual_cop_2026": 9914566,
+    "reposicion_anual_equivalente_cop_2026": 41307472,
+    "numero_de_items": 31,
+    "unidades": 134
    }
   },
   {
@@ -3604,6 +3729,25 @@
       350000,
       1000000
      ]
+    },
+    {
+     "nombre": "Regulador o estabilizador electrónico de voltaje para refrigerador de vacunas",
+     "cantidad": 2,
+     "especificacion": "Uno por refrigerador, con indicador de polo a tierra y protección de sobretensión.",
+     "clase_riesgo": "I",
+     "vida_util_anios": 8,
+     "mantenimiento_anual_pct": 2,
+     "precio_unitario_cop_2026": 450000,
+     "total_cop_2026": 900000,
+     "tipo_precio": "estimacion",
+     "metodo_precio": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026).",
+     "fuente": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026). Confirmar con 2 cotizaciones de 2 marcas de menos de 6 meses (Res. 485 de 2025, art. 7 sustituido por la Res. 1519 de 2025, num. 7.1.6).",
+     "prioridad": "habilitacion",
+     "rango_precio_unitario_cop_2026": [
+      250000,
+      800000
+     ],
+     "nota": "Verificación V1 (22-oct-2026): faltaba; la Res. 3100 (num. 11.2.3, criterio 6.2) lo exige para refrigeradores eléctricos."
     }
    ],
    "mobiliario": [
@@ -3646,18 +3790,18 @@
    ],
    "nota": "Si la E.S.E. es el centro de acopio municipal del Programa Ampliado de Inmunizaciones (PAI), se agrega un cuarto frío (proyecto tipo DNP de cadena de frío, unos $241 millones de 2026 según proyecto_tipo.json); aquí no se suma.",
    "totales": {
-    "equipos_cop_2026": 44800000,
+    "equipos_cop_2026": 45700000,
     "mobiliario_cop_2026": 8000000,
-    "total_cop_2026": 52800000,
+    "total_cop_2026": 53700000,
     "rango_total_cop_2026": [
-     34700000,
-     84500000
+     35200000,
+     86100000
     ],
-    "solo_items_de_habilitacion_cop_2026": 52800000,
-    "mantenimiento_anual_cop_2026": 1320000,
-    "reposicion_anual_equivalente_cop_2026": 6483333,
-    "numero_de_items": 7,
-    "unidades": 21
+    "solo_items_de_habilitacion_cop_2026": 53700000,
+    "mantenimiento_anual_cop_2026": 1338000,
+    "reposicion_anual_equivalente_cop_2026": 6595833,
+    "numero_de_items": 8,
+    "unidades": 23
    }
   },
   {
@@ -4115,7 +4259,7 @@
     ],
     "solo_items_de_habilitacion_cop_2026": 65000000,
     "mantenimiento_anual_cop_2026": 2460000,
-    "reposicion_anual_equivalente_cop_2026": 9015477,
+    "reposicion_anual_equivalente_cop_2026": 9015476,
     "numero_de_items": 14,
     "unidades": 19
    }
@@ -4482,7 +4626,7 @@
   {
    "nombre": "Montacargas exclusivo de muestras y tubo neumático",
    "cantidad": 1,
-   "especificacion": "Conecta los pisos 1, 2 y 3.",
+   "especificacion": "Montacargas de muestras entre los pisos 1 y 2; tubo neumático opcional entre urgencias (piso 1), laboratorio (piso 2) y hospitalización y partos (piso 3).",
    "clase_riesgo": "Equipo industrial de uso hospitalario (Res. 1211 de 2025); no lleva clase de riesgo INVIMA",
    "vida_util_anios": 20,
    "mantenimiento_anual_pct": 5,
@@ -4496,7 +4640,7 @@
     70000000,
     150000000
    ],
-   "componentes": "Montacargas de la toma de muestras (piso 1) al laboratorio (piso 2), previsto en programa.json; tubo neumático para urgencias y hospitalización.",
+   "componentes": "Montacargas de 0,60 × 0,60 m de la toma de muestras (piso 1) al laboratorio (piso 2), previsto en programa.json; tubo neumático para urgencias y hospitalización. El montacargas general de carga liviana (0,80 × 0,80 m, 4 paradas) va en el presupuesto de obra (presupuesto.json).",
    "riesgo_doble_conteo_con_obra": false
   },
   {
@@ -4682,18 +4826,39 @@
    ],
    "componentes": "Para ropa hospitalaria; puede quedar en el edificio actual como central de servicios.",
    "riesgo_doble_conteo_con_obra": false
+  },
+  {
+   "nombre": "Nevera mortuoria de 2 cuerpos con camilla de transporte de cadáveres",
+   "cantidad": 1,
+   "especificacion": "Acero inoxidable, 2 a 4 °C, 2 bandejas, alarma de temperatura, conexión a la planta; camilla con cubierta.",
+   "clase_riesgo": "I",
+   "vida_util_anios": 12,
+   "mantenimiento_anual_pct": 4,
+   "precio_unitario_cop_2026": 38000000,
+   "total_cop_2026": 38000000,
+   "tipo_precio": "estimacion",
+   "metodo_precio": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026).",
+   "fuente": "Estimación del equipo a partir de precios usuales de distribuidores en Colombia (2026). Confirmar con 2 cotizaciones de 2 marcas de menos de 6 meses (Res. 485 de 2025, art. 7 sustituido por la Res. 1519 de 2025, num. 7.1.6).",
+   "prioridad": "habilitacion",
+   "nota": "Verificación V1 (22-oct-2026): el programa (programa.json, bloque técnico) prevé un depósito de cadáveres con nevera para 2 cuerpos y la Res. 1633 (Anexo 1, num. 5.7, Cuadro 107) lo exige cuando hay urgencias y hospitalización, pero la nevera no estaba ni aquí ni en el presupuesto de obra.",
+   "componentes": "Nevera de 2 cuerpos y camilla de transporte de cadáveres.",
+   "riesgo_doble_conteo_con_obra": false,
+   "rango_precio_unitario_cop_2026": [
+    25000000,
+    55000000
+   ]
   }
  ],
  "totales_equipamiento_fijo": {
-  "total_cop_2026": 4306468726,
+  "total_cop_2026": 4344468726,
   "rango_cop_2026": [
-   3156703174,
-   6084179623
+   3181703174,
+   6139179623
   ],
-  "sin_items_que_pueden_estar_en_obra_cop_2026": 1951468726,
-  "solo_habilitacion_cop_2026": 3468473726,
-  "mantenimiento_anual_cop_2026": 212663436,
-  "reposicion_anual_equivalente_cop_2026": 278730727
+  "sin_items_que_pueden_estar_en_obra_cop_2026": 1989468726,
+  "solo_habilitacion_cop_2026": 3506473726,
+  "mantenimiento_anual_cop_2026": 214183436,
+  "reposicion_anual_equivalente_cop_2026": 281897394
  },
  "laboratorio_resumen": {
   "archivo": "data/proyectos/torre_hospital/laboratorio.json",
@@ -4717,39 +4882,40 @@
   "nota": "El GeneXpert no está sumado en dotacion.json: se propone obtenerlo por el programa nacional de tuberculosis; si se compra, sumar el valor indicado."
  },
  "totales_generales": {
-  "dotacion_biomedica_cop_2026": 3406435278,
-  "mobiliario_clinico_cop_2026": 862123442,
-  "subtotal_dotacion_y_mobiliario_cop_2026": 4268558720,
+  "dotacion_biomedica_cop_2026": 3416010131,
+  "mobiliario_clinico_cop_2026": 878027349,
+  "subtotal_dotacion_y_mobiliario_cop_2026": 4294037480,
   "rango_dotacion_y_mobiliario_cop_2026": [
-   3125965420,
-   6098702755
+   3145694180,
+   6133331515
   ],
-  "solo_items_de_habilitacion_cop_2026": 3883018196,
+  "solo_items_de_habilitacion_cop_2026": 3908496956,
   "items_recomendados_no_obligatorios_cop_2026": 385540524,
-  "equipamiento_fijo_e_industrial_cop_2026": 4306468726,
+  "equipamiento_fijo_e_industrial_cop_2026": 4344468726,
   "rango_equipamiento_fijo_cop_2026": [
-   3156703174,
-   6084179623
+   3181703174,
+   6139179623
   ],
-  "equipamiento_fijo_sin_items_que_pueden_estar_en_obra_cop_2026": 1951468726,
-  "equipamiento_fijo_solo_habilitacion_cop_2026": 3468473726,
-  "total_general_cop_2026": 8575027446,
+  "equipamiento_fijo_sin_items_que_pueden_estar_en_obra_cop_2026": 1989468726,
+  "equipamiento_fijo_solo_habilitacion_cop_2026": 3506473726,
+  "total_general_cop_2026": 8638506206,
   "rango_total_general_cop_2026": [
-   6282668594,
-   12182882378
+   6327397354,
+   12272511138
   ],
-  "total_general_sin_posible_doble_conteo_cop_2026": 6220027446,
-  "mantenimiento_anual_dotacion_y_mobiliario_cop_2026": 197912228,
-  "mantenimiento_anual_equipamiento_fijo_cop_2026": 212663436,
-  "reposicion_anual_equivalente_cop_2026": 773606674,
+  "total_general_sin_posible_doble_conteo_cop_2026": 6283506206,
+  "mantenimiento_anual_dotacion_y_mobiliario_cop_2026": 198307052,
+  "mantenimiento_anual_equipamiento_fijo_cop_2026": 214183436,
+  "reposicion_anual_equivalente_cop_2026": 779506566,
   "analizadores_de_laboratorio_en_comodato_valor_de_mercado_cop_2026": 955708589,
   "nota_comodato": "Los analizadores en comodato no se suman: se pagan dentro del precio de los reactivos (ver laboratorio.json). Si se compraran, sumar el valor de mercado indicado.",
-  "valor_con_referencia_secop_cop_2026": 1561908720,
-  "items_con_referencia_secop": 35,
-  "items_estimados": 193,
+  "valor_con_referencia_secop_cop_2026": 1569937480,
+  "items_con_referencia_secop": 37,
+  "items_estimados": 199,
   "tipo": "calculo_propio",
   "nota": "Suma de cantidades por precios unitarios. Los precios con referencia SECOP son datos oficiales llevados a pesos de 2026 con el IPC; los demás son estimaciones con rango. El rango total suma los mínimos y los máximos de cada ítem, por eso es amplio.",
-  "control_especial_de_oferta": "La dotación biomédica de baja complejidad no es de control especial de oferta aunque supere 5.000 SMMLV (Res. 485, art. 4.2: solo aplica a mediana y alta complejidad). Ojo: si se habilita la ecografía, ese servicio es de mediana complejidad. El equipamiento fijo sí cuenta para el umbral de 5.000 SMMLV ($8.754.525.000) de infraestructura y equipamiento fijo (art. 4.1)."
+  "control_especial_de_oferta": "La dotación biomédica solo es de control especial de oferta si supera 5.000 SMMLV en servicios de mediana y alta complejidad (Res. 485, art. 4.1); la de esta torre es de baja complejidad, salvo el ecógrafo (imágenes no ionizantes, mediana complejidad), que no se acerca a ese tope. El equipamiento fijo y la infraestructura sí cuentan para el umbral de 5.000 SMMLV ($8.754.525.000) del art. 4.2, y la obra de la torre lo supera: el proyecto es de control especial de oferta.",
+  "ajuste_v1": "Verificación V1 (22-oct-2026): se agregaron 9 ítems de habilitación que faltaban (báscula pesa bebés y mesas auxiliares de reanimación en urgencias; dotación del consultorio de valoración obstétrica y camilla en partos; carro de paro en hospitalización; reguladores de voltaje de las neveras de vacunas; nevera mortuoria en el equipamiento fijo). Suben el total general en $63 millones (de $8.575 a $8.639 millones); presupuesto.json y financiacion.json deben tomar los nuevos totales."
  },
  "comparaciones": [
   {
@@ -4825,7 +4991,7 @@
  "requisitos_res_485_para_dotacion": [
   "Listado por servicio con especificaciones, cantidades, precios y cuadro comparativo (num. 7.1.6 a).",
   "Justificación con el inventario existente: reposición o servicio nuevo (num. 7.1.6 a).",
-  "Certificación de disponibilidad de infraestructura, instalaciones y personal (num. 7.1.6 a).",
+  "Certificación del representante legal de que hay infraestructura física (área e instalaciones) para que la dotación funcione (num. 7.1.6 a.3); para el equipamiento fijo la certificación incluye además el personal (num. 7.1.5.3).",
   "Dos cotizaciones de dos marcas distintas con menos de 6 meses por equipo (num. 7.1.6 a y 7.1.5).",
   "Equipamiento fijo: planos con ubicación y justificación por nuevos servicios o aumento de capacidad (num. 7.1.5).",
   "Dotación TIC: documento de software y hardware, licencias, plan de implementación y certificación de protección de datos (num. 7.1.6 b).",

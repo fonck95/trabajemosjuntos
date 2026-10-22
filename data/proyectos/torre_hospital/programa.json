@@ -105,7 +105,8 @@
     "procedimientos": 1
    },
    "ambulancias_basicas": 3,
-   "sede": "Una sola sede (código 058930322701), barrio José Domingo Oliveros"
+   "sede": "Una sola sede (código 058930322701), barrio José Domingo Oliveros",
+   "verificacion_v1": "Verificación V1 (22-oct-2026): se volvió a consultar datos.gov.co s2ru-bqt6 (nit_ips = 800014884) y coinciden las 13 filas: 5 camas de adultos, 2 pediátricas, 2 TPR, 3 ambulancias básicas, 1 + 2 + 1 camillas de observación, 2 consultorios de urgencias, 13 de consulta externa, 1 sala de partos y 1 de procedimientos (corte 5-nov-2022). La vacunación (420) también se confirmó en 9vau-g3q7."
   },
   "produccion_registrada": {
    "tipo": "dato oficial con subregistro fuerte",
@@ -556,7 +557,8 @@
    "en_torre": true,
    "en_edificio_actual": false,
    "piso": 1,
-   "justificacion": "Junto a urgencias; lectura por telerradiología."
+   "justificacion": "Junto a urgencias; lectura por telerradiología.",
+   "complejidad": "baja (rayos X convencional sin medio de contraste); requiere licencia de práctica médica (Res. 3100, num. 11.1.2, criterio 15)"
   },
   {
    "nombre": "Imágenes diagnósticas no ionizantes (ecografía)",
@@ -567,7 +569,8 @@
    "en_torre": true,
    "en_edificio_actual": false,
    "piso": 2,
-   "justificacion": "Ecografía obstétrica de la ruta materno-perinatal."
+   "justificacion": "Ecografía obstétrica de la ruta materno-perinatal. Ojo: es el único servicio de mediana complejidad de la torre; exige radiólogo o especialista con certificado en ultrasonido (por ejemplo ginecobstetra) y debe quedar en el Documento de Capacidad Instalada (Res. 1211/1519, num. 7.1.2.4). Alternativa de baja complejidad: ecografía obstétrica por brigada o telemedicina con el segundo nivel.",
+   "complejidad": "mediana (Res. 3100, num. 11.3.4: los métodos no ionizantes son de mediana complejidad)"
   },
   {
    "nombre": "Radiología odontológica (periapical)",
@@ -3548,7 +3551,7 @@
    },
    "montacargas_de_muestras": "0,60 x 0,60 m, entre la toma de muestras (piso 1, esquina suroccidental) y el laboratorio (piso 2, encima)",
    "tubo_neumatico": "Opcional (Res. 1633, 3.4.11): estaciones en urgencias, laboratorio, hospitalización y partos",
-   "evacuacion": "2 escaleras protegidas de 2,40 m separadas ≈ 21,6 m entre centros (más de un tercio de la diagonal de la planta, 47,2 m); recorrido máximo hasta una escalera ≈ 30 m (el límite lo fija el Título K de la NSR-10 según el uso; se verifica en el diseño); los ascensores no cuentan como salida (Res. 1633, 3.3.6 c.i)"
+   "evacuacion": "2 escaleras protegidas de 2,40 m separadas ≈ 21,6 m entre centros (más de un tercio de la diagonal de la planta, 47,2 m); el recorrido más largo, desde la esquina suroccidental de los pisos 2 y 3 hasta la escalera sur, es de ≈ 35 m por los corredores (cálculo propio V1). Límite de la NSR-10 para el grupo Institucional: 45 m sin rociadores y 60 m con rociadores (Tabla K.3.6-1), y 30 m desde la puerta de un acceso de salida (K.3.14.1.2): cumple, pero las puertas de las habitaciones del extremo suroccidental deben quedar a menos de 30 m de la escalera. Los ascensores no cuentan como salida (Res. 1633, 3.3.6 c.i)."
   },
   "pisos_y_alturas": {
    "numero_de_pisos": 4,
@@ -3567,7 +3570,8 @@
     "cubierta_piso_3_sur": 12.9
    },
    "altura_libre_interior": "≥ 3,00 m bajo cielo raso (la Res. 1633, 3.3.4, recomienda ≥ 2,80 m y permite más en clima cálido); 1,0-1,2 m de entretecho para ductos de aire, gases y bandejas",
-   "grupo_de_uso_nsr10": "IV, edificación indispensable (A.2.5.1.1): tiene urgencias, partos e internación"
+   "grupo_de_uso_nsr10": "IV, edificación indispensable (A.2.5.1.1): tiene urgencias, partos e internación",
+   "resistencia_al_fuego": "Con 4 pisos y más de 1.000 m², la ocupación I-2 queda en categoría de riesgo I (NSR-10, Tabla J.3.3-1): estructura con 2 h de resistencia al fuego y cerramientos de escaleras, ascensores y ductos de 2 h (Tabla J.3.4-3); rociadores en todo el edificio (J.4.3.4.1). Con 3 pisos sería categoría II (1,5 h)."
   },
   "distribucion_por_piso": [
    {
@@ -3592,31 +3596,34 @@
    }
   ],
   "zonificacion_en_planta": {
-   "piso_1": "Norte (y 8-22): urgencias con puerta a la bahía en la fachada occidental, reanimación junto a la puerta, observación con ventanas al patio norte y al occidente. Centro: rayos X entre urgencias y el núcleo de ascensores. Sur (y -20 a 2): vestíbulo con puerta principal en la fachada occidental (y ≈ -6), admisiones, toma de muestras y salida de servicio al pasaje del sur.",
+   "piso_1": "Norte y centro (y ≈ -10 a 22,4): urgencias con puerta a la bahía en la fachada occidental (-13,0; 15,0), reanimación junto a la puerta, observación con ventanas al patio norte y al occidente, y rayos X al sur de urgencias, pegado al núcleo de ascensores. Sur (y -19,6 a ≈ -10): vestíbulo con la puerta principal en la fachada occidental (y ≈ -13), admisiones, escalera abierta al piso 2, toma de muestras en la esquina suroccidental y salida de servicio al pasaje del sur.",
    "piso_2": "Laboratorio sobre la toma de muestras (suroccidente); consulta externa y sala de espera en el centro y el norte; farmacia junto a la escalera principal; vacunación cerca del vestíbulo de ascensores.",
    "piso_3": "Estación de enfermería en el centro; habitaciones de hospitalización en las fachadas occidental, norte y sur; habitaciones TPR y posparto juntas en el norte; esterilización en el sur, junto al montacargas; descanso del personal de turno junto a la estación.",
-   "piso_4": "Terapias y gimnasio hacia el occidente (vista a los mangos); salón de telesalud y expansión en el norte; odontología y consultorios en el centro; coordinación asistencial y sala de crisis junto a los ascensores."
+   "piso_4": "Terapias y gimnasio hacia el occidente (vista a los mangos); salón de telesalud y expansión en el norte; odontología y consultorios en el centro; coordinación asistencial y sala de crisis junto a los ascensores.",
+   "verificacion_v1": "Verificación V1 (22-oct-2026): urgencias suma 373,2 m² útiles (≈ 496 m² con su 33 % de muros y circulación) y rayos X 47 m² (≈ 62 m²). La franja y 8-22,4 da solo ≈ 265 m² descontando la escalera norte, así que urgencias y rayos X ocupan de y ≈ -10 a 22,4 (16,1 m de ancho libre al occidente del núcleo × 32,4 m ≈ 520 m² + 33 m² junto al núcleo). El sur (y -19,6 a -10) deja ≈ 217 m² para vestíbulo, admisiones, toma de muestras y apoyo (≈ 202 m² con muros). Por eso la puerta principal baja de y = -6 a y ≈ -13; el resto de la planta no cambia. Cálculo propio."
   },
   "accesos": [
    {
     "id": "acceso_urgencias_ambulancias",
     "tipo": "vehicular y peatonal de urgencias",
     "ubicacion": "Portón de 8 m en el cerramiento occidental, centrado en (-26,8; 24,2), donde la vía queda casi al nivel del patio",
-    "recorrido": "Las ambulancias bajan por el lado del cerramiento, dan la vuelta alrededor de una isla verde (x -24 a -20,5; y 7 a 19) y suben por el carril pegado a la fachada hasta la bahía cubierta, con la puerta del vehículo hacia el edificio; salen por el mismo portón. Radio de giro exterior para ambulancia ≈ 7 m: el retorno del sur (y 0 a 7) y el del norte (y 19 a 24) caben en los 14-18 m de ancho del patio.",
+    "recorrido": "Las ambulancias entran por el portón, bajan por el carril pegado al cerramiento (x ≈ -28,5 a -24), dan la vuelta alrededor de la isla verde (x -24 a -20,5; y 7 a 19) por el retorno del sur (y ≈ -1 a 7) y suben por la bahía cubierta, pegada a la fachada. Para salir siguen al norte y giran al occidente hacia el portón pasando al norte del árbol del portón (-22; 25), por el patio libre del hospital entre y 27,25 y y ≈ 29 (al occidente del ala norte, x < -13,5), que queda por fuera del polígono del lote de intervención pero dentro del predio. Radio de giro exterior para ambulancia ≈ 7 m: el retorno del sur cabe en los 17,5 m entre el cerramiento y la fachada si los carriles van separados ≈ 11 m entre ejes.",
     "puerta_edificio": [
      -13.0,
      15.0
-    ]
+    ],
+    "verificacion_v1": "Verificación V1 (22-oct-2026): con la salida por el borde norte del patio de urgencias (y = 24) el giro de 90° no cabe y el tronco del árbol (-22; 25) queda dentro de la trayectoria. Se corrige la ruta de salida; la alternativa es trasplantar ese árbol. Verificar con el levantamiento topográfico y una plantilla de giro de la ambulancia."
    },
    {
     "id": "acceso_peatonal_principal",
     "tipo": "peatonal (consulta externa, laboratorio, farmacia, visitas)",
-    "ubicacion": "Portón peatonal en el cerramiento occidental en (-31,2; -6,0)",
-    "recorrido": "Plaza bajo el mango grande con rampa en zigzag al 6 % y escalera para salvar ≈ 1,8 m hasta la puerta principal",
+    "ubicacion": "Portón peatonal en el cerramiento occidental en (-32,0; -12,0)",
+    "recorrido": "Plaza bajo los dos mangos con rampa en zigzag al 6 % (≈ 34 m de recorrido) y escalera para salvar ≈ 2,0 m (nivel estimado de la vía frente al portón) hasta la puerta principal",
     "puerta_edificio": [
      -13.0,
-     -6.0
-    ]
+     -13.0
+    ],
+    "nota_v1": "Verificación V1 (22-oct-2026): antes la puerta estaba en y = -6, dentro de la zona que necesita urgencias (ver zonificacion_en_planta)."
    },
    {
     "id": "acceso_servicio",
@@ -3728,8 +3735,8 @@
      25.0
     ],
     "copa_m": 8,
-    "decision": "se conserva con poda de elevación",
-    "motivo": "Altura libre ≥ 4,5 m sobre el carril de ambulancias."
+    "decision": "se conserva como isla del giro de salida, con poda de elevación (o se trasplanta si el levantamiento no confirma el paso al norte)",
+    "motivo": "Altura libre ≥ 4,5 m sobre el carril de ambulancias. Su tronco queda en el giro de salida de la bahía: las ambulancias lo rodean por el norte (ver accesos)."
    },
    {
     "arbol": "Árbol del patio norte (hospital.json, -18; 7,5 en su marco)",
@@ -3802,7 +3809,7 @@
    },
    {
     "id": "plaza_principal",
-    "uso": "Plaza de los mangos con rampa y escalera",
+    "uso": "Plaza de los mangos con rampa y escalera (se extiende al sur hasta la nueva puerta principal, y ≈ -13)",
     "poligono": [
      [
       -30.4,
@@ -3814,11 +3821,11 @@
      ],
      [
       -13.0,
-      -14.0
+      -19.6
      ],
      [
-      -32.25,
-      -14.0
+      -32.95,
+      -19.6
      ],
      [
       -32.0,
@@ -3981,7 +3988,10 @@
   "El tamaño real del tronco del mango grande no se ha medido; un arborista debe definir la zona de protección de raíces antes de diseñar la cimentación de la esquina suroccidental.",
   "La cantidad de parqueaderos exigible depende del EOT de Yondó, que no se revisó.",
   "Las urgencias de adultos y de pediatría se diseñaron integradas, compartiendo los ambientes que la Res. 1633 permite compartir; si la Secretaría exige juegos completos separados, el piso 1 necesita ≈ 40-60 m² más.",
-  "La demanda eléctrica (200-260 kVA), los tanques (40 m³ de agua potable y ≈ 30 m³ contra incendio) y las tomas de oxígeno (≈ 40) son estimaciones de prediseño."
+  "La demanda eléctrica (200-260 kVA), los tanques (40 m³ de agua potable y ≈ 30 m³ contra incendio) y las tomas de oxígeno (≈ 40) son estimaciones de prediseño.",
+  "La fachada occidental del bloque central del hospital (que pasa a uso administrativo) queda a 5,3 m de una torre de 18,3 m: sus ventanas pierden luz y ventilación; el proyecto tipo DNP pide separar fachadas con aberturas una distancia igual a la altura. Revisar con el EOT y con el uso final de esos recintos.",
+  "La zonificación del piso 1 quedó ajustada en V1 (urgencias de y ≈ -10 a 22,4); los pisos 1 y 2 tienen muy poca holgura (2,5 y 5,4 m²): si los corredores de urgencias se hacen de 2,80 m en vez de 2,40 m, puede faltar área y habría que pasar ambientes de apoyo al piso 3 o 4.",
+  "La salida de las ambulancias usa unos 2 m del patio del hospital al norte de la línea y = 27,25 (fuera del lote de intervención); confirmarlo con el levantamiento o trasplantar el árbol del portón."
  ],
  "fuentes": [
   {

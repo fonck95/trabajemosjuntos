@@ -9,7 +9,7 @@
   "calculo_propio": "operación sobre datos oficiales",
   "estimacion": "supuesto con rango, a confirmar"
  },
- "respuesta_corta": "Sí hay proyecto tipo, pero solo para la escala de puesto o centro de salud: el 'Puesto de salud tipo' de MinSalud (2017, sin precios) y el Proyecto Tipo de infraestructura básica de salud del DNP con MinSalud (2018, con diseño y presupuesto). No hay un hospital o torre de primer nivel tipo publicado. La torre se inspira en el proyecto tipo DNP (modulación, bioclimática, materiales, dotación y presupuesto) y se escala con las áreas de la Res. 1633 de 2025 y la Res. 3100 de 2019.",
+ "respuesta_corta": "Sí hay proyecto tipo, pero solo para la escala de puesto o centro de salud: el 'Puesto de salud tipo' de MinSalud (2017, sin precios) y el Proyecto Tipo de infraestructura básica de salud del DNP con MinSalud (2018, con diseño y presupuesto). No hay un hospital o torre de primer nivel tipo con planos; lo más cercano es la guía 'Programa Médico Arquitectónico – Hospital Tipo' del Ministerio de la Protección Social (2010), que es una plantilla para calcular áreas por servicio, sin diseño. La torre se inspira en el proyecto tipo DNP (modulación, bioclimática, materiales, dotación y presupuesto) y se escala con las áreas de la Res. 1633 de 2025 y la Res. 3100 de 2019.",
  "proyectos_tipo": [
   {
    "id": "dnp_infraestructura_basica_salud_2018",
@@ -576,12 +576,26 @@
    ],
    "diseno_tipo_publico": "No encontrado: no hay planos ni ficha técnica públicos de un 'CAPS tipo'.",
    "aplicabilidad_a_la_torre": "Sirve como encuadre de política (la torre puede presentarse como 'CAPS principal urbano' dentro de la red) y como referencia de tamaño de un CAPS rural (≈226 m²), no como diseño."
+  },
+  {
+   "id": "minproteccion_pma_hospital_tipo_2010",
+   "nombre": "Programa Médico Arquitectónico – Hospital Tipo: instructivo de uso e instrumento-guía (Guías metodológicas del Programa de Reorganización, Rediseño y Modernización de Redes)",
+   "autor": "Ministerio de la Protección Social (hoy MinSalud), Dirección General de Calidad de Servicios; arquitecto Amedeo Vita",
+   "fecha": "15 de marzo de 2010",
+   "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PSA/guias-programa-medico-arquitectonico-red-prestadores%20servicios-salud.pdf",
+   "paginas": 48,
+   "fecha_consulta": "2026-10-22",
+   "tipo_dato": "dato_oficial",
+   "contenido": "Portafolio de servicios de un 'Hospital Tipo' y cuadros de cálculo por servicio (ambientes, cantidad, área unitaria) más un porcentaje de muros y circulaciones internas por servicio: 20 % administración y máquinas; 25 % laboratorio, hospitalización, farmacia y esterilización; 30 % consulta externa, urgencias, radiología y terapias; 35 % obstetricia; 40 % cirugía. Áreas generales: hall principal 2 %, circulación horizontal general 15 %, vertical 5 % y ductos 2 % del área total (págs. 8 y 11-48).",
+   "que_no_trae": "Planos, implantación, especificaciones ni precios. Las áreas unitarias van en blanco: el usuario las llena con la norma vigente (hoy la Res. 1633 de 2025).",
+   "aplicabilidad_a_la_torre": "Alta como método: es la base del programa médico-arquitectónico de programa.json (factores de muros y circulaciones por servicio). El programa usa 5 % de circulación general en vez de 15 % porque la planta es compacta, pero suma aparte el núcleo vertical y los ductos (≈ 17 % de cada piso); el total construido (3.369,6 m²) queda a 1 % de lo que daría la guía completa (≈ 3.400 m², cálculo propio V1).",
+   "nota": "Verificación V1 (22-oct-2026): documento descargado y leído; faltaba en este archivo aunque programa.json ya lo citaba."
   }
  ],
  "busquedas_sin_resultado": [
   {
    "busqueda": "Centro de salud tipo u hospital de primer nivel tipo de MinSalud",
-   "resultado": "No existe publicado. En la Biblioteca Digital de MinSalud solo aparece el 'Puesto de salud tipo' (2017); se probaron rutas equivalentes (centro-salud-tipo, hospital-tipo, etc.) y todas dan error 404.",
+   "resultado": "No existe un proyecto arquitectónico tipo (con planos) de centro de salud ni de hospital de primer nivel. En la Biblioteca Digital de MinSalud solo aparece el 'Puesto de salud tipo' (2017); las rutas equivalentes (centro-salud-tipo, hospital-tipo, etc.) dan error 404. Sí existe la guía 'Programa Médico Arquitectónico – Hospital Tipo' (2010), que es una plantilla de áreas sin diseño (ver proyectos_tipo).",
    "fecha": "2026-10-22",
    "url": "https://www.minsalud.gov.co/salud/prestacion-servicios/Paginas/infraestructura-en-salud.aspx"
   },
@@ -847,7 +861,7 @@
    "lote_disponible": {
     "tipo": "calculo_propio",
     "valor_m2": "≈1.400-1.600",
-    "nota": "Zona del antiguo Centro Vida en el marco de data/edificios/bienestar_anciano.json: de x ≈ -27 m (cerramiento occidental, al borde del talud) a x ≈ +14 m (unión con el bloque central del hospital) y de y ≈ -22 m a y ≈ +18 m; una huella de 760-1.280 m² cabe dejando retiros, el acceso de ambulancias y el patio de luz. Falta topografía y la norma del EOT."
+    "nota": "Zona del antiguo Centro Vida en el marco de data/edificios/bienestar_anciano.json: de x ≈ -27 m (cerramiento occidental, al borde del talud) a x ≈ +14 m (unión con el bloque central del hospital) y de y ≈ -22 m a y ≈ +18 m; una huella de 760-1.280 m² cabe dejando retiros, el acceso de ambulancias y el patio de luz. Falta topografía y la norma del EOT. Verificación V1 (22-oct-2026): el polígono del lote de intervención que dibuja programa.json mide 2.460,1 m² (recalculado); los 1.400-1.600 m² de aquí son la franja edificable dejando retiros y el patio de ambulancias."
    },
    "supuesto_capacidad": "16-20 camas, 6-8 camillas de observación, 1 sala de partos con 2 de trabajo de parto y 2 de recuperación, 1-2 TPR, 14 consultorios, 3 unidades odontológicas, 1 sala de rayos X y 1 de ecografía. Hoy el REPS registra 9 camas, 4 camillas de observación, 13 consultorios y 1 sala de partos. Todo esto se debe concertar en el Documento de Capacidad Instalada (Res. 1211)."
   },
@@ -871,6 +885,16 @@
     "max": 37446617088
    },
    "advertencia": "Orden de magnitud para dimensionar fuentes; no reemplaza el presupuesto por APU. No incluye dotación biomédica, demolición, estudios y diseños ni interventoría. El IPC no sigue de cerca los costos de construcción (el ICOCED del DANE sería mejor), pero el encargo fija el IPC como deflactor."
+  },
+  "resultado_en_programa_json": {
+   "tipo": "calculo_propio (resumen de programa.json)",
+   "pisos": 4,
+   "area_torre_m2": 3369.6,
+   "area_construida_total_m2": 3620.6,
+   "area_util_m2": 2018.4,
+   "capacidad": "13 camas generales + 2 habitaciones TPR (sin sala de partos convencional), 6 puestos de observación, 15 consultorios, 3 unidades odontológicas, 1 sala de rayos X y 1 de ecografía",
+   "diferencias_con_este_programa_preliminar": "Se pasó de 3 a 4 pisos (categoría de riesgo de incendio I: estructura de 2 h); la farmacia sube al piso 2 y odontología, terapias y telemedicina al piso 4; los ascensores camilleros quedan con cabina de 1,40 × 2,40 m (más que el mínimo de 2,20 × 1,20 m); las camas bajan de 16-20 a 13 + 2 TPR, que cubren el escenario alto de demanda de 2035 (4,4-12,2 camas).",
+   "nota": "Verificación V1 (22-oct-2026): este bloque evita leer el programa preliminar (3 pisos, 16-20 camas) como si fuera el definitivo."
   }
  },
  "estetica": {

@@ -2019,7 +2019,8 @@
    },
    "clase_riesgo": "Equipo para diagnóstico in vitro; reactivos categoría II",
    "precio_unitario_cop_2026": 70000000,
-   "precio_mercado_total_cop_2026": 70000000
+   "precio_mercado_total_cop_2026": 70000000,
+   "viabilidad_comodato": "Verificación V1 (22-oct-2026): 121 pruebas al mes es un volumen bajo para un HPLC en comodato; el respaldo previsto (HbA1c inmunoturbidimétrica en el analizador de química, certificada NGSP) puede ser la opción principal si ningún proveedor lo ofrece. El tiempo de respuesta (≤ 48 h) no cambia."
   },
   {
    "nombre": "Lector automático de tiras de orina y analizador de sedimento por imagen",
@@ -2046,7 +2047,8 @@
    },
    "clase_riesgo": "Equipo para diagnóstico in vitro; reactivos categoría II",
    "precio_unitario_cop_2026": 107708174,
-   "precio_mercado_total_cop_2026": 107708174
+   "precio_mercado_total_cop_2026": 107708174,
+   "viabilidad_comodato": "Verificación V1 (22-oct-2026): unos 25 uroanálisis por día hábil están por debajo del volumen con que suelen ofrecerse los analizadores de sedimento por imagen en comodato. Si no se consigue, se deja el lector de tiras (≈ $17 millones, referencia SECOP de San Juan de Urabá) y el sedimento al microscopio, que ya está en la dotación (4 microscopios); el tiempo de respuesta de urgencias (≤ 60 min) se mantiene."
   },
   {
    "nombre": "Coagulómetro semiautomático de 4 canales",
@@ -2093,7 +2095,7 @@
     "fuente": "Estimación de precio de mercado del analizador en Colombia (2026); los analizadores casi nunca se compran: se entregan en comodato."
    },
    "clase_riesgo": "Equipo para diagnóstico in vitro; reactivos categoría II",
-   "nota": "Con unos 55 gases al mes, el cartucho de un solo uso evita botar reactivos, cosa que sí pasa con los analizadores de mesa.",
+   "nota": "Con unos 34 gases al mes (carga_por_equipo; rango 26-47), el cartucho de un solo uso evita botar reactivos, cosa que sí pasa con los analizadores de mesa.",
    "precio_unitario_cop_2026": 45000000,
    "precio_mercado_total_cop_2026": 90000000
   },
@@ -2121,7 +2123,8 @@
    },
    "clase_riesgo": "Equipo para diagnóstico in vitro; medios de cultivo categoría I",
    "precio_unitario_cop_2026": 160000000,
-   "precio_mercado_total_cop_2026": 160000000
+   "precio_mercado_total_cop_2026": 160000000,
+   "viabilidad_comodato": "Verificación V1 (22-oct-2026): con 34 frascos al mes (17 juegos) el uso es de 14 % y el proveedor recibe menos de $2 millones al mes en frascos (17 × $95.000, cálculo propio): es posible que no acepte dejar en comodato un equipo de $110-230 millones. Alternativas: equipo de 20-40 frascos, frascos con lectura visual y subcultivo, o remisión de hemocultivos al segundo nivel de Barrancabermeja. Pedir la condición de consumo mínimo en las 3 cotizaciones antes de comprometer el tiempo de respuesta."
   },
   {
    "nombre": "GeneXpert de 4 módulos (PCR en tiempo real en cartucho)",
@@ -2873,13 +2876,14 @@
   }
  ],
  "incertidumbres": [
-  "Los costos por prueba en comodato son estimaciones con rango: SECOP no publica los anexos de precios unitarios en datos abiertos. Hay que pedir al menos 3 cotizaciones por área (Res. 485, num. 7.1.9).",
+  "Los costos por prueba en comodato son estimaciones con rango: SECOP no publica los anexos de precios unitarios en datos abiertos. Para el concepto de viabilidad se piden mínimo 2 cotizaciones de 2 marcas de menos de 6 meses por equipo (Res. 485, num. 7.1.6, texto de la Res. 1519); para negociar el comodato conviene pedir 3 por área.",
   "La población atendida por la E.S.E. es incierta (42-70 % de la población DANE): mueve todos los volúmenes de tamizaje.",
   "No se pudo consultar SIHO ni los RIPS del hospital: consultas, urgencias y egresos son supuestos.",
   "Endemicidad de malaria y Chagas para la gota gruesa mensual y el tamizaje de Chagas en gestantes: confirmar con la Secretaría Seccional de Salud de Antioquia.",
   "Elegibilidad de Colombia para los precios de acceso de Cepheid y disponibilidad de cartuchos del programa nacional de tuberculosis: no verificadas.",
   "La Res. 3280 recomienda procesar ADN-VPH en laboratorios centralizados: la opción de procesarlo en Yondó debe acordarse con las EPS.",
-  "Los brotes de dengue pueden triplicar la demanda de pruebas febriles en algunos meses."
+  "Los brotes de dengue pueden triplicar la demanda de pruebas febriles en algunos meses.",
+  "Los analizadores de bajo volumen (hemocultivos, sedimento urinario por imagen y HbA1c por HPLC) pueden no conseguirse en comodato con los consumos estimados; cada uno tiene una alternativa manual o de respaldo indicada en equipos[] (viabilidad_comodato)."
  ],
  "equipos_y_mobiliario_que_compra_la_ese": {
   "archivo": "data/proyectos/torre_hospital/dotacion.json (servicios 'laboratorio' y 'toma_muestras')",
@@ -2906,5 +2910,23 @@
    "1 × Camilla ginecológica y lámpara (toma de muestras especiales)"
   ],
   "tipo": "calculo_propio"
+ },
+ "verificacion_v1": {
+  "fecha": "2026-10-22",
+  "revisado": [
+   "Suma del menú: 5.365 pruebas al mes en sitio y $434.799.600 al año en reactivos; secciones, costos mensuales y anuales cuadran.",
+   "Carga por equipo: química 2.439 determinaciones (perfil lipídico × 3, transaminasas y bilirrubinas × 2, relación albúmina/creatinina × 2), coagulación 128 (TP + TTP), hemocultivo 34 frascos; todos los analizadores quedan por debajo de 15 % de uso en la hora pico, de modo que los tiempos de respuesta de urgencias (≤ 60 min) dependen del personal de turno y del transporte de la muestra, no de la capacidad.",
+   "Valor presente de comodato frente a compra (7 años, 6 % real): $2.427 y $3.250 millones; punto de equilibrio de 132 % de sobreprecio: recalculados y correctos.",
+   "Áreas: los 124 m² del laboratorio y los 61,9 m² de toma de muestras coinciden con programa.json.",
+   "TRM: promedio de enero a septiembre de 2026 en datos.gov.co 32sa-8pi3 = $3.495,6 (recalculado).",
+   "Referencias SECOP de analizadores (hematología San Andrés de Sotavento $121,5 millones; química Montelíbano $144,5 millones; GeneXpert Valle $129,9 millones; hematología Macaravita $34,5 millones): confirmadas en datos.gov.co p6dx-8zbt.",
+   "Res. 3100, num. 11.3.12: el laboratorio clínico no tiene grados de complejidad; la cabina de bioseguridad se exige para biología molecular (GeneXpert) y el microscopio para enfermedades transmitidas por vectores: ambos están en la dotación.",
+   "Res. 3280: la gota gruesa mensual a gestantes en zona endémica y la TSH neonatal en sangre de cordón están en la norma."
+  ],
+  "corregido": [
+   "Nota del analizador de gases: decía 55 gases al mes; son 34.",
+   "Cita de cotizaciones: era el num. 7.1.9 (estudios y diseños); para dotación rige el 7.1.6 (2 cotizaciones de 2 marcas).",
+   "Se agregó la viabilidad del comodato para los 3 analizadores de menor volumen."
+  ]
  }
 }

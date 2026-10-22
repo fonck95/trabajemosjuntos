@@ -14,9 +14,10 @@
  "proyecto_en_breve": {
   "que_es": "Torre nueva para los servicios asistenciales de primer nivel, en el lote del antiguo Centro Vida (alas occidentales del predio del hospital, ver data/edificios/bienestar_anciano.json), tras demoler esas construcciones. El edificio actual pasa a administración, archivo, bodega y central de distribución.",
   "tipologia_res_485": "Proyecto mixto (infraestructura física + equipamiento fijo + dotación biomédica + TIC). Por definición de la Res. 1211 es 'reposición de infraestructura' (edificación nueva en sustitución de la existente para los servicios asistenciales) con 'fortalecimiento de capacidad instalada'. No es 'obra nueva' en sentido estricto porque el lote ya está intervenido.",
-  "control_especial_de_oferta": "Probable: si la infraestructura o el equipamiento fijo superan 5.000 SMMLV (≈ $8.755 millones de 2026), requiere concepto de MinSalud e inclusión en el Plan Bienal.",
+  "control_especial_de_oferta": "Sí. El art. 4.2 de la Res. 485 hace de control especial de oferta todo proyecto de infraestructura física o de equipamiento fijo de más de 5.000 SMMLV ($8.754.525.000 en 2026, cálculo propio). Solo la obra de la torre vale unos $25.740 millones de 2026 (presupuesto.json, estimación): necesita concepto técnico de MinSalud aunque se pague solo con plata territorial (art. 6.1.1) e inclusión en el Plan Bienal (art. 7.1.1.6).",
   "grupo_uso_nsr10": "IV (tiene urgencias)",
-  "ocupacion_nsr10": "I-2"
+  "ocupacion_nsr10": "I-2",
+  "categoria_riesgo_incendio_nsr10": "I: el programa (programa.json) quedó en 4 pisos y 3.369,6 m², y para I-2 con más de 1.000 m² la Tabla J.3.3-1 da categoría I desde 4 pisos; la estructura necesita 2 horas de resistencia al fuego (Tabla J.3.4-3)."
  },
  "normas": [
   {
@@ -26,7 +27,7 @@
    "fecha": "2025-03-27",
    "emisor": "Ministerio de Salud y Protección Social (MinSalud)",
    "objeto": "Requisitos para expedir el concepto técnico de viabilidad de proyectos de inversión en infraestructura física, equipamiento fijo y dotación biomédica financiados con el Presupuesto General de la Nación (PGN) – MinSalud o con recursos territoriales, y de los proyectos de control especial de oferta. Es 'la 485' del encargo.",
-   "estado": "Vigente, modificada por la Res. 1211 de 2025 (arts. 3 y 7) y por la Res. 1519 de 2025 (arts. 2 y 7). Derogó la Res. 2053 de 2019, la 1653 de 2023, la 400 de 2024 y el art. 1 de la Res. 5042 de 1996 (art. 8).",
+   "estado": "Vigente, modificada por la Res. 1211 de 2025 (arts. 3 y 7) y por la Res. 1519 de 2025 (arts. 2 y 7). Derogó la Res. 2053 de 2019, la 1653 de 2023, la 400 de 2024 y el art. 1 de la Res. 5042 de 1996, y modificó el art. 8 de la Res. 2514 de 2012 (art. 8, hoja 17).",
    "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%20485%20de%202025.pdf",
    "paginas": 17,
    "fecha_consulta": "2026-10-22",
@@ -335,6 +336,13 @@
      "requisito": "Pendiente máxima 8 % en rampas que son medio de salida (12,5 % en otras rampas peatonales), transversal máxima 2 %, ancho mínimo 1,10 m; 2,40 m en áreas I-2 con movimiento de camas; cumplir NTC 4143.",
      "cita": "Título K, K.3.8.6",
      "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Distancia de recorrido",
+     "requisito": "Desde el punto más alejado hasta una salida (escalera protegida o salida exterior): máximo 45 m sin rociadores y 60 m con rociadores para el grupo Institucional (I). Para edificaciones institucionales, además: 30 m entre una puerta de acceso de salida y la salida, 45 m desde cualquier punto de una habitación y 15 m dentro de una habitación de enfermos hasta su puerta.",
+     "cita": "Título K, K.3.6.5, Tabla K.3.6-1; K.3.14.1.2",
+     "tipo": "dato_oficial",
+     "nota": "Verificación V1 (22-oct-2026): agregado tras leer el Título K (nsr10.txt)."
     }
    ]
   },
@@ -571,8 +579,8 @@
   {
    "numeral": "7.1.1.6",
    "requisito": "Inclusión y aprobación en el Plan Bienal de Inversiones Públicas en Salud si el proyecto es de control especial de oferta (art. 4).",
-   "aplica": "sí (probable)",
-   "como_lo_cumple_este_proyecto": "Si la infraestructura o el equipamiento fijo superan 5.000 SMMLV ($8.754.525.000 en 2026, cálculo propio), es de control especial de oferta. Una torre de este tamaño casi seguro lo supera.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "La obra de la torre (unos $25.740 millones de 2026, presupuesto.json) supera 5.000 SMMLV ($8.754.525.000, cálculo propio): es de control especial de oferta (art. 4.2) y debe estar en el Plan Bienal.",
    "documento_a_producir": "Soporte de inclusión en el Plan Bienal (aplicativo de MinSalud) del periodo de radicación.",
    "responsable": "Secretaría Seccional de Salud de Antioquia",
    "estado": "pendiente"
@@ -1393,6 +1401,20 @@
     ],
     "tipo": "estimacion",
     "nota": "Riesgo ligero NFPA 13: 0,10 gpm/pie² sobre 1.500 pie² (≈570 L/min) + 380 L/min de mangueras durante 30 min ≈ 28 m³. Lo fija el diseño hidráulico; tanque independiente del de consumo (Res. 1633, num. 3.4.4 b.4)."
+   },
+   "aplicado_a_la_torre": {
+    "pisos": 4,
+    "area_m2": 3369.6,
+    "categoria": "I",
+    "resistencia_estructura_h": 2.0,
+    "tipo": "calculo_propio",
+    "nota": "Con el programa de 4 pisos de programa.json (Tabla J.3.3-1). Con 3 pisos sería categoría II (1,5 h)."
+   },
+   "distancia_recorrido_max_m": {
+    "sin_rociadores": 45,
+    "con_rociadores": 60,
+    "tipo": "dato_oficial",
+    "cita": "NSR-10, Tabla K.3.6-1 (grupo I); K.3.14.1.2 (30 m desde la puerta de acceso de salida)"
    }
   },
   "agua": {
@@ -1432,6 +1454,15 @@
       "reserva_24h_res3100_m3": 20.4,
       "reserva_48h_res1633_m3": 40.8,
       "reserva_72h_ish_m3": 61.2
+     },
+     {
+      "escenario": "programa final de programa.json: 13 camas + 2 TPR + 6 puestos de observación + 2 camillas de reanimación + 2 de EDA",
+      "camas_y_camillas": 25,
+      "consumo_m3_dia": 15.0,
+      "reserva_24h_res3100_m3": 15.0,
+      "reserva_48h_res1633_m3": 30.0,
+      "reserva_72h_ish_m3": 45.0,
+      "nota": "Verificación V1 (22-oct-2026): el programa prevé 40 m³ en cisterna + 10 m³ en tanques elevados = 50 m³, que cubre las 72 h."
      }
     ],
     "tipo": "calculo_propio",
@@ -1512,7 +1543,7 @@
  "conflictos_entre_normas": [
   "Reserva de agua: la Res. 3100 pide 24 h, la Res. 1633 pide 48 h y el Índice de Seguridad Hospitalaria califica 'alto' con 72 h. Se adopta 72 h.",
   "Áreas mínimas: la Res. 1633 (2025) sube varios mínimos frente a la Res. 3100 (2019): sala de procedimientos 10 m² (vs 8), consultorio de procedimientos 14 m² (vs 10), consultorio de entrevista 6 m² (vs 4), habitación TPR 24 m² (vs 16). Se toma siempre el mayor, porque la torre es nueva.",
-  "Ecografía: la Res. 3100 la clasifica como imágenes de mediana complejidad. Incluirla obliga a habilitar ese servicio en mediana complejidad; debe quedar en el Documento de Capacidad Instalada.",
+  "Ecografía: la Res. 3100 la clasifica como imágenes de mediana complejidad. Incluirla obliga a habilitar ese servicio en mediana complejidad; debe quedar en el Documento de Capacidad Instalada. Además exige médico radiólogo, o especialista con certificado en ultrasonido (por ejemplo ginecobstetra), para hacer e interpretar los estudios (Res. 3100, num. 11.3.4.2, talento humano).",
   "Corredores: la Res. 1633 recomienda 2,80 m con camillas en urgencias y hospitalización, mientras la NSR-10 exige 2,40 m. Se recomienda diseñar con 2,80 m en esos servicios.",
   "Res. 549 de 2015: para hospitales solo es obligatoria desde 5.000 m²; la torre quedaría por debajo, pero el Anexo 2 de la Res. 1633 empuja las mismas medidas de ahorro."
  ],
