@@ -727,11 +727,13 @@ export function arc(a, b, lift = 3) {
   return new THREE.QuadraticBezierCurve3(A, M, B);
 }
 
+// Pesos abreviados con espacios que no se parten ("$2,0 mil M" nunca deja la "M" sola en otro renglón) y un decimal
+// fijo en miles de millones, para que cifras vecinas se lean con el mismo formato ("$51,0 mil M" junto a "$52,1 mil M")
 export const fmtCOP = (v) => {
   const a = Math.abs(v);
-  if (a >= 1e12) return `$${(v / 1e12).toLocaleString('es-CO', { maximumFractionDigits: 2 })} billones`;
-  if (a >= 1e9) return `$${(v / 1e9).toLocaleString('es-CO', { maximumFractionDigits: 1 })} mil M`;
-  if (a >= 1e6) return `$${(v / 1e6).toLocaleString('es-CO', { maximumFractionDigits: 0 })} M`;
+  if (a >= 1e12) return `$${(v / 1e12).toLocaleString('es-CO', { maximumFractionDigits: 2 })}\u00a0billones`;
+  if (a >= 1e9) return `$${(v / 1e9).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}\u00a0mil\u00a0M`;
+  if (a >= 1e6) return `$${(v / 1e6).toLocaleString('es-CO', { maximumFractionDigits: a < 1e7 ? 1 : 0 })}\u00a0M`;
   return `$${Math.round(v).toLocaleString('es-CO')}`;
 };
 export const fmtN = (v, d = 0) => Number(v).toLocaleString('es-CO', { maximumFractionDigits: d, minimumFractionDigits: d });
