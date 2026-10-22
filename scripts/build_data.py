@@ -206,8 +206,17 @@ if _din:
 _panel = opt('comparativa/panel_anual.json')
 PANEL = {'anios': _panel.get('anios', []), 'indicadores': _panel.get('indicadores', [])} if _panel else {}
 
+# --- Red de distribución: distancias por la vía entre sedes y red propuesta (scripts/geo/red_distancias.py) y su presupuesto
+_dist = opt('red/distancias.json')
+RED = {}
+if _dist:
+    RED = {k: _dist[k] for k in ('fuente', 'metodo', 'raiz', 'puntos', 'matriz_via_km', 'matriz_recta_km') if k in _dist}
+    RED['arbol'] = {**_dist['arbol'], 'tramos': [{**t, 'ruta': [[round(x), round(y)] for x, y in t['ruta']]} for t in _dist['arbol']['tramos']]}
+    _pres = opt('red/presupuesto_red.json')
+    if _pres: RED['presupuesto'] = _pres
+
 out = {
-    'EDIFICIOS': EDIFICIOS, 'CALLES': CALLES, 'DINERO': DINERO, 'PANEL': PANEL,
+    'EDIFICIOS': EDIFICIOS, 'CALLES': CALLES, 'DINERO': DINERO, 'PANEL': PANEL, 'RED': RED,
     'TEXTOS': subst({k: v for k, v in textos.items() if isinstance(v, str)}),
     'SECOP': subst(SECOP), 'EMBUDO': subst(EMBUDO),
     'PERIODOS': subst(per['periodos']), 'AREAS': subst(per['areas']),

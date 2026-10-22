@@ -131,6 +131,7 @@ svg.mr-chart .now { stroke: var(--accent); stroke-width: 1.5; }
 .lbl-cx span { display: flex; align-items: center; gap: 6px; }
 .lbl-cx span::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 2.5px color-mix(in srgb, currentColor 25%, transparent); }
 .lbl-cx .pw { color: var(--power); } .lbl-cx .dt { color: var(--data); }
+.lbl-km { font: 700 10px var(--f-mono); color: var(--power); background: var(--surface); border: 1.5px solid var(--power); border-radius: 999px; padding: 1px 6px; transition: opacity 0.2s; } .lbl-km.dim { opacity: 0.3; }
 .lbl-cx:hover { border-color: var(--accent); }
 .cx-ruta { margin: 4px 0 0; padding: 0; list-style: none; font-size: 0.85rem; }
 .cx-ruta li { display: flex; gap: 8px; align-items: baseline; } .cx-ruta li::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--power); transform: translateY(-1px); }
@@ -144,7 +145,7 @@ svg.mr-chart .now { stroke: var(--accent); stroke-width: 1.5; }
 .nav3d .sep { flex: none; width: 1px; align-self: stretch; margin: 3px 3px; background: var(--line); }
 .leyenda3d { position: absolute; right: 10px; bottom: 10px; z-index: 2; display: grid; gap: 2px; font: 0.68rem/1.45 var(--f-mono); color: var(--ink); background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; pointer-events: none; }
 .leyenda3d i { display: inline-block; vertical-align: middle; margin-right: 7px; }
-.leyenda3d .ln { width: 22px; border-top: 3px dashed var(--data); }
+.leyenda3d .ln { width: 22px; border-top: 3px dashed var(--data); } .leyenda3d .ln.pw { border-top: 3px solid var(--power); }
 .leyenda3d .pt { width: 9px; height: 9px; margin-left: 6px; margin-right: 14px; border-radius: 50%; } .leyenda3d .pw { background: var(--power); } .leyenda3d .dt { background: var(--data); }
 .lbl-small { font: 10px var(--f-mono); color: var(--muted); }
 .lbl-geo { font: italic 12px var(--f-body); color: var(--muted); }
@@ -453,6 +454,7 @@ details.fold summary span { color: var(--accent); font-weight: 600; white-space:
             </div>
             <div class="row">
               <label for="cd-flujos"><input id="cd-flujos" type="checkbox" checked> Red de datos al centro de control</label>
+              <label for="cd-red"><input id="cd-red" type="checkbox" checked> Red eléctrica propuesta (km por la vía)</label>
               <label for="cd-etiquetas"><input id="cd-etiquetas" type="checkbox" checked> Etiquetas</label>
             </div>
           </div>
@@ -463,6 +465,7 @@ details.fold summary span { color: var(--accent); font-weight: 600; white-space:
       </div>
     </div>
     <div class="card"><h3>Lo que cabe de verdad en cada cubierta</h3><div class="tbl-wrap" data-slot="ciudad.tabla"></div><p class="note" data-t="ciudad.metodo"></p></div>
+    <div class="card"><h3>Distancias por la vía y red de distribución</h3><div data-slot="ciudad.red"></div></div>
   </section>
 
   <!-- ======================= HOSPITAL ======================= -->

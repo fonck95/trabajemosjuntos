@@ -24,7 +24,7 @@ export function tokens() {
     bg: g('--bg'), surface: g('--surface'), ink: g('--ink'), muted: g('--muted'), line: g('--line'),
     ground: g('--ground'), water: g('--water'), wall: g('--wall'), roof: g('--roof'), accent: g('--accent'), sun: g('--sun'),
     s: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => g(`--s${i}`)),
-    good: g('--good'), warn: g('--warn'), bad: g('--bad'), data: g('--data'),
+    good: g('--good'), warn: g('--warn'), bad: g('--bad'), data: g('--data'), power: g('--power'),
   };
 }
 

@@ -8,7 +8,7 @@ import { Line2 } from 'three/addons/lines/Line2.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { progressiveLOD } from '../assets.js';
-import { EDIFICIOS, CALLES, MICRORRED } from '../data.js';
+import { EDIFICIOS, CALLES, MICRORRED, RED } from '../data.js';
 
 // cámara inicial que mete todas las sedes urbanas en pantalla (con margen para las etiquetas), mirando desde el
 // sur a ~55° de elevación: busca la distancia y recentra el objetivo sobre la caja proyectada
@@ -53,7 +53,7 @@ const NAV = `<div class="nav3d" role="toolbar" aria-label="Recorrido por las sed
   <button type="button" data-nav-modo="hoy" aria-pressed="false">Hoy</button>
   <button type="button" data-nav-modo="proyecto" aria-pressed="true">Proyecto</button>
 </div>
-<div class="leyenda3d" aria-hidden="true"><span><i class="ln"></i>Enlace de datos al CCED</span><span><i class="pt pw"></i>Tablero y medidor bidireccional</span><span><i class="pt dt"></i>Gateway IoT</span></div>`;
+<div class="leyenda3d" aria-hidden="true"><span><i class="ln pw"></i>Red eléctrica propuesta (km por la vía)</span><span><i class="ln"></i>Enlace de datos al CCED</span><span><i class="pt pw"></i>Tablero y medidor bidireccional</span><span><i class="pt dt"></i>Gateway IoT</span></div>`;
 
 export function mount(root) {
   const el = root.querySelector('.stage');
@@ -66,7 +66,7 @@ export function mount(root) {
   const farR = Math.max(1500, ...lista.map((e) => Math.hypot(e.x, e.y) + 400));
   const cx = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0, cy = ys.length ? (Math.min(...ys) + Math.max(...ys)) / 2 : 0;
   const vista = encuadre(urb, cx, cy);
-  const st = new Stage(el, { ...vista, fov: 38, minDist: 6, maxDist: 1500, fit: 1, declutter: true, tone: 'aces', exposure: 1.05 });
+  const st = new Stage(el, { ...vista, fov: 38, minDist: 6, maxDist: 1500, fit: 1, declutter: ['lbl-node', 'lbl-km'], tone: 'aces', exposure: 1.05 });
   st.camera.far = 5000; st.camera.updateProjectionMatrix();
   // la rueda acerca hacia donde apunta el cursor y el arrastre con clic derecho se desliza sobre el piso
   Object.assign(st.controls, { zoomToCursor: true, screenSpacePanning: false, zoomSpeed: 1.15 });
@@ -186,7 +186,31 @@ export function mount(root) {
     links.forEach((l) => { l.base.material.resolution.set(w, h); l.dash.material.resolution.set(w, h); l.dash.material.dashOffset -= dt * 28; });
     return true;
   });
+  // red eléctrica propuesta: árbol de mínima longitud por las vías (scripts/geo/red_distancias.py), cada tramo con su
+  // distancia por la vía en km; trazo de ancho fijo en pantalla en el color de la potencia
+  const redG = new THREE.Group(); S.add(redG);
+  const nombreDe = (id) => lista.find((e) => e.id === id)?.corto || RED?.puntos?.find((p) => p.id === id)?.nombre || id;
+  const tramos = (RED?.arbol?.tramos || []).map((t) => {
+    const geo = new LineGeometry(); geo.setPositions(t.ruta.flatMap(([x, y]) => [x, 0.9, -y]));
+    const line = new Line2(geo, new LineMaterial({ color: T.power, linewidth: 3, transparent: true, opacity: 0.95, depthWrite: false }));
+    redG.add(line);
+    // la etiqueta va en la mitad del recorrido (por longitud), no en la mitad de la recta
+    const seg = t.ruta.slice(1).map((q, k) => Math.hypot(q[0] - t.ruta[k][0], q[1] - t.ruta[k][1])), L = seg.reduce((a, b) => a + b, 0);
+    let acc = 0, mid = t.ruta[0];
+    for (let k = 0; k < seg.length; k++) { if (acc + seg[k] >= L / 2) { const u = (L / 2 - acc) / (seg[k] || 1), a = t.ruta[k], b = t.ruta[k + 1]; mid = [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]; break; } acc += seg[k]; }
+    const lab = st.label(`${fmtN(t.km_via, 2)} km`, 'lbl-km', [mid[0], 4, -mid[1]], redG);
+    lab.element.title = `${nombreDe(t.de)} → ${nombreDe(t.a)}: ${fmtN(t.km_via, 3)} km por la vía (${fmtN(t.km_recta, 3)} km en línea recta)`;
+    return { t, line, lab };
+  });
+  let showRed = true;
+  const verRed = (v) => { showRed = v; redG.visible = v; tramos.forEach((r) => { r.lab.visible = v; }); st.invalidate(); };
+  st.onFrame(() => { if (showRed) tramos.forEach((r) => r.line.material.resolution.set(el.clientWidth, el.clientHeight)); return false; });
   function resaltar(it) {
+    tramos.forEach((r) => {
+      const on = !it || r.t.de === it.e.id || r.t.a === it.e.id;
+      r.line.material.opacity = on ? 0.95 : 0.25; r.line.material.linewidth = it && on ? 5 : 3;
+      r.lab.element.classList.toggle('dim', !on);
+    });
     links.forEach((l) => {
       const on = !it || it === hub || l.it === it;
       l.base.material.opacity = on ? 0.5 : 0.1; l.dash.material.opacity = on ? 1 : 0.14;
@@ -212,6 +236,7 @@ export function mount(root) {
     st.updateShadows();
   }));
   root.querySelector('#cd-flujos')?.addEventListener('change', (ev) => { showFlows = ev.target.checked; enlaces.visible = showFlows; st.invalidate(); });
+  root.querySelector('#cd-red')?.addEventListener('change', (ev) => verRed(ev.target.checked));
   root.querySelector('#cd-etiquetas')?.addEventListener('change', (ev) => { items.forEach((it) => { it.lab.element.hidden = !ev.target.checked; }); st.invalidate(); });
 
   // anillo en el piso que marca la sede elegida
@@ -327,10 +352,29 @@ export function mount(root) {
     <div class="tile"><b data-n="${kwh}">${fmtN(kwh)}</b><span>kWh de baterías</span></div>`;
   root.querySelector('[data-slot="ciudad.tabla"]').innerHTML = `<table><thead><tr><th>Sede</th><th class="n">kWp plan</th><th class="n">kWp que caben</th><th class="n">Módulos</th><th class="n">Baterías kWh</th><th>Ubicación</th><th>Modelo</th></tr></thead><tbody>${lista.map((e) => `<tr><td>${e.nombre}</td><td class="n">${e.kwp_plan != null ? fmtN(e.kwp_plan, 0) : '—'}</td><td class="n">${e.kwp_factible != null ? fmtN(e.kwp_factible, 1) : '—'}</td><td class="n">${fmtN(e.modulos || 0)}</td><td class="n">${e.bess ? fmtN(e.bess.kwh) : '—'}</td><td>${e.confianza || '—'}</td><td class="note">${e.bytes ? `${fmtN(e.bytes / 1024, 0)} KB · ${fmtN(e.triangulos)} triángulos` : '—'}</td></tr>`).join('')}</tbody></table>`;
 
+  // distancias por la vía y presupuesto de la red (si ya se calculó)
+  const redSlot = root.querySelector('[data-slot="ciudad.red"]');
+  if (redSlot && RED?.arbol) {
+    const A = RED.arbol, P = RED.presupuesto;
+    redSlot.innerHTML = `<p class="note">${RED.metodo || ''}</p>
+      <div class="tbl-wrap"><table><thead><tr><th>Tramo</th><th class="n">km por la vía</th><th class="n">km en línea recta</th><th class="n">km de red nueva</th></tr></thead><tbody>
+      ${A.tramos.map((t) => `<tr><td>${nombreDe(t.de)} → ${nombreDe(t.a)}</td><td class="n">${fmtN(t.km_via, 3)}</td><td class="n">${fmtN(t.km_recta, 3)}</td><td class="n">${fmtN(t.km_red_nueva, 3)}</td></tr>`).join('')}
+      <tr><td><b>Total de la red propuesta</b></td><td class="n">${fmtN(A.km_suma_tramos, 2)}</td><td></td><td class="n"><b>${fmtN(A.km_total_red, 2)} km</b></td></tr></tbody></table></div>
+      <p><button type="button" class="btn ghost" data-csv>Descargar matriz de distancias entre todas las sedes (CSV)</button></p>
+      ${P ? '' : '<p class="note">El presupuesto por capítulos e ítems con precios unitarios de Antioquia 2026 se agrega cuando terminen de verificarse los precios.</p>'}`;
+    redSlot.querySelector('[data-csv]').addEventListener('click', () => {
+      const ids = RED.puntos.map((p) => p.id), head = ['km por la vía', ...ids.map(nombreDe)];
+      const rows = [head, ...RED.matriz_via_km.map((r, i) => [nombreDe(ids[i]), ...r.map((v) => String(v).replace('.', ','))])];
+      const csv = '\ufeff' + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n');
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = 'yondo_distancias_km.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+  }
+
   onTheme((t) => {
     ctxMats.wall.color.copy(t.wall); ctxMats.roof.color.copy(t.roof); M.ground.color.copy(t.ground); M.road.color.copy(t.ground.clone().lerp(t.ink, 0.22));
     M.water.color.copy(t.water); M.cano.color.copy(t.water); M.block.color.copy(t.surface); anillo.material.color.copy(t.accent);
     links.forEach((l) => { l.base.material.color.copy(t.data); l.dash.material.color.copy(t.data); });
+    tramos.forEach((r) => r.line.material.color.copy(t.power));
   });
   return st;
 }
