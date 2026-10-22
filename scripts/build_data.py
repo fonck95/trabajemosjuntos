@@ -161,6 +161,7 @@ CORTO = {'alcaldia': 'Alcaldía + CCED', 'hospital': 'Hospital', 'policia': 'Pol
 EDIFICIOS = []
 for f in sorted((D / 'edificios').glob('*.json')):
     s = json.loads(f.read_text(encoding='utf-8'))
+    if s.get('reemplazado_por'): continue   # levantamiento reemplazado por otra especificación (no se dibuja)
     m = manifest.get(s['id'], {})
     ad = s.get('adecuaciones', {})
     vols = s.get('volumenes', [])
@@ -205,6 +206,34 @@ if _din:
     DINERO['periodos'] = [{**p_, 'fugas': [_fuga(f) for f in p_.get('fugas', [])]} for p_ in _din['periodos']]
 _panel = opt('comparativa/panel_anual.json')
 PANEL = {'anios': _panel.get('anios', []), 'indicadores': _panel.get('indicadores', [])} if _panel else {}
+
+# --- Torre de servicios de primer nivel (data/proyectos/torre_hospital/): archivo aparte que la vista carga al abrirse
+def _sel(d, keys):
+    return {k: d[k] for k in keys if k in d} if isinstance(d, dict) else {}
+_tdir = D / 'proyectos/torre_hospital'
+if _tdir.exists():
+    _t = {f.stem: json.loads(f.read_text(encoding='utf-8')) for f in sorted(_tdir.glob('*.json'))}
+    _pr, _no, _pt, _do, _la = (_t.get(k, {}) for k in ('programa', 'normas', 'proyecto_tipo', 'dotacion', 'laboratorio'))
+    TORRE = {
+        'programa': {**_sel(_pr, ('resumen', 'totales', 'resumen_por_piso', 'servicios', 'capacidad_resultante', 'uso_del_edificio_actual', 'demanda')),
+                     'ambientes': [_sel(a_, ('servicio', 'nombre', 'cantidad', 'm2_unitario', 'm2_total', 'piso')) for a_ in _pr.get('ambientes', [])],
+                     'implantacion': _sel(_pr.get('implantacion', {}), ('huella', 'accesos', 'demoliciones', 'pisos_y_alturas', 'zonificacion_en_planta', 'materiales_y_volumetria', 'cubierta_tecnica'))},
+        'normas': _sel(_no, ('proyecto_en_breve', 'normas', 'checklist_485', 'parametros_diseno', 'conflictos_entre_normas')),
+        'proyecto_tipo': _sel(_pt, ('respuesta_corta', 'proyectos_tipo', 'seleccion', 'escalamiento_a_torre', 'estetica')),
+        'dotacion': {**_sel(_do, ('resumen', 'totales_generales', 'totales_equipamiento_fijo', 'comparaciones', 'proyectos_articulados', 'requisitos_res_485_para_dotacion', 'laboratorio_resumen')),
+                     'servicios': [{**_sel(s_, ('id', 'nombre', 'piso', 'capacidad', 'norma', 'totales')),
+                                    'equipos': [_sel(e_, ('nombre', 'cantidad', 'clase_riesgo', 'precio_unitario_cop_2026', 'total_cop_2026', 'tipo_precio', 'prioridad')) for e_ in s_.get('equipos', [])]}
+                                   for s_ in _do.get('servicios', [])],
+                     'equipamiento_fijo': [_sel(e_, ('nombre', 'cantidad', 'precio_unitario_cop_2026', 'total_cop_2026', 'tipo_precio')) for e_ in _do.get('equipamiento_fijo', [])]},
+        'laboratorio': {**_sel(_la, ('resumen', 'totales_menu', 'areas', 'area_total_laboratorio_piso2_m2', 'costos_operacion_anual', 'modelo_de_compra', 'lis', 'calidad', 'referencia_de_muestras')),
+                        'menu': [_sel(m_, ('id', 'prueba', 'seccion', 'metodo', 'equipo', 'ruta', 'tiempo_respuesta', 'volumen_mes')) for m_ in _la.get('menu', [])],
+                        'equipos': [{**_sel(e_, ('nombre', 'cantidad', 'funcion', 'capacidad', 'modelo_de_compra')), 'precio': (e_.get('precio_mercado') or {}).get('valor'), 'uso_pico_pct': (e_.get('carga') or {}).get('uso_en_hora_pico_pct')} for e_ in _la.get('equipos', [])]},
+    }
+    for k in ('presupuesto', 'apu', 'financiacion', 'proyectos'):
+        if k in _t: TORRE[k] = _t[k]
+    (R / 'web/data').mkdir(parents=True, exist_ok=True)
+    (R / 'web/data/torre.json').write_text(json.dumps(TORRE, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+    print('torre.json', (R / 'web/data/torre.json').stat().st_size // 1024, 'KB')
 
 # --- Red de distribución: distancias por la vía entre sedes y red propuesta (scripts/geo/red_distancias.py) y su presupuesto
 _dist = opt('red/distancias.json')

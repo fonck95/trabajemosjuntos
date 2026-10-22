@@ -9,6 +9,7 @@ const scenes = {
   microrred: () => import('./scenes/microrred.js'),
   ciudad: () => import('./scenes/ciudad.js'),
   hospital: () => import('./scenes/hospital.js'),
+  torre: () => import('./scenes/torre.js'),
   ruta: () => import('./scenes/ruta.js'),
   modelos: () => import('./scenes/modelos.js'),
 };

@@ -1,0 +1,1529 @@
+{
+ "id": "torre_hospital_normas",
+ "titulo": "Marco normativo de la torre de servicios de primer nivel – E.S.E. Hospital Héctor Abad Gómez (Yondó)",
+ "tarea": "T1 – Marco normativo y proyecto tipo",
+ "fecha_corte": "2026-10-22",
+ "moneda_y_base": "Pesos constantes de 2026 (base: promedio enero-septiembre de 2026 del IPC del DANE; data/fuentes/ipc_dane.csv)",
+ "smmlv_2026": {
+  "valor": 1750905,
+  "fuente": "Decreto 1469 de 2025 (dato ya usado en data/comparativa)",
+  "umbral_5000_smmlv": 8754525000,
+  "umbral_500_smmlv": 875452500,
+  "tipo_umbrales": "calculo_propio"
+ },
+ "proyecto_en_breve": {
+  "que_es": "Torre nueva para los servicios asistenciales de primer nivel, en el lote del antiguo Centro Vida (alas occidentales del predio del hospital, ver data/edificios/bienestar_anciano.json), tras demoler esas construcciones. El edificio actual pasa a administración, archivo, bodega y central de distribución.",
+  "tipologia_res_485": "Proyecto mixto (infraestructura física + equipamiento fijo + dotación biomédica + TIC). Por definición de la Res. 1211 es 'reposición de infraestructura' (edificación nueva en sustitución de la existente para los servicios asistenciales) con 'fortalecimiento de capacidad instalada'. No es 'obra nueva' en sentido estricto porque el lote ya está intervenido.",
+  "control_especial_de_oferta": "Probable: si la infraestructura o el equipamiento fijo superan 5.000 SMMLV (≈ $8.755 millones de 2026), requiere concepto de MinSalud e inclusión en el Plan Bienal.",
+  "grupo_uso_nsr10": "IV (tiene urgencias)",
+  "ocupacion_nsr10": "I-2"
+ },
+ "normas": [
+  {
+   "id": "res_485_2025",
+   "numero": "Resolución 485",
+   "anio": 2025,
+   "fecha": "2025-03-27",
+   "emisor": "Ministerio de Salud y Protección Social (MinSalud)",
+   "objeto": "Requisitos para expedir el concepto técnico de viabilidad de proyectos de inversión en infraestructura física, equipamiento fijo y dotación biomédica financiados con el Presupuesto General de la Nación (PGN) – MinSalud o con recursos territoriales, y de los proyectos de control especial de oferta. Es 'la 485' del encargo.",
+   "estado": "Vigente, modificada por la Res. 1211 de 2025 (arts. 3 y 7) y por la Res. 1519 de 2025 (arts. 2 y 7). Derogó la Res. 2053 de 2019, la 1653 de 2023, la 400 de 2024 y el art. 1 de la Res. 5042 de 1996 (art. 8).",
+   "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%20485%20de%202025.pdf",
+   "paginas": 17,
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Alcance",
+     "requisito": "Cubre adecuaciones, telesalud, y 'fortalecimiento de la infraestructura' (puesta en funcionamiento o ampliación de una edificación con oferta adicional), desde la planeación hasta la puesta en marcha.",
+     "cita": "Art. 1, hoja 2-3",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Control especial de oferta",
+     "requisito": "Son de control especial de oferta los proyectos de infraestructura física o equipamiento fijo de más de 5.000 SMMLV, y la dotación biomédica de más de 5.000 SMMLV en servicios de mediana y alta complejidad (diálisis, oncología, imágenes de mediana y alta complejidad, UCI, obstetricia de mediana y alta, etc.).",
+     "cita": "Art. 4, numerales 4.1 y 4.2, hojas 5-6",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Quién da el concepto",
+     "requisito": "Si hay plata del PGN–MinSalud: concepto de MinSalud, sin importar la cuantía (art. 5). Si solo hay plata territorial: MinSalud si es de control especial de oferta; si no, la secretaría de salud departamental (para Yondó, la Secretaría Seccional de Salud de Antioquia) (art. 6.1). Obras por Impuestos: siempre MinSalud (art. 6.3). Recursos con régimen especial (por ejemplo regalías) siguen su norma propia (parágrafo del art. 5).",
+     "cita": "Arts. 5 y 6, hojas 6-7",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Plan Bienal",
+     "requisito": "Los proyectos deben estar incluidos y aprobados en el Plan Bienal de Inversiones Públicas en Salud cuando aplique.",
+     "cita": "Art. 6, parágrafo 1, hoja 7",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Requisitos documentales",
+     "requisito": "El art. 7 original fue sustituido por completo; el texto que rige es el de la Res. 1519 de 2025 (ver esa norma y checklist_485).",
+     "cita": "Art. 7, hojas 7-17",
+     "tipo": "dato_oficial",
+     "nota": "Para la lista de chequeo se usa el art. 7 vigente (Res. 1519 de 2025)."
+    }
+   ],
+   "lo_que_no_trae": "No define una rúbrica de puntaje ni topes de valor por metro cuadrado para obra nueva; la evaluación es una verificación documental y técnica. Los únicos topes en pesos son 5.000 SMMLV (control especial de oferta) y 500 SMMLV (adecuaciones, art. 7.1.7)."
+  },
+  {
+   "id": "res_1211_2025",
+   "numero": "Resolución 1211",
+   "anio": 2025,
+   "fecha": "2025-06-13",
+   "emisor": "MinSalud",
+   "diario_oficial": "53.149 del 14 de junio de 2025",
+   "objeto": "Modifica los arts. 3 (definiciones) y 7 (requisitos) de la Res. 485: incorpora 'capacidad instalada', el 'Documento de Capacidad Instalada' concertado con la Subdirección de Prestación de Servicios, y la modalidad 'llave en mano a precio global fijo sin fórmula de reajuste' (numeral 7.1.12).",
+   "estado": "Vigente; su art. 2 (art. 7) fue a su vez sustituido por la Res. 1519 de 2025, que conserva y amplía su contenido.",
+   "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_1211_2025.htm",
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Definiciones",
+     "requisito": "Obra nueva = construcción en terrenos no intervenidos. Reposición de infraestructura = construcción de una edificación nueva en sustitución de una existente. Ampliación = incremento del área construida. Capacidad instalada = recursos físicos, tecnológicos y humanos (infraestructura, talento humano y equipamiento).",
+     "cita": "Art. 1 (nuevo art. 3), numerales 1, 8, 13 y 18",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Llave en mano",
+     "requisito": "Modalidad en la que la entidad beneficiaria ejecuta exclusivamente mediante contrato llave en mano: el contratista hace, si es necesario, estudios y diseños, construcción, personal, instalaciones y suministros, y entrega la obra terminada y en funcionamiento.",
+     "cita": "Art. 1 (nuevo art. 3), numeral 19",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Capacidades tipo",
+     "requisito": "MinSalud elaborará una propuesta de 'capacidades instaladas tipo' según población, acceso y oferta, que las ESE podrán acoger para la concertación.",
+     "cita": "Art. 2, parágrafo del art. 7",
+     "tipo": "dato_oficial"
+    }
+   ]
+  },
+  {
+   "id": "res_1519_2025",
+   "numero": "Resolución 1519",
+   "anio": 2025,
+   "fecha": "2025-07-25",
+   "emisor": "MinSalud",
+   "objeto": "Modifica los arts. 2 (campo de aplicación) y 7 (requisitos) de la Res. 485, ya modificada por la 1211. Amplía el campo a entidades del orden nacional, departamental, distrital y municipal 100 % públicas; dice que los requisitos se exigen 'en los casos que aplique'; añade el numeral 7.1.13 (proyectos para cumplir fallos judiciales).",
+   "estado": "Vigente. Es el texto que rige hoy el art. 7 de la Res. 485.",
+   "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%201519%20de%202025.pdf",
+   "paginas": 14,
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Aplicación caso a caso",
+     "requisito": "La Dirección de Prestación de Servicios y Atención Primaria (DPSAP) verifica en cada caso si un criterio aplica, según la estructura, el campo de acción, la naturaleza jurídica de la entidad y las condiciones del proyecto.",
+     "cita": "Art. 2, parágrafo 2 del art. 7, hoja 14",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Llave en mano (7.1.12)",
+     "requisito": "Exige, además de los generales: certificado de tradición, uso de suelo y riesgo, servicios públicos, Documento de Capacidad Instalada aprobado, estudio del sector (estructura de costos), estudio de mercado con 3 cotizaciones por componente (estudios y diseños, obra e interventoría), programa médico arquitectónico, memorias de acabados y sistemas constructivos, cronograma, anteproyecto arquitectónico firmado, certificación de impuestos y tasas, y presupuesto por estudios y diseños, obra e interventoría según lineamientos de la Subdirección de Infraestructura.",
+     "cita": "Art. 2, numeral 7.1.12, hojas 11-12",
+     "tipo": "dato_oficial"
+    }
+   ]
+  },
+  {
+   "id": "res_1633_2025",
+   "numero": "Resolución 1633",
+   "anio": 2025,
+   "fecha": "2025-08-11",
+   "emisor": "MinSalud",
+   "objeto": "Marco técnico de infraestructura y equipamiento de edificaciones de salud: criterios de diseño y dimensionamiento, equipamiento y adaptación al cambio climático. Deroga las Res. 4445 y 5042 de 1996. Sus Anexo 1 (estándares de diseño, 173 hojas) y Anexo 2 (parámetros de cambio climático, 31 páginas) se publicaron en un archivo comprimido en la web de MinSalud.",
+   "estado": "Expedida y vigente desde el 11 de agosto de 2025 (no es borrador). Ojo: el nombre del archivo de anexos conserva la palabra 'proyecto-resolucion', pero los PDF dentro se titulan 'VF ... AJUSTADO DPSAP' (versión final) y el art. 1 de la resolución remite a ese enlace. Aplica a toda edificación nueva; las existentes pueden acogerse voluntariamente (art. 2, par. 1). Transición: proyectos con licencia, concepto de viabilidad de menos de 2 años, obra iniciada, radicados o en contratación al 11-ago-2025 siguen con la norma anterior (art. 4). La torre es nueva: le aplica completa.",
+   "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%201633%20de%202025.pdf",
+   "url_anexos": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/anexos-1-2-proyecto-resolucion-marco-tecnico-edificaciones-prestadoras-servicios-salud.zip",
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Hospital resiliente",
+     "requisito": "Diseñar con los principios de 'Hospitales Resilientes frente a Emergencias de Salud y Desastres' (Res. 625 de 2024: ISH, INGRID-H, STAR-H, Hospital Seguro, Verde e Inteligente) y con el Anexo 2 de cambio climático.",
+     "cita": "Art. 5; Anexo 1, num. 2.1.2, hoja 14",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Uso exclusivo",
+     "requisito": "Urgencias, parto, internación y cirugía solo en edificaciones de uso exclusivo de salud; con internación, parto o urgencias los ascensores son camilleros; urgencias con acceso directo desde el exterior, al nivel de acceso y en un solo piso; agua caliente en internación, parto y urgencias.",
+     "cita": "Anexo 1, num. 2.1.4 y 2.1.7, hojas 14-15",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Lote",
+     "requisito": "No ubicar en zonas inundables, de remoción en masa o amenaza no mitigable, ni en ronda hídrica; terreno predominantemente plano; si el ordenamiento no fija índices, ocupación máxima 0,6 del lote para edificios con hospitalización y urgencias (hasta 0,7 con concepto favorable).",
+     "cita": "Anexo 1, num. 3.1.1 y 3.1.2, hojas 17-19",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Módulo y altura",
+     "requisito": "Módulo Hospitalario Colombiano de 1,20 × 1,20 m para edificaciones nuevas; altura libre interior recomendada no menor de 2,80 m (piso terminado a cielorraso), que puede aumentar en zonas cálidas.",
+     "cita": "Anexo 1, num. 3.3.3 y 3.3.4, hoja 23",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Circulaciones",
+     "requisito": "Pasillos, corredores y rampas de salida de 2,40 m mínimo; se recomienda 2,80 m en el corredor de urgencias que llega del exterior y en corredores con camillas de urgencias y hospitalización; 1,20 m en los demás pasillos; flujos sin cruce limpio/sucio ni ambulatorio/internado; ingresos diferenciados: principal, urgencias y servicios generales.",
+     "cita": "Anexo 1, num. 3.3.6, hojas 24-28",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Escaleras y ascensores",
+     "requisito": "Escalera de servicio 1,20 m y de evacuación 2,40 m con descanso doble para giro de camillas; ascensor obligatorio con más de 3 pisos; cabina camillera de 2,20 × 1,20 m interior; cabina de pie o silla de ruedas de 1,50 × 1,20 × 2,20 m con 2,00 m² libres frente a la puerta; ascensores conectados a la fuente alterna.",
+     "cita": "Anexo 1, num. 3.3.6 b, hojas 26-27",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Bioclimática",
+     "requisito": "Aprovechar ventilación e iluminación natural (obligatorio en salas de espera, internación y observación de urgencias, sin sol directo); control solar en fachadas oriente y occidente; climatización pasiva según orientación y vientos; cubiertas preferiblemente inclinadas, reflectivas y con captación de agua lluvia; muros exteriores compactos.",
+     "cita": "Anexo 1, num. 3.3.7 y 3.3.8 g, hojas 28-32",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Acabados",
+     "requisito": "Pisos continuos, antideslizantes, lavables y de color claro; mediacaña piso-pared en ambientes de procedimientos, aseo, trabajo sucio y residuos; mediacaña pared-pared y pared-techo en sala de partos y esterilización; puertas según Cuadro 1; prohibido el asbesto.",
+     "cita": "Anexo 1, num. 3.3.8, hojas 29-33; num. 3.2.1 e, hoja 21",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Agua",
+     "requisito": "Tanques independientes para consumo y red contra incendio; acometida de emergencia para carrotanque; con hospitalización o urgencias, volumen con 600 L por cama al día y reserva mínima de 48 horas.",
+     "cita": "Anexo 1, num. 3.4.4, hojas 40-43",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Climatización",
+     "requisito": "Condiciones de diseño por ambiente (temperatura, humedad, cambios de aire, renovación, presión y filtración) en el Cuadro 4.",
+     "cita": "Anexo 1, num. 3.4.9.1, Cuadro 4, hojas 45-46",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Áreas mínimas por servicio",
+     "requisito": "Cuadros 5 a 109 con área mínima y características de cada ambiente (ver parametros_diseno.areas_minimas_m2).",
+     "cita": "Anexo 1, cap. 4 y 5, hojas 47-171",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Cambio climático",
+     "requisito": "Recomendables en obra nueva: al menos 20 % de la energía con solar fotovoltaica; vidrio en cubierta máximo 5 %; claraboyas entre 3 % y 6 % de la cubierta; aleros o cortasoles; colores exteriores claros con reflectividad de 80 % o más (blanco, gris claro, beige, terracota); estacionamiento de bicicletas para 20 % de usuarios habituales; datos climáticos IDEAM como insumo obligatorio del diseño.",
+     "cita": "Anexo 2, num. 4 y Cuadro 3, págs. 5, 13-20",
+     "tipo": "dato_oficial"
+    }
+   ]
+  },
+  {
+   "id": "res_3100_2019",
+   "numero": "Resolución 3100",
+   "anio": 2019,
+   "fecha": "2019-11-25",
+   "emisor": "MinSalud",
+   "objeto": "Procedimientos y condiciones de inscripción de prestadores y habilitación de servicios; adopta el Manual de Inscripción de Prestadores y Habilitación de Servicios de Salud (estándares de talento humano, infraestructura, dotación, medicamentos, procesos prioritarios, historia clínica e interdependencia).",
+   "estado": "Vigente con modificaciones (entre otras Res. 1410 de 2022, 544 de 2023, 465 de 2025 y 914 de 2025; esta última deroga desde el 3-ene-2027 los criterios de esterilización del estándar de infraestructura y los traslada al manual de reprocesamiento de dispositivos médicos).",
+   "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+   "url_pdf_original": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No.%203100%20de%202019.pdf",
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Agua",
+     "requisito": "Edificaciones con urgencias o internación: tanque de agua para consumo humano con reserva mínima de 24 horas, calculada con 600 L por cama o camilla al día.",
+     "cita": "Manual, num. 11.1.2, criterio 4",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Vinculación de edificios",
+     "requisito": "Si el prestador tiene más de una infraestructura que se pueda vincular funcionalmente, lo hace por túnel o puente cubierto, o por muros colindantes con accesos, de uso exclusivo, con ancho para camas y camillas, piso antideslizante y pasamanos.",
+     "cita": "Manual, num. 11.1.2, criterio 5",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Planta eléctrica",
+     "requisito": "Obligatoria donde haya cirugía, parto, laboratorio clínico, urgencias, gestión pretransfusional, diálisis, hospitalización, imágenes diagnósticas, vacunación, servicio farmacéutico y servicios con cadena de frío.",
+     "cita": "Manual, num. 11.1.2, criterio 14",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Radiaciones",
+     "requisito": "Licencia de práctica médica vigente para equipos generadores de radiación ionizante.",
+     "cita": "Manual, num. 11.1.2, criterio 15",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Servicios de la torre",
+     "requisito": "Estándares por servicio: ver servicios_3100.",
+     "cita": "Manual, num. 11.2 a 11.6",
+     "tipo": "dato_oficial"
+    }
+   ]
+  },
+  {
+   "id": "nsr_10",
+   "numero": "Reglamento Colombiano de Construcción Sismo Resistente NSR-10 (Decreto 926 de 2010 y modificaciones; Ley 400 de 1997)",
+   "anio": 2010,
+   "emisor": "Gobierno Nacional – Comisión Asesora Permanente del Régimen de Construcciones Sismo Resistentes",
+   "objeto": "Diseño y construcción sismo resistente (Título A), protección contra el fuego (Título J) y requisitos complementarios como medios de evacuación (Título K).",
+   "estado": "Vigente.",
+   "url": "https://www.unisdr.org/campaign/resilientcities/uploads/city/attachments/3871-10684.pdf",
+   "url_titulo_a": "https://www.idrd.gov.co/sites/default/files/documentos/Construcciones/titulo-a-nsr-100.pdf",
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Grupo de uso",
+     "requisito": "Grupo IV – Edificaciones indispensables: todas las edificaciones de hospitales, clínicas y centros de salud con cirugía, cuidados intensivos, neonatos y/o urgencias; también las estructuras de plantas eléctricas de emergencia, tanques de la red contra incendio y los accesos. La torre tiene urgencias: es Grupo IV.",
+     "cita": "Título A, A.2.5.1.1",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Coeficiente de importancia",
+     "requisito": "I = 1,50 para el Grupo IV.",
+     "cita": "Título A, Tabla A.2.5-1",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Amenaza sísmica de Yondó",
+     "requisito": "Yondó (código 05893): Aa = 0,15; Av = 0,15; amenaza intermedia; Ae = 0,06; Ad = 0,04.",
+     "cita": "Título A, Apéndice A-4 (lista de municipios de Antioquia)",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Derivas",
+     "requisito": "Deriva máxima 1,0 % de la altura de piso (concreto, acero, mampostería que cumple A.6.4.2.2). Para edificaciones indispensables, además, verificación para el umbral de daño con deriva máxima de 0,40 % (0,20 % en mampostería que no cumpla A.12.5.3.1).",
+     "cita": "Título A, Tabla A.6.4-1; A.1.3.10; cap. A.12, Tabla A.12.5-1",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Supervisión técnica",
+     "requisito": "Obligatoria para grupos de uso III y IV sin importar el área (art. 20, Ley 400 de 1997).",
+     "cita": "Título A, A.1.3.9.1",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Interruptor sísmico",
+     "requisito": "En los empates con las redes de electricidad y gas de edificaciones del Grupo IV en amenaza intermedia o alta, interruptor automático del lado de la edificación que actúe con aceleración horizontal mayor que 0,5 Aa.",
+     "cita": "Título A, A.9.6.5",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Ocupación contra incendio",
+     "requisito": "Subgrupo de ocupación Institucional de Salud o Incapacidad (I-2): hospitales, centros de salud, laboratorios clínicos, puestos de primeros auxilios.",
+     "cita": "Título K, K.2.6.3, Tabla K.2.6-2",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Categoría de riesgo de incendio",
+     "requisito": "I-2 con área total mayor de 1.000 m²: categoría III con 1 piso, II con 2 o 3 pisos, I con 4 pisos o más.",
+     "cita": "Título J, J.3.3 (tabla de categorías por grupo, área y número de pisos)",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Resistencia al fuego",
+     "requisito": "Estructura (columnas, vigas, losas): 1½ h en categoría II y 2 h en categoría I; cerramiento de escaleras, ascensores y ductos: 2 h; cubiertas: 1 h (ensayo NTC 1480 / ISO 834).",
+     "cita": "Título J, Tabla J.3.4-3",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Rociadores y alarma",
+     "requisito": "Todo edificio I-2 debe tener rociadores automáticos supervisados eléctricamente (NTC 2301 y NFPA 13) y detección automática de humo con alarma sonora en cualquier caso, con pulsadores en pasillos y dependencias.",
+     "cita": "Título J, J.4.3.4.1 (b) y tabla de detección y alarma de J.4",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Evacuación",
+     "requisito": "I-2: pasillos, corredores y rampas de salida de 2,40 m libres; puertas para camas de 1,10 m mínimo y con barra antipánico si evacúan 75 personas o más; capacidad de 22 personas por módulo en escaleras y 30 en recorridos horizontales (35 y 45 con rociadores); dos salidas en alas de alcobas de más de 200 m²; índice de ocupación de 7 m² por ocupante.",
+     "cita": "Título K, K.3.14.2; Tabla K.3.3-1",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Rampas",
+     "requisito": "Pendiente máxima 8 % en rampas que son medio de salida (12,5 % en otras rampas peatonales), transversal máxima 2 %, ancho mínimo 1,10 m; 2,40 m en áreas I-2 con movimiento de camas; cumplir NTC 4143.",
+     "cita": "Título K, K.3.8.6",
+     "tipo": "dato_oficial"
+    }
+   ]
+  },
+  {
+   "id": "ish_ops_2018",
+   "numero": "Índice de Seguridad Hospitalaria – Guía para evaluadores, 2.ª edición (OMS/OPS)",
+   "anio": 2018,
+   "emisor": "Organización Panamericana de la Salud / Organización Mundial de la Salud",
+   "objeto": "Método para calificar la seguridad estructural, no estructural y funcional de un hospital ante desastres. La Res. 1633 pide revisarlo durante el anteproyecto y la Res. 625 de 2024 lo adopta dentro de 'Hospitales Resilientes'.",
+   "estado": "Referencia técnica (no es ley); exigida como criterio de diseño por la Res. 1633, Anexo 1, num. 3.2.1 a.",
+   "url": "https://www.salud.gob.ec/wp-content/uploads/2021/01/ISH-Guia-de-Evaluadores-2da-Edicion.pdf",
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Agua",
+     "requisito": "Calificación alta: reservas de agua para al menos 72 horas, más una reserva contra incendio (se aconseja mínimo 300 L por cama).",
+     "cita": "Punto 56, págs. 82-83 del PDF",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Energía",
+     "requisito": "Calificación alta: fuentes alternas que arrancan automáticamente en menos de 10 segundos y cubren más del 70 % de la demanda de las áreas críticas; baterías y UPS aseguradas contra sismo.",
+     "cita": "Punto 38, págs. 73-74 del PDF",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Combustible",
+     "requisito": "Calificación alta: combustible garantizado para al menos 72 horas a capacidad máxima; conexiones flexibles en zonas sísmicas.",
+     "cita": "Punto 72, pág. 93 del PDF",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Suministros",
+     "requisito": "Medicamentos, equipos y soporte vital para al menos 72 horas a capacidad máxima.",
+     "cita": "Módulo 3 (seguridad no estructural), puntos sobre medicamentos, equipos y soporte vital, págs. 109-112 del PDF",
+     "tipo": "dato_oficial"
+    }
+   ]
+  },
+  {
+   "id": "retie",
+   "numero": "Reglamento Técnico de Instalaciones Eléctricas (RETIE): Res. 40117 de 2024 y Res. 40284 de 2026 del Ministerio de Minas y Energía",
+   "anio": 2026,
+   "emisor": "Ministerio de Minas y Energía",
+   "objeto": "Requisitos de seguridad de instalaciones eléctricas; numeral 3.28.3.2 'Instituciones de asistencia médica', que remite a la sección 517 de la NTC 2050 (Código Eléctrico Colombiano, segunda actualización).",
+   "estado": "La Res. 40284 del 23-jun-2026 (Diario Oficial 53.539, 1-jul-2026) modificó el RETIE; la Res. 40117 de 2024 queda derogada cuando se cumplan sus periodos de transición. El numeral 3.28.3.2 conserva en 2026 la exigencia de los 10 segundos.",
+   "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_minminas_40284_2026.htm",
+   "url_2024": "https://normograma.dian.gov.co/dian/compilacion/docs/resolucion_minminas_40117_2024.htm",
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Fuentes",
+     "requisito": "Hospitales y centros con servicios críticos: dos fuentes de alimentación independientes y una o más transferencias automáticas hacia el sistema eléctrico esencial.",
+     "cita": "Libro 3, num. 3.28.3.2 b",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Planta",
+     "requisito": "Fuente alterna que entre en operación dentro de los 10 segundos siguientes al corte, con transferencia automática y bypass.",
+     "cita": "Libro 3, num. 3.28.3.2 c (Res. 40284 de 2026)",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "UPS",
+     "requisito": "En áreas de cuidado crítico, UPS en línea para equipos de soporte vital, control de gases medicinales y comunicaciones; variación de tensión máxima ±3 %.",
+     "cita": "Libro 3, num. 3.28.3.2 d",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Tomacorrientes",
+     "requisito": "Grado hospitalario; los del sistema de emergencia, rojos e identificados con circuito y tablero; sistemas normal, esencial y aislado sin compartir canalizaciones.",
+     "cita": "Libro 3, num. 3.28.3.2 l, n, t",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Coordinación de protecciones",
+     "requisito": "Selectividad del sistema eléctrico esencial según NTC 2050, 517.31 (G).",
+     "cita": "Libro 3 (requisitos de diseño)",
+     "tipo": "dato_oficial"
+    }
+   ]
+  },
+  {
+   "id": "gases_medicinales",
+   "numero": "NTC 5318 (citada en el encargo) e ISO 7396-1 / NFPA 99 como referencia",
+   "anio": null,
+   "emisor": "ICONTEC / ISO / NFPA",
+   "objeto": "Diseño, instalación y pruebas de redes de gases medicinales (oxígeno, aire medicinal, vacío).",
+   "estado": "No verificado: en esta revisión no se pudo confirmar en línea el título ni la versión vigente de la NTC 5318 (el catálogo de ICONTEC es de pago). La Res. 1633 (Anexo 1, num. 3.4.9.2) remite a 'la normatividad vigente específica' sin nombrar la norma.",
+   "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/anexos-1-2-proyecto-resolucion-marco-tecnico-edificaciones-prestadoras-servicios-salud.zip",
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Puntos de gases",
+     "requisito": "Salida de oxígeno, aire medicinal y vacío en sala de partos; oxígeno y vacío por camilla en observación, reanimación, trabajo de parto y recuperación (o equipos portátiles en baja complejidad según la Res. 3100).",
+     "cita": "Res. 1633, Anexo 1, Cuadros 92 y 96; Res. 3100, num. 11.6.1 y 11.6.4",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Alarma",
+     "requisito": "Sistema de alarma cuando haya red de distribución de gases medicinales; alarma por fuera de la sala de partos.",
+     "cita": "Res. 3100, num. 11.1.2, criterio 31; Res. 1633, Cuadro 96",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Respaldo eléctrico",
+     "requisito": "El control de gases medicinales en áreas críticas va con UPS en línea.",
+     "cita": "RETIE, num. 3.28.3.2 d",
+     "tipo": "dato_oficial"
+    }
+   ]
+  },
+  {
+   "id": "accesibilidad",
+   "numero": "NTC 6047 de 2013 y NTC 4143 (rampas fijas); Ley 361 de 1997 y Ley 1618 de 2013",
+   "anio": 2013,
+   "emisor": "ICONTEC / Congreso de la República",
+   "objeto": "Accesibilidad al medio físico: rutas accesibles, rampas, baños y unidades sanitarias para personas con movilidad reducida, señalización táctil y Símbolo Internacional de Accesibilidad.",
+   "estado": "Vigentes. La Res. 1633 remite expresamente a la NTC 6047 para dimensionar unidades sanitarias, baños y baterías para personas con movilidad reducida; la NSR-10 (K.3.8.6) remite a la NTC 4143 para rampas.",
+   "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/anexos-1-2-proyecto-resolucion-marco-tecnico-edificaciones-prestadoras-servicios-salud.zip",
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Baños accesibles",
+     "requisito": "Unidades sanitarias, baños y baterías para personas con movilidad reducida dimensionados según NTC 6047.",
+     "cita": "Res. 1633, Anexo 1, num. 3.3.16 b, hojas 38-39",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Ruta accesible",
+     "requisito": "Huella podotáctil, Símbolo Internacional de Accesibilidad, sala de espera con espacio para al menos una silla de ruedas.",
+     "cita": "Res. 1633, Anexo 1, num. 3.3.6 a.10 y 3.3.16 c.4",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Otras NTC afines",
+     "requisito": "Usadas habitualmente: NTC 4140 (pasillos), NTC 4145 (escaleras), NTC 4201 (pasamanos y agarraderas), NTC 4349 (ascensores), NTC 5017 (servicios sanitarios accesibles).",
+     "cita": "Referencia general",
+     "tipo": "referencia_no_verificada",
+     "nota": "Números de norma conocidos en el medio; no se verificó su edición vigente en esta revisión."
+    }
+   ]
+  },
+  {
+   "id": "residuos",
+   "numero": "Decreto 780 de 2016 (Libro 2, Parte 8, Título 10) y Resolución 591 de 2024",
+   "anio": 2024,
+   "emisor": "MinSalud y Ministerio de Ambiente",
+   "objeto": "Gestión integral de residuos generados en la atención en salud. La Res. 591 de 2024 (4-abr-2024) adopta el nuevo Manual de gestión integral de residuos y reemplaza el de la Res. 1164 de 2002.",
+   "estado": "Vigentes; la Res. 1633 las cita expresamente.",
+   "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_0591_2024.htm",
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Almacenamiento",
+     "requisito": "Unidad de almacenamiento central fuera de la edificación principal, de fácil acceso para el vehículo recolector y aislada de laboratorio, toma de muestras, hospitalización y alimentos; unidad intermedia (3 m²) y ambiente de aseo (3 m²) por servicio o por piso; refrigeración a 4 °C o menos para anatomopatológicos; lavado de recipientes; acabados lisos, lavables y con barreras contra vectores.",
+     "cita": "Res. 1633, Anexo 1, num. 3.3.13, hojas 35-36",
+     "tipo": "dato_oficial"
+    },
+    {
+     "tema": "Vertimientos",
+     "requisito": "Líquidos de parto, laboratorio y similares a cajas de inspección y tratamiento especiales antes del alcantarillado.",
+     "cita": "Res. 1633, Anexo 1, num. 3.4.4 f, hoja 43",
+     "tipo": "dato_oficial"
+    }
+   ]
+  },
+  {
+   "id": "res_549_2015",
+   "numero": "Resolución 549 de 2015 (MinVivienda) – Guía de construcción sostenible para el ahorro de agua y energía",
+   "anio": 2015,
+   "emisor": "Ministerio de Vivienda, Ciudad y Territorio",
+   "objeto": "Porcentajes mínimos de ahorro de agua y energía en edificaciones nuevas. La Res. 1633 la cita en sus considerandos.",
+   "estado": "Vigente. Según su definición de tipologías, la obligación para hospitales aplica desde 5.000 m² construidos (sin parqueaderos); la torre quedaría por debajo, así que su cumplimiento sería voluntario pero recomendado.",
+   "url": "https://www.minvivienda.gov.co/sites/default/files/normativa/0549%20-%202015.pdf",
+   "fecha_consulta": "2026-10-22",
+   "requisitos_aplicables": [
+    {
+     "tema": "Ahorro para hospitales (clima cálido húmedo)",
+     "requisito": "Desde el segundo año de vigencia: 30 % de energía y 40 % de agua frente a la línea base.",
+     "cita": "Art. 5, Tabla 2",
+     "tipo": "dato_oficial",
+     "nota": "Lectura por OCR del PDF escaneado; verificar contra el original. La clasificación de Yondó como clima cálido húmedo es inferencia propia (altitud cercana a 75–100 m s. n. m. en el valle del Magdalena Medio)."
+    }
+   ]
+  }
+ ],
+ "checklist_485": [
+  {
+   "numeral": "7.1.1.1",
+   "requisito": "Carta de presentación dirigida a MinSalud con nombre, valor total, entidades que financian, fuentes, montos, tiempo de ejecución e instancia ejecutora.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "La firma quien presente el proyecto (E.S.E. Hospital Héctor Abad Gómez o Municipio de Yondó). Debe cuadrar con la matriz de fuentes del proyecto.",
+   "documento_a_producir": "Carta de presentación firmada.",
+   "responsable": "Gerente de la E.S.E. / alcalde",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.1.2",
+   "requisito": "Proyecto diligenciado en la Metodología General Ajustada (MGA web).",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Formular la torre en MGA con su BPIN: problema (servicios asistenciales en un edificio que no cumple la NSR-10), alternativas (reforzar vs. torre nueva), productos y costos por etapa.",
+   "documento_a_producir": "Ficha MGA web con BPIN.",
+   "responsable": "Oficina de planeación municipal / E.S.E.",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.1.3",
+   "requisito": "Concepto técnico de quien presenta: conveniencia y coherencia con el Programa Territorial de Reorganización, Rediseño y Modernización de Redes de E.S.E. (PTRRM) vigente de Antioquia.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Verificar que el documento de red de Antioquia contemple a Yondó con los servicios de la torre; si no, pedir su ajuste a la Secretaría Seccional de Salud antes de radicar.",
+   "documento_a_producir": "Concepto técnico de conveniencia y extracto del PTRRM.",
+   "responsable": "E.S.E. + Secretaría Seccional de Salud de Antioquia",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.1.4",
+   "requisito": "Certificación de que el presupuesto incluye todas las actividades y cantidades para la ejecución completa y el cierre financiero, con precios verificados como razonables para la región (insumos, mano de obra, cuadrillas).",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Presupuesto con APU propios y precios de referencia del Magdalena Medio (Barrancabermeja / Gobernación de Antioquia), con fecha.",
+   "documento_a_producir": "Certificación de presupuesto completo y razonable + APU.",
+   "responsable": "Entidad que presenta",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.1.5",
+   "requisito": "Certificación de que el personal técnico de la entidad revisó y avala toda la documentación.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Revisión interna (o con apoyo de la Gobernación) antes de radicar.",
+   "documento_a_producir": "Certificación de aval técnico.",
+   "responsable": "Entidad que presenta",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.1.6",
+   "requisito": "Inclusión y aprobación en el Plan Bienal de Inversiones Públicas en Salud si el proyecto es de control especial de oferta (art. 4).",
+   "aplica": "sí (probable)",
+   "como_lo_cumple_este_proyecto": "Si la infraestructura o el equipamiento fijo superan 5.000 SMMLV ($8.754.525.000 en 2026, cálculo propio), es de control especial de oferta. Una torre de este tamaño casi seguro lo supera.",
+   "documento_a_producir": "Soporte de inclusión en el Plan Bienal (aplicativo de MinSalud) del periodo de radicación.",
+   "responsable": "Secretaría Seccional de Salud de Antioquia",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.1.7",
+   "requisito": "Documento que soporte la cofinanciación de fuentes distintas del PGN.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Certificados de disponibilidad, acuerdos o actos de las fuentes (municipio, Gobernación, SGR, Obras por Impuestos, recursos propios de la E.S.E.).",
+   "documento_a_producir": "Soportes de cofinanciación (CDP, actas, acuerdos).",
+   "responsable": "Cada cofinanciador",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.2.1",
+   "requisito": "Certificado de tradición y libertad del predio (expedido hace menos de 3 meses) o documento equivalente de titularidad.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Establecer quién es dueño del lote del antiguo Centro Vida (¿E.S.E. o municipio?). Si es del municipio, formalizar la transferencia o el título que permita a la E.S.E. construir.",
+   "documento_a_producir": "Certificado de tradición y libertad; si aplica, acto de transferencia o comodato.",
+   "responsable": "E.S.E. / Secretaría de Hacienda municipal",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.2.2",
+   "requisito": "Certificado de planeación: cumplimiento del EOT/PBOT (uso del suelo y condiciones urbanísticas) y que el predio no está en riesgo no mitigable.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Yondó está a orillas del Magdalena: pedir explícitamente el concepto de amenaza por inundación del lote y su cota frente a las crecientes.",
+   "documento_a_producir": "Certificado de uso del suelo y de riesgo.",
+   "responsable": "Secretaría de Planeación de Yondó",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.2.3",
+   "requisito": "Certificación de disponibilidad de servicios (agua potable, alcantarillado, energía) o hoja de ruta para proveerlos.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Disponibilidad de acueducto y alcantarillado del prestador municipal y de energía de EPM para la nueva carga (incluida la planta y la solar).",
+   "documento_a_producir": "Certificados de disponibilidad de servicios.",
+   "responsable": "Prestadores de servicios públicos",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.2.4",
+   "requisito": "Documento de Capacidad Instalada concertado entre la E.S.E. y la Subdirección de Prestación de Servicios de MinSalud, en el marco del PTRRM.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Definir camas, camillas, consultorios, salas y equipos de la torre y concertarlo; puede partir de la 'capacidad instalada tipo' que publique MinSalud (parágrafo 1, Res. 1519).",
+   "documento_a_producir": "Documento de Capacidad Instalada concertado y firmado.",
+   "responsable": "E.S.E. + MinSalud (Subdirección de Prestación de Servicios)",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.2.5",
+   "requisito": "Programa médico arquitectónico con áreas de cada ambiente, servicio y circulaciones.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Usar las áreas mínimas de la Res. 1633 (Anexo 1) y de la Res. 3100 (ver parametros_diseno).",
+   "documento_a_producir": "Programa médico arquitectónico.",
+   "responsable": "Arquitecto diseñador",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.2.6",
+   "requisito": "Diseños arquitectónicos (localización, plantas, cubiertas, cortes y fachadas) a escala 1:75, 1:100 o 1:125, acotados, amoblados y firmados con matrícula, que cumplan la normatividad del sector salud.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Diseño de la torre según Res. 1633 y 3100, NSR-10 Grupo IV y accesibilidad.",
+   "documento_a_producir": "Planos arquitectónicos firmados.",
+   "responsable": "Arquitecto con matrícula",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.2.7",
+   "requisito": "Componente de reforzamiento sísmico (7.1.4) en proyectos de remodelación.",
+   "aplica": "no para la torre; condicional para el edificio actual",
+   "como_lo_cumple_este_proyecto": "La torre es obra nueva/reposición. El edificio actual pasa a usos administrativos y de bodega: si se remodela con plata del sector, se debe sustentar con el estudio de vulnerabilidad de 2024 (no público) y decidir si se refuerza o se recategoriza.",
+   "documento_a_producir": "Para el edificio actual: estudio de vulnerabilidad y concepto de uso (si aplica).",
+   "responsable": "E.S.E.",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.2.8",
+   "requisito": "Implantación de la propuesta en el levantamiento topográfico con curvas de nivel.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Levantamiento del lote (el prado queda unos 2 m por encima de la vía occidental, según Street View).",
+   "documento_a_producir": "Plano de implantación sobre topografía.",
+   "responsable": "Topógrafo + arquitecto",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.2.9",
+   "requisito": "Estudios topográficos y de suelos; diseños estructural, hidrosanitario, contra incendio, eléctrico, redes de voz y datos, y mecánicos (gases medicinales, ventilación), firmados y con memoriales de responsabilidad.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Estructura Grupo IV (I = 1,5; umbral de daño), rociadores NFPA 13/NTC 2301, RETIE 3.28.3.2, gases medicinales, climatización según Cuadro 4 de la Res. 1633.",
+   "documento_a_producir": "Estudios y diseños técnicos firmados + memoriales.",
+   "responsable": "Especialistas con matrícula",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.2.10",
+   "requisito": "Presupuesto detallado de obra, fechado y firmado por quien lo elaboró y por el profesional de la entidad que lo revisó.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Presupuesto por capítulos con APU (ver tareas de presupuesto del proyecto).",
+   "documento_a_producir": "Presupuesto detallado firmado y APU.",
+   "responsable": "Presupuestador + profesional de la entidad",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.2.11",
+   "requisito": "Mobiliario dentro del proyecto de infraestructura (solo para servicios exclusivos de primer nivel con desarrollo integral): listado con especificaciones y precios, cuadro comparativo y mínimo 2 cotizaciones de menos de 6 meses.",
+   "aplica": "condicional",
+   "como_lo_cumple_este_proyecto": "Aplica si la torre se presenta como desarrollo integral (estudios, diseños y obra) de servicios exclusivos de primer nivel. Ojo: la ecografía es mediana complejidad en la Res. 3100 (ver servicios_3100).",
+   "documento_a_producir": "Listado de mobiliario + 2 cotizaciones + cuadro comparativo.",
+   "responsable": "E.S.E.",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.5",
+   "requisito": "Equipamiento fijo: listado con especificaciones, cantidad, precio, justificación (nuevos servicios o incremento de capacidad), cuadro comparativo, planos con ubicación, certificación de disponibilidad de área, instalaciones y personal, y 2 cotizaciones de 2 marcas (menos de 6 meses).",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Planta eléctrica, transferencias y UPS, ascensor camillero, bombas y tanques, aire acondicionado y ventilación, central o manifold de gases, autoclave, lavachatas, sistema contra incendio. (Las autoclaves y plantas son 'equipo industrial de uso hospitalario' según la definición de la Res. 1211).",
+   "documento_a_producir": "Listado de equipamiento fijo + cotizaciones + planos de ubicación + certificación.",
+   "responsable": "E.S.E. + ingeniería",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.6 a",
+   "requisito": "Dotación biomédica: listado por servicio con especificaciones, cantidades, precios, cuadro comparativo, justificación con inventario existente, certificación de disponibilidad de infraestructura y 2 cotizaciones de 2 marcas (menos de 6 meses).",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Dotación de urgencias, parto, hospitalización, consulta, odontología, laboratorio clínico (con tamizaje y analizadores), rayos X, ecografía, esterilización, vacunación y farmacia. Incluir inventario actual para justificar reposición o nuevos servicios.",
+   "documento_a_producir": "Listado de dotación biomédica + cotizaciones + inventario + certificación.",
+   "responsable": "E.S.E. + ingeniero biomédico",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.6 b",
+   "requisito": "Dotación TIC: documento de software y hardware con licencias, especificaciones y manuales, plan de implementación y capacitación, listado con cotizaciones (2 marcas) y certificación de protección de datos firmada por ingeniero de sistemas.",
+   "aplica": "sí (si se incluye TIC, LIS/RIS o historia clínica)",
+   "como_lo_cumple_este_proyecto": "Sistema de información del laboratorio (LIS), PACS/RIS para imágenes, red de datos y telemedicina.",
+   "documento_a_producir": "Documento técnico TIC + plan de implementación + certificación de datos.",
+   "responsable": "E.S.E. + ingeniero de sistemas",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.7",
+   "requisito": "Adecuaciones: certificado de tradición, documento de evaluación del estado de la infraestructura (formato DPSAP), presupuesto aprobado (formato DPSAP); tope de 500 SMMLV salvo justificación; priorización Res. 2521 de 2022 si financia MinSalud.",
+   "aplica": "condicional (edificio actual)",
+   "como_lo_cumple_este_proyecto": "Solo si se financia aparte la adecuación del edificio actual para archivo, bodega y administración. Tope: 500 SMMLV = $875.452.500 en 2026 (cálculo propio).",
+   "documento_a_producir": "Evaluación del estado de la infraestructura + presupuesto en formato DPSAP.",
+   "responsable": "E.S.E.",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.9",
+   "requisito": "Estudios y diseños e interventoría como proyecto separado: título, uso de suelo, servicios, Capacidad Instalada aprobada, programa médico arquitectónico, relación de productos, necesidades de equipamiento y dotación, estudio de mercado con 3 cotizaciones (menos de 6 meses) incluida la interventoría.",
+   "aplica": "condicional (si se fasea)",
+   "como_lo_cumple_este_proyecto": "Ruta recomendable si no hay diseños: un primer proyecto solo para estudios y diseños de la torre.",
+   "documento_a_producir": "Términos de los productos de diseño + estudio de mercado de diseño e interventoría.",
+   "responsable": "E.S.E. / municipio",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.10",
+   "requisito": "Telesalud como proyecto propio: listado con cotizaciones, plataforma con certificación de datos, certificación de disponibilidad y modelo de operación (telemedicina articulada con atención primaria). MinSalud da concepto de pertinencia.",
+   "aplica": "condicional",
+   "como_lo_cumple_este_proyecto": "Si la telemedicina se financia aparte (por ejemplo con MinTIC o MinSalud).",
+   "documento_a_producir": "Modelo de operación de telesalud + listado + certificaciones.",
+   "responsable": "E.S.E.",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.11",
+   "requisito": "Adquisición o donación de predios o inmuebles construidos.",
+   "aplica": "no (salvo que el lote no sea de la E.S.E. ni del municipio)",
+   "como_lo_cumple_este_proyecto": "El lote ya es parte del predio del hospital.",
+   "documento_a_producir": "—",
+   "responsable": "—",
+   "estado": "no aplica"
+  },
+  {
+   "numeral": "7.1.12",
+   "requisito": "Llave en mano a precio global fijo sin fórmula de reajuste: título, uso de suelo, servicios, Capacidad Instalada aprobada, estudio del sector, estudio de mercado (3 cotizaciones por componente), programa médico arquitectónico, memorias de acabados y sistemas, cronograma, anteproyecto firmado, certificación de impuestos y tasas, presupuesto por estudios y diseños / obra / interventoría.",
+   "aplica": "alternativa",
+   "como_lo_cumple_este_proyecto": "Ruta alterna a 7.1.2 cuando aún no hay diseños completos: se radica con anteproyecto y el contratista diseña y construye. Exige anteproyecto y memorias sólidas para no quedar corto en el precio global.",
+   "documento_a_producir": "Anteproyecto + memorias + estudio del sector + estudio de mercado + cronograma + presupuesto por componentes.",
+   "responsable": "E.S.E. / municipio",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "7.1.13",
+   "requisito": "Proyectos para cumplir fallos judiciales.",
+   "aplica": "no (salvo que exista un fallo o acción popular sobre el hospital)",
+   "como_lo_cumple_este_proyecto": "No se conoce fallo; verificar.",
+   "documento_a_producir": "—",
+   "responsable": "—",
+   "estado": "no aplica"
+  },
+  {
+   "numeral": "Art. 6 / Art. 5",
+   "requisito": "Ruta del concepto según la fuente.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "Con plata de MinSalud o por Obras por Impuestos: concepto de MinSalud. Solo con plata territorial y por debajo de 5.000 SMMLV: concepto de la Secretaría Seccional de Salud de Antioquia. Con regalías: seguir además los requisitos del SGR para el sector salud (verificar).",
+   "documento_a_producir": "Definición de la ruta en la carta de presentación.",
+   "responsable": "E.S.E. + Gobernación",
+   "estado": "pendiente"
+  },
+  {
+   "numeral": "Res. 1633, art. 4",
+   "requisito": "Transición del marco técnico.",
+   "aplica": "sí",
+   "como_lo_cumple_este_proyecto": "La torre no tiene licencia, concepto ni obra al 11-ago-2025: se diseña con la Res. 1633 completa.",
+   "documento_a_producir": "Declaración de norma aplicable en la memoria de diseño.",
+   "responsable": "Arquitecto diseñador",
+   "estado": "pendiente"
+  }
+ ],
+ "servicios_3100": [
+  {
+   "servicio": "Urgencias de baja complejidad",
+   "res_3100": "Manual, num. 11.6.1",
+   "res_1633": "Anexo 1, num. 4.5.1, Cuadros 92-95, hojas 144-154",
+   "talento_humano": "Médico con formación en soporte vital avanzado y auxiliar de enfermería con soporte vital básico.",
+   "infraestructura": "Acceso directo desde el exterior, en un solo piso; sala de espera; unidades sanitarias por sexo (una accesible); estacionamiento de camillas; descontaminación con ducha teléfono; consultorios (uno con unidad sanitaria); triage; estación de enfermería; sala de procedimientos; ERA, inmovilización, rehidratación y POCT cuando se requiera; aislamiento; reanimación; observación de adultos (por sexo) y pediátrica; área exclusiva cubierta para ambulancias.",
+   "dotacion_minima": "Instrumental ginecoobstétrico, equipo de partos, sujeción, toracostomía, carro de paro adulto y pediátrico, monitor de signos vitales (ECG, PNI, SpO2, temperatura, batería), oxímetro, bomba de infusión, electrocardiógrafo de 12 derivaciones, nebulizador, oxígeno y succión; reanimación con camilla rodante, aspirador por camilla, monitor, marcapasos externo y carro de paro.",
+   "interdependencia": "Disponibilidad de imágenes diagnósticas, laboratorio clínico, hospitalización, servicio farmacéutico, transporte asistencial y apoyos (alimentación, lavandería, vigilancia)."
+  },
+  {
+   "servicio": "Consulta externa general y especializada (incluye procedimientos menores y telemedicina)",
+   "res_3100": "Manual, num. 11.2.1 y 11.2.2",
+   "res_1633": "Anexo 1, num. 4.1.1 y 4.1.2, Cuadros 5-9, hojas 47-54",
+   "infraestructura": "Consultorios de examen (10 m²), de entrevista, de procedimientos, odontológicos y de telemedicina; sala de procedimientos; recepción, citas, SIAU, sala de espera de 4 m² por consultorio; unidades o baterías sanitarias según número de consultorios; aseo y residuos por piso.",
+   "dotacion_minima": "Por consultorio: camilla, tensiómetro y fonendoscopio adulto/pediátrico, termómetro, báscula, cinta métrica, martillo de reflejos y equipo de órganos de los sentidos (ver listas del proyecto tipo)."
+  },
+  {
+   "servicio": "Odontología",
+   "res_3100": "Manual, num. 11.2.1 (consultorio odontológico) y 11.3.3 (radiología odontológica)",
+   "res_1633": "Anexo 1, Cuadro 5 (consultorio odontológico) y Cuadros 19-20",
+   "infraestructura": "Consultorio de 10 m² con una unidad y 8 m² por unidad adicional; barrera entre unidades; un lavamanos por cada 3 unidades; desde 3 unidades, ambiente con mesón y poceta para esterilización.",
+   "dotacion_minima": "Unidad odontológica, compresor, piezas de mano, lámpara de fotocurado, cavitrón, esterilizador, instrumental; rayos X odontológico con licencia."
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "res_3100": "Manual, num. 11.3.12",
+   "res_1633": "Anexo 1, num. 4.2.12, Cuadros 49-50, hojas 88-91",
+   "talento_humano": "Bacteriólogo; auxiliar de laboratorio o de enfermería cuando se requiera; bacteriólogo con formación en control de calidad de pruebas en el punto de atención (POCT) si controla las de otros servicios.",
+   "infraestructura": "Área de recepción de muestras y entrega de resultados; ambientes técnicos de procedimientos con mesón, poceta, ducha o lavaojos, área de neveras o cuarto frío, lavamanos y cuarto oscuro si se requiere; almacenamiento exclusivo de reactivos; toma de muestras especiales (10 m² + unidad sanitaria) y cubículos (3 m² c/u); vestidor y descanso si funciona 24 horas.",
+   "dotacion_minima": "Equipos manuales, semiautomatizados o automatizados según las pruebas; cabina de bioseguridad si hace cultivos de anaerobios, micosis profundas o biología molecular; microscopio para enfermedades transmitidas por vectores en zonas endémicas (aplica a Yondó por dengue y malaria; verificar con SIVIGILA).",
+   "procesos": "Control de calidad interno y externo, validación secundaria, toma, transporte y remisión de muestras, entrega de resultados, control de calidad de POCT; contrato con laboratorio de referencia para lo que no procese.",
+   "climatizacion": "18-24 °C, humedad 40-65 %, 10 cambios de aire por hora, 4 renovaciones de aire exterior por hora, presión negativa (Res. 1633, Cuadro 4)."
+  },
+  {
+   "servicio": "Toma de muestras de laboratorio clínico",
+   "res_3100": "Manual, num. 11.3.11 (si el laboratorio toma muestras no se habilita aparte)",
+   "res_1633": "Anexo 1, num. 4.2.11, Cuadros 47-48, hojas 86-88",
+   "infraestructura": "Recepción, cubículos de 3 m² (se permite toma sin bajarse del vehículo), toma de muestras especiales de 10 m² con unidad sanitaria, preparación, embalaje y remisión, oficina de 6 m², aseo."
+  },
+  {
+   "servicio": "Imágenes diagnósticas: rayos X (ionizantes, baja complejidad) y ecografía (no ionizantes)",
+   "res_3100": "Manual, num. 11.3.4",
+   "res_1633": "Anexo 1, num. 4.2.4, Cuadros 21-27, hojas 63-68",
+   "talento_humano": "Técnico o tecnólogo en imágenes; disponibilidad de radiólogo (puede ser por telerradiología).",
+   "infraestructura": "Sala exclusiva para el equipo (dimensión según ficha técnica) con blindaje de plomo en muros, puertas y marcos (y entrepisos si hay más pisos), control/comando con visión del paciente, vestidor, almacenamiento 4 m², procesamiento 6 m², oficina del radiólogo 8 m²; ecografía con control 4 m², procesamiento 5 m² y unidad sanitaria accesible si el examen la requiere. Licencia de práctica médica para rayos X.",
+   "dotacion_minima": "Equipo de rayos X, monitor grado médico, delantal plomado, protector de tiroides y de gónadas, gafas plomadas si se requieren.",
+   "alerta": "La Res. 3100 clasifica la ecografía (radiaciones no ionizantes) como servicio de mediana complejidad. Incluirla obliga a habilitar ese servicio en mediana complejidad, aunque la E.S.E. siga siendo de primer nivel. Es una decisión a concertar en el Documento de Capacidad Instalada."
+  },
+  {
+   "servicio": "Servicio farmacéutico",
+   "res_3100": "Manual, num. 11.3.2",
+   "res_1633": "Anexo 1, num. 4.2.2, Cuadros 16-18, hojas 59-62",
+   "infraestructura": "Recepción 4 m², cuarentena 4 m², almacenamiento 20 m², control especial 4 m² (independiente y seguro), dispensación 4 m², medicamentos para destruir 4 m², rechazados y devueltos 4 m², oficina 6 m², aseo 3 m²; 21-24 °C y humedad 40-65 % en almacenamiento.",
+   "dotacion_minima": "Neveras con termómetro y termohigrómetro, estanterías, carro de medicamentos (ver lista del puesto de salud tipo)."
+  },
+  {
+   "servicio": "Vacunación",
+   "res_3100": "Manual, num. 11.2.3",
+   "res_1633": "Anexo 1, num. 4.1.3, Cuadros 10-12, hojas 54-56",
+   "infraestructura": "Opción de 2 ambientes (consultorio 10 m² + almacenamiento y alistamiento de termos 6 m²) o 1 ambiente de 16 m²; mesón con poceta de acero de 0,50 × 0,50 × 0,40 m para termos; planta eléctrica obligatoria por cadena de frío."
+  },
+  {
+   "servicio": "Atención del parto de baja complejidad",
+   "res_3100": "Manual, num. 11.6.4",
+   "res_1633": "Anexo 1, num. 4.5.2, Cuadros 96-98, hojas 154-160",
+   "infraestructura": "Cinco zonas: ingreso, semiaséptica (vestidores filtro, preparación, trabajo de parto), aséptica (sala de partos de 16 m² con altura libre ≥2,80 m, lavamanos quirúrgico, estación de enfermería, depósitos), recuperación y zona séptica. Trabajo de parto: 2 camillas por sala de partos, 6 m² por camilla (mínimo 12 m²); recuperación igual. Habitación TPR: 24 m² en la Res. 1633 (16 m² en la Res. 3100: se toma el mayor).",
+   "dotacion_minima": "Cama de partos y monitor fetal en trabajo de parto; lámpara cielítica, mesa de partos, equipos de parto y episiotomía, aspirador y oxígeno en sala de partos; incubadora abierta o lámpara de calor radiante, báscula de bebé, infantómetro, oxímetro neonatal y laringoscopio neonatal en adaptación; carro de paro, bomba de infusión, glucómetro e incubadora de transporte en el servicio."
+  },
+  {
+   "servicio": "Hospitalización general de baja complejidad",
+   "res_3100": "Manual, num. 11.4.1",
+   "res_1633": "Anexo 1, num. 4.3.1, Cuadros 63-64, hojas 101-106",
+   "infraestructura": "Habitación individual de 16 m² (incluye baño accesible y guardarropa); múltiple de adultos hasta 4 camas con 7 m² libres por cama; pediátrica hasta 6 camas con 6 m² por cama; lactantes 4 m² por cuna; separación 0,50 m cama-pared y 0,90 m entre camas; habitaciones por sexo y adultos separados de niños; aislamiento de 16 m² con antecámara, 10 cambios de aire por hora y 1 por cada 20 camas (mínimo 1); estación de enfermería a no más de 35 m de la cama más alejada y máximo 35 camas; sala de procedimientos de 10 m² si hay habitaciones múltiples; extracción de leche 10 m²; sala de visitas.",
+   "dotacion_minima": "Camas hospitalarias, carro de paro por piso, bomba de infusión, glucómetro, silla de ruedas, tensiómetro, fonendoscopio, equipo de órganos, electrocardiógrafo y oxígeno."
+  },
+  {
+   "servicio": "Esterilización (reprocesamiento de dispositivos médicos)",
+   "res_3100": "Manual, num. 11.1.2, criterios 25-27 (derogados desde el 3-ene-2027 por la Res. 914 de 2025)",
+   "res_1633": "Anexo 1, num. 5.1, Cuadros 99-100, hojas 161-162",
+   "infraestructura": "Flujo unidireccional sin cruce sucio-limpio: recibo y lavado, ambiente limpio (secado, empaque, esterilización) y almacenamiento estéril; 20-24 °C, 10 cambios de aire, presión negativa (Cuadro 4). Diseñar ya con el manual de la Res. 914 de 2025."
+  },
+  {
+   "servicio": "Telemedicina (prestador remisor)",
+   "res_3100": "Manual, num. 11.1.2 criterios 51-53 y 11.1.3 criterio 17",
+   "res_1633": "Anexo 1, Cuadro 5 (consultorio de telemedicina 10 m²)",
+   "infraestructura": "Conectividad con integridad y continuidad, plataforma con seguridad y protección de datos, energía o baterías para equipos, iluminación homogénea (luz blanca fría).",
+   "dotacion_minima": "Certificados firmados por ingeniero biomédico (periféricos y digitalización) y de sistemas (videoconferencia y ancho de banda); monitores grado médico con separación entre píxeles de 0,25 mm o menos."
+  },
+  {
+   "servicio": "Transporte asistencial básico",
+   "res_3100": "Manual, num. 11.6.2",
+   "res_1633": "Anexo 1, num. 5.1 (transporte asistencial), Cuadro 109, hojas 166-167",
+   "infraestructura": "Parqueo de 3,80 × 6,00 m por ambulancia terrestre; oficina 6 m²; almacenamiento de medicamentos 4 m² y de equipos 4 m² con tomas; archivo de registros 4 m²; descanso de conductores y de enfermería.",
+   "dotacion_minima": "Ambulancia TAB 4×4 o 4×2 según NTC 3729; compartimiento del paciente de 2,20 × 1,50 × 1,35 m como mínimo."
+  }
+ ],
+ "parametros_diseno": {
+  "convenciones": {
+   "dato_oficial": "valor tomado textualmente de la norma citada",
+   "calculo_propio": "operación aritmética sobre datos oficiales",
+   "estimacion": "supuesto del equipo con rango; debe confirmarse en diseño"
+  },
+  "lote": {
+   "indice_ocupacion_max": 0.6,
+   "indice_ocupacion_excepcional": 0.7,
+   "tipo": "dato_oficial",
+   "cita": "Res. 1633, Anexo 1, num. 3.1.2 (solo si el EOT de Yondó no fija índice)",
+   "frentes": "Preferible esquina o dos frentes libres para accesos diferenciados (principal, urgencias, servicios generales)."
+  },
+  "modulo_hospitalario_m": {
+   "valor": 1.2,
+   "tipo": "dato_oficial",
+   "cita": "Res. 1633, Anexo 1, num. 3.3.3"
+  },
+  "alturas": {
+   "altura_libre_min_recomendada_m": 2.8,
+   "tipo": "dato_oficial",
+   "cita": "Res. 1633, Anexo 1, num. 3.3.4",
+   "sala_partos_altura_libre_min_m": 2.8,
+   "cita_partos": "Res. 1633, Cuadro 96",
+   "altura_libre_adoptada_m": {
+    "valor": 3.0,
+    "rango": [
+     2.8,
+     3.2
+    ],
+    "tipo": "estimacion",
+    "nota": "Yondó es zona cálida: la norma permite subir la altura; 3,00 m mejora la ventilación natural."
+   },
+   "altura_piso_a_piso_m": {
+    "valor": 4.5,
+    "rango": [
+     4.2,
+     4.8
+    ],
+    "tipo": "estimacion",
+    "nota": "2,80-3,20 m libres + 1,0-1,2 m de entrecielo para ductos de aire, gases, rociadores y bandejas + losa de 0,30-0,40 m."
+   }
+  },
+  "circulaciones_m": {
+   "pasillos_corredores_rampas_de_salida_min": 2.4,
+   "cita_1": "Res. 1633, Anexo 1, num. 3.3.6 b.1; NSR-10 K.3.14.2.2",
+   "corredor_urgencias_desde_exterior_recomendado": 2.8,
+   "corredores_con_camillas_urgencias_y_hospitalizacion_recomendado": 2.8,
+   "demas_pasillos_no_de_salida_min": 1.2,
+   "corredor_tecnico_exterior_min": 1.2,
+   "circulacion_exterior_de_servicio_min": 1.0,
+   "circulacion_alterna_sala_partos_min": 1.2,
+   "tipo": "dato_oficial"
+  },
+  "escaleras_rampas": {
+   "escalera_servicio_ancho_min_m": 1.2,
+   "escalera_evacuacion_ancho_min_m": 2.4,
+   "descanso_escalera_evacuacion": "doble, para girar camillas",
+   "rampa_medio_de_salida_pendiente_max_pct": 8.0,
+   "rampa_peatonal_otra_pendiente_max_pct": 12.5,
+   "rampa_pendiente_transversal_max_pct": 2.0,
+   "rampa_ancho_min_m": 1.1,
+   "rampa_I2_movimiento_camas_ancho_m": 2.4,
+   "tipo": "dato_oficial",
+   "cita": "Res. 1633, Anexo 1, num. 3.3.6 b.iv; NSR-10 K.3.8.6"
+  },
+  "ascensores": {
+   "obligatorio_si_pisos_mayor_a": 3,
+   "camillero_interior_min_m": {
+    "profundidad": 2.2,
+    "ancho": 1.2
+   },
+   "pasajeros_silla_ruedas_interior_min_m": {
+    "profundidad": 1.5,
+    "ancho": 1.2,
+    "alto": 2.2
+   },
+   "espacio_libre_frente_puerta_m2": 2.0,
+   "requisito": "Con internación, parto o urgencias en la edificación: ascensores camilleros, iluminación permanente, llamado de emergencia y conexión a la fuente alterna. No cuentan como medio de evacuación.",
+   "tipo": "dato_oficial",
+   "cita": "Res. 1633, Anexo 1, num. 2.1.7 y 3.3.6 b.c; Res. 3100, num. 11.1.2, criterios 10-11"
+  },
+  "puertas_ancho_min_m": {
+   "almacenamientos_aseo_administrativos": 0.9,
+   "unidades_sanitarias_vestidores": 0.9,
+   "banos_y_baterias": 1.0,
+   "consultorios_toma_muestras_archivo": 1.0,
+   "habitaciones_aislamiento": 1.2,
+   "procedimientos_reanimacion_partos_recuperacion": 1.4,
+   "salas_radiologia": 1.4,
+   "puertas_de_salida_para_camas_nsr10": 1.1,
+   "altura_min": 2.1,
+   "tipo": "dato_oficial",
+   "cita": "Res. 1633, Anexo 1, Cuadro 1, hojas 31-32; NSR-10 K.3.14.2.3"
+  },
+  "areas_minimas_m2": {
+   "fuente": "Res. 1633 de 2025, Anexo 1 (cuando la Res. 3100 da un mínimo distinto se indica y se toma el mayor)",
+   "tipo": "dato_oficial",
+   "consultorio_examen_fisico": {
+    "m2": 10.0,
+    "lado_min_m": 2.5,
+    "cita": "Cuadro 5",
+    "nota": "Sin unidad sanitaria. Igual en la Res. 3100 (num. 11.1.2, criterio 28.1)."
+   },
+   "consultorio_entrevista": {
+    "m2": 6.0,
+    "lado_min_m": 2.5,
+    "cita": "Cuadro 5",
+    "nota": "La Res. 3100 (num. 11.1.2, criterio 29) pide 4 m²; se toma 6 m²."
+   },
+   "consultorio_procedimientos": {
+    "m2": 14.0,
+    "lado_min_m": 2.5,
+    "cita": "Cuadro 5",
+    "nota": "La Res. 3100 (num. 11.1.2, criterio 28.2) pide 10 m²; se toma 14 m²."
+   },
+   "consultorio_odontologico_1_unidad": {
+    "m2": 10.0,
+    "cita": "Cuadro 5"
+   },
+   "consultorio_odontologico_unidad_adicional": {
+    "m2": 8.0,
+    "cita": "Cuadro 5"
+   },
+   "consultorio_telemedicina": {
+    "m2": 10.0,
+    "cita": "Cuadro 5"
+   },
+   "consultorio_especializado_con_procedimientos": {
+    "m2": 14.0,
+    "cita": "Cuadro 7",
+    "nota": "10 m² + 4 m² si hace procedimientos; gineco-obstetricia y urología con unidad sanitaria."
+   },
+   "sala_procedimientos": {
+    "m2": 10.0,
+    "cita": "Cuadros 5 y 63",
+    "nota": "La Res. 3100 (num. 11.1.2 criterio 30.1 y num. 11.6.1 criterio 18.8) pide 8 m²; se toma 10 m²."
+   },
+   "sala_espera_consulta_por_consultorio": {
+    "m2": 4.0,
+    "cita": "Cuadro 6"
+   },
+   "oficina_coordinador": {
+    "m2": 6.0,
+    "cita": "Cuadros 5, 47, 63"
+   },
+   "ambiente_aseo": {
+    "m2": 3.0,
+    "cita": "todos los servicios (uno por piso o nivel)"
+   },
+   "unidad_almacenamiento_intermedio_residuos": {
+    "m2": 3.0,
+    "cita": "todos los servicios (una por piso o nivel)"
+   },
+   "trabajo_limpio": {
+    "m2": 3.0,
+    "lado_min_m": 1.2,
+    "cita": "num. 3.3.16 a"
+   },
+   "trabajo_sucio": {
+    "m2": 3.0,
+    "lado_min_m": 1.2,
+    "cita": "num. 3.3.16 a"
+   },
+   "deposito_equipos_ropa_limpia_ropa_sucia_c_u": {
+    "m2": 3.0,
+    "lado_min_m": 1.2,
+    "cita": "num. 3.3.16 a"
+   },
+   "unidad_sanitaria": {
+    "medidas_m": "1,50 × 1,50",
+    "cita": "num. 3.3.16 b"
+   },
+   "bano_con_ducha": {
+    "medidas_m": "1,50 × 2,30",
+    "cita": "num. 3.3.16 b"
+   },
+   "vacunacion_un_ambiente": {
+    "m2": 16.0,
+    "cita": "Cuadro 11"
+   },
+   "vacunacion_consultorio_mas_alistamiento": {
+    "m2": [
+     10.0,
+     6.0
+    ],
+    "cita": "Cuadro 10"
+   },
+   "farmacia_almacenamiento": {
+    "m2": 20.0,
+    "cita": "Cuadro 16"
+   },
+   "farmacia_recepcion_cuarentena_control_especial_dispensacion_c_u": {
+    "m2": 4.0,
+    "cita": "Cuadro 16"
+   },
+   "toma_muestras_cubiculo": {
+    "m2": 3.0,
+    "cita": "Cuadros 47 y 49"
+   },
+   "toma_muestras_especiales": {
+    "m2": 10.0,
+    "cita": "Cuadros 47 y 49",
+    "nota": "Sin la unidad sanitaria."
+   },
+   "laboratorio_ambientes_tecnicos": {
+    "m2": null,
+    "cita": "Cuadro 49",
+    "nota": "Sin mínimo: según capacidad, procesos y tecnología."
+   },
+   "rayos_x_sala": {
+    "m2": null,
+    "cita": "Cuadro 22",
+    "nota": "Según ficha técnica del equipo; blindaje obligatorio."
+   },
+   "imagenes_almacenamiento": {
+    "m2": 4.0,
+    "cita": "Cuadro 22"
+   },
+   "imagenes_procesamiento_ionizantes": {
+    "m2": 6.0,
+    "cita": "Cuadro 22"
+   },
+   "oficina_radiologo": {
+    "m2": 8.0,
+    "cita": "Cuadro 22"
+   },
+   "ecografia_control": {
+    "m2": 4.0,
+    "cita": "Cuadro 27"
+   },
+   "ecografia_procesamiento": {
+    "m2": 5.0,
+    "cita": "Cuadro 27"
+   },
+   "urgencias_sala_espera": {
+    "m2": "10 + 3 por consultorio o sala de procedimientos",
+    "cita": "Cuadro 92"
+   },
+   "urgencias_consultorio": {
+    "m2": 10.0,
+    "lado_min_m": 2.5,
+    "cita": "Cuadro 92"
+   },
+   "urgencias_descontaminacion": {
+    "m2": 6.0,
+    "lado_min_m": 2.0,
+    "cita": "Cuadro 92"
+   },
+   "urgencias_cuarto_custodia": {
+    "m2": 3.0,
+    "cita": "Cuadro 92"
+   },
+   "urgencias_estacionamiento_camillas": {
+    "m2": 3.0,
+    "cita": "Cuadro 92"
+   },
+   "urgencias_era_por_silla": {
+    "m2": 3.0,
+    "lado_min_m": 1.5,
+    "cita": "Cuadro 92"
+   },
+   "urgencias_eda_por_camilla": {
+    "m2": 6.0,
+    "lado_min_m": 2.0,
+    "cita": "Cuadro 92"
+   },
+   "urgencias_inmovilizacion": {
+    "m2": "9 + 6 por camilla adicional",
+    "lado_min_m": 3.0,
+    "cita": "Cuadro 92"
+   },
+   "urgencias_aislamiento": {
+    "m2": 16.0,
+    "cita": "Cuadro 92",
+    "nota": "Incluye cama, baño accesible y guardarropa; con antecámara."
+   },
+   "urgencias_reanimacion": {
+    "m2": "12 + 8 por camilla adicional",
+    "lado_min_m": 3.0,
+    "cita": "Cuadro 92; Res. 3100, num. 11.6.1, criterio 18.14 (12 m²)"
+   },
+   "urgencias_observacion_por_camilla": {
+    "m2": 6.0,
+    "lado_min_m": 3.0,
+    "separacion_camillas_m": 1.0,
+    "cita": "Cuadro 92; Res. 3100, num. 11.6.1, criterio 18.15"
+   },
+   "urgencias_observacion_pediatrica": {
+    "m2": "6 por camilla o 4 por cuna",
+    "cita": "Cuadro 94"
+   },
+   "parto_sala_partos": {
+    "m2": 16.0,
+    "altura_libre_min_m": 2.8,
+    "cita": "Cuadro 96; Res. 3100, num. 11.6.4, criterio 12"
+   },
+   "parto_trabajo_de_parto": {
+    "m2": "mínimo 12; 6 por camilla; 2 camillas por sala de partos",
+    "cita": "Cuadro 96"
+   },
+   "parto_recuperacion": {
+    "m2": "mínimo 12; 6 por camilla",
+    "cita": "Cuadro 96"
+   },
+   "parto_habitacion_TPR": {
+    "m2": 24.0,
+    "cita": "Cuadro 98",
+    "nota": "La Res. 3100 (num. 11.6.4, criterio 16.1) pide 16 m²; se toma 24 m²."
+   },
+   "hospitalizacion_habitacion_individual": {
+    "m2": 16.0,
+    "cita": "Cuadro 63",
+    "nota": "Incluye cama, baño accesible y guardarropa; +2 m² si hay área de acompañante."
+   },
+   "hospitalizacion_multiple_adultos_libre_por_cama": {
+    "m2": 7.0,
+    "max_camas": 4,
+    "cita": "Cuadro 63"
+   },
+   "hospitalizacion_multiple_pediatrica_libre_por_cama": {
+    "m2": 6.0,
+    "max_camas": 6,
+    "cita": "Cuadro 63"
+   },
+   "hospitalizacion_lactantes_por_cuna": {
+    "m2": 4.0,
+    "cita": "Cuadro 63"
+   },
+   "hospitalizacion_aislamiento": {
+    "m2": 16.0,
+    "proporcion": "1 por cada 20 camas, mínimo 1",
+    "cita": "Cuadro 63"
+   },
+   "hospitalizacion_extraccion_leche": {
+    "m2": "10 (+2 por punto adicional)",
+    "cita": "Cuadro 64"
+   },
+   "transporte_asistencial_parqueo_ambulancia": {
+    "medidas_m": "3,80 × 6,00",
+    "cita": "Cuadro 109"
+   },
+   "transporte_asistencial_oficina_almacenes_archivo": {
+    "m2": [
+     6.0,
+     4.0,
+     4.0,
+     4.0
+    ],
+    "cita": "Cuadro 109"
+   }
+  },
+  "climatizacion_cuadro4": {
+   "filas": [
+    {
+     "ambiente": "Salas de partos",
+     "temp_c": "18-24",
+     "hr_pct": "40-65",
+     "cambios_h": 30,
+     "renovacion_h": 12,
+     "presion": "+",
+     "filtro": "HEPA en suministro"
+    },
+    {
+     "ambiente": "Urgencias",
+     "temp_c": "21-24",
+     "hr_pct": "40-65",
+     "cambios_h": 10,
+     "renovacion_h": 2,
+     "presion": "+",
+     "filtro": "65 %"
+    },
+    {
+     "ambiente": "Consulta externa y odontología",
+     "temp_c": "18-25",
+     "hr_pct": "40-65",
+     "cambios_h": null,
+     "renovacion_h": 2,
+     "presion": null,
+     "filtro": null
+    },
+    {
+     "ambiente": "Vacunación",
+     "temp_c": "21-24",
+     "hr_pct": "40-65",
+     "cambios_h": null,
+     "renovacion_h": 2,
+     "presion": null,
+     "filtro": null
+    },
+    {
+     "ambiente": "Hospitalización",
+     "temp_c": "21-25",
+     "hr_pct": "40-65",
+     "cambios_h": null,
+     "renovacion_h": 2,
+     "presion": null,
+     "filtro": null
+    },
+    {
+     "ambiente": "Laboratorio clínico",
+     "temp_c": "18-24",
+     "hr_pct": "40-65",
+     "cambios_h": 10,
+     "renovacion_h": 4,
+     "presion": "-",
+     "filtro": null
+    },
+    {
+     "ambiente": "Aislamiento de paciente infectocontagioso",
+     "temp_c": "21-24",
+     "hr_pct": "40-65",
+     "cambios_h": 12,
+     "renovacion_h": 12,
+     "presion": "-",
+     "filtro": "HEPA en extracción"
+    },
+    {
+     "ambiente": "Sala de enfermedad respiratoria aguda (ERA)",
+     "temp_c": "22-24",
+     "hr_pct": "40-65",
+     "cambios_h": 12,
+     "renovacion_h": 12,
+     "presion": "-",
+     "filtro": "HEPA en extracción"
+    },
+    {
+     "ambiente": "Central de esterilización",
+     "temp_c": "20-24",
+     "hr_pct": "40-65",
+     "cambios_h": 10,
+     "renovacion_h": 10,
+     "presion": "-",
+     "filtro": null
+    },
+    {
+     "ambiente": "Salas de espera",
+     "temp_c": "18-25",
+     "hr_pct": "40-65",
+     "cambios_h": 10,
+     "renovacion_h": 2,
+     "presion": null,
+     "filtro": null
+    },
+    {
+     "ambiente": "Almacenamiento y dispensación de medicamentos; cadena de frío",
+     "temp_c": "21-24",
+     "hr_pct": "40-65",
+     "cambios_h": null,
+     "renovacion_h": 2,
+     "presion": null,
+     "filtro": null
+    }
+   ],
+   "tipo": "dato_oficial",
+   "cita": "Res. 1633, Anexo 1, Cuadro 4, hojas 45-46"
+  },
+  "sismo": {
+   "municipio": "Yondó (05893)",
+   "Aa": 0.15,
+   "Av": 0.15,
+   "Ae": 0.06,
+   "Ad": 0.04,
+   "zona_amenaza": "intermedia",
+   "grupo_uso": "IV (edificación indispensable)",
+   "coeficiente_importancia_I": 1.5,
+   "deriva_max_pct_hpi": 1.0,
+   "deriva_umbral_dano_max_pct_hpi": 0.4,
+   "supervision_tecnica": "obligatoria (A.1.3.9.1)",
+   "interruptor_sismico_acometidas": "sí, activa con aceleración > 0,5 Aa (A.9.6.5)",
+   "tipo": "dato_oficial",
+   "cita": "NSR-10, Título A: Apéndice A-4, Tabla A.2.5-1, Tabla A.6.4-1, Tabla A.12.5-1",
+   "meseta_espectro_Sa_g": {
+    "formula": "Sa = 2,5 × Aa × Fa × I (NSR-10, A.2.6)",
+    "suelo_C": 0.675,
+    "suelo_D": 0.844,
+    "suelo_E": 1.181,
+    "Fa_usado": {
+     "C": 1.2,
+     "D": 1.5,
+     "E": 2.1
+    },
+    "tipo": "calculo_propio",
+    "nota": "Fa interpolado de la Tabla A.2.4-3 para Aa = 0,15. El tipo de perfil de suelo lo define el estudio geotécnico; junto al Magdalena se esperan depósitos aluviales (perfil D o E: estimación)."
+   }
+  },
+  "fuego": {
+   "ocupacion": "I-2 (Institucional de salud o incapacidad)",
+   "categoria_riesgo": {
+    "3_pisos_area_mayor_1000m2": "II",
+    "4_pisos_o_mas": "I"
+   },
+   "resistencia_estructura_h": {
+    "categoria_II": 1.5,
+    "categoria_I": 2.0
+   },
+   "resistencia_escaleras_ascensores_ductos_h": 2.0,
+   "resistencia_cubierta_h": 1.0,
+   "rociadores": "obligatorios en todo el edificio (NTC 2301 y NFPA 13)",
+   "deteccion_humo_y_alarma": "obligatoria",
+   "indice_ocupacion_m2_por_persona": 7.0,
+   "tipo": "dato_oficial",
+   "cita": "NSR-10, J.3.3, Tabla J.3.4-3, J.4.3.4.1, Tabla K.3.3-1, K.3.14.2",
+   "reserva_agua_incendio_m3": {
+    "valor": 28,
+    "rango": [
+     20,
+     40
+    ],
+    "tipo": "estimacion",
+    "nota": "Riesgo ligero NFPA 13: 0,10 gpm/pie² sobre 1.500 pie² (≈570 L/min) + 380 L/min de mangueras durante 30 min ≈ 28 m³. Lo fija el diseño hidráulico; tanque independiente del de consumo (Res. 1633, num. 3.4.4 b.4)."
+   }
+  },
+  "agua": {
+   "dotacion_L_por_cama_o_camilla_dia": 600,
+   "reserva_min_horas": {
+    "res_3100": 24,
+    "res_1633": 48,
+    "ish_ops_calificacion_alta": 72,
+    "adoptada_proyecto": 72
+   },
+   "tanques_independientes_consumo_e_incendio": true,
+   "acometida_carrotanque": true,
+   "tipo": "dato_oficial",
+   "cita": "Res. 3100 num. 11.1.2 criterio 4; Res. 1633 Anexo 1 num. 3.4.4 c; ISH punto 56",
+   "ejemplos_volumen_consumo": {
+    "casos": [
+     {
+      "escenario": "bajo: capacidad actual del REPS (9 camas + 4 camillas de observación + 2 de trabajo de parto + 2 de recuperación)",
+      "camas_y_camillas": 17,
+      "consumo_m3_dia": 10.2,
+      "reserva_24h_res3100_m3": 10.2,
+      "reserva_48h_res1633_m3": 20.4,
+      "reserva_72h_ish_m3": 30.6
+     },
+     {
+      "escenario": "central: hipótesis de torre (16 camas + 2 TPR + 6 camillas de observación + 2 de trabajo de parto + 2 de recuperación)",
+      "camas_y_camillas": 28,
+      "consumo_m3_dia": 16.8,
+      "reserva_24h_res3100_m3": 16.8,
+      "reserva_48h_res1633_m3": 33.6,
+      "reserva_72h_ish_m3": 50.4
+     },
+     {
+      "escenario": "alto: torre ampliada (20 camas + 2 TPR + 8 de observación + 2 + 2)",
+      "camas_y_camillas": 34,
+      "consumo_m3_dia": 20.4,
+      "reserva_24h_res3100_m3": 20.4,
+      "reserva_48h_res1633_m3": 40.8,
+      "reserva_72h_ish_m3": 61.2
+     }
+    ],
+    "tipo": "calculo_propio",
+    "nota": "Volumen = camas y camillas × 600 L × horas / 24. Los escenarios de camas son supuestos hasta concertar el Documento de Capacidad Instalada."
+   }
+  },
+  "energia": {
+   "planta_electrica_obligatoria": true,
+   "transferencia_automatica_max_s": 10,
+   "dos_fuentes_independientes": true,
+   "ups_en_linea_areas_criticas": true,
+   "ish_cobertura_minima_areas_criticas_pct": 70,
+   "autonomia_combustible_min_h": 72,
+   "solar_fv_recomendada_pct_energia": 20,
+   "tipo": "dato_oficial",
+   "cita": "Res. 3100 num. 11.1.2 criterio 14; RETIE num. 3.28.3.2 b-d; ISH puntos 38 y 72; Res. 1633 Anexo 2 (pág. 16)",
+   "ejemplo_tanque_combustible_L": {
+    "valor": 2300,
+    "rango": [
+     1500,
+     3500
+    ],
+    "tipo": "estimacion",
+    "nota": "Supuesto: carga de respaldo media de 120 kW × 0,27 L/kWh × 72 h ≈ 2.330 L. Se ajusta con el cuadro de cargas del diseño eléctrico."
+   }
+  },
+  "bioclimatica_clima_calido_humedo": {
+   "orientacion": "Fachadas largas hacia el norte y el sur; minimizar fachadas oriente y occidente o protegerlas.",
+   "aleros": "Ancho mínimo igual a 1/3 de la altura piso a piso cuando no se conozca el ángulo solar (proyecto tipo DNP).",
+   "ventilacion": "Ventilación cruzada; fachada de ataque a 45-60° del viento dominante; ventilación natural obligatoria en salas de espera, internación y observación.",
+   "cubierta": "Inclinada, reflectiva (≥80 %), con captación de agua lluvia; vidrio en cubierta ≤5 %; claraboyas 3-6 %.",
+   "vegetacion": "Árboles de copa alta al oriente y occidente, a no menos de 10 m de la fachada (proyecto tipo DNP).",
+   "tipo": "dato_oficial",
+   "cita": "Res. 1633 Anexo 1 num. 3.3.7-3.3.8 y Anexo 2 Cuadro 3; DNP Proyecto Tipo de salud v1.0 (2018), num. 6.2"
+  },
+  "accesibilidad": {
+   "normas": [
+    "NTC 6047 de 2013",
+    "NTC 4143 (rampas)",
+    "Ley 361 de 1997",
+    "Ley 1618 de 2013"
+   ],
+   "requisitos": [
+    "Ruta accesible con huella podotáctil y Símbolo Internacional de Accesibilidad",
+    "Al menos una unidad sanitaria accesible por servicio de espera",
+    "Espacio para silla de ruedas en cada sala de espera",
+    "Baños de hospitalización accesibles en todas las habitaciones"
+   ],
+   "tipo": "dato_oficial",
+   "cita": "Res. 1633 Anexo 1 num. 3.3.5, 3.3.6, 3.3.16; NSR-10 K.3.8.6"
+  },
+  "senalizacion_colores": {
+   "servicios": {
+    "direccion_y_administracion": "violeta",
+    "consulta_externa": "naranja",
+    "atencion_inmediata": "rojo",
+    "apoyo_diagnostico_y_terapeutico": "amarillo",
+    "quirurgico_y_esterilizacion": "verde",
+    "internacion": "azul",
+    "apoyo_y_servicios_generales": "café"
+   },
+   "piso": {
+    "no_restringido_a_semirrestringido": "verde",
+    "semirrestringido_a_restringido": "amarillo",
+    "restringido": "rojo"
+   },
+   "tipo": "dato_oficial",
+   "cita": "Res. 1633, Anexo 1, Cuadros 2 y 3, hoja 35"
+  },
+  "residuos": {
+   "almacenamiento_central": "fuera del edificio, con acceso del vehículo recolector",
+   "almacenamiento_intermedio_m2_por_piso": 3.0,
+   "refrigeracion_anatomopatologicos_max_C": 4,
+   "tipo": "dato_oficial",
+   "cita": "Res. 1633 Anexo 1 num. 3.3.13; Decreto 780 de 2016; Res. 591 de 2024"
+  }
+ },
+ "conflictos_entre_normas": [
+  "Reserva de agua: la Res. 3100 pide 24 h, la Res. 1633 pide 48 h y el Índice de Seguridad Hospitalaria califica 'alto' con 72 h. Se adopta 72 h.",
+  "Áreas mínimas: la Res. 1633 (2025) sube varios mínimos frente a la Res. 3100 (2019): sala de procedimientos 10 m² (vs 8), consultorio de procedimientos 14 m² (vs 10), consultorio de entrevista 6 m² (vs 4), habitación TPR 24 m² (vs 16). Se toma siempre el mayor, porque la torre es nueva.",
+  "Ecografía: la Res. 3100 la clasifica como imágenes de mediana complejidad. Incluirla obliga a habilitar ese servicio en mediana complejidad; debe quedar en el Documento de Capacidad Instalada.",
+  "Corredores: la Res. 1633 recomienda 2,80 m con camillas en urgencias y hospitalización, mientras la NSR-10 exige 2,40 m. Se recomienda diseñar con 2,80 m en esos servicios.",
+  "Res. 549 de 2015: para hospitales solo es obligatoria desde 5.000 m²; la torre quedaría por debajo, pero el Anexo 2 de la Res. 1633 empuja las mismas medidas de ahorro."
+ ],
+ "incertidumbres": [
+  "NTC 5318 (gases medicinales): no se pudo verificar en línea su título ni su versión vigente.",
+  "Res. 549 de 2015: los porcentajes salen de lectura OCR de un PDF escaneado; verificar contra el original.",
+  "Requisitos del SGR (regalías) para proyectos de salud: la Res. 485 dice que los recursos con régimen especial siguen su norma; hay que confirmar con el Acuerdo Único de la Comisión Rectora vigente si se exige además concepto sectorial de MinSalud o de la Secretaría Seccional.",
+  "Titularidad del lote del antiguo Centro Vida (E.S.E. o municipio): no verificada.",
+  "Amenaza por inundación del predio frente al Magdalena: no verificada; es requisito del certificado de planeación.",
+  "Perfil de suelo: desconocido hasta el estudio geotécnico (cambia la meseta del espectro entre 0,68 g y 1,18 g).",
+  "El estudio de vulnerabilidad sísmica del hospital actual (2024) no es público; de él depende el uso futuro del edificio existente.",
+  "No hay en la web una lista oficial de 'capacidades instaladas tipo' de MinSalud (prometidas por la Res. 1211 y la 1519) a octubre de 2026."
+ ]
+}

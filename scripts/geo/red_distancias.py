@@ -34,7 +34,7 @@ for w in t.iter('way'):
 pts = []
 for f in sorted(glob.glob(os.path.join(R, 'data/edificios/*.json'))):
     s = json.load(open(f))
-    if not s.get('id') or s.get('lat') is None: continue
+    if not s.get('id') or s.get('lat') is None or s.get('reemplazado_por'): continue
     pts.append({'id': s['id'], 'nombre': s.get('nombre', s['id']), 'lat': s['lat'], 'lon': s['lon']})
 sub_path = os.path.join(R, 'data/red/subestacion.json')
 if os.path.exists(sub_path):

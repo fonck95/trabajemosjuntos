@@ -1,0 +1,2910 @@
+{
+ "id": "torre_hospital_laboratorio",
+ "titulo": "Laboratorio clínico de primer nivel con tamizaje – torre de servicios de la E.S.E. Hospital Héctor Abad Gómez (Yondó)",
+ "tarea": "T3 – Dotación biomédica completa y laboratorio clínico con tamizaje",
+ "fecha_corte": "2026-10-22",
+ "moneda_y_base": "Pesos constantes de 2026 (promedio enero-septiembre de 2026 del IPC del DANE). TRM promedio enero-septiembre de 2026: $3.495,6 por dólar (datos.gov.co, 32sa-8pi3).",
+ "convenciones": {
+  "dato_oficial": "tomado de la fuente citada",
+  "calculo_propio": "operación sobre datos o supuestos declarados",
+  "estimacion": "supuesto con rango, a confirmar"
+ },
+ "resumen": "Laboratorio de 24 horas con unas 5.365 pruebas al mes en sitio (rango 4.247-7.309) y 81 remitidas. Cubre hematología, química, hormonas y marcadores (TSH, T4 libre, TSH neonatal, PSA, beta-hCG, ferritina, troponina), HbA1c por HPLC, serologías (VIH, hepatitis B y C, sífilis, toxoplasma, rubéola, Chagas, dengue), malaria, leishmaniasis, tuberculosis y VPH por PCR (GeneXpert), sangre oculta inmunoquímica, coagulación, gases, uroanálisis, coprológico y microbiología con hemocultivo automatizado. Los analizadores (valor de mercado $956 millones) van en comodato pagado con reactivos; reactivos e insumos cuestan unos $679 millones al año (reactivos solos $435 millones, rango $197 millones-$874 millones), más $583 millones de personal. Hoy el hospital gasta $672 millones de 2026 al año en laboratorio, sobre todo pagando a un laboratorio externo. Área útil: 124 m² de laboratorio en el piso 2 y 61,9 m² de toma de muestras en el piso 1 (programa.json).",
+ "poblacion_y_demanda": {
+  "fuente": "DANE, proyecciones municipales 2018-2042 publicadas en TerriData (archivo TerriData05893.txt, dimensión 'Demografía y población', año 2028): https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip",
+  "total_2028": 22963,
+  "tipo_total": "dato_oficial (suma de los quinquenios por sexo de TerriData)",
+  "nota_total": "El archivo PPED-AreaMun-2018-2042 del DANE usado en hospital2028.json da 23.157 para 2028; la diferencia (0,8 %) viene de la versión de la proyección y no cambia los resultados.",
+  "grupos_2028": {
+   "mujeres_30_65": 4334,
+   "mujeres_25_29": 985,
+   "hombres_50_75": 2053,
+   "personas_50_75": 3805,
+   "personas_50_mas": 4348,
+   "adultos_30_mas": 10647,
+   "jovenes_18_29": 4569,
+   "ninas_10_17": 1536
+  },
+  "tipo_grupos": "calculo_propio (suma de quinquenios; para edades de corte que no coinciden con el quinquenio se toma la parte proporcional)",
+  "fraccion_atendida_por_la_ese": {
+   "valor": 0.6,
+   "rango": [
+    0.55,
+    0.7
+   ],
+   "tipo": "estimacion",
+   "por_que": "Mismo rango del programa médico-arquitectónico (programa.json: 55-70 % de la población DANE para consulta y hospitalización). En el BDUA hay 9.582 afiliados de los regímenes subsidiado y contributivo (oct-2026), 42,7 % de la población DANE 2026; la diferencia se explica por regímenes especiales, población no afiliada y afiliados en otros municipios. Para urgencias se atiende a todo el municipio."
+  },
+  "ano_de_referencia": "2030, primer año probable de operación de la torre: los componentes que dependen de la población se multiplican por 23.853 / 23.157 = 1,03 (DANE 2030 frente a 2028, programa.json). En 2035 la población sería 7 % mayor que en 2030.",
+  "poblacion_atendida_programada": 14193,
+  "cronicos_en_programa": {
+   "hipertensos": 992,
+   "diabeticos": 331,
+   "tipo": "estimacion",
+   "supuesto": "Prevalencia diagnosticada de hipertensión 9 % (rango 7-12 %) y diabetes 3 % (rango 2,5-4 %) de la población atendida, con 80 % en programa. Confirmar con la caracterización de la EPS."
+  },
+  "gestantes_anio": {
+   "valor": 300,
+   "rango": [
+    240,
+    340
+   ],
+   "tipo": "estimacion",
+   "por_que": "Unos 280-320 nacimientos al año de madres residentes (TerriData: 9,52 muertes infantiles por 1.000 nacidos vivos en 2024 equivale a 3 de unos 315; la tasa de fecundidad de 50-60 por 1.000 mujeres de 15-49 años da 300-350)."
+  },
+  "partos_en_la_ese_anio": {
+   "valor": 165,
+   "rango": [
+    120,
+    210
+   ],
+   "tipo": "estimacion",
+   "por_que": "Valor central de programa.json (50-65 % de los nacimientos; cesáreas y alto riesgo se remiten a Barrancabermeja)."
+  },
+  "actividad_asistencial": {
+   "consultas_medicas_anio": 30900,
+   "rango_consultas": [
+    22480,
+    39350
+   ],
+   "urgencias_anio": 8300,
+   "rango_urgencias": [
+    6390,
+    10220
+   ],
+   "egresos_hospitalarios_anio": 765,
+   "rango_egresos": [
+    510,
+    1020
+   ],
+   "tipo": "estimacion",
+   "por_que": "Valores centrales de la producción estimada de programa.json (SIHO no fue accesible). Con ellos el laboratorio queda dentro del rango de 27.000 a 73.000 pruebas al año que calcula ese archivo."
+  }
+ },
+ "supuestos_demanda": {
+  "f_servida": 0.6,
+  "f_servida_rango": [
+   0.55,
+   0.7
+  ],
+  "cobertura_vph_5a": 0.7,
+  "cobertura_fit_2a": 0.5,
+  "cobertura_psa_5a": 0.4,
+  "cobertura_rcv_5a": 0.6,
+  "cobertura_hcv_5a": 0.6,
+  "prev_hta": 0.09,
+  "prev_dm": 0.03,
+  "en_programa": 0.8,
+  "gestantes_anio": 300,
+  "partos_ese_anio": 165,
+  "consultas_medicas_anio": 30900,
+  "pct_con_orden": 0.18,
+  "pruebas_por_orden": 3.0,
+  "urgencias_anio": 8300,
+  "egresos_anio": 765,
+  "factor_poblacion_2030": 1.0301
+ },
+ "menu": [
+  {
+   "id": "hemograma",
+   "prueba": "Hemograma completo (5 partes) con índices y recuento de plaquetas",
+   "seccion": "Hematología",
+   "metodo": "Citometría de flujo y fluorescencia con impedancia",
+   "equipo": "Analizador hematológico de 5 partes",
+   "ruta": "Morbilidad (urgencias, hospitalización, consulta); RIAMP (ingreso y semana 28); RPMS (anemia en adolescentes)",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 4 h",
+    "tamizaje": "≤ 24 h"
+   },
+   "volumen_mes": 618,
+   "rango_volumen_mes": [
+    468,
+    849
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 166,
+    "hospitalizacion": 110,
+    "ambulatorio": 278,
+    "prenatal": 50,
+    "anemia_adolescentes": 14
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 4500,
+   "rango_costo_por_prueba_cop_2026": [
+    3200,
+    6500
+   ],
+   "costo_mensual_cop_2026": 2781000,
+   "costo_anual_cop_2026": 33372000,
+   "cups": "902210"
+  },
+  {
+   "id": "vsg",
+   "prueba": "Velocidad de sedimentación globular",
+   "seccion": "Hematología",
+   "metodo": "Westergren modificado",
+   "equipo": "Manual o analizador de VSG",
+   "ruta": "Morbilidad",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 4 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 32,
+   "rango_volumen_mes": [
+    24,
+    45
+   ],
+   "composicion_volumen_mes": {
+    "ambulatorio": 26,
+    "hospitalizacion": 6
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 900,
+   "rango_costo_por_prueba_cop_2026": [
+    500,
+    1500
+   ],
+   "costo_mensual_cop_2026": 28800,
+   "costo_anual_cop_2026": 345600,
+   "cups": "902204"
+  },
+  {
+   "id": "extendido",
+   "prueba": "Extendido de sangre periférica (revisión al microscopio)",
+   "seccion": "Hematología",
+   "metodo": "Tinción de Wright y lectura",
+   "equipo": "Microscopio",
+   "ruta": "Morbilidad; alarmas del hemograma; neonatos",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 90 min",
+    "rutina": "≤ 6 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 60,
+   "rango_volumen_mes": [
+    45,
+    84
+   ],
+   "composicion_volumen_mes": {
+    "revision_hemogramas": 55,
+    "neonatos": 5
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 800,
+   "rango_costo_por_prueba_cop_2026": [
+    500,
+    1300
+   ],
+   "costo_mensual_cop_2026": 48000,
+   "costo_anual_cop_2026": 576000,
+   "cups": "902216"
+  },
+  {
+   "id": "reticulocitos",
+   "prueba": "Recuento de reticulocitos",
+   "seccion": "Hematología",
+   "metodo": "Citometría o azul de cresil brillante",
+   "equipo": "Analizador hematológico o microscopio",
+   "ruta": "Morbilidad (anemia); neonatos",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 6 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 10,
+   "rango_volumen_mes": [
+    7,
+    14
+   ],
+   "composicion_volumen_mes": {
+    "ambulatorio": 6,
+    "hospitalizacion": 4
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 1500,
+   "rango_costo_por_prueba_cop_2026": [
+    900,
+    2500
+   ],
+   "costo_mensual_cop_2026": 15000,
+   "costo_anual_cop_2026": 180000
+  },
+  {
+   "id": "hemoclasificacion",
+   "prueba": "Hemoclasificación ABO y Rh",
+   "seccion": "Hematología / inmunohematología básica",
+   "metodo": "Aglutinación en tubo o tarjeta de gel",
+   "equipo": "Centrífuga y lector manual",
+   "ruta": "RIAMP (gestante y recién nacido en sangre de cordón); urgencias",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 6 h",
+    "tamizaje": "≤ 24 h"
+   },
+   "volumen_mes": 45,
+   "rango_volumen_mes": [
+    36,
+    53
+   ],
+   "composicion_volumen_mes": {
+    "prenatal": 25,
+    "recien_nacidos": 14,
+    "urgencias": 6
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 4000,
+   "rango_costo_por_prueba_cop_2026": [
+    2500,
+    7000
+   ],
+   "costo_mensual_cop_2026": 180000,
+   "costo_anual_cop_2026": 2160000,
+   "cups": "911018"
+  },
+  {
+   "id": "gota_gruesa",
+   "prueba": "Gota gruesa para malaria (hemoparásitos) con recuento parasitario",
+   "seccion": "Parasitología",
+   "metodo": "Tinción de Giemsa y microscopía",
+   "equipo": "Microscopio",
+   "ruta": "Vigilancia en salud pública (malaria); RIAMP: tamizaje y gota gruesa mensual a gestantes en zona endémica",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 2 h",
+    "tamizaje": "≤ 24 h"
+   },
+   "volumen_mes": 280,
+   "rango_volumen_mes": [
+    193,
+    514
+   ],
+   "composicion_volumen_mes": {
+    "febriles": 80,
+    "urgencias": 26,
+    "prenatal_mensual": 175
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 1500,
+   "rango_costo_por_prueba_cop_2026": [
+    900,
+    2500
+   ],
+   "costo_mensual_cop_2026": 420000,
+   "costo_anual_cop_2026": 5040000,
+   "cups": "902214",
+   "nota": "Si la Secretaría Seccional no clasifica a Yondó como zona endémica, la gota gruesa mensual de gestantes (175/mes) no aplica. Yondó notificó 9 a 78 casos de malaria al año entre 2009 y 2022 (SIVIGILA)."
+  },
+  {
+   "id": "glucosa",
+   "prueba": "Glucosa en suero (incluye prueba de tolerancia oral a la glucosa de 75 g: 3 muestras)",
+   "seccion": "Química clínica",
+   "metodo": "Enzimático (hexoquinasa o glucosa oxidasa)",
+   "equipo": "Analizador de química",
+   "ruta": "RPMS (riesgo cardiovascular y metabólico); ruta cardiovascular; RIAMP (glicemia y PTOG 24-28 semanas); morbilidad",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 4 h",
+    "tamizaje": "≤ 24 h"
+   },
+   "volumen_mes": 526,
+   "rango_volumen_mes": [
+    435,
+    660
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 58,
+    "hospitalizacion": 43,
+    "ambulatorio": 113,
+    "rcv": 78,
+    "cronicos": 142,
+    "prenatal": 25,
+    "ptog": 68
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 900,
+   "rango_costo_por_prueba_cop_2026": [
+    600,
+    1400
+   ],
+   "costo_mensual_cop_2026": 473400,
+   "costo_anual_cop_2026": 5680800,
+   "cups": "903841"
+  },
+  {
+   "id": "creatinina",
+   "prueba": "Creatinina en suero",
+   "seccion": "Química clínica",
+   "metodo": "Jaffé cinético o enzimático",
+   "equipo": "Analizador de química",
+   "ruta": "RPMS (riesgo cardiovascular); ruta cardiovascular y renal; morbilidad",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 4 h",
+    "tamizaje": "≤ 24 h"
+   },
+   "volumen_mes": 437,
+   "rango_volumen_mes": [
+    369,
+    554
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 58,
+    "hospitalizacion": 49,
+    "ambulatorio": 82,
+    "rcv": 78,
+    "cronicos": 170
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 1100,
+   "rango_costo_por_prueba_cop_2026": [
+    700,
+    1700
+   ],
+   "costo_mensual_cop_2026": 480700,
+   "costo_anual_cop_2026": 5768400,
+   "cups": "903822"
+  },
+  {
+   "id": "bun",
+   "prueba": "Nitrógeno ureico (BUN)",
+   "seccion": "Química clínica",
+   "metodo": "Ureasa cinético",
+   "equipo": "Analizador de química",
+   "ruta": "Morbilidad",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 4 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 88,
+   "rango_volumen_mes": [
+    66,
+    124
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 32,
+    "hospitalizacion": 31,
+    "ambulatorio": 26
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 1000,
+   "rango_costo_por_prueba_cop_2026": [
+    600,
+    1500
+   ],
+   "costo_mensual_cop_2026": 88000,
+   "costo_anual_cop_2026": 1056000,
+   "cups": "903856"
+  },
+  {
+   "id": "perfil_lipidico",
+   "prueba": "Perfil lipídico: colesterol total, HDL, triglicéridos y LDL calculado (se cuentan 3 determinaciones medidas)",
+   "seccion": "Química clínica",
+   "metodo": "Enzimático colorimétrico; HDL directo; LDL por fórmula",
+   "equipo": "Analizador de química",
+   "ruta": "RPMS (riesgo cardiovascular cada 5 años); ruta cardiovascular (anual en crónicos)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 6 h",
+    "tamizaje": "≤ 24 h"
+   },
+   "volumen_mes": 243,
+   "rango_volumen_mes": [
+    214,
+    295
+   ],
+   "composicion_volumen_mes": {
+    "ambulatorio": 52,
+    "rcv": 78,
+    "cronicos": 114
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 6000,
+   "rango_costo_por_prueba_cop_2026": [
+    4000,
+    9000
+   ],
+   "costo_mensual_cop_2026": 1458000,
+   "costo_anual_cop_2026": 17496000,
+   "cups": "903818/903815/903868",
+   "nota": "Costo por perfil (3 determinaciones)."
+  },
+  {
+   "id": "transaminasas",
+   "prueba": "Transaminasas AST y ALT (par)",
+   "seccion": "Química clínica",
+   "metodo": "Cinético UV (IFCC)",
+   "equipo": "Analizador de química",
+   "ruta": "Morbilidad; hepatitis; preeclampsia",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 4 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 51,
+   "rango_volumen_mes": [
+    38,
+    71
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 10,
+    "hospitalizacion": 15,
+    "ambulatorio": 26
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 2400,
+   "rango_costo_por_prueba_cop_2026": [
+    1500,
+    3600
+   ],
+   "costo_mensual_cop_2026": 122400,
+   "costo_anual_cop_2026": 1468800,
+   "cups": "903866/903867",
+   "nota": "Costo por par."
+  },
+  {
+   "id": "bilirrubinas",
+   "prueba": "Bilirrubina total y directa (par)",
+   "seccion": "Química clínica",
+   "metodo": "Diazo o vanadato",
+   "equipo": "Analizador de química",
+   "ruta": "Ictericia neonatal; morbilidad",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 4 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 29,
+   "rango_volumen_mes": [
+    22,
+    40
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 6,
+    "hospitalizacion": 12,
+    "ambulatorio": 10
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 2400,
+   "rango_costo_por_prueba_cop_2026": [
+    1500,
+    3600
+   ],
+   "costo_mensual_cop_2026": 69600,
+   "costo_anual_cop_2026": 835200,
+   "cups": "903809"
+  },
+  {
+   "id": "quimica_otros",
+   "prueba": "Otras de química: fosfatasa alcalina, proteínas totales, albúmina, ácido úrico, amilasa, calcio, magnesio, fósforo, LDH, CK (promedio por prueba)",
+   "seccion": "Química clínica",
+   "metodo": "Fotométricos",
+   "equipo": "Analizador de química",
+   "ruta": "Morbilidad; hospitalización; preeclampsia (LDH, ácido úrico)",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra (amilasa, calcio, magnesio, CK)",
+    "rutina": "≤ 6 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 136,
+   "rango_volumen_mes": [
+    102,
+    190
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 21,
+    "hospitalizacion": 55,
+    "ambulatorio": 60
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 1500,
+   "rango_costo_por_prueba_cop_2026": [
+    900,
+    2500
+   ],
+   "costo_mensual_cop_2026": 204000,
+   "costo_anual_cop_2026": 2448000
+  },
+  {
+   "id": "electrolitos",
+   "prueba": "Electrolitos: sodio, potasio y cloro (panel)",
+   "seccion": "Química clínica / urgencias",
+   "metodo": "Electrodo ion selectivo (ISE)",
+   "equipo": "Módulo ISE del analizador de química (respaldo: analizador de gases)",
+   "ruta": "Urgencias; hospitalización; ruta cardiovascular (potasio en tratados)",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 4 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 158,
+   "rango_volumen_mes": [
+    127,
+    209
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 58,
+    "hospitalizacion": 49,
+    "cronicos": 51
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 2500,
+   "rango_costo_por_prueba_cop_2026": [
+    1600,
+    4000
+   ],
+   "costo_mensual_cop_2026": 395000,
+   "costo_anual_cop_2026": 4740000,
+   "cups": "903864/903859"
+  },
+  {
+   "id": "pcr",
+   "prueba": "Proteína C reactiva cuantitativa",
+   "seccion": "Química clínica",
+   "metodo": "Inmunoturbidimetría",
+   "equipo": "Analizador de química",
+   "ruta": "Urgencias; infecciones; neonatos",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 4 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 135,
+   "rango_volumen_mes": [
+    102,
+    190
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 58,
+    "hospitalizacion": 37,
+    "ambulatorio": 41
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 3500,
+   "rango_costo_por_prueba_cop_2026": [
+    2200,
+    5500
+   ],
+   "costo_mensual_cop_2026": 472500,
+   "costo_anual_cop_2026": 5670000,
+   "cups": "906914"
+  },
+  {
+   "id": "rac",
+   "prueba": "Relación albúmina/creatinina en orina (microalbuminuria)",
+   "seccion": "Química clínica",
+   "metodo": "Inmunoturbidimetría y creatinina urinaria",
+   "equipo": "Analizador de química",
+   "ruta": "Ruta cardiovascular y renal (hipertensos y diabéticos, anual)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 24 h",
+    "tamizaje": "≤ 24 h"
+   },
+   "volumen_mes": 114,
+   "rango_volumen_mes": [
+    104,
+    132
+   ],
+   "composicion_volumen_mes": {
+    "cronicos": 114
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 5500,
+   "rango_costo_por_prueba_cop_2026": [
+    3500,
+    8000
+   ],
+   "costo_mensual_cop_2026": 627000,
+   "costo_anual_cop_2026": 7524000,
+   "cups": "903026"
+  },
+  {
+   "id": "hba1c",
+   "prueba": "Hemoglobina glicosilada (HbA1c)",
+   "seccion": "Química clínica",
+   "metodo": "Cromatografía líquida de alta resolución (HPLC) certificada NGSP",
+   "equipo": "Analizador de HbA1c por HPLC",
+   "ruta": "Ruta cardiovascular y metabólica (diabéticos, 3 al año); diagnóstico de diabetes",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 48 h",
+    "tamizaje": "≤ 48 h"
+   },
+   "volumen_mes": 121,
+   "rango_volumen_mes": [
+    109,
+    145
+   ],
+   "composicion_volumen_mes": {
+    "cronicos": 85,
+    "diagnostico": 21,
+    "ambulatorio": 16
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 11000,
+   "rango_costo_por_prueba_cop_2026": [
+    7500,
+    15000
+   ],
+   "costo_mensual_cop_2026": 1331000,
+   "costo_anual_cop_2026": 15972000,
+   "cups": "903426",
+   "nota": "El HPLC detecta variantes de hemoglobina (como la HbS) que alteran otros métodos."
+  },
+  {
+   "id": "tsh",
+   "prueba": "Hormona estimulante del tiroides (TSH)",
+   "seccion": "Inmunología / hormonas",
+   "metodo": "Quimioluminiscencia",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "Morbilidad; gestantes con síntomas; control de tratados",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 24 h",
+    "tamizaje": "≤ 48 h"
+   },
+   "volumen_mes": 75,
+   "rango_volumen_mes": [
+    58,
+    103
+   ],
+   "composicion_volumen_mes": {
+    "ambulatorio": 62,
+    "cronicos": 10,
+    "hospitalizacion": 3
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 9000,
+   "rango_costo_por_prueba_cop_2026": [
+    6000,
+    13000
+   ],
+   "costo_mensual_cop_2026": 675000,
+   "costo_anual_cop_2026": 8100000,
+   "cups": "904902"
+  },
+  {
+   "id": "t4l",
+   "prueba": "Tiroxina libre (T4 libre)",
+   "seccion": "Inmunología / hormonas",
+   "metodo": "Quimioluminiscencia",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "Morbilidad",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 24 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 26,
+   "rango_volumen_mes": [
+    20,
+    35
+   ],
+   "composicion_volumen_mes": {
+    "ambulatorio": 21,
+    "cronicos": 5
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 9500,
+   "rango_costo_por_prueba_cop_2026": [
+    6500,
+    14000
+   ],
+   "costo_mensual_cop_2026": 247000,
+   "costo_anual_cop_2026": 2964000,
+   "cups": "904921"
+  },
+  {
+   "id": "tsh_neonatal",
+   "prueba": "TSH neonatal en sangre de cordón (tamizaje de hipotiroidismo congénito)",
+   "seccion": "Inmunología / hormonas",
+   "metodo": "Quimioluminiscencia",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "RIAMP (recién nacido: muestra de cordón, Res. 3280)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "no aplica",
+    "tamizaje": "≤ 48 h; un resultado alterado se avisa el mismo día a la familia y a la EPS"
+   },
+   "volumen_mes": 14,
+   "rango_volumen_mes": [
+    11,
+    16
+   ],
+   "composicion_volumen_mes": {
+    "recien_nacidos": 14
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 9000,
+   "rango_costo_por_prueba_cop_2026": [
+    6000,
+    13000
+   ],
+   "costo_mensual_cop_2026": 126000,
+   "costo_anual_cop_2026": 1512000,
+   "cups": "904903"
+  },
+  {
+   "id": "psa",
+   "prueba": "Antígeno prostático específico (PSA) total",
+   "seccion": "Inmunología / marcadores tumorales",
+   "metodo": "Quimioluminiscencia",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "RPMS: tamización de oportunidad de cáncer de próstata en hombres de 50 a 75 años cada 5 años o más (con tacto rectal)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 48 h",
+    "tamizaje": "≤ 48 h"
+   },
+   "volumen_mes": 24,
+   "rango_volumen_mes": [
+    19,
+    32
+   ],
+   "composicion_volumen_mes": {
+    "tamizaje": 8,
+    "ambulatorio": 16
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 11000,
+   "rango_costo_por_prueba_cop_2026": [
+    7500,
+    16000
+   ],
+   "costo_mensual_cop_2026": 264000,
+   "costo_anual_cop_2026": 3168000,
+   "cups": "906610"
+  },
+  {
+   "id": "ferritina",
+   "prueba": "Ferritina",
+   "seccion": "Inmunología",
+   "metodo": "Quimioluminiscencia",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "Morbilidad (anemia); gestantes con anemia",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 24 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 40,
+   "rango_volumen_mes": [
+    30,
+    55
+   ],
+   "composicion_volumen_mes": {
+    "ambulatorio": 31,
+    "prenatal": 6,
+    "hospitalizacion": 3
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 10000,
+   "rango_costo_por_prueba_cop_2026": [
+    7000,
+    15000
+   ],
+   "costo_mensual_cop_2026": 400000,
+   "costo_anual_cop_2026": 4800000,
+   "cups": "903016"
+  },
+  {
+   "id": "bhcg_cuant",
+   "prueba": "Gonadotropina coriónica subunidad beta cuantitativa",
+   "seccion": "Inmunología / hormonas",
+   "metodo": "Quimioluminiscencia",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "Urgencias (sangrado, dolor abdominal); morbilidad",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 6 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 35,
+   "rango_volumen_mes": [
+    26,
+    48
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 16,
+    "hospitalizacion": 3,
+    "ambulatorio": 16
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 9000,
+   "rango_costo_por_prueba_cop_2026": [
+    6000,
+    13000
+   ],
+   "costo_mensual_cop_2026": 315000,
+   "costo_anual_cop_2026": 3780000,
+   "cups": "904508"
+  },
+  {
+   "id": "troponina",
+   "prueba": "Troponina I de alta sensibilidad",
+   "seccion": "Inmunología / urgencias",
+   "metodo": "Quimioluminiscencia (respaldo: casete de fluorescencia)",
+   "equipo": "Analizador de inmunoensayo / lector de fluorescencia",
+   "ruta": "Urgencias (dolor torácico)",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min",
+    "rutina": "no aplica",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 21,
+   "rango_volumen_mes": [
+    16,
+    29
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 16,
+    "hospitalizacion": 5
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 20000,
+   "rango_costo_por_prueba_cop_2026": [
+    14000,
+    30000
+   ],
+   "costo_mensual_cop_2026": 420000,
+   "costo_anual_cop_2026": 5040000
+  },
+  {
+   "id": "toxo_igg",
+   "prueba": "Toxoplasma IgG",
+   "seccion": "Inmunología / serología",
+   "metodo": "Quimioluminiscencia",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "RIAMP (primera consulta prenatal y repetición)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 72 h",
+    "tamizaje": "≤ 72 h"
+   },
+   "volumen_mes": 29,
+   "rango_volumen_mes": [
+    23,
+    33
+   ],
+   "composicion_volumen_mes": {
+    "prenatal": 29
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 10000,
+   "rango_costo_por_prueba_cop_2026": [
+    7000,
+    15000
+   ],
+   "costo_mensual_cop_2026": 290000,
+   "costo_anual_cop_2026": 3480000
+  },
+  {
+   "id": "toxo_igm",
+   "prueba": "Toxoplasma IgM (incluye tamizaje mensual de gestantes seronegativas)",
+   "seccion": "Inmunología / serología",
+   "metodo": "Quimioluminiscencia",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "RIAMP (Res. 3280: IgM mensual a gestantes seronegativas)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 72 h",
+    "tamizaje": "≤ 72 h"
+   },
+   "volumen_mes": 100,
+   "rango_volumen_mes": [
+    80,
+    113
+   ],
+   "composicion_volumen_mes": {
+    "prenatal_inicial": 25,
+    "prenatal_mensual_seronegativas": 75
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 12000,
+   "rango_costo_por_prueba_cop_2026": [
+    8000,
+    17000
+   ],
+   "costo_mensual_cop_2026": 1200000,
+   "costo_anual_cop_2026": 14400000,
+   "nota": "Se supone 50 % de gestantes seronegativas con 6 controles mensuales; confirmar la seroprevalencia local."
+  },
+  {
+   "id": "rubeola_igg",
+   "prueba": "Rubéola IgG",
+   "seccion": "Inmunología / serología",
+   "metodo": "Quimioluminiscencia",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "RIAMP y preconcepción (mujeres no vacunadas, antes de la semana 16)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 72 h",
+    "tamizaje": "≤ 72 h"
+   },
+   "volumen_mes": 8,
+   "rango_volumen_mes": [
+    6,
+    8
+   ],
+   "composicion_volumen_mes": {
+    "prenatal": 8
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 11000,
+   "rango_costo_por_prueba_cop_2026": [
+    7500,
+    16000
+   ],
+   "costo_mensual_cop_2026": 88000,
+   "costo_anual_cop_2026": 1056000
+  },
+  {
+   "id": "chagas",
+   "prueba": "Anticuerpos contra Trypanosoma cruzi (Chagas)",
+   "seccion": "Inmunología / serología",
+   "metodo": "ELISA o quimioluminiscencia con antígenos totales (sensibilidad ≥ 98 %)",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "RIAMP (gestantes de zonas endémicas, Res. 3280); vigilancia en salud pública",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 5 días",
+    "tamizaje": "≤ 5 días; los reactivos se confirman en el Laboratorio Departamental con otra técnica"
+   },
+   "volumen_mes": 29,
+   "rango_volumen_mes": [
+    23,
+    34
+   ],
+   "composicion_volumen_mes": {
+    "prenatal": 25,
+    "morbilidad": 4
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 13000,
+   "rango_costo_por_prueba_cop_2026": [
+    9000,
+    19000
+   ],
+   "costo_mensual_cop_2026": 377000,
+   "costo_anual_cop_2026": 4524000,
+   "nota": "Aplica si la Secretaría Seccional de Salud confirma a Yondó como área endémica o la gestante procede de una; verificar."
+  },
+  {
+   "id": "serologias_confirmatorias",
+   "prueba": "Pruebas confirmatorias o de segunda línea por quimioluminiscencia: VIH Ag/Ac de 4.ª generación, HBsAg, anti-VHC, anticuerpos treponémicos (promedio)",
+   "seccion": "Inmunología / serología",
+   "metodo": "Quimioluminiscencia",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "Algoritmos diagnósticos de VIH, sífilis y hepatitis después de una prueba rápida reactiva; vigilancia en salud pública",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 6 h en gestante en trabajo de parto",
+    "rutina": "≤ 72 h",
+    "tamizaje": "≤ 72 h"
+   },
+   "volumen_mes": 45,
+   "rango_volumen_mes": [
+    34,
+    63
+   ],
+   "composicion_volumen_mes": {
+    "confirmaciones": 35,
+    "ambulatorio": 10
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 11000,
+   "rango_costo_por_prueba_cop_2026": [
+    7500,
+    16000
+   ],
+   "costo_mensual_cop_2026": 495000,
+   "costo_anual_cop_2026": 5940000
+  },
+  {
+   "id": "dengue_igm",
+   "prueba": "Dengue IgM (diagnóstico después del día 5 de fiebre)",
+   "seccion": "Inmunología / serología",
+   "metodo": "ELISA o quimioluminiscencia",
+   "equipo": "Analizador de inmunoensayo",
+   "ruta": "Vigilancia en salud pública (dengue); urgencias",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 24 h",
+    "rutina": "≤ 72 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 25,
+   "rango_volumen_mes": [
+    12,
+    75
+   ],
+   "composicion_volumen_mes": {
+    "febriles": 25
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 15000,
+   "rango_costo_por_prueba_cop_2026": [
+    10000,
+    22000
+   ],
+   "costo_mensual_cop_2026": 375000,
+   "costo_anual_cop_2026": 4500000
+  },
+  {
+   "id": "vih_rapida",
+   "prueba": "Prueba rápida de VIH 1 y 2",
+   "seccion": "Pruebas en el punto de atención (POCT)",
+   "metodo": "Inmunocromatografía",
+   "equipo": "Casete (sin equipo)",
+   "ruta": "RIAMP (cada trimestre y en el parto); RPMS (por exposición); vigilancia en salud pública",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 20 min",
+    "rutina": "≤ 20 min en la consulta",
+    "tamizaje": "≤ 20 min en la consulta"
+   },
+   "volumen_mes": 141,
+   "rango_volumen_mes": [
+    116,
+    163
+   ],
+   "composicion_volumen_mes": {
+    "prenatal": 100,
+    "rpms": 31,
+    "ambulatorio": 10
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 7500,
+   "rango_costo_por_prueba_cop_2026": [
+    5000,
+    11000
+   ],
+   "costo_mensual_cop_2026": 1057500,
+   "costo_anual_cop_2026": 12690000,
+   "cups": "906249"
+  },
+  {
+   "id": "sifilis_rapida",
+   "prueba": "Prueba treponémica rápida para sífilis",
+   "seccion": "Pruebas en el punto de atención (POCT)",
+   "metodo": "Inmunocromatografía",
+   "equipo": "Casete",
+   "ruta": "RIAMP (cada trimestre y en el parto si no hubo control); RPMS",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 20 min",
+    "rutina": "≤ 20 min",
+    "tamizaje": "≤ 20 min"
+   },
+   "volumen_mes": 106,
+   "rango_volumen_mes": [
+    88,
+    120
+   ],
+   "composicion_volumen_mes": {
+    "prenatal": 75,
+    "parto_sin_control": 5,
+    "rpms": 26
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 4500,
+   "rango_costo_por_prueba_cop_2026": [
+    3000,
+    7000
+   ],
+   "costo_mensual_cop_2026": 477000,
+   "costo_anual_cop_2026": 5724000,
+   "cups": "906039"
+  },
+  {
+   "id": "rpr",
+   "prueba": "Prueba no treponémica (RPR o VDRL) con diluciones",
+   "seccion": "Inmunología / serología",
+   "metodo": "Floculación",
+   "equipo": "Rotador de VDRL",
+   "ruta": "RIAMP (sífilis gestacional, cada trimestre); seguimiento de tratamiento",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 2 h en el parto",
+    "rutina": "≤ 24 h",
+    "tamizaje": "≤ 24 h"
+   },
+   "volumen_mes": 18,
+   "rango_volumen_mes": [
+    14,
+    23
+   ],
+   "composicion_volumen_mes": {
+    "prenatal": 8,
+    "ambulatorio": 10
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 2500,
+   "rango_costo_por_prueba_cop_2026": [
+    1500,
+    4000
+   ],
+   "costo_mensual_cop_2026": 45000,
+   "costo_anual_cop_2026": 540000,
+   "cups": "906915"
+  },
+  {
+   "id": "hbsag_rapida",
+   "prueba": "Antígeno de superficie de hepatitis B (prueba rápida)",
+   "seccion": "Pruebas en el punto de atención (POCT)",
+   "metodo": "Inmunocromatografía",
+   "equipo": "Casete",
+   "ruta": "RIAMP (primera consulta y parto); RPMS (por exposición)",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 20 min",
+    "rutina": "≤ 20 min",
+    "tamizaje": "≤ 20 min"
+   },
+   "volumen_mes": 40,
+   "rango_volumen_mes": [
+    34,
+    46
+   ],
+   "composicion_volumen_mes": {
+    "prenatal": 25,
+    "rpms": 16
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 4500,
+   "rango_costo_por_prueba_cop_2026": [
+    3000,
+    7000
+   ],
+   "costo_mensual_cop_2026": 180000,
+   "costo_anual_cop_2026": 2160000,
+   "cups": "906317"
+  },
+  {
+   "id": "hcv_rapida",
+   "prueba": "Prueba rápida para hepatitis C",
+   "seccion": "Pruebas en el punto de atención (POCT)",
+   "metodo": "Inmunocromatografía",
+   "equipo": "Casete",
+   "ruta": "RPMS: toda persona de 50 años o más una vez en la vida y transfundidos antes de 1996 (Res. 3280)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 20 min",
+    "tamizaje": "≤ 20 min"
+   },
+   "volumen_mes": 27,
+   "rango_volumen_mes": [
+    25,
+    31
+   ],
+   "composicion_volumen_mes": {
+    "tamizaje": 27
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 7000,
+   "rango_costo_por_prueba_cop_2026": [
+    4500,
+    10000
+   ],
+   "costo_mensual_cop_2026": 189000,
+   "costo_anual_cop_2026": 2268000
+  },
+  {
+   "id": "dengue_rapida",
+   "prueba": "Dengue NS1 + IgM/IgG (prueba rápida combinada)",
+   "seccion": "Pruebas en el punto de atención (POCT)",
+   "metodo": "Inmunocromatografía",
+   "equipo": "Casete",
+   "ruta": "Vigilancia en salud pública (dengue); urgencias (síndrome febril)",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 30 min",
+    "rutina": "≤ 30 min",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 60,
+   "rango_volumen_mes": [
+    30,
+    180
+   ],
+   "composicion_volumen_mes": {
+    "febriles": 60
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 28000,
+   "rango_costo_por_prueba_cop_2026": [
+    18000,
+    40000
+   ],
+   "costo_mensual_cop_2026": 1680000,
+   "costo_anual_cop_2026": 20160000,
+   "nota": "En brote la demanda puede triplicarse; Yondó tuvo incidencias de 280 a 360 casos por 100.000 habitantes en riesgo en 2019 y 2023 (TerriData)."
+  },
+  {
+   "id": "malaria_rapida",
+   "prueba": "Prueba rápida de malaria (P. falciparum / P. vivax)",
+   "seccion": "Pruebas en el punto de atención (POCT)",
+   "metodo": "Inmunocromatografía",
+   "equipo": "Casete",
+   "ruta": "Vigilancia en salud pública; equipos básicos rurales y noches sin microscopista",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 20 min",
+    "rutina": "≤ 20 min",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 30,
+   "rango_volumen_mes": [
+    15,
+    90
+   ],
+   "composicion_volumen_mes": {
+    "febriles": 30
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 6500,
+   "rango_costo_por_prueba_cop_2026": [
+    4000,
+    10000
+   ],
+   "costo_mensual_cop_2026": 195000,
+   "costo_anual_cop_2026": 2340000
+  },
+  {
+   "id": "bhcg_orina",
+   "prueba": "Prueba de embarazo en orina (cualitativa)",
+   "seccion": "Pruebas en el punto de atención (POCT)",
+   "metodo": "Inmunocromatografía",
+   "equipo": "Casete",
+   "ruta": "Urgencias; consulta; antes de rayos X",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 15 min",
+    "rutina": "≤ 15 min",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 108,
+   "rango_volumen_mes": [
+    81,
+    151
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 26,
+    "ambulatorio": 82
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 1800,
+   "rango_costo_por_prueba_cop_2026": [
+    1000,
+    3000
+   ],
+   "costo_mensual_cop_2026": 194400,
+   "costo_anual_cop_2026": 2332800,
+   "cups": "904508"
+  },
+  {
+   "id": "fit",
+   "prueba": "Sangre oculta en materia fecal inmunoquímica (FIT)",
+   "seccion": "Pruebas en el punto de atención (POCT)",
+   "metodo": "Inmunoquímico (casete cualitativo con umbral de 50 ng/mL o analizador cuantitativo si supera 300 al mes)",
+   "equipo": "Casete o analizador de FIT",
+   "ruta": "RPMS: tamización de cáncer de colon y recto en personas de 50 años o más cada 2 años (Res. 3280)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 48 h",
+    "tamizaje": "≤ 48 h"
+   },
+   "volumen_mes": 49,
+   "rango_volumen_mes": [
+    45,
+    57
+   ],
+   "composicion_volumen_mes": {
+    "tamizaje": 49
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 10000,
+   "rango_costo_por_prueba_cop_2026": [
+    6500,
+    15000
+   ],
+   "costo_mensual_cop_2026": 490000,
+   "costo_anual_cop_2026": 5880000,
+   "cups": "907009"
+  },
+  {
+   "id": "hemoglobina_poct",
+   "prueba": "Hemoglobina capilar (hemoglobinómetro portátil)",
+   "seccion": "Pruebas en el punto de atención (POCT)",
+   "metodo": "Fotometría de azida-metahemoglobina",
+   "equipo": "Hemoglobinómetro",
+   "ruta": "Equipos básicos de salud extramurales; gestantes en zona rural",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 5 min",
+    "rutina": "≤ 5 min",
+    "tamizaje": "≤ 5 min"
+   },
+   "volumen_mes": 82,
+   "rango_volumen_mes": [
+    76,
+    96
+   ],
+   "composicion_volumen_mes": {
+    "extramural": 82
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 3500,
+   "rango_costo_por_prueba_cop_2026": [
+    2200,
+    5000
+   ],
+   "costo_mensual_cop_2026": 287000,
+   "costo_anual_cop_2026": 3444000
+  },
+  {
+   "id": "uroanalisis",
+   "prueba": "Uroanálisis completo (tira reactiva y sedimento)",
+   "seccion": "Uroanálisis",
+   "metodo": "Reflectometría de tiras y sedimento por imagen automatizada o microscopía",
+   "equipo": "Lector de tiras y analizador de sedimento",
+   "ruta": "RPMS (riesgo cardiovascular); ruta cardiovascular; morbilidad; RIAMP",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 4 h",
+    "tamizaje": "≤ 24 h"
+   },
+   "volumen_mes": 538,
+   "rango_volumen_mes": [
+    435,
+    708
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 89,
+    "hospitalizacion": 31,
+    "ambulatorio": 227,
+    "rcv": 78,
+    "cronicos": 114
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 2200,
+   "rango_costo_por_prueba_cop_2026": [
+    1400,
+    3200
+   ],
+   "costo_mensual_cop_2026": 1183600,
+   "costo_anual_cop_2026": 14203200,
+   "cups": "907106"
+  },
+  {
+   "id": "coprologico",
+   "prueba": "Coprológico (examen directo con solución salina y lugol)",
+   "seccion": "Coprología",
+   "metodo": "Microscopía",
+   "equipo": "Microscopio",
+   "ruta": "Morbilidad (diarrea, parasitosis); niños",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 2 h",
+    "rutina": "≤ 6 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 98,
+   "rango_volumen_mes": [
+    74,
+    137
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 10,
+    "ambulatorio": 82,
+    "hospitalizacion": 6
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 1800,
+   "rango_costo_por_prueba_cop_2026": [
+    1000,
+    2800
+   ],
+   "costo_mensual_cop_2026": 176400,
+   "costo_anual_cop_2026": 2116800,
+   "cups": "907002"
+  },
+  {
+   "id": "copro_antigenos",
+   "prueba": "Antígenos en heces: rotavirus/adenovirus y Helicobacter pylori (promedio)",
+   "seccion": "Coprología",
+   "metodo": "Inmunocromatografía",
+   "equipo": "Casete",
+   "ruta": "Morbilidad (diarrea aguda en niños; dispepsia)",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 30 min",
+    "rutina": "≤ 2 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 22,
+   "rango_volumen_mes": [
+    16,
+    30
+   ],
+   "composicion_volumen_mes": {
+    "ambulatorio": 22
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 15000,
+   "rango_costo_por_prueba_cop_2026": [
+    10000,
+    22000
+   ],
+   "costo_mensual_cop_2026": 330000,
+   "costo_anual_cop_2026": 3960000
+  },
+  {
+   "id": "coagulacion",
+   "prueba": "Tiempo de protrombina con INR y tiempo de tromboplastina parcial (par)",
+   "seccion": "Coagulación",
+   "metodo": "Coagulométrico (detección mecánica u óptica)",
+   "equipo": "Coagulómetro semiautomático (respaldo: INR en punto de atención)",
+   "ruta": "Urgencias; hemorragia obstétrica; anticoagulados; prequirúrgicos de procedimientos",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min desde que llega la muestra",
+    "rutina": "≤ 4 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 60,
+   "rango_volumen_mes": [
+    45,
+    84
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 19,
+    "hospitalizacion": 15,
+    "ambulatorio": 26
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 7000,
+   "rango_costo_por_prueba_cop_2026": [
+    4500,
+    10000
+   ],
+   "costo_mensual_cop_2026": 420000,
+   "costo_anual_cop_2026": 5040000,
+   "cups": "902045/902049",
+   "nota": "Costo por par."
+  },
+  {
+   "id": "fibrinogeno",
+   "prueba": "Fibrinógeno",
+   "seccion": "Coagulación",
+   "metodo": "Clauss",
+   "equipo": "Coagulómetro",
+   "ruta": "Hemorragia posparto (código rojo); sepsis",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min",
+    "rutina": "≤ 4 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 8,
+   "rango_volumen_mes": [
+    6,
+    10
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 3,
+    "hospitalizacion": 5
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 9000,
+   "rango_costo_por_prueba_cop_2026": [
+    6000,
+    13000
+   ],
+   "costo_mensual_cop_2026": 72000,
+   "costo_anual_cop_2026": 864000
+  },
+  {
+   "id": "gases",
+   "prueba": "Gases arteriales o venosos con electrolitos, lactato y glucosa",
+   "seccion": "Gases y electrolitos (urgencias)",
+   "metodo": "Electrodos y biosensores en cartucho de un solo uso",
+   "equipo": "Lector de gases por cartucho",
+   "ruta": "Urgencias; partos complicados; sepsis; neonatos",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 15 min",
+    "rutina": "no aplica",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 34,
+   "rango_volumen_mes": [
+    26,
+    47
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 19,
+    "hospitalizacion": 12,
+    "partos": 3
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 60000,
+   "rango_costo_por_prueba_cop_2026": [
+    40000,
+    85000
+   ],
+   "costo_mensual_cop_2026": 2040000,
+   "costo_anual_cop_2026": 24480000
+  },
+  {
+   "id": "urocultivo",
+   "prueba": "Urocultivo con recuento y antibiograma",
+   "seccion": "Microbiología",
+   "metodo": "Siembra cuantitativa, identificación bioquímica y antibiograma por difusión en disco (CLSI)",
+   "equipo": "Incubadora, cabina de bioseguridad",
+   "ruta": "RIAMP (todas las gestantes y seguimiento); morbilidad",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "48-72 h (negativo a las 24 h)",
+    "tamizaje": "48-72 h"
+   },
+   "volumen_mes": 101,
+   "rango_volumen_mes": [
+    77,
+    132
+   ],
+   "composicion_volumen_mes": {
+    "prenatal": 32,
+    "ambulatorio": 46,
+    "urgencias": 10,
+    "hospitalizacion": 12
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 14000,
+   "rango_costo_por_prueba_cop_2026": [
+    9000,
+    20000
+   ],
+   "costo_mensual_cop_2026": 1414000,
+   "costo_anual_cop_2026": 16968000,
+   "cups": "901235"
+  },
+  {
+   "id": "hemocultivo",
+   "prueba": "Hemocultivo automatizado (juego de 2 frascos) con identificación y antibiograma si crece",
+   "seccion": "Microbiología",
+   "metodo": "Detección colorimétrica continua de CO2 y subcultivo",
+   "equipo": "Sistema automatizado de hemocultivos",
+   "ruta": "Urgencias y hospitalización (sepsis, fiebre neonatal)",
+   "tiempo_respuesta": {
+    "urgencias": "Gram del frasco positivo ≤ 1 h tras la alarma; aviso al médico de inmediato",
+    "rutina": "positivos preliminares 12-48 h; negativo final a los 5 días",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 17,
+   "rango_volumen_mes": [
+    13,
+    24
+   ],
+   "composicion_volumen_mes": {
+    "urgencias": 5,
+    "hospitalizacion": 12
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 95000,
+   "rango_costo_por_prueba_cop_2026": [
+    70000,
+    130000
+   ],
+   "costo_mensual_cop_2026": 1615000,
+   "costo_anual_cop_2026": 19380000,
+   "cups": "901217"
+  },
+  {
+   "id": "cultivos_otros",
+   "prueba": "Cultivos de secreciones, heridas, faringe y coprocultivo (promedio)",
+   "seccion": "Microbiología",
+   "metodo": "Siembra en medios selectivos, identificación y antibiograma",
+   "equipo": "Incubadora, cabina de bioseguridad",
+   "ruta": "Morbilidad; vigilancia de cólera y EDA con sangre",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "48-72 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 43,
+   "rango_volumen_mes": [
+    32,
+    60
+   ],
+   "composicion_volumen_mes": {
+    "ambulatorio": 26,
+    "hospitalizacion": 9,
+    "coprocultivo": 8
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 16000,
+   "rango_costo_por_prueba_cop_2026": [
+    11000,
+    24000
+   ],
+   "costo_mensual_cop_2026": 688000,
+   "costo_anual_cop_2026": 8256000
+  },
+  {
+   "id": "estreptococo_b",
+   "prueba": "Cultivo rectal y vaginal para estreptococo del grupo B",
+   "seccion": "Microbiología",
+   "metodo": "Caldo selectivo y subcultivo",
+   "equipo": "Incubadora",
+   "ruta": "RIAMP (semana 35 a 37, Res. 3280)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "48-72 h",
+    "tamizaje": "≤ 72 h"
+   },
+   "volumen_mes": 22,
+   "rango_volumen_mes": [
+    18,
+    25
+   ],
+   "composicion_volumen_mes": {
+    "prenatal": 22
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 14000,
+   "rango_costo_por_prueba_cop_2026": [
+    9000,
+    20000
+   ],
+   "costo_mensual_cop_2026": 308000,
+   "costo_anual_cop_2026": 3696000
+  },
+  {
+   "id": "gram_koh_fresco",
+   "prueba": "Coloración de Gram, KOH y examen directo en fresco (promedio)",
+   "seccion": "Microbiología",
+   "metodo": "Microscopía",
+   "equipo": "Microscopio",
+   "ruta": "Morbilidad (flujo vaginal, micosis, uretritis); líquidos",
+   "tiempo_respuesta": {
+    "urgencias": "≤ 60 min",
+    "rutina": "≤ 4 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 130,
+   "rango_volumen_mes": [
+    98,
+    182
+   ],
+   "composicion_volumen_mes": {
+    "gram": 40,
+    "koh": 30,
+    "fresco": 60
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 1200,
+   "rango_costo_por_prueba_cop_2026": [
+    700,
+    2000
+   ],
+   "costo_mensual_cop_2026": 156000,
+   "costo_anual_cop_2026": 1872000,
+   "cups": "901107/901305/901304"
+  },
+  {
+   "id": "baciloscopia",
+   "prueba": "Baciloscopia (Ziehl-Neelsen) de seguimiento de tuberculosis",
+   "seccion": "Microbiología / tuberculosis",
+   "metodo": "Microscopía de luz",
+   "equipo": "Microscopio",
+   "ruta": "Programa de tuberculosis (seguimiento de tratamiento); vigilancia en salud pública",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 24 h",
+    "tamizaje": "≤ 24 h"
+   },
+   "volumen_mes": 12,
+   "rango_volumen_mes": [
+    9,
+    17
+   ],
+   "composicion_volumen_mes": {
+    "seguimiento": 12
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 2000,
+   "rango_costo_por_prueba_cop_2026": [
+    1200,
+    3000
+   ],
+   "costo_mensual_cop_2026": 24000,
+   "costo_anual_cop_2026": 288000,
+   "cups": "901101"
+  },
+  {
+   "id": "leishmania",
+   "prueba": "Examen directo para leishmaniasis cutánea (frotis de la lesión)",
+   "seccion": "Parasitología",
+   "metodo": "Tinción de Giemsa y microscopía",
+   "equipo": "Microscopio",
+   "ruta": "Vigilancia en salud pública (leishmaniasis)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "≤ 24 h",
+    "tamizaje": "no aplica"
+   },
+   "volumen_mes": 6,
+   "rango_volumen_mes": [
+    4,
+    8
+   ],
+   "composicion_volumen_mes": {
+    "morbilidad": 6
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 2500,
+   "rango_costo_por_prueba_cop_2026": [
+    1500,
+    4000
+   ],
+   "costo_mensual_cop_2026": 15000,
+   "costo_anual_cop_2026": 180000
+  },
+  {
+   "id": "xpert_mtb",
+   "prueba": "Mycobacterium tuberculosis y resistencia a rifampicina por PCR en tiempo real (Xpert MTB/RIF Ultra)",
+   "seccion": "Biología molecular",
+   "metodo": "PCR en tiempo real en cartucho cerrado",
+   "equipo": "GeneXpert de 4 módulos",
+   "ruta": "Programa de tuberculosis: prueba inicial de todo sintomático respiratorio; vigilancia en salud pública",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "mismo día (unas 80 min por prueba)",
+    "tamizaje": "≤ 24 h"
+   },
+   "volumen_mes": 25,
+   "rango_volumen_mes": [
+    19,
+    35
+   ],
+   "composicion_volumen_mes": {
+    "sintomaticos_respiratorios": 25
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 110000,
+   "rango_costo_por_prueba_cop_2026": [
+    28000,
+    160000
+   ],
+   "costo_mensual_cop_2026": 2750000,
+   "costo_anual_cop_2026": 33000000,
+   "nota": "El costo mínimo del rango es el precio de acceso del cartucho (US$ 7,97) si se compra por el programa nacional o el Fondo Estratégico de la OPS; si los cartuchos los entrega el programa nacional de tuberculosis, el costo para la E.S.E. es casi cero."
+  },
+  {
+   "id": "xpert_vph",
+   "prueba": "ADN del virus del papiloma humano de alto riesgo con genotipificación 16 y 18/45 (Xpert HPV)",
+   "seccion": "Biología molecular",
+   "metodo": "PCR en tiempo real en cartucho cerrado",
+   "equipo": "GeneXpert de 4 módulos",
+   "ruta": "RPMS: tamización obligatoria de cáncer de cuello uterino con ADN-VPH en mujeres de 30 a 65 años, esquema 1-5-5 (Res. 3280)",
+   "tiempo_respuesta": {
+    "urgencias": "no aplica",
+    "rutina": "no aplica",
+    "tamizaje": "≤ 5 días hábiles (corridas 2 veces por semana); la Res. 3280 pide entregar resultados en máximo 15 días"
+   },
+   "volumen_mes": 34,
+   "rango_volumen_mes": [
+    32,
+    40
+   ],
+   "composicion_volumen_mes": {
+    "tamizaje": 34
+   },
+   "en_sitio": true,
+   "costo_reactivo_insumo_por_prueba_cop_2026": 170000,
+   "rango_costo_por_prueba_cop_2026": [
+    52000,
+    220000
+   ],
+   "costo_mensual_cop_2026": 5780000,
+   "costo_anual_cop_2026": 69360000,
+   "nota": "La Res. 3280 recomienda procesar el ADN-VPH en laboratorios centralizados. Opción A (base): procesar aquí con control de calidad externo, para que la mujer reciba resultado y tratamiento en Yondó. Opción B: remitir al laboratorio que contrate la EPS. El mínimo del rango es el precio de acceso del cartucho (US$ 14,90)."
+  }
+ ],
+ "totales_menu": {
+  "pruebas_en_sitio_mes": 5365,
+  "rango_pruebas_en_sitio_mes": [
+   4247,
+   7309
+  ],
+  "pruebas_en_sitio_anio": 64380,
+  "pruebas_remitidas_mes": 81,
+  "por_seccion": {
+   "Hematología": {
+    "pruebas_mes": 765,
+    "costo_anual_cop_2026": 36633600
+   },
+   "Parasitología": {
+    "pruebas_mes": 286,
+    "costo_anual_cop_2026": 5220000
+   },
+   "Química clínica": {
+    "pruebas_mes": 2038,
+    "costo_anual_cop_2026": 68659200
+   },
+   "Inmunología": {
+    "pruebas_mes": 489,
+    "costo_anual_cop_2026": 63804000
+   },
+   "Pruebas en el punto de atención (POCT)": {
+    "pruebas_mes": 643,
+    "costo_anual_cop_2026": 56998800
+   },
+   "Uroanálisis": {
+    "pruebas_mes": 538,
+    "costo_anual_cop_2026": 14203200
+   },
+   "Coprología": {
+    "pruebas_mes": 120,
+    "costo_anual_cop_2026": 6076800
+   },
+   "Coagulación": {
+    "pruebas_mes": 68,
+    "costo_anual_cop_2026": 5904000
+   },
+   "Gases y electrolitos (urgencias)": {
+    "pruebas_mes": 34,
+    "costo_anual_cop_2026": 24480000
+   },
+   "Microbiología": {
+    "pruebas_mes": 325,
+    "costo_anual_cop_2026": 50460000
+   },
+   "Biología molecular": {
+    "pruebas_mes": 59,
+    "costo_anual_cop_2026": 102360000
+   }
+  },
+  "tipo": "calculo_propio",
+  "glucometrias_capilares_mes_no_sumadas": 1500,
+  "chequeo_mezcla": "La E.S.E. Pasto Salud (primer nivel) registró 354.420 exámenes en 2020; su mezcla (hemograma 9 %, uroanálisis 10 %, glucosa 10 %, perfil lipídico 26 %, creatinina 7 %, VPH 4 %, VIH rápida 4 %, sífilis rápida 3 %) se usó para repartir la demanda de consulta: https://www.datos.gov.co/resource/944v-fw5e.json"
+ },
+ "carga_por_equipo": {
+  "determinaciones_quimica_mes": 2439,
+  "determinaciones_electrolitos_mes": 474,
+  "pruebas_inmunoensayo_mes": 471,
+  "hemogramas_mes": 618,
+  "uroanalisis_mes": 538,
+  "pruebas_coagulacion_mes": 128,
+  "gases_mes": 34,
+  "frascos_hemocultivo_mes": 34,
+  "pruebas_genexpert_mes": 59,
+  "hba1c_mes": 121,
+  "supuesto_picos": "Las muestras ambulatorias llegan en la mañana: 60-80 % del día en 3-4 horas; 22 días hábiles al mes."
+ },
+ "equipos": [
+  {
+   "nombre": "Analizador hematológico de 5 partes con cargador automático",
+   "cantidad": 1,
+   "funcion": "Hemograma completo, reticulocitos (según modelo)",
+   "capacidad": "60 hemogramas por hora",
+   "carga": {
+    "demanda_mes": 618,
+    "demanda_dia_habil": 28.1,
+    "demanda_hora_pico": 5.6,
+    "capacidad_por_hora": 60,
+    "uso_en_hora_pico_pct": 9.4
+   },
+   "respaldo": "Analizador de 3 partes (abajo) y remisión urgente",
+   "modelo_de_compra": "comodato pagado con reactivos",
+   "precio_mercado": {
+    "valor": 106133803,
+    "tipo": "referencia_secop_ajustada_ipc",
+    "rango": [
+     90767606,
+     121500000
+    ],
+    "fuente": "E.S.E. Hospital San Andrés Apóstol (Córdoba), 2026-02-24, $121.500.000 (proceso SECOP II, precio base): https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.10209091; E.S.E. Hospital Mental Rudesindo Soto (Cúcuta), 2024-05-30, $81.900.560 (proceso SECOP II, precio base): https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.6316348"
+   },
+   "clase_riesgo": "Equipo para diagnóstico in vitro (Decreto 3770 de 2004); reactivos categoría II",
+   "precio_unitario_cop_2026": 106133803,
+   "precio_mercado_total_cop_2026": 106133803
+  },
+  {
+   "nombre": "Analizador hematológico de 3 partes (respaldo y urgencias nocturnas)",
+   "cantidad": 1,
+   "funcion": "Hemograma de respaldo",
+   "capacidad": "60 hemogramas por hora",
+   "carga": null,
+   "respaldo": "—",
+   "modelo_de_compra": "comodato (incluido en el contrato de hematología)",
+   "precio_mercado": {
+    "valor": 34510000,
+    "tipo": "referencia_secop_ajustada_ipc",
+    "rango": [
+     34510000,
+     34510000
+    ],
+    "fuente": "E.S.E. Hospital Señor de la Misericordia (Santander), 2026-10-12, $34.510.000 (proceso SECOP II, precio base): https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.11194970"
+   },
+   "clase_riesgo": "Equipo para diagnóstico in vitro; reactivos categoría II",
+   "precio_unitario_cop_2026": 34510000,
+   "precio_mercado_total_cop_2026": 34510000
+  },
+  {
+   "nombre": "Analizador de química clínica automatizado con módulo de electrolitos (ISE)",
+   "cantidad": 1,
+   "funcion": "Química, proteína C reactiva, microalbuminuria y electrolitos",
+   "capacidad": "240-400 pruebas fotométricas por hora + 150 de electrolitos",
+   "carga": {
+    "demanda_mes": 2913,
+    "demanda_dia_habil": 132.4,
+    "demanda_hora_pico": 26.5,
+    "capacidad_por_hora": 300,
+    "uso_en_hora_pico_pct": 8.8
+   },
+   "respaldo": "El analizador Snibe Biossays 240 Plus que ya usa el hospital (SECOP I, contratos de reactivos 2023-2026) queda como respaldo",
+   "modelo_de_compra": "comodato pagado con reactivos",
+   "precio_mercado": {
+    "valor": 177356612,
+    "tipo": "referencia_secop_ajustada_ipc",
+    "rango": [
+     152311381,
+     202401844
+    ],
+    "fuente": "E.S.E. Hospital Local de Montelíbano (Córdoba), 2025-03-31, $144.500.000 (proceso SECOP II, precio base): https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.8046694; E.S.E. Hospital Local de Piedecuesta (Santander), 2024-12-19, $182.629.300 (proceso SECOP II, precio base): https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.7343391"
+   },
+   "clase_riesgo": "Equipo para diagnóstico in vitro; reactivos categoría II",
+   "precio_unitario_cop_2026": 177356612,
+   "precio_mercado_total_cop_2026": 177356612
+  },
+  {
+   "nombre": "Analizador de inmunoensayo por quimioluminiscencia de mesa",
+   "cantidad": 1,
+   "funcion": "Hormonas (TSH, T4 libre, TSH neonatal, beta-hCG), PSA, ferritina, troponina, serologías (toxoplasma, rubéola, Chagas, VIH, hepatitis, sífilis, dengue)",
+   "capacidad": "120-180 pruebas por hora",
+   "carga": {
+    "demanda_mes": 471,
+    "demanda_dia_habil": 21.4,
+    "demanda_hora_pico": 3.7,
+    "capacidad_por_hora": 150,
+    "uso_en_hora_pico_pct": 2.5
+   },
+   "respaldo": "Lector de fluorescencia de punto de atención para TSH, troponina y beta-hCG; remisión",
+   "modelo_de_compra": "comodato pagado con reactivos",
+   "precio_mercado": {
+    "valor": 180000000,
+    "tipo": "estimacion",
+    "rango": [
+     120000000,
+     260000000
+    ],
+    "fuente": "Estimación de precio de mercado del analizador en Colombia (2026); los analizadores casi nunca se compran: se entregan en comodato."
+   },
+   "clase_riesgo": "Equipo para diagnóstico in vitro; reactivos categoría II y III (VIH, hepatitis, sífilis, Chagas)",
+   "precio_unitario_cop_2026": 180000000,
+   "precio_mercado_total_cop_2026": 180000000
+  },
+  {
+   "nombre": "Analizador de hemoglobina glicosilada por HPLC (certificado NGSP)",
+   "cantidad": 1,
+   "funcion": "HbA1c y detección de variantes de hemoglobina",
+   "capacidad": "30-40 pruebas por hora",
+   "carga": {
+    "demanda_mes": 121,
+    "demanda_dia_habil": 5.5,
+    "demanda_hora_pico": 1.1,
+    "capacidad_por_hora": 35,
+    "uso_en_hora_pico_pct": 3.1
+   },
+   "respaldo": "HbA1c inmunoturbidimétrica en el analizador de química",
+   "modelo_de_compra": "comodato pagado con reactivos",
+   "precio_mercado": {
+    "valor": 70000000,
+    "tipo": "estimacion",
+    "rango": [
+     45000000,
+     110000000
+    ],
+    "fuente": "Estimación de precio de mercado del analizador en Colombia (2026); los analizadores casi nunca se compran: se entregan en comodato."
+   },
+   "clase_riesgo": "Equipo para diagnóstico in vitro; reactivos categoría II",
+   "precio_unitario_cop_2026": 70000000,
+   "precio_mercado_total_cop_2026": 70000000
+  },
+  {
+   "nombre": "Lector automático de tiras de orina y analizador de sedimento por imagen",
+   "cantidad": 1,
+   "funcion": "Uroanálisis completo estandarizado",
+   "capacidad": "Tiras: 300-500 por hora; sedimento: 60-100 por hora",
+   "carga": {
+    "demanda_mes": 538,
+    "demanda_dia_habil": 24.5,
+    "demanda_hora_pico": 4.9,
+    "capacidad_por_hora": 80,
+    "uso_en_hora_pico_pct": 6.1
+   },
+   "respaldo": "Sedimento al microscopio",
+   "modelo_de_compra": "comodato pagado con reactivos",
+   "precio_mercado": {
+    "valor": 107708174,
+    "tipo": "referencia_secop_ajustada_ipc + estimacion",
+    "rango": [
+     77708174,
+     157708174
+    ],
+    "fuente": "Lector de tiras: E.S.E. Hospital Héctor Abad Gómez de San Juan de Urabá (homónimo, NIT 800143438; no es el de Yondó), 2025-04-24, $16.800.000: https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.8142926; sedimento automatizado: estimación de $90 millones (60-140)."
+   },
+   "clase_riesgo": "Equipo para diagnóstico in vitro; reactivos categoría II",
+   "precio_unitario_cop_2026": 107708174,
+   "precio_mercado_total_cop_2026": 107708174
+  },
+  {
+   "nombre": "Coagulómetro semiautomático de 4 canales",
+   "cantidad": 1,
+   "funcion": "Tiempo de protrombina/INR, tiempo de tromboplastina parcial, fibrinógeno",
+   "capacidad": "30-60 pruebas por hora",
+   "carga": {
+    "demanda_mes": 128,
+    "demanda_dia_habil": 5.8,
+    "demanda_hora_pico": 1.2,
+    "capacidad_por_hora": 40,
+    "uso_en_hora_pico_pct": 2.9
+   },
+   "respaldo": "INR capilar en punto de atención",
+   "modelo_de_compra": "comodato pagado con reactivos",
+   "precio_mercado": {
+    "valor": 30000000,
+    "tipo": "estimacion",
+    "rango": [
+     20000000,
+     45000000
+    ],
+    "fuente": "Estimación de precio de mercado del analizador en Colombia (2026); los analizadores casi nunca se compran: se entregan en comodato."
+   },
+   "clase_riesgo": "Equipo para diagnóstico in vitro; reactivos categoría II",
+   "precio_unitario_cop_2026": 30000000,
+   "precio_mercado_total_cop_2026": 30000000
+  },
+  {
+   "nombre": "Analizador de gases y electrolitos por cartucho (lector portátil)",
+   "cantidad": 2,
+   "funcion": "Gases, sodio, potasio, calcio iónico, lactato, glucosa y hematocrito",
+   "capacidad": "Una prueba en 2-3 minutos por lector",
+   "carga": null,
+   "respaldo": "Un lector en el laboratorio y otro en urgencias; se respaldan entre sí",
+   "modelo_de_compra": "comodato pagado con cartuchos",
+   "precio_mercado": {
+    "valor": 45000000,
+    "tipo": "estimacion",
+    "rango": [
+     30000000,
+     70000000
+    ],
+    "fuente": "Estimación de precio de mercado del analizador en Colombia (2026); los analizadores casi nunca se compran: se entregan en comodato."
+   },
+   "clase_riesgo": "Equipo para diagnóstico in vitro; reactivos categoría II",
+   "nota": "Con unos 55 gases al mes, el cartucho de un solo uso evita botar reactivos, cosa que sí pasa con los analizadores de mesa.",
+   "precio_unitario_cop_2026": 45000000,
+   "precio_mercado_total_cop_2026": 90000000
+  },
+  {
+   "nombre": "Sistema automatizado de hemocultivos (40-60 frascos)",
+   "cantidad": 1,
+   "funcion": "Detección continua de crecimiento en sangre",
+   "capacidad": "40-60 frascos en incubación simultánea",
+   "carga": {
+    "demanda_mes": 34,
+    "frascos_simultaneos_promedio": 5.7,
+    "capacidad_frascos": 40,
+    "uso_promedio_pct": 14.2
+   },
+   "respaldo": "Frascos manuales con lectura visual; remisión",
+   "modelo_de_compra": "comodato pagado con frascos",
+   "precio_mercado": {
+    "valor": 160000000,
+    "tipo": "estimacion",
+    "rango": [
+     110000000,
+     230000000
+    ],
+    "fuente": "Estimación de precio de mercado del analizador en Colombia (2026); los analizadores casi nunca se compran: se entregan en comodato."
+   },
+   "clase_riesgo": "Equipo para diagnóstico in vitro; medios de cultivo categoría I",
+   "precio_unitario_cop_2026": 160000000,
+   "precio_mercado_total_cop_2026": 160000000
+  },
+  {
+   "nombre": "GeneXpert de 4 módulos (PCR en tiempo real en cartucho)",
+   "cantidad": 1,
+   "funcion": "Tuberculosis con resistencia a rifampicina; VPH; opcionales: carga viral de VIH y clamidia/gonococo",
+   "capacidad": "4 pruebas cada 60-90 minutos; unas 20 por turno de 8 horas",
+   "carga": {
+    "demanda_mes": 59,
+    "demanda_dia_habil": 2.7,
+    "capacidad_turno": 20,
+    "uso_pct": 13.4
+   },
+   "respaldo": "Remisión al Laboratorio Departamental o a un GeneXpert de Barrancabermeja",
+   "modelo_de_compra": "compra o entrega del programa nacional de tuberculosis; cartuchos por programa o compra directa",
+   "precio_mercado": {
+    "valor": 143967621,
+    "tipo": "referencia_secop_ajustada_ipc",
+    "rango": [
+     143967621,
+     143967621
+    ],
+    "fuente": "Gobernación del Valle del Cauca – Laboratorio de Salud Pública, 2024-09-11, $129.903.490 (proceso SECOP II, adjudicado): https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.6813664"
+   },
+   "precio_acceso": {
+    "valor": 66416400,
+    "usd": 19000,
+    "fuente": "Cepheid, precios de acceso (HBDC) publicados por PFSCM, GeneXpert IV de 4 módulos US$ 19.000 (escritorio) – https://pfscm.org/access-programs/cepheid-accessible-pricing/ (consultado 22-oct-2026). Colombia no aparece verificada en la lista de países elegibles.",
+    "tipo": "dato_oficial convertido con TRM (cálculo propio)"
+   },
+   "clase_riesgo": "Equipo para diagnóstico in vitro; cartuchos categoría II (biología molecular)",
+   "precio_unitario_cop_2026": 143967621,
+   "precio_mercado_total_cop_2026": 143967621
+  },
+  {
+   "nombre": "Sistema semiautomatizado de identificación y antibiograma",
+   "cantidad": 1,
+   "funcion": "Identificación bacteriana y concentración inhibitoria mínima",
+   "capacidad": "Paneles por lote",
+   "carga": null,
+   "respaldo": "Método manual de difusión en disco (CLSI)",
+   "modelo_de_compra": "opcional, comodato pagado con paneles cuando haya más de 150 aislamientos al mes",
+   "precio_mercado": {
+    "valor": 150000000,
+    "tipo": "estimacion",
+    "rango": [
+     100000000,
+     220000000
+    ],
+    "fuente": "Estimación de precio de mercado del analizador en Colombia (2026); los analizadores casi nunca se compran: se entregan en comodato."
+   },
+   "clase_riesgo": "Equipo para diagnóstico in vitro; reactivos categoría II",
+   "opcional": true,
+   "precio_unitario_cop_2026": 150000000,
+   "precio_mercado_total_cop_2026": 150000000
+  }
+ ],
+ "valor_mercado_analizadores_comodato_cop_2026": 955708589,
+ "areas": [
+  {
+   "seccion": "Toma de muestras: recepción y entrega de resultados (2 puestos)",
+   "piso": 1,
+   "area_m2": 8.0,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Toma de muestras: sala de espera (15 personas)",
+   "piso": 1,
+   "area_m2": 18.0,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Toma de muestras: 4 cubículos de flebotomía de 3,6 m²",
+   "piso": 1,
+   "area_m2": 14.4,
+   "condiciones": "Mínimo 3 m² por cubículo (Res. 1633, Cuadro 47).",
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Toma de muestras especiales (pediátricas, microbiológicas, curvas de glucosa) con unidad sanitaria",
+   "piso": 1,
+   "area_m2": 12.5,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Preparación, embalaje y envío de muestras (montacargas al laboratorio y remisión)",
+   "piso": 1,
+   "area_m2": 6.0,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Toma de muestras: aseo",
+   "piso": 1,
+   "area_m2": 3.0,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Toma de citologías y ADN-VPH con unidad sanitaria y preparación",
+   "piso": 2,
+   "area_m2": 17.9,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: recepción interna (llegada del montacargas y del tubo neumático), registro y clasificación",
+   "piso": 2,
+   "area_m2": 6.0,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: centrifugación y alícuotas (preanalítica)",
+   "piso": 2,
+   "area_m2": 8.0,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: hematología y coagulación",
+   "piso": 2,
+   "area_m2": 12.0,
+   "condiciones": "Tomas reguladas y UPS; microscopio de revisión.",
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: química clínica, HbA1c e inmunoensayo",
+   "piso": 2,
+   "area_m2": 18.0,
+   "condiciones": "0,6 m de servicio detrás de los analizadores; purificador de agua tipo II; desagüe; aire acondicionado por la carga térmica.",
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: inmunología y pruebas rápidas (VIH, sífilis, hepatitis, dengue) y GeneXpert",
+   "piso": 2,
+   "area_m2": 8.0,
+   "condiciones": "El cartucho del GeneXpert es cerrado: no requiere salas separadas de PCR.",
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: microbiología y baciloscopia con antecámara y cabina de bioseguridad",
+   "piso": 2,
+   "area_m2": 14.0,
+   "condiciones": "Presión negativa y 10 cambios de aire por hora (Res. 1633, Cuadro 4); ducha y lavaojos.",
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: uroanálisis, coprológico, parasitología y gota gruesa",
+   "piso": 2,
+   "area_m2": 12.0,
+   "condiciones": "Poceta y extracción localizada.",
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: lavado, descontaminación y esterilización de material (autoclave)",
+   "piso": 2,
+   "area_m2": 6.0,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: área de neveras (reactivos y muestras)",
+   "piso": 2,
+   "area_m2": 4.0,
+   "condiciones": "Registro de temperatura con alarma remota.",
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: depósito de materiales, insumos y reactivos",
+   "piso": 2,
+   "area_m2": 8.0,
+   "condiciones": "Almacenamiento exclusivo de reactivos (Res. 3100, num. 11.3.12).",
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: oficina de coordinación, control de calidad y LIS",
+   "piso": 2,
+   "area_m2": 6.0,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: vestidor con unidad sanitaria y descanso del personal (servicio 24 horas)",
+   "piso": 2,
+   "area_m2": 14.0,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: unidades sanitarias del personal (2)",
+   "piso": 2,
+   "area_m2": 5.0,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  },
+  {
+   "seccion": "Laboratorio: aseo",
+   "piso": 2,
+   "area_m2": 3.0,
+   "fuente": "programa.json (ambientes), con condiciones de la Res. 1633 y la Res. 3100"
+  }
+ ],
+ "area_total_laboratorio_piso2_m2": 124.0,
+ "area_toma_de_muestras_piso1_m2": 61.9,
+ "nota_areas": "Áreas útiles tomadas del programa médico-arquitectónico (programa.json); cuadran con el rango de 110-180 m² netos del laboratorio en proyecto_tipo.json.",
+ "lis": {
+  "funciones": [
+   "Recibe la orden electrónica desde la historia clínica (hoy el hospital usa los módulos de Xenco S.A., incluido el de laboratorio: contrato SECOP I de $63,2 millones en 2026, https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=26-4-14596835).",
+   "Imprime etiquetas con código de barras en la toma de muestras y registra la trazabilidad de cada tubo.",
+   "Interfaz bidireccional con cada analizador (protocolos ASTM o HL7) para no transcribir resultados a mano.",
+   "Autovalidación con reglas, control delta y validación por el bacteriólogo; firma electrónica.",
+   "Alerta de valores críticos al médico y registro de la llamada (meta: 100 % avisados en menos de 30 minutos).",
+   "Módulo de control de calidad interno con reglas de Westgard y gráficos de Levey-Jennings.",
+   "Tablero de tiempos de respuesta por prueba y por servicio (urgencias, rutina, tamizaje).",
+   "Módulo de microbiología con exportación a WHONET y apoyo a la notificación en SIVIGILA.",
+   "Seguimiento de muestras remitidas y de resultados de tamizaje para búsqueda activa (VPH, sangre oculta, TSH neonatal).",
+   "Portal o mensaje de texto para que el paciente consulte resultados; envío de resultados a la historia clínica y generación de RIPS."
+  ],
+  "interoperabilidad": "Ley 2015 de 2020 (interoperabilidad de la historia clínica electrónica) y Res. 866 de 2021 (conjunto de elementos de datos clínicos); HL7 FHIR o HL7 v2 con la historia clínica.",
+  "interfaces_requeridas": [
+   "Hematología 5 partes",
+   "Hematología 3 partes",
+   "Química",
+   "Inmunoensayo",
+   "HbA1c",
+   "Orina",
+   "Coagulación",
+   "Gases (2)",
+   "Hemocultivos",
+   "GeneXpert"
+  ],
+  "opciones": [
+   {
+    "opcion": "LIS dedicado por suscripción, de la E.S.E., con interfaz HL7 a Xenco",
+    "costo_anual_cop_2026": 60000000,
+    "rango": [
+     36000000,
+     96000000
+    ],
+    "tipo": "estimacion",
+    "recomendada": true
+   },
+   {
+    "opcion": "Módulo de laboratorio de Xenco más middleware de interfaces",
+    "costo": "A cotizar con Xenco; el middleware cuesta unos $40-80 millones (estimación).",
+    "recomendada": false
+   },
+   {
+    "opcion": "LIS que entrega el proveedor del comodato",
+    "costo": "Incluido en reactivos, pero los datos y la continuidad dependen del proveedor.",
+    "recomendada": false
+   }
+  ],
+  "requisito_485": "Dotación TIC: documento de software y hardware, licencias, plan de implementación y capacitación, y certificación de protección de datos firmada por ingeniero de sistemas (Res. 485, num. 7.1.6 b)."
+ },
+ "calidad": {
+  "control_interno": {
+   "descripcion": "Dos niveles de control en cada corrida para química, hematología, coagulación, gases y HbA1c; dos o tres niveles para inmunoensayo; controles positivos y negativos para pruebas rápidas por lote y cada semana; cepas de referencia para microbiología.",
+   "reglas": "Reglas de Westgard y gráficos de Levey-Jennings en el LIS; verificación de métodos (precisión y veracidad) antes de usar cada prueba.",
+   "norma": "Res. 3100, estándar de procesos prioritarios del laboratorio clínico: control de calidad interno y externo y validación secundaria."
+  },
+  "control_externo": [
+   {
+    "programa": "Programas de Evaluación Externa del Desempeño Directo (PEED) del Instituto Nacional de Salud: malaria, leishmaniasis, Chagas y química clínica y hematología (PEEDQCH)",
+    "costo": "Sin costo",
+    "url": "https://www.ins.gov.co/TyS/programas-de-calidad",
+    "nota": "El INS publica informes anuales (por ejemplo, PEED de malaria 2024: https://www.ins.gov.co/Portalweb2025/informe-%20final-pedd-malaria-2024.pdf)."
+   },
+   {
+    "programa": "Evaluación externa indirecta por el Laboratorio Departamental de Salud Pública de Antioquia: relectura de láminas de gota gruesa (todas las positivas y una muestra de negativas) y de baciloscopias; panel de VIH y sífilis",
+    "costo": "Sin costo",
+    "norma": "Red Nacional de Laboratorios (Decreto 780 de 2016, compila el Decreto 2323 de 2006) y Res. 1619 de 2015 (estándares de calidad en salud pública)."
+   },
+   {
+    "programa": "Programa comercial de evaluación externa (hematología, química, inmunología, uroanálisis, coagulación, HbA1c, parasitología, microbiología)",
+    "costo_anual_cop_2026": 22000000,
+    "rango": [
+     12000000,
+     35000000
+    ],
+    "tipo": "estimacion"
+   },
+   {
+    "programa": "Control externo de ADN-VPH y GeneXpert (paneles del fabricante o de un programa internacional)",
+    "costo": "Incluido en el rango anterior",
+    "nota": "La Res. 3280 exige que los laboratorios de ADN-VPH usen pruebas validadas con control de calidad."
+   }
+  ],
+  "punto_de_atencion": "Un bacteriólogo con formación en control de calidad de pruebas en el punto de atención supervisa glucómetros, pruebas rápidas y lectores de urgencias y partos (Res. 3100, num. 11.3.12).",
+  "indicadores": [
+   {
+    "indicador": "Cumplimiento del tiempo de respuesta de urgencias (≤ 60 min)",
+    "meta": "≥ 90 %"
+   },
+   {
+    "indicador": "Muestras rechazadas (hemolizadas, mal rotuladas, insuficientes)",
+    "meta": "< 2 %"
+   },
+   {
+    "indicador": "Valores críticos avisados en menos de 30 minutos",
+    "meta": "100 %"
+   },
+   {
+    "indicador": "Resultados satisfactorios en evaluación externa",
+    "meta": "≥ 95 %"
+   },
+   {
+    "indicador": "Contaminación de hemocultivos",
+    "meta": "< 3 %"
+   },
+   {
+    "indicador": "Mujeres con VPH positivo contactadas en 2 semanas (Res. 3280)",
+    "meta": "100 %"
+   },
+   {
+    "indicador": "TSH neonatal con resultado antes de 48 horas",
+    "meta": "≥ 95 %"
+   }
+  ],
+  "bioseguridad": [
+   "Cabina de bioseguridad certificada cada año (NSF/ANSI 49).",
+   "Autoclave validada con indicadores biológicos.",
+   "Plan de gestión integral de residuos (Res. 591 de 2024).",
+   "Esquema de vacunación del personal (hepatitis B) y protocolo de accidentes biológicos."
+  ]
+ },
+ "referencia_de_muestras": {
+  "laboratorios": [
+   "Laboratorio Departamental de Salud Pública de Antioquia (Medellín): eventos de interés en salud pública y control de calidad, sin costo.",
+   "Laboratorio de referencia contratado (Medellín, Bucaramanga o Barrancabermeja): pruebas especializadas.",
+   "Laboratorio centralizado de citología, patología y, si se elige la opción B, ADN-VPH, contratado por la EPS."
+  ],
+  "logistica": "Triple embalaje (UN3373, sustancia biológica categoría B), cadena de frío de 2-8 °C con registrador, remisión documentada en el LIS, envío dos veces por semana por Barrancabermeja (por el río Magdalena) y resultados electrónicos.",
+  "remitidas": [
+   {
+    "prueba": "Citología de cuello uterino (mujeres de 25 a 29 años y triage de VPH positivo)",
+    "destino": "Laboratorio de citología y patología contratado por la EPS (centralizado)",
+    "volumen_mes": 15,
+    "tiempo_respuesta": "≤ 15 días (Res. 3280)",
+    "costo_unitario_cop_2026": 35000,
+    "rango_costo_unitario_cop_2026": [
+     25000,
+     50000
+    ],
+    "costo_anual_cop_2026": 6300000,
+    "tipo": "estimacion"
+   },
+   {
+    "prueba": "Cultivo y pruebas de sensibilidad de tuberculosis; confirmación de casos",
+    "destino": "Laboratorio Departamental de Salud Pública de Antioquia (Medellín) / Instituto Nacional de Salud",
+    "volumen_mes": 4,
+    "tiempo_respuesta": "4-8 semanas",
+    "nota": "Evento de salud pública: sin costo para la E.S.E. salvo el transporte.",
+    "costo_unitario_cop_2026": 0,
+    "rango_costo_unitario_cop_2026": [
+     0,
+     0
+    ],
+    "costo_anual_cop_2026": 0,
+    "tipo": "estimacion"
+   },
+   {
+    "prueba": "Carga viral y conteo de CD4 de VIH; carga viral de hepatitis B y C",
+    "destino": "Laboratorio de referencia de la EPS o del programa",
+    "volumen_mes": 4,
+    "tiempo_respuesta": "7-15 días",
+    "costo_unitario_cop_2026": 180000,
+    "rango_costo_unitario_cop_2026": [
+     120000,
+     260000
+    ],
+    "costo_anual_cop_2026": 8640000,
+    "tipo": "estimacion"
+   },
+   {
+    "prueba": "Confirmación de dengue (PCR/serotipo), malaria (control de calidad de láminas), Chagas (segunda técnica), leishmaniasis, sarampión/rubéola, cólera, leptospira y rickettsia",
+    "destino": "Laboratorio Departamental de Salud Pública de Antioquia",
+    "volumen_mes": 10,
+    "tiempo_respuesta": "5-15 días",
+    "nota": "Muestras de vigilancia SIVIGILA: sin costo para la E.S.E.",
+    "costo_unitario_cop_2026": 0,
+    "rango_costo_unitario_cop_2026": [
+     0,
+     0
+    ],
+    "costo_anual_cop_2026": 0,
+    "tipo": "estimacion"
+   },
+   {
+    "prueba": "Marcadores tumorales distintos de PSA, vitamina B12, perfil hormonal ampliado, inmunología especial, niveles de medicamentos",
+    "destino": "Laboratorio de referencia contratado",
+    "volumen_mes": 25,
+    "tiempo_respuesta": "3-8 días",
+    "costo_unitario_cop_2026": 45000,
+    "rango_costo_unitario_cop_2026": [
+     30000,
+     70000
+    ],
+    "costo_anual_cop_2026": 13500000,
+    "tipo": "estimacion"
+   },
+   {
+    "prueba": "Coombs directo e indirecto, identificación de anticuerpos irregulares",
+    "destino": "Laboratorio de referencia o servicio de transfusión de Barrancabermeja",
+    "volumen_mes": 8,
+    "tiempo_respuesta": "24-72 h",
+    "costo_unitario_cop_2026": 30000,
+    "rango_costo_unitario_cop_2026": [
+     20000,
+     45000
+    ],
+    "costo_anual_cop_2026": 2880000,
+    "tipo": "estimacion"
+   },
+   {
+    "prueba": "Tamizaje neonatal ampliado (errores innatos del metabolismo) cuando se implemente",
+    "destino": "Laboratorio definido por MinSalud",
+    "volumen_mes": 0,
+    "tiempo_respuesta": "según programa",
+    "nota": "La Res. 3280 lo prevé de forma progresiva.",
+    "costo_unitario_cop_2026": 0,
+    "rango_costo_unitario_cop_2026": [
+     0,
+     0
+    ],
+    "costo_anual_cop_2026": 0,
+    "tipo": "estimacion"
+   },
+   {
+    "prueba": "Patología (biopsias) y otros estudios especiales",
+    "destino": "Laboratorio de patología contratado",
+    "volumen_mes": 15,
+    "tiempo_respuesta": "8-15 días",
+    "costo_unitario_cop_2026": 60000,
+    "rango_costo_unitario_cop_2026": [
+     40000,
+     90000
+    ],
+    "costo_anual_cop_2026": 10800000,
+    "tipo": "estimacion"
+   }
+  ],
+  "volumen_mes": 81
+ },
+ "modelo_de_compra": {
+  "recomendacion": "Modelo mixto: (1) analizadores con reactivos cerrados en comodato pagado con reactivos (hematología, química, inmunoensayo, HbA1c, orina, coagulación, gases y hemocultivos); (2) compra directa de lo durable y abierto (microscopios, cabina de bioseguridad, centrífugas, incubadoras, neveras, autoclave, pipetas: ver dotacion.json); (3) GeneXpert por el programa nacional de tuberculosis o compra con precio de acceso; (4) sistema de información del laboratorio (LIS) propiedad o suscripción de la E.S.E., no del proveedor, para no quedar amarrado.",
+  "escenario_comodato": {
+   "inversion_inicial_cop_2026": 0,
+   "costo_anual_reactivos_cop_2026": 434799600,
+   "valor_presente_7_anios_cop_2026": 2427217217,
+   "ventajas": [
+    "Sin inversión inicial: libera recursos de regalías o cofinanciación para la obra.",
+    "El proveedor mantiene, calibra y cambia el equipo si falla o queda obsoleto.",
+    "Interfaz al LIS y capacitación incluidas."
+   ],
+   "riesgos": [
+    "Sobreprecio del reactivo de 25-40 % (estimación).",
+    "Compromiso de consumo mínimo; si la E.S.E. se atrasa en pagos (está en Programa de Saneamiento Fiscal y Financiero), el proveedor puede retirar el equipo.",
+    "Debe quedar claro en el contrato que el equipo es del proveedor, con póliza y sin cobro oculto de compra."
+   ]
+  },
+  "escenario_compra": {
+   "inversion_inicial_cop_2026": 955708589,
+   "costo_anual_reactivos_cop_2026": 334461231,
+   "mantenimiento_anual_cop_2026": 76456687,
+   "valor_presente_7_anios_cop_2026": 3249609148,
+   "ventajas": [
+    "Reactivo más barato y libertad de proveedor si el reactivo es abierto.",
+    "El equipo es activo de la E.S.E."
+   ],
+   "riesgos": [
+    "Inversión inicial alta y obsolescencia a los 7 años.",
+    "Muchos analizadores solo aceptan reactivos de su marca: la libertad de compra es menor de lo que parece.",
+    "Requiere ingeniería biomédica y contratos de mantenimiento."
+   ]
+  },
+  "diferencia_valor_presente_cop_2026": 822391931,
+  "supuestos": "Horizonte de 7 años (vida útil de un analizador), tasa de descuento real de 6 %, sobreprecio del reactivo en comodato de 30 % (estimación), mantenimiento en compra de 8 % anual del valor del equipo, sin valor de salvamento. Tipo: calculo_propio sobre estimaciones.",
+  "punto_de_equilibrio": {
+   "sobreprecio_comodato_que_iguala_pct": 132,
+   "multiplicador_de_volumen_que_iguala": 2.47,
+   "tipo": "calculo_propio"
+  },
+  "lectura": "Con estos volúmenes el comodato sale más barato en valor presente (diferencia de $822 millones). Comprar solo convendría si el sobreprecio del reactivo en comodato superara el 132 % o si los volúmenes fueran 2,5 veces los estimados."
+ },
+ "costos_operacion_anual": {
+  "componentes": {
+   "reactivos_e_insumos_analiticos_comodato": {
+    "valor": 434799600,
+    "rango": [
+     197430000,
+     874341600
+    ],
+    "tipo": "calculo_propio sobre estimaciones",
+    "detalle": "Suma de volumen mensual × costo por prueba del menú × 12. El precio por prueba en comodato incluye calibradores, controles internos, consumibles del analizador, mantenimiento e interfaz."
+   },
+   "insumos_de_toma_de_muestras": {
+    "valor": 69316800,
+    "tipo": "estimacion",
+    "detalle": "Unos 2.063 pacientes al mes × $2.800 (tubos, agujas, torniquetes, etiquetas, guantes)."
+   },
+   "control_de_calidad_externo": {
+    "valor": 22000000,
+    "rango": [
+     12000000,
+     35000000
+    ],
+    "tipo": "estimacion",
+    "detalle": "Programas comerciales de hematología, química, inmunología, uroanálisis, coagulación, HbA1c y microbiología; los del INS y del Laboratorio Departamental no tienen costo. Referencias: E.S.E. Santa Ana de Falan pagó $5,46 millones en 2026 por hematología, química y serología (https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10048737)."
+   },
+   "control_de_calidad_interno": {
+    "valor": 0,
+    "tipo": "supuesto",
+    "detalle": "Incluido en el precio por prueba del comodato; si se compra aparte, unos $30-45 millones al año."
+   },
+   "sistema_de_informacion_lis": {
+    "valor": 60000000,
+    "rango": [
+     36000000,
+     96000000
+    ],
+    "tipo": "estimacion",
+    "detalle": "Suscripción anual con soporte; las interfaces de los analizadores las pagan los proveedores del comodato."
+   },
+   "pruebas_remitidas": {
+    "valor": 42120000,
+    "tipo": "calculo_propio sobre estimaciones",
+    "detalle": "Ver remitidas[]; las muestras de vigilancia en salud pública no tienen costo para la E.S.E."
+   },
+   "transporte_de_muestras_remitidas": {
+    "valor": 14400000,
+    "tipo": "estimacion",
+    "detalle": "Mensajería con triple embalaje y cadena de frío dos veces por semana (unos $1,2 millones al mes)."
+   },
+   "mantenimiento_equipos_propios_del_laboratorio": {
+    "valor": 22000000,
+    "tipo": "estimacion",
+    "detalle": "4 % anual de unos $550 millones de equipos comprados (dotacion.json: laboratorio y toma de muestras, más el GeneXpert); incluye la certificación anual de la cabina."
+   },
+   "residuos_peligrosos": {
+    "valor": 14853600,
+    "tipo": "estimacion",
+    "detalle": "Recolección y disposición de residuos biológicos del laboratorio (unos $600 por paciente)."
+   }
+  },
+  "total_reactivos_e_insumos_cop_2026": 679490000,
+  "rango_reactivos_cop_2026": [
+   197430000,
+   874341600
+  ],
+  "costo_promedio_por_prueba_cop_2026": 6754,
+  "personal_informativo": {
+   "bacteriologos_fte": 6,
+   "auxiliares_fte": 3,
+   "turnos": "Laboratorio 24 horas: un bacteriólogo por turno las 24 horas (unos 4,2 tiempos completos) más un bacteriólogo de día para microbiología, tamizaje y control de calidad; el coordinador es uno de ellos.",
+   "costo_anual_cop_2026": 583200000,
+   "tipo": "estimacion",
+   "supuestos": "Bacteriólogo $6,5 millones al mes y auxiliar $3,2 millones al mes con prestaciones (estimación; hoy la E.S.E. paga unos $5,0 millones al mes por contrato de prestación de servicios: $30.054.834 por 6 meses en 2025).",
+   "nota": "No se suma a 'costos de operación de reactivos e insumos' porque el encargo pide reactivos e insumos; se informa para el flujo de caja."
+  },
+  "total_con_personal_cop_2026": 1262690000,
+  "tipo": "calculo_propio sobre estimaciones"
+ },
+ "gasto_actual_laboratorio": {
+  "fuente": "SECOP I en datos.gov.co (conjunto f789-7hwg, filtro nit_de_la_entidad = 800014884), consultado el 22-oct-2026",
+  "contratos_2025": [
+   {
+    "objeto": "Procesamiento de muestras y lectura de exámenes (Laboratorio Clínico JM Diagnóstico)",
+    "valor_cop": 200000000,
+    "fecha": "2025-01-07",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-4-14279262",
+    "tipo": "dato_oficial"
+   },
+   {
+    "objeto": "Procesamiento de muestras y lectura de exámenes (Laboratorio Clínico JM Diagnóstico)",
+    "valor_cop": 240000000,
+    "fecha": "2025-07-03",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-4-14446678",
+    "tipo": "dato_oficial"
+   },
+   {
+    "objeto": "Reactivos e insumos de laboratorio (Biosystems S.A.S.)",
+    "valor_cop": 30000000,
+    "fecha": "2025-01-10",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-4-14282170",
+    "tipo": "dato_oficial"
+   },
+   {
+    "objeto": "Reactivos e insumos de laboratorio (Biosystems S.A.S.)",
+    "valor_cop": 35000000,
+    "fecha": "2025-07-03",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-4-14446706",
+    "tipo": "dato_oficial"
+   },
+   {
+    "objeto": "Reactivos para el analizador Snibe Biossays 240 Plus (Vivaldi Ingeniería Hospitalaria)",
+    "valor_cop": 15000000,
+    "fecha": "2025-01-22",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-4-14294803",
+    "tipo": "dato_oficial"
+   },
+   {
+    "objeto": "Reactivos para el analizador Snibe Biossays 240 Plus (Vivaldi Ingeniería Hospitalaria)",
+    "valor_cop": 20000000,
+    "fecha": "2025-07-30",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-4-14471894",
+    "tipo": "dato_oficial"
+   },
+   {
+    "objeto": "Bacteriología por prestación de servicios (proceso de laboratorio clínico)",
+    "valor_cop": 30054834,
+    "fecha": "2025-01-07",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-4-14279248",
+    "tipo": "dato_oficial"
+   },
+   {
+    "objeto": "Bacteriología por prestación de servicios (proceso de laboratorio clínico)",
+    "valor_cop": 30054834,
+    "fecha": "2025-07-03",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-4-14446705",
+    "tipo": "dato_oficial"
+   },
+   {
+    "objeto": "Bacteriología por prestación de servicios (actividades asistenciales)",
+    "valor_cop": 37568538,
+    "fecha": "2025-05-20",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-4-14416352",
+    "tipo": "dato_oficial"
+   }
+  ],
+  "total_2025_cop_corrientes": 637678206,
+  "total_2025_cop_2026": 672149814,
+  "tipo_total": "calculo_propio",
+  "no_incluido": "Contratos mixtos de material quirúrgico, reactivos y productos farmacéuticos (Comercializadora Mediflash, $45 millones en 2025) porque no separan lo del laboratorio.",
+  "lectura": "Hoy el hospital paga a un laboratorio externo por procesar la mayor parte de las muestras ($440 millones en 2025, frente a $180 millones en 2023 y $300 millones en 2024). En julio de 2026 abrió un proceso de reactivos a precios unitarios con equipos en comodato (constancia 26-4-14734972, sin valor publicado), que va en la dirección de este diseño."
+ },
+ "comparables_reactivos_con_comodato": [
+  {
+   "entidad": "E.S.E. Centro de Salud con Camas de Palmar de Varela (Atlántico, primer nivel)",
+   "valor": "$90 millones por 6 meses (ene-2026) y $65 millones por 4 meses (sep-2026): unos $15-16 millones al mes",
+   "urls": [
+    "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9908929",
+    "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10814297"
+   ]
+  },
+  {
+   "entidad": "E.S.E. Hospital San Vicente de Paúl de Barbosa (Antioquia)",
+   "valor": "$150 millones por 11 meses (mar-2026) y $150 millones por 166 días (ago-2026)",
+   "urls": [
+    "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10099585",
+    "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10614636"
+   ]
+  },
+  {
+   "entidad": "E.S.E. Barrancabermeja (primer nivel, ciudad vecina)",
+   "valor": "$60 millones por 1 mes (oct-2026)",
+   "urls": [
+    "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.11067886"
+   ]
+  },
+  {
+   "entidad": "E.S.E. Hospital Regional del Magdalena Medio (Barrancabermeja, segundo nivel)",
+   "valor": "$260 millones por 2 meses (oct-2026)",
+   "urls": [
+    "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10991649"
+   ]
+  },
+  {
+   "lectura": "Las E.S.E. suelen firmar varios contratos de reactivos al año (por áreas); los valores mensuales son un piso, no el gasto total."
+  }
+ ],
+ "fuentes": [
+  {
+   "fuente": "DANE vía TerriData (población 2028 por edad y sexo; indicadores de salud de Yondó)",
+   "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip",
+   "fecha_consulta": "2026-10-22"
+  },
+  {
+   "fuente": "Res. 3280 de 2018 (rutas de promoción y mantenimiento y materno-perinatal), texto compilado",
+   "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3280_2018.htm",
+   "fecha_consulta": "2026-10-22",
+   "citas": [
+    "ADN-VPH obligatorio de 30 a 65 años, esquema 1-5-5",
+    "PSA y tacto rectal de 50 a 75 años con frecuencia no inferior a 5 años",
+    "Sangre oculta inmunoquímica cada 2 años desde los 50 años",
+    "Riesgo cardiovascular cada 5 años: glicemia, perfil lipídico, creatinina y uroanálisis",
+    "Hepatitis C rápida a toda persona de 50 años o más una vez en la vida",
+    "Prenatal: urocultivo, hemograma, hemoclasificación, glicemia, VIH (cada trimestre y parto), sífilis (cada trimestre), HBsAg, rubéola, toxoplasma (IgM mensual en seronegativas), PTOG 24-28 semanas, estreptococo B 35-37 semanas, gota gruesa mensual en zona endémica de malaria y Chagas en zona endémica",
+    "Recién nacido: TSH neonatal y hemoclasificación en sangre de cordón"
+   ]
+  },
+  {
+   "fuente": "Res. 3100 de 2019, Manual num. 11.3.12 (laboratorio clínico)",
+   "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+  },
+  {
+   "fuente": "Res. 1633 de 2025, Anexo 1, Cuadros 4, 47-50",
+   "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%201633%20de%202025.pdf"
+  },
+  {
+   "fuente": "Decreto 3770 de 2004 (clasificación de reactivos de diagnóstico in vitro en categorías I, II y III)",
+   "url": "https://normograma.invima.gov.co/compilacion/docs/decreto_3770_2004.htm"
+  },
+  {
+   "fuente": "Instituto Nacional de Salud – programas de calidad (PEED)",
+   "url": "https://www.ins.gov.co/TyS/programas-de-calidad"
+  },
+  {
+   "fuente": "Cepheid, precios de acceso publicados por PFSCM",
+   "url": "https://pfscm.org/access-programs/cepheid-accessible-pricing/",
+   "fecha_consulta": "2026-10-22"
+  },
+  {
+   "fuente": "Exámenes de laboratorio de la E.S.E. Pasto Salud (mezcla de pruebas de un primer nivel)",
+   "url": "https://www.datos.gov.co/resource/944v-fw5e.json"
+  },
+  {
+   "fuente": "SECOP I – contratos de la E.S.E. Hospital Héctor Abad Gómez de Yondó (NIT 800014884)",
+   "url": "https://www.datos.gov.co/resource/f789-7hwg.json?nit_de_la_entidad=800014884"
+  },
+  {
+   "fuente": "SECOP II – contratos electrónicos (jbjy-vk9h) y procesos (p6dx-8zbt) de E.S.E. de Colombia, 2024-2026",
+   "url": "https://www.datos.gov.co/resource/jbjy-vk9h.json"
+  },
+  {
+   "fuente": "TRM diaria (promedio enero-septiembre de 2026)",
+   "url": "https://www.datos.gov.co/resource/32sa-8pi3.json"
+  },
+  {
+   "fuente": "Gobernación del Valle del Cauca – Laboratorio de Salud Pública – Equipo GeneXpert (Cepheid) con sus insumos (2024-09-11, $129.903.490)",
+   "url": "https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.6813664",
+   "tipo": "proceso SECOP II, adjudicado"
+  },
+  {
+   "fuente": "E.S.E. Hospital Señor de la Misericordia (Santander) – Analizador hematológico automatizado (precio base; se asume de 3 partes por el valor) (2026-10-12, $34.510.000)",
+   "url": "https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.11194970",
+   "tipo": "proceso SECOP II, precio base"
+  },
+  {
+   "fuente": "E.S.E. Hospital Mental Rudesindo Soto (Cúcuta) – Analizador hematológico Mindray BC-5390 (precio base) (2024-05-30, $81.900.560)",
+   "url": "https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.6316348",
+   "tipo": "proceso SECOP II, precio base"
+  },
+  {
+   "fuente": "E.S.E. Hospital San Andrés Apóstol (Córdoba) – Analizador hematológico automatizado de 5 partes tipo Mindray BC-5380 (precio base) (2026-02-24, $121.500.000)",
+   "url": "https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.10209091",
+   "tipo": "proceso SECOP II, precio base"
+  },
+  {
+   "fuente": "E.S.E. Hospital Local de Montelíbano (Córdoba) – Analizador de química clínica CM serie 320 (precio base) (2025-03-31, $144.500.000)",
+   "url": "https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.8046694",
+   "tipo": "proceso SECOP II, precio base"
+  },
+  {
+   "fuente": "E.S.E. Hospital Local de Piedecuesta (Santander) – Analizador de química automatizado (precio base) (2024-12-19, $182.629.300)",
+   "url": "https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.7343391",
+   "tipo": "proceso SECOP II, precio base"
+  }
+ ],
+ "incertidumbres": [
+  "Los costos por prueba en comodato son estimaciones con rango: SECOP no publica los anexos de precios unitarios en datos abiertos. Hay que pedir al menos 3 cotizaciones por área (Res. 485, num. 7.1.9).",
+  "La población atendida por la E.S.E. es incierta (42-70 % de la población DANE): mueve todos los volúmenes de tamizaje.",
+  "No se pudo consultar SIHO ni los RIPS del hospital: consultas, urgencias y egresos son supuestos.",
+  "Endemicidad de malaria y Chagas para la gota gruesa mensual y el tamizaje de Chagas en gestantes: confirmar con la Secretaría Seccional de Salud de Antioquia.",
+  "Elegibilidad de Colombia para los precios de acceso de Cepheid y disponibilidad de cartuchos del programa nacional de tuberculosis: no verificadas.",
+  "La Res. 3280 recomienda procesar ADN-VPH en laboratorios centralizados: la opción de procesarlo en Yondó debe acordarse con las EPS.",
+  "Los brotes de dengue pueden triplicar la demanda de pruebas febriles en algunos meses."
+ ],
+ "equipos_y_mobiliario_que_compra_la_ese": {
+  "archivo": "data/proyectos/torre_hospital/dotacion.json (servicios 'laboratorio' y 'toma_muestras')",
+  "laboratorio_cop_2026": 357496296,
+  "toma_de_muestras_cop_2026": 44700000,
+  "items": [
+   "4 × Microscopio binocular con objetivo de inmersión",
+   "1 × Cabina de bioseguridad clase II tipo A2 (4 pies)",
+   "2 × Centrífuga de mesa de 24 tubos",
+   "1 × Microcentrífuga para hematocrito",
+   "2 × Incubadora bacteriológica 35-37 °C",
+   "2 × Refrigerador de laboratorio 2-8 °C para reactivos",
+   "1 × Congelador de -20 °C a -30 °C (seroteca y muestras de vigilancia)",
+   "1 × Autoclave de laboratorio para descontaminación de residuos y medios",
+   "1 × Baño serológico y rotador de VDRL",
+   "1 × Juego de micropipetas automáticas (10 volúmenes) y agitadores vórtex",
+   "1 × Lector de inmunoensayo por fluorescencia de punto de atención (respaldo de TSH, troponina, procalcitonina)",
+   "2 × UPS en línea de 6 kVA para analizadores",
+   "1 × Balanza analítica y horno de secado",
+   "8 × Termohigrómetros y registradores de temperatura con alarma remota",
+   "3 × Impresora de etiquetas con código de barras y lector",
+   "1 × Nevera de muestras 2-8 °C con registrador de temperatura",
+   "4 × Cava de transporte de muestras con registrador",
+   "1 × Camilla ginecológica y lámpara (toma de muestras especiales)"
+  ],
+  "tipo": "calculo_propio"
+ }
+}

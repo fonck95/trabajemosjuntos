@@ -356,222 +356,6 @@
   ]
  },
  {
-  "id": "bienestar_anciano",
-  "nombre": "Centro de Bienestar del Anciano (CPSAM) de Yondó",
-  "nodo_microrred": "cpsam",
-  "lat": 7.005271,
-  "lon": -73.914597,
-  "archivo": "models/edificios/bienestar_anciano_lod0.glb",
-  "archivo_lod1": "models/edificios/bienestar_anciano_lod1.glb",
-  "bytes": 141048,
-  "bytes_lod1": 71744,
-  "bytes_sin_comprimir": 1769424,
-  "triangulos": 23584,
-  "triangulos_lod1": 3108,
-  "extensiones": [
-   "EXT_mesh_gpu_instancing",
-   "KHR_draco_mesh_compression"
-  ],
-  "nodos_instanciados": 2,
-  "tamano": [
-   54,
-   6.6,
-   62
-  ],
-  "modulos": 24,
-  "kwp_modelado": 13.2,
-  "kwp_plan": 14,
-  "kwp_factible": 13.2,
-  "bess": {
-   "kwh": 30,
-   "kw": 15,
-   "tipo": "gabinete"
-  },
-  "conexion": {
-   "tablero": [
-    -14.42,
-    1.3,
-    -7.7
-   ],
-   "gateway": [
-    -14.35,
-    1.61,
-    -8.28
-   ],
-   "red": [
-    -31.37,
-    7.1,
-    -2.27
-   ],
-   "nota": "Punto de conexión: poste existente de la red a 17 m del muro; acometida subterránea desde el medidor y bajante por el poste."
-  },
-  "confianza": "media",
-  "fuentes": [
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Encierro de malla con alambre de púas sobre muro bajo de ladrillo, puerta de malla, prado con senderos, kiosco de palma con sillas plásticas y muros rojos detrás. Comparación cmp1. A 4 m, poste metálico café con dos luminarias y red de baja tensión (rumbo 62, pitch 25).",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=m3Sn3nKZFMYxLI6Hv-xIMA&heading=70"
-   },
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Acercamiento al patio entre los dos pabellones: a la izquierda el pabellón norte con muro rojo y puerta blanca, al fondo un corredor blanco con postes oscuros y cubierta gris, a la derecha el pabellón sur con ventanas de marco blanco. Rumbo 200: vía hacia el sur con poste de concreto y luminaria junto a la cerca.",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=m3Sn3nKZFMYxLI6Hv-xIMA&heading=88"
-   },
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Remate occidental del pabellón sur: muro rojo con una franja de ventanas altas, cubierta de fibrocemento a cuatro aguas y, a la izquierda, el pabellón norte con su corredor blanco. Se ve que el prado queda unos 2 m más alto que la vía. Comparación cmp2.",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Y_D5IXa2aczM_BFEG4rNAg&heading=78"
-   },
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Frente a la puerta de malla: kiosco de palma (remate a cuatro aguas), palma y pabellón rojo con ventanas y columnas blancas. Sin letrero visible.",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=l7a44fb2a7RSYUWk_1lIlg&heading=100"
-   },
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Desde el noroccidente: el kiosco de palma de unos 11 m de largo en sentido norte-sur, sillas plásticas, muros rojos al fondo y la vía del occidente con red eléctrica.",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=CVi55z4HoMzef5D2D5n-Rw&heading=150"
-   },
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Desde el suroccidente, entre mangos grandes: muro rojo del remate occidental del pabellón sur y corredor de fascia blanca.",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=RfESmrKTRcVDO_uerUX8VA&heading=55"
-   },
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Culata roja pequeña en lo alto del remate occidental del pabellón sur y, a la derecha, corredor de columnas blancas con antepecho rojo en la fachada sur.",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=FiBLH50BxgM-7UFIAl1rwQ&heading=55"
-   },
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Jardín del norte con plátanos y árboles frutales, entre el hogar y el ala norte del hospital.",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=uu2bQK6rFi44z7hhcJr8XA&heading=125"
-   },
-   {
-    "tipo": "satelite",
-    "fecha": null,
-    "nota": "Huella medida con perfiles de brillo (marco de la especificación, igual al del levantamiento del hospital). Pabellón norte: cubierta de x -15,0 a 13,9 m y de y 5,9 a 17,9 m, con cumbrera cerca de y 12,9; franja clara del corredor de y 3,5 a 5,9 m. Pabellón sur: cubierta de x -14,4 a 13,9 m y de y -19,3 a -4,9 m, cumbrera cerca de y -11,5; franja clara del corredor sur de y -21,8 a -20,2 m. Kiosco: x -20,8 a -15,3 m, y 7,3 a 18,2 m. Las sombras caen al norte y al occidente (sol del suroriente). Cubierta de los pabellones #6f6c68.",
-    "url": null
-   },
-   {
-    "tipo": "satelite",
-    "fecha": null,
-    "nota": "Se correlacionó con Esri: Google queda 2,5 m al sur y 0,25 m al oriente. Muestra la cubierta nueva blanca del hospital y la vieja gris de estas dos alas, el kiosco rojizo (#a3705c) pegado al extremo occidental del pabellón norte y las limahoyas triangulares donde las alas se unen al bloque central del hospital (la cumbrera del pabellón norte entra unos 7 m en la cubierta del hospital).",
-    "url": null
-   },
-   {
-    "tipo": "satelite",
-    "fecha": null,
-    "nota": "Tercera imagen: el kiosco con cubierta terracota (#ad7b62) y el mismo límite entre cubierta blanca (hospital) y gris (hogar).",
-    "url": null
-   },
-   {
-    "tipo": "web",
-    "fecha": "2024-09",
-    "nota": "Fotos de la Alcaldía en el CPSAM: muros de ladrillo pintado de rojo, ventanas con reja blanca, corredor con postes metálicos y vigas de madera, piso de baldosa blanca, kiosco de madera con lámina ondulada terracota, prado con plátanos. Unas 20 personas mayores en sillas de ruedas y caminadores. (Contenido leído por la interfaz /api/v1/contents del portal.)",
-    "url": "https://www.yondo-antioquia.gov.co/secretaria-de-salud-y-bienestar-social/compartiendo-con-los-adultos-mayores-del-cpsam"
-   },
-   {
-    "tipo": "web",
-    "fecha": "2024-09",
-    "nota": "Mismo evento, foto adicional con el muro rojo y la ventana de reja blanca.",
-    "url": "https://www.yondo-antioquia.gov.co/secretaria-de-salud-y-bienestar-social/compartiendo-con-los-adultos-mayores-del-cpsam-318419"
-   },
-   {
-    "tipo": "web",
-    "fecha": "2023-04",
-    "nota": "La Alcaldía entregó equipos biomédicos y mobiliario por 20 millones; el centro 'atiende a cerca de 20 adultos mayores'.",
-    "url": "https://www.yondo-antioquia.gov.co/secretaria-de-salud-y-bienestar-social/entrega-de-equipos-biomedicos-y-mobiliario-al-cpsam"
-   },
-   {
-    "tipo": "web",
-    "fecha": "2023-04",
-    "nota": "Video de la Alcaldía 'Los niños de la Policía Cívica realizaron una visita al Cepesan': muro de ladrillo pintado de rojo (#893e43), corredor con postes y piso de baldosa, prado grande con árboles donde sembraron.",
-    "url": "https://youtu.be/Q17-_i_s2bE"
-   },
-   {
-    "tipo": "web",
-    "fecha": "2020-05",
-    "nota": "Video 'Actividad física en el Centro de Protección al Adulto Mayor Cepesan': comedor con muros blancos, mesas de concreto y piso de tablón rojo.",
-    "url": "https://youtu.be/4jVZpjIoIf4"
-   },
-   {
-    "tipo": "web",
-    "fecha": null,
-    "nota": "SECOP I LPY-003-2016: obra de adecuaciones locativas del Centro de Protección Social al Adulto Mayor (CPSAM), $351,8 millones, Fundación Gestar, liquidado. Interventoría: 16-15-5239425 ($35,2 millones).",
-    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=16-1-158912"
-   },
-   {
-    "tipo": "web",
-    "fecha": null,
-    "nota": "SECOP I 2018: adecuaciones y mantenimiento de las instalaciones del CPSAM, $30,4 millones, Instrumentación Montajes y Consultorías SAS.",
-    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-11-8050166"
-   },
-   {
-    "tipo": "web",
-    "fecha": null,
-    "nota": "SECOP I 2012 ($15,4 millones), citado en el inventario como arreglo de cubierta del Centro de Bienestar del Anciano; el objeto no aparece en los datos abiertos.",
-    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=12-13-1273359"
-   },
-   {
-    "tipo": "web",
-    "fecha": null,
-    "nota": "SECOP I 2009: víveres para 'la población de la tercera edad que viven y pernoctan en el Centro de Bienestar del Anciano'. Hay contratos de atención del 'CBA' desde 2008 hasta 2015 y, desde 2024, convenios que nombran juntos el CPSAM y el Centro Vida Canitas Sabias (CO1.PCCNTR.6379109, 7973669 y 9630366).",
-    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=09-12-229937"
-   },
-   {
-    "tipo": "web",
-    "fecha": null,
-    "nota": "El hospital ocupa parte del antiguo hospital de la Shell (años 30 y 40), remodelado en 1989: explica que el hogar funcione en alas del mismo conjunto.",
-    "url": "https://sebastiangmesehospitalhectorabadgomez.blogspot.com/"
-   },
-   {
-    "tipo": "web",
-    "fecha": null,
-    "nota": "Google Maps no tiene ficha del CPSAM ni del Centro de Bienestar del Anciano en Yondó (búsqueda de octubre de 2026).",
-    "url": "https://www.google.com/maps/search/CPSAM+Yond%C3%B3"
-   },
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Verificación (comparación ver_cmpA, con el modelo levantado 1,0 m por el talud): el kiosco de palma de 2014 era más largo hacia el norte (llegaba a y ≈ 20 m) que el actual del satélite (7,3 a 18,4 m); su alero quedaba a unos 1,9 m del prado y la cumbrera a unos 4,2 m. La malla pasa a unos 2–3 m al oriente del panorama.",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=CVi55z4HoMzef5D2D5n-Rw&heading=140"
-   },
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Verificación (comparación ver_cmpB, modelo levantado 2,1 m): remate occidental del pabellón sur con la base del muro unos 2,1 m sobre la vía y el borde superior del muro rojo unos 3,3 m sobre el prado. Con rumbo 95 se ve que la malla con muro bajo sigue hacia el sur, más allá de y = -20 m.",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=RfESmrKTRcVDO_uerUX8VA&heading=70"
-   },
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Verificación con acercamiento (fov 22 y 40): el muro del remate occidental del pabellón sur mide 3,5–3,7 m del prado al alero; el remate a cuatro aguas tiene una culata pequeña arriba. El poste de concreto con luminaria queda a unos 6,7 m del panorama, en (-33,2; -13,3), no en (-33,5; -11,5).",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Y_D5IXa2aczM_BFEG4rNAg&heading=82"
-   },
-   {
-    "tipo": "street_view",
-    "fecha": "2014-01",
-    "nota": "Desde la calle del norte: el cerramiento del predio, con alambre de púas, llega hasta el ala norte del hospital (ladrillo y verde); detrás, el jardín de plátanos y el muro rojo del pabellón norte.",
-    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=5QD9d8wI99kdzK8ToYu-eA&heading=160"
-   },
-   {
-    "tipo": "satelite",
-    "fecha": null,
-    "nota": "Perfiles de brillo en Esri: pabellón norte con alero norte en y ≈ 18,0 y occidental en x ≈ -15,0; pabellón sur con alero norte en y ≈ -4,8 y occidental en x ≈ -14,8; kiosco de x -20,9 a -15,4 y de y 7,4 a 18,5; corredor norte–sur claro entre x ≈ 9,9 y 11,8 que une los pabellones. En Esri las cumbreras salen unos 0,8 m al norte de donde las pone Google por el desplazamiento de relieve; en Google caen centradas. Al sur del pabellón sur hay un bosque de mangos con copas desde y ≈ -24 m.",
-    "url": null
-   }
-  ]
- },
- {
   "id": "bomberos",
   "nombre": "Cuerpo de Bomberos Voluntarios de Yondó (sede de la dirección registrada)",
   "nodo_microrred": "bomberos",
@@ -3626,6 +3410,218 @@
     "fecha": "2014-01",
     "nota": "Panorama a 1,28 km al suroriente. El tanque se ve en damero, tapado en parte por un árbol.",
     "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=dHmNI5YscFD2qySPtMoKyw&heading=316"
+   }
+  ]
+ },
+ {
+  "id": "torre_hospital",
+  "nombre": "Torre de servicios de primer nivel — E.S.E. Hospital Héctor Abad Gómez (sitio del antiguo Centro Vida)",
+  "nodo_microrred": "hospital",
+  "lat": 7.005271,
+  "lon": -73.914597,
+  "archivo": "models/edificios/torre_hospital_lod0.glb",
+  "archivo_lod1": "models/edificios/torre_hospital_lod1.glb",
+  "bytes": 420332,
+  "bytes_lod1": 297120,
+  "bytes_sin_comprimir": 4469328,
+  "triangulos": 51520,
+  "triangulos_lod1": 12696,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 7,
+  "tamano": [
+   54,
+   23.4,
+   65.3
+  ],
+  "modulos": 174,
+  "kwp_modelado": 95.7,
+  "kwp_plan": null,
+  "kwp_factible": 95.7,
+  "bess": null,
+  "conexion": {
+   "tablero": [
+    -19.88,
+    1.3,
+    26
+   ],
+   "gateway": [
+    -19.95,
+    1.61,
+    26.58
+   ],
+   "red": [
+    -33.02,
+    6.6,
+    13.46
+   ],
+   "nota": "Punto de conexión: poste existente de la red a 11 m del muro; acometida subterránea desde el medidor y bajante por el poste."
+  },
+  "confianza": "media",
+  "fuentes": [
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Encierro de malla con alambre de púas sobre muro bajo de ladrillo, puerta de malla, prado con senderos, kiosco de palma con sillas plásticas y muros rojos detrás. Comparación cmp1. A 4 m, poste metálico café con dos luminarias y red de baja tensión (rumbo 62, pitch 25).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=m3Sn3nKZFMYxLI6Hv-xIMA&heading=70"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Acercamiento al patio entre los dos pabellones: a la izquierda el pabellón norte con muro rojo y puerta blanca, al fondo un corredor blanco con postes oscuros y cubierta gris, a la derecha el pabellón sur con ventanas de marco blanco. Rumbo 200: vía hacia el sur con poste de concreto y luminaria junto a la cerca.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=m3Sn3nKZFMYxLI6Hv-xIMA&heading=88"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Remate occidental del pabellón sur: muro rojo con una franja de ventanas altas, cubierta de fibrocemento a cuatro aguas y, a la izquierda, el pabellón norte con su corredor blanco. Se ve que el prado queda unos 2 m más alto que la vía. Comparación cmp2.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Y_D5IXa2aczM_BFEG4rNAg&heading=78"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Frente a la puerta de malla: kiosco de palma (remate a cuatro aguas), palma y pabellón rojo con ventanas y columnas blancas. Sin letrero visible.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=l7a44fb2a7RSYUWk_1lIlg&heading=100"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Desde el noroccidente: el kiosco de palma de unos 11 m de largo en sentido norte-sur, sillas plásticas, muros rojos al fondo y la vía del occidente con red eléctrica.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=CVi55z4HoMzef5D2D5n-Rw&heading=150"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Desde el suroccidente, entre mangos grandes: muro rojo del remate occidental del pabellón sur y corredor de fascia blanca.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=RfESmrKTRcVDO_uerUX8VA&heading=55"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Culata roja pequeña en lo alto del remate occidental del pabellón sur y, a la derecha, corredor de columnas blancas con antepecho rojo en la fachada sur.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=FiBLH50BxgM-7UFIAl1rwQ&heading=55"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Jardín del norte con plátanos y árboles frutales, entre el hogar y el ala norte del hospital.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=uu2bQK6rFi44z7hhcJr8XA&heading=125"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Huella medida con perfiles de brillo (marco de la especificación, igual al del levantamiento del hospital). Pabellón norte: cubierta de x -15,0 a 13,9 m y de y 5,9 a 17,9 m, con cumbrera cerca de y 12,9; franja clara del corredor de y 3,5 a 5,9 m. Pabellón sur: cubierta de x -14,4 a 13,9 m y de y -19,3 a -4,9 m, cumbrera cerca de y -11,5; franja clara del corredor sur de y -21,8 a -20,2 m. Kiosco: x -20,8 a -15,3 m, y 7,3 a 18,2 m. Las sombras caen al norte y al occidente (sol del suroriente). Cubierta de los pabellones #6f6c68.",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Se correlacionó con Esri: Google queda 2,5 m al sur y 0,25 m al oriente. Muestra la cubierta nueva blanca del hospital y la vieja gris de estas dos alas, el kiosco rojizo (#a3705c) pegado al extremo occidental del pabellón norte y las limahoyas triangulares donde las alas se unen al bloque central del hospital (la cumbrera del pabellón norte entra unos 7 m en la cubierta del hospital).",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Tercera imagen: el kiosco con cubierta terracota (#ad7b62) y el mismo límite entre cubierta blanca (hospital) y gris (hogar).",
+    "url": null
+   },
+   {
+    "tipo": "web",
+    "fecha": "2024-09",
+    "nota": "Fotos de la Alcaldía en el CPSAM: muros de ladrillo pintado de rojo, ventanas con reja blanca, corredor con postes metálicos y vigas de madera, piso de baldosa blanca, kiosco de madera con lámina ondulada terracota, prado con plátanos. Unas 20 personas mayores en sillas de ruedas y caminadores. (Contenido leído por la interfaz /api/v1/contents del portal.)",
+    "url": "https://www.yondo-antioquia.gov.co/secretaria-de-salud-y-bienestar-social/compartiendo-con-los-adultos-mayores-del-cpsam"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2024-09",
+    "nota": "Mismo evento, foto adicional con el muro rojo y la ventana de reja blanca.",
+    "url": "https://www.yondo-antioquia.gov.co/secretaria-de-salud-y-bienestar-social/compartiendo-con-los-adultos-mayores-del-cpsam-318419"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2023-04",
+    "nota": "La Alcaldía entregó equipos biomédicos y mobiliario por 20 millones; el centro 'atiende a cerca de 20 adultos mayores'.",
+    "url": "https://www.yondo-antioquia.gov.co/secretaria-de-salud-y-bienestar-social/entrega-de-equipos-biomedicos-y-mobiliario-al-cpsam"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2023-04",
+    "nota": "Video de la Alcaldía 'Los niños de la Policía Cívica realizaron una visita al Cepesan': muro de ladrillo pintado de rojo (#893e43), corredor con postes y piso de baldosa, prado grande con árboles donde sembraron.",
+    "url": "https://youtu.be/Q17-_i_s2bE"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2020-05",
+    "nota": "Video 'Actividad física en el Centro de Protección al Adulto Mayor Cepesan': comedor con muros blancos, mesas de concreto y piso de tablón rojo.",
+    "url": "https://youtu.be/4jVZpjIoIf4"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SECOP I LPY-003-2016: obra de adecuaciones locativas del Centro de Protección Social al Adulto Mayor (CPSAM), $351,8 millones, Fundación Gestar, liquidado. Interventoría: 16-15-5239425 ($35,2 millones).",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=16-1-158912"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SECOP I 2018: adecuaciones y mantenimiento de las instalaciones del CPSAM, $30,4 millones, Instrumentación Montajes y Consultorías SAS.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-11-8050166"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SECOP I 2012 ($15,4 millones), citado en el inventario como arreglo de cubierta del Centro de Bienestar del Anciano; el objeto no aparece en los datos abiertos.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=12-13-1273359"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SECOP I 2009: víveres para 'la población de la tercera edad que viven y pernoctan en el Centro de Bienestar del Anciano'. Hay contratos de atención del 'CBA' desde 2008 hasta 2015 y, desde 2024, convenios que nombran juntos el CPSAM y el Centro Vida Canitas Sabias (CO1.PCCNTR.6379109, 7973669 y 9630366).",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=09-12-229937"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "El hospital ocupa parte del antiguo hospital de la Shell (años 30 y 40), remodelado en 1989: explica que el hogar funcione en alas del mismo conjunto.",
+    "url": "https://sebastiangmesehospitalhectorabadgomez.blogspot.com/"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "Google Maps no tiene ficha del CPSAM ni del Centro de Bienestar del Anciano en Yondó (búsqueda de octubre de 2026).",
+    "url": "https://www.google.com/maps/search/CPSAM+Yond%C3%B3"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Verificación (comparación ver_cmpA, con el modelo levantado 1,0 m por el talud): el kiosco de palma de 2014 era más largo hacia el norte (llegaba a y ≈ 20 m) que el actual del satélite (7,3 a 18,4 m); su alero quedaba a unos 1,9 m del prado y la cumbrera a unos 4,2 m. La malla pasa a unos 2–3 m al oriente del panorama.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=CVi55z4HoMzef5D2D5n-Rw&heading=140"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Verificación (comparación ver_cmpB, modelo levantado 2,1 m): remate occidental del pabellón sur con la base del muro unos 2,1 m sobre la vía y el borde superior del muro rojo unos 3,3 m sobre el prado. Con rumbo 95 se ve que la malla con muro bajo sigue hacia el sur, más allá de y = -20 m.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=RfESmrKTRcVDO_uerUX8VA&heading=70"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Verificación con acercamiento (fov 22 y 40): el muro del remate occidental del pabellón sur mide 3,5–3,7 m del prado al alero; el remate a cuatro aguas tiene una culata pequeña arriba. El poste de concreto con luminaria queda a unos 6,7 m del panorama, en (-33,2; -13,3), no en (-33,5; -11,5).",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=Y_D5IXa2aczM_BFEG4rNAg&heading=82"
+   },
+   {
+    "tipo": "street_view",
+    "fecha": "2014-01",
+    "nota": "Desde la calle del norte: el cerramiento del predio, con alambre de púas, llega hasta el ala norte del hospital (ladrillo y verde); detrás, el jardín de plátanos y el muro rojo del pabellón norte.",
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=5QD9d8wI99kdzK8ToYu-eA&heading=160"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Perfiles de brillo en Esri: pabellón norte con alero norte en y ≈ 18,0 y occidental en x ≈ -15,0; pabellón sur con alero norte en y ≈ -4,8 y occidental en x ≈ -14,8; kiosco de x -20,9 a -15,4 y de y 7,4 a 18,5; corredor norte–sur claro entre x ≈ 9,9 y 11,8 que une los pabellones. En Esri las cumbreras salen unos 0,8 m al norte de donde las pone Google por el desplazamiento de relieve; en Google caen centradas. Al sur del pabellón sur hay un bosque de mangos con copas desde y ≈ -24 m.",
+    "url": null
    }
   ]
  }

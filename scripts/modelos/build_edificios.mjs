@@ -2206,6 +2206,8 @@ for (const file of files) {
   let spec;
   try { spec = JSON.parse(readFileSync(new URL(file, DATA))); } catch (e) { console.error(`✗ ${file}: JSON inválido (${e.message})`); continue; }
   if (!spec.id || !spec.volumenes?.length) { console.error(`✗ ${file}: sin id o sin volúmenes`); continue; }
+  // levantamientos que otra especificación reemplazó (por ejemplo, alas que se demuelen para una obra nueva): no se dibujan
+  if (spec.reemplazado_por) { const k = manifest.findIndex((x) => x.id === spec.id); if (k >= 0) manifest.splice(k, 1); console.log(`${spec.id}: reemplazado por ${spec.reemplazado_por}, no se dibuja`); continue; }
   const before = warn.length;
   const hi = build(spec, true), m0 = await writeGLB(hi.b, OUT, `${spec.id}_lod0`, { compress, instance: false });
   const lo = build(spec, false), m1 = await writeGLB(lo.b, OUT, `${spec.id}_lod1`, { compress, instance: false });

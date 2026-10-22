@@ -668,5 +668,7 @@
       "data/geo/img/bienestar_anciano_ver_orbita_todo.png"
     ],
     "nota": "Verificación de octubre de 2026: la huella se volvió a medir con perfiles de brillo en Esri z19 (aleros, kiosco y corredores coinciden con la especificación con menos de 0,5 m) y se comparó con Google z20–z21 (corrido unos 1,5 m al sur). Las comparaciones nuevas ver_cmpA (CVi5, rumbo 140, pitch 2, fov 75) y ver_cmpB (RfES, rumbo 66, pitch 4, fov 60) usan panoramas distintos a los del levantamiento y una copia del modelo levantada 1,0 m y 2,1 m (base y altura de alero juntas, porque el generador mide la altura de alero desde el terreno). Con ellas, más proyecciones de alambre sobre acercamientos de Y_D5 y RfES, el alero del pabellón sur bajó de 3,9 a 3,6 m; el pabellón norte y el kiosco actual quedaron igual. Queda un giro de 2–4° en los panoramas de 2014. Las comparaciones cmp1 y cmp2 y las órbitas sin prefijo 'ver_' son del levantamiento, con la versión anterior (paneles en el pabellón sur)."
-  }
+  },
+  "reemplazado_por": "torre_hospital",
+  "nota_reemplazo": "El usuario aclaró que en estas alas funcionaba antes el Centro Vida, que fue reubicado. Se demuelen para la torre de servicios de primer nivel: su geometría pasó a data/edificios/torre_hospital.json con \"estado\": \"demoler\". Este archivo se conserva como levantamiento de referencia y no se dibuja."
 }

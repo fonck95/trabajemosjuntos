@@ -1,0 +1,889 @@
+{
+ "id": "torre_hospital_proyecto_tipo",
+ "titulo": "Proyectos tipo de referencia para la torre de servicios de primer nivel – E.S.E. Hospital Héctor Abad Gómez (Yondó)",
+ "tarea": "T1 – Marco normativo y proyecto tipo",
+ "fecha_corte": "2026-10-22",
+ "moneda_y_base": "Pesos constantes de 2026 (base: promedio enero-septiembre de 2026 del IPC del DANE). Factores de data/fuentes/ipc_dane.csv: 2016 = 1.720701; 2017 = 1.649512.",
+ "convenciones": {
+  "dato_oficial": "tomado del documento citado",
+  "calculo_propio": "operación sobre datos oficiales",
+  "estimacion": "supuesto con rango, a confirmar"
+ },
+ "respuesta_corta": "Sí hay proyecto tipo, pero solo para la escala de puesto o centro de salud: el 'Puesto de salud tipo' de MinSalud (2017, sin precios) y el Proyecto Tipo de infraestructura básica de salud del DNP con MinSalud (2018, con diseño y presupuesto). No hay un hospital o torre de primer nivel tipo publicado. La torre se inspira en el proyecto tipo DNP (modulación, bioclimática, materiales, dotación y presupuesto) y se escala con las áreas de la Res. 1633 de 2025 y la Res. 3100 de 2019.",
+ "proyectos_tipo": [
+  {
+   "id": "dnp_infraestructura_basica_salud_2018",
+   "nombre": "Proyecto Tipo 'Construcción y dotación de infraestructura básica en salud' (puesto o centro de salud), versión 1.0",
+   "autor": "Departamento Nacional de Planeación (Subdirección Territorial y de Inversiones Públicas) con MinSalud (Dirección de Prestación de Servicios y Subdirección de Infraestructura); diseño de la Consultoría Carlos Cabal + PU",
+   "fecha": "Enero de 2018 (precios de 2017)",
+   "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=126&Itemid=198",
+   "url_pdf": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf",
+   "paginas": 73,
+   "fecha_consulta": "2026-10-22",
+   "tipo_dato": "dato_oficial",
+   "normativa_de_base": "Res. 4445 de 1996 y Res. 2003 de 2014, hoy derogadas (por la Res. 1633 de 2025 y la Res. 3100 de 2019). Hay que actualizar todo el programa a las normas vigentes.",
+   "alcance": "Ambientes asistenciales: consultorio médico, consultorio de promoción y prevención, odontología, cubículo de toma de muestras de laboratorio, toma de muestras ginecológicas y dispensación de medicamentos. Apoyo: recepción y sala de espera, aseo, residuos, unidad sanitaria con vestier del personal, baños públicos, depósito, planta de emergencia y planta de tratamiento de agua si se requiere. Incluye dotación médica y mobiliario.",
+   "areas": {
+    "area_construida_m2": 320.6,
+    "area_presupuestada_m2": 269.6,
+    "plazoleta_acceso_m2": 91.43,
+    "circulacion_y_acceso_cubierto_m2": 81.4,
+    "modulos": [
+     {
+      "modulo": "1 – Consultorios tipo 1 (medicina general y P&P con baños y almacenamiento)",
+      "area_construida_m2": 59.65,
+      "area_util_m2": 37.94
+     },
+     {
+      "modulo": "2 – Consultorios tipo 2 (odontología, toma de muestras ginecológicas y de laboratorio)",
+      "area_construida_m2": 59.65,
+      "area_util_m2": 37.94
+     },
+     {
+      "modulo": "3 – Servicios (baños públicos, baño-vestier del personal, atención, historias, caja, depósito, café)",
+      "area_construida_m2": 59.65,
+      "area_util_m2": 37.94
+     },
+     {
+      "modulo": "4 – Espera y dispensación (con atención hacia el exterior y zona segura para medicamentos)",
+      "area_construida_m2": 59.65,
+      "area_util_m2": 37.94
+     },
+     {
+      "modulo": "5 – Técnico (tableros, compresor, PTAR hospitalaria, residuos, baño de servicios generales)",
+      "area_construida_m2": 59.65,
+      "area_util_m2": 37.94
+     },
+     {
+      "modulo": "6 – Vivienda médica (opcional)",
+      "area_construida_m2": 59.65,
+      "area_util_m2": 37.94
+     }
+    ],
+    "relacion_util_construida": 0.636
+   },
+   "modulacion_y_estructura": "Un solo módulo estructural de pórticos de concreto con luces de 7,60 × 4,30 m y una viga-canal en voladizo que cubre la circulación central; cualquier módulo funcional cabe en el módulo estructural.",
+   "lote": {
+    "area_min_m2": 754,
+    "area_con_vivienda_medica_m2": 850,
+    "area_max_ref_m2": 1002,
+    "proporcion": "1:1 a 1:2,8 (ideal 1:2)",
+    "pendiente_transversal_max_pct": 5,
+    "pendiente_longitudinal_max_pct": 2,
+    "aislamiento_perimetral_m": 3,
+    "separacion_entre_bloques_m": "2,4 entre fachadas cerradas; altura del volumen (4,36 m) entre fachadas con aberturas",
+    "poblacion_objetivo": "1.000 a 5.000 habitantes"
+   },
+   "condiciones_interiores": {
+    "temperatura_C": "19-24",
+    "humedad_pct": "50-65",
+    "ruido_dBA": 45
+   },
+   "materiales": {
+    "estructura": "Cimentación en concreto de 3.000 psi; columnas y vigas de 4.000 psi en concreto a la vista; placa maciza de 0,12 m impermeabilizada; acero de 60.000 psi; estructura metálica de cubierta.",
+    "muros": "Mampostería en bloque N.º 4 con columnetas de confinamiento; divisiones en superboard; pañete liso impermeabilizado en zonas húmedas y exteriores.",
+    "pisos": "Baldosín de granito de 0,30 × 0,30 m blanco Huila grano 1, pulido; mortero endurecido con cuarzo en áreas técnicas.",
+    "ventanas": "Aluminio anodizado natural mate con vidrio laminado 3+3 de seguridad (opalizado en baños y consultorios). En clima cálido: paneles móviles grandes, persianas o bloque calado de concreto.",
+    "cubierta": "Teja termoacústica trapezoidal tipo sándwich (aluzinc cal. 28 con poliuretano y bandeja interior perforada) en color azul; poliurea impermeabilizante.",
+    "cielorraso": "Lámina microperforada de aluminio con registros de 0,60 × 0,60 m.",
+    "aparatos_y_accesorios": "Divisiones de baño en acero inoxidable, grifería de sensor o push, secador de manos en acero, marquesinas en aluminio, cerramiento en malla plastificada de 2,20 m."
+   },
+   "bioclimatica_clima_calido": [
+    "Fachadas largas hacia el norte (y el sur) para evitar calentamiento.",
+    "Aleros de ancho mínimo 1/3 de la altura piso a piso.",
+    "Fachada de ataque a 45-60° del viento para repartir el aire; edificio permeable al viento para sacar el aire caliente.",
+    "Árboles nativos de copa alta (hasta 15 m) al oriente y occidente, a no menos de 10 m de la fachada, intercalados con arbustos de hasta 4 m.",
+    "Barreras rompevientos con permeabilidad de al menos 25 %."
+   ],
+   "estetica": "Volúmenes bajos blancos y gris claro (pañete y concreto a la vista), cubiertas azules en voladizo que dan sombra, una torre técnica vertical en concreto como hito, acceso con vidrio y marquesina, plazoleta de acceso y vegetación (según los renders de las ilustraciones 3 a 5).",
+   "presupuesto_referencia": [
+    {
+     "concepto": "Realizar obras preliminares",
+     "valor_original": 712458,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 1175208
+    },
+    {
+     "concepto": "Construcción de estructura",
+     "valor_original": 251938314,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 415575272
+    },
+    {
+     "concepto": "Instalación de redes",
+     "valor_original": 218627672,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 360628968
+    },
+    {
+     "concepto": "Acabados",
+     "valor_original": 312895740,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 516125278
+    },
+    {
+     "concepto": "Obras exteriores",
+     "valor_original": 101294570,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 167086609
+    },
+    {
+     "concepto": "COSTO DIRECTO (incluye un AIU teórico)",
+     "valor_original": 885468754,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 1460591335
+    },
+    {
+     "concepto": "Interventoría (4,5 meses, con IVA)",
+     "valor_original": 67322820,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 111049799
+    },
+    {
+     "concepto": "COSTO TOTAL CONSTRUCCIÓN",
+     "valor_original": 952791574,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 1571641135
+    },
+    {
+     "concepto": "Dotación (59 ítems de equipos y mobiliario)",
+     "valor_original": 120122953,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 198144252,
+     "nota": "El documento la declara 'precios de 2017'."
+    },
+    {
+     "concepto": "TOTAL PROYECTO",
+     "valor_original": 1072914527,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 1769785387
+    },
+    {
+     "concepto": "Supervisión (2 % del costo directo sin AIU; aparte del total)",
+     "valor_original": 13061883,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 21545733
+    },
+    {
+     "concepto": "Operación y mantenimiento mensual (personal, servicios, insumos y mantenimiento)",
+     "valor_original": 17941334,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 29594446
+    }
+   ],
+   "dotacion_por_espacio": [
+    {
+     "concepto": "Consultorio de medicina general",
+     "valor_original": 21322068,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 35171007
+    },
+    {
+     "concepto": "Consultorio de promoción y prevención",
+     "valor_original": 21322068,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 35171007
+    },
+    {
+     "concepto": "Consultorio odontológico",
+     "valor_original": 33213412,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 54785922
+    },
+    {
+     "concepto": "Toma de muestras de laboratorio",
+     "valor_original": 7119000,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 11742876
+    },
+    {
+     "concepto": "Toma de muestras ginecológicas",
+     "valor_original": 21322068,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 35171007
+    },
+    {
+     "concepto": "Recepción",
+     "valor_original": 5009944,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 8263963
+    },
+    {
+     "concepto": "Sala de espera",
+     "valor_original": 4743200,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 7823965
+    },
+    {
+     "concepto": "Dispensación de medicamentos",
+     "valor_original": 6071176,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 10014478
+    }
+   ],
+   "costo_por_m2": {
+    "costo_directo_por_m2_sobre_269_6m2": {
+     "anio_2017": 3284380,
+     "pesos_2026": 5417624
+    },
+    "costo_directo_por_m2_sobre_320_6m2": {
+     "anio_2017": 2761911,
+     "pesos_2026": 4555806
+    },
+    "costo_directo_sin_exteriores_por_m2_sobre_269_6m2": {
+     "anio_2017": 2908658,
+     "pesos_2026": 4797866
+    },
+    "tipo": "calculo_propio",
+    "nota": "El presupuesto usa 269,6 m² como cantidad de 'construcción', mientras el texto habla de 320,6 m² construidos (incluye circulación y acceso cubierto). Se dan ambos. El costo directo ya trae AIU teórico y obras exteriores (plazoleta, andenes y cerramiento)."
+   },
+   "cronograma": "Obra de unos 130 días (≈4,5 meses) e interventoría de 4,5 meses; se recomienda un mes más para cierre.",
+   "operacion_mensual_2017": {
+    "personal": 13541334,
+    "servicios_e_insumos": 1900000,
+    "mantenimiento": 2500000,
+    "total": 17941334,
+    "personal_detalle": "2 médicos, 1 odontólogo, 1 enfermero, 1 auxiliar de enfermería, 1 auxiliar farmacéutico, servicios generales, mantenimiento y 2 vigilantes"
+   }
+  },
+  {
+   "id": "minsalud_puesto_salud_tipo_2017",
+   "nombre": "Puesto de salud tipo – proyecto arquitectónico (planos: 'Puesto de salud tipo 4')",
+   "autor": "MinSalud – Dirección de Prestación de Servicios y Atención Primaria, Subdirección de Infraestructura en Salud",
+   "fecha": "Enero de 2017 (planos fechados en septiembre de 2016)",
+   "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PSA/puesto-salud-tipo.pdf",
+   "paginas": 10,
+   "fecha_consulta": "2026-10-22",
+   "tipo_dato": "dato_oficial",
+   "contenido": "Cuadro de áreas, dotación hospitalaria mínima, presupuesto preliminar (solo cantidades) y planos (planta general, cubiertas y fachadas).",
+   "cuadro_areas": [
+    {
+     "ambiente": "Sala de espera",
+     "cantidad": 1,
+     "area_m2": 11.95,
+     "area_total_m2": 11.95
+    },
+    {
+     "ambiente": "Baño público para personas con discapacidad",
+     "cantidad": 2,
+     "area_m2": 4.88,
+     "area_total_m2": 9.76
+    },
+    {
+     "ambiente": "Consultorio de medicina general",
+     "cantidad": 1,
+     "area_m2": 11.76,
+     "area_total_m2": 11.76
+    },
+    {
+     "ambiente": "Consultorio de enfermería",
+     "cantidad": 1,
+     "area_m2": 10.52,
+     "area_total_m2": 10.52
+    },
+    {
+     "ambiente": "Toma de muestras de laboratorio",
+     "cantidad": 1,
+     "area_m2": 10.52,
+     "area_total_m2": 10.52
+    },
+    {
+     "ambiente": "Consultorio de odontología (unidad)",
+     "cantidad": 1,
+     "area_m2": 11.76,
+     "area_total_m2": 11.76
+    },
+    {
+     "ambiente": "Entrega de medicamentos",
+     "cantidad": 1,
+     "area_m2": 13.72,
+     "area_total_m2": 13.72
+    },
+    {
+     "ambiente": "Almacén o depósito",
+     "cantidad": 1,
+     "area_m2": 3.01,
+     "area_total_m2": 3.01
+    },
+    {
+     "ambiente": "Cuarto de aseo",
+     "cantidad": 1,
+     "area_m2": 1.44,
+     "area_total_m2": 1.44
+    },
+    {
+     "ambiente": "Depósito de residuos",
+     "cantidad": 1,
+     "area_m2": 3.48,
+     "area_total_m2": 3.48
+    },
+    {
+     "ambiente": "Cuarto eléctrico",
+     "cantidad": 1,
+     "area_m2": 4.42,
+     "area_total_m2": 4.42
+    }
+   ],
+   "subtotal_m2": 92.34,
+   "circulacion_y_muros_pct": 39,
+   "circulacion_y_muros_m2": 36.17,
+   "area_total_programa_m2": 128.51,
+   "area_planta_general_m2": 150,
+   "area_replanteo_lote_m2": 222,
+   "dotacion_minima": {
+    "sala_espera": [
+     "Caneca punto ecológico (1)",
+     "Dispensador de agua (1)",
+     "Tándem de 3 puestos (3)",
+     "Tándem de 4 puestos (4)"
+    ],
+    "consultorio_medicina_general": [
+     "Balanza de pie con tallímetro",
+     "Camilla de examen",
+     "Cinta métrica",
+     "Equipo de órganos de los sentidos de pared",
+     "Escalerilla de dos pasos",
+     "Fonendoscopio adulto-pediátrico",
+     "Infantómetro",
+     "Lámpara cuello de cisne de luz fría",
+     "Linterna para valoración pupilar",
+     "Martillo de reflejos",
+     "Negatoscopio de un cuerpo",
+     "Tensiómetro aneroide de pared adulto-pediátrico",
+     "Puesto de trabajo"
+    ],
+    "consultorio_enfermeria": [
+     "Igual al de medicina general sin negatoscopio"
+    ],
+    "consultorio_odontologia": [
+     "Cavitrón",
+     "Compresor de aire",
+     "Esterilizador de mesa",
+     "Lámpara de fotocurado",
+     "Micromotor y contraángulo",
+     "Pieza de mano de alta y de baja",
+     "Juego de instrumental básico",
+     "Unidad odontológica fija",
+     "Puesto de trabajo"
+    ],
+    "farmacia": [
+     "Archivador bajo mesón",
+     "Canecas con pedal gris y verde de 15 L",
+     "Carro de distribución de medicamentos",
+     "Estantes metálicos (2)",
+     "Mesón con superficie",
+     "Nevera para medicamentos (2)",
+     "Puesto de trabajo",
+     "Silla",
+     "Termohigrómetro",
+     "Termómetro digital para nevera",
+     "Torre gavetera (apoteca)"
+    ],
+    "toma_muestras_laboratorio": [
+     "Mesas (2)",
+     "Sillas (4)",
+     "Canecas roja y verde de 15 L"
+    ],
+    "cuarto_electrico": [
+     "Planta eléctrica"
+    ],
+    "deposito_y_residuos": [
+     "Estantes metálicos (3)",
+     "Estibas (4)",
+     "Báscula para residuos hasta 500 kg",
+     "Canecas de 55 galones gris, verde y roja"
+    ]
+   },
+   "presupuesto": {
+    "valores": "Sin precios: la tabla trae todas las columnas de valor en $0. Sirve solo como lista de cantidades.",
+    "capitulos": [
+     "Preliminares",
+     "Cimientos",
+     "Estructuras",
+     "Muros en sistema Royalco (Azembla)",
+     "Ventanería en PVC",
+     "Cubierta en teja de PVC",
+     "Pisos e impermeabilización",
+     "Instalación eléctrica",
+     "Instalación hidrosanitaria",
+     "Adicionales",
+     "Varios"
+    ],
+    "cantidades_clave": {
+     "estructura_metalica_kg": 1500,
+     "columnas_acero_galvanizado_ml": 120,
+     "muro_azembla_100mm_m2": 64,
+     "muro_azembla_64mm_m2": 191.5,
+     "cubierta_pvc_m2": 172,
+     "piso_baldosa_antideslizante_m2": 140,
+     "mediacana_ml": 125,
+     "salidas_tomas": 18,
+     "salidas_iluminacion": 15,
+     "tanques_1000L": 4,
+     "transferencia_electrica": 1
+    }
+   },
+   "sistema_constructivo": "Estructura liviana de acero galvanizado con muros de paneles de PVC rellenos (sistema Azembla de Royalco), cubierta en teja de PVC con pendiente de 15 %, ventanas y puertas en PVC, placa de contrapiso con vigas de cimentación y módulo de tanques sobre losa. Incluye 'flete Cartagena – Paraguachón', o sea que se pensó para La Guajira.",
+   "estetica": "Un piso, cubierta a dos aguas, módulo de tanques elevado y pórtico de acceso con cubierta trapezoidal. Los planos son de línea, sin colores ni materiales de fachada.",
+   "aplicabilidad_a_la_torre": "Baja como edificio: el sistema liviano en seco no sirve para una edificación del Grupo IV de varios pisos con urgencias. Útil como lista mínima de dotación y como referencia del 39 % de circulación y muros en un programa pequeño."
+  },
+  {
+   "id": "dnp_ambulancias_2018",
+   "nombre": "Proyecto Tipo 'Dotación de ambulancias: transporte asistencial básico y medicalizado', versión 2.0",
+   "autor": "DNP con MinSalud",
+   "fecha": "2018 (precios de 2017)",
+   "url": "https://proyectostipo.dnp.gov.co/images/pdf/ambulancias/PTambulancias.pdf",
+   "fecha_consulta": "2026-10-22",
+   "tipo_dato": "dato_oficial",
+   "presupuesto_referencia": [
+    {
+     "concepto": "Ambulancia TAB 4×4 o 4×2 con dotación (NTC 3729)",
+     "valor_original": 205500000,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 338974716
+    },
+    {
+     "concepto": "Ambulancia TAM 4×4 o 4×2 con dotación (NTC 3729)",
+     "valor_original": 280500000,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 462688116
+    },
+    {
+     "concepto": "Supervisión",
+     "valor_original": 14618964,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 24114157
+    },
+    {
+     "concepto": "Operación y mantenimiento anual",
+     "valor_original": 399513170,
+     "anio_precios": 2017,
+     "factor_ipc_a_2026": 1.649512,
+     "valor_pesos_2026": 659001768
+    }
+   ],
+   "alerta": "La actualización por IPC subestima el precio de vehículos importados: la Gobernación de Antioquia reportó una TAB promedio de $597 millones en 2021 (ver data/hospital2028.json). Para presupuestar, usar cotizaciones.",
+   "uso_en_la_torre": "Proyecto que se articula aparte (transporte asistencial es interdependencia obligatoria de urgencias); la torre aporta el parqueo cubierto de 3,80 × 6,00 m por ambulancia y los ambientes de apoyo."
+  },
+  {
+   "id": "dnp_cadena_frio_2016",
+   "nombre": "Proyecto Tipo 'Fortalecimiento de la cadena de frío', versión 1.0",
+   "autor": "DNP con MinSalud",
+   "fecha": "2016 (precios de 2016)",
+   "url": "https://proyectostipo.dnp.gov.co/images/pdf/cadenafrio/ptcadena.pdf",
+   "fecha_consulta": "2026-10-22",
+   "tipo_dato": "dato_oficial",
+   "presupuesto_referencia": [
+    {
+     "concepto": "Cuarto frío de vacunas de 4,5 × 3,5 m con condensadora principal y de respaldo",
+     "valor_original": 140000000,
+     "anio_precios": 2016,
+     "factor_ipc_a_2026": 1.720701,
+     "valor_pesos_2026": 240898140
+    },
+    {
+     "concepto": "Planta eléctrica de 21 kVA con transferencia automática, tanque auxiliar y UPS",
+     "valor_original": 56000000,
+     "anio_precios": 2016,
+     "factor_ipc_a_2026": 1.720701,
+     "valor_pesos_2026": 96359256
+    },
+    {
+     "concepto": "Aire acondicionado mini split de 18.000 BTU",
+     "valor_original": 15000000,
+     "anio_precios": 2016,
+     "factor_ipc_a_2026": 1.720701,
+     "valor_pesos_2026": 25810515
+    },
+    {
+     "concepto": "Computador para monitoreo",
+     "valor_original": 5000000,
+     "anio_precios": 2016,
+     "factor_ipc_a_2026": 1.720701,
+     "valor_pesos_2026": 8603505
+    },
+    {
+     "concepto": "Vehículo furgón para transporte de vacunas",
+     "valor_original": 150000000,
+     "anio_precios": 2016,
+     "factor_ipc_a_2026": 1.720701,
+     "valor_pesos_2026": 258105150
+    },
+    {
+     "concepto": "Elementos técnicos para transporte de vacunas",
+     "valor_original": 74000000,
+     "anio_precios": 2016,
+     "factor_ipc_a_2026": 1.720701,
+     "valor_pesos_2026": 127331874
+    },
+    {
+     "concepto": "Mantenimiento anual",
+     "valor_original": 80400000,
+     "anio_precios": 2016,
+     "factor_ipc_a_2026": 1.720701,
+     "valor_pesos_2026": 138344360
+    }
+   ],
+   "uso_en_la_torre": "Referencia de componentes para el servicio de vacunación y la red de frío municipal; el cuarto frío y su respaldo eléctrico van dentro de la torre si la E.S.E. es nodo de la red de frío."
+  },
+  {
+   "id": "minsalud_caps_2023_2025",
+   "nombre": "Centros de Atención Primaria en Salud (CAPS) – programa de MinSalud",
+   "fecha": "2023-2025",
+   "fuentes": [
+    "https://www.elcolombiano.com/colombia/por-primera-vez-minsalud-dice-cuanto-costara-construir-caps-NC23036913",
+    "https://consultorsalud.com/guajira-cinco-nuevos-caps-atencion-salud/"
+   ],
+   "fecha_consulta": "2026-10-22",
+   "datos": [
+    {
+     "dato": "MinSalud calculó 2.500 intervenciones en E.S.E. (296 reposiciones, 1.358 ampliaciones, 435 adecuaciones y 411 obras nuevas) por $6.953.347 millones, en cuatro categorías: CAPS principal urbano, CAPS urbano ambulatorio, CAPS principal rural y sede satélite rural. MinSalud aclara que son 'cálculos teóricos'.",
+     "fecha": "Respuesta a derecho de petición publicada el 1-nov-2023",
+     "tipo": "dato_oficial"
+    },
+    {
+     "dato": "Promedio de $2.781 millones por intervención (precios corrientes de 2023).",
+     "tipo": "calculo_propio"
+    },
+    {
+     "dato": "La Guajira: cada CAPS de la segunda etapa tiene unos 226 m²; el contrato interadministrativo MinSalud–ENTerritorio es de $82.029 millones para construir u optimizar 25 centros en 10 municipios; la segunda etapa (5 CAPS) vale $35.289 millones e incluye obra en el hospital de Manaure.",
+     "fecha": "16-sep-2025",
+     "tipo": "dato_oficial"
+    }
+   ],
+   "diseno_tipo_publico": "No encontrado: no hay planos ni ficha técnica públicos de un 'CAPS tipo'.",
+   "aplicabilidad_a_la_torre": "Sirve como encuadre de política (la torre puede presentarse como 'CAPS principal urbano' dentro de la red) y como referencia de tamaño de un CAPS rural (≈226 m²), no como diseño."
+  }
+ ],
+ "busquedas_sin_resultado": [
+  {
+   "busqueda": "Centro de salud tipo u hospital de primer nivel tipo de MinSalud",
+   "resultado": "No existe publicado. En la Biblioteca Digital de MinSalud solo aparece el 'Puesto de salud tipo' (2017); se probaron rutas equivalentes (centro-salud-tipo, hospital-tipo, etc.) y todas dan error 404.",
+   "fecha": "2026-10-22",
+   "url": "https://www.minsalud.gov.co/salud/prestacion-servicios/Paginas/infraestructura-en-salud.aspx"
+  },
+  {
+   "busqueda": "Diseños tipo de la Gobernación de Antioquia (Secretaría Seccional de Salud)",
+   "resultado": "No se encontraron prototipos publicados; solo resoluciones de cofinanciación de reposición, adecuación y ampliación de E.S.E. (art. 43, Ley 715 de 2001).",
+   "fecha": "2026-10-22"
+  },
+  {
+   "busqueda": "'Capacidades instaladas tipo' de MinSalud (Res. 1211 y 1519 de 2025)",
+   "resultado": "No publicadas a la fecha de corte.",
+   "fecha": "2026-10-22"
+  },
+  {
+   "busqueda": "Proyectos tipo de salud del DNP",
+   "resultado": "Hay tres: infraestructura básica de salud (puesto/centro), ambulancias y cadena de frío. Los tres se incluyen arriba.",
+   "fecha": "2026-10-22",
+   "url": "https://proyectostipo.dnp.gov.co"
+  }
+ ],
+ "seleccion": {
+  "proyecto_que_inspira": "dnp_infraestructura_basica_salud_2018",
+  "por_que": [
+   "Es el único proyecto tipo nacional de salud con diseño completo y presupuesto con fecha (enero de 2018, precios de 2017), elaborado por el DNP con MinSalud.",
+   "Usa pórticos de concreto, un sistema compatible con una edificación del Grupo IV de varios pisos (el puesto tipo de MinSalud usa paneles de PVC en seco).",
+   "Trae modulación, estrategias bioclimáticas para clima cálido, especificaciones de materiales, dotación por ambiente y costo de operación mensual.",
+   "No existe un 'centro de salud tipo' ni un 'hospital de primer nivel tipo' de MinSalud publicado; tampoco un CAPS tipo con planos."
+  ],
+  "que_se_toma_de_cada_uno": [
+   {
+    "proyecto": "dnp_infraestructura_basica_salud_2018",
+    "se_toma": [
+     "Lógica modular: un módulo estructural repetible donde caben consultorios, servicios, espera y área técnica",
+     "Circulación central cubierta por voladizos y viga-canal (en la torre: corredor central de 2,40-2,80 m con aleros profundos en fachada)",
+     "Bioclimática de clima cálido: fachadas largas norte-sur, aleros de 1/3 de la altura, ventilación cruzada, vegetación al oriente y occidente",
+     "Paleta de materiales durables: concreto a la vista, granito pulido blanco, aluminio natural con vidrio laminado, persianas o bloque calado, cubierta termoacústica",
+     "Torre técnica como hito vertical (en la torre: núcleo de escalera, ascensor y tanques)",
+     "Listas de dotación por ambiente y su costo como base de cotización",
+     "Estructura de presupuesto por actividades MGA y estimación de operación y mantenimiento"
+    ]
+   },
+   {
+    "proyecto": "minsalud_puesto_salud_tipo_2017",
+    "se_toma": [
+     "Dotación hospitalaria mínima por ambiente (consulta, enfermería, odontología, farmacia, toma de muestras, residuos)",
+     "Proporción de circulación y muros (39 %) como piso del factor bruto",
+     "Capítulos del presupuesto como lista de verificación de cantidades"
+    ]
+   },
+   {
+    "proyecto": "dnp_ambulancias_2018",
+    "se_toma": [
+     "Componentes y costo de referencia de TAB y TAM; el transporte asistencial se articula como proyecto aparte"
+    ]
+   },
+   {
+    "proyecto": "dnp_cadena_frio_2016",
+    "se_toma": [
+     "Componentes del cuarto frío de vacunas con respaldo eléctrico para el servicio de vacunación"
+    ]
+   },
+   {
+    "proyecto": "minsalud_caps_2023_2025",
+    "se_toma": [
+     "Encuadre de política: la torre como sede principal (CAPS principal urbano) de la red de Yondó, articulada con los puestos rurales"
+    ]
+   }
+  ],
+  "que_no_se_toma": [
+   "Las normas de base del proyecto tipo DNP (Res. 4445 de 1996 y Res. 2003 de 2014), ambas derogadas: el programa se rehace con la Res. 3100 de 2019 y la Res. 1633 de 2025.",
+   "La luz estructural de 7,60 × 4,30 m: se cambia por una malla múltiplo del Módulo Hospitalario Colombiano de 1,20 m (por ejemplo 7,20 × 7,20 m), que permite dos consultorios de 3,60 × 3,00 m (10,8 m²) por crujía y corredores de 2,40-2,80 m.",
+   "El color azul de la cubierta: el Anexo 2 de la Res. 1633 recomienda colores con reflectividad de 80 % o más (blanco, gris claro, beige, terracota).",
+   "El sistema liviano de PVC del puesto tipo de MinSalud (no apto para Grupo IV de varios pisos).",
+   "Los valores de 2017 sin actualizar: todo se lleva a pesos de 2026 y se confirma con cotizaciones vigentes (menos de 6 meses, Res. 485)."
+  ]
+ },
+ "escalamiento_a_torre": {
+  "idea": "Pasar de un puesto o centro de un piso (320,6 m²) a una torre de 3 pisos de unos 2.900 m² (rango 2.300-3.800 m²) apilando 'módulos' del proyecto tipo por servicio y separando flujos por piso.",
+  "pasos": [
+   "1. Malla estructural de 7,20 × 7,20 m (6 × 1,20 m) en pórticos de concreto (o acero) diseñados para Grupo IV, con núcleo rígido de escaleras de evacuación de 2,40 m, ascensor camillero (2,20 × 1,20 m) y ductos.",
+   "2. Piso 1 (nivel de acceso): urgencias completa en un solo piso con acceso directo y cubierto de ambulancias; imágenes y farmacia junto a urgencias; vestíbulo, admisión y toma de muestras para el público ambulatorio; ingreso de servicios generales aparte.",
+   "3. Piso 2: consulta externa, odontología, vacunación y laboratorio clínico (el laboratorio conectado por montacargas o ascensor con la toma de muestras del piso 1 y con urgencias).",
+   "4. Piso 3: parto, hospitalización y esterilización, con la estación de enfermería a menos de 35 m de la cama más lejana.",
+   "5. Cubierta: tanques (72 h de reserva más tanque contra incendio aparte), condensadoras, paneles solares (meta ≥20 % de la energía) y captación de agua lluvia.",
+   "6. Conexión con el edificio actual (que queda para administración, archivo, bodega y distribución) por un puente o pasillo cubierto de uso exclusivo (Res. 3100, num. 11.1.2, criterio 5)."
+  ],
+  "programa_preliminar": {
+   "tipo": "estimacion",
+   "metodo": "Áreas netas a partir de los mínimos de la Res. 1633 y la Res. 3100 y de tamaños usuales; factor bruto (circulaciones de 2,40-2,80 m, muros, ductos, escaleras de evacuación de 2,40 m y ascensor camillero) de 1,45 a 1,60. El Puesto de salud tipo usa 39 % de circulación y muros (factor 1,39) en un programa pequeño de un piso; en una torre con corredores de 2,40 m el factor sube.",
+   "servicios": [
+    {
+     "servicio": "Urgencias de baja complejidad",
+     "piso_sugerido": 1,
+     "area_neta_m2": {
+      "min": 280,
+      "central": 330,
+      "max": 400
+     },
+     "contenido": "2 consultorios, triage, procedimientos, reanimación de 2 camillas, observación adultos (por sexo) y pediátrica, ERA, EDA, yesos, aislamiento, descontaminación, custodia, estación de enfermería, apoyos; acceso exclusivo de ambulancias"
+    },
+    {
+     "servicio": "Vestíbulo, admisión, SIAU, facturación y espera general",
+     "piso_sugerido": 1,
+     "area_neta_m2": {
+      "min": 70,
+      "central": 90,
+      "max": 120
+     },
+     "contenido": "Ingreso principal diferenciado del de urgencias"
+    },
+    {
+     "servicio": "Imágenes: rayos X y ecografía",
+     "piso_sugerido": 1,
+     "area_neta_m2": {
+      "min": 80,
+      "central": 95,
+      "max": 120
+     },
+     "contenido": "Sala de rayos X blindada con control, vestidores, ecografía con baño, lectura y procesamiento, oficina del radiólogo"
+    },
+    {
+     "servicio": "Servicio farmacéutico",
+     "piso_sugerido": 1,
+     "area_neta_m2": {
+      "min": 55,
+      "central": 70,
+      "max": 90
+     },
+     "contenido": "Recepción, cuarentena, almacenamiento de 20 m², control especial, dispensación hacia el vestíbulo y hacia urgencias"
+    },
+    {
+     "servicio": "Toma de muestras y recepción del laboratorio",
+     "piso_sugerido": 1,
+     "area_neta_m2": {
+      "min": 35,
+      "central": 45,
+      "max": 60
+     },
+     "contenido": "4 cubículos, toma especial con baño, recepción y entrega de resultados"
+    },
+    {
+     "servicio": "Transporte asistencial (apoyos)",
+     "piso_sugerido": 1,
+     "area_neta_m2": {
+      "min": 20,
+      "central": 25,
+      "max": 35
+     },
+     "contenido": "Oficina, almacenes y descanso; parqueos de ambulancia afuera, cubiertos"
+    },
+    {
+     "servicio": "Laboratorio clínico (ambientes técnicos)",
+     "piso_sugerido": 2,
+     "area_neta_m2": {
+      "min": 110,
+      "central": 140,
+      "max": 180
+     },
+     "contenido": "Hematología, química, inmunología y serología, microbiología con cabina, uroanálisis y coprología, coagulación y POCT, lavado y esterilización de material, reactivos, cuarto frío, vestidor y descanso 24 h"
+    },
+    {
+     "servicio": "Consulta externa general y especializada",
+     "piso_sugerido": 2,
+     "area_neta_m2": {
+      "min": 280,
+      "central": 330,
+      "max": 400
+     },
+     "contenido": "14 consultorios (incluye telemedicina, gineco-obstetricia con baño y P&P), sala de procedimientos, espera de 4 m² por consultorio, baterías sanitarias"
+    },
+    {
+     "servicio": "Odontología y radiología odontológica",
+     "piso_sugerido": 2,
+     "area_neta_m2": {
+      "min": 40,
+      "central": 50,
+      "max": 65
+     },
+     "contenido": "3 unidades, esterilización odontológica, rayos X odontológico"
+    },
+    {
+     "servicio": "Vacunación y cadena de frío",
+     "piso_sugerido": 2,
+     "area_neta_m2": {
+      "min": 22,
+      "central": 25,
+      "max": 35
+     },
+     "contenido": "Consultorio + alistamiento de termos (o ambiente único de 16 m²)"
+    },
+    {
+     "servicio": "Atención del parto",
+     "piso_sugerido": 3,
+     "area_neta_m2": {
+      "min": 160,
+      "central": 190,
+      "max": 240
+     },
+     "contenido": "Trabajo de parto (2 camillas), sala de partos de 16 m², recuperación (2 camillas), 1-2 habitaciones TPR de 24 m², vestidores filtro, zona séptica"
+    },
+    {
+     "servicio": "Hospitalización general",
+     "piso_sugerido": 3,
+     "area_neta_m2": {
+      "min": 280,
+      "central": 330,
+      "max": 420
+     },
+     "contenido": "16-20 camas en habitaciones de 1 a 4 camas, aislamiento, estación de enfermería, procedimientos, lactario y extracción de leche, sala de visitas"
+    },
+    {
+     "servicio": "Central de esterilización",
+     "piso_sugerido": 3,
+     "area_neta_m2": {
+      "min": 30,
+      "central": 40,
+      "max": 55
+     },
+     "contenido": "Flujo unidireccional según Res. 914 de 2025"
+    },
+    {
+     "servicio": "Apoyo técnico y de personal",
+     "piso_sugerido": 0,
+     "area_neta_m2": {
+      "min": 110,
+      "central": 140,
+      "max": 180
+     },
+     "contenido": "Cuartos eléctricos, UPS, datos, gases, aseo y residuos por piso, ropa, vestidores y descanso del personal (0 = repartido en todos los pisos)"
+    }
+   ],
+   "area_neta_total_m2": {
+    "min": 1572,
+    "central": 1900,
+    "max": 2400
+   },
+   "factor_bruto": {
+    "min": 1.45,
+    "central": 1.5,
+    "max": 1.6
+   },
+   "area_bruta_total_m2": {
+    "min": 2279,
+    "central": 2850,
+    "max": 3840
+   },
+   "pisos": "3 pisos asistenciales + cubierta técnica (tanques, condensadoras y paneles solares). Con 4 pisos la categoría de riesgo de incendio pasa a I (más resistencia al fuego).",
+   "huella_por_piso_m2": {
+    "central": 950,
+    "rango": [
+     760,
+     1280
+    ]
+   },
+   "equivalencia_en_modulos_dnp": {
+    "central": 48,
+    "nota": "Módulos de 59,65 m² del proyecto tipo DNP (cálculo propio)."
+   },
+   "escala_frente_al_proyecto_tipo": {
+    "veces_el_area_dnp_320_6m2": 8.9,
+    "tipo": "calculo_propio"
+   },
+   "lote_disponible": {
+    "tipo": "calculo_propio",
+    "valor_m2": "≈1.400-1.600",
+    "nota": "Zona del antiguo Centro Vida en el marco de data/edificios/bienestar_anciano.json: de x ≈ -27 m (cerramiento occidental, al borde del talud) a x ≈ +14 m (unión con el bloque central del hospital) y de y ≈ -22 m a y ≈ +18 m; una huella de 760-1.280 m² cabe dejando retiros, el acceso de ambulancias y el patio de luz. Falta topografía y la norma del EOT."
+   },
+   "supuesto_capacidad": "16-20 camas, 6-8 camillas de observación, 1 sala de partos con 2 de trabajo de parto y 2 de recuperación, 1-2 TPR, 14 consultorios, 3 unidades odontológicas, 1 sala de rayos X y 1 de ecografía. Hoy el REPS registra 9 camas, 4 camillas de observación, 13 consultorios y 1 sala de partos. Todo esto se debe concertar en el Documento de Capacidad Instalada (Res. 1211)."
+  },
+  "orden_de_magnitud_costo": {
+   "tipo": "estimacion",
+   "base": "Costo directo por m² del proyecto tipo DNP llevado a 2026 por IPC: $5.417.624 (incluye AIU y exteriores).",
+   "factor_complejidad": {
+    "min": 1.3,
+    "central": 1.5,
+    "max": 1.8,
+    "por_que": "La torre es Grupo IV (I = 1,5, umbral de daño), de 3 pisos con ascensor camillero, rociadores, gases medicinales, climatización por ambientes, blindaje de rayos X, sistema eléctrico esencial y redes de laboratorio; el prototipo DNP es de un piso sin nada de eso."
+   },
+   "costo_directo_m2_2026": {
+    "min": 7042911,
+    "central": 8126436,
+    "max": 9751723
+   },
+   "costo_directo_torre_2026": {
+    "min": 16053611789,
+    "central": 23160342600,
+    "max": 37446617088
+   },
+   "advertencia": "Orden de magnitud para dimensionar fuentes; no reemplaza el presupuesto por APU. No incluye dotación biomédica, demolición, estudios y diseños ni interventoría. El IPC no sigue de cerca los costos de construcción (el ICOCED del DANE sería mejor), pero el encargo fija el IPC como deflactor."
+  }
+ },
+ "estetica": {
+  "tipo": "estimacion",
+  "propuesta": "Volumen de concreto claro y pañete blanco con aleros y quiebrasoles horizontales profundos en norte y sur; celosías o ladrillo calado en tono terracota en oriente y occidente (guiño al ladrillo rojo de las alas del antiguo hospital de la Shell que se demuelen); cubierta blanca reflectiva, como la lámina blanca que ya puso el hospital; carpintería de aluminio natural con vidrio laminado; núcleo técnico vertical como hito; jardín de sombra con árboles nativos al occidente.",
+  "base": "Proyecto tipo DNP (concreto a la vista, aleros, torre técnica), Res. 1633 Anexo 2 (reflectividad ≥80 %; terracota aceptada) y el contexto de data/edificios/bienestar_anciano.json y hospital.json.",
+  "senalizacion_interior": "Colores por grupo de servicio de la Res. 1633 (rojo urgencias, naranja consulta, amarillo apoyo diagnóstico, azul internación, verde esterilización, violeta administración, café servicios generales)."
+ },
+ "incertidumbres": [
+  "El presupuesto del proyecto tipo DNP es 'teórico' según el propio documento y trae un AIU sin desglosar; además hay dos áreas de referencia (269,6 y 320,6 m²).",
+  "La actualización por IPC no refleja bien los costos de construcción ni de equipos importados; se usa porque el encargo fija el IPC.",
+  "El programa preliminar de la torre y la capacidad (camas, camillas, consultorios) son supuestos hasta concertar el Documento de Capacidad Instalada con MinSalud.",
+  "La huella disponible sale del modelo del sitio (bienestar_anciano.json), sin topografía ni retiros del EOT.",
+  "Los renders del proyecto tipo DNP se describieron a partir de las imágenes del PDF (sin especificación de colores de fachada, salvo la cubierta azul)."
+ ]
+}

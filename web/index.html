@@ -131,6 +131,17 @@ svg.mr-chart .now { stroke: var(--accent); stroke-width: 1.5; }
 .lbl-cx span { display: flex; align-items: center; gap: 6px; }
 .lbl-cx span::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 2.5px color-mix(in srgb, currentColor 25%, transparent); }
 .lbl-cx .pw { color: var(--power); } .lbl-cx .dt { color: var(--data); }
+.leyenda-servicios i { width: 10px; height: 10px; border-radius: 2px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.checklist { max-height: 320px; overflow: auto; padding-right: 6px; font-size: 0.85rem; }
+.barras details.fold summary { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) auto; gap: 10px; align-items: center; padding: 4px 0; }
+.barras .bar { height: 12px; background: var(--line); border-radius: 999px; overflow: hidden; } .barras .bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.barras .bar-v { font: 600 0.82rem var(--f-mono); text-align: right; } .barras .bar-l { font-size: 0.88rem; }
+.gantt-head, .gantt-row summary { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr); gap: 10px; align-items: center; }
+.gantt-head { grid-template-columns: minmax(0, 1.3fr) repeat(4, minmax(0, 0.5fr)); font: 600 0.75rem var(--f-mono); color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.g-bar { position: relative; height: 14px; background: repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 25%); border-radius: 4px; }
+.g-bar i { position: absolute; top: 2px; bottom: 2px; background: var(--accent); border-radius: 4px; }
+.g-n { font-size: 0.88rem; }
 .lbl-km { font: 700 10px var(--f-mono); color: var(--power); background: var(--surface); border: 1.5px solid var(--power); border-radius: 999px; padding: 1px 6px; transition: opacity 0.2s; } .lbl-km.dim { opacity: 0.3; }
 .lbl-cx:hover { border-color: var(--accent); }
 .cx-ruta { margin: 4px 0 0; padding: 0; list-style: none; font-size: 0.85rem; }
@@ -265,6 +276,7 @@ details.fold summary span { color: var(--accent); font-weight: 600; white-space:
       <a href="#microrred" data-view="microrred">Microrred</a>
       <a href="#ciudad" data-view="ciudad">Sedes reales</a>
       <a href="#hospital" data-view="hospital">Hospital 2028</a>
+      <a href="#torre" data-view="torre">Torre del hospital</a>
       <a href="#ruta" data-view="ruta">Hoja de ruta</a>
       <a href="#modelos" data-view="modelos">Modelos 3D</a>
     </nav>
@@ -469,6 +481,48 @@ details.fold summary span { color: var(--accent); font-weight: 600; white-space:
   </section>
 
   <!-- ======================= HOSPITAL ======================= -->
+  <!-- ======================= TORRE DEL HOSPITAL ======================= -->
+  <section class="view" id="v-torre" data-view="torre" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">Proyecto · Resolución 485 de 2025 de MinSalud</p><h2>Una torre para los servicios de primer nivel</h2></div>
+        <p class="lede" data-t="torre.lede"></p>
+      </div>
+      <p class="stamp" data-t="torre.stamp"></p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="torre"><span class="stage-hint">Arrastra para girar · en «Pisos por servicio» toca un piso para ver sus ambientes</span><div class="leyenda3d leyenda-servicios" aria-hidden="true" data-slot="torre.leyenda"></div></div>
+      <div class="folder">
+        <div class="card">
+          <h3>Ver</h3>
+          <div class="seg wrap-seg" role="group" aria-label="Vista de la torre">
+            <button type="button" data-modo-torre="hoy" aria-pressed="false">Hoy</button>
+            <button type="button" data-modo-torre="torre" aria-pressed="true">Con la torre</button>
+            <button type="button" data-modo-torre="pisos" aria-pressed="false">Pisos por servicio</button>
+            <button type="button" data-modo-torre="laboratorio" aria-pressed="false">Laboratorio</button>
+          </div>
+          <div class="tiles" style="margin-top:10px" data-slot="torre.tiles"></div>
+        </div>
+        <div class="card" data-slot="torre.ficha"><p class="note">En «Pisos por servicio», toca un piso para ver sus ambientes y áreas.</p></div>
+      </div>
+    </div>
+    <div class="cols two">
+      <div class="card"><h3>Programa por piso</h3><div class="tbl-wrap" data-slot="torre.pisos"></div></div>
+      <div class="card"><h3>Lo que pide la norma para la viabilidad</h3><div data-slot="torre.norma"></div></div>
+    </div>
+    <div class="card"><h3>Presupuesto por capítulos e ítems</h3><div data-slot="torre.presupuesto"></div></div>
+    <div class="cols two">
+      <div class="card"><h3>Análisis de precios unitarios (APU)</h3><div data-slot="torre.apu"></div></div>
+      <div class="card"><h3>Fuentes de financiación</h3><div class="tbl-wrap" data-slot="torre.financiacion"></div></div>
+    </div>
+    <div class="card"><h3>Proyectos que hay que articular</h3><div data-slot="torre.proyectos"></div></div>
+    <div class="cols two">
+      <div class="card"><h3>Dotación por servicio</h3><div class="tbl-wrap" data-slot="torre.dotacion"></div></div>
+      <div class="card"><h3>Laboratorio clínico con tamizaje</h3><div data-slot="torre.laboratorio"></div></div>
+    </div>
+    <div class="card"><h3>El proyecto tipo que la inspira</h3><div data-slot="torre.tipo"></div></div>
+  </section>
+
   <section class="view" id="v-hospital" data-view="hospital" hidden>
     <div class="intro">
       <div>

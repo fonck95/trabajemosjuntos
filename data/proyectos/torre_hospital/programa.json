@@ -1,0 +1,4188 @@
+{
+ "id": "torre_hospital_programa",
+ "titulo": "Torre de servicios de primer nivel - E.S.E. Hospital Héctor Abad Gómez (Yondó): demanda y programa médico-arquitectónico",
+ "fecha": "2026-10-22",
+ "estado": "Prediseño para formular el proyecto ante MinSalud (Res. 485/2025, art. 7.1.2, numerales 4 y 5). No reemplaza los estudios y diseños firmados.",
+ "convenciones": "dato oficial = publicado por una entidad; cálculo propio = operación sobre datos citados; estimación = supuesto con rango. Áreas en m², alturas en m.",
+ "resumen": "Torre de 4 pisos (3.369,6 m² construidos; 2.018,4 m² útiles) sobre el antiguo Centro Vida, unida al hospital actual por una galería. Lleva urgencias con bahía de ambulancias, rayos X y toma de muestras (piso 1); consulta externa, laboratorio 24 horas, vacunación, farmacia y ecografía (piso 2); hospitalización y partos (piso 3, 15 camas con 2 TPR); terapias, odontología y sala de expansión (piso 4). El hospital actual queda para administración, archivo, almacén y central de distribución, cocina, lavandería, mantenimiento, base de ambulancias y atención extramural.",
+ "demanda": {
+  "horizonte_de_diseno": "2035 (la torre podría operar desde 2029-2030; se revisa contra 2040)",
+  "poblacion_dane": {
+   "tipo": "dato oficial",
+   "fuente": "DANE, proyecciones municipales por área 2018-2042 (PPED-AreaMun-2018-2042_VP.xlsx, hoja PobMunicipalxÁrea, código 05893), consultado el 22-oct-2026",
+   "serie": {
+    "2026": {
+     "total": 22429,
+     "cabecera": 11856,
+     "rural": 10573
+    },
+    "2028": {
+     "total": 23157,
+     "cabecera": 12402,
+     "rural": 10755
+    },
+    "2030": {
+     "total": 23853,
+     "cabecera": 12941,
+     "rural": 10912
+    },
+    "2035": {
+     "total": 25550,
+     "cabecera": 14303,
+     "rural": 11247
+    },
+    "2040": {
+     "total": 27112,
+     "cabecera": 15627,
+     "rural": 11485
+    }
+   },
+   "porcentaje_rural_2026": 47.1,
+   "crecimiento_2026_2035_pct": 13.9
+  },
+  "afiliacion": {
+   "tipo": "dato oficial",
+   "fuente": "ADRES, BDUA en datos abiertos (subsidiado d7a5-cnra, contributivo tq4m-hmg2), datos al 3-oct-2026; resumido en docs/anexos/C-hospital-2028.md",
+   "subsidiado": {
+    "total": 8512,
+    "savia_salud": 7949,
+    "nueva_eps": 561,
+    "coosalud": 2,
+    "cabecera": 4437,
+    "rural_disperso": 3856
+   },
+   "contributivo": {
+    "total": 1070,
+    "nueva_eps": 725,
+    "savia_salud": 345
+   },
+   "subsidiado_mas_contributivo": 9582,
+   "porcentaje_de_la_poblacion_dane_2026": 42.7,
+   "afiliados_sgsss_2025_terridata": 10179,
+   "lectura": "Menos de la mitad de la población aparece afiliada en la BDUA abierta. La diferencia se explica, sobre todo, por regímenes especiales y de excepción (Ecopetrol opera los campos Casabe y Llanito; magisterio; fuerza pública), por población pobre no afiliada y por rezagos de la base. Esto no se ha verificado con la Secretaría de Salud."
+  },
+  "poblacion_usuaria_estimada": {
+   "tipo": "estimación (rango)",
+   "supuesto": "La E.S.E. es la única IPS con urgencias del municipio: urgencias se calcula sobre toda la población. Para consulta y hospitalización se toma entre el 55 % y el 70 % de la población DANE (subsidiado, parte del contributivo, población no afiliada y migrantes).",
+   "2026": [
+    12340,
+    15700
+   ],
+   "2035": [
+    14050,
+    17880
+   ]
+  },
+  "servicios_habilitados_hoy_reps": {
+   "tipo": "dato oficial parcial",
+   "confirmados_en_datos_abiertos": [
+    "Vacunación (código 420), corte REPS 13-abr-2023 (datos.gov.co 9vau-g3q7)",
+    "Urgencias, atención del parto, hospitalización de adultos y pediátrica, transporte asistencial básico y consulta externa: se deducen de la capacidad instalada registrada (camas, camillas de observación, salas de partos, ambulancias y consultorios), corte 5-nov-2022 (datos.gov.co s2ru-bqt6)"
+   ],
+   "por_verificar": "La lista completa de servicios habilitados (códigos REPS) no se pudo descargar: el portal prestadores.minsalud.gov.co rechazó la conexión desde este entorno (22-oct-2026) y no hay un conjunto nacional de servicios en datos abiertos. Es probable que estén habilitados enfermería, odontología, laboratorio clínico, toma de muestras, servicio farmacéutico, toma de citologías y psicología (contratos de SECOP con estos perfiles), pero no está confirmado."
+  },
+  "capacidad_instalada_actual": {
+   "tipo": "dato oficial",
+   "fuente": "REPS, 'Relación de IPS públicas y privadas según el nivel de atención y capacidad instalada', corte 5-nov-2022 (datos.gov.co s2ru-bqt6, filtro NIT 800014884), consultado el 22-oct-2026",
+   "camas": {
+    "adultos": 5,
+    "pediatricas": 2,
+    "tpr_obstetricas": 2,
+    "total": 9
+   },
+   "camillas_observacion": {
+    "pediatrica": 1,
+    "adultos_hombres": 2,
+    "adultos_mujeres": 1,
+    "total": 4
+   },
+   "consultorios": {
+    "consulta_externa": 13,
+    "urgencias": 2
+   },
+   "salas": {
+    "partos": 1,
+    "procedimientos": 1
+   },
+   "ambulancias_basicas": 3,
+   "sede": "Una sola sede (código 058930322701), barrio José Domingo Oliveros"
+  },
+  "produccion_registrada": {
+   "tipo": "dato oficial con subregistro fuerte",
+   "fuente": "MinSalud, Registros Individuales de Prestación de Servicios de Salud (RIPS) en datos abiertos (datos.gov.co 4k9h-8qiu), municipio 05893, consultado el 22-oct-2026",
+   "advertencia": "Son atenciones registradas de residentes de Yondó en el conjunto abierto; no son la producción completa de la E.S.E. Los saltos entre años (por ejemplo, 47.459 procedimientos en 2018 y 9.321 en 2021) muestran que el reporte es incompleto. La producción oficial de la E.S.E. está en el SIHO de MinSalud, que no fue accesible desde este entorno.",
+   "por_anio": {
+    "2017": {
+     "consultas": 13434,
+     "urgencias": 91,
+     "hospitalizaciones": 134,
+     "procedimientos": 5792
+    },
+    "2018": {
+     "consultas": 18267,
+     "urgencias": 112,
+     "hospitalizaciones": 246,
+     "procedimientos": 47459
+    },
+    "2019": {
+     "consultas": 19620,
+     "urgencias": 256,
+     "hospitalizaciones": 341,
+     "procedimientos": 24749
+    },
+    "2020": {
+     "consultas": 5151,
+     "urgencias": 162,
+     "hospitalizaciones": 123,
+     "procedimientos": 3931
+    },
+    "2021": {
+     "consultas": 3214,
+     "urgencias": 114,
+     "hospitalizaciones": 140,
+     "procedimientos": 9321
+    }
+   },
+   "nacimientos_madres_residentes": {
+    "tipo": "cálculo propio",
+    "valor": "≈ 210 a 280 nacidos vivos por año entre 2019 y 2024",
+    "metodo": "Se despeja el número de nacidos vivos de las tasas de mortalidad infantil, neonatal y en menores de 5 años de TerriData (DNP, con datos de MinSalud, INS y DANE), que solo cuadran con números enteros de muertes para ≈ 210 (2019, 2024), ≈ 243 (2022) y ≈ 276 (2021, 2023) nacimientos. Debe confirmarse con las estadísticas vitales del DANE."
+   }
+  },
+  "produccion_estimada_2035": {
+   "tipo": "estimación (rango), cálculo propio",
+   "supuestos": {
+    "consultas_medicina_general_por_usuario_año": [
+     1.6,
+     2.2
+    ],
+    "consultas_enfermeria_por_usuario_año": [
+     0.6,
+     1.0
+    ],
+    "consultas_odontologia_por_usuario_año": [
+     0.5,
+     0.8
+    ],
+    "psicologia_y_nutricion_por_usuario_año": [
+     0.1,
+     0.2
+    ],
+    "urgencias_por_habitante_año": [
+     0.25,
+     0.4
+    ],
+    "egresos_hospitalarios_por_1000_habitantes": [
+     20,
+     40
+    ],
+    "estancia_promedio_dias": [
+     2.5,
+     3.5
+    ],
+    "partos_atendidos_en_la_ese": "50 % a 65 % de los nacimientos de madres residentes (el resto, cesáreas y alto riesgo, se remite al segundo nivel en Barrancabermeja)",
+    "pruebas_de_laboratorio": "0,8-1,2 por consulta médica + 1,0-1,5 por urgencia + 6-10 por egreso",
+    "nota": "Supuestos de planeación propios, a revisar con la producción del SIHO y con el ASIS municipal."
+   },
+   "consultas_medicina_general": [
+    22480,
+    39350
+   ],
+   "consultas_enfermeria": [
+    8430,
+    17880
+   ],
+   "consultas_odontologia": [
+    7030,
+    14310
+   ],
+   "consultas_psicologia_y_nutricion": [
+    1410,
+    3580
+   ],
+   "atenciones_de_urgencias": [
+    6390,
+    10220
+   ],
+   "egresos_hospitalarios": [
+    510,
+    1020
+   ],
+   "partos_en_la_ese": [
+    120,
+    210
+   ],
+   "pruebas_de_laboratorio": [
+    27000,
+    73000
+   ],
+   "pruebas_de_laboratorio_por_dia": [
+    74,
+    200
+   ],
+   "estudios_de_rayos_x": [
+    1200,
+    2010
+   ],
+   "camas_necesarias_con_ocupacion_80": [
+    4.4,
+    12.2
+   ]
+  },
+  "lectura": "Con la población DANE de 2035 (25.550) y los rangos de uso supuestos, la E.S.E. necesitaría entre 4 y 12 camas generales con 80 % de ocupación, entre 22.500 y 39.400 consultas de medicina general al año, entre 6.400 y 10.200 atenciones de urgencias y entre 27.000 y 73.000 pruebas de laboratorio (≈ 70 a 200 al día). Hoy tiene 9 camas (contando 2 TPR), 13 consultorios y 4 camillas de observación (REPS 2022).",
+  "perfil_de_morbilidad": {
+   "asis": "El Análisis de Situación de Salud (ASIS) de Yondó del periodo 2024 obtuvo la máxima calificación departamental (Decreto 2025070003378 del 25-jul-2025, Gobernación de Antioquia), pero el documento no está publicado en internet. Se usan como sustituto los RIPS, el SIVIGILA y TerriData. Pedir el ASIS a la Secretaría de Salud municipal es un pendiente.",
+   "consulta_externa_rips_2017_2021": {
+    "tipo": "dato oficial con subregistro",
+    "primeras_causas": [
+     [
+      "Hipertensión esencial (I10)",
+      3944
+     ],
+     [
+      "Dolor abdominal no especificado (R104)",
+      2913
+     ],
+     [
+      "Parasitosis intestinal (B829)",
+      2820
+     ],
+     [
+      "Control de salud de rutina del niño (Z001)",
+      2394
+     ],
+     [
+      "Fiebre no especificada (R509)",
+      1706
+     ],
+     [
+      "Lumbago (M545)",
+      1659
+     ],
+     [
+      "Resfriado común (J00)",
+      1388
+     ],
+     [
+      "Asesoría en anticoncepción (Z300)",
+      1242
+     ],
+     [
+      "Infección respiratoria alta (J069)",
+      815
+     ],
+     [
+      "Diabetes mellitus (E109)",
+      490
+     ]
+    ]
+   },
+   "urgencias_rips_2017_2021": {
+    "tipo": "dato oficial con subregistro",
+    "primeras_causas": [
+     "Cólico renal",
+     "Infección de vías urinarias",
+     "Cefalea",
+     "Dolor pélvico",
+     "Fiebre",
+     "Hipertensión",
+     "Aborto incompleto",
+     "Insuficiencia respiratoria aguda",
+     "Dolor torácico",
+     "Ruptura prematura de membranas",
+     "Dengue"
+    ]
+   },
+   "hospitalizacion_rips_2017_2021": {
+    "tipo": "dato oficial con subregistro",
+    "primeras_causas": [
+     [
+      "Infección de vías urinarias (N390)",
+      102
+     ],
+     [
+      "Falso trabajo de parto (O471)",
+      62
+     ],
+     [
+      "Dolor abdominal (R104)",
+      36
+     ],
+     [
+      "Celulitis (L031)",
+      27
+     ],
+     [
+      "Parto espontáneo (O800)",
+      20
+     ],
+     [
+      "Neumonía bacteriana (J159)",
+      18
+     ],
+     [
+      "Preeclampsia severa (O141)",
+      15
+     ]
+    ]
+   },
+   "eventos_sivigila_2018_2022_ocurridos_en_yondo": {
+    "tipo": "dato oficial",
+    "fuente": "INS, datos de vigilancia en salud pública (datos.gov.co 4hyg-wa9d), municipio de ocurrencia 05893",
+    "casos": {
+     "violencia de género e intrafamiliar": 304,
+     "agresiones por animales potencialmente transmisores de rabia": 128,
+     "malaria vivax": 97,
+     "malaria falciparum": 15,
+     "malaria complicada": 4,
+     "dengue": 80,
+     "dengue grave": 5,
+     "accidente ofídico": 41,
+     "sífilis gestacional": 40,
+     "bajo peso al nacer": 35,
+     "morbilidad materna extrema": 34,
+     "intento de suicidio": 33,
+     "desnutrición aguda en menores de 5 años": 30,
+     "mortalidad perinatal y neonatal tardía": 23,
+     "tuberculosis pulmonar": 15,
+     "intoxicación por plaguicidas": 12,
+     "VIH/sida": 5,
+     "leishmaniasis cutánea": 2
+    }
+   },
+   "otros_indicadores_terridata": {
+    "incidencia_dengue_por_100000_en_riesgo": {
+     "2019": 360.0,
+     "2023": 280.1,
+     "2024": 193.0
+    },
+    "mortalidad_infantil_por_1000_nv_2024": 9.52,
+    "razon_mortalidad_materna": "muy volátil por el bajo número de nacimientos: 1 muerte materna equivale a 300-400 por 100.000 nacidos vivos",
+    "fuente": "TerriData 05893 (DNP), resumido en docs/anexos/E-indicadores-sociales.md"
+   },
+   "implicaciones_para_la_torre": [
+    "Laboratorio 24 horas con hematología, química (glucosa, HbA1c, creatinina, perfil lipídico), uroanálisis y urocultivo, coprológico, gota gruesa para malaria, pruebas de dengue (NS1, IgM/IgG y plaquetas), pruebas rápidas de VIH, sífilis y hepatitis B, baciloscopia para tuberculosis y coagulación para las urgencias obstétricas: responde a las primeras causas de consulta, urgencias y hospitalización.",
+    "Hipertensión y diabetes encabezan la consulta: consultorios de enfermería y medicina para la ruta de crónicos, nutrición y telemedicina con medicina interna.",
+    "Carga obstétrica alta (falso trabajo de parto, preeclampsia, sífilis gestacional, morbilidad materna extrema): consultorio de valoración obstétrica, 2 habitaciones TPR, ecografía obstétrica, toma de citologías y enlace de referencia con el segundo nivel.",
+    "Dengue, malaria, IRA y EDA con brotes: ambientes de ERA y EDA en urgencias, sala de expansión de 8 camillas con oxígeno en el piso 4 y aislamiento con presión negativa.",
+    "Violencia, intentos de suicidio y agresiones por animales: cuarto de custodia, entrevista a familiares, consultorio de psicología y stock de biológicos (antirrábica) en vacunación.",
+    "Accidente ofídico e intoxicaciones por plaguicidas: descontaminación en urgencias y nevera para sueros antiofídicos en farmacia."
+   ]
+  }
+ },
+ "servicios": [
+  {
+   "nombre": "Urgencias (adultos y pediatría)",
+   "codigo_reps": "1102",
+   "grupo": "Atención inmediata",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.6.1 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "habilitado (2 consultorios y 4 camillas de observación en REPS 2022)",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 1,
+   "justificacion": "Servicio de 24 horas que exige acceso directo de ambulancias; es la razón principal para trasladar lo asistencial a un edificio sismorresistente del grupo IV de la NSR-10."
+  },
+  {
+   "nombre": "Atención del parto (modalidad TPR)",
+   "codigo_reps": "1101",
+   "grupo": "Atención inmediata",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.6.4 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "habilitado (1 sala de partos y 2 camas TPR en REPS 2022)",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 3,
+   "justificacion": "Se pasa a 2 habitaciones TPR de 24 m² junto a hospitalización; cesáreas y alto riesgo se remiten."
+  },
+  {
+   "nombre": "Hospitalización adultos",
+   "codigo_reps": "129",
+   "grupo": "Internación",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.4.1 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "habilitado (5 camas en REPS 2022)",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 3,
+   "justificacion": "Sube a 7 camas, con 1 aislamiento."
+  },
+  {
+   "nombre": "Hospitalización pediátrica",
+   "codigo_reps": "130",
+   "grupo": "Internación",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.4.1 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "habilitado (2 camas en REPS 2022)",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 3,
+   "justificacion": "Sube a 4 camas con acompañante y lactario."
+  },
+  {
+   "nombre": "Hospitalización obstétrica (posparto, dentro de hospitalización adultos)",
+   "codigo_reps": "129",
+   "grupo": "Internación",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.4.1 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "parte de las camas actuales",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 3,
+   "justificacion": "2 camas de alojamiento conjunto junto a las TPR."
+  },
+  {
+   "nombre": "Medicina general",
+   "codigo_reps": "328",
+   "grupo": "Consulta externa",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.2.1 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "habilitado (13 consultorios de consulta externa en REPS 2022)",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 2,
+   "justificacion": "8 consultorios en el piso 2; la ruta de promoción y mantenimiento y la de crónicos son la mayor demanda (la hipertensión es la primera causa de consulta)."
+  },
+  {
+   "nombre": "Enfermería",
+   "codigo_reps": "312",
+   "grupo": "Consulta externa",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.2.1 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "probable, por verificar en REPS",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 2,
+   "justificacion": "Ruta de promoción y mantenimiento, control prenatal y crónicos."
+  },
+  {
+   "nombre": "Odontología general",
+   "codigo_reps": "334",
+   "grupo": "Consulta externa",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.2.1 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "probable, por verificar en REPS",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 4,
+   "justificacion": "1 consultorio con 3 unidades en el piso 4, con rayos X periapical y esterilización propia."
+  },
+  {
+   "nombre": "Psicología",
+   "codigo_reps": "344",
+   "grupo": "Consulta externa",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.2.1 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "probable (SECOP: psicólogos de los Equipos Básicos de Salud), por verificar",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 4,
+   "justificacion": "Consultorio en el piso 4; atiende violencia, intentos de suicidio y salud mental (eventos frecuentes en SIVIGILA)."
+  },
+  {
+   "nombre": "Nutrición y dietética",
+   "codigo_reps": "333",
+   "grupo": "Consulta externa",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.2.1 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "probable (SECOP: nutricionistas), por verificar",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 4,
+   "justificacion": "Consultorio en el piso 4; desnutrición aguda infantil y enfermedades crónicas."
+  },
+  {
+   "nombre": "Consulta especializada por brigadas y telemedicina (ginecobstetricia 320, pediatría 342, medicina interna 329)",
+   "codigo_reps": "320 / 342 / 329",
+   "grupo": "Consulta externa",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.2.2 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "no confirmado; nuevo",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 2,
+   "justificacion": "Consultorio especializado y consultorio de telemedicina como prestador remisor (Res. 2654/2019)."
+  },
+  {
+   "nombre": "Vacunación",
+   "codigo_reps": "420",
+   "grupo": "Consulta externa",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.2.3 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "habilitado (confirmado, corte REPS 13-abr-2023)",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 2,
+   "justificacion": "Consultorio y cuarto de cadena de frío en el piso 2, con neveras respaldadas por la batería de la microrred."
+  },
+  {
+   "nombre": "Toma de muestras de laboratorio clínico",
+   "codigo_reps": "712",
+   "grupo": "Apoyo diagnóstico y complementación terapéutica",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.3.11 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "probable, por verificar",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 1,
+   "justificacion": "4 cubículos y 1 toma de muestras especiales en el piso 1, junto al vestíbulo, con montacargas directo al laboratorio."
+  },
+  {
+   "nombre": "Laboratorio clínico (24 horas)",
+   "codigo_reps": "706",
+   "grupo": "Apoyo diagnóstico y complementación terapéutica",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.3.12 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "por verificar; se propone ampliado y dotado",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 2,
+   "justificacion": "Encima de la toma de muestras, con montacargas exclusivo de muestras."
+  },
+  {
+   "nombre": "Toma de muestras de cuello uterino y ginecológicas",
+   "codigo_reps": "749",
+   "grupo": "Apoyo diagnóstico y complementación terapéutica",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.3.13 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "probable, por verificar",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 2,
+   "justificacion": "Junto al consultorio especializado y a ecografía en el piso 2."
+  },
+  {
+   "nombre": "Servicio farmacéutico de baja complejidad",
+   "codigo_reps": "714",
+   "grupo": "Apoyo diagnóstico y complementación terapéutica",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.3.2 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "probable, por verificar",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 2,
+   "justificacion": "Con dispensación ambulatoria y hospitalaria; la reserva grande queda en la central de distribución del edificio actual."
+  },
+  {
+   "nombre": "Imágenes diagnósticas ionizantes (rayos X convencional digital)",
+   "codigo_reps": "744",
+   "grupo": "Apoyo diagnóstico y complementación terapéutica",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.3.4 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "por verificar; nuevo si no existe",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 1,
+   "justificacion": "Junto a urgencias; lectura por telerradiología."
+  },
+  {
+   "nombre": "Imágenes diagnósticas no ionizantes (ecografía)",
+   "codigo_reps": "745",
+   "grupo": "Apoyo diagnóstico y complementación terapéutica",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.3.4 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "por verificar; nuevo si no existe",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 2,
+   "justificacion": "Ecografía obstétrica de la ruta materno-perinatal."
+  },
+  {
+   "nombre": "Radiología odontológica (periapical)",
+   "codigo_reps": "748",
+   "grupo": "Apoyo diagnóstico y complementación terapéutica",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.3.3 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "por verificar; nuevo si no existe",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 4,
+   "justificacion": "Junto al consultorio odontológico del piso 4."
+  },
+  {
+   "nombre": "Fisioterapia",
+   "codigo_reps": "739",
+   "grupo": "Apoyo diagnóstico y complementación terapéutica",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.3.1 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "por verificar; nuevo si no existe",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 4,
+   "justificacion": "Gimnasio terapéutico y 3 cubículos en el piso 4."
+  },
+  {
+   "nombre": "Terapia respiratoria",
+   "codigo_reps": "729",
+   "grupo": "Apoyo diagnóstico y complementación terapéutica",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.3.1 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "por verificar; nuevo si no existe",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 4,
+   "justificacion": "Apoya ERA en urgencias y la rehabilitación de crónicos."
+  },
+  {
+   "nombre": "Transporte asistencial básico: bahía de llegada en la torre",
+   "codigo_reps": "1103",
+   "grupo": "Atención inmediata",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.6.2 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "habilitado (3 ambulancias básicas en REPS 2022)",
+   "en_torre": true,
+   "en_edificio_actual": false,
+   "piso": 1,
+   "justificacion": "En la torre solo la bahía cubierta de 2 cupos; la base del servicio (oficina, depósitos, descanso de conductores, parqueo de la flota) sigue en el patio del hospital actual."
+  },
+  {
+   "nombre": "Transporte asistencial medicalizado",
+   "codigo_reps": "1104",
+   "grupo": "Atención inmediata",
+   "estandar_habilitacion": "Res. 3100/2019, Manual de inscripción de prestadores y habilitación de servicios de salud, numeral 11.6.2 (estándares de talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica y registros, e interdependencia); infraestructura según Res. 1633/2025, Anexo 1",
+   "estado_hoy": "no habilitado (proyecto de ambulancia devuelto en 2024)",
+   "en_torre": false,
+   "en_edificio_actual": true,
+   "piso": null,
+   "justificacion": "Base compartida con la básica en el edificio actual; usa la misma bahía de la torre."
+  },
+  {
+   "nombre": "Dirección y administración (gerencia, subgerencias, financiera, facturación central y glosas, talento humano, jurídica, control interno, sistemas)",
+   "codigo_reps": null,
+   "grupo": "Apoyo no asistencial",
+   "estandar_habilitacion": "No es un servicio habilitable; ambiente de apoyo o servicio general (Res. 1633/2025, Anexo 1, capítulo 5)",
+   "estado_hoy": "existe hoy en el edificio actual (por confirmar en sitio)",
+   "en_torre": false,
+   "en_edificio_actual": true,
+   "piso": null,
+   "m2_indicativos": 300,
+   "justificacion": "Función no asistencial y de baja ocupación nocturna. Res. 1633/2025 (art. 2, par. 1) no exige sus requisitos a edificaciones ya construidas."
+  },
+  {
+   "nombre": "Archivo de historias clínicas (central) y archivo general",
+   "codigo_reps": null,
+   "grupo": "Apoyo no asistencial",
+   "estandar_habilitacion": "No es un servicio habilitable; ambiente de apoyo o servicio general (Res. 1633/2025, Anexo 1, capítulo 5)",
+   "estado_hoy": "existe hoy en el edificio actual (por confirmar en sitio)",
+   "en_torre": false,
+   "en_edificio_actual": true,
+   "piso": null,
+   "m2_indicativos": 150,
+   "justificacion": "Res. 1633, Anexo 1, 5.5 y 5.6; Res. 1995/1999, Ley 2015/2020 y Ley 594/2000. Necesita control de humedad, no condiciones asistenciales; se reduce con la historia clínica electrónica."
+  },
+  {
+   "nombre": "Almacén general y central de distribución (incluye la reserva del servicio farmacéutico con control de temperatura)",
+   "codigo_reps": null,
+   "grupo": "Apoyo no asistencial",
+   "estandar_habilitacion": "No es un servicio habilitable; ambiente de apoyo o servicio general (Res. 1633/2025, Anexo 1, capítulo 5)",
+   "estado_hoy": "existe hoy en el edificio actual (por confirmar en sitio)",
+   "en_torre": false,
+   "en_edificio_actual": true,
+   "piso": null,
+   "m2_indicativos": 250,
+   "justificacion": "Res. 1633, Anexo 1, 5.2.1. Abastece la torre por la galería, en horarios que no se cruzan con pacientes."
+  },
+  {
+   "nombre": "Producción de alimentos (cocina) para hospitalizados y personal",
+   "codigo_reps": null,
+   "grupo": "Apoyo no asistencial",
+   "estandar_habilitacion": "No es un servicio habilitable; ambiente de apoyo o servicio general (Res. 1633/2025, Anexo 1, capítulo 5)",
+   "estado_hoy": "existe hoy en el edificio actual (por confirmar en sitio)",
+   "en_torre": false,
+   "en_edificio_actual": true,
+   "piso": null,
+   "m2_indicativos": 120,
+   "justificacion": "Res. 1633, Anexo 1, 5.2; Res. 2674/2013. Los carros llegan al repostero del piso 3 por la galería y el ascensor de servicio. Puede contratarse."
+  },
+  {
+   "nombre": "Lavandería o ropería (si se contrata)",
+   "codigo_reps": null,
+   "grupo": "Apoyo no asistencial",
+   "estandar_habilitacion": "No es un servicio habilitable; ambiente de apoyo o servicio general (Res. 1633/2025, Anexo 1, capítulo 5)",
+   "estado_hoy": "existe hoy en el edificio actual (por confirmar en sitio)",
+   "en_torre": false,
+   "en_edificio_actual": true,
+   "piso": null,
+   "m2_indicativos": 100,
+   "justificacion": "Res. 1633, Anexo 1, 5.3: intercambio de ropa limpia y sucia por la galería."
+  },
+  {
+   "nombre": "Mantenimiento (taller general, taller biomédico y de sistemas industriales, depósito de elementos en desuso)",
+   "codigo_reps": null,
+   "grupo": "Apoyo no asistencial",
+   "estandar_habilitacion": "No es un servicio habilitable; ambiente de apoyo o servicio general (Res. 1633/2025, Anexo 1, capítulo 5)",
+   "estado_hoy": "existe hoy en el edificio actual (por confirmar en sitio)",
+   "en_torre": false,
+   "en_edificio_actual": true,
+   "piso": null,
+   "m2_indicativos": 120,
+   "justificacion": "Res. 1633, Anexo 1, 5.2.2."
+  },
+  {
+   "nombre": "Vestuarios generales, comedor y bienestar del personal",
+   "codigo_reps": null,
+   "grupo": "Apoyo no asistencial",
+   "estandar_habilitacion": "No es un servicio habilitable; ambiente de apoyo o servicio general (Res. 1633/2025, Anexo 1, capítulo 5)",
+   "estado_hoy": "existe hoy en el edificio actual (por confirmar en sitio)",
+   "en_torre": false,
+   "en_edificio_actual": true,
+   "piso": null,
+   "m2_indicativos": 120,
+   "justificacion": "Apoyo del personal; la torre conserva vestidores de filtro por servicio."
+  },
+  {
+   "nombre": "Base del transporte asistencial (oficina, depósitos de 4 m², archivo, descanso de conductores y enfermería) y parqueo cubierto de la flota",
+   "codigo_reps": null,
+   "grupo": "Apoyo no asistencial",
+   "estandar_habilitacion": "No es un servicio habilitable; ambiente de apoyo o servicio general (Res. 1633/2025, Anexo 1, capítulo 5)",
+   "estado_hoy": "existe hoy en el edificio actual (por confirmar en sitio)",
+   "en_torre": false,
+   "en_edificio_actual": true,
+   "piso": null,
+   "m2_indicativos": 60,
+   "justificacion": "Res. 1633, Anexo 1, 5.1 (Cuadro 109). Ya existe el patio de ambulancias y el techo de parqueadero contratado en 2024."
+  },
+  {
+   "nombre": "Sede de atención primaria extramural: Equipos Básicos de Salud y Plan de Intervenciones Colectivas (logística de brigadas e insumos)",
+   "codigo_reps": null,
+   "grupo": "Apoyo no asistencial",
+   "estandar_habilitacion": "No es un servicio habilitable; ambiente de apoyo o servicio general (Res. 1633/2025, Anexo 1, capítulo 5)",
+   "estado_hoy": "existe hoy en el edificio actual (por confirmar en sitio)",
+   "en_torre": false,
+   "en_edificio_actual": true,
+   "piso": null,
+   "m2_indicativos": 150,
+   "justificacion": "Trabajo de campo; no atiende pacientes en el edificio."
+  },
+  {
+   "nombre": "Auditorio y salas de capacitación grandes; oficina del SIAU (la ventanilla de atención va en el vestíbulo de la torre)",
+   "codigo_reps": null,
+   "grupo": "Apoyo no asistencial",
+   "estandar_habilitacion": "No es un servicio habilitable; ambiente de apoyo o servicio general (Res. 1633/2025, Anexo 1, capítulo 5)",
+   "estado_hoy": "existe hoy en el edificio actual (por confirmar en sitio)",
+   "en_torre": false,
+   "en_edificio_actual": true,
+   "piso": null,
+   "m2_indicativos": 100,
+   "justificacion": "Actividades complementarias (Res. 1633, Anexo 1, 5.2.3)."
+  }
+ ],
+ "uso_del_edificio_actual": {
+  "area_construida_estimada_m2": 2301,
+  "metodo": "Cálculo propio: suma de las huellas de data/edificios/hospital.json (ala norte 552,5; galería norte 90,6; bloque central 819,1; ala oriental 565,2; enlace 94,3; bloque sureste 89,5; anexo y porche 69,2; caseta y portería 20,8 m²), sin las dos alas occidentales que se demuelen.",
+  "area_asignada_m2": 1470,
+  "area_libre_m2": 831,
+  "por_que_no_asistencial": "El hospital actual funciona desde 1989 (parte en el antiguo hospital de la Shell); el estudio de vulnerabilidad sísmica de 2024 ($182,6 M) no es público. Un hospital con urgencias es edificación indispensable (grupo IV de la NSR-10, A.2.5.1.1) y la Res. 1633/2025 pide hospitales seguros frente a desastres. Reforzar todo el edificio para grupo IV sale caro y deja los servicios en un edificio viejo; en cambio, llevar lo asistencial a la torre nueva y dejar en el edificio actual solo funciones de apoyo baja el riesgo. Aun así, el edificio actual necesita la intervención estructural que diga el estudio de 2024 para su nuevo uso, y la torre debe guardar stock de 72 horas por si falla la central de distribución.",
+  "nota": "Las áreas por función son indicativas (estimación); se ajustan con el levantamiento interior del edificio, que no existe en el repositorio."
+ },
+ "ambientes": [
+  {
+   "servicio": "Vestíbulo y admisiones",
+   "nombre": "Vestíbulo principal con espera de admisión",
+   "cantidad": 1,
+   "m2_unitario": 32.0,
+   "m2_total": 32.0,
+   "piso": 1,
+   "fuente": "Guía PMA Hospital Tipo MinProtección 2010 (hall ≈ 2 % del área total) y Res. 1633/2025, Anexo 1 3.3.16 c",
+   "nota": "Acceso desde la plaza occidental; punto de información y silla de ruedas en préstamo."
+  },
+  {
+   "servicio": "Vestíbulo y admisiones",
+   "nombre": "Información, admisiones, facturación y atención al usuario (SIAU), 3 puestos",
+   "cantidad": 1,
+   "m2_unitario": 14.0,
+   "m2_total": 14.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 6 (dimensión según capacidad)"
+  },
+  {
+   "servicio": "Vestíbulo y admisiones",
+   "nombre": "Unidades sanitarias públicas del vestíbulo y de toma de muestras (hombres, mujeres, familiar/pediátrica; PMR)",
+   "cantidad": 3,
+   "m2_unitario": 4.9,
+   "m2_total": 14.7,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadros 48 y 49 (2 US PMR por sexo en la sala de espera)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Esclusa de acceso desde la bahía de ambulancias (cortavientos)",
+   "cantidad": 1,
+   "m2_unitario": 8.0,
+   "m2_total": 8.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 4.5.1 (acceso directo, cubierto y al mismo nivel)",
+   "nota": "Puerta automática de 1,80 m para camillas."
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Recepción de urgencias",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Sala de espera de urgencias",
+   "cantidad": 1,
+   "m2_unitario": 25.0,
+   "m2_total": 25.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (mín. 10 m² + 3 m² por consultorio o sala de procedimientos)",
+   "nota": "10 + 3 x 4 = 22 m² mínimos; se dejan 25 m² por los brotes de dengue."
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Unidades sanitarias públicas de urgencias, hombres y mujeres (PMR)",
+   "cantidad": 2,
+   "m2_unitario": 4.9,
+   "m2_total": 9.8,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Unidades sanitarias pediátricas, niños y niñas (PMR)",
+   "cantidad": 2,
+   "m2_unitario": 4.9,
+   "m2_total": 9.8,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 94",
+   "nota": "Urgencias integradas de adultos y pediatría."
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Información y control (con unidad sanitaria del personal)",
+   "cantidad": 1,
+   "m2_unitario": 9.0,
+   "m2_total": 9.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Entrevista a familiares",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Referencia y contrarreferencia (con unidad sanitaria del personal)",
+   "cantidad": 1,
+   "m2_unitario": 9.0,
+   "m2_total": 9.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92",
+   "nota": "Enlace con el CRUE y con el segundo nivel de Barrancabermeja; equipo de telemedicina."
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Estacionamiento de camillas y sillas de ruedas",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Descontaminación de pacientes (ducha teléfono, drenaje, sanitario)",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (mín. 6 m², lado 2,00 m)",
+   "nota": "Intoxicaciones por plaguicidas e hidrocarburos."
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Cuarto de custodia",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Triage (clasificación)",
+   "cantidad": 1,
+   "m2_unitario": 9.0,
+   "m2_total": 9.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (según modelo de atención)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Consultorio de urgencias con unidad sanitaria",
+   "cantidad": 2,
+   "m2_unitario": 13.0,
+   "m2_total": 26.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (mín. 10 m² sin unidad sanitaria)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Sala de procedimientos (suturas, curaciones)",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (mín. 10 m²)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Sala de reanimación, 2 camillas",
+   "cantidad": 1,
+   "m2_unitario": 20.0,
+   "m2_total": 20.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (12 m² + 8 m² por camilla adicional)",
+   "nota": "Junto al acceso de ambulancias."
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Atención de enfermedad respiratoria aguda (ERA), 3 sillas",
+   "cantidad": 1,
+   "m2_unitario": 9.0,
+   "m2_total": 9.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (3 m² por silla)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Atención de enfermedad diarreica aguda (EDA), 2 camillas",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (6 m² por camilla)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Unidades sanitarias de ERA y EDA (PMR)",
+   "cantidad": 2,
+   "m2_unitario": 4.9,
+   "m2_total": 9.8,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Sala de yesos e inmovilización",
+   "cantidad": 1,
+   "m2_unitario": 9.0,
+   "m2_total": 9.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (mín. 9 m², lado 3,00 m)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Ambiente individual de aislamiento con baño PMR",
+   "cantidad": 1,
+   "m2_unitario": 16.0,
+   "m2_total": 16.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (mín. 16 m²)",
+   "nota": "Presión negativa, 10 cambios de aire por hora."
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Antecámara del aislamiento",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Observación adultos hombres, 2 camillas",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (6 m² por camilla)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Observación adultos mujeres, 2 camillas",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (6 m² por camilla)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 94 (6 m² por camilla, 4 m² por cuna)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Baños de observación con ducha (hombres, mujeres, pediátrico; PMR)",
+   "cantidad": 3,
+   "m2_unitario": 5.0,
+   "m2_total": 15.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadros 92 y 94"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Ambiente de transición, 2 sillas reclinables",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (3 m² por silla)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Estación de enfermería: puesto de enfermería",
+   "cantidad": 1,
+   "m2_unitario": 8.0,
+   "m2_total": 8.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a",
+   "nota": "Con vista directa a observación y reanimación."
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Estación de enfermería: trabajo limpio",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a (mín. 3 m²)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Estación de enfermería: trabajo sucio",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a (mín. 3 m²)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Lavapatos",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a (mín. 3 m²)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Depósito de equipos y dispositivos médicos",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a (mín. 3 m²)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Depósito de ropa limpia",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Depósito de ropa sucia",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Depósito de medicamentos e insumos de urgencias",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 1,
+   "fuente": "Propio (Res. 1633 deja la dimensión al prestador)",
+   "nota": "Stock de 72 horas."
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Unidades sanitarias para pacientes, hombres y mujeres (PMR)",
+   "cantidad": 2,
+   "m2_unitario": 4.9,
+   "m2_total": 9.8,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Vestidor del talento humano con baño PMR (hombres y mujeres)",
+   "cantidad": 2,
+   "m2_unitario": 8.0,
+   "m2_total": 16.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Unidades sanitarias del personal (hombres y mujeres)",
+   "cantidad": 2,
+   "m2_unitario": 2.5,
+   "m2_total": 5.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Oficina del coordinador de urgencias",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (mín. 6 m²)"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Descanso del personal profesional (médico de turno) con baño",
+   "cantidad": 1,
+   "m2_unitario": 10.0,
+   "m2_total": 10.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Descanso del personal de enfermería con baño",
+   "cantidad": 1,
+   "m2_unitario": 10.0,
+   "m2_total": 10.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92"
+  },
+  {
+   "servicio": "Urgencias",
+   "nombre": "Ambiente de aseo",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 92 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Imágenes diagnósticas ionizantes (rayos X)",
+   "nombre": "Sala de rayos X convencional digital (con blindaje en plomo)",
+   "cantidad": 1,
+   "m2_unitario": 24.0,
+   "m2_total": 24.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 22 (según ficha técnica del equipo)",
+   "nota": "Junto a urgencias; placa de piso para la carga del equipo."
+  },
+  {
+   "servicio": "Imágenes diagnósticas ionizantes (rayos X)",
+   "nombre": "Control y comando del equipo",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 22"
+  },
+  {
+   "servicio": "Imágenes diagnósticas ionizantes (rayos X)",
+   "nombre": "Vestidor de pacientes (2 cubículos con casilleros)",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 22"
+  },
+  {
+   "servicio": "Imágenes diagnósticas ionizantes (rayos X)",
+   "nombre": "Almacenamiento de dispositivos médicos e insumos",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 22 (mín. 4 m²)"
+  },
+  {
+   "servicio": "Imágenes diagnósticas ionizantes (rayos X)",
+   "nombre": "Oficina del radiólogo y lectura (telerradiología)",
+   "cantidad": 1,
+   "m2_unitario": 8.0,
+   "m2_total": 8.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 22 (mín. 8 m²)",
+   "nota": "Con equipo digital no hace falta cuarto oscuro."
+  },
+  {
+   "servicio": "Imágenes diagnósticas ionizantes (rayos X)",
+   "nombre": "Ambiente de aseo",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 22 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Toma de muestras de laboratorio clínico",
+   "nombre": "Recepción de muestras, información y entrega de resultados (2 puestos)",
+   "cantidad": 1,
+   "m2_unitario": 8.0,
+   "m2_total": 8.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 47",
+   "nota": "Ventanilla hacia el vestíbulo."
+  },
+  {
+   "servicio": "Toma de muestras de laboratorio clínico",
+   "nombre": "Sala de espera de toma de muestras (15 personas)",
+   "cantidad": 1,
+   "m2_unitario": 18.0,
+   "m2_total": 18.0,
+   "piso": 1,
+   "fuente": "Guía PMA Hospital Tipo MinProtección 2010 (1,2 m² por persona) y Res. 1633/2025, Anexo 1 Cuadro 48",
+   "nota": "La hora pico es de 6 a 9 a. m. (pacientes en ayunas)."
+  },
+  {
+   "servicio": "Toma de muestras de laboratorio clínico",
+   "nombre": "Cubículo de toma de muestras (flebotomía)",
+   "cantidad": 4,
+   "m2_unitario": 3.6,
+   "m2_total": 14.4,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 47 (mín. 3 m² por cubículo)"
+  },
+  {
+   "servicio": "Toma de muestras de laboratorio clínico",
+   "nombre": "Toma de muestras especiales (pediátricas, microbiológicas, curvas de glucosa) con unidad sanitaria",
+   "cantidad": 1,
+   "m2_unitario": 12.5,
+   "m2_total": 12.5,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 47 (10 m² sin unidad sanitaria)"
+  },
+  {
+   "servicio": "Toma de muestras de laboratorio clínico",
+   "nombre": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 47",
+   "nota": "El montacargas de muestras sube directo al laboratorio del piso 2."
+  },
+  {
+   "servicio": "Toma de muestras de laboratorio clínico",
+   "nombre": "Ambiente de aseo",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 47 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 1",
+   "nombre": "Unidad de almacenamiento intermedio de residuos",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.13 (mín. 3 m² por piso)"
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 1",
+   "nombre": "Cuarto principal de telecomunicaciones y UPS",
+   "cantidad": 1,
+   "m2_unitario": 8.0,
+   "m2_total": 8.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.7 y 3.4.8"
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 1",
+   "nombre": "Cuarto eléctrico del piso (tableros normal y esencial)",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.6"
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Escalera de evacuación protegida (2,40 m libres, pasamanos a ambos lados, descanso doble para camillas)",
+   "cantidad": 2,
+   "m2_unitario": 46.2,
+   "m2_total": 92.4,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 b, flujos de circulación vertical, a.ii (escalera de evacuación de 2,40 m) y NSR-10 Título K",
+   "nota": "Una al norte y otra al centro-sur del lado oriental; separadas ≈ 21,6 m."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Hueco de ascensor camillero (cabina 1,40 x 2,40 m, conectado a la planta de emergencia)",
+   "cantidad": 2,
+   "m2_unitario": 7.2,
+   "m2_total": 14.4,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 c (más de 3 pisos y servicios de urgencias, parto e internación)",
+   "nota": "Uno exclusivo para pacientes en camilla; el otro para público y suministros por horarios."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Vestíbulo de ascensores",
+   "cantidad": 1,
+   "m2_unitario": 18.0,
+   "m2_total": 18.0,
+   "piso": 1,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 c.iv",
+   "nota": "Recibe la galería que viene del hospital actual (piso 1)."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Montacargas general de carga liviana (medicamentos, material estéril, ropa)",
+   "cantidad": 1,
+   "m2_unitario": 0.64,
+   "m2_total": 0.6,
+   "piso": 1,
+   "fuente": "Propio"
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Montacargas exclusivo de muestras (toma de muestras del piso 1 al laboratorio del piso 2)",
+   "cantidad": 1,
+   "m2_unitario": 0.36,
+   "m2_total": 0.4,
+   "piso": 1,
+   "fuente": "Propio (pedido del usuario: laboratorio con montacargas)"
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Escalera principal abierta del vestíbulo (pisos 1 y 2)",
+   "cantidad": 1,
+   "m2_unitario": 15.0,
+   "m2_total": 15.0,
+   "piso": 1,
+   "fuente": "Propio",
+   "nota": "Para que el público de consulta externa no dependa de los ascensores."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Ductos verticales de instalaciones (agua, desagües, eléctricos, datos, gases, aire)",
+   "cantidad": 1,
+   "m2_unitario": 17.7,
+   "m2_total": 17.7,
+   "piso": 1,
+   "fuente": "Guía PMA Hospital Tipo MinProtección 2010 (ductos ≈ 2 % del área)"
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Consultorio de medicina general",
+   "cantidad": 8,
+   "m2_unitario": 12.96,
+   "m2_total": 103.7,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 5 (mín. 10 m², lado 2,50 m); Puesto de Salud Tipo MinSalud 2017 (11,76 m²)",
+   "nota": "Módulo de 3,60 x 3,60 m."
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos)",
+   "cantidad": 3,
+   "m2_unitario": 12.96,
+   "m2_total": 38.9,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 5; Puesto de Salud Tipo MinSalud 2017 (10,52 m²)"
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)",
+   "cantidad": 1,
+   "m2_unitario": 12.96,
+   "m2_total": 13.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 7 (mín. 10 m²)"
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Unidad sanitaria PMR del consultorio especializado",
+   "cantidad": 1,
+   "m2_unitario": 4.9,
+   "m2_total": 4.9,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 7 (ginecobstetricia con unidad sanitaria)"
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Sala de procedimientos de consulta externa (curaciones, inyectología, electrocardiograma)",
+   "cantidad": 1,
+   "m2_unitario": 12.96,
+   "m2_total": 13.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 5 (mín. 10 m²)"
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Recepción, información, citas y control (2 puestos, con unidad sanitaria del personal)",
+   "cantidad": 1,
+   "m2_unitario": 14.0,
+   "m2_total": 14.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 6"
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Sistema de información y atención al usuario (SIAU) con unidad sanitaria",
+   "cantidad": 1,
+   "m2_unitario": 8.5,
+   "m2_total": 8.5,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 6 (6 m² sin unidad sanitaria)"
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Sala de espera de consulta externa (4 m² por consultorio, 13 consultorios y salas)",
+   "cantidad": 1,
+   "m2_unitario": 52.0,
+   "m2_total": 52.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 6 (4 m² por consultorio)",
+   "nota": "Medicina, enfermería, especializado, procedimientos y ecografía."
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Batería sanitaria pública (hombres y mujeres; 3 sanitarios y 3 lavamanos, uno PMR)",
+   "cantidad": 2,
+   "m2_unitario": 16.0,
+   "m2_total": 32.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 6 (más de 10 consultorios) y 3.3.16 b"
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Unidades sanitarias pediátricas, niños y niñas (PMR)",
+   "cantidad": 2,
+   "m2_unitario": 4.9,
+   "m2_total": 9.8,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 6 (consulta pediátrica)"
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Unidades sanitarias del personal (hombres y mujeres)",
+   "cantidad": 2,
+   "m2_unitario": 2.5,
+   "m2_total": 5.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 6"
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Oficina del coordinador de consulta externa",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 5 (mín. 6 m²)"
+  },
+  {
+   "servicio": "Consulta externa",
+   "nombre": "Ambiente de aseo (compartido con vacunación y farmacia)",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadros 5, 10 y 16"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Recepción interna de muestras (llegada del montacargas y del tubo neumático), registro y clasificación",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 49",
+   "nota": "Encima de la toma de muestras del piso 1."
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Área técnica: centrifugación y alícuotas (preanalítica)",
+   "cantidad": 1,
+   "m2_unitario": 8.0,
+   "m2_total": 8.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 49 (según capacidad y tecnología)"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Área técnica: hematología y coagulación",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 49"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Área técnica: química clínica e inmunoensayo",
+   "cantidad": 1,
+   "m2_unitario": 18.0,
+   "m2_total": 18.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 49"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Área técnica: inmunología y pruebas rápidas (VIH, sífilis, hepatitis, dengue)",
+   "cantidad": 1,
+   "m2_unitario": 8.0,
+   "m2_total": 8.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 49"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+   "cantidad": 1,
+   "m2_unitario": 14.0,
+   "m2_total": 14.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 49"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Área técnica: uroanálisis, coprológico, parasitología y gota gruesa (malaria)",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 49"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Lavado, descontaminación y esterilización de material (autoclave)",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 2,
+   "fuente": "Guía PMA Hospital Tipo MinProtección 2010 y Res. 1633/2025, Anexo 1 Cuadro 49"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Área de neveras (reactivos y muestras)",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 49 (área para neveras o cuarto frío)"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Depósito de materiales, insumos y reactivos",
+   "cantidad": 1,
+   "m2_unitario": 8.0,
+   "m2_total": 8.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 49"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 49 (mín. 6 m²)"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Vestidor del talento humano con unidad sanitaria (servicio 24 horas)",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 50"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Descanso del personal con baño y guardarropa",
+   "cantidad": 1,
+   "m2_unitario": 8.0,
+   "m2_total": 8.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 50"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Unidades sanitarias del personal (hombres y mujeres)",
+   "cantidad": 2,
+   "m2_unitario": 2.5,
+   "m2_total": 5.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 50"
+  },
+  {
+   "servicio": "Laboratorio clínico",
+   "nombre": "Ambiente de aseo",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 49 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Vacunación",
+   "nombre": "Consultorio para administración de biológicos",
+   "cantidad": 1,
+   "m2_unitario": 12.96,
+   "m2_total": 13.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 10 (mín. 10 m²)"
+  },
+  {
+   "servicio": "Vacunación",
+   "nombre": "Almacenamiento y alistamiento de termos (cadena de frío)",
+   "cantidad": 1,
+   "m2_unitario": 7.2,
+   "m2_total": 7.2,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 10 (mín. 6 m², lado 2,50 m)",
+   "nota": "Neveras con respaldo de batería y alarma de temperatura (microrred)."
+  },
+  {
+   "servicio": "Servicio farmacéutico",
+   "nombre": "Recepción técnica de medicamentos y dispositivos",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 16 (mín. 4 m²)"
+  },
+  {
+   "servicio": "Servicio farmacéutico",
+   "nombre": "Cuarentena de medicamentos",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 16 (mín. 4 m²)"
+  },
+  {
+   "servicio": "Servicio farmacéutico",
+   "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)",
+   "cantidad": 1,
+   "m2_unitario": 24.0,
+   "m2_total": 24.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 16 (mín. 20 m²)",
+   "nota": "La reserva grande queda en la central de distribución del edificio actual."
+  },
+  {
+   "servicio": "Servicio farmacéutico",
+   "nombre": "Medicamentos de control especial (seguro)",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 16 (mín. 4 m²)"
+  },
+  {
+   "servicio": "Servicio farmacéutico",
+   "nombre": "Dispensación y entrega (ventanilla ambulatoria y ventanilla hospitalaria)",
+   "cantidad": 2,
+   "m2_unitario": 4.0,
+   "m2_total": 8.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 16 (mín. 4 m²)"
+  },
+  {
+   "servicio": "Servicio farmacéutico",
+   "nombre": "Medicamentos vencidos o deteriorados para destrucción",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 16 (mín. 4 m²)"
+  },
+  {
+   "servicio": "Servicio farmacéutico",
+   "nombre": "Productos rechazados, devueltos y retirados del mercado",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 16 (mín. 4 m²)"
+  },
+  {
+   "servicio": "Servicio farmacéutico",
+   "nombre": "Oficina del químico farmacéutico o regente",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 16 (mín. 6 m²)"
+  },
+  {
+   "servicio": "Servicio farmacéutico",
+   "nombre": "Sala de espera de farmacia (8 personas)",
+   "cantidad": 1,
+   "m2_unitario": 10.0,
+   "m2_total": 10.0,
+   "piso": 2,
+   "fuente": "Guía PMA Hospital Tipo MinProtección 2010 (1,2 m² por persona) y Res. 1633/2025, Anexo 1 Cuadro 18"
+  },
+  {
+   "servicio": "Imágenes diagnósticas no ionizantes (ecografía)",
+   "nombre": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+   "cantidad": 1,
+   "m2_unitario": 12.96,
+   "m2_total": 13.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 26 (según ficha técnica)"
+  },
+  {
+   "servicio": "Imágenes diagnósticas no ionizantes (ecografía)",
+   "nombre": "Unidad sanitaria PMR de ecografía",
+   "cantidad": 1,
+   "m2_unitario": 4.9,
+   "m2_total": 4.9,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 26"
+  },
+  {
+   "servicio": "Toma de muestras de cuello uterino y ginecológicas",
+   "nombre": "Ambiente de toma de muestras (citología, prueba de VPH, frotis)",
+   "cantidad": 1,
+   "m2_unitario": 10.0,
+   "m2_total": 10.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 51 (mín. 10 m² sin unidad sanitaria)",
+   "nota": "Junto al consultorio especializado."
+  },
+  {
+   "servicio": "Toma de muestras de cuello uterino y ginecológicas",
+   "nombre": "Unidad sanitaria PMR con casilleros",
+   "cantidad": 1,
+   "m2_unitario": 4.9,
+   "m2_total": 4.9,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 51"
+  },
+  {
+   "servicio": "Toma de muestras de cuello uterino y ginecológicas",
+   "nombre": "Preparación, embalaje y remisión de muestras",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 51",
+   "nota": "Las muestras bajan al laboratorio por el montacargas."
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 2",
+   "nombre": "Unidad de almacenamiento intermedio de residuos",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.13 (mín. 3 m² por piso)"
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 2",
+   "nombre": "Cuarto eléctrico y de datos del piso",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.6 a 3.4.8"
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Escalera de evacuación protegida (2,40 m libres, pasamanos a ambos lados, descanso doble para camillas)",
+   "cantidad": 2,
+   "m2_unitario": 46.2,
+   "m2_total": 92.4,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 b, flujos de circulación vertical, a.ii (escalera de evacuación de 2,40 m) y NSR-10 Título K",
+   "nota": "Una al norte y otra al centro-sur del lado oriental; separadas ≈ 21,6 m."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Hueco de ascensor camillero (cabina 1,40 x 2,40 m, conectado a la planta de emergencia)",
+   "cantidad": 2,
+   "m2_unitario": 7.2,
+   "m2_total": 14.4,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 c (más de 3 pisos y servicios de urgencias, parto e internación)",
+   "nota": "Uno exclusivo para pacientes en camilla; el otro para público y suministros por horarios."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Vestíbulo de ascensores",
+   "cantidad": 1,
+   "m2_unitario": 18.0,
+   "m2_total": 18.0,
+   "piso": 2,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 c.iv",
+   "nota": "Recibe la galería que viene del hospital actual (piso 1)."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Montacargas general de carga liviana (medicamentos, material estéril, ropa)",
+   "cantidad": 1,
+   "m2_unitario": 0.64,
+   "m2_total": 0.6,
+   "piso": 2,
+   "fuente": "Propio"
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Montacargas exclusivo de muestras (toma de muestras del piso 1 al laboratorio del piso 2)",
+   "cantidad": 1,
+   "m2_unitario": 0.36,
+   "m2_total": 0.4,
+   "piso": 2,
+   "fuente": "Propio (pedido del usuario: laboratorio con montacargas)"
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Escalera principal abierta del vestíbulo (pisos 1 y 2)",
+   "cantidad": 1,
+   "m2_unitario": 15.0,
+   "m2_total": 15.0,
+   "piso": 2,
+   "fuente": "Propio",
+   "nota": "Para que el público de consulta externa no dependa de los ascensores."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Ductos verticales de instalaciones (agua, desagües, eléctricos, datos, gases, aire)",
+   "cantidad": 1,
+   "m2_unitario": 17.7,
+   "m2_total": 17.7,
+   "piso": 2,
+   "fuente": "Guía PMA Hospital Tipo MinProtección 2010 (ductos ≈ 2 % del área)"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Habitación doble de adultos con baño PMR y guardarropa (2 camas)",
+   "cantidad": 3,
+   "m2_unitario": 24.0,
+   "m2_total": 72.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63 (7 m² libres por cama + baño PMR)",
+   "nota": "Habitaciones separadas por sexo."
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Habitación individual de aislamiento con baño PMR (1 cama)",
+   "cantidad": 1,
+   "m2_unitario": 16.0,
+   "m2_total": 16.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63 (mín. 16 m²; 1 por cada 20 camas, mínimo 1)"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Antecámara del aislamiento",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Habitación doble pediátrica con área para acompañante y baño PMR (2 camas)",
+   "cantidad": 2,
+   "m2_unitario": 24.0,
+   "m2_total": 48.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63 (6 m² libres por cama + 2 m² por acompañante)"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Habitación doble de obstetricia y posparto, alojamiento conjunto madre y recién nacido (2 camas)",
+   "cantidad": 1,
+   "m2_unitario": 26.0,
+   "m2_total": 26.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63",
+   "nota": "Junto a las habitaciones de parto (TPR)."
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Sala de procedimientos de hospitalización",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63 (mín. 10 m²; obligatoria con habitaciones múltiples)"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Estación de enfermería: puesto central",
+   "cantidad": 1,
+   "m2_unitario": 10.0,
+   "m2_total": 10.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63 y 3.3.16 a (a menos de 35 m de la cama más lejana)",
+   "nota": "Controla también las habitaciones de parto."
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Estación de enfermería: trabajo limpio",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a (mín. 3 m²)"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Estación de enfermería: trabajo sucio",
+   "cantidad": 1,
+   "m2_unitario": 5.0,
+   "m2_total": 5.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a (mín. 3 m²)"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Lavapatos",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a (mín. 3 m²)"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Depósito de equipos",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a (mín. 3 m²)"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Depósito de ropa limpia",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Depósito de ropa sucia",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.16 a"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Estacionamiento de camillas y sillas de ruedas",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Depósito de medicamentos (con chapa de seguridad)",
+   "cantidad": 1,
+   "m2_unitario": 5.0,
+   "m2_total": 5.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Unidades sanitarias del personal (hombres y mujeres)",
+   "cantidad": 2,
+   "m2_unitario": 2.5,
+   "m2_total": 5.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Oficina del coordinador (enfermera jefe)",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63 (mín. 6 m²)"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Sala de espera y de visitas (compartida con partos)",
+   "cantidad": 1,
+   "m2_unitario": 14.0,
+   "m2_total": 14.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadros 64 y 98"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Unidades sanitarias de la sala de espera, hombres y mujeres (PMR)",
+   "cantidad": 2,
+   "m2_unitario": 4.9,
+   "m2_total": 9.8,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadros 64 y 98"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Almacenamiento y distribución de alimentos (repostero del piso)",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 64 (exclusivo por piso)",
+   "nota": "Los alimentos llegan de la cocina del edificio actual."
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Preparación de fórmulas artificiales (con vestidor de filtro)",
+   "cantidad": 1,
+   "m2_unitario": 8.0,
+   "m2_total": 8.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 64"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Lactario: extracción de leche materna (2 puntos)",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 64 (10 m² + 2 m² por punto adicional)",
+   "nota": "Obligatorio con hospitalización pediátrica."
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Almacenamiento de materiales e insumos",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 64"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Descanso del personal profesional con baño (compartido con partos)",
+   "cantidad": 1,
+   "m2_unitario": 10.0,
+   "m2_total": 10.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 64"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Descanso del personal de enfermería con baño (compartido con partos)",
+   "cantidad": 1,
+   "m2_unitario": 10.0,
+   "m2_total": 10.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 64"
+  },
+  {
+   "servicio": "Hospitalización (adultos, pediatría y obstetricia)",
+   "nombre": "Ambiente de aseo",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 63 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Recepción y entrega de pacientes (con estacionamiento de camillas)",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Ambiente para información a familiares",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Oficina del coordinador del servicio",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98 (mín. 6 m²)"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Vestidor del talento humano con baño PMR (filtro; hombres y mujeres)",
+   "cantidad": 2,
+   "m2_unitario": 7.0,
+   "m2_total": 14.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Consultorio de valoración obstétrica (triage obstétrico)",
+   "cantidad": 1,
+   "m2_unitario": 16.0,
+   "m2_total": 16.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98 (mín. 16 m² sin unidad sanitaria)"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Unidad sanitaria PMR del consultorio obstétrico",
+   "cantidad": 1,
+   "m2_unitario": 4.9,
+   "m2_total": 4.9,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+   "cantidad": 2,
+   "m2_unitario": 24.0,
+   "m2_total": 48.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98 (24 m²)",
+   "nota": "Con área de atención del recién nacido y espacio para acompañante."
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Baño de la habitación TPR con guardarropa y llamado de enfermería",
+   "cantidad": 2,
+   "m2_unitario": 5.0,
+   "m2_total": 10.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Antecámara y vestidor compartido de las habitaciones TPR (filtro con lavamanos)",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98 (se puede compartir cuando hay más de una TPR)"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Unidades sanitarias del personal (PMR)",
+   "cantidad": 2,
+   "m2_unitario": 4.9,
+   "m2_total": 9.8,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Recepción y almacenamiento de material estéril",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98",
+   "nota": "La central de esterilización queda en el mismo piso."
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Depósito de medicamentos (con chapa)",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Depósito de insumos",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Depósito de anestesia (con chapa)",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Puesto de enfermería de las habitaciones TPR",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98 y 3.3.16 a"
+  },
+  {
+   "servicio": "Atención del parto (TPR)",
+   "nombre": "Ambiente de aseo",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 98 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Esterilización (reprocesamiento de dispositivos médicos)",
+   "nombre": "Recepción y lavado de material contaminado (zona sucia)",
+   "cantidad": 1,
+   "m2_unitario": 10.0,
+   "m2_total": 10.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 99; Res. 914/2025",
+   "nota": "Flujo en un solo sentido: sucio, limpio, estéril."
+  },
+  {
+   "servicio": "Esterilización (reprocesamiento de dispositivos médicos)",
+   "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+   "cantidad": 1,
+   "m2_unitario": 14.0,
+   "m2_total": 14.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 99; Res. 914/2025"
+  },
+  {
+   "servicio": "Esterilización (reprocesamiento de dispositivos médicos)",
+   "nombre": "Almacenamiento y entrega de material estéril",
+   "cantidad": 1,
+   "m2_unitario": 8.0,
+   "m2_total": 8.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 99; Res. 914/2025"
+  },
+  {
+   "servicio": "Esterilización (reprocesamiento de dispositivos médicos)",
+   "nombre": "Vestidor de filtro del personal",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 99; Res. 914/2025"
+  },
+  {
+   "servicio": "Esterilización (reprocesamiento de dispositivos médicos)",
+   "nombre": "Ambiente de aseo",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 99 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 3",
+   "nombre": "Unidad de almacenamiento intermedio de residuos",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.13 (mín. 3 m² por piso)"
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 3",
+   "nombre": "Cuarto eléctrico y de datos del piso",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.6 a 3.4.8"
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 3",
+   "nombre": "Cuarto de tableros del área de partos (tableros de aislamiento)",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 96 (ambiente para tableros)"
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 3",
+   "nombre": "Habitación de descanso del personal de turno 24 horas con baño",
+   "cantidad": 2,
+   "m2_unitario": 10.0,
+   "m2_total": 20.0,
+   "piso": 3,
+   "fuente": "Propio",
+   "nota": "Médico de hospitalización y partos y bacteriólogo de turno de noche."
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 3",
+   "nombre": "Estar y cafetería del personal de turno (sin preparación de alimentos)",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 5.2.3"
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Escalera de evacuación protegida (2,40 m libres, pasamanos a ambos lados, descanso doble para camillas)",
+   "cantidad": 2,
+   "m2_unitario": 46.2,
+   "m2_total": 92.4,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 b, flujos de circulación vertical, a.ii (escalera de evacuación de 2,40 m) y NSR-10 Título K",
+   "nota": "Una al norte y otra al centro-sur del lado oriental; separadas ≈ 21,6 m."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Hueco de ascensor camillero (cabina 1,40 x 2,40 m, conectado a la planta de emergencia)",
+   "cantidad": 2,
+   "m2_unitario": 7.2,
+   "m2_total": 14.4,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 c (más de 3 pisos y servicios de urgencias, parto e internación)",
+   "nota": "Uno exclusivo para pacientes en camilla; el otro para público y suministros por horarios."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Vestíbulo de ascensores",
+   "cantidad": 1,
+   "m2_unitario": 18.0,
+   "m2_total": 18.0,
+   "piso": 3,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 c.iv",
+   "nota": "Recibe la galería que viene del hospital actual (piso 1)."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Montacargas general de carga liviana (medicamentos, material estéril, ropa)",
+   "cantidad": 1,
+   "m2_unitario": 0.64,
+   "m2_total": 0.6,
+   "piso": 3,
+   "fuente": "Propio"
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Ductos verticales de instalaciones (agua, desagües, eléctricos, datos, gases, aire)",
+   "cantidad": 1,
+   "m2_unitario": 16.9,
+   "m2_total": 16.9,
+   "piso": 3,
+   "fuente": "Guía PMA Hospital Tipo MinProtección 2010 (ductos ≈ 2 % del área)"
+  },
+  {
+   "servicio": "Consulta externa: salud oral, salud mental, nutrición y telemedicina (piso 4)",
+   "nombre": "Consultorio de psicología (entrevista)",
+   "cantidad": 1,
+   "m2_unitario": 10.8,
+   "m2_total": 10.8,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 5 (mín. 6 m²)"
+  },
+  {
+   "servicio": "Consulta externa: salud oral, salud mental, nutrición y telemedicina (piso 4)",
+   "nombre": "Consultorio de nutrición y dietética",
+   "cantidad": 1,
+   "m2_unitario": 12.96,
+   "m2_total": 13.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 5"
+  },
+  {
+   "servicio": "Consulta externa: salud oral, salud mental, nutrición y telemedicina (piso 4)",
+   "nombre": "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)",
+   "cantidad": 1,
+   "m2_unitario": 12.96,
+   "m2_total": 13.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 5 (mín. 10 m²); Res. 2654/2019",
+   "nota": "Junto al salón de telesalud."
+  },
+  {
+   "servicio": "Consulta externa: salud oral, salud mental, nutrición y telemedicina (piso 4)",
+   "nombre": "Sala de espera (4 m² por consultorio: 3 consultorios y odontología)",
+   "cantidad": 1,
+   "m2_unitario": 16.0,
+   "m2_total": 16.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 6",
+   "nota": "Comparte recepción con terapias."
+  },
+  {
+   "servicio": "Odontología y radiología odontológica",
+   "nombre": "Consultorio odontológico con 3 unidades separadas por barrera",
+   "cantidad": 1,
+   "m2_unitario": 26.0,
+   "m2_total": 26.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 5 (10 m² + 8 m² por unidad adicional)"
+  },
+  {
+   "servicio": "Odontología y radiología odontológica",
+   "nombre": "Ambiente de esterilización odontológica (desde 3 unidades)",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 5"
+  },
+  {
+   "servicio": "Odontología y radiología odontológica",
+   "nombre": "Rayos X odontológico periapical (blindado)",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 19 (según ficha técnica)"
+  },
+  {
+   "servicio": "Odontología y radiología odontológica",
+   "nombre": "Cuarto de compresor y succión odontológica",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 4,
+   "fuente": "Propio",
+   "nota": "Aislado del ruido."
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Recepción y sala de espera de terapias (10 personas)",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 15 y Guía PMA Hospital Tipo MinProtección 2010"
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Unidades sanitarias públicas, hombres y mujeres (PMR)",
+   "cantidad": 2,
+   "m2_unitario": 4.9,
+   "m2_total": 9.8,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 15"
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Área para camillas, sillas de ruedas y ayudas ortopédicas",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 13 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Vestidor de pacientes con unidad sanitaria PMR (hombres y mujeres)",
+   "cantidad": 2,
+   "m2_unitario": 4.9,
+   "m2_total": 9.8,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 13"
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Ambiente de entrevista y evaluación",
+   "cantidad": 1,
+   "m2_unitario": 7.2,
+   "m2_total": 7.2,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 13 (mín. 6 m²)"
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Cubículo de atención individual (electroterapia, camilla)",
+   "cantidad": 3,
+   "m2_unitario": 10.0,
+   "m2_total": 30.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 13 (mín. 10 m²)"
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Gimnasio terapéutico (rehabilitación física, cardiopulmonar y del adulto mayor)",
+   "cantidad": 1,
+   "m2_unitario": 40.0,
+   "m2_total": 40.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 13 (según capacidad)",
+   "nota": "Reconvertible en zona de expansión."
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Sala de procedimientos de terapia respiratoria (nebulizaciones, espirometría)",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 13 (mín. 10 m², con oxígeno)"
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Área de lavado de material",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 13 (mín. 3 m²)"
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Depósito de insumos y equipos",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 13"
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Oficina del coordinador de terapias",
+   "cantidad": 1,
+   "m2_unitario": 6.0,
+   "m2_total": 6.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 13 (mín. 6 m²)"
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Unidades sanitarias del personal (hombres y mujeres)",
+   "cantidad": 2,
+   "m2_unitario": 2.5,
+   "m2_total": 5.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 15"
+  },
+  {
+   "servicio": "Terapias (fisioterapia y terapia respiratoria)",
+   "nombre": "Ambiente de aseo",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 Cuadro 13"
+  },
+  {
+   "servicio": "Zona de expansión, telesalud y coordinación asistencial",
+   "nombre": "Salón multipropósito de capacitación y telesalud, reconvertible en sala de expansión (8 camillas con oxígeno, energía y datos)",
+   "cantidad": 1,
+   "m2_unitario": 64.0,
+   "m2_total": 64.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 3.2.1 d (zonas de expansión en edificaciones indispensables)",
+   "nota": "Plan hospitalario de emergencias: brotes de dengue o IRA, desastres."
+  },
+  {
+   "servicio": "Zona de expansión, telesalud y coordinación asistencial",
+   "nombre": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+   "cantidad": 1,
+   "m2_unitario": 10.0,
+   "m2_total": 10.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 3.2.1 d"
+  },
+  {
+   "servicio": "Zona de expansión, telesalud y coordinación asistencial",
+   "nombre": "Sala de crisis y centro de monitoreo (energía, cadena de frío, comité de emergencias)",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 4,
+   "fuente": "Propio; Res. 625/2024 (Hospitales Resilientes)",
+   "nota": "Enlazada con el centro de control de la microrred."
+  },
+  {
+   "servicio": "Zona de expansión, telesalud y coordinación asistencial",
+   "nombre": "Oficina de coordinación médica, vigilancia epidemiológica y calidad (3 puestos)",
+   "cantidad": 1,
+   "m2_unitario": 15.0,
+   "m2_total": 15.0,
+   "piso": 4,
+   "fuente": "Propio",
+   "nota": "SIVIGILA, seguridad del paciente."
+  },
+  {
+   "servicio": "Zona de expansión, telesalud y coordinación asistencial",
+   "nombre": "Unidades sanitarias del personal (hombres y mujeres)",
+   "cantidad": 2,
+   "m2_unitario": 2.5,
+   "m2_total": 5.0,
+   "piso": 4,
+   "fuente": "Propio"
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 4",
+   "nombre": "Unidad de almacenamiento intermedio de residuos",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.13 (mín. 3 m² por piso)"
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 4",
+   "nombre": "Cuarto eléctrico y de datos del piso",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.6 a 3.4.8"
+  },
+  {
+   "servicio": "Apoyo y áreas técnicas del piso 4",
+   "nombre": "Ambiente de aseo general del piso",
+   "cantidad": 1,
+   "m2_unitario": 3.0,
+   "m2_total": 3.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.13 h"
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Escalera de evacuación protegida (2,40 m libres, pasamanos a ambos lados, descanso doble para camillas)",
+   "cantidad": 2,
+   "m2_unitario": 46.2,
+   "m2_total": 92.4,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 b, flujos de circulación vertical, a.ii (escalera de evacuación de 2,40 m) y NSR-10 Título K",
+   "nota": "Una al norte y otra al centro-sur del lado oriental; separadas ≈ 21,6 m."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Hueco de ascensor camillero (cabina 1,40 x 2,40 m, conectado a la planta de emergencia)",
+   "cantidad": 2,
+   "m2_unitario": 7.2,
+   "m2_total": 14.4,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 c (más de 3 pisos y servicios de urgencias, parto e internación)",
+   "nota": "Uno exclusivo para pacientes en camilla; el otro para público y suministros por horarios."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Vestíbulo de ascensores",
+   "cantidad": 1,
+   "m2_unitario": 18.0,
+   "m2_total": 18.0,
+   "piso": 4,
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 c.iv",
+   "nota": "Recibe la galería que viene del hospital actual (piso 1)."
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Montacargas general de carga liviana (medicamentos, material estéril, ropa)",
+   "cantidad": 1,
+   "m2_unitario": 0.64,
+   "m2_total": 0.6,
+   "piso": 4,
+   "fuente": "Propio"
+  },
+  {
+   "servicio": "Circulación vertical y ductos",
+   "nombre": "Ductos verticales de instalaciones (agua, desagües, eléctricos, datos, gases, aire)",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": 4,
+   "fuente": "Guía PMA Hospital Tipo MinProtección 2010 (ductos ≈ 2 % del área)"
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Subestación eléctrica tipo pedestal de 300 kVA (celda cerrada y ventilada)",
+   "cantidad": 1,
+   "m2_unitario": 18.0,
+   "m2_total": 18.0,
+   "piso": "bloque técnico",
+   "fuente": "RETIE; Res. 1633/2025, Anexo 1 3.4.6",
+   "nota": "Demanda estimada de la torre: 200-260 kVA (estimación con 60-80 W/m²)."
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Planta eléctrica diésel de 250-300 kVA insonorizada, con tanque diario y transferencia automática",
+   "cantidad": 1,
+   "m2_unitario": 28.0,
+   "m2_total": 28.0,
+   "piso": "bloque técnico",
+   "fuente": "Res. 1633/2025, Anexo 1 3.1.1 a.5 y 5.4; RETIE y NTC 2050",
+   "nota": "Respaldo del 100 % de la carga esencial; boca de llenado de combustible sobre el cerramiento."
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Cuarto de tableros generales, transferencias y banco de baterías de la microrred",
+   "cantidad": 1,
+   "m2_unitario": 18.0,
+   "m2_total": 18.0,
+   "piso": "bloque técnico",
+   "fuente": "Res. 1633/2025, Anexo 1 5.4",
+   "nota": "Se conecta con el nodo hospital de data/microrred.json."
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Central de gases medicinales: oxígeno (múltiple de cilindros o generador PSA), vacío y aire medicinal",
+   "cantidad": 1,
+   "m2_unitario": 26.0,
+   "m2_total": 26.0,
+   "piso": "bloque técnico",
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.9.2 (redes de gases medicinales)",
+   "nota": "≈ 40 tomas de oxígeno en la torre (estimación)."
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Cuarto de bombas: equipo hidroneumático de agua potable y bomba contra incendio",
+   "cantidad": 1,
+   "m2_unitario": 18.0,
+   "m2_total": 18.0,
+   "piso": "bloque técnico",
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.4 y 3.4.5"
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Depósito de cadáveres con nevera mortuoria para 2 cuerpos y entrega al vehículo funerario",
+   "cantidad": 1,
+   "m2_unitario": 12.0,
+   "m2_total": 12.0,
+   "piso": "bloque técnico",
+   "fuente": "Res. 1633/2025, Anexo 1 5.7 (obligatorio con urgencias y hospitalización)",
+   "nota": "Llega desde la torre por el pasaje de servicio cubierto."
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Cisterna enterrada de agua potable, 2 compartimentos (40 m³)",
+   "cantidad": 1,
+   "m2_unitario": 0.0,
+   "m2_total": 0.0,
+   "piso": "subsuelo del patio de servicio",
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.4 c (600 L por cama al día, reserva de 48 h); Res. 3100/2019, Manual 11.1.2, criterio 4 (600 L por cama o camilla, 24 h)",
+   "nota": "Mínimos: 15 camas x 600 L x 2 días = 18 m³ (Res. 1633); 25 camas y camillas x 600 L x 1 día = 15 m³ (Res. 3100). Se proponen 40 m³ (≈ 2 días con todas las camas y camillas, más consulta) porque no hay datos de continuidad del acueducto."
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Tanque enterrado de la red contra incendio (≈ 30 m³, se define en el diseño hidráulico)",
+   "cantidad": 1,
+   "m2_unitario": 0.0,
+   "m2_total": 0.0,
+   "piso": "subsuelo del patio de servicio",
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.4 (tanques independientes para consumo humano y contra incendio) y NSR-10 Título J"
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Tanque de aguas lluvias para sanitarios y riego (≈ 20 m³)",
+   "cantidad": 1,
+   "m2_unitario": 0.0,
+   "m2_total": 0.0,
+   "piso": "subsuelo del patio de servicio",
+   "fuente": "Res. 549/2015 (ahorro de agua); Res. 1633/2025, Anexo 1 3.2.1 e; proyecto tipo DNP 2018 (canales hacia tanque de aprovechamiento)"
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Unidad de almacenamiento central de residuos (peligrosos, no peligrosos, aprovechables), con nevera ≤ 4 °C para anatomopatológicos y lavado de recipientes",
+   "cantidad": 1,
+   "m2_unitario": 18.0,
+   "m2_total": 18.0,
+   "piso": "exterior (patio de servicio)",
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.13 h.2 (fuera de la edificación principal); Decreto 780/2016; Res. 591/2024",
+   "nota": "Junto a la vía de servicio para el carro recolector."
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Caseta de escalera de evacuación sobre la cubierta (acceso a la cubierta técnica)",
+   "cantidad": 2,
+   "m2_unitario": 46.2,
+   "m2_total": 92.4,
+   "piso": "cubierta",
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6"
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Sobrerrecorrido de los ascensores (sin cuarto de máquinas)",
+   "cantidad": 1,
+   "m2_unitario": 15.04,
+   "m2_total": 15.0,
+   "piso": "cubierta",
+   "fuente": "Propio"
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Zona de unidades condensadoras de aire acondicionado (sistema de volumen variable de refrigerante)",
+   "cantidad": 1,
+   "m2_unitario": 40.0,
+   "m2_total": 40.0,
+   "piso": "cubierta",
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.9.1"
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Extractores (aislamientos con presión negativa, laboratorio, baños, cuarto de aseo)",
+   "cantidad": 1,
+   "m2_unitario": 10.0,
+   "m2_total": 10.0,
+   "piso": "cubierta",
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.9.1"
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Tanques elevados de respaldo por gravedad (2 x 5 m³)",
+   "cantidad": 1,
+   "m2_unitario": 14.0,
+   "m2_total": 14.0,
+   "piso": "cubierta",
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.4 c",
+   "nota": "Mantienen agua en servicios críticos si falla el bombeo."
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Calentamiento solar o por bomba de calor del agua caliente (partos, baños de hospitalización)",
+   "cantidad": 1,
+   "m2_unitario": 10.0,
+   "m2_total": 10.0,
+   "piso": "cubierta",
+   "fuente": "Res. 1633/2025, Anexo 1 3.2.1 e"
+  },
+  {
+   "servicio": "Áreas técnicas y de servicio",
+   "nombre": "Antena y enlace de datos (telemedicina, MinTIC), pararrayos y línea de vida",
+   "cantidad": 1,
+   "m2_unitario": 4.0,
+   "m2_total": 4.0,
+   "piso": "cubierta",
+   "fuente": "Res. 1633/2025, Anexo 1 3.4.7 y 3.4.12"
+  },
+  {
+   "servicio": "Áreas exteriores cubiertas",
+   "nombre": "Bahía de ambulancias cubierta (2 cupos en línea de 3,80 x 6,00 m, carril de 4,00 m y andén de 2,00 m)",
+   "cantidad": 1,
+   "m2_unitario": 95.04,
+   "m2_total": 95.0,
+   "piso": "exterior",
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.5, 4.5.1 y Cuadro 109 (cupo de 3,80 x 6,00 m)",
+   "nota": "Acceso directo, cubierto y al mismo nivel de urgencias."
+  },
+  {
+   "servicio": "Áreas exteriores cubiertas",
+   "nombre": "Galería cubierta de conexión con el hospital actual (5,30 x 3,00 m), cerrada a los lados, piso antideslizante y pasamanos a ambos lados",
+   "cantidad": 1,
+   "m2_unitario": 15.9,
+   "m2_total": 15.9,
+   "piso": "exterior",
+   "fuente": "Res. 3100/2019, Manual 11.1.2, criterio 5 (túnel o puente cubierto de uso exclusivo, con ancho para camas y camillas); Res. 1633/2025, Anexo 1 3.3.6 b"
+  },
+  {
+   "servicio": "Áreas exteriores cubiertas",
+   "nombre": "Pasaje de servicio cubierto en rampa (1,20 m de ancho) entre la torre, el bloque técnico y el patio de servicio",
+   "cantidad": 1,
+   "m2_unitario": 33.72,
+   "m2_total": 33.7,
+   "piso": "exterior",
+   "fuente": "Res. 1633/2025, Anexo 1 3.3.6 b.1.v-vi (corredores técnicos exteriores ≥ 1,00-1,20 m, protegidos del sol y la lluvia)"
+  }
+ ],
+ "resumen_por_piso": [
+  {
+   "piso": 1,
+   "nivel_piso_terminado_m": 0.0,
+   "altura_entrepiso_m": 4.5,
+   "servicios": "Urgencias (adultos y pediatría, 24 horas) con bahía de ambulancias, rayos X, toma de muestras de laboratorio, vestíbulo y admisiones",
+   "por_que": "Urgencias debe tener todos sus ambientes en un solo piso con acceso directo, cubierto y al mismo nivel desde la bahía de ambulancias (Res. 1633, 4.5.1). Rayos X queda pegado a urgencias para no mover pacientes politraumatizados por ascensor. La toma de muestras queda junto al vestíbulo porque recibe la mayor fila de la mañana (pacientes en ayunas, embarazadas y adultos mayores).",
+   "m2_util": 560.8,
+   "m2_muros_y_circulacion_interna": 157.3,
+   "m2_circulacion_general": 28.0,
+   "m2_nucleo_vertical_y_ductos": 158.5,
+   "m2_requerido_por_programa": 904.7,
+   "m2_construido": 907.2,
+   "holgura_m2": 2.5,
+   "factor_muros_y_circulaciones": 0.33,
+   "m2_util_por_servicio": {
+    "Vestíbulo y admisiones": 60.7,
+    "Urgencias": 373.2,
+    "Imágenes diagnósticas ionizantes (rayos X)": 47.0,
+    "Toma de muestras de laboratorio clínico": 61.9,
+    "Apoyo y áreas técnicas del piso 1": 18.0
+   }
+  },
+  {
+   "piso": 2,
+   "nivel_piso_terminado_m": 4.5,
+   "altura_entrepiso_m": 4.2,
+   "servicios": "Consulta externa (medicina, enfermería, especialistas), laboratorio clínico 24 horas, vacunación, servicio farmacéutico, ecografía y toma de citologías",
+   "por_que": "Consulta externa es el servicio con más público y queda a un piso del acceso, con escalera abierta además de los ascensores. El laboratorio queda justo encima de la toma de muestras, unido por un montacargas exclusivo de muestras; urgencias (piso 1) y hospitalización (piso 3) le envían muestras por el montacargas general o por tubo neumático. Vacunación, farmacia, ecografía y citologías completan la atención ambulatoria de la ruta materno-perinatal y de crónicos en el mismo piso.",
+   "m2_util": 559.6,
+   "m2_muros_y_circulacion_interna": 155.7,
+   "m2_circulacion_general": 28.0,
+   "m2_nucleo_vertical_y_ductos": 158.5,
+   "m2_requerido_por_programa": 901.8,
+   "m2_construido": 907.2,
+   "holgura_m2": 5.4,
+   "factor_muros_y_circulaciones": 0.33,
+   "m2_util_por_servicio": {
+    "Consulta externa": 303.7,
+    "Laboratorio clínico": 124.0,
+    "Vacunación": 20.2,
+    "Servicio farmacéutico": 68.0,
+    "Imágenes diagnósticas no ionizantes (ecografía)": 17.9,
+    "Toma de muestras de cuello uterino y ginecológicas": 17.9,
+    "Apoyo y áreas técnicas del piso 2": 8.0
+   }
+  },
+  {
+   "piso": 3,
+   "nivel_piso_terminado_m": 8.7,
+   "altura_entrepiso_m": 4.2,
+   "servicios": "Hospitalización (adultos, pediatría y obstetricia), atención del parto en habitaciones TPR y central de esterilización",
+   "por_que": "Partos y hospitalización van juntos: una sola estación de enfermería controla las 13 camas y las 2 habitaciones TPR (15 en total) (Res. 1633: máximo 35 camas y 35 m a la cama más lejana); la madre pasa de la TPR a la habitación de posparto sin cambiar de piso. La central de esterilización queda en el mismo piso que su mayor usuario (partos) y baja por montacargas a urgencias y consulta.",
+   "m2_util": 543.5,
+   "m2_muros_y_circulacion_interna": 148.4,
+   "m2_circulacion_general": 27.2,
+   "m2_nucleo_vertical_y_ductos": 142.3,
+   "m2_requerido_por_programa": 861.5,
+   "m2_construido": 907.2,
+   "holgura_m2": 45.7,
+   "factor_muros_y_circulaciones": 0.32,
+   "m2_util_por_servicio": {
+    "Hospitalización (adultos, pediatría y obstetricia)": 312.8,
+    "Atención del parto (TPR)": 147.7,
+    "Esterilización (reprocesamiento de dispositivos médicos)": 39.0,
+    "Apoyo y áreas técnicas del piso 3": 44.0
+   }
+  },
+  {
+   "piso": 4,
+   "nivel_piso_terminado_m": 12.9,
+   "altura_entrepiso_m": 4.2,
+   "servicios": "Terapias (física y respiratoria), odontología con rayos X periapical, psicología, nutrición, telemedicina, zona de expansión y coordinación asistencial",
+   "por_que": "Servicios programados, que no son de urgencia, y el salón de telesalud que se convierte en sala de expansión en brotes o desastres (Res. 1633, 3.2.1 d). El piso es más pequeño (retrocede 12 m en el sur) y deja una terraza técnica para paneles solares.",
+   "m2_util": 354.5,
+   "m2_muros_y_circulacion_interna": 100.0,
+   "m2_circulacion_general": 17.7,
+   "m2_nucleo_vertical_y_ductos": 137.4,
+   "m2_requerido_por_programa": 609.6,
+   "m2_construido": 648.0,
+   "holgura_m2": 38.4,
+   "factor_muros_y_circulaciones": 0.33,
+   "m2_util_por_servicio": {
+    "Consulta externa: salud oral, salud mental, nutrición y telemedicina (piso 4)": 52.7,
+    "Odontología y radiología odontológica": 37.0,
+    "Terapias (fisioterapia y terapia respiratoria)": 147.8,
+    "Zona de expansión, telesalud y coordinación asistencial": 106.0,
+    "Apoyo y áreas técnicas del piso 4": 11.0
+   }
+  }
+ ],
+ "totales": {
+  "m2_util_torre": 2018.4,
+  "m2_requerido_por_programa_torre": 3277.5,
+  "m2_construido_torre": 3369.6,
+  "holgura_torre_m2": 92.1,
+  "factor_global_muros_y_circulaciones_horizontales": 0.33,
+  "factor_global_construido_sobre_util": 1.67,
+  "nota_factor_global": "El cociente construido/útil incluye el núcleo vertical, los ductos y la holgura de cada piso; no es el factor de muros y circulaciones.",
+  "justificacion_factor": "Muros y circulaciones horizontales = factor de la Guía PMA 2010 por servicio (20-35 %) + 5 % de pasillo general (planta compacta de un solo pasillo en anillo, no el 15 % de un hospital grande). Da ≈ 33 %, dentro del rango de 30-40 % y cerca del 39 % del Puesto de Salud Tipo. El núcleo vertical (2 escaleras de 2,40 m con descanso doble, 2 ascensores camilleros, montacargas) y los ductos se suman aparte porque la Res. 1633 los hace grandes: ≈ 125 m² por piso.",
+  "m2_bloque_tecnico": 125.6,
+  "m2_residuos_central": 18.0,
+  "m2_casetas_de_cubierta": 107.4,
+  "m2_exteriores_cubiertos": 144.7,
+  "m2_construido_total_proyecto": 3620.6,
+  "m2_construido_mas_cubiertas_abiertas": 3765.3,
+  "camas": 15,
+  "camas_generales": 13,
+  "habitaciones_tpr": 2,
+  "camillas_observacion": 6,
+  "consultorios_consulta_externa": 15,
+  "unidades_odontologicas": 3,
+  "consultorios_urgencias": 2,
+  "puestos_toma_de_muestras": 6,
+  "salas_rayos_x": 1,
+  "ascensores_camilleros": 2,
+  "escaleras_de_evacuacion": 2,
+  "montacargas": 2,
+  "kwp_solares_capacidad": 119.4,
+  "altura_total_m": 18.3,
+  "pisos": 4
+ },
+ "capacidad_resultante": {
+  "metodo": "Cálculo propio. Consulta: 8 horas al día, 250 días al año, 85 % de ocupación; medicina 3 consultas por hora (20 min), enfermería 2 por hora, odontología 2,5 por hora por unidad. Camas: ocupación de 80 %.",
+  "tabla": [
+   {
+    "recurso": "Consultorios de consulta externa (sin urgencias)",
+    "actual": 13,
+    "torre": 15,
+    "detalle_torre": "8 medicina general, 3 enfermería, 1 especializado, 1 telemedicina, 1 psicología, 1 nutrición = 15 consultorios; más 1 sala de procedimientos, 1 sala de ecografía, 1 ambiente de vacunación y 1 de toma de citologías"
+   },
+   {
+    "recurso": "Unidades odontológicas",
+    "actual": "por verificar",
+    "torre": 3,
+    "detalle_torre": "1 consultorio con 3 unidades y rayos X periapical"
+   },
+   {
+    "recurso": "Consultorios de urgencias",
+    "actual": 2,
+    "torre": 2,
+    "detalle_torre": "2 consultorios con unidad sanitaria, más triage, sala de procedimientos y sala de reanimación de 2 camillas"
+   },
+   {
+    "recurso": "Camas de hospitalización",
+    "actual": 9,
+    "torre": 15,
+    "detalle_torre": "7 adultos (1 aislamiento), 4 pediátricas, 2 obstetricia/posparto, 2 TPR"
+   },
+   {
+    "recurso": "Camillas de observación de urgencias",
+    "actual": 4,
+    "torre": 6,
+    "detalle_torre": "2 hombres, 2 mujeres, 1 camilla y 1 cuna pediátricas; además 2 camillas de EDA, 3 sillas de ERA, 2 sillas de transición y 1 aislamiento"
+   },
+   {
+    "recurso": "Salas o habitaciones de parto",
+    "actual": 1,
+    "torre": 2,
+    "detalle_torre": "2 habitaciones TPR (trabajo de parto, parto y recuperación en el mismo cuarto)"
+   },
+   {
+    "recurso": "Puestos de toma de muestras",
+    "actual": "por verificar",
+    "torre": 6,
+    "detalle_torre": "4 cubículos de flebotomía, 1 toma de muestras especiales (piso 1) y 1 toma de citologías (piso 2)"
+   },
+   {
+    "recurso": "Salas de rayos X",
+    "actual": "por verificar",
+    "torre": 1,
+    "detalle_torre": "1 sala digital junto a urgencias"
+   },
+   {
+    "recurso": "Sala de expansión para emergencias",
+    "actual": 0,
+    "torre": 8,
+    "detalle_torre": "8 camillas con oxígeno en el salón multipropósito del piso 4"
+   }
+  ],
+  "comparacion_con_demanda_2035": [
+   {
+    "servicio": "Medicina general",
+    "capacidad_anual": 40800,
+    "demanda_anual": [
+     22480,
+     39350
+    ],
+    "lectura": "Un turno de 8 horas alcanza incluso para la demanda alta, pero al 96 % de uso; con horario de 10-12 horas queda holgura."
+   },
+   {
+    "servicio": "Enfermería",
+    "capacidad_anual": 10200,
+    "demanda_anual": [
+     8430,
+     17880
+    ],
+    "lectura": "Alcanza para la demanda baja; para la alta se necesita horario extendido o que los Equipos Básicos hagan parte de las actividades en las veredas."
+   },
+   {
+    "servicio": "Odontología",
+    "capacidad_anual": 12800,
+    "demanda_anual": [
+     7030,
+     14310
+    ],
+    "lectura": "Cubre la demanda baja y media en un turno."
+   },
+   {
+    "servicio": "Urgencias",
+    "capacidad_anual": "≈ 17.000-35.000 atenciones al año con 2 consultorios y triage",
+    "demanda_anual": [
+     6390,
+     10220
+    ],
+    "lectura": "Holgura para picos y brotes."
+   },
+   {
+    "servicio": "Camas",
+    "capacidad_anual": "15 camas (13 generales y 2 TPR)",
+    "demanda_anual": "4,4 a 12,2 camas generales necesarias",
+    "lectura": "13 camas generales cubren el escenario alto de 2035 y el crecimiento a 2040 (27.112 habitantes)."
+   },
+   {
+    "servicio": "Partos",
+    "capacidad_anual": "2 TPR: más de 1.000 partos al año",
+    "demanda_anual": [
+     120,
+     210
+    ],
+    "lectura": "La segunda TPR es por simultaneidad y respaldo, no por volumen."
+   },
+   {
+    "servicio": "Toma de muestras",
+    "capacidad_anual": "4 cubículos x 12 pacientes por hora x 4 horas ≈ 190 pacientes por mañana",
+    "demanda_anual": "31 a 117 pacientes por día hábil",
+    "lectura": "Holgura para el pico de los lunes y para pediatría."
+   },
+   {
+    "servicio": "Laboratorio",
+    "capacidad_anual": "Analizadores automatizados de hematología y química: decenas de miles de pruebas al año; el límite es el personal",
+    "demanda_anual": [
+     27000,
+     73000
+    ],
+    "lectura": "≈ 70 a 200 pruebas al día."
+   },
+   {
+    "servicio": "Rayos X",
+    "capacidad_anual": "1 sala: ≈ 8.000 estudios al año en jornada diurna",
+    "demanda_anual": [
+     1200,
+     2010
+    ],
+    "lectura": "Disponible 24 horas para urgencias."
+   }
+  ]
+ },
+ "implantacion": {
+  "marco_de_coordenadas": {
+   "nombre": "Marco de data/edificios/bienestar_anciano.json",
+   "ancla": {
+    "lat": 7.005271,
+    "lon": -73.914597
+   },
+   "ejes": "x hacia el este y y hacia el norte, en metros; rumbo_eje en grados desde el norte en el sentido de las agujas del reloj (0 = eje largo norte-sur, 90 = oriente-occidente)",
+   "paso_al_marco_del_hospital": "x_hospital = x - 16; y_hospital = y - 16 (el ancla de bienestar_anciano está 16 m al occidente y 16 m al sur del ancla de hospital.json)",
+   "conversion_a_wgs84": "lat = 7.005271 + y / 111320; lon = -73.914597 + x / (111320 · cos(7.005271°))"
+  },
+  "lote": {
+   "descripcion": "Antiguo Centro Vida: las dos alas occidentales del antiguo hospital de la Shell, el kiosco, el patio entre ellas y el prado occidental con los mangos, dentro del cerramiento del predio del hospital. Limita al occidente con el cerramiento sobre el talud de la vía sin nombre, al norte con la galería del ala norte del hospital (y = 27,25), al oriente con el bloque central del hospital (x = 13,9) y al sur con el borde del bosque de mangos.",
+   "poligono_lote_de_intervencion": [
+    [
+     -27.0,
+     24.0
+    ],
+    [
+     -25.8,
+     27.25
+    ],
+    [
+     13.9,
+     27.25
+    ],
+    [
+     13.9,
+     -19.05
+    ],
+    [
+     12.5,
+     -25.0
+    ],
+    [
+     -10.0,
+     -25.0
+    ],
+    [
+     -12.0,
+     -32.0
+    ],
+    [
+     -33.86,
+     -32.0
+    ],
+    [
+     -33.0,
+     -20.0
+    ],
+    [
+     -32.0,
+     -12.0
+    ],
+    [
+     -30.5,
+     0.0
+    ],
+    [
+     -29.0,
+     12.0
+    ]
+   ],
+   "area_lote_de_intervencion_m2": 2460.1,
+   "area_ocupada_por_construcciones_m2": 1195.5,
+   "indice_de_ocupacion_en_el_lote_de_intervencion": 0.49,
+   "nota_indice": "La Res. 1633/2025 (Anexo 1, 3.1.2) pide índice de ocupación ≤ 0,6 (hasta 0,7 con concepto favorable) sobre el lote o predio completo cuando el EOT no lo fija. Aquí el cálculo es solo sobre el lote de intervención; sobre el predio completo del hospital el índice es menor. Se verifica con el certificado de tradición y la norma urbana del EOT de Yondó.",
+   "retiros": {
+    "cerramiento_occidental": "la torre queda a 14-18 m del cerramiento (patio de urgencias con retorno de ambulancias); el proyecto tipo del DNP pide aislamiento perimetral mínimo de 3 m",
+    "galeria_del_ala_norte": "4,85 m (patio norte de luz y ventilación)",
+    "bloque_central_del_hospital": "5,30 m (fachada oriental de la torre casi cerrada: escaleras, ascensores y ductos; el proyecto tipo pide 2,4 m entre fachadas cerradas)",
+    "mango_grande_del_prado": "la fachada occidental queda a 3 m del borde de la copa y a 9 m del tronco"
+   },
+   "niveles": {
+    "tipo": "estimación (a verificar con levantamiento topográfico, Res. 485/2025 art. 7.1.2 num. 8)",
+    "npt_torre": "±0,00 = nivel del piso del hospital actual (≈ nivel del prado)",
+    "via_del_occidente": "≈ -0,40 m en el portón de urgencias (y ≈ 24), ≈ -1,0 m frente al antiguo kiosco (y ≈ 12), ≈ -1,8 m frente a la puerta principal (y ≈ -6), ≈ -2,8 m en el portón de servicio (y ≈ -30)",
+    "patio_de_servicio_y_bloque_tecnico": "≈ -1,50 m (nivel intermedio: la vía de servicio sube 1,3 m y el pasaje cubierto sube 1,5 m en rampa hasta la torre)",
+    "base_de_las_estimaciones": "Street View de 2014 citado en data/edificios/bienestar_anciano.json (el prado queda ≈ 1,0 m sobre la vía frente al pabellón norte y ≈ 2,1 m frente al pabellón sur)"
+   }
+  },
+  "demoliciones": [
+   {
+    "elemento": "Pabellón norte del antiguo Centro Vida (con su corredor sur)",
+    "area_m2": 377.3,
+    "referencia": "bienestar_anciano.json: pabellon_norte, 28,2 x 10,6 m"
+   },
+   {
+    "elemento": "Pabellón sur (con su corredor sur)",
+    "area_m2": 442.0,
+    "referencia": "bienestar_anciano.json: pabellon_sur, 27,8 x 13,0 m"
+   },
+   {
+    "elemento": "Kiosco de madera",
+    "area_m2": 41.7,
+    "referencia": "bienestar_anciano.json: kiosco"
+   },
+   {
+    "elemento": "Corredores cubiertos que unen los pabellones con el hospital",
+    "area_m2": 29.6,
+    "referencia": "cubiertas ligeras en bienestar_anciano.json (11,1; 0,7) y en hospital.json (-4,9; 7,2)"
+   },
+   {
+    "elemento": "Cubiertas de teja ondulada de fibrocemento",
+    "area_m2": 800,
+    "referencia": "estimación: ≈ 775 m² en planta con aleros, más la pendiente",
+    "nota": "Pueden contener asbesto (prohibido por la Ley 1968 de 2019): retiro por personal autorizado, mojando la teja, sin cortarla, y disposición como residuo peligroso."
+   }
+  ],
+  "huella": [
+   {
+    "id": "torre_pisos_1_a_3",
+    "uso": "Torre: pisos 1, 2 y 3",
+    "centro": [
+     -2.2,
+     1.4
+    ],
+    "largo": 42.0,
+    "ancho": 21.6,
+    "rumbo_eje": 0,
+    "area_m2": 907.2,
+    "limites": {
+     "x": [
+      -13.0,
+      8.6
+     ],
+     "y": [
+      -19.6,
+      22.4
+     ]
+    },
+    "pisos": 3,
+    "base": 0.0,
+    "altura_m": 12.9,
+    "nota": "Planta de 21,60 x 42,00 m en retícula de pórticos de concreto: 3 luces de 7,20 m en sentido oriente-occidente y luces de 7,20 / 4,80 / 8,40 / 7,20 / 6,00 / 8,40 m de sur a norte (líneas en y = -19,6; -12,4; -7,6; 0,8; 8,0; 14,0; 22,4), todas múltiplos del módulo hospitalario de 1,20 m (Res. 1633, 3.3.3). Cada escalera ocupa una luz de 8,40 m y los ascensores la luz de 7,20 m entre ellas."
+   },
+   {
+    "id": "torre_piso_4",
+    "uso": "Torre: piso 4 (retrocede 12 m en el sur)",
+    "centro": [
+     -2.2,
+     7.4
+    ],
+    "largo": 30.0,
+    "ancho": 21.6,
+    "rumbo_eje": 0,
+    "area_m2": 648.0,
+    "limites": {
+     "x": [
+      -13.0,
+      8.6
+     ],
+     "y": [
+      -7.6,
+      22.4
+     ]
+    },
+    "pisos": 1,
+    "base": 12.9,
+    "altura_m": 4.2
+   },
+   {
+    "id": "caseta_escalera_norte",
+    "uso": "Caseta de escalera sobre la cubierta",
+    "centro": [
+     5.85,
+     18.2
+    ],
+    "largo": 8.4,
+    "ancho": 5.5,
+    "rumbo_eje": 0,
+    "area_m2": 46.2,
+    "limites": {
+     "x": [
+      3.1,
+      8.6
+     ],
+     "y": [
+      14.0,
+      22.4
+     ]
+    },
+    "pisos": 1,
+    "base": 17.1,
+    "altura_m": 3.3
+   },
+   {
+    "id": "caseta_escalera_sur",
+    "uso": "Caseta de escalera sobre la cubierta",
+    "centro": [
+     5.85,
+     -3.4
+    ],
+    "largo": 8.4,
+    "ancho": 5.5,
+    "rumbo_eje": 0,
+    "area_m2": 46.2,
+    "limites": {
+     "x": [
+      3.1,
+      8.6
+     ],
+     "y": [
+      -7.6,
+      0.8
+     ]
+    },
+    "pisos": 1,
+    "base": 17.1,
+    "altura_m": 3.3
+   },
+   {
+    "id": "sobrerrecorrido_ascensores",
+    "uso": "Sobrerrecorrido de ascensores sin cuarto de máquinas",
+    "centro": [
+     4.6,
+     4.4
+    ],
+    "largo": 5.6,
+    "ancho": 3.0,
+    "rumbo_eje": 0,
+    "area_m2": 16.8,
+    "limites": {
+     "x": [
+      3.1,
+      6.1
+     ],
+     "y": [
+      1.6,
+      7.2
+     ]
+    },
+    "pisos": 1,
+    "base": 17.1,
+    "altura_m": 1.8
+   },
+   {
+    "id": "bahia_ambulancias",
+    "uso": "Bahía de ambulancias cubierta (estructura metálica abierta, cubierta con paneles solares)",
+    "centro": [
+     -16.6,
+     15.0
+    ],
+    "largo": 13.2,
+    "ancho": 7.2,
+    "rumbo_eje": 0,
+    "area_m2": 95.0,
+    "limites": {
+     "x": [
+      -20.2,
+      -13.0
+     ],
+     "y": [
+      8.4,
+      21.6
+     ]
+    },
+    "abierto": true,
+    "base": 0.0,
+    "altura_libre_m": 4.5
+   },
+   {
+    "id": "galeria_conexion",
+    "uso": "Galería cubierta de conexión con el bloque central del hospital actual",
+    "centro": [
+     11.25,
+     4.4
+    ],
+    "largo": 5.3,
+    "ancho": 3.0,
+    "rumbo_eje": 90,
+    "area_m2": 15.9,
+    "limites": {
+     "x": [
+      8.6,
+      13.9
+     ],
+     "y": [
+      2.9,
+      5.9
+     ]
+    },
+    "abierto": true,
+    "base": 0.0,
+    "altura_libre_m": 3.0
+   },
+   {
+    "id": "pasaje_servicio",
+    "uso": "Pasaje de servicio cubierto en rampa (de -1,50 a ±0,00)",
+    "centro": [
+     -5.45,
+     -20.2
+    ],
+    "largo": 28.1,
+    "ancho": 1.2,
+    "rumbo_eje": 90,
+    "area_m2": 33.7,
+    "limites": {
+     "x": [
+      -19.5,
+      8.6
+     ],
+     "y": [
+      -20.8,
+      -19.6
+     ]
+    },
+    "abierto": true,
+    "base": -1.5,
+    "altura_libre_m": 2.6
+   },
+   {
+    "id": "bloque_tecnico",
+    "uso": "Bloque técnico de un piso (subestación, planta, tableros, gases, bombas, depósito de cadáveres); las cisternas van enterradas bajo el patio de servicio",
+    "centro": [
+     -3.8,
+     -22.8
+    ],
+    "largo": 31.4,
+    "ancho": 4.0,
+    "rumbo_eje": 90,
+    "area_m2": 125.6,
+    "limites": {
+     "x": [
+      -19.5,
+      11.9
+     ],
+     "y": [
+      -24.8,
+      -20.8
+     ]
+    },
+    "pisos": 1,
+    "base": -1.5,
+    "altura_m": 4.0
+   },
+   {
+    "id": "residuos_central",
+    "uso": "Unidad de almacenamiento central de residuos",
+    "centro": [
+     -22.25,
+     -26.0
+    ],
+    "largo": 4.5,
+    "ancho": 4.0,
+    "rumbo_eje": 90,
+    "area_m2": 18.0,
+    "limites": {
+     "x": [
+      -24.5,
+      -20.0
+     ],
+     "y": [
+      -28.0,
+      -24.0
+     ]
+    },
+    "pisos": 1,
+    "base": -1.5,
+    "altura_m": 3.0
+   }
+  ],
+  "nucleos_verticales": {
+   "escalera_norte": {
+    "limites": {
+     "x": [
+      3.1,
+      8.6
+     ],
+     "y": [
+      14.0,
+      22.4
+     ]
+    },
+    "pisos": "1 a cubierta"
+   },
+   "escalera_sur": {
+    "limites": {
+     "x": [
+      3.1,
+      8.6
+     ],
+     "y": [
+      -7.6,
+      0.8
+     ]
+    },
+    "pisos": "1 a cubierta"
+   },
+   "ascensores": {
+    "limites": {
+     "x": [
+      3.1,
+      6.1
+     ],
+     "y": [
+      1.6,
+      7.2
+     ]
+    },
+    "detalle": "2 ascensores camilleros de cabina 1,40 x 2,40 m (uno exclusivo para pacientes) y 1 montacargas de 0,80 x 0,80 m, con vestíbulo al oriente (x 6,1-8,6; y 0,8-8,0) donde llega la galería"
+   },
+   "montacargas_de_muestras": "0,60 x 0,60 m, entre la toma de muestras (piso 1, esquina suroccidental) y el laboratorio (piso 2, encima)",
+   "tubo_neumatico": "Opcional (Res. 1633, 3.4.11): estaciones en urgencias, laboratorio, hospitalización y partos",
+   "evacuacion": "2 escaleras protegidas de 2,40 m separadas ≈ 21,6 m entre centros (más de un tercio de la diagonal de la planta, 47,2 m); recorrido máximo hasta una escalera ≈ 30 m (el límite lo fija el Título K de la NSR-10 según el uso; se verifica en el diseño); los ascensores no cuentan como salida (Res. 1633, 3.3.6 c.i)"
+  },
+  "pisos_y_alturas": {
+   "numero_de_pisos": 4,
+   "entrepisos_m": {
+    "piso_1": 4.5,
+    "pisos_2_a_4": 4.2
+   },
+   "niveles_m": {
+    "piso_1": 0.0,
+    "piso_2": 4.5,
+    "piso_3": 8.7,
+    "piso_4": 12.9,
+    "cubierta_piso_4": 17.1,
+    "parapeto": 18.3,
+    "casetas": 20.4,
+    "cubierta_piso_3_sur": 12.9
+   },
+   "altura_libre_interior": "≥ 3,00 m bajo cielo raso (la Res. 1633, 3.3.4, recomienda ≥ 2,80 m y permite más en clima cálido); 1,0-1,2 m de entretecho para ductos de aire, gases y bandejas",
+   "grupo_de_uso_nsr10": "IV, edificación indispensable (A.2.5.1.1): tiene urgencias, partos e internación"
+  },
+  "distribucion_por_piso": [
+   {
+    "piso": 1,
+    "servicios": "Urgencias (adultos y pediatría, 24 horas) con bahía de ambulancias, rayos X, toma de muestras de laboratorio, vestíbulo y admisiones",
+    "por_que": "Urgencias debe tener todos sus ambientes en un solo piso con acceso directo, cubierto y al mismo nivel desde la bahía de ambulancias (Res. 1633, 4.5.1). Rayos X queda pegado a urgencias para no mover pacientes politraumatizados por ascensor. La toma de muestras queda junto al vestíbulo porque recibe la mayor fila de la mañana (pacientes en ayunas, embarazadas y adultos mayores)."
+   },
+   {
+    "piso": 2,
+    "servicios": "Consulta externa (medicina, enfermería, especialistas), laboratorio clínico 24 horas, vacunación, servicio farmacéutico, ecografía y toma de citologías",
+    "por_que": "Consulta externa es el servicio con más público y queda a un piso del acceso, con escalera abierta además de los ascensores. El laboratorio queda justo encima de la toma de muestras, unido por un montacargas exclusivo de muestras; urgencias (piso 1) y hospitalización (piso 3) le envían muestras por el montacargas general o por tubo neumático. Vacunación, farmacia, ecografía y citologías completan la atención ambulatoria de la ruta materno-perinatal y de crónicos en el mismo piso."
+   },
+   {
+    "piso": 3,
+    "servicios": "Hospitalización (adultos, pediatría y obstetricia), atención del parto en habitaciones TPR y central de esterilización",
+    "por_que": "Partos y hospitalización van juntos: una sola estación de enfermería controla las 13 camas y las 2 habitaciones TPR (15 en total) (Res. 1633: máximo 35 camas y 35 m a la cama más lejana); la madre pasa de la TPR a la habitación de posparto sin cambiar de piso. La central de esterilización queda en el mismo piso que su mayor usuario (partos) y baja por montacargas a urgencias y consulta."
+   },
+   {
+    "piso": 4,
+    "servicios": "Terapias (física y respiratoria), odontología con rayos X periapical, psicología, nutrición, telemedicina, zona de expansión y coordinación asistencial",
+    "por_que": "Servicios programados, que no son de urgencia, y el salón de telesalud que se convierte en sala de expansión en brotes o desastres (Res. 1633, 3.2.1 d). El piso es más pequeño (retrocede 12 m en el sur) y deja una terraza técnica para paneles solares."
+   }
+  ],
+  "zonificacion_en_planta": {
+   "piso_1": "Norte (y 8-22): urgencias con puerta a la bahía en la fachada occidental, reanimación junto a la puerta, observación con ventanas al patio norte y al occidente. Centro: rayos X entre urgencias y el núcleo de ascensores. Sur (y -20 a 2): vestíbulo con puerta principal en la fachada occidental (y ≈ -6), admisiones, toma de muestras y salida de servicio al pasaje del sur.",
+   "piso_2": "Laboratorio sobre la toma de muestras (suroccidente); consulta externa y sala de espera en el centro y el norte; farmacia junto a la escalera principal; vacunación cerca del vestíbulo de ascensores.",
+   "piso_3": "Estación de enfermería en el centro; habitaciones de hospitalización en las fachadas occidental, norte y sur; habitaciones TPR y posparto juntas en el norte; esterilización en el sur, junto al montacargas; descanso del personal de turno junto a la estación.",
+   "piso_4": "Terapias y gimnasio hacia el occidente (vista a los mangos); salón de telesalud y expansión en el norte; odontología y consultorios en el centro; coordinación asistencial y sala de crisis junto a los ascensores."
+  },
+  "accesos": [
+   {
+    "id": "acceso_urgencias_ambulancias",
+    "tipo": "vehicular y peatonal de urgencias",
+    "ubicacion": "Portón de 8 m en el cerramiento occidental, centrado en (-26,8; 24,2), donde la vía queda casi al nivel del patio",
+    "recorrido": "Las ambulancias bajan por el lado del cerramiento, dan la vuelta alrededor de una isla verde (x -24 a -20,5; y 7 a 19) y suben por el carril pegado a la fachada hasta la bahía cubierta, con la puerta del vehículo hacia el edificio; salen por el mismo portón. Radio de giro exterior para ambulancia ≈ 7 m: el retorno del sur (y 0 a 7) y el del norte (y 19 a 24) caben en los 14-18 m de ancho del patio.",
+    "puerta_edificio": [
+     -13.0,
+     15.0
+    ]
+   },
+   {
+    "id": "acceso_peatonal_principal",
+    "tipo": "peatonal (consulta externa, laboratorio, farmacia, visitas)",
+    "ubicacion": "Portón peatonal en el cerramiento occidental en (-31,2; -6,0)",
+    "recorrido": "Plaza bajo el mango grande con rampa en zigzag al 6 % y escalera para salvar ≈ 1,8 m hasta la puerta principal",
+    "puerta_edificio": [
+     -13.0,
+     -6.0
+    ]
+   },
+   {
+    "id": "acceso_servicio",
+    "tipo": "servicio (residuos, gases, combustible, vehículo funerario, personal)",
+    "ubicacion": "Portón vehicular en el cerramiento suroccidental en (-33,8; -30,0)",
+    "recorrido": "Vía de servicio de 4 m (y -32 a -28) que sube ≈ 1,3 m (≈ 9 %) hasta el patio de servicio (x -19,5 a -10,5; y -28 a -24,8); de allí el pasaje cubierto en rampa llega a la puerta de servicio de la torre (fachada sur)",
+    "puerta_edificio": [
+     3.0,
+     -19.6
+    ]
+   },
+   {
+    "id": "conexion_hospital_actual",
+    "tipo": "interno (suministros, alimentos, ropa, personal, administración)",
+    "ubicacion": "Galería cubierta de 5,30 x 3,00 m entre el vestíbulo de ascensores de la torre y el bloque central del hospital (x 8,6 a 13,9; y 2,9 a 5,9)",
+    "recorrido": "Al mismo nivel (si el piso del bloque central no coincide, rampa ≤ 8 %). Rutas de limpio y sucio por horarios y en carros cerrados (Res. 1633, 3.3.6 a.7)",
+    "puerta_edificio": [
+     8.6,
+     4.4
+    ]
+   }
+  ],
+  "conexion_con_el_hospital_actual": "Galería cubierta a nivel del piso 1, de uso exclusivo de la E.S.E., de 3,00 m de ancho (camas y camillas), cerrada a los lados, con piso antideslizante y pasamanos a ambos lados (Res. 3100/2019, Manual 11.1.2, criterio 5). No hace falta puente porque el hospital actual es de un piso. La torre y el hospital actual quedan como estructuras independientes, con junta y muro cortafuego en el encuentro; la vinculación debe quedar aprobada en la licencia urbanística (criterio 5.3).",
+  "parqueaderos": {
+   "ambulancias": "2 cupos en línea de 3,80 x 6,00 m bajo la bahía cubierta (Res. 1633, Cuadro 109; mínimo 1 cupo en edificaciones indispensables, 5.2.4). La flota (3 básicas y la medicalizada propuesta) sigue parqueando en el patio del hospital actual.",
+   "maternas_y_pmr": "Dentro del retorno solo hay zona de ascenso y descenso (sin parqueo), frente a la puerta de urgencias. Los 2 cupos de parqueo (1 para personas con movilidad reducida de 3,70 x 5,00 m y 1 preferente para maternas, que recomienda la Res. 1633 en 5.2.4) van en una bahía sobre la vía del occidente, al pie de la rampa de la plaza principal (espacio público; necesita visto bueno de Planeación municipal).",
+   "bicicletas": "10 cupos en el patio norte",
+   "motos_y_publico": "No caben dentro del lote sin talar mangos ni cruzar el patio de urgencias. Se propone una bahía de ≈ 20 motos sobre la vía del occidente frente a la plaza (espacio público; necesita visto bueno de Planeación municipal) y seguir usando el parqueadero actual del hospital al nororiente (≈ 8 cupos).",
+   "nota": "La cantidad exigible la fija el EOT de Yondó (Res. 1633, Anexo 1, 3.3.6, circulación externa); está por verificar."
+  },
+  "bahia_de_ambulancias": {
+   "limites": {
+    "x": [
+     -20.2,
+     -13.0
+    ],
+    "y": [
+     8.4,
+     21.6
+    ]
+   },
+   "dimensiones": "7,20 x 13,20 m, altura libre 4,50 m",
+   "cupos": 2,
+   "condiciones": "Directa desde el exterior, al mismo nivel de urgencias, señalizada, cubierta y exclusiva (Res. 1633, 3.3.5 y 4.5.1). La puerta de urgencias (esclusa) queda en (-13,0; 15,0), frente a la sala de reanimación."
+  },
+  "cubierta_tecnica": {
+   "cubierta_piso_4": "Placa de concreto impermeabilizada con aislamiento térmico y pasarelas: casetas de las 2 escaleras, sobrerrecorrido de ascensores, unidades condensadoras de aire acondicionado (≈ 40 m²), extractores (≈ 10 m²), 2 tanques de respaldo de 5 m³ (≈ 14 m²), agua caliente solar (≈ 10 m²), antena de datos, pararrayos y línea de vida; el resto, paneles solares.",
+   "terraza_piso_3_sur": "Paneles solares sobre la parte de la cubierta del piso 3 que no tapa el piso 4 (21,6 x 12,0 m).",
+   "bahia_de_ambulancias": "Marquesina con paneles solares.",
+   "paneles_solares": {
+    "tipo": "estimación",
+    "modulos": {
+     "cubierta_piso_4": 119,
+     "terraza_piso_3": 71,
+     "bahia": 27
+    },
+    "kwp_capacidad_maxima": 119.4,
+    "supuestos": "Módulos de 2,28 x 1,13 m y 0,55 kWp; 3,0 m² por módulo con inclinación de 10° y separación entre filas, 2,6 m² en la marquesina; franja libre de 1 m en el borde.",
+    "nota": "data/microrred.json asigna 100 kWp al nodo hospital (límite de 100 kW para acreditar excedentes 1:1). La cubierta de la torre puede llevar casi todo ese valor; el reparto con el edificio actual lo define el proyecto de la microrred."
+   },
+   "aguas_lluvias": "≈ 980 m² de cubiertas drenan a un tanque enterrado de ≈ 20 m³ para sanitarios y riego (estimación)."
+  },
+  "arboles": [
+   {
+    "arbol": "Mango grande del prado suroccidental",
+    "centro": [
+     -22.0,
+     -8.0
+    ],
+    "copa_m": 12,
+    "altura_m": 12,
+    "decision": "se conserva",
+    "motivo": "Da sombra a la plaza principal y a la fachada occidental, como recomienda el proyecto tipo del DNP (árboles en las fachadas oriente y occidente). La torre queda a 3 m del borde de la copa y a 9 m del tronco; cimentación con protección de raíces en la esquina suroccidental."
+   },
+   {
+    "arbol": "Mango junto a la cerca del suroccidente",
+    "centro": [
+     -27.0,
+     -19.0
+    ],
+    "copa_m": 9,
+    "altura_m": 11,
+    "decision": "se conserva",
+    "motivo": "La vía de servicio y la unidad de residuos pasan fuera de su copa."
+   },
+   {
+    "arbol": "Mangos del bosque al sur",
+    "centro": [
+     [
+      -4.0,
+      -30.0
+     ],
+     [
+      16.0,
+      -30.0
+     ]
+    ],
+    "copa_m": [
+     12,
+     14
+    ],
+    "decision": "se conservan",
+    "motivo": "Quedan fuera del lote de intervención; poda leve del lado norte del primero, que toca el bloque técnico."
+   },
+   {
+    "arbol": "Árbol junto al portón noroccidental (hospital.json, -38; 9 en su marco)",
+    "centro": [
+     -22.0,
+     25.0
+    ],
+    "copa_m": 8,
+    "decision": "se conserva con poda de elevación",
+    "motivo": "Altura libre ≥ 4,5 m sobre el carril de ambulancias."
+   },
+   {
+    "arbol": "Árbol del patio norte (hospital.json, -18; 7,5 en su marco)",
+    "centro": [
+     -2.0,
+     23.5
+    ],
+    "copa_m": 5,
+    "decision": "se conserva con poda",
+    "motivo": "Su copa toca la fachada norte de la torre."
+   },
+   {
+    "arbol": "Palma junto al kiosco",
+    "centro": [
+     -22.5,
+     5.5
+    ],
+    "copa_m": 4,
+    "decision": "se trasplanta a la isla del retorno",
+    "motivo": "Queda en el carril de ambulancias."
+   },
+   {
+    "arbol": "Árboles y plátanos del jardín norte",
+    "centro": [
+     -11.0,
+     22.5
+    ],
+    "copa_m": 8,
+    "decision": "se talan o se reubican",
+    "motivo": "Quedan dentro de la huella de la torre. Si son árboles (no plátanos), se tramita el permiso ante la autoridad ambiental (Corantioquia, por confirmar)."
+   }
+  ],
+  "patios_y_exteriores": [
+   {
+    "id": "patio_urgencias",
+    "uso": "Retorno de ambulancias y zona de ascenso y descenso",
+    "poligono": [
+     [
+      -27.0,
+      24.0
+     ],
+     [
+      -13.0,
+      24.0
+     ],
+     [
+      -13.0,
+      -1.0
+     ],
+     [
+      -30.4,
+      -1.0
+     ],
+     [
+      -29.0,
+      12.0
+     ]
+    ]
+   },
+   {
+    "id": "isla_retorno",
+    "uso": "Zona verde con la palma trasplantada",
+    "centro": [
+     -22.25,
+     13.0
+    ],
+    "largo": 12.0,
+    "ancho": 3.5,
+    "rumbo_eje": 0
+   },
+   {
+    "id": "plaza_principal",
+    "uso": "Plaza de los mangos con rampa y escalera",
+    "poligono": [
+     [
+      -30.4,
+      -1.0
+     ],
+     [
+      -13.0,
+      -1.0
+     ],
+     [
+      -13.0,
+      -14.0
+     ],
+     [
+      -32.25,
+      -14.0
+     ],
+     [
+      -32.0,
+      -12.0
+     ]
+    ]
+   },
+   {
+    "id": "patio_norte",
+    "uso": "Patio de luz y ventilación, bicicletas",
+    "poligono": [
+     [
+      -13.0,
+      22.4
+     ],
+     [
+      13.9,
+      22.4
+     ],
+     [
+      13.9,
+      27.25
+     ],
+     [
+      -13.0,
+      27.25
+     ]
+    ]
+   },
+   {
+    "id": "patio_oriente",
+    "uso": "Franja de servicio entre la torre y el bloque central (luz, ductos, galería)",
+    "poligono": [
+     [
+      8.6,
+      -19.05
+     ],
+     [
+      13.9,
+      -19.05
+     ],
+     [
+      13.9,
+      22.4
+     ],
+     [
+      8.6,
+      22.4
+     ]
+    ]
+   },
+   {
+    "id": "via_servicio",
+    "uso": "Vía de servicio en pendiente",
+    "poligono": [
+     [
+      -33.86,
+      -32.0
+     ],
+     [
+      -19.5,
+      -32.0
+     ],
+     [
+      -19.5,
+      -28.0
+     ],
+     [
+      -33.6,
+      -28.0
+     ]
+    ]
+   },
+   {
+    "id": "patio_servicio",
+    "uso": "Patio de maniobra y cargue sobre las cisternas",
+    "poligono": [
+     [
+      -19.5,
+      -28.0
+     ],
+     [
+      -10.5,
+      -28.0
+     ],
+     [
+      -10.5,
+      -24.8
+     ],
+     [
+      -19.5,
+      -24.8
+     ]
+    ]
+   }
+  ],
+  "materiales_y_volumetria": {
+   "inspiracion": "Del proyecto tipo del DNP (2018) se toman la modulación estructural en pórticos de concreto, la viga-canal y los aleros que cubren circulaciones, la ventilación cruzada y la sombra con árboles; del Puesto de Salud Tipo de MinSalud (2017), los muros interiores en sistema liviano en seco, la ventanería en PVC o aluminio y la cubierta liviana sobre estructura metálica en los volúmenes abiertos (bahía, galería, pasaje).",
+   "estructura": "Pórticos de concreto reforzado con placas aligeradas, diseño para grupo de uso IV de la NSR-10; anclaje de elementos no estructurales (Índice de Seguridad Hospitalaria, Res. 1633, 3.2.1 a).",
+   "fachadas": "Base y muros de fachada en ladrillo a la vista color terracota (continúa el ladrillo del hospital y de los pabellones que se demuelen); fachada occidental con celosías verticales de concreto o aluminio y corredor técnico de 1,20 m que da sombra; fachada oriental casi cerrada (núcleos).",
+   "orientacion": "El proyecto tipo recomienda fachadas largas al norte en clima cálido; el lote es más largo de norte a sur y obliga a fachadas largas al oriente y al occidente. Se compensa con el mango grande, las celosías, el corredor de sombra, la fachada oriental cerrada y ventilación cruzada por los patios norte y oriente.",
+   "interiores": "Pisos en baldosa o vinilo antideslizante con media caña, cielo raso registrable, muros lavables; blindaje en plomo en rayos X; acabados según Res. 1633, 3.3.8.",
+   "colores": {
+    "ladrillo": "#b5562f",
+    "pañete_blanco": "#f2efe6",
+    "verde_hospital": "#2f6b4f",
+    "celosias": "#d9d4c7",
+    "cubiertas_metalicas": "#e9e7e1"
+   }
+  }
+ },
+ "proyectos_tipo": [
+  {
+   "nombre": "Puesto de Salud Tipo - Proyecto Arquitectónico",
+   "entidad": "MinSalud, Dirección de Prestación de Servicios y Atención Primaria, Subdirección de Infraestructura en Salud",
+   "fecha": "enero de 2017",
+   "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PSA/puesto-salud-tipo.pdf",
+   "datos_clave": "92,34 m² útiles + 39 % de circulación y muros = 128,51 m² (pág. 2); consultorio de medicina 11,76 m², enfermería y toma de muestras 10,52 m², baño PMR 4,88 m², entrega de medicamentos 13,72 m²; columnas de acero galvanizado, muros en sistema liviano, ventanas de PVC, cubierta liviana, planta eléctrica y depósito de residuos como ambientes propios (págs. 2-5).",
+   "que_se_toma": "Módulo de consultorio cercano a 12 m², baño PMR de 4,9 m², factor de muros y circulación de referencia (39 % a escala pequeña), sistema liviano para divisiones interiores y cubierta liviana en volúmenes abiertos."
+  },
+  {
+   "nombre": "Proyecto Tipo: Construcción y dotación de infraestructura básica de salud (lineamiento 'Puesto / Centro de salud')",
+   "entidad": "Departamento Nacional de Planeación con MinSalud",
+   "fecha": "enero de 2018 (versión 1.0, precios de 2017)",
+   "url": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf",
+   "datos_clave": "Prototipo de 320,6 m² en 5 módulos más vivienda médica opcional (pág. 25); pórticos de concreto de 7,60 x 4,30 m con viga-canal en voladizo sobre la circulación central (pág. 27); lote mínimo de 754 m², población de 1.000 a 5.000 (pág. 16); fachadas largas al norte en clima cálido, aislamiento perimetral de 3 m, separación entre bloques de 2,4 m o igual a la altura (pág. 37); construcción $885.468.754 de 2017 (pág. 14).",
+   "costo_de_referencia": {
+    "tipo": "cálculo propio",
+    "valor_m2_pesos_2017": 2761911,
+    "factor_ipc_2017_a_2026": 1.649512,
+    "valor_m2_pesos_2026": 4555830,
+    "nota": "Costo directo de construcción del prototipo de un piso, sin dotación ni interventoría; solo como referencia, no como presupuesto de la torre."
+   },
+   "que_se_toma": "Modulación estructural, aleros y circulaciones cubiertas, ventilación cruzada, árboles en fachadas oriente y occidente, retiros mínimos."
+  },
+  {
+   "nombre": "Programa Médico Arquitectónico - Hospital Tipo (Guías metodológicas del Programa de Reorganización, Rediseño y Modernización de Redes)",
+   "entidad": "Ministerio de la Protección Social",
+   "fecha": "15 de marzo de 2010",
+   "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PSA/guias-programa-medico-arquitectonico-red-prestadores%20servicios-salud.pdf",
+   "datos_clave": "Cuadros de cálculo por servicio con el porcentaje de muros y circulaciones (20 % administración y máquinas; 25 % laboratorio, hospitalización, farmacia, esterilización; 30 % consulta externa, urgencias, radiología, terapias; 35 % obstetricia; 40 % cirugía) y áreas generales (hall 2 %, circulación horizontal 15 %, vertical 5 %, ductos 2 %) (págs. 8 y 11-48).",
+   "que_se_toma": "Método del programa y factores de muros y circulaciones por servicio."
+  },
+  {
+   "nombre": "Centros de Atención Primaria en Salud (CAPS)",
+   "entidad": "MinSalud",
+   "fecha": "2023-2025",
+   "url": null,
+   "datos_clave": "No se encontró un proyecto tipo oficial publicado. MinSalud construyó CAPS de ≈ 226 m² en La Guajira con ENTerritorio (consultorsalud.com, 2024) y el decreto de CAPS (0858 de 2025) está suspendido (docs/anexos/C-hospital-2028.md).",
+   "que_se_toma": "Nada normativo; solo confirma que no hay un modelo tipo de hospital de primer nivel con urgencias y partos."
+  }
+ ],
+ "incertidumbres": [
+  "No se pudo descargar la lista de servicios habilitados del REPS (portal bloqueado desde este entorno) ni la producción del SIHO; la demanda se apoya en rangos con supuestos propios.",
+  "La capacidad instalada es del corte REPS de noviembre de 2022; puede haber cambiado.",
+  "El ASIS 2024 de Yondó existe y fue premiado, pero no está publicado; el perfil de morbilidad sale de RIPS (con subregistro) y SIVIGILA (hasta 2022).",
+  "Los niveles del terreno respecto de la vía son estimaciones de Street View de 2014 (±0,3 m); las pendientes de la vía de servicio y de las rampas se definen con el levantamiento topográfico.",
+  "No hay planos del hospital actual ni del predio: el límite del lote, el índice de ocupación sobre el predio completo y las áreas del edificio actual son aproximados.",
+  "El nivel del piso del bloque central del hospital puede no coincidir con el nivel elegido para la torre; si no coincide, la galería lleva rampa.",
+  "El tamaño real del tronco del mango grande no se ha medido; un arborista debe definir la zona de protección de raíces antes de diseñar la cimentación de la esquina suroccidental.",
+  "La cantidad de parqueaderos exigible depende del EOT de Yondó, que no se revisó.",
+  "Las urgencias de adultos y de pediatría se diseñaron integradas, compartiendo los ambientes que la Res. 1633 permite compartir; si la Secretaría exige juegos completos separados, el piso 1 necesita ≈ 40-60 m² más.",
+  "La demanda eléctrica (200-260 kVA), los tanques (40 m³ de agua potable y ≈ 30 m³ contra incendio) y las tomas de oxígeno (≈ 40) son estimaciones de prediseño."
+ ],
+ "fuentes": [
+  {
+   "id": "dane_pped",
+   "titulo": "DANE - Proyecciones de población municipal por área geográfica 2018-2042 (actualización posCOVID)",
+   "url": "https://www.dane.gov.co/files/censo2018/proyecciones-de-poblacion/Municipal/PPED-AreaMun-2018-2042_VP.xlsx",
+   "detalle": "Hoja PobMunicipalxÁrea, código 05893 (Yondó), años 2026-2040",
+   "consultado": "2026-10-22",
+   "tipo": "dato oficial"
+  },
+  {
+   "id": "reps_capacidad",
+   "titulo": "REPS - Relación de IPS públicas y privadas según nivel de atención y capacidad instalada (corte 5-nov-2022)",
+   "url": "https://www.datos.gov.co/resource/s2ru-bqt6.json?nit_ips=800014884",
+   "detalle": "Camas, camillas, consultorios, salas y ambulancias de la E.S.E.",
+   "consultado": "2026-10-22",
+   "tipo": "dato oficial"
+  },
+  {
+   "id": "reps_vacunacion",
+   "titulo": "Sedes de prestadores con servicio de vacunación (corte REPS 13-abr-2023)",
+   "url": "https://www.datos.gov.co/resource/9vau-g3q7.json",
+   "detalle": "Registro de la E.S.E. Hospital Héctor Abad Gómez, servicio 420",
+   "consultado": "2026-10-22",
+   "tipo": "dato oficial"
+  },
+  {
+   "id": "reps_sedes",
+   "titulo": "Registro Especial de Prestadores y Sedes de Servicios de Salud (corte 12-mar-2026)",
+   "url": "https://www.datos.gov.co/d/c36g-9fc2",
+   "detalle": "Código de prestador 0589303227, sede única 01 (según docs/anexos/C-hospital-2028.md)",
+   "consultado": "2026-10-20",
+   "tipo": "dato oficial"
+  },
+  {
+   "id": "codigos_servicios",
+   "titulo": "Servicios habilitados de la red pública de Boyacá (nomenclatura de la Res. 3100/2019)",
+   "url": "https://www.datos.gov.co/resource/p9n2-9qsb.json",
+   "detalle": "Usado solo para verificar los códigos REPS de cada servicio (420, 706, 712, 714, 744, 745, 748, 749, 729, 739, 129, 130, 1101-1104, 312, 328, 333, 334, 344)",
+   "consultado": "2026-10-22",
+   "tipo": "dato oficial"
+  },
+  {
+   "id": "bdua",
+   "titulo": "ADRES - Base de Datos Única de Afiliados en datos abiertos (subsidiado y contributivo)",
+   "url": "https://www.datos.gov.co/d/d7a5-cnra",
+   "detalle": "Contributivo: https://www.datos.gov.co/d/tq4m-hmg2; datos al 3-oct-2026, resumidos en docs/anexos/C-hospital-2028.md, sección 1.3",
+   "consultado": "2026-10-20",
+   "tipo": "dato oficial"
+  },
+  {
+   "id": "rips",
+   "titulo": "MinSalud - Registros Individuales de Prestación de Servicios de Salud (RIPS) en datos abiertos",
+   "url": "https://www.datos.gov.co/resource/4k9h-8qiu.json",
+   "detalle": "Municipio 05893: atenciones por año y tipo (2009-2021) y primeras causas 2017-2021",
+   "consultado": "2026-10-22",
+   "tipo": "dato oficial con subregistro"
+  },
+  {
+   "id": "sivigila",
+   "titulo": "INS - Datos de vigilancia en salud pública (SIVIGILA) en datos abiertos",
+   "url": "https://www.datos.gov.co/resource/4hyg-wa9d.json",
+   "detalle": "Municipio de ocurrencia 05893, 2018-2022",
+   "consultado": "2026-10-22",
+   "tipo": "dato oficial"
+  },
+  {
+   "id": "terridata",
+   "titulo": "DNP - TerriData, ficha de Yondó (05893)",
+   "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip",
+   "detalle": "Incidencia de dengue y tasas de mortalidad; resumido en docs/anexos/E-indicadores-sociales.md",
+   "consultado": "2026-10-20",
+   "tipo": "dato oficial"
+  },
+  {
+   "id": "decreto_asis",
+   "titulo": "Gobernación de Antioquia - Decreto 2025070003378 del 25-jul-2025 (reconocimiento a los mejores ASIS municipales del periodo 2024)",
+   "url": "https://www.antioquia.gov.co/images/PDF2/Decretos/2025/07/2025070003378.pdf",
+   "detalle": "Artículo 1: Itagüí, Yondó, Betania, Remedios y Tarso",
+   "consultado": "2026-10-22",
+   "tipo": "dato oficial"
+  },
+  {
+   "id": "res1633",
+   "titulo": "MinSalud - Resolución 1633 del 11-ago-2025 (marco técnico de infraestructura y equipamiento de edificaciones de salud)",
+   "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_1633_2025.htm",
+   "detalle": "Arts. 1-6; deroga las Res. 4445 y 5042 de 1996",
+   "consultado": "2026-10-22",
+   "tipo": "norma"
+  },
+  {
+   "id": "res1633_anexo1",
+   "titulo": "Anexo 1 de la Res. 1633/2025 - Estándares de edificaciones de salud",
+   "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/anexos-1-2-proyecto-resolucion-marco-tecnico-edificaciones-prestadoras-servicios-salud.zip",
+   "detalle": "Hojas 19 (índice de ocupación), 23-28 (altura libre, circulaciones, escaleras, ascensores), 35-39 (residuos y ambientes generales), 41-42 (tanques: 600 L por cama al día, 48 h), 47-68 (consulta externa, vacunación, terapias, farmacia, imágenes), 86-92 (toma de muestras y laboratorio), 101-106 (hospitalización), 144-160 (urgencias y parto), 161-171 (ambientes de apoyo y parqueaderos)",
+   "consultado": "2026-10-22",
+   "tipo": "norma"
+  },
+  {
+   "id": "res485",
+   "titulo": "MinSalud - Resolución 485 de 2025 (requisitos del concepto técnico de viabilidad)",
+   "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_0485_2025.htm",
+   "detalle": "Art. 7.1.2, numerales 4 (comparativo de capacidad actual y propuesta), 5 (programa médico arquitectónico con áreas por ambiente, servicio y circulaciones) y 8 (implantación sobre levantamiento topográfico)",
+   "consultado": "2026-10-22",
+   "tipo": "norma"
+  },
+  {
+   "id": "res1211",
+   "titulo": "MinSalud - Resolución 1211 de 2025 (modifica la Res. 485)",
+   "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_1211_2025.htm",
+   "detalle": "",
+   "consultado": "2026-10-22",
+   "tipo": "norma"
+  },
+  {
+   "id": "res3100",
+   "titulo": "MinSalud - Resolución 3100 de 2019 (procedimientos y condiciones de inscripción y habilitación)",
+   "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+   "detalle": "Manual, numerales 11.2 (consulta externa), 11.3 (apoyo diagnóstico), 11.4 (internación) y 11.6 (atención inmediata)",
+   "consultado": "2026-10-22",
+   "tipo": "norma"
+  },
+  {
+   "id": "res2654",
+   "titulo": "MinSalud - Resolución 2654 de 2019 (telesalud y telemedicina)",
+   "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_2654_2019.htm",
+   "detalle": "Telemedicina como prestador remisor",
+   "consultado": "2026-10-20",
+   "tipo": "norma"
+  },
+  {
+   "id": "puesto_tipo",
+   "titulo": "MinSalud - Puesto de Salud Tipo, proyecto arquitectónico (enero de 2017)",
+   "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PSA/puesto-salud-tipo.pdf",
+   "detalle": "Pág. 2 (cuadro de áreas y 39 % de circulación y muros), págs. 2-3 (dotación), págs. 3-5 (presupuesto por capítulos)",
+   "consultado": "2026-10-22",
+   "tipo": "proyecto tipo"
+  },
+  {
+   "id": "dnp_tipo",
+   "titulo": "DNP - Proyecto Tipo: Construcción y dotación de infraestructura básica de salud (2018)",
+   "url": "https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf",
+   "detalle": "Págs. 14 (costos de 2017), 16 (criterios del lote), 25-27 (prototipo y módulo estructural), 33-37 (recomendaciones bioclimáticas y del predio)",
+   "consultado": "2026-10-22",
+   "tipo": "proyecto tipo"
+  },
+  {
+   "id": "guia_pma_2010",
+   "titulo": "Ministerio de la Protección Social - Guía metodológica 'Programa Médico Arquitectónico', Hospital Tipo (15-mar-2010)",
+   "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PSA/guias-programa-medico-arquitectonico-red-prestadores%20servicios-salud.pdf",
+   "detalle": "Pág. 8 (método), págs. 11-48 (cuadros por servicio con % de muros y circulaciones; otras áreas: hall 2 %, circulaciones 15 % y 5 %, ductos 2 %)",
+   "consultado": "2026-10-22",
+   "tipo": "guía oficial"
+  },
+  {
+   "id": "dnp_portal_tipo",
+   "titulo": "DNP - Portal de proyectos tipo (sector salud: ambulancias, cadena de frío, puesto/centro de salud)",
+   "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=126&Itemid=198",
+   "detalle": "Lineamiento 'Puesto / Centro de salud'",
+   "consultado": "2026-10-22",
+   "tipo": "proyecto tipo"
+  },
+  {
+   "id": "caps_guajira",
+   "titulo": "Consultorsalud - La Guajira tendrá cinco nuevos CAPS",
+   "url": "https://consultorsalud.com/guajira-cinco-nuevos-caps-atencion-salud/",
+   "detalle": "CAPS de ≈ 226 m² construidos por MinSalud con ENTerritorio",
+   "consultado": "2026-10-22",
+   "tipo": "prensa"
+  },
+  {
+   "id": "ipc",
+   "titulo": "DANE - IPC, índices (serie en data/fuentes/ipc_dane.csv; base = promedio ene-sep 2026)",
+   "url": "https://www.dane.gov.co/files/operaciones/IPC/sep2026/anex-IPC-Indices-sep2026.xlsx",
+   "detalle": "Factor 2017 -> 2026 = 1,649512",
+   "consultado": "2026-10-22",
+   "tipo": "dato oficial"
+  },
+  {
+   "id": "repo_sitio",
+   "titulo": "Levantamiento del sitio en el repositorio",
+   "url": "data/edificios/bienestar_anciano.json; data/edificios/hospital.json",
+   "detalle": "Huellas, cerramiento, árboles, postes y diferencias de nivel con la vía (Street View 2014, Esri 2020)",
+   "consultado": "2026-10-22",
+   "tipo": "levantamiento propio"
+  },
+  {
+   "id": "repo_hospital",
+   "titulo": "Análisis previo del hospital en el repositorio",
+   "url": "docs/anexos/C-hospital-2028.md; docs/06-hospital-2028-financiacion.md; data/hospital2028.json; data/microrred.json",
+   "detalle": "REPS, BDUA, estudio de vulnerabilidad de 2024, nodo eléctrico (25.000 kWh/mes, 100 kWp)",
+   "consultado": "2026-10-22",
+   "tipo": "investigación previa"
+  },
+  {
+   "id": "ley1968",
+   "titulo": "Ley 1968 de 2019 (prohíbe el uso de asbesto en el territorio nacional; Diario Oficial 51.011 del 11-jul-2019)",
+   "url": "https://sidn.ramajudicial.gov.co/SIDN/NORMATIVA/TEXTOS_COMPLETOS/7_LEYES/LEYES%202019%20(1945)/Ley%201968%20de%202019%20(Prohibici%C3%B3n%20del%20uso%20del%20asbesto).pdf",
+   "detalle": "Arts. 2 y 3 (la prohibición no cubre materiales ya instalados; su retiro debe hacerse con protección)",
+   "consultado": "2026-10-22",
+   "tipo": "norma"
+  }
+ ]
+}
