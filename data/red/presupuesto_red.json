@@ -1,0 +1,892 @@
+{
+ "titulo": "Presupuesto de la red de distribución propuesta: media tensión 13,2 kV aérea y fibra óptica entre las sedes",
+ "moneda": "pesos colombianos de 2026; precios con AIU (27 % más IVA sobre la utilidad) en la obra",
+ "precision": "Clase 4 de AACE (prefactibilidad): −30 % / +50 %",
+ "raiz": "alcaldia",
+ "km_urbanos": 4.596,
+ "km_rurales": 5.47,
+ "km_total": 10.066,
+ "capitulos": [
+  {
+   "nombre": "Preliminares, permisos y trámites",
+   "items": [
+    {
+     "codigo": "GES-TOPO",
+     "descripcion": "Topografía, replanteo con GPS y levantamiento de postes existentes",
+     "unidad": "km",
+     "cantidad": 10.066,
+     "valor_unitario": 1800000,
+     "total": 18118800
+    },
+    {
+     "codigo": "GES-RETIE-KM",
+     "descripcion": "Inspección y certificado de conformidad RETIE de red de MT por organismo acreditado",
+     "unidad": "km",
+     "cantidad": 10.066,
+     "valor_unitario": 2500000,
+     "total": 25165000
+    },
+    {
+     "codigo": "GES-SERV",
+     "descripcion": "Servidumbre para red aérea en tramo rural (franja de 15 m), avalúo y escritura",
+     "unidad": "km",
+     "cantidad": 5.47,
+     "valor_unitario": 10000000,
+     "total": 54700000
+    },
+    {
+     "codigo": "GES-PODA",
+     "descripcion": "Poda, rocería y despeje de franja en tramo rural",
+     "unidad": "km",
+     "cantidad": 5.47,
+     "valor_unitario": 3000000,
+     "total": 16410000
+    },
+    {
+     "codigo": "GES-RETIE-TR",
+     "descripcion": "Inspección y certificado RETIE por subestación de poste (transformador)",
+     "unidad": "un",
+     "cantidad": 20,
+     "valor_unitario": 1000000,
+     "total": 20000000
+    },
+    {
+     "codigo": "GES-RETIE-AC",
+     "descripcion": "Inspección RETIE de acometida y medida por sede",
+     "unidad": "un",
+     "cantidad": 20,
+     "valor_unitario": 600000,
+     "total": 12000000
+    },
+    {
+     "codigo": "GES-EPM",
+     "descripcion": "Trámites con EPM: solicitud de factibilidad, estudio de conexión, revisión de diseños, recibo de obra y energización (por proyecto)",
+     "unidad": "global",
+     "cantidad": 1,
+     "valor_unitario": 6000000,
+     "total": 6000000
+    }
+   ],
+   "total": 152393800
+  },
+  {
+   "nombre": "Red de media tensión aérea 13,2 kV — zona urbana",
+   "unidad_resumen": "4.60 km × APU-06U",
+   "items": [
+    {
+     "codigo": "APU-01",
+     "descripcion": "Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida",
+     "unidad": "un",
+     "cantidad": 87.32,
+     "valor_unitario": 2511679,
+     "total": 219329854
+    },
+    {
+     "codigo": "APU-01b",
+     "descripcion": "Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales)",
+     "unidad": "un",
+     "cantidad": 27.58,
+     "valor_unitario": 2639629,
+     "total": 72790408
+    },
+    {
+     "codigo": "APU-02",
+     "descripcion": "Estructura de suspensión trifásica 13,2 kV con neutro inferior, cruceta de 1.500 mm al centro (vestida sobre poste ya instalado)",
+     "unidad": "un",
+     "cantidad": 87.32,
+     "valor_unitario": 1118575,
+     "total": 97678419
+    },
+    {
+     "codigo": "APU-03",
+     "descripcion": "Estructura de retención (referencia) trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin vientos)",
+     "unidad": "un",
+     "cantidad": 22.98,
+     "valor_unitario": 3109591,
+     "total": 71458392
+    },
+    {
+     "codigo": "APU-03b",
+     "descripcion": "Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento)",
+     "unidad": "un",
+     "cantidad": 4.6,
+     "valor_unitario": 2097455,
+     "total": 9639903
+    },
+    {
+     "codigo": "APU-04",
+     "descripcion": "Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje",
+     "unidad": "un",
+     "cantidad": 55.15,
+     "valor_unitario": 823435,
+     "total": 45414088
+    },
+    {
+     "codigo": "APU-05",
+     "descripcion": "Puesta a tierra de estructura o equipo: 1 varilla copperweld de 5/8\" × 2,4 m, bajante de Cu 2 AWG, 2 soldaduras exotérmicas, caja de registro y medición",
+     "unidad": "un",
+     "cantidad": 18.38,
+     "valor_unitario": 924138,
+     "total": 16989354
+    },
+    {
+     "codigo": "ACSR-20",
+     "descripcion": "Conductor ACSR 2/0 AWG (Quail), con IVA",
+     "unidad": "m",
+     "cantidad": 14339.52,
+     "valor_unitario": 7677,
+     "total": 110084495
+    },
+    {
+     "codigo": "ACSR-10",
+     "descripcion": "Conductor ACSR 1/0 AWG (Raven), con IVA",
+     "unidad": "m",
+     "cantidad": 4779.84,
+     "valor_unitario": 6142,
+     "total": 29355865
+    },
+    {
+     "codigo": "CONECTOR",
+     "descripcion": "Empalmes de tensión y conectores de puentes",
+     "unidad": "un",
+     "cantidad": 36.77,
+     "valor_unitario": 19192,
+     "total": 705670
+    },
+    {
+     "codigo": "PLACA-ID",
+     "descripcion": "Marcación de circuito (RA6-020: en derivaciones y cada 2 km)",
+     "unidad": "un",
+     "cantidad": 13.79,
+     "valor_unitario": 19192,
+     "total": 264626
+    },
+    {
+     "codigo": "EQ-TENDIDO",
+     "descripcion": "Equipo de tendido: poleas, malacate, ranas, tensiómetro y pértigas",
+     "unidad": "día",
+     "cantidad": 4.596,
+     "valor_unitario": 533125,
+     "total": 2450244
+    },
+    {
+     "codigo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 4.596,
+     "valor_unitario": 810350,
+     "total": 3724367
+    },
+    {
+     "codigo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 4.596,
+     "valor_unitario": 1919250,
+     "total": 8820873
+    },
+    {
+     "codigo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 4.596,
+     "valor_unitario": 103639,
+     "total": 476327
+    },
+    {
+     "codigo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
+     "unidad": "%",
+     "cantidad": 4.596,
+     "valor_unitario": 916519,
+     "total": 4212320
+    },
+    {
+     "codigo": "MO",
+     "descripcion": "Mano de obra: Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes — tendido, tensionado, amarres y puentes de 4 conductores",
+     "unidad": "km",
+     "cantidad": 4.596,
+     "valor_unitario": 2072790,
+     "total": 9526543
+    }
+   ],
+   "total": 702921748
+  },
+  {
+   "nombre": "Red de media tensión aérea 13,2 kV — zona rural",
+   "unidad_resumen": "5.47 km × APU-06R",
+   "items": [
+    {
+     "codigo": "APU-01",
+     "descripcion": "Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida",
+     "unidad": "un",
+     "cantidad": 54.7,
+     "valor_unitario": 2511679,
+     "total": 137388840
+    },
+    {
+     "codigo": "APU-01b",
+     "descripcion": "Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales)",
+     "unidad": "un",
+     "cantidad": 13.68,
+     "valor_unitario": 2639629,
+     "total": 36096926
+    },
+    {
+     "codigo": "APU-02",
+     "descripcion": "Estructura de suspensión trifásica 13,2 kV con neutro inferior, cruceta de 1.500 mm al centro (vestida sobre poste ya instalado)",
+     "unidad": "un",
+     "cantidad": 54.7,
+     "valor_unitario": 1118575,
+     "total": 61186038
+    },
+    {
+     "codigo": "APU-03",
+     "descripcion": "Estructura de retención (referencia) trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin vientos)",
+     "unidad": "un",
+     "cantidad": 10.94,
+     "valor_unitario": 3109591,
+     "total": 34018921
+    },
+    {
+     "codigo": "APU-03b",
+     "descripcion": "Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento)",
+     "unidad": "un",
+     "cantidad": 2.74,
+     "valor_unitario": 2097455,
+     "total": 5736536
+    },
+    {
+     "codigo": "APU-04",
+     "descripcion": "Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje",
+     "unidad": "un",
+     "cantidad": 30.09,
+     "valor_unitario": 823435,
+     "total": 24773043
+    },
+    {
+     "codigo": "APU-05",
+     "descripcion": "Puesta a tierra de estructura o equipo: 1 varilla copperweld de 5/8\" × 2,4 m, bajante de Cu 2 AWG, 2 soldaduras exotérmicas, caja de registro y medición",
+     "unidad": "un",
+     "cantidad": 16.41,
+     "valor_unitario": 924138,
+     "total": 15165106
+    },
+    {
+     "codigo": "ACSR-10",
+     "descripcion": "Conductor ACSR 1/0 AWG (Raven), con IVA",
+     "unidad": "m",
+     "cantidad": 22755.2,
+     "valor_unitario": 6142,
+     "total": 139753337
+    },
+    {
+     "codigo": "CONECTOR",
+     "descripcion": "Empalmes y conectores",
+     "unidad": "un",
+     "cantidad": 32.82,
+     "valor_unitario": 19193,
+     "total": 629898
+    },
+    {
+     "codigo": "PLACA-ID",
+     "descripcion": "Marcación de circuito",
+     "unidad": "un",
+     "cantidad": 10.94,
+     "valor_unitario": 19193,
+     "total": 209966
+    },
+    {
+     "codigo": "EQ-TENDIDO",
+     "descripcion": "Equipo de tendido: poleas, malacate, ranas, tensiómetro y pértigas",
+     "unidad": "día",
+     "cantidad": 5.47,
+     "valor_unitario": 319875,
+     "total": 1749716
+    },
+    {
+     "codigo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 5.47,
+     "valor_unitario": 486210,
+     "total": 2659569
+    },
+    {
+     "codigo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 5.47,
+     "valor_unitario": 690930,
+     "total": 3779387
+    },
+    {
+     "codigo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 5.47,
+     "valor_unitario": 62184,
+     "total": 340145
+    },
+    {
+     "codigo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales, sin postes ni transformadores)",
+     "unidad": "%",
+     "cantidad": 5.47,
+     "valor_unitario": 771078,
+     "total": 4217796
+    },
+    {
+     "codigo": "MO",
+     "descripcion": "Mano de obra: Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes — tendido, tensionado, amarres y puentes de 4 conductores",
+     "unidad": "km",
+     "cantidad": 5.47,
+     "valor_unitario": 1243674,
+     "total": 6802897
+    }
+   ],
+   "total": 474508121
+  },
+  {
+   "nombre": "Transformadores de distribución (uno por sede)",
+   "items": [
+    {
+     "codigo": "APU-08-375",
+     "descripcion": "Transformador de 37,5 kVA instalado — Palacio Municipal de Yondó (Alcaldía; alojaría el CCED)",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 27244227,
+     "total": 27244227,
+     "nota": "8.000 kWh/mes → pico ≈ 28 kW → 31 kVA"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — Estación de Policía Yondó",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "3.000 kWh/mes → pico ≈ 10 kW → 12 kVA"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — Registraduría Nacional del Estado Civil – Yondó",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "tamaño por tipo de carga (sin nodo propio en el plan)"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — Parque Educativo 'Sueños de Casabe'",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "2.000 kWh/mes → pico ≈ 7 kW → 8 kVA"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — Biblioteca Pública Municipal María Cano",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "2.000 kWh/mes → pico ≈ 7 kW → 8 kVA"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — Coliseo Benito Arias",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "2.400 kWh/mes → pico ≈ 8 kW → 9 kVA"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — Casa de la Cultura de Yondó (antiguo teatro municipal)",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "tamaño por tipo de carga (sin nodo propio en el plan)"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — Sede administrativa de Aguas y Aseo de Yondó S.A. E.S.P.",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "tamaño por tipo de carga (sin nodo propio en el plan)"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — Concejo Municipal de Yondó",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "tamaño por tipo de carga (sin nodo propio en el plan)"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — Cuerpo de Bomberos Voluntarios de Yondó (sede de la dirección registrada)",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "1.500 kWh/mes → pico ≈ 5 kW → 6 kVA"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — I.E. Luis Eduardo Díaz – sede La Patria (preescolar y primaria)",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "4.000 kWh/mes → pico ≈ 14 kW → 15 kVA"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — Centro Vida 'Canitas Sabias' del adulto mayor",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "3.200 kWh/mes → pico ≈ 11 kW → 12 kVA"
+    },
+    {
+     "codigo": "APU-08-25",
+     "descripcion": "Transformador de 25 kVA instalado — I.E. Luis Eduardo Díaz – sede principal",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 25326717,
+     "total": 25326717,
+     "nota": "4.000 kWh/mes → pico ≈ 14 kW → 15 kVA"
+    },
+    {
+     "codigo": "APU-08-45",
+     "descripcion": "Transformador de 45 kVA instalado — Centro de Integración Ciudadana (CIC) – candidato",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 37191867,
+     "total": 37191867,
+     "nota": "tamaño por tipo de carga (sin nodo propio en el plan)"
+    },
+    {
+     "codigo": "APU-08-45",
+     "descripcion": "Transformador de 45 kVA instalado — I.E. Luis Eduardo Díaz – sede Megacolegio (nueva sede)",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 37191867,
+     "total": 37191867,
+     "nota": "tamaño por tipo de carga (sin nodo propio en el plan)"
+    },
+    {
+     "codigo": "APU-08-375",
+     "descripcion": "Transformador de 37,5 kVA instalado — E.S.E. Hospital Héctor Abad Gómez",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 27244227,
+     "total": 27244227,
+     "nota": "7.500 kWh/mes → pico ≈ 26 kW → 29 kVA"
+    },
+    {
+     "codigo": "APU-08",
+     "descripcion": "Transformador de 75 kVA instalado — Torre de servicios de primer nivel — E.S.E. Hospital Héctor Abad Gómez (sitio del antiguo Centro Vida)",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 46774767,
+     "total": 46774767,
+     "nota": "17.500 kWh/mes → pico ≈ 61 kW → 68 kVA"
+    },
+    {
+     "codigo": "APU-08-1125",
+     "descripcion": "Transformador de 112,5 kVA instalado — Planta de tratamiento de agua potable municipal (Aguas y Aseo de Yondó)",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 58871866,
+     "total": 58871866,
+     "nota": "30.000 kWh/mes → pico ≈ 104 kW → 116 kVA"
+    },
+    {
+     "codigo": "APU-08-45",
+     "descripcion": "Transformador de 45 kVA instalado — Captación por pozos profundos junto a la PTAP",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 37191867,
+     "total": 37191867,
+     "nota": "tamaño por tipo de carga (sin nodo propio en el plan)"
+    },
+    {
+     "codigo": "APU-08-45",
+     "descripcion": "Transformador de 45 kVA instalado — Planta de potabilización veredal (compacta) de Aguas y Aseo de Yondó",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 37191867,
+     "total": 37191867,
+     "nota": "tamaño por tipo de carga (sin nodo propio en el plan)"
+    }
+   ],
+   "total": 612823159
+  },
+  {
+   "nombre": "Acometidas y medición bidireccional",
+   "items": [
+    {
+     "codigo": "APU-11",
+     "descripcion": "Acometida trifásica de BT a una sede (25 m de Cu 3 × 2/0 + N 1/0 + T 4 en tubería) con medida semidirecta y medidor bidireccional con comunicación",
+     "unidad": "un",
+     "cantidad": 20,
+     "valor_unitario": 13666966,
+     "total": 273339320,
+     "nota": "Una por sede: acometida trifásica y medidor bidireccional con comunicación"
+    }
+   ],
+   "total": 273339320
+  },
+  {
+   "nombre": "Protección y maniobra",
+   "items": [
+    {
+     "codigo": "CREG-N2EQ35",
+     "descripcion": "Reconectador, nivel 2, instalado — valor de referencia regulatorio",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 74783431,
+     "total": 74783431,
+     "nota": "En la salida del alimentador"
+    },
+    {
+     "codigo": "CREG-N2EQ29",
+     "descripcion": "Seccionalizador manual bajo carga 400 A, nivel 2, instalado — valor de referencia regulatorio",
+     "unidad": "un",
+     "cantidad": 6,
+     "valor_unitario": 33470441,
+     "total": 200822646,
+     "nota": "Uno por derivación principal del árbol"
+    }
+   ],
+   "total": 275606077
+  },
+  {
+   "nombre": "Fibra óptica sobre los mismos postes (datos al CCED)",
+   "items": [
+    {
+     "codigo": "APU-09",
+     "descripcion": "km de fibra óptica ADSS 24 hilos instalada en postes existentes (zona urbana, vano de 40 m), con herrajes, reservas, empalmes y pruebas",
+     "unidad": "km",
+     "cantidad": 4.872,
+     "valor_unitario": 12923326,
+     "total": 62959343,
+     "nota": "ADSS 24 hilos en zona urbana (incluye 6 % de reservas)"
+    },
+    {
+     "codigo": "APU-09-Rural",
+     "descripcion": "km de fibra óptica ADSS 24 hilos instalada en postes existentes (zona urbana — variante Rural (vano 80 m, 12,5 postes/km)",
+     "unidad": "km",
+     "cantidad": 5.798,
+     "valor_unitario": 10080194,
+     "total": 58446981,
+     "nota": "ADSS 24 hilos en zona rural"
+    },
+    {
+     "codigo": "APU-13",
+     "descripcion": "Conexión de una sede a la red de fibra (GPON): caja de distribución (NAP) con splitter, acometida de fibra de 50 m, roseta, ONU y conexión al tablero de la sede",
+     "unidad": "un",
+     "cantidad": 21,
+     "valor_unitario": 2152090,
+     "total": 45193890,
+     "nota": "Conexión GPON de cada sede"
+    },
+    {
+     "codigo": "APU-14",
+     "descripcion": "Nodo central de la red de datos en el CCED (Alcaldía): OLT GPON de 16 puertos, switch industrial capa 3 con 10G, distribuidor de fibra (ODF) y transceptores",
+     "unidad": "un",
+     "cantidad": 1,
+     "valor_unitario": 41220943,
+     "total": 41220943,
+     "nota": "Nodo central en el CCED (alcaldía)"
+    }
+   ],
+   "total": 207821157
+  }
+ ],
+ "indirectos": [
+  {
+   "nombre": "Ingeniería de detalle",
+   "base": "obra",
+   "porcentaje": 0.04,
+   "total": 101880783
+  },
+  {
+   "nombre": "Plan de manejo ambiental, de tráfico y SST",
+   "base": "costo directo",
+   "porcentaje": 0.015,
+   "total": 29859550
+  },
+  {
+   "nombre": "Interventoría",
+   "base": "obra",
+   "porcentaje": 0.08,
+   "total": 203761567
+  }
+ ],
+ "totales": {
+  "obra_cop_2026": 2547019582,
+  "preliminares_y_tramites_cop_2026": 152393800,
+  "indirectos_cop_2026": 335501900,
+  "total_cop_2026": 3034915282,
+  "rango_cop_2026": [
+   2124440697,
+   4552372923
+  ],
+  "costo_por_km_red_cop_2026": 116970978
+ },
+ "por_tramo": [
+  {
+   "de": "alcaldia",
+   "a": "policia",
+   "km_via": 0.132,
+   "km_red_nueva": 0.113,
+   "km_urbanos": 0.113,
+   "km_rurales": 0.0,
+   "costo_red": 19316310,
+   "costo_sede": 41145773,
+   "costo_total": 67717533
+  },
+  {
+   "de": "policia",
+   "a": "registraduria",
+   "km_via": 0.192,
+   "km_red_nueva": 0.135,
+   "km_urbanos": 0.135,
+   "km_rurales": 0.0,
+   "costo_red": 23077007,
+   "costo_sede": 41145773,
+   "costo_total": 71929514
+  },
+  {
+   "de": "policia",
+   "a": "parque_edu",
+   "km_via": 0.276,
+   "km_red_nueva": 0.263,
+   "km_urbanos": 0.263,
+   "km_rurales": 0.0,
+   "costo_red": 44957429,
+   "costo_sede": 41145773,
+   "costo_total": 96435586
+  },
+  {
+   "de": "parque_edu",
+   "a": "cultura",
+   "km_via": 0.069,
+   "km_red_nueva": 0.055,
+   "km_urbanos": 0.055,
+   "km_rurales": 0.0,
+   "costo_red": 9401744,
+   "costo_sede": 41145773,
+   "costo_total": 56613219
+  },
+  {
+   "de": "cultura",
+   "a": "coliseo",
+   "km_via": 0.084,
+   "km_red_nueva": 0.064,
+   "km_urbanos": 0.064,
+   "km_rurales": 0.0,
+   "costo_red": 10940211,
+   "costo_sede": 41145773,
+   "costo_total": 58336302
+  },
+  {
+   "de": "parque_edu",
+   "a": "casa_cultura",
+   "km_via": 0.297,
+   "km_red_nueva": 0.235,
+   "km_urbanos": 0.235,
+   "km_rurales": 0.0,
+   "costo_red": 40171087,
+   "costo_sede": 41145773,
+   "costo_total": 91074883
+  },
+  {
+   "de": "casa_cultura",
+   "a": "aguas_aseo_sede",
+   "km_via": 0.168,
+   "km_red_nueva": 0.109,
+   "km_urbanos": 0.109,
+   "km_rurales": 0.0,
+   "costo_red": 18632547,
+   "costo_sede": 41145773,
+   "costo_total": 66951718
+  },
+  {
+   "de": "aguas_aseo_sede",
+   "a": "concejo",
+   "km_via": 0.262,
+   "km_red_nueva": 0.246,
+   "km_urbanos": 0.246,
+   "km_rurales": 0.0,
+   "costo_red": 42051435,
+   "costo_sede": 41145773,
+   "costo_total": 93180873
+  },
+  {
+   "de": "concejo",
+   "a": "bomberos",
+   "km_via": 0.15,
+   "km_red_nueva": 0.138,
+   "km_urbanos": 0.138,
+   "km_rurales": 0.0,
+   "costo_red": 23589830,
+   "costo_sede": 41145773,
+   "costo_total": 72503875
+  },
+  {
+   "de": "casa_cultura",
+   "a": "ie_prim",
+   "km_via": 0.374,
+   "km_red_nueva": 0.348,
+   "km_urbanos": 0.348,
+   "km_rurales": 0.0,
+   "costo_red": 59487397,
+   "costo_sede": 41145773,
+   "costo_total": 112709150
+  },
+  {
+   "de": "ie_prim",
+   "a": "cpsam",
+   "km_via": 0.352,
+   "km_red_nueva": 0.313,
+   "km_urbanos": 0.313,
+   "km_rurales": 0.0,
+   "costo_red": 53504469,
+   "costo_sede": 41145773,
+   "costo_total": 106008271
+  },
+  {
+   "de": "bomberos",
+   "a": "ie_led",
+   "km_via": 0.412,
+   "km_red_nueva": 0.399,
+   "km_urbanos": 0.399,
+   "km_rurales": 0.0,
+   "costo_red": 68205377,
+   "costo_sede": 41145773,
+   "costo_total": 122473288
+  },
+  {
+   "de": "aguas_aseo_sede",
+   "a": "cic",
+   "km_via": 0.423,
+   "km_red_nueva": 0.383,
+   "km_urbanos": 0.383,
+   "km_rurales": 0.0,
+   "costo_red": 65470324,
+   "costo_sede": 53010923,
+   "costo_total": 132698997
+  },
+  {
+   "de": "cic",
+   "a": "ie_megacolegio",
+   "km_via": 0.348,
+   "km_red_nueva": 0.196,
+   "km_urbanos": 0.196,
+   "km_rurales": 0.0,
+   "costo_red": 33504396,
+   "costo_sede": 53010923,
+   "costo_total": 96897157
+  },
+  {
+   "de": "policia",
+   "a": "hospital",
+   "km_via": 0.557,
+   "km_red_nueva": 0.53,
+   "km_urbanos": 0.53,
+   "km_rurales": 0.0,
+   "costo_red": 90598621,
+   "costo_sede": 43063283,
+   "costo_total": 149701333
+  },
+  {
+   "de": "hospital",
+   "a": "torre_hospital",
+   "km_via": 0.149,
+   "km_red_nueva": 0.111,
+   "km_urbanos": 0.111,
+   "km_rurales": 0.0,
+   "costo_red": 18974428,
+   "costo_sede": 62593823,
+   "costo_total": 91356441
+  },
+  {
+   "de": "hospital",
+   "a": "ptap",
+   "km_via": 2.707,
+   "km_red_nueva": 2.574,
+   "km_urbanos": 0.958,
+   "km_rurales": 1.616,
+   "costo_red": 349168802,
+   "costo_sede": 74690922,
+   "costo_total": 474722891
+  },
+  {
+   "de": "ptap",
+   "a": "captacion",
+   "km_via": 0.124,
+   "km_red_nueva": 0.111,
+   "km_urbanos": 0.0,
+   "km_rurales": 0.111,
+   "costo_red": 12735294,
+   "costo_sede": 53010923,
+   "costo_total": 73635763
+  },
+  {
+   "de": "ptap",
+   "a": "tanque_elevado",
+   "km_via": 1.051,
+   "km_red_nueva": 0.541,
+   "km_urbanos": 0.0,
+   "km_rurales": 0.541,
+   "costo_red": 62070216,
+   "costo_sede": 2152090,
+   "costo_total": 71928982,
+   "nota": "solo telemetría; se alimenta en baja tensión desde la planta"
+  },
+  {
+   "de": "tanque_elevado",
+   "a": "relleno_parque",
+   "km_via": 0.639,
+   "km_red_nueva": 0.614,
+   "km_urbanos": 0.0,
+   "km_rurales": 0.614,
+   "costo_red": 70445679,
+   "costo_sede": 2152090,
+   "costo_total": 81309502,
+   "nota": "su subestación de 800 kW y la línea a EPM están en el presupuesto del parque"
+  },
+  {
+   "de": "relleno_parque",
+   "a": "ptap_veredal",
+   "km_via": 2.676,
+   "km_red_nueva": 2.588,
+   "km_urbanos": 0.0,
+   "km_rurales": 2.588,
+   "costo_red": 296927391,
+   "costo_sede": 53010923,
+   "costo_total": 391930911
+  }
+ ],
+ "supuestos": [
+  "Distancias por la vía de OpenStreetMap y árbol de mínima longitud (scripts/geo/red_distancias.py); km urbanos a menos de 1.1 km del centro.",
+  "La subestación de EPM no se pudo ubicar con certeza: la red arranca en la alcaldía (CCED) y su enlace a la subestación se suma cuando se conozca.",
+  "Un transformador nuevo por sede; si una sede ya tiene transformador propio con capacidad, ese ítem se descuenta.",
+  "El tramo al parque del relleno tiene su línea y subestación en el presupuesto del parque (docs/12); aquí se cuenta solo si se construye como parte de esta red.",
+  "Fibra ADSS sobre los postes de la red nueva (sin arriendo); sobre postes de EPM se paga arriendo (tope de la CRC).",
+  "No incluye la generación solar ni las baterías (van en cada sede) ni la red subterránea (unas 7 veces más cara por km)."
+ ]
+}

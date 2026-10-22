@@ -3,7 +3,7 @@
 // adecuaciones: solar en cubiertas, marquesinas, baterías, inversores, cubiertas nuevas y cargadores.
 // Se recorre sede por sede (‹ ›, flechas del teclado, la lista o doble clic) y cada sede muestra su conexión:
 // tablero con medidor bidireccional, gateway IoT y enlace de datos al centro de control (CCED) en la alcaldía.
-import { THREE, Stage, engine, tokens, onTheme, mat, arc, fmtN, gsap, solidBox, conexionLabels } from '../core.js';
+import { THREE, Stage, engine, tokens, onTheme, mat, arc, fmtN, fmtCOP, gsap, solidBox, conexionLabels } from '../core.js';
 import { Line2 } from 'three/addons/lines/Line2.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
@@ -410,12 +410,22 @@ export function mount(root) {
   const redSlot = root.querySelector('[data-slot="ciudad.red"]');
   if (redSlot && RED?.arbol) {
     const A = RED.arbol, P = RED.presupuesto;
+    const costo = Object.fromEntries((P?.por_tramo || []).map((t) => [`${t.de}>${t.a}`, t]));
+    const caps = P?.capitulos || [], maxCap = Math.max(1, ...caps.map((c) => c.total));
     redSlot.innerHTML = `<p class="note">${RED.metodo || ''}</p>
-      <div class="tbl-wrap"><table><thead><tr><th>Tramo</th><th class="n">km por la vía</th><th class="n">km en línea recta</th><th class="n">km de red nueva</th></tr></thead><tbody>
-      ${A.tramos.map((t) => `<tr><td>${nombreDe(t.de)} → ${nombreDe(t.a)}</td><td class="n">${fmtN(t.km_via, 3)}</td><td class="n">${fmtN(t.km_recta, 3)}</td><td class="n">${fmtN(t.km_red_nueva, 3)}</td></tr>`).join('')}
-      <tr><td><b>Total de la red propuesta</b></td><td class="n">${fmtN(A.km_suma_tramos, 2)}</td><td></td><td class="n"><b>${fmtN(A.km_total_red, 2)} km</b></td></tr></tbody></table></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Tramo</th><th class="n">km por la vía</th><th class="n">km en línea recta</th><th class="n">km de red nueva</th>${P ? '<th class="n">Costo del tramo</th>' : ''}</tr></thead><tbody>
+      ${A.tramos.map((t) => { const c = costo[`${t.de}>${t.a}`]; return `<tr><td>${nombreDe(t.de)} → ${nombreDe(t.a)}${c?.nota ? `<br><small class="note">${c.nota}</small>` : ''}</td><td class="n">${fmtN(t.km_via, 3)}</td><td class="n">${fmtN(t.km_recta, 3)}</td><td class="n">${fmtN(t.km_red_nueva, 3)}</td>${P ? `<td class="n">${c ? fmtCOP(c.costo_total) : '—'}</td>` : ''}</tr>`; }).join('')}
+      <tr><td><b>Total de la red propuesta</b></td><td class="n">${fmtN(A.km_suma_tramos, 2)}</td><td></td><td class="n"><b>${fmtN(A.km_total_red, 2)} km</b></td>${P ? `<td class="n"><b>${fmtCOP(P.totales.total_cop_2026)}</b></td>` : ''}</tr></tbody></table></div>
       <p><button type="button" class="btn ghost" data-csv>Descargar matriz de distancias entre todas las sedes (CSV)</button></p>
-      ${P ? '' : '<p class="note">El presupuesto por capítulos e ítems con precios unitarios de Antioquia 2026 se agrega cuando terminen de verificarse los precios.</p>'}`;
+      ${P ? `<h4>Presupuesto por capítulos (por mayores) e ítems (por menores)</h4>
+        <p class="note">${fmtN(P.km_urbanos, 2)} km urbanos y ${fmtN(P.km_rurales, 2)} km rurales de red nueva · ${P.moneda} · ${P.precision}</p>
+        <div class="barras">${caps.map((c) => `<details class="fold"><summary><span class="bar-l">${c.nombre}${c.unidad_resumen ? `<br><small class="note">${c.unidad_resumen}</small>` : ''}</span><span class="bar"><i style="width:${(100 * c.total) / maxCap}%"></i></span><span class="bar-v">${fmtCOP(c.total)}</span></summary>
+          <div class="tbl-wrap"><table><thead><tr><th>Ítem</th><th>Und.</th><th class="n">Cantidad</th><th class="n">Valor unitario</th><th class="n">Total</th></tr></thead><tbody>
+          ${c.items.map((i) => `<tr><td>${i.descripcion}${i.nota ? `<br><small class="note">${i.nota}</small>` : ''}</td><td>${i.unidad}</td><td class="n">${fmtN(i.cantidad, 2)}</td><td class="n">${fmtCOP(i.valor_unitario)}</td><td class="n">${fmtCOP(i.total)}</td></tr>`).join('')}
+          </tbody></table></div></details>`).join('')}</div>
+        <dl class="kv" style="margin-top:10px">${P.indirectos.map((i) => `<dt>${i.nombre} (${fmtN(i.porcentaje * 100, 1)} % de ${i.base})</dt><dd>${fmtCOP(i.total)}</dd>`).join('')}
+          <dt><b>Total</b></dt><dd><b>${fmtCOP(P.totales.total_cop_2026)}</b></dd><dt>Rango (−30 % / +50 %)</dt><dd>${fmtCOP(P.totales.rango_cop_2026[0])} a ${fmtCOP(P.totales.rango_cop_2026[1])}</dd></dl>
+        <details class="fold"><summary>Supuestos</summary><ul class="tight">${P.supuestos.map((x) => `<li>${x}</li>`).join('')}</ul></details>` : '<p class="note">El presupuesto por capítulos e ítems se agrega cuando terminen de verificarse los precios.</p>'}`;
     redSlot.querySelector('[data-csv]').addEventListener('click', () => {
       const ids = RED.puntos.map((p) => p.id), head = ['km por la vía', ...ids.map(nombreDe)];
       const rows = [head, ...RED.matriz_via_km.map((r, i) => [nombreDe(ids[i]), ...r.map((v) => String(v).replace('.', ','))])];

@@ -519,111 +519,128 @@
  },
  {
   "id": "captacion",
-  "nombre": "Captación del acueducto en la Laguna del Miedo (barcazas de bombeo)",
+  "nombre": "Captación por pozos profundos junto a la PTAP",
   "nodo_microrred": "ptap",
-  "lat": 7.0175,
-  "lon": -73.9468,
+  "lat": 7.008735,
+  "lon": -73.932518,
   "archivo": "models/edificios/captacion_lod0.glb",
   "archivo_lod1": "models/edificios/captacion_lod1.glb",
-  "bytes": 109480,
-  "bytes_lod1": 67904,
-  "bytes_sin_comprimir": 1473060,
-  "triangulos": 17722,
-  "triangulos_lod1": 3030,
+  "bytes": 45596,
+  "bytes_lod1": 35756,
+  "bytes_sin_comprimir": 246472,
+  "triangulos": 2810,
+  "triangulos_lod1": 952,
   "extensiones": [
-   "EXT_mesh_gpu_instancing",
    "KHR_draco_mesh_compression"
   ],
-  "nodos_instanciados": 2,
+  "nodos_instanciados": 0,
   "tamano": [
-   84.2,
-   5.3,
-   34
+   22.5,
+   5.4,
+   9.7
   ],
-  "modulos": 48,
-  "kwp_modelado": 26.4,
+  "modulos": 0,
+  "kwp_modelado": 0,
   "kwp_plan": 75,
-  "kwp_factible": 26.4,
+  "kwp_factible": 0,
   "bess": null,
   "conexion": {
    "tablero": [
-    25.83,
-    1.4,
-    4.93
+    -5,
+    1.3,
+    2.88
    ],
    "gateway": [
-    25.7,
-    1.71,
-    5.5
+    -4.42,
+    1.61,
+    2.95
    ],
    "red": [
-    35.27,
-    4.1,
-    0.98
+    -5.58,
+    2.75,
+    2.38
    ],
-   "nota": "Punto de conexión: poste existente de la red a 9 m del muro (Poste de la red con luminaria en la orilla (llegada de la acometida)); acometida subterránea desde el medidor y bajante por el poste."
+   "nota": "Sin poste cercano en la especificación: el punto de conexión es la acometida en la fachada de Caseta de tableros de los pozos (obra nueva: tablero de distribución, medición, protecciones y espacio para los inversores del arreglo del claro) que da a la puerta principal."
   },
-  "confianza": "alta",
+  "confianza": "baja",
   "fuentes": [
    {
     "tipo": "web",
-    "fecha": "2018-05",
-    "nota": "Superservicios, evaluación integral (visita del 17 y 18 de mayo de 2018), páginas 22 a 26: 'dos bocatomas tipo barcaza flotante, acondicionadas con dos bombas de succión cada una' para el acueducto urbano (24 L/s) y el veredal (8,5 L/s); tres bombas, de las que operan dos que se alternan cada 24 horas; caudal de bombeo de diseño 40,9 L/s, altura de bombeo 32,8 m, energía eléctrica. Página 24: Imagen 14 'Captación Laguna El Miedo' (las dos barcazas, la pasarela y el poste, vistos desde la orilla sur, junto a la caseta) e Imagen 15 'Captación tipo barcaza (2 bocatomas)' (las dos barcazas de cerca, desde una canoa al norte: armazón metálico con malla, cubierta a dos aguas, cascos oxidados y poste metálico con luminaria). Página 26: Imagen 17 'Aducción tubería 10\"' (arranque de la pasarela con la caseta de madera, la tubería negra de PEAD y las barcazas al fondo) e Imagen 18 (canoa junto a la pasarela). El levantamiento usó la Imagen 17 (citada antes por error como Imagen 14); la verificación resolvió la cámara de las Imágenes 14 y 15.",
-    "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf"
+    "fecha": "2024-06",
+    "nota": "Plan de Desarrollo Municipal 'Yondó avanza: inclusivo, productivo y competitivo' 2024–2027 (PDF de 176 páginas; diagnóstico de agua potable en la página impresa 102, página 52 del PDF): 'El servicio de agua potable se presta por horas/día; en la zona urbana, es de 18 horas de forma intermitente, ahora con mayor continuidad respecto a los años anteriores, que solo se prestaba 12 horas/día. Este aumento en la distribución se debe a que la fuente de abastecimiento, actualmente es de pozos profundos y la anterior laguna del miedo, queda como un recurso de contingencia.' También: 3.275 suscriptores urbanos y 731 en la zona rural plana; cobertura de acueducto del 61,27 % (Superservicios, 2022). El mismo plan está en la página de la Alcaldía (https://www.yondo-antioquia.gov.co/plan-de-desarrollo-2024--2027/plan-de-desarrollo-territorial-yondo-avanza-20242027).",
+    "url": "https://repositoriocdim.esap.edu.co/items/143f23fc-e675-4f46-b428-7cd698841ee2"
    },
    {
     "tipo": "web",
-    "fecha": "2018-05",
-    "nota": "Imágenes 14 y 15 del mismo informe, usadas en la verificación (data/geo/img/captacion_foto2018_laguna.jpg y captacion_foto2018_barcazas.jpg). En la 15 la cámara quedó a 1,2 m sobre el agua, 7 m al norte de la barcaza oriental, con 75° de campo horizontal; se ajustó con 14 puntos (esquinas de los cascos en la línea de agua, aleros y cumbreras) con un error medio de 3,7 píxeles y midió la altura de las barcazas. En la 14 la cámara quedó junto a la caseta, a unos 3 m sobre el agua.",
-    "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf"
-   },
-   {
-    "tipo": "web",
-    "fecha": "2020",
-    "nota": "Superservicios, evaluación integral 2020 (vigencia 2019), páginas 30 a 37: bocatoma 'de fondo' sobre la laguna con dos sistemas de bombas que operan alternados cada 24 horas; unos 30 L/s llegan a la PTAP municipal; aducción de 12\" y 10\" de 3 km; macromedidor de 8\" de la captación fuera de servicio en mayo de 2020; la PTAP veredal ya no toma de la laguna sino de un pozo. Imagen 7 (caseta de madera vista desde la loma del oriente, pasarela, tubería, las dos barcazas con cubierta clara y el poste con luminaria). Se usó para la comparación con el modelo.",
+    "fecha": "2020-09",
+    "nota": "Superservicios, evaluación integral de Aguas & Aseo de Yondó (vigencia 2019, visita y requerimiento de mayo de 2020). Página 29: 'A mayo de 2020, el prestador menciona que se está realizando la optimización del sistema de acueducto en el municipio de Yondó, la cual incluye la construcción de obras adicionales como lo son la adición de 2 pozos subterráneos, un tanque de compensación y un tanque elevado.' Página 28: en ese momento la captación urbana todavía era la bocatoma de la laguna (unos 30 L/s llegaban a la PTAP, con dos sistemas de bombas alternados cada 24 horas). Página 29, Tabla 14: PTAP municipal de 40 L/s que opera 24 horas al día. Página 26: la concesión de la laguna (Corantioquia, 28,9 L/s) estaba vencida desde 2015. Páginas 28 y 33: la PTAP veredal ya tomaba agua de un pozo a 60 m de la planta 'con una bomba tipo lapicero', con 3,5 mg/L de hierro, el mismo tipo de equipo que el usuario describe para los pozos urbanos. Página 44: el prestador esperaba mejorar presiones y continuidad 'entre 8 meses y un año' después de la optimización.",
     "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf"
    },
    {
-    "tipo": "satelite",
-    "fecha": null,
-    "nota": "Huellas medidas sobre esta imagen: cubiertas de las dos barcazas, de la caseta (girada 5,4°), línea de la pasarela y rampa del corredor.",
-    "url": null
+    "tipo": "web",
+    "fecha": "2018-10",
+    "nota": "Superservicios, evaluación integral de 2018 (visita de mayo de 2018). Página 25: el prestador buscaba 'otra fuente de captación subterránea' con Ecopetrol, que 'realizaría un aporte para la obtención no solo de una nueva fuente subterránea, sino para la optimización del sistema de acueducto desde la captación hasta el tratamiento'. Página 24, Tabla 11 (Plan Maestro): cota del tanque de la PTAP 100 m (lámina a 104 m) y de la laguna 72,5 m; el bombeo desde la laguna era de 40,9 L/s con 32,8 m de altura, 24 horas al día.",
+    "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf"
    },
    {
-    "tipo": "satelite",
-    "fecha": null,
-    "nota": "Confirma que las barcazas y la caseta seguían en 2026 (con un corrimiento de unos 2,9 m al occidente y 2,7 m al sur respecto a Google) y muestra desmontado el bosque al nororiente de la caseta, donde se proponen las mesas solares.",
-    "url": null
+    "tipo": "datos_abiertos",
+    "fecha": "2026-10",
+    "nota": "DNP, proyectos de regalías (datos básicos, seguimiento https://www.datos.gov.co/d/7mxf-bp6x y productos https://www.datos.gov.co/d/8kfp-z3my), consulta del 22 de octubre de 2026: BPIN 2019058930084 'Optimización del Acueducto Fase 1 del Municipio de Yondó', objetivo 'Mejorar el suministro del servicio de agua potable en el área urbana del municipio de Yondó Antioquia', 10.277 beneficiarios, valor $9.938.482.458 (pesos corrientes; unos $14.961 millones de 2026 con el IPC de 2020, cálculo propio), avance físico 100 %, estado terminado y cerrado; producto 'acueductos optimizados: 1'. Es la obra en la que la Superservicios ubicó los dos pozos y el tanque de compensación. Los datos abiertos no detallan profundidad, caudal ni equipos.",
+    "url": "https://www.datos.gov.co/d/cf9k-55fw"
+   },
+   {
+    "tipo": "datos_abiertos",
+    "fecha": "2026-10",
+    "nota": "DNP, contratos del BPIN 2019058930084: obra 'Optimización acueducto fase 1 municipio de Yondó, Antioquia' con Kaliza Arquitectos S.A.S. (contrato 008-2020, $9.456.542.162 corrientes, unos $14.236 millones de 2026, liquidado) e interventoría de CMG Ingenieros S.A.S. ($481.940.290 corrientes, unos $725 millones de 2026, liquidado), ambos por la Asociación de Municipios del Magdalena Medio (AMMA).",
+    "url": "https://www.datos.gov.co/d/uwns-mbwd"
    },
    {
     "tipo": "web",
-    "fecha": "2018-07",
-    "nota": "Prestación de servicios como operador de la bocatoma (Aguas y Aseo de Yondó). Hay contratos iguales en diciembre de 2017 (18-4-7520438 y 18-4-7520160): la captación tiene operador permanente, lo que explica la caseta.",
-    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-4-8213567"
+    "fecha": "2020-02",
+    "nota": "SECOP I (vía datos abiertos https://www.datos.gov.co/d/f789-7hwg; la página de SECOP responde 403 a consultas automáticas): AMMA, 'Administración delegada del proyecto Optimización del acueducto fase 1 del municipio de Yondó', BPIN 2019058930084, ejecución del 28 de febrero de 2020 al 28 de febrero de 2021 (12 meses). La interventoría es la constancia 20-13-10499175, con el mismo plazo. Da la ventana de construcción de los pozos: 2020–2021.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-13-10492691"
    },
    {
     "tipo": "web",
-    "fecha": "2019-07",
-    "nota": "Obras de rehabilitación de la capacidad hídrica de la Laguna del Miedo ($2.471 millones), con interventoría (19-4-9618885). Puede explicar los cambios de la orilla y los claros redondos que se ven en la imagen de 2026.",
-    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-4-9754238"
+    "fecha": "2018-09",
+    "nota": "SECOP I: Aguas y Aseo de Yondó, 'Estudios y diseños para la optimización del acueducto municipal de Yondó' con Ingeniería y Construcciones Óptimas S.A.S., $1.237.455.369 corrientes (unos $1.977 millones de 2026), del 26 de septiembre de 2018 al 26 de marzo de 2019, liquidado. Los diseños de los pozos (profundidad, caudal, bombas) deben estar en ese contrato; no son públicos en línea.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-4-8358866"
    },
    {
     "tipo": "web",
-    "fecha": "2022-09",
-    "nota": "Obras de limpieza y mantenimiento de la laguna en el área de la bocatoma y de canales naturales de agua lluvia ($103 millones).",
-    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.3287043"
+    "fecha": "2018-06",
+    "nota": "SECOP I: Alcaldía de Yondó, 'Construcción de un pozo profundo cumpliendo con lo establecido en la Resolución 330 de 2017 ... en el municipio de Yondó', Unión Temporal Aguas Subterráneas, $135.999.487 corrientes (unos $217 millones de 2026), del 20 de junio al 20 de julio de 2018, liquidado. No dice dónde se perforó: puede ser un pozo de prueba de la captación urbana o de otro acueducto.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-11-8084637"
    },
    {
     "tipo": "web",
-    "fecha": null,
-    "nota": "Caracterización semestral del agua cruda de la Laguna del Miedo para los acueductos urbano y veredal: la laguna sigue siendo la fuente del acueducto urbano.",
+    "fecha": "2020-07",
+    "nota": "SECOP I: Aguas y Aseo de Yondó compró 'una electrobomba de 60 HP, velocidad 3500 RPM, voltaje fases 220/3/60 Hz para el sistema de bombeo del acueducto urbano' ($20.000.000 corrientes). No dice si es para los pozos, para la laguna o para el bombeo de la PTAP al tanque elevado; si fuera una bomba de pozo, la carga sería unas tres veces la estimada aquí.",
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-4-11200214"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2026",
+    "nota": "SECOP II: caracterización semestral del agua cruda de la Laguna del Miedo para los acueductos urbano y veredal. La empresa sigue vigilando la laguna, lo que cuadra con que sea la reserva. En 2022 un contrato de químicos (CO1.NTC.3246814) todavía hablaba del 'agua cruda proveniente de la Laguna del Miedo'.",
     "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10238025"
    },
    {
-    "tipo": "web",
+    "tipo": "satelite",
     "fecha": null,
-    "nota": "Laguna del Miedo (7,021775, −73,949444). La captación está en el brazo sur, unos 560 m al sur-suroriente de este punto.",
-    "url": "https://www.google.com/maps/place/?q=place_id:ChIJ1Q12BADvQo4R-pjtf-s3gAc"
+    "nota": "Búsqueda de los cabezales en el claro suroccidental, alrededor de la planta y en la losa de unos 40 × 15 m que está 130 m al suroriente. Imágenes: data/geo/img/pozos_g21_claro.png, pozos_g21_claro_raw.png, pozos_g22_so.png, pozos_g22_e.png, pozos_g22_norte.png, pozos_g22_ptap_o.png, pozos_g21_ramal.png, pozos_g20_se.png y pozos_g21_losa_se_raw.png.",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "El claro suroccidental, el ramal y sus construcciones todavía no existen: las obras de los pozos son posteriores a enero de 2020 (data/geo/img/pozos_e18_claro.png y pozos_e19_claro.png).",
+    "url": null
+   },
+   {
+    "tipo": "elevacion",
+    "fecha": "2026-10",
+    "nota": "Modelo SRTM de 30 m (año 2000, error de ±5 a 10 m y afectado por el bosque): el claro de los pozos queda a unos 79–83 m y la PTAP a unos 93 m, es decir, unos 10 m más abajo que la planta. Solo se usa para estimar la altura de bombeo.",
+    "url": "https://api.opentopodata.org/v1/srtm30m"
    }
   ]
  },
@@ -2832,11 +2849,11 @@
   "lon": -73.932,
   "archivo": "models/edificios/ptap_lod0.glb",
   "archivo_lod1": "models/edificios/ptap_lod1.glb",
-  "bytes": 116196,
-  "bytes_lod1": 72148,
-  "bytes_sin_comprimir": 911772,
-  "triangulos": 11727,
-  "triangulos_lod1": 3669,
+  "bytes": 115656,
+  "bytes_lod1": 72000,
+  "bytes_sin_comprimir": 904320,
+  "triangulos": 11643,
+  "triangulos_lod1": 3613,
   "extensiones": [
    "EXT_mesh_gpu_instancing",
    "KHR_draco_mesh_compression"
@@ -2847,10 +2864,10 @@
    9.3,
    101
   ],
-  "modulos": 114,
-  "kwp_modelado": 62.7,
+  "modulos": 104,
+  "kwp_modelado": 57.2,
   "kwp_plan": 150,
-  "kwp_factible": 62.7,
+  "kwp_factible": 57.2,
   "bess": {
    "kwh": 150,
    "kw": 75,
@@ -2897,7 +2914,7 @@
    {
     "tipo": "web",
     "fecha": "2020",
-    "nota": "Superservicios, evaluación integral 2020 (vigencia 2019): PTAP convencional de 40 L/s, de concreto reforzado, construida en 2003 en la vereda Las Américas; aducción de 3 km desde la Laguna del Miedo; tanque de 1.125 m³ dentro de la planta y tanque elevado de 350 m³ en la parte alta de Las Américas; caseta con laboratorio, cuarto de cloro, bodega y baños. Fotos de la torre de aireación, de los sedimentadores con polisombra, de los filtros y de la losa del tanque con baranda azul.",
+    "nota": "Superservicios, evaluación integral 2020 (vigencia 2019): PTAP convencional de 40 L/s, de concreto reforzado, construida en 2003 en la vereda Las Américas; aducción de 3 km desde la Laguna del Miedo (la captación de entonces; en la página 29 dice que la optimización en obra añadía 2 pozos subterráneos, un tanque de compensación y un tanque elevado); tanque de 1.125 m³ dentro de la planta y tanque elevado de 350 m³ en la parte alta de Las Américas; caseta con laboratorio, cuarto de cloro, bodega y baños. Fotos de la torre de aireación, de los sedimentadores con polisombra, de los filtros y de la losa del tanque con baranda azul.",
     "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf"
    },
    {
@@ -2915,7 +2932,7 @@
    {
     "tipo": "web",
     "fecha": null,
-    "nota": "Laguna del Miedo (7,021775, −73,949444), la fuente: 2,4 km en línea recta al noroccidente de la planta.",
+    "nota": "Laguna del Miedo (7,021775, −73,949444), fuente del acueducto hasta que entraron los pozos (hoy es la reserva, según el Plan de Desarrollo 2024–2027): 2,4 km en línea recta al noroccidente de la planta.",
     "url": "https://www.google.com/maps/place/?q=place_id:ChIJ1Q12BADvQo4R-pjtf-s3gAc"
    },
    {
@@ -2933,7 +2950,7 @@
    {
     "tipo": "web",
     "fecha": "2018-09",
-    "nota": "Estudios y diseños para la optimización del acueducto municipal ($1.237 millones). La Superservicios (2020) dice que la optimización incluye dos pozos, un tanque de compensación y un tanque elevado.",
+    "nota": "Estudios y diseños para la optimización del acueducto municipal ($1.237 millones). La Superservicios (2020) dice que la optimización incluye dos pozos, un tanque de compensación y un tanque elevado. La obra se hizo con regalías (BPIN 2019058930084, 'Optimización del acueducto fase 1', Kaliza Arquitectos S.A.S. por medio de la AMMA, 2020–2021, terminada) y los pozos están en el claro suroccidental de la planta (captacion.json).",
     "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-4-8358866"
    },
    {
@@ -2977,6 +2994,12 @@
     "fecha": "2014-01",
     "nota": "Verificación: a 985 m; la subestación y los árboles tapan la loma de la planta.",
     "url": "https://www.google.com/maps/@?api=1&map_action=pano&pano=HQ5eNOXg-YI0wt0n1HiEVQ&heading=319"
+   },
+   {
+    "tipo": "web",
+    "fecha": "2024-06",
+    "nota": "Plan de Desarrollo Municipal 2024–2027 'Yondó avanza', página impresa 102 (página 52 del PDF): en la zona urbana el agua llega 18 horas al día (antes 12) 'debido a que la fuente de abastecimiento, actualmente es de pozos profundos y la anterior laguna del miedo, queda como un recurso de contingencia'.",
+    "url": "https://repositoriocdim.esap.edu.co/items/143f23fc-e675-4f46-b428-7cd698841ee2"
    }
   ]
  },
@@ -3293,6 +3316,96 @@
     "fecha": null,
     "nota": "Perfiles de brillo cada 0,25 m. Medidas respecto al ancla (u a lo largo del eje, v hacia los 80°): alero occidental v = −4,6; cumbrera v = +0,1 (recta entre u = +2 y u = −12, así que el rumbo de 350° está bien); borde norte u = +4,75 (Esri, ya alineado: +4,9); borde oriental del ala v = 9,5 en Google (empieza una franja clara de 0,8 m) y 10,0–10,4 en Esri y Bing; vecino de cubierta blanca desde u = −5,4 hacia el sur y desde v = 3,6 hacia el oriente; borde de la calzada de la Carrera 56 en v = −9,75. Desfases medidos por correlación: Esri queda 1,5 m al oriente y 1,5 m al norte de Google; Bing, 1,6 m al oriente y 2,4 m al sur.",
     "url": null
+   }
+  ]
+ },
+ {
+  "id": "relleno_parque",
+  "nombre": "Relleno sanitario Las Américas → Parque ecotecnológico y granja solar de Yondó",
+  "nodo_microrred": null,
+  "lat": 7.014,
+  "lon": -73.9342,
+  "archivo": "models/edificios/relleno_parque_lod0.glb",
+  "archivo_lod1": "models/edificios/relleno_parque_lod1.glb",
+  "bytes": 436632,
+  "bytes_lod1": 209372,
+  "bytes_sin_comprimir": 6700036,
+  "triangulos": 95148,
+  "triangulos_lod1": 36376,
+  "extensiones": [
+   "EXT_mesh_gpu_instancing",
+   "KHR_draco_mesh_compression"
+  ],
+  "nodos_instanciados": 4,
+  "tamano": [
+   264,
+   6.8,
+   322.9
+  ],
+  "modulos": 1892,
+  "kwp_modelado": 1040.6,
+  "kwp_plan": 1000,
+  "kwp_factible": 1040.6,
+  "bess": {
+   "kwh": 100,
+   "kw": 50,
+   "tipo": "contenedor_10"
+  },
+  "conexion": {
+   "tablero": [
+    40,
+    1.3,
+    44.38
+   ],
+   "gateway": [
+    39.42,
+    1.61,
+    44.3
+   ],
+   "red": [
+    40.02,
+    10.1,
+    51.76
+   ],
+   "nota": "Punto de conexión: poste existente de la red a 8 m del muro (Poste de 13,2 kV con medidor bidireccional (llegada de la red de EPM)); acometida subterránea desde el medidor y bajante por el poste."
+  },
+  "confianza": "media",
+  "fuentes": [
+   {
+    "tipo": "web",
+    "fecha": "2018-05",
+    "nota": "Evaluación integral de Aguas y Aseo de Yondó, págs. 51–52 y 68–74: relleno Las Américas, 167 t/mes, licencia 130ZF-1311-6219 (12-nov-2013, 10 años, reducida a 3 años en 2014), sin báscula ni cobertura diaria, lixiviados recirculados desde un pozo, chimeneas de piedra, etapas de 1.840, 9.483, 4.243 y 2.893 m², vida útil de 11,8 años (manual) frente a 3 años (Corantioquia).",
+    "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf"
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Plataformas grises, piscinas, vía interna, celda norte con pasto, área de préstamo al noroccidente y caseta en la entrada norte.",
+    "url": null
+   },
+   {
+    "tipo": "satelite",
+    "fecha": null,
+    "nota": "Plataforma parda y blanca de unas 3–4 ha alrededor de las celdas y otra mancha parda de unas 2,7 ha al sur de las lagunas (donde el proyecto ubica los servicios), en total unas 6,6 ha (estimación por color sobre la imagen); piscinas oscuras con agua, vía de acceso con cerca por el noroccidente y vía perimetral en arena por el oriente.",
+    "url": null
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SUI, registro de sitios de disposición final: NUSD 2220805893, Las Américas, propietario Municipio, capacidad de diseño 81.147 m³, vida útil hasta 31-dic-2023, en operación (certificado 18-jun-2021).",
+    "url": "https://www.datos.gov.co/resource/84tn-nnhf.json"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SUI, autorizaciones ambientales: licencia de Corantioquia del 12-nov-2013 con vigencia hasta el 12-nov-2023.",
+    "url": "https://www.datos.gov.co/resource/wu2p-623h.json"
+   },
+   {
+    "tipo": "web",
+    "fecha": null,
+    "nota": "SUI, toneladas dispuestas por año: 1.647 (2011) a 4.562 (2015); 3.316 (2020); 3.761 (2021).",
+    "url": "https://www.datos.gov.co/resource/urvy-i3ii.json"
    }
   ]
  },
