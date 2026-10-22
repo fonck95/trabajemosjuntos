@@ -7,6 +7,7 @@ import { THREE, Stage, engine, tokens, onTheme, mat, arc, fmtN, gsap, solidBox, 
 import { Line2 } from 'three/addons/lines/Line2.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { progressiveLOD } from '../assets.js';
 import { EDIFICIOS, CALLES, MICRORRED, RED } from '../data.js';
 
@@ -202,6 +203,59 @@ export function mount(root) {
     lab.element.title = `${nombreDe(t.de)} → ${nombreDe(t.a)}: ${fmtN(t.km_via, 3)} km por la vía (${fmtN(t.km_recta, 3)} km en línea recta)`;
     return { t, line, lab };
   });
+  // infraestructura de la red propuesta: postes de concreto de 12 m con cruceta y tres aisladores, tres conductores con
+  // flecha entre postes y un transformador en el poste más cercano a cada sede. Postes a 4 m del eje de la vía, cada
+  // ~40 m en el casco urbano y ~70 m en la zona rural; donde varios tramos comparten calle se reutiliza el poste
+  const postes = [], spans = new Set(), trafo = new Set();
+  const posteCerca = (x, z) => postes.findIndex((p) => Math.hypot(p.x - x, p.z - z) < 14);
+  const ponerPoste = (x, y, dx, dy) => { const z = -y, k = posteCerca(x, z); if (k >= 0) return k; postes.push({ x, z, dx, dz: -dy }); return postes.length - 1; };
+  for (const r of tramos) {
+    const pts = r.t.ruta.slice(1, -1); if (pts.length < 2) continue;
+    const ids = []; let next = 0, acc = 0;
+    for (let k = 0; k < pts.length - 1; k++) {
+      const [x0, y0] = pts[k], [x1, y1] = pts[k + 1], L = Math.hypot(x1 - x0, y1 - y0); if (L < 0.5) continue;
+      const ux = (x1 - x0) / L, uy = (y1 - y0) / L, vano = Math.hypot(x0, y0) < 1000 ? 40 : 70;
+      while (next <= acc + L) { const s = next - acc; ids.push(ponerPoste(x0 + ux * s + uy * 4, y0 + uy * s - ux * 4, ux, uy)); next += vano; }
+      acc += L;
+    }
+    const [xe, ye] = pts[pts.length - 1], [xp, yp] = pts[pts.length - 2], Le = Math.hypot(xe - xp, ye - yp) || 1;
+    ids.push(ponerPoste(xe + ((ye - yp) / Le) * 4, ye - ((xe - xp) / Le) * 4, (xe - xp) / Le, (ye - yp) / Le));
+    trafo.add(ids[ids.length - 1]);
+    for (let k = 0; k < ids.length - 1; k++) if (ids[k] !== ids[k + 1]) spans.add(ids[k] < ids[k + 1] ? `${ids[k]}-${ids[k + 1]}` : `${ids[k + 1]}-${ids[k]}`);
+  }
+  if (postes.length) {
+    const H = 12, yC = 11.35, fases = [-1.0, 0, 1.0];
+    const mPoste = mat(new THREE.Color('#a9aba5'), { roughness: 0.9 }), mHerraje = mat(new THREE.Color('#8d949b'), { roughness: 0.45, metalness: 0.6 });
+    const mAisl = mat(new THREE.Color('#dcd6c8'), { roughness: 0.35 }), mTrafo = mat(new THREE.Color('#7f878e'), { roughness: 0.5, metalness: 0.4 });
+    const gPoste = new THREE.CylinderGeometry(0.1, 0.17, H, 8).translate(0, H / 2, 0);
+    const gCruceta = mergeGeometries([new THREE.BoxGeometry(2.4, 0.1, 0.1).translate(0, yC, 0), new THREE.BoxGeometry(0.06, 0.06, 0.9).rotateX(0.75).translate(0.55, yC - 0.33, 0), new THREE.BoxGeometry(0.06, 0.06, 0.9).rotateX(0.75).translate(-0.55, yC - 0.33, 0)].map((g) => g.toNonIndexed()));
+    const gAisl = mergeGeometries(fases.map((f) => new THREE.CylinderGeometry(0.06, 0.08, 0.28, 8).translate(f, yC + 0.19, 0).toNonIndexed()));
+    const gTrafo = mergeGeometries([new THREE.CylinderGeometry(0.36, 0.36, 0.95, 14).translate(0, 9.3, 0.5), new THREE.BoxGeometry(0.3, 0.12, 0.3).translate(0, 8.75, 0.32), new THREE.CylinderGeometry(0.04, 0.04, 0.3, 6).translate(0, 9.92, 0.5)].map((g) => g.toNonIndexed()));
+    const inst = (g, m, idx) => {
+      const im = new THREE.InstancedMesh(g, m, idx.length), m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+      idx.forEach((k, i) => { const p = postes[k]; q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(p.dx, p.dz)); m4.compose(new THREE.Vector3(p.x, 0, p.z), q, new THREE.Vector3(1, 1, 1)); im.setMatrixAt(i, m4); });
+      im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere(); redG.add(im); st.freeze(im); return im;
+    };
+    const todos = postes.map((_, k) => k);
+    inst(gPoste, mPoste, todos); inst(gCruceta, mHerraje, todos); inst(gAisl, mAisl, todos); inst(gTrafo, mTrafo, [...trafo]);
+    // conductores: tres fases por vano con flecha, medidas sobre la perpendicular del vano (no se cruzan)
+    const pos = [];
+    for (const key of spans) {
+      const [a, b] = key.split('-').map(Number), A = postes[a], B = postes[b], L = Math.hypot(B.x - A.x, B.z - A.z); if (L < 1) continue;
+      const px = -(B.z - A.z) / L, pz = (B.x - A.x) / L, sag = 0.3 + L * 0.006;
+      for (const f of fases) {
+        let prev = null;
+        for (let i = 0; i <= 8; i++) {
+          const u = i / 8, x = A.x + (B.x - A.x) * u + px * f, z = A.z + (B.z - A.z) * u + pz * f, y = yC + 0.3 - sag * 4 * u * (1 - u);
+          if (prev) pos.push(...prev, x, y, z); prev = [x, y, z];
+        }
+      }
+    }
+    const gC = new THREE.BufferGeometry(); gC.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    const cond = new THREE.LineSegments(gC, new THREE.LineBasicMaterial({ color: 0x2c3036, transparent: true, opacity: 0.85 }));
+    redG.add(cond); st.freeze(cond);
+    st.updateShadows();
+  }
   let showRed = true;
   const verRed = (v) => { showRed = v; redG.visible = v; tramos.forEach((r) => { r.lab.visible = v; }); st.invalidate(); };
   st.onFrame(() => { if (showRed) tramos.forEach((r) => r.line.material.resolution.set(el.clientWidth, el.clientHeight)); return false; });
