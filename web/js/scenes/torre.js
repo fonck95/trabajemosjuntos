@@ -4,7 +4,7 @@
 // color de grupo de la Res. 1633 de 2025 y su área) y "Laboratorio" (el piso 2 con mesones y analizadores).
 // Los datos del proyecto (programa, norma, dotación, laboratorio, presupuesto, APU, financiación y proyectos) vienen de
 // data/proyectos/torre_hospital/ y se cargan aparte (data/torre.json) al abrir la vista.
-import { THREE, Stage, tokens, onTheme, mat, fmtN, fmtCOP, gsap, solidBox } from '../core.js';
+import { THREE, Stage, tokens, onTheme, mat, box, fmtN, fmtCOP, gsap, solidBox } from '../core.js';
 import { progressiveLOD } from '../assets.js';
 import { EDIFICIOS } from '../data.js';
 
@@ -27,7 +27,7 @@ const cop = (v) => (v == null || Number.isNaN(+v) ? '—' : fmtCOP(+v));
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [-78, 52, 70], target: [-2, 7, -2], fov: 36, minDist: 6, maxDist: 500, tone: 'aces', exposure: 1.05, fit: 0.85, declutter: ['lbl-node'] });
+  const st = new Stage(el, { cam: [-78, 52, 70], target: [-2, 7, -2], fov: 36, minDist: 6, maxDist: 500, tone: 'aces', exposure: 1.05, fit: 0.85, declutter: ['lbl-node', 'lbl-room'] });
   const T = tokens(), S = st.scene;
   const sc = st.sunLight.shadow.camera; Object.assign(sc, { left: -90, right: 90, top: 90, bottom: -90, near: 1, far: 400 });
   st.sunLight.position.set(60, 120, 40); st.sunLight.shadow.mapSize.set(2048, 2048);
@@ -47,6 +47,7 @@ export function mount(root) {
     g.add(progressiveLOD([{ url: HOS.archivo, distance: 0 }, { url: HOS.archivo_lod1, distance: 300 }], (lod) => {
       // del hospital actual solo se ve el edificio (sus paneles y equipos son de otro proyecto)
       lod.traverse((o) => { if (o.name === 'adecuaciones') o.visible = false; });
+      arboles();
       st.updateShadows();
     }));
   }
@@ -64,6 +65,8 @@ export function mount(root) {
     });
     const conPisos = modo === 'pisos' || modo === 'laboratorio';
     gPisos.visible = conPisos;
+    pisos.forEach((p) => { p.g.visible = modo !== 'laboratorio' || p.piso <= 2; });   // en «Laboratorio» los pisos 3 y 4 tapaban la vista
+    arboles();
     etiquetas();
     zonas.forEach((z) => { const on = modo !== 'laboratorio' || z.lab; z.mesh.material.opacity = on ? 1 : 0.18; z.mesh.material.transparent = !on; z.mesh.material.depthWrite = on; });
     const meta = conPisos ? (modo === 'laboratorio' ? 2.2 : 1) : 0;
@@ -71,6 +74,8 @@ export function mount(root) {
     else { sep = meta; apilar(); }
     st.updateShadows();
   }
+  // con los pisos abiertos los árboles de los dos modelos se ocultan: tapaban los servicios del primer piso
+  function arboles() { const v = modo !== 'pisos' && modo !== 'laboratorio'; S.traverse((o) => { if (/arboles$/.test(o.name)) o.visible = v; }); }
   // etiquetas: en «Pisos» el título de cada piso, los servicios grandes y todos los del piso elegido; en «Laboratorio», sus equipos
   function etiquetas() {
     const conPisos = modo === 'pisos' || modo === 'laboratorio';
@@ -114,33 +119,125 @@ export function mount(root) {
     aplicar(false);
   }
 
-  // mesones y equipos del laboratorio (piso 2), en la franja del laboratorio
+  const corto = (t, n) => { t = t.trim(); return t.length <= n ? t : `${t.slice(0, t.lastIndexOf(' ', n - 1))}…`; };
+  // Laboratorio del piso 2 en planta de corte: sus salas (laboratorio.areas) a escala de su área, con muros bajos,
+  // mesones con tope de resina y cada analizador en la sala que le corresponde; neveras, cabina de bioseguridad,
+  // autoclave, centrífugas y microscopios salen de las condiciones de cada sala
   function armarLaboratorio() {
     const z = zonas.find((q) => q.lab && q.piso === 2), p2 = pisos.find((p) => p.piso === 2);
-    if (!z || !p2 || !D?.laboratorio?.equipos?.length) return;
+    const secs = (D?.laboratorio?.areas || []).filter((a) => +a.piso === 2 && /^Laboratorio:/.test(a.seccion)).map((a) => ({ n: a.seccion.replace(/^Laboratorio:\s*/, ''), m2: +a.area_m2 || 0 }));
+    if (!z || !p2 || !secs.length) return;
     const g = new THREE.Group(); p2.g.add(g);
-    const mMeson = mat(new THREE.Color('#f4f4f2'), { roughness: 0.4 }), mEq = mat(new THREE.Color('#dfe3e6'), { roughness: 0.35, metalness: 0.1 });
-    const mPant = mat(new THREE.Color('#1f2a33'), { roughness: 0.3, emissive: new THREE.Color('#2b6cb0'), emissiveIntensity: 0.25 });
-    const x0 = XW[0] + 0.8, x1 = XW[1] - 0.8, len = z.y1 - z.y0 - 1.2;
-    for (const xm of [x0 + 0.4, x1 - 0.4, (x0 + x1) / 2]) {
-      const mz = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.9, len), mMeson); mz.position.set(xm, 0.35 + 2.2 + 0.45, -(z.y0 + z.y1) / 2); mz.castShadow = true; g.add(mz);
-    }
-    // un equipo por unidad, en orden de costo; los grandes de piso (neveras, cabinas) van aparte con su alto
-    const eqs = [...D.laboratorio.equipos].sort((a, b) => (b.precio || 0) - (a.precio || 0));
-    let k = 0;
-    const slots = Math.max(1, Math.floor(len / 1.1)) * 3;
-    eqs.forEach((e) => {
-      for (let u = 0; u < Math.min(4, +e.cantidad || 1) && k < slots; u++, k++) {
-        const fila = k % 3, pos = Math.floor(k / 3), xm = [x0 + 0.4, x1 - 0.4, (x0 + x1) / 2][fila], yz = z.y1 - 1.0 - pos * 1.1;
-        const alto = /nevera|refriger|congel|cabina|incubad/i.test(e.nombre) ? 1.6 : /microsc|centr[ií]f|ba[nñ]o|pipet/i.test(e.nombre) ? 0.35 : 0.6;
-        const caja = new THREE.Mesh(new THREE.BoxGeometry(0.62, alto, 0.7), mEq); caja.position.set(xm, 0.35 + 2.2 + 0.9 + alto / 2, -yz); caja.castShadow = true; g.add(caja);
-        if (alto >= 0.6) { const pan = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.18, 0.28), mPant); pan.position.set(xm - 0.32, 0.35 + 2.2 + 0.9 + alto * 0.7, -yz); g.add(pan); }
-        if (u === 0 && k < 18 && (e.precio || 0) > 20e6) {
-          const l = st.label(`<b>${esc(e.nombre.split(/[,(]/)[0].split(' ').slice(0, 4).join(' '))}</b>${e.capacidad ? `<br><small>${esc(String(e.capacidad).slice(0, 40))}</small>` : ''}`, 'lbl-node', [xm, 0.35 + 2.2 + 0.9 + alto + 0.9, -yz], g);
-          l.visible = false; labLab.push(l);
-        }
+    const c = (h) => new THREE.Color(h);
+    const M = {
+      pisoA: mat(c('#e3eef2'), { roughness: 0.7 }), pisoB: mat(c('#ecebe6'), { roughness: 0.8 }), muro: mat(c('#fbfbf9'), { roughness: 0.85 }),
+      meson: mat(c('#f1f2f0'), { roughness: 0.5 }), tope: mat(c('#2f3a40'), { roughness: 0.35 }), eq: mat(c('#e4e7ea'), { roughness: 0.35, metalness: 0.08 }),
+      tapa: mat(c('#b9c2c8'), { roughness: 0.3, metalness: 0.2 }), pant: mat(c('#1d2731'), { roughness: 0.3, emissive: c('#2b6cb0'), emissiveIntensity: 0.3 }),
+      vidrio: mat(c('#bfe3f0'), { roughness: 0.05, transparent: true, opacity: 0.45, depthWrite: false }), acero: mat(c('#c9ced2'), { roughness: 0.25, metalness: 0.65 }),
+      oscuro: mat(c('#3a4148'), { roughness: 0.6 }), asiento: mat(c('#2c5d8a'), { roughness: 0.6 }),
+    };
+    const Y = 0.35 + 2.2, H = 1.0;   // cara superior de la franja (piso del laboratorio en esta vista) y alto del muro de corte
+    // dos crujías: las salas analíticas al norte y las de apoyo al sur, cada una con el fondo proporcional a su área
+    const analit = /recepci|centrifug|hematol|qu[ií]mica|inmunol|microbiol|uroan/i;
+    const filas = [secs.filter((s) => analit.test(s.n)), secs.filter((s) => !analit.test(s.n))].filter((f) => f.length);
+    const X0 = XW[0] + 0.15, X1 = XW[1] - 0.15, V0 = z.y0 + 0.15, V1 = z.y1 - 0.15, tot = secs.reduce((a, s) => a + s.m2, 0) || 1;
+    const salas = [];
+    let v = V1;
+    filas.forEach((f, fi) => {
+      const m2f = f.reduce((a, s) => a + s.m2, 0), d = ((V1 - V0) * m2f) / tot;
+      let x = X0;
+      f.forEach((s) => { const w = ((X1 - X0) * s.m2) / m2f; salas.push({ ...s, x0: x, x1: x + w, v0: v - d, v1: v, fila: fi, mesa: [], piso: [] }); x += w; });
+      v -= d;
+    });
+    const muro = (xa, va, xb, vb) => {
+      const L = Math.hypot(xb - xa, vb - va), m = box(xb !== xa ? L + 0.1 : 0.1, H, xb !== xa ? 0.1 : L + 0.1, M.muro, (xa + xb) / 2, Y, -(va + vb) / 2);
+      g.add(m);
+    };
+    salas.forEach((s) => {
+      const p = box(s.x1 - s.x0, 0.02, s.v1 - s.v0, s.fila === 0 ? M.pisoA : M.pisoB, (s.x0 + s.x1) / 2, Y + 0.005, -(s.v0 + s.v1) / 2); p.castShadow = false; g.add(p);
+      if (s.x0 > X0 + 0.01) muro(s.x0, s.v0, s.x0, s.v1);
+    });
+    muro(X0, V0, X1, V0); muro(X0, V1, X1, V1); muro(X0, V0, X0, V1); muro(X1, V0, X1, V1);
+    for (let i = 1; i < filas.length; i++) { const b = salas.find((s) => s.fila === i); muro(X0, b.v1, X1, b.v1); }
+
+    // cada analizador a su sala; lo que no encaje va a química
+    const sala = (re) => salas.find((s) => re.test(s.n)) || salas.find((s) => /qu[ií]mica/i.test(s.n)) || salas[0];
+    const destino = (n) => (/hematol|coagul/i.test(n) ? /hematol/i : /GeneXpert|r[aá]pida/i.test(n) ? /inmunol/i : /orina|sediment/i.test(n) ? /uroan/i
+      : /hemocult|antibiog|identific/i.test(n) ? /microbiol/i : /gases/i.test(n) ? /recepci/i : /qu[ií]mica/i);
+    [...(D.laboratorio.equipos || [])].sort((a, b) => (b.precio || 0) - (a.precio || 0)).forEach((e) => {
+      const s = sala(destino(e.nombre)), n = e.nombre;
+      for (let u = 0; u < Math.min(3, +e.cantidad || 1); u++) {
+        const it = { e: u === 0 ? e : null, tipo: /hemocult/i.test(n) ? 'hemocultivos' : /GeneXpert/i.test(n) ? 'genexpert' : /gases/i.test(n) ? 'portatil' : 'analizador',
+          w: /5 partes|qu[ií]mica|inmunoens|orina/i.test(n) ? 0.95 : /identific/i.test(n) ? 0.65 : 0.55 };
+        (it.tipo === 'hemocultivos' ? s.piso : s.mesa).push(it);
       }
     });
+    const fijo = (re, lista, it) => { const s = salas.find((q) => re.test(q.n)); if (s) s[lista].push(it); };
+    fijo(/centrifug/i, 'mesa', { tipo: 'centrifuga', w: 0.5 }); fijo(/centrifug/i, 'mesa', { tipo: 'centrifuga', w: 0.5 });
+    fijo(/hematol/i, 'mesa', { tipo: 'microscopio', w: 0.45 }); fijo(/microbiol/i, 'piso', { tipo: 'cabina', w: 1.3 });
+    fijo(/microbiol/i, 'mesa', { tipo: 'microscopio', w: 0.45 }); fijo(/uroan/i, 'mesa', { tipo: 'microscopio', w: 0.45 });
+    fijo(/uroan/i, 'mesa', { tipo: 'poceta', w: 0.6 }); fijo(/lavado/i, 'piso', { tipo: 'autoclave', w: 0.75 }); fijo(/lavado/i, 'mesa', { tipo: 'poceta', w: 0.6 });
+    fijo(/neveras/i, 'piso', { tipo: 'nevera', w: 0.75 }); fijo(/neveras/i, 'piso', { tipo: 'nevera', w: 0.75 });
+    fijo(/dep[oó]sito/i, 'piso', { tipo: 'estante', w: 1.0 }); fijo(/dep[oó]sito/i, 'piso', { tipo: 'estante', w: 1.0 });
+    fijo(/oficina/i, 'mesa', { tipo: 'monitor', w: 0.6 }); fijo(/vestidor/i, 'piso', { tipo: 'lockers', w: 1.2 }); fijo(/recepci/i, 'mesa', { tipo: 'monitor', w: 0.6 });
+
+    // piezas (frente hacia +z local; se giran según el muro en que se apoyan)
+    const pieza = {
+      analizador(w) { const q = new THREE.Group(), h = w > 0.8 ? 0.7 : 0.45, d = w > 0.8 ? 0.7 : 0.5; q.add(box(w, h, d, M.eq), box(w * 0.94, 0.06, d * 0.94, M.tapa, 0, h), box(0.24, 0.17, 0.02, M.pant, w / 2 - 0.18, h * 0.55, d / 2 + 0.01), box(Math.min(0.36, w * 0.5), 0.05, 0.14, M.oscuro, -w / 2 + 0.24, 0.1, d / 2 + 0.07)); return [q, h + 0.06]; },
+      genexpert(w) { const q = new THREE.Group(); q.add(box(w, 0.36, 0.5, M.eq)); for (let i = 0; i < 4; i++) q.add(box(0.09, 0.2, 0.02, M.oscuro, -w / 2 + 0.1 + i * 0.12, 0.08, 0.26)); return [q, 0.36]; },
+      portatil() { const q = new THREE.Group(); q.add(box(0.28, 0.2, 0.3, M.eq), box(0.18, 0.1, 0.02, M.pant, 0, 0.08, 0.16)); return [q, 0.2]; },
+      hemocultivos() { const q = new THREE.Group(); q.add(box(0.7, 1.3, 0.7, M.eq), box(0.62, 0.9, 0.02, M.tapa, 0, 0.3, 0.36), box(0.24, 0.17, 0.02, M.pant, 0.12, 1.05, 0.36)); return [q, 1.3]; },
+      cabina() { const q = new THREE.Group(); q.add(box(1.3, 0.75, 0.75, M.acero), box(1.3, 1.05, 0.75, M.eq, 0, 0.75), box(1.18, 0.55, 0.02, M.vidrio, 0, 0.95, 0.38), box(1.3, 0.28, 0.75, M.tapa, 0, 1.8)); return [q, 2.08]; },
+      nevera() { const q = new THREE.Group(); q.add(box(0.7, 1.9, 0.7, M.eq), box(0.6, 1.6, 0.02, M.vidrio, 0, 0.2, 0.36), box(0.03, 0.5, 0.04, M.acero, 0.25, 0.8, 0.39)); return [q, 1.9]; },
+      autoclave() { const q = new THREE.Group(); q.add(box(0.7, 1.0, 0.7, M.acero)); const t = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.05, 28), M.tapa); t.rotation.x = Math.PI / 2; t.position.set(0, 0.62, 0.37); q.add(t); return [q, 1.0]; },
+      estante(w) { const q = new THREE.Group(); [-1, 1].forEach((sx) => [-1, 1].forEach((sz) => q.add(box(0.04, 1.9, 0.04, M.acero, (sx * (w - 0.04)) / 2, 0, (sz * 0.41) / 2)))); for (let i = 0; i < 5; i++) q.add(box(w, 0.025, 0.45, M.acero, 0, 0.12 + i * 0.42)); return [q, 1.9]; },
+      lockers(w) { const q = new THREE.Group(); q.add(box(w, 1.8, 0.45, M.tapa)); for (let i = 1; i < 4; i++) q.add(box(0.01, 1.7, 0.01, M.oscuro, -w / 2 + (i * w) / 4, 0.05, 0.23)); return [q, 1.8]; },
+      centrifuga() { const q = new THREE.Group(), cu = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.21, 0.3, 28), M.eq), ta = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.03, 28), M.tapa); cu.position.y = 0.15; ta.position.y = 0.31; q.add(cu, ta); return [q, 0.33]; },
+      microscopio() { const q = new THREE.Group(); q.add(box(0.2, 0.04, 0.26, M.oscuro), box(0.05, 0.32, 0.06, M.oscuro, 0, 0.04, -0.09), box(0.12, 0.08, 0.2, M.eq, 0, 0.3, -0.02), box(0.14, 0.02, 0.14, M.acero, 0, 0.14, 0.03)); return [q, 0.38]; },
+      poceta(w) { const q = new THREE.Group(); q.add(box(w * 0.75, 0.012, 0.42, M.acero, 0, 0)); const l = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.28, 10), M.acero); l.position.set(0, 0.14, -0.24); q.add(l); return [q, 0.28]; },
+      monitor() { const q = new THREE.Group(); q.add(box(0.5, 0.3, 0.03, M.pant, 0, 0.12, -0.1), box(0.06, 0.12, 0.06, M.oscuro, 0, 0, -0.12), box(0.4, 0.02, 0.14, M.oscuro, 0, 0, 0.12)); return [q, 0.42]; },
+    };
+    const silla = (x, zz) => { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.06, 18), M.asiento), p = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.55, 8), M.acero); t.position.set(x, Y + 0.6, zz); p.position.set(x, Y + 0.3, zz); t.castShadow = true; g.add(t, p); };
+    const MESA = 0.9, FONDO = 0.7;
+    salas.forEach((s) => {
+      // se apoyan contra el muro exterior de la crujía; el frente mira al centro del laboratorio
+      const vMuro = s.fila === 0 ? s.v1 : s.v0, dir = s.fila === 0 ? 1 : -1, zMuro = -vMuro;
+      const zFila = zMuro + dir * (0.05 + FONDO / 2);
+      let xr = s.x1 - 0.1;
+      s.piso.forEach((it) => {
+        const [o, h] = pieza[it.tipo](it.w); o.position.set(xr - it.w / 2, Y, zMuro + dir * 0.45); if (dir < 0) o.rotation.y = Math.PI;
+        o.traverse((m) => { if (m.isMesh) m.castShadow = true; }); g.add(o); xr -= it.w + 0.1;
+        if (it.e) etiquetaEq(it.e, xr + it.w / 2 + 0.1, Y + h + 0.6, zMuro + dir * 0.45);
+      });
+      const L = xr - (s.x0 + 0.1);
+      if (!s.mesa.length || L < 0.6) return;
+      // mesón: mueble bajo y tope de resina; si no cabe todo en uno, un segundo mesón contra el muro de enfrente
+      const cupo = (largo) => { let a = 0, k = 0; while (k < s.mesa.length && a + s.mesa[k].w + 0.15 <= largo) a += s.mesa[k++].w + 0.15; return k; };
+      const n1 = Math.max(1, cupo(L)), tramos = [[s.mesa.slice(0, n1), zFila, dir, s.x0 + 0.1, xr]];
+      if (n1 < s.mesa.length && s.v1 - s.v0 > 2.4) tramos.push([s.mesa.slice(n1), -(s.fila === 0 ? s.v0 : s.v1) - dir * (0.05 + FONDO / 2), -dir, s.x0 + 0.1, s.x1 - 0.1]);
+      tramos.forEach(([items, zc, dd, xa, xb]) => {
+        g.add(box(xb - xa, MESA - 0.05, FONDO - 0.04, M.meson, (xa + xb) / 2, Y, zc), box(xb - xa + 0.02, 0.05, FONDO + 0.02, M.tope, (xa + xb) / 2, Y + MESA - 0.05, zc));
+        const usado = items.reduce((a, it) => a + it.w, 0), gap = Math.max(0.12, (xb - xa - usado) / (items.length + 1));
+        let x = xa + gap;
+        items.forEach((it) => {
+          const [o, h] = pieza[it.tipo](it.w); o.position.set(x + it.w / 2, Y + MESA, zc); if (dd < 0) o.rotation.y = Math.PI;
+          o.traverse((m) => { if (m.isMesh) m.castShadow = true; }); g.add(o);
+          if (it.tipo === 'microscopio' || it.tipo === 'monitor') silla(x + it.w / 2, zc + dd * (FONDO / 2 + 0.35));
+          if (it.e) etiquetaEq(it.e, x + it.w / 2, Y + MESA + h + 0.55, zc);
+          x += it.w + gap;
+        });
+      });
+    });
+    // nombre de cada sala, sobre su piso
+    salas.forEach((s) => {
+      const l = st.label(esc(corto(s.n.split(/[,(]/)[0].replace(/\s+y\s+.*$/, '').replace(/^Lavado.*$/i, 'Lavado y autoclave'), 26)), 'lbl-room', [(s.x0 + s.x1) / 2, Y + 0.25, -(s.v0 + s.v1) / 2], g);
+      l.visible = false; labLab.push(l);
+    });
+    function etiquetaEq(e, x, y, zz) {
+      if ((e.precio || 0) < 30e6) return;
+      const l = st.label(`<b>${esc(corto(e.nombre.split('(')[0].replace(/\s+(con|por)\s.*$/, ''), 40))}</b>${e.capacidad ? `<br><small>${esc(corto(String(e.capacidad).split(';')[0], 44))}</small>` : ''}`, 'lbl-node', [x, y, zz], g);
+      l.visible = false; labLab.push(l);
+    }
   }
 
   // ---------------------------------------------------------------- fichas
@@ -165,7 +262,7 @@ export function mount(root) {
     aplicar(true);
     if (modo === 'laboratorio') {
       const z = zonas.find((zz) => zz.lab && zz.piso === 2);
-      if (z) setTimeout(() => st.closeUp(new THREE.Vector3((XW[0] + XW[1]) / 2, 4.5 + 2.2 * 4.5 + 3, -(z.y0 + z.y1) / 2), [], new THREE.Vector3(-1, 0, 0.3), { dist: 26, elev: 38 }), 350);
+      if (z) setTimeout(() => st.closeUp(new THREE.Vector3((XW[0] + XW[1]) / 2, 4.5 + 2.2 * 4.5 + 3, -(z.y0 + z.y1) / 2), [], new THREE.Vector3(-0.45, 0, 1), { dist: 22, elev: 48 }), 350);
     } else if (modo === 'pisos') setTimeout(() => st.frameBox(new THREE.Box3(new THREE.Vector3(XW[0] - 8, 0, -24), new THREE.Vector3(XN[1] + 6, 32, 21)), new THREE.Vector3(-0.8, 0.45, 0.55), { margin: 0.85 }), 200);
     else encuadre();
   }));
