@@ -14,46 +14,70 @@
 <body>
 <script type="module">
 // Renderiza un GLB de edificio desde una cámara dada (posición de un panorama de Street View o una órbita).
-// Parámetros: glb, cam=x,y,z, look=x,y,z, fov (vertical), w, h, capa=existente|todo, env=1 (mapa de entorno como en la web)
+// Parámetros: glb, cam=x,y,z, look=x,y,z, fov (vertical), w, h, capa=existente|todo,
+// env=1 (iluminación de las vistas de modelos de la web: cielo procedimental como mapa de entorno y sus luces)
 import * as THREE from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 const q = new URLSearchParams(location.search);
 const num = (k, d) => (q.has(k) ? q.get(k).split(',').map(Number) : d);
 const W = +(q.get('w') || 1400), H = +(q.get('h') || 900);
-const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-renderer.setSize(W, H); renderer.setPixelRatio(1);
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-document.body.appendChild(renderer.domElement);
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(q.get('fondo') || '#cdd8e3');
-if (q.get('env') === '1') { const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new RoomEnvironment(renderer), 0.04).texture; pm.dispose(); }
-// con env=1, las intensidades de la web (web/js/core.js: hemisférica 0,55 y sol 1,35 con mapa de entorno)
 const ENV = q.get('env') === '1';
-scene.add(new THREE.HemisphereLight('#e6eef6', '#8b8a7c', ENV ? 0.55 : 1.6));
-const sun = new THREE.DirectionalLight('#fff6e8', ENV ? 1.35 : 2.2); sun.position.set(30, 60, 20); sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, far: 200 });
-scene.add(sun);
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshStandardMaterial({ color: q.get('suelo') || '#9a978d', roughness: 1 }));
-ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02; ground.receiveShadow = true; scene.add(ground);
-const [cx, cy, cz] = num('cam', [40, 30, 40]), [lx, ly, lz] = num('look', [0, 3, 0]);
-const camera = new THREE.PerspectiveCamera(+(q.get('fov') || 50), W / H, 0.1, 3000);
-camera.position.set(cx, cy, cz); camera.lookAt(lx, ly, lz);
-const draco = new DRACOLoader().setDecoderPath('/web/vendor/draco/').setDecoderConfig({ type: 'js' });
-const loader = new GLTFLoader().setDRACOLoader(draco);
-loader.load(q.get('glb'), (gltf) => {
-  const root = gltf.scene, capa = q.get('capa') || 'todo';
-  root.traverse((o) => {
-    if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
-    if (capa === 'existente' && o.name === 'adecuaciones') o.visible = false;
-    if (capa === 'todo' && o.name === 'cubierta_actual' && o.userData.reemplazada) o.visible = false;
-  });
-  scene.add(root);
-  renderer.render(scene, camera);
-  window.__listo = true;
-}, undefined, (e) => { window.__error = String(e); });
+
+// El cielo de la web se toma de web/js/core.js (función cieloEntorno) en vez de copiarlo: si cambian sus colores
+// o parámetros, la previa cambia igual. La función solo usa THREE; si eso deja de ser así, falla con un aviso claro.
+async function cieloDeLaWeb() {
+  const src = await (await fetch('/web/js/core.js')).text();
+  const m = src.match(/^function cieloEntorno\([^)]*\) \{[\s\S]*?^\}$/m);
+  if (!m) throw new Error('no se encontró la función cieloEntorno en web/js/core.js');
+  return new Function('THREE', `${m[0]}\nreturn cieloEntorno;`)(THREE);
+}
+
+try {
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setSize(W, H); renderer.setPixelRatio(1);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  document.body.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(q.get('fondo') || '#cdd8e3');
+  // Con env=1, lo mismo que una vista de la web con tono ACES (Stage con tone: 'aces' en web/js/core.js): el cielo en
+  // su intensidad tenue (0,36), luz hemisférica de 0,3 y sol cálido de 2,1 en la dirección del sol del cielo
+  if (ENV) {
+    const cielo = (await cieloDeLaWeb())(0.36), pm = new THREE.PMREMGenerator(renderer);
+    scene.environment = pm.fromEquirectangular(cielo).texture;
+    cielo.dispose(); pm.dispose();
+  }
+  scene.add(ENV ? new THREE.HemisphereLight(0xffffff, 0x445544, 0.3) : new THREE.HemisphereLight('#e6eef6', '#8b8a7c', 1.6));
+  const sun = new THREE.DirectionalLight(ENV ? 0xfff4e6 : '#fff6e8', ENV ? 2.1 : 2.2); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, far: 200 });
+  if (ENV) {
+    // dirección (30, 50, 20) como en la web, más lejos para que la cámara de sombra cubra edificios altos
+    sun.position.set(30, 50, 20).multiplyScalar(2); sun.shadow.camera.far = 300;
+    // sesgos proporcionales al téxel, como el motor de la web: un téxel de sesgo normal
+    const texel = 140 / 2048;
+    sun.shadow.normalBias = texel; sun.shadow.bias = (-0.6 * texel) / (sun.shadow.camera.far - sun.shadow.camera.near);
+  } else sun.position.set(30, 60, 20);
+  scene.add(sun);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshStandardMaterial({ color: q.get('suelo') || '#9a978d', roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02; ground.receiveShadow = true; scene.add(ground);
+  const [cx, cy, cz] = num('cam', [40, 30, 40]), [lx, ly, lz] = num('look', [0, 3, 0]);
+  const camera = new THREE.PerspectiveCamera(+(q.get('fov') || 50), W / H, 0.1, 3000);
+  camera.position.set(cx, cy, cz); camera.lookAt(lx, ly, lz);
+  const draco = new DRACOLoader().setDecoderPath('/web/vendor/draco/').setDecoderConfig({ type: 'js' });
+  const loader = new GLTFLoader().setDRACOLoader(draco);
+  loader.load(q.get('glb'), (gltf) => {
+    const root = gltf.scene, capa = q.get('capa') || 'todo';
+    root.traverse((o) => {
+      if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+      if (capa === 'existente' && o.name === 'adecuaciones') o.visible = false;
+      if (capa === 'todo' && o.name === 'cubierta_actual' && o.userData.reemplazada) o.visible = false;
+    });
+    scene.add(root);
+    renderer.render(scene, camera);
+    window.__listo = true;
+  }, undefined, (e) => { window.__error = String(e); });
+} catch (e) { window.__error = String(e); }
 </script>
 </body>
 </html>

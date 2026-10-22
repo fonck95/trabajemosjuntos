@@ -2,9 +2,11 @@
 // con la foto real) o en órbita (para revisar el modelo). Usa Chromium sin pantalla con SwiftShader.
 //
 // Uso:
-//   node render_vista.mjs <id> --pano PANO_ID --rumbo R [--pitch P] [--fov F] [--sv foto.jpg] --out salida.png [--capa existente|todo]
-//   node render_vista.mjs <id> --orbita AZ,EL,DIST [--mira x,y,z] [--fov F] --out salida.png [--capa existente|todo]
-// --entorno agrega el mapa de entorno de la web (RoomEnvironment): vidrios y metales se ven como en el visor.
+//   node render_vista.mjs <id> --pano PANO_ID --rumbo R [--pitch P] [--fov F] [--sv foto.jpg] --out salida.png [--capa existente|todo] [--entorno]
+//   node render_vista.mjs <id> --orbita AZ,EL,DIST [--mira x,y,z] [--fov F] --out salida.png [--capa existente|todo] [--entorno]
+// --entorno ilumina como las vistas de modelos de la web (tono ACES): el mismo cielo procedimental como mapa de
+// entorno (cieloEntorno, leído de web/js/core.js), luz hemisférica tenue y sol cálido en la dirección del sol del
+// cielo, con sesgos de sombra por téxel. Vidrios, metales y sombras se ven como en el visor.
 // Con --sv escribe además salida_comparacion.png (foto | modelo) y salida_mezcla.png (50 % / 50 %).
 // --fov es horizontal en grados, igual que scripts/geo/sv_pano.py (W = 1400, H = 900).
 import { createServer } from 'node:http';
@@ -82,7 +84,7 @@ const qs = new URLSearchParams({ glb: `/__out/${id}_lod0.glb`, cam: cam.join(','
 await page.goto(`http://127.0.0.1:${port}/scripts/modelos/render.html?${qs}`);
 await page.waitForFunction(() => window.__listo || window.__error, null, { timeout: 120000 });
 const err = await page.evaluate(() => window.__error);
-if (err) { console.error('error al cargar el modelo:', err, errs); }
+if (err) { console.error('error en el render:', err, errs); process.exitCode = 1; }
 const out = resolve(opt('out'));
 await page.screenshot({ path: out });
 await browser.close(); server.close();

@@ -6,23 +6,72 @@
 
 | Técnica | Qué hace | Por qué importa |
 |---|---|---|
-| **Un solo WebGLRenderer compartido** | El lienzo se mueve a la vista activa; cada vista tiene su escena, cámara y controles | Los navegadores limitan los contextos WebGL (≈16). Con siete vistas se ahorran seis contextos y su memoria de GPU |
+| **Un solo WebGLRenderer compartido** | El lienzo se mueve a la vista activa; cada vista tiene su escena, cámara y controles | Los navegadores limitan los contextos WebGL (≈16). Con diez vistas se ahorran nueve contextos y su memoria de GPU |
 | **Renderizado bajo demanda** | Solo se dibuja cuando algo cambia: cámara, animación, interacción o tema. Cada animación declara si necesita el siguiente cuadro | Una vista quieta consume 0 % de GPU; la batería del teléfono dura más |
 | **Pausa automática** | No se dibuja si la pestaña está oculta o el escenario salió de pantalla (IntersectionObserver) | Cero trabajo en segundo plano |
-| **Resolución adaptativa** | Mide el tiempo de cada cuadro; si pasa de ~22 ms baja el pixel ratio en pasos de 0,25 y lo recupera con holgura | Mantiene la fluidez en equipos modestos sin sacrificar nitidez en los potentes |
+| **Tres niveles de calidad** | Alta, media y baja. El motor elige uno según el equipo y el panel "Rendimiento" deja fijarlo a mano (ver [Calidad de imagen](#calidad-de-imagen)) | Un celular no paga el posproceso de un computador de escritorio |
+| **Resolución adaptativa** | Mide el tiempo de cada cuadro; si pasa de ~22 ms baja el pixel ratio en pasos de 0,25 y lo recupera con holgura. El tope es ×2 en alta y media y ×1,5 en baja | Mantiene la fluidez en equipos modestos sin sacrificar nitidez en los potentes |
+| **Posproceso solo en alta** | `web/js/post.js` se descarga solo cuando la calidad es alta | Las otras calidades no cargan ni compilan nada de más |
 | **Sombras manuales** | `shadowMap.autoUpdate = false`; las sombras se recalculan solo cuando algo se mueve | El mapa de sombras es una pasada completa de la escena |
-| **Iluminación por entorno (PMREM)** | Un mapa de entorno precalculado (RoomEnvironment) para materiales PBR, con tono ACES en las vistas de modelos | Los modelos con metal y vidrio se ven físicamente creíbles |
+| **Sombras ajustadas a la vista** | En alta y media el volumen de la sombra se ajusta a lo que se mira, y los sesgos van en proporción al téxel | De cerca la sombra es nítida y pegada al objeto; de lejos no aparecen rayas (acné) |
+| **Cielo de día como entorno (PMREM)** | Un cielo procedimental (`cieloEntorno`) ilumina los materiales PBR. Se genera en la CPU y se prefiltra una sola vez | Techos más claros que muros, el lado del sol más cálido y reflejos de exterior creíbles en metal y vidrio |
 | **Geometría compartida e instancias** | Todas las cajas comparten una geometría; árboles, postes, módulos solares y partículas son `InstancedMesh` | Cientos de objetos en una sola llamada de dibujo |
 | **Matrices congeladas** | Los objetos estáticos tienen `matrixAutoUpdate = false` | three.js deja de recalcular miles de matrices por cuadro |
 | **Selección optimizada** | El raycasting del cursor se agrupa por cuadro de animación | Mover el ratón no dispara cálculos de más |
 | **Liberación de memoria** | `disposeObject` libera geometrías, materiales y texturas al cambiar de modelo | Evita fugas de memoria en el visor |
-| **Panel de rendimiento** | Botón "Rendimiento" en cada escenario: cuadros por segundo, milisegundos, resolución, llamadas de dibujo, triángulos, geometrías y texturas | Mide en vez de suponer |
+| **Panel de rendimiento** | Botón "Rendimiento" en cada escenario: cuadros por segundo, milisegundos, resolución, calidad y por qué se eligió, llamadas de dibujo (las del posproceso aparte), triángulos, geometrías y texturas. Abajo, el selector de calidad | Mide en vez de suponer, y deja probar cada calidad en el mismo equipo |
 | **Plano cercano adaptativo** | `adaptDepth()` pone el plano cercano en ~1,2 % de la distancia de la cámara a su objetivo | Con 0,1 m fijo y la cámara a 1 km la precisión de profundidad cae a ~0,6 m: techos, paneles, ventanas y pisos titilan (z-fighting). Así baja a milímetros |
 | **Sin cuadros en blanco** | Al cambiar el tamaño del lienzo o la resolución se redibuja en el mismo cuadro (`redraw`); la resolución adaptativa deja de subir tras dos bajadas | El navegador borra el lienzo al redimensionarlo: antes quedaba un destello |
 | **Histéresis en el nivel de detalle** | `progressiveLOD` cambia de nivel con un margen del 15 % | Cerca del umbral el modelo no salta de un nivel a otro con cada movimiento |
 | **Cámara que se adapta** | `fitFactor`/`fitPos` alejan la cámara según el ancho real del contenedor; `frameBox` encuadra una caja proyectando sus 8 esquinas; `closeUp` busca un rumbo con línea de vista libre hacia un punto | Las escenas caben en el teléfono y los edificios alargados o en patios se ven completos |
 | **Etiquetas sin encimarse** | `declutterLabels` (opción `declutter` de la escena) sube lo justo las etiquetas que chocan; las de conexión quedan fijas | Las etiquetas se leen en la vista general y en el teléfono |
 | **Reloj real en GSAP** | `gsap.ticker.lagSmoothing(0)` | En equipos lentos un vuelo de cámara de 1,5 s ya no tarda 20 s |
+
+### Calidad de imagen
+
+#### Niveles
+
+| Nivel | Qué tiene | En Auto se elige para |
+|---|---|---|
+| **Alta** | Posproceso: bordes suavizados (MSAA) y oclusión ambiental (GTAO), que oscurece un poco los rincones y los contactos entre piezas. Sombras como en media. Resolución hasta ×2 | Computadores de escritorio |
+| **Media** | Render directo, sin posproceso. Mapa de sombras del tamaño que pide la escena, ajustado a lo que se mira. Resolución hasta ×2 | GPU por software (SwiftShader, llvmpipe), pantallas táctiles más grandes, equipos de 4 núcleos o 4 GB de memoria o menos, pantallas muy densas (más de ×2,5) |
+| **Baja** | Render directo. Mapa de sombras a la mitad (mínimo 1024 px), sin ajustarse a la vista. Resolución hasta ×1,5 | Celulares y tabletas pequeñas, equipos de 2 núcleos o 2 GB de memoria o menos |
+
+- **Auto se corrige solo.** Si en alta los cuadros siguen por encima de ~30 ms con la resolución ya al mínimo (tres mediciones seguidas), baja a media. También baja a media si el navegador no tiene WebGL 2 o si `post.js` no carga.
+- **Selector manual.** El panel "Rendimiento" tiene los botones Auto, Alta, Media y Baja. La elección se guarda en el navegador (`localStorage`, clave `atlas-calidad`); Auto la borra y vuelve a la detección. El panel dice si la calidad fue elegida o automática, y por qué.
+- **Al cambiar de nivel** la resolución vuelve al máximo del nivel y la resolución adaptativa empieza de nuevo.
+
+#### Posproceso (`web/js/post.js`, solo en alta)
+
+Una sola cadena sirve a todas las vistas y respeta el renderizado bajo demanda.
+
+1. La escena se dibuja en un render target con MSAA (4 muestras; 2 en pantallas densas) y textura de profundidad. Ese render target se comporta como el lienzo: el tono de cada vista y el sRGB se aplican igual. Así las transparencias se ven igual que en media y baja.
+2. Entre lo opaco y lo transparente se calcula la oclusión ambiental con la profundidad ya dibujada. No hace falta otra pasada de geometría: las normales salen de la profundidad. El resultado se multiplica sobre lo opaco.
+3. Después se dibujan las líneas, los halos, los vidrios y las partículas, limpios. El fondo no se oscurece, porque donde no hay geometría no hay oclusión.
+4. Una pasada final copia la imagen al lienzo, que sigue transparente sobre el fondo de la página.
+
+El radio de la oclusión crece con la distancia de la cámara: detalle fino de cerca, contacto amplio de lejos. Tiene un tope según la escala de la vista. En pantallas densas se calcula a media resolución. El panel cuenta aparte las llamadas de dibujo del posproceso.
+
+#### Cielo, niebla y oclusión por vista (opciones de `Stage`)
+
+- **`sky: true`**: cúpula de cielo en degradé, del horizonte al cenit, con los colores del tema claro u oscuro. Va en el plano lejano: no tapa nada y la oclusión no la toca. Lleva un tramado fino para que no se vean bandas.
+- **`fog`**: niebla del mismo color del horizonte, para que el borde del piso se disuelva. `true` la empieza en el 60 % del plano lejano de la cámara; `{ near, far }` la fija en metros de la escena. El color es el mismo en las tres calidades.
+- **`ao`**: oclusión ambiental en alta. `false` la apaga; `{ radius, intensity }` la ajusta.
+- Hoy usa cielo y niebla la vista "Sedes reales" (`scenes/ciudad.js`). Las demás muestran el fondo de la página detrás del lienzo.
+
+#### Luz y entorno
+
+- **Entorno.** `cieloEntorno` arma un cielo de día de 256 × 128 en media precisión: cenit frío, horizonte claro, suelo cálido oscuro y un sol cálido con halo en la dirección del sol de las escenas (30, 50, 20). Se prefiltra con PMREM una sola vez, en dos intensidades: tenue (0,36) para las vistas con tono ACES y plena para las demás.
+- **Vistas con tono ACES** (modelos, torre, hospital, sedes reales y parque): entorno tenue, luz hemisférica de 0,3 y sol cálido (`#fff4e6`) de 2,1. ACES comprime los claros; así muros, techos y sombras se distinguen aunque los materiales sean casi blancos.
+- **Vistas sin tono**: entorno pleno, luz hemisférica de 0,55 y sol blanco de 1,35. Las vistas sin entorno (microrred, dinero, periodos y ruta) usan hemisférica de 1,1 y sol de 1,6.
+
+#### Sombras ajustadas
+
+La escena fija el volumen máximo de la sombra, el tamaño del mapa y, si quiere, el sesgo normal. Si los cambia después (otro modelo, otra hora), esos valores pasan a ser la nueva base. El motor ajusta tres cosas antes de cada cuadro:
+
+- **Tamaño del mapa** según la calidad: en alta y media, el de la escena; en baja, la mitad. Siempre queda entre 1024 y 4096 px.
+- **Volumen, en alta y media**: se ajusta a lo que se ve. Las cuatro esquinas de la pantalla se proyectan sobre el piso alrededor del punto que se mira. El tamaño cambia en pasos de √2 y el centro se mueve por tramos, así el mapa se recalcula solo de vez en cuando y no en cada cuadro. De cerca, cada téxel mide centímetros. Si una esquina ve el horizonte, se usa el volumen completo.
+- **Sesgos en proporción al téxel**: sin rayas cuando el téxel es grande ni sombras despegadas de cerca.
 
 ## 2. Carga de modelos (`web/js/assets.js`)
 
@@ -192,7 +241,7 @@ node build_edificios.mjs                 # todas las sedes → web/models/edific
 node build_edificios.mjs hospital        # solo una
 node check_coplanar.mjs                  # revisa web/models/edificios/*.glb (o las rutas que se le den)
 node render_vista.mjs hospital --orbita 210,30,70 --out /tmp/h.png --capa todo
-node render_vista.mjs hospital --orbita 210,30,70 --out /tmp/h.png --capa todo --entorno   # luces y mapa de entorno de la web
+node render_vista.mjs hospital --orbita 210,30,70 --out /tmp/h.png --capa todo --entorno   # cielo y luces de las vistas ACES de la web
 ```
 
 ### Escena urbana (vista "Sedes reales")
@@ -205,6 +254,12 @@ node render_vista.mjs hospital --orbita 210,30,70 --out /tmp/h.png --capa todo -
 - **Recorrido:** barra sobre el escenario (‹ ›, Todo, Girar, Hoy/Proyecto), flechas del teclado, Esc y doble clic. Las sedes se ordenan por cercanía desde la alcaldía; cada una se encuadra por su volumen (`solidBox` + `frameBox`) conservando el rumbo, con un anillo de selección.
 - **Conexión de cada sede:** una etiqueta junta tablero con medidor bidireccional, gateway IoT y acometida (vienen de `manifest.json → conexion`); el poste de la red va aparte si queda lejos. Tocarla, o «Ver la conexión de cerca» en la ficha, lleva la cámara a un punto con línea de vista libre (`closeUp`).
 - **21 sedes** levantadas y verificadas, entre ellas las del acueducto fuera del casco urbano (PTAP, planta veredal, tanque elevado y captación con sus barcazas en la Laguna del Miedo).
+- **Cielo y niebla:** cúpula de cielo con los colores del tema y niebla del color del horizonte que empieza en el 60 % del radio del piso (el piso mide 1,5 km de radio o más). El borde del piso se disuelve en el cielo.
+
+### Vista "Torre del hospital"
+
+- **Modos:** "Hoy" (las alas del antiguo Centro Vida), "Con la torre" (el modelo de `data/edificios/torre_hospital.json`), "Pisos por servicio" (cada piso aparte, con el color de su grupo de servicio y su área) y "Laboratorio".
+- **Laboratorio:** el piso 2 en planta de corte, con sus 14 salas a escala del área que da `laboratorio.areas` (muros bajos; salas analíticas al norte y de apoyo al sur), mesones con tope de resina y los equipos de cada sala: analizadores, neveras, cabina de bioseguridad, autoclave, centrífugas y microscopios.
 
 ## 5. Agregar un modelo profesional
 
