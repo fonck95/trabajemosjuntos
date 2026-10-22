@@ -17,6 +17,12 @@
 | **Selección optimizada** | El raycasting del cursor se agrupa por cuadro de animación | Mover el ratón no dispara cálculos de más |
 | **Liberación de memoria** | `disposeObject` libera geometrías, materiales y texturas al cambiar de modelo | Evita fugas de memoria en el visor |
 | **Panel de rendimiento** | Botón "Rendimiento" en cada escenario: cuadros por segundo, milisegundos, resolución, llamadas de dibujo, triángulos, geometrías y texturas | Mide en vez de suponer |
+| **Plano cercano adaptativo** | `adaptDepth()` pone el plano cercano en ~1,2 % de la distancia de la cámara a su objetivo | Con 0,1 m fijo y la cámara a 1 km la precisión de profundidad cae a ~0,6 m: techos, paneles, ventanas y pisos titilan (z-fighting). Así baja a milímetros |
+| **Sin cuadros en blanco** | Al cambiar el tamaño del lienzo o la resolución se redibuja en el mismo cuadro (`redraw`); la resolución adaptativa deja de subir tras dos bajadas | El navegador borra el lienzo al redimensionarlo: antes quedaba un destello |
+| **Histéresis en el nivel de detalle** | `progressiveLOD` cambia de nivel con un margen del 15 % | Cerca del umbral el modelo no salta de un nivel a otro con cada movimiento |
+| **Cámara que se adapta** | `fitFactor`/`fitPos` alejan la cámara según el ancho real del contenedor; `frameBox` encuadra una caja proyectando sus 8 esquinas; `closeUp` busca un rumbo con línea de vista libre hacia un punto | Las escenas caben en el teléfono y los edificios alargados o en patios se ven completos |
+| **Etiquetas sin encimarse** | `declutterLabels` (opción `declutter` de la escena) sube lo justo las etiquetas que chocan; las de conexión quedan fijas | Las etiquetas se leen en la vista general y en el teléfono |
+| **Reloj real en GSAP** | `gsap.ticker.lagSmoothing(0)` | En equipos lentos un vuelo de cámara de 1,5 s ya no tarda 20 s |
 
 ## 2. Carga de modelos (`web/js/assets.js`)
 
@@ -50,8 +56,8 @@ Cada dependencia pública de la microrred tiene una réplica 3D construida a par
 
 ### Cómo se levanta un edificio
 
-1. **Ubicación.** Se cruzan la web de la alcaldía, SECOP, OpenStreetMap y los letreros visibles en Street View. Cada sede declara su confianza: alta, media o baja.
-2. **Huella.** Se mide sobre la imagen satelital Esri World Imagery (zoom 19 ≈ 0,30 m por píxel). `scripts/geo/trace.py` superpone los rectángulos medidos sobre el satélite, y se itera hasta que coinciden con los bordes de la cubierta.
+1. **Ubicación.** Se cruzan la web de la alcaldía, SECOP, OpenStreetMap, las fichas de Google y los letreros visibles en Street View. Cada sede declara su confianza: alta, media o baja. Las coordenadas de los inventarios no se dan por buenas: la planta de agua estaba 270 m corrida (sobre una piscícola) y el «CPSAM» resultó ser el Centro Vida; el hogar real funciona en las alas occidentales del predio del hospital.
+2. **Huella.** Se mide sobre la imagen satelital Esri World Imagery (zoom 19 ≈ 0,30 m por píxel, enero de 2020) y sobre la de Google (zoom 20–21 ≈ 0,15–0,07 m por píxel, más reciente). `scripts/geo/trace.py` (Esri) y `scripts/geo/gtrace.py` (Google o Esri, con retícula de 5 m) superponen los rectángulos medidos, y se itera hasta que coinciden con los bordes de la cubierta. Entre las dos fuentes hay desfases de ~2 m: cada especificación dice sobre cuál se midió.
 3. **Alturas, cubierta y fachada.** Salen de los panoramas de Google Street View (`scripts/geo/cobertura.py`, `sv_pano.py`). Hay 2.100 panoramas en el casco urbano, casi todos de 2013–2014; se contrastan con el satélite, que es más reciente, y con fotos web.
 4. **Comparación con la foto.** `scripts/modelos/render_vista.mjs` dibuja el modelo desde la misma posición, rumbo y campo visual del panorama. Luego genera una imagen lado a lado y una mezcla al 50 % para corregir siluetas, pendientes, puertas, ventanas y colores.
 5. **Verificación independiente.** Un segundo revisor vuelve a medir y compara con panoramas distintos.
@@ -157,7 +163,11 @@ node render_vista.mjs hospital --orbita 210,30,70 --out /tmp/h.png --capa todo
 - Las réplicas se ubican en su posición real respecto al centro del casco urbano (7,0065 N; −73,9115 O).
 - Las calles, caños y cuerpos de agua vienen de OpenStreetMap (`scripts/geo/osm_calles.py`, ODbL).
 - Las casas del contexto se extruyen a partir de las huellas de Microsoft Global ML Building Footprints (`scripts/geo/huellas.py`, ODbL), con alturas de uno o dos pisos.
-- La capa de datos MinTIC conecta cada sede con el centro de control en la alcaldía.
+- La Laguna del Miedo (captación del acueducto) se agrega desde la relación completa de OpenStreetMap (`data/geo/osm_laguna_del_miedo.xml`).
+- La capa de datos MinTIC conecta cada sede con el centro de control en la alcaldía: trazo de ancho fijo en pantalla (`Line2`) con guiones que avanzan hacia la alcaldía; el enlace de la sede elegida se resalta.
+- **Recorrido:** barra sobre el escenario (‹ ›, Todo, Girar, Hoy/Proyecto), flechas del teclado, Esc y doble clic. Las sedes se ordenan por cercanía desde la alcaldía; cada una se encuadra por su volumen (`solidBox` + `frameBox`) conservando el rumbo, con un anillo de selección.
+- **Conexión de cada sede:** una etiqueta junta tablero con medidor bidireccional, gateway IoT y acometida (vienen de `manifest.json → conexion`); el poste de la red va aparte si queda lejos. Tocarla, o «Ver la conexión de cerca» en la ficha, lleva la cámara a un punto con línea de vista libre (`closeUp`).
+- **21 sedes** levantadas y verificadas, entre ellas las del acueducto fuera del casco urbano (PTAP, planta veredal, tanque elevado y captación con sus barcazas en la Laguna del Miedo).
 
 ## 5. Agregar un modelo profesional
 
