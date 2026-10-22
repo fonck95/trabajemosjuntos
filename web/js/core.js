@@ -38,7 +38,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fireTheme)
 new MutationObserver(fireTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 // ---------------------------------------------------------------- calidad de imagen
-// alta: posproceso (oclusión ambiental GTAO, MSAA y OutputPass) y las sombras de media.
+// alta: posproceso (MSAA en un render target y oclusión ambiental GTAO) y las sombras de media.
 // media: render directo, el de siempre, con el mapa de sombras que pide la escena ajustado a lo que se mira.
 // baja: render directo, mapa de sombras a la mitad (mínimo 1024 px) y fijo, resolución hasta ×1,5 (celulares).
 export const CALIDADES = { alta: 'Alta', media: 'Media', baja: 'Baja' };
@@ -128,20 +128,6 @@ function coloresCielo(t) {
     ? { hor: t.raised.clone().lerp(t.water, 0.14), zen: t.bg.clone().lerp(t.water, 0.32) }
     : { hor: t.raised.clone().lerp(t.water, 0.08), zen: t.raised.clone().lerp(t.water, 0.45) };
 }
-// Con posproceso, el mapeo de tonos ACES se aplica después del cielo y de la niebla (en el render directo, la
-// niebla se mezcla ya en sRGB y el cielo no pasa por el tono). Para que se vean iguales en todas las calidades,
-// en 'alta' se les da el color lineal que, tras ACES, devuelve el color del tema (mismo ACES de three r160).
-const ACES_IN = [0.59719, 0.35458, 0.04823, 0.076, 0.90834, 0.01566, 0.0284, 0.13383, 0.83777];
-const ACES_OUT = [1.60475, -0.53108, -0.07367, -0.10208, 1.10813, -0.00605, -0.00327, -0.07276, 1.07602];
-const mul3 = (M, v) => [0, 1, 2].map((i) => M[i * 3] * v[0] + M[i * 3 + 1] * v[1] + M[i * 3 + 2] * v[2]);
-const acesFit = (x) => (x * (x + 0.0245786) - 0.000090537) / (x * (0.983729 * x + 0.432951) + 0.238081);
-function aces(c, exp) { return mul3(ACES_OUT, mul3(ACES_IN, c.map((x) => (x * exp) / 0.6)).map(acesFit)).map((x) => THREE.MathUtils.clamp(x, 0, 1)); }
-function antesDelTono(color, exp) {
-  const t = [color.r, color.g, color.b].map((x) => THREE.MathUtils.clamp(x, 0.002, 0.97));
-  let x = [...t];
-  for (let i = 0; i < 40; i++) { const y = aces(x, exp); x = x.map((xi, n) => xi * THREE.MathUtils.clamp(t[n] / Math.max(1e-5, y[n]), 0.5, 2)); }
-  return new THREE.Color(...x);
-}
 
 // ---------------------------------------------------------------- motor compartido
 class Engine {
@@ -188,6 +174,8 @@ class Engine {
   elegir(q) { this.qManual = q in NIVEL ? q : null; guardarCalidad(this.qManual); this.setTier(this.qManual || this.qAuto); }
   cargarPost() {
     if (this.post || this._cargando) return;
+    // GTAO y el MSAA en render targets necesitan WebGL 2
+    if (!this.renderer.capabilities.isWebGL2) { this.qAuto = 'media'; this.qMotivo = 'sin WebGL 2'; if (this.tier === 'alta') this.setTier('media'); return; }
     this._cargando = import('./post.js').then(({ Post }) => {
       this.post = new Post(this.renderer);
       this.perf.lastChange = performance.now(); // los primeros cuadros compilan shaders: no cuentan como lentos
@@ -498,12 +486,13 @@ export class Stage {
     const f = this.scene.fog;
     if (f && this.fogCfg) { const far = this.camera.far; f.near = this.fogCfg.near ?? far * 0.6; f.far = this.fogCfg.far ?? far; }
     if (!f && !this.sky) return;
-    const comp = engine.usePost() && this.tone === THREE.ACESFilmicToneMapping, key = `${temaV}|${comp}|${this.exposure}`;
+    const post = engine.usePost(), key = `${temaV}|${post}`;
     if (key === this._atmK) return;
     this._atmK = key;
-    let { hor, zen } = coloresCielo(tokens());
-    if (comp) { hor = antesDelTono(hor, this.exposure); zen = antesDelTono(zen, this.exposure); }
-    if (f) f.color.copy(hor);
+    const { hor, zen } = coloresCielo(tokens());
+    // three mezcla la niebla después de codificar en sRGB y, al dibujar en un render target (posproceso), le pasa
+    // el color en lineal: se le entrega ya codificado para que el horizonte sea el mismo en todas las calidades
+    if (f) { f.color.copy(hor); if (post) f.color.convertLinearToSRGB(); }
     if (this.sky) { this.sky.material.uniforms.uHor.value.copy(hor); this.sky.material.uniforms.uZen.value.copy(zen); }
   }
   // Sombras. La escena define el volumen máximo (left/right/top/bottom), el tamaño del mapa y, si quiere, el sesgo
@@ -593,8 +582,8 @@ function makeHud(el, stage) {
   btn.type = 'button'; btn.className = 'hud-btn'; btn.textContent = 'Rendimiento'; btn.setAttribute('aria-pressed', 'false');
   const box = document.createElement('div');
   box.className = 'hud'; box.hidden = true;
-  const opciones = ['auto', ...Object.keys(CALIDADES)];
-  box.innerHTML = `<div data-hud-datos></div><div class="hud-q" role="group" aria-label="Calidad de imagen"><span>Calidad</span>${opciones.map((q) => `<button type="button" data-q="${q}" aria-pressed="false" title="${q === 'auto' ? 'Según el equipo y el tiempo de cuadro' : q === 'alta' ? 'Oclusión ambiental, bordes suavizados y sombras nítidas' : q === 'media' ? 'Render directo con sombras ajustadas' : 'Lo más liviano: para celulares'}">${q === 'auto' ? 'Auto' : CALIDADES[q]}</button>`).join('')}</div>`;
+  const opciones = { auto: ['Auto', 'Según el equipo y el tiempo de cuadro'], alta: [CALIDADES.alta, 'Oclusión ambiental, bordes suavizados y sombras nítidas'], media: [CALIDADES.media, 'Render directo con sombras ajustadas'], baja: [CALIDADES.baja, 'Lo más liviano: para celulares'] };
+  box.innerHTML = `<div data-hud-datos></div><div class="hud-q" role="group" aria-label="Calidad de imagen"><span>Calidad</span>${Object.entries(opciones).map(([q, [txt, ayuda]]) => `<button type="button" data-q="${q}" aria-pressed="false" title="${ayuda}">${txt}</button>`).join('')}</div>`;
   el.append(btn, box);
   const datos = box.querySelector('[data-hud-datos]'), botones = box.querySelectorAll('[data-q]');
   const hud = {

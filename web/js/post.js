@@ -1,32 +1,37 @@
 // Posproceso de la calidad 'alta' (se carga solo cuando hace falta). Una sola cadena para todas las vistas:
-//   1. RenderPass dibuja la escena en un render target con MSAA (bordes suaves) y textura de profundidad.
+//   1. RenderPass dibuja la escena en un render target con MSAA (bordes suaves) y textura de profundidad. El
+//      render target trabaja como el lienzo: el mapeo de tonos de cada vista y el sRGB se aplican en los shaders
+//      y las transparencias se mezclan igual que en el render directo (misma apariencia en todas las calidades).
 //   2. Entre lo opaco y lo transparente se calcula la oclusión ambiental (GTAO) con la profundidad ya dibujada y
 //      se multiplica sobre lo opaco. Así las líneas, los halos, los vidrios y las partículas se dibujan después,
 //      limpios, y el fondo (CSS o cielo) no se oscurece: donde no hay geometría la profundidad es 1 y no hay AO.
-//   3. OutputPass aplica el mapeo de tonos de cada vista y la conversión a sRGB, con alfa premultiplicado para
-//      que el lienzo siga siendo transparente sobre el fondo de la página.
+//   3. Una pasada final copia el resultado al lienzo con alfa premultiplicado: el lienzo sigue transparente sobre el
+//      fondo de la página.
 // Respeta el renderizado bajo demanda: Engine llama a render() solo cuando hace falta un cuadro.
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 const _size = new THREE.Vector2();
 
-// OutputPass con alfa premultiplicado: el color del render target ya viene multiplicado por la cobertura (bordes
-// con MSAA, objetos transparentes sobre el fondo vacío). Se divide antes del tono y del sRGB y se vuelve a
-// multiplicar después; si no, los bordes contra el fondo quedan con un halo claro. Un tramado de ±½ nivel evita
-// bandas en degradés suaves (cielo, oclusión).
-function outputPremultiplicado() {
-  const p = new OutputPass();
-  const fs = p.material.fragmentShader;
-  const a = 'gl_FragColor = texture2D( tDiffuse, vUv );';
-  if (!fs.includes(a)) return p; // otra versión de three: se deja el OutputPass tal cual
-  p.material.fragmentShader = fs
-    .replace(a, `${a}\n\t\t\tfloat alfa = gl_FragColor.a;\n\t\t\tif ( alfa > 0.0 ) gl_FragColor.rgb /= alfa;`)
-    .replace(/}\s*$/, `\tgl_FragColor.rgb = clamp( gl_FragColor.rgb + ( fract( sin( dot( gl_FragCoord.xy, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 ) - 0.5 ) / 255.0, 0.0, 1.0 ) * alfa;\n\t\t}`);
-  return p;
+// Copia al lienzo tal cual: el render target ya tiene lo que tendría el lienzo (colores en sRGB, alfa premultiplicado)
+const SalidaShader = {
+  name: 'SalidaShader',
+  uniforms: { tDiffuse: { value: null } },
+  vertexShader: 'varying vec2 vUv;\nvoid main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'uniform sampler2D tDiffuse;\nvarying vec2 vUv;\nvoid main() { gl_FragColor = texture2D(tDiffuse, vUv); }',
+};
+
+// GTAO de three r160 supone que la oclusión tiene la misma resolución que la profundidad. A media resolución cada
+// píxel cae entre cuatro de la profundidad y la posición reconstruida se corre medio téxel: en vistas lejanas y
+// rasantes aparecen bandas horizontales. Se centra la coordenada en el téxel de profundidad que se lee.
+function centrarEnTexel(m) {
+  m.vertexShader = m.vertexShader.replace('varying vec2 vUv;', 'varying vec2 vUvQ;').replace('vUv = uv;', 'vUvQ = uv;');
+  m.fragmentShader = m.fragmentShader.replace('varying vec2 vUv;', 'varying vec2 vUvQ;\nvec2 vUv;')
+    .replace('void main() {', 'void main() {\n\tvec2 tsz = vec2( textureSize( tDepth, 0 ) );\n\tvUv = ( floor( vUvQ * tsz ) + 0.5 ) / tsz;');
+  m.needsUpdate = true;
 }
 
 export class Post {
@@ -34,27 +39,37 @@ export class Post {
     this.renderer = renderer;
     this.w = 0; this.h = 0; this.pr = 0;
     this.extra = 0; // llamadas de dibujo del posproceso en el último cuadro (no cuentan como de la escena)
-    const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(1, 1) });
+    const rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.UnsignedByteType, internalFormat: 'RGBA8', samples: 4, depthTexture: new THREE.DepthTexture(1, 1), colorSpace: THREE.SRGBColorSpace });
     rt.texture.name = 'Post.escena';
     this.composer = new EffectComposer(renderer, rt);
     this.scenePass = new RenderPass(new THREE.Scene(), new THREE.PerspectiveCamera());
-    this.output = outputPremultiplicado();
+    this.output = new ShaderPass(SalidaShader);
     // sin intercambio de búferes: RenderPass escribe siempre en el mismo render target (con MSAA y profundidad) y
-    // OutputPass lo lee; el segundo búfer del compositor nunca se usa y no ocupa memoria de GPU
+    // la salida lo lee; el segundo búfer del compositor nunca se usa y no ocupa memoria de GPU
     this.output.needsSwap = false;
     const out = this.output, render = out.render.bind(out);
     out.render = (...a) => { const c = renderer.info.render.calls; render(...a); this.extra += renderer.info.render.calls - c; };
     this.composer.addPass(this.scenePass);
     this.composer.addPass(this.output);
     this.beauty = this.composer.readBuffer;
+    // En three r160 un render target marcado como de XR se trata como el lienzo: los materiales aplican el tono
+    // (ACES u otro) y la codificación sRGB, y la mezcla de transparencias ocurre en el espacio de la pantalla. Con 8
+    // bits por canal (RGBA8, sin conversión sRGB del hardware) los valores se recortan a 1 igual que en el lienzo.
+    // Así las opacidades con que se diseñaron halos, huellas y vidrios se ven igual que en el render directo; en un
+    // render target lineal de media precisión quedarían más pálidas. (No se usa para XR.)
+    this.beauty.isXRRenderTarget = true;
+    this.beauty.texture.colorSpace = THREE.SRGBColorSpace;
+    this.beauty.texture.internalFormat = 'RGBA8';
 
     // GTAO con normales reconstruidas desde la profundidad de la escena: no hace falta otra pasada de geometría
     // (las llamadas de dibujo de la escena no se duplican)
     this.gtao = new GTAOPass(new THREE.Scene(), new THREE.PerspectiveCamera(), 1, 1);
     this.gtao.setGBuffer(this.beauty.depthTexture);
-    // 32 muestras (5 direcciones) y un filtro amplio: sin el grano de las normales reconstruidas
-    this.gtao.updateGtaoMaterial({ samples: 32, distanceExponent: 1.4, distanceFallOff: 1, scale: 1.25 });
-    this.gtao.updatePdMaterial({ lumaPhi: 10, normalPhi: 1.5, radius: 10, rings: 2, samples: 16 });
+    centrarEnTexel(this.gtao.gtaoMaterial); centrarEnTexel(this.gtao.pdMaterial);
+    // 32 muestras (5 direcciones) y un filtro amplio: sin el grano de las normales reconstruidas;
+    // la oclusión se multiplica sobre colores ya codificados en sRGB: el exponente bajo equivale a ~1,3 en lineal
+    this.gtao.updateGtaoMaterial({ samples: 32, distanceExponent: 1.4, distanceFallOff: 1, scale: 0.6 });
+    this.gtao.updatePdMaterial({ lumaPhi: 10, normalPhi: 1, radius: 10, rings: 2, samples: 24 });
 
     // Centinela: la primera pieza de la lista de transparentes (renderOrder muy bajo). Su onBeforeRender corre
     // cuando lo opaco ya está dibujado y antes de cualquier transparencia: ahí se calcula y aplica la oclusión.
@@ -81,7 +96,8 @@ export class Post {
     if (this.beauty.samples !== samples) { this.beauty.samples = samples; this.beauty.dispose(); }
     this.composer.setPixelRatio(pr);
     this.composer.setSize(this.w, this.h);
-    // la oclusión es de baja frecuencia: en pantallas densas se calcula a media resolución
+    // en pantallas densas la oclusión se calcula a media resolución (un cuarto del costo; cada téxel sigue siendo un
+    // píxel CSS). Con pixel ratio 1 va a resolución completa: a media, las aristas entre muro y piso dejan puntos claros
     const k = pr > 1.25 ? 0.5 : 1, aw = Math.max(1, Math.round(this.w * pr * k)), ah = Math.max(1, Math.round(this.h * pr * k));
     const g = this.gtao;
     g.gtaoRenderTarget.setSize(aw, ah); g.pdRenderTarget.setSize(aw, ah);
