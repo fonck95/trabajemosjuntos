@@ -70,7 +70,8 @@ main { padding-block: 26px 40px; }
 .stage { position: relative; height: clamp(420px, 68vh, 760px); background: var(--raised); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; touch-action: none; }
 .stage canvas.gl { display: block; position: absolute; inset: 0; }
 .label-layer { position: absolute; inset: 0; pointer-events: none; }
-.stage-hint { position: absolute; left: 12px; bottom: 10px; font-family: var(--f-mono); font-size: 0.68rem; color: var(--muted); pointer-events: none; z-index: 2; }
+/* ayuda de la esquina: sobre un fondo del color de la superficie para que se lea encima de calles, árboles y techos */
+.stage-hint { position: absolute; left: 12px; bottom: 10px; max-width: calc(100% - 24px); box-sizing: border-box; font-family: var(--f-mono); font-size: 0.68rem; line-height: 1.4; color: var(--ink); background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; box-shadow: 0 1px 4px color-mix(in srgb, var(--ink) 14%, transparent); pointer-events: none; z-index: 2; }
 .hud-btn { position: absolute; top: 10px; right: 10px; z-index: 3; font: 600 0.72rem var(--f-mono); background: var(--surface); color: var(--ink); border: 1.5px solid var(--ink); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
 .hud-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 .hud { position: absolute; top: 42px; right: 10px; z-index: 3; font: 0.72rem/1.5 var(--f-mono); background: var(--surface); color: var(--ink); border: 1.5px solid var(--ink); border-radius: 10px; padding: 8px 10px; min-width: 210px; }
@@ -114,6 +115,7 @@ svg.mr-chart .pv { fill: var(--sun); opacity: 0.35; stroke: var(--sun); stroke-w
 svg.mr-chart .dem { fill: none; stroke: var(--s1); stroke-width: 2; }
 svg.mr-chart .soc { fill: none; stroke: var(--good); stroke-width: 2; stroke-dasharray: 4 3; }
 svg.mr-chart .now { stroke: var(--accent); stroke-width: 1.5; }
+#v-microrred svg.mr-chart .soc-t { fill: var(--good); font-weight: 600; } /* rótulo del 100 % de la batería, del color de su curva */
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.78rem; color: var(--muted); }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 .pill { display: inline-block; font: 600 0.7rem var(--f-mono); padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; }
@@ -188,6 +190,17 @@ svg.mr-chart .now { stroke: var(--accent); stroke-width: 1.5; }
 /* Hospital 2028: nombre completo de la fuente en escritorio (el corto es para el teléfono) y aviso de la decisión vigente */
 [data-scene="hospital"] .lbl-money .fc { display: none; }
 [data-scene="ruta"] .lbl-node { font-size: 10px; } /* Hoja de ruta: rótulos de hito más compactos para que la franja de atrás no se encime */
+/* Microrred: baterías, planta, barra y CCED con fondo propio, para que se lean sobre techos, árboles y flujos */
+[data-scene="microrred"] .lbl-small, [data-scene="microrred"] .lbl-data { background: color-mix(in srgb, var(--surface) 88%, transparent); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--line); }
+[data-scene="microrred"] .lbl-small { color: var(--ink); } [data-scene="microrred"] .lbl-data { border-color: color-mix(in srgb, var(--data) 60%, transparent); }
+/* Sedes reales: la ficha se lee como texto (valores en letra normal, alineados a la izquierda) con sus apartados
+   largos plegados; la ayuda del escenario no se mete debajo de la leyenda de la derecha */
+#v-ciudad [data-slot="ciudad.ficha"] .kv { grid-template-columns: 6.5em minmax(0, 1fr); }
+#v-ciudad [data-slot="ciudad.ficha"] .kv dd { font-family: var(--f-body); font-size: 0.86rem; text-align: left; }
+#v-ciudad [data-slot="ciudad.ficha"] details { margin: 0 0 8px; } #v-ciudad [data-slot="ciudad.ficha"] details > summary { padding: 2px 0; }
+#v-ciudad .stage-hint { max-width: calc(100% - 336px); }
+/* en escritorio la maqueta acompaña la lectura de la ficha (que es más larga) en vez de dejar un hueco debajo */
+@media (min-width: 1081px) { #v-ciudad .board > .stage { position: sticky; top: 112px; } }
 #v-hospital .decision { margin: 0; padding: 10px 14px; max-width: 110ch; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--r); font-size: 0.95rem; }
 
 /* ---------- contenido */
@@ -199,17 +212,25 @@ table { border-collapse: collapse; width: 100%; font-size: 0.85rem; font-variant
 th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { font-family: var(--f-mono); font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 td.n, th.n { text-align: right; font-family: var(--f-mono); font-size: 0.8rem; white-space: nowrap; }
-.nw { white-space: nowrap; } /* montos y rangos de plata que no se parten entre renglones */
+.nw, .rango { white-space: nowrap; } /* montos y rangos de plata que no se parten entre renglones (.rango sí parte en el teléfono, entre las dos cifras) */
 /* tablas en el teléfono: las de cuatro o más columnas se deslizan de lado con columnas legibles y la primera columna
    queda fija, para no perder de qué fila es cada cifra al llegar a ella; los encabezados de cifras parten en dos renglones */
 @media (max-width: 720px) {
-  th.n { white-space: normal; }
-  .tbl-wrap > table:has(tr > :nth-child(4)) { min-width: 500px; }
-  .tbl-wrap > table:has(tr > :nth-child(5)) { min-width: 600px; }
-  .tbl-wrap > table:has(tr > :nth-child(6)) { min-width: 680px; }
-  .tbl-wrap > table:has(tr > :nth-child(4)) tr > :first-child { position: sticky; left: 0; z-index: 1; max-width: 38vw; background: var(--surface); box-shadow: 6px 0 6px -6px color-mix(in srgb, var(--ink) 40%, transparent); }
+  th.n, .rango { white-space: normal; }
+  .tbl-wrap > table:not(.fichas):has(tr > :nth-child(4)) { min-width: 500px; }
+  .tbl-wrap > table:not(.fichas):has(tr > :nth-child(5)) { min-width: 600px; }
+  .tbl-wrap > table:not(.fichas):has(tr > :nth-child(6)) { min-width: 680px; }
+  .tbl-wrap > table:not(.fichas):has(tr > :nth-child(4)) tr > :first-child { position: sticky; left: 0; z-index: 1; max-width: 38vw; background: var(--surface); box-shadow: 6px 0 6px -6px color-mix(in srgb, var(--ink) 40%, transparent); }
   /* sombra en el borde derecho mientras quede tabla por ver (se tapa al llegar al final) */
-  .tbl-wrap:has(> table tr > :nth-child(4)) { background: linear-gradient(to left, var(--surface) 35%, transparent) right / 28px 100% no-repeat local, radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 42%, transparent), transparent) right / 12px 100% no-repeat scroll; }
+  .tbl-wrap:has(> table:not(.fichas) tr > :nth-child(4)) { background: linear-gradient(to left, var(--surface) 35%, transparent) right / 28px 100% no-repeat local, radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 42%, transparent), transparent) right / 12px 100% no-repeat scroll; }
+  /* table.fichas: cada fila se apila como una ficha (nombre arriba y debajo cada cifra con su rótulo, tomado de data-th),
+     así todas las cifras quedan a la vista sin deslizar; td.ancho ocupa todo el ancho (textos largos) */
+  table.fichas, table.fichas tbody, table.fichas td { display: block; }
+  table.fichas thead { display: none; }
+  table.fichas tr { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  table.fichas td { padding: 0; border: 0; text-align: left; white-space: normal; }
+  table.fichas td:first-child, table.fichas td.ancho { grid-column: 1 / -1; } table.fichas td.sin-ficha { display: none; }
+  table.fichas td[data-th]::before { content: attr(data-th); display: block; font: 600 0.62rem var(--f-mono); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
 }
 tfoot td { font-weight: 700; border-top: 3px solid var(--ink); }
 .tag { font: 600 0.68rem var(--f-mono); text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 6px; border-radius: 4px; background: var(--raised); border: 1px solid var(--line); color: var(--muted); }
@@ -249,10 +270,16 @@ a { color: var(--accent); }
   .nav3d { top: auto; bottom: 10px; right: 10px; max-width: none; justify-content: space-between; }
   .nav3d-name { flex: 1; max-width: none; text-align: center; }
   [data-scene="ciudad"] .stage-hint { display: none; }
+  /* Sedes reales en el teléfono: rótulos de una línea (los kWp están en la ficha y la tabla), sin las distancias en km
+     en la vista general y, con una sede elegida, sin los rótulos atenuados de las demás; se ocultan con display para
+     que el reacomodo de etiquetas no les guarde lugar */
+  [data-scene="ciudad"] .lbl-node:not(.on) br, [data-scene="ciudad"] .lbl-node:not(.on) small { display: none; }
+  [data-scene="ciudad"]:not(.con-sede) .lbl-km, [data-scene="ciudad"] .lbl-node.dim, [data-scene="ciudad"] .lbl-km.dim { display: none; }
   .lbl-small, .lbl-geo, .lbl-money small { display: none; }
+  [data-scene="microrred"] .lbl-data { font-size: 9.5px; } /* Microrred: el rótulo del CCED tan compacto como los de las sedes */
   /* Hospital 2028 en el teléfono: cada cifra con el nombre corto de su fuente; sin la etiqueta del edificio (tapaba el modelo) */
   [data-scene="hospital"] .lbl-money small { display: block; font-size: 9px; } [data-scene="hospital"] .lbl-money .fl { display: none; } [data-scene="hospital"] .lbl-money .fc { display: inline; }
-  [data-scene="hospital"] .lbl-hosp { display: none; }
+  [data-scene="hospital"] .lbl-hosp { display: none; } #v-hospital .stage { height: clamp(340px, 50vh, 430px); } /* la maqueta es apaisada: recuadro más bajo, sin vacío arriba y abajo */
   /* Hoja de ruta en el teléfono: la maqueta es apaisada, así que el recuadro es más bajo (sin franjas vacías arriba y abajo) */
   #v-ruta .stage { height: clamp(280px, 40vh, 360px); } [data-scene="ruta"] .lbl-node { font-size: 9.5px; }
   [data-scene="modelos"] .lbl-cx { font-size: 9px; padding: 2px 6px 2px 5px; } /* Modelos 3D: etiqueta de conexión compacta */
@@ -266,6 +293,13 @@ a { color: var(--accent); }
   [data-slot="periodos.pudo"] .tbl-wrap thead { display: none; }
   [data-slot="periodos.pudo"] .tbl-wrap tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
   [data-slot="periodos.pudo"] .tbl-wrap td { padding: 0; border: 0; } [data-slot="periodos.pudo"] .tbl-wrap td:first-child { grid-column: 1 / -1; }
+  /* matriz de indicadores: cada área como ficha, con sus seis periodos en una grilla de tres (el periodo encima de la cifra) */
+  #v-periodos [data-slot="periodos.table"] table, #v-periodos [data-slot="periodos.table"] tbody { display: block; min-width: 0; }
+  #v-periodos [data-slot="periodos.table"] thead { display: none; }
+  #v-periodos [data-slot="periodos.table"] tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  #v-periodos [data-slot="periodos.table"] tr > td { padding: 0; border: 0; } #v-periodos [data-slot="periodos.table"] tr > td:first-child { grid-column: 1 / -1; position: static; max-width: none; box-shadow: none; }
+  #v-periodos [data-slot="periodos.table"] td.n { text-align: left; white-space: normal; } #v-periodos [data-slot="periodos.table"] td .note { font-size: 0.75rem; }
+  #v-periodos [data-slot="periodos.table"] td.n::before { content: attr(data-p); display: block; font: 600 0.66rem var(--f-mono); color: var(--muted); }
   #v-periodos .tbl-wrap, #v-dinero .tbl-wrap { background: linear-gradient(to right, var(--surface) 30%, transparent) left / 28px 100% no-repeat local, linear-gradient(to left, var(--surface) 30%, transparent) right / 28px 100% no-repeat local, radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--ink) 22%, transparent), transparent) left / 12px 100% no-repeat scroll, radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 22%, transparent), transparent) right / 12px 100% no-repeat scroll; }
   .lbl-pila { font-size: 11px; padding: 2px 5px; } .lbl-pila small { display: none; }
   .lbl-money { font-size: 10px; padding: 2px 5px; }

@@ -29,9 +29,13 @@ export function mount(root) {
   proc.add(box(18, 6, 10, M.wall, 0, 0, 0), box(18.2, 0.5, 10.2, M.roof, 0, 6, 0));
   for (let i = 0; i < 8; i++) { proc.add(box(1.4, 1.2, 0.1, M.glass, -7.7 + i * 2.2, 1.2, 5.02)); proc.add(box(1.4, 1.2, 0.1, M.glass, -7.7 + i * 2.2, 4, 5.02)); }
   proc.add(box(8, 3.6, 7, M.wall, 13, 0, 1.5), box(9, 3.6, 7, M.wall, -13.5, 0, -1), box(6, 3, 5, M.wall, 4, 0, -9));
-  const roofPV = solarArray(14, 4, M.pv, null); roofPV.position.set(0, 6.3, 0); proc.add(roofPV);
-  const cp = solarArray(16, 2, M.pv, M.frame); cp.position.set(0, 2.8, 14.5); proc.add(cp);
-  proc.add(box(7.6, 2.6, 2.4, M.bess, -12, 0, 9), box(3.4, 2.1, 1.9, M.gen, -12, 0, -8), box(0.2, 10, 0.2, M.dark, 8.5, 6.5, -3.5));
+  // paneles y baterías del marcador solo si el edificio los tiene (el nodo solar del hospital pasó a la torre)
+  if (!REAL || REAL.kwp_plan || REAL.bess) {
+    const roofPV = solarArray(14, 4, M.pv, null); roofPV.position.set(0, 6.3, 0); proc.add(roofPV);
+    const cp = solarArray(16, 2, M.pv, M.frame); cp.position.set(0, 2.8, 14.5); proc.add(cp);
+    proc.add(box(7.6, 2.6, 2.4, M.bess, -12, 0, 9));
+  }
+  proc.add(box(3.4, 2.1, 1.9, M.gen, -12, 0, -8), box(0.2, 10, 0.2, M.dark, 8.5, 6.5, -3.5));
 
   // Modelo GLB comprimido con Draco, con dos niveles de detalle (se cambia por distancia de cámara)
   const status = st.label('Cargando modelo 3D…', 'lbl-small', [0, 1, 18]);
@@ -93,7 +97,7 @@ export function mount(root) {
   if (el.clientWidth < 560) {
     const bx = new THREE.Box3(new THREE.Vector3(-half, 0, -half), new THREE.Vector3(half, HY, half));
     items.forEach((it) => bx.expandByPoint(it.p.position.clone().setY(16 * Math.sqrt(K))));
-    st.frameBox(bx, new THREE.Vector3(0.1, 1.6, 1), { margin: 0.68 });
+    st.frameBox(bx, new THREE.Vector3(0.1, 1.2, 1), { margin: 0.72 });
   }
 
   let esc = 'med';
@@ -140,7 +144,7 @@ export function mount(root) {
     <dt>Aseguramiento</dt><dd style="text-align:left;font-family:inherit">${fi.aseguramiento}</dd><dt>Población 2028</dt><dd>${fmtN(fi.poblacion_2028)} habitantes (DANE)</dd></dl>`;
   const pc = Hs.proyecto.componentes;
   // si la tabla todavía es la del refuerzo del edificio, se aclara que la torre la reemplazó
-  const antes = pc.some((c) => /reforz/i.test(c.componente)) ? '<p class="note">Propuesta anterior a la torre: el reforzamiento se reemplaza por la <a href="#torre">torre de servicios de primer nivel</a> y por la adecuación del edificio actual para oficinas y bodega; la solar y las baterías ahora van en la torre.</p>' : '';
+  const antes = pc.some((c) => /reforz/i.test(c.componente)) ? '<p class="note">Propuesta anterior a la torre: el reforzamiento se reemplaza por la <a href="#torre">torre de servicios de primer nivel</a> y por la adecuación del edificio actual para administración, archivo, bodega y central de distribución; la solar y las baterías ahora van en la torre.</p>' : '';
   root.querySelector('[data-slot="hospital.proyecto"]').innerHTML = `${antes}<table><thead><tr><th>Componente</th><th class="n">Valor</th></tr></thead><tbody>${pc.map((c) => `<tr><td>${limpia(c.componente)} <span class="tag ${c.certeza === 'V' ? 'ver' : 'sup'}">${c.certeza === 'V' ? 'verificado' : 'supuesto'}</span><br><span class="note">${limpia(c.fuente)}</span></td><td class="n">${fmtCOP(c.valor * 1e6)}</td></tr>`).join('')}</tbody><tfoot><tr><td>Total</td><td class="n">${fmtCOP(pc.reduce((a, c) => a + c.valor, 0) * 1e6)}</td></tr></tfoot></table>`;
   layout();
   pick(F[0]);

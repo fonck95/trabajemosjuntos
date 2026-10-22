@@ -12,22 +12,23 @@ import { progressiveLOD } from '../assets.js';
 import { EDIFICIOS, CALLES, MICRORRED, RED } from '../data.js';
 
 // cámara inicial que mete todas las sedes urbanas en pantalla (con margen para las etiquetas), mirando desde el
-// sur a ~55° de elevación: busca la distancia y recentra el objetivo sobre la caja proyectada
-function encuadre(urb, cx, cy) {
-  // se encuadra para la proporción de escritorio; en pantallas angostas Stage aleja la cámara (fit: 1)
-  const asp = 1.5;
+// sur a ~55° de elevación: busca la distancia y recentra el objetivo sobre la caja proyectada. Se encuadra con la
+// proporción real del escenario: en el teléfono (alto y angosto) el pueblo llena el ancho, con más margen abajo
+// para la barra de recorrido y arriba para el botón «Rendimiento» y las etiquetas
+function encuadre(urb, cx, cy, asp = 1.5) {
+  const [mx, my0, my1] = asp < 1 ? [0.74, -0.58, 0.6] : [0.8, -0.78, 0.72];
   const c = new THREE.PerspectiveCamera(38, asp, 1, 5000), dir = new THREE.Vector3(-0.2, 0.82, 0.54).normalize();
   const pts = (urb.length ? urb : [{ x: 0, y: 0 }]).map((e) => new THREE.Vector3(e.x, 8, -e.y));
   const tgt = new THREE.Vector3(cx, 0, -cy), v = new THREE.Vector3(), right = new THREE.Vector3();
   const fwd = new THREE.Vector3(-dir.x, 0, -dir.z).normalize(), tanH = Math.tan(THREE.MathUtils.degToRad(19));
   let D = 300;
   const place = () => { c.position.copy(tgt).addScaledVector(dir, D); c.lookAt(tgt); c.updateMatrixWorld(); };
-  const box = () => pts.reduce((b, p) => { v.copy(p).project(c); return [Math.min(b[0], v.x), Math.max(b[1], v.x), Math.min(b[2], v.y), Math.max(b[3], v.y)]; }, [1, -1, 1, -1]);
+  const box = () => pts.reduce((b, p) => { v.copy(p).project(c); if (v.z > 1) return [-9, 9, -9, 9]; return [Math.min(b[0], v.x), Math.max(b[1], v.x), Math.min(b[2], v.y), Math.max(b[3], v.y)]; }, [1, -1, 1, -1]); // detrás de la cámara: no cabe
   for (let it = 0; it < 3; it++) {
-    for (D = 250; D < 1450; D *= 1.04) { place(); const [x0, x1, y0, y1] = box(); if (x0 > -0.8 && x1 < 0.8 && y0 > -0.78 && y1 < 0.72) break; }
+    for (D = 250; D < 3200; D *= 1.04) { place(); const [x0, x1, y0, y1] = box(); if (x0 > -mx && x1 < mx && y0 > my0 && y1 < my1) break; }
     const [x0, x1, y0, y1] = box();
     right.setFromMatrixColumn(c.matrixWorld, 0).setY(0).normalize();
-    tgt.addScaledVector(right, ((x0 + x1) / 2) * D * tanH * asp).addScaledVector(fwd, (((y0 + y1) / 2 + 0.03) * D * tanH) / dir.y);
+    tgt.addScaledVector(right, ((x0 + x1) / 2) * D * tanH * asp).addScaledVector(fwd, (((y0 + y1 - my0 - my1) / 2) * D * tanH) / dir.y);
   }
   place();
   return { cam: c.position.toArray(), target: tgt.toArray() };
@@ -66,8 +67,14 @@ export function mount(root) {
   const xs = urb.map((e) => e.x), ys = urb.map((e) => e.y);
   const farR = Math.max(1500, ...lista.map((e) => Math.hypot(e.x, e.y) + 400));
   const cx = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0, cy = ys.length ? (Math.min(...ys) + Math.max(...ys)) / 2 : 0;
-  const vista = encuadre(urb, cx, cy);
-  const st = new Stage(el, { ...vista, fov: 38, minDist: 6, maxDist: 1500, fit: 1, declutter: ['lbl-node', 'lbl-km'], tone: 'aces', exposure: 1.05, sky: true, fog: { near: farR * 0.6, far: farR } });
+  // se encuadra con la proporción real del escenario; Stage aleja la cámara en pantallas angostas (fit: 1), así que
+  // se guarda la posición equivalente de escritorio (si el escenario cambia de tamaño, Stage la reajusta)
+  const asp = el.clientWidth && el.clientHeight ? el.clientWidth / el.clientHeight : 1.5, f0 = Math.max(1, 1.5 / asp);
+  const vista = encuadre(urb, cx, cy, asp);
+  // en el teléfono la cámara queda más lejos: la niebla empieza detrás del pueblo para que no lo deslave
+  const dist = Math.hypot(...vista.cam.map((v, i) => v - vista.target[i])), fogNear = Math.max(farR * 0.6, dist * 1.2);
+  vista.cam = vista.cam.map((v, i) => vista.target[i] + (v - vista.target[i]) / f0);
+  const st = new Stage(el, { ...vista, fov: 38, minDist: 6, maxDist: 1500, fit: 1, declutter: ['lbl-node', 'lbl-km'], tone: 'aces', exposure: 1.05, sky: true, fog: { near: fogNear, far: Math.max(farR, fogNear + 1800) } });
   st.camera.far = 5000; st.camera.updateProjectionMatrix();
   // la rueda acerca hacia donde apunta el cursor y el arrastre con clic derecho se desliza sobre el piso
   Object.assign(st.controls, { zoomToCursor: true, screenSpacePanning: false, zoomSpeed: 1.15 });
@@ -358,6 +365,14 @@ export function mount(root) {
   list.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => select(items[+b.dataset.i])));
   const node = (id) => MICRORRED.nodos.find((n) => n.id === id);
   const conf = { alta: 'Ubicación confirmada', media: 'Ubicación probable', baja: 'Ubicación por confirmar' };
+  // textos de la ficha sin rutas ni claves de los archivos de datos (que citan las fuentes para el equipo técnico)
+  const cortoDe = Object.fromEntries(lista.map((e) => [e.id, e.corto || e.nombre]));
+  const limpia = (t) => String(t)
+    .replace(/\s*\((?:ver |no tiene nodo en )?(?:data\/)?[\w/]*\.json(?: no l[ao] incluye)?\)/g, '').replace(/(?:data\/)?[\w/]*\.json;\s*/g, '')
+    .replace(/data\/microrred\.json/g, 'el plan de la microrred').replace(/kwp_factible = 0/g, 'sin paneles propios').replace(/kwp_factible/g, 'los kWp que caben')
+    .replace(/(?:data\/[\w/]*\/)?(\w+)\.json/g, (m, id) => (cortoDe[id] ? `la ficha de ${cortoDe[id]}` : 'el estudio del proyecto'))
+    .replace(/docs\/11\b/g, 'el estudio de la torre del hospital').replace(/'([a-z]+)_([a-z]+)'/g, '$1 de $2').replace(/\bde el\b/g, 'del')
+    .replace(/(^|\. )los kWp/g, '$1Los kWp').replace(/volumenes/g, 'volúmenes');
   function marcar(it) {
     list.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(items[+b.dataset.i] === it)));
     items.forEach((x) => {
@@ -365,6 +380,7 @@ export function mount(root) {
       x.cx.forEach((l) => { l.visible = x === it && proyecto; });
     });
     resaltar(it);
+    el.classList.toggle('con-sede', !!it); // en el teléfono, sin sede elegida se ocultan las distancias en km (CSS)
     nombre.textContent = it ? `${items.indexOf(it) + 1}/${items.length} · ${it.e.corto || it.e.nombre}` : 'Vista general';
   }
   function general() {
@@ -382,16 +398,16 @@ export function mount(root) {
       <dl class="kv">
         <dt>Solar</dt><dd>${pv}</dd>
         ${e.bess ? `<dt>Baterías</dt><dd>${fmtN(e.bess.kwh)} kWh / ${fmtN(e.bess.kw)} kW${e.bess.tipo ? ` · ${e.bess.tipo.replace('_', ' ')}` : ''}</dd>` : ''}
-        ${e.conexion ? `<dt>Conexión</dt><dd style="white-space:normal">${e.conexion.nota || ''}</dd>` : ''}
+        ${e.conexion ? `<dt>Conexión</dt><dd>${limpia(e.conexion.nota || '')}</dd>` : ''}
         ${n ? `<dt>Consumo</dt><dd>${fmtN(n.kwh_mes)} kWh/mes · prioridad ${n.prioridad}${n.isla ? ' · funciona en isla' : ''}</dd>` : ''}
-        ${e.pisos ? `<dt>Edificio</dt><dd>${e.pisos}</dd>` : ''}
+        ${e.pisos ? `<dt>Edificio</dt><dd>${limpia(e.pisos)}</dd>` : ''}
       </dl>
       ${e.conexion ? `<p><b>Cómo se conecta</b></p><ul class="cx-ruta"><li>Paneles → inversores${e.bess ? ' → baterías' : ''} → tablero con medidor bidireccional</li><li>Tablero → ${/poste/i.test(e.conexion.nota || '') ? 'poste de la red de EPM' : 'acometida de EPM en la fachada'}</li><li class="dt">Gateway IoT → enlace de datos al CCED (alcaldía)</li></ul><p><button type="button" class="btn ghost" data-cx-cerca>Ver la conexión de cerca</button></p>` : ''}
-      ${e.obras_civiles?.length ? `<p><b>Obras previas</b></p><ul class="tight">${e.obras_civiles.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''}
-      ${e.domotica?.length ? `<p><b>Domótica</b></p><p class="note">${e.domotica.join(' · ')}</p>` : ''}
-      ${e.notas ? `<p class="note">${e.notas}</p>` : ''}
+      ${e.obras_civiles?.length ? `<details class="fold"><summary><b>Obras previas (${e.obras_civiles.length})</b></summary><ul class="tight">${e.obras_civiles.map((x) => `<li>${limpia(x)}</li>`).join('')}</ul></details>` : ''}
+      ${e.domotica?.length ? `<details class="fold"><summary><b>Domótica</b></summary><p class="note">${e.domotica.join(' · ')}</p></details>` : ''}
+      ${e.notas ? `<details class="fold"><summary><b>Detalle técnico</b></summary><p class="note">${limpia(e.notas)}</p></details>` : ''}
       ${fuentes.length ? `<p><b>Ver el edificio real</b></p><p>${fuentes.map((f, k) => `<a href="${f.url}" target="_blank" rel="noopener">${f.tipo === 'street_view' ? `Street View${f.fecha ? ` (${f.fecha})` : ''}` : `Fuente ${k + 1}`}</a>`).join(' · ')}</p>` : ''}
-      ${e.incertidumbres?.length ? `<details><summary>Lo que no se pudo verificar (${e.incertidumbres.length})</summary><ul class="tight">${e.incertidumbres.map((x) => `<li>${x}</li>`).join('')}</ul></details>` : ''}`;
+      ${e.incertidumbres?.length ? `<details class="fold"><summary>Lo que no se pudo verificar (${e.incertidumbres.length})</summary><ul class="tight">${e.incertidumbres.map((x) => `<li>${x}</li>`).join('')}</ul></details>` : ''}`;
     card.querySelector('[data-cx-cerca]')?.addEventListener('click', () => acercar(it, it.e.conexion.tablero));
     if (gsap) gsap.from(card, { opacity: 0, y: 8, duration: 0.35, ease: 'power2.out' });
   }
@@ -404,7 +420,7 @@ export function mount(root) {
     <div class="tile"><b data-n="${kwp.toFixed(0)}">${fmtN(kwp, 0)}</b><span>kWp que caben en las cubiertas reales${plan ? ` (plan ${fmtN(plan, 0)})` : ''}</span></div>
     <div class="tile"><b data-n="${mods}">${fmtN(mods)}</b><span>Módulos de 550 Wp</span></div>
     <div class="tile"><b data-n="${kwh}">${fmtN(kwh)}</b><span>kWh de baterías</span></div>`;
-  root.querySelector('[data-slot="ciudad.tabla"]').innerHTML = `<table><thead><tr><th>Sede</th><th class="n">kWp plan</th><th class="n">kWp que caben</th><th class="n">Módulos</th><th class="n">Baterías kWh</th><th>Ubicación</th><th>Modelo</th></tr></thead><tbody>${lista.map((e) => `<tr><td>${e.nombre}</td><td class="n">${e.kwp_plan != null ? fmtN(e.kwp_plan, 0) : '—'}</td><td class="n">${e.kwp_factible != null ? fmtN(e.kwp_factible, 1) : '—'}</td><td class="n">${fmtN(e.modulos || 0)}</td><td class="n">${e.bess ? fmtN(e.bess.kwh) : '—'}</td><td>${e.confianza || '—'}</td><td class="note">${e.bytes ? `${fmtN(e.bytes / 1024, 0)} KB · ${fmtN(e.triangulos)} triángulos` : '—'}</td></tr>`).join('')}</tbody></table>`;
+  root.querySelector('[data-slot="ciudad.tabla"]').innerHTML = `<table><thead><tr><th>Sede</th><th class="n">kWp plan</th><th class="n">kWp que caben</th><th class="n">Módulos</th><th class="n">Baterías kWh</th><th>Certeza de la ubicación</th></tr></thead><tbody>${lista.map((e) => `<tr><td>${e.nombre}</td><td class="n">${e.kwp_plan != null ? fmtN(e.kwp_plan, 0) : '—'}</td><td class="n">${e.kwp_factible != null ? fmtN(e.kwp_factible, 1) : '—'}</td><td class="n">${fmtN(e.modulos || 0)}</td><td class="n">${e.bess ? fmtN(e.bess.kwh) : '—'}</td><td>${conf[e.confianza]?.replace('Ubicación ', '') || '—'}</td></tr>`).join('')}</tbody></table>`;
 
   // distancias por la vía y presupuesto de la red (si ya se calculó)
   const redSlot = root.querySelector('[data-slot="ciudad.red"]');
@@ -412,14 +428,20 @@ export function mount(root) {
     const A = RED.arbol, P = RED.presupuesto;
     const costo = Object.fromEntries((P?.por_tramo || []).map((t) => [`${t.de}>${t.a}`, t]));
     const caps = P?.capitulos || [], maxCap = Math.max(1, ...caps.map((c) => c.total));
-    redSlot.innerHTML = `<p class="note">${RED.metodo || ''}</p>
+    // la nota del método en palabras (sin la clave interna de la columna ni nombres de algoritmos) y los costos que
+    // no se reparten por tramo, para que la columna de costos cuadre con el total
+    const metodo = (RED.metodo || '').replace(/red propuesta = árbol de mínima longitud \(Prim\) con esas distancias/, 'la red propuesta une todas las sedes con el menor recorrido total por esas vías')
+      .replace(/\s*\((Dijkstra|Prim)\)/g, '').replace(/el grafo de vías de OSM/, 'el mapa de calles de OpenStreetMap').replace(/km_red_nueva/g, 'la columna «km de red nueva»');
+    const comunes = P ? P.totales.total_cop_2026 - (P.por_tramo || []).reduce((a, t) => a + t.costo_total, 0) : 0;
+    redSlot.innerHTML = `<p class="note">${metodo}</p>
       <div class="tbl-wrap"><table><thead><tr><th>Tramo</th><th class="n">km por la vía</th><th class="n">km en línea recta</th><th class="n">km de red nueva</th>${P ? '<th class="n">Costo del tramo</th>' : ''}</tr></thead><tbody>
       ${A.tramos.map((t) => { const c = costo[`${t.de}>${t.a}`]; return `<tr><td>${nombreDe(t.de)} → ${nombreDe(t.a)}${c?.nota ? `<br><small class="note">${c.nota}</small>` : ''}</td><td class="n">${fmtN(t.km_via, 3)}</td><td class="n">${fmtN(t.km_recta, 3)}</td><td class="n">${fmtN(t.km_red_nueva, 3)}</td>${P ? `<td class="n">${c ? fmtCOP(c.costo_total) : '—'}</td>` : ''}</tr>`; }).join('')}
-      <tr><td><b>Total de la red propuesta</b></td><td class="n">${fmtN(A.km_suma_tramos, 2)}</td><td></td><td class="n"><b>${fmtN(A.km_total_red, 2)} km</b></td>${P ? `<td class="n"><b>${fmtCOP(P.totales.total_cop_2026)}</b></td>` : ''}</tr></tbody></table></div>
+      ${comunes > 0 ? `<tr><td>Costos comunes de toda la red<br><small class="note">no se reparten por tramo: protección y maniobra, nodo de datos del CCED, conexión de la alcaldía, trámites RETIE y plan de manejo ambiental</small></td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">${fmtCOP(comunes)}</td></tr>` : ''}
+      <tr><td><b>Total de la red propuesta</b></td><td class="n">${fmtN(A.km_suma_tramos, 2)} km</td><td class="n">—</td><td class="n"><b>${fmtN(A.km_total_red, 2)} km</b></td>${P ? `<td class="n"><b>${fmtCOP(P.totales.total_cop_2026)}</b></td>` : ''}</tr></tbody></table></div>
       <p><button type="button" class="btn ghost" data-csv>Descargar matriz de distancias entre todas las sedes (CSV)</button></p>
       ${P ? `<h4>Presupuesto por capítulos (por mayores) e ítems (por menores)</h4>
         <p class="note">${fmtN(P.km_urbanos, 2)} km urbanos y ${fmtN(P.km_rurales, 2)} km rurales de red nueva · ${P.moneda} · ${P.precision}</p>
-        <div class="barras">${caps.map((c) => `<details class="fold"><summary><span class="bar-l">${c.nombre}${c.unidad_resumen ? `<br><small class="note">${c.unidad_resumen}</small>` : ''}</span><span class="bar"><i style="width:${(100 * c.total) / maxCap}%"></i></span><span class="bar-v">${fmtCOP(c.total)}</span></summary>
+        <div class="barras">${caps.map((c) => `<details class="fold"><summary><span class="bar-l">${c.nombre}${parseFloat(c.unidad_resumen) > 0 ? `<br><small class="note">${fmtN(parseFloat(c.unidad_resumen), 2)} km de red nueva</small>` : ''}</span><span class="bar"><i style="width:${(100 * c.total) / maxCap}%"></i></span><span class="bar-v">${fmtCOP(c.total)}</span></summary>
           <div class="tbl-wrap"><table><thead><tr><th>Ítem</th><th>Und.</th><th class="n">Cantidad</th><th class="n">Valor unitario</th><th class="n">Total</th></tr></thead><tbody>
           ${c.items.map((i) => `<tr><td>${i.descripcion}${i.nota ? `<br><small class="note">${i.nota}</small>` : ''}</td><td>${i.unidad}</td><td class="n">${fmtN(i.cantidad, 2)}</td><td class="n">${fmtCOP(i.valor_unitario)}</td><td class="n">${fmtCOP(i.total)}</td></tr>`).join('')}
           </tbody></table></div></details>`).join('')}</div>

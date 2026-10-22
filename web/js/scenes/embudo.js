@@ -39,10 +39,12 @@ export function mount(root) {
     // pernos sobre la cara superior del anillo
     const nb = Math.round(10 + r * 2.4);
     for (let k = 0; k < nb; k++) { const a = (k / nb) * Math.PI * 2; bolts.push(new THREE.CylinderGeometry(0.045, 0.05, 0.06, 6).translate(Math.cos(a) * r, y + 0.19, Math.sin(a) * r)); }
-    st.label(`<b>${e.etapa}</b><br>${fmtN(e.n)} ${e.unidad}${e.valor ? ` · ${fmtCOP(e.valor)}` : ''}`, 'lbl-node', [r + 1.5, y, 0]);
+    const lab = st.label(`<b>${e.etapa}</b><br>${fmtN(e.n)} ${e.unidad}${e.valor ? ` · ${fmtCOP(e.valor)}` : ''}`, 'lbl-node', [r + 1.5, y, 0]);
     st.pickable(ring, { onPick: () => info(e) });
-    return { ring, y, r, e };
+    return { ring, y, r, e, lab };
   });
+  // en pantallas angostas la etiqueta del anillo mayor no cabe a su derecha: va centrada encima del anillo
+  new ResizeObserver(() => { const c = el.clientWidth < 560, { lab, r, y } = rings[0]; lab.position.set(c ? 0 : r + 1.5, c ? y + 3.2 : y, 0); st.invalidate(); }).observe(el);
   const boltMat = mat(0x6c747b, { roughness: 0.35, metalness: 0.7 });
   const boltM = new THREE.Mesh(mergeGeometries(bolts), boltMat); S.add(boltM);
   // embudo de vidrio en una sola pieza: primero la cara interior y luego la exterior (sin parpadeo por orden)
@@ -116,7 +118,14 @@ export function mount(root) {
   root.querySelector('[data-slot="embudo.break"]').innerHTML = EMBUDO.rupturas.map((r) => `<p><b>${r.titulo}.</b> ${r.texto}</p>`).join('');
   const pickEl = root.querySelector('[data-slot="embudo.break"]');
   function info(e) { pickEl.insertAdjacentHTML('afterbegin', `<div class="card" style="background:var(--raised);margin-bottom:8px"><b>${e.etapa}</b><br>${fmtN(e.n)} ${e.unidad}${e.valor ? ` · ${fmtCOP(e.valor)}` : ''}<br><span class="note">${e.nota}</span></div>`); }
-  root.querySelector('[data-slot="embudo.table"]').innerHTML = `<table><thead><tr><th>Año</th><th class="n">Valor</th><th>Objeto (SECOP)</th><th>Obra posterior identificable</th></tr></thead><tbody>${EMBUDO.estudios.map((s) => `<tr><td>${s.anio}</td><td class="n">${fmtCOP(s.valor)}</td><td>${s.objeto}</td><td>${s.obra ? `Sí (${s.anio_obra}) <span class="note">${s.obra}</span>` : '<span class="tag est">no hallada</span>'}</td></tr>`).join('')}</tbody></table>`;
+  // los objetos de SECOP llegan cortados a 180 caracteres (la obra, a 110), a veces a mitad de palabra: se corta en la
+  // última palabra completa, sin conectores sueltos al final, y se marca con «…»
+  const fin = (s, n) => {
+    const t = s.replace(/\s+/g, ' ').trim();
+    if (s.length !== n || /[.…)]$/.test(t)) return t;
+    return (/\s$/.test(s) ? t : t.replace(/\s+\S*$/, '')).replace(/(\s+(a|al|con|de|del|e|el|en|la|las|lo|los|o|para|por|que|u|un|una|y))+$/i, '').replace(/[\s,;:-]+$/, '') + '…';
+  };
+  root.querySelector('[data-slot="embudo.table"]').innerHTML = `<table><thead><tr><th>Año</th><th class="n">Valor</th><th>Objeto (SECOP)</th><th>Obra posterior identificable</th></tr></thead><tbody>${EMBUDO.estudios.map((s) => `<tr><td>${s.anio}</td><td class="n">${fmtCOP(s.valor)}</td><td>${fin(s.objeto, 180)}</td><td>${s.obra ? `Sí (${s.anio_obra}) <span class="note">${fin(s.obra, 110)}</span>` : '<span class="tag est">no hallada</span>'}</td></tr>`).join('')}</tbody></table>`;
 
   onTheme((t) => {
     rings.forEach((r, i) => { ringMats[i].color.copy(t.s[r.e.slot - 1]); prints[i].material.color.copy(t.s[r.e.slot - 1]); });

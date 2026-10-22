@@ -283,7 +283,7 @@ class Links {
 export function mount(root) {
   const el = root.querySelector('.stage');
   const home = { pos: [38, 44, 58], tg: [-2, 0, -1] };
-  const st = new Stage(el, { cam: home.pos, target: home.tg, maxDist: 130, env: false, declutter: true });
+  const st = new Stage(el, { cam: home.pos, target: home.tg, maxDist: 130, env: false, declutter: ['lbl-node', 'lbl-small'] });
   st.sunLight.shadow.normalBias = 0.05; // sin acné de sombra con el sol rasante del amanecer
   const T = tokens();
   const S = st.scene;
@@ -734,7 +734,7 @@ export function mount(root) {
     big ? container(K, len, hgt) : cabinets(K, nc);
     const body = K.mesh(pal);
     c.add(body); S.add(c);
-    if (big) st.label(`BESS ${fmtN(b.kwh)} kWh`, 'lbl-small', [0, hgt + 0.8, 0], c);
+    if (big) st.label(`Baterías ${fmtN(b.kwh)} kWh`, 'lbl-small', [0, hgt + 0.8, 0], c);
     st.pickable(c, {
       onPick: () => { panel.innerHTML = `<h4>Baterías LFP · ${n.nombre}</h4><dl class="kv"><dt>Energía</dt><dd>${fmtN(b.kwh)} kWh</dd><dt>Potencia</dt><dd>${fmtN(b.kw)} kW</dd><dt>Función</dt><dd>Autoconsumo de día, respaldo en falla, recorte de pico nocturno</dd></dl>`; select(b.nodo, false); },
       onEnter: () => hover(b.nodo), onLeave: () => hover(null),
@@ -897,8 +897,15 @@ export function mount(root) {
     <button type="button" class="hud-btn" style="position:static;justify-self:start;margin-top:5px;pointer-events:auto" hidden>Vista general</button>`;
   el.appendChild(leg);
   const homeBtn = leg.querySelector('button');
-  // en pantallas angostas la leyenda se abrevia para no tapar la maqueta
-  new ResizeObserver(() => { const c = el.clientWidth < 560; leg.querySelectorAll('[data-x]').forEach((x) => { x.hidden = c; }); }).observe(el);
+  // en pantallas angostas la leyenda se abrevia y baja al pie, encima de la ayuda: arriba quedan las etiquetas
+  // de las sedes, que el declutter sube para no encimarse
+  const hint = el.querySelector('.stage-hint');
+  new ResizeObserver(() => {
+    const c = el.clientWidth < 560;
+    leg.querySelectorAll('[data-x]').forEach((x) => { x.hidden = c; });
+    leg.style.top = c ? 'auto' : '10px';
+    leg.style.bottom = c ? `${(hint?.offsetHeight || 0) + 16}px` : 'auto';
+  }).observe(el);
 
   // ---- Resalte: al pasar el cursor o elegir una sede, sus enlaces engordan y brillan; el resto se apaga
   let sel = null, hov = null;
@@ -962,8 +969,12 @@ export function mount(root) {
     const line = (f) => s.map((x, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(f(x)).toFixed(1)}`).join('');
     const area = `${line((x) => x.pv)}L${X(STEPS - 1)},${Y(0)}L${X(0)},${Y(0)}Z`;
     const socLine = s.map((x, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${(H - 16 - x.soc * (H - 30)).toFixed(1)}`).join('');
-    const ticks = [0, 6, 12, 18, 24].map((h) => `<text x="${X(Math.min(STEPS - 1, h * 4))}" y="${H - 3}" text-anchor="middle">${h}h</text>`).join('');
-    const yt = [0, maxP / 2].map((v) => `<line x1="${pad}" x2="${W - 6}" y1="${Y(v)}" y2="${Y(v)}" class="grid"/><text x="${pad - 3}" y="${Y(v) + 3}" text-anchor="end">${fmtN(v, 0)}</text>`).join('');
+    // horas: la primera y la última alineadas hacia adentro para que no se corten en los bordes
+    const ticks = [0, 6, 12, 18, 24].map((h) => `<text x="${X(Math.min(STEPS - 1, h * 4))}" y="${H - 3}" text-anchor="${h ? (h === 24 ? 'end' : 'middle') : 'start'}">${h}h</text>`).join('');
+    // eje de potencia en valores redondos con su unidad arriba; el borde superior es el 100 % de la batería
+    const paso = [10, 20, 25, 50, 100, 200, 250, 500].find((p) => maxP / p <= 3.2) || 1000;
+    const yt = Array.from({ length: Math.floor(maxP / paso) + 1 }, (_, i) => i * paso).map((v) => `<line x1="${pad}" x2="${W - 6}" y1="${Y(v)}" y2="${Y(v)}" class="grid"/><text x="${pad - 3}" y="${Y(v) + 3}" text-anchor="end">${fmtN(v, 0)}</text>`).join('')
+      + `<text x="${pad - 3}" y="8" text-anchor="end">kW</text><text x="${W - 6}" y="10" text-anchor="end" class="soc-t">batería 100 %</text>`;
     svg.innerHTML = `${yt}<path d="${area}" class="pv"/><path d="${line((x) => x.served)}" class="dem"/><path d="${socLine}" class="soc"/>${ticks}<line class="now" x1="0" x2="0" y1="8" y2="${H - 16}"/>`;
     svg.dataset.x0 = pad; svg.dataset.w = W - pad - 6;
   }

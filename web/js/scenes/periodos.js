@@ -188,7 +188,7 @@ export function mount(root) {
     const noObra = c.sinObra;
     det.innerHTML = `<h4>${p.id.replace('-', '–')} · ${p.alcalde}</h4>
       ${D ? `<div class="money-big"><div><b>${fmtM(c.ingresos)}</b><span>entraron${d?.en_curso ? ' (solo años con dato; periodo en curso)' : ''} · pesos de 2026</span></div>
-        <div class="bad"><b>${fmtM(noObra)}</b><span>no se convirtieron en obra${c.estimado ? ` (${fmtM(c.hecho)} en registros + ${fmtM(c.estimado)} estimado)` : ''}${d?.sin_obra_rango ? ` · rango ${fmtM(d.sin_obra_rango[0])}–${fmtM(d.sin_obra_rango[1])}` : ''}</span></div>
+        <div class="bad"><b>${fmtM(noObra)}</b><span>no se convirtieron en obra${c.estimado ? ` (${fmtM(c.hecho)} en registros + ${fmtM(c.estimado)} estimado)` : ''}${d?.sin_obra_rango ? ` · rango <span class="nw">${fmtM(d.sin_obra_rango[0])}–${fmtM(d.sin_obra_rango[1])}</span>` : ''}</span></div>
         ${c.indicio ? `<div class="ind"><b>${fmtM(c.indicio)}</b><span>indicio por verificar (no suma en "sin obra")</span></div>` : ''}
         ${c.quieta ? `<div class="quieta"><b>${fmtM(c.quieta)}</b><span>plata quieta: regalías sin aprobar o sin comprometer al cierre (no es plata perdida)</span></div>` : ''}
         <div class="ghost"><b>${fmtM(c.contra)}</b><span>pudieron gestionarse o ahorrarse y no se hizo</span></div></div>` : ''}
@@ -327,7 +327,8 @@ export function mount(root) {
   }
 
   // ---------------------------------------------------------------- matriz (tabla)
-  root.querySelector('[data-slot="periodos.table"]').innerHTML = `<table><thead><tr><th>Área (fuente)</th>${PERIODOS.map((p) => `<th class="n">${p.id}</th>`).join('')}</tr></thead><tbody>${AREAS.map((a) => `<tr><td>${a.nombre}<br><span class="note">${a.fuente}</span></td>${PERIODOS.map((p) => `<td class="n">${a.crudo?.[p.id] ?? (a.valores[p.id] == null ? '—' : fmtN(a.valores[p.id], 0))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  // data-p: en el teléfono cada área se lee como ficha y el periodo va encima de su cifra
+  root.querySelector('[data-slot="periodos.table"]').innerHTML = `<table><thead><tr><th>Área (fuente)</th>${PERIODOS.map((p) => `<th class="n">${p.id}</th>`).join('')}</tr></thead><tbody>${AREAS.map((a) => `<tr><td>${a.nombre}<br><span class="note">${a.fuente}</span></td>${PERIODOS.map((p) => `<td class="n" data-p="${p.id.replace('-', '–')}">${a.crudo?.[p.id] ?? (a.valores[p.id] == null ? '—' : fmtN(a.valores[p.id], 0))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 
   setMode(mode);
   select(n - 1);

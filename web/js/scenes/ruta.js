@@ -11,6 +11,8 @@ import { RUTA } from '../data.js';
 const limpia = (s) => String(s ?? '').replace(/\s*\(?\bVer (?:docs\/\d+(?:,\s*|\s+y\s+)?)+\)?\.?/g, '').replace(/\s*\((?:docs\/\d+|[\w./-]+\.json)[^()]*\)/g, '');
 // proyectos del portafolio que tienen su propia página en el atlas
 const VISTA = [[/torre/i, 'torre'], [/parque/i, 'parque'], [/red de distribución/i, 'ciudad'], [/microrred/i, 'microrred']];
+// los montos y rangos de plata del texto ("$2.075–4.447 M") no se parten entre renglones
+const plata = (s) => s.replace(/\$[\d.,]+(?:\s*[–-]\s*[\d.,]+)?\s(?:mil\s)?M\b/g, '<span class="nw">$&</span>');
 
 // cinta plana a lo largo de la curva entre los desplazamientos laterales a < b (cara hacia arriba)
 function ribbon(curve, a, b, y, n, t0 = 0, t1 = 1, colorAt) {
@@ -174,8 +176,8 @@ export function mount(root) {
   // el nombre lleva a la página del proyecto si la tiene; el refuerzo del hospital, si aparece, remite a la torre que lo reemplazó
   const nombre = (p) => { const v = VISTA.find(([re]) => re.test(p.nombre)); return v ? `<a href="#${v[1]}">${p.nombre}</a>` : p.nombre; };
   const torre = (p) => (/hospital/i.test(p.nombre) && !/torre/i.test(p.nombre) && /reforz/i.test(p.alcance) ? ' <b>Decisión actual:</b> en lugar de reforzar el edificio se construye la <a href="#torre">torre de servicios de primer nivel</a>; el edificio actual pasa a administración, archivo, bodega y central de distribución.' : '');
-  // "Cuándo" y no "Fase": la columna trae años y no las fases 0 a 3 de la hoja de ruta
-  root.querySelector('[data-slot="ruta.portafolio"]').innerHTML = `<table><thead><tr><th>Proyecto</th><th>Ejecutor / vía</th><th>Fuentes</th><th>Cuándo</th><th class="n">Inversión</th></tr></thead><tbody>${P.map((p) => `<tr><td><b>${nombre(p)}</b><br><span class="note">${limpia(p.alcance)}${torre(p)}</span></td><td>${p.ejecutor}</td><td>${p.fuentes}</td><td>${p.fase}</td><td class="n">${fmtCOP(p.valor * 1e6)}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="4">Total portafolio</td><td class="n">${fmtCOP(P.reduce((a, p) => a + p.valor, 0) * 1e6)}</td></tr></tfoot></table>`;
+  // "Cuándo" y no "Fase": la columna trae años y no las fases 0 a 3 de la hoja de ruta; el rango de años no se parte
+  root.querySelector('[data-slot="ruta.portafolio"]').innerHTML = `<table><thead><tr><th>Proyecto</th><th>Ejecutor / vía</th><th>Fuentes</th><th>Cuándo</th><th class="n">Inversión</th></tr></thead><tbody>${P.map((p) => `<tr><td><b>${nombre(p)}</b><br><span class="note">${plata(limpia(p.alcance))}${torre(p)}</span></td><td>${p.ejecutor}</td><td>${p.fuentes}</td><td>${String(p.fase).replace(/\d{4}\s*[–-]\s*\d{4}/g, '<span class="nw">$&</span>')}</td><td class="n">${fmtCOP(p.valor * 1e6)}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="4">Total portafolio</td><td class="n">${fmtCOP(P.reduce((a, p) => a + p.valor, 0) * 1e6)}</td></tr></tfoot></table>`;
 
   onTheme((t) => {
     Object.assign(T, t);
