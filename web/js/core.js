@@ -177,8 +177,9 @@ export class Stage {
     for (const o of this._labels) {
       const e = o.element, c = e.classList;
       if (!e.isConnected || e.hidden || e.style.display === 'none') continue;
-      const fijo = c.contains('lbl-cx') || c.contains('lbl-data') || c.contains('lbl-alert');
-      if (!fijo && !this.declutter.some((k) => c.contains(k))) continue;
+      // la etiqueta secundaria de una conexión (.lbl-cx.alt, el poste) sí se mueve para no tapar la del tablero
+      const fijo = (c.contains('lbl-cx') && !c.contains('alt')) || c.contains('lbl-data') || c.contains('lbl-alert');
+      if (!fijo && !c.contains('alt') && !this.declutter.some((k) => c.contains(k))) continue;
       o.getWorldPosition(v).project(this.camera);
       if (v.z > 1) continue;
       const r = { e, x: ((v.x + 1) / 2) * W, y: ((1 - v.y) / 2) * H, w: e.offsetWidth, h: e.offsetHeight };
@@ -434,13 +435,13 @@ export class Flow {
 export function conexionLabels(st, cn, parent, onClick) {
   if (!cn?.tablero) return [];
   const [tx, ty, tz] = cn.tablero, lejos = cn.red && Math.hypot(cn.red[0] - tx, cn.red[2] - tz) > 5;
-  const make = (html, pos) => {
-    const l = st.label(html, 'lbl-cx', pos, parent);
+  const make = (html, pos, cls = '') => {
+    const l = st.label(html, `lbl-cx${cls}`, pos, parent);
     if (onClick) { Object.assign(l.element.style, { pointerEvents: 'auto', cursor: 'zoom-in' }); l.element.title = 'Acercar a la conexión'; l.element.addEventListener('click', () => onClick(pos)); }
     return l;
   };
   const out = [make(`<span class="pw">Tablero + medidor bidireccional</span><span class="dt">Gateway IoT → CCED</span>${cn.red && !lejos ? '<span class="pw">Acometida de la red (EPM)</span>' : ''}`, [tx, ty + 2.4, tz])];
-  if (lejos) out.push(make('<span class="pw">Poste de la red (EPM)</span>', [cn.red[0], cn.red[1] + 1.5, cn.red[2]]));
+  if (lejos) out.push(make('<span class="pw">Poste de la red (EPM)</span>', [cn.red[0], cn.red[1] + 1.5, cn.red[2]], ' alt'));
   return out;
 }
 

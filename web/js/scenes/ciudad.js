@@ -104,6 +104,7 @@ export function mount(root) {
   const canos = new THREE.Mesh(ribbon(CALLES.canos, 0.04), M.cano); S.add(canos);
   CALLES.agua.forEach((a) => {
     const sh = new THREE.Shape(a.p.map(([x, y]) => new THREE.Vector2(x, y)));
+    (a.huecos || []).forEach((h) => sh.holes.push(new THREE.Path(h.map(([x, y]) => new THREE.Vector2(x, y)))));
     const g = new THREE.ShapeGeometry(sh); g.rotateX(-Math.PI / 2);
     const m = new THREE.Mesh(g, M.water); m.position.y = 0; S.add(m); st.freeze(m);
   });
