@@ -67,7 +67,7 @@ export function mount(root) {
   const farR = Math.max(1500, ...lista.map((e) => Math.hypot(e.x, e.y) + 400));
   const cx = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0, cy = ys.length ? (Math.min(...ys) + Math.max(...ys)) / 2 : 0;
   const vista = encuadre(urb, cx, cy);
-  const st = new Stage(el, { ...vista, fov: 38, minDist: 6, maxDist: 1500, fit: 1, declutter: ['lbl-node', 'lbl-km'], tone: 'aces', exposure: 1.05 });
+  const st = new Stage(el, { ...vista, fov: 38, minDist: 6, maxDist: 1500, fit: 1, declutter: ['lbl-node', 'lbl-km'], tone: 'aces', exposure: 1.05, sky: true, fog: { near: farR * 0.6, far: farR } });
   st.camera.far = 5000; st.camera.updateProjectionMatrix();
   // la rueda acerca hacia donde apunta el cursor y el arrastre con clic derecho se desliza sobre el piso
   Object.assign(st.controls, { zoomToCursor: true, screenSpacePanning: false, zoomSpeed: 1.15 });

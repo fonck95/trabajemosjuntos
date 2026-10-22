@@ -467,7 +467,7 @@
         7
       ],
       "forma": "ptap",
-      "nota": "Dos fronteras de 75 kWp (captación y PTAP). Tarifa ESPD de EPM 1.090 COP/kWh. Con tanques, el bombeo se desplaza a horas solares.",
+      "nota": "Dos fronteras de 75 kWp (captación y PTAP). La captación ya no está en la Laguna del Miedo (quedó de reserva): son dos pozos profundos en el mismo predio de la PTAP, así que las dos fronteras quedan juntas (ver data/edificios/captacion.json). Tarifa ESPD de EPM 1.090 COP/kWh. Con tanques, el bombeo se desplaza a horas solares.",
       "tarifa": 1090.41
     },
     {

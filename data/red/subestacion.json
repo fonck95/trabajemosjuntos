@@ -1,0 +1,100 @@
+{
+ "id": "se_yondo_epm",
+ "nombre": "Subestación Yondó (EPM), 34,5/13,2 kV, 10 MVA",
+ "lat": null,
+ "lon": null,
+ "confianza": "no_ubicada",
+ "resumen": "No se encontró en documentos públicos de EPM, la UPME, OpenStreetMap ni en las etiquetas de Google Maps, y el barrido satelital del casco urbano y de los dos accesos desde Barrancabermeja no mostró un patio de 34,5/13,2 kV que pueda atribuirse a EPM con seguridad. Se descartaron tres subestaciones industriales de Ecopetrol. La ubicación queda pendiente de un derecho de petición a EPM o de una visita.",
+ "datos_oficiales": {
+  "capacidad": "1 transformador de 10 MVA, 34,5/13,2 kV, con edificio de control",
+  "alimentacion": "dos circuitos exclusivos de 34,5 kV desde la subestación Barranca (Barrancabermeja, Santander), que conectan a Yondó con el SIN",
+  "longitud_redes_km": 32,
+  "inversion_cop_corrientes": 15509000000,
+  "entrada_en_operacion": 2021,
+  "contratistas_2020": "JE Jaimes Ingenieros S.A. (obras civiles y adecuaciones de la subestación); Ingeomega S.A.S. (circuitos de alimentación)",
+  "beneficiarios": "más de 19.000 habitantes; 7.000 usuarios",
+  "codigo_epm": "165 (Subestación Yondo, región 1 = Nordeste y Magdalena Medio)",
+  "fuentes": [
+   "https://www.epm.com.co/clientesyusuarios/noticias-y-novedades/epm-pone-en-marcha-solucion-de-energia-electrica-en-yondo--que-b/",
+   "https://www.epm.com.co/clientesyusuarios/noticias-y-novedades/en-2021-epm-entro-en-operacion-importantes-proyectos-de-infraestructura-de-servicios-publicos/",
+   "https://comercializadorenergia.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA6-020.pdf"
+  ]
+ },
+ "circuitos": {
+  "codificacion_13_2kV": "Según la RA6-020 de EPM, los circuitos de 13,2 kV de las subestaciones del Mercado Regional se marcan MNN-11 a MNN-16; para Yondó serían 165-11 a 165-16 (hasta seis salidas). No se encontró cuántos están en servicio.",
+  "trazado_casco_urbano": "No publicado. EPM no divulga el GIS de sus redes. Los avisos de cortes de 2022, 2025 y 2026 hablan de la \"zona urbana y rural\" o listan veredas (Rocas de San Francisco, Jabonal, Vietnam, La Rompida 1 y 2, El Totumo, Puerto Nuevo, La Felicidad, El Campo Cimitarra, El Bagre, Cuatro Bocas, Bellavista, El Cedro, El Descanso, Las Lomas, Bocas de San Juan): eso solo confirma que de la subestación salen circuitos que alimentan tanto el casco como las veredas, no su recorrido.",
+  "zona_ptap": "La PTAP (7,00919, −73,932) y sus pozos tienen fronteras propias de EPM con tarifa ESPD (data/microrred.json), así que hay una línea de 13,2 kV o un ramal hasta el predio; su recorrido no se ve en el satélite (el bosque lo tapa) ni hay Street View en la vía a la Laguna del Miedo (Calle 15). Hipótesis de trabajo, sin verificar: el ramal sale por la Calle 15 / vía a la Laguna del Miedo, que es el único acceso del predio.",
+  "en_osm": "OpenStreetMap no tiene líneas de 13,2 ni de 34,5 kV en Yondó. Sí tiene la línea de 115 kV Barranca–Cóndor (way 1410062153), que cruza el río Magdalena entre (7,0756, −73,9086) y (7,0728, −73,9106) y llega a la subestación industrial Cóndor de Ecopetrol."
+ },
+ "aguas_arriba": {
+  "nombre": "Subestación Barranca (230/115 kV, Barrancabermeja)",
+  "lat": 7.0976,
+  "lon": -73.895,
+  "fuente": "OpenStreetMap way 1426109682 (centroide)",
+  "confianza": "alta"
+ },
+ "metodo": [
+  "Lectura de las notas de EPM de 2020 y 2021 y de los avisos de interrupciones de 2022, 2025 y 2026 (sin dirección de la subestación).",
+  "Consulta de elementos power=* de OpenStreetMap en 12 km a la redonda (Overpass): 6 subestaciones, ninguna de EPM en Yondó.",
+  "Barrido con imágenes de Google z16–z20 del casco urbano y de las dos vías a Barrancabermeja (Carrera 57 / Yondó–Barrancabermeja y Vía Barrancabermeja–Yondó–Bucaramanga) entre 6,99 y 7,05 N; imágenes en data/geo/img/red_se_*.png (fuera del repositorio).",
+  "Etiquetas del mapa de Google (capa de calles) en 3 ventanas de 3 km: no aparece ninguna subestación de EPM.",
+  "Contraste con Esri (enero de 2020) del único patio de alta tensión encontrado junto a la vía."
+ ],
+ "candidatos_descartados": [
+  {
+   "nombre": "Patio eléctrico de la PIA Casabe (planta de inyección de agua de Ecopetrol)",
+   "lat": 7.0432,
+   "lon": -73.91255,
+   "motivo": "Es un patio de alta tensión real (dos zonas de equipos y un edificio de 65 × 24 m), junto a la vía Yondó–Barrancabermeja y 4 km al norte del casco; Google lo etiqueta \"PIA CASABE\" y al sur está la \"PTAP CASABE\" con tanques y tuberías. Ya existía en enero de 2020 (Esri) con menos equipos. Es infraestructura del campo Casabe, no la S/E de EPM.",
+   "imagenes": [
+    "data/geo/img/red_se_cand4_z20.png",
+    "data/geo/img/red_se_cand4_esri2020.png",
+    "data/geo/img/red_se_mapa_cand4_z18.png"
+   ]
+  },
+  {
+   "nombre": "Subestación Cóndor 115 kV (industrial, Ecopetrol)",
+   "lat": 7.037,
+   "lon": -73.9309,
+   "motivo": "Así figura en OpenStreetMap (way 1410062152), alimentada en 115 kV desde Barranca; es del campo petrolero.",
+   "imagenes": []
+  },
+  {
+   "nombre": "Patio pequeño en la base de Ecopetrol al sur del casco",
+   "lat": 7.0013,
+   "lon": -73.91375,
+   "motivo": "Pórtico y equipos menores dentro de una base industrial (tubería en patio); demasiado pequeño para 10 MVA con edificio de control.",
+   "imagenes": [
+    "data/geo/img/red_se_cand2_z20.png",
+    "data/geo/img/red_se_cand5_z21.png"
+   ]
+  },
+  {
+   "nombre": "Patio de camiones al norte (7,0187, −73,9145) y construcción en la Calle 15 (7,0170, −73,9160)",
+   "lat": null,
+   "lon": null,
+   "motivo": "No son instalaciones eléctricas.",
+   "imagenes": [
+    "data/geo/img/red_se_cand1_z20.png",
+    "data/geo/img/red_se_cand3_z20.png"
+   ]
+  }
+ ],
+ "punto_provisional_para_calculos": {
+  "uso": "El nodo \"conexion\" de data/microrred.json (pos [-30, -20] en la escena) es esquemático y no es la ubicación real. Para la red de la microrred no hace falta llegar a la subestación: la red de 13,2 kV de EPM pasa por todas las calles del casco y cada sede ya tiene acometida. El tramo subestación → troncal solo se costea en la fase de microrred física (un alimentador propio), cuando EPM entregue la ubicación y el punto de conexión aprobado."
+ },
+ "pendientes": [
+  "Derecho de petición a EPM (Ley 1755 de 2015): ubicación de la S/E Yondó, diagrama unifilar, número y recorrido de los circuitos 165-1x, capacidad disponible por circuito y transformador para AGPE (CREG 174 de 2021) y planos de las redes de 13,2 kV del casco y hacia la PTAP.",
+  "Consulta de capacidad disponible en el aplicativo de EPM para generación distribuida (por circuito).",
+  "Visita de campo con GPS a las salidas de la vía a Barrancabermeja y a la Calle 15."
+ ],
+ "fuentes": [
+  "https://www.epm.com.co/clientesyusuarios/noticias-y-novedades/epm-pone-en-marcha-solucion-de-energia-electrica-en-yondo--que-b/",
+  "https://www.epm.com.co/clientesyusuarios/noticias-y-novedades/en-2021-epm-entro-en-operacion-importantes-proyectos-de-infraestructura-de-servicios-publicos/",
+  "https://comercializadorenergia.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA6-020.pdf",
+  "https://www.openstreetmap.org/way/1426109682",
+  "https://www.epm.com.co/institucional/sala-de-prensa/noticias-y-novedades/interrupciones-energia-epm-antioquia-9-12-diciembre-2025/",
+  "https://www.epm.com.co/institucional/sala-de-prensa/noticias-y-novedades/interrupciones-energia-mantenimiento-marzo-21-2025/"
+ ],
+ "fecha_corte": "2026-10-22"
+}

@@ -1,589 +1,300 @@
 {
   "id": "captacion",
-  "nombre": "Captación del acueducto en la Laguna del Miedo (barcazas de bombeo)",
+  "nombre": "Captación por pozos profundos junto a la PTAP",
   "nodo_microrred": "ptap",
-  "direccion": "Vereda Laguna del Miedo: brazo sur de la laguna, unos 150 m al sur de la vía a la laguna (frente a la edificación de cubierta azul) y 1,9 km en línea recta al occidente-noroccidente de la PTAP municipal. Se llega por un camino destapado que baja a la orilla.",
-  "lat": 7.0175,
-  "lon": -73.9468,
+  "direccion": "Predio de la planta de tratamiento municipal (PTAP) de Aguas y Aseo de Yondó, vereda Las Américas: claro de tierra roja unos 70 a 80 m al suroccidente de la planta. Se llega por el ramal destapado que sale de la vía interna de la PTAP. La Laguna del Miedo, donde se captaba antes, queda 2,4 km al noroccidente y hoy es la fuente de reserva.",
+  "lat": 7.008735,
+  "lon": -73.932518,
   "ubicacion": {
-    "confianza": "alta",
-    "metodo": "La coordenada del inventario (7,018818, −73,94681) caía sobre una edificación alargada de cubierta azul junto a la vía, 147 m al norte, que no corresponde a la captación. La Superservicios (2018) dice que la bocatoma son 'dos bocatomas tipo barcaza flotante, acondicionadas con dos bombas de succión cada una', y sus fotos (mayo de 2018) muestran dos barcazas con cubierta a dos aguas, una pasarela flotante de unos 45 m con barandas amarillas, una caseta de madera sobre pilotes en la orilla y un poste con luminaria. En el brazo sur de la laguna, la imagen de Google z21 muestra exactamente ese conjunto: dos techos flotantes (5,2 × 6,1 m y 3,5 × 5,0 m) unidos por una línea recta de 48 m a la orilla, y una cubierta clara de 5,1 × 5,8 m al lado del arranque de la pasarela; no hay otra estructura parecida en toda la laguna. La imagen de Esri del 11 de febrero de 2026 (Vantor, 0,6 m) muestra las mismas tres cubiertas, corridas unos 2,9 m al occidente y 2,7 m al sur respecto a Google: la captación seguía en el sitio a comienzos de 2026. La geometría se comprobó con dos fotos de la Superservicios resolviendo la cámara: en la de 2018 (desde el arranque de la pasarela) coinciden la posición de los postes del corredor, el borde de la cubierta y el tamaño aparente de las dos barcazas al fondo; en la de 2020 (desde la loma del oriente) coinciden la culata oriental de la caseta, las dos barcazas y el poste (error medio de 8 píxeles). Queda a 1,9 km de la PTAP, coherente con la aducción de 2 a 3 km que reporta la Superservicios. El ancla está en el centro del conjunto (sobre la pasarela, entre las barcazas y la caseta). No hay Street View: el panorama más cercano está a 2,24 km. Verificación independiente: las Imágenes 14 y 15 del informe de 2018, con la cámara resuelta, muestran el mismo conjunto (dos barcazas, pasarela y poste) en las posiciones medidas en Google."
+    "confianza": "baja",
+    "metodo": "Que la captación ya no está en la laguna sino en la PTAP o muy cerca lo confirman dos fuentes independientes: un conocedor del municipio (dos pozos de 8 pulgadas con bomba sumergible tipo lapicero, donde está la planta o cerca) y el Plan de Desarrollo Municipal 2024–2027, que dice que la fuente de abastecimiento 'actualmente es de pozos profundos' y que la Laguna del Miedo 'queda como un recurso de contingencia'. La Superservicios ya reportaba en mayo de 2020 que la optimización del acueducto, en obra, incluía 'la adición de 2 pozos subterráneos, un tanque de compensación y un tanque elevado', y esa obra (regalías, BPIN 2019058930084, contratos de 2020) figura terminada al 100 %. Lo que NO está confirmado es el punto exacto de cada pozo (por eso la confianza es baja). En la imagen de Google z21–z22, el único sitio con obras nuevas junto a la planta es el claro suroccidental: no existía en la imagen de Esri del 12 de enero de 2020, y allí están el ramal, una estructura de concreto de 14,7 × 14,5 m (posiblemente el tanque de compensación), una caja de concreto con un elemento redondo de unos 3 m y una caseta pequeña de techo claro. Dentro del claro se escogieron los dos objetos que más se parecen a un cabezal de pozo: el pozo 1 es un marco blanco de unos 3,3 × 2,2 m con el centro oscuro, en la tierra removida al suroriente de la estructura, hacia el que apunta un tubo oscuro tendido en el suelo; el pozo 2 es una caja blanca de unos 1,9 × 1,7 m con una abertura oscura en el centro, 1,2 m al oriente de la caseta pequeña. Quedan 18,5 m entre los dos. El ancla es el punto medio entre los dos pozos (en el sistema de la PTAP: 57,25 m al occidente y 50,7 m al sur de su ancla). En los alrededores inmediatos de la planta (filtros, bodega, construcción del noroccidente) no se vio nada parecido a un cabezal. No hay Street View: el panorama más cercano está a 870 m y el bosque tapa la planta."
   },
   "fuentes": [
     {
-      "tipo": "web",
-      "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf",
-      "fecha": "2018-05",
-      "nota": "Superservicios, evaluación integral (visita del 17 y 18 de mayo de 2018), páginas 22 a 26: 'dos bocatomas tipo barcaza flotante, acondicionadas con dos bombas de succión cada una' para el acueducto urbano (24 L/s) y el veredal (8,5 L/s); tres bombas, de las que operan dos que se alternan cada 24 horas; caudal de bombeo de diseño 40,9 L/s, altura de bombeo 32,8 m, energía eléctrica. Página 24: Imagen 14 'Captación Laguna El Miedo' (las dos barcazas, la pasarela y el poste, vistos desde la orilla sur, junto a la caseta) e Imagen 15 'Captación tipo barcaza (2 bocatomas)' (las dos barcazas de cerca, desde una canoa al norte: armazón metálico con malla, cubierta a dos aguas, cascos oxidados y poste metálico con luminaria). Página 26: Imagen 17 'Aducción tubería 10\"' (arranque de la pasarela con la caseta de madera, la tubería negra de PEAD y las barcazas al fondo) e Imagen 18 (canoa junto a la pasarela). El levantamiento usó la Imagen 17 (citada antes por error como Imagen 14); la verificación resolvió la cámara de las Imágenes 14 y 15."
+      "tipo": "testimonio",
+      "fecha": "2026-10",
+      "nota": "Conocedor del municipio (dato entregado al proyecto): 'la captación ya no se hace en la laguna; es donde está la planta de tratamiento o cerca, con dos pozos de 8 pulgadas con bomba lapicero (sumergible); entonces se pondría la red eléctrica aquí mismo'. Es la fuente del diámetro (8 pulgadas), del número de pozos (2) y del tipo de bomba."
     },
     {
       "tipo": "web",
-      "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf",
-      "fecha": "2018-05",
-      "nota": "Imágenes 14 y 15 del mismo informe, usadas en la verificación (data/geo/img/captacion_foto2018_laguna.jpg y captacion_foto2018_barcazas.jpg). En la 15 la cámara quedó a 1,2 m sobre el agua, 7 m al norte de la barcaza oriental, con 75° de campo horizontal; se ajustó con 14 puntos (esquinas de los cascos en la línea de agua, aleros y cumbreras) con un error medio de 3,7 píxeles y midió la altura de las barcazas. En la 14 la cámara quedó junto a la caseta, a unos 3 m sobre el agua."
+      "url": "https://repositoriocdim.esap.edu.co/items/143f23fc-e675-4f46-b428-7cd698841ee2",
+      "fecha": "2024-06",
+      "nota": "Plan de Desarrollo Municipal 'Yondó avanza: inclusivo, productivo y competitivo' 2024–2027 (PDF de 176 páginas; diagnóstico de agua potable en la página impresa 102, página 52 del PDF): 'El servicio de agua potable se presta por horas/día; en la zona urbana, es de 18 horas de forma intermitente, ahora con mayor continuidad respecto a los años anteriores, que solo se prestaba 12 horas/día. Este aumento en la distribución se debe a que la fuente de abastecimiento, actualmente es de pozos profundos y la anterior laguna del miedo, queda como un recurso de contingencia.' También: 3.275 suscriptores urbanos y 731 en la zona rural plana; cobertura de acueducto del 61,27 % (Superservicios, 2022). El mismo plan está en la página de la Alcaldía (https://www.yondo-antioquia.gov.co/plan-de-desarrollo-2024--2027/plan-de-desarrollo-territorial-yondo-avanza-20242027)."
     },
     {
       "tipo": "web",
       "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
-      "fecha": "2020",
-      "nota": "Superservicios, evaluación integral 2020 (vigencia 2019), páginas 30 a 37: bocatoma 'de fondo' sobre la laguna con dos sistemas de bombas que operan alternados cada 24 horas; unos 30 L/s llegan a la PTAP municipal; aducción de 12\" y 10\" de 3 km; macromedidor de 8\" de la captación fuera de servicio en mayo de 2020; la PTAP veredal ya no toma de la laguna sino de un pozo. Imagen 7 (caseta de madera vista desde la loma del oriente, pasarela, tubería, las dos barcazas con cubierta clara y el poste con luminaria). Se usó para la comparación con el modelo."
-    },
-    {
-      "tipo": "satelite",
-      "fuente": "Google z21 (0,074 m/píxel; fecha de la toma desconocida, anterior a 2026)",
-      "nota": "Huellas medidas sobre esta imagen: cubiertas de las dos barcazas, de la caseta (girada 5,4°), línea de la pasarela y rampa del corredor."
-    },
-    {
-      "tipo": "satelite",
-      "fuente": "Esri World Imagery z18 (Vantor, 11 de febrero de 2026, 0,6 m; sin datos en z19)",
-      "nota": "Confirma que las barcazas y la caseta seguían en 2026 (con un corrimiento de unos 2,9 m al occidente y 2,7 m al sur respecto a Google) y muestra desmontado el bosque al nororiente de la caseta, donde se proponen las mesas solares."
+      "fecha": "2020-09",
+      "nota": "Superservicios, evaluación integral de Aguas & Aseo de Yondó (vigencia 2019, visita y requerimiento de mayo de 2020). Página 29: 'A mayo de 2020, el prestador menciona que se está realizando la optimización del sistema de acueducto en el municipio de Yondó, la cual incluye la construcción de obras adicionales como lo son la adición de 2 pozos subterráneos, un tanque de compensación y un tanque elevado.' Página 28: en ese momento la captación urbana todavía era la bocatoma de la laguna (unos 30 L/s llegaban a la PTAP, con dos sistemas de bombas alternados cada 24 horas). Página 29, Tabla 14: PTAP municipal de 40 L/s que opera 24 horas al día. Página 26: la concesión de la laguna (Corantioquia, 28,9 L/s) estaba vencida desde 2015. Páginas 28 y 33: la PTAP veredal ya tomaba agua de un pozo a 60 m de la planta 'con una bomba tipo lapicero', con 3,5 mg/L de hierro, el mismo tipo de equipo que el usuario describe para los pozos urbanos. Página 44: el prestador esperaba mejorar presiones y continuidad 'entre 8 meses y un año' después de la optimización."
     },
     {
       "tipo": "web",
-      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-4-8213567",
-      "fecha": "2018-07",
-      "nota": "Prestación de servicios como operador de la bocatoma (Aguas y Aseo de Yondó). Hay contratos iguales en diciembre de 2017 (18-4-7520438 y 18-4-7520160): la captación tiene operador permanente, lo que explica la caseta."
+      "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf",
+      "fecha": "2018-10",
+      "nota": "Superservicios, evaluación integral de 2018 (visita de mayo de 2018). Página 25: el prestador buscaba 'otra fuente de captación subterránea' con Ecopetrol, que 'realizaría un aporte para la obtención no solo de una nueva fuente subterránea, sino para la optimización del sistema de acueducto desde la captación hasta el tratamiento'. Página 24, Tabla 11 (Plan Maestro): cota del tanque de la PTAP 100 m (lámina a 104 m) y de la laguna 72,5 m; el bombeo desde la laguna era de 40,9 L/s con 32,8 m de altura, 24 horas al día."
+    },
+    {
+      "tipo": "datos_abiertos",
+      "url": "https://www.datos.gov.co/d/cf9k-55fw",
+      "fecha": "2026-10",
+      "nota": "DNP, proyectos de regalías (datos básicos, seguimiento https://www.datos.gov.co/d/7mxf-bp6x y productos https://www.datos.gov.co/d/8kfp-z3my), consulta del 22 de octubre de 2026: BPIN 2019058930084 'Optimización del Acueducto Fase 1 del Municipio de Yondó', objetivo 'Mejorar el suministro del servicio de agua potable en el área urbana del municipio de Yondó Antioquia', 10.277 beneficiarios, valor $9.938.482.458 (pesos corrientes; unos $14.961 millones de 2026 con el IPC de 2020, cálculo propio), avance físico 100 %, estado terminado y cerrado; producto 'acueductos optimizados: 1'. Es la obra en la que la Superservicios ubicó los dos pozos y el tanque de compensación. Los datos abiertos no detallan profundidad, caudal ni equipos."
+    },
+    {
+      "tipo": "datos_abiertos",
+      "url": "https://www.datos.gov.co/d/uwns-mbwd",
+      "fecha": "2026-10",
+      "nota": "DNP, contratos del BPIN 2019058930084: obra 'Optimización acueducto fase 1 municipio de Yondó, Antioquia' con Kaliza Arquitectos S.A.S. (contrato 008-2020, $9.456.542.162 corrientes, unos $14.236 millones de 2026, liquidado) e interventoría de CMG Ingenieros S.A.S. ($481.940.290 corrientes, unos $725 millones de 2026, liquidado), ambos por la Asociación de Municipios del Magdalena Medio (AMMA)."
     },
     {
       "tipo": "web",
-      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-4-9754238",
-      "fecha": "2019-07",
-      "nota": "Obras de rehabilitación de la capacidad hídrica de la Laguna del Miedo ($2.471 millones), con interventoría (19-4-9618885). Puede explicar los cambios de la orilla y los claros redondos que se ven en la imagen de 2026."
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-13-10492691",
+      "fecha": "2020-02",
+      "nota": "SECOP I (vía datos abiertos https://www.datos.gov.co/d/f789-7hwg; la página de SECOP responde 403 a consultas automáticas): AMMA, 'Administración delegada del proyecto Optimización del acueducto fase 1 del municipio de Yondó', BPIN 2019058930084, ejecución del 28 de febrero de 2020 al 28 de febrero de 2021 (12 meses). La interventoría es la constancia 20-13-10499175, con el mismo plazo. Da la ventana de construcción de los pozos: 2020–2021."
     },
     {
       "tipo": "web",
-      "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.3287043",
-      "fecha": "2022-09",
-      "nota": "Obras de limpieza y mantenimiento de la laguna en el área de la bocatoma y de canales naturales de agua lluvia ($103 millones)."
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-4-8358866",
+      "fecha": "2018-09",
+      "nota": "SECOP I: Aguas y Aseo de Yondó, 'Estudios y diseños para la optimización del acueducto municipal de Yondó' con Ingeniería y Construcciones Óptimas S.A.S., $1.237.455.369 corrientes (unos $1.977 millones de 2026), del 26 de septiembre de 2018 al 26 de marzo de 2019, liquidado. Los diseños de los pozos (profundidad, caudal, bombas) deben estar en ese contrato; no son públicos en línea."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-11-8084637",
+      "fecha": "2018-06",
+      "nota": "SECOP I: Alcaldía de Yondó, 'Construcción de un pozo profundo cumpliendo con lo establecido en la Resolución 330 de 2017 ... en el municipio de Yondó', Unión Temporal Aguas Subterráneas, $135.999.487 corrientes (unos $217 millones de 2026), del 20 de junio al 20 de julio de 2018, liquidado. No dice dónde se perforó: puede ser un pozo de prueba de la captación urbana o de otro acueducto."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=20-4-11200214",
+      "fecha": "2020-07",
+      "nota": "SECOP I: Aguas y Aseo de Yondó compró 'una electrobomba de 60 HP, velocidad 3500 RPM, voltaje fases 220/3/60 Hz para el sistema de bombeo del acueducto urbano' ($20.000.000 corrientes). No dice si es para los pozos, para la laguna o para el bombeo de la PTAP al tanque elevado; si fuera una bomba de pozo, la carga sería unas tres veces la estimada aquí."
     },
     {
       "tipo": "web",
       "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10238025",
-      "nota": "Caracterización semestral del agua cruda de la Laguna del Miedo para los acueductos urbano y veredal: la laguna sigue siendo la fuente del acueducto urbano."
+      "fecha": "2026",
+      "nota": "SECOP II: caracterización semestral del agua cruda de la Laguna del Miedo para los acueductos urbano y veredal. La empresa sigue vigilando la laguna, lo que cuadra con que sea la reserva. En 2022 un contrato de químicos (CO1.NTC.3246814) todavía hablaba del 'agua cruda proveniente de la Laguna del Miedo'."
     },
     {
-      "tipo": "web",
-      "url": "https://www.google.com/maps/place/?q=place_id:ChIJ1Q12BADvQo4R-pjtf-s3gAc",
-      "nota": "Laguna del Miedo (7,021775, −73,949444). La captación está en el brazo sur, unos 560 m al sur-suroriente de este punto."
+      "tipo": "satelite",
+      "fuente": "Google z21 y z22 (0,074 y 0,037 m/píxel; fecha de la toma desconocida, posterior a enero de 2020; marca de agua de 2026)",
+      "nota": "Búsqueda de los cabezales en el claro suroccidental, alrededor de la planta y en la losa de unos 40 × 15 m que está 130 m al suroriente. Imágenes: data/geo/img/pozos_g21_claro.png, pozos_g21_claro_raw.png, pozos_g22_so.png, pozos_g22_e.png, pozos_g22_norte.png, pozos_g22_ptap_o.png, pozos_g21_ramal.png, pozos_g20_se.png y pozos_g21_losa_se_raw.png."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z18–z19 (WorldView-2 del 12 de enero de 2020)",
+      "nota": "El claro suroccidental, el ramal y sus construcciones todavía no existen: las obras de los pozos son posteriores a enero de 2020 (data/geo/img/pozos_e18_claro.png y pozos_e19_claro.png)."
+    },
+    {
+      "tipo": "elevacion",
+      "url": "https://api.opentopodata.org/v1/srtm30m",
+      "fecha": "2026-10",
+      "nota": "Modelo SRTM de 30 m (año 2000, error de ±5 a 10 m y afectado por el bosque): el claro de los pozos queda a unos 79–83 m y la PTAP a unos 93 m, es decir, unos 10 m más abajo que la planta. Solo se usa para estimar la altura de bombeo."
     },
     {
       "tipo": "street_view",
-      "nota": "No hay panoramas: el más cercano de la cobertura local está a 2,24 km (7,019181, −73,926605) y la búsqueda en Google no encontró ninguno a menos de 800 m de la captación."
+      "nota": "No hay panoramas que vean el claro: el más cercano está a 870 m (hFSyoqecy1eHy2hJjH4FNw, enero de 2014) y el bosque tapa la planta."
     }
   ],
   "volumenes": [
     {
-      "id": "caseta_cubierta",
-      "nombre": "Cubierta y corredor de la caseta del operador",
-      "abierto": true,
+      "id": "caseta_tableros",
+      "nombre": "Caseta de tableros de los pozos (obra nueva: tablero de distribución, medición, protecciones y espacio para los inversores del arreglo del claro)",
+      "estado": "nuevo",
       "centro": [
-        23.47,
-        -5.71
+        -5.0,
+        -4.0
       ],
-      "largo": 4.98,
-      "ancho": 4.3,
-      "rumbo_eje": 5.4,
-      "base": 0.7,
+      "largo": 2.6,
+      "ancho": 2.0,
+      "rumbo_eje": 90,
+      "base": 0,
       "altura_alero": 2.4,
-      "sep_columnas": 2.1,
-      "columna": 0.12,
+      "pisos": 1,
       "techo": {
-        "tipo": "dos_aguas",
-        "pendiente": 12,
-        "cumbrera": "corto",
+        "tipo": "una_agua",
+        "caida": "S",
+        "pendiente": 8,
         "voladizo": 0.4,
         "material": "zinc",
-        "color": "#a3a19c"
+        "color": "#b9bcbf"
       },
       "fachada": {
-        "material": "pañete_pintado",
-        "color": "#e6e6e0"
-      }
-    },
-    {
-      "id": "caseta",
-      "nombre": "Caseta del operador (madera, sobre pilotes)",
-      "centro": [
-        23.4,
-        -6.45
-      ],
-      "largo": 3.48,
-      "ancho": 4.3,
-      "rumbo_eje": 5.4,
-      "base": 0.1,
-      "altura_alero": 2.3,
-      "techo": {
-        "tipo": "plano",
-        "parapeto": 0,
-        "material": "concreto",
-        "color": "#9c978c"
-      },
-      "fachada": {
-        "material": "pañete_pintado",
-        "color": "#a39f94",
+        "material": "bloque",
+        "color": "#d8d4cb",
         "ventanas": {
-          "tipo": "ventana",
-          "ancho": 0.9,
-          "alto": 0.6,
-          "antepecho": 1.35,
-          "separacion": 1.7,
+          "tipo": "celosia",
+          "ancho": 0.8,
+          "alto": 0.4,
+          "antepecho": 1.8,
+          "separacion": 2.0,
           "lados": [
             "E",
-            "S"
+            "O"
           ]
         },
         "puertas": [
           {
             "lado": "N",
-            "pos": 0.35,
+            "pos": 0.3,
             "ancho": 0.9,
-            "alto": 1.95
+            "alto": 2.1
           }
         ]
-      }
-    },
-    {
-      "id": "caseta_pilotes",
-      "nombre": "Pilotes y piso de la caseta",
-      "abierto": true,
-      "piso": false,
-      "centro": [
-        23.47,
-        -5.71
-      ],
-      "largo": 5.68,
-      "ancho": 5.0,
-      "rumbo_eje": 5.4,
-      "altura_alero": 0.7,
-      "sep_columnas": 2.0,
-      "columna": 0.14,
-      "techo": {
-        "tipo": "ninguno"
-      },
-      "fachada": {
-        "material": "pañete_pintado",
-        "color": "#a9a59a"
-      }
-    },
-    {
-      "id": "barcaza_o_casco",
-      "nombre": "Casco de la barcaza occidental",
-      "poligono": [
-        [
-          -24.24,
-          -1.09
-        ],
-        [
-          -19.21,
-          -1.09
-        ],
-        [
-          -19.21,
-          4.8
-        ],
-        [
-          -24.24,
-          4.8
-        ]
-      ],
-      "altura_alero": 0.8,
-      "techo": {
-        "tipo": "plano",
-        "parapeto": 0
-      },
-      "fachada": {
-        "material": "metal",
-        "color": "#8c6340"
-      }
-    },
-    {
-      "id": "barcaza_o",
-      "nombre": "Barcaza occidental (bombas de succión)",
-      "abierto": true,
-      "centro": [
-        -21.73,
-        1.86
-      ],
-      "largo": 5.49,
-      "ancho": 4.63,
-      "rumbo_eje": 0,
-      "base": 0.8,
-      "altura_alero": 3.05,
-      "sep_columnas": 2.0,
-      "columna": 0.08,
-      "techo": {
-        "tipo": "dos_aguas",
-        "pendiente": 15,
-        "cumbrera": "largo",
-        "voladizo": 0.3,
-        "material": "zinc",
-        "color": "#6f5448"
-      },
-      "fachada": {
-        "material": "metal",
-        "color": "#55585b"
-      }
-    },
-    {
-      "id": "barcaza_e_casco",
-      "nombre": "Casco de la barcaza oriental",
-      "poligono": [
-        [
-          -17.73,
-          2.11
-        ],
-        [
-          -14.48,
-          2.11
-        ],
-        [
-          -14.48,
-          6.91
-        ],
-        [
-          -17.73,
-          6.91
-        ]
-      ],
-      "altura_alero": 0.7,
-      "techo": {
-        "tipo": "plano",
-        "parapeto": 0
-      },
-      "fachada": {
-        "material": "metal",
-        "color": "#8c6340"
-      }
-    },
-    {
-      "id": "barcaza_e",
-      "nombre": "Barcaza oriental (bombas de succión)",
-      "abierto": true,
-      "centro": [
-        -16.11,
-        4.51
-      ],
-      "largo": 4.6,
-      "ancho": 3.05,
-      "rumbo_eje": 0,
-      "base": 0.7,
-      "altura_alero": 2.81,
-      "sep_columnas": 2.0,
-      "columna": 0.08,
-      "techo": {
-        "tipo": "dos_aguas",
-        "pendiente": 28,
-        "cumbrera": "largo",
-        "voladizo": 0.2,
-        "material": "zinc",
-        "color": "#a9b3ba"
-      },
-      "fachada": {
-        "material": "metal",
-        "color": "#55585b"
       }
     }
   ],
   "elementos": [
     {
-      "tipo": "zona_verde",
-      "nombre": "Orilla oriental (potrero y claro)",
-      "poligono": [
-        [
-          20.3,
-          -18
-        ],
-        [
-          56,
-          -18
-        ],
-        [
-          56,
-          12
-        ],
-        [
-          31,
-          12
-        ],
-        [
-          29.0,
-          2.4
-        ],
-        [
-          26.0,
-          -0.8
-        ],
-        [
-          20.6,
-          -2.2
-        ],
-        [
-          20.2,
-          -9.0
-        ]
-      ]
-    },
-    {
-      "tipo": "anden",
-      "nombre": "Pasarela flotante (tablas sobre canecas)",
+      "tipo": "pozo",
+      "nombre": "Pozo 1 (oriental)",
       "centro": [
-        4.55,
-        0.8
+        9.23,
+        0.65
       ],
-      "largo": 47.5,
-      "ancho": 1.1,
-      "rumbo_eje": 90
+      "diametro_pulgadas": 8,
+      "rumbo": 35,
+      "bomba": "sumergible tipo lapicero (dato del usuario); potencia no publicada, estimada en 7 a 17 kW",
+      "nota": "Marco blanco de unos 3,3 × 2,2 m con el centro oscuro, al suroriente de la estructura de concreto del claro (en el sistema de la PTAP: x = −48,0 m, y = −50,0 m). La descarga mira hacia la cámara de llegada de la PTAP, que queda a 75 m con rumbo 35°."
     },
     {
-      "tipo": "cerramiento",
-      "nombre": "Baranda norte de la pasarela",
-      "linea": [
-        [
-          -19.0,
-          1.35
-        ],
-        [
-          28.2,
-          1.35
-        ]
-      ],
-      "altura": 1.5,
-      "material": "reja",
-      "color": "#c29a45"
-    },
-    {
-      "tipo": "cerramiento",
-      "nombre": "Baranda sur de la pasarela",
-      "linea": [
-        [
-          -19.0,
-          0.25
-        ],
-        [
-          28.2,
-          0.25
-        ]
-      ],
-      "altura": 1.5,
-      "material": "reja",
-      "color": "#c29a45"
-    },
-    {
-      "tipo": "anden",
-      "nombre": "Rampa del corredor de la caseta a la orilla",
+      "tipo": "pozo",
+      "nombre": "Pozo 2 (occidental)",
       "centro": [
-        27.72,
-        -4.25
+        -9.27,
+        -0.75
       ],
-      "largo": 3.75,
-      "ancho": 1.1,
-      "rumbo_eje": 90
-    },
-    {
-      "tipo": "poste",
-      "nombre": "Poste de la red con luminaria en la orilla (llegada de la acometida)",
-      "centro": [
-        35.5,
-        -0.9
-      ],
-      "altura": 6.0
-    },
-    {
-      "tipo": "poste",
-      "nombre": "Poste metálico con luminaria en la esquina nororiental de la barcaza occidental",
-      "centro": [
-        -19.85,
-        5.2
-      ],
-      "altura": 8.5
-    },
-    {
-      "tipo": "arbol",
-      "centro": [
-        21,
-        -15
-      ],
-      "altura": 14,
-      "copa": 9
-    },
-    {
-      "tipo": "arbol",
-      "centro": [
-        30,
-        -17
-      ],
-      "altura": 12,
-      "copa": 8
-    },
-    {
-      "tipo": "arbol",
-      "centro": [
-        39,
-        -15.5
-      ],
-      "altura": 13,
-      "copa": 8
-    },
-    {
-      "tipo": "arbol",
-      "centro": [
-        47,
-        -12.5
-      ],
-      "altura": 14,
-      "copa": 9
-    },
-    {
-      "tipo": "arbol",
-      "centro": [
-        53.5,
-        0
-      ],
-      "altura": 15,
-      "copa": 9
-    },
-    {
-      "tipo": "arbol",
-      "centro": [
-        53.5,
-        9.5
-      ],
-      "altura": 15,
-      "copa": 10
+      "diametro_pulgadas": 8,
+      "rumbo": 45,
+      "bomba": "sumergible tipo lapicero (dato del usuario); potencia no publicada, estimada en 7 a 17 kW",
+      "nota": "Caja blanca de unos 1,9 × 1,7 m con una abertura oscura en el centro, junto a la caseta pequeña de techo claro (en el sistema de la PTAP: x = −66,5 m, y = −51,4 m). La descarga mira hacia la cámara de llegada de la PTAP, a 88 m con rumbo 45°."
     }
   ],
   "adecuaciones": {
     "kwp_plan": 75,
-    "fv": [
-      {
-        "tipo": "marquesina",
-        "centro": [
-          38.7,
-          1.0
-        ],
-        "largo": 13.8,
-        "ancho": 4.6,
-        "rumbo_eje": 0,
-        "altura": 1.0,
-        "filas": 2,
-        "columnas": 12,
-        "orientacion_modulo": "vertical",
-        "inclinacion": 10
+    "fv": [],
+    "kwp_factible": 0,
+    "carga_bombas": {
+      "tipo": "estimación (cálculo propio); no hay placa de los motores ni factura por NIU",
+      "kw_por_bomba": {
+        "central": 11,
+        "rango": [
+          7,
+          17
+        ]
       },
-      {
-        "tipo": "marquesina",
-        "centro": [
-          44.5,
-          1.0
+      "kw_dos_bombas": {
+        "central": 22,
+        "rango": [
+          14,
+          33
+        ]
+      },
+      "horas_dia": {
+        "central": 20,
+        "rango": [
+          18,
+          24
+        ]
+      },
+      "kwh_dia": {
+        "central": 440,
+        "rango": [
+          250,
+          800
+        ]
+      },
+      "kwh_mes": {
+        "central": 13400,
+        "rango": [
+          7500,
+          24300
+        ]
+      },
+      "costo_mes_cop_2026": {
+        "central": 14600000,
+        "rango": [
+          8200000,
+          26500000
         ],
-        "largo": 13.8,
-        "ancho": 4.6,
-        "rumbo_eje": 180,
-        "altura": 1.0,
-        "filas": 2,
-        "columnas": 12,
-        "orientacion_modulo": "vertical",
-        "inclinacion": 10
-      }
-    ],
-    "kwp_factible": 26.4,
-    "inversores": {
-      "n": 2,
-      "kw": 12,
-      "volumen": "caseta",
-      "lado": "N",
-      "pos": 0.7
+        "tarifa_cop_kwh": 1090.41
+      },
+      "supuestos": "Potencia = 9,81 × caudal × altura ÷ eficiencia. Caudal de 13 a 17 L/s por pozo (central 15: los dos juntos dan unos 30 L/s, lo que recibía la PTAP en 2020; la planta es de 40 L/s). Altura total de 34 a 57 m (central 45; es la suma de los componentes que siguen): nivel del agua dentro del pozo bombeando (no publicado; se supuso de 15 a 35 m), unos 10 m de subida del claro a la planta (SRTM), los 6,3 m de la cámara de llegada y 3 a 6 m de pérdidas en la tubería. Eficiencia de bomba y motor de 57 a 63 % (central 60 %). Horas: la PTAP opera 24 horas (Superservicios, 2020) y el agua llega a las casas 18 horas (Plan de Desarrollo). La tarifa es la del nodo en data/microrred.json. Cuentas: bomba central 9,81 × 0,015 × 45 ÷ 0,60 = 11,0 kW; baja 9,81 × 0,013 × 34 ÷ 0,63 = 6,9 kW; alta 9,81 × 0,017 × 57 ÷ 0,57 = 16,7 kW. Energía: kW de las dos bombas × horas × 30,4 días (central 22,1 × 20 = 441; baja 13,8 × 18 = 248; alta 33,4 × 24 = 800 kWh/día), redondeado."
+    },
+    "red_electrica": {
+      "origen": "Barra de la microrred de la PTAP: acometida de EPM, inversores del arreglo solar del claro (modelado en data/edificios/ptap.json) y baterías del nodo (150 kWh / 75 kW, en el patio de entrada de la planta).",
+      "alimentador": "Subterráneo, entre la caseta de la PTAP y la caseta de tableros de los pozos: unos 100 m en línea recta por el borde del bosque o unos 165 m por la vía interna y el ramal (medidos en el sistema de la PTAP; cálculo propio). Si las bombas trabajan a 220 V trifásico, la corriente es de 68 a 103 A (22 a 33 kW con factor de potencia 0,85). Para no pasar de un 3 a 3,5 % de caída de tensión con la carga alta, el calibre sería del orden de 2/0 AWG en cobre por la ruta corta y de 4/0 AWG a 250 kcmil por el ramal (predimensionamiento propio con resistencias típicas del cobre a 75 °C); se confirma con la placa de los motores y el tablero que ya existe.",
+      "tablero_pozos": "Caseta pequeña nueva (2,6 × 2,0 m) unos 5 m al suroriente del pozo 2, por fuera del paso de la grúa; si la caseta pequeña que ya existe en el claro resulta ser la de control de los pozos, el tablero puede ir allí y la caseta nueva sobra. Lleva totalizador, una salida por pozo con su variador de velocidad, medidor de energía por pozo, protecciones contra sobretensiones (DPS), puesta a tierra y pasarela IoT. Cada cabezal conserva su arrancador y variador bajo techo (en el modelo 3D van junto a cada pozo). De la caseta al pozo 2 hay unos 5 m y al pozo 1 unos 15 m de canalización enterrada.",
+      "inversores": "Propuesta: los 2 inversores de 25 kW del arreglo del claro se pasan de la caseta de la PTAP a la caseta de tableros de los pozos (el cable de corriente continua baja de unos 70 m a unos 15–21 m y la energía solar llega primero a las bombas). El modelo 3D de la PTAP todavía los dibuja en su caseta, por eso esta especificación no repite los inversores.",
+      "bateria": "No se propone batería en los pozos (ver notas).",
+      "punto_de_conexion": "No se ven postes ni transformador en el claro ni a lo largo del ramal en la imagen de Google. Se desconoce si los pozos tienen transformador y medidor propios o si cuelgan del medidor de la PTAP (totalizador de 3 × 250 A comprado en 2014)."
     },
     "domotica": [
-      "medidor bidireccional en la frontera de la captación (la otra frontera del nodo es la PTAP)",
-      "pasarela IoT con enlace celular o de radio al Centro de Control Energético y Digital (CCED)",
-      "variadores de velocidad o arrancadores suaves en las bombas de succión de las barcazas",
-      "mando de las bombas según el nivel de los tanques de la PTAP (1.125 m³ y 350 m³), para bombear más en las horas de sol",
-      "macromedidor de agua cruda con lectura remota (el de 8\" estaba fuera de servicio en 2020)",
-      "sensores de nivel de la laguna y de vibración y temperatura de los motores, con alarma al operador",
-      "cámara y alarma de intrusión en la caseta, la pasarela y el arreglo solar",
-      "iluminación LED con fotocelda en la pasarela y la orilla"
+      "medidor de energía por pozo y, si los pozos tienen medidor propio de EPM, medidor bidireccional en esa frontera",
+      "variadores de velocidad en las dos bombas, mandados por el nivel del tanque de la PTAP (1.125 m³), del tanque de compensación y del tanque elevado (350 m³), para bombear más en las horas de sol sin pasar el caudal que se autorice",
+      "sensor de nivel dentro de cada pozo (transductor de presión) con parada por bajo nivel, para no secar el pozo ni quemar la bomba",
+      "caudalímetro en cada descarga y macromedidor con lectura remota a la llegada de la PTAP",
+      "alarmas de falla de fase, sobrecorriente y temperatura de los motores, con aviso al operador",
+      "alternancia automática de los pozos y registro de horas de bombeo",
+      "pasarela IoT con enlace al Centro de Control Energético y Digital (CCED)"
     ],
     "obras_civiles": [
-      "Adecuación del claro al nororiente de la caseta (desmontado en la imagen de febrero de 2026): nivelación, drenaje y cerramiento en malla del arreglo, dejando libres el arranque de la pasarela, la rampa de la caseta y el camino hacia la vía.",
-      "Mesas en tierra con hincado o dados de concreto según el estudio de suelos (orilla húmeda); borde inferior de los módulos a 1 m del suelo por las crecientes de la laguna.",
-      "Permiso de Corantioquia: la orilla es humedal; no se tala bosque adicional y solo se podan ramas que den sombra a las mesas.",
-      "Canalización enterrada de unos 15 m desde las mesas hasta la caseta y de unos 12 m desde la caseta hasta el poste de la red.",
-      "Bastidor metálico propio, techado y ventilado, en el corredor de la caseta para colgar los inversores y el tablero (el muro es de tablas de madera y no debe cargarlos).",
-      "Puesta a tierra y pararrayos para las mesas y la caseta, unión equipotencial de las barcazas metálicas y protecciones contra sobretensiones (DPS) en corriente continua y alterna.",
-      "Revisión del cable aéreo que alimenta las barcazas y de su llegada flotante (la caseta y las barcazas dependen de él)."
+      "caseta pequeña de tableros (obra nueva, 2,6 × 2,0 m, en bloque con techo de zinc y celosías de ventilación) unos 5 m al suroriente del pozo 2, para el tablero de los pozos y los inversores del arreglo del claro",
+      "canalización enterrada: alimentador desde la caseta de la PTAP (unos 100 m en línea recta o 165 m por el ramal), de la caseta de tableros a los pozos (unos 5 y 15 m) y de las mesas solares a la caseta de tableros (unos 15–21 m)",
+      "espacio libre alrededor de cada cabezal y acceso para el camión grúa que saca la bomba (en el modelo, el pozo 1 queda a 6 m de la mesa solar del medio, a 4,1 m de la del norte y a 3,3 m de la del sur; si Aguas y Aseo o la norma piden más, se recortan también los extremos occidentales de esas dos mesas): al pozo 1 se llega por el corredor de unos 5,7 m entre el ala de la estructura nueva y las mesas solares; por eso la mesa del medio se recortó en ptap.json",
+      "cerramiento en malla de cada cabezal y revisión de la losa y del sello sanitario",
+      "puesta a tierra de cada cabezal, del gabinete y de las mesas solares, unidas entre sí",
+      "trámite o verificación de la concesión de aguas subterráneas ante Corantioquia (no se encontró en fuentes públicas)"
     ],
-    "notas": "El plan asigna 150 kWp al nodo del acueducto, repartidos en dos fronteras de 75 kWp: la PTAP (data/edificios/ptap.json) y esta captación. Aquí no hay cubiertas útiles: la caseta es de tablas de madera y tiene unos 29 m² de techo de zinc (cabría 1 módulo por faldón con los retiros de 0,5 m), y las barcazas flotan, se mueven y tienen cubiertas pequeñas y oxidadas (con las medidas verificadas, la occidental admitiría 1 módulo por faldón y la oriental ninguno, porque su faldón inclinado mide 1,7 m). Por eso el arreglo va en el piso, en el claro al nororiente de la caseta, que en la imagen de Esri del 11 de febrero de 2026 aparece desmontado (en la imagen de Google, más antigua, era bosque). Caben 2 mesas bajas de 12 columnas × 2 módulos en vertical (13,8 × 4,6 m cada una), con el eje largo norte–sur y los módulos inclinados 10° hacia el oriente y hacia el occidente (en esta latitud se pierde menos del 5 % frente a mirar al sur y así se aprovecha el ancho del claro), con un pasillo de 1,2 m entre ellas y 1 m libre alrededor del poste de la orilla: 48 módulos de 550 Wp = 26,4 kWp, el 35 % de la frontera de la captación. Se dejan libres el arranque de la pasarela, la rampa de la caseta y el camino que sube hacia la vía. Sombras: con los árboles modelados (12 a 15 m, alturas supuestas) se pierde cerca del 15 % del sol directo, sobre todo en la mañana por los árboles del oriente y al final de la tarde por los del sur; como el bosque real es más denso, se espera una producción de unos 2.400 a 2.700 kWh/mes (sin sombras serían unos 2.960). Las bombas trabajan las 24 horas: con 40,9 L/s de diseño (unos 30 L/s llegaban a la PTAP en 2020) y 32,8 m de altura de bombeo, consumen del orden de 15 a 24 kW, es decir, unos 11.000 a 17.500 kWh/mes (estimado; falta la factura del NIU). La energía solar cubriría entre el 14 y el 24 % de la captación y se consumiría toda en el sitio, porque las bombas piden casi siempre más que lo que entregan los 2 inversores de 12 kW (relación CC/CA de 1,1). Los 48,6 kWp que faltan para la frontera no caben en la orilla sin talar bosque. Opciones, por orden: (a) un arreglo flotante de unos 88 módulos amarrado junto a las barcazas, sobre flotadores como los de la pasarela (sombrea el agua y reduce algas y evaporación; requiere permiso de Corantioquia y estudio de anclaje y del nivel de la laguna); (b) un lote en arriendo cerca de las casas de la vía, unos 150 m al oriente; (c) pasar esa potencia a la frontera de la PTAP, donde su levantamiento encontró espacio adicional. Baterías: el BESS del nodo (150 kWh / 75 kW) quedó en la PTAP. En la captación no se propone batería: una de 30 a 50 kWh solo movería una bomba unas 2 horas; es mejor coordinar el bombeo con las horas de sol y con los tanques de la PTAP (1.125 m³ y 350 m³). Inversores: 2 de 12 kW en el muro norte del cuarto, dentro del corredor (siempre a la sombra y bajo techo), en un bastidor propio. El tablero y el medidor van en el muro oriental, a 9 m del poste de la orilla. No se propone cargador de vehículo eléctrico: no hay parqueadero y el acceso es un camino destapado."
+    "notas": "Carga: los dos pozos son la carga más grande del nodo del acueducto mientras bombean. Con los supuestos de 'carga_bombas' piden de 14 a 33 kW (central 22 kW) y gastan de 7.500 a 24.300 kWh al mes (central 13.400, unos 14,6 millones de pesos al mes); es una estimación con rango, porque no se publicaron la profundidad, el caudal ni la potencia de las bombas. Esta especificación no tiene arreglo propio (kwp_factible = 0): la energía llega de la microrred de la PTAP a la caseta de tableros nueva, que es lo único que se construye aquí además de las protecciones de los pozos. Energía solar disponible: el arreglo en piso del claro, que está a 5–25 m de los pozos, quedó en 57,2 kWp después de recortarlo para dejar libre el pozo 1 (data/edificios/ptap.json) y produce unos 4.800 a 5.300 kWh al mes con las sombras del bosque. Cubriría cerca del 38 % de lo que gastan los pozos (entre el 20 y el 71 % según el rango). En las horas de sol las bombas consumen casi todo; solo a mediodía de los días despejados, cuando el arreglo entrega unos 45 kW y las bombas piden unos 22 kW, el sobrante pasa por el alimentador a la PTAP y a las baterías del nodo. Batería: no se propone en los pozos. Para mover las dos bombas una noche de 12 horas harían falta unos 265 kWh más de batería, y el agua ya se guarda en los tanques (PTAP 1.125 m³, tanque de compensación de unos 450 a 500 m³ si es la estructura del claro (estimado con su huella de 213 m² y una lámina supuesta de 2,1 a 2,4 m), tanque elevado 350 m³): si EPM corta de noche, los pozos paran y los tanques abastecen; las baterías de 150 kWh del nodo quedan para la dosificación de cloro, el laboratorio, el control y las comunicaciones. Reparto de la potencia entre la PTAP y los pozos (propuesta): el plan asigna 150 kWp al nodo en dos fronteras de 75 kWp, una para la captación y otra para la PTAP. Como la captación ya está en el mismo predio de la planta: (1) si los pozos tienen medidor propio, la frontera de los pozos toma el arreglo del claro (57,2 kWp) con los inversores junto a los pozos, y la frontera de la PTAP toma el claro oriental junto a la vía de acceso (unas 3 mesas, unos 43 kWp según el levantamiento de la PTAP, sin verificar sombras) y, con estudio estructural, la losa del tanque (unos 52 kWp): hasta unos 95 kWp, más que los 75 kWp que le asigna el plan pero por debajo del tope de 100 kW por frontera; (2) si cuelgan del medidor de la PTAP, se hace una sola frontera de hasta 100 kW (el tope por frontera que usa el plan, por el trámite simplificado de la CREG 174 de 2021 para autogeneradores de hasta 100 kW) con el claro y el claro oriental (unos 100 kWp). En los dos casos los 150 kWp del plan no caben en el predio sin la losa del tanque; lo que falte debe ir a otra sede del nodo (por ejemplo, las estaciones de bombeo de aguas residuales) o reasignarse. Hay que pedir a Aguas y Aseo de Yondó las facturas de EPM por NIU de la PTAP y de los pozos, la placa de las bombas y el registro de horas de bombeo antes de diseñar."
   },
   "incertidumbres": [
-    "No hay Street View (el panorama más cercano está a 2,24 km). Las alturas, la pendiente de las cubiertas y los colores salen de dos fotos de la Superservicios (mayo de 2018 y una de 2020 sin fecha exacta) con la cámara resuelta a partir de medidas conocidas; la de 2020 tiene un error medio de 8 píxeles.",
-    "La fecha de la imagen de Google (sobre la que se midieron las huellas, ±0,3 m) no se conoce. La de Esri es del 11 de febrero de 2026 pero solo tiene 0,6 m de detalle y está corrida unos 2,9 m al occidente y 2,7 m al sur respecto a Google.",
-    "Las barcazas flotan: su posición y altura cambian con el nivel de la laguna. Según la foto de 2020, la orilla está unos 0,45 m por encima del agua; el modelo pone el agua y la orilla al mismo nivel y no dibuja el agua (el generador no tiene ese tipo de suelo: la laguna se ve como el piso gris del predio).",
-    "Barcazas: las alturas salen de la Imagen 15 de la Superservicios (mayo de 2018) con la cámara resuelta: casco de 0,7 m (oriental) y 0,8 m (occidental) sobre el agua, borde del alero a 2,7 y 3,0 m y cumbrera a unos 3,6 m (±0,1 m por la lectura de los píxeles). La foto de 2020 no sirve para medirlas, porque su cámara se resolvió con esas mismas alturas como dato y ajusta igual de bien con las alturas viejas que con las nuevas. En Google la cubierta occidental se ve parda en el faldón occidental y gris en el oriental; en 2020 se veía clara. En 2018 la barcaza occidental tenía un cuarto de láminas claras en su costado oriental, y en 2020 se ve un cuarto verde azulado en el extremo sur; no se modelaron, como tampoco la malla de los costados, las bombas, los motores ni los tableros. Desde 2020 la PTAP veredal se abastece de un pozo, así que una de las dos barcazas podría estar de reserva o fuera de servicio.",
-    "Caseta: es de tablas de madera (el generador la dibuja como muro pintado). El muro real mide unos 1,7 m del piso al alero, pero el generador exige 2,2 m en un volumen cerrado, así que el cuarto arranca 0,6 m por debajo del piso del corredor (la diferencia queda tapada por el piso sobre pilotes). La ventana del costado oriental se ve en 2020; las del sur y la puerta al corredor son supuestas. No se modelaron el antepecho azul del corredor, la escalera de tablas ni las canecas.",
-    "Pasarela: flota sobre canecas azules y su piso queda unos 0,4 m sobre el agua. Como el generador pone el andén a ras del suelo, las barandas se dibujaron de 1,5 m desde el agua (piso flotante más baranda de 1,1 m), que es lo que pide la Imagen 14 con la cámara resuelta. No se dibujan la tubería negra de PEAD de 10 a 12 pulgadas que va a su lado ni la aducción por tierra hacia la PTAP (no se ve en el satélite).",
-    "Postes: el poste de la orilla se ubicó con las fotos del levantamiento (±1,5 m) y su altura visible con la de 2020 (unos 5,7 m). El poste de las barcazas se ubicó con la Imagen 15 (esquina nororiental de la barcaza occidental, ±0,7 m; antes estaba 3 m más al sur, entre los cascos) y su altura, unos 8,5 m (±1 m), con la Imagen 14; la luminaria va a unos 5,6 m. No se ve el transformador ni el recorrido de la red de media tensión; el cable a las barcazas es aéreo.",
-    "Árboles: posiciones aproximadas y alturas supuestas (12 a 15 m); el bosque real alrededor del claro es más denso, así que las sombras pueden ser mayores que el 15 % calculado.",
-    "El claro de las mesas solares es bosque en Google y tierra desmontada en Esri 2026: puede ser una obra en curso o un potrero. Hay que verificar en campo el uso actual, la propiedad del predio (empresa, municipio o particular), el suelo y la cota de inundación.",
-    "El consumo de la captación (11.000 a 17.500 kWh/mes) se estimó con el caudal y la altura de bombeo de la Superservicios; no hay factura por NIU."
+    "Ubicación exacta de los pozos (confianza baja): son los dos objetos del claro que más se parecen a un cabezal, pero la imagen no permite asegurarlo. Otros candidatos, en el sistema de esta especificación: un objeto blanco redondeado de unos 1,7 m en el borde norte del claro (12,0 m; 14,0 m), que puede ser un tanque plástico; el elemento redondo de unos 3 m dentro de la caja de concreto al occidente (−12,2 m; 2,1 m), que puede ser una cámara o un tanque pequeño; y un objeto blanco junto a un corte de tierra unos 28 m al norte (9,7 m; 28,7 m). Fuera del claro hay otra zona posible: unos 125 m al oriente-suroriente de la planta hay una losa alta de unos 40 × 15 m, también posterior a enero de 2020 (podría ser el tanque de compensación), y a su noroccidente una caseta pequeña de techo claro y un objeto blanco (en el sistema de la PTAP, cerca de x = 112, y = −53 y de x = 123, y = −46; imagen data/geo/img/verif_losa_se_g21.png). Tampoco allí se distingue un cabezal. Se confirma con una visita o con los planos de la optimización de 2020–2021.",
+    "Profundidad, caudal de cada pozo, potencia de las bombas, horas de bombeo, tablero y variadores no aparecen en ninguna fuente pública consultada (SECOP I bloquea las consultas automáticas y SECOP II pide captcha). La carga eléctrica es una estimación con rango; si la electrobomba de 60 HP comprada en 2020 fuera de un pozo, la carga sería unas tres veces mayor.",
+    "Fecha de entrada en operación: la obra se contrató en febrero de 2020 con plazo hasta febrero de 2021 y los contratos figuran liquidados con vigencia 2024; un contrato de químicos de septiembre de 2022 todavía hablaba del agua 'proveniente de la Laguna del Miedo' y el Plan de Desarrollo (junio de 2024) ya da los pozos como fuente. Los pozos entraron, por tanto, entre 2021 y 2024; no se encontró la fecha exacta.",
+    "La Laguna del Miedo queda como reserva según el Plan de Desarrollo. El levantamiento anterior de esta especificación vio las dos barcazas, la pasarela y la caseta todavía en su sitio en la imagen de Esri del 11 de febrero de 2026, lo que cuadra con una bocatoma de respaldo; no se sabe si sus bombas siguen conectadas ni cada cuánto se usan.",
+    "No se sabe si el agua de los pozos entra primero al tanque de compensación o directamente a la PTAP. La Superservicios (2020) reporta 3,5 mg/L de hierro en el pozo de la PTAP veredal; si los pozos urbanos tienen hierro parecido, la torre de aireación de la PTAP sigue siendo necesaria.",
+    "La estructura de concreto de 14,7 × 14,5 m del claro se interpreta como el tanque de compensación de la optimización, pero su uso no está confirmado: la losa alta de unos 40 × 15 m del suroriente también podría serlo; tampoco el de la caja con el elemento redondo ni el de la caseta pequeña (que puede ser la caseta de control de los pozos).",
+    "No se ven postes, transformador ni el recorrido de la red eléctrica hasta los pozos. Se desconoce si tienen medidor propio de EPM, lo que decide si hay una o dos fronteras.",
+    "La tubería de impulsión no se ve en el satélite: puede ir en línea recta por el bosque (unos 75 m desde el pozo 1 y 88 m desde el pozo 2 hasta la cámara de llegada) o por el ramal y la vía interna (unos 170 m). Su diámetro no se conoce; para unos 30 L/s lo usual sería de 6 pulgadas.",
+    "Concesión de aguas subterráneas: no se encontró el acto de Corantioquia para estos pozos. En 2020 la concesión de la laguna estaba vencida y la del pozo veredal no se había notificado.",
+    "El generador (scripts/modelos/build_edificios.mjs, caso 'pozo') gira la descarga 180° respecto a lo que dice ESPECIFICACION.md: con rumbo 35° la dibuja hacia el suroccidente (comprobado en data/geo/img/captacion_orbita_pozo1.png). Aquí el rumbo se escribió como lo define la especificación (hacia la planta); hasta que se corrija el generador, en el modelo la descarga sale hacia el lado contrario. Ni con el error ni sin él la descarga o el tablero chocan con algo.",
+    "Las alturas del terreno salen del modelo SRTM (±5 a 10 m): la diferencia de unos 10 m entre el claro y la PTAP es aproximada. El modelo 3D usa terreno plano."
   ],
+  "notas": "Corrección de octubre de 2026: esta especificación describía la bocatoma de barcazas de la Laguna del Miedo, que ya no es la captación del acueducto urbano. Hoy el agua cruda sale de dos pozos profundos de 8 pulgadas con bombas sumergibles tipo lapicero, en el claro al suroccidente de la PTAP, construidos con la 'Optimización del acueducto fase 1' (regalías, unos $9.938 millones de 2020, unos $14.961 millones de 2026). La laguna quedó como reserva. Se quitaron las barcazas, la pasarela, la caseta del operador, los postes de la orilla y el arreglo solar de la orilla; la versión anterior queda en el historial del repositorio. Tubería de impulsión: el formato de especificación no tiene un elemento para tuberías, así que no se dibuja; va de los pozos a la cámara de llegada de la PTAP (torre de concreto de 6,3 m junto a la torre de aireación, en el sistema de la PTAP en x = −4,9 m, y = 11,1 m), con unos 10 m de subida del claro a la planta más la altura de la cámara; recorrido de 75 a 170 m y diámetro probable de 6 pulgadas (estimados). Las construcciones vecinas del claro (estructura de concreto, caja y caseta pequeña), el arreglo solar y los árboles están en data/edificios/ptap.json y no se repiten aquí, para que los dos modelos no se monten uno sobre otro en el gemelo urbano. Los textos que todavía hablan de la captación en la laguna fuera de los archivos de esta tarea (por ejemplo docs/09-motor-3d-y-modelos.md, data/presupuesto_microrred.json y data/red/distancias.json, que mide la distancia a la laguna) deben revisarse.",
   "verificacion": {
-    "trace": "data/geo/img/captacion_trace.png",
-    "trace_esri": "data/geo/img/captacion_trace_esri18.png",
     "trace_google": [
-      "data/geo/img/captacion_gtrace.png",
-      "data/geo/img/captacion_gtrace_barcazas.png",
-      "data/geo/img/captacion_gtrace_caseta.png",
-      "data/geo/img/captacion_gtrace_v0.png",
-      "data/geo/img/captacion_gtrace_v1.png"
+      "data/geo/img/pozos_g21_claro.png",
+      "data/geo/img/pozos_g22_so.png",
+      "data/geo/img/pozos_g22_e.png"
     ],
     "satelite": [
-      "data/geo/img/captacion_esri2026_alineada.png",
-      "data/geo/img/captacion_g21.png",
-      "data/geo/img/captacion_busca_g18.png",
-      "data/geo/img/captacion_cmp_google_esri2026.png",
-      "data/geo/img/captacion_e18_2026_entorno.png",
-      "data/geo/img/captacion_g19_entorno.png"
-    ],
-    "vistas": [
-      "data/geo/img/captacion_foto2018_pasarela.jpg",
-      "data/geo/img/captacion_foto2020_caseta.jpg",
-      "data/geo/img/captacion_foto_sspd2020.png",
-      "data/geo/img/captacion_foto2018_barcazas.jpg",
-      "data/geo/img/captacion_foto2018_laguna.jpg"
-    ],
-    "comparaciones": [
-      "data/geo/img/captacion_cmp2018_v1_comparacion.png",
-      "data/geo/img/captacion_cmp2018_v1_mezcla.png",
-      "data/geo/img/captacion_cmp2018_v2_comparacion.png",
-      "data/geo/img/captacion_cmp2018_v2_mezcla.png",
-      "data/geo/img/captacion_cmp2020_v1_comparacion.png",
-      "data/geo/img/captacion_cmp2020_v2_mezcla.png",
-      "data/geo/img/captacion_cmp2020_v3_comparacion.png",
-      "data/geo/img/captacion_cmp2020_v3_mezcla.png",
-      "data/geo/img/captacion_ver1_barcazas_comparacion.png",
-      "data/geo/img/captacion_ver2_barcazas_comparacion.png",
-      "data/geo/img/captacion_ver2_barcazas_mezcla.png",
-      "data/geo/img/captacion_ver3_laguna_comparacion.png",
-      "data/geo/img/captacion_ver3_laguna_mezcla.png",
-      "data/geo/img/captacion_ver7_laguna_comparacion.png",
-      "data/geo/img/captacion_ver7_laguna_mezcla.png"
+      "data/geo/img/pozos_g21_claro_raw.png",
+      "data/geo/img/pozos_g21_zoom_so.png",
+      "data/geo/img/pozos_g21_zoom_e.png",
+      "data/geo/img/pozos_g22_norte.png",
+      "data/geo/img/pozos_g22_ptap_o.png",
+      "data/geo/img/pozos_g21_ramal.png",
+      "data/geo/img/pozos_g19_ctx.png",
+      "data/geo/img/pozos_g20_se.png",
+      "data/geo/img/pozos_g21_losa_se_raw.png",
+      "data/geo/img/pozos_e18_claro.png",
+      "data/geo/img/pozos_e19_claro.png",
+      "data/geo/img/verif_pozos_g21_raw.png",
+      "data/geo/img/verif_pozos_g21_ptap.png",
+      "data/geo/img/verif_losa_se_g21.png"
     ],
     "orbitas": [
-      "data/geo/img/captacion_orbita_v1.png",
-      "data/geo/img/captacion_orbita_caseta_v1.png",
-      "data/geo/img/captacion_orbita_barcazas_v1.png",
-      "data/geo/img/captacion_orbita_todo.png",
-      "data/geo/img/captacion_ver4_orbita_todo.png",
-      "data/geo/img/captacion_ver5_orbita_barcazas.png",
-      "data/geo/img/captacion_ver6_orbita_todo_norte.png"
+      "data/geo/img/captacion_orbita_todo_pozos.png",
+      "data/geo/img/captacion_orbita_pozo1.png",
+      "data/geo/img/captacion_orbita_pozo2_caseta.png",
+      "data/geo/img/captacion_orbita_con_ptap.png",
+      "data/geo/img/captacion_orbita_con_ptap_norte.png",
+      "data/geo/img/captacion_cenital_con_ptap.png",
+      "data/geo/img/verif_capt_orbita_todo.png",
+      "data/geo/img/verif_capt_cenital_combo.png",
+      "data/geo/img/verif_capt_orbita_combo.png"
     ],
-    "notas": "Sin Street View, la comparación modelo–foto se hizo con dos fotos de la Superservicios. Foto de 2018 (Imagen 17, celular con unos 67° de campo horizontal, recorte 14:9): cámara a 1,5 m de altura en el arranque de la pasarela (32,7 m al oriente y 0,1 m al sur del ancla), rumbo 272,4°, 7,1° hacia abajo. Primera comparación: la pasarela salía 1 m más al norte y las barandas quedaban a la derecha de la foto; se corrió la pasarela 0,3 m al sur y se resolvió de nuevo la cámara con los postes del corredor. En la segunda coinciden los tres postes, el borde de la cubierta del corredor y el tamaño de las barcazas al fondo; se quitaron dos árboles que el modelo ponía detrás de las barcazas y que en la foto no existen. Foto de 2020 (Imagen 7, recorte 14:9): la primera cámara (66 m al oriente, 13°) dejaba las barcazas 1,6 veces más grandes que en la foto; se resolvió por mínimos cuadrados con 9 puntos (esquinas y culata de la caseta, cumbreras de las barcazas) y quedó a 53,8 m al oriente y 12,9 m al sur del ancla, a 5,6 m sobre la orilla, rumbo 292,1°, 4,6° hacia abajo y 26,9° de campo horizontal. Con esa cámara la foto mostró que el muro de la caseta mide unos 1,7 m sobre un piso a 0,7 m (no 2,2 m), que la cubierta tiene unos 12° y (con las alturas de las barcazas puestas como dato) que las barcazas eran bajas, de 2,7 m de cumbrera; se corrigieron, y se movieron el final de la pasarela (a 28,3 m) y el poste de la orilla. En la tercera comparación coinciden la culata de la caseta, el piso sobre pilotes, las dos barcazas y el poste. El modelo no dibuja el agua ni el desnivel de 0,45 m entre la orilla y la laguna. Se hicieron 10 renders en total (el último, la órbita con el proyecto). check_coplanar: sin caras coplanares después de bajar la puerta del cuarto a 1,95 m.",
-    "trace_verificacion": [
-      "data/geo/img/captacion_ver_trace.png",
-      "data/geo/img/captacion_ver_gtrace_barcazas.png",
-      "data/geo/img/captacion_ver_gtrace_caseta.png"
-    ],
-    "notas_verificacion": "Verificación independiente (octubre de 2026). Ubicación: se confirmó con el texto de la Superservicios de 2018 ('dos bocatomas tipo barcaza flotante') y con sus Imágenes 14 y 15, que no había usado el levantamiento: las dos barcazas, la pasarela y el poste coinciden con el conjunto que se ve en Google z21 y en Esri de febrero de 2026. Huellas medidas de nuevo en Google z21 (0,074 m/píxel): cubierta de la barcaza occidental 5,2 × 6,2 m, de la oriental 3,4 × 5,1 m y de la caseta 5,1 × 5,8 m girada 4,4° (la especificación dice 5,4°); todas quedan a menos de 0,3 m de la especificación. En Esri 2026 el claro al oriente y nororiente de la caseta sí aparece en tierra, donde llega el camino; en Google es bosque. Alturas: en la Imagen 15 (desde una canoa al norte) la cámara se resolvió junto con las alturas de las barcazas: 14 puntos, error medio de 3,7 píxeles. Con las alturas que traía la especificación el mejor ajuste posible deja 12,8 píxeles de error y no logra casar cascos y cubiertas a la vez. Resultado: casco de 0,7 y 0,8 m, borde del alero a 2,7 y 3,0 m, cumbrera a 3,6 y 3,7 m (pendientes de unos 28° en la oriental y 15° en la occidental); el armazón de la oriental va casi hasta el borde del casco (3,05 m de ancho, alero de 0,2 m). En la Imagen 14 (cámara junto a la caseta, a unos 3 m sobre el agua, 68° de campo) las alturas nuevas ajustan mejor que las viejas (1,4 frente a 2,0 píxeles) y el poste de las barcazas mide unos 8,5 m. Con la cámara de 2020 del levantamiento, las alturas nuevas ajustan igual (7,7 frente a 7,9 píxeles), así que esa foto no las contradice. Se corrigieron las alturas, el ancho y la pendiente de las barcazas, la posición y la altura del poste de las barcazas, la altura de las barandas de la pasarela (1,5 m desde el agua) y la cita de las imágenes del informe de 2018. Renders de la verificación: ver1 (antes, Imagen 15: las cubiertas del modelo quedaban 1 m por debajo), ver2 (después, Imagen 15: coinciden cubiertas, cascos y armazones), ver3 y ver7 (Imagen 14, antes y después de subir las barandas), ver5 (órbita de las barcazas) y ver4 y ver6 (órbitas con el proyecto). check_coplanar: sin caras coplanares."
+    "notas": "Sin Street View ni fotos del sitio. Las posiciones salen de la imagen de Google z21–z22. Para revisar choques se armó un modelo temporal que junta la PTAP y los pozos en el mismo sistema (fuera del repositorio) y se vio desde arriba y en órbita con la capa 'todo': el pozo 1 queda a unos 6 m del extremo occidental de la mesa solar del medio (recortada) y a unos 4,1 m de la mesa del norte y 3,3 m de la del sur; la descarga del pozo 2 (dibujada hacia el suroccidente por el error del generador) queda a unos 0,9 m de la caseta pequeña existente y el alero de la caseta de tableros nueva a unos 2 m de la copa del árbol más cercano. Ningún pozo, tablero ni caseta se monta sobre los volúmenes, las mesas ni los árboles de la PTAP. Verificación independiente (22 de octubre de 2026): se revisaron las citas en los PDF (Superservicios 2018 y 2020, Plan de Desarrollo 2024–2027), los datos abiertos del DNP (BPIN y contratos) y las conversiones a pesos de 2026; se volvieron a ubicar los dos pozos en Google z21 (data/geo/img/verif_pozos_g21_raw.png) y se revisó el modelo junto con la PTAP desde arriba y en órbita con la capa todo (data/geo/img/verif_capt_cenital_combo.png y verif_capt_orbita_combo.png): no hay choques."
   }
 }

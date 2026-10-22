@@ -1,0 +1,396 @@
+{
+ "titulo": "Supuestos de cantidades por km para costear la red de distribución eléctrica y de datos de la microrred de Yondó",
+ "fecha_corte": "2026-10-22",
+ "convenciones": {
+  "dato_oficial": "copiado de la fuente",
+  "calculo_propio": "operación sobre datos oficiales",
+  "estimacion": "supuesto con rango, a confirmar con diseño y cotizaciones"
+ },
+ "red_mt": {
+  "tension_kv": 13.2,
+  "configuracion": "trifásica tetrafilar (3 fases + neutro inferior en aislador carrete), como las estructuras RA2-001 y RA2-003 de EPM",
+  "conductor_fase": "ACSR 2/0 AWG (Quail) en troncal; ACSR 1/0 en ramales; cable protegido 15 kV 1/0 (red compacta) donde haya árboles o fachadas cerca",
+  "conductor_neutro": "ACSR 1/0 AWG",
+  "vano_max_norma_m": {
+   "valor": 60,
+   "tipo_dato": "dato_oficial",
+   "fuente": "EPM RA2-001, RA2-003, RA2-004 y RA2-021: poste de 12 m, tensión mecánica 20 % de la TUR, terreno plano, distancia mínima a tierra 7,0 m; vano por separación de conductores 110 m",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA2-001.pdf"
+  },
+  "vano_max_norma_rural_m": {
+   "valor": 90,
+   "tipo_dato": "dato_oficial",
+   "fuente": "EPM RA2-011 (suspensión disposición V-neutro, poste de 12 m, 20 % TUR, distancia mínima a tierra 6,5 m); con poste de 10 m, 70 m",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA2-011.pdf"
+  },
+  "urbano": {
+   "vano_m": 40,
+   "rango_vano_m": [
+    30,
+    50
+   ],
+   "postes_por_km": 25,
+   "poste_adicional_por_tramo": 1,
+   "reparto_postes": {
+    "suspension_RA2-001_510kgf": 0.76,
+    "retencion_RA2-004_750kgf": 0.2,
+    "terminal_RA2-003_750kgf": 0.04
+   },
+   "retenciones_por_km": 5,
+   "terminales_por_tramo": 2,
+   "vientos_por_km": 6,
+   "puestas_a_tierra_por_km": 4,
+   "tipo_dato": "estimacion",
+   "nota": "Vano de diseño de 40 m en las calles de Yondó (manzanas de 80–100 m, cruces y acometidas); el máximo de la norma es 60 m. Retención (RA2-004) cada 200 m en promedio por ángulos de más de 15–20° y cambios de calle; dos terminales (RA2-003) por tramo; 1,2 vientos por retención; puesta a tierra cada 250 m y en cada terminal o equipo."
+  },
+  "rural": {
+   "vano_m": 80,
+   "rango_vano_m": [
+    70,
+    90
+   ],
+   "postes_por_km": 12.5,
+   "poste_adicional_por_tramo": 1,
+   "reparto_postes": {
+    "suspension_RA2-011_510kgf": 0.8,
+    "retencion_RA2-004_750kgf": 0.16,
+    "terminal_RA2-003_750kgf": 0.04
+   },
+   "retenciones_por_km": 2,
+   "terminales_por_tramo": 2,
+   "vientos_por_km": 3,
+   "puestas_a_tierra_por_km": 3,
+   "tipo_dato": "estimacion",
+   "nota": "Vía a la PTAP y a los pozos (vereda Las Américas) y a la PTAP veredal: vano de 80 m (norma: hasta 90 m con poste de 12 m), retención cada 500 m, puesta a tierra cada 330 m (el NESC pide al menos 4 por milla en neutro multiaterrizado)."
+  },
+  "factor_conductor": {
+   "valor": 1.04,
+   "rango": [
+    1.03,
+    1.06
+   ],
+   "tipo_dato": "estimacion",
+   "nota": "3 % de flecha y desperdicio + 1 % de puentes y colas (la RA2-011 pide dejar 1,0 m de remanente para puentes futuros)."
+  },
+  "conductores_por_km_circuito": 4
+ },
+ "herrajes_por_estructura_epm": {
+  "tipo_dato": "dato_oficial",
+  "fuente": "Listas de materiales de las normas de construcción de EPM (planos de 2013–2014)",
+  "RA2-001_suspension_cruceta_1500_al_centro": {
+   "nombre": "Suspensión con neutro inferior, cruceta de 1.500 mm al centro",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA2-001.pdf",
+   "materiales": {
+    "poste concreto 12 m octogonal": 1,
+    "cruceta angular metálica 1.500 mm": 1,
+    "tiranta 1.500 mm": 1,
+    "aislador carrete 600 V 81 mm (neutro)": 1,
+    "espigo para aisladores": 2,
+    "tornillo tipo carrete": 1,
+    "perno espaciador 15,9 × 254 mm": 3,
+    "tornillo 5/8\" × 1½\"": 2,
+    "aislador pin (corona) 13,2 kV": 3,
+    "espigo de barra plana": 1
+   }
+  },
+  "RA2-003_terminal": {
+   "nombre": "Terminal con neutro inferior, doble cruceta de 1.500 mm",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA2-003.pdf",
+   "materiales": {
+    "poste concreto 12 m octogonal": 1,
+    "cruceta angular metálica 1.500 mm": 2,
+    "tiranta 1.500 mm": 2,
+    "aislador de suspensión 13,2 kV 165 mm": 6,
+    "grapa terminal tipo recta": 4,
+    "tuerca de ojo 5/8\"": 2,
+    "eslabón 5/8\"": 2,
+    "perno espaciador 15,9 × 254 mm": 6,
+    "tornillo 5/8\" × 1½\"": 4,
+    "viento poste 12 m (RA6-001)": 1
+   }
+  },
+  "RA2-004_referencia_retencion_doble": {
+   "nombre": "Referencia (retención doble) con neutro inferior",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA2-004.pdf",
+   "materiales": {
+    "poste concreto 12 m octogonal": 1,
+    "cruceta angular metálica 1.500 mm": 2,
+    "tiranta 1.500 mm": 2,
+    "aislador de suspensión 13,2 kV 165 mm": 12,
+    "grapa terminal tipo recta": 8,
+    "tuerca de ojo 5/8\"": 4,
+    "eslabón 5/8\"": 4,
+    "perno espaciador 15,9 × 254 mm": 6,
+    "tornillo 5/8\" × 1½\"": 4,
+    "viento poste 12 m": 4,
+    "espigo para aisladores": 3,
+    "aislador pin 13,2 kV": 3
+   }
+  },
+  "RA2-011_suspension_V_neutro_rural": {
+   "nombre": "Suspensión en disposición V con neutro (rural, vanos hasta 90 m)",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA2-011.pdf",
+   "materiales": {
+    "poste concreto 12 m octogonal": 1,
+    "cruceta angular metálica": 1,
+    "tiranta 1.500 mm": 1,
+    "espigo para aisladores": 3,
+    "aislador pin 13,2 kV": 3,
+    "grapa de suspensión": 1,
+    "ojal de suspensión": 1,
+    "eslabón 5/8\"": 1,
+    "bayoneta sencilla 1.500 mm": 1,
+    "conector de compresión en C": 1,
+    "perno espaciador 15,9 × 254 mm": 4,
+    "tornillo 5/8\" × 1½\"": 2
+   }
+  },
+  "RA2-021_suspension_cruceta_volada_2400": {
+   "nombre": "Suspensión con cruceta volada de 2.400 mm (calles angostas)",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA2-021.pdf",
+   "materiales": {
+    "poste concreto 12 m octogonal": 1,
+    "cruceta angular metálica 2.400 mm": 1,
+    "pie de amigo izquierdo 2.400 mm": 1,
+    "espigo para aisladores": 4,
+    "tornillo 5/8\" × 1½\"": 1,
+    "aislador pin 13,2 kV": 4,
+    "perno espaciador 15,9 × 254 mm": 2
+   },
+   "nota": "Para calles angostas: la cruceta se monta en bandera hacia la vía. Vano máximo 60 m."
+  },
+  "RA2-006_DPS_linea_trifasica": {
+   "nombre": "Instalación de DPS de 12 kV en línea trifásica",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA2-006.pdf",
+   "materiales": {
+    "cruceta 1.500 mm": 3,
+    "tiranta 1.500 mm": 3,
+    "tuerca de ojo": 4,
+    "DPS 12 kV": 3,
+    "aislador de suspensión": 8,
+    "grapa terminal recta": 6,
+    "eslabón": 4,
+    "espigos": 3,
+    "aislador pin": 3,
+    "estribo": 3,
+    "conector transversal universal": 3,
+    "conectores varios": 3,
+    "tornillos 5/8\" × 1½\"": 9,
+    "pernos espaciadores": 8
+   }
+  },
+  "RA2-007_cortacircuitos_trifasico_en_cruceta": {
+   "nombre": "Cortacircuitos trifásico en cruceta metálica de 2.400 mm",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA2-007.pdf",
+   "materiales": {
+    "tiranta 2.400 mm": 1,
+    "cruceta 2.400 mm": 1,
+    "tornillo 5/8\" × 1½\"": 2,
+    "tornillo carruaje para cajas primarias": 3,
+    "perno espaciador 15,9 × 305 mm": 2,
+    "estribo": 6,
+    "conector transversal universal": 6,
+    "conector de compresión en C 4/0 Cu": 1,
+    "puesta a tierra (RA6-010)": 1,
+    "caja primaria (cortacircuitos) 13,2 kV": 3
+   }
+  },
+  "RA2-010_desconectadores_monopolares": {
+   "nombre": "Desconectadores (cuchillas) monopolares de 13,2 kV",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA2-010.pdf",
+   "materiales": {
+    "cruceta 1.500 mm": 4,
+    "tiranta 1.500 mm": 2,
+    "tuerca de ojo": 4,
+    "aislador de suspensión": 12,
+    "grapa terminal recta": 8,
+    "eslabón": 4,
+    "aislador pin": 2,
+    "espigo": 2,
+    "seccionador tipo cuchilla": 3,
+    "pernos espaciadores": 7
+   }
+  },
+  "RA3-026_montaje_transformador_monofasico_convencional": {
+   "nombre": "Montaje de transformador monofásico convencional",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA3-026.pdf",
+   "materiales": {
+    "estribo": 1,
+    "caja primaria 13,2 kV": 1,
+    "conector de compresión derivación en C Cu": 4,
+    "DPS": 1,
+    "transformador monofásico": 1,
+    "conector transversal universal": 1,
+    "percha acanalada 1 puesto": 1,
+    "soporte en L para cortacircuitos y pararrayos": 1,
+    "tornillo carruaje": 1,
+    "varilla de puesta a tierra 2.400 mm": 2,
+    "tornillo 15,9 × 50,8 mm": 1,
+    "perno espaciador 254 mm": 2,
+    "perno espaciador 305 mm": 3
+   }
+  },
+  "RA3-029_transformador_autoprotegido_hasta_75kVA": {
+   "nombre": "Montaje de transformador autoprotegido (hasta 75 kVA)",
+   "url": "https://www.epm.com.co/content/dam/epm/proveedores-y-contratistas/RA3-029.pdf",
+   "materiales": {
+    "espigo para cruceta metálica": 2,
+    "transformador monofásico": 1,
+    "aislador pin": 2,
+    "conector transversal universal": 1,
+    "conector de compresión en C Cu": 3,
+    "caja de electrodos de puesta a tierra": 1,
+    "varilla de puesta a tierra 2.400 mm": 2,
+    "perno espaciador 300 mm": 2,
+    "estribo": 1
+   },
+   "nota": "La norma limita este montaje a 75 kVA."
+  }
+ },
+ "red_bt": {
+  "conductor": "trenzado de aluminio 3 × 1/0 + neutro portante 1/0 (trifásico) o 2 × 1/0 + neutro (monofásico trifilar)",
+  "urbano_compartida_con_mt": {
+   "postes_nuevos_por_km": 0,
+   "herrajes_suspension_por_km": 25,
+   "herrajes_retencion_por_km": 6,
+   "conectores_derivacion_por_km": 10,
+   "tipo_dato": "estimacion"
+  },
+  "urbano_solo_bt": {
+   "vano_m": 35,
+   "postes_10m_por_km": 29,
+   "tipo_dato": "estimacion",
+   "nota": "Si la BT va por una calle sin MT, se suman postes de 10 m (APU-01 con poste de 10 m)."
+  },
+  "factor_conductor": 1.03,
+  "caida_tension_max": "diseñar con caída ≤ 3 % en el circuito de BT (RETIE/NTC 2050); con trenzado 3 × 1/0 a 220 V, unos 250–300 m para 30 kVA"
+ },
+ "fibra": {
+  "cable_troncal": "ADSS 48 hilos entre el CCED (Alcaldía) y los nodos principales; ADSS 24 hilos en ramales",
+  "sobre_postes": "existentes de EPM (con permiso y arriendo) o nuevos de la red de MT del proyecto",
+  "factor_cable": {
+   "valor": 1.06,
+   "tipo_dato": "estimacion",
+   "nota": "3 % de desperdicio y catenaria + reservas de 20–30 m en cada caja y cada 500 m."
+  },
+  "herrajes_suspension_por_poste_de_paso": 1,
+  "remates_por_poste_de_retencion": 2,
+  "postes_retencion_fibra_por_km_urbano": 4,
+  "postes_retencion_fibra_por_km_rural": 2,
+  "fleje_m_por_herraje": 1.2,
+  "hebillas_por_herraje": 2,
+  "reservas_por_km": 2,
+  "cajas_empalme_por_km": {
+   "valor": 0.5,
+   "nota": "una cada 2 km en promedio (el carrete es de 4 km y hay derivaciones a sedes); mínimo una por derivación"
+  },
+  "nap_por_sede": 1,
+  "onu_por_sede": 1,
+  "fusiones_por_caja_24h": 24,
+  "fusiones_por_dia": 48,
+  "tipo_dato": "estimacion"
+ },
+ "canalizacion": {
+  "ductos": 4,
+  "diametro_pulg": 4,
+  "uso": "2 para MT/BT, 1 para fibra y 1 de reserva",
+  "seccion_zanja_m": [
+   0.6,
+   1.0
+  ],
+  "envoltura_concreto_m3_por_m": 0.16,
+  "relleno_m3_por_m": 0.35,
+  "sobrantes_m3_por_m": 0.4,
+  "camara_cada_m": 50,
+  "rango_camara_m": [
+   40,
+   60
+  ],
+  "camaras_adicionales": "una en cada cambio de dirección, cruce de vía y llegada a sede",
+  "tipo_dato": "estimacion"
+ },
+ "rendimientos": {
+  "tipo_dato": "estimacion",
+  "excavacion_hueco_poste_por_dia_CCIV": 5,
+  "izado_postes_por_dia_CMT_con_grua": 8,
+  "estructuras_suspension_por_dia_CMT": 6,
+  "estructuras_retencion_por_dia_CMT": 3,
+  "vientos_por_dia_pareja": 2,
+  "puestas_a_tierra_por_dia_pareja": 4,
+  "tendido_mt_4_conductores_km_por_dia_urbano": 0.6,
+  "tendido_mt_km_por_dia_rural": 1.0,
+  "tendido_bt_trenzado_km_por_dia": 0.8,
+  "tendido_fibra_km_por_dia_urbano": 1.2,
+  "canalizacion_m_por_dia_CCIV": 6,
+  "transformador_montaje_dias_CMT": 1.0,
+  "acometida_dias_pareja": 1.5,
+  "nota": "Rendimientos de cuadrillas de la región para terreno plano; la SIF 2020 usa rendimientos del mismo orden (p. ej., 0,8 días-pareja por viento y 1,25 postes por día-oficial sin grúa)."
+ },
+ "indirectos": {
+  "AIU": {
+   "administracion": 0.19,
+   "imprevistos": 0.03,
+   "utilidad": 0.05,
+   "total": 0.27,
+   "rango_total": [
+    0.24,
+    0.32
+   ],
+   "tipo_dato": "estimacion"
+  },
+  "IVA_sobre_utilidad": 0.19,
+  "interventoria": {
+   "valor": 0.08,
+   "rango": [
+    0.062,
+    0.0977
+   ],
+   "mediana_secop": 0.083,
+   "tipo_dato": "calculo_propio"
+  },
+  "ingenieria_detalle": {
+   "valor": 0.04,
+   "rango": [
+    0.03,
+    0.06
+   ],
+   "tipo_dato": "estimacion"
+  },
+  "pma_pmt_sst": {
+   "valor": 0.015,
+   "tipo_dato": "estimacion"
+  },
+  "precision_presupuesto": "Clase 4 de AACE (prefactibilidad): −30 % / +50 %"
+ },
+ "factores_actualizacion": {
+  "IPP_oferta_interna_dic2017": 113.41,
+  "IPP_oferta_interna_ene_sep_2026": [
+   183.09,
+   184.47,
+   188.84,
+   189.54,
+   189.2,
+   186.97,
+   186.15,
+   185.6,
+   187.47
+  ],
+  "IPP_promedio_2026": 186.814,
+  "factor_IPP_dic2017_a_2026": 1.64725,
+  "factor_IPC_2020_a_2026": 1.50538,
+  "factor_IPC_2023_a_2026": 1.181514,
+  "nota": "Los valores de la CREG se actualizan con IPP de oferta interna, como lo hace la propia CREG (cap. 1, definición de IPP). Los APU de la SIF de 2020 y el tope de la CRC de 2023 se llevan a 2026 con el IPC del repositorio."
+ },
+ "reglas_presupuesto_por_tramo": {
+  "entrada": "longitud del tramo L (km) medida por las calles, tipo urbano o rural, si lleva MT, BT, fibra o canalización, número de sedes y transformadores",
+  "postes_nuevos": "ceil(L × postes_por_km) + poste_adicional_por_tramo (solo si la MT es nueva)",
+  "red_mt": "L × precio de APU-06U (urbano) o APU-06R (rural); o, por menores: postes × APU-01 + estructuras × APU-02/03 + vientos × APU-04 + PAT × APU-05 + conductor",
+  "red_bt": "L × APU-07 (+ postes de 10 m si no comparte postes con la MT)",
+  "fibra": "L × APU-09 (24 hilos) o APU-09 variante 48 hilos; + APU-13 por sede conectada y un APU-14 en el CCED",
+  "subterranea": "L × 1000 × APU-10 + ceil(L × 1000 / 50) × cámara + L × 3 fases × 1.000 m × factor × cable XLPE + 2 transiciones",
+  "transformadores": "un APU-08 por sede que necesite transformador propio (según capacidad)",
+  "acometidas": "un APU-11 por sede (medidor bidireccional)",
+  "preliminares_por_tramo": "L × topografía + L × certificado RETIE (MT) + (rural) L × (servidumbre + poda)",
+  "total": "costo de obra (ya con AIU) + ingeniería 4 % + PMA 1,5 % (sobre costo directo) + trámites EPM (global) + interventoría 8 % sobre la obra"
+ }
+}

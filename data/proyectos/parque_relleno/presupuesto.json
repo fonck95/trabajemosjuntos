@@ -1,0 +1,658 @@
+{
+ "id": "parque_relleno_presupuesto",
+ "titulo": "Presupuesto de prefactibilidad: clausura del relleno Las Américas, granja solar de 1 MWp y parque ecotecnológico",
+ "fecha_corte": "2026-10-22",
+ "moneda_y_base": "Pesos constantes de 2026 (base: promedio enero–septiembre de 2026 del IPC del DANE; factores en data/fuentes/ipc_dane.csv). Las tarifas de EPM de octubre de 2026 se toman como pesos de 2026 (diferencia menor al 0,5 %).",
+ "convenciones": {
+  "dato_oficial": "tomado tal cual del documento o base citada",
+  "calculo_propio": "operación aritmética sobre datos oficiales, con el método a la vista",
+  "estimacion": "supuesto razonado con rango; hay que confirmarlo en campo o con el dueño del dato"
+ },
+ "clase": "Prefactibilidad (clase 4: −30 % / +50 %). Los precios unitarios incluyen AIU salvo que se diga lo contrario. Se convierte en presupuesto de factibilidad con diseños, APU y tres cotizaciones.",
+ "capitulos": [
+  {
+   "capitulo": "1. Estudios, diseños, plan de clausura y posclausura y trámites",
+   "items": [
+    {
+     "item": "Topografía con dron (LiDAR o fotogrametría) del predio y batimetría de las lagunas",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 45000000.0,
+     "valor": 45000000,
+     "fuente": "Mercado Antioquia 2026 (25–60 M para 10–20 ha)",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Delimitación de residuos: apiques, sondeos y georradar (incluye el antiguo botadero de los años noventa)",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 180000000.0,
+     "valor": 180000000,
+     "fuente": "Mercado 2026: 20–30 apiques y 2–3 km de líneas de georradar",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Estudios geotécnico, de estabilidad, hidrológico e hidrogeológico (Decreto 1784 de 2017, art. 2.3.2.3.11)",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 160000000.0,
+     "valor": 160000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Línea base: caracterización de lixiviados, agua subterránea, aguas superficiales y biogás",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 60000000.0,
+     "valor": 60000000,
+     "fuente": "SECOP Aguas y Aseo: muestreos de 2025 por 94 M (agua potable y residual)",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Diseño del plan de clausura y posclausura con uso futuro (parque y granja solar) y trámite ante Corantioquia",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 260000000.0,
+     "valor": 260000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Diseños arquitectónicos y técnicos del parque (coworking, cafetería, granja, senderos, redes)",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 180000000.0,
+     "valor": 180000000,
+     "fuente": "≈5 % del costo de las obras del parque",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Diseño de la granja solar, estudio de conexión simplificado ante EPM y estudio de la línea de 13,2 kV",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 90000000.0,
+     "valor": 90000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    }
+   ],
+   "subtotal": 975000000
+  },
+  {
+   "capitulo": "2. Clausura técnica de las celdas",
+   "items": [
+    {
+     "item": "Reconformación de residuos y taludes hasta pendientes de 3–5 % (corte, traslado y compactación)",
+     "cantidad": 12000,
+     "unidad": "m³",
+     "precio_unitario": 28000,
+     "valor": 336000000,
+     "fuente": "Mercado 2026 (maquinaria pesada, SECOP Aguas y Aseo 2023: 200 M por alquiler de maquinaria)",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Capa de arcilla compactada de 0,45 m (permeabilidad ≤ 1×10⁻⁷ cm/s)",
+     "cantidad": 4500,
+     "unidad": "m³",
+     "precio_unitario": 65000,
+     "valor": 292500000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Geomembrana de polietileno de alta densidad de 1,0 mm texturizada, instalada",
+     "cantidad": 10500,
+     "unidad": "m²",
+     "precio_unitario": 32000,
+     "valor": 336000000,
+     "fuente": "Mercado 2026 (25–40 mil/m²)",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Geodrén de drenaje sobre la geomembrana",
+     "cantidad": 10000,
+     "unidad": "m²",
+     "precio_unitario": 22000,
+     "valor": 220000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Suelo de protección de 0,45 m y capa orgánica de 0,15 m",
+     "cantidad": 6000,
+     "unidad": "m³",
+     "precio_unitario": 42000,
+     "valor": 252000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Empradización con pasto rastrero nativo de raíz superficial",
+     "cantidad": 12000,
+     "unidad": "m²",
+     "precio_unitario": 9000,
+     "valor": 108000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Canales perimetrales de aguas lluvias (concreto o geoceldas)",
+     "cantidad": 650,
+     "unidad": "m",
+     "precio_unitario": 350000,
+     "valor": 227500000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Drenaje perimetral de lixiviados con cajas de inspección",
+     "cantidad": 450,
+     "unidad": "m",
+     "precio_unitario": 280000,
+     "valor": 126000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Chimeneas pasivas de biogás (tubo perforado de 6\", grava y biofiltro), en los pasillos entre filas",
+     "cantidad": 10,
+     "unidad": "und",
+     "precio_unitario": 9500000,
+     "valor": 95000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Quemador pasivo o biofiltro central de biogás",
+     "cantidad": 1,
+     "unidad": "und",
+     "precio_unitario": 85000000,
+     "valor": 85000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Pozos de monitoreo de agua subterránea (20–30 m, revestidos)",
+     "cantidad": 4,
+     "unidad": "und",
+     "precio_unitario": 45000000,
+     "valor": 180000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Hitos topográficos y piezómetros de asentamiento y de nivel de lixiviados",
+     "cantidad": 20,
+     "unidad": "und",
+     "precio_unitario": 1800000,
+     "valor": 36000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Impermeabilización de las lagunas A y B con geomembrana (igualación de lixiviados)",
+     "cantidad": 900,
+     "unidad": "m²",
+     "precio_unitario": 45000,
+     "valor": 40500000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Humedal artificial de flujo subsuperficial para pulir lixiviados",
+     "cantidad": 400,
+     "unidad": "m²",
+     "precio_unitario": 450000,
+     "valor": 180000000,
+     "fuente": "Mercado 2026 (lecho de grava, plantas, cajas y tubería)",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Cierre y relleno de las lagunas C y D y retiro de estructuras viejas",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 35000000,
+     "valor": 35000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    }
+   ],
+   "subtotal": 2549500000
+  },
+  {
+   "capitulo": "3. Granja solar sobre las celdas (≈1 MWp)",
+   "items": [
+    {
+     "item": "Sistema solar en tierra: 1.812 módulos de 550 Wp, 8 inversores de 100 kW, estructura, cableado, monitoreo y montaje",
+     "cantidad": 996.6,
+     "unidad": "kWp",
+     "precio_unitario": 2700000,
+     "valor": 2690820000,
+     "fuente": "Rango 2026 para granjas de 0,5–1 MW: 2,4–3,2 M COP/kWp sin cimentación; data/presupuesto_microrred.json usa 3,2 M para 150 kWp en piso",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Lastres prefabricados de concreto (≈0,4 m³ cada uno) para no perforar la cobertura",
+     "cantidad": 430,
+     "unidad": "und",
+     "precio_unitario": 750000,
+     "valor": 322500000,
+     "fuente": "Cálculo propio: un pórtico cada 5,5 m con dos patas en 1.000 m de mesas",
+     "certeza": "calculo_propio"
+    },
+    {
+     "item": "Centro de transformación: transformador de 1.000 kVA (0,48/13,2 kV), celdas y protecciones",
+     "cantidad": 1,
+     "unidad": "und",
+     "precio_unitario": 420000000,
+     "valor": 420000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Caseta del centro de transformación y control (40 m²)",
+     "cantidad": 40,
+     "unidad": "m²",
+     "precio_unitario": 2600000,
+     "valor": 104000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Malla eslabonada de 2,0 m con concertina alrededor de los dos bloques",
+     "cantidad": 670,
+     "unidad": "m",
+     "precio_unitario": 210000,
+     "valor": 140700000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Cámaras, alarma y monitoreo remoto de la granja",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 85000000,
+     "valor": 85000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Batería LFP de 100 kWh / 50 kW (servicios auxiliares y respaldo del coworking)",
+     "cantidad": 100,
+     "unidad": "kWh",
+     "precio_unitario": 1400000,
+     "valor": 140000000,
+     "fuente": "data/presupuesto_microrred.json (1,4 M COP/kWh)",
+     "certeza": "estimacion"
+    }
+   ],
+   "subtotal": 3903020000
+  },
+  {
+   "capitulo": "4. Conexión a la red de EPM",
+   "items": [
+    {
+     "item": "Línea aérea nueva de 13,2 kV trifásica (postes de concreto de 12 m, conductor ACSR 2/0) hasta la subestación Yondó",
+     "cantidad": 2.6,
+     "unidad": "km",
+     "precio_unitario": 420000000,
+     "valor": 1092000000,
+     "fuente": "Mercado 2026 (350–500 M/km); ruta estimada",
+     "certeza": "estimacion",
+     "nota": "Si EPM confirma capacidad en la red que alimenta la PTAP, basta una derivación de 0,6–0,8 km (≈300 M)."
+    },
+    {
+     "item": "Reconectador y equipo de corte y protección en el punto de conexión",
+     "cantidad": 1,
+     "unidad": "und",
+     "precio_unitario": 165000000,
+     "valor": 165000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Medición bidireccional semidirecta con telemedida en la frontera",
+     "cantidad": 1,
+     "unidad": "und",
+     "precio_unitario": 45000000,
+     "valor": 45000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Adecuación de una salida de 13,2 kV en la subestación Yondó (solo si EPM lo exige)",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 380000000,
+     "valor": 380000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    }
+   ],
+   "subtotal": 1682000000
+  },
+  {
+   "capitulo": "5. Parque: edificaciones y servicios (fuera de las celdas)",
+   "items": [
+    {
+     "item": "Coworking rural bioclimático y aula ambiental (312 m² cerrados)",
+     "cantidad": 312,
+     "unidad": "m²",
+     "precio_unitario": 3160310,
+     "valor": 986016720,
+     "fuente": "Proyecto tipo DNP 'Centro TIC municipal' v2.0 (2018): 430 M por 250 m², llevado a 2026 (×1,598) y +15 % por cubierta ventilada y aleros",
+     "certeza": "calculo_propio"
+    },
+    {
+     "item": "Corredor cubierto del coworking (68 m²)",
+     "cantidad": 68,
+     "unidad": "m²",
+     "precio_unitario": 1600000,
+     "valor": 108800000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Dotación del coworking: 40 puestos, sala de reuniones, 4 cabinas, aula de 20 puestos y equipos",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 335523300,
+     "valor": 335523300,
+     "fuente": "Proyecto tipo DNP 'Centro TIC municipal' (equipamiento 210 M de 2018, ×1,598)",
+     "certeza": "calculo_propio"
+    },
+    {
+     "item": "Conectividad: enlace dedicado (fibra o radioenlace) con respaldo satelital y wifi exterior",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 95000000,
+     "valor": 95000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Solar propia del coworking (40 módulos en la cubierta, 22 kWp)",
+     "cantidad": 22,
+     "unidad": "kWp",
+     "precio_unitario": 3800000,
+     "valor": 83600000,
+     "fuente": "data/presupuesto_microrred.json (cubiertas 2,8–4,0 M/kWp)",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Marquesina solar del parqueadero (40 módulos, 22 kWp)",
+     "cantidad": 22,
+     "unidad": "kWp",
+     "precio_unitario": 5000000,
+     "valor": 110000000,
+     "fuente": "data/presupuesto_microrred.json (marquesina 5,0 M/kWp)",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Cargadores: 2 de 22 kW para carros y 6 tomas para bicicletas eléctricas",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 70000000,
+     "valor": 70000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Cosecha de agua lluvia: canales, filtro, tanque de 30 m³ y bombeo",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 65000000,
+     "valor": 65000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Tratamiento de aguas residuales de baños y cafetería (tanque séptico y humedal pequeño)",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 55000000,
+     "valor": 55000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Cafetería, baños y duchas para ciclistas (96 m²)",
+     "cantidad": 96,
+     "unidad": "m²",
+     "precio_unitario": 3200000,
+     "valor": 307200000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Taller de bicicletas (40 m²) y herramientas",
+     "cantidad": 40,
+     "unidad": "m²",
+     "precio_unitario": 2400000,
+     "valor": 96000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Herramientas y repuestos iniciales del taller",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 25000000,
+     "valor": 25000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Portería del acceso occidental (10,5 m²)",
+     "cantidad": 10.5,
+     "unidad": "m²",
+     "precio_unitario": 2850000,
+     "valor": 29925000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Mirador: torre con terraza a 3 m y cubierta (2 niveles de 25 m²)",
+     "cantidad": 50,
+     "unidad": "m²",
+     "precio_unitario": 2800000,
+     "valor": 140000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Kioscos de trabajo al aire libre con mesas y tomas solares (3 × 25 m²)",
+     "cantidad": 75,
+     "unidad": "m²",
+     "precio_unitario": 1100000,
+     "valor": 82500000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    }
+   ],
+   "subtotal": 2589565020
+  },
+  {
+   "capitulo": "6. Granja autosostenible (fuera de las celdas)",
+   "items": [
+    {
+     "item": "Invernadero y vivero en policarbonato con riego por goteo (216 m²)",
+     "cantidad": 216,
+     "unidad": "m²",
+     "precio_unitario": 380000,
+     "valor": 82080000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Huerta en camas de cultivo con suelo traído, compost y riego (4 camas, 784 m²)",
+     "cantidad": 784,
+     "unidad": "m²",
+     "precio_unitario": 45000,
+     "valor": 35280000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Compostaje cubierto y composteras",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 38000000,
+     "valor": 38000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Apiario: 10 colmenas, equipo y cerca viva",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 28000000,
+     "valor": 28000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Arborización con especies nativas (incluye la cerca viva perimetral)",
+     "cantidad": 160,
+     "unidad": "und",
+     "precio_unitario": 350000,
+     "valor": 56000000,
+     "fuente": "Mercado 2026; proyecto tipo DNP 'Recuperación de cobertura vegetal en áreas disturbadas' (2022) como guía técnica",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Herramientas y capacitación inicial de la granja",
+     "cantidad": 1,
+     "unidad": "global",
+     "precio_unitario": 30000000,
+     "valor": 30000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    }
+   ],
+   "subtotal": 269360000
+  },
+  {
+   "capitulo": "7. Circuito, senderos y espacio público",
+   "items": [
+    {
+     "item": "Circuito de trote y ciclismo de 3 m en afirmado estabilizado con bordillo (0,90 km + enlace de 0,19 km)",
+     "cantidad": 3270,
+     "unidad": "m²",
+     "precio_unitario": 130000,
+     "valor": 425100000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Senderos internos (2 m) y plazoleta en concreto permeable o adoquín",
+     "cantidad": 900,
+     "unidad": "m²",
+     "precio_unitario": 160000,
+     "valor": 144000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Parqueadero en adoquín ecológico (704 m²)",
+     "cantidad": 704,
+     "unidad": "m²",
+     "precio_unitario": 140000,
+     "valor": 98560000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Módulo recreodeportivo (ejercitadores, juegos infantiles, mesas y escenario; 528 m²)",
+     "cantidad": 528,
+     "unidad": "m²",
+     "precio_unitario": 590437,
+     "valor": 311750736,
+     "fuente": "Proyecto tipo DNP 'Parque recreodeportivo' v2.0 (2017): 700 M por 2.040 m² (precios de 2016, ×1,721)",
+     "certeza": "calculo_propio"
+    },
+    {
+     "item": "Señalización informativa, educativa, de seguridad y de la ruta al pueblo",
+     "cantidad": 14,
+     "unidad": "señales",
+     "precio_unitario": 9586977,
+     "valor": 134217678,
+     "fuente": "Proyecto tipo DNP 'Señalización turística urbana' (2022): 130,7 M por 18 señales, ×1,320",
+     "certeza": "calculo_propio"
+    },
+    {
+     "item": "Luminarias solares de sendero con sensor de presencia",
+     "cantidad": 30,
+     "unidad": "und",
+     "precio_unitario": 4500000,
+     "valor": 135000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Cerramiento perimetral del parque con malla y cerca viva",
+     "cantidad": 1100,
+     "unidad": "m",
+     "precio_unitario": 120000,
+     "valor": 132000000,
+     "fuente": "Mercado 2026",
+     "certeza": "estimacion"
+    },
+    {
+     "item": "Ciclo-infraestructura en la vía entre el pueblo y el parque, con segregación y señalización",
+     "cantidad": 3.8,
+     "unidad": "km",
+     "precio_unitario": 348198266,
+     "valor": 1323153411,
+     "fuente": "Proyecto tipo DNP 'Ciclo-infraestructura y servicios complementarios' v2.0 (2022): 2.110 M por 8 km sobre vía, ×1,320",
+     "certeza": "calculo_propio"
+    }
+   ],
+   "subtotal": 2703781825
+  }
+ ],
+ "costo_directo": 14672226845,
+ "interventoria": {
+  "porcentaje": 0.07,
+  "valor": 1027055879
+ },
+ "gestion_social_y_ambiental": {
+  "porcentaje": 0.02,
+  "valor": 293444537
+ },
+ "imprevistos": {
+  "porcentaje": 0.1,
+  "valor": 1467222684
+ },
+ "total": 17459949946,
+ "total_millones": 17459.9,
+ "rango_millones": [
+  12222.0,
+  26189.9
+ ],
+ "por_fase_millones": {
+  "fase_0_1_estudios_y_clausura": 4194.2,
+  "fase_2_granja_solar_y_conexion": 6646.2,
+  "fase_3_parque": 6619.6
+ },
+ "costos_anuales_millones": {
+  "posclausura": 190,
+  "operacion_parque": 520,
+  "om_granja_solar": 58.5,
+  "disposicion_regional": 320.7,
+  "mantenimiento_ruta_ciclista_3_8_km": 29.2,
+  "tipo_dato": "estimacion"
+ },
+ "comparacion": {
+  "ampliar_el_relleno_bpin_2025058930015_millones": 3901.4,
+  "operar_el_relleno_promedio_2019_2023_millones_por_anio": 576.2,
+  "lectura": "La clausura (fases 0 y 1) cuesta del orden de lo que se pensaba gastar en ampliar el relleno, pero resuelve el problema para siempre y libera el predio para la granja solar y el parque."
+ },
+ "referencias_de_precios": [
+  "data/presupuesto_microrred.json (solar en cubierta 3,5 M/kWp; marquesina 5,0; piso 3,2; baterías 1,4 M/kWh)",
+  "DNP, proyectos tipo: Centro TIC municipal (2018), Parque recreodeportivo (2017), Ciclo-infraestructura (2022) y Señalización turística (2022), llevados a 2026 con el IPC",
+  "SECOP de Aguas y Aseo de Yondó 2022–2026 (maquinaria, material de cobertura, muestreos)",
+  "Precios de mercado 2026 en Antioquia para geosintéticos, movimiento de tierra, redes de media tensión y edificaciones (estimaciones con rango)"
+ ]
+}

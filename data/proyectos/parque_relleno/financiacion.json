@@ -1,0 +1,198 @@
+{
+ "id": "parque_relleno_financiacion",
+ "titulo": "Cómo se puede pagar: clausura, granja solar y parque",
+ "fecha_corte": "2026-10-22",
+ "moneda_y_base": "Pesos constantes de 2026 (base: promedio enero–septiembre de 2026 del IPC del DANE; factores en data/fuentes/ipc_dane.csv). Las tarifas de EPM de octubre de 2026 se toman como pesos de 2026 (diferencia menor al 0,5 %).",
+ "convenciones": {
+  "dato_oficial": "tomado tal cual del documento o base citada",
+  "calculo_propio": "operación aritmética sobre datos oficiales, con el método a la vista",
+  "estimacion": "supuesto razonado con rango; hay que confirmarlo en campo o con el dueño del dato"
+ },
+ "total_a_financiar_millones": 17459.9,
+ "principio": "Cada fase tiene su fuente: la clausura es obligación del servicio de aseo (tarifa, SGP de agua y saneamiento, Plan Departamental, regalías); la granja solar se paga con recursos energéticos (Colombia Solar, FENOGE, regalías del Incentivo a la Producción, Findeter, obras por impuestos o un privado); el parque, con regalías, cultura, deporte, TIC y cooperación. Ninguna fase depende de contratar una consultoría sin fuente para la obra.",
+ "fuentes": [
+  {
+   "fuente": "Tarifa de aseo: provisión de clausura y posclausura (Decreto 1784 de 2017, art. 2.3.2.3.17) y costo de disposición final en la tarifa (metodología CRA)",
+   "para": "Fase 1 y posclausura",
+   "monto_millones": [
+    300,
+    1200
+   ],
+   "condiciones": "Aguas y Aseo debió provisionar durante la operación; hay que verificar el saldo en sus estados financieros. Si no existe, el municipio responde.",
+   "certeza": "estimacion",
+   "url": "https://normas.cra.gov.co/gestor/docs/decreto_1784_2017.htm"
+  },
+  {
+   "fuente": "SGP de agua potable y saneamiento básico del municipio (asignación anual) y Plan Departamental de Agua de Antioquia",
+   "para": "Fase 0 y 1",
+   "monto_millones": [
+    800,
+    2000
+   ],
+   "condiciones": "Requiere el proyecto en el plan de inversiones del PDA y en el plan de desarrollo; cofinancia estudios y obras de aseo.",
+   "certeza": "estimacion",
+   "url": "https://www.sicodis.dnp.gov.co"
+  },
+  {
+   "fuente": "Sistema General de Regalías: asignaciones directas y OCAD Paz (Yondó es PDET), sector vivienda y saneamiento o ambiente",
+   "para": "Fase 1 y 3",
+   "monto_millones": [
+    2000,
+    5000
+   ],
+   "condiciones": "Reformular el BPIN 2025058930015 (ampliación, devuelto) como clausura con uso futuro y el BPIN 2025058930008 (vía de acceso) como vía del parque y ruta ciclista. El Decreto 1784 exige analizar la regionalización para cofinanciar.",
+   "certeza": "estimacion",
+   "url": "data/comparativa/sgr_fondos.json"
+  },
+  {
+   "fuente": "Colombia Solar (Decreto 0972 de 2025, Res. MinEnergía 40159 de 2026): sustitución de subsidios por autogeneración colectiva",
+   "para": "Fase 2",
+   "monto_millones": [
+    3000,
+    6100
+   ],
+   "condiciones": "Postular la granja como solución colectiva para hogares de estratos 1 y 2; contratos de hasta 25 años; seguir las convocatorias de FENOGE (la IA-006-2026 fue cancelada).",
+   "certeza": "estimacion",
+   "url": "https://www.minenergia.gov.co/es/sala-de-prensa/noticias-index/gobierno-nacional-reglamenta-colombia-solar-y-convierte-el-subsidio-electrico-en-autogeneracion-para-estratos-1-2-y-3/"
+  },
+  {
+   "fuente": "FENOGE: recursos no reembolsables o reembolsables; ConEnergía para municipios PDET",
+   "para": "Fase 2 y solar del parque",
+   "monto_millones": [
+    1000,
+    4000
+   ],
+   "condiciones": "Exige certificado de planeación, Marco Fiscal y viabilidad; trámite por cortes trimestrales.",
+   "certeza": "estimacion",
+   "url": "https://fenoge.gov.co/proyectos/conenergia/"
+  },
+  {
+   "fuente": "SGR – Incentivo a la Producción (convocatoria de MinEnergía): granjas solares y comunidades energéticas, hasta $8.000 M y dos proyectos por municipio",
+   "para": "Fase 2",
+   "monto_millones": [
+    3000,
+    6100
+   ],
+   "condiciones": "Yondó está entre los 209 municipios beneficiarios; en 2025 su único proyecto no cumplió. Presentar la granja en la próxima convocatoria.",
+   "certeza": "estimacion",
+   "url": "https://www.minenergia.gov.co/es/misional/sistema-general-de-regalias/convocatoria-ip-2025/"
+  },
+  {
+   "fuente": "Findeter – línea 'Municipios Territorios Energéticos' (crédito directo IBR + 0,7 % M.V., 10 años con 2 de gracia; granjas de 1 MW) y tasa compensada (Decreto 1223 de 2025)",
+   "para": "Fase 2",
+   "monto_millones": [
+    2000,
+    6100
+   ],
+   "condiciones": "El flujo de la granja (valor de generación de unos $540 M/año) alcanza para pagar un crédito de unos $3.000 M a 10 años (cuota de unos $500 M/año con una tasa nominal cercana al 10,5 %); requiere registro como 'municipio energético'.",
+   "certeza": "estimacion",
+   "url": "https://www.findeter.gov.co/noticias/comunicados/ministerio-de-minas-y-energia-y-findeter-en-alianza-con-asocapitales-asointermedias-y-fedemunicipios-lanzan-linea-de-financiamiento-para-parques-de-generacion-de-energia"
+  },
+  {
+   "fuente": "Obras por impuestos (Yondó es ZOMAC y PDET): Ecopetrol u otros contribuyentes",
+   "para": "Fase 2 (energía) y posibles componentes de agua y saneamiento",
+   "monto_millones": [
+    2000,
+    6000
+   ],
+   "condiciones": "Energía, agua y saneamiento son sectores habilitados; MinEnergía es la entidad competente para energía (Res. 40360 de 2024). Hay que inscribir el proyecto en el banco de la ART.",
+   "certeza": "estimacion",
+   "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_minminas_40360_2024.htm"
+  },
+  {
+   "fuente": "Privado con contrato de compra de energía (PPA) y derecho de superficie sobre el predio",
+   "para": "Fase 2 (alternativa a los recursos públicos)",
+   "monto_millones": [
+    0,
+    6100
+   ],
+   "condiciones": "El desarrollador invierte y vende la energía (por ejemplo a Ecopetrol o a un comercializador); el municipio cobra canon y negocia una parte para los hogares. Licitar con reglas claras de beneficio social.",
+   "certeza": "estimacion"
+  },
+  {
+   "fuente": "Ecopetrol, inversión social y comunidades energéticas (convocatoria CE Innovadoras con MinEnergía y MinCiencias)",
+   "para": "Fase 2 y 3",
+   "monto_millones": [
+    500,
+    2000
+   ],
+   "condiciones": "Ecopetrol opera en Yondó (Casabe, La Iguana) y ya apoya comunidades energéticas en el Magdalena Medio.",
+   "certeza": "estimacion",
+   "url": "https://www.minenergia.gov.co/es/sala-de-prensa/noticias-index/se-abrio-primera-convocatoria-para-desarrollar-comunidades-energeticas-innovadoras/"
+  },
+  {
+   "fuente": "MinTIC (zonas digitales, Centros Digitales) y MinCiencias/SGR CTeI",
+   "para": "Coworking y conectividad",
+   "monto_millones": [
+    300,
+    1000
+   ],
+   "condiciones": "El coworking sigue los proyectos tipo de Centro TIC y Zonas Digitales del DNP, que ya tienen MGA.",
+   "certeza": "estimacion",
+   "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=145&Itemid=197"
+  },
+  {
+   "fuente": "Ministerio del Deporte e INDER Antioquia",
+   "para": "Circuito, módulo recreodeportivo y ruta ciclista",
+   "monto_millones": [
+    500,
+    2000
+   ],
+   "condiciones": "Usar los proyectos tipo de Parque recreodeportivo y Ciclo-infraestructura del DNP.",
+   "certeza": "estimacion",
+   "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=144&Itemid=205"
+  },
+  {
+   "fuente": "Gobernación de Antioquia (Gerencia de Servicios Públicos, IDEA) y Corantioquia",
+   "para": "Fase 1 y restauración ecológica",
+   "monto_millones": [
+    500,
+    2000
+   ],
+   "condiciones": "Cofinanciación de saneamiento y restauración (proyecto tipo de cobertura vegetal del DNP).",
+   "certeza": "estimacion"
+  },
+  {
+   "fuente": "Cooperación internacional (BID, Unión Europea, KfW, GIZ, embajadas) y fondos climáticos",
+   "para": "Granja solar, humedal y aula ambiental",
+   "monto_millones": [
+    300,
+    2000
+   ],
+   "condiciones": "Proyecto demostrativo de transición justa en un municipio petrolero PDET; requiere estructuración en inglés y métricas de emisiones.",
+   "certeza": "estimacion"
+  }
+ ],
+ "mezcla_sugerida_millones": {
+  "fase_0_1_clausura": {
+   "total": 4194.2,
+   "tarifa_y_provision": 600,
+   "sgp_apsb_y_pda": 1200,
+   "sgr": 2394
+  },
+  "fase_2_granja_solar": {
+   "total": 6646.2,
+   "colombia_solar_o_fenoge": 3323,
+   "sgr_incentivo_produccion": 1994,
+   "findeter_o_privado": 1329
+  },
+  "fase_3_parque": {
+   "total": 6619.6,
+   "sgr": 3310,
+   "deporte_tic_cultura": 1324,
+   "ecopetrol_y_cooperacion": 993,
+   "recursos_propios": 993
+  },
+  "tipo_dato": "estimacion"
+ },
+ "compuertas": [
+  "No se licita la granja solar sin la delimitación de residuos (apiques y georradar) y sin el concepto de Corantioquia sobre el uso futuro.",
+  "No se construye nada con gente sin la línea base de biogás.",
+  "No se cierra el relleno sin el contrato de disposición regional firmado y un plan de contingencia por el puente.",
+  "Cada fuente se radica con su MGA; los proyectos tipo del DNP ahorran hasta el 70 % de la preinversión."
+ ],
+ "incertidumbres": [
+  "Los montos por fuente son rangos de referencia, no cupos asignados.",
+  "Las reglas de Colombia Solar para soluciones colectivas están en reglamentación."
+ ]
+}

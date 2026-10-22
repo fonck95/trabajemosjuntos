@@ -3,10 +3,12 @@
 // Optimizaciones: renderizado bajo demanda, pausa fuera de pantalla o con la pestaña oculta,
 // resolución adaptativa según el tiempo de cuadro, sombras que se recalculan solo cuando algo
 // cambia, geometrías compartidas e iluminación por entorno (PMREM) para modelos PBR.
+// Calidad de imagen en tres niveles (alta, media, baja) según el equipo y el tiempo de cuadro: posproceso con
+// oclusión ambiental y MSAA en 'alta' (post.js, se carga solo entonces), cielo y niebla por vista, entorno de
+// cielo de día y sombras ajustadas a lo que se mira, con sesgos proporcionales al téxel.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 export { THREE, CSS2DObject };
 
@@ -21,7 +23,7 @@ export function tokens() {
   const cs = getComputedStyle(document.documentElement);
   const g = (n) => new THREE.Color(cs.getPropertyValue(n).trim() || '#888');
   return {
-    bg: g('--bg'), surface: g('--surface'), ink: g('--ink'), muted: g('--muted'), line: g('--line'),
+    bg: g('--bg'), surface: g('--surface'), raised: g('--raised'), ink: g('--ink'), muted: g('--muted'), line: g('--line'),
     ground: g('--ground'), water: g('--water'), wall: g('--wall'), roof: g('--roof'), accent: g('--accent'), sun: g('--sun'),
     s: [1, 2, 3, 4, 5, 6, 7, 8].map((i) => g(`--s${i}`)),
     good: g('--good'), warn: g('--warn'), bad: g('--bad'), data: g('--data'), power: g('--power'),
@@ -29,14 +31,121 @@ export function tokens() {
 }
 
 const themeListeners = new Set();
+let temaV = 0; // versión del tema: el cielo y la niebla se recalculan cuando cambia
 export function onTheme(fn) { themeListeners.add(fn); return () => themeListeners.delete(fn); }
-function fireTheme() { const t = tokens(); themeListeners.forEach((fn) => fn(t)); engine.active?.invalidate(true); }
+function fireTheme() { temaV++; const t = tokens(); themeListeners.forEach((fn) => fn(t)); engine.active?.invalidate(true); }
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fireTheme);
 new MutationObserver(fireTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
+// ---------------------------------------------------------------- calidad de imagen
+// alta: posproceso (oclusión ambiental GTAO, MSAA y OutputPass) y las sombras de media.
+// media: render directo, el de siempre, con el mapa de sombras que pide la escena ajustado a lo que se mira.
+// baja: render directo, mapa de sombras a la mitad (mínimo 1024 px) y fijo, resolución hasta ×1,5 (celulares).
+export const CALIDADES = { alta: 'Alta', media: 'Media', baja: 'Baja' };
+const NIVEL = {
+  alta: { post: true, sombra: 1, ajuste: true, dpr: 2 },
+  media: { post: false, sombra: 1, ajuste: true, dpr: 2 },
+  baja: { post: false, sombra: 0.5, ajuste: false, dpr: 1.5 },
+};
+const Q_KEY = 'atlas-calidad';
+function leerCalidad() { try { const v = localStorage.getItem(Q_KEY); return v && v in NIVEL ? v : null; } catch { return null; } }
+function guardarCalidad(v) { try { if (v) localStorage.setItem(Q_KEY, v); else localStorage.removeItem(Q_KEY); } catch { /* sin almacenamiento */ } }
+
+// Nombre de la GPU cuando el navegador lo informa: con un renderizador por software el posproceso no vale la pena
+function nombreGPU(r) {
+  try { const gl = r.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'); return String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || ''); } catch { return ''; }
+}
+
+// Calidad automática: celulares y equipos modestos → baja; GPU por software, pantalla táctil, pocos núcleos o poca
+// memoria → media; el resto → alta, que baja a media si los cuadros resultan lentos (ver Engine.measure)
+function calidadAuto(gpu) {
+  const mq = (q) => matchMedia(q).matches;
+  const tactil = mq('(pointer: coarse)') || !mq('(any-hover: hover)');
+  const corto = Math.min(screen.width, screen.height), largo = Math.max(screen.width, screen.height);
+  const nucleos = navigator.hardwareConcurrency || 4, mem = navigator.deviceMemory || 8;
+  if ((tactil && corto < 820) || (corto < 600 && largo < 1000)) return ['baja', 'celular o tableta'];
+  if (nucleos <= 2 || mem <= 2) return ['baja', 'equipo modesto'];
+  if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(gpu)) return ['media', 'GPU por software'];
+  if (tactil) return ['media', 'pantalla táctil'];
+  if (nucleos <= 4 || mem <= 4 || devicePixelRatio > 2.5) return ['media', 'equipo de gama media'];
+  return ['alta', 'equipo de escritorio'];
+}
+
+// ---------------------------------------------------------------- cielo, entorno y niebla
+// Entorno para la iluminación PBR: cielo de día procedimental (cenit frío, horizonte claro, suelo cálido oscuro y
+// sol cálido con halo, en la dirección del sol de las escenas) en vez de una sala genérica. Da forma (techos más
+// claros que muros, el lado del sol más cálido) y reflejos de exterior creíbles en metal y vidrio. Se genera en la
+// CPU (256 × 128 en media precisión) y se prefiltra con PMREM una sola vez.
+function cieloEntorno(k0 = 1) {
+  const W = 256, H = 128, d = new Uint16Array(W * H * 4), half = THREE.DataUtils.toHalfFloat;
+  const sol = new THREE.Vector3(30, 50, 20).normalize(), v = new THREE.Vector3();
+  const zen = [1.12, 1.31, 1.69], hor = [0.94, 0.94, 0.92], suelo = [0.2, 0.19, 0.16], luz = [1, 0.86, 0.66];
+  for (let j = 0; j < H; j++) {
+    const el = ((j + 0.5) / H - 0.5) * Math.PI, y = Math.sin(el), c = Math.cos(el);
+    for (let i = 0; i < W; i++) {
+      const ph = ((i + 0.5) / W - 0.5) * 2 * Math.PI;
+      v.set(c * Math.cos(ph), y, c * Math.sin(ph));
+      // cielo: del horizonte al cenit; suelo: transición corta bajo el horizonte y algo más oscuro hacia el nadir
+      const k = y >= 0 ? Math.pow(y, 0.45) : Math.min(1, -y * 6), to = y >= 0 ? zen : suelo.map((s) => s * (1 - 0.25 * Math.pow(-y, 0.7)));
+      const cg = v.dot(sol), sun = 2.5 * Math.exp((cg - 1) * 6) * THREE.MathUtils.clamp(y * 4 + 1, 0, 1) + (cg > 0.99965 ? 75 : 0);
+      const p = (j * W + i) * 4;
+      for (let n = 0; n < 3; n++) d[p + n] = half(k0 * (hor[n] + (to[n] - hor[n]) * k + sun * luz[n]));
+      d[p + 3] = half(1);
+    }
+  }
+  const t = new THREE.DataTexture(d, W, H, THREE.RGBAFormat, THREE.HalfFloatType);
+  t.mapping = THREE.EquirectangularReflectionMapping; t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true;
+  return t;
+}
+
+// Cúpula de cielo en degradé (horizonte → cenit) con los colores del tema. Va en el plano lejano (no tapa nada,
+// no escribe profundidad: la oclusión ambiental no la toca) y solo gira con la cámara; con tramado contra bandas.
+const CIELO_VS = `varying vec3 vDir;
+void main() {
+  vDir = position;
+  gl_Position = (projectionMatrix * vec4(mat3(viewMatrix) * position, 1.0)).xyww;
+}`;
+const CIELO_FS = `uniform vec3 uZen; uniform vec3 uHor; varying vec3 vDir;
+void main() {
+  float y = normalize(vDir).y;
+  gl_FragColor = vec4(mix(uHor, uZen, pow(clamp(y, 0.0, 1.0), 0.65)), 1.0);
+  #include <colorspace_fragment>
+  gl_FragColor.rgb += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;
+}`;
+const cieloGeo = new THREE.SphereGeometry(1, 32, 16);
+function cupulaCielo() {
+  const m = new THREE.ShaderMaterial({ uniforms: { uZen: { value: new THREE.Color() }, uHor: { value: new THREE.Color() } }, vertexShader: CIELO_VS, fragmentShader: CIELO_FS, side: THREE.BackSide, depthWrite: false, fog: false });
+  const o = new THREE.Mesh(cieloGeo, m);
+  // se dibuja al final de lo opaco: solo llena los píxeles que no cubrió la escena
+  Object.assign(o, { name: 'cielo', frustumCulled: false, renderOrder: 1e9 });
+  return o;
+}
+// Colores del cielo según el tema: horizonte cercano al fondo del escenario (la niebla usa el mismo color, así el
+// borde del piso se disuelve) y cenit con un toque del azul del agua
+function coloresCielo(t) {
+  const oscuro = 0.2126 * t.bg.r + 0.7152 * t.bg.g + 0.0722 * t.bg.b < 0.2;
+  return oscuro
+    ? { hor: t.raised.clone().lerp(t.water, 0.14), zen: t.bg.clone().lerp(t.water, 0.32) }
+    : { hor: t.raised.clone().lerp(t.water, 0.08), zen: t.raised.clone().lerp(t.water, 0.45) };
+}
+// Con posproceso, el mapeo de tonos ACES se aplica después del cielo y de la niebla (en el render directo, la
+// niebla se mezcla ya en sRGB y el cielo no pasa por el tono). Para que se vean iguales en todas las calidades,
+// en 'alta' se les da el color lineal que, tras ACES, devuelve el color del tema (mismo ACES de three r160).
+const ACES_IN = [0.59719, 0.35458, 0.04823, 0.076, 0.90834, 0.01566, 0.0284, 0.13383, 0.83777];
+const ACES_OUT = [1.60475, -0.53108, -0.07367, -0.10208, 1.10813, -0.00605, -0.00327, -0.07276, 1.07602];
+const mul3 = (M, v) => [0, 1, 2].map((i) => M[i * 3] * v[0] + M[i * 3 + 1] * v[1] + M[i * 3 + 2] * v[2]);
+const acesFit = (x) => (x * (x + 0.0245786) - 0.000090537) / (x * (0.983729 * x + 0.432951) + 0.238081);
+function aces(c, exp) { return mul3(ACES_OUT, mul3(ACES_IN, c.map((x) => (x * exp) / 0.6)).map(acesFit)).map((x) => THREE.MathUtils.clamp(x, 0, 1)); }
+function antesDelTono(color, exp) {
+  const t = [color.r, color.g, color.b].map((x) => THREE.MathUtils.clamp(x, 0.002, 0.97));
+  let x = [...t];
+  for (let i = 0; i < 40; i++) { const y = aces(x, exp); x = x.map((xi, n) => xi * THREE.MathUtils.clamp(t[n] / Math.max(1e-5, y[n]), 0.5, 2)); }
+  return new THREE.Color(...x);
+}
+
 // ---------------------------------------------------------------- motor compartido
 class Engine {
-  constructor() { this.renderer = null; this.active = null; this.clock = new THREE.Clock(); }
+  constructor() { this.renderer = null; this.active = null; this.clock = new THREE.Clock(); this.post = null; }
   ensure() {
     if (this.renderer) return this.renderer;
     const r = new THREE.WebGLRenderer({ antialias: devicePixelRatio < 1.5, alpha: true, powerPreference: 'high-performance', stencil: false });
@@ -44,20 +153,52 @@ class Engine {
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFSoftShadowMap;
     r.shadowMap.autoUpdate = false; // se recalculan solo cuando algo cambia
+    // con posproceso un cuadro tiene varias pasadas: el conteo de llamadas se reinicia a mano al empezar cada cuadro
+    r.info.autoReset = false;
     r.domElement.className = 'gl';
-    this.maxDpr = Math.min(devicePixelRatio || 1, 2);
-    this.minDpr = Math.min(1, this.maxDpr);
-    this.dpr = this.maxDpr;
-    r.setPixelRatio(this.dpr);
-    const pmrem = new THREE.PMREMGenerator(r);
-    this.env = pmrem.fromScene(new RoomEnvironment(r), 0.04).texture;
-    pmrem.dispose();
     this.renderer = r;
     this.perf = { ema: 1 / 60, frames: 0, fps: 0, lastFpsT: performance.now(), lastChange: 0 };
+    // dos intensidades del mismo cielo: la tenue para las vistas con tono ACES (el sol domina y las sombras se
+    // leen aunque los materiales sean claros) y la plena para las vistas sin mapeo de tonos
+    const pmrem = new THREE.PMREMGenerator(r), tenue = cieloEntorno(0.36), pleno = cieloEntorno(1);
+    this.env = pmrem.fromEquirectangular(tenue).texture;
+    this.envPleno = pmrem.fromEquirectangular(pleno).texture;
+    tenue.dispose(); pleno.dispose(); pmrem.dispose();
+    this.gpu = nombreGPU(r);
+    [this.qAuto, this.qMotivo] = calidadAuto(this.gpu);
+    this.qManual = leerCalidad();
+    this.setTier(this.qManual || this.qAuto);
     const loop = () => { this.frame(); this.raf = requestAnimationFrame(loop); };
     loop();
     return r;
   }
+  // Cambia el nivel de calidad. La resolución vuelve al máximo del nivel y la adaptativa empieza de nuevo
+  setTier(t) {
+    this.tier = t; this.q = NIVEL[t];
+    this.maxDpr = Math.min(devicePixelRatio || 1, this.q.dpr);
+    this.minDpr = Math.min(1, this.maxDpr);
+    this.dpr = this.maxDpr;
+    Object.assign(this.perf, { ema: 1 / 60, continuous: false, drops: 0, slow: 0, lastChange: performance.now() });
+    this.renderer.setPixelRatio(this.dpr);
+    if (this.q.post) this.cargarPost();
+    const s = this.active;
+    if (s) { s.resize(); s.updateShadows(); }
+  }
+  // Elección desde el panel de rendimiento ('auto' vuelve a la detección automática); se recuerda en este navegador
+  elegir(q) { this.qManual = q in NIVEL ? q : null; guardarCalidad(this.qManual); this.setTier(this.qManual || this.qAuto); }
+  cargarPost() {
+    if (this.post || this._cargando) return;
+    this._cargando = import('./post.js').then(({ Post }) => {
+      this.post = new Post(this.renderer);
+      this.perf.lastChange = performance.now(); // los primeros cuadros compilan shaders: no cuentan como lentos
+      this.active?.invalidate(true);
+    }).catch((e) => {
+      console.warn('No se pudo cargar el posproceso; se usa la calidad media.', e);
+      this._cargando = null; this.qAuto = 'media'; this.qMotivo = 'posproceso no disponible';
+      if (this.tier === 'alta') this.setTier('media');
+    });
+  }
+  usePost() { return !!this.post && this.q.post; }
   attach(stage) {
     this.ensure();
     if (this.active && this.active !== stage) { this.active.controls.enabled = false; this.active.running = false; }
@@ -79,14 +220,23 @@ class Engine {
     if (s.controls.update()) need = true;
     if (!need) { this.perf.continuous = false; return; }
     if (s.dynamicShadows || s.shadowDirty) { this.renderer.shadowMap.needsUpdate = true; s.shadowDirty = false; }
+    this.draw(s);
+    this.measure(dt, s);
+  }
+  // Un cuadro: plano cercano, cielo/niebla y sombras de la calidad vigente; con posproceso (alta) o directo
+  draw(s) {
+    const r = this.renderer;
     s.adaptDepth();
-    this.renderer.render(s.scene, s.camera);
+    s.prepare();
+    r.info.reset();
+    if (this.usePost()) this.post.render(s);
+    else { this.post?.detach(); r.render(s.scene, s.camera); }
     s.labels.render(s.scene, s.camera);
     if (s.declutter) s.declutterLabels();
     s.dirty = false;
-    this.measure(dt, s);
   }
-  // Resolución adaptativa: baja el pixel ratio si los cuadros pasan de ~22 ms y lo recupera con holgura
+  // Resolución adaptativa: baja el pixel ratio si los cuadros pasan de ~22 ms y lo recupera con holgura; con la
+  // resolución ya al mínimo y cuadros de más de 30 ms sostenidos, la calidad automática baja de alta a media
   measure(dt, s) {
     const p = this.perf, now = performance.now();
     if (p.continuous) p.ema = p.ema * 0.92 + dt * 0.08;
@@ -98,21 +248,27 @@ class Engine {
         // tras dos bajadas deja de subir: alternar resoluciones se ve como un parpadeo
         if (p.ema > 1 / 45 && this.dpr > this.minDpr) { this.dpr = Math.max(this.minDpr, this.dpr - 0.25); this.applyDpr(s); p.lastChange = now; p.drops = (p.drops || 0) + 1; }
         else if (p.ema < 1 / 58 && this.dpr < this.maxDpr && (p.drops || 0) < 2 && now - p.lastChange > 10000) { this.dpr = Math.min(this.maxDpr, this.dpr + 0.25); this.applyDpr(s); p.lastChange = now; }
+        else if (this.tier === 'alta' && !this.qManual && this.usePost() && p.ema > 1 / 33) {
+          if (++p.slow >= 3) { this.qAuto = 'media'; this.qMotivo = 'cuadros lentos con posproceso'; this.setTier('media'); }
+        } else p.slow = 0;
       }
       s.hud?.update(this);
     }
   }
   applyDpr(s) { this.renderer.setPixelRatio(this.dpr); s.resize(); }
   // Al cambiar el tamaño del lienzo el navegador lo borra: se vuelve a dibujar en el mismo cuadro para que no parpadee
-  redraw(s) { if (this.active !== s || !s.running) return; s.adaptDepth(); this.renderer.render(s.scene, s.camera); s.labels.render(s.scene, s.camera); s.dirty = false; }
+  redraw(s) { if (this.active !== s || !s.running) return; this.draw(s); }
 }
 export const engine = new Engine();
 
 const sharedBox = new THREE.BoxGeometry(1, 1, 1);
+const NB_AUTO = 0.02; // sesgo normal por omisión: si la escena no lo cambia, el motor lo calcula según el téxel
+const ESQUINAS = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+const _x = new THREE.Vector3(), _y = new THREE.Vector3(), _z = new THREE.Vector3(), _d = new THREE.Vector3(), _q = new THREE.Vector3();
 
 // ---------------------------------------------------------------- escena de cada vista
 export class Stage {
-  constructor(el, { cam = [30, 26, 34], target = [0, 0, 0], fov = 40, minDist = 8, maxDist = 140, env = true, tone = 'none', exposure = 1, dynamicShadows = false, fit = 0.75, declutter = false } = {}) {
+  constructor(el, { cam = [30, 26, 34], target = [0, 0, 0], fov = 40, minDist = 8, maxDist = 140, env = true, tone = 'none', exposure = 1, dynamicShadows = false, fit = 0.75, declutter = false, sky = false, fog = false, ao = true } = {}) {
     // declutter: true (etiquetas .lbl-node) o la lista de clases que se pueden mover
     this.declutter = declutter === true ? ['lbl-node'] : declutter || null; this._labels = [];
     // fit: cuánto se aleja la cámara en pantallas angostas (1 = la escena conserva su ancho; 0,75 = término medio)
@@ -121,8 +277,11 @@ export class Stage {
     const r = engine.ensure();
     this.el = el;
     this.scene = new THREE.Scene();
-    if (env) this.scene.environment = engine.env;
     this.tone = tone === 'aces' ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
+    // con ACES los claros se comprimen: entorno tenue y sol más fuerte y cálido para que muros, techos y sombras
+    // se distingan aunque los materiales sean casi blancos
+    const aces = env && tone === 'aces';
+    if (env) this.scene.environment = aces ? engine.env : engine.envPleno;
     this.exposure = exposure;
     this.dynamicShadows = dynamicShadows;
     this.camera = new THREE.PerspectiveCamera(fov, 1, 0.1, 1200);
@@ -147,17 +306,26 @@ export class Stage {
     this.running = false;
     this.dirty = true;
     this.inView = true;
-    this.hemi = new THREE.HemisphereLight(0xffffff, 0x445544, env ? 0.55 : 1.1);
+    this.hemi = new THREE.HemisphereLight(0xffffff, 0x445544, aces ? 0.3 : env ? 0.55 : 1.1);
     this.scene.add(this.hemi);
-    this.sunLight = new THREE.DirectionalLight(0xffffff, env ? 1.35 : 1.6);
+    this.sunLight = new THREE.DirectionalLight(aces ? 0xfff4e6 : 0xffffff, aces ? 2.1 : env ? 1.35 : 1.6);
     this.sunLight.position.set(30, 50, 20);
     this.sunLight.castShadow = true;
-    const ms = innerWidth < 720 ? 1024 : 2048;
-    this.sunLight.shadow.mapSize.set(ms, ms);
-    this.sunLight.shadow.bias = -0.0004;
-    this.sunLight.shadow.normalBias = 0.02;
+    // el tamaño del mapa y los sesgos finales los fija la calidad vigente (ver _sombras); estos son los de partida
+    this.sunLight.shadow.mapSize.set(2048, 2048);
+    this.sunLight.shadow.bias = -0.0002;
+    this.sunLight.shadow.normalBias = NB_AUTO;
     const sc = this.sunLight.shadow.camera; sc.left = -50; sc.right = 50; sc.top = 50; sc.bottom = -50; sc.far = 180;
     this.scene.add(this.sunLight);
+    this._sw = { l: sc.left, r: sc.right, t: sc.top, b: sc.bottom, n: sc.near, f: sc.far, nb: NB_AUTO, ms: 2048 }; // lo último que escribió el motor
+    // sky: cielo en degradé con los colores del tema. fog: niebla por distancia del color del horizonte (true: desde
+    // el 60 % del plano lejano de la cámara; { near, far }: en unidades de la escena), disuelve el borde del piso.
+    // ao: oclusión ambiental en calidad alta (false la apaga; { radius, intensity } la ajusta)
+    this.fogCfg = fog;
+    if (fog) this.scene.fog = new THREE.Fog(0xffffff, 1, 2);
+    if (sky) { this.sky = cupulaCielo(); this.scene.add(this.sky); }
+    this.aoCfg = ao;
+    this.aoMax = THREE.MathUtils.clamp(maxDist * 0.02, 0.5, 5); // radio máximo de la oclusión según la escala
     this.ray = new THREE.Raycaster();
     this.pointer = new THREE.Vector2();
     this.pickables = [];
@@ -324,23 +492,129 @@ export class Stage {
   }
   _click(e) { const o = this._hit(e); if (o?.userData.onPick) { o.userData.onPick(); this.invalidate(); } }
   pickable(obj, handlers) { obj.userData.pick = true; Object.assign(obj.userData, handlers); this.pickables.push(obj); }
+  // Antes de cada cuadro: cielo y niebla según el tema y la calidad; mapa, volumen y sesgos de la sombra
+  prepare() { this._atmosfera(); this._sombras(); }
+  _atmosfera() {
+    const f = this.scene.fog;
+    if (f && this.fogCfg) { const far = this.camera.far; f.near = this.fogCfg.near ?? far * 0.6; f.far = this.fogCfg.far ?? far; }
+    if (!f && !this.sky) return;
+    const comp = engine.usePost() && this.tone === THREE.ACESFilmicToneMapping, key = `${temaV}|${comp}|${this.exposure}`;
+    if (key === this._atmK) return;
+    this._atmK = key;
+    let { hor, zen } = coloresCielo(tokens());
+    if (comp) { hor = antesDelTono(hor, this.exposure); zen = antesDelTono(zen, this.exposure); }
+    if (f) f.color.copy(hor);
+    if (this.sky) { this.sky.material.uniforms.uHor.value.copy(hor); this.sky.material.uniforms.uZen.value.copy(zen); }
+  }
+  // Sombras. La escena define el volumen máximo (left/right/top/bottom), el tamaño del mapa y, si quiere, el sesgo
+  // normal; si los cambia después (otro modelo, otra hora), esos valores pasan a ser la nueva base. El motor ajusta:
+  //  · el tamaño del mapa a la calidad (alta y media: el de la escena; baja: la mitad, mínimo 1024);
+  //  · en media y alta, el volumen a lo que se ve, para que de cerca la sombra sea nítida (téxeles de centímetros);
+  //  · los sesgos en proporción al téxel: sin acné cuando el téxel es grande ni sombras despegadas de cerca.
+  _sombras() {
+    const L = this.sunLight, sh = L.shadow, sc = sh.camera, q = engine.q, w = this._sw;
+    let b = this._sb;
+    const vol = !b || sc.left !== w.l || sc.right !== w.r || sc.top !== w.t || sc.bottom !== w.b || sc.near !== w.n || sc.far !== w.f;
+    if (vol || sh.normalBias !== w.nb || sh.mapSize.x !== w.ms) {
+      const nb = !b || sh.normalBias !== w.nb ? sh.normalBias : null;
+      b = this._sb = {
+        L: vol ? sc.left : b.L, R: vol ? sc.right : b.R, T: vol ? sc.top : b.T, B: vol ? sc.bottom : b.B, N: sc.near, F: sc.far,
+        ms: !b || sh.mapSize.x !== w.ms ? sh.mapSize.x : b.ms, nbTex: b ? b.nbTex : 1,
+      };
+      // sesgo normal de la escena expresado en téxeles de su propio volumen (NB_AUTO: un téxel)
+      if (nb !== null) b.nbTex = nb === NB_AUTO ? 1 : nb / (Math.max(b.R - b.L, b.T - b.B) / b.ms);
+      this._fit = null;
+    }
+    let cambio = false;
+    const ms = THREE.MathUtils.clamp(b.ms * q.sombra, 1024, Math.min(4096, engine.renderer.capabilities.maxTextureSize));
+    if (sh.mapSize.x !== ms) { sh.mapSize.set(ms, ms); sh.map?.dispose(); sh.map = null; cambio = true; }
+    const [l, r, t, bt] = (q.ajuste && this._ajuste(b)) || [b.L, b.R, b.T, b.B];
+    if (l !== sc.left || r !== sc.right || t !== sc.top || bt !== sc.bottom) { Object.assign(sc, { left: l, right: r, top: t, bottom: bt }); sc.updateProjectionMatrix(); cambio = true; }
+    const texel = Math.max(r - l, t - bt) / ms;
+    sh.normalBias = b.nbTex * texel;
+    sh.bias = (-0.6 * texel) / Math.max(1e-3, sc.far - sc.near);
+    Object.assign(w, { l, r, t, b: bt, n: sc.near, f: sc.far, nb: sh.normalBias, ms });
+    if (cambio) engine.renderer.shadowMap.needsUpdate = true;
+  }
+  // Volumen de sombra ajustado a la vista: las cuatro esquinas de la pantalla proyectadas sobre el piso, medidas en
+  // el plano de la luz alrededor del punto que se mira. El tamaño va en pasos de √2 y el centro se mueve por tramos:
+  // el mapa solo se recalcula de vez en cuando al acercarse o desplazarse, no en cada cuadro. null: volumen completo.
+  _ajuste(b) {
+    const cam = this.camera, P = this.controls.target, L = this.sunLight, half = Math.max(b.R - b.L, b.T - b.B) / 2;
+    _z.copy(L.position).sub(_d.setFromMatrixPosition(L.target.matrixWorld)).normalize();
+    _x.crossVectors(L.shadow.camera.up, _z);
+    if (_x.lengthSq() < 1e-8) return null;
+    _x.normalize(); _y.crossVectors(_z, _x);
+    _d.subVectors(P, L.position);
+    const px = _d.dot(_x), py = _d.dot(_y);
+    cam.updateMatrixWorld();
+    let ext = 0;
+    for (const [nx, ny] of ESQUINAS) {
+      _d.set(nx, ny, 0.5).unproject(cam).sub(cam.position);
+      if (_d.y > -1e-4) return null; // esa esquina ve el horizonte: volumen completo
+      const k = (P.y - cam.position.y) / _d.y;
+      if (k * _d.length() > cam.far) return null;
+      _q.copy(cam.position).addScaledVector(_d, k).sub(L.position);
+      ext = Math.max(ext, Math.abs(_q.dot(_x) - px), Math.abs(_q.dot(_y) - py));
+    }
+    const need = Math.max(ext * 1.6, this.controls.minDistance);
+    let lv = Math.min(14, Math.floor(2 * Math.log2(half / need)));
+    if (lv < 1) return null;
+    const f = this._fit, hOf = (n) => half / Math.pow(2, n / 2);
+    // histéresis: se conserva el paso anterior mientras siga cubriendo la vista sin sobrar demasiado
+    if (f && f.lv !== lv && f.lv >= 1 && hOf(f.lv) >= need && hOf(f.lv) <= need * 2) lv = f.lv;
+    const h = hOf(lv), grid = h / 8;
+    let cx = Math.round(px / grid) * grid, cy = Math.round(py / grid) * grid;
+    if (f && f.lv === lv && Math.abs(f.cx - px) < h * 0.25 && Math.abs(f.cy - py) < h * 0.25) { cx = f.cx; cy = f.cy; }
+    this._fit = { lv, cx, cy };
+    const eje = (c, lo, hi) => { if (hi - lo <= 2 * h) return [lo, hi]; const a = Math.min(Math.max(c - h, lo), hi - 2 * h); return [a, a + 2 * h]; };
+    const [l, r] = eje(cx, b.L, b.R), [bt, t] = eje(cy, b.B, b.T);
+    return [l, r, t, bt];
+  }
 }
 
-// Panel de rendimiento (cuadros por segundo, llamadas de dibujo, triángulos, memoria de GPU)
+// Panel de rendimiento (cuadros por segundo, llamadas de dibujo, triángulos, memoria de GPU) y selector de calidad
+let hudCss = false;
+function estiloHud() {
+  if (hudCss) return;
+  hudCss = true;
+  const s = document.createElement('style');
+  // el panel queda por encima de las etiquetas 3D (CSS2DRenderer les da z-index según la distancia)
+  s.textContent = '.stage>.hud,.stage>.hud-btn{z-index:1000}'
+    + '.hud-q{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:7px;padding-top:7px;border-top:1px solid var(--line)}'
+    + '.hud-q span{margin-right:2px;color:var(--muted)}'
+    + '.hud-q button{font:600 0.68rem var(--f-mono);background:transparent;color:var(--ink);border:1.5px solid var(--ink);border-radius:999px;padding:2px 8px;cursor:pointer}'
+    + '.hud-q button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}';
+  document.head.appendChild(s);
+}
 function makeHud(el, stage) {
+  estiloHud();
   const btn = document.createElement('button');
   btn.type = 'button'; btn.className = 'hud-btn'; btn.textContent = 'Rendimiento'; btn.setAttribute('aria-pressed', 'false');
   const box = document.createElement('div');
   box.className = 'hud'; box.hidden = true;
+  const opciones = ['auto', ...Object.keys(CALIDADES)];
+  box.innerHTML = `<div data-hud-datos></div><div class="hud-q" role="group" aria-label="Calidad de imagen"><span>Calidad</span>${opciones.map((q) => `<button type="button" data-q="${q}" aria-pressed="false" title="${q === 'auto' ? 'Según el equipo y el tiempo de cuadro' : q === 'alta' ? 'Oclusión ambiental, bordes suavizados y sombras nítidas' : q === 'media' ? 'Render directo con sombras ajustadas' : 'Lo más liviano: para celulares'}">${q === 'auto' ? 'Auto' : CALIDADES[q]}</button>`).join('')}</div>`;
   el.append(btn, box);
-  btn.addEventListener('click', () => { box.hidden = !box.hidden; btn.setAttribute('aria-pressed', String(!box.hidden)); stage.invalidate(); });
-  return {
+  const datos = box.querySelector('[data-hud-datos]'), botones = box.querySelectorAll('[data-q]');
+  const hud = {
     update(eng) {
-      if (box.hidden) return;
-      const i = eng.renderer.info;
-      box.innerHTML = `<b>${eng.perf.fps.toFixed(0)}</b> fps · ${(eng.perf.ema * 1000).toFixed(1)} ms<br>resolución ×${eng.dpr.toFixed(2)}<br>${i.render.calls} llamadas · ${i.render.triangles.toLocaleString('es-CO')} triángulos<br>${i.memory.geometries} geometrías · ${i.memory.textures} texturas`;
+      if (box.hidden || !eng.renderer) return;
+      const i = eng.renderer.info, p = eng.perf, extra = eng.usePost() ? eng.post.extra : 0;
+      const estado = eng.q.post && !eng.post ? 'cargando posproceso…' : eng.qManual ? 'elegida' : `auto: ${eng.qMotivo}`;
+      datos.innerHTML = `<b>${p.fps.toFixed(0)}</b> fps · ${(p.ema * 1000).toFixed(1)} ms<br>resolución ×${eng.dpr.toFixed(2)} · calidad ${eng.tier}<br><span style="color:var(--muted)">${estado}</span><br>${i.render.calls} llamadas${extra ? ` (+${extra} de posproceso)` : ''} · ${i.render.triangles.toLocaleString('es-CO')} triángulos<br>${i.memory.geometries} geometrías · ${i.memory.textures} texturas`;
+      botones.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.q === (eng.qManual || 'auto'))));
     },
   };
+  btn.addEventListener('click', () => { box.hidden = !box.hidden; btn.setAttribute('aria-pressed', String(!box.hidden)); hud.update(engine); stage.invalidate(); });
+  box.querySelector('.hud-q').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-q]');
+    if (!b) return;
+    engine.elegir(b.dataset.q);
+    hud.update(engine);
+    stage.invalidate(true);
+  });
+  return hud;
 }
 
 // Libera geometrías, materiales y texturas de un objeto (evita fugas al cambiar modelos)

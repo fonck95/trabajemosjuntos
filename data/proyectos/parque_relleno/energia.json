@@ -1,0 +1,353 @@
+{
+ "id": "parque_relleno_energia",
+ "titulo": "Granja solar sobre las celdas del relleno Las Américas: potencia, producción, conexión y subsidio a los estratos 1 y 2",
+ "fecha_corte": "2026-10-22",
+ "moneda_y_base": "Pesos constantes de 2026 (base: promedio enero–septiembre de 2026 del IPC del DANE; factores en data/fuentes/ipc_dane.csv). Las tarifas de EPM de octubre de 2026 se toman como pesos de 2026 (diferencia menor al 0,5 %).",
+ "convenciones": {
+  "dato_oficial": "tomado tal cual del documento o base citada",
+  "calculo_propio": "operación aritmética sobre datos oficiales, con el método a la vista",
+  "estimacion": "supuesto razonado con rango; hay que confirmarlo en campo o con el dueño del dato"
+ },
+ "respuesta_corta": "Sobre las celdas caben unos 997 kWp (1.812 módulos de 550 Wp) que producen cerca de 1,34 GWh al año. Eso equivale al consumo de subsistencia completo (173 kWh/mes) de unos 646 hogares, o a un bloque solar de 50 kWh/mes para unos 2.236 hogares de estratos 1 y 2 (el 27 % de los 8.193). Si esa energía reemplaza consumo subsidiado, la Nación deja de pagar unos $721 millones al año en subsidios y los hogares se ahorran unos $608 millones.",
+ "recurso_solar": {
+  "rendimiento_diseno_kwh_kwp_anio": {
+   "valor": 1346.0,
+   "rango": [
+    1300.0,
+    1450.0
+   ],
+   "tipo_dato": "dato_oficial",
+   "fuente": "data/microrred.json, parametros.rendimiento_kwh_kwp_dia = 3,69 (Global Solar Atlas 1.602 × 0,84)"
+  },
+  "irradiacion_nasa_power_kwh_m2_dia": {
+   "anual": 5.08,
+   "minimo_noviembre": 4.56,
+   "maximo_febrero": 5.54,
+   "tipo_dato": "dato_oficial",
+   "fuente": "NASA POWER, climatología ALLSKY_SFC_SW_DWN en 7,014 N, −73,934 O (consulta del 22-oct-2026): https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=ALLSKY_SFC_SW_DWN&community=RE&longitude=-73.934&latitude=7.014&format=JSON"
+  },
+  "verificacion": {
+   "valor_kwh_kwp_anio": 1446,
+   "tipo_dato": "calculo_propio",
+   "metodo": "5,08 × 365 × rendimiento global de 0,78; el valor de diseño (1.346) queda 7 % abajo, del lado prudente. PVGIS estaba en mantenimiento el día de la consulta."
+  }
+ },
+ "granja": {
+  "modulos": 1812,
+  "potencia_dc_kwp": 996.6,
+  "potencia_ac_kw": 800,
+  "relacion_dc_ac": 1.25,
+  "bloques": [
+   {
+    "bloque": "A (fase 1): sobre la cobertura final de las celdas visibles",
+    "area_m2": 8601,
+    "modulos": 1394,
+    "kwp": 766.7
+   },
+   {
+    "bloque": "B (fase 2): zona intervenida del nororiente, si los apiques confirman celdas estables o suelo natural",
+    "area_m2": 3709,
+    "modulos": 418,
+    "kwp": 229.9
+   }
+  ],
+  "disposicion": {
+   "mesas": "dos módulos en vertical (4,6 m), inclinadas 10° al sur, borde bajo a ≈1,35 m (permite cortar el pasto)",
+   "distancia_entre_filas_m": 6.5,
+   "pasillo_libre_m": 1.97,
+   "sombra": "Cálculo propio: el 21 de diciembre la sombra norte–sur de una mesa (0,80 m de alto) mide 0,63 m a las 9:00 y 0,89 m a las 8:00; con 1,97 m de pasillo no hay sombra entre filas de 8:00 a 16:00.",
+   "retiro_al_borde_m": 4,
+   "ocupacion_suelo": 0.7,
+   "tipo_dato": "calculo_propio"
+  },
+  "montaje_sobre_celdas": [
+   "Cimentación con lastres prefabricados de concreto apoyados en la capa de protección: nada perfora la geomembrana ni la arcilla (EPA/NREL 2022, secc. 5.1–5.2).",
+   "Mesas cortas y uniones flexibles para absorber asentamientos diferenciales; nivelación ajustable en cada pórtico y hitos de asentamiento con lectura semestral.",
+   "La granja se instala cuando la cobertura haya asentado: los desarrolladores evitan rellenos tapados hace menos de 2–3 años (EPA/NREL 2022, secc. 4.2.2.2). El bloque A empieza por la celda norte, la más antigua.",
+   "Pendientes finales de 3–5 % en la plataforma superior (EPA/NREL: 2–3 % ideal, máximo 5–10 %), canales perimetrales y drenaje entre filas que no cruce las chimeneas.",
+   "Biogás: 10 chimeneas pasivas con biofiltro en los pasillos entre filas, sensores de metano en el centro de transformación y en el coworking, cables en bandeja sobre el suelo o en ducto superficial (no zanjas profundas en la cobertura).",
+   "Pasto rastrero nativo de raíz superficial bajo las mesas; mantenimiento con guadaña o con ovejas, nunca cultivos de comida sobre las celdas."
+  ],
+  "produccion": {
+   "anual_kwh": 1341424,
+   "rango_kwh": [
+    1295580,
+    1445070
+   ],
+   "mes_promedio_kwh": 111785,
+   "mes_noviembre_kwh": 100343,
+   "promedio_25_anios_kwh": 1260938,
+   "degradacion_anual": 0.005,
+   "tipo_dato": "calculo_propio",
+   "metodo": "kWp × 1.346 kWh/kWp·año"
+  },
+  "emisiones_evitadas_t_co2_anio": {
+   "valor": 169.0,
+   "tipo_dato": "calculo_propio",
+   "fuente_factor": "data/microrred.json (0,126 kg/kWh, supuesto)"
+  }
+ },
+ "solar_propia_del_parque": {
+  "modulos": 80,
+  "kwp": 44.0,
+  "produccion_kwh_anio": 59224,
+  "demanda_estimada_kwh_anio": 39600,
+  "cobertura": 1.5,
+  "bess": "100 kWh / 50 kW en el centro de transformación",
+  "figura": "Autogenerador a pequeña escala (≤100 kW) con frontera y medidor propios (CREG 174 de 2021): excedentes acreditados 1:1 menos el Cv.",
+  "tipo_dato": "estimacion",
+  "metodo_demanda": "40 puestos de coworking, iluminación LED, ventiladores, una sala con aire, internet, cafetería, taller, bombeo de agua lluvia y cargadores: unos 110 kWh/día."
+ },
+ "conexion_a_la_red": {
+  "operador": "EPM (operador de red y comercializador incumbente en Yondó)",
+  "subestacion": {
+   "nombre": "Subestación Yondó de EPM, 10 MVA, 34,5/13,2 kV, alimentada por dos circuitos de 34,5 kV desde la subestación Barranca; en operación desde 2021",
+   "lat": 7.0031989,
+   "lon": -73.9226337,
+   "ubicacion_fuente": "Lugar de Google 'Subestación yondo epm', verificado en el satélite (patio de equipos y edificio de control)",
+   "fuente_datos": "docs/anexos/D-energia-mintic.md (EPM, 2020–2021)"
+  },
+  "distancia_linea_recta_km": {
+   "valor": 1.75,
+   "tipo_dato": "calculo_propio"
+  },
+  "distancia_por_vias_km": {
+   "valor": 4.6,
+   "tipo_dato": "calculo_propio",
+   "metodo": "OpenStreetMap, vías públicas"
+  },
+  "linea_nueva_km": {
+   "valor": 2.6,
+   "rango": [
+    2.3,
+    2.9
+   ],
+   "tipo_dato": "estimacion",
+   "metodo": "Trazado aéreo por servidumbres y bordes de vía hacia el suroriente."
+  },
+  "alternativa": "Derivar de la red de media tensión que alimenta la PTAP y el tanque elevado (350–590 m al sur), si EPM confirma capacidad. No hay líneas eléctricas en OpenStreetMap; hay que pedir el plano a EPM.",
+  "capacidad": "1 MW es el 10 % de los 10 MVA de la subestación; la CREG 174 de 2021 limita la suma de generación distribuida a ≤50 % de la capacidad del circuito o transformador. El estudio de conexión simplificado aplica de 100 kW a 1 MW."
+ },
+ "estratos_1_y_2": {
+  "usuarios": {
+   "epm_estrato_1": 6327,
+   "epm_estrato_2": 1866,
+   "essa_estrato_1": 46,
+   "total_residencial_epm": 8445,
+   "fecha": "agosto de 2026 (ESSA: 2025)",
+   "tipo_dato": "dato_oficial",
+   "fuente": "SUI, reporte 'Consolidado Energía por Empresa, Departamento y Municipio' (ele_com_096), consulta del 22-oct-2026: http://reportes.sui.gov.co/fabricaReportes/frameSet.jsp?idreporte=ele_com_096"
+  },
+  "serie_mensual_sui": {
+   "2025-12": {
+    "e1": 6210,
+    "e2": 1860,
+    "e3": 221,
+    "res": 8314,
+    "kwh_e1": 1051636,
+    "kwh_e2": 350013,
+    "vc_res": 1283414435,
+    "tf_res": 836882218
+   },
+   "2026-01": {
+    "e1": 6232,
+    "e2": 1865,
+    "e3": 220,
+    "res": 8340,
+    "kwh_e1": 822452,
+    "kwh_e2": 306283,
+    "vc_res": 1040541257,
+    "tf_res": 729527269
+   },
+   "2026-03": {
+    "e1": 6263,
+    "e2": 1865,
+    "e3": 221,
+    "res": 8373,
+    "kwh_e1": 1056484,
+    "kwh_e2": 357318,
+    "vc_res": 1241639011,
+    "tf_res": 834960510
+   },
+   "2026-06": {
+    "e1": 6300,
+    "e2": 1856,
+    "e3": 222,
+    "res": 8405,
+    "kwh_e1": 1166023,
+    "kwh_e2": 415650,
+    "vc_res": 1410781248,
+    "tf_res": 1008523120
+   },
+   "2026-07": {
+    "e1": 6310,
+    "e2": 1862,
+    "e3": 222,
+    "res": 8421,
+    "kwh_e1": 944033,
+    "kwh_e2": 349564,
+    "vc_res": 1200683771,
+    "tf_res": 843490747
+   },
+   "2026-08": {
+    "e1": 6327,
+    "e2": 1866,
+    "e3": 223,
+    "res": 8445,
+    "kwh_e1": 1017780,
+    "kwh_e2": 457453,
+    "vc_res": 1363329185,
+    "tf_res": 1017841161
+   }
+  },
+  "consumo_promedio_kwh_mes": {
+   "estrato_1": 161,
+   "estrato_2": 200,
+   "tipo_dato": "calculo_propio",
+   "metodo": "promedio de consumo por usuario en seis meses de dic-2025 a ago-2026 (SUI)"
+  },
+  "consumo_de_subsistencia_kwh_mes": {
+   "valor": 173,
+   "tipo_dato": "dato_oficial",
+   "fuente": "UPME, Resolución 355 de 2004 (municipios por debajo de 1.000 m s. n. m.); Yondó está a unos 75 m"
+  },
+  "tarifas_epm_octubre_2026": {
+   "costo_unitario_cu": 991.29,
+   "estrato_1_hasta_cs": 427.04,
+   "estrato_2_hasta_cs": 533.81,
+   "estrato_3_hasta_cs": 842.59,
+   "componentes_cu": {
+    "G": 403.5,
+    "T": 49.64,
+    "D": 297.88,
+    "Cv": 114.28,
+    "PR": 75.48,
+    "R": 50.5
+   },
+   "subsidio_efectivo": {
+    "estrato_1": 0.569,
+    "estrato_2": 0.461
+   },
+   "tipo_dato": "dato_oficial",
+   "fuente": "EPM, publicación de tarifas de octubre de 2026 (mercado Antioquia): https://www.epm.com.co/content/dam/epm/clientes-y-usuarios/energia/tarifas-energia/Tarifas%202026/10.PublicacionTarifasOctubre162026_ANT_OM.pdf"
+  },
+  "marco_de_subsidios": [
+   "Ley 142 de 1994, art. 99: los subsidios cubren solo el consumo de subsistencia de los estratos 1, 2 y 3.",
+   "Ley 1117 de 2006, art. 3 (texto de la Ley 1428 de 2010): en energía, el subsidio no puede superar el 60 % del costo del servicio en estrato 1 ni el 50 % en estrato 2, y la tarifa subsidiada sube como máximo con el IPC.",
+   "Ley 2294 de 2023 (Plan Nacional de Desarrollo), art. 272: prorroga esos subsidios hasta el 30 de junio de 2027; Res. CREG 105 006 de 2023 prorroga las fórmulas. El art. 108 ordena reasignar subsidios hacia un consumo indispensable para los hogares vulnerables."
+  ],
+  "factura_tipica_mes": {
+   "estrato_1": 68722,
+   "estrato_2": 119252,
+   "tipo_dato": "calculo_propio",
+   "metodo": "consumo promedio × tarifa de octubre de 2026 (subsidiada hasta 173 kWh y plena por encima)"
+  },
+  "costo_anual_subsidios_e1_e2": {
+   "valor_millones": 7054.6,
+   "rango_millones": [
+    4538.3,
+    7362.8
+   ],
+   "tipo_dato": "calculo_propio",
+   "metodo": "usuarios × kWh subsidiados por usuario (130 en estrato 1 y 145 en estrato 2, de una distribución lognormal con la media del SUI) × 12 × (CU − tarifa subsidiada). Cota baja: la diferencia mensual promedio entre el valor del consumo y el total facturado residencial en el SUI (378 M/mes), que descuenta otros cobros."
+  },
+  "energia_subsidiada_anual_kwh": {
+   "valor": 13116960,
+   "tipo_dato": "calculo_propio"
+  }
+ },
+ "cobertura_de_hogares": {
+  "escenario_a_subsistencia_completa": {
+   "hogares": 646,
+   "kwh_mes_por_hogar": 173,
+   "tipo_dato": "calculo_propio"
+  },
+  "escenario_b_consumo_subsidiado_real": {
+   "hogares": 860,
+   "kwh_mes_por_hogar": 130,
+   "tipo_dato": "calculo_propio"
+  },
+  "escenario_c_bloque_solar_50_kwh": {
+   "hogares": 2236,
+   "kwh_mes_por_hogar": 50,
+   "porcentaje_de_e1_e2": 27.3,
+   "ahorro_mes_estrato_1": 21352,
+   "ahorro_mes_estrato_2": 26690,
+   "ahorro_relativo": {
+    "estrato_1": 0.31,
+    "estrato_2": 0.22
+   },
+   "tipo_dato": "calculo_propio",
+   "nota": "Es el escenario recomendado: reparte el beneficio entre más hogares y queda en el rango de ahorro de 20–40 % que estima MinEnergía para Colombia Solar."
+  },
+  "porcentaje_de_la_energia_subsidiada_de_yondo": 10.2
+ },
+ "ahorro_anual": {
+  "si_sustituye_consumo_subsidiado": {
+   "nacion_subsidios_evitados_millones": 721.4,
+   "hogares_millones": 608.3,
+   "total_al_cu_millones": 1329.7,
+   "subsidio_promedio_por_kwh": 537.8,
+   "tarifa_subsidiada_promedio_por_kwh": 453.5,
+   "tipo_dato": "calculo_propio"
+  },
+  "valor_de_generacion_solamente_millones": {
+   "valor": 541.3,
+   "tipo_dato": "calculo_propio",
+   "metodo": "kWh × componente G (403,50 $/kWh): es lo que de verdad se evita si la energía viaja por la red de EPM y hay que pagar T, D, Cv, PR y R (587,78 $/kWh)."
+  },
+  "lectura": "El ahorro real queda entre el valor de generación y el valor al CU, según cómo reconozca la regulación la energía colectiva y quién pague el uso de la red."
+ },
+ "costo_de_la_energia_solar": {
+  "capex_granja_y_conexion_millones": 6534.5,
+  "om_anual_millones": 58.5,
+  "lcoe_6pct_real_25_anios_cop_kwh": 452,
+  "lcoe_sin_costo_financiero_cop_kwh": 254,
+  "tipo_dato": "calculo_propio",
+  "lectura": "Con crédito al 6 % real la granja produce un poco por encima del componente G (que hoy vale 403,5 $/kWh), pero por debajo del subsidio que reemplaza (564 $/kWh en estrato 1); con recursos no reembolsables cuesta menos de la mitad del subsidio."
+ },
+ "figura_legal": {
+  "recomendada": "Comunidad energética de usuarios de estratos 1 y 2 de Yondó (Ley 2294 de 2023, art. 235; Decreto 2236 de 2023), registrada en el RUCE (Res. MinEnergía 40136 de 2024), que actúa como Autogenerador Colectivo (AC) de hasta 1 MW: la granja es el punto de inyección y cada hogar recibe un Porcentaje de Distribución de Excedentes (PDE) (Res. CREG 101 072 de 2025, arts. 6, 19 y 21; límite de <5 MW y mismo mercado y SDL de EPM, Res. UPME 501 de 2024). El municipio aporta el predio (comodato o derecho de superficie por 25 años) y se postula a Colombia Solar como solución colectiva.",
+  "colombia_solar": "Decreto 0972 de 2025 y Resolución MinEnergía 40159 de 2026: sustituye de forma progresiva subsidios de estratos 1, 2 y 3 por autogeneración solar individual o colectiva, con contratos de hasta 25 años, medición avanzada y prioridad por pobreza multidimensional, pobreza energética, costo del servicio y radiación. MinEnergía estima ahorros de 20–40 % en la factura. La convocatoria de FENOGE IA-006-2026 (implementador urbano) fue cancelada; hay que seguir las próximas.",
+  "alternativas": [
+   {
+    "figura": "Generación distribuida (GD ≤1 MW, CREG 174 de 2021, art. 22) o Generación Distribuida Colectiva (GDC, CREG 101 072, art. 24)",
+    "uso": "El municipio o la comunidad vende la energía y usa el ingreso para un fondo energético social (eficiencia, pago de facturas de hogares vulnerables, mantenimiento del parque).",
+    "nota": "Hay que revisar con abogados el destino del ingreso; los subsidios municipales a la tarifa están topados por los porcentajes de ley (ya cerca del límite: 56,9 % y 46,1 %)."
+   },
+   {
+    "figura": "Desarrollador privado con contrato de compra de energía (PPA) a 15–25 años con un comercializador o un gran consumidor (por ejemplo Ecopetrol)",
+    "uso": "El municipio cobra un canon por el predio y negocia una parte de la energía o del ingreso para los hogares."
+   }
+  ],
+  "por_que_no_autogeneracion_simple": "Un AGPE de más de 100 kW recibe el crédito descontando T + D + Cv + PR + R; para un hogar de estrato 1, cuya tarifa subsidiada (427 $/kWh) es menor que esos cargos (588 $/kWh), el crédito no le sirve si no se combina con la sustitución de subsidios de Colombia Solar.",
+  "fuentes": [
+   "https://gestornormativo.creg.gov.co/gestor/entorno/docs/originales/Resoluci%C3%B3n_CREG_101_072_2025/Resoluci%C3%B3n_CREG_101_072_2025.pdf",
+   "https://www.minenergia.gov.co/es/sala-de-prensa/noticias-index/con-colombia-solar-subsidios-convierten-paneles-reducen-tarifa-energia-hogares-mas-pobres/",
+   "https://www.pv-magazine-latam.com/2026/03/19/reglamentan-el-programa-colombia-solar-para-sustituir-subsidios-electricos-por-autogeneracion-en-hogares-vulnerables/",
+   "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_105-6_2023.htm",
+   "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_0174_2021.htm",
+   "docs/anexos/D-energia-mintic.md, secciones 4.2–4.4"
+  ]
+ },
+ "referentes": [
+  {
+   "nombre": "Granja Solar La Iguana de Ecopetrol, en Yondó (26 MWp, 42,2 GWh/año, inaugurada el 4-dic-2025)",
+   "fuente": "docs/anexos/D-energia-mintic.md"
+  },
+  {
+   "nombre": "Línea Findeter–MinEnergía 'Municipios Territorios Energéticos': granjas de 1 MW, IBR + 0,7 %, 10 años",
+   "fuente": "https://www.findeter.gov.co/noticias/comunicados/ministerio-de-minas-y-energia-y-findeter-en-alianza-con-asocapitales-asointermedias-y-fedemunicipios-lanzan-linea-de-financiamiento-para-parques-de-generacion-de-energia"
+  },
+  {
+   "nombre": "EPA y NREL, Best Practices for Siting Solar Photovoltaics on MSW Landfills (mayo de 2022)",
+   "fuente": "https://www.epa.gov/system/files/documents/2022-05/best-practices-siting-solar-photovoltaics-municipal-solid-waste-landfills_051722-pub.pdf"
+  }
+ ],
+ "incertidumbres": [
+  "La huella de los residuos define cuántos kWp quedan de verdad 'sobre las celdas'; el bloque B depende de los apiques.",
+  "El valor del ahorro depende de cómo se reglamente la energía colectiva dentro de Colombia Solar; los subsidios de la Ley 1117 están prorrogados solo hasta el 30-jun-2027.",
+  "Los consumos por estrato salen de seis meses del SUI; los meses varían por ciclos de facturación.",
+  "La ruta y el costo de la línea de 13,2 kV los define EPM."
+ ]
+}

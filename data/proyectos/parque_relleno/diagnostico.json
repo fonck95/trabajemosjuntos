@@ -1,0 +1,504 @@
+{
+ "id": "parque_relleno_diagnostico",
+ "titulo": "Diagnóstico del relleno sanitario Las Américas de Yondó (sitio, estado legal, operación y riesgos)",
+ "fecha_corte": "2026-10-22",
+ "moneda_y_base": "Pesos constantes de 2026 (base: promedio enero–septiembre de 2026 del IPC del DANE; factores en data/fuentes/ipc_dane.csv). Las tarifas de EPM de octubre de 2026 se toman como pesos de 2026 (diferencia menor al 0,5 %).",
+ "convenciones": {
+  "dato_oficial": "tomado tal cual del documento o base citada",
+  "calculo_propio": "operación aritmética sobre datos oficiales, con el método a la vista",
+  "estimacion": "supuesto razonado con rango; hay que confirmarlo en campo o con el dueño del dato"
+ },
+ "respuesta_corta": "Yondó dispone su basura desde 1999 en el relleno sanitario Las Américas, un predio del municipio en la vereda Las Américas operado por Aguas y Aseo de Yondó. Su licencia de Corantioquia venció el 12 de noviembre de 2023 y su vida útil registrada en el SUI terminó en 2023, pero en noviembre de 2025 se contrató una obra de mantenimiento y adecuación y en mayo de 2026 se publicaron procesos de maquinaria, material de cobertura y arreglo de la vía. Hay que clausurarlo con plan de clausura y posclausura de al menos 20 años y llevar la basura a un relleno regional con licencia: el más cercano es el Parque Tecnológico Ambiental San Silvestre (Barrancabermeja), a unos 40 km por vía.",
+ "sitio": {
+  "nombre": "Relleno sanitario Las Américas",
+  "nusd": [
+   "2220805893 (registro y autorización ambiental del SUI)",
+   "16673 (registros SUI anteriores, R48765)"
+  ],
+  "prestador": "Aguas & Aseo de Yondó S.A. E.S.P.",
+  "propietario_predio": "Municipio de Yondó (Superservicios 2018; SUI). Un registro anterior del SUI dice 'Empresa'.",
+  "vereda": "Las Américas",
+  "ancla": {
+   "lat": 7.014,
+   "lon": -73.9342
+  },
+  "confianza_ubicacion": "media",
+  "metodo_ubicacion": "No hay un lugar de Google para el relleno. Se ubicó por coincidencia de varias pruebas: (1) la Superservicios (2018, págs. 68–73) lo sitúa a 2 km del casco urbano, en la vereda Las Américas, con cerca de postes y alambre de púas, pozo de lixiviados, chimeneas de piedra y vías internas destapadas; (2) los contratos de SECOP lo asocian con la vía del acueducto y con la torre del tanque elevado (2015: 'construcción de torre para tanque de almacenamiento; tramo de vía y cerramiento del predio del relleno'; BPIN 2025058930008: 'vía de acceso y vías internas del acueducto y relleno'); el tanque elevado está 330 m al sur-suroriente y la PTAP 560 m al sur; (3) el lugar de Google 'Escombrera' (7,015243, −73,934610) queda 140 m al norte, sobre el área de préstamo de material de cobertura; (4) en Esri (enero de 2020) se ve una plataforma parda de unas 3 ha con cuatro piscinas rectangulares oscuras y manchas blancas, y en Google (posterior a 2024) las mismas piscinas con algas, dos plataformas grises de material de cobertura y una vía interna en afirmado nueva (SECOP dic-2024: material triturado para la vía del relleno). No hay Street View ni fotos georreferenciadas. El ancla es el centro del conjunto de celdas y piscinas.",
+  "inicio_operacion": {
+   "valor": "1999-07-21",
+   "tipo_dato": "dato_oficial",
+   "fuente": "SUI, registro de sitios R48765 (datos.gov.co 6nqe-quhx)"
+  },
+  "distancias": {
+   "casco_urbano_km": {
+    "valor": 2,
+    "tipo_dato": "dato_oficial",
+    "fuente": "Superservicios 2018, pág. 70; SUI 6nqe-quhx"
+   },
+   "parque_principal_por_via_km": {
+    "valor": 3.9,
+    "rango": [
+     3.8,
+     4.0
+    ],
+    "tipo_dato": "calculo_propio",
+    "metodo": "Ruta más corta en OpenStreetMap desde el Parque Principal (Google: 7,007366, −73,909609) hasta la entrada occidental del relleno: 3,80 km por Calle 50, Carrera 57, la vía Barrancabermeja–Yondó y el ramal destapado; el enrutador OSRM da 3,99 km."
+   },
+   "parque_principal_linea_recta_km": {
+    "valor": 2.82,
+    "tipo_dato": "calculo_propio"
+   },
+   "tanque_elevado_m": {
+    "valor": 348,
+    "tipo_dato": "calculo_propio",
+    "nota": "Tanque elevado del acueducto (7,01118, −73,93284)"
+   },
+   "ptap_municipal_m": {
+    "valor": 588,
+    "tipo_dato": "calculo_propio"
+   },
+   "fuentes_de_agua": {
+    "valor": "495 m a la fuente hídrica 1 y 250 m a la fuente hídrica 2 (Laguna del Miedo como fuente cercana)",
+    "tipo_dato": "dato_oficial",
+    "fuente": "Superservicios 2018, págs. 70–71"
+   }
+  },
+  "desnivel": {
+   "valor_m": "0 a +10",
+   "tipo_dato": "estimacion",
+   "metodo": "SRTM de 30 m (2000) y ASTER/Mapzen: 70–80 m en el sitio y 68–80 m en el parque principal. La ruta es casi plana, con lomas suaves (la del tanque elevado llega a unos 85 m). Las celdas pueden sumar unos metros sobre el terreno original; el PGIRS habla de 'cotas de operación' de 82 a 105 m, con un dato de altura que no se puede verificar.",
+   "fuente": "https://api.opentopodata.org (srtm30m, aster30m, mapzen), consulta del 22-oct-2026"
+  }
+ },
+ "lo_que_se_ve_en_el_satelite": {
+  "imagenes": {
+   "google": "z19–z20, posterior a 2024 (vía interna en afirmado nueva)",
+   "esri": "z19, enero de 2020",
+   "archivos": [
+    "data/geo/img/relleno_g20.png",
+    "data/geo/img/relleno_e19.png",
+    "data/geo/img/relleno_g19grid.png",
+    "data/geo/img/relleno_parque_trace.png"
+   ]
+  },
+  "elementos": [
+   {
+    "elemento": "Celda occidental (plataforma gris de material de cobertura)",
+    "area_m2": 1844,
+    "centro_local_m": [
+     -56,
+     27
+    ],
+    "tipo_dato": "calculo_propio"
+   },
+   {
+    "elemento": "Celda oriental (frente activo, gris, con borde de piedra)",
+    "area_m2": 2452,
+    "centro_local_m": [
+     65,
+     22
+    ],
+    "tipo_dato": "calculo_propio"
+   },
+   {
+    "elemento": "Celda norte con pasto (probable celda clausurada de las etapas 1–2) y berma curva",
+    "area_m2": 3732,
+    "centro_local_m": [
+     25,
+     52
+    ],
+    "tipo_dato": "calculo_propio"
+   },
+   {
+    "elemento": "Cuatro piscinas rectangulares (probables lagunas de lixiviados): 20×18, 18×16, 13×8 y 8×8 m, giradas 35°",
+    "area_m2": 892,
+    "tipo_dato": "calculo_propio",
+    "nota": "En Esri 2020 se ven con agua oscura; en Google, con algas. La Superservicios (2018) solo menciona un pozo de recirculación de lixiviados."
+   },
+   {
+    "elemento": "Vía interna en afirmado de unos 6 m que une la entrada occidental con la celda oriental",
+    "longitud_m": 160,
+    "tipo_dato": "calculo_propio"
+   },
+   {
+    "elemento": "Chimenea o caja de gases visible sobre la celda oriental",
+    "centro_local_m": [
+     69,
+     -2
+    ],
+    "tipo_dato": "estimacion"
+   },
+   {
+    "elemento": "Caseta de 4 × 3 m en la entrada norte, junto a la vía de acceso con cerca",
+    "centro_local_m": [
+     -27,
+     143
+    ],
+    "tipo_dato": "estimacion"
+   },
+   {
+    "elemento": "Área de préstamo de material y escombrera al noroccidente (lugar de Google 'Escombrera', 7,015243, −73,934610)",
+    "tipo_dato": "dato_oficial"
+   },
+   {
+    "elemento": "Zona intervenida en enero de 2020 (parda y blanca, entre la vía de acceso del noroccidente y la vía perimetral del oriente)",
+    "area_m2_aprox": 30000,
+    "tipo_dato": "estimacion"
+   },
+   {
+    "elemento": "Cárcavas de erosión al suroriente, hacia el caño del oriente",
+    "tipo_dato": "estimacion"
+   }
+  ],
+  "areas": {
+   "celdas_visibles_m2": {
+    "valor": 8026,
+    "tipo_dato": "calculo_propio"
+   },
+   "etapas_del_manual_de_operaciones_m2": {
+    "valor": 18459,
+    "detalle": "1.840 (trinchera, clausurada) + 9.483 (plataforma en operación en 2018) + 4.243 + 2.893",
+    "tipo_dato": "dato_oficial",
+    "fuente": "Superservicios 2018, pág. 72"
+   },
+   "cobertura_final_propuesta_bloque_A_m2": {
+    "valor": 8601,
+    "tipo_dato": "calculo_propio"
+   },
+   "zona_nororiental_bloque_B_m2": {
+    "valor": 3709,
+    "tipo_dato": "calculo_propio"
+   },
+   "rango_huella_real_de_residuos_m2": {
+    "valor": [
+     8000,
+     30000
+    ],
+    "tipo_dato": "estimacion",
+    "nota": "Se define con topografía, apiques y georradar."
+   }
+  }
+ },
+ "estado_legal_y_operacion": {
+  "licencia": [
+   {
+    "acto": "Resolución 130ZF-3106 del 19-jun-2008 (licencia inicial)",
+    "tipo_dato": "dato_oficial",
+    "fuente": "Superservicios 2018, pág. 71"
+   },
+   {
+    "acto": "Resolución 130ZF-1311-6219 del 12-nov-2013: prórroga por 10 años",
+    "tipo_dato": "dato_oficial",
+    "fuente": "Superservicios 2018, pág. 71"
+   },
+   {
+    "acto": "Documento 130ZF-1411-141 del 24-nov-2014: Corantioquia reduce la vigencia a 3 años según el área disponible",
+    "tipo_dato": "dato_oficial",
+    "fuente": "Superservicios 2018, pág. 71"
+   },
+   {
+    "acto": "SUI: licencia de Corantioquia con vigencia del 12-nov-2013 al 12-nov-2023",
+    "tipo_dato": "dato_oficial",
+    "fuente": "https://www.datos.gov.co/resource/wu2p-623h.json (certificado el 18-jun-2021)"
+   }
+  ],
+  "vida_util": [
+   {
+    "valor": "3 años desde 2013 (concepto de Corantioquia) frente a 11,8 años (Manual de Operaciones)",
+    "tipo_dato": "dato_oficial",
+    "fuente": "Superservicios 2018, págs. 72 y 74"
+   },
+   {
+    "valor": "Capacidad 74.303 m³ en cuatro etapas (PGIRS) y 81.147 m³ (SUI)",
+    "tipo_dato": "dato_oficial",
+    "fuente": "Superservicios 2018, pág. 72; https://www.datos.gov.co/resource/84tn-nnhf.json"
+   },
+   {
+    "valor": "Fin de vida útil: 12-nov-2023 (SUI, activos 2020) o 31-dic-2023 (SUI, registro de sitios)",
+    "tipo_dato": "dato_oficial",
+    "fuente": "https://www.datos.gov.co/resource/6ga6-iyr7.json; https://www.datos.gov.co/resource/84tn-nnhf.json"
+   }
+  ],
+  "conclusion": "Con los datos públicos, el relleno opera con licencia y vida útil vencidas desde noviembre–diciembre de 2023. En 2025 el municipio formuló su ampliación (BPIN 2025058930015) y el proyecto fue devuelto. No se encontró una prórroga ni una nueva licencia publicadas.",
+  "hallazgos_superservicios_2018": [
+   "sin báscula (167 t/mes estimadas)",
+   "sin cobertura diaria",
+   "gallinazos, insectos y olores ofensivos",
+   "lixiviados recirculados desde un pozo, sin permiso de vertimientos",
+   "sin monitoreo de agua ni de aire y sin caracterización de residuos",
+   "chimeneas de gases de piedra",
+   "cerca de postes y alambre de púas con la puerta abierta a terceros",
+   "relleno de clase municipal (solo Yondó)",
+   "presuntamente operando sin permiso ambiental vigente"
+  ],
+  "fuente_hallazgos": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf (págs. 51–52 y 68–74)",
+  "evaluacion_2020": "La evaluación integral de 2020 (vigencia 2019) no revisa el componente de aseo; reporta cartera de aseo por $442,6 millones (pesos corrientes de 2019) al cierre de 2019. https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
+  "pgirs": "Adoptado por el Decreto 049 de 2015 y actualizado con la Resolución 099 de 2017 (Superservicios 2018, pág. 52). No se encontró una actualización posterior publicada.",
+  "sanciones": "No se encontraron sanciones publicadas de Corantioquia o de la Superservicios contra el relleno. En octubre de 2025 Teleantioquia informó que 13 de los 44 rellenos de la jurisdicción de Corantioquia operan sin licencia; la nota no se pudo leer completa y no se sabe si Yondó está en la lista."
+ },
+ "toneladas": {
+  "por_anio_t": {
+   "2011": 1646.63,
+   "2012": 2813.84,
+   "2013": 3520.01,
+   "2014": 3853.2,
+   "2015": 4561.8,
+   "2016": 1809.4,
+   "2017": 1925,
+   "2019": 1544,
+   "2020": 3316.25,
+   "2021": 3761.06,
+   "2022": 320.44
+  },
+  "tipo_dato": "dato_oficial",
+  "fuente": "SUI, toneladas dispuestas (https://www.datos.gov.co/resource/urvy-i3ii.json); 2018: 167 t/mes (Superservicios); 2020: 8,80 t/día (https://www.datos.gov.co/resource/6ga6-iyr7.json)",
+  "nota": "2016, 2017, 2019 y 2022 parecen reportes incompletos.",
+  "acumulado_1999_2026_t": {
+   "valor": 78000,
+   "rango": [
+    71000,
+    84000
+   ],
+   "tipo_dato": "estimacion",
+   "metodo": "30.755 t reportadas para 2011–2021 (con 2.004 t de 2018) + 2.000–2.800 t/año para 1999–2010 + 3.300–4.000 t/año para 2022–2026."
+  },
+  "volumen_ocupado_m3": {
+   "rango": [
+    78000,
+    130000
+   ],
+   "tipo_dato": "estimacion",
+   "metodo": "densidad compactada de 0,6–1,0 t/m³ más 20 % de material de cobertura; supera la capacidad de diseño (74–81 mil m³)."
+  }
+ },
+ "gasto_en_operacion_secop": {
+  "por_anio_millones_2026": {
+   "2014": 1537.7,
+   "2015": 426.2,
+   "2016": 530.8,
+   "2017": 335.6,
+   "2018": 254.8,
+   "2019": 773.1,
+   "2020": 482.0,
+   "2021": 421.8,
+   "2022": 731.0,
+   "2023": 473.2
+  },
+  "promedio_2019_2023_millones_2026": 576.2,
+  "tipo_dato": "calculo_propio",
+  "metodo": "Suma de contratos de SECOP I y II (alcaldía y Aguas y Aseo) cuyo objeto menciona el relleno, la celda o el material de cobertura, sin los de calidad de agua potable; llevados a 2026 con el IPC. No incluye la nómina de Aguas y Aseo.",
+  "contratos_clave": [
+   {
+    "anio": 2014,
+    "objeto": "Construcción de la primera etapa (nueva celda) del relleno manual-mecánico Las Américas",
+    "valor_corriente": 500000000,
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-4-3110226"
+   },
+   {
+    "anio": 2014,
+    "objeto": "Estudio de impacto ambiental y plan de manejo del relleno",
+    "valor_corriente": 20000000,
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-4-3106091"
+   },
+   {
+    "anio": 2015,
+    "objeto": "Torre del tanque de agua potable, tramo de vía y cerramiento del predio del relleno",
+    "valor_corriente": 70000000,
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-4-3722093"
+   },
+   {
+    "anio": 2021,
+    "objeto": "Obras de adecuación del relleno sanitario Las Américas",
+    "valor_corriente": 242000000,
+    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-4-12026632"
+   },
+   {
+    "anio": 2023,
+    "objeto": "Alquiler de maquinaria para adecuación y descontaminación de residuos del relleno (Aseo Móvil de Colombia S.A.S.)",
+    "valor_corriente": 199856370,
+    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.5339101"
+   },
+   {
+    "anio": 2024,
+    "objeto": "Material triturado para la vía de acceso del relleno",
+    "valor_corriente": 15455853,
+    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7249441"
+   },
+   {
+    "anio": 2025,
+    "objeto": "Obra de mantenimiento y adecuación del relleno (Quantum Constructora)",
+    "valor_corriente": 70000000,
+    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9104587"
+   },
+   {
+    "anio": 2026,
+    "objeto": "Alquiler de maquinaria, material de cobertura y arreglo de la vía del relleno (procesos de mayo de 2026: 20 + 20 + 30 M)",
+    "valor_corriente": 70000000,
+    "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10321878"
+   }
+  ],
+  "regalias": [
+   {
+    "bpin": "2025058930015",
+    "nombre": "Ampliación del relleno sanitario Las Américas",
+    "valor_corriente_2025": 3701286400,
+    "valor_2026": 3901370540,
+    "estado": "Formulación, devuelto a MGA",
+    "fuente": "data/comparativa/sgr_fondos.json (MapaInversiones)"
+   },
+   {
+    "bpin": "2025058930008",
+    "nombre": "Pavimentación de la vía de acceso (Calle 16) y vías internas del acueducto y relleno",
+    "valor_corriente_2025": 3787042800,
+    "valor_2026": 3991762760,
+    "estado": "Formulación, devuelto a MGA",
+    "fuente": "data/comparativa/sgr_fondos.json"
+   }
+  ]
+ },
+ "antiguo_botadero": {
+  "tipo_dato": "dato_oficial",
+  "texto": "Noticias Caracol (23-sep-2020): los dos pozos del acueducto (proyecto de unos $12.000 millones aprobado por el OCAD) se perforaban 'dentro del polígono que otrora ocupara un relleno sanitario', el de Las Américas, que funcionó allí hace unos 25 años; Corantioquia suspendió la obra porque no tenía permiso de captación. Ese sitio antiguo no se ha delimitado.",
+  "url": "https://www.noticiascaracol.com/antioquia/denuncian-construccion-de-pozos-de-agua-para-consumo-humano-en-antiguo-relleno-sanitario",
+  "implicacion": "El plan de clausura debe incluir el botadero antiguo (Res. 1390 de 2005, modificada por la Res. 1890 de 2011) y el monitoreo de agua subterránea debe cubrir los pozos que hoy abastecen al casco urbano."
+ },
+ "clausura_requisitos": [
+  {
+   "norma": "Decreto 1077 de 2015, modificado por el Decreto 1784 de 2017, art. 2.3.2.3.3",
+   "texto": "El municipio es responsable de asegurar la disposición final, en su territorio o en otra jurisdicción, participando en soluciones regionales.",
+   "url": "https://normas.cra.gov.co/gestor/docs/decreto_1784_2017.htm"
+  },
+  {
+   "norma": "Decreto 1784 de 2017, arts. 2.3.2.3.5 y 2.3.2.3.7",
+   "texto": "Los proyectos de disposición final deben propender por el enfoque regional; la cofinanciación de la Nación exige analizar alternativas de regionalización.",
+   "url": "https://normas.cra.gov.co/gestor/docs/decreto_1784_2017.htm"
+  },
+  {
+   "norma": "Decreto 1784 de 2017, art. 2.3.2.3.12",
+   "texto": "El uso futuro del sitio clausurado debe estar considerado y determinado (aquí: parque y granja solar).",
+   "url": "https://normas.cra.gov.co/gestor/docs/decreto_1784_2017.htm"
+  },
+  {
+   "norma": "Decreto 1784 de 2017, art. 2.3.2.3.16",
+   "texto": "Monitoreo de lixiviados (DBO, DQO, sólidos), agua subsuperficial en pozos, biogás (CH₄, H₂S y límite de explosividad), olores, vectores e incendios.",
+   "url": "https://normas.cra.gov.co/gestor/docs/decreto_1784_2017.htm"
+  },
+  {
+   "norma": "Decreto 1784 de 2017, art. 2.3.2.3.17",
+   "texto": "El prestador debe tener una provisión para el cierre, la clausura, la posclausura y el monitoreo, calculada con la metodología tarifaria de la CRA.",
+   "url": "https://normas.cra.gov.co/gestor/docs/decreto_1784_2017.htm"
+  },
+  {
+   "norma": "Decreto 1784 de 2017, arts. 2.3.2.3.11 (IV) y 2.3.2.3.21",
+   "texto": "Instrumentación (piezómetros, pozos de monitoreo, control de estabilidad); captura y quema tecnificada del biogás en todas las categorías; su aprovechamiento energético depende de un análisis de beneficio-costo.",
+   "url": "https://normas.cra.gov.co/gestor/docs/decreto_1784_2017.htm"
+  },
+  {
+   "norma": "Resolución MVCT 938 de 2019, art. 4",
+   "texto": "Para el cierre, la clausura y la posclausura debe contemplarse un mínimo de 20 años, asociado al uso futuro del suelo.",
+   "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0938_2019.htm"
+  },
+  {
+   "norma": "Resolución 0330 de 2017 (RAS), arts. 223 y 224, eliminados por el art. 77 de la Resolución 0799 de 2021",
+   "texto": "Los requisitos de rellenos sanitarios salieron del RAS: ahora están en el Decreto 1784 de 2017 y la Resolución 938 de 2019. El RAS sigue rigiendo la recolección y el transporte (art. 220).",
+   "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0330_2017.htm"
+  },
+  {
+   "norma": "Resolución 1390 de 2005 (modificada por la Res. 1890 de 2011)",
+   "texto": "Clausura y restauración ambiental de botaderos y celdas transitorias: aplica al antiguo botadero de Las Américas si se confirma.",
+   "url": "https://www.minambiente.gov.co"
+  },
+  {
+   "norma": "Licencia ambiental y plan de manejo ante Corantioquia",
+   "texto": "El plan de clausura y posclausura se presenta a la autoridad ambiental, que hace el seguimiento.",
+   "url": "https://www.corantioquia.gov.co"
+  }
+ ],
+ "posclausura": {
+  "duracion_anios": 20,
+  "tipo_dato": "dato_oficial",
+  "fuente": "Res. 938 de 2019, art. 4",
+  "actividades": [
+   "inspección y reparación de la cobertura y de los canales",
+   "medición de asentamientos (hitos) dos veces al año",
+   "caudal y calidad de lixiviados y del efluente del humedal cada trimestre",
+   "agua subterránea en 4 pozos cada semestre (incluye los pozos del acueducto)",
+   "biogás (CH₄, H₂S, límite de explosividad) mensual el primer año y luego trimestral; sensores fijos en el coworking",
+   "informe anual a Corantioquia y a la Superservicios"
+  ],
+  "costo_anual_millones": {
+   "valor": 190,
+   "rango": [
+    130,
+    260
+   ],
+   "tipo_dato": "estimacion"
+  }
+ },
+ "alternativa_regional": {
+  "recomendada": {
+   "sitio": "Parque Tecnológico Ambiental San Silvestre (Veolia Aseo Santander y Cesar), Barrancabermeja",
+   "licencia": "CAS, Resolución 1121 de 2014, vigente hasta el 27-dic-2044 (SUI)",
+   "distancia_via_km": 40.2,
+   "tiempo_min": 44,
+   "tipo_dato": "calculo_propio",
+   "metodo": "OSRM desde el parque principal hasta el lugar de Google 'Vertedero San Silvestre' (7,09807, −73,70143)",
+   "riesgos": [
+    "el puente Guillermo Gaviria Correa (Yondó–Barrancabermeja) tuvo una socavación y cierres en marzo de 2026 (Vanguardia, 4-jun-2026): hace falta un plan de contingencia",
+    "Global Witness y San Silvestre Green señalan daños ambientales; Veolia dice que la operación está normalizada"
+   ],
+   "fuentes": [
+    "https://www.datos.gov.co/resource/wu2p-623h.json",
+    "https://www.vanguardia.com/santander/barrancabermeja/2026/06/04/por-que-sigue-en-riesgo-el-puente-que-conecta-a-barrancabermeja-con-yondo-ruta-del-cacao-explico-las-causas/",
+    "https://globalwitness.org/es/campaigns/land-and-environmental-defenders/colombia-report-es/"
+   ]
+  },
+  "otras": [
+   {
+    "sitio": "Relleno La Tabaca, Puerto Berrío",
+    "nota": "licencia vencida el 2-sep-2021 según el SUI; unos 141 km por vía (OSRM, cálculo propio)"
+   },
+   {
+    "sitio": "Rellenos de Rediba y Yerbabuena, Barrancabermeja",
+    "nota": "licencias de la CAS hasta 2044–2045 (SUI); Rediba con condena penal a su exgerente y la Sentencia T-227 de 2017"
+   }
+  ],
+  "costo_anual": {
+   "valor_millones": 320.7,
+   "rango_millones": [
+    221.1,
+    465.6
+   ],
+   "tipo_dato": "estimacion",
+   "metodo": "3.900 t/año (3.500–4.300) × (tarifa de disposición de 60.000 $/t (45.000–80.000) + transporte del tramo excedente de 20,2 km a 1.100 $/t·km (900–1.400)). Las tarifas reales salen del contrato con el operador y de la metodología de la CRA."
+  },
+  "comparacion": {
+   "operacion_local_promedio_2019_2023_millones": 576.2,
+   "ampliacion_formulada_millones_2026": 3901.4,
+   "conclusion": "Llevar la basura a San Silvestre cuesta del mismo orden que operar el relleno local (sin contar la nómina) y evita invertir unos $3.900 millones en ampliarlo. Un aprovechamiento serio (ECA y compostaje, ver los proyectos tipo del DNP) baja las toneladas y el costo."
+  }
+ },
+ "incertidumbres": [
+  "La ubicación del relleno se dedujo de documentos y del satélite; no hay foto georreferenciada ni Street View. Confianza media.",
+  "El borde real de los residuos no se conoce: las celdas dibujadas (0,80 ha) son lo visible en Google; el Manual de Operaciones habla de 1,85 ha en cuatro etapas y la zona intervenida en Esri 2020 llega a unas 3 ha. Hay que delimitarla con topografía, apiques y georradar antes de diseñar la cobertura.",
+  "Las cuatro piscinas se interpretan como lagunas de lixiviados (la Superservicios en 2018 solo menciona 'un pozo' de recirculación). Podrían ser piscinas de aguas lluvias.",
+  "Una nota de Caracol (23-sep-2020) dice que los dos pozos del acueducto se perforaron 'dentro del polígono que otrora ocupara un relleno sanitario' (Las Américas, hace unos 25 años). Ese antiguo botadero no está dibujado: puede estar cerca de la PTAP y debe incluirse en el plan de clausura (Res. 1390 de 2005) y en el monitoreo del agua subterránea.",
+  "La caseta de la entrada norte se midió en Google (4 × 3 m); altura, materiales y uso se suponen.",
+  "Solo una chimenea de gases es visible (69, −2); las otras dos chimeneas existentes se ubicaron como referencia.",
+  "Las alturas del terreno son planas en el modelo; el SRTM da 70–80 m en todo el sitio y unos 74 m en el parque principal.",
+  "La línea de 13,2 kV se dibuja solo en sus primeros postes; la ruta y el punto de conexión los define EPM en el estudio de conexión.",
+  "La alternativa regional necesita contrato con Veolia, permiso de Corantioquia para la clausura y un plan de contingencia por el puente.",
+  "Los gastos de SECOP no incluyen la nómina de Aguas y Aseo ni contratos que no mencionan el relleno en el objeto."
+ ],
+ "fuentes": [
+  "Superservicios, evaluación integral de Aguas y Aseo de Yondó, vigencia 2017 (visita de mayo de 2018), págs. 51–52 y 68–74: https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf",
+  "Superservicios, evaluación integral 2020 (vigencia 2019): https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
+  "MinVivienda, listado de sitios de disposición final (2020): https://www.minvivienda.gov.co/sites/default/files/2020-09/disposicion-final.pdf",
+  "SUI en datos.gov.co: 84tn-nnhf (registro), wu2p-623h (autorización ambiental), 6nqe-quhx (registro R48765), urvy-i3ii (toneladas), 6ga6-iyr7 (activos 2020)",
+  "SECOP I y II: data/secop/raw/integrado.json y secop2_procesos.json (consulta local del proyecto)",
+  "Decreto 1784 de 2017: https://normas.cra.gov.co/gestor/docs/decreto_1784_2017.htm",
+  "Resolución 938 de 2019: https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0938_2019.htm",
+  "Resolución 0330 de 2017 con la 0799 de 2021: https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0330_2017.htm",
+  "OpenStreetMap (calles) y OSRM (https://router.project-osrm.org) para distancias por vía"
+ ]
+}

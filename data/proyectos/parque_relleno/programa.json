@@ -1,0 +1,345 @@
+{
+ "id": "parque_relleno_programa",
+ "titulo": "Programa del Parque Ecotecnológico Las Américas (coworking rural, granja autosostenible, circuito y granja solar)",
+ "fecha_corte": "2026-10-22",
+ "convenciones": {
+  "dato_oficial": "tomado tal cual del documento o base citada",
+  "calculo_propio": "operación aritmética sobre datos oficiales, con el método a la vista",
+  "estimacion": "supuesto razonado con rango; hay que confirmarlo en campo o con el dueño del dato"
+ },
+ "idea": "Cerrar bien el relleno y convertirlo en un lugar a donde la gente quiera ir: un coworking rural con internet y energía propia a 4 km del pueblo, una granja que enseña a producir y compostar, un circuito para correr y pedalear y, sobre las celdas, una granja solar que baja la factura de los hogares de estratos 1 y 2.",
+ "regla_de_oro": "Las instalaciones con gente quedan FUERA de las celdas y a 30 m o más de los residuos y de las lagunas (por biogás y asentamientos); sobre las celdas solo van la granja solar, el pasto y las chimeneas. No se cultiva comida sobre las celdas.",
+ "inspiracion_proyectos_tipo_dnp": [
+  {
+   "proyecto_tipo": "Construcción y dotación de centro TIC municipal (v2.0, 2018)",
+   "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=145&Itemid=197",
+   "que_se_toma": "Programa de 250 m² (acceso, recepción, internet, capacitación, gobierno en línea y baños), 24 equipos, costos de construcción (430 M), dotación (210 M), mantenimiento (15 M/año) y operación (9 M/mes), en pesos de 2018. El coworking escala ese programa a 312 m² con puestos de trabajo, cabinas y un aula ambiental."
+  },
+  {
+   "proyecto_tipo": "Construcción y dotación parque recreodeportivo (v2.0, 2017)",
+   "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=132&Itemid=201",
+   "que_se_toma": "Módulos de ejercitadores para adultos (60,3 m²) y adolescentes (61 m²), juegos infantiles (123,6 m²), mesas de ajedrez (68,5 m²) y escenario a nivel (30 m²); costo por m² (700 M por 2.040 m², precios de 2016) y mantenimiento (10 M/año)."
+  },
+  {
+   "proyecto_tipo": "Construcción de ciclo-infraestructura y servicios complementarios (v2.0, 2022)",
+   "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=144&Itemid=205",
+   "que_se_toma": "Sección bidireccional de 2,6 m con bordillos (3,0 m en total), costo de la ciclo-infraestructura sobre vía con segregación (2.110 M por 8 km, precios de 2022), cicloparqueaderos y mantenimiento (5,8 M/km·año)."
+  },
+  {
+   "proyecto_tipo": "Recuperación de cobertura vegetal en áreas disturbadas (v1.0, 2022)",
+   "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=263&Itemid=365",
+   "que_se_toma": "Método de restauración (diagnóstico, selección de especies nativas, siembra y mantenimiento) para la cobertura de las celdas, la cerca viva y el borde del caño."
+  },
+  {
+   "proyecto_tipo": "Mejoramiento de infraestructura para señalización turística urbana (2022)",
+   "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=269&Itemid=380",
+   "que_se_toma": "Tipologías de señales y costo por señal (130,7 M por 18 señales, precios de 2022) para la señalización del parque y de la ruta al pueblo."
+  },
+  {
+   "proyecto_tipo": "Construcción de estación de clasificación y aprovechamiento – ECA (v1.0, 2021) y Zonas digitales",
+   "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=259&Itemid=360",
+   "que_se_toma": "Proyectos complementarios: una ECA en el casco urbano baja las toneladas que viajan a Barrancabermeja; la zona wifi del parque sigue el esquema de Zonas Digitales."
+  },
+  {
+   "nota": "No hay un proyecto tipo del DNP para granjas solares interconectadas ni para clausura de rellenos; para esas partes se usan el Decreto 1784 de 2017, la Res. 938 de 2019 y la guía EPA/NREL de 2022."
+  }
+ ],
+ "componentes": [
+  {
+   "componente": "Granja solar sobre las celdas (bloques A y B)",
+   "ubicacion_local_m": "x −81 a 138, y −8 a 118",
+   "area_m2": 12310,
+   "capacidad": "1.812 módulos, 996,6 kWp DC, 800 kW AC, 1,34 GWh/año",
+   "nota": "Única instalación sobre las celdas, con malla de 2 m y sin acceso del público."
+  },
+  {
+   "componente": "Cobertura final, canales, drenaje de lixiviados y 10 chimeneas pasivas",
+   "ubicacion_local_m": "sobre las celdas",
+   "area_m2": 8601
+  },
+  {
+   "componente": "Lagunas A y B impermeabilizadas (igualación de lixiviados) y humedal artificial de 400 m²",
+   "ubicacion_local_m": "x −40 a 24, y −36 a 28",
+   "area_m2": 800,
+   "nota": "El humedal reemplaza las lagunas C y D; tiene un sendero de observación con baranda para el aula ambiental."
+  },
+  {
+   "componente": "Coworking rural bioclimático y aula ambiental",
+   "ubicacion_local_m": [
+    -6,
+    -80
+   ],
+   "area_m2": 312,
+   "capacidad": "40 puestos, sala de reuniones de 10, 4 cabinas de llamadas, aula de 20 puestos, internet dedicado con respaldo satelital, 22 kWp en la cubierta",
+   "distancia_a_residuos_m": 36.5,
+   "proyecto_tipo_dnp": "Centro TIC municipal (escalado)",
+   "nota": "Eje largo oriente–occidente, aleros de 1,5 m, corredor sur de 2,6 m, ventilación cruzada y ventiladores de techo (aire solo en la sala de reuniones), cubierta termoacústica clara, agua lluvia a un tanque de 30 m³, losa sobre membrana antigás y sensor de metano."
+  },
+  {
+   "componente": "Cafetería, baños y duchas para ciclistas",
+   "ubicacion_local_m": [
+    27,
+    -80
+   ],
+   "area_m2": 96,
+   "capacidad": "30 puestos en el corredor y la plazoleta",
+   "distancia_a_residuos_m": 47.6
+  },
+  {
+   "componente": "Taller de bicicletas y biciparqueadero cubierto",
+   "ubicacion_local_m": [
+    -50,
+    -85
+   ],
+   "area_m2": 80,
+   "capacidad": "40 cupos, estación de herramientas, aire e hidratación, 6 tomas para bicicletas eléctricas",
+   "distancia_a_residuos_m": 52.6,
+   "proyecto_tipo_dnp": "Ciclo-infraestructura y servicios complementarios (cicloparqueaderos)"
+  },
+  {
+   "componente": "Parqueadero con marquesina solar y carga de vehículos eléctricos",
+   "ubicacion_local_m": [
+    -76,
+    -87
+   ],
+   "area_m2": 704,
+   "capacidad": "16 carros, motos y un bus; 2 cargadores de 22 kW; 22 kWp"
+  },
+  {
+   "componente": "Plazoleta y kioscos de trabajo al aire libre",
+   "ubicacion_local_m": [
+    6,
+    -105
+   ],
+   "area_m2": 555,
+   "capacidad": "3 kioscos de 25 m² con mesas y tomas solares"
+  },
+  {
+   "componente": "Módulo recreodeportivo",
+   "ubicacion_local_m": [
+    -58,
+    -129
+   ],
+   "area_m2": 528,
+   "proyecto_tipo_dnp": "Parque recreodeportivo (ejercitadores, juegos infantiles, mesas de ajedrez y escenario)"
+  },
+  {
+   "componente": "Granja autosostenible: invernadero y vivero, huerta en 4 camas, compostaje y apiario",
+   "ubicacion_local_m": "x −42 a 64, y −160 a −116",
+   "area_m2": 1048,
+   "proyecto_tipo_dnp": "Recuperación de cobertura vegetal (vivero de nativas)",
+   "nota": "Todo fuera de las celdas, a más de 95 m de los residuos, con suelo traído y agua lluvia; el compost usa poda, residuos de la cafetería y de la granja (no basura del pueblo); el apiario está a más de 25 m de los senderos con cerca viva."
+  },
+  {
+   "componente": "Mirador",
+   "ubicacion_local_m": [
+    100,
+    -46
+   ],
+   "area_m2": 50,
+   "capacidad": "terraza a 3 m con vista a la granja solar y al valle del Magdalena",
+   "distancia_a_residuos_m": 42.2
+  },
+  {
+   "componente": "Circuito de trote y ciclismo",
+   "ubicacion_local_m": "perímetro del parque",
+   "capacidad": "0,90 km por vuelta (más 0,19 km de enlace por la plazoleta), 3 m de ancho, afirmado estabilizado",
+   "proyecto_tipo_dnp": "Ciclo-infraestructura (sección bidireccional de 2,6 m + bordillos)"
+  },
+  {
+   "componente": "Ruta pueblo–parque",
+   "ubicacion_local_m": "vía Barrancabermeja–Yondó y ramal",
+   "capacidad": "3,9 km desde el parque principal (OpenStreetMap); ida, una vuelta y regreso ≈ 8,7 km; con la Laguna del Miedo (3,1 km más por vía desde el parque, OSRM) sale un recorrido de unos 15 km",
+   "proyecto_tipo_dnp": "Ciclo-infraestructura sobre vía con segregación y señalización"
+  },
+  {
+   "componente": "Portería, cerramiento y seguridad",
+   "ubicacion_local_m": [
+    -104,
+    -92
+   ],
+   "capacidad": "portería en el acceso occidental, malla y cerca viva de 1.100 m, malla de 2 m con concertina en la granja solar, cámaras y alumbrado solar con sensor"
+  },
+  {
+   "componente": "Centro de transformación y control de la granja",
+   "ubicacion_local_m": [
+    40,
+    -42
+   ],
+   "area_m2": 40,
+   "capacidad": "8 inversores de 100 kW, transformador de 1.000 kVA, batería de 100 kWh, SCADA",
+   "distancia_a_residuos_m": 30.0
+  },
+  {
+   "componente": "Señalización",
+   "ubicacion_local_m": "en todo el parque y la ruta",
+   "capacidad": "14 señales: acceso, circuito, granja solar educativa, humedal, granja, mirador y 4 en la ruta al pueblo",
+   "proyecto_tipo_dnp": "Señalización turística urbana"
+  }
+ ],
+ "distancias_a_residuos_calculadas": {
+  "coworking": [
+   36.5,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "cafeteria": [
+   47.6,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "taller_bicis": [
+   52.6,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "porteria_parque": [
+   96.6,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "centro_transformacion": [
+   30.0,
+   "Cobertura final de las celdas (arcilla c"
+  ],
+  "mirador_base": [
+   42.2,
+   "Cobertura final de las celdas (arcilla c"
+  ],
+  "mirador_cubierta": [
+   42.2,
+   "Cobertura final de las celdas (arcilla c"
+  ],
+  "Escenario a nivel del módulo recreodeportivo (30 m": [
+   107.3,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "Biciparqueadero cubierto (40 cupos) con estación d": [
+   64.6,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "Kiosco de trabajo al aire libre 1": [
+   75.4,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "Kiosco de trabajo al aire libre 2": [
+   76.1,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "Kiosco de trabajo al aire libre 3": [
+   79.3,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "Invernadero y vivero de especies nativas (policarb": [
+   98.4,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "Compostaje de residuos de poda, cafetería y granja": [
+   108.7,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "Apiario (10 colmenas de abejas nativas y Apis), al": [
+   104.0,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "Parqueadero de visitantes (16 carros, motos y un b": [
+   60.3,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "Plazoleta de llegada del circuito y punto de encue": [
+   57.0,
+   "Humedal artificial de flujo subsuperfici"
+  ],
+  "Módulo recreodeportivo inspirado en el proyecto ti": [
+   89.4,
+   "Humedal artificial de flujo subsuperfici"
+  ]
+ },
+ "usuarios_esperados": {
+  "coworking_puestos_dia": [
+   15,
+   35
+  ],
+  "visitantes_fin_de_semana": [
+   150,
+   400
+  ],
+  "ciclistas_y_corredores_semana": [
+   200,
+   600
+  ],
+  "tipo_dato": "estimacion",
+  "nota": "Hay que medirlos con un piloto (por ejemplo, ciclovía dominical al parque y jornadas de coworking) antes de dimensionar la operación."
+ },
+ "operacion": {
+  "modelo": "Administración del parque por el municipio (o una asociación público-comunitaria) con concesión de la cafetería y del taller; la granja solar la opera la comunidad energética con un operador técnico contratado; Aguas y Aseo responde por la posclausura con la provisión de clausura.",
+  "personal": [
+   "administrador del parque",
+   "2 operarios de mantenimiento y granja",
+   "vigilancia 24 horas (3 turnos)",
+   "operador técnico de la granja solar (contratado)",
+   "monitoreo ambiental (contratado)"
+  ],
+  "costo_anual_millones": {
+   "parque": {
+    "valor": 520,
+    "rango": [
+     400,
+     650
+    ]
+   },
+   "posclausura": {
+    "valor": 190,
+    "rango": [
+     130,
+     260
+    ]
+   },
+   "granja_solar_om": 58.5,
+   "tipo_dato": "estimacion"
+  },
+  "ingresos_anuales_millones": {
+   "coworking": [
+    60,
+    150
+   ],
+   "concesiones_cafeteria_y_taller": [
+    24,
+    60
+   ],
+   "eventos_y_visitas_guiadas": [
+    10,
+    40
+   ],
+   "tipo_dato": "estimacion",
+   "referencia": "Centro TIC (DNP): operación de 9 M/mes de 2018 ≈ 14,4 M/mes de 2026"
+  }
+ },
+ "cronograma_fases": [
+  {
+   "fase": "0",
+   "anios": "2027",
+   "que": "Topografía, apiques, georradar, línea base ambiental; contrato de disposición regional; plan de clausura ante Corantioquia; formulación con MGA y postulación a fuentes"
+  },
+  {
+   "fase": "1",
+   "anios": "2027–2028",
+   "que": "Traslado de la basura a San Silvestre; clausura técnica (reconformación, cobertura, canales, chimeneas, lagunas y humedal, pozos de monitoreo)"
+  },
+  {
+   "fase": "2",
+   "anios": "2029–2030",
+   "que": "Granja solar bloque A (≈0,77 MWp) y conexión a EPM; constitución y registro de la comunidad energética; bloque B si los apiques lo permiten"
+  },
+  {
+   "fase": "3",
+   "anios": "2028–2030",
+   "que": "Coworking, cafetería, taller, granja, circuito, mirador y ruta ciclista al pueblo (fuera de las celdas: puede empezar en paralelo con la clausura)"
+  },
+  {
+   "fase": "posclausura",
+   "anios": "2028–2048",
+   "que": "Monitoreo y mantenimiento por 20 años como mínimo (Res. 938 de 2019)"
+  }
+ ],
+ "incertidumbres": [
+  "El predio del municipio puede no incluir todo el potrero del sur donde se ubican los servicios; hay que revisar el certificado de tradición y el catastro.",
+  "Las distancias de seguridad al biogás deben validarse con la línea base de gases."
+ ]
+}

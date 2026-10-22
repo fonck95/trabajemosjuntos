@@ -7,7 +7,7 @@
  "lon": -73.932,
  "ubicacion": {
   "confianza": "alta",
-  "metodo": "La coordenada del inventario (lugar de Google 'PTAP- Acueducto', 7,010934, −73,930272) cae 270 m al nororiente, sobre las casas y los estanques de una piscícola, que no se parecen a una planta convencional. En la loma con bosque que queda al suroccidente sí hay un conjunto de concreto que coincide con lo que describen y fotografían los informes de la Superservicios (2018 y 2020): la losa grande del tanque de almacenamiento con respiraderos, los tanques de procesos con polisombra negra, la torre de aireación, la caseta y la vía interna. La prueba más fuerte es la foto de la torre de aireación (18 de mayo de 2018): al fondo se ve el tanque elevado, y el único tanque elevado de la zona está 240 m al norte-noroccidente (7,01118, −73,93284), justo en la dirección en que aparece cuando se reproduce la foto con el modelo (la torre y la cámara de llegada también calzan). Cuadran además la distancia en línea recta a la Laguna del Miedo (2,4 km; la aducción mide 3 km) y la vereda Las Américas. La planta ya está en la imagen de Esri de enero de 2020. Se descartan los dos tanques circulares de 7,0256, −73,9206 (allí no hay floculadores, filtros ni tanque de losa) y la terminal de camiones de 7,01195, −73,91395. No hay Street View útil: el panorama más cercano está a 870 m y el bosque tapa la planta. El ancla se puso en el centro del conjunto de concreto."
+  "metodo": "La coordenada del inventario (lugar de Google 'PTAP- Acueducto', 7,010934, −73,930272) cae 270 m al nororiente, sobre las casas y los estanques de una piscícola, que no se parecen a una planta convencional. En la loma con bosque que queda al suroccidente sí hay un conjunto de concreto que coincide con lo que describen y fotografían los informes de la Superservicios (2018 y 2020): la losa grande del tanque de almacenamiento con respiraderos, los tanques de procesos con polisombra negra, la torre de aireación, la caseta y la vía interna. La prueba más fuerte es la foto de la torre de aireación (18 de mayo de 2018): al fondo se ve el tanque elevado, y el único tanque elevado de la zona está 240 m al norte-noroccidente (7,01118, −73,93284), justo en la dirección en que aparece cuando se reproduce la foto con el modelo (la torre y la cámara de llegada también calzan). Cuadran además la distancia en línea recta a la Laguna del Miedo (2,4 km; la aducción mide 3 km), que era la fuente en 2018–2020, y la vereda Las Américas. La planta ya está en la imagen de Esri de enero de 2020. Se descartan los dos tanques circulares de 7,0256, −73,9206 (allí no hay floculadores, filtros ni tanque de losa) y la terminal de camiones de 7,01195, −73,91395. No hay Street View útil: el panorama más cercano está a 870 m y el bosque tapa la planta. El ancla se puso en el centro del conjunto de concreto."
  },
  "fuentes": [
   {
@@ -29,7 +29,7 @@
    "tipo": "web",
    "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
    "fecha": "2020",
-   "nota": "Superservicios, evaluación integral 2020 (vigencia 2019): PTAP convencional de 40 L/s, de concreto reforzado, construida en 2003 en la vereda Las Américas; aducción de 3 km desde la Laguna del Miedo; tanque de 1.125 m³ dentro de la planta y tanque elevado de 350 m³ en la parte alta de Las Américas; caseta con laboratorio, cuarto de cloro, bodega y baños. Fotos de la torre de aireación, de los sedimentadores con polisombra, de los filtros y de la losa del tanque con baranda azul."
+   "nota": "Superservicios, evaluación integral 2020 (vigencia 2019): PTAP convencional de 40 L/s, de concreto reforzado, construida en 2003 en la vereda Las Américas; aducción de 3 km desde la Laguna del Miedo (la captación de entonces; en la página 29 dice que la optimización en obra añadía 2 pozos subterráneos, un tanque de compensación y un tanque elevado); tanque de 1.125 m³ dentro de la planta y tanque elevado de 350 m³ en la parte alta de Las Américas; caseta con laboratorio, cuarto de cloro, bodega y baños. Fotos de la torre de aireación, de los sedimentadores con polisombra, de los filtros y de la losa del tanque con baranda azul."
   },
   {
    "tipo": "web",
@@ -45,7 +45,7 @@
   {
    "tipo": "web",
    "url": "https://www.google.com/maps/place/?q=place_id:ChIJ1Q12BADvQo4R-pjtf-s3gAc",
-   "nota": "Laguna del Miedo (7,021775, −73,949444), la fuente: 2,4 km en línea recta al noroccidente de la planta."
+   "nota": "Laguna del Miedo (7,021775, −73,949444), fuente del acueducto hasta que entraron los pozos (hoy es la reserva, según el Plan de Desarrollo 2024–2027): 2,4 km en línea recta al noroccidente de la planta."
   },
   {
    "tipo": "web",
@@ -63,7 +63,7 @@
    "tipo": "web",
    "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-4-8358866",
    "fecha": "2018-09",
-   "nota": "Estudios y diseños para la optimización del acueducto municipal ($1.237 millones). La Superservicios (2020) dice que la optimización incluye dos pozos, un tanque de compensación y un tanque elevado."
+   "nota": "Estudios y diseños para la optimización del acueducto municipal ($1.237 millones). La Superservicios (2020) dice que la optimización incluye dos pozos, un tanque de compensación y un tanque elevado. La obra se hizo con regalías (BPIN 2019058930084, 'Optimización del acueducto fase 1', Kaliza Arquitectos S.A.S. por medio de la AMMA, 2020–2021, terminada) y los pozos están en el claro suroccidental de la planta (captacion.json)."
   },
   {
    "tipo": "web",
@@ -108,6 +108,12 @@
    "fecha": "2014-01",
    "rumbo": 319,
    "nota": "Verificación: a 985 m; la subestación y los árboles tapan la loma de la planta."
+  },
+  {
+   "tipo": "web",
+   "url": "https://repositoriocdim.esap.edu.co/items/143f23fc-e675-4f46-b428-7cd698841ee2",
+   "fecha": "2024-06",
+   "nota": "Plan de Desarrollo Municipal 2024–2027 'Yondó avanza', página impresa 102 (página 52 del PDF): en la zona urbana el agua llega 18 horas al día (antes 12) 'debido a que la fuente de abastecimiento, actualmente es de pozos profundos y la anterior laguna del miedo, queda como un recurso de contingencia'."
   }
  ],
  "volumenes": [
@@ -480,7 +486,7 @@
   },
   {
    "id": "obra_so",
-   "nombre": "Estructura de concreto nueva en el claro suroccidental (no aparece en la imagen de enero de 2020; uso no confirmado)",
+   "nombre": "Estructura de concreto nueva en el claro suroccidental (no aparece en la imagen de enero de 2020; posiblemente el tanque de compensación de la optimización del acueducto de 2020–2021, junto a los pozos de captación; uso no confirmado)",
    "centro": [
     -57.85,
     -36.65
@@ -528,7 +534,7 @@
   },
   {
    "id": "obra_so_caja",
-   "nombre": "Caja baja de concreto con una abertura redonda, al suroccidente de la estructura nueva (posible pozo o cámara; uso no confirmado)",
+   "nombre": "Caja baja de concreto con un elemento redondo de unos 3 m, al suroccidente de la estructura nueva y junto al pozo 2 de captación (posible cámara o tanque pequeño; uso no confirmado)",
    "centro": [
     -70.3,
     -47.6
@@ -552,7 +558,7 @@
   },
   {
    "id": "obra_so_caseta",
-   "nombre": "Caseta pequeña de techo claro junto a la caja (posible caseta de obra o de bombas; uso no confirmado)",
+   "nombre": "Caseta pequeña de techo claro junto a la caja y al pozo 2 de captación (posible caseta de control de los pozos; uso no confirmado)",
    "centro": [
     -71.6,
     -52.15
@@ -999,15 +1005,15 @@
    {
     "tipo": "marquesina",
     "centro": [
-     -36.8,
+     -33.9,
      -49.6
     ],
-    "largo": 22.0,
+    "largo": 16.2,
     "ancho": 4.65,
     "rumbo_eje": 90,
     "altura": 0.7,
     "filas": 2,
-    "columnas": 19,
+    "columnas": 14,
     "orientacion_modulo": "vertical"
    },
    {
@@ -1025,7 +1031,7 @@
     "orientacion_modulo": "vertical"
    }
   ],
-  "kwp_factible": 62.7,
+  "kwp_factible": 57.2,
   "bess": {
    "kwh": 150,
    "kw": 75,
@@ -1040,12 +1046,12 @@
   },
   "inversores": {
    "n": 2,
-   "kw": 30,
+   "kw": 25,
    "volumen": "caseta",
    "lado": "N"
   },
   "domotica": [
-   "medidor bidireccional en la frontera de la PTAP (y otro en la de la captación)",
+   "medidor bidireccional en la frontera de la PTAP (y otro en la de los pozos de captación, que están en el claro suroccidental de este mismo predio, si tienen medidor propio de EPM)",
    "pasarela IoT con telemetría al Centro de Control Energético y Digital (CCED)",
    "variadores de velocidad y arranque suave en las bombas",
    "control del bombeo según el nivel del tanque de 1.125 m³ y del tanque elevado de 350 m³, para bombear en las horas de sol",
@@ -1055,15 +1061,15 @@
    "iluminación LED con fotocelda en patios y vía interna"
   ],
   "obras_civiles": [
-   "adecuación del claro suroccidental cuando termine la obra vecina: nivelación, cunetas, cerramiento en malla de 2 m y bases hincadas o de concreto para las 3 mesas, dejando un carril de 4 m por el borde norte del claro para llegar a la estructura nueva (hay que despejar unos 2 m del borde sur de la isla de rastrojo)",
+   "adecuación del claro suroccidental, donde están los dos pozos de captación (data/edificios/captacion.json): nivelación, cunetas, cerramiento en malla de 2 m y bases hincadas o de concreto para las 3 mesas, dejando un carril de 4 m por el borde norte del claro para llegar a la estructura nueva y a los pozos (hay que despejar unos 2 m del borde sur de la isla de rastrojo) y unos 6 m libres entre el pozo 1 y la mesa del medio para el camión grúa que saca la bomba (a las mesas del norte y del sur quedan 4,1 y 3,3 m)",
    "control de sombras: medir la altura de los árboles del borde del claro y, si Corantioquia lo permite, descopar o ralear los árboles altos en una franja de 8 a 10 m al sur y al oriente de las mesas; podar solo el rastrojo y las ramas bajas no quita la sombra de árboles de 10 a 14 m",
-   "canalización enterrada desde las mesas hasta la caseta: unos 70 m en línea recta por el borde del bosque (unos 130 m si se lleva por el ramal y la vía interna)",
+   "canalización enterrada desde las mesas hasta la caseta: unos 70 m en línea recta por el borde del bosque (unos 130 m si se lleva por el ramal y la vía interna); con la propuesta de reparto (ver notas), los inversores van a la caseta de tableros de los pozos, a unos 15–21 m de las mesas, y de allí sale un alimentador de unos 100 m en línea recta (o unos 165 m por el ramal y la vía interna) hasta la caseta de la PTAP",
    "base de concreto con bordillo y techo liviano de sombra para el contenedor de baterías en el patio de entrada, con extintor y detector de humo",
    "revisión y ampliación de la puesta a tierra y del apantallamiento (SIPRA) construido en 2014 para la PTAP y el tanque elevado; protecciones contra sobretensiones (DPS) en corriente continua y alterna",
    "tablero de transferencia y protecciones en la caseta, junto al tablero de control de las bombas",
    "las cubiertas existentes se conservan: la losa del tanque y los tanques de procesos no reciben paneles"
   ],
-  "notas": "El plan asigna 150 kWp al nodo del acueducto, repartidos en dos fronteras de 75 kWp: la captación (bocatoma de la Laguna del Miedo, 2,4 km al noroccidente) y la PTAP. Este modelo cubre la frontera de la PTAP. En la planta no hay techos útiles: la losa del tanque cubre agua para consumo, los floculadores, sedimentadores y filtros son tanques abiertos, y la caseta y el cuarto de químicos suman unos 80 m² de fibrocemento con sombra del bosque. Por eso el arreglo va en el piso, en el claro de tierra roja que se abrió después de enero de 2020 al suroccidente (a unos 30 m en línea recta del tanque y unos 130 m por el ramal y la vía interna). La verificación midió la tierra desnuda en la imagen de Google: al oriente de la estructura nueva queda libre un área de unos 23 × 17 m, porque al norte hay una isla de rastrojo y por ese borde entra el ramal que lleva a la estructura nueva. Caben 3 mesas bajas de 19 columnas × 2 módulos en vertical (22 × 4,65 m cada una, inclinadas 5° hacia el sur, borde inferior a 0,7 m y pasillos de 1,35 m) = 114 módulos de 550 Wp = 62,7 kWp, el 84 % de la frontera de la PTAP y el 42 % de los 150 kWp del nodo. Se deja libre un carril de 4 m por el borde norte del claro para entrar a la estructura nueva; la versión anterior (4 mesas de 17 columnas, 74,8 kWp) ponía la mesa norte sobre el rastrojo y cerraba ese paso. Sombras: el claro es pequeño y está rodeado de bosque. Con árboles de 10 a 14 m (altura supuesta, sin medir) se pierde entre el 21 y el 31 % del sol directo (cálculo hora a hora para todo el año), sobre todo en las primeras horas de la mañana y al final de la tarde; la mesa del sur pierde casi todo el sol directo del mediodía entre noviembre y enero. Con eso, la producción esperada baja de unos 7.000 kWh/mes (sin sombras) a unos 5.200 a 5.800 kWh/mes, entre el 17 y el 19 % de los 30.000 kWh/mes estimados para captación, PTAP y EBAR. Antes del diseño hay que medir los árboles y tramitar el manejo de la franja de sombra con Corantioquia. Los 12 kWp que faltan para completar la frontera pueden ir en el claro oriental junto a la vía de acceso (el levantamiento estimó unas 3 mesas de 13 columnas, ≈43 kWp, pero es zona de tránsito y no se verificaron sombras) o en la losa del tanque (unos 95 módulos, ≈52 kWp, solo con estudio estructural, sin perforar la impermeabilización y dejando libres escotillas y respiraderos). Los 75 kWp de la captación no se modelan aquí. Baterías: 150 kWh / 75 kW en un contenedor de 10 pies en el rincón sur del patio de entrada, a 1,4 m de la punta nororiental del tanque y fuera del final de la vía de acceso, con su propio convertidor de 75 kW. Inversores: 2 de 30 kW en el muro noroccidental de la caseta, a la sombra del bosque (relación CC/CA de 1,05). Con los tanques de 1.125 m³ y 350 m³, el bombeo de agua tratada puede correrse a las horas de sol (perfil de bombeo con respuesta de la demanda). No se propone cargador de vehículo eléctrico: la planta no tiene parqueadero."
+  "notas": "El plan asigna 150 kWp al nodo del acueducto, repartidos en dos fronteras de 75 kWp: la captación y la PTAP. La captación ya no está en la Laguna del Miedo: el acueducto urbano se abastece de dos pozos profundos de 8 pulgadas con bombas sumergibles tipo lapicero, en el claro suroccidental de este mismo predio (data/edificios/captacion.json; Plan de Desarrollo 2024–2027, página 102, y Superservicios 2020, página 29), y la laguna quedó de reserva. Las dos fronteras quedan, entonces, en el mismo predio. Este modelo cubre la planta y el arreglo del claro. En la planta no hay techos útiles: la losa del tanque cubre agua para consumo, los floculadores, sedimentadores y filtros son tanques abiertos, y la caseta y el cuarto de químicos suman unos 80 m² de fibrocemento con sombra del bosque. Por eso el arreglo va en el piso, en el claro de tierra roja que se abrió después de enero de 2020 al suroccidente (a unos 30 m en línea recta del tanque y unos 130 m por el ramal y la vía interna), que es el mismo claro de los pozos. La verificación midió la tierra desnuda en la imagen de Google: al oriente de la estructura nueva queda libre un área de unos 23 × 17 m, porque al norte hay una isla de rastrojo y por ese borde entra el ramal. Caben 3 mesas bajas de 2 módulos en vertical (4,65 m de ancho, inclinadas 5° hacia el sur, borde inferior a 0,7 m y pasillos de 1,35 m): las del norte y del sur de 19 columnas (22 m) y la del medio de 14 columnas (16,2 m), recortada en su extremo occidental para dejar unos 6 m libres entre el pozo 1 y la mesa (a las mesas del norte y del sur quedan 4,1 y 3,3 m) y el paso del camión grúa que saca la bomba. Son 104 módulos de 550 Wp = 57,2 kWp (antes 114 módulos y 62,7 kWp), el 76 % de una frontera de 75 kWp y el 38 % de los 150 kWp del nodo. Se deja libre un carril de 4 m por el borde norte del claro para entrar a la estructura nueva y a los pozos. Sombras: el claro es pequeño y está rodeado de bosque. Con árboles de 10 a 14 m (altura supuesta, sin medir) se pierde entre el 21 y el 31 % del sol directo (cálculo hora a hora para todo el año, hecho con las 3 mesas antes del recorte; quitar el extremo occidental de la mesa del medio no lo empeora), sobre todo en las primeras horas de la mañana y al final de la tarde; la mesa del sur pierde casi todo el sol directo del mediodía entre noviembre y enero. Con eso, la producción esperada baja de unos 6.400 kWh/mes (sin sombras) a unos 4.800 a 5.300 kWh/mes, entre el 16 y el 18 % de los 30.000 kWh/mes estimados para captación, PTAP y EBAR. Antes del diseño hay que medir los árboles y tramitar el manejo de la franja de sombra con Corantioquia. Reparto entre la PTAP y los pozos (propuesta): los pozos son la carga más grande del día (14 a 33 kW estimados; valor central 22 kW y unos 13.400 kWh/mes, ver captacion.json) y quedan a 5–25 m de las mesas, mientras la caseta de la PTAP está a unos 70 m. Por eso este arreglo debe alimentar primero a los pozos. (1) Si los pozos tienen medidor propio de EPM, el arreglo del claro (57,2 kWp) pasa a la frontera de los pozos, con sus 2 inversores en la caseta de tableros nueva junto al pozo 2, y la frontera de la PTAP se arma con el claro oriental junto a la vía de acceso (el levantamiento estimó unas 3 mesas de 13 columnas, unos 43 kWp, pero es zona de tránsito y no se verificaron sombras) y, solo con estudio estructural, con la losa del tanque (unos 95 módulos, unos 52 kWp, sin perforar la impermeabilización y dejando libres escotillas y respiraderos): hasta unos 95 kWp, más que los 75 kWp que le asigna el plan pero por debajo del tope de 100 kW por frontera. (2) Si los pozos cuelgan del medidor de la PTAP, se hace una sola frontera de hasta 100 kW (el tope por frontera que usa el plan, por el trámite simplificado de la CREG 174 de 2021) con el claro y el claro oriental, unos 100 kWp. En ningún caso caben los 150 kWp del plan en el predio sin la losa del tanque; lo que falte debe ir a otra sede del nodo o reasignarse. El modelo 3D todavía dibuja los inversores en la caseta de la PTAP. Baterías: 150 kWh / 75 kW en un contenedor de 10 pies en el rincón sur del patio de entrada, a 1,4 m de la punta nororiental del tanque y fuera del final de la vía de acceso, con su propio convertidor de 75 kW; quedan para las cargas prioritarias de la planta (cloro, laboratorio, control y comunicaciones), no para mover los pozos de noche. Inversores: 2 de 25 kW (antes 2 de 30 kW; con 57,2 kWp la relación CC/CA queda en 1,14) en el muro noroccidental de la caseta, a la sombra del bosque. Con los tanques de 1.125 m³ y 350 m³, y el tanque de compensación del claro si es esa la estructura nueva, el bombeo puede correrse a las horas de sol (perfil de bombeo con respuesta de la demanda). No se propone cargador de vehículo eléctrico: la planta no tiene parqueadero."
  },
  "incertidumbres": [
   "No hay Street View de la planta (el panorama más cercano está a 870 m y el bosque la tapa). Alturas, colores de muros y la torre de aireación salen de las fotos de la Superservicios (2018 y 2020, días nublados) y de las sombras en el satélite.",
@@ -1075,13 +1081,13 @@
   "La polisombra negra de los sedimentadores se representa con el color oscuro de la parte superior del bloque de procesos, no como una cubierta aparte.",
   "Techo de la caseta y del cuarto de químicos: una agua de fibrocemento claro, deducido del color en el satélite; puede ser zinc. Puertas y ventanas no se ven: se pusieron valores típicos.",
   "No se ve el cerramiento perimetral ni la acometida eléctrica (transformador y medidor). El contrato de 2014 menciona un totalizador de 3 × 250 A.",
-  "La imagen de Google no tiene fecha publicada. La estructura nueva del claro suroccidental y una losa de unos 40 × 15 m que está 130 m al suroriente no existían en enero de 2020 y su uso no está confirmado (pueden ser obras de la optimización del acueducto). La losa del suroriente no se modela.",
-  "Se desconoce quién es dueño del claro suroccidental y si se necesita para la obra vecina: el arreglo solar debe coordinarse con Aguas y Aseo de Yondó.",
+  "La imagen de Google no tiene fecha publicada (lleva marca de agua de 2026). La estructura nueva del claro suroccidental y una losa de unos 40 × 15 m que está 130 m al suroriente no existían en enero de 2020. La del claro se interpreta como el tanque de compensación de la optimización del acueducto de 2020–2021, junto a los pozos de captación; la losa del suroriente, alta y con escotillas, puede ser otro tanque (o el mismo tanque de compensación), pero su uso no está confirmado y no se modela.",
+  "El claro suroccidental es zona de captación (los dos pozos y, posiblemente, el tanque de compensación): el arreglo solar debe coordinarse con Aguas y Aseo de Yondó, respetar el perímetro de protección sanitaria de los pozos que exija la norma y dejar libre el acceso del camión grúa. La posición de los pozos no está confirmada (confianza baja en captacion.json); si resultan en otro punto del claro, las mesas se vuelven a acomodar.",
   "El bosque se representa con árboles de muestra de 14 a 16 m puestos sobre las copas que se ven en el satélite, y la isla de rastrojo del claro con un árbol bajo de 6 m. La altura real de los árboles no se midió: el cálculo de sombras sobre las mesas usa 10 y 14 m y debe confirmarse en sitio.",
   "El tanque elevado de 350 m³ (240 m al norte-noroccidente) no se incluye en el modelo; no se midió su altura.",
   "La imagen de Google, con la que se midió todo, está corrida unos 1,9 m frente a la de Esri (en Esri la planta queda 0,8 m más al norte y 1,7 m más al occidente). No se sabe cuál de las dos está mejor ubicada.",
   "Las alturas se comprobaron con las sombras de la imagen de Google (sol del nororiente, a unos 50° de altura, deducido de la sombra del cuarto de químicos): tanque de unos 2,1 m, bodega y estructura nueva de unos 3 m, construcción del noroccidente de unos 2,7 a 3 m. La loma tiene pendiente, así que estas alturas tienen un margen de ±0,5 m.",
-  "La caja con abertura redonda y la caseta pequeña del suroccidente del claro pueden ser parte de la obra de optimización del acueducto (la Superservicios menciona dos pozos y un tanque de compensación); su uso no está confirmado y sus alturas salen de las sombras.",
+  "La caja con el elemento redondo y la caseta pequeña del suroccidente del claro quedan junto al pozo 2 (captacion.json): pueden ser una cámara o un tanque pequeño y la caseta de control de los pozos; su uso no está confirmado y sus alturas salen de las sombras.",
   "En las fotos de la Superservicios (2018 y 2020) se ve un mástil alto (pararrayos o antena) junto a la losa del tanque y la baranda azul de la losa; no se modelaron porque no se pudieron ubicar en la imagen satelital y el generador no pone barandas sobre losas."
  ],
  "verificacion": {
@@ -1113,7 +1119,9 @@
    "data/geo/img/ptap_orbita_todo.png",
    "data/geo/img/ptap_orbita_inversores.png",
    "data/geo/img/ptap_orbita_bess.png",
-   "data/geo/img/ptap_v_orbita_todo.png"
+   "data/geo/img/ptap_v_orbita_todo.png",
+   "data/geo/img/captacion_cenital_con_ptap.png",
+   "data/geo/img/captacion_orbita_con_ptap_norte.png"
   ],
   "satelite": [
    "data/geo/img/ptap_gctx_z17.png",
@@ -1127,8 +1135,12 @@
    "data/geo/img/ptap_v_gplace2.png",
    "data/geo/img/ptap_v_tqelev.png",
    "data/geo/img/ptap_v_rot_corr.png",
-   "data/geo/img/ptap_v_so_nuevo.png"
+   "data/geo/img/ptap_v_so_nuevo.png",
+   "data/geo/img/pozos_g21_claro.png",
+   "data/geo/img/pozos_g22_so.png",
+   "data/geo/img/pozos_g22_e.png",
+   "data/geo/img/pozos_g21_ramal.png"
   ],
-  "notas": "Sin Street View, la comparación modelo–foto se hizo con la Imagen 25 del informe de 2018 (cámara puesta a 4,1 m sobre los filtros, a 10 m de la torre, campo de visión de 67°) y con una vista cenital del modelo contra la imagen de Google. Verificación independiente (octubre de 2026): se confirmó la ubicación (la coordenada del inventario cae sobre la piscícola, 270 m al nororiente; el tanque elevado queda a 240 m con rumbo 337°, en la misma dirección en que aparece a la izquierda de la torre en la foto de 2018) y se midieron de nuevo las huellas en Google z21. Se corrigieron la bodega (estaba medida con su sombra y con el lado largo al revés), la construcción del noroccidente (0,65 m), la estructura nueva y su ala (estaban 2 m más al sur, sobre su sombra) y se agregaron dos anexos del claro. El arreglo solar se rehízo sobre la tierra desnuda medida (3 mesas, 62,7 kWp) y se calcularon las sombras del bosque. No hay Street View que vea la planta: se probaron 2 panoramas más (915 y 985 m) y la comparación de forma se hizo con vistas cenitales del modelo mezcladas con la imagen de Google."
+  "notas": "Sin Street View, la comparación modelo–foto se hizo con la Imagen 25 del informe de 2018 (cámara puesta a 4,1 m sobre los filtros, a 10 m de la torre, campo de visión de 67°) y con una vista cenital del modelo contra la imagen de Google. Verificación independiente (octubre de 2026): se confirmó la ubicación (la coordenada del inventario cae sobre la piscícola, 270 m al nororiente; el tanque elevado queda a 240 m con rumbo 337°, en la misma dirección en que aparece a la izquierda de la torre en la foto de 2018) y se midieron de nuevo las huellas en Google z21. Se corrigieron la bodega (estaba medida con su sombra y con el lado largo al revés), la construcción del noroccidente (0,65 m), la estructura nueva y su ala (estaban 2 m más al sur, sobre su sombra) y se agregaron dos anexos del claro. El arreglo solar se rehízo sobre la tierra desnuda medida (3 mesas, 62,7 kWp; luego se recortó a 57,2 kWp para dejar libre el pozo 1 de captación) y se calcularon las sombras del bosque. No hay Street View que vea la planta: se probaron 2 panoramas más (915 y 985 m) y la comparación de forma se hizo con vistas cenitales del modelo mezcladas con la imagen de Google."
  }
 }

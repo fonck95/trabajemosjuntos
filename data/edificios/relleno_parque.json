@@ -1,0 +1,3732 @@
+{
+ "id": "relleno_parque",
+ "nombre": "Relleno sanitario Las Américas → Parque ecotecnológico y granja solar de Yondó",
+ "nodo_microrred": null,
+ "direccion": "Vereda Las Américas, unos 2 km al occidente del casco urbano (3,8–4,0 km por vía desde el parque principal): por la vía Barrancabermeja–Yondó y el ramal destapado que bordea el relleno por el occidente; entrada norte con caseta. Predio del municipio operado por Aguas y Aseo de Yondó S.A. E.S.P.",
+ "lat": 7.014,
+ "lon": -73.9342,
+ "ubicacion": {
+  "confianza": "media",
+  "metodo": "No hay un lugar de Google para el relleno. Se ubicó por coincidencia de varias pruebas: (1) la Superservicios (2018, págs. 68–73) lo sitúa a 2 km del casco urbano, en la vereda Las Américas, con cerca de postes y alambre de púas, pozo de lixiviados, chimeneas de piedra y vías internas destapadas; (2) los contratos de SECOP lo asocian con la vía del acueducto y con la torre del tanque elevado (2015: 'construcción de torre para tanque de almacenamiento; tramo de vía y cerramiento del predio del relleno'; BPIN 2025058930008: 'vía de acceso y vías internas del acueducto y relleno'); el tanque elevado está 330 m al sur-suroriente y la PTAP 560 m al sur; (3) el lugar de Google 'Escombrera' (7,015243, −73,934610) queda 140 m al norte, sobre el área de préstamo de material de cobertura; (4) en Esri (enero de 2020) se ve una plataforma parda de unas 3 ha con cuatro piscinas rectangulares oscuras y manchas blancas, y en Google (posterior a 2024) las mismas piscinas con algas, dos plataformas grises de material de cobertura y una vía interna en afirmado nueva (SECOP dic-2024: material triturado para la vía del relleno). No hay Street View ni fotos georreferenciadas. El ancla es el centro del conjunto de celdas y piscinas."
+ },
+ "fuentes": [
+  {
+   "tipo": "web",
+   "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf",
+   "fecha": "2018-05",
+   "nota": "Evaluación integral de Aguas y Aseo de Yondó, págs. 51–52 y 68–74: relleno Las Américas, 167 t/mes, licencia 130ZF-1311-6219 (12-nov-2013, 10 años, reducida a 3 años en 2014), sin báscula ni cobertura diaria, lixiviados recirculados desde un pozo, chimeneas de piedra, etapas de 1.840, 9.483, 4.243 y 2.893 m², vida útil de 11,8 años (manual) frente a 3 años (Corantioquia)."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Google z19–z20 (posterior a 2024)",
+   "nota": "Plataformas grises, piscinas, vía interna, celda norte con pasto, área de préstamo al noroccidente y caseta en la entrada norte."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Esri World Imagery z19 (enero de 2020)",
+   "nota": "Plataforma parda y blanca de unas 3 ha, piscinas oscuras con agua, vía de acceso con cerca por el noroccidente y vía perimetral en arena por el oriente."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.datos.gov.co/resource/84tn-nnhf.json",
+   "nota": "SUI, registro de sitios de disposición final: NUSD 2220805893, Las Américas, propietario Municipio, capacidad de diseño 81.147 m³, vida útil hasta 31-dic-2023, en operación (certificado 18-jun-2021)."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.datos.gov.co/resource/wu2p-623h.json",
+   "nota": "SUI, autorizaciones ambientales: licencia de Corantioquia del 12-nov-2013 con vigencia hasta el 12-nov-2023."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.datos.gov.co/resource/urvy-i3ii.json",
+   "nota": "SUI, toneladas dispuestas por año: 1.647 (2011) a 4.562 (2015); 3.316 (2020); 3.761 (2021)."
+  }
+ ],
+ "volumenes": [
+  {
+   "id": "caseta_porteria",
+   "nombre": "Caseta de la entrada norte (portería del relleno)",
+   "estado": "existe",
+   "centro": [
+    -27,
+    143
+   ],
+   "largo": 4.2,
+   "ancho": 3.0,
+   "rumbo_eje": 35,
+   "altura_alero": 2.4,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "pendiente": 8,
+    "caida": "S",
+    "voladizo": 0.4,
+    "material": "zinc",
+    "color": "#6f6a62"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#bdb6a8",
+    "puertas": [
+     {
+      "lado": "E",
+      "pos": 0.5,
+      "ancho": 0.9,
+      "alto": 2.1
+     }
+    ],
+    "ventanas": {
+     "tipo": "reja",
+     "ancho": 0.8,
+     "alto": 0.8,
+     "antepecho": 1.1,
+     "separacion": 2.5,
+     "lados": [
+      "N"
+     ]
+    }
+   }
+  },
+  {
+   "id": "chimenea_existente_1",
+   "nombre": "Chimenea de gases existente (piedra, se retira con la cobertura final)",
+   "estado": "demoler",
+   "centro": [
+    69,
+    -2
+   ],
+   "largo": 1.0,
+   "ancho": 1.0,
+   "rumbo_eje": 0,
+   "altura_alero": 1.4,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#7b766c"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#8c8577"
+   }
+  },
+  {
+   "id": "chimenea_existente_2",
+   "nombre": "Chimenea de gases existente (piedra, se retira con la cobertura final)",
+   "estado": "demoler",
+   "centro": [
+    -56,
+    26
+   ],
+   "largo": 1.0,
+   "ancho": 1.0,
+   "rumbo_eje": 0,
+   "altura_alero": 1.4,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#7b766c"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#8c8577"
+   }
+  },
+  {
+   "id": "chimenea_existente_3",
+   "nombre": "Chimenea de gases existente (piedra, se retira con la cobertura final)",
+   "estado": "demoler",
+   "centro": [
+    24,
+    47
+   ],
+   "largo": 1.0,
+   "ancho": 1.0,
+   "rumbo_eje": 0,
+   "altura_alero": 1.4,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#7b766c"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#8c8577"
+   }
+  },
+  {
+   "id": "coworking",
+   "nombre": "Coworking rural bioclimático y aula ambiental",
+   "estado": "nuevo",
+   "centro": [
+    -6,
+    -80
+   ],
+   "largo": 26.0,
+   "ancho": 12.0,
+   "rumbo_eje": 90,
+   "altura_alero": 3.8,
+   "pisos": 1,
+   "techo": {
+    "tipo": "dos_aguas",
+    "pendiente": 15,
+    "cumbrera": "largo",
+    "voladizo": 1.5,
+    "material": "termoacustica",
+    "color": "#e9e7e1"
+   },
+   "fachada": {
+    "material": "ladrillo_visto",
+    "color": "#b46a45",
+    "zocalo": {
+     "color": "#6d4c3d",
+     "altura": 0.6
+    },
+    "ventanas": {
+     "tipo": "ventana",
+     "ancho": 2.2,
+     "alto": 1.8,
+     "antepecho": 0.8,
+     "separacion": 3.4,
+     "lados": [
+      "largo"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "S",
+      "pos": 0.35,
+      "ancho": 1.8,
+      "alto": 2.4
+     },
+     {
+      "lado": "N",
+      "pos": 0.5,
+      "ancho": 1.2,
+      "alto": 2.3
+     }
+    ],
+    "corredor": {
+     "lado": "S",
+     "profundidad": 2.6,
+     "sep_columnas": 3.25
+    },
+    "letrero": {
+     "lado": "S",
+     "texto": "COWORKING RURAL LAS AMÉRICAS",
+     "color": "#1f5f4a"
+    }
+   }
+  },
+  {
+   "id": "cafeteria",
+   "nombre": "Cafetería, baños y duchas para ciclistas",
+   "estado": "nuevo",
+   "centro": [
+    27,
+    -80
+   ],
+   "largo": 12.0,
+   "ancho": 8.0,
+   "rumbo_eje": 90,
+   "altura_alero": 3.4,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "pendiente": 10,
+    "caida": "N",
+    "voladizo": 1.2,
+    "material": "termoacustica",
+    "color": "#e9e7e1"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#f1ece0",
+    "zocalo": {
+     "color": "#1f5f4a",
+     "altura": 0.8
+    },
+    "ventanas": {
+     "tipo": "vitrina",
+     "ancho": 2.4,
+     "alto": 2.0,
+     "antepecho": 0.4,
+     "separacion": 3.0,
+     "lados": [
+      "S"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "S",
+      "pos": 0.2,
+      "ancho": 1.5,
+      "alto": 2.4
+     },
+     {
+      "lado": "E",
+      "pos": 0.5,
+      "ancho": 0.9,
+      "alto": 2.2
+     }
+    ],
+    "corredor": {
+     "lado": "S",
+     "profundidad": 2.4,
+     "sep_columnas": 3.0
+    },
+    "letrero": {
+     "lado": "S",
+     "texto": "CAFETERÍA",
+     "color": "#1f5f4a"
+    }
+   }
+  },
+  {
+   "id": "taller_bicis",
+   "nombre": "Taller y punto de servicio para bicicletas",
+   "estado": "nuevo",
+   "centro": [
+    -50,
+    -78
+   ],
+   "largo": 8.0,
+   "ancho": 5.0,
+   "rumbo_eje": 90,
+   "altura_alero": 3.2,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "pendiente": 8,
+    "caida": "N",
+    "voladizo": 0.8,
+    "material": "termoacustica",
+    "color": "#e9e7e1"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#d9d2c3",
+    "puertas": [
+     {
+      "lado": "S",
+      "pos": 0.5,
+      "ancho": 3.0,
+      "alto": 2.6
+     }
+    ],
+    "ventanas": {
+     "tipo": "celosia",
+     "ancho": 1.2,
+     "alto": 0.6,
+     "antepecho": 2.0,
+     "separacion": 2.5,
+     "lados": [
+      "N",
+      "E",
+      "O"
+     ]
+    },
+    "letrero": {
+     "lado": "S",
+     "texto": "TALLER DE BICICLETAS",
+     "color": "#c0392b"
+    }
+   }
+  },
+  {
+   "id": "porteria_parque",
+   "nombre": "Portería del parque (acceso occidental)",
+   "estado": "nuevo",
+   "centro": [
+    -104,
+    -92
+   ],
+   "largo": 3.5,
+   "ancho": 3.0,
+   "rumbo_eje": 0,
+   "altura_alero": 2.7,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "pendiente": 8,
+    "caida": "O",
+    "voladizo": 0.6,
+    "material": "termoacustica",
+    "color": "#e9e7e1"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#f1ece0",
+    "puertas": [
+     {
+      "lado": "E",
+      "pos": 0.5,
+      "ancho": 0.9,
+      "alto": 2.1
+     }
+    ],
+    "ventanas": {
+     "tipo": "ventana",
+     "ancho": 1.4,
+     "alto": 1.0,
+     "antepecho": 1.0,
+     "separacion": 2.0,
+     "lados": [
+      "N",
+      "S"
+     ]
+    }
+   }
+  },
+  {
+   "id": "centro_transformacion",
+   "nombre": "Centro de transformación, inversores y control de la granja solar",
+   "estado": "nuevo",
+   "centro": [
+    40,
+    -42
+   ],
+   "largo": 9.0,
+   "ancho": 4.5,
+   "rumbo_eje": 90,
+   "altura_alero": 3.0,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "pendiente": 6,
+    "caida": "S",
+    "voladizo": 0.5,
+    "material": "termoacustica",
+    "color": "#d7d9d6"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#c9c6bd",
+    "puertas": [
+     {
+      "lado": "S",
+      "pos": 0.25,
+      "ancho": 1.8,
+      "alto": 2.3
+     },
+     {
+      "lado": "S",
+      "pos": 0.75,
+      "ancho": 1.2,
+      "alto": 2.2
+     }
+    ],
+    "ventanas": {
+     "tipo": "celosia",
+     "ancho": 1.0,
+     "alto": 0.5,
+     "antepecho": 2.1,
+     "separacion": 2.5,
+     "lados": [
+      "E",
+      "O"
+     ]
+    },
+    "letrero": {
+     "lado": "S",
+     "texto": "GRANJA SOLAR 1 MW",
+     "color": "#b8860b"
+    }
+   }
+  },
+  {
+   "id": "mirador_base",
+   "nombre": "Mirador: torre de madera y bloque con terraza a 3 m",
+   "estado": "nuevo",
+   "centro": [
+    100,
+    -46
+   ],
+   "largo": 5.0,
+   "ancho": 5.0,
+   "rumbo_eje": 0,
+   "altura_alero": 3.0,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 1.1,
+    "material": "concreto",
+    "color": "#9a8f80"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#9c7b5b",
+    "puertas": [
+     {
+      "lado": "O",
+      "pos": 0.5,
+      "ancho": 1.0,
+      "alto": 2.2
+     }
+    ],
+    "ventanas": {
+     "tipo": "calado",
+     "ancho": 1.0,
+     "alto": 1.0,
+     "antepecho": 1.2,
+     "separacion": 2.0,
+     "lados": [
+      "N",
+      "E",
+      "S"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mirador_cubierta",
+   "nombre": "Mirador: cubierta sobre la terraza",
+   "estado": "nuevo",
+   "centro": [
+    100,
+    -46
+   ],
+   "largo": 5.0,
+   "ancho": 5.0,
+   "rumbo_eje": 0,
+   "base": 3.0,
+   "altura_alero": 5.6,
+   "abierto": true,
+   "sep_columnas": 4.6,
+   "techo": {
+    "tipo": "cuatro_aguas",
+    "pendiente": 22,
+    "voladizo": 0.6,
+    "material": "teja_barro",
+    "color": "#a5512f"
+   }
+  },
+  {
+   "id": "chimenea_pasiva_1",
+   "nombre": "Chimenea pasiva de biogás con biofiltro (en el pasillo entre filas)",
+   "estado": "nuevo",
+   "centro": [
+    -60,
+    23.52
+   ],
+   "largo": 0.6,
+   "ancho": 0.6,
+   "rumbo_eje": 0,
+   "altura_alero": 1.8,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#5d6266"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#5d6266"
+   }
+  },
+  {
+   "id": "chimenea_pasiva_2",
+   "nombre": "Chimenea pasiva de biogás con biofiltro (en el pasillo entre filas)",
+   "estado": "nuevo",
+   "centro": [
+    -40,
+    36.52
+   ],
+   "largo": 0.6,
+   "ancho": 0.6,
+   "rumbo_eje": 0,
+   "altura_alero": 1.8,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#5d6266"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#5d6266"
+   }
+  },
+  {
+   "id": "chimenea_pasiva_3",
+   "nombre": "Chimenea pasiva de biogás con biofiltro (en el pasillo entre filas)",
+   "estado": "nuevo",
+   "centro": [
+    60,
+    10.52
+   ],
+   "largo": 0.6,
+   "ancho": 0.6,
+   "rumbo_eje": 0,
+   "altura_alero": 1.8,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#5d6266"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#5d6266"
+   }
+  },
+  {
+   "id": "chimenea_pasiva_4",
+   "nombre": "Chimenea pasiva de biogás con biofiltro (en el pasillo entre filas)",
+   "estado": "nuevo",
+   "centro": [
+    75,
+    23.52
+   ],
+   "largo": 0.6,
+   "ancho": 0.6,
+   "rumbo_eje": 0,
+   "altura_alero": 1.8,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#5d6266"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#5d6266"
+   }
+  },
+  {
+   "id": "chimenea_pasiva_5",
+   "nombre": "Chimenea pasiva de biogás con biofiltro (en el pasillo entre filas)",
+   "estado": "nuevo",
+   "centro": [
+    50,
+    43.02
+   ],
+   "largo": 0.6,
+   "ancho": 0.6,
+   "rumbo_eje": 0,
+   "altura_alero": 1.8,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#5d6266"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#5d6266"
+   }
+  },
+  {
+   "id": "chimenea_pasiva_6",
+   "nombre": "Chimenea pasiva de biogás con biofiltro (en el pasillo entre filas)",
+   "estado": "nuevo",
+   "centro": [
+    0,
+    62.52
+   ],
+   "largo": 0.6,
+   "ancho": 0.6,
+   "rumbo_eje": 0,
+   "altura_alero": 1.8,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#5d6266"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#5d6266"
+   }
+  },
+  {
+   "id": "chimenea_pasiva_7",
+   "nombre": "Chimenea pasiva de biogás con biofiltro (en el pasillo entre filas)",
+   "estado": "nuevo",
+   "centro": [
+    30,
+    62.52
+   ],
+   "largo": 0.6,
+   "ancho": 0.6,
+   "rumbo_eje": 0,
+   "altura_alero": 1.8,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#5d6266"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#5d6266"
+   }
+  },
+  {
+   "id": "chimenea_pasiva_8",
+   "nombre": "Chimenea pasiva de biogás con biofiltro (en el pasillo entre filas)",
+   "estado": "nuevo",
+   "centro": [
+    10,
+    56.02
+   ],
+   "largo": 0.6,
+   "ancho": 0.6,
+   "rumbo_eje": 0,
+   "altura_alero": 1.8,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#5d6266"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#5d6266"
+   }
+  },
+  {
+   "id": "chimenea_pasiva_9",
+   "nombre": "Chimenea pasiva de biogás con biofiltro (en el pasillo entre filas)",
+   "estado": "nuevo",
+   "centro": [
+    40,
+    56.02
+   ],
+   "largo": 0.6,
+   "ancho": 0.6,
+   "rumbo_eje": 0,
+   "altura_alero": 1.8,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#5d6266"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#5d6266"
+   }
+  },
+  {
+   "id": "chimenea_pasiva_10",
+   "nombre": "Chimenea pasiva de biogás con biofiltro (en el pasillo entre filas)",
+   "estado": "nuevo",
+   "centro": [
+    -15,
+    49.52
+   ],
+   "largo": 0.6,
+   "ancho": 0.6,
+   "rumbo_eje": 0,
+   "altura_alero": 1.8,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.0,
+    "material": "concreto",
+    "color": "#5d6266"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#5d6266"
+   }
+  }
+ ],
+ "elementos": [
+  {
+   "tipo": "patio",
+   "nombre": "Celda occidental: plataforma de disposición reciente con material de cobertura (hoy)",
+   "estado": "demoler",
+   "color": "#9d9a90",
+   "poligono": [
+    [
+     -85,
+     12
+    ],
+    [
+     -84,
+     40
+    ],
+    [
+     -72,
+     43
+    ],
+    [
+     -62,
+     38
+    ],
+    [
+     -50,
+     44
+    ],
+    [
+     -35,
+     47
+    ],
+    [
+     -28,
+     42
+    ],
+    [
+     -27,
+     15
+    ],
+    [
+     -35,
+     10
+    ],
+    [
+     -60,
+     9
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Celda oriental: frente de disposición activo con material de cobertura (hoy)",
+   "estado": "demoler",
+   "color": "#a29e93",
+   "poligono": [
+    [
+     28,
+     22
+    ],
+    [
+     45,
+     28
+    ],
+    [
+     58,
+     34
+    ],
+    [
+     64,
+     45
+    ],
+    [
+     67,
+     55
+    ],
+    [
+     73,
+     50
+    ],
+    [
+     82,
+     38
+    ],
+    [
+     92,
+     24
+    ],
+    [
+     100,
+     8
+    ],
+    [
+     96,
+     0
+    ],
+    [
+     82,
+     -3
+    ],
+    [
+     68,
+     -6
+    ],
+    [
+     56,
+     -11
+    ],
+    [
+     47,
+     -6
+    ],
+    [
+     38,
+     8
+    ]
+   ]
+  },
+  {
+   "tipo": "zona_verde",
+   "nombre": "Celda norte: probable celda clausurada de las etapas 1 y 2, con pasto (hoy)",
+   "estado": "demoler",
+   "color": "#8d9a5b",
+   "poligono": [
+    [
+     -27,
+     42
+    ],
+    [
+     -22,
+     58
+    ],
+    [
+     -5,
+     70
+    ],
+    [
+     20,
+     78
+    ],
+    [
+     45,
+     76
+    ],
+    [
+     62,
+     66
+    ],
+    [
+     67,
+     55
+    ],
+    [
+     64,
+     45
+    ],
+    [
+     58,
+     34
+    ],
+    [
+     45,
+     28
+    ],
+    [
+     28,
+     22
+    ],
+    [
+     12,
+     28
+    ],
+    [
+     -5,
+     33
+    ],
+    [
+     -20,
+     33
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Tierra removida al sur de la celda occidental (hoy)",
+   "estado": "demoler",
+   "color": "#a07a55",
+   "poligono": [
+    [
+     -70,
+     5
+    ],
+    [
+     -45,
+     5
+    ],
+    [
+     -42,
+     -12
+    ],
+    [
+     -62,
+     -15
+    ],
+    [
+     -72,
+     -8
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Laguna A: piscina de lixiviados que se conserva, se impermeabiliza con geomembrana y se usa como laguna de igualación",
+   "estado": "existe",
+   "color": "#2f4a3a",
+   "poligono": [
+    [
+     -25.11,
+     12.97
+    ],
+    [
+     -13.64,
+     29.35
+    ],
+    [
+     1.11,
+     19.03
+    ],
+    [
+     -10.36,
+     2.65
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Laguna B: piscina de lixiviados que se conserva, se impermeabiliza con geomembrana y se usa como laguna de igualación",
+   "estado": "existe",
+   "color": "#2f4a3a",
+   "poligono": [
+    [
+     -0.72,
+     -1.78
+    ],
+    [
+     9.61,
+     12.96
+    ],
+    [
+     22.72,
+     3.78
+    ],
+    [
+     12.39,
+     -10.96
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Laguna C: piscina pequeña de lixiviados que se clausura y rellena",
+   "estado": "demoler",
+   "color": "#2f4a3a",
+   "poligono": [
+    [
+     -36.0,
+     -15.03
+    ],
+    [
+     -28.55,
+     -4.38
+    ],
+    [
+     -22.0,
+     -8.97
+    ],
+    [
+     -29.45,
+     -19.62
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Laguna D: piscina pequeña de lixiviados que se clausura y rellena",
+   "estado": "demoler",
+   "color": "#2f4a3a",
+   "poligono": [
+    [
+     -10.57,
+     -27.98
+    ],
+    [
+     -5.98,
+     -21.43
+    ],
+    [
+     0.57,
+     -26.02
+    ],
+    [
+     -4.02,
+     -32.57
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna en afirmado (se conserva como vía perimetral de mantenimiento)",
+   "estado": "existe",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     -88.09,
+     13.01
+    ],
+    [
+     -59.49,
+     10.97
+    ],
+    [
+     -59.91,
+     4.99
+    ],
+    [
+     -88.51,
+     7.03
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna en afirmado (se conserva como vía perimetral de mantenimiento)",
+   "estado": "existe",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     -59.59,
+     10.99
+    ],
+    [
+     -34.01,
+     4.85
+    ],
+    [
+     -35.41,
+     -0.99
+    ],
+    [
+     -60.99,
+     5.15
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna en afirmado (se conserva como vía perimetral de mantenimiento)",
+   "estado": "existe",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     -33.85,
+     4.79
+    ],
+    [
+     -18.32,
+     -3.49
+    ],
+    [
+     -21.15,
+     -8.79
+    ],
+    [
+     -36.68,
+     -0.51
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna en afirmado (se conserva como vía perimetral de mantenimiento)",
+   "estado": "existe",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     -18.71,
+     -3.27
+    ],
+    [
+     -3.2,
+     -12.58
+    ],
+    [
+     -6.29,
+     -17.73
+    ],
+    [
+     -21.8,
+     -8.42
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna en afirmado (se conserva como vía perimetral de mantenimiento)",
+   "estado": "existe",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     -3.53,
+     -12.37
+    ],
+    [
+     6.97,
+     -19.71
+    ],
+    [
+     3.53,
+     -24.63
+    ],
+    [
+     -6.97,
+     -17.29
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna en afirmado (se conserva como vía perimetral de mantenimiento)",
+   "estado": "existe",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     6.07,
+     -19.18
+    ],
+    [
+     16.61,
+     -24.45
+    ],
+    [
+     13.93,
+     -29.82
+    ],
+    [
+     3.39,
+     -24.55
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna en afirmado (se conserva como vía perimetral de mantenimiento)",
+   "estado": "existe",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     15.0,
+     -23.99
+    ],
+    [
+     25.6,
+     -25.04
+    ],
+    [
+     25.0,
+     -31.01
+    ],
+    [
+     14.4,
+     -29.96
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna en afirmado (se conserva como vía perimetral de mantenimiento)",
+   "estado": "existe",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     23.85,
+     -25.21
+    ],
+    [
+     34.43,
+     -22.04
+    ],
+    [
+     36.15,
+     -27.79
+    ],
+    [
+     25.57,
+     -30.96
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna en afirmado (se conserva como vía perimetral de mantenimiento)",
+   "estado": "existe",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     33.01,
+     -22.73
+    ],
+    [
+     40.5,
+     -17.38
+    ],
+    [
+     43.99,
+     -22.27
+    ],
+    [
+     36.5,
+     -27.62
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna en afirmado (se conserva como vía perimetral de mantenimiento)",
+   "estado": "existe",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     39.47,
+     -18.36
+    ],
+    [
+     43.84,
+     -12.89
+    ],
+    [
+     48.53,
+     -16.64
+    ],
+    [
+     44.16,
+     -22.11
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna sobre la celda oriental (queda bajo la cobertura final)",
+   "estado": "demoler",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     43.27,
+     -13.71
+    ],
+    [
+     49.58,
+     -3.2
+    ],
+    [
+     54.73,
+     -6.29
+    ],
+    [
+     48.42,
+     -16.8
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía interna sobre la celda oriental (queda bajo la cobertura final)",
+   "estado": "demoler",
+   "color": "#b3a98f",
+   "poligono": [
+    [
+     49.85,
+     -2.89
+    ],
+    [
+     56.31,
+     2.5
+    ],
+    [
+     60.15,
+     -2.11
+    ],
+    [
+     53.69,
+     -7.5
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía de acceso en afirmado por el norte y el occidente",
+   "estado": "existe",
+   "color": "#b8ad92",
+   "poligono": [
+    [
+     -90.26,
+     8.89
+    ],
+    [
+     -97.46,
+     29.46
+    ],
+    [
+     -92.74,
+     31.11
+    ],
+    [
+     -85.54,
+     10.54
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía de acceso en afirmado por el norte y el occidente",
+   "estado": "existe",
+   "color": "#b8ad92",
+   "poligono": [
+    [
+     -97.5,
+     30.32
+    ],
+    [
+     -92.35,
+     50.9
+    ],
+    [
+     -87.5,
+     49.68
+    ],
+    [
+     -92.65,
+     29.1
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía de acceso en afirmado por el norte y el occidente",
+   "estado": "existe",
+   "color": "#b8ad92",
+   "poligono": [
+    [
+     -92.25,
+     51.14
+    ],
+    [
+     -71.91,
+     81.64
+    ],
+    [
+     -67.75,
+     78.86
+    ],
+    [
+     -88.09,
+     48.36
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía de acceso en afirmado por el norte y el occidente",
+   "estado": "existe",
+   "color": "#b8ad92",
+   "poligono": [
+    [
+     -72.11,
+     81.37
+    ],
+    [
+     -46.73,
+     111.83
+    ],
+    [
+     -42.89,
+     108.63
+    ],
+    [
+     -68.27,
+     78.17
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía de acceso en afirmado por el norte y el occidente",
+   "estado": "existe",
+   "color": "#b8ad92",
+   "poligono": [
+    [
+     -47.2,
+     111.22
+    ],
+    [
+     -28.85,
+     136.7
+    ],
+    [
+     -24.8,
+     133.78
+    ],
+    [
+     -43.15,
+     108.3
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Vía de acceso en afirmado por el norte y el occidente",
+   "estado": "existe",
+   "color": "#b8ad92",
+   "poligono": [
+    [
+     -28.48,
+     137.04
+    ],
+    [
+     -0.95,
+     152.33
+    ],
+    [
+     1.48,
+     147.96
+    ],
+    [
+     -26.05,
+     132.67
+    ]
+   ]
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "Cerca del relleno: postes y alambre de púas (Superservicios, 2018)",
+   "estado": "existe",
+   "linea": [
+    [
+     -83,
+     22
+    ],
+    [
+     -82,
+     50
+    ],
+    [
+     -63,
+     78
+    ],
+    [
+     -40,
+     106
+    ],
+    [
+     -22,
+     128
+    ],
+    [
+     3,
+     143
+    ]
+   ],
+   "altura": 1.5,
+   "material": "malla",
+   "color": "#6b6f72"
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    75,
+    -17
+   ],
+   "altura": 14,
+   "copa": 20
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    -96,
+    35
+   ],
+   "altura": 12,
+   "copa": 10
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    -101,
+    15
+   ],
+   "altura": 12,
+   "copa": 10
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    -99,
+    -5
+   ],
+   "altura": 10,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    -56,
+    54
+   ],
+   "altura": 12,
+   "copa": 12
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    -44,
+    60
+   ],
+   "altura": 10,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    68,
+    47
+   ],
+   "altura": 10,
+   "copa": 10
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    78,
+    52
+   ],
+   "altura": 10,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    -45,
+    -30
+   ],
+   "altura": 8,
+   "copa": 6
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    5,
+    -48
+   ],
+   "altura": 8,
+   "copa": 6
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    -108,
+    -40
+   ],
+   "altura": 12,
+   "copa": 10
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    -110,
+    -62
+   ],
+   "altura": 11,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    120,
+    85
+   ],
+   "altura": 9,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "estado": "existe",
+   "centro": [
+    -20,
+    75
+   ],
+   "altura": 8,
+   "copa": 7
+  },
+  {
+   "tipo": "zona_verde",
+   "nombre": "Cobertura final de las celdas (arcilla compactada, geomembrana, drenaje, suelo y pasto) bajo la granja solar, bloque A",
+   "estado": "nuevo",
+   "color": "#7f9a52",
+   "poligono": [
+    [
+     -85,
+     10
+    ],
+    [
+     -84,
+     42
+    ],
+    [
+     -50,
+     46
+    ],
+    [
+     -27,
+     45
+    ],
+    [
+     -22,
+     58
+    ],
+    [
+     -5,
+     70
+    ],
+    [
+     20,
+     78
+    ],
+    [
+     45,
+     76
+    ],
+    [
+     62,
+     66
+    ],
+    [
+     70,
+     54
+    ],
+    [
+     82,
+     38
+    ],
+    [
+     92,
+     24
+    ],
+    [
+     100,
+     8
+    ],
+    [
+     96,
+     0
+    ],
+    [
+     82,
+     -4
+    ],
+    [
+     56,
+     -12
+    ],
+    [
+     47,
+     -6
+    ],
+    [
+     38,
+     6
+    ],
+    [
+     28,
+     20
+    ],
+    [
+     12,
+     26
+    ],
+    [
+     -5,
+     30
+    ],
+    [
+     -20,
+     30
+    ],
+    [
+     -27,
+     14
+    ],
+    [
+     -35,
+     8
+    ],
+    [
+     -60,
+     7
+    ]
+   ]
+  },
+  {
+   "tipo": "zona_verde",
+   "nombre": "Zona intervenida del nororiente reconformada y empradizada bajo la granja solar, bloque B (fase 2)",
+   "estado": "nuevo",
+   "color": "#86a058",
+   "poligono": [
+    [
+     84,
+     58
+    ],
+    [
+     86,
+     76
+    ],
+    [
+     90,
+     95
+    ],
+    [
+     98,
+     112
+    ],
+    [
+     112,
+     118
+    ],
+    [
+     128,
+     115
+    ],
+    [
+     136,
+     100
+    ],
+    [
+     138,
+     75
+    ],
+    [
+     134,
+     52
+    ],
+    [
+     124,
+     38
+    ],
+    [
+     110,
+     30
+    ],
+    [
+     100,
+     28
+    ],
+    [
+     90,
+     40
+    ]
+   ]
+  },
+  {
+   "tipo": "zona_verde",
+   "nombre": "Humedal artificial de flujo subsuperficial para pulir los lixiviados (reemplaza las lagunas C y D)",
+   "estado": "nuevo",
+   "color": "#5f8a4a",
+   "poligono": [
+    [
+     -29.98,
+     -9.7
+    ],
+    [
+     -0.84,
+     -27.21
+    ],
+    [
+     -7.02,
+     -37.5
+    ],
+    [
+     -36.16,
+     -19.99
+    ]
+   ]
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "Malla de la granja solar, bloque A (2,0 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -85,
+     10
+    ],
+    [
+     -84,
+     42
+    ],
+    [
+     -50,
+     46
+    ],
+    [
+     -27,
+     45
+    ],
+    [
+     -22,
+     58
+    ],
+    [
+     -5,
+     70
+    ],
+    [
+     20,
+     78
+    ],
+    [
+     45,
+     76
+    ],
+    [
+     62,
+     66
+    ],
+    [
+     70,
+     54
+    ],
+    [
+     82,
+     38
+    ],
+    [
+     92,
+     24
+    ],
+    [
+     100,
+     8
+    ],
+    [
+     96,
+     0
+    ],
+    [
+     82,
+     -4
+    ],
+    [
+     56,
+     -12
+    ],
+    [
+     47,
+     -6
+    ],
+    [
+     38,
+     6
+    ],
+    [
+     28,
+     20
+    ],
+    [
+     12,
+     26
+    ],
+    [
+     -5,
+     30
+    ],
+    [
+     -20,
+     30
+    ],
+    [
+     -27,
+     14
+    ],
+    [
+     -35,
+     8
+    ],
+    [
+     -60,
+     7
+    ]
+   ],
+   "altura": 2.0,
+   "material": "malla",
+   "color": "#3a3f44"
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "Malla de la granja solar, bloque B (2,0 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     84,
+     58
+    ],
+    [
+     86,
+     76
+    ],
+    [
+     90,
+     95
+    ],
+    [
+     98,
+     112
+    ],
+    [
+     112,
+     118
+    ],
+    [
+     128,
+     115
+    ],
+    [
+     136,
+     100
+    ],
+    [
+     138,
+     75
+    ],
+    [
+     134,
+     52
+    ],
+    [
+     124,
+     38
+    ],
+    [
+     110,
+     30
+    ],
+    [
+     100,
+     28
+    ],
+    [
+     90,
+     40
+    ]
+   ],
+   "altura": 2.0,
+   "material": "malla",
+   "color": "#3a3f44"
+  },
+  {
+   "tipo": "parqueadero",
+   "nombre": "Parqueadero de visitantes (16 carros, motos y un bus) en adoquín ecológico",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -92,
+     -98
+    ],
+    [
+     -60,
+     -98
+    ],
+    [
+     -60,
+     -76
+    ],
+    [
+     -92,
+     -76
+    ]
+   ]
+  },
+  {
+   "tipo": "plaza",
+   "nombre": "Plazoleta de llegada del circuito y punto de encuentro",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -24,
+     -101
+    ],
+    [
+     36,
+     -101
+    ],
+    [
+     36,
+     -93
+    ],
+    [
+     -24,
+     -93
+    ]
+   ]
+  },
+  {
+   "tipo": "plaza",
+   "nombre": "Módulo recreodeportivo inspirado en el proyecto tipo DNP 'Parque recreodeportivo' (ejercitadores biosaludables para adultos y adolescentes, juegos infantiles, mesas de ajedrez y escenario a nivel; 528 m²)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -70,
+     -140
+    ],
+    [
+     -46,
+     -140
+    ],
+    [
+     -46,
+     -118
+    ],
+    [
+     -70,
+     -118
+    ]
+   ]
+  },
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Escenario a nivel del módulo recreodeportivo (30 m²)",
+   "estado": "nuevo",
+   "centro": [
+    -58,
+    -136
+   ],
+   "largo": 6,
+   "ancho": 5,
+   "rumbo_eje": 90,
+   "altura": 3.2,
+   "material": "zinc",
+   "color": "#2f5f4f"
+  },
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Biciparqueadero cubierto (40 cupos) con estación de herramientas e hidratación",
+   "estado": "nuevo",
+   "centro": [
+    -50,
+    -92
+   ],
+   "largo": 10,
+   "ancho": 4,
+   "rumbo_eje": 90,
+   "altura": 2.6,
+   "material": "policarbonato",
+   "color": "#dfe7e2"
+  },
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Kiosco de trabajo al aire libre 1",
+   "estado": "nuevo",
+   "centro": [
+    -24,
+    -114
+   ],
+   "largo": 5,
+   "ancho": 5,
+   "rumbo_eje": 0,
+   "altura": 3.0,
+   "material": "zinc",
+   "color": "#2f5f4f"
+  },
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Kiosco de trabajo al aire libre 2",
+   "estado": "nuevo",
+   "centro": [
+    0,
+    -116
+   ],
+   "largo": 5,
+   "ancho": 5,
+   "rumbo_eje": 0,
+   "altura": 3.0,
+   "material": "zinc",
+   "color": "#2f5f4f"
+  },
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Kiosco de trabajo al aire libre 3",
+   "estado": "nuevo",
+   "centro": [
+    24,
+    -114
+   ],
+   "largo": 5,
+   "ancho": 5,
+   "rumbo_eje": 0,
+   "altura": 3.0,
+   "material": "zinc",
+   "color": "#2f5f4f"
+  },
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Invernadero y vivero de especies nativas (policarbonato, riego por goteo con agua lluvia)",
+   "estado": "nuevo",
+   "centro": [
+    14,
+    -140
+   ],
+   "largo": 24,
+   "ancho": 9,
+   "rumbo_eje": 90,
+   "altura": 3.6,
+   "material": "policarbonato",
+   "color": "#e3ece6"
+  },
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Compostaje de residuos de poda, cafetería y granja",
+   "estado": "nuevo",
+   "centro": [
+    48,
+    -136
+   ],
+   "largo": 8,
+   "ancho": 5,
+   "rumbo_eje": 90,
+   "altura": 2.8,
+   "material": "zinc",
+   "color": "#7a7f84"
+  },
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Apiario (10 colmenas de abejas nativas y Apis), alejado de senderos",
+   "estado": "nuevo",
+   "centro": [
+    62,
+    -118
+   ],
+   "largo": 4,
+   "ancho": 2,
+   "rumbo_eje": 90,
+   "altura": 1.4,
+   "material": "zinc",
+   "color": "#c79a2e"
+  },
+  {
+   "tipo": "tanque_elevado",
+   "nombre": "Tanque de agua lluvia (30 m³) del coworking",
+   "estado": "nuevo",
+   "centro": [
+    -6,
+    -69
+   ],
+   "altura": 4.5,
+   "diametro": 3.2
+  },
+  {
+   "tipo": "poste",
+   "nombre": "Poste de 13,2 kV con medidor bidireccional (llegada de la red de EPM)",
+   "estado": "nuevo",
+   "centro": [
+    40,
+    -52
+   ],
+   "altura": 12
+  },
+  {
+   "tipo": "poste",
+   "nombre": "Poste de la línea nueva de 13,2 kV hacia la subestación Yondó",
+   "estado": "nuevo",
+   "centro": [
+    80,
+    -90
+   ],
+   "altura": 12
+  },
+  {
+   "tipo": "poste",
+   "nombre": "Poste de la línea nueva de 13,2 kV hacia la subestación Yondó",
+   "estado": "nuevo",
+   "centro": [
+    120,
+    -127
+   ],
+   "altura": 12
+  },
+  {
+   "tipo": "zona_verde",
+   "nombre": "Huerta de la granja: cama de cultivo 1 (fuera de las celdas)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -42.0,
+     -158
+    ],
+    [
+     -35.0,
+     -158
+    ],
+    [
+     -35.0,
+     -130
+    ],
+    [
+     -42.0,
+     -130
+    ]
+   ]
+  },
+  {
+   "tipo": "zona_verde",
+   "nombre": "Huerta de la granja: cama de cultivo 2 (fuera de las celdas)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -32.5,
+     -158
+    ],
+    [
+     -25.5,
+     -158
+    ],
+    [
+     -25.5,
+     -130
+    ],
+    [
+     -32.5,
+     -130
+    ]
+   ]
+  },
+  {
+   "tipo": "zona_verde",
+   "nombre": "Huerta de la granja: cama de cultivo 3 (fuera de las celdas)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -23.0,
+     -158
+    ],
+    [
+     -16.0,
+     -158
+    ],
+    [
+     -16.0,
+     -130
+    ],
+    [
+     -23.0,
+     -130
+    ]
+   ]
+  },
+  {
+   "tipo": "zona_verde",
+   "nombre": "Huerta de la granja: cama de cultivo 4 (fuera de las celdas)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -13.5,
+     -158
+    ],
+    [
+     -6.5,
+     -158
+    ],
+    [
+     -6.5,
+     -130
+    ],
+    [
+     -13.5,
+     -130
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -99.47,
+     -80.42
+    ],
+    [
+     -103.52,
+     -29.82
+    ],
+    [
+     -100.53,
+     -29.58
+    ],
+    [
+     -96.48,
+     -80.18
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -103.51,
+     -30.24
+    ],
+    [
+     -101.49,
+     20.36
+    ],
+    [
+     -98.49,
+     20.24
+    ],
+    [
+     -100.51,
+     -30.36
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -101.53,
+     19.97
+    ],
+    [
+     -96.42,
+     48.56
+    ],
+    [
+     -93.47,
+     48.03
+    ],
+    [
+     -98.58,
+     19.44
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -96.39,
+     48.63
+    ],
+    [
+     -73.04,
+     81.12
+    ],
+    [
+     -70.61,
+     79.37
+    ],
+    [
+     -93.96,
+     46.88
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -73.33,
+     80.76
+    ],
+    [
+     -46.94,
+     111.21
+    ],
+    [
+     -44.67,
+     109.24
+    ],
+    [
+     -71.06,
+     78.79
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -47.33,
+     110.75
+    ],
+    [
+     -27.94,
+     133.21
+    ],
+    [
+     -25.67,
+     131.25
+    ],
+    [
+     -45.06,
+     108.79
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -27.99,
+     133.16
+    ],
+    [
+     -2.47,
+     147.46
+    ],
+    [
+     -1.01,
+     144.84
+    ],
+    [
+     -26.53,
+     130.54
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -2.06,
+     147.53
+    ],
+    [
+     35.54,
+     141.43
+    ],
+    [
+     35.06,
+     138.47
+    ],
+    [
+     -2.54,
+     144.57
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     35.03,
+     141.53
+    ],
+    [
+     80.62,
+     131.4
+    ],
+    [
+     79.97,
+     128.47
+    ],
+    [
+     34.38,
+     138.6
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     80.09,
+     131.53
+    ],
+    [
+     118.67,
+     121.37
+    ],
+    [
+     117.91,
+     118.47
+    ],
+    [
+     79.33,
+     128.63
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     118.85,
+     121.27
+    ],
+    [
+     141.27,
+     98.85
+    ],
+    [
+     139.15,
+     96.73
+    ],
+    [
+     116.73,
+     119.15
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     141.43,
+     98.53
+    ],
+    [
+     147.53,
+     59.94
+    ],
+    [
+     144.57,
+     59.47
+    ],
+    [
+     138.47,
+     98.06
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     147.52,
+     60.14
+    ],
+    [
+     143.46,
+     21.54
+    ],
+    [
+     140.48,
+     21.86
+    ],
+    [
+     144.54,
+     60.46
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     143.5,
+     21.71
+    ],
+    [
+     129.27,
+     -12.85
+    ],
+    [
+     126.5,
+     -11.71
+    ],
+    [
+     140.73,
+     22.85
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     129.4,
+     -12.61
+    ],
+    [
+     111.06,
+     -39.1
+    ],
+    [
+     108.6,
+     -37.39
+    ],
+    [
+     126.94,
+     -10.9
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     111.45,
+     -38.47
+    ],
+    [
+     93.16,
+     -71.0
+    ],
+    [
+     90.55,
+     -69.53
+    ],
+    [
+     108.84,
+     -37.0
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     93.53,
+     -69.96
+    ],
+    [
+     87.43,
+     -105.55
+    ],
+    [
+     84.47,
+     -105.04
+    ],
+    [
+     90.57,
+     -69.45
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     87.52,
+     -105.16
+    ],
+    [
+     76.34,
+     -140.74
+    ],
+    [
+     73.48,
+     -139.84
+    ],
+    [
+     84.66,
+     -104.26
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     76.0,
+     -141.15
+    ],
+    [
+     40.48,
+     -161.45
+    ],
+    [
+     39.0,
+     -158.85
+    ],
+    [
+     74.52,
+     -138.55
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     40.48,
+     -161.45
+    ],
+    [
+     -0.11,
+     -166.53
+    ],
+    [
+     -0.48,
+     -163.55
+    ],
+    [
+     40.11,
+     -158.47
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     0.11,
+     -166.53
+    ],
+    [
+     -40.48,
+     -161.45
+    ],
+    [
+     -40.11,
+     -158.47
+    ],
+    [
+     0.48,
+     -163.55
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -40.32,
+     -161.5
+    ],
+    [
+     -75.87,
+     -146.26
+    ],
+    [
+     -74.68,
+     -143.5
+    ],
+    [
+     -39.13,
+     -158.74
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -76.08,
+     -146.08
+    ],
+    [
+     -96.41,
+     -115.58
+    ],
+    [
+     -93.92,
+     -113.92
+    ],
+    [
+     -73.59,
+     -144.42
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Circuito de trote y ciclismo (3 m, afirmado estabilizado)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -96.47,
+     -115.43
+    ],
+    [
+     -99.52,
+     -79.83
+    ],
+    [
+     -96.53,
+     -79.57
+    ],
+    [
+     -93.48,
+     -115.17
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Enlace del circuito por la plazoleta y los servicios (3 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -95.21,
+     -102.49
+    ],
+    [
+     -59.61,
+     -104.52
+    ],
+    [
+     -59.79,
+     -107.51
+    ],
+    [
+     -95.39,
+     -105.48
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Enlace del circuito por la plazoleta y los servicios (3 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -60.2,
+     -104.48
+    ],
+    [
+     -29.6,
+     -106.52
+    ],
+    [
+     -29.8,
+     -109.52
+    ],
+    [
+     -60.4,
+     -107.48
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Enlace del circuito por la plazoleta y los servicios (3 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -30.4,
+     -106.52
+    ],
+    [
+     0.2,
+     -104.48
+    ],
+    [
+     0.4,
+     -107.48
+    ],
+    [
+     -30.2,
+     -109.52
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Enlace del circuito por la plazoleta y los servicios (3 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -0.62,
+     -104.6
+    ],
+    [
+     35.97,
+     -96.47
+    ],
+    [
+     36.62,
+     -99.4
+    ],
+    [
+     0.03,
+     -107.53
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Enlace del circuito por la plazoleta y los servicios (3 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     34.99,
+     -96.86
+    ],
+    [
+     59.5,
+     -82.55
+    ],
+    [
+     61.01,
+     -85.14
+    ],
+    [
+     36.5,
+     -99.45
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Enlace del circuito por la plazoleta y los servicios (3 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     59.12,
+     -82.75
+    ],
+    [
+     91.67,
+     -68.51
+    ],
+    [
+     92.88,
+     -71.25
+    ],
+    [
+     60.33,
+     -85.49
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Sendero interno (2 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -2.96,
+     -96.41
+    ],
+    [
+     -7.03,
+     -61.82
+    ],
+    [
+     -5.04,
+     -61.59
+    ],
+    [
+     -0.97,
+     -96.18
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Sendero interno (2 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     -6.87,
+     -62.58
+    ],
+    [
+     -15.04,
+     -36.01
+    ],
+    [
+     -13.13,
+     -35.42
+    ],
+    [
+     -4.96,
+     -61.99
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Sendero interno (2 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     5.95,
+     -106.56
+    ],
+    [
+     9.03,
+     -128.16
+    ],
+    [
+     7.05,
+     -128.44
+    ],
+    [
+     3.97,
+     -106.84
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Sendero interno (2 m)",
+   "estado": "nuevo",
+   "poligono": [
+    [
+     94.96,
+     -59.91
+    ],
+    [
+     99.18,
+     -49.35
+    ],
+    [
+     101.04,
+     -50.09
+    ],
+    [
+     96.82,
+     -60.65
+    ]
+   ]
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    -96,
+    -70
+   ],
+   "altura": 9,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    -82,
+    -70
+   ],
+   "altura": 9,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    -68,
+    -70
+   ],
+   "altura": 9,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    -34,
+    -70
+   ],
+   "altura": 10,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    22,
+    -66
+   ],
+   "altura": 10,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    -30,
+    -104
+   ],
+   "altura": 8,
+   "copa": 7
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    40,
+    -104
+   ],
+   "altura": 8,
+   "copa": 7
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    -106,
+    -55
+   ],
+   "altura": 11,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    -106,
+    0
+   ],
+   "altura": 11,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    -48,
+    -124
+   ],
+   "altura": 10,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    -20,
+    -124
+   ],
+   "altura": 10,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    40,
+    -122
+   ],
+   "altura": 10,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    60,
+    -150
+   ],
+   "altura": 9,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    112,
+    -55
+   ],
+   "altura": 10,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    88,
+    -60
+   ],
+   "altura": 9,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    -60,
+    -118
+   ],
+   "altura": 9,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    130,
+    -20
+   ],
+   "altura": 10,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "estado": "nuevo",
+   "centro": [
+    150,
+    40
+   ],
+   "altura": 10,
+   "copa": 9
+  }
+ ],
+ "adecuaciones": {
+  "kwp_plan": 1000,
+  "fv": [
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     61.88,
+     0.77
+    ],
+    "largo": 21.85,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 19,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     69.12,
+     7.27
+    ],
+    "largo": 46.0,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 40,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     65.46,
+     13.77
+    ],
+    "largo": 48.3,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 42,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     -55.74,
+     20.27
+    ],
+    "largo": 49.45,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 43,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     61.24,
+     20.27
+    ],
+    "largo": 49.45,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 43,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     -54.22,
+     26.77
+    ],
+    "largo": 51.75,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 45,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     56.11,
+     26.77
+    ],
+    "largo": 50.6,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 44,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     -52.69,
+     33.27
+    ],
+    "largo": 54.05,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 47,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     44.3,
+     33.27
+    ],
+    "largo": 64.4,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 56,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     24.69,
+     39.77
+    ],
+    "largo": 94.3,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 82,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     23.5,
+     46.27
+    ],
+    "largo": 86.25,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 75,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     23.05,
+     52.77
+    ],
+    "largo": 78.2,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 68,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     25.49,
+     59.27
+    ],
+    "largo": 65.55,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 57,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque A (sobre las celdas, fase 1)",
+    "centro": [
+     26.55,
+     65.77
+    ],
+    "largo": 41.4,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 36,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque B (zona intervenida del nororiente, fase 2)",
+    "centro": [
+     106.23,
+     40.77
+    ],
+    "largo": 14.95,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 13,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque B (zona intervenida del nororiente, fase 2)",
+    "centro": [
+     107.9,
+     47.27
+    ],
+    "largo": 27.6,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 24,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque B (zona intervenida del nororiente, fase 2)",
+    "centro": [
+     109.14,
+     53.77
+    ],
+    "largo": 34.5,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 30,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque B (zona intervenida del nororiente, fase 2)",
+    "centro": [
+     109.84,
+     60.27
+    ],
+    "largo": 40.25,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 35,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque B (zona intervenida del nororiente, fase 2)",
+    "centro": [
+     110.57,
+     66.77
+    ],
+    "largo": 41.4,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 36,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque B (zona intervenida del nororiente, fase 2)",
+    "centro": [
+     111.68,
+     73.27
+    ],
+    "largo": 41.4,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 36,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Granja solar, bloque B (zona intervenida del nororiente, fase 2)",
+    "centro": [
+     112.61,
+     79.77
+    ],
+    "largo": 40.25,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 1.3,
+    "inclinacion": 10,
+    "filas": 2,
+    "columnas": 35,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "volumen": "coworking",
+    "faldon": "S",
+    "filas": 2,
+    "columnas": 20,
+    "orientacion_modulo": "vertical"
+   },
+   {
+    "tipo": "marquesina",
+    "nombre": "Marquesina solar del parqueadero",
+    "centro": [
+     -76,
+     -86
+    ],
+    "largo": 23.0,
+    "ancho": 4.6,
+    "rumbo_eje": 90,
+    "altura": 3.2,
+    "inclinacion": 5,
+    "filas": 2,
+    "columnas": 20,
+    "orientacion_modulo": "vertical"
+   }
+  ],
+  "kwp_factible": 1040.6,
+  "bess": {
+   "kwh": 100,
+   "kw": 50,
+   "tipo": "contenedor_10",
+   "centro": [
+    53,
+    -42
+   ],
+   "largo": 2.99,
+   "ancho": 2.44,
+   "rumbo_eje": 90
+  },
+  "inversores": {
+   "n": 8,
+   "kw": 100,
+   "volumen": "centro_transformacion",
+   "lado": "N"
+  },
+  "domotica": [
+   "medidor bidireccional con telemedida en la frontera de 13,2 kV de la granja (autogenerador colectivo o generador distribuido)",
+   "medidor aparte para la autogeneración del parque (coworking y parqueadero, ≤100 kW)",
+   "SCADA de la granja y estación meteorológica (radiación, temperatura del módulo, viento)",
+   "sensores de metano y de límite de explosividad en las chimeneas y en el coworking (aviso por alarma)",
+   "hitos y piezómetros con lectura remota para vigilar asentamientos y el nivel de lixiviados",
+   "telemetría de los pozos de monitoreo y del humedal (caudal, pH, conductividad)",
+   "control de acceso, cámaras y alumbrado solar de senderos con sensor de presencia",
+   "pasarela IoT al Centro de Control Energético y Digital (CCED) de la alcaldía"
+  ],
+  "obras_civiles": [
+   "clausura técnica de las celdas con cobertura final de baja permeabilidad (arcilla compactada de 0,45 m, geomembrana de polietileno, geodrén, 0,45 m de suelo y pasto rastrero) con pendientes de 3 a 5 %",
+   "lastres prefabricados de concreto como cimentación de las mesas: nada perfora la cobertura",
+   "canales perimetrales de aguas lluvias y drenaje de lixiviados hacia las lagunas A y B (impermeabilizadas) y el humedal",
+   "10 chimeneas pasivas de biogás con biofiltro en los pasillos entre filas y 4 pozos de monitoreo de agua subterránea",
+   "línea nueva de 13,2 kV de unos 2,6 km hasta la subestación Yondó de EPM (o derivación de la red que alimenta la PTAP si EPM confirma capacidad)",
+   "coworking, cafetería, taller y portería fuera de las celdas, con losa sobre membrana antigás y ventilación bajo el piso"
+  ],
+  "cargador_ve": {
+   "centro": [
+    -62,
+    -79
+   ]
+  },
+  "notas": "Granja solar sobre las celdas: 1812 módulos de 550 Wp (996.6 kWp DC; 8 inversores de 100 kW = 800 kW AC) en mesas fijas de dos módulos en vertical, inclinadas 10° al sur, a 1,3 m del suelo, con 6,5 m entre filas (sin sombra entre 8:00 y 16:00 el 21 de diciembre). Bloque A (fase 1): 1394 módulos sobre la cobertura final de las celdas visibles (0,86 ha). Bloque B (fase 2): 418 módulos en la zona del nororiente que en enero de 2020 se veía intervenida; se monta solo si los apiques confirman celdas estables o suelo natural. Solar propia del parque: 40 módulos en la cubierta del coworking y 40 en la marquesina del parqueadero (44 kWp, autogeneración aparte, ≤100 kW). kwp_factible = 1892 módulos × 0,55. El BESS de 100 kWh respalda los servicios auxiliares de la granja, el internet y el coworking en cortes de EPM. En el modelo todos los arreglos llevan su ruta de potencia al centro de transformación porque el generador admite un solo grupo de inversores; en la obra, el coworking y la marquesina del parqueadero tienen inversor y medidor propios (frontera aparte). Las instalaciones con gente quedan a 30 m o más de los residuos (coworking 36,5 m del humedal; centro de transformación 30 m de la cobertura)."
+ },
+ "incertidumbres": [
+  "La ubicación del relleno se dedujo de documentos y del satélite; no hay foto georreferenciada ni Street View. Confianza media.",
+  "El borde real de los residuos no se conoce: las celdas dibujadas (0,80 ha) son lo visible en Google; el Manual de Operaciones habla de 1,85 ha en cuatro etapas y la zona intervenida en Esri 2020 llega a unas 3 ha. Hay que delimitarla con topografía, apiques y georradar antes de diseñar la cobertura.",
+  "Las cuatro piscinas se interpretan como lagunas de lixiviados (la Superservicios en 2018 solo menciona 'un pozo' de recirculación). Podrían ser piscinas de aguas lluvias.",
+  "Una nota de Caracol (23-sep-2020) dice que los dos pozos del acueducto se perforaron 'dentro del polígono que otrora ocupara un relleno sanitario' (Las Américas, hace unos 25 años). Ese antiguo botadero no está dibujado: puede estar cerca de la PTAP y debe incluirse en el plan de clausura (Res. 1390 de 2005) y en el monitoreo del agua subterránea.",
+  "La caseta de la entrada norte se midió en Google (4 × 3 m); altura, materiales y uso se suponen.",
+  "Solo una chimenea de gases es visible (69, −2); las otras dos chimeneas existentes se ubicaron como referencia.",
+  "Las alturas del terreno son planas en el modelo; el SRTM da 70–80 m en todo el sitio y unos 74 m en el parque principal.",
+  "La línea de 13,2 kV se dibuja solo en sus primeros postes; la ruta y el punto de conexión los define EPM en el estudio de conexión."
+ ],
+ "verificacion": {
+  "trace": "data/geo/img/relleno_parque_trace.png",
+  "vistas": [
+   "data/geo/img/relleno_parque_orbita_hoy.png",
+   "data/geo/img/relleno_parque_orbita_todo.png"
+  ]
+ },
+ "_metricas": {
+  "circuito_km": 0.9,
+  "enlace_plaza_km": 0.19,
+  "area_celdas_visibles_m2": 8026,
+  "area_cobertura_A_m2": 8601,
+  "area_bloque_B_m2": 3709,
+  "modulos_granja": 1812,
+  "kwp_granja": 996.6,
+  "modulos_total": 1892
+ }
+}

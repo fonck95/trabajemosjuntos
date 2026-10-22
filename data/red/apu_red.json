@@ -1,0 +1,3345 @@
+{
+ "titulo": "Análisis de precios unitarios (APU) de la red de distribución y de datos de la microrred de Yondó",
+ "fecha_corte": "2026-10-22",
+ "moneda": "COP constantes de 2026",
+ "aiu": {
+  "A": 0.19,
+  "I": 0.03,
+  "U": 0.05
+ },
+ "iva_sobre_utilidad": 0.19,
+ "nota": "Cada línea dice si su precio es dato oficial, de mercado, cálculo propio o estimación (ver data/red/precios_unitarios.json). Los APU compuestos (APU-06U, 06R) suman el costo directo de los APU unitarios y luego aplican el AIU una sola vez.",
+ "apus": [
+  {
+   "codigo": "APU-01",
+   "descripcion": "Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida",
+   "unidad": "un",
+   "norma_referencia": "EPM RA7-035 (poste) y RA2-001; empotramiento 10 % de la longitud + 0,6 m (1,8 m)",
+   "supuestos": [
+    "Hueco de 0,8 × 0,8 × 1,8 m excavado a mano; base y relleno con recebo compactado",
+    "Izado y aplomado con camión grúa: 8 postes por día",
+    "Transporte desde planta hasta Yondó: $350.000 por poste"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "POSTE-12-510",
+     "descripcion": "Poste de concreto octogonal de 12 m y 510 kgf (RA7-035), puesto en planta, con IVA",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 1250000,
+     "subtotal": 1250000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "RELLENO",
+     "descripcion": "Material seleccionado (recebo o arena) para relleno, puesto en obra",
+     "unidad": "m3",
+     "cantidad": 0.35,
+     "precio_unitario": 95000,
+     "subtotal": 33250,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ESMALTE",
+     "descripcion": "Esmalte para numeración de postes",
+     "unidad": "gal",
+     "cantidad": 0.1,
+     "precio_unitario": 93000,
+     "subtotal": 9300,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 0.125,
+     "tarifa": 1800000,
+     "subtotal": 225000
+    },
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 0.125,
+     "tarifa": 380000,
+     "subtotal": 47500
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 234943,
+     "subtotal": 11747
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 1292550,
+     "subtotal": 38776
+    },
+    {
+     "codigo_insumo": "TR-POSTE",
+     "descripcion": "Transporte de un poste de 12 m desde la planta (Santander o Antioquia) hasta Yondó, con cargue y descargue",
+     "unidad": "un",
+     "cantidad": 1,
+     "tarifa": 350000,
+     "subtotal": 350000
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de obra civil: 1 oficial + 4 obreros",
+     "actividad": "excavación del hueco y relleno",
+     "costo_dia": 567217,
+     "rendimiento_unidades_por_dia": 5,
+     "subtotal": 113443
+    },
+    {
+     "cuadrilla": "Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes",
+     "actividad": "izado, aplomado y numeración",
+     "costo_dia": 972000,
+     "rendimiento_unidades_por_dia": 8,
+     "subtotal": 121500
+    }
+   ],
+   "subtotales": {
+    "materiales": 1292550,
+    "componentes_apu": 0,
+    "equipo": 284247,
+    "transporte": 388776,
+    "mano_de_obra": 234943
+   },
+   "costo_directo": 2200516,
+   "aiu": {
+    "administracion": 418098,
+    "imprevistos": 66015,
+    "utilidad": 110026,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 20905,
+   "precio_unitario_total": 2815560,
+   "rango_precio_total": [
+    2252448,
+    3660228
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "SIF Antioquia 2020, ítem 17.13 (poste 12 m 1.052 kg, STI, sin AIU, actualizado con IPC)",
+     "valor": 1651658
+    },
+    {
+     "referencia": "CREG N1P3, poste de concreto 12 m urbano de BT instalado (actualizado con IPP)",
+     "valor": 1678546
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-01b",
+   "descripcion": "Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales)",
+   "unidad": "un",
+   "norma_referencia": "EPM RA7-035 (poste) y RA2-001; empotramiento 10 % de la longitud + 0,6 m (1,8 m)",
+   "supuestos": [
+    "Hueco de 0,8 × 0,8 × 1,8 m excavado a mano; base y relleno con recebo compactado",
+    "Izado y aplomado con camión grúa: 8 postes por día",
+    "Transporte desde planta hasta Yondó: $350.000 por poste"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "POSTE-12-750",
+     "descripcion": "Poste de concreto octogonal de 12 m y 750 kgf, puesto en planta, con IVA",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 1450000,
+     "subtotal": 1450000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "RELLENO",
+     "descripcion": "Material seleccionado (recebo o arena) para relleno, puesto en obra",
+     "unidad": "m3",
+     "cantidad": 0.35,
+     "precio_unitario": 95000,
+     "subtotal": 33250,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ESMALTE",
+     "descripcion": "Esmalte para numeración de postes",
+     "unidad": "gal",
+     "cantidad": 0.1,
+     "precio_unitario": 93000,
+     "subtotal": 9300,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 0.125,
+     "tarifa": 1800000,
+     "subtotal": 225000
+    },
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 0.125,
+     "tarifa": 380000,
+     "subtotal": 47500
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 234943,
+     "subtotal": 11747
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 1492550,
+     "subtotal": 44776
+    },
+    {
+     "codigo_insumo": "TR-POSTE",
+     "descripcion": "Transporte de un poste de 12 m desde la planta (Santander o Antioquia) hasta Yondó, con cargue y descargue",
+     "unidad": "un",
+     "cantidad": 1,
+     "tarifa": 350000,
+     "subtotal": 350000
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de obra civil: 1 oficial + 4 obreros",
+     "actividad": "excavación del hueco y relleno",
+     "costo_dia": 567217,
+     "rendimiento_unidades_por_dia": 5,
+     "subtotal": 113443
+    },
+    {
+     "cuadrilla": "Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes",
+     "actividad": "izado, aplomado y numeración",
+     "costo_dia": 972000,
+     "rendimiento_unidades_por_dia": 8,
+     "subtotal": 121500
+    }
+   ],
+   "subtotales": {
+    "materiales": 1492550,
+    "componentes_apu": 0,
+    "equipo": 284247,
+    "transporte": 394776,
+    "mano_de_obra": 234943
+   },
+   "costo_directo": 2406516,
+   "aiu": {
+    "administracion": 457238,
+    "imprevistos": 72195,
+    "utilidad": 120326,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 22862,
+   "precio_unitario_total": 3079137,
+   "rango_precio_total": [
+    2463310,
+    4002878
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-01c",
+   "descripcion": "Poste de concreto de 10 m y 510 kgf instalado, sin vestida (red de BT sola)",
+   "unidad": "un",
+   "norma_referencia": "EPM RA7-035 (poste) y RA2-001; empotramiento 10 % de la longitud + 0,6 m (1,8 m)",
+   "supuestos": [
+    "Hueco de 0,8 × 0,8 × 1,8 m excavado a mano; base y relleno con recebo compactado",
+    "Izado y aplomado con camión grúa: 8 postes por día",
+    "Transporte desde planta hasta Yondó: $350.000 por poste"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "POSTE-10-510",
+     "descripcion": "Poste de concreto de 10 m y 510 kgf, puesto en planta, con IVA",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 1000000,
+     "subtotal": 1000000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "RELLENO",
+     "descripcion": "Material seleccionado (recebo o arena) para relleno, puesto en obra",
+     "unidad": "m3",
+     "cantidad": 0.35,
+     "precio_unitario": 95000,
+     "subtotal": 33250,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ESMALTE",
+     "descripcion": "Esmalte para numeración de postes",
+     "unidad": "gal",
+     "cantidad": 0.1,
+     "precio_unitario": 93000,
+     "subtotal": 9300,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 0.125,
+     "tarifa": 1800000,
+     "subtotal": 225000
+    },
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 0.125,
+     "tarifa": 380000,
+     "subtotal": 47500
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 234943,
+     "subtotal": 11747
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 1042550,
+     "subtotal": 31276
+    },
+    {
+     "codigo_insumo": "TR-POSTE",
+     "descripcion": "Transporte de un poste de 12 m desde la planta (Santander o Antioquia) hasta Yondó, con cargue y descargue",
+     "unidad": "un",
+     "cantidad": 1,
+     "tarifa": 350000,
+     "subtotal": 350000
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de obra civil: 1 oficial + 4 obreros",
+     "actividad": "excavación del hueco y relleno",
+     "costo_dia": 567217,
+     "rendimiento_unidades_por_dia": 5,
+     "subtotal": 113443
+    },
+    {
+     "cuadrilla": "Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes",
+     "actividad": "izado, aplomado y numeración",
+     "costo_dia": 972000,
+     "rendimiento_unidades_por_dia": 8,
+     "subtotal": 121500
+    }
+   ],
+   "subtotales": {
+    "materiales": 1042550,
+    "componentes_apu": 0,
+    "equipo": 284247,
+    "transporte": 381276,
+    "mano_de_obra": 234943
+   },
+   "costo_directo": 1943016,
+   "aiu": {
+    "administracion": 369173,
+    "imprevistos": 58290,
+    "utilidad": 97151,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 18459,
+   "precio_unitario_total": 2486089,
+   "rango_precio_total": [
+    1988871,
+    3231916
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "SIF 2020, ítem 17.6 (poste 10 m, STI, actualizado con IPC)",
+     "valor": 1331391
+    },
+    {
+     "referencia": "CREG N1P50, poste 10 m urbano red trenzada instalado",
+     "valor": 1339213
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-02",
+   "descripcion": "Estructura de suspensión trifásica 13,2 kV con neutro inferior, cruceta de 1.500 mm al centro (vestida sobre poste ya instalado)",
+   "unidad": "un",
+   "norma_referencia": "EPM RA2-001 (lista de materiales del plano 3 de 4)",
+   "supuestos": [
+    "Materiales exactos de la lista de EPM más 3 amarres preformados",
+    "Rendimiento: 6 estructuras por día de cuadrilla"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "CRU-15",
+     "descripcion": "Cruceta angular metálica galvanizada de 1.500 mm (RA7-013)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 95000,
+     "subtotal": 95000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TIR-15",
+     "descripcion": "Tiranta (diagonal) de 1.500 mm",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 40000,
+     "subtotal": 40000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "AIS-PIN",
+     "descripcion": "Aislador tipo pin 13,2 kV (porcelana ANSI 55-5 o polimérico)",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 38000,
+     "subtotal": 114000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ESPIGO",
+     "descripcion": "Espigo para aislador en cruceta metálica (RA7-009)",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 22000,
+     "subtotal": 44000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ESPIGO-BP",
+     "descripcion": "Espigo de barra plana para punta de poste (RA7-010)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 45000,
+     "subtotal": 45000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PERNO-ESP",
+     "descripcion": "Perno espaciador de 15,9 × 254 mm (5/8\" × 10\") galvanizado",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 12500,
+     "subtotal": 37500,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TORN-58",
+     "descripcion": "Tornillo de máquina de 5/8\" × 1½\"–2\" galvanizado",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 5500,
+     "subtotal": 11000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "AIS-CARRETE",
+     "descripcion": "Aislador carrete 600 V de 81 mm con tornillo tipo carrete (neutro)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 21000,
+     "subtotal": 21000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "AMARRE",
+     "descripcion": "Amarre preformado para aislador pin (ACSR 1/0–2/0)",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 18000,
+     "subtotal": 54000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PLACA-ID",
+     "descripcion": "Placa o marquilla de identificación de circuito o poste (RA6-020)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 15000,
+     "subtotal": 15000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 0.1667,
+     "tarifa": 380000,
+     "subtotal": 63333
+    },
+    {
+     "codigo_insumo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 0.0833,
+     "tarifa": 1800000,
+     "subtotal": 150000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 162000,
+     "subtotal": 8100
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 476500,
+     "subtotal": 14295
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes",
+     "actividad": "armado de la estructura en el poste",
+     "costo_dia": 972000,
+     "rendimiento_unidades_por_dia": 6,
+     "subtotal": 162000
+    }
+   ],
+   "subtotales": {
+    "materiales": 476500,
+    "componentes_apu": 0,
+    "equipo": 221433,
+    "transporte": 14295,
+    "mano_de_obra": 162000
+   },
+   "costo_directo": 874228,
+   "aiu": {
+    "administracion": 166103,
+    "imprevistos": 26227,
+    "utilidad": 43711,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 8305,
+   "precio_unitario_total": 1118575,
+   "rango_precio_total": [
+    894860,
+    1454147
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "CREG N2L70 (estructura completa con poste 12 m 510 kg, montaje e ingeniería), actualizado",
+     "valor": 5295904
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-03",
+   "descripcion": "Estructura de retención (referencia) trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin vientos)",
+   "unidad": "un",
+   "norma_referencia": "EPM RA2-004",
+   "supuestos": [
+    "Materiales de la lista de EPM; los 4 vientos de la lista se costean aparte con APU-04 según los vientos por km",
+    "Rendimiento: 3 estructuras por día"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "CRU-15",
+     "descripcion": "Cruceta angular metálica galvanizada de 1.500 mm (RA7-013)",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 95000,
+     "subtotal": 190000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TIR-15",
+     "descripcion": "Tiranta (diagonal) de 1.500 mm",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 40000,
+     "subtotal": 80000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "AIS-SUS",
+     "descripcion": "Aislador de suspensión polimérico 13,2 kV, 165 mm (RA7-011)",
+     "unidad": "un",
+     "cantidad": 12,
+     "precio_unitario": 40000,
+     "subtotal": 480000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "GRAPA-T",
+     "descripcion": "Grapa terminal (recta o pistola) para ACSR 1/0–2/0",
+     "unidad": "un",
+     "cantidad": 8,
+     "precio_unitario": 30000,
+     "subtotal": 240000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TUERCA-OJO",
+     "descripcion": "Tuerca de ojo de 5/8\"",
+     "unidad": "un",
+     "cantidad": 4,
+     "precio_unitario": 34000,
+     "subtotal": 136000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ESLABON",
+     "descripcion": "Eslabón en U de 5/8\"",
+     "unidad": "un",
+     "cantidad": 4,
+     "precio_unitario": 8000,
+     "subtotal": 32000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PERNO-ESP",
+     "descripcion": "Perno espaciador de 15,9 × 254 mm (5/8\" × 10\") galvanizado",
+     "unidad": "un",
+     "cantidad": 6,
+     "precio_unitario": 12500,
+     "subtotal": 75000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TORN-58",
+     "descripcion": "Tornillo de máquina de 5/8\" × 1½\"–2\" galvanizado",
+     "unidad": "un",
+     "cantidad": 4,
+     "precio_unitario": 5500,
+     "subtotal": 22000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ESPIGO",
+     "descripcion": "Espigo para aislador en cruceta metálica (RA7-009)",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 22000,
+     "subtotal": 66000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "AIS-PIN",
+     "descripcion": "Aislador tipo pin 13,2 kV (porcelana ANSI 55-5 o polimérico)",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 38000,
+     "subtotal": 114000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "AMARRE",
+     "descripcion": "Amarre preformado para aislador pin (ACSR 1/0–2/0)",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 18000,
+     "subtotal": 54000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CONECTOR",
+     "descripcion": "Conector de compresión en C o transversal universal (cobre/aluminio)",
+     "unidad": "un",
+     "cantidad": 6,
+     "precio_unitario": 15000,
+     "subtotal": 90000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "AIS-CARRETE",
+     "descripcion": "Aislador carrete 600 V de 81 mm con tornillo tipo carrete (neutro)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 21000,
+     "subtotal": 21000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PLACA-ID",
+     "descripcion": "Placa o marquilla de identificación de circuito o poste (RA6-020)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 15000,
+     "subtotal": 15000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 0.3333,
+     "tarifa": 380000,
+     "subtotal": 126667
+    },
+    {
+     "codigo_insumo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 0.1667,
+     "tarifa": 1800000,
+     "subtotal": 300000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 324000,
+     "subtotal": 16200
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 1615000,
+     "subtotal": 48450
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes",
+     "actividad": "armado de la estructura de retención",
+     "costo_dia": 972000,
+     "rendimiento_unidades_por_dia": 3,
+     "subtotal": 324000
+    }
+   ],
+   "subtotales": {
+    "materiales": 1615000,
+    "componentes_apu": 0,
+    "equipo": 442867,
+    "transporte": 48450,
+    "mano_de_obra": 324000
+   },
+   "costo_directo": 2430317,
+   "aiu": {
+    "administracion": 461760,
+    "imprevistos": 72910,
+    "utilidad": 121516,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 23088,
+   "precio_unitario_total": 3109591,
+   "rango_precio_total": [
+    2487672,
+    4042468
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "SIF 2020, ítem 17.14 vestida de poste EPM (retención), actualizado con IPC",
+     "valor": 1760489
+    },
+    {
+     "referencia": "CREG N2L72 (estructura completa con poste 12 m 750 kg), actualizado",
+     "valor": 6730657
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-03b",
+   "descripcion": "Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento)",
+   "unidad": "un",
+   "norma_referencia": "EPM RA2-003",
+   "supuestos": [
+    "Materiales de la lista de EPM; el viento va aparte (APU-04)",
+    "Rendimiento: 3 estructuras por día"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "CRU-15",
+     "descripcion": "Cruceta angular metálica galvanizada de 1.500 mm (RA7-013)",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 95000,
+     "subtotal": 190000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TIR-15",
+     "descripcion": "Tiranta (diagonal) de 1.500 mm",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 40000,
+     "subtotal": 80000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "AIS-SUS",
+     "descripcion": "Aislador de suspensión polimérico 13,2 kV, 165 mm (RA7-011)",
+     "unidad": "un",
+     "cantidad": 6,
+     "precio_unitario": 40000,
+     "subtotal": 240000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "GRAPA-T",
+     "descripcion": "Grapa terminal (recta o pistola) para ACSR 1/0–2/0",
+     "unidad": "un",
+     "cantidad": 4,
+     "precio_unitario": 30000,
+     "subtotal": 120000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TUERCA-OJO",
+     "descripcion": "Tuerca de ojo de 5/8\"",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 34000,
+     "subtotal": 68000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ESLABON",
+     "descripcion": "Eslabón en U de 5/8\"",
+     "unidad": "un",
+     "cantidad": 5,
+     "precio_unitario": 8000,
+     "subtotal": 40000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PERNO-ESP",
+     "descripcion": "Perno espaciador de 15,9 × 254 mm (5/8\" × 10\") galvanizado",
+     "unidad": "un",
+     "cantidad": 6,
+     "precio_unitario": 12500,
+     "subtotal": 75000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TORN-58",
+     "descripcion": "Tornillo de máquina de 5/8\" × 1½\"–2\" galvanizado",
+     "unidad": "un",
+     "cantidad": 4,
+     "precio_unitario": 5500,
+     "subtotal": 22000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "AIS-CARRETE",
+     "descripcion": "Aislador carrete 600 V de 81 mm con tornillo tipo carrete (neutro)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 21000,
+     "subtotal": 21000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PLACA-ID",
+     "descripcion": "Placa o marquilla de identificación de circuito o poste (RA6-020)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 15000,
+     "subtotal": 15000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 0.3333,
+     "tarifa": 380000,
+     "subtotal": 126667
+    },
+    {
+     "codigo_insumo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 0.1667,
+     "tarifa": 1800000,
+     "subtotal": 300000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 324000,
+     "subtotal": 16200
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 871000,
+     "subtotal": 26130
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes",
+     "actividad": "armado de la estructura terminal",
+     "costo_dia": 972000,
+     "rendimiento_unidades_por_dia": 3,
+     "subtotal": 324000
+    }
+   ],
+   "subtotales": {
+    "materiales": 871000,
+    "componentes_apu": 0,
+    "equipo": 442867,
+    "transporte": 26130,
+    "mano_de_obra": 324000
+   },
+   "costo_directo": 1663997,
+   "aiu": {
+    "administracion": 316159,
+    "imprevistos": 49920,
+    "utilidad": 83200,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 15808,
+   "precio_unitario_total": 2129084,
+   "rango_precio_total": [
+    1703267,
+    2767809
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-04",
+   "descripcion": "Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje",
+   "unidad": "un",
+   "norma_referencia": "EPM RA6-001 (viento poste 12 m); materiales tomados del ítem 17.18 de la SIF 2020",
+   "supuestos": [
+    "15 m de cable de acero de 3/8\"",
+    "Anclaje enterrado a 1,5–1,8 m",
+    "Rendimiento: 2 vientos por día de pareja más 0,25 días de obrero para el anclaje"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "VIENTO-CABLE",
+     "descripcion": "Cable de acero galvanizado de 3/8\" para retenida",
+     "unidad": "m",
+     "cantidad": 15,
+     "precio_unitario": 4800,
+     "subtotal": 72000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "VIENTO-AIS",
+     "descripcion": "Aislador tensor de porcelana (strain) para retenida",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 16500,
+     "subtotal": 16500,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "VIENTO-VAR",
+     "descripcion": "Varilla de anclaje de 5/8\" × 1,80 m con arandela",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 58000,
+     "subtotal": 58000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "VIENTO-BLOQ",
+     "descripcion": "Bloque de anclaje en concreto",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 45000,
+     "subtotal": 45000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PREF-RET",
+     "descripcion": "Preformado de retención para cable de retenida",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 34600,
+     "subtotal": 69200,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "GUARDACABO",
+     "descripcion": "Guardacabo",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 3500,
+     "subtotal": 7000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "COLLARIN",
+     "descripcion": "Collarín (abrazadera) galvanizado para poste",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 55000,
+     "subtotal": 55000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "GUARDAVIENTO",
+     "descripcion": "Protector de retenida (guardaviento) en PVC amarillo",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 25000,
+     "subtotal": 25000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 0.25,
+     "tarifa": 380000,
+     "subtotal": 95000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 181361,
+     "subtotal": 9068
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 347700,
+     "subtotal": 10431
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Pareja: 1 liniero + 1 ayudante",
+     "actividad": "armado y tensionado",
+     "costo_dia": 306000,
+     "rendimiento_unidades_por_dia": 2,
+     "subtotal": 153000
+    },
+    {
+     "cuadrilla": "Cuadrilla de obra civil: 1 oficial + 4 obreros",
+     "actividad": "excavación del anclaje (0,25 días de obrero equivalentes)",
+     "costo_dia": 567217,
+     "rendimiento_unidades_por_dia": 20,
+     "subtotal": 28361
+    }
+   ],
+   "subtotales": {
+    "materiales": 347700,
+    "componentes_apu": 0,
+    "equipo": 104068,
+    "transporte": 10431,
+    "mano_de_obra": 181361
+   },
+   "costo_directo": 643560,
+   "aiu": {
+    "administracion": 122276,
+    "imprevistos": 19307,
+    "utilidad": 32178,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 6114,
+   "precio_unitario_total": 823435,
+   "rango_precio_total": [
+    658748,
+    1070466
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "SIF 2020, ítem 17.18 viento convencional (STI, sin AIU), actualizado con IPC",
+     "valor": 392121
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-05",
+   "descripcion": "Puesta a tierra de estructura o equipo: 1 varilla copperweld de 5/8\" × 2,4 m, bajante de Cu 2 AWG, 2 soldaduras exotérmicas, caja de registro y medición",
+   "unidad": "un",
+   "norma_referencia": "RETIE (Res. 40117 de 2024) y EPM RA6-014/RA6-015 (diseño y medición de la resistencia de puesta a tierra)",
+   "supuestos": [
+    "Bajante de 14 m (12 m de poste + 2 m de conexión)",
+    "Si la medida supera el valor de diseño se agrega otra varilla (+$85.000 y +0,1 día de pareja)",
+    "Rendimiento: 4 por día de pareja"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "VARILLA",
+     "descripcion": "Varilla de puesta a tierra copperweld de 5/8\" × 2,40 m",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 85000,
+     "subtotal": 85000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CU-2D",
+     "descripcion": "Cable de cobre desnudo 2 AWG, 7 hilos",
+     "unidad": "m",
+     "cantidad": 14,
+     "precio_unitario": 17000,
+     "subtotal": 238000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "EXOT",
+     "descripcion": "Soldadura exotérmica (carga de 90 g y prorrateo del molde)",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 45000,
+     "subtotal": 90000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TUBO-PAT",
+     "descripcion": "Tubo de protección del bajante de tierra (PVC o IMC 1/2\", 3 m) con cinta bandit",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 35000,
+     "subtotal": 35000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CONECTOR",
+     "descripcion": "Conector de compresión en C o transversal universal (cobre/aluminio)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 15000,
+     "subtotal": 15000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CAJA-PAT",
+     "descripcion": "Caja de registro para electrodo de puesta a tierra con tapa",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 85000,
+     "subtotal": 85000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-TELUR",
+     "descripcion": "Telurómetro y equipo de soldadura exotérmica",
+     "unidad": "día",
+     "cantidad": 0.25,
+     "tarifa": 120000,
+     "subtotal": 30000
+    },
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 0.125,
+     "tarifa": 380000,
+     "subtotal": 47500
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 76500,
+     "subtotal": 3825
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 548000,
+     "subtotal": 16440
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Pareja: 1 liniero + 1 ayudante",
+     "actividad": "hincado, soldadura, bajante y medición",
+     "costo_dia": 306000,
+     "rendimiento_unidades_por_dia": 4,
+     "subtotal": 76500
+    }
+   ],
+   "subtotales": {
+    "materiales": 548000,
+    "componentes_apu": 0,
+    "equipo": 81325,
+    "transporte": 16440,
+    "mano_de_obra": 76500
+   },
+   "costo_directo": 722265,
+   "aiu": {
+    "administracion": 137230,
+    "imprevistos": 21668,
+    "utilidad": 36113,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 6862,
+   "precio_unitario_total": 924138,
+   "rango_precio_total": [
+    739310,
+    1201379
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "CREG N2L137, puesta a tierra típica de nivel 2 (actualizado con IPP)",
+     "valor": 444757
+    },
+    {
+     "referencia": "CREG Tabla 30, puesta a tierra de nivel 1 (actualizado con IPP)",
+     "valor": 253742
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-06U",
+   "descripcion": "km de red de MT aérea trifásica 13,2 kV en zona urbana: ACSR 2/0 + neutro ACSR 1/0, postes de concreto de 12 m, vano de 40 m",
+   "unidad": "km",
+   "norma_referencia": "EPM RA2-001/RA2-003/RA2-004 y RETIE",
+   "supuestos": [
+    "25 postes por km: 19 de suspensión (510 kgf), 5 de retención y 1 terminal prorrateado (750 kgf)",
+    "6 vientos y 4 puestas a tierra por km",
+    "Conductor: 3 fases ACSR 2/0 + neutro ACSR 1/0 × factor 1,04",
+    "Tendido de 4 conductores: 0,6 km por día de cuadrilla, con equipo de tendido y grúa canasta la mitad del tiempo",
+    "No incluye equipos de protección (reconectador, cortacircuitos de ramal, DPS), que se cuentan por unidad"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "ACSR-20",
+     "descripcion": "Conductor ACSR 2/0 AWG (Quail), con IVA",
+     "unidad": "m",
+     "cantidad": 3120.0,
+     "precio_unitario": 6000,
+     "subtotal": 18720000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ACSR-10",
+     "descripcion": "Conductor ACSR 1/0 AWG (Raven), con IVA",
+     "unidad": "m",
+     "cantidad": 1040.0,
+     "precio_unitario": 4800,
+     "subtotal": 4992000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CONECTOR",
+     "descripcion": "Empalmes de tensión y conectores de puentes",
+     "unidad": "un",
+     "cantidad": 8,
+     "precio_unitario": 15000,
+     "subtotal": 120000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PLACA-ID",
+     "descripcion": "Marcación de circuito (RA6-020: en derivaciones y cada 2 km)",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 15000,
+     "subtotal": 45000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [
+    {
+     "codigo_apu": "APU-01",
+     "descripcion": "Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida",
+     "unidad": "un",
+     "cantidad": 19.0,
+     "costo_directo_unitario": 2200516,
+     "subtotal": 41809804,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-01b",
+     "descripcion": "Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales)",
+     "unidad": "un",
+     "cantidad": 6.0,
+     "costo_directo_unitario": 2406516,
+     "subtotal": 14439096,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-02",
+     "descripcion": "Estructura de suspensión trifásica 13,2 kV con neutro inferior, cruceta de 1.500 mm al centro (vestida sobre poste ya instalado)",
+     "unidad": "un",
+     "cantidad": 19.0,
+     "costo_directo_unitario": 874228,
+     "subtotal": 16610332,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-03",
+     "descripcion": "Estructura de retención (referencia) trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin vientos)",
+     "unidad": "un",
+     "cantidad": 5,
+     "costo_directo_unitario": 2430317,
+     "subtotal": 12151585,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-03b",
+     "descripcion": "Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento)",
+     "unidad": "un",
+     "cantidad": 1.0,
+     "costo_directo_unitario": 1663997,
+     "subtotal": 1663997,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-04",
+     "descripcion": "Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje",
+     "unidad": "un",
+     "cantidad": 6,
+     "costo_directo_unitario": 643560,
+     "subtotal": 3861360,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-05",
+     "descripcion": "Puesta a tierra de estructura o equipo: 1 varilla copperweld de 5/8\" × 2,4 m, bajante de Cu 2 AWG, 2 soldaduras exotérmicas, caja de registro y medición",
+     "unidad": "un",
+     "cantidad": 4,
+     "costo_directo_unitario": 722265,
+     "subtotal": 2889060,
+     "tipo_dato": "calculo_propio"
+    }
+   ],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-TENDIDO",
+     "descripcion": "Equipo de tendido: poleas, malacate, ranas, tensiómetro y pértigas",
+     "unidad": "día",
+     "cantidad": 1.6667,
+     "tarifa": 250000,
+     "subtotal": 416667
+    },
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 1.6667,
+     "tarifa": 380000,
+     "subtotal": 633333
+    },
+    {
+     "codigo_insumo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 0.8333,
+     "tarifa": 1800000,
+     "subtotal": 1500000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 1620000,
+     "subtotal": 81000
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 23877000,
+     "subtotal": 716310
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes",
+     "actividad": "tendido, tensionado, amarres y puentes de 4 conductores",
+     "costo_dia": 972000,
+     "rendimiento_unidades_por_dia": 0.6,
+     "subtotal": 1620000
+    }
+   ],
+   "subtotales": {
+    "materiales": 23877000,
+    "componentes_apu": 93425234,
+    "equipo": 2631000,
+    "transporte": 716310,
+    "mano_de_obra": 1620000
+   },
+   "costo_directo": 122269544,
+   "aiu": {
+    "administracion": 23231213,
+    "imprevistos": 3668086,
+    "utilidad": 6113477,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 1161561,
+   "precio_unitario_total": 156443882,
+   "rango_precio_total": [
+    125155105,
+    203377046
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "Suma de UC de la CREG para el mismo km (19 N2L70 + 6 N2L72 + N2L84 × 4/3 por el neutro + 4 N2L137), actualizada con IPP; ya incluye ingeniería y montaje",
+     "valor": 179347467
+    },
+    {
+     "referencia": "Solo conductor: CREG N2L84 ACSR 2/0 (3 fases) actualizado",
+     "valor": 27421745
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-06R",
+   "descripcion": "km de red de MT aérea trifásica 13,2 kV en zona rural (vía a la PTAP, pozos y PTAP veredal): ACSR 1/0 + neutro ACSR 1/0, vano de 80 m",
+   "unidad": "km",
+   "norma_referencia": "EPM RA2-011 (suspensión V-neutro, vano hasta 90 m), RA2-003, RA2-004",
+   "supuestos": [
+    "12,5 postes por km: 10,0 de suspensión, 2 de retención y 0,5 terminal prorrateado",
+    "3 vientos y 3 puestas a tierra por km",
+    "Se usa la estructura RA2-001 como costo de la suspensión rural (la RA2-011 tiene materiales equivalentes)",
+    "Tendido: 1,0 km por día",
+    "No incluye servidumbre ni poda (ítems GES-SERV y GES-PODA por km)"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "ACSR-10",
+     "descripcion": "Conductor ACSR 1/0 AWG (Raven), con IVA",
+     "unidad": "m",
+     "cantidad": 4160.0,
+     "precio_unitario": 4800,
+     "subtotal": 19968000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CONECTOR",
+     "descripcion": "Empalmes y conectores",
+     "unidad": "un",
+     "cantidad": 6,
+     "precio_unitario": 15000,
+     "subtotal": 90000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PLACA-ID",
+     "descripcion": "Marcación de circuito",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 15000,
+     "subtotal": 30000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [
+    {
+     "codigo_apu": "APU-01",
+     "descripcion": "Poste de concreto de 12 m y 510 kgf instalado (hincado, aplomado y relleno), sin vestida",
+     "unidad": "un",
+     "cantidad": 10.0,
+     "costo_directo_unitario": 2200516,
+     "subtotal": 22005160,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-01b",
+     "descripcion": "Poste de concreto de 12 m y 750 kgf instalado, sin vestida (para retenciones y terminales)",
+     "unidad": "un",
+     "cantidad": 2.5,
+     "costo_directo_unitario": 2406516,
+     "subtotal": 6016290,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-02",
+     "descripcion": "Estructura de suspensión trifásica 13,2 kV con neutro inferior, cruceta de 1.500 mm al centro (vestida sobre poste ya instalado)",
+     "unidad": "un",
+     "cantidad": 10.0,
+     "costo_directo_unitario": 874228,
+     "subtotal": 8742280,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-03",
+     "descripcion": "Estructura de retención (referencia) trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin vientos)",
+     "unidad": "un",
+     "cantidad": 2,
+     "costo_directo_unitario": 2430317,
+     "subtotal": 4860634,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-03b",
+     "descripcion": "Estructura terminal trifásica 13,2 kV, doble cruceta de 1.500 mm (vestida, sin viento)",
+     "unidad": "un",
+     "cantidad": 0.5,
+     "costo_directo_unitario": 1663997,
+     "subtotal": 831998,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-04",
+     "descripcion": "Viento (retenida) a tierra para poste de 12 m, con aislador tensor y varilla de anclaje",
+     "unidad": "un",
+     "cantidad": 3,
+     "costo_directo_unitario": 643560,
+     "subtotal": 1930680,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-05",
+     "descripcion": "Puesta a tierra de estructura o equipo: 1 varilla copperweld de 5/8\" × 2,4 m, bajante de Cu 2 AWG, 2 soldaduras exotérmicas, caja de registro y medición",
+     "unidad": "un",
+     "cantidad": 3,
+     "costo_directo_unitario": 722265,
+     "subtotal": 2166795,
+     "tipo_dato": "calculo_propio"
+    }
+   ],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-TENDIDO",
+     "descripcion": "Equipo de tendido: poleas, malacate, ranas, tensiómetro y pértigas",
+     "unidad": "día",
+     "cantidad": 1.0,
+     "tarifa": 250000,
+     "subtotal": 250000
+    },
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 1.0,
+     "tarifa": 380000,
+     "subtotal": 380000
+    },
+    {
+     "codigo_insumo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 0.3,
+     "tarifa": 1800000,
+     "subtotal": 540000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 972000,
+     "subtotal": 48600
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 20088000,
+     "subtotal": 602640
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes",
+     "actividad": "tendido, tensionado, amarres y puentes de 4 conductores",
+     "costo_dia": 972000,
+     "rendimiento_unidades_por_dia": 1.0,
+     "subtotal": 972000
+    }
+   ],
+   "subtotales": {
+    "materiales": 20088000,
+    "componentes_apu": 46553837,
+    "equipo": 1218600,
+    "transporte": 602640,
+    "mano_de_obra": 972000
+   },
+   "costo_directo": 69435077,
+   "aiu": {
+    "administracion": 13192665,
+    "imprevistos": 2083052,
+    "utilidad": 3471754,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 659633,
+   "precio_unitario_total": 88842181,
+   "rango_precio_total": [
+    71073745,
+    115494835
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "Suma de UC de la CREG para el mismo km (N2L70, N2L72, N2L83 × 4/3, N2L137), actualizada con IPP",
+     "valor": 103656402
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-07",
+   "descripcion": "km de red de BT trenzada 3 × 1/0 AWG Al + neutro portante 1/0, sobre postes de la red de MT (sin postes nuevos)",
+   "unidad": "km",
+   "norma_referencia": "RETIE y normas de EPM para red trenzada (pinzas de suspensión y anclaje)",
+   "supuestos": [
+    "25 pinzas de suspensión y 6 de anclaje por km, con collarín",
+    "10 derivaciones con conectores de perforación aislados",
+    "Tendido: 0,8 km por día",
+    "Si no hay MT en la calle, sumar 29 postes de 10 m por km (APU-01c)"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "TRENZ-3x10",
+     "descripcion": "Cable trenzado de aluminio 3 × 1/0 AWG + neutro portante 1/0, con IVA",
+     "unidad": "m",
+     "cantidad": 1030.0,
+     "precio_unitario": 22000,
+     "subtotal": 22660000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "COLLARIN",
+     "descripcion": "Collarín o abrazadera para pinza de suspensión/anclaje",
+     "unidad": "un",
+     "cantidad": 31,
+     "precio_unitario": 55000,
+     "subtotal": 1705000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PINZA-SUS",
+     "descripcion": "Pinza de suspensión para cable trenzado con soporte y tornillería",
+     "unidad": "un",
+     "cantidad": 25,
+     "precio_unitario": 38000,
+     "subtotal": 950000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PINZA-ANC",
+     "descripcion": "Pinza de anclaje (retención) para cable trenzado",
+     "unidad": "un",
+     "cantidad": 6,
+     "precio_unitario": 48000,
+     "subtotal": 288000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CONECT-PERF",
+     "descripcion": "Conector de perforación aislado para derivación en trenzado",
+     "unidad": "un",
+     "cantidad": 10,
+     "precio_unitario": 22000,
+     "subtotal": 220000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PLACA-ID",
+     "descripcion": "Placa o marquilla de identificación de circuito o poste (RA6-020)",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 15000,
+     "subtotal": 30000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-TENDIDO",
+     "descripcion": "Equipo de tendido: poleas, malacate, ranas, tensiómetro y pértigas",
+     "unidad": "día",
+     "cantidad": 1.25,
+     "tarifa": 250000,
+     "subtotal": 312500
+    },
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 1.25,
+     "tarifa": 380000,
+     "subtotal": 475000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 1215000,
+     "subtotal": 60750
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 25853000,
+     "subtotal": 775590
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes",
+     "actividad": "tendido del trenzado, pinzas y derivaciones",
+     "costo_dia": 972000,
+     "rendimiento_unidades_por_dia": 0.8,
+     "subtotal": 1215000
+    }
+   ],
+   "subtotales": {
+    "materiales": 25853000,
+    "componentes_apu": 0,
+    "equipo": 848250,
+    "transporte": 775590,
+    "mano_de_obra": 1215000
+   },
+   "costo_directo": 28691840,
+   "aiu": {
+    "administracion": 5451450,
+    "imprevistos": 860755,
+    "utilidad": 1434592,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 272572,
+   "precio_unitario_total": 36711209,
+   "rango_precio_total": [
+    29368967,
+    47724572
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "CREG N1L56 trenzado Al 1/0 × 3 fases, instalado (actualizado con IPP)",
+     "valor": 52444272
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-08",
+   "descripcion": "Transformador trifásico de 75 kVA, 13.200/220-127 V, instalado en poste existente con cortacircuitos, DPS, bajante de BT y 2 puestas a tierra",
+   "unidad": "un",
+   "norma_referencia": "EPM RA3-026 y RA2-007 (cortacircuitos en cruceta de 2.400 mm); RETIE",
+   "supuestos": [
+    "El poste de 12 m (750 o 1.050 kgf) se cuenta aparte si es nuevo",
+    "Montaje: 1 día de cuadrilla con grúa medio día",
+    "Precio del transformador estimado (sin cotización)"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "TR-75-3F",
+     "descripcion": "Transformador trifásico tipo poste en aceite, 75 kVA, 13.200/220-127 V, solo equipo",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 24813447,
+     "subtotal": 24813447,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CORTAC",
+     "descripcion": "Cortacircuitos 15 kV 100 A con portafusible (caja primaria), con IVA",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 445000,
+     "subtotal": 1335000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "FUSIBLE",
+     "descripcion": "Fusible tipo K para cortacircuitos",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 12000,
+     "subtotal": 36000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "DPS-12",
+     "descripcion": "DPS (pararrayos) de óxido metálico 12 kV polimérico, con IVA",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 250000,
+     "subtotal": 750000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CRU-24",
+     "descripcion": "Cruceta angular metálica galvanizada de 2.400 mm (RA7-013)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 150000,
+     "subtotal": 150000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TIR-24",
+     "descripcion": "Tiranta (diagonal) de 2.400 mm",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 55000,
+     "subtotal": 55000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "SOPORTE-L",
+     "descripcion": "Soporte en L para cortacircuitos y pararrayos",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 12000,
+     "subtotal": 36000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ESTRIBO",
+     "descripcion": "Estribo (derivación) para conexión de cortacircuitos",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 15000,
+     "subtotal": 45000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CONECTOR",
+     "descripcion": "Conector de compresión en C o transversal universal (cobre/aluminio)",
+     "unidad": "un",
+     "cantidad": 9,
+     "precio_unitario": 15000,
+     "subtotal": 135000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CU-2D",
+     "descripcion": "Cobre 2 AWG para puentes de MT y conexión de DPS",
+     "unidad": "m",
+     "cantidad": 12,
+     "precio_unitario": 17000,
+     "subtotal": 204000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "COLLAR-TR",
+     "descripcion": "Collarín doble o soporte para colgar transformador trifásico",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 120000,
+     "subtotal": 240000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PERNO-ESP",
+     "descripcion": "Perno espaciador de 15,9 × 254 mm (5/8\" × 10\") galvanizado",
+     "unidad": "un",
+     "cantidad": 4,
+     "precio_unitario": 12500,
+     "subtotal": 50000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TORN-58",
+     "descripcion": "Tornillo de máquina de 5/8\" × 1½\"–2\" galvanizado",
+     "unidad": "un",
+     "cantidad": 6,
+     "precio_unitario": 5500,
+     "subtotal": 33000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "THHN-20",
+     "descripcion": "Bajante de BT 4 × 2/0 Cu × 12 m (I = 197 A a 220 V)",
+     "unidad": "m",
+     "cantidad": 48,
+     "precio_unitario": 42000,
+     "subtotal": 2016000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "BAJANTE-3",
+     "descripcion": "Tubo galvanizado de 3\" × 6 m con capacete, unión y cinta bandit (bajante BT)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 480000,
+     "subtotal": 480000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CAJA-DERIV",
+     "descripcion": "Caja de derivación de acometidas o barraje de BT en poste",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 350000,
+     "subtotal": 350000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CUBIERTA-BUJE",
+     "descripcion": "Cubierta aislante para bujes secundarios (antifraude)",
+     "unidad": "un",
+     "cantidad": 4,
+     "precio_unitario": 20000,
+     "subtotal": 80000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PRUEBAS-TR",
+     "descripcion": "Pruebas de puesta en servicio del transformador (relación TTR, aislamiento, aceite) y protocolo",
+     "unidad": "global",
+     "cantidad": 1,
+     "precio_unitario": 600000,
+     "subtotal": 600000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PLACA-ID",
+     "descripcion": "Placa o marquilla de identificación de circuito o poste (RA6-020)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 15000,
+     "subtotal": 15000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [
+    {
+     "codigo_apu": "APU-05",
+     "descripcion": "Puesta a tierra de estructura o equipo: 1 varilla copperweld de 5/8\" × 2,4 m, bajante de Cu 2 AWG, 2 soldaduras exotérmicas, caja de registro y medición",
+     "unidad": "un",
+     "cantidad": 2,
+     "costo_directo_unitario": 722265,
+     "subtotal": 1444530,
+     "tipo_dato": "calculo_propio"
+    }
+   ],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 0.5,
+     "tarifa": 1800000,
+     "subtotal": 900000
+    },
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 1.0,
+     "tarifa": 380000,
+     "subtotal": 380000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 972000,
+     "subtotal": 48600
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 31423447,
+     "subtotal": 942703
+    },
+    {
+     "codigo_insumo": "TR-TRAFO",
+     "descripcion": "Transporte de un transformador de distribución hasta Yondó",
+     "unidad": "un",
+     "cantidad": 1,
+     "tarifa": 600000,
+     "subtotal": 600000
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes",
+     "actividad": "montaje del transformador, protecciones, bajante y pruebas",
+     "costo_dia": 972000,
+     "rendimiento_unidades_por_dia": 1.0,
+     "subtotal": 972000
+    }
+   ],
+   "subtotales": {
+    "materiales": 31423447,
+    "componentes_apu": 1444530,
+    "equipo": 1328600,
+    "transporte": 1542703,
+    "mano_de_obra": 972000
+   },
+   "costo_directo": 36711280,
+   "aiu": {
+    "administracion": 6975143,
+    "imprevistos": 1101338,
+    "utilidad": 1835564,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 348757,
+   "precio_unitario_total": 46972083,
+   "rango_precio_total": [
+    37577666,
+    61063708
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "CREG N1T14, transformador aéreo trifásico urbano de 75 kVA instalado (actualizado con IPP)",
+     "valor": 19697797
+    },
+    {
+     "referencia": "CREG N1T18, transformador pedestal de 75 kVA instalado (opción subterránea)",
+     "valor": 65649439
+    }
+   ],
+   "variantes": [
+    {
+     "variante": "25 kVA monofásico",
+     "transformador": "TR-25-1F",
+     "costo_directo": 20749783,
+     "precio_unitario_total": 26549347,
+     "rango": [
+      21239478,
+      34514151
+     ],
+     "referencia_creg": "N1T5",
+     "valor_creg_actualizado": 11013503,
+     "nota": "Monofásico: 1 cortacircuitos, 1 DPS, bajante 3 × 1/0 Cu, percha en vez de collarines (RA3-026); mismo montaje y puestas a tierra."
+    },
+    {
+     "variante": "37,5 kVA monofásico",
+     "transformador": "TR-37-1F",
+     "costo_directo": 21951783,
+     "precio_unitario_total": 28087306,
+     "rango": [
+      22469845,
+      36513498
+     ],
+     "referencia_creg": "N1T6",
+     "valor_creg_actualizado": 11749823,
+     "nota": "Monofásico: 1 cortacircuitos, 1 DPS, bajante 3 × 1/0 Cu, percha en vez de collarines (RA3-026); mismo montaje y puestas a tierra."
+    },
+    {
+     "variante": "45 kVA trifásico",
+     "transformador": "TR-45-3F",
+     "costo_directo": 30161074,
+     "precio_unitario_total": 38591094,
+     "rango": [
+      30872875,
+      50168422
+     ],
+     "referencia_creg": "N1T12",
+     "valor_creg_actualizado": 15559909,
+     "nota": "Igual al APU-08 cambiando el transformador; mismo montaje y puestas a tierra."
+    },
+    {
+     "variante": "112,5 kVA trifásico",
+     "transformador": "TR-1125-3F",
+     "costo_directo": 43545511,
+     "precio_unitario_total": 55716482,
+     "rango": [
+      44573185,
+      72431426
+     ],
+     "referencia_creg": "N1T15",
+     "valor_creg_actualizado": 21850750,
+     "nota": "Igual al APU-08 cambiando el transformador; mismo montaje y puestas a tierra. Para 112,5 kVA EPM puede pedir montaje en estructura doble (RA3-030) y poste de 1.050 kgf: sumar un poste APU-01b y una estructura APU-03."
+    }
+   ]
+  },
+  {
+   "codigo": "APU-09",
+   "descripcion": "km de fibra óptica ADSS 24 hilos instalada en postes existentes (zona urbana, vano de 40 m), con herrajes, reservas, empalmes y pruebas",
+   "unidad": "km",
+   "norma_referencia": "Buenas prácticas de despliegue aéreo (UIT-T L.26/ IEC 60794-4-20); permiso del dueño de los postes",
+   "supuestos": [
+    "Cable × 1,06 por desperdicio y reservas",
+    "21 herrajes de suspensión y 4 postes de retención con 2 remates cada uno",
+    "Fleje de 1,2 m y 2 hebillas por herraje",
+    "2 pares de raquetas de reserva por km",
+    "Media caja de empalme por km con 24 fusiones",
+    "Tendido: 1,2 km por día; pruebas OTDR en ambos sentidos",
+    "Precio del carrete de 4 km; para tramos sueltos de menos de 4 km usar el precio por km (+$3.064/m)"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "FO-ADSS24-4K",
+     "descripcion": "Cable de fibra óptica ADSS G.652D monomodo 24 hilos, span 100 m, en carrete de 4 km (precio con IVA)",
+     "unidad": "m",
+     "cantidad": 1060.0,
+     "precio_unitario": 6209,
+     "subtotal": 6581308,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-HSUS",
+     "descripcion": "Herraje de suspensión tipo J para ADSS Φ 10–15 mm (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 21,
+     "precio_unitario": 24640,
+     "subtotal": 517443,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-REMATE",
+     "descripcion": "Remate preformado (retención) para ADSS span 100 m, Φ 10–11 mm (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 8,
+     "precio_unitario": 16755,
+     "subtotal": 134042,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-FLEJE",
+     "descripcion": "Fleje de acero inoxidable 304 de 3/4\", 0,70 mm (rollo de 30,5 m) (precio con IVA)",
+     "unidad": "m",
+     "cantidad": 34.8,
+     "precio_unitario": 4718,
+     "subtotal": 164186,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-HEBILLA",
+     "descripcion": "Hebilla de acero inoxidable de 3/4\" (paquete de 100) (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 58,
+     "precio_unitario": 977,
+     "subtotal": 56641,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-RAQ",
+     "descripcion": "Par de raquetas de reserva para cable ADSS, 12\" (precio con IVA)",
+     "unidad": "par",
+     "cantidad": 2,
+     "precio_unitario": 93961,
+     "subtotal": 187922,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-CEMP",
+     "descripcion": "Caja de empalme exterior IP65, aérea, hasta 144 empalmes (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 0.5,
+     "precio_unitario": 425782,
+     "subtotal": 212891,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-PIG",
+     "descripcion": "Pigtail monomodo SC/UPC simplex de 1 m (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 12.0,
+     "precio_unitario": 4189,
+     "subtotal": 50266,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "PLACA-ID",
+     "descripcion": "Marquilla de identificación del cable en cada poste",
+     "unidad": "un",
+     "cantidad": 25,
+     "precio_unitario": 15000,
+     "subtotal": 375000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 0.8333,
+     "tarifa": 380000,
+     "subtotal": 316667
+    },
+    {
+     "codigo_insumo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 0.2,
+     "tarifa": 1800000,
+     "subtotal": 360000
+    },
+    {
+     "codigo_insumo": "EQ-FUSION",
+     "descripcion": "Fusionadora de fibra, OTDR, cortadora de precisión y medidor de potencia",
+     "unidad": "día",
+     "cantidad": 0.25,
+     "tarifa": 450000,
+     "subtotal": 112500
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 745500,
+     "subtotal": 37275
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 8279699,
+     "subtotal": 248391
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de fibra óptica: 1 empalmador + 1 liniero + 2 ayudantes",
+     "actividad": "tendido, herrajes y marquillas",
+     "costo_dia": 630000,
+     "rendimiento_unidades_por_dia": 1.2,
+     "subtotal": 525000
+    },
+    {
+     "cuadrilla": "Cuadrilla de fibra óptica: 1 empalmador + 1 liniero + 2 ayudantes",
+     "actividad": "empalmes (12 fusiones por km) y pruebas OTDR (0,1 día por km)",
+     "costo_dia": 630000,
+     "rendimiento_unidades_por_dia": 2.8571,
+     "subtotal": 220500
+    }
+   ],
+   "subtotales": {
+    "materiales": 8279699,
+    "componentes_apu": 0,
+    "equipo": 826442,
+    "transporte": 248391,
+    "mano_de_obra": 745500
+   },
+   "costo_directo": 10100032,
+   "aiu": {
+    "administracion": 1919006,
+    "imprevistos": 303001,
+    "utilidad": 505002,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 95950,
+   "precio_unitario_total": 12922991,
+   "rango_precio_total": [
+    10338393,
+    16799888
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "CREG N4L93, fibra ADSS en líneas de nivel 4 (actualizado con IPP); referencia alta, incluye trabajo en torres",
+     "valor": 50087883
+    }
+   ],
+   "variantes": [
+    {
+     "variante": "ADSS 48 hilos (troncal)",
+     "costo_directo": 21746854,
+     "precio_unitario_total": 27825099,
+     "rango": [
+      22260080,
+      36172629
+     ],
+     "nota": "Cambia el cable al precio por km suelto de 48 hilos (no hay precio confiable de carrete) y duplica las fusiones (12 más por km, 0,25 días de cuadrilla)."
+    },
+    {
+     "variante": "Rural (vano 80 m, 12,5 postes/km)",
+     "costo_directo": 7878025,
+     "precio_unitario_total": 10079933,
+     "rango": null,
+     "nota": "Estimación: la mitad de herrajes, fleje y marquillas y tendido más rápido; el cable no cambia."
+    }
+   ],
+   "costo_operacion_anual": {
+    "descripcion": "Arriendo de 25 puntos de apoyo por km en postes de EPM (tope CRC actualizado)",
+    "valor": 900668
+   }
+  },
+  {
+   "codigo": "APU-10",
+   "descripcion": "Metro de canalización subterránea con 4 ductos PVC de 4\" bajo andén, envueltos en concreto, con reposición de andén (sin cámaras)",
+   "unidad": "m",
+   "norma_referencia": "RETIE y normas de EPM para canalizaciones (RS-); NTC 2050",
+   "supuestos": [
+    "Zanja de 0,60 × 1,00 m; envoltura de concreto de 0,16 m³/m",
+    "Relleno compactado de 0,35 m³/m y retiro de 0,40 m³/m de sobrantes",
+    "Rendimiento: 6 m por día de cuadrilla civil",
+    "Cámaras aparte (cada 50 m)"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "DUCTO-4",
+     "descripcion": "Ducto PVC 4\" tipo DB o TDP para canalización eléctrica (por metro)",
+     "unidad": "m",
+     "cantidad": 4.12,
+     "precio_unitario": 26000,
+     "subtotal": 107120,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "SEPARADOR-D",
+     "descripcion": "Separador de ductos de 4\" (soporte para 4 vías)",
+     "unidad": "un",
+     "cantidad": 0.6667,
+     "precio_unitario": 4500,
+     "subtotal": 3000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CONCRETO-21",
+     "descripcion": "Concreto de 3.000 psi (21 MPa) hecho en obra, puesto en Yondó",
+     "unidad": "m3",
+     "cantidad": 0.16,
+     "precio_unitario": 650000,
+     "subtotal": 104000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "RELLENO",
+     "descripcion": "Material seleccionado (recebo o arena) para relleno, puesto en obra",
+     "unidad": "m3",
+     "cantidad": 0.35,
+     "precio_unitario": 95000,
+     "subtotal": 33250,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CINTA-SEN",
+     "descripcion": "Cinta de señalización \"peligro, energía\"",
+     "unidad": "m",
+     "cantidad": 1,
+     "precio_unitario": 1200,
+     "subtotal": 1200,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ANDEN",
+     "descripcion": "Demolición y reposición de andén en concreto de 0,10 m (materiales y mano de obra)",
+     "unidad": "m2",
+     "cantidad": 0.6,
+     "precio_unitario": 145000,
+     "subtotal": 87000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-COMPACT",
+     "descripcion": "Vibrocompactador tipo canguro",
+     "unidad": "día",
+     "cantidad": 0.1667,
+     "tarifa": 150000,
+     "subtotal": 25000
+    },
+    {
+     "codigo_insumo": "EQ-MEZCLA",
+     "descripcion": "Mezcladora de concreto de 1 bulto",
+     "unidad": "día",
+     "cantidad": 0.1667,
+     "tarifa": 90000,
+     "subtotal": 15000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 94536,
+     "subtotal": 4727
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 335570,
+     "subtotal": 10067
+    },
+    {
+     "codigo_insumo": "TR-ESCOMBRO",
+     "descripcion": "Retiro y disposición de sobrantes de excavación",
+     "unidad": "m3",
+     "cantidad": 0.4,
+     "tarifa": 85000,
+     "subtotal": 34000
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de obra civil: 1 oficial + 4 obreros",
+     "actividad": "demolición, excavación, ductos, concreto, relleno y reposición",
+     "costo_dia": 567217,
+     "rendimiento_unidades_por_dia": 6,
+     "subtotal": 94536
+    }
+   ],
+   "subtotales": {
+    "materiales": 335570,
+    "componentes_apu": 0,
+    "equipo": 44727,
+    "transporte": 44067,
+    "mano_de_obra": 94536
+   },
+   "costo_directo": 518900,
+   "aiu": {
+    "administracion": 98591,
+    "imprevistos": 15567,
+    "utilidad": 25945,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 4930,
+   "precio_unitario_total": 663933,
+   "rango_precio_total": [
+    531146,
+    863112
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "CREG N1C8 canalización 4 ductos de nivel 1 (actualizado con IPP)",
+     "valor": 304741
+    },
+    {
+     "referencia": "CREG N2L77 canalización urbana 4 × 4\" de nivel 2, por metro (incluye cámaras y vías), actualizado",
+     "valor": 866043
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-10b",
+   "descripcion": "Cámara de inspección de 1,0 × 1,0 × 1,2 m en concreto reforzado con tapa en ferroconcreto",
+   "unidad": "un",
+   "norma_referencia": "Normas de EPM para cámaras de redes subterráneas; RETIE",
+   "supuestos": [
+    "Excavación de 1,6 × 1,6 × 1,4 m (3,6 m³) a mano",
+    "Paredes y base de 0,15 m: 1,0 m³ de concreto y 50 kg de acero",
+    "2 días de cuadrilla civil por cámara"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "CONCRETO-21",
+     "descripcion": "Concreto de 3.000 psi (21 MPa) hecho en obra, puesto en Yondó",
+     "unidad": "m3",
+     "cantidad": 1.0,
+     "precio_unitario": 650000,
+     "subtotal": 650000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "ACERO-REF",
+     "descripcion": "Acero de refuerzo de 60.000 psi figurado",
+     "unidad": "kg",
+     "cantidad": 50,
+     "precio_unitario": 6500,
+     "subtotal": 325000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TAPA-CAMARA",
+     "descripcion": "Tapa y marco en ferroconcreto para cámara de 1,0 × 1,0 m, tráfico peatonal/vehicular liviano",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 750000,
+     "subtotal": 750000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "FORMALETA",
+     "descripcion": "Alquiler de formaleta metálica para cámara (por uso)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 150000,
+     "subtotal": 150000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "RELLENO",
+     "descripcion": "Material seleccionado (recebo o arena) para relleno, puesto en obra",
+     "unidad": "m3",
+     "cantidad": 0.5,
+     "precio_unitario": 95000,
+     "subtotal": 47500,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-MEZCLA",
+     "descripcion": "Mezcladora de concreto de 1 bulto",
+     "unidad": "día",
+     "cantidad": 1.0,
+     "tarifa": 90000,
+     "subtotal": 90000
+    },
+    {
+     "codigo_insumo": "EQ-COMPACT",
+     "descripcion": "Vibrocompactador tipo canguro",
+     "unidad": "día",
+     "cantidad": 0.5,
+     "tarifa": 150000,
+     "subtotal": 75000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 1134434,
+     "subtotal": 56722
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 1922500,
+     "subtotal": 57675
+    },
+    {
+     "codigo_insumo": "TR-ESCOMBRO",
+     "descripcion": "Retiro y disposición de sobrantes de excavación",
+     "unidad": "m3",
+     "cantidad": 3.0,
+     "tarifa": 85000,
+     "subtotal": 255000
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de obra civil: 1 oficial + 4 obreros",
+     "actividad": "excavación, formaleta, vaciado y relleno",
+     "costo_dia": 567217,
+     "rendimiento_unidades_por_dia": 0.5,
+     "subtotal": 1134434
+    }
+   ],
+   "subtotales": {
+    "materiales": 1922500,
+    "componentes_apu": 0,
+    "equipo": 221722,
+    "transporte": 312675,
+    "mano_de_obra": 1134434
+   },
+   "costo_directo": 3591331,
+   "aiu": {
+    "administracion": 682353,
+    "imprevistos": 107740,
+    "utilidad": 179567,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 34118,
+   "precio_unitario_total": 4595108,
+   "rango_precio_total": [
+    3676086,
+    5973640
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "CREG N1C1 caja sencilla para redes subterráneas, instalada (actualizado)",
+     "valor": 2502170
+    },
+    {
+     "referencia": "CREG N1C2 caja doble, instalada (actualizado)",
+     "valor": 6185418
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-12",
+   "descripcion": "km de red de MT subterránea 13,2 kV: canalización de 4 ductos, cámara cada 50 m y 3 cables monopolares Cu 1/0 XLPE 15 kV, con transiciones aéreo–subterráneas en los extremos",
+   "unidad": "km",
+   "norma_referencia": "RETIE; normas de EPM para redes subterráneas",
+   "supuestos": [
+    "1.000 m de canalización (APU-10) y 20 cámaras (APU-10b)",
+    "3 × 1.000 m × 1,04 de cable XLPE",
+    "Tendido del cable: 0,3 km de circuito por día de cuadrilla",
+    "2 transiciones (terminales, DPS y cortacircuitos) por km de tramo"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "XLPE-15-10",
+     "descripcion": "Cable monopolar de cobre 1/0 AWG XLPE 15 kV, aislamiento 133 %, con IVA",
+     "unidad": "m",
+     "cantidad": 3120.0,
+     "precio_unitario": 85000,
+     "subtotal": 265200000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TERM-15",
+     "descripcion": "Juego de 3 terminales premoldeados o termocontráctiles 15 kV exterior",
+     "unidad": "juego",
+     "cantidad": 2,
+     "precio_unitario": 1500000,
+     "subtotal": 3000000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "DPS-12",
+     "descripcion": "DPS (pararrayos) de óxido metálico 12 kV polimérico, con IVA",
+     "unidad": "un",
+     "cantidad": 6,
+     "precio_unitario": 250000,
+     "subtotal": 1500000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CORTAC",
+     "descripcion": "Cortacircuitos 15 kV 100 A con portafusible (caja primaria), con IVA",
+     "unidad": "un",
+     "cantidad": 6,
+     "precio_unitario": 445000,
+     "subtotal": 2670000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CONECTOR",
+     "descripcion": "Conector de compresión en C o transversal universal (cobre/aluminio)",
+     "unidad": "un",
+     "cantidad": 12,
+     "precio_unitario": 15000,
+     "subtotal": 180000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [
+    {
+     "codigo_apu": "APU-10",
+     "descripcion": "Metro de canalización subterránea con 4 ductos PVC de 4\" bajo andén, envueltos en concreto, con reposición de andén (sin cámaras)",
+     "unidad": "m",
+     "cantidad": 1000,
+     "costo_directo_unitario": 518900,
+     "subtotal": 518900000,
+     "tipo_dato": "calculo_propio"
+    },
+    {
+     "codigo_apu": "APU-10b",
+     "descripcion": "Cámara de inspección de 1,0 × 1,0 × 1,2 m en concreto reforzado con tapa en ferroconcreto",
+     "unidad": "un",
+     "cantidad": 20,
+     "costo_directo_unitario": 3591331,
+     "subtotal": 71826620,
+     "tipo_dato": "calculo_propio"
+    }
+   ],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-TENDIDO",
+     "descripcion": "Equipo de tendido: poleas, malacate, ranas, tensiómetro y pértigas",
+     "unidad": "día",
+     "cantidad": 3.3333,
+     "tarifa": 250000,
+     "subtotal": 833333
+    },
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 3.3333,
+     "tarifa": 380000,
+     "subtotal": 1266667
+    },
+    {
+     "codigo_insumo": "EQ-GRUA",
+     "descripcion": "Camión grúa de brazo articulado (8–12 t) con canasta, operador y combustible",
+     "unidad": "día",
+     "cantidad": 1.0,
+     "tarifa": 1800000,
+     "subtotal": 1800000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 3240000,
+     "subtotal": 162000
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 272550000,
+     "subtotal": 8176500
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de redes aéreas: 1 capataz + 2 linieros + 3 ayudantes",
+     "actividad": "tendido del cable, terminales y pruebas",
+     "costo_dia": 972000,
+     "rendimiento_unidades_por_dia": 0.3,
+     "subtotal": 3240000
+    }
+   ],
+   "subtotales": {
+    "materiales": 272550000,
+    "componentes_apu": 590726620,
+    "equipo": 4062000,
+    "transporte": 8176500,
+    "mano_de_obra": 3240000
+   },
+   "costo_directo": 878755120,
+   "aiu": {
+    "administracion": 166963473,
+    "imprevistos": 26362654,
+    "utilidad": 43937756,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 8348174,
+   "precio_unitario_total": 1124367176,
+   "rango_precio_total": [
+    899493741,
+    1461677329
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "CREG N2L77 (canalización urbana 4 × 4\", por km) + N2L127 (cable XLPE Cu 1/0, 3 fases), actualizados con IPP",
+     "valor": 1183121360
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-11",
+   "descripcion": "Acometida trifásica de BT a una sede (25 m de Cu 3 × 2/0 + N 1/0 + T 4 en tubería) con medida semidirecta y medidor bidireccional con comunicación",
+   "unidad": "un",
+   "norma_referencia": "RETIE; normas de medida de EPM; CREG 038 de 2014 (código de medida) y CREG 174 de 2021 (medidor bidireccional del autogenerador)",
+   "supuestos": [
+    "Para sedes de 30–100 kW (corriente de 80–260 A a 220 V); para cargas menores, medida directa (restar los TC y la bornera)",
+    "27 m de cable por conductor (25 m + colas)",
+    "1,5 días de pareja de liniería"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "THHN-20",
+     "descripcion": "Cable de cobre THHN/THWN-2 2/0 AWG",
+     "unidad": "m",
+     "cantidad": 81,
+     "precio_unitario": 42000,
+     "subtotal": 3402000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "THHN-10",
+     "descripcion": "Cable de cobre THHN/THWN-2 1/0 AWG",
+     "unidad": "m",
+     "cantidad": 27,
+     "precio_unitario": 34000,
+     "subtotal": 918000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "THHN-4",
+     "descripcion": "Cable de cobre THHN/THWN-2 4 AWG",
+     "unidad": "m",
+     "cantidad": 27,
+     "precio_unitario": 14000,
+     "subtotal": 378000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TUBO-PVC2",
+     "descripcion": "Tubería PVC conduit 2\" con accesorios (por metro)",
+     "unidad": "m",
+     "cantidad": 25,
+     "precio_unitario": 12000,
+     "subtotal": 300000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CONECTOR",
+     "descripcion": "Terminales y conectores",
+     "unidad": "un",
+     "cantidad": 12,
+     "precio_unitario": 15000,
+     "subtotal": 180000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "MED-BID",
+     "descripcion": "Medidor electrónico bidireccional trifásico clase 0,5S/1 semidirecto, con puerto de comunicación (homologado por EPM)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 1500000,
+     "subtotal": 1500000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "MODEM-AMI",
+     "descripcion": "Módem o módulo de comunicación (celular, LoRaWAN o RS-485) para el medidor",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 450000,
+     "subtotal": 450000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "TC-200",
+     "descripcion": "Transformador de corriente 200/5 A clase 0,5S para medida semidirecta",
+     "unidad": "un",
+     "cantidad": 3,
+     "precio_unitario": 180000,
+     "subtotal": 540000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "BORNERA",
+     "descripcion": "Bornera de prueba para medida semidirecta",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 150000,
+     "subtotal": 150000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CAJA-MED",
+     "descripcion": "Celda o caja de medida trifásica con totalizador 3 × 200 A, sellable",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 1900000,
+     "subtotal": 1900000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 0.5,
+     "tarifa": 380000,
+     "subtotal": 190000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 459000,
+     "subtotal": 22950
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 9718000,
+     "subtotal": 291540
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Pareja: 1 liniero + 1 ayudante",
+     "actividad": "acometida, celda de medida y conexión",
+     "costo_dia": 306000,
+     "rendimiento_unidades_por_dia": 0.6667,
+     "subtotal": 459000
+    }
+   ],
+   "subtotales": {
+    "materiales": 9718000,
+    "componentes_apu": 0,
+    "equipo": 212950,
+    "transporte": 291540,
+    "mano_de_obra": 459000
+   },
+   "costo_directo": 10681490,
+   "aiu": {
+    "administracion": 2029483,
+    "imprevistos": 320445,
+    "utilidad": 534074,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 101474,
+   "precio_unitario_total": 13666966,
+   "rango_precio_total": [
+    10933573,
+    17767056
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [
+    {
+     "referencia": "Rango de 2–5 M COP por punto de medición instalado usado en data/presupuesto_microrred.json (solo medidor y comunicación)",
+     "valor": 4000000
+    }
+   ],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-13",
+   "descripcion": "Conexión de una sede a la red de fibra (GPON): caja de distribución (NAP) con splitter, acometida de fibra de 50 m, roseta, ONU y conexión al tablero de la sede",
+   "unidad": "un",
+   "norma_referencia": "Arquitectura GPON (UIT-T G.984): OLT en el CCED, splitters en las NAP y una ONU por sede",
+   "supuestos": [
+    "Una NAP con splitter 1×8 por sede (sirve también a sedes vecinas)",
+    "50 m de acometida de fibra (drop) desde el poste",
+    "Medio día de cuadrilla de fibra con fusionadora"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "FO-NAP16",
+     "descripcion": "Caja de distribución (NAP) exterior para 24 empalmes con 16 acopladores SC/APC (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 261679,
+     "subtotal": 261679,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-SPL8",
+     "descripcion": "Splitter PLC 1×8 con conectores SC/APC (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 140284,
+     "subtotal": 140284,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-DROP",
+     "descripcion": "Cable de acometida de fibra (drop) de 2 hilos con mensajero, por metro",
+     "unidad": "m",
+     "cantidad": 55,
+     "precio_unitario": 1800,
+     "subtotal": 99000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "CAJA-ONU",
+     "descripcion": "Caja o bandeja de terminación óptica de pared con 2 adaptadores (roseta) en la sede",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 45000,
+     "subtotal": 45000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "NET-ONU",
+     "descripcion": "ONU (ONT) GPON con 4 puertos Gigabit y WiFi 2,4 GHz (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 399416,
+     "subtotal": 399416,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-PATCH",
+     "descripcion": "Cordón de parcheo de fibra monomodo SC/APC–LC de 3 m",
+     "unidad": "un",
+     "cantidad": 2,
+     "precio_unitario": 15000,
+     "subtotal": 30000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "FO-PIG",
+     "descripcion": "Pigtail monomodo SC/UPC simplex de 1 m (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 4,
+     "precio_unitario": 4189,
+     "subtotal": 16755,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "PLACA-ID",
+     "descripcion": "Placa o marquilla de identificación de circuito o poste (RA6-020)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 15000,
+     "subtotal": 15000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 0.5,
+     "tarifa": 380000,
+     "subtotal": 190000
+    },
+    {
+     "codigo_insumo": "EQ-FUSION",
+     "descripcion": "Fusionadora de fibra, OTDR, cortadora de precisión y medidor de potencia",
+     "unidad": "día",
+     "cantidad": 0.5,
+     "tarifa": 450000,
+     "subtotal": 225000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 315000,
+     "subtotal": 15750
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 1007134,
+     "subtotal": 30214
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de fibra óptica: 1 empalmador + 1 liniero + 2 ayudantes",
+     "actividad": "NAP, acometida, fusiones, roseta, ONU y prueba de potencia",
+     "costo_dia": 630000,
+     "rendimiento_unidades_por_dia": 2,
+     "subtotal": 315000
+    }
+   ],
+   "subtotales": {
+    "materiales": 1007134,
+    "componentes_apu": 0,
+    "equipo": 430750,
+    "transporte": 30214,
+    "mano_de_obra": 315000
+   },
+   "costo_directo": 1783098,
+   "aiu": {
+    "administracion": 338789,
+    "imprevistos": 53493,
+    "utilidad": 89155,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 16939,
+   "precio_unitario_total": 2281474,
+   "rango_precio_total": [
+    1825179,
+    2965916
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [],
+   "variantes": []
+  },
+  {
+   "codigo": "APU-14",
+   "descripcion": "Nodo central de la red de datos en el CCED (Alcaldía): OLT GPON de 16 puertos, switch industrial capa 3 con 10G, distribuidor de fibra (ODF) y transceptores",
+   "unidad": "un",
+   "norma_referencia": "Arquitectura GPON; el EMS/SCADA, los servidores y la UPS del CCED ya están en data/presupuesto_microrred.json",
+   "supuestos": [
+    "ODF de 48 fibras con 48 pigtails fusionados",
+    "4 transceptores SFP para enlaces de respaldo",
+    "2 días de cuadrilla de fibra y 1 día de fusionadora"
+   ],
+   "materiales": [
+    {
+     "codigo_insumo": "NET-OLT16",
+     "descripcion": "OLT GPON de 16 puertos con 8 uplinks (4 GE + 4 SFP) (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 18904079,
+     "subtotal": 18904079,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "NET-SWL3",
+     "descripcion": "Switch industrial administrable capa 3, 16 puertos GE + 4 SFP+ 10G (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 8484093,
+     "subtotal": 8484093,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-ODF48",
+     "descripcion": "Distribuidor de fibra (ODF) 19\" para 48 adaptadores LC dúplex, vacío (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 1,
+     "precio_unitario": 323772,
+     "subtotal": 323772,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-PIG",
+     "descripcion": "Pigtail monomodo SC/UPC simplex de 1 m (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 48,
+     "precio_unitario": 4189,
+     "subtotal": 201062,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "NET-SFP",
+     "descripcion": "Transceptor SFP 1G LX BiDi monomodo, 20 km (precio con IVA)",
+     "unidad": "un",
+     "cantidad": 4,
+     "precio_unitario": 266199,
+     "subtotal": 1064798,
+     "tipo_dato": "dato_mercado"
+    },
+    {
+     "codigo_insumo": "FO-PATCH",
+     "descripcion": "Cordón de parcheo de fibra monomodo SC/APC–LC de 3 m",
+     "unidad": "un",
+     "cantidad": 10,
+     "precio_unitario": 15000,
+     "subtotal": 150000,
+     "tipo_dato": "estimacion"
+    },
+    {
+     "codigo_insumo": "PLACA-ID",
+     "descripcion": "Placa o marquilla de identificación de circuito o poste (RA6-020)",
+     "unidad": "un",
+     "cantidad": 4,
+     "precio_unitario": 15000,
+     "subtotal": 60000,
+     "tipo_dato": "estimacion"
+    }
+   ],
+   "componentes_apu": [],
+   "equipo": [
+    {
+     "codigo_insumo": "EQ-FUSION",
+     "descripcion": "Fusionadora de fibra, OTDR, cortadora de precisión y medidor de potencia",
+     "unidad": "día",
+     "cantidad": 1.0,
+     "tarifa": 450000,
+     "subtotal": 450000
+    },
+    {
+     "codigo_insumo": "EQ-CAMIONETA",
+     "descripcion": "Camioneta 4×4 de cuadrilla con conductor y combustible",
+     "unidad": "día",
+     "cantidad": 1.0,
+     "tarifa": 380000,
+     "subtotal": 380000
+    },
+    {
+     "codigo_insumo": "EQ-HM",
+     "descripcion": "Herramienta menor (5 % de la mano de obra)",
+     "unidad": "%",
+     "cantidad": 0.05,
+     "tarifa": 1260000,
+     "subtotal": 63000
+    }
+   ],
+   "transporte": [
+    {
+     "codigo_insumo": "TR-MAT",
+     "descripcion": "Transporte de materiales menores hasta Yondó (3 % de los materiales)",
+     "unidad": "%",
+     "cantidad": 0.03,
+     "tarifa": 29187804,
+     "subtotal": 875634
+    }
+   ],
+   "mano_de_obra": [
+    {
+     "cuadrilla": "Cuadrilla de fibra óptica: 1 empalmador + 1 liniero + 2 ayudantes",
+     "actividad": "montaje en rack, fusiones del ODF, configuración y pruebas",
+     "costo_dia": 630000,
+     "rendimiento_unidades_por_dia": 0.5,
+     "subtotal": 1260000
+    }
+   ],
+   "subtotales": {
+    "materiales": 29187804,
+    "componentes_apu": 0,
+    "equipo": 893000,
+    "transporte": 875634,
+    "mano_de_obra": 1260000
+   },
+   "costo_directo": 32216438,
+   "aiu": {
+    "administracion": 6121123,
+    "imprevistos": 966493,
+    "utilidad": 1610822,
+    "porcentajes": {
+     "A": 0.19,
+     "I": 0.03,
+     "U": 0.05
+    }
+   },
+   "iva_sobre_utilidad": 306056,
+   "precio_unitario_total": 41220932,
+   "rango_precio_total": [
+    32976746,
+    53587212
+   ],
+   "tipo_dato": "calculo_propio (con insumos estimados; ver tipo de cada línea)",
+   "comparacion": [],
+   "variantes": []
+  }
+ ]
+}
