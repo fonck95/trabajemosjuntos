@@ -47,7 +47,8 @@ for f in sorted(os.listdir(os.path.join(R, 'data/edificios'))):
 REPARTO = {'torre_hospital': ('hospital', 0.7), 'hospital': ('hospital', 0.3), 'captacion': ('ptap', None)}
 # cargas sin nodo propio: bombas de los pozos (2 × 11–17 kW), planta veredal (2 × 25 HP), oficinas y colegios
 FIJO_KVA = {'captacion': 45, 'ptap_veredal': 45, 'ie_megacolegio': 45, 'cic': 45, 'concejo': 25, 'registraduria': 25, 'aguas_aseo_sede': 25, 'casa_cultura': 25}
-SIN_TRAFO = {'tanque_elevado': 'solo telemetría; se alimenta en baja tensión desde la planta', 'relleno_parque': 'su subestación de 800 kW y la línea a EPM están en el presupuesto del parque'}
+SIN_TRAFO = {'tanque_elevado': 'solo telemetría; se alimenta en baja tensión desde la planta', 'relleno_parque': 'su subestación de 800 kW y la línea a EPM están en el presupuesto del parque',
+             'torre_hospital': 'su acometida en media tensión y la subestación de 300 kVA están en el presupuesto de la torre (ítems 10.01 y 10.02)'}
 TAM = [(25, 'APU-08-25'), (37.5, 'APU-08-375'), (45, 'APU-08-45'), (75, 'APU-08'), (112.5, 'APU-08-1125')]
 def kva(id_):
     if id_ in FIJO_KVA: return FIJO_KVA[id_], 'tamaño por tipo de carga (sin nodo propio en el plan)'
@@ -136,7 +137,8 @@ out = {
         f'Distancias por la vía de OpenStreetMap y árbol de mínima longitud (scripts/geo/red_distancias.py); km urbanos a menos de {URBANO_M / 1000:.1f} km del centro.',
         'La subestación de EPM no se pudo ubicar con certeza: la red arranca en la alcaldía (CCED) y su enlace a la subestación se suma cuando se conozca.',
         'Un transformador nuevo por sede; si una sede ya tiene transformador propio con capacidad, ese ítem se descuenta.',
-        'El tramo al parque del relleno tiene su línea y subestación en el presupuesto del parque (docs/12); aquí se cuenta solo si se construye como parte de esta red.',
+        'El tramo del tanque elevado al parque del relleno sí está incluido en el total: es la misma derivación corta que docs/12 propone en lugar de la línea de 2,6 km. Si se construye con esta red, el capítulo de conexión del parque se reduce a su subestación; no se deben pagar las dos.',
+        'La torre del hospital no lleva transformador ni acometida en esta red: su acometida en media tensión y su subestación de 300 kVA están en el presupuesto de la torre.',
         'Fibra ADSS sobre los postes de la red nueva (sin arriendo); sobre postes de EPM se paga arriendo (tope de la CRC).',
         'No incluye la generación solar ni las baterías (van en cada sede) ni la red subterránea (unas 7 veces más cara por km).',
     ],

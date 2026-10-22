@@ -1443,7 +1443,14 @@
   }
  ],
  "adecuaciones": {
-  "kwp_plan": null,
+  "kwp_plan": 100,
+  "bess": {
+   "kwh": 400,
+   "kw": 150,
+   "tipo": "cuarto",
+   "interior": true,
+   "ubicacion": "cuarto de baterías del bloque técnico"
+  },
   "fv": [
    {
     "tipo": "pergola",
@@ -1462,7 +1469,7 @@
    {
     "volumen": "torre_sur",
     "faldon": "plano",
-    "filas": 6,
+    "filas": 7,
     "columnas": 8,
     "inclinacion": 10,
     "azimut": 180,
@@ -1504,7 +1511,7 @@
    "subestación, planta eléctrica y transferencia en el bloque técnico; red de gases medicinales",
    "galería cerrada de 3 m hasta el hospital actual con junta y muro cortafuego"
   ],
-  "notas": "Torre de servicios de primer nivel de la E.S.E. Hospital Héctor Abad Gómez sobre el sitio del antiguo Centro Vida (reubicado): programa, áreas y niveles de data/proyectos/torre_hospital/programa.json. Paneles: pérgola sobre la cubierta del piso 4 (los equipos quedan debajo), terraza del cuerpo sur y marquesina de la bahía de ambulancias. El nodo hospital del plan tiene 100 kWp (límite para acreditar excedentes 1:1): el reparto entre la torre y el edificio actual lo define el diseño de la microrred. Comparte la batería de 400 kWh del hospital."
+  "notas": "Torre de servicios de primer nivel de la E.S.E. Hospital Héctor Abad Gómez sobre el sitio del antiguo Centro Vida (reubicado): programa, áreas y niveles de data/proyectos/torre_hospital/programa.json. Paneles: pérgola sobre la cubierta del piso 4 (los equipos quedan debajo), terraza del cuerpo sur y marquesina de la bahía de ambulancias. El nodo hospital del plan tiene 100 kWp (límite para acreditar excedentes 1:1): la solar de 100 kWp (presupuesto 19.01 y 19.02) y las baterías de 400 kWh del nodo van en la torre (proyecto P7); el edificio actual ya no lleva paneles ni contenedor."
  },
  "incertidumbres": [
   "El terreno tiene desniveles de hasta 2,8 m hacia la vía del occidente; el modelo lo dibuja plano (los niveles están en programa.json).",

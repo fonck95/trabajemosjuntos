@@ -46,17 +46,17 @@
      "codigo": "GES-RETIE-TR",
      "descripcion": "Inspección y certificado RETIE por subestación de poste (transformador)",
      "unidad": "un",
-     "cantidad": 20,
+     "cantidad": 19,
      "valor_unitario": 1000000,
-     "total": 20000000
+     "total": 19000000
     },
     {
      "codigo": "GES-RETIE-AC",
      "descripcion": "Inspección RETIE de acometida y medida por sede",
      "unidad": "un",
-     "cantidad": 20,
+     "cantidad": 19,
      "valor_unitario": 600000,
-     "total": 12000000
+     "total": 11400000
     },
     {
      "codigo": "GES-EPM",
@@ -67,7 +67,7 @@
      "total": 6000000
     }
    ],
-   "total": 152393800
+   "total": 150793800
   },
   {
    "nombre": "Red de media tensión aérea 13,2 kV — zona urbana",
@@ -495,15 +495,6 @@
      "nota": "7.500 kWh/mes → pico ≈ 26 kW → 29 kVA"
     },
     {
-     "codigo": "APU-08",
-     "descripcion": "Transformador de 75 kVA instalado — Torre de servicios de primer nivel — E.S.E. Hospital Héctor Abad Gómez (sitio del antiguo Centro Vida)",
-     "unidad": "un",
-     "cantidad": 1,
-     "valor_unitario": 46774767,
-     "total": 46774767,
-     "nota": "17.500 kWh/mes → pico ≈ 61 kW → 68 kVA"
-    },
-    {
      "codigo": "APU-08-1125",
      "descripcion": "Transformador de 112,5 kVA instalado — Planta de tratamiento de agua potable municipal (Aguas y Aseo de Yondó)",
      "unidad": "un",
@@ -531,7 +522,7 @@
      "nota": "tamaño por tipo de carga (sin nodo propio en el plan)"
     }
    ],
-   "total": 612823159
+   "total": 566048392
   },
   {
    "nombre": "Acometidas y medición bidireccional",
@@ -540,13 +531,13 @@
      "codigo": "APU-11",
      "descripcion": "Acometida trifásica de BT a una sede (25 m de Cu 3 × 2/0 + N 1/0 + T 4 en tubería) con medida semidirecta y medidor bidireccional con comunicación",
      "unidad": "un",
-     "cantidad": 20,
+     "cantidad": 19,
      "valor_unitario": 13666966,
-     "total": 273339320,
+     "total": 259672354,
      "nota": "Una por sede: acometida trifásica y medidor bidireccional con comunicación"
     }
    ],
-   "total": 273339320
+   "total": 259672354
   },
   {
    "nombre": "Protección y maniobra",
@@ -620,29 +611,29 @@
    "nombre": "Ingeniería de detalle",
    "base": "obra",
    "porcentaje": 0.04,
-   "total": 101880783
+   "total": 99463114
   },
   {
    "nombre": "Plan de manejo ambiental, de tráfico y SST",
    "base": "costo directo",
    "porcentaje": 0.015,
-   "total": 29859550
+   "total": 29150971
   },
   {
    "nombre": "Interventoría",
    "base": "obra",
    "porcentaje": 0.08,
-   "total": 203761567
+   "total": 198926228
   }
  ],
  "totales": {
-  "obra_cop_2026": 2547019582,
-  "preliminares_y_tramites_cop_2026": 152393800,
-  "indirectos_cop_2026": 335501900,
-  "total_cop_2026": 3034915282,
+  "obra_cop_2026": 2486577849,
+  "preliminares_y_tramites_cop_2026": 150793800,
+  "indirectos_cop_2026": 327540313,
+  "total_cop_2026": 2964911962,
   "rango_cop_2026": [
-   2124440697,
-   4552372923
+   2075438373,
+   4447367943
   ],
   "costo_por_km_red_cop_2026": 116970978
  },
@@ -820,8 +811,9 @@
    "km_urbanos": 0.111,
    "km_rurales": 0.0,
    "costo_red": 18974428,
-   "costo_sede": 62593823,
-   "costo_total": 91356441
+   "costo_sede": 2152090,
+   "costo_total": 23661700,
+   "nota": "su acometida en media tensión y la subestación de 300 kVA están en el presupuesto de la torre (ítems 10.01 y 10.02)"
   },
   {
    "de": "hospital",
@@ -885,7 +877,8 @@
   "Distancias por la vía de OpenStreetMap y árbol de mínima longitud (scripts/geo/red_distancias.py); km urbanos a menos de 1.1 km del centro.",
   "La subestación de EPM no se pudo ubicar con certeza: la red arranca en la alcaldía (CCED) y su enlace a la subestación se suma cuando se conozca.",
   "Un transformador nuevo por sede; si una sede ya tiene transformador propio con capacidad, ese ítem se descuenta.",
-  "El tramo al parque del relleno tiene su línea y subestación en el presupuesto del parque (docs/12); aquí se cuenta solo si se construye como parte de esta red.",
+  "El tramo del tanque elevado al parque del relleno sí está incluido en el total: es la misma derivación corta que docs/12 propone en lugar de la línea de 2,6 km. Si se construye con esta red, el capítulo de conexión del parque se reduce a su subestación; no se deben pagar las dos.",
+  "La torre del hospital no lleva transformador ni acometida en esta red: su acometida en media tensión y su subestación de 300 kVA están en el presupuesto de la torre.",
   "Fibra ADSS sobre los postes de la red nueva (sin arriendo); sobre postes de EPM se paga arriendo (tope de la CRC).",
   "No incluye la generación solar ni las baterías (van en cada sede) ni la red subterránea (unas 7 veces más cara por km)."
  ]

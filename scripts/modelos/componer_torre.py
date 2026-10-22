@@ -104,10 +104,12 @@ el += [
     {'tipo': 'equipo_cubierta', 'estado': 'nuevo', 'equipo': 'uma', 'centro': [0.5, 18.5], 'largo': 3.2, 'ancho': 1.6, 'rumbo_eje': 0},
 ]
 ad = {
-    'kwp_plan': None,
+    'kwp_plan': 100,
+    # baterías LFP de 400 kWh / 150 kW en el cuarto de baterías del bloque técnico (presupuesto 19.03): no se dibuja contenedor
+    'bess': {'kwh': 400, 'kw': 150, 'tipo': 'cuarto', 'interior': True, 'ubicacion': 'cuarto de baterías del bloque técnico'},
     'fv': [
         {'tipo': 'pergola', 'volumen': 'torre_piso4', 'centro': [-5.0, 4.0], 'largo': 20.0, 'ancho': 15.0, 'rumbo_eje': 0, 'altura': 3.6, 'filas': 12, 'columnas': 8},
-        {'volumen': 'torre_sur', 'faldon': 'plano', 'filas': 6, 'columnas': 8, 'inclinacion': 10, 'azimut': 180, 'orientacion_modulo': 'horizontal'},
+        {'volumen': 'torre_sur', 'faldon': 'plano', 'filas': 7, 'columnas': 8, 'inclinacion': 10, 'azimut': 180, 'orientacion_modulo': 'horizontal'},
         {'tipo': 'marquesina', 'centro': [-16.6, 15.0], 'largo': 13.2, 'ancho': 7.2, 'rumbo_eje': 0, 'altura': 5.3, 'filas': 6, 'columnas': 5},
     ],
     'inversores': {'n': 2, 'kw': 50, 'volumen': 'bloque_tecnico', 'lado': 'N', 'pos': 0.35},
@@ -116,7 +118,7 @@ ad = {
     'notas': ('Torre de servicios de primer nivel de la E.S.E. Hospital Héctor Abad Gómez sobre el sitio del antiguo Centro Vida (reubicado): '
               'programa, áreas y niveles de data/proyectos/torre_hospital/programa.json. Paneles: pérgola sobre la cubierta del piso 4 (los equipos quedan debajo), '
               'terraza del cuerpo sur y marquesina de la bahía de ambulancias. El nodo hospital del plan tiene 100 kWp (límite para acreditar excedentes 1:1): '
-              'el reparto entre la torre y el edificio actual lo define el diseño de la microrred. Comparte la batería de 400 kWh del hospital.'),
+              'la solar de 100 kWp (presupuesto 19.01 y 19.02) y las baterías de 400 kWh del nodo van en la torre (proyecto P7); el edificio actual ya no lleva paneles ni contenedor.'),
 }
 spec = {
     'id': 'torre_hospital', 'nombre': 'Torre de servicios de primer nivel — E.S.E. Hospital Héctor Abad Gómez (sitio del antiguo Centro Vida)',

@@ -1749,47 +1749,43 @@
   "lon": -73.914452,
   "archivo": "models/edificios/hospital_lod0.glb",
   "archivo_lod1": "models/edificios/hospital_lod1.glb",
-  "bytes": 210468,
-  "bytes_lod1": 94788,
-  "bytes_sin_comprimir": 3192984,
-  "triangulos": 43723,
-  "triangulos_lod1": 8355,
+  "bytes": 125344,
+  "bytes_lod1": 58264,
+  "bytes_sin_comprimir": 2164784,
+  "triangulos": 28729,
+  "triangulos_lod1": 6283,
   "extensiones": [
    "EXT_mesh_gpu_instancing",
    "KHR_draco_mesh_compression"
   ],
-  "nodos_instanciados": 2,
+  "nodos_instanciados": 1,
   "tamano": [
    90,
    7.6,
    89.3
   ],
-  "modulos": 162,
-  "kwp_modelado": 89.1,
-  "kwp_plan": 100,
-  "kwp_factible": 89.1,
-  "bess": {
-   "kwh": 400,
-   "kw": 150,
-   "tipo": "contenedor_20"
-  },
+  "modulos": 0,
+  "kwp_modelado": 0,
+  "kwp_plan": null,
+  "kwp_factible": 0,
+  "bess": null,
   "conexion": {
    "tablero": [
-    15.75,
+    -5.1,
     1.3,
-    9.63
+    -27.68
    ],
    "gateway": [
-    15.17,
+    -4.52,
     1.61,
-    9.55
+    -27.6
    ],
    "red": [
-    16.33,
-    3.43,
-    10.12
+    -5.68,
+    3.72,
+    -28.17
    ],
-   "nota": "Sin poste cercano en la especificación: el punto de conexión es la acometida en la fachada de Conexión entre el bloque central y el ala oriental que da a la calle (residential, a 35 m)."
+   "nota": "Sin poste cercano en la especificación: el punto de conexión es la acometida en la fachada de Ala norte (consulta y administración) que da a la calle (residential, a 10 m)."
   },
   "confianza": "alta",
   "fuentes": [
@@ -3534,11 +3530,11 @@
   "lon": -73.914597,
   "archivo": "models/edificios/torre_hospital_lod0.glb",
   "archivo_lod1": "models/edificios/torre_hospital_lod1.glb",
-  "bytes": 422524,
-  "bytes_lod1": 298848,
-  "bytes_sin_comprimir": 4485680,
-  "triangulos": 51712,
-  "triangulos_lod1": 12734,
+  "bytes": 423784,
+  "bytes_lod1": 299052,
+  "bytes_sin_comprimir": 4548496,
+  "triangulos": 52456,
+  "triangulos_lod1": 12774,
   "extensiones": [
    "EXT_mesh_gpu_instancing",
    "KHR_draco_mesh_compression"
@@ -3549,11 +3545,15 @@
    23.4,
    67.3
   ],
-  "modulos": 174,
-  "kwp_modelado": 95.7,
-  "kwp_plan": null,
-  "kwp_factible": 95.7,
-  "bess": null,
+  "modulos": 182,
+  "kwp_modelado": 100.1,
+  "kwp_plan": 100,
+  "kwp_factible": 100.1,
+  "bess": {
+   "kwh": 400,
+   "kw": 150,
+   "tipo": "cuarto"
+  },
   "conexion": {
    "tablero": [
     -19.88,

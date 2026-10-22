@@ -79,6 +79,7 @@ lo convierte en un modelo 3D (GLB) con dos capas: **existente** (réplica del ed
     ],
     "kwp_factible": 48.4,             // módulos × 0,55 kWp
     "bess": { "kwh": 120, "kw": 60, "tipo": "gabinete|contenedor_10|contenedor_20", "centro": [x,y], "largo": 6.1, "ancho": 2.4, "rumbo_eje": 0 },
+    // con "interior": true las baterías van en un cuarto del edificio: no se dibuja gabinete ni contenedor
     "inversores": { "n": 2, "kw": 30, "volumen": "bloque_a", "lado": "S" },
     "domotica": ["medidor bidireccional", "gateway IoT", "sensores de ocupación", "control de aires", "telegestión de luminarias"],
     "obras_civiles": ["cambio de cubierta de fibrocemento por termoacústica antes del montaje", "puesta a tierra y pararrayos"],

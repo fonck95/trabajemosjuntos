@@ -2168,7 +2168,7 @@ function build(spec, detail) {
   if (!P.rack.empty) b.node('soportes', b.partMesh(`${spec.id}_soportes`, P.rack), [0, 0, 0], [0, 0, 0], [1, 1, 1], solar);
   if (!detail && !P.solarFlat.empty) b.node('solar_simplificada', b.partMesh(`${spec.id}_solar`, P.solarFlat), [0, 0, 0], [0, 0, 0], [1, 1, 1], solar);
   let bessInfo = null;
-  if (ad.bess) {
+  if (ad.bess && !ad.bess.interior) {   // "interior": va en un cuarto del edificio, no se dibuja
     const bi = bessGroup(b, ad.bess, P, detail);
     const c = V3(0, 0, 0).applyMatrix4(bi.f.m);
     // entrada de cables: el punto del borde de la losa más cercano a "p"
