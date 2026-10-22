@@ -1,0 +1,1779 @@
+{
+ "id": "tanque_elevado",
+ "nombre": "Tanque elevado del acueducto urbano (vereda Las Américas)",
+ "nodo_microrred": null,
+ "direccion": "Vereda Las Américas, en lo alto de una loma, unos 24 m al sur de la vía destapada que va del casco urbano a la Laguna del Miedo; 230 m al norte-noroccidente de la PTAP municipal y unos 2,5 km al occidente-noroccidente de la Alcaldía.",
+ "lat": 7.01115,
+ "lon": -73.93282,
+ "ubicacion": {
+  "confianza": "alta",
+  "metodo": "Se confirmó con cuatro pruebas independientes. (1) En la imagen de Google z21 hay un solo tanque elevado en la parte alta de la vereda Las Américas: un disco blanco de 10,3 m con juntas grises y un anillo gris de cornisa de 11,2 m, con una sombra larga hacia el suroccidente; en la imagen de Esri (12 de enero de 2020, vista inclinada) se ven el fuste de columnas y la sombra del tanque sobre la vía. (2) La foto de la Superservicios 'Tanque de distribución PTAP municipal' (Imagen 43, mayo de 2018) muestra un tanque de concreto de 16 caras pintado en damero blanco y gris oscuro, con cornisa, baranda, pararrayos, fondo cónico, columnas y una escalera de gato exterior. (3) La foto de la torre de aireación de la PTAP (Imagen 25, mayo de 2018) muestra ese mismo tanque al fondo: desde la cámara de la PTAP el tanque queda a 230 m con rumbo 339°, y en la foto se cuentan 16 caras con el mismo damero y 6 columnas a la vista. (4) La Superservicios (2020) ubica el tanque elevado del acueducto urbano, de 350 m³, en 'la parte alta de la vereda Las Américas'; un tanque de 10,4 m de diámetro con 3,1 m de muro y 1,4 m de fondo cónico guarda unos 340 m³. Correcciones al inventario: el ancla se puso en el centro del disco de la cubierta en Google (7,011150, −73,932820), 26 m al suroriente de la coordenada del inventario (7,01132, −73,932987, que cae en la pradera junto a la vía) y 4 m al suroriente del punto estimado desde la PTAP (7,01118, −73,93284). La foto de Google que cita el inventario (tanque de concreto gris junto a una vía pavimentada) es del tanque de la planta veredal (7,0142, −73,9435), que es distinto: gris, con el fuste arriostrado en cruz y una caseta blanca al pie (Imagen 42 de la Superservicios). No hay Street View cercano: desde los panoramas a 1,07 km la vegetación tapa el tanque. (5) Verificación independiente (octubre de 2026): el tanque en damero sí se ve de lejos en Street View de enero de 2014, desde la vía del suroriente del casco urbano, a 1,29 km (panoramas NzQYSkGjZ4VoB6wTzuvVhQ, 4no6LF4DEWBtC58T0thNww y dHmNI5YscFD2qySPtMoKyw). El modelo dibujado con la misma cámara queda a 0,2° del tanque de la foto (unos 4 m de lado), dentro del error de rumbo de los panoramas. Eso confirma que el tanque ya estaba en 2014 con el damero, y que es el mismo de las fotos de 2018 y del satélite."
+ },
+ "fuentes": [
+  {
+   "tipo": "satelite",
+   "fuente": "Google, imagen satelital z20–z21 (0,074 m/píxel; sin fecha publicada, posterior a 2020)",
+   "nota": "Huella de la cubierta (disco blanco de 10,3 m con juntas grises), anillo gris de la cornisa (11,2 m), sombra hacia el suroccidente (sol alto del nororiente), objeto cilíndrico con tapa blanca al noroccidente, cercas del norte y del oriente, vía a la Laguna del Miedo y carreteable del oriente. El anillo de la cornisa se ve completo alrededor del disco, por eso se tomó la vista como casi vertical y el eje del tanque en el centro del disco."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Esri World Imagery z19 (WorldView-2 del 12 de enero de 2020, 0,5 m)",
+   "nota": "Vista inclinada: el tanque se ve corrido unos 16 m hacia el norte-noroccidente y entre el disco y la base se ve el fuste de columnas claras. La sombra del tanque cae sobre la vía, unos 30 m al noroccidente de la base (sol del suroriente, a las 10 y algo de la mañana): sirvió para estimar la altura. Entre Esri y Google hay un desfase de unos 1,5 a 1,9 m (Esri queda más al occidente)."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Bing z19",
+   "nota": "Imagen borrosa y muy inclinada (el tanque se ve corrido hacia el sur-suroriente); confirma la torre en el mismo sitio."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf",
+   "fecha": "2018-05",
+   "nota": "Superservicios, evaluación integral de octubre de 2018 (visita del 18 de mayo de 2018). Página 34: 'el sistema cuenta con dos tanques elevados de distribución de capacidad 350 m³ cada uno'; Imagen 43 'Tanque de distribución PTAP municipal' (el tanque en damero visto a través de la malla de la PTAP) e Imagen 42 'Tanque de distribución PTAP veredal' (otro tanque, gris y arriostrado). Página 29, Imagen 25: torre de aireación de la PTAP con este tanque al fondo; se usó para comparar el modelo. También menciona un macromedidor 'a la salida de la PTAT del casco urbano, hacia el tanque elevado'."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
+   "fecha": "2020",
+   "nota": "Superservicios, evaluación integral 2020: 'un tanque elevado localizado en la parte alta de la vereda las américas del área urbana, su volumen útil es de 350 m³'; almacenamiento total del sistema urbano de 1.475 m³ (con el tanque de 1.125 m³ de la PTAP). La optimización del acueducto en curso incluye 'dos pozos subterráneos, un tanque de compensación y un tanque elevado' nuevos."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-4-3109331",
+   "fecha": "2014-10",
+   "nota": "Construcción del apantallamiento contra rayos (SIPRA) de la PTAP y del tanque elevado: explica el pararrayos de la cubierta."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-4-8358866",
+   "fecha": "2018-09",
+   "nota": "Estudios y diseños para la optimización del acueducto municipal (la Superservicios dice que la optimización incluye un tanque elevado nuevo; no se encontró dónde quedaría)."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.google.com/maps/place/?q=place_id:ChIJF7Rg3UTvQo4RgCDM07Wsgpg",
+   "nota": "Lugar de Google de la planta veredal: sus fotos muestran el tanque gris de la planta veredal, no este. Sirvió para descartar la identificación del inventario."
+  },
+  {
+   "tipo": "web",
+   "url": "https://api.opentopodata.org/v1/srtm30m",
+   "nota": "Alturas del terreno SRTM de 30 m: unos 83–85 m en el tanque y 90–92 m en la loma de la PTAP (con bosque), con una hondonada de 70 m entre las dos. Se usó para pasar la altura medida en la foto de 2018 a altura sobre el terreno del tanque."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "leuWUit0RiyPBJT4a_v94Q",
+   "fecha": "2023-04",
+   "rumbo": 224.5,
+   "nota": "Panorama más cercano (1,07 km al nororiente, vía a la Laguna del Miedo). Una casa y los árboles tapan el tanque."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "hFSyoqecy1eHy2hJjH4FNw",
+   "fecha": "2014-01",
+   "rumbo": 324.5,
+   "nota": "Panorama a 1,10 km al suroriente. El rastrojo tapa el tanque. No hay panoramas a menos de 1 km."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "NzQYSkGjZ4VoB6wTzuvVhQ",
+   "fecha": "2014-01",
+   "rumbo": 317.4,
+   "nota": "Panorama a 1,29 km al suroriente (vía del borde suroccidental del casco urbano). Con zoom se ve el tanque en damero por encima de la loma y de los árboles, con la parte alta del fuste. Se usó para comparar el modelo (misma cámara): coinciden el rumbo (0,2°) y el ancho; la altura se revisó corrigiendo la inclinación del panorama."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "4no6LF4DEWBtC58T0thNww",
+   "fecha": "2014-01",
+   "rumbo": 319.3,
+   "nota": "Panorama a 1,29 km al suroriente, 40 m al suroccidente del anterior. Se ve el tanque en damero y el fuste; segunda comparación con el modelo."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "dHmNI5YscFD2qySPtMoKyw",
+   "fecha": "2014-01",
+   "rumbo": 315.9,
+   "nota": "Panorama a 1,28 km al suroriente. El tanque se ve en damero, tapado en parte por un árbol."
+  }
+ ],
+ "volumenes": [
+  {
+   "id": "fuste_1",
+   "nombre": "Fuste del tanque: 12 columnas de concreto en anillo con viga de amarre bajo el fondo (columnas 1 a 4)",
+   "centro": [
+    0,
+    0
+   ],
+   "largo": 5.23,
+   "ancho": 5.23,
+   "rumbo_eje": 129,
+   "abierto": true,
+   "sep_columnas": 6.23,
+   "columna": 0.5,
+   "base": 0,
+   "altura_alero": 25.3,
+   "pisos": 1,
+   "techo": {
+    "tipo": "ninguno"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#969a99"
+   }
+  },
+  {
+   "id": "fuste_2",
+   "nombre": "Fuste del tanque: 12 columnas de concreto en anillo con viga de amarre bajo el fondo (columnas 5 a 8)",
+   "centro": [
+    0,
+    0
+   ],
+   "largo": 5.23,
+   "ancho": 5.23,
+   "rumbo_eje": 159,
+   "abierto": true,
+   "sep_columnas": 6.23,
+   "columna": 0.5,
+   "base": 0,
+   "altura_alero": 25.25,
+   "pisos": 1,
+   "techo": {
+    "tipo": "ninguno"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#969a99"
+   },
+   "piso": false
+  },
+  {
+   "id": "fuste_3",
+   "nombre": "Fuste del tanque: 12 columnas de concreto en anillo con viga de amarre bajo el fondo (columnas 9 a 12)",
+   "centro": [
+    0,
+    0
+   ],
+   "largo": 5.23,
+   "ancho": 5.23,
+   "rumbo_eje": 189,
+   "abierto": true,
+   "sep_columnas": 6.23,
+   "columna": 0.5,
+   "base": 0,
+   "altura_alero": 25.2,
+   "pisos": 1,
+   "techo": {
+    "tipo": "ninguno"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#969a99"
+   },
+   "piso": false
+  },
+  {
+   "id": "fondo_bajo",
+   "nombre": "Fondo del tanque, parte baja (el fondo es un cono truncado de concreto; se modela con dos escalones)",
+   "poligono": [
+    [
+     0.68,
+     -3.94
+    ],
+    [
+     -0.88,
+     -3.9
+    ],
+    [
+     -2.31,
+     -3.27
+    ],
+    [
+     -3.38,
+     -2.13
+    ],
+    [
+     -3.94,
+     -0.68
+    ],
+    [
+     -3.9,
+     0.88
+    ],
+    [
+     -3.27,
+     2.31
+    ],
+    [
+     -2.13,
+     3.38
+    ],
+    [
+     -0.68,
+     3.94
+    ],
+    [
+     0.88,
+     3.9
+    ],
+    [
+     2.31,
+     3.27
+    ],
+    [
+     3.38,
+     2.13
+    ],
+    [
+     3.94,
+     0.68
+    ],
+    [
+     3.9,
+     -0.88
+    ],
+    [
+     3.27,
+     -2.31
+    ],
+    [
+     2.13,
+     -3.38
+    ]
+   ],
+   "base": 25.3,
+   "altura_alero": 26.0,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#8a8f8e"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#8a8f8e"
+   }
+  },
+  {
+   "id": "fondo_alto",
+   "nombre": "Fondo del tanque, parte alta",
+   "poligono": [
+    [
+     0.8,
+     -4.63
+    ],
+    [
+     -1.04,
+     -4.58
+    ],
+    [
+     -2.71,
+     -3.84
+    ],
+    [
+     -3.97,
+     -2.51
+    ],
+    [
+     -4.63,
+     -0.8
+    ],
+    [
+     -4.58,
+     1.04
+    ],
+    [
+     -3.84,
+     2.71
+    ],
+    [
+     -2.51,
+     3.97
+    ],
+    [
+     -0.8,
+     4.63
+    ],
+    [
+     1.04,
+     4.58
+    ],
+    [
+     2.71,
+     3.84
+    ],
+    [
+     3.97,
+     2.51
+    ],
+    [
+     4.63,
+     0.8
+    ],
+    [
+     4.58,
+     -1.04
+    ],
+    [
+     3.84,
+     -2.71
+    ],
+    [
+     2.51,
+     -3.97
+    ]
+   ],
+   "base": 26.0,
+   "altura_alero": 26.7,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#8a8f8e"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#8a8f8e"
+   }
+  },
+  {
+   "id": "cuerpo",
+   "nombre": "Cuerpo del tanque de 350 m³: muro de 16 caras pintado de blanco con cuadros oscuros (damero)",
+   "poligono": [
+    [
+     0.88,
+     -5.12
+    ],
+    [
+     -1.15,
+     -5.07
+    ],
+    [
+     -3.0,
+     -4.25
+    ],
+    [
+     -4.4,
+     -2.77
+    ],
+    [
+     -5.12,
+     -0.88
+    ],
+    [
+     -5.07,
+     1.15
+    ],
+    [
+     -4.25,
+     3.0
+    ],
+    [
+     -2.77,
+     4.4
+    ],
+    [
+     -0.88,
+     5.12
+    ],
+    [
+     1.15,
+     5.07
+    ],
+    [
+     3.0,
+     4.25
+    ],
+    [
+     4.4,
+     2.77
+    ],
+    [
+     5.12,
+     0.88
+    ],
+    [
+     5.07,
+     -1.15
+    ],
+    [
+     4.25,
+     -3.0
+    ],
+    [
+     2.77,
+     -4.4
+    ]
+   ],
+   "base": 26.7,
+   "altura_alero": 29.8,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#e4e8e7"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#e4e8e7"
+   }
+  },
+  {
+   "id": "cuadro_abajo_01",
+   "nombre": "Cuadro oscuro del damero (hilera de abajo, cara 2 de 16)",
+   "poligono": [
+    [
+     0.886,
+     -5.155
+    ],
+    [
+     -1.154,
+     -5.102
+    ],
+    [
+     -1.134,
+     -5.012
+    ],
+    [
+     0.87,
+     -5.065
+    ]
+   ],
+   "base": 26.72,
+   "altura_alero": 28.25,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_abajo_03",
+   "nombre": "Cuadro oscuro del damero (hilera de abajo, cara 4 de 16)",
+   "poligono": [
+    [
+     -3.019,
+     -4.272
+    ],
+    [
+     -4.424,
+     -2.791
+    ],
+    [
+     -4.346,
+     -2.742
+    ],
+    [
+     -2.966,
+     -4.197
+    ]
+   ],
+   "base": 26.72,
+   "altura_alero": 28.25,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_abajo_05",
+   "nombre": "Cuadro oscuro del damero (hilera de abajo, cara 6 de 16)",
+   "poligono": [
+    [
+     -5.155,
+     -0.886
+    ],
+    [
+     -5.102,
+     1.154
+    ],
+    [
+     -5.012,
+     1.134
+    ],
+    [
+     -5.065,
+     -0.87
+    ]
+   ],
+   "base": 26.72,
+   "altura_alero": 28.25,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_abajo_07",
+   "nombre": "Cuadro oscuro del damero (hilera de abajo, cara 8 de 16)",
+   "poligono": [
+    [
+     -4.272,
+     3.019
+    ],
+    [
+     -2.791,
+     4.424
+    ],
+    [
+     -2.742,
+     4.346
+    ],
+    [
+     -4.197,
+     2.966
+    ]
+   ],
+   "base": 26.72,
+   "altura_alero": 28.25,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_abajo_09",
+   "nombre": "Cuadro oscuro del damero (hilera de abajo, cara 10 de 16)",
+   "poligono": [
+    [
+     -0.886,
+     5.155
+    ],
+    [
+     1.154,
+     5.102
+    ],
+    [
+     1.134,
+     5.012
+    ],
+    [
+     -0.87,
+     5.065
+    ]
+   ],
+   "base": 26.72,
+   "altura_alero": 28.25,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_abajo_11",
+   "nombre": "Cuadro oscuro del damero (hilera de abajo, cara 12 de 16)",
+   "poligono": [
+    [
+     3.019,
+     4.272
+    ],
+    [
+     4.424,
+     2.791
+    ],
+    [
+     4.346,
+     2.742
+    ],
+    [
+     2.966,
+     4.197
+    ]
+   ],
+   "base": 26.72,
+   "altura_alero": 28.25,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_abajo_13",
+   "nombre": "Cuadro oscuro del damero (hilera de abajo, cara 14 de 16)",
+   "poligono": [
+    [
+     5.155,
+     0.886
+    ],
+    [
+     5.102,
+     -1.154
+    ],
+    [
+     5.012,
+     -1.134
+    ],
+    [
+     5.065,
+     0.87
+    ]
+   ],
+   "base": 26.72,
+   "altura_alero": 28.25,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_abajo_15",
+   "nombre": "Cuadro oscuro del damero (hilera de abajo, cara 16 de 16)",
+   "poligono": [
+    [
+     4.272,
+     -3.019
+    ],
+    [
+     2.791,
+     -4.424
+    ],
+    [
+     2.742,
+     -4.346
+    ],
+    [
+     4.197,
+     -2.966
+    ]
+   ],
+   "base": 26.72,
+   "altura_alero": 28.25,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_arriba_00",
+   "nombre": "Cuadro oscuro del damero (hilera de arriba, cara 1 de 16)",
+   "poligono": [
+    [
+     2.791,
+     -4.424
+    ],
+    [
+     0.886,
+     -5.155
+    ],
+    [
+     0.87,
+     -5.065
+    ],
+    [
+     2.742,
+     -4.346
+    ]
+   ],
+   "base": 28.25,
+   "altura_alero": 29.78,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_arriba_02",
+   "nombre": "Cuadro oscuro del damero (hilera de arriba, cara 3 de 16)",
+   "poligono": [
+    [
+     -1.154,
+     -5.102
+    ],
+    [
+     -3.019,
+     -4.272
+    ],
+    [
+     -2.966,
+     -4.197
+    ],
+    [
+     -1.134,
+     -5.012
+    ]
+   ],
+   "base": 28.25,
+   "altura_alero": 29.78,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_arriba_04",
+   "nombre": "Cuadro oscuro del damero (hilera de arriba, cara 5 de 16)",
+   "poligono": [
+    [
+     -4.424,
+     -2.791
+    ],
+    [
+     -5.155,
+     -0.886
+    ],
+    [
+     -5.065,
+     -0.87
+    ],
+    [
+     -4.346,
+     -2.742
+    ]
+   ],
+   "base": 28.25,
+   "altura_alero": 29.78,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_arriba_06",
+   "nombre": "Cuadro oscuro del damero (hilera de arriba, cara 7 de 16)",
+   "poligono": [
+    [
+     -5.102,
+     1.154
+    ],
+    [
+     -4.272,
+     3.019
+    ],
+    [
+     -4.197,
+     2.966
+    ],
+    [
+     -5.012,
+     1.134
+    ]
+   ],
+   "base": 28.25,
+   "altura_alero": 29.78,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_arriba_08",
+   "nombre": "Cuadro oscuro del damero (hilera de arriba, cara 9 de 16)",
+   "poligono": [
+    [
+     -2.791,
+     4.424
+    ],
+    [
+     -0.886,
+     5.155
+    ],
+    [
+     -0.87,
+     5.065
+    ],
+    [
+     -2.742,
+     4.346
+    ]
+   ],
+   "base": 28.25,
+   "altura_alero": 29.78,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_arriba_10",
+   "nombre": "Cuadro oscuro del damero (hilera de arriba, cara 11 de 16)",
+   "poligono": [
+    [
+     1.154,
+     5.102
+    ],
+    [
+     3.019,
+     4.272
+    ],
+    [
+     2.966,
+     4.197
+    ],
+    [
+     1.134,
+     5.012
+    ]
+   ],
+   "base": 28.25,
+   "altura_alero": 29.78,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_arriba_12",
+   "nombre": "Cuadro oscuro del damero (hilera de arriba, cara 13 de 16)",
+   "poligono": [
+    [
+     4.424,
+     2.791
+    ],
+    [
+     5.155,
+     0.886
+    ],
+    [
+     5.065,
+     0.87
+    ],
+    [
+     4.346,
+     2.742
+    ]
+   ],
+   "base": 28.25,
+   "altura_alero": 29.78,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cuadro_arriba_14",
+   "nombre": "Cuadro oscuro del damero (hilera de arriba, cara 15 de 16)",
+   "poligono": [
+    [
+     5.102,
+     -1.154
+    ],
+    [
+     4.272,
+     -3.019
+    ],
+    [
+     4.197,
+     -2.966
+    ],
+    [
+     5.012,
+     -1.134
+    ]
+   ],
+   "base": 28.25,
+   "altura_alero": 29.78,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#455252"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#455252"
+   }
+  },
+  {
+   "id": "cornisa",
+   "nombre": "Cornisa y pasarela perimetral de la cubierta (anillo gris en el satélite; la baranda metálica no se modela)",
+   "poligono": [
+    [
+     0.95,
+     -5.52
+    ],
+    [
+     -1.24,
+     -5.46
+    ],
+    [
+     -3.23,
+     -4.57
+    ],
+    [
+     -4.74,
+     -2.99
+    ],
+    [
+     -5.52,
+     -0.95
+    ],
+    [
+     -5.46,
+     1.24
+    ],
+    [
+     -4.57,
+     3.23
+    ],
+    [
+     -2.99,
+     4.74
+    ],
+    [
+     -0.95,
+     5.52
+    ],
+    [
+     1.24,
+     5.46
+    ],
+    [
+     3.23,
+     4.57
+    ],
+    [
+     4.74,
+     2.99
+    ],
+    [
+     5.52,
+     0.95
+    ],
+    [
+     5.46,
+     -1.24
+    ],
+    [
+     4.57,
+     -3.23
+    ],
+    [
+     2.99,
+     -4.74
+    ]
+   ],
+   "base": 29.8,
+   "altura_alero": 30.3,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.1,
+    "material": "concreto",
+    "color": "#9ba2a4"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#9ba2a4"
+   }
+  },
+  {
+   "id": "cubierta",
+   "nombre": "Cubierta del tanque (losa pintada de blanco con juntas grises)",
+   "poligono": [
+    [
+     0.87,
+     -5.08
+    ],
+    [
+     -1.14,
+     -5.02
+    ],
+    [
+     -2.97,
+     -4.21
+    ],
+    [
+     -4.36,
+     -2.75
+    ],
+    [
+     -5.08,
+     -0.87
+    ],
+    [
+     -5.02,
+     1.14
+    ],
+    [
+     -4.21,
+     2.97
+    ],
+    [
+     -2.75,
+     4.36
+    ],
+    [
+     -0.87,
+     5.08
+    ],
+    [
+     1.14,
+     5.02
+    ],
+    [
+     2.97,
+     4.21
+    ],
+    [
+     4.36,
+     2.75
+    ],
+    [
+     5.08,
+     0.87
+    ],
+    [
+     5.02,
+     -1.14
+    ],
+    [
+     4.21,
+     -2.97
+    ],
+    [
+     2.75,
+     -4.36
+    ]
+   ],
+   "base": 30.3,
+   "altura_alero": 30.4,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#d3dbe0"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#d3dbe0"
+   }
+  },
+  {
+   "id": "pararrayos",
+   "nombre": "Mástil del pararrayos en el centro de la cubierta",
+   "poligono": [
+    [
+     -0.1,
+     -0.1
+    ],
+    [
+     0.1,
+     -0.1
+    ],
+    [
+     0.1,
+     0.1
+    ],
+    [
+     -0.1,
+     0.1
+    ]
+   ],
+   "base": 30.4,
+   "altura_alero": 32.6,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#6d7275"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#6d7275"
+   }
+  },
+  {
+   "id": "escalera",
+   "nombre": "Escalera de gato exterior del costado oriental, del suelo a la baranda de la cubierta (se dibuja como una franja delgada de 0,35 m; el generador no hace peldaños ni jaula)",
+   "poligono": [
+    [
+     5.763,
+     -0.026
+    ],
+    [
+     5.75,
+     -0.376
+    ],
+    [
+     5.85,
+     -0.379
+    ],
+    [
+     5.863,
+     -0.03
+    ]
+   ],
+   "base": 0,
+   "altura_alero": 31.3,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#a3a9ac"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#a3a9ac"
+   }
+  },
+  {
+   "id": "objeto_cilindrico",
+   "nombre": "Objeto cilíndrico oscuro con tapa blanca al noroccidente (probable tanque plástico negro, como el que se ve en la PTAP en la foto de 2018; uso no confirmado)",
+   "poligono": [
+    [
+     -14.9,
+     15.01
+    ],
+    [
+     -14.39,
+     14.71
+    ],
+    [
+     -14.09,
+     14.2
+    ],
+    [
+     -14.09,
+     13.6
+    ],
+    [
+     -14.39,
+     13.09
+    ],
+    [
+     -14.9,
+     12.79
+    ],
+    [
+     -15.5,
+     12.79
+    ],
+    [
+     -16.01,
+     13.09
+    ],
+    [
+     -16.31,
+     13.6
+    ],
+    [
+     -16.31,
+     14.2
+    ],
+    [
+     -16.01,
+     14.71
+    ],
+    [
+     -15.5,
+     15.01
+    ]
+   ],
+   "base": 0,
+   "altura_alero": 1.9,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#2f3533"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#2f3533"
+   }
+  },
+  {
+   "id": "objeto_tapa",
+   "nombre": "Tapa blanca del objeto cilíndrico",
+   "poligono": [
+    [
+     -14.91,
+     14.98
+    ],
+    [
+     -14.41,
+     14.69
+    ],
+    [
+     -14.12,
+     14.19
+    ],
+    [
+     -14.12,
+     13.61
+    ],
+    [
+     -14.41,
+     13.11
+    ],
+    [
+     -14.91,
+     12.82
+    ],
+    [
+     -15.49,
+     12.82
+    ],
+    [
+     -15.99,
+     13.11
+    ],
+    [
+     -16.28,
+     13.61
+    ],
+    [
+     -16.28,
+     14.19
+    ],
+    [
+     -15.99,
+     14.69
+    ],
+    [
+     -15.49,
+     14.98
+    ]
+   ],
+   "base": 1.9,
+   "altura_alero": 2.0,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#e9ecec"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#e9ecec"
+   }
+  }
+ ],
+ "elementos": [
+  {
+   "tipo": "anden",
+   "nombre": "Vía destapada del casco urbano a la Laguna del Miedo",
+   "poligono": [
+    [
+     -57.2,
+     25.9
+    ],
+    [
+     -37.29,
+     25.9
+    ],
+    [
+     -22.5,
+     26.89
+    ],
+    [
+     -12.67,
+     28.36
+    ],
+    [
+     -0.86,
+     30.33
+    ],
+    [
+     8.81,
+     33.23
+    ],
+    [
+     18.65,
+     37.17
+    ],
+    [
+     31.63,
+     42.66
+    ],
+    [
+     33.97,
+     37.14
+    ],
+    [
+     20.95,
+     31.63
+    ],
+    [
+     10.79,
+     27.57
+    ],
+    [
+     0.46,
+     24.47
+    ],
+    [
+     -11.73,
+     22.44
+    ],
+    [
+     -21.9,
+     20.91
+    ],
+    [
+     -37.11,
+     19.9
+    ],
+    [
+     -57.2,
+     19.9
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Carreteable destapado que baja hacia el sur (rumbo a la PTAP)",
+   "poligono": [
+    [
+     16.4,
+     30.33
+    ],
+    [
+     15.9,
+     19.48
+    ],
+    [
+     17.4,
+     9.52
+    ],
+    [
+     17.4,
+     -0.72
+    ],
+    [
+     15.85,
+     -10.99
+    ],
+    [
+     12.28,
+     -21.22
+    ],
+    [
+     8.21,
+     -29.35
+    ],
+    [
+     4.19,
+     -36.39
+    ],
+    [
+     1.41,
+     -34.81
+    ],
+    [
+     5.39,
+     -27.85
+    ],
+    [
+     9.32,
+     -19.98
+    ],
+    [
+     12.75,
+     -10.21
+    ],
+    [
+     14.2,
+     -0.48
+    ],
+    [
+     14.2,
+     9.28
+    ],
+    [
+     12.7,
+     19.32
+    ],
+    [
+     13.2,
+     30.47
+    ]
+   ]
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "Cerca del costado norte (línea recta clara con sombra; podría ser malla o una tubería sobre soportes)",
+   "linea": [
+    [
+     -20.2,
+     15.9
+    ],
+    [
+     2.8,
+     18.9
+    ],
+    [
+     5.3,
+     17.9
+    ]
+   ],
+   "altura": 1.8,
+   "material": "malla",
+   "color": "#8d9396"
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "Cerca del costado oriental (línea oscura con sombra; trazado aproximado)",
+   "linea": [
+    [
+     5.3,
+     17.9
+    ],
+    [
+     6.5,
+     12.4
+    ],
+    [
+     6.8,
+     7.4
+    ],
+    [
+     6.5,
+     2.4
+    ],
+    [
+     6.0,
+     -2.6
+    ],
+    [
+     5.0,
+     -6.6
+    ],
+    [
+     3.8,
+     -9.6
+    ]
+   ],
+   "altura": 1.8,
+   "material": "malla",
+   "color": "#8d9396"
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -18.2,
+    10.4
+   ],
+   "altura": 12,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -15.2,
+    5.4
+   ],
+   "altura": 11,
+   "copa": 7
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -24.2,
+    10.4
+   ],
+   "altura": 13,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -21.2,
+    1.4
+   ],
+   "altura": 14,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -21.2,
+    -7.6
+   ],
+   "altura": 15,
+   "copa": 10
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -14.2,
+    -10.6
+   ],
+   "altura": 15,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -7.2,
+    -13.6
+   ],
+   "altura": 14,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -1.2,
+    -17.6
+   ],
+   "altura": 14,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -30.2,
+    -3.6
+   ],
+   "altura": 15,
+   "copa": 10
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -27.2,
+    18.4
+   ],
+   "altura": 9,
+   "copa": 6
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    5.8,
+    19.9
+   ],
+   "altura": 9,
+   "copa": 6
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -30.2,
+    29.4
+   ],
+   "altura": 10,
+   "copa": 7
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -5.2,
+    37.4
+   ],
+   "altura": 9,
+   "copa": 6
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    4.8,
+    -25.6
+   ],
+   "altura": 13,
+   "copa": 9
+  }
+ ],
+ "adecuaciones": {
+  "kwp_plan": null,
+  "fv": [
+   {
+    "tipo": "marquesina",
+    "centro": [
+     3.0,
+     12.5
+    ],
+    "largo": 1.4,
+    "ancho": 2.4,
+    "rumbo_eje": 90,
+    "altura": 1.0,
+    "filas": 1,
+    "columnas": 1,
+    "orientacion_modulo": "vertical",
+    "inclinacion": 10
+   }
+  ],
+  "kwp_factible": 0.55,
+  "domotica": [
+   "sensor de nivel por radar en el tanque elevado con telemetría al Centro de Control Energético y Digital (CCED) y a la PTAP",
+   "mando de las bombas de la PTAP según el nivel del tanque elevado, para llenarlo en las horas de sol: el tanque funciona como una 'batería de agua' (un llenado completo de 350 m³ gasta del orden de 40 a 50 kWh de bombeo, estimado)",
+   "macromedidor con lectura remota a la salida del tanque hacia la red del casco urbano y alarma de rebose",
+   "pasarela IoT (celular o LoRa) en un gabinete hermético al pie del fuste, con batería de litio de unos 1,2 kWh (unos 3 días de autonomía) y regulador de carga del kit solar",
+   "luz de obstáculo LED con fotocelda en la cubierta, alimentada por el kit solar",
+   "sensor de apertura en el gabinete y en la tapa de acceso de la cubierta"
+  ],
+  "obras_civiles": [
+   "inspección estructural de columnas, vigas y fondo (concreto a la intemperie, de edad desconocida) y reparación de fisuras y acero expuesto",
+   "mantenimiento de la pintura en damero (señal diurna de obstáculo) y de la baranda; línea de vida y guarda en la escalera de gato",
+   "revisión del pararrayos y de la puesta a tierra del SIPRA de 2014, incluyendo la estructura del kit solar; protecciones contra sobretensiones (DPS) en el gabinete",
+   "dados de concreto y anclajes para la estructura del kit; canalización enterrada hasta el gabinete y subida por una columna para el sensor y la luz",
+   "lavado y desinfección del tanque y revisión de la impermeabilización interior antes de instalar el sensor"
+  ],
+  "notas": "El tanque no tiene nodo en data/microrred.json y su consumo propio es casi nulo: el agua baja por gravedad y el bombeo que lo llena está en la PTAP (nodo 'ptap', 150 kWp y 150 kWh de baterías en el plan). Su papel en la microrred es de almacenamiento: con un sensor de nivel y el mando de las bombas, la PTAP puede llenar los 350 m³ con energía solar y dejar de bombear en la hora punta. Un llenado completo gasta del orden de 40 a 50 kWh: unos 28 m de altura de bombeo desde la PTAP hasta el nivel del agua en el tanque (unos 115 m sobre el mar) con bombas del 60 % de eficiencia; es un estimado. La cubierta (losa de 10,1 m de diámetro a unos 30 m de altura) cabría en teoría para unos 15 módulos (8,25 kWp): con retiros de 0,5 m el círculo útil admite 17 o 18, menos el espacio del pararrayos y de la escotilla. No se recomienda: solo se sube por una escalera de gato, el viento a esa altura exige anclajes que perforarían la losa de un tanque de agua potable, la cubierta lleva el pararrayos y la señal en damero, y la energía rinde más en la PTAP, donde están las bombas. Se propone solo un kit autónomo de 1 módulo (0,55 kWp, unos 55 a 60 kWh al mes) en una estructura baja al nororiente del fuste, dentro de la cerca, para el sensor, la telemetría y la luz de obstáculo. Esas cargas suman unos 0,4 a 0,5 kWh al día (12 a 15 kWh al mes): el sensor por radar y la pasarela gastan pocos vatios y una luz de obstáculo LED de baja intensidad, unos 10 a 20 W de noche. Un módulo deja margen de sobra para los meses lluviosos. (El levantamiento proponía 2 módulos, 1,1 kWp, unas 8 veces más que el consumo; en la verificación se bajó a 1.) Con una simulación del sol de todo el año (tanque a 30 m y árboles de muestra), ese sitio queda libre de sombra cerca del 90 % de la energía; la sombra del tanque llega hacia el mediodía entre noviembre y febrero, cuando el sol pasa por el sur. El sur y el occidente del fuste quedan a la sombra del tanque o del bosque buena parte del día. No hay parqueadero (no aplica cargador de vehículo eléctrico) ni muro donde poner inversores: el regulador va en el gabinete del kit. No hay red eléctrica a la vista (ni postes ni transformador), por eso el kit es autónomo y no se registró ningún poste. El generador no dibuja el gabinete."
+ },
+ "incertidumbres": [
+  "Altura: no hay planos. En la verificación el tanque se subió 1,5 m: el borde de la cubierta quedó a 30,3 m y la punta del pararrayos a 32,6 m, con un margen de ±2,5 m (28 a 33 m). Tres cálculos independientes: (a) sombra en Esri (WorldView-2, 12 de enero de 2020): el borde más lejano de la sombra del tanque cae a unos 26,5 m de la base (medido sobre la vía, que queda 2,5 a 4 m más baja); con el rumbo de la sombra (unos 317°, sol hacia las 10:10 de la mañana, a 50–51° de altura) eso da de 28 a 30 m, y de 31 a 33 m si la base está 2 m al suroccidente o el satélite pasó a la hora usual (10:15–10:30); (b) foto de 2018 desde la PTAP: el borde queda unos 18 m por encima de la cámara usando el diámetro del tanque como escala; con la cámara a 4,1 m sobre el terreno de la PTAP y el terreno de la PTAP 4 a 7 m más alto que el pie del tanque (SRTM: 92 m contra 85 m, pero la PTAP tiene bosque y el SRTM puede quedar alto) da de 26 a 29 m, y hasta 33 m con el campo de visión de 67° del celular; (c) Street View de 2014 a 1,29 km (dos panoramas): corrigiendo la inclinación que trae cada panorama (1,4° y 1,6° hacia el tanque), el borde queda 0,24° más alto que en el modelo de 28,8 m en los dos panoramas, unos 5 m; con el SRTM (85 m en el tanque y 84 m en la vía) da unos 33 m, pero ese cálculo depende de alturas del terreno con errores de ±4 m. El promedio ponderado da unos 30 m. Los datos del terreno (SRTM, ASTER) no alcanzan para afinar más.",
+  "Posición del eje: se tomó el centro del disco de la cubierta en Google porque la cornisa se ve completa alrededor (vista casi vertical). Con la vista inclinada de Esri la base podría quedar hasta 2–3 m más al suroccidente. Margen ±1,5 m.",
+  "Proporciones del tanque (medidas en las fotos de 2018 con el diámetro como escala, ±0,2 m): cornisa de 0,5 m, muro en damero de 3,1 m (dos hileras de 1,55 m) y fondo cónico de 1,4 m. El fondo se modeló con dos escalones porque el generador no hace conos. El techo podría ser un poco cónico.",
+  "Fuste: en las fotos se ven 5 o 6 columnas, lo que cuadra con un anillo de 12 columnas de unos 0,5–0,6 m a 3,2–3,3 m del eje; se armó con tres cuadros girados 30° (solo columnas en las esquinas), por eso arriba quedan vigas que se cruzan en estrella en lugar de un anillo. Vigas de amarre intermedias: en la Imagen 43 hay una unos 5,5 m debajo del fondo (unos 10 m debajo de la cornisa) y en la vista inclinada de Esri el fuste se ve como un enrejado con 3 o 4 niveles de vigas, separados unos 5 a 6 m. No se modelaron: el generador solo pone la viga de arriba, y al apilar volúmenes abiertos quita las columnas repetidas y pone una losa en cada nivel.",
+  "No se modelaron la baranda metálica de la cubierta (en el modelo hay solo un borde de 0,1 m), el descanso de la escalera de gato, la tubería de subida y bajada ni la luz de obstáculo, si existe. La escalera de gato del costado oriental (Imagen 43) se agregó en la verificación como una franja delgada de 0,35 m, gris galvanizado,, del suelo a la baranda, a 5,8 m del eje; su posición exacta (entre el oriente y el oriente-suroriente) no está confirmada.",
+  "Colores: el damero se muestreó en fotos de días nublados (blanco y gris pizarra oscuro); en la foto de 2018 los cuadros oscuros se ven gris verdoso, no naranja. El color del concreto de las columnas no se confirmó (en Esri se ven claras). La pintura pudo cambiar después de 2018.",
+  "El objeto cilíndrico con tapa blanca (2,3 m de diámetro, a 21 m al noroccidente) no se ve en fotos; su uso (tanque plástico, cámara de válvulas) y su altura (unos 2 m, por la sombra) no están confirmados.",
+  "Las líneas del norte y del oriente se modelaron como cercas de malla de 1,8 m porque se ven en Google y en Esri con su sombra; podrían ser alambre de púas, una cerca viva o, la del norte, una tubería sobre soportes. No se ve portón ni camino de acceso desde la vía.",
+  "El modelo usa terreno plano; la loma baja unos 3 m hacia la vía del norte y hacia la hondonada del sur. Los árboles (9 a 15 m) son de muestra, puestos sobre las copas que se ven en el satélite.",
+  "No se ven postes, transformador ni medidor cerca del tanque; no se sabe si tiene luz eléctrica. Por eso no se registró ningún poste y el kit solar propuesto es autónomo.",
+  "No se encontró el año de construcción del tanque ni planos estructurales. La Superservicios (2018) dice que el municipio tiene dos tanques elevados de 350 m³ (este y el de la planta veredal).",
+  "En Google z21 se ve una barra clara de unos 5 m, tangente a la cornisa por el noroccidente (entre −7, 3,8 y −2,3, 6,4 m), que no aparece en las fotos; podría ser una tubería o una losa en el suelo, o el descanso de una escalera. No se modeló. La cubierta muestra manchas y juntas grises en forma radial, sin un damero regular; se dejó de un solo color.",
+  "Proporciones revisadas en la verificación con la Imagen 43 (12,5 píxeles por metro): hilera de abajo del damero de 1,5 m y fondo más resalto de 1,4 m, como en el modelo. La cornisa oscura se ve más delgada (0,25–0,3 m contra 0,5 m del modelo), y encima va la baranda de cerca de 1 m; la diferencia no pasa de 0,25 m y no se cambió.",
+  "En los dos panoramas de 2014 se ve, debajo del tanque, una franja oscura (el fondo cónico y la parte alta del fuste a la sombra del tanque) y, unos 8 a 12 m debajo de la cornisa, una franja blanca casi tan ancha como el tanque. Puede ser la viga de amarre intermedia de la Imagen 43 con las columnas más iluminadas, o un anillo o plataforma; con la resolución de esas fotos (unos 0,5 m por píxel) no se distingue y no se modeló."
+ ],
+ "verificacion": {
+  "trace": "data/geo/img/tanque_elevado_trace.png",
+  "trace_google": [
+   "data/geo/img/tanque_elevado_gtrace.png",
+   "data/geo/img/tanque_elevado_gtrace_contorno.png",
+   "data/geo/img/tanque_elevado_ver_gtrace.png"
+  ],
+  "vistas": [
+   "data/geo/img/tanque_elevado_foto2018_ptap.jpg",
+   "data/geo/img/tanque_elevado_foto2018_imagen43.png",
+   "data/geo/img/tanque_elevado_foto2018_imagen43_14x9.jpg",
+   "data/geo/img/tanque_elevado_sv_NzQYSkGjZ4VoB6wTzuvVhQ.jpg",
+   "data/geo/img/tanque_elevado_sv_4no6LF4DEWBtC58T0thNww.jpg"
+  ],
+  "comparaciones": [
+   "data/geo/img/tanque_elevado_cmp_foto1_comparacion.png",
+   "data/geo/img/tanque_elevado_cmp_foto1_zoom.png",
+   "data/geo/img/tanque_elevado_cmp_foto2_comparacion.png",
+   "data/geo/img/tanque_elevado_cmp_foto2_mezcla.png",
+   "data/geo/img/tanque_elevado_cmp_foto2_zoom.png",
+   "data/geo/img/tanque_elevado_cmp_cenital_comparacion.png",
+   "data/geo/img/tanque_elevado_cmp_cenital_mezcla.png",
+   "data/geo/img/tanque_elevado_cmp_imagen43_comparacion.png",
+   "data/geo/img/tanque_elevado_cmp_imagen43_mezcla.png",
+   "data/geo/img/tanque_elevado_ver_svNzQY_comparacion.png",
+   "data/geo/img/tanque_elevado_ver_svNzQY_mezcla.png",
+   "data/geo/img/tanque_elevado_ver_sv4no6_comparacion.png",
+   "data/geo/img/tanque_elevado_ver_sv4no6_mezcla.png",
+   "data/geo/img/tanque_elevado_ver_sv_alineado.png"
+  ],
+  "orbitas": [
+   "data/geo/img/tanque_elevado_orbita_existente.png",
+   "data/geo/img/tanque_elevado_orbita_todo.png",
+   "data/geo/img/tanque_elevado_orbita_todo_kit.png",
+   "data/geo/img/tanque_elevado_ver_orbita_existente.png",
+   "data/geo/img/tanque_elevado_ver_orbita_todo.png"
+  ],
+  "satelite": [
+   "data/geo/img/tanque_elevado_g21.png",
+   "data/geo/img/tanque_elevado_g20.png",
+   "data/geo/img/tanque_elevado_e19.png",
+   "data/geo/img/tanque_elevado_ctx.png",
+   "data/geo/img/tanque_elevado_sat_cenital_google.jpg",
+   "data/geo/img/tanque_elevado_e19_sombra.png"
+  ],
+  "notas": "Sin Street View, la forma se comprobó con la foto de la torre de aireación de 2018 (Imagen 25 de la Superservicios), tomada desde la PTAP a 230 m: cámara en (82,5; −215,0) m respecto al ancla, a 10,6 m sobre el pie del tanque (4,1 m sobre el terreno de la PTAP, que está unos 6,5 m más alto), rumbo 348,5°, cabeceo −0,4° (medido con la inclinación del poste de la izquierda) y campo de visión de 57,5° (ajustado con el ancho del tanque; el celular tiene unos 67°, ver incertidumbres). Con esa cámara coinciden el ancho del tanque, las 16 caras, la fase del damero (la cara que mira a la PTAP es oscura arriba y blanca abajo), las proporciones de cornisa, muro y fondo (±1 píxel, unos 0,2 m) y las 6 columnas a la vista. La primera versión tenía el muro muy bajo y el fondo muy alto, y un fuste de 8 columnas (se veían 3); se corrigió con 12 columnas en anillo. La huella se comprobó con el contorno sobre Google z21 (cornisa y cubierta a ±0,3 m) y con una vista cenital del modelo mezclada con la imagen de Google. Segunda foto: la Imagen 43 (tomada con zoom a través de la malla de la PTAP; recortada a 14:9), con la cámara en el mismo punto de la PTAP, rumbo 338,7°, cabeceo 2,7° y campo de visión de 13,5° (ajustados para centrar el tanque): coinciden el ancho, la altura de cornisa, muro y fondo y la fase del damero; la escalera de gato y la baranda de la foto no están en el modelo. En la vista de Esri el modelo queda sobre la parte baja del fuste que se ve inclinado hacia el norte-noroccidente, como corresponde a la base. Verificación independiente (octubre de 2026): la ubicación se confirmó además con Street View de 2014 a 1,29 km (el tanque en damero se ve desde la vía del suroriente) y con la foto de la PTAP. La huella se volvió a medir sobre Google z21 con perfiles radiales: disco blanco de 10,1–10,2 m y anillo exterior de la cornisa de 10,9–11,1 m, como en el modelo (diferencias menores de 0,3 m). Con los dos panoramas de 2014 (misma cámara) coinciden el rumbo (0,2°) y el ancho del tanque (87 píxeles en el modelo; en la foto, borrosa, 77 a 87). El tanque se subió 1,5 m (borde de la cubierta a 30,3 m; ver incertidumbres) y se agregó la escalera de gato. El kit solar se bajó a 1 módulo (0,55 kWp) para ajustarlo al consumo. Las comparaciones del levantamiento con las fotos de 2018 se hicieron con el tanque a 28,8 m; con el tanque subido 1,5 m cuadran igual si la cámara de la PTAP queda 1,5 m más alta (12,1 m sobre el pie del tanque, con la PTAP unos 8 m más alta que el pie, como da el SRTM). En los renders desde 1,29 km el damero se ve incompleto porque las placas oscuras quedan a 3,5 cm del muro y a esa distancia se confunden en la profundidad; de cerca (órbita) se ve completo y el chequeo de caras coplanares sigue limpio."
+ }
+}

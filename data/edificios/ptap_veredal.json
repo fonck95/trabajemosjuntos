@@ -1,0 +1,1061 @@
+{
+ "id": "ptap_veredal",
+ "nombre": "Planta de potabilización veredal (compacta) de Aguas y Aseo de Yondó",
+ "nodo_microrred": null,
+ "direccion": "Vereda Laguna del Miedo (código plus 2374+MH, Casabe): loma con bosque al sur de la vía que va del casco urbano a la Laguna del Miedo, 1,05 km al suroriente de la laguna, 1,4 km al occidente-noroccidente de la PTAP municipal y 3,8 km al occidente de la Alcaldía",
+ "lat": 7.01433,
+ "lon": -73.94354,
+ "ubicacion": {
+  "confianza": "alta",
+  "metodo": "Se confirmó con tres pruebas independientes. (1) El lugar de Google 'Planta de potabilización de agua vereda la laguna del miedo' (7,014218, −73,943529) queda 13 m al sur del ancla y su propietario subió tres fotos (hacia 2024): la torre del tanque elevado, la caseta blanca con ventana de reja, los filtros blancos de fibra de vidrio y un tanque manchado de óxido con el letrero 'FLOCULADOR Y SEDIMENTADOR #1'. (2) La imagen de Google z21 muestra en ese punto un claro en el bosque con un tanque redondo de concreto de unos 10,6 m de diámetro, la losa gris de la caseta y una fila de tanques pequeños de 1,4 m; la imagen de Bing (anterior, con tierra desnuda) muestra los mismos tanques blancos recién instalados. (3) Las medidas coinciden con la Superservicios (2020): planta compacta de fibra de vidrio de 15 L/s construida en 2014, con tanque de oxidación y floculadores de 3,0 m, trasiego y cuatro filtros de 1,4 m, y bombeo a un tanque elevado de unos 350 m³. Los contratos SECOP de 2015 sobre el pararrayos de la 'planta de tratamiento y tanque elevado del sistema de veredas del sector plano' confirman que la torre pertenece a este sistema y no al urbano (cuyo tanque elevado está en Las Américas, 1,4 km al oriente). La coordenada del inventario era correcta (queda en el claro, entre la torre y la caseta) y se dejó como ancla. Corrección al inventario: la planta no toma agua de la laguna por una aducción de 8\"; se abastece de un pozo profundo a unos 60–70 m (finca La Gaitana) con tubería de 3\", y la tubería de 8\" es la salida hacia la red rural de unos 20 km. No hay Street View: el panorama más cercano está a 1,42 km y no ve la planta. Verificación independiente (octubre de 2026): se volvió a consultar el lugar de Google (mismas coordenadas, código plus 2374+MH, cuatro fotos) y se comprobó que la foto aérea de la planta que publica la Superservicios (2020) corresponde a este sitio: la fila de cuatro filtros, el floculador n.º 1 y la caseta caen en las mismas posiciones relativas que en el satélite de Google z21. No hay panoramas de Street View a menos de 600 m (búsqueda en línea en una retícula de 1,2 km). La ubicación queda confirmada."
+ },
+ "fuentes": [
+  {
+   "tipo": "web",
+   "url": "https://www.google.com/maps/place/?q=place_id:ChIJF7Rg3UTvQo4RgCDM07Wsgpg",
+   "fecha": "2024 (aprox.)",
+   "nota": "Lugar de Google de la planta (7,014218, −73,9435294). Tres fotos del propietario: (a) vista desde el sur-suroriente con dos columnas de la torre a la izquierda, la caseta, dos tanques IBC, tres filtros blancos y el floculador-sedimentador n.º 1 oxidado a la derecha; se usó para comparar el modelo; (b) y (c) la torre vista desde la vía pavimentada, con la baranda, la escalera exterior, el fondo cónico, tres niveles de vigas de amarre y dos pararrayos."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
+   "fecha": "2020",
+   "nota": "Superservicios, evaluación integral 2018–2020, páginas 28 a 35: PTAP veredal compacta de poliéster reforzado con fibra de vidrio, 15 L/s, de 2014; tanque de oxidación de 3,0 × 4,2 m (30 m³), tanque de trasiego de 1,4 × 4,2 m (6 m³), dos floculadores-sedimentadores de 3,0 × 3,5 m (17 m³ cada uno), cuatro filtros de 1,4 × 3,5 m; tanque de almacenamiento de 209 m³; dos bombas de 25 HP al tanque elevado de unos 350 m³; laboratorio de 12 m²; pozo a 60 m con tubería de 3\" (finca La Gaitana); salida de 8\" a una red ramificada de 20 km; macromedidores fuera de servicio en mayo de 2020. Fotos de la planta (vista aérea desde lo alto, filtros y vista general con la caseta blanca de ventana con reja negra)."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-4-4188295",
+   "fecha": "2015-07",
+   "nota": "Construcción del apantallamiento (SIPRA) para la planta de tratamiento y el tanque elevado del sistema de veredas del sector plano. El diseño es el proceso 15-4-3986592 (mayo de 2015)."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=14-4-3258565",
+   "fecha": "2014-12",
+   "nota": "Compraventa de equipos, elementos y reactivos para la PTAP del acueducto veredal (área plana): la planta arrancó a finales de 2014."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=15-4-3721916",
+   "fecha": "2015-03",
+   "nota": "Reparación del tanque de sedimentación de la PTAP del sistema veredal."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=21-4-12025215",
+   "fecha": "2021-05",
+   "nota": "Obras para optimizar las redes hidráulicas de la planta veredal ($182,6 millones), que sirve a las veredas X-10, Puerto Casabe, Puerto Tomás, Puerto Los Mangos, La Laguna, El Cóndor y La Cabaña. En la misma fecha, 21-4-12023740: obras para optimizar el sistema de potabilización ($56 millones)."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=22-4-12906557",
+   "fecha": "2022-01",
+   "nota": "Limpieza del canal de desagüe de la planta veredal: la planta seguía en operación. Otros contratos del sistema: mantenimiento de las electrobombas de la planta veredal (17-4-6586434, 2017) y suministro de una electrobomba sumergible de 20 HP para el acueducto veredal (SECOP II)."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Google, imagen satelital z21 (0,074 m/píxel; fecha sin publicar, posterior a 2020)",
+   "nota": "Huella de la caseta (losa clara de 3,4 × 5,3 m con su sombra al suroccidente), de la enramada de lámina gris al noroccidente y del cobertizo azul al suroriente; del tanque elevado (disco de 10,6 m); de la fila de cuatro filtros (círculos oscuros de 1,4 m, cada uno con su sombra 1,5 m al occidente-suroccidente) y de los dos floculadores de 3 m (el n.º 1 al sur, de tapa oscura, y el n.º 2 al nororiente, de tapa clara). En el borde oriental del disco hay dos manchas blancas que no se usaron para ubicar la torre. La sombra de la torre, al occidente-suroccidente, indica que la imagen no ve el tanque muy inclinado. Con esta imagen se dibujaron todos los rectángulos y polígonos (corregidos en la verificación de octubre de 2026)."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Esri World Imagery z18 (z19 no disponible en este punto) y Bing z19",
+   "nota": "Esri solo sirve para el contexto (claro con el tanque y la caseta). Bing es más antigua: tierra desnuda alrededor de la planta recién construida, con los tanques blancos y el contorno del lote."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "-FjirII8hUu0JJYi__EgOg",
+   "fecha": "2023-04",
+   "rumbo": 239,
+   "nota": "Panorama más cercano (1,42 km al nororiente, en la vía hacia la laguna). La vegetación tapa la planta. No hay panoramas a menos de 800 m; la cobertura de 2023 se desvía hacia el norte."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
+   "fecha": "2020",
+   "nota": "Verificación: la foto aérea de la página 35 (tomada desde lo alto del tanque elevado, mirando al oriente) muestra la fila de cuatro filtros con un quinto cilindro aparte (el trasiego) cerca de un tanque alto blanco con tapa (oxidación), dos tanques de 3 m con tapa oscura y travesaños blancos (floculadores: uno al sur, que hoy es el n.º 1 oxidado, y otro junto al extremo nororiental de la fila de filtros), tres tanques bajos abiertos al norte, una cubierta translúcida donde hoy está la caseta y una caseta pequeña de techo verde al noroccidente. Al oriente del floculador n.º 1 solo hay grava."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Esri World Imagery (Wayback 2022–2026) z18",
+   "nota": "Verificación: en z19 y z20 no hay imagen. La versión de 2026 muestra el disco del tanque y la planta en la misma posición que Google, con un desfase de 1 a 2 m; es demasiado borrosa para medir."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.google.com/maps/place/?q=place_id:ChIJF7Rg3UTvQo4RgCDM07Wsgpg",
+   "fecha": "2024 (aprox.)",
+   "nota": "Verificación: las fotos de la torre desde la vía (b y c) se compararon con el modelo usando cámaras estimadas a unos 70 m y 90 m al occidente-noroccidente. Desde allí el fuste se ve de frente, con tres columnas delanteras y un ancho de 0,71 a 0,74 veces el diámetro del tanque; con el cuadro girado 175° se veía un 25 % más ancho. Las proporciones de la foto lejana dan un muro de 3,7 a 4,3 m, un fondo de 1,7 a 2,1 m y paneles del fuste de 4,2 a 5,2 m, compatibles con las alturas del modelo."
+  }
+ ],
+ "volumenes": [
+  {
+   "id": "caseta",
+   "nombre": "Caseta de operación de una planta: cuarto de bombas (dos bombas de 25 HP al tanque elevado), laboratorio, cuarto de cloro y bodega",
+   "centro": [
+    6.64,
+    3.93
+   ],
+   "largo": 5.3,
+   "ancho": 3.4,
+   "rumbo_eje": 35,
+   "base": 0,
+   "altura_alero": 2.9,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#c9c2bb"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#cfc4bc",
+    "ventanas": {
+     "tipo": "reja",
+     "ancho": 1.15,
+     "alto": 1.0,
+     "antepecho": 1.1,
+     "separacion": 3,
+     "lados": [
+      "S"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "S",
+      "pos": 0.89,
+      "ancho": 0.7,
+      "alto": 2.0
+     }
+    ]
+   }
+  },
+  {
+   "id": "enramada",
+   "nombre": "Enramada o depósito adosado a la fachada noroccidental de la caseta: muros blancos, vano oscuro con reja y cubierta de lámina de una agua que cae hacia el noroccidente",
+   "centro": [
+    4.05,
+    5.89
+   ],
+   "largo": 5.55,
+   "ancho": 3.3,
+   "rumbo_eje": 35,
+   "base": 0,
+   "altura_alero": 2.4,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "pendiente": 6,
+    "caida": "O",
+    "voladizo": 0.15,
+    "material": "zinc",
+    "color": "#a8a09b"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#cfc4bc",
+    "puertas": [
+     {
+      "lado": "S",
+      "pos": 0.85,
+      "ancho": 1.0,
+      "alto": 2.1
+     }
+    ]
+   }
+  },
+  {
+   "id": "fuste",
+   "nombre": "Fuste del tanque elevado: ocho columnas de concreto de cerca de 1 m en un cuadro de 6,5 m entre ejes, con tres anillos de vigas de amarre; una cara mira al occidente-noroccidente (se ve de frente desde la vía)",
+   "centro": [
+    -5.9,
+    -1.4
+   ],
+   "largo": 7.5,
+   "ancho": 7.5,
+   "rumbo_eje": 13,
+   "abierto": true,
+   "sep_columnas": 3.8,
+   "columna": 1.0,
+   "base": 0,
+   "altura_alero": 19.2,
+   "pisos": 1,
+   "techo": {
+    "tipo": "ninguno"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#9a958f"
+   }
+  },
+  {
+   "id": "fondo_tanque",
+   "nombre": "Fondo cónico del tanque elevado (concreto)",
+   "poligono": [
+    [
+     -1.5,
+     -1.4
+    ],
+    [
+     -2.09,
+     0.8
+    ],
+    [
+     -3.7,
+     2.41
+    ],
+    [
+     -5.9,
+     3.0
+    ],
+    [
+     -8.1,
+     2.41
+    ],
+    [
+     -9.71,
+     0.8
+    ],
+    [
+     -10.3,
+     -1.4
+    ],
+    [
+     -9.71,
+     -3.6
+    ],
+    [
+     -8.1,
+     -5.21
+    ],
+    [
+     -5.9,
+     -5.8
+    ],
+    [
+     -3.7,
+     -5.21
+    ],
+    [
+     -2.09,
+     -3.6
+    ]
+   ],
+   "base": 19.2,
+   "altura_alero": 21.2,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#8a857d"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#8a857d"
+   }
+  },
+  {
+   "id": "tanque_elevado",
+   "nombre": "Tanque elevado de concreto de unos 350 m³ (diámetro ≈10,6 m), con baranda metálica, escalera exterior y pararrayos en la cubierta",
+   "poligono": [
+    [
+     -0.6,
+     -1.4
+    ],
+    [
+     -0.86,
+     0.24
+    ],
+    [
+     -1.61,
+     1.72
+    ],
+    [
+     -2.78,
+     2.89
+    ],
+    [
+     -4.26,
+     3.64
+    ],
+    [
+     -5.9,
+     3.9
+    ],
+    [
+     -7.54,
+     3.64
+    ],
+    [
+     -9.02,
+     2.89
+    ],
+    [
+     -10.19,
+     1.72
+    ],
+    [
+     -10.94,
+     0.24
+    ],
+    [
+     -11.2,
+     -1.4
+    ],
+    [
+     -10.94,
+     -3.04
+    ],
+    [
+     -10.19,
+     -4.52
+    ],
+    [
+     -9.02,
+     -5.69
+    ],
+    [
+     -7.54,
+     -6.44
+    ],
+    [
+     -5.9,
+     -6.7
+    ],
+    [
+     -4.26,
+     -6.44
+    ],
+    [
+     -2.78,
+     -5.69
+    ],
+    [
+     -1.61,
+     -4.52
+    ],
+    [
+     -0.86,
+     -3.04
+    ]
+   ],
+   "base": 21.2,
+   "altura_alero": 25.4,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#9f988b"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#9f988b"
+   }
+  },
+  {
+   "id": "floculador_1",
+   "nombre": "Floculador-sedimentador n.º 1 de alta tasa (poliéster reforzado con fibra de vidrio, 3,0 m × 3,5 m, manchado de óxido por el hierro del agua; tapa oscura con travesaños)",
+   "poligono": [
+    [
+     13.2,
+     -6.2
+    ],
+    [
+     13.05,
+     -5.55
+    ],
+    [
+     12.64,
+     -5.03
+    ],
+    [
+     12.03,
+     -4.74
+    ],
+    [
+     11.37,
+     -4.74
+    ],
+    [
+     10.76,
+     -5.03
+    ],
+    [
+     10.35,
+     -5.55
+    ],
+    [
+     10.2,
+     -6.2
+    ],
+    [
+     10.35,
+     -6.85
+    ],
+    [
+     10.76,
+     -7.37
+    ],
+    [
+     11.37,
+     -7.66
+    ],
+    [
+     12.03,
+     -7.66
+    ],
+    [
+     12.64,
+     -7.37
+    ],
+    [
+     13.05,
+     -6.85
+    ]
+   ],
+   "base": 0,
+   "altura_alero": 3.5,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#3a3631"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#b0814a"
+   }
+  },
+  {
+   "id": "floculador_2",
+   "nombre": "Floculador-sedimentador n.º 2 (fibra de vidrio, 3,0 m × 3,5 m): tanque de tapa con travesaños junto al extremo nororiental de la fila de filtros, según la foto aérea de la Superservicios (2020); en el satélite se ve su tapa clara y su sombra",
+   "poligono": [
+    [
+     15.5,
+     2.0
+    ],
+    [
+     15.35,
+     2.65
+    ],
+    [
+     14.94,
+     3.17
+    ],
+    [
+     14.33,
+     3.46
+    ],
+    [
+     13.67,
+     3.46
+    ],
+    [
+     13.06,
+     3.17
+    ],
+    [
+     12.65,
+     2.65
+    ],
+    [
+     12.5,
+     2.0
+    ],
+    [
+     12.65,
+     1.35
+    ],
+    [
+     13.06,
+     0.83
+    ],
+    [
+     13.67,
+     0.54
+    ],
+    [
+     14.33,
+     0.54
+    ],
+    [
+     14.94,
+     0.83
+    ],
+    [
+     15.35,
+     1.35
+    ]
+   ],
+   "base": 0,
+   "altura_alero": 3.5,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#d8d1cb"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#d8d1cb"
+   }
+  },
+  {
+   "id": "filtro_1",
+   "nombre": "Filtro rápido n.º 1 de flujo descendente (fibra de vidrio, 1,4 m × 3,5 m; grava, arena y antracita)",
+   "poligono": [
+    [
+     9.1,
+     -1.0
+    ],
+    [
+     8.97,
+     -0.59
+    ],
+    [
+     8.62,
+     -0.33
+    ],
+    [
+     8.18,
+     -0.33
+    ],
+    [
+     7.83,
+     -0.59
+    ],
+    [
+     7.7,
+     -1.0
+    ],
+    [
+     7.83,
+     -1.41
+    ],
+    [
+     8.18,
+     -1.67
+    ],
+    [
+     8.62,
+     -1.67
+    ],
+    [
+     8.97,
+     -1.41
+    ]
+   ],
+   "base": 0,
+   "altura_alero": 3.5,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#d4cbc8"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#d4cbc8"
+   }
+  },
+  {
+   "id": "filtro_2",
+   "nombre": "Filtro rápido n.º 2 de flujo descendente (fibra de vidrio, 1,4 m × 3,5 m; grava, arena y antracita)",
+   "poligono": [
+    [
+     10.5,
+     1.0
+    ],
+    [
+     10.37,
+     1.41
+    ],
+    [
+     10.02,
+     1.67
+    ],
+    [
+     9.58,
+     1.67
+    ],
+    [
+     9.23,
+     1.41
+    ],
+    [
+     9.1,
+     1.0
+    ],
+    [
+     9.23,
+     0.59
+    ],
+    [
+     9.58,
+     0.33
+    ],
+    [
+     10.02,
+     0.33
+    ],
+    [
+     10.37,
+     0.59
+    ]
+   ],
+   "base": 0,
+   "altura_alero": 3.5,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#d4cbc8"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#d4cbc8"
+   }
+  },
+  {
+   "id": "filtro_3",
+   "nombre": "Filtro rápido n.º 3 de flujo descendente (fibra de vidrio, 1,4 m × 3,5 m; grava, arena y antracita)",
+   "poligono": [
+    [
+     11.9,
+     3.0
+    ],
+    [
+     11.77,
+     3.41
+    ],
+    [
+     11.42,
+     3.67
+    ],
+    [
+     10.98,
+     3.67
+    ],
+    [
+     10.63,
+     3.41
+    ],
+    [
+     10.5,
+     3.0
+    ],
+    [
+     10.63,
+     2.59
+    ],
+    [
+     10.98,
+     2.33
+    ],
+    [
+     11.42,
+     2.33
+    ],
+    [
+     11.77,
+     2.59
+    ]
+   ],
+   "base": 0,
+   "altura_alero": 3.5,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#d4cbc8"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#d4cbc8"
+   }
+  },
+  {
+   "id": "filtro_4",
+   "nombre": "Filtro rápido n.º 4 de flujo descendente (fibra de vidrio, 1,4 m × 3,5 m; grava, arena y antracita), en el extremo nororiental de la fila de filtros",
+   "poligono": [
+    [
+     13.4,
+     5.1
+    ],
+    [
+     13.27,
+     5.51
+    ],
+    [
+     12.92,
+     5.77
+    ],
+    [
+     12.48,
+     5.77
+    ],
+    [
+     12.13,
+     5.51
+    ],
+    [
+     12.0,
+     5.1
+    ],
+    [
+     12.13,
+     4.69
+    ],
+    [
+     12.48,
+     4.43
+    ],
+    [
+     12.92,
+     4.43
+    ],
+    [
+     13.27,
+     4.69
+    ]
+   ],
+   "base": 0,
+   "altura_alero": 3.5,
+   "pisos": 1,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0,
+    "material": "concreto",
+    "color": "#d4cbc8"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#d4cbc8"
+   }
+  }
+ ],
+ "elementos": [
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Cobertizo de lámina azul contra la fachada suroriental de la caseta, entre la caseta y la fila de filtros (dosificación e insumos)",
+   "centro": [
+    9.07,
+    3.14
+   ],
+   "largo": 3.7,
+   "ancho": 1.4,
+   "rumbo_eje": 35,
+   "altura": 2.3,
+   "material": "zinc",
+   "color": "#5d6b9a"
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Placa de concreto de la planta compacta",
+   "poligono": [
+    [
+     6.6,
+     -2.3
+    ],
+    [
+     9.3,
+     6.9
+    ],
+    [
+     14.9,
+     6.4
+    ],
+    [
+     16.0,
+     -2.4
+    ],
+    [
+     14.8,
+     -8.2
+    ],
+    [
+     9.6,
+     -8.4
+    ]
+   ]
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "Cerca perimetral de malla eslabonada sobre sardinel de ladrillo (trazado aproximado)",
+   "poligono": [
+    [
+     -13.0,
+     3.0
+    ],
+    [
+     -8.0,
+     7.5
+    ],
+    [
+     0.0,
+     9.5
+    ],
+    [
+     7.0,
+     12.5
+    ],
+    [
+     16.0,
+     9.0
+    ],
+    [
+     18.0,
+     -4.0
+    ],
+    [
+     16.5,
+     -13.0
+    ],
+    [
+     10.0,
+     -19.0
+    ],
+    [
+     0.0,
+     -16.5
+    ],
+    [
+     -9.0,
+     -12.0
+    ],
+    [
+     -13.0,
+     -5.0
+    ]
+   ],
+   "altura": 2.0,
+   "material": "malla",
+   "color": "#7b8084"
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -9,
+    12
+   ],
+   "altura": 11,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    0,
+    14
+   ],
+   "altura": 10,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    7,
+    16.5
+   ],
+   "altura": 10,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    14,
+    14.5
+   ],
+   "altura": 11,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    21.5,
+    4
+   ],
+   "altura": 12,
+   "copa": 10
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    22,
+    -8
+   ],
+   "altura": 12,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    20,
+    -17
+   ],
+   "altura": 11,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    4,
+    -21
+   ],
+   "altura": 11,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -6,
+    -18
+   ],
+   "altura": 10,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -15,
+    -12
+   ],
+   "altura": 12,
+   "copa": 10
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -19,
+    -1
+   ],
+   "altura": 13,
+   "copa": 10
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -17,
+    9
+   ],
+   "altura": 12,
+   "copa": 9
+  }
+ ],
+ "adecuaciones": {
+  "kwp_plan": null,
+  "fv": [
+   {
+    "volumen": "caseta",
+    "faldon": "plano",
+    "filas": 1,
+    "columnas": 3,
+    "orientacion_modulo": "vertical",
+    "inclinacion": 10,
+    "azimut": 125
+   }
+  ],
+  "kwp_factible": 1.65,
+  "inversores": {
+   "n": 1,
+   "kw": 1.5,
+   "volumen": "caseta",
+   "lado": "N"
+  },
+  "domotica": [
+   "medidor bidireccional y analizador de red en el tablero general de la planta",
+   "pasarela IoT con telemetría al Centro de Control Energético y Digital (CCED)",
+   "sensores de nivel en el tanque de almacenamiento de 209 m³ y en el tanque elevado de 350 m³, con mando de las dos bombas de 25 HP para llenar el tanque elevado en horas de sol y fuera de la hora punta",
+   "variadores de velocidad o arrancadores suaves en las bombas de 25 HP y en la bomba sumergible del pozo",
+   "macromedidores con lectura remota a la entrada (pozo) y a la salida de la planta (estaban fuera de servicio en 2020)",
+   "medición en línea de cloro residual y turbiedad del agua tratada",
+   "iluminación LED con fotocelda en el patio, la caseta y la escalera del tanque"
+  ],
+  "obras_civiles": [
+   "verificar antes de montar si la cubierta de la caseta es una losa de concreto (así lo sugiere el borde grueso que se ve en la foto de 2024) o láminas sobre vigas (en la foto aérea de 2020 había una cubierta translúcida en ese sitio); si es losa, revisarla e impermeabilizarla y usar anclajes que no rompan la impermeabilización; si no lo es, apoyar los 3 módulos en una estructura propia sobre los muros o llevarlos a tierra",
+   "poda de las ramas del borde del bosque al nororiente de la caseta que dan sombra en la mañana (con permiso de Corantioquia)",
+   "revisión y ampliación del apantallamiento (SIPRA) de 2015 y de la puesta a tierra para incluir el arreglo y el inversor; protecciones contra sobretensiones (DPS) en corriente continua y alterna",
+   "tablero de protecciones del sistema solar junto al tablero de las bombas, con canalización corta por la fachada nororiental"
+  ],
+  "notas": "La planta no tiene nodo en data/microrred.json, así que no hay potencia planeada. Su consumo no se ha medido; un estimado con los equipos que reportan la Superservicios y el SECOP da del orden de 12.000 a 16.000 kWh al mes: la bomba sumergible del pozo (20 HP) funciona casi todo el día para sacar unos 12 L/s, y una de las dos bombas de 25 HP sube unos 1.000 m³ diarios al tanque elevado durante unas 7 horas. Es una carga del mismo orden que la mitad del nodo del acueducto urbano, por eso debería sumarse a ese nodo, como dice el inventario. En el lote no cabe un arreglo solar que pese: la única cubierta firme es la de la caseta (3,4 × 5,3 m, plana), y con retiros de 0,5 m queda un área útil de 2,4 × 4,3 m donde solo caben 3 módulos en una fila mirando al suroriente (1,65 kWp, unos 130 a 180 kWh al mes), que además reciben sombra del bosque en la mañana y del tanque elevado en la tarde; por eso miran al suroriente, para aprovechar la mañana. La enramada y el cobertizo son de lámina liviana y no sirven para montar módulos. Alcanzan para el laboratorio, la telemetría y la iluminación, no para las bombas. No hay patio libre de sombra para una marquesina: el claro está rodeado de árboles de 10 a 13 m y el patio de grava es la zona de maniobra para traer insumos. Opciones para cubrir el bombeo: (1) acreditar a esta cuenta los excedentes de los arreglos grandes de la red (coliseo, PTAP municipal) dentro de la comunidad energética pública; (2) un arreglo en tierra de unos 40 kWp (unos 600 m² de terreno) en el potrero vecino, al nororiente de la vía, con servidumbre o compra del terreno, que daría unos 4.400 kWh al mes; (3) la cubierta del tanque elevado está libre de sombra y admitiría unos 12 módulos, pero exige revisión estructural y un acceso seguro distinto de la escalera de gato, por lo que no se propone. El tanque elevado (350 m³, unas 8 horas de suministro a 12 L/s) funciona como una batería de agua: bombear en horas de sol rinde más que una batería eléctrica. Por eso no se propone banco de baterías; si se quiere mantener la cloración y la telemetría durante un corte, basta un gabinete pequeño (unos 5 kWh) dentro de la caseta."
+ },
+ "incertidumbres": [
+  "No hay Street View a menos de 600 m. Las alturas y fachadas salen de tres fotos del propietario (hacia 2024) y de la foto aérea de la Superservicios (2020). La cámara de la foto tomada desde el sur-suroriente no queda bien fija: el ajuste del levantamiento (8,6 m al oriente y 16,7 m al sur del ancla, campo de 59°) y un ajuste nuevo con las alturas de los filtros y del floculador (8,8 m al oriente y 13,7 m al sur, campo de 66°) difieren en 3 m. Lo que se deduce de esa foto tiene un error de 1 a 2 m.",
+  "Altura de la torre: fondo del tanque a 19,2 m y muro de 21,2 a 25,4 m. Las proporciones de las dos fotos tomadas desde la vía dan entre 24,4 y 25,1 m para el borde del tanque, con un muro de 3,7 a 4,3 m y un fondo de 1,7 a 2,1 m. El panel más bajo del fuste queda tapado por los árboles, así que el error puede ser de ±2 m.",
+  "Posición de la base de la torre: el centro del fuste se dejó en (−5,9; −1,4). La sombra de la torre en el satélite descarta que la imagen vea el tanque muy inclinado: un corrimiento de 6 m, que sugería el anillo oscuro al suroccidente del disco, no cuadra con la sombra ni con la foto. Las dos manchas blancas del borde oriental del disco tampoco cuadran con la sombra como bases de columnas. El error puede ser de ±1,5 m.",
+  "El cuadro de columnas se giró de 175° a 13° (una cara mira al occidente-noroccidente) y se ajustó a 7,5 m por fuera con columnas de 1 m. Así se ve de frente desde la vía, con tres columnas delanteras, como en las fotos b y c; con el giro anterior se veía un 25 % más ancho. Desde la foto del sur-suroriente, las columnas visibles quedan a 1° o 2° con cualquiera de los dos giros. Podría ser un anillo octogonal.",
+  "El generador no dibuja los tres anillos de vigas de amarre de la torre (a unos 5, 10 y 15 m), la escalera de gato con su descanso del lado norte, la baranda de la cubierta, los pararrayos, los tubos verticales del fuste ni la pintura blanca de la base de las columnas (unos 2 m).",
+  "La caseta se midió de nuevo por su losa en Google z21: 3,4 × 5,3 m (el levantamiento traía 4,6 × 4,7 m, con 1 m menos hacia el nororiente y 0,4 m de más hacia el suroccidente). Al noroccidente tiene una enramada de lámina de 3,3 m y al suroriente un cobertizo azul de 1,4 m. El borde nororiental de las cubiertas es difuso (±0,4 m). En la foto de 2024, el alero de la enramada parece terminar entre 0,9 y 1,5 m antes que en el satélite: puede ser un error de la cámara o un cambio entre fechas, y se dejó la medida del satélite. La ventana con reja mide unos 1,45 m en la foto, pero se dibujó de 1,15 m porque el generador deja 0,4 m libres junto a la puerta.",
+  "No se sabe si la cubierta de la caseta es una losa de concreto o láminas sobre vigas: en la foto de 2024 se ve un borde grueso, como de losa, pero en la foto aérea de 2020 ese sitio tenía una cubierta translúcida. La división interna y las ventanas de las otras fachadas no se ven.",
+  "Tanques de la planta: lo que el levantamiento tomó como filtro n.º 4 (11,4; 4,4) es la sombra del filtro del extremo nororiental (12,7; 5,1), que antes estaba marcado como trasiego; cada uno de los cuatro filtros tiene su sombra 1,5 m al occidente-suroccidente. El trasiego y el tanque de oxidación, alto y blanco, se ven en la foto de 2020 al oriente de la fila de filtros, pero en el satélite quedan bajo el borde del bosque o no se distinguen. Se estima que están cerca de (14,3; −3,0) y de (16 a 17; 0), y no se modelaron.",
+  "El tanque bajo de 3 m que traía el levantamiento en (10,7; −1,6) se quitó: en el satélite es una superficie clara de bordes rectos y en la foto de 2020 no hay ningún tanque allí; queda como parte de la placa. El floculador n.º 2 se movió de (14,5; −5,0) a (14,0; 2,0), con un error de ±1 m: en 2020, al oriente del floculador n.º 1 solo había grava, y en el satélite se ven la tapa clara y la sombra de un tanque de 3 m en la nueva posición. Tampoco se modelaron los tres tanques bajos y abiertos del norte que aparecen en la foto de 2020 ni el tanque de almacenamiento de 209 m³, que no se ve.",
+  "Los dos tanques IBC de insumos que se ven frente a la caseta no se modelaron, porque se mueven: en el satélite aparecen en otra posición que en la foto.",
+  "El trazado de la cerca de malla es aproximado (solo se ve detrás de la torre en la foto) y las alturas de los árboles (10 a 13 m) son estimadas.",
+  "No se ven el transformador, el medidor ni los postes de la línea que alimenta la planta. En las fotos desde la vía hay cables junto a la carretera del occidente, pero no se pudieron ubicar, así que no se registró ningún poste. El pozo (a 60–70 m, finca La Gaitana) no se ubicó.",
+  "El consumo de energía de la planta es un estimado con la potencia de las bombas, no una medición."
+ ],
+ "verificacion": {
+  "trace": "data/geo/img/ptap_veredal_trace.png",
+  "trace_google": [
+   "data/geo/img/ptap_veredal_gtrace.png",
+   "data/geo/img/ptap_veredal_gtrace_grid.png",
+   "data/geo/img/ptap_veredal_ovl_g21.png"
+  ],
+  "vistas": [
+   "data/geo/img/ptap_veredal_foto_propietario1.jpg",
+   "data/geo/img/ptap_veredal_foto_propietario2.jpg",
+   "data/geo/img/ptap_veredal_foto_propietario3.jpg",
+   "data/geo/img/ptap_veredal_sv_lejos.jpg"
+  ],
+  "comparaciones": [
+   "data/geo/img/ptap_veredal_cmp_foto1_comparacion.png",
+   "data/geo/img/ptap_veredal_cmp_foto2_comparacion.png",
+   "data/geo/img/ptap_veredal_cmp_foto3_comparacion.png",
+   "data/geo/img/ptap_veredal_cmp_foto3_mezcla.png",
+   "data/geo/img/ptap_veredal_cmp_cenital1_mezcla.png",
+   "data/geo/img/ptap_veredal_cmp_cenital2_comparacion.png",
+   "data/geo/img/ptap_veredal_cmp_cenital2_mezcla.png",
+   "data/geo/img/ptap_veredal_cmp_torre_comparacion.png"
+  ],
+  "orbitas": [
+   "data/geo/img/ptap_veredal_orbita_todo.png",
+   "data/geo/img/ptap_veredal_orbita_torre_so.png"
+  ],
+  "satelite": [
+   "data/geo/img/ptap_veredal_g19.png",
+   "data/geo/img/ptap_veredal_g20w.png",
+   "data/geo/img/ptap_veredal_g21.png",
+   "data/geo/img/ptap_veredal_g21x3.png",
+   "data/geo/img/ptap_veredal_g21tq.png",
+   "data/geo/img/ptap_veredal_sat150.png",
+   "data/geo/img/ptap_veredal_bing19.png",
+   "data/geo/img/ptap_veredal_cenital_google.png"
+  ],
+  "notas": "Sin Street View, la comparación modelo–foto se hizo con la foto del propietario tomada desde el sur-suroriente (cámara resuelta con los tamaños conocidos de los filtros y del floculador: 8,6 m al oriente y 16,7 m al sur del ancla, a 1,45 m de altura, rumbo 352°, inclinación 6,4° hacia arriba, campo de visión de 59° en el recorte 14:9) y con una vista cenital del modelo mezclada con Google z21. Primera comparación: las columnas de la torre quedaban 4° a la derecha y demasiado cerca, la enramada salía adelante de la caseta y los tanques IBC se dibujaban de 2,2 m; se movió el fuste 1,6 m al occidente y 0,7 m al sur, se pasó la enramada a la fachada noroccidental (la caseta quedó de 4,6 m), se quitaron los IBC y se agrandó la ventana. Segunda comparación: el círculo claro junto al trasiego se había dibujado como un tanque de 4,2 m que en la foto no existe detrás de los filtros; se dejó como tanque bajo y se bajaron los árboles del norte. En la tercera comparación coinciden los filtros, el floculador oxidado, la caseta (alero a 2,9 m) y las dos columnas de la torre con un error de 1° a 2°. La vista de la torre desde el suroccidente se comparó con la foto desde la vía: coinciden la proporción del tanque (muro de unos 4,2 m para 10,6 m de diámetro) y el fondo cónico; el generador no dibuja las vigas intermedias ni la escalera.",
+  "verificacion_independiente": {
+   "fecha": "2026-10",
+   "trace": [
+    "data/geo/img/ptap_veredal_ver_trace.png",
+    "data/geo/img/ptap_veredal_ver_gtrace21.png",
+    "data/geo/img/ptap_veredal_ver_gtrace21_v2.png"
+   ],
+   "comparaciones": [
+    "data/geo/img/ptap_veredal_ver_foto1_comparacion.png",
+    "data/geo/img/ptap_veredal_ver_foto2_comparacion.png",
+    "data/geo/img/ptap_veredal_ver_foto2_mezcla.png",
+    "data/geo/img/ptap_veredal_ver_foto3_comparacion.png",
+    "data/geo/img/ptap_veredal_ver_foto3_torre_zoom.png"
+   ],
+   "orbitas": [
+    "data/geo/img/ptap_veredal_ver_orbita_todo.png"
+   ],
+   "notas": "Sin Street View, las dos vistas nuevas son las fotos de la torre tomadas desde la vía (b y c), recortadas a 14:9, con cámaras estimadas a unos 70 m y 90 m al occidente-noroccidente y entre 3 y 4 m por debajo de la base de la torre. Con el fuste girado a 13° coinciden el ancho del tanque, el ancho del fuste y las tres columnas delanteras con un error de unos 10 píxeles. Queda una diferencia vertical de 1° a 2° que se explica por la inclinación estimada de la cámara. La foto del sur-suroriente se volvió a comparar con la cámara del levantamiento: coinciden la caseta (borde noroccidental de la losa y puerta), los filtros (±2°) y el floculador n.º 1."
+  }
+ }
+}

@@ -1,0 +1,494 @@
+{
+  "id": "registraduria",
+  "nombre": "Registraduría Nacional del Estado Civil – Yondó",
+  "nodo_microrred": null,
+  "direccion": "Carrera 56 # 46-20, costado oriental, entre la Calle 46 y la Calle 46A, sector Colonia Sur (directorio oficial de sedes de la Registraduría). La ficha de Google dice Cra. 56 # 46-23.",
+  "lat": 7.003934,
+  "lon": -73.911337,
+  "ubicacion": {
+    "confianza": "media",
+    "metodo": "Verificación de octubre de 2026. La sede no se ve en ninguna foto: no hay panoramas de Street View en la Carrera 56 ni en la Calle 46 al oriente de la Carrera 57 (se buscaron con cobertura.py y consultando Google punto por punto), y desde la Carrera 57 la tapan las casas de la manzana del frente y los árboles. Por eso no se pudo leer un letrero. La ubicación se dedujo así: (1) el directorio oficial de sedes de la Registraduría da «REGISTRADURÍA MUNICIPAL de Yondó – ANTIOQUIA, carrera 56 # 46-20», teléfono 604 8325035; (2) la ficha de Google «Regidtraduría Nacional - Yondó» (categoría registro civil, sin fotos, creada por un usuario) da «Cra. 56 # 46-23» y su pin (7,003974, −73,911453, el del inventario) cae sobre la calzada de la Carrera 56, unos 13 m al occidente de la casa; (3) en Yondó las placas pares de las carreras quedan al oriente de la vía (la Alcaldía, Cra. 55 # 46A-16, y Planeación, Cra. 55 # 46B-44, están al oriente de la Cra. 55; la Policía, Cra. 55A # 46B-45, al occidente de la Cra. 55A; el Concejo, Cra. 50 # 53-26, al oriente de la Cra. 50), así que la placa 46-20 queda en el costado oriental de la Carrera 56, unos 20 m al norte del eje de la Calle 46; (4) en el satélite, justo ahí hay un predio de unos 10 m de frente sobre la Carrera 56, con una casa de un piso de cubierta a dos aguas (cumbrera paralela a la calle) y un ala posterior. Su lindero sur coincide con el borde norte de un edificio vecino más alto, de cubierta blanca, y el lindero norte con una franja de sombra. El centro del frente queda a unos 21 m del eje de la Calle 46, lo que cuadra con la placa. La placa de Google (46-23, impar) apuntaría al costado occidental; se prefirió la placa oficial. Google también le pone la dirección «Cra. 56 # 46-23» a la «Tesorería», cuyo pin está en la manzana de la Alcaldía, 100 m al nororiente: es un dato copiado. El ancla es el centro de la casa, medido en la imagen de Google. Verificación independiente (octubre de 2026): se volvió a descargar el directorio oficial de sedes y trae la misma dirección (carrera 56 # 46-20). La regla de numeración se comprobó con cinco sedes de ubicación ya confirmada, midiendo de qué lado de su carrera quedan según las vías de OpenStreetMap: Alcaldía (Cra. 55 # 46A-16), Concejo (Cra. 50 # 53-26) y Bomberos (Cra. 48 # 54-12), con placa par, quedan al oriente de su carrera; Policía (Cra. 55A # 46B-45) y Aguas y Aseo (Cra. 53 # 50-79), con placa impar, al occidente. El pin de Google cae sobre la calzada de la Carrera 56, frente al lindero norte de esta casa (unos 2 m al norte de su cubierta), lo que también cuadra con este predio. La casa está en la mitad norte de una cubierta a dos aguas de unos 20 m que sigue sin corte hasta cerca de la esquina; con la placa 46-20 (unos 20 m desde la Calle 46, cuyo eje pasa unos 23 m al sur del ancla según OpenStreetMap) la puerta caería en la mitad sur de esta casa o en su centro, según se mida desde el eje de la calle o desde la esquina del predio; como el lindero con la casa del sur no se ve, no se puede descartar del todo que la oficina esté en la casa del sur. Desde dos panoramas nuevos de 2023 en la Carrera 57 (IOReB0l7 y uAfNm063) la casa tampoco se ve."
+  },
+  "fuentes": [
+    {
+      "tipo": "web",
+      "url": "https://wapp.registraduria.gov.co/GTH/directorio/buscar.php",
+      "nota": "Directorio oficial de sedes de la Registraduría (consultado en octubre de 2026): «136. REGISTRADURIA MUNICIPAL de Yondó - ANTIOQUIA. TELÉFONO: 604 8325035. EMAIL: yondo-casabeant@registraduria.gov.co. DIRECCIÓN: carrera 56 # 46-20»."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.google.com/maps/place/?q=place_id:ChIJpW_qW5XtQo4RGHxTjrbFO8Q",
+      "nota": "Ficha de Google «Regidtraduría Nacional - Yondó» (con error de digitación), categoría registro civil, dirección Cra. 56 # 46-23, pin en 7,003974, −73,911453 (sobre la calzada de la Carrera 56). Sin fotos ni reseñas."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.google.com/maps/search/Tesorer%C3%ADa+Yond%C3%B3",
+      "nota": "Ficha de Google «Tesorería» con la misma dirección (Cra. 56 # 46-23) pero con el pin en la manzana de la Alcaldía (7,00447, −73,91055): la dirección se copió de una ficha a otra."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "xfyc8BNRqtS19QN2aPS_kw",
+      "fecha": "2023-04",
+      "rumbo": 50,
+      "nota": "Esquina de la Carrera 57 con la Calle 46, mirando al nororiente: muro de ladrillo y casa esquinera con cubierta de zinc y fibrocemento. La sede queda detrás, a unos 50 m, y no se ve."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "xfyc8BNRqtS19QN2aPS_kw",
+      "fecha": "2023-04",
+      "rumbo": 62,
+      "nota": "Foto de la primera comparación con el modelo (pitch 4, fov 60). Este panorama está casi nivelado (inclinación de 1,7° y balanceo de 1,1°)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "xfyc8BNRqtS19QN2aPS_kw",
+      "fecha": "2023-04",
+      "rumbo": 76,
+      "nota": "Acercamiento (fov 20) a la acera norte de la Calle 46: copas de árboles a 72–79° de rumbo, con la parte alta a unos 7 m. Son los árboles del antejardín de la manzana de la sede."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "KgUVWJp-lOd1736W79mxnQ",
+      "fecha": "2014-08",
+      "rumbo": 62,
+      "nota": "Misma esquina en 2014: lote con muro bajo y cubiertas de fibrocemento de la manzana del frente; aviso político «Serpa Senador». Comparación con el modelo. Este panorama está inclinado (2,7° y 2,8°), así que la foto queda unos 3,7° más abajo que el modelo."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "aZmh9ctBxiscGdrE2RH3WQ",
+      "fecha": "2023-04",
+      "rumbo": 90,
+      "nota": "Desde la Carrera 57, frente al lote vacío con muro de ladrillo y motos: un árbol grande tapa la vista hacia la Carrera 56."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "aZmh9ctBxiscGdrE2RH3WQ",
+      "fecha": "2023-04",
+      "rumbo": 125,
+      "nota": "Casa blanca de dos pisos con reja, al oriente de la Carrera 57 (manzana del frente de la sede)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "gunguE_7Z_4OFi88-r6RrQ",
+      "fecha": "2023-04",
+      "rumbo": 100,
+      "nota": "La misma casa blanca de dos pisos, de cerca. No es la sede."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "ua5Kmtv19THXFUko9vP5tg",
+      "fecha": "2014-08",
+      "rumbo": 95,
+      "nota": "Por encima del muro del lote vacío se ven las cubiertas de fibrocemento de las casas del costado occidental de la Carrera 56. Panorama nivelado (inclinación de 0,04°). Comparación con el modelo."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "BDRGN_YCtO8KXrP1XrA0SQ",
+      "fecha": "2014-08",
+      "rumbo": 92,
+      "nota": "Cubierta de fibrocemento con el aviso «Serpa Senador», en la manzana del frente (se ubicó por triangulación con KgUVW, unos 22 m al nororiente de esa esquina)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "hSYs1fZU61TiPLWovHNGWQ",
+      "fecha": "2014-04",
+      "rumbo": 72,
+      "nota": "Vista a lo largo de la Calle 46 hacia el oriente: casa esquinera de fibrocemento y árboles en la acera norte. La sede no se ve."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "Cu4gGLS44Zo3ieFCLKq8yw",
+      "fecha": "2014-04",
+      "rumbo": 76,
+      "nota": "Lo mismo, desde más al sur (fov 25): solo árboles y postes."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "19jkiJh_Ouy6wqFzRo9QAA",
+      "fecha": "2014-04",
+      "rumbo": 73,
+      "nota": "Lo mismo (fov 25), con la señal de pare de la esquina."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Google, z20 y z21 (0,148 y 0,074 m por píxel; fecha desconocida, más reciente y nítida que Esri)",
+      "nota": "Huella medida aquí, en un recorte rectificado al eje de 350° con perfiles de brillo cada 0,5 m: borde occidental de la cubierta, cumbrera (cambio de brillo entre los dos faldones), borde norte (empieza una franja de sombra de unos 3 m), lindero sur (borde norte del vecino de cubierta blanca) y borde oriental del ala posterior (franja blanca de un muro del vecino). La cubierta a dos aguas sigue hacia el sur sobre la casa esquinera, sin corte visible."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z19 (enero de 2020)",
+      "nota": "Confirma la cumbrera, el ancho del ala posterior y la franja de sombra al norte (1,5–1,8 m). Aquí Esri queda unos 2 m al oriente y 1,5 m al norte de Google. En 2020 una copa grande cubría el antejardín."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Bing (Microsoft), z19, fecha desconocida",
+      "nota": "Vista de la manzana con menos árboles: confirma la casa de cubierta gris contra la Carrera 56, el vecino de cubierta blanca en la esquina con la Calle 46 y la Calle 46 al sur."
+    },
+    {
+      "tipo": "osm",
+      "fuente": "OpenStreetMap (© colaboradores, ODbL)",
+      "nota": "Nombres de la Carrera 56, la Calle 46 y la Carrera 57. El eje de la Carrera 56 pasa unos 8 m al occidente de la fachada."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.datos.gov.co/resource/f789-7hwg.json",
+      "nota": "Búsqueda en SECOP I y II (datos abiertos) de contratos con «Registraduría» y «Yondó»: no hay contratos de obra, arriendo ni mantenimiento de la sede. Tampoco se encontraron noticias ni fotos de la sede en la web. La página de la Registraduría (registraduria.gov.co) bloquea las consultas automáticas."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "IOReB0l7iNXb-JNkepVuZQ",
+      "fecha": "2023-04",
+      "rumbo": 72,
+      "nota": "Verificación: desde la Carrera 57, entre la casa blanca de dos pisos y el muro de ladrillo del lote vacío. Se ven cubiertas viejas de fibrocemento y una de zinc más cercanas (casas de la manzana de la Carrera 57) y un árbol grande; la sede queda detrás, a 52 m, y no se ve. Comparación con el modelo."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "uAfNm063NXWvugenq9yJpQ",
+      "fecha": "2023-04",
+      "rumbo": 104,
+      "nota": "Verificación: desde la Carrera 57, por encima del muro del lote vacío. Cubiertas de fibrocemento de las casas de la manzana de la Carrera 57, un aguacate, plátanos y una casa de ladrillo con tanque azul (rumbo 110–118, más cercana). La sede queda detrás, a 58 m, y no se ve. Comparación con el modelo y acercamiento (rumbo 110, fov 25)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "2BquMvFrvCL6hABeW_pkKA",
+      "fecha": "2023-04",
+      "rumbo": 113,
+      "nota": "Verificación: parte trasera de casas de ladrillo con cubiertas de fibrocemento muy viejas en la manzana de la Carrera 57; la sede no se ve."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Google z20, Esri z19 y Bing z19 rectificados al eje de 350° (verificación)",
+      "nota": "Perfiles de brillo cada 0,25 m. Medidas respecto al ancla (u a lo largo del eje, v hacia los 80°): alero occidental v = −4,6; cumbrera v = +0,1 (recta entre u = +2 y u = −12, así que el rumbo de 350° está bien); borde norte u = +4,75 (Esri, ya alineado: +4,9); borde oriental del ala v = 9,5 en Google (empieza una franja clara de 0,8 m) y 10,0–10,4 en Esri y Bing; vecino de cubierta blanca desde u = −5,4 hacia el sur y desde v = 3,6 hacia el oriente; borde de la calzada de la Carrera 56 en v = −9,75. Desfases medidos por correlación: Esri queda 1,5 m al oriente y 1,5 m al norte de Google; Bing, 1,6 m al oriente y 2,4 m al sur."
+    }
+  ],
+  "volumenes": [
+    {
+      "id": "bloque_frente",
+      "nombre": "Casa de un piso con frente a la Carrera 56 (sede de la Registraduría según la placa oficial)",
+      "centro": [
+        0,
+        0
+      ],
+      "largo": 9.1,
+      "ancho": 8.2,
+      "rumbo_eje": 350,
+      "base": 0,
+      "altura_alero": 3.0,
+      "pisos": 1,
+      "techo": {
+        "tipo": "dos_aguas",
+        "cumbrera": "largo",
+        "pendiente": 12,
+        "voladizo": 0.4,
+        "material": "fibrocemento",
+        "color": "#7a7872"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#ecebe6",
+        "zocalo": {
+          "color": "#77736c",
+          "altura": 0.6
+        },
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 1.2,
+          "alto": 1.2,
+          "antepecho": 1.0,
+          "separacion": 2.3,
+          "lados": [
+            "O"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "O",
+            "pos": 0.5,
+            "ancho": 1.8,
+            "alto": 2.4
+          }
+        ],
+        "letrero": {
+          "lado": "O",
+          "texto": "REGISTRADURÍA",
+          "color": "#2f3a4a"
+        }
+      }
+    },
+    {
+      "id": "ala_posterior",
+      "nombre": "Ala posterior (nororiental) de un piso, con cubierta de una sola agua hacia el oriente",
+      "centro": [
+        6.6,
+        1.16
+      ],
+      "largo": 9.3,
+      "ancho": 5.4,
+      "rumbo_eje": 350,
+      "base": 0,
+      "altura_alero": 2.4,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "caida": "E",
+        "pendiente": 5,
+        "voladizo": 0.3,
+        "material": "fibrocemento",
+        "color": "#7a7872"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#ecebe6",
+        "zocalo": {
+          "color": "#77736c",
+          "altura": 0.6
+        }
+      }
+    }
+  ],
+  "elementos": [
+    {
+      "tipo": "arbol",
+      "nombre": "Árbol del antejardín, frente a la casa esquinera vecina",
+      "centro": [
+        -5.09,
+        -13.74
+      ],
+      "altura": 7,
+      "copa": 6
+    },
+    {
+      "tipo": "arbol",
+      "nombre": "Árbol del antejardín, junto al lindero sur de la sede",
+      "centro": [
+        -6.31,
+        -6.85
+      ],
+      "altura": 7,
+      "copa": 6
+    },
+    {
+      "tipo": "anden",
+      "poligono": [
+        [
+          -5.44,
+          -5.99
+        ],
+        [
+          -7.16,
+          3.76
+        ],
+        [
+          -4.9,
+          4.16
+        ],
+        [
+          -3.18,
+          -5.59
+        ]
+      ],
+      "nombre": "Andén frente a la fachada de la Carrera 56 (franja clara de 1,8 m que se ve en Google delante del alero)"
+    },
+    {
+      "tipo": "zona_verde",
+      "poligono": [
+        [
+          -8.74,
+          -6.57
+        ],
+        [
+          -10.46,
+          3.18
+        ],
+        [
+          -7.16,
+          3.76
+        ],
+        [
+          -5.44,
+          -5.99
+        ]
+      ],
+      "nombre": "Antejardín con árboles entre el andén y el borde de la calzada de la Carrera 56 (borde medido en Google)"
+    }
+  ],
+  "adecuaciones": {
+    "kwp_plan": null,
+    "fv": [
+      {
+        "volumen": "bloque_frente",
+        "faldon": "E",
+        "filas": 1,
+        "columnas": 7,
+        "orientacion_modulo": "vertical"
+      },
+      {
+        "volumen": "ala_posterior",
+        "faldon": "E",
+        "filas": 3,
+        "columnas": 3,
+        "orientacion_modulo": "horizontal"
+      }
+    ],
+    "kwp_factible": 8.8,
+    "inversores": {
+      "n": 1,
+      "kw": 8,
+      "volumen": "bloque_frente",
+      "lado": "O",
+      "pos": 3.5
+    },
+    "cubierta_nueva": {
+      "material": "termoacustica",
+      "color": "#e9e7e1",
+      "volumenes": [
+        "bloque_frente",
+        "ala_posterior"
+      ]
+    },
+    "domotica": [
+      "medidor bidireccional en la frontera con EPM, en la fachada de la Carrera 56",
+      "pasarela IoT (gateway) conectada al Centro de Control Energético y Digital (CCED) de la Alcaldía",
+      "control de los aires acondicionados de la sala de atención y de la oficina del registrador: horario de atención, 24 °C como mínimo y apagado con la sala vacía",
+      "sensores de ocupación en la sala de atención, la oficina y el archivo",
+      "iluminación LED con sensores en la sala y los pasillos",
+      "apagado programado de computadores, impresoras y equipos de cedulación fuera del horario (sin tocar los equipos que la Registraduría deba dejar encendidos)",
+      "monitoreo remoto de la generación solar y del inversor"
+    ],
+    "obras_civiles": [
+      "inspección de la cubierta: confirmar si es fibrocemento (por el color gris parejo) o zinc, el estado de correas y canales y si tiene asbesto",
+      "si es fibrocemento, retiro por personal certificado (Ley 1968 de 2019) y cambio por lámina termoacústica en la casa y en el ala posterior (unos 150 m² con los aleros) antes del montaje",
+      "la cubierta a dos aguas sigue sin corte sobre la casa esquinera vecina: al cambiarla hay que hacer un remate o flanche en el lindero sur y ponerse de acuerdo con el vecino",
+      "revisión estructural de correas y muros para unos 15 kg/m² adicionales y el viento",
+      "acceso seguro a la cubierta (escalera con guarda y punto de anclaje para línea de vida)",
+      "puesta a tierra, protecciones contra sobretensiones (DPS) y revisión del tablero",
+      "canalización desde los dos arreglos, por el hastial sur, hasta el inversor en la fachada de la Carrera 56; de ahí al tablero y al medidor bidireccional",
+      "poda de control de los dos árboles del antejardín para que no crezcan sobre la cubierta (sin talarlos: dan sombra a la fachada)",
+      "antes de invertir, aclarar si el inmueble es de la Registraduría, del municipio (comodato) o arrendado: en un inmueble arrendado se necesita autorización escrita del dueño"
+    ],
+    "notas": "Esta sede no es un nodo del plan de la microrred (data/microrred.json no la incluye), así que no hay potencia planeada ni baterías. Se deja una propuesta solar del tamaño que cabe sin sombras importantes, por si la Alcaldía o la Registraduría la incluyen: 16 módulos de 550 Wp = 8,8 kWp. (1) Faldón oriental de la casa (mira a 80°, pendiente supuesta de 12°): con retiros de 0,5 m quedan 8,1 m a lo largo (9,1 − 1,0) y 3,2 m en pendiente ((8,2 / 2) / cos 12° − 1,0). Caben 7 módulos parados en una fila (8,0 m de largo); acostados solo caben 2 filas de 3 (6). (2) Cubierta del ala posterior (una sola agua hacia el oriente, 5°): en la verificación se midió 0,7 m más ancha (5,4 m entre muros, borde oriental de la cubierta a 9,7 m del eje de la casa). Quedan 8,3 m a lo largo (9,3 − 1,0) y 4,4 m en pendiente (5,4 / cos 5° − 1,0), de los que unos 0,5 m quedan debajo del alero de la casa. Caben 3 filas de 3 módulos acostados (9 módulos, 6,9 × 3,5 m) o 7 parados en una fila; se eligen los 9 acostados, centrados, con 0,45 m de separación al alero de la casa, 1,25 m al borde oriental y 1,5 m a los bordes norte y sur. El faldón occidental de la casa no se usa porque los árboles del antejardín (unos 7 m de alto, a 3 m de la fachada) le dan sombra en la tarde. El edificio vecino de cubierta blanca, al sur del ala, es más alto (por sus sombras, unos 2 a 4 m por encima de estas cubiertas): en diciembre y enero, en la mañana y cerca del mediodía, su sombra puede alcanzar el extremo sur del arreglo del ala. Por eso el arreglo del ala deja libre 1,5 m en ese extremo y conviene usar optimizadores o microinversores. Con 3,69 kWh por kWp al día, los 8,8 kWp darían unos 990 kWh al mes, del orden del consumo de una oficina pequeña con aires acondicionados y equipos de cómputo (el consumo real se debe tomar de las facturas de EPM). Si el ala posterior resulta ser de otro predio, queda solo el arreglo del faldón oriental: 7 módulos, 3,85 kWp, unos 430 kWh al mes. El inversor de 8 kW (relación entre módulos e inversor de 1,1) va en un gabinete ventilado con visera en el extremo sur de la fachada de la Carrera 56, a la sombra del árbol del lindero sur y del alero (o adentro, en el mismo muro). No se vio ningún poste de la red porque no hay fotos de la Carrera 56; el generador pone la acometida en esa misma fachada. No hay parqueadero ni patio libre (la casa ocupa el predio y se parquea en la calle), así que no se propone marquesina ni cargador de vehículo eléctrico. No hay baterías en el plan; si la Registraduría quiere respaldo para los equipos de identificación en jornadas electorales, se podría agregar una batería pequeña (5–10 kWh) junto al inversor, pero no se dibujó."
+  },
+  "incertidumbres": [
+    "La sede no se ve en ninguna foto (no hay Street View en la Carrera 56 ni en la Calle 46 al oriente de la Carrera 57, y desde la Carrera 57 la tapan casas y árboles). No se leyó ningún letrero: la identificación se apoya en la placa oficial (Cra. 56 # 46-20), en la regla de numeración de Yondó (pares al oriente de las carreras) y en el predio que se ve en el satélite a unos 20 m de la Calle 46. Si la placa de Google (46-23, impar) fuera la correcta, la sede estaría al frente, en el costado occidental de la Carrera 56 (casas de la manzana de la Carrera 57). También es posible que la oficina ocupe solo una parte de la casa.",
+    "Toda la fachada es supuesta (valores típicos de una casa de un piso en Yondó): pañete blanco, zócalo gris de 0,6 m, puerta doble de 1,8 m en el centro, dos ventanas de reja de 1,2 × 1,2 m y el letrero «REGISTRADURÍA», que se puso solo para identificar la sede en el atlas. No se sabe el color, el número de puertas ni cómo es el aviso real.",
+    "Las alturas son típicas: alero a 3,0 m y pendiente de 12° (cumbrera a 3,9 m); ala posterior con alero bajo a 2,4 m y 5° (en la verificación se bajó de 2,45 a 2,4 m para que su cubierta no quede pegada al alero de la casa). Las comparaciones con fotos solo dan un límite: desde la esquina de la Carrera 57 con la Calle 46 (2023 y 2014) y desde la Carrera 57 (2014 y, en la verificación, IOReB0l7 y uAfNm063 de 2023) la casa queda escondida detrás de cubiertas más cercanas y de árboles, lo que indica que su cumbrera está por debajo de unos 5,6–6,4 m (un solo piso). Las sombras no sirven para fijar la altura: al norte de la casa la sombra mide unos 1,2 m en Esri (enero de 2020, sol de la mañana) y 3,4–3,7 m en Google, cuya fecha y hora no se conocen; en 2020 caía sobre una superficie clara (quizá una cubierta o un patio del vecino) y en Google sobre una franja muy oscura. Con el sol posible a esta latitud, los 3,7 m de Google darían más de 6 m de altura si la sombra cayera al suelo, lo que no cuadra con las fotos; por eso se dejan los valores típicos.",
+    "La cubierta a dos aguas mide unos 20 m de norte a sur (desde el borde norte, 4,75 m al norte del ancla, hasta unos 15 m al sur, donde la tapan los árboles) y no tiene ningún corte visible: la mitad sur es de la casa vecina. El lindero sur de la sede (unos 0,3 m al sur del muro del modelo) se tomó del borde norte del vecino de cubierta blanca (5,4 m al sur del ancla) y del final del ala posterior. En el modelo la casa termina en un hastial libre al sur; en la realidad ahí hay un muro medianero bajo una cubierta continua. Tampoco se puede descartar que la oficina ocupe la casa del sur o las dos.",
+    "El material de la cubierta (fibrocemento) se dedujo del gris parejo en las tres imágenes (Esri #7b7a76 en el faldón oriental, Bing #706e5e; en Google sale azulado). Podría ser zinc envejecido. No se ve si tiene tejas traslúcidas, tanques o equipos encima.",
+    "El ala posterior tiene el mismo brillo que el faldón oriental de la casa, sin corte visible; se modeló como una agua hacia el oriente, pero puede ser la continuación del faldón o un techo del vecino del norte. En la verificación su borde oriental se midió en v = 9,5 m en Google (donde empieza una franja clara de unos 0,8 m, que puede ser una canal, la corona de un muro o parte de la misma cubierta) y en 10,0–10,4 m en Esri y Bing alineados; el modelo lo deja en 9,7 m (antes 9,0 m), así que el ala pasó de 4,7 a 5,4 m de ancho y su arreglo solar de 6 a 9 módulos.",
+    "La franja de sombra de unos 3 m al norte de la casa puede ser un pasillo lateral, un patio o la cubierta baja del vecino; no se sabe. Delante del alero occidental hay una franja clara de 1,8 m (de 6,4 a 4,6 m al occidente del eje) que se modeló como andén; también podría ser una cubierta liviana de entrada.",
+    "Los dos árboles del antejardín se ubicaron por sus copas en Google y en Esri (2020) y su altura (unos 7 m) se midió desde el panorama de 2023 de la esquina de la Calle 46; la posición de los troncos y el tamaño de las copas son aproximados.",
+    "El andén y el antejardín se ajustaron en la verificación: el borde de la calzada de la Carrera 56 se midió en Google 9,75 m al occidente del eje de la casa (la calzada clara mide unos 7,5 m) y la franja clara del andén llega hasta 6,4 m; el eje de la vía en OpenStreetMap queda 1,3 m al oriente del centro de la calzada que se ve en Google. Bajo los árboles el borde no se ve.",
+    "Desfase entre fuentes, medido por correlación en la verificación: Esri queda 1,5 m al oriente y 1,5 m al norte de Google, y Bing 1,6 m al oriente y 2,4 m al sur. La huella se midió en Google (z21 es la misma imagen de z20 ampliada); trace.py (sobre Esri) muestra los rectángulos corridos esa distancia.",
+    "No se vio ningún poste de la red ni el medidor de la sede (no hay fotos de la Carrera 56). El tablero, el medidor bidireccional y la acometida se dejaron donde los pone el generador, en la fachada de la Carrera 56.",
+    "No se sabe si el inmueble es de la Registraduría, del municipio (en comodato) o arrendado; eso decide quién puede autorizar las obras.",
+    "No hay facturas de EPM de la sede: el consumo de unos 990 kWh al mes es un orden de magnitud para comparar, no un dato.",
+    "El panorama KgUVW (2014) está inclinado (2,7° y 2,8°): en esa comparación la foto queda unos 3,7° más abajo que el modelo, y solo se usó de forma cualitativa. Los panoramas xfyc8 (2023) y ua5K (2014) están casi nivelados.",
+    "No se encontraron fotos recientes de la sede en la web, noticias de traslado ni contratos de SECOP; la web de la Registraduría bloquea las consultas automáticas, así que no se pudo revisar si hay una dirección más reciente."
+  ],
+  "verificacion": {
+    "trace": "data/geo/img/registraduria_trace.png",
+    "satelite": [
+      "data/geo/img/registraduria_ver_gtrace.png",
+      "data/geo/img/registraduria_ver_trace.png",
+      "data/geo/img/registraduria_ver_g20_manzana.png",
+      "data/geo/img/registraduria_ver_g21_sur.png",
+      "data/geo/img/registraduria_gtrace.png",
+      "data/geo/img/registraduria_rect_it1.png",
+      "data/geo/img/registraduria_rect_it2.png",
+      "data/geo/img/registraduria_rect_3fuentes.png",
+      "data/geo/img/registraduria_g21_rect.png",
+      "data/geo/img/registraduria_e19_rect.png",
+      "data/geo/img/registraduria_b19_rect.png",
+      "data/geo/img/registraduria_blk_google.png",
+      "data/geo/img/registraduria_blk_esri.png",
+      "data/geo/img/registraduria_blk_bing.png",
+      "data/geo/img/registraduria_g21_sw.png",
+      "data/geo/img/registraduria_g20_blk.png",
+      "data/geo/img/registraduria_g20_oeste.png",
+      "data/geo/img/registraduria_b19_oeste.png",
+      "data/geo/img/registraduria_g19_wide.png",
+      "data/geo/img/registraduria_sat.png",
+      "data/geo/img/registraduria_overview.png"
+    ],
+    "vistas": [
+      "data/geo/img/registraduria_v_xfyc_50.jpg",
+      "data/geo/img/registraduria_v_xfyc_75z.jpg",
+      "data/geo/img/registraduria_v_xfyc_76zz.jpg",
+      "data/geo/img/registraduria_sv_xfyc_62.jpg",
+      "data/geo/img/registraduria_sv_kguv_62.jpg",
+      "data/geo/img/registraduria_v_azmh_90.jpg",
+      "data/geo/img/registraduria_v_azmh_125.jpg",
+      "data/geo/img/registraduria_v_gung_100.jpg",
+      "data/geo/img/registraduria_sv_ua5k_95.jpg",
+      "data/geo/img/registraduria_v_bdrg_92.jpg",
+      "data/geo/img/registraduria_v_hsys_72z.jpg",
+      "data/geo/img/registraduria_v_cu4g_76z.jpg",
+      "data/geo/img/registraduria_v_19jk_73z.jpg",
+      "data/geo/img/registraduria_ver_iore_72.jpg",
+      "data/geo/img/registraduria_ver_uafn_104.jpg",
+      "data/geo/img/registraduria_ver_uafn_110z.jpg",
+      "data/geo/img/registraduria_ver_2bqu_113.jpg"
+    ],
+    "comparaciones": [
+      {
+        "imagen": "data/geo/img/registraduria_cmp1_xfyc_mezcla.png",
+        "pano": "xfyc8BNRqtS19QN2aPS_kw",
+        "rumbo": 62,
+        "pitch": 4,
+        "fov": 60,
+        "nota": "Primera versión: la casa queda entera detrás de la casa esquinera de la Carrera 57 (la cumbrera del modelo sale unos 45 px, unos 2°, por debajo del borde de esa cubierta), como en la foto. Pero el árbol sur del antejardín, de 9 m, salía contra el cielo donde la foto no tiene copa: se bajaron los dos árboles a 7 m y 6 m de copa."
+      },
+      {
+        "imagen": "data/geo/img/registraduria_cmp2_kguv_mezcla.png",
+        "pano": "KgUVWJp-lOd1736W79mxnQ",
+        "rumbo": 62,
+        "pitch": 4,
+        "fov": 60,
+        "nota": "Primera versión, desde la misma esquina en 2014. El modelo parecía asomar por encima de las cubiertas de la manzana del frente, pero este panorama está inclinado: corrigiendo los 3,7° (medidos con una persona de pie y con el fondo de la calle, y coherentes con la inclinación del panorama), la cumbrera queda unos 3° por debajo de esas cubiertas, escondida, como en la foto."
+      },
+      {
+        "imagen": "data/geo/img/registraduria_cmp3_xfyc_mezcla.png",
+        "pano": "xfyc8BNRqtS19QN2aPS_kw",
+        "rumbo": 62,
+        "pitch": 4,
+        "fov": 60,
+        "nota": "Segunda versión (huella corregida, árboles de 7 m): el árbol sur del antejardín coincide en rumbo y altura con las copas reales que se ven sobre la acera norte de la Calle 46; la casa sigue escondida detrás de la casa esquinera. Límite: si la cumbrera pasara de unos 5,6 m se vería por encima de esa cubierta."
+      },
+      {
+        "imagen": "data/geo/img/registraduria_cmp4_ua5k_mezcla.png",
+        "pano": "ua5Kmtv19THXFUko9vP5tg",
+        "rumbo": 95,
+        "pitch": 4,
+        "fov": 50,
+        "nota": "Segunda versión, desde el lote vacío de la Carrera 57 (panorama nivelado): la casa queda detrás del árbol grande del lote y por debajo de la cumbrera de las casas del costado occidental de la Carrera 56 (a unos 6,4 m de altura a esa distancia), como en la foto. Las copas reales que asoman detrás son más altas que los árboles del modelo, pero pueden estar más lejos."
+      },
+      {
+        "imagen": "data/geo/img/registraduria_ver_cmp_iore_mezcla.png",
+        "pano": "IOReB0l7iNXb-JNkepVuZQ",
+        "rumbo": 72,
+        "pitch": 4,
+        "fov": 60,
+        "nota": "Verificación (ala corregida). La casa del modelo (cumbrera a unos 1,6° sobre la cámara, a 52 m) cae detrás de las cubiertas de fibrocemento y zinc que asoman por encima del muro del lote vacío, cuyo borde superior está a unos 6,6°; esas cubiertas son más cercanas (si fueran la sede, su cumbrera estaría a más de 8 m). Los árboles del modelo quedan detrás del árbol grande del lote. Como en la foto, la sede no se ve: solo confirma que tiene un piso."
+      },
+      {
+        "imagen": "data/geo/img/registraduria_ver_cmp_uafn_mezcla.png",
+        "pano": "uAfNm063NXWvugenq9yJpQ",
+        "rumbo": 104,
+        "pitch": 4,
+        "fov": 60,
+        "nota": "Verificación. La casa del modelo (rumbos 99–111°, a 58 m) queda detrás del aguacate y de los plátanos del lote vacío, donde la foto no muestra ninguna cubierta; los árboles del modelo coinciden en rumbo con la casa de ladrillo de tanque azul, que está más cerca. Tampoco se ve la sede."
+      }
+    ],
+    "orbitas": [
+      "data/geo/img/registraduria_orbita_it1.png",
+      "data/geo/img/registraduria_orbita_todo.png",
+      "data/geo/img/registraduria_orbita_todo_o.png",
+      "data/geo/img/registraduria_orbita_existente.png",
+      "data/geo/img/registraduria_ver_orbita_todo_o.png",
+      "data/geo/img/registraduria_ver_orbita_todo2.png",
+      "data/geo/img/registraduria_ver_orbita_existente.png"
+    ],
+    "nota": "Levantamiento de octubre de 2026. La huella se midió en Google z21, en un recorte rectificado al eje de 350° con perfiles de brillo, y se revisó en dos vueltas: la primera con la cumbrera en el centro de una cubierta de 8,2 m (quedaba 0,35 m al occidente del cambio de brillo) y el ala hasta 8,0 m; la segunda con la cumbrera sobre el cambio de brillo (v = −0,4 m), la cubierta de 9,0 m (alero occidental a −4,9 m) y el ala hasta 8,6 m. En la segunda, todos los bordes de cubierta quedan a menos de 0,5 m de los del satélite. Las comparaciones con fotos solo pueden mostrar que el modelo queda escondido donde la casa real no se ve (y así dan un límite de altura) y ubicar los árboles; no hay ninguna foto de la fachada. En la órbita con el proyecto, los 13 módulos del levantamiento (16 después de la verificación) quedan apoyados sobre el faldón oriental de la casa y sobre el ala, con sus rieles, sin flotar ni atravesar la cubierta; el inversor queda en el extremo sur de la fachada de la Carrera 56 y la canalización baja por el hastial sur. check_coplanar: solo un contacto de 0,00 m² entre el letrero y el cielo raso del alero (sin parpadeo visible).",
+    "nota_verificacion": "Verificación independiente de octubre de 2026. Ubicación: se confirmó la placa oficial y la regla de numeración (ver «ubicacion»), sin foto de la sede. Huella: perfiles de brillo en Google rectificado al eje de 350° (0,04 m por píxel de muestreo): alero occidental, cumbrera y borde norte quedan a 0,1–0,2 m del modelo y el rumbo está bien (cumbrera recta en 14 m); el borde oriental del ala estaba 0,5 m corto y se corrió a 9,7 m (ala de 5,4 m). Andén y antejardín ajustados al borde de calzada medido. Alero del ala bajado a 2,4 m. Solar: con el ala más ancha caben 3 filas de 3 módulos acostados (antes 6 parados): 16 módulos = 8,8 kWp, inversor de 8 kW. Se hicieron 2 comparaciones con panoramas nuevos (IOReB0l7 y uAfNm063, 2023) y 3 órbitas (con el proyecto desde el oriente y el occidente, y la réplica sola desde el nororiente). check_coplanar: solo el contacto de 0,00 m² entre el letrero y el cielo raso del alero."
+  }
+}

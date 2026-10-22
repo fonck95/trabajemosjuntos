@@ -1,0 +1,988 @@
+{
+ "id": "ie_megacolegio",
+ "nombre": "I.E. Luis Eduardo Díaz – sede Megacolegio (nueva sede)",
+ "nodo_microrred": null,
+ "direccion": "Vía al CIC y Megacolegio, al occidente de la Carrera 57 (sin placa encontrada)",
+ "lat": 7.008273,
+ "lon": -73.913995,
+ "ubicacion": {
+  "confianza": "alta",
+  "metodo": "Ficha de Google \"Colegio Luis E Diaz (Nueva Sede)\" (7.008291, -73.914048) sobre el bloque de aulas (levantamiento). Verificación independiente: el punto de OSM 12487375691 \"Institución Educativa Luis Eduardo Diaz Sede Megacolegio\" (fuente DANE) está 144 m al sur, sobre la vía de acceso que lleva a este predio; los contratos SECOP 19-21-11922 y 19-15-9979538 (obra e interventoría de la \"vía de acceso del CIC y Mega Colegio\", firmados en diciembre de 2019 y liquidados en 2023) son de esa misma vía; y seis panoramas de Street View de abril de 2023 (fUL0, aS8s, Z1FV, 5CNC, Eo_f y CR1U) muestran al final de la vía un colegio de tres pisos con aulas en serie, un salón múltiple de dos naves y, al otro lado de la vía, la cancha cubierta azul del CIC. No hay otro edificio escolar en el sector. La coordenada del inventario es correcta (cae en el centro del conjunto de aulas). No se vio letrero con el nombre."
+ },
+ "fuentes": [
+  {
+   "tipo": "street_view",
+   "pano": "fUL0g7rwO6vT3ZiDhXsGSA",
+   "fecha": "2023-04",
+   "rumbo": 1,
+   "nota": "desde el cruce de la vía de acceso con la vía principal (≈197 m al sur): fachada sur de los bloques de aulas, salón múltiple, cancha del CIC; foto de la comparación"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "fUL0g7rwO6vT3ZiDhXsGSA",
+   "fecha": "2023-04",
+   "rumbo": 355,
+   "nota": "acercamiento al salón múltiple: dos cubiertas de una agua con banda de ventilación entre ellas, puertas naranja"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "fUL0g7rwO6vT3ZiDhXsGSA",
+   "fecha": "2023-04",
+   "rumbo": 1.5,
+   "nota": "acercamiento al bloque suroriental: estructura de concreto a la vista, bloque gris, ventanas de aluminio blanco de 6,6 m por aula, tres pisos, pasillo de escaleras abierto con jardineras"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "fUL0g7rwO6vT3ZiDhXsGSA",
+   "fecha": "2023-04",
+   "rumbo": 7,
+   "nota": "costado oriental: tanques plásticos blancos de agua y cancha del CIC"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "5CNCFbPPkAm3itoEeWWPKw",
+   "fecha": "2023-04",
+   "rumbo": 14,
+   "nota": "desde la calle del suroccidente (≈170 m): salón múltiple en primer plano y bloque de aulas detrás; foto de la comparación"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "5CNCFbPPkAm3itoEeWWPKw",
+   "fecha": "2023-04",
+   "rumbo": 7,
+   "nota": "culata occidental del salón: cubierta que cae al sur y ventanas en dos niveles"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "5CNCFbPPkAm3itoEeWWPKw",
+   "fecha": "2023-04",
+   "rumbo": 22,
+   "nota": "poste de la red con caja a media altura delante del bloque suroriental; borde de la cubierta del bloque"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "Z1FVvq6H8rzeMqImeh4U5w",
+   "fecha": "2023-04",
+   "rumbo": 10,
+   "nota": "salón múltiple y bloque de aulas; puertas naranja del salón"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "CR1UxWxR9mnig06wbddEwg",
+   "fecha": "2023-04",
+   "rumbo": 24,
+   "nota": "bloque de aulas por encima del salón; culata occidental"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "xBvgnMC5rG-gxlzkDfaXkg",
+   "fecha": "2023-04",
+   "rumbo": 22,
+   "nota": "extremo occidental del bloque de aulas detrás de la caseta y el cerramiento del predio vecino"
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Google z20 y z21 (más reciente que Esri)",
+   "nota": "huella de todas las cubiertas, patios, tanques, vía, parqueadero y techo azul del CIC; medido con perfiles de brillo (0,074 m/píxel)"
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Esri World Imagery z19 (enero de 2020) y Bing z19",
+   "nota": "imágenes viejas: el salón en obra, el bloque de aulas en cimientos y la cancha del CIC ya terminada"
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-21-11922",
+   "nota": "SECOP I, contrato de obra 495-2019: construcción, pavimentación, urbanismo y drenaje de la vía de acceso del CIC y Mega Colegio ($1.313 millones; firmado el 13 de diciembre de 2019, ejecución de enero a mayo de 2020, liquidado en mayo de 2023)"
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-15-9979538",
+   "nota": "SECOP I, interventoría de la misma vía (2019-2020)"
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-13-8009310",
+   "nota": "SECOP I, 2018: revisión de los diseños estructurales y geotécnicos del Colegio Luis Eduardo Díaz para la licencia de construcción"
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=23-9-494673",
+   "nota": "SECOP I, 2023: proceso SASI-007-2023 de dotación de ventiladores para la \"nueva institución educativa\" por $69,8 millones. Está en borrador (sin contrato firmado), así que no se sabe si los ventiladores se compraron."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.datos.gov.co/d/mzgh-shtp",
+   "nota": "GESPROY/MapaInversiones, BPIN 2018058930089: vía al CIC y Megacolegio con avance físico de 92 %"
+  },
+  {
+   "tipo": "web",
+   "url": "data/geo/img/ie_megacolegio_web_ac2023.jpg",
+   "nota": "foto de 2023 del interior del salón múltiple (evento con estudiantes): cerchas metálicas, muros de bloque gris, ventanales y celosías altas, tarima; la dirección web de la foto no quedó registrada"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "Eo_fxAR79AHs2cvC3hOU-g",
+   "fecha": "2023-04",
+   "rumbo": 24,
+   "nota": "verificación: desde la calle del suroccidente (≈168 m), salón múltiple y bloques de aulas; foto de la comparación con el modelo"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "Eo_fxAR79AHs2cvC3hOU-g",
+   "fecha": "2023-04",
+   "rumbo": 19,
+   "nota": "verificación: acercamiento al salón; dos cubiertas que caen al sur, franja de celosías, puertas naranja y alero de la nave baja a unos 4 m"
+  },
+  {
+   "tipo": "street_view",
+   "pano": "aS8sQs6A8fgaRVjedn28sA",
+   "fecha": "2023-04",
+   "rumbo": 356,
+   "nota": "verificación: desde el sur (≈200 m, junto a la vía de acceso), cubierta de la nave alta, tercer piso de las aulas y postes de la red; foto de la comparación"
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.openstreetmap.org/node/12487375691",
+   "nota": "OSM: \"Institución Educativa Luis Eduardo Diaz Sede Megacolegio\" (fuente DANE), punto sobre la vía de acceso, 144 m al sur del ancla"
+  }
+ ],
+ "volumenes": [
+  {
+   "id": "aulas_so",
+   "nombre": "Bloque de aulas suroccidental (3 pisos)",
+   "centro": [
+    -13.75,
+    -10.55
+   ],
+   "largo": 24.9,
+   "ancho": 10.3,
+   "rumbo_eje": 90,
+   "base": 0,
+   "altura_alero": 11.4,
+   "pisos": 3,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "S",
+    "pendiente": 4,
+    "voladizo": 0.4,
+    "material": "termoacustica",
+    "color": "#e6e9e7"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#949a93",
+    "ventanas": {
+     "tipo": "ventana",
+     "ancho": 6.6,
+     "alto": 2.15,
+     "antepecho": 0.75,
+     "separacion": 7.9,
+     "lados": [
+      "largo"
+     ]
+    }
+   }
+  },
+  {
+   "id": "aulas_se",
+   "nombre": "Bloque de aulas suroriental (3 pisos)",
+   "centro": [
+    15.15,
+    -10.55
+   ],
+   "largo": 24.9,
+   "ancho": 10.3,
+   "rumbo_eje": 90,
+   "base": 0,
+   "altura_alero": 11.4,
+   "pisos": 3,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "S",
+    "pendiente": 4,
+    "voladizo": 0.4,
+    "material": "termoacustica",
+    "color": "#e6e9e7"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#949a93",
+    "ventanas": {
+     "tipo": "ventana",
+     "ancho": 6.6,
+     "alto": 2.15,
+     "antepecho": 0.75,
+     "separacion": 7.9,
+     "lados": [
+      "largo"
+     ]
+    }
+   }
+  },
+  {
+   "id": "aulas_no",
+   "nombre": "Bloque de aulas noroccidental (3 pisos)",
+   "centro": [
+    -13.75,
+    9.3
+   ],
+   "largo": 24.9,
+   "ancho": 9.8,
+   "rumbo_eje": 90,
+   "base": 0,
+   "altura_alero": 11.4,
+   "pisos": 3,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "N",
+    "pendiente": 4,
+    "voladizo": 0.4,
+    "material": "termoacustica",
+    "color": "#e6e9e7"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#949a93",
+    "ventanas": {
+     "tipo": "ventana",
+     "ancho": 6.6,
+     "alto": 2.15,
+     "antepecho": 0.75,
+     "separacion": 7.9,
+     "lados": [
+      "largo"
+     ]
+    }
+   }
+  },
+  {
+   "id": "aulas_ne",
+   "nombre": "Bloque de aulas nororiental (3 pisos)",
+   "centro": [
+    15.1,
+    9.35
+   ],
+   "largo": 25.0,
+   "ancho": 9.9,
+   "rumbo_eje": 90,
+   "base": 0,
+   "altura_alero": 11.4,
+   "pisos": 3,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "N",
+    "pendiente": 4,
+    "voladizo": 0.4,
+    "material": "termoacustica",
+    "color": "#e6e9e7"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#949a93",
+    "ventanas": {
+     "tipo": "ventana",
+     "ancho": 6.6,
+     "alto": 2.15,
+     "antepecho": 0.75,
+     "separacion": 7.9,
+     "lados": [
+      "largo"
+     ]
+    }
+   }
+  },
+  {
+   "id": "central_o",
+   "nombre": "Bloque central occidental (circulaciones y aulas)",
+   "centro": [
+    -13.8,
+    -0.5
+   ],
+   "largo": 16.0,
+   "ancho": 9.8,
+   "rumbo_eje": 90,
+   "base": 0,
+   "altura_alero": 11.8,
+   "pisos": 3,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.25,
+    "material": "concreto",
+    "color": "#e3e2dd"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#949a93",
+    "ventanas": {
+     "tipo": "ventana",
+     "ancho": 2.4,
+     "alto": 1.8,
+     "antepecho": 1.0,
+     "separacion": 3.6,
+     "lados": [
+      "corto"
+     ]
+    }
+   }
+  },
+  {
+   "id": "central_e",
+   "nombre": "Bloque central oriental (circulaciones y aulas)",
+   "centro": [
+    14.7,
+    -0.5
+   ],
+   "largo": 14.2,
+   "ancho": 9.8,
+   "rumbo_eje": 90,
+   "base": 0,
+   "altura_alero": 11.8,
+   "pisos": 3,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.25,
+    "material": "concreto",
+    "color": "#e3e2dd"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#949a93",
+    "ventanas": {
+     "tipo": "ventana",
+     "ancho": 2.4,
+     "alto": 1.8,
+     "antepecho": 1.0,
+     "separacion": 3.6,
+     "lados": [
+      "corto"
+     ]
+    }
+   }
+  },
+  {
+   "id": "pasillo_patio",
+   "nombre": "Pasillo norte del patio central",
+   "centro": [
+    0.9,
+    3.65
+   ],
+   "largo": 13.4,
+   "ancho": 1.5,
+   "rumbo_eje": 90,
+   "base": 0,
+   "altura_alero": 11.8,
+   "pisos": 3,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.25,
+    "material": "concreto",
+    "color": "#e3e2dd"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#949a93"
+   }
+  },
+  {
+   "id": "salon",
+   "nombre": "Salón múltiple (nave alta)",
+   "centro": [
+    -14.65,
+    -34.55
+   ],
+   "largo": 24.1,
+   "ancho": 24.3,
+   "rumbo_eje": 90,
+   "base": 0,
+   "altura_alero": 6.35,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "S",
+    "pendiente": 4,
+    "voladizo": 0.5,
+    "material": "termoacustica",
+    "color": "#e6e9e7"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#9a9e96",
+    "ventanas": {
+     "tipo": "celosia",
+     "ancho": 3.0,
+     "alto": 0.8,
+     "antepecho": 5.3,
+     "separacion": 3.6,
+     "lados": [
+      "todos"
+     ]
+    }
+   }
+  },
+  {
+   "id": "salon_bajo",
+   "nombre": "Salón múltiple (nave baja del costado sur)",
+   "centro": [
+    -14.65,
+    -50.05
+   ],
+   "largo": 24.1,
+   "ancho": 6.7,
+   "rumbo_eje": 90,
+   "base": 0,
+   "altura_alero": 4.15,
+   "pisos": 1,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "S",
+    "pendiente": 7,
+    "voladizo": 0.5,
+    "material": "termoacustica",
+    "color": "#e6e9e7"
+   },
+   "fachada": {
+    "material": "bloque",
+    "color": "#9a9e96",
+    "ventanas": {
+     "tipo": "ventana",
+     "ancho": 2.4,
+     "alto": 1.3,
+     "antepecho": 1.0,
+     "separacion": 3.6,
+     "lados": [
+      "S",
+      "E",
+      "O"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "S",
+      "pos": 0.23,
+      "ancho": 2.0,
+      "alto": 2.4
+     },
+     {
+      "lado": "S",
+      "pos": 0.77,
+      "ancho": 2.4,
+      "alto": 2.4
+     }
+    ]
+   }
+  }
+ ],
+ "elementos": [
+  {
+   "tipo": "anden",
+   "nombre": "Andén con baranda al sur de las aulas",
+   "poligono": [
+    [
+     -26.6,
+     -19.7
+    ],
+    [
+     28.0,
+     -19.7
+    ],
+    [
+     28.0,
+     -15.7
+    ],
+    [
+     -26.6,
+     -15.7
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Pasillo abierto de escaleras (sur)",
+   "poligono": [
+    [
+     -1.3,
+     -15.7
+    ],
+    [
+     2.7,
+     -15.7
+    ],
+    [
+     2.7,
+     -5.4
+    ],
+    [
+     -1.3,
+     -5.4
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Pasillo abierto de escaleras (norte)",
+   "poligono": [
+    [
+     -1.3,
+     4.4
+    ],
+    [
+     2.6,
+     4.4
+    ],
+    [
+     2.6,
+     14.3
+    ],
+    [
+     -1.3,
+     14.3
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "nombre": "Terraza norte del bloque nororiental",
+   "poligono": [
+    [
+     2.0,
+     14.3
+    ],
+    [
+     27.6,
+     14.3
+    ],
+    [
+     27.6,
+     17.4
+    ],
+    [
+     2.0,
+     17.4
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Patio central",
+   "poligono": [
+    [
+     -5.8,
+     -5.4
+    ],
+    [
+     7.6,
+     -5.4
+    ],
+    [
+     7.6,
+     2.9
+    ],
+    [
+     -5.8,
+     2.9
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Patio oriental (tanques)",
+   "poligono": [
+    [
+     21.8,
+     -5.4
+    ],
+    [
+     31.5,
+     -5.4
+    ],
+    [
+     31.5,
+     4.4
+    ],
+    [
+     21.8,
+     4.4
+    ]
+   ]
+  },
+  {
+   "tipo": "patio",
+   "nombre": "Patio occidental",
+   "poligono": [
+    [
+     -26.2,
+     -5.4
+    ],
+    [
+     -21.8,
+     -5.4
+    ],
+    [
+     -21.8,
+     4.4
+    ],
+    [
+     -26.2,
+     4.4
+    ]
+   ]
+  },
+  {
+   "tipo": "zona_verde",
+   "nombre": "Huerta escolar (tierra con camas y llantas)",
+   "poligono": [
+    [
+     -14.5,
+     15.5
+    ],
+    [
+     -3.5,
+     15.5
+    ],
+    [
+     -3.5,
+     36.0
+    ],
+    [
+     -14.5,
+     36.0
+    ]
+   ]
+  },
+  {
+   "tipo": "parqueadero",
+   "nombre": "Parqueadero al sur del salón múltiple",
+   "poligono": [
+    [
+     -30.0,
+     -64.5
+    ],
+    [
+     2.5,
+     -64.5
+    ],
+    [
+     2.5,
+     -54.4
+    ],
+    [
+     -30.0,
+     -54.4
+    ]
+   ]
+  },
+  {
+   "tipo": "parqueadero",
+   "nombre": "Vía de acceso al CIC y al Megacolegio (pública)",
+   "poligono": [
+    [
+     4.6,
+     -66.0
+    ],
+    [
+     13.0,
+     -66.0
+    ],
+    [
+     13.0,
+     -25.5
+    ],
+    [
+     54.8,
+     -25.5
+    ],
+    [
+     54.8,
+     -19.6
+    ],
+    [
+     8.0,
+     -19.6
+    ],
+    [
+     4.6,
+     -23.0
+    ]
+   ]
+  },
+  {
+   "tipo": "parqueadero",
+   "nombre": "Vía pública al sur",
+   "poligono": [
+    [
+     -40.0,
+     -71.2
+    ],
+    [
+     54.8,
+     -71.2
+    ],
+    [
+     54.8,
+     -66.0
+    ],
+    [
+     -40.0,
+     -66.0
+    ]
+   ]
+  },
+  {
+   "tipo": "tanque_elevado",
+   "nombre": "Tanque plástico de agua",
+   "centro": [
+    30.5,
+    -8.2
+   ],
+   "altura": 3.0,
+   "diametro": 2.9
+  },
+  {
+   "tipo": "tanque_elevado",
+   "nombre": "Tanque plástico de agua",
+   "centro": [
+    30.5,
+    -12.6
+   ],
+   "altura": 3.0,
+   "diametro": 2.9
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "Malla sur y costado de la vía de acceso (aproximada)",
+   "linea": [
+    [
+     -30.5,
+     -64.8
+    ],
+    [
+     3.8,
+     -64.8
+    ],
+    [
+     3.8,
+     -23.0
+    ]
+   ],
+   "altura": 2.2,
+   "material": "malla",
+   "color": "#9aa0a3"
+  },
+  {
+   "tipo": "cerramiento",
+   "nombre": "Malla oriental",
+   "linea": [
+    [
+     31.9,
+     -18.0
+    ],
+    [
+     31.9,
+     5.0
+    ]
+   ],
+   "altura": 2.2,
+   "material": "malla",
+   "color": "#9aa0a3"
+  },
+  {
+   "tipo": "poste",
+   "nombre": "Poste de la red (esquina sureste del parqueadero; caja a media altura, posible transformador)",
+   "centro": [
+    -2.0,
+    -64.0
+   ],
+   "altura": 9.5
+  },
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Cubierta liviana del costado oriental del salón (tramo 1 de 3)",
+   "centro": [
+    -1.15,
+    -27.23
+   ],
+   "largo": 10.67,
+   "ancho": 1.7,
+   "rumbo_eje": 0,
+   "altura": 3.0,
+   "material": "termoacustica",
+   "color": "#e6e9e7"
+  },
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Cubierta liviana del costado oriental del salón (tramo 2 de 3)",
+   "centro": [
+    -1.15,
+    -37.9
+   ],
+   "largo": 10.67,
+   "ancho": 1.7,
+   "rumbo_eje": 0,
+   "altura": 3.0,
+   "material": "termoacustica",
+   "color": "#e6e9e7"
+  },
+  {
+   "tipo": "cubierta_ligera",
+   "nombre": "Cubierta liviana del costado oriental del salón (tramo 3 de 3)",
+   "centro": [
+    -1.15,
+    -48.57
+   ],
+   "largo": 10.67,
+   "ancho": 1.7,
+   "rumbo_eje": 0,
+   "altura": 3.0,
+   "material": "termoacustica",
+   "color": "#e6e9e7"
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -35.5,
+    10.0
+   ],
+   "altura": 14,
+   "copa": 9
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -36.5,
+    -12.0
+   ],
+   "altura": 13,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -36.0,
+    -38.0
+   ],
+   "altura": 12,
+   "copa": 8
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    20.0,
+    27.0
+   ],
+   "altura": 14,
+   "copa": 11
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    36.0,
+    20.0
+   ],
+   "altura": 15,
+   "copa": 12
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -28.0,
+    28.0
+   ],
+   "altura": 12,
+   "copa": 9
+  }
+ ],
+ "adecuaciones": {
+  "kwp_plan": null,
+  "fv": [
+   {
+    "volumen": "salon",
+    "faldon": "S",
+    "filas": 4,
+    "columnas": 20,
+    "orientacion_modulo": "vertical"
+   }
+  ],
+  "kwp_factible": 44.0,
+  "inversores": {
+   "n": 2,
+   "kw": 20,
+   "volumen": "salon",
+   "lado": "E"
+  },
+  "domotica": [
+   "medidor bidireccional en la acometida",
+   "gateway IoT con monitoreo del sistema solar",
+   "sensores de ocupación por aula",
+   "control por horario de ventiladores y luminarias",
+   "telegestión de las bombas de los tanques de agua"
+  ],
+  "obras_civiles": [
+   "revisar con un ingeniero estructural que las cerchas y correas del salón múltiple resistan unos 15 kg/m² más; anclar los rieles a las correas, no a la lámina",
+   "puesta a tierra y pararrayos (el bloque de aulas es lo más alto del sector)",
+   "ducto por el muro oriental del salón para bajar los cables a los inversores, protegido por la cubierta liviana de ese costado",
+   "línea de vida en la cubierta del salón para el mantenimiento"
+  ],
+  "cargador_ve": {
+   "centro": [
+    -10.0,
+    -60.0
+   ]
+  },
+  "notas": "La sede no tiene nodo en el plan de la microrred (data/microrred.json), así que no hay potencia planeada. Se propone un arreglo de 80 módulos (4 filas × 20 columnas, 44,0 kWp) en el centro de la cubierta de la nave alta del salón múltiple, que cae al sur con unos 4°: es una cubierta baja (6,4 a 8,1 m), queda a unos 11 m del poste de la red y no recibe sombra del bloque de aulas. Los árboles altos del costado occidental pueden sombrear las primeras columnas del occidente después de las 3 de la tarde. Con el rendimiento del plan (3,69 kWh por kWp al día) daría unos 4.900 kWh al mes, del orden del consumo de la sede principal (4.000 kWh/mes en el plan); el consumo real de esta sede no se encontró y la compra de ventiladores de 2023 quedó en borrador en el SECOP. Caben más paneles si se necesitan: el faldón mide 24,1 m entre muros por 24,4 m en pendiente, y con los retiros de 0,5 m admite hasta 10 filas × 20 columnas (200 módulos, 110 kWp). Cada bloque de aulas del sur (10,3 m de ancho) admite 4 × 21 módulos (84; 46,2 kWp) y cada bloque del norte (9,8–9,9 m) 3 × 21 (63; 34,65 kWp), pero a más de 11 m de altura. No hace falta marquesina. No se propone banco de baterías porque el plan no lo asigna; si la sede se usa como albergue en inundaciones, convendría uno pequeño. Los inversores van en el muro oriental del salón, a la sombra de la cubierta liviana de ese costado. La cubierta es nueva (en obra en enero de 2020 y terminada en abril de 2023) y no es de fibrocemento: no hay que cambiarla antes del montaje."
+ },
+ "incertidumbres": [
+  "Street View solo tiene vistas desde 150 a 200 m (abril de 2023); no hay panoramas dentro del colegio ni en la vía de acceso. No se vio letrero.",
+  "Terreno: el modelo pone todo a nivel 0. En las comparaciones queda un corrimiento vertical parejo que mezcla el desnivel del terreno con la inclinación de la cámara de Street View (el carro no está nivelado), así que el desnivel real no se pudo medir; el levantamiento lo estimó en unos 4,5 m sobre el cruce de la vía principal. Desde aS8s, las proporciones (ventanas del tercer piso, cubierta de la nave alta) coinciden con el modelo en terreno plano.",
+  "Alturas del bloque de aulas: pisos de 3,65 m medidos entre filas de ventanas (fUL0, de frente). Sobre las ventanas del tercer piso hay unos 0,9 m de muro y un borde de cubierta de 0,5 m, más de lo que daba el alero de 11,0 m: se subió a 11,4 m con antepecho de 0,75 m (el generador reparte la altura en pisos iguales de 3,8 m). El antepecho del primer piso no se ve. La pendiente (4°) y la caída de las cubiertas hacia afuera no se pudieron comprobar.",
+  "El bloque central (entre los bloques norte y sur) se modeló de tres pisos con cubierta plana a 11,8 m (0,4 m sobre el alero de las aulas); no se ve desde la calle y en el satélite se une a los bloques de aulas por canales. Sus dos patios de luz (x ≈ −15,5 a −13,5 y 15 a 17, de unos 2 × 7 m) y los objetos blancos que hay en ellos no se modelaron.",
+  "Salón múltiple: la huella se corrigió con Google z21 y Esri. Las líneas de la cubierta (y ≈ −34,5 y −47) terminan en x ≈ −2,1, y las vigas de cimentación de 2020 miden unos 24 m de oriente a occidente: los muros van de x = −26,7 a −2,6 (24,1 m) y el alero llega a −2,1. La franja blanca de x = −2,1 a 0 es la cubierta liviana del costado oriental (modelada a 3,0 m; su altura no se midió). Alturas medidas en Eo_f, 5CNC y fUL0 contra las ventanas de las aulas y la parte alta de las puertas naranja (≈2,35 m): nave alta con alero de 6,35 m y 4° de pendiente (cumbre ≈8,1 m); nave baja con alero de 4,15 m y 7° (≈5,0 m contra la nave alta); entre las dos, una franja de celosías de ≈1,3 m. El margen es de ±0,3 m. Al oriente de la cubierta liviana hay una franja oscura (x ≈ 0,3 a 4, y ≈ −31 a −54) que puede ser un canal de drenaje o una cubierta oscura; no se modeló.",
+  "Hay una línea en la cubierta del salón en y ≈ −34,5 que puede ser una junta o un pequeño escalón; se modeló un solo faldón.",
+  "Las fachadas norte y las que dan a los patios no se ven: se pusieron las mismas ventanas de las fachadas sur. Las puertas de los bloques de aulas no se ven (el acceso parece ser por los pasillos de escaleras abiertos entre los bloques).",
+  "La cancha cubierta azul del CIC queda al otro lado de la vía pública de acceso, fuera del colegio. Ya se modela en data/edificios/cic.json (cubierta a dos aguas), así que se quitó de esta especificación para no dibujar dos techos en el mismo sitio del gemelo urbano. También se recortaron las vías de este archivo en x = 54,8 para que no se monten sobre la vía oriental del CIC.",
+  "Los dos tanques de agua son plásticos (≈3 m de diámetro) y están en el piso, en x ≈ 30,5 según Google z21; el generador los dibuja como tanques sobre pedestal bajo.",
+  "Cerramientos: solo se ve la malla del costado oriental y la del sur; su trazado es aproximado. El poste de la red (esquina sureste del parqueadero) se ubicó desde dos panoramas en el levantamiento y aparece en la dirección esperada desde Eo_f y aS8s (±5 m); no se sabe si la caja que tiene es un transformador ni dónde está el tablero general del colegio.",
+  "La huerta del norte se dibujó como zona verde. Los árboles se ubicaron en el satélite; sus alturas son estimadas.",
+  "Entre Google y Street View hay desfases de 1 a 2 m; la huella se midió sobre Google (z21). Los panoramas fUL0 y aS8s tienen un error de rumbo de unos 0,4–0,5° (en el modelo el bloque de aulas sale 1,5 a 2 m más al oriente que en la foto); desde CR1U, 5CNC y Eo_f coincide."
+ ],
+ "verificacion": {
+  "trace": "data/geo/img/ie_megacolegio_trace.png",
+  "trace_google": [
+   "data/geo/img/ie_megacolegio_gtrace.png",
+   "data/geo/img/ie_megacolegio_gtrace_salon.png",
+   "data/geo/img/ie_megacolegio_gtrace_campus.png",
+   "data/geo/img/ie_megacolegio_ver_gtrace.png"
+  ],
+  "comparaciones": [
+   "data/geo/img/ie_megacolegio_cmp_fUL0_comparacion.png",
+   "data/geo/img/ie_megacolegio_cmp_fUL0_mezcla.png",
+   "data/geo/img/ie_megacolegio_cmp_5CNC_comparacion.png",
+   "data/geo/img/ie_megacolegio_cmp_5CNC_mezcla.png",
+   "data/geo/img/ie_megacolegio_ver_cmp_Eo_f_comparacion.png",
+   "data/geo/img/ie_megacolegio_ver_cmp_Eo_f_mezcla.png",
+   "data/geo/img/ie_megacolegio_ver_cmp_aS8s_comparacion.png",
+   "data/geo/img/ie_megacolegio_ver_cmp_aS8s_mezcla.png"
+  ],
+  "orbita": [
+   "data/geo/img/ie_megacolegio_orbita_todo.png",
+   "data/geo/img/ie_megacolegio_orbita_inversores.png",
+   "data/geo/img/ie_megacolegio_ver_orbita_todo.png",
+   "data/geo/img/ie_megacolegio_ver_orbita_planta.png",
+   "data/geo/img/ie_megacolegio_ver_orbita_inversores.png"
+  ],
+  "vistas": [
+   "data/geo/img/ie_megacolegio_sv_fUL0_frente.jpg",
+   "data/geo/img/ie_megacolegio_sv_fUL0_salon.jpg",
+   "data/geo/img/ie_megacolegio_sv_fUL0_poste.jpg",
+   "data/geo/img/ie_megacolegio_sv_fUL0_este.jpg",
+   "data/geo/img/ie_megacolegio_sv_5CNC_cmp.jpg",
+   "data/geo/img/ie_megacolegio_sv_5CNC_salon.jpg",
+   "data/geo/img/ie_megacolegio_sv_5CNC_poste.jpg",
+   "data/geo/img/ie_megacolegio_sv_CR1U_oeste.jpg",
+   "data/geo/img/ie_megacolegio_sv_xBvg_oeste.jpg",
+   "data/geo/img/ie_megacolegio_ver_Eo_f_z.jpg",
+   "data/geo/img/ie_megacolegio_ver_Eo_f_salon.jpg",
+   "data/geo/img/ie_megacolegio_ver_aS8s_salon.jpg"
+  ]
+ }
+}

@@ -1,0 +1,672 @@
+{
+  "id": "bienestar_anciano",
+  "nombre": "Centro de Bienestar del Anciano (CPSAM) de Yondó",
+  "nodo_microrred": "cpsam",
+  "direccion": "Barrio José Domingo Oliveros, al occidente del Hospital Héctor Abad Gómez (Carrera 58 # 46-236), con entrada propia por la vía sin nombre que bordea el hospital por el occidente",
+  "lat": 7.005271,
+  "lon": -73.914597,
+  "ubicacion": {
+    "confianza": "media",
+    "metodo": "La coordenada del inventario era la del hospital. El hogar funciona en las dos alas occidentales del antiguo hospital de la Shell, en el mismo predio del Hospital Héctor Abad Gómez, unos 16 m al occidente y 16 m al sur del ancla del hospital (son las alas que el levantamiento del hospital llamó 'ala_media' y 'ala_sur'). La verificación de octubre de 2026 lo confirmó de forma independiente con una fuente oficial: en las fotos de la Alcaldía de septiembre de 2024 ('Compartiendo con los adultos mayores del CPSAM') se ve el kiosco de madera con lámina terracota pegado a un muro de ladrillo rojo con reja blanca y, al fondo, al otro lado de un prado con plátanos, un pabellón de ladrillo y pintura verde con cubierta a cuatro aguas, del mismo estilo que el hospital. Esa disposición coincide con el satélite: el kiosco rojizo está pegado al extremo occidental del pabellón norte y, hacia el nororiente, detrás del jardín de plátanos, está el ala norte del hospital. Lo apoyan además: (1) en Street View de enero de 2014 estas alas son rojas con ventanas de marco blanco, distintas del verde del hospital, con adultos mayores sentados en el prado y en el kiosco, y con una puerta peatonal propia sobre la vía del occidente; (2) en Google y Bing el hospital cambió su cubierta por lámina blanca, pero estas alas conservan el fibrocemento gris; (3) los videos del 'Cepesan' (2020 y 2023) muestran el mismo muro de ladrillo pintado de rojo; (4) el directorio Puebliando por Antioquia lo ubica en el barrio del hospital. Corrección a la versión anterior: la malla con alambre de púas no es un encierro propio del hogar; es el cerramiento del predio del hospital (el mismo que dibuja data/edificios/hospital.json), que sigue hacia el norte hasta el ala norte del hospital y hacia el sur por el bosque. No hay letrero ni ficha en Google Maps, por eso la confianza sigue en media: falta confirmar en sitio que el hogar ocupa las dos alas completas."
+  },
+  "fuentes": [
+    {
+      "tipo": "street_view",
+      "pano": "m3Sn3nKZFMYxLI6Hv-xIMA",
+      "fecha": "2014-01",
+      "rumbo": 70,
+      "nota": "Encierro de malla con alambre de púas sobre muro bajo de ladrillo, puerta de malla, prado con senderos, kiosco de palma con sillas plásticas y muros rojos detrás. Comparación cmp1. A 4 m, poste metálico café con dos luminarias y red de baja tensión (rumbo 62, pitch 25)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "m3Sn3nKZFMYxLI6Hv-xIMA",
+      "fecha": "2014-01",
+      "rumbo": 88,
+      "nota": "Acercamiento al patio entre los dos pabellones: a la izquierda el pabellón norte con muro rojo y puerta blanca, al fondo un corredor blanco con postes oscuros y cubierta gris, a la derecha el pabellón sur con ventanas de marco blanco. Rumbo 200: vía hacia el sur con poste de concreto y luminaria junto a la cerca."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "Y_D5IXa2aczM_BFEG4rNAg",
+      "fecha": "2014-01",
+      "rumbo": 78,
+      "nota": "Remate occidental del pabellón sur: muro rojo con una franja de ventanas altas, cubierta de fibrocemento a cuatro aguas y, a la izquierda, el pabellón norte con su corredor blanco. Se ve que el prado queda unos 2 m más alto que la vía. Comparación cmp2."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "l7a44fb2a7RSYUWk_1lIlg",
+      "fecha": "2014-01",
+      "rumbo": 100,
+      "nota": "Frente a la puerta de malla: kiosco de palma (remate a cuatro aguas), palma y pabellón rojo con ventanas y columnas blancas. Sin letrero visible."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "CVi55z4HoMzef5D2D5n-Rw",
+      "fecha": "2014-01",
+      "rumbo": 150,
+      "nota": "Desde el noroccidente: el kiosco de palma de unos 11 m de largo en sentido norte-sur, sillas plásticas, muros rojos al fondo y la vía del occidente con red eléctrica."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "RfESmrKTRcVDO_uerUX8VA",
+      "fecha": "2014-01",
+      "rumbo": 55,
+      "nota": "Desde el suroccidente, entre mangos grandes: muro rojo del remate occidental del pabellón sur y corredor de fascia blanca."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "FiBLH50BxgM-7UFIAl1rwQ",
+      "fecha": "2014-01",
+      "rumbo": 55,
+      "nota": "Culata roja pequeña en lo alto del remate occidental del pabellón sur y, a la derecha, corredor de columnas blancas con antepecho rojo en la fachada sur."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "uu2bQK6rFi44z7hhcJr8XA",
+      "fecha": "2014-01",
+      "rumbo": 125,
+      "nota": "Jardín del norte con plátanos y árboles frutales, entre el hogar y el ala norte del hospital."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z19 (WorldView-2 del 12 de enero de 2020, 0,5 m)",
+      "nota": "Huella medida con perfiles de brillo (marco de la especificación, igual al del levantamiento del hospital). Pabellón norte: cubierta de x -15,0 a 13,9 m y de y 5,9 a 17,9 m, con cumbrera cerca de y 12,9; franja clara del corredor de y 3,5 a 5,9 m. Pabellón sur: cubierta de x -14,4 a 13,9 m y de y -19,3 a -4,9 m, cumbrera cerca de y -11,5; franja clara del corredor sur de y -21,8 a -20,2 m. Kiosco: x -20,8 a -15,3 m, y 7,3 a 18,2 m. Las sombras caen al norte y al occidente (sol del suroriente). Cubierta de los pabellones #6f6c68."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Google satélite z20 (0,148 m por píxel, más reciente que Esri, con bruma sobre el sector)",
+      "nota": "Se correlacionó con Esri: Google queda 2,5 m al sur y 0,25 m al oriente. Muestra la cubierta nueva blanca del hospital y la vieja gris de estas dos alas, el kiosco rojizo (#a3705c) pegado al extremo occidental del pabellón norte y las limahoyas triangulares donde las alas se unen al bloque central del hospital (la cumbrera del pabellón norte entra unos 7 m en la cubierta del hospital)."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Bing (Microsoft) z19, corrida 6,5 m al sur y 2,1 m al oriente respecto a Esri",
+      "nota": "Tercera imagen: el kiosco con cubierta terracota (#ad7b62) y el mismo límite entre cubierta blanca (hospital) y gris (hogar)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.yondo-antioquia.gov.co/secretaria-de-salud-y-bienestar-social/compartiendo-con-los-adultos-mayores-del-cpsam",
+      "fecha": "2024-09",
+      "nota": "Fotos de la Alcaldía en el CPSAM: muros de ladrillo pintado de rojo, ventanas con reja blanca, corredor con postes metálicos y vigas de madera, piso de baldosa blanca, kiosco de madera con lámina ondulada terracota, prado con plátanos. Unas 20 personas mayores en sillas de ruedas y caminadores. (Contenido leído por la interfaz /api/v1/contents del portal.)"
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.yondo-antioquia.gov.co/secretaria-de-salud-y-bienestar-social/compartiendo-con-los-adultos-mayores-del-cpsam-318419",
+      "fecha": "2024-09",
+      "nota": "Mismo evento, foto adicional con el muro rojo y la ventana de reja blanca."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.yondo-antioquia.gov.co/secretaria-de-salud-y-bienestar-social/entrega-de-equipos-biomedicos-y-mobiliario-al-cpsam",
+      "fecha": "2023-04",
+      "nota": "La Alcaldía entregó equipos biomédicos y mobiliario por 20 millones; el centro 'atiende a cerca de 20 adultos mayores'."
+    },
+    {
+      "tipo": "web",
+      "url": "https://youtu.be/Q17-_i_s2bE",
+      "fecha": "2023-04",
+      "nota": "Video de la Alcaldía 'Los niños de la Policía Cívica realizaron una visita al Cepesan': muro de ladrillo pintado de rojo (#893e43), corredor con postes y piso de baldosa, prado grande con árboles donde sembraron."
+    },
+    {
+      "tipo": "web",
+      "url": "https://youtu.be/4jVZpjIoIf4",
+      "fecha": "2020-05",
+      "nota": "Video 'Actividad física en el Centro de Protección al Adulto Mayor Cepesan': comedor con muros blancos, mesas de concreto y piso de tablón rojo."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=16-1-158912",
+      "nota": "SECOP I LPY-003-2016: obra de adecuaciones locativas del Centro de Protección Social al Adulto Mayor (CPSAM), $351,8 millones, Fundación Gestar, liquidado. Interventoría: 16-15-5239425 ($35,2 millones)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-11-8050166",
+      "nota": "SECOP I 2018: adecuaciones y mantenimiento de las instalaciones del CPSAM, $30,4 millones, Instrumentación Montajes y Consultorías SAS."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=12-13-1273359",
+      "nota": "SECOP I 2012 ($15,4 millones), citado en el inventario como arreglo de cubierta del Centro de Bienestar del Anciano; el objeto no aparece en los datos abiertos."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=09-12-229937",
+      "nota": "SECOP I 2009: víveres para 'la población de la tercera edad que viven y pernoctan en el Centro de Bienestar del Anciano'. Hay contratos de atención del 'CBA' desde 2008 hasta 2015 y, desde 2024, convenios que nombran juntos el CPSAM y el Centro Vida Canitas Sabias (CO1.PCCNTR.6379109, 7973669 y 9630366)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://sebastiangmesehospitalhectorabadgomez.blogspot.com/",
+      "nota": "El hospital ocupa parte del antiguo hospital de la Shell (años 30 y 40), remodelado en 1989: explica que el hogar funcione en alas del mismo conjunto."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.google.com/maps/search/CPSAM+Yond%C3%B3",
+      "nota": "Google Maps no tiene ficha del CPSAM ni del Centro de Bienestar del Anciano en Yondó (búsqueda de octubre de 2026)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "CVi55z4HoMzef5D2D5n-Rw",
+      "fecha": "2014-01",
+      "rumbo": 140,
+      "nota": "Verificación (comparación ver_cmpA, con el modelo levantado 1,0 m por el talud): el kiosco de palma de 2014 era más largo hacia el norte (llegaba a y ≈ 20 m) que el actual del satélite (7,3 a 18,4 m); su alero quedaba a unos 1,9 m del prado y la cumbrera a unos 4,2 m. La malla pasa a unos 2–3 m al oriente del panorama."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "RfESmrKTRcVDO_uerUX8VA",
+      "fecha": "2014-01",
+      "rumbo": 70,
+      "nota": "Verificación (comparación ver_cmpB, modelo levantado 2,1 m): remate occidental del pabellón sur con la base del muro unos 2,1 m sobre la vía y el borde superior del muro rojo unos 3,3 m sobre el prado. Con rumbo 95 se ve que la malla con muro bajo sigue hacia el sur, más allá de y = -20 m."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "Y_D5IXa2aczM_BFEG4rNAg",
+      "fecha": "2014-01",
+      "rumbo": 82,
+      "nota": "Verificación con acercamiento (fov 22 y 40): el muro del remate occidental del pabellón sur mide 3,5–3,7 m del prado al alero; el remate a cuatro aguas tiene una culata pequeña arriba. El poste de concreto con luminaria queda a unos 6,7 m del panorama, en (-33,2; -13,3), no en (-33,5; -11,5)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "5QD9d8wI99kdzK8ToYu-eA",
+      "fecha": "2014-01",
+      "rumbo": 160,
+      "nota": "Desde la calle del norte: el cerramiento del predio, con alambre de púas, llega hasta el ala norte del hospital (ladrillo y verde); detrás, el jardín de plátanos y el muro rojo del pabellón norte."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z19 y Google z19–z21 (verificación de octubre de 2026)",
+      "nota": "Perfiles de brillo en Esri: pabellón norte con alero norte en y ≈ 18,0 y occidental en x ≈ -15,0; pabellón sur con alero norte en y ≈ -4,8 y occidental en x ≈ -14,8; kiosco de x -20,9 a -15,4 y de y 7,4 a 18,5; corredor norte–sur claro entre x ≈ 9,9 y 11,8 que une los pabellones. En Esri las cumbreras salen unos 0,8 m al norte de donde las pone Google por el desplazamiento de relieve; en Google caen centradas. Al sur del pabellón sur hay un bosque de mangos con copas desde y ≈ -24 m."
+    }
+  ],
+  "volumenes": [
+    {
+      "id": "pabellon_norte",
+      "nombre": "Pabellón norte: habitaciones y servicios (antigua ala media del hospital)",
+      "centro": [
+        -0.2,
+        11.9
+      ],
+      "largo": 28.2,
+      "ancho": 10.6,
+      "rumbo_eje": 90,
+      "base": 0,
+      "altura_alero": 3.3,
+      "pisos": 1,
+      "techo": {
+        "tipo": "cuatro_aguas",
+        "pendiente": 15,
+        "voladizo": 0.7,
+        "material": "fibrocemento",
+        "color": "#6f6c68"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#a4473b",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 1.2,
+          "alto": 1.2,
+          "antepecho": 1.3,
+          "separacion": 3.5,
+          "lados": [
+            "N",
+            "S"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "S",
+            "pos": 0.3,
+            "ancho": 1.0,
+            "alto": 2.2
+          },
+          {
+            "lado": "S",
+            "pos": 0.62,
+            "ancho": 1.0,
+            "alto": 2.2
+          },
+          {
+            "lado": "O",
+            "pos": 0.5,
+            "ancho": 1.0,
+            "alto": 2.2
+          }
+        ],
+        "corredor": {
+          "lado": "S",
+          "profundidad": 2.8,
+          "sep_columnas": 3.5
+        }
+      }
+    },
+    {
+      "id": "pabellon_sur",
+      "nombre": "Pabellón sur: habitaciones, comedor y cocina (antigua ala sur del hospital)",
+      "centro": [
+        0.0,
+        -12.1
+      ],
+      "largo": 27.8,
+      "ancho": 13.0,
+      "rumbo_eje": 90,
+      "base": 0,
+      "altura_alero": 3.6,
+      "pisos": 1,
+      "techo": {
+        "tipo": "cuatro_aguas",
+        "pendiente": 18,
+        "voladizo": 0.7,
+        "material": "fibrocemento",
+        "color": "#6f6c68"
+      },
+      "fachada": {
+        "material": "ladrillo_visto",
+        "color": "#a4473b",
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 1.2,
+          "alto": 1.2,
+          "antepecho": 1.3,
+          "separacion": 3.5,
+          "lados": [
+            "N",
+            "S",
+            "O"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "N",
+            "pos": 0.35,
+            "ancho": 1.0,
+            "alto": 2.2
+          },
+          {
+            "lado": "N",
+            "pos": 0.7,
+            "ancho": 1.0,
+            "alto": 2.2
+          },
+          {
+            "lado": "S",
+            "pos": 0.5,
+            "ancho": 1.0,
+            "alto": 2.2
+          }
+        ],
+        "corredor": {
+          "lado": "S",
+          "profundidad": 2.9,
+          "sep_columnas": 3.5
+        }
+      }
+    },
+    {
+      "id": "kiosco",
+      "nombre": "Kiosco social abierto (estructura de madera; en 2014 tenía techo de palma, hoy lámina ondulada terracota)",
+      "centro": [
+        -18.05,
+        12.75
+      ],
+      "largo": 9.7,
+      "ancho": 4.3,
+      "rumbo_eje": 0,
+      "base": 0,
+      "altura_alero": 2.2,
+      "pisos": 1,
+      "abierto": true,
+      "sep_columnas": 3.2,
+      "columna": 0.18,
+      "techo": {
+        "tipo": "cuatro_aguas",
+        "pendiente": 42,
+        "voladizo": 0.6,
+        "material": "termoacustica",
+        "color": "#a3705c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#7a5236"
+      }
+    }
+  ],
+  "elementos": [
+    {
+      "tipo": "cerramiento",
+      "nota": "malla eslabonada con tres hilos de alambre de púas sobre muro bajo, al borde del talud de la vía del occidente; es el cerramiento del predio del hospital (el mismo de hospital.json) e incluye la puerta peatonal de malla del hogar (y ≈ 12 m); sigue al sur por lo menos hasta y ≈ -34 m (Street View RfES y FiBL)",
+      "linea": [
+        [
+          -27.0,
+          24.0
+        ],
+        [
+          -29.0,
+          12.0
+        ],
+        [
+          -30.5,
+          0.0
+        ],
+        [
+          -32.0,
+          -12.0
+        ],
+        [
+          -33.0,
+          -20.0
+        ],
+        [
+          -34.0,
+          -34.0
+        ]
+      ],
+      "altura": 2.3,
+      "material": "malla",
+      "color": "#8a8f8c"
+    },
+    {
+      "tipo": "cerramiento",
+      "nota": "muro bajo de ladrillo pintado de rojo bajo la malla",
+      "linea": [
+        [
+          -27.0,
+          24.0
+        ],
+        [
+          -29.0,
+          12.0
+        ],
+        [
+          -30.5,
+          0.0
+        ],
+        [
+          -32.0,
+          -12.0
+        ],
+        [
+          -33.0,
+          -20.0
+        ],
+        [
+          -34.0,
+          -34.0
+        ]
+      ],
+      "altura": 0.6,
+      "material": "muro",
+      "color": "#7e3a33"
+    },
+    {
+      "tipo": "zona_verde",
+      "nota": "prado del occidente con senderos de concreto, sillas y mesas bajo los mangos; sigue al sur entre los mangos",
+      "poligono": [
+        [
+          -27.0,
+          24.0
+        ],
+        [
+          -15.5,
+          24.0
+        ],
+        [
+          -15.5,
+          -34.0
+        ],
+        [
+          -34.0,
+          -34.0
+        ],
+        [
+          -33.0,
+          -20.0
+        ],
+        [
+          -32.0,
+          -12.0
+        ],
+        [
+          -30.5,
+          0.0
+        ],
+        [
+          -29.0,
+          12.0
+        ]
+      ]
+    },
+    {
+      "tipo": "zona_verde",
+      "nota": "patio interior entre los pabellones, con prado y sendero",
+      "poligono": [
+        [
+          -15.5,
+          -4.9
+        ],
+        [
+          13.9,
+          -4.9
+        ],
+        [
+          13.9,
+          3.5
+        ],
+        [
+          -15.5,
+          3.5
+        ]
+      ]
+    },
+    {
+      "tipo": "cubierta_ligera",
+      "nota": "corredor cubierto norte–sur que une los dos pabellones junto al bloque central del hospital: franja clara en Esri y corredor de postes oscuros y fascia blanca al fondo del patio en Street View m3Sn (rumbo 86). Es el mismo que dibuja hospital.json",
+      "centro": [
+        11.1,
+        0.7
+      ],
+      "largo": 9.5,
+      "ancho": 1.6,
+      "rumbo_eje": 0,
+      "altura": 2.6,
+      "material": "fibrocemento",
+      "color": "#cfcdc6"
+    },
+    {
+      "tipo": "arbol",
+      "nota": "mango grande del prado suroccidental (copa de unos 12 m en Esri)",
+      "centro": [
+        -22.0,
+        -8.0
+      ],
+      "altura": 12,
+      "copa": 12
+    },
+    {
+      "tipo": "arbol",
+      "nota": "mango junto a la cerca del suroccidente",
+      "centro": [
+        -27.0,
+        -19.0
+      ],
+      "altura": 11,
+      "copa": 9
+    },
+    {
+      "tipo": "arbol",
+      "nota": "palma junto al kiosco",
+      "centro": [
+        -22.5,
+        5.5
+      ],
+      "altura": 7,
+      "copa": 4
+    },
+    {
+      "tipo": "arbol",
+      "nota": "árboles del jardín norte, entre el hogar y el ala norte del hospital",
+      "centro": [
+        -11.0,
+        22.5
+      ],
+      "altura": 9,
+      "copa": 8
+    },
+    {
+      "tipo": "poste",
+      "nota": "poste metálico con dos luminarias y red de baja tensión, junto a la cerca (Street View m3Sn, rumbo 62)",
+      "centro": [
+        -31.6,
+        2.2
+      ],
+      "altura": 9
+    },
+    {
+      "tipo": "poste",
+      "nota": "poste de concreto con luminaria y red, al borde del talud frente al remate del pabellón sur (Street View Y_D5, rumbo 82; m3Sn, rumbo 174)",
+      "centro": [
+        -33.2,
+        -13.3
+      ],
+      "altura": 8.5
+    },
+    {
+      "tipo": "arbol",
+      "nota": "mango del bosque al sur del pabellón sur (copa desde y ≈ -24 m en Esri; altura de hospital.json, no medida aquí)",
+      "centro": [
+        -4.0,
+        -30.0
+      ],
+      "altura": 16,
+      "copa": 12
+    },
+    {
+      "tipo": "arbol",
+      "nota": "mango del bosque al sur del pabellón sur (altura de hospital.json, no medida aquí)",
+      "centro": [
+        16.0,
+        -30.0
+      ],
+      "altura": 18,
+      "copa": 14
+    }
+  ],
+  "adecuaciones": {
+    "kwp_plan": 14,
+    "fv": [
+      {
+        "volumen": "pabellon_norte",
+        "faldon": "S",
+        "filas": 3,
+        "columnas": 8,
+        "orientacion_modulo": "horizontal"
+      }
+    ],
+    "kwp_factible": 13.2,
+    "cubierta_nueva": {
+      "material": "termoacustica",
+      "color": "#e9e7e1",
+      "volumenes": [
+        "pabellon_norte",
+        "pabellon_sur"
+      ]
+    },
+    "bess": {
+      "kwh": 30,
+      "kw": 15,
+      "tipo": "gabinete",
+      "centro": [
+        -18.0,
+        -16.5
+      ],
+      "largo": 2.3,
+      "ancho": 1.2,
+      "rumbo_eje": 0
+    },
+    "inversores": {
+      "n": 2,
+      "kw": 8,
+      "volumen": "pabellon_sur",
+      "lado": "O"
+    },
+    "domotica": [
+      "medidor bidireccional propio del hogar (hoy puede compartir la acometida del hospital; verificarlo en la fase 0)",
+      "pasarela IoT con monitoreo de inversores, batería y consumo, enlazada al centro de control de la microrred",
+      "transferencia automática a modo isla con cargas prioritarias de noche: luces de pasillos, baños y habitaciones, ventiladores, neveras de cocina y de medicamentos, concentradores de oxígeno y equipos de enfermería, bomba de agua y comunicaciones",
+      "llamado de enfermería y luces de orientación nocturna en habitaciones y baños, respaldados por la batería",
+      "alarma de temperatura de las neveras de medicamentos y de alimentos",
+      "sensores de humo en cocina y habitaciones",
+      "control por horario de ventiladores y luces de corredores y del kiosco"
+    ],
+    "obras_civiles": [
+      "cambio de la cubierta de fibrocemento de los dos pabellones por lámina termoacústica, empezando por el pabellón norte, donde van los paneles; la teja es vieja (de la época del hospital de la Shell o de su remodelación) y puede contener asbesto: el desmonte debe hacerlo personal autorizado, mojando la teja, sin cortarla ni romperla, y llevándola a un sitio de disposición de residuos peligrosos (en Colombia el asbesto está prohibido desde la Ley 1968 de 2019)",
+      "revisión de la estructura de madera o metálica del pabellón norte antes de cargar 24 módulos (unos 650 kg más rieles, cerca de 12 kg por m²)",
+      "base de concreto, caseta ventilada con techo liviano y malla con candado para el gabinete de baterías, a 3,5 m del muro occidental del pabellón sur y lejos de las habitaciones",
+      "alero metálico sobre los inversores en el muro occidental del pabellón sur (en la tarde los protege la sombra del mango, pero no todo el año)",
+      "puesta a tierra, protección contra sobretensiones (DPS) y tablero de transferencia",
+      "canalización metálica a la vista desde la cubierta del pabellón norte, bajando por su remate occidental, cruzando la entrada del patio en ducto enterrado (unos 12 m) hasta el muro occidental del pabellón sur, y ducto enterrado hasta el gabinete"
+    ],
+    "notas": "Reparto propuesto del nodo cpsam (3.200 kWh al mes, 20 kWp y 30 kWh / 15 kW de baterías en data/microrred.json): el plan suma en un solo nodo dos sedes distintas. Este hogar es donde viven unas 20 personas mayores las 24 horas, y ahí está toda la carga de noche (luces, ventiladores, neveras, oxígeno y enfermería); el Centro Vida Canitas Sabias funciona solo de día. Se propone: (1) aquí, unos 14 kWp y toda la batería del nodo, porque la batería sirve sobre todo para pasar la noche y los cortes; con un consumo estimado de 1.900 a 2.000 kWh al mes (60 % del nodo), los 13,2 kWp que caben producen unos 1.460 kWh al mes (3,69 kWh por kWp al día), cerca del 75 % de la energía del hogar; (2) en el Centro Vida, unos 6,6 kWp sin batería (12 módulos en la cara sur de su ala norte), que se consumen de día. En total son 19,8 kWp, casi los 20 kWp del plan. Si se acepta el reparto, hay que bajar el arreglo de data/edificios/cpsam.json (hoy 20,9 kWp con batería) para no contar dos veces el nodo. Dónde van los paneles (corrección de la verificación): el levantamiento los había puesto en la cara sur del pabellón sur, pero a unos 6 m al sur de ese muro empieza un bosque de mangos de 16 a 18 m (copas desde y ≈ -24 m en Esri; alturas de hospital.json). Desde esa cara los árboles tapan el cielo del sur hasta unos 40° de altura, y entre octubre y febrero el sol de la mañana y de la tarde pasa por ahí (a las 9 de la mañana de diciembre está a unos 37°): se perdería del 8 al 12 % de la energía del año. Por eso el arreglo pasa a la cara sur del pabellón norte, que mira al patio: la cumbrera del pabellón sur (unos 5,7 m) queda a unos 20 m y solo tapa hasta unos 6°, y los mangos, a 31–38 m, hasta unos 20°, así que solo le quitan sol muy temprano y muy tarde. Cómo cabe: esa cara es un trapecio (cubierta a cuatro aguas de 15°) con 5,49 m de pendiente del muro a la cumbrera, 28,2 m abajo y 17,6 m arriba. Con 1,0 m de retiro quedan 4,49 m, que dan 3 filas de módulos horizontales (3 × 1,13 = 3,39 m). El generador centra el arreglo en la cara: la fila de arriba queda a 4,44 m del muro, donde la cara mide 19,6 m entre limatesas; 8 columnas (8 × 2,28 = 18,24 m) dejan unos 0,5 m a cada limatesa. Son 3 × 8 = 24 módulos de 550 Wp = 13,2 kWp (94 % de los 14 kWp propuestos). Si el nodo crece, la cara norte del pabellón sur (que mira al patio y casi no recibe sombra de los mangos) admite 5 filas × 6 columnas = 30 módulos más (16,5 kWp); en esta latitud mirar al norte o al sur casi no cambia la producción. No se recomienda la cara sur del pabellón sur por la sombra del bosque. No se propone cargador de vehículo eléctrico: el hogar no tiene parqueadero ni entrada de carros (solo una puerta peatonal de malla). Cuidado con el plan del hospital: data/edificios/hospital.json modela estas mismas dos alas como 'ala_media' y 'ala_sur' y pone 18 módulos (3 × 6) justo en esta misma cara sur del 'ala_media' (este pabellón norte) dentro de sus 100 kWp; hay que quitar esos volúmenes y ese arreglo del hospital, o quitar este archivo, para no dibujar ni contar dos veces los mismos techos. Confirmar en la fase 0 si el hogar tiene medidor propio de EPM o si está colgado de la acometida del hospital: si comparte medidor, el hogar debería pasar al nodo del hospital (que ya tiene 400 kWh de baterías) y el nodo cpsam quedar solo con el Centro Vida."
+  },
+  "incertidumbres": [
+    "Ubicación sin letrero: la identificación se basa en las fotos de la Alcaldía de 2024 (kiosco terracota pegado al muro rojo, jardín de plátanos y un pabellón verde del hospital al fondo, lo mismo que muestra el satélite), en el color distinto de las alas y la puerta propia en Street View de 2014, en la cubierta vieja que el hospital no cambió, en los videos de 2020 y 2023 y en el barrio que da el directorio. Falta confirmar en sitio que el hogar ocupa las dos alas completas: puede que una parte (por ejemplo, el extremo oriental, junto al bloque central del hospital) siga siendo del hospital.",
+    "La malla con alambre de púas es el cerramiento de todo el predio del hospital, no un encierro propio del hogar (corrección de la verificación). No se sabe si hay una división interna entre el hogar y el hospital por el jardín del norte.",
+    "Se superpone con data/edificios/hospital.json: allí estas dos alas están como 'ala_media' y 'ala_sur', con el kiosco como cubierta ligera de (-33,7; -3,35), el corredor del patio como cubierta ligera de (-17,5; -11,5) y el corredor norte–sur como cubierta ligera de (-4,9; -15,3), en el marco del hospital; además, los dos mangos del sur, el cerramiento del occidente y un arreglo de 18 módulos sobre la misma cara sur del pabellón norte. Este archivo usa el mismo marco de Esri (ancla 16 m al occidente y 16 m al sur de la del hospital), así que esos elementos se deben quitar de uno de los dos archivos al integrar.",
+    "Terreno: el prado y los pabellones quedan más altos que la vía del occidente: unos 1,0 m frente al kiosco y al pabellón norte (Street View l7a4 y CVi5) y unos 2,1 m frente al remate del pabellón sur (RfES y Y_D5). El modelo se dejó plano (base 0). Las comparaciones se hicieron con una copia del modelo levantada esos valores (base y altura de alero juntas).",
+    "Alturas: alero del pabellón sur 3,6 m (±0,3): la verificación midió 3,3 m desde RfES y 3,5–3,7 m desde Y_D5, más bajo que los 3,9 m del levantamiento. Alero del pabellón norte 3,3 m (±0,4), coherente con unos 3,2 m medidos desde l7a4. Pendiente de 18° en el pabellón sur, coherente con la altura del remate y su culata pequeña; la de 15° del pabellón norte no se pudo comprobar (±4°).",
+    "Kiosco: la huella es la del satélite de 2020 y de Google (unos 10,9 × 5,5 m con aleros). En Street View de 2014, cuando tenía techo de palma, se veía más largo hacia el norte (hasta y ≈ 20 m). La pendiente de 42° y la altura vienen de ese techo de palma; no se sabe si al cambiarlo por lámina terracota cambió la pendiente.",
+    "Forma de la cubierta: los remates occidentales se ven a cuatro aguas; el pabellón sur además tiene una culata roja pequeña en lo alto del remate, que el generador no dibuja. Los remates orientales no se ven: se unen al bloque central del hospital con limahoyas (se ven en Google, donde la cubierta gris entra en punta hasta x ≈ 19,5 m), pero el generador los dibuja a cuatro aguas.",
+    "Posición de los panoramas: comparados con el modelo, los panoramas de 2014 quedan girados unos 2–4° (los remates salen a la derecha en el modelo). Desde Y_D5 el remate del pabellón sur se ve más angosto que en el modelo; la esquina suroccidental parece quedar tapada por árboles. La huella se dejó en el marco de Esri, que coincide con el del hospital y con las medidas del satélite.",
+    "Sombra de los árboles: las alturas de los mangos del sur (16 y 18 m) se tomaron de hospital.json y no se midieron aquí; la pérdida del 8 al 12 % en la cara sur del pabellón sur es una estimación con la geometría del sol a 7° de latitud norte.",
+    "Material de la cubierta: tejas onduladas de fibrocemento gris envejecido (en Street View y en el satélite). Por la edad, pueden contener asbesto; no se ha comprobado.",
+    "Fachadas: se ven de lejos y detrás de la malla. Ventanas con reja blanca de 1,2 m (fotos de 2024) y una franja de ventanas altas en el remate del pabellón sur; puertas y su posición son típicas, no medidas. En las fotos de 2024 el ladrillo se ve más naranja (#c54b1c) que en Street View de 2014 (#60181a a la sombra y detrás de la malla) por la luz y el filtro del celular; se usó un valor intermedio. En la foto de 2024 la tapa del alero junto al kiosco es verde oscura; el generador no deja escoger ese color.",
+    "Corredores: el corredor del patio (al sur del pabellón norte) y el corredor sur del pabellón sur salen de franjas claras en Esri y de las fotos (columnas blancas con antepecho rojo). Profundidades de 2,8 y 2,9 m (±0,5 m). Sus cubiertas se ven más claras que la de los pabellones, pero el generador les pone el material de su volumen.",
+    "Uso interior supuesto (habitaciones, comedor, cocina, enfermería); no hay planos. El consumo del hogar (1.900–2.000 kWh al mes) es una estimación: el plan solo da los 3.200 kWh del nodo completo.",
+    "La red eléctrica de la vía del occidente es de baja tensión en postes con luminarias; no se vio el transformador ni el medidor del hogar. El hogar puede estar conectado a la acometida del hospital.",
+    "Árboles del prado y del jardín norte: posiciones y copas tomadas de las manchas verdes en Esri y de Street View; las alturas son estimadas."
+  ],
+  "verificacion": {
+    "trace": "data/geo/img/bienestar_anciano_trace.png",
+    "trace_google": "data/geo/img/bienestar_anciano_ver_gtrace.png",
+    "satelite": [
+      "data/geo/img/bienestar_anciano_sat_hosp.png",
+      "data/geo/img/bienestar_anciano_ghosp20.png",
+      "data/geo/img/bienestar_anciano_esri19_hosp_ov.png",
+      "data/geo/img/bienestar_anciano_bing19_wide.png",
+      "data/geo/img/bienestar_anciano_g20_hframe.png",
+      "data/geo/img/bienestar_anciano_ovl_esri.png"
+    ],
+    "vistas": [
+      "data/geo/img/bienestar_anciano_sv_m3sn_70.jpg",
+      "data/geo/img/bienestar_anciano_sv_m3sn_88z.jpg",
+      "data/geo/img/bienestar_anciano_sv_m3sn_poste.jpg",
+      "data/geo/img/bienestar_anciano_sv_m3sn_200.jpg",
+      "data/geo/img/bienestar_anciano_sv_yd5_50.jpg",
+      "data/geo/img/bienestar_anciano_sv_yd5_78.jpg",
+      "data/geo/img/bienestar_anciano_sv_l7a4_86.jpg",
+      "data/geo/img/bienestar_anciano_sv_l7a4_100p.jpg",
+      "data/geo/img/bienestar_anciano_sv_cvi5_110.jpg",
+      "data/geo/img/bienestar_anciano_sv_cvi5_150.jpg",
+      "data/geo/img/bienestar_anciano_sv_rfes_45.jpg",
+      "data/geo/img/bienestar_anciano_sv_rfes_55z.jpg",
+      "data/geo/img/bienestar_anciano_sv_rfes_70.jpg",
+      "data/geo/img/bienestar_anciano_sv_fibl_55z.jpg",
+      "data/geo/img/bienestar_anciano_sv_fibl_62.jpg",
+      "data/geo/img/bienestar_anciano_sv_uu2b_125.jpg",
+      "data/geo/img/bienestar_anciano_ver_sv_cvi5_140.jpg",
+      "data/geo/img/bienestar_anciano_ver_sv_rfes_66.jpg"
+    ],
+    "comparaciones": [
+      "data/geo/img/bienestar_anciano_ver_cmpA_comparacion.png",
+      "data/geo/img/bienestar_anciano_ver_cmpA_mezcla.png",
+      "data/geo/img/bienestar_anciano_ver_cmpB_comparacion.png",
+      "data/geo/img/bienestar_anciano_ver_cmpB_mezcla.png",
+      "data/geo/img/bienestar_anciano_cmp1_comparacion.png",
+      "data/geo/img/bienestar_anciano_cmp1_mezcla.png",
+      "data/geo/img/bienestar_anciano_cmp2_comparacion.png",
+      "data/geo/img/bienestar_anciano_cmp2_mezcla.png"
+    ],
+    "orbitas": [
+      "data/geo/img/bienestar_anciano_ver_orbita_existente.png",
+      "data/geo/img/bienestar_anciano_ver_orbita_todo.png"
+    ],
+    "nota": "Verificación de octubre de 2026: la huella se volvió a medir con perfiles de brillo en Esri z19 (aleros, kiosco y corredores coinciden con la especificación con menos de 0,5 m) y se comparó con Google z20–z21 (corrido unos 1,5 m al sur). Las comparaciones nuevas ver_cmpA (CVi5, rumbo 140, pitch 2, fov 75) y ver_cmpB (RfES, rumbo 66, pitch 4, fov 60) usan panoramas distintos a los del levantamiento y una copia del modelo levantada 1,0 m y 2,1 m (base y altura de alero juntas, porque el generador mide la altura de alero desde el terreno). Con ellas, más proyecciones de alambre sobre acercamientos de Y_D5 y RfES, el alero del pabellón sur bajó de 3,9 a 3,6 m; el pabellón norte y el kiosco actual quedaron igual. Queda un giro de 2–4° en los panoramas de 2014. Las comparaciones cmp1 y cmp2 y las órbitas sin prefijo 'ver_' son del levantamiento, con la versión anterior (paneles en el pabellón sur)."
+  }
+}

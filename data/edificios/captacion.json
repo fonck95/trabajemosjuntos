@@ -1,0 +1,589 @@
+{
+  "id": "captacion",
+  "nombre": "Captación del acueducto en la Laguna del Miedo (barcazas de bombeo)",
+  "nodo_microrred": "ptap",
+  "direccion": "Vereda Laguna del Miedo: brazo sur de la laguna, unos 150 m al sur de la vía a la laguna (frente a la edificación de cubierta azul) y 1,9 km en línea recta al occidente-noroccidente de la PTAP municipal. Se llega por un camino destapado que baja a la orilla.",
+  "lat": 7.0175,
+  "lon": -73.9468,
+  "ubicacion": {
+    "confianza": "alta",
+    "metodo": "La coordenada del inventario (7,018818, −73,94681) caía sobre una edificación alargada de cubierta azul junto a la vía, 147 m al norte, que no corresponde a la captación. La Superservicios (2018) dice que la bocatoma son 'dos bocatomas tipo barcaza flotante, acondicionadas con dos bombas de succión cada una', y sus fotos (mayo de 2018) muestran dos barcazas con cubierta a dos aguas, una pasarela flotante de unos 45 m con barandas amarillas, una caseta de madera sobre pilotes en la orilla y un poste con luminaria. En el brazo sur de la laguna, la imagen de Google z21 muestra exactamente ese conjunto: dos techos flotantes (5,2 × 6,1 m y 3,5 × 5,0 m) unidos por una línea recta de 48 m a la orilla, y una cubierta clara de 5,1 × 5,8 m al lado del arranque de la pasarela; no hay otra estructura parecida en toda la laguna. La imagen de Esri del 11 de febrero de 2026 (Vantor, 0,6 m) muestra las mismas tres cubiertas, corridas unos 2,9 m al occidente y 2,7 m al sur respecto a Google: la captación seguía en el sitio a comienzos de 2026. La geometría se comprobó con dos fotos de la Superservicios resolviendo la cámara: en la de 2018 (desde el arranque de la pasarela) coinciden la posición de los postes del corredor, el borde de la cubierta y el tamaño aparente de las dos barcazas al fondo; en la de 2020 (desde la loma del oriente) coinciden la culata oriental de la caseta, las dos barcazas y el poste (error medio de 8 píxeles). Queda a 1,9 km de la PTAP, coherente con la aducción de 2 a 3 km que reporta la Superservicios. El ancla está en el centro del conjunto (sobre la pasarela, entre las barcazas y la caseta). No hay Street View: el panorama más cercano está a 2,24 km. Verificación independiente: las Imágenes 14 y 15 del informe de 2018, con la cámara resuelta, muestran el mismo conjunto (dos barcazas, pasarela y poste) en las posiciones medidas en Google."
+  },
+  "fuentes": [
+    {
+      "tipo": "web",
+      "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf",
+      "fecha": "2018-05",
+      "nota": "Superservicios, evaluación integral (visita del 17 y 18 de mayo de 2018), páginas 22 a 26: 'dos bocatomas tipo barcaza flotante, acondicionadas con dos bombas de succión cada una' para el acueducto urbano (24 L/s) y el veredal (8,5 L/s); tres bombas, de las que operan dos que se alternan cada 24 horas; caudal de bombeo de diseño 40,9 L/s, altura de bombeo 32,8 m, energía eléctrica. Página 24: Imagen 14 'Captación Laguna El Miedo' (las dos barcazas, la pasarela y el poste, vistos desde la orilla sur, junto a la caseta) e Imagen 15 'Captación tipo barcaza (2 bocatomas)' (las dos barcazas de cerca, desde una canoa al norte: armazón metálico con malla, cubierta a dos aguas, cascos oxidados y poste metálico con luminaria). Página 26: Imagen 17 'Aducción tubería 10\"' (arranque de la pasarela con la caseta de madera, la tubería negra de PEAD y las barcazas al fondo) e Imagen 18 (canoa junto a la pasarela). El levantamiento usó la Imagen 17 (citada antes por error como Imagen 14); la verificación resolvió la cámara de las Imágenes 14 y 15."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf",
+      "fecha": "2018-05",
+      "nota": "Imágenes 14 y 15 del mismo informe, usadas en la verificación (data/geo/img/captacion_foto2018_laguna.jpg y captacion_foto2018_barcazas.jpg). En la 15 la cámara quedó a 1,2 m sobre el agua, 7 m al norte de la barcaza oriental, con 75° de campo horizontal; se ajustó con 14 puntos (esquinas de los cascos en la línea de agua, aleros y cumbreras) con un error medio de 3,7 píxeles y midió la altura de las barcazas. En la 14 la cámara quedó junto a la caseta, a unos 3 m sobre el agua."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
+      "fecha": "2020",
+      "nota": "Superservicios, evaluación integral 2020 (vigencia 2019), páginas 30 a 37: bocatoma 'de fondo' sobre la laguna con dos sistemas de bombas que operan alternados cada 24 horas; unos 30 L/s llegan a la PTAP municipal; aducción de 12\" y 10\" de 3 km; macromedidor de 8\" de la captación fuera de servicio en mayo de 2020; la PTAP veredal ya no toma de la laguna sino de un pozo. Imagen 7 (caseta de madera vista desde la loma del oriente, pasarela, tubería, las dos barcazas con cubierta clara y el poste con luminaria). Se usó para la comparación con el modelo."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Google z21 (0,074 m/píxel; fecha de la toma desconocida, anterior a 2026)",
+      "nota": "Huellas medidas sobre esta imagen: cubiertas de las dos barcazas, de la caseta (girada 5,4°), línea de la pasarela y rampa del corredor."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z18 (Vantor, 11 de febrero de 2026, 0,6 m; sin datos en z19)",
+      "nota": "Confirma que las barcazas y la caseta seguían en 2026 (con un corrimiento de unos 2,9 m al occidente y 2,7 m al sur respecto a Google) y muestra desmontado el bosque al nororiente de la caseta, donde se proponen las mesas solares."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-4-8213567",
+      "fecha": "2018-07",
+      "nota": "Prestación de servicios como operador de la bocatoma (Aguas y Aseo de Yondó). Hay contratos iguales en diciembre de 2017 (18-4-7520438 y 18-4-7520160): la captación tiene operador permanente, lo que explica la caseta."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-4-9754238",
+      "fecha": "2019-07",
+      "nota": "Obras de rehabilitación de la capacidad hídrica de la Laguna del Miedo ($2.471 millones), con interventoría (19-4-9618885). Puede explicar los cambios de la orilla y los claros redondos que se ven en la imagen de 2026."
+    },
+    {
+      "tipo": "web",
+      "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.3287043",
+      "fecha": "2022-09",
+      "nota": "Obras de limpieza y mantenimiento de la laguna en el área de la bocatoma y de canales naturales de agua lluvia ($103 millones)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10238025",
+      "nota": "Caracterización semestral del agua cruda de la Laguna del Miedo para los acueductos urbano y veredal: la laguna sigue siendo la fuente del acueducto urbano."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.google.com/maps/place/?q=place_id:ChIJ1Q12BADvQo4R-pjtf-s3gAc",
+      "nota": "Laguna del Miedo (7,021775, −73,949444). La captación está en el brazo sur, unos 560 m al sur-suroriente de este punto."
+    },
+    {
+      "tipo": "street_view",
+      "nota": "No hay panoramas: el más cercano de la cobertura local está a 2,24 km (7,019181, −73,926605) y la búsqueda en Google no encontró ninguno a menos de 800 m de la captación."
+    }
+  ],
+  "volumenes": [
+    {
+      "id": "caseta_cubierta",
+      "nombre": "Cubierta y corredor de la caseta del operador",
+      "abierto": true,
+      "centro": [
+        23.47,
+        -5.71
+      ],
+      "largo": 4.98,
+      "ancho": 4.3,
+      "rumbo_eje": 5.4,
+      "base": 0.7,
+      "altura_alero": 2.4,
+      "sep_columnas": 2.1,
+      "columna": 0.12,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 12,
+        "cumbrera": "corto",
+        "voladizo": 0.4,
+        "material": "zinc",
+        "color": "#a3a19c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#e6e6e0"
+      }
+    },
+    {
+      "id": "caseta",
+      "nombre": "Caseta del operador (madera, sobre pilotes)",
+      "centro": [
+        23.4,
+        -6.45
+      ],
+      "largo": 3.48,
+      "ancho": 4.3,
+      "rumbo_eje": 5.4,
+      "base": 0.1,
+      "altura_alero": 2.3,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#9c978c"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#a39f94",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 0.9,
+          "alto": 0.6,
+          "antepecho": 1.35,
+          "separacion": 1.7,
+          "lados": [
+            "E",
+            "S"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "N",
+            "pos": 0.35,
+            "ancho": 0.9,
+            "alto": 1.95
+          }
+        ]
+      }
+    },
+    {
+      "id": "caseta_pilotes",
+      "nombre": "Pilotes y piso de la caseta",
+      "abierto": true,
+      "piso": false,
+      "centro": [
+        23.47,
+        -5.71
+      ],
+      "largo": 5.68,
+      "ancho": 5.0,
+      "rumbo_eje": 5.4,
+      "altura_alero": 0.7,
+      "sep_columnas": 2.0,
+      "columna": 0.14,
+      "techo": {
+        "tipo": "ninguno"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#a9a59a"
+      }
+    },
+    {
+      "id": "barcaza_o_casco",
+      "nombre": "Casco de la barcaza occidental",
+      "poligono": [
+        [
+          -24.24,
+          -1.09
+        ],
+        [
+          -19.21,
+          -1.09
+        ],
+        [
+          -19.21,
+          4.8
+        ],
+        [
+          -24.24,
+          4.8
+        ]
+      ],
+      "altura_alero": 0.8,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0
+      },
+      "fachada": {
+        "material": "metal",
+        "color": "#8c6340"
+      }
+    },
+    {
+      "id": "barcaza_o",
+      "nombre": "Barcaza occidental (bombas de succión)",
+      "abierto": true,
+      "centro": [
+        -21.73,
+        1.86
+      ],
+      "largo": 5.49,
+      "ancho": 4.63,
+      "rumbo_eje": 0,
+      "base": 0.8,
+      "altura_alero": 3.05,
+      "sep_columnas": 2.0,
+      "columna": 0.08,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 15,
+        "cumbrera": "largo",
+        "voladizo": 0.3,
+        "material": "zinc",
+        "color": "#6f5448"
+      },
+      "fachada": {
+        "material": "metal",
+        "color": "#55585b"
+      }
+    },
+    {
+      "id": "barcaza_e_casco",
+      "nombre": "Casco de la barcaza oriental",
+      "poligono": [
+        [
+          -17.73,
+          2.11
+        ],
+        [
+          -14.48,
+          2.11
+        ],
+        [
+          -14.48,
+          6.91
+        ],
+        [
+          -17.73,
+          6.91
+        ]
+      ],
+      "altura_alero": 0.7,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0
+      },
+      "fachada": {
+        "material": "metal",
+        "color": "#8c6340"
+      }
+    },
+    {
+      "id": "barcaza_e",
+      "nombre": "Barcaza oriental (bombas de succión)",
+      "abierto": true,
+      "centro": [
+        -16.11,
+        4.51
+      ],
+      "largo": 4.6,
+      "ancho": 3.05,
+      "rumbo_eje": 0,
+      "base": 0.7,
+      "altura_alero": 2.81,
+      "sep_columnas": 2.0,
+      "columna": 0.08,
+      "techo": {
+        "tipo": "dos_aguas",
+        "pendiente": 28,
+        "cumbrera": "largo",
+        "voladizo": 0.2,
+        "material": "zinc",
+        "color": "#a9b3ba"
+      },
+      "fachada": {
+        "material": "metal",
+        "color": "#55585b"
+      }
+    }
+  ],
+  "elementos": [
+    {
+      "tipo": "zona_verde",
+      "nombre": "Orilla oriental (potrero y claro)",
+      "poligono": [
+        [
+          20.3,
+          -18
+        ],
+        [
+          56,
+          -18
+        ],
+        [
+          56,
+          12
+        ],
+        [
+          31,
+          12
+        ],
+        [
+          29.0,
+          2.4
+        ],
+        [
+          26.0,
+          -0.8
+        ],
+        [
+          20.6,
+          -2.2
+        ],
+        [
+          20.2,
+          -9.0
+        ]
+      ]
+    },
+    {
+      "tipo": "anden",
+      "nombre": "Pasarela flotante (tablas sobre canecas)",
+      "centro": [
+        4.55,
+        0.8
+      ],
+      "largo": 47.5,
+      "ancho": 1.1,
+      "rumbo_eje": 90
+    },
+    {
+      "tipo": "cerramiento",
+      "nombre": "Baranda norte de la pasarela",
+      "linea": [
+        [
+          -19.0,
+          1.35
+        ],
+        [
+          28.2,
+          1.35
+        ]
+      ],
+      "altura": 1.5,
+      "material": "reja",
+      "color": "#c29a45"
+    },
+    {
+      "tipo": "cerramiento",
+      "nombre": "Baranda sur de la pasarela",
+      "linea": [
+        [
+          -19.0,
+          0.25
+        ],
+        [
+          28.2,
+          0.25
+        ]
+      ],
+      "altura": 1.5,
+      "material": "reja",
+      "color": "#c29a45"
+    },
+    {
+      "tipo": "anden",
+      "nombre": "Rampa del corredor de la caseta a la orilla",
+      "centro": [
+        27.72,
+        -4.25
+      ],
+      "largo": 3.75,
+      "ancho": 1.1,
+      "rumbo_eje": 90
+    },
+    {
+      "tipo": "poste",
+      "nombre": "Poste de la red con luminaria en la orilla (llegada de la acometida)",
+      "centro": [
+        35.5,
+        -0.9
+      ],
+      "altura": 6.0
+    },
+    {
+      "tipo": "poste",
+      "nombre": "Poste metálico con luminaria en la esquina nororiental de la barcaza occidental",
+      "centro": [
+        -19.85,
+        5.2
+      ],
+      "altura": 8.5
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        21,
+        -15
+      ],
+      "altura": 14,
+      "copa": 9
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        30,
+        -17
+      ],
+      "altura": 12,
+      "copa": 8
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        39,
+        -15.5
+      ],
+      "altura": 13,
+      "copa": 8
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        47,
+        -12.5
+      ],
+      "altura": 14,
+      "copa": 9
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        53.5,
+        0
+      ],
+      "altura": 15,
+      "copa": 9
+    },
+    {
+      "tipo": "arbol",
+      "centro": [
+        53.5,
+        9.5
+      ],
+      "altura": 15,
+      "copa": 10
+    }
+  ],
+  "adecuaciones": {
+    "kwp_plan": 75,
+    "fv": [
+      {
+        "tipo": "marquesina",
+        "centro": [
+          38.7,
+          1.0
+        ],
+        "largo": 13.8,
+        "ancho": 4.6,
+        "rumbo_eje": 0,
+        "altura": 1.0,
+        "filas": 2,
+        "columnas": 12,
+        "orientacion_modulo": "vertical",
+        "inclinacion": 10
+      },
+      {
+        "tipo": "marquesina",
+        "centro": [
+          44.5,
+          1.0
+        ],
+        "largo": 13.8,
+        "ancho": 4.6,
+        "rumbo_eje": 180,
+        "altura": 1.0,
+        "filas": 2,
+        "columnas": 12,
+        "orientacion_modulo": "vertical",
+        "inclinacion": 10
+      }
+    ],
+    "kwp_factible": 26.4,
+    "inversores": {
+      "n": 2,
+      "kw": 12,
+      "volumen": "caseta",
+      "lado": "N",
+      "pos": 0.7
+    },
+    "domotica": [
+      "medidor bidireccional en la frontera de la captación (la otra frontera del nodo es la PTAP)",
+      "pasarela IoT con enlace celular o de radio al Centro de Control Energético y Digital (CCED)",
+      "variadores de velocidad o arrancadores suaves en las bombas de succión de las barcazas",
+      "mando de las bombas según el nivel de los tanques de la PTAP (1.125 m³ y 350 m³), para bombear más en las horas de sol",
+      "macromedidor de agua cruda con lectura remota (el de 8\" estaba fuera de servicio en 2020)",
+      "sensores de nivel de la laguna y de vibración y temperatura de los motores, con alarma al operador",
+      "cámara y alarma de intrusión en la caseta, la pasarela y el arreglo solar",
+      "iluminación LED con fotocelda en la pasarela y la orilla"
+    ],
+    "obras_civiles": [
+      "Adecuación del claro al nororiente de la caseta (desmontado en la imagen de febrero de 2026): nivelación, drenaje y cerramiento en malla del arreglo, dejando libres el arranque de la pasarela, la rampa de la caseta y el camino hacia la vía.",
+      "Mesas en tierra con hincado o dados de concreto según el estudio de suelos (orilla húmeda); borde inferior de los módulos a 1 m del suelo por las crecientes de la laguna.",
+      "Permiso de Corantioquia: la orilla es humedal; no se tala bosque adicional y solo se podan ramas que den sombra a las mesas.",
+      "Canalización enterrada de unos 15 m desde las mesas hasta la caseta y de unos 12 m desde la caseta hasta el poste de la red.",
+      "Bastidor metálico propio, techado y ventilado, en el corredor de la caseta para colgar los inversores y el tablero (el muro es de tablas de madera y no debe cargarlos).",
+      "Puesta a tierra y pararrayos para las mesas y la caseta, unión equipotencial de las barcazas metálicas y protecciones contra sobretensiones (DPS) en corriente continua y alterna.",
+      "Revisión del cable aéreo que alimenta las barcazas y de su llegada flotante (la caseta y las barcazas dependen de él)."
+    ],
+    "notas": "El plan asigna 150 kWp al nodo del acueducto, repartidos en dos fronteras de 75 kWp: la PTAP (data/edificios/ptap.json) y esta captación. Aquí no hay cubiertas útiles: la caseta es de tablas de madera y tiene unos 29 m² de techo de zinc (cabría 1 módulo por faldón con los retiros de 0,5 m), y las barcazas flotan, se mueven y tienen cubiertas pequeñas y oxidadas (con las medidas verificadas, la occidental admitiría 1 módulo por faldón y la oriental ninguno, porque su faldón inclinado mide 1,7 m). Por eso el arreglo va en el piso, en el claro al nororiente de la caseta, que en la imagen de Esri del 11 de febrero de 2026 aparece desmontado (en la imagen de Google, más antigua, era bosque). Caben 2 mesas bajas de 12 columnas × 2 módulos en vertical (13,8 × 4,6 m cada una), con el eje largo norte–sur y los módulos inclinados 10° hacia el oriente y hacia el occidente (en esta latitud se pierde menos del 5 % frente a mirar al sur y así se aprovecha el ancho del claro), con un pasillo de 1,2 m entre ellas y 1 m libre alrededor del poste de la orilla: 48 módulos de 550 Wp = 26,4 kWp, el 35 % de la frontera de la captación. Se dejan libres el arranque de la pasarela, la rampa de la caseta y el camino que sube hacia la vía. Sombras: con los árboles modelados (12 a 15 m, alturas supuestas) se pierde cerca del 15 % del sol directo, sobre todo en la mañana por los árboles del oriente y al final de la tarde por los del sur; como el bosque real es más denso, se espera una producción de unos 2.400 a 2.700 kWh/mes (sin sombras serían unos 2.960). Las bombas trabajan las 24 horas: con 40,9 L/s de diseño (unos 30 L/s llegaban a la PTAP en 2020) y 32,8 m de altura de bombeo, consumen del orden de 15 a 24 kW, es decir, unos 11.000 a 17.500 kWh/mes (estimado; falta la factura del NIU). La energía solar cubriría entre el 14 y el 24 % de la captación y se consumiría toda en el sitio, porque las bombas piden casi siempre más que lo que entregan los 2 inversores de 12 kW (relación CC/CA de 1,1). Los 48,6 kWp que faltan para la frontera no caben en la orilla sin talar bosque. Opciones, por orden: (a) un arreglo flotante de unos 88 módulos amarrado junto a las barcazas, sobre flotadores como los de la pasarela (sombrea el agua y reduce algas y evaporación; requiere permiso de Corantioquia y estudio de anclaje y del nivel de la laguna); (b) un lote en arriendo cerca de las casas de la vía, unos 150 m al oriente; (c) pasar esa potencia a la frontera de la PTAP, donde su levantamiento encontró espacio adicional. Baterías: el BESS del nodo (150 kWh / 75 kW) quedó en la PTAP. En la captación no se propone batería: una de 30 a 50 kWh solo movería una bomba unas 2 horas; es mejor coordinar el bombeo con las horas de sol y con los tanques de la PTAP (1.125 m³ y 350 m³). Inversores: 2 de 12 kW en el muro norte del cuarto, dentro del corredor (siempre a la sombra y bajo techo), en un bastidor propio. El tablero y el medidor van en el muro oriental, a 9 m del poste de la orilla. No se propone cargador de vehículo eléctrico: no hay parqueadero y el acceso es un camino destapado."
+  },
+  "incertidumbres": [
+    "No hay Street View (el panorama más cercano está a 2,24 km). Las alturas, la pendiente de las cubiertas y los colores salen de dos fotos de la Superservicios (mayo de 2018 y una de 2020 sin fecha exacta) con la cámara resuelta a partir de medidas conocidas; la de 2020 tiene un error medio de 8 píxeles.",
+    "La fecha de la imagen de Google (sobre la que se midieron las huellas, ±0,3 m) no se conoce. La de Esri es del 11 de febrero de 2026 pero solo tiene 0,6 m de detalle y está corrida unos 2,9 m al occidente y 2,7 m al sur respecto a Google.",
+    "Las barcazas flotan: su posición y altura cambian con el nivel de la laguna. Según la foto de 2020, la orilla está unos 0,45 m por encima del agua; el modelo pone el agua y la orilla al mismo nivel y no dibuja el agua (el generador no tiene ese tipo de suelo: la laguna se ve como el piso gris del predio).",
+    "Barcazas: las alturas salen de la Imagen 15 de la Superservicios (mayo de 2018) con la cámara resuelta: casco de 0,7 m (oriental) y 0,8 m (occidental) sobre el agua, borde del alero a 2,7 y 3,0 m y cumbrera a unos 3,6 m (±0,1 m por la lectura de los píxeles). La foto de 2020 no sirve para medirlas, porque su cámara se resolvió con esas mismas alturas como dato y ajusta igual de bien con las alturas viejas que con las nuevas. En Google la cubierta occidental se ve parda en el faldón occidental y gris en el oriental; en 2020 se veía clara. En 2018 la barcaza occidental tenía un cuarto de láminas claras en su costado oriental, y en 2020 se ve un cuarto verde azulado en el extremo sur; no se modelaron, como tampoco la malla de los costados, las bombas, los motores ni los tableros. Desde 2020 la PTAP veredal se abastece de un pozo, así que una de las dos barcazas podría estar de reserva o fuera de servicio.",
+    "Caseta: es de tablas de madera (el generador la dibuja como muro pintado). El muro real mide unos 1,7 m del piso al alero, pero el generador exige 2,2 m en un volumen cerrado, así que el cuarto arranca 0,6 m por debajo del piso del corredor (la diferencia queda tapada por el piso sobre pilotes). La ventana del costado oriental se ve en 2020; las del sur y la puerta al corredor son supuestas. No se modelaron el antepecho azul del corredor, la escalera de tablas ni las canecas.",
+    "Pasarela: flota sobre canecas azules y su piso queda unos 0,4 m sobre el agua. Como el generador pone el andén a ras del suelo, las barandas se dibujaron de 1,5 m desde el agua (piso flotante más baranda de 1,1 m), que es lo que pide la Imagen 14 con la cámara resuelta. No se dibujan la tubería negra de PEAD de 10 a 12 pulgadas que va a su lado ni la aducción por tierra hacia la PTAP (no se ve en el satélite).",
+    "Postes: el poste de la orilla se ubicó con las fotos del levantamiento (±1,5 m) y su altura visible con la de 2020 (unos 5,7 m). El poste de las barcazas se ubicó con la Imagen 15 (esquina nororiental de la barcaza occidental, ±0,7 m; antes estaba 3 m más al sur, entre los cascos) y su altura, unos 8,5 m (±1 m), con la Imagen 14; la luminaria va a unos 5,6 m. No se ve el transformador ni el recorrido de la red de media tensión; el cable a las barcazas es aéreo.",
+    "Árboles: posiciones aproximadas y alturas supuestas (12 a 15 m); el bosque real alrededor del claro es más denso, así que las sombras pueden ser mayores que el 15 % calculado.",
+    "El claro de las mesas solares es bosque en Google y tierra desmontada en Esri 2026: puede ser una obra en curso o un potrero. Hay que verificar en campo el uso actual, la propiedad del predio (empresa, municipio o particular), el suelo y la cota de inundación.",
+    "El consumo de la captación (11.000 a 17.500 kWh/mes) se estimó con el caudal y la altura de bombeo de la Superservicios; no hay factura por NIU."
+  ],
+  "verificacion": {
+    "trace": "data/geo/img/captacion_trace.png",
+    "trace_esri": "data/geo/img/captacion_trace_esri18.png",
+    "trace_google": [
+      "data/geo/img/captacion_gtrace.png",
+      "data/geo/img/captacion_gtrace_barcazas.png",
+      "data/geo/img/captacion_gtrace_caseta.png",
+      "data/geo/img/captacion_gtrace_v0.png",
+      "data/geo/img/captacion_gtrace_v1.png"
+    ],
+    "satelite": [
+      "data/geo/img/captacion_esri2026_alineada.png",
+      "data/geo/img/captacion_g21.png",
+      "data/geo/img/captacion_busca_g18.png",
+      "data/geo/img/captacion_cmp_google_esri2026.png",
+      "data/geo/img/captacion_e18_2026_entorno.png",
+      "data/geo/img/captacion_g19_entorno.png"
+    ],
+    "vistas": [
+      "data/geo/img/captacion_foto2018_pasarela.jpg",
+      "data/geo/img/captacion_foto2020_caseta.jpg",
+      "data/geo/img/captacion_foto_sspd2020.png",
+      "data/geo/img/captacion_foto2018_barcazas.jpg",
+      "data/geo/img/captacion_foto2018_laguna.jpg"
+    ],
+    "comparaciones": [
+      "data/geo/img/captacion_cmp2018_v1_comparacion.png",
+      "data/geo/img/captacion_cmp2018_v1_mezcla.png",
+      "data/geo/img/captacion_cmp2018_v2_comparacion.png",
+      "data/geo/img/captacion_cmp2018_v2_mezcla.png",
+      "data/geo/img/captacion_cmp2020_v1_comparacion.png",
+      "data/geo/img/captacion_cmp2020_v2_mezcla.png",
+      "data/geo/img/captacion_cmp2020_v3_comparacion.png",
+      "data/geo/img/captacion_cmp2020_v3_mezcla.png",
+      "data/geo/img/captacion_ver1_barcazas_comparacion.png",
+      "data/geo/img/captacion_ver2_barcazas_comparacion.png",
+      "data/geo/img/captacion_ver2_barcazas_mezcla.png",
+      "data/geo/img/captacion_ver3_laguna_comparacion.png",
+      "data/geo/img/captacion_ver3_laguna_mezcla.png",
+      "data/geo/img/captacion_ver7_laguna_comparacion.png",
+      "data/geo/img/captacion_ver7_laguna_mezcla.png"
+    ],
+    "orbitas": [
+      "data/geo/img/captacion_orbita_v1.png",
+      "data/geo/img/captacion_orbita_caseta_v1.png",
+      "data/geo/img/captacion_orbita_barcazas_v1.png",
+      "data/geo/img/captacion_orbita_todo.png",
+      "data/geo/img/captacion_ver4_orbita_todo.png",
+      "data/geo/img/captacion_ver5_orbita_barcazas.png",
+      "data/geo/img/captacion_ver6_orbita_todo_norte.png"
+    ],
+    "notas": "Sin Street View, la comparación modelo–foto se hizo con dos fotos de la Superservicios. Foto de 2018 (Imagen 17, celular con unos 67° de campo horizontal, recorte 14:9): cámara a 1,5 m de altura en el arranque de la pasarela (32,7 m al oriente y 0,1 m al sur del ancla), rumbo 272,4°, 7,1° hacia abajo. Primera comparación: la pasarela salía 1 m más al norte y las barandas quedaban a la derecha de la foto; se corrió la pasarela 0,3 m al sur y se resolvió de nuevo la cámara con los postes del corredor. En la segunda coinciden los tres postes, el borde de la cubierta del corredor y el tamaño de las barcazas al fondo; se quitaron dos árboles que el modelo ponía detrás de las barcazas y que en la foto no existen. Foto de 2020 (Imagen 7, recorte 14:9): la primera cámara (66 m al oriente, 13°) dejaba las barcazas 1,6 veces más grandes que en la foto; se resolvió por mínimos cuadrados con 9 puntos (esquinas y culata de la caseta, cumbreras de las barcazas) y quedó a 53,8 m al oriente y 12,9 m al sur del ancla, a 5,6 m sobre la orilla, rumbo 292,1°, 4,6° hacia abajo y 26,9° de campo horizontal. Con esa cámara la foto mostró que el muro de la caseta mide unos 1,7 m sobre un piso a 0,7 m (no 2,2 m), que la cubierta tiene unos 12° y (con las alturas de las barcazas puestas como dato) que las barcazas eran bajas, de 2,7 m de cumbrera; se corrigieron, y se movieron el final de la pasarela (a 28,3 m) y el poste de la orilla. En la tercera comparación coinciden la culata de la caseta, el piso sobre pilotes, las dos barcazas y el poste. El modelo no dibuja el agua ni el desnivel de 0,45 m entre la orilla y la laguna. Se hicieron 10 renders en total (el último, la órbita con el proyecto). check_coplanar: sin caras coplanares después de bajar la puerta del cuarto a 1,95 m.",
+    "trace_verificacion": [
+      "data/geo/img/captacion_ver_trace.png",
+      "data/geo/img/captacion_ver_gtrace_barcazas.png",
+      "data/geo/img/captacion_ver_gtrace_caseta.png"
+    ],
+    "notas_verificacion": "Verificación independiente (octubre de 2026). Ubicación: se confirmó con el texto de la Superservicios de 2018 ('dos bocatomas tipo barcaza flotante') y con sus Imágenes 14 y 15, que no había usado el levantamiento: las dos barcazas, la pasarela y el poste coinciden con el conjunto que se ve en Google z21 y en Esri de febrero de 2026. Huellas medidas de nuevo en Google z21 (0,074 m/píxel): cubierta de la barcaza occidental 5,2 × 6,2 m, de la oriental 3,4 × 5,1 m y de la caseta 5,1 × 5,8 m girada 4,4° (la especificación dice 5,4°); todas quedan a menos de 0,3 m de la especificación. En Esri 2026 el claro al oriente y nororiente de la caseta sí aparece en tierra, donde llega el camino; en Google es bosque. Alturas: en la Imagen 15 (desde una canoa al norte) la cámara se resolvió junto con las alturas de las barcazas: 14 puntos, error medio de 3,7 píxeles. Con las alturas que traía la especificación el mejor ajuste posible deja 12,8 píxeles de error y no logra casar cascos y cubiertas a la vez. Resultado: casco de 0,7 y 0,8 m, borde del alero a 2,7 y 3,0 m, cumbrera a 3,6 y 3,7 m (pendientes de unos 28° en la oriental y 15° en la occidental); el armazón de la oriental va casi hasta el borde del casco (3,05 m de ancho, alero de 0,2 m). En la Imagen 14 (cámara junto a la caseta, a unos 3 m sobre el agua, 68° de campo) las alturas nuevas ajustan mejor que las viejas (1,4 frente a 2,0 píxeles) y el poste de las barcazas mide unos 8,5 m. Con la cámara de 2020 del levantamiento, las alturas nuevas ajustan igual (7,7 frente a 7,9 píxeles), así que esa foto no las contradice. Se corrigieron las alturas, el ancho y la pendiente de las barcazas, la posición y la altura del poste de las barcazas, la altura de las barandas de la pasarela (1,5 m desde el agua) y la cita de las imágenes del informe de 2018. Renders de la verificación: ver1 (antes, Imagen 15: las cubiertas del modelo quedaban 1 m por debajo), ver2 (después, Imagen 15: coinciden cubiertas, cascos y armazones), ver3 y ver7 (Imagen 14, antes y después de subir las barandas), ver5 (órbita de las barcazas) y ver4 y ver6 (órbitas con el proyecto). check_coplanar: sin caras coplanares."
+  }
+}

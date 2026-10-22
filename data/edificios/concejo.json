@@ -1,0 +1,587 @@
+{
+  "id": "concejo",
+  "nombre": "Concejo Municipal de Yondó",
+  "nodo_microrred": null,
+  "direccion": "Carrera 50 # 53-26, esquina nororiental con la Calle 53, frente a la plaza (placas «CARRERA 50», «CALLE 53» y «53-26» en Street View; en la fachada sur, sobre una puerta, otra placa dice «49-34»)",
+  "lat": 7.009454,
+  "lon": -73.909682,
+  "ubicacion": {
+    "confianza": "alta",
+    "metodo": "Verificación independiente (octubre de 2026), con el rumbo real de cada vista. Desde el panorama SozE6dV0WWloYGPIT3IK0w (agosto de 2014, en 7,009248, −73,909704, en la plaza), mirando con rumbo 352° (hacia el norte), se lee en el segundo piso, en el extremo occidental de la fachada sur, «HONORABLE CONCEJO MUNICIPAL – YONDÓ ANT.» con el escudo del municipio. El mismo letrero se ve desde SWcHofwCAza_oyp89P3-mA (rumbo 0°) y SGH9y1j4wQ33pFWHP8qIUw (rumbo 25°), de noviembre de 2013. En la esquina hay placas «CALLE 53» (fachada sur) y «CARRERA 50» (fachada occidental), y junto al portón de la fachada occidental una placa borrosa que se lee 53-26, igual que la ficha de Google «Carrera 50 # 53-26». El edificio ocupa la esquina nororiental de la Carrera 50 con la Calle 53, frente a la plaza. Al triangular las esquinas con siete panoramas, el muro occidental mide 14,3 m y sigue el rumbo 345°, lo mismo que el borde de la cubierta en el satélite. El pin de Google (7,009561, −73,909774) cae 13 m al norte-noroccidente, sobre el vecino de cubierta azul, que es el edificio del cajero Bancolombia (en la evidencia del inventario se mezclaron los dos edificios). La coordenada del inventario por imágenes (7,00945, −73,90965) sí cae sobre la sede. El ancla es el centro de la planta medida en Google. Los contratos del Concejo en SECOP (obras de adecuación en 2018, 2022 y 2023, y compra y mantenimiento de aires acondicionados entre 2018 y 2024) confirman que la corporación tiene instalaciones propias, pero no dan la dirección. Segunda verificación (octubre de 2026): el letrero se volvió a leer con el rumbo real desde SozE6dV0WWloYGPIT3IK0w (rumbo 352) y desde dos panoramas que el levantamiento no había usado, oHUX8R1CqLw3ObZ2liB6UQ (agosto de 2014, rumbo 30–37, desde la esquina de la plaza) e i0PX4ySNLdpzUWEq7V5dRg (noviembre de 2013, rumbo 60): en los tres el letrero y el escudo quedan en el segundo piso de la fachada sur, junto a la esquina suroccidental del edificio blanco con franjas verdes. La ubicación se confirma."
+  },
+  "fuentes": [
+    {
+      "tipo": "street_view",
+      "pano": "SozE6dV0WWloYGPIT3IK0w",
+      "fecha": "2014-08",
+      "rumbo": 352,
+      "nota": "Letrero «HONORABLE CONCEJO MUNICIPAL – YONDÓ ANT.» con escudo, en el segundo piso de la esquina suroccidental (vista con zoom, fov 25)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "SozE6dV0WWloYGPIT3IK0w",
+      "fecha": "2014-08",
+      "rumbo": 12,
+      "nota": "Alzado de la fachada sur (fov 45): banda verde entre pisos a 3,4–3,8 m, ventana del segundo piso a 5,2–6,4 m, cornisa a 6,8–7,2 m, puerta de 2,2 m; pendón de la Policía y aviso «Comisaría de Familia». Con rumbo 6 y fov 70 se hizo una comparación con el modelo."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "SWcHofwCAza_oyp89P3-mA",
+      "fecha": "2013-11",
+      "rumbo": 0,
+      "nota": "Letrero del Concejo y fachada sur con el pendón de la Alcaldía; placas «CALLE 53» (rumbo 328) y «49-34» sobre la puerta de Más Familias en Acción (rumbo 6)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "SGH9y1j4wQ33pFWHP8qIUw",
+      "fecha": "2013-11",
+      "rumbo": 25,
+      "nota": "Esquina suroccidental con las dos fachadas, remate en hastial de la fachada occidental, vecinos y poste de concreto con transformador junto a la esquina sureste. Comparación con el modelo."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "vIXNTZxvNErSCIwhi7McuA",
+      "fecha": "2013-11",
+      "rumbo": 60,
+      "nota": "Fachada occidental de cerca: puerta principal con marco verde, dos medidores de energía en el muro, cartelera con techito y placa «CARRERA 50» (rumbo 74)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "vIXNTZxvNErSCIwhi7McuA",
+      "fecha": "2013-11",
+      "rumbo": 110,
+      "nota": "Esquina suroccidental y plaza al sur, con la galería de mercado al fondo."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "XzNdQsZp3LmqLhrlHn1DsQ",
+      "fecha": "2013-11",
+      "rumbo": 80,
+      "nota": "Alzado de la fachada occidental: cuatro grupos de ventanas en el segundo piso, portón bajo toldo verde, puerta de reja, puerta principal y zócalo oscuro. Con rumbo 75 y pitch 15, el remate en hastial (punto alto a unos 8 m). Comparación con el modelo."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "QfjSVSRuPCbeUcZ_LRYnQA",
+      "fecha": "2013-11",
+      "rumbo": 110,
+      "nota": "Fachada occidental completa desde el norte; placa «53-26» junto al portón (rumbo 102)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "AkgyCwufZT_6DTf2k-7VeQ",
+      "fecha": "2013-11",
+      "rumbo": 115,
+      "nota": "Vecino del norte con el cajero Bancolombia, más adelantado hacia la calle, y la sede detrás."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "cr11P5TrGr3bBogohPblTg",
+      "fecha": "2013-11",
+      "rumbo": 55,
+      "nota": "Esquina desde el suroccidente, al lado de la plaza."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "4hjohqdLNXfgGFdEbHrxhw",
+      "fecha": "2013-11",
+      "rumbo": 290,
+      "nota": "Culata oriental de la sede (pañete gris con moho y ladrillo) que sobresale por encima del vecino azul de un piso."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Google, z20 y z21 (0,148 y 0,074 m por píxel; fecha desconocida, más nítida que Esri)",
+      "nota": "Huella medida aquí, en perfiles de brillo y en un recorte girado al eje: borde sur de la cubierta con rumbo 80°, borde occidental con rumbo 345° (el lote no es rectangular), borde oriental en la culata y borde norte bajo la sombra del vecino. Al norte de la cumbrera se ven objetos oscuros redondos (tanques o equipos)."
+    },
+    {
+      "tipo": "satelite",
+      "fuente": "Esri World Imagery z19 (enero de 2020)",
+      "nota": "Confirma la misma planta y el mismo borde sur; el borde occidental sale unos 0,8 m más al occidente que en Google."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=23-11-13843815",
+      "nota": "SECOP I, contrato de obra 011-2023 del Concejo (diciembre de 2023, 73,6 millones, FMV Ingeniería S.A.S.): obras para la adecuación y mejoramiento de las instalaciones físicas del Concejo. No se pudo abrir el detalle (la página responde 403)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=22-13-13285223",
+      "nota": "SECOP I, septiembre de 2022, 15,8 millones: adecuación y mantenimiento de las instalaciones físicas del Concejo."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-13-7972371",
+      "nota": "SECOP I, marzo de 2018, 8 millones: obra pública para la adecuación del Concejo."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-13-7975168",
+      "nota": "SECOP I, septiembre de 2016, 8,3 millones: impermeabilización, resane y pintura de los muros internos del Concejo."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-13-9723151",
+      "nota": "SECOP I, julio de 2019: mantenimiento y reparación de los aires acondicionados de las instalaciones del Concejo (también en 2018 y 2021)."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=24-13-14259626",
+      "nota": "SECOP I, diciembre de 2024, 10 millones: compra de aire acondicionado para el Concejo (otras compras en octubre y noviembre de 2022 y junio de 2023)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "oHUX8R1CqLw3ObZ2liB6UQ",
+      "fecha": "2014-08",
+      "rumbo": 37,
+      "nota": "Esquina suroccidental vista desde la plaza (no usado en el levantamiento): las dos fachadas, el remate trapezoidal de la Carrera 50, el letrero con escudo, la ventana ancha del extremo oriental del segundo piso y el poste con transformador. Comparación con el modelo (verificación)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "i0PX4ySNLdpzUWEq7V5dRg",
+      "fecha": "2013-11",
+      "rumbo": 60,
+      "nota": "Fachada occidental casi completa y esquina suroccidental (no usado en el levantamiento): el remate sube desde el extremo norte hasta un tramo alto horizontal y baja con un escalón hacia la esquina. Comparación con el modelo (verificación)."
+    },
+    {
+      "tipo": "street_view",
+      "pano": "ofen5rSi7AfscgFYqPh7oQ",
+      "fecha": "2013-11",
+      "rumbo": 307,
+      "nota": "Fachada sur desde el oriente, muy de cerca: puertas de reja, ventana de reja ancha del extremo oriental en el primer piso y ventana ancha encima en el segundo, dos postes (el de alumbrado adelante y el de concreto con caja junto a la esquina sureste) y la culata de ladrillo que asoma sobre el vecino azul."
+    },
+    {
+      "tipo": "web",
+      "url": "https://www.datos.gov.co/resource/jbjy-vk9h.json",
+      "nota": "SECOP II (datos abiertos), contratos del Concejo Municipal de Yondó de mayo de 2025 a agosto de 2026: ocho contratos de apoyo, cafetería, mantenimiento de computadores y papelería; ninguno de obra en la sede ni de aires acondicionados."
+    }
+  ],
+  "volumenes": [
+    {
+      "id": "planta_baja",
+      "nombre": "Primer piso: oficinas con puertas de reja hacia la Carrera 50 y la Calle 53 (en 2013–2014, Comisaría de Familia y Más Familias en Acción)",
+      "centro": [
+        0,
+        0
+      ],
+      "largo": 14.3,
+      "ancho": 12.45,
+      "rumbo_eje": 347.0,
+      "base": 0,
+      "altura_alero": 3.75,
+      "pisos": 1,
+      "techo": {
+        "tipo": "plano",
+        "parapeto": 0,
+        "material": "concreto",
+        "color": "#24696a"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#ecebe7",
+        "zocalo": {
+          "color": "#3d4246",
+          "altura": 1.0
+        },
+        "ventanas": {
+          "tipo": "reja",
+          "ancho": 1.6,
+          "alto": 1.5,
+          "antepecho": 1.1,
+          "separacion": 3.4,
+          "lados": [
+            "S",
+            "O"
+          ]
+        },
+        "puertas": [
+          {
+            "lado": "O",
+            "pos": 0.11,
+            "ancho": 2.9,
+            "alto": 2.6
+          },
+          {
+            "lado": "O",
+            "pos": 0.273,
+            "ancho": 1.0,
+            "alto": 2.2
+          },
+          {
+            "lado": "O",
+            "pos": 0.535,
+            "ancho": 2.0,
+            "alto": 2.35
+          },
+          {
+            "lado": "S",
+            "pos": 0.112,
+            "ancho": 2.1,
+            "alto": 2.3
+          },
+          {
+            "lado": "S",
+            "pos": 0.385,
+            "ancho": 2.0,
+            "alto": 2.3
+          },
+          {
+            "lado": "S",
+            "pos": 0.584,
+            "ancho": 1.9,
+            "alto": 2.25
+          }
+        ]
+      }
+    },
+    {
+      "id": "segundo_piso",
+      "nombre": "Segundo piso, mitad sur: recinto y oficinas del Concejo bajo el faldón sur (largo, de 8,25 m), con el letrero en la esquina suroccidental",
+      "centro": [
+        0.68,
+        -2.95
+      ],
+      "largo": 12.45,
+      "ancho": 8.25,
+      "rumbo_eje": 77.0,
+      "base": 3.75,
+      "altura_alero": 7.0,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "caida": "S",
+        "pendiente": 8.6,
+        "voladizo": 0.35,
+        "material": "fibrocemento",
+        "color": "#b7ada6"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#ecebe7",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 2.7,
+          "alto": 1.15,
+          "antepecho": 1.35,
+          "separacion": 3.0,
+          "lados": [
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "id": "segundo_piso_norte",
+      "nombre": "Segundo piso, mitad norte: oficinas bajo el faldón norte (corto, de 6,05 m), con tanques encima",
+      "centro": [
+        -0.93,
+        4.02
+      ],
+      "largo": 12.45,
+      "ancho": 6.05,
+      "rumbo_eje": 77.0,
+      "base": 3.75,
+      "altura_alero": 7.0,
+      "pisos": 1,
+      "techo": {
+        "tipo": "una_agua",
+        "caida": "N",
+        "pendiente": 11.7,
+        "voladizo": 0.2,
+        "material": "fibrocemento",
+        "color": "#b7ada6"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#ecebe7",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 1.45,
+          "alto": 1.15,
+          "antepecho": 1.35,
+          "separacion": 3.4,
+          "lados": [
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "id": "panel_letrero",
+      "nombre": "Paño de la esquina suroccidental con el letrero del Concejo (segundo piso, unos 2 m al oriente de la esquina)",
+      "centro": [
+        -2.47,
+        -7.95
+      ],
+      "largo": 2.6,
+      "ancho": 0.08,
+      "rumbo_eje": 77.0,
+      "base": 3.9,
+      "altura_alero": 6.3,
+      "pisos": 1,
+      "techo": {
+        "tipo": "ninguno"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#ecebe7",
+        "letrero": {
+          "lado": "S",
+          "texto": "CONCEJO MUNICIPAL",
+          "color": "#3b3a30"
+        }
+      }
+    },
+    {
+      "id": "panel_ventana_sur",
+      "nombre": "Paño delgado con la ventana ancha del extremo oriental del segundo piso en la fachada sur (el generador no pone ventanas sueltas)",
+      "centro": [
+        5.9,
+        -6.02
+      ],
+      "largo": 3.6,
+      "ancho": 0.08,
+      "rumbo_eje": 77.0,
+      "base": 3.9,
+      "altura_alero": 6.6,
+      "pisos": 1,
+      "techo": {
+        "tipo": "ninguno"
+      },
+      "fachada": {
+        "material": "pañete_pintado",
+        "color": "#ecebe7",
+        "ventanas": {
+          "tipo": "ventana",
+          "ancho": 2.4,
+          "alto": 1.15,
+          "antepecho": 1.2,
+          "separacion": 3.0,
+          "lados": [
+            "S"
+          ]
+        }
+      }
+    }
+  ],
+  "elementos": [
+    {
+      "tipo": "poste",
+      "nombre": "Poste de concreto de la red de EPM con transformador, esquina sureste (Calle 53)",
+      "centro": [
+        8.15,
+        -6.28
+      ],
+      "altura": 11
+    },
+    {
+      "tipo": "anden",
+      "poligono": [
+        [
+          -7.67,
+          5.57
+        ],
+        [
+          -8.94,
+          5.27
+        ],
+        [
+          -5.39,
+          -10.12
+        ],
+        [
+          8.99,
+          -6.8
+        ],
+        [
+          8.65,
+          -5.34
+        ],
+        [
+          -4.46,
+          -8.37
+        ]
+      ]
+    },
+    {
+      "tipo": "arbol",
+      "nombre": "Árbol del parque, al occidente de la Carrera 50",
+      "centro": [
+        -14.8,
+        10.6
+      ],
+      "altura": 9,
+      "copa": 7
+    }
+  ],
+  "adecuaciones": {
+    "kwp_plan": null,
+    "fv": [
+      {
+        "volumen": "segundo_piso",
+        "faldon": "S",
+        "filas": 6,
+        "columnas": 5,
+        "orientacion_modulo": "horizontal"
+      }
+    ],
+    "kwp_factible": 16.5,
+    "inversores": {
+      "n": 1,
+      "kw": 15,
+      "volumen": "planta_baja",
+      "lado": "O",
+      "pos": -1.6
+    },
+    "cubierta_nueva": {
+      "material": "termoacustica",
+      "color": "#e9e7e1",
+      "volumenes": [
+        "segundo_piso",
+        "segundo_piso_norte"
+      ]
+    },
+    "domotica": [
+      "medidor bidireccional en la frontera con EPM (hoy hay dos medidores en la fachada de la Carrera 50)",
+      "pasarela IoT (gateway) conectada al Centro de Control Energético y Digital (CCED) de la Alcaldía",
+      "control de los aires acondicionados del recinto y de las oficinas: horario de sesiones, 24 °C como mínimo y apagado con la sala vacía",
+      "sensores de ocupación en el recinto de sesiones, la secretaría y las oficinas del primer piso",
+      "iluminación LED con sensores en salas y pasillos",
+      "apagado programado de computadores, impresoras y equipo de sonido fuera del horario",
+      "monitoreo remoto de la generación solar y del inversor"
+    ],
+    "obras_civiles": [
+      "inspección de la cubierta, que no se ve desde la calle porque la tapan los antepechos: confirmar material, estado de correas y canales, y si hay asbesto",
+      "si es fibrocemento, retiro por personal certificado (Ley 1968 de 2019) y cambio por lámina termoacústica en los dos faldones (unos 205 m² con los aleros: 120 m² el sur y 85 m² el norte) antes del montaje",
+      "revisión estructural de correas y muros de carga para unos 15 kg/m² adicionales en el faldón sur (30 módulos con su estructura, unos 1,2 t) y para el viento",
+      "limpieza e impermeabilización de las canales que quedan detrás de los antepechos y del hastial (en 2016 ya se pagó una impermeabilización)",
+      "acceso seguro a la cubierta (escalera de gato con guarda y punto de anclaje para línea de vida)",
+      "puesta a tierra, protecciones contra sobretensiones (DPS) y pararrayos",
+      "canalización desde el arreglo hasta el inversor, que va en un gabinete metálico con visera y candado junto a los medidores actuales de la fachada de la Carrera 50 (o adentro, en el muro interior del primer piso), y de ahí, enterrada bajo el andén, hasta el tablero con el medidor bidireccional en el extremo oriental de la fachada sur, al lado del poste de la Calle 53",
+      "revisar con EPM la acometida desde el poste con transformador de la esquina sureste y unificar los dos medidores en uno bidireccional"
+    ],
+    "notas": "Esta sede no es un nodo del plan de la microrred (data/microrred.json no la incluye), así que no hay potencia planeada ni baterías. Se deja una propuesta solar del tamaño que cabe, por si la Alcaldía la incluye. La cubierta tiene dos faldones desiguales: la cumbrera va de oriente a occidente unos 1,1 m al norte del centro (se ve en el satélite como una línea a lo ancho de la cubierta y en el remate de la fachada occidental). El faldón sur mira a 167°, mide 12,45 m a lo largo de la cumbrera y 8,25 m en planta (8,34 m en pendiente, a 8,6°). Con 0,5 m de retiro en cada borde quedan 11,45 × 7,34 m útiles: caben 6 filas de módulos acostados (6,78 m) por 5 columnas (11,40 m), 30 módulos de 550 Wp = 16,5 kWp (con los módulos de pie también caben 30: 3 × 10). El faldón norte (6,05 m en planta, 6,18 m en pendiente, a 11,7°) da 5,18 m útiles: cabrían 4 × 5 = 20 módulos más (11 kWp), pero se deja libre porque mira al norte, tiene tanques encima y lo pega el vecino del norte. Ojo con las sombras: el antepecho de la fachada occidental sube hasta unos 0,6 m por encima de la cubierta en la mitad sur y la culata oriental también sobresale; si al inspeccionar la cubierta esas sombras pesan, se quitan las dos columnas de las puntas (6 × 3 = 18 módulos, 9,9 kWp). Con 3,69 kWh por kWp al día, 16,5 kWp darían unos 1.850 kWh al mes, del orden del consumo de una sede de oficinas con varios aires acondicionados (el consumo real se debe tomar de las facturas de EPM). El inversor de 15 kW va junto a los dos medidores actuales, en el muro de la Carrera 50 entre la puerta de reja y la puerta principal; ese muro recibe sol en la tarde, así que necesita gabinete con visera, o puede ir adentro, en el mismo muro. El tablero con el medidor bidireccional y la pasarela IoT quedan en el extremo oriental de la fachada sur, al lado del poste de concreto con transformador de la Calle 53, que es el punto de conexión con la red. No hay parqueadero ni patio (la sede ocupa todo el lote y se estaciona en la calle), así que no se propone marquesina ni cargador de vehículo eléctrico. La cubierta está oculta detrás de antepechos; su material (fibrocemento o zinc) se dedujo del color en el satélite y hay que confirmarlo antes de cualquier montaje."
+  },
+  "incertidumbres": [
+    "Las fotos de Street View son de noviembre de 2013 y agosto de 2014. Después hubo obras de adecuación (2018, 2022 y, la más grande, diciembre de 2023 por 73,6 millones) cuyo alcance no se conoce: los colores, las puertas, las ventanas y los letreros pudieron cambiar. El satélite de Google (más reciente) muestra la misma planta y la misma cubierta clara.",
+    "No se sabe qué dependencias funcionan hoy en el primer piso. En 2013–2014 había una oficina de Más Familias en Acción, la Comisaría de Familia y un pendón de la Estación de Policía en el segundo piso.",
+    "Desfase entre fuentes: al triangular las esquinas desde los panoramas, el edificio queda unos 3,9 m más al norte y 0,5 m más al occidente que en la imagen de Google (error normal de la posición de los panoramas o inclinación de la toma satelital); Esri coincide con Google en el borde sur. La huella respeta el satélite; las comparaciones con fotos se hicieron con una copia del modelo corrida esa distancia (en una carpeta temporal). En la verificación, i0PX (noviembre de 2013) encaja con esa misma corrección; oHUX (agosto de 2014) necesita otra, de unos 4,5–4,9 m al occidente y 1,4–3,1 m al norte.",
+    "El lote no es rectangular: el muro occidental sigue el rumbo 345° y el sur el 80°. El modelo usa un rectángulo con eje a 347° que deja los bordes a menos de 0,45 m de los del satélite.",
+    "El largo de muro a muro (14,3 m) sale de Street View; en el satélite la cubierta mide 15,1 m porque incluye la cornisa del sur (unos 0,35 m) y el borde norte queda bajo la sombra del vecino.",
+    "La cubierta no se ve desde la calle. Se modeló con dos faldones desiguales que se juntan en una cumbrera de oriente a occidente a unos 1,1 m al norte del centro y a 8,25 m: el sur de 8,25 m en planta (8,6°) y el norte de 6,05 m (11,7°). Así lo indican tres cosas: en el satélite de Google hay una línea clara a lo ancho de la cubierta a +0,8 a +1,3 m del centro; en Esri (enero de 2020, sol del sur) la parte sur de esa línea es pareja y más clara que la norte; y el remate de la fachada occidental sube desde el extremo norte hasta 1,2–1,3 m por encima del alero en ese mismo punto. El remate real es trapezoidal: sigue horizontal a esa altura hasta unos 3 m al sur del centro y baja con un escalón a la esquina; en el modelo baja desde la cumbrera, así que en ese tramo queda hasta 0,6 m más bajo que el antepecho real.",
+    "El material de la cubierta (fibrocemento gris claro, #b7ada6 en Google) se dedujo del color y de las líneas de las láminas en el satélite; podría ser zinc. Los objetos oscuros del faldón norte parecen tanques de agua, pero no se pudieron confirmar y no se dibujaron.",
+    "La culata oriental (medianera con el vecino azul de un piso) se ve desde el oriente como un muro de pañete gris y ladrillo que sube recto de sur a norte; no se sabe cuánto sobresale de la cubierta. En el modelo sigue la forma de los dos faldones. Los muros norte y oriental son medianeros: los vecinos no se dibujaron y el modelo les pone zócalo y banda como si fueran fachadas.",
+    "El letrero real forma un arco con el escudo y dice «HONORABLE CONCEJO MUNICIPAL – YONDÓ ANT.»; su centro queda unos 2 m al oriente de la esquina suroccidental. El generador solo escribe una línea recta, por eso se dejó «CONCEJO MUNICIPAL» sobre un paño de 8 cm de espesor en ese lugar; el texto queda algo más alto que el arco real.",
+    "El generador reparte las ventanas de forma simétrica en cada volumen. En la fachada occidental del segundo piso, las dos del faldón sur coinciden con las reales (2,7 m de ancho, centros a 1,5 y 4,5 m al sur del centro); las dos del faldón norte quedan 0,6–0,9 m más al norte que las reales. La ventana ancha del extremo oriental de la fachada sur se agregó sobre un paño delgado. Faltan la ventana abatible junto a la esquina suroccidental, las dos ventanitas de celosía encima del letrero, las pilastras verdes, el toldo verde sobre el portón y la cartelera con techito; en el primer piso las ventanas de reja quedan de 1,6 m (las reales miden unos 2 m en la Carrera 50 y 3 m en la Calle 53). Las puertas reales son de reja metálica negra; el generador las dibuja de madera.",
+    "Alturas: en la vista de frente de la fachada occidental (XzNd), tomando como escala su largo en el satélite, el remate queda a 6,7–7,3 m en los extremos, la banda verde a 3,5–3,9 m, las ventanas del segundo piso a 5,1–6,2 m y el tramo alto del remate 1,2–1,3 m por encima de los extremos. Con las posiciones de los panoramas resueltas solo con las esquinas, las vistas oblicuas (oHUX e i0PX) dan 5,9–6,2 m en la esquina suroccidental; con la corrección de posición de la ronda de 2013 (3,9 m al norte) dan 7,0–7,2 m. Se dejó el alero a 7,0 m; el rango real probable es 6,2–7,2 m. Los panoramas de 2013–2014 están corridos entre 2 y 5 m y algunos tienen errores de rumbo y de inclinación de 1–2°.",
+    "Los medidores de energía están en la fachada occidental; no se sabe dónde está el tablero general ni cómo llega la acometida desde el poste con transformador de la esquina sureste.",
+    "El poste se ubicó por triangulación desde dos panoramas (±1 m); su altura (11 m) es estimada.",
+    "No se encontraron fotos recientes en la web ni la dirección en la página de la Alcaldía; el detalle de los contratos de SECOP I no se pudo abrir (403).",
+    "Las fotos de Street View son de 2013–2014; en SECOP II no aparecen obras en la sede ni compras de aires entre mayo de 2025 y agosto de 2026, así que lo que cambió viene de las obras de 2018–2023."
+  ],
+  "verificacion": {
+    "trace": "data/geo/img/concejo_trace.png",
+    "satelite": [
+      "data/geo/img/concejo_gtrace.png",
+      "data/geo/img/concejo_gtrace_esri.png",
+      "data/geo/img/concejo_g21_rot.png",
+      "data/geo/img/concejo_g21_fine.png",
+      "data/geo/img/concejo_g21_grid.png",
+      "data/geo/img/concejo_e19_fine.png",
+      "data/geo/img/concejo_panos_g20.png",
+      "data/geo/img/concejo_ver_gtrace21.png",
+      "data/geo/img/concejo_ver_gtrace20.png"
+    ],
+    "vistas": [
+      "data/geo/img/concejo_v_soze_letrero.jpg",
+      "data/geo/img/concejo_v_soze_0.jpg",
+      "data/geo/img/concejo_sv_soze_alzado.jpg",
+      "data/geo/img/concejo_v_swch_0.jpg",
+      "data/geo/img/concejo_v_swch_placa.jpg",
+      "data/geo/img/concejo_v_swch_placa2.jpg",
+      "data/geo/img/concejo_v_sgh9_25.jpg",
+      "data/geo/img/concejo_v_vixn_60.jpg",
+      "data/geo/img/concejo_v_vixn_110.jpg",
+      "data/geo/img/concejo_sv_vixn_placa.jpg",
+      "data/geo/img/concejo_v_xznd_80.jpg",
+      "data/geo/img/concejo_v_xznd_top.jpg",
+      "data/geo/img/concejo_v_qfjs_110.jpg",
+      "data/geo/img/concejo_sv_qfjs_placa.jpg",
+      "data/geo/img/concejo_v_akgy_115.jpg",
+      "data/geo/img/concejo_v_cr11_55.jpg",
+      "data/geo/img/concejo_v_4hjo_290z.jpg",
+      "data/geo/img/concejo_ver_soze_letrero.jpg",
+      "data/geo/img/concejo_ver_ohux_37.jpg",
+      "data/geo/img/concejo_ver_ohux_30z.jpg",
+      "data/geo/img/concejo_ver_i0px_60.jpg",
+      "data/geo/img/concejo_ver_ofen_307.jpg",
+      "data/geo/img/concejo_ver_xznd_75w.jpg",
+      "data/geo/img/concejo_ver_qfjs_125.jpg",
+      "data/geo/img/concejo_ver_6ozj_137.jpg"
+    ],
+    "comparaciones": [
+      {
+        "imagen": "data/geo/img/concejo_cmp1_sgh9_comparacion.png",
+        "pano": "SGH9y1j4wQ33pFWHP8qIUw",
+        "rumbo": 25,
+        "pitch": 8,
+        "fov": 80,
+        "nota": "Primera versión (copia corrida 3,5 m al norte): el segundo piso salía de solo 2,2 m porque «altura_alero» se había dado desde la base del volumen y el generador la toma desde el suelo; se corrigió a 7,0 m absolutos."
+      },
+      {
+        "imagen": "data/geo/img/concejo_cmp2_xznd_comparacion.png",
+        "pano": "XzNdQsZp3LmqLhrlHn1DsQ",
+        "rumbo": 80,
+        "pitch": 8,
+        "fov": 80,
+        "nota": "Primera versión: hastial y ventanas bajos (mismo error); la fachada occidental del modelo salía 1,4 m más larga hacia el sur. Se acortó el muro a 14,3 m (lo que miden los panoramas) y se dejó la cornisa como alero de 0,35 m."
+      },
+      {
+        "imagen": "data/geo/img/concejo_cmp3_sgh9_mezcla.png",
+        "pano": "SGH9y1j4wQ33pFWHP8qIUw",
+        "rumbo": 25,
+        "pitch": 8,
+        "fov": 80,
+        "nota": "Verificación (copia corrida 3,9 m al norte y 0,5 m al occidente): coinciden el alero a 7,0 m, la banda verde entre pisos, el hastial occidental, las puertas de la fachada sur y el poste; el modelo queda unos 3° a la derecha, dentro del error de rumbo de ese panorama."
+      },
+      {
+        "imagen": "data/geo/img/concejo_cmp4_soze_mezcla.png",
+        "pano": "SozE6dV0WWloYGPIT3IK0w",
+        "rumbo": 6,
+        "pitch": 8,
+        "fov": 70,
+        "nota": "Verificación de la fachada sur (copia corrida): coinciden el ancho (12,45 m), el alero, la banda verde, las tres puertas, la ventana de reja del extremo oriental y el poste; el letrero queda en el mismo paño, algo más alto que el arco real. Falta la ventana del segundo piso del extremo oriental."
+      },
+      {
+        "imagen": "data/geo/img/concejo_cmp5_xznd_mezcla.png",
+        "pano": "XzNdQsZp3LmqLhrlHn1DsQ",
+        "rumbo": 80,
+        "pitch": 8,
+        "fov": 80,
+        "nota": "Verificación final de la fachada occidental: coinciden el punto alto del hastial (≈8 m), el portón, la puerta de reja, la puerta principal y la ventana de reja sobre la cartelera; las ventanas del segundo piso quedan unos 0,3 m altas y el extremo sur sale ≈1 m más allá, por el error de posición de ese panorama."
+      },
+      {
+        "imagen": "data/geo/img/concejo_ver_cmp_i0px_mezcla.png",
+        "pano": "i0PX4ySNLdpzUWEq7V5dRg",
+        "rumbo": 58.35,
+        "pitch": 11.56,
+        "fov": 70,
+        "nota": "Verificación con un panorama nuevo (copia del modelo corrida 3,9 m al norte y 0,5 m al occidente; rumbo y pitch corregidos 1,65° y 1,56° para que casen la esquina y el piso). Con los faldones desiguales, la cumbrera del modelo cae justo donde empieza el tramo alto del remate real; coinciden la esquina suroccidental, el alero, la banda, el zócalo, la puerta principal y las ventanas del faldón sur. El poste del modelo queda unos 1,3 m al occidente del real."
+      },
+      {
+        "imagen": "data/geo/img/concejo_ver_cmp_ohux_mezcla.png",
+        "pano": "oHUX8R1CqLw3ObZ2liB6UQ",
+        "rumbo": 33.0,
+        "pitch": 8.6,
+        "fov": 80,
+        "nota": "Verificación con un panorama nuevo (copia corrida 4,9 m al occidente y 3,1 m al norte; rumbo corregido 4°). Coinciden la fachada sur completa (esquinas, alero, banda, zócalo, puertas), la ventana ancha del extremo oriental agregada en el segundo piso y el poste; el letrero queda en el mismo paño. En la fachada occidental el modelo sale algo corto hacia el norte por la posición dudosa de este panorama."
+      }
+    ],
+    "orbitas": [
+      "data/geo/img/concejo_orbita_todo.png",
+      "data/geo/img/concejo_orbita_todo_se.png",
+      "data/geo/img/concejo_orbita_todo_so.png",
+      "data/geo/img/concejo_ver_orbita_todo_so.png",
+      "data/geo/img/concejo_ver_orbita_ne.png"
+    ],
+    "nota": "Levantamiento de octubre de 2026. La huella se midió en Google z21 (perfiles de brillo y recorte girado al eje) y se revisó en dos vueltas: primero con los bordes de cubierta (15,15 × 12,63 m) y luego con los muros (14,3 × 12,45 m) más un alero de 0,35 m, que deja la cubierta a menos de 0,45 m de los bordes del satélite salvo en la esquina suroccidental, que en la imagen sale redondeada. Las comparaciones con fotos usan copias del modelo con el ancla corrida para compensar el desfase entre la imagen satelital y los panoramas; las órbitas usan el modelo real. En la órbita con el proyecto, los 20 módulos quedan apoyados sobre el faldón sur con sus rieles, sin flotar ni atravesar la cubierta. check_coplanar: sin caras coplanares. Segunda verificación (octubre de 2026): huella medida otra vez en Google z21 con perfiles de brillo en el eje del edificio: cubierta de −6,5 a +6,5 m (oriente–occidente) y de −7,65 a +7,3 m (norte–sur), a menos de 0,25 m del modelo con aleros, y bordes a 345,6° y 78–80°, a menos de 2° del eje. Se encontró la cumbrera corrida al norte y se partió el segundo piso en dos volúmenes de una agua; se movió el letrero 0,7 m al oriente, se agregó la ventana ancha del extremo oriental de la fachada sur y se bajaron 5 cm las ventanas del segundo piso. Con el faldón sur más largo caben 30 módulos (16,5 kWp). check_coplanar: sin caras coplanares."
+  }
+}

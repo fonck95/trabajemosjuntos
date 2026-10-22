@@ -1,0 +1,391 @@
+{
+ "id": "aguas_aseo_sede",
+ "nombre": "Sede administrativa de Aguas y Aseo de Yondó S.A. E.S.P.",
+ "nodo_microrred": null,
+ "direccion": "Carrera 53 # 50-79, barrio Jorge Eliécer Gaitán (dirección oficial en la evaluación de la Superservicios de 2018 y 2020 y en una certificación de la empresa de enero de 2025). Costado occidental de la Carrera 53, entre las calles 50 y 51, unos 20 m al sur de la Iglesia Pentecostal Unida de Colombia, que ocupa la esquina con la Calle 51.",
+ "lat": 7.008179,
+ "lon": -73.91078,
+ "ubicacion": {
+  "confianza": "alta",
+  "metodo": "Segunda verificación independiente (octubre de 2026), con el rumbo real de cada vista y con cuatro panoramas de noviembre de 2013. Desde lZbyWbODXtAs0-3qxHVnLw, en la Carrera 53 justo enfrente de la sede (no aparece en el catálogo de cobertura y se encontró consultando Street View por coordenadas), mirando al occidente (rumbo 268°), se lee de frente la valla «EMPRESA DE SERVICIOS PÚBLICOS DOMICILIARIOS DE ACUEDUCTO, ALCANTARILLADO Y ASEO DE YONDÓ E.S.P. – Cambiamos para servir a la comunidad Yondosina», con el logo «E.S.P.», delante de una casa blanca de un piso con corredor de columnas metálicas verdes. La casa amarilla «FAMA LAS TRES NIÑAS» queda al sur y la casa blanca con el árbol al norte. La misma sede se ve desde zPOAhn1SxhNRpNsNzvqpFA (12 m más al sur, también fuera del catálogo), desde mSFZlbw67oRLx3radflEFg y desde 37narLhMibSP1P0d7MShQA. Con rayos desde lZby, mSFZ y zPOA se triangularon las cinco columnas del corredor, la puerta, dos ventanas y el poste del sur; los tres panoramas coinciden con diferencias menores de 0,5°. En el mismo marco de coordenadas se triangularon la fachada y la esquina nororiental de la iglesia (37na y EmCy), y caen sobre el borde de cubierta de la iglesia en el satélite de Esri de 2020: Esri y la posición GPS de los panoramas coinciden a menos de 1 m. La imagen de Google queda unos 1,6 m al occidente de Esri (correlación de las dos imágenes). La dirección oficial no cambió entre 2018 y 2025 y cae en esta cuadra. El ancla es el centro de la planta del bloque de oficinas medida en el marco de Esri y de Street View; se corrió 0,5 m respecto a la del levantamiento porque la fachada y el borde de atrás se movieron. La confianza es alta por la valla y la dirección; la única duda es que no hay fotos de calle posteriores a 2013."
+ },
+ "fuentes": [
+  {
+   "tipo": "street_view",
+   "pano": "mSFZlbw67oRLx3radflEFg",
+   "fecha": "2013-11",
+   "rumbo": 202,
+   "nota": "Aviso de la empresa leído con zoom (fov 16): «EMPRESA DE SERVICIOS PÚBLICOS DOMICILIARIOS DE ACUEDUCTO, ALCANTARILLADO Y ASEO DE YONDÓ E.S.P.» y «Cambiamos para servir a la comunidad Yondosina». Con rumbo 195 y 197 (fov 60 y 45) se ve el aviso con la calle a la izquierda, la cubierta de fibrocemento y la casa amarilla del sur con el aviso «FAMA LAS TRES NIÑAS» más adelante."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "mSFZlbw67oRLx3radflEFg",
+   "fecha": "2013-11",
+   "rumbo": 215,
+   "nota": "Vista general (fov 95, pitch 4): corredor sobre la cuneta con columnas metálicas verdes, alero del corredor a unos 2,2 m, cubierta de fibrocemento del corredor que sube hasta la fachada (unos 3,0–3,1 m) sin nada visible detrás, y poste de la red pintado de amarillo y negro en la esquina norte. Las comparaciones aguas_aseo_sede_cmp215 y 215b son del modelo anterior."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "mSFZlbw67oRLx3radflEFg",
+   "fecha": "2013-11",
+   "rumbo": 228,
+   "nota": "Alzado de la fachada (fov 64, pitch 0): muro blanco con manchas, ventanas con reja de marco blanco, puerta de entrada y tablero blanco bajo la viga del corredor. Las comparaciones aguas_aseo_sede_cmp228, 228b y 228c son del modelo anterior (corredor de 8,35 m con cuatro columnas). La verificación encontró cinco columnas cada 2,4 m en 9,7 m."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "mSFZlbw67oRLx3radflEFg",
+   "fecha": "2013-11",
+   "rumbo": 238,
+   "nota": "Extremo norte (fov 40): borde lateral de la lámina del corredor (unos 13° a 16° medidos en este borde), poste de la red y dos ménsulas negras. Las ménsulas están en la fachada, al fondo del extremo norte del corredor, que es abierto (se comprobó desde 37na y lZby). La casa vecina del norte tiene un medidor en su fachada."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "mSFZlbw67oRLx3radflEFg",
+   "fecha": "2013-11",
+   "rumbo": 250,
+   "nota": "Árbol de copa baja y ancha frente a la casa vecina del norte, junto al poste."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "37narLhMibSP1P0d7MShQA",
+   "fecha": "2013-11",
+   "rumbo": 205,
+   "nota": "Orden de los predios desde el norte: iglesia pentecostal, casa con reja, casa blanca con árbol y la sede con su corredor verde; con rumbo 198 (fov 40), puerta clara y ventana con reja bajo el corredor."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "37narLhMibSP1P0d7MShQA",
+   "fecha": "2013-11",
+   "rumbo": 203,
+   "nota": "Comparación con el modelo desde el norte (fov 60): columnas y alero del corredor coinciden; el árbol del modelo salía 1 m más alto que el real (copa entre 2,5 y 5 m) y se corrigió; el poste se trianguló con este panorama y con mSFZ: queda medio metro al norte de la esquina del corredor, sobre el borde del andén."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "37narLhMibSP1P0d7MShQA",
+   "fecha": "2013-11",
+   "rumbo": 255,
+   "nota": "Iglesia Pentecostal Unida de Colombia, en la esquina con la Calle 51 (referencia del extremo norte de la cuadra)."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "-JcMGm_Ec7xK7gvCqhwrHQ",
+   "fecha": "2013-11",
+   "rumbo": 345,
+   "nota": "Desde el sur, los árboles del andén tapan la sede."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "lZbyWbODXtAs0-3qxHVnLw",
+   "fecha": "2013-11",
+   "rumbo": 268,
+   "nota": "Vista de frente desde la calle (fov 95): valla de la empresa legible, cinco columnas verdes del corredor (rumbos 254,5°, 276,3°, 294,4°, 308,2° y 317,7°), puerta de entrada abierta, ventanas con reja y medidor de energía en la fachada, junto a la primera columna del sur (rumbo 256,7°, a unos 1,5 m de altura). Comparación con el modelo corregido: aguas_aseo_sede_v_cmp_lzby268b (columnas, alero, borde superior y puerta coinciden; la ventana al sur de la puerta no se dibuja)."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "lZbyWbODXtAs0-3qxHVnLw",
+   "fecha": "2013-11",
+   "rumbo": 265,
+   "nota": "Con zoom (fov 26) se cuentan las ondas de la teja del corredor entre la primera y la segunda columna: 13 ondas, unos 2,2 m, lo que confirma la escala del levantamiento (±10 %)."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "lZbyWbODXtAs0-3qxHVnLw",
+   "fecha": "2013-11",
+   "rumbo": 310,
+   "nota": "Extremo norte: la última columna está junto al poste; detrás se ve la fachada de la casa blanca vecina con su ventana de reja y su porche de baldosa roja. El corredor de la sede no tiene muro en ese extremo."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "zPOAhn1SxhNRpNsNzvqpFA",
+   "fecha": "2013-11",
+   "rumbo": 320,
+   "nota": "Desde el sur (fov 70): casa amarilla, aviso «FAMA LAS TRES NIÑAS», corredor de la sede con su viga verde y, a través del lado sur abierto, la puerta (rumbo 315°) y una ventana (318–319°) de la fachada. Se ve una condensadora de aire acondicionado hacia la esquina suroriental (rumbo 308–311°). Comparación: aguas_aseo_sede_v_cmp_zpoa320."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "37narLhMibSP1P0d7MShQA",
+   "fecha": "2013-11",
+   "rumbo": 196,
+   "nota": "Desde el norte, a través del extremo norte del corredor, se ven la puerta y una ventana de la fachada: ese extremo está abierto. Comparación: aguas_aseo_sede_v_cmp_37n196 (columnas, poste y árbol coinciden)."
+  },
+  {
+   "tipo": "street_view",
+   "pano": "mSFZlbw67oRLx3radflEFg",
+   "fecha": "2013-11",
+   "rumbo": 215,
+   "nota": "Comparación con el modelo corregido: aguas_aseo_sede_v_cmp_m215. Las cinco columnas, la puerta y las dos ventanas del norte coinciden con la foto; el modelo anterior tenía cuatro columnas."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Google, z20 (0,148 m por píxel; fecha desconocida, más reciente y nítida que Esri)",
+   "nota": "Marco de referencia de esta especificación: coincide con la posición GPS de los panoramas (la fachada de la iglesia triangulada desde 37na y EmCy cae sobre su borde de cubierta). Planta: cubierta gris (#7f807c) entre una línea clara a u ≈ −7,7 m (borde de atrás) y la fachada; franja muy clara a lo largo de la calle, sobre el corredor y la cuneta. Se dejó el muro de atrás en u = −7,4 m."
+  },
+  {
+   "tipo": "satelite",
+   "fuente": "Esri World Imagery z19 (enero de 2020)",
+   "nota": "Marco de referencia de esta especificación: coincide con la posición GPS de los panoramas (la fachada de la iglesia triangulada desde 37na y EmCy cae sobre su borde de cubierta). Planta: cubierta gris (#7f807c) entre una línea clara a u ≈ −7,7 m (borde de atrás) y la fachada; franja muy clara a lo largo de la calle, sobre el corredor y la cuneta. Se dejó el muro de atrás en u = −7,4 m."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/ei_yondo_ok1.pdf",
+   "nota": "Evaluación integral de la Superservicios (2018): dirección Carrera 53 # 50-79."
+  },
+  {
+   "tipo": "web",
+   "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
+   "nota": "Evaluación integral de la Superservicios (septiembre de 2020): la empresa es mixta, presta acueducto, alcantarillado y aseo a más de 2.500 suscriptores; misma dirección."
+  },
+  {
+   "tipo": "web",
+   "url": "https://antioquia.gov.co/images/PDF2/Planeacion/OCAD-SecretariaPlaneacion/2025/Aprobacion-de-ajustes/Regional/Documentos%20aprobacion%20ajuste%20-%202023058930018%20-%20Acueducto%20Jose%20Oliveros%20Yondo/5.%20Certificado%20no%20ejecucion%20cambios%20-%202023058930018.pdf",
+   "nota": "Certificación firmada por la empresa (enero de 2025) con membrete «Cra. 53 No. 50-79 Barrio Jorge Eliecer Gaitán – Yondó», NIT 811.021.151-6: la dirección sigue vigente."
+  },
+  {
+   "tipo": "web",
+   "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9070633&isFromPublicArea=True&isModal=true&asPopupView=true",
+   "nota": "SECOP II, contrato hasta mayo de 2025, 8 millones: mantenimiento preventivo y correctivo de los aires acondicionados, computadores, impresoras y cámaras de la sede administrativa."
+  },
+  {
+   "tipo": "web",
+   "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9104744&isFromPublicArea=True&isModal=true&asPopupView=true",
+   "nota": "SECOP II, contrato hasta marzo de 2025, 4,05 millones: compra de un aire acondicionado para la empresa."
+  },
+  {
+   "tipo": "web",
+   "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4394444&isFromPublicArea=True&isModal=true&asPopupView=true",
+   "nota": "SECOP II, contrato hasta noviembre de 2022, 3,7 millones: mantenimiento de los aires acondicionados y antivirus de los computadores."
+  }
+ ],
+ "volumenes": [
+  {
+   "id": "oficinas",
+   "nombre": "Oficinas, caja y atención al usuario",
+   "centro": [
+    0.0,
+    -0.04
+   ],
+   "largo": 15.55,
+   "ancho": 9.7,
+   "rumbo_eje": 78,
+   "base": 0,
+   "altura_alero": 3.1,
+   "pisos": 1,
+   "techo": {
+    "tipo": "dos_aguas",
+    "pendiente": 3.5,
+    "cumbrera": "corto",
+    "voladizo": 0.3,
+    "material": "fibrocemento",
+    "color": "#7d7470"
+   },
+   "fachada": {
+    "material": "pañete_pintado",
+    "color": "#e6e0cf",
+    "ventanas": {
+     "tipo": "reja",
+     "ancho": 1.0,
+     "alto": 1.0,
+     "antepecho": 1.1,
+     "separacion": 2.6,
+     "lados": [
+      "E"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "E",
+      "pos": 0.341,
+      "ancho": 1.0,
+      "alto": 2.1
+     }
+    ],
+    "letrero": {
+     "lado": "E",
+     "texto": "ACUEDUCTO Y ASEO",
+     "color": "#1f5e46"
+    }
+   }
+  },
+  {
+   "id": "corredor",
+   "nombre": "Corredor de entrada sobre la cuneta, con columnas metálicas verdes",
+   "centro": [
+    9.4,
+    1.96
+   ],
+   "largo": 9.7,
+   "ancho": 3.68,
+   "rumbo_eje": 348,
+   "abierto": true,
+   "sep_columnas": 2.5,
+   "columna": 0.12,
+   "altura_alero": 2.2,
+   "techo": {
+    "tipo": "una_agua",
+    "caida": "E",
+    "pendiente": 13,
+    "voladizo": 0.3,
+    "material": "fibrocemento",
+    "color": "#7d7470"
+   },
+   "fachada": {
+    "material": "metal",
+    "color": "#2e6a3c"
+   }
+  }
+ ],
+ "elementos": [
+  {
+   "tipo": "poste",
+   "nombre": "poste de la red frente a la esquina norte de la sede (base pintada de amarillo y negro)",
+   "centro": [
+    9.83,
+    7.78
+   ],
+   "altura": 9
+  },
+  {
+   "tipo": "poste",
+   "nombre": "poste de concreto de la red con luminaria y caja de derivación, frente a la casa amarilla del sur (triangulado desde lZby y zPOA)",
+   "centro": [
+    12.86,
+    -9.47
+   ],
+   "altura": 9
+  },
+  {
+   "tipo": "arbol",
+   "nombre": "árbol de copa baja frente a la casa vecina del norte",
+   "centro": [
+    8.66,
+    9.62
+   ],
+   "altura": 4.6,
+   "copa": 6.0
+  },
+  {
+   "tipo": "anden",
+   "nombre": "andén y losas sobre la cuneta, frente al corredor",
+   "poligono": [
+    [
+     12.21,
+     -2.4
+    ],
+    [
+     10.19,
+     7.08
+    ],
+    [
+     11.34,
+     7.33
+    ],
+    [
+     13.36,
+     -2.16
+    ]
+   ]
+  }
+ ],
+ "adecuaciones": {
+  "kwp_plan": null,
+  "fv": [
+   {
+    "volumen": "oficinas",
+    "faldon": "O",
+    "filas": 6,
+    "columnas": 3,
+    "orientacion_modulo": "horizontal"
+   }
+  ],
+  "kwp_factible": 9.9,
+  "inversores": {
+   "n": 1,
+   "kw": 8,
+   "volumen": "oficinas",
+   "lado": "E",
+   "pos": 3.8
+  },
+  "cubierta_nueva": {
+   "material": "termoacustica",
+   "color": "#e9e7e1",
+   "volumenes": [
+    "oficinas",
+    "corredor"
+   ]
+  },
+  "domotica": [
+   "medidor bidireccional en lugar del medidor actual, que está en la fachada, bajo el corredor, junto a la primera columna del sur (se ve en Street View de 2013 a unos 1,5 m de altura); al lado va el tablero nuevo",
+   "pasarela IoT (gateway) conectada al Centro de Control Energético y Digital (CCED) de la Alcaldía, para ver la sede junto con la PTAP y las estaciones de bombeo que opera la misma empresa",
+   "control de los aires acondicionados de las oficinas (la empresa compró uno en 2025 y paga su mantenimiento): horario de atención, 24 °C como mínimo y apagado con la oficina vacía",
+   "sensores de ocupación en las oficinas y en la sala de atención al usuario",
+   "iluminación LED con sensores en oficinas y corredor",
+   "apagado programado de computadores, impresoras y cámaras fuera del horario (las cámaras de seguridad quedan en el circuito respaldado)",
+   "monitoreo remoto de la generación solar y del inversor"
+  ],
+  "obras_civiles": [
+   "retiro de la cubierta de fibrocemento del bloque de oficinas y del corredor (unos 167 m² en el bloque y 42 m² en el corredor, con los aleros) por personal certificado, porque las láminas anteriores a la Ley 1968 de 2019 pueden tener asbesto, y cambio por lámina termoacústica antes del montaje",
+   "revisión de correas y muros de carga para unos 15 kg/m² adicionales y el viento; con una pendiente tan baja (unos 3,5°) conviene que la nueva cubierta lleve traslapos sellados",
+   "acceso seguro a la cubierta: la sede está entre medianeras, así que se sube por el patio de atrás con escalera y punto de anclaje para línea de vida",
+   "puesta a tierra, protecciones contra sobretensiones (DPS) y pararrayos",
+   "canalización desde el arreglo, por la cubierta, hasta el inversor, que va en la fachada, en el extremo norte del corredor (a la sombra todo el día, porque el corredor tiene 3,7 m de fondo); de ahí, una bandeja bajo el corredor lleva la salida hasta el tablero nuevo, junto al medidor actual, en el extremo sur",
+   "revisar con EPM cuál de los dos postes de la calle alimenta la sede (el del norte, junto a la última columna, o el del sur, con luminaria y caja de derivación); el generador dibuja la acometida desde el del norte porque es el más cercano a un muro"
+  ],
+  "notas": "Esta sede no es un nodo del plan de la microrred (data/microrred.json no la incluye), así que no hay potencia planeada ni baterías. Se deja una propuesta del tamaño que cabe sin sombras, por si la Alcaldía o la empresa la incluyen. La cubierta del bloque de oficinas es a dos aguas con la cumbrera paralela a la calle y una pendiente de unos 3,5°. Cada faldón mide 9,7 m a lo largo de la cumbrera y 7,78 m de ancho en planta (7,79 m en pendiente). Con retiros de 0,5 m quedan 8,7 m de largo útil y 6,79 m de ancho inclinado útil. Con módulos acostados (2,28 m a lo largo de la cumbrera y 1,13 m en la pendiente) caben 3 columnas (6,84 m) y 6 filas (6,78 m): 18 módulos de 550 Wp = 9,9 kWp. Las 6 filas llenan casi todo el ancho útil; con las juntas de 5 cm el arreglo se acerca 12 cm más a los bordes, y en obra se puede dejar en 5 filas (8,25 kWp) si el instalador pide más retiro. Se elige el faldón occidental (el de atrás) porque no se ve desde la calle, el árbol del andén no lo sombrea en la mañana y recibe el sol de la tarde, cuando más trabajan los aires. Producción esperada: 9,9 kWp × 3,69 kWh/kWp·día ≈ 1.110 kWh/mes, del orden del consumo de una oficina de este tamaño con varios aires (no se encontraron facturas). El faldón de la calle admite otros 18 módulos (19,8 kWp en total) si el consumo real lo justifica. Un inversor de 8 kW basta para 9,9 kWp (relación de 1,24). El corredor no sirve para paneles: es inclinado (unos 13°), está bajo el alero del bloque y la gente se para debajo. No hay parqueadero (las motos se parquean en el corredor), así que no se propone cargador de vehículo eléctrico; los vehículos de la empresa se guardan en otro sitio que no se ubicó. Las baterías del acueducto están en el nodo de la PTAP. El levantamiento anterior proponía 21 módulos (11,55 kWp) porque tomaba la fachada 1,1 m más adelante y el bloque 3,1 m más profundo; con la planta corregida caben 18."
+ },
+ "incertidumbres": [
+  "Las fotos de calle son de noviembre de 2013; no hay vistas posteriores. La sede pudo cambiar de fachada, de color, de aviso o de cubierta. El satélite de Esri de 2020 muestra la misma planta, con una franja muy clara a lo largo de la calle que puede ser el corredor con lámina nueva o el andén.",
+  "La dirección oficial no cambió entre 2018 y 2025 y cae en esta cuadra, pero no hay una foto reciente que muestre la empresa en este predio.",
+  "La casa amarilla vecina del sur queda detrás de la mitad de la valla; podría ser parte de la sede (por ejemplo, para archivo o bodega). Se modeló solo la casa blanca con el corredor verde.",
+  "El borde de atrás del bloque (15,55 m de fondo desde la fachada) sale de una línea clara en el satélite de Esri; desde la calle no se ve. Puede haber un patio o cuartos más bajos al fondo. El levantamiento había medido 18,7 m porque tomó la línea en la imagen de Google, que está corrida 1,6 m, y la fachada 1,1 m más adelante.",
+  "La pendiente de la cubierta principal (unos 3,5°) y la cumbrera paralela a la calle se dedujeron del satélite y de que la cubierta no asoma por encima del corredor. La del corredor (13°) sale del alero (2,15–2,2 m) y del borde superior visible en la fachada (3,0–3,1 m); en el borde lateral se midieron entre 13° y 16°.",
+  "La escala horizontal de la triangulación depende de la distancia GPS entre panoramas: el conteo de ondas de la teja la confirma, pero las alturas medidas con el ángulo hacia el suelo dan distancias entre 10 % y 15 % menores. El horizonte de las fotos está aproximadamente 1° más bajo que el centro de la imagen, por eso el modelo sale un poco más alto en las comparaciones.",
+  "Las columnas reales no quedan igual de separadas (2,1 a 2,6 m, de sur a norte); el modelo las reparte cada 2,4 m.",
+  "La fachada tiene tres ventanas con reja (una al sur de la puerta y dos al norte). El generador reparte las ventanas a la misma distancia; para que coincidan la puerta y las dos ventanas del norte y quede muro libre para el tablero nuevo junto al medidor actual, no se dibuja la ventana del sur.",
+  "La puerta principal (1,0 × 2,1 m) se ve en parte detrás de una columna; las ventanas son de unos 0,9–1,0 m de ancho y tienen el dintel tapado por el tablero blanco del corredor.",
+  "El color de los muros (#e6e0cf) es el blanco con manchas de la foto llevado a su valor sin sombra; en la foto, bajo el corredor y con cielo nublado, se muestrea #53544f. La cubierta se muestrea #6a645d en la foto y #737c84 en Google. El muro sur, por encima de la cubierta de la casa amarilla, parece de ladrillo sin pañetar; el generador lo dibuja del mismo color de la fachada.",
+  "El aviso real es una valla independiente sobre la viga del corredor y dos postes; el generador no tiene ese elemento, así que en la fachada, bajo el corredor, se escribe solo «ACUEDUCTO Y ASEO», que cabe en el ancho del muro.",
+  "El piso del corredor está unos 0,35 m por encima de la calle; el modelo lo deja a la altura estándar de corredores.",
+  "Se ve una condensadora de aire acondicionado hacia la esquina suroriental (desde zPOA), pero no se pudo fijar si está en la fachada o en el muro sur; no se modeló. Los contratos de SECOP confirman que la sede tiene aires.",
+  "No se sabe cuál de los dos postes alimenta el medidor; el cable del medidor sube hacia el corredor. El generador conecta al poste del norte, el más cercano a un muro.",
+  "El material actual de la cubierta pudo cambiar después de 2013; hay que confirmarlo en la visita antes de presupuestar el cambio."
+ ],
+ "verificacion": {
+  "trace": "data/geo/img/aguas_aseo_sede_trace.png",
+  "trace_esri_grande": "data/geo/img/aguas_aseo_sede_v_etrace.png",
+  "trace_google_levantamiento": "data/geo/img/aguas_aseo_sede_gtrace.png",
+  "recortes_girados": [
+   "data/geo/img/aguas_aseo_sede_uv_g20.png",
+   "data/geo/img/aguas_aseo_sede_uv_e19.png"
+  ],
+  "vistas": [
+   "data/geo/img/aguas_aseo_sede_v_lzby_268.jpg",
+   "data/geo/img/aguas_aseo_sede_v_lzby_300.jpg",
+   "data/geo/img/aguas_aseo_sede_v_lzby_285z.jpg",
+   "data/geo/img/aguas_aseo_sede_v_lzby_250z.jpg",
+   "data/geo/img/aguas_aseo_sede_v_zpoa_315.jpg",
+   "data/geo/img/aguas_aseo_sede_v_zpoa_320.jpg",
+   "data/geo/img/aguas_aseo_sede_v_37n_196.jpg",
+   "data/geo/img/aguas_aseo_sede_v_hsax_175.jpg",
+   "data/geo/img/aguas_aseo_sede_v_emcy_172.jpg",
+   "data/geo/img/aguas_aseo_sede_sv_m202letrero.jpg",
+   "data/geo/img/aguas_aseo_sede_sv_m215.jpg",
+   "data/geo/img/aguas_aseo_sede_sv_m228.jpg",
+   "data/geo/img/aguas_aseo_sede_sv_m238z.jpg",
+   "data/geo/img/aguas_aseo_sede_sv_37n_205.jpg"
+  ],
+  "comparaciones": [
+   "data/geo/img/aguas_aseo_sede_v_cmp_lzby268b_comparacion.png",
+   "data/geo/img/aguas_aseo_sede_v_cmp_lzby268b_mezcla.png",
+   "data/geo/img/aguas_aseo_sede_v_cmp_zpoa320_comparacion.png",
+   "data/geo/img/aguas_aseo_sede_v_cmp_zpoa320_mezcla.png",
+   "data/geo/img/aguas_aseo_sede_v_cmp_37n196_comparacion.png",
+   "data/geo/img/aguas_aseo_sede_v_cmp_37n196_mezcla.png",
+   "data/geo/img/aguas_aseo_sede_v_cmp_m215_comparacion.png",
+   "data/geo/img/aguas_aseo_sede_v_cmp_m215_mezcla.png",
+   "data/geo/img/aguas_aseo_sede_v_cmp_lzby268_comparacion.png"
+  ],
+  "orbitas": [
+   "data/geo/img/aguas_aseo_sede_v_orbita_todo.png"
+  ]
+ }
+}
