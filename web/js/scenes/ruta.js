@@ -7,6 +7,11 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RUTA } from '../data.js';
 
+// quita las referencias a archivos internos del proyecto ("Ver docs/05.", "(docs/11)") que el ciudadano no puede abrir
+const limpia = (s) => String(s ?? '').replace(/\s*\(?\bVer (?:docs\/\d+(?:,\s*|\s+y\s+)?)+\)?\.?/g, '').replace(/\s*\((?:docs\/\d+|[\w./-]+\.json)[^()]*\)/g, '');
+// proyectos del portafolio que tienen su propia página en el atlas
+const VISTA = [[/torre/i, 'torre'], [/parque/i, 'parque'], [/red de distribución/i, 'ciudad'], [/microrred/i, 'microrred']];
+
 // cinta plana a lo largo de la curva entre los desplazamientos laterales a < b (cara hacia arriba)
 function ribbon(curve, a, b, y, n, t0 = 0, t1 = 1, colorAt) {
   const pos = [], col = [], idx = [];
@@ -27,7 +32,8 @@ const tinted = (g, c) => { g = g.index ? g.toNonIndexed() : g; g.deleteAttribute
 
 export function mount(root) {
   const el = root.querySelector('.stage');
-  const st = new Stage(el, { cam: [0, 64, 92], target: [0, 0, 0], maxDist: 170, env: false });
+  // declutter: si dos rótulos de una franja se tocan, el de atrás sube lo justo
+  const st = new Stage(el, { cam: [0, 64, 92], target: [0, 0, 0], maxDist: 170, env: false, declutter: true });
   // la sombra cubre todo el plinto (antes el borde del volumen de sombra se veía sobre un piso de 700 m)
   Object.assign(st.sunLight.shadow.camera, { left: -70, right: 70, top: 50, bottom: -50, far: 200 });
   st.sunLight.shadow.camera.updateProjectionMatrix();
@@ -105,11 +111,13 @@ export function mount(root) {
     gateM[i].decompose(px.position, px.quaternion, px.scale); S.add(px);
     st.pickable(px, { onPick: () => pick(h) });
     const lab = st.label(`<b>${h.fecha}</b><span data-t><br>${h.titulo}</span>`, 'lbl-node', [sign(i).x, 1.95, sign(i).z]);
-    Object.assign(lab.element.style, { whiteSpace: 'normal', maxWidth: '132px' }); // el título largo se parte en dos líneas
+    Object.assign(lab.element.style, { whiteSpace: 'normal', maxWidth: '104px' }); // el título largo se parte en renglones (la franja de atrás se ve más angosta)
   });
 
   // en pantallas angostas los rótulos muestran solo la fecha (el título queda en la ficha al tocar)
   new ResizeObserver(() => { const c = el.clientWidth < 560; st.labels.domElement.querySelectorAll('[data-t]').forEach((x) => { x.hidden = c; }); }).observe(el);
+  // en el teléfono la cámara sube y encuadra solo la vía con sus rótulos (no el plinto entero), sin cortar los extremos
+  if (el.clientWidth < 560) st.frameBox(new THREE.Box3(new THREE.Vector3(-46, 0, BAND[0]), new THREE.Vector3(46, 4.5, 22.5)), new THREE.Vector3(0, 1.9, 1), { margin: 0.82, ty: 0 });
 
   // regla de años junto a la vía con mojones en cada año
   const rulerMat = mat(T.ground.clone().lerp(T.ink, 0.35), { roughness: 0.8 });
@@ -157,13 +165,17 @@ export function mount(root) {
   [ground, hills, berm, road, edges, center, posts, lintels, plates, housings, masts, guides, ruler, markers, forest].forEach((o) => st.freeze(o));
 
   function pick(h) {
-    pickEl.innerHTML = `<p class="eyebrow">${fases.find((f) => f.id === h.fase).nombre}</p><h4>${h.fecha} · ${h.titulo}</h4><p>${h.detalle}</p><p><b>Compuerta:</b> ${h.compuerta}</p>${h.responsable ? `<p class="note">Responsable: ${h.responsable}</p>` : ''}`;
+    pickEl.innerHTML = `<p class="eyebrow">${fases.find((f) => f.id === h.fase).nombre}</p><h4>${h.fecha} · ${h.titulo}</h4><p>${limpia(h.detalle)}</p><p><b>Compuerta:</b> ${limpia(h.compuerta)}</p>${h.responsable ? `<p class="note">Responsable: ${h.responsable}</p>` : ''}`;
   }
   pick(H[0]);
-  root.querySelector('[data-slot="ruta.gates"]').innerHTML = H.map((h) => `<div class="gate"><time>${h.fecha}</time><div><b>${h.titulo}</b>${h.detalle}<br><span class="note">Compuerta: ${h.compuerta}</span></div></div>`).join('');
-  root.querySelector('[data-slot="ruta.reglas"]').innerHTML = `<ol class="tight">${RUTA.reglas.map((r) => `<li>${r}</li>`).join('')}</ol>`;
+  root.querySelector('[data-slot="ruta.gates"]').innerHTML = H.map((h) => `<div class="gate"><time>${h.fecha}</time><div><b>${h.titulo}</b>${limpia(h.detalle)}<br><span class="note">Compuerta: ${limpia(h.compuerta)}</span></div></div>`).join('');
+  root.querySelector('[data-slot="ruta.reglas"]').innerHTML = `<ol class="tight">${RUTA.reglas.map((r) => `<li>${limpia(r)}</li>`).join('')}</ol>`;
   const P = RUTA.portafolio;
-  root.querySelector('[data-slot="ruta.portafolio"]').innerHTML = `<table><thead><tr><th>Proyecto</th><th>Ejecutor / vía</th><th>Fuentes</th><th>Fase</th><th class="n">Inversión</th></tr></thead><tbody>${P.map((p) => `<tr><td><b>${p.nombre}</b><br><span class="note">${p.alcance}</span></td><td>${p.ejecutor}</td><td>${p.fuentes}</td><td>${p.fase}</td><td class="n">${fmtCOP(p.valor * 1e6)}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="4">Total portafolio</td><td class="n">${fmtCOP(P.reduce((a, p) => a + p.valor, 0) * 1e6)}</td></tr></tfoot></table>`;
+  // el nombre lleva a la página del proyecto si la tiene; el refuerzo del hospital, si aparece, remite a la torre que lo reemplazó
+  const nombre = (p) => { const v = VISTA.find(([re]) => re.test(p.nombre)); return v ? `<a href="#${v[1]}">${p.nombre}</a>` : p.nombre; };
+  const torre = (p) => (/hospital/i.test(p.nombre) && !/torre/i.test(p.nombre) && /reforz/i.test(p.alcance) ? ' <b>Decisión actual:</b> en lugar de reforzar el edificio se construye la <a href="#torre">torre de servicios de primer nivel</a>; el edificio actual pasa a administración, archivo, bodega y central de distribución.' : '');
+  // "Cuándo" y no "Fase": la columna trae años y no las fases 0 a 3 de la hoja de ruta
+  root.querySelector('[data-slot="ruta.portafolio"]').innerHTML = `<table><thead><tr><th>Proyecto</th><th>Ejecutor / vía</th><th>Fuentes</th><th>Cuándo</th><th class="n">Inversión</th></tr></thead><tbody>${P.map((p) => `<tr><td><b>${nombre(p)}</b><br><span class="note">${limpia(p.alcance)}${torre(p)}</span></td><td>${p.ejecutor}</td><td>${p.fuentes}</td><td>${p.fase}</td><td class="n">${fmtCOP(p.valor * 1e6)}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="4">Total portafolio</td><td class="n">${fmtCOP(P.reduce((a, p) => a + p.valor, 0) * 1e6)}</td></tr></tfoot></table>`;
 
   onTheme((t) => {
     Object.assign(T, t);

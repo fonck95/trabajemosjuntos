@@ -4,13 +4,17 @@ import { THREE, Stage, tokens, onTheme, mat, box, solarArray, Flow, arc, fmtCOP,
 import { progressiveLOD } from '../assets.js';
 import { HOSPITAL as Hs, MICRORRED, EDIFICIOS } from '../data.js';
 
+// quita las referencias a archivos internos del proyecto ("(docs/05)", "Ver docs/06.") que el ciudadano no puede abrir
+const limpia = (s) => String(s ?? '').replace(/\s*\(?\bVer (?:docs\/\d+(?:,\s*|\s+y\s+)?)+\)?\.?/g, '').replace(/\s*\((?:docs\/\d+|[\w./-]+\.json)[^()]*\)/g, '');
+
 export function mount(root) {
   const el = root.querySelector('.stage');
   // Réplica real del hospital (levantada con satélite y Street View) si existe; si no, el modelo esquemático
   const REAL = EDIFICIOS.find((e) => e.id === 'hospital' && e.archivo);
   const half = REAL ? Math.max(REAL.tamano[0], REAL.tamano[2]) / 2 : 23, HY = REAL ? REAL.tamano[1] : 8;
   const RAD = Math.max(30, half * 1.25 + 10), K = RAD / 30;
-  const st = new Stage(el, { cam: [8 * K, 44 * K, 58 * K], target: [0, 4, -12 * K], maxDist: 130 * K, tone: 'aces', exposure: 1.05, dynamicShadows: true });
+  // las etiquetas de plata y la del hospital se apartan solas para no encimarse
+  const st = new Stage(el, { cam: [8 * K, 44 * K, 58 * K], target: [0, 4, -12 * K], maxDist: 130 * K, tone: 'aces', exposure: 1.05, dynamicShadows: true, declutter: ['lbl-money', 'lbl-node'] });
   { const c = st.sunLight.shadow.camera; Object.assign(c, { left: -RAD - 12, right: RAD + 12, top: RAD + 12, bottom: -RAD - 12, far: 260 * K }); st.sunLight.position.multiplyScalar(K); }
   const T = tokens();
   const S = st.scene;
@@ -45,15 +49,17 @@ export function mount(root) {
   if (REAL) {
     // las etiquetas del modelo esquemático no corresponden a la réplica (CSS2D no hereda la visibilidad del grupo)
     queueMicrotask(() => tags.children.forEach((o) => { o.visible = false; }));
-    st.label('<b>E.S.E. Hospital Héctor Abad Gómez</b><br><small>réplica del edificio real · con el proyecto</small>', 'lbl-node', [0, HY + 4, 0]);
-    (REAL.puntos || []).forEach((q) => st.label(q.tipo === 'bess' ? `Baterías ${fmtN(REAL.bess?.kwh || 0)} kWh` : 'Marquesina solar', 'lbl-small', [q.x, 4.5, -q.y]));
+    st.label('<b>E.S.E. Hospital Héctor Abad Gómez</b><br><small>edificio actual · pasa a administración y bodega</small>', 'lbl-node lbl-hosp', [0, HY + 4, 0]);
+    // baterías y marquesina solo si los datos del edificio las traen (el nodo solar del hospital pasó a la torre)
+    (REAL.puntos || []).filter((q) => q.tipo !== 'bess' || REAL.bess?.kwh).forEach((q) => st.label(q.tipo === 'bess' ? `Baterías ${fmtN(REAL.bess.kwh)} kWh` : 'Marquesina solar', 'lbl-node lbl-hosp', [q.x, 4.5, -q.y]));
   }
   st.label('Urgencias', 'lbl-small', [13, 5, 6.5], tags);
   st.label('Consulta externa · telesalud', 'lbl-small', [-13.5, 5, -1], tags);
   st.label('Servicios: cadena de frío, lavandería, esterilización', 'lbl-small', [4, 4.2, -9], tags);
   st.label('<b>E.S.E. Hospital Héctor Abad Gómez</b>', 'lbl-node', [0, 9.6, 0], tags);
   st.label('Marquesina solar del parqueadero', 'lbl-small', [0, 4.6, 14.5], tags);
-  st.label(`BESS ${fmtN(MICRORRED.bess.find((b) => b.nodo === 'hospital').kwh)} kWh`, 'lbl-small', [-12, 3.6, 9], tags);
+  const bessH = MICRORRED.bess.find((b) => b.nodo === 'hospital');
+  if (bessH) st.label(`BESS ${fmtN(bessH.kwh)} kWh`, 'lbl-small', [-12, 3.6, 9], tags);
   st.label('Planta de respaldo', 'lbl-small', [-12, 3, -8], tags);
   st.label('Nodo de conectividad MinTIC', 'lbl-data', [8.5, 17.5, -3.5], tags);
   // barra de carga sobre el techo del contenedor de baterías
@@ -67,12 +73,14 @@ export function mount(root) {
   trees.castShadow = trunks.castShadow = true; if (!REAL) S.add(trees, trunks);
   st.freeze(ground); st.freeze(proc);
 
-  // Fuentes de financiación: pilares en arco al norte
+  // Fuentes de financiación: pilares en arco al norte, abierto casi a media vuelta para que las etiquetas se separen
   const F = Hs.fuentes;
   const pillMats = F.map((f) => mat(T.s[f.slot - 1], { roughness: 0.5 }));
   const geo = new THREE.CylinderGeometry(1.25, 1.25, 1, 28); geo.translate(0, 0.5, 0);
+  // nombre corto de la fuente para el teléfono: "PMIDS + Gobernación" → "PMIDS", "MinSalud (PGN)" → "MinSalud"
+  const mini = (s) => s.split(/\s[+(/]/)[0].replace(/ por Impuestos$/, ' por imp.');
   const items = F.map((f, i) => {
-    const a = Math.PI * (0.12 + (0.76 * i) / Math.max(1, F.length - 1));
+    const a = Math.PI * (0.03 + (0.94 * i) / Math.max(1, F.length - 1));
     const x = Math.cos(a) * -RAD, z = -Math.sin(a) * RAD * 0.85 - 6 * K;
     const p = new THREE.Mesh(geo, pillMats[i]); p.position.set(x, 0, z); p.castShadow = true; S.add(p);
     p.scale.y = 0.1;
@@ -81,6 +89,12 @@ export function mount(root) {
     st.pickable(p, { onPick: () => pick(f) });
     return { f, p, lab, flow, target: 0.1 };
   });
+  // en el teléfono (recuadro vertical) la cámara sube y encuadra el edificio con el arco de pilares a su altura máxima
+  if (el.clientWidth < 560) {
+    const bx = new THREE.Box3(new THREE.Vector3(-half, 0, -half), new THREE.Vector3(half, HY, half));
+    items.forEach((it) => bx.expandByPoint(it.p.position.clone().setY(16 * Math.sqrt(K))));
+    st.frameBox(bx, new THREE.Vector3(0.1, 1.6, 1), { margin: 0.68 });
+  }
 
   let esc = 'med';
   const tiles = root.querySelector('[data-slot="hospital.tiles"]');
@@ -89,7 +103,9 @@ export function mount(root) {
     items.forEach((it) => {
       const v = it.f[esc];
       it.target = 0.3 + (v / max) * 16 * Math.sqrt(K);
-      it.lab.element.innerHTML = `${fmtCOP(v * 1e6)}<small>${it.f.corto}</small>`;
+      it.lab.element.innerHTML = `${fmtCOP(v * 1e6)}<small><span class="fl">${it.f.corto}</span><span class="fc">${mini(it.f.corto)}</span></small>`;
+      // una fuente sin aporte en este escenario no se dibuja (un pilar de "$0" distrae)
+      it.p.visible = it.lab.visible = v > 0; it.flow.visible(v > 0);
       it.flow.set((v / max) * 1.1, 1);
       // la corriente nace en la cima del pilar
       it.flow.curve.v0.y = it.target; it.flow.curve.updateArcLengths();
@@ -108,22 +124,24 @@ export function mount(root) {
   const pickEl = root.querySelector('[data-slot="hospital.pick"]');
   function pick(f) {
     pickEl.innerHTML = `<h4>${f.nombre}</h4><dl class="kv"><dt>Conservador</dt><dd>${fmtCOP(f.min * 1e6)}</dd><dt>Probable</dt><dd>${fmtCOP(f.med * 1e6)}</dd><dt>Ambicioso</dt><dd>${fmtCOP(f.max * 1e6)}</dd></dl>
-      <p style="margin-top:8px"><b>Para qué:</b> ${f.uso}</p><p><b>Requisito:</b> ${f.requisito}</p><p><b>Calendario:</b> ${f.calendario}</p><p class="note">${f.base}</p>`;
+      <p style="margin-top:8px"><b>Para qué:</b> ${limpia(f.uso)}</p><p><b>Requisito:</b> ${limpia(f.requisito)}</p><p><b>Calendario:</b> ${limpia(f.calendario)}</p><p class="note">${limpia(f.base)}</p>`;
   }
   root.querySelectorAll('[data-esc]').forEach((b) => b.addEventListener('click', () => {
     esc = b.dataset.esc; root.querySelectorAll('[data-esc]').forEach((x) => x.setAttribute('aria-pressed', x === b)); layout();
   }));
   root.querySelector('[data-slot="hospital.table"]').innerHTML = `<table><thead><tr><th>Fuente</th><th>Para qué</th><th>Calendario</th><th class="n">Conservador</th><th class="n">Probable</th><th class="n">Ambicioso</th></tr></thead>
-    <tbody>${F.map((f) => `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--s${f.slot})"></i> ${f.nombre}</td><td>${f.uso}</td><td>${f.calendario}</td><td class="n">${fmtCOP(f.min * 1e6)}</td><td class="n">${fmtCOP(f.med * 1e6)}</td><td class="n">${fmtCOP(f.max * 1e6)}</td></tr>`).join('')}</tbody>
+    <tbody>${F.map((f) => `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--s${f.slot})"></i> ${f.nombre}</td><td>${limpia(f.uso)}</td><td>${limpia(f.calendario)}</td><td class="n">${fmtCOP(f.min * 1e6)}</td><td class="n">${fmtCOP(f.med * 1e6)}</td><td class="n">${fmtCOP(f.max * 1e6)}</td></tr>`).join('')}</tbody>
     <tfoot><tr><td colspan="3">Total</td>${['min', 'med', 'max'].map((k) => `<td class="n">${fmtCOP(F.reduce((a, f) => a + f[k], 0) * 1e6)}</td>`).join('')}</tr></tfoot></table>`;
-  root.querySelector('[data-slot="hospital.cols"]').innerHTML = Hs.bloques.map((b) => `<div class="card"><p class="eyebrow">${b.tag}</p><h3>${b.titulo}</h3>${b.html}</div>`).join('');
+  root.querySelector('[data-slot="hospital.cols"]').innerHTML = Hs.bloques.map((b) => `<div class="card"><p class="eyebrow">${b.tag}</p><h3>${b.titulo}</h3>${limpia(b.html)}</div>`).join('');
   const fi = Hs.ficha;
   root.querySelector('[data-slot="hospital.ficha"]').innerHTML = `<dl class="kv" style="grid-template-columns:auto minmax(0,1fr)">
     <dt>NIT</dt><dd>${fi.nit}</dd><dt>Nivel y sede</dt><dd style="text-align:left;font-family:inherit">${fi.nivel}</dd>
     <dt>Capacidad</dt><dd style="text-align:left;font-family:inherit">${fi.capacidad}</dd><dt>Riesgo fiscal</dt><dd style="text-align:left;font-family:inherit">${fi.riesgo}</dd>
     <dt>Aseguramiento</dt><dd style="text-align:left;font-family:inherit">${fi.aseguramiento}</dd><dt>Población 2028</dt><dd>${fmtN(fi.poblacion_2028)} habitantes (DANE)</dd></dl>`;
   const pc = Hs.proyecto.componentes;
-  root.querySelector('[data-slot="hospital.proyecto"]').innerHTML = `<table><thead><tr><th>Componente</th><th class="n">Valor</th></tr></thead><tbody>${pc.map((c) => `<tr><td>${c.componente} <span class="tag ${c.certeza === 'V' ? 'ver' : 'sup'}">${c.certeza === 'V' ? 'verificado' : 'supuesto'}</span><br><span class="note">${c.fuente}</span></td><td class="n">${fmtCOP(c.valor * 1e6)}</td></tr>`).join('')}</tbody><tfoot><tr><td>Total</td><td class="n">${fmtCOP(pc.reduce((a, c) => a + c.valor, 0) * 1e6)}</td></tr></tfoot></table>`;
+  // si la tabla todavía es la del refuerzo del edificio, se aclara que la torre la reemplazó
+  const antes = pc.some((c) => /reforz/i.test(c.componente)) ? '<p class="note">Propuesta anterior a la torre: el reforzamiento se reemplaza por la <a href="#torre">torre de servicios de primer nivel</a> y por la adecuación del edificio actual para oficinas y bodega; la solar y las baterías ahora van en la torre.</p>' : '';
+  root.querySelector('[data-slot="hospital.proyecto"]').innerHTML = `${antes}<table><thead><tr><th>Componente</th><th class="n">Valor</th></tr></thead><tbody>${pc.map((c) => `<tr><td>${limpia(c.componente)} <span class="tag ${c.certeza === 'V' ? 'ver' : 'sup'}">${c.certeza === 'V' ? 'verificado' : 'supuesto'}</span><br><span class="note">${limpia(c.fuente)}</span></td><td class="n">${fmtCOP(c.valor * 1e6)}</td></tr>`).join('')}</tbody><tfoot><tr><td>Total</td><td class="n">${fmtCOP(pc.reduce((a, c) => a + c.valor, 0) * 1e6)}</td></tr></tfoot></table>`;
   layout();
   pick(F[0]);
 

@@ -185,6 +185,10 @@ svg.mr-chart .now { stroke: var(--accent); stroke-width: 1.5; }
 [data-scene="dinero"] .lbl-money span { display: block; } [data-scene="dinero"] .lbl-money .ct { font-weight: 500; } [data-scene="dinero"] .lbl-money .nt { font: 500 10px var(--f-body); color: var(--muted); }
 [data-scene="periodos"] .lbl-money small.sin { color: var(--bad); font-weight: 600; } [data-scene="periodos"] .per-c, [data-scene="dinero"] .per-c { display: none; }
 [data-slot="periodos.seg"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* Hospital 2028: nombre completo de la fuente en escritorio (el corto es para el teléfono) y aviso de la decisión vigente */
+[data-scene="hospital"] .lbl-money .fc { display: none; }
+[data-scene="ruta"] .lbl-node { font-size: 10px; } /* Hoja de ruta: rótulos de hito más compactos para que la franja de atrás no se encime */
+#v-hospital .decision { margin: 0; padding: 10px 14px; max-width: 110ch; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--r); font-size: 0.95rem; }
 
 /* ---------- contenido */
 .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
@@ -246,6 +250,12 @@ a { color: var(--accent); }
   .nav3d-name { flex: 1; max-width: none; text-align: center; }
   [data-scene="ciudad"] .stage-hint { display: none; }
   .lbl-small, .lbl-geo, .lbl-money small { display: none; }
+  /* Hospital 2028 en el teléfono: cada cifra con el nombre corto de su fuente; sin la etiqueta del edificio (tapaba el modelo) */
+  [data-scene="hospital"] .lbl-money small { display: block; font-size: 9px; } [data-scene="hospital"] .lbl-money .fl { display: none; } [data-scene="hospital"] .lbl-money .fc { display: inline; }
+  [data-scene="hospital"] .lbl-hosp { display: none; }
+  /* Hoja de ruta en el teléfono: la maqueta es apaisada, así que el recuadro es más bajo (sin franjas vacías arriba y abajo) */
+  #v-ruta .stage { height: clamp(280px, 40vh, 360px); } [data-scene="ruta"] .lbl-node { font-size: 9.5px; }
+  [data-scene="modelos"] .lbl-cx { font-size: 9px; padding: 2px 6px 2px 5px; } /* Modelos 3D: etiqueta de conexión compacta */
   /* La plata y Seis gobiernos en el teléfono: periodos con rótulo corto, pastillas compactas y sin "sin obra",
      "1 fajo" ni los nombres de categoría o área en 3D (ya están en la leyenda, las tarjetas y las tablas de abajo) */
   [data-scene="periodos"] .lbl-fajo, [data-scene="periodos"] .lbl-area, [data-scene="dinero"] .lbl-cat { display: none; }
@@ -612,6 +622,7 @@ details.fold > summary:hover { color: var(--accent); }
       </div>
       <p class="stamp" data-t="hospital.stamp"></p>
     </div>
+    <p class="decision"><b>Decisión actual:</b> en lugar de reforzar el edificio actual del hospital, se construye la <a href="#torre">torre de servicios de primer nivel</a>. El edificio actual pasa a administración, archivo, bodega y central de distribución. Las fuentes y montos de esta página se calcularon para el proyecto anterior (reforzar y adecuar el edificio); la mezcla de fuentes que paga la torre está en su página.</p>
     <div class="board">
       <div class="stage" data-scene="hospital"><span class="stage-hint">Modelo GLB con nivel de detalle · cada corriente es una fuente de recursos</span></div>
       <div class="folder">
@@ -629,7 +640,7 @@ details.fold > summary:hover { color: var(--accent); }
     </div>
     <div class="cols two">
       <div class="card"><h3>Ficha del hospital</h3><div data-slot="hospital.ficha"></div></div>
-      <div class="card"><h3>El proyecto: hospital seguro, verde e inteligente</h3><div class="tbl-wrap" data-slot="hospital.proyecto"></div></div>
+      <div class="card"><h3>El proyecto anterior: hospital seguro, verde e inteligente</h3><div class="tbl-wrap" data-slot="hospital.proyecto"></div></div>
     </div>
     <div class="card"><h3>Fuentes de financiación gestionables vía la E.S.E.</h3><div class="tbl-wrap" data-slot="hospital.table"></div><p class="note" data-t="hospital.nota"></p></div>
     <div class="cols" data-slot="hospital.cols"></div>

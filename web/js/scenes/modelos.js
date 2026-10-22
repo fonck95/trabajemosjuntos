@@ -9,6 +9,27 @@ const GUIA = [
   { tag: 'Paso 3', titulo: 'Publícalo en el atlas', html: '<ol class="tight"><li>Copia el archivo a <code>web/models/</code>.</li><li>Agrégalo a <code>web/models/manifest.json</code> para que aparezca en este visor.</li><li>En una escena, cárgalo con <code>progressiveLOD([{url, distance: 0}, {url: lod1, distance: 85}])</code>: se ve primero el liviano y luego el detallado.</li><li>Objetivo para teléfonos: menos de 300.000 triángulos visibles y 50 llamadas de dibujo.</li></ol><p class="note">Los modelos del atlas se generan con <code>scripts/modelos/build_models.mjs</code>.</p>' },
 ];
 
+// Retícula del piso que se desvanece con la distancia: las líneas densas cerca del horizonte hacían moiré.
+// n celdas por lado de 1 unidad; cada línea va en tramos para que la transparencia cambie a lo largo de ella
+function reticula(color, n = 40) {
+  const h = n / 2, pos = [], col = [], a = (x, z) => Math.max(0, 1 - Math.hypot(x, z) / h) ** 1.6;
+  for (let i = 0; i <= n; i++) {
+    const u = -h + i;
+    for (let j = 0; j < n; j++) {
+      const v0 = -h + j, v1 = v0 + 1;
+      pos.push(u, 0, v0, u, 0, v1, v0, 0, u, v1, 0, u);
+      col.push(1, 1, 1, a(u, v0), 1, 1, 1, a(u, v1), 1, 1, 1, a(v0, u), 1, 1, 1, a(v1, u));
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 4));
+  return new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color, vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false }));
+}
+// nombre corto de cada sede para la lista: conserva la sede ("Luis Eduardo Díaz · sede Megacolegio") y corta lo demás
+const CORTO = { relleno_parque: 'Relleno → parque ecotecnológico' };
+const corto = (m) => CORTO[m.id] || m.nombre.replace(/^(E\.S\.E\.|I\.E\.)\s*/, '').replace(/\s+S\.A\.\s+E\.S\.P\.$/, '').replace(/\s*–\s*(sede\s)/i, ' · $1').split(/\s*[(,–—]/)[0].trim();
+
 export function mount(root) {
   const el = root.querySelector('.stage');
   const st = new Stage(el, { cam: [9, 6, 12], target: [0, 1.5, 0], minDist: 0.5, maxDist: 400, tone: 'aces', exposure: 1.1 });
@@ -18,7 +39,7 @@ export function mount(root) {
   // piso que solo recibe sombra + retícula sutil
   const catcher = new THREE.Mesh(new THREE.CircleGeometry(400, 64), new THREE.ShadowMaterial({ opacity: 0.22 }));
   catcher.rotation.x = -Math.PI / 2; catcher.receiveShadow = true; S.add(catcher);
-  const grid = new THREE.GridHelper(200, 200, T.line, T.line); grid.material.transparent = true; grid.material.opacity = 0.5; S.add(grid);
+  const grid = reticula(T.line); S.add(grid);
   st.freeze(catcher); st.freeze(grid);
 
   const q = (s) => root.querySelector(`[data-slot="${s}"]`);
@@ -61,6 +82,9 @@ export function mount(root) {
     const size = fit(current);
     applyView();
     const R = Math.max(size.x, size.y, size.z);
+    // la retícula se ajusta al modelo: celdas de un paso redondo (1, 2, 5, 10 m…) cerca de una décima de su tamaño
+    const paso = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50].find((x) => x >= R / 10) || 100;
+    grid.scale.setScalar(paso); grid.updateMatrix();
     const sc = st.sunLight.shadow.camera; sc.left = -R; sc.right = R; sc.top = R; sc.bottom = -R; sc.near = 0.1; sc.far = R * 6; sc.updateProjectionMatrix();
     st.sunLight.position.set(R * 0.9, R * 1.6, R * 0.7);
     st.controls.maxDistance = R * 8;
@@ -69,7 +93,10 @@ export function mount(root) {
     // los edificios alargados se miran de costado para que el largo use el ancho de la pantalla
     const sb = solidBox(current), ss = sb.getSize(new THREE.Vector3());
     const dir = ss.z > ss.x * 1.4 ? new THREE.Vector3(1.7, 0.85, 0.55) : ss.x > ss.z * 1.4 ? new THREE.Vector3(0.55, 0.85, 1.7) : new THREE.Vector3(1.25, 0.8, 1.6);
-    st.frameBox(sb, dir, { margin: 0.8, duration: 1.3 });
+    // en el teléfono (recuadro vertical) se mira un poco más desde arriba y con menos margen: el edificio sale más grande
+    const angosto = el.clientWidth < 560;
+    if (angosto) dir.y *= 1.5;
+    st.frameBox(sb, dir, { margin: angosto ? 0.92 : 0.8, duration: 1.3 });
     if (gsap) gsap.from(current.scale, { x: 0.001, y: 0.001, z: 0.001, duration: 0.8, ease: 'back.out(1.4)', onUpdate: () => st.invalidate(true) });
     st.updateShadows();
     setStats(info, stats(current, info.gltf), nombre);
@@ -81,6 +108,8 @@ export function mount(root) {
       p.y = Math.max(1, p.y - 1.4);
       st.closeUp(p, [current], out.normalize(), { dist: 12 });
     });
+    // en el teléfono la etiqueta de la conexión va corta para no tapar el edificio (el detalle está al acercarse)
+    if (angosto) cxLabels.forEach((l) => l.element.querySelectorAll('span').forEach((x) => { x.textContent = x.textContent.replace(' + medidor bidireccional', ' y medidor').replace(' → CCED', '').replace(/(Acometida|Poste) de la red \(EPM\)/, '$1 EPM'); }));
     applyLayer();
   }
 
@@ -140,9 +169,9 @@ export function mount(root) {
   }));
   const getJSON = (u) => fetch(new URL(u, import.meta.url)).then((r) => (r.ok ? r.json() : [])).catch(() => []);
   Promise.all([getJSON('../../models/edificios/manifest.json'), getJSON('../../models/manifest.json')]).then(([sedes, comp]) => {
-    const man = [...sedes.map((m) => ({ ...m, titulo: m.nombre, corto: m.nombre.replace(/^(E\.S\.E\.|I\.E\.)\s*/, '').split(/[(,–]/)[0].trim() })), ...comp];
+    const man = [...sedes.map((m) => ({ ...m, titulo: m.nombre, corto: m.corto || corto(m) })), ...comp];
     if (!man.length) throw new Error('vacío');
-    lista.innerHTML = man.map((m, i) => `<button type="button" data-i="${i}" aria-pressed="${i === 0}">${m.corto || m.titulo.replace('Hospital Héctor Abad Gómez', 'Hospital').replace(/\s*\(.*\)/, (x) => x.includes('bajo') ? ' · LOD bajo' : ' · detallado')}</button>`).join('');
+    lista.innerHTML = man.map((m, i) => `<button type="button" data-i="${i}" aria-pressed="${i === 0}">${m.corto || m.titulo.replace('Hospital Héctor Abad Gómez', 'Hospital').replace(/\s*\(.*\)/, (x) => x.includes('bajo') ? ' · liviano' : ' · detallado')}</button>`).join('');
     lista.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
       lista.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
       loadUrl(man[+b.dataset.i]);
