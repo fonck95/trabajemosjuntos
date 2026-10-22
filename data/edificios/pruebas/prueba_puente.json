@@ -1,0 +1,42 @@
+{
+  "id": "prueba_puente",
+  "nombre": "Bloque nuevo con puentes (prueba del generador)",
+  "nodo_microrred": null,
+  "lat": 7.005415, "lon": -73.914452,
+  "volumenes": [
+    {
+      "id": "bloque_existente", "nombre": "Bloque existente de 2 pisos",
+      "centro": [-20, 0], "largo": 20, "ancho": 12, "rumbo_eje": 0,
+      "altura_alero": 7, "pisos": 2,
+      "techo": { "tipo": "cuatro_aguas", "pendiente": 18, "voladizo": 0.7, "material": "fibrocemento", "color": "#85827c" },
+      "fachada": { "material": "pañete_pintado", "color": "#e8e2d2", "zocalo": { "color": "#7a5a4c", "altura": 0.9 },
+        "ventanas": { "tipo": "ventana", "ancho": 1.4, "alto": 1.3, "antepecho": 1.0, "separacion": 3.0, "lados": ["E", "O"] } }
+    },
+    {
+      "id": "bloque_nuevo", "nombre": "Bloque nuevo de 3 pisos (laboratorio)", "estado": "nuevo",
+      "centro": [10, 0], "largo": 24, "ancho": 14, "rumbo_eje": 0,
+      "altura_alero": 12.6, "pisos": 3,
+      "techo": { "tipo": "plano", "parapeto": 0.9, "material": "concreto" },
+      "fachada": {
+        "material": "ladrillo_visto", "color": "#b0573b", "ladrillo": {},
+        "lados_material": { "N": "muro_cortina", "O": "concreto_visto" },
+        "ventanas": { "tipo": "ventana", "ancho": 1.6, "alto": 1.6, "antepecho": 1.0, "separacion": 2.8, "lados": ["E", "S"] },
+        "puertas": [ { "lado": "E", "pos": 0.5, "ancho": 2.0, "alto": 2.6 } ],
+        "parasoles": { "tipo": "vertical", "profundidad": 0.5, "separacion": 1.5, "color": "#e8e6e0", "lados": ["N"] },
+        "losas_expresadas": { "voladizo": 0.3, "espesor": 0.3, "color": "#efeee9" }
+      }
+    }
+  ],
+  "elementos": [
+    { "tipo": "patio", "poligono": [[-10, -14], [3, -14], [3, 14], [-10, 14]] },
+    { "tipo": "anden", "poligono": [[17, -14], [24, -14], [24, 14], [17, 14]], "estado": "nuevo" },
+    { "tipo": "puente", "desde": [-10, 4], "hasta": [3, 4], "altura": 3.5, "ancho": 3, "alto": 2.9, "apoyos": [[-3.5, 4]], "estado": "nuevo" },
+    { "tipo": "puente", "desde": [-10, -6], "hasta": [3, -6], "altura": 3.5, "ancho": 2.4, "alto": 2.8, "estructura": "viga", "estado": "nuevo" },
+    { "tipo": "marquesina_acceso", "centro": [19, 0], "largo": 8, "ancho": 4, "rumbo_eje": 0, "altura": 3.2, "apoyo": "voladizo", "frente": "E", "estado": "nuevo" },
+    { "tipo": "letrero_institucional", "texto": "LABORATORIO CLÍNICO", "volumen": "bloque_nuevo", "lado": "E", "sobre": "fachada", "y": 4.9, "altura": 0.55, "profundidad": 0.08, "color": "#1d4f91", "estado": "nuevo" },
+    { "tipo": "luminaria", "centros": [[22.5, -9], [22.5, 9]], "altura": 4, "rumbo": 270, "estado": "nuevo" },
+    { "tipo": "banca", "centro": [21.5, -5], "rumbo": 270, "estado": "nuevo" },
+    { "tipo": "jardinera", "centro": [22, 5], "largo": 3, "ancho": 1.2, "rumbo_eje": 0, "material": "metal", "estado": "nuevo" }
+  ],
+  "adecuaciones": {}
+}

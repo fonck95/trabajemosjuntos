@@ -110,6 +110,42 @@ Las imágenes de Google y Esri se usan solo como referencia de levantamiento: es
   - `_lod1` (la web lo usa a más de 140 m) lleva los vanos como paneles 4 cm delante del muro, los módulos como planos con textura, rejas simplificadas y ductos más gruesos sin codos.
   - Los dos van comprimidos con Draco (posiciones de 16 bits) y tienen copia `.glb.json`. Presupuesto medido: LOD0 hasta unos 100 000 triángulos y 300 KB por sede; LOD1 hasta 12 000 triángulos.
 
+#### Obra nueva: edificios contemporáneos
+
+Para proponer edificios nuevos (la torre de servicios de primer nivel del hospital, por ejemplo) la especificación tiene opciones de obra nueva. Se documentan en `data/edificios/ESPECIFICACION.md` («Obra nueva»). Son opcionales: con ellas apagadas, los GLB de las sedes levantadas salen idénticos byte a byte.
+
+- **Fachadas por lado** (`fachada.lados_material`) con materiales nuevos a escala real:
+  - **Muro cortina** (`muro_cortina`): vidrio oscuro y algo reflejante, en tres tonos apenas distintos por módulo. Lleva parales y travesaños de aluminio, enjutas opacas en cada losa, base y banda bajo la coronación, y esquineros. Cada esquina la pone el lado que la tiene a su derecha, para no duplicar piezas.
+  - **Puertas en el muro cortina**: vestíbulo hundido, marco y hojas corredizas automáticas con cabezal del operador.
+  - **Otros acabados**: panel de aluminio compuesto con juntas (`panel_compuesto`), concreto con formaleta de tablas (`concreto_visto`) y ladrillo tolete con junta rehundida y tono por pieza (`ladrillo_visto` con `fachada.ladrillo` o por lado).
+  - **Coronación**: el antepecho de la cubierta plana toma el acabado de cada lado, con remate metálico.
+- **Ventanas corridas** (`ventanas.tipo: "franja"`), que se cortan en puertas y tramos tapados.
+- **Losas expresadas** (`losas_expresadas`): bordes de losa en voladizo por piso y en la cubierta, en vez de las bandas de entrepiso. Se dibujan después de la conexión, para cortarlos donde suben sus ductos; en un muro cortina, el tablero y los ductos van delante de los parales.
+- **Parasoles** (`fachada.parasoles`): aletas verticales con ménsulas o lamas horizontales inclinadas con platinas. Son instancias GPU de una caja unitaria por color, en el nodo `<capa>_parasoles`. En el muro cortina van sobre los parales.
+- **Elementos**:
+  - `marquesina_acceso`: losa delgada con cielo raso y luminarias empotradas, sobre columnas esbeltas o en voladizo con tensores.
+  - `bahia_ambulancias`: marquesina alta, demarcación, rótulo en el piso y bolardos que respetan las puertas.
+  - `puente`: acristalado, con cerchas o vigas y columnas intermedias. Las losas expresadas y los parasoles le dejan paso.
+  - `equipo_cubierta`: manejadoras, enfriadores, tanques, cuarto de máquinas y pantalla de lamas, sobre la cubierta más alta bajo su centro.
+  - Paisajismo: `jardinera` (con arbustos instanciados), `banca` y `luminaria`.
+  - `letrero_institucional`: letras grandes con tildes sobre el antepecho, en la fachada o libres.
+- **Pérgola solar** (`fv` con `"tipo": "pergola"`): pórticos de acero sobre la losa con los módulos encima. Los equipos de la cubierta quedan debajo.
+- **Núcleos de escaleras y ascensores** como volúmenes propios. La lógica de muros tapados oculta lo que queda dentro de la torre. En las fachadas nuevas, lo tapado por un podio con antepecho sube hasta su remate, así el vidrio y las ventanas empiezan encima.
+- **Tildes**: en `letrero_institucional` y en el rótulo de la bahía, `textGeo` pone las tildes sobre la altura real de las mayúsculas de la fuente (1,013 × tamaño). El `letrero` de las réplicas sigue suponiendo 0,72 × tamaño, y con eso la tilde aguda queda dentro de la letra (pasa en BIBLIOTECA MUNICIPAL MARÍA CANO, INSTITUCIÓN EDUCATIVA LUIS EDUARDO DÍAZ y REGISTRADURÍA). Se dejó así para que esos modelos verificados no cambien; pasar `true` como cuarto argumento en ese llamado lo corrige.
+- **Llamadas de dibujo**:
+  - Bancas, luminarias y bolardos que se repiten menos de 10 veces se funden en la malla del entorno de su capa.
+  - Parasoles, arbustos, árboles y módulos van instanciados.
+  - Bancas, luminarias, bolardos y arbustos no van en el LOD1.
+
+Las especificaciones de prueba están en `data/edificios/pruebas/`; la compilación normal no las lee. Presupuesto de `prueba_torre`: torre de 5 pisos (32 × 22 m), podio de 2 pisos, núcleo, cubierta con equipos y pérgola de 48,4 kWp, marquesina, bahía y paisajismo.
+
+| | Triángulos dibujados (con instancias) | Llamadas de dibujo | Peso |
+|---|---|---|---|
+| LOD0 | 55 140 (meta: menos de 250 000) | 41 | 243 KB |
+| LOD1 | 12 716 (meta: menos de 30 000) | 32 | 184 KB |
+
+`check_coplanar.mjs` no encuentra caras coplanares en ninguna de las tres pruebas (LOD0 y LOD1).
+
 #### La conexión eléctrica (`adecuaciones/conexion`)
 
 La ruta de la energía se dibuja en ámbar `#f08a00` y la de datos en violeta `#6250d6` (el `--data` de la web). Los dos colores son algo emisivos para que se lean en la sombra. Los ductos miden 20 cm de diámetro en LOD0 y 24 cm en LOD1, para que se vean a 100 m. Hijos del nodo:
@@ -156,6 +192,7 @@ node build_edificios.mjs                 # todas las sedes → web/models/edific
 node build_edificios.mjs hospital        # solo una
 node check_coplanar.mjs                  # revisa web/models/edificios/*.glb (o las rutas que se le den)
 node render_vista.mjs hospital --orbita 210,30,70 --out /tmp/h.png --capa todo
+node render_vista.mjs hospital --orbita 210,30,70 --out /tmp/h.png --capa todo --entorno   # luces y mapa de entorno de la web
 ```
 
 ### Escena urbana (vista "Sedes reales")

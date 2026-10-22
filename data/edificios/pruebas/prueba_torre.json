@@ -1,0 +1,737 @@
+{
+ "id": "prueba_torre",
+ "nombre": "Torre de servicios de salud (prueba del generador)",
+ "nodo_microrred": null,
+ "lat": 7.005415,
+ "lon": -73.914452,
+ "estado": "nuevo",
+ "ubicacion": {
+  "confianza": "baja",
+  "metodo": "especificación de prueba: no es el diseño final"
+ },
+ "volumenes": [
+  {
+   "id": "torre",
+   "nombre": "Torre de servicios (5 pisos)",
+   "centro": [
+    0,
+    8
+   ],
+   "largo": 32,
+   "ancho": 22,
+   "rumbo_eje": 90,
+   "altura_alero": 21,
+   "pisos": 5,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 1.2,
+    "material": "concreto",
+    "color": "#c9c7c0"
+   },
+   "fachada": {
+    "material": "panel_compuesto",
+    "color": "#e3e4e2",
+    "lados_material": {
+     "N": "muro_cortina",
+     "E": "muro_cortina",
+     "O": {
+      "material": "panel_compuesto",
+      "color": "#676d73"
+     },
+     "S": {
+      "material": "panel_compuesto",
+      "color": "#e9e9e6"
+     }
+    },
+    "muro_cortina": {
+     "modulo": 1.6,
+     "enjuta": 1.1,
+     "color_vidrio": "#2b4250",
+     "color_perfil": "#c6cbce",
+     "color_enjuta": "#4d5961"
+    },
+    "ventanas": {
+     "tipo": "franja",
+     "alto": 2.2,
+     "antepecho": 1.1,
+     "lados": [
+      "S",
+      "O"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "N",
+      "pos": 0.7,
+      "ancho": 2.4,
+      "alto": 2.8
+     }
+    ],
+    "parasoles": [
+     {
+      "tipo": "vertical",
+      "profundidad": 0.7,
+      "separacion": 1.0,
+      "color": "#b5895c",
+      "lados": [
+       "O"
+      ]
+     },
+     {
+      "tipo": "horizontal",
+      "profundidad": 0.8,
+      "separacion": 0.75,
+      "color": "#c9ced2",
+      "lados": [
+       "S"
+      ]
+     }
+    ],
+    "losas_expresadas": {
+     "voladizo": 0.45,
+     "espesor": 0.4,
+     "color": "#f3f2ee",
+     "cubierta": true
+    }
+   }
+  },
+  {
+   "id": "podio",
+   "nombre": "Podio de 2 pisos (acceso, urgencias, consulta externa)",
+   "centro": [
+    -1,
+    -10
+   ],
+   "largo": 42,
+   "ancho": 14,
+   "rumbo_eje": 90,
+   "altura_alero": 8.4,
+   "pisos": 2,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 1.0,
+    "material": "concreto",
+    "color": "#c9c7c0"
+   },
+   "fachada": {
+    "material": "panel_compuesto",
+    "color": "#e9e9e6",
+    "lados_material": {
+     "S": "muro_cortina",
+     "O": {
+      "material": "concreto_visto",
+      "color": "#c4c1b9"
+     }
+    },
+    "muro_cortina": {
+     "modulo": 1.5,
+     "enjuta": 1.1,
+     "color_vidrio": "#2b4250",
+     "color_perfil": "#c6cbce",
+     "color_enjuta": "#4d5961"
+    },
+    "ventanas": {
+     "tipo": "franja",
+     "alto": 2.0,
+     "antepecho": 1.0,
+     "lados": [
+      "E",
+      "O"
+     ]
+    },
+    "puertas": [
+     {
+      "lado": "S",
+      "pos": 0.4286,
+      "ancho": 3.6,
+      "alto": 3.0
+     },
+     {
+      "lado": "E",
+      "pos": 0.5,
+      "ancho": 2.4,
+      "alto": 2.8
+     }
+    ],
+    "losas_expresadas": {
+     "voladizo": 0.45,
+     "espesor": 0.4,
+     "color": "#f3f2ee",
+     "cubierta": true
+    }
+   }
+  },
+  {
+   "id": "nucleo",
+   "nombre": "Núcleo de escaleras y ascensores",
+   "centro": [
+    -19.25,
+    8
+   ],
+   "largo": 10,
+   "ancho": 7.5,
+   "rumbo_eje": 0,
+   "altura_alero": 24.6,
+   "pisos": 6,
+   "techo": {
+    "tipo": "plano",
+    "parapeto": 0.6,
+    "material": "concreto",
+    "color": "#c9c7c0"
+   },
+   "fachada": {
+    "material": "concreto_visto",
+    "color": "#c4c1b9",
+    "puertas": [
+     {
+      "lado": "O",
+      "pos": 0.5,
+      "ancho": 1.2,
+      "alto": 2.4
+     }
+    ]
+   }
+  }
+ ],
+ "elementos": [
+  {
+   "tipo": "plaza",
+   "poligono": [
+    [
+     -24,
+     -17
+    ],
+    [
+     20,
+     -17
+    ],
+    [
+     20,
+     -30
+    ],
+    [
+     -24,
+     -30
+    ]
+   ]
+  },
+  {
+   "tipo": "anden",
+   "poligono": [
+    [
+     -42,
+     -30
+    ],
+    [
+     34,
+     -30
+    ],
+    [
+     34,
+     -33
+    ],
+    [
+     -42,
+     -33
+    ]
+   ]
+  },
+  {
+   "tipo": "parqueadero",
+   "poligono": [
+    [
+     -42,
+     -30
+    ],
+    [
+     -24.5,
+     -30
+    ],
+    [
+     -24.5,
+     24
+    ],
+    [
+     -42,
+     24
+    ]
+   ]
+  },
+  {
+   "tipo": "parqueadero",
+   "poligono": [
+    [
+     20,
+     -30
+    ],
+    [
+     32,
+     -30
+    ],
+    [
+     32,
+     6
+    ],
+    [
+     20,
+     6
+    ]
+   ]
+  },
+  {
+   "tipo": "zona_verde",
+   "poligono": [
+    [
+     -24.5,
+     19
+    ],
+    [
+     32,
+     19
+    ],
+    [
+     32,
+     26
+    ],
+    [
+     -24.5,
+     26
+    ]
+   ]
+  },
+  {
+   "tipo": "zona_verde",
+   "poligono": [
+    [
+     16,
+     -3
+    ],
+    [
+     20,
+     -3
+    ],
+    [
+     20,
+     19
+    ],
+    [
+     16,
+     19
+    ]
+   ]
+  },
+  {
+   "tipo": "marquesina_acceso",
+   "centro": [
+    -4,
+    -19.6
+   ],
+   "largo": 14,
+   "ancho": 5.2,
+   "rumbo_eje": 90,
+   "altura": 3.9,
+   "espesor": 0.3
+  },
+  {
+   "tipo": "bahia_ambulancias",
+   "centro": [
+    24.5,
+    -10
+   ],
+   "largo": 12,
+   "ancho": 9,
+   "rumbo_eje": 0
+  },
+  {
+   "tipo": "letrero_institucional",
+   "texto": "URGENCIAS",
+   "centro": [
+    28.7,
+    -10
+   ],
+   "rumbo": 90,
+   "base": 5.05,
+   "altura": 0.7,
+   "profundidad": 0.1,
+   "color": "#c8102e"
+  },
+  {
+   "tipo": "letrero_institucional",
+   "texto": "HOSPITAL HÉCTOR ABAD GÓMEZ",
+   "volumen": "torre",
+   "lado": "S",
+   "altura": 1.1,
+   "color": "#1d4f91"
+  },
+  {
+   "tipo": "equipo_cubierta",
+   "equipo": "pantalla",
+   "centro": [
+    5,
+    8
+   ],
+   "largo": 18,
+   "ancho": 13,
+   "rumbo_eje": 90,
+   "altura": 2.6
+  },
+  {
+   "tipo": "equipo_cubierta",
+   "equipo": "chiller",
+   "centro": [
+    9,
+    11
+   ],
+   "rumbo_eje": 90
+  },
+  {
+   "tipo": "equipo_cubierta",
+   "equipo": "chiller",
+   "centro": [
+    9,
+    5
+   ],
+   "rumbo_eje": 90
+  },
+  {
+   "tipo": "equipo_cubierta",
+   "equipo": "uma",
+   "centro": [
+    0,
+    11
+   ],
+   "rumbo_eje": 90
+  },
+  {
+   "tipo": "equipo_cubierta",
+   "equipo": "uma",
+   "centro": [
+    0,
+    5
+   ],
+   "rumbo_eje": 90
+  },
+  {
+   "tipo": "equipo_cubierta",
+   "equipo": "tanque",
+   "centro": [
+    -7,
+    16
+   ]
+  },
+  {
+   "tipo": "equipo_cubierta",
+   "equipo": "tanque",
+   "centro": [
+    -10,
+    16
+   ]
+  },
+  {
+   "tipo": "equipo_cubierta",
+   "equipo": "cuarto_maquinas",
+   "centro": [
+    -9,
+    1.5
+   ],
+   "largo": 4,
+   "ancho": 3,
+   "rumbo_eje": 90,
+   "material": "concreto_visto"
+  },
+  {
+   "tipo": "jardinera",
+   "centro": [
+    -14,
+    -25.5
+   ],
+   "largo": 6,
+   "ancho": 1.6,
+   "rumbo_eje": 90
+  },
+  {
+   "tipo": "jardinera",
+   "centro": [
+    6,
+    -25.5
+   ],
+   "largo": 6,
+   "ancho": 1.6,
+   "rumbo_eje": 90
+  },
+  {
+   "tipo": "jardinera",
+   "centro": [
+    -20,
+    -22
+   ],
+   "largo": 5,
+   "ancho": 1.6,
+   "rumbo_eje": 0
+  },
+  {
+   "tipo": "jardinera",
+   "centro": [
+    14,
+    -22
+   ],
+   "largo": 5,
+   "ancho": 1.6,
+   "rumbo_eje": 0
+  },
+  {
+   "tipo": "banca",
+   "centros": [
+    [
+     -14,
+     -24.1
+    ],
+    [
+     6,
+     -24.1
+    ]
+   ],
+   "largo": 2.4,
+   "rumbo": 0
+  },
+  {
+   "tipo": "banca",
+   "centros": [
+    [
+     -18.6,
+     -22
+    ],
+    [
+     12.6,
+     -22
+    ]
+   ],
+   "largo": 1.8,
+   "rumbo": 90,
+   "respaldo": true
+  },
+  {
+   "tipo": "luminaria",
+   "centros": [
+    [
+     -9.8,
+     -24.8
+    ],
+    [
+     -9.8,
+     -29
+    ],
+    [
+     1.8,
+     -24.8
+    ],
+    [
+     1.8,
+     -29
+    ]
+   ],
+   "altura": 4.5,
+   "rumbo": 90
+  },
+  {
+   "tipo": "luminaria",
+   "centros": [
+    [
+     -30,
+     -22
+    ],
+    [
+     -30,
+     -8
+    ],
+    [
+     -30,
+     6
+    ],
+    [
+     -30,
+     18
+    ]
+   ],
+   "altura": 7,
+   "rumbo": 90
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -21.5,
+    -27.5
+   ],
+   "altura": 8,
+   "copa": 6.5
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    17,
+    -27
+   ],
+   "altura": 8,
+   "copa": 6.5
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -26.8,
+    -20
+   ],
+   "altura": 9,
+   "copa": 7
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -26.8,
+    -6
+   ],
+   "altura": 9,
+   "copa": 7
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -26.8,
+    8
+   ],
+   "altura": 9,
+   "copa": 7
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -26.8,
+    21
+   ],
+   "altura": 9,
+   "copa": 7
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -8,
+    23
+   ],
+   "altura": 8,
+   "copa": 6.5
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    4,
+    23
+   ],
+   "altura": 8,
+   "copa": 6.5
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    16,
+    23
+   ],
+   "altura": 8,
+   "copa": 6.5
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    -12.5,
+    -28.6
+   ],
+   "altura": 6.5,
+   "copa": 5
+  },
+  {
+   "tipo": "arbol",
+   "centro": [
+    4.5,
+    -28.6
+   ],
+   "altura": 6.5,
+   "copa": 5
+  },
+  {
+   "tipo": "asta",
+   "centro": [
+    12.5,
+    -28.4
+   ],
+   "altura": 9
+  },
+  {
+   "tipo": "poste",
+   "centro": [
+    -41,
+    8
+   ],
+   "altura": 12,
+   "nombre": "Poste de la red de media tensión"
+  },
+  {
+   "tipo": "equipo_cubierta",
+   "equipo": "pantalla",
+   "centro": [
+    9,
+    -11
+   ],
+   "largo": 12,
+   "ancho": 6,
+   "rumbo_eje": 90,
+   "altura": 2.2
+  },
+  {
+   "tipo": "equipo_cubierta",
+   "equipo": "uma",
+   "centro": [
+    6,
+    -11
+   ],
+   "largo": 4.5,
+   "ancho": 2,
+   "rumbo_eje": 90,
+   "alto": 1.9
+  },
+  {
+   "tipo": "equipo_cubierta",
+   "equipo": "uma",
+   "centro": [
+    12,
+    -11
+   ],
+   "largo": 4.5,
+   "ancho": 2,
+   "rumbo_eje": 90,
+   "alto": 1.9
+  }
+ ],
+ "adecuaciones": {
+  "kwp_plan": 50,
+  "fv": [
+   {
+    "tipo": "pergola",
+    "volumen": "torre",
+    "centro": [
+     5,
+     8
+    ],
+    "largo": 19,
+    "ancho": 13.5,
+    "rumbo_eje": 90,
+    "altura": 4.3,
+    "inclinacion": 3,
+    "filas": 11,
+    "columnas": 8
+   }
+  ],
+  "kwp_factible": 48.4,
+  "notas": "Especificación de prueba del generador (torre, podio, núcleo, cubierta con equipos y pérgola solar); el programa real llega después."
+ },
+ "incertidumbres": [
+  "especificación de prueba: medidas y materiales ilustrativos"
+ ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "prueba_cortina",
+  "nombre": "Volumen de vidrio con anexo (prueba del generador)",
+  "lat": 7.005415, "lon": -73.914452,
+  "estado": "nuevo",
+  "volumenes": [
+    { "id": "caja", "centro": [0, 0], "largo": 20, "ancho": 12, "rumbo_eje": 30, "altura_alero": 14, "pisos": 4,
+      "techo": { "tipo": "plano", "parapeto": 0.9 },
+      "fachada": { "material": "muro_cortina", "muro_cortina": { "modulo": 1.25 },
+        "puertas": [ { "lado": "S", "pos": 0.3, "ancho": 2.0, "alto": 2.7 }, { "lado": "N", "pos": 0.5, "ancho": 4.0, "alto": 3.0 } ],
+        "parasoles": { "tipo": "horizontal", "profundidad": 0.6, "separacion": 0.5, "lados": ["S", "O"] },
+        "losas_expresadas": { "voladizo": 0.3, "espesor": 0.3 } } },
+    { "id": "anexo", "centro": [7.0, 12.124], "largo": 8, "ancho": 10, "rumbo_eje": 30, "altura_alero": 7, "pisos": 2,
+      "techo": { "tipo": "plano", "parapeto": 0.8 },
+      "fachada": { "material": "concreto_visto", "ventanas": { "tipo": "franja", "alto": 1.8, "lados": ["todos"] },
+        "puertas": [ { "lado": "E", "pos": 0.5, "ancho": 1.6, "alto": 2.4 } ], "losas_expresadas": { "voladizo": 0.3, "espesor": 0.3, "cubierta": true } } }
+  ],
+  "elementos": [
+    { "tipo": "plaza", "poligono": [[-16, -14], [24, -14], [24, 20], [-16, 20]] },
+    { "tipo": "letrero_institucional", "texto": "AÑO NUEVO ÜÑÍ", "volumen": "caja", "lado": "N", "sobre": "fachada", "y": 3.2, "altura": 0.5 }
+  ]
+}
