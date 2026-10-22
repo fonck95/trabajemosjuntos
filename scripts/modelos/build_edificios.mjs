@@ -4,6 +4,10 @@
 // equipos, cubierta nueva y la conexión eléctrica del proyecto de microrred), para mostrar el antes y el después.
 // Salida: web/models/edificios/<id>_lod0.glb (detalle) y <id>_lod1.glb (lejos) + manifest.json
 //
+// Obra nueva (opcional, no cambia las réplicas): fachadas por lado (muro cortina, panel compuesto, concreto a la vista,
+// ladrillo), ventanas corridas, losas expresadas, parasoles instanciados, marquesinas, bahía de ambulancias, puentes,
+// equipos de cubierta, paisajismo, letreros institucionales y pérgola solar. Formato en ESPECIFICACION.md («Obra nueva»).
+//
 // Sin parpadeo (z-fighting): nada queda coplanar con otra superficie visible. Los suelos se escalonan
 // (NIVEL), lo que va sobre un muro sobresale ≥ 2,5 cm, los vanos tienen jambas y los muros tapados por
 // otro volumen no se dibujan. Se verifica con check_coplanar.mjs.
@@ -78,6 +82,13 @@ function boxUV(w, h, d, x = 0, y = 0, z = 0, rep = 2) {
   for (let f = 0; f < 6; f++) for (let k = 0; k < 4; k++) { const i = f * 4 + k; uv.setXY(i, (uv.getX(i) * dims[f][0]) / rep, (uv.getY(i) * dims[f][1]) / rep); }
   return g;
 }
+// UV en metros → baldosa de textura de tile[0] × tile[1] m (paneles, tablas de formaleta, ladrillo); sin tile no cambia nada
+function uvs(g, tile) {
+  if (!tile || !g?.attributes.uv) return g;
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / tile[0], uv.getY(i) / tile[1]);
+  return g;
+}
 // caja orientada entre dos puntos (vigas, rieles, correas); "up" fija el giro de la sección w × h
 function beamG(a, b, w, h, up = UP) {
   const d = b.clone().sub(a), len = d.length(); if (len < 1e-4) return null;
@@ -143,9 +154,13 @@ function stripGeo(a, b, outHint) {
   return g;
 }
 
-// ---------- texto en relieve con tildes compuestas (la fuente no trae Á, Í, Ñ…)
-function textGeo(text, size, depth = 0.04) {
-  const data = font.data, sc = size / data.resolution, cap = 0.72 * size;
+// ---------- texto en relieve con tildes compuestas (la fuente no trae Á, Í, Ñ…). Con `real`, las tildes van sobre la altura
+// real de las mayúsculas de la fuente (CAP × size, medida en la "E"): así lo usan los elementos de obra nueva. Sin `real` se
+// conserva la altura supuesta de 0,72 × size del `letrero` de las réplicas, con la que la tilde aguda queda dentro de la letra
+// (se deja así para que los modelos verificados no cambien; pasar `true` en ese llamado lo corrige)
+const CAP = (() => { const g = new THREE.ShapeGeometry(font.generateShapes('E', 1)); g.computeBoundingBox(); return g.boundingBox.max.y; })();
+function textGeo(text, size, depth = 0.04, real = false) {
+  const data = font.data, sc = size / data.resolution, cap = (real ? CAP : 0.72) * size, kt = real ? 0.75 : 0.9;
   const geos = []; let x = 0;
   const ext = (shapes, dx, dy = 0) => { const g = new THREE.ExtrudeGeometry(shapes, { depth, bevelEnabled: false, curveSegments: 3 }); g.translate(dx, dy, 0); geos.push(g); };
   for (const ch of String(text).toUpperCase()) {
@@ -156,7 +171,7 @@ function textGeo(text, size, depth = 0.04) {
     const cx = x + adv / 2;
     for (const m of marks) {
       if (m === '́') ext([new THREE.Shape([new THREE.Vector2(cx - 0.06 * size, cap + 0.07 * size), new THREE.Vector2(cx + 0.06 * size, cap + 0.07 * size), new THREE.Vector2(cx + 0.16 * size, cap + 0.24 * size), new THREE.Vector2(cx + 0.02 * size, cap + 0.24 * size)])], 0);
-      else if (m === '̃' && data.glyphs['~']) ext(font.generateShapes('~', size * 0.9), cx - (data.glyphs['~'].ha * sc * 0.9) / 2, cap - 0.18 * size);
+      else if (m === '̃' && data.glyphs['~']) ext(font.generateShapes('~', size * kt), cx - (data.glyphs['~'].ha * sc * kt) / 2, real ? cap + 0.07 * size - 0.49 * size : cap - 0.18 * size);
       else if (m === '̈') for (const d of [-0.14, 0.06]) ext([new THREE.Shape([new THREE.Vector2(cx + d * size, cap + 0.08 * size), new THREE.Vector2(cx + (d + 0.09) * size, cap + 0.08 * size), new THREE.Vector2(cx + (d + 0.09) * size, cap + 0.17 * size), new THREE.Vector2(cx + d * size, cap + 0.17 * size)])], 0);
     }
     x += adv;
@@ -341,7 +356,9 @@ function flat(W, D, eaveY, t, R) {
   const pp = t.parapeto ?? 0.6;
   if (pp > 0) {
     R.roof.addRaw(R.rk, rotG(R, polyGeo([V3(-W / 2, eaveY + 0.02, -D / 2), V3(W / 2, eaveY + 0.02, -D / 2), V3(W / 2, eaveY + 0.02, D / 2), V3(-W / 2, eaveY + 0.02, D / 2)], UP, V3(1, 0, 0), V3(0, 0, 1))), true);
-    for (const [w, d, x, z] of [[W + 0.4, 0.2, 0, D / 2], [W + 0.4, 0.2, 0, -D / 2], [0.2, D, W / 2, 0], [0.2, D, -W / 2, 0]]) R.walls.addRaw(R.wk, rotG(R, boxG(w, pp, d, x, eaveY, z)), true);
+    // obra nueva (R.side): cada lado con su acabado y UV a escala; los antepechos ±X se acortan para no solapar las esquinas
+    if (R.side) for (const [s, w, d, x, z] of [['+Z', W + 0.4, 0.2, 0, D / 2], ['-Z', W + 0.4, 0.2, 0, -D / 2], ['+X', 0.2, D - 0.2, W / 2, 0], ['-X', 0.2, D - 0.2, -W / 2, 0]]) R.walls.addRaw(R.side[s].key, rotG(R, uvs(boxUV(w, pp, d, x, eaveY, z, 1), R.side[s].tile)), true);
+    else for (const [w, d, x, z] of [[W + 0.4, 0.2, 0, D / 2], [W + 0.4, 0.2, 0, -D / 2], [0.2, D, W / 2, 0], [0.2, D, -W / 2, 0]]) R.walls.addRaw(R.wk, rotG(R, boxG(w, pp, d, x, eaveY, z)), true);
     // remate (coronación) del antepecho
     if (R.trim) for (const [w, d, x, z] of [[W + 0.5, 0.3, 0, D / 2], [W + 0.5, 0.3, 0, -D / 2], [0.3, D - 0.3, W / 2, 0], [0.3, D - 0.3, -W / 2, 0]]) R.walls.addRaw(R.coping, rotG(R, boxG(w, 0.05, d, x, eaveY + pp, z)));
   } else R.roof.addRaw(R.rk, rotG(R, boxUV(W + 0.1, 0.2, D + 0.1, 0, eaveY - 0.18, 0, 1)), true); // losa con borde
@@ -369,7 +386,9 @@ function clipSeg(p, q, hx, hz) {
 }
 // Tramos del lado s del volumen A que quedan dentro de otro volumen cerrado (no se ven) o sobre un muro de un
 // volumen anterior que mira al mismo lado (serían coplanares): { a0, a1, y0, y1 } en coordenadas de la fachada.
-function coverage(V, A, s) {
+// Con `parapeto` (fachadas de obra nueva), si el tramo corre por el borde de B y B tiene cubierta plana con antepecho,
+// lo tapado sube hasta el remate del antepecho: así ventanas, enjutas y parasoles empiezan por encima de él.
+function coverage(V, A, s, parapeto = false) {
   const S = A.f.sides[s], e = 0.03, out = [];
   const c = S.n.clone().multiplyScalar(S.half);
   const l = c.clone().addScaledVector(S.t, -S.len / 2).applyMatrix4(A.f.m), r = c.clone().addScaledVector(S.t, S.len / 2).applyMatrix4(A.f.m);
@@ -386,7 +405,8 @@ function coverage(V, A, s) {
     if (Math.abs(Math.abs(m.z) - B.f.A / 2) < e && Math.abs(dir.z) < 0.02) edge = m.z > 0 ? '+Z' : '-Z';
     else if (Math.abs(Math.abs(m.x) - B.f.L / 2) < e && Math.abs(dir.x) < 0.02) edge = m.x > 0 ? '+X' : '-X';
     if (edge && B.f.sides[edge].n.clone().transformDirection(B.f.m).dot(nW) > 0.9 && B.i > A.i) continue; // el muro anterior se queda
-    out.push({ a0: -S.len / 2 + tt[0] * S.len, a1: -S.len / 2 + tt[1] * S.len, y0, y1 });
+    const pp = parapeto && edge && B.v.techo?.tipo === 'plano' ? B.v.techo.parapeto ?? 0.6 : 0;
+    out.push({ a0: -S.len / 2 + tt[0] * S.len, a1: -S.len / 2 + tt[1] * S.len, y0, y1: pp > 0 ? Math.min(A.eave, B.top + pp + 0.05 - A.base) : y1 });
   }
   return out;
 }
@@ -441,16 +461,16 @@ function obstructed(V, A, s, a0, a1, y0, y1, depth) {
 }
 const opInRect = (o, r) => o.along - o.w / 2 > r.x0 + 0.04 && o.along + o.w / 2 < r.x1 - 0.04 && o.y0 >= r.y0 - 1e-3 && o.y0 + o.h < r.y1 - 0.04;
 // un rectángulo de muro; en LOD0 con los vanos recortados (puertas como muescas, ventanas como huecos)
-function wallRect(part, wk, m0, r, ops, detail) {
+function wallRect(part, wk, m0, r, ops, detail, tile) {
   const inner = detail ? ops.filter((o) => opInRect(o, r)) : [];
-  if (!inner.length) { part.addRaw(wk, polyGeo([V3(r.x0, r.y0, 0), V3(r.x1, r.y0, 0), V3(r.x1, r.y1, 0), V3(r.x0, r.y1, 0)], V3(0, 0, 1), V3(1, 0, 0), UP).applyMatrix4(m0), true); return; }
+  if (!inner.length) { part.addRaw(wk, uvs(polyGeo([V3(r.x0, r.y0, 0), V3(r.x1, r.y0, 0), V3(r.x1, r.y1, 0), V3(r.x0, r.y1, 0)], V3(0, 0, 1), V3(1, 0, 0), UP), tile).applyMatrix4(m0), true); return; }
   const notch = inner.filter((o) => o.y0 <= r.y0 + 1e-3).sort((a, b) => a.along - b.along), holes = inner.filter((o) => o.y0 > r.y0 + 1e-3);
   const c = [[r.x0, r.y0]];
   for (const o of notch) c.push([o.along - o.w / 2, r.y0], [o.along - o.w / 2, r.y0 + o.h], [o.along + o.w / 2, r.y0 + o.h], [o.along + o.w / 2, r.y0]);
   c.push([r.x1, r.y0], [r.x1, r.y1], [r.x0, r.y1]);
   const sh = new THREE.Shape(c.map(([x, y]) => new THREE.Vector2(x, y)));
   for (const o of holes) sh.holes.push(new THREE.Path([[o.along - o.w / 2, o.y0], [o.along + o.w / 2, o.y0], [o.along + o.w / 2, o.y0 + o.h], [o.along - o.w / 2, o.y0 + o.h]].map(([x, y]) => new THREE.Vector2(x, y))));
-  part.addRaw(wk, new THREE.ShapeGeometry(sh).applyMatrix4(m0), true);
+  part.addRaw(wk, uvs(new THREE.ShapeGeometry(sh), tile).applyMatrix4(m0), true);
 }
 // intervalos de [x0, x1] libres de vanos que cruzan la franja [y0, y1]
 function freeSpans(x0, x1, ops, y0, y1) {
@@ -460,18 +480,20 @@ function freeSpans(x0, x1, ops, y0, y1) {
 }
 // Vano en LOD0: jambas, fondo oscuro, carpintería (marco, parteluces, vidrio, reja o celosía; hoja con tableros o
 // cortina enrollable), alféizar y dintel. En LOD1, un panel plano 4 cm delante del muro.
-function opening(part, f, s, o, wk, trimK, detail, topRoom, ext = 1) {
+function opening(part, f, s, o, wk, trimK, detail, topRoom, ext = 1, tile) {
   const th = 2 * f.sides[s].half, k = Math.min(REV, th - 0.03) / REV; // en paños delgados la carpintería se acerca al muro
   const m = sideMatrix(f, s, o.along, o.y0, 0), mi = m.clone().multiply(new THREE.Matrix4().makeScale(1, 1, k)), w = o.w, h = o.h;
   const add = (key, g, uv = false) => g && part.addRaw(key, g.applyMatrix4(mi), uv), addOut = (key, g, uv = false) => g && part.addRaw(key, g.applyMatrix4(m), uv);
   const door = o.kind === 'puerta', cel = !door && (o.tipo === 'celosia' || o.tipo === 'calado');
   const uvScale = (g, s) => { const uv = g.attributes.uv, p = g.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, p.getX(i) / s, p.getY(i) / s); return g; };
+  // fachadas de obra nueva: vidrio del muro cortina y marco oscuro (o.vidrio, o.marco); las réplicas usan los de siempre
+  const gk = o.vidrio || 'vidrio', fk = o.marco ? tint('metal_pintado', o.marco) : 'metal_pintado#d9dcdc';
   if (!detail) {
-    const key = door ? (w > 2.6 ? 'persiana' : 'pintura#4a3a2e') : cel ? 'celosia' : o.tipo === 'reja' ? 'reja_vidrio' : 'vidrio';
+    const key = door ? (w > 2.6 ? 'persiana' : o.vidrio ? gk : 'pintura#4a3a2e') : cel ? 'celosia' : o.tipo === 'reja' ? 'reja_vidrio' : gk;
     addOut(key, uvScale(new THREE.PlaneGeometry(w, h).translate(0, h / 2, 0.04), key === 'celosia' ? 0.9 : key === 'reja_vidrio' ? 0.5 : 1), key !== 'vidrio' && key !== 'pintura#4a3a2e');
     return;
   }
-  const d = -REV, q = (pts, n) => add(wk, polyGeo(pts, n), true);
+  const d = -REV, q = (pts, n) => add(wk, uvs(polyGeo(pts, n), tile), true);
   q([V3(-w / 2, 0, 0), V3(-w / 2, h, 0), V3(-w / 2, h, d), V3(-w / 2, 0, d)], V3(1, 0, 0));
   q([V3(w / 2, 0, 0), V3(w / 2, 0, d), V3(w / 2, h, d), V3(w / 2, h, 0)], V3(-1, 0, 0));
   q([V3(-w / 2, h, 0), V3(w / 2, h, 0), V3(w / 2, h, d), V3(-w / 2, h, d)], V3(0, -1, 0));
@@ -480,13 +502,13 @@ function opening(part, f, s, o, wk, trimK, detail, topRoom, ext = 1) {
   if (cel) { add('celosia', uvScale(new THREE.PlaneGeometry(w, h).translate(0, h / 2, -0.05), 0.9), true); return; }
   if (!door) {
     const vit = o.tipo === 'vitrina', fw = 0.05;
-    add('vidrio', new THREE.PlaneGeometry(w, h).translate(0, h / 2, -0.075));
-    add('metal_pintado#d9dcdc', boxG(w, fw, 0.06, 0, 0, -0.06)); add('metal_pintado#d9dcdc', boxG(w, fw, 0.06, 0, h - fw, -0.06));
-    add('metal_pintado#d9dcdc', boxG(fw, h - 2 * fw, 0.06, -w / 2 + fw / 2, fw, -0.06)); add('metal_pintado#d9dcdc', boxG(fw, h - 2 * fw, 0.06, w / 2 - fw / 2, fw, -0.06));
-    const nV = Math.max(1, Math.round(w / (vit ? 1.1 : 0.75)));
-    for (let i = 1; i < nV; i++) add('metal_pintado#d9dcdc', boxG(0.035, h - 2 * fw, 0.04, -w / 2 + (i * w) / nV, fw, -0.06));
+    add(gk, new THREE.PlaneGeometry(w, h).translate(0, h / 2, -0.075));
+    add(fk, boxG(w, fw, 0.06, 0, 0, -0.06)); add(fk, boxG(w, fw, 0.06, 0, h - fw, -0.06));
+    add(fk, boxG(fw, h - 2 * fw, 0.06, -w / 2 + fw / 2, fw, -0.06)); add(fk, boxG(fw, h - 2 * fw, 0.06, w / 2 - fw / 2, fw, -0.06));
+    const nV = Math.max(1, Math.round(w / (o.tipo === 'franja' ? 1.5 : vit ? 1.1 : 0.75)));
+    for (let i = 1; i < nV; i++) add(fk, boxG(0.035, h - 2 * fw, 0.04, -w / 2 + (i * w) / nV, fw, -0.06));
     const yT = vit ? (h > 2.3 ? 2.0 : 0) : h > 1.5 ? h * 0.68 : 0;
-    if (yT) add('metal_pintado#d9dcdc', boxG(w - 2 * fw, 0.035, 0.04, 0, yT, -0.06));
+    if (yT) add(fk, boxG(w - 2 * fw, 0.035, 0.04, 0, yT, -0.06));
     if (o.tipo === 'reja') {
       const nb = Math.max(2, Math.round(w / 0.12));
       for (let i = 0; i < nb; i++) add('metal_pintado#3f4448', boxG(0.018, h, 0.018, -w / 2 + ((i + 0.5) * w) / nb, 0, -0.012));
@@ -495,7 +517,7 @@ function opening(part, f, s, o, wk, trimK, detail, topRoom, ext = 1) {
     if (!vit && ext !== null) addOut(trimK, boxW(w + 0.12 * ext, 0.05, 0.09, 0, -0.065, 0.045)); // alféizar
   } else {
     const fw = 0.07, lw = w - 2 * fw, lh = h - fw;
-    add('metal_pintado#d9dcdc', boxG(fw, h, 0.08, -w / 2 + fw / 2, 0, -0.06)); add('metal_pintado#d9dcdc', boxG(fw, h, 0.08, w / 2 - fw / 2, 0, -0.06)); add('metal_pintado#d9dcdc', boxG(lw, fw, 0.08, 0, h - fw, -0.06));
+    add(fk, boxG(fw, h, 0.08, -w / 2 + fw / 2, 0, -0.06)); add(fk, boxG(fw, h, 0.08, w / 2 - fw / 2, 0, -0.06)); add(fk, boxG(lw, fw, 0.08, 0, h - fw, -0.06));
     if (w > 2.6) {
       // portón: cortina enrollable de lamas con barra inferior y manijas
       const g = new THREE.PlaneGeometry(lw, lh).translate(0, lh / 2, -0.08), uv = g.attributes.uv, p = g.attributes.position;
@@ -503,6 +525,17 @@ function opening(part, f, s, o, wk, trimK, detail, topRoom, ext = 1) {
       add('persiana', g, true);
       add('metal_pintado#2b2d30', boxG(lw, 0.07, 0.05, 0, 0, -0.075));
       for (const x of [-lw / 4, lw / 4]) add('metal_pintado#c4c8cb', boxG(0.14, 0.03, 0.03, x, 0.25, -0.045));
+    } else if (o.vidrio) {
+      // puerta de aluminio y vidrio (fachadas de obra nueva): hojas con marco, vidrio y manija vertical
+      const n = w > 1.3 ? 2 : 1, lwi = lw / n;
+      for (let i = 0; i < n; i++) {
+        const cx = -lw / 2 + lwi * (i + 0.5);
+        add(gk, new THREE.PlaneGeometry(lwi - 0.1, lh - 0.1).translate(cx, lh / 2, -0.08));
+        add(fk, boxG(lwi - 0.01, 0.06, 0.04, cx, 0, -0.08)); add(fk, boxG(lwi - 0.01, 0.06, 0.04, cx, lh - 0.06, -0.08));
+        for (const sx of [-1, 1]) add(fk, boxG(0.05, lh - 0.12, 0.04, cx + sx * (lwi / 2 - 0.03), 0.06, -0.08));
+        const hx = n === 2 ? (i ? -lwi / 2 + 0.12 : lwi / 2 - 0.12) : lwi / 2 - 0.14;
+        add('metal_pintado#c4c8cb', boxG(0.03, 0.7, 0.04, cx + hx, 0.75, -0.04));
+      }
     } else {
       const n = w > 1.3 ? 2 : 1, lwi = lw / n;
       for (let i = 0; i < n; i++) {
@@ -527,6 +560,10 @@ function volume(b, vi, V, P, detail) {
   const L = f.L, A = f.A, pisos = Math.max(1, v.pisos ?? 1), hf = eaveH / pisos;
   const W = P.walls, M = (g, m) => g.applyMatrix4(m);
   vi.ops = {}; vi.cov = {}; vi.pipes = {}; vi.cols = [];
+  // acabado por lado (fachadas de obra nueva: muro cortina, panel compuesto, concreto a la vista…); null en las réplicas
+  const SS = abierto ? null : cladSides(fa, f);
+  if (SS) newMats(b);
+  vi.SS = SS;
   if (abierto) {
     // pórtico, corredor o kiosco: columnas en el perímetro (cada ~3,5 m) con basa y capitel, y viga de amarre
     const cs = v.columna ?? 0.25, floor = v.piso !== false && base === 0;
@@ -564,6 +601,15 @@ function volume(b, vi, V, P, detail) {
         for (let k = 0; k < pisos; k++) {
           const y = k * hf + (tipo === 'vitrina' ? 0.25 : sill), h = tipo === 'vitrina' ? Math.min(hf - 0.6, 2.6) : Math.min(wh, hf - sill - 0.25);
           if (h < 0.3) continue;
+          if (tipo === 'franja') {
+            // ventana corrida: una por piso de punta a punta (menos el margen); en el primer piso se corta en las puertas.
+            // Después se parte en los tramos visibles del muro
+            const mg = vn.margen ?? 0.6;
+            let sp = [[-S.len / 2 + mg, S.len / 2 - mg]];
+            if (k === 0) for (const dd of doors[s] || []) sp = subtract(sp, dd);
+            for (const [a0, a1] of sp) if (a1 - a0 > 0.8) ops[s].push({ kind: 'ventana', tipo, along: (a0 + a1) / 2, w: a1 - a0, h, y0: y });
+            continue;
+          }
           for (let i = 0; i < n; i++) {
             const along = (i - (n - 1) / 2) * sep;
             if (k === 0 && (doors[s] || []).some(([a0, a1]) => along + ww / 2 > a0 && along - ww / 2 < a1)) continue;
@@ -573,33 +619,47 @@ function volume(b, vi, V, P, detail) {
       }
     }
     for (const [s, S] of Object.entries(f.sides)) {
-      vi.cov[s] = coverage(V, vi, s);
+      vi.cov[s] = coverage(V, vi, s, !!SS);
       const rects = wallRects(S.len, eaveH, vi.cov[s]), m0 = sideMatrix(f, s, 0, 0, 0);
+      const sd = SS ? SS[s] : null, wkS = sd ? sd.key : wk, trimS = sd?.clad ? tint('metal_pintado', PERFIL_DEF) : sd ? tint('pintura', shade(sd.color, 0.86)) : trimK;
+      // en el muro cortina solo quedan las puertas (el muro es el vidrio); las ventanas corridas se parten por tramos visibles
+      let list = sd?.cortina ? ops[s].filter((o) => o.kind === 'puerta') : ops[s];
+      list = list.flatMap((o) => (o.tipo !== 'franja' ? [o] : rects.filter((r) => r.y0 <= o.y0 + 1e-3 && o.y0 + o.h < r.y1 - 0.04).flatMap((r) => {
+        const a0 = Math.max(o.along - o.w / 2, r.x0 + 0.35), a1 = Math.min(o.along + o.w / 2, r.x1 - 0.35);
+        return a1 - a0 > 0.8 ? [{ ...o, along: (a0 + a1) / 2, w: a1 - a0 }] : [];
+      })));
+      if (sd?.clad) for (const o of list) Object.assign(o, { vidrio: tint('vidrio_cortina', hexOK(fa.muro_cortina?.color_vidrio, VIDRIO_DEF)), marco: hexOK(fa.ventanas?.color_marco, '#3b4043') });
       // solo quedan los vanos que caben enteros en un tramo visible y no se pisan entre sí
       const kept = [];
-      for (const o of ops[s]) {
+      for (const o of list) {
         if (!rects.some((r) => opInRect(o, r))) continue;
         if (o.kind === 'ventana' && obstructed(V, vi, s, o.along - o.w / 2 + 0.05, o.along + o.w / 2 - 0.05, o.y0, o.y0 + o.h, 0.12)) continue;
         if (kept.some((k) => Math.abs(k.along - o.along) < (k.w + o.w) / 2 + 0.08 && k.y0 < o.y0 + o.h + 0.08 && o.y0 < k.y0 + k.h + 0.08)) continue;
         kept.push(o);
       }
       vi.ops[s] = kept;
-      for (const r of rects) wallRect(W, wk, m0, r, kept, detail);
+      if (sd?.cortina) { curtainSide(W, vi, s, rects, kept, sd, SS, detail); continue; }
+      for (const r of rects) wallRect(W, wkS, m0, r, kept, detail, sd?.tile);
       for (const o of kept) {
         const r = rects.find((q) => opInRect(o, q)), ob = (e) => obstructed(V, vi, s, o.along - o.w / 2 - e, o.along + o.w / 2 + e, o.y0 - 0.1, o.y0 + o.h + 0.12, 0.12);
-        opening(W, f, s, o, wk, trimK, detail, r.y1 - (o.y0 + o.h), !ob(0.1) ? 1 : !ob(0) ? 0 : null);
+        opening(W, f, s, o, wkS, trimS, detail, r.y1 - (o.y0 + o.h), !ob(0.1) ? 1 : !ob(0) ? 0 : null, sd?.tile);
       }
+      // los acabados nuevos no llevan zócalo pintado ni bandas de entrepiso (las reemplazan las losas expresadas)
+      if (sd?.clad) continue;
       // zócalo (2,5 cm) y bandas de entrepiso (12 cm), interrumpidos en los vanos; envuelven las esquinas
       const zh = fa.zocalo ? fa.zocalo.altura ?? 0.8 : 0, zk = fa.zocalo ? tint('pintura', fa.zocalo.color, '#7a2b2b') : null;
       for (const r of rects) {
         const ext = (a, bb, e) => [Math.abs(a + S.len / 2) < 1e-3 ? a - e : a, Math.abs(bb - S.len / 2) < 1e-3 ? bb + e : bb];
         if (zk && r.y0 < 0.01) for (const [a, bb] of freeSpans(r.x0, r.x1, kept, 0, zh + 0.03)) { const [x0, x1] = ext(a, bb, 0.025); W.addRaw(zk, M(boxW(x1 - x0, Math.min(zh, r.y1), 0.025, (x0 + x1) / 2, 0, 0.0125), m0)); }
-        for (let k = 1; k < pisos; k++) {
+        for (let k = 1; k < pisos && !fa.losas_expresadas; k++) {
           const yb = k * hf - 0.1; if (yb < r.y0 || yb + 0.2 > r.y1) continue;
-          for (const [a, bb] of freeSpans(r.x0, r.x1, kept, yb, yb + 0.2)) { const [x0, x1] = ext(a, bb, 0.12); W.addRaw(trimK, M(boxW(x1 - x0, 0.2, 0.12, (x0 + x1) / 2, yb, 0.06), m0)); }
+          for (const [a, bb] of freeSpans(r.x0, r.x1, kept, yb, yb + 0.2)) { const [x0, x1] = ext(a, bb, 0.12); W.addRaw(trimS, M(boxW(x1 - x0, 0.2, 0.12, (x0 + x1) / 2, yb, 0.06), m0)); }
         }
       }
     }
+    // obra nueva: bordes de losa que sobresalen en cada piso y parasoles (instanciados)
+    if (fa.losas_expresadas) slabEdges(W, vi, fa.losas_expresadas, P.puentes, P);
+    if (fa.parasoles) sunShades(P, vi, fa, SS, detail);
   }
   // corredor con columnas (basa y capitel), viga, piso elevado y cubierta con tapa
   const co = fa.corredor;
@@ -630,7 +690,7 @@ function volume(b, vi, V, P, detail) {
       const along = dd.length ? dd[0].along : 0;
       const top = (pisos > 1 ? hf : eaveH) - size - 0.12, doorTop = Math.max(0, ...dd.map((o) => o.h + 0.1));
       const y = Math.min(top, Math.max(doorTop + 0.25, (pisos > 1 ? hf : eaveH) - size - 0.35));
-      W.addRaw(tint('pintura_satin', le.color, '#1b3d7a'), M(tg, sideMatrix(f, s, along, y, 0.045)));
+      W.addRaw(tint('pintura_satin', le.color, '#1b3d7a'), M(tg, sideMatrix(f, s, along, y, SS?.[s]?.cortina ? CW_D + 0.05 : 0.045)));
     }
   }
   // cubierta
@@ -652,6 +712,8 @@ function volume(b, vi, V, P, detail) {
   const local = { walls: new Part(), roof: new Part() }, eaves = [];
   if (vi.lift && t.voladizo !== 0) t = { ...t, voladizo: Math.max(0.05, (t.voladizo ?? (t.tipo === 'curvo' ? 0.4 : 0.6)) - vi.lift * 1.5) };
   const R0 = { roof: local.roof, walls: local.walls, wk, rk: roofMat(b, t), caps: detail, trim: detail, closed: !abierto, eaves, soffit, coping: tint('pintura', '#dcd9d1') };
+  // antepecho por lado con el acabado de cada fachada (coronación de aluminio sobre el muro cortina) y remate metálico
+  if (SS) Object.assign(R0, { side: Object.fromEntries(Object.entries(SS).map(([s, sd]) => [s, crownOf(fa, sd)])), coping: tint('metal_pintado', '#c9cdd0') });
   const faces = roofParts(R0), lift = vi.lift || 0;
   const raise = (part) => { if (lift) for (const gs of part.byMat.values()) for (const g of gs) g.translate(0, lift, 0); };
   raise(local.roof);
@@ -711,6 +773,238 @@ function volumePoly(b, v, P, detail) {
     }
   }
   return { faces: [], eave: base + h, base, roofGeos: [] };
+}
+
+// ---------- fachadas de obra nueva: acabado por lado, muro cortina, losas expresadas y parasoles
+// Solo se activan con las opciones nuevas (fachada.lados_material, materiales muro_cortina / panel_compuesto /
+// concreto_visto, fachada.ladrillo, losas_expresadas, parasoles): las réplicas existentes se generan igual que antes.
+const CLAD = { muro_cortina: '#2f4656', panel_compuesto: '#d3d6d8', concreto_visto: '#bdbab2', ladrillo_visto: '#b4583c' };
+const VIDRIO_DEF = '#2f4656', PERFIL_DEF = '#c3c8cc';
+const CW_D = 0.1; // los parales del muro cortina sobresalen 10 cm del vidrio
+const hsh = (a, b) => { let h = (a * 374761393 + b * 668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
+const unitBox = new THREE.BoxGeometry(1, 1, 1);
+// materiales de obra nueva: se crean solo cuando una especificación los usa
+function newMats(b) {
+  if (b.mats.vidrio_cortina) return;
+  b.mat('vidrio_cortina', { color: '#ffffff', rough: 0.07, metal: 0.55 }); // oscuro y algo reflejante (más con el mapa de entorno de la web)
+  b.mat('muro_panel', { color: '#ffffff', rough: 0.4, metal: 0.4, tex: TEX.panel });
+  b.mat('muro_concreto', { color: '#ffffff', rough: 0.93, tex: TEX.concreto_tabla });
+  b.mat('muro_ladrillo_fino', { color: '#ffffff', rough: 0.9, tex: TEX.ladrillo_fino });
+  b.mat('luz', { color: '#fff8ec', rough: 0.5, emissive: '#fff1d0' });
+}
+// acabado de un lado: { material, key (material#color), color, tile (baldosa en m), clad (acabado nuevo), cortina, cw }
+function cladOf(fa, m, c, nuevo) {
+  if (!(m in CLAD) || (m === 'ladrillo_visto' && !nuevo)) return { material: m, key: wallMat({ material: m, color: c }), color: wallColor({ material: m, color: c }), clad: false };
+  const color = hexOK(c, CLAD[m]), o = { material: m, color, clad: true, cortina: m === 'muro_cortina' };
+  if (m === 'panel_compuesto') { const p = fa.panel || {}; o.key = tint('muro_panel', color); o.tile = [4 * (p.ancho ?? 1.5), 4 * (p.alto ?? 0.75)]; }
+  else if (m === 'concreto_visto') { o.key = tint('muro_concreto', color); o.tile = [2.4, 1.2]; }
+  else if (m === 'ladrillo_visto') { o.key = tint('muro_ladrillo_fino', color); o.tile = [1.02, 1.05]; }
+  else {
+    const cw = fa.muro_cortina || {};
+    o.cw = { modulo: Math.max(0.6, cw.modulo ?? 1.5), enjuta: Math.max(0.3, cw.enjuta ?? 1.0), vidrio: hexOK(cw.color_vidrio, hexOK(c, VIDRIO_DEF)), perfil: hexOK(cw.color_perfil, PERFIL_DEF), enjutaColor: hexOK(cw.color_enjuta, '#56636c') };
+    o.key = tint('vidrio_cortina', o.cw.vidrio);
+  }
+  return o;
+}
+// acabado de cada lado del volumen, o null si la fachada no usa ninguna opción nueva
+function cladSides(fa, f) {
+  const lm = fa.lados_material && typeof fa.lados_material === 'object' ? fa.lados_material : null, main = fa.material || 'pañete_pintado';
+  if (!lm && !(main in CLAD && (main !== 'ladrillo_visto' || fa.ladrillo))) return null;
+  const out = {};
+  for (const s of Object.keys(f.sides)) out[s] = cladOf(fa, main, fa.color, !!(fa.ladrillo || lm));
+  for (const [k, val] of Object.entries(lm || {})) {
+    const o = typeof val === 'string' ? { material: val } : val || {}, m = o.material || main;
+    if (!['largo', 'corto', 'todos'].includes(k) && !CARD[String(k).toUpperCase()[0]]) { warn.push(`lados_material: lado desconocido "${k}"`); continue; }
+    for (const s of sidesOf(f, [k])) out[s] = cladOf(fa, m, o.color ?? (m === main ? fa.color : undefined), true);
+  }
+  return out;
+}
+// antepecho de la cubierta plana en un lado: fachada.coronacion, panel del color del perfil sobre el muro cortina, o el acabado del lado
+function crownOf(fa, sd) {
+  const c = fa.coronacion;
+  const o = c ? cladOf(fa, c.material || 'panel_compuesto', c.color, true) : sd;
+  return o.cortina ? cladOf(fa, 'panel_compuesto', o.cw.perfil, true) : o;
+}
+// Muro cortina de un lado: vidrio por módulos (tres tonos apenas distintos, como las unidades reales), enjutas opacas en cada
+// losa, en la base y bajo la coronación, parales (10 cm) y travesaños (7 cm) de aluminio, esquineros y puertas de vidrio.
+// Cada esquina la pone el lado que la tiene a su derecha; si el vecino de la izquierda no es muro cortina, va un paral de remate.
+function curtainSide(W, vi, s, rects, doors, sd, SS, detail) {
+  const f = vi.f, S = f.sides[s], len = S.len, eaveH = vi.eave, pisos = Math.max(1, vi.v.pisos ?? 1), hf = eaveH / pisos;
+  const cw = sd.cw, m0 = sideMatrix(f, s, 0, 0, 0), pk = tint('metal_pintado', cw.perfil), ek = tint('vidrio_cortina', cw.enjutaColor);
+  const dM = CW_D, wM = 0.06, dT = 0.07, e = cw.enjuta;
+  const gk = [1, 1.1, 0.9].map((k) => tint('vidrio_cortina', shade(cw.vidrio, k)));
+  const bands = [[-1, 0.18], [eaveH - Math.min(e / 2, 0.6), eaveH + 5]];
+  for (let k = 1; k < pisos; k++) bands.push([k * hf - e / 2, k * hf + e / 2]);
+  const inBand = (y0, y1) => bands.some(([a, c]) => y0 >= a - 1e-3 && y1 <= c + 1e-3);
+  const n = Math.max(1, Math.round(len / cw.modulo)), pitch = len / n, grid = Array.from({ length: n - 1 }, (_, i) => -len / 2 + (i + 1) * pitch);
+  const dr = doors.map((o) => ({ a: o.along - o.w / 2, b: o.along + o.w / 2, h: o.h }));
+  const quad = (key, x0, x1, y0, y1) => W.addRaw(key, polyGeo([V3(x0, y0, 0), V3(x1, y0, 0), V3(x1, y1, 0), V3(x0, y1, 0)], V3(0, 0, 1)).applyMatrix4(m0));
+  const bar = (w, h, d, x, y, z) => W.addRaw(pk, boxW(w, h, d, x, y, z).applyMatrix4(m0));
+  const uniq = (a) => [...new Set(a.map((x) => +x.toFixed(4)))].sort((p, q) => p - q);
+  const left = Object.keys(f.sides).find((k) => f.sides[k].n.dot(S.t) < -0.9), leftCurtain = !!SS[left]?.cortina, sid = Object.keys(f.sides).indexOf(s) * 997;
+  for (const r of rects) {
+    const xg = grid.filter((x) => x > r.x0 + 0.25 && x < r.x1 - 0.25 && !dr.some((d) => x > d.a - 0.3 && x < d.b + 0.3));
+    const xs = uniq([r.x0, r.x1, ...xg, ...dr.flatMap((d) => [d.a, d.b]).filter((x) => x > r.x0 + 0.05 && x < r.x1 - 0.05)]);
+    const ys = uniq([r.y0, r.y1, ...bands.flat().filter((y) => y > r.y0 + 0.02 && y < r.y1 - 0.02)]);
+    for (let i = 0; i < xs.length - 1; i++) {
+      const xa = xs[i], xb = xs[i + 1], door = dr.find((d) => xa >= d.a - 1e-3 && xb <= d.b + 1e-3), col = Math.round((xa + xb) / 2 / pitch);
+      for (let j = 0; j < ys.length - 1; j++) {
+        let ya = ys[j]; const yb = ys[j + 1];
+        if (door && ya < door.h) { if (yb <= door.h + 1e-3) continue; ya = door.h; }
+        quad(inBand(ys[j], yb) ? ek : gk[Math.floor(hsh(sid + col, Math.round(ya * 10)) * 2.999)], xa, xb, ya, yb);
+      }
+    }
+    // sobre otro volumen, parales y esquineros arrancan 5 cm más arriba (no quedan en el plano de su cubierta o antepecho)
+    const yb = r.y0 > 0.01 ? r.y0 + 0.05 : r.y0, H = r.y1 - yb;
+    for (const x of xg) bar(wM, H, dM, x, yb, dM / 2);
+    // travesaños en los bordes de las enjutas, cortados en las puertas (el cabezal de la puerta los reemplaza)
+    for (const y of uniq(bands.flat().filter((y) => y > r.y0 + 0.04 && y < r.y1 - 0.04))) {
+      let sp = [[r.x0, r.x1]];
+      for (const d of dr) if (y < d.h + 0.15) sp = subtract(sp, [d.a - 0.1, d.b + 0.1]);
+      for (const [a, c] of sp) if (c - a > 0.05) bar(c - a, 0.06, dT, (a + c) / 2, y - 0.03, dT / 2);
+    }
+    // extremos: esquinero, o paral de remate que entra hasta el muro del volumen vecino (3 cm más allá del tramo visible),
+    // a 3 cm de las caras de su antepecho
+    if (r.x1 >= len / 2 - 1e-3) bar(wM + dM, H, wM + dM, len / 2 + (dM - wM) / 2, yb, (dM - wM) / 2); // esquinero
+    else bar(0.07, H, dM, r.x1 - 0.005, yb, dM / 2);
+    if (r.x0 > -len / 2 + 1e-3) bar(0.07, H, dM, r.x0 + 0.005, yb, dM / 2);
+    else if (!leftCurtain) bar(wM, H, dM, -len / 2 + wM / 2, yb, dM / 2);
+  }
+  for (const o of doors) curtainDoor(W, f, s, o, sd, detail);
+}
+// Puerta en el muro cortina: vestíbulo hundido 40 cm con retornos de aluminio, marco exterior, hojas corredizas
+// automáticas (paños fijos laterales en vanos de más de 3,2 m) y cabezal del operador. En LOD1, un paño de vidrio.
+function curtainDoor(W, f, s, o, sd, detail) {
+  const m = sideMatrix(f, s, o.along, 0, 0), add = (k, g) => W.addRaw(k, g.applyMatrix4(m));
+  const cw = sd.cw, pk = tint('metal_pintado', cw.perfil), w = o.w, h = o.h, R = 0.4, lg = tint('vidrio_cortina', shade(cw.vidrio, 1.3));
+  if (!detail) { add(lg, new THREE.PlaneGeometry(w, h).translate(0, h / 2, -0.05)); return; }
+  const q = (k, pts, n) => add(k, polyGeo(pts, n));
+  q('pintura#17191b', [V3(-w / 2, 0, -R), V3(w / 2, 0, -R), V3(w / 2, h, -R), V3(-w / 2, h, -R)], V3(0, 0, 1));
+  q(pk, [V3(-w / 2, 0, 0), V3(-w / 2, h, 0), V3(-w / 2, h, -R), V3(-w / 2, 0, -R)], V3(1, 0, 0));
+  q(pk, [V3(w / 2, 0, 0), V3(w / 2, 0, -R), V3(w / 2, h, -R), V3(w / 2, h, 0)], V3(-1, 0, 0));
+  q(pk, [V3(-w / 2, h, 0), V3(w / 2, h, 0), V3(w / 2, h, -R), V3(-w / 2, h, -R)], V3(0, -1, 0));
+  const dd = CW_D + 0.04;
+  for (const sx of [-1, 1]) add(pk, boxW(0.08, h + 0.12, dd, sx * (w / 2 + 0.04), 0, dd / 2));
+  add(pk, boxW(w, 0.12, dd, 0, h, dd / 2));
+  const np = w > 3.2 ? 4 : w > 1.5 ? 2 : 1, pw = w / np, zl = -0.22, hl = h - 0.24;
+  add(pk, boxG(w, 0.24, 0.2, 0, hl, zl));
+  for (let i = 0; i < np; i++) {
+    const cx = -w / 2 + pw * (i + 0.5);
+    add(lg, new THREE.PlaneGeometry(pw - 0.08, hl - 0.08).translate(cx, hl / 2, zl));
+    add(pk, boxG(pw, 0.05, 0.05, cx, 0, zl));
+    for (const sx of [-1, 1]) add(pk, boxG(0.045, hl - 0.05, 0.05, cx + sx * (pw / 2 - 0.0225), 0.05, zl));
+  }
+}
+// Losas expresadas: borde de losa que sobresale `voladizo` en cada entrepiso (y en la cubierta con `cubierta: true`) por los
+// tramos visibles de cada lado; donde otro volumen tapa el muro, el borde entra 3 cm en él. Se guardan en P.rings y se
+// dibujan al final (ringsOut), cuando ya se sabe por dónde suben los ductos de la conexión. Los lados ±Z se prolongan en las
+// esquinas y los ±X se recortan 12 cm (lo que el borde entra en el muro), para que dos bordes nunca se solapen.
+function slabEdges(W, vi, le, cuts, P) {
+  const f = vi.f, eaveH = vi.eave, pisos = Math.max(1, vi.v.pisos ?? 1), hf = eaveH / pisos;
+  const v = Math.max(0.05, le.voladizo ?? 0.4), e = Math.max(0.1, le.espesor ?? 0.35), key = tint('pintura', le.color, '#eeede9');
+  const ys = Array.from({ length: pisos - 1 }, (_, k) => (k + 1) * hf);
+  if (le.cubierta) ys.push(eaveH);
+  for (const s of sidesOf(f, le.lados || ['todos'])) {
+    const S = f.sides[s], m0 = sideMatrix(f, s, 0, 0, 0), zs = s === '+Z' || s === '-Z', h = S.len / 2;
+    for (const y of ys) {
+      const ya = y + 0.05 - e, ym = y + 0.05 - e / 2;
+      let sp = [[-h, h]];
+      for (const c of vi.cov[s] || []) if (c.y0 <= ym && c.y1 >= ym) sp = subtract(sp, [c.a0 <= -h + 1e-3 ? -h - 1 : c.a0 + 0.06, c.a1 >= h - 1e-3 ? h + 1 : c.a1 - 0.06]);
+      for (const [c0, c1, cy0, cy1] of cutsOn(vi, s, cuts, -0.12, v)) if (cy0 < y + 0.05 && cy1 > ya) sp = subtract(sp, [c0, c1]);
+      for (let [a0, a1] of sp) {
+        if (a0 <= -h + 1e-3) a0 = zs ? -h - v : -h + 0.12;
+        if (a1 >= h - 1e-3) a1 = zs ? h + v : h - 0.12;
+        if (a1 - a0 > 0.1) P.rings.push({ W, key, m0, vi, s, a0, a1, ya, e, v });
+      }
+    }
+  }
+}
+// Dibuja los bordes de losa guardados; en la obra nueva se cortan donde pasa un tramo vertical de los ductos de la conexión
+function ringsOut(P, cortar) {
+  for (const rg of P.rings) {
+    let sp = [[rg.a0, rg.a1]];
+    const S = rg.vi.f.sides[rg.s], ya = rg.vi.base + rg.ya, yb = ya + rg.e;
+    if (cortar(rg.vi)) for (const d of P.ductos) for (let i = 1; i < d.pts.length; i++) {
+      const p = d.pts[i - 1], q = d.pts[i];
+      if (Math.hypot(p.x - q.x, p.z - q.z) > 0.05 || Math.max(p.y, q.y) < ya || Math.min(p.y, q.y) > yb) continue;
+      const l = p.clone().applyMatrix4(rg.vi.f.inv), al = l.dot(S.t), ou = l.dot(S.n) - S.half;
+      if (ou > -0.17 - d.r && ou < rg.v + d.r + 0.05) sp = subtract(sp, [al - d.r - 0.06, al + d.r + 0.06]);
+    }
+    for (const [a0, a1] of sp) if (a1 - a0 > 0.1) rg.W.addRaw(rg.key, boxG(a1 - a0, rg.e, rg.v + 0.12, (a0 + a1) / 2, rg.ya, (rg.v - 0.12) / 2).applyMatrix4(rg.m0));
+  }
+}
+// instancias GPU por capa: una malla unitaria por clave y su lista de transformaciones. Al armar el GLB, las claves con
+// menos de 10 instancias se funden en el entorno de su capa (no suman llamadas de dibujo), salvo `siempre` (parasoles)
+function inst(P, key, name, make, siempre = false) { let it = P.inst.get(key); if (!it) P.inst.set(key, (it = { name, part: make(), trs: [], siempre })); return it; }
+function trsOf(m, s) { const t = V3(0, 0, 0), q = new THREE.Quaternion(), sc = V3(1, 1, 1); m.decompose(t, q, sc); return { t: t.toArray(), r: [q.x, q.y, q.z, q.w], s: s || sc.toArray() }; }
+// Huella de cada puente (esquinas en planta y alturas, con su estructura): losas expresadas y parasoles le dejan paso
+function bridgeCuts(spec) {
+  return (spec.elementos || []).filter((e) => e.tipo === 'puente' && e.desde && e.hasta).map((e) => {
+    const a = planToThree(e.desde), c = planToThree(e.hasta), d = c.clone().sub(a).normalize(), n = V3(-d.z, 0, d.x), hw = (e.ancho ?? 3) / 2 + 0.35, y0 = e.altura ?? 4.2;
+    const pa = a.clone().addScaledVector(d, -0.4), pc = c.clone().addScaledVector(d, 0.4);
+    return { pts: [pa.clone().addScaledVector(n, hw), pc.clone().addScaledVector(n, hw), pc.clone().addScaledVector(n, -hw), pa.clone().addScaledVector(n, -hw)], y0: y0 - (e.estructura === 'viga' ? 1.25 : 0.3), y1: y0 + (e.alto ?? 3) + 0.4 };
+  });
+}
+// tramos [a0, a1, y0, y1] del lado s (en coordenadas de la fachada) que ocupa un puente entre o0 y o1 m del muro
+function cutsOn(vi, s, cuts, o0, o1) {
+  const S = vi.f.sides[s], out = [];
+  for (const c of cuts || []) {
+    const ls = c.pts.map((p) => p.clone().applyMatrix4(vi.f.inv)), al = ls.map((l) => l.dot(S.t)), ou = ls.map((l) => l.dot(S.n) - S.half);
+    if (Math.max(...ou) < o0 || Math.min(...ou) > o1) continue;
+    out.push([Math.min(...al) - 0.05, Math.max(...al) + 0.05, c.y0 - vi.base, c.y1 - vi.base]);
+  }
+  return out;
+}
+// Parasoles instanciados (una caja unitaria por color, escalada por instancia). Verticales: aletas de la base (o 1,2 m sobre
+// el volumen que tapa el muro) hasta casi el remate del antepecho, con ménsulas en cada losa; en el muro cortina van sobre los
+// parales. Horizontales: lamas inclinadas en la parte alta de cada piso, sostenidas por platinas verticales cada ~3 m.
+function sunShades(P, vi, fa, SS, detail) {
+  const f = vi.f, eaveH = vi.eave, pisos = Math.max(1, vi.v.pisos ?? 1), hf = eaveH / pisos;
+  const t = vi.v.techo || {}, pp = t.tipo === 'plano' ? t.parapeto ?? 0.6 : 0;
+  for (const ps of [].concat(fa.parasoles)) {
+    if (!ps || typeof ps !== 'object') continue;
+    const hor = ps.tipo === 'horizontal', d = Math.max(0.1, ps.profundidad ?? 0.6), sep = Math.max(0.2, ps.separacion ?? 0.9), th = ps.espesor ?? (hor ? 0.04 : 0.06);
+    const col = hexOK(ps.color, '#d9d5cc'), it = inst(P, `parasol${col}`, 'parasoles', () => new Part().add(`metal_pintado${col}`, unitBox), true);
+    const put = (m, sc) => it.trs.push(trsOf(m, sc));
+    for (const s of sidesOf(f, ps.lados || ['todos'])) {
+      const S = f.sides[s], cw = SS?.[s]?.cortina ? SS[s].cw : null, wz = cw ? CW_D : 0, z0 = wz + 0.05;
+      const doorsS = (vi.ops[s] || []).filter((o) => o.kind === 'puerta');
+      const M = (x, y, z, rx = 0) => sideMatrix(f, s, x, y, z).multiply(new THREE.Matrix4().makeRotationX(rx));
+      const cuts = cutsOn(vi, s, P.puentes, wz, z0 + d);
+      for (const r of wallRects(S.len, eaveH, vi.cov[s] || [])) {
+        const yA = r.y0 + (r.y0 > 0.05 ? 1.2 : ps.desde ?? 0), yB = r.y1 + (r.y1 > eaveH - 0.01 ? Math.max(0, pp - 0.08) : 0);
+        const cL = r.x0 <= -S.len / 2 + 1e-3, cR = r.x1 >= S.len / 2 - 1e-3;
+        if (!hor) {
+          let xs = [];
+          if (cw) { const n = Math.max(1, Math.round(S.len / cw.modulo)), p = S.len / n, k = Math.max(1, Math.round(sep / p)); for (let i = k; i < n; i += k) xs.push(-S.len / 2 + i * p); }
+          else { const n = Math.max(1, Math.floor((S.len - 0.6) / sep) + 1); for (let i = 0; i < n; i++) xs.push((i - (n - 1) / 2) * sep); }
+          for (const x of xs.filter((x) => x > r.x0 + 0.3 && x < r.x1 - 0.3)) {
+            let y0 = yA;
+            for (const o of doorsS) if (Math.abs(x - o.along) < o.w / 2 + 0.25) y0 = Math.max(y0, o.h + 0.6);
+            if (yB - y0 < 1) continue;
+            let ys = [[y0, yB]];
+            for (const [c0, c1, cy0, cy1] of cuts) if (x + th > c0 && x - th < c1) ys = subtract(ys, [cy0 - 0.1, cy1 + 0.1]);
+            for (const [ya, yb] of ys) if (yb - ya > 0.5) put(M(x, (ya + yb) / 2, z0 + d / 2), [th, yb - ya, d]);
+            if (detail) for (let k = 1; k <= pisos; k++) { const yy = Math.min(k * hf, yB) - 0.6; if (yy > y0 + 0.2) put(M(x, yy, (wz - 0.02 + z0 + 0.03) / 2), [0.03, 0.12, z0 + 0.05 - wz]); }
+          }
+          continue;
+        }
+        const x0 = r.x0 + (cL ? 0.15 : 0.35), x1 = r.x1 - (cR ? 0.15 : 0.35);
+        if (x1 - x0 < 1) continue;
+        const np = Math.max(1, Math.ceil((x1 - x0) / 3)), tilt = -(ps.inclinacion ?? 15) * D2R;
+        for (let k = 0; k < pisos; k++) {
+          const ys = [];
+          for (let y = (k + 1) * hf - 0.5; y > k * hf + (ps.antepecho ?? 1.0); y -= sep) if (y > yA && y < Math.min(yB, eaveH) - 0.3) ys.push(y);
+          if (!ys.length) continue;
+          const yt = ys[0] + 0.15, yb = ys[ys.length - 1] - 0.15;
+          let xr = [[x0, x1]];
+          for (const [c0, c1, cy0, cy1] of cuts) if (cy0 < yt && cy1 > yb) xr = subtract(xr, [c0, c1]);
+          for (const y of ys) for (const [a, c] of xr) if (c - a > 0.3) put(M((a + c) / 2, y, z0 + d / 2, tilt), [c - a, th, d]);
+          for (let i = 0; i <= np; i++) if (xr.some(([a, c]) => x0 + 0.03 + (i * (x1 - x0 - 0.06)) / np > a - 1e-3 && x0 + 0.03 + (i * (x1 - x0 - 0.06)) / np < c + 1e-3)) put(M(x0 + 0.03 + (i * (x1 - x0 - 0.06)) / np, (yt + yb) / 2, (wz - 0.02 + z0 + d) / 2), [0.02, yt - yb, z0 + d + 0.02 - wz]);
+        }
+      }
+    }
+  }
 }
 
 // ---------- suelos escalonados (losas con borde) y altura del suelo en un punto
@@ -1005,6 +1299,332 @@ function treeMesh(b, detail) {
   return b.partMesh('arbol', p);
 }
 
+// ---------- elementos de obra nueva (segunda pasada de build: ya se conocen los suelos y las cubiertas)
+const NUEVOS = new Set(['marquesina_acceso', 'bahia_ambulancias', 'puente', 'equipo_cubierta', 'jardinera', 'banca', 'luminaria', 'letrero_institucional']);
+const rayDown = new THREE.Raycaster();
+// altura de la cubierta más alta bajo un punto (null si no hay cubierta)
+function roofAt(P, x, z) { rayDown.set(V3(x, 300, z), V3(0, -1, 0)); rayDown.far = 600; const h = rayDown.intersectObjects(P.roofRay || [], false)[0]; return h ? h.point.y : null; }
+// lado de un rectángulo más alejado de los volúmenes cerrados: el frente abierto de marquesinas y bahías
+function farSide(f, V) {
+  let best = '+Z', bd = -Infinity;
+  for (const [k, S] of Object.entries(f.sides)) {
+    const p = S.n.clone().multiplyScalar(S.half + 0.5).applyMatrix4(f.m);
+    let dmin = Infinity;
+    for (const vi of V) { if (!vi.f || vi.open) continue; const l = p.clone().applyMatrix4(vi.f.inv); dmin = Math.min(dmin, Math.hypot(Math.max(0, Math.abs(l.x) - vi.f.L / 2), Math.max(0, Math.abs(l.z) - vi.f.A / 2))); }
+    if (dmin > bd) { bd = dmin; best = k; }
+  }
+  return best;
+}
+// recorta un polígono plano [[x, z]] a la franja xa ≤ x ≤ xb
+function clipX(poly, xa, xb) {
+  const cut = (pts, keep, x0) => {
+    const out = [];
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i], q = pts[(i + 1) % pts.length], ip = keep(p[0]), iq = keep(q[0]);
+      if (ip) out.push(p);
+      if (ip !== iq) { const t = (x0 - p[0]) / (q[0] - p[0]); out.push([x0, p[1] + t * (q[1] - p[1])]); }
+    }
+    return out;
+  };
+  return cut(cut(poly, (x) => x >= xa, xa), (x) => x <= xb, xb);
+}
+// rotación en planta para que el eje local +z mire hacia `rumbo` (grados desde el norte)
+const facing = (rumbo) => new THREE.Quaternion().setFromAxisAngle(UP, Math.PI - (rumbo ?? 180) * D2R);
+function elementoNuevo(e, P, detail, V) {
+  if (e.tipo !== 'puente' && !e.centro && !e.centros && !(e.tipo === 'letrero_institucional' && e.volumen)) { warn.push(`${e.tipo} sin centro`); return; }
+  switch (e.tipo) {
+    case 'marquesina_acceso': marquesina(e, P, V, detail, false); return;
+    case 'bahia_ambulancias': bahia(e, P, V, detail); return;
+    case 'puente': puente(e, P, V, detail); return;
+    case 'equipo_cubierta': equipo(e, P, detail); return;
+    case 'jardinera': jardinera(e, P, detail); return;
+    case 'banca': bancas(e, P, detail); return;
+    case 'luminaria': luminarias(e, P, detail); return;
+    case 'letrero_institucional': letreroInst(e, P, V, detail);
+  }
+}
+// Marquesina de acceso: losa delgada (borde de panel, cielo raso claro 2,5 cm abajo con luminarias empotradas) sobre columnas
+// de acero esbeltas en el frente abierto, o en voladizo con tensores al muro. El frente es `frente` o el lado más lejano de los
+// volúmenes. En la bahía de ambulancias (amb) es más alta, con columnas gruesas y franjas de protección.
+function marquesina(e, P, V, detail, amb) {
+  const f = frame({ ...e, largo: e.largo ?? (amb ? 12 : 10), ancho: e.ancho ?? (amb ? 8 : 4.5), base: 0 }), L = f.L, A = f.A;
+  const g0 = groundAt(P, e.centro[0], e.centro[1]), h = e.altura ?? (amb ? 4.6 : 3.8), esp = e.espesor ?? (amb ? 0.45 : 0.3);
+  const fk = tint('metal_pintado', e.color, '#eef0f0'), ck = tint('pintura', e.color_cielo, '#f3f2ee'), sk = tint('metal_pintado', e.color_columnas, '#3a3f44');
+  const add = (k, g) => g && P.env.addRaw(k, g.applyMatrix4(f.m));
+  add(fk, boxG(L, esp, A, 0, h, 0));
+  const i0 = 0.05, yc = h - 0.025;
+  add(ck, polyGeo([V3(-L / 2 + i0, yc, -A / 2 + i0), V3(L / 2 - i0, yc, -A / 2 + i0), V3(L / 2 - i0, yc, A / 2 - i0), V3(-L / 2 + i0, yc, A / 2 - i0)], V3(0, -1, 0)));
+  if (detail) {
+    const nx = Math.max(1, Math.round(L / 2.2)), nz = Math.max(1, Math.round(A / 2.2));
+    for (let a = 0; a < nx; a++) for (let c = 0; c < nz; c++) add('luz', new THREE.CylinderGeometry(0.11, 0.11, 0.02, 12).translate(-L / 2 + (a + 0.5) * (L / nx), yc - 0.01, -A / 2 + (c + 0.5) * (A / nz)));
+  }
+  const fs = e.frente ? sideFor(f, e.frente) : farSide(f, V), S = f.sides[fs];
+  if (e.apoyo === 'voladizo') {
+    // tensores desde el borde frontal hasta el muro, 2,4 m más arriba, con placas de anclaje
+    for (const x of [-S.len / 3, S.len / 3]) {
+      const a = S.n.clone().multiplyScalar(S.half - 0.35).addScaledVector(S.t, x).setY(h + esp), c = S.n.clone().multiplyScalar(-S.half + 0.04).addScaledVector(S.t, x).setY(h + esp + 2.4);
+      add(sk, tubeG(a, c, 0.025, 8));
+      add(sk, beamG(c.clone().addScaledVector(S.n, -0.06), c.clone().addScaledVector(S.n, 0.02), 0.25, 0.3));
+      if (detail) add(sk, beamG(a.clone().setY(h + esp - 0.01), a.clone().setY(h + esp + 0.12), 0.1, 0.12, S.n));
+    }
+    return;
+  }
+  const r = (e.diametro_columnas ?? (amb ? 0.32 : 0.2)) / 2, sep = e.sep_columnas ?? (amb ? 6 : 5), inset = amb ? 0.6 : 0.45, seg = detail ? 16 : 8;
+  const n = Math.max(2, Math.ceil((S.len - 2 * inset) / sep) + 1);
+  for (let k = 0; k < n; k++) {
+    const p = S.n.clone().multiplyScalar(S.half - inset).addScaledVector(S.t, -S.len / 2 + inset + (k * (S.len - 2 * inset)) / (n - 1));
+    add(sk, new THREE.CylinderGeometry(r, r, h - g0 + 0.02, seg).translate(p.x, (g0 - 0.02 + h) / 2, p.z));
+    if (!detail) continue;
+    add(sk, new THREE.CylinderGeometry(r + 0.07, r + 0.09, 0.04, seg).translate(p.x, g0 + 0.02, p.z)); // cubreplaca
+    if (amb) for (const y of [0.15, 0.55]) add('advertencia', new THREE.CylinderGeometry(r + 0.012, r + 0.012, 0.25, seg).translate(p.x, g0 + y + 0.125, p.z));
+  }
+}
+// Bahía de ambulancias: marquesina alta (4,6 m libres, salvo `cubierta: false`), recuadro amarillo, franja achurada contra el
+// muro (descargue), rótulo en el piso que se lee llegando por el frente y bolardos contra el muro que dejan libres las puertas.
+function bahia(e, P, V, detail) {
+  const f = frame({ ...e, largo: e.largo ?? 12, ancho: e.ancho ?? 8, base: 0 });
+  const fs = e.frente ? sideFor(f, e.frente) : farSide(f, V), S = f.sides[fs];
+  if (e.cubierta !== false) marquesina({ ...e, largo: f.L, ancho: f.A, frente: fs }, P, V, detail, true);
+  const g0 = groundAt(P, e.centro[0], e.centro[1]), y = g0 + PINTURA, yk = tint('pintura', e.color_demarcacion, '#f2c200');
+  // marco de la bahía: x a lo largo del frente, z del muro (−) al frente (+)
+  const bm = f.m.clone().multiply(new THREE.Matrix4().makeBasis(S.t, UP, S.n));
+  const gq = (x0, x1, z0, z1) => P.env.addRaw(yk, polyGeo([V3(x0, y, z0), V3(x1, y, z0), V3(x1, y, z1), V3(x0, y, z1)], UP).applyMatrix4(bm));
+  const hx = S.len / 2 - 0.3, hz = S.half - 0.3, lw = 0.15;
+  gq(-hx, hx, hz - lw, hz); gq(-hx, hx, -hz, -hz + lw); gq(-hx, -hx + lw, -hz + lw, hz - lw); gq(hx - lw, hx, -hz + lw, hz - lw);
+  const z0 = -hz + lw + 0.1, z1 = z0 + 1.2;
+  for (let c = -hx - 1.2; c < hx; c += 0.6) {
+    const poly = clipX([[c, z0], [c + 0.15, z0], [c + 1.35, z1], [c + 1.2, z1]], -hx + lw + 0.05, hx - lw - 0.05);
+    if (poly.length >= 3) P.env.addRaw(yk, polyGeo(poly.map(([a, z]) => V3(a, y, z)), UP).applyMatrix4(bm));
+  }
+  gq(-hx + lw, hx - lw, z1 + 0.05, z1 + 0.17);
+  const txt = e.rotulo ?? 'AMBULANCIAS';
+  if (txt) {
+    const size = Math.min(0.7, (2 * hx * 0.7) / Math.max(1, txt.length * 0.85)), tg = textGeo(txt, size, 0.003, true);
+    if (tg) P.env.addRaw('pintura#f5f5f0', tg.applyMatrix4(bm.clone().multiply(new THREE.Matrix4().makeBasis(V3(1, 0, 0), V3(0, 0, -1), UP).setPosition(0, y, (z1 + 0.17 + hz) / 2 + size * 0.36))));
+  }
+  // bolardos de acero con franja reflectiva contra el muro, con un claro frente a cada puerta cercana (solo LOD0)
+  if (!detail) return;
+  const it = inst(P, 'bolardo', 'bolardos', () => new Part()
+    .add('metal_pintado#9ea4a8', new THREE.CylinderGeometry(0.09, 0.09, 0.9, 14), [0, 0.45, 0])
+    .add('metal_pintado#f4c400', new THREE.CylinderGeometry(0.105, 0.105, 0.08, 14), [0, 0.72, 0])
+    .add('metal_pintado#9ea4a8', new THREE.SphereGeometry(0.09, 14, 4, 0, Math.PI * 2, 0, Math.PI / 2), [0, 0.9, 0]));
+  const inv = bm.clone().invert(), gaps = [];
+  for (const vi of V) for (const [s, ops] of Object.entries(vi.ops || {})) for (const o of ops) if (o.kind === 'puerta') {
+    const l = wallPt(vi, s, o.along, 0, 0).applyMatrix4(inv);
+    if (Math.abs(l.z + S.half) < 2.5 && Math.abs(l.x) < S.len / 2 + 1) gaps.push([l.x - o.w / 2 - 0.6, l.x + o.w / 2 + 0.6]);
+  }
+  for (let x = -hx; x <= hx + 1e-6; x += (2 * hx) / Math.max(1, Math.round((2 * hx) / 1.5))) {
+    if (gaps.some(([a, c]) => x > a && x < c)) continue;
+    it.trs.push(trsOf(bm.clone().multiply(new THREE.Matrix4().makeTranslation(x, g0 - 0.02, -S.half + 0.45))));
+  }
+}
+// Puente cubierto y acristalado entre `desde` y `hasta` a `altura` (piso): losa, cubierta con borde, muros de vidrio con enjuta
+// baja, parales cada 1,5 m y pasamanos, y estructura en cerchas laterales (por defecto) o vigas bajo la losa; columnas en `apoyos`.
+// Los extremos entran 30 cm en los volúmenes que tocan; un extremo libre lleva cierre de vidrio.
+function puente(e, P, V, detail) {
+  if (!e.desde || !e.hasta) { warn.push('puente sin desde/hasta'); return; }
+  const a = planToThree(e.desde), c = planToThree(e.hasta), y0 = e.altura ?? 4.2, w = e.ancho ?? 3, hc = e.alto ?? 3;
+  const dir = c.clone().sub(a); if (dir.length() < 1) return; dir.normalize();
+  const inside = (p) => V.some((vi) => { if (!vi.f || vi.open || vi.top < y0 + hc - 0.2 || vi.base > y0 + 0.1) return false; const l = p.clone().applyMatrix4(vi.f.inv); return Math.abs(l.x) < vi.f.L / 2 - 0.05 && Math.abs(l.z) < vi.f.A / 2 - 0.05; });
+  const ea = inside(a.clone().addScaledVector(dir, -0.3)), ec = inside(c.clone().addScaledVector(dir, 0.3));
+  const p0 = a.clone().addScaledVector(dir, ea ? -0.3 : 0), p1 = c.clone().addScaledVector(dir, ec ? 0.3 : 0), Lx = p0.distanceTo(p1), X = Lx / 2, mid = p0.clone().add(p1).multiplyScalar(0.5);
+  const m = new THREE.Matrix4().compose(V3(mid.x, 0, mid.z), new THREE.Quaternion().setFromAxisAngle(UP, Math.atan2(-dir.z, dir.x)), V3(1, 1, 1));
+  const sk = tint('metal_pintado', e.color, '#3a3f44'), gk = tint('vidrio_cortina', hexOK(e.color_vidrio, VIDRIO_DEF)), pk = tint('metal_pintado', e.color_perfil, PERFIL_DEF);
+  const add = (k, g) => g && P.env.addRaw(k, g.applyMatrix4(m)), est = e.estructura || 'cercha';
+  add('pintura#d8d7d1', boxG(Lx, 0.3, w + 0.1, 0, y0 - 0.3, 0));
+  add(tint('metal_pintado', e.color_cubierta, '#e6e8e9'), boxG(Lx, 0.35, w + (est === 'viga' ? 0.3 : 0.2), 0, y0 + hc, 0)); // con cerchas, justo hasta los cordones
+  for (const sz of [1, -1]) {
+    const z = (sz * w) / 2, nz = V3(0, 0, sz), q = (k, ya, yb) => add(k, polyGeo([V3(-X, ya, z), V3(X, ya, z), V3(X, yb, z), V3(-X, yb, z)], nz));
+    q(tint('vidrio_cortina', '#56636c'), y0, y0 + 0.9); q(gk, y0 + 0.9, y0 + hc);
+    const nm = Math.max(1, Math.round(Lx / 1.5));
+    for (let i = 1; i < nm; i++) add(pk, boxG(0.05, hc, 0.06, -X + (i * Lx) / nm, y0, z + sz * 0.03));
+    add(pk, boxG(Lx, 0.05, 0.05, 0, y0 + 0.875, z + sz * 0.025));
+  }
+  for (const [free, sx] of [[!ea, -1], [!ec, 1]]) if (free) add(gk, polyGeo([V3(sx * X, y0, -w / 2), V3(sx * X, y0, w / 2), V3(sx * X, y0 + hc, w / 2), V3(sx * X, y0 + hc, -w / 2)], V3(sx, 0, 0)));
+  if (est === 'viga') {
+    for (const sz of [1, -1]) { const z = sz * (w / 2 - 0.35); add(sk, boxG(Lx, 0.9, 0.025, 0, y0 - 1.2, z)); add(sk, boxG(Lx, 0.03, 0.3, 0, y0 - 1.2, z)); add(sk, boxG(Lx, 0.03, 0.3, 0, y0 - 0.33, z)); }
+  } else {
+    // cerchas Warren a los lados: cordones, montantes y diagonales en tubo cuadrado
+    const np = Math.max(2, Math.round(Lx / (hc + 0.6))), yb = y0 - 0.15, yt = y0 + hc + 0.175;
+    for (const sz of [1, -1]) {
+      const z = sz * (w / 2 + 0.2), px = (i) => -X + 0.1 + (i * (Lx - 0.2)) / np;
+      add(sk, beamG(V3(-X, yb, z), V3(X, yb, z), 0.2, 0.2)); add(sk, beamG(V3(-X, yt, z), V3(X, yt, z), 0.2, 0.2));
+      for (let i = 0; i <= np; i++) {
+        add(sk, beamG(V3(px(i), yb + 0.1, z), V3(px(i), yt - 0.1, z), 0.16, 0.16, V3(0, 0, 1)));
+        if (i < np) add(sk, i % 2 ? beamG(V3(px(i), yb + 0.1, z), V3(px(i + 1), yt - 0.1, z), 0.13, 0.13, V3(0, 0, 1)) : beamG(V3(px(i), yt - 0.1, z), V3(px(i + 1), yb + 0.1, z), 0.13, 0.13, V3(0, 0, 1)));
+      }
+    }
+  }
+  // columnas intermedias (sobre el eje del puente) con cabezal transversal
+  const top = est === 'viga' ? y0 - 1.2 : y0 - 0.25;
+  for (const pt of e.apoyos || []) {
+    const x = planToThree(pt).sub(p0).dot(dir) - X, g = groundAt(P, pt[0], pt[1]);
+    if (Math.abs(x) > X) continue;
+    add(sk, boxG(0.4, top - 0.3 - g + 0.02, 0.4, x, g - 0.02, 0));
+    add(sk, boxG(0.5, 0.3, w + 0.7, x, top - 0.3, 0));
+  }
+}
+// Equipos de cubierta sobre su base de concreto: manejadora de aire (uma), enfriador (chiller), tanque, cuarto de máquinas del
+// ascensor y pantalla de lamas que oculta los equipos (abierta arriba). Se apoyan en la cubierta más alta bajo el centro (o en `base`).
+function equipo(e, P, detail) {
+  const kind = e.equipo || 'uma', D = { uma: [5, 2.2, 2.1], chiller: [6, 2.3, 2.4], tanque: [2.2, 2.2, 2.6], cuarto_maquinas: [4, 3, 3], pantalla: [12, 8, 2.4] }[kind];
+  if (!D) { warn.push(`equipo_cubierta desconocido: ${kind}`); return; }
+  const c = planToThree(e.centro), y0 = e.base ?? roofAt(P, c.x, c.z) ?? groundAt(P, e.centro[0], e.centro[1]);
+  const f = frame({ ...e, largo: e.largo ?? D[0], ancho: e.ancho ?? D[1], base: y0 }), L = f.L, A = f.A, H = e.alto ?? e.altura ?? D[2];
+  const add = (k, g, uv = false) => g && P.env.addRaw(k, g.applyMatrix4(f.m), uv), wp = (pts) => pts.map((q) => q.applyMatrix4(f.m));
+  const body = tint('pintura_satin', e.color, kind === 'tanque' ? '#d5d9dc' : '#e6e8e9'), steel = 'metal_pintado#4a4f54', alu = 'metal_pintado#b9bec2', pad = 'pintura#c9c8c2', seg = detail ? 20 : 10;
+  if (kind === 'pantalla') {
+    const col = tint('metal_pintado', e.color, '#b4b9bd'), pts = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => V3((a * L) / 2, 0, (b * A) / 2));
+    for (let i = 0; i < 4; i++) {
+      const p = pts[i], q = pts[(i + 1) % 4], len = p.distanceTo(q), d = q.clone().sub(p).normalize(), out = V3(d.z, 0, -d.x), mid = p.clone().add(q).multiplyScalar(0.5);
+      const np = Math.max(1, Math.ceil(len / 2.5));
+      for (let k = 0; k < np; k++) { const x = p.clone().addScaledVector(d, (k * len) / np); add(col, boxG(0.09, H + 0.03, 0.09, x.x, -0.03, x.z)); }
+      if (detail) {
+        // lamas a 45° cada ~20 cm (el borde exterior abajo) entre rieles; base (−d, arriba, afuera) para que la terna sea derecha
+        const nb = Math.max(2, Math.floor((H - 0.25) / 0.2)), sm = new THREE.Matrix4().makeBasis(d.clone().negate(), UP, out);
+        for (let j = 0; j < nb; j++) add(col, new THREE.BoxGeometry(len, 0.012, 0.15).rotateX(Math.PI / 4).applyMatrix4(sm.clone().setPosition(mid.clone().setY(0.15 + (j + 0.5) * ((H - 0.25) / nb)))));
+        for (const yy of [0.1, H - 0.05]) add(col, beamG(p.clone().setY(yy), q.clone().setY(yy), 0.05, 0.08));
+      } else for (const sg of [1, -1]) {
+        const g = new THREE.PlaneGeometry(len, H - 0.1), uv = g.attributes.uv;
+        for (let k = 0; k < uv.count; k++) uv.setXY(k, uv.getX(k) * len, (uv.getY(k) * (H - 0.1)) / 1.6);
+        add('rejilla', g.applyMatrix4(new THREE.Matrix4().makeBasis(d.clone().multiplyScalar(-sg), UP, out.clone().multiplyScalar(sg)).setPosition(mid.clone().addScaledVector(out, sg * 0.02).setY(0.05 + (H - 0.1) / 2))), true);
+      }
+    }
+    return;
+  }
+  if (kind === 'tanque') {
+    const r = Math.min(L, A) / 2, s2 = detail ? 28 : 12;
+    add(pad, boxG(2 * r + 0.4, 0.15, 2 * r + 0.4, 0, -0.03, 0));
+    add(body, new THREE.CylinderGeometry(r, r, H, s2).translate(0, 0.12 + H / 2, 0));
+    add(body, new THREE.CylinderGeometry(r * 0.3, r, 0.3, s2).translate(0, 0.12 + H + 0.15, 0));
+    if (detail) {
+      add(steel, new THREE.CylinderGeometry(0.28, 0.28, 0.1, 16).translate(0, 0.12 + H + 0.35, 0));
+      for (const yy of [0.35, 0.68]) add(body, new THREE.CylinderGeometry(r + 0.025, r + 0.025, 0.06, s2).translate(0, 0.12 + H * yy, 0));
+      for (const sx of [-0.22, 0.22]) add(alu, boxG(0.04, H + 0.3, 0.04, sx, 0.12, r + 0.18));
+      for (let yy = 0.4; yy < H + 0.3; yy += 0.3) add(alu, boxG(0.44, 0.025, 0.025, 0, 0.12 + yy, r + 0.18));
+      pipe(P.env, alu, wp([V3(-r * 0.6, 0.4, -r * 0.6), V3(-r - 0.3, 0.4, -r * 0.6), V3(-r - 0.3, -0.05, -r * 0.6)]), 0.05, true, 8);
+    }
+    return;
+  }
+  if (kind === 'cuarto_maquinas') {
+    const cv = e.material === 'concreto_visto', wk = cv ? tint('muro_concreto', e.color, CLAD.concreto_visto) : tint('pintura', e.color, '#e9e7e1');
+    add(wk, uvs(boxUV(L, H, A, 0, -0.03, 0, 1), cv ? [2.4, 1.2] : null), true);
+    add('pintura#d6d4cd', boxG(L + 0.3, 0.18, A + 0.3, 0, H - 0.03, 0));
+    if (detail) { add(steel, boxG(1.0, 2.12, 0.05, -L / 4, -0.02, A / 2 + 0.025)); add('rejilla', boxG(0.05, 0.6, Math.min(1.2, A - 0.6), L / 2 + 0.025, H - 1.1, 0), true); }
+    return;
+  }
+  add(pad, boxG(L + 0.5, 0.15, A + 0.5, 0, -0.03, 0));
+  add(steel, boxG(L, 0.14, A, 0, 0.12, 0));
+  if (kind === 'uma') {
+    add(body, boxG(L, H - 0.26, A, 0, 0.26, 0));
+    for (const x of [L / 2 - 1.0, L / 2 - 2.1]) add(alu, boxG(0.8, 1.3, 0.62, x, -0.05, -A / 2 - 0.29)); // ductos que bajan a la cubierta
+    if (detail) {
+      const n = Math.max(2, Math.round(L / 1.1)), hb = H - 0.26;
+      for (let i = 1; i < n; i++) for (const sz of [1, -1]) add(alu, boxG(0.04, hb - 0.08, 0.02, -L / 2 + (i * L) / n, 0.3, sz * (A / 2 + 0.01)));
+      for (let i = 0; i < n; i++) add(steel, boxG(0.03, 0.18, 0.04, -L / 2 + ((i + 0.5) * L) / n + 0.3, 0.26 + hb * 0.5, A / 2 + 0.03));
+      add('rejilla', boxG(0.03, hb * 0.6, A * 0.8, -L / 2 - 0.015, 0.26 + hb * 0.2, 0), true);
+      add(body, boxG(0.45, 0.06, A * 0.86, -L / 2 - 0.2, 0.26 + hb * 0.8 + 0.02, 0));
+      add('pintura#2a2e31', new THREE.CylinderGeometry(0.42, 0.42, 0.06, seg).translate(L / 2 - 0.7, H, 0));
+      add(alu, new THREE.CylinderGeometry(0.47, 0.47, 0.18, seg, 1, true).translate(L / 2 - 0.7, H + 0.09, 0));
+    }
+    return;
+  }
+  // enfriador enfriado por aire: compresores abajo, serpentines con rejilla, cubierta con ventiladores y tuberías aisladas
+  const hb = 1.05;
+  add(body, boxG(L, hb - 0.26, A, 0, 0.26, 0));
+  add('rejilla', boxG(L - 0.12, H - 0.16 - hb, A - 0.12, 0, hb, 0), true);
+  add(body, boxG(L, 0.16, A, 0, H - 0.16, 0));
+  if (detail) for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) add(body, boxG(0.1, H - 0.06 - hb, 0.1, sx * (L / 2 - 0.05), hb - 0.02, sz * (A / 2 - 0.05)));
+  const nx = Math.max(1, Math.round(L / 1.15)), nz = A > 1.8 ? 2 : 1, rf = Math.min(L / nx, A / nz) * 0.42;
+  for (let i = 0; i < nx; i++) for (let j = 0; j < nz; j++) {
+    const x = -L / 2 + ((i + 0.5) * L) / nx, z = -A / 2 + ((j + 0.5) * A) / nz;
+    add(alu, new THREE.CylinderGeometry(rf, rf, 0.3, seg, 1, true).translate(x, H + 0.15, z));
+    add('pintura#22262a', new THREE.CylinderGeometry(rf * 0.96, rf * 0.96, 0.02, seg).translate(x, H + 0.01, z));
+    if (detail) for (const a of [0.4, 0.4 + Math.PI / 2]) add(alu, new THREE.BoxGeometry(2 * rf, 0.025, 0.025).rotateY(a).translate(x, H + 0.28, z));
+  }
+  if (detail) for (const z of [-0.3, 0.3]) pipe(P.env, alu, wp([V3(L / 2 - 0.3, 0.6, z), V3(L / 2 + 0.45, 0.6, z), V3(L / 2 + 0.45, -0.05, z)]), 0.09, true, 8);
+}
+// Jardinera elevada de concreto (o `material: "metal"`) con tierra y arbustos instanciados
+function jardinera(e, P, detail) {
+  const f = frame({ ...e, largo: e.largo ?? 4, ancho: e.ancho ?? 1.5, base: 0 }), L = f.L, A = f.A, H = e.alto ?? 0.45, t = e.espesor ?? 0.15;
+  const g0 = groundAt(P, e.centro[0], e.centro[1]), wk = e.material === 'metal' ? tint('metal_pintado', e.color, '#4a4f54') : tint('pintura', e.color, '#d9d7d0');
+  const add = (k, g) => P.env.addRaw(k, g.applyMatrix4(f.m));
+  for (const sz of [1, -1]) add(wk, boxG(L, H + 0.02, t, 0, g0 - 0.02, sz * (A / 2 - t / 2)));
+  for (const sx of [1, -1]) add(wk, boxG(t, H + 0.02, A - 2 * t, sx * (L / 2 - t / 2), g0 - 0.02, 0));
+  const ys = g0 + H - 0.08, xi = L / 2 - t, zi = A / 2 - t;
+  add('pintura#4d3d2c', polyGeo([V3(-xi, ys, -zi), V3(xi, ys, -zi), V3(xi, ys, zi), V3(-xi, ys, zi)], UP));
+  if (e.plantas === false || !detail) return; // arbustos solo en LOD0
+  const it = inst(P, 'arbusto', 'arbustos', () => {
+    const p = new Part();
+    [[0, 0.36, 0, 0.42, '#4f7a37'], [0.22, 0.3, 0.1, 0.3, '#5d8a3e'], [-0.2, 0.32, -0.08, 0.3, '#436d31']].forEach(([x, y, z, r, c], i) => p.add(`copa${c}`, new THREE.IcosahedronGeometry(r, detail ? 1 : 0).rotateY(i).scale(1, 0.8, 1), [x, y, z]));
+    return p;
+  });
+  const sp = e.separacion_plantas ?? 0.8, nx = Math.max(1, Math.round((2 * xi) / sp)), nz = Math.max(1, Math.round((2 * zi) / sp)), id = Math.round(e.centro[0] * 13 + e.centro[1] * 7);
+  for (let i = 0; i < nx; i++) for (let j = 0; j < nz; j++) {
+    const k = id + i * 31 + j * 17, s = 0.55 + hsh(k, 1) * 0.4;
+    const pl = V3(-xi + ((i + 0.5) * 2 * xi) / nx + (hsh(k, 2) - 0.5) * 0.2, ys - 0.05, -zi + ((j + 0.5) * 2 * zi) / nz + (hsh(k, 3) - 0.5) * 0.2).applyMatrix4(f.m);
+    const q = new THREE.Quaternion().setFromAxisAngle(UP, hsh(k, 4) * 6.28);
+    it.trs.push({ t: pl.toArray(), r: [q.x, q.y, q.z, q.w], s: [s, s * (0.8 + hsh(k, 5) * 0.4), s] });
+  }
+}
+// Bancas (instanciadas): dos apoyos de concreto y asiento de listones de madera; `respaldo: true` agrega espaldar.
+// `rumbo`: hacia dónde mira quien se sienta. `centros` pone varias iguales.
+function bancas(e, P, detail) {
+  if (!detail) return; // a la distancia del LOD1 no se ven
+  const L = e.largo ?? 1.8, resp = !!e.respaldo;
+  const it = inst(P, `banca${L}${resp ? 'r' : ''}`, 'bancas', () => {
+    const p = new Part(), wood = 'pintura#9a6b45';
+    for (const x of [-L / 2 + 0.25, L / 2 - 0.25]) p.box('pintura#c9c7c0', 0.12, 0.42, 0.45, x, 0, 0);
+    for (let i = 0; i < 5; i++) p.box(wood, L, 0.04, 0.085, 0, 0.42, -0.2 + i * 0.1);
+    if (resp) {
+      for (const x of [-L / 2 + 0.25, L / 2 - 0.25]) p.box('pintura#3a3f44', 0.05, 0.5, 0.04, x, 0.46, -0.22);
+      for (let i = 0; i < 3; i++) p.box(wood, L, 0.08, 0.035, 0, 0.6 + i * 0.12, -0.25);
+    }
+    return p;
+  });
+  for (const c of e.centros || [e.centro]) { const q = facing(e.rumbo), p = planToThree(c, groundAt(P, c[0], c[1]) - 0.02); it.trs.push({ t: p.toArray(), r: [q.x, q.y, q.z, q.w] }); }
+}
+// Luminarias peatonales (instanciadas): poste cónico de acero con base, brazo corto y luminaria plana con difusor encendido.
+// `rumbo`: hacia dónde apunta el brazo. `centros` pone varias iguales.
+function luminarias(e, P, detail) {
+  if (!detail) return; // a la distancia del LOD1 no se ven
+  const h = e.altura ?? 4.5, col = hexOK(e.color, '#3a3f44'), mk = `metal_pintado${col}`;
+  const it = inst(P, `luminaria${h}${col}`, 'luminarias', () => {
+    const p = new Part();
+    p.add(mk, new THREE.CylinderGeometry(0.045, 0.07, h, 10), [0, h / 2, 0]).add(mk, new THREE.CylinderGeometry(0.12, 0.13, 0.1, 10), [0, 0.05, 0]);
+    p.box(mk, 0.24, 0.05, 0.05, 0.1, h - 0.06, 0).box(mk, 0.62, 0.07, 0.26, 0.5, h - 0.07, 0).box('luz', 0.56, 0.02, 0.2, 0.5, h - 0.09, 0);
+    return p;
+  });
+  for (const c of e.centros || [e.centro]) {
+    const q = new THREE.Quaternion().setFromAxisAngle(UP, Math.PI / 2 - (e.rumbo ?? 0) * D2R), p = planToThree(c, groundAt(P, c[0], c[1]) - 0.02);
+    it.trs.push({ t: p.toArray(), r: [q.x, q.y, q.z, q.w] });
+  }
+}
+// Letrero institucional: letras grandes en relieve (con tildes) sobre el antepecho de un volumen, de pie sobre una canaleta,
+// en su fachada (`sobre: "fachada"`, a la altura `y`) o libres (`centro`, `rumbo` hacia donde miran, `base`).
+function letreroInst(e, P, V, detail) {
+  if (!e.texto) return;
+  const Hl = e.altura ?? 0.9, size = Hl / CAP, dep = e.profundidad ?? 0.12, key = tint('pintura_satin', e.color, '#1d4f91');
+  const tg = textGeo(e.texto, size, dep, true); if (!tg) return;
+  tg.computeBoundingBox();
+  const tw = tg.boundingBox.max.x - tg.boundingBox.min.x;
+  let m;
+  if (e.volumen) {
+    const vi = V.find((x) => x.v.id === e.volumen && x.f && !x.open);
+    if (!vi) { warn.push(`letrero_institucional: no hay un volumen rectangular "${e.volumen}"`); return; }
+    const s = sideFor(vi.f, e.lado || 'S'), S = vi.f.sides[s], along = ((e.pos ?? 0.5) - 0.5) * S.len, t = vi.v.techo || {};
+    if ((e.sobre || 'parapeto') === 'parapeto') {
+      const pp = t.tipo === 'plano' ? t.parapeto ?? 0.6 : 0, y = vi.eave + pp + (detail && pp > 0 ? 0.05 : 0) + (vi.lift || 0);
+      P.env.addRaw('metal_pintado#3a3f44', boxG(tw + 0.3, 0.14, dep + 0.08).applyMatrix4(sideMatrix(vi.f, s, along, y, 0)));
+      m = sideMatrix(vi.f, s, along, y + 0.14, -dep / 2);
+    } else m = sideMatrix(vi.f, s, along, e.y ?? Math.max(0.5, vi.eave - Hl - 0.7), (vi.SS?.[s]?.cortina ? CW_D : 0) + 0.06);
+  } else {
+    const c = planToThree(e.centro);
+    m = new THREE.Matrix4().compose(V3(c.x, e.base ?? 0, c.z), facing(e.rumbo), V3(1, 1, 1));
+  }
+  P.env.addRaw(key, tg.applyMatrix4(m));
+}
+
 // ---------- adecuaciones: paneles (con rieles y anclajes), marquesinas, baterías, inversores y conexión
 const quatFrom = (u, n, d) => { const x = u.clone(); if (x.clone().cross(n).dot(d) < 0) x.negate(); return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, n, d)); };
 // devuelve { mods: [[p, q]], u, kind, ext } (p: centro de la cara inferior del módulo)
@@ -1119,6 +1739,43 @@ function canopy(ad, P, detail) {
   if (detail && !low) add('metal_pintado#c3c7c8', beamG(beamAt(FW / 2 + 0.1).addScaledVector(uL, -FL / 2), beamAt(FW / 2 + 0.1).addScaledVector(uL, FL / 2), 0.14, 0.12));
   return { mods, u, kind: 'marquesina', ext: [mw, ml], feet, top: h };
 }
+// Pérgola solar sobre una cubierta plana: pórticos de acero apoyados en la losa (columnas cada ~6,5 m con dado, placa y
+// riostras), vigas en la pendiente de los módulos, vigas de amarre, correas bajo cada fila y canal en el borde bajo; los
+// equipos de la cubierta quedan debajo. La base es la cubierta del `volumen` (o la más alta bajo el centro) y `altura` es la
+// del plano de los módulos sobre ella (la luz libre bajo las vigas es ~0,75 m menor).
+function pergola(ad, P, V, detail) {
+  const f0 = frame({ ...ad, largo: ad.largo ?? 16, ancho: ad.ancho ?? 10 }), c = V3(0, 0, 0).applyMatrix4(f0.m);
+  const vol = ad.volumen ? V.find((x) => x.v.id === ad.volumen && x.f) : null;
+  const base = ad.base ?? (vol ? vol.base + vol.eave + 0.02 + (vol.lift || 0) : roofAt(P, c.x, c.z) ?? 0);
+  const f = frame({ ...ad, largo: f0.L, ancho: f0.A, base }), h = ad.altura ?? 3.5, tilt = (ad.inclinacion ?? 3) * D2R;
+  const cols = Math.max(1, ad.columnas | 0), rows = Math.max(1, ad.filas | 0), vert = (ad.orientacion_modulo || 'horizontal') === 'vertical';
+  const mw = vert ? MOD.W : MOD.L, ml = vert ? MOD.L : MOD.W, pu = mw + 0.02, pv = ml + 0.02;
+  const r3 = new THREE.Matrix4().extractRotation(f.m);
+  const uL = V3(1, 0, 0), nL = V3(0, Math.cos(tilt), Math.sin(tilt)), dL = V3(0, -Math.sin(tilt), Math.cos(tilt));
+  const u = uL.clone().applyMatrix4(r3), n = nL.clone().applyMatrix4(r3), d = dL.clone().applyMatrix4(r3);
+  const q = quatFrom(u, n, d).multiply(vert ? new THREE.Quaternion() : new THREE.Quaternion().setFromAxisAngle(UP, Math.PI / 2));
+  const cL = V3(0, h, 0), mods = [];
+  for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) mods.push([cL.clone().addScaledVector(uL, (i - (cols - 1) / 2) * pu).addScaledVector(dL, (j - (rows - 1) / 2) * pv).applyMatrix4(f.m), q]);
+  const FL = cols * pu, FW = rows * pv, sk = tint('metal_pintado', ad.color, '#5d6368'), add = (k, g) => g && P.rack.addRaw(k, g.applyMatrix4(f.m));
+  const at = (s, off, x = 0) => cL.clone().addScaledVector(dL, s).addScaledVector(nL, off).addScaledVector(uL, x);
+  for (let j = 0; j < rows; j++) for (const sg of [-1, 1]) { const o = (j - (rows - 1) / 2) * pv + (sg * ml) / 4; add(sk, beamG(at(o, -0.07, -FL / 2 - 0.1), at(o, -0.07, FL / 2 + 0.1), 0.06, 0.1, nL)); }
+  const nx = Math.max(2, Math.ceil((FL - 1) / 6.5) + 1), nz = Math.max(2, Math.ceil((FW - 1.2) / 6.5) + 1), feet = [];
+  const xs = Array.from({ length: nx }, (_, i) => -FL / 2 + 0.5 + (i * (FL - 1)) / (nx - 1)), ss = Array.from({ length: nz }, (_, j) => -FW / 2 + 0.6 + (j * (FW - 1.2)) / (nz - 1));
+  for (const x of xs) add(sk, beamG(at(-FW / 2 - 0.1, -0.27, x), at(FW / 2 + 0.1, -0.27, x), 0.16, 0.3, nL));
+  for (const s of ss) add(sk, beamG(at(s, -0.57, -FL / 2 + 0.4), at(s, -0.57, FL / 2 - 0.4), 0.14, 0.3, nL));
+  for (const x of xs) for (const s of ss) {
+    const top = at(s, -0.72, x), foot = V3(top.x, detail ? 0.1 : -0.02, top.z); // dentro del dado (o 2 cm en la losa)
+    add(sk, beamG(foot, top, 0.22, 0.22, V3(0, 0, 1)));
+    if (detail) {
+      add('pintura#c9c8c2', boxG(0.5, 0.3, 0.5, foot.x, -0.02, foot.z));
+      add(sk, boxG(0.4, 0.03, 0.4, foot.x, 0.28, foot.z));
+      for (const sg of [-1, 1]) add(sk, beamG(V3(top.x, top.y - 1.0, top.z), at(s, -0.62, x + sg * 1.0), 0.08, 0.08, V3(0, 0, 1)));
+    }
+    feet.push(foot.clone().setY(0).applyMatrix4(f.m));
+  }
+  if (detail) add(sk, beamG(at(FW / 2 + 0.17, -0.2, -FL / 2 - 0.1), at(FW / 2 + 0.17, -0.2, FL / 2 + 0.1), 0.14, 0.16, nL));
+  return { mods, u, kind: 'pergola', ext: [mw, ml], feet, top: base + h, vi: vol };
+}
 // Baterías: gabinetes (con puertas, rejillas, aire acondicionado y señales) o contenedor; losa y bolardos
 function bessGroup(b, be, P, detail) {
   const tipo = be.tipo || (be.kwh > 200 ? 'contenedor_20' : be.kwh > 90 ? 'contenedor_10' : 'gabinete');
@@ -1169,7 +1826,7 @@ function inverters(P, inv, V, detail) {
   const pos = Math.max(-S.len / 2 + 0.6 + (n * 0.85) / 2, Math.min(S.len / 2 - 0.6 - (n * 0.85) / 2, inv.pos ?? 0));
   const alongs = [];
   for (let i = 0; i < n; i++) {
-    const a = (i - (n - 1) / 2) * 0.85 + pos, m = sideMatrix(f, s, a, 1.2, 0), add = (k, g) => P.equip.addRaw(k, g.applyMatrix4(m));
+    const a = (i - (n - 1) / 2) * 0.85 + pos, m = sideMatrix(f, s, a, 1.2, cwOff(vi, s)), add = (k, g) => P.equip.addRaw(k, g.applyMatrix4(m));
     alongs.push(a);
     add('pintura_satin#e9ecec', boxW(0.6, 0.78, 0.24, 0, 0, 0.12));
     add('pantalla', boxG(0.16, 0.1, 0.02, 0.1, 0.5, 0.25));
@@ -1235,7 +1892,9 @@ function wallSlot(V, vi, s, target, lo, hi, avoid = []) {
   }
   return null;
 }
-const wallPt = (vi, s, a, y, out = 0.15) => { const S = vi.f.sides[s]; const p = S.n.clone().multiplyScalar(S.half + out).addScaledVector(S.t, a); p.y = y; return p.applyMatrix4(vi.f.m); };
+// en un muro cortina, lo que va sobre el muro (tablero, medidor, inversores, ductos) se monta delante de los parales
+const cwOff = (vi, s) => (vi.SS?.[s]?.cortina ? CW_D + 0.02 : 0);
+const wallPt = (vi, s, a, y, out = 0.15) => { const S = vi.f.sides[s]; const p = S.n.clone().multiplyScalar(S.half + out + cwOff(vi, s)).addScaledVector(S.t, a); p.y = y; return p.applyMatrix4(vi.f.m); };
 const proj = (vi, s, p) => { const l = p.clone().applyMatrix4(vi.f.inv), S = vi.f.sides[s]; return l.x * S.t.x + l.z * S.t.z; };
 function conexion(spec, P, V, arrays, invInfo, bessInfo, evPt, detail) {
   const R = detail ? 0.1 : 0.12, seg = detail ? 10 : 6, J = detail, POW = P.pow, DAT = P.dat, MED = 0.58, GWO = -0.58;
@@ -1243,7 +1902,7 @@ function conexion(spec, P, V, arrays, invInfo, bessInfo, evPt, detail) {
   const G = (p) => V3(p.x, gp(p), p.z);
   const roofs = V.flatMap((vi) => vi.ray || []), rc = new THREE.Raycaster();
   const roofY = (x, z) => { rc.set(V3(x, 80, z), V3(0, -1, 0)); rc.far = 200; const h = rc.intersectObjects(roofs, false)[0]; return h ? h.point.y : null; };
-  const run = (pts) => pipe(POW, 'potencia', pts, R, J, seg);
+  const run = (pts) => { P.ductos.push({ pts, r: R }); return pipe(POW, 'potencia', pts, R, J, seg); };
   // esquina de un tramo en "L" entre a y b: primero a lo largo de "dir" (horizontal)
   const corner = (a, b, dir) => { const d = dir.clone().setY(0).normalize(); return a.clone().addScaledVector(d, b.clone().sub(a).setY(0).dot(d)); };
   const wallN = (vi, s) => vi.f.sides[s].n.clone().transformDirection(vi.f.m), wallT = (vi, s) => vi.f.sides[s].t.clone().transformDirection(vi.f.m);
@@ -1273,7 +1932,7 @@ function conexion(spec, P, V, arrays, invInfo, bessInfo, evPt, detail) {
   let ta = wallSlot(V, site.vi, site.s, site.target, -0.8, 0.8, avoid(site.vi, site.s));
   if (ta === null) for (const s of Object.keys(site.vi.f.sides)) { ta = wallSlot(V, site.vi, s, 0, -0.8, 0.8, avoid(site.vi, s)); if (ta !== null) { site.s = s; break; } }
   if (ta === null) ta = site.target;
-  const tv = site.vi, ts = site.s, TB = (a, y, out) => wallPt(tv, ts, ta + a, y, out), mt = (a, y) => sideMatrix(tv.f, ts, ta + a, y, 0);
+  const tv = site.vi, ts = site.s, TB = (a, y, out) => wallPt(tv, ts, ta + a, y, out), mt = (a, y) => sideMatrix(tv.f, ts, ta + a, y, cwOff(tv, ts));
   // tablero general (gris con franja ámbar), medidor bidireccional y pasarela IoT (franja violeta)
   const pc = P.punto, gw = P.gw;
   pc.addRaw('pintura_satin#aeb5b9', boxW(0.7, 1.0, 0.25, 0, 0, 0.125).applyMatrix4(mt(0, 0.8)));
@@ -1299,7 +1958,9 @@ function conexion(spec, P, V, arrays, invInfo, bessInfo, evPt, detail) {
   };
   // ---- datos: de la pasarela, muro arriba, bajo el alero y hasta la antena sobre el borde de la cubierta
   const ed = edge(ta + GWO), yUnder = Math.max(2.4 + tv.base, Math.min(ed.y, eY) - 0.45), antTop = V3(ed.p.x, ed.y + 1.4, ed.p.z);
-  pipe(DAT, 'datos', [TB(GWO, 1.77, 0.12), TB(GWO, yUnder, 0.12), V3(ed.p.x, yUnder, ed.p.z), V3(ed.p.x, ed.y + 0.3, ed.p.z)], detail ? 0.05 : 0.07, J, seg);
+  const dat = [TB(GWO, 1.77, 0.12), TB(GWO, yUnder, 0.12), V3(ed.p.x, yUnder, ed.p.z), V3(ed.p.x, ed.y + 0.3, ed.p.z)];
+  P.ductos.push({ pts: dat, r: detail ? 0.05 : 0.07 }, { pts: [V3(ed.p.x, yUnder - 0.3, ed.p.z), antTop], r: 0.03 });
+  pipe(DAT, 'datos', dat, detail ? 0.05 : 0.07, J, seg);
   gw.addRaw('metal_pintado#c4c8cb', tubeG(V3(ed.p.x, yUnder - 0.3, ed.p.z), antTop, 0.03, 8));
   gw.addRaw('pintura_satin#f2f3f3', new THREE.CylinderGeometry(0.06, 0.06, 0.55, 10).translate(antTop.x, antTop.y + 0.27, antTop.z));
   gw.addRaw('datos', new THREE.CylinderGeometry(0.085, 0.085, 0.06, 10).translate(antTop.x, antTop.y + 0.4, antTop.z));
@@ -1389,15 +2050,16 @@ function build(spec, detail) {
   const P = {
     walls: new Part(), roof: new Part(), roofKeep: new Part(), env: new Part(), newRoof: cn ? new Part() : null,
     equip: new Part(), bess: new Part(), solarFlat: new Part(), rack: new Part(), pow: new Part(), dat: new Part(), punto: new Part(), gw: new Part(),
-    ground: [], trees: [], poles: [],
+    ground: [], trees: [], poles: [], inst: new Map(), puentes: bridgeCuts(spec), rings: [], ductos: [],
     replace: (v) => estadoDe(v) === 'existe' && (replaceIds ? replaceIds.includes(v.id) : ['fibrocemento', 'zinc', undefined].includes(v.techo?.material) && v.techo?.tipo !== 'plano' && v.techo?.tipo !== 'ninguno'),
     newRoofSpec: (t) => ({ ...t, material: cn?.material || 'termoacustica', color: cn?.color || (cn?.material === 'teja_barro' ? '#a5512f' : '#e9e7e1') }),
   };
   // estado de cada pieza: "existe" (se conserva), "demoler" (se ve en "Hoy" y desaparece con el proyecto) o "nuevo"
   // (obra nueva, solo con el proyecto). Cada estado acumula sus muros, cubiertas, entorno y árboles por separado
   const estadoDe = (o) => o.estado || spec.estado || 'existe';
-  const G = { existe: { walls: P.walls, roof: P.roof, roofKeep: P.roofKeep, env: P.env, trees: P.trees } };
-  for (const k of ['demoler', 'nuevo']) G[k] = { walls: new Part(), roof: new Part(), roofKeep: new Part(), env: new Part(), trees: [] };
+  // (inst: instancias GPU de la capa: parasoles, luminarias, bancas, bolardos, arbustos)
+  const G = { existe: { walls: P.walls, roof: P.roof, roofKeep: P.roofKeep, env: P.env, trees: P.trees, inst: P.inst } };
+  for (const k of ['demoler', 'nuevo']) G[k] = { walls: new Part(), roof: new Part(), roofKeep: new Part(), env: new Part(), trees: [], inst: new Map() };
   const usar = (k) => Object.assign(P, G[k] || G.existe);
   // lo que hoy existe no tapa ni es tapado por la obra nueva, y lo que se demuele no cuenta para la obra nueva
   const compatibles = (k) => (k === 'nuevo' ? ['existe', 'nuevo'] : k === 'demoler' ? ['existe', 'demoler'] : ['existe']);
@@ -1405,7 +2067,7 @@ function build(spec, detail) {
   const xs = [], ys = [];
   const push = (pts) => pts && pts.forEach(([x, y]) => { xs.push(x); ys.push(y); });
   for (const v of spec.volumenes || []) push(rectOrPoly(v));
-  for (const e of spec.elementos || []) push(rectOrPoly(e) || (e.centro ? [e.centro] : e.poligono || e.linea));
+  for (const e of spec.elementos || []) push(rectOrPoly(e) || (e.centro ? [e.centro] : e.poligono || e.linea || (e.desde && e.hasta ? [e.desde, e.hasta] : e.centros)));
   if (xs.length) { const m = 2; slab(P, 'predio', [[Math.min(...xs) - m, Math.min(...ys) - m], [Math.max(...xs) + m, Math.min(...ys) - m], [Math.max(...xs) + m, Math.max(...ys) + m], [Math.min(...xs) - m, Math.max(...ys) + m]], 'predio'); }
   // volúmenes: marcos primero (para saber qué muros tapa cada uno)
   const V = (spec.volumenes || []).map((v, i) => {
@@ -1438,13 +2100,24 @@ function build(spec, detail) {
     } catch (e) { warn.push(`${spec.id}/${vi.v.id}: ${e.message}`); vi.ray = []; return { id: vi.v.id, vi, faces: [] }; }
   });
   P.roofRay = V.flatMap((vi) => vi.ray || []);
-  for (const e of spec.elementos || []) { try { usar(estadoDe(e)); element(b, e, P, detail, V); } catch (err) { warn.push(`${spec.id}/elemento ${e.tipo}: ${err.message}`); } }
+  for (const e of spec.elementos || []) { if (NUEVOS.has(e.tipo)) continue; try { usar(estadoDe(e)); element(b, e, P, detail, V); } catch (err) { warn.push(`${spec.id}/elemento ${e.tipo}: ${err.message}`); } }
+  // elementos de obra nueva en una segunda pasada: ya están todos los suelos (pintura de bahías) y las cubiertas (equipos)
+  for (const e of spec.elementos || []) { if (!NUEVOS.has(e.tipo)) continue; try { usar(estadoDe(e)); newMats(b); elementoNuevo(e, P, detail, V); } catch (err) { warn.push(`${spec.id}/elemento ${e.tipo}: ${err.message}`); } }
   usar('existe');
 
+  // instancias de pocas repeticiones: se funden en el entorno de su capa
+  for (const g of Object.values(G)) for (const [k, it] of g.inst) {
+    if (it.siempre || it.trs.length >= 10) continue;
+    for (const tr of it.trs) { const m = new THREE.Matrix4().compose(V3(...tr.t), new THREE.Quaternion(...tr.r), V3(...(tr.s || [1, 1, 1]))); for (const [mk, gs] of it.part.byMat) for (const geo of gs) g.env.addRaw(mk, geo, !!geo.attributes.uv, m); }
+    g.inst.delete(k);
+  }
   const root = b.node(spec.nombre || spec.id, null);
   root.setExtras({ id: spec.id, lat: spec.lat, lon: spec.lon });
   const ex = b.node('existente', null, [0, 0, 0], [0, 0, 0], [1, 1, 1], root); ex.setExtras({ capa: 'existente' });
-  b.node('estructura', b.partMesh(`${spec.id}_estructura`, P.walls), [0, 0, 0], [0, 0, 0], [1, 1, 1], ex);
+  // con losas expresadas, las mallas de muros se arman después de la conexión (los bordes de losa se cortan en sus ductos);
+  // sin ellas, en el mismo orden de siempre
+  const tarde = [], wallsNode = (name, mesh, part, parent) => { const nd = b.node(name, P.rings.length ? null : b.partMesh(mesh, part), [0, 0, 0], [0, 0, 0], [1, 1, 1], parent); if (P.rings.length) tarde.push(() => nd.setMesh(b.partMesh(mesh, part))); return nd; };
+  wallsNode('estructura', `${spec.id}_estructura`, P.walls, ex);
   // cubiertas que el proyecto reemplaza (se ocultan con "Con el proyecto") y cubiertas que se conservan
   if (!P.roof.empty) b.node('cubierta_actual', b.partMesh(`${spec.id}_cubierta`, P.roof), [0, 0, 0], [0, 0, 0], [1, 1, 1], ex).setExtras({ capa: 'existente', reemplazada: !!(P.newRoof && !P.newRoof.empty) });
   if (!P.roofKeep.empty) b.node('cubierta', b.partMesh(`${spec.id}_cubierta_conservada`, P.roofKeep), [0, 0, 0], [0, 0, 0], [1, 1, 1], ex).setExtras({ capa: 'existente' });
@@ -1453,15 +2126,18 @@ function build(spec, detail) {
     const tm = treeMesh(b, detail);
     instanced(b, 'arboles', tm, P.trees.map((t, i) => { const q = new THREE.Quaternion().setFromAxisAngle(UP, (i * 2.399) % (Math.PI * 2)); return { t: [t.c.x, 0, t.c.z], r: [q.x, q.y, q.z, q.w], s: [t.cp, t.H, t.cp] }; }), env);
   }
+  const instNodes = (map, parent, pre) => [...map.values()].forEach((it, i) => instanced(b, `${pre}${it.name}`, b.partMesh(`${spec.id}_${pre}${it.name}_${i}`, it.part), it.trs, parent));
+  instNodes(G.existe.inst, ex, '');
 
   // lo que el proyecto demuele: visible en "Hoy", oculto "Con el proyecto"
   const grupo = (k, parent, nombre, extras) => {
-    const g = G[k]; if (g.walls.empty && g.roof.empty && g.roofKeep.empty && g.env.empty && !g.trees.length) return;
+    const g = G[k]; if (g.walls.empty && g.roof.empty && g.roofKeep.empty && g.env.empty && !g.trees.length && !g.inst.size) return;
     const n = b.node(nombre, null, [0, 0, 0], [0, 0, 0], [1, 1, 1], parent); n.setExtras(extras);
-    if (!g.walls.empty) b.node(`${nombre}_estructura`, b.partMesh(`${spec.id}_${nombre}_estructura`, g.walls), [0, 0, 0], [0, 0, 0], [1, 1, 1], n);
+    if (!g.walls.empty) wallsNode(`${nombre}_estructura`, `${spec.id}_${nombre}_estructura`, g.walls, n);
     for (const part of [g.roof, g.roofKeep].filter((x) => !x.empty)) b.node(`${nombre}_cubierta`, b.partMesh(`${spec.id}_${nombre}_cubierta_${part === g.roof ? 'a' : 'b'}`, part), [0, 0, 0], [0, 0, 0], [1, 1, 1], n);
     if (!g.env.empty) b.node(`${nombre}_entorno`, b.partMesh(`${spec.id}_${nombre}_entorno`, g.env), [0, 0, 0], [0, 0, 0], [1, 1, 1], n);
     if (g.trees.length) { const tm = treeMesh(b, detail); instanced(b, `${nombre}_arboles`, tm, g.trees.map((t, i) => { const q = new THREE.Quaternion().setFromAxisAngle(UP, (i * 2.399) % (Math.PI * 2)); return { t: [t.c.x, 0, t.c.z], r: [q.x, q.y, q.z, q.w], s: [t.cp, t.H, t.cp] }; }), n); }
+    instNodes(g.inst, n, `${nombre}_`);
   };
   grupo('demoler', ex, 'a_demoler', { capa: 'existente', demoler: true });
 
@@ -1473,6 +2149,7 @@ function build(spec, detail) {
   (ad.fv || []).forEach((a, k) => {
     try {
       if (a.tipo === 'marquesina') { arrays.push(canopy(a, P, detail)); return; }
+      if (a.tipo === 'pergola') { newMats(b); arrays.push(pergola(a, P, V, detail)); return; }
       const vol = vols.find((v) => v.id === a.volumen) || vols[0];
       if (!vol?.faces?.length) { warn.push(`${spec.id}: el arreglo ${k} no tiene cubierta donde apoyarse`); return; }
       let fi = vol.faces[0];
@@ -1502,6 +2179,8 @@ function build(spec, detail) {
   const evPt = ad.cargador_ve?.centro ? charger(P, ad.cargador_ve, detail) : null;
   let cx = null;
   try { cx = conexion(spec, P, V, arrays, invInfo, bessInfo, evPt, detail); } catch (e) { warn.push(`${spec.id}/conexión: ${e.message}`); }
+  ringsOut(P, (vi) => estadoDe(vi.v) === 'nuevo');
+  tarde.forEach((f) => f());
   if (!P.bess.empty) b.node('almacenamiento', b.partMesh(`${spec.id}_bess`, P.bess), [0, 0, 0], [0, 0, 0], [1, 1, 1], adn);
   if (!P.equip.empty) b.node('equipos', b.partMesh(`${spec.id}_equipos`, P.equip), [0, 0, 0], [0, 0, 0], [1, 1, 1], adn);
   if (cx) {

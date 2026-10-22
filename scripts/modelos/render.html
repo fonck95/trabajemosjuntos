@@ -14,8 +14,9 @@
 <body>
 <script type="module">
 // Renderiza un GLB de edificio desde una cámara dada (posición de un panorama de Street View o una órbita).
-// Parámetros: glb, cam=x,y,z, look=x,y,z, fov (vertical), w, h, capa=existente|todo
+// Parámetros: glb, cam=x,y,z, look=x,y,z, fov (vertical), w, h, capa=existente|todo, env=1 (mapa de entorno como en la web)
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 const q = new URLSearchParams(location.search);
@@ -28,8 +29,11 @@ renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadow
 document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(q.get('fondo') || '#cdd8e3');
-scene.add(new THREE.HemisphereLight('#e6eef6', '#8b8a7c', 1.6));
-const sun = new THREE.DirectionalLight('#fff6e8', 2.2); sun.position.set(30, 60, 20); sun.castShadow = true;
+if (q.get('env') === '1') { const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(new RoomEnvironment(renderer), 0.04).texture; pm.dispose(); }
+// con env=1, las intensidades de la web (web/js/core.js: hemisférica 0,55 y sol 1,35 con mapa de entorno)
+const ENV = q.get('env') === '1';
+scene.add(new THREE.HemisphereLight('#e6eef6', '#8b8a7c', ENV ? 0.55 : 1.6));
+const sun = new THREE.DirectionalLight('#fff6e8', ENV ? 1.35 : 2.2); sun.position.set(30, 60, 20); sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, far: 200 });
 scene.add(sun);
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshStandardMaterial({ color: q.get('suelo') || '#9a978d', roughness: 1 }));

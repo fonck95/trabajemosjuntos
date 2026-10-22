@@ -177,6 +177,35 @@ export const TEX = {
   // rejilla de ventilación: celosía metálica horizontal (lamas cada 2,5 cm en 20 cm)
   rejilla: png(8, 64, (x, y) => { const t = ((y / 64) * 8) % 1; const v = t < 0.35 ? 70 : t < 0.5 ? 245 : 200; return [v, v, v]; }),
   asfalto: png(64, 64, (x, y) => { const v = 200 + (hash(x, y) - 0.5) * 40; return [v, v, v]; }),
+  // Acabados de obra nueva. La imagen se ve invertida en vertical sobre el muro (v crece hacia arriba), por eso las
+  // sombras de las juntas van en la parte baja de cada pieza de la imagen.
+  // panel compuesto de aluminio (ACM): 4 × 4 paneles por baldosa con junta de ~2 cm y una variación mínima de tono
+  // entre paneles; el generador escala la baldosa al tamaño del panel (1,5 × 0,75 m por defecto)
+  panel: png(512, 256, (x, y) => {
+    const cx = x % 128, cy = y % 64;
+    if (cx < 2 || cy < 2) return [92, 94, 96];
+    if (cy > 61) return [196, 198, 200];
+    const v = 236 + (hash(x >> 7, y >> 6) - 0.5) * 12 + (cy / 64) * 6;
+    return [v, v, v];
+  }),
+  // concreto a la vista con formaleta de tablas (12 cm, 2,4 m de baldosa × 1,2 m): tono por tabla, veta, rebaba en
+  // las juntas, empates escalonados y huecos de los tensores cada 60 cm
+  concreto_tabla: png(512, 256, (x, y) => {
+    const row = Math.floor((y / 256) * 10), ry = ((y / 256) * 10) % 1, j = Math.floor(hash(row, 7) * 512), dx = (x - j + 512) % 512;
+    let v = 206 + (hash(row, 3) - 0.5) * 20 + Math.sin((x / 512) * Math.PI * 2 * (5 + Math.floor(hash(row, 5) * 5)) + ry * 7 + hash(row, 11) * 6) * 4 + (hash(x >> 1, y) - 0.5) * 12;
+    if (ry > 0.93) v -= 30; else if (ry < 0.05) v += 8;
+    if (dx < 2) v -= 24;
+    if ((x % 128 - 64) ** 2 + (y % 128 - 64) ** 2 < 6) v = 118;
+    return [v, v, v];
+  }),
+  // ladrillo a la vista (tolete de 24,5 × 6,5 cm con junta rehundida de 1 cm, trabado a soga): cada pieza con su tono
+  // y matiz; 4 × 14 piezas por baldosa (1,02 × 1,05 m)
+  ladrillo_fino: png(256, 256, (x, y) => {
+    const row = Math.floor((y / 256) * 14), fy = ((y / 256) * 14) % 1, off = row % 2 ? 0.5 : 0, bx = (x / 256) * 4 + off, fx = bx % 1;
+    if (fx < 0.04 || fy < 0.133) { const s = fy < 0.133 && fy > 0.07 ? 150 : 212; return [s, s * 0.97, s * 0.92]; }
+    const id = Math.floor(bx) * 31 + row, t = hash(id, 17) - 0.5, u = hash(id, 29) - 0.5, s = 198 + t * 52 + (hash(x, y) - 0.5) * 14;
+    return [s * (1 + u * 0.06), s * (0.93 - u * 0.04), s * (0.88 - u * 0.05)];
+  }),
 };
 
 export function baseMaterials(b) {

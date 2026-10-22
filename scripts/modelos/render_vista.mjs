@@ -4,6 +4,7 @@
 // Uso:
 //   node render_vista.mjs <id> --pano PANO_ID --rumbo R [--pitch P] [--fov F] [--sv foto.jpg] --out salida.png [--capa existente|todo]
 //   node render_vista.mjs <id> --orbita AZ,EL,DIST [--mira x,y,z] [--fov F] --out salida.png [--capa existente|todo]
+// --entorno agrega el mapa de entorno de la web (RoomEnvironment): vidrios y metales se ven como en el visor.
 // Con --sv escribe además salida_comparacion.png (foto | modelo) y salida_mezcla.png (50 % / 50 %).
 // --fov es horizontal en grados, igual que scripts/geo/sv_pano.py (W = 1400, H = 900).
 import { createServer } from 'node:http';
@@ -77,7 +78,7 @@ const { chromium } = await import(pathToFileURL('/opt/node-tools/node_modules/pl
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 const errs = []; page.on('console', (m) => m.type() === 'error' && errs.push(m.text())); page.on('pageerror', (e) => errs.push(String(e)));
-const qs = new URLSearchParams({ glb: `/__out/${id}_lod0.glb`, cam: cam.join(','), look: look.join(','), fov: vfov.toFixed(3), w: W, h: H, capa: opt('capa', 'todo') });
+const qs = new URLSearchParams({ glb: `/__out/${id}_lod0.glb`, cam: cam.join(','), look: look.join(','), fov: vfov.toFixed(3), w: W, h: H, capa: opt('capa', 'todo'), env: args.includes('--entorno') ? '1' : '0' });
 await page.goto(`http://127.0.0.1:${port}/scripts/modelos/render.html?${qs}`);
 await page.waitForFunction(() => window.__listo || window.__error, null, { timeout: 120000 });
 const err = await page.evaluate(() => window.__error);
