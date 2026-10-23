@@ -1,0 +1,1503 @@
+{
+  "id": "investigacion_normas_4725_1732",
+  "titulo": "Decreto 4725 de 2005 (dispositivos médicos), Resolución 1732 de 2026 (habilitación, revocada) y revisión de las clases de riesgo de la dotación de la torre",
+  "fecha_corte": "2026-10-23",
+  "proyecto": "Torre de servicios de primer nivel – E.S.E. Hospital Héctor Abad Gómez (Yondó)",
+  "convenciones": {
+    "dato oficial": "copiado o resumido de la norma o de la fuente oficial",
+    "cálculo propio": "operación o aplicación hecha en este estudio sobre datos del repo o de la norma",
+    "estimación": "supuesto con rango, por confirmar",
+    "por confirmar": "no se pudo leer en la fuente primaria"
+  },
+  "en_pocas_palabras": [
+    "‘La 4725’ es el Decreto 4725 de 2005: regula el registro sanitario, el permiso de comercialización y la vigilancia de los dispositivos médicos. Sigue vigente (modificado, sobre todo, por el Decreto 582 de 2017). Hay un proyecto para reemplazarlo que aún no se ha expedido.",
+    "Clasifica cada equipo en clase I (riesgo bajo), IIa (moderado), IIb (alto) o III (muy alto) con 18 reglas. La torre no tiene equipos de clase III; los 26 IIb (desfibriladores, monitores, bombas, ventilador, incubadoras, rayos X…) no se pueden comprar usados y su mantenimiento lo debe hacer personal inscrito en el INVIMA.",
+    "‘La 1732 de 2026’ es la Resolución 1732 del 5 de agosto de 2026 de MinSalud, el nuevo manual de habilitación que iba a reemplazar a la 3100. Nunca se publicó en el Diario Oficial y la Resolución 2080 del 8 de septiembre de 2026 la revocó completa: hoy rige la Res. 3100 de 2019.",
+    "En dotacion.json hay 17 líneas cuya clase no cuadra con las reglas del Decreto 4725 y 9 probables; 8 equipos de laboratorio pertenecen a otro régimen (diagnóstico in vitro o uso general); 11 dependen de un concepto del INVIMA o del uso previsto, y 4 kits deben inventariarse por componente (ver clases_riesgo_revisadas; cálculo propio)."
+  ],
+  "decreto_4725": {
+    "que_es": "‘Las normas 4725’ del encargo son el Decreto 4725 de 2005. Es el reglamento de los dispositivos médicos para uso humano: dice cuándo un equipo o insumo médico necesita registro sanitario o permiso de comercialización del INVIMA, cómo se clasifica por riesgo (clases I, IIa, IIb y III) y qué vigilancia sigue después de la compra (mantenimiento, tecnovigilancia). Es la norma que el estándar de dotación de la Res. 3100 de 2019 da por cumplida cuando pide registro sanitario y clase de riesgo de cada equipo.",
+    "identificacion": {
+      "numero": "Decreto 4725 de 2005",
+      "fecha": "2005-12-26",
+      "emisor": "Ministerio de la Protección Social (hoy Ministerio de Salud y Protección Social)",
+      "diario_oficial": "46.134 (por confirmar en el Diario Oficial: el número aparece en las compilaciones, no se abrió el original)",
+      "titulo": "Por el cual se reglamenta el régimen de registros sanitarios, permiso de comercialización y vigilancia sanitaria de los dispositivos médicos para uso humano",
+      "tipo_dato": "dato oficial",
+      "urls": [
+        "https://www.minsalud.gov.co/sites/rid/lists/bibliotecadigital/ride/de/dij/decreto-4725-de-2005.pdf",
+        "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=18697",
+        "https://normograma.invima.gov.co/normograma/compilacion/docs/decreto_4725_2005.htm",
+        "https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Decretos/1549782"
+      ]
+    },
+    "estado_a_oct_2026": {
+      "vigente": true,
+      "detalle": "Vigente con modificaciones. El INVIMA presenta como norma vigente el Decreto 4725 de 2005 modificado por el Decreto 582 de 2017. Existe un proyecto de decreto (publicado hacia diciembre de 2025 y comentado en enero de 2026) que lo reemplazaría junto con el Decreto 3770 de 2004, pero en las búsquedas hechas hasta el 23-oct-2026 no apareció un decreto firmado ni publicado en el Diario Oficial: se trata como proyecto (por confirmar en el Diario Oficial).",
+      "tipo_dato": "dato oficial (vigencia) + por confirmar (estado del proyecto de reemplazo)",
+      "urls": [
+        "https://www.invima.gov.co/productos-vigilados/dispositivos-medicos/dispositivos-medicos-equipos-biomedicos",
+        "https://normograma.invima.gov.co/normograma/compilacion/docs/decreto_4725_2005.htm",
+        "https://www.infobae.com/colombia/2026/01/02/gobierno-expidio-nuevo-regimen-sanitario-para-dispositivos-medicos-en-colombia-estos-son-los-puntos-clave-del-borrador-de-decreto/",
+        "https://invitronews.com/de-los-decretos-4725-y-3770-hacia-un-nuevo-modelo-regulatorio-de-dispositivos-medicos-y-reactivos-de-diagnostico-in-vitro/"
+      ]
+    },
+    "ambito": {
+      "texto": "Aplica a los dispositivos médicos para uso humano (instrumentos, aparatos, equipos biomédicos, materiales y sus accesorios con finalidad de diagnóstico, prevención, tratamiento o vigilancia en personas). Los reactivos de diagnóstico in vitro tienen régimen propio: Decreto 3770 de 2004, modificado por el Decreto 581 de 2017.",
+      "articulo": "Art. 1 (objeto y ámbito); el texto exacto de las exclusiones del art. 1 está por confirmar. El art. 1 fue modificado por el Decreto 3275 de 2009.",
+      "urls": [
+        "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=18697",
+        "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=37226",
+        "https://www.invima.gov.co/node/71"
+      ]
+    },
+    "definiciones_clave_art_2": [
+      {
+        "termino": "Dispositivo médico activo",
+        "cita": "Cualquier dispositivo médico cuyo funcionamiento dependa de una fuente de energía eléctrica o de cualquier fuente de energía distinta de la generada directamente por el cuerpo humano o por la gravedad, y que actúa mediante la conversión de dicha energía.",
+        "nota": "El mismo artículo aclara que no son activos los productos que solo transmiten, sin modificación significativa, energía o sustancias de un dispositivo activo al paciente.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      {
+        "termino": "Dispositivo médico activo terapéutico",
+        "cita": "Cualquier dispositivo médico activo utilizado sólo o en combinación con otros dispositivos médicos, destinado a sostener, modificar, sustituir o restaurar funciones o estructuras biológicas en el contexto del tratamiento o alivio de una enfermedad, lesión o deficiencia.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      {
+        "termino": "Equipo biomédico",
+        "cita": "Dispositivo médico operacional y funcional que reúne sistemas y subsistemas eléctricos, electrónicos o h[idráulicos…]",
+        "verificacion": "Extracto incompleto: el resto de la definición está por confirmar."
+      },
+      {
+        "termino": "Equipo biomédico de tecnología controlada",
+        "cita": "Son aquellos dispositivos médicos sometidos a un control especial, por estar incluidos en alguna de las siguientes situaciones",
+        "resumen": "Entre las situaciones: alto riesgo y alta vulnerabilidad por diseño, fabricación, instalación, manejo o destino previsto; prototipos de nuevos desarrollos. El Ministerio puede, por acto administrativo, incluir equipos de clase I y IIa en esta categoría. La lista completa de literales está por confirmar.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      {
+        "termino": "Equipo biomédico usado",
+        "cita": "Incluye todos los equipos que han sido utilizados en la prestación de servicios y/o en procesos de demostración, que no tienen más de cinco (5) años de servicio desde su fabricación o ensamble.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      {
+        "termino": "Equipo biomédico repotenciado",
+        "resumen": "Equipo ya usado en servicios de salud o en demostraciones al que el fabricante, o un repotenciador autorizado por el fabricante, cambió partes de sus subsistemas principales por piezas nuevas.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      {
+        "termino": "Duración del uso",
+        "resumen": "Uso transitorio: continuo por menos de 60 minutos. Corto plazo: hasta 30 días. Largo plazo: más de 30 días.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      }
+    ],
+    "clasificacion_por_riesgo": {
+      "base_art_5": {
+        "cita": "La clasificación de los dispositivos médicos realizada por el fabricante, se fundamenta en los riesgos potenciales relacionados con el uso y el posible fracaso de los dispositivos con base en la combinación de varios criterios tales como, duración del contacto con el cuerpo, grado de invasión y efecto local contra efecto sistémico.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      "quien_clasifica": "El fabricante, aplicando las reglas del art. 7. El INVIMA la revisa al otorgar el registro: la clase que vale para el inventario es la que figura en el registro sanitario del modelo comprado.",
+      "clases": [
+        {
+          "clase": "I",
+          "cita": "Son aquellos dispositivos médicos de bajo riesgo, sujetos a controles generales",
+          "en_palabras_simples": "Riesgo bajo. Ejemplos de la torre: camillas, instrumental quirúrgico reutilizable, lámparas de examen."
+        },
+        {
+          "clase": "IIa",
+          "cita": "Son los dispositivos médicos de riesgo moderado, sujetos a controles especiales en la fase de fabricación para demostrar su seguridad y efectividad.",
+          "en_palabras_simples": "Riesgo moderado. Ejemplos: electrocardiógrafo, ecógrafo, aspirador de secreciones."
+        },
+        {
+          "clase": "IIb",
+          "cita": "Son los dispositivos médicos de riesgo alto, sujetos a controles especiales en el diseño y fabricación para demostrar su seguridad y efectividad.",
+          "en_palabras_simples": "Riesgo alto. Ejemplos: desfibrilador, bomba de infusión, ventilador, rayos X, incubadora neonatal."
+        },
+        {
+          "clase": "III",
+          "cita": "Son los dispositivos médicos de muy alto riesgo sujetos a controles especiales, destinados a proteger o mantener la vida o para un uso de importancia sustancial en la prevención del deterioro de la salud humana […]",
+          "en_palabras_simples": "Riesgo muy alto (por ejemplo implantes en contacto con el corazón). Según dotacion.json, la torre no lleva equipos de clase III (cálculo propio)."
+        }
+      ],
+      "articulos": "Art. 5 (base de la clasificación y las cuatro clases), art. 6 (criterios: duración, dispositivos combinados, regla más estricta) y art. 7 (reglas de clasificación). La división exacta entre los arts. 5 y 6 está por confirmar contra el texto oficial.",
+      "criterios_art_6": [
+        {
+          "criterio": "Si a un mismo dispositivo le aplican varias reglas, se toma la que dé la clase más alta.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        },
+        {
+          "criterio": "Si un dispositivo se usa junto con otro, las reglas se aplican a cada producto por separado (importa para los ‘kits’ del inventario).",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        },
+        {
+          "criterio": "Los soportes informáticos que manejan un producto o influyen en él (literal b del art. 6): texto incompleto, por confirmar.",
+          "verificacion": "por confirmar"
+        }
+      ],
+      "reglas_art_7": [
+        {
+          "regla": 1,
+          "grupo": "No invasivos",
+          "contenido": "Todos los dispositivos no invasivos son clase I, salvo que les aplique otra regla.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        },
+        {
+          "regla": 2,
+          "grupo": "No invasivos",
+          "contenido": "Los no invasivos para conducir o almacenar sangre, fluidos o tejidos, o líquidos o gases que se van a perfundir, administrar o introducir en el cuerpo, son IIa si pueden conectarse a un dispositivo activo IIa o superior, o si almacenan o canalizan sangre u otros fluidos; en los demás casos son I.",
+          "cita": "En todos los demás casos se incluirán en la clase I.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        },
+        {
+          "regla": 3,
+          "grupo": "No invasivos",
+          "contenido": "Dispositivos que modifican la composición de la sangre u otros fluidos.",
+          "verificacion": "por confirmar (no se obtuvo el texto)"
+        },
+        {
+          "regla": 4,
+          "grupo": "No invasivos",
+          "contenido": "Dispositivos en contacto con piel lesionada.",
+          "verificacion": "por confirmar (no se obtuvo el texto)"
+        },
+        {
+          "regla": 5,
+          "grupo": "Invasivos",
+          "contenido": "Invasivos por orificios corporales (no quirúrgicos).",
+          "verificacion": "por confirmar (no se obtuvo el texto)"
+        },
+        {
+          "regla": 6,
+          "grupo": "Invasivos",
+          "contenido": "Quirúrgicamente invasivos de uso transitorio: clase IIa, con excepciones; los instrumentos quirúrgicos reutilizables son clase I.",
+          "cita": "Sean instrumentos quirúrgicos reutilizables, en cuyo caso, se incluirán en la clase I",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        },
+        {
+          "regla": 7,
+          "grupo": "Invasivos",
+          "contenido": "Quirúrgicamente invasivos de corto plazo; según el extracto, los que suministran energía en forma de radiación ionizante pasan a IIb (literal a).",
+          "verificacion": "parcial: texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        },
+        {
+          "regla": 8,
+          "grupo": "Invasivos",
+          "contenido": "Implantables y quirúrgicamente invasivos de largo plazo.",
+          "verificacion": "por confirmar (no se obtuvo el texto)"
+        },
+        {
+          "regla": 9,
+          "grupo": "Activos",
+          "contenido": "Los activos terapéuticos que administran o intercambian energía son IIa; pasan a IIb si pueden hacerlo de forma potencialmente peligrosa (según naturaleza, densidad y punto de aplicación de la energía).",
+          "cita": "Todos los dispositivos médicos terapéuticos activos destinados a administrar o intercambiar energía se incluirán en la clase IIa",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        },
+        {
+          "regla": 10,
+          "grupo": "Activos",
+          "contenido": "Los activos de diagnóstico son IIa; pasan a IIb los destinados a vigilar parámetros fisiológicos vitales cuyas variaciones (función cardíaca, respiración, actividad del sistema nervioso central) puedan suponer peligro inmediato para la vida (literal c), y los que emiten radiación ionizante para radiología diagnóstica y terapéutica (literal d). La excepción de los equipos que solo iluminan en el espectro visible (literal a) está por confirmar en el texto colombiano.",
+          "ejemplos_invima": "El ABC de Dispositivos Médicos del INVIMA pone como ejemplos de diagnóstico directo (IIa) termómetros electrónicos, estetoscopios electrónicos, tensiómetros electrónicos y electrocardiógrafos, y como ejemplos de vigilancia con peligro inmediato (IIb) monitores de signos vitales, centrales de monitoreo, monitores de saturación de oxígeno y monitores de apnea.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita",
+          "urls": [
+            "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=18697",
+            "https://www.visitaodontologica.com/ARCHIVOS/ARCHIVOS-NORMAS/TECNOVIGILANCIA/ABC-Dispositivos-Medicos-INVIMA.pdf"
+          ]
+        },
+        {
+          "regla": 11,
+          "grupo": "Activos",
+          "cita": "Todos los dispositivos médicos activos destinados a administrar medicamentos, líquidos corporales u otras sustancias al organismo, o extraerlos del mismo, se incluirán en la clase IIa, salvo que ello se efectúe de forma potencialmente peligrosa, teniendo en cuenta la naturaleza de las sustancias, la parte del cuerpo de que se trate y el modo de aplicación, en cuyo caso, se incluirán en la clase IIb.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        },
+        {
+          "regla": 12,
+          "grupo": "Activos",
+          "contenido": "Todos los demás dispositivos activos son clase I.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        },
+        {
+          "regla": 13,
+          "grupo": "Especiales",
+          "contenido": "Dispositivos que incorporan una sustancia con acción accesoria similar a la de un medicamento.",
+          "verificacion": "tema confirmado; la clase asignada está por confirmar"
+        },
+        {
+          "regla": 14,
+          "grupo": "Especiales",
+          "contenido": "Dispositivos anticonceptivos o de prevención de infecciones de transmisión sexual.",
+          "verificacion": "por confirmar (no se obtuvo el texto)"
+        },
+        {
+          "regla": 15,
+          "grupo": "Especiales",
+          "contenido": "Los destinados a desinfectar, limpiar, enjuagar o hidratar lentes de contacto son IIb; los destinados específicamente a desinfectar dispositivos médicos son IIa. No aplica a productos que limpian dispositivos médicos (distintos de lentes de contacto) por medios físicos.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita; la redacción exacta de la excepción quedó cortada"
+        },
+        {
+          "regla": 16,
+          "grupo": "Especiales",
+          "cita": "Los dispositivos médicos no activos destinados específicamente al registro de imágenes radiográficas de diagnóstico, se incluirán en la clase IIa.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        },
+        {
+          "regla": 17,
+          "grupo": "Especiales",
+          "cita": "Todos los dispositivos médicos elaborados utilizando tejidos animales o derivados de los mismos que hayan sido transformados en inviables, se incluirán en la clase III, excepto en los casos en que los dispositivos médicos estén destinados a entrar en contacto únicamente con piel intacta.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        },
+        {
+          "regla": 18,
+          "grupo": "Especiales",
+          "cita": "No obstante lo dispuesto en otras reglas, las bolsas para sangre se incluirán en la clase IIb.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+        }
+      ],
+      "nota_origen": "Las 18 reglas siguen el esquema de la Directiva europea 93/42/CEE (Anexo IX). Donde el texto colombiano no se pudo leer, las reglas quedan ‘por confirmar’ y no se usaron para declarar discrepancias firmes."
+    },
+    "registro_sanitario_y_permiso": [
+      {
+        "tema": "Registro sanitario automático",
+        "requisito": "Los dispositivos médicos y equipos biomédicos de clases I y IIa que no sean de tecnología controlada requieren registro sanitario automático del INVIMA.",
+        "articulo": "Art. 17; el procedimiento del registro automático está en el art. 22.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita",
+        "urls": [
+          "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=18697",
+          "https://www.minsalud.gov.co/sites/rid/lists/bibliotecadigital/ride/de/dij/decreto-4725-de-2005.pdf"
+        ]
+      },
+      {
+        "tema": "Clases IIb y III",
+        "requisito": "Pasan por evaluación técnica previa (capacidad técnica del fabricante, proceso de fabricación y calidad del producto) y deben aportar estudios clínicos.",
+        "cita": "Los dispositivos de clases IIb y III deberán allegar estudios clínicos sobre el uso para demostrar la seguridad y efectividad",
+        "articulo": "Art. 18 (documentación para la evaluación técnica; el Decreto 3275 de 2009 le añadió un parágrafo). El numeral exacto de la frase sobre estudios clínicos está por confirmar.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      {
+        "tema": "Procedimiento y modificaciones",
+        "requisito": "El art. 21 (procedimiento para obtener el registro) fue modificado y el art. 30 (modificación automática de registros y permisos) fue sustituido por el Decreto 582 de 2017.",
+        "urls": [
+          "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=71523",
+          "https://www.invima.gov.co/legacy-files/test_template/decreto_0582_2017.pdf"
+        ]
+      },
+      {
+        "tema": "Permiso de comercialización",
+        "requisito": "Los equipos biomédicos de tecnología controlada necesitan permiso de comercialización del INVIMA para producirse, importarse, exportarse, comercializarse o venderse en Colombia.",
+        "articulo": "por confirmar (capítulo del permiso de comercialización)",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita",
+        "urls": [
+          "https://www.invima.gov.co/productos-vigilados/dispositivos-medicos/dispositivos-medicos-equipos-biomedicos",
+          "https://normograma.invima.gov.co/normograma/compilacion/docs/decreto_4725_2005.htm"
+        ]
+      },
+      {
+        "tema": "Que la torre lo exija al comprar",
+        "requisito": "Cada pliego de compra debe pedir copia del registro sanitario o del permiso de comercialización vigente del modelo ofertado, con la clase de riesgo que figura en él. Es requisito de la Res. 3100 (num. 11.1.3 y 11.1.4) y de la Res. 485 (num. 7.1.6 a, listado de dotación con especificaciones).",
+        "tipo_dato": "cálculo propio (aplicación de las normas al proyecto)"
+      }
+    ],
+    "usados_repotenciados_importacion": [
+      {
+        "tema": "Usados IIb y III",
+        "cita": "No se podrá autorizar la importación, adquisición o donación de equipo biomédico usado de clases IIb y III.",
+        "articulo": "Art. 37, sustituido por el art. 2 del Decreto 582 de 2017 según la compilación del INVIMA (otra compilación lo ubica como art. 36: por confirmar).",
+        "consecuencia_torre": "La E.S.E. no puede comprar ni recibir en donación desfibriladores, monitores, bombas, ventiladores, incubadoras, rayos X u otros IIb usados.",
+        "urls": [
+          "https://www.invima.gov.co/productos-vigilados/dispositivos-medicos/dispositivos-medicos-equipos-biomedicos",
+          "https://normograma.invima.gov.co/normograma/compilacion/docs/decreto_4725_2005.htm",
+          "https://www.cundinamarca.gov.co/dependencias/secsalud/tramites-y-licencias/Equipos-generadores"
+        ]
+      },
+      {
+        "tema": "Usados I y IIa",
+        "cita": "Se podrá autorizar la importación, adquisición o donación de equipo biomédico usado clase I o IIa",
+        "requisito": "Se tratan como tecnología controlada: permiso de comercialización y certificado del fabricante o su representante de que el equipo no tiene más de 5 años desde su fabricación.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      {
+        "tema": "Repotenciados",
+        "cita": "Solo se podrá importar o comercializar equipos repotenciados por el fabricante o el repotenciador autorizado.",
+        "requisito": "Se admiten repotenciados de clase I, IIa, IIb y III que cumplan los requisitos del equipo biomédico; el repotenciamiento no puede alterar el diseño original. La Res. 2434 de 2006 de MinProtección reglamenta la importación de repotenciados (objeto exacto por confirmar).",
+        "urls": [
+          "https://normograma.invima.gov.co/normograma/compilacion/docs/decreto_4725_2005.htm",
+          "https://minsalud.gov.co/Normatividad_Nuevo/RESOLUCI%C3%93N%202434%20DE%202006.pdf"
+        ]
+      },
+      {
+        "tema": "Repuestos",
+        "cita": "Los repuestos para el mantenimiento y soporte técnico de los equipos biomédicos importados, deberán contar con el permiso de comercialización de los equipos biomédicos que se pretendan reparar, mantener o soportar.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      }
+    ],
+    "obligaciones_del_prestador": [
+      {
+        "obligacion": "Comprar solo dispositivos con registro sanitario o permiso de comercialización vigente del INVIMA y registrar su clase de riesgo.",
+        "fuente": "Decreto 4725 (arts. 17 y ss.) y Res. 3100, num. 11.1.3 y 11.1.4",
+        "tipo_dato": "dato oficial"
+      },
+      {
+        "obligacion": "Responder por el buen funcionamiento del equipo en la posventa: la responsabilidad se reparte entre el fabricante o su representante y el propietario o tenedor (la E.S.E.).",
+        "fuente": "Decreto 4725, art. 38 (posventa)",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      {
+        "obligacion": "Tener siempre los manuales de operación, funcionamiento y mantenimiento de los equipos de tecnología controlada, entregados por el distribuidor en castellano y en el idioma de origen.",
+        "fuente": "Decreto 4725, art. 38",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      {
+        "obligacion": "Exigir al proveedor soporte técnico, repuestos y herramientas de mantenimiento y calibración durante la vida útil del equipo.",
+        "fuente": "Decreto 4725, art. 35 lit. b (según transcripción de un blog técnico; por confirmar en el texto oficial)",
+        "urls": [
+          "https://bioingenieriaparatodos.home.blog/2019/02/23/mantenimiento-de-los-equipos-medicos/"
+        ]
+      },
+      {
+        "obligacion": "Mantenimiento preventivo con programa de revisiones periódicas y calibración según el fabricante, consignado en la hoja de vida de cada equipo (con los correctivos).",
+        "fuente": "Res. 3100, num. 11.1.3 (dotación, todos los servicios); el mismo deber se atribuye al Decreto 4725, art. 35 (por confirmar)",
+        "urls": [
+          "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "https://bioingenieriaparatodos.home.blog/2019/02/23/mantenimiento-de-los-equipos-medicos/"
+        ]
+      },
+      {
+        "obligacion": "El mantenimiento y la verificación de calibración de equipos IIb y III los hace una persona natural o jurídica con responsable técnico (ingeniero biomédico, ingeniería afín o técnico acreditado) inscrito ante el INVIMA. Para I y IIa no se exige inscripción.",
+        "cita": "toda persona jurídica o natural que preste servicios de mantenimiento y verificación de la calibración para equipos biomédicos de Clases IIb y III, deberá contar con un responsable técnico",
+        "fuente": "Decreto 4725, art. 39; INVIMA, base de conocimiento ‘Inscripción de recurso humano’ y listados de inscritos (corte 31-ago-2025)",
+        "urls": [
+          "https://app.invima.gov.co/oficina-virtual/atencion-al-ciudadano/knowledgebase.php?article=37",
+          "https://www.invima.gov.co/biblioteca/listado-inscritos-recurso-humano-equipos-biomedicos-2025",
+          "https://www.invima.gov.co/invima_website/static/attachments/dispositivos_dispositivos_medicos_equipos_biomedicos/Guia_20para_20la_20inscripci_C3_B3n_20de_20recurso_20humano_20que_20presta_20servicios_20de_20mantenimiento_2C_206-may-24_2C_20pdf.pdf"
+        ]
+      },
+      {
+        "obligacion": "Contratar el mantenimiento de equipos de tecnología controlada solo con terceros que demuestren capacidad técnica.",
+        "fuente": "Decreto 4725 (artículo por confirmar)",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      {
+        "obligacion": "Programa institucional de tecnovigilancia: responsable designado, formato de reporte (propio o del INVIMA) y sistema de gestión de datos. Reportar al INVIMA los eventos e incidentes adversos SERIOS dentro de las 72 horas siguientes a conocerlos, y los NO serios en forma trimestral y consolidada.",
+        "cita": "Enviar el formulario al INVIMA en caso de presentarse un evento o incidente adverso SERIO, dentro de las setenta y dos horas (72) siguientes al conocimiento de la ocurrencia del mismo.",
+        "fuente": "Decreto 4725, art. 61 y ss. (Programa Nacional de Tecnovigilancia) y Res. 4816 de 2008 (el art. 15 como base del plazo de 72 h está por confirmar)",
+        "urls": [
+          "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/Resoluci%C3%B3n_4816_de_2008.pdf",
+          "https://normograma.invima.gov.co/compilacion/docs/resolucion_minproteccion_4816_2008.htm",
+          "https://www.invima.gov.co/productos-vigilados/dispositivos-medicos/programa-nacional-de-tecnovigilancia"
+        ]
+      },
+      {
+        "obligacion": "Notificar al INVIMA los incidentes adversos, el uso incorrecto o indebido y las fallas de mantenimiento de dispositivos comercializados en Colombia (deber de titulares, fabricantes y usuarios).",
+        "fuente": "Decreto 4725, capítulo de tecnovigilancia (artículo exacto por confirmar)",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita"
+      },
+      {
+        "obligacion": "Equipos que emiten radiación ionizante (rayos X fijo y periapical): además del registro (clase IIb), licencia de práctica médica vigente otorgada por la Secretaría Seccional de Salud.",
+        "fuente": "Res. 3100, num. 11.1.2, criterio 15 (ya citado en normas.json del repo); Gobernación de Cundinamarca: ‘Todo equipo generador de radiación ionizante se clasifica como riesgo IIb’",
+        "urls": [
+          "https://www.cundinamarca.gov.co/dependencias/secsalud/tramites-y-licencias/Equipos-generadores"
+        ]
+      }
+    ],
+    "conexion_con_res_3100": {
+      "resumen": "La Res. 3100 no repite el Decreto 4725: lo usa. Su estándar de dotación pide que cada equipo biomédico esté inventariado con su registro sanitario o permiso de comercialización y su clase de riesgo (que salen del Decreto 4725 y del registro INVIMA), que tenga mantenimiento preventivo según el fabricante y hoja de vida, y su estándar de medicamentos y dispositivos pide el programa de tecnovigilancia (Res. 4816).",
+      "criterios": [
+        {
+          "numeral": "Res. 3100, Manual, definición de dotación",
+          "cita": "Son las condiciones mínimas e indispensables que garantizan los equipos biomédicos necesarios, así como sus mantenimientos, para la prestación de los servicios de salud con el menor riesgo posible.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita",
+          "url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "numeral": "Res. 3100, Manual, num. 11.1.3 (dotación, todos los servicios)",
+          "contenido": "Registro de la relación de equipos biomédicos con, como mínimo, nombre, marca, modelo y serie (una guía secundaria agrega registro sanitario o permiso de comercialización cuando aplique y clasificación por riesgo); programa de capacitación en el uso de dispositivos que lo requieran; suficiencia de equipos según frecuencia de uso; programa de mantenimiento preventivo según el fabricante; hojas de vida con mantenimientos preventivos y correctivos. Número de cada criterio: por confirmar.",
+          "cita": "El mantenimiento de los equipos biomédicos es ejecutado por talento humano profesional, tecnólogo o técnico en áreas relacionadas. Este mantenimiento puede ser realizado directamente por el prestador de servicios de salud o mediante contrato o convenio con un tercero.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita",
+          "url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "numeral": "Res. 3100, Manual, num. 11.1.4 (medicamentos, dispositivos médicos e insumos, todos los servicios)",
+          "contenido": "Información documentada de cada dispositivo médico: descripción, marca, serie (cuando aplique), presentación comercial, registro sanitario o permiso de comercialización del INVIMA y clasificación por riesgo; planeación y ejecución de los programas de farmacovigilancia, tecnovigilancia y reactivovigilancia. Número de cada criterio: por confirmar.",
+          "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita",
+          "url": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "numeral": "Res. 3100, Manual, num. 11.2 a 11.6 (estándar de dotación de cada servicio)",
+          "contenido": "Lista mínima de equipos de cada servicio (ya resumida en normas.json → servicios_3100 del repo). Cada equipo de esas listas debe cumplir el Decreto 4725.",
+          "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/resolucion-3100-de-2019.pdf"
+        }
+      ],
+      "campos_minimos_para_el_inventario_por_servicio": [
+        "servicio y ambiente (para ubicarlo en el modelo 3D)",
+        "nombre genérico",
+        "marca",
+        "modelo",
+        "serie",
+        "registro sanitario o permiso de comercialización INVIMA y fecha de vencimiento",
+        "clase de riesgo según el registro (I, IIa, IIb, III) o ‘no es dispositivo médico’ o ‘reactivo/equipo IVD (Decreto 3770)’",
+        "tecnología controlada (sí/no)",
+        "fecha de instalación y de compra",
+        "hoja de vida con mantenimientos preventivos, correctivos y calibraciones",
+        "responsable del mantenimiento (inscrito en el INVIMA si es IIb o III)",
+        "referente de tecnovigilancia del servicio"
+      ],
+      "tipo_dato": "dato oficial (requisitos) + cálculo propio (lista de campos, que une los requisitos de la Res. 3100 y del Decreto 4725)"
+    },
+    "como_aplica_a_la_torre": "Cálculo propio sobre dotacion.json (250 líneas: 149 equipos y 87 de mobiliario en los 15 servicios, más 14 de equipamiento fijo): el repositorio asigna clase I a 104 ítems, IIa a 52, IIb a 26, ‘no es dispositivo médico’ a 50, ‘equipo industrial’ a 13 y ‘diagnóstico in vitro’ a 5; ninguno es clase III. Los 26 ítems IIb (desfibriladores, monitores, bombas, ventilador, incubadoras, fototerapia, rayos X, electrobisturí, CPAP/BiPAP, autoclaves y lavadora desinfectora) son los que exigen mantenimiento por personal inscrito en el INVIMA y no pueden comprarse usados. Ver clases_riesgo_revisadas para los ajustes."
+  },
+  "otras_normas_4725": [
+    {
+      "norma": "Resolución 4725 de 2011 (Ministerio de la Protección Social)",
+      "que_es": "Periodicidad, forma y contenido de la información sobre VIH/sida que las EPS reportan a la Cuenta de Alto Costo (Diario Oficial 48.226 del 18-oct-2011).",
+      "estado": "Derogada por el art. 9 de la Res. 273 de 2019 (según el normograma de Supersalud).",
+      "aplica_a_la_torre": false,
+      "urls": [
+        "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/Resoluci%C3%B3n_4725_de_2011.pdf",
+        "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minproteccion_4725_2011.htm",
+        "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/resolucion-273-de-2019.pdf"
+      ]
+    },
+    {
+      "norma": "NTC 4725 (ICONTEC)",
+      "que_es": "No se encontró ninguna norma técnica colombiana con ese número en las búsquedas hechas (el catálogo de ICONTEC es de pago).",
+      "estado": "por confirmar",
+      "aplica_a_la_torre": false
+    },
+    {
+      "norma": "Decreto 4725 de 2005",
+      "que_es": "Régimen de registros sanitarios, permiso de comercialización y vigilancia sanitaria de dispositivos médicos para uso humano.",
+      "estado": "Vigente con modificaciones.",
+      "aplica_a_la_torre": true,
+      "conclusion": "Es la ‘4725’ que pide el encargo: la única que se relaciona con dotación y habilitación."
+    }
+  ],
+  "modificaciones_posteriores": [
+    {
+      "norma": "Decreto 4562 de 2006",
+      "efecto": "Adiciona un parágrafo al art. 86 del Decreto 4725 (régimen de transición y plazos).",
+      "estado": "Vigente (efecto ya cumplido)",
+      "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita",
+      "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=18697"
+    },
+    {
+      "norma": "Decreto 4957 de 2007",
+      "efecto": "Aparece en la lista de normas que modifican el Decreto 4725 de la compilación del ICBF; contenido por confirmar.",
+      "estado": "por confirmar",
+      "url": "https://www.icbf.gov.co/cargues/avance/docs/decreto_2473_2018.htm"
+    },
+    {
+      "norma": "Decreto 38 de 2009",
+      "efecto": "Aparece en la misma lista del ICBF; contenido por confirmar.",
+      "estado": "por confirmar",
+      "url": "https://www.icbf.gov.co/cargues/avance/docs/decreto_2473_2018.htm"
+    },
+    {
+      "norma": "Decreto 3275 de 2009",
+      "efecto": "Modifica el art. 1 y adiciona un parágrafo al art. 18 del Decreto 4725; el Ministerio fija los requisitos de los dispositivos médicos sobre medida.",
+      "estado": "Vigente",
+      "urls": [
+        "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=37226",
+        "https://www.invima.gov.co/biblioteca/decreto-3275-2009-modificacion-dispositivos-medicos"
+      ]
+    },
+    {
+      "norma": "Decreto 1313 de 2010",
+      "efecto": "Aparece en la lista del ICBF; contenido por confirmar.",
+      "estado": "por confirmar",
+      "url": "https://www.icbf.gov.co/cargues/avance/docs/decreto_2473_2018.htm"
+    },
+    {
+      "norma": "Decreto 582 de 2017 (4-abr-2017, Diario Oficial 50.196)",
+      "efecto": "Modifica el art. 21 (procedimiento para obtener el registro sanitario), sustituye el art. 30 (modificación automática de registros y permisos) y, según la compilación del INVIMA, sustituye el art. 37 (equipo biomédico usado o repotenciado) por su art. 2.",
+      "estado": "Vigente; el INVIMA lo cita como la modificación vigente del Decreto 4725.",
+      "urls": [
+        "https://dapre.presidencia.gov.co/normativa/normativa/DECRETO%20582%20DEL%2004%20DE%20ABRIL%20DE%202017.pdf",
+        "https://www.invima.gov.co/legacy-files/test_template/decreto_0582_2017.pdf",
+        "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=71523"
+      ]
+    },
+    {
+      "norma": "Resolución 2434 de 2006 (MinProtección, 11-jul-2006, Diario Oficial 46.336)",
+      "efecto": "Desarrolla el Decreto 4725 para equipos biomédicos repotenciados (objeto exacto por confirmar).",
+      "estado": "por confirmar",
+      "url": "https://minsalud.gov.co/Normatividad_Nuevo/RESOLUCI%C3%93N%202434%20DE%202006.pdf"
+    },
+    {
+      "norma": "Resolución 4816 de 2008 (MinProtección, 27-nov-2008, Diario Oficial 47.201)",
+      "efecto": "Reglamenta el Programa Nacional de Tecnovigilancia que ordena el art. 61 del Decreto 4725: niveles nacional, departamental y local; programa institucional en cada prestador; reportes de 72 horas (serios) y trimestrales (no serios).",
+      "estado": "Vigente: no se encontró norma que la sustituya hasta octubre de 2026.",
+      "urls": [
+        "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/Resoluci%C3%B3n_4816_de_2008.pdf",
+        "https://normograma.invima.gov.co/compilacion/docs/resolucion_minproteccion_4816_2008.htm",
+        "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=34200&dt=S"
+      ]
+    },
+    {
+      "norma": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017)",
+      "efecto": "Régimen aparte de los reactivos de diagnóstico in vitro (no modifica el 4725; delimita su campo). Aplica a los analizadores y reactivos del laboratorio de la torre.",
+      "estado": "Vigente",
+      "url": "https://www.invima.gov.co/node/71"
+    },
+    {
+      "norma": "Resolución 184 de 2024 (MinSalud)",
+      "efecto": "Según el extracto, se refiere a los Decretos 3770 y 4725 y dispone que, cuando menciona dispositivos médicos, se entienden incluidos los reactivos de diagnóstico in vitro. Objeto exacto por confirmar.",
+      "estado": "por confirmar",
+      "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No%20184%20de%202024.pdf"
+    },
+    {
+      "norma": "Proyecto de decreto del nuevo régimen sanitario de dispositivos médicos y reactivos in vitro (MinSalud, publicado hacia diciembre de 2025)",
+      "efecto": "Reemplazaría los Decretos 4725 de 2005 y 3770 de 2004: cubre diseño, fabricación, importación, comercialización, uso, vigilancia poscomercialización y disposición final; trata los reactivos in vitro como dispositivos médicos; clasifica por riesgo bajo, moderado, alto y muy alto; se alinea con el IMDRF (Colombia fue aceptada como miembro afiliado en 2025).",
+      "estado": "Proyecto. Infobae (2-ene-2026) lo titula ‘expidió’ pero lo describe como borrador en observaciones; no se encontró decreto firmado ni publicado al 23-oct-2026 (por confirmar en el Diario Oficial).",
+      "urls": [
+        "https://www.infobae.com/colombia/2026/01/02/gobierno-expidio-nuevo-regimen-sanitario-para-dispositivos-medicos-en-colombia-estos-son-los-puntos-clave-del-borrador-de-decreto/",
+        "https://www.lafm.com.co/sociedad/gobierno-expide-nuevo-regimen-sanitario-para-dispositivos-medicos-en-colombia-386894",
+        "https://invitronews.com/de-los-decretos-4725-y-3770-hacia-un-nuevo-modelo-regulatorio-de-dispositivos-medicos-y-reactivos-de-diagnostico-in-vitro/"
+      ]
+    },
+    {
+      "norma": "Resolución 1732 de 2026 (MinSalud)",
+      "efecto": "No modifica el Decreto 4725. Es el manual de habilitación que iba a reemplazar a la Res. 3100; fue revocado. Ver res_1732_2026.",
+      "estado": "Revocada por la Res. 2080 de 2026"
+    }
+  ],
+  "res_1732_2026": {
+    "existe": true,
+    "identificacion": {
+      "numero": "Resolución 1732 de 2026",
+      "fecha_expedicion": "2026-08-05",
+      "emisor": "Ministerio de Salud y Protección Social",
+      "titulo_segun_fuentes": "Por la cual se establecen el procedimiento de inscripción de prestadores en el REPS y las condiciones de habilitación de servicios de salud, y se adopta el Manual de Inscripción de Prestadores y Habilitación de Servicios de Salud, Tomos I y II (título reconstruido de los extractos; texto literal por confirmar).",
+      "proyecto_previo": "Proyecto de resolución y Anexo 1 (Tomo I) publicados para comentarios el 9-jul-2026.",
+      "urls": [
+        "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No%201732%20de%202026.pdf",
+        "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/resolucion-1732-de-2026.pdf",
+        "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/CA/manual-inscripcion-prestadores-habilitacion-ss-t1.pdf",
+        "https://www.minsalud.gov.co/Comunicaciones/noticias/2026/Paginas/colombia-moderniza-su-sistema-unico-de-habilitacion-una-reglamentacion-mas-clara-agil-y-centrada-en-la-seguridad-del-pacien.aspx",
+        "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=193984&dt=S"
+      ],
+      "tipo_dato": "dato oficial"
+    },
+    "estado_a_oct_2026": {
+      "resumen": "REVOCADA. No rige. La Resolución 2080 del 8 de septiembre de 2026 la revocó en su integridad. Nunca fue publicada en el Diario Oficial, así que nunca obligó a nadie. La Res. 3100 de 2019 y sus modificaciones siguen vigentes sin interrupción.",
+      "res_2080_2026": {
+        "fecha": "2026-09-08",
+        "articulo_1": "Revoca en su integridad la Resolución 1732 del 5 de agosto de 2026.",
+        "cita_articulo_1": "Revocar en su integridad la Resolución 1732 del 5 de agosto de 2026",
+        "vigencia_3100": "la Resolución 3100 de 2019 y sus modificaciones continúan vigentes, sin solución de continuidad",
+        "fundamento": "Art. 93 de la Ley 1437 de 2011 (revocatoria directa). La Imprenta Nacional certificó, con oficio 20261400007931 del 3-sep-2026, que la 1732 no se publicó en el Diario Oficial: por eso ‘nunca adquirió eficacia jurídica’ (art. 65 de la Ley 1437).",
+        "razones_de_fondo": [
+          "El art. 19 de la 1732 hacía vinculantes los conceptos del Ministerio sobre diferencias técnicas surgidas en las visitas de verificación; choca con el art. 28 de la Ley 1437 de 2011 (sustituido por la Ley 1755 de 2015: los conceptos no son obligatorios salvo que la ley lo diga) y con las funciones de inspección, vigilancia y control de las entidades territoriales.",
+          "El Plan de Adecuación Progresiva permitía cumplir los estándares de forma diferida (hasta 4 años, a partir de un diagnóstico de brechas): una parte de la población habría recibido servicios con estándares de infraestructura inferiores a los exigidos.",
+          "La revocatoria es integral y no parcial porque esos puntos eran ‘elementos estructurales del régimen’; una revocatoria parcial habría hecho convivir fragmentos de la 1732 con la 3100."
+        ],
+        "publicacion_de_la_2080": "Su publicación en el Diario Oficial no se pudo confirmar (una fuente lo advierte). El PDF está en el portal normativo de MinSalud.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita",
+        "urls": [
+          "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No%202080%20de%202026.pdf",
+          "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=194230",
+          "https://www.cerlatam.com/normatividad/minsalud-resolucion-2080-de-2026-08-sep-26/",
+          "https://consultorsalud.com/minsalud-revoca-la-resolucion-1732-de-2026-asi-quedan-las-reglas-de-habilitacion-para-prestadores-de-servicios-de-salud/",
+          "https://www.qsystems.com.co/resolucion-2080-2026-revocatoria-1732-vigencia-3100/",
+          "https://fepasde.com/noticias/resolucion-2080-2026-habilitacion-servicios-salud/"
+        ]
+      }
+    },
+    "objeto": "Habría reemplazado la Res. 3100 de 2019 como norma de habilitación: un manual en dos tomos (Tomo I: inscripción en el REPS, autoevaluación, novedades, cierre temporal, reactivación, inactivación y visitas; Tomo II: estándares y criterios por grupo de servicios: talento humano, infraestructura, dotación, medicamentos y dispositivos, procesos prioritarios, historia clínica e interdependencia). Derogaba la Res. 3100, sus modificaciones (las fuentes hablan de ocho) y la Res. 77 de 2007, con 12 meses de transición en los que el prestador podía seguir con la 3100 o acogerse antes a la nueva.",
+    "relacion_con_otras_normas": {
+      "res_3100_2019": "La iba a sustituir (derogatoria diferida al fin de la transición). Revocada la 1732, la 3100 sigue rigiendo.",
+      "res_1633_2025": "No la modificaba. Un análisis periodístico describe una armonización con la 1633 (por ejemplo, licencia de construcción para edificaciones, e infraestructura física independiente por prestador en edificios de uso mixto, Anexo II). Por confirmar en el texto.",
+      "res_485_2025": "No se encontró ninguna referencia: la viabilidad de proyectos sigue en la Res. 485 de 2025 modificada por las Res. 1211 y 1519 de 2025.",
+      "decreto_4725_2005": "No lo modificaba: el registro sanitario y la clasificación de riesgo de los equipos siguen igual.",
+      "dotacion_hospitalaria": "Único cambio de dotación documentado en las fuentes: eliminaba el numeral de la 3100 que exigía al prestador que esteriliza contar con equipos según el método usado. Sin efecto por la revocatoria."
+    },
+    "articulos_relevantes": [
+      {
+        "articulo": "Vigencias y derogatorias (número por confirmar)",
+        "contenido": "La presente resolución rige a partir de la fecha de su expedición, surte efectos a partir de su publicación en el Diario Oficial y, deroga la Resolución 3100 de 2019 y sus modificatorias",
+        "efecto_hoy": "Ninguno: nunca se publicó y fue revocada.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita (compilación de Keralty)",
+        "url": "https://normograma.com/keralty/compilacion/docs/resolucion_minsaludps_1732_2026.htm"
+      },
+      {
+        "articulo": "Transición (las fuentes la ubican en el art. 34; por confirmar)",
+        "contenido": "12 meses; durante ese plazo, cumplir la 3100 o acogerse anticipadamente a la 1732 avisando a la secretaría de salud.",
+        "efecto_hoy": "Ninguno."
+      },
+      {
+        "articulo": "Art. 19",
+        "contenido": "Conceptos vinculantes del Ministerio sobre diferencias técnicas en visitas de verificación.",
+        "efecto_hoy": "Ninguno; fue una de las razones de la revocatoria.",
+        "verificacion": "según los considerandos de la Res. 2080 (extracto)"
+      },
+      {
+        "articulo": "Plan de Adecuación Progresiva (artículo por confirmar)",
+        "contenido": "Para prestadores de municipios con condiciones especiales (rurales dispersos, comunidades étnicas): hasta 4 años para cerrar brechas frente a los estándares.",
+        "efecto_hoy": "Ninguno; fue la otra razón de la revocatoria."
+      },
+      {
+        "articulo": "Verificación limitada al Manual (proyecto de julio de 2026, Tomo I)",
+        "contenido": "la verificación del cumplimiento de las condiciones de habilitación se circunscribirá exclusivamente a los requisitos contenidos en dicho Manual",
+        "efecto_hoy": "Ninguno.",
+        "verificacion": "texto tomado del extracto que devolvió el buscador sobre la fuente citada; cotejar con el PDF oficial antes de publicarlo como cita (proyecto)",
+        "url": "https://consultorsalud.com/wp-content/uploads/2026/07/PROYECTO-DE-RESOLUCION-ACTUALIZACION-HABILITACION-09072026_20260709121104-PUBLICADA.pdf"
+      },
+      {
+        "articulo": "Otros cambios mencionados por las fuentes",
+        "contenido": "Un solo prestador responsable por servicio (fin de la doble habilitación); vigencia de la inscripción en el REPS de 4 o 5 años (las fuentes no coinciden) con autoevaluación anual; armonización con telesalud.",
+        "efecto_hoy": "Ninguno."
+      }
+    ],
+    "normas_2026_relacionadas": [
+      {
+        "norma": "Resolución 2313 de 2026 (MinSalud, 5-oct-2026; Diario Oficial 53.651 del 7-oct-2026, según el repositorio normativo citado por la prensa)",
+        "objeto": "Modifica transitoriamente la Res. 3100 por el terremoto del 10-ago-2026: hasta 6 meses más (desde su publicación) para la autoevaluación periódica en el REPS, y plan de visitas de 2026 ejecutable hasta el 31-mar-2027, en 16 departamentos que, según la prensa, incluyen Antioquia. No suspende estándares ni permite operar incumpliéndolos.",
+        "impacto": "Afecta al hospital actual de Yondó (autoevaluación y visitas), no a la torre, que entrará como servicios nuevos con visita previa hacia 2029-2030.",
+        "verificacion": "prensa especializada; lista de departamentos por confirmar en el texto oficial",
+        "urls": [
+          "https://consultorsalud.com/habilitacion-de-ips-resolucion-002313-2026/",
+          "https://softwaremedico.com.co/resolucion-2313-ips-plazos-habilitacion/",
+          "https://ifmnoticias.com/salud/minsalud-amplia-plazos-de-habilitacion-para-las-ips-de-16-departamentos-tras-el-/"
+        ]
+      }
+    ],
+    "impacto_en_torre": [
+      "Hoy, ninguno jurídico: la habilitación de los servicios de la torre se prepara con la Res. 3100 de 2019 y sus modificaciones (entre ellas 544 de 2023, 465 de 2025 y 914 de 2025, como ya registra normas.json), y el diseño con la Res. 1633 de 2025. No se debe citar la 1732 como requisito en el estudio, el MGA ni el Documento de Capacidad Instalada.",
+      "El inventario de dotación por servicio debe seguir los campos de la Res. 3100 (num. 11.1.3 y 11.1.4) y del Decreto 4725: nombre, marca, modelo, serie, registro sanitario o permiso, clase de riesgo según el registro, hoja de vida y mantenimiento.",
+      "El Plan de Adecuación Progresiva de la 1732 habría podido beneficiar a municipios como Yondó, pero quedó sin efecto: la torre no tiene ninguna excepción y debe cumplir completos los estándares de infraestructura y dotación desde la visita previa.",
+      "Riesgo de calendario (estimación): el Ministerio dijo que adelanta una nueva actualización del régimen de habilitación. Como la torre abriría hacia 2029-2030 (proyectos.json), es probable que para la autoevaluación y la visita previa rija un manual nuevo. Recomendación: seguir diseñando con el requisito más exigente entre la 3100 y la 1633 (lo que ya hace normas.json) y revisar el nuevo manual cuando se expida, antes de cerrar los diseños de detalle y la compra de dotación.",
+      "Si alguien en la E.S.E. ya ajustó su autoevaluación o su dotación a la 1732 entre agosto y septiembre de 2026, debe volver a la 3100 (así lo indican las fuentes sobre la Res. 2080).",
+      "La Res. 2313 de 2026 (terremoto) da más plazo al hospital actual para autoevaluarse si Antioquia está en la lista (según la prensa, sí); no cambia nada para la torre."
+    ],
+    "fuentes": [
+      {
+        "titulo": "Res. 1732 de 2026, PDF en Normatividad de MinSalud",
+        "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No%201732%20de%202026.pdf",
+        "tipo": "primaria (no se pudo abrir desde este entorno; identificada por búsqueda)"
+      },
+      {
+        "titulo": "Res. 1732 de 2026, PDF en la Biblioteca Digital (RID) de MinSalud",
+        "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/resolucion-1732-de-2026.pdf",
+        "tipo": "primaria (identificada por búsqueda)"
+      },
+      {
+        "titulo": "Manual de Inscripción de Prestadores y Habilitación, Tomo I, ‘05 de agosto de 2026, Versión Oficial’",
+        "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/CA/manual-inscripcion-prestadores-habilitacion-ss-t1.pdf",
+        "tipo": "primaria (identificada por búsqueda)"
+      },
+      {
+        "titulo": "MinSalud: ‘Colombia moderniza su Sistema Único de Habilitación…’ (boletín de prensa, 2026)",
+        "url": "https://www.minsalud.gov.co/Comunicaciones/noticias/2026/Paginas/colombia-moderniza-su-sistema-unico-de-habilitacion-una-reglamentacion-mas-clara-agil-y-centrada-en-la-seguridad-del-pacien.aspx",
+        "tipo": "primaria"
+      },
+      {
+        "titulo": "Res. 2080 de 2026, PDF en Normatividad de MinSalud",
+        "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No%202080%20de%202026.pdf",
+        "tipo": "primaria (identificada por búsqueda)"
+      },
+      {
+        "titulo": "SISJUR Alcaldía de Bogotá: Res. 1732 de 2026",
+        "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=193984&dt=S",
+        "tipo": "compilación oficial (distrital)"
+      },
+      {
+        "titulo": "SISJUR Alcaldía de Bogotá: Res. 2080 de 2026",
+        "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=194230",
+        "tipo": "compilación oficial (distrital)"
+      },
+      {
+        "titulo": "Compilación Keralty: Res. 1732 de 2026 con nota de revocatoria",
+        "url": "https://normograma.com/keralty/compilacion/docs/resolucion_minsaludps_1732_2026.htm",
+        "tipo": "compilación privada"
+      },
+      {
+        "titulo": "Cerlatam: ficha de la Res. 1732 (05-ago-26)",
+        "url": "https://www.cerlatam.com/normatividad/minsalud-resolucion-1732-de-2026-05-ago-26/",
+        "tipo": "secundaria"
+      },
+      {
+        "titulo": "Cerlatam: ficha de la Res. 2080 (08-sep-26)",
+        "url": "https://www.cerlatam.com/normatividad/minsalud-resolucion-2080-de-2026-08-sep-26/",
+        "tipo": "secundaria"
+      },
+      {
+        "titulo": "Consultorsalud: ‘Minsalud revoca la Resolución 1732 de 2026…’",
+        "url": "https://consultorsalud.com/minsalud-revoca-la-resolucion-1732-de-2026-asi-quedan-las-reglas-de-habilitacion-para-prestadores-de-servicios-de-salud/",
+        "tipo": "secundaria"
+      },
+      {
+        "titulo": "QSystems: ‘Resolución 2080 de 2026: Revocan la 1732 y rige la 3100’",
+        "url": "https://www.qsystems.com.co/resolucion-2080-2026-revocatoria-1732-vigencia-3100/",
+        "tipo": "secundaria"
+      },
+      {
+        "titulo": "Fepasde: Res. 2080 de 2026",
+        "url": "https://fepasde.com/noticias/resolucion-2080-2026-habilitacion-servicios-salud/",
+        "tipo": "secundaria"
+      },
+      {
+        "titulo": "Proyecto de resolución de actualización de habilitación (9-jul-2026) y Anexo 1 Tomo I",
+        "url": "https://consultorsalud.com/wp-content/uploads/2026/07/PROYECTO-DE-RESOLUCION-ACTUALIZACION-HABILITACION-09072026_20260709121104-PUBLICADA.pdf",
+        "url_2": "https://consultorsalud.com/wp-content/uploads/2026/07/ANEXO-1-MANUAL-HABILITACION-TOMO-I-09072026_20260709121415.pdf",
+        "tipo": "proyecto oficial alojado por tercero"
+      },
+      {
+        "titulo": "El Espectador: ‘Minsalud cambia las reglas para habilitar clínicas, hospitales y otros prestadores de salud’",
+        "url": "https://www.elespectador.com/salud/minsalud-cambia-las-reglas-para-habilitar-clinicas-hospitales-y-otros-prestadores-de-salud/",
+        "tipo": "prensa"
+      },
+      {
+        "titulo": "Saludika, Saludtools, Auditamérica, QSystems (ingeniería clínica), Consultorsalud: notas sobre la 1732 anteriores a la revocatoria",
+        "url": "https://saludika.com/blog/resolucion-1732-2026-habilitacion-prestadores/",
+        "urls_adicionales": [
+          "https://www.saludtools.com/articulo/nuevo-manual-habilitacion-proyecto-reemplaza-resolucion-3100-colombia",
+          "https://auditamericasas.com/noticias/posts/res-1732-habilitacion-2026.html",
+          "https://www.qsystems.com.co/resolucion-1732-2026-ingenieria-clinica-mantenimiento-hospitalario/",
+          "https://consultorsalud.com/habilitacion-servicios-de-salud-cambia-colombia/"
+        ],
+        "tipo": "secundaria (desactualizada por la revocatoria)"
+      },
+      {
+        "titulo": "Res. 2313 de 2026 (prensa especializada)",
+        "url": "https://consultorsalud.com/habilitacion-de-ips-resolucion-002313-2026/",
+        "tipo": "secundaria"
+      }
+    ],
+    "busquedas": [
+      {
+        "consulta": "\"Resolución 1732 de 2026\"",
+        "herramienta": "WebSearch (extendida)",
+        "resultado": "Encontrada: MinSalud, 5-ago-2026, nuevo manual de habilitación; una fuente reciente informa la revocatoria."
+      },
+      {
+        "consulta": "minsalud.gov.co Normatividad_Nuevo \"Resolución No. 1732 de 2026\" inscripción de prestadores habilitación de servicios de salud",
+        "herramienta": "WebSearch",
+        "resultado": "SISJUR, Keralty, boletín de MinSalud; Keralty marca la revocatoria."
+      },
+      {
+        "consulta": "\"Resolución 2080 de 2026\" MinSalud revoca Resolución 1732 habilitación",
+        "herramienta": "WebSearch",
+        "resultado": "Confirmada la revocatoria integral (8-sep-2026) y la vigencia de la 3100."
+      },
+      {
+        "consulta": "qsystems \"Resolución 2080 de 2026\" revocatoria 1732 vigencia 3100 Imprenta Nacional Diario Oficial",
+        "herramienta": "WebSearch",
+        "resultado": "Oficio de la Imprenta Nacional del 3-sep-2026; revocatoria integral."
+      },
+      {
+        "consulta": "\"Resolución 2080\" 2026 Ministerio de Salud texto artículo 1 \"Revocar\" \"Resolución 1732 de 2026\" artículo 2 vigencia Resolución 3100 Diario Oficial número",
+        "herramienta": "WebSearch",
+        "resultado": "Art. 1 confirmado; número de Diario Oficial de la 2080 no encontrado."
+      },
+      {
+        "consulta": "Resolución 2080 de 2026 considerandos razones revocatoria 1732 conceptos vinculantes infraestructura NSR-10 RETIE normas superiores entidades territoriales",
+        "herramienta": "WebSearch",
+        "resultado": "Razones: art. 19 (conceptos vinculantes) y Plan de Adecuación Progresiva; nada sobre NSR-10 o RETIE."
+      },
+      {
+        "consulta": "Pérez-Llorca El Tablero radar jurídico 8 septiembre 2026 Resolución 2080 revoca 1732 sismorresistencia instalaciones eléctricas incendios accesibilidad",
+        "herramienta": "WebSearch",
+        "resultado": "Sin resultados que confirmen esa razón (ver dudas)."
+      },
+      {
+        "consulta": "Resolución 1732 de 2026 artículos transición doce meses derogatoria Resolución 3100 Tomo I Tomo II manual estándar dotación infraestructura cambios",
+        "herramienta": "WebSearch",
+        "resultado": "Transición de 12 meses y derogatorias; sin detalle por servicio."
+      },
+      {
+        "consulta": "Resolución 1732 de 2026 Tomo II manual habilitación cambios servicios urgencias atención del parto hospitalización esterilización laboratorio clínico dotación respecto a 3100",
+        "herramienta": "WebSearch",
+        "resultado": "Solo un cambio por servicio documentado (esterilización)."
+      },
+      {
+        "consulta": "Resolución 1732 de 2026 relación Resolución 1633 de 2025 infraestructura edificaciones de salud estándar de infraestructura habilitación remite",
+        "herramienta": "WebSearch",
+        "resultado": "Armonización descrita por prensa; sin artículo de remisión confirmado."
+      },
+      {
+        "consulta": "\"Resolución 1732\" 2026 habilitación estándar de dotación equipos biomédicos mantenimiento metrología tecnovigilancia cambios frente a 3100 infraestructura",
+        "herramienta": "WebSearch",
+        "resultado": "Sin cambios confirmados en metrología, tecnovigilancia o infraestructura."
+      },
+      {
+        "consulta": "\"Resolución 1732 de 2026\" \"Plan de Adecuación Progresiva\" infraestructura brechas habilitación artículo 19 concepto vinculante",
+        "herramienta": "WebSearch",
+        "resultado": "Plan de hasta 4 años; crítica del Ministerio en la 2080."
+      },
+      {
+        "consulta": "Minsalud nuevo proyecto de resolución habilitación tras revocatoria 1732 octubre 2026 consulta pública manual habilitación",
+        "herramienta": "WebSearch",
+        "resultado": "No se encontró un proyecto nuevo publicado después de la revocatoria."
+      },
+      {
+        "consulta": "\"Resolución 002313 de 2026\" OR \"Resolución 2313 de 2026\" Minsalud habilitación plazos 16 departamentos terremoto",
+        "herramienta": "WebSearch",
+        "resultado": "Res. 2313 (5-oct-2026) amplía plazos en 16 departamentos."
+      },
+      {
+        "consulta": "\"Decreto 1732 de 2026\" Colombia",
+        "herramienta": "WebSearch",
+        "resultado": "Sin resultados: no existe un decreto con ese número en salud (la numeración de decretos de 2026 iba en el rango 500-700 a mitad de año)."
+      },
+      {
+        "consulta": "Descarga directa de minsalud.gov.co, funcionpublica.gov.co, normograma.supersalud.gov.co, normograma.invima.gov.co (WebFetch y curl)",
+        "herramienta": "WebFetch / curl",
+        "resultado": "Bloqueado por la política de red del entorno (getaddrinfo ENOTFOUND / CONNECT 403). Todo se verificó con extractos de WebSearch."
+      }
+    ]
+  },
+  "clases_riesgo_revisadas": [
+    {
+      "servicio": "Consulta externa general y especializada, procedimientos menores y promoción y prevención",
+      "servicio_id": "consulta_externa",
+      "item": "Tensiómetro aneroide de pared adulto-pediátrico",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "I",
+      "regla": "Decreto 4725, art. 7, regla 1 (no invasivo y no activo → clase I). La regla 10 (IIa) solo aplica a dispositivos activos; el ABC del INVIMA pone como ejemplo IIa el tensiómetro electrónico, no el aneroide.",
+      "tipo": "discrepancia",
+      "explicacion": "Un tensiómetro aneroide no usa energía eléctrica: no es activo. Si se compra uno electrónico, sí sería IIa."
+    },
+    {
+      "servicio": "Equipamiento fijo e industrial",
+      "servicio_id": "equipamiento_fijo",
+      "item": "Nevera mortuoria de 2 cuerpos con camilla de transporte de cadáveres",
+      "clase_en_repo": "I",
+      "clase_correcta": "No es dispositivo médico",
+      "regla": "Decreto 4725, art. 1 (dispositivos médicos ‘para uso humano’ con finalidad de diagnóstico, prevención o tratamiento).",
+      "tipo": "discrepancia",
+      "explicacion": "Se usa con cadáveres, no para atender personas."
+    },
+    {
+      "servicio": "Central de esterilización",
+      "servicio_id": "esterilizacion",
+      "item": "Incubadora de indicadores biológicos",
+      "clase_en_repo": "Equipo para diagnóstico in vitro",
+      "clase_correcta": "Dispositivo médico (Decreto 4725): I por regla 12 o IIa por regla 15; por confirmar",
+      "regla": "Decreto 4725, art. 7, reglas 12 y 15; Decreto 3770 de 2004 (los reactivos in vitro son para estudiar muestras del cuerpo humano).",
+      "tipo": "discrepancia",
+      "explicacion": "El repo la marca como ‘equipo para diagnóstico in vitro’, pero no analiza muestras humanas: verifica si un ciclo de esterilización funcionó. Está en el régimen del Decreto 4725."
+    },
+    {
+      "servicio": "Central de esterilización",
+      "servicio_id": "esterilizacion",
+      "item": "Lavadora desinfectora de instrumental",
+      "clase_en_repo": "IIb",
+      "clase_correcta": "IIa",
+      "regla": "Decreto 4725, art. 7, regla 15: los dispositivos destinados específicamente a desinfectar dispositivos médicos son clase IIa.",
+      "tipo": "discrepancia",
+      "explicacion": "La clase IIb para lavadoras desinfectoras de instrumental invasivo viene del reglamento europeo 2017/745 (regla 16), no de la norma colombiana. Confirmar en el registro INVIMA del modelo."
+    },
+    {
+      "servicio": "Servicio farmacéutico",
+      "servicio_id": "farmacia",
+      "item": "Termohigrómetros con registro",
+      "clase_en_repo": "I",
+      "clase_correcta": "No es dispositivo médico",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "tipo": "discrepancia",
+      "explicacion": "Miden el ambiente o la cadena de frío, no a personas. Requieren calibración (control metrológico), no registro sanitario."
+    },
+    {
+      "servicio": "Hospitalización general de baja complejidad",
+      "servicio_id": "hospitalizacion",
+      "item": "Tensiómetro aneroide de pared adulto-pediátrico",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "I",
+      "regla": "Decreto 4725, art. 7, regla 1 (no invasivo y no activo → clase I). La regla 10 (IIa) solo aplica a dispositivos activos; el ABC del INVIMA pone como ejemplo IIa el tensiómetro electrónico, no el aneroide.",
+      "tipo": "discrepancia",
+      "explicacion": "Un tensiómetro aneroide no usa energía eléctrica: no es activo. Si se compra uno electrónico, sí sería IIa."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Autoclave de laboratorio para descontaminación de residuos y medios",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "No es dispositivo médico",
+      "regla": "Decreto 4725, art. 7, regla 15: la clase IIa es solo para desinfectar dispositivos médicos; descontaminar residuos y medios de cultivo no lo es.",
+      "tipo": "discrepancia",
+      "explicacion": "Es equipo de laboratorio y de gestión de residuos (Res. 591 de 2024), no un dispositivo médico."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Balanza analítica y horno de secado",
+      "clase_en_repo": "I",
+      "clase_correcta": "No es dispositivo médico",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "tipo": "discrepancia",
+      "explicacion": "Equipo de uso general de laboratorio."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Termohigrómetros y registradores de temperatura con alarma remota",
+      "clase_en_repo": "I",
+      "clase_correcta": "No es dispositivo médico",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "tipo": "discrepancia",
+      "explicacion": "Miden el ambiente o la cadena de frío, no a personas. Requieren calibración (control metrológico), no registro sanitario."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "UPS en línea de 6 kVA para analizadores",
+      "clase_en_repo": "I",
+      "clase_correcta": "No es dispositivo médico",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "tipo": "discrepancia",
+      "explicacion": "Es equipo eléctrico de respaldo; el repo trata la UPS central como equipo industrial, sin clase de riesgo."
+    },
+    {
+      "servicio": "Atención del parto de baja complejidad y adaptación neonatal",
+      "servicio_id": "partos",
+      "item": "Laringoscopio neonatal y resucitador neonatal con mezclador de oxígeno",
+      "clase_en_repo": "I",
+      "clase_correcta": "Separar: laringoscopio I; resucitador con mezclador de oxígeno IIa",
+      "regla": "Decreto 4725, art. 6 (productos combinados se clasifican por separado; vale la regla de clase más alta) y art. 7, regla 2 (conduce gases para administrar al cuerpo, conectable a un dispositivo IIa) o regla 11 (activo neumático que administra gases → IIa).",
+      "tipo": "discrepancia",
+      "explicacion": "El mismo repo clasifica el resucitador manual de urgencias como IIa. El ítem combinado no puede quedar en clase I."
+    },
+    {
+      "servicio": "Atención del parto de baja complejidad y adaptación neonatal",
+      "servicio_id": "partos",
+      "item": "Puesto de trabajo y canecas del consultorio de valoración obstétrica",
+      "clase_en_repo": "I",
+      "clase_correcta": "No es dispositivo médico",
+      "regla": "Decreto 4725, art. 1 y 2 (solo son dispositivos médicos los productos con finalidad de diagnóstico, prevención, tratamiento o vigilancia en personas).",
+      "tipo": "discrepancia",
+      "explicacion": "Escritorio, sillas y canecas son mobiliario general; el mismo repo los marca así en los demás servicios."
+    },
+    {
+      "servicio": "Urgencias de baja complejidad",
+      "servicio_id": "urgencias",
+      "item": "Báscula pesa bebés digital (consultorio de urgencias)",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "I",
+      "regla": "Decreto 4725, art. 7, regla 12 (activo que no es terapéutico ni vigila procesos fisiológicos vitales → clase I); regla 1 si la báscula no es eléctrica.",
+      "tipo": "discrepancia",
+      "explicacion": "Pesar no es ‘diagnóstico directo o vigilancia de procesos fisiológicos vitales’ (regla 10). El mismo repo pone la báscula pesa bebés de consulta externa en clase I: hay una incoherencia interna."
+    },
+    {
+      "servicio": "Urgencias de baja complejidad",
+      "servicio_id": "urgencias",
+      "item": "Tensiómetro aneroide de pared adulto-pediátrico",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "I",
+      "regla": "Decreto 4725, art. 7, regla 1 (no invasivo y no activo → clase I). La regla 10 (IIa) solo aplica a dispositivos activos; el ABC del INVIMA pone como ejemplo IIa el tensiómetro electrónico, no el aneroide.",
+      "tipo": "discrepancia",
+      "explicacion": "Un tensiómetro aneroide no usa energía eléctrica: no es activo. Si se compra uno electrónico, sí sería IIa."
+    },
+    {
+      "servicio": "Vacunación con cadena de frío",
+      "servicio_id": "vacunacion",
+      "item": "Refrigerador de vacunas precalificado OMS (PQS E003) con registrador de 30 días",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "I (regla 2) si se considera dispositivo médico; probablemente no lo es",
+      "regla": "Decreto 4725, art. 7, regla 2: almacenar líquidos que se van a administrar es clase I salvo que almacene sangre u otros fluidos o se conecte a un dispositivo activo IIa o superior.",
+      "tipo": "discrepancia",
+      "explicacion": "Guarda vacunas (medicamentos), no sangre ni fluidos corporales: la clase IIa no sale de ninguna regla. La exigencia real para este equipo es la precalificación PQS de la OMS y los lineamientos del PAI."
+    },
+    {
+      "servicio": "Vacunación con cadena de frío",
+      "servicio_id": "vacunacion",
+      "item": "Registradores de temperatura de 30 días y termómetros digitales",
+      "clase_en_repo": "I",
+      "clase_correcta": "No es dispositivo médico",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "tipo": "discrepancia",
+      "explicacion": "Miden el ambiente o la cadena de frío, no a personas. Requieren calibración (control metrológico), no registro sanitario."
+    },
+    {
+      "servicio": "Vacunación con cadena de frío",
+      "servicio_id": "vacunacion",
+      "item": "Regulador o estabilizador electrónico de voltaje para refrigerador de vacunas",
+      "clase_en_repo": "I",
+      "clase_correcta": "No es dispositivo médico",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "tipo": "discrepancia",
+      "explicacion": "Equipo eléctrico general."
+    },
+    {
+      "servicio": "Consulta externa general y especializada, procedimientos menores y promoción y prevención",
+      "servicio_id": "consulta_externa",
+      "item": "Equipo de órganos de los sentidos de pared",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "I (probable)",
+      "regla": "Decreto 4725, art. 7, regla 12 (demás activos → I). La regla 10 lit. a excluiría los equipos que solo iluminan en el espectro visible (excepción por confirmar en el texto colombiano).",
+      "tipo": "probable_discrepancia",
+      "explicacion": "Otoscopio y oftalmoscopio con transformador de pared iluminan con luz visible; no suministran energía absorbida ni vigilan funciones vitales. Confirmar la clase en el registro INVIMA del modelo."
+    },
+    {
+      "servicio": "Central de esterilización",
+      "servicio_id": "esterilizacion",
+      "item": "Autoclave clase B de mesa de 23 L (respaldo)",
+      "clase_en_repo": "IIb",
+      "clase_correcta": "IIa (regla 15, si la esterilización se asimila a desinfección de dispositivos) o I (regla 12); por confirmar en el registro INVIMA",
+      "regla": "Decreto 4725, art. 7: ninguna de las reglas leídas lleva un esterilizador a IIb; la regla 15 da IIa a la desinfección de dispositivos médicos y la regla 12 deja en I los demás activos.",
+      "tipo": "probable_discrepancia",
+      "explicacion": "El autoclave no administra energía ni sustancias al paciente (reglas 9 y 11). El INVIMA puede haber registrado modelos como IIb: la clase del inventario debe ser la del registro."
+    },
+    {
+      "servicio": "Central de esterilización",
+      "servicio_id": "esterilizacion",
+      "item": "Autoclave de vapor central de carga frontal (cámara de 150-250 L)",
+      "clase_en_repo": "IIb",
+      "clase_correcta": "IIa (regla 15, si la esterilización se asimila a desinfección de dispositivos) o I (regla 12); por confirmar en el registro INVIMA",
+      "regla": "Decreto 4725, art. 7: ninguna de las reglas leídas lleva un esterilizador a IIb; la regla 15 da IIa a la desinfección de dispositivos médicos y la regla 12 deja en I los demás activos.",
+      "tipo": "probable_discrepancia",
+      "explicacion": "El autoclave no administra energía ni sustancias al paciente (reglas 9 y 11). El INVIMA puede haber registrado modelos como IIb: la clase del inventario debe ser la del registro."
+    },
+    {
+      "servicio": "Hospitalización general de baja complejidad",
+      "servicio_id": "hospitalizacion",
+      "item": "Equipo de órganos de los sentidos de pared",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "I (probable)",
+      "regla": "Decreto 4725, art. 7, regla 12 (demás activos → I). La regla 10 lit. a excluiría los equipos que solo iluminan en el espectro visible (excepción por confirmar en el texto colombiano).",
+      "tipo": "probable_discrepancia",
+      "explicacion": "Otoscopio y oftalmoscopio con transformador de pared iluminan con luz visible; no suministran energía absorbida ni vigilan funciones vitales. Confirmar la clase en el registro INVIMA del modelo."
+    },
+    {
+      "servicio": "Imágenes diagnósticas: rayos X digital y ecografía",
+      "servicio_id": "imagenes",
+      "item": "Monitor de diagnóstico de 2 megapíxeles y estación de visualización DICOM",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "Monitor: I (probable); software de visualización: por confirmar",
+      "regla": "Decreto 4725, art. 7, regla 12 para el monitor; art. 6 (cada producto combinado se clasifica por separado) para el software.",
+      "tipo": "probable_discrepancia",
+      "explicacion": "El software de diagnóstico por imagen podría ser dispositivo médico; el proyecto de decreto de 2025-2026 lo incluye expresamente. Registrar monitor y software como ítems separados."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Cabina de bioseguridad clase II tipo A2 (4 pies)",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "No es dispositivo médico (probable)",
+      "regla": "Decreto 4725, art. 1 y 2 (finalidad médica sobre personas); ninguna regla del art. 7 la lleva a IIa.",
+      "tipo": "probable_discrepancia",
+      "explicacion": "Protege al trabajador y a la muestra; no tiene finalidad diagnóstica ni terapéutica sobre el paciente. Confirmar con el INVIMA si exige registro."
+    },
+    {
+      "servicio": "Odontología general y radiología odontológica",
+      "servicio_id": "odontologia",
+      "item": "Autoclave clase B de mesa (esterilización odontológica)",
+      "clase_en_repo": "IIb",
+      "clase_correcta": "IIa (regla 15, si la esterilización se asimila a desinfección de dispositivos) o I (regla 12); por confirmar en el registro INVIMA",
+      "regla": "Decreto 4725, art. 7: ninguna de las reglas leídas lleva un esterilizador a IIb; la regla 15 da IIa a la desinfección de dispositivos médicos y la regla 12 deja en I los demás activos.",
+      "tipo": "probable_discrepancia",
+      "explicacion": "El autoclave no administra energía ni sustancias al paciente (reglas 9 y 11). El INVIMA puede haber registrado modelos como IIb: la clase del inventario debe ser la del registro."
+    },
+    {
+      "servicio": "Telemedicina (prestador remisor)",
+      "servicio_id": "telemedicina",
+      "item": "Monitor grado médico para revisión clínica (separación entre píxeles ≤ 0,25 mm)",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "I (probable)",
+      "regla": "Decreto 4725, art. 7, regla 12 (activo que no suministra energía, no forma imagen de radiofármacos ni vigila funciones vitales → I).",
+      "tipo": "probable_discrepancia",
+      "explicacion": "Una pantalla solo muestra imágenes producidas por otro equipo. Confirmar en el registro INVIMA; muchos monitores clínicos ni siquiera tienen registro sanitario."
+    },
+    {
+      "servicio": "Urgencias de baja complejidad",
+      "servicio_id": "urgencias",
+      "item": "Equipo de órganos de los sentidos de pared",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "I (probable)",
+      "regla": "Decreto 4725, art. 7, regla 12 (demás activos → I). La regla 10 lit. a excluiría los equipos que solo iluminan en el espectro visible (excepción por confirmar en el texto colombiano).",
+      "tipo": "probable_discrepancia",
+      "explicacion": "Otoscopio y oftalmoscopio con transformador de pared iluminan con luz visible; no suministran energía absorbida ni vigilan funciones vitales. Confirmar la clase en el registro INVIMA del modelo."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Baño serológico y rotador de VDRL",
+      "clase_en_repo": "I",
+      "clase_correcta": "Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "tipo": "regimen_distinto",
+      "explicacion": "laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Centrífuga de mesa de 24 tubos",
+      "clase_en_repo": "I",
+      "clase_correcta": "Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "tipo": "regimen_distinto",
+      "explicacion": "laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Congelador de -20 °C a -30 °C (seroteca y muestras de vigilancia)",
+      "clase_en_repo": "I",
+      "clase_correcta": "Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "tipo": "regimen_distinto",
+      "explicacion": "laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Incubadora bacteriológica 35-37 °C",
+      "clase_en_repo": "I",
+      "clase_correcta": "Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "tipo": "regimen_distinto",
+      "explicacion": "laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Juego de micropipetas automáticas (10 volúmenes) y agitadores vórtex",
+      "clase_en_repo": "I",
+      "clase_correcta": "Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "tipo": "regimen_distinto",
+      "explicacion": "laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Microcentrífuga para hematocrito",
+      "clase_en_repo": "I",
+      "clase_correcta": "Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "tipo": "regimen_distinto",
+      "explicacion": "laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Microscopio binocular con objetivo de inmersión",
+      "clase_en_repo": "I",
+      "clase_correcta": "Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "tipo": "regimen_distinto",
+      "explicacion": "laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+    },
+    {
+      "servicio": "Laboratorio clínico (bienes que compra el hospital)",
+      "servicio_id": "laboratorio",
+      "item": "Refrigerador de laboratorio 2-8 °C para reactivos",
+      "clase_en_repo": "I",
+      "clase_correcta": "Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "tipo": "regimen_distinto",
+      "explicacion": "laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+    },
+    {
+      "servicio": "Equipamiento fijo e industrial",
+      "servicio_id": "equipamiento_fijo",
+      "item": "Central de gases medicinales: oxígeno, aire medicinal y vacío",
+      "clase_en_repo": "Equipo industrial de uso hospitalario (Res. 1211 de 2025); no lleva clase de riesgo INVIMA",
+      "clase_correcta": "Por confirmar con el INVIMA",
+      "regla": "Decreto 4725, arts. 1 y 2 (componentes que conducen gases al paciente) y régimen de gases medicinales como medicamentos (norma específica no verificada en esta revisión).",
+      "tipo": "por_confirmar",
+      "explicacion": "El repo dice que ‘no lleva clase de riesgo INVIMA’. Pero el oxígeno es un medicamento y producirlo en sitio (PSA) puede exigir requisitos sanitarios propios; además, partes de la red (tomas murales, reguladores, alarmas) pueden requerir registro como dispositivos médicos. Pedir concepto al INVIMA antes de cerrar el presupuesto."
+    },
+    {
+      "servicio": "Equipamiento fijo e industrial",
+      "servicio_id": "equipamiento_fijo",
+      "item": "Generador de oxígeno en sitio (tecnología PSA)",
+      "clase_en_repo": "Equipo industrial de uso hospitalario (Res. 1211 de 2025); no lleva clase de riesgo INVIMA",
+      "clase_correcta": "Por confirmar con el INVIMA",
+      "regla": "Decreto 4725, arts. 1 y 2 (componentes que conducen gases al paciente) y régimen de gases medicinales como medicamentos (norma específica no verificada en esta revisión).",
+      "tipo": "por_confirmar",
+      "explicacion": "El repo dice que ‘no lleva clase de riesgo INVIMA’. Pero el oxígeno es un medicamento y producirlo en sitio (PSA) puede exigir requisitos sanitarios propios; además, partes de la red (tomas murales, reguladores, alarmas) pueden requerir registro como dispositivos médicos. Pedir concepto al INVIMA antes de cerrar el presupuesto."
+    },
+    {
+      "servicio": "Servicio farmacéutico",
+      "servicio_id": "farmacia",
+      "item": "Refrigerador grado médico para medicamentos (400-700 L)",
+      "clase_en_repo": "I",
+      "clase_correcta": "I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "tipo": "por_confirmar",
+      "explicacion": "Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+    },
+    {
+      "servicio": "Servicio farmacéutico",
+      "servicio_id": "farmacia",
+      "item": "Refrigerador grado médico para urgencias/dispensación (150-250 L)",
+      "clase_en_repo": "I",
+      "clase_correcta": "I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "tipo": "por_confirmar",
+      "explicacion": "Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+    },
+    {
+      "servicio": "Atención del parto de baja complejidad y adaptación neonatal",
+      "servicio_id": "partos",
+      "item": "Oxímetro de pulso neonatal",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "IIb si es para vigilancia continua con alarmas; IIa si es para controles puntuales",
+      "regla": "Decreto 4725, art. 7, regla 10 lit. c (vigilancia de parámetros vitales con peligro inmediato → IIb). El ABC del INVIMA pone los ‘monitores de saturación de oxígeno’ como ejemplo de IIb.",
+      "tipo": "por_confirmar",
+      "explicacion": "En adaptación neonatal y en urgencias el oxímetro suele usarse como monitor. Definir el uso en la especificación de compra y tomar la clase del registro INVIMA."
+    },
+    {
+      "servicio": "Tecnologías de la información y apoyo general",
+      "servicio_id": "tic_apoyo",
+      "item": "PACS/RIS para imágenes con licencias y almacenamiento (telerradiología)",
+      "clase_en_repo": "No es dispositivo médico (mobiliario general)",
+      "clase_correcta": "Por confirmar (puede ser dispositivo médico como software)",
+      "regla": "Decreto 4725, art. 2 (definición de dispositivo médico: si incluye software, por confirmar) y art. 6 lit. b (soportes informáticos).",
+      "tipo": "por_confirmar",
+      "explicacion": "Un PACS que procesa imágenes para diagnóstico se regula como dispositivo médico en otros países; el proyecto de decreto colombiano de 2025-2026 lo incluiría expresamente."
+    },
+    {
+      "servicio": "Toma de muestras de laboratorio clínico",
+      "servicio_id": "toma_muestras",
+      "item": "Nevera de muestras 2-8 °C con registrador de temperatura",
+      "clase_en_repo": "I",
+      "clase_correcta": "I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "tipo": "por_confirmar",
+      "explicacion": "Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+    },
+    {
+      "servicio": "Urgencias de baja complejidad",
+      "servicio_id": "urgencias",
+      "item": "Oxímetro de pulso de mesa/portátil",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "IIb si es para vigilancia continua con alarmas; IIa si es para controles puntuales",
+      "regla": "Decreto 4725, art. 7, regla 10 lit. c (vigilancia de parámetros vitales con peligro inmediato → IIb). El ABC del INVIMA pone los ‘monitores de saturación de oxígeno’ como ejemplo de IIb.",
+      "tipo": "por_confirmar",
+      "explicacion": "En adaptación neonatal y en urgencias el oxímetro suele usarse como monitor. Definir el uso en la especificación de compra y tomar la clase del registro INVIMA."
+    },
+    {
+      "servicio": "Vacunación con cadena de frío",
+      "servicio_id": "vacunacion",
+      "item": "Caja térmica de transporte (PQS E004)",
+      "clase_en_repo": "I",
+      "clase_correcta": "I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "tipo": "por_confirmar",
+      "explicacion": "Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+    },
+    {
+      "servicio": "Vacunación con cadena de frío",
+      "servicio_id": "vacunacion",
+      "item": "Congelador para paquetes fríos",
+      "clase_en_repo": "I",
+      "clase_correcta": "I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "tipo": "por_confirmar",
+      "explicacion": "Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+    },
+    {
+      "servicio": "Vacunación con cadena de frío",
+      "servicio_id": "vacunacion",
+      "item": "Termo portavacunas precalificado (PQS E004)",
+      "clase_en_repo": "I",
+      "clase_correcta": "I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "tipo": "por_confirmar",
+      "explicacion": "Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+    },
+    {
+      "servicio": "Consulta externa general y especializada, procedimientos menores y promoción y prevención",
+      "servicio_id": "consulta_externa",
+      "item": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "IIa como conjunto es aceptable, pero cada componente tiene su propia clase: oxímetro IIa y termómetro infrarrojo IIa (regla 10); báscula, fonendoscopio, cinta y tallímetro I; tensiómetro I si es aneroide o IIa si es electrónico; equipo de órganos portátil I (probable)",
+      "regla": "Decreto 4725, art. 6 (cada producto combinado se clasifica por separado) y art. 7, reglas 1, 10 y 12; el ABC del INVIMA pone el termómetro electrónico como ejemplo IIa.",
+      "tipo": "observacion",
+      "explicacion": "El inventario y la hoja de vida deben llevar una línea por componente con su registro sanitario."
+    },
+    {
+      "servicio": "Hospitalización general de baja complejidad",
+      "servicio_id": "hospitalizacion",
+      "item": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "IIa como conjunto es aceptable, pero cada componente tiene su propia clase: oxímetro IIa y termómetro infrarrojo IIa (regla 10); báscula, fonendoscopio, cinta y tallímetro I; tensiómetro I si es aneroide o IIa si es electrónico; equipo de órganos portátil I (probable)",
+      "regla": "Decreto 4725, art. 6 (cada producto combinado se clasifica por separado) y art. 7, reglas 1, 10 y 12; el ABC del INVIMA pone el termómetro electrónico como ejemplo IIa.",
+      "tipo": "observacion",
+      "explicacion": "El inventario y la hoja de vida deben llevar una línea por componente con su registro sanitario."
+    },
+    {
+      "servicio": "Atención del parto de baja complejidad y adaptación neonatal",
+      "servicio_id": "partos",
+      "item": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "IIa como conjunto es aceptable, pero cada componente tiene su propia clase: oxímetro IIa y termómetro infrarrojo IIa (regla 10); báscula, fonendoscopio, cinta y tallímetro I; tensiómetro I si es aneroide o IIa si es electrónico; equipo de órganos portátil I (probable)",
+      "regla": "Decreto 4725, art. 6 (cada producto combinado se clasifica por separado) y art. 7, reglas 1, 10 y 12; el ABC del INVIMA pone el termómetro electrónico como ejemplo IIa.",
+      "tipo": "observacion",
+      "explicacion": "El inventario y la hoja de vida deben llevar una línea por componente con su registro sanitario."
+    },
+    {
+      "servicio": "Urgencias de baja complejidad",
+      "servicio_id": "urgencias",
+      "item": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)",
+      "clase_en_repo": "IIa",
+      "clase_correcta": "IIa como conjunto es aceptable, pero cada componente tiene su propia clase: oxímetro IIa y termómetro infrarrojo IIa (regla 10); báscula, fonendoscopio, cinta y tallímetro I; tensiómetro I si es aneroide o IIa si es electrónico; equipo de órganos portátil I (probable)",
+      "regla": "Decreto 4725, art. 6 (cada producto combinado se clasifica por separado) y art. 7, reglas 1, 10 y 12; el ABC del INVIMA pone el termómetro electrónico como ejemplo IIa.",
+      "tipo": "observacion",
+      "explicacion": "El inventario y la hoja de vida deben llevar una línea por componente con su registro sanitario."
+    }
+  ],
+  "resumen_revision_clases": {
+    "metodo": "Se leyó la clase de cada uno de los ítems de dotacion.json (servicios: equipos y mobiliario; y equipamiento fijo) y se comparó con las reglas del art. 7 y el ámbito de los arts. 1 y 2 del Decreto 4725. Solo se declara ‘discrepancia’ cuando la regla aplicable se confirmó en el texto (por extracto); si depende de una regla no leída, del uso previsto o de un concepto del INVIMA, se marca ‘probable_discrepancia’, ‘regimen_distinto’ o ‘por_confirmar’. La clase que vale para el inventario es siempre la del registro sanitario del modelo comprado (supuesto que el propio repo ya declara en supuestos.clase_riesgo).",
+    "items_revisados": 250,
+    "clases_en_repo": {
+      "IIb": 26,
+      "IIa": 52,
+      "I": 104,
+      "Equipo para diagnóstico in vitro (POCT)": 3,
+      "No es dispositivo médico (mobiliario general)": 50,
+      "Equipo para diagnóstico in vitro (Decreto 3770 de 2004, art. 2); sus reactivos son categoría II o III": 1,
+      "Equipo para diagnóstico in vitro": 1,
+      "Equipo industrial de uso hospitalario (Res. 1211 de 2025); no lleva clase de riesgo INVIMA": 13
+    },
+    "filas_por_tipo": {
+      "discrepancia": 17,
+      "probable_discrepancia": 9,
+      "regimen_distinto": 8,
+      "por_confirmar": 11,
+      "observacion": 4
+    },
+    "coherentes_sin_cambio": "Los demás ítems son coherentes con las reglas: desfibriladores, bombas, ventilador, CPAP/BiPAP, electrobisturí, incubadoras, servocuna y fototerapia en IIb (reglas 9 y 11); monitores de signos vitales y monitor fetal en IIb (regla 10 lit. c); rayos X fijo y periapical en IIb (regla 10 lit. d); electrocardiógrafos, espirómetro, otoemisiones, ecógrafo y doppler en IIa (regla 10); aspiradores, nebulizadores y extractor de leche en IIa (regla 11); unidad y piezas de mano odontológicas en IIa; instrumental quirúrgico reutilizable en I (regla 6); camillas, camas, sillas de ruedas e inmovilizadores en I (reglas 1 y 12); glucómetros y lector de inmunoensayo en el régimen de diagnóstico in vitro (Decreto 3770).",
+    "tipo_dato": "cálculo propio"
+  },
+  "fuentes": [
+    {
+      "titulo": "Decreto 4725 de 2005, PDF de MinSalud (Biblioteca Digital)",
+      "url": "https://www.minsalud.gov.co/sites/rid/lists/bibliotecadigital/ride/de/dij/decreto-4725-de-2005.pdf",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "Decreto 4725 de 2005, Gestor Normativo de Función Pública (HTML y PDF)",
+      "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=18697",
+      "url_2": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma_pdf.php?i=18697",
+      "tipo": "primaria (compilación oficial)"
+    },
+    {
+      "titulo": "Decreto 4725 de 2005, Compilación Jurídica del INVIMA",
+      "url": "https://normograma.invima.gov.co/normograma/compilacion/docs/decreto_4725_2005.htm",
+      "tipo": "primaria (compilación oficial)"
+    },
+    {
+      "titulo": "Decreto 4725 de 2005, SUIN-Juriscol",
+      "url": "https://www.suin-juriscol.gov.co/viewDocument.asp?ruta=Decretos/1549782",
+      "tipo": "primaria (compilación oficial)"
+    },
+    {
+      "titulo": "Decreto 4725 de 2005, SISJUR Alcaldía de Bogotá",
+      "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=18697",
+      "tipo": "compilación oficial (distrital)"
+    },
+    {
+      "titulo": "INVIMA: Dispositivos médicos y equipos biomédicos (usados, tecnología controlada)",
+      "url": "https://www.invima.gov.co/productos-vigilados/dispositivos-medicos/dispositivos-medicos-equipos-biomedicos",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "INVIMA: Inscripción de recurso humano para mantenimiento (art. 39)",
+      "url": "https://app.invima.gov.co/oficina-virtual/atencion-al-ciudadano/knowledgebase.php?article=37",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "INVIMA: Listado unificado de inscritos para mantenimiento de equipos IIb y III (corte 31-ago-2025)",
+      "url": "https://www.invima.gov.co/biblioteca/listado-inscritos-recurso-humano-equipos-biomedicos-2025",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "INVIMA: ABC de Dispositivos Médicos (copia alojada por tercero)",
+      "url": "https://www.visitaodontologica.com/ARCHIVOS/ARCHIVOS-NORMAS/TECNOVIGILANCIA/ABC-Dispositivos-Medicos-INVIMA.pdf",
+      "tipo": "primaria alojada por tercero"
+    },
+    {
+      "titulo": "Gobernación de Cundinamarca: licencias de equipos generadores de radiación ionizante",
+      "url": "https://www.cundinamarca.gov.co/dependencias/secsalud/tramites-y-licencias/Equipos-generadores",
+      "tipo": "oficial territorial"
+    },
+    {
+      "titulo": "Decreto 3275 de 2009 (Función Pública e INVIMA)",
+      "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=37226",
+      "url_2": "https://www.invima.gov.co/biblioteca/decreto-3275-2009-modificacion-dispositivos-medicos",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "Decreto 582 de 2017 (Presidencia, INVIMA, SISJUR)",
+      "url": "https://dapre.presidencia.gov.co/normativa/normativa/DECRETO%20582%20DEL%2004%20DE%20ABRIL%20DE%202017.pdf",
+      "url_2": "https://www.invima.gov.co/legacy-files/test_template/decreto_0582_2017.pdf",
+      "url_3": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=71523",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "Compilación del ICBF (Decreto 2473 de 2018) con la lista de decretos que modifican el 4725",
+      "url": "https://www.icbf.gov.co/cargues/avance/docs/decreto_2473_2018.htm",
+      "tipo": "compilación oficial"
+    },
+    {
+      "titulo": "Resolución 2434 de 2006 (repotenciados)",
+      "url": "https://minsalud.gov.co/Normatividad_Nuevo/RESOLUCI%C3%93N%202434%20DE%202006.pdf",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "Resolución 4816 de 2008 (tecnovigilancia), MinSalud e INVIMA",
+      "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/Resoluci%C3%B3n_4816_de_2008.pdf",
+      "url_2": "https://normograma.invima.gov.co/compilacion/docs/resolucion_minproteccion_4816_2008.htm",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "INVIMA: Programa Nacional de Tecnovigilancia",
+      "url": "https://www.invima.gov.co/productos-vigilados/dispositivos-medicos/programa-nacional-de-tecnovigilancia",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "INVIMA: Reactivos de diagnóstico in vitro (Decreto 3770 de 2004 y Decreto 581 de 2017)",
+      "url": "https://www.invima.gov.co/node/71",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "Resolución 184 de 2024 (MinSalud)",
+      "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No%20184%20de%202024.pdf",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "Infobae (2-ene-2026): borrador del nuevo régimen sanitario de dispositivos médicos",
+      "url": "https://www.infobae.com/colombia/2026/01/02/gobierno-expidio-nuevo-regimen-sanitario-para-dispositivos-medicos-en-colombia-estos-son-los-puntos-clave-del-borrador-de-decreto/",
+      "tipo": "prensa"
+    },
+    {
+      "titulo": "Invitro News: de los Decretos 4725 y 3770 hacia un nuevo modelo regulatorio",
+      "url": "https://invitronews.com/de-los-decretos-4725-y-3770-hacia-un-nuevo-modelo-regulatorio-de-dispositivos-medicos-y-reactivos-de-diagnostico-in-vitro/",
+      "tipo": "secundaria"
+    },
+    {
+      "titulo": "Resolución 4725 de 2011 (VIH) y Resolución 273 de 2019 que la deroga",
+      "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/Resoluci%C3%B3n_4725_de_2011.pdf",
+      "url_2": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/resolucion-273-de-2019.pdf",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "Resolución 3100 de 2019, PDF de MinSalud",
+      "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/resolucion-3100-de-2019.pdf",
+      "tipo": "primaria"
+    },
+    {
+      "titulo": "Resolución 3100 de 2019, compilaciones del ICBF y de la Cancillería (num. 11.1.3 y 11.1.4)",
+      "url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "url_2": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo": "compilación oficial"
+    },
+    {
+      "titulo": "Res. 1732, 2080 y 2313 de 2026: ver res_1732_2026.fuentes",
+      "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No%202080%20de%202026.pdf",
+      "tipo": "primaria"
+    }
+  ],
+  "incertidumbres": [
+    "Acceso: el entorno de trabajo bloquea minsalud.gov.co, funcionpublica.gov.co, normograma.invima.gov.co, normograma.supersalud.gov.co y las copias de terceros (WebFetch: getaddrinfo ENOTFOUND; curl: CONNECT 403). Toda la verificación se hizo con extractos de WebSearch; las citas textuales deben cotejarse con el PDF oficial antes de publicarlas.",
+    "Se agotó el cupo de búsquedas (200 por turno, compartido) antes de leer el texto de las reglas 3, 4, 5, 8 y 14 del art. 7 del Decreto 4725, la clase de la regla 13 y el literal a de la regla 10 (excepción de iluminación visible). No se usaron para declarar discrepancias firmes.",
+    "Numeración: la regla de equipos usados aparece como art. 37 (INVIMA) o art. 36 (otra compilación); el art. 35 lit. b (soporte técnico y hoja de vida) solo se vio en un blog; el artículo de tecnovigilancia de la Res. 4816 con el plazo de 72 h (art. 15) está por confirmar.",
+    "La definición general de ‘dispositivo médico’ del art. 2 del Decreto 4725 (finalidad de diagnóstico, prevención, tratamiento o vigilancia en personas, y si incluye software) no se leyó textualmente: las filas que concluyen ‘no es dispositivo médico’ se apoyan en esa definición y deben cotejarse con el texto oficial o con un concepto del INVIMA.",
+    "Decretos 4957 de 2007, 38 de 2009 y 1313 de 2010: figuran como modificatorios del 4725 en la compilación del ICBF, pero no se verificó qué cambian.",
+    "Proyecto de decreto que reemplazaría los Decretos 4725 y 3770: no se encontró decreto firmado al 23-oct-2026; revisar el Diario Oficial antes de la compra de dotación (2028-2029), porque cambiaría la clasificación (riesgo bajo, moderado, alto y muy alto) y el régimen de los equipos de laboratorio y del software.",
+    "Res. 1732 de 2026: un resumen de buscador atribuyó a un boletín de Pérez-Llorca (El Tablero, 8-9 sep 2026) la idea de que la 1732 contrariaba normas superiores de sismorresistencia, instalaciones eléctricas, incendios y accesibilidad; la búsqueda de comprobación no lo confirmó. No se usa.",
+    "Res. 2080 de 2026: no se confirmó su número de Diario Oficial.",
+    "Conteo del repo: docs/11 dice ‘236 ítems con el equipamiento fijo’, pero dotacion.json tiene 236 líneas en los 15 servicios (149 equipos y 87 de mobiliario) más 14 de equipamiento fijo, es decir 250 (cálculo propio).",
+    "Res. 2313 de 2026: la lista de 16 departamentos (con Antioquia) sale de prensa; confirmar en el texto oficial.",
+    "Gases medicinales y generador PSA: no se verificó qué exige el INVIMA para producir oxígeno en sitio ni si las tomas murales y reguladores requieren registro; está pendiente desde normas.json (NTC 5318 por confirmar)."
+  ]
+}

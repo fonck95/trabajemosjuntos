@@ -1,0 +1,1734 @@
+{
+  "grupo": "Apoyo diagnóstico y complementación terapéutica (Res. 3100 de 2019, Manual, num. 11.3): laboratorio clínico, toma de muestras, imágenes diagnósticas ionizantes (rayos X convencional y odontológica) y no ionizantes (ecografía); más el estándar de todos los servicios (num. 11.1) y el apoyo TIC",
+  "fecha_corte": "2026-10-23",
+  "fuente_principal": {
+    "titulo": "Resolución 3100 de 2019 del Ministerio de Salud y Protección Social, por la cual se definen los procedimientos y condiciones de inscripción de los prestadores de servicios de salud y de habilitación de los servicios de salud y se adopta el Manual de Inscripción de Prestadores y Habilitación de Servicios de Salud",
+    "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+    "fecha_consulta": "2026-10-23",
+    "copias_consultadas": [
+      "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+      "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "https://normograma.invima.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/resolucion-3100-de-2019.pdf"
+    ],
+    "modificaciones_conocidas": "Res. 544 de 2023 (modifica los arts. 2, 3, 4, 7, 12, 13, 15, 19 y 20 de la resolución, según MinSalud) y Res. 465 de 2025 (arts. 4, 5, 7, 19 y 20); normas.json cita además la 1410 de 2022 y la 914 de 2025. No se encontró que alguna cambiara el estándar de dotación de estos servicios (por confirmar).",
+    "urls_modificaciones": [
+      "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No.%20544%20de%202023.pdf",
+      "https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%20465%20de%202025.pdf"
+    ]
+  },
+  "vigencia": {
+    "resumen": "Rige la Res. 3100 de 2019 con sus modificaciones. La Res. 1732 del 5 de agosto de 2026, que adoptaba un nuevo Manual (Tomos I y II), fue revocada en su totalidad por la Res. 2080 del 8 de septiembre de 2026; según la propia 2080 y las fuentes que la reseñan, la 1732 nunca produjo efectos porque la Imprenta Nacional certificó que no se publicó en el Diario Oficial.",
+    "urls": [
+      "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=194230",
+      "https://www.cerlatam.com/normatividad/minsalud-resolucion-2080-de-2026-08-sep-26/",
+      "https://consultorsalud.com/minsalud-revoca-la-resolucion-1732-de-2026-asi-quedan-las-reglas-de-habilitacion-para-prestadores-de-servicios-de-salud/",
+      "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=193984&dt=S"
+    ],
+    "tipo_dato": "dato oficial (Res. 2080 en el régimen legal de la Alcaldía de Bogotá) y fuentes secundarias coincidentes; publicación de la 2080 en el Diario Oficial por confirmar",
+    "advertencia_para_el_repositorio": "El archivo hermano investigacion/res3100_consulta_y_ambulatorio.json dice que la 1732 está en transición de 12 meses: eso quedó superado por la Res. 2080. La torre abriría en 2030: si para entonces sale otro manual, este cruce debe repetirse.",
+    "radiaciones_ionizantes": "La Res. 1811 de 2025 (4-sep-2025, Diario Oficial 53.234) reglamenta el uso de equipos generadores de radiación ionizante, la protección radiológica y el control de calidad; MinSalud indica que rige desde el 6 de marzo de 2026 y que ese día quedó derogada la Res. 482 de 2018. presupuesto.json todavía cita la 482.",
+    "urls_radiaciones": [
+      "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/resolucion-1811-de-2025.pdf",
+      "https://www.minsalud.gov.co/salud/medicamentos-y-tecnologias/Paginas/radiaciones-ionizantes.aspx"
+    ]
+  },
+  "convencion_estados": {
+    "cubierto": "Un ítem de dotacion.json (o de equipamiento_fijo, laboratorio.json o presupuesto.json, cuando se indica) cumple lo exigido en cantidad y ubicación.",
+    "parcial": "El ítem existe pero falta cantidad, una característica o un documento (licencia, programa, certificado).",
+    "falta": "Ningún ítem del repositorio lo cubre.",
+    "verificacion_texto": {
+      "literal_confirmado": "La frase se recuperó entre comillas de una compilación oficial (Supersalud, Cancillería, ICBF o Invima) por medio del buscador; conviene cotejarla con el PDF del Ministerio.",
+      "contenido_confirmado_redaccion_por_confirmar": "El contenido aparece en una compilación oficial, pero la redacción completa o el subnumeral quedan por confirmar.",
+      "solo_fuente_secundaria": "Texto de la norma citado por una fuente secundaria (Colegio de Odontólogos, ConsultorSalud).",
+      "por_confirmar": "No se encontró en la fuente: queda pendiente."
+    }
+  },
+  "requisitos_todos_los_servicios": [
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.3 (dotación, todos los servicios), criterio 1",
+      "texto_literal": "El prestador de servicios de salud cuenta con el registro de la relación de los equipos biomédicos requeridos [...]: Nombre del equipo biomédico. Marca. Modelo. Serie. Registro sanitario para dispositivos médicos o permiso de comercialización para equipos biomédicos de tecnología controlada, cuando lo requiera. Clasificación por riesgo, cuando el equipo lo requiera.",
+      "que_exige": "Inventario de todos los equipos biomédicos (también los de comodato) con nombre, marca, modelo, serie, registro sanitario o permiso de comercialización del Invima y clase de riesgo. Clases I, IIa, IIb y III del Decreto 4725 de 2005 (art. 5); registro sanitario automático para clases I y IIa no controladas y permiso de comercialización para equipos de tecnología controlada (artículos exactos por confirmar).",
+      "ambiente_programa": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+      "cantidad_minima": "1 registro por equipo",
+      "estado_en_dotacion": "parcial",
+      "item_dotacion": "Todos los ítems de dotacion.json (campos nombre, especificacion y clase_riesgo) y los analizadores de laboratorio.json",
+      "comentario": "Faltan marca, modelo, serie y número de registro: se conocen al comprar. Exigirlos en los pliegos y en los contratos de comodato. Las clases de riesgo de dotacion.json son supuestas y deben confirmarse en el registro del Invima.",
+      "distribucion_por_ambiente": [],
+      "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+      "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.3, criterio 2 (subnumeración por confirmar)",
+      "texto_literal": "El prestador de servicios de salud garantiza las condiciones técnicas de calidad de los equipos biomédicos, para lo cual cuenta con: Programa de mantenimiento preventivo de los equipos biomédicos, que incluya el cumplimiento de las recomendaciones establecidas por el fabricante [...] Hoja(s) de vida del(los) equipo(s) biomédicos(s), con los registros de los mantenimientos preventivos y correctivos, según corresponda.",
+      "que_exige": "Programa anual de mantenimiento preventivo según el fabricante y hoja de vida por equipo.",
+      "ambiente_programa": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+      "cantidad_minima": "1 programa anual; 1 hoja de vida por equipo",
+      "estado_en_dotacion": "parcial",
+      "item_dotacion": "Campo mantenimiento_anual_pct de cada ítem y totales de mantenimiento de dotacion.json",
+      "comentario": "El costo está estimado, pero el programa y las hojas de vida son documentos por producir. Exigir al proveedor manual de servicio, protocolo de mantenimiento y primera hoja de vida en la entrega; en comodato, el mantenimiento queda a cargo del proveedor por contrato.",
+      "distribucion_por_ambiente": [],
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.3 (subnumeral por confirmar)",
+      "texto_literal": "El mantenimiento de los equipos biomédicos es ejecutado por talento humano profesional, tecnólogo o técnico en áreas relacionadas. Este mantenimiento puede ser realizado directamente por el prestador de servicios de salud o mediante contrato o convenio con un tercero.",
+      "que_exige": "Personal idóneo (propio o contratado) para el mantenimiento.",
+      "ambiente_programa": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+      "cantidad_minima": "1 responsable o contrato",
+      "estado_en_dotacion": "parcial",
+      "item_dotacion": "Taller biomédico del edificio actual (programa.json, servicio de mantenimiento fuera de la torre)",
+      "comentario": "No está costeado el personal o contrato de ingeniería biomédica para la torre (proceso, no dotación).",
+      "distribucion_por_ambiente": [],
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.3 (subnumeral por confirmar)",
+      "texto_literal": "El prestador de servicios de salud cuenta con un programa de capacitación en el uso de dispositivos médicos cuando éstos lo requieran, el cual puede ser desarrollado por el fabricante, importador o por el mismo prestador.",
+      "que_exige": "Capacitación del personal en el uso de los equipos que lo requieran (analizadores, rayos X, ecógrafo, cabina, autoclave).",
+      "ambiente_programa": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+      "cantidad_minima": "1 programa",
+      "estado_en_dotacion": "parcial",
+      "item_dotacion": "presupuesto.json, indirectos: capacitación de puesta en marcha ($40 millones) y de sistemas ($20 millones)",
+      "comentario": "Exigir en los pliegos la capacitación del fabricante con constancias.",
+      "distribucion_por_ambiente": [],
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.3 (subnumeral por confirmar)",
+      "texto_literal": "La suficiencia de equipos biomédicos está relacionada con la frecuencia de uso de los mismos, incluyendo los tiempos del proceso de esterilización, cuando aplique.",
+      "que_exige": "Cantidad de equipos acorde con el volumen.",
+      "ambiente_programa": "Cubículo de toma de muestras (flebotomía)",
+      "cantidad_minima": "Según demanda",
+      "estado_en_dotacion": "cubierto",
+      "item_dotacion": "4 sillones para 4 cubículos; 4 microscopios; 2 centrífugas; 1 rayos X y 1 ecógrafo",
+      "comentario": "La demanda es estimación de laboratorio.json y programa.json.",
+      "distribucion_por_ambiente": [],
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.2 (infraestructura, todos los servicios), criterio 14",
+      "texto_literal": "En edificaciones donde se presten servicios de cirugía, atención del parto, laboratorio clínico, urgencias, gestión pre transfusional, diálisis, hospitalarios, imágenes diagnósticas, vacunación, servicio farmacéutico y los que requieran cadena de frio, cuentan con planta eléctrica.",
+      "que_exige": "Planta eléctrica.",
+      "ambiente_programa": "Planta eléctrica diésel de 250-300 kVA insonorizada, con tanque diario y transferencia automática",
+      "cantidad_minima": "1",
+      "estado_en_dotacion": "cubierto",
+      "item_dotacion": "Planta eléctrica diésel de 300 kVA con transferencia automática (equipamiento_fijo)",
+      "comentario": "",
+      "distribucion_por_ambiente": [
+        {
+          "servicio_programa": "Áreas técnicas y de servicio",
+          "ambiente": "Planta eléctrica diésel de 250-300 kVA insonorizada, con tanque diario y transferencia automática",
+          "piso": "bloque técnico",
+          "cantidad": 1
+        }
+      ],
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.2, criterio 15 (según normas.json)",
+      "texto_literal": "El prestador de servicios de salud que utilice equipos generadores de radiaciones ionizantes, cuenta con licencia de práctica médica vigente expedida por la entidad competente.",
+      "que_exige": "Licencia de práctica médica para rayos X y periapical (Res. 1811 de 2025).",
+      "ambiente_programa": "Sala de rayos X convencional digital (con blindaje en plomo)",
+      "cantidad_minima": "1 por equipo o instalación",
+      "estado_en_dotacion": "parcial",
+      "item_dotacion": "presupuesto.json (indirectos, P4, $30 millones con control de calidad)",
+      "comentario": "Falta la dosimetría personal y actualizar la norma citada (482 de 2018 → 1811 de 2025).",
+      "distribucion_por_ambiente": [
+        {
+          "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+          "ambiente": "Sala de rayos X convencional digital (con blindaje en plomo)",
+          "piso": 1,
+          "cantidad": 1
+        },
+        {
+          "servicio_programa": "Odontología y radiología odontológica",
+          "ambiente": "Rayos X odontológico periapical (blindado)",
+          "piso": 4,
+          "cantidad": 1
+        }
+      ],
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "medicamentos_dispositivos",
+      "numeral": "Manual, num. 11.1.4 (todos los servicios); la copia del ICBF lo numera '9.2'",
+      "texto_literal": "Instrumentos para medir la humedad relativa y la temperatura, en donde se almacenen medicamentos y dispositivos médicos.",
+      "que_exige": "Termohigrómetros con registro en todo sitio de almacenamiento.",
+      "ambiente_programa": "Área de neveras (reactivos y muestras)",
+      "cantidad_minima": "1 por sitio de almacenamiento",
+      "estado_en_dotacion": "parcial",
+      "item_dotacion": "Termohigrómetros y registradores de temperatura con alarma remota (laboratorio, 8)",
+      "comentario": "Faltan 2: uno en toma de muestras (piso 1) y uno en el almacenamiento de rayos X.",
+      "distribucion_por_ambiente": [
+        {
+          "servicio_programa": "Laboratorio clínico",
+          "ambiente": "Área de neveras (reactivos y muestras)",
+          "piso": 2,
+          "cantidad": 3
+        },
+        {
+          "servicio_programa": "Toma de muestras de laboratorio clínico",
+          "ambiente": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)",
+          "piso": 1,
+          "cantidad": 1
+        },
+        {
+          "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+          "ambiente": "Almacenamiento de dispositivos médicos e insumos",
+          "piso": 1,
+          "cantidad": 1
+        }
+      ],
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "medicamentos_dispositivos",
+      "numeral": "Manual, num. 11.1.4 (todos los servicios), criterio de programas de vigilancia (subnumeral por confirmar)",
+      "texto_literal": "[...] información documentada sobre la planeación y ejecución de los programas de farmacovigilancia, tecnovigilancia y reactivovigilancia, que garanticen el seguimiento al uso de medicamentos, dispositivos médicos [...] y reactivos de diagnóstico in vitro, cuando aplique (redacción por confirmar).",
+      "que_exige": "Programas documentados de tecnovigilancia (Res. 4816 de 2008, citada por el Invima) y reactivovigilancia.",
+      "ambiente_programa": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+      "cantidad_minima": "1 por prestador",
+      "estado_en_dotacion": "falta",
+      "item_dotacion": "",
+      "comentario": "Proceso de la E.S.E., sin costo de dotación. Debe cubrir los equipos nuevos y los de comodato.",
+      "distribucion_por_ambiente": [],
+      "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+      "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1 (regla general de los estándares de infraestructura; numeral por confirmar)",
+      "texto_literal": "En el estándar de infraestructura, un área o ambiente puede estar localizado fuera del servicio o ambiente, pero dentro de la misma edificación donde se encuentre el servicio.",
+      "que_exige": "Permite compartir ambientes entre servicios de la misma edificación.",
+      "ambiente_programa": "Recepción de muestras, información y entrega de resultados (2 puestos)",
+      "cantidad_minima": "No aplica",
+      "estado_en_dotacion": "cubierto",
+      "item_dotacion": "No aplica",
+      "comentario": "Justifica que la recepción del laboratorio (piso 2) esté en la toma de muestras (piso 1) y que el aseo del piso 2 se comparta.",
+      "distribucion_por_ambiente": [],
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.3, criterio del carro de paro (número por confirmar)",
+      "texto_literal": "Carro de paro: conjunto de medicamentos, dispositivos médicos y equipos biomédicos utilizados en la reanimación cardio cerebro pulmonar.",
+      "que_exige": "No se encontró que laboratorio, toma de muestras, rayos X sin contraste, ecografía o radiología odontológica exijan carro de paro en la 3100 (por confirmar).",
+      "ambiente_programa": "Cubículo de toma de muestras (flebotomía)",
+      "cantidad_minima": "0 exigidos (por confirmar)",
+      "estado_en_dotacion": "cubierto",
+      "item_dotacion": "Carro de paro (mueble) adulto-pediátrico con tabla de reanimación (urgencias, piso 1)",
+      "comentario": "La toma de muestras y el rayos X están en el piso 1, cerca del carro de paro de urgencias. Si algún día se usa medio de contraste, revisar la exigencia de mediana complejidad.",
+      "distribucion_por_ambiente": [],
+      "verificacion_texto": "por_confirmar",
+      "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    }
+  ],
+  "servicios": [
+    {
+      "id": "laboratorio",
+      "nombre_3100": "Servicio de laboratorio clínico",
+      "codigo_reps": "706 (tomado de programa.json; por confirmar en la tabla oficial del REPS)",
+      "numeral": "Manual, num. 11.3.12",
+      "descripcion_literal": "Servicio en el cual se realizan procedimientos de análisis de especímenes biológicos de origen humano.",
+      "complejidad": "Por confirmar en el texto oficial (las copias consultadas no muestran con claridad la línea de complejidades del 11.3.12). El repositorio lo trata como laboratorio de primer nivel; el menú de laboratorio.json (PCR para tuberculosis, quimioluminiscencia, hemocultivos) puede leerse como mediana complejidad: confirmar con la Secretaría Seccional de Salud de Antioquia.",
+      "piso": 2,
+      "exigencias": [
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.12, estándar de infraestructura, modalidad intramural (subnumeral por confirmar)",
+          "texto_literal": "Área para recepción de muestras, información y entrega de resultados.",
+          "que_exige": "Recepción al público, información y entrega de resultados.",
+          "ambiente_programa": "Recepción de muestras, información y entrega de resultados (2 puestos)",
+          "cantidad_minima": "1 área",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Mueble de recepción y entrega de resultados (toma_muestras, 1)",
+          "comentario": "La recepción al público queda en el piso 1 y la recepción interna en el piso 2. Vale porque, según el Manual, 'un área o ambiente puede estar localizado fuera del servicio o ambiente, pero dentro de la misma edificación donde se encuentre el servicio' (texto confirmado en la compilación; numeral por confirmar).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Recepción de muestras, información y entrega de resultados (2 puestos)",
+              "piso": 1,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Recepción interna de muestras (llegada del montacargas y del tubo neumático), registro y clasificación",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.12, estándar de infraestructura, modalidad intramural (subnumeral por confirmar)",
+          "texto_literal": "Ambiente(s) técnico(s) de procedimientos que cuenta con: Mesón de trabajo, con poceta cuando ésta se requiera.",
+          "que_exige": "Mesón de trabajo en cada ambiente técnico, con poceta donde el procedimiento la use (tinciones, uroanálisis, coprológico, lavado).",
+          "ambiente_programa": "Área técnica: química clínica e inmunoensayo",
+          "cantidad_minima": "1 mesón por ambiente técnico; 12 módulos de 1,5 m en total (cálculo propio de la distribución)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Mesones de laboratorio en acero inoxidable o resina con pocetas (módulos de 1,5 m) (12)",
+          "comentario": "Distribución propuesta (cálculo propio): preanalítica 1, hematología 2, química 3, inmunología 1, microbiología 2, uroanálisis y parasitología 2, lavado 1. Las pocetas van en microbiología, uroanálisis y lavado.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: centrifugación y alícuotas (preanalítica)",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: hematología y coagulación",
+              "piso": 2,
+              "cantidad": 2
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: química clínica e inmunoensayo",
+              "piso": 2,
+              "cantidad": 3
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: inmunología y pruebas rápidas (VIH, sífilis, hepatitis, dengue)",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+              "piso": 2,
+              "cantidad": 2
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: uroanálisis, coprológico, parasitología y gota gruesa (malaria)",
+              "piso": 2,
+              "cantidad": 2
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Lavado, descontaminación y esterilización de material (autoclave)",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.12, estándar de infraestructura (subnumeral por confirmar)",
+          "texto_literal": "Ducha manual o lavaojos que puede ser compartida entre los ambientes técnicos.",
+          "que_exige": "Una ducha manual o lavaojos al que se llegue desde todos los ambientes técnicos.",
+          "ambiente_programa": "Área técnica: química clínica e inmunoensayo",
+          "cantidad_minima": "1 (compartido)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Lavaojos y ducha de emergencia (1)",
+          "comentario": "Se propone en el área técnica de química (central y la de más reactivos). Recomendación, no exigencia: un segundo lavaojos de grifo en microbiología, porque queda tras una antecámara (unos $0,4 a $1,2 millones, estimación).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: química clínica e inmunoensayo",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.12, estándar de infraestructura (subnumeral por confirmar)",
+          "texto_literal": "Área para neveras o cuarto frío.",
+          "que_exige": "Un área para neveras de reactivos y muestras (o un cuarto frío).",
+          "ambiente_programa": "Área de neveras (reactivos y muestras)",
+          "cantidad_minima": "1 área",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Refrigerador de laboratorio 2-8 °C para reactivos (2); Congelador de -20 °C a -30 °C (seroteca y muestras de vigilancia) (1)",
+          "comentario": "Los 3 equipos deben ir a circuitos respaldados por la planta (criterio 14 de todos los servicios).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área de neveras (reactivos y muestras)",
+              "piso": 2,
+              "cantidad": 3
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.12, estándar de infraestructura (subnumeral por confirmar)",
+          "texto_literal": "Lavamanos.",
+          "que_exige": "Lavamanos en el servicio (aparato exclusivo para lavarse las manos, con grifería y sifón con rejilla, según el glosario).",
+          "ambiente_programa": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+          "cantidad_minima": "1 lavamanos como mínimo en el servicio; se recomienda 1 por ambiente técnico y 1 en la antecámara de microbiología",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Obra: 'Lavamanos con grifería de sensor o de codo' (presupuesto.json, ítem 8.11, 136 un.)",
+          "comentario": "No es dotación sino obra. presupuesto.json no asigna los 60 lavamanos clínicos por ambiente: en el diseño hay que ubicar al menos uno en el laboratorio, separado de las pocetas de los mesones.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: uroanálisis, coprológico, parasitología y gota gruesa (malaria)",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: química clínica e inmunoensayo",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.12, estándar de infraestructura (subnumeral por confirmar)",
+          "texto_literal": "Ambiente oscuro, cuando se requiera.",
+          "que_exige": "Ambiente oscuro solo si alguna técnica lo pide (por ejemplo, lectura de fluorescencia).",
+          "ambiente_programa": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+          "cantidad_minima": "0 (no se requiere con el menú actual)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "No aplica",
+          "comentario": "El menú de laboratorio.json usa Ziehl-Neelsen y GeneXpert para tuberculosis y no lee microscopía de fluorescencia; si se adopta auramina-rodamina, habrá que prever un ambiente oscuro (o un microscopio LED de fluorescencia que no lo necesita: por confirmar).",
+          "distribucion_por_ambiente": [],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.12, estándar de infraestructura (subnumeral por confirmar)",
+          "texto_literal": "Área o ambiente para el almacenamiento de materiales, insumos y reactivos.",
+          "que_exige": "Depósito propio de materiales, insumos y reactivos.",
+          "ambiente_programa": "Depósito de materiales, insumos y reactivos",
+          "cantidad_minima": "1 ambiente",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Estantería para almacén de reactivos y archivo de láminas (6)",
+          "comentario": "Distribución propuesta: 5 estanterías en el depósito y 1 para el archivo de láminas en la oficina de control de calidad (cálculo propio).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Depósito de materiales, insumos y reactivos",
+              "piso": 2,
+              "cantidad": 5
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.12, estándar de dotación; la copia del ICBF lo numera 12.1",
+          "texto_literal": "Cumple con los criterios que le sean aplicables de todos los servicios y adicionalmente, cuenta con: 12.1. Equipos biomédicos manuales, semi-automatizados o automatizados para los procedimientos que realice.",
+          "que_exige": "Los equipos que pida cada prueba del menú, sea por compra o por comodato.",
+          "ambiente_programa": "Área técnica: química clínica e inmunoensayo",
+          "cantidad_minima": "Según el menú: ver distribución",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Analizadores en comodato de laboratorio.json (hematología 5 y 3 partes, química con ISE, quimioluminiscencia, HbA1c por HPLC, orina, coagulación, gases, hemocultivos, identificación y antibiograma, GeneXpert); y de dotacion.json: Centrífuga de mesa de 24 tubos (2); Microcentrífuga para hematocrito (1); Incubadora bacteriológica 35-37 °C (2); Baño serológico y rotador de VDRL (1); Juego de micropipetas automáticas (10 volúmenes) y agitadores vórtex (1); Autoclave de laboratorio para descontaminación de residuos y medios (1)",
+          "comentario": "Los analizadores en comodato también cuentan para la habilitación: deben entrar al inventario con registro sanitario y tener hojas de vida y mantenimiento a cargo del proveedor (exigirlo en el contrato). El autoclave sirve para inactivar cultivos antes de desecharlos.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: centrifugación y alícuotas (preanalítica)",
+              "piso": 2,
+              "cantidad": 2
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: hematología y coagulación",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+              "piso": 2,
+              "cantidad": 2
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: inmunología y pruebas rápidas (VIH, sífilis, hepatitis, dengue)",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: química clínica e inmunoensayo",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Lavado, descontaminación y esterilización de material (autoclave)",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.12, estándar de dotación (subnumeral por confirmar)",
+          "texto_literal": "Cabina de bioseguridad, si procesa muestras para el análisis de bacterias anaerobias, micosis subcutáneas o profundas y pruebas por técnica de biología molecular, cuando se requiera.",
+          "que_exige": "Cabina de bioseguridad cuando haya anaerobios, micosis profundas o biología molecular. El GeneXpert (PCR en tiempo real) y la opción de ADN-VPH son biología molecular.",
+          "ambiente_programa": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Cabina de bioseguridad clase II tipo A2 (4 pies) (1)",
+          "comentario": "Las copias numeran distinto este criterio. Certificar la cabina al instalarla y cada año (lo dice la especificación de dotacion.json; la frecuencia no es de la 3100).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.12, estándar de dotación (modalidad y subnumeral por confirmar: el fragmento aparece junto a la modalidad de telemedicina)",
+          "texto_literal": "Microscopio para toma e interpretación de pruebas para enfermedades transmitidas por vectores en zonas rurales, zonas especiales de dispersión geográfica y endémica.",
+          "que_exige": "Microscopio para gota gruesa (malaria) y otras pruebas de enfermedades transmitidas por vectores. Yondó es zona endémica de malaria (docs/11 y laboratorio.json).",
+          "ambiente_programa": "Área técnica: uroanálisis, coprológico, parasitología y gota gruesa (malaria)",
+          "cantidad_minima": "1 como mínimo para vectores; 4 en total por el menú",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Microscopio binocular con objetivo de inmersión (4)",
+          "comentario": "Distribución propuesta: 2 en uroanálisis, parasitología y gota gruesa; 1 en microbiología (baciloscopia); 1 en hematología (extendido de sangre periférica). El de cámara sirve al control de calidad externo de lámina del INS y del Laboratorio Departamental.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: uroanálisis, coprológico, parasitología y gota gruesa (malaria)",
+              "piso": 2,
+              "cantidad": 2
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: hematología y coagulación",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Manual, num. 11.3.12, estándar de procesos prioritarios (subnumerales por confirmar)",
+          "texto_literal": "Registro de control de calidad interno y externo. [...] Análisis de los reportes del control de calidad y toma de medidas preventivas y correctivas. [...] Registro de control de calidad de las \"pruebas en el punto de atención del paciente - (point of care testing - POCT)\", cuando aplique.",
+          "que_exige": "Control de calidad interno en cada corrida, participación en programas de evaluación externa y registro del control de calidad de las pruebas rápidas que se hacen fuera del laboratorio (urgencias, partos, consulta).",
+          "ambiente_programa": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+          "cantidad_minima": "1 puesto de control de calidad con acceso al LIS",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Procedimiento y costos en laboratorio.json (calidad) y presupuesto.json (indirectos: 'Puesta en marcha del laboratorio...', control de calidad externo del primer año); LIS en presupuesto.json (indirectos: 'Software e integración...')",
+          "comentario": "No es dotación: es proceso. La dotación de soporte es el computador de la oficina (tic_apoyo) y el módulo de control de calidad del LIS.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Manual, num. 11.3.12, estándar de procesos prioritarios (subnumeral por confirmar)",
+          "texto_literal": "Contrato o convenio escrito con el o los laboratorios que realizan el procesamiento de las muestras, cuando lo requiera. Cuando se trate de sedes de un mismo prestador no requiere convenio o contrato.",
+          "que_exige": "Contrato o convenio con cada laboratorio de referencia (pruebas remitidas).",
+          "ambiente_programa": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+          "cantidad_minima": "1 contrato por laboratorio de referencia",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "laboratorio.json (referencia_de_muestras): Laboratorio Departamental de Salud Pública de Antioquia y laboratorio de referencia contratado",
+          "comentario": "Documento, no dotación. El Laboratorio Departamental atiende eventos de salud pública sin costo; para lo demás hace falta contrato.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, num. 11.1.2 (infraestructura, todos los servicios), criterio 14",
+          "texto_literal": "En edificaciones donde se presten servicios de cirugía, atención del parto, laboratorio clínico, urgencias, gestión pre transfusional, diálisis, hospitalarios, imágenes diagnósticas, vacunación, servicio farmacéutico y los que requieran cadena de frio, cuentan con planta eléctrica.",
+          "que_exige": "Planta eléctrica para la edificación.",
+          "ambiente_programa": "Planta eléctrica diésel de 250-300 kVA insonorizada, con tanque diario y transferencia automática",
+          "cantidad_minima": "1 planta para la torre",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Planta eléctrica diésel de 300 kVA con transferencia automática (equipamiento_fijo)",
+          "comentario": "Las UPS de 6 kVA de los analizadores y la UPS central de 60 kVA no son exigencia de la 3100 pero evitan perder corridas durante los segundos de la transferencia.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Áreas técnicas y de servicio",
+              "ambiente": "Planta eléctrica diésel de 250-300 kVA insonorizada, con tanque diario y transferencia automática",
+              "piso": "bloque técnico",
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "Manual, num. 11.1.4 (todos los servicios); la copia del ICBF lo numera '9.2'",
+          "texto_literal": "Instrumentos para medir la humedad relativa y la temperatura, en donde se almacenen medicamentos y dispositivos médicos.",
+          "que_exige": "Termohigrómetros con registro en neveras, depósito y áreas técnicas donde se guarden reactivos de diagnóstico in vitro e insumos.",
+          "ambiente_programa": "Área de neveras (reactivos y muestras)",
+          "cantidad_minima": "1 por nevera o congelador y 1 por ambiente de almacenamiento",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Termohigrómetros y registradores de temperatura con alarma remota (8)",
+          "comentario": "Distribución propuesta: neveras 3, depósito 1, química 1, hematología 1, microbiología 1, preanalítica 1. Si se interrumpe la cadena de frío hay que notificar al Invima según su procedimiento (texto del mismo estándar recuperado en la compilación del ICBF; numeral por confirmar).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área de neveras (reactivos y muestras)",
+              "piso": 2,
+              "cantidad": 3
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Depósito de materiales, insumos y reactivos",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: química clínica e inmunoensayo",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: hematología y coagulación",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: centrifugación y alícuotas (preanalítica)",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "Manual, num. 11.1.4 (todos los servicios), criterio de programas de vigilancia (subnumeral por confirmar); Decreto 3770 de 2004 (registro sanitario de reactivos de diagnóstico in vitro, artículo por confirmar)",
+          "texto_literal": "[...] información documentada sobre la planeación y ejecución de los programas de farmacovigilancia, tecnovigilancia y reactivovigilancia [...] (redacción exacta por confirmar).",
+          "que_exige": "Programa de reactivovigilancia y de tecnovigilancia; todos los reactivos con registro sanitario del Invima (categorías I, II y III del Decreto 3770 de 2004).",
+          "ambiente_programa": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+          "cantidad_minima": "1 programa por prestador; 1 registro sanitario vigente por reactivo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Ninguno en dotacion.json (es proceso). Los reactivos van en comodato (laboratorio.json, modelo_de_compra)",
+          "comentario": "Exigir en el contrato de comodato el registro sanitario vigente de cada reactivo y analizador, y que el proveedor reporte eventos adversos. Según el Invima, los reactivos de categoría III tienen registro de 5 años y los de categorías I y II registro automático de 10 años.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Lector de inmunoensayo por fluorescencia de punto de atención (respaldo de TSH, troponina, procalcitonina)",
+          "cantidad": 1,
+          "por_que_no_lo_exige_la_3100": "Es respaldo del analizador de quimioluminiscencia; la norma solo pide equipos para los procedimientos que se hagan.",
+          "justificacion": "Continuidad en urgencias de noche y cuando falle el analizador principal.",
+          "recomendacion": "mantener en 'Área técnica: química clínica e inmunoensayo'; si se usa fuera del laboratorio entra al control de calidad de POCT."
+        },
+        {
+          "item_dotacion": "UPS en línea de 6 kVA para analizadores",
+          "cantidad": 2,
+          "por_que_no_lo_exige_la_3100": "La 3100 exige planta eléctrica, no UPS.",
+          "justificacion": "Evita perder corridas y dañar analizadores en los cortes del municipio.",
+          "recomendacion": "mantener: 1 en 'Área técnica: química clínica e inmunoensayo' y 1 en 'Área técnica: hematología y coagulación'."
+        },
+        {
+          "item_dotacion": "Balanza analítica y horno de secado",
+          "cantidad": 1,
+          "por_que_no_lo_exige_la_3100": "No es ítem del estándar.",
+          "justificacion": "Solo hace falta si el laboratorio prepara medios o reactivos; con medios listos para usar se puede quitar.",
+          "recomendacion": "revisar contra el manual de procedimientos de microbiología."
+        },
+        {
+          "item_dotacion": "Congelador de -20 °C a -30 °C (seroteca y muestras de vigilancia)",
+          "cantidad": 1,
+          "por_que_no_lo_exige_la_3100": "La 3100 pide área de neveras, no congelador.",
+          "justificacion": "Seroteca y conservación de muestras para la red de laboratorios de salud pública (Decreto 780 de 2016).",
+          "recomendacion": "mantener."
+        },
+        {
+          "item_dotacion": "Lockers y mueble de vestidor y descanso del personal (servicio 24 horas)",
+          "cantidad": 1,
+          "por_que_no_lo_exige_la_3100": "La 3100 no lo pide en el 11.3.12 (según las copias consultadas).",
+          "justificacion": "Lo exige la Res. 1633 de 2025 para servicios 24 horas (Cuadro 50, según el repositorio).",
+          "recomendacion": "mantener en 'Vestidor del talento humano con unidad sanitaria (servicio 24 horas)' y 'Descanso del personal con baño y guardarropa'."
+        },
+        {
+          "item_dotacion": "Sillas de laboratorio altas con espaldar",
+          "cantidad": 8,
+          "por_que_no_lo_exige_la_3100": "La norma no enumera mobiliario de trabajo.",
+          "justificacion": "Indispensable para trabajar en los mesones.",
+          "recomendacion": "mantener: 1 por puesto de mesón."
+        }
+      ],
+      "resumen_cruce": {
+        "exigencias": 15,
+        "cubierto": 14,
+        "parcial": 1,
+        "falta": 0,
+        "excesos_recomendados": 6
+      }
+    },
+    {
+      "id": "toma_muestras",
+      "nombre_3100": "Servicio de toma de muestras de laboratorio clínico",
+      "codigo_reps": "712 (tomado de programa.json; no se pudo cotejar con la tabla oficial de códigos del REPS: por confirmar)",
+      "numeral": "Manual, num. 11.3.11",
+      "descripcion_literal": "Servicio en el cual se realiza la toma y recepción de muestras de origen humano, que serán remitidas para su procesamiento.",
+      "complejidad": "No aplica (el servicio no se clasifica por complejidad según la compilación consultada; redacción por confirmar). Modalidades: intramural y extramural (unidad móvil, jornada de salud y domiciliaria).",
+      "piso": 1,
+      "decision_de_habilitacion": {
+        "texto_literal": "En este servicio se podrá realizar toma de muestras de origen humano. En tal caso, no será necesario habilitar el servicio de toma de muestras de laboratorio clínico.",
+        "numeral": "Manual, num. 11.3.12 (descripción del servicio de laboratorio clínico)",
+        "lectura": "Como el laboratorio clínico 24 horas (piso 2) y la toma de muestras (piso 1) quedan en la misma torre y la misma sede, basta con habilitar el laboratorio clínico (706): la toma de muestras no necesita habilitación aparte. Las áreas del piso 1 siguen siendo necesarias porque el laboratorio debe cumplir los criterios de toma cuando toma muestras. programa.json lista el 712 como servicio propio: conviene dejarlo como parte del 706 (o habilitarlo solo si se quiere ofrecer toma de muestras extramural con otra sede).",
+        "verificacion_texto": "literal_confirmado",
+        "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+      },
+      "exigencias": [
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.11, estándar de infraestructura, modalidad intramural (subnumeral por confirmar)",
+          "texto_literal": "Cumple con los criterios que le sean aplicables de todos los servicios y adicionalmente, cuenta con: [...] Área para recepción de muestras, información y entrega de resultados.",
+          "que_exige": "Un área de recepción de muestras, información y entrega de resultados (distinta del sitio donde se toma la muestra).",
+          "ambiente_programa": "Recepción de muestras, información y entrega de resultados (2 puestos)",
+          "cantidad_minima": "1 área con 1 puesto de recepción como mínimo; el programa propone 2 puestos",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Mueble de recepción y entrega de resultados (toma_muestras, 1, 2 puestos)",
+          "comentario": "La compilación de la Cancillería trae la frase dentro del servicio de toma de muestras; una guía de ConsultorSalud agrega que la recepción debe ser distinta del área de toma y que la entrega de resultados puede compartirla. Faltan los computadores de los 2 puestos: se toman de tic_apoyo (ver ese servicio).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Recepción de muestras, información y entrega de resultados (2 puestos)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.11, estándar de infraestructura, modalidad intramural (subnumeral por confirmar)",
+          "texto_literal": "[...] Cubículo para la toma de muestras. (Glosario del Manual: «Cubículo: área delimitada con barrera física fija o móvil, exclusiva para un solo paciente.»)",
+          "que_exige": "Al menos un cubículo, con barrera física fija o móvil, para un solo paciente a la vez.",
+          "ambiente_programa": "Cubículo de toma de muestras (flebotomía)",
+          "cantidad_minima": "1 cubículo como mínimo según la norma; 4 en el programa (dimensionado por la demanda de 6 a 9 a. m.)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Sillón de toma de muestras con apoyabrazos regulables (toma_muestras, 4: uno por cubículo)",
+          "comentario": "La norma no pide un número de cubículos: lo fija la demanda. Con 5.365 pruebas al mes (laboratorio.json, estimación) los 4 cubículos son razonables. El área mínima de 3 m² por cubículo es de la Res. 1633 (Cuadro 47), no de la 3100.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Cubículo de toma de muestras (flebotomía)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.11, estándar de dotación, modalidades intramural, extramural y domiciliaria (subnumeral por confirmar)",
+          "texto_literal": "Cumple con los criterios que le sean aplicables de todos los servicios y adicionalmente, cuenta con: Equipos biomédicos necesarios, según las muestras que se tomen, de acuerdo con lo documentado en el estándar de procesos prioritarios.",
+          "que_exige": "La norma no trae una lista cerrada: la dotación sale del manual de toma de muestras que escriba la E.S.E. (qué muestras toma, en qué posición, cómo las conserva y las transporta). Para el menú de laboratorio.json eso implica: silla o sillón de flebotomía por cubículo, camilla para pacientes con riesgo de desmayo o pediátricos, nevera de 2-8 °C para conservar muestras y cavas para transportarlas.",
+          "ambiente_programa": "Cubículo de toma de muestras (flebotomía)",
+          "cantidad_minima": "1 sillón por cubículo (4); 1 nevera; cavas según rutas de remisión",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Sillón de toma de muestras con apoyabrazos regulables (4); Camilla para toma de muestras en posición acostada (1); Nevera de muestras 2-8 °C con registrador de temperatura (1); Cava de transporte de muestras con registrador (4)",
+          "comentario": "Cubierto siempre que el manual de toma de muestras (estándar de procesos prioritarios) describa estas muestras. Ese manual es documento obligatorio y aún no existe para la torre.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Cubículo de toma de muestras (flebotomía)",
+              "piso": 1,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Toma de muestras especiales (pediátricas, microbiológicas, curvas de glucosa) con unidad sanitaria",
+              "piso": 1,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Manual, num. 11.3.11 / 11.3.12, estándar de procesos prioritarios (subnumeral por confirmar)",
+          "texto_literal": "Toma, identificación, transporte, conservación, embalaje y remisión de las muestras, cuando aplique. [...] Registro de muestras tomadas y muestras remitidas, cuando aplique.",
+          "que_exige": "Procedimiento documentado y registros de cada muestra desde la toma hasta la remisión (incluido el envío al laboratorio de referencia).",
+          "ambiente_programa": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)",
+          "cantidad_minima": "1 puesto de embalaje; cavas para cada ruta (interna por montacargas y externa al laboratorio de referencia)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Mesón con gavetas para preparación, embalaje y remisión (1); Cava de transporte de muestras con registrador (4); Impresora de etiquetas con código de barras y lector (3)",
+          "comentario": "La trazabilidad con código de barras y el LIS (presupuesto.json, indirectos: 'Software e integración: LIS...') sirven para el registro de muestras tomadas y remitidas. El triple embalaje UN3373 está descrito en laboratorio.json (referencia_de_muestras).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)",
+              "piso": 1,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Recepción de muestras, información y entrega de resultados (2 puestos)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "Manual, num. 11.1.4 (todos los servicios); la copia del ICBF lo numera '9.2' (estándar exacto por confirmar)",
+          "texto_literal": "Instrumentos para medir la humedad relativa y la temperatura, en donde se almacenen medicamentos y dispositivos médicos.",
+          "que_exige": "Termohigrómetro con registro donde se guarden tubos, agujas, lancetas, medios de transporte y demás dispositivos médicos de la toma.",
+          "ambiente_programa": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)",
+          "cantidad_minima": "1 termohigrómetro en el sitio donde se guarden los insumos del piso 1",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "",
+          "comentario": "La nevera de muestras ya trae registrador, pero no hay termohigrómetro ambiental en el piso 1 (los 8 de laboratorio quedan en el piso 2). Agregar 1 termohigrómetro con registro: unos $150.000 a $400.000 (estimación, confirmar con 2 cotizaciones).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.1.2 (todos los servicios), definición de unidad sanitaria; el criterio de unidades sanitarias para toma de muestras queda por confirmar",
+          "texto_literal": "Unidad sanitaria: ambiente que cuenta con: Sanitario. Lavamanos.",
+          "que_exige": "Unidades sanitarias para pacientes (muestras de orina y materia fecal, curvas de glucosa).",
+          "ambiente_programa": "Unidades sanitarias públicas del vestíbulo y de toma de muestras (hombres, mujeres, familiar/pediátrica; PMR)",
+          "cantidad_minima": "1 unidad sanitaria accesible como mínimo (la Res. 1633 pide más: ver programa.json)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Obra (presupuesto.json, cap. 8: aparatos sanitarios y 'Lavamanos con grifería de sensor o de codo')",
+          "comentario": "No es dotación sino obra. El programa ya trae 3 unidades sanitarias en el vestíbulo y 1 en la toma de muestras especiales.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Vestíbulo y admisiones",
+              "ambiente": "Unidades sanitarias públicas del vestíbulo y de toma de muestras (hombres, mujeres, familiar/pediátrica; PMR)",
+              "piso": 1,
+              "cantidad": 3
+            },
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Toma de muestras especiales (pediátricas, microbiológicas, curvas de glucosa) con unidad sanitaria",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://normograma.invima.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Res. 591 de 2024 (gestión integral de residuos) y Decreto 780 de 2016; el criterio de la Res. 3100 que lo exige por servicio queda por confirmar",
+          "texto_literal": "por confirmar",
+          "que_exige": "Recipientes de residuos por punto de generación (biosanitarios, cortopunzantes y no peligrosos) en cada cubículo y en la toma especial.",
+          "ambiente_programa": "Cubículo de toma de muestras (flebotomía)",
+          "cantidad_minima": "1 juego de canecas de pedal y 1 recipiente para cortopunzantes por cubículo y por toma especial (6 puntos)",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "",
+          "comentario": "dotacion.json solo trae canecas en urgencias y las del almacenamiento intermedio por piso (tic_apoyo). En toma de muestras no hay. Costo aproximado de $150.000 a $350.000 por punto (estimación); los guardianes son insumo, no dotación.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Cubículo de toma de muestras (flebotomía)",
+              "piso": 1,
+              "cantidad": 4
+            },
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Toma de muestras especiales (pediátricas, microbiológicas, curvas de glucosa) con unidad sanitaria",
+              "piso": 1,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "por_confirmar",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_0591_2024.htm",
+          "tipo_dato": "estimación"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Camilla ginecológica y lámpara (toma de muestras especiales)",
+          "cantidad": 1,
+          "por_que_no_lo_exige_la_3100": "La toma de muestras de laboratorio no pide camilla ginecológica. Las muestras ginecológicas (citología, ADN-VPH, frotis) son otro servicio (toma de muestras de cuello uterino y ginecológicas) que el programa ubica en el piso 2.",
+          "justificacion": "Puede servir para el cultivo rectovaginal de estreptococo del grupo B (laboratorio.json) si se toma en el piso 1.",
+          "recomendacion": "revisar: si ese cultivo se toma en el piso 2, trasladar la camilla a 'Ambiente de toma de muestras (citología, prueba de VPH, frotis)' o quitarla del piso 1."
+        },
+        {
+          "item_dotacion": "Camilla para toma de muestras en posición acostada",
+          "cantidad": 1,
+          "por_que_no_lo_exige_la_3100": "No es un ítem literal del estándar.",
+          "justificacion": "Seguridad del paciente: personas con antecedente de desmayo, niños pequeños y curvas de glucosa. Queda cubierta por el criterio abierto 'equipos biomédicos necesarios, según las muestras que se tomen'.",
+          "recomendacion": "mantener en 'Toma de muestras especiales (pediátricas, microbiológicas, curvas de glucosa) con unidad sanitaria'."
+        },
+        {
+          "item_dotacion": "Impresora de etiquetas con código de barras y lector",
+          "cantidad": 3,
+          "por_que_no_lo_exige_la_3100": "La norma pide identificar las muestras, no un medio concreto.",
+          "justificacion": "Evita errores de identificación y alimenta el LIS.",
+          "recomendacion": "mantener: 2 en 'Recepción de muestras, información y entrega de resultados (2 puestos)' y 1 en 'Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)'."
+        }
+      ],
+      "resumen_cruce": {
+        "exigencias": 7,
+        "cubierto": 5,
+        "parcial": 0,
+        "falta": 2,
+        "excesos_recomendados": 3
+      }
+    },
+    {
+      "id": "imagenes",
+      "nombre_3100": "Servicio de imágenes diagnósticas: 11.3.4.1 métodos con equipos generadores de radiaciones ionizantes (rayos X convencional) y 11.3.4.2 métodos con equipos generadores de radiaciones no ionizantes (ecografía)",
+      "codigo_reps": "744 ionizantes y 745 no ionizantes (tomados de programa.json; por confirmar en la tabla oficial del REPS)",
+      "numeral": "Manual, num. 11.3.4 (11.3.4.1 ionizantes; 11.3.4.2 no ionizantes)",
+      "complejidad": "Texto confirmado: 'Complejidades: Baja, mediana y alta: Aplica para el uso de métodos diagnósticos con imágenes obtenidas a través de equipos generadores de radiaciones ionizantes. Mediana: Aplica para el uso de métodos diagnósticos con imágenes obtenidas a través de equipos generadores de radiaciones no ionizantes.' Por eso la ecografía solo existe como servicio de mediana complejidad, aunque la E.S.E. sea de primer nivel (confirma la alerta de normas.json). El rayos X convencional sin contraste se habilitaría en baja complejidad (qué procedimientos caben en baja: por confirmar en el texto oficial).",
+      "piso": "1 (rayos X) y 2 (ecografía)",
+      "exigencias": [
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.4.1, estándar de dotación, complejidad baja, modalidades intramural y telemedicina – prestador remisor (subnumeral por confirmar)",
+          "texto_literal": "Cumple con los criterios que le sean aplicables de todos los servicios y adicionalmente, cuenta con: Equipo generador de radiación ionizante según los exámenes diagnósticos realizados.",
+          "que_exige": "Un equipo de rayos X que sirva para los exámenes que se ofrezcan.",
+          "ambiente_programa": "Sala de rayos X convencional digital (con blindaje en plomo)",
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Equipo de rayos X digital fijo con detector plano (radiología convencional) (1)",
+          "comentario": "Equipo clase IIb (dotacion.json, a confirmar en el registro sanitario): el Decreto 4725 de 2005 no permite importar ni adquirir equipos biomédicos usados de clases IIb y III (artículo por confirmar), así que debe ser nuevo.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Sala de rayos X convencional digital (con blindaje en plomo)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.4.1, estándar de dotación (subnumeral por confirmar)",
+          "texto_literal": "Delantal plomado. Protector de tiroides.",
+          "que_exige": "Delantal plomado y protector de tiroides para pacientes, acompañantes y personal. El protector de gónadas aparece en la Res. 2003 de 2014 (derogada) y en guías comerciales; en la 3100 no se confirmó.",
+          "ambiente_programa": "Sala de rayos X convencional digital (con blindaje en plomo)",
+          "cantidad_minima": "1 delantal y 1 protector de tiroides como mínimo; se recomiendan tallas adulto y pediátrica",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Elementos de protección radiológica (delantales, protectores de tiroides y gónadas, gafas, biombo plomado) (1 juego)",
+          "comentario": "Especificar en la compra al menos 2 delantales (1 adulto y 1 pediátrico) y 2 protectores de tiroides, con su colgadero. Va en la sala, junto a la puerta del control.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Sala de rayos X convencional digital (con blindaje en plomo)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.4.1, estándar de dotación, complejidad baja, intramural y telemedicina – prestador remisor (subnumeral por confirmar)",
+          "texto_literal": "[...] cuenta con pantalla o monitor grado médico para imágenes radiológicas.",
+          "que_exige": "Monitor grado médico para ver e interpretar las imágenes.",
+          "ambiente_programa": "Oficina del radiólogo y lectura (telerradiología)",
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Monitor de diagnóstico de 2 megapíxeles y estación de visualización DICOM (1)",
+          "comentario": "La especificación mínima del monitor no quedó confirmada: una copia habla de 0,25 mm o menos entre píxeles (criterio de telemedicina que cita normas.json) y la del Invima trae 0,19 mm, 1024 × 768, contraste 500:1 y 250 cd/m². Pedir el más exigente en el pliego.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Oficina del radiólogo y lectura (telerradiología)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.4.1, estándar de infraestructura (subnumeral por confirmar)",
+          "texto_literal": "Ambiente exclusivo, para el equipo generador de radiación ionizante. La dimensión de este ambiente debe ser acorde al tipo de equipo generador de radiación ionizante [...]",
+          "que_exige": "Sala solo para el equipo, del tamaño que pida su ficha técnica.",
+          "ambiente_programa": "Sala de rayos X convencional digital (con blindaje en plomo)",
+          "cantidad_minima": "1 sala de 24 m² (programa.json)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Obra: 'Blindaje con lámina de plomo (≈ 2 mm) en sala de rayos X y periapical...' (presupuesto.json, 4.07) y 'Puertas plomadas de rayos X (2) y visor plomado (1)' (7.06)",
+          "comentario": "Ojo: presupuesto.json cita la Res. 482 de 2018 para el blindaje y la licencia, pero la Res. 1811 de 2025 la reemplazó (MinSalud indica que rige desde el 6 de marzo de 2026 y que ese día queda derogada la 482). El cálculo de blindaje debe hacerse con la 1811.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Sala de rayos X convencional digital (con blindaje en plomo)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.4.1, estándar de infraestructura (subnumeral por confirmar)",
+          "texto_literal": "Área o ambiente de control / comando del equipo, de acuerdo con la tecnología a utilizar, que permita visualización del paciente.",
+          "que_exige": "Puesto de comando desde el que se vea al paciente (visor plomado o cámara).",
+          "ambiente_programa": "Control y comando del equipo",
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Mobiliario de control, vestidores y oficina del radiólogo (1); visor plomado en obra (presupuesto.json, 7.06)",
+          "comentario": "La consola del equipo viene con el rayos X.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Control y comando del equipo",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.4.1, estándar de infraestructura (subnumeral por confirmar)",
+          "texto_literal": "Vestidor de pacientes, con disponibilidad de área para casilleros.",
+          "que_exige": "Vestidor para pacientes con casilleros donde dejar la ropa y objetos metálicos.",
+          "ambiente_programa": "Vestidor de pacientes (2 cubículos con casilleros)",
+          "cantidad_minima": "1 vestidor con casilleros (el programa trae 2 cubículos)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Mobiliario de control, vestidores y oficina del radiólogo (1: 'bancas de vestidor')",
+          "comentario": "La especificación de dotacion.json habla de bancas pero no de casilleros. Agregar 1 módulo de 2 a 4 casilleros con llave (unos $0,4 a $1,2 millones, estimación).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Vestidor de pacientes (2 cubículos con casilleros)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, num. 11.1.2 (infraestructura, todos los servicios), criterio 15 según normas.json; Res. 1811 de 2025 (requisitos de la licencia; artículos por confirmar)",
+          "texto_literal": "El prestador de servicios de salud que utilice equipos generadores de radiaciones ionizantes, cuenta con licencia de práctica médica vigente expedida por la entidad competente.",
+          "que_exige": "Licencia de práctica médica vigente para el rayos X (y para el periapical) antes de habilitar. Para la licencia, la Res. 1811 de 2025 pide, entre otros, registros dosimétricos de un servicio de dosimetría personal autorizado (o el contrato con ese servicio si es la primera licencia) y constancia del curso de protección radiológica de los trabajadores.",
+          "ambiente_programa": "Sala de rayos X convencional digital (con blindaje en plomo)",
+          "cantidad_minima": "1 licencia por equipo o instalación (por confirmar en la 1811)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Ninguno en dotacion.json. presupuesto.json (indirectos, P4) reserva $30 millones para 'licencia y control de calidad de rayos X' (estimación)",
+          "comentario": "Falta presupuestar la dosimetría personal (servicio anual): 6 a 8 dosímetros entre tecnólogos de rayos X y personal de odontología, a unos $0,3 a $0,8 millones por persona al año (estimación, confirmar con 2 cotizaciones). Actualizar las citas de la Res. 482 de 2018 a la Res. 1811 de 2025.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Sala de rayos X convencional digital (con blindaje en plomo)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Manual, num. 11.3.4.1, estándar de procesos prioritarios (subnumeral por confirmar)",
+          "texto_literal": "Verificación de la calidad de la imagen, del equipo generador de radiación ionizante, que incluye la toma de medidas preventivas y correctivas cuando apliquen.",
+          "que_exige": "Pruebas periódicas de control de calidad del equipo y de la imagen, con acciones correctivas.",
+          "ambiente_programa": "Control y comando del equipo",
+          "cantidad_minima": "Según el programa de control de calidad (frecuencia por confirmar en la Res. 1811 de 2025)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "presupuesto.json (indirectos, P4): parte de los $30 millones de 'licencia y control de calidad de rayos X'",
+          "comentario": "Solo está el primer año. El control de calidad periódico lo hace un prestador de servicios de protección radiológica con licencia (Res. 1811 de 2025): incluirlo en el costo anual de operación.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Control y comando del equipo",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://consultorsalud.com/wp-content/uploads/2021/03/Informacion-documentada-obligatorios-por-servicio-curso-res-3100-de-2019-procesos-prioritarios.pdf",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, num. 11.1.2 (infraestructura, todos los servicios), criterio 14",
+          "texto_literal": "En edificaciones donde se presten servicios de [...] imágenes diagnósticas [...] cuentan con planta eléctrica.",
+          "que_exige": "Planta eléctrica para la edificación.",
+          "ambiente_programa": "Planta eléctrica diésel de 250-300 kVA insonorizada, con tanque diario y transferencia automática",
+          "cantidad_minima": "1 para la torre",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Planta eléctrica diésel de 300 kVA con transferencia automática (equipamiento_fijo)",
+          "comentario": "El generador del rayos X es una carga grande: incluirlo en el cuadro de cargas de la planta y la UPS (la UPS central de dotacion.json ya menciona imágenes).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Áreas técnicas y de servicio",
+              "ambiente": "Planta eléctrica diésel de 250-300 kVA insonorizada, con tanque diario y transferencia automática",
+              "piso": "bloque técnico",
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "Manual, num. 11.1.4 (todos los servicios); la copia del ICBF lo numera '9.2'",
+          "texto_literal": "Instrumentos para medir la humedad relativa y la temperatura, en donde se almacenen medicamentos y dispositivos médicos.",
+          "que_exige": "Termohigrómetro en el almacenamiento de dispositivos e insumos de rayos X.",
+          "ambiente_programa": "Almacenamiento de dispositivos médicos e insumos",
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "",
+          "comentario": "Agregar 1 termohigrómetro con registro: unos $150.000 a $400.000 (estimación).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Almacenamiento de dispositivos médicos e insumos",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.4.2, estándar de dotación, complejidad mediana (subnumeral y redacción por confirmar)",
+          "texto_literal": "Disponibilidad de: Ecógrafo.",
+          "que_exige": "Un ecógrafo con los transductores que pidan los exámenes ofrecidos (obstétrico, abdominal, transvaginal).",
+          "ambiente_programa": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Ecógrafo multipropósito con 3 transductores (convexo, lineal, endocavitario) (1)",
+          "comentario": "El buscador devolvió 'Disponibilidad de: Ecógrafo' como parte del 11.3.4.2, pero el fragmento no se pudo leer completo: confirmar que no pida algo más (por ejemplo, impresión o almacenamiento de imágenes).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas no ionizantes (ecografía)",
+              "ambiente": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://normograma.invima.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.1.3 (dotación, todos los servicios), criterio general (subnumeral por confirmar)",
+          "texto_literal": "Se debe contar con los equipos biomédicos necesarios para la valoración y atención de los pacientes, de acuerdo con el tipo de actividades desarrolladas.",
+          "que_exige": "Camilla de examen para ecografía y lo demás que pida la atención.",
+          "ambiente_programa": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+          "cantidad_minima": "1 camilla",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Camilla de ecografía con posiciones (1)",
+          "comentario": "Para ecografía transvaginal conviene camilla con pierneras o posición ginecológica: revisar la especificación.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas no ionizantes (ecografía)",
+              "ambiente": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://normograma.invima.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.4.2, estándar de infraestructura, complejidad mediana, intramural (subnumeral y redacción por confirmar)",
+          "texto_literal": "Unidad sanitaria [...] cuando el procedimiento lo requiera (redacción exacta por confirmar).",
+          "que_exige": "Unidad sanitaria asociada a la sala cuando se hagan ecografías que la necesiten (pélvica con vejiga llena, transvaginal).",
+          "ambiente_programa": "Unidad sanitaria PMR de ecografía",
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Obra (aparatos sanitarios en presupuesto.json, cap. 8)",
+          "comentario": "Ya está en programa.json.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas no ionizantes (ecografía)",
+              "ambiente": "Unidad sanitaria PMR de ecografía",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://normograma.invima.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Por confirmar en la Res. 3100 (procesos prioritarios: limpieza, desinfección y reúso de dispositivos) y en el manual de reprocesamiento adoptado por la Res. 914 de 2025 (citada en normas.json)",
+          "texto_literal": "por confirmar",
+          "que_exige": "Desinfección de alto nivel del transductor endocavitario entre pacientes, con fundas de un solo uso.",
+          "ambiente_programa": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+          "cantidad_minima": "1 sistema de desinfección (manual con contenedor y desinfectante de alto nivel, o automatizado)",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "",
+          "comentario": "Recomendación de seguridad del paciente, no criterio literal confirmado. Opción manual: unos $0,3 a $1,5 millones; automatizada: bastante más (estimaciones a cotizar).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas no ionizantes (ecografía)",
+              "ambiente": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+              "piso": 2,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "por_confirmar",
+          "fuente_url": "https://normograma.invima.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "estimación"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Res. 591 de 2024 (gestión integral de residuos); el criterio de la Res. 3100 que lo exige por servicio queda por confirmar",
+          "texto_literal": "por confirmar",
+          "que_exige": "Recipientes de residuos por punto de generación en la sala de rayos X y en la de ecografía.",
+          "ambiente_programa": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+          "cantidad_minima": "1 juego de canecas por sala (2 puntos)",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "",
+          "comentario": "Unos $150.000 a $350.000 por punto (estimación).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Imágenes diagnósticas no ionizantes (ecografía)",
+              "ambiente": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Sala de rayos X convencional digital (con blindaje en plomo)",
+              "piso": 1,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "por_confirmar",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_0591_2024.htm",
+          "tipo_dato": "estimación"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Impresora térmica para ecografía",
+          "cantidad": 1,
+          "por_que_no_lo_exige_la_3100": "No se encontró exigencia de imprimir: la imagen puede ir al PACS y a la historia clínica.",
+          "justificacion": "Las gestantes suelen pedir la imagen impresa; costo bajo.",
+          "recomendacion": "opcional; si se mantiene, en 'Sala de ecografía (obstétrica, abdominal y transvaginal)'."
+        }
+      ],
+      "resumen_cruce": {
+        "exigencias": 15,
+        "cubierto": 9,
+        "parcial": 3,
+        "falta": 3,
+        "excesos_recomendados": 1
+      }
+    },
+    {
+      "id": "odontologia",
+      "nombre_3100": "Servicio de radiología odontológica (solo la parte de rayos X; el consultorio odontológico pertenece a consulta externa, num. 11.2.1)",
+      "codigo_reps": "748 (tomado de programa.json; por confirmar en la tabla oficial del REPS)",
+      "numeral": "Manual, num. 11.3.3",
+      "complejidad": "Por confirmar: una compilación lo muestra en baja, mediana y alta con modalidades intramural y telemedicina (prestador remisor); otra solo lista modalidades. El periapical intraoral es práctica de categoría I según el concepto del Colegio de Odontólogos sobre la Res. 1811 de 2025.",
+      "piso": 4,
+      "exigencias": [
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.3, estándar de dotación; criterio 10.1 según la copia citada por el Colegio de Odontólogos",
+          "texto_literal": "Cumple con los criterios que le sean aplicables de todos los servicios y adicionalmente, cuenta con: 10.1. Equipo generador de radiación ionizante según los exámenes diagnósticos realizados.",
+          "que_exige": "Un equipo de rayos X odontológico que sirva para los exámenes que se ofrezcan (periapical).",
+          "ambiente_programa": "Rayos X odontológico periapical (blindado)",
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Rayos X periapical de pared con radiovisiógrafo (sensor digital) (1)",
+          "comentario": "El sensor digital necesita un computador en el consultorio (tic_apoyo).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Odontología y radiología odontológica",
+              "ambiente": "Rayos X odontológico periapical (blindado)",
+              "piso": 4,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "solo_fuente_secundaria",
+          "fuente_url": "https://colegiodeodontologos.org/wp-content/uploads/2025/09/Concepto-tecnico-radiovisiografos.pdf",
+          "tipo_dato": "dato oficial citado por fuente secundaria"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.3, estándar de dotación; criterios 10.2 y 10.2.1 según la misma copia (10.2.2 y siguientes por confirmar)",
+          "texto_literal": "Elementos de protección radiológica adulto o pediátrico, según oferta, protocolos y especificaciones técnicas del equipo: 10.2.1. Delantal plomado.",
+          "que_exige": "Delantal plomado en talla adulto y, si se atienden niños, pediátrico. El protector de tiroides y de gónadas aparece en una compilación pero no se leyó el texto.",
+          "ambiente_programa": "Rayos X odontológico periapical (blindado)",
+          "cantidad_minima": "1 adulto + 1 pediátrico",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Elementos de protección radiológica (delantal plomado con protector de tiroides) (2)",
+          "comentario": "Especificar que uno de los 2 sea pediátrico (la consulta odontológica atiende niños).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Odontología y radiología odontológica",
+              "ambiente": "Rayos X odontológico periapical (blindado)",
+              "piso": 4,
+              "cantidad": 2
+            }
+          ],
+          "verificacion_texto": "solo_fuente_secundaria",
+          "fuente_url": "https://colegiodeodontologos.org/wp-content/uploads/2025/09/Concepto-tecnico-radiovisiografos.pdf",
+          "tipo_dato": "dato oficial citado por fuente secundaria"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, num. 11.1.2, criterio 15 (según normas.json); Res. 1811 de 2025",
+          "texto_literal": "El prestador de servicios de salud que utilice equipos generadores de radiaciones ionizantes, cuenta con licencia de práctica médica vigente expedida por la entidad competente.",
+          "que_exige": "Licencia de práctica médica (categoría I) para el periapical, con dosimetría personal y curso del personal.",
+          "ambiente_programa": "Rayos X odontológico periapical (blindado)",
+          "cantidad_minima": "1 licencia",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "La especificación del equipo en dotacion.json dice 'requiere licencia de práctica médica'; el costo está dentro de los $30 millones de presupuesto.json (indirectos, P4)",
+          "comentario": "Falta la dosimetría personal de quienes disparan el equipo (ver imágenes).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Odontología y radiología odontológica",
+              "ambiente": "Rayos X odontológico periapical (blindado)",
+              "piso": 4,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Manual, num. 11.3.3, estándar de procesos prioritarios (subnumeral por confirmar)",
+          "texto_literal": "por confirmar (la guía de ConsultorSalud cita información documentada para 'la toma de exámenes que impliquen el manejo de cualquier tipo de radiación ionizante')",
+          "que_exige": "Protocolo de toma de radiografías y control de calidad del equipo.",
+          "ambiente_programa": "Rayos X odontológico periapical (blindado)",
+          "cantidad_minima": "1 protocolo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Ninguno (proceso)",
+          "comentario": "Incluir el periapical en el contrato de control de calidad de rayos X.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Odontología y radiología odontológica",
+              "ambiente": "Rayos X odontológico periapical (blindado)",
+              "piso": 4,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "solo_fuente_secundaria",
+          "fuente_url": "https://consultorsalud.com/wp-content/uploads/2021/03/Informacion-documentada-obligatorios-por-servicio-curso-res-3100-de-2019-procesos-prioritarios.pdf",
+          "tipo_dato": "fuente secundaria"
+        }
+      ],
+      "excesos_recomendados": [],
+      "resumen_cruce": {
+        "exigencias": 4,
+        "cubierto": 2,
+        "parcial": 2,
+        "falta": 0,
+        "excesos_recomendados": 0
+      }
+    },
+    {
+      "id": "tic_apoyo",
+      "nombre_3100": "No es un servicio habilitable: soporte transversal de los estándares de historia clínica y registros, y de telemedicina (telerradiología) de todos los servicios",
+      "codigo_reps": "No aplica",
+      "numeral": "Manual, num. 11.1 (todos los servicios): estándar de historia clínica y registros (numeral 11.1.6 por confirmar) y criterios de telemedicina de los estándares de infraestructura y dotación (normas.json los ubica en 11.1.2, criterios 51-53, y 11.1.3, criterio 17: por confirmar)",
+      "complejidad": "No aplica",
+      "piso": "todos",
+      "exigencias": [
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, estándar de historia clínica y registros, todos los servicios (numeral 11.1.6 y criterio por confirmar)",
+          "texto_literal": "Los medios electrónicos para la gestión de la historia clínica garantizan la confidencialidad y seguridad, así como el carácter permanente de registrar en esta y en otros registros asistenciales, sin que se puedan modificar los datos una vez se guarden los registros.",
+          "que_exige": "Historia clínica electrónica segura e inalterable, con puestos de registro en cada ambiente asistencial. Marco complementario: Ley 2015 de 2020 (historia clínica electrónica interoperable), Res. 866 de 2021 y Res. 1888 de 2025 (resumen digital de atención), artículos por confirmar.",
+          "ambiente_programa": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+          "cantidad_minima": "Cálculo propio para estos servicios: toma de muestras 2 (recepción) + 1 (preparación); laboratorio 8 (recepción interna, 6 áreas técnicas y oficina); rayos X 2 (control y oficina); ecografía 1; periapical 1 = 15 de los 70",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Computador todo en uno con UPS pequeña para puestos asistenciales y administrativos (70); software de historia clínica, LIS e interoperabilidad en presupuesto.json (indirectos: 'Software e integración...')",
+          "comentario": "La confidencialidad e inalterabilidad dependen del software (Xenco y LIS), no del computador: exigir bitácora de auditoría y firma electrónica.",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Recepción de muestras, información y entrega de resultados (2 puestos)",
+              "piso": 1,
+              "cantidad": 2
+            },
+            {
+              "servicio_programa": "Toma de muestras de laboratorio clínico",
+              "ambiente": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)",
+              "piso": 1,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Recepción interna de muestras (llegada del montacargas y del tubo neumático), registro y clasificación",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: centrifugación y alícuotas (preanalítica)",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: hematología y coagulación",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: química clínica e inmunoensayo",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: inmunología y pruebas rápidas (VIH, sífilis, hepatitis, dengue)",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Área técnica: uroanálisis, coprológico, parasitología y gota gruesa (malaria)",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Laboratorio clínico",
+              "ambiente": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Control y comando del equipo",
+              "piso": 1,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+              "ambiente": "Oficina del radiólogo y lectura (telerradiología)",
+              "piso": 1,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Imágenes diagnósticas no ionizantes (ecografía)",
+              "ambiente": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+              "piso": 2,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Odontología y radiología odontológica",
+              "ambiente": "Consultorio odontológico con 3 unidades separadas por barrera",
+              "piso": 4,
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, criterios de telemedicina de todos los servicios (numeral por confirmar); aplica porque imágenes se habilita también en modalidad telemedicina – prestador remisor (telerradiología)",
+          "texto_literal": "[...] los parámetros de digitalización y compresión [...] garantizan la resolución necesaria para permitir el diagnóstico [...] (redacción exacta por confirmar). Los documentos de la plataforma tecnológica los firma un ingeniero de sistemas con tarjeta profesional vigente (contenido confirmado; redacción por confirmar).",
+          "que_exige": "Plataforma de telerradiología que conserve la calidad diagnóstica de la imagen, con certificaciones técnicas firmadas.",
+          "ambiente_programa": "Cuarto principal de telecomunicaciones y UPS",
+          "cantidad_minima": "1 PACS/RIS; enlace de datos con respaldo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "PACS/RIS para imágenes con licencias y almacenamiento (telerradiología) (1); Red de voz y datos (cableado categoría 6A, equipos activos y Wi-Fi) (equipamiento_fijo)",
+          "comentario": "Falta la parte documental: certificación del ingeniero de sistemas sobre la plataforma y el ancho de banda, y del ingeniero biomédico sobre la digitalización (esta última solo aparece en normas.json, por confirmar). El enlace de datos está en programa.json (cubierta).",
+          "distribucion_por_ambiente": [
+            {
+              "servicio_programa": "Apoyo y áreas técnicas del piso 1",
+              "ambiente": "Cuarto principal de telecomunicaciones y UPS",
+              "piso": 1,
+              "cantidad": 1
+            },
+            {
+              "servicio_programa": "Áreas técnicas y de servicio",
+              "ambiente": "Antena y enlace de datos (telemedicina, MinTIC), pararrayos y línea de vida",
+              "piso": "cubierta",
+              "cantidad": 1
+            }
+          ],
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://normograma.invima.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Impresora láser",
+          "cantidad": 12,
+          "por_que_no_lo_exige_la_3100": "No es exigencia de habilitación.",
+          "justificacion": "Fórmulas, órdenes y resultados en papel para quien no tenga acceso digital.",
+          "recomendacion": "mantener; revisar cantidad si se adopta entrega digital de resultados."
+        },
+        {
+          "item_dotacion": "Sistema de turnos y pantallas informativas (digiturno)",
+          "cantidad": 1,
+          "por_que_no_lo_exige_la_3100": "No es exigencia de habilitación.",
+          "justificacion": "Ordena la fila de 6 a 9 a. m. en toma de muestras.",
+          "recomendacion": "mantener: 1 pantalla en 'Sala de espera de toma de muestras (15 personas)'."
+        },
+        {
+          "item_dotacion": "Silla de ruedas para el vestíbulo y traslados",
+          "cantidad": 4,
+          "por_que_no_lo_exige_la_3100": "No se exige en los servicios de apoyo diagnóstico (sí en hospitalización, otro servicio).",
+          "justificacion": "Accesibilidad y traslado a rayos X y toma de muestras.",
+          "recomendacion": "mantener."
+        },
+        {
+          "item_dotacion": "Camilla de transporte adicional (ascensor y puente al edificio actual)",
+          "cantidad": 1,
+          "por_que_no_lo_exige_la_3100": "No se exige en apoyo diagnóstico.",
+          "justificacion": "Traslado de pacientes de hospitalización a rayos X y ecografía.",
+          "recomendacion": "mantener."
+        },
+        {
+          "item_dotacion": "Tándem de sillas del vestíbulo principal y espera general (4 puestos)",
+          "cantidad": 10,
+          "por_que_no_lo_exige_la_3100": "La 3100 pide salas de espera como infraestructura, no su mobiliario.",
+          "justificacion": "Sala de espera de toma de muestras y vestíbulo.",
+          "recomendacion": "mantener: incluir 4 tándem (15 puestos) en 'Sala de espera de toma de muestras (15 personas)' si no están contados en otro servicio."
+        },
+        {
+          "item_dotacion": "Lockers de personal (módulos de 6 puestos)",
+          "cantidad": 12,
+          "por_que_no_lo_exige_la_3100": "No es exigencia de habilitación en estos servicios.",
+          "justificacion": "Vestidores del personal por piso (Res. 1633, según el repositorio).",
+          "recomendacion": "mantener."
+        }
+      ],
+      "nota_residuos": "El ítem 'Canecas y contenedores de almacenamiento intermedio de residuos por piso' (3) no es exceso: cubre el almacenamiento intermedio de la Res. 591 de 2024 en 'Unidad de almacenamiento intermedio de residuos' de los pisos 1, 2 y 4 (programa.json). No reemplaza las canecas por punto de generación que faltan en toma de muestras, laboratorio e imágenes.",
+      "resumen_cruce": {
+        "exigencias": 2,
+        "cubierto": 1,
+        "parcial": 1,
+        "falta": 0,
+        "excesos_recomendados": 6
+      }
+    }
+  ],
+  "faltantes_prioritarios": [
+    {
+      "que": "Dosimetría personal (servicio anual) para el personal de rayos X y periapical",
+      "donde": "Sala de rayos X convencional digital (con blindaje en plomo) / Rayos X odontológico periapical (blindado)",
+      "cantidad": "6 a 8 dosímetros",
+      "costo_cop_2026": "≈ $1,8 a $6,4 millones al año",
+      "tipo": "estimación",
+      "norma": "Res. 1811 de 2025 (requisito de la licencia; artículo por confirmar) y Res. 3100, num. 11.1.2, criterio 15"
+    },
+    {
+      "que": "Termohigrómetros con registro",
+      "donde": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia) / Almacenamiento de dispositivos médicos e insumos",
+      "cantidad": 2,
+      "costo_cop_2026": "≈ $0,3 a $0,8 millones",
+      "tipo": "estimación",
+      "norma": "Res. 3100, num. 11.1.4"
+    },
+    {
+      "que": "Casilleros en el vestidor de pacientes de rayos X",
+      "donde": "Vestidor de pacientes (2 cubículos con casilleros)",
+      "cantidad": "1 módulo de 2 a 4 casilleros",
+      "costo_cop_2026": "≈ $0,4 a $1,2 millones",
+      "tipo": "estimación",
+      "norma": "Res. 3100, num. 11.3.4.1 (infraestructura)"
+    },
+    {
+      "que": "Recipientes de residuos por punto de generación",
+      "donde": "Cubículos y toma especial (6), áreas técnicas y lavado del laboratorio (7), salas de rayos X y ecografía (2)",
+      "cantidad": "15 puntos",
+      "costo_cop_2026": "≈ $2,3 a $5,3 millones",
+      "tipo": "estimación",
+      "norma": "Res. 591 de 2024; criterio de la 3100 por confirmar"
+    },
+    {
+      "que": "Desinfección de alto nivel del transductor endocavitario",
+      "donde": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+      "cantidad": 1,
+      "costo_cop_2026": "≈ $0,3 a $1,5 millones (opción manual)",
+      "tipo": "estimación",
+      "norma": "por confirmar (Res. 914 de 2025 / procesos prioritarios)"
+    },
+    {
+      "que": "Control de calidad periódico de rayos X y periapical (después del primer año)",
+      "donde": "Control y comando del equipo",
+      "cantidad": "anual",
+      "costo_cop_2026": "por cotizar",
+      "tipo": "estimación",
+      "norma": "Res. 3100, num. 11.3.4.1 (procesos prioritarios) y Res. 1811 de 2025"
+    }
+  ],
+  "correcciones_sugeridas_al_repositorio": [
+    "presupuesto.json (ítem 4.07 e indirectos P4) cita la Res. 482 de 2018: cambiar por la Res. 1811 de 2025.",
+    "programa.json trata la toma de muestras (712) como servicio aparte: con el laboratorio habilitado en la misma sede no hace falta habilitarla (Res. 3100, num. 11.3.12, texto confirmado).",
+    "La alerta de normas.json sobre la ecografía queda confirmada: la 3100 solo la admite en mediana complejidad.",
+    "La especificación de 'Elementos de protección radiológica' de imágenes y odontología debe pedir tallas adulto y pediátrica.",
+    "La 'Camilla ginecológica y lámpara (toma de muestras especiales)' del piso 1 debería revisarse: las muestras ginecológicas son otro servicio, ubicado en el piso 2."
+  ],
+  "verificacion": "1) Se leyó primero lo que trae el repositorio: docs/11 (secciones 5 y 11), normas.json (servicios_3100 y res_3100_2019), dotacion.json (servicios toma_muestras, laboratorio, imagenes, odontologia, tic_apoyo y equipamiento_fijo), programa.json (servicios y ambientes), laboratorio.json (equipos, calidad, LIS y remisión) y presupuesto.json (blindaje, licencia, software y lavamanos). 2) Desde esta sesión no se pudo abrir ninguna fuente primaria: el proxy rechazó normograma.supersalud.gov.co, minsalud.gov.co, funcionpublica.gov.co, invima.gov.co y otros, y la herramienta de lectura web no resolvía ningún dominio. 3) Los textos se recuperaron con unas 30 búsquedas web dirigidas (varias limitadas a los dominios icbf.gov.co, cancilleria.gov.co, invima.gov.co, minsalud.gov.co y supersalud.gov.co), que devuelven fragmentos de las compilaciones oficiales de la Res. 3100 (copias del mismo texto de Avance Jurídico que publica Supersalud). Una frase se marcó 'literal_confirmado' solo cuando el buscador la devolvió entre comillas desde una compilación oficial; 'contenido_confirmado_redaccion_por_confirmar' cuando el contenido aparecía pero el fragmento estaba cortado o la numeración no era clara; 'solo_fuente_secundaria' cuando el texto de la norma solo se vio citado por un tercero (Colegio de Odontólogos, ConsultorSalud); y 'por_confirmar' cuando no apareció. Las copias numeran distinto los criterios (por ejemplo '12.1' o '9.2'), y así se dice en cada caso. 4) La vigencia (revocatoria de la Res. 1732 de 2026 por la Res. 2080 de 2026) y la Res. 1811 de 2025 se confirmaron con varias fuentes coincidentes, entre ellas el régimen legal de la Alcaldía de Bogotá y el PDF de MinSalud listado por el buscador. 5) Cada exigencia se cruzó con los nombres exactos de dotacion.json y de programa.json; el script que generó este archivo comprueba que todos los ambientes y los ítems de excesos existan (ver control_*). 6) Pendiente: cotejar todo contra el PDF oficial del Ministerio, confirmar subnumerales y los códigos REPS, y leer los anexos de la Res. 1811 de 2025.",
+  "control_ambientes_no_encontrados": [],
+  "control_nombres_excesos_no_encontrados": [],
+  "control_items_de_dotacion_no_mencionados": {
+    "toma_muestras": [],
+    "laboratorio": [],
+    "imagenes": [],
+    "tic_apoyo": []
+  }
+}
