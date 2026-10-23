@@ -1,0 +1,2 @@
+# Railway (Railpack) sirve site/ con Caddy; railpack.json lo genera con los scripts de Python
+root: site
