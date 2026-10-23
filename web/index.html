@@ -352,6 +352,17 @@ details.fold > summary:hover { color: var(--accent); }
 .spark svg .band { fill: var(--line); opacity: 0.25; } .spark svg .band.alt { opacity: 0.12; } .spark svg .band.on { fill: var(--accent); opacity: 0.16; }
 .spark svg text { font: 8px var(--f-mono); fill: var(--muted); }
 .spark .delta { font: 600 0.72rem var(--f-mono); color: var(--muted); } .spark .delta.good { color: var(--good); } .spark .delta.bad { color: var(--bad); }
+/* Torre del hospital: contenedores de los modos nuevos (recorrido y simulador, especificación de integración 10.3). La capa
+   del recuadro no recibe clics (la cámara sigue funcionando); lo que cada modo ponga dentro de su contenedor, sí */
+[data-scene="torre"] .torre-hud { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+[data-scene="torre"] .torre-hud > [data-slot] > * { pointer-events: auto; }
+#v-torre [data-slot="torre.capas"] { margin-top: 8px; }
+/* >>> torre-recorrido (equipo C) */
+/* <<< torre-recorrido */
+/* >>> torre-sismo (equipo D) */
+/* <<< torre-sismo */
+/* >>> torre-contraste (equipo E) */
+/* <<< torre-contraste */
 </style>
 
 <header class="top">
@@ -616,7 +627,7 @@ details.fold > summary:hover { color: var(--accent); }
       <p class="stamp" data-t="torre.stamp"></p>
     </div>
     <div class="board">
-      <div class="stage" data-scene="torre"><span class="stage-hint">Arrastra para girar · en «Pisos por servicio» toca un piso para ver sus ambientes</span><div class="leyenda3d leyenda-servicios" aria-hidden="true" data-slot="torre.leyenda"></div></div>
+      <div class="stage" data-scene="torre"><span class="stage-hint">Arrastra para girar · en «Pisos por servicio» toca un piso para ver sus ambientes</span><div class="leyenda3d leyenda-servicios" aria-hidden="true" data-slot="torre.leyenda"></div><div class="torre-hud" data-slot="torre.hud"><div data-slot="torre.hud.recorrido" hidden></div><div data-slot="torre.hud.sismo" hidden></div></div></div>
       <div class="folder">
         <div class="card">
           <h3>Ver</h3>
@@ -625,12 +636,20 @@ details.fold > summary:hover { color: var(--accent); }
             <button type="button" data-modo-torre="torre" aria-pressed="true">Con la torre</button>
             <button type="button" data-modo-torre="pisos" aria-pressed="false">Pisos por servicio</button>
             <button type="button" data-modo-torre="laboratorio" aria-pressed="false">Laboratorio</button>
+            <button type="button" data-modo-torre="recorrido" aria-pressed="false">Recorrer por dentro</button>
+            <button type="button" data-modo-torre="sismo" aria-pressed="false">Simulador sísmico</button>
+          </div>
+          <div class="seg wrap-seg" role="group" aria-label="Capas de «Con la torre»" data-slot="torre.capas">
+            <button type="button" data-capa-torre="tipo" aria-pressed="false" title="Muestra junto a la torre, a la misma escala, el área del puesto de salud tipo del DNP">Proyecto tipo</button>
           </div>
           <div class="tiles" style="margin-top:10px" data-slot="torre.tiles"></div>
         </div>
-        <div class="card" data-slot="torre.ficha"><p class="note">En «Pisos por servicio», toca un piso para ver sus ambientes y áreas.</p></div>
+        <div class="card" data-slot="torre.panel" hidden><div data-slot="torre.panel.recorrido" hidden></div><div data-slot="torre.panel.sismo" hidden></div></div>
+        <div class="card" data-slot="torre.ficha"><div data-slot="torre.ficha.base"><p class="note">En «Pisos por servicio», toca un piso para ver sus ambientes y áreas.</p></div><div data-slot="torre.ficha.modo" hidden></div></div>
       </div>
     </div>
+    <div class="card" data-slot="torre.sismo" hidden><h3>Lo que calculó el simulador</h3><div data-slot="torre.sismo.graficas"></div></div>
+    <div class="card"><h3>Dotación para la habilitación, servicio por servicio</h3><div data-slot="torre.habilitacion"></div></div>
     <div class="cols two">
       <div class="card"><h3>Programa por piso</h3><div class="tbl-wrap" data-slot="torre.pisos"></div></div>
       <div class="card"><h3>Lo que pide la norma para la viabilidad</h3><div data-slot="torre.norma"></div></div>
@@ -645,7 +664,7 @@ details.fold > summary:hover { color: var(--accent); }
       <div class="card"><h3>Dotación por servicio</h3><div class="tbl-wrap" data-slot="torre.dotacion"></div></div>
       <div class="card"><h3>Laboratorio clínico con tamizaje</h3><div data-slot="torre.laboratorio"></div></div>
     </div>
-    <div class="card"><h3>El proyecto tipo que la inspira</h3><div data-slot="torre.tipo"></div></div>
+    <div class="card"><h3>Contraste con el proyecto tipo</h3><div data-slot="torre.tipo"></div></div>
   </section>
 
   <section class="view" id="v-hospital" data-view="hospital" hidden>

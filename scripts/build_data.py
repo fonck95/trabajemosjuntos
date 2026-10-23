@@ -166,6 +166,7 @@ EDIFICIOS = []
 for f in sorted((D / 'edificios').glob('*.json')):
     s = json.loads(f.read_text(encoding='utf-8'))
     if s.get('reemplazado_por'): continue   # levantamiento reemplazado por otra especificación (no se dibuja)
+    if 'lat' not in s or 'lon' not in s: continue   # no es una sede: plantas y trazado de la torre (torre_hospital_plantas.json…)
     m = manifest.get(s['id'], {})
     ad = s.get('adecuaciones', {})
     vols = s.get('volumenes', [])
@@ -211,13 +212,337 @@ if _din:
 _panel = opt('comparativa/panel_anual.json')
 PANEL = {'anios': _panel.get('anios', []), 'indicadores': _panel.get('indicadores', [])} if _panel else {}
 
+# --- Datos de los modos nuevos de la torre (recorrido, dotación para la habilitación, contraste y simulador sísmico):
+# especificación de integración, 10.1. Cada archivo se escribe solo si su insumo existe y está al día; si falta, se avisa y
+# se sigue (los equipos que los generan trabajan en paralelo). Los generados guardan insumos_sha1 = {archivo: sha1}: si un
+# insumo cambió después de generarlos, no se exportan hasta regenerarlos (así CI no necesita pasos nuevos).
+import hashlib
+AVISOS_WEB = []
+LIMITES_KB = {'torre.json': 620, 'torre_plantas.json': 500, 'torre_inventario.json': 700, 'torre_habilitacion.json': 300,
+              'torre_contraste.json': 150, 'sismo_torre_estructura.json': 250, 'sismo_amenaza.json': 90}
+# carpetas donde se buscan los insumos que nombra insumos_sha1 (por nombre de archivo, o por ruta desde la raíz si la trae)
+_CARPETAS_INSUMOS = [D / 'edificios', D / 'proyectos/torre_hospital', D / 'sismo', D, D / 'proyectos/torre_hospital/fuentes_investigacion', D / 'sismo/fuentes_investigacion']
+# campos internos que no llegan a la web (10.1): trazas de origen, notas internas, huellas y rutas de archivo
+_INTERNOS = {'origen', 'ref', 'fuente_reparto', 'nota_interna', 'insumos_sha1', 'sha256_dotacion', 'generado_por'}
+
+def _aviso(m):
+    AVISOS_WEB.append(m)
+    print('  AVISO:', m)
+
+def _escribir_web(nombre, obj):
+    ruta = R / 'web/data' / nombre
+    ruta.write_text(json.dumps(obj, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+    kb = ruta.stat().st_size / 1024
+    lim = LIMITES_KB.get(nombre)
+    print(f'{nombre} {kb:.0f} KB' + (f' (máximo {lim} KB)' if lim else ''))
+    if lim and kb > lim:
+        _aviso(f'{nombre} pesa {kb:.0f} KB y el máximo del contrato es {lim} KB')
+
+def _no_exportar(nombre, motivo):
+    """No escribe el archivo web y borra la copia vieja, para que la vista no muestre datos desactualizados."""
+    _aviso(f'{nombre} no se exporta: {motivo}')
+    vieja = R / 'web/data' / nombre
+    if vieja.exists():
+        vieja.unlink()
+
+def _ausente(nombre, ruta):
+    """El insumo todavía no existe: no se escribe el archivo web (y se borra una copia vieja, que ya no tendría de dónde salir)."""
+    print(f'{nombre}: todavía no existe {ruta.relative_to(R)}; no se escribe')
+    vieja = R / 'web/data' / nombre
+    if vieja.exists():
+        vieja.unlink()
+
+def _sha(ruta, algo='sha1'):
+    return hashlib.new(algo, Path(ruta).read_bytes()).hexdigest()
+
+def _ruta_insumo(nombre):
+    if '/' in nombre and (R / nombre).exists():
+        return R / nombre
+    return next((c / nombre for c in _CARPETAS_INSUMOS if (c / nombre).exists()), None)
+
+def _al_dia(nombre_web, gen, ruta_gen):
+    """True si insumos_sha1 de gen coincide con los archivos actuales; si no, avisa por qué."""
+    hs = gen.get('insumos_sha1')
+    if not isinstance(hs, dict) or not hs:
+        _no_exportar(nombre_web, f'{ruta_gen.relative_to(R)} no trae insumos_sha1')
+        return False
+    malos = []
+    for n_, h in hs.items():
+        r = _ruta_insumo(n_)
+        if r is None:
+            malos.append(f'{n_} (no se encuentra)')
+        elif _sha(r) != h:
+            malos.append(f'{n_} (cambió)')
+    if malos:
+        _no_exportar(nombre_web, f'{ruta_gen.relative_to(R)} está desactualizado frente a ' + ', '.join(malos) + '; hay que regenerarlo')
+        return False
+    return True
+
+def _cargar_generado(nombre_web, ruta):
+    """Lee un archivo generado si existe y está al día; si no, None (con aviso cuando existe pero no sirve)."""
+    if not ruta.exists():
+        _ausente(nombre_web, ruta)
+        return None
+    try:
+        gen = json.loads(ruta.read_text(encoding='utf-8'))
+    except ValueError as e:
+        _no_exportar(nombre_web, f'{ruta.relative_to(R)} no es JSON válido ({e})')
+        return None
+    return gen if _al_dia(nombre_web, gen, ruta) else None
+
+def _sin_internos(o):
+    if isinstance(o, dict):
+        return {k: _sin_internos(v) for k, v in o.items() if k not in _INTERNOS}
+    if isinstance(o, list):
+        return [_sin_internos(x) for x in o]
+    return o
+
+def _redondear(o, d=2):
+    if isinstance(o, float):
+        return round(o, d)
+    if isinstance(o, dict):
+        return {k: _redondear(v, d) for k, v in o.items()}
+    if isinstance(o, list):
+        return [_redondear(x, d) for x in o]
+    return o
+
+def _fuentes(texto):
+    """Las referencias del campo «fuente» (separadas por «;» fuera de paréntesis), todas y no solo la primera (4.5)."""
+    if not texto:
+        return []
+    partes, nivel, act = [], 0, ''
+    for ch in str(texto):
+        nivel += (ch == '(') - (ch == ')')
+        if ch == ';' and nivel <= 0:
+            partes.append(act); act = ''
+        else:
+            act += ch
+    partes.append(act)
+    return [x.strip() for x in partes if x.strip()]
+
+_INV_DATOS = {}
+def _web_torre_inventario_datos():
+    """inventario_dotacion.json si existe, está al día y coincide con el dotacion.json actual (sha256_dotacion); si no, None."""
+    if 'v' not in _INV_DATOS:
+        ruta = D / 'proyectos/torre_hospital/inventario_dotacion.json'
+        inv = _cargar_generado('torre_inventario.json', ruta)
+        dot = D / 'proyectos/torre_hospital/dotacion.json'
+        if inv is not None and inv.get('sha256_dotacion') != _sha(dot, 'sha256'):
+            _no_exportar('torre_inventario.json', 'sha256_dotacion del inventario no corresponde al dotacion.json actual; hay que regenerarlo')
+            inv = None
+        _INV_DATOS['v'] = inv
+    return _INV_DATOS['v']
+
+def _item_de_linea(l, dot, lab):
+    """El ítem de dotacion.json (o de laboratorio.json) al que apunta la ref de una línea del inventario."""
+    r, o = l.get('ref') or {}, l.get('origen')
+    try:
+        if o == 'laboratorio':
+            return lab.get('equipos', [])[r['idx']]
+        if o == 'cierre_brechas':
+            return (dot.get('cierre_brechas_habilitacion') or {}).get('items', [])[r['idx']]
+        if r.get('lista') == 'equipamiento_fijo':
+            return dot.get('equipamiento_fijo', [])[r['idx']]
+        srv = next(s_ for s_ in dot.get('servicios', []) if s_.get('id') == r.get('servicio'))
+        return srv.get(r.get('lista'), [])[r['idx']]
+    except (KeyError, IndexError, TypeError, StopIteration):
+        return None
+
+def _precio(item, origen):
+    """Precio, rango, tipo, fuentes y método de una línea: una sola fuente de precio, la de dotacion.json o laboratorio.json (10.1)."""
+    if origen == 'laboratorio':
+        pm = item.get('precio_mercado') or {}
+        return {'precio': pm.get('valor'), 'rango': pm.get('rango'), 'tipo_precio': pm.get('tipo') or 'valor_de_mercado',
+                'fuentes_precio': _fuentes(pm.get('fuente')), 'metodo_precio': pm.get('metodo') or item.get('metodo_precio') or ''}
+    return {'precio': item.get('precio_unitario_cop_2026'), 'rango': item.get('rango_precio_unitario_cop_2026'), 'tipo_precio': item.get('tipo_precio') or 'por_cotizar',
+            'fuentes_precio': _fuentes(item.get('fuente')), 'metodo_precio': item.get('metodo_precio') or ''}
+
+_RE_COMP = __import__('re').compile(r'^(U-.+-\d{3})-c\d+$')
+def torre_inventario_web(inv, dot, lab, cat, imp, hab):
+    """Forma web compacta del inventario (10.2)."""
+    lineas, idx_linea = [], {}
+    for l in inv.get('lineas', []):
+        item = _item_de_linea(l, dot, lab)
+        if item is None or (item.get('nombre') and item.get('nombre') != l.get('nombre')):
+            raise ValueError(f'la línea {l.get("id")} no corresponde a su ítem de la dotación ({l.get("ref")})')
+        cr, mt, rg = l.get('clase_riesgo') or {}, l.get('mantenimiento') or {}, l.get('registro_invima') or {}
+        w = {'id': l['id'], 'nombre': l.get('nombre'), 'servicio': l.get('servicio'), 'tipo': l.get('tipo'), 'cantidad': l.get('cantidad'),
+             'modelo3d': l.get('modelo3d'), 'especificacion': l.get('especificacion'),
+             'clase': {'vigente': cr.get('vigente'), 'estado': cr.get('estado'), 'revision': l.get('clase_riesgo_revision')},
+             'registro': {k: rg.get(k) for k in ('requerido', 'via', 'usado_permitido', 'nota') if k in rg},
+             'exigencias': [{'id': e.get('id'), 'exigible': e.get('exigible')} for e in l.get('exigencias') or []],
+             'prioridad': l.get('prioridad'), 'prioridad_revisada': l.get('prioridad_revisada'), 'norma_base': l.get('norma_base'),
+             'mantenimiento': {k: mt.get(k) for k in ('anual_pct', 'vida_util_anios', 'personal_inscrito_invima', 'calibracion')},
+             'componentes': l.get('componentes') or [], 'plantilla': l.get('plantilla_contenido'),
+             **_precio(item, l.get('origen'))}
+        for k in ('justificacion_recomendado', 'nota_exigencias', 'adquisicion', 'en_presupuesto', 'nota_precio', 'tecnologia_controlada', 'es_dispositivo_medico'):
+            if l.get(k) is not None:
+                w[k] = l[k]
+        idx_linea[l['id']] = len(lineas)
+        lineas.append(_sin_internos(w))
+    us = inv.get('unidades', [])
+    idx_u = {u['id']: i for i, u in enumerate(us)}
+    filas = []
+    for u in us:
+        x, y, z = (list(u.get('posicion') or []) + [0.0, 0.0, 0.0])[:3]
+        m_ = _RE_COMP.match(u['id'])
+        filas.append([u['id'], idx_linea[u['linea']], u.get('piso'), u.get('recinto'), round(x, 3), round(y, 3), round(z, 3), round(u.get('rotacion_z') or 0.0, 4),
+                      idx_u.get(u.get('apoyo'), -1), idx_u.get(u.get('dentro_de'), -1), idx_u.get(m_.group(1), -1) if m_ else -1, u.get('montaje'), u.get('estado')])
+    modelos = (cat or {}).get('modelos', {})
+    usados = sorted({l['modelo3d'] for l in lineas if l.get('modelo3d')})
+    falta = [m_ for m_ in usados if m_ not in modelos]
+    if falta:
+        raise ValueError(f'modelos 3D sin entrada en catalogo_equipos.json: {falta}')
+    catalogo = {}
+    for m_ in usados:
+        c = modelos[m_]
+        catalogo[m_] = {'f': c.get('familia'), 'dim': c.get('dim_m'), 'b': c.get('b_m', min(c['dim_m'][0], c['dim_m'][1]) / 2), 'mont': c.get('montaje'), 'anc': c.get('anclaje'),
+                        'masa': c.get('masa_kg'), 'hcg': c.get('h_cg_m'), 'mu': c.get('mu'), 'cont': bool(c.get('contenedor')), 'comp': c.get('compartimientos', [])}
+    implementos = {}
+    for nom_, pl in ((imp or {}).get('plantillas') or {}).items():
+        implementos[nom_] = [{k2: v for k2, v in (('n', it.get('nombre')), ('c', it.get('cantidad')), ('comp', it.get('compartimiento')), ('tipo', it.get('tipo')),
+                                                ('verif', it.get('verificacion')), ('clase', it.get('clase_riesgo')), ('reg', (it.get('registro_invima') or {}).get('requerido')),
+                                                ('fuente', it.get('fuente'))) if v is not None} for it in pl.get('items', [])]
+    # por recinto, el estado de la matriz y sus exigencias exigibles (las por confirmar van solo en el conteo, 4.8)
+    exigible = {e.get('id'): e.get('exigible') for sv in (hab or {}).get('servicios', []) for e in sv.get('exigencias') or [] if isinstance(e, dict)}
+    recintos = {rid: {'estado': r.get('estado'), 'exig': [x for x in r.get('exigencias', []) if exigible.get(x, 'si') == 'si'], 'por_confirmar': r.get('por_confirmar', 0)}
+                for rid, r in ((hab or {}).get('por_recinto') or {}).items()}
+    # totales: por servicio, sumados aquí con los precios de la dotación; el resto (laboratorio, habilitación, cierre) del inventario
+    por_srv = {}
+    for f in filas:
+        l = lineas[f[1]]
+        t = por_srv.setdefault(l['servicio'], {'unidades': 0, 'equipos_cop_2026': 0, 'mobiliario_cop_2026': 0})
+        t['unidades'] += 1
+        if _RE_COMP.match(f[0]) or l.get('tipo') not in ('equipo', 'mobiliario') or (l['id'].split('-')[-2] in ('c', 'x')):
+            continue
+        t[{'equipo': 'equipos_cop_2026', 'mobiliario': 'mobiliario_cop_2026'}[l['tipo']]] += l.get('precio') or 0
+    tot_inv = inv.get('totales') or {}
+    totales = {'por_servicio': por_srv, **{k: tot_inv[k] for k in ('laboratorio_json', 'habilitacion_cop_2026', 'cierre_brechas') if k in tot_inv}}
+    return {'v': 2, 'catalogo': catalogo, 'lineas': lineas,
+            'columnas_unidades': ['id', 'linea_idx', 'piso', 'recinto', 'x', 'y', 'z', 'rot_z', 'apoyo_idx', 'dentro_de_idx', 'componente_de_idx', 'montaje', 'estado'],
+            'unidades': filas, 'implementos': implementos, 'recintos': recintos, 'totales': _sin_internos(totales)}
+
+def torre_plantas_web(pl):
+    """Forma compacta de las plantas (3.3): citas repetidas en una tabla (cada objeto lleva su índice en «cita»), sin
+    poligono_libre ni fuentes largas, coordenadas con 2 decimales."""
+    citas = list(pl.get('citas') or [])
+    def cita(t):
+        if t is None:
+            return None
+        if t not in citas:
+            citas.append(t)
+        return citas.index(t)
+    niveles = []
+    for nv in pl.get('niveles', []):
+        nv = dict(nv)
+        rs = []
+        for r in nv.get('recintos', []):
+            r = {k: v for k, v in r.items() if k != 'poligono_libre'}
+            if isinstance(r.get('minimo_1633'), dict):
+                r['minimo_1633'] = {**r['minimo_1633'], 'cita': cita(r['minimo_1633'].get('cita'))}
+            if isinstance(r.get('climatizacion'), dict) and r['climatizacion'].get('fuente'):
+                cl = dict(r['climatizacion'])
+                cl['cita'] = cita(cl.pop('fuente'))
+                r['climatizacion'] = cl
+            rs.append(r)
+        nv['recintos'] = rs
+        nv['puertas'] = [{**{k: v for k, v in pt.items() if k != 'cita_ancho'}, **({'cita': cita(pt['cita_ancho'])} if pt.get('cita_ancho') else {})} for pt in nv.get('puertas', [])]
+        niveles.append(nv)
+    out = {k: v for k, v in pl.items() if k not in ('niveles', 'citas', 'fuentes')}
+    out['niveles'] = niveles
+    out['citas'] = citas
+    return _redondear(_sin_internos(out), 2)
+
+def torre_contraste_web(c, dot, lab, inv):
+    """Contraste con el proyecto tipo (9.1): sin búsquedas ni acceso a fuentes; el costo de la dotación de cada ambiente se
+    calcula aquí desde lineas_torre con los precios de dotacion.json (no se copia a mano)."""
+    out = {k: v for k, v in c.items() if k not in ('busquedas', 'acceso_a_fuentes')}
+    por_id = {l['id']: l for l in (inv or {}).get('lineas', [])}
+    filas, sin_lineas = [], 0
+    for f in out.get('dotacion_por_ambiente') or []:
+        f = dict(f)
+        f.pop('costo_torre_cop_2026', None)
+        lt = f.get('lineas_torre')
+        if isinstance(lt, list):
+            items = [(por_id.get(x.get('linea')), x) for x in lt]
+            if all(l for l, _ in items):
+                tot = 0
+                for l, _ in items:
+                    it = _item_de_linea(l, dot, lab) or {}
+                    p_ = _precio(it, l.get('origen'))['precio']
+                    tot += (p_ or 0) * (l.get('cantidad') or 0)
+                f['costo_torre_cop_2026'] = tot
+                f['costo_torre_tipo'] = 'cálculo propio (precios de la dotación × cantidades)'
+            else:
+                f['costo_torre_cop_2026'] = None
+        else:
+            sin_lineas += 1
+        filas.append(f)
+    if 'dotacion_por_ambiente' in out:
+        out['dotacion_por_ambiente'] = filas
+    if sin_lineas:
+        _aviso(f'torre_contraste.json: {sin_lineas} filas de dotacion_por_ambiente sin lineas_torre; se publican sin costo (el precio no se copia a mano)')
+    return _sin_internos(out)
+
+def _exportar_torre_y_sismo():
+    tdir = D / 'proyectos/torre_hospital'
+    dot = json.loads((tdir / 'dotacion.json').read_text(encoding='utf-8')) if (tdir / 'dotacion.json').exists() else {}
+    lab = json.loads((tdir / 'laboratorio.json').read_text(encoding='utf-8')) if (tdir / 'laboratorio.json').exists() else {}
+    opt_t = lambda n_: json.loads((tdir / n_).read_text(encoding='utf-8')) if (tdir / n_).exists() else None
+    # plantas por piso (B)
+    pl = _cargar_generado('torre_plantas.json', D / 'edificios/torre_hospital_plantas.json')
+    if pl is not None:
+        _escribir_web('torre_plantas.json', torre_plantas_web(pl))
+    # matriz de cumplimiento en dotación e infraestructura (B)
+    hab = _cargar_generado('torre_habilitacion.json', tdir / 'habilitacion.json')
+    if hab is not None:
+        _escribir_web('torre_habilitacion.json', _sin_internos(hab))
+    # inventario (B): con el catálogo 3D y los implementos
+    inv = _web_torre_inventario_datos()
+    if inv is not None:
+        try:
+            _escribir_web('torre_inventario.json', torre_inventario_web(inv, dot, lab, opt_t('catalogo_equipos.json'), opt_t('implementos.json'), hab))
+        except ValueError as e:
+            _no_exportar('torre_inventario.json', str(e))
+    # contraste con el proyecto tipo (E); no es un generado: se exporta si existe
+    c = opt_t('proyecto_tipo_contraste.json')
+    if c is None:
+        _ausente('torre_contraste.json', tdir / 'proyecto_tipo_contraste.json')
+    else:
+        _escribir_web('torre_contraste.json', torre_contraste_web(c, dot, lab, inv))
+    # simulador sísmico (A): estructura (generada) y amenaza (a mano)
+    est = _cargar_generado('sismo_torre_estructura.json', D / 'sismo/torre_hospital_estructura.json')
+    if est is not None:
+        _escribir_web('sismo_torre_estructura.json', {k: v for k, v in est.items() if k not in ('insumos_sha1', 'generado_por')})
+    am = D / 'sismo/amenaza.json'
+    if am.exists():
+        _escribir_web('sismo_amenaza.json', json.loads(am.read_text(encoding='utf-8')))
+    else:
+        _ausente('sismo_amenaza.json', am)
+
 # --- Torre de servicios de primer nivel (data/proyectos/torre_hospital/): archivo aparte que la vista carga al abrirse
 def _sel(d, keys):
     return {k: d[k] for k in keys if k in d} if isinstance(d, dict) else {}
 _tdir = D / 'proyectos/torre_hospital'
+# exigencias que el inventario enlaza a cada línea de dotacion.json (por su ref), para la ficha de cada equipo en torre.json
+def _exigencias_por_ref():
+    inv = _web_torre_inventario_datos()
+    out = {}
+    for l in (inv or {}).get('lineas', []):
+        r = l.get('ref') or {}
+        if l.get('origen') == 'dotacion' and r.get('lista') in ('equipos', 'mobiliario'):
+            out[(r.get('servicio'), r['lista'], r.get('idx'))] = [{'id': e['id'], 'exigible': e.get('exigible')} for e in l.get('exigencias') or [] if e.get('id')]
+    return out
+_EQ = ('nombre', 'cantidad', 'clase_riesgo', 'precio_unitario_cop_2026', 'total_cop_2026', 'tipo_precio', 'prioridad', 'especificacion', 'nota')
+def _equipo_web(e, srv, lista, i, exig):
+    o = _sel(e, _EQ)
+    if (srv, lista, i) in exig:
+        o['exigencias'] = exig[(srv, lista, i)]
+    return o
 if _tdir.exists():
     _t = {f.stem: json.loads(f.read_text(encoding='utf-8')) for f in sorted(_tdir.glob('*.json'))}
     _pr, _no, _pt, _do, _la = (_t.get(k, {}) for k in ('programa', 'normas', 'proyecto_tipo', 'dotacion', 'laboratorio'))
+    _exig = _exigencias_por_ref()
     TORRE = {
         'programa': {**_sel(_pr, ('resumen', 'totales', 'resumen_por_piso', 'servicios', 'capacidad_resultante', 'uso_del_edificio_actual', 'demanda')),
                      'ambientes': [_sel(a_, ('servicio', 'nombre', 'cantidad', 'm2_unitario', 'm2_total', 'piso')) for a_ in _pr.get('ambientes', [])],
@@ -225,8 +550,9 @@ if _tdir.exists():
         'normas': _sel(_no, ('proyecto_en_breve', 'normas', 'checklist_485', 'parametros_diseno', 'conflictos_entre_normas')),
         'proyecto_tipo': _sel(_pt, ('respuesta_corta', 'proyectos_tipo', 'seleccion', 'escalamiento_a_torre', 'estetica')),
         'dotacion': {**_sel(_do, ('resumen', 'totales_generales', 'totales_equipamiento_fijo', 'comparaciones', 'proyectos_articulados', 'requisitos_res_485_para_dotacion', 'laboratorio_resumen')),
+                     # cada equipo y mueble con su especificación, su nota y las exigencias que le enlaza el inventario (10.1)
                      'servicios': [{**_sel(s_, ('id', 'nombre', 'piso', 'capacidad', 'norma', 'totales')),
-                                    'equipos': [_sel(e_, ('nombre', 'cantidad', 'clase_riesgo', 'precio_unitario_cop_2026', 'total_cop_2026', 'tipo_precio', 'prioridad')) for e_ in s_.get('equipos', [])]}
+                                    **{lista: [_equipo_web(e_, s_.get('id'), lista, i, _exig) for i, e_ in enumerate(s_.get(lista, []))] for lista in ('equipos', 'mobiliario')}}
                                    for s_ in _do.get('servicios', [])],
                      'equipamiento_fijo': [_sel(e_, ('nombre', 'cantidad', 'precio_unitario_cop_2026', 'total_cop_2026', 'tipo_precio')) for e_ in _do.get('equipamiento_fijo', [])]},
         'laboratorio': {**_sel(_la, ('resumen', 'totales_menu', 'areas', 'area_total_laboratorio_piso2_m2', 'costos_operacion_anual', 'modelo_de_compra', 'lis', 'calidad', 'referencia_de_muestras')),
@@ -236,8 +562,8 @@ if _tdir.exists():
     for k in ('presupuesto', 'apu', 'financiacion', 'proyectos'):
         if k in _t: TORRE[k] = _t[k]
     (R / 'web/data').mkdir(parents=True, exist_ok=True)
-    (R / 'web/data/torre.json').write_text(json.dumps(TORRE, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
-    print('torre.json', (R / 'web/data/torre.json').stat().st_size // 1024, 'KB')
+    _escribir_web('torre.json', TORRE)
+    _exportar_torre_y_sismo()
 
 # --- Parque ecotecnológico sobre el relleno sanitario (data/proyectos/parque_relleno/): archivo aparte para su vista
 _pdir = D / 'proyectos/parque_relleno'
@@ -277,3 +603,6 @@ js = '// Generado por scripts/build_data.py — no editar a mano.\n' + ''.join(
 print('data.js', len(js) // 1024, 'KB')
 for k, v in fill.items():
     print(f'  {k} = {v}')
+print(f'Avisos de los datos de la torre y del simulador: {len(AVISOS_WEB)}')
+for a_ in AVISOS_WEB:
+    print('  -', a_)

@@ -1,12 +1,43 @@
 // Escena 3D y fichas de la torre de servicios de primer nivel de la E.S.E. Hospital Héctor Abad Gómez, sobre el sitio del
 // antiguo Centro Vida (alas occidentales del predio, que se demuelen). Modos: "Hoy" (las alas), "Con la torre" (el modelo
 // generado desde data/edificios/torre_hospital.json), "Pisos por servicio" (los cuatro pisos separados, cada servicio con su
-// color de grupo de la Res. 1633 de 2025 y su área) y "Laboratorio" (el piso 2 con mesones y analizadores).
+// color de grupo de la Res. 1633 de 2025 y su área), "Laboratorio" (el piso 2 con mesones y analizadores), y los dos modos de
+// la especificación de integración (data/proyectos/torre_hospital/ESPECIFICACION_INTEGRACION.md): "Recorrer por dentro"
+// (módulo ./torre/recorrido.js, equipo C) y "Simulador sísmico" (./torre/sismo.js, equipo D). Abajo, las tarjetas de
+// dotación para la habilitación (./torre/habilitacion.js, C) y de contraste con el proyecto tipo (./torre/contraste.js, E).
+// Esos módulos se cargan solo al pedirlos; mientras no existan se usa ./torre/_relleno.js («en construcción»).
 // Los datos del proyecto (programa, norma, dotación, laboratorio, presupuesto, APU, financiación y proyectos) vienen de
-// data/proyectos/torre_hospital/ y se cargan aparte (data/torre.json) al abrir la vista.
-import { THREE, Stage, tokens, onTheme, mat, box, fmtN, fmtCOP, gsap, solidBox } from '../core.js';
+// data/proyectos/torre_hospital/ y se cargan aparte (data/torre.json) al abrir la vista; los de los modos nuevos
+// (data/torre_*.json y data/sismo_*.json, que escribe scripts/build_data.py) al entrar a cada modo o al abrir cada tarjeta.
+import { THREE, Stage, tokens, onTheme, mat, box, fmtN, fmtCOP, gsap, solidBox, engine } from '../core.js';
 import { progressiveLOD } from '../assets.js';
 import { EDIFICIOS } from '../data.js';
+import { limpio, esc, escH } from './torre/textos.js';
+
+const TEXTOS = { limpio, esc, escH };   // lo que reciben los módulos de C, D y E en ctx.textos (13.6)
+// módulos de los modos y tarjetas nuevos. Si el del equipo dueño todavía no está (404) o no carga, se usa el relleno; un
+// módulo que existe pero falla al evaluarse se avisa en la consola para que su equipo lo vea
+const relleno = (e) => {
+  if (!/Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(String(e?.message || e))) console.warn('torre: módulo con errores; se usa el relleno', e);
+  return import('./torre/_relleno.js');
+};
+const MODULOS = {
+  recorrido: () => import('./torre/recorrido.js').catch(relleno),
+  sismo: () => import('./torre/sismo.js').catch(relleno),
+  habilitacion: () => import('./torre/habilitacion.js').catch(relleno),
+  contraste: () => import('./torre/contraste.js').catch(relleno),
+};
+const NUEVOS = ['recorrido', 'sismo'];   // modos con módulo propio (6.8 y 8.6)
+// obra nueva del GLB: el recorrido y el simulador la ocultan porque el GLB reparte entrepisos de 4,30 m que no coinciden con
+// los niveles reales (1.2). Es el nodo «obra_nueva» entero (su suelo, letreros y equipos de cubierta van fundidos en una sola
+// malla con el edificio) más los paneles solares y los equipos de la cubierta; quedan lo existente, el terreno y la conexión
+const EDIFICIO_GLB = new Set(['obra_nueva', 'solar', 'equipos']);
+// capa «Proyecto tipo» (9.2): placa de un piso con el área del puesto de salud tipo del DNP 2018 (320,6 m², dato del proyecto
+// tipo, pág. 25), a la misma escala que la torre. Posición fija, centro en x = −46, y = 0 (marco de la especificación): al
+// occidente del predio modelado, que llega hasta x ≈ −36. No se cruza con el hospital actual (al nororiente), la galería
+// (y ≈ 29), el bloque técnico (y de −24,8 a −20,8) ni con los árboles, postes y parqueaderos del occidente (x ≥ −34). El ejemplo
+// del contrato (x = −30) caía sobre el parqueadero y dos árboles
+const AREA_TIPO = 320.6, TIPO_XY = [-46, 0];
 
 // grupos de servicio con sus colores de señalización (Res. 1633 de 2025): rojo urgencias, naranja consulta, amarillo apoyo
 // diagnóstico y terapéutico, azul internación, verde esterilización, violeta administración, café servicios generales
@@ -22,27 +53,6 @@ const GRUPOS = [
 const grupo = (n) => GRUPOS.find(([re]) => re.test(n)) || [null, '#9aa0a6', 'Otros'];
 const XW = [-13.0, 3.1], XN = [3.1, 9.0];            // franja de servicios y franja del núcleo (marco de la especificación)
 const YP = (piso) => (piso === 4 ? [-7.6, 22.4] : [-19.6, 22.4]);
-const escH = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-// Los textos de los datos citan archivos y carpetas del proyecto ("(programa.json)", "docs/06") que el lector no puede
-// abrir: se quitan las citas entre paréntesis y el resto se nombra en palabras; también "m2" y "m3" pasan a m² y m³
-const FUENTES = { programa: 'el programa', normas: 'la revisión de normas', dotacion: 'la dotación', presupuesto: 'el presupuesto', laboratorio: 'el laboratorio', financiacion: 'la financiación', proyectos: 'los proyectos', microrred: 'la microrred', presupuesto_microrred: 'el presupuesto de la microrred', bienestar_anciano: 'el levantamiento del Centro Vida', hospital: 'el levantamiento del hospital' };
-const JS = String.raw`(?:data\/(?:[\w-]+\/)*)?([\w-]+)\.json`, fuente = (k) => FUENTES[k] || 'el estudio';
-const limpio = (s) => String(s ?? '')
-  .replace(/\bbess_hospital\b/g, 'baterías del hospital')
-  .replace(/\s*Verificación V\d+(?: \([^)]*\))?:.*?\.(?=\s|$)/g, '')                          // notas internas de revisión
-  .replace(new RegExp(String.raw`\s*\((?:ver\s+)?${JS}(?:,\s*[^()]*)?\)`, 'gi'), '')       // «(programa.json)», «(programa.json, demoliciones)»
-  .replace(new RegExp(String.raw`[;,]\s*${JS}(?:,\s*[^();]*)?(?=\))`, 'g'), '')             // «(…; programa.json, implantación)», «(…, normas.json)»
-  .replace(new RegExp(String.raw`\(${JS}:\s*`, 'g'), '(')                                     // «(normas.json: se adopta…)»
-  .replace(new RegExp(String.raw`^${JS}:\s*(.)`), (m, k, c) => c.toUpperCase())              // «programa.json: 2 × 5 m³ en cubierta»
-  .replace(new RegExp(String.raw`^${JS},\s*`), (m, k) => `Según ${fuente(k)}, `)
-  .replace(new RegExp(JS, 'g'), (m, k) => fuente(k))
-  .replace(/\s*\((?:ver\s+)?docs\/[\w/.-]+\)/gi, '').replace(/\s*Ver docs\/[\w/.-]+\.?/g, '')
-  .replace(/docs\/0?6\b/g, 'el estudio de financiación').replace(/docs\/[\w/.-]+/g, 'el estudio')
-  .replace(/'([a-z]+(?:_[a-z]+)+)'/g, (m, k) => `«${k.replace(/_/g, ' ')}»`)
-  .replace(/\bde el\b/g, 'del').replace(/\ba el\b/g, 'al')
-  .replace(/\bm2\b/g, 'm²').replace(/\bm3\b/g, 'm³')
-  .replace(/\b(\d+)\.(\d{1,2}) veces\b/g, '$1,$2 veces');                                     // «1.04 veces» → «1,04 veces»
-const esc = (s) => escH(limpio(s));   // para textos; los enlaces van con escH
 const cop = (v) => (v == null || Number.isNaN(+v) ? '—' : fmtCOP(+v));
 
 export function mount(root) {
@@ -56,14 +66,19 @@ export function mount(root) {
   // modelos: la torre (marco de su especificación) y el hospital actual como contexto, en su posición real relativa
   const TOR = EDIFICIOS.find((e) => e.id === 'torre_hospital'), HOS = EDIFICIOS.find((e) => e.id === 'hospital');
   const off = (e) => [(e.lon - TOR.lon) * 111320 * Math.cos((TOR.lat * Math.PI) / 180), (e.lat - TOR.lat) * 111320];
-  let torre = null, modo = 'torre';
+  let torre = null, modo = 'torre', gHosp = null;
+  // estado de los modos nuevos: modo montado y en curso, selección del Stage guardada mientras dura, piezas ocultas del
+  // exterior (null, 'parcial' en el simulador o 'total' en el recorrido) y turno del último cambio de modo pedido
+  let activo = null, guardados = null, exterior = null, turno = 0, tEncuadre = 0, tSep = null, capaTipo = false;
+  const instancias = {}, cargando = {}, modulos = {};
+  const nuevo = () => NUEVOS.includes(modo);
   const gTorre = new THREE.Group(); S.add(gTorre);
   if (TOR?.archivo) {
     torre = progressiveLOD([{ url: TOR.archivo, distance: 0 }, { url: TOR.archivo_lod1, distance: 420 }], () => { aplicar(false); st.updateShadows(); encuadre(); });
     gTorre.add(torre);
   }
   if (HOS?.archivo && TOR) {
-    const [hx, hy] = off(HOS), g = new THREE.Group(); g.position.set(hx, 0, -hy); S.add(g);
+    const [hx, hy] = off(HOS), g = new THREE.Group(); g.position.set(hx, 0, -hy); S.add(g); gHosp = g;
     g.add(progressiveLOD([{ url: HOS.archivo, distance: 0 }, { url: HOS.archivo_lod1, distance: 300 }], (lod) => {
       // del hospital actual solo se ve el edificio (sus paneles y equipos son de otro proyecto)
       lod.traverse((o) => { if (o.name === 'adecuaciones') o.visible = false; });
@@ -71,7 +86,16 @@ export function mount(root) {
       st.updateShadows();
     }));
   }
-  const encuadre = () => { if (!torre) return; st.frameBox(solidBox(torre), new THREE.Vector3(-0.75, 0.55, 0.62), { margin: 0.78, duration: 1.4 }); };
+  // en el recorrido y el simulador la cámara es del modo: ni la carga del GLB ni la capa del proyecto tipo la mueven (6.8);
+  // solo con el relleno «en construcción», que no maneja la cámara, se encuadra la torre por fuera (forzar)
+  const encuadre = (forzar = false) => {
+    if (!torre || (nuevo() && !forzar)) return;
+    const caja = solidBox(torre);
+    if (capaTipo && modo === 'torre' && gTipo.children.length) caja.union(new THREE.Box3().setFromObject(gTipo));
+    st.frameBox(caja, new THREE.Vector3(-0.75, 0.55, 0.62), { margin: 0.78, duration: 1.4 });
+  };
+  const gTipo = new THREE.Group(); gTipo.position.set(TIPO_XY[0], 0, -TIPO_XY[1]); gTipo.visible = false; S.add(gTipo);
+  let lblTipo = null;
 
   // pisos por servicio (se arman cuando llega data/torre.json)
   const gPisos = new THREE.Group(); gPisos.visible = false; S.add(gPisos);
@@ -83,10 +107,17 @@ export function mount(root) {
   const angosto = () => el.clientWidth < 560;
 
   function aplicar(anim = true) {
+    // el recorrido y el simulador parten de «Con la torre»; cada uno oculta lo suyo con ctx.exterior.ocultar
     if (torre) torre.traverse((o) => {
       if (o.userData.demoler) o.visible = modo === 'hoy';
-      if (o.name === 'adecuaciones') o.visible = modo === 'torre';
+      if (o.name === 'adecuaciones') o.visible = modo === 'torre' || nuevo();
+      if (EDIFICIO_GLB.has(o.name)) o.visible = !exterior;
+      if (o.name === 'conexion') o.visible = exterior !== 'total';   // la acometida llega al hospital, que el recorrido oculta
     });
+    if (gHosp) gHosp.visible = exterior !== 'total';
+    gTipo.visible = capaTipo && modo === 'torre';
+    if (lblTipo) lblTipo.visible = gTipo.visible;
+    if (capas) capas.hidden = modo !== 'torre';
     if (leyenda) leyenda.hidden = modo !== 'pisos';
     const conPisos = modo === 'pisos' || modo === 'laboratorio';
     gPisos.visible = conPisos;
@@ -95,12 +126,13 @@ export function mount(root) {
     etiquetas();
     zonas.forEach((z) => { const on = modo !== 'laboratorio' || z.lab; z.mesh.material.opacity = on ? 1 : 0.18; z.mesh.material.transparent = !on; z.mesh.material.depthWrite = on; });
     const meta = conPisos ? (modo === 'laboratorio' ? 2.2 : 1) : 0;
-    if (gsap && anim) gsap.to({ v: sep }, { v: meta, duration: 1.1, ease: 'power3.inOut', onUpdate() { sep = this.targets()[0].v; apilar(); } });
+    tSep?.kill(); tSep = null;
+    if (gsap && anim) tSep = gsap.to({ v: sep }, { v: meta, duration: 1.1, ease: 'power3.inOut', onUpdate() { sep = this.targets()[0].v; apilar(); } });
     else { sep = meta; apilar(); }
     st.updateShadows();
   }
   // con los pisos abiertos los árboles de los dos modelos se ocultan: tapaban los servicios del primer piso
-  function arboles() { const v = modo !== 'pisos' && modo !== 'laboratorio'; S.traverse((o) => { if (/arboles$/.test(o.name)) o.visible = v; }); }
+  function arboles() { const v = modo !== 'pisos' && modo !== 'laboratorio' && exterior !== 'total'; S.traverse((o) => { if (/arboles$/.test(o.name)) o.visible = v; }); }
   // etiquetas: en «Pisos» el título de cada piso, los servicios grandes y todos los del piso elegido; en «Laboratorio», sus
   // salas y equipos. En el teléfono no caben: en «Pisos» van los títulos y, al tocar un piso, solo su título y sus servicios
   // de 20 m² o más (el resto está en la ficha del piso); en «Laboratorio», solo los nombres de las salas analíticas (los
@@ -270,7 +302,8 @@ export function mount(root) {
 
   // ---------------------------------------------------------------- fichas
   const q = (s) => root.querySelector(`[data-slot="torre.${s}"]`);
-  const ficha = q('ficha');
+  // la ficha de siempre escribe en su propio contenedor: torre.ficha.modo es de los modos nuevos (10.3)
+  const ficha = q('ficha.base'), nota0 = ficha.innerHTML;
   function fichaPiso(p) {
     selPiso = +p.piso; etiquetas();
     const amb = (D?.programa?.ambientes || []).filter((a) => String(a.piso) === String(p.piso));
@@ -284,9 +317,106 @@ export function mount(root) {
   }
 
   const modeBtns = root.querySelectorAll('[data-modo-torre]');
-  modeBtns.forEach((b) => b.addEventListener('click', () => {
-    modo = b.dataset.modoTorre;
-    modeBtns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  modeBtns.forEach((b) => b.addEventListener('click', () => cambiarModo(b.dataset.modoTorre)));
+
+  // ---------------------------------------------------------------- modos nuevos (6.8, 8.6 y 10.3)
+  const capas = q('capas'), fichaModo = q('ficha.modo'), tarjetaSismo = q('sismo'), pistaEl = el.querySelector('.stage-hint'), pista0 = pistaEl?.textContent;
+  const PISTAS = {
+    recorrido: 'W A S D o flechas para caminar · arrastra para mirar · R y F cambian de piso · Esc para salir',
+    sismo: 'Elige un sismo en el panel y calcula · el deslizador recorre los pasos calculados · toca un elemento para ver sus esfuerzos',
+    relleno: 'Arrastra para girar · este modo está en construcción',
+    cargando: 'Cargando el modo…',
+  };
+  const pista = () => { if (pistaEl) pistaEl.textContent = !nuevo() ? pista0 : !modulos[modo] ? PISTAS.cargando : modulos[modo].RELLENO ? PISTAS.relleno : PISTAS[modo]; };
+  // una tarjeta de la carpeta se ve solo si alguno de sus contenedores está a la vista (los modos muestran u ocultan los suyos)
+  const vigilar = (card) => {
+    if (!card) return;
+    const f = () => { const v = [...card.children].every((c) => c.hidden); if (card.hidden !== v) card.hidden = v; };
+    new MutationObserver(f).observe(card, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
+    f();
+  };
+  vigilar(q('panel')); vigilar(q('ficha'));
+  // datos de los modos nuevos: se piden al entrar; si el archivo todavía no se publicó, el modo recibe null
+  const pedidos = {};
+  const leer = (f) => (pedidos[f] ??= fetch(new URL(`../../data/${f}`, import.meta.url)).then((r) => (r.ok ? r.json() : null)).catch(() => null));
+  const urlDatos = (f) => new URL(`../../data/${f}`, import.meta.url).href;
+  // colores del contraste para la capa del recorrido: E los calcula por recinto y C los recibe ya como THREE.Color (9.2)
+  async function coloresContraste(plantas) {
+    const mod = await MODULOS.contraste();
+    if (mod.RELLENO || !plantas) return null;
+    const c = await leer('torre_contraste.json');
+    if (!c) return null;
+    return new Map([...mod.coloresRecintos(c, plantas)].map(([id, v]) => [id, new THREE.Color(v.color_hex)]));
+  }
+  async function datosModo(m) {
+    if (m === 'recorrido') {
+      const [plantas, inventario, habilitacion] = await Promise.all(['torre_plantas.json', 'torre_inventario.json', 'torre_habilitacion.json'].map(leer));
+      return { plantas, inventario, habilitacion, coloresContraste: await coloresContraste(plantas) };
+    }
+    // el simulador pasa al trabajador las URL absolutas (7.5); la amenaza y el inventario los usa la vista (8.2 y 8.3)
+    const [amenaza, inventario] = await Promise.all(['sismo_amenaza.json', 'torre_inventario.json'].map(leer));
+    return { amenaza, inventario, urls: { estructura: urlDatos('sismo_torre_estructura.json'), amenaza: urlDatos('sismo_amenaza.json') } };
+  }
+  // contexto de cada modo (6.2 y 8.6): solo sus contenedores; el exterior se oculta entero en el recorrido y en parte en el
+  // simulador (el edificio del GLB; quedan el hospital, el terreno y los árboles)
+  function ctxModo(m, datos) {
+    const ctx = {
+      st, raiz: root, hud: q(`hud.${m}`), panel: q(`panel.${m}`), ficha: fichaModo, datos, textos: TEXTOS,
+      exterior: { ocultar(on) { const v = on ? (m === 'sismo' ? 'parcial' : 'total') : null; if (v === exterior) return; exterior = v; aplicar(false); } },
+      alSalir: () => { if (activo?.nombre === m) { activo = null; vaciarFichaModo(); cambiarModo('torre'); } },
+    };
+    // el simulador crea su trabajador (o el respaldo de web/js/sismo/motor.js) desde sismo.js (7.5): ctx.motor se agrega allí
+    if (m === 'sismo') ctx.graficas = q('sismo.graficas');
+    return ctx;
+  }
+  // monta cada modo una sola vez por vista; dos pedidos seguidos comparten la misma carga
+  function montarModo(m) {
+    if (instancias[m]) return Promise.resolve(instancias[m]);
+    return (cargando[m] ??= (async () => {
+      const mod = await MODULOS[m]();
+      modulos[m] = mod;
+      const obj = await mod.montar(ctxModo(m, mod.RELLENO ? {} : await datosModo(m)));
+      instancias[m] = obj;
+      return obj;
+    })().catch((e) => { console.error(`torre: no se pudo montar el modo «${m}»`, e); cargando[m] = null; return null; }));
+  }
+  const vaciarFichaModo = () => { fichaModo.innerHTML = ''; fichaModo.hidden = true; };
+  // Cambio de modo. El modo que sale deja sus contenedores vacíos; uno pedido mientras otro carga gana (turno), así un
+  // cambio en medio de una carga, un cálculo o un vuelo de cámara no deja contenidos ni cámaras cruzados (13.4)
+  async function cambiarModo(m, op) {
+    if (![...modeBtns].some((b) => b.dataset.modoTorre === m)) return;
+    const mio = ++turno;
+    clearTimeout(tEncuadre);
+    if (activo && activo.nombre === m) { if (op) activo.obj.irA?.(op); return; }
+    if (activo) { const a = activo; activo = null; a.obj.salir({ porUsuario: false }); vaciarFichaModo(); }
+    const venia = nuevo();
+    modo = m;
+    modeBtns.forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.modoTorre === m)));
+    if (nuevo()) {
+      // paso 1 del 6.8: sin vuelos ni encuadres pendientes y sin selección del Stage (el Raycaster no mira visible)
+      st.stopFlight();
+      if (!guardados) { guardados = st.pickables.splice(0); st.hovered = null; }
+      ficha.hidden = true;
+      if (tarjetaSismo) tarjetaSismo.hidden = m !== 'sismo';
+      aplicar(false);
+      pista();
+      const obj = await montarModo(m);
+      if (mio !== turno) return;
+      if (!obj) { cambiarModo('torre'); return; }
+      activo = { nombre: m, obj };
+      pista();
+      if (obj.relleno) encuadre(true);
+      obj.entrar(op);
+      st.invalidate(true);
+      return;
+    }
+    // modos de siempre: vuelve la selección, la ficha con su nota original y el encuadre de cada uno
+    if (guardados) { st.pickables.push(...guardados); guardados = null; }
+    exterior = null;   // por si un modo salió sin devolver lo que ocultó
+    if (tarjetaSismo) tarjetaSismo.hidden = true;
+    if (venia) { ficha.innerHTML = nota0; selPiso = null; }
+    ficha.hidden = false;
+    pista();
     aplicar(true);
     if (modo === 'laboratorio') {
       const z = zonas.find((zz) => zz.lab && zz.piso === 2);
@@ -297,17 +427,67 @@ export function mount(root) {
         const caja = new THREE.Box3(new THREE.Vector3(XW[0] - 1, y, -z.y1 - 1), new THREE.Vector3(XW[1] + 1, y + 3, -z.y0 + 1));
         // en el teléfono se mira desde el occidente y casi desde arriba: el lado largo del laboratorio queda a lo alto
         const tel = angosto(), dir = tel ? new THREE.Vector3(-0.4, 0.9, 0.1) : new THREE.Vector3(-0.27, 0.74, 0.61);
-        setTimeout(() => st.frameBox(caja, dir, { margin: tel ? 0.95 : 0.72, ty: 0.3 }), 350);
+        tEncuadre = setTimeout(() => st.frameBox(caja, dir, { margin: tel ? 0.95 : 0.72, ty: 0.3 }), 350);
       }
-    } else if (modo === 'pisos') setTimeout(() => st.frameBox(new THREE.Box3(new THREE.Vector3(XW[0] - 8, 0, -24), new THREE.Vector3(XN[1] + 6, 32, 21)), new THREE.Vector3(-0.8, 0.45, 0.55), { margin: 0.85 }), 200);
+    } else if (modo === 'pisos') tEncuadre = setTimeout(() => st.frameBox(new THREE.Box3(new THREE.Vector3(XW[0] - 8, 0, -24), new THREE.Vector3(XN[1] + 6, 32, 21)), new THREE.Vector3(-0.8, 0.45, 0.55), { margin: 0.85 }), 200);
     else encuadre();
-  }));
+  }
+  // Engine.attach vuelve a activar los controles cada vez que la vista arranca (core.js): el modo en curso repite su ajuste
+  // (6.8, paso 4). alDetener es opcional: el recorrido vacía allí sus teclas oprimidas (6.4)
+  const start0 = st.start.bind(st), stop0 = st.stop.bind(st);
+  st.start = () => { start0(); activo?.obj.alReanudar?.(); };
+  st.stop = () => { stop0(); activo?.obj.alDetener?.(); };
+
+  // capa «Proyecto tipo» en «Con la torre» (9.2): el modelo lo da E (o el relleno); D lo pone en su sitio con su etiqueta
+  let tipoListo = null;
+  const armarTipo = () => (tipoListo ??= (async () => {
+    const mod = await MODULOS.contraste();
+    const c = mod.RELLENO ? null : await leer('torre_contraste.json');
+    const g = mod.modeloTipo3D(THREE, c);
+    gTipo.add(g);
+    const alto = new THREE.Box3().setFromObject(g).max.y || 3, m2 = +D?.programa?.totales?.m2_construido_torre || 0;
+    const texto = g.userData.etiqueta || `<b>Área equivalente del puesto tipo DNP 2018</b><br><small>${fmtN(AREA_TIPO, 1)} m², 1 piso${m2 ? ` · la torre es ${fmtN(m2 / AREA_TIPO, 1)} veces` : ''}</small>`;
+    lblTipo = st.label(texto, 'lbl-node', [0, alto + 1.2, 0], gTipo);
+    st.updateShadows();
+  })().catch((e) => { console.error('torre: capa del proyecto tipo', e); tipoListo = null; }));
+  const btnTipo = root.querySelector('[data-capa-torre="tipo"]');
+  btnTipo?.addEventListener('click', async () => {
+    capaTipo = !capaTipo;
+    btnTipo.setAttribute('aria-pressed', String(capaTipo));
+    if (capaTipo) await armarTipo();
+    aplicar(false);
+    if (modo === 'torre') encuadre();
+  });
+
+  // tarjetas de abajo (habilitación de C y contraste de E): se cargan al acercarse a la pantalla
+  const verEn3D = (destino) => { cambiarModo('recorrido', destino); el.scrollIntoView({ behavior: gsap ? 'smooth' : 'auto', block: 'center' }); };
+  function tarjetasPerezosas() {
+    const abrir = new Map([
+      [q('habilitacion'), async (slot) => {
+        const mod = await MODULOS.habilitacion();
+        const [hab, inv] = mod.RELLENO ? [null, null] : await Promise.all([leer('torre_habilitacion.json'), leer('torre_inventario.json')]);
+        mod.pintarHabilitacion(slot, hab, inv, { verEn3D, textos: TEXTOS });
+      }],
+      [q('tipo'), async (slot) => {
+        const mod = await MODULOS.contraste();
+        const c = mod.RELLENO ? null : await leer('torre_contraste.json');
+        if (c || mod.RELLENO) mod.pintarContraste(slot, c, { verEn3D, textos: TEXTOS });
+      }],
+    ].filter(([slot]) => slot));
+    const io = new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target);
+      abrir.get(e.target)?.(e.target).catch((err) => console.error('torre: tarjeta', err));
+    }), { rootMargin: '300px 0px' });
+    abrir.forEach((f, slot) => io.observe(slot));
+  }
 
   fetch(new URL('../../data/torre.json', import.meta.url)).then((r) => (r.ok ? r.json() : null)).then((d) => {
     if (!d) return;
     D = d;
     if (d.programa) armarPisos(d.programa);
     pintarFichas(d);
+    tarjetasPerezosas();
   }).catch((e) => console.warn('torre.json', e));
 
   function pintarFichas(d) {
@@ -450,6 +630,30 @@ export function mount(root) {
     return `${p.respuesta_corta ? `<p>${esc(p.respuesta_corta)}</p>` : ''}<div class="gantt"><div class="gantt-head"><span></span><span class="g-bar" style="background-size:${100 / N}% 100%">${anios.map((a) => `<b style="left:${pct(a)}%">${a}</b>`).join('')}</span></div>
       ${L.map((x) => { const a = fecha(x.inicio) ?? A0, b = Math.max(a + 0.08, (fecha(x.fin) ?? a + 0.5) + 1 / 12); return `<details class="fold gantt-row"><summary><span class="g-n"><b>${esc(x.id || x.orden)}</b> ${esc(nom(x))}<br><small class="note">${cop(num(x, 'valor'))} · ${esc(fuente(x.fuente_financiacion))}</small></span><span class="g-bar" style="background-size:${100 / N}% 100%"><i title="${esc(`${x.inicio} a ${x.fin}`)}" style="left:${pct(a)}%;width:${pct(b) - pct(a)}%"></i></span></summary><p class="note">${esc(x.objeto || '')}</p><p class="note">${x.entidad ? `<b>Presenta:</b> ${esc(x.entidad)}<br>` : ''}${x.tipo_concepto_485 ? `<b>Concepto técnico:</b> ${esc(x.tipo_concepto_485)}<br>` : ''}${x.mga ? `<b>MGA:</b> ${esc(typeof x.mga === 'string' ? x.mga : JSON.stringify(x.mga))}<br>` : ''}${(x.dependencias || []).length ? `<b>Requiere:</b> ${esc([].concat(x.dependencias).join('; '))}` : ''}</p></details>`; }).join('')}</div>
       ${mga ? `<p class="note"><b>Fichas MGA (${Array.isArray(mga) ? mga.length : ''}):</b> ${esc(Array.isArray(mga) ? mga.map((g) => [].concat(g).join(' + ')).join(' · ') : typeof mga === 'string' ? mga : String(mga.resumen || '').slice(0, 600))}</p>` : ''}`;
+  }
+
+  // ganchos de QA (8.7): solo con «?qa» en la consulta de la URL (index.html?qa=1#torre)
+  if (new URLSearchParams(location.search).has('qa')) {
+    const sim = () => instancias.sismo, rec = () => instancias.recorrido;
+    window.__torreQA = {
+      modo: (m, op) => (m === undefined ? modo : cambiarModo(m, op)),
+      stats() { st.invalidate(); engine.redraw(st); const r = engine.renderer.info.render; return { llamadas: r.calls, triangulos: r.triangles }; },
+      recorrido: {
+        irA: async (d) => { if (modo !== 'recorrido') await cambiarModo('recorrido', d); else rec()?.irA(d); },
+        estado: () => rec()?.estado?.() ?? null,
+        libre: (x, y) => rec()?.libre?.(x, y) ?? null,
+      },
+      sismo: {
+        calcular: async (p) => { if (modo !== 'sismo') await cambiarModo('sismo'); return (await sim()?.calcular?.(p)) ?? null; },
+        ultimo: () => sim()?.ultimo?.() ?? null,
+        motor: () => sim()?.motor?.() ?? null,
+        cubiertaDibujada: (i) => sim()?.cubiertaDibujada?.(i) ?? null,
+      },
+      // para la QA de integración: qué modos usan el relleno, si llegaron los datos de la vista y qué oculta el exterior
+      relleno: (m) => (m in modulos ? !!modulos[m].RELLENO : null),
+      listo: () => !!D,
+      exterior: () => exterior,
+    };
   }
 
   onTheme((t) => { ground.material.color.copy(t.ground); });

@@ -1,0 +1,68 @@
+{
+ "id": "dotacion_min",
+ "moneda_y_base": "Pesos constantes de 2026 (valores de prueba)",
+ "servicios": [
+  {
+   "id": "consulta_externa",
+   "nombre": "Consulta externa (prueba)",
+   "equipos": [],
+   "mobiliario": [
+    {
+     "nombre": "Camilla de examen de prueba",
+     "cantidad": 1,
+     "especificacion": "Camilla fija con portarrollo (prueba).",
+     "clase_riesgo": "I",
+     "vida_util_anios": 10,
+     "mantenimiento_anual_pct": 3,
+     "precio_unitario_cop_2026": 1500000,
+     "total_cop_2026": 1500000,
+     "tipo_precio": "estimacion",
+     "metodo_precio": "valor de prueba",
+     "fuente": "valor de prueba",
+     "prioridad": "habilitacion",
+     "rango_precio_unitario_cop_2026": [1200000, 1800000]
+    }
+   ],
+   "totales": {"equipos_cop_2026": 0, "mobiliario_cop_2026": 1500000, "total_cop_2026": 1500000, "unidades": 1}
+  },
+  {
+   "id": "urgencias",
+   "nombre": "Urgencias (prueba)",
+   "equipos": [
+    {
+     "nombre": "Desfibrilador de prueba",
+     "cantidad": 1,
+     "especificacion": "Bifásico, modo DEA y manual (prueba).",
+     "clase_riesgo": "IIb",
+     "vida_util_anios": 8,
+     "mantenimiento_anual_pct": 6,
+     "precio_unitario_cop_2026": 29126266,
+     "total_cop_2026": 29126266,
+     "tipo_precio": "referencia_secop_ajustada_ipc",
+     "metodo_precio": "valor de prueba",
+     "fuente": "valor de prueba",
+     "prioridad": "habilitacion",
+     "rango_precio_unitario_cop_2026": [26955531, 31297000]
+    }
+   ],
+   "mobiliario": [
+    {
+     "nombre": "Carro de paro de prueba",
+     "cantidad": 1,
+     "especificacion": "Carro de paro con 5 cajones, tabla de reanimación y soporte de cilindro (prueba).",
+     "clase_riesgo": "I",
+     "vida_util_anios": 10,
+     "mantenimiento_anual_pct": 3,
+     "precio_unitario_cop_2026": 6000000,
+     "total_cop_2026": 6000000,
+     "tipo_precio": "estimacion",
+     "metodo_precio": "valor de prueba",
+     "fuente": "valor de prueba",
+     "prioridad": "habilitacion",
+     "rango_precio_unitario_cop_2026": [5000000, 7000000]
+    }
+   ],
+   "totales": {"equipos_cop_2026": 29126266, "mobiliario_cop_2026": 6000000, "total_cop_2026": 35126266, "unidades": 2}
+  }
+ ]
+}

@@ -1,0 +1,172 @@
+{
+ "id": "habilitacion_min",
+ "version": 2,
+ "generado_por": "a mano (fixture del contrato, Anexo A.2)",
+ "fecha": "2026-10-23",
+ "insumos_sha1": {
+  "inventario_min_datos.json": "7b20741cb5f0bbfeec1900457c5aea3b0510a2d1",
+  "plantas_min.json": "ff8bcd8a94b2cf57c1c817f0bb08b424eefcd24f"
+ },
+ "norma": "Res. 3100 de 2019 y modificaciones",
+ "alcance": "Cumplimiento en dotación e infraestructura",
+ "estandares_evaluados": [
+  "dotación",
+  "infraestructura",
+  "medicamentos, dispositivos médicos e insumos (parcial)",
+  "procesos prioritarios (parcial)"
+ ],
+ "estandares_no_evaluados": ["talento humano", "historia clínica y registros", "interdependencia"],
+ "texto_alcance": "Esta matriz revisa la dotación y la infraestructura. No revisa talento humano, historia clínica ni interdependencia (por ejemplo, urgencias depende de imágenes, laboratorio y transporte asistencial): no dice si un servicio se puede habilitar.",
+ "fecha_referencia": [
+  {"id": "corte_2026", "fecha": "2026-10-23", "regla": "Res. 3100 con sus modificaciones vigentes"},
+  {
+   "id": "apertura",
+   "fecha": "2030-04-01",
+   "tipo_dato": "estimacion (apertura «hacia abril de 2030», docs/11)",
+   "regla": "Exigencias con vigencia_hasta anterior quedan no_aplica; esterilización con la Res. 914 de 2025, por_confirmar hasta leer el manual DMER"
+  }
+ ],
+ "aviso_vigencia": "La Res. 1732 de 2026 fue revocada por la Res. 2080 del 8-sep-2026 antes de regir.",
+ "aviso_textos": "Textos tomados de compilaciones oficiales vistas por buscador o de guías secundarias; cotejar con el Diario Oficial antes de radicar o de la visita previa.",
+ "escenarios": ["dotacion_actual", "con_cierre_de_brechas"],
+ "estados": ["cumple", "parcial", "falta", "documento_pendiente", "no_aplica"],
+ "servicios": [
+  {
+   "id": "urgencias",
+   "nombre": "Servicio de urgencias (prueba)",
+   "codigo_reps": "1102 (por confirmar)",
+   "numeral": "11.6.1",
+   "complejidad": "baja",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.6.1",
+   "resumen": {
+    "corte_2026": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 1}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 1}
+     }
+    },
+    "apertura": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 1}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 1}
+     }
+    }
+   },
+   "exigencias": [
+    {
+     "id": "EX-URG-001",
+     "estandar": "dotacion",
+     "numeral": "11.6.1, estándar de dotación (texto de prueba)",
+     "numeral_confirmado": false,
+     "texto_corto": "Desfibrilador con monitor en el ambiente de atención (texto de prueba).",
+     "que_exige": "Un desfibrilador en el consultorio de prueba B.",
+     "texto_disponible": true,
+     "verificacion_texto": "literal_compilacion",
+     "exigible": "si",
+     "ambientes": [{"fila": 1, "nombre": "Consultorio de prueba B"}],
+     "recintos": ["P1-A001-01"],
+     "regla": {
+      "tipo": "por_recinto",
+      "items": [{"linea": "L-urgencias-e-2cd8df", "nombre": "Desfibrilador de prueba"}],
+      "n_por_recinto": 1
+     },
+     "requerido": 1,
+     "encontrado": {"dotacion_actual": 1, "con_cierre_de_brechas": 1},
+     "unidades": ["U-urgencias-2cd8df-001"],
+     "estado": {
+      "corte_2026": {"dotacion_actual": "cumple", "con_cierre_de_brechas": "cumple"},
+      "apertura": {"dotacion_actual": "cumple", "con_cierre_de_brechas": "cumple"}
+     },
+     "estado_investigacion": "cubierto",
+     "diferencia": null,
+     "referencia": false,
+     "vigencia_hasta": null,
+     "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+    },
+    {
+     "id": "EX-URG-002",
+     "estandar": "dotacion",
+     "numeral": "11.6.1, dotación, según guía secundaria; por confirmar",
+     "numeral_confirmado": false,
+     "texto_corto": null,
+     "que_exige": "Laringoscopio dentro del carro de paro (resumen de prueba).",
+     "texto_disponible": false,
+     "verificacion_texto": "fuente_secundaria",
+     "exigible": "por_confirmar",
+     "ambientes": [{"fila": 1, "nombre": "Consultorio de prueba B"}],
+     "recintos": ["P1-A001-01"],
+     "regla": {
+      "tipo": "contenido",
+      "dentro_de": {"linea": "L-urgencias-m-a3f0fc", "nombre": "Carro de paro de prueba"},
+      "items": [{"nombre": "Laringoscopio (no está en la dotación de prueba)"}],
+      "n": 1
+     },
+     "requerido": 1,
+     "encontrado": {"dotacion_actual": 0, "con_cierre_de_brechas": 0},
+     "unidades": [],
+     "estado": {
+      "corte_2026": {"dotacion_actual": "falta", "con_cierre_de_brechas": "falta"},
+      "apertura": {"dotacion_actual": "falta", "con_cierre_de_brechas": "falta"}
+     },
+     "estado_investigacion": "falta",
+     "diferencia": null,
+     "referencia": false,
+     "vigencia_hasta": null,
+     "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+    }
+   ]
+  },
+  {
+   "id": "sala_expansion",
+   "nombre": "Sala de expansión",
+   "habilitable": "no",
+   "marco": "Res. 2065 de 2025 (sedes transitorias en emergencias); sus exigencias de dotación son por analogía con 11.6.1 y van como referencia",
+   "resumen": null,
+   "exigencias": []
+  }
+ ],
+ "todos_los_servicios": {
+  "exigencias": ["EX-TOD-C01"],
+  "detalle": [
+   {
+    "id": "EX-TOD-C01",
+    "estandar": "todos_los_servicios",
+    "numeral": "Manual, num. 11.1.3 (dotación, todos los servicios), criterio 1 (texto de prueba)",
+    "numeral_confirmado": true,
+    "texto_corto": null,
+    "que_exige": "Inventario de equipos biomédicos con marca, modelo, serie, registro sanitario y clase de riesgo (resumen de prueba).",
+    "texto_disponible": false,
+    "verificacion_texto": "contenido_compilacion",
+    "exigible": "si",
+    "regla": {"tipo": "documental"},
+    "estado": {
+     "corte_2026": {"dotacion_actual": "documento_pendiente", "con_cierre_de_brechas": "documento_pendiente"},
+     "apertura": {"dotacion_actual": "documento_pendiente", "con_cierre_de_brechas": "documento_pendiente"}
+    },
+    "estado_investigacion": "parcial",
+    "diferencia": "Los campos de marca, modelo, serie y registro se llenan al comprar: queda como documento pendiente (prueba).",
+    "referencia": false,
+    "vigencia_hasta": null,
+    "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+   }
+  ],
+  "nota": "Se muestran una vez; no suman en los resúmenes por servicio"
+ },
+ "por_recinto": {
+  "P1-A000-01": {"estado": {"corte_2026": "cumple", "apertura": "cumple"}, "exigencias": [], "por_confirmar": 0},
+  "P1-A001-01": {
+   "estado": {"corte_2026": "cumple", "apertura": "cumple"},
+   "exigencias": ["EX-URG-001", "EX-URG-002"],
+   "por_confirmar": 1
+  }
+ }
+}
