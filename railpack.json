@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "packages": { "python": "3.12" },
+  "steps": {
+    "site": {
+      "inputs": [{ "step": "packages:mise" }, { "local": true, "include": ["."] }],
+      "commands": ["python3 scripts/build_data.py", "python3 scripts/build_site.py"],
+      "deployOutputs": [{ "include": ["site"] }]
+    }
+  }
+}

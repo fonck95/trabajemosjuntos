@@ -56,7 +56,7 @@ cd site && python3 -m http.server 8000
 # abrir http://localhost:8000
 ```
 
-Al hacer *push* a `main`, el flujo `.github/workflows/pages.yml` publica el atlas en GitHub Pages (hay que activar Pages con origen "GitHub Actions" en la configuración del repositorio).
+Al hacer *push* a `main`, el flujo `.github/workflows/pages.yml` publica el atlas en GitHub Pages (hay que activar Pages con origen "GitHub Actions" en la configuración del repositorio). Railway lo construye con Railpack: `railpack.json` corre los mismos dos scripts y `Staticfile` + `Caddyfile` sirven `site/` con Caddy.
 
 ## Reproducir el análisis de contratación
 
