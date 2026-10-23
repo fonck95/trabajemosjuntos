@@ -1,0 +1,1414 @@
+{
+  "grupo": "Consulta y ambulatorio: consulta externa general y especializada con procedimientos menores, odontología con radiología odontológica, telemedicina (prestador remisor), vacunación, servicio farmacéutico y terapias",
+  "fecha_corte": "2026-10-23",
+  "fuente_principal": {
+    "titulo": "Resolución 3100 de 2019 del Ministerio de Salud y Protección Social, por la cual se definen los procedimientos y condiciones de inscripción de los prestadores de servicios de salud y de habilitación de los servicios de salud y se adopta el Manual de Inscripción de Prestadores y Habilitación de Servicios de Salud",
+    "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+    "fecha_consulta": "2026-10-23",
+    "copias_consultadas": [
+      "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+      "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "https://normograma.invima.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "https://www.minsalud.gov.co/sites/rid/lists/bibliotecadigital/ride/de/dij/resolucion-3100-de-2019.pdf"
+    ],
+    "modificaciones_conocidas": "Res. 544 de 2023 y Res. 465 de 2025 (entre otras; normas.json también cita la 1410 de 2022 y la 914 de 2025). No se pudo confirmar si alguna cambió los criterios de dotación de estos seis servicios."
+  },
+  "aviso_vigencia_res_1732_de_2026": {
+    "que_es": "La Res. 1732 del 5 de agosto de 2026 adopta un nuevo Manual de Inscripción de Prestadores y Habilitación (Tomos I y II) que reemplaza a la Res. 3100 de 2019.",
+    "transicion_texto_literal": [
+      "los prestadores de servicios de salud podrán continuar dando cumplimiento a las condiciones de habilitación previstas en la Resolución 3100 de 2019 y sus modificaciones, o acogerse de manera anticipada y voluntaria a la totalidad de las disposiciones de la presente resolución",
+      "Vencido el término de transición, los prestadores de servicios de salud deberán dar cumplimiento integral a las disposiciones contenidas en la presente resolución, sin que resulte aplicable, a partir de dicho momento, ninguna disposición de la Resolución 3100 de 2019 y sus modificaciones."
+    ],
+    "plazo": "12 meses (las fuentes no coinciden en si cuentan desde el 5-ago-2026 o desde la publicación en el Diario Oficial). Número del artículo: por confirmar.",
+    "consecuencia_para_la_torre": "La torre abriría hacia abril de 2030 (docs/11): para entonces la 3100 ya no aplica. Este cruce sirve de línea base y para el concepto de la Res. 485, pero la dotación final debe verificarse contra el Tomo II de la Res. 1732.",
+    "urls": [
+      "https://normograma.com/keralty/compilacion/docs/resolucion_minsaludps_1732_2026.htm",
+      "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=193984&dt=S",
+      "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/CA/manual-inscripcion-prestadores-habilitacion-ss-t1.pdf"
+    ],
+    "tipo_dato": "dato oficial (texto de la compilación de Keralty, leído con el buscador); fecha y plazo, confirmados en varias fuentes secundarias"
+  },
+  "convencion_estados": {
+    "cubierto": "Un ítem de dotacion.json (o de equipamiento_fijo, tic_apoyo, presupuesto u obra cuando se indica) cumple lo exigido en cantidad y ubicación.",
+    "parcial": "El ítem existe pero falta cantidad, una característica o un documento (certificado, licencia, programa).",
+    "falta": "Ningún ítem de dotacion.json lo cubre.",
+    "verificacion_texto": {
+      "literal_confirmado": "La frase se recuperó de una compilación oficial (ICBF, Cancillería o Invima) a través del buscador. La redacción coincide entre copias, pero conviene cotejarla con el PDF del Ministerio.",
+      "contenido_confirmado_redaccion_por_confirmar": "El contenido aparece en una compilación oficial; la redacción exacta o el subnumeral quedan por confirmar.",
+      "solo_fuente_secundaria": "Solo aparece en guías comerciales o de consultoría (Allers, ConsultorSalud): no es texto normativo.",
+      "por_confirmar": "No se encontró en la fuente; se deja como pendiente."
+    }
+  },
+  "requisitos_todos_los_servicios": [
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.3 (dotación, todos los servicios), criterio 1 (subnumerales 1.1 a 1.6)",
+      "texto_literal": "El prestador de servicios de salud cuenta con el registro de la relación de los equipos biomédicos requeridos para la prestación de servicios de salud, este registro cuenta como mínimo con la siguiente información: [...] 1.5 Registro sanitario para dispositivos médicos o permiso de comercialización para equipos biomédicos de tecnología controlada, cuando lo requiera. [...] Clasificación por riesgo, cuando el equipo lo requiera.",
+      "que_exige": "Inventario de equipos biomédicos con nombre, marca, modelo, serie, registro sanitario o permiso de comercialización del INVIMA y clase de riesgo. El registro sanitario y la clasificación (I, IIa, IIb, III) los regula el Decreto 4725 de 2005 (artículos por confirmar).",
+      "ambiente_programa": "Todos los ambientes con equipos biomédicos",
+      "cantidad_minima": "1 registro por equipo (inventario único de la E.S.E.)",
+      "estado_en_dotacion": "parcial",
+      "item_dotacion": "Todos los ítems de dotacion.json (campos nombre, especificacion y clase_riesgo)",
+      "comentario": "dotacion.json ya trae nombre, especificación y clase de riesgo de cada ítem. Faltan marca, modelo, serie y número de registro sanitario INVIMA: solo se conocen al comprar. Exigirlos en los pliegos y cargarlos al inventario al recibir cada equipo.",
+      "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+      "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.3, criterio 2 (subnumeración por confirmar)",
+      "texto_literal": "Programa de mantenimiento preventivo de los equipos biomédicos, que incluya el cumplimiento de las recomendaciones establecidas por el fabricante [...] Hoja(s) de vida del(los) equipo(s) biomédicos(s), con los registros de los mantenimientos preventivos y correctivos, según corresponda.",
+      "que_exige": "Programa de mantenimiento preventivo según el fabricante (o protocolo propio si el fabricante no lo define) y una hoja de vida por equipo con sus mantenimientos.",
+      "ambiente_programa": "Todos los ambientes con equipos biomédicos; archivo en el taller biomédico del edificio actual",
+      "cantidad_minima": "1 hoja de vida por equipo; 1 programa anual",
+      "estado_en_dotacion": "parcial",
+      "item_dotacion": "Campo mantenimiento_anual_pct de cada ítem y totales.mantenimiento_anual_cop_2026 de cada servicio",
+      "comentario": "El costo del mantenimiento está estimado (por ejemplo $9,6 M al año en consulta externa y $9,1 M en odontología, cálculo propio de dotacion.json), pero el programa y las hojas de vida son documentos por producir. Exigir al proveedor manuales, protocolo de mantenimiento y la primera hoja de vida en la entrega.",
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.3 (numeral exacto por confirmar)",
+      "texto_literal": "La suficiencia de equipos biomédicos está relacionada con la frecuencia de uso de los mismos, incluyendo los tiempos del proceso de esterilización, cuando aplique.",
+      "que_exige": "Tener suficientes equipos e instrumental para el volumen de atención, contando el tiempo en que el instrumental está en esterilización.",
+      "ambiente_programa": "Todos los servicios; crítico en odontología y sala de procedimientos",
+      "cantidad_minima": "Según volumen (ver cada servicio)",
+      "estado_en_dotacion": "cubierto",
+      "item_dotacion": "Juego de instrumental básico de odontología (30); Equipo de pequeña cirugía (instrumental) para sala de procedimientos (6)",
+      "comentario": "Ver el análisis por servicio.",
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "todos_los_servicios",
+      "numeral": "Manual, num. 11.1.3 (criterio del carro de paro; número por confirmar: 8 u 11 según la copia)",
+      "texto_literal": "Carro de paro: Conjunto de medicamentos, dispositivos médicos y equipos biomédicos utilizados en la reanimación cardio cerebro pulmonar. [...] en los servicios donde se requiera carro de paro, adicional a la dotación definida en el presente manual, los medicamentos, dispositivos médicos e insumos deben ser definidos por el prestador de servicios de salud de acuerdo con la morbilidad, riesgos de complicaciones más frecuentes [...]",
+      "que_exige": "Donde un servicio exija carro de paro, debe tener desfibrilador bifásico con visualización integrada, cardioversión, marcapasos transcutáneo y paletas adulto y pediátricas según aplique, resucitador pulmonar manual, aspirador o sistema de vacío y monitor de signos vitales con trazado electrocardiográfico y presión no invasiva (lista recuperada de las compilaciones del Invima y la Cancillería; el laringoscopio solo aparece en una guía comercial).",
+      "ambiente_programa": "No se encontró que consulta externa, odontología, vacunación, farmacia, terapias ni telemedicina lo exijan en la Res. 3100 (por confirmar)",
+      "cantidad_minima": "0 en estos seis servicios según lo verificado",
+      "estado_en_dotacion": "parcial",
+      "item_dotacion": "Desfibrilador externo automático (DEA) para el piso de consulta (consulta_externa, 1); carros de paro en urgencias (piso 1) y en partos y hospitalización (piso 3)",
+      "comentario": "En el piso 4 (odontología, terapias, telemedicina, psicología, nutrición y sala de expansión de 8 camillas) no hay DEA ni carro de paro, y la sala de expansión recibe pacientes. No es exigencia confirmada de la 3100 para estos servicios, pero se recomienda un DEA en el piso 4 (unos $8-12 M, estimación) y definir cómo llega el carro de paro del piso 3.",
+      "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+      "fuente_url": "https://normograma.invima.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "medicamentos_dispositivos",
+      "numeral": "Manual, num. 11.1.4 (medicamentos, dispositivos médicos e insumos, todos los servicios; numeral del criterio por confirmar)",
+      "texto_literal": "Son las condiciones mínimas e indispensables de procesos que garantizan las condiciones de almacenamiento, trazabilidad, y seguimiento al uso de medicamentos, componentes anatómicos, dispositivos médicos, reactivos de diagnóstico in vitro [...]",
+      "que_exige": "Registro de medicamentos (principio activo, forma farmacéutica, concentración, lote, fecha de vencimiento, presentación, unidad de medida y registro sanitario vigente del INVIMA) y de dispositivos; programas de farmacovigilancia, tecnovigilancia (Res. 4816 de 2008) y reactivovigilancia (estos programas solo se confirmaron en fuentes secundarias).",
+      "ambiente_programa": "Servicio farmacéutico y depósitos de cada servicio",
+      "cantidad_minima": "1 registro y 1 programa por prestador",
+      "estado_en_dotacion": "parcial",
+      "item_dotacion": "Lectores de código de barras para dispensación trazable (farmacia, 3); software de historia clínica e interoperabilidad (presupuesto.json, TIC)",
+      "comentario": "La trazabilidad tiene soporte en equipos y software, pero los programas de vigilancia son procesos de la E.S.E., no compras.",
+      "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+      "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "medicamentos_dispositivos",
+      "numeral": "Copia del ICBF: '9.2' (no se pudo confirmar a qué estándar o servicio pertenece ese 9.2)",
+      "texto_literal": "9.2. Instrumentos para medir la humedad relativa y la temperatura, en donde se almacenen medicamentos y dispositivos médicos.",
+      "que_exige": "Termohigrómetro o equivalente en cada sitio donde se guarden medicamentos o dispositivos, con registro y control.",
+      "ambiente_programa": "Farmacia (almacenamiento, recepción, cuarentena, control especial, dispensación), cadena de frío de vacunación y depósitos de cada servicio",
+      "cantidad_minima": "1 por ambiente de almacenamiento",
+      "estado_en_dotacion": "parcial",
+      "item_dotacion": "Termohigrómetros con registro (farmacia, 6); Registradores de temperatura de 30 días y termómetros digitales (vacunación, 8)",
+      "comentario": "Cubierto en farmacia y vacunación. Falta en los depósitos de terapias ('Depósito de insumos y equipos') y en las salas de procedimientos que guardan medicamentos (consulta externa y terapia respiratoria): 1 termohigrómetro por depósito, unos $150.000 a $400.000 cada uno (estimación).",
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+      "tipo_dato": "dato oficial"
+    },
+    {
+      "estandar": "infraestructura",
+      "numeral": "Manual, num. 11.1.2 (infraestructura, todos los servicios), criterio 14",
+      "texto_literal": "En edificaciones donde se presten servicios de cirugía, atención del parto, laboratorio clínico, urgencias, gestión pre transfusional, diálisis, hospitalarios, imágenes diagnósticas, vacunación, servicio farmacéutico y los que requieran cadena de frío, cuentan con planta eléctrica.",
+      "que_exige": "Planta eléctrica para la edificación (aquí, por vacunación, servicio farmacéutico y cadena de frío, además de urgencias, partos, laboratorio, hospitalización e imágenes).",
+      "ambiente_programa": "Bloque técnico (exterior)",
+      "cantidad_minima": "1 planta para la torre",
+      "estado_en_dotacion": "cubierto",
+      "item_dotacion": "Planta eléctrica diésel de 300 kVA con transferencia automática (equipamiento_fijo)",
+      "comentario": "Una resolución modificatoria publicada por Cerlatam habla de 'planta eléctrica o sistema eléctrico alterno de emergencia' para ionizantes, vacunación y servicio farmacéutico; no se confirmó si cambió la redacción vigente. Los refrigeradores de vacunas y de farmacia deben quedar en circuitos de la planta (y de la UPS si se quiere cero interrupción).",
+      "verificacion_texto": "literal_confirmado",
+      "fuente_url": "https://www.tekvobioingenieria.com/resolucion-3100-procedimientos-y-condiciones-de-inscripcion-y-habilitacion-de-los-servicios-de-salud/",
+      "tipo_dato": "dato oficial"
+    }
+  ],
+  "servicios": [
+    {
+      "id": "consulta_externa",
+      "nombre_3100": "Servicio de consulta externa general (11.2.1) y servicio de consulta externa especializada (11.2.2); los procedimientos menores van en consultorio de procedimientos o sala de procedimientos dentro de consulta externa",
+      "codigo_reps": "328 medicina general; 312 enfermería; 344 psicología; 333 nutrición y dietética; 320 ginecobstetricia, 342 pediatría y 329 medicina interna (tomados de programa.json; confirmar contra la tabla de servicios vigente del REPS)",
+      "numeral": "Manual, num. 11.2.1 (dotación, criterios 19 a 24) y 11.2.2; infraestructura de todos los servicios, num. 11.1.2, criterios 28 a 30",
+      "complejidad": "General: baja. Especializada: la 3100 la ubica en mediana (y alta) complejidad (por confirmar en el texto): habilitarla, aunque sea por brigadas, suma un servicio de mediana complejidad a la E.S.E., igual que la ecografía.",
+      "ambientes_programa": [
+        "Consultorio de medicina general (8)",
+        "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (3)",
+        "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas) (1)",
+        "Consultorio de nutrición y dietética (1)",
+        "Consultorio de psicología (entrevista) (1)",
+        "Sala de procedimientos de consulta externa (curaciones, inyectología, electrocardiograma) (1)",
+        "Ambiente de toma de muestras (citología, prueba de VPH, frotis) (1, servicio 749)"
+      ],
+      "exigencias": [
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 19 (19.1)",
+          "texto_literal": "Camilla fija",
+          "que_exige": "Una camilla fija en cada consultorio donde se hace examen físico.",
+          "ambiente_programa": [
+            "Consultorio de medicina general (8)",
+            "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (3)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas) (1)",
+            "Consultorio de nutrición y dietética (1)"
+          ],
+          "cantidad_minima": "1 por consultorio = 13",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Camilla de examen fija tapizada con portarrollo (14)",
+          "comentario": "Hay 14 camillas para 13 consultorios de examen: la del consultorio de psicología no la exige la norma (consultorio de entrevista). Se puede pasar a la sala de procedimientos o dejar de comprar.",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 19 (19.2)",
+          "texto_literal": "Escalerilla",
+          "que_exige": "Una escalerilla junto a cada camilla de examen.",
+          "ambiente_programa": [
+            "Consultorio de medicina general (8)",
+            "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (3)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas) (1)",
+            "Consultorio de nutrición y dietética (1)"
+          ],
+          "cantidad_minima": "1 por consultorio = 13",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Escalerilla de dos pasos (14)",
+          "comentario": "Igual que la camilla: sobra la de psicología.",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 19 (19.3)",
+          "texto_literal": "Tensiómetro adulto y/o pediátrico, según la oferta del servicio (redacción por confirmar)",
+          "que_exige": "Tensiómetro con brazaletes para adulto y, donde se atienden niños, pediátrico.",
+          "ambiente_programa": [
+            "Consultorio de medicina general (8)",
+            "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (3)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas) (1)",
+            "Consultorio de nutrición y dietética (1)"
+          ],
+          "cantidad_minima": "1 por consultorio = 13 (con brazalete pediátrico donde haya oferta pediátrica)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Tensiómetro aneroide de pared adulto-pediátrico (13); el Kit de examen básico (13) trae otro portátil con brazaletes pediátrico y obeso",
+          "comentario": "",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 19 (19.4)",
+          "texto_literal": "Fonendoscopio adulto y/o pediátrico, según la oferta del servicio (redacción por confirmar)",
+          "que_exige": "Fonendoscopio de adulto y, en consultorios que atienden niños, pediátrico.",
+          "ambiente_programa": [
+            "Consultorio de medicina general (8)",
+            "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (3)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas) (1)",
+            "Consultorio de nutrición y dietética (1)"
+          ],
+          "cantidad_minima": "1 adulto por consultorio = 13; 1 pediátrico en cada consultorio con oferta pediátrica (hasta 12: medicina general, enfermería y especializado)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Kit de examen básico (13): 'fonendoscopio de doble campana'",
+          "comentario": "El kit trae un solo fonendoscopio de adulto. Falta el pediátrico en los consultorios que atienden niños (crecimiento y desarrollo, pediatría, consulta general). Costo bajo: unos $150.000 a $400.000 cada uno (estimación).",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 19 (19.5)",
+          "texto_literal": "Equipo de órganos de los sentidos",
+          "que_exige": "Otoscopio y oftalmoscopio en cada consultorio de examen.",
+          "ambiente_programa": [
+            "Consultorio de medicina general (8)",
+            "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (3)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas) (1)",
+            "Consultorio de nutrición y dietética (1)"
+          ],
+          "cantidad_minima": "1 por consultorio = 13",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Equipo de órganos de los sentidos de pared (13), más el portátil del Kit de examen básico (13)",
+          "comentario": "",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 19 (resto de la lista: subnumerales por confirmar)",
+          "texto_literal": null,
+          "que_exige": "Martillo de reflejos. La lista completa de 11 ítems del criterio 19 solo aparece en una guía comercial; en la compilación oficial se ve el martillo dentro del criterio 24 (modalidad extramural).",
+          "ambiente_programa": [
+            "Consultorio de medicina general (8)",
+            "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (3)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas) (1)",
+            "Consultorio de nutrición y dietética (1)"
+          ],
+          "cantidad_minima": "1 por consultorio = 13 (si se confirma)",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": null,
+          "comentario": "Ningún ítem de dotacion.json incluye martillo de reflejos. Cuesta poco (unos $20.000 a $60.000 cada uno, estimación): conviene agregarlo al kit aunque la exigencia intramural esté por confirmar.",
+          "verificacion_texto": "solo_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 19 (por confirmar)",
+          "texto_literal": null,
+          "que_exige": "Tallímetro o infantómetro, cinta métrica y termómetro cuando se requiera (lista de fuente secundaria).",
+          "ambiente_programa": [
+            "Consultorio de medicina general (8)",
+            "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (3)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas) (1)",
+            "Consultorio de nutrición y dietética (1)"
+          ],
+          "cantidad_minima": "1 de cada uno por consultorio = 13 (infantómetro donde haya oferta pediátrica)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Kit de examen básico (13: tallímetro, cinta métrica, termómetro infrarrojo); Infantómetro (2)",
+          "comentario": "",
+          "verificacion_texto": "solo_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 19 (por confirmar); en el criterio 24 (extramural) figura como 24.9",
+          "texto_literal": "Báscula grado médico o pesa bebé, según la oferta del servicio",
+          "que_exige": "Báscula grado médico en cada consultorio de examen y pesabebés donde se atiendan menores de 2 años.",
+          "ambiente_programa": [
+            "Consultorio de medicina general (8)",
+            "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (3)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas) (1)",
+            "Consultorio de nutrición y dietética (1)"
+          ],
+          "cantidad_minima": "1 báscula por consultorio = 13; 1 pesabebés en cada consultorio con oferta de lactantes (mínimo 4: 3 de enfermería y el especializado)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Kit de examen básico (13: báscula digital grado médico hasta 200 kg); Báscula pesa bebés digital (2)",
+          "comentario": "Hay 2 pesabebés para al menos 4 consultorios con lactantes (crecimiento y desarrollo en enfermería y pediatría). Si la verificación es por consultorio, faltan 2 (unos $0,6 M a $1,5 M cada uno, estimación).",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 19 (por confirmar)",
+          "texto_literal": null,
+          "que_exige": "Negatoscopio o sistema de visualización de imágenes según la tecnología del prestador.",
+          "ambiente_programa": [
+            "Consultorio de medicina general (8)",
+            "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (3)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas) (1)",
+            "Consultorio de nutrición y dietética (1)"
+          ],
+          "cantidad_minima": "1 por consultorio = 13",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Computador todo en uno con UPS pequeña para puestos asistenciales y administrativos (tic_apoyo, 70) y PACS/RIS con visor web (tic_apoyo, 1)",
+          "comentario": "Como los rayos X son digitales, el computador del consultorio con el visor del PACS reemplaza el negatoscopio. Asignar un computador a cada consultorio en el inventario.",
+          "verificacion_texto": "solo_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 20 (por confirmar)",
+          "texto_literal": null,
+          "que_exige": "Consultorio sin examen físico ni procedimientos (entrevista): no se exige dotación biomédica adicional a la de todos los servicios.",
+          "ambiente_programa": [
+            "Consultorio de psicología (entrevista)"
+          ],
+          "cantidad_minima": "0 equipos biomédicos",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Puesto de trabajo (escritorio, silla del profesional y 2 sillas interlocutoras) (14)",
+          "comentario": "",
+          "verificacion_texto": "solo_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 21",
+          "texto_literal": null,
+          "que_exige": "Consultorio donde se hacen procedimientos: la dotación del consultorio de examen físico más los equipos que exijan los procedimientos documentados en el estándar de procesos prioritarios (contenido confirmado en la compilación del ICBF; redacción por confirmar).",
+          "ambiente_programa": [
+            "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (si allí se insertan implantes o DIU)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)"
+          ],
+          "cantidad_minima": "Según procedimientos documentados",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Camilla ginecológica con lámpara cuello de cisne y mesa auxiliar (2); Equipo de pequeña cirugía (instrumental) para sala de procedimientos (6)",
+          "comentario": "Si la E.S.E. inserta implantes subdérmicos o DIU en los consultorios (planificación familiar, Res. 3280 de 2018), debe documentar el procedimiento y dotar ese consultorio con su instrumental. Hoy el instrumental está pensado para la sala de procedimientos.",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 22 (22.1)",
+          "texto_literal": null,
+          "que_exige": "Sala de procedimientos con la dotación necesaria para los procedimientos documentados en el estándar de procesos prioritarios (contenido confirmado; redacción por confirmar).",
+          "ambiente_programa": [
+            "Sala de procedimientos de consulta externa (curaciones, inyectología, electrocardiograma)"
+          ],
+          "cantidad_minima": "1 juego por sala; instrumental según volumen y tiempos de esterilización",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Electrobisturí para cirugía menor (1); Lámpara de procedimientos LED rodable (1); Equipo de pequeña cirugía (6); Mesa de Mayo y mesa auxiliar en acero inoxidable (2); Electrocardiógrafo de 12 derivaciones (1)",
+          "comentario": "Cubierto para curaciones, suturas, inyectología y electrocardiograma, que son los procedimientos que nombra programa.json. Si se documentan otros, revisar.",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 22 (22.2)",
+          "texto_literal": null,
+          "que_exige": "Camilla con barandas, ruedas y freno cuando los procedimientos la requieran.",
+          "ambiente_programa": [
+            "Sala de procedimientos de consulta externa (curaciones, inyectología, electrocardiograma)"
+          ],
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Camilla de procedimientos (1): especificación 'Hidráulica, posiciones'",
+          "comentario": "La especificación no dice barandas ni ruedas con freno. Corregir la ficha técnica antes de cotizar; el precio casi no cambia.",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 24 (24.1 a 24.9) — modalidad extramural (jornada de salud, unidad móvil o domiciliaria), según la guía y la compilación de la Cancillería",
+          "texto_literal": "Báscula grado médico o pesa bebé, según la oferta del servicio",
+          "que_exige": "Si se habilita la modalidad extramural: fonendoscopio, tensiómetro, equipo de órganos de los sentidos, oxímetro, glucómetro, martillo de reflejos, [...] y báscula (subnumerales 24.7 y 24.8 por confirmar).",
+          "ambiente_programa": "No hay ambiente: va en maletín (los equipos básicos de salud salen del edificio actual)",
+          "cantidad_minima": "1 juego por equipo extramural",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Kit de examen básico (13: fonendoscopio, tensiómetro, equipo de órganos portátil, oxímetro de dedo, termómetro, báscula, cinta métrica, tallímetro)",
+          "comentario": "El kit cubre casi todo, pero no trae glucómetro ni martillo de reflejos. Solo aplica si se habilita la modalidad extramural para consulta general (la E.S.E. ya tiene equipos básicos de salud).",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.2 (criterio de dotación de la consulta especializada; número por confirmar)",
+          "texto_literal": "los consultorios de los especialistas cuentan con la dotación necesaria para realizar los procedimientos documentados en el estándar de procesos prioritarios",
+          "que_exige": "Lo de consulta general más lo que exijan los procedimientos de cada especialidad: en ginecobstetricia, camilla ginecológica, lámpara y Doppler fetal; en pediatría, pesabebés e infantómetro; en medicina interna, electrocardiógrafo.",
+          "ambiente_programa": [
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)",
+            "Ambiente de toma de muestras (citología, prueba de VPH, frotis)"
+          ],
+          "cantidad_minima": "1 camilla ginecológica en el consultorio especializado y 1 en toma de citologías; 1 Doppler en el consultorio especializado",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Camilla ginecológica con lámpara cuello de cisne y mesa auxiliar (2); Doppler fetal de bolsillo (3); Báscula pesa bebés digital (2); Infantómetro (2); Electrocardiógrafo de 12 derivaciones (1, compartido)",
+          "comentario": "El colposcopio es de mediana complejidad: déjelo solo si se habilita ginecología con colposcopia.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.1.2, criterio 28.1",
+          "texto_literal": "Consultorio donde se realiza examen físico: Ambiente con mínimo 10 m2 (sin incluir la unidad sanitaria) que cuenta con [...] Lavamanos. No se exige adicional si el consultorio cuenta con unidad sanitaria.",
+          "que_exige": "Consultorio de 10 m² o más con área de entrevista, área de examen y lavamanos.",
+          "ambiente_programa": [
+            "Consultorio de medicina general (8)",
+            "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos) (3)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas) (1)",
+            "Consultorio de nutrición y dietética (1)"
+          ],
+          "cantidad_minima": "1 lavamanos por consultorio = 13",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "No es dotación: área en programa.json (12,96 m² por consultorio) y lavamanos en obra (presupuesto.json, capítulo 8: 136 lavamanos)",
+          "comentario": "Cumple el área (12,96 m² > 10 m²). Verificar en planos que cada consultorio tenga su lavamanos.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.1.2, criterio 28.2",
+          "texto_literal": "Poceta, cuando la requiera, según los procedimientos que el prestador documente en el estándar de procesos prioritarios.",
+          "que_exige": "Consultorio de procedimientos: área de entrevista, área de procedimientos separada por barrera física fija, mesón de trabajo, poceta si el procedimiento la requiere y lavamanos.",
+          "ambiente_programa": [
+            "Sala de procedimientos de consulta externa (curaciones, inyectología, electrocardiograma)"
+          ],
+          "cantidad_minima": "1 mesón con poceta y 1 lavamanos",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Mesa de Mayo y mesa auxiliar en acero inoxidable (2); mesón, poceta y lavamanos van en obra",
+          "comentario": "La torre usa sala de procedimientos (la Res. 3100 pide 8 m² según normas.json; programa.json da 12,96 m²). Confirmar en planos el mesón con poceta para curaciones.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, num. 11.1.3 (suficiencia)",
+          "texto_literal": "La suficiencia de equipos biomédicos está relacionada con la frecuencia de uso de los mismos [...]",
+          "que_exige": "Equipos compartidos suficientes para el volumen del piso 2.",
+          "ambiente_programa": [
+            "Sala de procedimientos de consulta externa (curaciones, inyectología, electrocardiograma)",
+            "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)"
+          ],
+          "cantidad_minima": "Electrocardiógrafo 1; Doppler 3; DEA 1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Electrocardiógrafo de 12 derivaciones (1); Doppler fetal de bolsillo (3); Desfibrilador externo automático (DEA) para el piso de consulta (1)",
+          "comentario": "Un electrocardiógrafo para todo el piso 2 alcanza para la consulta de crónicos si se agenda; si se hacen electrocardiogramas en la sala y en el consultorio especializado a la vez, considerar un segundo.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Espirómetro digital",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "La 3100 no lo nombra para consulta externa.",
+          "recomendacion": "Útil para EPOC y asma (ruta de crónicos). Mantener como recomendado.",
+          "prioridad_en_dotacion_json": "recomendado"
+        },
+        {
+          "item_dotacion": "Equipo de termoablación (termocoagulador) para lesiones de cuello uterino",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "No lo nombra la 3100.",
+          "recomendacion": "Sirve a la estrategia 'ver y tratar' de cáncer de cuello (Res. 3280 de 2018). Mantener si hay ginecólogo o médico entrenado.",
+          "prioridad_en_dotacion_json": "recomendado"
+        },
+        {
+          "item_dotacion": "Colposcopio",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "La colposcopia es de mediana complejidad; la consulta general no la exige.",
+          "recomendacion": "Comprar solo si se habilita ginecología con colposcopia.",
+          "prioridad_en_dotacion_json": "recomendado"
+        },
+        {
+          "item_dotacion": "Equipo de otoemisiones acústicas (tamizaje auditivo del recién nacido)",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "La 3100 no lo nombra en consulta externa.",
+          "recomendacion": "Lo pide la Res. 3280 de 2018 para el tamizaje auditivo; dejarlo, pero su base normativa es la 3280, no la 3100.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        },
+        {
+          "item_dotacion": "Desfibrilador externo automático (DEA) para el piso de consulta",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "No se encontró que la 3100 exija DEA en consulta externa.",
+          "recomendacion": "Mantener (seguridad del paciente) y agregar otro en el piso 4.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        },
+        {
+          "item_dotacion": "Lámpara de examen cuello de cisne LED",
+          "cantidad_en_dotacion": 13,
+          "por_que_es_exceso": "No aparece en la parte del criterio 19 que se pudo confirmar.",
+          "recomendacion": "Útil para examen de piel, oídos y heridas; mantener.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        },
+        {
+          "item_dotacion": "Camilla de examen fija tapizada con portarrollo y Escalerilla de dos pasos (la unidad de psicología)",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "El consultorio de psicología es de entrevista: no exige camilla.",
+          "recomendacion": "Pasar esa unidad a otro ambiente o no comprarla.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        },
+        {
+          "item_dotacion": "Canecas para residuos (verde, gris y roja con pedal) y guardián",
+          "cantidad_en_dotacion": 14,
+          "por_que_es_exceso": "No es dotación de la 3100: lo exige la gestión de residuos (Res. 591 de 2024).",
+          "recomendacion": "Mantener: es obligatorio por otra norma.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        },
+        {
+          "item_dotacion": "Tándem de sillas para salas de espera (4 puestos)",
+          "cantidad_en_dotacion": 14,
+          "por_que_es_exceso": "Mobiliario general; la 3100 pide la sala de espera como ambiente, no las sillas.",
+          "recomendacion": "Mantener.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        },
+        {
+          "item_dotacion": "Mueble de admisión, citas y atención al usuario (SIAU)",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "Mobiliario general.",
+          "recomendacion": "Mantener.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        }
+      ],
+      "conteo_estados": {
+        "cubierto": 11,
+        "parcial": 6,
+        "falta": 1
+      },
+      "conteo_estados_tipo": "cálculo propio sobre las exigencias de este archivo"
+    },
+    {
+      "id": "odontologia",
+      "nombre_3100": "Odontología general dentro del servicio de consulta externa general (11.2.1) y servicio de radiología odontológica (11.3.3)",
+      "codigo_reps": "334 odontología general; 748 radiología odontológica (tomados de programa.json; confirmar en el REPS)",
+      "numeral": "Manual, num. 11.2.1 (dotación, criterio 23), 11.1.2 (infraestructura, criterios 28.3 y 28.4) y 11.3.3 (radiología odontológica)",
+      "complejidad": "Odontología general: baja. Radiología odontológica: por confirmar; modalidades intramural, extramural en unidad móvil y telemedicina como prestador remisor.",
+      "ambientes_programa": [
+        "Consultorio odontológico con 3 unidades separadas por barrera",
+        "Ambiente de esterilización odontológica (desde 3 unidades)",
+        "Rayos X odontológico periapical (blindado)",
+        "Cuarto de compresor y succión odontológica"
+      ],
+      "exigencias": [
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 23 (23.1)",
+          "texto_literal": "El consultorio odontológico cuenta con: 23.1. Unidad odontológica fija.",
+          "que_exige": "Una unidad odontológica fija por puesto de atención.",
+          "ambiente_programa": [
+            "Consultorio odontológico con 3 unidades separadas por barrera"
+          ],
+          "cantidad_minima": "1 por unidad = 3",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Unidad odontológica completa (sillón, lámpara de luz fría, módulo de 3 servicios, escupidera, eyector, jeringa triple, taburete) (3); Pieza de mano de alta velocidad (6); Micromotor con contraángulo y pieza recta (3)",
+          "comentario": "Las piezas de mano y el micromotor completan la unidad; la norma no los nombra aparte.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 23 (23.2)",
+          "texto_literal": "23.2. Lámpara de fotocurado o amalgamador según la oferta del servicio.",
+          "que_exige": "Lámpara de fotocurado (o amalgamador si se usa amalgama).",
+          "ambiente_programa": [
+            "Consultorio odontológico con 3 unidades separadas por barrera"
+          ],
+          "cantidad_minima": "1 por unidad = 3 (o compartida si la frecuencia de uso lo permite)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Lámpara de fotocurado LED (3)",
+          "comentario": "Bien que no haya amalgamador: la Ley 1658 de 2013 ordena eliminar el mercurio.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 23 (23.3)",
+          "texto_literal": "23.3. Negatoscopio cuando se requiera o sistema de visualización según la tecnología utilizada por el prestador.",
+          "que_exige": "Pantalla para ver las radiografías digitales.",
+          "ambiente_programa": [
+            "Consultorio odontológico con 3 unidades separadas por barrera"
+          ],
+          "cantidad_minima": "1 (o 1 por unidad si se trabaja en paralelo)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Rayos X periapical de pared con radiovisiógrafo (sensor digital) (1) + Computador todo en uno con UPS pequeña (tic_apoyo)",
+          "comentario": "Asignar al menos un computador al consultorio odontológico en el inventario de TIC.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 23 (23.4)",
+          "texto_literal": "23.4. Sistema de succión que podrá estar incorporado a la unidad odontológica.",
+          "que_exige": "Succión, que puede ser el eyector de la unidad.",
+          "ambiente_programa": [
+            "Consultorio odontológico con 3 unidades separadas por barrera",
+            "Cuarto de compresor y succión odontológica"
+          ],
+          "cantidad_minima": "1 por unidad = 3",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Unidad odontológica completa (incluye eyector) (3)",
+          "comentario": "El programa tiene un 'cuarto de compresor y succión', pero dotacion.json no trae bomba de succión central. Si se quiere succión de alto volumen (recomendable para aerosoles), agregarla (unos $8-20 M, estimación).",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.1, criterio 23 (23.5)",
+          "texto_literal": "23.5. Compresor de aire para uso odontológico.",
+          "que_exige": "Compresor de aire de uso odontológico.",
+          "ambiente_programa": [
+            "Cuarto de compresor y succión odontológica"
+          ],
+          "cantidad_minima": "1 (que alcance para las 3 unidades)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Compresor odontológico libre de aceite para 3 unidades (1)",
+          "comentario": "",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, num. 11.1.3 (suficiencia)",
+          "texto_literal": "La suficiencia de equipos biomédicos está relacionada con la frecuencia de uso de los mismos, incluyendo los tiempos del proceso de esterilización, cuando aplique.",
+          "que_exige": "Instrumental suficiente para atender mientras el resto se esteriliza.",
+          "ambiente_programa": [
+            "Consultorio odontológico con 3 unidades separadas por barrera",
+            "Ambiente de esterilización odontológica (desde 3 unidades)"
+          ],
+          "cantidad_minima": "Según agenda: con 3 unidades y 8 a 10 pacientes por unidad al día, unos 24-30 juegos básicos (cálculo propio)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Juego de instrumental básico de odontología (30); Instrumental de operatoria, periodoncia, endodoncia simple y cirugía oral (6); Autoclave clase B de mesa (1)",
+          "comentario": "Con un solo autoclave de mesa, el ciclo (unos 45-60 minutos) limita la rotación; 30 juegos lo compensan. El reprocesamiento de dispositivos sigue el manual de la Res. 914 de 2025 desde el 3-ene-2027 (dato de normas.json).",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.1.2, criterios 28.3 y 28.4 (28.4.1, 28.4.2 y 28.4.5)",
+          "texto_literal": "Mínimo un lavamanos por cada tres unidades odontológicas o fracción.",
+          "que_exige": "Consultorio de 10 m² para la primera unidad más área por cada unidad adicional, barrera física (fija o móvil) entre unidades, mesón con poceta y, desde 3 unidades, un ambiente con mesón de trabajo y poceta (para lavar y esterilizar).",
+          "ambiente_programa": [
+            "Consultorio odontológico con 3 unidades separadas por barrera",
+            "Ambiente de esterilización odontológica (desde 3 unidades)"
+          ],
+          "cantidad_minima": "1 lavamanos; 1 ambiente de esterilización con mesón y poceta",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Mueble modular con mesón, poceta y vitrina para instrumental (3); lavamanos en obra; ambiente de esterilización en programa.json",
+          "comentario": "programa.json da 26 m² (10 + 8 + 8) y el ambiente de esterilización de 4 m²: cumple.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.3 (estándar de dotación de radiología odontológica; criterios por confirmar)",
+          "texto_literal": null,
+          "que_exige": "Equipo de rayos X odontológico con sus equipos biomédicos y mantenimientos (la lista exacta del estándar no se pudo recuperar).",
+          "ambiente_programa": [
+            "Rayos X odontológico periapical (blindado)"
+          ],
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Rayos X periapical de pared con radiovisiógrafo (sensor digital) (1)",
+          "comentario": "",
+          "verificacion_texto": "por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.3 (por confirmar) y Res. 482 de 2018 (protección radiológica; artículo por confirmar)",
+          "texto_literal": null,
+          "que_exige": "Elementos de protección radiológica para el paciente (delantal y collar de tiroides).",
+          "ambiente_programa": [
+            "Rayos X odontológico periapical (blindado)"
+          ],
+          "cantidad_minima": "1 juego adulto y 1 pediátrico (recomendado)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Elementos de protección radiológica (delantal plomado con protector de tiroides) (2)",
+          "comentario": "No se pudo leer el texto que lo exige en la 3100. Si se confirma, comprar uno de los dos en talla pediátrica.",
+          "verificacion_texto": "por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.1.2, criterio 15 (según normas.json) y Res. 482 de 2018",
+          "texto_literal": null,
+          "que_exige": "Licencia de práctica médica vigente para el equipo de rayos X (radiación ionizante), con su estudio de blindaje.",
+          "ambiente_programa": [
+            "Rayos X odontológico periapical (blindado)"
+          ],
+          "cantidad_minima": "1 licencia",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Rayos X periapical de pared con radiovisiógrafo (sensor digital): la especificación dice 'requiere licencia de práctica médica'",
+          "comentario": "Es un trámite ante la Secretaría Seccional de Salud de Antioquia, no una compra; sin licencia no se habilita el servicio. El blindaje del ambiente va en obra.",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Localizador de ápice",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "La 3100 no lo nombra.",
+          "recomendacion": "Útil para endodoncia simple; mantener como recomendado.",
+          "prioridad_en_dotacion_json": "recomendado"
+        },
+        {
+          "item_dotacion": "Cavitrón (destartarizador ultrasónico)",
+          "cantidad_en_dotacion": 3,
+          "por_que_es_exceso": "La 3100 no lo nombra en el criterio 23.",
+          "recomendacion": "Necesario para profilaxis y detartraje, que son actividades de la ruta de salud bucal (Res. 3280 de 2018); mantener.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        },
+        {
+          "item_dotacion": "Puesto de trabajo y silla del odontólogo",
+          "cantidad_en_dotacion": 3,
+          "por_que_es_exceso": "Mobiliario general.",
+          "recomendacion": "Mantener.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        }
+      ],
+      "conteo_estados": {
+        "cubierto": 9,
+        "parcial": 1,
+        "falta": 0
+      },
+      "conteo_estados_tipo": "cálculo propio sobre las exigencias de este archivo"
+    },
+    {
+      "id": "telemedicina",
+      "nombre_3100": "Modalidad telemedicina, categoría prestador remisor (no es un servicio con código propio: se aplica a cada servicio que se preste así)",
+      "codigo_reps": "Sin código de servicio: se registra la modalidad 'telemedicina - prestador remisor' en cada servicio habilitado (por ejemplo 328, 334, 744). Por confirmar en el REPS.",
+      "numeral": "Manual, num. 11.1.3 (dotación de todos los servicios, criterio 17) y 11.1.2 (infraestructura; normas.json cita los criterios 51 a 53, no confirmados aquí); Res. 2654 de 2019 (telesalud)",
+      "complejidad": "No aplica a la modalidad: sigue la complejidad del servicio que se presta.",
+      "ambientes_programa": [
+        "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"
+      ],
+      "exigencias": [
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, num. 11.1.3, criterio 17 (17.1)",
+          "texto_literal": "Documento firmado por un ingeniero biomédico con tarjeta profesional vigente, que certifique que [...] Los dispositivos periféricos necesarios, de acuerdo con el tipo de servicios ofertados, garantizan la obtención de la información requerida por el prestador de referencia.",
+          "que_exige": "Periféricos que capten la información que necesita el especialista a distancia, con certificado del ingeniero biomédico.",
+          "ambiente_programa": [
+            "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"
+          ],
+          "cantidad_minima": "1 juego de periféricos por consultorio de telemedicina",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Periféricos digitales: dermatoscopio, otoscopio, fonendoscopio y cámara de documentos (1)",
+          "comentario": "Los equipos están; el certificado es un documento por producir. Si se hace teleelectrocardiografía o teleecografía, los periféricos cambian.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, num. 11.1.3, criterio 17 (17.1.2.1 en la copia de la Cancillería; 17.2.1.1 en la del ICBF)",
+          "texto_literal": null,
+          "que_exige": "Equipos de videoconferencia sincrónica con buena fidelidad de imagen y sonido para el remisor y el de referencia.",
+          "ambiente_programa": [
+            "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"
+          ],
+          "cantidad_minima": "1 estación",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Estación de telemedicina (computador, cámara HD con zoom, micrófono de ambiente, parlantes) (1)",
+          "comentario": "",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, num. 11.1.3, criterio 17 (17.1.2.2 en la Cancillería; 17.2.1.2 en el ICBF)",
+          "texto_literal": null,
+          "que_exige": "Software que se adapte a variaciones del ancho de banda sin perder la conexión y, si se graba, con seguridad informática que proteja la confidencialidad. Certificado de un ingeniero de sistemas con tarjeta profesional vigente.",
+          "ambiente_programa": [
+            "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"
+          ],
+          "cantidad_minima": "1 plataforma y 1 certificado",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Plataforma de telemedicina del primer año (presupuesto.json, software e integración); Red de voz y datos (equipamiento_fijo)",
+          "comentario": "La plataforma está presupuestada por fuera de dotacion.json. Ojo: dotacion.json ubica el certificado del ingeniero de sistemas en el num. 11.1.2 (infraestructura); las compilaciones lo muestran en el estándar de dotación (11.1.3, criterio 17). Corregir la cita.",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, num. 11.1.3, criterio 17 (subnumeral por confirmar; copia del ICBF)",
+          "texto_literal": null,
+          "que_exige": "Los equipos de captura deben producir información equivalente a la original, para que su reproducción conserve calidad y confiabilidad (aplica a la telerradiología de rayos X).",
+          "ambiente_programa": [
+            "Sala de rayos X del piso 1 (servicio de imágenes)",
+            "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"
+          ],
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "PACS/RIS para imágenes con licencias y almacenamiento (telerradiología) (tic_apoyo, 1); Equipo de rayos X digital fijo con detector plano (imagenes)",
+          "comentario": "",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.1.2, criterios 51 a 53 (según normas.json; no confirmado en esta revisión)",
+          "texto_literal": null,
+          "que_exige": "Conectividad con integridad y continuidad, energía o baterías para los equipos e iluminación homogénea en el ambiente de telemedicina.",
+          "ambiente_programa": [
+            "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"
+          ],
+          "cantidad_minima": "1 punto de red, respaldo de energía e iluminación",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Computador todo en uno con UPS pequeña (tic_apoyo); UPS central en línea modular de 60 kVA (equipamiento_fijo); Red de voz y datos (equipamiento_fijo)",
+          "comentario": "Verificar que el consultorio de telemedicina quede en un circuito respaldado.",
+          "verificacion_texto": "por_confirmar",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Retinógrafo portátil (tamizaje de retinopatía diabética por telemedicina)",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "La 3100 no lo exige.",
+          "recomendacion": "Útil para la ruta de diabetes con lectura por oftalmólogo a distancia; mantener como recomendado.",
+          "prioridad_en_dotacion_json": "recomendado"
+        },
+        {
+          "item_dotacion": "Monitor grado médico para revisión clínica (separación entre píxeles ≤ 0,25 mm)",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "dotacion.json lo da como exigencia de la 3100, pero en esta revisión no se encontró ese requisito para el prestador remisor (parece aplicar a quien lee las imágenes, el prestador de referencia).",
+          "recomendacion": "Confirmar en el texto oficial antes de comprarlo; si la lectura de rayos X es siempre remota, puede bastar un monitor normal en el remisor.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        }
+      ],
+      "conteo_estados": {
+        "cubierto": 3,
+        "parcial": 2,
+        "falta": 0
+      },
+      "conteo_estados_tipo": "cálculo propio sobre las exigencias de este archivo"
+    },
+    {
+      "id": "vacunacion",
+      "nombre_3100": "Servicio de vacunación (11.2.3)",
+      "codigo_reps": "420 (tomado de programa.json; confirmar en el REPS)",
+      "numeral": "Manual, num. 11.2.3 (infraestructura, criterios 4 y 5; dotación, criterios 6 y 7)",
+      "complejidad": "Baja; modalidades intramural, extramural unidad móvil, jornada de salud y domiciliaria. La Res. 465 de 2025 cambió reglas de vacunación en otros servicios y en extramural (por confirmar el alcance).",
+      "ambientes_programa": [
+        "Consultorio para administración de biológicos",
+        "Almacenamiento y alistamiento de termos (cadena de frío)"
+      ],
+      "exigencias": [
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.3, criterio 6 (6.1)",
+          "texto_literal": "refrigerador precalificado por la Organización Mundial de la Salud para almacenamiento de vacunas (redacción según la compilación del ICBF)",
+          "que_exige": "Refrigerador de vacunas precalificado por la OMS.",
+          "ambiente_programa": [
+            "Almacenamiento y alistamiento de termos (cadena de frío)"
+          ],
+          "cantidad_minima": "1 (mínimo)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Refrigerador de vacunas precalificado OMS (PQS E003) con registrador de 30 días (2)",
+          "comentario": "Dos refrigeradores (almacenamiento y uso diario) dan respaldo si uno falla.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.3, criterio 6 (6.2)",
+          "texto_literal": "Para los refrigeradores con alimentación eléctrica cuenta con regulador o estabilizador electrónico de voltaje independiente",
+          "que_exige": "Regulador o estabilizador independiente por refrigerador eléctrico, o conexión a fuente regulada con indicador de polo a tierra.",
+          "ambiente_programa": [
+            "Almacenamiento y alistamiento de termos (cadena de frío)"
+          ],
+          "cantidad_minima": "1 por refrigerador eléctrico = 2",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Regulador o estabilizador electrónico de voltaje para refrigerador de vacunas (2)",
+          "comentario": "",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.3, criterio 6 (6.3)",
+          "texto_literal": "Papelería, cajas de transporte y termos portavacunas precalificados por la Organización Mundial de la Salud para manejo de vacunas",
+          "que_exige": "Termos y cajas de transporte precalificados por la OMS, y papelería del programa.",
+          "ambiente_programa": [
+            "Almacenamiento y alistamiento de termos (cadena de frío)",
+            "Consultorio para administración de biológicos"
+          ],
+          "cantidad_minima": "Termos y cajas según la operación (1 termo de uso diario en el consultorio como mínimo)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Termo portavacunas precalificado (PQS E004) (6); Caja térmica de transporte (PQS E004) (2)",
+          "comentario": "La papelería es insumo de operación, no dotación.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.2.3, criterio 7 (7.1); modalidad por confirmar (una guía la asigna a extramural)",
+          "texto_literal": null,
+          "que_exige": "Congelador con capacidad para los paquetes fríos del alistamiento de todas las cajas térmicas y termos.",
+          "ambiente_programa": [
+            "Almacenamiento y alistamiento de termos (cadena de frío)"
+          ],
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Congelador para paquetes fríos (1, horizontal de 200 L)",
+          "comentario": "200 L alcanzan con holgura para los paquetes de 6 termos y 2 cajas (cálculo propio aproximado).",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.2.3, criterios 4.2.1 (dos ambientes) o 5.1 y 5.2 (ambiente único)",
+          "texto_literal": null,
+          "que_exige": "Ambiente para alistar termos y cajas térmicas y ambiente de cadena de frío; el consultorio de vacunación aparte (opción de dos ambientes).",
+          "ambiente_programa": [
+            "Consultorio para administración de biológicos",
+            "Almacenamiento y alistamiento de termos (cadena de frío)"
+          ],
+          "cantidad_minima": "1 de cada uno",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Mesón con poceta de acero de 0,50 × 0,50 × 0,40 m para termos (1); Camilla, escritorio y sillas del vacunador (1)",
+          "comentario": "La poceta de 0,50 × 0,50 × 0,40 m viene de la Res. 1633 de 2025, no de la 3100.",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.1.2, criterio 14",
+          "texto_literal": "En edificaciones donde se presten servicios de [...] vacunación, servicio farmacéutico y los que requieran cadena de frío, cuentan con planta eléctrica.",
+          "que_exige": "Planta eléctrica que respalde la cadena de frío.",
+          "ambiente_programa": [
+            "Almacenamiento y alistamiento de termos (cadena de frío)"
+          ],
+          "cantidad_minima": "Refrigeradores y congelador en circuito de emergencia",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Planta eléctrica diésel de 300 kVA con transferencia automática (equipamiento_fijo)",
+          "comentario": "programa.json prevé además baterías y alarma de temperatura (microrred).",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.tekvobioingenieria.com/resolucion-3100-procedimientos-y-condiciones-de-inscripcion-y-habilitacion-de-los-servicios-de-salud/",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "Manual, num. 11.1.4 (todos los servicios; numeral por confirmar)",
+          "texto_literal": null,
+          "que_exige": "Control y registro de temperatura de las vacunas; si se interrumpe la cadena de frío, notificar según el procedimiento del INVIMA (fuente secundaria).",
+          "ambiente_programa": [
+            "Almacenamiento y alistamiento de termos (cadena de frío)"
+          ],
+          "cantidad_minima": "1 registrador por equipo de frío y por termo en uso",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Registradores de temperatura de 30 días y termómetros digitales (8)",
+          "comentario": "",
+          "verificacion_texto": "solo_fuente_secundaria",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Manual, num. 11.2.3, procesos prioritarios (numeral por confirmar)",
+          "texto_literal": null,
+          "que_exige": "Vacunación segura y manejo y reporte de eventos supuestamente atribuidos a la vacunación (ESAVI). La norma no nombra un kit de anafilaxia en lo que se pudo leer.",
+          "ambiente_programa": [
+            "Consultorio para administración de biológicos"
+          ],
+          "cantidad_minima": "Kit de manejo de anafilaxia (adrenalina, jeringas, cánulas) según el protocolo de la E.S.E.",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": null,
+          "comentario": "No está en dotacion.json. Son medicamentos e insumos (los surte farmacia), no equipos; conviene que el protocolo de ESAVI los defina. Exigencia exacta por confirmar.",
+          "verificacion_texto": "solo_fuente_secundaria",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        }
+      ],
+      "excesos_recomendados": [],
+      "nota_excesos": "No se encontró ningún ítem de vacunación que la norma no pida o que no responda a la cadena de frío.",
+      "conteo_estados": {
+        "cubierto": 7,
+        "parcial": 0,
+        "falta": 1
+      },
+      "conteo_estados_tipo": "cálculo propio sobre las exigencias de este archivo"
+    },
+    {
+      "id": "farmacia",
+      "nombre_3100": "Servicio farmacéutico (11.3.2), baja complejidad",
+      "codigo_reps": "714 (tomado de programa.json; confirmar en el REPS)",
+      "numeral": "Manual, num. 11.3.2; para baja complejidad remite también al manual de condiciones esenciales de la Res. 1403 de 2007",
+      "complejidad": "Baja (el manual lo tiene en baja, mediana y alta).",
+      "ambientes_programa": [
+        "Recepción técnica de medicamentos y dispositivos",
+        "Cuarentena de medicamentos",
+        "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)",
+        "Medicamentos de control especial (seguro)",
+        "Dispensación y entrega (ventanilla ambulatoria y ventanilla hospitalaria)",
+        "Medicamentos vencidos o deteriorados para destrucción",
+        "Productos rechazados, devueltos y retirados del mercado"
+      ],
+      "exigencias": [
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.2 (criterio de dotación; número por confirmar)",
+          "texto_literal": "La dotación y mobiliario exclusivos y necesarios para el cumplimiento de los objetivos de los procesos generales y especiales que brinda el servicio, de acuerdo con las recomendaciones dadas por los fabricantes.",
+          "que_exige": "Estanterías, estibas, mobiliario de dispensación y de seguridad propios del servicio.",
+          "ambiente_programa": [
+            "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)",
+            "Recepción técnica de medicamentos y dispositivos",
+            "Cuarentena de medicamentos",
+            "Dispensación y entrega (ventanilla ambulatoria y ventanilla hospitalaria)",
+            "Productos rechazados, devueltos y retirados del mercado",
+            "Medicamentos vencidos o deteriorados para destrucción"
+          ],
+          "cantidad_minima": "Según volumen; estantería en almacenamiento, rechazados y vencidos; estibas para que nada toque el piso",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Estantería metálica para almacenamiento (módulos) (14); Estibas plásticas (10); Mueble de dispensación con ventanilla y puestos de trabajo (1)",
+          "comentario": "Repartir la estantería entre almacenamiento (la mayor parte), rechazados y vencidos. El mueble de dispensación es uno con dos ventanillas (ambulatoria y hospitalaria).",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "Copia del ICBF: '9.2' (numeral por confirmar)",
+          "texto_literal": "9.2. Instrumentos para medir la humedad relativa y la temperatura, en donde se almacenen medicamentos y dispositivos médicos.",
+          "que_exige": "Termohigrómetro con registro en cada ambiente donde se guardan medicamentos.",
+          "ambiente_programa": [
+            "Recepción técnica de medicamentos y dispositivos",
+            "Cuarentena de medicamentos",
+            "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)",
+            "Medicamentos de control especial (seguro)",
+            "Dispensación y entrega (ventanilla ambulatoria y ventanilla hospitalaria)"
+          ],
+          "cantidad_minima": "1 por ambiente = 6 (2 en dispensación)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Termohigrómetros con registro (6)",
+          "comentario": "El refrigerador de 150-250 L no dice 'registro de temperatura' en su ficha (el de 400-700 L sí): pedirlo o asignarle un registrador.",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.2 (criterio de infraestructura; número por confirmar)",
+          "texto_literal": "Incluye cadena de frio, cuando aplique.",
+          "que_exige": "Ambiente de almacenamiento que garantice la temperatura y humedad que recomienda el fabricante, con cadena de frío.",
+          "ambiente_programa": [
+            "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"
+          ],
+          "cantidad_minima": "1 ambiente climatizado; refrigeración para todo lo que exige 2-8 °C",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Refrigerador grado médico para medicamentos (400-700 L) (1); Refrigerador grado médico para urgencias/dispensación (150-250 L) (1); aire acondicionado (equipamiento_fijo)",
+          "comentario": "La Res. 1633 fija 21-24 °C y 40-65 % de humedad en almacenamiento (dato de normas.json).",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.2, criterios 5.5 y 5.6 (numeración según una de las copias)",
+          "texto_literal": null,
+          "que_exige": "Área separada para medicamentos de control especial, cuando aplique, y área para productos rechazados, devueltos o retirados.",
+          "ambiente_programa": [
+            "Medicamentos de control especial (seguro)",
+            "Productos rechazados, devueltos y retirados del mercado"
+          ],
+          "cantidad_minima": "1 de cada una",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Gabinete de seguridad para medicamentos de control especial (1, con doble llave)",
+          "comentario": "",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.2 (baja complejidad)",
+          "texto_literal": "Cumple con el Manual de la Resolución 1403 del 2007 (según un documento de consultoría que resume el estándar)",
+          "que_exige": "Para baja complejidad, cumplir las condiciones locativas y los procesos del manual de la Res. 1403 de 2007.",
+          "ambiente_programa": [
+            "Recepción técnica de medicamentos y dispositivos",
+            "Cuarentena de medicamentos",
+            "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)",
+            "Medicamentos de control especial (seguro)",
+            "Dispensación y entrega (ventanilla ambulatoria y ventanilla hospitalaria)",
+            "Medicamentos vencidos o deteriorados para destrucción",
+            "Productos rechazados, devueltos y retirados del mercado"
+          ],
+          "cantidad_minima": "Todos los ambientes del servicio",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Ambientes de programa.json y mobiliario de farmacia",
+          "comentario": "Los ambientes están; los procesos (selección, adquisición, recepción, almacenamiento, dispensación) son documentos por producir.",
+          "verificacion_texto": "solo_fuente_secundaria",
+          "fuente_url": "https://consultorsalud.com/wp-content/uploads/2020/06/03_RHABI_L1_To12.pdf",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.1.2, criterio 14",
+          "texto_literal": "En edificaciones donde se presten servicios de [...] servicio farmacéutico y los que requieran cadena de frío, cuentan con planta eléctrica.",
+          "que_exige": "Planta eléctrica que respalde la farmacia y sus refrigeradores.",
+          "ambiente_programa": [
+            "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"
+          ],
+          "cantidad_minima": "Refrigeradores en circuito de emergencia",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Planta eléctrica diésel de 300 kVA con transferencia automática (equipamiento_fijo)",
+          "comentario": "",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.tekvobioingenieria.com/resolucion-3100-procedimientos-y-condiciones-de-inscripcion-y-habilitacion-de-los-servicios-de-salud/",
+          "tipo_dato": "dato oficial"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Lectores de código de barras para dispensación trazable",
+          "cantidad_en_dotacion": 3,
+          "por_que_es_exceso": "La 3100 no los nombra.",
+          "recomendacion": "Apoyan la trazabilidad que pide el estándar de medicamentos; mantener.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        },
+        {
+          "item_dotacion": "Carro de distribución de medicamentos (unidosis)",
+          "cantidad_en_dotacion": 2,
+          "por_que_es_exceso": "En lo verificado, la 3100 no los pide al servicio farmacéutico de baja complejidad.",
+          "recomendacion": "Útiles para llevar medicamentos a hospitalización y partos; mantener o pasarlos a la dotación de hospitalización.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        }
+      ],
+      "conteo_estados": {
+        "cubierto": 5,
+        "parcial": 1,
+        "falta": 0
+      },
+      "conteo_estados_tipo": "cálculo propio sobre las exigencias de este archivo"
+    },
+    {
+      "id": "terapias",
+      "nombre_3100": "Servicio de terapias (11.3.1): incluye fisioterapia o terapia física, fonoaudiología o terapia del lenguaje, terapia ocupacional y terapia respiratoria",
+      "codigo_reps": "739 fisioterapia y 729 terapia respiratoria (tomados de programa.json; con la 3100 se agrupan en el 'servicio de terapias': confirmar el código en el REPS)",
+      "numeral": "Manual, num. 11.3.1",
+      "complejidad": "Según una de las copias, el servicio no se clasifica por complejidad ('no aplica'); por confirmar. Modalidades intramural, extramural (unidad móvil, jornada de salud, domiciliaria) y telemedicina.",
+      "ambientes_programa": [
+        "Ambiente de entrevista y evaluación",
+        "Cubículo de atención individual (electroterapia, camilla)",
+        "Gimnasio terapéutico (rehabilitación física, cardiopulmonar y del adulto mayor)",
+        "Sala de procedimientos de terapia respiratoria (nebulizaciones, espirometría)",
+        "Área de lavado de material",
+        "Depósito de insumos y equipos"
+      ],
+      "exigencias": [
+        {
+          "estandar": "dotacion",
+          "numeral": "Manual, num. 11.3.1 (estándar de dotación; criterios por confirmar)",
+          "texto_literal": null,
+          "que_exige": "No se encontró una lista de equipos propia del servicio: aplica lo de todos los servicios y la dotación que permita hacer los procedimientos que el prestador documente en procesos prioritarios.",
+          "ambiente_programa": [
+            "Cubículo de atención individual (electroterapia, camilla)",
+            "Gimnasio terapéutico (rehabilitación física, cardiopulmonar y del adulto mayor)",
+            "Sala de procedimientos de terapia respiratoria (nebulizaciones, espirometría)"
+          ],
+          "cantidad_minima": "Según procedimientos documentados",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Equipo combinado de electroterapia con ultrasonido (2); Unidad de compresas calientes (1); Camilla de terapia física de dos cuerpos (3); Barras paralelas (1); Escalera de rehabilitación con rampa (1); Espejo postural (1); Kit de rehabilitación (1); Nebulizador (2); Oxímetro de pulso portátil (2); Aspirador de secreciones portátil (1)",
+          "comentario": "Como la norma no da lista, la dotación se justifica con los protocolos que la E.S.E. escriba. Escribir esos protocolos antes de comprar.",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "Manual, num. 11.1.3 (suficiencia)",
+          "texto_literal": "La suficiencia de equipos biomédicos está relacionada con la frecuencia de uso de los mismos [...]",
+          "que_exige": "Un equipo de electroterapia por cubículo si se atiende en paralelo.",
+          "ambiente_programa": [
+            "Cubículo de atención individual (electroterapia, camilla)"
+          ],
+          "cantidad_minima": "1 por cubículo = 3 (si se atiende en paralelo)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Equipo combinado de electroterapia (TENS, EMS, interferencial) con ultrasonido terapéutico (2)",
+          "comentario": "Hay 3 cubículos y 2 equipos. Alcanza si un cubículo se usa para masoterapia o compresas; si no, falta 1 (unos $6-12 M, estimación).",
+          "verificacion_texto": "literal_confirmado",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Res. 3100: frase 'oxígeno medicinal, cuando lo requiera de acuerdo con la información documentada en el estándar de procesos prioritarios' (servicio y numeral por confirmar); Res. 1633 de 2025, Anexo 1, Cuadro 13 (según programa.json)",
+          "texto_literal": "oxígeno medicinal, cuando lo requiera de acuerdo con la información documentada en el estándar de procesos prioritarios",
+          "que_exige": "Oxígeno en la sala de terapia respiratoria.",
+          "ambiente_programa": [
+            "Sala de procedimientos de terapia respiratoria (nebulizaciones, espirometría)"
+          ],
+          "cantidad_minima": "1 toma de oxígeno con flujómetro y humidificador (o cilindro con regulador)",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": null,
+          "comentario": "programa.json dice que la sala de terapia respiratoria va 'con oxígeno', pero la central de gases (equipamiento_fijo) solo lista tomas en urgencias, partos, TPR, hospitalización y aislamiento, y dotacion.json de terapias no trae flujómetro. Agregar la toma en el piso 4 (o un cilindro con regulador) y un flujómetro con humidificador (unos $0,4-0,8 M, estimación).",
+          "verificacion_texto": "contenido_confirmado_redaccion_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Por confirmar si aplica a terapias el criterio 19 de consulta externa (consultorio con examen físico)",
+          "texto_literal": null,
+          "que_exige": "Para valorar al paciente: tensiómetro, fonendoscopio, goniómetro, cinta métrica y martillo de reflejos.",
+          "ambiente_programa": [
+            "Ambiente de entrevista y evaluación"
+          ],
+          "cantidad_minima": "1 juego",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": null,
+          "comentario": "La dotación de terapias no trae equipos de valoración. Son necesarios para rehabilitación cardiopulmonar y del adulto mayor (control de presión y frecuencia antes y después del ejercicio). Costo bajo: unos $0,5-1,2 M el juego (estimación).",
+          "verificacion_texto": "por_confirmar",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/",
+          "tipo_dato": "dato oficial"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Manual, num. 11.3.1 (estándar de infraestructura; criterios no recuperados)",
+          "texto_literal": null,
+          "que_exige": "No se pudo leer qué ambientes exige la 3100 a terapias; programa.json sigue la Res. 1633 de 2025, Anexo 1, Cuadro 13.",
+          "ambiente_programa": [
+            "Ambiente de entrevista y evaluación",
+            "Cubículo de atención individual (electroterapia, camilla)",
+            "Gimnasio terapéutico (rehabilitación física, cardiopulmonar y del adulto mayor)",
+            "Sala de procedimientos de terapia respiratoria (nebulizaciones, espirometría)",
+            "Área de lavado de material",
+            "Depósito de insumos y equipos"
+          ],
+          "cantidad_minima": "Los de programa.json",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Puesto de trabajo de evaluación y recepción (1); ambientes de programa.json",
+          "comentario": "Revisar en el texto oficial si la 3100 pide lavamanos por cubículo o en el gimnasio.",
+          "verificacion_texto": "por_confirmar",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+          "tipo_dato": "dato oficial"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Equipo de presión positiva (CPAP/BiPAP) para terapia respiratoria",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "La 3100 no lo nombra para terapias ambulatorias.",
+          "recomendacion": "Mantener como recomendado solo si se documenta su uso (por ejemplo, adaptación a CPAP).",
+          "prioridad_en_dotacion_json": "recomendado"
+        },
+        {
+          "item_dotacion": "Banda caminadora terapéutica con pasamanos",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "No lo nombra la norma.",
+          "recomendacion": "Necesaria si se ofrece rehabilitación cardiopulmonar; documentar el procedimiento.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        },
+        {
+          "item_dotacion": "Bicicleta estática terapéutica",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "No lo nombra la norma.",
+          "recomendacion": "Igual que la banda.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        },
+        {
+          "item_dotacion": "Unidad de compresas calientes (compresero) con compresas",
+          "cantidad_en_dotacion": 1,
+          "por_que_es_exceso": "No lo nombra la norma.",
+          "recomendacion": "Útil y barata; mantener si se documenta termoterapia.",
+          "prioridad_en_dotacion_json": "habilitacion"
+        }
+      ],
+      "conteo_estados": {
+        "cubierto": 2,
+        "parcial": 1,
+        "falta": 2
+      },
+      "conteo_estados_tipo": "cálculo propio sobre las exigencias de este archivo"
+    }
+  ],
+  "faltantes_prioritarios": [
+    {
+      "servicio": "terapias",
+      "item": "Toma de oxígeno con flujómetro y humidificador en la sala de terapia respiratoria (piso 4)",
+      "cantidad": 1,
+      "costo_estimado_cop_2026": [
+        400000,
+        800000
+      ],
+      "tipo": "estimación (sin la toma de la red de gases, que va en obra)"
+    },
+    {
+      "servicio": "terapias",
+      "item": "Juego de valoración: tensiómetro, fonendoscopio, goniómetro, cinta métrica, martillo de reflejos",
+      "cantidad": 1,
+      "costo_estimado_cop_2026": [
+        500000,
+        1200000
+      ],
+      "tipo": "estimación"
+    },
+    {
+      "servicio": "consulta_externa",
+      "item": "Fonendoscopio pediátrico",
+      "cantidad": 12,
+      "costo_estimado_cop_2026": [
+        1800000,
+        4800000
+      ],
+      "tipo": "estimación"
+    },
+    {
+      "servicio": "consulta_externa",
+      "item": "Martillo de reflejos (exigencia intramural por confirmar)",
+      "cantidad": 13,
+      "costo_estimado_cop_2026": [
+        260000,
+        780000
+      ],
+      "tipo": "estimación"
+    },
+    {
+      "servicio": "consulta_externa",
+      "item": "Báscula pesabebés adicional",
+      "cantidad": 2,
+      "costo_estimado_cop_2026": [
+        1200000,
+        3000000
+      ],
+      "tipo": "estimación"
+    },
+    {
+      "servicio": "consulta_externa",
+      "item": "Ficha técnica de la camilla de procedimientos con barandas, ruedas y freno",
+      "cantidad": 1,
+      "costo_estimado_cop_2026": [
+        0,
+        0
+      ],
+      "tipo": "corrección de especificación"
+    },
+    {
+      "servicio": "todos (piso 4)",
+      "item": "DEA para el piso 4 (recomendado, no exigencia confirmada)",
+      "cantidad": 1,
+      "costo_estimado_cop_2026": [
+        8000000,
+        12000000
+      ],
+      "tipo": "estimación"
+    },
+    {
+      "servicio": "vacunacion",
+      "item": "Kit de anafilaxia (insumos de farmacia, exigencia por confirmar)",
+      "cantidad": 1,
+      "costo_estimado_cop_2026": null,
+      "tipo": "por confirmar"
+    }
+  ],
+  "faltantes_prioritarios_total": "Entre $12,2 M y $22,6 M de 2026 sin el kit de anafilaxia (cálculo propio con estimaciones): entre el 1,4 % y el 2,6 % de la dotación de estos seis servicios ($852,5 M según dotacion.json, cálculo propio).",
+  "verificacion": "1) Se leyó primero lo que ya tiene el repositorio (docs/11, normas.json servicios_3100, dotacion.json, programa.json). 2) Desde esta sesión no se pudo abrir ninguna página de .gov.co: WebFetch no resolvía ningún dominio y el proxy rechazó normograma.supersalud.gov.co, minsalud.gov.co, funcionpublica.gov.co, icbf.gov.co y cancilleria.gov.co. Tampoco hay copia del manual en GitHub (búsqueda de código sin resultados). 3) Los textos se recuperaron con unas 30 búsquedas web dirigidas, que devuelven fragmentos de las compilaciones oficiales del ICBF, la Cancillería y el Invima (copias del mismo texto de Avance Jurídico que usa el normograma de Supersalud). Una frase se marcó literal_confirmado solo cuando el buscador la devolvió entre comillas desde una de esas compilaciones; si solo aparecía en guías comerciales (Allers, ConsultorSalud) quedó como solo_fuente_secundaria, y si no apareció, por_confirmar. Las copias numeran distinto algunos criterios (por ejemplo 17.1.2.x frente a 17.2.1.x, o 19 frente a 28.1), y eso queda dicho en cada caso. 4) Cada exigencia se cruzó con los nombres exactos de dotacion.json (servicios[].equipos y .mobiliario, equipamiento_fijo y tic_apoyo) y de programa.json (ambientes[].nombre); el script comprueba que los nombres de ambientes y excesos existan (ver control_ambientes_no_encontrados y control_nombres_excesos_no_encontrados, vacíos si todo cuadra). 5) Pendiente: cotejar todo contra el PDF oficial del Ministerio y contra el Tomo II de la Res. 1732 de 2026.",
+  "total_dotacion_seis_servicios_cop_2026": 852498085,
+  "total_dotacion_seis_servicios_tipo": "cálculo propio: suma de totales.total_cop_2026 de dotacion.json",
+  "faltantes_prioritarios_rango_cop_2026": [
+    12160000,
+    22580000
+  ],
+  "control_nombres_excesos_no_encontrados": [],
+  "control_ambientes_no_encontrados": []
+}

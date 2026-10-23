@@ -1,0 +1,1991 @@
+{
+  "grupo": "urgencias e internación",
+  "fecha_corte": "2026-10-23",
+  "fuente_principal": {
+    "titulo": "Resolución 3100 de 2019 del Ministerio de Salud y Protección Social y su anexo técnico, Manual de inscripción de prestadores y habilitación de servicios de salud (compilación con modificaciones del normograma de Supersalud)",
+    "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+    "fecha_consulta": "2026-10-23",
+    "nota": "Desde este entorno no se pudo abrir ningún sitio .gov.co (el proxy bloqueó la descarga y la lectura directa no resolvió el dominio). Los textos se tomaron de los fragmentos de las compilaciones de Cancillería e ICBF que muestra el buscador, de transcripciones de autoevaluación y de guías de consultoría. Ver 'verificacion'."
+  },
+  "vigencia_normativa": [
+    {
+      "norma": "Res. 3100 de 2019",
+      "estado": "Vigente con modificaciones (Res. 2215 de 2020, 1317 de 2021, 1138 de 2022, 544 de 2023, 465 de 2025 y 914 de 2025, entre otras). Según una guía secundaria, las de 2023 y 2025 no cambiaron las listas de dotación por servicio.",
+      "url": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_minsaludps_0544_2023.htm ; https://www.allers.com.co/guias/resolucion-544-de-2023-y-465-de-2025/",
+      "tipo": "dato oficial (compilación) y guía secundaria"
+    },
+    {
+      "norma": "Res. 1732 de 2026 (nuevo manual de habilitación, 5-ago-2026)",
+      "estado": "REVOCADA en su integridad por la Res. 2080 del 8-sep-2026. Según los comentarios citados, la Imprenta Nacional certificó que la 1732 nunca se publicó en el Diario Oficial, así que no llegó a regir. La Res. 2080 declara que la 3100 y sus modificaciones siguen vigentes.",
+      "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=194230 ; https://consultorsalud.com/minsalud-revoca-la-resolucion-1732-de-2026-asi-quedan-las-reglas-de-habilitacion-para-prestadores-de-servicios-de-salud/ ; https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=193984",
+      "tipo": "dato oficial (Sisjur) y prensa especializada; texto de la 2080 no leído directamente"
+    },
+    {
+      "norma": "Res. 914 de 2025 (manual DMER)",
+      "estado": "Rige desde el 3-ene-2027 (art. 15). Deroga desde esa fecha los numerales de esterilización de la 3100 (art. 14). Hay un proyecto de julio de 2026 que la reemplazaría; no expedido a 23-oct-2026.",
+      "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_0914_2025.htm ; https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=182733 ; https://www.cerlatam.com/normatividad/minsalud-proyecto-de-resolucion-julio-2026/",
+      "tipo": "dato oficial (compilación) y prensa especializada"
+    },
+    {
+      "norma": "Res. 2065 de 2025 (sedes transitorias en emergencias)",
+      "estado": "Vigente; proyecto de octubre de 2026 la derogaría y llevaría sus reglas al Manual de la 3100.",
+      "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=191017 ; https://consultorsalud.com/minsalud-reglas-prestar-servicios-de-salud/ ; https://consultorsalud.com/minsalud-reglas-urgencias-medicamentos-desastre/",
+      "tipo": "dato oficial (Sisjur) y prensa especializada"
+    },
+    {
+      "norma": "Decreto 4725 de 2005 (registro sanitario, permiso de comercialización y clasificación de riesgo de dispositivos médicos)",
+      "estado": "Citado por dotacion.json; no se verificaron artículos en esta tarea.",
+      "url": "https://normograma.invima.gov.co/compilacion/docs/decreto_4725_2005.htm",
+      "tipo": "por confirmar"
+    }
+  ],
+  "servicios": [
+    {
+      "id": "urgencias",
+      "nombre_3100": "Servicio de urgencias (grupo atención inmediata)",
+      "codigo_reps": "1102 (código del REPS tomado de programa.json; no aparece en el texto de la 3100; confirmar en el REPS)",
+      "numeral": "11.6.1 (confirmado por el texto de un proyecto modificatorio que cita 'Para el SERVICIO DE URGENCIAS, en numeral 11.6.1')",
+      "complejidad": "baja (la 3100 tiene criterios para baja, mediana y alta; la torre aplica los de baja)",
+      "exigencias": [
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.1, estándar de dotación, criterio 22 según guía secundaria; numeral por confirmar",
+          "texto_literal": "Oxígeno medicinal y succión. Puede ser suministrado mediante salida de oxígeno medicinal y sistema de vacío o mediante oxígeno medicinal portátil y aspirador.",
+          "que_exige": "Oxígeno y succión en el servicio, de pared o portátiles.",
+          "ambiente_programa": "Sala de reanimación, 2 camillas | Observación adultos hombres, 2 camillas | Observación adultos mujeres, 2 camillas | Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes | Sala de procedimientos (suturas, curaciones) | Ambiente individual de aislamiento con baño PMR | Atención de enfermedad respiratoria aguda (ERA), 3 sillas | Atención de enfermedad diarreica aguda (EDA), 2 camillas",
+          "cantidad_minima": "1 salida de oxígeno y 1 de vacío (o portátil) por camilla de reanimación, observación, procedimientos y aislamiento; oxígeno por silla de ERA",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Flujómetro de oxígeno con humidificador | Regulador de vacío de pared con frasco (succión por camilla) | Aspirador de secreciones portátil | Central de gases medicinales: oxígeno, aire medicinal y vacío",
+          "comentario": "15 flujómetros = 2 reanimación + 6 observación + 1 procedimientos + 1 aislamiento + 3 ERA + 2 EDA. 10 reguladores de vacío = 2 + 6 + 1 + 1. Dos aspiradores portátiles de respaldo.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.1, dotación, criterio 22 según guía secundaria; por confirmar",
+          "texto_literal": "instrumental gineco-obstétrico, equipo de atención de partos (lista de la guía; texto oficial por cotejar)",
+          "que_exige": "Instrumental ginecobstétrico y equipo de atención de partos en urgencias.",
+          "ambiente_programa": "Sala de procedimientos (suturas, curaciones) | Depósito de equipos y dispositivos médicos",
+          "cantidad_minima": "1 de cada uno en el servicio",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Equipo de partos e instrumental ginecoobstétrico para urgencias",
+          "comentario": "dotacion.json trae 2 juegos combinados (pinzas, tijeras, espéculos, porta agujas). En la compra, separar el juego de examen ginecológico del equipo de parto para que el verificador los identifique.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.1, dotación, criterio 22 según guía secundaria; por confirmar",
+          "texto_literal": "elementos de sujeción (lista de la guía; texto oficial por cotejar)",
+          "que_exige": "Elementos para sujetar al paciente agitado.",
+          "ambiente_programa": "Depósito de equipos y dispositivos médicos",
+          "cantidad_minima": "1 juego",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Equipo de sujeción mecánica (juego)",
+          "comentario": "2 juegos en dotacion.json.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.1, dotación, criterio 22 según guía secundaria; por confirmar",
+          "texto_literal": "equipo de toracostomía (lista de la guía; texto oficial por cotejar)",
+          "que_exige": "Instrumental para drenar el tórax.",
+          "ambiente_programa": "Sala de reanimación, 2 camillas",
+          "cantidad_minima": "1 equipo",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Equipo de toracostomía (instrumental)",
+          "comentario": "2 equipos en dotacion.json (uno en uso, otro en esterilización).",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.1, dotación, criterio 22 según guía secundaria; por confirmar",
+          "texto_literal": "carro de paro adulto y pediátrico (lista de la guía; texto oficial por cotejar)",
+          "que_exige": "Un carro de paro con elementos para adultos y niños.",
+          "ambiente_programa": "Sala de reanimación, 2 camillas",
+          "cantidad_minima": "1 carro de paro",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Carro de paro (mueble) adulto-pediátrico con tabla de reanimación | Desfibrilador bifásico con monitor y marcapasos externo | Laringoscopio adulto y pediátrico (mango + hojas de fibra óptica) | Resucitador manual adulto, pediátrico y neonatal (juego)",
+          "comentario": "El contenido mínimo del carro se revisa en la exigencia de 'todos los servicios' (criterio 8).",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.1, dotación, criterio 22 según guía secundaria; por confirmar",
+          "texto_literal": "monitor de signos vitales con trazado electrocardiográfico (si no está en el desfibrilador), presión no invasiva, saturación de oxígeno y batería (fragmento de la guía; no identifica con certeza el servicio)",
+          "que_exige": "Monitor de signos vitales con ECG, presión no invasiva, oximetría y batería.",
+          "ambiente_programa": "Sala de reanimación, 2 camillas | Observación adultos hombres, 2 camillas | Observación adultos mujeres, 2 camillas | Sala de procedimientos (suturas, curaciones)",
+          "cantidad_minima": "Disponible en el servicio; el proyecto pone 1 por camilla de reanimación",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Monitor multiparámetro avanzado con capnografía (reanimación) | Monitor de signos vitales básico (observación y procedimientos)",
+          "comentario": "Los 5 monitores básicos tienen ECG de 3 derivaciones, SpO2, PNI, temperatura y batería: cumplen. Los 2 avanzados cumplen y agregan capnografía.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.1, dotación, criterio 22 según guía secundaria; por confirmar",
+          "texto_literal": "oxímetro, bomba de infusión, electrocardiógrafo de 12 derivaciones, nebulizador (lista de la guía; texto oficial por cotejar)",
+          "que_exige": "Oxímetro, bomba de infusión, electrocardiógrafo de 12 derivaciones y nebulizador disponibles.",
+          "ambiente_programa": "Estación de enfermería: puesto de enfermería | Atención de enfermedad respiratoria aguda (ERA), 3 sillas | Depósito de equipos y dispositivos médicos",
+          "cantidad_minima": "1 de cada uno disponible en el servicio",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Oxímetro de pulso de mesa/portátil | Bomba de infusión volumétrica | Electrocardiógrafo de 12 derivaciones con interpretación | Nebulizador ultrasónico o de compresor",
+          "comentario": "3 oxímetros, 6 bombas, 1 electrocardiógrafo y 3 nebulizadores (uno por silla de ERA).",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.1, dotación, criterio 23 según guía secundaria (el repo cita el 23.6 para la báscula pesa bebé); por confirmar",
+          "texto_literal": "camilla con estribos cuando se requiera, tensiómetro y fonendoscopio adulto y pediátrico, termómetro, báscula grado médico o pesa bebé según la oferta del servicio, cinta métrica, martillo de reflejos y equipo de órganos (lista de la guía; texto oficial por cotejar)",
+          "que_exige": "Dotación de cada consultorio de urgencias.",
+          "ambiente_programa": "Consultorio de urgencias con unidad sanitaria | Triage (clasificación)",
+          "cantidad_minima": "1 juego por consultorio (2 consultorios); recomendado también en triage",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro) | Equipo de órganos de los sentidos de pared | Tensiómetro aneroide de pared adulto-pediátrico | Báscula pesa bebés digital (consultorio de urgencias) | Camilla de examen fija tapizada con portarrollo | Escalerilla de dos pasos",
+          "comentario": "FALTA: martillo de reflejos (no está en el kit) en cada consultorio; camilla con estribos en al menos 1 consultorio (urgencias atiende urgencias ginecobstétricas y la 3100 le exige instrumental ginecobstétrico); confirmar que el fonendoscopio 'de doble campana' sirva para niños o agregar uno pediátrico.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Sala de procedimientos: criterio 22 de consulta externa (texto general) y criterio 24 de urgencias según guía secundaria; por confirmar",
+          "texto_literal": "Si realiza procedimientos en sala de procedimientos, cuenta con: Dotación necesaria para realizar los procedimientos documentados en el estándar de procesos prioritarios. | Camilla con barandas, ruedas y freno, cuando los procedimientos requieran estas características.",
+          "que_exige": "Camilla con barandas, ruedas y freno, lámpara, equipo de pequeña cirugía, oxígeno y succión en la sala de procedimientos.",
+          "ambiente_programa": "Sala de procedimientos (suturas, curaciones)",
+          "cantidad_minima": "1 camilla, 1 lámpara, equipos de pequeña cirugía según frecuencia de uso",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Camilla de procedimientos e inmovilización (yesos) | Lámpara de procedimientos LED rodable | Equipo de pequeña cirugía y sutura (instrumental) | Carro de curaciones en acero inoxidable",
+          "comentario": "La especificación de la camilla de procedimientos no dice barandas, ruedas ni freno: agregarlo al pliego. Lámpara (2) e instrumental (8 equipos) cumplen.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.1, dotación, criterio 26 (numeración de la compilación citada por el buscador; por confirmar)",
+          "texto_literal": "Sala de observación, que cuenta con: 26.1. Camilla con barandas, ruedas y freno. | Oxígeno medicinal que puede ser suministrado mediante salida de oxígeno medicinal o mediante oxígeno medicinal portátil por camilla. | Dotación requerida conforme con lo documentado en el estándar de procesos prioritarios.",
+          "que_exige": "Cada puesto de observación con camilla con barandas, ruedas y freno, y oxígeno por camilla.",
+          "ambiente_programa": "Observación adultos hombres, 2 camillas | Observación adultos mujeres, 2 camillas | Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes",
+          "cantidad_minima": "1 camilla (o cuna) y 1 salida de oxígeno por puesto: 2 + 2 + 2",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Camilla de observación hidráulica con barandas | Cuna de observación pediátrica | Flujómetro de oxígeno con humidificador",
+          "comentario": "Las especificaciones de la camilla de observación (5) y de la cuna (1) no dicen 'ruedas y freno': exigirlo en el pliego. El oxígeno por puesto está cubierto.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.1, dotación, criterios 25 a 28 según guía secundaria (el repo cita el 28.2 para la mesa auxiliar); por confirmar",
+          "texto_literal": "Sala de reanimación, que cuenta con: camilla rodante con freno y con baranda; mesa auxiliar rodante; aspirador para cada camilla. (La guía agrega monitor, marcapasos externo, lámpara y carro de paro.)",
+          "que_exige": "Por cada camilla de reanimación: camilla rodante con freno y baranda, mesa auxiliar rodante y aspirador; en la sala, monitor, marcapasos externo y carro de paro.",
+          "ambiente_programa": "Sala de reanimación, 2 camillas",
+          "cantidad_minima": "Por camilla: 1 camilla, 1 mesa auxiliar, 1 aspirador (2 de cada uno); por sala: 1 monitor, 1 marcapasos externo, 1 carro de paro",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Camilla de reanimación rodante con barandas y posiciones | Mesa auxiliar rodante en acero inoxidable (sala de reanimación) | Regulador de vacío de pared con frasco (succión por camilla) | Monitor multiparámetro avanzado con capnografía (reanimación) | Desfibrilador bifásico con monitor y marcapasos externo | Carro de paro (mueble) adulto-pediátrico con tabla de reanimación",
+          "comentario": "Cubierto. Agregar 'freno' a la especificación de la camilla de reanimación. La lámpara que menciona la guía se puede cubrir con una de las 2 lámparas de procedimientos rodables.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm ; https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "11.6.1, estándar de infraestructura (criterios por confirmar); regla general de observación en el Manual (numeral por confirmar)",
+          "texto_literal": "Las áreas de observación son exclusivas de los servicios de urgencias. | Pacientes que requieran observación o internación no pueden permanecer en ambientes de consulta externa. (fragmentos; la lista de ambientes de urgencias no se obtuvo literal)",
+          "que_exige": "Ambientes de urgencias en un solo servicio: acceso directo desde el exterior, sala de espera, unidades sanitarias, estacionamiento de camillas, descontaminación, consultorios, triage, estación de enfermería, procedimientos, reanimación, observación por sexo y pediátrica, aislamiento (resumen de normas.json del repo).",
+          "ambiente_programa": "Esclusa de acceso desde la bahía de ambulancias (cortavientos) | Sala de espera de urgencias | Estacionamiento de camillas y sillas de ruedas | Descontaminación de pacientes (ducha teléfono, drenaje, sanitario) | Triage (clasificación) | Consultorio de urgencias con unidad sanitaria | Sala de reanimación, 2 camillas | Observación adultos hombres, 2 camillas | Observación adultos mujeres, 2 camillas | Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes | Ambiente individual de aislamiento con baño PMR",
+          "cantidad_minima": "1 de cada ambiente (2 consultorios)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "(ambientes de programa.json; no son ítems de dotación)",
+          "comentario": "programa.json tiene todos los ambientes del resumen. La lista literal de la 3100 para urgencias no se pudo abrir: cotejar criterio por criterio. Un proyecto modificatorio (2022) cambió el numeral 18.7 de infraestructura de urgencias; su texto final no se confirmó.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Ambiente 'sala de procedimientos o curaciones' (texto visto en el estándar de infraestructura de consulta externa; se aplica por remisión a urgencias); numeral por confirmar",
+          "texto_literal": "Sala de procedimientos o curaciones. Ambiente con mínimo 8 m2, que cuenta con: Mesón de trabajo. Poceta, cuando la requiera, según los procedimientos que el prestador documente en el estándar de procesos prioritarios. Lavamanos.",
+          "que_exige": "Sala de procedimientos de 8 m² o más con mesón, poceta si se requiere y lavamanos.",
+          "ambiente_programa": "Sala de procedimientos (suturas, curaciones)",
+          "cantidad_minima": "1 sala de 8 m² o más con 1 lavamanos y 1 mesón",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "(ambiente de 12 m² en programa.json; lavamanos y mesón van en la obra)",
+          "comentario": "El área cumple (12 m²; la Res. 1633 pide 10 m²). Lavamanos, mesón y poceta son obra, no dotación: verificar que estén en planos y en presupuesto.json.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Todos los servicios / estación de enfermería; numeral por confirmar",
+          "texto_literal": "Sistema de alarma cuando se cuente con red de distribución de gases medicinales.",
+          "que_exige": "Alarma de la red de gases medicinales visible para enfermería.",
+          "ambiente_programa": "Estación de enfermería: puesto de enfermería",
+          "cantidad_minima": "1 panel de alarma de gases del servicio",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Central de gases medicinales: oxígeno, aire medicinal y vacío",
+          "comentario": "La especificación de la central no menciona alarmas de área: agregar paneles de alarma por zona (urgencias, piso 3).",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Todos los servicios; numeral por confirmar",
+          "texto_literal": "Cuenta con alarma o sistema de llamado a enfermería, donde se requiera.",
+          "que_exige": "Llamado de enfermería en camillas de observación, aislamiento, reanimación y baños de pacientes.",
+          "ambiente_programa": "Observación adultos hombres, 2 camillas | Observación adultos mujeres, 2 camillas | Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes | Ambiente individual de aislamiento con baño PMR | Baños de observación con ducha (hombres, mujeres, pediátrico; PMR)",
+          "cantidad_minima": "1 punto por camilla o cuna y 1 por baño de pacientes",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Sistema de llamado de enfermería y códigos de emergencia",
+          "comentario": "Unos 45 puntos para toda la torre (equipamiento fijo).",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "11.1.2 (todos los servicios), criterio 14 según normas.json del repo; texto literal por confirmar",
+          "texto_literal": "[paráfrasis] Planta eléctrica obligatoria donde haya urgencias, parto, hospitalización, laboratorio, imágenes, vacunación, servicio farmacéutico y servicios con cadena de frío.",
+          "que_exige": "Respaldo eléctrico para los equipos del servicio.",
+          "ambiente_programa": "Sala de reanimación, 2 camillas | Estación de enfermería: puesto de enfermería",
+          "cantidad_minima": "1 planta para la torre; UPS en áreas críticas",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Planta eléctrica diésel de 300 kVA con transferencia automática | UPS central en línea modular de 60 kVA (N+1) para cargas críticas",
+          "comentario": "Dato ya registrado en normas.json (num. 11.1.2, criterio 14); no se volvió a ver el texto literal en esta tarea.",
+          "nivel_verificacion": "parafrasis_por_confirmar",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Todos los servicios, estándar de procesos prioritarios; numeral por confirmar",
+          "texto_literal": "Manejo de gases medicinales que incluya como mínimo la atención de emergencias y sistema de alarma, cuando se utilicen.",
+          "que_exige": "Procedimiento escrito para el manejo de gases medicinales, emergencias y alarmas.",
+          "ambiente_programa": "Estación de enfermería: puesto de enfermería",
+          "cantidad_minima": "1 procedimiento documentado",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Central de gases medicinales: oxígeno, aire medicinal y vacío",
+          "comentario": "Documento a producir en la puesta en marcha; requiere las alarmas de la exigencia anterior.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 8 según guía secundaria; por confirmar",
+          "texto_literal": "Conjunto de medicamentos, dispositivos médicos y equipos biomédicos utilizados en la reanimación cardio cerebro pulmonar. (definición literal) | [guía] desfibrilador bifásico con visualización, cardioversión, marcapasos transcutáneo y paletas para adultos y pediátricas según aplique; resucitador manual; aspirador; monitor de signos vitales; laringoscopio con hojas rectas y curvas para adulto y pediátrico; medicamentos e insumos definidos por el prestador según su morbilidad",
+          "que_exige": "Contenido mínimo del carro de paro de urgencias.",
+          "ambiente_programa": "Sala de reanimación, 2 camillas",
+          "cantidad_minima": "1 carro completo",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Carro de paro (mueble) adulto-pediátrico con tabla de reanimación | Desfibrilador bifásico con monitor y marcapasos externo | Resucitador manual adulto, pediátrico y neonatal (juego) | Aspirador de secreciones portátil | Laringoscopio adulto y pediátrico (mango + hojas de fibra óptica)",
+          "comentario": "Completo en equipos (4 hojas Macintosh y 2 Miller). Los medicamentos e insumos del carro no están en dotacion.json: van en el inventario inicial de 72 horas (presupuesto.json, P4).",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/ ; https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3 (estándar de dotación, todos los servicios), criterio 1 según guía secundaria; por confirmar",
+          "texto_literal": "El prestador de servicios de salud cuenta con el registro de la relación de los equipos biomédicos (Inventario) este registro cuenta como mínimo con la siguiente información: Nombre del equipo biomédicos. Registro sanitario para dispositivos médicos o permiso de comercialización para equipos biomédicos de tecnología controlada, cuando lo requiera. Clasificación por riesgo, cuando el equipo lo requiera.",
+          "que_exige": "Inventario de cada equipo biomédico del servicio con nombre, registro sanitario INVIMA (o permiso de comercialización si es de tecnología controlada) y clase de riesgo.",
+          "ambiente_programa": "Depósito de equipos y dispositivos médicos",
+          "cantidad_minima": "1 inventario por servicio, con una fila por equipo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(todos los equipos de dotacion.json, servicio urgencias)",
+          "comentario": "dotacion.json ya trae nombre y clase de riesgo por ítem (Decreto 4725 de 2005), pero no registro sanitario, marca, modelo ni serie, porque los equipos aún no se compran. Exigir en el pliego el registro sanitario INVIMA vigente de cada modelo y cargarlo al inventario al recibir.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.slideshare.net/slideshow/capacitacion-habilitacion-resolucion-3100-de-2019-2pptx/262121435 ; https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 2 según guía secundaria; por confirmar",
+          "texto_literal": "Programa de mantenimiento preventivo de los equipos biomédicos, que incluya el cumplimiento de las recomendaciones establecidas por el fabricante o de acuerdo con el protocolo de mantenimiento que tenga definido el prestador | Hoja(s) de vida del(los) equipo(s) biomédicos(s), con los registros de los mantenimientos preventivos y correctivos, según corresponda.",
+          "que_exige": "Plan de mantenimiento preventivo según fabricante y una hoja de vida por equipo con sus mantenimientos.",
+          "ambiente_programa": "Depósito de equipos y dispositivos médicos",
+          "cantidad_minima": "1 hoja de vida por equipo; 1 programa por prestador",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(campo mantenimiento_anual_pct de cada ítem de dotacion.json)",
+          "comentario": "dotacion.json presupuesta el mantenimiento anual (porcentaje por ítem), pero el programa y las hojas de vida no existen todavía. Pedir al proveedor manual, protocolo de mantenimiento y capacitación; abrir la hoja de vida con el acta de recibo. La palabra 'calibración' no aparece en estos criterios (según la guía de Allers solo aparece en radioterapia); calibrar igual los equipos de medición por buena práctica.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 3 según guía secundaria; por confirmar",
+          "texto_literal": "El prestador de servicios de salud cuenta con un programa de capacitación en el uso de dispositivos médicos cuando éstos lo requieran",
+          "que_exige": "Capacitar al personal en el uso de los equipos que lo requieran (monitores, desfibrilador, bombas, autoclaves).",
+          "ambiente_programa": "Depósito de equipos y dispositivos médicos",
+          "cantidad_minima": "1 programa por prestador; registro de asistencia por equipo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(no hay ítem en dotacion.json)",
+          "comentario": "No es un ítem de compra. presupuesto.json incluye $40 millones de capacitación dentro de 'Puesta en marcha y habilitación' (P4, estimación). Exigir capacitación del fabricante en el contrato de compra.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterios 5 y 9 según la compilación citada por el buscador; por confirmar",
+          "texto_literal": "La suficiencia de equipos biomédicos está relacionada con la frecuencia de uso de los mismos, incluyendo los tiempos del proceso de esterilización, cuando aplique. | La suficiencia de dispositivos médicos está relacionada con la frecuencia de uso de los mismos, incluyendo los tiempos del proceso de esterilización, cuando aplique.",
+          "que_exige": "Tener suficientes equipos e instrumental para que, mientras unos se esterilizan, haya otros disponibles.",
+          "ambiente_programa": "Depósito de equipos y dispositivos médicos",
+          "cantidad_minima": "Según frecuencia de uso (no fija cantidad)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "(cantidades de instrumental de dotacion.json)",
+          "comentario": "Revisado en cada servicio en las exigencias de instrumental.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "11.1.4 (estándar de medicamentos, dispositivos médicos e insumos, todos los servicios); numeral por confirmar",
+          "texto_literal": "Instrumentos para medir la humedad relativa y la temperatura, en donde se almacenen medicamentos y dispositivos médicos.",
+          "que_exige": "Termohigrómetro con registro en cada depósito de medicamentos y dispositivos del servicio.",
+          "ambiente_programa": "Depósito de medicamentos e insumos de urgencias",
+          "cantidad_minima": "1 termohigrómetro por depósito",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Termohigrómetros con registro",
+          "comentario": "Los 6 termohigrómetros están en la dotación del servicio farmacéutico (servicio farmacia). Asignar uno a este depósito o comprar uno adicional; costo menor.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "11.1.4; numeral por confirmar",
+          "texto_literal": "Acciones de seguimiento a través de los comités de infecciones, de seguridad del paciente y del programa de tecnovigilancia",
+          "que_exige": "Programa de tecnovigilancia (reporte de incidentes y eventos adversos con dispositivos médicos) y seguimiento en los comités.",
+          "ambiente_programa": "Depósito de equipos y dispositivos médicos",
+          "cantidad_minima": "1 programa por prestador",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "(no hay ítem en dotacion.json)",
+          "comentario": "No es un ítem de compra: va en la documentación de habilitación (P4, puesta en marcha). El programa nacional de tecnovigilancia es del INVIMA (Res. 4816 de 2008, no verificada en esta tarea).",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Ventilador de transporte (traslado de pacientes críticos)",
+          "cantidad": 1,
+          "prioridad_en_dotacion": "recomendado",
+          "por_que_no_lo_exige_la_3100": "No está en la dotación de urgencias de baja complejidad.",
+          "recomendacion": "Mantener: Yondó remite por ferry o carretera a Barrancabermeja; permite trasladar al paciente intubado."
+        },
+        {
+          "item_dotacion": "Videolaringoscopio",
+          "cantidad": 1,
+          "prioridad_en_dotacion": "recomendado",
+          "por_que_no_lo_exige_la_3100": "La norma pide laringoscopio convencional (en el carro de paro).",
+          "recomendacion": "Opcional; dejarlo para una segunda fase si el presupuesto aprieta."
+        },
+        {
+          "item_dotacion": "Monitor multiparámetro avanzado con capnografía (reanimación)",
+          "cantidad": 2,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "La 3100 pide monitor con ECG, presión no invasiva y oximetría; la capnografía va más allá.",
+          "recomendacion": "Mantener: la capnografía confirma la intubación; reclasificar como 'habilitación con mejora'."
+        },
+        {
+          "item_dotacion": "Glucómetro",
+          "cantidad": 3,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "No aparece en la lista de dotación de urgencias obtenida (sí en hospitalización y partos).",
+          "recomendacion": "Mantener: lo exigirá el procedimiento de hipoglucemia del estándar de procesos prioritarios."
+        },
+        {
+          "item_dotacion": "Lámpara de examen cuello de cisne LED",
+          "cantidad": 3,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "No aparece en la lista del consultorio de urgencias obtenida.",
+          "recomendacion": "Mantener (bajo costo, útil para examen ginecológico)."
+        },
+        {
+          "item_dotacion": "Tándem de sillas para sala de espera (4 puestos) | Puesto de trabajo (escritorio, silla del profesional y 2 sillas interlocutoras) | Estación de enfermería (mueble modular) | Mesa de noche y biombo/cortina antifluido por camilla | Carro de medicamentos | Atril porta suero rodable | Silla de ruedas de transporte | Camilla de transporte de pacientes | Canecas para residuos (verde, gris y roja con pedal) y guardián | Mueble para descontaminación y cuarto de custodia",
+          "cantidad": null,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "Mobiliario de funcionamiento: la 3100 no lo lista en la dotación de urgencias (las canecas responden a la norma de residuos).",
+          "recomendacion": "Mantener: sin él el servicio no funciona; no es un exceso real."
+        }
+      ]
+    },
+    {
+      "id": "hospitalizacion",
+      "nombre_3100": "Servicio de hospitalización (grupo internación): adultos y pediátrica",
+      "codigo_reps": "129 hospitalización adultos y 130 hospitalización pediátrica (códigos del REPS tomados de programa.json; confirmar en el REPS)",
+      "numeral": "11.4.1 (confirmado por el texto de un proyecto modificatorio de 2022 que cita el numeral 11.4.1 'SERVICIO DE HOSPITALIZACIÓN')",
+      "complejidad": "baja",
+      "exigencias": [
+        {
+          "estandar": "dotacion",
+          "numeral": "11.4.1, dotación complejidad baja, criterio 25 según guía secundaria; por confirmar (el buscador ubicó el mismo texto en hospitalización de paciente crónico)",
+          "texto_literal": "Camas hospitalarias, de acuerdo con la oferta del servicio.",
+          "que_exige": "Una cama hospitalaria por cada cama ofertada.",
+          "ambiente_programa": "Habitación doble de adultos con baño PMR y guardarropa (2 camas) | Habitación individual de aislamiento con baño PMR (1 cama) | Habitación doble pediátrica con área para acompañante y baño PMR (2 camas) | Habitación doble de obstetricia y posparto, alojamiento conjunto madre y recién nacido (2 camas)",
+          "cantidad_minima": "2 por habitación doble de adultos (×3), 1 en aislamiento, 2 por habitación pediátrica (×2: 1 cama y 1 cuna), 2 en posparto = 13",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Cama hospitalaria eléctrica de 3 funciones con barandas y colchón | Cama pediátrica con barandas altas | Cuna hospitalaria pediátrica",
+          "comentario": "9 eléctricas (6 + 1 + 2), 2 pediátricas y 2 cunas = 13 camas.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.4.1, dotación, criterio 25 según guía secundaria; por confirmar",
+          "texto_literal": "Carro de paro. Si el servicio de hospitalización está en varios pisos o niveles, cada piso o nivel, cuenta con mínimo un carro de paro.",
+          "que_exige": "Al menos un carro de paro en el servicio y uno por piso.",
+          "ambiente_programa": "Estación de enfermería: puesto central",
+          "cantidad_minima": "1 carro de paro (piso 3)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Carro de paro (mueble) adulto-pediátrico para hospitalización | Desfibrilador bifásico con monitor y marcapasos (piso 3: partos y hospitalización) | Aspirador de secreciones portátil | Monitor de signos vitales",
+          "comentario": "El mueble existe, pero su contenido (criterio 8 de todos los servicios) queda incompleto: FALTA 1 laringoscopio adulto y pediátrico y 1 resucitador manual adulto y pediátrico (los de dotacion.json están en urgencias, piso 1, y en partos solo hay neonatales). El desfibrilador se comparte con partos: si el verificador exige uno por carro, falta 1.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.4.1, dotación, criterio 26 según guía secundaria; por confirmar",
+          "texto_literal": "Disponibilidad de: Bomba de infusión. Glucómetro. Silla de ruedas. Tensiómetro adulto o pediátrico de acuerdo con el tipo de paciente hospitalizado. Fonendoscopio adulto o pediátrico de acuerdo con el tipo de paciente hospitalizado. Equipo de órganos de los sentidos. Electrocardiógrafo.",
+          "que_exige": "Equipos disponibles en el servicio, en versión adulta y pediátrica.",
+          "ambiente_programa": "Estación de enfermería: puesto central | Depósito de equipos | Estacionamiento de camillas y sillas de ruedas",
+          "cantidad_minima": "1 de cada uno disponible; tensiómetro y fonendoscopio en versión adulta y pediátrica",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Bomba de infusión volumétrica | Glucómetro | Silla de ruedas | Tensiómetro aneroide de pared adulto-pediátrico | Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro) | Equipo de órganos de los sentidos de pared | Electrocardiógrafo de 12 derivaciones",
+          "comentario": "Todo está, salvo el fonendoscopio pediátrico: el kit trae fonendoscopio 'de doble campana' (confirmar campana pediátrica o agregar 1 pediátrico). Hay 5 bombas, 2 glucómetros, 3 sillas de ruedas y 1 electrocardiógrafo.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.4.1, dotación, criterio 26 según guía secundaria; por confirmar",
+          "texto_literal": "oxígeno medicinal (agregado por la guía a la lista anterior; no visto en el fragmento del normograma)",
+          "que_exige": "Oxígeno medicinal disponible para los hospitalizados.",
+          "ambiente_programa": "Habitación doble de adultos con baño PMR y guardarropa (2 camas) | Habitación individual de aislamiento con baño PMR (1 cama) | Habitación doble pediátrica con área para acompañante y baño PMR (2 camas) | Habitación doble de obstetricia y posparto, alojamiento conjunto madre y recién nacido (2 camas)",
+          "cantidad_minima": "Disponible; el proyecto pone 1 salida por cama",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Flujómetro de oxígeno con humidificador | Central de gases medicinales: oxígeno, aire medicinal y vacío",
+          "comentario": "13 flujómetros, uno por cama.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.4.1, dotación; numeral por confirmar",
+          "texto_literal": "[paráfrasis] elementos y equipos biomédicos necesarios según el plan individualizado de atención y los procedimientos documentados en el estándar de procesos prioritarios",
+          "que_exige": "Lo que pidan los procedimientos que el hospital documente.",
+          "ambiente_programa": "Sala de procedimientos de hospitalización | Depósito de equipos",
+          "cantidad_minima": "Según procedimientos",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Monitor de signos vitales | Aspirador de secreciones portátil | Oxímetro de pulso portátil | Nebulizador | Lámpara de procedimientos LED (sala de procedimientos de hospitalización) | Camilla de procedimientos",
+          "comentario": "Cubierto de forma razonable; revisar cuando existan los procedimientos escritos.",
+          "nivel_verificacion": "parafrasis_por_confirmar",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "11.4.1, infraestructura complejidad baja; numeral por confirmar",
+          "texto_literal": "La habitación múltiple para pacientes adultos debe tener una capacidad máxima de 4 camas, con área libre mínima de 7 m2 por cama, separadas con barrera física fija o móvil.",
+          "que_exige": "Máximo 4 camas por habitación de adultos, 7 m² libres por cama y una barrera entre camas.",
+          "ambiente_programa": "Habitación doble de adultos con baño PMR y guardarropa (2 camas) | Habitación doble de obstetricia y posparto, alojamiento conjunto madre y recién nacido (2 camas)",
+          "cantidad_minima": "Máx. 4 camas; 1 barrera por cama",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Riel y cortina antifluido entre camas",
+          "comentario": "Habitaciones de 2 camas de 24 y 26 m² con baño (cálculo propio: unos 9,5 m² por cama sin el baño de 4,9 m²). 13 cortinas antifluido.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/ ; https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "11.4.1, infraestructura complejidad baja; numeral por confirmar",
+          "texto_literal": "La habitación múltiple para pacientes pediátricos debe tener una capacidad máxima de 6 camas, con área libre mínima de 6 m2 por cama, separadas con barrera física fija o móvil.",
+          "que_exige": "Máximo 6 camas por habitación pediátrica, 6 m² libres por cama y barrera entre camas.",
+          "ambiente_programa": "Habitación doble pediátrica con área para acompañante y baño PMR (2 camas)",
+          "cantidad_minima": "Máx. 6 camas; 1 barrera por cama",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Riel y cortina antifluido entre camas",
+          "comentario": "Habitaciones pediátricas de 2 camas de 24 m².",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Todos los servicios; numeral por confirmar",
+          "texto_literal": "Cuenta con alarma o sistema de llamado a enfermería, donde se requiera.",
+          "que_exige": "Llamado de enfermería en cada cama y en cada baño de pacientes.",
+          "ambiente_programa": "Habitación doble de adultos con baño PMR y guardarropa (2 camas) | Habitación individual de aislamiento con baño PMR (1 cama) | Habitación doble pediátrica con área para acompañante y baño PMR (2 camas) | Habitación doble de obstetricia y posparto, alojamiento conjunto madre y recién nacido (2 camas) | Estación de enfermería: puesto central",
+          "cantidad_minima": "1 punto por cama y 1 por baño; consola en la estación",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Sistema de llamado de enfermería y códigos de emergencia",
+          "comentario": "Unos 45 puntos para toda la torre.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Todos los servicios / estación de enfermería; numeral por confirmar",
+          "texto_literal": "Sistema de alarma cuando se cuente con red de distribución de gases medicinales.",
+          "que_exige": "Alarma de gases medicinales visible desde la estación de enfermería del piso 3.",
+          "ambiente_programa": "Estación de enfermería: puesto central",
+          "cantidad_minima": "1 panel de alarma de gases del piso",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Central de gases medicinales: oxígeno, aire medicinal y vacío",
+          "comentario": "Agregar paneles de alarma por zona a la especificación de la central.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Todos los servicios, procesos prioritarios; numeral por confirmar",
+          "texto_literal": "Manejo de gases medicinales que incluya como mínimo la atención de emergencias y sistema de alarma, cuando se utilicen.",
+          "que_exige": "Procedimiento escrito para gases medicinales.",
+          "ambiente_programa": "Estación de enfermería: puesto central",
+          "cantidad_minima": "1 procedimiento",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Central de gases medicinales: oxígeno, aire medicinal y vacío",
+          "comentario": "Documento de la puesta en marcha.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 8 según guía secundaria; por confirmar",
+          "texto_literal": "Conjunto de medicamentos, dispositivos médicos y equipos biomédicos utilizados en la reanimación cardio cerebro pulmonar. (definición literal) | [guía] desfibrilador, resucitador manual, aspirador, monitor y laringoscopio con hojas rectas y curvas para adulto y pediátrico",
+          "que_exige": "Contenido mínimo del carro de paro de hospitalización (adultos y niños).",
+          "ambiente_programa": "Estación de enfermería: puesto central",
+          "cantidad_minima": "1 laringoscopio adulto-pediátrico y 1 resucitador adulto-pediátrico en el carro",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "Carro de paro (mueble) adulto-pediátrico para hospitalización",
+          "comentario": "FALTA: 'Laringoscopio adulto y pediátrico (mango + hojas de fibra óptica)' ×1 y 'Resucitador manual adulto, pediátrico y neonatal (juego)' ×1 para el carro del piso 3 (los 3 de cada uno están en urgencias, piso 1).",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/ ; https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3 (estándar de dotación, todos los servicios), criterio 1 según guía secundaria; por confirmar",
+          "texto_literal": "El prestador de servicios de salud cuenta con el registro de la relación de los equipos biomédicos (Inventario) este registro cuenta como mínimo con la siguiente información: Nombre del equipo biomédicos. Registro sanitario para dispositivos médicos o permiso de comercialización para equipos biomédicos de tecnología controlada, cuando lo requiera. Clasificación por riesgo, cuando el equipo lo requiera.",
+          "que_exige": "Inventario de cada equipo biomédico del servicio con nombre, registro sanitario INVIMA (o permiso de comercialización si es de tecnología controlada) y clase de riesgo.",
+          "ambiente_programa": "Depósito de equipos",
+          "cantidad_minima": "1 inventario por servicio, con una fila por equipo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(todos los equipos de dotacion.json, servicio hospitalizacion)",
+          "comentario": "dotacion.json ya trae nombre y clase de riesgo por ítem (Decreto 4725 de 2005), pero no registro sanitario, marca, modelo ni serie, porque los equipos aún no se compran. Exigir en el pliego el registro sanitario INVIMA vigente de cada modelo y cargarlo al inventario al recibir.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.slideshare.net/slideshow/capacitacion-habilitacion-resolucion-3100-de-2019-2pptx/262121435 ; https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 2 según guía secundaria; por confirmar",
+          "texto_literal": "Programa de mantenimiento preventivo de los equipos biomédicos, que incluya el cumplimiento de las recomendaciones establecidas por el fabricante o de acuerdo con el protocolo de mantenimiento que tenga definido el prestador | Hoja(s) de vida del(los) equipo(s) biomédicos(s), con los registros de los mantenimientos preventivos y correctivos, según corresponda.",
+          "que_exige": "Plan de mantenimiento preventivo según fabricante y una hoja de vida por equipo con sus mantenimientos.",
+          "ambiente_programa": "Depósito de equipos",
+          "cantidad_minima": "1 hoja de vida por equipo; 1 programa por prestador",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(campo mantenimiento_anual_pct de cada ítem de dotacion.json)",
+          "comentario": "dotacion.json presupuesta el mantenimiento anual (porcentaje por ítem), pero el programa y las hojas de vida no existen todavía. Pedir al proveedor manual, protocolo de mantenimiento y capacitación; abrir la hoja de vida con el acta de recibo. La palabra 'calibración' no aparece en estos criterios (según la guía de Allers solo aparece en radioterapia); calibrar igual los equipos de medición por buena práctica.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 3 según guía secundaria; por confirmar",
+          "texto_literal": "El prestador de servicios de salud cuenta con un programa de capacitación en el uso de dispositivos médicos cuando éstos lo requieran",
+          "que_exige": "Capacitar al personal en el uso de los equipos que lo requieran (monitores, desfibrilador, bombas, autoclaves).",
+          "ambiente_programa": "Depósito de equipos",
+          "cantidad_minima": "1 programa por prestador; registro de asistencia por equipo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(no hay ítem en dotacion.json)",
+          "comentario": "No es un ítem de compra. presupuesto.json incluye $40 millones de capacitación dentro de 'Puesta en marcha y habilitación' (P4, estimación). Exigir capacitación del fabricante en el contrato de compra.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterios 5 y 9 según la compilación citada por el buscador; por confirmar",
+          "texto_literal": "La suficiencia de equipos biomédicos está relacionada con la frecuencia de uso de los mismos, incluyendo los tiempos del proceso de esterilización, cuando aplique. | La suficiencia de dispositivos médicos está relacionada con la frecuencia de uso de los mismos, incluyendo los tiempos del proceso de esterilización, cuando aplique.",
+          "que_exige": "Tener suficientes equipos e instrumental para que, mientras unos se esterilizan, haya otros disponibles.",
+          "ambiente_programa": "Depósito de equipos",
+          "cantidad_minima": "Según frecuencia de uso (no fija cantidad)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "(cantidades de instrumental de dotacion.json)",
+          "comentario": "Revisado en cada servicio en las exigencias de instrumental.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "11.1.4 (estándar de medicamentos, dispositivos médicos e insumos, todos los servicios); numeral por confirmar",
+          "texto_literal": "Instrumentos para medir la humedad relativa y la temperatura, en donde se almacenen medicamentos y dispositivos médicos.",
+          "que_exige": "Termohigrómetro con registro en cada depósito de medicamentos y dispositivos del servicio.",
+          "ambiente_programa": "Depósito de medicamentos (con chapa de seguridad)",
+          "cantidad_minima": "1 termohigrómetro por depósito",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Termohigrómetros con registro",
+          "comentario": "Los 6 termohigrómetros están en la dotación del servicio farmacéutico (servicio farmacia). Asignar uno a este depósito o comprar uno adicional; costo menor.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "11.1.4; numeral por confirmar",
+          "texto_literal": "Acciones de seguimiento a través de los comités de infecciones, de seguridad del paciente y del programa de tecnovigilancia",
+          "que_exige": "Programa de tecnovigilancia (reporte de incidentes y eventos adversos con dispositivos médicos) y seguimiento en los comités.",
+          "ambiente_programa": "Depósito de equipos",
+          "cantidad_minima": "1 programa por prestador",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "(no hay ítem en dotacion.json)",
+          "comentario": "No es un ítem de compra: va en la documentación de habilitación (P4, puesta en marcha). El programa nacional de tecnovigilancia es del INVIMA (Res. 4816 de 2008, no verificada en esta tarea).",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Cama hospitalaria eléctrica de 3 funciones con barandas y colchón",
+          "cantidad": 9,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "La norma pide 'camas hospitalarias'; no exige que sean eléctricas.",
+          "recomendacion": "Mantener o pasar a camas manuales de 3 posiciones si el presupuesto aprieta; las eléctricas dependen de la planta."
+        },
+        {
+          "item_dotacion": "Sillón reclinable para acompañante",
+          "cantidad": 13,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "No está en la dotación de hospitalización.",
+          "recomendacion": "Mantener por humanización (alojamiento conjunto y niños), pero reclasificar como 'recomendado'."
+        },
+        {
+          "item_dotacion": "Monitor de signos vitales | Oxímetro de pulso portátil | Nebulizador | Regulador de vacío de pared con frasco | Aspirador de secreciones portátil",
+          "cantidad": null,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "No están en la lista literal de hospitalización; los justifica el plan individualizado y el carro de paro.",
+          "recomendacion": "Mantener."
+        },
+        {
+          "item_dotacion": "Extractor de leche eléctrico (sala de extracción de leche) | Nevera para leche materna y mobiliario del lactario",
+          "cantidad": null,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "No se confirmó en esta tarea que la 3100 los exija; el ambiente de extracción de leche sale del programa (Res. 1633, por confirmar en la 3100 para hospitalización pediátrica).",
+          "recomendacion": "Mantener; confirmar la norma que lo exige."
+        },
+        {
+          "item_dotacion": "Mesa de noche y mesa puente (alimentación) | Carro de medicamentos (unidosis) | Carro de curaciones | Carro de ropa limpia y carro de ropa sucia | Camilla de transporte | Atril porta suero | Estación de enfermería (mueble modular) y mobiliario de sala de visitas",
+          "cantidad": null,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "Mobiliario de funcionamiento no listado en la dotación de hospitalización.",
+          "recomendacion": "Mantener: no es un exceso real."
+        }
+      ]
+    },
+    {
+      "id": "partos",
+      "nombre_3100": "Servicio para la atención del parto (grupo atención inmediata), con adaptación neonatal",
+      "codigo_reps": "1101 (código del REPS tomado de programa.json; confirmar en el REPS)",
+      "numeral": "11.6.4 (confirmado en transcripción de autoevaluación: '11.6.4 SERVICIO PARA LA ATENCIÓN DEL PARTO')",
+      "complejidad": "baja (cesáreas y alto riesgo se remiten)",
+      "notas": [
+        "Texto modificatorio encontrado por el buscador (resolución exacta por confirmar): 'Cuando en la Resolución 3100 de 2019 y en el Anexo Técnico ... se encuentre la expresión \"hospitalización obstétrica\" se debe entender como \"atención del parto\".' programa.json registra las 2 camas de posparto como 'Hospitalización obstétrica' con código 129: confirmar con la Secretaría Seccional de Salud de Antioquia cómo se declaran en el REPS.",
+        "La guía de Allers indica que urgencias, atención del parto y transporte asistencial nuevos requieren visita previa de verificación antes de habilitarse (por confirmar en el art. de la 3100)."
+      ],
+      "exigencias": [
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación complejidad baja, 19.1.1 (numeración de transcripción de autoevaluación; por confirmar)",
+          "texto_literal": "19.1.1. Cama hospitalaria para atención de partos.",
+          "que_exige": "Cama para el trabajo de parto.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "1 por habitación TPR (2)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Cama de partos multiposición para habitación TPR",
+          "comentario": "2 camas eléctricas multiposición.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación, 19.1.2 (por confirmar)",
+          "texto_literal": "19.1.2. Monitor fetal.",
+          "que_exige": "Monitor fetal para vigilar al bebé durante el trabajo de parto.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "1 por habitación TPR (2)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Monitor fetal (cardiotocógrafo)",
+          "comentario": "2 cardiotocógrafos.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación, sala de partos (19.2 probable; por confirmar)",
+          "texto_literal": "La sala de partos cuenta con: Lámpara pielítica o cielítica.",
+          "que_exige": "Lámpara de techo para el parto.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "1 por habitación TPR (2)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Lámpara de techo LED para atención del parto (una por habitación TPR)",
+          "comentario": "100.000 lux, una por TPR.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación, sala de partos (por confirmar)",
+          "texto_literal": "Mesa para atención de partos.",
+          "que_exige": "Mesa (o cama) donde ocurre el parto.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "1 por habitación TPR (2)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Cama de partos multiposición para habitación TPR | Mesa de Mayo, mesa auxiliar y vitrina de instrumental",
+          "comentario": "En la modalidad TPR la cama multiposición (perneras y pies removibles) hace de mesa de partos. La 3100 lista 'cama' y 'mesa' por separado: pedir al verificador de la Secretaría que acepte la cama TPR como ambas, o comprar mesa de partos. Riesgo de hallazgo en la visita previa.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación, sala de partos (por confirmar)",
+          "texto_literal": "Equipo para atención de partos.",
+          "que_exige": "Instrumental de parto.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR) | Recepción y almacenamiento de material estéril",
+          "cantidad_minima": "1 por TPR más reposición según tiempos de esterilización (criterios 5 y 9)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Equipo de parto (instrumental)",
+          "comentario": "6 equipos: 3 por TPR (uno en uso, uno en esterilización, uno de reserva).",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación, sala de partos (por confirmar)",
+          "texto_literal": "Equipo de episiotomía y episiorrafia.",
+          "que_exige": "Instrumental para hacer y suturar la episiotomía.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "1 por TPR (2)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Equipo de parto (instrumental) | Equipo de revisión uterina y sutura de desgarros",
+          "comentario": "Funcionalmente cubierto (tijeras de episiotomía y porta agujas en el equipo de parto; sutura de desgarros aparte). Nombrar en la compra un 'equipo de episiotomía y episiorrafia' para que el verificador lo identifique.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación, sala de partos (por confirmar)",
+          "texto_literal": "Aspirador o sistema de succión.",
+          "que_exige": "Succión para la madre y el recién nacido.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "1 por TPR (2)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Aspirador de secreciones (adulto y neonatal) | Central de gases medicinales: oxígeno, aire medicinal y vacío",
+          "comentario": "2 aspiradores con regulador fino; la central lleva tomas de vacío a las TPR.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación, área de adaptación del recién nacido (19.3 probable; por confirmar)",
+          "texto_literal": "El área de adaptación del recién nacido cuenta con: Incubadora abierta o lámpara de calor radiante.",
+          "que_exige": "Fuente de calor para recibir al recién nacido.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "1 por área de adaptación (2)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Lámpara de calor radiante (servocuna) para adaptación neonatal",
+          "comentario": "2 servocunas.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación, área de adaptación del recién nacido (por confirmar)",
+          "texto_literal": "Báscula para bebé. | Infantómetro.",
+          "que_exige": "Pesar y medir al recién nacido.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "1 de cada uno por área de adaptación (2)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Báscula pesa bebés digital e infantómetro",
+          "comentario": "Hay 1 juego para 2 áreas de adaptación. Comprar 1 más, o aceptar que se comparta si la Secretaría lo admite (la norma dice 'el área ... cuenta con').",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación, área de adaptación del recién nacido (por confirmar)",
+          "texto_literal": "Cinta métrica.",
+          "que_exige": "Cinta para medir perímetros del recién nacido.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "1 por área de adaptación (2)",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "(no hay ítem en partos; el 'Kit de examen básico' del servicio es para el consultorio de valoración obstétrica)",
+          "comentario": "FALTA: 2 cintas métricas (costo despreciable).",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación, área de adaptación del recién nacido (por confirmar)",
+          "texto_literal": "Oxímetro con sensor neonatal.",
+          "que_exige": "Oximetría del recién nacido.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "1 por área de adaptación (2)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Oxímetro de pulso neonatal",
+          "comentario": "Hay 1 para 2 áreas: comprar 1 más.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación, adaptación neonatal, 19.3.7 según guía secundaria; por confirmar",
+          "texto_literal": "Laringoscopio con hoja neonatal.",
+          "que_exige": "Laringoscopio para reanimar al recién nacido.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "1 por área de adaptación (2)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Laringoscopio neonatal y resucitador neonatal con mezclador de oxígeno",
+          "comentario": "Hay 1 juego para 2 áreas (en el carro con módulo neonatal). Comprar 1 laringoscopio neonatal más para que cada TPR tenga el suyo.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/ ; https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación (disponibilidad en el servicio); numeral por confirmar",
+          "texto_literal": "[paráfrasis de normas.json del repo] carro de paro, bomba de infusión, glucómetro e incubadora de transporte en el servicio",
+          "que_exige": "Equipos disponibles en el servicio de partos.",
+          "ambiente_programa": "Puesto de enfermería de las habitaciones TPR",
+          "cantidad_minima": "1 de cada uno disponible",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Carro de paro (mueble) con módulo neonatal | Bomba de infusión volumétrica | Glucómetro | Incubadora de transporte neonatal",
+          "comentario": "1 carro, 3 bombas, 2 glucómetros y 1 incubadora de transporte. Texto literal no obtenido en esta tarea.",
+          "nivel_verificacion": "parafrasis_por_confirmar",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "11.6.4, dotación TPR; el repo cita el criterio 20.8.7; por confirmar",
+          "texto_literal": "[paráfrasis del repo] disponibilidad de camilla con barandas, ruedas y freno dentro del servicio de partos con TPR",
+          "que_exige": "Camilla para trasladar a la paciente (por ejemplo, a remisión).",
+          "ambiente_programa": "Recepción y entrega de pacientes (con estacionamiento de camillas)",
+          "cantidad_minima": "1 disponible",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Camilla de transporte",
+          "comentario": "La especificación dice 'barandas y porta suero': agregar ruedas con freno.",
+          "nivel_verificacion": "parafrasis_por_confirmar",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "11.6.4, estándar de medicamentos, dispositivos médicos e insumos; numeral por confirmar",
+          "texto_literal": "kit de emergencias obstétricas o código rojo (fragmento de un listado de consultoría que transcribe la 3100; texto oficial por cotejar)",
+          "que_exige": "Kit listo para la hemorragia obstétrica (código rojo).",
+          "ambiente_programa": "Puesto de enfermería de las habitaciones TPR",
+          "cantidad_minima": "1 kit por servicio (recomendado 1 por TPR y 1 en urgencias)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Traje antichoque no neumático (hemorragia posparto)",
+          "comentario": "El traje antichoque (2) es parte del kit; los medicamentos e insumos del kit son consumibles y van en el inventario inicial (P4). Urgencias también atiende partos: dejar otro kit allí.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://consultorsalud.com/wp-content/uploads/2020/06/05_RHABI_L1_To9-Resoluci%C3%B3n-3100-de-2019-Medicamentos-dispositivos-m%C3%A9dicos-e-insumos.pdf"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "11.1.4 (todos los servicios); numeral por confirmar",
+          "texto_literal": "Si se presenta interrupción de la cadena de frio, el prestador de servicios de salud realiza notificación según el procedimiento establecido por el Invima.",
+          "que_exige": "Guardar en frío los medicamentos que lo pidan (la oxitocina, según la ficha de cada fabricante, suele pedir 2 a 8 °C) y notificar al INVIMA si se rompe la cadena de frío.",
+          "ambiente_programa": "Depósito de medicamentos (con chapa)",
+          "cantidad_minima": "1 nevera de grado médico pequeña con registrador, o suministro por turno desde farmacia",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "(no hay nevera en partos; las 2 neveras de grado médico están en el servicio farmacéutico, piso 2)",
+          "comentario": "FALTA en el piso 3: una nevera pequeña de grado médico con registrador de temperatura en el depósito de medicamentos de partos, o un procedimiento de suministro por turno desde farmacia.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://consultorsalud.com/wp-content/uploads/2020/06/05_RHABI_L1_To9-Resoluci%C3%B3n-3100-de-2019-Medicamentos-dispositivos-m%C3%A9dicos-e-insumos.pdf"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "Definiciones del Manual (TPR); el área mínima de la 3100 está en normas.json como 16 m², por confirmar el numeral",
+          "texto_literal": "TPR (Trabajo de parto, parto, recuperación) Ambiente donde se atiende el trabajo de parto, parto y recuperación y que requiere características específicas de infraestructura.",
+          "que_exige": "Habitación TPR con las condiciones de infraestructura del servicio.",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR) | Baño de la habitación TPR con guardarropa y llamado de enfermería | Antecámara y vestidor compartido de las habitaciones TPR (filtro con lavamanos)",
+          "cantidad_minima": "2 habitaciones TPR (24 m² cada una en programa.json)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "(ambientes de programa.json; tomas de gases en Central de gases medicinales: oxígeno, aire medicinal y vacío)",
+          "comentario": "programa.json usa 24 m² (Res. 1633), mayor que los 16 m² de la 3100 que registra normas.json.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "11.6.4, infraestructura; numeral por confirmar",
+          "texto_literal": "[paráfrasis de un resumen de consultoría] la atención del parto se habilita en edificaciones exclusivas para servicios de salud y está entre los servicios que exigen media caña entre piso y muro",
+          "que_exige": "Edificio exclusivo de salud y uniones piso-muro en media caña (fáciles de limpiar).",
+          "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+          "cantidad_minima": "Todas las TPR y ambientes del servicio",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "(obra; no es dotación)",
+          "comentario": "La torre es exclusiva de salud. La media caña va en especificaciones de obra (verificar en presupuesto.json).",
+          "nivel_verificacion": "parafrasis_por_confirmar",
+          "fuente_url": "https://consultorsalud.com/wp-content/uploads/2020/01/Ley-3100-pdf.pdf"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 8 según guía secundaria; por confirmar",
+          "texto_literal": "Conjunto de medicamentos, dispositivos médicos y equipos biomédicos utilizados en la reanimación cardio cerebro pulmonar. (definición literal) | [guía] desfibrilador, resucitador manual, aspirador, monitor y laringoscopio con hojas para adulto y pediátrico",
+          "que_exige": "El carro de paro de partos debe servir también para reanimar a la madre (adulta).",
+          "ambiente_programa": "Puesto de enfermería de las habitaciones TPR",
+          "cantidad_minima": "1 carro con elementos adultos y neonatales",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "Carro de paro (mueble) con módulo neonatal | Desfibrilador bifásico con monitor y marcapasos (piso 3: partos y hospitalización) | Monitor de signos vitales (uno por habitación TPR) | Aspirador de secreciones (adulto y neonatal)",
+          "comentario": "FALTA en partos: 1 laringoscopio adulto (hojas Macintosh) y 1 resucitador manual adulto; solo hay neonatales. El desfibrilador se comparte con hospitalización.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/ ; https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3 (estándar de dotación, todos los servicios), criterio 1 según guía secundaria; por confirmar",
+          "texto_literal": "El prestador de servicios de salud cuenta con el registro de la relación de los equipos biomédicos (Inventario) este registro cuenta como mínimo con la siguiente información: Nombre del equipo biomédicos. Registro sanitario para dispositivos médicos o permiso de comercialización para equipos biomédicos de tecnología controlada, cuando lo requiera. Clasificación por riesgo, cuando el equipo lo requiera.",
+          "que_exige": "Inventario de cada equipo biomédico del servicio con nombre, registro sanitario INVIMA (o permiso de comercialización si es de tecnología controlada) y clase de riesgo.",
+          "ambiente_programa": "Depósito de insumos",
+          "cantidad_minima": "1 inventario por servicio, con una fila por equipo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(todos los equipos de dotacion.json, servicio partos)",
+          "comentario": "dotacion.json ya trae nombre y clase de riesgo por ítem (Decreto 4725 de 2005), pero no registro sanitario, marca, modelo ni serie, porque los equipos aún no se compran. Exigir en el pliego el registro sanitario INVIMA vigente de cada modelo y cargarlo al inventario al recibir.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.slideshare.net/slideshow/capacitacion-habilitacion-resolucion-3100-de-2019-2pptx/262121435 ; https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 2 según guía secundaria; por confirmar",
+          "texto_literal": "Programa de mantenimiento preventivo de los equipos biomédicos, que incluya el cumplimiento de las recomendaciones establecidas por el fabricante o de acuerdo con el protocolo de mantenimiento que tenga definido el prestador | Hoja(s) de vida del(los) equipo(s) biomédicos(s), con los registros de los mantenimientos preventivos y correctivos, según corresponda.",
+          "que_exige": "Plan de mantenimiento preventivo según fabricante y una hoja de vida por equipo con sus mantenimientos.",
+          "ambiente_programa": "Depósito de insumos",
+          "cantidad_minima": "1 hoja de vida por equipo; 1 programa por prestador",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(campo mantenimiento_anual_pct de cada ítem de dotacion.json)",
+          "comentario": "dotacion.json presupuesta el mantenimiento anual (porcentaje por ítem), pero el programa y las hojas de vida no existen todavía. Pedir al proveedor manual, protocolo de mantenimiento y capacitación; abrir la hoja de vida con el acta de recibo. La palabra 'calibración' no aparece en estos criterios (según la guía de Allers solo aparece en radioterapia); calibrar igual los equipos de medición por buena práctica.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 3 según guía secundaria; por confirmar",
+          "texto_literal": "El prestador de servicios de salud cuenta con un programa de capacitación en el uso de dispositivos médicos cuando éstos lo requieran",
+          "que_exige": "Capacitar al personal en el uso de los equipos que lo requieran (monitores, desfibrilador, bombas, autoclaves).",
+          "ambiente_programa": "Depósito de insumos",
+          "cantidad_minima": "1 programa por prestador; registro de asistencia por equipo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(no hay ítem en dotacion.json)",
+          "comentario": "No es un ítem de compra. presupuesto.json incluye $40 millones de capacitación dentro de 'Puesta en marcha y habilitación' (P4, estimación). Exigir capacitación del fabricante en el contrato de compra.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterios 5 y 9 según la compilación citada por el buscador; por confirmar",
+          "texto_literal": "La suficiencia de equipos biomédicos está relacionada con la frecuencia de uso de los mismos, incluyendo los tiempos del proceso de esterilización, cuando aplique. | La suficiencia de dispositivos médicos está relacionada con la frecuencia de uso de los mismos, incluyendo los tiempos del proceso de esterilización, cuando aplique.",
+          "que_exige": "Tener suficientes equipos e instrumental para que, mientras unos se esterilizan, haya otros disponibles.",
+          "ambiente_programa": "Depósito de insumos",
+          "cantidad_minima": "Según frecuencia de uso (no fija cantidad)",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "(cantidades de instrumental de dotacion.json)",
+          "comentario": "Revisado en cada servicio en las exigencias de instrumental.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "11.1.4 (estándar de medicamentos, dispositivos médicos e insumos, todos los servicios); numeral por confirmar",
+          "texto_literal": "Instrumentos para medir la humedad relativa y la temperatura, en donde se almacenen medicamentos y dispositivos médicos.",
+          "que_exige": "Termohigrómetro con registro en cada depósito de medicamentos y dispositivos del servicio.",
+          "ambiente_programa": "Depósito de medicamentos (con chapa)",
+          "cantidad_minima": "1 termohigrómetro por depósito",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Termohigrómetros con registro",
+          "comentario": "Los 6 termohigrómetros están en la dotación del servicio farmacéutico (servicio farmacia). Asignar uno a este depósito o comprar uno adicional; costo menor.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "11.1.4; numeral por confirmar",
+          "texto_literal": "Acciones de seguimiento a través de los comités de infecciones, de seguridad del paciente y del programa de tecnovigilancia",
+          "que_exige": "Programa de tecnovigilancia (reporte de incidentes y eventos adversos con dispositivos médicos) y seguimiento en los comités.",
+          "ambiente_programa": "Depósito de insumos",
+          "cantidad_minima": "1 programa por prestador",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "(no hay ítem en dotacion.json)",
+          "comentario": "No es un ítem de compra: va en la documentación de habilitación (P4, puesta en marcha). El programa nacional de tecnovigilancia es del INVIMA (Res. 4816 de 2008, no verificada en esta tarea).",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Incubadora neonatal estacionaria",
+          "cantidad": 1,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "En baja complejidad la 3100 pide 'incubadora abierta o lámpara de calor radiante' e incubadora de transporte; no incubadora cerrada estacionaria.",
+          "recomendacion": "Revisar: útil para estabilizar al prematuro mientras se remite; reclasificar como 'recomendado'."
+        },
+        {
+          "item_dotacion": "Lámpara de fototerapia LED",
+          "cantidad": 1,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "No está en la dotación de partos de baja complejidad obtenida.",
+          "recomendacion": "Revisar: la ictericia neonatal se trata en hospitalización pediátrica; reclasificar como 'recomendado'."
+        },
+        {
+          "item_dotacion": "Doppler fetal",
+          "cantidad": 2,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "La norma pide monitor fetal; el Doppler es adicional.",
+          "recomendacion": "Mantener (bajo costo, auscultación intermitente)."
+        },
+        {
+          "item_dotacion": "Monitor de signos vitales (uno por habitación TPR)",
+          "cantidad": 2,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "No aparece en la lista de partos obtenida; sí en el contenido del carro de paro.",
+          "recomendacion": "Mantener (vigilancia de la hemorragia posparto)."
+        },
+        {
+          "item_dotacion": "Sillón reclinable para acompañante (TPR)",
+          "cantidad": 2,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "No está en la dotación de partos.",
+          "recomendacion": "Mantener por parto acompañado; reclasificar como 'recomendado'."
+        }
+      ]
+    },
+    {
+      "id": "esterilizacion",
+      "nombre_3100": "No es un servicio habilitable: la 3100 regula la esterilización dentro de 'Todos los servicios' (infraestructura, dotación, medicamentos y procesos prioritarios)",
+      "codigo_reps": "No tiene (proceso de apoyo, no servicio del REPS)",
+      "numeral": "11.1 (todos los servicios): 11.1.2 'Generalidades de los ambientes y las áreas de los servicios y sus características' num. 2 y 25-27; 11.1.3 criterios 5 y 9; 11.1.4 registros; procesos prioritarios num. 13, 13.1 y 14. Los num. 25-27 y 13-14 quedan derogados desde el 3-ene-2027 (art. 14 de la Res. 914 de 2025). Ubicación exacta de cada numeral por confirmar.",
+      "complejidad": "no aplica",
+      "notas": [
+        "Res. 914 de 2025 (Manual de buenas prácticas de reprocesamiento de dispositivos médicos y elementos reutilizables, DMER): expedida el 15-may-2025, publicada el 3-jul-2025 y vigente desde el 3-ene-2027 (art. 15: 18 meses después de su publicación, según la compilación de Supersalud). Deroga la Res. 2183 de 2004 y numerales del Anexo Técnico de la 3100 (art. 14). Fuentes secundarias difieren en la lista exacta de numerales derogados.",
+        "En julio de 2026 MinSalud publicó un proyecto que derogaría la Res. 914 y adoptaría un nuevo manual DMER (regiría 6 meses después de publicado). A 23-oct-2026 no se encontró expedido. La torre abrirá hacia 2030: diseñar la central con la Res. 914 y su sucesora."
+      ],
+      "exigencias": [
+        {
+          "estandar": "infraestructura",
+          "numeral": "11.1.2, 'Generalidades de los ambientes...', numeral 25 (derogado desde el 3-ene-2027 por el art. 14 de la Res. 914 de 2025)",
+          "texto_literal": "[paráfrasis del normograma de Cancillería, texto literal no obtenido] ambientes o áreas para: recibo de material contaminado, lavado, secado, empaque, esterilización, almacenamiento de material estéril, mesón de trabajo con poceta y lavamanos (si el proceso se hace fuera del servicio)",
+          "que_exige": "Áreas separadas para cada paso del reprocesamiento, en un solo sentido de sucio a estéril.",
+          "ambiente_programa": "Recepción y lavado de material contaminado (zona sucia) | Preparación y empaque con autoclave de doble puerta (zona limpia) | Almacenamiento y entrega de material estéril",
+          "cantidad_minima": "1 área por paso; 1 mesón con poceta en la zona sucia; 1 lavamanos",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Mesas de trabajo y estanterías en acero inoxidable (área sucia, limpia y estéril) | Lavadora ultrasónica de instrumental | Autoclave de vapor central de carga frontal (cámara de 150-250 L) | Selladora rotativa de grado médico",
+          "comentario": "Recibo, lavado, empaque, esterilización y almacenamiento están en programa.json. El SECADO no tiene área ni equipo: falta una secadora o gabinete de secado de instrumental, o pistolas de aire medicinal en la zona limpia. Poceta y lavamanos son obra.",
+          "nivel_verificacion": "parafrasis_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "11.1.2, 'Generalidades de los ambientes...', numerales 26 y 27 (derogados desde el 3-ene-2027)",
+          "texto_literal": "[contenido no obtenido en esta tarea]",
+          "que_exige": "Requisitos complementarios de los ambientes de esterilización (por confirmar).",
+          "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+          "cantidad_minima": "por confirmar",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(por confirmar)",
+          "comentario": "Cotejar en el normograma. Igual quedan reemplazados por el manual DMER en 2027.",
+          "nivel_verificacion": "parafrasis_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "11.1.2, numeral 2 (según la compilación citada por el buscador; por confirmar)",
+          "texto_literal": "[paráfrasis] los servicios donde se realice el proceso de esterilización deben contar con ambiente de aseo de uso exclusivo",
+          "que_exige": "Cuarto de aseo solo para la central.",
+          "ambiente_programa": "Ambiente de aseo",
+          "cantidad_minima": "1",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "(ambiente de 3 m² en programa.json)",
+          "comentario": "Es el 'Ambiente de aseo' del servicio 'Esterilización (reprocesamiento de dispositivos médicos)' de programa.json.",
+          "nivel_verificacion": "parafrasis_por_confirmar",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Procesos prioritarios, numerales 13 y 13.1 (derogados desde el 3-ene-2027 según la compilación de Cancillería)",
+          "texto_literal": "El prestador de servicios de salud que realice el proceso de esterilización cuenta con la siguiente información documentada | 13.1.8. Verificación de la integridad del material estéril. 13.1.9. Control de calidad que incluya el análisis de los reportes de dicho control, para la toma de medidas preventivas y correctivas.",
+          "que_exige": "Procedimientos escritos de todo el proceso, verificación de que los paquetes estén íntegros y control de calidad con indicadores.",
+          "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia) | Almacenamiento y entrega de material estéril",
+          "cantidad_minima": "1 incubadora de indicadores biológicos; indicadores químicos por paquete; 1 lupa con luz para inspección",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Incubadora de indicadores biológicos | Autoclave de vapor central de carga frontal (cámara de 150-250 L)",
+          "comentario": "Control de calidad cubierto (incubadora de lectura rápida y autoclave con impresora de registro). FALTA una lupa con iluminación para inspeccionar instrumental (costo menor). Los indicadores son consumibles (P4).",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "11.1.4, registros de esterilización (numeral 11 según la compilación; por confirmar)",
+          "texto_literal": "Cuenta con los siguientes registros, cuando los prestadores de servicios de salud realicen el proceso de esterilización dentro del servicio y fuera de centrales de esterilización | Etiquetado de cada paquete que permita la trazabilidad de la esterilización.",
+          "que_exige": "Registro de cada carga, resultados de control de calidad, lista del contenido de cada paquete y etiqueta de trazabilidad.",
+          "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+          "cantidad_minima": "1 sistema de etiquetado por central",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Selladora rotativa de grado médico | Autoclave de vapor central de carga frontal (cámara de 150-250 L)",
+          "comentario": "La selladora imprime lote y el autoclave registra ciclos. Falta una etiquetadora de lotes (o software de trazabilidad) para paquetes no sellados en papel grado médico. El texto aplica a esterilización 'dentro del servicio y fuera de centrales': para la central rige además la Res. 914.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Procesos prioritarios, numeral 14 (derogado desde el 3-ene-2027 según la compilación de Cancillería)",
+          "texto_literal": "Cuando un prestador de servicios de salud contrate el proceso de esterilización con un tercero, cuenta con un contrato, convenio o acuerdo escrito entre las partes",
+          "que_exige": "Contrato escrito si se terceriza la esterilización.",
+          "ambiente_programa": "Almacenamiento y entrega de material estéril",
+          "cantidad_minima": "No aplica con central propia",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Autoclave clase B de mesa de 23 L (respaldo)",
+          "comentario": "La central es propia; el autoclave de respaldo evita tercerizar si falla el central.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterios 5 y 9 (por confirmar)",
+          "texto_literal": "La suficiencia de equipos biomédicos está relacionada con la frecuencia de uso de los mismos, incluyendo los tiempos del proceso de esterilización, cuando aplique.",
+          "que_exige": "Tener instrumental suficiente para cubrir los tiempos de lavado y esterilización.",
+          "ambiente_programa": "Almacenamiento y entrega de material estéril",
+          "cantidad_minima": "Según frecuencia de uso",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "Autoclave de vapor central de carga frontal (cámara de 150-250 L) | Autoclave clase B de mesa de 23 L (respaldo)",
+          "comentario": "Instrumental de la torre: 8 equipos de pequeña cirugía en urgencias, 6 en consulta, 6 de parto, 3 de revisión uterina, 2 de toracostomía. Con un autoclave de 150-250 L hay capacidad de sobra (estimación).",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "procesos_prioritarios",
+          "numeral": "Res. 914 de 2025, Manual DMER (reemplaza los numerales de la 3100 desde el 3-ene-2027); numerales del manual por confirmar",
+          "texto_literal": "[paráfrasis de resúmenes] áreas diferenciadas y unidireccionales; equipos de limpieza (lavadoras ultrasónicas, termodesinfectadoras, secadores) y esterilizadores con mantenimiento, calibración y validación documentados; trazabilidad y control de calidad",
+          "que_exige": "Desde 2027 la central se evalúa con el manual DMER.",
+          "ambiente_programa": "Recepción y lavado de material contaminado (zona sucia) | Preparación y empaque con autoclave de doble puerta (zona limpia) | Almacenamiento y entrega de material estéril",
+          "cantidad_minima": "1 lavadora desinfectora y 1 secadora recomendadas",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Lavadora desinfectora de instrumental | Lavadora ultrasónica de instrumental",
+          "comentario": "La lavadora desinfectora está como 'recomendada' en dotacion.json; con la Res. 914 conviene volverla de habilitación. Falta secadora de instrumental. Calificación del autoclave (instalación, operación, desempeño) debe ir en el contrato de compra.",
+          "nivel_verificacion": "parafrasis_por_confirmar",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_0914_2025.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3 (estándar de dotación, todos los servicios), criterio 1 según guía secundaria; por confirmar",
+          "texto_literal": "El prestador de servicios de salud cuenta con el registro de la relación de los equipos biomédicos (Inventario) este registro cuenta como mínimo con la siguiente información: Nombre del equipo biomédicos. Registro sanitario para dispositivos médicos o permiso de comercialización para equipos biomédicos de tecnología controlada, cuando lo requiera. Clasificación por riesgo, cuando el equipo lo requiera.",
+          "que_exige": "Inventario de cada equipo biomédico del servicio con nombre, registro sanitario INVIMA (o permiso de comercialización si es de tecnología controlada) y clase de riesgo.",
+          "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+          "cantidad_minima": "1 inventario por servicio, con una fila por equipo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(todos los equipos de dotacion.json, servicio esterilizacion)",
+          "comentario": "dotacion.json ya trae nombre y clase de riesgo por ítem (Decreto 4725 de 2005), pero no registro sanitario, marca, modelo ni serie, porque los equipos aún no se compran. Exigir en el pliego el registro sanitario INVIMA vigente de cada modelo y cargarlo al inventario al recibir.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.slideshare.net/slideshow/capacitacion-habilitacion-resolucion-3100-de-2019-2pptx/262121435 ; https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 2 según guía secundaria; por confirmar",
+          "texto_literal": "Programa de mantenimiento preventivo de los equipos biomédicos, que incluya el cumplimiento de las recomendaciones establecidas por el fabricante o de acuerdo con el protocolo de mantenimiento que tenga definido el prestador | Hoja(s) de vida del(los) equipo(s) biomédicos(s), con los registros de los mantenimientos preventivos y correctivos, según corresponda.",
+          "que_exige": "Plan de mantenimiento preventivo según fabricante y una hoja de vida por equipo con sus mantenimientos.",
+          "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+          "cantidad_minima": "1 hoja de vida por equipo; 1 programa por prestador",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(campo mantenimiento_anual_pct de cada ítem de dotacion.json)",
+          "comentario": "dotacion.json presupuesta el mantenimiento anual (porcentaje por ítem), pero el programa y las hojas de vida no existen todavía. Pedir al proveedor manual, protocolo de mantenimiento y capacitación; abrir la hoja de vida con el acta de recibo. La palabra 'calibración' no aparece en estos criterios (según la guía de Allers solo aparece en radioterapia); calibrar igual los equipos de medición por buena práctica.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 3 según guía secundaria; por confirmar",
+          "texto_literal": "El prestador de servicios de salud cuenta con un programa de capacitación en el uso de dispositivos médicos cuando éstos lo requieran",
+          "que_exige": "Capacitar al personal en el uso de los equipos que lo requieran (monitores, desfibrilador, bombas, autoclaves).",
+          "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+          "cantidad_minima": "1 programa por prestador; registro de asistencia por equipo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "(no hay ítem en dotacion.json)",
+          "comentario": "No es un ítem de compra. presupuesto.json incluye $40 millones de capacitación dentro de 'Puesta en marcha y habilitación' (P4, estimación). Exigir capacitación del fabricante en el contrato de compra.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "11.1.4 (estándar de medicamentos, dispositivos médicos e insumos, todos los servicios); numeral por confirmar",
+          "texto_literal": "Instrumentos para medir la humedad relativa y la temperatura, en donde se almacenen medicamentos y dispositivos médicos.",
+          "que_exige": "Termohigrómetro con registro en cada depósito de medicamentos y dispositivos del servicio.",
+          "ambiente_programa": "Almacenamiento y entrega de material estéril",
+          "cantidad_minima": "1 termohigrómetro por depósito",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Termohigrómetros con registro",
+          "comentario": "Los 6 termohigrómetros están en la dotación del servicio farmacéutico (servicio farmacia). Asignar uno a este depósito o comprar uno adicional; costo menor.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "medicamentos_dispositivos",
+          "numeral": "11.1.4; numeral por confirmar",
+          "texto_literal": "Acciones de seguimiento a través de los comités de infecciones, de seguridad del paciente y del programa de tecnovigilancia",
+          "que_exige": "Programa de tecnovigilancia (reporte de incidentes y eventos adversos con dispositivos médicos) y seguimiento en los comités.",
+          "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+          "cantidad_minima": "1 programa por prestador",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "(no hay ítem en dotacion.json)",
+          "comentario": "No es un ítem de compra: va en la documentación de habilitación (P4, puesta en marcha). El programa nacional de tecnovigilancia es del INVIMA (Res. 4816 de 2008, no verificada en esta tarea).",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Lavadora desinfectora de instrumental",
+          "cantidad": 1,
+          "prioridad_en_dotacion": "recomendado",
+          "por_que_no_lo_exige_la_3100": "La 3100 no lista equipos de esterilización.",
+          "recomendacion": "Mantener y pasar a 'habilitación' por la Res. 914 de 2025 (vigente desde el 3-ene-2027)."
+        },
+        {
+          "item_dotacion": "Autoclave clase B de mesa de 23 L (respaldo)",
+          "cantidad": 1,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "La norma no pide respaldo.",
+          "recomendacion": "Mantener: evita parar urgencias y partos si falla el autoclave central."
+        },
+        {
+          "item_dotacion": "Lavadora ultrasónica de instrumental",
+          "cantidad": 1,
+          "prioridad_en_dotacion": "habilitacion",
+          "por_que_no_lo_exige_la_3100": "La 3100 no nombra el equipo de lavado.",
+          "recomendacion": "Mantener (lavado de instrumental con cavidades; la Res. 914 la menciona)."
+        }
+      ]
+    },
+    {
+      "id": "expansion_emergencias",
+      "nombre_3100": "No existe como servicio en la Res. 3100",
+      "codigo_reps": "No tiene",
+      "numeral": "No aplica. Marco: Res. 2065 de 2025 (sedes transitorias o itinerantes en emergencias) y la regla de la 3100 que esa norma cita; proyecto de MinSalud (oct-2026) para llevar estas reglas al Manual de la 3100.",
+      "complejidad": "no aplica (si opera como extensión de urgencias, aplican los criterios de urgencias de baja complejidad)",
+      "notas": [
+        "Res. 2065 de 2025 (6-oct-2025): autoriza sedes transitorias o itinerantes en desastres, crisis humanitarias o fallas estructurales; según su texto, la 3100 no exige habilitación ni novedad a servicios de un prestador inscrito que no pueden funcionar normalmente por una emergencia.",
+        "Circular Externa 030 de 2026 de MinSalud (reglas para urgencias y medicamentos durante el desastre; no se verificó si se refiere al terremoto del 10-ago-2026): remite a la Res. 2065 y pide notificar a la Supersalud cuando una IPS opere sedes transitorias.",
+        "Proyecto de MinSalud (octubre de 2026): derogaría la Res. 2065 y llevaría al Manual de la 3100 las reglas para ampliar capacidad y reconvertir servicios, con autorizaciones de hasta 12 meses prorrogables. No expedido a 23-oct-2026."
+      ],
+      "exigencias": [
+        {
+          "estandar": "infraestructura",
+          "numeral": "Regla del Manual sobre observación; numeral por confirmar",
+          "texto_literal": "Las áreas de observación son exclusivas de los servicios de urgencias.",
+          "que_exige": "En tiempo normal el salón del piso 4 no puede tener pacientes en observación; solo como extensión de urgencias durante una emergencia, con la autorización que pida la norma vigente.",
+          "ambiente_programa": "Salón multipropósito de capacitación y telesalud, reconvertible en sala de expansión (8 camillas con oxígeno, energía y datos)",
+          "cantidad_minima": "No aplica cantidad",
+          "estado_en_dotacion": "cubierto",
+          "item_dotacion": "(regla de uso; no es dotación)",
+          "comentario": "Dejarlo escrito en el plan hospitalario de emergencias: quién activa la sala, cómo se notifica a la Secretaría y a la Supersalud y cuándo se cierra.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm ; https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=191017"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Por analogía con 11.6.1, observación (criterio 26; por confirmar)",
+          "texto_literal": "Sala de observación, que cuenta con: 26.1. Camilla con barandas, ruedas y freno. | Oxígeno medicinal que puede ser suministrado mediante salida de oxígeno medicinal o mediante oxígeno medicinal portátil por camilla.",
+          "que_exige": "Si la sala opera como observación, cada puesto necesita camilla con barandas, ruedas y freno y oxígeno.",
+          "ambiente_programa": "Salón multipropósito de capacitación y telesalud, reconvertible en sala de expansión (8 camillas con oxígeno, energía y datos) | Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+          "cantidad_minima": "8 camillas y 8 salidas de oxígeno",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Camilla plegable de expansión con porta suero | Flujómetro de oxígeno con humidificador para la sala de expansión",
+          "comentario": "Oxígeno cubierto (8 flujómetros y tomas previstas). Las camillas plegables no especifican barandas, ruedas ni freno: pedir camillas plegables con barandas y ruedas con freno.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Por analogía con 11.6.1 (criterio 22; por confirmar)",
+          "texto_literal": "Oxígeno medicinal y succión. Puede ser suministrado mediante salida de oxígeno medicinal y sistema de vacío o mediante oxígeno medicinal portátil y aspirador.",
+          "que_exige": "Succión disponible para las 8 camillas.",
+          "ambiente_programa": "Salón multipropósito de capacitación y telesalud, reconvertible en sala de expansión (8 camillas con oxígeno, energía y datos)",
+          "cantidad_minima": "Succión disponible; recomendado 1 aspirador por cada 4 camillas (estimación)",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Aspirador de secreciones portátil",
+          "comentario": "Hay 1 aspirador para 8 camillas: agregar 1 aspirador portátil o tomas de vacío con regulador.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Por analogía con 11.6.1 (carro de paro adulto y pediátrico, criterio 22 según guía secundaria; por confirmar)",
+          "texto_literal": "carro de paro adulto y pediátrico (lista de la guía; texto oficial por cotejar)",
+          "que_exige": "Elementos de reanimación en el piso 4 cuando la sala opere.",
+          "ambiente_programa": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+          "cantidad_minima": "1 desfibrilador externo automático y 1 maletín de reanimación adulto-pediátrico",
+          "estado_en_dotacion": "falta",
+          "item_dotacion": "(no hay ítem en expansion_emergencias)",
+          "comentario": "FALTA: el piso 4 no tiene desfibrilador ni elementos de reanimación. Mínimo un DEA y un maletín de reanimación (resucitador y laringoscopio adulto-pediátrico) guardados en el depósito de kits.",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "dotacion",
+          "numeral": "Por analogía con 11.6.1 (criterios 22 y 23; por confirmar)",
+          "texto_literal": "monitor de signos vitales ..., oxímetro, ... tensiómetro y fonendoscopio adulto y pediátrico, termómetro (lista de la guía; texto oficial por cotejar)",
+          "que_exige": "Equipos básicos para valorar a los pacientes de la sala.",
+          "ambiente_programa": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+          "cantidad_minima": "1 monitor; 2 kits de examen (tensiómetro, fonendoscopio, termómetro, oxímetro); 1 glucómetro",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Monitor de signos vitales básico",
+          "comentario": "Solo hay 1 monitor. FALTAN 2 kits de examen básico y 1 glucómetro (o traerlos de consulta externa del piso 2 según el plan de emergencias).",
+          "nivel_verificacion": "fragmento_fuente_secundaria",
+          "fuente_url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+        },
+        {
+          "estandar": "todos_los_servicios",
+          "numeral": "11.1.3, criterio 2 (por confirmar)",
+          "texto_literal": "Programa de mantenimiento preventivo de los equipos biomédicos, que incluya el cumplimiento de las recomendaciones establecidas por el fabricante o de acuerdo con el protocolo de mantenimiento que tenga definido el prestador",
+          "que_exige": "Los equipos guardados también llevan mantenimiento y hoja de vida, y se prueban en los simulacros.",
+          "ambiente_programa": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+          "cantidad_minima": "1 hoja de vida por equipo",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Flujómetro de oxígeno con humidificador para la sala de expansión | Aspirador de secreciones portátil | Monitor de signos vitales básico",
+          "comentario": "Incluir la sala en el plan de mantenimiento y en los simulacros del plan hospitalario de emergencias.",
+          "nivel_verificacion": "fragmento_normograma",
+          "fuente_url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        },
+        {
+          "estandar": "infraestructura",
+          "numeral": "11.1.2, criterio 14 según normas.json del repo (por confirmar)",
+          "texto_literal": "[paráfrasis] planta eléctrica obligatoria donde haya urgencias y hospitalización",
+          "que_exige": "Las tomas de la sala deben ir a circuitos respaldados por la planta.",
+          "ambiente_programa": "Salón multipropósito de capacitación y telesalud, reconvertible en sala de expansión (8 camillas con oxígeno, energía y datos)",
+          "cantidad_minima": "Tomas eléctricas de las 8 camillas en circuito de emergencia",
+          "estado_en_dotacion": "parcial",
+          "item_dotacion": "Planta eléctrica diésel de 300 kVA con transferencia automática",
+          "comentario": "programa.json dice 'energía y datos' pero no si las tomas están en circuito de emergencia: dejarlo en el diseño eléctrico.",
+          "nivel_verificacion": "parafrasis_por_confirmar",
+          "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+        }
+      ],
+      "excesos_recomendados": [
+        {
+          "item_dotacion": "Flujómetro de oxígeno con humidificador para la sala de expansión | Aspirador de secreciones portátil | Monitor de signos vitales básico | Camilla plegable de expansión con porta suero | Atril porta suero",
+          "cantidad": null,
+          "prioridad_en_dotacion": "recomendado",
+          "por_que_no_lo_exige_la_3100": "La 3100 no tiene un servicio de expansión: ningún ítem de esta sala es de habilitación.",
+          "recomendacion": "Mantener: lo justifican el hospital seguro (Res. 1633, art. 5, e Índice de Seguridad Hospitalaria de la OPS, según dotacion.json) y la experiencia del terremoto de 2026. Completar con los faltantes señalados."
+        }
+      ]
+    }
+  ],
+  "resumen_faltantes": {
+    "compras_nuevas_minimas": [
+      {
+        "servicio": "urgencias",
+        "item": "Martillo de reflejos",
+        "cantidad": 3,
+        "ambiente_programa": "Consultorio de urgencias con unidad sanitaria | Triage (clasificación)"
+      },
+      {
+        "servicio": "urgencias",
+        "item": "Camilla ginecológica con estribos (o camilla de examen con estribos)",
+        "cantidad": 1,
+        "ambiente_programa": "Consultorio de urgencias con unidad sanitaria"
+      },
+      {
+        "servicio": "hospitalizacion",
+        "item": "Laringoscopio adulto y pediátrico (mango + hojas de fibra óptica)",
+        "cantidad": 1,
+        "ambiente_programa": "Estación de enfermería: puesto central"
+      },
+      {
+        "servicio": "hospitalizacion",
+        "item": "Resucitador manual adulto, pediátrico y neonatal (juego)",
+        "cantidad": 1,
+        "ambiente_programa": "Estación de enfermería: puesto central"
+      },
+      {
+        "servicio": "hospitalizacion",
+        "item": "Fonendoscopio pediátrico (si el del kit no lo es)",
+        "cantidad": 1,
+        "ambiente_programa": "Estación de enfermería: puesto central"
+      },
+      {
+        "servicio": "partos",
+        "item": "Laringoscopio adulto (hojas Macintosh) y resucitador manual adulto",
+        "cantidad": 1,
+        "ambiente_programa": "Puesto de enfermería de las habitaciones TPR"
+      },
+      {
+        "servicio": "partos",
+        "item": "Cinta métrica",
+        "cantidad": 2,
+        "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)"
+      },
+      {
+        "servicio": "partos",
+        "item": "Oxímetro de pulso neonatal (segundo)",
+        "cantidad": 1,
+        "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)"
+      },
+      {
+        "servicio": "partos",
+        "item": "Báscula pesa bebés digital e infantómetro (segundo juego)",
+        "cantidad": 1,
+        "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)"
+      },
+      {
+        "servicio": "partos",
+        "item": "Laringoscopio neonatal (segundo)",
+        "cantidad": 1,
+        "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)"
+      },
+      {
+        "servicio": "partos",
+        "item": "Nevera de grado médico pequeña con registrador de temperatura",
+        "cantidad": 1,
+        "ambiente_programa": "Depósito de medicamentos (con chapa)"
+      },
+      {
+        "servicio": "esterilizacion",
+        "item": "Secadora o gabinete de secado de instrumental",
+        "cantidad": 1,
+        "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)"
+      },
+      {
+        "servicio": "esterilizacion",
+        "item": "Lupa con iluminación para inspección de instrumental",
+        "cantidad": 1,
+        "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)"
+      },
+      {
+        "servicio": "esterilizacion",
+        "item": "Etiquetadora de lotes o software de trazabilidad",
+        "cantidad": 1,
+        "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)"
+      },
+      {
+        "servicio": "expansion_emergencias",
+        "item": "Desfibrilador externo automático y maletín de reanimación adulto-pediátrico",
+        "cantidad": 1,
+        "ambiente_programa": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)"
+      },
+      {
+        "servicio": "expansion_emergencias",
+        "item": "Aspirador de secreciones portátil (segundo)",
+        "cantidad": 1,
+        "ambiente_programa": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)"
+      },
+      {
+        "servicio": "expansion_emergencias",
+        "item": "Kit de examen básico y glucómetro",
+        "cantidad": 2,
+        "ambiente_programa": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)"
+      },
+      {
+        "servicio": "todos",
+        "item": "Termohigrómetro con registro (uno por depósito de medicamentos: urgencias, hospitalización, partos)",
+        "cantidad": 3,
+        "ambiente_programa": "Depósito de medicamentos e insumos de urgencias | Depósito de medicamentos (con chapa de seguridad) | Depósito de medicamentos (con chapa)"
+      }
+    ],
+    "ajustes_de_especificacion": [
+      "Camilla de procedimientos (urgencias), camillas y cuna de observación, camilla de transporte de partos y camillas plegables de expansión: exigir barandas y ruedas con freno.",
+      "Camilla de reanimación: agregar freno a la especificación.",
+      "Central de gases medicinales: agregar paneles de alarma por zona visibles desde las estaciones de enfermería.",
+      "Equipo de partos de urgencias: separar el juego de examen ginecológico del equipo de parto; en partos, nombrar el equipo de episiotomía y episiorrafia.",
+      "Pliego de compra: registro sanitario INVIMA vigente o permiso de comercialización, clase de riesgo, manual, protocolo de mantenimiento, capacitación y calificación (autoclaves)."
+    ],
+    "decisiones_con_la_secretaria": [
+      "Si la cama de partos multiposición de cada TPR se acepta como 'mesa para atención de partos'.",
+      "Si el desfibrilador del piso 3 puede compartirse entre el carro de paro de partos y el de hospitalización.",
+      "Cómo se declaran en el REPS las 2 camas de posparto ('hospitalización obstétrica' se entiende como 'atención del parto')."
+    ],
+    "detalle_por_exigencia": [
+      {
+        "servicio": "urgencias",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "11.6.1, dotación, criterio 23 según guía secundaria (el repo cita el 23.6 para la báscula pesa bebé); por confirmar",
+        "ambiente_programa": "Consultorio de urgencias con unidad sanitaria | Triage (clasificación)",
+        "que_hacer": "FALTA: martillo de reflejos (no está en el kit) en cada consultorio; camilla con estribos en al menos 1 consultorio (urgencias atiende urgencias ginecobstétricas y la 3100 le exige instrumental ginecobstétrico); confirmar que el fonendoscopio 'de doble campana' sirva para niños o agregar uno pediátrico."
+      },
+      {
+        "servicio": "urgencias",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "Sala de procedimientos: criterio 22 de consulta externa (texto general) y criterio 24 de urgencias según guía secundaria; por confirmar",
+        "ambiente_programa": "Sala de procedimientos (suturas, curaciones)",
+        "que_hacer": "La especificación de la camilla de procedimientos no dice barandas, ruedas ni freno: agregarlo al pliego. Lámpara (2) e instrumental (8 equipos) cumplen."
+      },
+      {
+        "servicio": "urgencias",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "11.6.1, dotación, criterio 26 (numeración de la compilación citada por el buscador; por confirmar)",
+        "ambiente_programa": "Observación adultos hombres, 2 camillas | Observación adultos mujeres, 2 camillas | Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes",
+        "que_hacer": "Las especificaciones de la camilla de observación (5) y de la cuna (1) no dicen 'ruedas y freno': exigirlo en el pliego. El oxígeno por puesto está cubierto."
+      },
+      {
+        "servicio": "urgencias",
+        "estado": "parcial",
+        "estandar": "infraestructura",
+        "numeral": "Todos los servicios / estación de enfermería; numeral por confirmar",
+        "ambiente_programa": "Estación de enfermería: puesto de enfermería",
+        "que_hacer": "La especificación de la central no menciona alarmas de área: agregar paneles de alarma por zona (urgencias, piso 3)."
+      },
+      {
+        "servicio": "urgencias",
+        "estado": "parcial",
+        "estandar": "procesos_prioritarios",
+        "numeral": "Todos los servicios, estándar de procesos prioritarios; numeral por confirmar",
+        "ambiente_programa": "Estación de enfermería: puesto de enfermería",
+        "que_hacer": "Documento a producir en la puesta en marcha; requiere las alarmas de la exigencia anterior."
+      },
+      {
+        "servicio": "urgencias",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3 (estándar de dotación, todos los servicios), criterio 1 según guía secundaria; por confirmar",
+        "ambiente_programa": "Depósito de equipos y dispositivos médicos",
+        "que_hacer": "dotacion.json ya trae nombre y clase de riesgo por ítem (Decreto 4725 de 2005), pero no registro sanitario, marca, modelo ni serie, porque los equipos aún no se compran. Exigir en el pliego el registro sanitario INVIMA vigente de cada modelo y cargarlo al inventario al recibir."
+      },
+      {
+        "servicio": "urgencias",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3, criterio 2 según guía secundaria; por confirmar",
+        "ambiente_programa": "Depósito de equipos y dispositivos médicos",
+        "que_hacer": "dotacion.json presupuesta el mantenimiento anual (porcentaje por ítem), pero el programa y las hojas de vida no existen todavía. Pedir al proveedor manual, protocolo de mantenimiento y capacitación; abrir la hoja de vida con el acta de recibo. La palabra 'calibración' no aparece en estos criterios (según la guía de Allers solo aparece en radioterapia); calibrar igual los equipos de medición por buena práctica."
+      },
+      {
+        "servicio": "urgencias",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3, criterio 3 según guía secundaria; por confirmar",
+        "ambiente_programa": "Depósito de equipos y dispositivos médicos",
+        "que_hacer": "No es un ítem de compra. presupuesto.json incluye $40 millones de capacitación dentro de 'Puesta en marcha y habilitación' (P4, estimación). Exigir capacitación del fabricante en el contrato de compra."
+      },
+      {
+        "servicio": "urgencias",
+        "estado": "parcial",
+        "estandar": "medicamentos_dispositivos",
+        "numeral": "11.1.4 (estándar de medicamentos, dispositivos médicos e insumos, todos los servicios); numeral por confirmar",
+        "ambiente_programa": "Depósito de medicamentos e insumos de urgencias",
+        "que_hacer": "Los 6 termohigrómetros están en la dotación del servicio farmacéutico (servicio farmacia). Asignar uno a este depósito o comprar uno adicional; costo menor."
+      },
+      {
+        "servicio": "urgencias",
+        "estado": "falta",
+        "estandar": "medicamentos_dispositivos",
+        "numeral": "11.1.4; numeral por confirmar",
+        "ambiente_programa": "Depósito de equipos y dispositivos médicos",
+        "que_hacer": "No es un ítem de compra: va en la documentación de habilitación (P4, puesta en marcha). El programa nacional de tecnovigilancia es del INVIMA (Res. 4816 de 2008, no verificada en esta tarea)."
+      },
+      {
+        "servicio": "hospitalizacion",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "11.4.1, dotación, criterio 25 según guía secundaria; por confirmar",
+        "ambiente_programa": "Estación de enfermería: puesto central",
+        "que_hacer": "El mueble existe, pero su contenido (criterio 8 de todos los servicios) queda incompleto: FALTA 1 laringoscopio adulto y pediátrico y 1 resucitador manual adulto y pediátrico (los de dotacion.json están en urgencias, piso 1, y en partos solo hay neonatales). El desfibrilador se comparte con partos: si el verificador exige uno por carro, falta 1."
+      },
+      {
+        "servicio": "hospitalizacion",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "11.4.1, dotación, criterio 26 según guía secundaria; por confirmar",
+        "ambiente_programa": "Estación de enfermería: puesto central | Depósito de equipos | Estacionamiento de camillas y sillas de ruedas",
+        "que_hacer": "Todo está, salvo el fonendoscopio pediátrico: el kit trae fonendoscopio 'de doble campana' (confirmar campana pediátrica o agregar 1 pediátrico). Hay 5 bombas, 2 glucómetros, 3 sillas de ruedas y 1 electrocardiógrafo."
+      },
+      {
+        "servicio": "hospitalizacion",
+        "estado": "parcial",
+        "estandar": "infraestructura",
+        "numeral": "Todos los servicios / estación de enfermería; numeral por confirmar",
+        "ambiente_programa": "Estación de enfermería: puesto central",
+        "que_hacer": "Agregar paneles de alarma por zona a la especificación de la central."
+      },
+      {
+        "servicio": "hospitalizacion",
+        "estado": "parcial",
+        "estandar": "procesos_prioritarios",
+        "numeral": "Todos los servicios, procesos prioritarios; numeral por confirmar",
+        "ambiente_programa": "Estación de enfermería: puesto central",
+        "que_hacer": "Documento de la puesta en marcha."
+      },
+      {
+        "servicio": "hospitalizacion",
+        "estado": "falta",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3, criterio 8 según guía secundaria; por confirmar",
+        "ambiente_programa": "Estación de enfermería: puesto central",
+        "que_hacer": "FALTA: 'Laringoscopio adulto y pediátrico (mango + hojas de fibra óptica)' ×1 y 'Resucitador manual adulto, pediátrico y neonatal (juego)' ×1 para el carro del piso 3 (los 3 de cada uno están en urgencias, piso 1)."
+      },
+      {
+        "servicio": "hospitalizacion",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3 (estándar de dotación, todos los servicios), criterio 1 según guía secundaria; por confirmar",
+        "ambiente_programa": "Depósito de equipos",
+        "que_hacer": "dotacion.json ya trae nombre y clase de riesgo por ítem (Decreto 4725 de 2005), pero no registro sanitario, marca, modelo ni serie, porque los equipos aún no se compran. Exigir en el pliego el registro sanitario INVIMA vigente de cada modelo y cargarlo al inventario al recibir."
+      },
+      {
+        "servicio": "hospitalizacion",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3, criterio 2 según guía secundaria; por confirmar",
+        "ambiente_programa": "Depósito de equipos",
+        "que_hacer": "dotacion.json presupuesta el mantenimiento anual (porcentaje por ítem), pero el programa y las hojas de vida no existen todavía. Pedir al proveedor manual, protocolo de mantenimiento y capacitación; abrir la hoja de vida con el acta de recibo. La palabra 'calibración' no aparece en estos criterios (según la guía de Allers solo aparece en radioterapia); calibrar igual los equipos de medición por buena práctica."
+      },
+      {
+        "servicio": "hospitalizacion",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3, criterio 3 según guía secundaria; por confirmar",
+        "ambiente_programa": "Depósito de equipos",
+        "que_hacer": "No es un ítem de compra. presupuesto.json incluye $40 millones de capacitación dentro de 'Puesta en marcha y habilitación' (P4, estimación). Exigir capacitación del fabricante en el contrato de compra."
+      },
+      {
+        "servicio": "hospitalizacion",
+        "estado": "parcial",
+        "estandar": "medicamentos_dispositivos",
+        "numeral": "11.1.4 (estándar de medicamentos, dispositivos médicos e insumos, todos los servicios); numeral por confirmar",
+        "ambiente_programa": "Depósito de medicamentos (con chapa de seguridad)",
+        "que_hacer": "Los 6 termohigrómetros están en la dotación del servicio farmacéutico (servicio farmacia). Asignar uno a este depósito o comprar uno adicional; costo menor."
+      },
+      {
+        "servicio": "hospitalizacion",
+        "estado": "falta",
+        "estandar": "medicamentos_dispositivos",
+        "numeral": "11.1.4; numeral por confirmar",
+        "ambiente_programa": "Depósito de equipos",
+        "que_hacer": "No es un ítem de compra: va en la documentación de habilitación (P4, puesta en marcha). El programa nacional de tecnovigilancia es del INVIMA (Res. 4816 de 2008, no verificada en esta tarea)."
+      },
+      {
+        "servicio": "partos",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "11.6.4, dotación, sala de partos (por confirmar)",
+        "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+        "que_hacer": "En la modalidad TPR la cama multiposición (perneras y pies removibles) hace de mesa de partos. La 3100 lista 'cama' y 'mesa' por separado: pedir al verificador de la Secretaría que acepte la cama TPR como ambas, o comprar mesa de partos. Riesgo de hallazgo en la visita previa."
+      },
+      {
+        "servicio": "partos",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "11.6.4, dotación, sala de partos (por confirmar)",
+        "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+        "que_hacer": "Funcionalmente cubierto (tijeras de episiotomía y porta agujas en el equipo de parto; sutura de desgarros aparte). Nombrar en la compra un 'equipo de episiotomía y episiorrafia' para que el verificador lo identifique."
+      },
+      {
+        "servicio": "partos",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "11.6.4, dotación, área de adaptación del recién nacido (por confirmar)",
+        "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+        "que_hacer": "Hay 1 juego para 2 áreas de adaptación. Comprar 1 más, o aceptar que se comparta si la Secretaría lo admite (la norma dice 'el área ... cuenta con')."
+      },
+      {
+        "servicio": "partos",
+        "estado": "falta",
+        "estandar": "dotacion",
+        "numeral": "11.6.4, dotación, área de adaptación del recién nacido (por confirmar)",
+        "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+        "que_hacer": "FALTA: 2 cintas métricas (costo despreciable)."
+      },
+      {
+        "servicio": "partos",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "11.6.4, dotación, área de adaptación del recién nacido (por confirmar)",
+        "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+        "que_hacer": "Hay 1 para 2 áreas: comprar 1 más."
+      },
+      {
+        "servicio": "partos",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "11.6.4, dotación, adaptación neonatal, 19.3.7 según guía secundaria; por confirmar",
+        "ambiente_programa": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+        "que_hacer": "Hay 1 juego para 2 áreas (en el carro con módulo neonatal). Comprar 1 laringoscopio neonatal más para que cada TPR tenga el suyo."
+      },
+      {
+        "servicio": "partos",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "11.6.4, dotación TPR; el repo cita el criterio 20.8.7; por confirmar",
+        "ambiente_programa": "Recepción y entrega de pacientes (con estacionamiento de camillas)",
+        "que_hacer": "La especificación dice 'barandas y porta suero': agregar ruedas con freno."
+      },
+      {
+        "servicio": "partos",
+        "estado": "parcial",
+        "estandar": "medicamentos_dispositivos",
+        "numeral": "11.6.4, estándar de medicamentos, dispositivos médicos e insumos; numeral por confirmar",
+        "ambiente_programa": "Puesto de enfermería de las habitaciones TPR",
+        "que_hacer": "El traje antichoque (2) es parte del kit; los medicamentos e insumos del kit son consumibles y van en el inventario inicial (P4). Urgencias también atiende partos: dejar otro kit allí."
+      },
+      {
+        "servicio": "partos",
+        "estado": "falta",
+        "estandar": "medicamentos_dispositivos",
+        "numeral": "11.1.4 (todos los servicios); numeral por confirmar",
+        "ambiente_programa": "Depósito de medicamentos (con chapa)",
+        "que_hacer": "FALTA en el piso 3: una nevera pequeña de grado médico con registrador de temperatura en el depósito de medicamentos de partos, o un procedimiento de suministro por turno desde farmacia."
+      },
+      {
+        "servicio": "partos",
+        "estado": "falta",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3, criterio 8 según guía secundaria; por confirmar",
+        "ambiente_programa": "Puesto de enfermería de las habitaciones TPR",
+        "que_hacer": "FALTA en partos: 1 laringoscopio adulto (hojas Macintosh) y 1 resucitador manual adulto; solo hay neonatales. El desfibrilador se comparte con hospitalización."
+      },
+      {
+        "servicio": "partos",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3 (estándar de dotación, todos los servicios), criterio 1 según guía secundaria; por confirmar",
+        "ambiente_programa": "Depósito de insumos",
+        "que_hacer": "dotacion.json ya trae nombre y clase de riesgo por ítem (Decreto 4725 de 2005), pero no registro sanitario, marca, modelo ni serie, porque los equipos aún no se compran. Exigir en el pliego el registro sanitario INVIMA vigente de cada modelo y cargarlo al inventario al recibir."
+      },
+      {
+        "servicio": "partos",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3, criterio 2 según guía secundaria; por confirmar",
+        "ambiente_programa": "Depósito de insumos",
+        "que_hacer": "dotacion.json presupuesta el mantenimiento anual (porcentaje por ítem), pero el programa y las hojas de vida no existen todavía. Pedir al proveedor manual, protocolo de mantenimiento y capacitación; abrir la hoja de vida con el acta de recibo. La palabra 'calibración' no aparece en estos criterios (según la guía de Allers solo aparece en radioterapia); calibrar igual los equipos de medición por buena práctica."
+      },
+      {
+        "servicio": "partos",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3, criterio 3 según guía secundaria; por confirmar",
+        "ambiente_programa": "Depósito de insumos",
+        "que_hacer": "No es un ítem de compra. presupuesto.json incluye $40 millones de capacitación dentro de 'Puesta en marcha y habilitación' (P4, estimación). Exigir capacitación del fabricante en el contrato de compra."
+      },
+      {
+        "servicio": "partos",
+        "estado": "parcial",
+        "estandar": "medicamentos_dispositivos",
+        "numeral": "11.1.4 (estándar de medicamentos, dispositivos médicos e insumos, todos los servicios); numeral por confirmar",
+        "ambiente_programa": "Depósito de medicamentos (con chapa)",
+        "que_hacer": "Los 6 termohigrómetros están en la dotación del servicio farmacéutico (servicio farmacia). Asignar uno a este depósito o comprar uno adicional; costo menor."
+      },
+      {
+        "servicio": "partos",
+        "estado": "falta",
+        "estandar": "medicamentos_dispositivos",
+        "numeral": "11.1.4; numeral por confirmar",
+        "ambiente_programa": "Depósito de insumos",
+        "que_hacer": "No es un ítem de compra: va en la documentación de habilitación (P4, puesta en marcha). El programa nacional de tecnovigilancia es del INVIMA (Res. 4816 de 2008, no verificada en esta tarea)."
+      },
+      {
+        "servicio": "esterilizacion",
+        "estado": "parcial",
+        "estandar": "infraestructura",
+        "numeral": "11.1.2, 'Generalidades de los ambientes...', numeral 25 (derogado desde el 3-ene-2027 por el art. 14 de la Res. 914 de 2025)",
+        "ambiente_programa": "Recepción y lavado de material contaminado (zona sucia) | Preparación y empaque con autoclave de doble puerta (zona limpia) | Almacenamiento y entrega de material estéril",
+        "que_hacer": "Recibo, lavado, empaque, esterilización y almacenamiento están en programa.json. El SECADO no tiene área ni equipo: falta una secadora o gabinete de secado de instrumental, o pistolas de aire medicinal en la zona limpia. Poceta y lavamanos son obra."
+      },
+      {
+        "servicio": "esterilizacion",
+        "estado": "parcial",
+        "estandar": "infraestructura",
+        "numeral": "11.1.2, 'Generalidades de los ambientes...', numerales 26 y 27 (derogados desde el 3-ene-2027)",
+        "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+        "que_hacer": "Cotejar en el normograma. Igual quedan reemplazados por el manual DMER en 2027."
+      },
+      {
+        "servicio": "esterilizacion",
+        "estado": "parcial",
+        "estandar": "procesos_prioritarios",
+        "numeral": "Procesos prioritarios, numerales 13 y 13.1 (derogados desde el 3-ene-2027 según la compilación de Cancillería)",
+        "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia) | Almacenamiento y entrega de material estéril",
+        "que_hacer": "Control de calidad cubierto (incubadora de lectura rápida y autoclave con impresora de registro). FALTA una lupa con iluminación para inspeccionar instrumental (costo menor). Los indicadores son consumibles (P4)."
+      },
+      {
+        "servicio": "esterilizacion",
+        "estado": "parcial",
+        "estandar": "medicamentos_dispositivos",
+        "numeral": "11.1.4, registros de esterilización (numeral 11 según la compilación; por confirmar)",
+        "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+        "que_hacer": "La selladora imprime lote y el autoclave registra ciclos. Falta una etiquetadora de lotes (o software de trazabilidad) para paquetes no sellados en papel grado médico. El texto aplica a esterilización 'dentro del servicio y fuera de centrales': para la central rige además la Res. 914."
+      },
+      {
+        "servicio": "esterilizacion",
+        "estado": "parcial",
+        "estandar": "procesos_prioritarios",
+        "numeral": "Res. 914 de 2025, Manual DMER (reemplaza los numerales de la 3100 desde el 3-ene-2027); numerales del manual por confirmar",
+        "ambiente_programa": "Recepción y lavado de material contaminado (zona sucia) | Preparación y empaque con autoclave de doble puerta (zona limpia) | Almacenamiento y entrega de material estéril",
+        "que_hacer": "La lavadora desinfectora está como 'recomendada' en dotacion.json; con la Res. 914 conviene volverla de habilitación. Falta secadora de instrumental. Calificación del autoclave (instalación, operación, desempeño) debe ir en el contrato de compra."
+      },
+      {
+        "servicio": "esterilizacion",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3 (estándar de dotación, todos los servicios), criterio 1 según guía secundaria; por confirmar",
+        "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+        "que_hacer": "dotacion.json ya trae nombre y clase de riesgo por ítem (Decreto 4725 de 2005), pero no registro sanitario, marca, modelo ni serie, porque los equipos aún no se compran. Exigir en el pliego el registro sanitario INVIMA vigente de cada modelo y cargarlo al inventario al recibir."
+      },
+      {
+        "servicio": "esterilizacion",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3, criterio 2 según guía secundaria; por confirmar",
+        "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+        "que_hacer": "dotacion.json presupuesta el mantenimiento anual (porcentaje por ítem), pero el programa y las hojas de vida no existen todavía. Pedir al proveedor manual, protocolo de mantenimiento y capacitación; abrir la hoja de vida con el acta de recibo. La palabra 'calibración' no aparece en estos criterios (según la guía de Allers solo aparece en radioterapia); calibrar igual los equipos de medición por buena práctica."
+      },
+      {
+        "servicio": "esterilizacion",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3, criterio 3 según guía secundaria; por confirmar",
+        "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+        "que_hacer": "No es un ítem de compra. presupuesto.json incluye $40 millones de capacitación dentro de 'Puesta en marcha y habilitación' (P4, estimación). Exigir capacitación del fabricante en el contrato de compra."
+      },
+      {
+        "servicio": "esterilizacion",
+        "estado": "parcial",
+        "estandar": "medicamentos_dispositivos",
+        "numeral": "11.1.4 (estándar de medicamentos, dispositivos médicos e insumos, todos los servicios); numeral por confirmar",
+        "ambiente_programa": "Almacenamiento y entrega de material estéril",
+        "que_hacer": "Los 6 termohigrómetros están en la dotación del servicio farmacéutico (servicio farmacia). Asignar uno a este depósito o comprar uno adicional; costo menor."
+      },
+      {
+        "servicio": "esterilizacion",
+        "estado": "falta",
+        "estandar": "medicamentos_dispositivos",
+        "numeral": "11.1.4; numeral por confirmar",
+        "ambiente_programa": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+        "que_hacer": "No es un ítem de compra: va en la documentación de habilitación (P4, puesta en marcha). El programa nacional de tecnovigilancia es del INVIMA (Res. 4816 de 2008, no verificada en esta tarea)."
+      },
+      {
+        "servicio": "expansion_emergencias",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "Por analogía con 11.6.1, observación (criterio 26; por confirmar)",
+        "ambiente_programa": "Salón multipropósito de capacitación y telesalud, reconvertible en sala de expansión (8 camillas con oxígeno, energía y datos) | Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+        "que_hacer": "Oxígeno cubierto (8 flujómetros y tomas previstas). Las camillas plegables no especifican barandas, ruedas ni freno: pedir camillas plegables con barandas y ruedas con freno."
+      },
+      {
+        "servicio": "expansion_emergencias",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "Por analogía con 11.6.1 (criterio 22; por confirmar)",
+        "ambiente_programa": "Salón multipropósito de capacitación y telesalud, reconvertible en sala de expansión (8 camillas con oxígeno, energía y datos)",
+        "que_hacer": "Hay 1 aspirador para 8 camillas: agregar 1 aspirador portátil o tomas de vacío con regulador."
+      },
+      {
+        "servicio": "expansion_emergencias",
+        "estado": "falta",
+        "estandar": "dotacion",
+        "numeral": "Por analogía con 11.6.1 (carro de paro adulto y pediátrico, criterio 22 según guía secundaria; por confirmar)",
+        "ambiente_programa": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+        "que_hacer": "FALTA: el piso 4 no tiene desfibrilador ni elementos de reanimación. Mínimo un DEA y un maletín de reanimación (resucitador y laringoscopio adulto-pediátrico) guardados en el depósito de kits."
+      },
+      {
+        "servicio": "expansion_emergencias",
+        "estado": "parcial",
+        "estandar": "dotacion",
+        "numeral": "Por analogía con 11.6.1 (criterios 22 y 23; por confirmar)",
+        "ambiente_programa": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+        "que_hacer": "Solo hay 1 monitor. FALTAN 2 kits de examen básico y 1 glucómetro (o traerlos de consulta externa del piso 2 según el plan de emergencias)."
+      },
+      {
+        "servicio": "expansion_emergencias",
+        "estado": "parcial",
+        "estandar": "todos_los_servicios",
+        "numeral": "11.1.3, criterio 2 (por confirmar)",
+        "ambiente_programa": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+        "que_hacer": "Incluir la sala en el plan de mantenimiento y en los simulacros del plan hospitalario de emergencias."
+      },
+      {
+        "servicio": "expansion_emergencias",
+        "estado": "parcial",
+        "estandar": "infraestructura",
+        "numeral": "11.1.2, criterio 14 según normas.json del repo (por confirmar)",
+        "ambiente_programa": "Salón multipropósito de capacitación y telesalud, reconvertible en sala de expansión (8 camillas con oxígeno, energía y datos)",
+        "que_hacer": "programa.json dice 'energía y datos' pero no si las tomas están en circuito de emergencia: dejarlo en el diseño eléctrico."
+      }
+    ]
+  },
+  "verificacion": "1) Lectura previa del repo: docs/11-torre-hospital-nivel-1.md, normas.json (servicios_3100), dotacion.json (servicios y equipamiento_fijo), programa.json (servicios y ambientes) y presupuesto.json. 2) Acceso a fuentes: curl a normograma.supersalud.gov.co, minsalud.gov.co, funcionpublica.gov.co y demás .gov.co devolvió 403 del proxy de salida; WebFetch no resolvió ningún dominio (ENOTFOUND, también con sitios no gubernamentales). La búsqueda de código en GitHub no encontró transcripciones. 3) Por eso los textos salen de unas 40 búsquedas web (modo extendido) que citan fragmentos de las compilaciones de la 3100 de Cancillería e ICBF (mismo texto compilado que el de Supersalud), de transcripciones de autoevaluación (docsity, slideshare) y de guías de Allers y Consultorsalud. Cada exigencia trae 'nivel_verificacion': 'fragmento_normograma' (frase vista en la compilación oficial a través del buscador), 'fragmento_fuente_secundaria' (frase de una transcripción o guía, cotejar) o 'parafrasis_por_confirmar' (sin texto literal). 4) Los numerales de criterio (22, 23, 26, 28, 19.1.1, etc.) vienen de esas fuentes y del repo; se marcan 'por confirmar' cuando no se vieron junto al texto en la compilación. Los numerales de grupo 11.4.1, 11.6.1 y 11.6.4 se confirmaron en textos modificatorios y transcripciones. 5) Vigencia: Res. 2080 de 2026 (revoca la 1732), Res. 914 de 2025 (rige el 3-ene-2027) y Res. 2065 de 2025 se confirmaron en varias fuentes (Sisjur, Supersalud vía buscador, Consultorsalud, Cerlatam), sin leer directamente el Diario Oficial. 6) Cruce: cada nombre de 'ambiente_programa' e 'item_dotacion' se validó por script contra programa.json y dotacion.json (nombres exactos). Antes de la radicación o de la visita previa, cotejar cada texto con el normograma de Supersalud o el PDF del Diario Oficial.",
+  "fuentes": [
+    {
+      "id": "supersalud",
+      "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+    },
+    {
+      "id": "cancilleria",
+      "url": "https://www.cancilleria.gov.co/sites/default/files/Normograma/docs/resolucion_minsaludps_3100_2019.htm"
+    },
+    {
+      "id": "icbf",
+      "url": "https://www.icbf.gov.co/cargues/avance/compilacion/docs/resolucion_minsaludps_3100_2019.htm"
+    },
+    {
+      "id": "pdf_minsalud",
+      "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/resolucion-3100-de-2019.pdf"
+    },
+    {
+      "id": "allers",
+      "url": "https://www.allers.com.co/guias/resolucion-3100-de-2019-habilitacion/"
+    },
+    {
+      "id": "docsity",
+      "url": "https://www.docsity.com/es/docs/autoevaluacion-3100-de-resolucion-2019/7572448/"
+    },
+    {
+      "id": "slideshare_inv",
+      "url": "https://www.slideshare.net/slideshow/capacitacion-habilitacion-resolucion-3100-de-2019-2pptx/262121435"
+    },
+    {
+      "id": "cs_medicamentos",
+      "url": "https://consultorsalud.com/wp-content/uploads/2020/06/05_RHABI_L1_To9-Resoluci%C3%B3n-3100-de-2019-Medicamentos-dispositivos-m%C3%A9dicos-e-insumos.pdf"
+    },
+    {
+      "id": "cs_infra",
+      "url": "https://consultorsalud.com/wp-content/uploads/2020/01/Ley-3100-pdf.pdf"
+    },
+    {
+      "id": "res914_supersalud",
+      "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_0914_2025.htm"
+    },
+    {
+      "id": "res914_sisjur",
+      "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=182733"
+    },
+    {
+      "id": "res2080_sisjur",
+      "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=194230"
+    },
+    {
+      "id": "res2080_cs",
+      "url": "https://consultorsalud.com/minsalud-revoca-la-resolucion-1732-de-2026-asi-quedan-las-reglas-de-habilitacion-para-prestadores-de-servicios-de-salud/"
+    },
+    {
+      "id": "res1732_sisjur",
+      "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=193984"
+    },
+    {
+      "id": "res2065_sisjur",
+      "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=191017"
+    },
+    {
+      "id": "proy_emergencias",
+      "url": "https://consultorsalud.com/minsalud-reglas-prestar-servicios-de-salud/"
+    },
+    {
+      "id": "proy_dmer_2026",
+      "url": "https://www.cerlatam.com/normatividad/minsalud-proyecto-de-resolucion-julio-2026/"
+    },
+    {
+      "id": "res544_mintic",
+      "url": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_minsaludps_0544_2023.htm"
+    },
+    {
+      "id": "allers_544_465",
+      "url": "https://www.allers.com.co/guias/resolucion-544-de-2023-y-465-de-2025/"
+    },
+    {
+      "id": "dec4725",
+      "url": "https://normograma.invima.gov.co/compilacion/docs/decreto_4725_2005.htm"
+    },
+    {
+      "id": "circular030",
+      "url": "https://consultorsalud.com/minsalud-reglas-urgencias-medicamentos-desastre/"
+    }
+  ]
+}
