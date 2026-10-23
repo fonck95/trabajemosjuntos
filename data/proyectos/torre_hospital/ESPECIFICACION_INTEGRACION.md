@@ -1520,7 +1520,7 @@ grep -rn "482 de 2018" docs/*.md data/proyectos/torre_hospital/*.json web/data/t
 | Diferencias de idealización entre el motor y OpenSees que se confundan con errores | Misma formulación de amortiguamiento y de P-Delta en los dos, `Steel01` con `b` escalado y dos casos de control antes de la torre (7.9) |
 | Amortiguamiento que oculte aceleraciones de piso | Períodos ancla de E8 y ξ efectivo de cada modo publicado |
 
-**Fuera de alcance de esta iteración:** regenerar el GLB de la torre con los niveles 4,5/4,2/4,2/4,2 m y nodos por piso (`build_edificios.mjs:559, 601, 654, 831, 902, 961`); la cubierta técnica caminable; la interacción suelo-estructura con pilotes; la componente vertical; la degradación de resistencia (modelo de Ibarra-Medina-Krawinkler); la interacción P-M en rótulas y muros (E10, fase 2); la compatibilidad vertical en las esquinas de los núcleos (se usan aletas efectivas); las rótulas dentro del vano de las vigas; apoyar el modo «Laboratorio» en los recintos reales; actualizar `presupuesto.json`/`financiacion.json` con el cierre de brechas.
+**Fuera de alcance de esta iteración:** regenerar el GLB de la torre con los niveles 4,5/4,2/4,2/4,2 m y nodos por piso (`build_edificios.mjs:559, 601, 654, 831, 902, 961`); la interacción suelo-estructura con pilotes; la componente vertical; la degradación de resistencia (modelo de Ibarra-Medina-Krawinkler); la interacción P-M en rótulas y muros (E10, fase 2); la compatibilidad vertical en las esquinas de los núcleos (se usan aletas efectivas); las rótulas dentro del vano de las vigas; actualizar `presupuesto.json`/`financiacion.json` con el cierre de brechas.
 
 ---
 
@@ -1539,6 +1539,83 @@ grep -rn "482 de 2018" docs/*.md data/proyectos/torre_hospital/*.json web/data/t
 - ASCE/SEI 41-17: factores de material esperado para f'c y fy; parámetros «a» y «b» y límites IO, LS y CP de vigas, columnas y muros de concreto; longitud de rótula de muros.
 - Sismotectónica: centro y profundidad del nido de Bucaramanga, Mw del 10-mar-2015, distancias a las fallas, magnitudes máximas, GMPE del modelo nacional del SGC.
 - Proyecto tipo: el PDF del DNP (áreas por ambiente de los 6 módulos, lista de 59 ítems, AIU) y las «capacidades instaladas tipo» de la Res. 1211/1519.
+
+---
+
+## 16. Alcance ampliado: recorrer TODA la torre (pedido del usuario, 23-oct-2026)
+
+Pedido literal posterior: «Quiero poder caminar por cada parte de la torre e inspeccionar toda la dotación necesaria, así como el
+laboratorio, pero con TODO lo de la torre». Esta sección **prevalece** sobre lo que diga en contra el resto del documento (incluidos 6, 8.8,
+14 y el Anexo C) y la aplican B, C, D y E desde la ola 1.
+
+### 16.1 Qué se recorre (todo caminable, con colisión)
+
+| Nivel del recorrido | Qué tiene | Dueño de la planta |
+|---|---|---|
+| Exteriores inmediatos (cota 0) | Plaza de acceso bajo el mango grande, patio y retorno de urgencias, **bahía de ambulancias** con marquesina solar y 2 cupos (con 2 ambulancias como contexto, no dotación de la torre), galería cubierta al hospital actual, accesos de servicio, cerramiento | B (`trazado`, nivel `EXT`) |
+| Pisos 1 a 4 | Todos los recintos del programa (incluidos baños, depósitos, cuartos de aseo, ductos visitables, vestíbulos, esclusas) | B |
+| Núcleos | Escaleras norte y sur **caminables** entre pisos (rampa de colisión por tramo, o tramo con «subir/bajar» al llegar al descanso), vestíbulo de ascensores con cabinas y botón de piso, montacargas de muestras visible en la toma (piso 1) y en el laboratorio (piso 2) | B (geometría), C (interacción) |
+| Bloque técnico (`BT`) | Subestación y transformador de 300 kVA, planta eléctrica con transferencia, tableros generales, **cuarto de baterías del nodo hospital (400 kWh, P7) y UPS**, central de gases (manifold y generador de oxígeno PSA), equipos de presión y bombas sobre las cisternas (40 m³ agua potable, ≈ 30 m³ contra incendio), depósito de cadáveres con nevera mortuoria, cuarto central de residuos con canecas y báscula | B |
+| Cubierta técnica (`CUB`, piso 4 y terraza del piso 3 sur) | Caminable: **paneles solares** (los 182 módulos de 100,1 kWp, en filas con pasillos de mantenimiento), condensadoras de la climatización, tanques elevados si el programa los tiene, casetas de cubierta (107,4 m²), salida de escalera, baranda perimetral | B |
+
+Las cifras y la ubicación salen de `programa.json` (implantación, núcleos, cubierta técnica, bloque técnico, patios), de `dotacion.json`
+(`equipamiento_fijo`) y de `data/edificios/torre_hospital.json` (`adecuaciones`, solar y baterías). Si un dato no está, se marca
+«estimación» y se dice en la ficha.
+
+### 16.2 El laboratorio, completo y dentro del recorrido
+
+- Los recintos reales del laboratorio del piso 2 (recepción y registro, toma o paso de muestras desde el montacargas, hematología,
+  química, inmunología, microbiología y tamizaje con cabina de bioseguridad, biología molecular con el GeneXpert, uroanálisis y
+  coprología, lavado y esterilización de material, depósito de reactivos, neveras, área administrativa del bacteriólogo, ducha y lavaojos)
+  se dibujan con **todo** lo de `laboratorio.json` (analizadores en comodato, los de compra o programa y el opcional, marcados como tales)
+  y lo de `dotacion.json` del servicio `laboratorio` y `toma_muestras`.
+- **Implementos internos del laboratorio** (en `implementos.json`): por analizador, los reactivos, calibradores, controles y consumibles que
+  usa según las pruebas de `laboratorio.json` (nombre, presentación, condición de almacenamiento, nevera donde se guarda); kits de
+  tamizaje; material de vidrio y de toma; elementos de bioseguridad. Si `laboratorio.json` no detalla un insumo, se nombra genérico y
+  se marca «estimación».
+- El botón del modo **«Laboratorio»** abre el recorrido parado en la puerta del laboratorio (piso 2), mirando hacia adentro. La maqueta
+  vieja deja de usarse (D decide si se retira o queda como vista de conjunto).
+
+### 16.3 Infraestructura que se ve y se inspecciona (capa propia, no es dotación ni suma a su costo)
+
+Lo que los estándares de infraestructura de la Res. 3100 y de la Res. 1633 piden en cada ambiente y que condiciona la habilitación:
+lavamanos (con su regla por ambiente), unidades sanitarias, duchas, pocetas de aseo, lavachatas, **tomas de gases medicinales** (oxígeno,
+vacío, aire) por cama y camilla, tomas eléctricas de la red de emergencia donde aplique, llamado de enfermería, extintores y gabinetes
+contra incendio, señalización de evacuación, cortinas antifluido. Va en `inventario_dotacion.json` con `capa: "infraestructura"`
+(sin precio de dotación; si el presupuesto de obra lo tiene, se cita el ítem de `presupuesto.json`) y en la matriz de cumplimiento como
+evidencia de las exigencias de infraestructura. Se puede encender o apagar en el recorrido.
+
+### 16.4 Inspección de TODO
+
+- Todo objeto visible del recorrido (dotación, implemento a la vista, equipamiento fijo, infraestructura, recinto) se puede seleccionar y
+  abre su ficha: nombre, servicio, recinto, cantidad, especificación, clase de riesgo (Decreto 4725) y registro INVIMA, exigencia
+  (Res. 3100, numeral, nivel de verificación) o «recomendado», estado, precio y tipo de precio, mantenimiento, anclaje sísmico, y su
+  contenido (implementos internos) desplegable.
+- **Inventario completo navegable**: un buscador y una lista filtrable por piso/nivel, servicio, recinto, capa (dotación, fijo,
+  infraestructura, laboratorio en comodato), clase de riesgo y estado de cumplimiento, con el total de unidades y de valor de lo filtrado;
+  cada fila tiene «Ir a», que lleva al caminante frente a la unidad y la resalta.
+- **Por servicio**: la tarjeta de cumplimiento en dotación e infraestructura lista cada exigencia con sus unidades (cada una con «Ir a»)
+  y las faltantes resaltadas en el 3D.
+- La lista del recinto actual se actualiza al caminar.
+
+### 16.5 Catálogo 3D: modelos que se agregan al Anexo C
+
+`lavamanos`, `lavamanos_quirurgico`, `inodoro`, `ducha`, `poceta_aseo`, `lavachatas`, `barra_apoyo`, `extintor`, `gabinete_incendio`,
+`senal_evacuacion`, `toma_gases_cabecera` (panel de cabecera con O₂, vacío, aire y tomas), `llamado_enfermeria`, `transformador`,
+`tablero_electrico`, `banco_baterias` (racks del BESS), `bomba_agua`, `tanque_agua` (elevado o tapa de cisterna), `panel_solar_fila`
+(fila paramétrica de módulos sobre estructura), `caseta_cubierta`, `baranda`, `contenedor_residuos`, `bascula_residuos`,
+`ambulancia` (contexto), `montacargas_muestras`, `escalera_tramo` (si la escalera se dibuja como modelo), `reactivo_caja` y
+`frasco_reactivo` (implementos visibles en estantes y neveras del laboratorio, instanciados), `gradilla_tubos`, `pipeta_set`.
+Mismas reglas del 5 (instanciado, LOD, dimensiones reales, `mergeGeometries` sin `null`).
+
+### 16.6 Presupuesto y criterios que cambian
+
+- Un solo nivel visible a la vez (exteriores, pisos 1-4, `BT`, `CUB`); el presupuesto del 5.2 aplica por nivel. Los implementos internos
+  se dibujan solo en el recinto donde está el caminante (o como cajas resumen instanciadas) para no pasarse.
+- 13.2: los conteos de recintos incluyen los niveles `EXT`, `BT` y `CUB`; todo `equipamiento_fijo` de `dotacion.json` queda ubicado.
+- 13.3: el guion de QA recorre exteriores, los 4 pisos (incluido el laboratorio completo), el bloque técnico y la cubierta; abre la ficha de
+  un analizador en comodato con sus reactivos, la de un panel solar, la del manifold de gases y la de un lavamanos; usa «Ir a» desde el
+  buscador; sube y baja por una escalera caminando.
 
 ---
 
