@@ -2,10 +2,12 @@
 //   W1  el trabajador responde los mensajes del 7.5 (cargado, listo, movimiento, progreso, resultado, serie_elemento,
 //       errores) con arreglos tipados transferidos y resultados que pasan validar_resultado.mjs
 //   E1  escala «nivel de diseño NSR-10» (7.4) y calidad baja (Δt = 0,01 s sobre el registro filtrado y diezmado)
-//   R1  tiempos del 7.7 en escritorio con un modelo del tamaño de la torre (≈ 400 elementos) y memoria de los
-//       resultados más la historia interna
-// T18 (la estructura real de la torre) es de la ola 2: se escribe cuando exista data/sismo/torre_hospital_estructura.json.
+//   R1  tiempos del 7.7 en escritorio con la estructura real de la torre (data/sismo/torre_hospital_estructura.json; si
+//       no está, la torre sintética de _torre_sintetica.mjs, del mismo tamaño) y memoria de los resultados más la
+//       historia interna. En Chromium y con la CPU frenada ×4 los mide scripts/sismo/qa_worker.mjs.
+// T18 (la estructura real de la torre con el motor) está en pruebas/estructura.mjs.
 import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { crearMotor, cargarMovimiento } from '../../../web/js/sismo/motor.js';
 import { validarResultado, validarSerie } from '../validar_resultado.mjs';
 import { torreSintetica, equiposSinteticos } from './_torre_sintetica.mjs';
@@ -172,12 +174,34 @@ async function e1() {
   const dmax = (x) => Math.max(...x.envolventes.deriva_vector_max);
   casos.push(caso('calidad baja frente a normal: deriva vectorial máxima', errorRelativo(dmax(rb), dmax(rn)), 0.05,
     `${dmax(rb).toExponential(3)} y ${dmax(rn).toExponential(3)} (T20 lo prueba con nido_2015 y cimitarra)`));
+  // mensaje movimiento: la curva de umbral de daño es la del prediseño (A.12.3, ξ = 2 %: 3,0·Ad·Fa y 1,5·Ad·Fv/T)
+  const mv = await m.movimiento(params);
+  const Ad = am.nsr10.Ad.valor ?? am.nsr10.Ad, d = est.diseno;
+  let eU = 0;
+  mv.nsr10.T.forEach((t, i) => { const ref = t <= (0.5 * d.Fv) / d.Fa ? 3.0 * Ad * d.Fa : (1.5 * Ad * d.Fv) / t; eU = Math.max(eU, errorRelativo(mv.nsr10.umbral_dano[i], ref)); });
+  casos.push(caso(`movimiento: nsr10.umbral_dano = espectro de umbral de daño del prediseño (ξ = ${mv.nsr10.xi_umbral_dano})`, eU + (mv.nsr10.xi_umbral_dano === 0.02 ? 0 : 1), 1e-6));
+  // torre «Aislados» frente a «Sin aislar»: el mismo movimiento del suelo (factor con los períodos del modelo de diseño;
+  // revisión A6: con los de «Sin aislar» el factor subía 12-14 %)
+  if (existsSync(new URL('data/sismo/torre_hospital_estructura.json', RAIZ))) {
+    const torre = leerJSON('data/sismo/torre_hospital_estructura.json'), f = {}, T = {};
+    for (const ne of ['aislados', 'confinados']) {
+      const mt = crearMotor();
+      const l = await mt.iniciar({ estructura: torre, amenaza: am, opciones: { noEstructurales: ne } });
+      const rt = await mt.analizar(escenario(am, 'local_hip'), { duracion_s: 1, escala: 'nsr10' });
+      f[ne] = rt.factor_escala; T[ne] = l;
+    }
+    casos.push(caso(`torre: factor de escala con «Aislados» ${f.aislados.toFixed(4)} y con «Sin aislar» ${f.confinados.toFixed(4)} ` +
+      `(T1 de la escala ${T.confinados.escala_nsr10.T1x.toFixed(3)}/${T.confinados.escala_nsr10.T1y.toFixed(3)} s; T1 del modelo sin aislar ` +
+      `${T.confinados.modos.T1x.toFixed(3)}/${T.confinados.modos.T1y.toFixed(3)} s)`, errorRelativo(f.confinados, f.aislados), 1e-12));
+  }
   return casos;
 }
 
 // ---- R1: tiempos (7.7, escritorio) y memoria -------------------------------------------------------------------------
 async function r1() {
-  const am = amenaza(), est = torreSintetica();
+  const RUTA = 'data/sismo/torre_hospital_estructura.json';
+  const real = existsSync(new URL(RUTA, RAIZ));
+  const am = amenaza(), est = real ? leerJSON(RUTA) : torreSintetica();
   const params = escenario(am, 'cimitarra');
   const tI = [], tM = [], tA = [];
   let res = null, hist = null, listo = null;
@@ -190,7 +214,7 @@ async function r1() {
   }
   const bytes = (x) => (ArrayBuffer.isView(x) ? x.byteLength : x && typeof x === 'object' ? Object.values(x).reduce((s, v) => s + bytes(v), 0) : 0);
   const mb = (bytes(res) + bytes(hist)) / 1e6;
-  const n = `${listo.resumen.elementos} elementos, ${listo.resumen.nodos} nodos, ${listo.resumen.gdl_condensados} gdl condensados`;
+  const n = `${real ? 'torre real' : 'torre sintética'}: ${listo.resumen.elementos} elementos, ${listo.resumen.nodos} nodos, ${listo.resumen.gdl_condensados} gdl condensados`;
   return [
     caso(`iniciar (armar, gravedad, 12 modos, amortiguamiento): ${Math.min(...tI).toFixed(0)} ms`, Math.min(...tI), 300, n),
     caso(`movimiento (síntesis, 2 × 60 períodos, Fourier, GMPE): ${Math.min(...tM).toFixed(0)} ms`, Math.min(...tM), 400),
@@ -204,5 +228,5 @@ export const pruebas = [
   { id: 'T17', nombre: 'Determinismo: misma semilla y opciones → resultados idénticos', fn: t17 },
   { id: 'W1', nombre: 'El trabajador responde los mensajes del 7.5', fn: w1 },
   { id: 'E1', nombre: 'Escala nivel de diseño NSR-10 y calidad baja', fn: e1 },
-  { id: 'R1', nombre: 'Tiempos del 7.7 (escritorio) con un modelo del tamaño de la torre', fn: r1 },
+  { id: 'R1', nombre: 'Tiempos del 7.7 (escritorio) con la estructura de la torre', fn: r1 },
 ];

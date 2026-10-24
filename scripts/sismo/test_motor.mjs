@@ -25,7 +25,8 @@ const MODULO_SUGERIDO = {
   'integrador.mjs': ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T12', 'T21'],
   'modelo.mjs': ['T8', 'T9', 'T10', 'T11', 'T22'],
   'movimiento.mjs': ['T13', 'T14', 'T15', 'T15b', 'T15c', 'T16', 'T19', 'T20'],
-  'motor.mjs': ['T17', 'T18'],
+  'motor.mjs': ['T17'],
+  'estructura.mjs': ['T18'],
 };
 
 const args = process.argv.slice(2);

@@ -258,6 +258,12 @@ function t14() {
   casos.push(caso(`TL = 2,4·Fv = ${tl.toFixed(2)} s (amenaza.json ${v.TL_s})`, Math.abs(tl - v.TL_s), 0.005));
   casos.push(caso('empalme de la meseta con 1,2·Av·Fv·I/T en TC (g)', Math.abs(MOV.espectroNSR10(tc - eps, par) - MOV.espectroNSR10(tc + eps, par)), 1e-6));
   casos.push(caso('empalme en TL (g)', Math.abs(MOV.espectroNSR10(tl - eps, par) - MOV.espectroNSR10(tl + eps, par)), 1e-6));
+  // umbral de daño (A.12.3, ξ = 2 %): la misma curva del prediseño (estructura_torre.py, espectro_umbral), revisión A6
+  const ud = { Ad: 0.04, Fa: par.Fa, Fv: par.Fv }, tcu = (0.5 * par.Fv) / par.Fa;
+  for (const [t, ref] of [[0.2, 3.0 * 0.04 * par.Fa], [0.45, 3.0 * 0.04 * par.Fa], [1.0, (1.5 * 0.04 * par.Fv) / 1.0]]) {
+    tres(`umbral de daño Sa(${t} s), ξ = 2 %`, MOV.espectroUmbralDano(t, ud), ref);
+  }
+  casos.push(caso(`umbral de daño: empalme en TC = 0,5·Fv/Fa = ${tcu.toFixed(4)} s (g)`, Math.abs(MOV.espectroUmbralDano(tcu - eps, ud) - MOV.espectroUmbralDano(tcu + eps, ud)), 1e-6));
   return casos;
 }
 
@@ -418,6 +424,35 @@ async function t19() {
     casos.push({ caso: `Mw ${Mw}, Repi ${Repi} km: PGA(h + 1)/PGA(h) entre ${lo.toFixed(3)} (h = ${hLo}) y ${hi.toFixed(3)} (h = ${hHi})`,
       ok: lo >= 0.85 && hi <= 1.18, detalle: 'tolerancia 0,85 a 1,18' });
   }
+  return casos;
+}
+
+// ── T19b · Tendencia con la profundidad frente a las GMPE (revisión A6) ──────────────────────────────────────────
+// T19 mira solo el cociente km a km (≤ 1,18): una deriva de 3 % por km (1,03^30 ≈ 2,4) la pasa. Con Δσ intraplaca fijo
+// en 800 bar el PGA a Repi 92 km subía 2,4 veces de h = 40 a 70 km y quedaba +0,49 (en ln) sobre sus GMPE; con Δσ(h)
+// (DSIGMA_INTRAPLACA_PROF de movimiento.js) el residuo queda casi plano. Además, con h = 40 km las GMPE corticales del
+// escenario ya no traen BSSA14 (sin término de profundidad; fraccionBSSA14).
+async function t19b() {
+  const hs = [50, 60, 70, 85, 100, 120, 150], tareas = [];
+  for (const Repi of [92, 200]) for (const h of hs) tareas.push([6.2, Repi, h]);
+  const semillas = Array.from({ length: 24 }, (_, k) => 101 + 2 * k);
+  const medianas = await enHilos('./_movimiento_t19.mjs', tareas, { semillas, vs30: 270 });
+  const casos = [];
+  for (const Repi of [92, 200]) {
+    const res = hs.map((h) => {
+      const k = tareas.findIndex((t) => t[1] === Repi && t[2] === h);
+      const G = MOV.gmpeEscenario({ Mw: 6.2, profundidad_km: h, distancia_epicentral_km: Repi, vs30_m_s: 270 }, amenaza, [0]);
+      return Math.log(medianas[k]) - G.reduce((a, g) => a + g.peso * Math.log(g.mediana_g[0]), 0);
+    });
+    const peor = Math.max(...res.map(Math.abs));
+    casos.push(caso(`Mw 6,2, Repi ${Repi} km: ln(mediana del PGA simulado/GMPE ponderada) en h = ${hs.join(', ')} km: ` +
+      res.map((x) => (x >= 0 ? '+' : '') + x.toFixed(2)).join(' / '), peor, 0.35));
+  }
+  const G40 = MOV.gmpeEscenario({ Mw: 6.2, profundidad_km: 40, distancia_epicentral_km: 0, vs30_m_s: 270 }, amenaza, [0]);
+  const G10 = MOV.gmpeEscenario({ Mw: 6.2, profundidad_km: 10, distancia_epicentral_km: 0, vs30_m_s: 270 }, amenaza, [0]);
+  const pB = (G) => G.filter((g) => g.modelo === 'bssa14').reduce((a, g) => a + g.peso, 0);
+  casos.push(comprobar(`GMPE corticales sin BSSA14 con h = 40 km (peso ${pB(G40)}) y con todo su peso con h = 10 km (${pB(G10)}); pesos suman 1`,
+    pB(G40) === 0 && Math.abs(pB(G10) - 0.5) < 1e-12 && [G40, G10].every((G) => Math.abs(G.reduce((a, g) => a + g.peso, 0) - 1) < 1e-12)));
   return casos;
 }
 
@@ -663,6 +698,7 @@ export const pruebas = [
   { id: 'T15c', nombre: 'Normalización del ruido: |Δt·FFT(a)|²/A(f)² en tercios de octava (200 realizaciones)', fn: t15c },
   { id: 'T16', nombre: 'Espectro de respuesta: Nigam y Jennings contra FFT (60 períodos)', fn: t16 },
   { id: 'T19', nombre: 'Continuidad con la profundidad (E15): PGA(h + 1)/PGA(h), h de 5 a 199 km', fn: t19 },
+  { id: 'T19b', nombre: 'Tendencia del PGA con la profundidad frente a las GMPE (Δσ intraplaca según h; BSSA14 solo somero)', fn: t19b },
   { id: 'T20', nombre: 'Calidad baja: filtro FIR de 20 Hz, diezmado y Δt = 0,01 s', fn: t20 },
   { id: 'MOV1', nombre: 'Fragmentos y constantes de amenaza.json → notas_para_implementar', fn: mov1 },
   { id: 'MOV2', nombre: 'FFT radix-2 (DFT directa, inversa, Parseval) y normales de Box-Muller', fn: mov2 },

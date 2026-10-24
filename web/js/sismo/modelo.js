@@ -46,8 +46,6 @@ const esNum = (x) => typeof x === 'number' && Number.isFinite(x);
  * opciones: histeresis 'bilineal' | 'clough' (si falta, la de cada sección); noEstructurales 'aislados' (cada muro
  * como diga su campo `aislado`; si falta, trabaja, como en la versión 1 del esquema) | 'confinados' (todos los muros
  * trabajan: el escenario «sin aislar»); pDelta (si falta, `p_delta` de la estructura).
- * Solo para reproducir el cálculo de referencia de la ola 0 (scripts/sismo/referencia_min.py): theta0ConCortante
- * agrega w·L_f/(2·G·Av) a θ0, como decía la versión 2 del contrato (ver ESQUEMA.md, «Carga del vano»).
  */
 export function armarModelo(estructura, opciones = {}) {
   const est = estructura;
@@ -56,7 +54,6 @@ export function armarModelo(estructura, opciones = {}) {
     histeresis: opciones.histeresis ?? null,
     noEstructurales: opciones.noEstructurales ?? 'aislados',
     pDelta: opciones.pDelta ?? est.p_delta !== false,
-    theta0ConCortante: !!opciones.theta0ConCortante,
   };
   if (op.histeresis !== null && op.histeresis !== 'bilineal' && op.histeresis !== 'clough') fallo(`histeresis «${op.histeresis}»: se espera bilineal o clough`);
   if (op.noEstructurales !== 'aislados' && op.noEstructurales !== 'confinados') fallo(`noEstructurales «${op.noEstructurales}»: se espera aislados o confinados`);
@@ -252,7 +249,7 @@ export function armarModelo(estructura, opciones = {}) {
     const wv = tipo === VIGA && esNum(e.w_gravedad_kN_m) ? e.w_gravedad_kN_m : 0;
     if (tipo !== VIGA && esNum(e.w_gravedad_kN_m) && e.w_gravedad_kN_m !== 0) avisos.push(`${e.id}: w_gravedad solo aplica a vigas; se ignora`);
     el.w[ie] = wv;
-    const c0 = (wv * Lf ** 3) / (24 * EI) + (op.theta0ConCortante ? (wv * Lf * invGAv) / 2 : 0);
+    const c0 = (wv * Lf ** 3) / (24 * EI);
     el.th0[2 * ie] = -c0; el.th0[2 * ie + 1] = c0;
     if (wv !== 0) {
       // reacciones de la parte flexible (w·L_f/2) y carga sobre los brazos, llevadas a los nudos
@@ -915,11 +912,28 @@ export function modosDe(K, m, nd, n = nd) {
 }
 
 /**
- * Amortiguamiento de Rayleigh de la parte elástica (E8): a0 = 2ξ·ωi·ωj/(ωi + ωj), a1 = 2ξ/(ωi + ωj). Si la
- * estructura no trae periodos_ancla_s: Ti = T1 y Tj = el menor entre el período con el que la masa participativa
- * acumulada llega a ≥ 90 % en x y en y y 0,2·T1. ξ efectivo de los primeros min(12, 3N) modos:
- * ξ_r = φ_rᵀ(a0·M + a1·K_C)φ_r/(2ω_r), con K_C la rigidez condensada de los elementos (sin P-Delta y sin la
- * mampostería, que no lleva amortiguamiento de Rayleigh: C = a0·M + a1·Σe K0,e).
+ * Amortiguamiento de Rayleigh de la parte elástica (E8), C = a0·M + a1·K_el: K_el es la rigidez condensada de la parte
+ * elástica de los elementos, sin P-Delta y sin la mampostería (que no lleva amortiguamiento de Rayleigh, Charney 2008).
+ *
+ * Anclas (Ti, Tj):
+ * - Las `periodos_ancla_s` del archivo describen el modelo con los muros de mampostería como dice el archivo (aislados
+ *   o no, campo `aislado`). Solo valen si el modelo analizado tiene esos mismos muros: con `noEstructurales:
+ *   'confinados'` y algún muro que en el archivo está aislado, el sistema dinámico es otro (en la torre, T1 baja de
+ *   0,456 a 0,285 s) y el motor aplica la regla automática sobre los modos del modelo analizado (corrección al
+ *   contrato, ESQUEMA.md «Amortiguamiento»).
+ * - Regla automática (E8): Ti = T1 y Tj = el menor entre el período con el que la masa participativa acumulada llega a
+ *   ≥ 90 % en x y en y y 0,2·T1.
+ *
+ * a0 y a1: ξ exacto en las dos anclas. Para el modo r (φ normalizado a la masa), ξ_r = (a0 + a1·k_r)/(2ω_r), con
+ * k_r = φ_rᵀ·K_el·φ_r. La fórmula de siempre, a0 = 2ξωiωj/(ωi + ωj) y a1 = 2ξ/(ωi + ωj), supone k_r = ω_r², es decir,
+ * que todo lo que da rigidez amortigua. No es así cuando la mampostería trabaja (en la torre «sin aislar» aporta ≈ 60 %
+ * de la rigidez inicial y con la fórmula de siempre ξ1 quedaba en 3,2-4,6 %). Con ρ(ω) = k/ω² (fracción de la rigidez
+ * modal que amortigua; ≈ 1 sin mampostería, un poco más de 1 por P-Delta), imponer ξ en ωi y ωj da el sistema 2 × 2
+ *   a0 + a1·ρi·ωi² = 2ξ·ωi,   a0 + a1·ρj·ωj² = 2ξ·ωj
+ *   → a1 = 2ξ·(ωj − ωi)/(ρj·ωj² − ρi·ωi²),   a0 = 2ξ·ωi − a1·ρi·ωi²
+ * (con ρ = 1 vuelve a la fórmula de siempre). ρ en un ancla que no cae en un modo (0,2·T1) se interpola linealmente en
+ * ln ω entre los dos modos vecinos (fuera de su rango, el del modo extremo).
+ * ξ efectivo de los primeros min(12, 3N) modos: ξ_r = φ_rᵀ(a0·M + a1·K_el)φ_r/(2ω_r).
  */
 export function amortiguamiento(mod) {
   if (mod._cache.amortiguamiento) return mod._cache.amortiguamiento;
@@ -928,10 +942,24 @@ export function amortiguamiento(mod) {
   const nd = mod.nd;
   const md = modos(mod, nd);
   const T = md.periodos_s;
+  const KC = rigidezLateral(mod, undefined, { conMuros: false });
+  // k_r = φ_rᵀ·K_el·φ_r de todos los modos (φᵀMφ = 1)
+  const k = new Float64Array(nd);
+  for (let r = 0; r < nd; r++) {
+    const phi = md.formas[r];
+    let c = 0;
+    for (let a = 0; a < nd; a++) {
+      let s = 0;
+      for (let b = 0; b < nd; b++) s += KC[a * nd + b] * phi[b];
+      c += phi[a] * s;
+    }
+    k[r] = c;
+  }
+  const murosCambiados = mod.muros.some((m) => m.aislado !== m.aisladoArchivo);
   let Ti, Tj, regla;
-  if (Array.isArray(am.periodos_ancla_s) && am.periodos_ancla_s.length === 2) {
+  if (Array.isArray(am.periodos_ancla_s) && am.periodos_ancla_s.length === 2 && !murosCambiados) {
     [Ti, Tj] = am.periodos_ancla_s; regla = 'periodos_ancla_s de la estructura';
-  } else if (Array.isArray(am.modos) && am.modos.length === 2) {
+  } else if (Array.isArray(am.modos) && am.modos.length === 2 && !murosCambiados) {
     Ti = T[am.modos[0] - 1]; Tj = T[am.modos[1] - 1]; regla = `modos ${am.modos.join(' y ')} de la estructura (forma anterior a E8)`;
   } else {
     let cx = 0, cy = 0, r90 = T.length - 1;
@@ -940,24 +968,29 @@ export function amortiguamiento(mod) {
       if (cx >= 0.9 && cy >= 0.9) { r90 = r; break; }
     }
     Ti = T[0]; Tj = Math.min(T[r90], 0.2 * T[0]);
-    regla = `E8: Ti = T1; Tj = mín(T del modo ${r90 + 1}, con ≥ 90 % de masa en x y en y; 0,2·T1)`;
+    regla = `E8: Ti = T1; Tj = mín(T del modo ${r90 + 1}, con ≥ 90 % de masa en x y en y; 0,2·T1)` +
+      (murosCambiados ? ' (con los muros de mampostería del escenario, no los del archivo: las anclas del archivo no valen)' : '');
   }
+  // ρ(ω) = k/ω², interpolada en ln ω entre modos (ω crece con r)
+  const rho = (w) => {
+    const om = md.omega, n = om.length;
+    if (w <= om[0]) return k[0] / (om[0] * om[0]);
+    if (w >= om[n - 1]) return k[n - 1] / (om[n - 1] * om[n - 1]);
+    let r = 1;
+    while (om[r] < w) r++;
+    const p0 = k[r - 1] / (om[r - 1] * om[r - 1]), p1 = k[r] / (om[r] * om[r]);
+    const t = om[r] > om[r - 1] ? Math.log(w / om[r - 1]) / Math.log(om[r] / om[r - 1]) : 0;
+    return p0 + t * (p1 - p0);
+  };
   const wi = (2 * Math.PI) / Ti, wj = (2 * Math.PI) / Tj;
-  const a0 = (2 * xi * wi * wj) / (wi + wj), a1 = (2 * xi) / (wi + wj);
-  const KC = rigidezLateral(mod, undefined, { conMuros: false });
+  const ri = rho(wi), rj = rho(wj);
+  const a1 = (2 * xi * (wj - wi)) / (rj * wj * wj - ri * wi * wi);
+  const a0 = 2 * xi * wi - a1 * ri * wi * wi;
+  if (!(a0 >= 0 && a1 >= 0)) throw new ErrorMotor('interno', `amortiguamiento: a0 = ${a0}, a1 = ${a1} con las anclas ${Ti} y ${Tj} s`);
   const nx = Math.min(12, nd);
   const xi_modos = new Float64Array(nx);
-  for (let r = 0; r < nx; r++) {
-    const phi = md.formas[r];
-    let c = 0;
-    for (let a = 0; a < nd; a++) {
-      let s = 0;
-      for (let b = 0; b < nd; b++) s += KC[a * nd + b] * phi[b];
-      c += phi[a] * (a0 * mod.masa[a] * phi[a] + a1 * s);
-    }
-    xi_modos[r] = c / (2 * md.omega[r]);
-  }
-  const r = { a0, a1, periodos_ancla_s: [Ti, Tj], xi_modos, xi, regla };
+  for (let r = 0; r < nx; r++) xi_modos[r] = (a0 + a1 * k[r]) / (2 * md.omega[r]);
+  const r = { a0, a1, periodos_ancla_s: [Ti, Tj], xi_modos, xi, regla, rho_anclas: [ri, rj] };
   mod._cache.amortiguamiento = r;
   return r;
 }

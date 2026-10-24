@@ -40,6 +40,9 @@ ES_SOBRE_M0 = 1 / 20000
 H_FF = (-0.405, 0.235)
 BT14_MAS_ALLA = (270.0, 34.2, 0.156)
 TCAMINO_INTRAPLACA_B = 0.05
+# Δσ intraplaca según la profundidad (regla del motor, revisión A6; la deducción está en movimiento.js y ESQUEMA.md):
+# Δσ(h) = Δσ_ref·exp((3/2)·θ·(min(h, hc) − hc)), θ = 0,0135/km (media de θ11 de BC Hydro y e de Zhao), hc = 120 km.
+DSIGMA_INTRAPLACA_PROF = (0.0135, 120.0)
 IMPEDANCIA_REF = (2.8, 3.5)
 RELLENO_S = 40.0
 F_CERO = 1e-6
@@ -298,7 +301,9 @@ def terminos(q, P):
     lista = []
 
     def agregar(t, peso):
-        f0 = BRUNE_F0 * t['beta'] * math.cbrt(t['dsigma'] / M0)
+        th, hc = DSIGMA_INTRAPLACA_PROF
+        dsigma = t['dsigma'] if t['regimen'] == 'cortical' else t['dsigma'] * math.exp(1.5 * th * (min(h, hc) - hc))
+        f0 = BRUNE_F0 * t['beta'] * math.cbrt(dsigma / M0)
         C = (c['Rtp'] * c['F'] * c['V']) / (4 * math.pi * t['rho'] * t['beta'] ** 3 * c['R0']) * c['unidades']
         if t['regimen'] == 'cortical':
             hff = 10 ** (H_FF[0] + H_FF[1] * Mw)
@@ -307,7 +312,7 @@ def terminos(q, P):
         else:
             Ref = Rhip
             Tc = TCAMINO_INTRAPLACA_B * Ref
-        lista.append(dict(regimen=t['regimen'], peso=peso, t=t, M0=M0, f0=f0, C=C, Rhip=Rhip, Ref=Ref,
+        lista.append(dict(regimen=t['regimen'], peso=peso, t=t, dsigma=dsigma, M0=M0, f0=f0, C=C, Rhip=Rhip, Ref=Ref,
                           Z=dispersion(Ref, t['tramos']), Tcamino=Tc, Tgm=1 / f0 + Tc))
     if w < 1:
         agregar(P['cortical'], 1 - w)

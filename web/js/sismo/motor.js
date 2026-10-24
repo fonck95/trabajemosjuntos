@@ -60,6 +60,7 @@ export function crearMotor(config = {}) {
   const leer = config.leer ?? leerJSONPorDefecto;
   let estructura = null, amenaza = null, urlE = null, urlA = null;
   let modelo = null, listo = null;
+  let periodosEscala = null;     // { T1x, T1y }: los del modelo de diseño, para la escala «nsr10»
   let ultimoMov = null;          // { clave, reg } — registro de 0,005 s (Float64) del último `movimiento`
   let historia = null;
   let ultimo = null;             // { registro (0,005 s, sin escalar), factor, iteraciones } del último análisis
@@ -85,11 +86,18 @@ export function crearMotor(config = {}) {
     else if (op.url_amenaza && (op.url_amenaza !== urlA || !amenaza)) { amenaza = await leer(op.url_amenaza); urlA = op.url_amenaza; }
     if (!estructura) throw new ErrorMotor('datos', 'iniciar sin estructura (url_estructura)');
     const o = op.opciones || {};
-    modelo = null; listo = null; historia = null;
-    const mod = armarModelo(estructura, { histeresis: o.histeresis ?? null, noEstructurales: o.noEstructurales ?? 'aislados', pDelta: o.pDelta });
+    modelo = null; listo = null; historia = null; periodosEscala = null;
+    const opModelo = { histeresis: o.histeresis ?? null, noEstructurales: o.noEstructurales ?? 'aislados', pDelta: o.pDelta };
+    const mod = armarModelo(estructura, opModelo);
     const g = gravedad(mod);
     const md = modos(mod, 12);
     const am = amortiguamiento(mod);
+    // Escala «nsr10»: con los períodos del modelo de diseño (muros de mampostería como dice el archivo), sea cual sea
+    // el escenario. Así «Aislados» y «Sin aislar» reciben el mismo movimiento del suelo y el contraste de E5 muestra
+    // solo el efecto de la estructura (revisión A6: con los períodos de «Sin aislar» el factor subía 12-14 %).
+    const mdDiseno = mod.muros.some((m) => m.aislado !== m.aisladoArchivo)
+      ? modos(armarModelo(estructura, { ...opModelo, noEstructurales: 'aislados' }), 12) : md;
+    periodosEscala = { T1x: mdDiseno.T1x, T1y: mdDiseno.T1y, modelo: mdDiseno === md ? 'el analizado' : 'el de diseño (muros de mampostería como en el archivo)' };
     modelo = mod;
     listo = {
       tipo: 'listo', id: op.id ?? null,
@@ -103,6 +111,7 @@ export function crearMotor(config = {}) {
         T1x: md.T1x, T1y: md.T1y,
       },
       amortiguamiento: { a0: am.a0, a1: am.a1, periodos_ancla_s: [...am.periodos_ancla_s], xi_modos: [...am.xi_modos], regla: am.regla },
+      escala_nsr10: { ...periodosEscala },
       gravedad: { iteraciones: g.iteraciones },
       avisos: [...mod.avisos],
     };
@@ -140,23 +149,24 @@ export function crearMotor(config = {}) {
         T: f32(T),
         con_I: f32(mov.espectroNSR10(T, { ...n10 })),
         sin_I: f32(mov.espectroNSR10(T, { ...n10, I: 1 })),
-        // umbral de daño: forma del espectro de diseño con Ad en lugar de Aa y Av, sin I (A.12.3; forma por confirmar)
-        umbral_dano: f32(mov.espectroNSR10(T, { Aa: n10.Ad, Av: n10.Ad, Fa: n10.Fa, Fv: n10.Fv, I: 1 })),
+        // umbral de daño (A.12.3; ξ = 2 %, sin I): el mismo espectro con que el prediseño revisa la deriva ≤ 0,4 %
+        umbral_dano: f32(mov.espectroUmbralDano(T, { Ad: n10.Ad, Fa: n10.Fa, Fv: n10.Fv })),
+        xi: 0.05, xi_umbral_dano: mov.XI_UMBRAL_DANO,
       },
     };
   }
 
   /**
    * Escala «nivel de diseño NSR-10» (7.4): f iguala la media, en los períodos de 0,8·T1 a 1,2·T1 (de x y de y), del
-   * espectro de la media geométrica de las dos componentes (ξ = 5 %) con la del espectro de diseño con I. Como el
-   * factor de suelo no lineal depende del PGA en roca, la pasada de suelo se repite con PGAr × f hasta que f cambie
-   * < 1 % (máximo 10 vueltas). → { reg (sin escalar), f, iteraciones }
+   * espectro de la media geométrica de las dos componentes (ξ = 5 %) con la del espectro de diseño con I. T1x y T1y
+   * son los del modelo de diseño (muros de mampostería como en el archivo), también en «Sin aislar». Como el factor
+   * de suelo no lineal depende del PGA en roca, la pasada de suelo se repite con PGAr × f hasta que f cambie < 1 %
+   * (máximo 10 vueltas). → { reg (sin escalar), f, iteraciones }
    */
   async function escalaNSR10(params, pausa = async () => {}) {
     const mov = await cargarMovimiento();
-    const md = modos(modelo, 12);
     const per = [];
-    for (const T1 of [md.T1x, md.T1y]) for (let i = 0; i <= 10; i++) per.push(T1 * (0.8 + 0.04 * i));
+    for (const T1 of [periodosEscala.T1x, periodosEscala.T1y]) for (let i = 0; i <= 10; i++) per.push(T1 * (0.8 + 0.04 * i));
     const Tp = Float64Array.from(per);
     const n10 = parametrosNSR10(estructura, amenaza);
     const obj = mov.espectroNSR10(Tp, { ...n10 });

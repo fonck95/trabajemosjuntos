@@ -843,10 +843,15 @@ const cederPorDefecto = () => new Promise((ok) => setTimeout(ok, 0));
 export async function analizarPorTramos(modelo, registro, op = {}, { presupuesto_ms = 12, ceder = cederPorDefecto, alProgreso, senal } = {}) {
   if (senal?.aborted) throw abortado();
   const an = new Analisis(modelo, registro, op);
+  // el armado (gravedad, cajas de resultados de ≈ 30 MB) va en su propio tramo
+  await ceder();
+  if (senal?.aborted) throw abortado();
   let ultimo = ahora();
   while (!an.terminado) {
     const t0 = ahora();
-    do an.avanzar(10); while (!an.terminado && ahora() - t0 < presupuesto_ms);
+    // de a un paso: un paso frío (primera factorización de los pórticos, compilación) puede tardar más que el
+    // presupuesto, y con tandas de 10 el tramo llegaba a ≈ 25 ms en Chromium (qa_worker.mjs); los pasos son los mismos
+    do an.avanzar(1); while (!an.terminado && ahora() - t0 < presupuesto_ms);
     if (alProgreso && ahora() - ultimo >= an.o.intervaloProgreso) { ultimo = ahora(); alProgreso(an.fraccion, an.t_s); }
     if (!an.terminado) {
       await ceder();

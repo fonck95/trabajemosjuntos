@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
-"""Cálculo de referencia de los fixtures del Anexo A.4 sobre scripts/fixtures/torre/estructura_min.json.
+"""Cálculo de referencia independiente del motor sobre scripts/fixtures/torre/estructura_min.json (Anexo A.3).
 
-En la ola 0 el motor JavaScript (web/js/sismo/) todavía no existe; este programa resuelve **de verdad** el modelo
-mínimo del Anexo A.3 para que `resultado_min.json` y `serie_elemento_min.json` tengan números calculados, no
-inventados. En la ola 2 los fixtures se regeneran con el motor y se vuelven a pasar por validar_resultado.mjs.
+En la ola 0 el motor JavaScript (web/js/sismo/) todavía no existía y este programa escribió los fixtures del Anexo
+A.4. Desde la ola 2 los fixtures (`resultado_min.json`, `serie_elemento_min.json` y el bloque generado de
+`trabajador_simulado.js`) los escribe el motor (`node scripts/sismo/fixtures_min.mjs`), y este programa queda como
+**segunda implementación** del mismo cálculo: escribe `scripts/fixtures/torre/referencia_min.json` (los Resultados
+del 7.6 del mismo caso) y la prueba R0 de `node scripts/sismo/test_motor.mjs` compara el motor con él (10⁻⁶ del
+máximo de cada arreglo; D/C, rótulas y thp idénticos). Usa las reglas corregidas del esquema (ola 1): θ0 de la
+carga del vano sin el término de cortante y ξ de los modos sin la mampostería (data/sismo/ESQUEMA.md, «Reglas que el
+motor asume» y «Amortiguamiento»).
 
 Uso (Python 3 con numpy; ver scripts/sismo/requisitos_validacion.txt):
-    python scripts/sismo/referencia_min.py              # escribe los fixtures y el bloque generado de trabajador_simulado.js
+    python scripts/sismo/referencia_min.py              # escribe scripts/fixtures/torre/referencia_min.json
     python scripts/sismo/referencia_min.py --verificar  # recalcula y compara byte a byte; sale 1 si algo cambió
     python scripts/sismo/referencia_min.py --informe    # además imprime el detalle de la corrida
 
@@ -15,7 +20,8 @@ Qué resuelve (mismas reglas del contrato, 7.4 y data/sismo/ESQUEMA.md):
   pórticos planos con v y θ por nodo. Aquí todos los grados de libertad se resuelven juntos en un solo sistema de
   Newton-Raphson (es lo mismo que condensar por complemento de Schur en cada iteración: misma solución).
 - Elemento de Giberson: parte elástica de Timoshenko (flexión + cortante, longitud flexible L_f con brazos rígidos),
-  carga de gravedad del vano con los giros de viga simplemente apoyada θ0, rigidez axial EA/L y rótulas rígido-
+  carga de gravedad del vano con los giros de viga simplemente apoyada θ0 = w·L_f³/(24EI)·[−1, 1] (el cortante no
+  gira la sección en el apoyo: ESQUEMA.md), rigidez axial EA/L_f y rótulas rígido-
   plásticas en los extremos con propiedades esperadas (My_e, asimétricas en vigas) y endurecimiento cinemático
   H = α·6EI_fis/L_f. Retorno al estado admisible 2 × 2 probando los 4 conjuntos activos; tangente consistente.
 - Amortiguamiento de Rayleigh a0·M + a1·(parte elástica de cada elemento, también la axial), sin las rótulas,
@@ -185,7 +191,9 @@ def armar_modelo(est):
                 P_g -= (R + w * dj) * vJ - (R * dj + w * dj * dj / 2.0) * tJ
             fe = (Lf / (6 * EI)) * np.array([[2.0, -1.0], [-1.0, 2.0]]) + (1.0 / (GAv * Lf)) * np.ones((2, 2))
             Ke = np.linalg.inv(fe)
-            c0 = w * Lf ** 3 / (24 * EI) + w * Lf / (2 * GAv)
+            # giros de la viga simplemente apoyada: c = w·L_f³/(24EI). El cortante no gira la sección en el apoyo
+            # (trabajo virtual: ∫V_w·v_i/(G·Av) dx = 0 con v_i = 1/L_f constante y V_w antisimétrico; ESQUEMA.md)
+            c0 = w * Lf ** 3 / (24 * EI)
             alfa = sec.get('endurecimiento', 0.0) or 1e-4
             ke = 6 * EI / Lf
             My = sec.get('My_e_kNm', sec['My_kNm'])
@@ -198,7 +206,7 @@ def armar_modelo(est):
             elementos.append({
                 'id': e['id'], 'tipo': e['tipo'], 'portico': p['id'], 'nivel': e['nivel'], 'fisico': e.get('fisico', e['id']),
                 'i': e['i'], 'j': e['j'], 'seccion': e['seccion'], 'a': a, 'L': L, 'Lf': Lf, 'w': w, 'EI': EI, 'EA': EA,
-                'Ke': Ke, 'kax': EA / L, 'th0': np.array([-c0, c0]), 'H': np.array([alfa * ke, alfa * ke]),
+                'Ke': Ke, 'kax': EA / Lf, 'th0': np.array([-c0, c0]), 'H': np.array([alfa * ke, alfa * ke]),
                 'sup': sup, 'inf': inf, 'Mn_e': sec['Mn_e_kNm'], 'Vn_e': sec['Vn_e_kN'],
                 'IO': sec['theta_p_IO'], 'LS': sec['theta_p_LS'], 'CP': sec['theta_p_CP'],
             })
@@ -400,8 +408,13 @@ def gravedad(mod):
 # ---------------------------------------------------------------------------------------------------------------
 # Modos, centro de rigidez y amortiguamiento (E8)
 # ---------------------------------------------------------------------------------------------------------------
-def rigidez_condensada(mod, u_g, est_el, est_mu, con_pdelta):
-    _, K, _, _ = ensamblar(mod, u_g, est_el, est_mu, None, 0.0)
+def rigidez_condensada(mod, u_g, est_el, est_mu, con_pdelta, con_muros=True):
+    _, K, _, tr_mu = ensamblar(mod, u_g, est_el, est_mu, None, 0.0)
+    if not con_muros:
+        # sin la mampostería (no lleva amortiguamiento de Rayleigh): se resta su tangente
+        for mu, st in zip(mod['muros'], est_mu):
+            _, km, _ = respuesta_muro(mu, st, float(mu['b'] @ u_g))
+            K = K - km * np.outer(mu['b'], mu['b'])
     if con_pdelta:
         K = K + mod['Kpd']
     nd = mod['nd']
@@ -434,6 +447,10 @@ def modos(mod, KL):
 
 
 def amortiguamiento(md, KL_el, m, xi):
+    """Rayleigh de la parte elástica (E8) con ξ exacto en las dos anclas (ESQUEMA.md, «Amortiguamiento»):
+    ξ_r = (a0 + a1·k_r)/(2ω_r), k_r = φ_rᵀ·K_el·φ_r (φ normalizado a la masa; K_el sin mampostería ni P-Delta).
+    Con ρ = k/ω² en cada ancla (interpolada linealmente en ln ω entre modos vecinos si el ancla no es un modo):
+    a1 = 2ξ(ωj − ωi)/(ρj·ωj² − ρi·ωi²), a0 = 2ξ·ωi − a1·ρi·ωi². Con ρ = 1 es la fórmula de siempre."""
     T = md['T']
     T1 = float(T[0])
     cx = np.cumsum(md['part']['x']); cy = np.cumsum(md['part']['y'])
@@ -443,14 +460,24 @@ def amortiguamiento(md, KL_el, m, xi):
             r90 = r
             break
     Ti, Tj = T1, min(float(T[r90]), 0.2 * T1)
+    w = md['w']
+    k = np.array([float(md['phi'][:, r] @ KL_el @ md['phi'][:, r]) for r in range(len(T))])
+    rho_m = k / w ** 2
+
+    def rho(wa):
+        if wa <= w[0]:
+            return float(rho_m[0])
+        if wa >= w[-1]:
+            return float(rho_m[-1])
+        r = int(np.searchsorted(w, wa))       # w[r - 1] < wa <= w[r]
+        t = math.log(wa / w[r - 1]) / math.log(w[r] / w[r - 1]) if w[r] > w[r - 1] else 0.0
+        return float(rho_m[r - 1] + t * (rho_m[r] - rho_m[r - 1]))
+
     wi, wj = 2 * math.pi / Ti, 2 * math.pi / Tj
-    a0 = 2 * xi * wi * wj / (wi + wj)
-    a1 = 2 * xi / (wi + wj)
-    xis = []
-    for r in range(min(12, len(T))):
-        ph = md['phi'][:, r]
-        c = a0 * float(ph @ (m * ph)) + a1 * float(ph @ KL_el @ ph)
-        xis.append(c / (2 * md['w'][r]))
+    ri, rj = rho(wi), rho(wj)
+    a1 = 2 * xi * (wj - wi) / (rj * wj ** 2 - ri * wi ** 2)
+    a0 = 2 * xi * wi - a1 * ri * wi ** 2
+    xis = [(a0 + a1 * float(k[r])) / (2 * w[r]) for r in range(min(12, len(T)))]
     return {'a0': a0, 'a1': a1, 'periodos_ancla_s': [Ti, Tj], 'xi_modos': xis, 'r90': r90}
 
 
@@ -1071,8 +1098,9 @@ def construir(informe=False):
     u_g, est_el, est_mu, tr_el, tr_mu = gravedad(mod)
     KL = rigidez_condensada(mod, u_g, est_el, est_mu, True)
     KL_el = rigidez_condensada(mod, u_g, est_el, est_mu, False)
+    KL_amort = rigidez_condensada(mod, u_g, est_el, est_mu, False, con_muros=False)
     md = modos(mod, KL)
-    am = amortiguamiento(md, KL_el, mod['mdiag'][:mod['nd']], est['amortiguamiento']['xi'])
+    am = amortiguamiento(md, KL_amort, mod['mdiag'][:mod['nd']], est['amortiguamiento']['xi'])
     res = analizar(mod, u_g, est_el, est_mu, am)
     res['est'] = est
     nE, N, nN, nP = len(mod['elementos']), mod['N'], len(mod['nodos']), len(mod['porticos'])
@@ -1192,47 +1220,28 @@ def construir(informe=False):
     return resultado, serie, {'listo': listo, 'movimiento': movimiento, 'series': series}
 
 
-MARCA_INI = '/* >>> generado por scripts/sismo/referencia_min.py (no editar a mano) */'
-MARCA_FIN = '/* <<< generado */'
-
-
-def bloque_js(datos):
-    return MARCA_INI + '\nconst GENERADO = ' + a_json(datos) + ';\n' + MARCA_FIN
-
-
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
-    ap.add_argument('--verificar', action='store_true', help='recalcula y compara con los archivos versionados')
+    ap.add_argument('--verificar', action='store_true', help='recalcula y compara con el archivo versionado')
     ap.add_argument('--informe', action='store_true', help='imprime el detalle de la corrida')
     args = ap.parse_args()
     resultado, serie, gen = construir(args.informe)
-    salidas = {
-        FIXTURES / 'resultado_min.json': a_json(resultado) + '\n',
-        FIXTURES / 'serie_elemento_min.json': a_json(serie) + '\n',
-    }
-    ruta_js = FIXTURES / 'trabajador_simulado.js'
-    texto_js = ruta_js.read_text(encoding='utf-8')
-    i0, i1 = texto_js.find(MARCA_INI), texto_js.find(MARCA_FIN)
-    if i0 < 0 or i1 < 0:
-        raise SystemExit(f'{ruta_js}: faltan las marcas del bloque generado')
-    salidas[ruta_js] = texto_js[:i0] + bloque_js(gen) + texto_js[i1 + len(MARCA_FIN):]
-    distintos = []
-    for ruta, texto in salidas.items():
-        actual = ruta.read_text(encoding='utf-8') if ruta.exists() else None
-        if args.verificar:
-            if actual != texto:
-                distintos.append(ruta.relative_to(RAIZ).as_posix())
-        elif actual != texto:
-            ruta.write_text(texto, encoding='utf-8')
-            print('escrito', ruta.relative_to(RAIZ).as_posix())
+    # la referencia: los Resultados del caso (con la serie de C-A1-1@X), para la prueba R0 del motor
+    resultado['serie_elemento'] = {k: serie[k] for k in ('elemento', 'Mi', 'Mj', 'V', 'N', 'thp_i', 'thp_j', 'dc')}
+    ruta = FIXTURES / 'referencia_min.json'
+    texto = a_json(resultado) + '\n'
+    actual = ruta.read_text(encoding='utf-8') if ruta.exists() else None
     cal = resultado['calidad_numerica']
     print(f"pasos {cal['pasos']} · iteraciones promedio {cal['iteraciones_promedio']} · error de energía {cal['error_energia_max']} · "
           f"error de deformación {cal['error_deformacion_max']} · elementos que fluyen {len(resultado['thp']['elementos'])}")
     if args.verificar:
-        if distintos:
-            print('DIFERENTES (correr sin --verificar y revisar el cambio):', ', '.join(distintos))
+        if actual != texto:
+            print(f'DIFERENTE: {ruta.relative_to(RAIZ).as_posix()} (correr sin --verificar y revisar el cambio)')
             sys.exit(1)
-        print('fixtures al día: idénticos byte a byte')
+        print('referencia al día: idéntica byte a byte')
+    elif actual != texto:
+        ruta.write_text(texto, encoding='utf-8')
+        print('escrito', ruta.relative_to(RAIZ).as_posix())
 
 
 if __name__ == '__main__':

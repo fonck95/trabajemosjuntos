@@ -1,5 +1,5 @@
 // Pruebas del integrador (web/js/sismo/integrador.js): T1-T7, T12 y T21 del contrato (7.8), más R0: el motor
-// contra el cálculo de referencia de la ola 0 (scripts/sismo/referencia_min.py → resultado_min.json).
+// contra una segunda implementación del mismo cálculo (scripts/sismo/referencia_min.py → referencia_min.json).
 import { osciladorNewmark, analizar, Analisis, prepararEquipos, riesgoEquipos, resumenEquipos, bPsi, regimenBloque } from '../../../web/js/sismo/integrador.js';
 import { rotulaEnSerie, BILINEAL, CLOUGH } from '../../../web/js/sismo/histeresis.js';
 import { armarModelo } from '../../../web/js/sismo/modelo.js';
@@ -300,22 +300,21 @@ function t21() {
   return casos;
 }
 
-// ---- R0: el motor contra el cálculo de referencia de la ola 0 --------------------------------------------------------
-// Mismo modelo (estructura_min.json), pulso de prueba ×25 y equipos de referencia_min.py. El cálculo de referencia
-// agrega w·L_f/(2·G·Av) a θ0 (la versión 2 del contrato; ESQUEMA.md explica por qué el motor no lo hace): aquí se
-// activa esa opción para comparar lo mismo. Diferencias esperadas: el redondeo a Float32 del archivo y la tolerancia
-// de Newton (10⁻⁶); ξ de los modos con mampostería sin aislar (el motor no amortigua la mampostería: ESQUEMA.md).
+// ---- R0: el motor contra el cálculo de referencia (segunda implementación, en Python con numpy) ---------------------
+// Mismo modelo (estructura_min.json), pulso de prueba ×25 y equipos de referencia_min.py, con las mismas reglas del
+// esquema (θ0 sin el término de cortante, ξ de los modos sin la mampostería). Diferencias esperadas: el redondeo a
+// Float32 del archivo y la tolerancia de Newton (10⁻⁶).
 const EQUIPOS_REF = [
   { unidad: 'U-consulta_externa-2d1bfe-001', piso: 2, x: 1.2, y: 3.8, z_sobre_piso: 0, anclaje: 'apoyado', masa_kg: 60, h_cg_m: 0.45, mu: 0.3, bx_m: 0.3, by_m: 0.25, rot_z: 0 },
   { unidad: 'U-hospitalizacion-5d13f8-001', piso: 2, x: 4.4, y: 0.6, z_sobre_piso: 0, anclaje: 'apoyado', masa_kg: 90, h_cg_m: 0.95, mu: 0.5, bx_m: 0.3, by_m: 0.2, rot_z: Math.PI / 2 },
   { unidad: 'U-fijo-91b0de-001', piso: 'CUB', x: 3.5, y: 3.5, z_sobre_piso: 0, anclaje: 'anclado', masa_kg: 200, h_cg_m: 0.7, mu: 0.5, bx_m: 0.5, by_m: 0.4, rot_z: 0 },
 ];
 function r0() {
-  const est = leerJSON(FIX + 'estructura_min.json'), ref = leerJSON(FIX + 'resultado_min.json');
-  const mod = armarModelo(est, { theta0ConCortante: true });
+  const est = leerJSON(FIX + 'estructura_min.json'), ref = leerJSON(FIX + 'referencia_min.json');
+  const mod = armarModelo(est);
   const n = 9, ax = new Float64Array(n), ay = new Float64Array(n);
   for (let i = 1; i < n; i++) { ax[i] = 1; ay[i] = -0.5; }
-  const { resultados: r } = analizar(mod, { dt: 0.005, ax, ay }, { dt_s: 0.005, dt_salida_s: 0.02, duracion_s: 0.04, escala: 25, equipos: EQUIPOS_REF,
+  const { resultados: r, historia: h } = analizar(mod, { dt: 0.005, ax, ay }, { dt_s: 0.005, dt_salida_s: 0.02, duracion_s: 0.04, escala: 25, equipos: EQUIPOS_REF,
     params: ref.params, id: 'prueba', origen_registro: ref.origen_registro });
   const casos = [];
   let peor = 0, cual = '';
@@ -327,15 +326,19 @@ function r0() {
   };
   for (const k of ['u', 'a_abs', 'giros', 'v_nodos', 'derivas', 'derivas_vector', 'derivas_porticos_env', 'cortante_basal', 'energia']) comparar(k, r[k], ref[k]);
   for (const k of Object.keys(ref.envolventes)) comparar(`envolventes.${k}`, r.envolventes[k], ref.envolventes[k]);
-  casos.push(caso('series y envolventes reales (error relativo al máximo de cada arreglo)', peor, 1e-6, `el peor: ${cual}`));
+  // serie de C-A1-1@X (historia interna del motor)
+  const ie = h.ids.indexOf(ref.serie_elemento.elemento);
+  for (const k of ['Mi', 'Mj', 'V', 'N', 'thp_i', 'thp_j', 'dc']) comparar(`serie.${k}`, Array.from({ length: h.nt }, (_, i) => h[k][i * h.nE + ie]), ref.serie_elemento[k]);
+  casos.push(caso('series, envolventes y serie de C-A1-1@X (error relativo al máximo de cada arreglo)', peor, 1e-6, `el peor: ${cual}`));
   const enteros = ['dc', 'dc_flexion', 'dc_cortante', 'dc_rotacion', 'rotulas'].every((k) => r[k].every((x, i) => x === ref[k][i]));
   casos.push(comprobar('D/C × 100, bits de rótulas y thp idénticos', enteros && r.thp.valores.every((x, i) => x === ref.thp.valores[i]) && r.thp.elementos.join() === ref.thp.elementos.join(),
     `elementos con fluencia: ${[...r.thp.elementos].join(', ')}`));
   const eqOk = r.equipos.every((q, i) => q.regimen === ref.equipos[i].regimen && q.inicia_balanceo === ref.equipos[i].inicia_balanceo &&
     errorRelativo(q.deslizamiento_max_m, ref.equipos[i].deslizamiento_max_m) < 1e-6 && errorRelativo(q.a_max_m_s2, ref.equipos[i].a_max_m_s2) < 1e-6);
   casos.push(comprobar('equipos (régimen, balanceo, deslizamiento, aceleración) y muro de mampostería', eqOk && r.muros_mamposteria[0].estado === ref.muros_mamposteria[0].estado));
-  casos.push(caso('a0, a1 y períodos ancla', Math.max(errorRelativo(r.amortiguamiento.a0, ref.amortiguamiento.a0), errorRelativo(r.amortiguamiento.a1, ref.amortiguamiento.a1),
-    errorRelativo(r.amortiguamiento.periodos_ancla_s[1], ref.amortiguamiento.periodos_ancla_s[1])), 1e-6));
+  casos.push(caso('a0, a1, períodos ancla y ξ de los modos', Math.max(errorRelativo(r.amortiguamiento.a0, ref.amortiguamiento.a0), errorRelativo(r.amortiguamiento.a1, ref.amortiguamiento.a1),
+    errorRelativo(r.amortiguamiento.periodos_ancla_s[1], ref.amortiguamiento.periodos_ancla_s[1]),
+    ...ref.amortiguamiento.xi_modos.map((x, k) => errorRelativo(r.amortiguamiento.xi_modos[k], x))), 1e-6));
   const v = validarResultado(r, est, { tipado: true });
   casos.push(caso('validar_resultado.mjs (tipado)', v.errores.length, 0, v.errores[0]));
   return casos;

@@ -9,6 +9,12 @@ Este documento fija el contrato entre los modelos estructurales (`data/sismo/*_e
 > la sección de resultados y la de mensajes; ningún campo que ya existía cambia de significado. Dos **reglas** sí
 > cambian y se marcan como «Cambio de regla»: la demanda/capacidad que se muestra (E16) y el anclaje del
 > amortiguamiento (E8). La tabla del final dice dónde quedó cada cambio.
+>
+> **Versión 2.1 (24-oct-2026).** Contrato 17 (prevalece sobre el 7.2): la torre se prediseña en zona de amenaza
+> intermedia con capacidad moderada de disipación (DMO) y el archivo de la estructura trae además la cimentación, el
+> despiece del refuerzo de cada elemento y las cantidades (ver «Prediseño de la torre», con las correcciones al
+> contrato: criterio del sistema dual, espectro del umbral de daño, muros partidos por las puertas y sismo en la
+> cimentación).
 
 ## Unidades y ejes
 
@@ -229,10 +235,9 @@ lo usa para P-Delta (E14).
   trabajo virtual, el aporte del cortante es `∫V_w·v_i/(G·Av) dx`, con `v_i = 1/L_f` constante (cortante de un momento
   unitario en un extremo) y `V_w` antisimétrico, así que vale 0. Comprobación independiente: en una viga de Timoshenko
   empotrada con carga uniforme, `φ(0) = φ(L) = 0` exige `∫M dx = 0` y los momentos de empotramiento son `w·L²/12` sin
-  importar `G·Av`; con el término de más no lo serían. El cálculo de referencia de la ola 0 (`referencia_min.py`)
-  usa el término del contrato: `armarModelo(est, { theta0ConCortante: true })` lo reproduce solo para la prueba R0, y
-  los fixtures del Anexo A.4 se regeneran en la ola 2 con la regla corregida (en el cubo cambia el giro de gravedad
-  de los nudos en ≈ 1 %).
+  importar `G·Av`; con el término de más no lo serían. Desde la ola 2 el cálculo de referencia
+  (`referencia_min.py`) y los fixtures del Anexo A.4 (regenerados con el motor) usan la regla corregida (en el cubo
+  el giro de gravedad de los nudos cambió ≈ 1 % respecto a los fixtures de la ola 0).
 - Rótulas: concentradas en los extremos de vigas y columnas y **solo en la base** de los muros de concreto (E1:
   en el tramo de abajo de cada muro, el elemento cuyo nodo i no es el nodo j de otro tramo del mismo muro; los tramos
   de encima son elásticos, como pide el diseño por capacidad de muros), modelo de Giberson (resorte rotacional en serie con el elemento elástico). Rígidas hasta la fluencia **esperada**
@@ -257,10 +262,30 @@ lo usa para P-Delta (E14).
 - Con `periodos_ancla_s: null`, el motor usa `Ti = T1` (el período más largo) y `Tj` = el menor entre (a) el período
   del modo con el que la masa participativa acumulada llega a ≥ 90 % en x **y** en y y (b) `0,2·T1`; todo con la
   rigidez inicial (elástica condensada más `K_PΔ`).
-- `a0 = 2ξ·ωi·ωj/(ωi + ωj)`, `a1 = 2ξ/(ωi + ωj)`; `C = a0·M + a1·Σe K0,e`, donde `K0,e` es la rigidez inicial de la
-  **parte elástica** de cada viga, columna y muro (flexión, cortante y axial). **Las rótulas nunca amortiguan**
-  (evita el amortiguamiento espurio después de la fluencia, Charney 2008), y así OpenSees con
-  `rayleigh(a0, 0, a1, 0)` y `zeroLength` sin Rayleigh es réplica exacta.
+- **Las anclas del archivo valen solo para el modelo con los muros de mampostería como dice el archivo** (corrección
+  al contrato, revisión A6). `periodos_ancla_s` sale del modelo con cada muro `aislado` como está escrito; con
+  `noEstructurales: 'confinados'` («Sin aislar») y algún muro que en el archivo está aislado, el sistema dinámico es
+  otro (torre: T1 = 0,285 s en lugar de 0,456 s; T2 = 0,244 s; T3 = 0,218 s) y el motor aplica la regla automática
+  sobre los modos del modelo analizado. `regla` dice cuál se usó y por qué. Con las anclas del archivo, la torre
+  «sin aislar» quedaba con ξ = 3,2 %, 2,8 % y 2,6 % en sus tres modos fundamentales, y con eso la deriva salía
+  +30 % y la aceleración de piso +15 a +24 % por encima de la del modelo con su propio amortiguamiento: el contraste
+  de E5 (aislados frente a sin aislar) quedaba sesgado.
+- `C = a0·M + a1·Σe K0,e`, donde `K0,e` es la rigidez inicial de la **parte elástica** de cada viga, columna y muro
+  (flexión, cortante y axial). **Las rótulas nunca amortiguan** (evita el amortiguamiento espurio después de la
+  fluencia, Charney 2008), y así OpenSees con `rayleigh(a0, 0, a1, 0)` y `zeroLength` sin Rayleigh es réplica exacta.
+  La mampostería tampoco (mismo argumento: se fisura en `dcr` y su rigidez inicial dejaría de representarla).
+- **a0 y a1 con ξ exacto en las dos anclas** (corrección al contrato, revisión A6). Con `φ_r` normalizado a la masa,
+  `ξ_r = (a0 + a1·k_r)/(2ω_r)`, `k_r = φ_rᵀ·K_el·φ_r`. La fórmula del contrato, `a0 = 2ξ·ωi·ωj/(ωi + ωj)` y
+  `a1 = 2ξ/(ωi + ωj)`, supone `k_r = ω_r²`, es decir, que toda la rigidez amortigua; con la mampostería trabajando
+  (≈ 60 % de la rigidez inicial de la torre «sin aislar», (0,456/0,285)² ≈ 2,56) daba ξ1 = 4,55 % aun con las
+  anclas bien puestas. Con `ρ(ω) = k/ω²` (fracción de la rigidez modal que amortigua), imponer ξ en ωi y ωj da
+  `a0 + a1·ρi·ωi² = 2ξ·ωi` y `a0 + a1·ρj·ωj² = 2ξ·ωj`, es decir
+  `a1 = 2ξ·(ωj − ωi)/(ρj·ωj² − ρi·ωi²)` y `a0 = 2ξ·ωi − a1·ρi·ωi²` (con `ρ = 1` es la fórmula de siempre). Si un
+  ancla no cae en un modo (`0,2·T1`), `ρ` se interpola linealmente en `ln ω` entre los dos modos vecinos (fuera de
+  su rango, la del modo extremo). En la torre con los muros aislados `ρ ≈ 1,004` (P-Delta) y ξ1 pasa de 5,004 % a
+  5 %; «sin aislar» queda ξ = 5,00 / 4,29 / 3,92 % en los modos 1 a 3 (los modos 2 y 3 tienen más mampostería que el
+  1: con dos parámetros no se puede fijar más). Lo mismo hacen `referencia_min.py` (prueba R0) y el prediseño
+  (`amortiguamiento_y_anclas`), y lo prueba S5.
 - `modos: [1, 3]` (la forma anterior) sigue aceptándose, pero `periodos_ancla_s` manda si están los dos, y los
   validadores avisan si se usa `modos`. Por qué: en el modelo pseudotridimensional los modos 1 a 3 suelen ser los
   tres fundamentales (x, y, torsión), con ω3 ≈ 1,2-1,5·ω1, y anclar en 1 y 3 sobreamortigua los modos altos (con
@@ -270,25 +295,88 @@ lo usa para P-Delta (E14).
   modos normalizados a la masa y `K_el` la rigidez condensada de la parte elástica de los elementos (sin P-Delta y
   **sin la mampostería**, que no lleva amortiguamiento de Rayleigh). Como dentro de cada pórtico el amortiguamiento es
   proporcional a la rigidez de la parte elástica, condensarlo es exacto: `(1 + a1·d/dt)(K_cc·u_c + K_cd·u_d) = 0`
-  da `u_c = −K_cc⁻¹·K_cd·u_d`, y la matriz de amortiguamiento condensada es `a0·M + a1·K̂_el`. (El cálculo de
-  referencia de la ola 0 incluía la mampostería en `K_el`: sus ξ difieren en los modos donde trabaja el muro sin
-  aislar del cubo.)
+  da `u_c = −K_cc⁻¹·K_cd·u_d`, y la matriz de amortiguamiento condensada es `a0·M + a1·K̂_el`.
 
-### Prediseño de la torre (`sistema` y `prediseno`, E13)
+### Prediseño de la torre (`sistema`, `prediseno`, `cimentacion`, `refuerzo` y `cantidades`; E13 y contrato 17)
 
-`data/sismo/torre_hospital_estructura.json` lo genera `scripts/sismo/estructura_torre.py` (Python, solo biblioteca
-estándar, determinista byte a byte; `--verificar` regenera y compara). Pasos y salidas (contrato, 7.2):
+`data/sismo/torre_hospital_estructura.json` lo genera `scripts/sismo/estructura_torre.py` (Python 3.12, solo biblioteca
+estándar, determinista byte a byte; `--verificar` regenera, compara e imprime los chequeos, y sale con 1 si algo
+difiere o falla; `--informe` imprime además el detalle). **Norma (contrato 17, que prevalece sobre el 7.2):** zona de
+amenaza sísmica **intermedia** (Aa = Av = 0,15) y capacidad **moderada** de disipación de energía (**DMO**); la revisión
+de la exigencia para el grupo IV está en `prediseno.verificacion_nsr10` (no cambia la capacidad de disipación; sí pide
+I = 1,5, el umbral de daño, el desempeño superior de los no estructurales y la supervisión técnica; por confirmar con el
+texto). El prediseño agrega criterios más exigentes que el mínimo DMO, todos declarados: confinamiento Ash de DES en
+columnas, cortante por capacidad con `Mpr` en vigas, columnas y muros, columna fuerte-viga débil en todos los nudos, sin
+irregularidad torsional extrema y cimentación revisada con el sismo de capacidad.
 
-- `sistema` (paso 0): fracción del cortante que resisten los pórticos solos con el modelo elástico; si es ≥ 25 %, el
-  sistema es **dual** (Tabla A.3-4), si no, **combinado** (Tabla A.3-2); fila de la tabla, `R0`, `Omega0` y
-  justificación (numerales por confirmar).
-- `prediseno` (paso 7): `R = φa·φp·φr·R0` con cada factor justificado; período del modelo, `Ta` y `Cu·Ta` de la fila
-  del sistema adoptado; cortante basal de diseño (FHE y modal, con el factor de ajuste a ≥ 80 % o ≥ 90 % de la FHE);
-  `derivas_vector` por entrepiso con el punto donde ocurren y por pórtico; `derivas_umbral_dano` (Ad = 0,04; ≤ 0,4 %
-  con muros aislados y ≤ 0,2 % sin aislar); irregularidades 1aP/1bP y 3A con sus cocientes; relaciones columna-viga
-  (≥ 1,2); cortante por capacidad; cuantías; excentricidades y centro de rigidez por nivel; `periodos_ancla_s` del
-  amortiguamiento con el ξ efectivo de los 12 primeros modos; supuestos e incertidumbres (sin estudio de suelos:
-  base empotrada sobre los dados de pilotes).
+**Correcciones al contrato (escritas también en la respuesta de la tarea):**
+
+- **Paso 0 (dual o combinado).** El contrato tomaba la fracción del cortante que los pórticos resisten en el modelo
+  elástico (≥ 25 % → dual). La NSR-10 (A.3.2.1.4) no clasifica por esa fracción: exige que el pórtico resistente a
+  momentos, esencialmente completo y capaz de llevar las cargas verticales, **se diseñe** para resistir por sí solo al
+  menos el 25 % del cortante sísmico de diseño. `sistema.fraccion_cortante_porticos` guarda la fracción elástica
+  (informativa: 18 % en x y 28 % en y en el entrepiso 1) y el diseño usa la envolvente del modelo completo y del modelo
+  de solo pórticos con el 25 % de la FHE (con su torsión accidental): el sistema es **dual** (Tabla A.3-4, fila de muros
+  de concreto DMO con pórticos DMO: R0 = 6,0 y Ω0 = 2,5, por confirmar).
+- **Espectro del umbral de daño.** Con ξ = 2 % (A.12.3): meseta `3,0·Ad·Fa` hasta `TC = 0,5·Fv/Fa` y `1,5·Ad·Fv/T`
+  después (la forma de la NSR-98, 3,0·Ad y 1,5·Ad·S/T, con los coeficientes de sitio de la NSR-10: 3,0 = 2,5·1,2 y
+  1,5 = 1,2·1,25 son la meseta y la rama del espectro de diseño llevadas de 5 % a 2 %). Texto exacto por confirmar; si la
+  meseta fuera 3,0·Ad sin Fa, esta queda del lado seguro. La curva `nsr10.umbral_dano` del mensaje `movimiento`
+  (`motor.js`, con `espectroUmbralDano` de `movimiento.js`) es esta misma (unificada en la revisión A6; antes usaba
+  la forma del 5 %, 2,5·Ad·Fa, entre 17 % y 20 % más baja).
+- **Muros con las puertas de las escaleras.** Las puertas de las escaleras (planta de B) parten los muros en x = 3,1:
+  cada muro en y es el machón de 6,5 m que queda entre la jamba y el otro extremo, con la aleta del muro en x de ese
+  extremo; el machón corto del otro lado de la puerta (0,7 m) es aleta del muro en x de su esquina. El prediseño supone
+  las puertas apiladas en x = 3,1 (y = 15,3 al norte, y = −6,3 al sur) en los cuatro pisos.
+- **Cimentación con el sismo.** La capacidad geotécnica de los pilotes se revisa con las combinaciones de servicio de
+  B.2.3 y los factores de seguridad de H.4.7-1 (3,0 estático; 1,5 con el sismo); el sismo de capacidad (`Ecap`: Ω0·E
+  sin pasar de lo que pueden entregar muros y columnas, Mpr y Ve, ni de la suma de los cortantes de capacidad de las
+  vigas en la carga axial de las columnas) se usa para el refuerzo y el anclaje de los pilotes y se informa en las
+  reacciones, pero no para la capacidad del suelo (un núcleo que llega a la capacidad última de sus pilotes se mece y
+  eso limita la demanda; ASCE/SEI 41-17 8.4 y ASCE/SEI 7-16 12.13.5 tampoco piden Ω0 para el suelo).
+
+Campos agregados (todos opcionales para el motor, que no los usa salvo lo dicho):
+
+| Campo | Dónde | Qué es |
+|---|---|---|
+| `xyz` | nodos | Coordenadas `[x, y, z]` del nodo (para la vista y el modelo BIM; el motor las recalcula con `s`, `coordenada` y `z`) |
+| `ejes.x[].auxiliar` | `ejes` | Eje auxiliar `N` (x = 3,1, cara occidental de los núcleos); no es línea de pórtico |
+| `detalle_masa` | niveles | Masa por categoría **en t** (losa, vigas, columnas, muros de concreto, acabados e instalaciones, divisorios, fachada, escaleras, mampostería de núcleos, casetas, equipos de cubierta, `viva_25pct`) |
+| `aletas` | secciones de muro | Partes de la sección distintas del alma: `[{u0, u1, ancho_m, de}]` en la coordenada `u` del muro (aleta efectiva o columna de borde); reemplaza la forma `{lado, ancho_efectivo_m, espesor_m}` del ejemplo |
+| `Mn_pos_kNm`, `Mn_neg_kNm`, `phiMn_pos_kNm`, `Mpr_pos_kNm`, `Mn_e_pos_kNm`, `momento_curvatura_neg`, `refuerzo`, `b_ala` | secciones | Valores del otro sentido de flexión y el refuerzo resumido; `Mn_kNm`, `phiMn_kNm`, `Mpr_kNm` y `Mn_e_kNm` son los del momento negativo (el mayor) en vigas |
+| `portico` | — | No se escribe en los resortes (la línea la dan `direccion` y `coordenada`) |
+
+Bloques de la raíz:
+
+- `sistema` (paso 0) y `diseno` (Aa, Av, Ad, Fa, Fv, I, zona, `capacidad_disipacion: "DMO"`, Ta, Cu·Ta, Sa, R, Ω0, Vs).
+- `prediseno`: `metodo` y `metodo_secciones`; `historial_de_ajustes` (cada paso desde el punto de partida del
+  presupuesto con su período, cocientes de torsión, deriva, umbral de daño y R: así se ve por qué se cambiaron las
+  secciones); `dimensiones_adoptadas`; `eleccion_muros` (paños activos, longitudes, todos los paños de núcleo con su
+  material, por qué y las notas de las aletas); `R` con φa, φp, φr y su justificación; `redundancia` (prueba de
+  remoción de cada muro); `irregularidades` (1aP/1bP con el cociente por entrepiso y Ax, 3A, 1A y 2A);
+  `participacion_porticos`; `periodos` (12 modos con masa participativa, T1x, T1y, Ta, Cu, Cu·Ta y la fila de la tabla);
+  `cortante_basal` (FHE por dirección con Sa, k, W, Vs, Vs/R y fuerzas por nivel; modal con el factor de ajuste);
+  `derivas_vector` (por entrepiso, con el vértice y la combinación 100 % + 30 %), `derivas_porticos` y
+  `derivas_umbral_dano` (aislados y con la mampostería adherida, con rigidez secante a 0,2 %); `estabilidad`;
+  `centro_rigidez` (por nivel, con la excentricidad); `amortiguamiento` (períodos ancla, a0, a1, ξ de 12 modos);
+  `columna_fuerte_viga_debil` (cada columna y plano, los de cubierta exentos); `cortante_por_capacidad` (vigas,
+  columnas y muros: Ve, φVn, Ωv); `cuantias`; `verificacion_nsr10`; `chequeos` (lista `{id, descripcion, valor, limite,
+  cumple, fuente, detalle?}`: todos deben cumplir).
+- `cimentacion` (17.2): `suelo_supuesto` (estimación con su fuente), `pilote` (D, L escogido por el menor total de
+  metros, capacidades y factores de seguridad, `estudio_de_largo`), `reacciones` en la base por apoyo (D, L, Lr, E y
+  Ecap), `grupos` (dados, dados combinados y losas de pilotes de los núcleos, con las reacciones extremas por tipo de
+  combinación y el diseño de sus pilotes), y la geometría con el refuerzo para el modelo BIM: `pilotes` (posiciones,
+  cotas de cabeza y punta, canasta en dos tramos y espiral), `dados` (caja en planta, cotas, parrillas),
+  `vigas_amarre`, `contrapiso`, `fosos` y `cisternas`. Cotas `z` desde el piso terminado del piso 1.
+- `refuerzo` (17.3): `convenciones` (barras N.º 3 a N.º 8 de NTC 2289, recubrimientos, ganchos y traslapos) y el
+  despiece de **cada** elemento: `columnas` (por columna física y piso: barras por cara, traslapo, anclaje, estribos y
+  ganchos suplementarios en lo, en el centro y en el nudo), `vigas` (corridas y bastones superiores con su largo desde
+  la cara, inferiores y del vano, estribos en 2h y en el centro; incluye las vigas banda columna-muro que no están en el
+  modelo), `muros` (por piso: cortinas, bordes y planta), `losas` (por paño: nervios con su refuerzo, riostras, malla)
+  y `escaleras`; cada uno con `texto` (la etiqueta de la vista: «12 N.º 7», «E N.º 4 c/0,10 en lo = 0,60 m»), `kg` y
+  `m3`.
+- `cantidades`: m³ y kg por tipo con su cuantía, pilotes (número, metros, kg/m) y la comparación con los ítems de
+  `presupuesto.json` (capítulos 2 y 3) con el efecto en el costo directo; el presupuesto no se edita.
 
 ## `data/sismo/amenaza.json`
 
@@ -312,8 +400,24 @@ para comparar. Cada parámetro con su fuente.
   de la banda, un solo régimen. El umbral brusco de `seleccion_de_regimen.regla` (50 km) ya no se usa: con él, mover
   la profundidad 1 km cambiaba el PGA hasta 3 a 4 veces (Mw 6,2 a 92 km: 0,0247 g con h = 49,9 km y 0,0795 g con
   h = 50 km; prueba de la revisión con `sim.py`), un artefacto del umbral y no física. Si la persona fuerza el
-  régimen, `avisos` advierte «intraplaca con h < 40 km» o «cortical con h > 60 km». Con la banda, el cociente de
-  la mediana del PGA entre h + 1 y h queda entre 0,91 y 1,05 para Mw 5 a 7 y Repi 0 a 200 km (T19).
+  régimen, `avisos` advierte «intraplaca con h < 40 km» o «cortical con h > 60 km». La banda **no elimina** el
+  contraste entre regímenes (≈ 3 veces en el PGA): lo **reparte** en 30 km. Por eso, sola, no basta (ver la regla
+  siguiente). Con la banda y Δσ(h), el cociente de la mediana del PGA entre h + 1 y h queda dentro de 0,85-1,18 para
+  Mw 5 a 7 y Repi 0 a 200 km (T19), y la tendencia con h sigue a la de las GMPE (T19b).
+- **Caída de esfuerzos intraplaca según la profundidad (regla del motor, revisión A6; desviación de E15, sin cambiar
+  números de este archivo).** `Δσ_i(h) = Δσ_ref·exp((3/2)·θ̄·(min(h, h_c) − h_c))`, con `Δσ_ref = 800 bar`
+  (`intraplaca_profunda.delta_sigma_bar`, calibrado solo con focos de 100 a 150 km), `θ̄ = 0,0135/km` y
+  `h_c = 120 km`. Deducción: `θ̄` es la media de las pendientes de profundidad del PGA de las dos GMPE con que se
+  calibró `Δσ_ref` (BC Hydro 2016, `fdepth = θ11·(min(Zh, 120) − 60)`, `θ11 = 0,013`; Zhao et al. 2006,
+  `e·(min(h, 125) − 15)`, `e = 0,0141`), y `h_c` es el tope de BC Hydro (Zhao usa 125 km). En alta frecuencia
+  (`f ≫ f0`) la amplitud de Fourier de Brune es `∝ M0·f0² ∝ M0^(1/3)·Δσ^(2/3)`; para que `d ln A/dh = θ̄` hace falta
+  `d ln Δσ/dh = (3/2)·θ̄`. Por qué: con Δσ fijo desde 40 km, a igual distancia epicentral el PGA mediano subía 2,1 a
+  2,4 veces entre h = 40 y 70 km, tenía su máximo en 70 km y bajaba después, al revés de las GMPE (que suben despacio
+  hasta 120 km); a 70 km la simulación quedaba 1,5 a 2,7 veces sobre sus propias GMPE (Mw 6,2, Repi 92 km:
+  ln(sim/GMPE) = +0,49 en el PGA, +0,77 en Sa(0,5) y +0,98 en Sa(1,0)). Con Δσ(h), en Repi 92 y 200 km el residuo
+  del PGA queda entre −0,24 y −0,05 para h de 50 a 150 km (T19b, tolerancia ±0,35). Para h ≥ 120 km (el nido,
+  150 km) Δσ = 800 bar: `nido_2015` y T15 no cambian. `meta.delta_sigma_bar` (y el de cada término) es el Δσ ya
+  ajustado. La aplican igual `movimiento.js` y `estocastico.py` (T15b).
 
 ### Movimiento del suelo (`movimiento.js`; decisiones de implementación)
 
@@ -344,9 +448,19 @@ encabezado de `web/js/sismo/movimiento.js`; `scripts/sismo/estocastico.py` hace 
   T ≤ 0,01 s, interpola ln Sa y σ linealmente en ln T entre 0,2 y 1,0 s (`gmpe.otras_periodos`) y devuelve **NaN**
   en 0,01 < T < 0,2 s y en T > 1,0 s: la meseta y la rama larga no se pueden reconstruir sin inventarlas. Quien
   dibuje la GMPE salta los NaN: queda el PGA (T = 0) y la curva de 0,2 a 1,0 s, con su banda ±1σ. Distancias de fuente
-  puntual: BC Hydro con la hipocentral, Zhao con la hipocentral como distancia a la ruptura, BSSA14 con Rjb ≈ Repi;
-  fFABA = 0, mecanismo no especificado y Zhao cortical sin el término de falla inversa, como en la investigación.
-  `gmpeEscenario` pesa las dos de cada régimen con (1 − w)/2 y w/2.
+  puntual: BC Hydro con la hipocentral, Zhao con la hipocentral como distancia a la ruptura, BSSA14 con Rjb ≈ Repi
+  **solo para focos someros**; fFABA = 0, mecanismo no especificado y Zhao cortical sin el término de falla inversa,
+  como en la investigación. `gmpeEscenario` pesa las dos de cada régimen con (1 − w)/2 y w/2, salvo BSSA14.
+- **BSSA14 y la profundidad (regla del motor, revisión A6; desviación de `amenaza.json → gmpe.bssa14.
+  distancia_para_fuente_puntual`, que solo vale para focos someros).** BSSA14 no tiene término de profundidad
+  (`FE(M) + FP(√(Rjb² + h_coef²)) + FS`, con una seudoprofundidad fija de 4,5 km en el PGA) y se ajustó con sismos
+  corticales someros de NGA-West2. Con `Rjb = Repi` daba lo mismo para un foco a 10 km que a 40 o a 65 km
+  (Mw 6,2, Repi 0: 0,481 g en todos) y, con Repi corto y h ≥ 20 km, arrastraba hacia arriba la media ponderada: la
+  simulación parecía quedarse hasta 3 veces corta (ln = −1,12 en h = 40 km) cuando el problema era la referencia. Ahora
+  BSSA14 conserva `fraccionBSSA14(h) = clamp((25 − h)/10, 0, 1)` de su peso (todo hasta 15 km, nada desde 25 km;
+  rango de focos de NGA-West2 por confirmar) y el resto pasa a Zhao 2006 cortical, que sí tiene término de
+  profundidad. `avisos` dice «BSSA14 fuera de su rango de profundidad» cuando pierde peso. Los coeficientes y las
+  formas de las cuatro GMPE no cambian (la revisión los comparó con pygmm 0.8.0 y con `zhao_2006.py` de OpenQuake).
 - **Partición** `V = 1/√2` exacta (`amenaza.json` guarda 0,7071: diferencia relativa de 7·10⁻⁶).
 - **Calidad baja.** FIR de fase cero con ventana de Kaiser (81 coeficientes): rizado ≤ 10⁻³ hasta 20 Hz y ≥ 60 dB desde
   30 Hz (medidos sobre la respuesta exacta en MOV4; con las fórmulas de Kaiser para 60 dB el rizado salía 1,1·10⁻³,
@@ -401,6 +515,11 @@ Reglas de física y numérica (resumen; el detalle está en el contrato, 7.4):
 - **Escala «nivel de diseño NSR-10»** (`escala: 'nsr10'`): factor que iguala la media del espectro de la media
   geométrica de las dos componentes entre `0,8·T1` y `1,2·T1` (de x y de y) con la del espectro de diseño con
   I = 1,5; la pasada de suelo se repite con `PGAr × f` hasta que el factor cambie < 1 % (máximo 10 vueltas).
+  **T1x y T1y son los del modelo de diseño** (muros de mampostería como en el archivo), también con
+  `noEstructurales: 'confinados'` (revisión A6): el registro escalado depende solo del sismo, y «Aislados» y
+  «Sin aislar» se comparan con el mismo movimiento del suelo (con los períodos de «Sin aislar», 0,285/0,244 s, el
+  factor subía 12-14 % y el contraste de E5 mezclaba el efecto de los muros con otro registro). `listo.escala_nsr10`
+  dice qué períodos usa (`{ T1x, T1y, modelo }`).
 - **Qué se evalúa en cada Δt** (no sobre la salida): envolventes, primera fluencia, bits de `rotulas` (O lógico
   entre dos salidas), derivas vectoriales y `riesgoEquipos`. Las series de salida (cada `dt_salida_s`) son para
   dibujar.
@@ -459,18 +578,24 @@ Reglas de física y numérica (resumen; el detalle está en el contrato, 7.4):
   Newmark de aceleración promedio); si el bloque se detiene dentro del paso se calcula el instante y, si `|a| > μg`,
   vuelve a arrancar en lo que queda del paso; un bloque que ya desliza sigue deslizando aunque el régimen
   instantáneo sea de balanceo. Es exacto en 1D con aceleración constante por tramos (T21).
-- **Espectro de umbral de daño** del mensaje `movimiento`: la forma del espectro de diseño con `Ad` en lugar de `Aa`
-  y `Av` e `I = 1` (A.12.3; forma por confirmar), como en el trabajador simulado.
+- **Espectro de umbral de daño** del mensaje `movimiento`: `espectroUmbralDano(T, { Ad, Fa, Fv })` de `movimiento.js`,
+  el mismo del prediseño (A.12.3, ξ = 2 %, sin I: `3,0·Ad·Fa` hasta `TC = 0,5·Fv/Fa` y `1,5·Ad·Fv/T` después; forma
+  por confirmar). El mensaje dice el amortiguamiento de cada curva: `nsr10.xi = 0,05` (diseño, con y sin I) y
+  `nsr10.xi_umbral_dano = 0,02`; la de umbral de daño no se compara a la par con el espectro del registro (5 %).
 - **Respaldo por tramos.** Con `opciones.ceder` (o `crearMotor({ modo: 'tramos' })`), `analizar` cede también entre
   las etapas previas (síntesis, vueltas de la escala `nsr10`, filtro), no solo entre pasos; la síntesis de un
   registro (≈ 60 ms en escritorio) sigue siendo un bloque. Cancelado: error con `codigo: 'cancelado'`.
+  `analizarPorTramos` cede también después de armar el análisis (gravedad y cajas de resultados de ≈ 30 MB) y avanza
+  de a un paso mientras quede presupuesto (ola 2): con tandas de 10 pasos, un paso frío (primera factorización de los
+  pórticos y compilación) dejaba tramos de ≈ 25 ms en Chromium; ahora el más largo es de ≈ 13 ms. Los pasos y los
+  resultados son los mismos, bit a bit (T17).
 - **Historia interna.** Series `Float32Array(nt·nE)` de `Mi`, `Mj`, `V`, `N`, `thp_i`, `thp_j` y `dc` (cociente) por
   salida; con `guardar_serie_completa`, además `u_completa` (Float64, cada Δt) para `exportar_caso.mjs`.
 - **Tiempos medidos (Node 22, este entorno, 4 núcleos compartidos)** con una torre sintética de 398 elementos, 294
   nodos y 464 gdl condensados (`pruebas/_torre_sintetica.mjs`, geometría del 1.2): `iniciar` 5-40 ms, `movimiento`
   20-130 ms, `analizar` de 40 s con Δt = 0,005 s (8.000 pasos, cimitarra, 33 elementos con fluencia) 0,85-1,3 s;
   resultados más historia 31,7 MB. En Chromium sin pantalla, el trabajador de módulo y el respaldo dan resultados
-  idénticos bit a bit. Los tiempos con la torre real y con CPU ×4 los mide `qa_worker.mjs` (ola 2).
+  idénticos bit a bit. Los tiempos con la torre real y con CPU ×4 los mide `qa_worker.mjs` (ola 2, abajo).
 
 ## Mensajes del trabajador (E11; contrato, 7.5)
 
@@ -482,7 +607,7 @@ import.meta.url), { type: 'module' })` y le pasa URL **absolutas** (dentro del t
 |---|---|---|
 | ← | (al evaluar el módulo) | `{ tipo: 'cargado' }` |
 | → | `{ tipo: 'iniciar', v: 1, id, url_estructura, url_amenaza, opciones: { histeresis, noEstructurales } }` | `{ tipo: 'listo', id, resumen, elementos, nodos, modos, amortiguamiento }` |
-| → | `{ tipo: 'movimiento', id, params }` | `{ tipo: 'movimiento', id, registro: { dt, n, ax, ay, meta, intensidades, avisos }, espectro: { T, Sa_x, Sa_y }, fourier: { f, A_x, A_y }, gmpe: [{ nombre, peso, T, mediana_g, sigma_ln }], nsr10: { T, con_I, sin_I, umbral_dano } }` |
+| → | `{ tipo: 'movimiento', id, params }` | `{ tipo: 'movimiento', id, registro: { dt, n, ax, ay, meta, intensidades, avisos }, espectro: { T, Sa_x, Sa_y }, fourier: { f, A_x, A_y }, gmpe: [{ nombre, peso, T, mediana_g, sigma_ln }], nsr10: { T, con_I, sin_I, umbral_dano, xi, xi_umbral_dano } }` |
 | → | `{ tipo: 'analizar', id, params, opciones }` | varios `{ tipo: 'progreso', id, fraccion, t_s }` (cada ≥ 250 ms) y al final `{ tipo: 'resultado', id, resultados }`; usa el registro del último `movimiento` si sus `params` son iguales |
 | → | `{ tipo: 'serie_elemento', id, elemento }` | `{ tipo: 'serie_elemento', id, elemento, t, Mi, Mj, V, N, thp_i, thp_j, dc }` (copias de la historia interna; también después de `resultado`) |
 | ← | errores | `{ tipo: 'error', id, codigo: 'datos' \| 'no_converge' \| 'interno', mensaje, detalle }` |
@@ -496,6 +621,8 @@ import.meta.url), { type: 'module' })` y le pasa URL **absolutas** (dentro del t
 - `listo.modos`: `{ periodos_s, masa_participativa: { x, y, rz }, formas, T1x, T1y }` con los primeros `min(12, 3N)`
   modos; `formas[r]` tiene `3N` valores (ux, uy, rz por nivel) normalizados con `φᵀMφ = 1` y la componente de mayor
   valor absoluto positiva; `T1x` y `T1y` son los períodos de mayor masa participativa en x y en y.
+- `listo.escala_nsr10`: `{ T1x, T1y, modelo }`, los períodos con que se calcula la escala «nsr10» (los del modelo de
+  diseño; con «Sin aislar» no son los de `listo.modos`). `listo.amortiguamiento.regla` dice de dónde salen las anclas.
 - Las series de `movimiento` y de `serie_elemento` viajan en `Float32Array` y sus búferes se transfieren. Unidades de
   `serie_elemento`: `Mi`, `Mj` en kN·m (momentos de extremo antihorarios), `V` en kN (el extremo de mayor valor
   absoluto, con la convención de arriba), `N` en kN (tracción +), `thp_i`, `thp_j` en rad, `dc` como **cociente**
@@ -579,8 +706,9 @@ export const pruebas = [
 | `pruebas/integrador.mjs` | T1-T7, T12, T21 |
 | `pruebas/modelo.mjs` | T8-T11, T22 |
 | `pruebas/movimiento.mjs` | T13-T15, T15b, T15c, T16, T19 (en hilos de trabajo, ≈ 45 s con 4 núcleos), T20; MOV1-MOV5 propias (fragmentos de `notas_para_implementar`, FFT y azar, Nigam y Jennings con solución cerrada, registro y filtro, intensidades) |
-| `pruebas/integrador.mjs` (además) | R0: el motor contra el cálculo de referencia de la ola 0 (`resultado_min.json`, con `theta0ConCortante`): series y envolventes a 10⁻⁶ del máximo de cada arreglo, D/C, rótulas y thp idénticos |
-| `pruebas/motor.mjs` | T17, T18 (ola 2); W1 el trabajador real responde los mensajes del 7.5; E1 escala `nsr10` y calidad baja; R1 tiempos del 7.7 con la torre sintética |
+| `pruebas/integrador.mjs` (además) | R0: el motor contra una segunda implementación del mismo cálculo (`scripts/sismo/referencia_min.py` → `scripts/fixtures/torre/referencia_min.json`, con las mismas reglas): series, envolventes y serie de `C-A1-1@X` a 10⁻⁶ del máximo de cada arreglo; D/C, rótulas, thp, equipos y muro idénticos; a0, a1 y ξ de los modos a 10⁻⁶ |
+| `pruebas/motor.mjs` | T17; W1 el trabajador real responde los mensajes del 7.5; E1 escala `nsr10` y calidad baja; R1 tiempos del 7.7 con la torre sintética |
+| `pruebas/estructura.mjs` | T18 con la estructura real (`torre_hospital_estructura.json`); S1 la estructura cumple el esquema; S2 los 12 períodos del motor son los del prediseño en Python (< 10⁻³); S3 períodos ancla y centro de rigidez iguales; S4 equilibrio de gravedad |
 | `pruebas/_estructuras.mjs`, `pruebas/_torre_sintetica.mjs` | Ayudantes: estructuras pequeñas con solución cerrada y registro sintético determinista; torre sintética del tamaño de la torre (hasta que exista `torre_hospital_estructura.json`) |
 | `pruebas/datos.mjs` | F1 fixtures del Anexo A, F2 `amenaza.json` idéntico en números a la investigación, F3 el validador detecta errores sembrados, F4 el trabajador simulado responde los mensajes |
 
@@ -601,13 +729,91 @@ estructura real y usa `validarResultado` de `validar_resultado.mjs`. Dos lectura
 ## Validación con OpenSees: `python3 scripts/sismo/validar_opensees.py` (contrato, 7.9)
 
 Requisitos en `scripts/sismo/requisitos_validacion.txt` (`openseespy==3.8.0`, `numpy`); no corre en CI: el resultado
-se versiona en `data/sismo/validacion_opensees.json`. `node scripts/sismo/exportar_caso.mjs <escenario> <salida.json>`
-escribe el registro (mismo `dt`), `a0`, `a1` y el modelo de referencia. Réplica de la idealización: nodos propios
-por pórtico como esclavos de `rigidDiaphragm 3` sin restringir en ellos `ux`, `uy` ni `rz` (solo el giro fuera del
-plano); `ElasticTimoshenkoBeam` con `I·factor_fisuracion`; brazos rígidos como elementos 10³ veces más rígidos (no
-`rigidLink`); rótulas `zeroLength` con `Steel01(My_e, k0 = 10³·k_e, b = α/10³)` sin Rayleigh; `rayleigh(a0, 0, a1, 0)`;
-P-Delta con 4 pilas de columnas articuladas de gravedad por nivel; gravedad con `loadConst -time 0.0`. Casos de
-control antes de la torre y criterios en el contrato (7.9).
+se versiona en `data/sismo/validacion_opensees.json` (con los criterios del 7.9, cada uno con su valor, su tolerancia
+y si cumple). `node scripts/sismo/exportar_caso.mjs <escenario|ninguno> <salida.json> [--estructura R] [--escala X|nsr10]
+[--angulo G] [--calidad baja] [--duracion S] [--sin-pdelta]` escribe el registro tal como lo integra el motor (cada Δt,
+girado, escalado y, en calidad baja, filtrado y diezmado), `a0` y `a1`, el modelo de referencia con las propiedades
+que el motor usa de verdad (E, G, A, `I·factor_fisuracion`, Av, `L_f`, brazos, `k_e`, `H`, momentos de fluencia de cada
+extremo, rótula sí o no, cargas de gravedad), la rigidez lateral condensada, `K_PΔ`, los modos y los resultados del
+motor sobre el mismo caso (con `u_completa` de cada Δt); así la réplica no reimplementa la síntesis ni las reglas de
+las secciones.
+
+Réplica de la idealización (modelo 3D, `ndm 3, ndf 6`): nodos propios por pórtico como esclavos de `rigidDiaphragm 3`
+(maestro en el centro de masa con `mass(m, m, 0, 0, 0, Jz)`), sin restringir en ellos `ux`, `uy` ni `rz` (solo el giro
+fuera del plano); `ElasticTimoshenkoBeam` con `I·factor_fisuracion` e `Iy = J = 10⁻⁶·I`; brazos rígidos como
+`elasticBeamColumn` 10³ veces más rígidos (no `rigidLink`); rótulas `zeroLength` sin Rayleigh con `k0 = 10³·k_e` y
+pendiente después de la fluencia `α·k_e`; `rayleigh(a0, 0, a1, 0)` (las columnas de gravedad, en una región sin
+Rayleigh); P-Delta con 4 pilas de columnas articuladas de gravedad por nivel (`geomTransf PDelta`, `EI = 10⁻⁶ kN·m²`);
+gravedad con `loadConst -time 0.0`; `Newmark 0.5 0.25`; `Transformation`. Decisiones de la réplica (medidas en este
+entorno; el detalle está al principio del programa):
+
+- **Rótulas asimétricas** (vigas y muros, E3): `Parallel(ElasticPP(k0 − H, My_pos/k0, −My_neg/k0), Elastic(H))`, que
+  es el mismo endurecimiento cinemático bilineal (resorte elastoplástico perfecto en paralelo con uno elástico) con
+  fluencia distinta en cada sentido; las simétricas, `Steel01(My, k0, b = α/10³)`. El caso de control 2 prueba las dos.
+- **Los otros 5 gdl de la rótula:** `equalDOF` cuando la cara no es esclava del diafragma. Con el manejador
+  `Transformation`, un `equalDOF` cuyo nodo retenido es esclavo de `rigidDiaphragm` da desplazamientos errados
+  (restricciones encadenadas: 112 % en un pórtico de prueba); por eso, si la cara es esclava (nudo sin brazo), el nodo
+  interno es esclavo del mismo diafragma (mismo punto) y `uz` se une con un resorte de 10¹² kN/m. Si la cara es el
+  apoyo, el nodo interno queda fijo salvo el giro de la rótula: con `equalDOF` hacia el apoyo, OpenSees no suma las
+  fuerzas del elemento a la reacción del apoyo y el cortante basal salía 0.
+- **Cortante basal** de OpenSees: suma de las reacciones de los apoyos de los pórticos con `reactions -dynamic` (las
+  fuerzas resistentes con el amortiguamiento de Rayleigh; `-rayleigh` da solo el amortiguamiento).
+- **Energía amortiguada** de OpenSees: `a0·∫u̇ᵀMu̇` en los maestros más `a1·∫ėᵀK_e ė` en la parte elástica de cada
+  elemento, con las velocidades que da OpenSees y la misma regla del trapecio del motor (`Δu = Δt/2·(u̇_n + u̇_{n+1})`
+  es exacta en Newmark de aceleración promedio). Los brazos también amortiguan en OpenSees, pero en serie y 10³ veces
+  más rígidos su aporte es ≈ 10⁻³.
+- **Períodos** de OpenSees: de la flexibilidad lateral condensada (3N cargas unitarias en los maestros, después de la
+  gravedad, con P-Delta) y, como control, de `eigen -genBandArpack` (coinciden a 10⁻⁹).
+- **Sistema de ecuaciones:** `ProfileSPD` (38 ms por paso en la torre, frente a 67 ms de `UmfPack`, con los mismos
+  resultados). `SparseSYM` es más rápido, pero en OpenSees 3.8 dio el caso de control 1 errado (97 %) y un valor propio
+  negativo en la torre: no se usa.
+- **Algoritmo:** Newton; si no converge (en la inversión de una rótula de `k0 = 10³·k_e`, el primer tanteo con la
+  tangente después de la fluencia salta al otro lado de la superficie y Newton oscila), Newton-Krylov con la tangente
+  inicial, Krylov con la del paso y Newton con búsqueda lineal; si nada converge, el paso se parte en 10 (hasta 3
+  veces). Después de un intento fallido OpenSees 3.8 deja el análisis contaminado (el siguiente algoritmo tampoco
+  converge, aunque desde un análisis limpio converja en 3 iteraciones): cada intento nuevo arma el análisis otra vez
+  (`wipeAnalysis`), que parte del estado comprometido. Todos llevan a la misma solución.
+
+Casos de control (7.9): (1) un piso y tres pórticos (dos X con columnas distintas y uno Y, Timoshenko, CM corrido)
+contra la condensación pseudotridimensional exacta armada aparte en el programa (Przemieniecki, condensación estática y
+compatibilidad del diafragma; P-Delta con las 4 columnas articuladas): desplazamientos < 10⁻⁵ sin y con P-Delta. El
+residuo (≈ 9·10⁻⁶) es la rigidez fuera del plano `Iy = J = 10⁻⁶·I` que pide el 7.9: con `10⁻⁹·I` baja a 9·10⁻⁹. Con las
+rótulas `zeroLength` de `k0 = 10³·k_e` (informativo) la diferencia es ≈ 9·10⁻⁴. (2) Ciclo cuasiestático de una rótula
+en serie con su parte elástica contra la tabla de T7 (< 0,5 %), con las dos formas de la réplica, y una rótula
+asimétrica (100 y 60 kN·m) contra la del motor (`rotulaEnSerie`). El caso no lineal de la torre es `local_hip` con la
+escala «nivel de diseño NSR-10» (×2,46, declarada). Fluencia en OpenSees: θp = deformación − parte elástica del
+resorte (σ/k0 en `Steel01`; σ_pp/(k0 − H) en el paralelo) mayor que 10⁻⁹ rad.
+
+## QA del trabajador en Chromium: `node scripts/sismo/qa_worker.mjs --vendor <carpeta>` (contrato, 7.5, 7.7 y 13.1)
+
+Usa `scripts/qa/comun.mjs` (D) sin modificarlo. Con el trabajador real y la estructura real, sirviendo la raíz del
+repositorio en `/` y bajo `/trabajemosjuntos/` (una página de prueba que Playwright entrega en esa subruta; no es un
+archivo del repositorio): `cargado`, `listo`, `movimiento` (Float32Array transferidos), `progreso` (cada ≥ 250 ms),
+`resultado` tipado y `serie_elemento` después del resultado; cancelar a la mitad (`terminate` y aviso) ≤ 300 ms y un
+trabajador nuevo que vuelve a calcular; el respaldo por tramos con los mismos Resultados (SHA-256 de todos los arreglos
+y campos, sin `duracion_calculo_ms` ni `id`) y su tramo más largo sin ceder; los tiempos del 7.7. Con `--vendor`, además
+la vista real (`index.html?qa=1#torre`, modo sismo, bajo `/trabajemosjuntos/`): usa el trabajador, el botón «Cancelar»
+deja «Cálculo cancelado.» en ≤ 300 ms, vuelve a calcular, y sin `Worker` usa el respaldo con los mismos Resultados.
+Si `web/data` todavía no trae `sismo_torre_estructura.json`, la prueba le sirve la estructura de `data/sismo/`.
+
+- **Teléfono (CPU ×4 por CDP):** Chromium solo frena páginas (`Emulation.setCPUThrottlingRate` sobre un trabajador:
+  «Operation is only supported for pages, not workers»). La misma cuenta de `motor.js` corre de corrido en el hilo
+  principal de la página frenada ×4 (es el proxy del trabajador en un teléfono), y se informa el freno medido con el
+  mismo análisis a ×1 (entre ×3,2 y ×4,5 en este entorno: si queda por debajo de 4, los tiempos se llevan a ×4).
+- **Memoria del trabajador:** `Runtime.getHeapUsage` del trabajador por CDP (montón de V8 y almacenamiento de los
+  ArrayBuffer, después de recoger la basura: queda la historia interna) más los Resultados transferidos.
+
+## Escenarios de referencia: `node scripts/sismo/escenarios.mjs` → `data/sismo/escenarios.json`
+
+Cifras para `docs/14` (contrato, 11.3 punto 8): `nido_2015`, `cimitarra` y `local_hip` con su registro físico y el
+«nivel de diseño NSR-10» (escenario hipotético) aplicado a los mismos tres registros (el de referencia es `local_hip`
+escalado, el mismo de la validación con OpenSees), con Δt = 0,005 s, semilla y Vs30 por defecto, P-Delta y muros
+aislados. Por escenario: factor de escala, PGA, PGV y D5-95 del registro integrado, deriva vectorial máxima por piso
+(con el vértice y el instante), desplazamientos y aceleraciones absolutas máximos, cortante basal máximo (de la serie de
+0,02 s) y sobre el peso, elementos que fluyen (por nivel y por tipo, extremos más allá de IO, LS y CP), D/C máximo con
+el elemento y lo que gobierna, energía final, estado de los muros de mampostería, equipos del inventario publicado
+(misma regla de la vista: cuántos deslizan, empiezan a balancearse o quedan en la frontera, y la fuerza máxima de
+anclaje) y calidad numérica. Determinista (`--verificar`).
 
 ## Fixtures (Anexo A.3 y A.4 del contrato)
 
@@ -618,20 +824,24 @@ En `scripts/fixtures/torre/`:
   (`M-X1-1`, nivel 1 de `X-1`). Valores de prueba, no de diseño. `theta_y` y `theta_y_e` van con 4 cifras
   (0,001616 y 0,003946 rad): con 0,0039 la viga quedaba a −1,16 % de su fórmula, fuera de ± 1 %.
 - `resultado_min.json` y `serie_elemento_min.json` (`C-A1-1@X`): `Resultados` de 3 pasos de salida (0; 0,02;
-  0,04 s) calculados **sobre `estructura_min.json`** con `scripts/sismo/referencia_min.py` (Python con numpy; el
-  modelo no lineal completo con Newmark y Newton-Raphson; lo que simplifica está escrito al principio del archivo).
-  El registro es un pulso de prueba ×25 (`origen_registro`), porque en 0,04 s ningún acelerograma sintético hace
-  fluir nada; `params` conserva el escenario por defecto para que la vista tenga qué mostrar. Trae rótulas que
-  fluyen, un equipo que desliza, uno que empieza a balancearse, uno anclado y el muro con daño. En la ola 2 se
-  regeneran con el motor y se vuelven a pasar por `validar_resultado.mjs`.
+  0,04 s) calculados **con el motor** sobre `estructura_min.json` por `node scripts/sismo/fixtures_min.mjs` (ola 2;
+  en la ola 0 los calculó `referencia_min.py`). El registro es un pulso de prueba ×25 (`origen_registro`), porque en
+  0,04 s ningún acelerograma sintético hace fluir nada; `params` conserva el escenario por defecto para que la vista
+  tenga qué mostrar. Trae rótulas que fluyen, un equipo que desliza, uno que empieza a balancearse, uno anclado y el
+  muro con daño. Reales en Float32 (la representación decimal más corta), `duracion_calculo_ms` fijo en 1.
 - `trabajador_simulado.js`: responde `cargado`, `listo`, `movimiento`, `resultado` y `serie_elemento` con esos
-  archivos y con el bloque `GENERADO` que escribe `referencia_min.py` (modos, registro, espectros, series de los
-  24 elementos). Acepta `url_fixtures` en `iniciar` y `simular: { retardo_ms, error }` en cualquier mensaje.
+  archivos y con el bloque `GENERADO` que escribe `fixtures_min.mjs` (el `listo` del motor, el pulso con sus
+  espectros, Fourier, GMPE y NSR-10 calculados con `movimiento.js`, y las series de los 24 elementos de la historia
+  interna). Acepta `url_fixtures` en `iniciar` y `simular: { retardo_ms, error }` en cualquier mensaje.
+- `referencia_min.json`: los mismos Resultados calculados por `scripts/sismo/referencia_min.py` (Python con numpy, el
+  modelo no lineal completo escrito aparte; lo que simplifica está al principio del archivo), con las reglas corregidas
+  de la ola 1. Es la segunda implementación contra la que la prueba R0 compara el motor.
 
 ```bash
+node scripts/sismo/fixtures_min.mjs --verificar        # recalcula con el motor y compara byte a byte
 node scripts/sismo/validar_resultado.mjs scripts/fixtures/torre/resultado_min.json
-python3 scripts/sismo/referencia_min.py --verificar   # con numpy: recalcula y compara byte a byte
-node scripts/sismo/test_motor.mjs --solo F1,F2,F3,F4
+python3 scripts/sismo/referencia_min.py --verificar    # con numpy: recalcula la referencia y compara byte a byte
+node scripts/sismo/test_motor.mjs --solo F1,F2,F3,F4,R0
 ```
 
 ## Cambios de la versión 2

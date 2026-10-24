@@ -66,6 +66,16 @@ const ES_SOBRE_M0 = 1 / 20000;              // Es ≈ M0/20.000 (Kanamori 1977; 
 const H_FF = { a: -0.405, b: 0.235 };       // h_ff = 10^(−0,405 + 0,235·Mw) km (Yenier y Atkinson 2015)
 const BT14_MAS_ALLA = { R: 270, T: 34.2, b: 0.156 };   // Tcamino = 34,2 + 0,156·(R − 270) para R > 270 km
 const TCAMINO_INTRAPLACA_B = 0.05;          // Tcamino = 0,05·R (Atkinson y Silva 2000; Campbell 2003)
+// Caída de esfuerzos intraplaca según la profundidad (regla del motor, revisión A6; ESQUEMA.md, «Profundidad»):
+//   Δσ(h) = Δσ_ref·exp((3/2)·θ·(min(h, hc) − hc)),  Δσ_ref = 800 bar (amenaza.json, calibrado con h de 100 a 150 km).
+// θ = 0,0135/km es la media de las pendientes de profundidad del PGA de las GMPE con que se calibró Δσ_ref:
+// BC Hydro 2016, fdepth = θ11·(min(Zh, 120) − 60) con θ11 = 0,013, y Zhao et al. 2006, e·(min(h, 125) − 15) con
+// e = 0,0141 (amenaza.json → gmpe). hc = 120 km es el tope de BC Hydro (Zhao usa 125). El 3/2: en alta frecuencia
+// (f ≫ f0) la amplitud de Fourier de Brune es ∝ M0·f0² ∝ M0^(1/3)·Δσ^(2/3), así que d ln A/dh = θ pide
+// d ln Δσ/dh = (3/2)·θ. Con Δσ fijo, entre 40 y 120 km la simulación iba al revés de las GMPE: a igual distancia
+// epicentral el PGA subía 2,1-2,4 veces de h = 40 a 70 km y bajaba después (a 70 km quedaba 1,5-2,7 veces sobre sus
+// GMPE). Para h ≥ 120 km (el nido, 150 km) Δσ = Δσ_ref: los escenarios calibrados no cambian.
+const DSIGMA_INTRAPLACA_PROF = { theta: 0.0135, hc: 120 };
 const IMPEDANCIA_REF = { rho: 2.8, beta: 3.5 };   // Fimp = √(ρs·βs/(2,8·3,5)): corteza de la amplificación genérica
 const RELLENO_S = 40;                        // ≥ 40 s de ceros después de la ventana (notas, paso 5)
 const F_CERO = 1e-6;                         // «usar f_0 = 1e-6 para no dividir por cero» (notas, paso 5)
@@ -213,7 +223,10 @@ function terminos(q, P) {
   const c = P.comunes;
   const lista = [];
   const agregar = (t, peso) => {
-    const f0 = BRUNE_F0 * t.beta * Math.cbrt(t.dsigma / M0);
+    // Δσ del término: intraplaca, según la profundidad (DSIGMA_INTRAPLACA_PROF); cortical, el de amenaza.json
+    const dsigma = t.regimen === 'cortical' ? t.dsigma
+      : t.dsigma * Math.exp(1.5 * DSIGMA_INTRAPLACA_PROF.theta * (Math.min(h, DSIGMA_INTRAPLACA_PROF.hc) - DSIGMA_INTRAPLACA_PROF.hc));
+    const f0 = BRUNE_F0 * t.beta * Math.cbrt(dsigma / M0);
     // C = Rθφ·F·V/(4π·ρs·βs³·R0)·10⁻²⁰: con M0 en dina·cm, ρ en g/cm³, β en km/s y R en km el espectro de
     // desplazamiento sale en cm·s (10⁵ cm/km elevado a 4: (km/s)³·km); ×(2πf)² da aceleración en cm/s.
     const C = (c.Rtp * c.F * c.V) / (4 * Math.PI * t.rho * t.beta ** 3 * c.R0) * c.unidades;
@@ -227,7 +240,7 @@ function terminos(q, P) {
       Tcamino = TCAMINO_INTRAPLACA_B * Ref;
     }
     const Tgm = 1 / f0 + Tcamino;                           // Tfuente = 1/f0 (Brune) + camino
-    lista.push({ regimen: t.regimen, peso, t, M0, f0, C, Rhip, Ref, Z: dispersionGeometrica(Ref, t.tramos), Tcamino, Tgm });
+    lista.push({ regimen: t.regimen, peso, t, dsigma, M0, f0, C, Rhip, Ref, Z: dispersionGeometrica(Ref, t.tramos), Tcamino, Tgm });
   };
   if (w < 1) agregar(P.cortical, 1 - w);
   if (w > 0) agregar(P.intraplaca_profunda, w);
@@ -266,7 +279,7 @@ function resumenTerminos(T) {
   const lg = (k) => Math.exp(L.reduce((s, x) => s + x.peso * Math.log(k(x)), 0));
   const li = (k) => L.reduce((s, x) => s + x.peso * k(x), 0);
   return {
-    f0_Hz: lg((x) => x.f0), delta_sigma_bar: lg((x) => x.t.dsigma), beta_s_km_s: lg((x) => x.t.beta), rho_s_g_cm3: lg((x) => x.t.rho),
+    f0_Hz: lg((x) => x.f0), delta_sigma_bar: lg((x) => x.dsigma), beta_s_km_s: lg((x) => x.t.beta), rho_s_g_cm3: lg((x) => x.t.rho),
     Q0: lg((x) => x.t.Q0), eta: li((x) => x.t.etaQ), kappa0_s: li((x) => x.t.kappa), Ref_km: lg((x) => x.Ref),
     Tgm_s: li((x) => x.Tgm),
   };
@@ -476,7 +489,7 @@ export function sintetizar(p, amenaza) {
     pga_roca_g: pgar, pga_roca_x_g: pgaRoca[0], pga_roca_y_g: pgaRoca[1], escala_pgar: q.escala_pgar,
     vs30_m_s: q.vs30_m_s, semillas,
     terminos: T.lista.map((x) => ({
-      regimen: x.regimen, peso: x.peso, f0_Hz: x.f0, delta_sigma_bar: x.t.dsigma, beta_s_km_s: x.t.beta, rho_s_g_cm3: x.t.rho,
+      regimen: x.regimen, peso: x.peso, f0_Hz: x.f0, delta_sigma_bar: x.dsigma, beta_s_km_s: x.t.beta, rho_s_g_cm3: x.t.rho,
       Q0: x.t.Q0, eta: x.t.etaQ, beta_Q_km_s: x.t.betaQ, kappa0_s: x.t.kappa, Ref_km: x.Ref, Z: x.Z,
       Tcamino_s: x.Tcamino, Tgm_s: x.Tgm, Fimp: x.t.fimp,
     })),
@@ -687,6 +700,24 @@ export function espectroNSR10(T, { Aa, Av, Fa, Fv, I = 1, rama_corta = false }) 
   return out;
 }
 
+/**
+ * Espectro del umbral de daño (NSR-10 A.12.3; ξ = 2 %, sin I), el mismo con que el prediseño revisa la deriva ≤ 0,4 %
+ * del grupo IV (scripts/sismo/estructura_torre.py, espectro_umbral): meseta 3,0·Ad·Fa hasta TC = 0,5·Fv/Fa y
+ * 1,5·Ad·Fv/T después. Es la forma de la NSR-98 (3,0·Ad y 1,5·Ad·S/T) con los coeficientes de sitio de la NSR-10:
+ * 3,0 = 2,5·1,2 y 1,5 = 1,2·1,25 son la meseta y la rama del espectro de diseño llevadas de 5 % a 2 % de
+ * amortiguamiento. Texto exacto de A.12.3 por confirmar. Por ser de 2 %, no se compara a la par con un espectro del
+ * registro calculado con 5 %.
+ */
+export const XI_UMBRAL_DANO = 0.02;
+export function espectroUmbralDano(T, { Ad, Fa, Fv }) {
+  const TC = (0.5 * Fv) / Fa;
+  const uno = (t) => (t <= TC ? 3.0 * Ad * Fa : (1.5 * Ad * Fv) / t);
+  if (typeof T === 'number') return uno(T);
+  const out = new Float64Array(T.length);
+  for (let i = 0; i < T.length; i++) out[i] = uno(T[i]);
+  return out;
+}
+
 // ── Ecuaciones de predicción (GMPE) ──────────────────────────────────────────────────────────────────────────
 // Coeficientes copiados con exactitud de data/sismo/amenaza.json → gmpe (la prueba T13 los compara número a número
 // con el archivo). Solo hay filas para PGA, 0,2, 0,5 y 1,0 s: gmpe() da PGA para T ≤ 0,01 s (incluido T = 0), los
@@ -871,9 +902,22 @@ export function gmpe(modelo, esc, periodos) {
 }
 
 /**
+ * Fracción de su parte que conserva BSSA14 según la profundidad (regla del motor, revisión A6): 1 hasta 15 km,
+ * 0 desde 25 km, lineal entre. BSSA14 se ajustó con sismos corticales someros de NGA-West2 (focos de hasta ≈ 20 km;
+ * por confirmar) y no tiene término de profundidad: su distancia es √(Rjb² + h_coef²) con una seudoprofundidad fija
+ * (4,5 km para el PGA) y, con Rjb ≈ Repi, da lo mismo para un foco a 10 que a 65 km. Lo que pierde pasa a Zhao 2006
+ * cortical, que sí tiene término de profundidad y usa la hipocentral. La rampa evita otro salto con h.
+ */
+const BSSA14_PROF = { plena_km: 15, nula_km: 25 };
+export function fraccionBSSA14(h_km) {
+  return clamp((BSSA14_PROF.nula_km - h_km) / (BSSA14_PROF.nula_km - BSSA14_PROF.plena_km), 0, 1);
+}
+
+/**
  * GMPE del escenario con su peso (para la gráfica de espectros): las de cada régimen de
  * amenaza.json → seleccion_de_regimen.gmpe_por_regimen, con peso (1 − w)/2 las corticales y w/2 las intraplaca
- * (w de E15, o 0/1 si el régimen está forzado). Se omiten las de peso 0.
+ * (w de E15, o 0/1 si el régimen está forzado). BSSA14 conserva solo fraccionBSSA14(h) de su parte y el resto va a
+ * las demás corticales (Zhao 2006 cortical). Se omiten las de peso 0.
  * → [{ nombre, modelo, regimen, peso, T, mediana_g, sigma_ln }]
  */
 export function gmpeEscenario(p, amenaza, periodos = PERIODOS_GMPE_S) {
@@ -886,9 +930,14 @@ export function gmpeEscenario(p, amenaza, periodos = PERIODOS_GMPE_S) {
   for (const [regimen, pesoRegimen] of [['cortical', 1 - w], ['intraplaca_profunda', w]]) {
     if (!(pesoRegimen > 0)) continue;
     const lista = porRegimen[regimen];
+    const base = pesoRegimen / lista.length;
+    const otras = lista.filter((m) => m !== 'bssa14').length;
+    const fB = lista.includes('bssa14') && otras > 0 ? fraccionBSSA14(q.profundidad_km) : 1;
     for (const modelo of lista) {
+      const peso = modelo === 'bssa14' ? base * fB : base + (lista.includes('bssa14') ? (base * (1 - fB)) / otras : 0);
+      if (!(peso > 0)) continue;
       const r = gmpe(modelo, q, periodos);
-      out.push({ nombre: NOMBRES_GMPE[modelo], modelo, regimen, peso: pesoRegimen / lista.length, T: Float64Array.from(periodos), ...r });
+      out.push({ nombre: NOMBRES_GMPE[modelo], modelo, regimen, peso, T: Float64Array.from(periodos), ...r });
     }
   }
   return out;
@@ -963,6 +1012,13 @@ export function avisos(p, amenaza) {
   }
   if (q.regimen === 'cortical' && h > 60) {
     out.push(`Régimen cortical forzado con h > 60 km (h = ${coma(h, 0)} km): la corteza bajo el Magdalena Medio tiene del orden de 30-45 km (por confirmar). Escenario hipotético.`);
+  }
+  {
+    const w = q.regimen === 'cortical' ? 0 : q.regimen === 'intraplaca_profunda' ? 1 : regimenPorProfundidad(h).w;
+    const fB = fraccionBSSA14(h);
+    if (w < 1 && fB < 1) {
+      out.push(`BSSA14 fuera de su rango de profundidad (sismos corticales someros, sin término de profundidad): con h = ${coma(h, 0)} km pesa ${coma(100 * fB, 0)} % de su parte en la comparación con las GMPE y el resto pasa a Zhao 2006 cortical (rango de 15 a 25 km por confirmar).`);
+    }
   }
   if (q.regimen === 'auto') {
     const { w } = regimenPorProfundidad(h);
