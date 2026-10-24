@@ -98,7 +98,7 @@ export async function montar(ctx) {
         ${radio('calidad', 'Calidad del cálculo', [['normal', 'Normal: paso de 0,005 s', true], ['baja', 'Baja: paso de 0,01 s (más rápido)']])}
       </div></details>
       <div class="sismo-acciones"><button type="submit" class="btn" data-s="calcular">Calcular</button><button type="button" class="btn ghost" data-s="cancelar" hidden>Cancelar</button></div>
-      <div class="sismo-estado"><p role="status" aria-live="polite" data-o="estado">Preparando el motor…</p><progress data-o="progreso" max="1" value="0" hidden></progress></div>
+      <div class="sismo-estado"><p role="status" aria-live="polite" data-o="estado">Preparando el motor…</p><progress data-o="progreso" max="1" value="0" aria-label="Avance del cálculo" hidden></progress><p class="note" data-o="estado-det" aria-hidden="true" hidden></p></div>
       <ul class="tight note sismo-avisos" data-o="avisos"></ul>
     </form>
     <h4>Cómo se dibuja</h4>
@@ -147,6 +147,7 @@ export async function montar(ctx) {
     const calidad = radioV('calidad') || 'normal', esc = radioV('escala');
     return { dt_s: calidad === 'baja' ? 0.01 : 0.005, dt_salida_s: 0.02, angulo_deg: +ctl('ang').value, escala: esc === 'nsr10' ? 'nsr10' : 1, calidad };
   }
+  let ultimoEscenario = null;
   const opcionesModelo = () => ({ histeresis: radioV('histeresis') || 'bilineal', noEstructurales: radioV('muros') || 'aislados' });
   function textosControles() {
     const p = leerParams();
@@ -165,8 +166,10 @@ export async function montar(ctx) {
     out('rhip').textContent = `Distancia al foco (hipocentral): ${nv(Math.hypot(p.distancia_epicentral_km, h), 0)} km (cálculo propio: √(distancia² + profundidad²)).`;
     out('escala').hidden = radioV('escala') !== 'nsr10';
     const e = ESC.find((x) => x.id === ctl('escenario').value);
-    out('escenario').innerHTML = e ? `<b>${esc(e.nombre)}</b>: Mw ${n(e.Mw, 1)}, ${nv(e.profundidad_km, 0)} km de profundidad, a ${nv(e.distancia_epicentral_km, 0)} km. ${esc(e.justificacion || '')}${e.aviso ? ` <span class="pill">${esc(e.aviso)}</span>` : ''} <span class="pill">por confirmar</span>`
+    const html = e ? `<b>${esc(e.nombre)}</b>: Mw ${n(e.Mw, 1)}, ${nv(e.profundidad_km, 0)} km de profundidad, a ${nv(e.distancia_epicentral_km, 0)} km. ${esc(e.justificacion || '')}${e.aviso ? ` <span class="pill">${esc(e.aviso)}</span>` : ''} <span class="pill">por confirmar</span>`
       : 'Combinación elegida a mano. Si queda fuera de la sismicidad conocida, el cálculo lo avisa.';
+    // es una región viva: se reescribe solo si cambia (si no, el lector de pantalla la repite con cada flecha de un control)
+    if (html !== ultimoEscenario) { ultimoEscenario = html; out('escenario').innerHTML = html; }
   }
   function aplicarEscenario(id) {
     const e = ESC.find((x) => x.id === id);
@@ -297,7 +300,8 @@ export async function montar(ctx) {
   const eqPorUnidad = new Map();
   const rotulos = [];
   // etiquetas de deriva: un ancla sin tamaño (sismo-lbl) con la caja dentro, que se abre hacia la izquierda del punto
-  const etiqueta = (html, pos, padre) => { const o = st.label(html, 'sismo-lbl', pos, padre); rotulos.push(o); o.visible = dentro; return o; };
+  // nacen ocultas: sin resultado no tienen deriva que mostrar (serían píldoras vacías); se ven con el primer actualizar()
+  const etiqueta = (html, pos, padre) => { const o = st.label(html, 'sismo-lbl', pos, padre); rotulos.push(o); o.visible = dentro && !!R; return o; };
   function armarInfo(L, est) {
     const nodos = L.nodos, elementos = L.elementos, nN = nodos.length;
     const niveles = [], porticos = {}, muros = [], nivelNodo = new Int16Array(nN), secciones = est?.secciones || {};
@@ -333,7 +337,7 @@ export async function montar(ctx) {
     info = armarInfo(listo, estructura);
     est3d = crearEstructura3D(info, { tier: engine.tier, colores: tokens(), renderer: engine.renderer, etiqueta });
     const v = engine.renderer.getSize(new THREE.Vector2()); est3d.resolucion(v.x, v.y);
-    if (dentro) { st.scene.add(est3d.grupo); rotulos.forEach((o) => { o.visible = true; }); }
+    if (dentro) { st.scene.add(est3d.grupo); rotulos.forEach((o) => { o.visible = !!R; }); }
     llenarElementos();
     pisosEquipos();
   }
@@ -399,13 +403,26 @@ export async function montar(ctx) {
     fichaPaso();
     st.invalidate();
   }
+  // «Reproducir» avanza el índice con el reloj real en su propio requestAnimationFrame: no depende de que el recuadro esté
+  // a la vista (Engine.frame no corre las funciones de onFrame fuera de la pantalla) y así los cursores de las gráficas
+  // siguen mientras la persona las lee abajo; al volver al recuadro el modelo está en el mismo paso
+  let rafRep = 0;
+  function bucleRep() {
+    rafRep = 0;
+    if (!reproduciendo || !R || !dentro) return;
+    const dt = R.opciones?.dt_salida_s || (R.t[1] - R.t[0]) || 0.02, nt = R.t.length;
+    const i = i0 + Math.floor(((performance.now() - t0) / 1000) * velocidad / dt);
+    if (i >= nt - 1) { irAPaso(nt - 1); reproducir(false); return; }
+    if (i !== paso) irAPaso(i);
+    rafRep = requestAnimationFrame(bucleRep);
+  }
   function reproducir(on) {
-    reproduciendo = on && !!R;
+    reproduciendo = on && !!R && dentro;
     const b = $(elHud, '[data-s="play"]');
     b.setAttribute('aria-pressed', String(reproduciendo));
     b.textContent = reproduciendo ? 'Pausa' : 'Reproducir';
-    if (reproduciendo) { if (paso >= R.t.length - 1) irAPaso(0); i0 = paso; t0 = performance.now(); }
-    else st.updateShadows();
+    if (reproduciendo) { if (paso >= R.t.length - 1) irAPaso(0); i0 = paso; t0 = performance.now(); if (!rafRep) rafRep = requestAnimationFrame(bucleRep); }
+    else { cancelAnimationFrame(rafRep); rafRep = 0; st.updateShadows(); }
   }
   $(elHud, '[data-s="play"]').addEventListener('click', () => reproducir(!reproduciendo));
   ctl('t').addEventListener('input', () => { if (reproduciendo) reproducir(false); irAPaso(+ctl('t').value, true); });
@@ -421,22 +438,17 @@ export async function montar(ctx) {
     leyenda(); irAPaso(paso);
   }));
 
-  // un solo cuadro por función (6.8): reproducción y resolución de las líneas; false si no hay nada que redibujar
+  // un solo cuadro por función (6.8): resolución de las líneas; false si no hay nada que redibujar (la reproducción
+  // avanza en su propio bucle e invalida el cuadro con irAPaso)
   const _tam = new THREE.Vector2();
   let tamPrev = '';
   const enCuadro = () => {
     if (!dentro || !est3d) return false;
-    let cambio = false;
     engine.renderer.getSize(_tam);
     const k = `${_tam.x}x${_tam.y}`;
-    if (k !== tamPrev) { tamPrev = k; est3d.resolucion(_tam.x, _tam.y); cambio = true; }
-    if (reproduciendo && R) {
-      const dt = R.opciones?.dt_salida_s || (R.t[1] - R.t[0]) || 0.02, nt = R.t.length;
-      let i = i0 + Math.floor(((performance.now() - t0) / 1000) * velocidad / dt);
-      if (i >= nt - 1) { i = nt - 1; reproducir(false); }
-      if (i !== paso) { irAPaso(i); cambio = true; }
-    }
-    return cambio;
+    if (k === tamPrev) return false;
+    tamPrev = k; est3d.resolucion(_tam.x, _tam.y);
+    return true;
   };
   st.onFrame(enCuadro);
 
@@ -480,7 +492,7 @@ export async function montar(ctx) {
     s.innerHTML = filas.map((f) => opt(f.id, `${escH(f.nombre)}${env ? ` · D/C máx. ${n(f.dc, 2)}` : ''}`, f.id === elegido)).join('');
   }
   ctl('elemento').addEventListener('change', () => elegir(ctl('elemento').value));
-  let pedidoSerie = 0;
+  let pedidoSerie = 0, seriesPendientes = false;
   async function elegir(id) {
     elegido = id;
     est3d?.seleccionar(id);
@@ -492,10 +504,13 @@ export async function montar(ctx) {
     const ids = est3d?.elementosDe(id) || [id];
     try {
       const series = await Promise.all(ids.map((x) => motor.serie(x)));
-      if (mio !== pedidoSerie || !dentro) return;
+      if (mio !== pedidoSerie) return;
+      if (!dentro) { seriesPendientes = true; return; }
+      seriesPendientes = false;
       graficasElemento(ids, series);
     } catch (e) {
-      if (e?.codigo === 'cancelado' || mio !== pedidoSerie || !dentro) return;
+      if (e?.codigo === 'cancelado' || mio !== pedidoSerie) return;
+      if (!dentro) { seriesPendientes = true; return; }
       // después de cancelar un cálculo el trabajador nuevo no guarda las series del anterior
       console.warn('Simulador sísmico: serie del elemento', e);
       for (const k of ['histeresis', 'momentos', 'fuerzas']) cerrarGraf(k);
@@ -770,16 +785,25 @@ export async function montar(ctx) {
 
   // ================================================================ cálculo
   let turnoCalc = 0, calculando = null, primero = true;
-  const estado = (t, { progreso = null } = {}) => {
-    out('estado').textContent = t;
-    const p = out('progreso');
+  // El estado es una región viva: cambia solo con la fase («Preparando», «Armando el movimiento», «Calculando» por cuartos,
+  // «Listo»), no con cada mensaje de avance del motor (≈ 4 por segundo), para no encolar anuncios en el lector de pantalla.
+  // El avance fino va en la barra <progress> (que expone su valor) y en una línea que no se anuncia
+  const estado = (t, { progreso = null, detalle = null } = {}) => {
+    if (out('estado').textContent !== t) out('estado').textContent = t;
+    const p = out('progreso'), d = out('estado-det');
     p.hidden = progreso == null;
     if (progreso != null) p.value = progreso;
+    d.hidden = !detalle;
+    d.textContent = detalle || '';
   };
   function botones(enCurso) {
-    $(elPanel, '[data-s="calcular"]').hidden = enCurso;
-    $(elPanel, '[data-s="cancelar"]').hidden = !enCurso;
-    if (enCurso) $(elPanel, '[data-s="cancelar"]').focus?.({ preventScroll: true });
+    const bC = $(elPanel, '[data-s="calcular"]'), bX = $(elPanel, '[data-s="cancelar"]'), foco = document.activeElement;
+    bC.hidden = enCurso;
+    bX.hidden = !enCurso;
+    // el foco pasa al botón que aparece cuando el que lo tenía se oculta (si no, cae en <body>); si estaba en otra parte
+    // (un cálculo pedido al entrar al modo o desde la QA) no se mueve
+    if (enCurso && foco === bC) bX.focus({ preventScroll: true });
+    if (!enCurso && foco === bX) bC.focus({ preventScroll: true });
   }
   async function calcular(p) {
     if (typeof p === 'string') { ctl('escenario').value = p; aplicarEscenario(p); }
@@ -807,7 +831,10 @@ export async function montar(ctx) {
       estado('Preparando el motor y el modelo de la torre…', { progreso: 0 });
       const m = await asegurarModelo();
       if (mio !== turnoCalc) return { cancelado: true };
-      if (!est3d || info?.elementos !== listo.elementos) construir3D();
+      // el modelo 3D se arma aquí solo la primera vez (para que la torre se vea mientras se calcula); si cambió el modelo
+      // (otra histéresis u otros muros), se rehace cuando llega el resultado nuevo: si este cálculo se cancela o falla,
+      // sigue a la vista el resultado anterior con su modelo, coloreado y seleccionable
+      if (!est3d) construir3D();
       opciones.equipos = equiposRiesgo();
       estado('Armando el movimiento del suelo…', { progreso: 0.02 });
       const mv = await m.movimiento(params);
@@ -817,7 +844,8 @@ export async function montar(ctx) {
       estado('Calculando la respuesta de la estructura…', { progreso: 0.05 });
       const Rn = await m.analizar(params, opciones, (f, ts) => {
         if (mio !== turnoCalc) return;
-        estado(`Calculando la respuesta de la estructura: ${nv((f || 0) * 100, 0)} %${ts != null ? ` (t = ${n(ts, 1)} s)` : ''}`, { progreso: 0.05 + 0.95 * (f || 0) });
+        const q = Math.min(3, Math.floor((f || 0) * 4));
+        estado(q ? `Calculando la respuesta de la estructura: más del ${q * 25} %` : 'Calculando la respuesta de la estructura…', { progreso: 0.05 + 0.95 * (f || 0), detalle: `${nv((f || 0) * 100, 0)} %${ts != null ? ` · t = ${n(ts, 1)} s del registro` : ''}` });
       });
       if (mio !== turnoCalc) return { cancelado: true };
       R = Rn;
@@ -850,6 +878,8 @@ export async function montar(ctx) {
   function mostrarResultado(dur) {
     const nt = R.t.length;
     construirSiCambia();
+    // las etiquetas de deriva nacieron ocultas si el modelo se armó antes del primer resultado: ya tienen qué mostrar
+    if (dentro) rotulos.forEach((o) => { o.visible = true; });
     textoEscala();
     leyenda();
     ctl('t').max = nt - 1; ctl('t').disabled = false; $(elHud, '[data-s="play"]').disabled = false;
@@ -872,7 +902,7 @@ export async function montar(ctx) {
     irAPaso(ipk);
     elegir(listo.elementos[kmax]?.id);
     estado(`Listo: ${nt} pasos calculados en ${n(dur / 1000, 1)} s (${NOMBRE_MOTOR[motor?.tipo] || motor?.tipo}).`);
-    if (!reducedMotion && !primeraVezSinAuto) { irAPaso(0); reproducir(true); }
+    if (!reducedMotion && !primeraVezSinAuto && dentro) { irAPaso(0); reproducir(true); }
     resumen = {
       id: R.id, escenario: ctl('escenario').value, params: R.params, opciones: R.opciones, motor: motor?.tipo, nt, N, nE: listo.elementos.length,
       escala, duracion_ms: Math.round(dur), pga_g: mov?.registro?.intensidades?.x?.pga_g ?? null,
@@ -893,7 +923,7 @@ export async function montar(ctx) {
     return c;
   }
   let primeraVezSinAuto = false;
-  function construirSiCambia() { if (!est3d) construir3D(); }
+  function construirSiCambia() { if (!est3d || info?.elementos !== listo.elementos) construir3D(); }
   function cancelar(avisar = true) {
     if (!calculando) return;
     turnoCalc++;
@@ -912,6 +942,10 @@ export async function montar(ctx) {
   let dentro = false;
   const poner = (cont, el) => { cont.replaceChildren(el); cont.hidden = false; };
   const sacar = (cont) => { cont.replaceChildren(); cont.hidden = true; };
+  // la persona giró o acercó la cámara (OrbitControls avisa «start» solo con el puntero o la rueda, no con frameBox)
+  let camaraTocada = false;
+  const alTocarCamara = () => { if (dentro) camaraTocada = true; };
+  st.controls.addEventListener('start', alTocarCamara);
   function encuadrar() {
     if (!est3d || !dentro) return;
     // en el recuadro angosto del teléfono la torre llena más el ancho (la barra de tiempo y la leyenda van encima y abajo)
@@ -922,26 +956,36 @@ export async function montar(ctx) {
     entrar() {
       if (dentro) return;
       dentro = true;
+      camaraTocada = false;
       ctx.exterior.ocultar(true);
       poner(panel, elPanel); poner(hud, elHud); poner(cajaG, elG); poner(ficha, elFicha);
-      if (est3d) { st.scene.add(est3d.grupo); rotulos.forEach((o) => { o.visible = true; }); tamPrev = ''; }
+      if (est3d) { st.scene.add(est3d.grupo); rotulos.forEach((o) => { o.visible = !!R; }); tamPrev = ''; }
       if (!elFicha.childNodes.length) fichaElemento();
+      // un resultado que terminó mientras la persona estaba en otro modo: las series del elemento se piden ahora
+      if (R && elegido && seriesPendientes) elegir(elegido);
       st.invalidate(true);
       if (est3d) encuadrar();
       if (!R && !calculando) {
         // la primera vez se corre el escenario por defecto (nido_2015) para que la vista nunca esté vacía (8.6)
         if (primero) { primero = false; primeraVezSinAuto = true; }
         const p = calcular().then((r) => { primeraVezSinAuto = false; return r; });
-        p.then(() => encuadrar());
+        // al terminar se encuadra la torre, salvo que la persona ya haya girado o acercado la cámara mientras calculaba
+        p.then(() => { if (!camaraTocada) encuadrar(); });
         // mientras el motor se prepara, la cámara encuadra la torre en cuanto exista el modelo
-        (async () => { try { await obtenerMotor(); if (!estructura) estructura = await leerJSON(URL_ESTRUCTURA); if (dentro && !est3d && listo) { construir3D(); encuadrar(); } } catch { /* el estado lo dice el cálculo */ } })();
+        (async () => { try { await obtenerMotor(); if (!estructura) estructura = await leerJSON(URL_ESTRUCTURA); if (dentro && !est3d && listo) { construir3D(); if (!camaraTocada) encuadrar(); } } catch { /* el estado lo dice el cálculo */ } })();
       }
     },
     salir({ porUsuario = false } = {}) {
       if (!dentro) return;
       dentro = false;
       reproducir(false);
-      cancelar(false);
+      // Con el trabajador, un cálculo en curso sigue fuera del hilo principal: al volver se ve su resultado (o su avance)
+      // y las series de los elementos siguen disponibles. Con el respaldo en el hilo principal (o si el motor todavía no
+      // está), se detiene para no quitarle tiempo al modo nuevo, y el estado lo dice (sin barra de avance congelada)
+      if (calculando && !(motor && motor.tipo !== 'hilo_principal')) {
+        cancelar(false);
+        estado(R ? 'El cálculo se detuvo al salir del simulador; se muestra el resultado anterior.' : 'El cálculo se detuvo al salir del simulador. Pulsa «Calcular» para hacerlo.');
+      }
       if (est3d) st.scene.remove(est3d.grupo);
       rotulos.forEach((o) => { o.visible = false; o.element.style.display = 'none'; });
       sacar(panel); sacar(hud); sacar(cajaG); sacar(ficha);
@@ -960,6 +1004,7 @@ export async function montar(ctx) {
       this.salir({ porUsuario: false });
       const k = st.frameFns.indexOf(enCuadro); if (k >= 0) st.frameFns.splice(k, 1);
       lienzo.removeEventListener('pointerdown', alBajar); lienzo.removeEventListener('pointerup', alSubir);
+      st.controls.removeEventListener('start', alTocarCamara);
       sinTema();
       Object.keys(grafs).forEach(cerrarGraf);
       quitarRotulos();

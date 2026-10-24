@@ -412,8 +412,10 @@ export function crearEstructura3D(info, { tier = 'media', colores, renderer, eti
     // equipos: [{ unidad, k (nivel global sobre el que se apoyan; 0 = suelo), x, y, z (cota absoluta de la base), dim, rot,
     //   color, desliza_m (deslizamiento máximo que calculó el motor, m) }]
     ponerEquipos(lista) {
-      if (cajas) { grupo.remove(cajas); cajas.geometry.dispose(); cajas = null; }
-      if (anillosEq) { grupo.remove(anillosEq); anillosEq.geometry.dispose(); anillosEq = null; }
+      // InstancedMesh.dispose() avisa a three que libere también instanceMatrix e instanceColor (con solo la geometría,
+      // sus búferes WebGL quedarían vivos en cada cambio de piso o de tema)
+      if (cajas) { grupo.remove(cajas); cajas.geometry.dispose(); cajas.dispose(); cajas = null; }
+      if (anillosEq) { grupo.remove(anillosEq); anillosEq.geometry.dispose(); anillosEq.dispose(); anillosEq = null; }
       equipos = (lista || []).map((q) => ({ ...q, base: new THREE.Matrix4().compose(new THREE.Vector3(q.x, q.z + q.dim[2] / 2, -q.y), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), q.rot || 0), new THREE.Vector3(Math.max(0.05, q.dim[0]), Math.max(0.05, q.dim[2]), Math.max(0.05, q.dim[1]))) }));
       conAnillo = equipos.filter((q) => q.desliza_m > 0).map((q) => {
         const r = Math.hypot(q.dim[0], q.dim[1]) / 2 + q.desliza_m;
@@ -444,6 +446,8 @@ export function crearEstructura3D(info, { tier = 'media', colores, renderer, eti
     dispose() {
       etiquetas.forEach((o) => { o.element.remove(); o.parent?.remove(o); });
       grupo.traverse((o) => { o.geometry?.dispose?.(); });
+      [esferas, anillos, cajas, anillosEq].forEach((im) => im?.dispose());
+      cajas = null; anillosEq = null;
       [mFant, mLosa, mBorde, mEsf, mMur, mCaja, mAnilloEq, anillos.material, ...capas.map((c) => c.m), sel.m].forEach((m) => m.dispose());
       grupo.parent?.remove(grupo);
     },

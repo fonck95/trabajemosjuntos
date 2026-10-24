@@ -15,7 +15,7 @@ const HEX = {
   panete: '#f0eee8', ladrillo: '#b5562f', concreto: '#bcb8af', plomado: '#d5dade', parapeto: '#c8c4bb', cerramiento: '#7e847a',
   cielo: '#f6f5f1', losa: '#c7c3bb', borde_losa: '#a9a59c', puerta: '#d2c19c', cortafuego: '#9e4336', puerta_plomo: '#8d98a1',
   marco: '#8a8d91', escalon: '#cbc7be', baranda: '#5f6469', vidrio: '#9fc3d6', malla: '#3f5a46', cabina: '#9ea4aa',
-  piso_bano: '#dfe9ec', piso_tecnico: '#c4c1ba', asfalto: '#77797b', adoquin: '#d2cdc2', verde: '#86a872', tronco: '#6b4a32',
+  piso_bano: '#dfe9ec', piso_tecnico: '#c4c1ba', asfalto: '#6f7173', adoquin: '#b8ad9b', verde: '#86a872', tronco: '#6b4a32',
   copa: '#4d8a46', cubierta: '#c3c1ba', huella: '#d9d6cf', senal_texto: '#ffffff',
 };
 const C = Object.fromEntries(Object.entries(HEX).map(([k, v]) => [k, new THREE.Color(v)]));
@@ -144,7 +144,9 @@ function materiales() {
   if (MATS) return MATS;
   const opaco = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0.02 });
   const piso = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0.02, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
-  const cielo = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 });
+  // el cielo raso mira hacia abajo: sin sombras solo lo alumbra el hemisferio; un poco de emisión lo deja claro, como
+  // un cielo con luminarias
+  const cielo = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0, emissive: 0x6e6d69 });
   // doble cara en una sola pasada (una llamada por malla transparente)
   const vidrio = new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, opacity: 0.32, roughness: 0.1, metalness: 0, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true });
   MATS = { opaco, piso, cielo, vidrio };
@@ -152,6 +154,7 @@ function materiales() {
     if (!t) return;
     const oscuro = t.bg.r + t.bg.g + t.bg.b < 0.3;
     opaco.color.setScalar(oscuro ? 0.86 : 1); piso.color.setScalar(oscuro ? 0.84 : 1); cielo.color.setScalar(oscuro ? 0.8 : 1);
+    cielo.emissive.setHex(oscuro ? 0x3a3936 : 0x6e6d69);
     vidrio.opacity = oscuro ? 0.4 : 0.32;
   };
   try { tema(tokens()); } catch { /* sin documento */ }
@@ -309,9 +312,12 @@ function armarEscalera(op, esc, zOff) {
 // colorPor: 'grupo' | 'estado' | 'contraste' | null. op.abajo: nivel inferior (para ver completa la escalera que baja);
 // op.envolvente: niveles de la torre cuyas fachadas y losas se dibujan como contexto (exteriores y cubierta);
 // op.estados: Map<recinto, 'cumple' | 'parcial' | 'falta' | …> para colorPor 'estado'; op.contraste: Map<recinto, Color>.
+// op.omitirContexto: ids de niveles del contexto que no se dibujan en la envolvente (el recorrido dibuja el piso 1 entero
+// junto a los exteriores); op.huella: false omite el piso de los recintos no transitables (la huella de la torre en los
+// exteriores, cuando el piso 1 se dibuja encima).
 export function construirPiso(nivel, {
   tier = 'media', colorPor = 'grupo', grupos = {}, cielo = true, envolvente = true, abajo = null, contexto = null, senales = true, hojas = true,
-  estados = null, contraste = null, coloresEstado = null,
+  estados = null, contraste = null, coloresEstado = null, omitirContexto = [], huella = true,
 } = {}) {
   const mats = materiales();
   const ix = indice(nivel);
@@ -375,17 +381,17 @@ export function construirPiso(nivel, {
       const hex = colorGrupo(g);
       if (!hex) continue;
       const d = t / 2 + 0.012;
-      op.prisma(cx - ux * w / 2 + nx * s * d, cy - uy * w / 2 + ny * s * d, cx + ux * w / 2 + nx * s * d, cy + uy * w / 2 + ny * s * d, 0.02, z, z + 0.16, new THREE.Color(hex));
+      op.prisma(cx - ux * w / 2 + nx * s * d, cy - uy * w / 2 + ny * s * d, cx + ux * w / 2 + nx * s * d, cy + uy * w / 2 + ny * s * d, 0.02, z, z + 0.12, new THREE.Color(hex));
     }
   };
 
   // ---- muros del nivel
-  // en los exteriores, la fachada del piso 1 la dibuja la envolvente (con sus ventanas): se omiten los muros de fachada
-  // de los exteriores que caen sobre el contorno de la torre
+  // en los exteriores, la fachada del piso 1 la dibuja la envolvente (con sus ventanas) o el piso 1 entero: se omiten los
+  // muros de fachada de los exteriores que caen sobre el contorno de la torre
   const contornoTorre = contexto?.find?.((n) => n.id === 'P1')?.contorno;
   const sobreContorno = (m) => contornoTorre && [m.a, m.b].every(([x, y]) => contornoTorre.some((q, i) => { const r = contornoTorre[(i + 1) % contornoTorre.length]; return distSegmento(x, y, q, r) < 0.05; }));
   for (const m of nivel.muros || []) {
-    if (tipoNivel === 'ext' && envolvente && m.tipo === 'fachada' && sobreContorno(m)) continue;
+    if (tipoNivel === 'ext' && m.tipo === 'fachada' && sobreContorno(m)) continue;
     armarMuro(op, vi, m, nivel, puertasPorMuro.get(m.id) || [], ventanasPorMuro.get(m.id) || [], 0, { hojas: hojasPuerta, senales: senalPuerta });
   }
   // columnas (en los muros, en el contorno o en el borde de los corredores)
@@ -405,9 +411,10 @@ export function construirPiso(nivel, {
     if (tipoNivel === 'bt' && r.tipo === 'circulacion') return /v[ií]a/i.test(nom) ? C.asfalto : C.adoquin;
     if (/ascensor|montacargas/i.test(nom) && r.grupo_1633 === 'circulacion') return C.cabina;
     const hex = colorGrupo(r.grupo_1633);
-    return hex ? tonoPiso(hex, r.grupo_1633 === 'circulacion' ? 0.45 : 0.6) : C.huella;
+    return hex ? tonoPiso(hex, r.grupo_1633 === 'circulacion' ? 0.4 : 0.5) : C.huella;
   };
   for (const { r, pol } of ix.recs) {
+    if (!huella && r.transitable === false) continue;
     const esc = recEsc.get(r.id);
     const v0 = pi.vertices, col = colorPisoDe(r);
     if (esc && (abajo || esc.baja_a)) {
@@ -498,7 +505,7 @@ export function construirPiso(nivel, {
   // ---- envolvente de la torre como contexto (exteriores, bloque técnico y cubierta): fachadas con ventanas y losas
   if (envolvente && Array.isArray(contexto) && tipoNivel !== 'piso') {
     for (const L of contexto) {
-      if (L.id === nivel.id || L.id === 'EXT') continue;
+      if (L.id === nivel.id || L.id === 'EXT' || omitirContexto.includes(L.id)) continue;
       if (tipoNivel === 'bt' && L.id === 'BT') continue;
       if (tipoNivel === 'cub' && L.id === 'BT') continue;
       const dz = (+L.z || 0) - (+nivel.z || 0);

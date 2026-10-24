@@ -11,7 +11,7 @@ const CLASE_ESTADO = { cumple: 'hab-ok', parcial: 'hab-parcial', falta: 'hab-fal
 const ESTANDAR = { dotacion: 'Dotación', infraestructura: 'Infraestructura', medicamentos_dispositivos: 'Medicamentos, dispositivos e insumos', procesos_prioritarios: 'Procesos prioritarios', todos_los_servicios: 'Todos los servicios' };
 const palabras = (s) => String(s ?? '').replace(/_/g, ' ');
 
-export function pintarHabilitacion(el, habilitacion, inventario, { verEn3D, textos } = {}) {
+export function pintarHabilitacion(el, habilitacion, inventario, { verEn3D, textos, plantas = null } = {}) {
   if (!el) return;
   const { esc, escH } = textos || { esc: (s) => String(s ?? ''), escH: (s) => String(s ?? '') };
   if (!habilitacion) {
@@ -25,11 +25,17 @@ export function pintarHabilitacion(el, habilitacion, inventario, { verEn3D, text
     const cols = inventario.columnas_unidades || [], c = Object.fromEntries(cols.map((k, i) => [k, i])), x = inventario.unidades_extra || {};
     (inventario.unidades || []).forEach((f, i) => {
       const l = inventario.lineas?.[f[c.linea_idx]] || {};
-      const u = { id: f[c.id], nombre: x[String(i)]?.n || l.nombre || f[c.id], recinto: f[c.recinto], linea: l.id, estado: f[c.estado] };
+      const p = f[c.piso], nivel = f[c.estado] === 'fuera_de_la_torre' ? 'fuera de la torre' : p == null ? 'Exteriores' : /^\d$/.test(String(p)) ? `Piso ${p}` : p === 'BT' ? 'Bloque técnico' : p === 'CUB' ? 'Cubierta' : '';
+      const u = { id: f[c.id], nombre: x[String(i)]?.n || l.nombre || f[c.id], recinto: f[c.recinto], linea: l.id, estado: f[c.estado], nivel };
       U.set(String(u.id), u);
       if (!porLinea.has(l.id)) porLinea.set(l.id, []);
       porLinea.get(l.id).push(u);
     });
+  }
+  // nombres de los recintos (y subrecintos) de la planta, para decir dónde está cada unidad de «Unidades que la cubren»
+  for (const n of plantas?.niveles || []) for (const r of n.recintos || []) {
+    if (r.ambiente || r.nombre) nombreRecinto.set(r.id, String(r.ambiente || r.nombre));
+    for (const sb of r.subrecintos || []) nombreRecinto.set(sb.id, `${r.ambiente || r.nombre || ''} · ${sb.nombre || sb.ambiente || ''}`);
   }
   const corte = { valor: 'corte_2026' }, escenario = { valor: 'dotacion_actual' };
   const fechas = Object.fromEntries((H.fecha_referencia || []).map((f) => [f.id, f]));
@@ -39,11 +45,27 @@ export function pintarHabilitacion(el, habilitacion, inventario, { verEn3D, text
   const ir = (destino, txt, etiqueta) => (verEn3D ? `<button type="button" class="reco-ir" data-ver="${escH(JSON.stringify(destino))}" aria-label="${escH(etiqueta || txt)}">${esc(txt)}</button>` : '');
   const enlace = (url) => (/^https?:\/\//.test(String(url || '')) ? ` <a href="${escH(url)}" target="_blank" rel="noopener">fuente</a>` : '');
 
+  // dónde está una unidad: nivel y recinto (o solo el nivel si la planta no está)
+  const dondeU = (u) => [u.nivel, u.recinto && nombreRecinto.get(u.recinto)].filter(Boolean).join(' · ');
+  // filas de unidades agrupadas por nombre, lugar y estado («3 × Kit de examen… Piso 1 · Consultorio 2»); «Ir a» lleva a la
+  // primera y resalta todas; las del cierre de brechas propuesto (que todavía no existen) llevan su píldora y encienden la capa
+  function filasUnidades(L, faltante) {
+    const grupos = new Map();
+    for (const u of L) { const k = `${u.nombre}|${u.recinto || u.nivel}`; if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(u); }
+    return [...grupos.values()].map((g) => {
+      const u = g[0], ids = g.map((x) => x.id), d = dondeU(u);
+      const destino = faltante ? { unidad: u.id, faltantes: true, resaltar: ids } : g.length > 1 ? { unidad: u.id, resaltar: ids } : { unidad: u.id };
+      return `<li>${g.length > 1 ? `${fmtN(g.length)} × ` : ''}${esc(u.nombre)}${faltante ? ' <span class="pill p1">faltante (cierre propuesto)</span>' : ''}${d ? ` <small class="note">${esc(d)}</small>` : ''} ${ir(destino, 'Ir a', `Ir a ${u.nombre}${d ? ` (${d})` : ''} en el recorrido 3D`)}</li>`;
+    }).join('');
+  }
   function filaExigencia(e) {
-    const est = estadoDe(e), uu = (e.unidades || []).map((id) => U.get(String(id)) || { id, nombre: id });
+    const est = estadoDe(e), todas = (e.unidades || []).map((id) => U.get(String(id)) || { id, nombre: id });
+    // las unidades del cierre de brechas no cubren la exigencia hoy: van aparte y marcadas
+    const uu = todas.filter((u) => u.estado !== 'cierre_brechas_propuesto'), propuestas = todas.filter((u) => u.estado === 'cierre_brechas_propuesto');
     const fantasmas = (e.cierre_de_brechas || []).flatMap((l) => porLinea.get(l) || []).filter((u) => u.estado === 'cierre_brechas_propuesto');
     const texto = e.texto_disponible ? `«${esc(e.texto_corto || e.que_exige || '')}»` : `${esc(e.que_exige || e.texto_corto || '')} <small class="note">(resumen; texto oficial no obtenido)</small>`;
-    const unidadesHTML = uu.length ? `<details class="fold"><summary>Unidades que la cubren (${fmtN(uu.length)})</summary><ul class="tight hab-unidades">${uu.map((u) => `<li>${esc(u.nombre)}${u.recinto && nombreRecinto.get(u.recinto) ? ` <small class="note">${esc(nombreRecinto.get(u.recinto))}</small>` : ''} ${ir({ unidad: u.id }, 'Ir a', `Ir a ${u.nombre} en el recorrido 3D`)}</li>`).join('')}</ul></details>` : '';
+    const unidadesHTML = (uu.length ? `<details class="fold"><summary>Unidades que la cubren (${fmtN(uu.length)})</summary><ul class="tight hab-unidades">${filasUnidades(uu, false)}</ul></details>` : '')
+      + (propuestas.length ? `<details class="fold"><summary>Faltantes con cierre propuesto (${fmtN(propuestas.length)}; todavía no existen)</summary><ul class="tight hab-unidades">${filasUnidades(propuestas, true)}</ul></details>` : '');
     const cierre = (e.cierre_de_brechas || []).length ? `<p class="hab-cierre"><small>Cierre de brechas propuesto: ${esc((e.cierre_de_brechas || []).map((l) => porLinea.get(l)?.[0]?.nombre || l).join('; '))}</small> ${fantasmas.length ? ir({ unidad: fantasmas[0].id, faltantes: true, resaltar: fantasmas.map((u) => u.id) }, 'Ver faltantes en 3D', 'Ver en el recorrido 3D lo que falta para esta exigencia') : ''}</p>` : '';
     return `<li class="hab-ex">
       <div class="hab-ex-c">${pill(est)} <b>${esc(String(e.numeral || e.id))}</b> <small class="note">· ${esc(ESTANDAR[e.estandar] || palabras(e.estandar))} · ${esc(e.exigible === 'si' ? 'exigible' : e.exigible === 'por_confirmar' ? 'por confirmar' : palabras(e.exigible))}</small></div>
@@ -111,7 +133,7 @@ export function pintarHabilitacion(el, habilitacion, inventario, { verEn3D, text
     const b = ev.target.closest('[data-ver]');
     if (b && verEn3D) { try { verEn3D(JSON.parse(b.dataset.ver)); } catch { /* destino mal formado */ } }
   });
-  // nombres de recintos (para las listas de unidades); si la planta no está, se omiten
   pintar();
-  return { refrescar: pintar, nombresRecintos(m) { for (const [k, v] of m) nombreRecinto.set(k, v); } };
+  // nombresRecintos: otra forma de dar los nombres (Map id → nombre) si la planta llega después
+  return { refrescar: pintar, nombresRecintos(m) { for (const [k, v] of m) nombreRecinto.set(k, v); el.querySelectorAll('details.hab-srv[open]').forEach((d) => llenar(d)); } };
 }

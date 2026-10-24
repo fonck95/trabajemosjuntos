@@ -358,6 +358,112 @@ details.fold > summary:hover { color: var(--accent); }
 [data-scene="torre"] .torre-hud > [data-slot] > * { pointer-events: auto; }
 #v-torre [data-slot="torre.capas"] { margin-top: 8px; }
 /* >>> torre-recorrido (equipo C) */
+/* Recorrido en primera persona (web/js/scenes/torre/recorrido.js y sus módulos) y tarjeta de habilitación (habilitacion.js).
+   Sobre el recuadro: barra arriba a la izquierda, minimapa arriba a la derecha (debajo de «Rendimiento»), joystick abajo a la
+   izquierda en pantallas táctiles, ascensor y salida abajo a la derecha. Solo tokens del tema. */
+#v-torre [data-slot="torre.hud.recorrido"] { position: absolute; inset: 0; pointer-events: none; }
+#v-torre .stage.reco-on:focus { outline: none; }
+#v-torre .stage.reco-on:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+#v-torre .stage.reco-on .stage-hint { max-width: calc(100% - 330px); }
+#v-torre .nav3d.reco-barra { top: 10px; left: 10px; bottom: auto; right: auto; max-width: calc(100% - 132px); justify-content: flex-start; }
+#v-torre .nav3d.reco-barra { overflow: hidden; }
+#v-torre .reco-barra .nav3d-name { flex: 0 1 auto; min-width: 0; max-width: 150px; }
+.reco-barra .reco-corto { display: none; }
+.reco-donde { position: absolute; top: 50px; left: 10px; max-width: calc(100% - 200px); margin: 0; padding: 2px 8px; font: 600 0.72rem/1.4 var(--f-mono); color: var(--ink); background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid var(--line); border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none !important; }
+.reco-donde:empty { display: none; }
+.reco-verficha { position: absolute; right: 10px; bottom: 100px; max-width: min(320px, calc(100% - 150px)); font: 600 0.74rem var(--f-mono); color: var(--bg); background: var(--ink); border: 1.5px solid var(--accent); border-radius: 999px; padding: 7px 12px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reco-verficha:focus-visible, .reco-ficha:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reco-ficha:focus { outline: none; }
+.reco-contiene { color: var(--muted); font-size: 0.78rem; }
+#v-torre .reco-barra button { padding: 0 8px; }
+.reco-mapa { position: absolute; top: 44px; right: 10px; border: 1.5px solid var(--ink); border-radius: 8px; background: var(--surface); cursor: pointer; }
+#v-torre .stage:has(> .hud:not([hidden])) .reco-mapa { display: none; }
+.reco-joy { position: absolute; left: 16px; bottom: 16px; width: 110px; height: 110px; border-radius: 50%; border: 2px solid var(--ink); background: color-mix(in srgb, var(--surface) 70%, transparent); touch-action: none; display: grid; place-items: center; }
+.reco-joy-pomo { width: 44px; height: 44px; border-radius: 50%; background: var(--ink); opacity: 0.8; pointer-events: none; }
+.reco-asc { position: absolute; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 4px; padding: 4px 6px 4px 10px; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 999px; font: 600 0.72rem var(--f-mono); color: var(--ink); max-width: calc(100% - 20px); }
+.reco-asc span { margin-right: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.reco-asc button { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--surface); color: var(--ink); font: 600 0.8rem var(--f-mono); cursor: pointer; }
+.reco-asc button[aria-current="true"] { background: var(--ink); color: var(--bg); }
+.reco-asc button:focus-visible, .reco-salida:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reco-salida { position: absolute; right: 10px; bottom: 56px; font: 600 0.74rem var(--f-mono); color: var(--bg); background: var(--ink); border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; }
+.reco-pista, .reco-aviso { position: absolute; left: 50%; transform: translateX(-50%); max-width: calc(100% - 360px); margin: 0; padding: 3px 9px; font: 0.72rem/1.4 var(--f-mono); color: var(--ink); background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid var(--line); border-radius: 8px; text-align: center; pointer-events: none !important; }
+.reco-pista { top: 82px; }
+.reco-aviso { top: 112px; border-color: var(--ink); }
+.reco-mira { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; pointer-events: none !important; }
+.reco-mira::before, .reco-mira::after { content: ''; position: absolute; background: var(--accent); }
+.reco-mira::before { left: 8px; top: 0; width: 2px; height: 18px; } .reco-mira::after { top: 8px; left: 0; width: 18px; height: 2px; }
+.reco-fundido { position: absolute; inset: 0; background: var(--bg); opacity: 0; transition: opacity 0.12s linear; pointer-events: none !important; }
+.reco-fundido.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .reco-fundido { transition: none; } }
+.lbl-room.reco-senal { background: color-mix(in srgb, var(--surface) 86%, transparent); border-left: 3px solid var(--ink); padding: 1px 5px; border-radius: 2px; text-shadow: none; font-size: 9px; }
+.lbl-node.reco-lbl { font-size: 10.5px; }
+/* panel del recorrido */
+.reco-panel h3 { margin: 2px 0 4px; }
+.reco-panel h3:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reco-panel h4 { margin: 12px 0 6px; font-size: 0.92rem; }
+.reco-panel .reco-p-nivel { margin: 0; }
+.reco-rec-sub { margin-bottom: 6px; }
+.reco-rec-acc { margin: 0 0 8px; } .reco-rec-acc .btn { font-size: 0.86rem; padding: 4px 11px; }
+.reco-capas { margin: 4px 0; }
+.reco-leyenda { margin: 6px 0 0; } .reco-leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 4px 0 6px; vertical-align: -1px; }
+ul.reco-lista, ul.reco-recintos, ul.reco-res { list-style: none; margin: 0; padding: 0; }
+ul.reco-lista { display: grid; gap: 3px; max-height: 300px; overflow: auto; }
+ul.reco-lista button { display: block; width: 100%; text-align: left; font: 0.84rem/1.35 var(--f-body); color: var(--ink); background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; cursor: pointer; }
+ul.reco-lista button:hover { border-color: var(--accent); }
+ul.reco-lista .reco-n { font: 600 0.8rem var(--f-mono); } ul.reco-lista .pill { margin-left: 2px; }
+.reco-niveles { margin: 6px 0; }
+ul.reco-recintos { display: flex; flex-wrap: wrap; gap: 4px; max-height: 220px; overflow: auto; }
+ul.reco-recintos button, button.reco-link { font: 0.8rem/1.3 var(--f-body); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; cursor: pointer; text-align: left; }
+button.reco-link { display: inline; border: 0; padding: 0; color: var(--accent); text-decoration: underline; white-space: normal; }
+ul.reco-recintos button:hover { border-color: var(--accent); }
+ul.reco-recintos .reco-sep { width: 100%; font: 600 0.7rem var(--f-mono); color: var(--muted); margin-top: 4px; }
+button.reco-ir { flex: none; font: 600 0.72rem var(--f-mono); color: var(--bg); background: var(--ink); border: 0; border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.reco-busca { margin-top: 8px; }
+.reco-busca input[type=search], .reco-busca select { font: 0.85rem var(--f-body); color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px; padding: 5px 8px; width: 100%; max-width: 100%; min-width: 0; }
+.reco-filtros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 8px; }
+.reco-filtros label { font-size: 0.78rem; }
+.reco-totales { font-size: 0.84rem; margin: 2px 0; }
+ul.reco-res { display: grid; gap: 2px; max-height: 380px; overflow: auto; }
+ul.reco-res li { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); }
+ul.reco-res .reco-r-n { flex: 1; min-width: 0; font-size: 0.84rem; overflow-wrap: anywhere; }
+.reco-mas { margin-top: 6px; }
+/* fichas del recorrido: los valores se leen como texto */
+.reco-ficha .kv { grid-template-columns: 7.5em minmax(0, 1fr); }
+.reco-ficha .kv dd { font-family: var(--f-body); font-size: 0.84rem; text-align: left; overflow-wrap: anywhere; }
+.reco-ficha h5 { margin: 10px 0 4px; font-size: 0.86rem; }
+.reco-ficha .pill { margin-right: 3px; }
+.reco-ficha details.fold { margin: 6px 0; }
+.reco-impl h5 { margin: 8px 0 2px; font: 600 0.74rem var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+ul.reco-exig li { margin: 4px 0; font-size: 0.84rem; }
+.reco-ficha-ir { margin: 8px 0 0; }
+/* tarjeta «Dotación para la habilitación» */
+.hab-alcance { border-left: 3px solid var(--accent); padding-left: 10px; }
+.hab-ctl { display: grid; gap: 6px; margin: 8px 0; }
+.pill.hab-ok { color: var(--good); } .pill.hab-parcial { color: var(--s4); } .pill.hab-falta { color: var(--bad); } .pill.hab-doc { color: var(--data); } .pill.hab-na { color: var(--muted); }
+.hab-tabla td a { color: var(--ink); } .hab-tabla td.hab-falta-n { color: var(--bad); font-weight: 700; }
+.hab-servicios { display: grid; gap: 4px; margin-top: 10px; }
+ul.hab-lista { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 8px; }
+.hab-ex { border-bottom: 1px solid var(--line); padding-bottom: 6px; font-size: 0.86rem; }
+.hab-ex p { margin: 3px 0; }
+.hab-ex-c { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
+ul.hab-unidades li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.hab-cierre { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+@media (pointer: coarse) { #v-torre .stage.reco-on .stage-hint { display: none; } }
+@media (max-width: 720px) {
+  #v-torre .nav3d.reco-barra { top: 10px; bottom: auto; right: auto; max-width: calc(100% - 132px); justify-content: flex-start; }
+  #v-torre .reco-barra .nav3d-name { flex: 0 1 auto; min-width: 0; max-width: 56px; padding: 0 3px 0 5px; }
+  .reco-barra .reco-largo { display: none; } .reco-barra .reco-corto { display: inline; }
+  .reco-donde { max-width: calc(100% - 20px); }
+  #v-torre .reco-barra .sep { display: none; }
+  #v-torre .reco-barra .reco-ancho, #v-torre .reco-barra .reco-raton { display: none; }
+  #v-torre .reco-barra button { min-width: 26px; padding: 0 5px; }
+  .reco-pista, .reco-aviso { max-width: calc(100% - 20px); }
+  .reco-pista { top: 80px; } .reco-aviso { top: 110px; }
+  #v-torre .stage.reco-on .stage-hint { display: none; }
+  .reco-asc { bottom: 14px; } .reco-salida { bottom: 60px; }
+  .reco-asc span { display: none; }
+  .reco-filtros { grid-template-columns: minmax(0, 1fr); }
+}
 /* <<< torre-recorrido */
 /* >>> torre-sismo (equipo D) */
 /* Simulador sísmico (web/js/scenes/torre/sismo.js, estructura3d.js y graficas.js): panel, barra de tiempo y leyenda sobre

@@ -28,7 +28,17 @@ const TIPO_PRECIO = {
 const ANCLAJE = { ruedas_con_freno: 'ruedas con freno', anclado: 'anclado a la estructura', apoyado: 'apoyado, sin anclaje', sobre: 'sobre otro mueble', dentro: 'dentro de otro elemento', pared: 'fijo a la pared', colgado: 'colgado', empotrado: 'empotrado' };
 const MONTAJE = { piso: 'en el piso', pared: 'en la pared', sobre: 'sobre otro mueble', dentro: 'dentro de otro elemento', cielo: 'en el cielo raso', en_nucleo: 'en el núcleo' };
 const palabras = (s) => String(s ?? '').replace(/_/g, ' ');
-const normal = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+// vías del registro INVIMA tal como vienen en los datos («automatico», «evaluacion_tecnica») → en palabras y con tildes
+const via = (s) => palabras(s).replace(/\bautomatico\b/g, 'automático').replace(/\bevaluacion tecnica\b/g, 'evaluación técnica').replace(/\bno aplica\b/g, 'no aplica');
+function dentroPol(x, y, pol) {
+  let d = false;
+  for (let i = 0, j = pol.length - 1; i < pol.length; j = i++) {
+    const [xi, yi] = pol[i], [xj, yj] = pol[j];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) d = !d;
+  }
+  return d;
+}
+const normal =(s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 // ---------------------------------------------------------------- modelo
 export function crearInventario(inv, { plantas = null, habilitacion = null, textos } = {}) {
@@ -63,6 +73,14 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
     u.valor = comp != null && comp >= 0 ? 0 : (+l.precio || 0);
     return u;
   });
+  // unidades de zona sin recinto en los datos (pérgola, filas de la terraza, barandas, ambulancias): su recinto es el que
+  // contiene su posición en la planta de su nivel
+  const recsNivel = new Map((plantas?.niveles || []).map((n) => [n.id, n.recintos || []]));
+  for (const u of U) {
+    if (u.recinto || !u.extra.recinto_por_posicion) continue;
+    const r = (recsNivel.get(u.nivel) || []).find((q) => q.transitable !== false && dentroPol(u.x, u.y, q.poligono)) || (recsNivel.get(u.nivel) || []).find((q) => dentroPol(u.x, u.y, q.poligono));
+    if (r) u.recinto = r.id;
+  }
   const porId = new Map(U.map((u) => [String(u.id), u]));
   const porRecinto = new Map();
   for (const u of U) { if (!u.recinto) continue; if (!porRecinto.has(u.recinto)) porRecinto.set(u.recinto, []); porRecinto.get(u.recinto).push(u); }
@@ -71,11 +89,22 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
     if (u.dentro >= 0) { if (!hijosDentro.has(u.dentro)) hijosDentro.set(u.dentro, []); hijosDentro.get(u.dentro).push(u); }
     if (u.componente >= 0) { if (!hijosComp.has(u.componente)) hijosComp.set(u.componente, []); hijosComp.get(u.componente).push(u); }
   }
-  // texto de búsqueda de cada unidad (sin tildes)
-  for (const u of U) u.busca = normal(`${u.nombre} ${u.linea.especificacion || ''} ${recintos.get(u.recinto)?.ambiente || ''} ${nombreServicio(u.linea.servicio)} ${u.extra.ubic || ''} ${u.id}`);
   const implementos = inv?.implementos || {};
   const plantillaDe = (u) => u.extra.plantilla || u.linea.plantilla || null;
   const itemsDe = (u) => { const p = plantillaDe(u); return p ? (Array.isArray(p) ? p : implementos[p] || []) : []; };
+  // texto de búsqueda de cada unidad (sin tildes): lo suyo y, aparte, sus implementos internos (reactivos de un analizador,
+  // contenido de un carro de paro…), para que «lisante» o «adrenalina» lleven al equipo que los guarda (16.2 y 16.4)
+  const textoItem = (it) => normal(`${it.n || ''} ${it.pres || ''}`);
+  for (const u of U) {
+    u.busca = normal(`${u.nombre} ${u.linea.especificacion || ''} ${recintos.get(u.recinto)?.ambiente || ''} ${nombreServicio(u.linea.servicio)} ${u.extra.ubic || ''} ${u.id}`);
+    u.buscaItems = itemsDe(u).map(textoItem).join(' | ');
+  }
+  // implementos internos de u que coinciden con todas las palabras buscadas (para «contiene: …» en el buscador)
+  const contiene = (u, texto) => {
+    const q = normal(texto).trim().split(/\s+/).filter(Boolean);
+    if (!q.length || !u.buscaItems || q.every((p) => u.busca.includes(p))) return [];
+    return itemsDe(u).filter((it) => { const t = textoItem(it); return q.every((p) => t.includes(p)); });
+  };
   // valor de una unidad para los totales: dotación, fijo y cierre de brechas (el laboratorio en comodato no suma)
   const sumaValor = (u) => (['dotacion', 'fijo', 'cierre_brechas'].includes(u.capa) ? u.valor : 0);
 
@@ -140,7 +169,7 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
         <dt>Cantidad en la línea</dt><dd>${fmtN(l.cantidad || 1)}</dd>
         ${madre ? `<dt>Parte de</dt><dd><button type="button" class="reco-link" data-unidad="${escH(madre.id)}">${esc(madre.nombre)}</button></dd>` : ''}
         <dt>Clase de riesgo</dt><dd>${esc(clase(cl))}${cl.estado && cl.estado !== 'coherente' ? `<br><small class="note">${esc(palabras(cl.estado))}${cl.revision?.valor ? `: revisión ${esc(CLASES[cl.revision.valor] || cl.revision.valor)}` : ''}</small>` : ''}${cl.regla || cl.revision?.regla ? `<br><small class="note">${esc(cl.regla || cl.revision.regla)}</small>` : ''}</dd>
-        <dt>Registro INVIMA</dt><dd>${esc(rg.requerido === 'si' ? 'requerido' : rg.requerido === 'no' ? 'no requerido' : palabras(rg.requerido || '—'))}${rg.via ? `<br><small class="note">${esc(rg.via)}</small>` : ''}${rg.usado_permitido === false ? '<br><small class="note">no se puede comprar ni recibir usado</small>' : ''}${rg.nota ? `<br><small class="note">${esc(rg.nota)}</small>` : ''}</dd>
+        <dt>Registro INVIMA</dt><dd>${esc(rg.requerido === 'si' ? 'requerido' : rg.requerido === 'no' ? 'no requerido' : palabras(rg.requerido || '—'))}${rg.via ? `<br><small class="note">${esc(via(rg.via))}</small>` : ''}${rg.usado_permitido === false ? '<br><small class="note">no se puede comprar ni recibir usado</small>' : ''}${rg.nota ? `<br><small class="note">${esc(rg.nota)}</small>` : ''}</dd>
         <dt>Prioridad</dt><dd>${esc(PRIORIDAD[l.prioridad] || palabras(l.prioridad || '—'))}${l.prioridad_revisada ? `<br><small class="note">revisada: ${esc(PRIORIDAD[l.prioridad_revisada] || palabras(l.prioridad_revisada))}${l.norma_base ? ` (${esc(l.norma_base)})` : ''}</small>` : ''}</dd>
         <dt>Mantenimiento</dt><dd>${mt.anual_pct != null ? `${fmtN(mt.anual_pct, 1)} % al año` : '—'}${mt.vida_util_anios ? ` · vida útil ${fmtN(mt.vida_util_anios)} años` : ''}${mt.personal_inscrito_invima ? '<br><small class="note">por personal inscrito en el INVIMA</small>' : ''}${mt.calibracion ? '<br><small class="note">con calibración</small>' : ''}${preventivo ? `<br><small class="note">${esc(preventivo)}</small>` : ''}</dd>
         ${precio}
@@ -223,10 +252,16 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
         if (estado.startsWith('u:') && u.estado !== estado.slice(2)) continue;
         if (estado.startsWith('r:') && estadoRecinto(u.recinto) !== estado.slice(2)) continue;
       }
-      if (q.length && !q.every((p) => u.busca.includes(p))) continue;
+      if (q.length && !q.every((p) => u.busca.includes(p)) && !(u.buscaItems && itemsDe(u).some((it) => { const t = textoItem(it); return q.every((p) => t.includes(p)); }))) continue;
       out.push(u);
       valor += sumaValor(u);
       if (u.capa === 'laboratorio' && u.componente < 0) comodato += +u.linea.precio || 0;
+    }
+    // con texto, primero lo que coincide en el nombre, después en la especificación o el recinto y al final en los
+    // implementos internos
+    if (q.length) {
+      const orden = (u) => (u._nom ??= normal(u.nombre), q.every((p) => u._nom.includes(p)) ? 0 : q.every((p) => u.busca.includes(p)) ? 1 : 2);
+      out.sort((a, b) => orden(a) - orden(b));
     }
     return { unidades: out, valor, comodato };
   }
@@ -238,20 +273,20 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
   return {
     unidades: U, porId, porRecinto, recintos, exig, implementos, lineas,
     unidad: (id) => porId.get(String(id)) || null,
-    itemsDe, nombreServicio, nombreRecinto, lugar, estadoRecinto,
+    itemsDe, contiene, nombreServicio, nombreRecinto, lugar, estadoRecinto,
     fichaUnidad, fichaImplemento, fichaRecinto, listaRecinto, buscar, opciones,
     total: U.length,
   };
 }
 
 // ---------------------------------------------------------------- buscador (panel del recorrido)
-// op: { irA(idUnidad), textos }. Devuelve { refrescar(), filtrarRecinto(id) }.
+// op: { irA(idUnidad, { implementos }), textos }. Devuelve { refrescar(), filtrar(valores), resultados() }.
 export function montarBuscador(el, modelo, { irA, textos }) {
   const { esc, escH } = textos;
   const op = modelo.opciones();
   const POR_PAGINA = 40;
   el.innerHTML = `<div class="reco-busca ctl">
-      <label>Buscar en el inventario <input type="search" data-f="texto" placeholder="Nombre, recinto o servicio" autocomplete="off"></label>
+      <label>Buscar en el inventario <input type="search" data-f="texto" placeholder="Nombre, recinto, servicio o reactivo" autocomplete="off"></label>
       <div class="reco-filtros">
         <label>Nivel <select data-f="nivel"><option value="">Todos</option>${NIVELES.map((n) => `<option value="${n}">${esc(NOMBRE_NIVEL[n])}</option>`).join('')}</select></label>
         <label>Servicio <select data-f="servicio"><option value="">Todos</option>${op.servicios.map(([v, t]) => `<option value="${escH(v)}">${esc(t)}</option>`).join('')}</select></label>
@@ -274,8 +309,13 @@ export function montarBuscador(el, modelo, { irA, textos }) {
     sel.innerHTML = `<option value="">Todos</option>${ids.map((id) => `<option value="${escH(id)}">${esc(modelo.nombreRecinto(id))}${nivel ? '' : ` (${esc(NOMBRE_NIVEL[modelo.recintos.get(id)?.nivel] || '')})`}</option>`).join('')}`;
     if (ids.includes(previo)) sel.value = previo;
   };
-  const fila = (u) => `<li><span class="reco-r-n"><b>${esc(u.nombre)}</b><br><small class="note">${esc(modelo.lugar(u))} · ${esc(NOMBRE_NIVEL[u.nivel] || '')}${u.valor && ['dotacion', 'fijo', 'cierre_brechas'].includes(u.capa) ? ` · ${fmtCOP(u.valor)}` : ''}</small></span>
-      <span class="reco-r-b"><button type="button" class="reco-ir" data-ir="${escH(u.id)}" aria-label="Ir a ${escH(u.nombre)} en ${escH(modelo.lugar(u))}">Ir a</button></span></li>`;
+  const fila = (u) => {
+    // si coincide por lo que guarda adentro, se dice qué (y «Ir a» abre su ficha con los implementos desplegados)
+    const c = modelo.contiene(u, f('texto').value);
+    const cont = c.length ? `<br><small class="reco-contiene">contiene: ${esc(c[0].n)}${c[0].pres ? ` (${esc(c[0].pres)})` : ''}${c.length > 1 ? ` y ${fmtN(c.length - 1)} más` : ''}</small>` : '';
+    return `<li><span class="reco-r-n"><b>${esc(u.nombre)}</b>${cont}<br><small class="note">${esc(modelo.lugar(u))} · ${esc(NOMBRE_NIVEL[u.nivel] || '')}${u.valor && ['dotacion', 'fijo', 'cierre_brechas'].includes(u.capa) ? ` · ${fmtCOP(u.valor)}` : ''}</small></span>
+      <span class="reco-r-b"><button type="button" class="reco-ir" data-ir="${escH(u.id)}"${c.length ? ' data-impl="1"' : ''} aria-label="Ir a ${escH(u.nombre)} en ${escH(modelo.lugar(u))}${c.length ? `, que contiene ${escH(c[0].n)}` : ''}">Ir a</button></span></li>`;
+  };
   const pintar = () => {
     res.innerHTML = lista.slice(0, n).map(fila).join('');
     mas.hidden = n >= lista.length;
@@ -292,7 +332,7 @@ export function montarBuscador(el, modelo, { irA, textos }) {
   el.addEventListener('change', (ev) => { if (ev.target.dataset.f === 'nivel') llenarRecintos(); if (ev.target.dataset.f && ev.target.dataset.f !== 'texto') refrescar(); });
   el.addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-ir]');
-    if (b) { irA(b.dataset.ir); return; }
+    if (b) { irA(b.dataset.ir, { implementos: !!b.dataset.impl }); return; }
     if (ev.target === mas) { n = Math.min(lista.length, n + POR_PAGINA); pintar(); }
   });
   llenarRecintos();

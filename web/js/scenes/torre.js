@@ -172,7 +172,9 @@ export function mount(root) {
       const tit = st.label(`<b>Piso ${piso}</b><br><small>${fmtN(p.m2_construido, 0)} m² · entrepiso ${fmtN(p.altura_entrepiso_m, 1)} m</small>`, 'lbl-node', [XN[1] + 1, 2.4, -(y0 + y1) / 2], g);
       g.position.y = +p.nivel_piso_terminado_m || 0;
       gPisos.add(g);
-      st.pickable(g, { onPick: () => fichaPiso(p) });
+      // si torre.json llega con un modo nuevo activo (recorrido o simulador), el piso no entra a la selección del Stage (6.8,
+      // paso 1): queda en lo guardado y vuelve al salir del modo; si no, el clic sobre un piso oculto reescribiría la ficha
+      if (guardados) { g.userData.pick = true; g.userData.onPick = () => fichaPiso(p); guardados.push(g); } else st.pickable(g, { onPick: () => fichaPiso(p) });
       pisos.push({ piso, g, tit, nivel: +p.nivel_piso_terminado_m || 0 });
     });
     armarLaboratorio();
@@ -398,13 +400,31 @@ export function mount(root) {
     })().catch((e) => { console.error(`torre: no se pudo montar el modo «${m}»`, e); cargando[m] = null; return null; }));
   }
   const vaciarFichaModo = () => { fichaModo.innerHTML = ''; fichaModo.hidden = true; };
+  // En los modos nuevos la ficha va justo debajo de «Ver» (antes del panel, que es largo) y las cifras se esconden: así la
+  // ficha de lo que se toca en 3D aparece a la vista junto al recuadro y no 1.000 px más abajo. Los modos de siempre
+  // vuelven al orden original (panel, si lo hay, y luego la ficha) con sus cifras
+  const cardPanel = q('panel'), cardFicha = q('ficha'), tiles = q('tiles');
+  function ordenCarpeta(enModoNuevo) {
+    if (!cardPanel || !cardFicha) return;
+    if (enModoNuevo) { if (cardFicha.nextElementSibling !== cardPanel) cardPanel.before(cardFicha); }
+    else if (cardPanel.nextElementSibling !== cardFicha) cardFicha.before(cardPanel);
+    if (tiles) tiles.hidden = !!enModoNuevo;
+  }
   // Cambio de modo. El modo que sale deja sus contenedores vacíos; uno pedido mientras otro carga gana (turno), así un
   // cambio en medio de una carga, un cálculo o un vuelo de cámara no deja contenidos ni cámaras cruzados (13.4)
   async function cambiarModo(m, op) {
     if (![...modeBtns].some((b) => b.dataset.modoTorre === m)) return;
+    // «Laboratorio» abre el recorrido parado en la puerta del laboratorio del piso 2, mirando hacia adentro (16.2, que
+    // prevalece): el laboratorio completo, con sus analizadores, neveras y reactivos, se inspecciona caminando. La maqueta
+    // aérea anterior se retira de la vista (16.2 deja a D decidir)
+    if (m === 'laboratorio') {
+      await cambiarModo('recorrido', { laboratorio: true, ...(op || {}) });
+      if (modo === 'recorrido') modeBtns.forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.modoTorre === 'laboratorio')));
+      return;
+    }
     const mio = ++turno;
     clearTimeout(tEncuadre);
-    if (activo && activo.nombre === m) { if (op) activo.obj.irA?.(op); return; }
+    if (activo && activo.nombre === m) { modeBtns.forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.modoTorre === m))); if (op) activo.obj.irA?.(op); return; }
     if (activo) { const a = activo; activo = null; a.obj.salir({ porUsuario: false }); vaciarFichaModo(); }
     const venia = nuevo();
     modo = m;
@@ -414,6 +434,7 @@ export function mount(root) {
       st.stopFlight();
       if (!guardados) { guardados = st.pickables.splice(0); st.hovered = null; }
       ficha.hidden = true;
+      ordenCarpeta(true);
       if (tarjetaSismo) tarjetaSismo.hidden = m !== 'sismo';
       aplicar(false);
       pista();
@@ -433,6 +454,7 @@ export function mount(root) {
     if (tarjetaSismo) tarjetaSismo.hidden = true;
     if (venia) { ficha.innerHTML = nota0; selPiso = null; }
     ficha.hidden = false;
+    ordenCarpeta(false);
     pista();
     aplicar(true);
     if (modo === 'laboratorio') {
@@ -482,8 +504,9 @@ export function mount(root) {
     const abrir = new Map([
       [q('habilitacion'), async (slot) => {
         const mod = await MODULOS.habilitacion();
-        const [hab, inv] = mod.RELLENO ? [null, null] : await Promise.all([leer('torre_habilitacion.json'), leer('torre_inventario.json')]);
-        mod.pintarHabilitacion(slot, hab, inv, { verEn3D, textos: TEXTOS });
+        // la planta da los nombres de los recintos de «Unidades que la cubren» (dónde está cada unidad)
+        const [hab, inv, plantas] = mod.RELLENO ? [null, null, null] : await Promise.all([leer('torre_habilitacion.json'), leer('torre_inventario.json'), leer('torre_plantas.json')]);
+        mod.pintarHabilitacion(slot, hab, inv, { verEn3D, textos: TEXTOS, plantas });
       }],
       [q('tipo'), async (slot) => {
         const mod = await MODULOS.contraste();
@@ -671,6 +694,7 @@ export function mount(root) {
       listo: () => !!D,
       datos: (f) => leer(f),   // un archivo de web/data tal como lo recibe cada modo (con las partes ya juntas)
       exterior: () => exterior,
+      seleccionables: () => st.pickables.length,   // objetos que hoy reciben clics del Stage (0 en los modos nuevos, 6.8)
     };
   }
 
