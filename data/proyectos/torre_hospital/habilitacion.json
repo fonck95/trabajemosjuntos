@@ -4,8 +4,8 @@
  "generado_por": "scripts/torre/generar_inventario.py",
  "fecha": "2026-10-24",
  "insumos_sha1": {
-  "inventario_dotacion.json": "af608853505f396b9b3ae83e5ca6dc0acf9500e6",
-  "torre_hospital_plantas.json": "c2a3a8c074056f175e729adad3a574739c303484",
+  "inventario_dotacion.json": "59296056633083d13549a37ae20c35c0fba45512",
+  "torre_hospital_plantas.json": "ed31741725c1c9ee2b3c9bebd8be3898ccb8c9dc",
   "exigencias_3100.json": "747f9137790e7bcac2d35f2d7cf2d29c6f10877e"
  },
  "norma": "Res. 3100 de 2019 y modificaciones",

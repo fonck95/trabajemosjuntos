@@ -5,7 +5,7 @@
  "fecha": "2026-10-23",
  "insumos_sha1": {
   "dotacion_min.json": "1e2f2bcfbd146a56edead6cebe8bbe8b975a5a6b",
-  "plantas_min.json": "ff8bcd8a94b2cf57c1c817f0bb08b424eefcd24f"
+  "plantas_min.json": "635fe7736a36accd322cbd9472f54a1f7bedaa11"
  },
  "sha256_dotacion": "8aebdbfa6de665b61bbc639944dfb5e77fb355a3fbe53f587bd06fd93d4b0420",
  "moneda_y_base": "Pesos constantes de 2026 (valores de prueba)",

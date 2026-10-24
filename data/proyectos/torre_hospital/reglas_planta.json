@@ -22,11 +22,17 @@
    "altura": "entrepiso"
   },
   "nucleo": {
-   "espesor_m": 0.3,
-   "material": "concreto de 28 MPa (estructural)",
-   "fuente": "presupuesto.json 3.02",
+   "espesor_m": 0.35,
+   "material": "concreto de 28 MPa: muro estructural del sistema dual con capacidad moderada de disipación de energía (DMO), solo en los paños que eligió el prediseño",
+   "fuente": "data/sismo/torre_hospital_estructura.json → prediseno.dimensiones_adoptadas.muros y prediseno.eleccion_muros (cálculo propio del equipo A); presupuesto.json 3.02",
    "altura": "entrepiso",
    "estructural": true
+  },
+  "nucleo_mamposteria": {
+   "espesor_m": 0.2,
+   "material": "mampostería del núcleo separada de la estructura: bloque de concreto de 15 cm de celdas llenas con pañete en las dos caras (2 h de resistencia al fuego en las escaleras: NSR-10 Tabla J.3.4-3, por confirmar)",
+   "fuente": "data/sismo/torre_hospital_estructura.json → prediseno.eleccion_muros.paneles_de_nucleo (material «mamposteria») y supuestos; espesor con pañete: estimación",
+   "altura": "entrepiso"
   },
   "bloque": {
    "espesor_m": 0.15,
@@ -63,7 +69,7 @@
  "muros": {
   "bloque_patron": "sanitari|^Baño|Batería|Vestidor|ducha|Ducha|aseo|Lavapatos|trabajo sucio|Descontaminación|^Ductos|^Cuarto eléctrico|telecomunicaciones|tableros|residuos|medicamentos|Laboratorio clínico$|biología molecular|^Subestación|^Planta eléctrica|gases|bombas|cadáveres|^Montacargas|^Lavado|lavado de material|compresor|Esterilización \\(reprocesamiento|esterilización odontológica|baterías|vencidos|rechazados|control especial",
   "plomado_patron": "rayos\\s*x|periapical",
-  "nota": "Tipo de cada borde (3.3): fachada en el contorno, núcleo en el borde de escaleras, ascensores y montacargas, plomado alrededor de rayos X y del periapical, bloque entre zonas húmedas, ductos, cuartos técnicos, depósitos de medicamentos y laboratorio, liviano en el resto; gana el más exigente (plomado > núcleo > fachada > bloque > liviano). Los vanos abiertos (sin muro) los marca el trazado."
+  "nota": "Tipo de cada borde (3.3): fachada en el contorno; en el borde de escaleras, ascensores y montacargas, «nucleo» (concreto estructural de 0,35 m) solo sobre los paños de estructura.muros_estructurales y «nucleo_mamposteria» en el resto; plomado alrededor de rayos X y del periapical; bloque entre zonas húmedas, ductos, cuartos técnicos, depósitos de medicamentos y laboratorio; liviano en el resto. Gana el más exigente (muro estructural > plomado > mampostería del núcleo > fachada > bloque > liviano): un paño estructural es de concreto aunque toque una sala de rayos X (0,35 m de concreto blindan más que la lámina de ≈ 2 mm de plomo; cálculo de blindaje pendiente). Los vanos abiertos (sin muro) los marca el trazado; ni puertas ni vanos ni ventanas en un muro estructural."
  },
  "minimos": [
   {
@@ -849,6 +855,11 @@
    "cita": "Estimación: puerta de cuarto técnico para el paso de equipos (tableros, transformador, bombas); Res. 1633, Cuadro 1 pide 0,90 m en almacenamientos"
   },
   {
+   "categoria": "mantenimiento",
+   "ancho_m": 0.9,
+   "cita": "Estimación: puerta de mantenimiento a una cubierta técnica (sin paso de camillas ni de público); Res. 1633, Anexo 1, Cuadro 1 (normas.json → puertas_ancho_min_m) pide 0,90 m en almacenamientos y áreas de apoyo"
+  },
+  {
    "categoria": "exterior",
    "ancho_m": 1.6,
    "cita": "Estimación: puerta de acceso de público o de urgencias (automática corrediza); ≥ 1,10 m (NSR-10 K.3.14.2.3)"
@@ -1333,26 +1344,129 @@
   ]
  },
  "decisiones": [
-  "Puerta principal en la fachada occidental en y = -8,8 (no en y ≈ -13 de programa.json): abre a una galería de entrada de 2,40 m que lleva derecho a la escalera sur, a la escalera principal y a admisiones; la plaza y el acceso peatonal no cambian.",
+  "Puerta principal en la fachada occidental en y = -8,9 (no en y ≈ -13 de programa.json; baja 0,10 m para que la columna A3, de 0,90 m desde el prediseño DMO, no tape su vano de 1,60 m): abre a una galería de entrada de 2,40 m que lleva derecho a la escalera sur, a la escalera principal y a admisiones; la plaza y el acceso peatonal no cambian.",
   "Sin puerta de servicio en la fachada sur del piso 1 (programa.json → accesos.acceso_servicio.puerta_edificio = (3,0; -19,6)): esa franja la ocupan la toma de muestras especiales, los cubículos y el personal de urgencias, y abrir un paso de 1,20 m hasta la fachada no cabe con sus áreas. El servicio (residuos, cadáveres, cilindros, suministros) va por el pasaje del bloque técnico (BT-A229-01, 1,20 m en rampa) al patio oriente sur, cruza el portón de 2,40 m a la galería y entra por la galería al vestíbulo de ascensores y al montacargas (revisión adversarial: antes el patio no tenía paso a la galería). Queda como diferencia con el programa, por confirmar con quien lo aprueba.",
   "El personal de urgencias (vestidores, descanso, referencia y coordinación) queda en la franja sur del piso 1, unido a urgencias por el pasillo sur y el corredor general: en y -10 a 22,4 no cabe con todo el programa clínico.",
   "Piso 2: el laboratorio ocupa todo el sur (sobre la toma de muestras) con un corredor propio; biología molecular (GeneXpert) y la ducha de emergencia con lavaojos son recintos no programados (16.2). El montacargas de muestras sube en (-7,4; -14,95) de la preparación de muestras del piso 1 a la recepción interna del piso 2.",
   "Piso 2: la espera de consulta externa es lineal sobre el eje B (2,55 m) y la farmacia queda frente a la llegada de la escalera principal, con su espera; los consultorios de medicina general dan a la fachada occidental.",
   "Piso 3: la escalera sur se abre desde el corredor interno de la estación (puerta en su costado occidental); el estacionamiento de camillas une la estación con ese corredor. Depósitos de partos, triage obstétrico y estar del personal quedan al sur por área.",
-  "Piso 4: la escalera sur abre a la sala de espera de consulta y, por su descanso de piso, a la terraza solar del piso 3.",
-  "Escalera principal abierta (pisos 1 y 2): tramos de 1,30 m con la columna C2 en el ojo y descanso de piso de 0,55 m abierto a la galería.",
-  "Corredores de evacuación de 2,55 m a ejes (≥ 2,40 m libres entre caras de muro, Res. 1633 num. 3.3.6 b.1); los 2,80 m recomendados para camillas no caben en la huella (aviso V13). Columnas: en la sección de las columnas de los ejes B y C que sobresalen de la cara del muro quedan 2,12 a 2,19 m libres (aviso V13, que ahora las mide). No se corren los muros: alinear la cara del muro con la de la columna (muro en x = -5,5 en lugar de -5,8) o ensanchar 0,25 m cada corredor quita área a todos los recintos de las dos franjas y mueve la retícula; queda por confirmar con el estructural si las columnas de borde del corredor pueden ser de 0,45 m en esa dirección o ir embebidas en el muro (revisión adversarial, sin cambio).",
+  "Piso 4: la escalera sur abre a la sala de espera de consulta. La terraza solar del piso 3 se alcanza por una puerta de mantenimiento de 0,90 m en la fachada sur de esa sala, junto a la puerta de la escalera (el muro sur de la escalera, MX-3, es estructural y no admite vanos).",
+  "Escalera principal abierta (pisos 1 y 2): tramos de 1,20 m con la columna C2 (0,80 m) en el ojo de 0,88 m y descanso de piso de 0,55 m abierto a la galería.",
+  "Corredores de evacuación de 2,55 m a ejes (≥ 2,40 m libres entre caras de muro, Res. 1633 num. 3.3.6 b.1); los 2,80 m recomendados para camillas no caben en la huella (aviso V13). Columnas: en la sección de las columnas de los ejes A, B y C que sobresalen de la cara del muro (0,80 m y 0,90 m desde el prediseño DMO) quedan 2,02 a 2,09 m libres (aviso V13, que las mide; con las de 0,60 m eran 2,12 a 2,19 m). No se corren los muros: alinear la cara del muro con la de la columna o ensanchar cada corredor 0,35 m quita área a todos los recintos de las dos franjas y mueve la retícula; el prediseño no admite columnas de borde más esbeltas. Cálculo propio.",
   "Exteriores con bordes ortogonales (estimación de los polígonos de programa.json); el patio de urgencias baja hasta y = -3,3 para incluir la entrada a descontaminación.",
   "Bloque técnico: el banco de baterías de 400 kWh del nodo hospital (P7) va en el cuarto de tableros generales (fila 212, 23,6 m²); andén de servicio y escalera exterior a la plaza son estimaciones.",
-  "Paneles solares: 96 módulos en la pérgola de la cubierta del piso 4, 56 en la terraza del piso 3 sur y 30 en la marquesina de la bahía = 182 módulos de 0,55 kWp (100,1 kWp).",
+  "Paneles solares: 96 módulos en la pérgola de la cubierta del piso 4, 56 en la terraza del piso 3 sur y 30 en la marquesina de la bahía = 182 módulos de 0,55 kWp (100,1 kWp). Las filas de la terraza se corren 0,30 m al sur para dejar 0,87 m junto a la fachada del piso 4, desde la puerta de mantenimiento hasta la franja libre del oriente.",
   "Consulta externa del piso 2 (ajuste de B2b, inventario): las puertas de los consultorios de medicina general a la espera van en pareja junto al muro que comparten dos consultorios vecinos, para dejar 3,2 m de muro libre entre parejas. En la espera de 2,49 m caben 7 tándems de 4 puestos (3 contra el muro occidental y 4 enfrente, con 1,10 m de paso): las columnas B3, B4 y B5 y las puertas del muro oriental no dejan sitio para el octavo, que va a la espera de farmacia del mismo piso (reglas_ubicacion.json → L-consulta_externa-m-5b67cb).",
   "Partos, piso 3 (ajuste de B2b, inventario): las puertas de la recepción y entrega de pacientes se corren al oriente (centros en x = 2,30 y 2,40) para que la camilla de transporte quepa estacionada contra el muro occidental, como pide el programa («con estacionamiento de camillas»).",
   "Vestíbulo de ascensores (revisión adversarial, pisos 1 a 4): el núcleo queda con los límites de programa.json (ascensores x 3,1-6,1; y 1,6-7,2, V15). El vestíbulo se prolonga al norte del núcleo y se une al corredor de los ascensores por un vano abierto; los cuartos de residuos, eléctrico y de ductos se reacomodan para que el paso no tenga esquinas en el giro. Paso libre del corredor al frente del ascensor camillero (diámetro del mayor disco que pasa, rejilla de 5 cm): piso 1 ≈ 1,68 m, piso 2 ≈ 1,84 m, piso 3 ≈ 1,44 m y piso 4 ≈ 1,52 m; pasa una camilla (V22 con radio 0,45 m), pero no los 2,40 m de un corredor de evacuación (el vestíbulo no es ruta de evacuación: se evacúa por las escaleras). Llegar a 2,40 m exige ampliar el bloque del núcleo o quitarle área a los ductos (17,7 m² en los pisos 1 y 2): pendiente del programa.",
   "Piso 1, bloque del núcleo: el lavapatos baja su borde norte a y = 7,2 y se abre al vestíbulo; el depósito de ropa sucia se usa desde el lavapatos (la columna C5 tapa su borde al corredor); el cuarto eléctrico (x 3,1-7,1; y 9,5-11,0) registra los ductos (accesos_permitidos); los residuos van en la franja oriental (x 7,1-8,6; y 9,0-11,7); el trabajo sucio se acorta a 3,98 m² (y 10,55-12,7), se abre al corredor de los ascensores con puerta corrediza y le cede al cuarto de ductos su extremo norte. Pisos 2 a 4: el cuarto eléctrico (y los residuos de los pisos 3 y 4) en la franja norte del vestíbulo; en el piso 2 los residuos van junto a la toma de citologías.",
-  "Columnas en vanos (revisión adversarial): ninguna puerta ni vano abierto queda tapado por una columna de 0,60 × 0,60 m (V11 descuenta las columnas del vano; V12 revisa que la hoja no barra una columna). Se corrieron puertas en los pisos 1 a 4, la fila de oficinas del vestíbulo principal del piso 1 baja a y = -7,9 frente a la columna C3, el pasillo de consultorios de urgencias pasa a y -0,65 a 0,45 (columna B4) y la puerta de urgencias a la bahía sube a y = 15,35. Las ventanas no cruzan columnas de fachada.",
+  "Columnas en vanos (revisión adversarial): ninguna puerta ni vano abierto queda tapado por una columna (0,80 × 0,80 m; 0,90 × 0,90 m en el eje A desde el prediseño DMO) (V11 descuenta las columnas del vano; V12 revisa que la hoja no barra una columna). Se corrieron puertas en los pisos 1 a 4, la fila de oficinas del vestíbulo principal del piso 1 baja a y = -7,9 frente a la columna C3, el pasillo de consultorios de urgencias pasa a y -0,65 a 0,45 (columna B4) y la puerta de urgencias a la bahía sube a y = 15,35. Las ventanas no cruzan columnas de fachada.",
   "Baños y cabinas (revisión adversarial): en los 28 recintos «con baño» o «con unidad sanitaria» el baño es un subrecinto ({recinto}-Bn) con tabique de placa de yeso RH (liviano) y puerta corrediza (1,00 m en baños, 0,90 m en unidades sanitarias; NTC 6047 para las PMR, numeral por confirmar); las dos baterías públicas del piso 2 tienen 3 cabinas, una PMR. El área sigue contando en el recinto del programa (área libre del recinto más la del baño frente al mínimo). Medidas a ejes (estimación): 11 baños PMR con ducha de 1,65-1,85 × 1,65-2,55 m, 7 baños con ducha de 1,5-1,6 × 1,8-2,0 m, 7 unidades sanitarias de 1,1-1,2 × 1,5-1,55 m y una con ducha de 1,6 × 2,2 m, 2 cabinas PMR de 1,7-1,8 × 1,8-2,35 m y 4 cabinas de 1,1-1,5 × 1,4-1,7 m. En las habitaciones de hospitalización el baño va junto al corredor y la puerta de la habitación sube al norte de su muro. El baño no lleva ventana (extracción de la cubierta, CUB-A223). Quedan sin subrecinto la descontaminación de pacientes (todo el recinto es área húmeda) y los recintos que ya son baños. Los vestidores de pacientes del piso 4 miden 1,20 m de ancho: su unidad sanitaria (1,20 × 2,65 m) no da el giro de 1,50 m de una silla de ruedas; pendiente del programa (4,9 m² no alcanzan para vestidor y unidad PMR).",
   "Cubierta (revisión adversarial): la terraza solar del piso 3 está 4,2 m más abajo que la cubierta del piso 4; sus muros llevan z_base_m (cota de su base respecto al piso del nivel, tomada del z_piso_m de los recintos de sus lados) y el borde y = -7,6 entre la terraza y la cubierta es el antepecho (parapeto) de la cubierta del piso 4.",
   "Exteriores (revisión adversarial): cada paso del nivel de exteriores a otro nivel tiene su vano en el muro de exteriores: una puerta espejo (espejo_de: nivel y puerta del otro nivel, mismo centro y ancho). La galería tiene un portón de 2,40 m al patio oriente sur (descarga de la escalera sur y ruta de servicio) y su salida al patio oriente norte pasa a 2,40 m.",
-  "Montacargas general (revisión adversarial): el hueco de 3,0 × 0,8 m entre muros de núcleo de 0,30 m deja 0,50 m libres de fondo, menos que la cabina de 0,80 × 0,80 m de programa.json. No se achica la cabina sin decirlo: queda como pendiente del programa (ampliar el núcleo o elegir otra cabina) y como nota en el núcleo MC del trazado."
- ]
+  "Montacargas general (revisión adversarial y prediseño DMO): el hueco de 3,0 × 0,8 m queda entre el muro estructural MX-4 (0,35 m, al sur) y la mampostería del foso de los ascensores (0,20 m, al norte): 0,53 m libres de fondo, menos que la cabina de 0,80 × 0,80 m de programa.json. No se achica la cabina sin decirlo: queda como pendiente del programa (ampliar el núcleo o elegir otra cabina) y como nota en el núcleo MC del trazado.",
+  "Prediseño estructural DMO (equipo A, data/sismo/torre_hospital_estructura.json; 17.1): columnas de 0,80 × 0,80 m y de 0,90 × 0,90 m en el eje A, centradas en los ejes; vigas de 0,80 m de peralte (0,90 m en el eje A), que dejan 3,70 m libres bajo viga en el piso 1 y 3,40 m en los pisos 2 a 4 (3,60 y 3,30 m bajo las del eje A): el cielo raso de 3,00 m cabe con 0,30 a 0,60 m de plenum. Muros estructurales de concreto de 0,35 m («nucleo») solo en los paños MY-N6 y MX-7 (escalera norte) y MY-N3, MX-3 y MX-4 (escalera sur); el resto del borde de escaleras, foso de ascensores y montacargas, incluidas las caras de x = 8,6 y la cara sur de la escalera norte, es mampostería separada de la estructura de 0,20 m («nucleo_mamposteria»), como las casetas de la cubierta. Las puertas de las escaleras van en el vano de 1,20 m que dejan los muros en x = 3,1 (y = 15,3 al norte e y = -6,3 al sur), con hoja de 1,10 m (NSR-10 K.3.14.2.3) y marco de 5 cm a cada lado. Ni puertas, ni vanos, ni ventanas en un muro estructural (V23). Un muro estructural que toca la sala de rayos X o el periapical cuenta como blindaje (0,35 m de concreto equivalen a más que la lámina de ≈ 2 mm de plomo; cálculo de blindaje pendiente con la Res. 1811 de 2025).",
+  "Áreas con las columnas más grandes (prediseño DMO): el área libre de cada recinto descuenta ahora la parte de las columnas que entra en su polígono libre. Ningún recinto queda bajo su área de programa ni bajo el mínimo de la Res. 1633 a ejes (V6 y V7) por las columnas de 0,80 y 0,90 m, y ninguno pasa a quedar bajo el mínimo en área libre por ellas: la lista de avisos V8 es la misma de antes más el aseo de rayos X del piso 1 (P1-A049-01), que se achicó para abrir el acceso a la escalera sur (3,08 m² a ejes y 2,27 m² libres frente a 3,0 m²; por confirmar si el mínimo se mide libre o a ejes). Cálculo propio.",
+  "Piso 1, acceso a la escalera sur (prediseño DMO): la puerta sale del muro estructural MX-3 (y = -7,6) al vano de x = 3,1, y = -6,3. La galería sube por el costado occidental de la escalera con 1,55 m a ejes (≈ 1,30 m libres; la columna C3 queda en su esquina). Para hacerle lugar: la unidad sanitaria pública P1-A002-01 pasa a la franja de sanitarios del pasillo sur (1,50 × 3,25 m), la unidad sanitaria de pacientes P1-A037-02 se alarga hasta y = -12,35 y admisiones (P1-A001-01, 14,39 m² frente a 14,0) cede su esquina suroriental; el aseo de toma de muestras (P1-A055-01) sube junto a la escalera, y el aseo de rayos X (P1-A049-01) y el almacenamiento (P1-A047-01) se reacomodan en la franja de rayos X; los dos aseos abren a la galería.",
+  "Piso 2, acceso a la escalera sur (prediseño DMO): el vestíbulo de la escalera sur (P2-CIRC-03) sube por el costado occidental de la escalera hasta el vano de x = 3,1 (1,30 m a ejes; 1,06 a 1,14 m libres, aviso V13 de pasillo interno, por donde evacúan el laboratorio y la farmacia). La farmacia, que estaba en su mínimo, se reacomoda: la ventanilla ambulatoria (P2-A100-01, 4,20 m² a ejes) y la recepción técnica (P2-A096-01, 4,20 m²) bajan 0,75 a 0,90 m sobre la sala de espera de farmacia y abren a ella; la espera queda en 10,02 m² a ejes frente a 10,0 del programa, con las sillas en una fila contra el muro norte. La ventanilla hospitalaria (P2-A100-02, 1,25 × 3,20 m, 4,00 m²) queda al oriente del almacenamiento, contra el vestíbulo de la escalera, y el almacenamiento queda en 24,09 m² (frente a 24,0). El área técnica de hematología cede 0,70 m de fondo (12,04 m² frente a 12,0) para que la espera conserve fondo para las sillas. La columna C3 queda en la esquina entre la recepción técnica, la ventanilla hospitalaria y el vestíbulo. Cálculo propio.",
+  "Piso 3, esterilización (prediseño DMO): la zona limpia (P3-A162-01, con 2,07 m² de holgura) cede 0,10 m de ancho para que el aseo P3-A165-01 tenga 1,00 m libres en su puerta entre la mampostería y el muro estructural MX-3 de 0,35 m. En la habitación de aislamiento P3-A120-01, la columna A3 (0,90 m) corre la cama hacia el oriente y el baño se corre 0,15 m al oriente para que el riel de la cortina antifluido junto a la cama quede fuera del baño; la habitación no cambia de tamaño (16,24 m² a ejes).",
+  "Puertas corridas por las columnas de 0,80 y 0,90 m (V11 y V12): urgencias EDA (P1, columna B3), unidad sanitaria del personal (P2, B6), lavapatos (P3, C4), lavado de material (P4, B4), consultorio odontológico (P4, C5, con la bisagra junto al núcleo) y periapical (P4, C4).",
+  "Bloque técnico: cisternas del prediseño (cimentacion → cisternas): caja enterrada de 9,0 × 3,2 m bajo el patio de servicio con compartimientos de 40, 30 y 20 m³ útiles; los recintos del patio sobre ellas (filas 216 a 218) siguen los tabiques (x = -15,55 y -12,70). La tapa va a la cota del patio (-1,50) y el fondo 5,40 m más abajo (-6,90 desde el piso 1). Fosos de los ascensores (1,50 m) y del montacargas (0,60 m) bajo su núcleo en el piso 1 (bajo_rasante).",
+  "Piso 1, consultorio de urgencias junto a la columna A4 (prediseño DMO): la columna del eje A, de 0,90 m, entra 0,45 m en la esquina del consultorio P1-A015-01; para que quepan la camilla y su unidad sanitaria, el consultorio se ensancha 0,10 m (13,45 m² a ejes y 10,42 m² libres, frente a 13,0 del programa y 10,0 de la Res. 1633), su puerta pasa a x = -11,3, el depósito de equipos (P1-A033-01) se corre 0,10 m al oriente sin cambiar de tamaño (1,20 m de lado) y el triage (P1-A014-01) cede 0,10 m (9,95 m² a ejes frente a 9,0). Cálculo propio."
+ ],
+ "estructura": {
+  "nota": "Dimensiones del prediseño estructural DMO del equipo A (data/sismo/torre_hospital_estructura.json), copiadas aquí tal cual para trazar la planta; validar_plantas.py (V23) las compara con ese archivo. No reemplazan el diseño estructural firmado.",
+  "tipo_dato": "cálculo propio (prediseño del equipo A)",
+  "fuente": "data/sismo/torre_hospital_estructura.json → prediseno.dimensiones_adoptadas, prediseno.eleccion_muros, secciones, bloques y cimentacion",
+  "niveles": ["P1", "P2", "P3", "P4"],
+  "columnas": {
+   "lado_m": 0.8,
+   "por_eje_x": {"A": 0.9},
+   "nota": "Sección cuadrada centrada en la intersección de ejes: 0,80 × 0,80 m y 0,90 × 0,90 m en el eje A (fachada occidental), en los cuatro pisos."
+  },
+  "vigas": {
+   "ancho_m": 0.4,
+   "peralte_m": 0.8,
+   "por_eje_x": {"A": {"ancho_m": 0.5, "peralte_m": 0.9}},
+   "losa_nervada_m": 0.45,
+   "viga_banda_m": 0.45,
+   "nota": "Vigas de 0,40 × 0,80 m (0,50 × 0,90 m en el eje A) y vigas banda de 0,45 m entre la columna C y los muros; losa nervada de 0,45 m (nervios de 0,12 m cada 0,80 m, loseta de 0,05 m). La altura libre bajo viga es la de entrepiso menos el peralte; el cielo raso (altura_libre_m) debe quedar por debajo."
+  },
+  "muros_estructurales": {
+   "espesor_m": 0.35,
+   "activos": ["MY-N6", "MY-N3", "MX-3", "MX-4", "MX-7"],
+   "paneles": [
+    {
+     "muro": "MY-N6",
+     "nombre": "escalera norte, cara occidental al norte de la puerta",
+     "tramo": [3.1, 15.9, 3.1, 22.4]
+    },
+    {"muro": "MX-7", "nombre": "escalera norte, cara norte (y = 22,4)", "tramo": [3.1, 22.4, 8.6, 22.4]},
+    {"muro": "MY-N3", "nombre": "escalera sur, cara occidental al norte de la puerta", "tramo": [3.1, -5.7, 3.1, 0.8]},
+    {"muro": "MX-3", "nombre": "escalera sur, machón al sur de la puerta", "tramo": [3.1, -7.6, 3.1, -6.9]},
+    {"muro": "MX-3", "nombre": "escalera sur, cara sur (y = −7,6)", "tramo": [3.1, -7.6, 8.6, -7.6]},
+    {"muro": "MX-4", "nombre": "escalera sur, cara norte (y = 0,8)", "tramo": [3.1, 0.8, 8.6, 0.8]}
+   ],
+   "mamposteria": [
+    {"nombre": "escalera norte, machón al sur de la puerta", "tramo": [3.1, 14.0, 3.1, 14.7]},
+    {"nombre": "escalera norte, cara sur (y = 14,0)", "tramo": [3.1, 14.0, 8.6, 14.0]},
+    {"nombre": "escalera norte, cara oriental (x = 8,6)", "tramo": [8.6, 14.0, 8.6, 22.4]},
+    {"nombre": "escalera sur, cara oriental (x = 8,6)", "tramo": [8.6, -7.6, 8.6, 0.8]},
+    {"nombre": "foso de ascensores, cara occidental (x = 3,1)", "tramo": [3.1, 1.6, 3.1, 7.2]},
+    {"nombre": "foso de ascensores, cara y = 1,6", "tramo": [3.1, 1.6, 6.1, 1.6]},
+    {"nombre": "foso de ascensores, cara y = 7,2", "tramo": [3.1, 7.2, 6.1, 7.2]},
+    {"nombre": "foso de ascensores, cara oriental con las puertas (x = 6,1)", "tramo": [6.1, 1.6, 6.1, 7.2]},
+    {"nombre": "foso de ascensores, separación entre cabinas (y = 4,4)", "tramo": [3.1, 4.4, 6.1, 4.4]},
+    {"nombre": "montacargas general, cara occidental (x = 3,1)", "tramo": [3.1, 0.8, 3.1, 1.6]},
+    {"nombre": "montacargas general, cara oriental (x = 6,1)", "tramo": [6.1, 0.8, 6.1, 1.6]}
+   ],
+   "por_que": "Con los 7 paños posibles el centro de rigidez queda casi 5 m al oriente del de masa y la torsión es extrema (1bP). Quitando la cara sur de la escalera norte (MX-6) y el foso (MY-N4) los muros en x quedan repartidos a lado y lado del centro de masa en y, y los dos muros en y son los machones de 6,5 m que dejan las puertas; el resto de los núcleos va en mampostería separada."
+  },
+  "fosos": [
+   {
+    "id": "FOSO-ASC",
+    "nombre": "Foso de los ascensores camilleros (2 cabinas)",
+    "nivel": "P1",
+    "nucleo": "ASC",
+    "x": [3.1, 6.1],
+    "y": [1.6, 7.2],
+    "profundidad_m": 1.5,
+    "losa_e_m": 0.35,
+    "muro_e_m": 0.25,
+    "z_fondo_m": -1.85,
+    "nota": "profundidad de 1,50 m para ascensores camilleros de 1,0 m/s sin cuarto de máquinas (estimación; la fija el fabricante); se apoya en el suelo (carga ≈ 40 kPa) y se revisa la subpresión con el freático a 1,0 m"
+   },
+   {
+    "id": "FOSO-MC",
+    "nombre": "Foso del montacargas general",
+    "nivel": "P1",
+    "nucleo": "MC",
+    "x": [3.1, 6.1],
+    "y": [0.8, 1.6],
+    "profundidad_m": 0.6,
+    "losa_e_m": 0.25,
+    "muro_e_m": 0.2,
+    "z_fondo_m": -0.85,
+    "nota": "montacargas de 0,80 × 0,80 m (estimación)"
+   }
+  ],
+  "cisternas": [
+   {
+    "id": "CIS-1",
+    "nombre": "Cisternas enterradas (agua potable 40 m³, contra incendio 30 m³, lluvias 20 m³)",
+    "nivel": "BT",
+    "x": [-19.5, -10.5],
+    "y": [-28.0, -24.8],
+    "muro_e_m": 0.3,
+    "tabique_e_m": 0.25,
+    "losa_fondo_e_m": 0.35,
+    "losa_tapa_e_m": 0.25,
+    "h_interior_m": 4.8,
+    "h_agua_m": 4.382,
+    "profundidad_m": 5.4,
+    "compartimientos": [{"fila": 216, "volumen_util_m3": 40}, {"fila": 217, "volumen_util_m3": 30}, {"fila": 218, "volumen_util_m3": 20}],
+    "nota": "estructura independiente de la torre (bajo el patio del bloque técnico); compartimientos de 40, 30 y 20 m³ útiles"
+   }
+  ]
+ }
 }

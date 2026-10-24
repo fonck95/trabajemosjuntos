@@ -1018,7 +1018,7 @@ class TestPlantasTorre(unittest.TestCase):
         self.assertEqual(errores(inf), {})
         self.assertEqual(rc, 0)
         estados = {r['regla']: r['estado'] for r in inf['reglas']}
-        for regla in ('V2', 'V6', 'V7', 'V9', 'V10', 'V11', 'V12', 'V14', 'V15', 'V16', 'V20', 'V21', 'V22'):
+        for regla in ('V2', 'V6', 'V7', 'V9', 'V10', 'V11', 'V12', 'V14', 'V15', 'V16', 'V20', 'V21', 'V22', 'V23'):
             self.assertEqual(estados.get(regla), 'ok', regla)
 
     def test_todos_los_niveles_y_conteos_del_programa(self):
@@ -1073,8 +1073,65 @@ class TestPlantasTorre(unittest.TestCase):
         tec = {r['ambiente'] for r in self.niv['P2']['recintos'] if r.get('programado') is False}
         self.assertIn('Biología molecular (GeneXpert)', tec)
         self.assertIn('Ducha de emergencia y lavaojos del laboratorio', tec)
-        toma = [r for r in self.niv['P1']['recintos'] if r.get('servicio_programa') == 'Toma de muestras de laboratorio clínico']
+        # el aseo de la toma (P1-A055-01) sube junto a la escalera sur desde el prediseño DMO (acceso a la escalera, 17.1)
+        toma = [r for r in self.niv['P1']['recintos'] if r.get('servicio_programa') == 'Toma de muestras de laboratorio clínico'
+                and r['ambiente'] != 'Ambiente de aseo']
+        self.assertTrue(toma)
         self.assertTrue(all(C.centroide(r['poligono'])[1] < -10.0 for r in toma))
+
+    def test_estructura_del_prediseno_dmo(self):
+        """17.1: columnas de 0,80 m (0,90 m en el eje A), muros estructurales de 0,35 m solo en los paños del prediseño,
+        puertas de las escaleras en el vano de x = 3,1, alturas libres bajo viga, fosos y cisternas (equipo A)."""
+        est = C.cargar_json(C.DATOS / 'sismo' / 'torre_hospital_estructura.json')
+        paneles = [p for p in est['prediseno']['eleccion_muros']['paneles_de_nucleo'] if p['material'] == 'concreto']
+        for N in ('P1', 'P2', 'P3', 'P4'):
+            n = self.niv[N]
+            for c in n['columnas']:
+                lado = 0.9 if c['id'].startswith('A') else 0.8
+                self.assertEqual((c['b'], c['h']), (lado, lado), c['id'])
+            nucleo = [m for m in n['muros'] if m['tipo'] == 'nucleo']
+            for m in nucleo:
+                self.assertEqual(m['espesor'], 0.35)
+                self.assertTrue(m['estructural'])
+                self.assertTrue(any(C.distancia_punto_segmento(m['a'], pn['tramo'][:2], pn['tramo'][2:]) < 1e-6 and
+                                    C.distancia_punto_segmento(m['b'], pn['tramo'][:2], pn['tramo'][2:]) < 1e-6 for pn in paneles), m['id'])
+            largo = sum(math.dist(m['a'], m['b']) for m in nucleo)
+            self.assertAlmostEqual(largo, sum(math.dist(pn['tramo'][:2], pn['tramo'][2:]) for pn in paneles), places=2)
+            ids_nucleo = {m['id'] for m in nucleo}
+            self.assertFalse([pt['id'] for pt in n['puertas'] if pt['muro'] in ids_nucleo])
+            self.assertFalse([v['id'] for v in n['ventanas'] if v['muro'] in ids_nucleo])
+            escaleras = [pt for pt in n['puertas'] if pt['categoria'] == 'evacuacion' and pt['centro'][0] == 3.1]
+            self.assertEqual(sorted(pt['centro'][1] for pt in escaleras), [-6.3, 15.3], N)
+            self.assertTrue(all(pt['ancho'] == 1.1 for pt in escaleras))
+            e = n['estructura']
+            self.assertAlmostEqual(e['altura_libre_bajo_viga_m'], n['altura_entrepiso_m'] - 0.8, places=6)
+            self.assertAlmostEqual(e['altura_libre_bajo_viga_min_m'], n['altura_entrepiso_m'] - 0.9, places=6)
+            self.assertGreaterEqual(e['plenum_bajo_viga_m'], 0.3)
+        for N in ('EXT', 'BT', 'CUB'):
+            self.assertFalse([m['id'] for m in self.niv[N]['muros'] if m['tipo'] == 'nucleo'])
+        self.assertEqual({m['tipo'] for m in self.niv['CUB']['muros'] if 'CUB-A220-01' in m['lados']} - {'fachada', 'parapeto'},
+                         {'nucleo_mamposteria'})
+        fosos = {b['id']: b for b in self.niv['P1']['bajo_rasante']}
+        self.assertEqual(set(fosos), {'FOSO-ASC', 'FOSO-MC'})
+        self.assertEqual(fosos['FOSO-ASC']['nucleo'], 'P1-NUC-ASC')
+        cis = self.niv['BT']['bajo_rasante'][0]
+        self.assertEqual(cis['id'], 'CIS-1')
+        self.assertEqual([k['volumen_util_m3'] for k in cis['compartimientos']], [40, 30, 20])
+        self.assertEqual([k['recinto'] for k in cis['compartimientos']], ['BT-A216-01', 'BT-A217-01', 'BT-A218-01'])
+
+    def test_v23_detecta_cambios_del_prediseno(self):
+        pl = C.cargar_json(C.PLANTAS)
+        P1 = next(n for n in pl['niveles'] if n['id'] == 'P1')
+        P1['columnas'][0]['b'] = P1['columnas'][0]['h'] = 0.6                      # columna de antes del prediseño
+        m = next(m for m in P1['muros'] if m['tipo'] == 'nucleo')
+        m.update(tipo='nucleo_mamposteria', espesor=0.2, estructural=False)        # paño estructural en mampostería
+        ruta = self.tmp / 'plantas_v23.json'
+        C.escribir_json(ruta, pl)
+        rc, inf = correr(VALIDAR_PLANTAS, '--archivo', ruta)
+        self.assertEqual(rc, 1)
+        v23 = errores(inf).get('V23', [])
+        self.assertTrue(any('columna A1' in x for x in v23), v23)
+        self.assertTrue(any('no es muro estructural en toda su longitud' in x for x in v23), v23)
 
     def test_paneles_solares_182_modulos(self):
         grupos = [g for n in self.pl['niveles'] for g in n.get('paneles_solares', [])]

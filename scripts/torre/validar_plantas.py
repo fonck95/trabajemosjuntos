@@ -1,4 +1,5 @@
-"""Valida la planta de la torre con las reglas V1 a V20 del contrato (ESPECIFICACION_INTEGRACION.md, 3.5).
+"""Valida la planta de la torre con las reglas V1 a V20 del contrato (ESPECIFICACION_INTEGRACION.md, 3.5), V21 y V22 de
+la sección 16 y V23 del prediseño estructural DMO (17.1).
 
 Uso:
   python3 scripts/torre/validar_plantas.py                     # data/edificios/torre_hospital_plantas.json, todas las reglas
@@ -21,6 +22,10 @@ Conceptos que el validador entiende (los escribe generar_plantas.py):
 - recintos exteriores (exterior: true) y no transitables (transitable: false: huecos, sobrerrecorrido, huella de la torre);
 - núcleos con varios recintos (ascensores: dos huecos), escaleras caminables por tramos y descansos con cotas (V21);
 - V14 se aplica a los niveles cerrados (P1-P4 y BT); en EXT y CUB no aplica (son exteriores).
+- Prediseño DMO (17.1, V23): «nucleo» es el muro estructural de concreto de 0,35 m y va solo sobre los paños que eligió el
+  prediseño (data/sismo/torre_hospital_estructura.json → prediseno.eleccion_muros); el resto del borde de los núcleos es
+  «nucleo_mamposteria». Las columnas tienen la sección del prediseño (0,80 m; 0,90 m en el eje A) y el área libre de cada
+  recinto descuenta la parte de las columnas que entra en su polígono libre (V1 y V8).
 """
 from __future__ import annotations
 
@@ -58,8 +63,13 @@ REGLAS = {
     'V22': ('Paso físico (16 y 6.4): con muros, columnas y obstáculos del recorrido, un caminante de radio 0,30 m llega a cada '
             'recinto desde las entradas, conexiones y pasos de su nivel, en una sola zona por cota de piso; con radio 0,45 m '
             '(camilla) llega a los recintos de puertas para camas o camillas', 'duro'),
+    'V23': ('Prediseño estructural DMO (17.1): columnas con la sección del prediseño; muros estructurales de concreto solo y '
+            'completos sobre los paños del prediseño, sin puertas, vanos ni ventanas; cielo raso bajo las vigas; fosos y '
+            'cisternas iguales a la cimentación', 'duro'),
 }
-SOLO_PROGRAMA = ('V2', 'V6', 'V15', 'V16', 'V20')
+SOLO_PROGRAMA = ('V2', 'V6', 'V15', 'V16', 'V20', 'V23')
+ESTRUCTURA = C.DATOS / 'sismo' / 'torre_hospital_estructura.json'
+MARCO_PUERTA_M = 0.05          # el vano de una puerta (hoja + marco) no puede tocar un muro estructural
 
 TIPOS_ESPACIO = ('recinto', 'circulacion', 'nucleo')
 ABRE = ('adentro', 'afuera', 'corrediza', 'doble')
@@ -172,6 +182,9 @@ class Nivel:
                 and (C.es_horizontal(m['a'], m['b']) or C.es_vertical(m['a'], m['b']))
                 and math.dist(m['a'][:2], m['b'][:2]) > TOL]
 
+    def columnas(self) -> list[dict]:
+        return [c for c in self.d.get('columnas', []) or [] if isinstance(c, dict) and num(c.get('x')) and num(c.get('y'))]
+
     def espacio_en(self, pt):
         for rid, p in self.pol.items():
             if C.punto_en_poligono(pt, p, 0.0):
@@ -214,12 +227,14 @@ def libre_de_columnas(lo: float, hi: float, a, b, cols) -> tuple[float, list]:
 
 
 class Validador:
-    def __init__(self, plantas: dict, informe: C.Informe, fixture: bool, programa: dict | None, reglas: dict):
+    def __init__(self, plantas: dict, informe: C.Informe, fixture: bool, programa: dict | None, reglas: dict,
+                 estructura: dict | None = None):
         self.pl = plantas
         self.inf = informe
         self.fixture = fixture
         self.programa = programa
         self.reglas = reglas
+        self.estructura = estructura
         self.cat_puertas = {p['categoria']: p for p in reglas['puertas']}
 
     # ------------------------------------------------------------------------------------------------ utilidades
@@ -362,9 +377,10 @@ class Validador:
                 self.err('V1', f'{q}falta poligono_libre válido')
             else:
                 if 'area_libre_m2' in r or tipo == 'recinto':
-                    al = C.area_poligono(nv.libre[rid])
+                    al = C.area_libre(nv.libre[rid], nv.columnas())
                     if not num(r.get('area_libre_m2')) or abs(r['area_libre_m2'] - al) > 0.01:
-                        self.err('V1', f'{q}area_libre_m2 = {r.get("area_libre_m2")} y el polígono libre mide {al:.3f} m²')
+                        self.err('V1', f'{q}area_libre_m2 = {r.get("area_libre_m2")} y el polígono libre, sin las columnas, '
+                                       f'mide {al:.3f} m²')
                 if not C.poligono_dentro_de(nv.libre[rid], p, TOL):
                     self.err('V1', f'{q}el polígono libre se sale del polígono a ejes')
             mn = r.get('minimo_1633')
@@ -712,8 +728,9 @@ class Validador:
                 self.err('V1', f'{q}falta poligono_libre válido')
                 continue
             lp = nv.libre_sub[sid]
-            if not num(sb.get('area_libre_m2')) or abs(sb['area_libre_m2'] - C.area_poligono(lp)) > 0.01:
-                self.err('V1', f'{q}area_libre_m2 = {sb.get("area_libre_m2")} y el polígono libre mide {C.area_poligono(lp):.3f} m²')
+            al = C.area_libre(lp, nv.columnas())
+            if not num(sb.get('area_libre_m2')) or abs(sb['area_libre_m2'] - al) > 0.01:
+                self.err('V1', f'{q}area_libre_m2 = {sb.get("area_libre_m2")} y el polígono libre, sin las columnas, mide {al:.3f} m²')
             if not C.poligono_dentro_de(lp, p, TOL):
                 self.err('V1', f'{q}el polígono libre se sale del polígono a ejes')
             cortes = [v for m in validos for v in (m['a'], m['b'])]
@@ -786,8 +803,9 @@ class Validador:
                 self.err('V7', f'{nv.id}: {rid} tiene lado menor de {lado:.2f} m a ejes; mínimo {mn["lado_m"]} m')
             if rid in nv.libre and num(mn.get('m2')):
                 self.inf.revisado('V8')
-                al = C.area_poligono(nv.libre[rid]) + sum(C.area_poligono(nv.libre_sub[sid]) for sid in nv.libre_sub
-                                                          if nv.padre(sid) == rid)
+                cols = nv.columnas()
+                al = C.area_libre(nv.libre[rid], cols) + sum(C.area_libre(nv.libre_sub[sid], cols) for sid in nv.libre_sub
+                                                             if nv.padre(sid) == rid)
                 if al < mn['m2'] - 1e-6:
                     self.av('V8', f'{nv.id}: {rid} ({r.get("ambiente")}): {al:.2f} m² libres frente a {mn["m2"]} m² del mínimo; '
                                   'por confirmar si el mínimo de la Res. 1633 se mide libre o a ejes (Anexo 1, definiciones)')
@@ -1078,7 +1096,9 @@ class Validador:
             self.inf.revisado('V18')
             for s0, s1 in C.bordes(nv.pol[r['id']]):
                 tramo = [m for m in validos if C.solape_colineal(s0, s1, m['a'], m['b'])]
-                malos = [m['id'] for m in tramo if m.get('tipo') != 'plomado']
+                # un muro estructural de concreto (0,35 m) blinda más que la lámina de ≈ 2 mm de plomo (prediseño DMO;
+                # cálculo de blindaje pendiente, Res. 1811 de 2025)
+                malos = [m['id'] for m in tramo if m.get('tipo') != 'plomado' and not (m.get('tipo') == 'nucleo' and m.get('estructural'))]
                 if malos:
                     self.err('V18', f'{nv.id}: {r["id"]} ({r.get("ambiente")}): muros sin plomo {malos}')
                 if C.largo_cubierto(s0, s1, [(m['a'], m['b']) for m in tramo]) < math.dist(s0, s1) - TOL:
@@ -1339,6 +1359,151 @@ class Validador:
                     self.err('V22', f'{nv.id}: {rid} ({(nv.por_id.get(rid) or {}).get("ambiente")}): una camilla '
                                     '(radio 0,45 m) no llega por su puerta de camas o camillas')
 
+    # ------------------------------------------------------------------------------------------------ V23
+    def v23(self, niveles: list[Nivel]):
+        """Prediseño DMO (17.1): la planta usa las dimensiones de data/sismo/torre_hospital_estructura.json (equipo A):
+        columnas por eje y piso, muros estructurales solo y completos sobre los paños del prediseño (sin vanos), cielo
+        raso bajo las vigas y fosos y cisternas de la cimentación."""
+        est = self.estructura
+        if not isinstance(est, dict):
+            self.inf.omitir('V23', 'no se pudo leer data/sismo/torre_hospital_estructura.json (prediseño del equipo A)')
+            return
+        S = est.get('secciones') or {}
+        col_sec, muro_esp, vigas = {}, {}, {}
+        for b in est.get('bloques') or []:
+            for po in b.get('porticos') or []:
+                for e in po.get('elementos') or []:
+                    sec = S.get(e.get('seccion')) or {}
+                    if e.get('tipo') == 'columna':
+                        col_sec[(str(e.get('eje')), e.get('nivel'))] = (sec.get('b'), sec.get('h'))
+                    elif e.get('tipo') == 'muro_concreto':
+                        muro_esp[po.get('id')] = sec.get('b')
+                    elif e.get('tipo') == 'viga' and num(sec.get('h')):
+                        vigas.setdefault(e.get('nivel'), []).append(float(sec['h']))
+        paneles = [p for p in ((est.get('prediseno') or {}).get('eleccion_muros') or {}).get('paneles_de_nucleo', [])
+                   if p.get('material') == 'concreto']
+        niveles_est = {nv.d.get('piso') for nv in niveles if nv.id in NIVELES_PISO}
+        for nv in niveles:
+            piso = nv.d.get('piso')
+            muros = nv.muros_validos()
+            nucleo = [m for m in muros if m.get('tipo') == 'nucleo']
+            if nv.id not in NIVELES_PISO:
+                for m in nucleo:
+                    self.err('V23', f'{nv.id}: {m.get("id")} es muro estructural y el prediseño no tiene muros en este nivel')
+                continue
+            self.inf.revisado('V23')
+            # columnas
+            vistas = set()
+            for c in nv.columnas():
+                cid = str(c.get('id'))
+                clave = (f'{cid[0]}-{cid[1:]}', piso)
+                vistas.add(clave)
+                bh = col_sec.get(clave)
+                if bh is None:
+                    self.err('V23', f'{nv.id}: la columna {cid} no está en el prediseño (eje {clave[0]}, piso {piso})')
+                elif not (num(c.get('b')) and num(c.get('h')) and abs(c['b'] - bh[0]) <= 1e-6 and abs(c['h'] - bh[1]) <= 1e-6):
+                    self.err('V23', f'{nv.id}: la columna {cid} mide {c.get("b")} × {c.get("h")} m y el prediseño dice '
+                                    f'{bh[0]} × {bh[1]} m')
+            for clave in col_sec:
+                if clave[1] == piso and clave not in vistas:
+                    self.err('V23', f'{nv.id}: falta la columna del eje {clave[0]} del prediseño')
+            # muros estructurales: solo y completos sobre los paños del prediseño, con su espesor
+            for m in nucleo:
+                pan = [pn for pn in paneles if C.distancia_punto_segmento(m['a'], pn['tramo'][:2], pn['tramo'][2:]) <= 1e-6
+                       and C.distancia_punto_segmento(m['b'], pn['tramo'][:2], pn['tramo'][2:]) <= 1e-6]
+                if not pan:
+                    self.err('V23', f'{nv.id}: {m.get("id")} ({m["a"]} → {m["b"]}) es muro estructural y no está sobre un paño '
+                                    'de concreto del prediseño')
+                    continue
+                esp = muro_esp.get(pan[0].get('muro'))
+                if not num(esp) or abs(m.get('espesor', -1) - esp) > 1e-6 or m.get('estructural') is not True:
+                    self.err('V23', f'{nv.id}: {m.get("id")} mide {m.get("espesor")} m y el muro {pan[0].get("muro")} del '
+                                    f'prediseño {esp} m (o no está marcado estructural)')
+            for pn in paneles:
+                a, b = pn['tramo'][:2], pn['tramo'][2:]
+                cub = C.largo_cubierto(a, b, [(m['a'], m['b']) for m in nucleo])
+                if cub < math.dist(a, b) - TOL:
+                    self.err('V23', f'{nv.id}: el paño {pn.get("nombre")} del muro {pn.get("muro")} ({a} → {b}) no es muro '
+                                    f'estructural en toda su longitud ({cub:.2f} de {math.dist(a, b):.2f} m)')
+            for pt in nv.puertas:
+                m = nv.muros.get(pt.get('muro'))
+                if m is None or not punto(pt.get('centro')) or not num(pt.get('ancho')) or not punto(m.get('a')):
+                    continue
+                if m.get('tipo') == 'nucleo':
+                    self.err('V23', f'{nv.id}: la puerta {pt.get("id")} perfora el muro estructural {m.get("id")}')
+                    continue
+                hz = C.es_horizontal(m['a'], m['b'])
+                e, f = (0, 1) if hz else (1, 0)
+                lo = pt['centro'][e] - pt['ancho'] / 2 - MARCO_PUERTA_M
+                hi = pt['centro'][e] + pt['ancho'] / 2 + MARCO_PUERTA_M
+                for w in nucleo:
+                    if C.es_horizontal(w['a'], w['b']) != hz or abs(w['a'][f] - pt['centro'][f]) > 1e-6:
+                        continue
+                    w0, w1 = sorted((w['a'][e], w['b'][e]))
+                    if min(hi, w1) - max(lo, w0) > 1e-6:
+                        self.err('V23', f'{nv.id}: el vano de la puerta {pt.get("id")} (hoja y marco de 5 cm) se mete en el '
+                                        f'muro estructural {w.get("id")}')
+            for v in nv.ventanas:
+                m = nv.muros.get(v.get('muro'))
+                if m is not None and m.get('tipo') == 'nucleo':
+                    self.err('V23', f'{nv.id}: la ventana {v.get("id")} queda en el muro estructural {m.get("id")}')
+            # alturas: el cielo raso cabe bajo la viga más alta del piso
+            hs = vigas.get(piso) or []
+            ed = nv.d.get('estructura') or {}
+            H = nv.d.get('altura_entrepiso_m')
+            if not hs or not num(H):
+                self.err('V23', f'{nv.id}: sin vigas del prediseño en el piso {piso} o sin altura de entrepiso')
+            else:
+                bajo_min = H - max(hs)
+                if not num(ed.get('altura_libre_bajo_viga_min_m')) or abs(ed['altura_libre_bajo_viga_min_m'] - bajo_min) > 0.005:
+                    self.err('V23', f'{nv.id}: altura libre bajo la viga más alta {ed.get("altura_libre_bajo_viga_min_m")} m; '
+                                    f'con el prediseño es {bajo_min:.2f} m')
+                if num(nv.d.get('altura_libre_m')) and nv.d['altura_libre_m'] > bajo_min + 1e-6:
+                    self.err('V23', f'{nv.id}: el cielo raso ({nv.d["altura_libre_m"]} m) queda por encima de las vigas '
+                                    f'({bajo_min:.2f} m libres)')
+        if not niveles_est:
+            self.err('V23', 'la planta no tiene los pisos 1 a 4 del prediseño')
+        # fosos y cisternas de la cimentación
+        cim = est.get('cimentacion') or {}
+        br = {b.get('id'): (nv, b) for nv in niveles for b in nv.d.get('bajo_rasante', []) or [] if isinstance(b, dict)}
+        for f in cim.get('fosos', []) or []:
+            nb = br.get(f.get('id'))
+            if nb is None:
+                self.err('V23', f'falta el foso {f.get("id")} de la cimentación en la planta (bajo_rasante)')
+                continue
+            nv, b = nb
+            q = C.rect_a_poligono([f['x'][0], f['y'][0], f['x'][1], f['y'][1]])
+            if not poligono_valido(b.get('poligono')) or abs(C.area_interseccion(q, b['poligono']) - C.area_poligono(q)) > 1e-3 \
+                    or abs(C.area_poligono(b['poligono']) - C.area_poligono(q)) > 1e-3:
+                self.err('V23', f'{nv.id}: el foso {f.get("id")} no tiene la huella de la cimentación')
+            for k in ('profundidad_m',):
+                if not num(b.get(k)) or abs(b[k] - f.get(k, -1)) > 1e-6:
+                    self.err('V23', f'{nv.id}: el foso {f.get("id")} tiene {k} = {b.get(k)} y la cimentación {f.get(k)}')
+            if not num(b.get('z_fondo_m')) or abs(b['z_fondo_m'] - f.get('z_fondo', -99)) > 1e-6:
+                self.err('V23', f'{nv.id}: el foso {f.get("id")} tiene el fondo en {b.get("z_fondo_m")} y la cimentación en '
+                                f'{f.get("z_fondo")}')
+            nus = [nu for nu in nv.d.get('nucleos', []) if nu.get('id') == b.get('nucleo')]
+            if not nus or not C.poligono_dentro_de(q, nus[0].get('poligono'), 1e-3):
+                self.err('V23', f'{nv.id}: el foso {f.get("id")} no queda bajo su núcleo {b.get("nucleo")}')
+        for c in cim.get('cisternas', []) or []:
+            nb = br.get(c.get('id'))
+            if nb is None:
+                self.err('V23', f'falta la cisterna {c.get("id")} de la cimentación en la planta (bajo_rasante)')
+                continue
+            nv, b = nb
+            q = C.rect_a_poligono([c['x'][0], c['y'][0], c['x'][1], c['y'][1]])
+            if not poligono_valido(b.get('poligono')) or abs(C.area_interseccion(q, b['poligono']) - C.area_poligono(q)) > 1e-3 \
+                    or abs(C.area_poligono(b['poligono']) - C.area_poligono(q)) > 1e-3:
+                self.err('V23', f'{nv.id}: la cisterna {c.get("id")} no tiene la huella de la cimentación')
+            prof = c.get('h_interior_m', 0) + c.get('losa_fondo_e_m', 0) + c.get('losa_tapa_e_m', 0)
+            if not num(b.get('profundidad_m')) or abs(b['profundidad_m'] - prof) > 0.005:
+                self.err('V23', f'{nv.id}: la cisterna {c.get("id")} tiene {b.get("profundidad_m")} m de profundidad y la '
+                                f'cimentación {prof:.3f} m')
+            sobre = [nv.pol.get(k.get('recinto')) for k in b.get('compartimientos', []) or []]
+            if not sobre or any(x is None for x in sobre) or \
+                    abs(sum(C.area_interseccion(q, x) for x in sobre) - C.area_poligono(q)) > 1e-3:
+                self.err('V23', f'{nv.id}: la cisterna {c.get("id")} no queda bajo los recintos de sus compartimientos')
+
     # ------------------------------------------------------------------------------------------------ todo
     def correr(self):
         self.v1_general()
@@ -1369,6 +1534,7 @@ class Validador:
             self.v15(niveles)
             self.v16(niveles)
             self.v20(niveles)
+            self.v23(niveles)
         self.v21(niveles)
         self.v22(niveles)
         if not (self.pl.get('zonas') if self.fixture else self.reglas.get('zonas')):
@@ -1376,12 +1542,14 @@ class Validador:
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description='Valida la planta de la torre (reglas V1-V20 del contrato, 3.5, V21 de las escaleras, 16.1, y V22 de paso físico).')
+    ap = argparse.ArgumentParser(description='Valida la planta de la torre (reglas V1-V20 del contrato, 3.5, V21 de las escaleras, 16.1, V22 de paso físico y V23 del prediseño DMO, 17.1).')
     ap.add_argument('--archivo', type=Path, help='archivo de plantas a validar con todas las reglas')
     ap.add_argument('--fixture', nargs='?', type=Path, const=C.FIXTURES / 'plantas_min.json',
                     help='valida un fixture y omite V2, V6, V15, V16 y V20 (por defecto scripts/fixtures/torre/plantas_min.json)')
     ap.add_argument('--programa', type=Path, default=C.PROGRAMA)
     ap.add_argument('--reglas', type=Path, default=C.REGLAS_PLANTA)
+    ap.add_argument('--estructura', type=Path, default=ESTRUCTURA,
+                    help='prediseño estructural del equipo A (V23); por defecto data/sismo/torre_hospital_estructura.json')
     a = ap.parse_args(argv)
     if a.archivo and a.fixture:
         ap.error('use --archivo o --fixture, no los dos')
@@ -1402,7 +1570,14 @@ def main(argv=None):
             programa = None
     reglas = cargar_reglas(a.reglas)
     inf.cabecera['reglas_planta'] = reglas['fuente']
-    Validador(plantas, inf, fixture, programa, reglas).correr()
+    estructura = None
+    if not fixture:
+        try:
+            estructura = C.cargar_json(a.estructura)
+            inf.cabecera['estructura'] = C.relativa(a.estructura)
+        except (FileNotFoundError, ValueError):
+            estructura = None
+    Validador(plantas, inf, fixture, programa, reglas, estructura).correr()
     inf.salir()
 
 

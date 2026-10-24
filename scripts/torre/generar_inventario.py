@@ -537,8 +537,9 @@ class Sala:
 
     # ---------------------------------------------------------------------------------------------- columnas
     def _columnas(self):
-        """Las columnas de 0,60 × 0,60 m sobresalen hasta 0,24 m de la cara de los muros (revisión adversarial): no se
-        pisan (fuera de `dentro`), ninguna huella las cruza y en los bordes que tapan no se cuelga ni se arrima nada."""
+        """Las columnas (0,80 × 0,80 m y 0,90 × 0,90 m en el eje A desde el prediseño DMO; las medidas salen de la planta)
+        sobresalen de la cara de los muros (revisión adversarial): no se pisan (fuera de `dentro`), ninguna huella las
+        cruza y en los bordes que tapan no se cuelga ni se arrima nada."""
         X0, Y0, X1, Y1 = C.caja(self.libre)
         for c in self.nivel.get('columnas', []) or []:
             b2, h2 = float(c.get('b', 0.6)) / 2, float(c.get('h', 0.6)) / 2

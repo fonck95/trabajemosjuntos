@@ -1584,10 +1584,11 @@
     },
     {
      "ambiente": {"fila": 104, "nombre": "Sala de espera de farmacia (8 personas)"},
-     "por_recinto": 2,
+     "por_recinto": 1,
      "estrategia": "cuadricula",
      "patron": "teatro",
-     "pared": "s"
+     "pared": "n",
+     "nota": "Prediseño DMO: con el acceso a la escalera sur la espera de farmacia queda en dos franjas; el tándem va contra el muro norte de la occidental y deja libre el paso hacia la franja oriental, el laboratorio y la escalera sur."
     },
     {
      "ambiente": {"fila": 179, "nombre": "Sala de espera (4 m² por consultorio: 3 consultorios y odontología)"},
@@ -1605,7 +1606,7 @@
     },
     {
      "ambiente": {"fila": 1, "nombre": "Información, admisiones, facturación y atención al usuario (SIAU), 3 puestos"},
-     "por_recinto": 1,
+     "por_recinto": 2,
      "estrategia": "contra_pared",
      "pared": "s"
     }
@@ -1713,10 +1714,14 @@
     {
      "ambiente": {"fila": 180, "nombre": "Consultorio odontológico con 3 unidades separadas por barrera"},
      "por_recinto": 3,
-     "estrategia": "cabecera_a_pared",
-     "bandas": 1,
+     "estrategia": "posiciones_fijas",
      "dim_m": [1.2, 2.0, 1.9],
-     "pared": "o"
+     "posiciones": [
+      {"ref": "punto", "punto": [0.36, 6.325], "rotacion_deg": -90},
+      {"ref": "punto", "punto": [0.36, 4.225], "rotacion_deg": -90},
+      {"ref": "punto", "punto": [0.38, 2.925], "rotacion_deg": -90}
+     ],
+     "justificacion": "Pieza compuesta (sillón, lámpara, módulo y escupidera) en 1,2 × 2,0 m. Las columnas C4 y C5 del prediseño DMO (0,80 m) acortan el muro occidental: las tres unidades van contra él, entre y = 2,33 (frente a la puerta de esterilización) y y = 6,93, con la franja de 0,9 m entre la primera y la segunda compartida y la de la tercera hacia la puerta de esterilización; el pasillo de 1,04 m frente a los mesones del muro oriental llega a las puertas de esterilización y del periapical. El ubicador por pasos ponía la tercera unidad atravesada en el paso."
     }
    ],
    "fuente_reparto": "3 unidades en el consultorio de 3 unidades separadas por barrera: huella de 1,20 × 2,00 m por unidad (sillón reclinado con el módulo del odontólogo; estimación) y el taburete del odontólogo aparte (línea «Puesto de trabajo y silla del odontólogo»), con 0,9 m libres a un costado de cada una."
@@ -6045,7 +6050,9 @@
     {
      "ambiente": {"fila": 104, "nombre": "Sala de espera de farmacia (8 personas)"},
      "por_recinto": 1,
-     "estrategia": "contra_pared"
+     "estrategia": "contra_pared",
+     "pared": "n",
+     "nota": "Contra un muro norte de la espera de farmacia (prediseño DMO): la espera queda en dos franjas y la caneca no cabe en la misma franja que el tándem sin cerrar el paso de 0,60 m."
     },
     {
      "ambiente": {"fila": 136, "nombre": "Sala de espera y de visitas (compartida con partos)"},

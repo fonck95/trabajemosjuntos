@@ -899,6 +899,27 @@ if _tdir.exists():
     (R / 'web/data').mkdir(parents=True, exist_ok=True)
     _escribir_web('torre.json', TORRE)
     _exportar_torre_y_sismo()
+    # --- bim: inicio (equipo F, especificación 17.4-17.5; solo este bloque es de F) ---
+    # modelo BIM de la torre para el modo «Modelo BIM»: web/data/torre_bim*.json desde data/bim (scripts/bim/web_bim.py),
+    # solo si el modelo, las interferencias y la validación del IFC están al día con sus insumos (insumos_sha1)
+    def _exportar_bim():
+        import importlib.util as _ilu
+        _spec = _ilu.spec_from_file_location('web_bim', R / 'scripts/bim/web_bim.py')
+        web_bim = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(web_bim)
+        LIMITES_KB.update({'torre_bim.json': 150, 'torre_bim_interferencias.json': 900})
+        for _niv in ('CIM-PIL', 'CIM', 'BT', 'EXT', 'P1', 'P2', 'P3', 'P4', 'CUB'):
+            LIMITES_KB[f'torre_bim_{_niv}.json'] = 1100
+            LIMITES_KB[f'torre_bim_ref_{_niv}.json'] = 900
+        viejos = {p_.name for p_ in (R / 'web/data').glob('torre_bim*.json')}
+        escritos = web_bim.exportar(_escribir_web, _aviso, _cargar_generado)
+        for n_ in sorted(viejos - set(escritos)):                 # lo que ya no sale (modelo desactualizado o nivel vacío)
+            (R / 'web/data' / n_).unlink()
+    try:
+        _exportar_bim()
+    except Exception as _e:                                       # el modelo BIM nunca detiene el resto de la exportación
+        _aviso(f'torre_bim*.json no se exportó: {type(_e).__name__}: {_e}')
+    # --- bim: fin ---
 
 # --- Parque ecotecnológico sobre el relleno sanitario (data/proyectos/parque_relleno/): archivo aparte para su vista
 _pdir = D / 'proyectos/parque_relleno'

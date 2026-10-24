@@ -28,6 +28,20 @@ const MODULOS = {
   contraste: () => import('./torre/contraste.js').catch(relleno),
 };
 const NUEVOS = ['recorrido', 'sismo'];   // modos con módulo propio (6.8 y 8.6)
+// --- bim: inicio (equipo F, especificación 17.5; solo este bloque es de F) ---
+// modo «Modelo BIM» (./torre/bim.js): se carga al pedirlo, como el recorrido y el simulador. Si no carga, un aviso propio
+// (el relleno de D trae los textos del recorrido y del simulador)
+MODULOS.bim = () => import('./torre/bim.js').catch((e) => {
+  console.warn('torre: no se pudo cargar el modo «Modelo BIM»', e);
+  return { RELLENO: true, montar: async (ctx) => ({
+    relleno: true,
+    entrar() { ctx.panel.innerHTML = '<h3>Modelo BIM</h3><p class="note">El modelo BIM no se pudo cargar en este momento. Vuelve a intentarlo más tarde.</p>'; ctx.panel.hidden = false; },
+    salir({ porUsuario = false } = {}) { ctx.panel.innerHTML = ''; ctx.panel.hidden = true; if (porUsuario) ctx.alSalir?.(); },
+    irA() {}, alReanudar() {}, dispose() {},
+  }) };
+});
+NUEVOS.push('bim');
+// --- bim: fin ---
 // obra nueva del GLB: el recorrido y el simulador la ocultan porque el GLB reparte entrepisos de 4,30 m que no coinciden con
 // los niveles reales (1.2). Es el nodo «obra_nueva» entero (su suelo, letreros y equipos de cubierta van fundidos en una sola
 // malla con el edificio) más los paneles solares y los equipos de la cubierta; quedan lo existente, el terreno y la conexión
@@ -329,6 +343,9 @@ export function mount(root) {
     relleno: 'Arrastra para girar · este modo está en construcción',
     cargando: 'Cargando el modo…',
   };
+  // --- bim: inicio ---
+  PISTAS.bim = 'Arrastra para girar · toca un elemento para ver su ficha · cortes, cimentación, refuerzo, 4D y 5D en el panel';
+  // --- bim: fin ---
   const pista = () => { if (pistaEl) pistaEl.textContent = !nuevo() ? pista0 : !modulos[modo] ? PISTAS.cargando : modulos[modo].RELLENO ? PISTAS.relleno : PISTAS[modo]; };
   // una tarjeta de la carpeta se ve solo si alguno de sus contenedores está a la vista (los modos muestran u ocultan los suyos)
   const vigilar = (card) => {
@@ -368,6 +385,10 @@ export function mount(root) {
     return new Map([...mod.coloresRecintos(c, plantas)].map(([id, v]) => [id, new THREE.Color(v.color_hex)]));
   }
   async function datosModo(m) {
+    // --- bim: inicio ---
+    // el modo BIM recibe el índice del modelo y lee los niveles, el refuerzo y las interferencias cuando los necesita
+    if (m === 'bim') return { indice: await leer('torre_bim.json'), leer, url: urlDatos };
+    // --- bim: fin ---
     if (m === 'recorrido') {
       const [plantas, inventario, habilitacion] = await Promise.all(['torre_plantas.json', 'torre_inventario.json', 'torre_habilitacion.json'].map(leer));
       return { plantas, inventario, habilitacion, coloresContraste: await coloresContraste(plantas) };
@@ -385,6 +406,16 @@ export function mount(root) {
       alSalir: () => { if (activo?.nombre === m) { activo = null; vaciarFichaModo(); cambiarModo('torre'); } },
     };
     // el simulador crea su trabajador (o el respaldo de web/js/sismo/motor.js) desde sismo.js (7.5): ctx.motor se agrega allí
+    // --- bim: inicio ---
+    if (m === 'bim') {
+      // como el recorrido, oculta el exterior (el edificio del GLB, el hospital, los árboles y la acometida: tapaban las
+      // plantas cortadas y la cimentación); queda el terreno, que el modo vuelve transparente o corta alrededor de los cimientos
+      ctx.exterior = { ocultar(on) { const v = on ? 'total' : null; if (v === exterior) return; exterior = v; aplicar(false); } };
+      ctx.tarjeta = q('bim'); ctx.tablas = q('bim.tablas');
+      ctx.sismo = { ultimo: () => instancias.sismo?.ultimo?.() ?? null };   // último cálculo del simulador en esta visita
+      ctx.abrirModo = (mm, op) => { cambiarModo(mm, op); el.scrollIntoView({ behavior: gsap ? 'smooth' : 'auto', block: 'center' }); };
+    }
+    // --- bim: fin ---
     if (m === 'sismo') ctx.graficas = q('sismo.graficas');
     return ctx;
   }
@@ -696,6 +727,9 @@ export function mount(root) {
       exterior: () => exterior,
       seleccionables: () => st.pickables.length,   // objetos que hoy reciben clics del Stage (0 en los modos nuevos, 6.8)
     };
+    // --- bim: inicio ---
+    window.__torreQA.bim = { api: () => instancias.bim ?? null };   // la API del modo BIM (montado), para scripts/qa/bim_qa.mjs
+    // --- bim: fin ---
   }
 
   onTheme((t) => { ground.material.color.copy(t.ground); });

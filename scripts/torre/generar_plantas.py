@@ -39,8 +39,13 @@ NIVELES_PISO = ('P1', 'P2', 'P3', 'P4')
 # técnico llegan a los patios y a la plaza). En la cubierta, la terraza del piso 3 está 4,20 m abajo: la puerta de la
 # escalera sur es del piso 4 y su vano ya está en el muro del núcleo de ese piso.
 NIVELES_CON_ESPEJO = ('EXT',)
-RANGO = {'abierto': 0, 'liviano': 1, 'bloque': 2, 'parapeto': 2, 'cerramiento': 2, 'fachada': 3, 'nucleo': 4,
-         'plomado': 5}
+# Prediseño DMO (17.1, equipo A): «nucleo» es el muro estructural de concreto (0,35 m) y solo va sobre los paños de
+# reglas_planta → estructura.muros_estructurales; el resto del borde de escaleras, ascensores y montacargas es
+# «nucleo_mamposteria» (mampostería separada de la estructura). El muro estructural gana siempre: es de concreto aunque
+# toque una sala de rayos X (0,35 m de concreto blindan más que ≈ 2 mm de plomo; cálculo de blindaje pendiente).
+RANGO = {'abierto': 0, 'liviano': 1, 'bloque': 2, 'parapeto': 2, 'cerramiento': 2, 'fachada': 3, 'nucleo_mamposteria': 4,
+         'plomado': 5, 'nucleo': 6}
+MARCO_PUERTA_M = 0.05     # marco a cada lado de la hoja: el vano de una puerta no puede tocar un muro estructural
 TIPOS_NUCLEO_MURO = ('escalera', 'ascensor', 'montacargas')
 TOL = 1e-6
 
@@ -144,6 +149,89 @@ class Generador:
         self.re_plomado = re.compile(reglas['muros']['plomado_patron'], re.I)
         self.de_paso = {self._fila(ref) for ref in reglas.get('recintos_de_paso', [])}
         self.zonas_nivel = {}
+        self.est = reglas.get('estructura') or {}
+
+    # ------------------------------------------------------------------------------------------------ estructura (17.1)
+    def tramos_estructurales(self, N) -> list[tuple[list[float], list[float], str]]:
+        """Paños de muro estructural (concreto) del prediseño en el nivel N: [(a, b, muro)]."""
+        if N not in self.est.get('niveles', []):
+            return []
+        out = []
+        for p in (self.est.get('muros_estructurales') or {}).get('paneles', []):
+            x0, y0, x1, y1 = (float(v) for v in p['tramo'])
+            out.append(([x0, y0], [x1, y1], p['muro']))
+        return out
+
+    @staticmethod
+    def en_tramo(a, b, tramos) -> str | None:
+        for t0, t1, mid in tramos:
+            if C.distancia_punto_segmento(a, t0, t1) <= 1e-6 and C.distancia_punto_segmento(b, t0, t1) <= 1e-6:
+                return mid
+        return None
+
+    def lado_columna(self, eje_x: str) -> float:
+        col = self.est.get('columnas') or {}
+        return float((col.get('por_eje_x') or {}).get(eje_x, col.get('lado_m', 0.6)))
+
+    def estructura_nivel(self, tn) -> dict | None:
+        """Dimensiones de la estructura que importan a la planta del nivel (columnas, vigas, alturas libres bajo viga)."""
+        if tn['id'] not in self.est.get('niveles', []):
+            return None
+        v = self.est['vigas']
+        col = self.est['columnas']
+        pe = float(v['peralte_m'])
+        pe_a = max([pe] + [float(o['peralte_m']) for o in (v.get('por_eje_x') or {}).values()])
+        H = float(tn['altura_entrepiso_m'])
+        d = {'columnas_m': col['lado_m'], 'columnas_por_eje_x_m': col.get('por_eje_x', {}),
+             'vigas_m': {'ancho': v['ancho_m'], 'peralte': pe},
+             'vigas_por_eje_x_m': {k: {'ancho': o['ancho_m'], 'peralte': o['peralte_m']} for k, o in (v.get('por_eje_x') or {}).items()},
+             'losa_nervada_m': v['losa_nervada_m'],
+             'altura_libre_bajo_viga_m': r2(H - pe), 'altura_libre_bajo_viga_min_m': r2(H - pe_a),
+             'altura_libre_bajo_losa_m': r2(H - float(v['losa_nervada_m'])),
+             'plenum_bajo_viga_m': r2(H - pe_a - float(tn['altura_libre_m'])),
+             'muro_estructural_m': (self.est.get('muros_estructurales') or {}).get('espesor_m'),
+             'fuente': self.cita(self.est['fuente']), 'tipo_dato': self.est['tipo_dato']}
+        if d['plenum_bajo_viga_m'] < 0:
+            raise ErrorTrazado(f'{tn["id"]}: el cielo raso ({tn["altura_libre_m"]} m) queda por encima de las vigas '
+                               f'({d["altura_libre_bajo_viga_min_m"]} m libres bajo la viga más alta)')
+        return d
+
+    def bajo_rasante(self, N, por_id) -> list[dict]:
+        """Fosos (piso 1) y cisternas (patio del bloque técnico) del prediseño de la cimentación: cotas relativas al piso
+        terminado del nivel. Cada uno debe quedar bajo su núcleo o bajo los recintos de sus compartimientos."""
+        out = []
+        for f in self.est.get('fosos', []):
+            if f['nivel'] != N:
+                continue
+            nid = f'{N}-NUC-{f["nucleo"]}'
+            out.append({'id': f['id'], 'tipo': 'foso', 'nombre': f['nombre'], 'nucleo': nid,
+                        'poligono': C.rect_a_poligono([f['x'][0], f['y'][0], f['x'][1], f['y'][1]]),
+                        'profundidad_m': f['profundidad_m'], 'z_fondo_m': f['z_fondo_m'],
+                        'muro_e_m': f['muro_e_m'], 'losa_e_m': f['losa_e_m'], 'nota': f['nota'],
+                        'fuente': self.cita(self.est['fuente'])})
+        for c_ in self.est.get('cisternas', []):
+            if c_['nivel'] != N:
+                continue
+            x0, x1 = c_['x']
+            y0, y1 = c_['y']
+            util = sum(k['volumen_util_m3'] for k in c_['compartimientos'])
+            largo = (x1 - x0) - 2 * c_['muro_e_m'] - (len(c_['compartimientos']) - 1) * c_['tabique_e_m']
+            comps, xa = [], x0 + c_['muro_e_m']
+            for k in c_['compartimientos']:
+                rid = C.id_recinto(N, k['fila'], 1)
+                if rid not in por_id:
+                    raise ErrorTrazado(f'{N}: la cisterna {c_["id"]} cita el recinto {rid}, que no existe')
+                xb = xa + largo * k['volumen_util_m3'] / util
+                comps.append({'recinto': rid, 'volumen_util_m3': k['volumen_util_m3'],
+                              'interior': [r3(xa), r3(y0 + c_['muro_e_m']), r3(xb), r3(y1 - c_['muro_e_m'])]})
+                xa = xb + c_['tabique_e_m']
+            out.append({'id': c_['id'], 'tipo': 'cisterna', 'nombre': c_['nombre'],
+                        'poligono': C.rect_a_poligono([x0, y0, x1, y1]), 'profundidad_m': c_['profundidad_m'],
+                        'z_fondo_m': r3(-c_['profundidad_m']), 'h_interior_m': c_['h_interior_m'], 'h_agua_m': c_['h_agua_m'],
+                        'muro_e_m': c_['muro_e_m'], 'tabique_e_m': c_['tabique_e_m'], 'compartimientos': comps,
+                        'nota': c_['nota'] + '; la tapa queda a la cota del patio de servicio (piso del nivel)',
+                        'fuente': self.cita(self.est['fuente'])})
+        return out
 
     # ------------------------------------------------------------------------------------------------ referencias
     def _fila(self, ref) -> int:
@@ -252,9 +340,14 @@ class Generador:
         return salida
 
     # ------------------------------------------------------------------------------------------------ muros
-    def tipo_borde(self, N, tn, e1, e2, nucleo_ids, abiertos, forzados) -> str:
-        """Tipo de muro de un borde entre e1 y e2 (e2 None = afuera del contorno)."""
+    def tipo_borde(self, N, tn, e1, e2, nucleo_ids, abiertos, forzados, estructural=None) -> str:
+        """Tipo de muro de un borde entre e1 y e2 (e2 None = afuera del contorno). `estructural` es el muro del prediseño
+        (MX-3, MY-N6…) si el borde cae sobre uno de sus paños: entonces es «nucleo» (concreto) sin excepción."""
         par = frozenset([e1['id'], e2['id'] if e2 else 'exterior'])
+        if estructural:
+            if par in abiertos or par in forzados:
+                raise ErrorTrazado(f'{N}: el borde {sorted(par)} es el muro estructural {estructural}: no se abre ni cambia de tipo')
+            return 'nucleo'
         if par in forzados:
             return forzados[par]
         cands = []
@@ -274,23 +367,23 @@ class Generador:
             if self.re_plomado.search(e['ambiente']):
                 cands.append('plomado')
             if e['id'] in nucleo_ids:
-                cands.append('nucleo')
+                cands.append('nucleo_mamposteria')
             if not e['exterior'] and (self.re_bloque.search(f'{e["ambiente"]} {e.get("servicio_programa") or ""}')
                                       or e['_t'].get('muro') == 'bloque'):
                 cands.append('bloque')
         t = max(cands, key=lambda x: RANGO[x])
         if par in abiertos:
-            if t in ('nucleo', 'plomado', 'fachada'):
+            if t in ('nucleo', 'nucleo_mamposteria', 'plomado', 'fachada'):
                 raise ErrorTrazado(f'{N}: no se puede abrir el borde {sorted(par)} (es {t})')
             return 'abierto'
         return t
 
-    def muros(self, N, tn, esp, contorno, nucleo_ids):
+    def muros(self, N, tn, esp, contorno, nucleo_ids, tramos=()):
         pref = lambda x: x if x == 'exterior' or x.startswith(N + '-') else f'{N}-{x}'
         abiertos = {frozenset(pref(x) for x in par) for par in tn.get('abiertos', [])}
         forzados = {frozenset(pref(x) for x in f['entre']): f['tipo'] for f in tn.get('muros_forzados', [])}
         por_id = {e['id']: e for e in esp}
-        cortes = [v for e in esp for v in e['_p']] + list(contorno)
+        cortes = [v for e in esp for v in e['_p']] + list(contorno) + [v for t0, t1, _ in tramos for v in (t0, t1)]
         segs = {}
         for e in esp:
             for a, b in C.bordes(C.partir_bordes(e['_p'], cortes)):
@@ -308,7 +401,7 @@ class Generador:
                 e1, e2 = por_id[ids[0]], None
             else:
                 e1, e2 = por_id[ids[0]], por_id[ids[1]]
-            t = self.tipo_borde(N, tn, e1, e2, nucleo_ids, abiertos, forzados)
+            t = self.tipo_borde(N, tn, e1, e2, nucleo_ids, abiertos, forzados, self.en_tramo(a, b, tramos))
             if e2 is None:
                 clave = ('ext', t) if t == 'fachada' else ('ext1', e1['id'], t)
             else:
@@ -479,6 +572,7 @@ class Generador:
                 raise ErrorTrazado(f'{N}: categoría de puerta desconocida {cat!r}')
             req, cita = self.ancho_requerido(cat, (e_h, e_d))
             ancho = max(float(d.get('ancho', 0.0)), req)
+            self.revisar_vano(N, d, muro, c, ancho, muros)
             hojas = d.get('hojas', 2 if ancho >= 1.40 - 1e-9 else 1)
             abre = d.get('abre')
             if abre is None:
@@ -498,6 +592,24 @@ class Generador:
                 p['lleva_a'] = la
             salida.append(p)
         return salida
+
+    @staticmethod
+    def revisar_vano(N, d, muro, c, ancho, muros):
+        """Prediseño DMO: ninguna puerta perfora un muro estructural; el vano (hoja + marco de 5 cm a cada lado) tampoco
+        se mete en el muro estructural vecino de la misma línea (las jambas de las puertas de las escaleras son los bordes
+        libres de los muros MY-N6 y MY-N3)."""
+        if muro['tipo'] == 'nucleo':
+            raise ErrorTrazado(f'{N}: la puerta {d} queda en el muro estructural {muro["id"]} ({muro["a"]} → {muro["b"]})')
+        hz = C.es_horizontal(muro['a'], muro['b'])
+        e, f = (0, 1) if hz else (1, 0)
+        lo, hi = c[e] - ancho / 2 - MARCO_PUERTA_M, c[e] + ancho / 2 + MARCO_PUERTA_M
+        for m in muros:
+            if m['tipo'] != 'nucleo' or C.es_horizontal(m['a'], m['b']) != hz or abs(m['a'][f] - c[f]) > 1e-6:
+                continue
+            m0, m1 = sorted((m['a'][e], m['b'][e]))
+            if min(hi, m1) - max(lo, m0) > 1e-6:
+                raise ErrorTrazado(f'{N}: el vano de la puerta {d} (ancho {ancho} m más el marco) se mete en el muro '
+                                   f'estructural {m["id"]} ({m["a"]} → {m["b"]})')
 
     # ------------------------------------------------------------------------------------------------ subrecintos
     def subrecintos(self, N, tn, esp, muros, puertas) -> dict:
@@ -745,17 +857,18 @@ class Generador:
             nucleos.append(d)
             if nu['tipo'] in TIPOS_NUCLEO_MURO and nu.get('muro_de_nucleo', True):
                 nucleo_ids.update(recs)
-        muros = self.muros(N, tn, esp, contorno, nucleo_ids)
+        muros = self.muros(N, tn, esp, contorno, nucleo_ids, self.tramos_estructurales(N))
         puertas = self.puertas(N, tn, esp, muros, contorno)
         subs_de = self.subrecintos(N, tn, esp, muros, puertas)
-        # columnas de la retícula
+        # columnas de la retícula, con la sección del prediseño DMO (0,80 m; 0,90 m en el eje A)
         columnas = []
         if N in NIVELES_PISO:
             ret = self.tz['reticula']
             for ey in ret['ejes_y']:
                 for ex in ret['ejes_x']:
                     if C.punto_en_poligono((ex['x'], ey['y']), contorno, 1e-3):
-                        columnas.append({'id': f'{ex["id"]}{ey["id"]}', 'x': ex['x'], 'y': ey['y'], 'b': 0.6, 'h': 0.6})
+                        lado = self.lado_columna(ex['id'])
+                        columnas.append({'id': f'{ex["id"]}{ey["id"]}', 'x': ex['x'], 'y': ey['y'], 'b': lado, 'h': lado})
         ventanas = self.ventanas(N, tn, esp, muros, puertas, [(c['x'], c['y'], c['b'], c['h']) for c in columnas])
         # vecinos por puertas y vanos abiertos
         vecinos = {e['id']: set() for e in esp}
@@ -792,8 +905,8 @@ class Generador:
                     sl = self.poligono_libre(sb['_p'], muros)
                     subs_out.append({'id': sb['id'], 'nombre': sb['nombre'], 'poligono': [pt(v) for v in sb['_p']],
                                      'poligono_libre': sl, 'area_ejes_m2': r2(C.area_poligono(sb['_p'])),
-                                     'area_libre_m2': r2(C.area_poligono(sl)), 'puertas': sb['puertas']})
-            al = C.area_poligono(libre)
+                                     'area_libre_m2': r2(C.area_libre(sl, columnas)), 'puertas': sb['puertas']})
+            al = C.area_libre(libre, columnas)
             r = {'id': e['id']}
             if e.get('fila') is not None:
                 r.update(fila=e['fila'], k=e['k'], de=e['de'])
@@ -862,6 +975,9 @@ class Generador:
             obst.append(d)
         nivel = {'id': N, 'piso': piso, 'nombre': tn['nombre'], 'z': tn['z'],
                  'altura_entrepiso_m': tn['altura_entrepiso_m'], 'altura_libre_m': tn['altura_libre_m']}
+        est = self.estructura_nivel(tn)
+        if est:
+            nivel['estructura'] = est
         if tn.get('notas'):
             nivel['notas'] = tn['notas']
         nivel['contorno'] = [pt(v) for v in contorno]
@@ -872,6 +988,24 @@ class Generador:
                      entradas_recorrido=entradas, obstaculos_recorrido=obst)
         if tn.get('paneles_solares'):
             nivel['paneles_solares'] = tn['paneles_solares']
+        br = self.bajo_rasante(N, por_id)
+        if br:
+            nucs = {nu['id']: nu for nu in nucleos}
+            for b in br:
+                if b['tipo'] == 'foso':
+                    nu = nucs.get(b['nucleo'])
+                    if nu is None or not C.poligono_dentro_de(b['poligono'], nu['poligono'], 1e-3):
+                        raise ErrorTrazado(f'{N}: el foso {b["id"]} no queda bajo el núcleo {b["nucleo"]}')
+                else:
+                    sobre = [por_id[k['recinto']]['_p'] for k in b['compartimientos']]
+                    if abs(C.area_interseccion(b['poligono'], contorno_de_union(sobre)) - C.area_poligono(b['poligono'])) > 1e-3:
+                        raise ErrorTrazado(f'{N}: la cisterna {b["id"]} no queda bajo los recintos de sus compartimientos')
+                    for k in b['compartimientos']:
+                        q = C.rect_a_poligono(k['interior'])
+                        if C.area_interseccion(q, por_id[k['recinto']]['_p']) < 0.5 * C.area_poligono(q):
+                            raise ErrorTrazado(f'{N}: el compartimiento de {k["volumen_util_m3"]} m³ de {b["id"]} no queda '
+                                               f'bajo {k["recinto"]}')
+            nivel['bajo_rasante'] = br
         nivel['_avisos_libre'] = avisos_libre
         return nivel
 

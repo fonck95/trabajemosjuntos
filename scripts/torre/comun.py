@@ -504,6 +504,16 @@ def area_interseccion(p, q) -> float:
     return _area_celdas([p, q], all)
 
 
+def area_libre(p, columnas=()) -> float:
+    """Área libre de un recinto: la de su polígono libre (entre caras de muro) menos la de las columnas que entran en él
+    (17.1: las columnas del prediseño DMO, de 0,80 m y 0,90 m en el eje A, sobresalen hasta 0,34 m de la cara del muro)."""
+    a = area_poligono(p)
+    for c in columnas or ():
+        b, h = float(c.get('b', 0.6)) / 2, float(c.get('h', 0.6)) / 2
+        a -= area_interseccion(p, rect_a_poligono([c['x'] - b, c['y'] - h, c['x'] + b, c['y'] + h]))
+    return a
+
+
 def area_union(poligonos) -> float:
     """Área de la unión de polígonos ortogonales."""
     if not poligonos:
