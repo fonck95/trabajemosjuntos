@@ -477,6 +477,10 @@ def amortiguamiento(md, KL_el, m, xi):
     ri, rj = rho(wi), rho(wj)
     a1 = 2 * xi * (wj - wi) / (rj * wj ** 2 - ri * wi ** 2)
     a0 = 2 * xi * wi - a1 * ri * wi ** 2
+    if not a0 >= 0:                     # ρj < ρi·ωi/ωj: ξ exacto solo en Ti, con C ≥ 0 (como el motor)
+        a0, a1 = 0.0, 2 * xi / (ri * wi)
+    elif not a1 >= 0:
+        a0, a1 = 2 * xi * wi, 0.0
     xis = [(a0 + a1 * float(k[r])) / (2 * w[r]) for r in range(min(12, len(T)))]
     return {'a0': a0, 'a1': a1, 'periodos_ancla_s': [Ti, Tj], 'xi_modos': xis, 'r90': r90}
 

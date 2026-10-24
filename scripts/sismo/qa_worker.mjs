@@ -393,7 +393,8 @@ async function pruebasDeVista(nav) {
         const estado = () => panel.querySelector('[data-o="estado"]')?.textContent || '';
         window.__calc = window.__torreQA.sismo.calcular({ escenario: 'cimitarra' });
         const t00 = performance.now();
-        while (!/estructura: ([3-9]\d) %/.test(estado())) { if (performance.now() - t00 > 60000) return { error: 'el cálculo no llegó al 30 %: ' + estado() }; await new Promise((r) => setTimeout(r, 5)); }
+        // la vista dice el avance por cuartos («… estructura: más del 50 %»; antes, en por ciento): se cancela desde el 30 %
+        while (!/estructura: (?:más del )?([3-9]\d) %/.test(estado())) { if (performance.now() - t00 > 60000) return { error: 'el cálculo no llegó al 30 %: ' + estado() }; await new Promise((r) => setTimeout(r, 5)); }
         const al = estado();
         const t0 = performance.now();
         panel.querySelector('[data-s="cancelar"]').click();

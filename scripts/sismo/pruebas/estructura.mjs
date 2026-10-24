@@ -11,6 +11,10 @@
 //        el centro de rigidez de cada nivel del motor es el del prediseño (< 1 cm).
 //   S4   gravedad: la suma de las cargas verticales del archivo (w_gravedad en las vigas y carga_kN en los nodos) es la
 //        reacción vertical de la base en el análisis de gravedad del motor (equilibrio, 10⁻⁶).
+//   S6   muros con una sola sección crítica (revisión A6): con la escala «nivel de diseño NSR-10» (local_hip y
+//        cimitarra), el momento máximo en la base de cada tramo de encima (|M| en cada Δt) queda por debajo de su propio
+//        My_e (el menor de los dos sentidos) y la base es la que fluye. Antes los tramos 2-4 usaban la sección de la
+//        base y el nivel 2 pasaba su Mn_e esperado (D/C 1,07-1,24 contra su capacidad real).
 //   S5   amortiguamiento con los muros de mampostería trabajando («Sin aislar», noEstructurales 'confinados'): las
 //        anclas del archivo (del modelo con los muros aislados) no se usan; el motor ancla en T1 del modelo analizado y
 //        ξ1 = 5 % exacto aunque la mampostería, que no amortigua, dé ≈ 60 % de la rigidez inicial (revisión A6).
@@ -128,6 +132,34 @@ function s5() {
   ];
 }
 
+async function s6() {
+  const est = leerJSON(RUTA);
+  const am = amenaza();
+  const muros = [];
+  for (const b of est.bloques) for (const p of b.porticos) for (const e of p.elementos) if (e.tipo === 'muro_concreto') muros.push(e);
+  const casos = [];
+  for (const id of ['local_hip', 'cimitarra']) {
+    const m = crearMotor();
+    await m.iniciar({ estructura: est, amenaza: am });
+    const r = await m.analizar(escenario(am, id), { dt_s: 0.005, escala: 'nsr10' });
+    const ids = m.modelo.el.id;
+    let peor = 0, cual = '', fluyeBase = 0, secPropia = true;
+    for (const e of muros) {
+      const s = est.secciones[e.seccion];
+      if (!e.seccion.endsWith(`-${e.nivel}`)) secPropia = false;
+      const ie = ids.indexOf(e.id);
+      if (e.nivel === 1) { if (r.envolventes.thp_max[2 * ie] > 0) fluyeBase++; continue; }
+      const q = r.envolventes.Mi_max[ie] / Math.min(s.My_e_pos_kNm ?? s.My_e_kNm, s.My_e_neg_kNm ?? s.My_e_kNm);
+      if (q > peor) { peor = q; cual = e.id; }
+    }
+    const bases = muros.filter((e) => e.nivel === 1).length;
+    casos.push(caso(`${id} al nivel de diseño (factor ${r.factor_escala.toFixed(2)}): |M| máx./My_e en los tramos de encima, ` +
+      `el mayor en ${cual}; fluyen ${fluyeBase} de ${bases} bases`, peor, 1, secPropia ? 'cada tramo con su sección' : 'tramos sin sección propia'));
+    casos.push(comprobar(`${id}: cada tramo de muro tiene su propia sección (MURO-{pórtico}-{nivel})`, secPropia));
+  }
+  return casos;
+}
+
 export const pruebas = [
   { id: 'T18', nombre: 'Estructura real de la torre con el motor (nido_2015 y local_hip, Δt = 0,005 s, con y sin P-Delta)', fn: t18 },
   { id: 'S1', nombre: 'La estructura de la torre cumple el esquema (E1-E16, theta_y ± 1 %)', fn: s1 },
@@ -135,4 +167,5 @@ export const pruebas = [
   { id: 'S3', nombre: 'Períodos ancla de Rayleigh y centro de rigidez: motor = prediseño', fn: s3 },
   { id: 'S4', nombre: 'Equilibrio de gravedad del motor con las cargas del prediseño', fn: s4 },
   { id: 'S5', nombre: 'Amortiguamiento con los muros de mampostería trabajando («Sin aislar»): ξ1 = 5 %', fn: s5 },
+  { id: 'S6', nombre: 'Muros con una sola sección crítica: los tramos de encima siguen elásticos al nivel de diseño', fn: s6 },
 ];

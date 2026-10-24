@@ -984,9 +984,13 @@ export function amortiguamiento(mod) {
   };
   const wi = (2 * Math.PI) / Ti, wj = (2 * Math.PI) / Tj;
   const ri = rho(wi), rj = rho(wj);
-  const a1 = (2 * xi * (wj - wi)) / (rj * wj * wj - ri * wi * wi);
-  const a0 = 2 * xi * wi - a1 * ri * wi * wi;
-  if (!(a0 >= 0 && a1 >= 0)) throw new ErrorMotor('interno', `amortiguamiento: a0 = ${a0}, a1 = ${a1} con las anclas ${Ti} y ${Tj} s`);
+  let a1 = (2 * xi * (wj - wi)) / (rj * wj * wj - ri * wi * wi);
+  let a0 = 2 * xi * wi - a1 * ri * wi * wi;
+  // Si la mampostería pesa tanto en el ancla alta que ρj < ρi·ωi/ωj, el sistema daría a0 < 0 (o a1 < 0): no hay
+  // amortiguamiento de Rayleigh con los dos coeficientes ≥ 0 que dé ξ en las dos anclas. Se fija ξ solo en Ti con el
+  // término que queda (C definida no negativa) y la regla lo dice.
+  if (!(a0 >= 0)) { a0 = 0; a1 = (2 * xi) / (ri * wi); regla += '; a0 = 0: ξ exacto solo en Ti (la mampostería no deja fijarlo también en Tj)'; }
+  else if (!(a1 >= 0)) { a1 = 0; a0 = 2 * xi * wi; regla += '; a1 = 0: ξ exacto solo en Ti'; }
   const nx = Math.min(12, nd);
   const xi_modos = new Float64Array(nx);
   for (let r = 0; r < nx; r++) xi_modos[r] = (a0 + a1 * k[r]) / (2 * md.omega[r]);

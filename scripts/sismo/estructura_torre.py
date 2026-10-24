@@ -2548,11 +2548,44 @@ def disenar_columna(fis, copias, demandas, nudo_sup, b, col_arriba, cache):
     return elegido, revisados
 
 
-def seccion_muro_refuerzo(mu, t, cortina, borde_i, borde_j, col_barras=None, rec=REC['muro']):
-    """Sección del muro con su refuerzo: dos cortinas verticales (N.º, s) en el alma y en el ancho efectivo de las
-    aletas, barras de borde (n, N.º) a 0,10 m de cada extremo del alma y las barras de la columna de borde (muros en x;
-    col_barras = (n, N.º) de su diseño como columna)."""
+RHO_BORDE_MAX = 0.04          # cuantía máxima de una zona de borde de muro: la de columnas (C.21.6.3.1); revisión A6
+NUM_EST_BORDE = 4             # estribos y ganchos de las zonas de borde: N.º 4
+
+
+def zona_borde(n, num, t, lb_min=0.0, rec=REC['muro'], num_e=NUM_EST_BORDE):
+    """Zona de borde de un muro dentro de su espesor t (revisión A6: antes las barras de borde iban en un solo punto a
+    0,10 m del extremo, sin estribos, y no cabían). n barras N.º num en las dos caras, en parejas enfrentadas (n/2 por
+    cara), con la separación libre de un elemento a compresión (≥ 1,5·db y ≥ 40 mm, C.7.6.3) y largo lb tal que la
+    cuantía de la zona As/(t·lb) ≤ 4 % (como en columnas, C.21.6.3.1; estas barras se empalman con acopladores
+    mecánicos, así que los empalmes no la duplican). lb_min: el largo que pide el elemento de borde especial
+    (C.21.9.6.4 a). → dict con lb, u (distancia de cada pareja al extremo del alma) y la cuantía; None si n = 0."""
+    if not n:
+        return None
+    db = BARRAS[num][0] / 1000
+    de = BARRAS[num_e][0] / 1000
+    c0 = rec + de + db / 2                      # del extremo (y de cada cara) al centro de la barra
+    s_min = db + max(1.5 * db, 0.040)
+    npos = max(1, (n + 1) // 2)
+    As = area(n, num)
+    lb = max(2 * c0 + (npos - 1) * s_min, As / (RHO_BORDE_MAX * t), lb_min)
+    lb = math.ceil(lb / 0.05 - 1e-9) * 0.05
+    u = [c0] if npos == 1 else [c0 + (lb - 2 * c0) * k / (npos - 1) for k in range(npos)]
+    return {'n': n, 'num': num, 'lb': lb, 'u': u, 'npos': npos, 'rho': As / (t * lb), 'c0': c0,
+            's_barras': (lb - 2 * c0) / (npos - 1) if npos > 1 else 0.0, 'cabe': t - 2 * c0 >= s_min - 1e-12}
+
+
+def seccion_muro_refuerzo(mu, t, cortina, borde_i, borde_j, col_barras=None, lb_min=(0.0, 0.0), conf=(0.0, 0.0),
+                          rec=REC['muro']):
+    """Sección del muro con su refuerzo (revisión A6): zonas de borde reales en los dos extremos del alma (zona_borde:
+    barras en parejas en las dos caras), dos cortinas verticales (N.º, s) en el resto del alma y en el ancho efectivo
+    de las aletas, y las barras de la columna de borde (muros en x: el borde j es la columna, col_barras = (n, N.º), que
+    lleva todas las barras de ese extremo; antes había además barras de borde en el alma, junto a ella). conf: cuantía
+    volumétrica de los estribos de cada zona (> 0 si es elemento de borde especial): su núcleo va confinado (Mander)
+    en el momento-curvatura. → Seccion con .zonas = {'i': zona | None, 'j': zona | None}."""
     num_c, s_c = cortina
+    alma = next(p for p in mu['partes'] if p['tipo'] == 'alma')
+    zi = zona_borde(*borde_i, t, lb_min[0]) if borde_i else None
+    zj = zona_borde(*borde_j, t, lb_min[1]) if borde_j else None
     barras = []
     for p in mu['partes']:
         u0, u1, w = p['u0'], p['u1'], p['ancho']
@@ -2572,16 +2605,86 @@ def seccion_muro_refuerzo(mu, t, cortina, borde_i, borde_j, col_barras=None, rec
             # las dos cortinas corren a lo largo del ancho efectivo w (perpendicular al plano): en u es una franja
             n_barras = 2 * max(2, int(w / s_c) + 1)
             barras.append(((u0 + u1) / 2, area(n_barras, num_c)))
+            continue
+        # alma: las cortinas van entre las zonas de borde (dentro de una zona las reemplazan sus barras)
+        dbc = BARRAS[num_c][0] / 1000
+        ua = u0 + (zi['lb'] + s_c / 2 if zi else rec + dbc / 2)
+        ub = u1 - (zj['lb'] + s_c / 2 if zj else rec + dbc / 2)
+        if ub >= ua:
+            nb = int((ub - ua) / s_c + 1e-9) + 1
+            pos = [(ua + ub) / 2] if nb == 1 else [ua + (ub - ua) * i / (nb - 1) for i in range(nb)]
+            barras += [(u_, area(2, num_c)) for u_ in pos]
+    nucleo, rhos = [], []
+    de = BARRAS[NUM_EST_BORDE][0] / 1000
+    for z, sg, base, rho_s in ((zi, 1, alma['u0'], conf[0]), (zj, -1, alma['u1'], conf[1])):
+        if not z:
+            continue
+        for k, uu in enumerate(z['u']):
+            barras.append((base + sg * uu, area(2 if 2 * (k + 1) <= z['n'] else 1, z['num'])))
+        if rho_s > 0:
+            a_, b_ = base + sg * (rec + de / 2), base + sg * (z['lb'] - de / 2)
+            nucleo.append((min(a_, b_), max(a_, b_), t - 2 * rec - de))
+            rhos.append(rho_s)
+    sec = Seccion(mu['rect'], barras, nucleo, rho_s=min(rhos) if rhos else 0.0, ke=K_PRIESTLEY['muro'])
+    sec.zonas = {'i': zi, 'j': zj}
+    return sec
+
+
+def transversal_borde(z, t, tipo, rec=REC['muro'], num_e=NUM_EST_BORDE):
+    """Refuerzo transversal de una zona de borde de muro (revisión A6; numerales por confirmar):
+    'especial' (elemento de borde especial, C.21.9.6.4 c con C.21.6.4.2 a C.21.6.4.4 sin la ec. C.21-4): estribos
+      cerrados con ganchos de 135° y ganchos suplementarios en cada pareja de barras, Ash ≥ 0,09·s·bc·f'c/fyt en las
+      dos direcciones (ec. C.21-5), s ≤ t/3, 6·db y so = 100 + (350 − hx)/3 entre 100 y 150 mm, hx ≤ 350 mm;
+    'C.21.9.6.5' (sin elemento especial pero con ρ de la zona > 2,8/fy): estribos y ganchos de C.21.6.4.2 (barras de
+      esquina y alternas apoyadas, hx ≤ 350 mm) con s ≤ 200 mm;
+    'C.7.10' (ρ ≤ 2,8/fy): estribos de elemento a compresión, s ≤ min(16·db, 48·de, t).
+    → dict con N.º, s, ramas en cada dirección, Ash pedida y puesta y kg por metro de altura."""
+    db = BARRAS[z['num']][0] / 1000
+    de = BARRAS[num_e][0] / 1000
+    Ab = BARRAS[num_e][1] * 1e-6
+    npos = z['npos']
+    paso = 1 if tipo == 'especial' else 2
+    apoyadas = sorted(set(list(range(0, npos, paso)) + [npos - 1]))
+    # ninguna rama a más de 350 mm de la siguiente a lo largo de la zona (hx de C.21.6.4.2)
+    while True:
+        hueco = [(apoyadas[q], apoyadas[q + 1]) for q in range(len(apoyadas) - 1)
+                 if z['u'][apoyadas[q + 1]] - z['u'][apoyadas[q]] > 0.35 + 1e-9]
+        if not hueco:
+            break
+        a_, b_ = hueco[0]
+        if b_ - a_ < 2:
+            break
+        apoyadas = sorted(set(apoyadas + [(a_ + b_) // 2]))
+    hx = max([z['u'][apoyadas[q + 1]] - z['u'][apoyadas[q]] for q in range(len(apoyadas) - 1)] + [t - 2 * z['c0']])
+    bc_l = z['u'][-1] + db / 2 + de - rec              # núcleo a lo largo del muro, al exterior del estribo
+    bc_t = t - 2 * rec
+    if tipo == 'especial':
+        so = min(max(0.100 + (0.350 - hx) / 3, 0.100), 0.150)
+        s = min(t / 3, 6 * db, so)
+    elif tipo == 'C.21.9.6.5':
+        s = min(0.200, 16 * db, 48 * de)
+    else:
+        s = min(16 * db, 48 * de, t)
+    s = math.floor(s / 0.025 + 1e-9) * 0.025
+    ramas_t = max(len(apoyadas), 2)
+    req = (lambda s_: (0.09 * s_ * bc_l * FC / FY, 0.09 * s_ * bc_t * FC / FY)) if tipo == 'especial' else (lambda s_: (0.0, 0.0))
+    while True:
+        Al, At = req(s)
+        if ramas_t * Ab >= Al - 1e-12 and 2 * Ab >= At - 1e-12:
+            break
+        if ramas_t < npos:
+            ramas_t += 1
+        elif s > 0.050 + 1e-9:
+            s = round(s - 0.025, 3)
         else:
-            largo = u1 - u0
-            nb = max(2, int((largo - 2 * rec) / s_c) + 1)
-            for i in range(nb):
-                barras.append((u0 + rec + (largo - 2 * rec) * i / max(nb - 1, 1), area(2, num_c)))
-    alma = next(p for p in mu['partes'] if p['tipo'] == 'alma')
-    for (n, num), uu in ((borde_i, alma['u0'] + 0.10), (borde_j, alma['u1'] - 0.10)):
-        if n:
-            barras.append((uu, area(n, num)))
-    return Seccion(mu['rect'], barras, [], rho_s=0.0, ke=K_PRIESTLEY['muro'])
+            break
+    Al, At = req(s)
+    ok = ramas_t * Ab >= Al - 1e-12 and 2 * Ab >= At - 1e-12
+    gs = gancho_sismico(num_e)
+    largo_set = 2 * (bc_l - de) + 2 * (bc_t - de) + 2 * gs + (ramas_t - 2) * (bc_t + 2 * gs)
+    return {'tipo': tipo, 'num': num_e, 's': round(s, 3), 'ramas_espesor': ramas_t, 'ramas_largo': 2, 'hx_m': hx,
+            'Ash_req_mm2': [Al * 1e6, At * 1e6], 'Ash_mm2': [ramas_t * Ab * 1e6, 2 * Ab * 1e6], 'ok': ok,
+            'kg_m': BARRAS[num_e][2] * largo_set / s, 'rho_s': (ramas_t * Ab * bc_t + 2 * Ab * bc_l) / (bc_l * bc_t * s)}
 
 
 def cortina_muro(t):
@@ -2593,44 +2696,112 @@ def cortina_muro(t):
     return (5, 0.15)
 
 
-def disenar_muro(mu, niveles_e, t, col_barras, delta_u, R):
-    """Muro DMO (NSR-10 C.21.9 con los criterios DMO del capítulo; numerales por confirmar): por nivel, barras de borde
-    para φMn ≥ Mu en los dos sentidos con la carga axial mayorada; cortante por capacidad: el que corresponde a la
-    sobrerresistencia a flexión de la base, Ve = Ωv·Vu con Ωv = Mpr/Mu (≥ 1, sin pasar del cortante elástico R·Vu), con
-    φ = 0,75 (más exigente que C.21.9.4, que diseña con Vu); la amplificación dinámica de modos altos ωv = 0,9 + ns/10 de
-    ACI 318-19 18.10.3.1.2 se informa. Elementos de borde por desplazamiento (C.21.9.6.2) y por esfuerzo (C.21.9.6.3,
-    informativo).
-    niveles_e: por nivel k, dict con Pu_max, Pu_min (compresión +), Mu (kN·m, en la base del tramo), Vu, Pg (D + 0,25·L)."""
-    m = mu['def']
+def siguiente_columna(b, n, num):
+    """La columna candidata que sigue en área a (n, N.º) y cabe con ρ ≤ 4 % (para el borde de un muro en x)."""
+    A0 = area(n, num)
+    for n2, num2 in CANDIDATOS_COL:
+        if area(n2, num2) > A0 + 1e-12 and area(n2, num2) / (b * b) <= 0.04 and columna_cabe(b, n2, num2):
+            return (n2, num2)
+    return None
+
+
+def disenar_muro(mu, niveles_e, t, col_barras, delta_u, R, b_col=None):
+    """Muro DMO (NSR-10 C.21.9 con los criterios DMO del capítulo; numerales por confirmar) con una sola sección
+    crítica, en la base (revisión A6):
+    - nivel 1: zonas de borde (o columna de borde) para φMn ≥ Mu en los dos sentidos con la carga axial mayorada;
+    - niveles k ≥ 2 (diseño por capacidad): φMn_k ≥ max(Ωv·Mu_k; M_env(z_k)), con M_env la envolvente lineal que va de
+      Mu_1 en la base a cero en la cubierta del muro, corrida hacia arriba a = 0,8·lw (corrimiento de tracción: las
+      barras siguen 0,8·lw más allá de donde dejan de necesitarse, C.21.9.2.3 a, y la fisuración diagonal y los modos
+      altos suben el momento de los tramos de encima; Eurocódigo 8, 5.5.2.4.1, y Paulay y Priestley, 1992). Antes cada
+      tramo se diseñaba con su propio Mu y el nivel 2 fluía antes que la base en el motor;
+    - cortante por capacidad: Ve = Ωv·Vu con Ωv = Mpr/Mu de la base (≥ 1, sin pasar de R), con φ = 0,75 (más exigente
+      que C.21.9.4, que diseña con Vu); la amplificación de modos altos ωv = 0,9 + ns/10 (ACI 318-19 18.10.3.1.2) se
+      informa;
+    - elementos de borde especiales (C.21.9.6.4) donde los pide C.21.9.6.2 (desplazamiento; vale porque la sección
+      crítica es única; en una altura ≥ max(lw, Mu/4Vu) desde la base) o C.21.9.6.3 (esfuerzo de compresión de la
+      sección bruta > 0,2·f'c, hasta que baje de 0,15·f'c), que se adopta además por ser grupo IV; si un borde de un
+      nivel lo pide se confinan los dos (el sismo invierte el sentido). Si no: C.21.9.6.5 con ρ de la zona > 2,8/fy,
+      o estribos de C.7.10.
+    niveles_e: por nivel k, dict con Pu_max, Pu_min (compresión +), Mu (kN·m, en la base del tramo), Vu, Pg (D + 0,25·L).
+    col_barras: (n, N.º) de la columna de borde en cada nivel (muros en x) o None; b_col, su lado."""
     cort = cortina_muro(t)
     lw = mu['u1'] - mu['u0']
-    hw = H_TOTAL
+    n_t = len(niveles_e)
+    hw = Z[n_t]                                          # altura del muro (de la base a su último nivel)
+    a_ts = 0.8 * lw                                      # corrimiento de tracción
     l_alma = mu['l_alma']
     Acv = mu['Av']                                       # área del alma (las aletas no toman cortante en el plano)
+    tiene_col = any(p['tipo'] == 'columna' for p in mu['partes'])
+    Mu1, Vu1 = niveles_e[0]['Mu'], niveles_e[0]['Vu']
+    y_lado = {'i': mu['uc'] - mu['u0'], 'j': mu['u1'] - mu['uc']}
+    h_borde_desp = max(lw, Mu1 / (4 * Vu1)) if Vu1 > 0 else lw    # C.21.9.6.2 b
+    lim = lw / (600 * max(delta_u / hw, 0.007))
     out = []
     Omega_v = None
+    req_desp = False
+    esp_prev = {'i': False, 'j': False}
     for k, dem in enumerate(niveles_e, start=1):
-        borde = {'i': (0, 5), 'j': (0, 5)}
-        sec = None
-        for intento in range(40):
-            sec = seccion_muro_refuerzo(mu, t, cort, borde['i'], borde['j'], col_barras)
-            falta = []
-            for cara, lado in (('sup', 'i'), ('inf', 'j')):
-                # cara 'sup' comprimida = borde de mayor u comprimido → tracción en el borde i (menor u)
-                for Pu in (dem['Pu_max'], dem['Pu_min']):
-                    pm = sec.phiMn_rapido(Pu, cara)
-                    if pm is None or pm < dem['Mu']:
-                        falta.append(lado)
-            if not falta:
+        z0 = Z[k - 1]
+        if k == 1:
+            M_env, M_req = Mu1, dem['Mu']
+        else:
+            M_env = Mu1 * min(1.0, (hw - z0 + a_ts) / hw)
+            M_req = max(Omega_v * dem['Mu'], M_env)
+        sig = {l_: dem['Pu_max'] / (mu['A'] * 1000) + dem['Mu'] * y_lado[l_] / (mu['I'] * 1000) for l_ in ('i', 'j')}
+        lb_min = {'i': 0.0, 'j': 0.0}
+        col = col_barras[k - 1] if col_barras else None
+        falla = False
+        for vuelta in range(4):
+            borde = {l_: (None if (l_ == 'j' and tiene_col) else (4, 5)) for l_ in ('i', 'j')}
+            col = col_barras[k - 1] if col_barras else None
+            for _ in range(200):
+                sec = seccion_muro_refuerzo(mu, t, cort, borde['i'], borde['j'], col, (lb_min['i'], lb_min['j']))
+                falta = set()
+                for cara, lado in (('sup', 'i'), ('inf', 'j')):
+                    # cara 'sup' comprimida = borde de mayor u comprimido → tracción en el borde i (menor u)
+                    for Pu in (dem['Pu_max'], dem['Pu_min']):
+                        pm = sec.phiMn_rapido(Pu, cara)
+                        if pm is None or pm < M_req:
+                            falta.add(lado)
+                if not falta:
+                    break
+                for lado in sorted(falta):
+                    if lado == 'j' and tiene_col:
+                        sig_c = siguiente_columna(b_col, *col)
+                        if sig_c is None:
+                            falla = True
+                        else:
+                            col = sig_c
+                    else:
+                        n, num = borde[lado]
+                        borde[lado] = (n, num + 1) if (n <= 4 and num < 8) else (n + 2, num)
+                if falla:
+                    break
+            else:
+                falla = True
+            # profundidad del eje neutro con el borde de cada lado comprimido ('inf' comprime i; 'sup', j)
+            c_lado = {'i': sec.resistencia(dem['Pu_max'], 'inf')[1], 'j': sec.resistencia(dem['Pu_max'], 'sup')[1]}
+            if k == 1:
+                req_desp = max(c_lado.values()) >= lim
+            por_desp = req_desp and z0 < h_borde_desp - 1e-9
+            por_esf = any(sig[l_] > 0.2 * FC or (esp_prev[l_] and sig[l_] >= 0.15 * FC) for l_ in ('i', 'j'))
+            especial = por_desp or por_esf
+            # extensión horizontal del elemento especial: ≥ max(c − 0,1·lw; c/2) (C.21.9.6.4 a)
+            nuevo = {l_: (max(c_lado[l_] - 0.1 * lw, c_lado[l_] / 2) if especial else 0.0) for l_ in ('i', 'j')}
+            if all(nuevo[l_] <= (sec.zonas[l_]['lb'] if sec.zonas[l_] else (b_col or 0.0)) + 1e-9 for l_ in ('i', 'j')):
                 break
-            for lado in sorted(set(falta)):
-                n, num = borde[lado]
-                if n < 4:
-                    borde[lado] = (n + 2, num)
-                elif num < 8:
-                    borde[lado] = (n, num + 1)
-                else:
-                    borde[lado] = (n + 2, num)
+            lb_min = {l_: max(lb_min[l_], nuevo[l_]) if sec.zonas[l_] else 0.0 for l_ in ('i', 'j')}
+        esp_prev = {l_: especial for l_ in ('i', 'j')}
+        # refuerzo transversal de cada zona
+        trans = {}
+        for l_ in ('i', 'j'):
+            z = sec.zonas[l_]
+            if not z:
+                continue
+            tipo = 'especial' if especial else ('C.21.9.6.5' if z['rho'] > 2.8 / FY else 'C.7.10')
+            trans[l_] = transversal_borde(z, t, tipo)
+        conf = tuple(trans[l_]['rho_s'] if l_ in trans and trans[l_]['tipo'] == 'especial' else 0.0 for l_ in ('i', 'j'))
+        sec_mc = seccion_muro_refuerzo(mu, t, cort, borde['i'], borde['j'], col, (lb_min['i'], lb_min['j']), conf)
         cap_pos = sec.resistencia(dem['Pg'], 'sup')
         cap_neg = sec.resistencia(dem['Pg'], 'inf')
         Mpr = max(sec.resistencia(dem['Pu_max'], c_, FC, FY_PR)[0] for c_ in ('sup', 'inf'))
@@ -2650,18 +2821,21 @@ def disenar_muro(mu, niveles_e, t, col_barras, delta_u, R):
         Vn_max = 0.83 * math.sqrt(FC) * Acv * 1000                      # C.21.9.4.4: tope de la resistencia utilizable
         Vn = min(Acv * 1000 * (ac * math.sqrt(FC) + rho_t * FY), Vn_max)
         Vn_e = min(Acv * 1000 * (ac * math.sqrt(FCE) + rho_t * FYE), 0.83 * math.sqrt(FCE) * Acv * 1000)
-        # elementos de borde (base): c con la mayor compresión y Mn; δu de diseño en la cubierta del muro
-        c_max = max(sec.resistencia(dem['Pu_max'], c_)[1] for c_ in ('sup', 'inf'))
-        lim = lw / (600 * max(delta_u / hw, 0.007))
-        req_borde = k == 1 and c_max >= lim
-        sigma = dem['Pu_max'] / (mu['A'] * 1000) + dem['Mu'] * (lw / 2) / (mu['I'] * 1000)
-        out.append({'nivel': k, 'borde_i': borde['i'], 'borde_j': borde['j'], 'cortina_v': cort, 'cortina_h': cort_h,
-                    'sec': sec, 'Mn_pos': cap_pos[0], 'Mn_neg': cap_neg[0], 'phiMn_pos': cap_pos[3] * cap_pos[0],
-                    'phiMn_neg': cap_neg[3] * cap_neg[0], 'Mpr': Mpr, 'Mu': dem['Mu'], 'Vu': dem['Vu'], 'Ve': Ve,
-                    'Omega_v': Omega_v, 'omega_v': omega_v, 'Ve_din': Ve_din, 'alfa_c': ac, 'rho_t': rho_t, 'Vn': Vn, 'phiVn': 0.75 * Vn,
-                    'Vn_max': Vn_max, 'Vn_e': Vn_e, 'c_max': c_max, 'c_lim': lim, 'requiere_borde': req_borde,
-                    'sigma_MPa': sigma, 'Acv': Acv, 'lw': lw, 'l_alma': l_alma, 'Pg': dem['Pg'],
-                    'Pu_max': dem['Pu_max'], 'Pu_min': dem['Pu_min']})
+        out.append({'nivel': k, 'z0': z0, 'borde_i': borde['i'], 'borde_j': borde['j'], 'col_barras': col,
+                    'zonas': dict(sec.zonas), 'transversal_borde': trans, 'especial': especial,
+                    'especial_por': ('desplazamiento (C.21.9.6.2) y esfuerzo (C.21.9.6.3)' if por_desp and por_esf else
+                                     'desplazamiento (C.21.9.6.2)' if por_desp else
+                                     'esfuerzo (C.21.9.6.3)' if por_esf else None),
+                    'lb_min': lb_min, 'ext_req': nuevo, 'b_col': b_col, 'c_lado': c_lado, 'sigma_lado_MPa': sig, 'falla': falla,
+                    'cortina_v': cort, 'cortina_h': cort_h, 'sec': sec, 'sec_mc': sec_mc,
+                    'Mn_pos': cap_pos[0], 'Mn_neg': cap_neg[0], 'phiMn_pos': cap_pos[3] * cap_pos[0],
+                    'phiMn_neg': cap_neg[3] * cap_neg[0], 'Mpr': Mpr, 'Mu': dem['Mu'], 'M_env': M_env, 'M_req': M_req,
+                    'Vu': dem['Vu'], 'Ve': Ve,
+                    'Omega_v': Omega_v, 'omega_v': omega_v, 'Ve_din': Ve_din, 'alfa_c': ac, 'rho_t': rho_t, 'Vn': Vn,
+                    'phiVn': 0.75 * Vn, 'Vn_max': Vn_max, 'Vn_e': Vn_e, 'c_max': max(c_lado.values()), 'c_lim': lim,
+                    'requiere_borde': especial, 'requiere_borde_desp': por_desp, 'h_borde_desp': h_borde_desp,
+                    'sigma_MPa': max(sig.values()), 'Acv': Acv, 'lw': lw, 'l_alma': l_alma, 'Pg': dem['Pg'],
+                    'Pu_max': dem['Pu_max'], 'Pu_min': dem['Pu_min'], 'a_corrimiento': a_ts, 'hw': hw})
     return out
 
 
@@ -2757,6 +2931,21 @@ def disenar(torre, A, R, Omega0):
         Mn_pos_i = izq['Mn_pos'] if izq else 0.0
         return max(Mn_neg_i + Mn_pos_d, Mn_pos_i + Mn_neg_d)
 
+    # ---- columnas que son el borde de un muro en x (C-D3, C-D4 y C-D7) -------------------------------------------------
+    # Además del momento de su pórtico en y, toman la fuerza de cuerda del vuelco del muro, que actúa a la vez (100 % +
+    # 30 %): N_cuerda = M·(u_col − uc)·A_col/I (sección bruta del muro con sus aletas y la columna) y su parte del peso
+    # del muro, A_col/A. Revisión A6: antes solo veían el pórtico Y-D y la sección del muro contaba sus barras otra vez.
+    borde_col = {}
+    for pid, mu in torre['muros'].items():
+        m = mu['def']
+        if m['dir'] != 'x' or m['j'][0] != 'columna':
+            continue
+        pc = next(p for p in mu['partes'] if p['tipo'] == 'columna')
+        A_col = (pc['u1'] - pc['u0']) * pc['ancho']
+        kc = abs(((pc['u0'] + pc['u1']) / 2 - mu['uc']) * A_col / mu['I'])
+        for e in torre['por_id'][pid]['elementos']:
+            borde_col[f'C-{m["j"][1]}{m["j"][2]}-{e["nivel"]}'] = {'muro': pid, 'eid': e['id'], 'kc': kc, 'fa': A_col / mu['A']}
+
     # ---- columnas (de arriba hacia abajo) -------------------------------------------------------------------------
     fis = {}
     for eid, (pm, e) in elementos.items():
@@ -2770,11 +2959,18 @@ def disenar(torre, A, R, Omega0):
         b = next(iter(cop.values()))[1]['b']
         # gravedad: axial de las dos copias (cada una lleva las cargas de sus vigas); momentos de cada copia
         Ng = {c: sum(fuerzas_elemento(res, G_[c], e['id'])[3] for pm, e in cop.values()) for c in ('D', 'L', 'Lr', 'S')}
+        bc_ = borde_col.get(f)
+        if bc_:
+            Nw = {c: fuerzas_elemento(res, G_[c], bc_['eid'])[3] * bc_['fa'] for c in ('D', 'L', 'Lr')}   # tracción +
+            Mw = E_el(bc_['eid'], 0, False)            # momento del muro en la base del tramo: (100x + 30y; 30x + 100y)/R
+            bc_['N_cuerda'] = [Mw[0] * bc_['kc'], Mw[1] * bc_['kc']]
         dem = []
         for nombre, cD, cL, cLr, cE in COMBOS:
             Pg = -(cD * Ng['D'] + cL * Ng['L'] + cLr * Ng['Lr'])
-            for orto in ((1.0, 0.3), (0.3, 1.0)):
-                NE = 0.0
+            if bc_:
+                Pg -= cD * Nw['D'] + cL * Nw['L'] + cLr * Nw['Lr']
+            for io, orto in enumerate(((1.0, 0.3), (0.3, 1.0))):
+                NE = bc_['N_cuerda'][io] if bc_ else 0.0
                 ME = {}
                 for plano, (pm, e) in cop.items():
                     i = res.i_el[e['id']]
@@ -2810,9 +3006,27 @@ def disenar(torre, A, R, Omega0):
         Pg_s = -Ng['S']
         columnas[f] = {'b': b, 'n': n, 'num': num, 'sec': sec, 'util_PM': util, 'Mnc': Mnc, 'cvd': cvd, 'copias': cop,
                        'Pmin': Pmin, 'Pmax': Pmax, 'Pg': Pg_s, 'nudo': nudo, 'arriba': arriba, 'revisados': revisados,
-                       'k': k, 'Ng': Ng, 'dem': dem}
+                       'k': k, 'Ng': Ng, 'dem': dem, 'borde_de_muro': dict(bc_) if bc_ else None}
         columnas[f]['transversal'] = transversal_columna(columnas[f], ln_columna(cop), (Pmin, Pmax))
     # ---- muros ----------------------------------------------------------------------------------------------------
+    def actualizar_columna(c, n, num):
+        """La columna de borde de un muro en x con más barras de las de su diseño como columna (las pide el muro):
+        se rehace su revisión P-M, columna fuerte-viga débil y refuerzo transversal (cortante con su nuevo Mpr)."""
+        b = c['b']
+        if (b, n, num) not in cache:
+            cache[(b, n, num)] = seccion_columna(b, n, num)
+        sec = cache[(b, n, num)]
+        peor = 0.0
+        for Pu, Mx, My in c['dem']:
+            pm = sec.phiMn_rapido(Pu, 'sup')
+            if pm is None or pm <= 0:
+                peor = 9.9
+                break
+            peor = max(peor, (abs(Mx) / pm) ** ALFA_BRESLER + (abs(My) / pm) ** ALFA_BRESLER)
+        c.update(n=n, num=num, sec=sec, util_PM=peor, ampliada_por_muro=True,
+                 Mnc=min(sec.Mn_rapido(c['Pmin'], 'sup'), sec.Mn_rapido(c['Pmax'], 'sup')))
+        c['transversal'] = transversal_columna(c, ln_columna(c['copias']), (c['Pmin'], c['Pmax']))
+
     muros = {}
     for pid, mu in torre['muros'].items():
         pm = next(p_ for p_ in mod.porticos if p_.id == pid)
@@ -2829,13 +3043,41 @@ def disenar(torre, A, R, Omega0):
         # desplazamiento de diseño (sin reducir) en la cubierta del muro: suma de las derivas del pórtico
         delta_u = sum(max(abs(Ex[res.i_port[(pid, k)]]) + 0.3 * abs(Ey[res.i_port[(pid, k)]]),
                           0.3 * abs(Ex[res.i_port[(pid, k)]]) + abs(Ey[res.i_port[(pid, k)]])) for k in pm.niveles)
-        col_b = None
-        if mu['def']['dir'] == 'x':
-            cD = mu['def']['j'][1:]
-            fD = f'C-{cD[0]}{cD[1]}-1'
-            col_b = (columnas[fD]['n'], columnas[fD]['num']) if fD in columnas and 'n' in columnas[fD] else (12, 7)
-        muros[pid] = {'niveles': disenar_muro(mu, dem, mu['t'], col_b, delta_u, R), 'delta_u': delta_u, 'col_barras': col_b,
-                      'dem': dem}
+        col_b, b_col, fcols = None, None, None
+        if mu['def']['dir'] == 'x' and mu['def']['j'][0] == 'columna':
+            _, ex_, ey_ = mu['def']['j']
+            fcols = [f'C-{ex_}{ey_}-{k}' for k in range(1, len(dem) + 1)]
+            col_b = [(columnas[f_]['n'], columnas[f_]['num']) if f_ in columnas and 'n' in columnas[f_] else (12, 7)
+                     for f_ in fcols]
+            b_col = next(p['ancho'] for p in mu['partes'] if p['tipo'] == 'columna')
+        niveles = disenar_muro(mu, dem, mu['t'], col_b, delta_u, R, b_col)
+        if fcols:
+            # la columna es el borde j del muro: lleva todas las barras de ese extremo y, si el muro pide elemento de
+            # borde especial en ese nivel, va confinada en toda la altura del piso (C.21.9.6.4)
+            for f_, nv_ in zip(fcols, niveles):
+                c_ = columnas.get(f_)
+                if c_ is None or 'n' not in c_:
+                    continue
+                if tuple(nv_['col_barras']) != (c_['n'], c_['num']):
+                    actualizar_columna(c_, *nv_['col_barras'])
+                c_['borde_de_muro'] = {**(c_.get('borde_de_muro') or {}), 'muro': pid, 'especial': nv_['especial']}
+                if nv_['especial']:
+                    tr_ = c_['transversal']
+                    tr_['s_centro'] = tr_['s_lo']
+                    tr_['confinada_toda_la_altura'] = True
+        muros[pid] = {'niveles': niveles, 'delta_u': delta_u, 'col_barras': col_b, 'dem': dem}
+    # columna fuerte-viga débil otra vez con las columnas de borde que crecieron (solo puede mejorar; se informa al día)
+    for f_, c_ in columnas.items():
+        if 'n' not in c_:
+            continue
+        k_ = int(f_.rsplit('-', 1)[1])
+        f_arr = f_.rsplit('-', 1)[0] + f'-{k_ + 1}'
+        for plano in list(c_['cvd']):
+            arr = columnas[f_arr]['Mnc'] if f_arr in columnas and 'Mnc' in columnas[f_arr] else None
+            c_['arriba'][plano] = arr
+            sMnb = c_['nudo'].get(plano)
+            if sMnb:
+                c_['cvd'][plano] = (c_['Mnc'] + (arr or 0.0)) / sMnb
     return {'G': G_, 'vigas': vigas, 'acoples': acoples, 'columnas': columnas, 'muros': muros, 'E25': E25,
             'res25': res25, 'mod25': mod25, 'sMnb': sMnb, 'E_el': E_el}
 
@@ -3031,11 +3273,14 @@ def props_columna_rotula(e, c, tr, Pg):
     }
 
 
-def props_muro_rotula(mu, dm, h1):
-    """Propiedades de la rótula de la base de un muro (E1, E3, E16): momento-curvatura con la aleta en compresión
-    (My_pos: borde de mayor u comprimido) y en tracción (My_neg), lp = min(0,5·lw; altura del piso 1)."""
-    n1 = dm['niveles'][0]
-    sec = n1['sec']
+def props_muro_rotula(mu, n1, h1):
+    """Propiedades de un tramo de muro (E1, E3, E16) con su propio refuerzo (revisión A6: antes los cuatro tramos usaban
+    las del nivel 1, y el D/C de flexión y cortante de los de encima salía contra el Mn_e y el Vn_e de la base):
+    momento-curvatura con la aleta en compresión (My_pos: borde de mayor u comprimido) y en tracción (My_neg), con el
+    núcleo confinado de los elementos de borde especiales; lp = min(0,5·lw; altura del piso 1). En el motor solo el
+    tramo de la base tiene rótula (E1); en los de encima estas propiedades dan el D/C y su My_e muestra que siguen
+    elásticos."""
+    sec = n1['sec_mc']
     Pg = n1['Pg']
     lw = mu['u1'] - mu['u0']
     lp = min(0.5 * lw, h1)
@@ -3053,7 +3298,7 @@ def props_muro_rotula(mu, dm, h1):
     As = sum(a_ for u_, a_ in sec.barras if (u_ - sec.uc) < 0)       # barras del lado traccionado con My_pos
     x1 = (As * FYE * 1000 + Pg) / (mu['t'] * lw * FCE * 1000)
     v = n1['Ve'] / (mu['Av'] * 1000 * math.sqrt(FCE)) * PSI
-    tabla = ASCE_MURO[bool(n1['requiere_borde'])]
+    tabla = ASCE_MURO[bool(n1['especial'])]
     a, bb, IO, LS, CP = interp2(x1, 0.10, 0.25, v, 4.0, 6.0, tabla)
     mc_p = sec.momento_curvatura(Pg, 'sup', FCE, FYE, fyep)
     mc_n = sec.momento_curvatura(Pg, 'inf', FCE, FYE, fyen)
@@ -3068,7 +3313,7 @@ def props_muro_rotula(mu, dm, h1):
         'A': rs(mu['A'], 6), 'I': rs(mu['I'], 6), 'Av': rs(mu['Av'], 6), 'factor_fisuracion': 0.35, 'lp_m': rs(lp, 5),
         'refuerzo': {'cortina_vertical': f'2 cortinas N.º {n1["cortina_v"][0]} c/{es(n1["cortina_v"][1])}',
                      'cortina_horizontal': f'2 cortinas N.º {n1["cortina_h"][0]} c/{es(n1["cortina_h"][1])}',
-                     'borde_i': f'{n1["borde_i"][0]} N.º {n1["borde_i"][1]}', 'borde_j': f'{n1["borde_j"][0]} N.º {n1["borde_j"][1]}'},
+                     **{f'borde_{l_}': texto_borde(n1, l_) for l_ in ('i', 'j')}},
         'P_gravedad_kN': r(Pg, 1),
         'My_kNm': r(My, 0), 'My_pos_kNm': r(Myp, 0), 'My_neg_kNm': r(Myn, 0),
         'Mn_kNm': r(max(n1['Mn_pos'], n1['Mn_neg']), 0), 'phiMn_kNm': r(max(n1['phiMn_pos'], n1['phiMn_neg']), 0),
@@ -3079,15 +3324,16 @@ def props_muro_rotula(mu, dm, h1):
         'theta_p_IO': r(IO, 5), 'theta_p_LS': r(LS, 5), 'theta_p_CP': r(CP, 5),
         'endurecimiento': r(alfa, 4), 'histeresis': 'bilineal',
         'momento_curvatura': mc_puntos(mc_p), 'momento_curvatura_neg': mc_puntos(mc_n),
-        'calculo': (f'aletas efectivas (C.21.9.5.2); P = {es(Pg, 0)} kN; lp = min(0,5·lw; h1) = {es(lp, 3)} m; ASCE 41 '
-                    f'T10-19 {"con" if n1["requiere_borde"] else "sin"} borde confinado, ((As − A\'s)·fyE + P)/(tw·lw·f\'cE) = '
+        'calculo': (f'tramo del nivel {n1["nivel"]}; aletas efectivas (C.21.9.5.2); P = {es(Pg, 0)} kN; lp = min(0,5·lw; h1) = '
+                    f'{es(lp, 3)} m; ASCE 41 '
+                    f'T10-19 {"con" if n1["especial"] else "sin"} borde confinado, ((As − A\'s)·fyE + P)/(tw·lw·f\'cE) = '
                     f'{es(x1, 3)}, V/(tw·lw·√f\'cE) = {es(v, 1)} psi; endurecimiento del momento-curvatura'),
     }
 
 
 def secciones_y_rotulas(torre, D):
     """Una sección por grupo de elementos con propiedades idénticas (deduplicadas por contenido); nombres estables:
-    V-{b}x{h}-{n}, C-{b}-{n}, MURO-{pórtico}. → (secciones, asignación {id del elemento: nombre})."""
+    V-{b}x{h}-{n}, C-{b}-{n} y MURO-{pórtico}-{nivel} (una por tramo de muro). → (secciones, asignación {id: nombre})."""
     secciones = {}
     por_contenido = {}
     asignacion = {}
@@ -3117,11 +3363,23 @@ def secciones_y_rotulas(torre, D):
             registrar(e['id'], 'C', props_columna_rotula(e, c, c['transversal'], c['Pg']))
     for pid, dm in D['muros'].items():
         mu = torre['muros'][pid]
-        nombre = f'MURO-{pid}'
-        secciones[nombre] = props_muro_rotula(mu, dm, Z[1] - Z[0])
+        por_nivel = {nv_['nivel']: nv_ for nv_ in dm['niveles']}
         for e in torre['por_id'][pid]['elementos']:
+            nombre = f'MURO-{pid}-{e["nivel"]}'          # una sección por tramo, con su refuerzo (revisión A6)
+            secciones[nombre] = props_muro_rotula(mu, por_nivel[e['nivel']], Z[1] - Z[0])
             asignacion[e['id']] = nombre
     return secciones, asignacion
+
+
+def texto_borde(nv, lado):
+    """Texto del borde de un tramo de muro: zona de borde (barras, largo, cuantía y estribos) o columna de borde."""
+    z = nv['zonas'][lado]
+    if not z:
+        n, num = nv['col_barras']
+        return f'columna de borde con {n} N.º {num}' + (' (confinada en toda la altura del piso)' if nv['especial'] else '')
+    tr = nv['transversal_borde'][lado]
+    return (f'{z["n"]} N.º {z["num"]} en {z["n"] // 2} parejas en lb = {es(z["lb"])} m (ρ = {es(100 * z["rho"], 1)} %); '
+            f'E N.º {tr["num"]} c/{es(tr["s"], 3)} con {tr["ramas_espesor"]} ramas ({tr["tipo"]})')
 
 
 # =================================================================================================================
@@ -3290,6 +3548,10 @@ def amortiguamiento_y_anclas(mod, xi=XI):
     ri, rj = rho(wi), rho(wj)
     a1 = 2 * xi * (wj - wi) / (rj * wj ** 2 - ri * wi ** 2)
     a0 = 2 * xi * wi - a1 * ri * wi ** 2
+    if not a0 >= 0:                     # ρj < ρi·ωi/ωj: ξ exacto solo en Ti, con C ≥ 0 (como el motor)
+        a0, a1 = 0.0, 2 * xi / (ri * wi)
+    elif not a1 >= 0:
+        a0, a1 = 2 * xi * wi, 0.0
     xis = [(a0 + a1 * k) / (2 * w) for k, w in zip(kel, om)]
     return {'modos': modos, 'Ti': T1, 'Tj': Tj, 'a0': a0, 'a1': a1, 'xi': xis, 'cum_x': cx, 'cum_y': cy}
 
@@ -3378,10 +3640,14 @@ def disposicion(n, s=S_PILOTES):
 
 def reacciones_pilotes(pos, N, Mx, My):
     """Reacciones de un grupo de pilotes bajo un dado rígido: P_i = N/n + My·x_i/Σx² + Mx·y_i/Σy² (Mx: momento que
-    carga los pilotes de y > 0; My: los de x > 0). N y P de compresión positivos."""
+    carga los pilotes de y > 0; My: los de x > 0). N y P de compresión positivos. Un grupo en línea no tiene brazo
+    para el momento perpendicular a la línea: si lo hay, no se descarta en silencio (revisión A6: los dados de 2
+    pilotes de las esquinas perdían el momento de la base de la columna), se rechaza el grupo."""
     n = len(pos)
     sx = sum(x * x for x, y in pos)
     sy = sum(y * y for x, y in pos)
+    if (sx <= 0 and abs(My) > 1e-9) or (sy <= 0 and abs(Mx) > 1e-9):
+        raise ValueError('grupo de pilotes en línea con momento perpendicular a la línea: no tiene cómo resistirlo')
     return [N / n + (My * x / sx if sx > 0 else 0.0) + (Mx * y / sy if sy > 0 else 0.0) for x, y in pos]
 
 
@@ -3589,7 +3855,11 @@ def disenar_dado(apoyo, combos, pos, B, Lc, b_col, cap_pilote, nombre):
 
 
 def opciones_pilotes():
-    return (2, 3, 4, 5, 6, 9, 12, 16)
+    """Pilotes por dado de columna. Sin dados de 2 pilotes: en línea no resisten el momento de la base de la columna
+    perpendicular a la línea (todas las columnas de un sistema dual lo tienen en las dos direcciones), y llevarlo a las
+    vigas de amarre exigiría diseñarlas para él; con 3 pilotes en triángulo el dado lo toma en las dos direcciones
+    (revisión A6)."""
+    return (3, 4, 5, 6, 9, 12, 16)
 
 
 def tamano_dado(n, b_col):
@@ -4339,9 +4609,14 @@ def despiece_columnas(torre, D):
                                  'ganchos_suplementarios_por_direccion': tr['ganchos_suplementarios'], 'gancho': '135°',
                                  'lo_m': tr['lo'], 's_lo_m': tr['s_lo'], 's_centro_m': tr['s_centro'],
                                  'nudo': {'alto_m': h_viga, 's_m': tr['s_lo']}, 'primer_estribo_m': 0.05,
-                                 'juegos': n_sets},
+                                 'juegos': n_sets, 'confinada_toda_la_altura': bool(tr.get('confinada_toda_la_altura'))},
+                    'borde_de_muro': ({'muro': c['borde_de_muro']['muro'],
+                                       'N_cuerda_kN': [r(x_, 0) for x_ in c['borde_de_muro'].get('N_cuerda', [])],
+                                       'elemento_de_borde_especial': bool(c['borde_de_muro'].get('especial'))}
+                                      if c.get('borde_de_muro') else None),
                     'texto': f'{n} N.º {num} ({n // 4 + 1} por cara); E N.º {tr["num"]} de {tr["ramas"]} ramas c/{es(tr["s_lo"], 3)} '
-                             f'en lo = {es(tr["lo"])} m y c/{es(tr["s_centro"], 3)} en el centro',
+                             f'en lo = {es(tr["lo"])} m y c/{es(tr["s_centro"], 3)} en el centro'
+                             + (f'; borde del muro {c["borde_de_muro"]["muro"]}' if c.get('borde_de_muro') else ''),
                     'kg': kg_long + kg_tr, 'kg_longitudinal': kg_long, 'kg_transversal': kg_tr, 'm3': vol})
     return out
 
@@ -4437,41 +4712,79 @@ def despiece_vigas(torre, D):
 
 
 def despiece_muros(torre, D):
-    """Despiece de cada muro por piso: dos cortinas verticales y horizontales (C.21.9.2 y C.14.3), barras de borde en
-    los extremos del alma y elemento de borde confinado donde lo pide C.21.9.6.2; traslapo de las verticales en la base
-    de cada piso (clase B; las de borde, 1,3·ld) y horizontales con gancho alrededor de las barras de borde."""
+    """Despiece de cada muro por piso (revisión A6). Dos cortinas verticales y horizontales (C.21.9.2 y C.14.3): las
+    verticales con traslapo clase B en la base de cada piso y las horizontales con gancho alrededor de las barras de
+    borde (ancladas dentro del núcleo confinado de los elementos de borde especiales, C.21.9.6.4). Zonas de borde con
+    sus barras en parejas en las dos caras, su largo lb y su cuantía, y sus estribos cerrados con ganchos (especial,
+    C.21.9.6.5 o C.7.10) en toda la altura del piso. Las barras de borde se empalman con acopladores mecánicos tipo 2
+    en la base de cada piso (C.21.1.6, por confirmar): un traslapo duplicaría la cuantía de la zona. Las que no siguen
+    arriba se prolongan 1,25·ld en el piso 1, donde pueden fluir (C.21.9.2.3 b), o ld dentro del piso de arriba (los
+    0,8·lw de C.21.9.2.3 a ya están en la envolvente de diseño); las que empiezan en un piso se anclan ld abajo; en el
+    piso 1 llegan al dado con gancho y en el último piso terminan con gancho de 90°. En los muros en x el borde j es la
+    columna de borde: sus barras y estribos van en el despiece de la columna."""
     out = []
     for pid, dm in D['muros'].items():
         mu = torre['muros'][pid]
         m = mu['def']
-        for nv in dm['niveles']:
+        niv = dm['niveles']
+        for idx, nv in enumerate(niv):
             k = nv['nivel']
             h_ent = Z[k] - Z[k - 1]
             t = mu['t']
             numv, sv = nv['cortina_v']
             numh, sh = nv['cortina_h']
             largo = sum(math.hypot(q[1][2] - q[1][0], q[1][3] - q[1][1]) for q in mu['concreto'])
-            n_v = 2 * (int(largo / sv) + 1)
+            largo_cort = max(largo - sum(z['lb'] for z in nv['zonas'].values() if z), 0.0)
+            n_v = 2 * (int(largo_cort / sv) + 1)
             l_v = h_ent + traslapo(numv)
             n_h = 2 * (int(h_ent / sh) + 1)
             l_h = largo + 2 * gancho_90(numh)
             kg = kg_barra(numv, l_v, n_v) + kg_barra(numh, l_h, n_h)
+            arriba = niv[idx + 1] if idx + 1 < len(niv) else None
+            abajo = niv[idx - 1] if idx > 0 else None
             bordes = []
             for lado in ('i', 'j'):
-                n, num = nv[f'borde_{lado}']
-                if n:
-                    kg += kg_barra(num, h_ent + traslapo(num) + (ldh_sismico(num) + gancho_90(num) if k == 1 else 0.0), n)
-                    bordes.append({'lado': lado, 'n': n, 'num': num})
+                z = nv['zonas'][lado]
+                if not z:
+                    n_, num_ = nv['col_barras']
+                    bordes.append({'lado': lado, 'columna_de_borde': f'C-{m["j"][1]}{m["j"][2]}-{k}', 'n': n_, 'num': num_,
+                                   'confinada_toda_la_altura': nv['especial'], 'kg': 0.0,
+                                   'nota': 'barras y estribos en el despiece de la columna'})
+                    continue
+                tr = nv['transversal_borde'][lado]
+                num = z['num']
+                za = arriba['zonas'][lado] if arriba else None
+                zb = abajo['zonas'][lado] if abajo else None
+                n_sigue = min(z['n'], za['n']) if za else 0
+                n_corta = z['n'] - n_sigue
+                n_nuevas = max(z['n'] - zb['n'], 0) if zb else 0
+                ld_ = ld_traccion(num) * (1.25 if k == 1 else 1.0)
+                base = ldh_sismico(num) + gancho_90(num) if k == 1 else 0.0
+                tope = ld_ if arriba else gancho_90(num)
+                kg_b = (kg_barra(num, h_ent + base, n_sigue) + kg_barra(num, h_ent + base + tope, n_corta)
+                        + kg_barra(num, ld_traccion(num), n_nuevas))
+                kg_t = tr['kg_m'] * h_ent
+                kg += kg_b + kg_t
+                bordes.append({'lado': lado, 'n': z['n'], 'num': num, 'lb_m': r(z['lb'], 3), 'cuantia': r(z['rho'], 4),
+                               'parejas_desde_el_extremo_m': [r(u_, 3) for u_ in z['u']],
+                               'estribos': {'tipo': tr['tipo'], 'num': tr['num'], 's_m': tr['s'],
+                                            'ramas_espesor': tr['ramas_espesor'], 'ramas_largo': tr['ramas_largo'],
+                                            'Ash_req_mm2': [r(a_, 0) for a_ in tr['Ash_req_mm2']],
+                                            'Ash_mm2': [r(a_, 0) for a_ in tr['Ash_mm2']]},
+                               'acopladores_arriba': n_sigue, 'barras_que_terminan': n_corta,
+                               'prolongacion_m': r(tope, 3) if n_corta else 0.0, 'kg': r(kg_b + kg_t, 2)})
             vol = t * largo * h_ent
             planta = [[r(q, 3) for q in rr] for rr in rect_planta_muro(mu)]
             out.append({'id': next(e['id'] for e in torre['por_id'][pid]['elementos'] if e['nivel'] == k), 'muro': pid,
                         'nivel': k, 'z0': Z[k - 1], 'z1': Z[k], 't': t, 'planta': planta, 'direccion': m['dir'],
                         'cortina_vertical': {'capas': 2, 'num': numv, 's_m': sv},
                         'cortina_horizontal': {'capas': 2, 'num': numh, 's_m': sh},
-                        'bordes': bordes, 'elemento_de_borde_confinado': bool(nv['requiere_borde']),
+                        'bordes': bordes, 'elemento_de_borde_confinado': bool(nv['especial']),
+                        'elemento_de_borde_por': nv['especial_por'],
                         'traslapo_vertical_m': r(traslapo(numv), 3),
+                        'empalme_barras_de_borde': 'acoplador mecánico tipo 2 en la base de cada piso (C.21.1.6, por confirmar)',
                         'texto': f'2 cortinas N.º {numv} c/{es(sv)} (vertical) y N.º {numh} c/{es(sh)} (horizontal); bordes: '
-                                 + ', '.join(f'{b_["n"]} N.º {b_["num"]} en {b_["lado"]}' for b_ in bordes),
+                                 + '; '.join(f'{l_}: {texto_borde(nv, l_)}' for l_ in ('i', 'j')),
                         'kg': kg, 'm3': vol})
     return out
 
@@ -4771,6 +5084,28 @@ def chequeos_prediseno(torre, A, S, D, C, losas, secciones, est):
             {s_: r(fr[s_][0], 3) for s_ in fr}, '25 % de diseño independiente', True, 'NSR-10 A.3.2.1.4 y Tabla A.3-4 (por confirmar)')
     chequeo(ch, 'R', 'R = φa·φp·φr·R0 con cada factor justificado', r(S['R'], 3),
             f'{S["phi_a"]}·{S["phi_p"]}·{S["phi_r"]}·{S["R0"]}', True, 'NSR-10 A.3.3.3 (por confirmar)')
+    # redundancia de los pórticos (A.3.3.8; ASCE/SEI 7-16 Tabla 12.3-3, «pórticos resistentes a momento»; por
+    # confirmar): perder el momento en los dos extremos de una viga no debe quitar más de un tercio de la resistencia del
+    # piso. Cota superior de lo que se pierde: (Mn⁻ + Mn⁺)/h del piso (lo que esa viga le daba a las columnas de abajo y
+    # de arriba); cota inferior de la resistencia del piso: su cortante de diseño (FHE/R), que todos los elementos
+    # resisten con φ. Si la fracción así acotada es ≤ 1/3, la de verdad también lo es.
+    red = []
+    for s_ in ('x', 'y'):
+        F = A['fhe'][s_]['F']
+        for k in range(1, len(nv) + 1):
+            Vk = sum(F[k - 1:]) / S['R']
+            h = Z[k] - Z[k - 1]
+            dV = max(((dv['Mn_neg'] + dv['Mn_pos']) / h for eid, dv in D['vigas'].items()
+                      if dv['pm'].startswith('X' if s_ == 'x' else 'Y') and int(eid.rsplit('-', 1)[1]) == k), default=0.0)
+            red.append((dV / Vk, f'{s_}, entrepiso {k}'))
+    peor_red = max(red)
+    muros_suj = [x['muro'] for x in S['redundancia'] if x['sujeto_a_la_prueba']]
+    chequeo(ch, 'RED', 'Redundancia (φr): muros con h_piso/l > 1,0 en la prueba de remoción y pérdida del momento de una viga '
+            '≤ 1/3 de la resistencia del piso (cota: (Mn⁻ + Mn⁺)/h frente al cortante de diseño del piso)',
+            r(peor_red[0], 3), 0.33, peor_red[0] <= 0.33 and (S['phi_r'] < 1 or not muros_suj),
+            'NSR-10 A.3.3.8 y ASCE/SEI 7-16 12.3.4.2 y Tabla 12.3-3 (por confirmar)',
+            f'peor: {peor_red[1]}; muros que entran en la prueba de remoción: {", ".join(muros_suj) or "ninguno"} '
+            f'(h/l máximo {es(max(x["h_piso_sobre_l_alma_max"] for x in S["redundancia"]), 2)})')
     rt = max(S['cociente_torsional'].values())
     chequeo(ch, 'IRR-1P', 'Irregularidad torsional: deriva máxima de un extremo / promedio de los dos extremos (sin la '
             'extrema, 1bP, en un edificio indispensable)', r(rt, 3), LIMITE_TORSION, rt <= LIMITE_TORSION,
@@ -4824,9 +5159,12 @@ def chequeos_prediseno(torre, A, S, D, C, losas, secciones, est):
     flex_v = [eid for eid, dv in D['vigas'].items() if dv['phiMn_neg'] < dv['Mneg_u'] - 1e-6 or dv['phiMn_pos'] < dv['Mpos_u'] - 1e-6]
     flex_c = [f for f, c in D['columnas'].items() if c['util_PM'] > 1.0 + 1e-9]
     flex_m = [f'{pid}-{nv_["nivel"]}' for pid, dm in D['muros'].items() for nv_ in dm['niveles']
-              if min(nv_['phiMn_pos'], nv_['phiMn_neg']) < nv_['Mu'] - 1e-6]
-    chequeo(ch, 'FLEX', 'Flexión y flexocompresión: φMn ≥ Mu en vigas y muros, contorno de carga biaxial ≤ 1 en columnas',
-            len(flex_v) + len(flex_c) + len(flex_m), 0, not (flex_v or flex_c or flex_m), 'NSR-10 C.10 y C.21',
+              if nv_['falla'] or min(nv_['phiMn_pos'], nv_['phiMn_neg']) < nv_['M_req'] - 1e-6]
+    chequeo(ch, 'FLEX', 'Flexión y flexocompresión: φMn ≥ Mu en vigas, contorno de carga biaxial ≤ 1 en columnas (las de '
+            'borde de muro con la fuerza de cuerda) y en muros φMn ≥ Mu en la base y ≥ max(Ωv·Mu; envolvente lineal con '
+            'corrimiento de 0,8·lw) en los tramos de encima (sección crítica única)',
+            len(flex_v) + len(flex_c) + len(flex_m), 0, not (flex_v or flex_c or flex_m),
+            'NSR-10 C.10, C.21 y C.21.9.2.3 a (por confirmar); Eurocódigo 8, 5.5.2.4.1',
             ', '.join(flex_v + flex_c + flex_m) or None)
     rho_c = [area(c['n'], c['num']) / (c['b'] ** 2) for c in D['columnas'].values()]
     rho_v = [max(dv['rho_sup'], dv['rho_inf']) for dv in D['vigas'].values()]
@@ -4839,10 +5177,25 @@ def chequeos_prediseno(torre, A, S, D, C, losas, secciones, est):
     chequeo(ch, 'DMO', 'Detallado DMO de columnas: so ≤ min(8·db, 16·d_estribo, b/3, 150 mm) en lo ≥ max(ln/6, b, 500 mm), '
             'Ash de C.21.6.4.4 y a lo sumo una rama por barra de la cara (cada gancho abraza una barra)',
             len(so_mal), 0, not so_mal, 'NSR-10 C.21.3.5, C.21.6.4.2, C.21.6.4.4 y C.7.10.5.3 (por confirmar)', ', '.join(so_mal) or None)
-    bordes = [f'{pid}-{nv_["nivel"]}' for pid, dm in D['muros'].items() for nv_ in dm['niveles'] if nv_['requiere_borde']]
-    chequeo(ch, 'BORDE', 'Muros: profundidad del eje neutro c frente a lw/(600·δu/hw) (elementos de borde especiales)',
-            len(bordes), 0, True, 'NSR-10 C.21.9.6.2 (por confirmar)',
-            ('requieren elemento de borde confinado (se detalla): ' + ', '.join(bordes)) if bordes else 'ningún muro lo requiere')
+    bordes = [f'{pid}-{nv_["nivel"]} ({nv_["especial_por"]})' for pid, dm in D['muros'].items() for nv_ in dm['niveles']
+              if nv_['especial']]
+    malos_b = []
+    for pid, dm in D['muros'].items():
+        for nv_ in dm['niveles']:
+            for l_, z in nv_['zonas'].items():
+                if not z:
+                    if nv_['ext_req'][l_] > (nv_['b_col'] or 0.0) + 1e-9:
+                        malos_b.append(f'{pid}-{nv_["nivel"]}{l_}: columna de borde más corta que el elemento especial')
+                    continue
+                tr = nv_['transversal_borde'][l_]
+                if z['rho'] > RHO_BORDE_MAX + 1e-9 or not z['cabe'] or not tr['ok'] or z['lb'] < nv_['ext_req'][l_] - 1e-9:
+                    malos_b.append(f'{pid}-{nv_["nivel"]}{l_}')
+    chequeo(ch, 'BORDE', 'Muros: zonas de borde con ρ ≤ 4 % (sin traslapos: acopladores), barras que caben en el espesor y '
+            'elemento de borde especial (Ash de C.21.6.4.4 ec. C.21-5, s ≤ t/3 y largo ≥ max(c − 0,1·lw; c/2)) donde lo '
+            'piden C.21.9.6.2 (desplazamiento) o C.21.9.6.3 (esfuerzo > 0,2·f\'c, hasta 0,15·f\'c)',
+            len(malos_b), 0, not malos_b, 'NSR-10 C.21.9.6 y C.21.6.3.1 (por confirmar)',
+            ('; '.join(malos_b) + '. ' if malos_b else '') +
+            (('elementos de borde especiales: ' + ', '.join(bordes)) if bordes else 'ningún muro pide elemento de borde especial'))
     # cimentación
     geo = [gid for gid, g, sg in C['elementos'] if not verificar_grupo(sg['combos'], sg['pos'], C['capacidad'])[0]]
     estr = [gid for gid, g, sg in C['elementos'] if not sg['diseno']['ok']]
@@ -4998,8 +5351,10 @@ def salida_json(torre, A, S, D, secciones, asignacion, resortes, am, C, losas, e
         'muros': [{'id': f'{pid}-{nv_["nivel"]}', 'Vu_kN': r(nv_['Vu'], 1), 'Omega_v': r(nv_['Omega_v'], 3),
                    'Ve_kN': r(nv_['Ve'], 1), 'phiVn_kN': r(nv_['phiVn'], 1), 'omega_v_informativo': r(nv_['omega_v'], 2),
                    'Ve_con_omega_v_kN': r(nv_['Ve_din'], 1), 'Mu_kNm': r(nv_['Mu'], 0),
+                   'M_envolvente_kNm': r(nv_['M_env'], 0), 'M_diseno_kNm': r(nv_['M_req'], 0),
                    'phiMn_kNm': r(min(nv_['phiMn_pos'], nv_['phiMn_neg']), 0), 'c_max_m': r(nv_['c_max'], 3),
-                   'c_limite_m': r(nv_['c_lim'], 3), 'requiere_borde': nv_['requiere_borde']}
+                   'c_limite_m': r(nv_['c_lim'], 3), 'sigma_max_MPa': r(nv_['sigma_MPa'], 2),
+                   'elemento_de_borde_especial': nv_['especial'], 'por': nv_['especial_por']}
                   for pid, dm in sorted(D['muros'].items()) for nv_ in dm['niveles']],
     }
     prediseno = {
@@ -5171,7 +5526,8 @@ def salida_json(torre, A, S, D, secciones, asignacion, resortes, am, C, losas, e
             'designacion': 'NTC 2289, fy = 420 MPa; N.º n = n/8 de pulgada (NSR-10 Tabla C.3.5.3-2)',
             'recubrimientos_m': REC, 'ganchos': 'estribos y ganchos suplementarios con 135° y 6·db ≥ 75 mm (C.7.1.3 y '
                                                 'C.21.1); barras ancladas en nudos exteriores con gancho de 90° y ldh de '
-                                                'C.21.7.5.1', 'traslapos': 'clase B = 1,3·ld (C.12.15)',
+                                                'C.21.7.5.1', 'traslapos': 'clase B = 1,3·ld (C.12.15); las barras de las zonas de borde de los muros no se '
+                                                'traslapan: acopladores mecánicos tipo 2 (C.21.1.6, por confirmar)',
             'cotas': 'z desde el piso terminado del piso 1; columnas y muros por piso de z0 a z1; vigas por su eje en z del nivel'},
             **ref},
         'cantidades': cant,

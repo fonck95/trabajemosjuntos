@@ -5,7 +5,7 @@
  "tipo_dato": "calculo_propio",
  "nota": "Cálculo propio con el motor del simulador (análisis no lineal en el tiempo con Δt = 0,005 s) sobre el prediseño de la torre (estimación) y movimientos sintéticos (estimación: Boore 2003 con los parámetros de amenaza.json). «Diseño NSR-10» es un escenario hipotético: el registro se multiplica para que su espectro, entre 0,8 y 1,2 veces el período fundamental en cada dirección, iguale en promedio el espectro de diseño de Yondó con I = 1,5. Una sola semilla por escenario: otra semilla da otras cifras (ver la dispersión en T15 de las pruebas del motor).",
  "insumos_sha1": {
-  "data/sismo/torre_hospital_estructura.json": "1ca2bd6ccf34046a68aec582f853c7e58e510ef9",
+  "data/sismo/torre_hospital_estructura.json": "9f0bfe3b5f39cff8b47673f90bc06ac38d2ca1c1",
   "data/sismo/amenaza.json": "114d35e1bdb4b4eb0e1293c1045b0bfa233578b7"
  },
  "opciones": {
@@ -85,8 +85,8 @@
    ]
   },
   "amortiguamiento": {
-   "a0": 1.149,
-   "a1": 0.001209,
+   "a0": 1.148,
+   "a1": 0.001208,
    "periodos_ancla_s": [
     0.4558,
     0.09115
@@ -99,9 +99,9 @@
     0.0458,
     0.0493,
     0.0699,
-    0.0802,
-    0.0898,
-    0.0974,
+    0.0801,
+    0.0897,
+    0.0973,
     0.112,
     0.126
    ]
@@ -137,101 +137,101 @@
     "x": 8.554,
     "y": 9.884
    },
-   "deriva_vector_max": 0.0005582,
+   "deriva_vector_max": 0.0005584,
    "niveles": [
     {
      "nivel": 1,
-     "deriva_vector_max": 0.0003051,
+     "deriva_vector_max": 0.0003052,
      "punto": [
       -13,
       -19.6
      ],
      "t_s": 4.5,
-     "deriva_x_max": 0.0002735,
-     "deriva_y_max": 0.0001622,
+     "deriva_x_max": 0.0002736,
+     "deriva_y_max": 0.0001623,
      "u_max_m": [
-      0.0007986,
-      0.0006141
+      0.0007987,
+      0.0006143
      ],
-     "rz_max_rad": 0.00002059,
+     "rz_max_rad": 0.0000206,
      "a_abs_max_g": [
-      0.04701,
+      0.04702,
       0.02368
      ],
      "elementos_que_fluyen": 0
     },
     {
      "nivel": 2,
-     "deriva_vector_max": 0.0005302,
+     "deriva_vector_max": 0.0005304,
      "punto": [
       -13,
       -19.6
      ],
      "t_s": 4.505,
-     "deriva_x_max": 0.0004795,
-     "deriva_y_max": 0.0002894,
+     "deriva_x_max": 0.0004796,
+     "deriva_y_max": 0.0002895,
      "u_max_m": [
-      0.002153,
-      0.001663
+      0.002154,
+      0.001664
      ],
-     "rz_max_rad": 0.00005218,
+     "rz_max_rad": 0.0000522,
      "a_abs_max_g": [
       0.06034,
-      0.03791
+      0.03793
      ],
      "elementos_que_fluyen": 0
     },
     {
      "nivel": 3,
-     "deriva_vector_max": 0.0005582,
+     "deriva_vector_max": 0.0005584,
      "punto": [
       -13,
       -19.6
      ],
      "t_s": 4.505,
-     "deriva_x_max": 0.0005099,
-     "deriva_y_max": 0.0003188,
+     "deriva_x_max": 0.00051,
+     "deriva_y_max": 0.0003189,
      "u_max_m": [
       0.003617,
-      0.002846
+      0.002847
      ],
-     "rz_max_rad": 0.00008458,
+     "rz_max_rad": 0.00008462,
      "a_abs_max_g": [
       0.07156,
-      0.05777
+      0.05779
      ],
      "elementos_que_fluyen": 0
     },
     {
      "nivel": 4,
-     "deriva_vector_max": 0.0004798,
+     "deriva_vector_max": 0.0004799,
      "punto": [
       -13,
       -7.6
      ],
      "t_s": 4.495,
-     "deriva_x_max": 0.0004264,
-     "deriva_y_max": 0.0003147,
+     "deriva_x_max": 0.0004265,
+     "deriva_y_max": 0.0003148,
      "u_max_m": [
       0.004616,
-      0.003994
+      0.003995
      ],
      "rz_max_rad": 0.0001192,
      "a_abs_max_g": [
-      0.0925,
-      0.08122
+      0.09253,
+      0.08125
      ],
      "elementos_que_fluyen": 0
     }
    ],
    "cortante_basal_max_kN": {
     "Vx": 2950,
-    "Vy": 2153,
-    "torsor_kNm": 9573
+    "Vy": 2154,
+    "torsor_kNm": 9578
    },
    "cortante_basal_sobre_peso": {
-    "x": 0.06143,
-    "y": 0.04484
+    "x": 0.06144,
+    "y": 0.04485
    },
    "fluencia": {
     "elementos": 0,
@@ -247,18 +247,18 @@
     "t_primera_s": null
    },
    "dc_max": {
-    "valor": 0.3583,
-    "elemento": "VY-B-34-4",
+    "valor": 0.426,
+    "elemento": "VY-B-67-4",
     "gobierna": "flexión",
     "elementos_con_dc_mayor_que_1": 0
    },
    "energia_final_kJ": {
-    "entrada": 28.24,
-    "cinetica": 0.0008565,
-    "elastica": 0.0003101,
+    "entrada": 28.25,
+    "cinetica": 0.000859,
+    "elastica": 0.0003107,
     "amortiguada": 28.24,
     "histeretica": 0,
-    "trabajo_pdelta": -0.000002367
+    "trabajo_pdelta": -0.00000237
    },
    "muros_mamposteria": {
     "sin_dano": 42
@@ -271,14 +271,14 @@
     "anclado": 212,
     "estable": 471,
     "deslizamiento_max_m": 0.0131,
-    "fuerza_anclaje_max_kN": 6.51
+    "fuerza_anclaje_max_kN": 6.52
    },
    "calidad_numerica": {
     "pasos": 4506,
     "iteraciones_promedio": 1,
     "subdivisiones": 0,
     "no_convergidos": 0,
-    "error_energia_max": 3.9e-14,
+    "error_energia_max": 2.8e-14,
     "indice_estabilidad_max": 0.00473
    }
   },
@@ -310,150 +310,150 @@
     "x": 8.884,
     "y": 10.08
    },
-   "deriva_vector_max": 0.002852,
+   "deriva_vector_max": 0.003036,
    "niveles": [
     {
      "nivel": 1,
-     "deriva_vector_max": 0.001765,
+     "deriva_vector_max": 0.002216,
      "punto": [
       -13,
       -19.6
      ],
-     "t_s": 7.39,
-     "deriva_x_max": 0.001617,
-     "deriva_y_max": 0.0009458,
+     "t_s": 7.395,
+     "deriva_x_max": 0.002048,
+     "deriva_y_max": 0.001073,
      "u_max_m": [
-      0.004708,
-      0.003364
+      0.005715,
+      0.003531
      ],
-     "rz_max_rad": 0.0001232,
+     "rz_max_rad": 0.0001669,
      "a_abs_max_g": [
-      0.2767,
-      0.147
+      0.3158,
+      0.1477
      ],
-     "elementos_que_fluyen": 2
+     "elementos_que_fluyen": 9
     },
     {
      "nivel": 2,
-     "deriva_vector_max": 0.002803,
+     "deriva_vector_max": 0.003022,
      "punto": [
       -13,
       -19.6
      ],
-     "t_s": 7.39,
-     "deriva_x_max": 0.002571,
-     "deriva_y_max": 0.001606,
+     "t_s": 7.405,
+     "deriva_x_max": 0.002793,
+     "deriva_y_max": 0.001649,
      "u_max_m": [
-      0.01205,
-      0.009006
+      0.01344,
+      0.008952
      ],
-     "rz_max_rad": 0.0002898,
+     "rz_max_rad": 0.0003588,
      "a_abs_max_g": [
-      0.3515,
-      0.2105
+      0.3627,
+      0.2185
      ],
-     "elementos_que_fluyen": 0
+     "elementos_que_fluyen": 3
     },
     {
      "nivel": 3,
-     "deriva_vector_max": 0.002852,
+     "deriva_vector_max": 0.003036,
      "punto": [
       -13,
       -19.6
      ],
-     "t_s": 7.375,
-     "deriva_x_max": 0.002634,
-     "deriva_y_max": 0.001748,
+     "t_s": 7.43,
+     "deriva_x_max": 0.002841,
+     "deriva_y_max": 0.001727,
      "u_max_m": [
-      0.01974,
-      0.01533
+      0.02101,
+      0.01486
      ],
-     "rz_max_rad": 0.0004607,
+     "rz_max_rad": 0.0005382,
      "a_abs_max_g": [
-      0.376,
-      0.3085
+      0.3356,
+      0.2884
      ],
-     "elementos_que_fluyen": 0
+     "elementos_que_fluyen": 3
     },
     {
      "nivel": 4,
-     "deriva_vector_max": 0.002492,
+     "deriva_vector_max": 0.00258,
      "punto": [
       -13,
       -7.6
      ],
-     "t_s": 7.365,
-     "deriva_x_max": 0.002256,
-     "deriva_y_max": 0.001715,
+     "t_s": 7.43,
+     "deriva_x_max": 0.002353,
+     "deriva_y_max": 0.001691,
      "u_max_m": [
-      0.02513,
-      0.02138
+      0.02564,
+      0.02048
      ],
-     "rz_max_rad": 0.000631,
+     "rz_max_rad": 0.0007329,
      "a_abs_max_g": [
-      0.4998,
-      0.4116
+      0.4666,
+      0.3902
      ],
      "elementos_que_fluyen": 0
     }
    ],
    "cortante_basal_max_kN": {
-    "Vx": 15770,
-    "Vy": 11680,
-    "torsor_kNm": 51990
+    "Vx": 15270,
+    "Vy": 10770,
+    "torsor_kNm": 50380
    },
    "cortante_basal_sobre_peso": {
-    "x": 0.3283,
-    "y": 0.2432
+    "x": 0.318,
+    "y": 0.2243
    },
    "fluencia": {
-    "elementos": 2,
+    "elementos": 15,
     "por_tipo": {
      "columna": 0,
-     "viga": 0,
-     "muro_concreto": 2
+     "viga": 11,
+     "muro_concreto": 4
     },
     "extremos_mas_alla_de_IO": 0,
     "de_LS": 0,
     "de_CP": 0,
     "cortante_mayor_que_Vn": 0,
-    "t_primera_s": 7.32
+    "t_primera_s": 7.29
    },
    "dc_max": {
-    "valor": 0.8551,
-    "elemento": "MX-4D-1",
+    "valor": 0.9094,
+    "elemento": "VY-A-23-1",
     "gobierna": "flexión",
     "elementos_con_dc_mayor_que_1": 0
    },
    "energia_final_kJ": {
-    "entrada": 782.4,
-    "cinetica": 0.0001327,
-    "elastica": 0.1496,
-    "amortiguada": 749.5,
-    "histeretica": 32.7,
-    "trabajo_pdelta": -0.0006873
+    "entrada": 805.2,
+    "cinetica": 0.0001337,
+    "elastica": 0.3401,
+    "amortiguada": 674.9,
+    "histeretica": 130,
+    "trabajo_pdelta": -0.002178
    },
    "muros_mamposteria": {
-    "leve": 35,
-    "sin_dano": 7
+    "leve": 37,
+    "sin_dano": 5
    },
    "equipos": {
     "evaluados": 785,
-    "desliza": 182,
+    "desliza": 191,
     "balancea": 11,
     "frontera": 2,
     "anclado": 212,
-    "estable": 378,
-    "deslizamiento_max_m": 0.22,
-    "fuerza_anclaje_max_kN": 33.8
+    "estable": 369,
+    "deslizamiento_max_m": 0.226,
+    "fuerza_anclaje_max_kN": 35.6
    },
    "calidad_numerica": {
     "pasos": 5747,
-    "iteraciones_promedio": 1.01,
+    "iteraciones_promedio": 1.02,
     "subdivisiones": 0,
     "no_convergidos": 0,
-    "error_energia_max": 2.9e-14,
-    "indice_estabilidad_max": 0.00493
+    "error_energia_max": 1.9e-14,
+    "indice_estabilidad_max": 0.00572
    }
   },
   {
@@ -484,151 +484,151 @@
     "x": 6.042,
     "y": 6.233
    },
-   "deriva_vector_max": 0.003799,
+   "deriva_vector_max": 0.004083,
    "niveles": [
     {
      "nivel": 1,
-     "deriva_vector_max": 0.002686,
+     "deriva_vector_max": 0.002867,
      "punto": [
       -13,
       -19.6
      ],
      "t_s": 5.66,
-     "deriva_x_max": 0.002444,
-     "deriva_y_max": 0.001152,
+     "deriva_x_max": 0.002656,
+     "deriva_y_max": 0.001232,
      "u_max_m": [
-      0.006623,
-      0.003764
+      0.00728,
+      0.003921
      ],
-     "rz_max_rad": 0.0002084,
+     "rz_max_rad": 0.0002247,
      "a_abs_max_g": [
-      0.3677,
-      0.1824
+      0.4017,
+      0.1799
      ],
-     "elementos_que_fluyen": 10
+     "elementos_que_fluyen": 16
     },
     {
      "nivel": 2,
-     "deriva_vector_max": 0.003799,
-     "punto": [
-      -13,
-      -19.6
-     ],
-     "t_s": 5.66,
-     "deriva_x_max": 0.003435,
-     "deriva_y_max": 0.001899,
-     "u_max_m": [
-      0.0158,
-      0.01
-     ],
-     "rz_max_rad": 0.0004593,
-     "a_abs_max_g": [
-      0.4462,
-      0.2377
-     ],
-     "elementos_que_fluyen": 6
-    },
-    {
-     "nivel": 3,
-     "deriva_vector_max": 0.003716,
+     "deriva_vector_max": 0.003928,
      "punto": [
       -13,
       -19.6
      ],
      "t_s": 5.685,
-     "deriva_x_max": 0.003408,
-     "deriva_y_max": 0.002121,
+     "deriva_x_max": 0.003623,
+     "deriva_y_max": 0.001883,
      "u_max_m": [
-      0.02475,
-      0.01694
+      0.01673,
+      0.009772
      ],
-     "rz_max_rad": 0.0006804,
+     "rz_max_rad": 0.0004965,
      "a_abs_max_g": [
-      0.4084,
-      0.3384
+      0.4244,
+      0.2528
      ],
-     "elementos_que_fluyen": 3
+     "elementos_que_fluyen": 8
+    },
+    {
+     "nivel": 3,
+     "deriva_vector_max": 0.004083,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 5.7,
+     "deriva_x_max": 0.003797,
+     "deriva_y_max": 0.001938,
+     "u_max_m": [
+      0.02615,
+      0.01597
+     ],
+     "rz_max_rad": 0.0007712,
+     "a_abs_max_g": [
+      0.3756,
+      0.3049
+     ],
+     "elementos_que_fluyen": 10
     },
     {
      "nivel": 4,
-     "deriva_vector_max": 0.003124,
+     "deriva_vector_max": 0.003428,
      "punto": [
       -13,
       -7.6
      ],
-     "t_s": 5.69,
-     "deriva_x_max": 0.002768,
-     "deriva_y_max": 0.002108,
+     "t_s": 5.7,
+     "deriva_x_max": 0.003084,
+     "deriva_y_max": 0.001891,
      "u_max_m": [
-      0.02989,
-      0.02346
+      0.03147,
+      0.02172
      ],
-     "rz_max_rad": 0.0009122,
+     "rz_max_rad": 0.001055,
      "a_abs_max_g": [
-      0.5279,
-      0.494
+      0.5052,
+      0.4634
      ],
-     "elementos_que_fluyen": 0
+     "elementos_que_fluyen": 2
     }
    ],
    "cortante_basal_max_kN": {
-    "Vx": 18440,
-    "Vy": 12580,
-    "torsor_kNm": 67380
+    "Vx": 17360,
+    "Vy": 11680,
+    "torsor_kNm": 64460
    },
    "cortante_basal_sobre_peso": {
-    "x": 0.3839,
-    "y": 0.262
+    "x": 0.3615,
+    "y": 0.2432
    },
    "fluencia": {
-    "elementos": 19,
+    "elementos": 36,
     "por_tipo": {
-     "columna": 0,
-     "viga": 17,
-     "muro_concreto": 2
+     "columna": 1,
+     "viga": 30,
+     "muro_concreto": 5
     },
     "extremos_mas_alla_de_IO": 0,
     "de_LS": 0,
     "de_CP": 0,
     "cortante_mayor_que_Vn": 0,
-    "t_primera_s": 5.565
+    "t_primera_s": 4.21
    },
    "dc_max": {
-    "valor": 0.9172,
-    "elemento": "VX-1-CD-1",
+    "valor": 0.9356,
+    "elemento": "VX-1-BC-3",
     "gobierna": "flexión",
     "elementos_con_dc_mayor_que_1": 0
    },
    "energia_final_kJ": {
-    "entrada": 682.2,
-    "cinetica": 0.01407,
-    "elastica": 2.846,
-    "amortiguada": 592.2,
-    "histeretica": 87.14,
-    "trabajo_pdelta": -0.02048
+    "entrada": 763.5,
+    "cinetica": 0.01427,
+    "elastica": 2.194,
+    "amortiguada": 558.9,
+    "histeretica": 202.4,
+    "trabajo_pdelta": -0.03391
    },
    "muros_mamposteria": {
     "leve": 33,
-    "sin_dano": 5,
-    "moderado": 4
+    "sin_dano": 3,
+    "moderado": 6
    },
    "equipos": {
     "evaluados": 785,
-    "desliza": 274,
-    "balancea": 14,
+    "desliza": 258,
+    "balancea": 15,
     "frontera": 6,
     "anclado": 212,
-    "estable": 279,
-    "deslizamiento_max_m": 0.125,
-    "fuerza_anclaje_max_kN": 44.5
+    "estable": 294,
+    "deslizamiento_max_m": 0.123,
+    "fuerza_anclaje_max_kN": 44.1
    },
    "calidad_numerica": {
     "pasos": 3489,
-    "iteraciones_promedio": 1.01,
+    "iteraciones_promedio": 1.03,
     "subdivisiones": 0,
     "no_convergidos": 0,
-    "error_energia_max": 8.7e-15,
-    "indice_estabilidad_max": 0.00554
+    "error_energia_max": 2.5e-14,
+    "indice_estabilidad_max": 0.00645
    }
   },
   {
@@ -659,151 +659,151 @@
     "x": 8.476,
     "y": 9.39
    },
-   "deriva_vector_max": 0.008235,
+   "deriva_vector_max": 0.008332,
    "niveles": [
     {
      "nivel": 1,
-     "deriva_vector_max": 0.006616,
+     "deriva_vector_max": 0.007128,
      "punto": [
       -13,
       -19.6
      ],
-     "t_s": 4.61,
-     "deriva_x_max": 0.006404,
-     "deriva_y_max": 0.002561,
+     "t_s": 4.62,
+     "deriva_x_max": 0.006982,
+     "deriva_y_max": 0.002323,
      "u_max_m": [
-      0.0182,
-      0.009352
+      0.02318,
+      0.008928
      ],
-     "rz_max_rad": 0.0005214,
+     "rz_max_rad": 0.0003932,
      "a_abs_max_g": [
-      0.6408,
-      0.3388
+      0.6069,
+      0.3425
      ],
-     "elementos_que_fluyen": 63
+     "elementos_que_fluyen": 68
     },
     {
      "nivel": 2,
-     "deriva_vector_max": 0.008192,
+     "deriva_vector_max": 0.008332,
      "punto": [
       -13,
       -19.6
      ],
-     "t_s": 4.605,
-     "deriva_x_max": 0.0079,
-     "deriva_y_max": 0.003638,
+     "t_s": 4.63,
+     "deriva_x_max": 0.008105,
+     "deriva_y_max": 0.00311,
      "u_max_m": [
-      0.04007,
-      0.02152
+      0.04881,
+      0.02027
      ],
-     "rz_max_rad": 0.001099,
+     "rz_max_rad": 0.000807,
      "a_abs_max_g": [
-      0.6626,
-      0.4663
-     ],
-     "elementos_que_fluyen": 30
-    },
-    {
-     "nivel": 3,
-     "deriva_vector_max": 0.008235,
-     "punto": [
-      -13,
-      -19.6
-     ],
-     "t_s": 4.595,
-     "deriva_x_max": 0.007963,
-     "deriva_y_max": 0.003758,
-     "u_max_m": [
-      0.06202,
-      0.03408
-     ],
-     "rz_max_rad": 0.001654,
-     "a_abs_max_g": [
-      0.5508,
-      0.5101
+      0.6089,
+      0.4747
      ],
      "elementos_que_fluyen": 33
     },
     {
+     "nivel": 3,
+     "deriva_vector_max": 0.008271,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 4.64,
+     "deriva_x_max": 0.008072,
+     "deriva_y_max": 0.003094,
+     "u_max_m": [
+      0.07418,
+      0.03194
+     ],
+     "rz_max_rad": 0.001195,
+     "a_abs_max_g": [
+      0.4754,
+      0.4258
+     ],
+     "elementos_que_fluyen": 37
+    },
+    {
      "nivel": 4,
-     "deriva_vector_max": 0.006902,
+     "deriva_vector_max": 0.007188,
      "punto": [
       -13,
       -7.6
      ],
-     "t_s": 4.585,
-     "deriva_x_max": 0.006564,
-     "deriva_y_max": 0.003634,
+     "t_s": 4.635,
+     "deriva_x_max": 0.006985,
+     "deriva_y_max": 0.002958,
      "u_max_m": [
-      0.07641,
-      0.04575
+      0.0929,
+      0.04297
      ],
-     "rz_max_rad": 0.002212,
+     "rz_max_rad": 0.001592,
      "a_abs_max_g": [
-      0.8025,
-      0.72
+      0.7275,
+      0.6935
      ],
-     "elementos_que_fluyen": 21
+     "elementos_que_fluyen": 22
     }
    ],
    "cortante_basal_max_kN": {
-    "Vx": 25270,
-    "Vy": 20330,
-    "torsor_kNm": 107100
+    "Vx": 21890,
+    "Vy": 16720,
+    "torsor_kNm": 74950
    },
    "cortante_basal_sobre_peso": {
-    "x": 0.5263,
-    "y": 0.4234
+    "x": 0.4559,
+    "y": 0.3483
    },
    "fluencia": {
-    "elementos": 147,
+    "elementos": 160,
     "por_tipo": {
-     "columna": 26,
-     "viga": 116,
+     "columna": 27,
+     "viga": 128,
      "muro_concreto": 5
     },
-    "extremos_mas_alla_de_IO": 2,
+    "extremos_mas_alla_de_IO": 1,
     "de_LS": 0,
     "de_CP": 0,
     "cortante_mayor_que_Vn": 0,
-    "t_primera_s": 3.055
+    "t_primera_s": 2.5
    },
    "dc_max": {
-    "valor": 2,
+    "valor": 1.082,
     "elemento": "MX-3D-1",
     "gobierna": "rotación plástica",
-    "elementos_con_dc_mayor_que_1": 2
+    "elementos_con_dc_mayor_que_1": 1
    },
    "energia_final_kJ": {
-    "entrada": 5659,
-    "cinetica": 0.1342,
-    "elastica": 8.686,
-    "amortiguada": 2713,
-    "histeretica": 2937,
-    "trabajo_pdelta": -0.4033
+    "entrada": 6287,
+    "cinetica": 0.1353,
+    "elastica": -5.713,
+    "amortiguada": 2303,
+    "histeretica": 3991,
+    "trabajo_pdelta": -0.9645
    },
    "muros_mamposteria": {
-    "extenso": 8,
-    "leve": 11,
-    "moderado": 23
+    "extenso": 12,
+    "moderado": 16,
+    "leve": 14
    },
    "equipos": {
     "evaluados": 785,
-    "desliza": 491,
+    "desliza": 492,
     "balancea": 1,
-    "frontera": 33,
+    "frontera": 32,
     "anclado": 212,
     "estable": 48,
-    "deslizamiento_max_m": 0.213,
-    "fuerza_anclaje_max_kN": 56.5
+    "deslizamiento_max_m": 0.189,
+    "fuerza_anclaje_max_kN": 53.3
    },
    "calidad_numerica": {
     "pasos": 4506,
-    "iteraciones_promedio": 1.15,
+    "iteraciones_promedio": 1.21,
     "subdivisiones": 0,
     "no_convergidos": 0,
-    "error_energia_max": 7.4e-15,
-    "indice_estabilidad_max": 0.0103
+    "error_energia_max": 3.5e-12,
+    "indice_estabilidad_max": 0.0138
    }
   },
   {
@@ -834,151 +834,151 @@
     "x": 8.862,
     "y": 9.694
    },
-   "deriva_vector_max": 0.008445,
+   "deriva_vector_max": 0.008689,
    "niveles": [
     {
      "nivel": 1,
-     "deriva_vector_max": 0.006892,
+     "deriva_vector_max": 0.007472,
      "punto": [
       -13,
       -19.6
      ],
-     "t_s": 7.485,
-     "deriva_x_max": 0.006702,
-     "deriva_y_max": 0.002871,
+     "t_s": 7.5,
+     "deriva_x_max": 0.007367,
+     "deriva_y_max": 0.00263,
      "u_max_m": [
-      0.01984,
-      0.01124
+      0.02502,
+      0.01066
      ],
-     "rz_max_rad": 0.0005064,
+     "rz_max_rad": 0.0003867,
      "a_abs_max_g": [
-      0.6386,
-      0.3883
+      0.5611,
+      0.3745
      ],
-     "elementos_que_fluyen": 75
+     "elementos_que_fluyen": 77
     },
     {
      "nivel": 2,
-     "deriva_vector_max": 0.008429,
+     "deriva_vector_max": 0.008689,
      "punto": [
       -13,
       -19.6
      ],
-     "t_s": 7.485,
-     "deriva_x_max": 0.008172,
-     "deriva_y_max": 0.003941,
+     "t_s": 7.51,
+     "deriva_x_max": 0.008519,
+     "deriva_y_max": 0.00343,
      "u_max_m": [
-      0.04328,
-      0.02523
+      0.0525,
+      0.02367
      ],
-     "rz_max_rad": 0.001061,
+     "rz_max_rad": 0.0007874,
      "a_abs_max_g": [
-      0.6559,
-      0.4926
+      0.5857,
+      0.5193
      ],
-     "elementos_que_fluyen": 36
+     "elementos_que_fluyen": 37
     },
     {
      "nivel": 3,
-     "deriva_vector_max": 0.008445,
+     "deriva_vector_max": 0.008675,
      "punto": [
       -13,
       -19.6
      ],
-     "t_s": 7.48,
-     "deriva_x_max": 0.008219,
-     "deriva_y_max": 0.004013,
+     "t_s": 7.52,
+     "deriva_x_max": 0.008524,
+     "deriva_y_max": 0.003405,
      "u_max_m": [
-      0.06673,
-      0.03947
+      0.07998,
+      0.03694
      ],
-     "rz_max_rad": 0.001589,
+     "rz_max_rad": 0.001168,
      "a_abs_max_g": [
-      0.5682,
-      0.5357
+      0.5023,
+      0.4424
      ],
-     "elementos_que_fluyen": 35
+     "elementos_que_fluyen": 37
     },
     {
      "nivel": 4,
-     "deriva_vector_max": 0.007117,
+     "deriva_vector_max": 0.007631,
      "punto": [
       -13,
       -7.6
      ],
-     "t_s": 7.465,
-     "deriva_x_max": 0.006846,
-     "deriva_y_max": 0.003868,
+     "t_s": 7.515,
+     "deriva_x_max": 0.007479,
+     "deriva_y_max": 0.003263,
      "u_max_m": [
-      0.08186,
-      0.05284
+      0.1011,
+      0.04967
      ],
-     "rz_max_rad": 0.002122,
+     "rz_max_rad": 0.001568,
      "a_abs_max_g": [
-      0.776,
-      0.7328
+      0.7895,
+      0.7496
      ],
-     "elementos_que_fluyen": 23
+     "elementos_que_fluyen": 27
     }
    ],
    "cortante_basal_max_kN": {
-    "Vx": 25350,
-    "Vy": 21730,
-    "torsor_kNm": 108300
+    "Vx": 21430,
+    "Vy": 17990,
+    "torsor_kNm": 85660
    },
    "cortante_basal_sobre_peso": {
-    "x": 0.528,
-    "y": 0.4526
+    "x": 0.4463,
+    "y": 0.3747
    },
    "fluencia": {
-    "elementos": 169,
+    "elementos": 178,
     "por_tipo": {
-     "columna": 30,
-     "viga": 134,
+     "columna": 32,
+     "viga": 141,
      "muro_concreto": 5
     },
-    "extremos_mas_alla_de_IO": 3,
+    "extremos_mas_alla_de_IO": 2,
     "de_LS": 0,
     "de_CP": 0,
     "cortante_mayor_que_Vn": 0,
-    "t_primera_s": 5.935
+    "t_primera_s": 5.395
    },
    "dc_max": {
-    "valor": 2.165,
+    "valor": 1.165,
     "elemento": "MX-3D-1",
     "gobierna": "rotación plástica",
-    "elementos_con_dc_mayor_que_1": 3
+    "elementos_con_dc_mayor_que_1": 2
    },
    "energia_final_kJ": {
-    "entrada": 5573,
-    "cinetica": 0.0006962,
-    "elastica": 9.261,
-    "amortiguada": 2561,
-    "histeretica": 3003,
-    "trabajo_pdelta": -0.4283
+    "entrada": 6276,
+    "cinetica": 0.0007026,
+    "elastica": -7.741,
+    "amortiguada": 2197,
+    "histeretica": 4087,
+    "trabajo_pdelta": -0.8982
    },
    "muros_mamposteria": {
-    "extenso": 8,
-    "leve": 8,
-    "moderado": 26
+    "extenso": 15,
+    "moderado": 20,
+    "leve": 7
    },
    "equipos": {
     "evaluados": 785,
-    "desliza": 532,
+    "desliza": 533,
     "balancea": 1,
-    "frontera": 40,
+    "frontera": 39,
     "anclado": 212,
     "estable": 0,
-    "deslizamiento_max_m": 0.679,
-    "fuerza_anclaje_max_kN": 55.1
+    "deslizamiento_max_m": 0.674,
+    "fuerza_anclaje_max_kN": 56.9
    },
    "calidad_numerica": {
     "pasos": 5747,
-    "iteraciones_promedio": 1.11,
+    "iteraciones_promedio": 1.16,
     "subdivisiones": 0,
     "no_convergidos": 0,
-    "error_energia_max": 1.2e-14,
-    "indice_estabilidad_max": 0.0109
+    "error_energia_max": 8.7e-12,
+    "indice_estabilidad_max": 0.0148
    }
   },
   {
@@ -1009,133 +1009,133 @@
     "x": 6.031,
     "y": 6.227
    },
-   "deriva_vector_max": 0.008502,
+   "deriva_vector_max": 0.008759,
    "niveles": [
     {
      "nivel": 1,
-     "deriva_vector_max": 0.006984,
+     "deriva_vector_max": 0.007539,
      "punto": [
       -13,
       -19.6
      ],
-     "t_s": 5.76,
-     "deriva_x_max": 0.006804,
-     "deriva_y_max": 0.002229,
+     "t_s": 5.77,
+     "deriva_x_max": 0.007407,
+     "deriva_y_max": 0.002042,
      "u_max_m": [
-      0.02056,
-      0.008468
+      0.0255,
+      0.008362
      ],
-     "rz_max_rad": 0.0004968,
+     "rz_max_rad": 0.0003714,
      "a_abs_max_g": [
-      0.6718,
-      0.3587
+      0.6067,
+      0.3625
      ],
-     "elementos_que_fluyen": 62
+     "elementos_que_fluyen": 64
     },
     {
      "nivel": 2,
-     "deriva_vector_max": 0.008492,
+     "deriva_vector_max": 0.008759,
      "punto": [
       -13,
       -19.6
      ],
-     "t_s": 5.755,
-     "deriva_x_max": 0.00823,
-     "deriva_y_max": 0.003273,
+     "t_s": 5.78,
+     "deriva_x_max": 0.008547,
+     "deriva_y_max": 0.002964,
      "u_max_m": [
-      0.04474,
-      0.01924
+      0.05346,
+      0.01866
      ],
-     "rz_max_rad": 0.001033,
+     "rz_max_rad": 0.0007533,
      "a_abs_max_g": [
-      0.6642,
-      0.4885
+      0.6081,
+      0.4493
      ],
-     "elementos_que_fluyen": 29
+     "elementos_que_fluyen": 33
     },
     {
      "nivel": 3,
-     "deriva_vector_max": 0.008502,
+     "deriva_vector_max": 0.008718,
      "punto": [
       -13,
       -19.6
      ],
-     "t_s": 5.745,
-     "deriva_x_max": 0.008262,
-     "deriva_y_max": 0.003304,
+     "t_s": 5.79,
+     "deriva_x_max": 0.008527,
+     "deriva_y_max": 0.003051,
      "u_max_m": [
-      0.06909,
-      0.03005
+      0.08142,
+      0.02975
      ],
-     "rz_max_rad": 0.001542,
+     "rz_max_rad": 0.001107,
      "a_abs_max_g": [
-      0.5752,
-      0.5228
+      0.5026,
+      0.4259
      ],
-     "elementos_que_fluyen": 28
+     "elementos_que_fluyen": 35
     },
     {
      "nivel": 4,
-     "deriva_vector_max": 0.007296,
+     "deriva_vector_max": 0.007741,
      "punto": [
       -13,
       -7.6
      ],
-     "t_s": 5.735,
-     "deriva_x_max": 0.007001,
-     "deriva_y_max": 0.003172,
+     "t_s": 5.79,
+     "deriva_x_max": 0.007546,
+     "deriva_y_max": 0.002987,
      "u_max_m": [
-      0.0856,
-      0.04048
+      0.1033,
+      0.04032
      ],
-     "rz_max_rad": 0.002074,
+     "rz_max_rad": 0.001481,
      "a_abs_max_g": [
-      0.8268,
-      0.7525
+      0.7836,
+      0.7285
      ],
-     "elementos_que_fluyen": 21
+     "elementos_que_fluyen": 22
     }
    ],
    "cortante_basal_max_kN": {
-    "Vx": 25390,
-    "Vy": 19800,
-    "torsor_kNm": 104900
+    "Vx": 21910,
+    "Vy": 16990,
+    "torsor_kNm": 82180
    },
    "cortante_basal_sobre_peso": {
-    "x": 0.5287,
-    "y": 0.4124
+    "x": 0.4564,
+    "y": 0.3539
    },
    "fluencia": {
-    "elementos": 140,
+    "elementos": 154,
     "por_tipo": {
-     "columna": 23,
-     "viga": 112,
+     "columna": 25,
+     "viga": 124,
      "muro_concreto": 5
     },
     "extremos_mas_alla_de_IO": 2,
     "de_LS": 0,
     "de_CP": 0,
     "cortante_mayor_que_Vn": 0,
-    "t_primera_s": 3.45
+    "t_primera_s": 3.39
    },
    "dc_max": {
-    "valor": 2.23,
+    "valor": 1.181,
     "elemento": "MX-3D-1",
     "gobierna": "rotación plástica",
     "elementos_con_dc_mayor_que_1": 2
    },
    "energia_final_kJ": {
-    "entrada": 4098,
-    "cinetica": 0.05302,
-    "elastica": 9.718,
-    "amortiguada": 1982,
-    "histeretica": 2108,
-    "trabajo_pdelta": -0.9329
+    "entrada": 4744,
+    "cinetica": 0.0483,
+    "elastica": -3.791,
+    "amortiguada": 1752,
+    "histeretica": 2997,
+    "trabajo_pdelta": -1.28
    },
    "muros_mamposteria": {
-    "extenso": 11,
-    "leve": 14,
-    "moderado": 17
+    "extenso": 16,
+    "moderado": 11,
+    "leve": 15
    },
    "equipos": {
     "evaluados": 785,
@@ -1144,16 +1144,16 @@
     "frontera": 40,
     "anclado": 212,
     "estable": 0,
-    "deslizamiento_max_m": 0.29,
-    "fuerza_anclaje_max_kN": 59.7
+    "deslizamiento_max_m": 0.308,
+    "fuerza_anclaje_max_kN": 56.6
    },
    "calidad_numerica": {
     "pasos": 3489,
-    "iteraciones_promedio": 1.13,
+    "iteraciones_promedio": 1.19,
     "subdivisiones": 0,
     "no_convergidos": 0,
-    "error_energia_max": 7e-11,
-    "indice_estabilidad_max": 0.0112
+    "error_energia_max": 3.4e-15,
+    "indice_estabilidad_max": 0.0151
    }
   }
  ]

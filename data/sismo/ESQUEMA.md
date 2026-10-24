@@ -240,7 +240,9 @@ lo usa para P-Delta (E14).
   el giro de gravedad de los nudos cambió ≈ 1 % respecto a los fixtures de la ola 0).
 - Rótulas: concentradas en los extremos de vigas y columnas y **solo en la base** de los muros de concreto (E1:
   en el tramo de abajo de cada muro, el elemento cuyo nodo i no es el nodo j de otro tramo del mismo muro; los tramos
-  de encima son elásticos, como pide el diseño por capacidad de muros), modelo de Giberson (resorte rotacional en serie con el elemento elástico). Rígidas hasta la fluencia **esperada**
+  de encima son elásticos, como pide el diseño por capacidad de muros: el prediseño los diseña con la envolvente de
+  capacidad, cada tramo lleva su propia sección para el D/C y la prueba S6 comprueba con el motor que, al nivel de
+  diseño, su momento queda por debajo de su `My_e`), modelo de Giberson (resorte rotacional en serie con el elemento elástico). Rígidas hasta la fluencia **esperada**
   `My_e` (E16; asimétrica en vigas y muros, E3); después, pendiente `H = endurecimiento · k_e` con
   `k_e = 6EI_fis/L_f` en vigas y columnas y `k_e = EI_fis/lp` en muros (E1); si `endurecimiento` es 0 se usa 10⁻⁴.
   `bilineal` = endurecimiento cinemático (`β = H·θp`); `clough` = recarga hacia el punto de máxima respuesta anterior
@@ -284,8 +286,9 @@ lo usa para P-Delta (E14).
   ancla no cae en un modo (`0,2·T1`), `ρ` se interpola linealmente en `ln ω` entre los dos modos vecinos (fuera de
   su rango, la del modo extremo). En la torre con los muros aislados `ρ ≈ 1,004` (P-Delta) y ξ1 pasa de 5,004 % a
   5 %; «sin aislar» queda ξ = 5,00 / 4,29 / 3,92 % en los modos 1 a 3 (los modos 2 y 3 tienen más mampostería que el
-  1: con dos parámetros no se puede fijar más). Lo mismo hacen `referencia_min.py` (prueba R0) y el prediseño
-  (`amortiguamiento_y_anclas`), y lo prueba S5.
+  1: con dos parámetros no se puede fijar más). Si la mampostería pesara tanto en el ancla alta que `ρj < ρi·ωi/ωj`,
+  el sistema daría `a0 < 0`: entonces `a0 = 0` y `a1 = 2ξ/(ρi·ωi)` (ξ exacto solo en Ti, C ≥ 0) y `regla` lo dice.
+  Lo mismo hacen `referencia_min.py` (prueba R0) y el prediseño (`amortiguamiento_y_anclas`), y lo prueba S5.
 - `modos: [1, 3]` (la forma anterior) sigue aceptándose, pero `periodos_ancla_s` manda si están los dos, y los
   validadores avisan si se usa `modos`. Por qué: en el modelo pseudotridimensional los modos 1 a 3 suelen ser los
   tres fundamentales (x, y, torsión), con ω3 ≈ 1,2-1,5·ω1, y anclar en 1 y 3 sobreamortigua los modos altos (con
@@ -335,6 +338,49 @@ irregularidad torsional extrema y cimentación revisada con el sismo de capacida
   reacciones, pero no para la capacidad del suelo (un núcleo que llega a la capacidad última de sus pilotes se mece y
   eso limita la demanda; ASCE/SEI 41-17 8.4 y ASCE/SEI 7-16 12.13.5 tampoco piden Ω0 para el suelo).
 
+**Correcciones de la revisión A6 (prediseño):**
+
+- **φr (redundancia).** La prueba de remoción de la fuente que se cita (ASCE/SEI 7-16 12.3.4.2 a y Tabla 12.3-3, a
+  falta del texto de NSR-10 A.3.3.8; por confirmar) solo somete a la prueba los muros con relación altura del
+  piso/longitud > 1,0 (Fig. 12.3-2), y compara **resistencias** del piso con y sin el elemento, no la fracción del
+  cortante elástico. Todos los muros adoptados tienen h/l ≤ 0,91 (con la longitud del alma, la menor): ninguno entra.
+  En los pórticos, perder el momento en los dos extremos de una viga quita a lo sumo `(Mn⁻ + Mn⁺)/h` del piso, que
+  frente a su cortante de diseño (cota inferior de su resistencia) es ≤ 0,10 (chequeo `RED`). Por eso φr = 1,0 y
+  `R = 0,9·0,9·1,0·6,0 = 4,86` (antes 3,645, con fuerzas de diseño 33 % mayores). `prediseno.R.justificacion` trae
+  `R_si_phi_r_fuera_075` mientras el numeral siga por confirmar; `prediseno.redundancia` guarda la fracción elástica y
+  la torsión sin cada muro solo como dato.
+- **Muros con una sola sección crítica.** Cada tramo se diseñaba con su propio Mu, sin la sobrerresistencia de la
+  base, y el motor usaba la sección del nivel 1 en los cuatro tramos: al nivel de diseño, la base del nivel 2 pasaba
+  su Mn_e (D/C 1,07-1,24 contra su capacidad real) donde el modelo supone el muro elástico (E1). Ahora: (a) los tramos
+  de encima se diseñan con `φMn_k ≥ max(Ωv·Mu_k; M_env(z_k))`, `M_env` la envolvente lineal de `Mu_1` en la base a
+  cero en el tope del muro corrida `a = 0,8·lw` hacia arriba (corrimiento de tracción; C.21.9.2.3 a, Eurocódigo 8
+  5.5.2.4.1, Paulay y Priestley 1992); (b) cada tramo tiene su sección, `MURO-{pórtico}-{nivel}`, con su `My_e`,
+  `Mn_e`, `Vn_e` y su momento-curvatura (en el motor solo el de la base tiene rótula; los de encima dan el D/C); (c) la
+  prueba S6 corre el motor con la escala «nsr10» (local_hip y cimitarra) y exige `|M| < My_e` en la base de cada tramo
+  de encima: queda ≤ 0,92 y las cinco bases fluyen. Con eso vale la premisa de C.21.9.6.2 (sección crítica única).
+- **Bordes de los muros.** Antes, 14-22 N.º 8 por extremo en un punto a 0,10 m del borde de un muro de 0,35 m, sin
+  estribos (ρ de la zona ≈ 12 % y ≈ 16 % en el traslapo). Ahora cada extremo del alma tiene una **zona de borde** real
+  (`zona_borde`): barras en parejas en las dos caras con la separación libre de C.7.6.3, largo `lb` con ρ ≤ 4 % (como
+  columnas, C.21.6.3.1) y sin traslapos (acopladores mecánicos tipo 2, C.21.1.6, por confirmar); la sección por
+  fibras las pone donde van. Elemento de borde **especial** (C.21.9.6.4: estribos cerrados y ganchos en cada pareja,
+  Ash de la ec. C.21-5 en las dos direcciones, s ≤ t/3, 6·db y so; largo ≥ max(c − 0,1·lw; c/2)) donde lo pide
+  C.21.9.6.2 o C.21.9.6.3 (esfuerzo de la sección bruta > 0,2·f'c, hasta que baje de 0,15·f'c; se adopta además por
+  ser grupo IV), y en los dos bordes de ese nivel; si no, estribos de C.21.9.6.5 (ρ > 2,8/fy) o de C.7.10. La fila
+  «con borde confinado» de ASCE/SEI 41-17 Tabla 10-19 se usa solo si el tramo tiene elemento especial. Las barras que
+  no siguen arriba se prolongan 1,25·ld en el piso 1 (C.21.9.2.3 b) o ld; el despiece trae estribos, acopladores y kg.
+- **Columnas de borde de los muros en x (C-D3, C-D4 y C-D7).** Son el borde j de MX-3, MX-4 y MX-7: llevan todas las
+  barras de ese extremo (antes había además barras de borde en el alma junto a ellas) y se diseñan con la fuerza de
+  cuerda del vuelco del muro, `N = M·(u_col − uc)·A_col/I`, más su parte del peso del muro, a la vez que el momento de
+  su pórtico en y (100 % + 30 %), con flexocompresión biaxial y ρ ≤ 4 %; donde el muro pide elemento de borde especial
+  van confinadas en toda la altura del piso. Antes solo veían el pórtico Y-D (P de 447 a 1.435 kN) y con 0,9D − cuerda
+  la tracción quedaba fuera de su diagrama de interacción.
+- **Ramas de estribo de las columnas.** Cada gancho suplementario abraza una barra de la cara (C.7.10.5.3 y
+  C.21.6.4.2): a lo sumo tantas ramas como barras por cara. Si el Ash o el cortante piden más, se cierra la separación
+  (hasta 75 mm) o se pasa a N.º 5 (antes había columnas de 5 barras por cara con 7 ramas; el chequeo DMO lo revisa).
+- **Dados de pilotes.** Sin dados de 2 pilotes en línea: no tienen brazo para el momento de la base de la columna
+  perpendicular a la línea (y `reacciones_pilotes` lo descartaba en silencio); ahora rechaza ese caso y las esquinas
+  llevan al menos 3 pilotes en triángulo.
+
 Campos agregados (todos opcionales para el motor, que no los usa salvo lo dicho):
 
 | Campo | Dónde | Qué es |
@@ -352,15 +398,16 @@ Bloques de la raíz:
 - `prediseno`: `metodo` y `metodo_secciones`; `historial_de_ajustes` (cada paso desde el punto de partida del
   presupuesto con su período, cocientes de torsión, deriva, umbral de daño y R: así se ve por qué se cambiaron las
   secciones); `dimensiones_adoptadas`; `eleccion_muros` (paños activos, longitudes, todos los paños de núcleo con su
-  material, por qué y las notas de las aletas); `R` con φa, φp, φr y su justificación; `redundancia` (prueba de
-  remoción de cada muro); `irregularidades` (1aP/1bP con el cociente por entrepiso y Ax, 3A, 1A y 2A);
+  material, por qué y las notas de las aletas); `R` con φa, φp, φr y su justificación; `redundancia` (h_piso/l de
+  cada muro, si entra en la prueba de remoción, y como dato la fracción del cortante elástico y la torsión sin él); `irregularidades` (1aP/1bP con el cociente por entrepiso y Ax, 3A, 1A y 2A);
   `participacion_porticos`; `periodos` (12 modos con masa participativa, T1x, T1y, Ta, Cu, Cu·Ta y la fila de la tabla);
   `cortante_basal` (FHE por dirección con Sa, k, W, Vs, Vs/R y fuerzas por nivel; modal con el factor de ajuste);
   `derivas_vector` (por entrepiso, con el vértice y la combinación 100 % + 30 %), `derivas_porticos` y
   `derivas_umbral_dano` (aislados y con la mampostería adherida, con rigidez secante a 0,2 %); `estabilidad`;
   `centro_rigidez` (por nivel, con la excentricidad); `amortiguamiento` (períodos ancla, a0, a1, ξ de 12 modos);
   `columna_fuerte_viga_debil` (cada columna y plano, los de cubierta exentos); `cortante_por_capacidad` (vigas,
-  columnas y muros: Ve, φVn, Ωv); `cuantias`; `verificacion_nsr10`; `chequeos` (lista `{id, descripcion, valor, limite,
+  columnas y muros: Ve, φVn, Ωv; en muros además el momento de diseño de cada tramo con su envolvente, σ y si lleva
+  elemento de borde especial); `cuantias`; `verificacion_nsr10`; `chequeos` (lista `{id, descripcion, valor, limite,
   cumple, fuente, detalle?}`: todos deben cumplir).
 - `cimentacion` (17.2): `suelo_supuesto` (estimación con su fuente), `pilote` (D, L escogido por el menor total de
   metros, capacidades y factores de seguridad, `estudio_de_largo`), `reacciones` en la base por apoyo (D, L, Lr, E y
@@ -372,7 +419,8 @@ Bloques de la raíz:
   despiece de **cada** elemento: `columnas` (por columna física y piso: barras por cara, traslapo, anclaje, estribos y
   ganchos suplementarios en lo, en el centro y en el nudo), `vigas` (corridas y bastones superiores con su largo desde
   la cara, inferiores y del vano, estribos en 2h y en el centro; incluye las vigas banda columna-muro que no están en el
-  modelo), `muros` (por piso: cortinas, bordes y planta), `losas` (por paño: nervios con su refuerzo, riostras, malla)
+  modelo), `muros` (por piso: cortinas, zonas de borde con sus parejas de barras, lb, cuantía,
+  estribos, acopladores y prolongaciones, o la columna de borde, y planta), `losas` (por paño: nervios con su refuerzo, riostras, malla)
   y `escaleras`; cada uno con `texto` (la etiqueta de la vista: «12 N.º 7», «E N.º 4 c/0,10 en lo = 0,60 m»), `kg` y
   `m3`.
 - `cantidades`: m³ y kg por tipo con su cuantía, pilotes (número, metros, kg/m) y la comparación con los ítems de
@@ -402,8 +450,8 @@ para comparar. Cada parámetro con su fuente.
   h = 50 km; prueba de la revisión con `sim.py`), un artefacto del umbral y no física. Si la persona fuerza el
   régimen, `avisos` advierte «intraplaca con h < 40 km» o «cortical con h > 60 km». La banda **no elimina** el
   contraste entre regímenes (≈ 3 veces en el PGA): lo **reparte** en 30 km. Por eso, sola, no basta (ver la regla
-  siguiente). Con la banda y Δσ(h), el cociente de la mediana del PGA entre h + 1 y h queda dentro de 0,85-1,18 para
-  Mw 5 a 7 y Repi 0 a 200 km (T19), y la tendencia con h sigue a la de las GMPE (T19b).
+  siguiente). Con la banda y Δσ(h), el cociente de la mediana del PGA entre h + 1 y h queda entre 0,91 y 1,04 para
+  Mw 5 a 7 y Repi 0 a 200 km (T19, tolerancia 0,85-1,18), y la tendencia con h sigue a la de las GMPE (T19b).
 - **Caída de esfuerzos intraplaca según la profundidad (regla del motor, revisión A6; desviación de E15, sin cambiar
   números de este archivo).** `Δσ_i(h) = Δσ_ref·exp((3/2)·θ̄·(min(h, h_c) − h_c))`, con `Δσ_ref = 800 bar`
   (`intraplaca_profunda.delta_sigma_bar`, calibrado solo con focos de 100 a 150 km), `θ̄ = 0,0135/km` y
@@ -705,10 +753,10 @@ export const pruebas = [
 |---|---|
 | `pruebas/integrador.mjs` | T1-T7, T12, T21 |
 | `pruebas/modelo.mjs` | T8-T11, T22 |
-| `pruebas/movimiento.mjs` | T13-T15, T15b, T15c, T16, T19 (en hilos de trabajo, ≈ 45 s con 4 núcleos), T20; MOV1-MOV5 propias (fragmentos de `notas_para_implementar`, FFT y azar, Nigam y Jennings con solución cerrada, registro y filtro, intensidades) |
+| `pruebas/movimiento.mjs` | T13-T15, T15b, T15c, T16, T19 (en hilos de trabajo, ≈ 45 s con 4 núcleos), T19b (tendencia del PGA con la profundidad frente a las GMPE, Mw 6,2 a 92 y 200 km: |ln(sim/GMPE)| ≤ 0,35 de 50 a 150 km, y BSSA14 sin peso con h = 40 km), T20; MOV1-MOV5 propias (fragmentos de `notas_para_implementar`, FFT y azar, Nigam y Jennings con solución cerrada, registro y filtro, intensidades) |
 | `pruebas/integrador.mjs` (además) | R0: el motor contra una segunda implementación del mismo cálculo (`scripts/sismo/referencia_min.py` → `scripts/fixtures/torre/referencia_min.json`, con las mismas reglas): series, envolventes y serie de `C-A1-1@X` a 10⁻⁶ del máximo de cada arreglo; D/C, rótulas, thp, equipos y muro idénticos; a0, a1 y ξ de los modos a 10⁻⁶ |
-| `pruebas/motor.mjs` | T17; W1 el trabajador real responde los mensajes del 7.5; E1 escala `nsr10` y calidad baja; R1 tiempos del 7.7 con la torre sintética |
-| `pruebas/estructura.mjs` | T18 con la estructura real (`torre_hospital_estructura.json`); S1 la estructura cumple el esquema; S2 los 12 períodos del motor son los del prediseño en Python (< 10⁻³); S3 períodos ancla y centro de rigidez iguales; S4 equilibrio de gravedad |
+| `pruebas/motor.mjs` | T17; W1 el trabajador real responde los mensajes del 7.5; E1 escala `nsr10` (con el mismo factor en «Aislados» y «Sin aislar»), espectro de umbral de daño del mensaje `movimiento` y calidad baja; R1 tiempos del 7.7 con la torre sintética |
+| `pruebas/estructura.mjs` | T18 con la estructura real (`torre_hospital_estructura.json`); S1 la estructura cumple el esquema; S2 los 12 períodos del motor son los del prediseño en Python (< 10⁻³); S3 períodos ancla y centro de rigidez iguales; S4 equilibrio de gravedad; S5 amortiguamiento con los muros de mampostería trabajando (ξ1 = 5 %); S6 una sola sección crítica en los muros (al nivel de diseño, |M| < My_e en los tramos de encima) |
 | `pruebas/_estructuras.mjs`, `pruebas/_torre_sintetica.mjs` | Ayudantes: estructuras pequeñas con solución cerrada y registro sintético determinista; torre sintética del tamaño de la torre (hasta que exista `torre_hospital_estructura.json`) |
 | `pruebas/datos.mjs` | F1 fixtures del Anexo A, F2 `amenaza.json` idéntico en números a la investigación, F3 el validador detecta errores sembrados, F4 el trabajador simulado responde los mensajes |
 
@@ -864,3 +912,15 @@ node scripts/sismo/test_motor.mjs --solo F1,F2,F3,F4,R0
 | E14 | P-Delta por nivel con el peso y el centro de masa de cada nivel; `P_sobre_entrepiso_kN` informativo | Campos; Motor |
 | E15 | Transición de profundidad de 40 a 70 km | amenaza.json |
 | E16 | Propiedades esperadas y límites IO, LS y CP; demanda/capacidad con `Mn_e`, `Vn_e` y `θp_IO` (**Cambio de regla**) | Campos; Reglas |
+
+### Correcciones de la revisión A6 (desviaciones del contrato)
+
+| Corrección | Qué cambia | Dónde quedó |
+|---|---|---|
+| Anclas de Rayleigh con los muros como en el archivo (E8) | `periodos_ancla_s` del archivo solo con los muros de mampostería como dice el archivo; con «confinados», la regla automática sobre el modelo analizado | Amortiguamiento; prueba S5 |
+| a0 y a1 con ξ exacto en las anclas (7.4) | `a0 + a1·ρ·ω² = 2ξ·ω` en las dos anclas, con `ρ = φᵀK_elφ/ω²` (la mampostería no amortigua) | Amortiguamiento; R0 y S5 |
+| Escala «nsr10» con el modelo de diseño (7.4) | T1x y T1y del modelo con los muros como en el archivo, también en «Sin aislar» | Motor; prueba E1 |
+| Δσ intraplaca según la profundidad (E15) | `Δσ(h) = 800·exp(1,5·0,0135·(min(h, 120) − 120))` bar; la banda reparte el contraste, no lo quita | amenaza.json (regla del motor); T19b |
+| BSSA14 solo para focos someros | peso `clamp((25 − h)/10, 0, 1)` de su parte; el resto a Zhao 2006 cortical; aviso | Movimiento del suelo; T19b |
+| Espectro de umbral de daño (A.12.3) | el mensaje `movimiento` usa el del prediseño (ξ = 2 %) y dice el ξ de cada curva | Mensajes; T14 y E1 |
+| Prediseño: φr, muros, bordes, columnas de borde, ramas y dados | ver «Correcciones de la revisión A6 (prediseño)» | Prediseño de la torre; S6 |

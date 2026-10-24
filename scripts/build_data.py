@@ -219,7 +219,7 @@ PANEL = {'anios': _panel.get('anios', []), 'indicadores': _panel.get('indicadore
 import hashlib
 AVISOS_WEB = []
 LIMITES_KB = {'torre.json': 620, 'torre_plantas.json': 500, 'torre_inventario.json': 700, 'torre_habilitacion.json': 300,
-              'torre_contraste.json': 150, 'sismo_torre_estructura.json': 250, 'sismo_amenaza.json': 90}
+              'torre_contraste.json': 150, 'sismo_torre_estructura.json': 420, 'sismo_amenaza.json': 90}
 # carpetas donde se buscan los insumos que nombra insumos_sha1 (por nombre de archivo, o por ruta desde la raíz si la trae)
 _CARPETAS_INSUMOS = [D / 'edificios', D / 'proyectos/torre_hospital', D / 'sismo', D, D / 'proyectos/torre_hospital/fuentes_investigacion', D / 'sismo/fuentes_investigacion']
 # campos internos que no llegan a la web (10.1): trazas de origen, notas internas, huellas y rutas de archivo
@@ -838,7 +838,13 @@ def _exportar_torre_y_sismo():
     # simulador sísmico (A): estructura (generada) y amenaza (a mano)
     est = _cargar_generado('sismo_torre_estructura.json', D / 'sismo/torre_hospital_estructura.json')
     if est is not None:
-        _escribir_web('sismo_torre_estructura.json', {k: v for k, v in est.items() if k not in ('insumos_sha1', 'generado_por')})
+        # el simulador no usa el despiece, la cimentación ni las cantidades (los lee el modelo BIM desde data/) ni las tablas
+        # largas del prediseño; sin ellos el archivo baja de ≈ 800 KB a ≈ 390 KB (≈ 60 KB comprimido)
+        largos = ('columna_fuerte_viga_debil', 'cortante_por_capacidad', 'cuantias', 'chequeos')
+        web = {k: v for k, v in est.items() if k not in ('insumos_sha1', 'generado_por', 'refuerzo', 'cimentacion', 'cantidades')}
+        if isinstance(web.get('prediseno'), dict):
+            web['prediseno'] = {k: v for k, v in web['prediseno'].items() if k not in largos}
+        _escribir_web('sismo_torre_estructura.json', web)
     am = D / 'sismo/amenaza.json'
     if am.exists():
         _escribir_web('sismo_amenaza.json', json.loads(am.read_text(encoding='utf-8')))

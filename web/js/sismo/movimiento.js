@@ -48,6 +48,9 @@
 //   - N (potencia de 2) ≥ muestras antes de la ventana + ventana + 40 s de ceros (paso 5 de las notas).
 //   - Las dos componentes comparten el PGA en roca de la no linealidad del suelo: la media geométrica de los PGA en
 //     roca de las dos (BSSA14 define PGAr como la mediana de la media de las dos horizontales; el suelo es uno solo).
+//   - La caída de esfuerzos intraplaca depende de la profundidad, con la pendiente y el tope de las GMPE con que se
+//     calibró (DSIGMA_INTRAPLACA_PROF, revisión A6); BSSA14 pierde su peso entre 15 y 25 km en la comparación con las
+//     GMPE, porque no tiene término de profundidad (fraccionBSSA14).
 
 import { rfft, irfft, siguientePotencia2 } from './fft.js';
 import { normales } from './azar.js';
