@@ -372,6 +372,51 @@ class TestReglasPlantas(unittest.TestCase):
     def test_rayos_x_sin_plomo(self):
         self.assertIn('V18', self.alterar(lambda n: n['recintos'][0].update(ambiente='Sala de rayos X de prueba')))
 
+    @staticmethod
+    def con_bano(n):
+        """Unidad sanitaria de 1,50 × 1,60 m en la esquina noreste del consultorio B (revisión adversarial: subrecinto con
+        tabique liviano y puerta corrediza; el área sigue en el recinto del programa)."""
+        r = next(x for x in n['recintos'] if x['id'] == 'P1-A001-01')
+        r['poligono_libre'] = [[3.66, 5.01], [7.05, 5.01], [7.05, 6.89], [5.64, 6.89], [5.64, 8.45], [3.66, 8.45]]
+        r['area_libre_m2'] = 9.46
+        r['subrecintos'] = [{'id': 'P1-A001-01-B1', 'nombre': 'Unidad sanitaria',
+                             'poligono': [[5.7, 6.95], [7.2, 6.95], [7.2, 8.55], [5.7, 8.55]],
+                             'poligono_libre': [[5.76, 7.01], [7.05, 7.01], [7.05, 8.45], [5.76, 8.45]],
+                             'area_ejes_m2': 2.4, 'area_libre_m2': 1.86, 'puertas': ['P1-PT-005']}]
+        base = {'tipo': 'liviano', 'espesor': 0.12, 'altura': 3.0, 'estructural': False}
+        n['muros'] += [dict(base, id='P1-M-0012', a=[5.7, 8.55], b=[5.7, 6.95], lados=['P1-A001-01-B1', 'P1-A001-01']),
+                       dict(base, id='P1-M-0013', a=[7.2, 6.95], b=[5.7, 6.95], lados=['P1-A001-01', 'P1-A001-01-B1'])]
+        n['puertas'].append({'id': 'P1-PT-005', 'muro': 'P1-M-0013', 'centro': [6.45, 6.95], 'ancho': 0.9, 'alto': 2.1, 'hojas': 1,
+                             'desde': 'P1-A001-01', 'hacia': 'P1-A001-01-B1', 'abre': 'corrediza', 'tipo': 'corrediza',
+                             'categoria': 'unidad_sanitaria'})
+
+    def test_bano_subrecinto(self):
+        self.assertEqual(self.alterar(self.con_bano), {})
+
+        def sin_tabique(n):
+            self.con_bano(n)
+            n['muros'] = [m for m in n['muros'] if m['id'] != 'P1-M-0012']
+        self.assertIn('V1', self.alterar(sin_tabique))
+
+        def sin_puerta(n):
+            self.con_bano(n)
+            n['puertas'] = [p for p in n['puertas'] if p['id'] != 'P1-PT-005']
+            n['recintos'][1]['subrecintos'][0]['puertas'] = []
+        self.assertEqual(set(self.alterar(sin_puerta)), {'V9', 'V14', 'V22'})     # sin puerta: ni salida ni paso al baño
+
+        def afuera(n):
+            self.con_bano(n)
+            n['recintos'][1]['subrecintos'][0]['poligono'] = [[5.7, 6.95], [7.5, 6.95], [7.5, 8.55], [5.7, 8.55]]
+        self.assertIn('V1', self.alterar(afuera))
+
+    def test_paso_fisico(self):
+        """V22: un obstáculo de lado a lado del corredor separa la entrada de las escaleras aunque el grafo de puertas (V10)
+        siga unido; y una columna en el vano de una puerta (V11)."""
+        e = self.alterar(lambda n: n['obstaculos_recorrido'].append({'poligono': [[3.0, 2.4], [3.4, 2.4], [3.4, 4.95], [3.0, 4.95]]}))
+        self.assertIn('V22', e)
+        self.assertNotIn('V10', e)
+        self.assertIn('V11', self.alterar(lambda n: n['columnas'].append({'id': 'X9', 'x': 1.8, 'y': 4.95, 'b': 0.6, 'h': 0.6})))
+
 
 class TestReglasInventario(unittest.TestCase):
     @classmethod
@@ -434,6 +479,12 @@ class TestReglasInventario(unittest.TestCase):
 
     def test_sin_recinto(self):
         self.assertIn('I11', self.alterar(lambda d: d['unidades'][2].update(recinto=None)))
+
+    def test_paso_fisico_con_mobiliario(self):
+        """I17: una camilla atravesada en el corredor deja 0,29 m a cada lado y parte el nivel (I3 a I6 no lo ven)."""
+        def f(d):
+            d['unidades'][2].update(recinto='P1-CIRC-01', ambiente='Corredor', posicion=[6.3, 3.675, 0.0], rotacion_z=0.0)
+        self.assertIn('I17', self.alterar(f))
 
     def test_forma_web(self):
         self.assertIn('catalogo', self.alterar(lambda d: d['catalogo']['carro_paro'].update(mu=0.5), web=True))
@@ -531,16 +582,31 @@ class TestExigencias(unittest.TestCase):
             self.assertTrue(C.RE_EXIGENCIA.match(x['id']), x['id'])
 
     def test_exigible_por_regla(self):
-        self.assertEqual(sum(1 for x in self.ex if x['exigible'] == 'por_confirmar'), 61)
+        self.assertEqual(sum(1 for x in self.ex if x['exigible'] == 'por_confirmar'), 63)
         self.assertEqual(self.doc['conteos']['por_confirmar_por_archivo'],
-                         {'res3100_urgencias_e_internacion.json': 42, 'res3100_consulta_y_ambulatorio.json': 12, 'res3100_apoyo_diagnostico.json': 7})
+                         {'res3100_urgencias_e_internacion.json': 43, 'res3100_consulta_y_ambulatorio.json': 12, 'res3100_apoyo_diagnostico.json': 8})
+        # revisión adversarial: una fila «literal» o de «contenido» de compilación que solo cita un sitio privado o de
+        # consultoría baja a fuente secundaria y queda por confirmar (EX-PAR-016 y EX-IMG-008 son las dos que suben la cuenta)
+        E = {x['id']: x for x in self.ex}
+        for eid in ('EX-PAR-016', 'EX-IMG-008'):
+            self.assertEqual(E[eid]['exigible'], 'por_confirmar', eid)
+            self.assertIn('sitio privado', E[eid]['ajuste_verificacion'], eid)
         for x in self.ex:
             if x['exigible'] == 'si':
                 self.assertIn(x['verificacion_texto'], ('literal_compilacion', 'contenido_compilacion'), x['id'])
             if not x['texto_disponible']:
                 self.assertIsNone(x['texto'], x['id'])
-            marcas = ('por confirmar', 'según guía', 'según normas.json', 'por analogía')
-            self.assertEqual(x['numeral_confirmado'], not any(m in (x['numeral'] or '').lower() for m in marcas), x['id'])
+            # revisión adversarial: tampoco está confirmado el numeral que difiere entre copias o no se recuperó (sección 15:
+            # «12.1 frente a 9.2; 17.1.2.x frente a 17.2.1.x»), ni el de una fila de guía secundaria o de paráfrasis
+            marcas = ('por confirmar', 'según guía', 'según la guía', 'según normas.json', 'por analogía', 'no se pudo confirmar',
+                      'no recuperad', 'según una de las copias', 'lo numera', 'en la copia', 'en la cancillería', 'en el icbf',
+                      'colegio')
+            esperado = not any(m in (x['numeral'] or '').lower() for m in marcas) and \
+                x['verificacion_texto'] not in ('fuente_secundaria', 'por_confirmar')
+            self.assertEqual(x['numeral_confirmado'], esperado, x['id'])
+        E = {x['id']: x for x in self.ex}
+        self.assertFalse(E['EX-TEL-002']['numeral_confirmado'])          # 17.1.2.1 (Cancillería) frente a 17.2.1.1 (ICBF)
+        self.assertFalse(E['EX-LAB-008']['numeral_confirmado'])          # la copia del ICBF lo numera 12.1
 
     def test_vigencia_y_superados(self):
         con_vigencia = sorted(x['id'] for x in self.ex if x['vigencia_hasta'])
@@ -592,7 +658,8 @@ class TestImplementosYReglas(unittest.TestCase):
         reglas = {r['linea']: r for r in self.reglas['reglas']}
         self.assertEqual(len(reglas), len(self.reglas['reglas']))
         self.assertEqual(set(reglas), set(self.lineas))
-        self.assertEqual(len(reglas), 236 + 14 + 11 + 41)
+        self.assertEqual(len(reglas), 236 + 14 + 11 + 42)          # 42 ítems de cierre: + termohigrómetro de esterilización
+        self.assertIn(C.id_linea('esterilizacion', 'x', 'Termohigrómetro con registro (depósito de esterilización)'), reglas)
         for lid, r in reglas.items():
             self.assertEqual(r['nombre'], self.lineas[lid]['nombre'])
             self.assertIn(r['modelo3d'], self.cat)
@@ -755,7 +822,7 @@ class TestInventarioReal(unittest.TestCase):
             for k in ('habilitacion_cop_2026', 'recomendado_cop_2026', 'por_confirmar_cop_2026', 'items', 'items_sin_precio'):
                 self.assertEqual(t['cierre_brechas']['por_proyecto'][p_][k], cb['por_proyecto'][p_][k], (p_, k))
         self.assertEqual(t['cierre_brechas']['items_sin_precio'], cb['items_sin_precio'])
-        self.assertEqual(t['unidades']['componentes'], 21 * 4 + 2)
+        self.assertEqual(t['unidades']['componentes'], 21 * 4 + 2 + 2)     # + las 2 bombas del equipo de presión (componentes)
 
     def test_clases_y_registro(self):
         for l in self.inv['lineas']:
@@ -827,6 +894,49 @@ class TestInventarioReal(unittest.TestCase):
         niveles_fijo = {u['nivel'] for u in self.inv['unidades'] if L[u['linea']]['capa'] == 'fijo' and u.get('nivel')}
         self.assertTrue({'BT', 'CUB', 'P1'} <= niveles_fijo, niveles_fijo)
 
+    def test_sanitarios_en_su_bano(self):
+        """Revisión adversarial: el inodoro, la ducha y las barras de un recinto con baño o cabinas van dentro de ellos (y
+        dentro de su polígono libre); el lavamanos de la unidad sanitaria también, salvo en las baterías (zona común)."""
+        subs = {sb['id']: (sb, r) for n in self.planta['niveles'] for r in n['recintos'] for sb in r.get('subrecintos', [])}
+        L = {l['id']: l for l in self.inv['lineas']}
+        con_bano = {r['id'] for sb, r in subs.values()}
+        vistos = set()
+        for u in self.inv['unidades']:
+            m = L[u['linea']]['modelo3d']
+            if u.get('recinto') in con_bano and m in ('inodoro', 'ducha', 'barra_apoyo'):
+                self.assertIn(u.get('subrecinto'), subs, u['id'])
+            if u.get('subrecinto'):
+                sb, r = subs[u['subrecinto']]
+                self.assertEqual(u['recinto'], r['id'])
+                self.assertTrue(C.punto_en_poligono(u['posicion'], sb['poligono_libre'], 0.02), u['id'])
+                vistos.add(u['subrecinto'])
+        self.assertEqual(vistos, set(subs))               # ningún baño vacío
+        inod = [u for u in self.inv['unidades'] if u.get('recinto') == 'P2-A074-01' and L[u['linea']]['modelo3d'] == 'inodoro']
+        self.assertEqual(len({u['subrecinto'] for u in inod}), 3)
+
+    def test_correcciones_de_la_revision(self):
+        L = {l['nombre']: l for l in self.inv['lineas']}
+        # oxímetros con clase por confirmar entre IIa y IIb: se tratan como IIb (no usados; personal inscrito)
+        for l in self.inv['lineas']:
+            if l['clase_riesgo'].get('clase_prudente') == 'IIb':
+                self.assertFalse(l['registro_invima']['usado_permitido'], l['id'])
+                self.assertTrue(l['mantenimiento']['personal_inscrito_invima'], l['id'])
+        # central de gases, generador PSA y PACS: clase por confirmar con el INVIMA (no «no_dm»)
+        for nombre in ('Generador de oxígeno en sitio (tecnología PSA)',):
+            self.assertEqual(L[nombre]['clase_riesgo']['vigente'], 'por_confirmar')
+        self.assertTrue(all(l['clase_riesgo']['vigente'] == 'por_confirmar' for l in self.inv['lineas']
+                            if l['nombre'].startswith(('Central de gases medicinales', 'PACS/RIS'))))
+        # la lupa de inspección no es de habilitación (EX-EST-004 es documental y la deroga la Res. 914)
+        self.assertEqual(L['Lupa con iluminación para inspección de instrumental']['prioridad'], 'por_confirmar')
+        # el CSV separa adquisición, presupuesto, nota de precio y proyecto
+        cab = (C.TORRE / 'inventario_dotacion.csv').read_text(encoding='utf-8').split('\n', 1)[0].lstrip('\ufeff').split(';')
+        for col in ('adquisicion', 'en_presupuesto', 'nota_precio', 'proyecto', 'parte_de_linea'):
+            self.assertIn(col, cab)
+        # la tabla de ítems del presupuesto marca la diferencia con lo ubicado
+        for it, d in self.inv['totales']['infraestructura']['por_item_presupuesto'].items():
+            if d.get('cantidad_presupuesto') is not None and d.get('unidades_ubicadas') is not None:
+                self.assertEqual(d['diferencia'], d['unidades_ubicadas'] - d['cantidad_presupuesto'], it)
+
     def test_paneles_en_sus_filas(self):
         ps = self.inv['totales']['infraestructura']['por_elemento']['panel_solar_fila']
         self.assertEqual((ps['modulos'], ps['kwp']), (182, 100.1))
@@ -839,11 +949,12 @@ class TestInventarioReal(unittest.TestCase):
     def test_faltantes_por_servicio(self):
         f = self.hab['faltantes_por_servicio']
         cb = C.cargar_json(C.DOTACION)['cierre_brechas_habilitacion']
-        self.assertEqual(f['total']['inversion_con_precio_cop_2026'], 46704906)
+        self.assertEqual(f['total']['inversion_con_precio_cop_2026'], cb['totales']['inversion_con_precio_cop_2026'])
+        self.assertEqual(f['total']['inversion_con_precio_cop_2026'], 46904906)
         self.assertEqual(f['total']['operacion_anual_cop_2026'], 4100000)
         self.assertEqual(f['total']['items_sin_precio'], cb['totales']['items_sin_precio'])
         self.assertEqual(sum(s['faltantes']['costo_cierre']['inversion_con_precio_cop_2026'] for s in self.hab['servicios']
-                             if s.get('faltantes')), 46704906)
+                             if s.get('faltantes')), 46904906)
         for s in self.hab['servicios']:
             for e in s.get('faltantes', {}).get('exigencias', []):
                 self.assertIn(e['id'], {x['id'] for x in s['exigencias']})
@@ -907,7 +1018,7 @@ class TestPlantasTorre(unittest.TestCase):
         self.assertEqual(errores(inf), {})
         self.assertEqual(rc, 0)
         estados = {r['regla']: r['estado'] for r in inf['reglas']}
-        for regla in ('V2', 'V6', 'V7', 'V9', 'V10', 'V14', 'V15', 'V16', 'V20', 'V21'):
+        for regla in ('V2', 'V6', 'V7', 'V9', 'V10', 'V11', 'V12', 'V14', 'V15', 'V16', 'V20', 'V21', 'V22'):
             self.assertEqual(estados.get(regla), 'ok', regla)
 
     def test_todos_los_niveles_y_conteos_del_programa(self):
@@ -976,6 +1087,57 @@ class TestPlantasTorre(unittest.TestCase):
                 otro = self.niv[pa['otro_nivel']]
                 self.assertTrue(any(q['otro_nivel'] == n['id'] and q['recinto'] == pa['otro_recinto'] for q in otro['pasos_entre_niveles']),
                                 pa)
+
+    def test_banos_y_cabinas(self):
+        """Revisión adversarial: los ambientes «con baño» o «con unidad sanitaria» tienen su baño como subrecinto (tabique,
+        puerta y polígono libre propios) y las baterías públicas tienen 3 cabinas, una PMR."""
+        con = {}
+        for n in self.pl['niveles']:
+            muros = {m['id']: m for m in n['muros']}
+            puertas = {p['id']: p for p in n['puertas']}
+            for r in n['recintos']:
+                for sb in r.get('subrecintos', []):
+                    con.setdefault(r['id'], []).append(sb)
+                    self.assertTrue(C.poligono_dentro_de(sb['poligono'], r['poligono'], 1e-6), sb['id'])
+                    self.assertEqual(len(sb['puertas']), 1, sb['id'])
+                    pt = puertas[sb['puertas'][0]]
+                    self.assertEqual(pt['hacia'], sb['id'])
+                    self.assertIn(pt['categoria'], ('bano', 'unidad_sanitaria'))
+                    self.assertEqual(pt['abre'], 'corrediza')
+                    self.assertNotIn(pt['id'], r['puertas'])
+                    self.assertEqual(muros[pt['muro']]['tipo'], 'liviano')
+                    self.assertLess(sb['area_libre_m2'], sb['area_ejes_m2'])
+                if r.get('subrecintos'):
+                    # el área del baño sigue en el recinto del programa
+                    self.assertAlmostEqual(r['area_ejes_m2'], C.area_poligono(r['poligono']), places=2)
+        filas = {r['fila'] for n in self.pl['niveles'] for r in n['recintos'] if r['id'] in con}
+        self.assertEqual(filas, {8, 10, 15, 22, 38, 41, 42, 53, 71, 72, 74, 90, 91, 119, 120, 122, 142, 143, 148, 169, 187})
+        self.assertEqual(len(con), 30)
+        for rid in ('P2-A074-01', 'P2-A074-02'):
+            self.assertEqual(len(con[rid]), 3, rid)
+            self.assertEqual(sum('PMR' in sb['nombre'] for sb in con[rid]), 1, rid)
+        # las habitaciones con el baño PMR junto al corredor y la puerta al lado
+        for rid in ('P3-A119-01', 'P3-A119-02', 'P3-A119-03', 'P3-A122-01', 'P3-A122-02'):
+            self.assertEqual(con[rid][0]['nombre'], 'Baño PMR')
+            self.assertEqual(C.caja(con[rid][0]['poligono'])[2], -5.8, rid)
+
+    def test_muros_con_cota_y_puertas_espejo(self):
+        """Revisión adversarial: en la cubierta los muros de la terraza (piso 3, z −4,2 m) llevan z_base_m y en los exteriores
+        cada paso a otro nivel tiene su vano, espejo de la puerta del otro nivel."""
+        cub = self.niv['CUB']
+        con_cota = [m for m in cub['muros'] if 'z_base_m' in m]
+        self.assertTrue(con_cota)
+        self.assertTrue(all(m['z_base_m'] < 0 for m in con_cota))
+        ext = self.niv['EXT']
+        espejos = [p for p in ext['puertas'] if p.get('espejo_de')]
+        self.assertTrue(espejos)
+        for p in espejos:
+            otro = self.niv[p['espejo_de']['nivel']]
+            q = next(x for x in otro['puertas'] if x['id'] == p['espejo_de']['puerta'])
+            self.assertEqual(q['centro'], p['centro'])
+            self.assertEqual(q['ancho'], p['ancho'])
+        for pa in ext['pasos_entre_niveles']:
+            self.assertTrue(pa.get('puerta'), pa)
 
     def test_ancho_minimo_ignora_muescas(self):
         p = C.orientar_antihorario([[0, 0], [10, 0], [10, 2.4], [6, 2.4], [6, 2.415], [4, 2.415], [4, 2.4], [0, 2.4]])

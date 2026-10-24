@@ -4,9 +4,9 @@
  "generado_por": "scripts/torre/generar_inventario.py",
  "fecha": "2026-10-24",
  "insumos_sha1": {
-  "inventario_dotacion.json": "eef9e4dfff93bfbc4add94585a24c9e5b2dbb965",
-  "torre_hospital_plantas.json": "8042d6e6cd1d3425cd8e73454af200534a53cf08",
-  "exigencias_3100.json": "f579d891e3afaa00199f5c7476cb36471169e9c6"
+  "inventario_dotacion.json": "af608853505f396b9b3ae83e5ca6dc0acf9500e6",
+  "torre_hospital_plantas.json": "c2a3a8c074056f175e729adad3a574739c303484",
+  "exigencias_3100.json": "747f9137790e7bcac2d35f2d7cf2d29c6f10877e"
  },
  "norma": "Res. 3100 de 2019 y modificaciones",
  "alcance": "Cumplimiento en dotación e infraestructura",
@@ -167,19 +167,20 @@
       "U-urgencias-a4d131-008",
       "U-urgencias-98adb9-008",
       "U-urgencias-98adb9-009",
-      "U-urgencias-a4d131-009",
       "U-urgencias-98adb9-010",
+      "U-urgencias-a4d131-009",
+      "U-urgencias-98adb9-011",
       "U-urgencias-a4d131-010",
       "U-urgencias-98adb9-001",
       "U-urgencias-a4d131-011",
       "U-urgencias-a4d131-012",
       "U-urgencias-a4d131-013",
-      "U-urgencias-98adb9-011",
       "U-urgencias-98adb9-012",
+      "U-urgencias-98adb9-013",
       "U-urgencias-a4d131-014",
       "U-urgencias-a4d131-015",
-      "U-urgencias-98adb9-013",
       "U-urgencias-98adb9-014",
+      "U-urgencias-98adb9-015",
       "U-urgencias-077095-001",
       "U-urgencias-077095-002",
       "U-urgencias-d1b44d-001",
@@ -676,7 +677,8 @@
       "U-urgencias-a4d131-007",
       "U-urgencias-a4d131-008",
       "U-urgencias-98adb9-008",
-      "U-urgencias-98adb9-009"
+      "U-urgencias-98adb9-009",
+      "U-urgencias-98adb9-010"
      ],
      "cierre_de_brechas": [],
      "estado": {
@@ -3573,7 +3575,7 @@
       "tipo_precio": "por_cotizar",
       "proyecto": "P4",
       "naturaleza": "inversion",
-      "prioridad": "habilitacion",
+      "prioridad": "por_confirmar",
       "exigencias": ["EX-PAR-016"]
      },
      {
@@ -4551,7 +4553,7 @@
       "por_confirmar": {"cumple": 3, "parcial": 0, "falta": 1, "documento_pendiente": 0}
      },
      "con_cierre_de_brechas": {
-      "exigibles": {"cumple": 12, "parcial": 2, "falta": 0, "documento_pendiente": 0},
+      "exigibles": {"cumple": 13, "parcial": 1, "falta": 0, "documento_pendiente": 0},
       "por_confirmar": {"cumple": 4, "parcial": 0, "falta": 0, "documento_pendiente": 0}
      }
     },
@@ -4561,7 +4563,7 @@
       "por_confirmar": {"cumple": 3, "parcial": 0, "falta": 1, "documento_pendiente": 0}
      },
      "con_cierre_de_brechas": {
-      "exigibles": {"cumple": 12, "parcial": 2, "falta": 0, "documento_pendiente": 0},
+      "exigibles": {"cumple": 13, "parcial": 1, "falta": 0, "documento_pendiente": 0},
       "por_confirmar": {"cumple": 4, "parcial": 0, "falta": 0, "documento_pendiente": 0}
      }
     }
@@ -5209,7 +5211,7 @@
       "origen_regla": "reglas_exigencias.json"
      },
      "requerido": 17,
-     "encontrado": {"dotacion_actual": 15, "con_cierre_de_brechas": 15},
+     "encontrado": {"dotacion_actual": 15, "con_cierre_de_brechas": 17},
      "unidades": [
       "U-consulta_externa-9b1266-001",
       "U-consulta_externa-9b1266-002",
@@ -5225,12 +5227,14 @@
       "U-consulta_externa-9b1266-012",
       "U-consulta_externa-9b1266-013",
       "U-consulta_externa-3a8a0b-001",
-      "U-consulta_externa-3a8a0b-002"
+      "U-consulta_externa-3a8a0b-002",
+      "U-consulta_externa-ab457a-001",
+      "U-consulta_externa-ab457a-002"
      ],
      "cierre_de_brechas": ["L-consulta_externa-x-ab457a"],
      "estado": {
-      "corte_2026": {"dotacion_actual": "parcial", "con_cierre_de_brechas": "parcial"},
-      "apertura": {"dotacion_actual": "parcial", "con_cierre_de_brechas": "parcial"}
+      "corte_2026": {"dotacion_actual": "parcial", "con_cierre_de_brechas": "cumple"},
+      "apertura": {"dotacion_actual": "parcial", "con_cierre_de_brechas": "cumple"}
      },
      "nota_estado": null,
      "estado_investigacion": "parcial",
@@ -5891,13 +5895,13 @@
       "estandar": "dotacion",
       "que_exige": "Báscula grado médico en cada consultorio de examen y pesabebés donde se atiendan menores de 2 años.",
       "estado": {
-       "corte_2026": {"dotacion_actual": "parcial", "con_cierre_de_brechas": "parcial"},
-       "apertura": {"dotacion_actual": "parcial", "con_cierre_de_brechas": "parcial"}
+       "corte_2026": {"dotacion_actual": "parcial", "con_cierre_de_brechas": "cumple"},
+       "apertura": {"dotacion_actual": "parcial", "con_cierre_de_brechas": "cumple"}
       },
       "requerido": 17,
-      "encontrado": {"dotacion_actual": 15, "con_cierre_de_brechas": 15},
+      "encontrado": {"dotacion_actual": 15, "con_cierre_de_brechas": 17},
       "cierre_de_brechas": ["L-consulta_externa-x-ab457a"],
-      "queda_sin_cubrir": true
+      "queda_sin_cubrir": false
      },
      {
       "id": "EX-CEX-014",
@@ -9341,7 +9345,7 @@
       "tipo_precio": "por_cotizar",
       "proyecto": "P4",
       "naturaleza": "operacion_anual",
-      "prioridad": "habilitacion",
+      "prioridad": "por_confirmar",
       "exigencias": ["EX-IMG-008"]
      }
     ],
@@ -10750,7 +10754,7 @@
     "habilitable": "si",
     "exigibles_que_faltan": 3,
     "por_confirmar_que_faltan": 1,
-    "sin_cubrir_con_el_cierre": 2,
+    "sin_cubrir_con_el_cierre": 1,
     "items_cierre": 5,
     "inversion_con_precio_cop_2026": 11617600,
     "operacion_anual_cop_2026": 0,

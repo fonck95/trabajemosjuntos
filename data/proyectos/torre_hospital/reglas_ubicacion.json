@@ -723,10 +723,14 @@
    "reparto": [
     {
      "ambiente": {"fila": 11, "nombre": "Estacionamiento de camillas y sillas de ruedas"},
-     "por_recinto": 2,
-     "estrategia": "contra_pared",
-     "pared": "larga",
-     "alternativa": {"estrategia": "centro"}
+     "cantidad": 1,
+     "estrategia": "zona",
+     "zona": {"nivel": "P1", "puntos": [[-8.19, 15.06]], "rotacion_deg": 0}
+    },
+    {
+     "ambiente": {"fila": 21, "nombre": "Sala de yesos e inmovilización"},
+     "por_recinto": 1,
+     "estrategia": "contra_pared"
     },
     {
      "ambiente": {"fila": 33, "nombre": "Depósito de equipos y dispositivos médicos"},
@@ -735,7 +739,7 @@
      "pared": "larga"
     }
    ],
-   "fuente_reparto": "3 camillas de transporte: 2 en el estacionamiento de camillas y sillas de ruedas (abierto a la sala de espera, a la recepción y al corredor) y 1 en el depósito de equipos. La esclusa de la bahía de ambulancias es de paso (tres puertas) y no se usa para guardar camillas. Decisión de ubicación; la dotación no cambia."
+   "fuente_reparto": "3 camillas de transporte: 1 en el estacionamiento de camillas y sillas de ruedas, contra su muro occidental (el estacionamiento es el paso a la antecámara del aislamiento: con dos camillas se tapa), 1 en la sala de yesos y 1 en el depósito de equipos. La esclusa de la bahía de ambulancias es de paso (tres puertas) y no se usa para guardar camillas. Decisión de ubicación (revisión adversarial, I17); la dotación no cambia."
   },
   {
    "linea": "L-urgencias-m-097182",
@@ -744,8 +748,10 @@
    "reparto": [
     {
      "ambiente": {"fila": 16, "nombre": "Sala de procedimientos (suturas, curaciones)"},
-     "por_recinto": 1,
-     "estrategia": "cabecera_a_pared"
+     "cantidad": 1,
+     "estrategia": "zona",
+     "zona": {"nivel": "P1", "puntos": [[-7.8, 6.6]], "rotacion_deg": 90},
+     "nota": "A lo largo del muro norte (las puertas del corredor y de yesos, enfrentadas, quedan al sur): el paso entre ellas y el costado de la camilla quedan libres (revisión adversarial: el mobiliario no tapa el paso entre las puertas del recinto (I17))."
     },
     {
      "ambiente": {"fila": 21, "nombre": "Sala de yesos e inmovilización"},
@@ -761,16 +767,26 @@
    "reparto": [
     {
      "ambiente": {"fila": 19, "nombre": "Atención de enfermedad diarreica aguda (EDA), 2 camillas"},
-     "por_recinto": 2,
-     "estrategia": "cabecera_a_pared"
+     "por_recinto": 1,
+     "estrategia": "cabecera_a_pared",
+     "pared": "o",
+     "bandas": 1
+    },
+    {
+     "ambiente": {"fila": 19, "nombre": "Atención de enfermedad diarreica aguda (EDA), 2 camillas"},
+     "por_recinto": 1,
+     "estrategia": "cabecera_a_pared",
+     "pared": "e",
+     "bandas": 1
     }
-   ]
+   ],
+   "fuente_reparto": "Las 2 camillas a lo largo del muro norte, con la cabecera en los muros cortos; las puertas (corredor y unidad sanitaria) quedan al sur y el paso entre ellas libre (revisión adversarial: el mobiliario no tapa el paso entre las puertas del recinto (I17))."
   },
   {
    "linea": "L-urgencias-m-a689e1",
    "nombre": "Sillón para terapia respiratoria (sala ERA) y sillas de transición",
    "modelo3d": "sillon_reclinable",
-   "fuente_reparto": "5 sillones: 2 en la sala ERA (1,73 m de fondo, con una puerta en cada punta: solo dos sillones quedan con 0,9 m libres a un costado) y 3 en el ambiente de transición vecino, abierto al corredor de urgencias. La sala ERA queda con 2 de las 3 sillas del programa: por confirmar en el diseño (decisión de ubicación).",
+   "fuente_reparto": "5 sillones: 2 en la sala ERA (1,73 m de fondo, con una puerta en cada punta: solo dos sillones quedan con 0,9 m libres a un costado), 2 en el ambiente de transición vecino (las 2 sillas del programa, sin tapar el paso a las observaciones) y 1 en la observación pediátrica, para el acompañante. La sala ERA queda con 2 de las 3 sillas del programa: por confirmar en el diseño (decisión de ubicación).",
    "reparto": [
     {
      "ambiente": {"fila": 18, "nombre": "Atención de enfermedad respiratoria aguda (ERA), 3 sillas"},
@@ -780,9 +796,16 @@
     },
     {
      "ambiente": {"fila": 28, "nombre": "Ambiente de transición, 2 sillas reclinables"},
-     "por_recinto": 3,
-     "estrategia": "cabecera_a_pared",
-     "bandas": 1
+     "cantidad": 2,
+     "estrategia": "zona",
+     "zona": {"nivel": "P1", "puntos": [[-1.275, 16.975], [0.925, 16.975]], "rotacion_deg": 90},
+     "nota": "Las 2 sillas del programa en los extremos del lado abierto al corredor: queda 1,25 m de paso hacia las observaciones (revisión adversarial: el mobiliario no tapa el paso entre las puertas del recinto (I17))."
+    },
+    {
+     "ambiente": {"fila": 26, "nombre": "Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes"},
+     "por_recinto": 1,
+     "estrategia": "contra_pared",
+     "nota": "El quinto sillón, para el acompañante en la observación pediátrica: el ambiente de transición (6 m², paso a las observaciones) solo admite dos sin tapar el paso."
     }
    ]
   },
@@ -837,13 +860,14 @@
    "modelo3d": "silla_ruedas",
    "reparto": [
     {
-     "ambiente": {"fila": 5, "nombre": "Sala de espera de urgencias"},
-     "por_recinto": 3,
+     "ambiente": {"fila": 0, "nombre": "Vestíbulo principal con espera de admisión"},
+     "por_recinto": 2,
      "estrategia": "contra_pared",
-     "pared": "s"
-    }
+     "pared": "n"
+    },
+    {"ambiente": {"fila": 4, "nombre": "Recepción de urgencias"}, "por_recinto": 1, "estrategia": "contra_pared"}
    ],
-   "fuente_reparto": "3 sillas de ruedas en la sala de espera de urgencias, entre las puertas de los baños públicos: el estacionamiento de camillas queda con las 2 camillas y la esclusa de la bahía de ambulancias es de paso."
+   "fuente_reparto": "3 sillas de ruedas: 2 en el vestíbulo principal, junto a la entrada, y 1 en la recepción de urgencias. En la sala de espera de urgencias tapaban, con la fila de tándems, el paso a las puertas de los baños públicos (revisión adversarial, I17); el estacionamiento de camillas queda con las 2 camillas y la esclusa de la bahía es de paso."
   },
   {
    "linea": "L-urgencias-m-ce79c0",
@@ -1491,7 +1515,7 @@
      "por_recinto": 1,
      "estrategia": "contra_pared",
      "pared": "e",
-     "dim_m": [1.6, 1.2, 0.75]
+     "dim_m": [1.6, 1.0, 0.75]
     },
     {
      "ambiente": {"fila": 177, "nombre": "Consultorio de nutrición y dietética"},
@@ -1552,7 +1576,7 @@
    "reparto": [
     {
      "ambiente": {"fila": 73, "nombre": "Sala de espera de consulta externa (4 m² por consultorio, 13 consultorios y salas)"},
-     "por_recinto": 8,
+     "por_recinto": 7,
      "estrategia": "cuadricula",
      "pared": "o",
      "patron": "enfrentadas",
@@ -1567,13 +1591,26 @@
     },
     {
      "ambiente": {"fila": 179, "nombre": "Sala de espera (4 m² por consultorio: 3 consultorios y odontología)"},
-     "por_recinto": 4,
+     "por_recinto": 3,
      "estrategia": "cuadricula",
      "pared": "s",
-     "patron": "teatro"
+     "patron": "teatro",
+     "filas_max": 1
+    },
+    {
+     "ambiente": {"fila": 179, "nombre": "Sala de espera (4 m² por consultorio: 3 consultorios y odontología)"},
+     "por_recinto": 1,
+     "estrategia": "contra_pared",
+     "pared": "n"
+    },
+    {
+     "ambiente": {"fila": 1, "nombre": "Información, admisiones, facturación y atención al usuario (SIAU), 3 puestos"},
+     "por_recinto": 1,
+     "estrategia": "contra_pared",
+     "pared": "s"
     }
    ],
-   "fuente_reparto": "14 tándems (56 puestos) de las salas de espera de consulta externa: 8 en la espera del piso 2 (franja de 2,49 m entre consultorios: 3 de espaldas a los consultorios, entre sus puertas pareadas, y 5 enfrente, con 1,10 m de paso), 2 en la espera de farmacia del piso 2, que atiende a los mismos pacientes, y 4 en la espera del piso 4 (consultorios y odontología). Decisión de ubicación; la dotación no cambia."
+   "fuente_reparto": "14 tándems (56 puestos) de las salas de espera de consulta externa: 7 en la espera del piso 2 (franja de 2,49 m entre consultorios, con 1,10 m de paso; las columnas B3, B4 y B5 y las puertas del muro oriental dejan sitio para 7), 2 en la espera de farmacia del piso 2, que atiende a los mismos pacientes, 4 en la espera del piso 4 (consultorios y odontología: 3 en una fila contra el muro sur y 1 contra el muro norte, para dejar libre el paso del corredor a la escalera sur) y 1 en admisiones del piso 1, donde los pacientes de consulta externa esperan su turno. Decisión de ubicación; la dotación no cambia."
   },
   {
    "linea": "L-consulta_externa-m-8a9d7f",
@@ -1678,7 +1715,8 @@
      "por_recinto": 3,
      "estrategia": "cabecera_a_pared",
      "bandas": 1,
-     "dim_m": [1.2, 2.0, 1.9]
+     "dim_m": [1.2, 2.0, 1.9],
+     "pared": "o"
     }
    ],
    "fuente_reparto": "3 unidades en el consultorio de 3 unidades separadas por barrera: huella de 1,20 × 2,00 m por unidad (sillón reclinado con el módulo del odontólogo; estimación) y el taburete del odontólogo aparte (línea «Puesto de trabajo y silla del odontólogo»), con 0,9 m libres a un costado de cada una."
@@ -2614,9 +2652,9 @@
      "ambiente": {"fila": 44, "nombre": "Sala de rayos X convencional digital (con blindaje en plomo)"},
      "por_recinto": 1,
      "estrategia": "posiciones_fijas",
-     "posiciones": [{"ref": "centro"}],
-     "dim_m": [3.5, 2.5, 2.2],
-     "justificacion": "Pieza compuesta (mesa con bucky, columna portatubo y bucky mural) en una huella de 3,50 × 2,50 m (estimación): la de 4,00 × 3,00 m del catálogo no cabe entre la puerta doble del corredor y la del vestidor."
+     "posiciones": [{"ref": "punto", "punto": [-0.25, -1.65], "rotacion_deg": 0}, {"ref": "centro", "eje": "largo"}],
+     "dim_m": [3.3, 2.5, 2.2],
+     "justificacion": "Pieza compuesta (mesa con bucky, columna portatubo y bucky mural) en una huella de 3,30 × 2,50 m (estimación): la de 4,00 × 3,00 m del catálogo no cabe. Va a lo largo de la sala, contra el muro sur, entre la puerta doble del corredor y la del vestidor (que abre al oriente): queda una franja de 1,10 m al norte para llegar al vestidor y la columna C4 no la toca (revisión adversarial)."
     }
    ]
   },
@@ -3393,10 +3431,10 @@
      "ambiente": {"fila": 125, "nombre": "Estación de enfermería: puesto central"},
      "por_recinto": 1,
      "estrategia": "centro",
-     "dim_m": [2.8, 0.85, 1.1]
+     "dim_m": [2.2, 0.85, 1.1]
     }
    ],
-   "fuente_reparto": "Mostrador modular de 2,80 × 0,85 m (estimación) suelto en el puesto central, que está abierto a los dos corredores; los muros norte y sur tienen las puertas de trabajo limpio y sucio."
+   "fuente_reparto": "Mostrador modular de 2,20 × 0,85 m (estimación) suelto en el puesto central, que está abierto a los dos corredores; los muros norte y sur tienen las puertas de trabajo limpio y sucio: con 2,20 m queda 1,20 m de paso a esas puertas (revisión adversarial: el mobiliario no tapa el paso entre las puertas del recinto (I17))."
   },
   {
    "linea": "L-hospitalizacion-m-e31186",
@@ -4126,7 +4164,9 @@
      "ambiente": {"fila": 101, "nombre": "Medicamentos vencidos o deteriorados para destrucción"},
      "por_recinto": 1,
      "estrategia": "contra_pared",
-     "pared": "larga"
+     "pared": "larga",
+     "dim_m": [0.9, 0.45, 2.0],
+     "nota": "Módulo de 0,90 × 0,45 m: el depósito mide 1,10 m entre ejes y la columna C4 ocupa una punta (revisión adversarial)."
     },
     {
      "ambiente": {"fila": 102, "nombre": "Productos rechazados, devueltos y retirados del mercado"},
@@ -4195,37 +4235,43 @@
      "ambiente": {"fila": 97, "nombre": "Cuarentena de medicamentos"},
      "por_recinto": 1,
      "estrategia": "contra_pared",
-     "pared": "larga"
+     "pared": "larga",
+     "dim_m": [0.8, 0.6, 0.15]
     },
     {
      "ambiente": {"fila": 97, "nombre": "Cuarentena de medicamentos"},
      "por_recinto": 3,
      "estrategia": "sobre",
-     "sobre": ["estiba"]
+     "sobre": ["estiba"],
+     "dim_m": [0.8, 0.6, 0.15]
     },
     {
      "ambiente": {"fila": 101, "nombre": "Medicamentos vencidos o deteriorados para destrucción"},
      "por_recinto": 1,
      "estrategia": "contra_pared",
-     "pared": "larga"
+     "pared": "larga",
+     "dim_m": [0.8, 0.6, 0.15]
     },
     {
      "ambiente": {"fila": 101, "nombre": "Medicamentos vencidos o deteriorados para destrucción"},
      "por_recinto": 2,
      "estrategia": "sobre",
-     "sobre": ["estiba"]
+     "sobre": ["estiba"],
+     "dim_m": [0.8, 0.6, 0.15]
     },
     {
      "ambiente": {"fila": 102, "nombre": "Productos rechazados, devueltos y retirados del mercado"},
      "por_recinto": 1,
      "estrategia": "contra_pared",
-     "pared": "larga"
+     "pared": "larga",
+     "dim_m": [0.8, 0.6, 0.15]
     },
     {
      "ambiente": {"fila": 102, "nombre": "Productos rechazados, devueltos y retirados del mercado"},
      "por_recinto": 2,
      "estrategia": "sobre",
-     "sobre": ["estiba"]
+     "sobre": ["estiba"],
+     "dim_m": [0.8, 0.6, 0.15]
     }
    ],
    "dim_m": [1.0, 0.8, 0.15],
@@ -5318,11 +5364,11 @@
    "linea": "L-urgencias-x-121387",
    "nombre": "Camilla ginecológica con estribos (o camilla de examen con estribos)",
    "modelo3d": "camilla_ginecologica",
-   "nota": "La revisión la propone en lugar de la camilla de examen de un consultorio («o camilla de examen con estribos»): se ubica como unidad propuesta en el segundo consultorio.",
+   "nota": "La revisión la propone en lugar de la camilla de examen de un consultorio («o camilla de examen con estribos»): se ubica como unidad propuesta en el consultorio P1-A015-01, el más hondo de los dos (3,35 × 3,90 m a ejes) desde que el pasillo de consultorios bajó para librar la columna B4.",
    "reparto": [
     {
      "ambiente": {"fila": 15, "nombre": "Consultorio de urgencias con unidad sanitaria"},
-     "recintos_k": [2],
+     "recintos_k": [1],
      "por_recinto": 1,
      "estrategia": "cabecera_a_pared",
      "bandas": 1
@@ -5834,7 +5880,8 @@
      "ambiente": {"fila": 52, "nombre": "Cubículo de toma de muestras (flebotomía)"},
      "por_recinto": 1,
      "estrategia": "contra_pared",
-     "pared": "junto_puerta"
+     "pared": "junto_puerta",
+     "dim_m": [0.6, 0.35, 0.65]
     },
     {
      "ambiente": {
@@ -6247,20 +6294,6 @@
     "modelo3d": "contenedor_residuos",
     "presupuesto": ["17.13"],
     "norma": "Gestión integral de residuos (Res. 591 de 2024, citada en la revisión de la Res. 3100)",
-    "exigencias": []
-   },
-   "caseta_cubierta": {
-    "nombre": "Caseta de escalera sobre la cubierta",
-    "modelo3d": "caseta_cubierta",
-    "presupuesto": [],
-    "norma": "Huella del programa (programa.json, implantación)",
-    "exigencias": []
-   },
-   "baranda": {
-    "nombre": "Baranda perimetral de la cubierta",
-    "modelo3d": "baranda",
-    "presupuesto": ["7.09", "5.03"],
-    "norma": "Protección de bordes y línea de vida (presupuesto.json 5.03)",
     "exigencias": []
    },
    "ambulancia": {
@@ -6764,7 +6797,9 @@
       "ambiente": {"fila": 74, "nombre": "Batería sanitaria pública (hombres y mujeres; 3 sanitarios y 3 lavamanos, uno PMR)"},
       "por_recinto": 3,
       "estrategia": "pared_altura",
-      "altura_m": 0.6
+      "altura_m": 0.6,
+      "pared": "o",
+      "nota": "Revisión adversarial (baños): los inodoros van en las cabinas (subrecintos de la planta) y los lavamanos en la zona común, contra el muro occidental, fuera del pasillo de las cabinas."
      },
      {
       "ambiente": {"fila": 14, "nombre": "Triage (clasificación)"},
@@ -7511,7 +7546,8 @@
       "estrategia": "contra_pared",
       "pared": "larga",
       "variante": "inoxidable",
-      "dim_m": [1.1, 0.6, 0.9]
+      "dim_m": [1.1, 0.45, 0.9],
+      "nota": "Mesón de 0,45 m de fondo: el trabajo limpio mide 1,20 m entre ejes y es el paso al depósito de ropa limpia (revisión adversarial: el mobiliario no tapa el paso entre las puertas del recinto (I17))."
      },
      {
       "ambiente": {"fila": 109, "nombre": "Preparación, embalaje y remisión de muestras"},
@@ -8478,7 +8514,7 @@
      {
       "paneles": "FV-PERGOLA",
       "estrategia": "zona",
-      "nota": "12 filas de 8 módulos (96; 52,8 kWp) sobre la pérgola de 3,6 m de la cubierta del piso 4; posición de la planta (niveles[].paneles_solares) y data/edificios/torre_hospital.json. La fila incluye la estructura."
+      "nota": "12 filas de 8 módulos (96; 52,8 kWp) en lo alto de la pérgola de 3,6 m de la cubierta del piso 4 (montaje «cielo» a 3,6 m: no ocupan el piso de la cubierta; variante «elevada», con los postes de la estructura en los extremos de cada fila); posición de la planta (niveles[].paneles_solares) y data/edificios/torre_hospital.json."
      },
      {
       "paneles": "FV-TERRAZA",
@@ -8488,26 +8524,10 @@
      {
       "paneles": "FV-BAHIA",
       "estrategia": "zona",
-      "nota": "6 filas de 5 módulos (30; 16,5 kWp) sobre la marquesina de la bahía de ambulancias, a 5,30 m."
+      "nota": "6 filas de 5 módulos (30; 16,5 kWp) en lo alto de la marquesina de la bahía de ambulancias, a 5,30 m (montaje «cielo», variante «elevada»: los postes van en los extremos de cada fila, en el andén y en el borde exterior del carril, fuera del paso de las ambulancias)."
      }
     ],
     "nota": "182 módulos de ≈ 550 W = 100,1 kWp (data/edificios/torre_hospital.json → adecuaciones.fv); filas tomadas de la planta."
-   },
-   {
-    "elemento": "caseta_cubierta",
-    "reparto": [
-     {
-      "cantidad": 2,
-      "estrategia": "zona",
-      "zona": {
-       "nivel": "CUB",
-       "puntos": [[5.85, 18.2], [5.85, -3.4]],
-       "rotacion_deg": 0,
-       "nombre": "Casetas de las escaleras sobre la cubierta"
-      },
-      "nota": "Casetas de las escaleras norte (x 3,1-8,6; y 14,0-22,4) y sur (y −7,6 a 0,8), centradas en la huella del núcleo. Son el volumen construido que encierra los recintos CUB-A220-01 y CUB-A220-02 de la planta: van como zona del nivel, sin recinto."
-     }
-    ]
    },
    {
     "elemento": "condensadora",
@@ -8533,39 +8553,6 @@
       "zona": {"nivel": "CUB", "puntos": [[-1.0, 19.5], [1.4, 19.5]], "rotacion_deg": 0},
       "dim_m": [1.9, 1.9, 1.8],
       "nota": "Tanque cilíndrico de Ø 1,90 m × 1,80 m ≈ 5,1 m³ (estimación): dos caben lado a lado en los 3,93 m libres del recinto."
-     }
-    ]
-   },
-   {
-    "elemento": "baranda",
-    "reparto": [
-     {
-      "zona": {
-       "nivel": "CUB",
-       "nombre": "Borde de la cubierta del piso 4",
-       "piezas": [
-        {"punto": [-2.2, 22.35], "rotacion_deg": 180, "dim_m": [21.6, 0.05, 1.1]},
-        {"punto": [-2.2, -7.55], "rotacion_deg": 0, "dim_m": [21.6, 0.05, 1.1]},
-        {"punto": [-12.95, 7.4], "rotacion_deg": 270, "dim_m": [30.0, 0.05, 1.1]},
-        {"punto": [8.55, 7.4], "rotacion_deg": 90, "dim_m": [30.0, 0.05, 1.1]}
-       ]
-      },
-      "cantidad": 4,
-      "estrategia": "zona"
-     },
-     {
-      "zona": {
-       "nivel": "CUB-T",
-       "nombre": "Borde de la terraza del piso 3",
-       "piezas": [
-        {"punto": [-2.2, -19.55], "rotacion_deg": 0, "dim_m": [21.6, 0.05, 1.1]},
-        {"punto": [-12.95, -13.6], "rotacion_deg": 270, "dim_m": [12.0, 0.05, 1.1]},
-        {"punto": [8.55, -13.6], "rotacion_deg": 90, "dim_m": [12.0, 0.05, 1.1]}
-       ],
-       "z": -4.2
-      },
-      "cantidad": 3,
-      "estrategia": "zona"
      }
     ]
    },
@@ -8600,5 +8587,6 @@
     ]
    }
   ]
- }
+ },
+ "notas_revision": []
 }

@@ -55,6 +55,9 @@ REGLAS = {
     'V19': ('Hospitalización, TPR, observación, consultorios y terapias con ventana a fachada o patio', 'aviso'),
     'V20': ('Suma de áreas a ejes útiles por piso ≥ m² útiles del programa', 'duro'),
     'V21': ('Escaleras caminables: tramos y descansos dentro de su núcleo, con cotas continuas de piso a piso (16.1)', 'duro'),
+    'V22': ('Paso físico (16 y 6.4): con muros, columnas y obstáculos del recorrido, un caminante de radio 0,30 m llega a cada '
+            'recinto desde las entradas, conexiones y pasos de su nivel, en una sola zona por cota de piso; con radio 0,45 m '
+            '(camilla) llega a los recintos de puertas para camas o camillas', 'duro'),
 }
 SOLO_PROGRAMA = ('V2', 'V6', 'V15', 'V16', 'V20')
 
@@ -133,6 +136,12 @@ class Nivel:
                     if isinstance(r.get('id'), str) and poligono_valido(r.get('poligono'))}
         self.libre = {r['id']: C.orientar_antihorario(r['poligono_libre']) for r in self.espacios
                       if isinstance(r.get('id'), str) and poligono_valido(r.get('poligono_libre'))}
+        # subrecintos (baños y cabinas dentro de un recinto; revisión adversarial): id → (subrecinto, recinto que lo contiene)
+        self.subs = {sb['id']: (sb, r) for sb, r in C.subrecintos(n) if isinstance(sb.get('id'), str)}
+        self.pol_sub = {sid: C.orientar_antihorario(sb['poligono']) for sid, (sb, r) in self.subs.items()
+                        if poligono_valido(sb.get('poligono'))}
+        self.libre_sub = {sid: C.orientar_antihorario(sb['poligono_libre']) for sid, (sb, r) in self.subs.items()
+                          if poligono_valido(sb.get('poligono_libre'))}
         self.muros = {m.get('id'): m for m in n.get('muros', []) if isinstance(m, dict)}
         self.puertas = [p for p in n.get('puertas', []) if isinstance(p, dict)]
         self.ventanas = [v for v in n.get('ventanas', []) if isinstance(v, dict)]
@@ -145,6 +154,10 @@ class Nivel:
                     and lados[0] in self.por_id and lados[1] in self.por_id:
                 self.abiertos[lados[0]].add(lados[1])
                 self.abiertos[lados[1]].add(lados[0])
+
+    def padre(self, sid):
+        """Recinto que contiene al subrecinto `sid` (None si no es un subrecinto)."""
+        return self.subs[sid][1].get('id') if sid in self.subs else None
 
     def es_paso(self, rid) -> bool:
         """Circulación o recinto de paso (vestíbulo, espera, esclusa…): cuenta como circulación en V9."""
@@ -164,6 +177,40 @@ class Nivel:
             if C.punto_en_poligono(pt, p, 0.0):
                 return rid
         return None
+
+
+def rects_columnas(nv) -> list[tuple]:
+    out = []
+    for c in nv.d.get('columnas', []) or []:
+        if isinstance(c, dict) and num(c.get('x')) and num(c.get('y')):
+            b, h = float(c.get('b', 0.6)) / 2, float(c.get('h', 0.6)) / 2
+            out.append((c['x'] - b, c['y'] - h, c['x'] + b, c['y'] + h, c.get('id')))
+    return out
+
+
+def libre_de_columnas(lo: float, hi: float, a, b, cols) -> tuple[float, list]:
+    """Tramo libre más largo de [lo, hi] sobre la recta del muro a-b, descontadas las columnas que la cruzan."""
+    hz = C.es_horizontal(a, b)
+    fijo = a[1] if hz else a[0]
+    tramos, tapan = [(lo, hi)], []
+    for q in cols:
+        if hz and not (q[1] + 1e-6 < fijo < q[3] - 1e-6):
+            continue
+        if not hz and not (q[0] + 1e-6 < fijo < q[2] - 1e-6):
+            continue
+        c0, c1 = (q[0], q[2]) if hz else (q[1], q[3])
+        nuevos = []
+        for t0, t1 in tramos:
+            if c1 <= t0 + 1e-9 or c0 >= t1 - 1e-9:
+                nuevos.append((t0, t1))
+                continue
+            tapan.append(q[4])
+            if c0 > t0:
+                nuevos.append((t0, c0))
+            if c1 < t1:
+                nuevos.append((c1, t1))
+        tramos = nuevos
+    return max([t1 - t0 for t0, t1 in tramos] or [0.0]), sorted(set(tapan))
 
 
 class Validador:
@@ -253,6 +300,7 @@ class Validador:
         ids = []
         for clave in ('recintos', 'muros', 'puertas', 'ventanas', 'nucleos'):
             ids += [x.get('id') for x in n.get(clave, []) if isinstance(x, dict)]
+        ids += [sb.get('id') for sb, _ in C.subrecintos(n)]
         rep = sorted({x for x in ids if ids.count(x) > 1}, key=str)
         if rep:
             self.err('V1', f'{pre}ids repetidos: {rep}')
@@ -374,8 +422,25 @@ class Validador:
                         self.err('V1', f'{q}el lado {nombre_lado} dice «exterior» pero queda dentro del contorno (mirando de a a b)')
                     if not C.segmento_en_borde(a, b, nv.contorno):
                         self.err('V1', f'{q}muro con lado exterior que no está sobre el contorno')
+                elif lado in nv.subs:
+                    otro = lados[1] if s == 1 else lados[0]
+                    if otro != nv.padre(lado) and nv.padre(otro) != nv.padre(lado):
+                        self.err('V1', f'{q}el tabique del subrecinto {lado} debe separarlo de {nv.padre(lado)} o de otro '
+                                       f'subrecinto del mismo recinto (separa {lados})')
+                    elif lado not in nv.pol_sub:
+                        self.err('V1', f'{q}el subrecinto {lado} no tiene polígono válido')
+                    elif not C.segmento_en_borde(a, b, nv.pol_sub[lado]):
+                        self.err('V1', f'{q}no está sobre el borde del subrecinto {lado}')
+                    elif not all(C.punto_en_poligono(x, nv.pol_sub[lado], 0.0) for x in prueba):
+                        self.err('V1', f'{q}{lado} no queda a su lado {nombre_lado} (mirando de a a b)')
                 elif lado not in nv.pol:
                     self.err('V1', f'{q}lado {nombre_lado} {lado!r} no es un recinto del nivel')
+                elif nv.padre(lados[1] if s == 1 else lados[0]) == lado:
+                    # tabique de un baño visto desde el recinto que lo contiene: ese lado es del recinto y no de sus baños
+                    if not all(C.punto_en_poligono(x, nv.pol[lado], 0.0) for x in prueba) or any(
+                            C.punto_en_poligono(x, nv.pol_sub[sid], 0.0) for x in prueba for sid in nv.pol_sub
+                            if nv.padre(sid) == lado):
+                        self.err('V1', f'{q}{lado} no queda a su lado {nombre_lado} (mirando de a a b), afuera de sus baños')
                 else:
                     if not C.segmento_en_borde(a, b, nv.pol[lado]):
                         self.err('V1', f'{q}no está sobre el borde de {lado}')
@@ -399,6 +464,7 @@ class Validador:
                     if C.largo_cubierto(s0, s1, segs) < L - TOL:
                         self.err('V1', f'{pre}el borde común entre {r1} y {r2} ({s0} → {s1}) no está cubierto por un '
                                        f'muro con esos dos lados')
+        self._subrecintos(nv, validos)
         segs_ext = [(m['a'], m['b']) for m in validos if 'exterior' in m['lados']]
         for s0, s1 in C.bordes(nv.contorno):
             if C.largo_cubierto(s0, s1, segs_ext) < math.dist(s0[:2], s1[:2]) - TOL:
@@ -417,7 +483,16 @@ class Validador:
                 ds.append(max(esp) / 2 if esp else 0.0)
             esperado = C.desplazar_adentro(pp, ds)
             dado = nv.libre[rid]
-            dif = C.area_poligono(esperado) + C.area_poligono(dado) - 2 * C.area_interseccion(esperado, dado)
+            quitar = self._huecos_de_banos(nv, rid, validos)
+            if quitar:
+                # el polígono libre del recinto descuenta sus baños y la mitad del tabique que los rodea
+                rects = C.rectangulos_menos(esperado, quitar)
+                a_esp = sum((r_[2] - r_[0]) * (r_[3] - r_[1]) for r_ in rects)
+                inter = sum(C.area_interseccion(C.rect_a_poligono(list(r_)), dado) for r_ in rects)
+                dif = a_esp + C.area_poligono(dado) - 2 * inter
+                esperado = [list(r_) for r_ in rects]
+            else:
+                dif = C.area_poligono(esperado) + C.area_poligono(dado) - 2 * C.area_interseccion(esperado, dado)
             if dif > 0.01:
                 self.err('V1', f'{pre}{rid}: el polígono libre no corresponde a desplazar cada borde la mitad del espesor '
                                f'de su muro (diferencia {dif:.3f} m²; esperado {C.redondear_todo(esperado, 3)})')
@@ -425,6 +500,7 @@ class Validador:
         # puertas
         vecinos = {rid: set() for rid in nv.por_id}
         puertas_de = {rid: set() for rid in nv.por_id}
+        puertas_sub = {}
         for pt in nv.puertas:
             pid = pt.get('id')
             q = f'{pre}{pid}: '
@@ -449,8 +525,8 @@ class Validador:
                 self.err('V1', f'{q}falta «categoria»')
             de, ha = pt.get('desde'), pt.get('hacia')
             for lado in (de, ha):
-                if lado != 'exterior' and lado not in nv.por_id:
-                    self.err('V1', f'{q}{lado!r} no es un recinto del nivel ni «exterior»')
+                if lado != 'exterior' and lado not in nv.por_id and lado not in nv.subs:
+                    self.err('V1', f'{q}{lado!r} no es un recinto ni un subrecinto del nivel ni «exterior»')
             if de == ha:
                 self.err('V1', f'{q}desde y hacia son el mismo')
             if m is not None and isinstance(m.get('lados'), list) and len(m['lados']) == 2:
@@ -463,6 +539,11 @@ class Validador:
                         self.err('V1', f'{q}{otro} no está junto a la puerta')
                 elif {de, ha} != lados:
                     self.err('V1', f'{q}une {de} y {ha}, pero su muro separa {m["lados"]}')
+            if de in nv.subs or ha in nv.subs:
+                for x in (de, ha):
+                    if x in nv.subs:
+                        puertas_sub.setdefault(x, set()).add(pid)
+                continue                  # la puerta de un baño se lista en su subrecinto, no en el recinto
             for a_, b_ in ((de, ha), (ha, de)):
                 if a_ in vecinos:
                     vecinos[a_].add(b_)
@@ -477,6 +558,13 @@ class Validador:
             if 'puertas' in r and isinstance(r['puertas'], list) and set(r['puertas']) != puertas_de.get(rid, set()):
                 self.err('V1', f'{pre}{rid}: «puertas» = {sorted(r["puertas"])} y las que lo tocan son '
                                f'{sorted(puertas_de.get(rid, set()), key=str)}')
+        for sid, (sb, r) in nv.subs.items():
+            if not isinstance(sb.get('puertas'), list) or set(sb['puertas']) != puertas_sub.get(sid, set()):
+                self.err('V1', f'{pre}{sid}: «puertas» = {sb.get("puertas")} y las que lo tocan son '
+                               f'{sorted(puertas_sub.get(sid, set()))}')
+            if not puertas_sub.get(sid):
+                self.err('V9', f'{pre}{sid} ({sb.get("nombre")}): el baño no tiene puerta')
+            self.inf.revisado('V9')
 
         # ventanas
         ventanas_de = {}
@@ -575,6 +663,71 @@ class Validador:
                 self.err('V1', f'{pre}obstáculo del recorrido sin polígono válido: {ob}')
         self.inf.revisado('V1')
 
+    def _huecos_de_banos(self, nv: Nivel, rid, validos) -> list:
+        """Rectángulos de los baños del recinto agrandados la mitad del espesor de su tabique."""
+        out = []
+        for sid, (sb, r) in nv.subs.items():
+            if r.get('id') != rid or sid not in nv.pol_sub:
+                continue
+            esp = [m['espesor'] for m in validos if sid in m['lados'] and num(m.get('espesor'))]
+            e = max(esp) / 2 if esp else 0.0
+            x0, y0, x1, y1 = C.caja(nv.pol_sub[sid])
+            out.append((x0 - e, y0 - e, x1 + e, y1 + e))
+        return out
+
+    def _subrecintos(self, nv: Nivel, validos):
+        """Baños y cabinas (revisión adversarial): dentro de su recinto, sin traslaparse, con tabique en cada borde que no
+        es borde del recinto, polígono libre y áreas coherentes. El área sigue contando en el recinto del programa."""
+        pre = f'{nv.id}: '
+        for sid, (sb, r) in nv.subs.items():
+            rid = r.get('id')
+            q = f'{pre}{sid}: '
+            self.inf.revisado('V1')
+            if not re.fullmatch(re.escape(str(rid)) + r'-B\d+', sid):
+                self.err('V1', f'{q}id de subrecinto mal formado (se espera {rid}-Bn)')
+            if not isinstance(sb.get('nombre'), str) or not sb['nombre']:
+                self.err('V1', f'{q}falta «nombre»')
+            if sid not in nv.pol_sub or rid not in nv.pol:
+                self.err('V1', f'{q}polígono ausente o no válido')
+                continue
+            p, P = nv.pol_sub[sid], nv.pol[rid]
+            if not C.es_ortogonal(p):
+                self.err('V1', f'{q}el polígono no es ortogonal')
+            if any(not (C.es_multiplo(v[0], 0.05) and C.es_multiplo(v[1], 0.05)) for v in sb['poligono']):
+                self.err('V1', f'{q}coordenadas que no son múltiplo de 0,05 m')
+            if not C.poligono_dentro_de(p, P, TOL):
+                self.err('V1', f'{q}se sale de {rid}')
+            for sid2 in nv.pol_sub:
+                if sid2 > sid and nv.padre(sid2) == rid and C.area_interseccion(p, nv.pol_sub[sid2]) >= 0.01:
+                    self.err('V1', f'{q}se traslapa con {sid2}')
+            if not num(sb.get('area_ejes_m2')) or abs(sb['area_ejes_m2'] - C.area_poligono(p)) > 0.01:
+                self.err('V1', f'{q}area_ejes_m2 = {sb.get("area_ejes_m2")} y el polígono mide {C.area_poligono(p):.3f} m²')
+            # tabiques: cada borde del baño va sobre el borde del recinto o sobre un tabique del baño
+            segs = [(m['a'], m['b']) for m in validos if sid in m['lados']]
+            for s0, s1 in C.bordes(p):
+                L = math.dist(s0, s1)
+                if C.largo_cubierto(s0, s1, C.bordes(P)) + C.largo_cubierto(s0, s1, segs) < L - TOL:
+                    self.err('V1', f'{q}el borde {s0} → {s1} no lleva tabique ni es borde de {rid}')
+            if sid not in nv.libre_sub:
+                self.err('V1', f'{q}falta poligono_libre válido')
+                continue
+            lp = nv.libre_sub[sid]
+            if not num(sb.get('area_libre_m2')) or abs(sb['area_libre_m2'] - C.area_poligono(lp)) > 0.01:
+                self.err('V1', f'{q}area_libre_m2 = {sb.get("area_libre_m2")} y el polígono libre mide {C.area_poligono(lp):.3f} m²')
+            if not C.poligono_dentro_de(lp, p, TOL):
+                self.err('V1', f'{q}el polígono libre se sale del polígono a ejes')
+            cortes = [v for m in validos for v in (m['a'], m['b'])]
+            pp = C.partir_bordes(p, cortes)
+            ds = []
+            for s0, s1 in C.bordes(pp):
+                esp = [m['espesor'] for m in validos if num(m.get('espesor')) and C.solape_colineal(s0, s1, m['a'], m['b'], 1e-6)]
+                ds.append(max(esp) / 2 if esp else 0.0)
+            esperado = C.desplazar_adentro(pp, ds)
+            dif = C.area_poligono(esperado) + C.area_poligono(lp) - 2 * C.area_interseccion(esperado, lp)
+            if dif > 0.01:
+                self.err('V1', f'{q}el polígono libre no corresponde a desplazar cada borde la mitad del espesor de su muro '
+                               f'(diferencia {dif:.3f} m²)')
+
     def v1_conexiones(self, niveles: list[Nivel]):
         """La misma conexión vertical aparece igual en todos los pisos que une."""
         por_id = {}
@@ -633,7 +786,8 @@ class Validador:
                 self.err('V7', f'{nv.id}: {rid} tiene lado menor de {lado:.2f} m a ejes; mínimo {mn["lado_m"]} m')
             if rid in nv.libre and num(mn.get('m2')):
                 self.inf.revisado('V8')
-                al = C.area_poligono(nv.libre[rid])
+                al = C.area_poligono(nv.libre[rid]) + sum(C.area_poligono(nv.libre_sub[sid]) for sid in nv.libre_sub
+                                                          if nv.padre(sid) == rid)
                 if al < mn['m2'] - 1e-6:
                     self.av('V8', f'{nv.id}: {rid} ({r.get("ambiente")}): {al:.2f} m² libres frente a {mn["m2"]} m² del mínimo; '
                                   'por confirmar si el mínimo de la Res. 1633 se mide libre o a ejes (Anexo 1, definiciones)')
@@ -709,6 +863,7 @@ class Validador:
 
     # ------------------------------------------------------------------------------------------------ V11 y V12
     def v11(self, nv: Nivel):
+        cols = rects_columnas(nv)
         for pt in nv.puertas:
             m = nv.muros.get(pt.get('muro'))
             if m is None or not punto(pt.get('centro')) or not num(pt.get('ancho')) or not punto(m.get('a')):
@@ -723,7 +878,7 @@ class Validador:
                 req, cita = cat['ancho_m'], cat.get('cita', '')
             for lado in (pt.get('desde'), pt.get('hacia')):
                 r = nv.por_id.get(lado)
-                if not r:
+                if not r or pt.get('desde') in nv.subs or pt.get('hacia') in nv.subs:
                     continue
                 for c in self.cat_puertas.values():
                     if r.get('ambiente') in c.get('ambientes', []) and c['ancho_m'] > req:
@@ -740,14 +895,32 @@ class Validador:
                 self.err('V11', f'{q}la puerta se sale de su muro')
             if not num(pt.get('alto')) or pt['alto'] < 2.10 - 1e-6:
                 self.err('V11', f'{q}alto {pt.get("alto")} m < 2,10 m (Res. 1633, Cuadro 1)')
+            # revisión adversarial: una columna de la retícula no puede tapar el vano
+            e = 0 if C.es_horizontal(a, b) else 1
+            libre, tapan = libre_de_columnas(c[e] - pt['ancho'] / 2, c[e] + pt['ancho'] / 2, a, b, cols)
+            if tapan and libre < req - 1e-6:
+                self.err('V11', f'{q}la columna {", ".join(map(str, tapan))} tapa el vano: quedan {libre:.2f} m libres '
+                                f'< {req} m ({cita})')
+        for m in nv.muros.values():
+            if m.get('tipo') != 'abierto' or not punto(m.get('a')) or not punto(m.get('b')):
+                continue
+            a, b = m['a'], m['b']
+            e = 0 if C.es_horizontal(a, b) else 1
+            lo, hi = sorted((a[e], b[e]))
+            libre, tapan = libre_de_columnas(lo, hi, a, b, cols)
+            if tapan and libre < 0.90 - 1e-6:
+                self.err('V11', f'{nv.id}: vano abierto {m.get("id")} {m.get("lados")}: la columna {", ".join(map(str, tapan))} '
+                                f'deja {libre:.2f} m libres (< 0,90 m, paso de una silla de ruedas)')
 
     def _barridos(self, nv: Nivel):
         salida = []
         for pt in nv.puertas:
+            if pt.get('espejo_de'):
+                continue
             m = nv.muros.get(pt.get('muro'))
             if m is None or not punto(pt.get('centro')) or not num(pt.get('ancho')) or not punto(m.get('a')):
                 continue
-            for h in C.hojas_puerta(pt, m, nv.pol):
+            for h in C.hojas_puerta(pt, m, {**nv.pol, **nv.pol_sub}):
                 pts = [x for x in C.sector(h['bisagra'], h['radio'], h['ang0'], h['ang1'])
                        if C.distancia_punto_segmento(x, m['a'], m['b']) > m.get('espesor', 0) / 2 + 0.005]
                 salida.append((pt, m, h, pts))
@@ -755,12 +928,17 @@ class Validador:
 
     def v12(self, nv: Nivel):
         barridos = self._barridos(nv)
+        cols = rects_columnas(nv)
         for pt, m, h, pts in barridos:
             self.inf.revisado('V12')
+            choca = sorted({q[4] for q in cols for x in pts if q[0] + 0.005 < x[0] < q[2] - 0.005 and q[1] + 0.005 < x[1] < q[3] - 0.005})
+            if choca:
+                self.err('V12', f'{nv.id}: {pt.get("id")}: el barrido de la hoja choca con la columna {", ".join(map(str, choca))}')
             lado = h['lado']
-            if lado == 'exterior' or lado not in nv.libre:
+            libres = nv.libre_sub if lado in nv.libre_sub else nv.libre
+            if lado == 'exterior' or lado not in libres:
                 continue
-            fuera = [x for x in pts if not C.punto_en_poligono(x, nv.libre[lado], 0.01)]
+            fuera = [x for x in pts if not C.punto_en_poligono(x, libres[lado], 0.01)]
             if fuera:
                 self.err('V12', f'{nv.id}: {pt.get("id")}: el barrido de la hoja (bisagra en {C.redondear_todo(list(h["bisagra"]), 2)}) '
                                 f'cruza un muro de {lado}')
@@ -776,6 +954,7 @@ class Validador:
     # ------------------------------------------------------------------------------------------------ V13 y V14
     def v13(self, nv: Nivel):
         cor = self.reglas['corredores']
+        cols = rects_columnas(nv)
         for r in nv.espacios:
             if r.get('tipo') != 'circulacion' or r.get('id') not in nv.libre:
                 continue
@@ -791,6 +970,12 @@ class Validador:
                 self.av('V13', f'{q}{w:.2f} m libres < {cor["camillas_recomendado_m"]} m recomendados donde pasan camillas')
             if not r.get('evacuacion') and w < cor['interno_min_m'] - 0.005:
                 self.av('V13', f'{q}{w:.2f} m libres < {cor["interno_min_m"]} m de un pasillo interno')
+            # revisión adversarial: el ancho libre en la sección de cada columna que invade el corredor
+            if r.get('evacuacion') and cols:
+                wc, col = C.ancho_en_columnas(nv.libre[r['id']], cols)
+                if col is not None and wc < cor['evacuacion_min_m'] - 0.005:
+                    self.av('V13', f'{q}{wc:.2f} m libres en la sección de la columna {col[4]} (entre caras de muro '
+                                   f'{w:.2f} m) < {cor["evacuacion_min_m"]} m; ver reglas_planta → decisiones (columnas)')
 
     def v14(self, nv: Nivel):
         ev = self.reglas['evacuacion']
@@ -801,6 +986,9 @@ class Validador:
         rej = C.Rejilla(x0 - 0.5, y0 - 0.5, x1 + 0.5, y1 + 0.5, 0.10)
         for rid, p in nv.libre.items():
             if rid not in protegidas and nv.transitable(rid):
+                rej.pintar_poligono(p)
+        for sid, p in nv.libre_sub.items():
+            if nv.transitable(nv.padre(sid)):
                 rej.pintar_poligono(p)
         salidas, vanos = [], {}
         for pt in nv.puertas:
@@ -1115,6 +1303,42 @@ class Validador:
                     elif llegada[0]['partes'][0].get('rect') != partes[0].get('rect'):
                         self.err('V21', f'{q}el descanso de llegada en {destino} no coincide con el de salida')
 
+    # ------------------------------------------------------------------------------------------------ V22
+    def v22(self, niveles: list[Nivel]):
+        """Paso físico (revisión adversarial): el grafo de puertas de V10 no ve muros, columnas ni vanos tapados."""
+        camillas = {c for c in ('camas', 'camillas_procedimientos') if c in self.cat_puertas}
+        for nv in niveles:
+            if not nv.espacios or nv.contorno is None and not nv.d.get('recintos'):
+                continue
+            self.inf.revisado('V22')
+            # en los exteriores, cada paso a otro nivel necesita su vano (puerta espejo) en el muro del nivel
+            if nv.id == 'EXT':
+                for pa in nv.d.get('pasos_entre_niveles', []):
+                    if not pa.get('puerta'):
+                        self.err('V22', f'{nv.id}: el paso a {pa.get("otro_nivel")} en {pa.get("punto")} no tiene vano en el muro')
+            sem = C.semillas_de_paso(nv.d)
+            if not sem:
+                continue
+            r = C.alcance_fisico(nv.d, 0.30, sem)
+            for nombre in r['sin_lugar']:
+                self.err('V22', f'{nv.id}: {nombre}: no hay dónde pararse a menos de 0,60 m (radio 0,30 m)')
+            for z, grupos in sorted(r['por_cota'].items()):
+                if len(grupos) > 1:
+                    self.err('V22', f'{nv.id}: a la cota {z:+.2f} m hay {len(grupos)} zonas sin paso entre sí: '
+                                    + ' | '.join(', '.join(g) for g in grupos))
+            for rid in r['no_alcanzables']:
+                amb = (nv.por_id.get(rid) or {}).get('ambiente') or (nv.subs[rid][0].get('nombre') if rid in nv.subs else '') or ''
+                if amb.startswith('Montacargas'):
+                    continue              # cabina de carga: no la usa una persona
+                self.err('V22', f'{nv.id}: {rid} ({amb}): ningún punto alcanzable con radio 0,30 m')
+            con_camilla = {x for pt in nv.puertas if pt.get('categoria') in camillas and not pt.get('espejo_de')
+                           for x in (pt.get('desde'), pt.get('hacia')) if x in nv.por_id}
+            if con_camilla:
+                r2 = C.alcance_fisico(nv.d, 0.45, sem, recintos=con_camilla)
+                for rid in r2['no_alcanzables']:
+                    self.err('V22', f'{nv.id}: {rid} ({(nv.por_id.get(rid) or {}).get("ambiente")}): una camilla '
+                                    '(radio 0,45 m) no llega por su puerta de camas o camillas')
+
     # ------------------------------------------------------------------------------------------------ todo
     def correr(self):
         self.v1_general()
@@ -1146,12 +1370,13 @@ class Validador:
             self.v16(niveles)
             self.v20(niveles)
         self.v21(niveles)
+        self.v22(niveles)
         if not (self.pl.get('zonas') if self.fixture else self.reglas.get('zonas')):
             self.inf.omitir('V17', 'no hay zonas definidas' + (' en el fixture' if self.fixture else ' en reglas_planta.json'))
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description='Valida la planta de la torre (reglas V1-V20 del contrato, 3.5, y V21 de las escaleras, 16.1).')
+    ap = argparse.ArgumentParser(description='Valida la planta de la torre (reglas V1-V20 del contrato, 3.5, V21 de las escaleras, 16.1, y V22 de paso físico).')
     ap.add_argument('--archivo', type=Path, help='archivo de plantas a validar con todas las reglas')
     ap.add_argument('--fixture', nargs='?', type=Path, const=C.FIXTURES / 'plantas_min.json',
                     help='valida un fixture y omite V2, V6, V15, V16 y V20 (por defecto scripts/fixtures/torre/plantas_min.json)')

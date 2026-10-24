@@ -35,6 +35,10 @@ ORDEN_NIVELES = ('EXT', 'P1', 'P2', 'P3', 'P4', 'BT', 'CUB')
 NIVELES_PISO = ('P1', 'P2', 'P3', 'P4')
 # Tipos de muro que pueden ganar en un borde (el más exigente gana, 3.3). Los de contorno exterior (parapeto,
 # cerramiento) y el vano abierto se asignan por regla del nivel o del trazado.
+# Niveles donde una puerta de otro nivel que llega allí abre su vano espejo (exteriores a ±0,00: P1 y el pasaje del bloque
+# técnico llegan a los patios y a la plaza). En la cubierta, la terraza del piso 3 está 4,20 m abajo: la puerta de la
+# escalera sur es del piso 4 y su vano ya está en el muro del núcleo de ese piso.
+NIVELES_CON_ESPEJO = ('EXT',)
 RANGO = {'abierto': 0, 'liviano': 1, 'bloque': 2, 'parapeto': 2, 'cerramiento': 2, 'fachada': 3, 'nucleo': 4,
          'plomado': 5}
 TIPOS_NUCLEO_MURO = ('escalera', 'ascensor', 'montacargas')
@@ -67,6 +71,12 @@ def clave_pt(v):
 def clave_seg(a, b):
     ka, kb = clave_pt(a), clave_pt(b)
     return (ka, kb) if ka <= kb else (kb, ka)
+
+
+def diferencia(p, quitar) -> list[list[float]]:
+    """Polígono ortogonal p menos los rectángulos `quitar` (el resultado debe quedar de una pieza y sin huecos)."""
+    rects = C.rectangulos_menos(p, quitar, TOL)
+    return contorno_de_union([C.rect_a_poligono(list(r)) for r in rects])
 
 
 def contorno_de_union(poligonos) -> list[list[float]]:
@@ -353,6 +363,10 @@ class Generador:
                     izq, der = der, izq
                 lados = [None, 'exterior'] if clave[0] == 'ext' else [clave[1], 'exterior']
             d = tipos[t]
+            # cota de la base (16.6 y revisión adversarial): un muro de un recinto con z_piso_m distinto de 0 (la terraza del
+            # piso 3 dentro del nivel de cubierta) arranca en el piso más alto de sus lados; si es 0, no se escribe
+            zs = [float(por_id[x]['_t'].get('z_piso_m') or 0.0) for x in lados if x in por_id]
+            z_base = max(zs) if zs else 0.0
             alto_d = d.get('altura')
             if alto_d == 'entrepiso':
                 altura = tn['altura_entrepiso_m']
@@ -360,13 +374,17 @@ class Generador:
                 altura = tn['altura_libre_m']
             else:
                 altura = float(alto_d)
-            salida.append({'a': pt(a), 'b': pt(b), 'tipo': t, 'espesor': d['espesor_m'], 'altura': altura,
-                           'lados': lados, 'estructural': bool(d.get('estructural'))})
+            w = {'a': pt(a), 'b': pt(b), 'tipo': t, 'espesor': d['espesor_m'], 'altura': altura,
+                 'lados': lados, 'estructural': bool(d.get('estructural'))}
+            if abs(z_base) > 1e-9:
+                w['z_base_m'] = r2(z_base)
+            salida.append(w)
         salida.sort(key=lambda w: (min(w['a'][1], w['b'][1]), min(w['a'][0], w['b'][0]),
                                    max(w['a'][1], w['b'][1]), max(w['a'][0], w['b'][0])))
         for i, w in enumerate(salida, 1):
             w['id'] = C.id_muro(N, i)
-        return [{k: w[k] for k in ('id', 'a', 'b', 'tipo', 'espesor', 'altura', 'lados', 'estructural')} for w in salida]
+        return [{k: w[k] for k in ('id', 'a', 'b', 'tipo', 'espesor', 'altura', 'z_base_m', 'lados', 'estructural') if k in w}
+                for w in salida]
 
     @staticmethod
     def poligono_libre(p, muros):
@@ -481,8 +499,89 @@ class Generador:
             salida.append(p)
         return salida
 
+    # ------------------------------------------------------------------------------------------------ subrecintos
+    def subrecintos(self, N, tn, esp, muros, puertas) -> dict:
+        """Baños y cabinas dentro de un recinto (revisión adversarial: el inodoro y la ducha no quedan sueltos en la
+        habitación). El trazado los da en el recinto («banos»: rect, nombre y puerta); el área sigue contando en el recinto del
+        programa. Cada uno lleva tabique de placa de yeso RH (liviano) donde no toca el borde del recinto y su puerta, que
+        abre hacia el recinto (corrediza por defecto, NTC 6047 para las unidades PMR; numeral por confirmar)."""
+        por_id = {e['id']: e for e in esp}
+        salida = {}
+        tipos = self.reglas['tipos_muro']
+        nuevos_muros = []
+        for e in esp:
+            banos = e['_t'].get('banos') or []
+            if not banos:
+                continue
+            P = e['_p']
+            subs = []
+            for k, b in enumerate(banos, 1):
+                r = [float(v) for v in b['rect']]
+                for v in r:
+                    if not C.es_multiplo(v, 0.05):
+                        raise ErrorTrazado(f'{N}: {e["id"]}: el baño {b} no está en múltiplos de 0,05 m')
+                q = C.rect_a_poligono(r)
+                if not C.poligono_dentro_de(q, P, 1e-6):
+                    raise ErrorTrazado(f'{N}: {e["id"]}: el baño {r} se sale del recinto')
+                subs.append({'id': f'{e["id"]}-B{k}', 'nombre': b.get('nombre', 'Baño'), '_r': r, '_p': q, '_b': b})
+            # tabiques: bordes de cada baño que no están sobre el borde del recinto (los compartidos entre cabinas, uno solo)
+            hechos = {}
+            vertices = [v for sb in subs for v in sb['_p']] + [v for v in P]
+            for sb in subs:
+                for a, bb in C.bordes(C.partir_bordes(sb['_p'], vertices)):
+                    if C.segmento_en_borde(a, bb, P):
+                        continue
+                    clave = clave_seg(a, bb)
+                    if clave in hechos:
+                        hechos[clave]['lados'][hechos[clave]['_vacio']] = sb['id']
+                        continue
+                    nl = C.normal_unitaria_izquierda(a, bb)
+                    m_ = [(a[0] + bb[0]) / 2, (a[1] + bb[1]) / 2]
+                    izq = (m_[0] + 0.02 * nl[0], m_[1] + 0.02 * nl[1])
+                    dentro_izq = C.punto_en_poligono(izq, sb['_p'], 0.0)
+                    lados = [sb['id'], e['id']] if dentro_izq else [e['id'], sb['id']]
+                    d = tipos['liviano']
+                    w = {'a': pt(a), 'b': pt(bb), 'tipo': 'liviano', 'espesor': d['espesor_m'], 'altura': tn['altura_libre_m'],
+                         'lados': lados, 'estructural': False, '_vacio': 1 if dentro_izq else 0}
+                    hechos[clave] = w
+                    nuevos_muros.append(w)
+            salida[e['id']] = subs
+        for w in nuevos_muros:
+            w.pop('_vacio')
+        nuevos_muros.sort(key=lambda w: (min(w['a'][1], w['b'][1]), min(w['a'][0], w['b'][0]), w['lados']))
+        for w in nuevos_muros:
+            w['id'] = C.id_muro(N, len(muros) + 1)
+            muros.append({k: w[k] for k in ('id', 'a', 'b', 'tipo', 'espesor', 'altura', 'lados', 'estructural')})
+        # puertas de los baños
+        for rid, subs in salida.items():
+            for sb in subs:
+                b = sb['_b']
+                pd = b.get('puerta') or {}
+                c = [float(v) for v in pd['pos']]
+                cand = [m for m in muros if sb['id'] in m['lados'] and C.distancia_punto_segmento(c, m['a'], m['b']) <= 1e-6]
+                if not cand:
+                    raise ErrorTrazado(f'{N}: {sb["id"]}: la puerta {c} no está sobre un tabique del baño')
+                m = cand[0]
+                otro = next(x for x in m['lados'] if x != sb['id'])
+                e_sub = {'ambiente': sb['nombre']}
+                cat = pd.get('categoria') or self.categoria_puerta(e_sub) or 'unidad_sanitaria'
+                req, cita = self.ancho_requerido(cat, ())
+                ancho = max(float(pd.get('ancho', 0.0)), req)
+                abre = pd.get('abre', 'corrediza')
+                p = {'id': C.id_puerta(N, len(puertas) + 1), 'muro': m['id'], 'centro': pt(c), 'ancho': r2(ancho), 'alto': 2.1,
+                     'hojas': 1, 'desde': otro, 'hacia': sb['id'], 'abre': abre}
+                if abre != 'corrediza':
+                    p['bisagra'] = pd.get('bisagra', 'izquierda')
+                p['tipo'] = 'corrediza' if abre == 'corrediza' else 'batiente'
+                p['categoria'] = cat
+                p['cita_ancho'] = self.cita(cita) if cita else None
+                p['nombre'] = f'Puerta de {sb["nombre"][0].lower()}{sb["nombre"][1:]}'
+                puertas.append(p)
+                sb['puertas'] = [p['id']]
+        return salida
+
     # ------------------------------------------------------------------------------------------------ ventanas
-    def ventanas(self, N, tn, esp, muros, puertas):
+    def ventanas(self, N, tn, esp, muros, puertas, columnas=()):
         if not tn.get('ventanas', True):
             return []
         sin = {x if x.startswith(N + '-') else f'{N}-{x}' for x in tn.get('sin_ventana', [])}
@@ -510,6 +609,15 @@ class Generador:
                             continue
                         c = p['centro'][eje]
                         ocupados.append((c - p['ancho'] / 2 - 0.30, c + p['ancho'] / 2 + 0.30))
+                    for col in columnas:
+                        if abs(col[1 - eje] - fijo) <= col[2 + (1 - eje)] / 2 + 1e-6:
+                            ocupados.append((col[eje] - col[2 + eje] / 2, col[eje] + col[2 + eje] / 2))
+                    # los baños del recinto no llevan ventana (extracción mecánica, CUB-A223) y la del recinto no cruza su
+                    # tabique
+                    for bn in e['_t'].get('banos') or []:
+                        q = [float(v) for v in bn['rect']]
+                        if abs(q[1 - eje] - fijo) <= 1e-6 or abs(q[3 - eje] - fijo) <= 1e-6:
+                            ocupados.append((q[eje] - 0.06, q[2 + eje] + 0.06))
                     libres = [(lo + vparams['margen_m'], hi - vparams['margen_m'])]
                     for o0, o1 in sorted(ocupados):
                         nuevos = []
@@ -639,11 +747,23 @@ class Generador:
                 nucleo_ids.update(recs)
         muros = self.muros(N, tn, esp, contorno, nucleo_ids)
         puertas = self.puertas(N, tn, esp, muros, contorno)
-        ventanas = self.ventanas(N, tn, esp, muros, puertas)
+        subs_de = self.subrecintos(N, tn, esp, muros, puertas)
+        # columnas de la retícula
+        columnas = []
+        if N in NIVELES_PISO:
+            ret = self.tz['reticula']
+            for ey in ret['ejes_y']:
+                for ex in ret['ejes_x']:
+                    if C.punto_en_poligono((ex['x'], ey['y']), contorno, 1e-3):
+                        columnas.append({'id': f'{ex["id"]}{ey["id"]}', 'x': ex['x'], 'y': ey['y'], 'b': 0.6, 'h': 0.6})
+        ventanas = self.ventanas(N, tn, esp, muros, puertas, [(c['x'], c['y'], c['b'], c['h']) for c in columnas])
         # vecinos por puertas y vanos abiertos
         vecinos = {e['id']: set() for e in esp}
         puertas_de = {e['id']: set() for e in esp}
+        ids_sub = {sb['id'] for subs in subs_de.values() for sb in subs}
         for p in puertas:
+            if p['desde'] in ids_sub or p['hacia'] in ids_sub:
+                continue                      # la puerta de un baño se lista en su subrecinto
             for x, y in ((p['desde'], p['hacia']), (p['hacia'], p['desde'])):
                 if x in vecinos:
                     vecinos[x].add(y)
@@ -662,6 +782,17 @@ class Generador:
             t = e['_t']
             p = e['_p']
             libre = self.poligono_libre(p, muros)
+            subs_out = []
+            if e['id'] in subs_de:
+                # el polígono libre del recinto descuenta sus baños (con media espesura del tabique alrededor)
+                media = self.reglas['tipos_muro']['liviano']['espesor_m'] / 2
+                quitar = [[sb['_r'][0] - media, sb['_r'][1] - media, sb['_r'][2] + media, sb['_r'][3] + media] for sb in subs_de[e['id']]]
+                libre = [pt(v) for v in diferencia(libre, quitar)]
+                for sb in subs_de[e['id']]:
+                    sl = self.poligono_libre(sb['_p'], muros)
+                    subs_out.append({'id': sb['id'], 'nombre': sb['nombre'], 'poligono': [pt(v) for v in sb['_p']],
+                                     'poligono_libre': sl, 'area_ejes_m2': r2(C.area_poligono(sb['_p'])),
+                                     'area_libre_m2': r2(C.area_poligono(sl)), 'puertas': sb['puertas']})
             al = C.area_poligono(libre)
             r = {'id': e['id']}
             if e.get('fila') is not None:
@@ -700,25 +831,20 @@ class Generador:
                 r['camillas'] = bool(t.get('camillas'))
             r['acceso'] = sorted(vecinos[e['id']])
             r['puertas'] = sorted(puertas_de[e['id']])
+            if subs_out:
+                r['subrecintos'] = subs_out
             r['ventanas'] = sorted(ventanas_de.get(e['id'], []))
             cl = None if (e['exterior'] or e['tipo'] == 'circulacion') else self.climatizacion(e.get('servicio_programa'), e['ambiente'])
             if cl:
                 r['climatizacion'] = cl
             notas = list(t.get('notas', []))
             mn = r.get('minimo_1633')
-            if mn and al < mn['m2'] - 1e-6:
+            al_total = al + sum(sb['area_libre_m2'] for sb in subs_out)     # el baño cuenta en el recinto del programa
+            if mn and al_total < mn['m2'] - 1e-6:
                 avisos_libre += 1
                 notas.append(self.reglas['nota_area_libre'])
             r['notas'] = notas
             recintos.append(r)
-        # columnas de la retícula
-        columnas = []
-        if N in NIVELES_PISO:
-            ret = self.tz['reticula']
-            for ey in ret['ejes_y']:
-                for ex in ret['ejes_x']:
-                    if C.punto_en_poligono((ex['x'], ey['y']), contorno, 1e-3):
-                        columnas.append({'id': f'{ex["id"]}{ey["id"]}', 'x': ex['x'], 'y': ey['y'], 'b': 0.6, 'h': 0.6})
         # conexiones verticales
         piso = tn['piso']
         conexiones = []
@@ -749,6 +875,35 @@ class Generador:
         nivel['_avisos_libre'] = avisos_libre
         return nivel
 
+    @staticmethod
+    def puerta_espejo(otro: dict, p: dict, rid: str, nivel_p: str) -> str:
+        """Vano en el nivel de exteriores donde llega una puerta de otro nivel (revisión adversarial: la fachada y el
+        cerramiento no pueden quedar ciegos donde están los pasos). Es la misma puerta vista desde afuera: mismo centro,
+        ancho, tipo y apertura; la hoja la dibuja el nivel de la puerta (espejo_de)."""
+        cands = [m for m in otro['muros'] if m['tipo'] != 'abierto'
+                 and C.distancia_punto_segmento(p['centro'], m['a'], m['b']) <= 1e-6]
+        if not cands:
+            raise ErrorTrazado(f'{p["id"]}: en {otro["id"]} no hay muro en {p["centro"]} para el vano espejo')
+        cands.sort(key=lambda m: (rid not in m['lados'], m['id']))
+        m = cands[0]
+        otro_lado = [x for x in m['lados'] if x != rid]
+        e = {'id': C.id_puerta(otro['id'], len(otro['puertas']) + 1), 'muro': m['id'], 'centro': p['centro'],
+             'ancho': p['ancho'], 'alto': p['alto'], 'hojas': p['hojas'], 'desde': rid,
+             'hacia': (otro_lado[0] if otro_lado and otro_lado[0] else 'exterior'), 'abre': p['abre']}
+        if 'bisagra' in p:
+            e['bisagra'] = p['bisagra']
+        e.update(tipo=p['tipo'], categoria=p['categoria'], cita_ancho=p.get('cita_ancho'))
+        if p.get('nombre'):
+            e['nombre'] = p['nombre']
+        e['espejo_de'] = {'nivel': nivel_p, 'puerta': p['id']}
+        otro['puertas'].append(e)
+        por_id = {r['id']: r for r in otro['recintos']}
+        for a, b in ((e['desde'], e['hacia']), (e['hacia'], e['desde'])):
+            if a in por_id:
+                por_id[a]['puertas'] = sorted(set(por_id[a]['puertas']) | {e['id']})
+                por_id[a]['acceso'] = sorted(set(por_id[a]['acceso']) | {b})
+        return e['id']
+
     # ------------------------------------------------------------------------------------------------ todo
     def generar(self) -> dict:
         tz = self.tz
@@ -775,7 +930,8 @@ class Generador:
                     raise ErrorTrazado(f'{p["id"]}: lleva_a {la["recinto"]}, que no está en {la["nivel"]}')
                 n['pasos_entre_niveles'].append({'puerta': p['id'], 'punto': p['centro'], 'recinto': p['hacia'],
                                                  'otro_nivel': la['nivel'], 'otro_recinto': la['recinto']})
-                otro['pasos_entre_niveles'].append({'puerta': None, 'punto': p['centro'], 'recinto': la['recinto'],
+                espejo = self.puerta_espejo(otro, p, la['recinto'], n['id']) if la['nivel'] in NIVELES_CON_ESPEJO else None
+                otro['pasos_entre_niveles'].append({'puerta': espejo, 'punto': p['centro'], 'recinto': la['recinto'],
                                                     'otro_nivel': n['id'], 'otro_recinto': p['hacia'],
                                                     'puerta_del_otro_nivel': p['id']})
         for n in niveles:

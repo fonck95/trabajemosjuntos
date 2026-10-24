@@ -323,6 +323,8 @@ def controles_vigencia(ctrl: Control):
             textos(d)
         malas = []
         for donde, t in piezas:
+            if re.match(r'^superados\.[^.]+\.buscar$', donde):
+                continue          # el patrón que el normalizador reemplaza (su «reemplazo» va al lado): no es una mención
             if RE_1732.search(t) and not re.search(r'revoc', t, re.I):
                 malas.append(f'{donde}: Res. 1732 sin «revocada»')
             if RE_482.search(t) and not re.search(r'1811|reemplaz|derog|→', t):

@@ -43,6 +43,9 @@ REGLAS = {
     'I15': ('Laboratorio completo: analizadores de laboratorio.json y dotación del laboratorio y la toma de muestras en sus recintos, '
             'con reactivos por prueba del menú (16.2)', 'duro'),
     'I16': ('Infraestructura sin precio de dotación y con su ítem de obra de presupuesto.json (16.3)', 'duro'),
+    'I17': ('Paso físico con el mobiliario (6.4 y revisión adversarial): con las huellas de piso de más de 0,5 m² como obstáculo, '
+            'un caminante de radio 0,30 m llega a cada recinto y a cada conexión vertical de su nivel, en una sola zona por cota; '
+            'las unidades de cubierta y exteriores (recinto null) no chocan con muros, columnas ni otras unidades', 'duro'),
 }
 REGLAS_WEB = {'esquema': ('Forma web (10.2): campos, tipos e índices', 'duro'),
               'catalogo': ('Catálogo web igual a catalogo_equipos.json (lista cerrada del Anexo C)', 'duro')}
@@ -105,7 +108,7 @@ def entero(v) -> bool:
 # --------------------------------------------------------------------------------------------------------------------
 class Planta:
     def __init__(self, plantas: dict | None):
-        self.recintos, self.nivel_de, self.niveles = {}, {}, {}
+        self.recintos, self.nivel_de, self.niveles, self.subrecintos = {}, {}, {}, {}
         self.puertas_de, self.muros, self.abiertos_de = {}, {}, {}
         if not plantas:
             return
@@ -116,6 +119,11 @@ class Planta:
                 self.recintos[r['id']] = r
                 self.nivel_de[r['id']] = n
                 pol[r['id']] = C.orientar_antihorario(r['poligono'])
+            # baños y cabinas (subrecintos): lo que va adentro se revisa contra su polígono libre y su puerta
+            for sb, r in C.subrecintos(n):
+                self.subrecintos[sb['id']] = dict(sb, ambiente=sb.get('nombre'), z_piso_m=r.get('z_piso_m'), padre=r['id'])
+                self.nivel_de[sb['id']] = n
+                pol[sb['id']] = C.orientar_antihorario(sb['poligono'])
             muros = {m['id']: m for m in n.get('muros', [])}
             self.muros.update(muros)
             for m in n.get('muros', []):
@@ -130,7 +138,7 @@ class Planta:
                     self.puertas_de.setdefault(lado, []).append((pt, m, pol))
 
     def libre(self, rid):
-        r = self.recintos.get(rid)
+        r = self.recintos.get(rid) or self.subrecintos.get(rid)
         return C.orientar_antihorario(r['poligono_libre']) if r and r.get('poligono_libre') else None
 
 
@@ -333,9 +341,15 @@ class ValidadorDatos:
         por_recinto = {}
         for u in self.unidades:
             if u.get('recinto') is not None:
-                por_recinto.setdefault(u['recinto'], []).append(u)
+                # lo que va en un baño o una cabina se revisa en su subrecinto (polígono libre, puerta y paso propios)
+                por_recinto.setdefault(u.get('subrecinto') or u['recinto'], []).append(u)
         for rid, us in por_recinto.items():
             r = self.planta.recintos.get(rid)
+            if r is None and rid in self.planta.subrecintos:
+                r = self.planta.subrecintos[rid]
+                malos = [u.get('id') for u in us if u.get('recinto') != r['padre']]
+                if malos:
+                    self.err('I3', f'{rid}: el subrecinto es de {r["padre"]} y {malos} dicen otro recinto')
             if r is None:
                 continue          # I11 lo informa
             nivel = self.planta.nivel_de[rid]
@@ -343,6 +357,9 @@ class ValidadorDatos:
             alto_libre = nivel.get('altura_libre_m', 3.0)
             z0 = float(r.get('z_piso_m') or 0.0)          # piso del recinto respecto al de su nivel (terraza del piso 3)
             de_piso = []
+            cols = [C.rect_a_poligono([c['x'] - c.get('b', 0.6) / 2, c['y'] - c.get('h', 0.6) / 2, c['x'] + c.get('b', 0.6) / 2,
+                                       c['y'] + c.get('h', 0.6) / 2]) + [c.get('id')] for c in nivel.get('columnas', []) or []]
+            cajas3d = []
             for u in us:
                 uid = u.get('id')
                 mid, m = self.modelo_de(u)
@@ -358,6 +375,12 @@ class ValidadorDatos:
                     continue
                 self.inf.revisado('I3')
                 dim, z = self.dim_de(u), u['posicion'][2] - z0
+                if mont in ('piso', 'pared', 'cielo', 'en_nucleo'):
+                    for cp in cols:
+                        if C.convexos_se_traslapan(h, cp[:4], 0.02):
+                            self.err('I3', f'{uid} ({mid}): la huella entra en la columna {cp[4]} (las columnas van de piso a cielo)')
+                if mont in ('piso', 'pared', 'cielo', 'en_nucleo', 'sobre'):
+                    cajas3d.append((u, h, z, z + dim[2], mid))
                 if mont in ('piso', 'en_nucleo'):
                     if not C.poligono_dentro_de(h, libre, 0.02):
                         self.err('I3', f'{uid} ({mid}): la huella se sale del polígono libre de {rid}')
@@ -377,6 +400,8 @@ class ValidadorDatos:
                     if z < 0.30:
                         de_piso.append((u, h, mid, m))
                 elif mont == 'cielo':
+                    if not C.poligono_dentro_de(h, libre, 0.02):
+                        self.err('I3', f'{uid} ({mid}): la huella se sale del polígono libre de {rid} (entra en un muro)')
                     if abs(z + dim[2] - alto_libre) > 0.02:
                         self.err('I3', f'{uid} ({mid}): montaje de cielo con z + alto = {z + dim[2]:.2f} m y el cielo está a {alto_libre} m')
             # I4: traslapes entre huellas de piso
@@ -385,6 +410,19 @@ class ValidadorDatos:
                     self.inf.revisado('I4')
                     if C.convexos_se_traslapan(h1, h2, 0.005):
                         self.err('I4', f'{rid}: {u1.get("id")} y {u2.get("id")} se traslapan')
+            # I4 (3D): cajas de pared, de cielo, de piso y sobre apoyos que se cruzan en el espacio (salvo apoyo y contenido)
+            for i, (u1, h1, a1, b1, m1) in enumerate(cajas3d):
+                for u2, h2, a2, b2, m2 in cajas3d[i + 1:]:
+                    if u1.get('montaje') in ('piso', 'en_nucleo') and u2.get('montaje') in ('piso', 'en_nucleo'):
+                        continue          # ya revisado arriba con las huellas de piso
+                    if u1.get('apoyo') == u2.get('id') or u2.get('apoyo') == u1.get('id'):
+                        continue
+                    if min(b1, b2) - max(a1, a2) <= 0.01:
+                        continue
+                    self.inf.revisado('I4')
+                    if C.convexos_se_traslapan(h1, h2, 0.005):
+                        self.err('I4', f'{rid}: {u1.get("id")} ({m1}) y {u2.get("id")} ({m2}) se cruzan en 3D '
+                                       f'(z {a1:.2f}-{b1:.2f} y {a2:.2f}-{b2:.2f} m)')
             # I5: barrido de puertas
             for pt, muro, pol in self.planta.puertas_de.get(rid, []):
                 for hoja in C.hojas_puerta(pt, muro, pol):
@@ -426,6 +464,8 @@ class ValidadorDatos:
                     semillas.append(c)
                     return
         for pt, muro, pol in self.planta.puertas_de.get(rid, []):
+            if pt.get('hacia') in self.planta.subrecintos and pt.get('desde') == rid:
+                continue              # la puerta del baño propio no es una entrada al recinto
             semilla(pt['centro'], muro, pol)
         # los vanos abiertos (muro «abierto» de la planta) también son entradas, cada 0,20 m
         for muro, pol in self.planta.abiertos_de.get(rid, []):
@@ -457,6 +497,76 @@ class ValidadorDatos:
                     break
             if not alcanza:
                 self.err('I6', f'{rid}: {u.get("id")} ({mid}) sin paso libre de {PASO_LIBRE_M} m desde la puerta hasta uno de sus costados')
+
+    # ------------------------------------------------------------------------------------------------ I17
+    def i17(self):
+        """Paso físico con el mobiliario: lo que tapa vanos, puertas y corredores no se ve en I5 ni en I6."""
+        if not self.planta.niveles:
+            self.err('I17', 'no hay planta para comprobar el paso físico')
+            return
+        grandes, nulas = {}, {}
+        for u in self.unidades:
+            # nivel de la unidad (o el de su recinto, si la unidad no lo trae)
+            nid = u.get('nivel') or (self.planta.nivel_de.get(u.get('recinto')) or {}).get('id')
+            # la cabina del ascensor (en_nucleo) se pisa: no es obstáculo
+            if u.get('montaje') != 'piso' or u.get('posicion') is None:
+                if u.get('recinto') is None and u.get('posicion') is not None and u.get('montaje') not in ('dentro',):
+                    nulas.setdefault(nid, []).append(u)
+                continue
+            h = self.huella(u)
+            if h is None:
+                continue
+            if u.get('recinto') is None:
+                nulas.setdefault(nid, []).append(u)
+            dim = self.dim_de(u)
+            if dim[0] * dim[1] > 0.5 + 1e-9:
+                grandes.setdefault(nid, []).append(C.caja(h))
+        for nid, n in self.planta.niveles.items():
+            self.inf.revisado('I17')
+            sem = C.semillas_de_paso(n)
+            if not sem:
+                continue
+            r = C.alcance_fisico(n, 0.30, sem, obstaculos=grandes.get(nid, []))
+            for nombre in r['sin_lugar']:
+                self.err('I17', f'{nid}: {nombre}: el mobiliario no deja dónde pararse (radio 0,30 m)')
+            for z, grupos in sorted(r['por_cota'].items()):
+                if len(grupos) > 1:
+                    self.err('I17', f'{nid}: a la cota {z:+.2f} m el mobiliario parte el nivel en {len(grupos)} zonas: '
+                                    + ' | '.join(', '.join(g) for g in grupos))
+            for rid in r['no_alcanzables']:
+                amb = (self.planta.recintos.get(rid) or self.planta.subrecintos.get(rid) or {}).get('ambiente') or ''
+                if amb.startswith('Montacargas'):
+                    continue
+                self.err('I17', f'{nid}: {rid} ({amb}): el mobiliario no deja llegar (radio 0,30 m)')
+            # unidades sin recinto (cubierta y exteriores): ni muros, ni columnas, ni otras unidades
+            us = nulas.get(nid, [])
+            if not us:
+                continue
+            muros = [m for m in n.get('muros', []) if m.get('tipo') != 'abierto' and float(m.get('espesor') or 0) > 0]
+            cajas = []
+            for u in us:
+                h = self.huella(u)
+                if h is None:
+                    continue
+                dim = self.dim_de(u)
+                z = float(u['posicion'][2])
+                cajas.append((u, h, z, z + dim[2]))
+                for m in muros:
+                    e = float(m['espesor']) / 2
+                    zb = float(m.get('z_base_m') or 0.0)
+                    if not (z < zb + float(m.get('altura') or 0) - 0.01 and z + dim[2] > zb + 0.01):
+                        continue
+                    (ax, ay), (bx, by) = m['a'], m['b']
+                    caja_m = [min(ax, bx) - (e if ax == bx else 0), min(ay, by) - (e if ay == by else 0),
+                              max(ax, bx) + (e if ax == bx else 0), max(ay, by) + (e if ay == by else 0)]
+                    if C.convexos_se_traslapan(h, C.rect_a_poligono(caja_m), 0.005):
+                        self.err('I17', f'{u.get("id")} ({self.modelo_de(u)[0]}, {nid}): atraviesa el muro {m.get("id")}')
+            for i, (u1, h1, a1, b1) in enumerate(cajas):
+                for u2, h2, a2, b2 in cajas[i + 1:]:
+                    if u1.get('apoyo') == u2.get('id') or u2.get('apoyo') == u1.get('id'):
+                        continue
+                    if min(b1, b2) - max(a1, a2) > 0.01 and C.convexos_se_traslapan(h1, h2, 0.005):
+                        self.err('I17', f'{nid}: {u1.get("id")} y {u2.get("id")} se cruzan')
 
     # ------------------------------------------------------------------------------------------------ I7
     def registro_exigencias(self):
@@ -886,6 +996,7 @@ class ValidadorDatos:
         self.i14()
         self.i15()
         self.i16()
+        self.i17()
 
 
 # --------------------------------------------------------------------------------------------------------------------

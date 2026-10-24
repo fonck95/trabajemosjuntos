@@ -445,7 +445,8 @@ def completar_cierre(d, x, r):
 class Sala:
     CEL = 0.05
 
-    def __init__(self, recinto: dict, nivel: dict, poligonos_nivel: dict):
+    def __init__(self, recinto: dict, nivel: dict, poligonos_nivel: dict, reservar_pasos: bool = False):
+        self.reservar = reservar_pasos
         self.r = recinto
         self.id = recinto['id']
         self.nivel = nivel
@@ -497,6 +498,9 @@ class Sala:
         self.cursor = {}            # ocupación de la cara superior de cada apoyo
         self._abiertos()
         self._puertas_y_ventanas(poligonos_nivel)
+        self.columnas = []          # columnas de la retícula que sobresalen en el recinto (de piso a cielo)
+        self._columnas()
+        self._reservar_pasos()
 
     # ---------------------------------------------------------------------------------------------- bordes sin muro
     def _abiertos(self):
@@ -530,6 +534,195 @@ class Sala:
                 t = max(t, hi)
             if b['L'] > t + 0.05:
                 b['abiertos'].append((t, b['L']))
+
+    # ---------------------------------------------------------------------------------------------- columnas
+    def _columnas(self):
+        """Las columnas de 0,60 × 0,60 m sobresalen hasta 0,24 m de la cara de los muros (revisión adversarial): no se
+        pisan (fuera de `dentro`), ninguna huella las cruza y en los bordes que tapan no se cuelga ni se arrima nada."""
+        X0, Y0, X1, Y1 = C.caja(self.libre)
+        for c in self.nivel.get('columnas', []) or []:
+            b2, h2 = float(c.get('b', 0.6)) / 2, float(c.get('h', 0.6)) / 2
+            q = (c['x'] - b2, c['y'] - h2, c['x'] + b2, c['y'] + h2)
+            if q[2] <= X0 + 1e-6 or q[0] >= X1 - 1e-6 or q[3] <= Y0 + 1e-6 or q[1] >= Y1 - 1e-6:
+                continue
+            self.columnas.append(q)
+            self._pintar(self.dentro, (q[0] - 0.012, q[1] - 0.012, q[2] + 0.012, q[3] + 0.012), 0)
+            esquinas = ((q[0], q[1]), (q[2], q[3]), (q[0], q[3]), (q[2], q[1]))
+            for b in self.bordes:
+                ax, ay = b['a']
+                ts = [(x - ax) * b['u'][0] + (y - ay) * b['u'][1] for x, y in esquinas]
+                ds = [(x - ax) * b['nin'][0] + (y - ay) * b['nin'][1] for x, y in esquinas]
+                if max(ds) <= 0.005 or min(ds) > 0.05:
+                    continue
+                t0, t1 = max(0.0, min(ts)), min(b['L'], max(ts))
+                if t1 > t0:
+                    b['pared'].append((t0 - 0.02, t1 + 0.02, 0.0, 99.0))
+        self._sat_duro = self._sat_paso = None
+
+    # ---------------------------------------------------------------------------------------------- pasos entre vanos
+    def _entradas(self):
+        """Puntos a 0,45 m adentro de cada puerta y de cada tramo de 0,5 m de los vanos abiertos del recinto:
+        (x, y, borde, t, largo del vano, recinto del otro lado, ancho que cubre la entrada)."""
+        out = []
+        for pt, m in self.puertas_muro:
+            b, t = self._borde_de(pt['centro'], m, 0.05)
+            if b is not None:
+                otro = pt['hacia'] if pt.get('desde') == self.id else pt.get('desde')
+                out.append((b['a'][0] + b['u'][0] * t + b['nin'][0] * 0.45, b['a'][1] + b['u'][1] * t + b['nin'][1] * 0.45, b, t,
+                            float(pt['ancho']), otro, float(pt['ancho'])))
+        for m in self.muros_abiertos:
+            # un vano abierto largo es una entrada en cada tramo de 0,5 m (no solo en su centro)
+            L = math.hypot(m['b'][0] - m['a'][0], m['b'][1] - m['a'][1])
+            otro = next((x for x in m.get('lados') or [] if x != self.id), None)
+            n_ = max(1, int(L / 0.5))
+            for k in range(n_):
+                f = (k + 0.5) / n_
+                c = (m['a'][0] + (m['b'][0] - m['a'][0]) * f, m['a'][1] + (m['b'][1] - m['a'][1]) * f)
+                b, t = self._borde_de(c, m, 0.05)
+                if b is None:
+                    continue
+                out.append((b['a'][0] + b['u'][0] * t + b['nin'][0] * 0.45, b['a'][1] + b['u'][1] * t + b['nin'][1] * 0.45, b, t,
+                            L, otro, L / n_))
+        return out
+
+    def _externa(self, otro) -> bool:
+        """¿La entrada lleva a una circulación, a un recinto de paso o al exterior (se sigue por afuera del recinto)?"""
+        if otro in (None, 'exterior'):
+            return True
+        if any(sb.get('id') == otro for sb in self.r.get('subrecintos') or []):
+            return False                       # baño del recinto: se entra desde adentro
+        r = next((x for x in self.nivel.get('recintos', []) if x.get('id') == otro), None)
+        return r is None or r.get('tipo') == 'circulacion' or bool(r.get('de_paso')) or bool(r.get('exterior'))
+
+    def _reservar_pasos(self):
+        """Revisión adversarial (mobiliario que tapa vanos y accesos): si el recinto se amuebla con reserva (segunda vuelta
+        de `amueblar`, cuando la primera deja una entrada sin paso), se reserva un paso de 0,70 m entre la primera entrada
+        (puerta o vano abierto) y cada una de las demás: ahí no se pone nada de piso."""
+        if not self.reservar:
+            return
+        ent = self._entradas()
+        nx, ny, c = self.nx, self.ny, self.CEL
+        if len(ent) < 2:
+            self._sat_duro = self._sat_paso = None
+            return
+        # celdas donde cabe el centro de un caminante de 0,30 m de radio (cuadrado de 0,25 m de lado medio)
+        r = 5
+        fuera = self._sat(lambda k: 0 if self.dentro[k] else 1)
+        ok = bytearray(nx * ny)
+        for j in range(ny):
+            for i in range(nx):
+                i0, j0, i1, j1 = i - r, j - r, i + r, j + r
+                if i0 < 0 or j0 < 0 or i1 >= nx or j1 >= ny:
+                    continue
+                if self._suma(fuera, i0, j0, i1, j1) == 0:
+                    ok[j * nx + i] = 1
+
+        def celda(x, y):
+            i = int((x - self.X0) / c)
+            j = int((y - self.Y0) / c)
+            best = None
+            for dj in range(-8, 9):
+                for di in range(-8, 9):
+                    a_, b_ = i + di, j + dj
+                    if 0 <= a_ < nx and 0 <= b_ < ny and ok[b_ * nx + a_]:
+                        d2 = di * di + dj * dj
+                        if best is None or d2 < best[0]:
+                            best = (d2, a_, b_)
+            return None if best is None else best[2] * nx + best[1]
+        semillas = [celda(x, y) for x, y, *_ in ent]
+        if semillas[0] is None:
+            return
+        previo = [-1] * (nx * ny)
+        previo[semillas[0]] = semillas[0]
+        cola = [semillas[0]]
+        k_ = 0
+        while k_ < len(cola):
+            k = cola[k_]
+            k_ += 1
+            i, j = k % nx, k // nx
+            for kk in ((k - 1) if i > 0 else -1, (k + 1) if i < nx - 1 else -1, (k - nx) if j > 0 else -1,
+                       (k + nx) if j < ny - 1 else -1):
+                if kk >= 0 and ok[kk] and previo[kk] < 0:
+                    previo[kk] = k
+                    cola.append(kk)
+        media = 0.35
+        for s_ in semillas[1:]:
+            if s_ is None or previo[s_] < 0:
+                continue
+            k = s_
+            while True:
+                x, y = self._centro(k % nx, k // nx)
+                self._pintar(self.camino, (x - media, y - media, x + media, y + media), 1)
+                if k == semillas[0]:
+                    break
+                k = previo[k]
+        self._sat_duro = self._sat_paso = None
+
+    def entradas_bloqueadas(self) -> int:
+        """Entradas (puertas y vanos abiertos) a las que un caminante de 0,30 m de radio no llega desde las que dan afuera
+        del recinto, con las huellas de piso de más de 0,5 m² y las columnas como obstáculo. Usa la rejilla de 5 cm de la
+        regla I17 del validador (mismo origen que comun.rejilla_de_paso, para que las celdas caigan igual) y la misma
+        erosión (comun.erosionar): cada vano se prolonga 0,40 m hacia afuera con su ancho y el caminante entra por él."""
+        # vanos de menos de 0,65 m (compuertas de montacargas, rendijas): por ahí no pasa un caminante (V22 los exceptúa)
+        ent = [e_ for e_ in self._entradas() if e_[4] >= 0.65 - 1e-6]
+        if len(ent) < 2:
+            return 0
+        c = self.CEL
+        cont = self.nivel.get('contorno') or [v for r in self.nivel.get('recintos', []) for v in r.get('poligono') or []]
+        gx, gy = min(v[0] for v in cont) - 1.0, min(v[1] for v in cont) - 1.0        # origen de comun.rejilla_de_paso
+        x0 = gx + math.floor((self.X0 - 0.6 - gx) / c + 1e-9) * c
+        y0 = gy + math.floor((self.Y0 - 0.6 - gy) / c + 1e-9) * c
+        rej = C.Rejilla(x0, y0, self.X0 + self.nx * c + 0.6, self.Y0 + self.ny * c + 0.6, c)
+        rej.pintar_poligono(self.libre)
+        for q in self.columnas:
+            rej.pintar_rect(*q, valor=0)
+        for p in self.unidades:
+            if p.montaje == 'piso' and p.w * p.d > 0.5 + 1e-9:
+                rej.pintar_rect(*Sala.caja(p.cx, p.cy, p.w, p.d, p.rot), valor=0)
+        semillas = []
+        for x, y, b, t, L, otro, w in ent:
+            w += 0.10 if w < L - 1e-6 else 0.0            # tramos de un vano abierto: se solapan para no dejar rendijas
+            ex, ey = b['a'][0] + b['u'][0] * t, b['a'][1] + b['u'][1] * t
+            pa = (ex - b['u'][0] * w / 2, ey - b['u'][1] * w / 2)
+            pb = (ex + b['u'][0] * w / 2 - b['nin'][0] * 0.40, ey + b['u'][1] * w / 2 - b['nin'][1] * 0.40)
+            rej.pintar_rect(min(pa[0], pb[0]), min(pa[1], pb[1]), max(pa[0], pb[0]), max(pa[1], pb[1]), valor=1)
+            semillas.append((ex - b['nin'][0] * 0.05, ey - b['nin'][1] * 0.05))
+        pasa = C.erosionar(rej, C.RADIO_CAMINANTE_M)
+        nx = rej.nx
+
+        def celda(x, y):
+            ij = rej.celda_de(x, y)
+            return None if ij is None or not pasa[ij[1] * nx + ij[0]] else ij[1] * nx + ij[0]
+        # un vano abierto es una sola entrada aunque se muestree cada 0,5 m (los extremos quedan pegados a su borde): se
+        # prueba también su punto medio
+        grupo = [('vano', e_[5]) if e_[6] < e_[4] - 1e-6 else ('puerta', i) for i, e_ in enumerate(ent)]
+        for g in sorted({g for g in grupo if g[0] == 'vano'}, key=str):
+            ks = [i for i, g_ in enumerate(grupo) if g_ == g]
+            ent.append(ent[ks[0]])
+            grupo.append(g)
+            semillas.append((sum(semillas[i][0] for i in ks) / len(ks), sum(semillas[i][1] for i in ks) / len(ks)))
+        sem = [celda(x, y) for x, y in semillas]
+        externas = [i for i, e_ in enumerate(ent) if self._externa(e_[5])]
+        origen = [sem[i] for i in externas if sem[i] is not None] if externas else ([sem[0]] if sem[0] is not None else [])
+        grupos_int = sorted({grupo[i] for i in range(len(ent)) if i not in externas}, key=str) if externas else \
+            sorted({grupo[i] for i in range(1, len(ent))} - {grupo[0]}, key=str)
+        if not origen:
+            return len(grupos_int)
+        # las entradas externas se unen por afuera (corredor o recinto de paso): basta con llegar a una de ellas
+        visto = bytearray(len(pasa))
+        for o in origen:
+            visto[o] = 1
+        cola, k_ = list(origen), 0
+        while k_ < len(cola):
+            k = cola[k_]
+            k_ += 1
+            i = k % nx
+            for kk in ((k - 1) if i > 0 else -1, (k + 1) if i < nx - 1 else -1, k - nx, k + nx):
+                if 0 <= kk < len(pasa) and pasa[kk] and not visto[kk]:
+                    visto[kk] = 1
+                    cola.append(kk)
+        llega = {grupo[i] for i in range(len(ent)) if sem[i] is not None and visto[sem[i]]}
+        return sum(1 for g in grupos_int if g not in llega)
 
     # ---------------------------------------------------------------------------------------------- rejilla
     def _centro(self, i, j):
@@ -572,7 +765,7 @@ class Sala:
             self._sat_paso = self._sat(lambda k: 1 if pa[k] else 0)
         return self._sat_duro, self._sat_paso
 
-    def libre_caja(self, caja, permitir_paso=False, permitir_puerta=False) -> bool:
+    def libre_caja(self, caja, permitir_paso=False, permitir_puerta=False, h=None) -> bool:
         """¿La caja [x0, y0, x1, y1] está dentro del polígono libre y sin nada ocupado (ni barrido de puerta ni paso)?"""
         x0, y0, x1, y1 = caja
         i0, i1 = self._rango(x0, x1, self.X0, self.nx)
@@ -593,10 +786,37 @@ class Sala:
             if not permitir_paso and self._suma(paso, i0, j0, i1, j1):
                 return False
         # la rejilla de 5 cm puede no ver un traslape de menos de una celda: se revisa también contra las huellas exactas
-        for q0, r0, q1, r1 in self.cajas_piso:
+        for q0, r0, q1, r1 in self.cajas_piso + self.columnas:
             if min(x1, q1) - max(x0, q0) > 0.004 and min(y1, r1) - max(y0, r0) > 0.004:
                 return False
-        return C.poligono_dentro_de(C.rect_a_poligono(caja), self.libre, 0.01)
+        if not C.poligono_dentro_de(C.rect_a_poligono(caja), self.libre, 0.01):
+            return False
+        # lo que ya cuelga de las paredes por encima de 0,30 m (lavamanos, tableros, tomas): nada de piso debajo que lo
+        # alcance (revisión adversarial: choques 3D); sin la altura de la pieza se supone 2,0 m
+        z1 = 2.0 if h is None else h
+        for p in self.unidades:
+            if p.montaje == 'pared' and 0.30 - 1e-9 <= p.z < z1 - 0.01:
+                q0, r0, q1, r1 = Sala.caja(p.cx, p.cy, p.w, p.d, p.rot)
+                if min(x1, q1) - max(x0, q0) > 0.004 and min(y1, r1) - max(y0, r0) > 0.004:
+                    return False
+        return True
+
+    def choca_3d(self, caja, z0, z1, excluir=()) -> bool:
+        """¿La caja [x0, y0, x1, y1] entre las cotas z0 y z1 cruza una unidad ya colocada (de piso, pared, cielo o sobre un
+        apoyo) o una columna? Revisión adversarial: choques 3D entre unidades de pared, de cielo y de piso."""
+        x0, y0, x1, y1 = caja
+        for q0, r0, q1, r1 in self.columnas:
+            if min(x1, q1) - max(x0, q0) > 0.004 and min(y1, r1) - max(y0, r0) > 0.004:
+                return True
+        for p in self.unidades:
+            if p.montaje == 'dentro' or p.id in excluir:
+                continue
+            if min(z1, p.z + p.h) - max(z0, p.z) <= 0.01:
+                continue
+            q0, r0, q1, r1 = Sala.caja(p.cx, p.cy, p.w, p.d, p.rot)
+            if min(x1, q1) - max(x0, q0) > 0.004 and min(y1, r1) - max(y0, r0) > 0.004:
+                return True
+        return False
 
     def sin_paso(self, caja) -> bool:
         """¿La caja (recortada a la rejilla) no toca ninguna banda de paso reservada?"""
@@ -848,7 +1068,7 @@ class Colocador:
                     continue
                 cx, cy, rot = sala.contra(b, t, w, d, sep)
                 caja = Sala.caja(cx, cy, w, d, rot)
-                if sala.libre_caja(caja):
+                if sala.libre_caja(caja, h=h) and not sala.choca_3d(caja, 0.0, h):
                     return cx, cy, rot, b['k'], caja
         return None
 
@@ -894,7 +1114,7 @@ class Colocador:
             cy = ay + u[1] * t + nin[1] * (o0 + d / 2 + sep)
             rot = Sala.rot_de(nin)
             caja = Sala.caja(cx, cy, w, d, rot)
-            if sala.libre_caja(caja):
+            if sala.libre_caja(caja, h=h):
                 return cx, cy, rot, b['k'], caja
         return None
 
@@ -912,7 +1132,7 @@ class Colocador:
                         continue
                     cx, cy, rot = sala.contra(b, t, w, d)
                     caja = Sala.caja(cx, cy, w, d, rot)
-                    if not sala.libre_caja(caja) or not sala.sin_paso(Sala.caja(cx, cy, w + 0.1, d, rot)):
+                    if not sala.libre_caja(caja, h=h) or not sala.sin_paso(Sala.caja(cx, cy, w + 0.1, d, rot)):
                         continue
                     u, n = b['u'], b['nin']
                     bandas_c = []
@@ -966,7 +1186,7 @@ class Colocador:
                 if solo_cabecera and not cab:
                     continue
                 caja = Sala.caja(cx, cy, w, d, rot)
-                if sala.libre_caja(caja, permitir_paso=paso_ok):
+                if sala.libre_caja(caja, permitir_paso=paso_ok, h=h):
                     return cx, cy, rot, None, caja
         return None
 
@@ -989,9 +1209,11 @@ class Colocador:
                 caja = Sala.caja(cx, cy, w, d, rot)
                 if not C.poligono_dentro_de(C.rect_a_poligono(caja), sala.libre, 0.01):
                     continue
-                if sala.alto_en(caja) > z + 1e-3:
+                if sala.alto_en(caja) > z - 0.05 + 1e-3:
                     continue
                 if z < 0.30 and not sala.libre_caja(caja, permitir_paso=True):
+                    continue
+                if sala.choca_3d(caja, z, z + h):
                     continue
                 b['pared'].append((t - w / 2 - sep / 2, t + w / 2 + sep / 2, z, z + h))
                 return cx, cy, rot, b['k'], caja
@@ -1022,7 +1244,7 @@ class Colocador:
                     cands += [(k, -r), (k, r), (-r, k), (r, k)]
             for dx, dy in cands:
                 caja = Sala.caja(cx0 + dx, cy0 + dy, w, d, rot)
-                if sala.libre_caja(caja, permitir_paso=permitir_paso, permitir_puerta=permitir_puerta):
+                if sala.libre_caja(caja, permitir_paso=permitir_paso, permitir_puerta=permitir_puerta, h=h):
                     return cx0 + dx, cy0 + dy, rot, None, caja
         return None
 
@@ -1095,7 +1317,7 @@ class Colocador:
                         fx, fy = ax + u[0] * t + nin[0] * (o + d + pasillo / 2), ay + u[1] * t + nin[1] * (o + d + pasillo / 2)
                         if not sala.dentro_libre(Sala.caja(fx, fy, w, pasillo, rot)):
                             continue
-                    if sala.libre_caja(caja):
+                    if sala.libre_caja(caja, h=h):
                         if grupo:
                             sala.cursor[('cuadricula', grupo)] = b['k']
                         return cx, cy, rot, (b['k'] if fila == 0 else None), caja
@@ -1109,6 +1331,8 @@ FASE = {'zona': 0, 'fija': 0, 'posiciones_fijas': 0, 'en_nucleo': 0, 'esquina_sa
         'esquina': 3, 'centro': 3, 'cuadricula': 3, 'junto_a': 5, 'pared_altura': 6, 'cielo': 7, 'sobre': 8, 'dentro': 9,
         'fuera_de_la_torre': 0}
 SANITARIOS = ('inodoro', 'ducha', 'poceta_aseo')
+# aparatos que van dentro del baño o de la cabina del recinto (subrecinto de la planta; revisión adversarial)
+EN_BANO = ('inodoro', 'ducha', 'barra_apoyo')
 FAMILIAS_PACIENTE = ('cama', 'camilla')
 MODELOS_PACIENTE = ('sillon_reclinable', 'sillon_toma_muestras', 'unidad_odontologica')
 # piezas que la reparación del paso libre puede mover a otra pared (sin nada encima)
@@ -1161,10 +1385,22 @@ class Generador:
         self.fuera = []
         self.recintos, self.nivel_de, self.por_fila, self.circ = {}, {}, {}, {}
         self.poligonos = {}
+        self.subs_de, self.padre_de = {}, {}       # baños y cabinas de cada recinto (subrecintos de la planta)
         if ins.plantas:
             for n in ins.plantas.get('niveles', []):
                 pol = {r['id']: C.orientar_antihorario(r['poligono']) for r in n.get('recintos', [])}
                 self.poligonos[n['id']] = pol
+                for sb, r in C.subrecintos(n):
+                    # el baño se amuebla como un recinto propio (su polígono libre y su puerta); la unidad sigue siendo del
+                    # recinto del programa y lleva «subrecinto»
+                    d = {'id': sb['id'], 'ambiente': sb.get('nombre'), 'tipo': 'recinto', 'poligono': sb['poligono'],
+                         'poligono_libre': sb.get('poligono_libre'), 'puertas': list(sb.get('puertas') or []),
+                         'acceso': [r['id']], 'z_piso_m': r.get('z_piso_m'), 'area_libre_m2': sb.get('area_libre_m2')}
+                    self.recintos[sb['id']] = d
+                    self.nivel_de[sb['id']] = n
+                    pol[sb['id']] = C.orientar_antihorario(sb['poligono'])
+                    self.subs_de.setdefault(r['id'], []).append(d)
+                    self.padre_de[sb['id']] = r['id']
                 for r in n.get('recintos', []):
                     self.recintos[r['id']] = r
                     self.nivel_de[r['id']] = n
@@ -1192,6 +1428,7 @@ class Generador:
 
     def datos_recinto(self, rid):
         """(nivel, piso, ambiente) del recinto."""
+        rid = self.padre_de.get(rid, rid)          # lo del baño es del recinto del programa
         if rid in self.recintos:
             n = self.nivel_de[rid]
             return n['id'], n.get('piso', n['id']), self.recintos[rid].get('ambiente')
@@ -1342,15 +1579,15 @@ class Generador:
         rumbo = math.radians(float(grupo.get('rumbo_eje') or 0.0))
         vx, vy = math.cos(rumbo), -math.sin(rumbo)            # a lo ancho (rumbo 0: hacia el este)
         L = min(largo, nc * mod[0])
-        pergola = grupo.get('tipo') == 'pergola'
         alto = float(grupo.get('altura_m') or 0.0)
         for i in range(nf):
             o = -ancho / 2 + ancho / nf * (i + 0.5)
-            pz = {'punto': [r2(cx + vx * o), r2(cy + vy * o)],
-                  'dim_m': [r2(L), mod[1], r2(alto + 0.1) if pergola else 0.1],
+            # revisión adversarial: las filas de la pérgola y de la marquesina van arriba de su estructura (montaje «cielo» a la
+            # altura de la planta, 0,10 m de alto) y no ocupan el piso; la variante «elevada» trae los postes de los extremos
+            pz = {'punto': [r2(cx + vx * o), r2(cy + vy * o)], 'dim_m': [r2(L), mod[1], 0.1],
                   'rotacion_deg': C.redondear(90 - math.degrees(rumbo), 4), 'fila': f'{gid}-F{i + 1}', 'modulos': nc,
-                  'kwp': C.redondear(nc * kwp_mod, 2)}
-            out.append((None, dict(base, z=0.0 if pergola else alto), pz, None))
+                  'kwp': C.redondear(nc * kwp_mod, 2), 'montaje': 'cielo', 'variante': 'elevada'}
+            out.append((None, dict(base, z=alto), pz, None))
         return out
 
     # ---------------------------------------------------------------------------------------------- infraestructura
@@ -1525,6 +1762,7 @@ class Generador:
 
     def ejecutar(self):
         asg = self.asignar() + self.asignar_infra()
+        self.a_subrecintos(asg)
         for a in asg:
             self.nueva_unidad(a)
         dif = self.asignar_infra(diferidas=True)        # tomas y llamados por puesto: dependen del modelo, no de la posición
@@ -1547,6 +1785,10 @@ class Generador:
         for u in self.comps:
             if u['_colocado'] is False:
                 self.colocar_componente(u, None)
+        for u in self.unidades:
+            if u.get('recinto') in self.padre_de:
+                u['_sub'] = u['recinto']
+                u['recinto'] = self.padre_de[u['recinto']]
         self.contenidos()
         for u in self.unidades:
             self.riesgo(u)
@@ -1554,10 +1796,37 @@ class Generador:
         orden_l = {l['id']: i for i, l in enumerate(self.lineas)}
         self.unidades.sort(key=lambda u: (orden_l[u['linea']], u['k'], u['id']))
 
+    def a_subrecintos(self, asg):
+        """Revisión adversarial (baños): el inodoro, la ducha, las barras de apoyo, el lavamanos de la unidad sanitaria y el
+        llamado junto al inodoro de un recinto con baño o con cabinas van dentro de ellos. Los inodoros se reparten entre las cabinas en orden; la barra va a la
+        cabina PMR (o al baño más grande) y la ducha al baño más grande."""
+        por = {}
+        for a in asg:
+            if not a.rid or a.rid not in self.subs_de:
+                continue
+            modelo = self.L[a.linea]['modelo3d']
+            # el lavamanos de la unidad sanitaria (reparto sin «pared»; el del consultorio va «junto_puerta») entra al baño
+            # cuando el recinto tiene uno solo; en las baterías con cabinas queda afuera, en la zona común
+            lav = modelo == 'lavamanos' and not a.e.get('pared') and len(self.subs_de[a.rid]) == 1
+            if modelo in EN_BANO or lav or (modelo == 'llamado_enfermeria' and a.e.get('junto_a') == 'inodoro'):
+                por.setdefault((a.rid, modelo), []).append(a)
+        for (rid, modelo), lista in sorted(por.items()):
+            subs = sorted(self.subs_de[rid], key=lambda d: d['id'])
+            grande = max(subs, key=lambda d: (d.get('area_libre_m2') or 0.0, d['id']))
+            if modelo == 'inodoro':
+                for i, a in enumerate(sorted(lista, key=lambda a: (a.orden, a.k))):
+                    a.rid = subs[i % len(subs)]['id']
+                continue
+            destino = grande
+            if modelo == 'barra_apoyo':
+                destino = next((d for d in subs if 'PMR' in (d.get('ambiente') or '')), grande)
+            for a in lista:
+                a.rid = destino['id']
+
     def clave(self, a):
         est = self.estrategia(a)
         f = a.unidad['_ficha']['dim']
-        area = f[0] * f[1] if FASE[est] in (2, 3, 4, 8) else 0.0
+        area = f[0] * f[1] if FASE[est] in (1, 2, 3, 4, 8) else 0.0     # en un baño, la ducha antes que el inodoro
         return (FASE[est], -round(area, 4), a.orden)
 
     # ---------------------------------------------------------------------------------------------- un recinto completo
@@ -1574,13 +1843,19 @@ class Generador:
         hay_paciente = any(self.estrategia(a) == 'cabecera_a_pared' for a in asgs)
         n0 = len(self.avisos)
         mejor = None
-        for v in range(self.MAX_VARIANTES if hay_paciente else 1):
+        vueltas = [(v, r_) for r_ in (False, True) for v in range(self.MAX_VARIANTES if hay_paciente else 1)]
+        saltar = None
+        for v, reservar in vueltas:
+            if reservar == saltar:
+                continue
+            if reservar and mejor is not None and mejor['puntaje'][0] == 0:
+                break                         # la primera vuelta ya dejó todas las entradas con paso y todo en su lugar
             for u, b in zip(propias, base):
                 u.clear()
                 u.update(b)
             del self.avisos[n0:]
             n = self.nivel_de[rid]
-            sala = Sala(self.recintos[rid], n, self.poligonos[n['id']])
+            sala = Sala(self.recintos[rid], n, self.poligonos[n['id']], reservar_pasos=reservar)
             self.salas[rid] = sala
             self._salto = v
             self._agotado = False
@@ -1601,20 +1876,24 @@ class Generador:
             for c in comps:
                 if not c['_colocado']:
                     self.colocar_componente(c, sala)
-            if self._agotado:
-                break
             av = self.avisos[n0:]
             fallas = len(self.fallas_paso(sala))
-            puntaje = (sum('NO CABE' in x for x in av), fallas, sum(('sin lugar' in x) or ('sobrecupo' in x) for x in av))
+            bloqueadas = sala.entradas_bloqueadas()
+            puntaje = (sum('NO CABE' in x for x in av) + bloqueadas, fallas, sum(('sin lugar' in x) or ('sobrecupo' in x) for x in av))
             if mejor is None or puntaje < mejor['puntaje']:
-                mejor = {'puntaje': puntaje, 'sala': sala, 'avisos': list(av), 'estado': [dict(u) for u in propias]}
+                mejor = {'puntaje': puntaje, 'sala': sala, 'avisos': list(av), 'estado': [dict(u) for u in propias],
+                         'bloqueadas': bloqueadas}
             if puntaje == (0, 0, 0):
                 break
+            if self._agotado:
+                saltar = reservar             # sin más variantes de puesto en esta vuelta: se pasa a la siguiente
         for u, b in zip(propias, mejor['estado']):
             u.clear()
             u.update(b)
         del self.avisos[n0:]
         self.avisos += mejor['avisos']
+        if mejor['bloqueadas']:
+            self.aviso(f'{rid}: el mobiliario deja {mejor["bloqueadas"]} entrada(s) sin paso de 0,60 m (revisar la regla; I17)')
         self.salas[rid] = mejor['sala']
 
     def piezas(self, sala, modelos, contenedor=False):
@@ -1644,7 +1923,9 @@ class Generador:
             z = float(a.zona.get('z', 0.0))
             u['posicion'] = [r2(pt[0]), r2(pt[1]), r2(z)] if pt else None
             u['rotacion_z'] = ang(rot)
-            u['montaje'] = 'piso'
+            u['montaje'] = pz.get('montaje') or a.zona.get('montaje') or 'piso'
+            if pz.get('variante'):
+                u['variante'] = pz['variante']
             return
         sala = self.sala(a.rid)
         if sala is None:
@@ -1723,13 +2004,22 @@ class Generador:
             return ('en_nucleo', r, None) if r else None
         if est == 'posiciones_fijas':
             for pos in e.get('posiciones', [{'ref': 'centro'}]):
+                if pos.get('ref') == 'punto':              # punto del recinto (pieza compuesta con su lugar en la sala)
+                    cx, cy = pos['punto']
+                    rot = math.radians(float(pos.get('rotacion_deg', 0.0)))
+                    caja = Sala.caja(cx, cy, w, d, rot)
+                    if sala.libre_caja(caja, permitir_paso=True, h=h):
+                        return ('piso', (cx, cy, rot, None, caja), None)
+                    continue
                 if pos.get('ref') == 'pared_compartida':
                     ks = self.bordes_compartidos(sala, pos['con'])
                     r = col.contra_pared(sala, w, d, h, compartidos=ks, preferir='centro')
                 else:
                     X0, Y0, X1, Y1 = C.caja(sala.libre)
                     rot = 0.0 if (X1 - X0) >= (Y1 - Y0) else math.pi / 2
-                    r = col.centro(sala, w, d, h, rot_fija=rot if pos.get('eje') == 'largo' else None)
+                    if pos.get('eje') == 'corto':          # el lado largo de la pieza a lo ancho del recinto
+                        rot = math.pi / 2 - rot
+                    r = col.centro(sala, w, d, h, rot_fija=rot if pos.get('eje') in ('largo', 'corto') else None)
                 if r:
                     return ('piso', r, None)
             return None
@@ -1762,14 +2052,25 @@ class Generador:
             R = self.elegir(self.piezas(sala, e['sobre'])) if e.get('sobre') else None
             if R is not None and e.get('lado') == 'costado':
                 ux, uy = R.ejes()
+                # el riel corre junto al costado de la cama, de la cara del muro de la cabecera (5 cm) a 0,1 m más allá de los
+                # pies; se recorta a la cara de los muros y se busca el costado y la distancia que no crucen otra unidad
+                for sep_c in (0.45, 0.55, 0.65, 0.35, 0.75):
+                    for s in (1, -1):
+                        for largo in (round(R.d + 0.2, 2), round(R.d + 0.1, 2), round(R.d, 2), round(R.d - 0.2, 2)):
+                            for corr in (0.0, -0.1, 0.1, -0.2, 0.2, -0.3, 0.3):
+                                cx = R.cx + s * ux[0] * (R.w / 2 + sep_c) + uy[0] * corr
+                                cy = R.cy + s * ux[1] * (R.w / 2 + sep_c) + uy[1] * corr
+                                caja = Sala.caja(cx, cy, largo, d, R.rot + math.pi / 2)
+                                if not C.poligono_dentro_de(C.rect_a_poligono(caja), sala.libre, 0.0):
+                                    continue
+                                if sala.choca_3d(caja, z, z + h):
+                                    continue
+                                a.unidad['dim_m'] = [largo, d, h]
+                                R.n_junto += 1
+                                return ('cielo', (cx, cy, R.rot + math.pi / 2, None, caja), z)
                 largo = round(R.d + 0.2, 2)
                 a.unidad['dim_m'] = [largo, d, h]
-                for s in (1, -1):
-                    cx = R.cx + s * ux[0] * (R.w / 2 + 0.45)
-                    cy = R.cy + s * ux[1] * (R.w / 2 + 0.45)
-                    if C.punto_en_poligono((cx, cy), sala.libre, 0.0):
-                        R.n_junto += 1
-                        return ('cielo', (cx, cy, R.rot + math.pi / 2, None, Sala.caja(cx, cy, largo, d, R.rot + math.pi / 2)), z)
+                self.aviso(f'{a.unidad["id"]} (riel_cortina) en {a.rid}: sin lugar libre junto a {R.id}; queda sobre la cama')
             if R is not None:
                 R.n_junto += 1
                 return ('cielo', (R.cx, R.cy, R.rot, None, Sala.caja(R.cx, R.cy, w, d, R.rot)), z)
@@ -1795,6 +2096,13 @@ class Generador:
         apoyos = []
         for m in (e.get('sobre') or []):
             apoyos += [p for p in sala.unidades if p.modelo == m and p.id != a.unidad['id']]
+        if apoyos and all(A.modelo == a.unidad['_modelo'] for A in apoyos):
+            # pila del mismo modelo (estibas): encima de la última de la pila, no al lado (revisión adversarial: choques 3D)
+            arriba = {self.U[q.id].get('apoyo') for q in sala.unidades if q.montaje == 'sobre' and q.id in self.U}
+            cima = [A for A in apoyos if A.id not in arriba]
+            if cima:
+                A = min(cima, key=lambda q: (q.z, apoyos.index(q)))
+                return ('sobre', (A.cx, A.cy, A.rot, None, None), A)
         if e.get('repartir'):                         # uno por apoyo, por turnos (p. ej. un juego por unidad odontológica)
             apoyos.sort(key=lambda A: (sala.cursor.get(('n', A.id, a.unidad['linea']), 0), sala.cursor.get(('n', A.id), 0)))
         for A in apoyos:
@@ -1826,13 +2134,13 @@ class Generador:
                     lx, ly = ox + pos[0], oy + pos[1]
                     cx = A.cx + ux[0] * lx + uy[0] * ly
                     cy = A.cy + ux[1] * lx + uy[1] * ly
+                    if sala.choca_3d(Sala.caja(cx, cy, ww, dd, A.rot), A.z + A.h, A.z + A.h + h, excluir=(A.id,)):
+                        continue
                     for k in (('n', A.id), ('n', A.id, a.unidad['linea'])):
                         sala.cursor[k] = sala.cursor.get(k, 0) + 1
                     return ('sobre', (cx, cy, A.rot + giro, None, None), A)
-        if apoyos:
-            A = apoyos[0]
-            self.aviso(f'{a.unidad["id"]} ({a.unidad["_modelo"]}) en {a.rid}: no cabe sobre {A.id}; queda en su centro (sobrecupo)')
-            return ('sobre', (A.cx, A.cy, A.rot, None, None), A)
+        # sin lugar sobre ningún apoyo: la regla sigue con su alternativa o el respaldo (repisa en la pared), no se apila en el
+        # centro del apoyo (revisión adversarial: choques 3D)
         return None
 
     def _respaldo(self, sala, a, est, w, d, h):
@@ -2260,7 +2568,13 @@ class Generador:
     def unidades_salida(self) -> list[dict]:
         out = []
         for u in self.unidades:
-            d = {k: v for k, v in u.items() if not k.startswith('_')}
+            d = {}
+            for k, v in u.items():
+                if k.startswith('_'):
+                    continue
+                d[k] = v
+                if k == 'recinto' and u.get('_sub'):
+                    d['subrecinto'] = u['_sub']
             if d.get('rotacion_z') is None and d.get('posicion') is not None:
                 d['rotacion_z'] = 0.0
             out.append(d)
@@ -2818,7 +3132,7 @@ def totales(gen: Generador) -> dict:
                        'con_posicion': sum(1 for u in gen.unidades if u.get('posicion')),
                        'nota': ('«con_posicion»: unidades con x, y, z; las que van dentro de otra (contenido de carros, mesones, '
                                 'neveras y kits) llevan la posición de su contenedor. «sin_recinto»: zonas de la cubierta y de los '
-                                'exteriores que pasan por encima de varios recintos (pérgola, marquesina, casetas, barandas) y lo que '
+                                'exteriores que pasan por encima de varios recintos (pérgola y marquesina) y lo que '
                                 'queda fuera de la torre.')}
     return out
 

@@ -522,6 +522,38 @@ def poligono_dentro_de(p, contenedor, tol: float = 1e-3) -> bool:
     return all(punto_en_poligono(((a[0] + b[0]) / 2, (a[1] + b[1]) / 2), contenedor, tol) for a, b in bordes(p))
 
 
+def restar_rectangulo(r, q, tol: float = EPS) -> list[tuple[float, float, float, float]]:
+    """Rectángulos (hasta 4, sin traslapes) de r menos q; r y q son (x0, y0, x1, y1)."""
+    if q[2] <= r[0] + tol or q[0] >= r[2] - tol or q[3] <= r[1] + tol or q[1] >= r[3] - tol:
+        return [tuple(r)]
+    out = []
+    if q[1] > r[1] + tol:
+        out.append((r[0], r[1], r[2], q[1]))
+    if q[3] < r[3] - tol:
+        out.append((r[0], q[3], r[2], r[3]))
+    y0, y1 = max(r[1], q[1]), min(r[3], q[3])
+    if q[0] > r[0] + tol:
+        out.append((r[0], y0, q[0], y1))
+    if q[2] < r[2] - tol:
+        out.append((q[2], y0, r[2], y1))
+    return [x for x in out if x[2] - x[0] > tol and x[3] - x[1] > tol]
+
+
+def rectangulos_menos(p, quitar, tol: float = EPS) -> list[tuple[float, float, float, float]]:
+    """Rectángulos sin traslapes del polígono ortogonal p menos los rectángulos `quitar` (x0, y0, x1, y1)."""
+    rects = list(rectangulos(p))
+    for q in quitar:
+        rects = [x for r in rects for x in restar_rectangulo(r, q, tol)]
+    return rects
+
+
+def subrecintos(nivel: dict) -> list[tuple[dict, dict]]:
+    """[(subrecinto, recinto que lo contiene)] del nivel: baños y cabinas dentro de un recinto (revisión adversarial).
+    Su área cuenta en el recinto del programa; tienen polígono, polígono libre y puertas propios."""
+    return [(sb, r) for r in nivel.get('recintos', []) if isinstance(r, dict)
+            for sb in r.get('subrecintos') or [] if isinstance(sb, dict)]
+
+
 # Muesca del polígono libre que no cuenta como angostamiento (cambio de espesor de muro entre recintos vecinos).
 MUESCA_IGNORADA_M = 0.10
 
@@ -1040,7 +1072,8 @@ RADIO_CAMILLA_M = 0.45            # medio ancho de una camilla con quien la empu
 def rejilla_de_paso(nivel: dict, obstaculos=(), celda: float = 0.05):
     """Rejilla del nivel con lo que se pisa: el polígono libre de cada espacio transitable (descontadas las columnas), los
     vanos de las puertas y, como obstáculos, las columnas, los obstáculos del recorrido, los ojos de las escaleras y los
-    rectángulos `obstaculos` [x0, y0, x1, y1] (huellas de piso del inventario)."""
+    rectángulos `obstaculos` [x0, y0, x1, y1] (huellas de piso del inventario). Los subrecintos (baños y cabinas) se pisan
+    como los recintos."""
     recs = [r for r in nivel.get('recintos', []) if isinstance(r, dict) and r.get('poligono')]
     cont = nivel.get('contorno') or [v for r in recs for v in r['poligono']]
     xs = [v[0] for v in cont]
@@ -1050,6 +1083,9 @@ def rejilla_de_paso(nivel: dict, obstaculos=(), celda: float = 0.05):
         if r.get('transitable') is False:
             continue
         rej.pintar_poligono(orientar_antihorario(r.get('poligono_libre') or r['poligono']))
+    for sb, r in subrecintos(nivel):
+        if r.get('transitable') is not False and sb.get('poligono_libre'):
+            rej.pintar_poligono(orientar_antihorario(sb['poligono_libre']))
     muros = {m.get('id'): m for m in nivel.get('muros', [])}
     for p in nivel.get('puertas', []):
         m = muros.get(p.get('muro'))
@@ -1115,8 +1151,8 @@ def erosionar(rej: 'Rejilla', radio: float) -> bytearray:
 def alcance_fisico(nivel: dict, radio: float, semillas, obstaculos=(), celda: float = 0.05, recintos=None) -> dict:
     """Componentes por las que se camina con un cuerpo de `radio` desde `semillas` [(nombre, (x, y))]. Devuelve
     {componentes: [[nombres]], sin_lugar: [nombres de semillas sin celda libre a 0,6 m], no_alcanzables: [ids de
-    recinto sin ninguna celda alcanzable], celdas_alcanzables: n}. `recintos`: ids a revisar (por defecto, todos los
-    transitables)."""
+    recinto o de subrecinto sin ninguna celda alcanzable], celdas_alcanzables: n}. `recintos`: ids a revisar (por
+    defecto, todos los transitables y sus subrecintos)."""
     rej = rejilla_de_paso(nivel, obstaculos, celda)
     pasa = erosionar(rej, radio)
     nx, ny = rej.nx, rej.ny
@@ -1167,7 +1203,9 @@ def alcance_fisico(nivel: dict, radio: float, semillas, obstaculos=(), celda: fl
         for z in sorted({grupo_de[n] for n in noms}):
             por_cota.setdefault(z, []).append(noms)
     no_alcanzables = []
-    for r in nivel.get('recintos', []):
+    revisar = [r for r in nivel.get('recintos', []) if isinstance(r, dict)]
+    revisar += [dict(sb, transitable=r.get('transitable')) for sb, r in subrecintos(nivel)]
+    for r in revisar:
         if r.get('transitable') is False or not r.get('poligono'):
             continue
         if recintos is not None and r.get('id') not in recintos:

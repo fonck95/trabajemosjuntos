@@ -2173,7 +2173,13 @@
    "parametrico": ["ancho"],
    "masa_por_metro_kg": 25,
    "tipo_dato": "estimacion",
-   "seccion_contrato": "16.5"
+   "seccion_contrato": "16.5",
+   "variantes": {
+    "elevada": {
+     "nota": "Fila en lo alto de una estructura (pérgola de la cubierta a 3,6 m o marquesina de la bahía a 5,3 m): los módulos van arriba y la estructura baja en dos postes de 0,15 × 0,15 m en los extremos de la fila hasta el piso del nivel. No es obstáculo de piso salvo los postes (estimación).",
+     "postes": {"seccion_m": [0.15, 0.15], "en": "extremos"}
+    }
+   }
   },
   "caseta_cubierta": {
    "familia": "exterior",
