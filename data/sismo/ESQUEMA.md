@@ -40,9 +40,10 @@ Modelo pseudotridimensional clásico (el de TABS/ETABS en su origen, Wilson y Do
   sin masa que se condensan (complemento de Schur) en cada iteración de Newton; su equilibrio se impone en la misma
   iteración, sin iteración anidada.
 - La masa está concentrada en los diafragmas (masa traslacional y momento polar Jz).
-- Rigidez axial `EA/L` en cada copia de una columna (limitación conocida de TABS: la columna compartida suma su
-  rigidez axial en los dos pórticos). Las vigas no se deforman axialmente: sus dos extremos están en el mismo
-  diafragma.
+- Rigidez axial `EA/L_f` en cada copia de una columna o muro (limitación conocida de TABS: la columna compartida suma
+  su rigidez axial en los dos pórticos). Se usa la longitud flexible porque los brazos rígidos del nudo tampoco se
+  acortan (así es la réplica de OpenSees del 7.9, con brazos 10³ veces más rígidos); sin brazos es `EA/L`. Las vigas
+  no se deforman axialmente: sus dos extremos están en el mismo diafragma.
 - **Gravedad primero (E4):** análisis estático no lineal con las cargas de gravedad de las vigas y de los nodos; el
   análisis dinámico parte de ese estado (desplazamientos, momentos y axiales).
 - **P-Delta lineal por nivel con el peso y el centro de masa de cada nivel de encima (E14)** y **amortiguamiento de
@@ -221,10 +222,20 @@ lo usa para P-Delta (E14).
   `L_f = L − di − dj` (E2). Las fuerzas pasan al nudo a través de los brazos rígidos (`M_nudo = M + V·d`).
 - Rigidez elástica: E del material, `I · factor_fisuracion`, A y Av (Timoshenko, G = E / (2(1 + nu))).
   Flexibilidad de la parte elástica: `f_e = (L_f/(6EI))·[[2, −1], [−1, 2]] + (1/(G·Av·L_f))·[[1, 1], [1, 1]]`.
-- Carga del vano (E4): giros de viga simplemente apoyada `θ0 = c·[−1, +1]`, `c = w·L_f³/(24EI) + w·L_f/(2·G·Av)`;
-  la carga sobre los brazos rígidos pasa directo a los nudos.
-- Rótulas: concentradas en los extremos de vigas y columnas y **solo en la base** de los muros de concreto (E1),
-  modelo de Giberson (resorte rotacional en serie con el elemento elástico). Rígidas hasta la fluencia **esperada**
+- Carga del vano (E4): giros de la viga simplemente apoyada `θ0 = c·[−1, +1]` con `c = w·L_f³/(24EI)`; la carga
+  sobre los brazos rígidos pasa directo a los nudos. **Corrección física (ola 1):** el contrato (7.4) y la versión
+  anterior de este esquema sumaban `w·L_f/(2·G·Av)`. Ese término es la pendiente que el cortante le da al eje
+  deformado en el apoyo, no el giro de la sección, y los θ del elemento (los de `f_e`) son giros de sección: por
+  trabajo virtual, el aporte del cortante es `∫V_w·v_i/(G·Av) dx`, con `v_i = 1/L_f` constante (cortante de un momento
+  unitario en un extremo) y `V_w` antisimétrico, así que vale 0. Comprobación independiente: en una viga de Timoshenko
+  empotrada con carga uniforme, `φ(0) = φ(L) = 0` exige `∫M dx = 0` y los momentos de empotramiento son `w·L²/12` sin
+  importar `G·Av`; con el término de más no lo serían. El cálculo de referencia de la ola 0 (`referencia_min.py`)
+  usa el término del contrato: `armarModelo(est, { theta0ConCortante: true })` lo reproduce solo para la prueba R0, y
+  los fixtures del Anexo A.4 se regeneran en la ola 2 con la regla corregida (en el cubo cambia el giro de gravedad
+  de los nudos en ≈ 1 %).
+- Rótulas: concentradas en los extremos de vigas y columnas y **solo en la base** de los muros de concreto (E1:
+  en el tramo de abajo de cada muro, el elemento cuyo nodo i no es el nodo j de otro tramo del mismo muro; los tramos
+  de encima son elásticos, como pide el diseño por capacidad de muros), modelo de Giberson (resorte rotacional en serie con el elemento elástico). Rígidas hasta la fluencia **esperada**
   `My_e` (E16; asimétrica en vigas y muros, E3); después, pendiente `H = endurecimiento · k_e` con
   `k_e = 6EI_fis/L_f` en vigas y columnas y `k_e = EI_fis/lp` en muros (E1); si `endurecimiento` es 0 se usa 10⁻⁴.
   `bilineal` = endurecimiento cinemático (`β = H·θp`); `clough` = recarga hacia el punto de máxima respuesta anterior
@@ -256,7 +267,12 @@ lo usa para P-Delta (E14).
   ω3 = 1,3·ω1: ξ ≈ 7,5 % en 3ω1, 11 % en 5ω1 y ≈ 22 % en 10ω1; cálculo propio del contrato) y baja las aceleraciones
   de piso con las que se evalúa la dotación.
 - El motor publica el ξ efectivo de los primeros `min(12, 3N)` modos: `ξ_r = φ_rᵀ(a0·M + a1·K_el)φ_r / (2ω_r)` con
-  modos normalizados a la masa y `K_el` la rigidez elástica condensada sin P-Delta.
+  modos normalizados a la masa y `K_el` la rigidez condensada de la parte elástica de los elementos (sin P-Delta y
+  **sin la mampostería**, que no lleva amortiguamiento de Rayleigh). Como dentro de cada pórtico el amortiguamiento es
+  proporcional a la rigidez de la parte elástica, condensarlo es exacto: `(1 + a1·d/dt)(K_cc·u_c + K_cd·u_d) = 0`
+  da `u_c = −K_cc⁻¹·K_cd·u_d`, y la matriz de amortiguamiento condensada es `a0·M + a1·K̂_el`. (El cálculo de
+  referencia de la ola 0 incluía la mampostería en `K_el`: sus ξ difieren en los modos donde trabaja el muro sin
+  aislar del cubo.)
 
 ### Prediseño de la torre (`sistema` y `prediseno`, E13)
 
@@ -296,7 +312,50 @@ para comparar. Cada parámetro con su fuente.
   de la banda, un solo régimen. El umbral brusco de `seleccion_de_regimen.regla` (50 km) ya no se usa: con él, mover
   la profundidad 1 km cambiaba el PGA hasta 3 a 4 veces (Mw 6,2 a 92 km: 0,0247 g con h = 49,9 km y 0,0795 g con
   h = 50 km; prueba de la revisión con `sim.py`), un artefacto del umbral y no física. Si la persona fuerza el
-  régimen, `avisos` advierte «intraplaca con h < 40 km» o «cortical con h > 60 km».
+  régimen, `avisos` advierte «intraplaca con h < 40 km» o «cortical con h > 60 km». Con la banda, el cociente de
+  la mediana del PGA entre h + 1 y h queda entre 0,91 y 1,05 para Mw 5 a 7 y Repi 0 a 200 km (T19).
+
+### Movimiento del suelo (`movimiento.js`; decisiones de implementación)
+
+Los 12 pasos de `notas_para_implementar` se siguen tal cual, con estas precisiones (todas escritas también en el
+encabezado de `web/js/sismo/movimiento.js`; `scripts/sismo/estocastico.py` hace lo mismo en Python):
+
+- **Precursor del filtro de fase cero.** `A(f)` es real y positivo: su respuesta al impulso es simétrica y deja
+  energía antes de la ventana (la parte de baja frecuencia decae como `e^(−2π·f0·|t|)`, porque
+  `f²/(1 + (f/f0)²) ↔ f0²·[δ(t) − π·f0·e^(−2π·f0·|t|)]`; deducción propia). Por eso la ventana empieza en
+  `t_pre = max(5/(2π·f0), 1 s)` y el registro termina `t_pre` después de ella; `N` (potencia de 2) cubre además los
+  40 s de ceros del paso 5. La energía que queda fuera va en `meta.fraccion_energia_fuera` (≈ 10⁻⁷). `sim.py` empieza
+  la ventana en t = 0 y deja que el precursor dé la vuelta al búfer circular: la estadística es la misma (T15).
+- **No linealidad del suelo con las dos componentes.** El PGA en roca que entra en `Fnl` de BSSA14 es la media
+  geométrica de los PGA en roca de las dos componentes (el paso 8 lo toma por componente): el suelo es uno solo y
+  BSSA14 define `PGAr` sobre la media de las dos horizontales. `meta.pga_roca_g` es esa media; `escala_pgar` la
+  multiplica solo en la pasada de suelo (escala «nsr10»), sin escalar el registro.
+- **`espectroObjetivo`** aplica la misma regla: `pgar_g` (sin escalar) × `p.escala_pgar`. Si no se da `pgar_g`, usa el
+  PGA esperado en roca por vibración aleatoria (Boore, 2003, con el factor de pico de Cartwright y Longuet-Higgins,
+  1956). Para dibujar el objetivo de un registro ya sintetizado, el motor pasa `pgar_g = meta.pga_roca_g`: así es el
+  filtro que de verdad se aplicó (T15c lo usa así).
+- **PGV y PGD** se integran en el tiempo (trapecios, desde reposo), no por FFT (paso 10): sirve igual para el registro
+  filtrado de la calidad baja y no hay desplazamiento residual que corregir, porque `A(f) ∝ f²` cerca de f = 0.
+  `Sa(T = 0) = PGA`. El espectro de Nigam y Jennings sigue un período amortiguado de vibración libre después del
+  registro (el máximo de la vibración libre está en su primer medio ciclo).
+- **Banda de transición (E15).** Cada término lleva sus propios parámetros (`meta.terminos`); `meta` muestra, solo para
+  leer, medias geométricas ponderadas de f0, Δσ, βs, ρs, Q0 y Ref y medias lineales de κ0, η y Tgm.
+- **GMPE.** `amenaza.json` trae coeficientes solo para PGA, 0,2, 0,5 y 1,0 s. `gmpe()` devuelve el PGA para
+  T ≤ 0,01 s, interpola ln Sa y σ linealmente en ln T entre 0,2 y 1,0 s (`gmpe.otras_periodos`) y devuelve **NaN**
+  en 0,01 < T < 0,2 s y en T > 1,0 s: la meseta y la rama larga no se pueden reconstruir sin inventarlas. Quien
+  dibuje la GMPE salta los NaN: queda el PGA (T = 0) y la curva de 0,2 a 1,0 s, con su banda ±1σ. Distancias de fuente
+  puntual: BC Hydro con la hipocentral, Zhao con la hipocentral como distancia a la ruptura, BSSA14 con Rjb ≈ Repi;
+  fFABA = 0, mecanismo no especificado y Zhao cortical sin el término de falla inversa, como en la investigación.
+  `gmpeEscenario` pesa las dos de cada régimen con (1 − w)/2 y w/2.
+- **Partición** `V = 1/√2` exacta (`amenaza.json` guarda 0,7071: diferencia relativa de 7·10⁻⁶).
+- **Calidad baja.** FIR de fase cero con ventana de Kaiser (81 coeficientes): rizado ≤ 10⁻³ hasta 20 Hz y ≥ 60 dB desde
+  30 Hz (medidos sobre la respuesta exacta en MOV4; con las fórmulas de Kaiser para 60 dB el rizado salía 1,1·10⁻³,
+  por eso se diseña con 65 dB); después, una de cada dos muestras. `motor.js` filtra las dos componentes y llama al
+  integrador con el registro de Δt = 0,01 s.
+- **Magnitud.** El control es Mw («la escala que reemplazó a la de Richter»). ML (Richter, 1935) se satura por encima
+  de ≈ 6,5 a 7 y no hay una conversión ML → Mw confirmada para la red colombiana: el simulador no convierte. Se usa
+  `M0 = 10^(1,5·Mw + 16,05)` dina·cm (Hanks y Kanamori, 1979), con la que se calibró `amenaza.json` (la norma IASPEI
+  de 2013 da 16,1: 0,03 unidades de Mw de diferencia).
 
 ## Motor (`web/js/sismo/`)
 
@@ -368,7 +427,50 @@ Reglas de física y numérica (resumen; el detalle está en el contrato, 7.4):
   en 2D: `ψ` = dirección de `a` en los ejes locales (con `rot_z`), `b_ψ = min(bx/|cos ψ|, by/|sen ψ|)`. Si
   `μ < b_ψ/h_cg` **desliza primero** (Coulomb; empieza cuando `|a| > μg`); si `μ > b_ψ/h_cg` **se balancea primero**
   (solo se marca el inicio, `|a| > g·b_ψ/h_cg`, sin calcular si cae); si los dos cocientes difieren menos de 10 %,
-  `frontera` con los dos indicadores (Shenton, 1996). El régimen informado es el del instante de aceleración máxima.
+  `frontera` con los dos indicadores (Shenton, 1996). El régimen informado es el del instante de aceleración máxima;
+  en un bloque no cuadrado el régimen depende de la dirección de `a`, así que si en el registro pasó otra cosa se
+  informa lo que pasó: `desliza` si deslizó sin empezar a balancearse, `balancea` si se balanceó sin deslizar y
+  `frontera` si ocurrieron las dos.
+
+### Integrador y motor: decisiones de implementación (ola 1)
+
+- **Predictor de cada paso.** Con la tangente comprometida (la del último paso, si el Δt es el mismo), el
+  incremento lineal de Newmark escrito con las fuerzas comprometidas:
+  `K_ef·Δu = P_n+1 − M·ü(u_n) − a0·M·u̇(u_n) − (F_n − 2·D_n) − K_PΔ·u_n − F_m,n`, con `ü(u_n) = −(4/Δt)·u̇_n − ü_n`,
+  `u̇(u_n) = −u̇_n` y `D_n` la fuerza de amortiguamiento de los elementos (en `u_n`, con la historia del paso nuevo,
+  el momento de la parte elástica es `M_n − 2·D_n`). Es la forma incremental clásica
+  `K̂·Δu = ΔP + (4M/Δt + 2C)·u̇_n + 2M·ü_n`: un paso elástico converge en la primera evaluación (1,1 iteraciones por
+  paso en la torre sintética con 33 elementos que fluyen). Los v y θ siguen la condensación de la última tangente,
+  `Δu_c = −X·T·Δu_d` con `X = K_cc⁻¹·K_cd`; un pórtico cuyo residuo condensado queda por debajo de 10⁻³ de la
+  tolerancia omite su solución en banda en esa iteración.
+- **Convergencia.** Se exigen a la vez `‖R‖∞` (diafragma sin condensar y gdl condensados) y la corrección que da ese
+  residuo, `‖Δu‖∞ ≤ 10⁻⁹`; al converger esa corrección (≤ 10⁻⁹ m) no se aplica. Si el retorno de un elemento no
+  encuentra conjunto activo o un pórtico queda inestable con la tangente de prueba, el paso se trata como no
+  convergido y se parte.
+- **Registro.** `dt_s` debe dividir al Δt del registro (la excitación entre muestras es lineal, como en Newmark y en
+  Nigam-Jennings); después del registro el suelo queda quieto (vibración libre) hasta `duracion_s` (por defecto, la
+  duración del registro). `motor.js` hace la síntesis a 0,005 s, la escala `nsr10` (11 períodos igualmente
+  espaciados entre 0,8·T1 y 1,2·T1 para T1x y otros 11 para T1y) y, en calidad baja, `filtrarYDiezmar`.
+- **Energía.** `calidad_numerica.error_energia_max` y `error_deformacion_max` son el mayor desbalance absoluto de cada
+  igualdad en cualquier Δt, dividido por el máximo de `|E_entrada|` en toda la corrida.
+- **Equipos.** `CUB` = el nivel más alto cuyo contorno contiene la posición del equipo (cubierta del piso 4 o terraza
+  del piso 3 sur); `cielo` = la losa de arriba de su piso; `dentro` se trata como anclado a su contenedor (se informa
+  la fuerza que el contenedor le da). El deslizamiento usa la aceleración media de cada paso (la misma cinemática de
+  Newmark de aceleración promedio); si el bloque se detiene dentro del paso se calcula el instante y, si `|a| > μg`,
+  vuelve a arrancar en lo que queda del paso; un bloque que ya desliza sigue deslizando aunque el régimen
+  instantáneo sea de balanceo. Es exacto en 1D con aceleración constante por tramos (T21).
+- **Espectro de umbral de daño** del mensaje `movimiento`: la forma del espectro de diseño con `Ad` en lugar de `Aa`
+  y `Av` e `I = 1` (A.12.3; forma por confirmar), como en el trabajador simulado.
+- **Respaldo por tramos.** Con `opciones.ceder` (o `crearMotor({ modo: 'tramos' })`), `analizar` cede también entre
+  las etapas previas (síntesis, vueltas de la escala `nsr10`, filtro), no solo entre pasos; la síntesis de un
+  registro (≈ 60 ms en escritorio) sigue siendo un bloque. Cancelado: error con `codigo: 'cancelado'`.
+- **Historia interna.** Series `Float32Array(nt·nE)` de `Mi`, `Mj`, `V`, `N`, `thp_i`, `thp_j` y `dc` (cociente) por
+  salida; con `guardar_serie_completa`, además `u_completa` (Float64, cada Δt) para `exportar_caso.mjs`.
+- **Tiempos medidos (Node 22, este entorno, 4 núcleos compartidos)** con una torre sintética de 398 elementos, 294
+  nodos y 464 gdl condensados (`pruebas/_torre_sintetica.mjs`, geometría del 1.2): `iniciar` 5-40 ms, `movimiento`
+  20-130 ms, `analizar` de 40 s con Δt = 0,005 s (8.000 pasos, cimitarra, 33 elementos con fluencia) 0,85-1,3 s;
+  resultados más historia 31,7 MB. En Chromium sin pantalla, el trabajador de módulo y el respaldo dan resultados
+  idénticos bit a bit. Los tiempos con la torre real y con CPU ×4 los mide `qa_worker.mjs` (ola 2).
 
 ## Mensajes del trabajador (E11; contrato, 7.5)
 
@@ -476,12 +578,25 @@ export const pruebas = [
 |---|---|
 | `pruebas/integrador.mjs` | T1-T7, T12, T21 |
 | `pruebas/modelo.mjs` | T8-T11, T22 |
-| `pruebas/movimiento.mjs` | T13-T15, T15b, T15c, T16, T19, T20 |
-| `pruebas/motor.mjs` | T17, T18 |
+| `pruebas/movimiento.mjs` | T13-T15, T15b, T15c, T16, T19 (en hilos de trabajo, ≈ 45 s con 4 núcleos), T20; MOV1-MOV5 propias (fragmentos de `notas_para_implementar`, FFT y azar, Nigam y Jennings con solución cerrada, registro y filtro, intensidades) |
+| `pruebas/integrador.mjs` (además) | R0: el motor contra el cálculo de referencia de la ola 0 (`resultado_min.json`, con `theta0ConCortante`): series y envolventes a 10⁻⁶ del máximo de cada arreglo, D/C, rótulas y thp idénticos |
+| `pruebas/motor.mjs` | T17, T18 (ola 2); W1 el trabajador real responde los mensajes del 7.5; E1 escala `nsr10` y calidad baja; R1 tiempos del 7.7 con la torre sintética |
+| `pruebas/_estructuras.mjs`, `pruebas/_torre_sintetica.mjs` | Ayudantes: estructuras pequeñas con solución cerrada y registro sintético determinista; torre sintética del tamaño de la torre (hasta que exista `torre_hospital_estructura.json`) |
 | `pruebas/datos.mjs` | F1 fixtures del Anexo A, F2 `amenaza.json` idéntico en números a la investigación, F3 el validador detecta errores sembrados, F4 el trabajador simulado responde los mensajes |
 
 Las referencias y tolerancias de T1-T22 son las del contrato (7.8, con la tabla del lazo de T7). T18 corre la
-estructura real y usa `validarResultado` de `validar_resultado.mjs`.
+estructura real y usa `validarResultado` de `validar_resultado.mjs`. Dos lecturas precisas de la tabla del 7.8:
+
+- **T4 (escalón, 20 ciclos, 0,5 %).** Newmark de aceleración promedio no disipa pero alarga el período; con
+  Δt = T/100 el desfase acumulado a los 20 ciclos es 20·2π·(ωΔt)²/12 ≈ 0,041 rad, así que contra
+  `−(ag/ω²)(1 − cos ωt)` con la ω continua el error es ≈ 2 %, inalcanzable para cualquier implementación correcta.
+  La prueba compara la amplitud (`2·ag/ω²`, exacta) y la historia con la frecuencia discreta ω̄ = ω/(T̄/T) de T1
+  (la solución discreta es exactamente `−(ag/ω²)(1 − cos ω̄t)`, por ser el método la regla del trapecio sobre
+  `[u, u̇]`), e imprime el desfase contra la ω continua.
+- **T7.** Las cifras de la tabla están redondeadas: con `k_e = 10⁴ kN·m/rad`, imponer θ = 0,019417 en vez de
+  0,0194175 cambia M en 0,005 kN·m. La prueba impone el θ exacto de cada punto (deducido con las reglas del 7.4) y
+  compara θ, M y θp con las cifras impresas a media unidad de su última cifra; los 200 puntos intermedios se
+  comparan con el lazo lineal por tramos exacto (|ΔM|/My ≤ 10⁻⁶).
 
 ## Validación con OpenSees: `python3 scripts/sismo/validar_opensees.py` (contrato, 7.9)
 

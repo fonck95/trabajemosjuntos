@@ -13,7 +13,9 @@
 //  · rótulas que fluyeron como esferas en los extremos (tamaño ∝ θp/θp de ocupación inmediata) con un anillo del color
 //    del nivel de desempeño superado (IO, LS, CP);
 //  · muros de mampostería como paneles con el color del daño que alcanzaron; la estructura sin deformar en gris fino;
-//  · equipos de la dotación del piso elegido sobre su losa, coloreados por lo que calculó el motor.
+//  · deriva vectorial de cada entrepiso en ese paso, en una etiqueta por nivel;
+//  · equipos de la dotación del piso elegido sobre su losa (cajas que se mueven con ella), coloreados por lo que calculó
+//    el motor, con un anillo en el piso de radio = media diagonal de su huella + lo que deslizaron (a escala real).
 // La geometría se crea una vez; en cada paso se escriben los arreglos existentes (instanceStart.data.array.set(…) y
 // needsUpdate), nunca setPositions() (crea búferes nuevos en three 0.160).
 import { THREE } from '../../core.js';
@@ -98,7 +100,8 @@ export function crearEstructura3D(info, { tier = 'media', colores, renderer, eti
   const capas = [capaLineas(lin, anchoBase), capaLineas(mur, anchoBase * 2.4)];
   // resaltado del elemento elegido (encima de todo)
   const sel = capaLineas([0], anchoBase * 2.6);
-  sel.m.vertexColors = false; sel.m.color.copy(col.accent); sel.m.depthTest = false; sel.o.renderOrder = 10; sel.o.visible = false;
+  // el elegido va en el color de los datos (violeta): el rojo ya dice «supera la capacidad»
+  sel.m.vertexColors = false; sel.m.color.copy(col.data); sel.m.depthTest = false; sel.o.renderOrder = 10; sel.o.visible = false;
   let elegido = -1;
 
   // fantasma sin deformar
@@ -134,7 +137,7 @@ export function crearEstructura3D(info, { tier = 'media', colores, renderer, eti
   // ------------------------------------------------------------ rótulas: esferas instanciadas y anillos de nivel
   const capRot = Math.max(1, dib.length * 2);
   const diag = Math.hypot(...['x', 'y', 'z'].map((_, a) => { let lo = Infinity, hi = -Infinity; dib.forEach((d) => { for (const p of [d.A, d.B]) { lo = Math.min(lo, p[a]); hi = Math.max(hi, p[a]); } }); return hi - lo || 1; }));
-  const r0 = THREE.MathUtils.clamp(diag * 0.005, 0.05, 0.22);
+  const r0 = THREE.MathUtils.clamp(diag * 0.007, 0.06, 0.32);
   const mEsf = new THREE.MeshBasicMaterial({ color: col.ink, toneMapped: false });
   const esferas = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, tier === 'baja' ? 0 : 1), mEsf, capRot);
   const anillos = new THREE.InstancedMesh(new THREE.TorusGeometry(1, 0.2, 4, tier === 'baja' ? 10 : 16).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ toneMapped: false }), capRot);
@@ -153,15 +156,20 @@ export function crearEstructura3D(info, { tier = 'media', colores, renderer, eti
   const panelM = new THREE.Mesh(gMur, mMur); panelM.frustumCulled = false; panelM.visible = nM > 0; panelM.renderOrder = 2; grupo.add(panelM);
 
   // ------------------------------------------------------------ equipos de la dotación (cajas instanciadas)
-  let equipos = [], cajas = null;
+  // los que deslizaron llevan en el piso un anillo de radio = media diagonal de su huella + lo que deslizaron (a escala
+  // real: el motor da cuánto deslizó, no hacia dónde)
+  let equipos = [], cajas = null, anillosEq = null, conAnillo = [];
   const mCaja = new THREE.MeshLambertMaterial({ toneMapped: false });
+  const mAnilloEq = new THREE.MeshBasicMaterial({ color: col.warn, side: THREE.DoubleSide, toneMapped: false });
 
   // ------------------------------------------------------------ etiquetas de deriva por entrepiso
+  // en el vértice del suroriente de cada nivel; la caja se abre hacia el occidente (hacia el edificio), así no se sale
+  // del recuadro cuando la torre lo llena (la cámara mira desde el suroccidente)
   const etiquetas = [];
   if (etiqueta) niveles.forEach((nv, k) => {
     const c = nv.contorno?.length ? nv.contorno : [nv.cm];
-    const v = c.reduce((a, p) => (p[0] - p[1] > a[0] - a[1] ? p : a), c[0]);   // vértice del suroriente
-    const o = etiqueta('', [v[0] + 0.8, nv.z, -v[1] + 0.8], grupo);
+    const v = c.reduce((a, p) => (p[0] - p[1] > a[0] - a[1] ? p : a), c[0]);
+    const o = etiqueta('<span class="lbl-node"></span>', [v[0] + 0.5, nv.z, -v[1] + 0.5], grupo);
     o.userData.k = k; etiquetas.push(o);
   });
 
@@ -323,11 +331,10 @@ export function crearEstructura3D(info, { tier = 'media', colores, renderer, eti
   const _mb = new THREE.Matrix4(), _ml = new THREE.Matrix4();
   function escribirEquipos(i, e) {
     if (!cajas) return;
-    equipos.forEach((q, n) => {
-      if (q.k > 0) { const o = (i * NL() + (q.k - 1)) * 3; matrizNivel(q.k, R.u[o], R.u[o + 1], R.u[o + 2], e, _ml); } else _ml.identity();
-      cajas.setMatrixAt(n, _mb.multiplyMatrices(_ml, q.base));
-    });
+    const nivel = (q) => { if (q.k > 0) { const o = (i * NL() + (q.k - 1)) * 3; return matrizNivel(q.k, R.u[o], R.u[o + 1], R.u[o + 2], e, _ml); } return _ml.identity(); };
+    equipos.forEach((q, n) => { cajas.setMatrixAt(n, _mb.multiplyMatrices(nivel(q), q.base)); });
     cajas.instanceMatrix.needsUpdate = true;
+    if (anillosEq) { conAnillo.forEach((q, n) => { anillosEq.setMatrixAt(n, _mb.multiplyMatrices(nivel(q), q.baseAnillo)); }); anillosEq.instanceMatrix.needsUpdate = true; }
   }
   const fmtPct = (v) => (v * 100).toLocaleString('es-CO', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
 
@@ -350,8 +357,8 @@ export function crearEstructura3D(info, { tier = 'media', colores, renderer, eti
     escribirEquipos(i, escala);
     etiquetas.forEach((o) => {
       const k = o.userData.k, dv = R.derivas_vector ? R.derivas_vector[i * NL() + k] : null;
-      const html = `<b>Entrepiso ${k + 1}</b><span class="lv">${dv == null ? '' : `${fmtPct(dv)} %`}</span>`;
-      if (o.element.innerHTML !== html) o.element.innerHTML = html;
+      const html = `<b>Entrepiso ${k + 1}</b><span class="lv">${dv == null ? '' : `${fmtPct(dv)} %`}</span>`, caja = o.element.firstElementChild || o.element;
+      if (caja.innerHTML !== html) caja.innerHTML = html;
       const b = (i * NL() + k) * 3;
       matrizNivel(k + 1, R.u[b], R.u[b + 1], R.u[b + 2], escala, _ml);
       if (!o.userData.p0) o.userData.p0 = o.position.clone();
@@ -402,21 +409,33 @@ export function crearEstructura3D(info, { tier = 'media', colores, renderer, eti
       dib.forEach((d) => { b.expandByPoint(_v.set(d.A[0], d.A[2], -d.A[1])); b.expandByPoint(_v.set(d.B[0], d.B[2], -d.B[1])); });
       return b.expandByScalar(margen);
     },
-    // equipos: [{ unidad, k (nivel global sobre el que se apoyan; 0 = suelo), x, y, z (cota absoluta de la base), dim, rot, color }]
+    // equipos: [{ unidad, k (nivel global sobre el que se apoyan; 0 = suelo), x, y, z (cota absoluta de la base), dim, rot,
+    //   color, desliza_m (deslizamiento máximo que calculó el motor, m) }]
     ponerEquipos(lista) {
       if (cajas) { grupo.remove(cajas); cajas.geometry.dispose(); cajas = null; }
+      if (anillosEq) { grupo.remove(anillosEq); anillosEq.geometry.dispose(); anillosEq = null; }
       equipos = (lista || []).map((q) => ({ ...q, base: new THREE.Matrix4().compose(new THREE.Vector3(q.x, q.z + q.dim[2] / 2, -q.y), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), q.rot || 0), new THREE.Vector3(Math.max(0.05, q.dim[0]), Math.max(0.05, q.dim[2]), Math.max(0.05, q.dim[1]))) }));
+      conAnillo = equipos.filter((q) => q.desliza_m > 0).map((q) => {
+        const r = Math.hypot(q.dim[0], q.dim[1]) / 2 + q.desliza_m;
+        return { ...q, baseAnillo: new THREE.Matrix4().compose(new THREE.Vector3(q.x, q.z + 0.02, -q.y), new THREE.Quaternion(), new THREE.Vector3(r, 1, r)) };
+      });
       if (!equipos.length) return;
       cajas = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), mCaja, equipos.length);
       equipos.forEach((q, n) => { cajas.setMatrixAt(n, q.base); cajas.setColorAt(n, q.color || col.muted); });
       cajas.frustumCulled = false;
       grupo.add(cajas);
+      if (conAnillo.length) {
+        anillosEq = new THREE.InstancedMesh(new THREE.RingGeometry(0.9, 1, tier === 'baja' ? 20 : 32).rotateX(-Math.PI / 2), mAnilloEq, conAnillo.length);
+        conAnillo.forEach((q, n) => anillosEq.setMatrixAt(n, q.baseAnillo));
+        anillosEq.frustumCulled = false;
+        grupo.add(anillosEq);
+      }
       if (R && actual.i >= 0) escribirEquipos(actual.i, actual.escala);
     },
     resolucion(w, h) { [...capas, sel].forEach((c) => c.m.resolution.set(w, h)); },
     tema(c) {
       col = c; pal = paletaDC(c); palM = paletaMuro(c);
-      mFant.color.copy(c.muted); mLosa.color.copy(c.muted); mBorde.color.copy(c.ink); mEsf.color.copy(c.ink); sel.m.color.copy(c.accent);
+      mFant.color.copy(c.muted); mLosa.color.copy(c.muted); mBorde.color.copy(c.ink); mEsf.color.copy(c.ink); sel.m.color.copy(c.data); mAnilloEq.color.copy(c.warn);
       if (R && actual.i >= 0) actualizar(actual.i, R, actual.escala, actual.campo);
     },
     paleta: () => ({ dc: pal, muro: palM }),
@@ -425,7 +444,7 @@ export function crearEstructura3D(info, { tier = 'media', colores, renderer, eti
     dispose() {
       etiquetas.forEach((o) => { o.element.remove(); o.parent?.remove(o); });
       grupo.traverse((o) => { o.geometry?.dispose?.(); });
-      [mFant, mLosa, mBorde, mEsf, mMur, mCaja, anillos.material, ...capas.map((c) => c.m), sel.m].forEach((m) => m.dispose());
+      [mFant, mLosa, mBorde, mEsf, mMur, mCaja, mAnilloEq, anillos.material, ...capas.map((c) => c.m), sel.m].forEach((m) => m.dispose());
       grupo.parent?.remove(grupo);
     },
   };

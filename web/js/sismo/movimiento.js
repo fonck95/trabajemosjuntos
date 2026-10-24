@@ -21,9 +21,14 @@
 //   - Mw (Hanks y Kanamori, 1979) sale del momento sísmico M0 = μ·A·D (rigidez × área rota × deslizamiento):
 //     Mw = (2/3)·log10 M0[dina·cm] − 10,7, es decir M0 = 10^(1,5·Mw + 16,05) dina·cm (16,05 = 1,5 × 10,7). No se
 //     satura y es la magnitud que piden la física de la fuente (f0, Δσ) y las GMPE. Este módulo solo usa Mw.
+//     (La norma IASPEI de 2013 usa log10 M0[N·m] = 1,5·Mw + 9,1, es decir 16,1 en dina·cm: 0,03 unidades de Mw de
+//     diferencia. Se usa 16,05 porque con esa constante se calibraron Δσ y se escribieron f0 y los escenarios de
+//     amenaza.json, igual que en SMSIM, pyrvt y StochasticGroundMotionSimulation.jl.)
 //   - No hay una conversión única ML → Mw: para sismos moderados difieren en pocas décimas y la relación de la red
-//     colombiana está por confirmar (amenaza.json → magnitud.explicacion_ciudadana). Por eso la vista no convierte:
-//     muestra Mw, M0 y la energía, y explica que «Richter» es el nombre popular de la magnitud.
+//     colombiana está por confirmar (amenaza.json → magnitud.explicacion_ciudadana). Por eso ni este módulo ni la
+//     vista convierten: el deslizador es Mw (de 4 a 8), la vista muestra Mw, M0 y la energía, y explica que
+//     «Richter» es el nombre popular de la magnitud. Quien piense en «6,2 en la escala de Richter» puede poner Mw 6,2:
+//     en sismos moderados la diferencia es de décimas, y de los grandes las agencias (SGC, USGS) ya reportan Mw.
 //   - Energía radiada aproximada Es ≈ M0/20.000 (Kanamori, 1977) → log10 Es[J] ≈ 1,5·Mw + 4,75; cada punto de Mw es
 //     10^1,5 ≈ 32 veces más energía y 0,2 puntos son el doble (10^0,3 = 2).
 //
@@ -32,9 +37,14 @@
 //   - El ruido con ventana empieza en t_pre = max(5·τ, 1 s), con τ = 1/(2π·f0): el filtro A(f) es de fase cero
 //     (real y positivo), así que su respuesta al impulso es simétrica y deja un precursor antes de la ventana. Su parte
 //     de baja frecuencia decae como e^(−|t|/τ) (A ∝ f²/(1 + (f/f0)²) ↔ δ(t) − π·f0·e^(−2π·f0·|t|), deducción
-//     propia); con 5·τ queda < 1 % (e^−5 = 0,7 %). El segundo se cubre la cola de κ y de Q. El registro entregado
-//     termina t_pre después del fin de la ventana por la misma razón. SMSIM (Boore, 2003) hace lo mismo con sus
-//     rellenos «tpadl» y «tpadt». La energía que queda fuera se mide y va en meta.fraccion_energia_fuera.
+//     propia); con 5·τ queda < 1 % (e^−5 = 0,7 %). El mínimo de 1 s cubre la cola de κ y de Q, más corta. El registro
+//     entregado termina t_pre después del fin de la ventana por la misma razón. SMSIM (Boore, 2003) hace lo mismo con
+//     sus rellenos «tpadl» y «tpadt». La energía que queda fuera se mide y va en meta.fraccion_energia_fuera (del
+//     orden de 10⁻⁷ en los escenarios de amenaza.json). sim.py de la investigación empieza la ventana en t = 0 y el
+//     precursor da la vuelta al final del búfer circular: la estadística es la misma (T15 lo comprueba).
+//   - PGV y PGD se integran en el tiempo (trapecios, desde reposo) en lugar de por FFT (paso 10): sirve igual para
+//     cualquier registro (también el filtrado de la calidad baja) y no hay desplazamiento residual que corregir,
+//     porque A(f) ∝ f² cerca de f = 0 (la integral de a y la de v son nulas).
 //   - N (potencia de 2) ≥ muestras antes de la ventana + ventana + 40 s de ceros (paso 5 de las notas).
 //   - Las dos componentes comparten el PGA en roca de la no linealidad del suelo: la media geométrica de los PGA en
 //     roca de las dos (BSSA14 define PGAr como la mediana de la media de las dos horizontales; el suelo es uno solo).
@@ -47,7 +57,7 @@ export const DT_SINTESIS = 0.005;          // s (contrato 7.4; amenaza.json → 
 export const PERIODOS_GMPE_S = [0, 0.2, 0.5, 1.0];   // períodos con coeficientes en amenaza.json (0 = PGA)
 
 // Constantes que en amenaza.json están solo dentro de fórmulas escritas (no como números sueltos). Las pruebas
-// (scripts/sismo/pruebas/movimiento.mjs, M8) comprueban que esas fórmulas siguen diciendo lo mismo.
+// (scripts/sismo/pruebas/movimiento.mjs, MOV1) comprueban que esas fórmulas siguen diciendo lo mismo.
 const BRUNE_F0 = 4.906e6;   // f0 = 4,906e6·βs·(Δσ/M0)^(1/3) [Hz; km/s, bar, dina·cm] (Brune 1970; Boore 2003). Deducción:
 //   f0 = 2,34·β/(2π·r) y Δσ = 7·M0/(16·r³) → f0 = 0,4903·β·(Δσ/M0)^(1/3) en cgs; β ×10⁵ cm/s y Δσ ×10⁶ dina/cm²
 //   ((10⁶)^(1/3) = 100) dan 4,903e6; 4,906e6 es el valor de amenaza.json (4,9058e6 en StochasticGroundMotionSimulation.jl).
@@ -300,8 +310,10 @@ function pgaRVT(Afun, Tgm, fNyq) {
 
 /**
  * Espectro de amplitud de Fourier objetivo en roca (Vs30 = 760 m/s) y en el suelo del sitio, en m/s (Boore 2003;
- * en la banda de transición, mezcla logarítmica del 7.4). `pgar_g`: PGA en roca que fija la no linealidad del suelo;
- * si no se da, se usa el PGA esperado por vibración aleatoria (pgaRVT) del espectro en roca.
+ * en la banda de transición, mezcla logarítmica del 7.4). `pgar_g`: PGA en roca (sin escalar) que fija la no
+ * linealidad del suelo; si no se da, se usa el PGA esperado por vibración aleatoria (pgaRVT) del espectro en roca.
+ * Como en sintetizar, la no linealidad usa pgar_g × p.escala_pgar. Para dibujar el objetivo de un registro ya
+ * sintetizado se pasa pgar_g = registro.meta.pga_roca_g con los mismos p: así es exactamente el filtro que se aplicó.
  * → { roca: Float64Array, suelo: Float64Array, pgar_g, metodo_pgar: 'dado' | 'rvt', w_transicion, Tgm_s }
  */
 export function espectroObjetivo(p, amenaza, f_Hz, { pgar_g } = {}) {
@@ -317,7 +329,8 @@ export function espectroObjetivo(p, amenaza, f_Hz, { pgar_g } = {}) {
     pgar_g = pgaRVT(Aroca, Tgm, 1 / (2 * P.comunes.dt)).pga_g;
     metodo = 'rvt';
   }
-  const L = lnNoLineal(pgar_g);
+  if (!(pgar_g >= 0)) throw errorDatos(`espectroObjetivo: pgar_g = ${pgar_g} no válido`);
+  const L = lnNoLineal(pgar_g * q.escala_pgar);
   for (let i = 0; i < n; i++) {
     const f = f_Hz[i];
     if (!(f > 0)) continue;              // f ≤ 0: amplitud 0 (el espectro de aceleración es ∝ f² cerca de 0)
@@ -337,7 +350,7 @@ export function pgaEsperadoRVT(p, amenaza) {
   const fNyq = 1 / (2 * P.comunes.dt);
   const Ar = (f) => Math.exp(lnAmplitudMezcla(T, P, f)) * 0.01;
   const roca = pgaRVT(Ar, Tgm, fNyq);
-  const L = lnNoLineal(roca.pga_g);
+  const L = lnNoLineal(roca.pga_g * q.escala_pgar);
   const As = (f) => { const s = factorSueloCoef(P, f, q.vs30_m_s); return Ar(f) * Math.exp(s.lin + s.f2 * L); };
   return { roca_g: roca.pga_g, suelo_g: pgaRVT(As, Tgm, fNyq).pga_g, Tgm_s: Tgm };
 }
@@ -526,7 +539,16 @@ export function espectroRespuesta(a, dt, periodos, xi = 0.05) {
   const nT = periodos.length, n = a.length;
   const Sa_g = new Float64Array(nT), Sd_m = new Float64Array(nT);
   const raiz = Math.sqrt(1 - xi * xi);
+  let pga = -1;
   for (let j = 0; j < nT; j++) {
+    if (!(periodos[j] > 0)) {
+      // T = 0: oscilador infinitamente rígido, u = 0 y su aceleración absoluta es la del suelo → Sa(0) = PGA
+      if (!(periodos[j] === 0)) throw new Error(`espectroRespuesta: período ${periodos[j]} no válido`);
+      if (pga < 0) { pga = 0; for (let i = 0; i < n; i++) pga = Math.max(pga, Math.abs(a[i])); }
+      Sa_g[j] = pga / G;
+      Sd_m[j] = 0;
+      continue;
+    }
     const w = (2 * Math.PI) / periodos[j];
     const wd = w * raiz;
     const E = Math.exp(-xi * w * dt), S = Math.sin(wd * dt), C = Math.cos(wd * dt);
@@ -580,9 +602,11 @@ export function espectroFourier(a, dt) {
 // ── Calidad baja: FIR de fase cero a 20 Hz y diezmado ×2 ─────────────────────────────────────────────────────
 // Ventana de Kaiser (Kaiser, 1974): banda de paso hasta 20 Hz con rizado ≤ 10⁻³ (0,1 %), banda de rechazo desde
 // 30 Hz con ≥ 60 dB; la frecuencia de corte del seno cardinal ideal es el centro, 25 Hz. β = 0,1102·(A − 8,7) para
-// A ≥ 50 dB y N − 1 = (A − 7,95)/(14,36·Δf/fs). Al diezmar a Δt = 0,01 s (Nyquist 50 Hz) solo se repliega lo que
-// está sobre 50 Hz, que el filtro ya bajó 60 dB; la banda útil (≤ 20 Hz, T ≥ 0,05 s) queda intacta.
-const FIR = { fPaso: 20, fRechazo: 30, atenuacion_dB: 60 };
+// A ≥ 50 dB y N − 1 = (A − 7,95)/(14,36·Δf/fs). Esas fórmulas son aproximadas (con A = 60 dB el rizado medido fue
+// 1,1·10⁻³): se diseña con A = 65 dB (rizado esperado 10^(−65/20) = 5,6·10⁻⁴) y la prueba MOV4 mide la respuesta exacta
+// del filtro contra 10⁻³ y 60 dB. Al diezmar a Δt = 0,01 s (Nyquist 50 Hz) solo se repliega lo que está sobre 50 Hz,
+// que el filtro ya bajó más de 60 dB; la banda útil (≤ 20 Hz, T ≥ 0,05 s) queda intacta.
+const FIR = { fPaso: 20, fRechazo: 30, atenuacion_dB: 65 };
 const CACHE_FIR = new Map();
 
 function besselI0(x) {
@@ -816,8 +840,10 @@ export function gmpe(modelo, esc, periodos) {
     Mw: esc.Mw, h, vs30: esc.vs30_m_s, Rhip, Rrup: esc.Rrup_km ?? Rhip, Rjb: esc.Rjb_km ?? Repi,
     mecanismo: esc.mecanismo ?? 'U', trasarco: !!esc.trasarco, inversa: !!esc.inversa,
   };
-  for (const k of ['Mw', 'h', 'vs30', 'Rhip', 'Rrup', 'Rjb']) {
-    if (!Number.isFinite(e[k])) throw errorDatos(`gmpe: ${k} = ${e[k]} no es un número finito`);
+  // Cada modelo pide solo sus datos: BC Hydro, Rhip y h; Zhao, Rrup y h; BSSA14, Rjb (sin profundidad).
+  const necesita = { bchydro2016_intraslab: ['Rhip', 'h'], zhao2006_intraslab: ['Rrup', 'h'], zhao2006_cortical: ['Rrup', 'h'], bssa14: ['Rjb'] }[modelo];
+  for (const k of ['Mw', 'vs30', ...necesita]) {
+    if (!Number.isFinite(e[k])) throw errorDatos(`gmpe (${modelo}): ${k} = ${e[k]} no es un número finito`);
   }
   const tabla = [['PGA', 0.01], ['0.2', 0.2], ['0.5', 0.5], ['1.0', 1.0]];
   const memo = new Map();
@@ -827,6 +853,7 @@ export function gmpe(modelo, esc, periodos) {
   for (let i = 0; i < n; i++) {
     const T = periodos[i];
     let ln = NaN, s = NaN;
+    if (!(T >= 0)) throw errorDatos(`gmpe: período ${T} no válido`);
     if (T <= 0.01) ({ ln, sigma: s } = imtEn('PGA'));
     else if (T >= 0.2 - 1e-12 && T <= 1.0 + 1e-12) {
       let j = 1;

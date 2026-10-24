@@ -388,7 +388,7 @@ def espectro_objetivo(p, amenaza, f_Hz, pgar_g=None):
     Tgm = sum(x['peso'] * x['Tgm'] for x in lista)
     if pgar_g is None:
         pgar_g = pga_rvt(lambda f: math.exp(ln_amplitud_mezcla(lista, P, f)) * 0.01, Tgm, 1 / (2 * P['comunes']['dt']))
-    L = ln_no_lineal(pgar_g)
+    L = ln_no_lineal(pgar_g * q['escala_pgar'])   # como en sintetizar: PGA en roca sin escalar × escala_pgar
     roca, suelo = [], []
     for f in f_Hz:
         if not f > 0:
@@ -519,6 +519,10 @@ def espectro_respuesta(a, dt, periodos, xi=0.05):
     raiz = math.sqrt(1 - xi * xi)
     Sa, Sd = [], []
     for T in periodos:
+        if T == 0:   # oscilador rígido: Sa(0) = PGA
+            Sa.append(max(abs(v) for v in a) / G)
+            Sd.append(0.0)
+            continue
         w = 2 * math.pi / T
         wd = w * raiz
         E, S, C = math.exp(-xi * w * dt), math.sin(wd * dt), math.cos(wd * dt)
@@ -627,8 +631,8 @@ def _bssa14(amenaza, imt, M, Rjb, vs30):
 
 def gmpe(amenaza, modelo, esc, periodos):
     """Mismas reglas de períodos que gmpe() de movimiento.js (PGA si T ≤ 0,01; ln-ln entre 0,2 y 1,0; NaN fuera)."""
-    h, Repi = esc['profundidad_km'], esc['distancia_epicentral_km']
-    Rhip = esc.get('Rhip_km', math.hypot(Repi, h))
+    h, Repi = esc.get('profundidad_km'), esc.get('distancia_epicentral_km')
+    Rhip = esc['Rhip_km'] if 'Rhip_km' in esc else math.hypot(Repi, h) if None not in (Repi, h) else None
     Mw, vs30 = esc['Mw'], esc['vs30_m_s']
 
     def imt_en(imt):

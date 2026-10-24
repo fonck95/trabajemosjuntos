@@ -8,8 +8,9 @@
 // torre.js lo carga de forma perezosa y le pasa ctx (6.2 y 8.6): st, raiz, hud (torre.hud.sismo), panel
 // (torre.panel.sismo), ficha (torre.ficha.modo), graficas (torre.sismo.graficas), datos { amenaza, inventario, urls },
 // textos { limpio, esc, escH }, exterior.ocultar(on) y alSalir(). Solo escribe en esos contenedores.
-// QA (8.7): con «?qa=1&motor=simulado», sirviendo la raíz del repositorio, usa el trabajador simulado de los fixtures
-// (scripts/fixtures/torre/trabajador_simulado.js) y su estructura de prueba.
+// QA (8.7), sirviendo la raíz del repositorio para que existan los fixtures (scripts/fixtures/torre/):
+//   «?qa=1&motor=simulado»   trabajador simulado del equipo A (trabajador_simulado.js) con sus resultados de prueba;
+//   «?qa=1&estructura=min»   motor real (trabajador o respaldo) sobre el cubo de prueba estructura_min.json.
 import { THREE, tokens, onTheme, engine, reducedMotion } from '../../core.js';
 import { crearEstructura3D, CORTES_DC, ESTADOS_MURO } from './estructura3d.js';
 import * as G from './graficas.js';
@@ -47,10 +48,11 @@ export async function montar(ctx) {
   const { esc, escH, limpio } = textos;
   const qs = new URLSearchParams(location.search);
   const SIMULADO = qs.has('qa') && qs.get('motor') === 'simulado';
+  const MIN = SIMULADO || (qs.has('qa') && qs.get('estructura') === 'min');
   const FIX = (f) => new URL(`../../../../scripts/fixtures/torre/${f}`, import.meta.url).href;
   const URL_TRABAJADOR = SIMULADO ? FIX('trabajador_simulado.js') : new URL('../../sismo/trabajador.js', import.meta.url).href;
   const URL_MOTOR = new URL('../../sismo/motor.js', import.meta.url).href;
-  const URL_ESTRUCTURA = SIMULADO ? FIX('estructura_min.json') : ctx.datos?.urls?.estructura || new URL('../../../data/sismo_torre_estructura.json', import.meta.url).href;
+  const URL_ESTRUCTURA = MIN ? FIX('estructura_min.json') : ctx.datos?.urls?.estructura || new URL('../../../data/sismo_torre_estructura.json', import.meta.url).href;
   const URL_AMENAZA = ctx.datos?.urls?.amenaza || new URL('../../../data/sismo_amenaza.json', import.meta.url).href;
   const leerJSON = (u) => fetch(u).then((r) => (r.ok ? r.json() : null)).catch(() => null);
   let amenaza = ctx.datos?.amenaza || null;
@@ -62,7 +64,7 @@ export async function montar(ctx) {
   const def = (k, d) => CTRL[k]?.defecto ?? d;
 
   // ================================================================ contenedores (se guardan fuera mientras no se usan)
-  const tel = matchMedia('(max-width: 720px)');
+  const tel = matchMedia('(max-width: 1080px)');   // la leyenda sobre el recuadro empieza cerrada en pantallas medianas y pequeñas
   const elPanel = document.createElement('div'); elPanel.className = 'sismo-panel';
   const elHud = document.createElement('div'); elHud.className = 'sismo-hud';
   const elG = document.createElement('div'); elG.className = 'sismo-graficas';
@@ -260,12 +262,17 @@ export async function montar(ctx) {
     if (motorP) return motorP;
     motorP = (async () => {
       if (typeof Worker === 'function') {
+        let c = null;
         try {
           const w = await abrirTrabajador();
-          const c = clienteTrabajador(w, SIMULADO ? 'simulado' : 'trabajador');
+          c = clienteTrabajador(w, SIMULADO ? 'simulado' : 'trabajador');
           listo = await c.iniciar(msgIniciar());
           return c;
-        } catch (e) { console.info('Simulador sísmico: se usa el respaldo en el hilo principal.', e?.message || e); }
+        } catch (e) {
+          // sin «cargado» en 3 s o con un error antes de «listo»: se cierra el trabajador y se usa el respaldo (7.5)
+          c?.cerrar();
+          console.info('Simulador sísmico: se usa el respaldo en el hilo principal.', e?.message || e);
+        }
       }
       const h = await clienteHilo();
       listo = await h.iniciar(msgIniciar());
@@ -274,6 +281,7 @@ export async function montar(ctx) {
     motorP.then((m) => { motor = m; }, () => { motorP = null; });
     return motorP;
   }
+  ctx.motor = obtenerMotor;   // 8.6: el trabajador o, si falla, el respaldo de motor.js
   // el modelo se vuelve a armar si cambian la histéresis o los muros no estructurales
   let modeloArmado = JSON.stringify(opcionesModelo());
   async function asegurarModelo() {
@@ -288,7 +296,8 @@ export async function montar(ctx) {
   let est3d = null, info = null, R = null, mov = null, resumen = null, paso = 0, escala = 1, campo = 'max', elegido = null, pisoEq = '';
   const eqPorUnidad = new Map();
   const rotulos = [];
-  const etiqueta = (html, pos, padre) => { const o = st.label(html, 'lbl-node sismo-lbl', pos, padre); rotulos.push(o); o.visible = false; return o; };
+  // etiquetas de deriva: un ancla sin tamaño (sismo-lbl) con la caja dentro, que se abre hacia la izquierda del punto
+  const etiqueta = (html, pos, padre) => { const o = st.label(html, 'sismo-lbl', pos, padre); rotulos.push(o); o.visible = dentro; return o; };
   function armarInfo(L, est) {
     const nodos = L.nodos, elementos = L.elementos, nN = nodos.length;
     const niveles = [], porticos = {}, muros = [], nivelNodo = new Int16Array(nN), secciones = est?.secciones || {};
@@ -366,7 +375,7 @@ export async function montar(ctx) {
         <li><i style="background:var(--warn)"></i>${n(CORTES_DC[1], 1)} a ${n(CORTES_DC[2], 1)}</li><li><i style="background:var(--bad)"></i>más de ${n(CORTES_DC[2], 1)}${campo === 'rotacion' ? ': superó IO' : ': supera la capacidad esperada'}</li>
       </ul>
       <p><i class="sismo-rot"></i>rótula que fluyó (tamaño: θp/θp de IO); anillo: superó <i class="sismo-an" style="--c:var(--warn)"></i>IO, <i class="sismo-an" style="--c:color-mix(in srgb-linear, var(--warn) 50%, var(--bad))"></i>LS o <i class="sismo-an" style="--c:var(--bad)"></i>CP</p>
-      <p><i class="sismo-ln"></i>gris fino: estructura sin deformar · placas: losas (diafragma rígido de cada nivel)</p>
+      <p><i class="sismo-ln"></i>gris fino: estructura sin deformar · placas: losas (diafragma rígido de cada nivel) · <i class="sismo-sel"></i>violeta: el elemento elegido</p>
       ${muros ? '<p><i class="sismo-mm"></i>paneles: muros de mampostería, del color de su daño (verde sin daño a rojo colapso)</p>' : ''}
       <p>Exageración ×${escala}</p>`;
     out('campo').textContent = `La leyenda compara con ${d}: verde hasta la mitad de la capacidad; rojo, por encima.`;
@@ -381,7 +390,8 @@ export async function montar(ctx) {
     paso = Math.max(0, Math.min(nt - 1, i | 0));
     if (!desdeDeslizador) ctl('t').value = paso;
     const ax = R.ag[paso * 2], ay = R.ag[paso * 2 + 1], pga = Math.hypot(ax, ay) / g0;
-    const txt = `t = ${n(R.t[paso], 2)} s de ${n(R.t[nt - 1], 1)} · suelo ${n(pga, 3)} g`;
+    const tf = R.t[nt - 1];
+    const txt = `t = ${n(R.t[paso], 2)} s de ${n(tf, tf < 10 ? 2 : 1)} · suelo ${n(pga, 3)} g`;
     out('t').textContent = txt;
     ctl('t').setAttribute('aria-valuetext', txt);
     est3d?.actualizar(paso, R, escala, campo);
@@ -485,8 +495,11 @@ export async function montar(ctx) {
       if (mio !== pedidoSerie || !dentro) return;
       graficasElemento(ids, series);
     } catch (e) {
-      if (e?.codigo === 'cancelado') return;
-      out('el-titulo').textContent = `${nombreElemento(listo.elementos[mapaE.get(id)])}: no se pudo leer su serie (${e?.message || e})`;
+      if (e?.codigo === 'cancelado' || mio !== pedidoSerie || !dentro) return;
+      // después de cancelar un cálculo el trabajador nuevo no guarda las series del anterior
+      console.warn('Simulador sísmico: serie del elemento', e);
+      for (const k of ['histeresis', 'momentos', 'fuerzas']) cerrarGraf(k);
+      out('el-titulo').textContent = `${nombreElemento(listo.elementos[mapaE.get(id)])}: sus series en el tiempo no están disponibles (se pierden al cancelar un cálculo); vuelve a calcular para verlas.`;
     }
   }
 
@@ -540,7 +553,7 @@ export async function montar(ctx) {
       T, sa_x: m(mov.espectro?.Sa_x), sa_y: m(mov.espectro?.Sa_y),
       nsr10: { T: mov.nsr10?.T, con_I: mov.nsr10?.con_I, sin_I: mov.nsr10?.sin_I, umbral_dano: mov.nsr10?.umbral_dano },
       gmpe: (mov.gmpe || []).map((q) => ({ nombre: limpio(q.nombre), peso: q.peso, T: q.T, mediana: q.mediana_g, sigma: q.sigma_ln })),
-      marcas: modos.slice(0, 3).map((Tm, k) => ({ T: Tm, etiqueta: `T${k + 1}` })),
+      marcas: modos.slice(0, 3).map((Tm, k) => ({ T: Tm, etiqueta: `T${k + 1}` })), nombres: ['Este sismo, componente 1', 'Este sismo, componente 2'],
       nota: `Cuánto se aceleraría un oscilador de cada período con las componentes 1 y 2 de este sismo${f !== 1 ? ` (multiplicadas por ${n(f, 2)})` : ''}, contra el espectro de diseño de la NSR-10 para Yondó y las ecuaciones empíricas (GMPE) del tipo de sismo. Marcas: períodos de los tres primeros modos de la torre.`,
     });
     cerrarGraf('fourier');
@@ -654,22 +667,42 @@ export async function montar(ctx) {
     }
     out('tabla').innerHTML = `<table class="fichas sismo-tabla"><thead><tr><th>Variable</th><th class="n">Valor</th><th>Qué es</th></tr></thead><tbody>${filas.join('')}</tbody></table>`;
   }
+  // los equipos que más sufrieron primero: los que se balancean o quedan en la frontera, después los que deslizan (por lo
+  // que deslizaron), los estables por su cociente de vuelco y al final los anclados por la fuerza en su anclaje
+  const MAX_FILAS_EQ = 30;
+  const gravedadEq = (q) => (q.regimen === 'anclado' ? 0 : q.regimen === 'frontera' ? 4 : q.inicia_balanceo || q.regimen === 'balancea' ? 3 : q.desliza ? 2 : 1);
   function listaEquipos() {
     const el = out('equipos');
     if (!R?.equipos?.length) { el.innerHTML = ''; return; }
     const nombre = (u) => { const l = eqPorUnidad.get(u); return l ? esc(l.nombre) : escH(u); };
-    el.innerHTML = `<h4>Equipos de la dotación en el sismo</h4><p class="note">Bloque rígido sobre su losa: si la fricción alcanza antes, desliza; si no, empieza a balancearse (si se vuelca no se calcula). Los anclados reportan la fuerza que debe resistir el anclaje, sin los factores de la NSR-10.</p>
-      <div class="tbl-wrap"><table class="fichas"><thead><tr><th>Equipo</th><th>Qué le pasó</th><th class="n">Aceleración máx.</th><th class="n">Deslizamiento</th><th class="n">Anclaje</th></tr></thead><tbody>
-      ${R.equipos.map((q) => `<tr><td>${nombre(q.unidad)}</td><td data-th="Qué le pasó"><span class="sismo-eq" style="--c:${colorEq(q, true)}"></span>${REGIMEN_EQ[q.regimen] || escH(q.regimen)}</td><td class="n" data-th="Aceleración máx.">${nv(q.a_max_m_s2 / g0, 3)} g</td><td class="n" data-th="Deslizamiento">${q.desliza ? `${nv(q.deslizamiento_max_m * 100, 2)} cm` : '—'}</td><td class="n" data-th="Anclaje">${q.fuerza_anclaje_kN != null ? `${nv(q.fuerza_anclaje_kN, 2)} kN` : '—'}</td></tr>`).join('')}
+    const pisoDe = new Map(unidades.map((q) => [q.unidad, q.piso]));
+    const orden = [...R.equipos].sort((a, b) => gravedadEq(b) - gravedadEq(a) || (b.deslizamiento_max_m || 0) - (a.deslizamiento_max_m || 0) || (b.razon_vuelco || 0) - (a.razon_vuelco || 0) || (b.fuerza_anclaje_kN || 0) - (a.fuerza_anclaje_kN || 0));
+    const c = { desliza: 0, balancea: 0, frontera: 0, anclado: 0, estable: 0 };
+    for (const q of R.equipos) {
+      if (q.regimen === 'anclado') c.anclado++;
+      else if (q.regimen === 'frontera') c.frontera++;
+      else if (q.inicia_balanceo || q.regimen === 'balancea') c.balancea++;
+      else if (q.desliza) c.desliza++;
+      else c.estable++;
+    }
+    const filas = orden.slice(0, MAX_FILAS_EQ);
+    el.innerHTML = `<h4>Equipos de la dotación en el sismo</h4>
+      <p class="note">${nv(R.equipos.length, 0)} equipos entraron al cálculo: ${nv(c.desliza, 0)} deslizan, ${nv(c.balancea, 0)} empiezan a balancearse, ${nv(c.frontera, 0)} quedan en la frontera (deslizan y se balancean), ${nv(c.estable, 0)} quedan quietos y ${nv(c.anclado, 0)} están anclados. Cada uno es un bloque rígido sobre su losa: si la fricción alcanza antes, desliza; si no, empieza a balancearse (si se vuelca no se calcula). Los anclados reportan la fuerza que debe resistir el anclaje, sin los factores de la NSR-10.${R.equipos.length > MAX_FILAS_EQ ? ` Aquí van los ${MAX_FILAS_EQ} que más sufrieron.` : ''}</p>
+      <div class="tbl-wrap"><table class="fichas sismo-equipos"><thead><tr><th>Equipo</th><th>Dónde</th><th>Qué le pasó</th><th class="n">Aceleración máx.</th><th class="n">Deslizamiento</th><th class="n">Balanceo o anclaje</th></tr></thead><tbody>
+      ${filas.map((q) => `<tr><td>${nombre(q.unidad)}</td><td data-th="Dónde">${pisoDe.has(q.unidad) ? nombrePiso(pisoDe.get(q.unidad)) : '—'}</td><td data-th="Qué le pasó"><span class="sismo-eq" style="--c:${colorEq(q, true)}"></span>${REGIMEN_EQ[q.regimen] || escH(q.regimen)}</td><td class="n" data-th="Aceleración máx.">${nv(q.a_max_m_s2 / g0, 3)} g</td><td class="n" data-th="Deslizamiento">${q.desliza ? `${nv(q.deslizamiento_max_m * 1000, 1)} mm` : '—'}</td><td class="n" data-th="Balanceo o anclaje">${q.fuerza_anclaje_kN != null ? `${nv(q.fuerza_anclaje_kN, 2)} kN` : q.razon_vuelco != null ? `${nv(q.razon_vuelco, 2)} de la que lo hace balancear` : '—'}</td></tr>`).join('')}
       </tbody></table></div>`;
   }
 
   // ================================================================ dotación sobre las losas (8.3)
   const colorEq = (q, css = false) => {
-    const k = !q ? 'muted' : q.regimen === 'anclado' ? 'ink' : q.inicia_balanceo || q.regimen === 'balancea' ? 'bad' : q.regimen === 'frontera' ? 's7' : q.desliza ? 'warn' : 'good';
+    // sin resultado (no entró al cálculo) con el color de las líneas; anclado en gris
+    const k = !q ? 'line' : q.regimen === 'anclado' ? 'muted' : q.regimen === 'frontera' ? 's7' : q.inicia_balanceo || q.regimen === 'balancea' ? 'bad' : q.desliza ? 'warn' : 'good';
     if (css) return `var(--${k})`;
     const t = tokens(); return k === 's7' ? t.s[6] : t[k];
   };
+  // unidades del inventario ubicado (10.2) que se pueden poner sobre una losa: las de la torre (pisos 1 a 4, bloque
+  // técnico y cubierta), con dimensiones en el catálogo, que no van dentro de otra ni son componentes de otra
+  const PISOS_EQ = new Set([1, 2, 3, 4, 'BT', 'CUB']);
   function unidadesInventario() {
     const I = inventario;
     if (!I?.unidades?.length) return [];
@@ -678,31 +711,57 @@ export async function montar(ctx) {
       const l = I.lineas?.[u[col.linea_idx]] || {}, c = I.catalogo?.[l.modelo3d] || {};
       eqPorUnidad.set(u[col.id], l);
       return { unidad: u[col.id], piso: u[col.piso], x: +u[col.x], y: +u[col.y], z: +u[col.z] || 0, rot: +u[col.rot_z] || 0, montaje: u[col.montaje], dentro: u[col.dentro_de_idx] >= 0, comp: u[col.componente_de_idx] >= 0, cat: c, linea: l };
-    }).filter((q) => q.cat?.dim && !q.dentro && !q.comp && q.montaje !== 'dentro');
+    }).filter((q) => PISOS_EQ.has(q.piso) && Array.isArray(q.cat?.dim) && q.cat.dim.length >= 3 && Number.isFinite(q.x) && Number.isFinite(q.y) && !q.dentro && !q.comp && q.montaje !== 'dentro');
   }
   let unidades = [];
-  // EquipoRiesgo (7.4) de los equipos de piso con masa, centro de gravedad y fricción en el catálogo
-  const equiposRiesgo = () => unidades.filter((q) => q.cat.mont === 'piso' && q.cat.masa > 0 && q.cat.hcg > 0 && q.cat.mu > 0).map((q) => ({
-    unidad: q.unidad, piso: q.piso, x: q.x, y: q.y, z_sobre_piso: q.z, anclaje: q.cat.anc || 'apoyado', masa_kg: q.cat.masa, h_cg_m: q.cat.hcg, mu: q.cat.mu,
-    bx_m: q.cat.dim[0] / 2, by_m: q.cat.dim[1] / 2, rot_z: q.rot,
-  }));
+  // EquipoRiesgo (7.4): los equipos apoyados en el piso o sobre un mueble, con masa, centro de gravedad y fricción en el
+  // catálogo; los anclados también van (el motor da la fuerza que debe resistir su anclaje). Solo los pisos que tiene
+  // el modelo (piso p descansa en el nivel p − 1) y anclajes que el motor conoce (7.4)
+  const ANCLAJES = new Set(['apoyado', 'ruedas_con_freno', 'ruedas_sin_freno', 'sobre', 'anclado', 'pared', 'cielo', 'en_nucleo']);
+  const equiposRiesgo = () => {
+    const NL = +listo?.resumen?.niveles || info?.niveles?.length || 0;
+    return unidades.filter((q) => (q.montaje === 'piso' || q.montaje === 'sobre' || q.cat.mont === 'piso')
+      && (typeof q.piso !== 'number' || q.piso <= NL + 1) && ANCLAJES.has(q.cat.anc || 'apoyado')
+      && q.cat.masa > 0 && q.cat.hcg > 0 && q.cat.mu >= 0 && q.cat.dim[0] > 0 && q.cat.dim[1] > 0).map((q) => ({
+      unidad: q.unidad, piso: q.piso, x: q.x, y: q.y, z_sobre_piso: q.z, anclaje: q.cat.anc || 'apoyado', masa_kg: q.cat.masa, h_cg_m: q.cat.hcg, mu: q.cat.mu,
+      bx_m: q.cat.dim[0] / 2, by_m: q.cat.dim[1] / 2, rot_z: q.rot,
+    }));
+  };
+  const nombrePiso = (p) => (p === 'BT' ? 'Bloque técnico' : p === 'CUB' ? 'Cubierta' : `Piso ${p}`);
   function pisosEquipos() {
     unidades = unidadesInventario();
     const s = ctl('piso-eq'), pisos = [...new Set(unidades.map((q) => q.piso))].sort((a, b) => String(a).localeCompare(String(b), 'es', { numeric: true }));
-    const nom = (p) => (p === 'BT' ? 'Bloque técnico' : p === 'CUB' ? 'Cubierta' : `Piso ${p}`);
-    s.innerHTML = opt('', 'Ninguno', !pisoEq) + pisos.map((p) => opt(p, nom(p), String(p) === String(pisoEq))).join('');
+    s.innerHTML = opt('', 'Ninguno', !pisoEq) + pisos.map((p) => opt(p, nombrePiso(p), String(p) === String(pisoEq))).join('');
     s.disabled = !pisos.length;
-    out('piso-eq').textContent = pisos.length ? 'Cada equipo va sobre la losa de su piso y se colorea por lo que le pasó en el cálculo: verde estable, amarillo desliza, rojo empieza a balancearse, violeta en la frontera, negro anclado. El deslizamiento se lee en la tabla (milímetros a escala real).' : 'El inventario ubicado de la dotación todavía no está publicado: cuando esté, aquí se podrán ver los equipos sobre su losa.';
+    out('piso-eq').textContent = pisos.length ? 'Cada equipo va sobre la losa de su piso, se mueve con ella y se colorea por lo que le pasó en el cálculo: verde estable, amarillo desliza, rojo empieza a balancearse, violeta en la frontera (las dos cosas), gris anclado. El anillo alrededor de los que deslizan mide lo que deslizaron, a escala real (el cálculo da cuánto, no hacia dónde).' : 'El inventario ubicado de la dotación todavía no está publicado: cuando esté, aquí se podrán ver los equipos sobre su losa.';
+  }
+  // nivel (1…N; 0 = el suelo) sobre el que descansa una unidad: piso p → nivel p − 1; bloque técnico → suelo (es otra
+  // estructura); cubierta → el nivel más alto cuyo contorno la contiene (la del piso 4 o la terraza del piso 3)
+  function nivelDe(q) {
+    const N = info.niveles.length;
+    if (q.piso === 'BT') return 0;
+    if (q.piso === 'CUB') {
+      for (let k = N; k >= 1; k--) if (dentroDe(q.x, q.y, info.niveles[k - 1].contorno)) return k;
+      return N;
+    }
+    return Math.min(N, Math.max(0, (+q.piso || 1) - 1));
+  }
+  function dentroDe(x, y, poli) {
+    if (!poli || poli.length < 3) return false;
+    let d = false;
+    for (let i = 0, j = poli.length - 1; i < poli.length; j = i++) {
+      const [xi, yi] = poli[i], [xj, yj] = poli[j];
+      if ((yi > y) !== (yj > y) && x <= ((xj - xi) * (y - yi)) / (yj - yi) + xi + 1e-9) d = !d;
+    }
+    return d;
   }
   function ponerEquipos() {
     if (!est3d) return;
     if (pisoEq === '') { est3d.ponerEquipos([]); return; }
     const res = new Map((R?.equipos || []).map((q) => [q.unidad, q]));
-    const N = info.niveles.length;
-    const nivelDe = (p) => (p === 'CUB' ? N : p === 'BT' ? 0 : Math.min(N, Math.max(0, (+p || 1) - 1)));
-    const lista = unidades.filter((q) => String(q.piso) === String(pisoEq) && q.cat.mont !== 'techo').map((q) => {
-      const k = nivelDe(q.piso), z0 = k > 0 ? info.niveles[k - 1].z : 0;
-      return { unidad: q.unidad, k, x: q.x, y: q.y, z: z0 + q.z, rot: q.rot, dim: q.cat.dim, color: colorEq(res.get(q.unidad)) };
+    const lista = unidades.filter((q) => String(q.piso) === String(pisoEq) && q.montaje !== 'cielo' && q.cat.mont !== 'cielo').map((q) => {
+      const k = nivelDe(q), z0 = k > 0 ? info.niveles[k - 1].z : 0, r = res.get(q.unidad);
+      return { unidad: q.unidad, k, x: q.x, y: q.y, z: z0 + q.z, rot: q.rot, dim: q.cat.dim, color: colorEq(r), desliza_m: r?.desliza ? +r.deslizamiento_max_m || 0 : 0 };
     });
     est3d.ponerEquipos(lista);
     st.invalidate();
@@ -771,14 +830,19 @@ export async function montar(ctx) {
       calculando = null;
       botones(false);
       if (e?.codigo === 'cancelado') { estado('Cálculo cancelado.'); return { cancelado: true }; }
-      const msg = e?.codigo === 'no_converge' ? 'El cálculo no convergió en algún paso (la estructura perdió estabilidad numérica).' : e?.codigo === 'datos' ? 'Faltan datos del modelo o del estudio de amenaza.' : 'El motor de cálculo no está disponible.';
-      estado(`${msg} ${e?.message ? `(${e.message})` : ''}`);
+      // el mensaje técnico va a la consola (puede citar archivos); en la vista, solo qué pasó
+      const msg = e?.codigo === 'no_converge' ? 'El cálculo no convergió en algún paso (la estructura perdió estabilidad numérica). Prueba con otra semilla o con un sismo menor.'
+        : e?.codigo === 'datos' ? 'El modelo estructural de la torre o el estudio de amenaza todavía no están publicados: cuando estén, el simulador calcula aquí.'
+          : 'El motor de cálculo no respondió. Vuelve a intentarlo.';
+      estado(msg);
       console.warn('Simulador sísmico:', e);
       return { error: e?.codigo || 'interno', mensaje: e?.message };
     }
   }
+  // los avisos citan a veces la sección del estudio de amenaza («ver seleccion_de_regimen»): eso no se lee en la web
+  const sinCita = (a) => String(a ?? '').replace(/\s*\((?:ver|véase)\s+[a-z0-9_.]+\)/gi, '').replace(/\s*\b(?:ver|véase)\s+[a-z0-9]+(?:_[a-z0-9]+)+\b\.?/gi, '');
   function avisos(mv, opciones) {
-    const L = (mv?.registro?.avisos || []).map((a) => `<li>${esc(a)}</li>`);
+    const L = (mv?.registro?.avisos || []).map((a) => `<li>${esc(sinCita(a))}</li>`);
     if (opciones.calidad === 'baja') L.push('<li>calidad baja: paso de 0,01 s</li>');
     if (opciones.escala === 'nsr10') L.push('<li>Escala «nivel de diseño NSR-10»: escenario hipotético.</li>');
     out('avisos').innerHTML = L.join('');
@@ -798,6 +862,8 @@ export async function montar(ctx) {
     tabla();
     listaEquipos();
     ponerEquipos();
+    const fe = R.opciones?.escala === 'nsr10' && Number.isFinite(+R.factor_escala);
+    out('factor').textContent = fe ? `En este cálculo el registro se multiplicó por ${n(R.factor_escala, 2)}; el ajuste del suelo dio ${nv(R.iteraciones_escala ?? 0, 0)} vueltas.` : '';
     out('g-estado').textContent = `Sismo de Mw ${n(R.params?.Mw, 1)} a ${nv(R.params?.distancia_epicentral_km, 0)} km y ${nv(R.params?.profundidad_km, 0)} km de profundidad · ${nt} pasos de ${n(R.opciones?.dt_salida_s || 0.02, 2)} s · motor: ${NOMBRE_MOTOR[motor?.tipo] || motor?.tipo}.`;
     // paso inicial: el de mayor desplazamiento de la cubierta (el más informativo); sin movimiento reducido, se reproduce
     const N = NLv(), k = nivelSuperior();
@@ -811,12 +877,20 @@ export async function montar(ctx) {
       id: R.id, escenario: ctl('escenario').value, params: R.params, opciones: R.opciones, motor: motor?.tipo, nt, N, nE: listo.elementos.length,
       escala, duracion_ms: Math.round(dur), pga_g: mov?.registro?.intensidades?.x?.pga_g ?? null,
       deriva_vector_max: E?.deriva_vector_max ? Math.max(...E.deriva_vector_max) : null, dc_max: E?.dc_max ? Math.max(...E.dc_max) : null,
-      rotulas: est3d?.rotulasVisibles?.() ?? null, graficas: Object.values(grafs).filter(Boolean).length,
+      rotulas: contarRotulas(), graficas: Object.values(grafs).filter(Boolean).length,
     };
     Object.defineProperty(resumen, 'resultados', { value: R, enumerable: false });
     // para la QA (13.4): centro de masa de la cubierta esperado en el paso i = cm + u × escala
     Object.defineProperty(resumen, 'cubiertaEsperada', { enumerable: false, value: (i) => { const o = (i * N + k) * 3, nvl = info.niveles[k]; return [nvl.cm[0] + escala * R.u[o], nvl.cm[1] + escala * R.u[o + 1], nvl.z]; } });
     return resumen;
+  }
+  // extremos de elemento que fluyeron alguna vez en el sismo (bits 1 y 2 de Resultados.rotulas)
+  function contarRotulas() {
+    if (!R?.rotulas) return null;
+    const nE = listo.elementos.length, nt = R.t.length, b = new Uint8Array(nE);
+    for (let i = 0; i < nt; i++) for (let k = 0; k < nE; k++) b[k] |= R.rotulas[i * nE + k];
+    let c = 0; for (let k = 0; k < nE; k++) c += (b[k] & 1 ? 1 : 0) + (b[k] & 2 ? 1 : 0);
+    return c;
   }
   let primeraVezSinAuto = false;
   function construirSiCambia() { if (!est3d) construir3D(); }
@@ -840,7 +914,9 @@ export async function montar(ctx) {
   const sacar = (cont) => { cont.replaceChildren(); cont.hidden = true; };
   function encuadrar() {
     if (!est3d || !dentro) return;
-    st.frameBox(est3d.caja(2), new THREE.Vector3(-0.75, 0.5, 0.62), { margin: 0.78, duration: 1.2 });
+    // en el recuadro angosto del teléfono la torre llena más el ancho (la barra de tiempo y la leyenda van encima y abajo)
+    const angosto = (st.el?.clientWidth || 800) < 560;
+    st.frameBox(est3d.caja(2), new THREE.Vector3(-0.75, 0.5, 0.62), { margin: angosto ? 0.95 : 0.8, duration: 1.2, ty: angosto ? 0.42 : 0.35 });
   }
   return {
     entrar() {

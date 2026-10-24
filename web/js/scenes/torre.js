@@ -338,7 +338,24 @@ export function mount(root) {
   vigilar(q('panel')); vigilar(q('ficha'));
   // datos de los modos nuevos: se piden al entrar; si el archivo todavía no se publicó, el modo recibe null
   const pedidos = {};
-  const leer = (f) => (pedidos[f] ??= fetch(new URL(`../../data/${f}`, import.meta.url)).then((r) => (r.ok ? r.json() : null)).catch(() => null));
+  const pedir = (f) => fetch(new URL(`../../data/${f}`, import.meta.url)).then((r) => { if (!r.ok) throw new Error(f); return r.json(); });
+  // build_data.py parte por tamaño los archivos que pasan su límite (10.1: planta por nivel, inventario por nivel y matriz por
+  // grupos de servicios): el principal trae «partes» {archivos}; cada parte trae trozos de listas (se concatenan en orden) y de
+  // diccionarios (se suman). Se juntan aquí, así cada modo recibe el mismo esquema que con un solo archivo; si falta una parte,
+  // el modo recibe null como si el archivo no se hubiera publicado.
+  async function juntarPartes(o) {
+    if (!o?.partes?.archivos) return o;
+    const { partes, ...todo } = o;
+    for (const t of await Promise.all(partes.archivos.map(pedir))) {
+      for (const [k, v] of Object.entries(t)) {
+        if (Array.isArray(v)) todo[k] = (todo[k] || []).concat(v);
+        else if (v && typeof v === 'object') todo[k] = Object.assign(todo[k] || {}, v);
+        else todo[k] = v;
+      }
+    }
+    return todo;
+  }
+  const leer = (f) => (pedidos[f] ??= pedir(f).then(juntarPartes).catch(() => null));
   const urlDatos = (f) => new URL(`../../data/${f}`, import.meta.url).href;
   // colores del contraste para la capa del recorrido: E los calcula por recinto y C los recibe ya como THREE.Color (9.2)
   async function coloresContraste(plantas) {
@@ -652,6 +669,7 @@ export function mount(root) {
       // para la QA de integración: qué modos usan el relleno, si llegaron los datos de la vista y qué oculta el exterior
       relleno: (m) => (m in modulos ? !!modulos[m].RELLENO : null),
       listo: () => !!D,
+      datos: (f) => leer(f),   // un archivo de web/data tal como lo recibe cada modo (con las partes ya juntas)
       exterior: () => exterior,
     };
   }

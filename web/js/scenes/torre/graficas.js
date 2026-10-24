@@ -38,6 +38,9 @@ function marcasLog(a, b) {
   for (let e = Math.floor(Math.log10(a)); e <= Math.ceil(Math.log10(b)); e++) for (const m of [1, 2, 5]) { const v = m * 10 ** e; if (v >= a * 0.999 && v <= b * 1.001) out.push(v); }
   return out;
 }
+// marca «redonda» de un eje logarítmico: mantisa 1 (o 1 y 5); String(0.5) empieza por «0», así que se mira la mantisa
+const mantisa = (v) => Math.round(v / 10 ** Math.floor(Math.log10(v) + 1e-9));
+const es1 = (v) => mantisa(v) === 1, es15 = (v) => mantisa(v) === 1 || mantisa(v) === 5;
 // rótulo de un valor de eje: sin ceros de más y con coma decimal
 const rotulo = (v) => { const a = Math.abs(v); return a === 0 ? '0' : a >= 1000 ? num(v, 0) : a >= 1 ? num(v, 2) : sig(v, 1); };
 const rangoDe = (arrs, simetrico = false) => {
@@ -177,7 +180,8 @@ const logX = (a, b, p, q) => { const la = Math.log10(a), k = (q - p) / (Math.log
 // ---------------------------------------------------------------- serie de tiempo genérica (y el acelerograma)
 // series: [{ nombre, y, color? }], referencias: [{ valor, etiqueta }] (líneas horizontales finas, p. ej. el cortante de
 // diseño), unidad del eje y. Un solo eje: las series deben tener la misma unidad
-export function serieTiempo(el, { t, series = [], referencias = [], unidad = '', titulo = 'Serie de tiempo', nota = '', aria, simetrico = true, dec = 2 } = {}) {
+export function serieTiempo(el, { t, series = [], referencias = [], unidad: u0 = '', titulo = 'Serie de tiempo', nota = '', aria, simetrico = true, dec = 2 } = {}) {
+  const unidad = u0 || series[0]?.unidad || '';   // la unidad puede venir en la gráfica o en la serie (8.4)
   const cols = series.map((s, k) => s.color || C[k % C.length]);
   const m = marco(el, { titulo, nota, aria, leyenda: [...series.map((s, k) => ({ nombre: s.nombre, color: cols[k] })), ...referencias.map((r) => ({ nombre: r.etiqueta, color: 'var(--muted)', trazo: '5 3' }))] });
   const g = { M: { l: 50, r: 10, t: 16, b: 22 } };
@@ -208,10 +212,10 @@ export function acelerograma(el, { t, ax, ay, titulo = 'Aceleración del suelo',
 }
 
 // ---------------------------------------------------------------- espectros de respuesta (log-log)
-export function espectros(el, { T, sa_x, sa_y, nsr10 = {}, gmpe = [], marcas = [], titulo = 'Espectro de respuesta (5 % de amortiguamiento)', nota } = {}) {
+export function espectros(el, { T, sa_x, sa_y, nsr10 = {}, gmpe = [], marcas = [], nombres = ['Este sismo, x', 'Este sismo, y'], titulo = 'Espectro de respuesta (5 % de amortiguamiento)', nota } = {}) {
   const Tn = nsr10.T || T;
   const ley = [
-    { nombre: 'Este sismo, x', color: C[0] }, { nombre: 'Este sismo, y', color: C[1] },
+    { nombre: nombres[0], color: C[0] }, { nombre: nombres[1], color: C[1] },
     ...(nsr10.con_I ? [{ nombre: 'Diseño NSR-10 de Yondó (I = 1,5)', color: 'var(--ink)' }] : []),
     ...(nsr10.sin_I ? [{ nombre: 'Diseño sin I', color: 'var(--ink)', trazo: '6 3' }] : []),
     ...(nsr10.umbral_dano ? [{ nombre: 'Umbral de daño (Ad = 0,04)', color: 'var(--muted)', trazo: '2 3' }] : []),
@@ -230,8 +234,8 @@ export function espectros(el, { T, sa_x, sa_y, nsr10 = {}, gmpe = [], marcas = [
     [g.X, g.Xinv] = logX(tA, tB, M.l, W - M.r);
     const [Y] = logX(yA, yB, H - M.b, M.t);
     Object.assign(g, { W, H, xv: T });
-    const ys = marcasLog(yA, yB).filter((v) => /^[15]/.test(String(v)) || yB / yA < 1e3);
-    let s = ejes({ W, H, M, xs: marcasLog(tA, tB).filter((v) => W > 420 || /^[15]/.test(String(v))), ys, X: g.X, Y, xEt: 'período T (s)', yEt: 'Sa (g)' });
+    const ys = marcasLog(yA, yB).filter((v) => (yB / yA < 1e3 ? true : yB / yA < 1e5 && H > 230 ? es15(v) : es1(v)));
+    let s = ejes({ W, H, M, xs: marcasLog(tA, tB).filter((v) => W > 420 || es15(v)), ys, X: g.X, Y, xEt: 'período T (s)', yEt: 'Sa (g)' });
     const pos = (xv, yv) => { const xs = [], vs = []; for (let i = 0; i < Math.min(xv.length, yv.length); i++) if (xv[i] > 0 && yv[i] > 0) { xs.push(xv[i]); vs.push(yv[i]); } return [xs, vs]; };
     gmpe.forEach((q, k) => {
       const med = q.mediana || q.mediana_g || [], sg = q.sigma || q.sigma_ln || [], col = C[2 + (k % 4)];
@@ -256,7 +260,7 @@ export function espectros(el, { T, sa_x, sa_y, nsr10 = {}, gmpe = [], marcas = [
   });
   const interp = (xv, yv, x) => { if (!xv || !yv) return NaN; const i = cercano(xv, x); return yv[i]; };
   const sinLect = lectura(m, g, (i) => {
-    const Ti = T[i], f = [['Sa x', `${sig(sa_x?.[i], 3)} g`, C[0]], ['Sa y', `${sig(sa_y?.[i], 3)} g`, C[1]]];
+    const Ti = T[i], f = [[nombres[0], `${sig(sa_x?.[i], 3)} g`, C[0]], [nombres[1], `${sig(sa_y?.[i], 3)} g`, C[1]]];
     if (nsr10.con_I) f.push(['NSR-10 (I = 1,5)', `${sig(interp(Tn, nsr10.con_I, Ti), 3)} g`, 'var(--ink)']);
     if (nsr10.umbral_dano) f.push(['umbral de daño', `${sig(interp(Tn, nsr10.umbral_dano, Ti), 3)} g`, 'var(--muted)']);
     return f;
@@ -279,7 +283,7 @@ export function fourier(el, { f, A_x, A_y, objetivo = null, titulo = 'Espectro d
     [g.X, g.Xinv] = logX(fA, fB, M.l, W - M.r);
     const [Y] = logX(yA, yB, H - M.b, M.t);
     Object.assign(g, { W, H, xv: f });
-    let s = ejes({ W, H, M, xs: marcasLog(fA, fB).filter((v) => /^[15]/.test(String(v)) || W > 520), ys: marcasLog(yA, yB).filter((v) => /^1/.test(String(v))), X: g.X, Y, xEt: 'frecuencia (Hz)', yEt: 'amplitud (m/s)' });
+    let s = ejes({ W, H, M, xs: marcasLog(fA, fB).filter((v) => es15(v) || W > 520), ys: marcasLog(yA, yB).filter(es1), X: g.X, Y, xEt: 'frecuencia (Hz)', yEt: 'amplitud (m/s)' });
     const pos = (yv) => { const xs = [], vs = []; for (let i = 0; i < f.length; i++) if (f[i] > 0 && yv[i] > 0) { xs.push(f[i]); vs.push(yv[i]); } return [xs, vs]; };
     if (A_x) s += linea(trazo(...pos(A_x), g.X, Y), C[0], { ancho: 1.5 });
     if (A_y) s += linea(trazo(...pos(A_y), g.X, Y), C[1], { ancho: 1.5 });

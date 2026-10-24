@@ -360,6 +360,94 @@ details.fold > summary:hover { color: var(--accent); }
 /* >>> torre-recorrido (equipo C) */
 /* <<< torre-recorrido */
 /* >>> torre-sismo (equipo D) */
+/* Simulador sísmico (web/js/scenes/torre/sismo.js, estructura3d.js y graficas.js): panel, barra de tiempo y leyenda sobre
+   el recuadro, gráficas SVG y tablas. Solo tokens del tema; sin transiciones (todo lo que se mueve es del cálculo). */
+.sismo-panel h3 { margin-bottom: 6px; }
+.sismo-panel h4 { margin: 14px 0 6px; font-size: 0.95rem; }
+.sismo-panel .ctl { gap: 8px; }
+.sismo-panel .ctl > .note { margin: -3px 0 2px; font-size: 0.78rem; line-height: 1.45; }
+.sismo-panel select, .sismo-panel input[type=number], .sismo-graficas select { font: 0.85rem var(--f-body); color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px; padding: 5px 8px; width: 100%; max-width: 100%; min-width: 0; }
+.sismo-rango > span { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.sismo-rango output { font: 600 0.86rem var(--f-mono); color: var(--ink); }
+.sismo-rango small.note { font-size: 0.76rem; }
+.sismo-op { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 4px; }
+.sismo-op legend { padding: 0; margin-bottom: 3px; font-size: 0.85rem; }
+.sismo-op > label { display: flex; align-items: center; gap: 6px; font-size: 0.84rem; }
+.sismo-op .seg { max-width: 100%; }
+.sismo-op .seg button { padding: 5px 9px; font-size: 0.76rem; }
+.sismo-aviso { color: var(--ink); border-left: 3px solid var(--warn); padding-left: 8px; }
+.sismo-acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.sismo-estado { display: grid; gap: 5px; }
+.sismo-estado p { margin: 0; font-size: 0.84rem; }
+.sismo-estado progress { width: 100%; height: 8px; accent-color: var(--accent); }
+.sismo-avisos:empty { display: none; }
+.sismo-avisos li { margin: 2px 0; }
+.sismo-richter p { margin: 6px 0 0; }
+.sismo-ficha h4 { margin-bottom: 8px; }
+.sismo-ficha .kv dd { overflow-wrap: anywhere; }
+/* sobre el recuadro: la capa no atrapa el puntero (se puede girar la torre); sí la barra de tiempo y la leyenda */
+#v-torre .sismo-hud { position: absolute; inset: 0; pointer-events: none; }
+#v-torre .sismo-hud > * { pointer-events: auto; }
+.sismo-tiempo { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 6px 10px; padding: 5px 8px; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 12px; font: 0.74rem var(--f-mono); color: var(--ink); }
+.sismo-tiempo > button { flex: none; font: 600 0.74rem var(--f-mono); color: var(--bg); background: var(--ink); border: 0; border-radius: 999px; padding: 5px 11px; cursor: pointer; min-width: 92px; }
+.sismo-tiempo > button:disabled { opacity: 0.45; cursor: default; }
+.sismo-tiempo input[type=range] { flex: 1 1 140px; min-width: 0; margin: 0; }
+.sismo-t { flex: none; white-space: nowrap; }
+.sismo-vel { flex: none; border-width: 1.5px; border-radius: 999px; }
+.sismo-vel button { padding: 3px 8px; font: 600 0.7rem var(--f-mono); }
+.sismo-ley { position: absolute; top: 10px; left: 10px; max-width: min(280px, calc(100% - 140px)); max-height: calc(100% - 84px); overflow: auto; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 10px; padding: 4px 9px; font: 0.72rem/1.45 var(--f-body); color: var(--ink); }
+.sismo-ley summary { cursor: pointer; font: 600 0.72rem var(--f-mono); }
+.sismo-ley p { margin: 4px 0; }
+.sismo-bins { list-style: none; margin: 4px 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 10px; font-family: var(--f-mono); }
+.sismo-bins i, .sismo-rot, .sismo-an, .sismo-ln, .sismo-mm, .sismo-eq { display: inline-block; vertical-align: -1px; margin-right: 5px; }
+.sismo-bins i { width: 14px; height: 9px; border-radius: 2px; }
+.sismo-rot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink); }
+.sismo-an { width: 11px; height: 11px; border-radius: 50%; border: 2.5px solid var(--c); margin: 0 3px 0 6px; }
+.sismo-ln { width: 16px; height: 0; border-top: 1.5px solid var(--muted); vertical-align: 3px; }
+.sismo-mm { width: 12px; height: 9px; background: color-mix(in srgb, var(--good) 50%, transparent); border: 1px solid var(--line); }
+.sismo-eq { width: 10px; height: 10px; border-radius: 3px; background: var(--c); border: 1px solid var(--line); }
+.sismo-sel { display: inline-block; width: 16px; height: 0; border-top: 4px solid var(--data); vertical-align: 2px; margin-right: 5px; }
+#v-torre .stage:has([data-slot="torre.hud.sismo"]:not([hidden])) .stage-hint { bottom: 62px; }
+/* etiqueta de deriva de cada entrepiso: ancla sin tamaño en el vértice; la caja se abre hacia la izquierda */
+.lbl.sismo-lbl { width: 0; height: 0; overflow: visible; }
+.sismo-lbl > .lbl-node { position: absolute; right: 4px; bottom: 2px; font-size: 10.5px; white-space: nowrap; }
+/* tarjeta «Lo que calculó el simulador»: gráficas en rejilla, que bajan a una columna en el teléfono */
+.sismo-rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 430px), 1fr)); gap: 16px 22px; margin: 8px 0 16px; }
+.sismo-rejilla > div:empty { display: none; }
+.sismo-graficas h4 { margin: 16px 0 6px; }
+.sismo-el-sel { display: grid; gap: 4px; font-size: 0.85rem; max-width: 520px; }
+.sismo-honestidad { border-left: 3px solid var(--line); padding-left: 10px; margin-top: 14px; }
+.sismo-tabla td:first-child { font-weight: 600; }
+.sismo-tabla td.ancho { min-width: 16em; }
+figure.sg { margin: 0; min-width: 0; display: grid; gap: 6px; }
+figure.sg figcaption { display: grid; gap: 2px; font-size: 0.88rem; }
+figure.sg figcaption .note { font-size: 0.76rem; line-height: 1.45; }
+.sg-caja { position: relative; min-width: 0; }
+.sg-caja svg.mr-chart { touch-action: pan-y; }
+svg.mr-chart .sg-v { stroke-dasharray: 2 3; }
+svg.mr-chart .sg-et { fill: var(--ink); }
+svg.mr-chart .sg-cero { stroke: var(--muted); stroke-width: 1; }
+svg.mr-chart .sg-cruz { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3 3; }
+.sg-lectura { position: absolute; top: 4px; left: 60px; display: grid; gap: 1px; max-width: calc(100% - 8px); padding: 4px 8px; background: var(--surface); border: 1.5px solid var(--ink); border-radius: 8px; font: 0.72rem/1.4 var(--f-mono); color: var(--ink); pointer-events: none; z-index: 1; }
+.sg-lectura span { white-space: nowrap; }
+.sg-lectura i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; background: var(--c); margin-right: 5px; }
+.sg-ley { gap: 4px 12px; font-size: 0.74rem; }
+.sg-ley .sg-k { margin-right: 5px; }
+.sg-k.ln { width: 16px; height: 0; border-radius: 0; border-top: 2.5px solid var(--c); vertical-align: 3px; }
+.sg-k.ln[style*="--d"] { border-top-style: dashed; }
+.sg-k.banda { width: 14px; height: 9px; background: color-mix(in srgb, var(--c) 35%, transparent); border: 1px solid var(--c); }
+.sg-k.pt { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+@media (max-width: 720px) {
+  .sismo-tiempo { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "play rango rango" "t t vel"; gap: 5px 8px; bottom: 8px; left: 8px; right: 8px; padding: 5px 7px; }
+  .sismo-tiempo > button { grid-area: play; min-width: 84px; }
+  .sismo-tiempo input[type=range] { grid-area: rango; }
+  .sismo-t { grid-area: t; min-width: 0; align-self: center; white-space: normal; line-height: 1.3; }
+  .sismo-vel { grid-area: vel; }
+  .sismo-ley { max-width: calc(100% - 128px); max-height: calc(100% - 120px); }
+  .sismo-bins { grid-template-columns: minmax(0, 1fr); }
+  #v-torre .stage:has([data-slot="torre.hud.sismo"]:not([hidden])) .stage-hint { display: none; }
+  .sismo-tabla td.ancho { min-width: 0; }
+}
 /* <<< torre-sismo */
 /* >>> torre-contraste (equipo E) */
 /* Tarjeta «Contraste con el proyecto tipo» (web/js/scenes/torre/contraste.js). Píldoras de veredicto con los tokens del

@@ -78,7 +78,7 @@ export function armarModelo(estructura, opciones = {}) {
       niveles.push({
         id: nv.id, bloque: b.id, ib: bloques.length, k: k + 1, g: base + k, abajo: k === 0 ? -1 : base + k - 1,
         z: nv.z, h, masa: nv.masa_t, Jz: nv.Jz_t_m2, xc: nv.cm[0], yc: nv.cm[1],
-        peso: esNum(nv.peso_sismico_kN) ? nv.peso_sismico_kN : nv.masa_t * G, contorno,
+        peso: esNum(nv.peso_sismico_kN) ? nv.peso_sismico_kN : nv.masa_t * G, contorno, contornoPlano: Float64Array.from(contorno.flat()),
       });
       zAnt = nv.z;
     });
@@ -190,6 +190,9 @@ export function armarModelo(estructura, opciones = {}) {
   };
   const Pg = new Float64Array(ncTot);
   const avisos = [];
+  // base de cada muro de concreto: el elemento cuyo nodo i no es el nodo j de otro tramo del mismo muro (E1: la
+  // rótula del muro va solo ahí; los tramos de encima son elásticos, como el diseño por capacidad de muros)
+  const jMuro = new Set(elems.filter((x) => x.tipo === MURO).map((x) => x.nj.id));
   elems.forEach((x, ie) => {
     const { e, tipo, ni, nj, sec, mat, P } = x;
     const Ec = mat.Ec_MPa ?? mat.E_MPa ?? mat.Es_MPa;
@@ -284,7 +287,7 @@ export function armarModelo(estructura, opciones = {}) {
     } else {
       el.sup[h2] = el.inf[h2] = el.sup[h2 + 1] = el.inf[h2 + 1] = MyE;
     }
-    el.rmod[h2] = modelo;
+    el.rmod[h2] = tipo === MURO && jMuro.has(ni.id) ? SIN_ROTULA : modelo;
     el.rmod[h2 + 1] = tipo === MURO ? SIN_ROTULA : modelo;
     el.H[h2] = el.H[h2 + 1] = alfa * ke;
     if (!(el.sup[h2] > 0 && el.inf[h2] > 0)) fallo(`sección ${e.seccion}: momentos de fluencia deben ser positivos`);
@@ -340,8 +343,10 @@ export function armarModelo(estructura, opciones = {}) {
       b2[f1.t] += 1; b2[f1.r] += f1.coef;
       if (niveles[g].abajo >= 0) { const f0 = fila(dir, r.coordenada, niveles[g].abajo); b2[f0.t] -= 1; b2[f0.r] -= f0.coef; }
       const aisladoArchivo = r.aislado ?? false;
+      const ix = [], bv = [];
+      for (let a = 0; a < nd; a++) if (b2[a] !== 0) { ix.push(a); bv.push(b2[a]); }
       muros.push({
-        id: r.id, dir, c: r.coordenada, g, h: niveles[g].h, b: b2, env, estados: r.estados_de_dano || [],
+        id: r.id, dir, c: r.coordenada, g, h: niveles[g].h, b: b2, ix: Int32Array.from(ix), bv: Float64Array.from(bv), env, estados: r.estados_de_dano || [],
         aislado: op.noEstructurales === 'confinados' ? false : aisladoArchivo, aisladoArchivo,
       });
     }
@@ -444,8 +449,20 @@ export class Nucleo {
     this.ri = new Float64Array(2);
     this.KfD = new Float64Array(mod.nd * mod.nd);    // Σ Tᵀ·K̂·T de los pórticos
     this.KfDvalida = false;
+    // intervalo de M en el que cada rótula queda rígida desde su estado comprometido (cambia solo al comprometer)
+    this.lo = new Float64Array(2 * nE);
+    this.hi = new Float64Array(2 * nE);
     const el = mod.el;
     for (let h = 0; h < 2 * nE; h++) estadoInicial(el.sup[h], el.inf[h], this.st, h * NE);
+    this._intervalos();
+  }
+
+  _intervalos(h0 = 0, h1 = 2 * this.mod.nE) {
+    const el = this.mod.el, ri = this.ri;
+    for (let h = h0; h < h1; h++) {
+      intervaloRigido(el.rmod[h], el.sup[h], el.inf[h], el.H[h], this.st, h * NE, ri);
+      this.lo[h] = ri[0]; this.hi[h] = ri[1];
+    }
   }
 
   /** Copia del estado comprometido de los elementos (para volver a él). */
@@ -456,6 +473,7 @@ export class Nucleo {
     this.st.set(s.st); this.e.set(s.e); this.ed.set(s.ed); this.dl.set(s.dl); this.dld.set(s.dld); this.Q.set(s.Q); this.thp.set(s.thp);
     for (const P of this.mod.porticos) P.sucio = true;
     this.KfDvalida = false;
+    this._intervalos();
   }
 
   /**
@@ -469,7 +487,7 @@ export class Nucleo {
     const eN = this.e, edN = this.ed, dlN = this.dl, dldN = this.dld;
     const dinamico = dt > 0 && a1 > 0;
     const c1 = dt > 0 ? 2 / dt : 0;                 // γ/(β·Δt) con γ = 1/2, β = 1/4
-    const ri = this.ri, P1 = this.P1, P2 = this.P2, sal = this.sal;
+    const P1 = this.P1, P2 = this.P2, sal = this.sal, lo = this.lo, hi = this.hi;
     const ifac = 1 / fac;
     for (const P of mod.porticos) {
       const uL = P.uLoc, FL = P.Floc, nl = P.nl, n = P.n;
@@ -499,11 +517,8 @@ export class Nucleo {
         let M0 = k11 * (t0 - p0) + k12 * (t1 - p1) + g0;
         let M1 = k12 * (t0 - p0) + k22 * (t1 - p1) + g1;
         let tp0 = p0, tp1 = p1, b0 = 0, b1 = 0, ty0 = RIGIDO, ty1 = RIGIDO;
-        const m0 = el.rmod[h0], m1 = el.rmod[h1];
-        let rigido = true;
-        if (m0 !== SIN_ROTULA) { intervaloRigido(m0, el.sup[h0], el.inf[h0], el.H[h0], st, h0 * NE, ri); if (M0 < ri[0] || M0 > ri[1]) rigido = false; }
-        if (rigido && m1 !== SIN_ROTULA) { intervaloRigido(m1, el.sup[h1], el.inf[h1], el.H[h1], st, h1 * NE, ri); if (M1 < ri[0] || M1 > ri[1]) rigido = false; }
-        if (!rigido) {
+        if (M0 < lo[h0] || M0 > hi[h0] || M1 < lo[h1] || M1 > hi[h1]) {
+          const m0 = el.rmod[h0], m1 = el.rmod[h1];
           // retorno al estado admisible: f̃·M + Φ(M) = θt + f̃·h, con f̃ = f_e/fac
           const f11 = el.f11[ie] * ifac, f12 = el.f12[ie] * ifac, f22 = el.f22[ie] * ifac;
           const r0 = t0 + f11 * g0 + f12 * g1, r1 = t1 + f12 * g0 + f22 * g1;
@@ -620,23 +635,30 @@ export class Nucleo {
   }
 
   /**
-   * Residuo condensado de los pórticos: R̂ += Σ Tᵀ·(−F_d − K_dcᵀ·y) con y = K_cc⁻¹·R_c y R_c = λ·Pg − F_c. Guarda y
-   * en cada pórtico (para recuperar Δu_c) y devuelve ‖R_c‖∞. Requiere rigidezDiafragma() antes.
+   * Residuo condensado de los pórticos: R̂ += Σ Tᵀ·(−F_d − K_dcᵀ·y) con y = K_cc⁻¹·R_c y R_c = λ·Pg − F_c (sin −F_d si
+   * incluirF es false: el integrador ya lo restó al armar el residuo sin condensar). Guarda y en cada pórtico (para
+   * recuperar Δu_c) y devuelve ‖R_c‖∞. Requiere rigidezDiafragma() antes.
    */
-  residuoCondensado(Rd, lambda = 1) {
+  residuoCondensado(Rd, lambda = 1, incluirF = true, omitir = 0) {
     const mod = this.mod, Pg = mod.Pg;
     let nR = 0;
     for (const P of mod.porticos) {
       const { nl, nc, w } = P, y = P.y;
+      let nP = 0;
       for (let i = 0; i < nc; i++) {
         const r = lambda * Pg[P.offC + i] - P.Floc[nl + i];
         y[i] = r;
         const a = r < 0 ? -r : r;
-        if (a > nR) nR = a;
+        if (a > nP) nP = a;
       }
+      if (nP > nR) nR = nP;
+      // pórtico ya en equilibrio (residuo por debajo de `omitir`, una fracción de la tolerancia): su corrección
+      // K_cc⁻¹·R_c es despreciable y no se calcula
+      P.yCero = nP <= omitir;
+      if (P.yCero) { if (incluirF) for (let l = 0; l < nl; l++) { const r = -P.Floc[l]; Rd[P.latT[l]] += r; Rd[P.latR[l]] += P.latC[l] * r; } continue; }
       if (nc > 0) resolverBanda(P.Kcc, nc, w, y);
       for (let l = 0; l < nl; l++) {
-        let r = -P.Floc[l];
+        let r = incluirF ? -P.Floc[l] : 0;
         for (let i = 0; i < nc; i++) r -= P.Kcd[i * nl + l] * y[i];
         Rd[P.latT[l]] += r; Rd[P.latR[l]] += P.latC[l] * r;
       }
@@ -644,13 +666,31 @@ export class Nucleo {
     return nR;
   }
 
+  /**
+   * Predicción de los condensados al empezar un paso: Δc = −X·(T·Δu_d) con la X de la última factorización. Un
+   * pórtico que sigue elástico queda así en equilibrio (K_cc·Δc + K_cd·Δd = 0, también con el amortiguamiento
+   * proporcional de su parte elástica) y su solución en banda se omite en la iteración.
+   */
+  predecirCondensados(duD, uC) {
+    for (const P of this.mod.porticos) {
+      const { nl, nc } = P;
+      if (!(P.fac === P.fac)) continue;                  // pórtico sin factorizar todavía
+      for (let i = 0; i < nc; i++) {
+        let v = 0;
+        for (let l = 0; l < nl; l++) v -= P.X[i * nl + l] * (duD[P.latT[l]] + P.latC[l] * duD[P.latR[l]]);
+        uC[P.offC + i] += v;
+      }
+    }
+  }
+
   /** Δu_c de cada pórtico: Δc = y − X·(T·Δu_d). Devuelve ‖Δu_c‖∞. */
   recuperar(duD, duC) {
     let m = 0;
     for (const P of this.mod.porticos) {
       const { nl, nc } = P;
+      const yc = P.yCero;
       for (let i = 0; i < nc; i++) {
-        let v = P.y[i];
+        let v = yc ? 0 : P.y[i];
         for (let l = 0; l < nl; l++) v -= P.X[i * nl + l] * (duD[P.latT[l]] + P.latC[l] * duD[P.latR[l]]);
         duC[P.offC + i] = v;
         const a = v < 0 ? -v : v;
@@ -662,10 +702,12 @@ export class Nucleo {
 
   /**
    * Compromete el estado de prueba. dt = 0 en estática. Devuelve los incrementos de energía del paso por la regla del
-   * trapecio: { hist: Σ ∫M dθp, amort: Σ ∫(a1·K_e·ė)ᵀ de + ∫(a1·kax·δ̇) dδ }.
+   * trapecio: { hist: Σ ∫M dθp, amort: Σ ∫(a1·K_e·ė)ᵀ de + ∫(a1·kax·δ̇) dδ }. Si se da Dd (3N), deja ahí la fuerza de
+   * amortiguamiento de los elementos en los gdl del diafragma (la usa el predictor del integrador).
    */
-  comprometer(dt, a1) {
-    const mod = this.mod, el = mod.el, nE = mod.nE;
+  comprometer(dt, a1, Dd = null) {
+    const mod = this.mod, el = mod.el, nE = mod.nE, A = el.A, dof = el.dof;
+    if (Dd) Dd.fill(0);
     const st = this.st, Q = this.Q, Qt = this.Qt, e = this.e, ed = this.ed, dl = this.dl, dld = this.dld;
     const c1 = dt > 0 ? 2 / dt : 0;
     let hist = 0, amort = 0;
@@ -674,8 +716,10 @@ export class Nucleo {
       const K11 = el.k11[ie], K12 = el.k12[ie], K22 = el.k22[ie], kax = el.kax[ie];
       // rótulas
       hist += (this.thpT[h0] - st[h0 * NE]) * (Qt[3 * ie] + Q[3 * ie]) * 0.5 + (this.thpT[h1] - st[h1 * NE]) * (Qt[3 * ie + 1] + Q[3 * ie + 1]) * 0.5;
+      const cambia = this.thpT[h0] !== st[h0 * NE] || this.thpT[h1] !== st[h1 * NE] || el.rmod[h0] === CLOUGH || el.rmod[h1] === CLOUGH;
       actualizar(el.rmod[h0], st, h0 * NE, Qt[3 * ie], this.thpT[h0], this.tipoT[h0], st, h0 * NE);
       actualizar(el.rmod[h1], st, h1 * NE, Qt[3 * ie + 1], this.thpT[h1], this.tipoT[h1], st, h1 * NE);
+      if (cambia) this._intervalos(h0, h1 + 1);
       this.thp[h0] = this.thpT[h0]; this.thp[h1] = this.thpT[h1];
       // parte elástica y su amortiguamiento (Newmark: ė_{n+1} = (2/Δt)·(e_{n+1} − e_n) − ė_n)
       const e0 = this.et[h0], e1 = this.et[h1], d2 = this.dlt[ie];
@@ -684,8 +728,15 @@ export class Nucleo {
         ed0 = c1 * (e0 - e[h0]) - ed[h0]; ed1 = c1 * (e1 - e[h1]) - ed[h1]; dd = c1 * (d2 - dl[ie]) - dld[ie];
         if (a1 > 0) {
           const D0n = a1 * (K11 * ed[h0] + K12 * ed[h1]), D1n = a1 * (K12 * ed[h0] + K22 * ed[h1]);
-          const D0 = a1 * (K11 * ed0 + K12 * ed1), D1 = a1 * (K12 * ed0 + K22 * ed1);
+          const D0 = a1 * (K11 * ed0 + K12 * ed1), D1 = a1 * (K12 * ed0 + K22 * ed1), Dax = a1 * kax * dd;
           amort += (e0 - e[h0]) * (D0n + D0) * 0.5 + (e1 - e[h1]) * (D1n + D1) * 0.5 + (d2 - dl[ie]) * a1 * kax * (dld[ie] + dd) * 0.5;
+          if (Dd && el.tipo[ie] !== VIGA) {
+            // solo los gdl laterales (k = 0 en i y k = 3 en j): las vigas no tienen componente lateral
+            const P = mod.porticos[el.port[ie]], o = 18 * ie;
+            const li = dof[6 * ie], lj = dof[6 * ie + 3];
+            if (li < P.nl) { const f = A[o] * D0 + A[o + 6] * D1 + A[o + 12] * Dax; Dd[P.latT[li]] += f; Dd[P.latR[li]] += P.latC[li] * f; }
+            if (lj < P.nl) { const f = A[o + 3] * D0 + A[o + 9] * D1 + A[o + 15] * Dax; Dd[P.latT[lj]] += f; Dd[P.latR[lj]] += P.latC[lj] * f; }
+          }
         }
       }
       e[h0] = e0; e[h1] = e1; ed[h0] = ed0; ed[h1] = ed1; dl[ie] = d2; dld[ie] = dd;
@@ -711,20 +762,17 @@ export class Nucleo {
 // =================================================================================================================
 /** Estado de prueba de los muros para uD: fuerza, tangente y deriva; suma Fd += F·b y, si K, K += k·b·bᵀ. */
 export function evaluarMuros(mod, uD, dmax, sal, Fd, K) {
-  const nd = mod.nd, tmp = sal.tmp;
-  mod.muros.forEach((m, i) => {
+  const nd = mod.nd, tmp = sal.tmp, muros = mod.muros;
+  for (let i = 0; i < muros.length; i++) {
+    const m = muros[i], ix = m.ix, bv = m.bv, nz = ix.length;
     let D = 0;
-    for (let a = 0; a < nd; a++) D += m.b[a] * uD[a];
+    for (let a = 0; a < nz; a++) D += bv[a] * uD[ix[a]];
     respuestaMuro(m.env, m.aislado, D, dmax[i], tmp);
-    sal.F[i] = tmp[0]; sal.k[i] = tmp[1]; sal.dmax[i] = tmp[2]; sal.D[i] = D;
-    if (tmp[0] !== 0 && Fd) for (let a = 0; a < nd; a++) Fd[a] += tmp[0] * m.b[a];
-    if (tmp[1] !== 0 && K) {
-      for (let a = 0; a < nd; a++) {
-        if (m.b[a] === 0) continue;
-        for (let c = 0; c < nd; c++) K[a * nd + c] += tmp[1] * m.b[a] * m.b[c];
-      }
-    }
-  });
+    const F = tmp[0], k = tmp[1];
+    sal.F[i] = F; sal.k[i] = k; sal.dmax[i] = tmp[2]; sal.D[i] = D;
+    if (F !== 0 && Fd) for (let a = 0; a < nz; a++) Fd[ix[a]] += F * bv[a];
+    if (k !== 0 && K) for (let a = 0; a < nz; a++) for (let c = 0; c < nz; c++) K[ix[a] * nd + ix[c]] += k * bv[a] * bv[c];
+  }
 }
 
 export function cajaMuros(mod) {
@@ -757,17 +805,19 @@ export function gravedad(mod, { incrementos = 5, tolerancia = 1e-6, max_iter = 3
       iterTot++;
       nuc.evaluar(uD, uC, 1, 0, 0);
       K.set(nuc.rigidezDiafragma(1));
-      Rd.fill(0); Fd.fill(0);
+      // residuo sin condensar en el diafragma (no hay cargas laterales): R_d = −F_pórticos − F_mampostería − K_PΔ·u
+      Fd.fill(0);
+      nuc.fuerzaDiafragma(Fd);
       evaluarMuros(mod, uD, dmax, mur, Fd, K);
+      let nR = 0;
       for (let a = 0; a < nd; a++) {
         let s = 0;
         for (let c = 0; c < nd; c++) { s += mod.Kpd[a * nd + c] * uD[c]; K[a * nd + c] += mod.Kpd[a * nd + c]; }
         Rd[a] = -Fd[a] - s;
+        nR = Math.max(nR, Math.abs(Rd[a]));
       }
-      const RdCrudo = Float64Array.from(Rd);
-      nuc.fuerzaDiafragma(RdCrudo.fill(0));
-      let nR = nuc.residuoCondensado(Rd, lambda);
-      for (let a = 0; a < nd; a++) nR = Math.max(nR, Math.abs(-RdCrudo[a] - Fd[a] - productoFila(mod.Kpd, nd, a, uD)));
+      // condensado: R̂_d = R_d − K_dc·K_cc⁻¹·R_c, con R_c = λ·Pg − F_c en los v y θ de los pórticos
+      nR = Math.max(nR, nuc.residuoCondensado(Rd, lambda, false));
       if (!factorLU(K, nd, piv)) throw new ErrorMotor('datos', 'la estructura es inestable ante las cargas de gravedad (rigidez lateral singular)');
       resolverLU(K, nd, piv, Rd, duD, tmp);
       const mC = nuc.recuperar(duD, duC);
@@ -784,18 +834,17 @@ export function gravedad(mod, { incrementos = 5, tolerancia = 1e-6, max_iter = 3
   // fuerzas finales (estado comprometido) y mampostería
   nuc.evaluar(uD, uC, 1, 0, 0);
   evaluarMuros(mod, uD, dmax, mur, null, null);
+  const elementos = nuc.guardar();
+  const momentos = new Float64Array(2 * mod.nE), axiales = new Float64Array(mod.nE);
+  for (let ie = 0; ie < mod.nE; ie++) { momentos[2 * ie] = elementos.Q[3 * ie]; momentos[2 * ie + 1] = elementos.Q[3 * ie + 1]; axiales[ie] = elementos.Q[3 * ie + 2]; }
+  // EstadoInicial del 7.4: desplazamientos u_g (diafragma uD y condensados uC), momentos de extremo (Mi, Mj) y axiales
   const g = {
-    uD, uC, elementos: nuc.guardar(), dmaxMuros: dmax.slice(), FmMuros: mur.F.slice(), DMuros: mur.D.slice(), iteraciones: iterTot,
+    uD, uC, u_g: uD, momentos, axiales, elementos, dmaxMuros: dmax.slice(), FmMuros: mur.F.slice(), DMuros: mur.D.slice(), iteraciones: iterTot,
   };
   mod._cache.gravedad = g;
   return g;
 }
 
-function productoFila(K, n, a, u) {
-  let s = 0;
-  for (let c = 0; c < n; c++) s += K[a * n + c] * u[c];
-  return s;
-}
 
 // =================================================================================================================
 // Rigidez lateral, P-Delta, modos y amortiguamiento
@@ -897,7 +946,7 @@ export function amortiguamiento(mod) {
   const a0 = (2 * xi * wi * wj) / (wi + wj), a1 = (2 * xi) / (wi + wj);
   const KC = rigidezLateral(mod, undefined, { conMuros: false });
   const nx = Math.min(12, nd);
-  const xi_modos = new Float32Array(nx);
+  const xi_modos = new Float64Array(nx);
   for (let r = 0; r < nx; r++) {
     const phi = md.formas[r];
     let c = 0;
@@ -968,20 +1017,26 @@ export function puntoDiafragma(mod, u, g, x, y, out) {
 }
 
 /**
- * Deriva vectorial (E9): en cada vértice del contorno del nivel de arriba de cada entrepiso, √(Δx² + Δy²)/h con la
- * cinemática de los dos diafragmas. Escribe en `deriva` (N) el máximo por entrepiso y en `punto` (2N) el vértice.
+ * Deriva vectorial (E9; NSR-10 A.6.3.1): en cada vértice (x, y) del contorno del nivel de arriba de cada entrepiso,
+ *   Δ = √(Δx² + Δy²)/h,  Δx = [ux − (y − yc)·rz]_arriba − [ux − (y − yc)·rz]_abajo,  Δy = [uy + (x − xc)·rz]_arriba − …
+ * con la cinemática de diafragma rígido de los dos niveles (el de abajo, con su propio centro de masa; el suelo no se
+ * mueve). Escribe en `deriva` (N) el máximo por entrepiso y en `punto` (2N) el vértice donde ocurre (el primero en el
+ * orden del contorno si hay empate). Lo usan el integrador en cada Δt y la prueba T22.
  */
 export function derivaVectorial(mod, u, deriva, punto) {
-  const a = [0, 0], b = [0, 0];
-  mod.niveles.forEach((nv, g) => {
+  const niveles = mod.niveles;
+  for (let g = 0; g < niveles.length; g++) {
+    const nv = niveles[g], b = 3 * g, ab = nv.abajo, nb = ab >= 0 ? niveles[ab] : null, bb = 3 * ab;
+    const ct = nv.contornoPlano;
     let m = -1, px = 0, py = 0;
-    for (const [x, y] of nv.contorno) {
-      puntoDiafragma(mod, u, g, x, y, a);
-      puntoDiafragma(mod, u, nv.abajo, x, y, b);
-      const dx = a[0] - b[0], dy = a[1] - b[1];
+    for (let q = 0; q < ct.length; q += 2) {
+      const x = ct[q], y = ct[q + 1];
+      let dx = u[b] - (y - nv.yc) * u[b + 2], dy = u[b + 1] + (x - nv.xc) * u[b + 2];
+      if (nb) { dx -= u[bb] - (y - nb.yc) * u[bb + 2]; dy -= u[bb + 1] + (x - nb.xc) * u[bb + 2]; }
       const d = Math.sqrt(dx * dx + dy * dy) / nv.h;
       if (d > m) { m = d; px = x; py = y; }
     }
     deriva[g] = m; punto[2 * g] = px; punto[2 * g + 1] = py;
-  });
+  }
+  return deriva;
 }
