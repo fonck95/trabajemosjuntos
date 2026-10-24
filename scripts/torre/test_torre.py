@@ -213,10 +213,17 @@ class TestCatalogo(unittest.TestCase):
         texto = (C.TORRE / 'ESPECIFICACION_INTEGRACION.md').read_text(encoding='utf-8')
         anexo = texto[texto.index('## Anexo C'):texto.index('## Decisiones de la revisión')]
         cls.ids_anexo = {m.group(1) for m in re.finditer(r'^\|[^|]+\|\s*`([a-z0-9_]+)`\s*\|', anexo, re.M)} - {'modelo3d'}
+        # 16.5 (prevalece): modelos que se agregan al Anexo C
+        s165 = texto[texto.index('### 16.5'):texto.index('### 16.6')]
+        s165 = s165[:s165.index('Mismas reglas')]
+        cls.ids_165 = set(re.findall(r'`([a-z0-9_]+)`', s165))
 
     def test_lista_cerrada_del_anexo_c(self):
-        self.assertEqual(set(self.cat['modelos']), self.ids_anexo)
-        self.assertEqual(len(self.cat['modelos']), 118)
+        self.assertEqual(len(self.ids_anexo), 118)
+        self.assertEqual(len(self.ids_165), 29)
+        self.assertFalse(self.ids_anexo & self.ids_165)
+        self.assertEqual(set(self.cat['modelos']), self.ids_anexo | self.ids_165)
+        self.assertEqual(len(self.cat['modelos']), 147)
 
     def test_campos_de_cada_modelo(self):
         anclajes, montajes = set(self.cat['anclajes']), set(self.cat['montajes'])

@@ -44,7 +44,7 @@
       26955531,
       31297000
      ],
-     "nota": "Exigido en reanimación (Res. 3100, num. 11.6.1: 'marcapasos externo' y carro de paro)."
+     "nota": "Exigido en reanimación y en el carro de paro según guía secundaria; por confirmar (Res. 3100, num. 11.6.1: el «marcapasos externo» solo lo agrega una guía secundaria)."
     },
     {
      "nombre": "Monitor multiparámetro avanzado con capnografía (reanimación)",
@@ -257,7 +257,14 @@
      "rango_precio_unitario_cop_2026": [
       800000,
       2200000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "por_confirmar",
+      "regla": "Decreto 4725, art. 7, regla 10 lit. c (vigilancia de parámetros vitales con peligro inmediato → IIb). El ABC del INVIMA pone los ‘monitores de saturación de oxígeno’ como ejemplo de IIb.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: IIb si es para vigilancia continua con alarmas; IIa si es para controles puntuales. En adaptación neonatal y en urgencias el oxímetro suele usarse como monitor. Definir el uso en la especificación de compra y tomar la clase del registro INVIMA."
+     }
     },
     {
      "nombre": "Nebulizador ultrasónico o de compresor",
@@ -352,7 +359,7 @@
     {
      "nombre": "Equipo de partos e instrumental ginecoobstétrico para urgencias",
      "cantidad": 2,
-     "especificacion": "Pinzas, tijeras, espéculos, porta agujas.",
+     "especificacion": "Dos juegos separados: equipo de atención del parto (pinzas, tijeras, porta agujas, pinzas de cordón) y juego de examen ginecológico (espéculos de varias tallas, pinzas de anillos, histerómetro).",
      "clase_riesgo": "I",
      "vida_util_anios": 10,
      "mantenimiento_anual_pct": 0,
@@ -365,7 +372,8 @@
      "rango_precio_unitario_cop_2026": [
       800000,
       1800000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): se separa el examen ginecológico del equipo de parto (revisión de la Res. 3100, urgencias; contrato 4.7.2). Sin cambio de precio."
     },
     {
      "nombre": "Elementos de inmovilización (tabla espinal, collares cervicales, férulas, inmovilizador de cabeza)",
@@ -416,7 +424,14 @@
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (factores: 2025 = 1,054058)",
      "fuente": "E.S.E. Hospital San Rafael de Concepción (Santander), 2025-06-06, $24.855.200 por 8 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8243247",
      "prioridad": "habilitacion",
-     "nota": "El precio de referencia es el kit de los Equipos Básicos de Salud comprado en 2025 por la E.S.E. de Concepción (Santander) con recursos de la Res. 1397 de 2024. El equipo de órganos y el tensiómetro portátiles del kit sirven para la atención extramural; en el consultorio se usan los de pared."
+     "nota": "El precio de referencia es el kit de los Equipos Básicos de Salud comprado en 2025 por la E.S.E. de Concepción (Santander) con recursos de la Res. 1397 de 2024. El equipo de órganos y el tensiómetro portátiles del kit sirven para la atención extramural; en el consultorio se usan los de pared.",
+     "clase_riesgo_revision": {
+      "valor": "IIa",
+      "estado": "observacion",
+      "regla": "Decreto 4725, art. 6 (cada producto combinado se clasifica por separado) y art. 7, reglas 1, 10 y 12; el ABC del INVIMA pone el termómetro electrónico como ejemplo IIa.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: IIa como conjunto es aceptable, pero cada componente tiene su propia clase: oxímetro IIa y termómetro infrarrojo IIa (regla 10); báscula, fonendoscopio, cinta y tallímetro I; tensiómetro I si es aneroide o IIa si es electrónico; equipo de órganos portátil I (probable). El inventario y la hoja de vida deben llevar una línea por componente con su registro sanitario."
+     }
     },
     {
      "nombre": "Equipo de órganos de los sentidos de pared",
@@ -434,13 +449,20 @@
      "rango_precio_unitario_cop_2026": [
       2200000,
       4500000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "I",
+      "estado": "probable_discrepancia",
+      "regla": "Decreto 4725, art. 7, regla 12 (demás activos → I). La regla 10 lit. a excluiría los equipos que solo iluminan en el espectro visible (excepción por confirmar en el texto colombiano).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: I (probable). Otoscopio y oftalmoscopio con transformador de pared iluminan con luz visible; no suministran energía absorbida ni vigilan funciones vitales. Confirmar la clase en el registro INVIMA del modelo."
+     }
     },
     {
      "nombre": "Tensiómetro aneroide de pared adulto-pediátrico",
      "cantidad": 3,
      "especificacion": "Escala 0-300 mmHg, brazaletes adulto, pediátrico y obeso.",
-     "clase_riesgo": "IIa",
+     "clase_riesgo": "I",
      "vida_util_anios": 7,
      "mantenimiento_anual_pct": 3,
      "precio_unitario_cop_2026": 550000,
@@ -452,7 +474,15 @@
      "rango_precio_unitario_cop_2026": [
       350000,
       1200000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "I",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 7, regla 1 (no invasivo y no activo → clase I). La regla 10 (IIa) solo aplica a dispositivos activos; el ABC del INVIMA pone como ejemplo IIa el tensiómetro electrónico, no el aneroide.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: I. Un tensiómetro aneroide no usa energía eléctrica: no es activo. Si se compra uno electrónico, sí sería IIa.",
+      "clase_anterior": "IIa"
+     }
     },
     {
      "nombre": "Lámpara de examen cuello de cisne LED",
@@ -476,7 +506,7 @@
      "nombre": "Báscula pesa bebés digital (consultorio de urgencias)",
      "cantidad": 1,
      "especificacion": "Grado médico, hasta 20 kg, división de 5-10 g.",
-     "clase_riesgo": "IIa",
+     "clase_riesgo": "I",
      "vida_util_anios": 8,
      "mantenimiento_anual_pct": 3,
      "precio_unitario_cop_2026": 900000,
@@ -489,14 +519,22 @@
       600000,
       1500000
      ],
-     "nota": "Verificación V1 (22-oct-2026): faltaba; la Res. 3100 (num. 11.6.1, criterio 23.6) la pide en el consultorio de urgencias cuando se atienden niños."
+     "nota": "Verificación V1 (22-oct-2026): faltaba; la Res. 3100 (num. 11.6.1; criterio 23.6 según guía secundaria; por confirmar) la pide en el consultorio de urgencias cuando se atienden niños.",
+     "clase_riesgo_revision": {
+      "valor": "I",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 7, regla 12 (activo que no es terapéutico ni vigila procesos fisiológicos vitales → clase I); regla 1 si la báscula no es eléctrica.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: I. Pesar no es ‘diagnóstico directo o vigilancia de procesos fisiológicos vitales’ (regla 10). El mismo repo pone la báscula pesa bebés de consulta externa en clase I: hay una incoherencia interna.",
+      "clase_anterior": "IIa"
+     }
     }
    ],
    "mobiliario": [
     {
      "nombre": "Camilla de reanimación rodante con barandas y posiciones",
      "cantidad": 2,
-     "especificacion": "Hidráulica, Trendelenburg, porta suero, soporte de cilindro.",
+     "especificacion": "Hidráulica, Trendelenburg, porta suero, soporte de cilindro y ruedas con freno.",
      "clase_riesgo": "I",
      "vida_util_anios": 10,
      "mantenimiento_anual_pct": 2,
@@ -509,12 +547,13 @@
      "rango_precio_unitario_cop_2026": [
       6500000,
       14000000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): se agrega el freno (Res. 3100, 11.6.1, sala de reanimación: «camilla rodante con freno y con baranda», texto de compilación). Sin cambio de precio."
     },
     {
      "nombre": "Camilla de observación hidráulica con barandas",
      "cantidad": 5,
-     "especificacion": "2 hombres, 2 mujeres y 1 pediátrica (programa.json).",
+     "especificacion": "2 hombres, 2 mujeres y 1 pediátrica (programa.json). Barandas, ruedas con freno.",
      "clase_riesgo": "I",
      "vida_util_anios": 10,
      "mantenimiento_anual_pct": 2,
@@ -527,12 +566,13 @@
      "rango_precio_unitario_cop_2026": [
       4500000,
       9500000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): la Res. 3100 (11.6.1, sala de observación, texto de compilación) pide «camilla con barandas, ruedas y freno»: se exige en el pliego. Sin cambio de precio."
     },
     {
      "nombre": "Cuna de observación pediátrica",
      "cantidad": 1,
-     "especificacion": "Barandas abatibles.",
+     "especificacion": "Barandas abatibles, ruedas con freno.",
      "clase_riesgo": "I",
      "vida_util_anios": 12,
      "mantenimiento_anual_pct": 2,
@@ -545,7 +585,8 @@
      "rango_precio_unitario_cop_2026": [
       3000000,
       6500000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): se exigen ruedas con freno, igual que las camillas de observación (contrato 4.7.2). Sin cambio de precio."
     },
     {
      "nombre": "Camilla de transporte de pacientes",
@@ -564,7 +605,7 @@
     {
      "nombre": "Camilla de procedimientos e inmovilización (yesos)",
      "cantidad": 2,
-     "especificacion": "Una en sala de procedimientos, una en inmovilización.",
+     "especificacion": "Una en sala de procedimientos, una en inmovilización. Con barandas abatibles y ruedas con freno.",
      "clase_riesgo": "I",
      "vida_util_anios": 10,
      "mantenimiento_anual_pct": 2,
@@ -577,7 +618,8 @@
      "rango_precio_unitario_cop_2026": [
       3000000,
       6500000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): se exige en el pliego barandas y ruedas con freno (revisión de la Res. 3100, urgencias; contrato 4.7.2). Sin cambio de precio."
     },
     {
      "nombre": "Camilla para enfermedad diarreica aguda (EDA)",
@@ -866,7 +908,7 @@
       800000,
       2000000
      ],
-     "nota": "Verificación V1 (22-oct-2026): faltaba; la Res. 3100 (num. 11.6.1, criterio 28.2) la pide en la sala de reanimación."
+     "nota": "Verificación V1 (22-oct-2026): faltaba; la Res. 3100 (num. 11.6.1, sala de reanimación: «mesa auxiliar rodante», texto de compilación; el criterio 28.2 es según guía secundaria, por confirmar) la pide en la sala de reanimación."
     }
    ],
    "totales": {
@@ -904,7 +946,14 @@
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (factores: 2025 = 1,054058)",
      "fuente": "E.S.E. Hospital San Rafael de Concepción (Santander), 2025-06-06, $24.855.200 por 8 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8243247",
      "prioridad": "habilitacion",
-     "nota": "El precio de referencia es el kit de los Equipos Básicos de Salud comprado en 2025 por la E.S.E. de Concepción (Santander) con recursos de la Res. 1397 de 2024. El equipo de órganos y el tensiómetro portátiles del kit sirven para la atención extramural; en el consultorio se usan los de pared."
+     "nota": "El precio de referencia es el kit de los Equipos Básicos de Salud comprado en 2025 por la E.S.E. de Concepción (Santander) con recursos de la Res. 1397 de 2024. El equipo de órganos y el tensiómetro portátiles del kit sirven para la atención extramural; en el consultorio se usan los de pared.",
+     "clase_riesgo_revision": {
+      "valor": "IIa",
+      "estado": "observacion",
+      "regla": "Decreto 4725, art. 6 (cada producto combinado se clasifica por separado) y art. 7, reglas 1, 10 y 12; el ABC del INVIMA pone el termómetro electrónico como ejemplo IIa.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: IIa como conjunto es aceptable, pero cada componente tiene su propia clase: oxímetro IIa y termómetro infrarrojo IIa (regla 10); báscula, fonendoscopio, cinta y tallímetro I; tensiómetro I si es aneroide o IIa si es electrónico; equipo de órganos portátil I (probable). El inventario y la hoja de vida deben llevar una línea por componente con su registro sanitario."
+     }
     },
     {
      "nombre": "Equipo de órganos de los sentidos de pared",
@@ -922,13 +971,20 @@
      "rango_precio_unitario_cop_2026": [
       2200000,
       4500000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "I",
+      "estado": "probable_discrepancia",
+      "regla": "Decreto 4725, art. 7, regla 12 (demás activos → I). La regla 10 lit. a excluiría los equipos que solo iluminan en el espectro visible (excepción por confirmar en el texto colombiano).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: I (probable). Otoscopio y oftalmoscopio con transformador de pared iluminan con luz visible; no suministran energía absorbida ni vigilan funciones vitales. Confirmar la clase en el registro INVIMA del modelo."
+     }
     },
     {
      "nombre": "Tensiómetro aneroide de pared adulto-pediátrico",
      "cantidad": 13,
      "especificacion": "Escala 0-300 mmHg, brazaletes adulto, pediátrico y obeso.",
-     "clase_riesgo": "IIa",
+     "clase_riesgo": "I",
      "vida_util_anios": 7,
      "mantenimiento_anual_pct": 3,
      "precio_unitario_cop_2026": 550000,
@@ -940,7 +996,15 @@
      "rango_precio_unitario_cop_2026": [
       350000,
       1200000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "I",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 7, regla 1 (no invasivo y no activo → clase I). La regla 10 (IIa) solo aplica a dispositivos activos; el ABC del INVIMA pone como ejemplo IIa el tensiómetro electrónico, no el aneroide.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: I. Un tensiómetro aneroide no usa energía eléctrica: no es activo. Si se compra uno electrónico, sí sería IIa.",
+      "clase_anterior": "IIa"
+     }
     },
     {
      "nombre": "Lámpara de examen cuello de cisne LED",
@@ -1283,7 +1347,7 @@
     {
      "nombre": "Camilla de procedimientos",
      "cantidad": 1,
-     "especificacion": "Hidráulica, posiciones.",
+     "especificacion": "Hidráulica, posiciones, barandas abatibles y ruedas con freno.",
      "clase_riesgo": "I",
      "vida_util_anios": 10,
      "mantenimiento_anual_pct": 2,
@@ -1296,7 +1360,8 @@
      "rango_precio_unitario_cop_2026": [
       3000000,
       6500000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): se agregan barandas y ruedas con freno a la especificación (revisión de la Res. 3100, consulta externa; contrato 4.7.2). Sin cambio de precio."
     },
     {
      "nombre": "Mesa de Mayo y mesa auxiliar en acero inoxidable",
@@ -1391,7 +1456,14 @@
      "rango_precio_unitario_cop_2026": [
       5000000,
       14000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "I",
+      "estado": "probable_discrepancia",
+      "regla": "Decreto 4725, art. 7, regla 12 (activo que no suministra energía, no forma imagen de radiofármacos ni vigila funciones vitales → I).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: I (probable). Una pantalla solo muestra imágenes producidas por otro equipo. Confirmar en el registro INVIMA; muchos monitores clínicos ni siquiera tienen registro sanitario."
+     }
     },
     {
      "nombre": "Periféricos digitales: dermatoscopio, otoscopio, fonendoscopio y cámara de documentos",
@@ -1588,7 +1660,15 @@
      "tipo_precio": "referencia_secop_ajustada_ipc",
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (precio de 2026, factor 1)",
      "fuente": "E.S.E. Centro de Salud Hermana Gertrudis (Santander), 2026-08-24, $14.800.000 por 1 u. (proceso SECOP II, precio base): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10766386",
-     "prioridad": "habilitacion"
+     "prioridad": "habilitacion",
+     "ajuste_v2": "Verificación V2 (2026-10-24): el pliego exige registro sanitario INVIMA vigente (o la constancia de que no lo requiere), clase de riesgo, manual en castellano, protocolo de mantenimiento, capacitación y calificación de instalación, operación y desempeño del autoclave (contrato 4.7.2). Sin cambio de precio.",
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "probable_discrepancia",
+      "regla": "Decreto 4725, art. 7: ninguna de las reglas leídas lleva un esterilizador a IIb; la regla 15 da IIa a la desinfección de dispositivos médicos y la regla 12 deja en I los demás activos.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIb. Revisión: IIa (regla 15, si la esterilización se asimila a desinfección de dispositivos) o I (regla 12); por confirmar en el registro INVIMA. El autoclave no administra energía ni sustancias al paciente (reglas 9 y 11). El INVIMA puede haber registrado modelos como IIb: la clase del inventario debe ser la del registro."
+     }
     },
     {
      "nombre": "Juego de instrumental básico de odontología",
@@ -1647,7 +1727,7 @@
     {
      "nombre": "Elementos de protección radiológica (delantal plomado con protector de tiroides)",
      "cantidad": 2,
-     "especificacion": "0,25-0,5 mm Pb.",
+     "especificacion": "0,25-0,5 mm Pb; un juego adulto y uno pediátrico.",
      "clase_riesgo": "I",
      "vida_util_anios": 6,
      "mantenimiento_anual_pct": 0,
@@ -1660,7 +1740,8 @@
      "rango_precio_unitario_cop_2026": [
       800000,
       1800000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): se piden tallas adulto y pediátrica (contrato 4.7.2). Sin cambio de precio."
     }
    ],
    "mobiliario": [
@@ -1758,7 +1839,14 @@
      "rango_precio_unitario_cop_2026": [
       4500000,
       10000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "por_confirmar",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es. Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+     }
     },
     {
      "nombre": "Cava de transporte de muestras con registrador",
@@ -1906,7 +1994,14 @@
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (precio de 2026, factor 1)",
      "fuente": "E.S.E. Hospital Regional del Magdalena Medio (Barrancabermeja), 2026-10-08, $15.719.958 por 1 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.11033962",
      "prioridad": "habilitacion",
-     "nota": "Gota gruesa (malaria), baciloscopia, Gram, frotis de leishmaniasis, coprológico y sedimento. La Res. 3100 exige microscopio para enfermedades transmitidas por vectores en zona endémica."
+     "nota": "Gota gruesa (malaria), baciloscopia, Gram, frotis de leishmaniasis, coprológico y sedimento. La Res. 3100 exige microscopio para enfermedades transmitidas por vectores en zona endémica.",
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "regimen_distinto",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar. laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+     }
     },
     {
      "nombre": "Cabina de bioseguridad clase II tipo A2 (4 pies)",
@@ -1924,7 +2019,14 @@
      "rango_precio_unitario_cop_2026": [
       33219672,
       57672160
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "no_dm",
+      "estado": "probable_discrepancia",
+      "regla": "Decreto 4725, art. 1 y 2 (finalidad médica sobre personas); ninguna regla del art. 7 la lleva a IIa.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: No es dispositivo médico (probable). Protege al trabajador y a la muestra; no tiene finalidad diagnóstica ni terapéutica sobre el paciente. Confirmar con el INVIMA si exige registro."
+     }
     },
     {
      "nombre": "Centrífuga de mesa de 24 tubos",
@@ -1938,7 +2040,14 @@
      "tipo_precio": "referencia_secop_ajustada_ipc",
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (factores: 2025 = 1,054058)",
      "fuente": "Unidad Prestadora de Salud Córdoba, 2025-05-06, $12.600.000 por 1 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7940734",
-     "prioridad": "habilitacion"
+     "prioridad": "habilitacion",
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "regimen_distinto",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar. laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+     }
     },
     {
      "nombre": "Microcentrífuga para hematocrito",
@@ -1952,7 +2061,14 @@
      "tipo_precio": "referencia_secop_ajustada_ipc",
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (factores: 2025 = 1,054058)",
      "fuente": "E.S.E. Hospital Local de Turbaná, 2025-05-23, $8.245.034 por 1 u. (proceso SECOP II, precio base): https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.8315213",
-     "prioridad": "habilitacion"
+     "prioridad": "habilitacion",
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "regimen_distinto",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar. laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+     }
     },
     {
      "nombre": "Incubadora bacteriológica 35-37 °C",
@@ -1970,7 +2086,14 @@
      "rango_precio_unitario_cop_2026": [
       9000000,
       22000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "regimen_distinto",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar. laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+     }
     },
     {
      "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos",
@@ -1988,7 +2111,14 @@
      "rango_precio_unitario_cop_2026": [
       10000000,
       22000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "regimen_distinto",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar. laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+     }
     },
     {
      "nombre": "Congelador de -20 °C a -30 °C (seroteca y muestras de vigilancia)",
@@ -2006,13 +2136,20 @@
      "rango_precio_unitario_cop_2026": [
       6000000,
       15000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "regimen_distinto",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar. laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+     }
     },
     {
      "nombre": "Autoclave de laboratorio para descontaminación de residuos y medios",
      "cantidad": 1,
      "especificacion": "50-80 L, vertical.",
-     "clase_riesgo": "IIa",
+     "clase_riesgo": "no_dm",
      "vida_util_anios": 12,
      "mantenimiento_anual_pct": 5,
      "precio_unitario_cop_2026": 35000000,
@@ -2024,7 +2161,16 @@
      "rango_precio_unitario_cop_2026": [
       22000000,
       45000000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): el pliego exige registro sanitario INVIMA vigente (o la constancia de que no lo requiere), clase de riesgo, manual en castellano, protocolo de mantenimiento, capacitación y calificación de instalación, operación y desempeño del autoclave (contrato 4.7.2). Sin cambio de precio.",
+     "clase_riesgo_revision": {
+      "valor": "no_dm",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 7, regla 15: la clase IIa es solo para desinfectar dispositivos médicos; descontaminar residuos y medios de cultivo no lo es.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: No es dispositivo médico. No es dispositivo médico (por confirmar: definición del art. 2 del Decreto 4725 no leída en el texto oficial). Es equipo de laboratorio y de gestión de residuos (Res. 591 de 2024), no un dispositivo médico.",
+      "clase_anterior": "IIa"
+     }
     },
     {
      "nombre": "Baño serológico y rotador de VDRL",
@@ -2042,7 +2188,14 @@
      "rango_precio_unitario_cop_2026": [
       4500000,
       10000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "regimen_distinto",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar. laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+     }
     },
     {
      "nombre": "Juego de micropipetas automáticas (10 volúmenes) y agitadores vórtex",
@@ -2060,7 +2213,14 @@
      "rango_precio_unitario_cop_2026": [
       6000000,
       13000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "regimen_distinto",
+      "regla": "Decreto 3770 de 2004 (modificado por el Decreto 581 de 2017) para reactivos y equipos de diagnóstico in vitro; Decreto 4725, art. 1 (ámbito).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: Régimen de diagnóstico in vitro (Decreto 3770 de 2004) si el fabricante lo destina a diagnóstico in vitro; si es de uso general de laboratorio, no es dispositivo médico. No se clasifica con las reglas del Decreto 4725. Por confirmar. laboratorio.json ya pone los analizadores bajo el Decreto 3770, pero dotacion.json clasifica estos equipos de laboratorio con clases del Decreto 4725: es una incoherencia interna. Confirmar con el INVIMA si el Decreto 3770 cubre instrumentos (la definición exacta no se pudo leer)."
+     }
     },
     {
      "nombre": "Lector de inmunoensayo por fluorescencia de punto de atención (respaldo de TSH, troponina, procalcitonina)",
@@ -2085,7 +2245,7 @@
      "nombre": "UPS en línea de 6 kVA para analizadores",
      "cantidad": 2,
      "especificacion": "Autonomía de 15 minutos; se suma a la UPS central.",
-     "clase_riesgo": "I",
+     "clase_riesgo": "no_dm",
      "vida_util_anios": 10,
      "mantenimiento_anual_pct": 5,
      "precio_unitario_cop_2026": 7021000,
@@ -2093,13 +2253,21 @@
      "tipo_precio": "referencia_secop_ajustada_ipc",
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (precio de 2026, factor 1)",
      "fuente": "E.S.E. Hospital Piloto Jamundí, 2026-04-11, $14.042.000 por 2 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10197502",
-     "prioridad": "habilitacion"
+     "prioridad": "habilitacion",
+     "clase_riesgo_revision": {
+      "valor": "no_dm",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: No es dispositivo médico. No es dispositivo médico (por confirmar: definición del art. 2 del Decreto 4725 no leída en el texto oficial). Es equipo eléctrico de respaldo; el repo trata la UPS central como equipo industrial, sin clase de riesgo.",
+      "clase_anterior": "I"
+     }
     },
     {
      "nombre": "Balanza analítica y horno de secado",
      "cantidad": 1,
      "especificacion": "0,1 mg; horno de 50 L.",
-     "clase_riesgo": "I",
+     "clase_riesgo": "no_dm",
      "vida_util_anios": 10,
      "mantenimiento_anual_pct": 3,
      "precio_unitario_cop_2026": 14000000,
@@ -2111,13 +2279,21 @@
      "rango_precio_unitario_cop_2026": [
       9000000,
       20000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "no_dm",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: No es dispositivo médico. No es dispositivo médico (por confirmar: definición del art. 2 del Decreto 4725 no leída en el texto oficial). Equipo de uso general de laboratorio.",
+      "clase_anterior": "I"
+     }
     },
     {
      "nombre": "Termohigrómetros y registradores de temperatura con alarma remota",
      "cantidad": 8,
      "especificacion": "Neveras, congelador, áreas técnicas y almacén.",
-     "clase_riesgo": "I",
+     "clase_riesgo": "no_dm",
      "vida_util_anios": 5,
      "mantenimiento_anual_pct": 0,
      "precio_unitario_cop_2026": 600000,
@@ -2129,7 +2305,15 @@
      "rango_precio_unitario_cop_2026": [
       350000,
       1000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "no_dm",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: No es dispositivo médico. No es dispositivo médico (por confirmar: definición del art. 2 del Decreto 4725 no leída en el texto oficial). Miden el ambiente o la cadena de frío, no a personas. Requieren calibración (control metrológico), no registro sanitario.",
+      "clase_anterior": "I"
+     }
     }
    ],
    "mobiliario": [
@@ -2264,7 +2448,7 @@
       273700000,
       767022196
      ],
-     "nota": "Requiere licencia de práctica médica (Res. 3100, num. 11.1.2 criterio 15), blindaje de la sala (obra) y control de calidad anual."
+     "nota": "Requiere licencia de práctica médica (Res. 1811 de 2025; Res. 3100, num. 11.1.2, criterio 15 según normas.json, por confirmar), blindaje de la sala (obra) y control de calidad anual."
     },
     {
      "nombre": "Ecógrafo multipropósito con 3 transductores (convexo, lineal, endocavitario)",
@@ -2301,7 +2485,14 @@
      "rango_precio_unitario_cop_2026": [
       15000000,
       38000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "I",
+      "estado": "probable_discrepancia",
+      "regla": "Decreto 4725, art. 7, regla 12 para el monitor; art. 6 (cada producto combinado se clasifica por separado) para el software.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: Monitor: I (probable); software de visualización: por confirmar. El software de diagnóstico por imagen podría ser dispositivo médico; el proyecto de decreto de 2025-2026 lo incluye expresamente. Registrar monitor y software como ítems separados."
+     }
     },
     {
      "nombre": "Impresora térmica para ecografía",
@@ -2324,7 +2515,7 @@
     {
      "nombre": "Elementos de protección radiológica (delantales, protectores de tiroides y gónadas, gafas, biombo plomado)",
      "cantidad": 1,
-     "especificacion": "Juego para sala de rayos X (Res. 3100, num. 11.3.4).",
+     "especificacion": "Juego para sala de rayos X (Res. 3100, num. 11.3.4): delantales y protectores de tiroides en tallas adulto y pediátrica, protectores de gónadas, gafas y biombo plomado.",
      "clase_riesgo": "I",
      "vida_util_anios": 6,
      "mantenimiento_anual_pct": 0,
@@ -2337,7 +2528,8 @@
      "rango_precio_unitario_cop_2026": [
       6000000,
       13000000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): se piden tallas adulto y pediátrica (contrato 4.7.2). Sin cambio de precio."
     }
    ],
    "mobiliario": [
@@ -2558,7 +2750,14 @@
      "rango_precio_unitario_cop_2026": [
       1300000,
       3000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "por_confirmar",
+      "regla": "Decreto 4725, art. 7, regla 10 lit. c (vigilancia de parámetros vitales con peligro inmediato → IIb). El ABC del INVIMA pone los ‘monitores de saturación de oxígeno’ como ejemplo de IIb.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: IIb si es para vigilancia continua con alarmas; IIa si es para controles puntuales. En adaptación neonatal y en urgencias el oxímetro suele usarse como monitor. Definir el uso en la especificación de compra y tomar la clase del registro INVIMA."
+     }
     },
     {
      "nombre": "Laringoscopio neonatal y resucitador neonatal con mezclador de oxígeno",
@@ -2576,6 +2775,24 @@
      "rango_precio_unitario_cop_2026": [
       3000000,
       7000000
+     ],
+     "clase_riesgo_revision": {
+      "valor": "IIa",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 6 (productos combinados se clasifican por separado; vale la regla de clase más alta) y art. 7, regla 2 (conduce gases para administrar al cuerpo, conectable a un dispositivo IIa) o regla 11 (activo neumático que administra gases → IIa).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: Separar: laringoscopio I; resucitador con mezclador de oxígeno IIa. El mismo repo clasifica el resucitador manual de urgencias como IIa. El ítem combinado no puede quedar en clase I."
+     },
+     "componentes": [
+      {
+       "nombre": "Laringoscopio neonatal",
+       "clase": "I"
+      },
+      {
+       "nombre": "Resucitador neonatal con mezclador",
+       "clase": "IIa",
+       "regla": "Decreto 4725, art. 6 y regla 2"
+      }
      ]
     },
     {
@@ -2635,7 +2852,7 @@
     {
      "nombre": "Equipo de parto (instrumental)",
      "cantidad": 6,
-     "especificacion": "Pinzas, tijeras de cordón y episiotomía, porta agujas.",
+     "especificacion": "Pinzas, tijeras de cordón, porta agujas y equipo de episiotomía y episiorrafia (tijera de episiotomía, pinzas de disección, porta agujas, valvas).",
      "clase_riesgo": "I",
      "vida_util_anios": 8,
      "mantenimiento_anual_pct": 0,
@@ -2648,7 +2865,8 @@
      "rango_precio_unitario_cop_2026": [
       800000,
       1800000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): se nombra el equipo de episiotomía y episiorrafia que pide la Res. 3100 en la sala de partos (fuente secundaria; por confirmar). Sin cambio de precio."
     },
     {
      "nombre": "Equipo de revisión uterina y sutura de desgarros",
@@ -2735,7 +2953,14 @@
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (factores: 2025 = 1,054058)",
      "fuente": "E.S.E. Hospital San Rafael de Concepción (Santander), 2025-06-06, $24.855.200 por 8 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8243247",
      "prioridad": "habilitacion",
-     "nota": "Verificación V1 (22-oct-2026): para el consultorio de valoración obstétrica del piso 3 (programa.json), que no tenía dotación."
+     "nota": "Verificación V1 (22-oct-2026): para el consultorio de valoración obstétrica del piso 3 (programa.json), que no tenía dotación.",
+     "clase_riesgo_revision": {
+      "valor": "IIa",
+      "estado": "observacion",
+      "regla": "Decreto 4725, art. 6 (cada producto combinado se clasifica por separado) y art. 7, reglas 1, 10 y 12; el ABC del INVIMA pone el termómetro electrónico como ejemplo IIa.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: IIa como conjunto es aceptable, pero cada componente tiene su propia clase: oxímetro IIa y termómetro infrarrojo IIa (regla 10); báscula, fonendoscopio, cinta y tallímetro I; tensiómetro I si es aneroide o IIa si es electrónico; equipo de órganos portátil I (probable). El inventario y la hoja de vida deben llevar una línea por componente con su registro sanitario."
+     }
     },
     {
      "nombre": "Camilla ginecológica con estribos, lámpara cuello de cisne y mesa auxiliar (consultorio de valoración obstétrica)",
@@ -2852,7 +3077,7 @@
      "nombre": "Puesto de trabajo y canecas del consultorio de valoración obstétrica",
      "cantidad": 1,
      "especificacion": "Escritorio, silla del profesional, 2 sillas interlocutoras, canecas verde, gris y roja con pedal y guardián.",
-     "clase_riesgo": "I",
+     "clase_riesgo": "no_dm",
      "vida_util_anios": 10,
      "mantenimiento_anual_pct": 1,
      "precio_unitario_cop_2026": 2750000,
@@ -2865,12 +3090,20 @@
       2000000,
       4000000
      ],
-     "nota": "Verificación V1 (22-oct-2026): mismo precio que el puesto de trabajo y las canecas de los demás consultorios."
+     "nota": "Verificación V1 (22-oct-2026): mismo precio que el puesto de trabajo y las canecas de los demás consultorios.",
+     "clase_riesgo_revision": {
+      "valor": "no_dm",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 1 y 2 (solo son dispositivos médicos los productos con finalidad de diagnóstico, prevención, tratamiento o vigilancia en personas).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: No es dispositivo médico. No es dispositivo médico (por confirmar: definición del art. 2 del Decreto 4725 no leída en el texto oficial). Escritorio, sillas y canecas son mobiliario general; el mismo repo los marca así en los demás servicios.",
+      "clase_anterior": "I"
+     }
     },
     {
      "nombre": "Camilla de transporte",
      "cantidad": 1,
-     "especificacion": "Barandas y porta suero.",
+     "especificacion": "Barandas, ruedas con freno y porta suero.",
      "clase_riesgo": "I",
      "vida_util_anios": 10,
      "mantenimiento_anual_pct": 2,
@@ -2880,7 +3113,8 @@
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (factores: 2025 = 1,054058)",
      "fuente": "E.S.E. Hospital San Juan de Dios de Floridablanca, 2025-08-12, $9.020.200 por 2 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8586635",
      "prioridad": "habilitacion",
-     "nota": "Verificación V1 (22-oct-2026): la Res. 3100 (num. 11.6.4, criterio 20.8.7) pide disponibilidad de camilla con barandas, ruedas y freno dentro del servicio de partos con TPR."
+     "nota": "Verificación V1 (22-oct-2026): la Res. 3100 (num. 11.6.4; criterio 20.8.7 según paráfrasis del repositorio, por confirmar) pide disponibilidad de camilla con barandas, ruedas y freno dentro del servicio de partos con TPR.",
+     "ajuste_v2": "Verificación V2 (2026-10-24): se agregan ruedas con freno a la especificación (contrato 4.7.2). Sin cambio de precio."
     }
    ],
    "totales": {
@@ -3112,7 +3346,14 @@
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (factores: 2025 = 1,054058)",
      "fuente": "E.S.E. Hospital San Rafael de Concepción (Santander), 2025-06-06, $24.855.200 por 8 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8243247",
      "prioridad": "habilitacion",
-     "nota": "El precio de referencia es el kit de los Equipos Básicos de Salud comprado en 2025 por la E.S.E. de Concepción (Santander) con recursos de la Res. 1397 de 2024. El equipo de órganos y el tensiómetro portátiles del kit sirven para la atención extramural; en el consultorio se usan los de pared."
+     "nota": "El precio de referencia es el kit de los Equipos Básicos de Salud comprado en 2025 por la E.S.E. de Concepción (Santander) con recursos de la Res. 1397 de 2024. El equipo de órganos y el tensiómetro portátiles del kit sirven para la atención extramural; en el consultorio se usan los de pared.",
+     "clase_riesgo_revision": {
+      "valor": "IIa",
+      "estado": "observacion",
+      "regla": "Decreto 4725, art. 6 (cada producto combinado se clasifica por separado) y art. 7, reglas 1, 10 y 12; el ABC del INVIMA pone el termómetro electrónico como ejemplo IIa.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: IIa como conjunto es aceptable, pero cada componente tiene su propia clase: oxímetro IIa y termómetro infrarrojo IIa (regla 10); báscula, fonendoscopio, cinta y tallímetro I; tensiómetro I si es aneroide o IIa si es electrónico; equipo de órganos portátil I (probable). El inventario y la hoja de vida deben llevar una línea por componente con su registro sanitario."
+     }
     },
     {
      "nombre": "Equipo de órganos de los sentidos de pared",
@@ -3130,13 +3371,20 @@
      "rango_precio_unitario_cop_2026": [
       2200000,
       4500000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "I",
+      "estado": "probable_discrepancia",
+      "regla": "Decreto 4725, art. 7, regla 12 (demás activos → I). La regla 10 lit. a excluiría los equipos que solo iluminan en el espectro visible (excepción por confirmar en el texto colombiano).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: I (probable). Otoscopio y oftalmoscopio con transformador de pared iluminan con luz visible; no suministran energía absorbida ni vigilan funciones vitales. Confirmar la clase en el registro INVIMA del modelo."
+     }
     },
     {
      "nombre": "Tensiómetro aneroide de pared adulto-pediátrico",
      "cantidad": 2,
      "especificacion": "Escala 0-300 mmHg, brazaletes adulto, pediátrico y obeso.",
-     "clase_riesgo": "IIa",
+     "clase_riesgo": "I",
      "vida_util_anios": 7,
      "mantenimiento_anual_pct": 3,
      "precio_unitario_cop_2026": 550000,
@@ -3148,7 +3396,15 @@
      "rango_precio_unitario_cop_2026": [
       350000,
       1200000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "I",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 7, regla 1 (no invasivo y no activo → clase I). La regla 10 (IIa) solo aplica a dispositivos activos; el ABC del INVIMA pone como ejemplo IIa el tensiómetro electrónico, no el aneroide.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: I. Un tensiómetro aneroide no usa energía eléctrica: no es activo. Si se compra uno electrónico, sí sería IIa.",
+      "clase_anterior": "IIa"
+     }
     },
     {
      "nombre": "Lámpara de examen cuello de cisne LED",
@@ -3453,7 +3709,7 @@
       4000000,
       9000000
      ],
-     "nota": "Verificación V1 (22-oct-2026): la Res. 3100 (num. 11.4.1, criterio 25.2) exige que hospitalización cuente con carro de paro; el de partos tiene módulo neonatal y queda en las TPR."
+     "nota": "Verificación V1 (22-oct-2026): la Res. 3100 (num. 11.4.1, texto de compilación; criterio 25.2 según guía secundaria, por confirmar) exige que hospitalización cuente con carro de paro en cada piso; el de partos tiene módulo neonatal y queda en las TPR."
     }
    ],
    "totales": {
@@ -3490,7 +3746,15 @@
      "tipo_precio": "referencia_secop_ajustada_ipc",
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (precio de 2026, factor 1)",
      "fuente": "E.S.E. Suroccidente (hospital móvil de El Plateado, Cauca), 2026-09-02, $185.000.000 por 1 u. (proceso SECOP II, precio base): https://www.datos.gov.co/resource/p6dx-8zbt.json?id_del_proceso=CO1.REQ.10970776",
-     "prioridad": "habilitacion"
+     "prioridad": "habilitacion",
+     "ajuste_v2": "Verificación V2 (2026-10-24): el pliego exige registro sanitario INVIMA vigente (o la constancia de que no lo requiere), clase de riesgo, manual en castellano, protocolo de mantenimiento, capacitación y calificación de instalación, operación y desempeño del autoclave (contrato 4.7.2). Sin cambio de precio.",
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "probable_discrepancia",
+      "regla": "Decreto 4725, art. 7: ninguna de las reglas leídas lleva un esterilizador a IIb; la regla 15 da IIa a la desinfección de dispositivos médicos y la regla 12 deja en I los demás activos.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIb. Revisión: IIa (regla 15, si la esterilización se asimila a desinfección de dispositivos) o I (regla 12); por confirmar en el registro INVIMA. El autoclave no administra energía ni sustancias al paciente (reglas 9 y 11). El INVIMA puede haber registrado modelos como IIb: la clase del inventario debe ser la del registro."
+     }
     },
     {
      "nombre": "Autoclave clase B de mesa de 23 L (respaldo)",
@@ -3508,7 +3772,15 @@
      "rango_precio_unitario_cop_2026": [
       15000000,
       30000000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): el pliego exige registro sanitario INVIMA vigente (o la constancia de que no lo requiere), clase de riesgo, manual en castellano, protocolo de mantenimiento, capacitación y calificación de instalación, operación y desempeño del autoclave (contrato 4.7.2). Sin cambio de precio.",
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "probable_discrepancia",
+      "regla": "Decreto 4725, art. 7: ninguna de las reglas leídas lleva un esterilizador a IIb; la regla 15 da IIa a la desinfección de dispositivos médicos y la regla 12 deja en I los demás activos.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIb. Revisión: IIa (regla 15, si la esterilización se asimila a desinfección de dispositivos) o I (regla 12); por confirmar en el registro INVIMA. El autoclave no administra energía ni sustancias al paciente (reglas 9 y 11). El INVIMA puede haber registrado modelos como IIb: la clase del inventario debe ser la del registro."
+     }
     },
     {
      "nombre": "Selladora rotativa de grado médico",
@@ -3558,13 +3830,20 @@
      "rango_precio_unitario_cop_2026": [
       3000000,
       8000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "por_confirmar",
+      "regla": "Decreto 4725, art. 7, reglas 12 y 15; Decreto 3770 de 2004 (los reactivos in vitro son para estudiar muestras del cuerpo humano).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: Equipo para diagnóstico in vitro. Revisión: Dispositivo médico (Decreto 4725): I por regla 12 o IIa por regla 15; por confirmar. El repo la marca como ‘equipo para diagnóstico in vitro’, pero no analiza muestras humanas: verifica si un ciclo de esterilización funcionó. Está en el régimen del Decreto 4725."
+     }
     },
     {
      "nombre": "Lavadora desinfectora de instrumental",
      "cantidad": 1,
      "especificacion": "Termodesinfección A0 3000.",
-     "clase_riesgo": "IIb",
+     "clase_riesgo": "IIa",
      "vida_util_anios": 12,
      "mantenimiento_anual_pct": 6,
      "precio_unitario_cop_2026": 110000000,
@@ -3577,7 +3856,15 @@
       75000000,
       160000000
      ],
-     "nota": "Recomendada para cumplir el manual de reprocesamiento de la Res. 914 de 2025 (aplica desde el 3-ene-2027)."
+     "nota": "Recomendada para cumplir el manual de reprocesamiento de la Res. 914 de 2025 (aplica desde el 3-ene-2027).",
+     "clase_riesgo_revision": {
+      "valor": "IIa",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 7, regla 15: los dispositivos destinados específicamente a desinfectar dispositivos médicos son clase IIa.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIb. Revisión: IIa. La clase IIb para lavadoras desinfectoras de instrumental invasivo viene del reglamento europeo 2017/745 (regla 16), no de la norma colombiana. Confirmar en el registro INVIMA del modelo.",
+      "clase_anterior": "IIb"
+     }
     }
    ],
    "mobiliario": [
@@ -3656,7 +3943,14 @@
      "rango_precio_unitario_cop_2026": [
       10000000,
       25000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "por_confirmar",
+      "regla": "Decreto 4725, art. 7, regla 2: almacenar líquidos que se van a administrar es clase I salvo que almacene sangre u otros fluidos o se conecte a un dispositivo activo IIa o superior.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: IIa. Revisión: I (regla 2) si se considera dispositivo médico; probablemente no lo es. Guarda vacunas (medicamentos), no sangre ni fluidos corporales: la clase IIa no sale de ninguna regla. La exigencia real para este equipo es la precalificación PQS de la OMS y los lineamientos del PAI."
+     }
     },
     {
      "nombre": "Congelador para paquetes fríos",
@@ -3674,7 +3968,14 @@
      "rango_precio_unitario_cop_2026": [
       2500000,
       6000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "por_confirmar",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es. Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+     }
     },
     {
      "nombre": "Termo portavacunas precalificado (PQS E004)",
@@ -3692,7 +3993,14 @@
      "rango_precio_unitario_cop_2026": [
       400000,
       900000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "por_confirmar",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es. Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+     }
     },
     {
      "nombre": "Caja térmica de transporte (PQS E004)",
@@ -3710,13 +4018,20 @@
      "rango_precio_unitario_cop_2026": [
       800000,
       1800000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "por_confirmar",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es. Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+     }
     },
     {
      "nombre": "Registradores de temperatura de 30 días y termómetros digitales",
      "cantidad": 8,
      "especificacion": "Con alarma.",
-     "clase_riesgo": "I",
+     "clase_riesgo": "no_dm",
      "vida_util_anios": 4,
      "mantenimiento_anual_pct": 0,
      "precio_unitario_cop_2026": 600000,
@@ -3728,13 +4043,21 @@
      "rango_precio_unitario_cop_2026": [
       350000,
       1000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "no_dm",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: No es dispositivo médico. No es dispositivo médico (por confirmar: definición del art. 2 del Decreto 4725 no leída en el texto oficial). Miden el ambiente o la cadena de frío, no a personas. Requieren calibración (control metrológico), no registro sanitario.",
+      "clase_anterior": "I"
+     }
     },
     {
      "nombre": "Regulador o estabilizador electrónico de voltaje para refrigerador de vacunas",
      "cantidad": 2,
      "especificacion": "Uno por refrigerador, con indicador de polo a tierra y protección de sobretensión.",
-     "clase_riesgo": "I",
+     "clase_riesgo": "no_dm",
      "vida_util_anios": 8,
      "mantenimiento_anual_pct": 2,
      "precio_unitario_cop_2026": 450000,
@@ -3747,7 +4070,15 @@
       250000,
       800000
      ],
-     "nota": "Verificación V1 (22-oct-2026): faltaba; la Res. 3100 (num. 11.2.3, criterio 6.2) lo exige para refrigeradores eléctricos."
+     "nota": "Verificación V1 (22-oct-2026): faltaba; la Res. 3100 (num. 11.2.3, criterio 6.2) lo exige para refrigeradores eléctricos.",
+     "clase_riesgo_revision": {
+      "valor": "no_dm",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: No es dispositivo médico. No es dispositivo médico (por confirmar: definición del art. 2 del Decreto 4725 no leída en el texto oficial). Equipo eléctrico general.",
+      "clase_anterior": "I"
+     }
     }
    ],
    "mobiliario": [
@@ -3823,7 +4154,14 @@
      "tipo_precio": "referencia_secop_ajustada_ipc",
      "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (factores: 2025 = 1,054058)",
      "fuente": "E.S.E. Hospital Emiro Quintero Cañizares (Ocaña), 2025-12-02, $28.560.000 por 1 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9202771",
-     "prioridad": "habilitacion"
+     "prioridad": "habilitacion",
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "por_confirmar",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es. Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+     }
     },
     {
      "nombre": "Refrigerador grado médico para urgencias/dispensación (150-250 L)",
@@ -3841,13 +4179,20 @@
      "rango_precio_unitario_cop_2026": [
       8000000,
       18000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "por_confirmar",
+      "regla": "Decreto 4725, art. 7, regla 2 y arts. 1 y 2 (finalidad médica sobre personas).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: I (regla 2) si el INVIMA lo considera dispositivo médico; probablemente no lo es. Son equipos de cadena de frío para medicamentos, vacunas o muestras. La clase I del repo es coherente solo si fueran dispositivos médicos."
+     }
     },
     {
      "nombre": "Termohigrómetros con registro",
      "cantidad": 6,
      "especificacion": "Almacenamiento a 21-24 °C y 40-65 % de humedad (Res. 1633, Cuadro 16).",
-     "clase_riesgo": "I",
+     "clase_riesgo": "no_dm",
      "vida_util_anios": 5,
      "mantenimiento_anual_pct": 0,
      "precio_unitario_cop_2026": 350000,
@@ -3859,7 +4204,15 @@
      "rango_precio_unitario_cop_2026": [
       200000,
       600000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "no_dm",
+      "estado": "discrepancia",
+      "regla": "Decreto 4725, art. 1 y 2.",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: I. Revisión: No es dispositivo médico. No es dispositivo médico (por confirmar: definición del art. 2 del Decreto 4725 no leída en el texto oficial). Miden el ambiente o la cadena de frío, no a personas. Requieren calibración (control metrológico), no registro sanitario.",
+      "clase_anterior": "I"
+     }
     },
     {
      "nombre": "Lectores de código de barras para dispensación trazable",
@@ -4330,7 +4683,7 @@
     {
      "nombre": "Camilla plegable de expansión con porta suero",
      "cantidad": 8,
-     "especificacion": "Se guarda en el depósito de 10 m² junto al salón.",
+     "especificacion": "Se guarda en el depósito de 10 m² junto al salón. Con barandas y ruedas con freno.",
      "clase_riesgo": "I",
      "vida_util_anios": 10,
      "mantenimiento_anual_pct": 1,
@@ -4343,7 +4696,8 @@
      "rango_precio_unitario_cop_2026": [
       2500000,
       5000000
-     ]
+     ],
+     "ajuste_v2": "Verificación V2 (2026-10-24): se exigen barandas y ruedas con freno (contrato 4.7.2). Sin cambio de precio."
     },
     {
      "nombre": "Atril porta suero",
@@ -4438,7 +4792,14 @@
      "rango_precio_unitario_cop_2026": [
       120000000,
       300000000
-     ]
+     ],
+     "clase_riesgo_revision": {
+      "valor": "por_confirmar",
+      "estado": "por_confirmar",
+      "regla": "Decreto 4725, art. 2 (definición de dispositivo médico: si incluye software, por confirmar) y art. 6 lit. b (soportes informáticos).",
+      "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+      "nota": "Clase en el repositorio: No es dispositivo médico (mobiliario general). Revisión: Por confirmar (puede ser dispositivo médico como software). Un PACS que procesa imágenes para diagnóstico se regula como dispositivo médico en otros países; el proyecto de decreto colombiano de 2025-2026 lo incluiría expresamente."
+     }
     },
     {
      "nombre": "Sistema de turnos y pantallas informativas (digiturno)",
@@ -4577,7 +4938,7 @@
    "metodo_precio": "una referencia llevada a pesos de 2026 con el IPC (precio de 2026, factor 1)",
    "fuente": "Armada (BACAIM6, Sucre), 2026-06-02, $263.000.000 por 1 u. (contrato SECOP II): https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10264450",
    "prioridad": "habilitacion",
-   "nota": "Obligatoria por urgencias, partos, laboratorio, imágenes, vacunación, farmacia y cadena de frío (Res. 3100, num. 11.1.2 criterio 14).",
+   "nota": "Obligatoria por urgencias, partos, laboratorio, imágenes, vacunación, farmacia y cadena de frío (Res. 3100, num. 11.1.2, criterio 14: en la revisión de urgencias e internación es paráfrasis, según guía secundaria; por confirmar; las revisiones de consulta y de apoyo diagnóstico vieron el texto en una compilación oficial).",
    "componentes": "Grupo electrógeno cabinado insonoro, tablero de transferencia automática (menos de 10 s), tanque de combustible para 72 horas (unos 2.300 L, ver normas.json), sistema de escape y cargador de baterías.",
    "riesgo_doble_conteo_con_obra": false
   },
@@ -4646,7 +5007,7 @@
   {
    "nombre": "Central de gases medicinales: oxígeno, aire medicinal y vacío",
    "cantidad": 1,
-   "especificacion": "Tomas en reanimación, observación, procedimientos, partos, recuperación, TPR, hospitalización y aislamiento.",
+   "especificacion": "Tomas en reanimación, observación, procedimientos, partos, recuperación, TPR, hospitalización y aislamiento. Paneles de alarma por zona visibles desde las estaciones de enfermería (urgencias, piso 3 y piso 4).",
    "clase_riesgo": "Equipo industrial de uso hospitalario (Res. 1211 de 2025); no lleva clase de riesgo INVIMA",
    "vida_util_anios": 20,
    "mantenimiento_anual_pct": 5,
@@ -4662,7 +5023,15 @@
    ],
    "nota": "La tubería de cobre va en el presupuesto de obra; aquí van equipos, cajas, alarmas y tomas. Revisar para no sumar dos veces.",
    "componentes": "Manifold automático de oxígeno de doble banco, compresor de aire medicinal dúplex libre de aceite, bomba de vacío dúplex, cajas de corte por zona, alarmas y unas 100 tomas murales (incluye las 8 de la sala de expansión).",
-   "riesgo_doble_conteo_con_obra": true
+   "riesgo_doble_conteo_con_obra": true,
+   "ajuste_v2": "Verificación V2 (2026-10-24): se agregan los paneles de alarma por zona (Res. 3100, todos los servicios: «sistema de alarma cuando se cuente con red de distribución de gases medicinales», texto de compilación; numeral por confirmar). Sin cambio de precio.",
+   "clase_riesgo_revision": {
+    "valor": "por_confirmar",
+    "estado": "por_confirmar",
+    "regla": "Decreto 4725, arts. 1 y 2 (componentes que conducen gases al paciente) y régimen de gases medicinales como medicamentos (norma específica no verificada en esta revisión).",
+    "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+    "nota": "Clase en el repositorio: Equipo industrial de uso hospitalario (Res. 1211 de 2025); no lleva clase de riesgo INVIMA. Revisión: Por confirmar con el INVIMA. El repo dice que ‘no lleva clase de riesgo INVIMA’. Pero el oxígeno es un medicamento y producirlo en sitio (PSA) puede exigir requisitos sanitarios propios; además, partes de la red (tomas murales, reguladores, alarmas) pueden requerir registro como dispositivos médicos. Pedir concepto al INVIMA antes de cerrar el presupuesto."
+   }
   },
   {
    "nombre": "Generador de oxígeno en sitio (tecnología PSA)",
@@ -4682,7 +5051,14 @@
     900000000
    ],
    "componentes": "Planta PSA de 15-20 Nm³/h con llenado de cilindros de respaldo.",
-   "riesgo_doble_conteo_con_obra": false
+   "riesgo_doble_conteo_con_obra": false,
+   "clase_riesgo_revision": {
+    "valor": "por_confirmar",
+    "estado": "por_confirmar",
+    "regla": "Decreto 4725, arts. 1 y 2 (componentes que conducen gases al paciente) y régimen de gases medicinales como medicamentos (norma específica no verificada en esta revisión).",
+    "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+    "nota": "Clase en el repositorio: Equipo industrial de uso hospitalario (Res. 1211 de 2025); no lleva clase de riesgo INVIMA. Revisión: Por confirmar con el INVIMA. El repo dice que ‘no lleva clase de riesgo INVIMA’. Pero el oxígeno es un medicamento y producirlo en sitio (PSA) puede exigir requisitos sanitarios propios; además, partes de la red (tomas murales, reguladores, alarmas) pueden requerir registro como dispositivos médicos. Pedir concepto al INVIMA antes de cerrar el presupuesto."
+   }
   },
   {
    "nombre": "Aire acondicionado y ventilación mecánica con control de presiones",
@@ -4831,7 +5207,7 @@
    "nombre": "Nevera mortuoria de 2 cuerpos con camilla de transporte de cadáveres",
    "cantidad": 1,
    "especificacion": "Acero inoxidable, 2 a 4 °C, 2 bandejas, alarma de temperatura, conexión a la planta; camilla con cubierta.",
-   "clase_riesgo": "I",
+   "clase_riesgo": "no_dm",
    "vida_util_anios": 12,
    "mantenimiento_anual_pct": 4,
    "precio_unitario_cop_2026": 38000000,
@@ -4846,7 +5222,15 @@
    "rango_precio_unitario_cop_2026": [
     25000000,
     55000000
-   ]
+   ],
+   "clase_riesgo_revision": {
+    "valor": "no_dm",
+    "estado": "discrepancia",
+    "regla": "Decreto 4725, art. 1 (dispositivos médicos ‘para uso humano’ con finalidad de diagnóstico, prevención o tratamiento).",
+    "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+    "nota": "Clase en el repositorio: I. Revisión: No es dispositivo médico. No es dispositivo médico (por confirmar: definición del art. 2 del Decreto 4725 no leída en el texto oficial). Se usa con cadáveres, no para atender personas.",
+    "clase_anterior": "I"
+   }
   }
  ],
  "totales_equipamiento_fijo": {
@@ -4916,6 +5300,1472 @@
   "nota": "Suma de cantidades por precios unitarios. Los precios con referencia SECOP son datos oficiales llevados a pesos de 2026 con el IPC; los demás son estimaciones con rango. El rango total suma los mínimos y los máximos de cada ítem, por eso es amplio.",
   "control_especial_de_oferta": "La dotación biomédica solo es de control especial de oferta si supera 5.000 SMMLV en servicios de mediana y alta complejidad (Res. 485, art. 4.1); la de esta torre es de baja complejidad, salvo el ecógrafo (imágenes no ionizantes, mediana complejidad), que no se acerca a ese tope. El equipamiento fijo y la infraestructura sí cuentan para el umbral de 5.000 SMMLV ($8.754.525.000) del art. 4.2, y la obra de la torre lo supera: el proyecto es de control especial de oferta.",
   "ajuste_v1": "Verificación V1 (22-oct-2026): se agregaron 9 ítems de habilitación que faltaban (báscula pesa bebés y mesas auxiliares de reanimación en urgencias; dotación del consultorio de valoración obstétrica y camilla en partos; carro de paro en hospitalización; reguladores de voltaje de las neveras de vacunas; nevera mortuoria en el equipamiento fijo). Suben el total general en $63 millones (de $8.575 a $8.639 millones); presupuesto.json y financiacion.json deben tomar los nuevos totales."
+ },
+ "cierre_brechas_habilitacion": {
+  "fecha": "2026-10-24",
+  "origen": "Cruce con la Res. 3100 de 2019 (revisiones de urgencias e internación, consulta y ambulatorio y apoyo diagnóstico; fuentes_investigacion/res3100_*.json) y con el proyecto tipo (proyecto_tipo_contraste.json). Contrato de integración, 4.7.1.",
+  "como_se_financia": "Cada ítem indica su proyecto (P4, P5 o P6 de presupuesto.json). Mientras no se actualice el presupuesto, la inversión podría salir de la contingencia de su proyecto (P4: $175.059.364; P5: $26.160.785), que es la reserva para riesgo de cantidades y precios: usarla reduce esa reserva. Los gastos de operación anual no se financian con contingencias. No se suma a totales_generales.",
+  "reglas": {
+   "prioridad": "habilitacion solo si al menos una exigencia enlazada es exigible (texto de compilación oficial); por_confirmar si todas son de guía secundaria o paráfrasis; recomendado en la sala de expansión, el DEA del piso 4 y los ítems del proyecto tipo.",
+   "precio": "referencia_repo cuando el mismo ítem está en dotacion.json; estimacion con el rango de la investigación cuando la trae; por_cotizar (precio null) en los demás casos. Los totales no suman cifras supuestas.",
+   "proyecto": "P4 dotación; P5 laboratorio y toma de muestras; P6 sistemas de información."
+  },
+  "items": [
+   {
+    "servicio": "urgencias",
+    "nombre": "Martillo de reflejos",
+    "tipo": "equipo",
+    "cantidad": 3,
+    "ambientes": [
+     {
+      "fila": 15,
+      "nombre": "Consultorio de urgencias con unidad sanitaria",
+      "cantidad": 2
+     },
+     {
+      "fila": 14,
+      "nombre": "Triage (clasificación)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Martillo de reflejos tipo Taylor o Queen Square.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": 40000,
+    "rango_precio_unitario_cop_2026": [
+     20000,
+     60000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (consulta y ambulatorio, 23-oct-2026): 13 martillos de $260.000 a $780.000 (mismo ítem en consulta externa).",
+    "exigencias": [
+     {
+      "id": "EX-URG-008",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[0].exigencias[7]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "urgencias",
+    "nombre": "Camilla ginecológica con estribos (o camilla de examen con estribos)",
+    "tipo": "mobiliario",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 15,
+      "nombre": "Consultorio de urgencias con unidad sanitaria",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Con estribos y portarrollo; para el consultorio de urgencias que atiende urgencias ginecobstétricas.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [
+     {
+      "id": "EX-URG-008",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[0].exigencias[7]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "hospitalizacion",
+    "nombre": "Laringoscopio adulto y pediátrico (mango + hojas de fibra óptica)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 125,
+      "nombre": "Estación de enfermería: puesto central",
+      "cantidad": 1
+     }
+    ],
+    "dentro_de_linea": {
+     "linea": "L-hospitalizacion-m-a7568f",
+     "nombre": "Carro de paro (mueble) adulto-pediátrico para hospitalización"
+    },
+    "especificacion": "Igual a la línea de urgencias.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": 1800000,
+    "rango_precio_unitario_cop_2026": [
+     1200000,
+     2800000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (urgencias: «Laringoscopio adulto y pediátrico (mango + hojas de fibra óptica)»)",
+    "exigencias": [
+     {
+      "id": "EX-HOS-011",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[10]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "hospitalizacion",
+    "nombre": "Resucitador manual adulto, pediátrico y neonatal (juego)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 125,
+      "nombre": "Estación de enfermería: puesto central",
+      "cantidad": 1
+     }
+    ],
+    "dentro_de_linea": {
+     "linea": "L-hospitalizacion-m-a7568f",
+     "nombre": "Carro de paro (mueble) adulto-pediátrico para hospitalización"
+    },
+    "especificacion": "Igual a la línea de urgencias.",
+    "clase_riesgo": "IIa",
+    "precio_unitario_cop_2026": 1200000,
+    "rango_precio_unitario_cop_2026": [
+     800000,
+     1800000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (urgencias: «Resucitador manual adulto, pediátrico y neonatal (juego)»)",
+    "exigencias": [
+     {
+      "id": "EX-HOS-011",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[10]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "hospitalizacion",
+    "nombre": "Fonendoscopio pediátrico",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 125,
+      "nombre": "Estación de enfermería: puesto central",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Campana pediátrica; si el fonendoscopio del kit de examen ya es adulto-pediátrico, no se compra.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": 275000,
+    "rango_precio_unitario_cop_2026": [
+     150000,
+     400000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (consulta y ambulatorio, 23-oct-2026): 12 fonendoscopios pediátricos de $1,8 a $4,8 millones.",
+    "exigencias": [
+     {
+      "id": "EX-HOS-003",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[2]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "partos",
+    "nombre": "Laringoscopio adulto (hojas Macintosh)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 159,
+      "nombre": "Puesto de enfermería de las habitaciones TPR",
+      "cantidad": 1
+     }
+    ],
+    "dentro_de_linea": {
+     "linea": "L-partos-m-6568c3",
+     "nombre": "Carro de paro (mueble) con módulo neonatal"
+    },
+    "especificacion": "Mango y hojas Macintosh 3 y 4 de fibra óptica.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": 1800000,
+    "rango_precio_unitario_cop_2026": [
+     1200000,
+     2800000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (urgencias, juego adulto y pediátrico: «Laringoscopio adulto y pediátrico (mango + hojas de fibra óptica)»)",
+    "exigencias": [
+     {
+      "id": "EX-PAR-019",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[18]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "partos",
+    "nombre": "Resucitador manual adulto",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 159,
+      "nombre": "Puesto de enfermería de las habitaciones TPR",
+      "cantidad": 1
+     }
+    ],
+    "dentro_de_linea": {
+     "linea": "L-partos-m-6568c3",
+     "nombre": "Carro de paro (mueble) con módulo neonatal"
+    },
+    "especificacion": "Bolsa autoinflable adulta con reservorio y mascarillas.",
+    "clase_riesgo": "IIa",
+    "precio_unitario_cop_2026": 1200000,
+    "rango_precio_unitario_cop_2026": [
+     800000,
+     1800000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (urgencias, juego adulto, pediátrico y neonatal: «Resucitador manual adulto, pediátrico y neonatal (juego)»)",
+    "exigencias": [
+     {
+      "id": "EX-PAR-019",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[18]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "partos",
+    "nombre": "Cinta métrica (área de adaptación neonatal)",
+    "tipo": "equipo",
+    "cantidad": 2,
+    "ambientes": [
+     {
+      "fila": 151,
+      "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+      "cantidad": 2
+     }
+    ],
+    "especificacion": "Cinta métrica flexible no elástica.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [
+     {
+      "id": "EX-PAR-010",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[9]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "partos",
+    "nombre": "Oxímetro de pulso neonatal (segundo)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 151,
+      "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Igual a la línea de partos, con sensor neonatal.",
+    "clase_riesgo": "IIa",
+    "precio_unitario_cop_2026": 2000000,
+    "rango_precio_unitario_cop_2026": [
+     1300000,
+     3000000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (partos: «Oxímetro de pulso neonatal»)",
+    "exigencias": [
+     {
+      "id": "EX-PAR-011",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[10]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "partos",
+    "nombre": "Báscula pesa bebés digital e infantómetro (segundo juego)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 151,
+      "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Igual a la línea de partos.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": 1800000,
+    "rango_precio_unitario_cop_2026": [
+     1100000,
+     2800000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (partos: «Báscula pesa bebés digital e infantómetro»)",
+    "exigencias": [
+     {
+      "id": "EX-PAR-009",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[8]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "partos",
+    "nombre": "Laringoscopio neonatal (segundo)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 151,
+      "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Hojas Miller 0 y 1.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [
+     {
+      "id": "EX-PAR-012",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[11]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "partos",
+    "nombre": "Nevera de grado médico pequeña con registrador de temperatura",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 156,
+      "nombre": "Depósito de medicamentos (con chapa)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "2 a 8 °C, 50 a 100 L, con registrador y alarma; o suministro por turno desde la farmacia.",
+    "clase_riesgo": "por_confirmar",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [
+     {
+      "id": "EX-PAR-016",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[15]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "esterilizacion",
+    "nombre": "Secadora o gabinete de secado de instrumental",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 162,
+      "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Gabinete de secado con aire filtrado para instrumental y tubuladuras.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [
+     {
+      "id": "EX-EST-008",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[3].exigencias[7]"
+     },
+     {
+      "id": "EX-EST-001",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[3].exigencias[0]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion",
+    "depende_de": "Res. 914 de 2025 (manual de reprocesamiento de dispositivos médicos; rige desde el 3-ene-2027, antes de la apertura)"
+   },
+   {
+    "servicio": "esterilizacion",
+    "nombre": "Lupa con iluminación para inspección de instrumental",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 162,
+      "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Lupa de aumento con luz LED, de mesa.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [
+     {
+      "id": "EX-EST-004",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[3].exigencias[3]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion",
+    "depende_de": "Res. 914 de 2025 (manual de reprocesamiento de dispositivos médicos; rige desde el 3-ene-2027, antes de la apertura)"
+   },
+   {
+    "servicio": "esterilizacion",
+    "nombre": "Etiquetadora de lotes o software de trazabilidad",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 162,
+      "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Etiquetadora de lote y fecha o software de trazabilidad de la carga.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [
+     {
+      "id": "EX-EST-005",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[3].exigencias[4]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion",
+    "depende_de": "Res. 914 de 2025 (manual de reprocesamiento de dispositivos médicos; rige desde el 3-ene-2027, antes de la apertura)"
+   },
+   {
+    "servicio": "expansion_emergencias",
+    "nombre": "Desfibrilador externo automático (DEA) con maletín de reanimación adulto-pediátrico",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 198,
+      "nombre": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "DEA con parches adulto y pediátrico y maletín de reanimación (bolsa, cánulas, laringoscopio).",
+    "clase_riesgo": "IIb",
+    "precio_unitario_cop_2026": 5997600,
+    "rango_precio_unitario_cop_2026": [
+     5997600,
+     5997600
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (consulta externa; el maletín se cotiza aparte: «Desfibrilador externo automático (DEA) para el piso de consulta»)",
+    "exigencias": [
+     {
+      "id": "EX-EXP-004",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[4].exigencias[3]"
+     }
+    ],
+    "prioridad": "recomendado",
+    "proyecto": "P4",
+    "naturaleza": "inversion",
+    "nota": "Hospital seguro: la sala de expansión no es un servicio de la Res. 3100 (exigencia por analogía)."
+   },
+   {
+    "servicio": "expansion_emergencias",
+    "nombre": "Aspirador de secreciones portátil (segundo)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 198,
+      "nombre": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Igual a la línea de la sala de expansión.",
+    "clase_riesgo": "IIa",
+    "precio_unitario_cop_2026": 3500000,
+    "rango_precio_unitario_cop_2026": [
+     2500000,
+     5500000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (sala de expansión: «Aspirador de secreciones portátil»)",
+    "exigencias": [
+     {
+      "id": "EX-EXP-003",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[4].exigencias[2]"
+     }
+    ],
+    "prioridad": "recomendado",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "expansion_emergencias",
+    "nombre": "Kit de examen básico para la sala de expansión",
+    "tipo": "equipo",
+    "cantidad": 2,
+    "ambientes": [
+     {
+      "fila": 198,
+      "nombre": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+      "cantidad": 2
+     }
+    ],
+    "especificacion": "Igual al kit de examen básico de urgencias (8 componentes).",
+    "clase_riesgo": "IIa",
+    "precio_unitario_cop_2026": 3274853,
+    "rango_precio_unitario_cop_2026": [
+     3274853,
+     3274853
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (urgencias: «Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)»)",
+    "exigencias": [
+     {
+      "id": "EX-EXP-005",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[4].exigencias[4]"
+     }
+    ],
+    "prioridad": "recomendado",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "expansion_emergencias",
+    "nombre": "Glucómetro para la sala de expansión",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 198,
+      "nombre": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Igual a la línea de urgencias.",
+    "clase_riesgo": "ivd",
+    "precio_unitario_cop_2026": 150000,
+    "rango_precio_unitario_cop_2026": [
+     100000,
+     300000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (urgencias: «Glucómetro»)",
+    "exigencias": [
+     {
+      "id": "EX-EXP-005",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[4].exigencias[4]"
+     }
+    ],
+    "prioridad": "recomendado",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "consulta_externa",
+    "nombre": "Desfibrilador externo automático (DEA) para el piso 4",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 207,
+      "nombre": "Vestíbulo de ascensores",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "DEA en gabinete de pared con alarma, en el vestíbulo de ascensores del piso 4.",
+    "clase_riesgo": "IIb",
+    "precio_unitario_cop_2026": 5997600,
+    "rango_precio_unitario_cop_2026": [
+     5997600,
+     5997600
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (consulta externa: «Desfibrilador externo automático (DEA) para el piso de consulta»)",
+    "exigencias": [
+     {
+      "id": "EX-TOD-C04",
+      "origen": "res3100_consulta_y_ambulatorio.json#requisitos_todos_los_servicios[3]"
+     }
+    ],
+    "prioridad": "recomendado",
+    "proyecto": "P4",
+    "naturaleza": "inversion",
+    "nota": "Recomendado, no exigencia confirmada: por confirmar si lo exige el carro de paro del piso. La revisión de consulta estima un DEA en $8 a $12 millones; aquí se toma el precio del DEA del repositorio."
+   },
+   {
+    "servicio": "urgencias",
+    "nombre": "Termohigrómetro con registro (depósito de medicamentos)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 36,
+      "nombre": "Depósito de medicamentos e insumos de urgencias",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Igual a la línea del servicio farmacéutico.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": 350000,
+    "rango_precio_unitario_cop_2026": [
+     200000,
+     600000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (servicio farmacéutico: «Termohigrómetros con registro»)",
+    "exigencias": [
+     {
+      "id": "EX-URG-023",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[0].exigencias[22]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "hospitalizacion",
+    "nombre": "Termohigrómetro con registro (depósito de medicamentos)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 133,
+      "nombre": "Depósito de medicamentos (con chapa de seguridad)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Igual a la línea del servicio farmacéutico.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": 350000,
+    "rango_precio_unitario_cop_2026": [
+     200000,
+     600000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (servicio farmacéutico: «Termohigrómetros con registro»)",
+    "exigencias": [
+     {
+      "id": "EX-HOS-016",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[15]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "partos",
+    "nombre": "Termohigrómetro con registro (depósito de medicamentos)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 156,
+      "nombre": "Depósito de medicamentos (con chapa)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Igual a la línea del servicio farmacéutico.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": 350000,
+    "rango_precio_unitario_cop_2026": [
+     200000,
+     600000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (servicio farmacéutico: «Termohigrómetros con registro»)",
+    "exigencias": [
+     {
+      "id": "EX-PAR-024",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[23]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "toma_muestras",
+    "nombre": "Termohigrómetro con registro (preparación y envío de muestras)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 54,
+      "nombre": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Igual a la línea del servicio farmacéutico.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": 350000,
+    "rango_precio_unitario_cop_2026": [
+     200000,
+     600000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (servicio farmacéutico: «Termohigrómetros con registro»)",
+    "exigencias": [
+     {
+      "id": "EX-TOM-005",
+      "origen": "res3100_apoyo_diagnostico.json#servicios[1].exigencias[4]"
+     },
+     {
+      "id": "EX-TOD-A08",
+      "origen": "res3100_apoyo_diagnostico.json#requisitos_todos_los_servicios[7]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P5",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "imagenes",
+    "nombre": "Termohigrómetro con registro (almacenamiento de dispositivos médicos)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 47,
+      "nombre": "Almacenamiento de dispositivos médicos e insumos",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Igual a la línea del servicio farmacéutico.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": 350000,
+    "rango_precio_unitario_cop_2026": [
+     200000,
+     600000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (servicio farmacéutico: «Termohigrómetros con registro»)",
+    "exigencias": [
+     {
+      "id": "EX-IMG-010",
+      "origen": "res3100_apoyo_diagnostico.json#servicios[2].exigencias[9]"
+     },
+     {
+      "id": "EX-TOD-A08",
+      "origen": "res3100_apoyo_diagnostico.json#requisitos_todos_los_servicios[7]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "consulta_externa",
+    "nombre": "Fonendoscopio pediátrico",
+    "tipo": "equipo",
+    "cantidad": 12,
+    "ambientes": [
+     {
+      "fila": 66,
+      "nombre": "Consultorio de medicina general",
+      "cantidad": 8
+     },
+     {
+      "fila": 67,
+      "nombre": "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos)",
+      "cantidad": 3
+     },
+     {
+      "fila": 68,
+      "nombre": "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Campana pediátrica, uno por consultorio con oferta pediátrica.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": 275000,
+    "rango_precio_unitario_cop_2026": [
+     150000,
+     400000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (consulta y ambulatorio, 23-oct-2026): 12 fonendoscopios pediátricos de $1,8 a $4,8 millones.",
+    "exigencias": [
+     {
+      "id": "EX-CEX-004",
+      "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[3]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "consulta_externa",
+    "nombre": "Martillo de reflejos",
+    "tipo": "equipo",
+    "cantidad": 13,
+    "ambientes": [
+     {
+      "fila": 66,
+      "nombre": "Consultorio de medicina general",
+      "cantidad": 8
+     },
+     {
+      "fila": 67,
+      "nombre": "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos)",
+      "cantidad": 3
+     },
+     {
+      "fila": 68,
+      "nombre": "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)",
+      "cantidad": 1
+     },
+     {
+      "fila": 177,
+      "nombre": "Consultorio de nutrición y dietética",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Martillo de reflejos tipo Taylor o Queen Square.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": 40000,
+    "rango_precio_unitario_cop_2026": [
+     20000,
+     60000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (consulta y ambulatorio, 23-oct-2026): 13 martillos de $260.000 a $780.000.",
+    "exigencias": [
+     {
+      "id": "EX-CEX-006",
+      "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[5]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "consulta_externa",
+    "nombre": "Báscula pesa bebés digital (adicional)",
+    "tipo": "equipo",
+    "cantidad": 2,
+    "ambientes": [
+     {
+      "fila": 67,
+      "nombre": "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos)",
+      "cantidad": 2
+     }
+    ],
+    "especificacion": "Igual a la línea de consulta externa.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": 900000,
+    "rango_precio_unitario_cop_2026": [
+     600000,
+     1500000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (consulta externa: «Báscula pesa bebés digital»)",
+    "exigencias": [
+     {
+      "id": "EX-CEX-008",
+      "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[7]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "terapias",
+    "nombre": "Flujómetro de oxígeno con humidificador (terapia respiratoria)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 191,
+      "nombre": "Sala de procedimientos de terapia respiratoria (nebulizaciones, espirometría)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Flujómetro con humidificador en la toma de oxígeno de la sala de terapia respiratoria; la salida de la red va en la obra.",
+    "clase_riesgo": "IIa",
+    "precio_unitario_cop_2026": 600000,
+    "rango_precio_unitario_cop_2026": [
+     400000,
+     800000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (consulta y ambulatorio, 23-oct-2026) (sin la salida de la red de gases, que va en obra).",
+    "exigencias": [
+     {
+      "id": "EX-TER-003",
+      "origen": "res3100_consulta_y_ambulatorio.json#servicios[5].exigencias[2]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "terapias",
+    "nombre": "Juego de valoración (tensiómetro, fonendoscopio, goniómetro, cinta métrica y martillo de reflejos)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 188,
+      "nombre": "Ambiente de entrevista y evaluación",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Para el ambiente de entrevista y evaluación.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": 850000,
+    "rango_precio_unitario_cop_2026": [
+     500000,
+     1200000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (consulta y ambulatorio, 23-oct-2026).",
+    "exigencias": [
+     {
+      "id": "EX-TER-004",
+      "origen": "res3100_consulta_y_ambulatorio.json#servicios[5].exigencias[3]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "imagenes",
+    "nombre": "Casilleros del vestidor de pacientes (módulo de 2 a 4)",
+    "tipo": "mobiliario",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 46,
+      "nombre": "Vestidor de pacientes (2 cubículos con casilleros)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Módulo de casilleros con llave para los 2 cubículos del vestidor.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": 800000,
+    "rango_precio_unitario_cop_2026": [
+     400000,
+     1200000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (apoyo diagnóstico, 23-oct-2026).",
+    "exigencias": [
+     {
+      "id": "EX-IMG-006",
+      "origen": "res3100_apoyo_diagnostico.json#servicios[2].exigencias[5]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "imagenes",
+    "nombre": "Desinfección de alto nivel del transductor endocavitario (opción manual)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 105,
+      "nombre": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Contenedor y desinfectante de alto nivel con tiras de control; o sistema automatizado.",
+    "clase_riesgo": "por_confirmar",
+    "precio_unitario_cop_2026": 900000,
+    "rango_precio_unitario_cop_2026": [
+     300000,
+     1500000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (apoyo diagnóstico, 23-oct-2026) (opción manual).",
+    "exigencias": [
+     {
+      "id": "EX-IMG-014",
+      "origen": "res3100_apoyo_diagnostico.json#servicios[2].exigencias[13]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "imagenes",
+    "nombre": "Recipientes de residuos por punto de generación (imágenes)",
+    "tipo": "mobiliario",
+    "cantidad": 2,
+    "ambientes": [
+     {
+      "fila": 44,
+      "nombre": "Sala de rayos X convencional digital (con blindaje en plomo)",
+      "cantidad": 1
+     },
+     {
+      "fila": 105,
+      "nombre": "Sala de ecografía (obstétrica, abdominal y transvaginal)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Canecas de pedal verde, gris y roja y guardián.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": 253000,
+    "rango_precio_unitario_cop_2026": [
+     153000,
+     353000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (apoyo diagnóstico, 23-oct-2026): 15 puntos de $2,3 a $5,3 millones.",
+    "exigencias": [
+     {
+      "id": "EX-IMG-015",
+      "origen": "res3100_apoyo_diagnostico.json#servicios[2].exigencias[14]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P4",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "toma_muestras",
+    "nombre": "Recipientes de residuos por punto de generación (toma de muestras)",
+    "tipo": "mobiliario",
+    "cantidad": 6,
+    "ambientes": [
+     {
+      "fila": 52,
+      "nombre": "Cubículo de toma de muestras (flebotomía)",
+      "cantidad": 4
+     },
+     {
+      "fila": 53,
+      "nombre": "Toma de muestras especiales (pediátricas, microbiológicas, curvas de glucosa) con unidad sanitaria",
+      "cantidad": 1
+     },
+     {
+      "fila": 54,
+      "nombre": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Canecas de pedal y guardián para cortopunzantes por cubículo y por toma especial.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": 253000,
+    "rango_precio_unitario_cop_2026": [
+     153000,
+     353000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (apoyo diagnóstico, 23-oct-2026): 15 puntos de $2,3 a $5,3 millones.",
+    "exigencias": [
+     {
+      "id": "EX-TOM-007",
+      "origen": "res3100_apoyo_diagnostico.json#servicios[1].exigencias[6]"
+     }
+    ],
+    "prioridad": "por_confirmar",
+    "proyecto": "P5",
+    "naturaleza": "inversion"
+   },
+   {
+    "servicio": "laboratorio",
+    "nombre": "Recipientes de residuos por punto de generación (laboratorio)",
+    "tipo": "mobiliario",
+    "cantidad": 7,
+    "ambientes": [
+     {
+      "fila": 80,
+      "nombre": "Área técnica: centrifugación y alícuotas (preanalítica)",
+      "cantidad": 1
+     },
+     {
+      "fila": 81,
+      "nombre": "Área técnica: hematología y coagulación",
+      "cantidad": 1
+     },
+     {
+      "fila": 82,
+      "nombre": "Área técnica: química clínica e inmunoensayo",
+      "cantidad": 1
+     },
+     {
+      "fila": 83,
+      "nombre": "Área técnica: inmunología y pruebas rápidas (VIH, sífilis, hepatitis, dengue)",
+      "cantidad": 1
+     },
+     {
+      "fila": 84,
+      "nombre": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad",
+      "cantidad": 1
+     },
+     {
+      "fila": 85,
+      "nombre": "Área técnica: uroanálisis, coprológico, parasitología y gota gruesa (malaria)",
+      "cantidad": 1
+     },
+     {
+      "fila": 86,
+      "nombre": "Lavado, descontaminación y esterilización de material (autoclave)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Canecas de pedal y guardián por área técnica y en el lavado.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": 253000,
+    "rango_precio_unitario_cop_2026": [
+     153000,
+     353000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (apoyo diagnóstico, 23-oct-2026): 15 puntos de $2,3 a $5,3 millones.",
+    "exigencias": [],
+    "prioridad": "por_confirmar",
+    "proyecto": "P5",
+    "naturaleza": "inversion",
+    "nota": "Lo pide la gestión de residuos (Res. 591 de 2024); el criterio de la Res. 3100 por servicio está por confirmar."
+   },
+   {
+    "servicio": "imagenes",
+    "nombre": "Dosimetría personal (servicio anual)",
+    "tipo": "servicio",
+    "cantidad": 1,
+    "ambientes": [],
+    "especificacion": "Lectura mensual o bimestral de 6 a 8 dosímetros (rayos X y periapical).",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": 4100000,
+    "rango_precio_unitario_cop_2026": [
+     1800000,
+     6400000
+    ],
+    "tipo_precio": "estimacion",
+    "fuente": "Estimación de la revisión de la Res. 3100 (apoyo diagnóstico, 23-oct-2026): 6 a 8 dosímetros al año.",
+    "exigencias": [
+     {
+      "id": "EX-TOD-A07",
+      "origen": "res3100_apoyo_diagnostico.json#requisitos_todos_los_servicios[6]"
+     },
+     {
+      "id": "EX-ROD-003",
+      "origen": "res3100_apoyo_diagnostico.json#servicios[3].exigencias[2]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "operacion_anual",
+    "nota": "Servicio anual: no tiene unidad en el recorrido."
+   },
+   {
+    "servicio": "imagenes",
+    "nombre": "Control de calidad periódico de rayos X y periapical (después del primer año)",
+    "tipo": "servicio",
+    "cantidad": 1,
+    "ambientes": [],
+    "especificacion": "Pruebas de control de calidad del equipo generador de radiación (frecuencia por confirmar en la Res. 1811 de 2025).",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [
+     {
+      "id": "EX-IMG-008",
+      "origen": "res3100_apoyo_diagnostico.json#servicios[2].exigencias[7]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "operacion_anual",
+    "nota": "Servicio anual: no tiene unidad en el recorrido. El primer año está en presupuesto.json (puesta en marcha, P4)."
+   },
+   {
+    "servicio": "tic_apoyo",
+    "nombre": "Dispensador de agua (bebedero) para salas de espera",
+    "tipo": "mobiliario",
+    "cantidad": 8,
+    "ambientes": [
+     {
+      "fila": 0,
+      "nombre": "Vestíbulo principal con espera de admisión",
+      "cantidad": 1
+     },
+     {
+      "fila": 5,
+      "nombre": "Sala de espera de urgencias",
+      "cantidad": 1
+     },
+     {
+      "fila": 51,
+      "nombre": "Sala de espera de toma de muestras (15 personas)",
+      "cantidad": 1
+     },
+     {
+      "fila": 73,
+      "nombre": "Sala de espera de consulta externa (4 m² por consultorio, 13 consultorios y salas)",
+      "cantidad": 1
+     },
+     {
+      "fila": 104,
+      "nombre": "Sala de espera de farmacia (8 personas)",
+      "cantidad": 1
+     },
+     {
+      "fila": 136,
+      "nombre": "Sala de espera y de visitas (compartida con partos)",
+      "cantidad": 1
+     },
+     {
+      "fila": 179,
+      "nombre": "Sala de espera (4 m² por consultorio: 3 consultorios y odontología)",
+      "cantidad": 1
+     },
+     {
+      "fila": 184,
+      "nombre": "Recepción y sala de espera de terapias (10 personas)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Dispensador de agua potable con vasos desechables.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [],
+    "prioridad": "recomendado",
+    "proyecto": "P4",
+    "naturaleza": "inversion",
+    "nota": "Proyecto tipo (puesto de salud tipo de MinSalud 2017): una por sala de espera."
+   },
+   {
+    "servicio": "tic_apoyo",
+    "nombre": "Caneca de punto ecológico para salas de espera",
+    "tipo": "mobiliario",
+    "cantidad": 8,
+    "ambientes": [
+     {
+      "fila": 0,
+      "nombre": "Vestíbulo principal con espera de admisión",
+      "cantidad": 1
+     },
+     {
+      "fila": 5,
+      "nombre": "Sala de espera de urgencias",
+      "cantidad": 1
+     },
+     {
+      "fila": 51,
+      "nombre": "Sala de espera de toma de muestras (15 personas)",
+      "cantidad": 1
+     },
+     {
+      "fila": 73,
+      "nombre": "Sala de espera de consulta externa (4 m² por consultorio, 13 consultorios y salas)",
+      "cantidad": 1
+     },
+     {
+      "fila": 104,
+      "nombre": "Sala de espera de farmacia (8 personas)",
+      "cantidad": 1
+     },
+     {
+      "fila": 136,
+      "nombre": "Sala de espera y de visitas (compartida con partos)",
+      "cantidad": 1
+     },
+     {
+      "fila": 179,
+      "nombre": "Sala de espera (4 m² por consultorio: 3 consultorios y odontología)",
+      "cantidad": 1
+     },
+     {
+      "fila": 184,
+      "nombre": "Recepción y sala de espera de terapias (10 personas)",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Punto ecológico de 3 canecas (aprovechables, orgánicos, no aprovechables).",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [],
+    "prioridad": "recomendado",
+    "proyecto": "P4",
+    "naturaleza": "inversion",
+    "nota": "Proyecto tipo (puesto de salud tipo de MinSalud 2017): una por sala de espera."
+   },
+   {
+    "servicio": "tic_apoyo",
+    "nombre": "Báscula de residuos",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 219,
+      "nombre": "Unidad de almacenamiento central de residuos (peligrosos, no peligrosos, aprovechables), con nevera ≤ 4 °C para anatomopatológicos y lavado de recipientes",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Báscula de plataforma de 150 kg para pesar los residuos (registro del plan de gestión, Res. 591 de 2024).",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [],
+    "prioridad": "recomendado",
+    "proyecto": "P4",
+    "naturaleza": "inversion",
+    "nota": "Proyecto tipo (puesto de salud tipo de MinSalud 2017); la exigencia por la Res. 591 de 2024 está por confirmar."
+   },
+   {
+    "servicio": "consulta_externa",
+    "nombre": "Linterna de valoración pupilar",
+    "tipo": "equipo",
+    "cantidad": 13,
+    "ambientes": [
+     {
+      "fila": 66,
+      "nombre": "Consultorio de medicina general",
+      "cantidad": 8
+     },
+     {
+      "fila": 67,
+      "nombre": "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos)",
+      "cantidad": 3
+     },
+     {
+      "fila": 68,
+      "nombre": "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)",
+      "cantidad": 1
+     },
+     {
+      "fila": 177,
+      "nombre": "Consultorio de nutrición y dietética",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Linterna LED de diagnóstico.",
+    "clase_riesgo": "I",
+    "precio_unitario_cop_2026": null,
+    "rango_precio_unitario_cop_2026": null,
+    "tipo_precio": "por_cotizar",
+    "fuente": "Sin precio en dotacion.json ni en las investigaciones: por cotizar (2 cotizaciones de 2 marcas de menos de 6 meses, Res. 485 de 2025, num. 7.1.6).",
+    "exigencias": [],
+    "prioridad": "recomendado",
+    "proyecto": "P4",
+    "naturaleza": "inversion",
+    "nota": "Proyecto tipo (puesto de salud tipo de MinSalud 2017): el oftalmoscopio no la reemplaza."
+   }
+  ],
+  "totales": {
+   "por_proyecto": {
+    "P4": {
+     "habilitacion_cop_2026": 8175000,
+     "recomendado_cop_2026": 22194906,
+     "por_confirmar_cop_2026": 12696000,
+     "items": 36,
+     "items_sin_precio": 11,
+     "total_con_precio_cop_2026": 43065906
+    },
+    "P5": {
+     "habilitacion_cop_2026": 350000,
+     "recomendado_cop_2026": 0,
+     "por_confirmar_cop_2026": 3289000,
+     "items": 3,
+     "items_sin_precio": 0,
+     "total_con_precio_cop_2026": 3639000
+    },
+    "P6": {
+     "habilitacion_cop_2026": 0,
+     "recomendado_cop_2026": 0,
+     "por_confirmar_cop_2026": 0,
+     "items": 0,
+     "items_sin_precio": 0,
+     "total_con_precio_cop_2026": 0
+    }
+   },
+   "inversion_con_precio_cop_2026": 46704906,
+   "rango_inversion_con_precio_cop_2026": [
+    35909906,
+    61499906
+   ],
+   "operacion_anual": {
+    "cop_2026": 4100000,
+    "rango_cop_2026": [
+     1800000,
+     6400000
+    ],
+    "items": 2,
+    "items_sin_precio": 1
+   },
+   "items": 41,
+   "items_sin_precio": 12,
+   "tipo": "calculo_propio",
+   "nota": "Las sumas no incluyen ítems por cotizar; la operación anual va aparte y no se suma a la inversión."
+  },
+  "rango_de_referencia": "La revisión de consulta y ambulatorio estima los faltantes de sus seis servicios en $12,2 M a $22,6 M (1,4 % a 2,6 % de $852,5 M; cálculo propio de esa revisión), pero ese rango incluye un DEA para el piso 4 ($8 a $12 M) que no es exigencia confirmada: sin el DEA del piso 4 son $4,2 a $10,6 M (cálculo propio); el DEA va aparte como recomendado.",
+  "decisiones_pendientes": [
+   "Lavadora desinfectora ($110 M, recomendado): la revisión sugiere pasarla a habilitación por la Res. 914 de 2025; no se cambia su prioridad hasta leer el manual DMER (en el inventario queda prioridad_revisada «por_confirmar (Res. 914)»).",
+   "Posible duplicado del kit de examen ($67,5 M, cálculo propio de la revisión del proyecto tipo): decisión de la E.S.E.; no se cambia en esta versión.",
+   "Kit de anafilaxia en vacunación: exigencia por confirmar; su costo va en los insumos de farmacia."
+  ]
  },
  "comparaciones": [
   {
@@ -5612,5 +7462,13 @@
   "La capacidad (camas, consultorios) es un supuesto hasta concertar el Documento de Capacidad Instalada con MinSalud.",
   "Los ítems de equipamiento fijo marcados con riesgo de doble conteo pueden estar ya en el presupuesto de obra (redes de gases, climatización, datos, incendio).",
   "La cantidad de lámparas de calor radiante de la referencia de Tunja no se publicó; se supuso 2."
- ]
+ ],
+ "ajustes_v2": {
+  "fecha": "2026-10-24",
+  "origen": "Contrato de integración, 4.7.2 y 4.7.3 (revisiones de la Res. 3100 y del Decreto 4725 del 23-oct-2026).",
+  "especificaciones": "Cambios de texto sin cambio de precio, marcados con «ajuste_v2» en cada línea: barandas y ruedas con freno en camillas de procedimientos, observación, transporte de partos y plegables de expansión; freno en la camilla de reanimación; paneles de alarma por zona de la central de gases; examen ginecológico separado del equipo de parto de urgencias; equipo de episiotomía y episiorrafia en partos; tallas adulto y pediátrica en la protección radiológica; pliego de los autoclaves.",
+  "pliego": "Para toda compra: registro sanitario INVIMA vigente o permiso de comercialización (o constancia de que no lo requiere), clase de riesgo, manual en castellano, protocolo de mantenimiento, capacitación del fabricante y, en los autoclaves, calificación de instalación, operación y desempeño.",
+  "clases_de_riesgo": "Cada línea revisada lleva clase_riesgo_revision (49 filas de la revisión del Decreto 4725). Solo cambian de clase las discrepancias firmes (tensiómetros aneroides IIa → I, báscula pesa bebés de urgencias IIa → I, lavadora desinfectora IIb → IIa) y las filas que no son dispositivo médico (no_dm). El laringoscopio y resucitador neonatal no se parte: lleva componentes.",
+  "no_cambia": "Precios, cantidades, prioridades, totales_generales y las 236 líneas de los 15 servicios."
+ }
 }

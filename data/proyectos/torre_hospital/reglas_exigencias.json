@@ -1,0 +1,56 @@
+{
+ "id": "reglas_exigencias",
+ "version": 1,
+ "fecha": "2026-10-24",
+ "descripcion": "Insumo escrito a mano para scripts/torre/normalizar_exigencias.py (contrato, 4.2): la tabla cerrada que traduce cada servicio de las investigaciones de la Res. 3100 al servicio del programa, la escala única de verificación y, por exigencia, la regla de cumplimiento y los ítems que la cubren cuando no se pudieron resolver por nombre. Cada regla cita la exigencia por id y por origen; cada línea citada trae su nombre.",
+ "escala_verificacion": {
+  "fragmento_normograma": "literal_compilacion",
+  "literal_confirmado": "literal_compilacion",
+  "contenido_confirmado_redaccion_por_confirmar": "contenido_compilacion",
+  "fragmento_fuente_secundaria": "fuente_secundaria",
+  "solo_fuente_secundaria": "fuente_secundaria",
+  "parafrasis_por_confirmar": "por_confirmar",
+  "por_confirmar": "por_confirmar"
+ },
+ "archivos": [
+  {"archivo": "res3100_urgencias_e_internacion.json", "campo_verificacion": "nivel_verificacion", "todos": null},
+  {"archivo": "res3100_consulta_y_ambulatorio.json", "campo_verificacion": "verificacion_texto", "todos": "C"},
+  {"archivo": "res3100_apoyo_diagnostico.json", "campo_verificacion": "verificacion_texto", "todos": "A"}
+ ],
+ "servicio_a_programa": {
+  "res3100_urgencias_e_internacion.json": {
+   "urgencias": {"srv": "URG", "servicio": "urgencias", "matriz": "urgencias", "servicios_programa": ["Urgencias"], "numeral_grupo": "11.6.1", "codigo_reps": "1102"},
+   "hospitalizacion": {"srv": "HOS", "servicio": "hospitalizacion", "matriz": "hospitalizacion", "servicios_programa": ["Hospitalización (adultos, pediatría y obstetricia)"], "numeral_grupo": "11.4.1", "codigo_reps": "129 (adultos) y 130 (pediátrica)"},
+   "partos": {"srv": "PAR", "servicio": "partos", "matriz": "partos", "servicios_programa": ["Atención del parto (TPR)"], "numeral_grupo": "11.6.4", "codigo_reps": "1101"},
+   "esterilizacion": {"srv": "EST", "servicio": "esterilizacion", "matriz": "esterilizacion", "servicios_programa": ["Esterilización (reprocesamiento de dispositivos médicos)"], "numeral_grupo": "11.1", "codigo_reps": null},
+   "expansion_emergencias": {"srv": "EXP", "servicio": "expansion_emergencias", "matriz": "sala_expansion", "servicios_programa": ["Zona de expansión, telesalud y coordinación asistencial"], "numeral_grupo": null, "codigo_reps": null}
+  },
+  "res3100_consulta_y_ambulatorio.json": {
+   "consulta_externa": {"srv": "CEX", "servicio": "consulta_externa", "matriz": "consulta_externa", "servicios_programa": ["Consulta externa", "Consulta externa: salud oral, salud mental, nutrición y telemedicina (piso 4)", "Toma de muestras de cuello uterino y ginecológicas"], "numeral_grupo": "11.2.1", "codigo_reps": "328 (medicina general), 312 (enfermería) y 344 (ginecobstetricia por brigadas)"},
+   "odontologia": {"srv": "ODO", "servicio": "odontologia", "matriz": "odontologia", "servicios_programa": ["Odontología y radiología odontológica"], "numeral_grupo": "11.2.1", "codigo_reps": "334"},
+   "telemedicina": {"srv": "TEL", "servicio": "telemedicina", "matriz": "telemedicina", "servicios_programa": ["Consulta externa: salud oral, salud mental, nutrición y telemedicina (piso 4)"], "numeral_grupo": "11.1.3", "codigo_reps": null},
+   "vacunacion": {"srv": "VAC", "servicio": "vacunacion", "matriz": "vacunacion", "servicios_programa": ["Vacunación"], "numeral_grupo": "11.2.3", "codigo_reps": "420"},
+   "farmacia": {"srv": "FAR", "servicio": "farmacia", "matriz": "farmacia", "servicios_programa": ["Servicio farmacéutico"], "numeral_grupo": "11.3.2", "codigo_reps": "714"},
+   "terapias": {"srv": "TER", "servicio": "terapias", "matriz": "terapias", "servicios_programa": ["Terapias (fisioterapia y terapia respiratoria)"], "numeral_grupo": "11.3.1", "codigo_reps": "739 (fisioterapia) y 729 (terapia respiratoria)"}
+  },
+  "res3100_apoyo_diagnostico.json": {
+   "laboratorio": {"srv": "LAB", "servicio": "laboratorio", "matriz": "laboratorio", "servicios_programa": ["Laboratorio clínico"], "numeral_grupo": "11.3.12", "codigo_reps": "706"},
+   "toma_muestras": {"srv": "TOM", "servicio": "toma_muestras", "matriz": "toma_muestras", "servicios_programa": ["Toma de muestras de laboratorio clínico"], "numeral_grupo": "11.3.11", "codigo_reps": "712"},
+   "imagenes": {"srv": "IMG", "servicio": "imagenes", "matriz": "imagenes", "servicios_programa": ["Imágenes diagnósticas ionizantes (rayos X)", "Imágenes diagnósticas no ionizantes (ecografía)"], "numeral_grupo": "11.3.4", "codigo_reps": "744 (ionizantes) y 745 (no ionizantes)"},
+   "odontologia": {"srv": "ROD", "servicio": "odontologia", "matriz": "radiologia_odontologica", "servicios_programa": ["Odontología y radiología odontológica"], "numeral_grupo": "11.3.3", "codigo_reps": "748"},
+   "tic_apoyo": {"srv": "TIC", "servicio": "tic_apoyo", "matriz": "tic_apoyo", "servicios_programa": ["Vestíbulo y admisiones", "Apoyo y áreas técnicas del piso 1"], "numeral_grupo": "11.1", "codigo_reps": null}
+  }
+ },
+ "todos_los_servicios": {
+  "C": {"servicio": null, "servicios_programa": [], "numeral_grupo": "11.1"},
+  "A": {"servicio": null, "servicios_programa": [], "numeral_grupo": "11.1"}
+ },
+ "superados": {
+  "res_482": {"buscar": "Res. 482 de 2018", "reemplazo": "Res. 1811 de 2025 (reemplazó a la 482 desde el 6-mar-2026)", "nota": "Se reescribe en todos los campos de texto, salvo en los comentarios que ya explican el reemplazo (traen «1811»)."},
+  "res_1732": {"nota": "El aviso de transición de la Res. 1732 de 2026 de res3100_consulta_y_ambulatorio.json no se propaga: la Res. 2080 del 8-sep-2026 la revocó."}
+ },
+ "vigencia": {
+  "res914": {"vigencia_hasta": "2027-01-02", "vigencia_desde_914": "2027-01-03", "marca": "derogad", "nota": "Exigencias de esterilización cuyos numerales deroga el art. 14 de la Res. 914 de 2025 desde el 3-ene-2027 (ubicación exacta por confirmar)."}
+ },
+ "reglas": []
+}
