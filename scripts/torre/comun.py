@@ -132,26 +132,30 @@ def insumos_sha1(rutas) -> dict:
 # --------------------------------------------------------------------------------------------------------------------
 # letra del tipo de línea de dotación → (origen por defecto, nombre del tipo)
 LETRAS_LINEA = {'e': 'equipo', 'm': 'mobiliario', 'f': 'equipamiento fijo', 'c': 'equipo de laboratorio.json',
-                'x': 'cierre de brechas'}
-ORIGEN_POR_LETRA = {'e': 'dotacion', 'm': 'dotacion', 'f': 'dotacion', 'c': 'laboratorio', 'x': 'cierre_brechas'}
+                'x': 'cierre de brechas', 'i': 'infraestructura (capa del 16.3; sin precio de dotación)'}
+ORIGEN_POR_LETRA = {'e': 'dotacion', 'm': 'dotacion', 'f': 'dotacion', 'c': 'laboratorio', 'x': 'cierre_brechas',
+                    'i': 'infraestructura'}
 SRV_EXIGENCIA = ('URG', 'HOS', 'PAR', 'EST', 'EXP', 'CEX', 'ODO', 'TEL', 'VAC', 'FAR', 'TER', 'LAB', 'TOM', 'IMG', 'ROD',
                  'TIC')
 
-RE_NIVEL = re.compile(r'^(P[1-4]|BT|CUB)$')
-RE_RECINTO = re.compile(r'^(P[1-4]|BT)-A(\d{3})-(\d{2})$')
-RE_CIRCULACION = re.compile(r'^(P[1-4]|BT)-CIRC-(\d{2})$')
-RE_NUCLEO = re.compile(r'^(P[1-4]|BT)-NUC-[A-Z0-9][A-Z0-9-]*$')
-RE_MURO = re.compile(r'^(P[1-4]|BT|CUB)-M-(\d{4})$')
-RE_PUERTA = re.compile(r'^(P[1-4]|BT|CUB)-PT-(\d{3})$')
-RE_VENTANA = re.compile(r'^(P[1-4]|BT|CUB)-VN-(\d{3})$')
-RE_LINEA = re.compile(r'^L-([a-z0-9_]+)-([emfcx])-([0-9a-f]{6})$')
+# Niveles de la planta (3.3 y 16.1): EXT (exteriores inmediatos, cota 0), P1-P4, BT (bloque técnico) y CUB (cubierta)
+RE_NIVEL = re.compile(r'^(P[1-4]|BT|CUB|EXT)$')
+RE_RECINTO = re.compile(r'^(P[1-4]|BT|CUB|EXT)-A(\d{3})-(\d{2})$')
+RE_CIRCULACION = re.compile(r'^(P[1-4]|BT|CUB|EXT)-CIRC-(\d{2})$')
+# recinto técnico o de apoyo que no está en programa.json (16.1: «créalo como recinto no programado»; estimación)
+RE_TECNICO = re.compile(r'^(P[1-4]|BT|CUB|EXT)-TEC-(\d{2})$')
+RE_NUCLEO = re.compile(r'^(P[1-4]|BT|CUB|EXT)-NUC-[A-Z0-9][A-Z0-9-]*$')
+RE_MURO = re.compile(r'^(P[1-4]|BT|CUB|EXT)-M-(\d{4})$')
+RE_PUERTA = re.compile(r'^(P[1-4]|BT|CUB|EXT)-PT-(\d{3})$')
+RE_VENTANA = re.compile(r'^(P[1-4]|BT|CUB|EXT)-VN-(\d{3})$')
+RE_LINEA = re.compile(r'^L-([a-z0-9_]+)-([emfcxi])-([0-9a-f]{6})$')
 RE_UNIDAD = re.compile(r'^U-([a-z0-9_]+)-([0-9a-f]{6})-(\d{3})(?:-c(\d+))?$')
 RE_EXIGENCIA = re.compile(r'^EX-(?:(' + '|'.join(SRV_EXIGENCIA) + r')-(\d{3})|TOD-([CA])(\d{2}))$')
 RE_COLOR = re.compile(r'^#[0-9a-f]{6}$')
 
 
 def prefijo_nivel(piso) -> str:
-    """1 → «P1»; «BT» o «bloque técnico» → «BT»; «CUB» → «CUB»."""
+    """1 → «P1»; «BT» o «bloque técnico» → «BT»; «CUB» → «CUB»; «EXT» o «exterior» → «EXT»."""
     if isinstance(piso, int) and 1 <= piso <= 4:
         return f'P{piso}'
     s = str(piso).strip().upper()
@@ -159,6 +163,8 @@ def prefijo_nivel(piso) -> str:
         return 'BT'
     if s in ('CUB', 'CUBIERTA'):
         return 'CUB'
+    if s in ('EXT', 'EXTERIOR', 'EXTERIORES'):
+        return 'EXT'
     if re.fullmatch(r'P?[1-4]', s):
         return 'P' + s[-1]
     raise ValueError(f'piso desconocido: {piso!r}')
@@ -171,6 +177,11 @@ def id_recinto(piso, fila: int, k: int) -> str:
 
 def id_circulacion(piso, n: int) -> str:
     return f'{prefijo_nivel(piso)}-CIRC-{n:02d}'
+
+
+def id_tecnico(piso, n: int) -> str:
+    """Recinto no programado (técnico o de apoyo que pide el 16 y no trae programa.json): {nivel}-TEC-{nn}."""
+    return f'{prefijo_nivel(piso)}-TEC-{n:02d}'
 
 
 def id_muro(piso, n: int) -> str:
@@ -511,9 +522,15 @@ def poligono_dentro_de(p, contenedor, tol: float = 1e-3) -> bool:
     return all(punto_en_poligono(((a[0] + b[0]) / 2, (a[1] + b[1]) / 2), contenedor, tol) for a, b in bordes(p))
 
 
-def ancho_minimo(p) -> float:
+# Muesca del polígono libre que no cuenta como angostamiento (cambio de espesor de muro entre recintos vecinos).
+MUESCA_IGNORADA_M = 0.10
+
+
+def ancho_minimo(p, ignorar_m: float = 0.0) -> float:
     """Ancho mínimo de un polígono ortogonal: el menor, sobre todos sus puntos, de las cuerdas horizontal y vertical que
-    pasan por el punto. En un rectángulo es su lado menor; en una L, el ancho de su brazo más angosto."""
+    pasan por el punto. En un rectángulo es su lado menor; en una L, el ancho de su brazo más angosto.
+    ignorar_m > 0 descarta las franjas más delgadas que eso (las muescas de un polígono libre donde cambia el espesor
+    del muro: no angostan el paso)."""
     xs, ys = _rejilla_comun([p])
     nx, ny = len(xs) - 1, len(ys) - 1
     lleno = [[punto_en_poligono(((xs[i] + xs[i + 1]) / 2, (ys[j] + ys[j + 1]) / 2), p, 0.0) for i in range(nx)]
@@ -544,7 +561,8 @@ def ancho_minimo(p) -> float:
             for m in range(j, k):
                 vert[m][i] = ys[k] - ys[j]
             j = k
-    valores = [min(horiz[j][i], vert[j][i]) for j in range(ny) for i in range(nx) if lleno[j][i]]
+    valores = [min(horiz[j][i], vert[j][i]) for j in range(ny) for i in range(nx) if lleno[j][i]
+               and (ignorar_m <= 0 or (xs[i + 1] - xs[i] >= ignorar_m and ys[j + 1] - ys[j] >= ignorar_m))]
     return min(valores) if valores else 0.0
 
 
@@ -1010,3 +1028,332 @@ def vano_puerta(puerta, muro, extra: float = 0.06) -> list[float]:
     if es_horizontal(muro['a'], muro['b']):
         return [c[0] - w, c[1] - e, c[0] + w, c[1] + e]
     return [c[0] - e, c[1] - w, c[0] + e, c[1] + w]
+
+
+# --------------------------------------------------------------------------------------------------------------------
+# Paso físico (V22 de la planta, I17 del inventario): ¿se puede caminar, con el cuerpo, de las entradas a cada recinto?
+# --------------------------------------------------------------------------------------------------------------------
+RADIO_CAMINANTE_M = 0.30          # radio del caminante del recorrido (6.4)
+RADIO_CAMILLA_M = 0.45            # medio ancho de una camilla con quien la empuja (0,90 m de paso libre; estimación)
+
+
+def rejilla_de_paso(nivel: dict, obstaculos=(), celda: float = 0.05):
+    """Rejilla del nivel con lo que se pisa: el polígono libre de cada espacio transitable (descontadas las columnas), los
+    vanos de las puertas y, como obstáculos, las columnas, los obstáculos del recorrido, los ojos de las escaleras y los
+    rectángulos `obstaculos` [x0, y0, x1, y1] (huellas de piso del inventario)."""
+    recs = [r for r in nivel.get('recintos', []) if isinstance(r, dict) and r.get('poligono')]
+    cont = nivel.get('contorno') or [v for r in recs for v in r['poligono']]
+    xs = [v[0] for v in cont]
+    ys = [v[1] for v in cont]
+    rej = Rejilla(min(xs) - 1.0, min(ys) - 1.0, max(xs) + 1.0, max(ys) + 1.0, celda)
+    for r in recs:
+        if r.get('transitable') is False:
+            continue
+        rej.pintar_poligono(orientar_antihorario(r.get('poligono_libre') or r['poligono']))
+    muros = {m.get('id'): m for m in nivel.get('muros', [])}
+    for p in nivel.get('puertas', []):
+        m = muros.get(p.get('muro'))
+        if m is not None:
+            rej.pintar_rect(*vano_puerta(p, m, extra=0.0))
+    for c in nivel.get('columnas', []):
+        b, h = float(c.get('b', 0.6)) / 2, float(c.get('h', 0.6)) / 2
+        rej.pintar_rect(c['x'] - b, c['y'] - h, c['x'] + b, c['y'] + h, valor=0)
+    for o in nivel.get('obstaculos_recorrido', []):
+        rej.pintar_poligono(orientar_antihorario(o['poligono']), valor=0)
+    for e in nivel.get('escaleras', []):
+        if isinstance(e.get('ojo'), list):
+            rej.pintar_rect(*e['ojo'], valor=0)
+    for o in obstaculos:
+        rej.pintar_rect(*o, valor=0)
+    return rej
+
+
+def erosionar(rej: 'Rejilla', radio: float) -> bytearray:
+    """Celdas donde cabe el centro de un círculo de `radio` sin tocar ninguna celda bloqueada (distancia del centro de la
+    celda a la caja de la celda bloqueada; lo de afuera de la rejilla cuenta como bloqueado)."""
+    nx, ny, c = rej.nx, rej.ny, rej.celda
+    libre = rej.libre
+    k = int(math.ceil(radio / c + 0.5))
+    spans = []
+    for dj in range(-k, k + 1):
+        dy = max(0.0, abs(dj) * c - c / 2)
+        if dy >= radio:
+            continue
+        # |di| máximo con max(0, |di|·c − c/2)² + dy² < radio²
+        w = 0
+        while True:
+            dx = max(0.0, (w + 1) * c - c / 2)
+            if dx * dx + dy * dy < radio * radio - 1e-12:
+                w += 1
+            else:
+                break
+        spans.append((dj, w))
+    pasa = bytearray(libre)
+    for j in range(ny):
+        base = j * nx
+        for i in range(nx):
+            if libre[base + i]:
+                continue
+            # solo las celdas bloqueadas que tocan una libre (las demás no cambian nada)
+            if not ((i > 0 and libre[base + i - 1]) or (i < nx - 1 and libre[base + i + 1]) or
+                    (j > 0 and libre[base - nx + i]) or (j < ny - 1 and libre[base + nx + i])):
+                continue
+            for dj, w in spans:
+                jj = j + dj
+                if 0 <= jj < ny:
+                    a, b = max(0, i - w), min(nx, i + w + 1)
+                    pasa[jj * nx + a: jj * nx + b] = bytes(b - a)
+    # el borde de la rejilla también es pared
+    for j in range(ny):
+        for i in list(range(min(k, nx))) + list(range(max(0, nx - k), nx)):
+            pasa[j * nx + i] = 0
+    for j in list(range(min(k, ny))) + list(range(max(0, ny - k), ny)):
+        pasa[j * nx: (j + 1) * nx] = bytes(nx)
+    return pasa
+
+
+def alcance_fisico(nivel: dict, radio: float, semillas, obstaculos=(), celda: float = 0.05, recintos=None) -> dict:
+    """Componentes por las que se camina con un cuerpo de `radio` desde `semillas` [(nombre, (x, y))]. Devuelve
+    {componentes: [[nombres]], sin_lugar: [nombres de semillas sin celda libre a 0,6 m], no_alcanzables: [ids de
+    recinto sin ninguna celda alcanzable], celdas_alcanzables: n}. `recintos`: ids a revisar (por defecto, todos los
+    transitables)."""
+    rej = rejilla_de_paso(nivel, obstaculos, celda)
+    pasa = erosionar(rej, radio)
+    nx, ny = rej.nx, rej.ny
+    comp = [0] * (nx * ny)
+    etiquetas = {}
+    sin_lugar = []
+    actual = 0
+    alcance_r = int(round(0.6 / celda))
+    pols = {r['id']: orientar_antihorario(r.get('poligono_libre') or r['poligono']) for r in nivel.get('recintos', [])
+            if r.get('id') and r.get('poligono')}
+    grupo_de = {}
+    for sem in semillas:
+        nombre, pt = sem[0], sem[1]
+        rid = sem[2] if len(sem) > 2 else None
+        pol = pols.get(rid)
+        ij = rej.celda_de(pt[0], pt[1])
+        mejor = None
+        if ij is not None:
+            for dj in range(-alcance_r, alcance_r + 1):
+                for di in range(-alcance_r, alcance_r + 1):
+                    a, b = ij[0] + di, ij[1] + dj
+                    if 0 <= a < nx and 0 <= b < ny and pasa[b * nx + a]:
+                        d = di * di + dj * dj
+                        if (mejor is None or d < mejor[0]) and (pol is None or punto_en_poligono(rej.centro(a, b), pol, 0.0)):
+                            mejor = (d, a, b)
+        if mejor is None:
+            sin_lugar.append(nombre)
+            continue
+        k0 = mejor[2] * nx + mejor[1]
+        if not comp[k0]:
+            actual += 1
+            comp[k0] = actual
+            pila = [k0]
+            while pila:
+                k = pila.pop()
+                i, j = k % nx, k // nx
+                for kk in ((k - 1) if i > 0 else -1, (k + 1) if i < nx - 1 else -1,
+                           (k - nx) if j > 0 else -1, (k + nx) if j < ny - 1 else -1):
+                    if kk >= 0 and pasa[kk] and not comp[kk]:
+                        comp[kk] = actual
+                        pila.append(kk)
+        etiquetas.setdefault(comp[k0], []).append(nombre)
+        grupo_de[nombre] = sem[3] if len(sem) > 3 else 0.0
+    alcanzadas = set(etiquetas)
+    # una componente por cota de piso: la terraza del piso 3 (z −4,2 en la cubierta) es otro piso aunque esté en el nivel
+    por_cota = {}
+    for et, noms in etiquetas.items():
+        for z in sorted({grupo_de[n] for n in noms}):
+            por_cota.setdefault(z, []).append(noms)
+    no_alcanzables = []
+    for r in nivel.get('recintos', []):
+        if r.get('transitable') is False or not r.get('poligono'):
+            continue
+        if recintos is not None and r.get('id') not in recintos:
+            continue
+        pol = orientar_antihorario(r.get('poligono_libre') or r['poligono'])
+        x0, y0, x1, y1 = caja(pol)
+        ok = False
+        rects = rectangulos(pol) if es_ortogonal(pol) else [(x0, y0, x1, y1)]
+        for q in rects:
+            for j in rej._rango(q[1], q[3], rej.y0, ny):
+                base = j * nx
+                for i in rej._rango(q[0], q[2], rej.x0, nx):
+                    if comp[base + i] in alcanzadas:
+                        ok = True
+                        break
+                if ok:
+                    break
+            if ok:
+                break
+        if not ok:
+            no_alcanzables.append(r.get('id'))
+    return {'componentes': list(etiquetas.values()), 'por_cota': por_cota, 'sin_lugar': sin_lugar, 'no_alcanzables': no_alcanzables,
+            'celdas_alcanzables': sum(1 for v in comp if v in alcanzadas)}
+
+
+def semillas_de_paso(nivel: dict) -> list:
+    """Entradas del recorrido, conexiones verticales del nivel y pasos a otros niveles: [(nombre, (x, y), recinto, cota)].
+    El recinto es donde se busca la celda libre más cercana (el de la puerta en los pasos, que caen sobre el muro); la cota
+    es z_piso_m de ese recinto (0 si no la trae)."""
+    recs = [r for r in nivel.get('recintos', []) if r.get('poligono')]
+    por_id = {r['id']: r for r in recs}
+
+    def donde(pt):
+        for r in recs:
+            if r.get('transitable') is not False and punto_en_poligono(pt, orientar_antihorario(r['poligono']), 0.0):
+                return r['id']
+        return None
+
+    def cota(rid):
+        return float((por_id.get(rid) or {}).get('z_piso_m') or 0.0)
+    out = []
+    for e in nivel.get('entradas_recorrido', []):
+        if e.get('punto'):
+            rid = donde(e['punto'])
+            out.append((f'entrada {e.get("id")}', e['punto'], rid, cota(rid)))
+    clave = 'cubierta' if nivel.get('id') == 'CUB' else str(nivel.get('piso'))
+    for cv in nivel.get('conexiones_verticales', []):
+        p = (cv.get('puntos') or {}).get(clave)
+        if p and cv.get('tipo') != 'montacargas':
+            rid = donde(p)
+            out.append((f'{cv.get("tipo")} {cv.get("id")}', p, rid, cota(rid)))
+    for p in nivel.get('pasos_entre_niveles', []):
+        rid = p.get('recinto')
+        out.append((f'paso a {p.get("otro_nivel")} ({p.get("puerta") or p.get("puerta_del_otro_nivel")})', p['punto'], rid, cota(rid)))
+    return out
+
+
+
+def _cuerda(p, eje: int, t: float) -> list[tuple[float, float]]:
+    """Intervalos del polígono ortogonal p sobre la recta perpendicular al eje `eje` (0: recta x = t; 1: recta y = t)."""
+    # muestreo por celdas finas de 1 cm: robusto con polígonos ortogonales cualesquiera
+    x0, y0, x1, y1 = caja(p)
+    paso = 0.01
+    if eje == 0:
+        lo, hi, fijo = y0, y1, t
+    else:
+        lo, hi, fijo = x0, x1, t
+    n = int(math.ceil((hi - lo) / paso))
+    tramos, ini = [], None
+    for k in range(n + 1):
+        u = lo + (k + 0.5) * paso
+        pt = (fijo, u) if eje == 0 else (u, fijo)
+        d = u <= hi and punto_en_poligono(pt, p, 0.0)
+        if d and ini is None:
+            ini = u - paso / 2
+        if not d and ini is not None:
+            tramos.append((ini, u - paso / 2))
+            ini = None
+    if ini is not None:
+        tramos.append((ini, hi))
+    return tramos
+
+
+def ancho_en_columnas(p, columnas) -> tuple[float, tuple | None]:
+    """Ancho libre de un corredor (polígono libre p) en la sección de cada columna que lo invade: la cuerda transversal
+    (perpendicular al eje largo del corredor) por la columna, menos la columna. Así mide la revisión: «en la sección de
+    cada columna». Devuelve (ancho mínimo, columna) o (inf, None) si ninguna columna lo toca."""
+    p = orientar_antihorario(p)
+    x0, y0, x1, y1 = caja(p)
+    largo_x = (x1 - x0) >= (y1 - y0)
+    mejor, donde = math.inf, None
+    for c in columnas:
+        if c[2] <= x0 + 1e-6 or c[0] >= x1 - 1e-6 or c[3] <= y0 + 1e-6 or c[1] >= y1 - 1e-6:
+            continue
+        # muestras a lo largo del eje largo, dentro de la columna
+        a0, a1 = (c[0], c[2]) if largo_x else (c[1], c[3])
+        b0, b1 = (x0, x1) if largo_x else (y0, y1)
+        a0, a1 = max(a0, b0) + 0.03, min(a1, b1) - 0.03
+        if a1 < a0:
+            continue
+        for t in (a0, (a0 + a1) / 2, a1):
+            eje = 0 if largo_x else 1         # recta x = t (corredor largo en x) o y = t (largo en y)
+            tramos = _cuerda(p, eje, t)
+            if not tramos:
+                continue
+            col = (c[1], c[3]) if eje == 0 else (c[0], c[2])
+            libres = []
+            for u0, u1 in tramos:
+                if col[1] <= u0 or col[0] >= u1:
+                    libres.append((u0, u1))
+                    continue
+                if col[0] > u0:
+                    libres.append((u0, col[0]))
+                if col[1] < u1:
+                    libres.append((col[1], u1))
+            # el tramo que toca la columna (el que queda a su lado dentro del corredor)
+            junto = [u1 - u0 for u0, u1 in libres if abs(u0 - col[1]) < 1e-6 or abs(u1 - col[0]) < 1e-6]
+            if junto:
+                w = max(junto)
+                if w < mejor:
+                    mejor, donde = w, c
+    return mejor, donde
+
+
+def ancho_libre_con_columnas(p, columnas, celda: float = 0.05, ignorar_m: float = 0.10) -> tuple[float, tuple | None]:
+    """Ancho libre mínimo de un polígono ortogonal (el libre de un corredor) descontando las columnas que lo invaden
+    (rectángulos [x0, y0, x1, y1]): en cada celda libre, la menor de las cuerdas horizontal y vertical por dentro del
+    polígono y fuera de las columnas; se ignoran las celdas de las franjas más delgadas que `ignorar_m` (muescas del
+    polígono libre). Devuelve (ancho, punto donde se da)."""
+    p = orientar_antihorario(p)
+    x0, y0, x1, y1 = caja(p)
+    nx = max(1, int(math.ceil((x1 - x0) / celda - 1e-9)))
+    ny = max(1, int(math.ceil((y1 - y0) / celda - 1e-9)))
+    dentro = bytearray(nx * ny)
+    for r in rectangulos(p):
+        i0 = int(math.ceil((r[0] - x0) / celda - 0.5 - 1e-9)); i1 = int(math.floor((r[2] - x0) / celda - 0.5 + 1e-9))
+        j0 = int(math.ceil((r[1] - y0) / celda - 0.5 - 1e-9)); j1 = int(math.floor((r[3] - y0) / celda - 0.5 + 1e-9))
+        for j in range(max(0, j0), min(ny - 1, j1) + 1):
+            for i in range(max(0, i0), min(nx - 1, i1) + 1):
+                dentro[j * nx + i] = 1
+    toca = False
+    for c in columnas:
+        if c[2] <= x0 or c[0] >= x1 or c[3] <= y0 or c[1] >= y1:
+            continue
+        toca = True
+        i0 = int(math.ceil((c[0] - x0) / celda - 0.5 - 1e-9)); i1 = int(math.floor((c[2] - x0) / celda - 0.5 + 1e-9))
+        j0 = int(math.ceil((c[1] - y0) / celda - 0.5 - 1e-9)); j1 = int(math.floor((c[3] - y0) / celda - 0.5 + 1e-9))
+        for j in range(max(0, j0), min(ny - 1, j1) + 1):
+            for i in range(max(0, i0), min(nx - 1, i1) + 1):
+                dentro[j * nx + i] = 0
+    if not toca:
+        return ancho_minimo(p, ignorar_m), None
+    h = [0] * (nx * ny)
+    v = [0] * (nx * ny)
+    for j in range(ny):
+        i = 0
+        while i < nx:
+            if not dentro[j * nx + i]:
+                i += 1
+                continue
+            k = i
+            while k < nx and dentro[j * nx + k]:
+                k += 1
+            for m in range(i, k):
+                h[j * nx + m] = k - i
+            i = k
+    for i in range(nx):
+        j = 0
+        while j < ny:
+            if not dentro[j * nx + i]:
+                j += 1
+                continue
+            k = j
+            while k < ny and dentro[k * nx + i]:
+                k += 1
+            for m in range(j, k):
+                v[m * nx + i] = k - j
+            j = k
+    ig = int(round(ignorar_m / celda))
+    mejor, donde = None, None
+    for k in range(nx * ny):
+        if not dentro[k]:
+            continue
+        w = min(h[k], v[k])
+        if w <= ig:
+            continue
+        if mejor is None or w < mejor:
+            mejor, donde = w, (round(x0 + (k % nx + 0.5) * celda, 2), round(y0 + (k // nx + 0.5) * celda, 2))
+    return (mejor * celda if mejor is not None else 0.0), donde

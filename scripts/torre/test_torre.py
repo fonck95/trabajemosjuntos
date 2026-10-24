@@ -442,5 +442,553 @@ class TestReglasInventario(unittest.TestCase):
         self.assertIn('I1', self.alterar(lambda d: d['unidades'].pop(), web=True))
 
 
+# ------------------------------------------------------------------------------------------------------------------------
+# Exigencias, implementos, reglas de ubicación, generador del inventario y matriz (ola 1, tarea B2a)
+# ------------------------------------------------------------------------------------------------------------------------
+NORMALIZAR = AQUI / 'normalizar_exigencias.py'
+GENERAR = AQUI / 'generar_inventario.py'
+
+
+def armar_prueba(tmp: Path) -> None:
+    """Directorio de prueba del generador sobre los fixtures del Anexo A: plantas_min, la dotación de prueba con un kit de
+    examen (para las unidades componentes), reglas de ubicación, capa de infraestructura y tres exigencias."""
+    shutil.copy(FX / 'plantas_min.json', tmp / 'plantas_min.json')
+    dot = C.cargar_json(FX / 'dotacion_min.json')
+    ce = next(s for s in dot['servicios'] if s['id'] == 'consulta_externa')
+    ce['equipos'].append({'nombre': 'Kit de examen de prueba', 'cantidad': 1, 'precio_unitario_cop_2026': 3000000, 'tipo_precio': 'estimacion',
+                          'clase_riesgo': 'IIa', 'prioridad': 'habilitacion', 'fuente': 'valor de prueba', 'mantenimiento_anual_pct': 3,
+                          'vida_util_anios': 7})
+    ce['totales']['equipos_cop_2026'] = 3000000
+    (tmp / 'dotacion_prueba.json').write_text(json.dumps(dot, ensure_ascii=False, indent=1), encoding='utf-8')
+
+    def A(f, n):
+        return {'fila': f, 'nombre': n}
+    desf = {'linea': C.id_linea('urgencias', 'e', 'Desfibrilador de prueba'), 'nombre': 'Desfibrilador de prueba'}
+    carro = {'linea': C.id_linea('urgencias', 'm', 'Carro de paro de prueba'), 'nombre': 'Carro de paro de prueba'}
+    reglas = {'id': 'reglas_ubicacion_min', 'version': 2, 'fecha': '2026-10-24', 'reglas': [
+        {**carro, 'modelo3d': 'carro_paro', 'plantilla_contenido': 'carro_paro_adulto_pediatrico',
+         'reparto': [{'ambiente': A(1, 'Consultorio de prueba B'), 'por_recinto': 1, 'estrategia': 'contra_pared', 'pared': 'larga'}]},
+        {**desf, 'modelo3d': 'desfibrilador',
+         'reparto': [{'ambiente': A(1, 'Consultorio de prueba B'), 'por_recinto': 1, 'estrategia': 'sobre', 'sobre': ['carro_paro']}]},
+        {'linea': C.id_linea('consulta_externa', 'm', 'Camilla de examen de prueba'), 'nombre': 'Camilla de examen de prueba',
+         'modelo3d': 'camilla_examen',
+         'reparto': [{'ambiente': A(0, 'Consultorio de prueba A'), 'por_recinto': 1, 'estrategia': 'cabecera_a_pared', 'bandas': 1}]},
+        {'linea': C.id_linea('consulta_externa', 'e', 'Kit de examen de prueba'), 'nombre': 'Kit de examen de prueba', 'modelo3d': 'estuche',
+         'plantilla_contenido': 'kit_examen_basico',
+         'reparto': [{'ambiente': A(0, 'Consultorio de prueba A'), 'por_recinto': 1, 'estrategia': 'sobre', 'sobre': ['camilla_examen']}]}],
+        'infraestructura': {'servicio_de_programa': {'Consulta externa': 'consulta_externa', 'Urgencias': 'urgencias'},
+                            'elementos': {'lavamanos': {'nombre': 'Lavamanos de prueba', 'modelo3d': 'lavamanos', 'presupuesto': [],
+                                                        'norma': 'prueba', 'exigencias': []}},
+                            'reglas': [{'elemento': 'lavamanos', 'reparto': [
+                                {'ambiente': A(0, 'Consultorio de prueba A'), 'por_recinto': 1, 'estrategia': 'pared_altura', 'altura_m': 0.6},
+                                {'ambiente': A(1, 'Consultorio de prueba B'), 'por_recinto': 1, 'estrategia': 'pared_altura', 'altura_m': 0.6}]}]}}
+    (tmp / 'reglas_ubicacion_min.json').write_text(json.dumps(reglas, ensure_ascii=False, indent=1), encoding='utf-8')
+    base = {'servicio': 'urgencias', 'servicio_matriz': 'urgencias', 'numeral_confirmado': False, 'texto_disponible': True, 'misma_que': None,
+            'vigencia_hasta': None, 'vigencia_desde': None, 'referencia': False, 'diferencia': None, 'fuente_url': 'valor de prueba',
+            'comentario': None}
+    ex = {'id': 'exigencias_min', 'servicios_matriz': {
+        'urgencias': {'nombre': 'Servicio de urgencias (prueba)', 'codigo_reps': '1102 (por confirmar)', 'numeral': '11.6.1',
+                      'complejidad': 'baja', 'habilitable': 'si', 'marco': 'Res. 3100, num. 11.6.1'},
+        'sala_expansion': {'nombre': 'Sala de expansión (prueba)', 'habilitable': 'no', 'marco': 'Res. 2065 de 2025 (prueba)'}},
+        'exigencias': [
+            {**base, 'id': 'EX-URG-001', 'origen': 'prueba#0', 'estandar': 'dotacion', 'numeral': '11.6.1 (texto de prueba)',
+             'texto': 'Desfibrilador con monitor en el ambiente de atención (texto de prueba).', 'verificacion_texto': 'literal_compilacion',
+             'exigible': 'si', 'que_exige': 'Un desfibrilador en el consultorio de prueba B.', 'ambientes': [A(1, 'Consultorio de prueba B')],
+             'regla': {'tipo': 'por_recinto', 'n': 1, 'grupos': [{'lineas': [desf]}]}, 'cubre_con': [{'tipo': 'linea', **desf}],
+             'estado_investigacion': 'cubierto'},
+            {**base, 'id': 'EX-URG-002', 'origen': 'prueba#1', 'estandar': 'dotacion', 'numeral': '11.6.1, según guía secundaria; por confirmar',
+             'texto': None, 'texto_disponible': False, 'verificacion_texto': 'fuente_secundaria', 'exigible': 'por_confirmar',
+             'que_exige': 'Laringoscopio dentro del carro de paro (resumen de prueba).', 'ambientes': [A(1, 'Consultorio de prueba B')],
+             'regla': {'tipo': 'contenido', 'dentro_de': carro, 'items': [{'nombre': 'Laringoscopio (no está en la dotación de prueba)'}], 'n': 1},
+             'cubre_con': [], 'estado_investigacion': 'falta'},
+            {**base, 'id': 'EX-TOD-C01', 'origen': 'prueba#2', 'servicio': None, 'servicio_matriz': None, 'estandar': 'todos_los_servicios',
+             'numeral': '11.1.3 (texto de prueba)', 'texto': None, 'texto_disponible': False, 'verificacion_texto': 'contenido_compilacion',
+             'exigible': 'si', 'que_exige': 'Inventario de equipos biomédicos (resumen de prueba).', 'ambientes': [],
+             'regla': {'tipo': 'documental'}, 'cubre_con': [], 'estado_investigacion': 'parcial',
+             'diferencia': 'Los campos de marca, modelo, serie y registro se llenan al comprar: documento pendiente (prueba).'}]}
+    (tmp / 'exigencias_min.json').write_text(json.dumps(ex, ensure_ascii=False, indent=1), encoding='utf-8')
+
+
+class TestExigencias(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.doc = C.cargar_json(C.EXIGENCIAS)
+        cls.ex = cls.doc['exigencias']
+
+    def test_al_dia(self):
+        p = subprocess.run([sys.executable, str(NORMALIZAR), '--verificar'], capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+
+    def test_199_filas_trazables(self):
+        self.assertEqual(len(self.ex), 199)
+        self.assertEqual(len({x['id'] for x in self.ex}), 199)
+        self.assertEqual(len({x['origen'] for x in self.ex}), 199)
+        k = self.doc['conteos']['por_archivo']
+        self.assertEqual((k['res3100_urgencias_e_internacion.json']['servicios'], k['res3100_consulta_y_ambulatorio.json']['servicios'],
+                          k['res3100_consulta_y_ambulatorio.json']['todos_los_servicios'], k['res3100_apoyo_diagnostico.json']['servicios'],
+                          k['res3100_apoyo_diagnostico.json']['todos_los_servicios']), (86, 52, 7, 43, 11))
+        for x in self.ex:
+            self.assertTrue(C.RE_EXIGENCIA.match(x['id']), x['id'])
+
+    def test_exigible_por_regla(self):
+        self.assertEqual(sum(1 for x in self.ex if x['exigible'] == 'por_confirmar'), 61)
+        self.assertEqual(self.doc['conteos']['por_confirmar_por_archivo'],
+                         {'res3100_urgencias_e_internacion.json': 42, 'res3100_consulta_y_ambulatorio.json': 12, 'res3100_apoyo_diagnostico.json': 7})
+        for x in self.ex:
+            if x['exigible'] == 'si':
+                self.assertIn(x['verificacion_texto'], ('literal_compilacion', 'contenido_compilacion'), x['id'])
+            if not x['texto_disponible']:
+                self.assertIsNone(x['texto'], x['id'])
+            marcas = ('por confirmar', 'según guía', 'según normas.json', 'por analogía')
+            self.assertEqual(x['numeral_confirmado'], not any(m in (x['numeral'] or '').lower() for m in marcas), x['id'])
+
+    def test_vigencia_y_superados(self):
+        con_vigencia = sorted(x['id'] for x in self.ex if x['vigencia_hasta'])
+        self.assertTrue(con_vigencia and all(i.startswith('EX-EST-') for i in con_vigencia))
+        self.assertTrue(all(x['vigencia_hasta'] == '2027-01-02' for x in self.ex if x['vigencia_hasta']))
+        self.assertEqual([x['id'] for x in self.ex if x['vigencia_desde']], ['EX-EST-008'])
+        self.assertEqual(sorted(x['id'] for x in self.ex if x['referencia']), ['EX-EXP-002', 'EX-EXP-003', 'EX-EXP-004', 'EX-EXP-005'])
+        texto = C.texto_json(self.doc)
+        self.assertNotIn('482 de 2018»', texto)
+        self.assertNotIn('transición', texto.lower().replace('transición de la res. 1732 de 2026 no se propaga', ''))
+        for x in self.ex:
+            for campo in ('texto', 'numeral', 'que_exige', 'cantidad_texto'):
+                self.assertNotIn('Res. 482 de 2018', str(x.get(campo) or '').replace('reemplazó a la 482', ''), x['id'])
+
+    def test_reglas_y_servicios(self):
+        dot = [x for x in self.ex if x['estandar'] == 'dotacion']
+        con_regla = [x for x in dot if x['regla']['tipo'] != 'sin_regla']
+        self.assertGreaterEqual(len(con_regla) / len(dot), 0.80)
+        srv = self.doc['servicios_matriz']
+        for x in self.ex:
+            if not x['id'].startswith('EX-TOD-'):
+                m = x['servicio_matriz']
+                self.assertTrue(m == 'imagenes' or m in srv, x['id'])
+        for s in srv.values():
+            self.assertIn(s['habilitable'], ('si', 'no', 'modalidad', 'sin_habilitacion_propia'))
+
+
+class TestImplementosYReglas(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.impl = C.cargar_json(C.IMPLEMENTOS)
+        cls.reglas = C.cargar_json(C.REGLAS_UBICACION)
+        cls.cat = C.cargar_json(C.CATALOGO)['modelos']
+        dot, lab = C.cargar_json(C.DOTACION), C.cargar_json(C.LABORATORIO)
+        cls.lineas = {}
+        for s_ in dot['servicios']:
+            for lista, letra in (('equipos', 'e'), ('mobiliario', 'm')):
+                for x in s_[lista]:
+                    cls.lineas[C.id_linea(s_['id'], letra, x['nombre'])] = x
+        for x in dot['equipamiento_fijo']:
+            cls.lineas[C.id_linea('fijo', 'f', x['nombre'])] = x
+        for x in lab['equipos']:
+            cls.lineas[C.id_linea('laboratorio', 'c', x['nombre'])] = x
+        for x in dot['cierre_brechas_habilitacion']['items']:
+            cls.lineas[C.id_linea(x['servicio'], 'x', x['nombre'])] = x
+        cls.lab = lab
+
+    def test_una_regla_por_linea(self):
+        reglas = {r['linea']: r for r in self.reglas['reglas']}
+        self.assertEqual(len(reglas), len(self.reglas['reglas']))
+        self.assertEqual(set(reglas), set(self.lineas))
+        self.assertEqual(len(reglas), 236 + 14 + 11 + 41)
+        for lid, r in reglas.items():
+            self.assertEqual(r['nombre'], self.lineas[lid]['nombre'])
+            self.assertIn(r['modelo3d'], self.cat)
+
+    def test_infraestructura(self):
+        inf = self.reglas['infraestructura']
+        pres = {it['codigo'] for cap in C.cargar_json(C.TORRE / 'presupuesto.json')['capitulos'] for it in cap['items']}
+        for el, d in inf['elementos'].items():
+            self.assertIn(d['modelo3d'], self.cat, el)
+            for cod in d['presupuesto']:
+                self.assertIn(cod, pres, el)
+        self.assertTrue({'lavamanos', 'inodoro', 'ducha', 'poceta_aseo', 'lavachatas', 'toma_gases_cabecera', 'llamado_enfermeria',
+                         'extintor', 'gabinete_incendio', 'senal_evacuacion'} <= set(inf['elementos']))
+
+    def test_plantillas(self):
+        tipos = set(self.impl['tipos'])
+        for nombre, p in self.impl['plantillas'].items():
+            with self.subTest(plantilla=nombre):
+                self.assertTrue(p['lineas_que_la_usan'])
+                for ref in p['lineas_que_la_usan']:
+                    self.assertEqual(self.lineas[ref['linea']]['nombre'], ref['nombre'])
+                for it in p['items']:
+                    self.assertIn(it['tipo'], tipos)
+                    self.assertIn(it['verificacion'], self.impl['verificacion'])
+                    if it['tipo'] == 'equipo_biomedico':
+                        self.assertIn(it['clase_riesgo'], ('I', 'IIa', 'IIb', 'III'))
+                        self.assertIn(it['registro_invima']['requerido'], ('si', 'no', 'por_confirmar'))
+                        self.assertIsInstance(it['mantenimiento']['calibracion'], bool)
+        nombres = ('carro_paro_adulto_pediatrico', 'carro_paro_neonatal', 'kit_examen_basico', 'organos_sentidos_pared', 'pequena_cirugia_sutura',
+                   'toracostomia', 'equipo_partos', 'revision_uterina_desgarros', 'instrumental_basico_odontologia',
+                   'instrumental_especialidades_odontologia', 'inmovilizacion', 'sujecion_mecanica', 'kit_rehabilitacion', 'canecas_residuos',
+                   'proteccion_radiologica', 'maletin_reanimacion_expansion', 'carro_curaciones', 'carro_medicamentos')
+        self.assertTrue(set(nombres) <= set(self.impl['plantillas']))
+        kit = self.impl['plantillas']['kit_examen_basico']['items']
+        self.assertEqual(len(kit), 8)
+
+    def test_laboratorio_completo(self):
+        usadas = {r['linea']: r.get('plantilla_contenido') for r in self.reglas['reglas']}
+        cubiertas = {pr for p in self.impl['plantillas'].values() for it in p['items'] for pr in it.get('pruebas', [])}
+        for x in self.lab['equipos']:
+            p = usadas[C.id_linea('laboratorio', 'c', x['nombre'])]
+            self.assertIn(p, self.impl['plantillas'], x['nombre'])
+            self.assertTrue(any(it.get('pruebas') and it.get('almacenamiento') for it in self.impl['plantillas'][p]['items']))
+        for m in self.lab['menu']:
+            if m.get('en_sitio'):
+                self.assertIn(m['id'], cubiertas)
+
+
+class TestGenerador(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = Path(tempfile.mkdtemp(prefix='torre_generador_'))
+        armar_prueba(cls.tmp)
+        cls.p = subprocess.run([sys.executable, str(GENERAR), '--fixture', cls.tmp], capture_output=True, text=True)
+        cls.inv = C.cargar_json(cls.tmp / 'inventario_dotacion.json') if cls.p.returncode == 0 else None
+        cls.hab = C.cargar_json(cls.tmp / 'habilitacion.json') if cls.p.returncode == 0 else None
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_genera_y_valida(self):
+        self.assertEqual(self.p.returncode, 0, self.p.stderr)
+        rc, inf = correr(VALIDAR_INVENTARIO, '--fixture', self.tmp / 'inventario_dotacion.json', self.tmp / 'dotacion_prueba.json',
+                         '--plantas', self.tmp / 'plantas_min.json', '--habilitacion', self.tmp / 'habilitacion.json')
+        self.assertEqual(rc, 0, errores(inf))
+
+    def test_determinista(self):
+        p = subprocess.run([sys.executable, str(GENERAR), '--fixture', self.tmp, '--verificar'], capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+
+    def test_ids_y_unidades(self):
+        ids = {l['id'] for l in self.inv['lineas']}
+        self.assertTrue({'L-urgencias-e-2cd8df', 'L-urgencias-m-a3f0fc', 'L-consulta_externa-m-2d1bfe'} <= ids)
+        U = {u['id']: u for u in self.inv['unidades']}
+        self.assertEqual(U['U-urgencias-2cd8df-001']['apoyo'], 'U-urgencias-a3f0fc-001')
+        self.assertEqual(U['U-urgencias-2cd8df-001']['posicion'][2], 1.0)
+        kit = next(u for u in self.inv['unidades'] if u['linea'] == C.id_linea('consulta_externa', 'e', 'Kit de examen de prueba')
+                   and not u.get('componente_de'))
+        comps = [u for u in self.inv['unidades'] if u.get('componente_de') == kit['id']]
+        self.assertEqual(len(comps), 4)              # báscula, equipo de órganos portátil, oxímetro y termómetro
+        self.assertEqual({c['clase_riesgo']['vigente'] for c in comps}, {'I', 'IIa'})
+        self.assertTrue(all(c['precio_unitario_cop_2026'] == 0 for c in comps))
+        self.assertEqual(sum(1 for c in comps if c['montaje'] == 'piso'), 1)
+        self.assertEqual(U['U-urgencias-a3f0fc-001']['contenido']['plantilla'], 'carro_paro_adulto_pediatrico')
+        infra = [l for l in self.inv['lineas'] if l['capa'] == 'infraestructura']
+        self.assertEqual(sum(l['cantidad'] for l in infra), 2)
+        self.assertTrue(all(l['precio_unitario_cop_2026'] is None for l in infra))
+        tot = self.inv['totales']['por_servicio']
+        self.assertTrue(all(t['coincide_con_dotacion'] for t in tot.values()))
+
+    def test_matriz(self):
+        h = self.hab
+        self.assertEqual([c['id'] for c in h['fecha_referencia']], ['corte_2026', 'apertura'])
+        self.assertEqual(h['estandares_no_evaluados'], ['talento humano', 'historia clínica y registros', 'interdependencia'])
+        self.assertNotIn('servicio habilitado', C.texto_json(h).lower())
+        urg = next(s for s in h['servicios'] if s['id'] == 'urgencias')
+        e = {x['id']: x for x in urg['exigencias']}
+        self.assertEqual(e['EX-URG-001']['estado']['corte_2026']['dotacion_actual'], 'cumple')
+        self.assertEqual(e['EX-URG-002']['estado']['corte_2026']['dotacion_actual'], 'falta')
+        self.assertEqual(urg['resumen']['corte_2026']['dotacion_actual']['por_confirmar']['falta'], 1)
+        self.assertEqual(h['por_recinto']['P1-A001-01']['estado']['corte_2026'], 'cumple')
+        self.assertEqual(h['por_recinto']['P1-A001-01']['por_confirmar'], 1)
+        self.assertEqual(next(s for s in h['servicios'] if s['id'] == 'sala_expansion')['habilitable'], 'no')
+
+    def test_csv(self):
+        t = (self.tmp / 'inventario_dotacion.csv').read_text(encoding='utf-8')
+        self.assertTrue(t.startswith('﻿unidad;'))
+        filas = t.strip().split('\n')
+        self.assertEqual(len(filas) - 1, len(self.inv['unidades']))
+
+    def test_reparto_que_no_suma_falla(self):
+        tmp = Path(tempfile.mkdtemp(prefix='torre_generador_mal_'))
+        try:
+            armar_prueba(tmp)
+            r = C.cargar_json(tmp / 'reglas_ubicacion_min.json')
+            r['reglas'][0]['reparto'][0]['por_recinto'] = 2
+            (tmp / 'reglas_ubicacion_min.json').write_text(json.dumps(r, ensure_ascii=False), encoding='utf-8')
+            p = subprocess.run([sys.executable, str(GENERAR), '--fixture', tmp], capture_output=True, text=True)
+            self.assertEqual(p.returncode, 2)
+            self.assertIn('el reparto ubica 2 unidades', p.stderr)
+            r['reglas'][0]['reparto'][0]['por_recinto'] = 1
+            r['reglas'][0]['nombre'] = 'Otro nombre'
+            (tmp / 'reglas_ubicacion_min.json').write_text(json.dumps(r, ensure_ascii=False), encoding='utf-8')
+            p = subprocess.run([sys.executable, str(GENERAR), '--fixture', tmp], capture_output=True, text=True)
+            self.assertEqual(p.returncode, 2)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
+class TestInventarioReal(unittest.TestCase):
+    """El inventario de los datos reales ubicado en la planta real de toda la torre (16.6): líneas, unidades, precios,
+    clases, componentes, conteos por nivel, paneles, laboratorio en sus recintos, la matriz y sus faltantes."""
+
+    @classmethod
+    def setUpClass(cls):
+        import generar_inventario as G
+        cls.G = G
+        cls.inv, cls.hab, cls.gen = G.generar(G.rutas_reales())
+        cls.planta = C.cargar_json(C.PLANTAS)
+        cls.recintos = {r['id']: (r, n['id']) for n in cls.planta['niveles'] for r in n['recintos']}
+
+    def test_unidades_y_precios(self):
+        t = self.inv['totales']
+        self.assertTrue(all(s['coincide_con_dotacion'] for s in t['por_servicio'].values()))
+        self.assertTrue(t['equipamiento_fijo']['coincide_con_dotacion'])
+        self.assertEqual(sum(s['unidades'] for s in t['por_servicio'].values()), 509 + 359)
+        self.assertEqual(t['equipamiento_fijo']['unidades'], 15)
+        lj = t['laboratorio_json']
+        self.assertEqual((lj['lineas'], lj['unidades'], lj['valor_mercado_cop_2026']), (11, 12, 1249676210))
+        self.assertEqual((lj['comodato']['lineas'], lj['comodato']['unidades'], lj['comodato']['valor_mercado_cop_2026']), (9, 10, 955708589))
+        self.assertEqual(lj['programa_o_compra']['valor_mercado_cop_2026'], 143967621)
+        self.assertEqual(lj['opcional']['valor_mercado_cop_2026'], 150000000)
+        self.assertEqual(t['habilitacion_cop_2026']['segun_dotacion'], 3908496956)
+        self.assertEqual(t['habilitacion_cop_2026']['reclasificados'], 26200000 + 15000000 + 33044847 if False else
+                         t['habilitacion_cop_2026']['reclasificados'])
+        self.assertTrue(70_000_000 < t['habilitacion_cop_2026']['reclasificados'] < 80_000_000)
+        cb = self.inv['dotacion'] if False else C.cargar_json(C.DOTACION)['cierre_brechas_habilitacion']['totales']
+        for p_ in ('P4', 'P5', 'P6'):
+            for k in ('habilitacion_cop_2026', 'recomendado_cop_2026', 'por_confirmar_cop_2026', 'items', 'items_sin_precio'):
+                self.assertEqual(t['cierre_brechas']['por_proyecto'][p_][k], cb['por_proyecto'][p_][k], (p_, k))
+        self.assertEqual(t['cierre_brechas']['items_sin_precio'], cb['items_sin_precio'])
+        self.assertEqual(t['unidades']['componentes'], 21 * 4 + 2)
+
+    def test_clases_y_registro(self):
+        for l in self.inv['lineas']:
+            cr = l['clase_riesgo']
+            self.assertIn(cr['vigente'], ('I', 'IIa', 'IIb', 'III', 'no_dm', 'ivd', 'por_confirmar'), l['id'])
+            if cr['vigente'] in ('IIb', 'III'):
+                self.assertFalse(l['registro_invima']['usado_permitido'])
+                self.assertTrue(l['mantenimiento']['personal_inscrito_invima'])
+        nombres = {l['nombre']: l for l in self.inv['lineas'] if l['servicio'] == 'urgencias'}
+        self.assertEqual(nombres['Tensiómetro aneroide de pared adulto-pediátrico']['clase_riesgo']['vigente'], 'I')
+        lav = next(l for l in self.inv['lineas'] if l['nombre'] == 'Lavadora desinfectora de instrumental')
+        self.assertEqual((lav['clase_riesgo']['vigente'], lav['prioridad'], lav['prioridad_revisada']), ('IIa', 'recomendado', 'por_confirmar (Res. 914)'))
+
+    def test_todo_fijo_y_laboratorio_ubicados(self):
+        prog = C.cargar_json(C.PROGRAMA)['ambientes']
+        servicios_lab = ('Laboratorio clínico', 'Toma de muestras de laboratorio clínico')
+        filas_lab = {i for i, a in enumerate(prog) if a['servicio'] in servicios_lab}
+        L = {l['id']: l for l in self.inv['lineas']}
+        tec = 0
+        for u in self.inv['unidades']:
+            l = L[u['linea']]
+            if l['capa'] == 'fijo':
+                self.assertTrue(u['recinto'] or u.get('ubicacion'), u['id'])
+            if l['origen'] == 'laboratorio' or (l['origen'] == 'dotacion' and l['servicio'] in ('laboratorio', 'toma_muestras')):
+                m = C.RE_RECINTO.match(u['recinto'])
+                if m:
+                    self.assertIn(int(m.group(2)), filas_lab, u['id'])
+                else:                                # recinto técnico del laboratorio (16.2): biología molecular, lavaojos
+                    self.assertTrue(C.RE_TECNICO.match(u['recinto']), u['id'])
+                    self.assertIn(self.recintos[u['recinto']][0]['servicio_programa'], servicios_lab, u['id'])
+                    tec += 1
+        self.assertGreater(tec, 0)
+        self.assertEqual([f['nombre'][:10] for f in self.inv['fuera_de_la_torre']], ['Lavandería'])
+        gx = [u for u in self.inv['unidades'] if 'GeneXpert' in L[u['linea']]['nombre']]
+        self.assertTrue(gx and all(u['recinto'] == 'P2-TEC-02' and u['montaje'] == 'sobre' for u in gx))
+
+    def test_al_dia_con_los_archivos(self):
+        """Lo que está en el repositorio es lo que sale hoy del generador (mismos bytes)."""
+        texto = C.texto_json(self.inv)
+        self.assertEqual(texto, (C.TORRE / 'inventario_dotacion.json').read_text(encoding='utf-8'))
+        self.assertEqual(self.G.texto_csv(self.inv), (C.TORRE / 'inventario_dotacion.csv').read_text(encoding='utf-8'))
+
+    def test_valida_sin_errores_duros(self):
+        rc, inf = correr(VALIDAR_INVENTARIO)
+        self.assertEqual(rc, 0, errores(inf))
+        self.assertEqual(sum(len(r['errores']) for r in inf['reglas'] if r['estado'] != 'omitida'), 0)
+
+    def test_todas_ubicadas_y_conteos_por_nivel(self):
+        t = self.inv['totales']['unidades']
+        self.assertEqual(t['total'], len(self.inv['unidades']))
+        pn = t['por_nivel']
+        self.assertEqual(sum(v['total'] for v in pn.values()), t['total'])
+        self.assertEqual(set(pn) - {'fuera_de_la_torre'}, {n['id'] for n in self.planta['niveles']})
+        for nid, v in pn.items():
+            self.assertEqual(sum(v['por_capa'].values()), v['total'], nid)
+            if nid != 'fuera_de_la_torre':
+                self.assertGreater(v['total'], 0, nid)
+                self.assertEqual(v['con_posicion'], v['total'], nid)
+        self.assertEqual(pn['fuera_de_la_torre']['total'], 1)          # lavandería: fuera de la torre, sin posición
+        self.assertEqual(t['con_posicion'], t['total'] - 1)
+        for u in self.inv['unidades']:
+            if u.get('recinto'):
+                self.assertEqual(self.recintos[u['recinto']][1], u['nivel'], u['id'])
+            if u['montaje'] not in ('dentro',) and u.get('estado') != 'fuera_de_la_torre':
+                self.assertIsNotNone(u['posicion'], u['id'])
+        self.assertFalse([a for a in self.inv['avisos_ubicacion'] if 'NO CABE' in a])
+        # equipamiento fijo en el bloque técnico, la cubierta, los núcleos y los pisos
+        L = {l['id']: l for l in self.inv['lineas']}
+        niveles_fijo = {u['nivel'] for u in self.inv['unidades'] if L[u['linea']]['capa'] == 'fijo' and u.get('nivel')}
+        self.assertTrue({'BT', 'CUB', 'P1'} <= niveles_fijo, niveles_fijo)
+
+    def test_paneles_en_sus_filas(self):
+        ps = self.inv['totales']['infraestructura']['por_elemento']['panel_solar_fila']
+        self.assertEqual((ps['modulos'], ps['kwp']), (182, 100.1))
+        self.assertEqual(ps['por_grupo'], {'FV-BAHIA': 30, 'FV-PERGOLA': 96, 'FV-TERRAZA': 56})
+        filas = [u for u in self.inv['unidades'] if u.get('paneles')]
+        self.assertEqual(len(filas), ps['unidades'])
+        self.assertEqual(sum(u['paneles']['modulos'] for u in filas), 182)
+        self.assertEqual({u['nivel'] for u in filas}, {'CUB', 'EXT'})
+
+    def test_faltantes_por_servicio(self):
+        f = self.hab['faltantes_por_servicio']
+        cb = C.cargar_json(C.DOTACION)['cierre_brechas_habilitacion']
+        self.assertEqual(f['total']['inversion_con_precio_cop_2026'], 46704906)
+        self.assertEqual(f['total']['operacion_anual_cop_2026'], 4100000)
+        self.assertEqual(f['total']['items_sin_precio'], cb['totales']['items_sin_precio'])
+        self.assertEqual(sum(s['faltantes']['costo_cierre']['inversion_con_precio_cop_2026'] for s in self.hab['servicios']
+                             if s.get('faltantes')), 46704906)
+        for s in self.hab['servicios']:
+            for e in s.get('faltantes', {}).get('exigencias', []):
+                self.assertIn(e['id'], {x['id'] for x in s['exigencias']})
+
+    def test_matriz_real(self):
+        h = self.hab
+        ids = [s['id'] for s in h['servicios']]
+        for sid in ('urgencias', 'hospitalizacion', 'partos', 'esterilizacion', 'sala_expansion', 'imagenes_744', 'imagenes_745',
+                    'toma_muestras', 'telemedicina', 'tic_apoyo'):
+            self.assertIn(sid, ids)
+        n = sum(len(s['exigencias']) for s in h['servicios']) + len(h['todos_los_servicios']['detalle'])
+        self.assertEqual(n, 199)
+        self.assertEqual(len(h['todos_los_servicios']['exigencias']), 18)
+        for s in h['servicios']:
+            self.assertIn(s['habilitable'], ('si', 'no', 'modalidad', 'sin_habilitacion_propia'))
+            for e in s['exigencias']:
+                for c in ('corte_2026', 'apertura'):
+                    for esc in ('dotacion_actual', 'con_cierre_de_brechas'):
+                        self.assertIn(e['estado'][c][esc], ('cumple', 'parcial', 'falta', 'documento_pendiente', 'no_aplica'))
+                if e['referencia']:
+                    self.assertEqual(e['estado']['corte_2026']['dotacion_actual'], 'no_aplica')
+        est = {e['id']: e for s in h['servicios'] for e in s['exigencias']}
+        self.assertEqual(est['EX-EST-001']['estado']['apertura']['dotacion_actual'], 'no_aplica')
+        self.assertEqual(est['EX-EST-008']['estado']['corte_2026']['dotacion_actual'], 'no_aplica')
+        self.assertEqual(est['EX-HOS-011']['estado']['corte_2026'], {'dotacion_actual': 'falta', 'con_cierre_de_brechas': 'cumple'})
+
+
+# ------------------------------------------------------------------------------------------------------------------------
+GENERAR_PLANTAS = AQUI / 'generar_plantas.py'
+
+
+class TestPlantasTorre(unittest.TestCase):
+    """Planta real de toda la torre (16.1): generador determinista, conteos por nivel, escaleras, laboratorio y paneles."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = Path(tempfile.mkdtemp(prefix='torre_plantas_real_'))
+        cls.pl = C.cargar_json(C.PLANTAS)
+        cls.prog = C.cargar_json(C.PROGRAMA)
+        cls.reglas = C.cargar_json(C.REGLAS_PLANTA)
+        cls.niv = {n['id']: n for n in cls.pl['niveles']}
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_generador_determinista_y_al_dia(self):
+        salidas = []
+        for i in range(2):
+            ruta = self.tmp / f'plantas_{i}.json'
+            p = subprocess.run([sys.executable, str(GENERAR_PLANTAS), '--salida', str(ruta)], capture_output=True, text=True)
+            self.assertEqual(p.returncode, 0, p.stderr)
+            salidas.append(ruta.read_bytes())
+        self.assertEqual(salidas[0], salidas[1])
+        self.assertEqual(salidas[0], C.PLANTAS.read_bytes(), 'torre_hospital_plantas.json no está al día con el trazado')
+        p = subprocess.run([sys.executable, str(GENERAR_PLANTAS), '--verificar'], capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+
+    def test_planta_real_sin_errores_duros(self):
+        rc, inf = correr(VALIDAR_PLANTAS)
+        self.assertEqual(errores(inf), {})
+        self.assertEqual(rc, 0)
+        estados = {r['regla']: r['estado'] for r in inf['reglas']}
+        for regla in ('V2', 'V6', 'V7', 'V9', 'V10', 'V14', 'V15', 'V16', 'V20', 'V21'):
+            self.assertEqual(estados.get(regla), 'ok', regla)
+
+    def test_todos_los_niveles_y_conteos_del_programa(self):
+        self.assertEqual(list(self.niv), ['EXT', 'P1', 'P2', 'P3', 'P4', 'BT', 'CUB'])
+        esperados = {}
+        mapa = self.reglas['niveles']
+        for f, a in enumerate(self.prog['ambientes']):
+            piso = a.get('piso')
+            if piso is None:
+                continue
+            nivel = mapa.get('nivel_por_fila', {}).get(str(f)) or (f'P{piso}' if isinstance(piso, int) else mapa['piso_a_nivel'][piso])
+            esperados[nivel] = esperados.get(nivel, 0) + a['cantidad']
+        self.assertEqual(self.pl['resumen']['recintos_por_nivel'], {k: esperados.get(k, 0) for k in self.niv})
+        self.assertEqual(self.pl['resumen']['recintos_por_nivel'], {'EXT': 2, 'P1': 82, 'P2': 69, 'P3': 69, 'P4': 42, 'BT': 11, 'CUB': 8})
+
+    def test_ids_regla_13_y_no_programados_con_estimacion(self):
+        for n in self.pl['niveles']:
+            for r in n['recintos']:
+                if r.get('fila') is not None:
+                    self.assertEqual(r['id'], C.id_recinto(n['id'], r['fila'], r['k']))
+                elif r['tipo'] != 'circulacion':
+                    self.assertRegex(r['id'], C.RE_TECNICO)
+                    self.assertIs(r.get('programado'), False)
+                    self.assertTrue(any('estimaci' in x for x in r.get('notas', [])), r['id'])
+
+    def test_escaleras_caminables_de_piso_a_cubierta(self):
+        for es_id in ('ESC-N', 'ESC-S'):
+            tramos = [(n, e) for n in ('P1', 'P2', 'P3', 'P4', 'CUB') for e in self.niv[n]['escaleras'] if e['id'] == es_id]
+            self.assertEqual([n for n, _ in tramos], ['P1', 'P2', 'P3', 'P4', 'CUB'])
+            for n, e in tramos[:-1]:
+                h = self.niv[e['sube_a']]['z'] - self.niv[n]['z']
+                partes = [x for x in e['partes'] if x['tipo'] == 'tramo']
+                self.assertEqual(len(partes), 2)
+                self.assertAlmostEqual(partes[0]['z0'], 0.0)
+                self.assertAlmostEqual(partes[1]['z1'], h, places=3)
+                self.assertAlmostEqual(partes[0]['z1'], partes[1]['z0'], places=3)
+                for t in partes:
+                    self.assertLessEqual(t['contrahuella_m'], 0.18)
+                    self.assertGreaterEqual(t['huella_m'], 0.28)
+            self.assertIsNone(tramos[-1][1]['sube_a'])
+        # escalera principal abierta: la columna C2 queda en el ojo
+        esp = next(e for e in self.niv['P1']['escaleras'] if e['id'] == 'ESC-P')
+        ojo = esp['ojo']
+        self.assertTrue(ojo[0] + 0.3 <= 1.4 <= ojo[2] - 0.3 and ojo[1] + 0.3 <= -12.4 <= ojo[3] - 0.3, ojo)
+
+    def test_laboratorio_sobre_la_toma_y_montacargas_alineado(self):
+        mm1 = next(r for r in self.niv['P1']['recintos'] if r.get('fila') == 63)
+        mm2 = next(r for r in self.niv['P2']['recintos'] if r.get('fila') == 116)
+        self.assertEqual(C.caja(mm1['poligono']), C.caja(mm2['poligono']))
+        lab = {r['fila'] for r in self.niv['P2']['recintos'] if r.get('servicio_programa') == 'Laboratorio clínico' and r.get('fila')}
+        self.assertTrue(set(range(79, 94)) <= lab)
+        tec = {r['ambiente'] for r in self.niv['P2']['recintos'] if r.get('programado') is False}
+        self.assertIn('Biología molecular (GeneXpert)', tec)
+        self.assertIn('Ducha de emergencia y lavaojos del laboratorio', tec)
+        toma = [r for r in self.niv['P1']['recintos'] if r.get('servicio_programa') == 'Toma de muestras de laboratorio clínico']
+        self.assertTrue(all(C.centroide(r['poligono'])[1] < -10.0 for r in toma))
+
+    def test_paneles_solares_182_modulos(self):
+        grupos = [g for n in self.pl['niveles'] for g in n.get('paneles_solares', [])]
+        self.assertEqual(sum(g['modulos'] for g in grupos), 182)
+        self.assertAlmostEqual(sum(g['kwp'] for g in grupos), 100.1, places=1)
+
+    def test_pasos_entre_niveles_reciprocos(self):
+        for n in self.pl['niveles']:
+            for pa in n['pasos_entre_niveles']:
+                otro = self.niv[pa['otro_nivel']]
+                self.assertTrue(any(q['otro_nivel'] == n['id'] and q['recinto'] == pa['otro_recinto'] for q in otro['pasos_entre_niveles']),
+                                pa)
+
+    def test_ancho_minimo_ignora_muescas(self):
+        p = C.orientar_antihorario([[0, 0], [10, 0], [10, 2.4], [6, 2.4], [6, 2.415], [4, 2.415], [4, 2.4], [0, 2.4]])
+        self.assertLess(C.ancho_minimo(p), 2.1)
+        self.assertAlmostEqual(C.ancho_minimo(p, C.MUESCA_IGNORADA_M), 2.4)
+
+    def test_contorno_de_union(self):
+        sys.path.insert(0, str(AQUI))
+        import generar_plantas as G
+        u = G.contorno_de_union([C.rect_a_poligono([0, 0, 2, 1]), C.rect_a_poligono([2, 0, 3, 1]), C.rect_a_poligono([0, 1, 1, 2])])
+        self.assertAlmostEqual(C.area_poligono(u), 4.0)
+        self.assertEqual(len(u), 6)
+
+
 if __name__ == '__main__':
     unittest.main()

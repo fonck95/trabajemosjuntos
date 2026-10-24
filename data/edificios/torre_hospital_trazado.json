@@ -1,0 +1,1588 @@
+{
+ "id": "torre_hospital_trazado",
+ "version": 1,
+ "fecha": "2026-10-24",
+ "tipo_dato": "estimacion",
+ "estado": "Anteproyecto ilustrativo para el atlas; no reemplaza el diseño arquitectónico firmado (Res. 485 de 2025, num. 7.1.2.6)",
+ "convenciones": {
+  "coordenadas": "x este, y norte, metros desde el ancla (programa.json → implantacion.marco_de_coordenadas); rect = [x0, y0, x1, y1] a ejes de muro",
+  "ids": "fila y k del programa (regla 1.3: {nivel}-A{fila}-{k}); circ = circulación no programada ({nivel}-CIRC-nn); tec = recinto técnico o de apoyo no programado ({nivel}-TEC-nn, estimación)",
+  "puertas": "entre dos recintos del nivel (o «exterior»), con pos como fracción del borde común o como punto [x, y] sobre él",
+  "abiertos": "pares de recintos unidos sin muro (vano abierto: espera abierta al corredor, mostrador, galería)",
+  "cotas": "z de cada nivel = piso terminado sobre el ±0,00 de la torre; las cotas de escaleras, rampas y terrazas van relativas al piso del nivel"
+ },
+ "reticula": {
+  "ejes_x": [{"id": "A", "x": -13.0}, {"id": "B", "x": -5.8}, {"id": "C", "x": 1.4}, {"id": "D", "x": 8.6}],
+  "ejes_y": [
+   {"id": "1", "y": -19.6},
+   {"id": "2", "y": -12.4},
+   {"id": "3", "y": -7.6},
+   {"id": "4", "y": 0.8},
+   {"id": "5", "y": 8.0},
+   {"id": "6", "y": 14.0},
+   {"id": "7", "y": 22.4}
+  ],
+  "fuente": "ESPECIFICACION_INTEGRACION.md 1.2 y programa.json → implantacion.huella"
+ },
+ "escaleras": [
+  {
+   "id": "ESC-N",
+   "nombre": "Escalera de evacuación protegida norte",
+   "rect": [3.1, 14.0, 8.6, 22.4],
+   "muro_m": 0.3,
+   "descanso_piso": "sur",
+   "carril_subida": "oeste",
+   "ancho_tramo_m": 2.4,
+   "huella_m": 0.28,
+   "huellas_por_tramo": 12,
+   "niveles": ["P1", "P2", "P3", "P4", "CUB"],
+   "recintos": {"P1": "A059-01", "P2": "A112-01", "P3": "A171-01", "P4": "A205-01", "CUB": "A220-01"},
+   "notas": [
+    "Dos tramos de 13 contrahuellas por piso, de 2,40 m libres, con descanso de piso y descanso intermedio dobles para girar camillas (programa.json); ojo de 0,40 m entre tramos. Estimación de este trazado."
+   ]
+  },
+  {
+   "id": "ESC-S",
+   "nombre": "Escalera de evacuación protegida sur",
+   "rect": [3.1, -7.6, 8.6, 0.8],
+   "muro_m": 0.3,
+   "descanso_piso": "sur",
+   "carril_subida": "oeste",
+   "ancho_tramo_m": 2.4,
+   "huella_m": 0.28,
+   "huellas_por_tramo": 12,
+   "niveles": ["P1", "P2", "P3", "P4", "CUB"],
+   "recintos": {"P1": "A059-02", "P2": "A112-02", "P3": "A171-02", "P4": "A205-02", "CUB": "A220-02"},
+   "notas": ["Igual a la norte. En el piso 4 su descanso de piso da a la terraza del piso 3 (paneles solares)."]
+  },
+  {
+   "id": "ESC-P",
+   "nombre": "Escalera principal abierta del vestíbulo",
+   "rect": [-0.3, -15.25, 3.1, -10.0],
+   "muro_m": 0.12,
+   "descanso_piso": "norte",
+   "carril_subida": "oeste",
+   "ancho_tramo_m": 1.3,
+   "huella_m": 0.28,
+   "huellas_por_tramo": 12,
+   "descanso_piso_m": 0.55,
+   "niveles": ["P1", "P2"],
+   "recintos": {"P1": "A064-01", "P2": "A117-01"},
+   "notas": [
+    "Escalera en U de dos tramos de 1,30 m (la columna C2 queda en el ojo) que sube del vestíbulo del piso 1 a la espera del piso 2; el descanso de piso es la franja de 0,55 m abierta a la galería. Estimación de este trazado."
+   ]
+  }
+ ],
+ "conexiones_verticales": [
+  {
+   "id": "ESC-N",
+   "tipo": "escalera",
+   "nombre": "Escalera norte",
+   "pisos": [1, 2, 3, 4, "cubierta"],
+   "puntos": {"1": [5.85, 15.3], "2": [5.85, 15.3], "3": [5.85, 15.3], "4": [5.85, 15.3], "cubierta": [5.85, 15.3]}
+  },
+  {
+   "id": "ESC-S",
+   "tipo": "escalera",
+   "nombre": "Escalera sur",
+   "pisos": [1, 2, 3, 4, "cubierta"],
+   "puntos": {"1": [5.85, -6.3], "2": [5.85, -6.3], "3": [5.85, -6.3], "4": [5.85, -6.3], "cubierta": [5.85, -6.3]}
+  },
+  {
+   "id": "ASC-1",
+   "tipo": "ascensor",
+   "nombre": "Ascensor camillero 1 (pacientes)",
+   "pisos": [1, 2, 3, 4],
+   "puntos": {"1": [4.6, 5.8], "2": [4.6, 5.8], "3": [4.6, 5.8], "4": [4.6, 5.8]}
+  },
+  {
+   "id": "ASC-2",
+   "tipo": "ascensor",
+   "nombre": "Ascensor camillero 2 (público y servicio)",
+   "pisos": [1, 2, 3, 4],
+   "puntos": {"1": [4.6, 3.0], "2": [4.6, 3.0], "3": [4.6, 3.0], "4": [4.6, 3.0]}
+  },
+  {
+   "id": "MC",
+   "tipo": "montacargas",
+   "nombre": "Montacargas general (medicamentos, material estéril y ropa)",
+   "pisos": [1, 2, 3, 4],
+   "puntos": {"1": [4.6, 1.2], "2": [4.6, 1.2], "3": [4.6, 1.2], "4": [4.6, 1.2]}
+  },
+  {
+   "id": "MM",
+   "tipo": "montacargas",
+   "nombre": "Montacargas de muestras (toma del piso 1 al laboratorio del piso 2)",
+   "pisos": [1, 2],
+   "puntos": {"1": [-7.4, -14.95], "2": [-7.4, -14.95]}
+  },
+  {
+   "id": "ESC-P",
+   "tipo": "escalera_abierta",
+   "nombre": "Escalera principal abierta (pisos 1 y 2)",
+   "pisos": [1, 2],
+   "puntos": {"1": [0.4, -10.4], "2": [2.4, -10.4]}
+  }
+ ],
+ "niveles": [
+  {
+   "id": "EXT",
+   "piso": "exterior",
+   "nombre": "Exteriores inmediatos (cota 0): bahía, patios, plaza y galería",
+   "z": 0.0,
+   "altura_entrepiso_m": 4.5,
+   "altura_libre_m": 4.5,
+   "muro_borde_exterior": "cerramiento",
+   "notas": [
+    "Polígonos de programa.json → patios_y_exteriores llevados a bordes ortogonales (estimación); el patio de urgencias baja hasta y = -3,3 para que la entrada a descontaminación quede en él."
+   ],
+   "paneles_solares": [
+    {
+     "id": "FV-BAHIA",
+     "nombre": "Marquesina solar de la bahía de ambulancias",
+     "centro": [-16.6, 15.0],
+     "largo_m": 13.2,
+     "ancho_m": 7.2,
+     "rumbo_eje": 0,
+     "altura_m": 5.3,
+     "filas": 6,
+     "columnas": 5,
+     "modulos": 30,
+     "kwp_modulo": 0.55,
+     "kwp": 16.5,
+     "modulo_m": [2.28, 1.13],
+     "inclinacion_deg": 0,
+     "tipo": "marquesina",
+     "fuente": "data/edificios/torre_hospital.json → adecuaciones.fv (marquesina)"
+    }
+   ],
+   "recintos": [
+    {
+     "circ": 1,
+     "nombre": "Patio y retorno de urgencias (ascenso y descenso)",
+     "poligono": [
+      [-29.0, -3.3],
+      [-13.0, -3.3],
+      [-13.0, 8.4],
+      [-20.2, 8.4],
+      [-20.2, 21.6],
+      [-13.0, 21.6],
+      [-13.0, 24.0],
+      [-29.0, 24.0]
+     ],
+     "exterior": true
+    },
+    {"circ": 2, "nombre": "Plaza principal bajo los mangos", "rect": [-32.0, -19.6, -13.0, -3.3], "exterior": true},
+    {
+     "circ": 3,
+     "nombre": "Patio norte (luz, ventilación y bicicletas)",
+     "rect": [-13.0, 22.4, 13.9, 27.25],
+     "exterior": true
+    },
+    {
+     "circ": 4,
+     "nombre": "Patio oriente norte (salida de la escalera norte)",
+     "rect": [8.6, 5.9, 13.9, 22.4],
+     "exterior": true
+    },
+    {
+     "circ": 5,
+     "nombre": "Patio oriente sur (salida de la escalera sur y pasaje de servicio)",
+     "poligono": [[8.6, -19.6], [12.5, -19.6], [12.5, -19.05], [13.9, -19.05], [13.9, 2.9], [8.6, 2.9]],
+     "exterior": true
+    },
+    {"fila": 227, "k": 1, "rect": [-20.2, 8.4, -13.0, 21.6], "exterior": true},
+    {"fila": 228, "k": 1, "rect": [8.6, 2.9, 13.9, 5.9], "exterior": true},
+    {
+     "tec": 1,
+     "nombre": "Huella de la torre (se recorre por dentro, en los pisos)",
+     "servicio": null,
+     "grupo": "circulacion",
+     "rect": [-13.0, -19.6, 8.6, 22.4],
+     "transitable": false,
+     "notas": [
+      "Recinto no programado: marca la huella del edificio en el nivel exterior (no caminable aquí); estimación de este trazado."
+     ]
+    }
+   ],
+   "muros_forzados": [{"entre": ["A228-01", "CIRC-04"], "tipo": "cerramiento"}, {"entre": ["A228-01", "CIRC-05"], "tipo": "cerramiento"}],
+   "puertas": [
+    {
+     "entre": ["A228-01", "CIRC-04"],
+     "pos": [11.25, 5.9],
+     "ancho": 2.4,
+     "abre": "corrediza",
+     "categoria": "exterior",
+     "nombre": "Salida de la galería al patio oriente norte (mantenimiento y evacuación)"
+    },
+    {
+     "entre": ["A228-01", "CIRC-05"],
+     "pos": [11.25, 2.9],
+     "ancho": 2.4,
+     "abre": "corrediza",
+     "categoria": "exterior",
+     "nombre": "Portón de la galería al patio oriente sur (descarga de la escalera sur y ruta de servicio)"
+    }
+   ],
+   "entradas_recorrido": [
+    {
+     "id": "porton_urgencias",
+     "punto": [-26.8, 23.0],
+     "mirando_deg": 270,
+     "nombre": "Portón de urgencias (ambulancias)"
+    },
+    {
+     "id": "porton_peatonal",
+     "punto": [-31.0, -12.0],
+     "mirando_deg": 0,
+     "nombre": "Portón peatonal de la plaza principal"
+    },
+    {"id": "puerta_principal", "punto": [-14.0, -8.8], "mirando_deg": 0, "nombre": "Frente a la puerta principal"},
+    {"id": "bahia", "punto": [-16.6, 15.0], "mirando_deg": 0, "nombre": "Bahía de ambulancias"}
+   ],
+   "obstaculos_recorrido": [
+    {
+     "id": "mango_grande",
+     "nombre": "Tronco del mango grande del prado (se conserva)",
+     "rect": [-22.5, -8.5, -21.5, -7.5],
+     "altura_m": 12.0
+    },
+    {
+     "id": "isla_retorno",
+     "nombre": "Isla verde del retorno con la palma trasplantada",
+     "rect": [-24.0, 7.0, -20.5, 19.0],
+     "altura_m": 0.2
+    },
+    {
+     "id": "arbol_patio_norte",
+     "nombre": "Árbol del patio norte (se conserva con poda)",
+     "rect": [-2.3, 23.2, -1.7, 23.8],
+     "altura_m": 6.0
+    }
+   ]
+  },
+  {
+   "id": "P1",
+   "piso": 1,
+   "nombre": "Piso 1: urgencias, rayos X, toma de muestras, vestíbulo y admisiones",
+   "z": 0.0,
+   "altura_entrepiso_m": 4.5,
+   "altura_libre_m": 3.0,
+   "contorno": [[-13.0, -19.6], [8.6, -19.6], [8.6, 22.4], [-13.0, 22.4]],
+   "recintos": [
+    {"fila": 59, "k": 1, "rect": [3.1, 14.0, 8.6, 22.4]},
+    {"fila": 59, "k": 2, "rect": [3.1, -7.6, 8.6, 0.8]},
+    {"fila": 60, "k": 1, "rect": [3.1, 4.4, 6.1, 6.8]},
+    {"fila": 60, "k": 2, "rect": [3.1, 2.0, 6.1, 4.4]},
+    {"fila": 62, "k": 1, "rect": [3.1, 0.8, 6.1, 2.0]},
+    {
+     "fila": 61,
+     "k": 1,
+     "poligono": [[6.1, 0.8], [8.6, 0.8], [8.6, 8.9], [3.1, 8.9], [3.1, 8.0], [2.05, 8.0], [2.05, 6.8], [6.1, 6.8]]
+    },
+    {"fila": 65, "k": 1, "rect": [3.1, 10.75, 8.6, 14.0]},
+    {"fila": 58, "k": 1, "rect": [5.35, 8.9, 8.6, 10.75]},
+    {"fila": 56, "k": 1, "rect": [3.1, 8.9, 5.35, 10.75]},
+    {
+     "fila": 0,
+     "k": 1,
+     "poligono": [[-13.0, -10.0], [4.6, -10.0], [4.6, -7.6], [3.1, -7.6], [3.1, -7.9], [-3.25, -7.9], [-3.25, -7.6], [-13.0, -7.6]]
+    },
+    {
+     "circ": 1,
+     "nombre": "Corredor general de urgencias",
+     "poligono": [[-5.8, -7.6], [-3.25, -7.6], [-3.25, -3.0], [-3.2, -3.0], [-3.2, 0.8], [-3.25, 0.8], [-3.25, 14.0], [-5.8, 14.0]],
+     "evacuacion": true,
+     "camillas": true
+    },
+    {
+     "circ": 2,
+     "nombre": "Corredor de urgencias (observación y escalera norte)",
+     "rect": [-5.8, 14.0, 3.1, 16.55],
+     "evacuacion": true,
+     "camillas": true
+    },
+    {"circ": 3, "nombre": "Corredor de los ascensores", "evacuacion": true, "rect": [-3.25, 8.0, 3.1, 10.55]},
+    {"fila": 17, "k": 1, "rect": [-13.0, 16.55, -9.55, 22.4]},
+    {"fila": 23, "k": 1, "rect": [-9.55, 16.55, -6.1, 17.75]},
+    {"fila": 22, "k": 1, "rect": [-9.55, 17.75, -6.1, 22.4]},
+    {"fila": 29, "k": 1, "rect": [-6.1, 16.55, -1.8, 18.4]},
+    {"fila": 28, "k": 1, "rect": [-1.8, 16.55, 1.45, 18.4]},
+    {"fila": 43, "k": 1, "rect": [1.45, 16.55, 3.1, 18.4]},
+    {"fila": 24, "k": 1, "rect": [-6.1, 18.4, -3.1, 22.4]},
+    {"fila": 25, "k": 1, "rect": [-3.1, 18.4, -0.1, 22.4]},
+    {"fila": 26, "k": 1, "rect": [-0.1, 18.4, 3.1, 22.4]},
+    {"fila": 3, "k": 1, "rect": [-13.0, 13.35, -10.5, 16.55]},
+    {"fila": 4, "k": 1, "rect": [-10.5, 13.35, -8.6, 16.55]},
+    {"fila": 11, "k": 1, "rect": [-8.6, 14.0, -7.0, 16.55]},
+    {
+     "fila": 5,
+     "k": 1,
+     "poligono": [[-13.0, 10.1], [-5.8, 10.1], [-5.8, 14.0], [-8.6, 14.0], [-8.6, 13.35], [-13.0, 13.35]]
+    },
+    {"fila": 6, "k": 1, "rect": [-13.0, 7.35, -11.2, 10.1]},
+    {"fila": 6, "k": 2, "rect": [-11.2, 7.35, -9.4, 10.1]},
+    {"fila": 7, "k": 1, "rect": [-9.4, 7.35, -7.6, 10.1]},
+    {"fila": 7, "k": 2, "rect": [-7.6, 7.35, -5.8, 10.1]},
+    {"fila": 21, "k": 1, "rect": [-13.0, 4.35, -9.8, 7.35]},
+    {"fila": 16, "k": 1, "rect": [-9.8, 4.35, -5.8, 7.35]},
+    {"fila": 15, "k": 1, "rect": [-13.0, 0.45, -9.65, 4.35]},
+    {"fila": 14, "k": 1, "rect": [-8.45, 0.45, -5.8, 4.35]},
+    {"circ": 5, "nombre": "Pasillo de consultorios y descontaminación de urgencias", "rect": [-13.0, -0.65, -5.8, 0.45]},
+    {"fila": 12, "k": 1, "rect": [-13.0, -3.3, -10.7, -0.65]},
+    {"fila": 33, "k": 1, "rect": [-9.65, 0.45, -8.45, 4.35]},
+    {"fila": 15, "k": 2, "rect": [-10.7, -3.3, -5.8, -0.65]},
+    {"fila": 20, "k": 1, "rect": [-13.0, -5.45, -10.7, -3.3]},
+    {"fila": 18, "k": 1, "rect": [-10.7, -5.15, -5.8, -3.3]},
+    {"fila": 20, "k": 2, "rect": [-13.0, -7.6, -10.7, -5.45]},
+    {"fila": 19, "k": 1, "rect": [-10.7, -7.6, -5.8, -5.15]},
+    {"fila": 27, "k": 1, "rect": [-3.25, 10.55, -1.75, 14.0]},
+    {"fila": 27, "k": 2, "rect": [-1.75, 10.55, -0.25, 14.0]},
+    {"fila": 27, "k": 3, "rect": [-0.25, 10.55, 1.25, 14.0]},
+    {"fila": 31, "k": 1, "rect": [1.25, 10.55, 3.1, 14.0]},
+    {"fila": 9, "k": 1, "rect": [-3.25, 4.05, -1.7, 8.0]},
+    {"fila": 36, "k": 1, "rect": [-1.7, 4.05, -0.65, 8.0]},
+    {"fila": 37, "k": 1, "rect": [-0.65, 4.05, 0.85, 8.0]},
+    {"fila": 35, "k": 1, "poligono": [[0.85, 4.05], [3.1, 4.05], [3.1, 6.8], [2.05, 6.8], [2.05, 8.0], [0.85, 8.0]]},
+    {"fila": 32, "k": 1, "rect": [-7.0, 14.0, -5.8, 16.55]},
+    {"fila": 8, "k": 1, "rect": [-3.25, 2.0, 1.15, 4.05]},
+    {"fila": 13, "k": 1, "rect": [1.15, 2.0, 3.1, 4.05]},
+    {"fila": 30, "k": 1, "rect": [-3.25, 0.8, 0.15, 2.0]},
+    {"fila": 34, "k": 1, "rect": [0.15, 0.8, 3.1, 2.0]},
+    {
+     "fila": 44,
+     "k": 1,
+     "poligono": [[-3.2, -3.0], [-0.15, -3.0], [-0.15, -3.05], [3.1, -3.05], [3.1, 0.8], [-3.2, 0.8]]
+    },
+    {"fila": 45, "k": 1, "rect": [-3.25, -4.3, -0.15, -3.0]},
+    {"fila": 46, "k": 1, "rect": [-0.15, -4.3, 3.1, -3.05]},
+    {"fila": 48, "k": 1, "rect": [-3.25, -7.9, -0.95, -4.3]},
+    {"fila": 47, "k": 1, "rect": [0.1, -7.9, 1.4, -4.3]},
+    {"fila": 49, "k": 1, "rect": [-0.95, -7.9, 0.1, -4.3]},
+    {"fila": 2, "k": 1, "rect": [1.4, -7.9, 3.1, -4.3]},
+    {"fila": 57, "k": 1, "rect": [4.6, -10.0, 8.6, -7.6]},
+    {"fila": 51, "k": 1, "rect": [-13.0, -15.25, -9.55, -10.0]},
+    {"fila": 50, "k": 1, "rect": [-9.55, -12.55, -6.4, -10.0]},
+    {"fila": 1, "k": 1, "rect": [-6.4, -12.55, -0.3, -10.0]},
+    {"fila": 63, "k": 1, "rect": [-7.7, -15.25, -7.1, -14.65]},
+    {
+     "fila": 54,
+     "k": 1,
+     "poligono": [[-9.55, -15.25], [-7.7, -15.25], [-7.7, -14.65], [-7.1, -14.65], [-7.1, -12.55], [-9.55, -12.55]]
+    },
+    {"fila": 2, "k": 2, "rect": [-7.1, -15.25, -5.3, -12.55]},
+    {"fila": 2, "k": 3, "rect": [-5.3, -15.25, -3.5, -12.55]},
+    {"fila": 37, "k": 2, "rect": [-3.5, -15.25, -1.7, -12.55]},
+    {"fila": 55, "k": 1, "rect": [-1.7, -15.25, -0.3, -12.55]},
+    {"fila": 64, "k": 1, "rect": [-0.3, -15.25, 3.1, -10.0]},
+    {"circ": 9, "nombre": "Paso de la galería al pasillo sur", "rect": [3.1, -15.25, 4.6, -10.0]},
+    {"fila": 41, "k": 1, "rect": [4.6, -12.5, 8.6, -10.0]},
+    {"fila": 42, "k": 1, "rect": [4.6, -15.25, 8.6, -12.5]},
+    {
+     "circ": 8,
+     "nombre": "Pasillo sur (toma de muestras, servicios y personal de urgencias)",
+     "rect": [-13.0, -16.6, 8.6, -15.25]
+    },
+    {"fila": 53, "k": 1, "rect": [-13.0, -19.6, -8.85, -16.6]},
+    {"fila": 52, "k": 1, "rect": [-8.85, -19.6, -7.65, -16.6]},
+    {"fila": 52, "k": 2, "rect": [-7.65, -19.6, -6.45, -16.6]},
+    {"fila": 52, "k": 3, "rect": [-6.45, -19.6, -5.25, -16.6]},
+    {"fila": 52, "k": 4, "rect": [-5.25, -19.6, -4.05, -16.6]},
+    {"fila": 10, "k": 1, "rect": [-4.05, -19.6, -1.05, -16.6]},
+    {
+     "fila": 38,
+     "k": 1,
+     "poligono": [[-1.05, -19.6], [1.2, -19.6], [1.2, -17.95], [2.7, -17.95], [2.7, -16.6], [-1.05, -16.6]]
+    },
+    {"fila": 39, "k": 1, "rect": [1.2, -19.6, 2.7, -17.95]},
+    {
+     "fila": 38,
+     "k": 2,
+     "poligono": [[2.7, -19.6], [4.95, -19.6], [4.95, -17.95], [6.45, -17.95], [6.45, -16.6], [2.7, -16.6]]
+    },
+    {"fila": 39, "k": 2, "rect": [4.95, -19.6, 6.45, -17.95]},
+    {"fila": 40, "k": 1, "rect": [6.45, -19.6, 8.6, -16.6]}
+   ],
+   "nucleos": [
+    {"id": "ESC-N", "tipo": "escalera", "recinto": "A059-01", "nombre": "Escalera de evacuación norte"},
+    {"id": "ESC-S", "tipo": "escalera", "recinto": "A059-02", "nombre": "Escalera de evacuación sur"},
+    {
+     "id": "ASC",
+     "tipo": "ascensor",
+     "recintos": ["A060-01", "A060-02"],
+     "rect": [3.1, 1.6, 6.1, 7.2],
+     "nombre": "Ascensores camilleros",
+     "nota": "Límites del programa (x 3,1-6,1; y 1,6-7,2). Los dos huecos miden 3,0 × 2,4 m (7,2 m², el área del programa) y van de y 2,0 a 6,8; el montacargas (hueco de 3,0 × 1,2 m) de y 0,8 a 2,0. La franja y 6,8-7,2 es paso del vestíbulo hacia el corredor (revisión adversarial, paso físico)."
+    },
+    {"id": "MC", "tipo": "montacargas", "recinto": "A062-01", "nombre": "Montacargas general"},
+    {
+     "id": "MM",
+     "tipo": "montacargas",
+     "recinto": "A063-01",
+     "nombre": "Montacargas de muestras",
+     "muro_de_nucleo": false
+    },
+    {"id": "DUC", "tipo": "ductos", "recinto": "A065-01", "nombre": "Ductos verticales"}
+   ],
+   "abiertos": [
+    ["A000-01", "CIRC-01"],
+    ["A000-01", "A051-01"],
+    ["A000-01", "A001-01"],
+    ["A000-01", "A064-01"],
+    ["A000-01", "CIRC-09"],
+    ["CIRC-01", "CIRC-02"],
+    ["CIRC-01", "CIRC-03"],
+    ["CIRC-01", "CIRC-05"],
+    ["CIRC-01", "A005-01"],
+    ["CIRC-02", "A029-01"],
+    ["CIRC-02", "A028-01"],
+    ["CIRC-08", "A051-01"],
+    ["CIRC-08", "CIRC-09"],
+    ["CIRC-03", "A061-01"],
+    ["A004-01", "A011-01"],
+    ["A004-01", "A005-01"],
+    ["A005-01", "A011-01"]
+   ],
+   "puertas": [
+    {"entre": ["CIRC-02", "A059-01"], "pos": [3.1, 15.3], "ancho": 1.2, "nombre": "Puerta de la escalera norte"},
+    {
+     "entre": ["A059-01", "exterior"],
+     "pos": [8.6, 15.3],
+     "ancho": 1.2,
+     "abre": "afuera",
+     "tipo": "cortafuego",
+     "categoria": "evacuacion",
+     "nombre": "Salida de la escalera norte al patio oriente",
+     "lleva_a": {"nivel": "EXT", "recinto": "EXT-CIRC-04"}
+    },
+    {"entre": ["A000-01", "A059-02"], "pos": [3.85, -7.6], "ancho": 1.2, "nombre": "Puerta de la escalera sur"},
+    {
+     "entre": ["A059-02", "exterior"],
+     "pos": [8.6, -6.3],
+     "ancho": 1.2,
+     "abre": "afuera",
+     "tipo": "cortafuego",
+     "categoria": "evacuacion",
+     "nombre": "Salida de la escalera sur al patio oriente",
+     "lleva_a": {"nivel": "EXT", "recinto": "EXT-CIRC-05"}
+    },
+    {"entre": ["A061-01", "A060-01"], "pos": [6.1, 5.8], "ancho": 1.2},
+    {"entre": ["A061-01", "A060-02"], "pos": [6.1, 3.0], "ancho": 1.2},
+    {"entre": ["A061-01", "A062-01"], "pos": [6.1, 1.4], "ancho": 0.6},
+    {
+     "entre": ["A061-01", "exterior"],
+     "pos": [8.6, 4.4],
+     "ancho": 2.0,
+     "abre": "corrediza",
+     "tipo": "automatica",
+     "categoria": "exterior",
+     "nombre": "Galería al hospital actual",
+     "lleva_a": {"nivel": "EXT", "recinto": "EXT-A228-01"}
+    },
+    {"entre": ["A061-01", "A058-01"], "pos": [7.0, 8.9], "ancho": 0.9},
+    {
+     "entre": ["A000-01", "exterior"],
+     "pos": [-13.0, -8.8],
+     "ancho": 1.6,
+     "abre": "corrediza",
+     "tipo": "automatica",
+     "categoria": "exterior",
+     "nombre": "Puerta principal",
+     "lleva_a": {"nivel": "EXT", "recinto": "EXT-CIRC-02"}
+    },
+    {"entre": ["A051-01", "A050-01"], "pos": [-9.55, -11.3], "ancho": 1.0},
+    {"entre": ["A000-01", "A057-01"], "pos": [4.6, -8.8], "ancho": 1.0, "categoria": "tecnico"},
+    {"entre": ["A000-01", "A048-01"], "pos": [-2.0, -7.9], "ancho": 0.9},
+    {"entre": ["A000-01", "A047-01"], "pos": [0.64, -7.9], "ancho": 0.9},
+    {"entre": ["A000-01", "A049-01"], "pos": [-0.425, -7.9], "ancho": 0.9},
+    {"entre": ["A000-01", "A002-01"], "pos": [2.3, -7.9], "ancho": 0.9},
+    {
+     "entre": ["A003-01", "exterior"],
+     "pos": [-13.0, 15.35],
+     "ancho": 2.0,
+     "abre": "corrediza",
+     "tipo": "automatica",
+     "categoria": "exterior",
+     "nombre": "Puerta de urgencias (bahía de ambulancias)",
+     "lleva_a": {"nivel": "EXT", "recinto": "EXT-A227-01"}
+    },
+    {
+     "entre": ["A003-01", "A004-01"],
+     "pos": [-10.5, 14.95],
+     "ancho": 1.8,
+     "abre": "corrediza",
+     "tipo": "automatica",
+     "categoria": "camas"
+    },
+    {"entre": ["A003-01", "A017-01"], "pos": [-11.75, 16.55], "ancho": 1.4},
+    {"entre": ["A011-01", "A023-01"], "pos": [-7.85, 16.55], "ancho": 1.2, "abre": "corrediza"},
+    {"entre": ["A023-01", "A022-01"], "pos": [-7.8, 17.75], "ancho": 1.2, "abre": "corrediza"},
+    {"entre": ["A005-01", "A006-01"], "pos": [-12.1, 10.1], "ancho": 0.9},
+    {"entre": ["A005-01", "A006-02"], "pos": [-10.3, 10.1], "ancho": 0.9},
+    {"entre": ["A005-01", "A007-01"], "pos": [-8.5, 10.1], "ancho": 0.9},
+    {"entre": ["A005-01", "A007-02"], "pos": [-6.7, 10.1], "ancho": 0.9},
+    {"entre": ["A029-01", "A024-01"], "pos": [-4.6, 18.4], "ancho": 1.2},
+    {"entre": ["A028-01", "A025-01"], "pos": [-0.975, 18.4], "ancho": 1.2},
+    {"entre": ["A028-01", "A026-01"], "pos": [0.65, 18.4], "ancho": 1.2},
+    {"entre": ["CIRC-02", "A043-01"], "pos": [2.3, 16.55], "ancho": 0.9},
+    {"entre": ["CIRC-02", "A027-01"], "pos": [-2.5, 14.0], "ancho": 1.0},
+    {"entre": ["CIRC-02", "A027-02"], "pos": [-1.0, 14.0], "ancho": 1.0},
+    {"entre": ["CIRC-02", "A027-03"], "pos": [0.5, 14.0], "ancho": 1.0},
+    {"entre": ["CIRC-02", "A031-01"], "pos": [2.175, 14.0], "ancho": 0.9},
+    {"entre": ["A016-01", "A021-01"], "pos": [-9.8, 5.85], "ancho": 1.4},
+    {"entre": ["CIRC-01", "A016-01"], "pos": [-5.8, 5.85], "ancho": 1.4},
+    {"entre": ["CIRC-05", "A015-01"], "pos": [-11.35, 0.45], "ancho": 1.0},
+    {"entre": ["CIRC-01", "A014-01"], "pos": [-5.8, 2.8], "ancho": 1.0},
+    {"entre": ["CIRC-05", "A012-01"], "pos": [-12.0, -0.65], "ancho": 1.2},
+    {
+     "entre": ["A012-01", "exterior"],
+     "pos": [-13.0, -1.65],
+     "ancho": 1.2,
+     "abre": "afuera",
+     "categoria": "camas",
+     "nombre": "Entrada a descontaminación desde el patio de urgencias",
+     "lleva_a": {"nivel": "EXT", "recinto": "EXT-CIRC-01"}
+    },
+    {"entre": ["CIRC-05", "A033-01"], "pos": [-9.05, 0.45], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A015-02"], "pos": [-5.8, -1.65], "ancho": 1.0},
+    {"entre": ["A018-01", "A020-01"], "pos": [-10.7, -4.225], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A018-01"], "pos": [-5.8, -4.225], "ancho": 1.0},
+    {"entre": ["A019-01", "A020-02"], "pos": [-10.7, -6.5], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A019-01"], "pos": [-5.8, -6.4], "ancho": 1.2},
+    {"entre": ["CIRC-01", "A009-01"], "pos": [-3.25, 6.0], "ancho": 1.0},
+    {"entre": ["CIRC-03", "A036-01"], "pos": [-1.175, 8.0], "ancho": 0.9},
+    {"entre": ["CIRC-03", "A037-01"], "pos": [0.1, 8.0], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A008-01"], "pos": [-3.25, 3.0], "ancho": 1.0},
+    {"entre": ["A008-01", "A013-01"], "pos": [1.15, 3.0], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A030-01"], "pos": [-3.25, 1.4], "ancho": 0.9},
+    {"entre": ["A030-01", "A034-01"], "pos": [0.15, 1.4], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A044-01"], "pos": [-3.2, -1.1], "ancho": 1.4},
+    {"entre": ["CIRC-01", "A045-01"], "pos": [-3.25, -3.65], "ancho": 1.0},
+    {"entre": ["A044-01", "A046-01"], "pos": [1.5, -3.05], "ancho": 0.9},
+    {"entre": ["A050-01", "A054-01"], "pos": [-8.3, -12.55], "ancho": 0.9},
+    {"entre": ["CIRC-08", "A054-01"], "pos": [-8.6, -15.25], "ancho": 0.9},
+    {"entre": ["A054-01", "A063-01"], "pos": [-7.7, -14.95], "ancho": 0.5, "abre": "corrediza"},
+    {"entre": ["CIRC-08", "A002-02"], "pos": [-6.2, -15.25], "ancho": 0.9},
+    {"entre": ["CIRC-08", "A002-03"], "pos": [-4.4, -15.25], "ancho": 0.9},
+    {"entre": ["CIRC-08", "A037-02"], "pos": [-2.6, -15.25], "ancho": 0.9},
+    {"entre": ["CIRC-08", "A055-01"], "pos": [-1.0, -15.25], "ancho": 0.9},
+    {"entre": ["CIRC-09", "A041-01"], "pos": [4.6, -11.25], "ancho": 1.0},
+    {"entre": ["CIRC-09", "A042-01"], "pos": [4.6, -13.95], "ancho": 1.0},
+    {"entre": ["CIRC-08", "A053-01"], "pos": [-10.9, -16.6], "ancho": 1.0},
+    {"entre": ["CIRC-08", "A052-01"], "pos": [-8.25, -16.6], "ancho": 1.0, "abre": "corrediza"},
+    {"entre": ["CIRC-08", "A052-02"], "pos": [-7.05, -16.6], "ancho": 1.0, "abre": "corrediza"},
+    {"entre": ["CIRC-08", "A052-03"], "pos": [-5.85, -16.6], "ancho": 1.0, "abre": "corrediza"},
+    {"entre": ["CIRC-08", "A052-04"], "pos": [-4.65, -16.6], "ancho": 1.0, "abre": "corrediza"},
+    {"entre": ["CIRC-08", "A010-01"], "pos": [-2.55, -16.6], "ancho": 1.0},
+    {"entre": ["CIRC-08", "A038-01"], "pos": [0.0, -16.6], "ancho": 0.9},
+    {"entre": ["A038-01", "A039-01"], "pos": [1.95, -17.95], "ancho": 0.9},
+    {"entre": ["CIRC-08", "A038-02"], "pos": [3.6, -16.6], "ancho": 0.9},
+    {"entre": ["A038-02", "A039-02"], "pos": [5.7, -17.95], "ancho": 0.9},
+    {"entre": ["CIRC-08", "A040-01"], "pos": [7.5, -16.6], "ancho": 0.9},
+    {
+     "entre": ["A058-01", "A065-01"],
+     "pos": [7.0, 10.75],
+     "ancho": 0.9,
+     "categoria": "deposito",
+     "nombre": "Registro de los ductos desde el cuarto eléctrico"
+    },
+    {"entre": ["CIRC-03", "A056-01"], "pos": [3.1, 9.7], "ancho": 0.9},
+    {"entre": ["A061-01", "A035-01"], "pos": [2.05, 7.4], "ancho": 0.9},
+    {"entre": ["CIRC-02", "A032-01"], "pos": [-5.8, 15.6], "ancho": 0.9, "abre": "corrediza"}
+   ],
+   "sin_ventana": ["A044-01", "A063-01"],
+   "entradas_recorrido": [
+    {"id": "principal", "punto": [-12.2, -8.8], "mirando_deg": 0, "nombre": "Puerta principal (galería de entrada)"},
+    {
+     "id": "urgencias",
+     "punto": [-12.0, 15.35],
+     "mirando_deg": 0,
+     "nombre": "Puerta de urgencias desde la bahía de ambulancias"
+    },
+    {"id": "galeria", "punto": [7.8, 4.4], "mirando_deg": 180, "nombre": "Llegada de la galería del hospital actual"}
+   ],
+   "obstaculos_recorrido": []
+  },
+  {
+   "id": "P2",
+   "piso": 2,
+   "nombre": "Piso 2: consulta externa, laboratorio clínico, farmacia, vacunación, ecografía y citologías",
+   "z": 4.5,
+   "altura_entrepiso_m": 4.2,
+   "altura_libre_m": 3.0,
+   "contorno": [[-13.0, -19.6], [8.6, -19.6], [8.6, 22.4], [-13.0, 22.4]],
+   "recintos": [
+    {"fila": 112, "k": 1, "rect": [3.1, 14.0, 8.6, 22.4]},
+    {"fila": 112, "k": 2, "rect": [3.1, -7.6, 8.6, 0.8]},
+    {"fila": 113, "k": 1, "rect": [3.1, 4.4, 6.1, 6.8]},
+    {"fila": 113, "k": 2, "rect": [3.1, 2.0, 6.1, 4.4]},
+    {"fila": 115, "k": 1, "rect": [3.1, 0.8, 6.1, 2.0]},
+    {"fila": 114, "k": 1, "poligono": [[6.1, 0.8], [8.6, 0.8], [8.6, 9.45], [3.1, 9.45], [3.1, 6.8], [6.1, 6.8]]},
+    {"fila": 118, "k": 1, "rect": [3.1, 10.75, 8.6, 14.0]},
+    {"fila": 111, "k": 1, "rect": [4.5, 9.45, 8.6, 10.75]},
+    {"fila": 110, "k": 1, "rect": [1.4, 5.6, 3.1, 7.95]},
+    {"fila": 117, "k": 1, "rect": [-0.3, -15.25, 3.1, -10.0]},
+    {"fila": 116, "k": 1, "rect": [-7.7, -15.25, -7.1, -14.65]},
+    {"circ": 1, "nombre": "Corredor del laboratorio", "rect": [-13.0, -16.85, 8.6, -15.25]},
+    {
+     "circ": 2,
+     "nombre": "Entrada del laboratorio (desde el vestíbulo de la escalera sur)",
+     "rect": [3.1, -15.25, 4.6, -10.0]
+    },
+    {"fila": 93, "k": 1, "rect": [-13.0, -19.6, -11.9, -16.85]},
+    {"fila": 87, "k": 1, "rect": [-11.9, -19.6, -10.4, -16.85]},
+    {"fila": 86, "k": 1, "rect": [-10.4, -19.6, -8.2, -16.85]},
+    {"fila": 88, "k": 1, "rect": [-8.2, -19.6, -5.25, -16.85]},
+    {
+     "tec": 1,
+     "nombre": "Ducha de emergencia y lavaojos del laboratorio",
+     "servicio": "Laboratorio clínico",
+     "grupo": "apoyo_diagnostico_y_terapeutico",
+     "rect": [-5.25, -19.6, -4.05, -16.85],
+     "notas": [
+      "Recinto no programado (16.2): ducha de emergencia y lavaojos junto a las áreas técnicas; estimación de este trazado."
+     ]
+    },
+    {"fila": 89, "k": 1, "rect": [-4.05, -19.6, -1.85, -16.85]},
+    {"fila": 90, "k": 1, "rect": [-1.85, -19.6, 0.35, -16.85]},
+    {"fila": 92, "k": 1, "rect": [0.35, -19.6, 1.85, -16.85]},
+    {"fila": 92, "k": 2, "rect": [1.85, -19.6, 3.35, -16.85]},
+    {"fila": 91, "k": 1, "rect": [3.35, -19.6, 8.6, -16.85]},
+    {"fila": 82, "k": 1, "rect": [-13.0, -15.25, -9.4, -10.25]},
+    {"fila": 80, "k": 1, "rect": [-9.4, -15.25, -7.7, -10.25]},
+    {
+     "fila": 79,
+     "k": 1,
+     "poligono": [[-7.1, -15.25], [-5.9, -15.25], [-5.9, -10.25], [-7.7, -10.25], [-7.7, -14.65], [-7.1, -14.65]]
+    },
+    {"fila": 84, "k": 1, "rect": [-5.9, -15.25, -3.1, -10.25]},
+    {"fila": 81, "k": 1, "rect": [-3.1, -15.25, -0.3, -10.25]},
+    {"fila": 85, "k": 1, "rect": [4.6, -15.25, 8.6, -12.25]},
+    {"fila": 83, "k": 1, "rect": [4.6, -12.25, 8.6, -10.25]},
+    {
+     "tec": 2,
+     "nombre": "Biología molecular (GeneXpert)",
+     "servicio": "Laboratorio clínico",
+     "grupo": "apoyo_diagnostico_y_terapeutico",
+     "rect": [4.6, -10.25, 8.6, -7.6],
+     "notas": [
+      "Recinto no programado (16.2): área de biología molecular con el GeneXpert, contigua a inmunología; estimación de este trazado."
+     ]
+    },
+    {
+     "fila": 104,
+     "k": 1,
+     "poligono": [[-5.8, -10.25], [-0.3, -10.25], [-0.3, -10.0], [3.1, -10.0], [3.1, -8.6], [-5.8, -8.6]]
+    },
+    {"circ": 3, "nombre": "Vestíbulo de la escalera sur y entrada del laboratorio", "rect": [3.1, -10.0, 4.6, -7.6]},
+    {"fila": 73, "k": 1, "rect": [-8.35, -10.25, -5.8, 10.15]},
+    {
+     "circ": 4,
+     "nombre": "Corredor de consulta externa (norte de la espera)",
+     "rect": [-8.35, 10.15, -5.8, 14.0],
+     "evacuacion": true,
+     "camillas": true
+    },
+    {
+     "circ": 5,
+     "nombre": "Corredor de los ascensores",
+     "evacuacion": true,
+     "camillas": true,
+     "poligono": [[-5.8, 7.95], [3.1, 7.95], [3.1, 9.45], [4.5, 9.45], [4.5, 10.75], [3.1, 10.75], [3.1, 10.5], [-5.8, 10.5]]
+    },
+    {
+     "circ": 6,
+     "nombre": "Corredor norte (escalera norte)",
+     "rect": [-13.0, 14.0, 3.1, 16.55],
+     "evacuacion": true,
+     "camillas": true
+    },
+    {"fila": 66, "k": 1, "rect": [-13.0, -10.25, -8.35, -7.45]},
+    {"fila": 66, "k": 2, "rect": [-13.0, -7.45, -8.35, -4.65]},
+    {"fila": 66, "k": 3, "rect": [-13.0, -4.65, -8.35, -1.85]},
+    {"fila": 66, "k": 4, "rect": [-13.0, -1.85, -8.35, 0.95]},
+    {"fila": 66, "k": 5, "rect": [-13.0, 0.95, -8.35, 3.75]},
+    {"fila": 66, "k": 6, "rect": [-13.0, 3.75, -8.35, 6.55]},
+    {"fila": 66, "k": 7, "rect": [-13.0, 6.55, -8.35, 9.35]},
+    {"fila": 66, "k": 8, "rect": [-13.0, 9.35, -8.35, 12.15]},
+    {"fila": 77, "k": 1, "rect": [-13.0, 12.15, -8.35, 14.0]},
+    {"fila": 71, "k": 1, "rect": [-5.8, -8.6, -3.0, -3.6]},
+    {"fila": 72, "k": 1, "rect": [-5.8, -3.6, -3.0, -0.55]},
+    {"fila": 94, "k": 1, "rect": [-5.8, -0.55, -3.0, 4.1]},
+    {"fila": 95, "k": 1, "rect": [-5.8, 4.1, -3.0, 6.7]},
+    {"fila": 78, "k": 1, "rect": [-5.8, 6.7, -3.0, 7.95]},
+    {"fila": 96, "k": 1, "rect": [-3.0, -8.6, -1.3, -6.2]},
+    {"fila": 100, "k": 1, "rect": [-1.3, -8.6, 1.4, -7.1]},
+    {"fila": 100, "k": 2, "rect": [1.4, -8.6, 3.1, -6.2]},
+    {
+     "fila": 98,
+     "k": 1,
+     "poligono": [[-3.0, -6.2], [-1.3, -6.2], [-1.3, -7.1], [1.4, -7.1], [1.4, -6.2], [3.1, -6.2], [3.1, -2.65], [-3.0, -2.65]]
+    },
+    {"fila": 103, "k": 1, "rect": [-3.0, -2.65, -1.3, 1.1]},
+    {"fila": 97, "k": 1, "rect": [-1.3, -2.65, -0.2, 1.1]},
+    {"fila": 99, "k": 1, "rect": [-0.2, -2.65, 0.9, 1.1]},
+    {"fila": 101, "k": 1, "rect": [0.9, -2.65, 2.0, 1.1]},
+    {"fila": 102, "k": 1, "rect": [2.0, -2.65, 3.1, 1.1]},
+    {"fila": 74, "k": 2, "rect": [-3.0, 1.1, -0.65, 7.95]},
+    {"fila": 107, "k": 1, "rect": [-0.65, 3.05, 1.4, 7.95]},
+    {"fila": 108, "k": 1, "rect": [-0.65, 1.1, 1.9, 3.05]},
+    {"fila": 109, "k": 1, "poligono": [[1.9, 1.1], [3.1, 1.1], [3.1, 5.6], [1.4, 5.6], [1.4, 3.05], [1.9, 3.05]]},
+    {"fila": 76, "k": 1, "rect": [-5.8, 10.5, -4.3, 12.25]},
+    {"fila": 76, "k": 2, "rect": [-5.8, 12.25, -4.3, 14.0]},
+    {"fila": 75, "k": 1, "rect": [-4.3, 10.5, -1.5, 12.25]},
+    {"fila": 75, "k": 2, "rect": [-4.3, 12.25, -1.5, 14.0]},
+    {"fila": 74, "k": 1, "rect": [-1.5, 10.5, 3.1, 14.0]},
+    {"fila": 68, "k": 1, "rect": [-13.0, 16.55, -9.75, 20.9]},
+    {"fila": 69, "k": 1, "rect": [-13.0, 20.9, -9.75, 22.4]},
+    {"fila": 105, "k": 1, "rect": [-9.75, 16.55, -6.65, 20.75]},
+    {"fila": 106, "k": 1, "rect": [-9.75, 20.75, -6.65, 22.4]},
+    {"fila": 67, "k": 1, "rect": [-6.65, 16.55, -4.15, 22.4]},
+    {"fila": 67, "k": 2, "rect": [-4.15, 16.55, -1.65, 22.4]},
+    {"fila": 67, "k": 3, "rect": [-1.65, 16.55, 0.85, 22.4]},
+    {"fila": 70, "k": 1, "rect": [0.85, 16.55, 3.1, 22.4]}
+   ],
+   "nucleos": [
+    {"id": "ESC-N", "tipo": "escalera", "recinto": "A112-01", "nombre": "Escalera de evacuación norte"},
+    {"id": "ESC-S", "tipo": "escalera", "recinto": "A112-02", "nombre": "Escalera de evacuación sur"},
+    {
+     "id": "ASC",
+     "tipo": "ascensor",
+     "recintos": ["A113-01", "A113-02"],
+     "rect": [3.1, 1.6, 6.1, 7.2],
+     "nombre": "Ascensores camilleros",
+     "nota": "Límites del programa (x 3,1-6,1; y 1,6-7,2). Los dos huecos miden 3,0 × 2,4 m (7,2 m², el área del programa) y van de y 2,0 a 6,8; el montacargas (hueco de 3,0 × 1,2 m) de y 0,8 a 2,0. La franja y 6,8-7,2 es paso del vestíbulo hacia el corredor (revisión adversarial, paso físico)."
+    },
+    {"id": "MC", "tipo": "montacargas", "recinto": "A115-01", "nombre": "Montacargas general"},
+    {
+     "id": "MM",
+     "tipo": "montacargas",
+     "recinto": "A116-01",
+     "nombre": "Montacargas de muestras",
+     "muro_de_nucleo": false
+    },
+    {"id": "DUC", "tipo": "ductos", "recinto": "A118-01", "nombre": "Ductos verticales"}
+   ],
+   "abiertos": [
+    ["A104-01", "A117-01"],
+    ["A104-01", "A073-01"],
+    ["A104-01", "CIRC-03"],
+    ["A073-01", "CIRC-04"],
+    ["A073-01", "CIRC-05"],
+    ["CIRC-04", "CIRC-05"],
+    ["CIRC-04", "CIRC-06"],
+    ["CIRC-05", "A114-01"],
+    ["CIRC-01", "CIRC-02"]
+   ],
+   "puertas": [
+    {"entre": ["CIRC-06", "A112-01"], "pos": [3.1, 15.3], "ancho": 1.2, "nombre": "Puerta de la escalera norte"},
+    {"entre": ["CIRC-03", "A112-02"], "pos": [3.85, -7.6], "ancho": 1.2, "nombre": "Puerta de la escalera sur"},
+    {"entre": ["A114-01", "A113-01"], "pos": [6.1, 5.8], "ancho": 1.2},
+    {"entre": ["A114-01", "A113-02"], "pos": [6.1, 3.0], "ancho": 1.2},
+    {"entre": ["A114-01", "A115-01"], "pos": [6.1, 1.4], "ancho": 0.6},
+    {"entre": ["CIRC-05", "A118-01"], "pos": [3.8, 10.75], "ancho": 0.9, "categoria": "deposito"},
+    {"entre": ["A114-01", "A111-01"], "pos": [7.35, 9.45], "ancho": 0.9},
+    {
+     "entre": ["CIRC-03", "CIRC-02"],
+     "pos": [3.85, -10.0],
+     "ancho": 1.2,
+     "nombre": "Puerta del laboratorio (acceso restringido)"
+    },
+    {"entre": ["A079-01", "A116-01"], "pos": [-7.1, -14.95], "ancho": 0.5, "abre": "corrediza"},
+    {"entre": ["CIRC-01", "A079-01"], "pos": [-6.5, -15.25], "ancho": 1.0},
+    {"entre": ["A079-01", "A080-01"], "pos": [-7.7, -12.5], "ancho": 1.0},
+    {"entre": ["CIRC-01", "A080-01"], "pos": [-8.55, -15.25], "ancho": 1.0},
+    {"entre": ["CIRC-01", "A082-01"], "pos": [-11.2, -15.25], "ancho": 1.0},
+    {"entre": ["CIRC-01", "A084-01"], "pos": [-4.5, -15.25], "ancho": 1.0},
+    {"entre": ["CIRC-01", "A081-01"], "pos": [-1.7, -15.25], "ancho": 1.0},
+    {"entre": ["CIRC-02", "A085-01"], "pos": [4.6, -13.75], "ancho": 1.0},
+    {"entre": ["CIRC-02", "A083-01"], "pos": [4.6, -11.25], "ancho": 1.0},
+    {"entre": ["A083-01", "TEC-02"], "pos": [6.6, -10.25], "ancho": 1.0},
+    {"entre": ["CIRC-01", "A093-01"], "pos": [-12.45, -16.85], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A087-01"], "pos": [-11.15, -16.85], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A086-01"], "pos": [-9.3, -16.85], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A088-01"], "pos": [-6.7, -16.85], "ancho": 0.9},
+    {"entre": ["CIRC-01", "TEC-01"], "pos": [-4.65, -16.85], "ancho": 0.9, "abre": "corrediza"},
+    {"entre": ["CIRC-01", "A089-01"], "pos": [-2.95, -16.85], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A090-01"], "pos": [-0.75, -16.85], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A092-01"], "pos": [1.1, -16.85], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A092-02"], "pos": [2.6, -16.85], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A091-01"], "pos": [5.0, -16.85], "ancho": 0.9},
+    {"entre": ["A073-01", "A066-01"], "pos": [-8.35, -8.1], "ancho": 1.0},
+    {"entre": ["A073-01", "A066-02"], "pos": [-8.35, -6.8], "ancho": 1.0},
+    {"entre": ["A073-01", "A066-03"], "pos": [-8.35, -2.5], "ancho": 1.0},
+    {"entre": ["A073-01", "A066-04"], "pos": [-8.35, -1.2], "ancho": 1.0},
+    {"entre": ["A073-01", "A066-05"], "pos": [-8.35, 3.1], "ancho": 1.0},
+    {"entre": ["A073-01", "A066-06"], "pos": [-8.35, 4.4], "ancho": 1.0},
+    {"entre": ["A073-01", "A066-07"], "pos": [-8.35, 8.7], "ancho": 1.0},
+    {"entre": ["CIRC-04", "A066-08"], "pos": [-8.35, 10.75], "ancho": 1.0},
+    {"entre": ["CIRC-04", "A077-01"], "pos": [-8.35, 13.1], "ancho": 0.9},
+    {"entre": ["A073-01", "A071-01"], "pos": [-5.8, -6.1], "ancho": 1.0},
+    {"entre": ["A073-01", "A072-01"], "pos": [-5.8, -2.1], "ancho": 1.0},
+    {"entre": ["A073-01", "A094-01"], "pos": [-5.8, 1.8], "ancho": 1.0},
+    {"entre": ["A094-01", "A095-01"], "pos": [-4.4, 4.1], "ancho": 0.9},
+    {"entre": ["A073-01", "A078-01"], "pos": [-5.8, 7.3], "ancho": 0.9},
+    {"entre": ["A104-01", "A096-01"], "pos": [-2.15, -8.6], "ancho": 1.0, "nombre": "Recepción técnica de medicamentos"},
+    {"entre": ["A096-01", "A098-01"], "pos": [-2.15, -6.2], "ancho": 1.0},
+    {"entre": ["A100-01", "A098-01"], "pos": [0.05, -7.1], "ancho": 0.9},
+    {"entre": ["A100-02", "A098-01"], "pos": [2.25, -6.2], "ancho": 0.9},
+    {"entre": ["A098-01", "A103-01"], "pos": [-2.15, -2.65], "ancho": 0.9},
+    {"entre": ["A098-01", "A097-01"], "pos": [-0.75, -2.65], "ancho": 0.9, "abre": "corrediza"},
+    {"entre": ["A098-01", "A099-01"], "pos": [0.35, -2.65], "ancho": 0.9, "abre": "corrediza"},
+    {"entre": ["A098-01", "A101-01"], "pos": [1.45, -2.65], "ancho": 0.9, "abre": "corrediza"},
+    {"entre": ["A098-01", "A102-01"], "pos": [2.55, -2.65], "ancho": 0.9, "abre": "corrediza"},
+    {"entre": ["CIRC-05", "A074-02"], "pos": [-1.8, 7.95], "ancho": 1.0},
+    {"entre": ["CIRC-05", "A107-01"], "pos": [0.35, 7.95], "ancho": 1.0},
+    {"entre": ["A107-01", "A108-01"], "pos": [0.4, 3.05], "ancho": 0.9},
+    {"entre": ["A107-01", "A109-01"], "pos": [1.4, 4.3], "ancho": 0.9},
+    {"entre": ["CIRC-05", "A076-01"], "pos": [-5.05, 10.5], "ancho": 0.9},
+    {"entre": ["CIRC-06", "A076-02"], "pos": [-5.05, 14.0], "ancho": 0.9},
+    {"entre": ["CIRC-05", "A075-01"], "pos": [-2.9, 10.5], "ancho": 0.9},
+    {"entre": ["CIRC-06", "A075-02"], "pos": [-2.9, 14.0], "ancho": 0.9},
+    {"entre": ["CIRC-05", "A074-01"], "pos": [0.8, 10.5], "ancho": 1.0},
+    {"entre": ["CIRC-06", "A068-01"], "pos": [-11.4, 16.55], "ancho": 1.0},
+    {"entre": ["A068-01", "A069-01"], "pos": [-11.4, 20.9], "ancho": 0.9},
+    {"entre": ["CIRC-06", "A105-01"], "pos": [-8.2, 16.55], "ancho": 1.0},
+    {"entre": ["A105-01", "A106-01"], "pos": [-8.2, 20.75], "ancho": 0.9},
+    {"entre": ["CIRC-06", "A067-01"], "pos": [-5.4, 16.55], "ancho": 1.0},
+    {"entre": ["CIRC-06", "A067-02"], "pos": [-2.9, 16.55], "ancho": 1.0},
+    {"entre": ["CIRC-06", "A067-03"], "pos": [-0.4, 16.55], "ancho": 1.0},
+    {"entre": ["CIRC-06", "A070-01"], "pos": [1.975, 16.55], "ancho": 1.4},
+    {"entre": ["CIRC-05", "A110-01"], "pos": [2.35, 7.95], "ancho": 0.9}
+   ],
+   "sin_ventana": ["A116-01", "A117-01"],
+   "entradas_recorrido": [
+    {"id": "escalera_principal", "punto": [1.75, -9.6], "mirando_deg": 90, "nombre": "Llegada de la escalera principal"},
+    {"id": "ascensores", "punto": [4.6, 8.1], "mirando_deg": 180, "nombre": "Vestíbulo de ascensores"},
+    {
+     "id": "laboratorio",
+     "punto": [3.85, -10.6],
+     "mirando_deg": 270,
+     "nombre": "Puerta del laboratorio, mirando hacia adentro"
+    }
+   ],
+   "obstaculos_recorrido": [
+    {
+     "id": "hueco_escalera_principal",
+     "nombre": "Hueco de la escalera principal (baranda de 1,10 m)",
+     "rect": [-0.24, -15.19, 3.04, -10.61],
+     "altura_m": 1.1
+    }
+   ]
+  },
+  {
+   "id": "P3",
+   "piso": 3,
+   "nombre": "Piso 3: hospitalización, partos (TPR) y central de esterilización",
+   "z": 8.7,
+   "altura_entrepiso_m": 4.2,
+   "altura_libre_m": 3.0,
+   "contorno": [[-13.0, -19.6], [8.6, -19.6], [8.6, 22.4], [-13.0, 22.4]],
+   "recintos": [
+    {"fila": 171, "k": 1, "rect": [3.1, 14.0, 8.6, 22.4]},
+    {"fila": 171, "k": 2, "rect": [3.1, -7.6, 8.6, 0.8]},
+    {"fila": 172, "k": 1, "rect": [3.1, 4.4, 6.1, 6.8]},
+    {"fila": 172, "k": 2, "rect": [3.1, 2.0, 6.1, 4.4]},
+    {"fila": 174, "k": 1, "rect": [3.1, 0.8, 6.1, 2.0]},
+    {"fila": 173, "k": 1, "poligono": [[6.1, 0.8], [8.6, 0.8], [8.6, 9.45], [3.1, 9.45], [3.1, 6.8], [6.1, 6.8]]},
+    {"fila": 175, "k": 1, "rect": [3.1, 10.9, 8.6, 14.0]},
+    {"fila": 167, "k": 1, "rect": [4.5, 9.45, 8.6, 10.9]},
+    {"fila": 166, "k": 1, "rect": [1.4, 5.65, 3.1, 8.0]},
+    {
+     "circ": 1,
+     "nombre": "Corredor de hospitalización",
+     "rect": [-5.8, -12.4, -3.25, 14.0],
+     "evacuacion": true,
+     "camillas": true
+    },
+    {
+     "circ": 2,
+     "nombre": "Corredor norte (partos y escalera norte)",
+     "rect": [-8.85, 14.0, 3.1, 16.55],
+     "evacuacion": true,
+     "camillas": true
+    },
+    {
+     "circ": 3,
+     "nombre": "Corredor de los ascensores",
+     "evacuacion": true,
+     "camillas": true,
+     "poligono": [[-3.25, 8.0], [3.1, 8.0], [3.1, 9.45], [4.5, 9.45], [4.5, 10.9], [3.1, 10.9], [3.1, 10.55], [-3.25, 10.55]]
+    },
+    {
+     "circ": 4,
+     "nombre": "Corredor interno de la estación (escalera sur y servicios)",
+     "rect": [1.4, -15.25, 3.1, 5.65]
+    },
+    {"circ": 5, "nombre": "Corredor de servicio sur (esterilización y personal)", "rect": [-13.0, -16.65, 8.6, -15.25]},
+    {"fila": 123, "k": 1, "rect": [-13.0, 10.35, -5.8, 14.0]},
+    {"fila": 119, "k": 1, "rect": [-13.0, 7.0, -5.8, 10.35]},
+    {"fila": 119, "k": 2, "rect": [-13.0, 3.65, -5.8, 7.0]},
+    {"fila": 119, "k": 3, "rect": [-13.0, 0.3, -5.8, 3.65]},
+    {"fila": 122, "k": 1, "rect": [-13.0, -3.05, -5.8, 0.3]},
+    {"fila": 122, "k": 2, "rect": [-13.0, -6.4, -5.8, -3.05]},
+    {"fila": 120, "k": 1, "rect": [-13.0, -9.3, -7.4, -6.4]},
+    {"fila": 121, "k": 1, "rect": [-7.4, -9.3, -5.8, -6.4]},
+    {"fila": 149, "k": 1, "rect": [-11.0, -12.4, -5.8, -9.3]},
+    {"fila": 150, "k": 1, "rect": [-13.0, -12.4, -11.0, -9.3]},
+    {"fila": 148, "k": 1, "rect": [-13.0, 14.0, -8.85, 16.55]},
+    {"fila": 151, "k": 1, "rect": [-13.0, 16.55, -8.85, 22.4]},
+    {"fila": 152, "k": 1, "rect": [-8.85, 19.3, -7.25, 22.4]},
+    {"fila": 152, "k": 2, "rect": [-7.25, 19.3, -5.65, 22.4]},
+    {"fila": 153, "k": 1, "rect": [-8.85, 16.55, -5.65, 19.3]},
+    {"fila": 151, "k": 2, "rect": [-5.65, 16.55, -1.5, 22.4]},
+    {"fila": 159, "k": 1, "rect": [-1.5, 16.55, 0.8, 19.15]},
+    {"fila": 147, "k": 1, "rect": [-1.5, 19.15, 0.8, 22.4]},
+    {"fila": 145, "k": 1, "rect": [0.8, 16.55, 3.1, 19.15]},
+    {"fila": 146, "k": 1, "rect": [0.8, 19.15, 3.1, 22.4]},
+    {"fila": 154, "k": 1, "rect": [-3.25, 10.55, -0.35, 12.3]},
+    {"fila": 154, "k": 2, "rect": [-3.25, 12.3, -0.35, 14.0]},
+    {"fila": 168, "k": 1, "rect": [-0.35, 10.55, 1.05, 14.0]},
+    {"fila": 148, "k": 2, "rect": [1.05, 10.55, 3.1, 14.0]},
+    {"fila": 136, "k": 1, "rect": [-3.25, 3.25, -0.3, 8.0]},
+    {"fila": 124, "k": 1, "rect": [-3.25, -0.85, -0.3, 3.25]},
+    {"fila": 126, "k": 1, "rect": [-3.25, -2.9, -0.3, -0.85]},
+    {"fila": 125, "k": 1, "rect": [-3.25, -6.3, -0.3, -2.9]},
+    {"fila": 127, "k": 1, "rect": [-3.25, -8.0, -0.3, -6.3]},
+    {"fila": 135, "k": 1, "rect": [-3.25, -10.05, -0.3, -8.0]},
+    {"fila": 133, "k": 1, "rect": [-3.25, -12.4, -0.75, -10.05]},
+    {"fila": 137, "k": 1, "rect": [-0.3, 5.1, 1.4, 8.0]},
+    {"fila": 137, "k": 2, "rect": [-0.3, 2.2, 1.4, 5.1]},
+    {"fila": 128, "k": 1, "rect": [-0.3, 0.45, 1.4, 2.2]},
+    {"fila": 130, "k": 1, "rect": [-0.3, -1.35, 1.4, 0.45]},
+    {"fila": 131, "k": 1, "rect": [-0.3, -3.15, 1.4, -1.35]},
+    {"fila": 132, "k": 1, "rect": [-0.3, -5.5, 1.4, -3.15]},
+    {"fila": 134, "k": 1, "rect": [-0.3, -7.0, 1.4, -5.5]},
+    {"fila": 134, "k": 2, "rect": [-0.3, -9.0, 1.4, -7.0]},
+    {
+     "fila": 129,
+     "k": 1,
+     "poligono": [[-0.75, -12.4], [1.4, -12.4], [1.4, -9.0], [-0.3, -9.0], [-0.3, -10.05], [-0.75, -10.05]]
+    },
+    {"fila": 161, "k": 1, "rect": [3.1, -15.25, 6.5, -12.3]},
+    {"fila": 164, "k": 1, "rect": [3.1, -12.3, 6.5, -11.1]},
+    {"fila": 163, "k": 1, "rect": [3.1, -11.1, 6.5, -8.75]},
+    {"fila": 165, "k": 1, "rect": [3.1, -8.75, 6.5, -7.6]},
+    {"fila": 162, "k": 1, "rect": [6.5, -15.25, 8.6, -7.6]},
+    {"fila": 170, "k": 1, "rect": [-13.0, -15.25, -8.8, -12.4]},
+    {"fila": 139, "k": 1, "rect": [-8.8, -15.25, -6.0, -12.4]},
+    {"fila": 141, "k": 1, "rect": [-6.0, -15.25, -3.9, -12.4]},
+    {"fila": 155, "k": 1, "rect": [-3.9, -15.25, -2.85, -12.4]},
+    {"fila": 156, "k": 1, "rect": [-2.85, -15.25, -1.8, -12.4]},
+    {"fila": 157, "k": 1, "rect": [-1.8, -15.25, -0.75, -12.4]},
+    {"fila": 158, "k": 1, "rect": [-0.75, -15.25, 0.3, -12.4]},
+    {"fila": 160, "k": 1, "rect": [0.3, -15.25, 1.4, -12.4]},
+    {"fila": 142, "k": 1, "rect": [-13.0, -19.6, -9.6, -16.65]},
+    {"fila": 143, "k": 1, "rect": [-9.6, -19.6, -6.2, -16.65]},
+    {"fila": 169, "k": 1, "rect": [-6.2, -19.6, -2.8, -16.65]},
+    {"fila": 169, "k": 2, "rect": [-2.8, -19.6, 0.6, -16.65]},
+    {"fila": 140, "k": 1, "rect": [0.6, -19.6, 4.7, -16.65]},
+    {"fila": 138, "k": 1, "rect": [4.7, -19.6, 6.75, -16.65]},
+    {"fila": 144, "k": 1, "rect": [6.75, -19.6, 8.6, -16.65]}
+   ],
+   "nucleos": [
+    {"id": "ESC-N", "tipo": "escalera", "recinto": "A171-01", "nombre": "Escalera de evacuación norte"},
+    {"id": "ESC-S", "tipo": "escalera", "recinto": "A171-02", "nombre": "Escalera de evacuación sur"},
+    {
+     "id": "ASC",
+     "tipo": "ascensor",
+     "recintos": ["A172-01", "A172-02"],
+     "rect": [3.1, 1.6, 6.1, 7.2],
+     "nombre": "Ascensores camilleros",
+     "nota": "Límites del programa (x 3,1-6,1; y 1,6-7,2). Los dos huecos miden 3,0 × 2,4 m (7,2 m², el área del programa) y van de y 2,0 a 6,8; el montacargas (hueco de 3,0 × 1,2 m) de y 0,8 a 2,0. La franja y 6,8-7,2 es paso del vestíbulo hacia el corredor (revisión adversarial, paso físico)."
+    },
+    {"id": "MC", "tipo": "montacargas", "recinto": "A174-01", "nombre": "Montacargas general"},
+    {"id": "DUC", "tipo": "ductos", "recinto": "A175-01", "nombre": "Ductos verticales"}
+   ],
+   "abiertos": [
+    ["CIRC-03", "A173-01"],
+    ["CIRC-01", "CIRC-03"],
+    ["CIRC-01", "CIRC-02"],
+    ["CIRC-04", "CIRC-05"],
+    ["CIRC-01", "A125-01"],
+    ["A125-01", "A132-01"],
+    ["CIRC-03", "A136-01"],
+    ["CIRC-01", "A136-01"],
+    ["CIRC-02", "A159-01"],
+    ["CIRC-04", "A132-01"]
+   ],
+   "puertas": [
+    {"entre": ["CIRC-02", "A171-01"], "pos": [3.1, 15.3], "ancho": 1.2, "nombre": "Puerta de la escalera norte"},
+    {"entre": ["CIRC-04", "A171-02"], "pos": [3.1, -6.3], "ancho": 1.2, "nombre": "Puerta de la escalera sur"},
+    {"entre": ["A173-01", "A172-01"], "pos": [6.1, 5.8], "ancho": 1.2},
+    {"entre": ["A173-01", "A172-02"], "pos": [6.1, 3.0], "ancho": 1.2},
+    {"entre": ["A173-01", "A174-01"], "pos": [6.1, 1.4], "ancho": 0.6},
+    {"entre": ["CIRC-03", "A175-01"], "pos": [3.8, 10.9], "ancho": 0.9, "categoria": "deposito"},
+    {"entre": ["A173-01", "A167-01"], "pos": [7.35, 9.45], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A123-01"], "pos": [-5.8, 12.2], "ancho": 1.2},
+    {"entre": ["CIRC-01", "A119-01"], "pos": [-5.8, 8.7], "ancho": 1.2},
+    {"entre": ["CIRC-01", "A119-02"], "pos": [-5.8, 5.3], "ancho": 1.2},
+    {"entre": ["CIRC-01", "A119-03"], "pos": [-5.8, 2.0], "ancho": 1.2},
+    {"entre": ["CIRC-01", "A122-01"], "pos": [-5.8, -1.4], "ancho": 1.2},
+    {"entre": ["CIRC-01", "A122-02"], "pos": [-5.8, -4.7], "ancho": 1.2},
+    {"entre": ["CIRC-01", "A121-01"], "pos": [-5.8, -8.6], "ancho": 1.2, "abre": "corrediza"},
+    {"entre": ["A121-01", "A120-01"], "pos": [-7.4, -7.85], "ancho": 1.2, "abre": "corrediza"},
+    {"entre": ["CIRC-01", "A149-01"], "pos": [-5.8, -10.85], "ancho": 1.0},
+    {"entre": ["A149-01", "A150-01"], "pos": [-11.0, -10.85], "ancho": 0.9},
+    {"entre": ["CIRC-02", "A148-01"], "pos": [-8.85, 15.3], "ancho": 0.9},
+    {"entre": ["CIRC-02", "A153-01"], "pos": [-7.25, 16.55], "ancho": 1.4, "abre": "corrediza"},
+    {"entre": ["A153-01", "A151-01"], "pos": [-8.85, 17.9], "ancho": 1.4, "abre": "corrediza"},
+    {"entre": ["A153-01", "A151-02"], "pos": [-5.65, 17.9], "ancho": 1.4, "abre": "corrediza"},
+    {"entre": ["A151-01", "A152-01"], "pos": [-8.85, 20.85], "ancho": 1.0},
+    {"entre": ["A151-02", "A152-02"], "pos": [-5.65, 20.85], "ancho": 1.0},
+    {"entre": ["A159-01", "A147-01"], "pos": [-0.35, 19.15], "ancho": 0.9},
+    {"entre": ["CIRC-02", "A145-01"], "pos": [2.3, 16.55], "ancho": 1.2},
+    {"entre": ["A145-01", "A146-01"], "pos": [2.4, 19.15], "ancho": 0.9},
+    {"entre": ["CIRC-03", "A154-01"], "pos": [-1.8, 10.55], "ancho": 0.9},
+    {"entre": ["CIRC-02", "A154-02"], "pos": [-1.8, 14.0], "ancho": 0.9},
+    {"entre": ["CIRC-03", "A168-01"], "pos": [0.35, 10.55], "ancho": 0.9},
+    {"entre": ["CIRC-02", "A148-02"], "pos": [2.05, 14.0], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A124-01"], "pos": [-3.25, 1.2], "ancho": 1.4},
+    {"entre": ["A125-01", "A126-01"], "pos": [-1.8, -2.9], "ancho": 0.9},
+    {"entre": ["A125-01", "A127-01"], "pos": [-1.8, -6.3], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A135-01"], "pos": [-3.25, -9.0], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A133-01"], "pos": [-3.25, -11.2], "ancho": 0.9},
+    {"entre": ["CIRC-04", "A137-02"], "pos": [1.4, 3.65], "ancho": 0.9},
+    {"entre": ["CIRC-04", "A128-01"], "pos": [1.4, 1.3], "ancho": 0.9},
+    {"entre": ["CIRC-04", "A130-01"], "pos": [1.4, -0.45], "ancho": 0.9},
+    {"entre": ["CIRC-04", "A131-01"], "pos": [1.4, -2.25], "ancho": 0.9},
+    {"entre": ["CIRC-04", "A134-01"], "pos": [1.4, -6.25], "ancho": 0.9},
+    {"entre": ["CIRC-04", "A134-02"], "pos": [1.4, -8.45], "ancho": 0.9},
+    {"entre": ["CIRC-04", "A129-01"], "pos": [1.4, -10.45], "ancho": 0.9},
+    {"entre": ["CIRC-04", "A161-01"], "pos": [3.1, -13.75], "ancho": 1.0, "nombre": "Recepción de material contaminado"},
+    {
+     "entre": ["A161-01", "A162-01"],
+     "pos": [6.5, -13.75],
+     "ancho": 0.9,
+     "nombre": "Paso a la zona limpia (lavadora desinfectadora)"
+    },
+    {"entre": ["CIRC-04", "A164-01"], "pos": [3.1, -11.7], "ancho": 0.9},
+    {"entre": ["A164-01", "A162-01"], "pos": [6.5, -11.7], "ancho": 0.9},
+    {"entre": ["A162-01", "A163-01"], "pos": [6.5, -9.9], "ancho": 0.9, "nombre": "Autoclave de doble puerta"},
+    {"entre": ["CIRC-04", "A163-01"], "pos": [3.1, -9.9], "ancho": 1.0, "nombre": "Entrega de material estéril"},
+    {"entre": ["CIRC-04", "A165-01"], "pos": [3.1, -8.2], "ancho": 0.9},
+    {"entre": ["CIRC-05", "A170-01"], "pos": [-10.9, -15.25], "ancho": 1.0},
+    {"entre": ["CIRC-05", "A139-01"], "pos": [-7.35, -15.25], "ancho": 0.9},
+    {"entre": ["CIRC-05", "A141-01"], "pos": [-4.9, -15.25], "ancho": 0.9},
+    {"entre": ["CIRC-05", "A155-01"], "pos": [-3.375, -15.25], "ancho": 0.9, "categoria": "deposito"},
+    {"entre": ["CIRC-05", "A156-01"], "pos": [-2.325, -15.25], "ancho": 0.9, "categoria": "deposito"},
+    {"entre": ["CIRC-05", "A157-01"], "pos": [-1.275, -15.25], "ancho": 0.9, "categoria": "deposito"},
+    {"entre": ["CIRC-05", "A158-01"], "pos": [-0.225, -15.25], "ancho": 0.9, "categoria": "deposito"},
+    {"entre": ["CIRC-05", "A160-01"], "pos": [0.85, -15.25], "ancho": 0.9, "categoria": "deposito"},
+    {"entre": ["CIRC-05", "A142-01"], "pos": [-11.3, -16.65], "ancho": 1.0},
+    {"entre": ["CIRC-05", "A143-01"], "pos": [-7.9, -16.65], "ancho": 1.0},
+    {"entre": ["CIRC-05", "A169-01"], "pos": [-4.5, -16.65], "ancho": 1.0},
+    {"entre": ["CIRC-05", "A169-02"], "pos": [-1.1, -16.65], "ancho": 1.0},
+    {"entre": ["CIRC-05", "A140-01"], "pos": [2.65, -16.65], "ancho": 1.0},
+    {"entre": ["CIRC-05", "A138-01"], "pos": [5.725, -16.65], "ancho": 0.9},
+    {"entre": ["CIRC-05", "A144-01"], "pos": [7.675, -16.65], "ancho": 0.9},
+    {"entre": ["CIRC-03", "A166-01"], "pos": [2.35, 8.0], "ancho": 0.9},
+    {"entre": ["CIRC-03", "A137-01"], "pos": [0.45, 8.0], "ancho": 0.9}
+   ],
+   "entradas_recorrido": [
+    {"id": "ascensores", "punto": [4.6, 8.1], "mirando_deg": 180, "nombre": "Vestíbulo de ascensores"},
+    {"id": "estacion", "punto": [-4.5, -4.6], "mirando_deg": 0, "nombre": "Estación de enfermería"},
+    {"id": "partos", "punto": [-7.25, 15.3], "mirando_deg": 90, "nombre": "Entrada de partos (habitaciones TPR)"}
+   ],
+   "obstaculos_recorrido": []
+  },
+  {
+   "id": "P4",
+   "piso": 4,
+   "nombre": "Piso 4: terapias, odontología, consultorios, telesalud y expansión",
+   "z": 12.9,
+   "altura_entrepiso_m": 4.2,
+   "altura_libre_m": 3.0,
+   "contorno": [[-13.0, -7.6], [8.6, -7.6], [8.6, 22.4], [-13.0, 22.4]],
+   "recintos": [
+    {"fila": 205, "k": 1, "rect": [3.1, 14.0, 8.6, 22.4]},
+    {"fila": 205, "k": 2, "rect": [3.1, -7.6, 8.6, 0.8]},
+    {"fila": 206, "k": 1, "rect": [3.1, 4.4, 6.1, 6.8]},
+    {"fila": 206, "k": 2, "rect": [3.1, 2.0, 6.1, 4.4]},
+    {"fila": 208, "k": 1, "rect": [3.1, 0.8, 6.1, 2.0]},
+    {"fila": 207, "k": 1, "poligono": [[6.1, 0.8], [8.6, 0.8], [8.6, 9.45], [3.1, 9.45], [3.1, 6.8], [6.1, 6.8]]},
+    {"fila": 209, "k": 1, "rect": [3.1, 11.8, 8.6, 14.0]},
+    {"fila": 203, "k": 1, "rect": [6.6, 9.45, 8.6, 11.8]},
+    {"fila": 202, "k": 1, "rect": [4.5, 9.45, 6.6, 11.8]},
+    {
+     "circ": 1,
+     "nombre": "Corredor de terapias y consulta",
+     "rect": [-5.8, -5.05, -3.25, 16.55],
+     "evacuacion": true,
+     "camillas": true
+    },
+    {
+     "circ": 2,
+     "nombre": "Corredor norte (escalera norte)",
+     "rect": [-3.25, 14.0, 3.1, 16.55],
+     "evacuacion": true,
+     "camillas": true
+    },
+    {
+     "circ": 3,
+     "nombre": "Corredor de los ascensores",
+     "evacuacion": true,
+     "camillas": true,
+     "poligono": [[-3.25, 8.0], [3.1, 8.0], [3.1, 9.45], [4.5, 9.45], [4.5, 11.8], [3.1, 11.8], [3.1, 10.55], [-3.25, 10.55]]
+    },
+    {"circ": 4, "nombre": "Pasillo de los cubículos de terapia", "rect": [-13.0, -4.8, -5.8, -3.5]},
+    {"fila": 179, "k": 1, "rect": [-5.8, -7.6, 3.1, -5.05]},
+    {"fila": 189, "k": 1, "rect": [-13.0, -7.6, -9.4, -4.8]},
+    {"fila": 189, "k": 2, "rect": [-9.4, -7.6, -5.8, -4.8]},
+    {"fila": 189, "k": 3, "rect": [-13.0, -3.5, -9.4, -0.7]},
+    {"fila": 193, "k": 1, "rect": [-9.4, -3.5, -7.25, -0.7]},
+    {"fila": 186, "k": 1, "rect": [-7.25, -3.5, -5.8, -0.7]},
+    {"fila": 191, "k": 1, "rect": [-13.0, -0.7, -9.4, 2.65]},
+    {"fila": 188, "k": 1, "rect": [-9.4, -0.7, -6.95, 2.65]},
+    {"fila": 192, "k": 1, "rect": [-6.95, -0.7, -5.8, 2.65]},
+    {"fila": 184, "k": 1, "rect": [-13.0, 2.65, -5.8, 4.35]},
+    {"fila": 185, "k": 1, "rect": [-13.0, 4.35, -11.5, 8.45]},
+    {"fila": 185, "k": 2, "rect": [-11.5, 4.35, -10.0, 8.45]},
+    {"fila": 187, "k": 1, "rect": [-10.0, 4.35, -8.8, 8.45]},
+    {"fila": 187, "k": 2, "rect": [-8.8, 4.35, -7.6, 8.45]},
+    {"fila": 194, "k": 1, "rect": [-7.6, 4.35, -5.8, 8.45]},
+    {"fila": 190, "k": 1, "rect": [-13.0, 8.45, -5.8, 14.0]},
+    {"fila": 200, "k": 1, "rect": [-13.0, 14.0, -5.8, 16.55]},
+    {"fila": 176, "k": 1, "rect": [-3.25, -5.05, -0.55, -1.0]},
+    {"fila": 177, "k": 1, "rect": [-0.55, -5.05, 3.1, -1.0]},
+    {"fila": 180, "k": 1, "rect": [-0.7, 1.1, 3.1, 8.0]},
+    {"fila": 181, "k": 1, "rect": [-0.7, -1.0, 1.2, 1.1]},
+    {"fila": 182, "k": 1, "rect": [1.2, -1.0, 3.1, 1.1]},
+    {"fila": 199, "k": 1, "rect": [-3.25, 2.9, -0.7, 8.0]},
+    {"fila": 183, "k": 1, "rect": [-3.25, 1.7, -0.7, 2.9]},
+    {"fila": 196, "k": 1, "rect": [-3.25, -1.0, -0.7, 0.2]},
+    {"fila": 204, "k": 1, "rect": [-3.25, 0.2, -0.7, 1.7]},
+    {"fila": 201, "k": 1, "rect": [-3.25, 10.55, -1.75, 12.35]},
+    {"fila": 201, "k": 2, "rect": [-3.25, 12.35, -1.75, 14.0]},
+    {"fila": 195, "k": 1, "rect": [-1.75, 10.55, -0.25, 12.35]},
+    {"fila": 195, "k": 2, "rect": [-1.75, 12.35, -0.25, 14.0]},
+    {
+     "tec": 1,
+     "nombre": "Archivo y depósito de la coordinación asistencial",
+     "servicio": "Zona de expansión, telesalud y coordinación asistencial",
+     "grupo": "direccion_y_administracion",
+     "rect": [-0.25, 10.55, 3.1, 14.0],
+     "notas": [
+      "Recinto no programado: espacio sobrante junto a los ascensores (archivo, insumos de oficina y equipos de la sala de crisis); estimación de este trazado."
+     ]
+    },
+    {"fila": 197, "k": 1, "rect": [-13.0, 16.55, -2.05, 22.4]},
+    {"fila": 198, "k": 1, "rect": [-2.05, 16.55, -0.3, 22.4]},
+    {"fila": 178, "k": 1, "rect": [-0.3, 16.55, 3.1, 22.4]}
+   ],
+   "nucleos": [
+    {"id": "ESC-N", "tipo": "escalera", "recinto": "A205-01", "nombre": "Escalera de evacuación norte"},
+    {"id": "ESC-S", "tipo": "escalera", "recinto": "A205-02", "nombre": "Escalera de evacuación sur"},
+    {
+     "id": "ASC",
+     "tipo": "ascensor",
+     "recintos": ["A206-01", "A206-02"],
+     "rect": [3.1, 1.6, 6.1, 7.2],
+     "nombre": "Ascensores camilleros",
+     "nota": "Límites del programa (x 3,1-6,1; y 1,6-7,2). Los dos huecos miden 3,0 × 2,4 m (7,2 m², el área del programa) y van de y 2,0 a 6,8; el montacargas (hueco de 3,0 × 1,2 m) de y 0,8 a 2,0. La franja y 6,8-7,2 es paso del vestíbulo hacia el corredor (revisión adversarial, paso físico)."
+    },
+    {"id": "MC", "tipo": "montacargas", "recinto": "A208-01", "nombre": "Montacargas general"},
+    {"id": "DUC", "tipo": "ductos", "recinto": "A209-01", "nombre": "Ductos verticales"}
+   ],
+   "abiertos": [
+    ["CIRC-03", "A207-01"],
+    ["CIRC-01", "CIRC-03"],
+    ["CIRC-01", "CIRC-02"],
+    ["CIRC-01", "A179-01"],
+    ["CIRC-01", "A184-01"],
+    ["CIRC-01", "CIRC-04"],
+    ["CIRC-02", "CIRC-03"]
+   ],
+   "puertas": [
+    {"entre": ["CIRC-02", "A205-01"], "pos": [3.1, 15.3], "ancho": 1.2, "nombre": "Puerta de la escalera norte"},
+    {"entre": ["A179-01", "A205-02"], "pos": [3.1, -6.3], "ancho": 1.2, "nombre": "Puerta de la escalera sur"},
+    {
+     "entre": ["A205-02", "exterior"],
+     "pos": [5.85, -7.6],
+     "ancho": 1.2,
+     "abre": "afuera",
+     "categoria": "evacuacion",
+     "nombre": "Salida de la escalera sur a la terraza del piso 3",
+     "lleva_a": {"nivel": "CUB", "recinto": "CUB-CIRC-02"}
+    },
+    {"entre": ["A207-01", "A206-01"], "pos": [6.1, 5.8], "ancho": 1.2},
+    {"entre": ["A207-01", "A206-02"], "pos": [6.1, 3.0], "ancho": 1.2},
+    {"entre": ["A207-01", "A208-01"], "pos": [6.1, 1.4], "ancho": 0.6},
+    {"entre": ["CIRC-03", "A209-01"], "pos": [3.8, 11.8], "ancho": 0.9, "categoria": "deposito"},
+    {"entre": ["A207-01", "A203-01"], "pos": [7.6, 9.45], "ancho": 0.9},
+    {"entre": ["CIRC-03", "A202-01"], "pos": [4.5, 10.6], "ancho": 0.9},
+    {"entre": ["CIRC-04", "A189-01"], "pos": [-11.2, -4.8], "ancho": 1.0},
+    {"entre": ["CIRC-04", "A189-02"], "pos": [-7.6, -4.8], "ancho": 1.0},
+    {"entre": ["CIRC-04", "A189-03"], "pos": [-11.2, -3.5], "ancho": 1.0},
+    {"entre": ["CIRC-04", "A193-01"], "pos": [-8.3, -3.5], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A186-01"], "pos": [-5.8, -2.1], "ancho": 1.2},
+    {"entre": ["A184-01", "A191-01"], "pos": [-11.2, 2.65], "ancho": 1.4},
+    {"entre": ["A184-01", "A188-01"], "pos": [-8.2, 2.65], "ancho": 1.0},
+    {"entre": ["CIRC-01", "A192-01"], "pos": [-5.8, 1.0], "ancho": 0.9},
+    {"entre": ["A184-01", "A185-01"], "pos": [-12.25, 4.35], "ancho": 1.0},
+    {"entre": ["A184-01", "A185-02"], "pos": [-10.75, 4.35], "ancho": 1.0},
+    {"entre": ["A184-01", "A187-01"], "pos": [-9.4, 4.35], "ancho": 0.9},
+    {"entre": ["A184-01", "A187-02"], "pos": [-8.2, 4.35], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A194-01"], "pos": [-5.8, 6.4], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A190-01"], "pos": [-5.8, 11.2], "ancho": 1.4},
+    {"entre": ["CIRC-01", "A200-01"], "pos": [-5.8, 15.3], "ancho": 1.0},
+    {"entre": ["A179-01", "A176-01"], "pos": [-1.9, -5.05], "ancho": 1.0},
+    {"entre": ["A179-01", "A177-01"], "pos": [1.3, -5.05], "ancho": 1.0},
+    {"entre": ["CIRC-03", "A180-01"], "pos": [2.35, 8.0], "ancho": 1.2},
+    {"entre": ["A180-01", "A181-01"], "pos": [0.25, 1.1], "ancho": 0.9},
+    {"entre": ["A180-01", "A182-01"], "pos": [2.15, 1.1], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A199-01"], "pos": [-3.25, 5.45], "ancho": 1.0},
+    {"entre": ["CIRC-03", "A199-01"], "pos": [-1.95, 8.0], "ancho": 1.0},
+    {"entre": ["CIRC-01", "A183-01"], "pos": [-3.25, 2.3], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A196-01"], "pos": [-3.25, -0.4], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A204-01"], "pos": [-3.25, 0.95], "ancho": 0.9},
+    {"entre": ["CIRC-03", "A201-01"], "pos": [-2.5, 10.55], "ancho": 0.9},
+    {"entre": ["CIRC-02", "A201-02"], "pos": [-2.5, 14.0], "ancho": 0.9},
+    {"entre": ["CIRC-03", "A195-01"], "pos": [-1.0, 10.55], "ancho": 0.9},
+    {"entre": ["CIRC-02", "A195-02"], "pos": [-1.0, 14.0], "ancho": 0.9},
+    {"entre": ["CIRC-03", "TEC-01"], "pos": [1.4, 10.55], "ancho": 0.9},
+    {"entre": ["CIRC-01", "A197-01"], "pos": [-4.5, 16.55], "ancho": 1.6, "hojas": 2, "categoria": "camas"},
+    {"entre": ["A197-01", "A198-01"], "pos": [-2.05, 19.5], "ancho": 1.2},
+    {"entre": ["CIRC-02", "A178-01"], "pos": [1.4, 16.55], "ancho": 1.0}
+   ],
+   "entradas_recorrido": [
+    {"id": "ascensores", "punto": [4.6, 8.1], "mirando_deg": 180, "nombre": "Vestíbulo de ascensores"},
+    {"id": "terapias", "punto": [-6.5, 3.5], "mirando_deg": 180, "nombre": "Recepción de terapias"}
+   ],
+   "obstaculos_recorrido": []
+  },
+  {
+   "id": "BT",
+   "piso": "bloque técnico",
+   "nombre": "Bloque técnico, patio de servicio y pasaje (cota -1,50)",
+   "z": -1.5,
+   "altura_entrepiso_m": 4.0,
+   "altura_libre_m": 3.5,
+   "muro_borde_exterior": "cerramiento",
+   "notas": [
+    "Cotas estimadas (programa.json → implantacion.lote.niveles): patio de servicio ≈ -1,50; el pasaje sube en rampa hasta ±0,00 en el patio oriente."
+   ],
+   "recintos": [
+    {
+     "circ": 1,
+     "nombre": "Vía de servicio (portón suroccidental)",
+     "rect": [-33.6, -32.0, -10.5, -28.0],
+     "exterior": true
+    },
+    {
+     "circ": 2,
+     "nombre": "Andén de servicio (residuos, cisternas y pasaje)",
+     "poligono": [[-21.5, -24.0], [-21.0, -24.0], [-21.0, -28.0], [-19.5, -28.0], [-19.5, -19.6], [-21.5, -19.6]],
+     "exterior": true
+    },
+    {
+     "fila": 229,
+     "k": 1,
+     "rect": [-19.5, -20.8, 11.9, -19.6],
+     "exterior": true,
+     "rampa": {"eje": "x", "desde": -19.5, "hasta": 11.9, "z0": 0.0, "z1": 1.5, "pendiente_pct": 4.8}
+    },
+    {"fila": 214, "k": 1, "rect": [-19.5, -24.8, -15.0, -20.8]},
+    {"fila": 211, "k": 1, "rect": [-15.0, -24.8, -8.0, -20.8]},
+    {"fila": 210, "k": 1, "rect": [-8.0, -24.8, -3.5, -20.8]},
+    {
+     "fila": 212,
+     "k": 1,
+     "rect": [-3.5, -24.8, 2.4, -20.8],
+     "notas": [
+      "Aloja también el banco de baterías de 400 kWh / 150 kW del nodo hospital (proyecto P7, data/edificios/torre_hospital.json → adecuaciones.bess) y la UPS; 18 m² del programa son estrechos para los racks: se dibujan 23,6 m² (estimación)."
+     ]
+    },
+    {"fila": 213, "k": 1, "rect": [2.4, -24.8, 8.9, -20.8]},
+    {"fila": 215, "k": 1, "rect": [8.9, -24.8, 11.9, -20.8]},
+    {"fila": 216, "k": 1, "rect": [-19.5, -28.0, -15.5, -24.8], "exterior": true},
+    {"fila": 217, "k": 1, "rect": [-15.5, -28.0, -12.5, -24.8], "exterior": true},
+    {"fila": 218, "k": 1, "rect": [-12.5, -28.0, -10.5, -24.8], "exterior": true},
+    {"fila": 219, "k": 1, "rect": [-25.5, -28.0, -21.0, -24.0]}
+   ],
+   "abiertos": [
+    ["CIRC-02", "A229-01"],
+    ["CIRC-02", "A216-01"],
+    ["CIRC-01", "CIRC-02"],
+    ["CIRC-01", "A216-01"],
+    ["CIRC-01", "A217-01"],
+    ["CIRC-01", "A218-01"]
+   ],
+   "puertas": [
+    {"entre": ["A229-01", "A214-01"], "pos": [-17.25, -20.8], "ancho": 1.2},
+    {
+     "entre": ["A216-01", "A214-01"],
+     "pos": [-17.25, -24.8],
+     "ancho": 1.2,
+     "nombre": "Puerta de bombas al patio de las cisternas"
+    },
+    {"entre": ["A229-01", "A211-01"], "pos": [-11.5, -20.8], "ancho": 1.6, "hojas": 2},
+    {
+     "entre": ["A218-01", "A211-01"],
+     "pos": [-11.5, -24.8],
+     "ancho": 1.2,
+     "nombre": "Llenado de combustible y mantenimiento de la planta"
+    },
+    {"entre": ["A229-01", "A210-01"], "pos": [-5.75, -20.8], "ancho": 1.6, "hojas": 2},
+    {"entre": ["A229-01", "A212-01"], "pos": [-0.55, -20.8], "ancho": 1.2},
+    {"entre": ["A229-01", "A213-01"], "pos": [5.65, -20.8], "ancho": 1.6, "hojas": 2},
+    {"entre": ["A229-01", "A215-01"], "pos": [10.4, -20.8], "ancho": 1.2},
+    {"entre": ["CIRC-02", "A219-01"], "pos": [-21.0, -26.0], "ancho": 1.6, "hojas": 2},
+    {
+     "entre": ["CIRC-01", "A219-01"],
+     "pos": [-23.25, -28.0],
+     "ancho": 1.6,
+     "hojas": 2,
+     "nombre": "Cargue de residuos al vehículo recolector"
+    },
+    {
+     "entre": ["A229-01", "exterior"],
+     "pos": [10.25, -19.6],
+     "ancho": 1.2,
+     "abre": "corrediza",
+     "categoria": "exterior",
+     "nombre": "Llegada del pasaje al patio oriente (±0,00)",
+     "lleva_a": {"nivel": "EXT", "recinto": "EXT-CIRC-05"}
+    },
+    {
+     "entre": ["CIRC-02", "exterior"],
+     "pos": [-20.5, -19.6],
+     "ancho": 1.2,
+     "abre": "corrediza",
+     "categoria": "exterior",
+     "nombre": "Escalera exterior del andén a la plaza (estimación: 1,50 m)",
+     "lleva_a": {"nivel": "EXT", "recinto": "EXT-CIRC-02"}
+    },
+    {
+     "entre": ["CIRC-01", "exterior"],
+     "pos": [-33.6, -30.0],
+     "ancho": 3.6,
+     "abre": "corrediza",
+     "categoria": "exterior",
+     "nombre": "Portón de servicio"
+    }
+   ],
+   "entradas_recorrido": [
+    {
+     "id": "pasaje",
+     "punto": [9.5, -20.2],
+     "mirando_deg": 180,
+     "nombre": "Pasaje de servicio (llegada desde el patio oriente)"
+    },
+    {
+     "id": "patio_servicio",
+     "punto": [-15.0, -26.5],
+     "mirando_deg": 90,
+     "nombre": "Patio de servicio sobre las cisternas"
+    }
+   ],
+   "obstaculos_recorrido": []
+  },
+  {
+   "id": "CUB",
+   "piso": "cubierta",
+   "nombre": "Cubierta técnica (piso 4) y terraza del piso 3 sur",
+   "z": 17.1,
+   "altura_entrepiso_m": 3.3,
+   "altura_libre_m": 3.0,
+   "muro_borde_exterior": "parapeto",
+   "notas": [
+    "La terraza del piso 3 queda 4,20 m por debajo de la cubierta del piso 4 (z_piso_m = -4,2); se llega a ella por la escalera sur desde el piso 4. Equipos con las áreas de programa.json (filas 220 a 226) y paneles de data/edificios/torre_hospital.json → adecuaciones.fv."
+   ],
+   "paneles_solares": [
+    {
+     "id": "FV-PERGOLA",
+     "nombre": "Pérgola solar sobre la cubierta del piso 4 (los equipos quedan debajo)",
+     "centro": [-5.0, 4.0],
+     "largo_m": 20.0,
+     "ancho_m": 15.0,
+     "rumbo_eje": 0,
+     "altura_m": 3.6,
+     "filas": 12,
+     "columnas": 8,
+     "modulos": 96,
+     "kwp_modulo": 0.55,
+     "kwp": 52.8,
+     "modulo_m": [2.28, 1.13],
+     "inclinacion_deg": 0,
+     "tipo": "pergola",
+     "fuente": "data/edificios/torre_hospital.json → adecuaciones.fv (pérgola)"
+    },
+    {
+     "id": "FV-TERRAZA",
+     "nombre": "Filas de paneles de la terraza del piso 3 sur",
+     "z_piso_m": -4.2,
+     "filas": 7,
+     "columnas": 8,
+     "modulos": 56,
+     "kwp_modulo": 0.55,
+     "kwp": 30.8,
+     "modulo_m": [2.28, 1.13],
+     "inclinacion_deg": 10,
+     "azimut_deg": 180,
+     "orientacion_modulo": "horizontal",
+     "filas_rect": [
+      {"id": "FV-TER-F1", "rect": [-12.4, -19.0, 5.84, -17.89], "modulos": 8},
+      {"id": "FV-TER-F2", "rect": [-12.4, -17.38, 5.84, -16.27], "modulos": 8},
+      {"id": "FV-TER-F3", "rect": [-12.4, -15.76, 5.84, -14.65], "modulos": 8},
+      {"id": "FV-TER-F4", "rect": [-12.4, -14.14, 5.84, -13.03], "modulos": 8},
+      {"id": "FV-TER-F5", "rect": [-12.4, -12.52, 5.84, -11.41], "modulos": 8},
+      {"id": "FV-TER-F6", "rect": [-12.4, -10.9, 5.84, -9.79], "modulos": 8},
+      {"id": "FV-TER-F7", "rect": [-12.4, -9.28, 5.84, -8.17], "modulos": 8}
+     ],
+     "pasillos": "pasillos de mantenimiento de 0,51 m entre filas y franja libre de 2,76 m al oriente (puerta de la escalera sur)",
+     "fuente": "data/edificios/torre_hospital.json → adecuaciones.fv (torre_sur)"
+    }
+   ],
+   "recintos": [
+    {
+     "circ": 1,
+     "nombre": "Cubierta transitable del piso 4 (pasarelas de mantenimiento bajo la pérgola solar)",
+     "poligono": [
+      [-9.0, -7.6],
+      [3.1, -7.6],
+      [3.1, 20.4],
+      [1.1, 20.4],
+      [1.1, 19.9],
+      [-3.0, 19.9],
+      [-3.0, 22.4],
+      [-13.0, 22.4],
+      [-13.0, 19.5],
+      [-9.0, 19.5],
+      [-9.0, 17.0],
+      [-13.0, 17.0],
+      [-13.0, 14.0],
+      [-5.0, 14.0],
+      [-5.0, 9.0],
+      [-13.0, 9.0],
+      [-13.0, -4.1],
+      [-9.0, -4.1]
+     ],
+     "exterior": true
+    },
+    {
+     "circ": 3,
+     "nombre": "Cubierta sobre el vestíbulo de ascensores y los ductos",
+     "poligono": [[6.1, 0.8], [8.6, 0.8], [8.6, 14.0], [3.1, 14.0], [3.1, 7.2], [6.1, 7.2]],
+     "exterior": true
+    },
+    {
+     "circ": 2,
+     "nombre": "Terraza del piso 3 sur (paneles solares)",
+     "rect": [-13.0, -19.6, 8.6, -7.6],
+     "exterior": true,
+     "z_piso_m": -4.2
+    },
+    {"fila": 220, "k": 1, "rect": [3.1, 14.0, 8.6, 22.4]},
+    {"fila": 220, "k": 2, "rect": [3.1, -7.6, 8.6, 0.8]},
+    {"fila": 221, "k": 1, "rect": [3.1, 1.6, 6.1, 7.2], "transitable": false},
+    {
+     "tec": 1,
+     "nombre": "Cubierta del montacargas (sin acceso)",
+     "servicio": "Áreas técnicas y de servicio",
+     "grupo": "apoyo_y_servicios_generales",
+     "rect": [3.1, 0.8, 6.1, 1.6],
+     "transitable": false,
+     "notas": [
+      "Recinto no programado: franja de 0,80 m entre la caseta sur y el sobrerrecorrido, sin acceso; estimación de este trazado."
+     ]
+    },
+    {"fila": 222, "k": 1, "rect": [-13.0, 9.0, -5.0, 14.0], "exterior": true},
+    {"fila": 223, "k": 1, "rect": [-3.0, 19.9, 1.1, 22.4], "exterior": true},
+    {"fila": 224, "k": 1, "rect": [-13.0, -7.6, -9.0, -4.1], "exterior": true},
+    {"fila": 225, "k": 1, "rect": [-13.0, 17.0, -9.0, 19.5], "exterior": true},
+    {"fila": 226, "k": 1, "rect": [1.1, 20.4, 3.1, 22.4], "exterior": true}
+   ],
+   "nucleos": [
+    {"id": "ESC-N", "tipo": "escalera", "recinto": "A220-01", "nombre": "Caseta de la escalera norte"},
+    {"id": "ESC-S", "tipo": "escalera", "recinto": "A220-02", "nombre": "Caseta de la escalera sur"},
+    {"id": "ASC", "tipo": "ascensor", "recinto": "A221-01", "nombre": "Sobrerrecorrido de los ascensores"}
+   ],
+   "muros_forzados": [{"entre": ["CIRC-02", "CIRC-01"], "tipo": "parapeto"}, {"entre": ["CIRC-02", "A224-01"], "tipo": "parapeto"}],
+   "puertas": [
+    {
+     "entre": ["CIRC-01", "A220-01"],
+     "pos": [3.1, 15.3],
+     "ancho": 1.2,
+     "categoria": "evacuacion",
+     "nombre": "Puerta de la caseta de la escalera norte (abre hacia la escalera)"
+    },
+    {
+     "entre": ["CIRC-01", "A220-02"],
+     "pos": [3.1, -6.3],
+     "ancho": 1.2,
+     "categoria": "evacuacion",
+     "nombre": "Puerta de la caseta de la escalera sur (abre hacia la escalera)"
+    }
+   ],
+   "entradas_recorrido": [
+    {"id": "cubierta", "punto": [1.5, 15.3], "mirando_deg": 180, "nombre": "Salida de la escalera norte a la cubierta"},
+    {
+     "id": "terraza",
+     "punto": [5.85, -8.3],
+     "mirando_deg": 270,
+     "nombre": "Terraza del piso 3 (llegada desde la escalera sur del piso 4)"
+    }
+   ],
+   "obstaculos_recorrido": [
+    {
+     "id": "FV-TER-F1",
+     "nombre": "Fila 1 de paneles de la terraza (8 módulos a 10°)",
+     "rect": [-12.4, -19.0, 5.84, -17.89],
+     "altura_m": 1.0,
+     "z_piso_m": -4.2
+    },
+    {
+     "id": "FV-TER-F2",
+     "nombre": "Fila 2 de paneles de la terraza (8 módulos a 10°)",
+     "rect": [-12.4, -17.38, 5.84, -16.27],
+     "altura_m": 1.0,
+     "z_piso_m": -4.2
+    },
+    {
+     "id": "FV-TER-F3",
+     "nombre": "Fila 3 de paneles de la terraza (8 módulos a 10°)",
+     "rect": [-12.4, -15.76, 5.84, -14.65],
+     "altura_m": 1.0,
+     "z_piso_m": -4.2
+    },
+    {
+     "id": "FV-TER-F4",
+     "nombre": "Fila 4 de paneles de la terraza (8 módulos a 10°)",
+     "rect": [-12.4, -14.14, 5.84, -13.03],
+     "altura_m": 1.0,
+     "z_piso_m": -4.2
+    },
+    {
+     "id": "FV-TER-F5",
+     "nombre": "Fila 5 de paneles de la terraza (8 módulos a 10°)",
+     "rect": [-12.4, -12.52, 5.84, -11.41],
+     "altura_m": 1.0,
+     "z_piso_m": -4.2
+    },
+    {
+     "id": "FV-TER-F6",
+     "nombre": "Fila 6 de paneles de la terraza (8 módulos a 10°)",
+     "rect": [-12.4, -10.9, 5.84, -9.79],
+     "altura_m": 1.0,
+     "z_piso_m": -4.2
+    },
+    {
+     "id": "FV-TER-F7",
+     "nombre": "Fila 7 de paneles de la terraza (8 módulos a 10°)",
+     "rect": [-12.4, -9.28, 5.84, -8.17],
+     "altura_m": 1.0,
+     "z_piso_m": -4.2
+    }
+   ]
+  }
+ ],
+ "decisiones": [],
+ "fuentes": [
+  "programa.json (ambientes, implantación, núcleos, accesos, bahía, cubierta técnica, patios y árboles)",
+  "data/edificios/torre_hospital.json (adecuaciones: paneles solares y baterías del nodo hospital)",
+  "normas.json → parametros_diseno",
+  "presupuesto.json (capítulos 3 y 4: tipos de muro)",
+  "ESPECIFICACION_INTEGRACION.md, secciones 1.2, 3 y 16"
+ ]
+}

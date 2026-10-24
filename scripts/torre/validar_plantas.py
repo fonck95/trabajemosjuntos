@@ -12,6 +12,15 @@ Uso:
 Imprime un informe JSON en la salida estándar (y un resumen de una línea en la de errores) y sale con 1 si hay errores
 duros. Solo biblioteca estándar. Geometría ortogonal (rectángulos y polígonos ortogonales); recorridos por búsqueda con
 pesos sobre una rejilla de 0,10 m.
+
+Alcance ampliado (16): además de P1-P4 y BT valida los niveles EXT (exteriores inmediatos) y CUB (cubierta técnica).
+Conceptos que el validador entiende (los escribe generar_plantas.py):
+- muros de tipo «abierto» (espesor 0): vano abierto entre dos espacios; cuenta como acceso en V9 y V10 y no lleva puerta;
+- recintos «de_paso» (vestíbulos, salas de espera, esclusa, puesto de enfermería): cuentan como circulación en V9;
+- recintos no programados {nivel}-TEC-nn (programado: false): técnicos o de apoyo que pide el 16 y no trae el programa;
+- recintos exteriores (exterior: true) y no transitables (transitable: false: huecos, sobrerrecorrido, huella de la torre);
+- núcleos con varios recintos (ascensores: dos huecos), escaleras caminables por tramos y descansos con cotas (V21);
+- V14 se aplica a los niveles cerrados (P1-P4 y BT); en EXT y CUB no aplica (son exteriores).
 """
 from __future__ import annotations
 
@@ -45,6 +54,7 @@ REGLAS = {
     'V18': ('Sala de rayos X y periapical con todos sus muros plomados', 'duro'),
     'V19': ('Hospitalización, TPR, observación, consultorios y terapias con ventana a fachada o patio', 'aviso'),
     'V20': ('Suma de áreas a ejes útiles por piso ≥ m² útiles del programa', 'duro'),
+    'V21': ('Escaleras caminables: tramos y descansos dentro de su núcleo, con cotas continuas de piso a piso (16.1)', 'duro'),
 }
 SOLO_PROGRAMA = ('V2', 'V6', 'V15', 'V16', 'V20')
 
@@ -52,6 +62,8 @@ TIPOS_ESPACIO = ('recinto', 'circulacion', 'nucleo')
 ABRE = ('adentro', 'afuera', 'corrediza', 'doble')
 TIPOS_CONEXION = ('escalera', 'ascensor', 'escalera_abierta', 'montacargas')
 TIPOS_NUCLEO = ('escalera', 'ascensor', 'montacargas', 'ductos')
+NIVELES_PISO = ('P1', 'P2', 'P3', 'P4')
+NIVELES_EXTERIORES = ('EXT', 'CUB')
 
 # Valores por defecto del 3.4 (se usan si reglas_planta.json no existe o no trae la clave)
 REGLAS_PLANTA_DEFECTO = {
@@ -67,10 +79,14 @@ REGLAS_PLANTA_DEFECTO = {
     'evacuacion': {'puerta_a_escalera_max_m': 30.0, 'cualquier_punto_max_m': 45.0},
     'zonas': {},
     'accesos_permitidos': [],
+    'niveles': {'piso_a_nivel': {'bloque técnico': 'BT'}, 'nivel_por_fila': {}},
 }
-COLUMNA_LIBRE_PERMITIDA = re.compile(r'gimnasio|expansi[oó]n|espera', re.I)
+COLUMNA_LIBRE_PERMITIDA = re.compile(r'gimnasio|expansi[oó]n|espera|vest[ií]bulo', re.I)
 RE_PLOMADO = re.compile(r'rayos\s*x|periapical', re.I)
-RE_VENTANA_EXIGIDA = re.compile(r'hospitaliz|habitaci[oó]n|TPR|parto|posparto|observaci[oó]n|consultorio|terapia|fisioterapia', re.I)
+# Ambientes donde el paciente permanece o se atiende (habitaciones, TPR, observación, consultorios, terapias); los baños,
+# depósitos y cuartos de apoyo de esos servicios no se exigen con ventana.
+RE_VENTANA_EXIGIDA = re.compile(r'^(habitaci[oó]n|observaci[oó]n|consultorio|cub[ií]culo de atenci[oó]n|gimnasio|'
+                                r'sala de procedimientos de terapia|ambiente individual de aislamiento)', re.I)
 TOL = 1e-3
 
 
@@ -91,7 +107,7 @@ def cargar_reglas(ruta: Path | None) -> dict:
     r['fuente'] = 'valores por defecto del contrato (3.4)'
     if ruta and ruta.exists():
         dato = C.cargar_json(ruta)
-        for k in ('puertas', 'corredores', 'evacuacion', 'zonas', 'accesos_permitidos'):
+        for k in ('puertas', 'corredores', 'evacuacion', 'zonas', 'accesos_permitidos', 'niveles'):
             if k in dato:
                 if k == 'puertas':
                     cats = {p['categoria']: p for p in r['puertas']}
@@ -121,6 +137,22 @@ class Nivel:
         self.puertas = [p for p in n.get('puertas', []) if isinstance(p, dict)]
         self.ventanas = [v for v in n.get('ventanas', []) if isinstance(v, dict)]
         self.contorno = C.orientar_antihorario(n['contorno']) if poligono_valido(n.get('contorno')) else None
+        # vanos abiertos (muros de tipo «abierto» entre dos espacios del nivel): cuentan como paso en V9 y V10
+        self.abiertos = {rid: set() for rid in self.por_id}
+        for m in self.muros.values():
+            lados = m.get('lados')
+            if m.get('tipo') == 'abierto' and isinstance(lados, list) and len(lados) == 2 \
+                    and lados[0] in self.por_id and lados[1] in self.por_id:
+                self.abiertos[lados[0]].add(lados[1])
+                self.abiertos[lados[1]].add(lados[0])
+
+    def es_paso(self, rid) -> bool:
+        """Circulación o recinto de paso (vestíbulo, espera, esclusa…): cuenta como circulación en V9."""
+        r = self.por_id.get(rid) or {}
+        return r.get('tipo') == 'circulacion' or bool(r.get('de_paso'))
+
+    def transitable(self, rid) -> bool:
+        return (self.por_id.get(rid) or {}).get('transitable', True) is not False
 
     def muros_validos(self):
         return [m for m in self.muros.values() if punto(m.get('a')) and punto(m.get('b'))
@@ -169,8 +201,9 @@ class Validador:
                                                                   and num(e.get(coord)) for e in ejes):
                 self.err('V1', f'reticula.{clave} debe ser una lista de {{id, {coord}}}')
         for t, d in (pl.get('tipos_muro') or {}).items():
-            if not isinstance(d, dict) or not num(d.get('espesor_m')) or d['espesor_m'] <= 0:
-                self.err('V1', f'tipos_muro.{t} sin espesor_m positivo')
+            if not isinstance(d, dict) or not num(d.get('espesor_m')) or d['espesor_m'] < 0 \
+                    or (d['espesor_m'] == 0 and t != 'abierto'):
+                self.err('V1', f'tipos_muro.{t} sin espesor_m positivo (solo el vano «abierto» tiene espesor 0)')
         for g, d in (pl.get('grupos_1633') or {}).items():
             if not isinstance(d, dict) or not isinstance(d.get('nombre'), str) or not isinstance(d.get('cita'), str):
                 self.err('V1', f'grupos_1633.{g} sin nombre o sin cita')
@@ -233,10 +266,18 @@ class Validador:
                 self.err('V1', f'{q}tipo {tipo!r} no es uno de {TIPOS_ESPACIO}')
             if not isinstance(r.get('ambiente'), str) or not r['ambiente']:
                 self.err('V1', f'{q}falta «ambiente»')
-            if tipo == 'circulacion':
+            if tipo == 'circulacion' and r.get('fila') is None:
                 m = C.RE_CIRCULACION.match(str(rid))
                 if not m or m.group(1) != P:
                     self.err('V1', f'{q}id de circulación mal formado (se espera {P}-CIRC-nn)')
+            elif r.get('programado') is False:
+                m = C.RE_TECNICO.match(str(rid))
+                if not m or m.group(1) != P:
+                    self.err('V1', f'{q}id de recinto no programado mal formado (se espera {P}-TEC-nn)')
+                if r.get('grupo_1633') not in grupos:
+                    self.err('V1', f'{q}grupo_1633 {r.get("grupo_1633")!r} no está en grupos_1633')
+                if not any('estimaci' in str(x) for x in r.get('notas') or []):
+                    self.err('V1', f'{q}un recinto no programado debe llevar la nota «estimación» (16.1)')
             else:
                 m = C.RE_RECINTO.match(str(rid))
                 if not m or m.group(1) != P:
@@ -279,9 +320,10 @@ class Validador:
                 if not C.poligono_dentro_de(nv.libre[rid], p, TOL):
                     self.err('V1', f'{q}el polígono libre se sale del polígono a ejes')
             mn = r.get('minimo_1633')
-            if mn is not None and not (isinstance(mn, dict) and num(mn.get('m2')) and num(mn.get('lado_m'))
+            if mn is not None and not (isinstance(mn, dict) and num(mn.get('m2'))
+                                       and (mn.get('lado_m') is None or num(mn.get('lado_m')))
                                        and isinstance(mn.get('cita'), str)):
-                self.err('V1', f'{q}minimo_1633 debe ser null o {{m2, lado_m, cita}}')
+                self.err('V1', f'{q}minimo_1633 debe ser null o {{m2, lado_m (o null), cita}}')
             for clave in ('acceso', 'puertas', 'ventanas'):
                 if clave in r and not isinstance(r[clave], list):
                     self.err('V1', f'{q}«{clave}» debe ser una lista')
@@ -308,7 +350,7 @@ class Validador:
                 self.err('V1', f'{q}tipo {t!r} no está en tipos_muro')
             elif not num(m.get('espesor')) or abs(m['espesor'] - tipos_muro[t].get('espesor_m', -1)) > 1e-6:
                 self.err('V1', f'{q}espesor {m.get("espesor")} distinto del de su tipo ({tipos_muro[t].get("espesor_m")})')
-            if not num(m.get('altura')) or m['altura'] <= 0:
+            if not num(m.get('altura')) or (m['altura'] <= 0 and t != 'abierto'):
                 self.err('V1', f'{q}falta altura positiva')
             if not isinstance(m.get('estructural'), bool):
                 self.err('V1', f'{q}«estructural» debe ser booleano')
@@ -392,6 +434,8 @@ class Validador:
             m = nv.muros.get(pt.get('muro'))
             if m is None:
                 self.err('V1', f'{q}el muro {pt.get("muro")!r} no existe')
+            elif m.get('tipo') == 'abierto':
+                self.err('V1', f'{q}la puerta está en un vano abierto (sobra: el paso ya es libre)')
             if not punto(pt.get('centro')) or not num(pt.get('ancho')) or not num(pt.get('alto')):
                 self.err('V1', f'{q}faltan centro, ancho o alto')
                 continue
@@ -423,10 +467,12 @@ class Validador:
                 if a_ in vecinos:
                     vecinos[a_].add(b_)
                     puertas_de[a_].add(pid)
+        for rid, otros in nv.abiertos.items():
+            vecinos.setdefault(rid, set()).update(otros)
         for r in nv.espacios:
             rid = r.get('id')
             if 'acceso' in r and isinstance(r['acceso'], list) and set(r['acceso']) != vecinos.get(rid, set()):
-                self.err('V1', f'{pre}{rid}: «acceso» = {sorted(r["acceso"])} y sus puertas llevan a '
+                self.err('V1', f'{pre}{rid}: «acceso» = {sorted(r["acceso"])} y sus puertas y vanos abiertos llevan a '
                                f'{sorted(vecinos.get(rid, set()), key=str)}')
             if 'puertas' in r and isinstance(r['puertas'], list) and set(r['puertas']) != puertas_de.get(rid, set()):
                 self.err('V1', f'{pre}{rid}: «puertas» = {sorted(r["puertas"])} y las que lo tocan son '
@@ -477,11 +523,20 @@ class Validador:
                 self.err('V1', f'{q}id de núcleo mal formado (se espera {P}-NUC-…)')
             if nu.get('tipo') not in TIPOS_NUCLEO:
                 self.err('V1', f'{q}tipo {nu.get("tipo")!r} no es uno de {TIPOS_NUCLEO}')
-            rid = nu.get('recinto')
-            if rid not in nv.pol:
-                self.err('V1', f'{q}el recinto {rid!r} no existe')
-            elif not poligono_valido(nu.get('poligono')) or not C.poligono_dentro_de(nu['poligono'], nv.pol[rid], TOL):
-                self.err('V1', f'{q}el polígono del núcleo no queda dentro de su recinto {rid}')
+            recs = nu.get('recintos') or [nu.get('recinto')]
+            if nu.get('recinto') not in recs:
+                self.err('V1', f'{q}«recinto» debe ser uno de «recintos»')
+            faltan = [x for x in recs if x not in nv.pol]
+            if faltan:
+                self.err('V1', f'{q}recintos que no existen: {faltan}')
+            elif not poligono_valido(nu.get('poligono')):
+                self.err('V1', f'{q}polígono del núcleo no válido')
+            else:
+                pols = [nv.pol[x] for x in recs]
+                ap = C.area_poligono(nu['poligono'])
+                dentro = sum(C.area_interseccion(nu['poligono'], q_) for q_ in pols)
+                if dentro < ap - 0.01:
+                    self.err('V1', f'{q}el polígono del núcleo no queda dentro de sus recintos {recs}')
 
         # conexiones verticales
         for cv in n.get('conexiones_verticales', []):
@@ -607,19 +662,21 @@ class Validador:
             if de in adyacentes and ha in adyacentes:
                 adyacentes[de].add(ha)
                 adyacentes[ha].add(de)
+        for rid, otros in nv.abiertos.items():
+            adyacentes[rid].update(otros)
         for r in nv.espacios:
-            if r.get('tipo') not in ('recinto', 'nucleo'):
+            if r.get('tipo') not in ('recinto', 'nucleo') or not nv.transitable(r.get('id')):
                 continue
             self.inf.revisado('V9')
             ok = False
             for otro in adyacentes.get(r.get('id'), ()):
                 o = nv.por_id[otro]
-                if o.get('tipo') == 'circulacion' or self._permitido(r, o):
+                if nv.es_paso(otro) or self._permitido(r, o):
                     ok = True
                     break
             if not ok:
-                self.err('V9', f'{nv.id}: {r.get("id")} ({r.get("ambiente")}) no tiene puerta a una circulación ni a un '
-                               'recinto de accesos_permitidos')
+                self.err('V9', f'{nv.id}: {r.get("id")} ({r.get("ambiente")}) no tiene puerta ni vano a una circulación, '
+                               'a un recinto de paso ni a un recinto de accesos_permitidos')
         semillas = set()
         for cv in nv.d.get('conexiones_verticales', []):
             p = (cv.get('puntos') or {}).get(str(nv.d.get('piso')))
@@ -631,6 +688,9 @@ class Validador:
         for pt in nv.puertas:
             if 'exterior' in (pt.get('desde'), pt.get('hacia')):
                 semillas.add(pt['hacia'] if pt.get('desde') == 'exterior' else pt.get('desde'))
+        for pa in nv.d.get('pasos_entre_niveles', []):
+            if pa.get('recinto') in nv.por_id:
+                semillas.add(pa['recinto'])
         semillas.discard(None)
         self.inf.revisado('V10')
         if not semillas:
@@ -643,7 +703,7 @@ class Validador:
                 if y not in vistos:
                     vistos.add(y)
                     pila.append(y)
-        sueltos = [rid for rid in nv.por_id if rid not in vistos]
+        sueltos = [rid for rid in nv.por_id if rid not in vistos and nv.transitable(rid)]
         if sueltos:
             self.err('V10', f'{nv.id}: recintos que no se alcanzan por puertas: {sueltos}')
 
@@ -720,7 +780,7 @@ class Validador:
             if r.get('tipo') != 'circulacion' or r.get('id') not in nv.libre:
                 continue
             self.inf.revisado('V13')
-            w = C.ancho_minimo(nv.libre[r['id']])
+            w = C.ancho_minimo(nv.libre[r['id']], C.MUESCA_IGNORADA_M)
             q = f'{nv.id}: {r["id"]} ({r.get("ambiente")}): '
             if num(r.get('ancho_libre_m')) and abs(r['ancho_libre_m'] - w) > 0.01:
                 self.err('V13', f'{q}ancho_libre_m = {r["ancho_libre_m"]} y el polígono libre da {w:.3f} m')
@@ -740,7 +800,7 @@ class Validador:
         x0, y0, x1, y1 = C.caja(nv.contorno)
         rej = C.Rejilla(x0 - 0.5, y0 - 0.5, x1 + 0.5, y1 + 0.5, 0.10)
         for rid, p in nv.libre.items():
-            if rid not in protegidas:
+            if rid not in protegidas and nv.transitable(rid):
                 rej.pintar_poligono(p)
         salidas, vanos = [], {}
         for pt in nv.puertas:
@@ -771,13 +831,19 @@ class Validador:
                     for i in rej._rango(r[0], r[2], rej.x0, rej.nx)]
             return min(vals) if vals else math.inf
 
+        # Las puertas de cabina de ascensor, de montacargas y de ductos no son puertas de salida de un recinto
+        # ocupado: el recorrido se mide desde las puertas de los recintos (K.3.14.1.2); sus celdas igual cuentan abajo.
+        huecos = set()
+        for nu in nv.d.get('nucleos', []):
+            if isinstance(nu, dict) and nu.get('tipo') in ('ascensor', 'montacargas', 'ductos'):
+                huecos.update(nu.get('recintos') or [nu.get('recinto')])
         for pt in nv.puertas:
             pid = pt.get('id')
-            if pid not in vanos:
+            if pid not in vanos or pt.get('desde') in huecos or pt.get('hacia') in huecos:
                 continue
             for lado in (pt.get('desde'), pt.get('hacia')):
                 r = nv.por_id.get(lado)
-                if not r or r.get('tipo') == 'circulacion' or lado in protegidas:
+                if not r or r.get('tipo') == 'circulacion' or lado in protegidas or not nv.transitable(lado):
                     continue
                 d = en(vanos[pid])
                 if d > ev['puerta_a_escalera_max_m'] + 1e-6:
@@ -834,8 +900,7 @@ class Validador:
         for r in nv.espacios:
             if r.get('tipo') != 'recinto':
                 continue
-            texto = f'{r.get("ambiente", "")} {r.get("servicio_programa", "")}'
-            if not RE_VENTANA_EXIGIDA.search(texto) or r.get('id') not in nv.pol:
+            if not RE_VENTANA_EXIGIDA.search(str(r.get('ambiente', ''))) or r.get('id') not in nv.pol:
                 continue
             self.inf.revisado('V19')
             tiene = False
@@ -852,13 +917,16 @@ class Validador:
     def ambientes(self):
         return (self.programa or {}).get('ambientes', [])
 
-    @staticmethod
-    def piso_programa(piso):
+    def nivel_de_fila(self, f):
+        """Nivel de la planta donde va la fila f (reglas_planta.json → niveles; 16.1)."""
+        niv = self.reglas.get('niveles') or {}
+        por_fila = niv.get('nivel_por_fila') or {}
+        if str(f) in por_fila:
+            return por_fila[str(f)]
+        piso = self.ambientes()[f].get('piso')
         if isinstance(piso, int):
             return f'P{piso}'
-        if isinstance(piso, str) and 'bloque' in piso.lower():
-            return 'BT'
-        return None
+        return (niv.get('piso_a_nivel') or {}).get(str(piso))
 
     def v2_v6(self, niveles: list[Nivel]):
         amb = self.ambientes()
@@ -866,7 +934,7 @@ class Validador:
         for nv in niveles:
             for r in nv.espacios:
                 f = r.get('fila')
-                if r.get('tipo') == 'circulacion' or not isinstance(f, int):
+                if not isinstance(f, int) or isinstance(f, bool):
                     continue
                 cuenta[f] = cuenta.get(f, 0) + 1
                 q = f'{nv.id}: {r.get("id")}: '
@@ -877,8 +945,8 @@ class Validador:
                 a = amb[f]
                 if a.get('nombre') != r.get('ambiente'):
                     self.err('V2', f'{q}ambiente «{r.get("ambiente")}» y la fila {f} es «{a.get("nombre")}» (¿se reordenó programa.json?)')
-                if self.piso_programa(a.get('piso')) != nv.id:
-                    self.err('V2', f'{q}la fila {f} es del piso {a.get("piso")!r}, no de {nv.id}')
+                if self.nivel_de_fila(f) != nv.id:
+                    self.err('V2', f'{q}la fila {f} es del piso {a.get("piso")!r} (nivel {self.nivel_de_fila(f)}), no de {nv.id}')
                 if a.get('servicio') != r.get('servicio_programa'):
                     self.err('V2', f'{q}servicio «{r.get("servicio_programa")}» y la fila {f} es de «{a.get("servicio")}»')
                 if r.get('de') != a.get('cantidad'):
@@ -892,19 +960,22 @@ class Validador:
                     ae = C.area_poligono(nv.pol[r['id']]) if r.get('id') in nv.pol else 0.0
                     if ae < m2 - 0.05 - 1e-9:
                         self.err('V6', f'{q}{ae:.2f} m² a ejes < {m2} m² del programa − 0,05')
+        presentes = {nv.id for nv in niveles}
         for f, a in enumerate(amb):
-            if self.piso_programa(a.get('piso')) is None:
+            if self.nivel_de_fila(f) is None:
+                continue
+            if self.nivel_de_fila(f) not in presentes:
+                self.err('V2', f'fila {f} («{a.get("nombre")}»): su nivel {self.nivel_de_fila(f)} no está en la planta')
                 continue
             if cuenta.get(f, 0) != a.get('cantidad'):
                 self.err('V2', f'fila {f} («{a.get("nombre")}», piso {a.get("piso")}): {cuenta.get(f, 0)} recintos y la '
                                f'cantidad es {a.get("cantidad")}')
         esperado = {}
-        for a in amb:
-            k = self.piso_programa(a.get('piso'))
+        for f, a in enumerate(amb):
+            k = self.nivel_de_fila(f)
             if k:
                 esperado[k] = esperado.get(k, 0) + a.get('cantidad', 0)
-        obtenido = {nv.id: sum(1 for r in nv.espacios if r.get('tipo') != 'circulacion' and isinstance(r.get('fila'), int))
-                    for nv in niveles}
+        obtenido = {nv.id: sum(1 for r in nv.espacios if isinstance(r.get('fila'), int)) for nv in niveles}
         for k, v in sorted(esperado.items()):
             if obtenido.get(k, 0) != v:
                 self.err('V2', f'{k}: {obtenido.get(k, 0)} recintos del programa y se esperan {v}')
@@ -920,10 +991,12 @@ class Validador:
             self.err('V15', 'programa.json no trae implantacion.nucleos_verticales con límites')
             return
         for nv in niveles:
-            if nv.id == 'BT':
+            if nv.id not in NIVELES_PISO and nv.id != 'CUB':
                 continue
             pols = [(nu.get('tipo'), nu.get('poligono')) for nu in nv.d.get('nucleos', []) if poligono_valido(nu.get('poligono'))]
             for clave, (tipo, r) in rects.items():
+                if nv.id == 'CUB' and not any(t == tipo for t, _ in pols):
+                    continue
                 self.inf.revisado('V15')
                 ok = any(t == tipo and abs(C.area_poligono(p) - C.area_poligono(r)) < 0.01
                          and C.area_interseccion(p, r) > C.area_poligono(r) - 0.01 for t, p in pols)
@@ -943,8 +1016,9 @@ class Validador:
         xs = [e['x'] for e in ret.get('ejes_x', []) if num(e.get('x'))]
         ys = [e['y'] for e in ret.get('ejes_y', []) if num(e.get('y'))]
         for nv in niveles:
-            if nv.id == 'BT' or nv.contorno is None:
+            if nv.id not in NIVELES_PISO or nv.contorno is None:
                 continue
+            ojos = [e['ojo'] for e in nv.d.get('escaleras', []) if isinstance(e, dict) and isinstance(e.get('ojo'), list)]
             esperadas = [(x, y) for x in xs for y in ys if C.punto_en_poligono((x, y), nv.contorno, TOL)]
             cols = [c for c in nv.d.get('columnas', []) if isinstance(c, dict) and num(c.get('x')) and num(c.get('y'))]
             self.inf.revisado('V16')
@@ -963,6 +1037,9 @@ class Validador:
                 if any(nv.por_id[rid].get('tipo') == 'circulacion' and C.distancia_a_borde(pt, p) <= 0.30 + TOL
                        for rid, p in nv.pol.items()):
                     continue
+                if any(o[0] + 0.3 - TOL <= pt[0] <= o[2] - 0.3 + TOL and o[1] + 0.3 - TOL <= pt[1] <= o[3] - 0.3 + TOL
+                       for o in ojos):
+                    continue          # en el ojo de una escalera abierta: la columna sube entre los dos tramos
                 donde = nv.espacio_en(pt)
                 amb = nv.por_id.get(donde, {}).get('ambiente', '')
                 if not COLUMNA_LIBRE_PERMITIDA.search(amb):
@@ -974,10 +1051,69 @@ class Validador:
             if nv.id not in resumen:
                 continue
             self.inf.revisado('V20')
-            util = sum(C.area_poligono(nv.pol[r['id']]) for r in nv.espacios if r.get('tipo') == 'recinto' and r.get('id') in nv.pol)
+            servicios = set(resumen[nv.id].get('m2_util_por_servicio') or {})
+            util = sum(C.area_poligono(nv.pol[r['id']]) for r in nv.espacios
+                       if isinstance(r.get('fila'), int) and r.get('id') in nv.pol
+                       and (not servicios or r.get('servicio_programa') in servicios))
             meta = resumen[nv.id].get('m2_util', 0)
             if util < meta - 1e-6:
                 self.err('V20', f'{nv.id}: {util:.1f} m² útiles a ejes < {meta} m² útiles del programa')
+
+    # ------------------------------------------------------------------------------------------------ V21
+    def v21(self, niveles: list[Nivel]):
+        """Escaleras caminables (16.1): partes dentro del recinto, cotas continuas y la misma escalera en el nivel de
+        llegada. Contrahuella entre 0,10 y 0,18 m y huella ≥ 0,28 m: valores usuales de diseño (numeral de la NSR-10 por
+        confirmar), no se cita norma."""
+        por_id = {nv.id: nv for nv in niveles}
+        for nv in niveles:
+            for es in nv.d.get('escaleras', []):
+                q = f'{nv.id}: escalera {es.get("id")}: '
+                self.inf.revisado('V21')
+                rid = es.get('recinto')
+                if rid not in nv.pol:
+                    self.err('V21', f'{q}el recinto {rid!r} no existe')
+                    continue
+                partes = es.get('partes') or []
+                if not partes or partes[0].get('tipo') != 'descanso_piso' or partes[0].get('z') != 0:
+                    self.err('V21', f'{q}debe empezar en un descanso de piso a cota 0')
+                z = 0.0
+                for pa in partes:
+                    r = pa.get('rect')
+                    if not (isinstance(r, list) and len(r) == 4 and all(num(v) for v in r) and r[2] > r[0] and r[3] > r[1]):
+                        self.err('V21', f'{q}parte sin rectángulo válido: {pa}')
+                        continue
+                    if not C.poligono_dentro_de(C.rect_a_poligono(r), nv.pol[rid], 0.01):
+                        self.err('V21', f'{q}la parte {pa.get("tipo")} {r} se sale del recinto {rid}')
+                    if pa.get('tipo') == 'tramo':
+                        z0, z1, n_, ch = pa.get('z0'), pa.get('z1'), pa.get('contrahuellas'), pa.get('contrahuella_m')
+                        if not (num(z0) and num(z1) and isinstance(n_, int) and num(ch)) or z1 <= z0:
+                            self.err('V21', f'{q}tramo sin cotas o contrahuellas válidas')
+                            continue
+                        if abs(z0 - z) > 0.002:
+                            self.err('V21', f'{q}el tramo empieza en {z0} m y la parte anterior queda en {z} m')
+                        if abs((z1 - z0) / n_ - ch) > 0.002:
+                            self.err('V21', f'{q}contrahuella {ch} m y el tramo sube {z1 - z0:.3f} m en {n_} contrahuellas')
+                        if not 0.10 <= ch <= 0.18 or not num(pa.get('huella_m')) or pa['huella_m'] < 0.28 - 1e-9:
+                            self.err('V21', f'{q}contrahuella {ch} m o huella {pa.get("huella_m")} m fuera de lo usual (0,10-0,18 y ≥ 0,28)')
+                        z = z1
+                    elif num(pa.get('z')):
+                        if abs(pa['z'] - z) > 0.002:
+                            self.err('V21', f'{q}el descanso está a {pa["z"]} m y el tramo anterior llega a {z} m')
+                        z = pa['z']
+                destino = es.get('sube_a')
+                if destino:
+                    otro = por_id.get(destino)
+                    if otro is None:
+                        self.err('V21', f'{q}sube a {destino}, que no está en la planta')
+                        continue
+                    h = otro.d.get('z', 0) - nv.d.get('z', 0)
+                    if abs(z - h) > 0.002:
+                        self.err('V21', f'{q}llega a {z} m y el nivel {destino} está {h:.3f} m más arriba')
+                    llegada = [e for e in otro.d.get('escaleras', []) if e.get('id') == es.get('id')]
+                    if not llegada:
+                        self.err('V21', f'{q}el nivel {destino} no tiene la escalera {es.get("id")}')
+                    elif llegada[0]['partes'][0].get('rect') != partes[0].get('rect'):
+                        self.err('V21', f'{q}el descanso de llegada en {destino} no coincide con el de salida')
 
     # ------------------------------------------------------------------------------------------------ todo
     def correr(self):
@@ -993,7 +1129,8 @@ class Validador:
             self.v11(nv)
             self.v12(nv)
             self.v13(nv)
-            self.v14(nv)
+            if nv.id not in NIVELES_EXTERIORES:
+                self.v14(nv)
             self.v17(nv)
             self.v18(nv)
             self.v19(nv)
@@ -1008,12 +1145,13 @@ class Validador:
             self.v15(niveles)
             self.v16(niveles)
             self.v20(niveles)
+        self.v21(niveles)
         if not (self.pl.get('zonas') if self.fixture else self.reglas.get('zonas')):
             self.inf.omitir('V17', 'no hay zonas definidas' + (' en el fixture' if self.fixture else ' en reglas_planta.json'))
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description='Valida la planta de la torre (reglas V1-V20 del contrato, 3.5).')
+    ap = argparse.ArgumentParser(description='Valida la planta de la torre (reglas V1-V20 del contrato, 3.5, y V21 de las escaleras, 16.1).')
     ap.add_argument('--archivo', type=Path, help='archivo de plantas a validar con todas las reglas')
     ap.add_argument('--fixture', nargs='?', type=Path, const=C.FIXTURES / 'plantas_min.json',
                     help='valida un fixture y omite V2, V6, V15, V16 y V20 (por defecto scripts/fixtures/torre/plantas_min.json)')

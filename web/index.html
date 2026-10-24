@@ -362,6 +362,52 @@ details.fold > summary:hover { color: var(--accent); }
 /* >>> torre-sismo (equipo D) */
 /* <<< torre-sismo */
 /* >>> torre-contraste (equipo E) */
+/* Tarjeta «Contraste con el proyecto tipo» (web/js/scenes/torre/contraste.js). Píldoras de veredicto con los tokens del
+   tema y texto --ink: mejora --good, cumple igual --s1, se aparta --warn, falta --bad (los colores fijos son solo del 3D) */
+.tc { display: grid; gap: 18px; min-width: 0; }
+.tc section { min-width: 0; }
+.tc h4 { margin: 0 0 8px; }
+.tc-v { --tc-c: var(--line); display: inline-block; font: 600 0.7rem/1.5 var(--f-mono); padding: 0 8px; border-radius: 999px; color: var(--ink); border: 1.5px solid var(--tc-c); background: color-mix(in srgb, var(--tc-c) 24%, var(--surface)); white-space: nowrap; vertical-align: 0.05em; }
+.tc-v[data-v="mejora"], .tc-v[data-v="cubre"] { --tc-c: var(--good); }
+.tc-v[data-v="cumple igual"], .tc-v[data-v="cubre en parte"], .tc-v[data-v="compartido"] { --tc-c: var(--s1); }
+.tc-v[data-v="se aparta"] { --tc-c: var(--warn); }
+.tc-v[data-v="falta"] { --tc-c: var(--bad); }
+.tc-v[data-v="sobra"], .tc-v[data-v="sin"] { --tc-c: var(--muted); background: transparent; }
+.tc-ley { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin: 0 0 6px; font-size: 0.78rem; color: var(--muted); }
+.tc-cifras { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.tc-cifra { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; display: grid; gap: 4px; align-content: start; }
+.tc-cifra .tc-tit { font: 600 0.68rem var(--f-mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.tc-cifra b { font-family: var(--f-display); font-weight: 400; font-size: 1.45rem; line-height: 1.08; letter-spacing: 0.01em; overflow-wrap: anywhere; }
+.tc-cifra p { margin: 0; }
+.tc-cifra .tc-txt { font-size: 0.82rem; }
+.tc-cifra .tc-base { font-size: 0.72rem; color: var(--muted); }
+.tc-cuentas { display: flex; flex-wrap: wrap; gap: 4px; }
+.tc-sub { font-size: 0.86rem; margin: 6px 0 4px; }
+.tc-lista { margin: 4px 0 8px; padding-left: 18px; font-size: 0.86rem; }
+.tc-lista li { margin: 2px 0; }
+.tc-tabla td, .tc-pares td { vertical-align: top; }
+.tc-mas, .tc-metodo { margin-top: 2px; }
+.tc-mas > summary, .tc-metodo > summary { font-size: 0.74rem; }
+.tc-3d { font: 600 0.72rem var(--f-mono); background: transparent; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 999px; padding: 2px 9px; cursor: pointer; white-space: nowrap; }
+.tc-3d:hover, .tc-3d:focus-visible { border-color: var(--accent); color: var(--accent); }
+.tc-oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.tc-dot { border-top: 1px solid var(--line); padding: 4px 0; }
+.tc-dot > summary, .tc-tema > summary { padding: 4px 0; font-weight: 600; }
+.tc-tema { padding-left: 12px; }
+.tc-barras { display: grid; gap: 7px; margin-bottom: 8px; }
+.tc-barra { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 2fr) auto; gap: 10px; align-items: center; font-size: 0.84rem; }
+.tc-barra .bar { height: 12px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.tc-barra .bar i { display: block; height: 100%; border-radius: 999px; background: var(--s1); }
+.tc-barra[data-quien="torre"] .bar i { background: var(--s4); }
+.tc-barra[data-quien="referente"] .bar i { background: var(--muted); }
+.tc-barra .v { font: 600 0.8rem var(--f-mono); white-space: nowrap; text-align: right; }
+.tc-bl { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 720px) {
+  .tc-barra { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; }
+  .tc-barra .bar { grid-column: 1 / -1; grid-row: 2; }
+  .tc-cifras { grid-template-columns: minmax(0, 1fr); }
+  .tc-tema { padding-left: 0; }
+}
 /* <<< torre-contraste */
 </style>
 

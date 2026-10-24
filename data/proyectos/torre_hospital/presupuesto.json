@@ -805,7 +805,7 @@
     },
     {
      "codigo": "4.07",
-     "descripcion": "Blindaje con lámina de plomo (≈ 2 mm) en sala de rayos X y periapical, según cálculo de blindaje (Res. 482 de 2018)",
+     "descripcion": "Blindaje con lámina de plomo (≈ 2 mm) en sala de rayos X y periapical, según cálculo de blindaje (Res. 1811 de 2025, que reemplazó a la 482 desde el 6-mar-2026)",
      "unidad": "m2",
      "cantidad": 65,
      "supuesto_cantidad": "Sala de 24 m² y periapical de 4 m² (programa.json).",
@@ -3535,7 +3535,7 @@
   },
   {
    "grupo": "Puesta en marcha y habilitación",
-   "concepto": "Traslado de servicios, aseo terminal y validación ambiental, licencia de rayos X (Res. 482 de 2018), autoevaluación y documentación para habilitar en el REPS, capacitación del personal e inventario inicial para 72 horas",
+   "concepto": "Traslado de servicios, aseo terminal y validación ambiental, licencia de rayos X (Res. 1811 de 2025, que reemplazó a la 482 desde el 6-mar-2026), autoevaluación y documentación para habilitar en el REPS, capacitación del personal e inventario inicial para 72 horas",
    "valor": 250000000,
    "rango": [
     170000000,

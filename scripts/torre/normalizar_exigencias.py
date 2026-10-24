@@ -37,7 +37,21 @@ ARCH_APO = 'res3100_apoyo_diagnostico.json'
 TIPOS_REGLA = ('por_recinto', 'por_puesto', 'total_servicio', 'por_piso', 'contenido', 'existe_ambiente',
                'area_libre_por_puesto', 'documental', 'sin_regla')
 VERIF_EXIGIBLE = ('literal_compilacion', 'contenido_compilacion')
-MARCAS_NUMERAL = ('por confirmar', 'según guía', 'según normas.json', 'por analogía')
+# El numeral no está confirmado si el propio texto del numeral lo dice (marcas del 4.2) o si dice que difiere entre copias o que
+# no se recuperó (sección 15 del contrato: «12.1 frente a 9.2; 17.1.2.x frente a 17.2.1.x»), y tampoco si la fila es de guía
+# secundaria o paráfrasis (fuente_secundaria o por_confirmar).
+MARCAS_NUMERAL = ('por confirmar', 'según guía', 'según la guía', 'según normas.json', 'por analogía', 'no se pudo confirmar',
+                  'no recuperad', 'según una de las copias', 'lo numera', 'en la copia', 'en la cancillería', 'en el icbf', 'colegio')
+VERIF_NUMERAL_NO_CONFIRMADO = ('fuente_secundaria', 'por_confirmar')
+# Compilaciones oficiales (4.2: Cancillería, ICBF, Invima, normograma de Supersalud): sitios .gov.co. Una fila «literal» o de
+# «contenido» de compilación que solo cita un sitio privado o de consultoría baja a fuente_secundaria (y queda por_confirmar).
+RE_URL_OFICIAL = re.compile(r'^https?://[^/]*\.gov\.co(/|$)', re.I)
+# Exigencias documentales (licencias, certificados, documentos firmados, programas, información documentada, contratos): se
+# detectan en el texto de la fila (texto literal y resumen) antes de mirar si hay ítems de dotación, en cualquier estándar.
+RE_DOCUMENTAL = re.compile(r'\blicencia\b|\bcertific(?:ado|ados|a|an|ar|que)\b|\bdocumentos? firmados?\b|\blos firma\b|'
+                           r'\bprogramas? de (?:mantenimiento|capacitaci[oó]n|tecnovigilancia|farmacovigilancia|reactivovigilancia)|'
+                           r'\bprogramas de farmacovigilancia|\binformaci[oó]n documentada sobre\b|\bsiguiente informaci[oó]n documentada\b|'
+                           r'\bhojas? de vida\b|\bhoja\(s\) de vida\b|\bcontrato\b|\bregistro de la relaci[oó]n de los equipos\b', re.I)
 SIN_TEXTO = ('[paráfrasis', '[contenido no obtenido', 'por confirmar')
 ESTADOS_INV = ('cubierto', 'parcial', 'falta')
 
@@ -69,6 +83,7 @@ def catalogo_lineas(dot: dict, lab: dict) -> list[dict]:
 
 
 PISTAS = {'equipamiento_fijo': 'fijo', 'fijo': 'fijo'}
+RE_PAREN_FINAL = re.compile(r'\s*\([^()]*\)\s*$')
 
 
 def _pista(texto: str, j: int, servicios: set[str]) -> str | None:
@@ -81,17 +96,24 @@ def _pista(texto: str, j: int, servicios: set[str]) -> str | None:
     return s if s in servicios or s == 'fijo' else None
 
 
-def resolver_items(texto, servicio: str | None, cat: list[dict]) -> tuple[list[dict], list[str]]:
+def resolver_items(texto, servicio: str | None, cat: list[dict], sin_aviso=()) -> tuple[list[dict], list[str]]:
     """Busca en el texto de «item_dotacion» los nombres exactos de líneas (los más largos primero, sin traslapes).
     Devuelve ([{linea, nombre}], [avisos]). Si un nombre está en varios servicios, decide la pista entre paréntesis,
     después el servicio de la exigencia; si sigue ambiguo, lo informa y no lo usa."""
     if not texto or not isinstance(texto, str):
         return [], []
     por_nombre = {}
+    propios = {}            # nombre base (sin el paréntesis final) → líneas del servicio de la exigencia: «… (sala de procedimientos)»
     for l in cat:
         if l['letra'] == 'x':
             continue
         por_nombre.setdefault(l['nombre'], []).append(l)
+    for l in cat:
+        if l['letra'] != 'x' and servicio and l['servicio'] == servicio:
+            base = RE_PAREN_FINAL.sub('', l['nombre']).strip()
+            # solo reemplaza un nombre exacto que existe en otro servicio (no crea coincidencias nuevas)
+            if base and base != l['nombre'] and base in por_nombre and not any(x['servicio'] == servicio for x in por_nombre[base]):
+                propios.setdefault(base, []).append(l)
     servicios = {l['servicio'] for l in cat}
     usado = [False] * len(texto)
     hallados, avisos = [], []
@@ -113,8 +135,14 @@ def resolver_items(texto, servicio: str | None, cat: list[dict]) -> tuple[list[d
     salida, vistos = [], set()
     for _, nombre, pista in sorted(hallados):
         cands = por_nombre[nombre]
+        # pista entre paréntesis; si no, la línea del propio servicio (con el mismo nombre o con el mismo nombre y un paréntesis
+        # final que dice dónde va); solo si no hay ninguna propia, la única línea de otro servicio
         elegidas = [l for l in cands if pista and l['servicio'] == pista] or \
-                   [l for l in cands if l['servicio'] == servicio] or (cands if len(cands) == 1 else [])
+                   [l for l in cands if l['servicio'] == servicio] or propios.get(nombre, []) or (cands if len(cands) == 1 else [])
+        if len(elegidas) == 1 and servicio and elegidas[0]['servicio'] not in (servicio, 'fijo') and not pista \
+                and elegidas[0]['id'] not in sin_aviso:
+            avisos.append(f'«{nombre}» solo está en {elegidas[0]["servicio"]}: se toma esa línea para una exigencia de {servicio} '
+                          '(si el servicio tiene una propia, citarla en reglas_exigencias.json)')
         if len(elegidas) != 1:
             avisos.append(f'«{nombre}» está en {len(cands)} servicios ({", ".join(sorted(l["servicio"] for l in cands))}) '
                           'y el texto no dice cuál')
@@ -129,7 +157,6 @@ def resolver_items(texto, servicio: str | None, cat: list[dict]) -> tuple[list[d
 # --------------------------------------------------------------------------------------------------------------------
 # Ambientes por fila del programa (regla común del 3.4)
 # --------------------------------------------------------------------------------------------------------------------
-RE_PAREN_FINAL = re.compile(r'\s*\([^()]*\)\s*$')
 
 
 def _variantes(nombre: str):
@@ -202,9 +229,16 @@ def ambientes_de_fila(e: dict, servicios_programa: list[str], ambientes: list[di
 # --------------------------------------------------------------------------------------------------------------------
 # Campos calculados
 # --------------------------------------------------------------------------------------------------------------------
-def numeral_confirmado(numeral: str | None) -> bool:
+def numeral_confirmado(numeral: str | None, verificacion: str | None = None) -> bool:
     t = (numeral or '').lower()
+    if verificacion in VERIF_NUMERAL_NO_CONFIRMADO:
+        return False
     return not any(m in t for m in MARCAS_NUMERAL)
+
+
+def url_oficial(url) -> bool:
+    urls = url if isinstance(url, list) else [url]
+    return any(isinstance(u, str) and RE_URL_OFICIAL.match(u) for u in urls)
 
 
 def texto_disponible(texto) -> bool:
@@ -226,15 +260,24 @@ def corregir_superados(v, superados: dict, es_comentario: bool = False):
     return v
 
 
+def es_documental(e: dict) -> bool:
+    """¿La fila exige un documento (licencia, certificado, documento firmado, programa, información documentada, contrato)?
+    Se mira lo que la fila exige (texto literal y resumen), no los ítems de dotación que la investigación le asocia."""
+    texto = ' '.join(str(e.get(k) or '') for k in ('texto_literal', 'que_exige'))
+    return bool(RE_DOCUMENTAL.search(texto))
+
+
 def regla_automatica(e: dict, items: list[dict], ambientes: list[dict]) -> dict:
-    """Regla por defecto cuando reglas_exigencias.json no trae una: los ítems resueltos deben existir en el servicio
-    (dotación), los ambientes deben existir en la planta (infraestructura sin ítems) o queda documental o sin regla."""
+    """Regla por defecto cuando reglas_exigencias.json no trae una. Primero lo documental (en cualquier estándar y aunque la
+    fila traiga ítems: que exista el equipo no cumple una licencia, un certificado o un programa); luego, los ítems resueltos
+    deben existir en los recintos del servicio (dotación), los ambientes deben existir en la planta (infraestructura sin
+    ítems) o queda sin regla (estado de la investigación)."""
     est = e.get('estandar')
     texto = ' '.join(str(e.get(k) or '') for k in ('item_dotacion', 'cantidad_minima', 'texto_literal')).lower()
-    documental = any(p in texto for p in ('inventario', 'hoja de vida', 'programa de mantenimiento', 'capacitación',
-                                          'tecnovigilancia', 'licencia', 'contrato', 'procedimiento', 'protocolo',
-                                          'registro de control', 'información documentada'))
-    if est == 'procesos_prioritarios' or (est == 'todos_los_servicios' and documental and not items):
+    documental_viejo = any(p in texto for p in ('inventario', 'hoja de vida', 'programa de mantenimiento', 'capacitación',
+                                                'tecnovigilancia', 'licencia', 'contrato', 'procedimiento', 'protocolo',
+                                                'registro de control', 'información documentada'))
+    if est == 'procesos_prioritarios' or es_documental(e) or (est == 'todos_los_servicios' and documental_viejo and not items):
         return {'tipo': 'documental', 'origen_regla': 'automatica'}
     if items:
         return {'tipo': 'total_servicio', 'items': [{'linea': x['linea'], 'nombre': x['nombre']} for x in items], 'n': 1,
@@ -249,6 +292,24 @@ def validar_regla(regla: dict, cat_ids: dict, donde: str, ambientes: list[dict])
         raise ErrorNormalizacion(f'{donde}: regla.tipo {regla.get("tipo")!r} fuera de {TIPOS_REGLA}')
     for it in regla.get('items', []) or []:
         validar_ref_linea(it, cat_ids, f'{donde} → regla.items', obligatoria=False)
+    for k, g in enumerate(regla.get('grupos', []) or []):
+        if not g.get('lineas') and not g.get('infra'):
+            raise ErrorNormalizacion(f'{donde} → regla.grupos[{k}]: un grupo sin líneas ni infraestructura')
+        for it in g.get('lineas', []) or []:
+            validar_ref_linea(it, cat_ids, f'{donde} → regla.grupos[{k}]')
+        # un grupo puede pedir sus propios puestos (por_puesto) o solo algunos ambientes (por_recinto)
+        for campo in ('puestos', 'ambientes'):
+            for a in g.get(campo, []) or []:
+                try:
+                    C.resolver_ambiente({kk: v for kk, v in a.items() if kk in ('fila', 'nombre', 'servicio_programa')}, ambientes)
+                except C.ErrorAmbiente as err:
+                    raise ErrorNormalizacion(f'{donde} → regla.grupos[{k}].{campo}: {err}') from None
+    for it in regla.get('compartidas', []) or []:
+        validar_ref_linea(it, cat_ids, f'{donde} → regla.compartidas')
+        if not it.get('motivo'):
+            raise ErrorNormalizacion(f'{donde} → regla.compartidas: {it.get("linea")} sin motivo')
+    if 'parte_documental' in regla and not (isinstance(regla['parte_documental'], str) and regla['parte_documental'].strip()):
+        raise ErrorNormalizacion(f'{donde} → regla.parte_documental: debe ser el texto del documento que falta')
     if regla.get('dentro_de'):
         validar_ref_linea(regla['dentro_de'], cat_ids, f'{donde} → regla.dentro_de')
     for p in regla.get('puestos', []) or []:
@@ -310,6 +371,9 @@ def normalizar(fuentes: dict, reglas: dict, programa: dict, dot: dict, lab: dict
         manual[r['id']] = r
     filas = list(leer_filas(fuentes, reglas))
     por_id = {f['id']: f for f in filas}
+    compartidas_globales = (reglas.get('lineas_compartidas') or {}).get('lineas', [])
+    for c in compartidas_globales:
+        validar_ref_linea(c, cat_ids, 'reglas_exigencias.json → lineas_compartidas')
     for rid, r in manual.items():
         f = por_id.get(rid)
         if f is None:
@@ -325,11 +389,19 @@ def normalizar(fuentes: dict, reglas: dict, programa: dict, dot: dict, lab: dict
         if verif_origen not in escala:
             raise ErrorNormalizacion(f'{eid}: nivel de verificación {verif_origen!r} fuera de la escala')
         verif = escala[verif_origen]
+        r = manual.get(eid, {})
+        fuente_url = r.get('fuente_url') or e.get('fuente_url')
+        ajuste_verif = None
+        if verif in VERIF_EXIGIBLE and not url_oficial(fuente_url):
+            # «vista en una compilación oficial» pide una URL de compilación oficial (4.2); con un sitio privado baja de nivel
+            ajuste_verif = (f'La revisión la marcó «{verif}», pero solo cita {fuente_url} (sitio privado o de consultoría, no una '
+                            'compilación oficial): queda como fuente secundaria hasta cotejarla en el normograma de Supersalud o en '
+                            'el Diario Oficial.')
+            verif = 'fuente_secundaria'
         numeral = corregir_superados(e.get('numeral'), superados)
         texto_crudo = e.get('texto_literal')
         disponible = texto_disponible(texto_crudo)
         servicios_programa = cfg.get('servicios_programa') or []
-        r = manual.get(eid, {})
         try:
             if 'ambientes' in r:
                 amb = []
@@ -344,7 +416,9 @@ def normalizar(fuentes: dict, reglas: dict, programa: dict, dot: dict, lab: dict
                 amb, sin_fila = ambientes_de_fila(e, servicios_programa, ambientes)
         except (C.ErrorAmbiente, ErrorNormalizacion) as err:
             raise ErrorNormalizacion(f'{eid}: {err}') from None
-        items, av = resolver_items(e.get('item_dotacion'), cfg.get('servicio'), cat)
+        # líneas de otro servicio que la regla ya decidió (las quita o las declara compartidas): sin aviso
+        sin_aviso = set(r.get('quitar_cubre_con', []) or []) | {c.get('linea') for c in (r.get('regla') or {}).get('compartidas', []) or []}
+        items, av = resolver_items(e.get('item_dotacion'), cfg.get('servicio'), cat, sin_aviso)
         avisos += [f'{eid}: {a}' for a in av]
         cubre = list(items)
         for c in r.get('cubre_con', []) or []:
@@ -361,6 +435,16 @@ def normalizar(fuentes: dict, reglas: dict, programa: dict, dot: dict, lab: dict
             regla.setdefault('origen_regla', 'reglas_exigencias.json')
         else:
             regla = regla_automatica(e, [x for x in cubre if x.get('tipo') == 'linea'], amb)
+        if regla.get('tipo') == 'total_servicio':
+            # centrales únicas de la torre (lista explícita de reglas_exigencias.json): cuentan aunque estén fuera del servicio
+            usadas = {i.get('linea') for i in regla.get('items', []) or []} | \
+                     {i.get('linea') for g in regla.get('grupos', []) or [] for i in g.get('lineas', []) or []}
+            if not regla.get('items') and not regla.get('grupos'):
+                usadas |= {c.get('linea') for c in cubre if c.get('tipo') == 'linea'}
+            ya = {c.get('linea') for c in regla.get('compartidas', []) or []}
+            extra = [dict(c) for c in compartidas_globales if c['linea'] in usadas and c['linea'] not in ya]
+            if extra:
+                regla['compartidas'] = list(regla.get('compartidas', []) or []) + extra
         validar_regla(regla, cat_ids, eid, ambientes)
         texto_norm = corregir_superados(texto_crudo, superados) if disponible else None
         misma_que = None
@@ -368,8 +452,13 @@ def normalizar(fuentes: dict, reglas: dict, programa: dict, dot: dict, lab: dict
             clave = (f['archivo'], e.get('estandar'), texto_crudo)
             misma_que = primeros_texto.setdefault(clave, eid)
             misma_que = None if misma_que == eid else misma_que
+        if r.get('misma_que'):
+            if r['misma_que'] not in por_id or r['misma_que'] == eid:
+                raise ErrorNormalizacion(f'{eid}: misma_que {r["misma_que"]!r} no es otra exigencia')
+            misma_que = r['misma_que']
         derogado = marca_914['marca'] in (e.get('numeral') or '').lower() and cfg.get('srv') == 'EST'
-        es_914 = 'res. 914' in (e.get('numeral') or '').lower() and not derogado
+        # requisito propio de la Res. 914 (rige desde el 3-ene-2027): solo las filas de esterilización que la citan como norma
+        es_914 = (e.get('numeral') or '').lower().startswith('res. 914') and cfg.get('srv') == 'EST' and not derogado
         referencia = 'por analogía' in (e.get('numeral') or '').lower()
         estado_inv = e.get('estado_en_dotacion')
         if estado_inv not in ESTADOS_INV:
@@ -386,12 +475,12 @@ def normalizar(fuentes: dict, reglas: dict, programa: dict, dot: dict, lab: dict
             'numeral_grupo': cfg.get('numeral_grupo'),
             'estandar': e.get('estandar'),
             'numeral': numeral,
-            'numeral_confirmado': numeral_confirmado(e.get('numeral')),
+            'numeral_confirmado': numeral_confirmado(e.get('numeral'), verif),
             'texto': texto_norm,
             'texto_disponible': disponible,
             'verificacion_texto': verif,
             'verificacion_origen': verif_origen,
-            'exigible': 'si' if verif in VERIF_EXIGIBLE else 'por_confirmar',
+            'exigible': 'si' if verif in VERIF_EXIGIBLE and not es_914 else 'por_confirmar',
             'que_exige': corregir_superados(e.get('que_exige'), superados),
             'ambientes': amb,
             'ambientes_sin_fila': sin_fila,
@@ -406,11 +495,20 @@ def normalizar(fuentes: dict, reglas: dict, programa: dict, dot: dict, lab: dict
             'vigencia_desde': marca_914['vigencia_desde_914'] if es_914 else None,
             'referencia': referencia,
             'misma_que': misma_que,
-            'fuente_url': e.get('fuente_url'),
-            'tipo_dato': e.get('tipo_dato') or ('dato oficial' if verif in VERIF_EXIGIBLE else 'fuente secundaria o paráfrasis'),
+            'fuente_url': fuente_url,
+            'tipo_dato': 'dato oficial' if verif in VERIF_EXIGIBLE else 'fuente secundaria o paráfrasis',
         }
+        if e.get('tipo_dato') and e['tipo_dato'] != x['tipo_dato']:
+            x['tipo_dato_origen'] = e['tipo_dato']
+        if r.get('fuente_url') and r['fuente_url'] != e.get('fuente_url'):
+            x['fuente_url_origen'] = e.get('fuente_url')
+            x['nota_fuente_url'] = r.get('nota_fuente_url')
+        if ajuste_verif:
+            x['ajuste_verificacion'] = ajuste_verif
         if r.get('nota'):
             x['nota_regla'] = r['nota']
+        if es_914:
+            x['motivo_exigible'] = marca_914.get('nota_exigible') or 'Requisito de la Res. 914 de 2025: por confirmar hasta leer el manual DMER.'
         if x['texto'] is None and x['texto_disponible']:
             raise ErrorNormalizacion(f'{eid}: texto vacío con texto_disponible')
         salida.append(x)
@@ -496,7 +594,19 @@ def construir(rutas: dict | None = None) -> dict:
             'por_confirmar': 'Paráfrasis o dato sin fuente leída: por confirmar.'},
         'reglas_de_calculo': {
             'exigible': '«si» solo con literal_compilacion o contenido_compilacion; «por_confirmar» en los demás casos.',
-            'numeral_confirmado': 'false si el numeral contiene «por confirmar», «según guía», «según normas.json» o «por analogía».',
+            'numeral_confirmado': ('false si el numeral contiene «por confirmar», «según guía», «según la guía», «según normas.json», '
+                                   '«por analogía», «no se pudo confirmar», «no recuperad», «según una de las copias», «lo numera», '
+                                   '«en la copia», «en la Cancillería», «en el ICBF» o «Colegio» (subnumerales que difieren entre copias '
+                                   'o que no se recuperaron), y siempre que la fila sea fuente_secundaria o por_confirmar.'),
+            'verificacion_por_url': ('Una fila literal_compilacion o contenido_compilacion cuya única URL no es una compilación oficial '
+                                     '(sitio .gov.co: Cancillería, ICBF, Invima, normograma de Supersalud) baja a fuente_secundaria y '
+                                     'queda exigible por_confirmar (campo ajuste_verificacion), salvo que reglas_exigencias.json cite la '
+                                     'compilación oficial donde está el mismo texto.'),
+            'tipo_dato': ('«dato oficial» solo con literal_compilacion o contenido_compilacion; «fuente secundaria o paráfrasis» en '
+                          'los demás casos. Si la investigación traía otro tipo_dato, queda en tipo_dato_origen.'),
+            'documental': ('Regla automática documental, en cualquier estándar y antes de mirar los ítems, si lo que la fila exige es '
+                           'una licencia, un certificado, un documento firmado, un programa (mantenimiento, capacitación, tecno-, '
+                           'fármaco- o reactivovigilancia), información documentada, hojas de vida o un contrato.'),
             'texto': 'El texto literal de la fila; null (y texto_disponible false) si la investigación no lo trae o es una '
                      'paráfrasis: la web muestra entonces que_exige con la etiqueta «resumen; texto oficial no obtenido».',
             'vigencia': 'Las exigencias de esterilización cuyos numerales deroga la Res. 914 de 2025 llevan vigencia_hasta '
@@ -505,6 +615,7 @@ def construir(rutas: dict | None = None) -> dict:
             'superados': 'Toda mención de la Res. 482 de 2018 se reescribe como Res. 1811 de 2025; la transición de la '
                          'Res. 1732 de 2026 no se propaga (fue revocada).'},
         'conteos': conteos(exig),
+        'servicios_matriz': reglas.get('servicios_matriz', {}),
         'avisos': res['avisos'],
         'exigencias': exig,
     }

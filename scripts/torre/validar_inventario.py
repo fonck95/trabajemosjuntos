@@ -31,7 +31,7 @@ REGLAS = {
     'I3': ('Huella de cada unidad de piso dentro del polígono libre (2 cm); las de pared tocan un muro; las de cielo, el cielo', 'duro'),
     'I4': ('Sin traslapes entre huellas de piso', 'duro'),
     'I5': ('Área de barrido de cada puerta libre', 'duro'),
-    'I6': ('Paso libre ≥ 0,90 m desde la puerta hasta un costado de cada cama, camilla, cuna, sillón y unidad odontológica', 'duro'),
+    'I6': ('Paso libre ≥ 0,90 m desde una puerta o un vano abierto hasta un costado de cada cama, camilla, cuna, sillón y unidad odontológica', 'duro'),
     'I7': ('Cada exigencia evaluada con estado; diferencias con la investigación explicadas', 'duro'),
     'I8': ('Cada unidad con clase de riesgo de la enumeración, registro INVIMA y mantenimiento', 'duro'),
     'I9': ('dentro_de apunta a un contenedor del mismo recinto y a uno de sus compartimientos', 'duro'),
@@ -39,6 +39,10 @@ REGLAS = {
     'I11': ('Ninguna unidad sin recinto, salvo fuera de la torre y equipos de cubierta', 'duro'),
     'I12': ('Nombres de línea en reglas y cubre_con coinciden; ambientes por nombre a una sola fila', 'duro'),
     'I13': ('Líneas de laboratorio.json en comodato suman $955.708.589', 'duro'),
+    'I14': ('Todo el equipamiento fijo de dotacion.json queda ubicado (16.6)', 'duro'),
+    'I15': ('Laboratorio completo: analizadores de laboratorio.json y dotación del laboratorio y la toma de muestras en sus recintos, '
+            'con reactivos por prueba del menú (16.2)', 'duro'),
+    'I16': ('Infraestructura sin precio de dotación y con su ítem de obra de presupuesto.json (16.3)', 'duro'),
 }
 REGLAS_WEB = {'esquema': ('Forma web (10.2): campos, tipos e índices', 'duro'),
               'catalogo': ('Catálogo web igual a catalogo_equipos.json (lista cerrada del Anexo C)', 'duro')}
@@ -47,9 +51,9 @@ CLASES = ('I', 'IIa', 'IIb', 'III', 'no_dm', 'ivd', 'por_confirmar')
 ESTADOS_CLASE = ('coherente', 'discrepancia', 'probable_discrepancia', 'regimen_distinto', 'por_confirmar', 'observacion')
 ES_DM = ('si', 'no', 'ivd', 'por_confirmar')
 REQUERIDO = ('si', 'no', 'por_confirmar')
-PRIORIDADES = ('habilitacion', 'recomendado', 'por_confirmar')
+PRIORIDADES = ('habilitacion', 'recomendado', 'por_confirmar', 'no_aplica')
 MONTAJES = ('piso', 'pared', 'cielo', 'sobre', 'dentro', 'en_nucleo')
-ESTADOS_UNIDAD = ('en_dotacion', 'cierre_brechas_propuesto', 'fuera_de_la_torre', 'cubierta')
+ESTADOS_UNIDAD = ('en_dotacion', 'cierre_brechas_propuesto', 'fuera_de_la_torre', 'cubierta', 'infraestructura', 'contexto')
 ESTADOS_EXIG = ('cumple', 'parcial', 'falta', 'documento_pendiente', 'no_aplica')
 EXIGIBLE = ('si', 'por_confirmar')
 VERIFICACION = ('literal_compilacion', 'contenido_compilacion', 'fuente_secundaria', 'por_confirmar')
@@ -64,6 +68,28 @@ LETRA_POR_LISTA = {'equipos': 'e', 'mobiliario': 'm', 'equipamiento_fijo': 'f'}
 NOTA_SIN_EXIGENCIA = 'sin exigencia literal encontrada'
 COMODATO_COP = 955708589
 PASO_LIBRE_M = 0.90
+SERVICIOS_LABORATORIO = ('Laboratorio clínico', 'Toma de muestras de laboratorio clínico')
+PRESUPUESTO = C.TORRE / 'presupuesto.json'
+
+
+def es_puesto_paciente(modelo: str, familia: str, variante=None, nombre_linea=None) -> bool:
+    """Puestos de paciente de la regla I6: camas, camillas, cunas, sillones de paciente y unidades odontológicas. No lo son
+    las camillas de transporte estacionadas, las plegadas guardadas ni los sillones de acompañante."""
+    if variante == 'plegada' or modelo == 'camilla_transporte':
+        return False
+    if 'acompañante' in str(nombre_linea or '').lower():
+        return False
+    return familia in FAMILIAS_PACIENTE or modelo in MODELOS_PACIENTE
+
+
+def en_vano(punto, muro, tol=0.03) -> bool:
+    """¿El punto queda sobre el tramo interior (sin los 5 cm de cada punta) de un muro «abierto» (vano sin muro)?"""
+    a, b = muro['a'], muro['b']
+    L = math.hypot(b[0] - a[0], b[1] - a[1])
+    if L < 0.1:
+        return False
+    t = ((punto[0] - a[0]) * (b[0] - a[0]) + (punto[1] - a[1]) * (b[1] - a[1])) / L
+    return 0.05 < t < L - 0.05 and C.distancia_punto_segmento(punto, a, b) < tol
 
 
 def num(v) -> bool:
@@ -80,7 +106,7 @@ def entero(v) -> bool:
 class Planta:
     def __init__(self, plantas: dict | None):
         self.recintos, self.nivel_de, self.niveles = {}, {}, {}
-        self.puertas_de, self.muros = {}, {}
+        self.puertas_de, self.muros, self.abiertos_de = {}, {}, {}
         if not plantas:
             return
         for n in plantas.get('niveles', []):
@@ -92,6 +118,10 @@ class Planta:
                 pol[r['id']] = C.orientar_antihorario(r['poligono'])
             muros = {m['id']: m for m in n.get('muros', [])}
             self.muros.update(muros)
+            for m in n.get('muros', []):
+                if m.get('tipo') == 'abierto':
+                    for lado in m.get('lados') or []:
+                        self.abiertos_de.setdefault(lado, []).append((m, pol))
             for pt in n.get('puertas', []):
                 m = muros.get(pt.get('muro'))
                 if not m:
@@ -229,6 +259,10 @@ class ValidadorDatos:
                     self.err('I1', f'{uid}: componente_de = {u.get("componente_de")!r} y el id dice {madre}')
         for l in self.lineas:
             ks = sorted(por_linea.get(l.get('id'), []))
+            if l.get('tipo') == 'servicio' or l.get('sin_unidades'):
+                if ks:
+                    self.err('I1', f'{l.get("id")}: es un servicio sin unidades físicas y tiene {len(ks)} unidades')
+                continue
             if entero(l.get('cantidad')) and ks != list(range(1, l['cantidad'] + 1)):
                 self.err('I1', f'{l.get("id")}: {len(ks)} unidades (k = {ks}) para cantidad {l.get("cantidad")}')
 
@@ -307,6 +341,7 @@ class ValidadorDatos:
             nivel = self.planta.nivel_de[rid]
             libre = self.planta.libre(rid)
             alto_libre = nivel.get('altura_libre_m', 3.0)
+            z0 = float(r.get('z_piso_m') or 0.0)          # piso del recinto respecto al de su nivel (terraza del piso 3)
             de_piso = []
             for u in us:
                 uid = u.get('id')
@@ -322,7 +357,7 @@ class ValidadorDatos:
                     self.err('I3', f'{uid}: sin posición o sin polígono libre para comprobar')
                     continue
                 self.inf.revisado('I3')
-                dim, z = self.dim_de(u), u['posicion'][2]
+                dim, z = self.dim_de(u), u['posicion'][2] - z0
                 if mont in ('piso', 'en_nucleo'):
                     if not C.poligono_dentro_de(h, libre, 0.02):
                         self.err('I3', f'{uid} ({mid}): la huella se sale del polígono libre de {rid}')
@@ -337,6 +372,8 @@ class ValidadorDatos:
                     espalda = (p[0] + math.sin(rot) * dim[1] / 2, p[1] - math.cos(rot) * dim[1] / 2)
                     if C.distancia_a_borde(espalda, libre) > 0.02:
                         self.err('I3', f'{uid} ({mid}): montaje de pared y su espalda no toca la cara de un muro')
+                    elif any(en_vano(espalda, mu) for mu, _pol in self.planta.abiertos_de.get(rid, [])):
+                        self.err('I3', f'{uid} ({mid}): montaje de pared en un vano abierto (no hay muro)')
                     if z < 0.30:
                         de_piso.append((u, h, mid, m))
                 elif mont == 'cielo':
@@ -361,7 +398,8 @@ class ValidadorDatos:
                             self.err('I5', f'{rid}: {u.get("id")} ({mid}) queda en el barrido de la puerta {pt.get("id")}')
             # I6: paso libre a un costado de camas, camillas, cunas, sillones y unidades odontológicas
             pacientes = [(u, h, mid, m) for u, h, mid, m in de_piso
-                         if m.get('familia') in FAMILIAS_PACIENTE or mid in MODELOS_PACIENTE]
+                         if es_puesto_paciente(mid, m.get('familia'), u.get('variante') or (self.L.get(u.get('linea')) or {}).get('variante'),
+                                               (self.L.get(u.get('linea')) or {}).get('nombre'))]
             if pacientes:
                 self.i6(rid, libre, de_piso, pacientes)
 
@@ -372,23 +410,35 @@ class ValidadorDatos:
         for _u, h, _mid, _m in de_piso:
             rej.pintar_poligono(h, 0)
         holgura = rej.holgura()
-        umbral = PASO_LIBRE_M / 2 + rej.celda / 2
+        # paso de 0,90 m: el centro de cada celda del camino queda a 0,45 m o más del centro de la celda ocupada más cercana
+        umbral = PASO_LIBRE_M / 2
         transitable = bytearray(1 if rej.libre[k] and holgura[k] >= umbral - 1e-9 else 0 for k in range(len(rej.libre)))
         semillas = []
-        for pt, muro, pol in self.planta.puertas_de.get(rid, []):
-            n = C.normal_hacia(muro['a'], muro['b'], pt['centro'], pol[rid]) if rid in pol else None
+
+        def semilla(punto, muro, pol):
+            n = C.normal_hacia(muro['a'], muro['b'], punto, pol[rid]) if rid in pol else None
             if n is None:
-                continue
+                return
             for paso in (0.5, 0.6, 0.7, 0.8):
-                d = muro.get('espesor', 0.12) / 2 + paso
-                c = rej.celda_de(pt['centro'][0] + n[0] * d, pt['centro'][1] + n[1] * d)
+                d = float(muro.get('espesor', 0.12) or 0.0) / 2 + paso
+                c = rej.celda_de(punto[0] + n[0] * d, punto[1] + n[1] * d)
                 if c and transitable[c[1] * rej.nx + c[0]]:
                     semillas.append(c)
-                    break
+                    return
+        for pt, muro, pol in self.planta.puertas_de.get(rid, []):
+            semilla(pt['centro'], muro, pol)
+        # los vanos abiertos (muro «abierto» de la planta) también son entradas, cada 0,20 m
+        for muro, pol in self.planta.abiertos_de.get(rid, []):
+            L = math.hypot(muro['b'][0] - muro['a'][0], muro['b'][1] - muro['a'][1])
+            s = 0.3
+            while s <= L - 0.3 + 1e-9:
+                semilla((muro['a'][0] + (muro['b'][0] - muro['a'][0]) * s / L, muro['a'][1] + (muro['b'][1] - muro['a'][1]) * s / L),
+                        muro, pol)
+                s = round(s + 0.2, 6)
         for u, h, mid, m in pacientes:
             self.inf.revisado('I6')
             if not semillas:
-                self.err('I6', f'{rid}: no hay paso libre de {PASO_LIBRE_M} m junto a ninguna puerta del recinto')
+                self.err('I6', f'{rid}: no hay paso libre de {PASO_LIBRE_M} m junto a ninguna puerta ni vano abierto del recinto')
                 return
             dist = rej.distancias(semillas, transitable)
             dim = self.dim_de(u)
@@ -541,7 +591,7 @@ class ValidadorDatos:
             es = por_recinto.get(rid, [])
             for c in cortes:
                 vals = [(e.get('estado') or {}).get(c, {}).get('dotacion_actual') for e in es
-                        if e.get('exigible') == 'si' and e.get('referencia') is not True]
+                        if e.get('exigible') == 'si' and e.get('referencia') is not True and not str(e.get('id')).startswith('EX-TOD-')]
                 esperado = 'falta' if 'falta' in vals else 'parcial' if 'parcial' in vals else 'cumple'
                 dado = (dato.get('estado') or {}).get(c)
                 if dado != esperado:
@@ -592,7 +642,7 @@ class ValidadorDatos:
         for u in self.unidades:
             uid = u.get('id')
             mont = u.get('montaje')
-            if mont not in MONTAJES:
+            if mont not in MONTAJES and not (mont is None and u.get('estado') == 'fuera_de_la_torre'):
                 self.err('I9', f'{uid}: montaje {mont!r} fuera de {MONTAJES}')
             d = u.get('dentro_de')
             if mont == 'dentro' and not d:
@@ -641,7 +691,7 @@ class ValidadorDatos:
             rid = u.get('recinto')
             if rid is None:
                 if u.get('linea') in fuera or u.get('estado') == 'fuera_de_la_torre' or \
-                        str(u.get('ubicacion', '')).startswith('cubierta'):
+                        str(u.get('ubicacion', '')).startswith(('cubierta', 'exterior')):
                     continue
                 self.err('I11', f'{u.get("id")}: sin recinto (solo se permite fuera de la torre o en la cubierta sin planta)')
             elif self.planta.recintos and rid not in self.planta.recintos:
@@ -706,10 +756,16 @@ class ValidadorDatos:
             self.ref_linea('reglas_ubicacion', r)
             for rep in r.get('reparto', []):
                 self.ref_ambiente(f'reglas_ubicacion {r.get("linea")}', rep.get('ambiente'), ambientes)
+        inf = (self.reglas_ub or {}).get('infraestructura') or {}
+        for r in inf.get('reglas', []):
+            if r.get('elemento') not in (inf.get('elementos') or {}):
+                self.err('I12', f'reglas_ubicacion → infraestructura: elemento {r.get("elemento")!r} sin definir')
+            for rep in r.get('reparto', []):
+                self.ref_ambiente(f'reglas_ubicacion → infraestructura {r.get("elemento")}', rep.get('ambiente'), ambientes)
         for r in (self.reglas_ex or {}).get('reglas', []):
             for c in r.get('cubre_con', []) or []:
                 self.ref_linea('reglas_exigencias → cubre_con', c)
-        for nombre, p in ((self.impl or {}).get('plantillas') or {}).items():
+        for nombre, p in ((self.impl or {}).get('plantillas') or {}).items() if not self.fixture else ():
             for ref in p.get('lineas_que_la_usan', []) or []:
                 self.ref_linea(f'implementos.{nombre}', ref)
         for l in self.lineas:
@@ -738,6 +794,85 @@ class ValidadorDatos:
             if l.get('adquisicion') not in ('comodato', 'programa_o_compra', 'opcional'):
                 self.err('I13', f'{l.get("id")}: adquisicion {l.get("adquisicion")!r} fuera de comodato, programa_o_compra u opcional')
 
+    # ------------------------------------------------------------------------------------------------ I14 a I16 (16)
+    def i14(self):
+        fijo = [l for l in self.lineas if (l.get('ref') or {}).get('lista') == 'equipamiento_fijo']
+        if not fijo:
+            self.inf.omitir('I14', 'el inventario no trae equipamiento fijo')
+            return
+        esperadas = len(self.dot.get('equipamiento_fijo', []))
+        if len(fijo) != esperadas:
+            self.err('I14', f'{len(fijo)} líneas de equipamiento fijo y dotacion.json trae {esperadas}')
+        fuera = {f.get('linea') for f in self.inv.get('fuera_de_la_torre', []) if isinstance(f, dict)}
+        for l in fijo:
+            us = [u for u in self.unidades if u.get('linea') == l.get('id') and self.es_base(u)]
+            self.inf.revisado('I14', len(us))
+            for u in us:
+                if u.get('recinto') is None and l.get('id') not in fuera and not str(u.get('ubicacion', '')).startswith(('cubierta', 'exterior')):
+                    self.err('I14', f'{u.get("id")} «{l.get("nombre")}»: sin ubicar (ni recinto, ni zona, ni fuera de la torre)')
+                if u.get('recinto') is not None and self.planta.recintos and not u.get('posicion'):
+                    self.err('I14', f'{u.get("id")} «{l.get("nombre")}»: sin posición en su recinto')
+
+    def i15(self):
+        if self.fixture:
+            self.inf.omitir('I15', 'el fixture no trae el laboratorio')
+            return
+        lab = [l for l in self.lineas if l.get('origen') == 'laboratorio']
+        n_lab = len((self.lab or {}).get('equipos', []))
+        if len(lab) != n_lab:
+            self.err('I15', f'{len(lab)} líneas de laboratorio.json en el inventario y el archivo trae {n_lab}')
+        prog = (self.programa or {}).get('ambientes', [])
+        filas_lab = {i for i, a in enumerate(prog) if a.get('servicio') in SERVICIOS_LABORATORIO}
+        for l in lab + [l for l in self.lineas if l.get('origen') == 'dotacion' and l.get('servicio') in ('laboratorio', 'toma_muestras')]:
+            for u in (u for u in self.unidades if u.get('linea') == l.get('id') and self.es_base(u)):
+                self.inf.revisado('I15')
+                m = C.RE_RECINTO.match(str(u.get('recinto')))
+                r_planta = self.planta.recintos.get(u.get('recinto')) or {}
+                tec_lab = bool(C.RE_TECNICO.match(str(u.get('recinto')))) and r_planta.get('servicio_programa') in SERVICIOS_LABORATORIO
+                if not tec_lab and (not m or int(m.group(2)) not in filas_lab):
+                    self.err('I15', f'{u.get("id")} «{l.get("nombre")}»: no está en un recinto del laboratorio o de la toma de muestras')
+        plantillas = (self.impl or {}).get('plantillas') or {}
+        cubiertas = set()
+        for nombre, p in plantillas.items():
+            for it in p.get('items', []):
+                cubiertas.update(it.get('pruebas') or [])
+        for l in lab:
+            p = plantillas.get(l.get('plantilla_contenido'))
+            if not p:
+                self.err('I15', f'{l.get("id")} «{l.get("nombre")}»: el analizador no tiene plantilla de reactivos en implementos.json')
+                continue
+            reactivos = [it for it in p.get('items', []) if it.get('pruebas') and it.get('almacenamiento')]
+            if not reactivos:
+                self.err('I15', f'{l.get("id")}: su plantilla no trae reactivos con pruebas y condición de almacenamiento')
+        for m in (self.lab or {}).get('menu', []):
+            if m.get('en_sitio') and m.get('id') not in cubiertas:
+                self.err('I15', f'la prueba «{m.get("id")}» del menú no tiene reactivo o insumo en implementos.json')
+
+    def i16(self):
+        infra = [l for l in self.lineas if l.get('origen') == 'infraestructura']
+        if not infra:
+            self.inf.omitir('I16', 'el inventario no trae capa de infraestructura')
+            return
+        items = {}
+        if PRESUPUESTO.exists() and not self.fixture:
+            for cap in C.cargar_json(PRESUPUESTO).get('capitulos', []):
+                for it in cap.get('items', []):
+                    items[str(it.get('codigo'))] = it.get('descripcion')
+        for l in infra:
+            self.inf.revisado('I16')
+            if l.get('precio_unitario_cop_2026') not in (None, 0) or l.get('rango_precio_unitario_cop_2026'):
+                self.err('I16', f'{l.get("id")}: la infraestructura no lleva precio de dotación')
+            if l.get('capa') not in ('infraestructura', 'contexto'):
+                self.err('I16', f'{l.get("id")}: capa {l.get("capa")!r} (se espera infraestructura o contexto)')
+            for c in l.get('cita_presupuesto', []) or []:
+                if items and items.get(c.get('item')) != c.get('descripcion'):
+                    self.err('I16', f'{l.get("id")}: el ítem {c.get("item")} no corresponde a presupuesto.json')
+        for u in self.unidades:
+            l = self.L.get(u.get('linea')) or {}
+            if l.get('origen') == 'infraestructura' and u.get('estado') not in ('infraestructura', 'contexto') \
+                    and not (u.get('estado') == 'cierre_brechas_propuesto' and u.get('propuesta_obra')):
+                self.err('I16', f'{u.get("id")}: unidad de infraestructura con estado {u.get("estado")!r}')
+
     def correr(self):
         self.i1()
         self.i2()
@@ -748,6 +883,9 @@ class ValidadorDatos:
         self.i11()
         self.i12()
         self.i13()
+        self.i14()
+        self.i15()
+        self.i16()
 
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -959,6 +1097,7 @@ def main(argv=None):
     modo.add_argument('--web', type=Path, metavar='INVENTARIO_WEB')
     ap.add_argument('--plantas', type=Path)
     ap.add_argument('--habilitacion', type=Path)
+    ap.add_argument('--inventario', type=Path, default=C.INVENTARIO, help='inventario de datos a validar (por defecto, el de data/)')
     ap.add_argument('--catalogo', type=Path, default=C.CATALOGO)
     a = ap.parse_args(argv)
 
@@ -988,7 +1127,7 @@ def main(argv=None):
         ruta_pl = a.plantas or carpeta / nombre_plantas
         ruta_hab = a.habilitacion or carpeta / 'habilitacion_min.json'
         rutas = {Path(ruta_dot).name: ruta_dot, nombre_plantas: ruta_pl}
-        rutas.update({k: carpeta / k for k in hs if k not in rutas})
+        rutas.update({k: (carpeta / k if (carpeta / k).exists() else C.TORRE / k) for k in hs if k not in rutas})
         revisar_huellas(inf, inv, rutas, Path(ruta_dot))
         plantas = leer(inf, 'insumos', ruta_pl)
         hab = leer(inf, 'I7', ruta_hab)
@@ -997,8 +1136,8 @@ def main(argv=None):
         ValidadorDatos(inf, inv, dot, cat, Planta(plantas), hab, None, None, impl, None, None, None, True).correr()
         inf.salir()
 
-    inf = C.Informe('validar_inventario', REGLAS, archivo=C.relativa(C.INVENTARIO), modo='completo')
-    inv = leer(inf, 'insumos', C.INVENTARIO)
+    inf = C.Informe('validar_inventario', REGLAS, archivo=C.relativa(a.inventario), modo='completo')
+    inv = leer(inf, 'insumos', a.inventario)
     dot = leer(inf, 'insumos', C.DOTACION)
     cat = leer(inf, 'insumos', a.catalogo)
     if inv is None or dot is None or cat is None:
@@ -1008,12 +1147,13 @@ def main(argv=None):
     rutas = {'dotacion.json': C.DOTACION, 'laboratorio.json': C.LABORATORIO, ruta_pl.name: ruta_pl,
              'reglas_ubicacion.json': C.REGLAS_UBICACION, 'catalogo_equipos.json': a.catalogo,
              'implementos.json': C.IMPLEMENTOS, 'exigencias_3100.json': C.EXIGENCIAS,
-             'normas_4725_1732.json': C.FUENTES_INVESTIGACION / 'normas_4725_1732.json'}
+             'normas_4725_1732.json': C.FUENTES_INVESTIGACION / 'normas_4725_1732.json', 'programa.json': C.PROGRAMA,
+             'presupuesto.json': PRESUPUESTO}
     revisar_huellas(inf, inv, rutas, C.DOTACION,
                     esperadas=('dotacion.json', 'laboratorio.json', ruta_pl.name, 'reglas_ubicacion.json',
                                'catalogo_equipos.json', 'implementos.json', 'exigencias_3100.json'))
     plantas = leer(inf, 'insumos', ruta_pl)
-    hab = leer(inf, 'I7', a.habilitacion or C.HABILITACION)
+    hab = leer(inf, 'I7', a.habilitacion or (a.inventario.parent / C.HABILITACION.name))
     ex = leer(inf, 'I7', C.EXIGENCIAS)
     ex = ex.get('exigencias', []) if isinstance(ex, dict) else ex
     lab = leer(inf, 'I13', C.LABORATORIO)

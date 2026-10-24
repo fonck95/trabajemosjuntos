@@ -1420,12 +1420,12 @@
    "nombre": "Telemedicina (prestador remisor)",
    "piso": 4,
    "capacidad": "1 consultorio de telemedicina de 10 m² y telerradiología para imágenes.",
-   "norma": "Res. 2654 de 2019; Res. 3100, num. 11.1.2 criterios 51-53 y 11.1.3 criterio 17; Res. 1633, Cuadro 5.",
+   "norma": "Res. 2654 de 2019; Res. 3100, num. 11.1.2 criterios 51-53 (según normas.json; por confirmar) y 11.1.3 criterio 17; Res. 1633, Cuadro 5.",
    "equipos": [
     {
      "nombre": "Estación de telemedicina (computador, cámara HD con zoom, micrófono de ambiente, parlantes)",
      "cantidad": 1,
-     "especificacion": "Videoconferencia cifrada; certificado del ingeniero de sistemas sobre ancho de banda (Res. 3100, num. 11.1.2).",
+     "especificacion": "Videoconferencia cifrada; certificado del ingeniero de sistemas sobre ancho de banda (Res. 3100, num. 11.1.3, criterio 17).",
      "clase_riesgo": "No es dispositivo médico (mobiliario general)",
      "vida_util_anios": 5,
      "mantenimiento_anual_pct": 5,
@@ -1438,7 +1438,8 @@
      "rango_precio_unitario_cop_2026": [
       6000000,
       14000000
-     ]
+     ],
+     "ajuste_v2": "Verificación V3 (2026-10-24, revisión adversarial): la cita del certificado del ingeniero de sistemas pasa del num. 11.1.2 (infraestructura) al 11.1.3, criterio 17 (estándar de dotación, según las compilaciones; subnumeral por confirmar entre copias). Sin cambio de precio."
     },
     {
      "nombre": "Monitor grado médico para revisión clínica (separación entre píxeles ≤ 0,25 mm)",
@@ -5306,7 +5307,7 @@
   "origen": "Cruce con la Res. 3100 de 2019 (revisiones de urgencias e internación, consulta y ambulatorio y apoyo diagnóstico; fuentes_investigacion/res3100_*.json) y con el proyecto tipo (proyecto_tipo_contraste.json). Contrato de integración, 4.7.1.",
   "como_se_financia": "Cada ítem indica su proyecto (P4, P5 o P6 de presupuesto.json). Mientras no se actualice el presupuesto, la inversión podría salir de la contingencia de su proyecto (P4: $175.059.364; P5: $26.160.785), que es la reserva para riesgo de cantidades y precios: usarla reduce esa reserva. Los gastos de operación anual no se financian con contingencias. No se suma a totales_generales.",
   "reglas": {
-   "prioridad": "habilitacion solo si al menos una exigencia enlazada es exigible (texto de compilación oficial); por_confirmar si todas son de guía secundaria o paráfrasis; recomendado en la sala de expansión, el DEA del piso 4 y los ítems del proyecto tipo.",
+   "prioridad": "habilitacion solo si al menos una exigencia enlazada es exigible (texto de compilación oficial); por_confirmar si todas son de guía secundaria o paráfrasis; recomendado en la sala de expansión, el DEA del piso 4 y los ítems del proyecto tipo. Una exigencia con vigencia_hasta anterior a la apertura (las de esterilización que deroga la Res. 914 de 2025) no basta para dar prioridad habilitacion: el ítem queda por_confirmar hasta leer el manual DMER.",
    "precio": "referencia_repo cuando el mismo ítem está en dotacion.json; estimacion con el rango de la investigación cuando la trae; por_cotizar (precio null) en los demás casos. Los totales no suman cifras supuestas.",
    "proyecto": "P4 dotación; P5 laboratorio y toma de muestras; P6 sistemas de información."
   },
@@ -5603,7 +5604,14 @@
     ],
     "prioridad": "por_confirmar",
     "proyecto": "P4",
-    "naturaleza": "inversion"
+    "naturaleza": "inversion",
+    "clase_riesgo_revision": {
+     "valor": "por_confirmar",
+     "estado": "por_confirmar",
+     "regla": "Decreto 4725, art. 7, regla 10 lit. c (vigilancia de parámetros vitales con peligro inmediato → IIb). El ABC del INVIMA pone los ‘monitores de saturación de oxígeno’ como ejemplo de IIb.",
+     "fuente": "Revisión del Decreto 4725 de 2005 (investigación del 23-oct-2026)",
+     "nota": "Clase en el repositorio: IIa. Revisión: IIb si es para vigilancia continua con alarmas; IIa si es para controles puntuales. En adaptación neonatal y en urgencias el oxímetro suele usarse como monitor. Definir el uso en la especificación de compra y tomar la clase del registro INVIMA."
+    }
    },
    {
     "servicio": "partos",
@@ -5688,9 +5696,10 @@
       "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[15]"
      }
     ],
-    "prioridad": "habilitacion",
+    "prioridad": "por_confirmar",
     "proyecto": "P4",
-    "naturaleza": "inversion"
+    "naturaleza": "inversion",
+    "ajuste_v2": "Verificación V3 (2026-10-24, revisión adversarial): pasa de habilitación a por confirmar: su exigencia (EX-PAR-016) solo se vio en una guía de consultoría (no en una compilación oficial), así que queda por confirmar."
    },
    {
     "servicio": "esterilizacion",
@@ -5749,10 +5758,11 @@
       "origen": "res3100_urgencias_e_internacion.json#servicios[3].exigencias[3]"
      }
     ],
-    "prioridad": "habilitacion",
+    "prioridad": "por_confirmar",
     "proyecto": "P4",
     "naturaleza": "inversion",
-    "depende_de": "Res. 914 de 2025 (manual de reprocesamiento de dispositivos médicos; rige desde el 3-ene-2027, antes de la apertura)"
+    "depende_de": "Res. 914 de 2025 (manual de reprocesamiento de dispositivos médicos; rige desde el 3-ene-2027, antes de la apertura)",
+    "ajuste_v2": "Verificación V3 (2026-10-24, revisión adversarial): pasa de habilitación a por confirmar: su única exigencia (EX-EST-004) la deroga la Res. 914 de 2025 el 3-ene-2027, antes de la apertura; se decide al leer el manual DMER, como la secadora."
    },
    {
     "servicio": "esterilizacion",
@@ -6104,6 +6114,38 @@
     "naturaleza": "inversion"
    },
    {
+    "servicio": "esterilizacion",
+    "nombre": "Termohigrómetro con registro (depósito de esterilización)",
+    "tipo": "equipo",
+    "cantidad": 1,
+    "ambientes": [
+     {
+      "fila": 163,
+      "nombre": "Almacenamiento y entrega de material estéril",
+      "cantidad": 1
+     }
+    ],
+    "especificacion": "Igual a la línea del servicio farmacéutico: temperatura y humedad relativa con registro, en el depósito de material estéril.",
+    "clase_riesgo": "no_dm",
+    "precio_unitario_cop_2026": 350000,
+    "rango_precio_unitario_cop_2026": [
+     200000,
+     600000
+    ],
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (servicio farmacéutico: «Termohigrómetros con registro»)",
+    "exigencias": [
+     {
+      "id": "EX-EST-012",
+      "origen": "res3100_urgencias_e_internacion.json#servicios[3].exigencias[11]"
+     }
+    ],
+    "prioridad": "habilitacion",
+    "proyecto": "P4",
+    "naturaleza": "inversion",
+    "nota": "La revisión de la Res. 3100 pide un termohigrómetro propio en el depósito de esterilización: los 6 del servicio farmacéutico están en sus recintos del piso 2."
+   },
+   {
     "servicio": "consulta_externa",
     "nombre": "Fonendoscopio pediátrico",
     "tipo": "equipo",
@@ -6199,7 +6241,12 @@
      {
       "fila": 67,
       "nombre": "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos)",
-      "cantidad": 2
+      "cantidad": 1
+     },
+     {
+      "fila": 68,
+      "nombre": "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)",
+      "cantidad": 1
      }
     ],
     "especificacion": "Igual a la línea de consulta externa.",
@@ -6235,13 +6282,13 @@
     ],
     "especificacion": "Flujómetro con humidificador en la toma de oxígeno de la sala de terapia respiratoria; la salida de la red va en la obra.",
     "clase_riesgo": "IIa",
-    "precio_unitario_cop_2026": 600000,
+    "precio_unitario_cop_2026": 450000,
     "rango_precio_unitario_cop_2026": [
-     400000,
-     800000
+     300000,
+     700000
     ],
-    "tipo_precio": "estimacion",
-    "fuente": "Estimación de la revisión de la Res. 3100 (consulta y ambulatorio, 23-oct-2026) (sin la salida de la red de gases, que va en obra).",
+    "tipo_precio": "referencia_repo",
+    "fuente": "Mismo ítem en dotacion.json (urgencias: «Flujómetro de oxígeno con humidificador»)",
     "exigencias": [
      {
       "id": "EX-TER-003",
@@ -6250,7 +6297,8 @@
     ],
     "prioridad": "habilitacion",
     "proyecto": "P4",
-    "naturaleza": "inversion"
+    "naturaleza": "inversion",
+    "ajuste_v2": "Verificación V3 (2026-10-24, revisión adversarial): precio del mismo ítem de dotacion.json ($450.000; rango $300.000 a $700.000) en lugar de la estimación de la revisión ($600.000), como pide la regla de precio del cierre."
    },
    {
     "servicio": "terapias",
@@ -6527,10 +6575,11 @@
       "origen": "res3100_apoyo_diagnostico.json#servicios[2].exigencias[7]"
      }
     ],
-    "prioridad": "habilitacion",
+    "prioridad": "por_confirmar",
     "proyecto": "P4",
     "naturaleza": "operacion_anual",
-    "nota": "Servicio anual: no tiene unidad en el recorrido. El primer año está en presupuesto.json (puesta en marcha, P4)."
+    "nota": "Servicio anual: no tiene unidad en el recorrido. El primer año está en presupuesto.json (puesta en marcha, P4).",
+    "ajuste_v2": "Verificación V3 (2026-10-24, revisión adversarial): pasa de habilitación a por confirmar: su exigencia de la Res. 3100 (EX-IMG-008) solo se vio en una guía de consultoría; el control de calidad lo pide también la Res. 1811 de 2025 (por confirmar en su texto)."
    },
    {
     "servicio": "tic_apoyo",
@@ -6717,12 +6766,12 @@
   "totales": {
    "por_proyecto": {
     "P4": {
-     "habilitacion_cop_2026": 8175000,
+     "habilitacion_cop_2026": 8375000,
      "recomendado_cop_2026": 22194906,
      "por_confirmar_cop_2026": 12696000,
-     "items": 36,
+     "items": 37,
      "items_sin_precio": 11,
-     "total_con_precio_cop_2026": 43065906
+     "total_con_precio_cop_2026": 43265906
     },
     "P5": {
      "habilitacion_cop_2026": 350000,
@@ -6741,10 +6790,10 @@
      "total_con_precio_cop_2026": 0
     }
    },
-   "inversion_con_precio_cop_2026": 46704906,
+   "inversion_con_precio_cop_2026": 46904906,
    "rango_inversion_con_precio_cop_2026": [
-    35909906,
-    61499906
+    36009906,
+    61999906
    ],
    "operacion_anual": {
     "cop_2026": 4100000,
@@ -6755,7 +6804,7 @@
     "items": 2,
     "items_sin_precio": 1
    },
-   "items": 41,
+   "items": 42,
    "items_sin_precio": 12,
    "tipo": "calculo_propio",
    "nota": "Las sumas no incluyen ítems por cotizar; la operación anual va aparte y no se suma a la inversión."

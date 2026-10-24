@@ -1,0 +1,1341 @@
+{
+ "version": 1,
+ "tipo_dato": "mixto: dato oficial (mínimos y anchos citados), cálculo propio y estimación (marcados en cada fila)",
+ "redondeo_m": 0.05,
+ "niveles": {
+  "nota": "Nivel de la planta donde va cada fila del programa (16.1: exteriores, bloque técnico y cubierta también tienen recintos).",
+  "piso_a_nivel": {
+   "bloque técnico": "BT",
+   "subsuelo del patio de servicio": "BT",
+   "exterior (patio de servicio)": "BT",
+   "exterior": "EXT",
+   "cubierta": "CUB"
+  },
+  "nivel_por_fila": {"229": "BT"},
+  "nota_fila_229": "El pasaje de servicio en rampa (exterior) une la torre con el bloque técnico y el patio de servicio: se dibuja en el nivel BT."
+ },
+ "tipos_muro": {
+  "fachada": {
+   "espesor_m": 0.2,
+   "material": "ladrillo a la vista de 15 cm con pañete interior",
+   "fuente": "presupuesto.json 4.03",
+   "altura": "entrepiso"
+  },
+  "nucleo": {
+   "espesor_m": 0.3,
+   "material": "concreto de 28 MPa (estructural)",
+   "fuente": "presupuesto.json 3.02",
+   "altura": "entrepiso",
+   "estructural": true
+  },
+  "bloque": {
+   "espesor_m": 0.15,
+   "material": "bloque de arcilla No. 5 con pañete",
+   "fuente": "presupuesto.json 4.01",
+   "altura": "libre"
+  },
+  "liviano": {"espesor_m": 0.12, "material": "placa de yeso RH doble cara", "fuente": "presupuesto.json 4.02", "altura": "libre"},
+  "plomado": {
+   "espesor_m": 0.2,
+   "material": "bloque con lámina de plomo ≈ 2 mm (cálculo de blindaje pendiente)",
+   "fuente": "presupuesto.json 4.07",
+   "altura": "libre"
+  },
+  "parapeto": {
+   "espesor_m": 0.15,
+   "material": "antepecho de cubierta de 1,20 m con baranda (programa.json → pisos_y_alturas.parapeto = 18,3 m)",
+   "fuente": "estimación",
+   "altura": 1.2
+  },
+  "cerramiento": {
+   "espesor_m": 0.1,
+   "material": "borde del área exterior: malla del cerramiento del predio sobre muro bajo, muro de contención o borde de patio (torre_hospital.json → elementos)",
+   "fuente": "estimación",
+   "altura": 2.3
+  },
+  "abierto": {
+   "espesor_m": 0.0,
+   "material": "vano abierto: límite entre dos espacios sin muro (no se dibuja ni bloquea el paso)",
+   "fuente": "decisión de este trazado",
+   "altura": 0.0
+  }
+ },
+ "muros": {
+  "bloque_patron": "sanitari|^Baño|Batería|Vestidor|ducha|Ducha|aseo|Lavapatos|trabajo sucio|Descontaminación|^Ductos|^Cuarto eléctrico|telecomunicaciones|tableros|residuos|medicamentos|Laboratorio clínico$|biología molecular|^Subestación|^Planta eléctrica|gases|bombas|cadáveres|^Montacargas|^Lavado|lavado de material|compresor|Esterilización \\(reprocesamiento|esterilización odontológica|baterías|vencidos|rechazados|control especial",
+  "plomado_patron": "rayos\\s*x|periapical",
+  "nota": "Tipo de cada borde (3.3): fachada en el contorno, núcleo en el borde de escaleras, ascensores y montacargas, plomado alrededor de rayos X y del periapical, bloque entre zonas húmedas, ductos, cuartos técnicos, depósitos de medicamentos y laboratorio, liviano en el resto; gana el más exigente (plomado > núcleo > fachada > bloque > liviano). Los vanos abiertos (sin muro) los marca el trazado."
+ },
+ "minimos": [
+  {
+   "ambiente": {"fila": 15, "nombre": "Consultorio de urgencias con unidad sanitaria"},
+   "m2": 10.0,
+   "lado_m": 2.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (consultorio de urgencias)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_consultorio"
+  },
+  {
+   "ambiente": {"fila": 16, "nombre": "Sala de procedimientos (suturas, curaciones)"},
+   "m2": 10.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 5 y 63 (sala de procedimientos); la Res. 3100 pide 8 m² (normas.json)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.sala_procedimientos"
+  },
+  {
+   "ambiente": {"fila": 70, "nombre": "Sala de procedimientos de consulta externa (curaciones, inyectología, electrocardiograma)"},
+   "m2": 10.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 5 y 63 (sala de procedimientos); la Res. 3100 pide 8 m² (normas.json)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.sala_procedimientos"
+  },
+  {
+   "ambiente": {"fila": 124, "nombre": "Sala de procedimientos de hospitalización"},
+   "m2": 10.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 5 y 63 (sala de procedimientos); la Res. 3100 pide 8 m² (normas.json)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.sala_procedimientos"
+  },
+  {
+   "ambiente": {"fila": 17, "nombre": "Sala de reanimación, 2 camillas"},
+   "m2": 20.0,
+   "lado_m": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (reanimación: 12 m² + 8 m² por camilla adicional; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.14 (12 m², según normas.json; por confirmar)",
+   "tipo_dato": "dato oficial (Res. 1633); por confirmar (Res. 3100)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_reanimacion"
+  },
+  {
+   "ambiente": {"fila": 12, "nombre": "Descontaminación de pacientes (ducha teléfono, drenaje, sanitario)"},
+   "m2": 6.0,
+   "lado_m": 2.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (descontaminación)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_descontaminacion"
+  },
+  {
+   "ambiente": {"fila": 13, "nombre": "Cuarto de custodia"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (cuarto de custodia)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_cuarto_custodia"
+  },
+  {
+   "ambiente": {"fila": 11, "nombre": "Estacionamiento de camillas y sillas de ruedas"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (estacionamiento de camillas)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_estacionamiento_camillas"
+  },
+  {
+   "ambiente": {"fila": 18, "nombre": "Atención de enfermedad respiratoria aguda (ERA), 3 sillas"},
+   "m2": 9.0,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (ERA: 3 m² por silla; 3 sillas)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_era_por_silla"
+  },
+  {
+   "ambiente": {"fila": 19, "nombre": "Atención de enfermedad diarreica aguda (EDA), 2 camillas"},
+   "m2": 12.0,
+   "lado_m": 2.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (EDA: 6 m² por camilla; 2 camillas)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_eda_por_camilla"
+  },
+  {
+   "ambiente": {"fila": 21, "nombre": "Sala de yesos e inmovilización"},
+   "m2": 9.0,
+   "lado_m": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (inmovilización: 9 m² + 6 m² por camilla adicional; 1 camilla)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_inmovilizacion"
+  },
+  {
+   "ambiente": {"fila": 22, "nombre": "Ambiente individual de aislamiento con baño PMR"},
+   "m2": 16.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (aislamiento con baño accesible y guardarropa, con antecámara)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_aislamiento"
+  },
+  {
+   "ambiente": {"fila": 24, "nombre": "Observación adultos hombres, 2 camillas"},
+   "m2": 12.0,
+   "lado_m": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_observacion_por_camilla"
+  },
+  {
+   "ambiente": {"fila": 25, "nombre": "Observación adultos mujeres, 2 camillas"},
+   "m2": 12.0,
+   "lado_m": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_observacion_por_camilla"
+  },
+  {
+   "ambiente": {"fila": 26, "nombre": "Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes"},
+   "m2": 10.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 94 (observación pediátrica: 6 m² por camilla o 4 m² por cuna; 1 camilla y 1 cuna)",
+   "tipo_dato": "cálculo propio sobre dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_observacion_pediatrica"
+  },
+  {
+   "ambiente": {"fila": 30, "nombre": "Estación de enfermería: trabajo limpio"},
+   "m2": 3.0,
+   "lado_m": 1.2,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 a (trabajo limpio y trabajo sucio)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.trabajo_limpio / trabajo_sucio"
+  },
+  {
+   "ambiente": {"fila": 31, "nombre": "Estación de enfermería: trabajo sucio"},
+   "m2": 3.0,
+   "lado_m": 1.2,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 a (trabajo limpio y trabajo sucio)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.trabajo_limpio / trabajo_sucio"
+  },
+  {
+   "ambiente": {"fila": 126, "nombre": "Estación de enfermería: trabajo limpio"},
+   "m2": 3.0,
+   "lado_m": 1.2,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 a (trabajo limpio y trabajo sucio)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.trabajo_limpio / trabajo_sucio"
+  },
+  {
+   "ambiente": {"fila": 127, "nombre": "Estación de enfermería: trabajo sucio"},
+   "m2": 3.0,
+   "lado_m": 1.2,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 a (trabajo limpio y trabajo sucio)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.trabajo_limpio / trabajo_sucio"
+  },
+  {
+   "ambiente": {"fila": 33, "nombre": "Depósito de equipos y dispositivos médicos"},
+   "m2": 3.0,
+   "lado_m": 1.2,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 a (depósito de equipos, ropa limpia y ropa sucia)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.deposito_equipos_ropa_limpia_ropa_sucia_c_u"
+  },
+  {
+   "ambiente": {"fila": 34, "nombre": "Depósito de ropa limpia"},
+   "m2": 3.0,
+   "lado_m": 1.2,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 a (depósito de equipos, ropa limpia y ropa sucia)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.deposito_equipos_ropa_limpia_ropa_sucia_c_u"
+  },
+  {
+   "ambiente": {"fila": 35, "nombre": "Depósito de ropa sucia"},
+   "m2": 3.0,
+   "lado_m": 1.2,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 a (depósito de equipos, ropa limpia y ropa sucia)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.deposito_equipos_ropa_limpia_ropa_sucia_c_u"
+  },
+  {
+   "ambiente": {"fila": 129, "nombre": "Depósito de equipos"},
+   "m2": 3.0,
+   "lado_m": 1.2,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 a (depósito de equipos, ropa limpia y ropa sucia)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.deposito_equipos_ropa_limpia_ropa_sucia_c_u"
+  },
+  {
+   "ambiente": {"fila": 130, "nombre": "Depósito de ropa limpia"},
+   "m2": 3.0,
+   "lado_m": 1.2,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 a (depósito de equipos, ropa limpia y ropa sucia)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.deposito_equipos_ropa_limpia_ropa_sucia_c_u"
+  },
+  {
+   "ambiente": {"fila": 131, "nombre": "Depósito de ropa sucia"},
+   "m2": 3.0,
+   "lado_m": 1.2,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 a (depósito de equipos, ropa limpia y ropa sucia)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.deposito_equipos_ropa_limpia_ropa_sucia_c_u"
+  },
+  {
+   "ambiente": {"fila": 43, "nombre": "Ambiente de aseo"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (ambiente de aseo: todos los servicios, uno por piso o nivel; numeral por confirmar)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.ambiente_aseo"
+  },
+  {
+   "ambiente": {"fila": 49, "nombre": "Ambiente de aseo"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (ambiente de aseo: todos los servicios, uno por piso o nivel; numeral por confirmar)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.ambiente_aseo"
+  },
+  {
+   "ambiente": {"fila": 55, "nombre": "Ambiente de aseo"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (ambiente de aseo: todos los servicios, uno por piso o nivel; numeral por confirmar)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.ambiente_aseo"
+  },
+  {
+   "ambiente": {"fila": 78, "nombre": "Ambiente de aseo (compartido con vacunación y farmacia)"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (ambiente de aseo: todos los servicios, uno por piso o nivel; numeral por confirmar)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.ambiente_aseo"
+  },
+  {
+   "ambiente": {"fila": 93, "nombre": "Ambiente de aseo"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (ambiente de aseo: todos los servicios, uno por piso o nivel; numeral por confirmar)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.ambiente_aseo"
+  },
+  {
+   "ambiente": {"fila": 144, "nombre": "Ambiente de aseo"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (ambiente de aseo: todos los servicios, uno por piso o nivel; numeral por confirmar)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.ambiente_aseo"
+  },
+  {
+   "ambiente": {"fila": 160, "nombre": "Ambiente de aseo"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (ambiente de aseo: todos los servicios, uno por piso o nivel; numeral por confirmar)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.ambiente_aseo"
+  },
+  {
+   "ambiente": {"fila": 165, "nombre": "Ambiente de aseo"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (ambiente de aseo: todos los servicios, uno por piso o nivel; numeral por confirmar)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.ambiente_aseo"
+  },
+  {
+   "ambiente": {"fila": 196, "nombre": "Ambiente de aseo"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (ambiente de aseo: todos los servicios, uno por piso o nivel; numeral por confirmar)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.ambiente_aseo"
+  },
+  {
+   "ambiente": {"fila": 204, "nombre": "Ambiente de aseo general del piso"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (ambiente de aseo: todos los servicios, uno por piso o nivel; numeral por confirmar)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.ambiente_aseo"
+  },
+  {
+   "ambiente": {"fila": 56, "nombre": "Unidad de almacenamiento intermedio de residuos"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (unidad de almacenamiento intermedio de residuos: una por piso o nivel; numeral por confirmar); Res. 1633, num. 3.3.13 (normas.json → residuos)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_almacenamiento_intermedio_residuos"
+  },
+  {
+   "ambiente": {"fila": 110, "nombre": "Unidad de almacenamiento intermedio de residuos"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (unidad de almacenamiento intermedio de residuos: una por piso o nivel; numeral por confirmar); Res. 1633, num. 3.3.13 (normas.json → residuos)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_almacenamiento_intermedio_residuos"
+  },
+  {
+   "ambiente": {"fila": 166, "nombre": "Unidad de almacenamiento intermedio de residuos"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (unidad de almacenamiento intermedio de residuos: una por piso o nivel; numeral por confirmar); Res. 1633, num. 3.3.13 (normas.json → residuos)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_almacenamiento_intermedio_residuos"
+  },
+  {
+   "ambiente": {"fila": 202, "nombre": "Unidad de almacenamiento intermedio de residuos"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1 (unidad de almacenamiento intermedio de residuos: una por piso o nivel; numeral por confirmar); Res. 1633, num. 3.3.13 (normas.json → residuos)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_almacenamiento_intermedio_residuos"
+  },
+  {
+   "ambiente": {
+    "fila": 2,
+    "nombre": "Unidades sanitarias públicas del vestíbulo y de toma de muestras (hombres, mujeres, familiar/pediátrica; PMR)"
+   },
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 6, "nombre": "Unidades sanitarias públicas de urgencias, hombres y mujeres (PMR)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 7, "nombre": "Unidades sanitarias pediátricas, niños y niñas (PMR)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 20, "nombre": "Unidades sanitarias de ERA y EDA (PMR)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 37, "nombre": "Unidades sanitarias para pacientes, hombres y mujeres (PMR)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 39, "nombre": "Unidades sanitarias del personal (hombres y mujeres)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 69, "nombre": "Unidad sanitaria PMR del consultorio especializado"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 75, "nombre": "Unidades sanitarias pediátricas, niños y niñas (PMR)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 76, "nombre": "Unidades sanitarias del personal (hombres y mujeres)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 92, "nombre": "Unidades sanitarias del personal (hombres y mujeres)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 106, "nombre": "Unidad sanitaria PMR de ecografía"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 108, "nombre": "Unidad sanitaria PMR con casilleros"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 134, "nombre": "Unidades sanitarias del personal (hombres y mujeres)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 137, "nombre": "Unidades sanitarias de la sala de espera, hombres y mujeres (PMR)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 150, "nombre": "Unidad sanitaria PMR del consultorio obstétrico"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 154, "nombre": "Unidades sanitarias del personal (PMR)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 185, "nombre": "Unidades sanitarias públicas, hombres y mujeres (PMR)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 195, "nombre": "Unidades sanitarias del personal (hombres y mujeres)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 201, "nombre": "Unidades sanitarias del personal (hombres y mujeres)"},
+   "m2": 2.25,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (unidad sanitaria de 1,50 × 1,50 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 1,50 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.unidad_sanitaria"
+  },
+  {
+   "ambiente": {"fila": 27, "nombre": "Baños de observación con ducha (hombres, mujeres, pediátrico; PMR)"},
+   "m2": 3.45,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (baño con ducha de 1,50 × 2,30 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 2,30 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.bano_con_ducha"
+  },
+  {
+   "ambiente": {"fila": 152, "nombre": "Baño de la habitación TPR con guardarropa y llamado de enfermería"},
+   "m2": 3.45,
+   "lado_m": 1.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, num. 3.3.16 b (baño con ducha de 1,50 × 2,30 m)",
+   "tipo_dato": "cálculo propio sobre dato oficial (1,50 × 2,30 m)",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.bano_con_ducha"
+  },
+  {
+   "ambiente": {"fila": 40, "nombre": "Oficina del coordinador de urgencias"},
+   "m2": 6.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 5, 47 y 63 (oficina del coordinador)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.oficina_coordinador"
+  },
+  {
+   "ambiente": {"fila": 77, "nombre": "Oficina del coordinador de consulta externa"},
+   "m2": 6.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 5, 47 y 63 (oficina del coordinador)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.oficina_coordinador"
+  },
+  {
+   "ambiente": {
+    "fila": 89,
+    "nombre": "Oficina del coordinador (bacteriólogo jefe), control de calidad y sistema de información del laboratorio"
+   },
+   "m2": 6.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 5, 47 y 63 (oficina del coordinador)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.oficina_coordinador"
+  },
+  {
+   "ambiente": {"fila": 135, "nombre": "Oficina del coordinador (enfermera jefe)"},
+   "m2": 6.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 5, 47 y 63 (oficina del coordinador)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.oficina_coordinador"
+  },
+  {
+   "ambiente": {"fila": 147, "nombre": "Oficina del coordinador del servicio"},
+   "m2": 6.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 5, 47 y 63 (oficina del coordinador)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.oficina_coordinador"
+  },
+  {
+   "ambiente": {"fila": 194, "nombre": "Oficina del coordinador de terapias"},
+   "m2": 6.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 5, 47 y 63 (oficina del coordinador)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.oficina_coordinador"
+  },
+  {
+   "ambiente": {"fila": 47, "nombre": "Almacenamiento de dispositivos médicos e insumos"},
+   "m2": 4.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 22 (almacenamiento de imágenes diagnósticas)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.imagenes_almacenamiento"
+  },
+  {
+   "ambiente": {"fila": 48, "nombre": "Oficina del radiólogo y lectura (telerradiología)"},
+   "m2": 8.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 22 (oficina del radiólogo)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.oficina_radiologo"
+  },
+  {
+   "ambiente": {"fila": 52, "nombre": "Cubículo de toma de muestras (flebotomía)"},
+   "m2": 3.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 47 y 49 (cubículo de toma de muestras)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.toma_muestras_cubiculo"
+  },
+  {
+   "ambiente": {
+    "fila": 53,
+    "nombre": "Toma de muestras especiales (pediátricas, microbiológicas, curvas de glucosa) con unidad sanitaria"
+   },
+   "m2": 10.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 47 y 49 (toma de muestras especiales, sin la unidad sanitaria)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.toma_muestras_especiales"
+  },
+  {
+   "ambiente": {"fila": 66, "nombre": "Consultorio de medicina general"},
+   "m2": 10.0,
+   "lado_m": 2.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 5 (consultorio con examen físico); igual en la Res. 3100, num. 11.1.2, criterio 28.1 (normas.json)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.consultorio_examen_fisico"
+  },
+  {
+   "ambiente": {"fila": 67, "nombre": "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos)"},
+   "m2": 10.0,
+   "lado_m": 2.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 5 (consultorio con examen físico); igual en la Res. 3100, num. 11.1.2, criterio 28.1 (normas.json)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.consultorio_examen_fisico"
+  },
+  {
+   "ambiente": {"fila": 177, "nombre": "Consultorio de nutrición y dietética"},
+   "m2": 10.0,
+   "lado_m": 2.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 5 (consultorio con examen físico); igual en la Res. 3100, num. 11.1.2, criterio 28.1 (normas.json)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.consultorio_examen_fisico"
+  },
+  {
+   "ambiente": {"fila": 149, "nombre": "Consultorio de valoración obstétrica (triage obstétrico)"},
+   "m2": 10.0,
+   "lado_m": 2.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 5 (consultorio con examen físico); igual en la Res. 3100, num. 11.1.2, criterio 28.1 (normas.json)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.consultorio_examen_fisico"
+  },
+  {
+   "ambiente": {"fila": 68, "nombre": "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)"},
+   "m2": 14.0,
+   "lado_m": 2.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 7 (consultorio especializado: 10 m² + 4 m² si hace procedimientos, como colposcopia o termoablación)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.consultorio_especializado_con_procedimientos"
+  },
+  {
+   "ambiente": {"fila": 176, "nombre": "Consultorio de psicología (entrevista)"},
+   "m2": 6.0,
+   "lado_m": 2.5,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 5 (consultorio de entrevista); la Res. 3100 pide 4 m² (normas.json)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.consultorio_entrevista"
+  },
+  {
+   "ambiente": {"fila": 178, "nombre": "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"},
+   "m2": 10.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 5 (consultorio de telemedicina)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.consultorio_telemedicina"
+  },
+  {
+   "ambiente": {"fila": 180, "nombre": "Consultorio odontológico con 3 unidades separadas por barrera"},
+   "m2": 26.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 5 (consultorio odontológico: 10 m² la primera unidad + 8 m² por unidad adicional; 3 unidades)",
+   "tipo_dato": "cálculo propio sobre dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.consultorio_odontologico_1_unidad y _unidad_adicional"
+  },
+  {
+   "ambiente": {"fila": 73, "nombre": "Sala de espera de consulta externa (4 m² por consultorio, 13 consultorios y salas)"},
+   "m2": 52.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 6 (4 m² de espera por consultorio; 13 consultorios y salas)",
+   "tipo_dato": "cálculo propio sobre dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.sala_espera_consulta_por_consultorio"
+  },
+  {
+   "ambiente": {"fila": 94, "nombre": "Consultorio para administración de biológicos"},
+   "m2": 10.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 10 (vacunación: consultorio)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.vacunacion_consultorio_mas_alistamiento"
+  },
+  {
+   "ambiente": {"fila": 95, "nombre": "Almacenamiento y alistamiento de termos (cadena de frío)"},
+   "m2": 6.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 10 (vacunación: alistamiento)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.vacunacion_consultorio_mas_alistamiento"
+  },
+  {
+   "ambiente": {"fila": 98, "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"},
+   "m2": 20.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 16 (almacenamiento del servicio farmacéutico)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.farmacia_almacenamiento"
+  },
+  {
+   "ambiente": {"fila": 96, "nombre": "Recepción técnica de medicamentos y dispositivos"},
+   "m2": 4.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 16 (recepción, cuarentena, control especial y dispensación: 4 m² cada uno)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.farmacia_recepcion_cuarentena_control_especial_dispensacion_c_u"
+  },
+  {
+   "ambiente": {"fila": 97, "nombre": "Cuarentena de medicamentos"},
+   "m2": 4.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 16 (recepción, cuarentena, control especial y dispensación: 4 m² cada uno)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.farmacia_recepcion_cuarentena_control_especial_dispensacion_c_u"
+  },
+  {
+   "ambiente": {"fila": 99, "nombre": "Medicamentos de control especial (seguro)"},
+   "m2": 4.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 16 (recepción, cuarentena, control especial y dispensación: 4 m² cada uno)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.farmacia_recepcion_cuarentena_control_especial_dispensacion_c_u"
+  },
+  {
+   "ambiente": {"fila": 100, "nombre": "Dispensación y entrega (ventanilla ambulatoria y ventanilla hospitalaria)"},
+   "m2": 4.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 16 (recepción, cuarentena, control especial y dispensación: 4 m² cada uno)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.farmacia_recepcion_cuarentena_control_especial_dispensacion_c_u"
+  },
+  {
+   "ambiente": {"fila": 119, "nombre": "Habitación doble de adultos con baño PMR y guardarropa (2 camas)"},
+   "m2": 14.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 63 (habitación múltiple de adultos: 7 m² libres por cama; 2 camas). Se compara con el área de la habitación con su baño: por confirmar si los 7 m² excluyen el baño",
+   "tipo_dato": "cálculo propio sobre dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.hospitalizacion_multiple_adultos_libre_por_cama"
+  },
+  {
+   "ambiente": {
+    "fila": 123,
+    "nombre": "Habitación doble de obstetricia y posparto, alojamiento conjunto madre y recién nacido (2 camas)"
+   },
+   "m2": 14.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 63 (habitación múltiple de adultos: 7 m² libres por cama; 2 camas). Se compara con el área de la habitación con su baño: por confirmar si los 7 m² excluyen el baño",
+   "tipo_dato": "cálculo propio sobre dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.hospitalizacion_multiple_adultos_libre_por_cama"
+  },
+  {
+   "ambiente": {"fila": 122, "nombre": "Habitación doble pediátrica con área para acompañante y baño PMR (2 camas)"},
+   "m2": 12.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 63 (habitación múltiple pediátrica: 6 m² libres por cama; 2 camas). Por confirmar si excluyen el baño",
+   "tipo_dato": "cálculo propio sobre dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.hospitalizacion_multiple_pediatrica_libre_por_cama"
+  },
+  {
+   "ambiente": {"fila": 120, "nombre": "Habitación individual de aislamiento con baño PMR (1 cama)"},
+   "m2": 16.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 63 (aislamiento: 1 por cada 20 camas, mínimo 1)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.hospitalizacion_aislamiento"
+  },
+  {
+   "ambiente": {"fila": 140, "nombre": "Lactario: extracción de leche materna (2 puntos)"},
+   "m2": 12.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 64 (extracción de leche: 10 m² + 2 m² por punto adicional; 2 puntos)",
+   "tipo_dato": "cálculo propio sobre dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.hospitalizacion_extraccion_leche"
+  },
+  {
+   "ambiente": {"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"},
+   "m2": 24.0,
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 98 (habitación TPR); la Res. 3100, num. 11.6.4, criterio 16.1 pide 16 m² (normas.json)",
+   "tipo_dato": "dato oficial",
+   "fuente": "normas.json → parametros_diseno.areas_minimas_m2.parto_habitacion_TPR"
+  }
+ ],
+ "nota_area_libre": "Por confirmar si el mínimo de la Res. 1633 se mide libre o a ejes (Anexo 1, definiciones): a ejes cumple, libre queda por debajo.",
+ "puertas": [
+  {
+   "categoria": "camillas_procedimientos",
+   "ancho_m": 1.4,
+   "ambientes": [
+    "Sala de reanimación, 2 camillas",
+    "Sala de procedimientos (suturas, curaciones)",
+    "Sala de procedimientos de consulta externa (curaciones, inyectología, electrocardiograma)",
+    "Sala de procedimientos de hospitalización",
+    "Habitación de trabajo de parto, parto y recuperación (TPR)",
+    "Sala de rayos X convencional digital (con blindaje en plomo)",
+    "Sala de yesos e inmovilización"
+   ],
+   "cita": "Res. 1633, Anexo 1, Cuadro 1 (normas.json → puertas_ancho_min_m): procedimientos, reanimación, partos, recuperación y radiología, 1,40 m"
+  },
+  {
+   "categoria": "camas",
+   "ancho_m": 1.2,
+   "ambientes": [
+    "Habitación doble de adultos con baño PMR y guardarropa (2 camas)",
+    "Habitación individual de aislamiento con baño PMR (1 cama)",
+    "Habitación doble pediátrica con área para acompañante y baño PMR (2 camas)",
+    "Habitación doble de obstetricia y posparto, alojamiento conjunto madre y recién nacido (2 camas)",
+    "Ambiente individual de aislamiento con baño PMR",
+    "Antecámara del aislamiento",
+    "Antecámara del aislamiento",
+    "Observación adultos hombres, 2 camillas",
+    "Observación adultos mujeres, 2 camillas",
+    "Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes",
+    "Atención de enfermedad diarreica aguda (EDA), 2 camillas",
+    "Descontaminación de pacientes (ducha teléfono, drenaje, sanitario)"
+   ],
+   "cita": "Res. 1633, Anexo 1, Cuadro 1 (normas.json → puertas_ancho_min_m): aislamiento, 1,20 m; NSR-10 K.3.14.2.3 (puertas de salida para camas ≥ 1,10 m); 1,20 m para todas las habitaciones, observación, EDA y descontaminación: decisión de este contrato"
+  },
+  {
+   "categoria": "consultorio",
+   "ancho_m": 1.0,
+   "cita": "Res. 1633, Anexo 1, Cuadro 1 (normas.json → puertas_ancho_min_m): consultorios, toma de muestras y archivo, 1,00 m"
+  },
+  {
+   "categoria": "bano",
+   "ancho_m": 1.0,
+   "cita": "Res. 1633, Anexo 1, Cuadro 1 (normas.json → puertas_ancho_min_m): baños y baterías sanitarias, 1,00 m"
+  },
+  {
+   "categoria": "unidad_sanitaria",
+   "ancho_m": 0.9,
+   "cita": "Res. 1633, Anexo 1, Cuadro 1 (normas.json → puertas_ancho_min_m): unidades sanitarias y vestidores, 0,90 m"
+  },
+  {
+   "categoria": "deposito",
+   "ancho_m": 0.9,
+   "cita": "Res. 1633, Anexo 1, Cuadro 1 (normas.json → puertas_ancho_min_m): almacenamientos, aseo y administrativos, 0,90 m"
+  },
+  {
+   "categoria": "evacuacion",
+   "ancho_m": 1.1,
+   "cita": "NSR-10 K.3.14.2.3 (puertas de salida para camas ≥ 1,10 m; normas.json → puertas_ancho_min_m)"
+  },
+  {
+   "categoria": "paso",
+   "ancho_m": 1.1,
+   "cita": "NSR-10 K.3.14.2.3 (puertas de salida para camas ≥ 1,10 m; normas.json → puertas_ancho_min_m); puertas entre circulaciones"
+  },
+  {
+   "categoria": "ascensor",
+   "ancho_m": 1.1,
+   "cita": "Estimación: puerta telescópica de ascensor camillero (cabina de 1,40 × 2,40 m, programa.json); ≥ 1,10 m como las de salida para camas (NSR-10 K.3.14.2.3)"
+  },
+  {
+   "categoria": "montacargas",
+   "ancho_m": 0.5,
+   "cita": "Estimación: compuerta de carga del montacargas (cabina de 0,80 × 0,80 m o de 0,60 × 0,60 m, programa.json)"
+  },
+  {
+   "categoria": "tecnico",
+   "ancho_m": 1.2,
+   "cita": "Estimación: puerta de cuarto técnico para el paso de equipos (tableros, transformador, bombas); Res. 1633, Cuadro 1 pide 0,90 m en almacenamientos"
+  },
+  {
+   "categoria": "exterior",
+   "ancho_m": 1.6,
+   "cita": "Estimación: puerta de acceso de público o de urgencias (automática corrediza); ≥ 1,10 m (NSR-10 K.3.14.2.3)"
+  }
+ ],
+ "categoria_puerta": [
+  {"patron": "^Montacargas", "categoria": "montacargas"},
+  {"patron": "^Hueco de ascensor", "categoria": "ascensor"},
+  {"patron": "^Escalera de evacuación|^Caseta de escalera", "categoria": "evacuacion"},
+  {
+   "patron": "^Subestación|^Planta eléctrica|^Central de gases|^Cuarto de bombas|^Cuarto de tableros generales|baterías del nodo|^Depósito de cadáveres",
+   "categoria": "tecnico"
+  },
+  {"patron": "^Baño|^Batería sanitaria|^Vestidor de pacientes con unidad", "categoria": "bano"},
+  {"patron": "^Unidad(es)? sanitaria|^Vestidor|Ducha de emergencia", "categoria": "unidad_sanitaria"},
+  {
+   "patron": "^Habitación|aislamiento|^Antecámara del aislamiento|^Observación|^Ambiente de transición|^Salón multipropósito|^Esclusa",
+   "categoria": "camas"
+  },
+  {
+   "patron": "^Consultorio|^Triage|^Toma de muestras|^Cubículo|^Ambiente de toma|^Sala de ecograf|^Lactario|^Gimnasio|^Área técnica|^Atención de enfermedad|^Sala de procedimientos|^Ambiente de entrevista|^Entrevista|^Sala de rayos|^Rayos X|^Sala de crisis|^Recepción",
+   "categoria": "consultorio"
+  },
+  {"patron": ".", "categoria": "deposito"}
+ ],
+ "abre_por_categoria": {
+  "bano": "corrediza",
+  "unidad_sanitaria": "corrediza",
+  "ascensor": "corrediza",
+  "montacargas": "corrediza",
+  "evacuacion": "adentro",
+  "exterior": "corrediza"
+ },
+ "ventanas": {
+  "antepecho_m": 1.0,
+  "alto_m": 2.0,
+  "margen_m": 0.3,
+  "ancho_min_m": 0.6,
+  "cita": "Franja con antepecho de 1,0 m y 2,0 m de alto, como el GLB (build_edificios.mjs:601), en paños del ancho del borde menos 0,30 m a cada lado (3.2)"
+ },
+ "corredores": {
+  "evacuacion_min_m": 2.4,
+  "camillas_recomendado_m": 2.8,
+  "interno_min_m": 1.2,
+  "cita": "Res. 1633, num. 3.3.6 b.1; NSR-10 K.3.14.2.2 (normas.json → circulaciones_m)"
+ },
+ "evacuacion": {
+  "puerta_a_escalera_max_m": 30.0,
+  "cualquier_punto_max_m": 45.0,
+  "cita": "NSR-10 K.3.14.1.2 y Tabla K.3.6-1 según programa.json → nucleos_verticales.evacuacion (numerales por confirmar en el texto)"
+ },
+ "zonas": {
+  "nota": "Zonas de programa.json → implantacion.zonificacion_en_planta y distribucion_por_piso (rectángulos amplios; V17 avisa si el centroide de un recinto queda fuera de la zona de su servicio).",
+  "P1": [
+   {"servicio_programa": "Urgencias", "x": [-13.0, 8.6], "y": [-10.0, 22.4], "texto": "norte y centro (y ≈ -10 a 22,4)"},
+   {
+    "servicio_programa": "Imágenes diagnósticas ionizantes (rayos X)",
+    "x": [-13.0, 8.6],
+    "y": [-10.0, 8.0],
+    "texto": "al sur de urgencias, pegado al núcleo de ascensores"
+   },
+   {
+    "servicio_programa": "Vestíbulo y admisiones",
+    "x": [-13.0, 8.6],
+    "y": [-19.6, -7.6],
+    "texto": "sur (y -19,6 a ≈ -10)"
+   },
+   {
+    "servicio_programa": "Toma de muestras de laboratorio clínico",
+    "x": [-13.0, 0.0],
+    "y": [-19.6, -10.0],
+    "texto": "esquina suroccidental"
+   }
+  ],
+  "P2": [
+   {
+    "servicio_programa": "Laboratorio clínico",
+    "x": [-13.0, 8.6],
+    "y": [-19.6, -7.6],
+    "texto": "sobre la toma de muestras (sur)"
+   },
+   {"servicio_programa": "Consulta externa", "x": [-13.0, 8.6], "y": [-10.5, 22.4], "texto": "centro y norte"},
+   {
+    "servicio_programa": "Servicio farmacéutico",
+    "x": [-5.8, 8.6],
+    "y": [-12.0, 2.0],
+    "texto": "junto a la escalera principal"
+   },
+   {
+    "servicio_programa": "Vacunación",
+    "x": [-6.5, 8.6],
+    "y": [-2.0, 10.6],
+    "texto": "cerca del vestíbulo de ascensores"
+   }
+  ],
+  "P3": [
+   {
+    "servicio_programa": "Atención del parto (TPR)",
+    "x": [-13.0, 8.6],
+    "y": [8.0, 22.4],
+    "texto": "habitaciones TPR y posparto juntas en el norte"
+   },
+   {
+    "servicio_programa": "Esterilización (reprocesamiento de dispositivos médicos)",
+    "x": [-13.0, 8.6],
+    "y": [-19.6, 1.6],
+    "texto": "en el sur, junto al montacargas"
+   }
+  ],
+  "P4": [
+   {
+    "servicio_programa": "Terapias (fisioterapia y terapia respiratoria)",
+    "x": [-13.0, -3.0],
+    "y": [-7.6, 22.4],
+    "texto": "hacia el occidente (vista a los mangos)"
+   },
+   {
+    "servicio_programa": "Zona de expansión, telesalud y coordinación asistencial",
+    "x": [-13.0, 8.6],
+    "y": [8.0, 22.4],
+    "texto": "salón de telesalud y expansión en el norte"
+   },
+   {
+    "servicio_programa": "Zona de expansión, telesalud y coordinación asistencial",
+    "x": [-6.0, 8.6],
+    "y": [-1.0, 22.4],
+    "texto": "coordinación y sala de crisis junto a los ascensores"
+   },
+   {
+    "servicio_programa": "Odontología y radiología odontológica",
+    "x": [-5.8, 3.1],
+    "y": [-7.6, 14.0],
+    "texto": "odontología en el centro"
+   }
+  ]
+ },
+ "accesos_permitidos": [
+  {
+   "ambiente": {"fila": 22, "nombre": "Ambiente individual de aislamiento con baño PMR"},
+   "desde": [{"fila": 23, "nombre": "Antecámara del aislamiento"}],
+   "nota": "El aislamiento se usa a través de su antecámara (Res. 1633, Cuadro 92)."
+  },
+  {
+   "ambiente": {"fila": 20, "nombre": "Unidades sanitarias de ERA y EDA (PMR)"},
+   "desde": [
+    {"fila": 18, "nombre": "Atención de enfermedad respiratoria aguda (ERA), 3 sillas"},
+    {"fila": 19, "nombre": "Atención de enfermedad diarreica aguda (EDA), 2 camillas"}
+   ],
+   "nota": "Cada unidad sanitaria de ERA y EDA se usa desde su sala (programa.json)."
+  },
+  {
+   "ambiente": {"fila": 21, "nombre": "Sala de yesos e inmovilización"},
+   "desde": [{"fila": 16, "nombre": "Sala de procedimientos (suturas, curaciones)"}],
+   "nota": "La sala de yesos queda contigua a la de procedimientos y se usa desde ella."
+  },
+  {
+   "ambiente": {"fila": 13, "nombre": "Cuarto de custodia"},
+   "desde": [{"fila": 8, "nombre": "Información y control (con unidad sanitaria del personal)"}],
+   "nota": "El cuarto de custodia se vigila y se usa desde información y control."
+  },
+  {
+   "ambiente": {"fila": 34, "nombre": "Depósito de ropa limpia"},
+   "desde": [{"fila": 30, "nombre": "Estación de enfermería: trabajo limpio"}],
+   "nota": "El depósito de ropa limpia se usa desde el trabajo limpio."
+  },
+  {
+   "ambiente": {"fila": 46, "nombre": "Vestidor de pacientes (2 cubículos con casilleros)"},
+   "desde": [{"fila": 44, "nombre": "Sala de rayos X convencional digital (con blindaje en plomo)"}],
+   "nota": "El vestidor de pacientes de rayos X da a la sala."
+  },
+  {
+   "ambiente": {"fila": 63, "nombre": "Montacargas exclusivo de muestras (toma de muestras del piso 1 al laboratorio del piso 2)"},
+   "desde": [
+    {
+     "fila": 54,
+     "nombre": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)"
+    }
+   ],
+   "nota": "El montacargas de muestras se carga desde la preparación y envío de muestras (piso 1)."
+  },
+  {
+   "ambiente": {
+    "fila": 54,
+    "nombre": "Preparación, embalaje y envío de muestras (montacargas de muestras al laboratorio y remisión al laboratorio de referencia)"
+   },
+   "desde": [{"fila": 50, "nombre": "Recepción de muestras, información y entrega de resultados (2 puestos)"}],
+   "nota": "La preparación de muestras se comunica con la recepción de muestras."
+  },
+  {
+   "ambiente": {"fila": 39, "nombre": "Unidades sanitarias del personal (hombres y mujeres)"},
+   "desde": [{"fila": 38, "nombre": "Vestidor del talento humano con baño PMR (hombres y mujeres)"}],
+   "nota": "La unidad sanitaria del personal se usa desde su vestidor."
+  },
+  {
+   "ambiente": {"fila": 116, "nombre": "Montacargas exclusivo de muestras (toma de muestras del piso 1 al laboratorio del piso 2)"},
+   "desde": [
+    {
+     "fila": 79,
+     "nombre": "Recepción interna de muestras (llegada del montacargas y del tubo neumático), registro y clasificación"
+    }
+   ],
+   "nota": "El montacargas de muestras se descarga en la recepción interna del laboratorio (piso 2)."
+  },
+  {
+   "ambiente": {"fila": 69, "nombre": "Unidad sanitaria PMR del consultorio especializado"},
+   "desde": [{"fila": 68, "nombre": "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)"}],
+   "nota": "La unidad sanitaria del consultorio especializado se usa desde el consultorio."
+  },
+  {
+   "ambiente": {"fila": 106, "nombre": "Unidad sanitaria PMR de ecografía"},
+   "desde": [{"fila": 105, "nombre": "Sala de ecografía (obstétrica, abdominal y transvaginal)"}],
+   "nota": "La unidad sanitaria de ecografía se usa desde la sala."
+  },
+  {
+   "ambiente": {"fila": 108, "nombre": "Unidad sanitaria PMR con casilleros"},
+   "desde": [{"fila": 107, "nombre": "Ambiente de toma de muestras (citología, prueba de VPH, frotis)"}],
+   "nota": "La unidad sanitaria con casilleros de la toma de citologías se usa desde la toma."
+  },
+  {
+   "ambiente": {"fila": 109, "nombre": "Preparación, embalaje y remisión de muestras"},
+   "desde": [{"fila": 107, "nombre": "Ambiente de toma de muestras (citología, prueba de VPH, frotis)"}],
+   "nota": "La preparación y remisión de muestras se comunica con la toma de citologías."
+  },
+  {
+   "ambiente": {"fila": 95, "nombre": "Almacenamiento y alistamiento de termos (cadena de frío)"},
+   "desde": [{"fila": 94, "nombre": "Consultorio para administración de biológicos"}],
+   "nota": "El alistamiento de termos (cadena de frío) se usa desde el consultorio de vacunación."
+  },
+  {
+   "ambiente": {"fila": 98, "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"},
+   "desde": [
+    {"fila": 96, "nombre": "Recepción técnica de medicamentos y dispositivos"},
+    {"fila": 100, "nombre": "Dispensación y entrega (ventanilla ambulatoria y ventanilla hospitalaria)"}
+   ],
+   "nota": "El almacenamiento de la farmacia se usa desde la recepción técnica y desde la dispensación."
+  },
+  {
+   "ambiente": {"fila": 100, "nombre": "Dispensación y entrega (ventanilla ambulatoria y ventanilla hospitalaria)"},
+   "desde": [{"fila": 98, "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"}],
+   "nota": "La dispensación atiende por ventanilla y se surte desde el almacenamiento."
+  },
+  {
+   "ambiente": {"fila": 97, "nombre": "Cuarentena de medicamentos"},
+   "desde": [{"fila": 98, "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"}],
+   "nota": "La cuarentena de medicamentos se usa desde el almacenamiento."
+  },
+  {
+   "ambiente": {"fila": 99, "nombre": "Medicamentos de control especial (seguro)"},
+   "desde": [{"fila": 98, "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"}],
+   "nota": "Los medicamentos de control especial se guardan dentro del almacenamiento, bajo llave."
+  },
+  {
+   "ambiente": {"fila": 101, "nombre": "Medicamentos vencidos o deteriorados para destrucción"},
+   "desde": [{"fila": 98, "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"}],
+   "nota": "Los vencidos o deteriorados se apartan dentro del almacenamiento."
+  },
+  {
+   "ambiente": {"fila": 102, "nombre": "Productos rechazados, devueltos y retirados del mercado"},
+   "desde": [{"fila": 98, "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"}],
+   "nota": "Los rechazados y devueltos se apartan dentro del almacenamiento."
+  },
+  {
+   "ambiente": {"fila": 103, "nombre": "Oficina del químico farmacéutico o regente"},
+   "desde": [{"fila": 98, "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"}],
+   "nota": "La oficina del químico farmacéutico se abre al almacenamiento."
+  },
+  {
+   "ambiente": {"fila": 120, "nombre": "Habitación individual de aislamiento con baño PMR (1 cama)"},
+   "desde": [{"fila": 121, "nombre": "Antecámara del aislamiento"}],
+   "nota": "El aislamiento de hospitalización se usa a través de su antecámara."
+  },
+  {
+   "ambiente": {"fila": 150, "nombre": "Unidad sanitaria PMR del consultorio obstétrico"},
+   "desde": [{"fila": 149, "nombre": "Consultorio de valoración obstétrica (triage obstétrico)"}],
+   "nota": "La unidad sanitaria del consultorio obstétrico se usa desde el consultorio."
+  },
+  {
+   "ambiente": {"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"},
+   "desde": [{"fila": 153, "nombre": "Antecámara y vestidor compartido de las habitaciones TPR (filtro con lavamanos)"}],
+   "nota": "Las habitaciones TPR se usan a través de la antecámara y vestidor compartido (filtro)."
+  },
+  {
+   "ambiente": {"fila": 152, "nombre": "Baño de la habitación TPR con guardarropa y llamado de enfermería"},
+   "desde": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
+   "nota": "El baño de cada habitación TPR se usa desde la habitación."
+  },
+  {
+   "ambiente": {"fila": 147, "nombre": "Oficina del coordinador del servicio"},
+   "desde": [{"fila": 159, "nombre": "Puesto de enfermería de las habitaciones TPR"}],
+   "nota": "La oficina del coordinador de partos se abre al puesto de enfermería de las TPR."
+  },
+  {
+   "ambiente": {"fila": 146, "nombre": "Ambiente para información a familiares"},
+   "desde": [{"fila": 145, "nombre": "Recepción y entrega de pacientes (con estacionamiento de camillas)"}],
+   "nota": "La información a familiares se da junto a la recepción y entrega de pacientes."
+  },
+  {
+   "ambiente": {"fila": 181, "nombre": "Ambiente de esterilización odontológica (desde 3 unidades)"},
+   "desde": [{"fila": 180, "nombre": "Consultorio odontológico con 3 unidades separadas por barrera"}],
+   "nota": "La esterilización odontológica se usa desde el consultorio odontológico."
+  },
+  {
+   "ambiente": {"fila": 182, "nombre": "Rayos X odontológico periapical (blindado)"},
+   "desde": [{"fila": 180, "nombre": "Consultorio odontológico con 3 unidades separadas por barrera"}],
+   "nota": "El periapical (blindado) se usa desde el consultorio odontológico."
+  },
+  {
+   "ambiente": {"fila": 198, "nombre": "Depósito de mobiliario y kits de expansión (camillas plegables, equipos de contingencia)"},
+   "desde": [
+    {
+     "fila": 197,
+     "nombre": "Salón multipropósito de capacitación y telesalud, reconvertible en sala de expansión (8 camillas con oxígeno, energía y datos)"
+    }
+   ],
+   "nota": "El depósito de mobiliario y kits de expansión se abre al salón multipropósito."
+  },
+  {
+   "ambiente": {"fila": 162, "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)"},
+   "desde": [
+    {"fila": 161, "nombre": "Recepción y lavado de material contaminado (zona sucia)"},
+    {"fila": 164, "nombre": "Vestidor de filtro del personal"}
+   ],
+   "nota": "La zona limpia de esterilización recibe el material por la lavadora desde la zona sucia y al personal por el vestidor de filtro."
+  },
+  {
+   "ambiente": {"nombre": "Biología molecular (GeneXpert)"},
+   "desde": [{"fila": 83, "nombre": "Área técnica: inmunología y pruebas rápidas (VIH, sífilis, hepatitis, dengue)"}],
+   "nota": "La biología molecular se usa desde inmunología (área contigua, 16.2)."
+  }
+ ],
+ "recintos_de_paso": [
+  {"fila": 0, "nombre": "Vestíbulo principal con espera de admisión"},
+  {"fila": 3, "nombre": "Esclusa de acceso desde la bahía de ambulancias (cortavientos)"},
+  {"fila": 4, "nombre": "Recepción de urgencias"},
+  {"fila": 5, "nombre": "Sala de espera de urgencias"},
+  {"fila": 11, "nombre": "Estacionamiento de camillas y sillas de ruedas"},
+  {"fila": 28, "nombre": "Ambiente de transición, 2 sillas reclinables"},
+  {"fila": 29, "nombre": "Estación de enfermería: puesto de enfermería"},
+  {"fila": 51, "nombre": "Sala de espera de toma de muestras (15 personas)"},
+  {"fila": 61, "nombre": "Vestíbulo de ascensores"},
+  {"fila": 73, "nombre": "Sala de espera de consulta externa (4 m² por consultorio, 13 consultorios y salas)"},
+  {"fila": 104, "nombre": "Sala de espera de farmacia (8 personas)"},
+  {"fila": 114, "nombre": "Vestíbulo de ascensores"},
+  {"fila": 125, "nombre": "Estación de enfermería: puesto central"},
+  {"fila": 132, "nombre": "Estacionamiento de camillas y sillas de ruedas"},
+  {"fila": 136, "nombre": "Sala de espera y de visitas (compartida con partos)"},
+  {"fila": 159, "nombre": "Puesto de enfermería de las habitaciones TPR"},
+  {"fila": 173, "nombre": "Vestíbulo de ascensores"},
+  {"fila": 179, "nombre": "Sala de espera (4 m² por consultorio: 3 consultorios y odontología)"},
+  {"fila": 184, "nombre": "Recepción y sala de espera de terapias (10 personas)"},
+  {"fila": 207, "nombre": "Vestíbulo de ascensores"},
+  {
+   "fila": 227,
+   "nombre": "Bahía de ambulancias cubierta (2 cupos en línea de 3,80 x 6,00 m, carril de 4,00 m y andén de 2,00 m)"
+  },
+  {
+   "fila": 228,
+   "nombre": "Galería cubierta de conexión con el hospital actual (5,30 x 3,00 m), cerrada a los lados, piso antideslizante y pasamanos a ambos lados"
+  },
+  {
+   "fila": 229,
+   "nombre": "Pasaje de servicio cubierto en rampa (1,20 m de ancho) entre la torre, el bloque técnico y el patio de servicio"
+  }
+ ],
+ "servicio_a_grupo": {
+  "por_servicio": {
+   "Vestíbulo y admisiones": "direccion_y_administracion",
+   "Urgencias": "atencion_inmediata",
+   "Imágenes diagnósticas ionizantes (rayos X)": "apoyo_diagnostico_y_terapeutico",
+   "Toma de muestras de laboratorio clínico": "apoyo_diagnostico_y_terapeutico",
+   "Apoyo y áreas técnicas del piso 1": "apoyo_y_servicios_generales",
+   "Apoyo y áreas técnicas del piso 2": "apoyo_y_servicios_generales",
+   "Apoyo y áreas técnicas del piso 3": "apoyo_y_servicios_generales",
+   "Apoyo y áreas técnicas del piso 4": "apoyo_y_servicios_generales",
+   "Circulación vertical y ductos": "circulacion",
+   "Consulta externa": "consulta_externa",
+   "Laboratorio clínico": "apoyo_diagnostico_y_terapeutico",
+   "Vacunación": "consulta_externa",
+   "Servicio farmacéutico": "apoyo_diagnostico_y_terapeutico",
+   "Imágenes diagnósticas no ionizantes (ecografía)": "apoyo_diagnostico_y_terapeutico",
+   "Toma de muestras de cuello uterino y ginecológicas": "apoyo_diagnostico_y_terapeutico",
+   "Hospitalización (adultos, pediatría y obstetricia)": "internacion",
+   "Atención del parto (TPR)": "atencion_inmediata",
+   "Esterilización (reprocesamiento de dispositivos médicos)": "quirurgico_y_esterilizacion",
+   "Consulta externa: salud oral, salud mental, nutrición y telemedicina (piso 4)": "consulta_externa",
+   "Odontología y radiología odontológica": "consulta_externa",
+   "Terapias (fisioterapia y terapia respiratoria)": "apoyo_diagnostico_y_terapeutico",
+   "Zona de expansión, telesalud y coordinación asistencial": "direccion_y_administracion",
+   "Áreas técnicas y de servicio": "apoyo_y_servicios_generales",
+   "Áreas exteriores cubiertas": "circulacion"
+  },
+  "por_fila": []
+ },
+ "grupos_1633": {
+  "nombres": {
+   "atencion_inmediata": "Atención inmediata",
+   "consulta_externa": "Consulta externa",
+   "apoyo_diagnostico_y_terapeutico": "Apoyo diagnóstico y terapéutico",
+   "internacion": "Internación",
+   "quirurgico_y_esterilizacion": "Quirúrgico y esterilización",
+   "direccion_y_administracion": "Dirección y administración",
+   "apoyo_y_servicios_generales": "Apoyo y servicios generales",
+   "circulacion": "Circulación"
+  },
+  "colores_fuera_de_la_norma": {"circulacion": "gris"},
+  "tonos_hex": {
+   "rojo": "#d62828",
+   "naranja": "#f08a00",
+   "amarillo": "#e3a91c",
+   "azul": "#2f6db3",
+   "verde": "#2a9d8f",
+   "violeta": "#7b5ea7",
+   "café": "#8d6e63",
+   "gris": "#9aa0a6"
+  },
+  "cita": "Res. 1633 de 2025, Anexo 1, Cuadros 2 y 3, hoja 35 (normas.json → parametros_diseno.senalizacion_colores)",
+  "nota": "El nombre del color es el de la Res. 1633 (normas.json → senalizacion_colores); el tono hexadecimal es el que ya usa la vista de la torre para ese color (web/js/scenes/torre.js). La circulación no tiene color en la norma: se pinta en gris (decisión de este trazado)."
+ },
+ "zona_acceso": {
+  "nota": "Estimación para colorear el piso (Res. 1633, Cuadros 2 y 3: no restringido, semirrestringido y restringido); no es un dato del programa.",
+  "por_servicio": {
+   "Vestíbulo y admisiones": "no_restringido",
+   "Urgencias": "semirrestringido",
+   "Imágenes diagnósticas ionizantes (rayos X)": "semirrestringido",
+   "Toma de muestras de laboratorio clínico": "no_restringido",
+   "Consulta externa": "no_restringido",
+   "Laboratorio clínico": "restringido",
+   "Vacunación": "no_restringido",
+   "Servicio farmacéutico": "semirrestringido",
+   "Imágenes diagnósticas no ionizantes (ecografía)": "no_restringido",
+   "Toma de muestras de cuello uterino y ginecológicas": "no_restringido",
+   "Hospitalización (adultos, pediatría y obstetricia)": "semirrestringido",
+   "Atención del parto (TPR)": "restringido",
+   "Esterilización (reprocesamiento de dispositivos médicos)": "restringido",
+   "Consulta externa: salud oral, salud mental, nutrición y telemedicina (piso 4)": "no_restringido",
+   "Odontología y radiología odontológica": "no_restringido",
+   "Terapias (fisioterapia y terapia respiratoria)": "no_restringido",
+   "Zona de expansión, telesalud y coordinación asistencial": "semirrestringido",
+   "Circulación vertical y ductos": "no_restringido",
+   "Áreas exteriores cubiertas": "no_restringido"
+  },
+  "patrones": [
+   {
+    "patron": "^Sala de espera|^Unidades sanitarias públicas|^Batería sanitaria|^Recepción|^Información|^Vestíbulo",
+    "zona": "no_restringido"
+   },
+   {
+    "patron": "aislamiento|^Antecámara|reanimación|^Habitación de trabajo de parto|^Ductos|^Hueco|^Montacargas|^Cuarto|^Subestación|^Planta|^Central|^Depósito de cadáveres|^Unidad de almacenamiento",
+    "zona": "restringido"
+   }
+  ],
+  "circulacion": "no_restringido",
+  "defecto": "restringido"
+ },
+ "climatizacion": {
+  "patrones": [
+   {"patron": "trabajo de parto|\\bTPR\\b", "fila_cuadro4": "Salas de partos"},
+   {"patron": "aislamiento|Antecámara del aislamiento", "fila_cuadro4": "Aislamiento de paciente infectocontagioso"},
+   {"patron": "\\(ERA\\)", "fila_cuadro4": "Sala de enfermedad respiratoria aguda (ERA)"},
+   {"patron": "Esterilización \\(reprocesamiento", "fila_cuadro4": "Central de esterilización"},
+   {"patron": "Laboratorio clínico$|biología molecular", "fila_cuadro4": "Laboratorio clínico"},
+   {"patron": "^Sala de espera|^Recepción y sala de espera", "fila_cuadro4": "Salas de espera"},
+   {"patron": "Vacunación$", "fila_cuadro4": "Vacunación"},
+   {
+    "patron": "Servicio farmacéutico$|^Depósito de medicamentos",
+    "fila_cuadro4": "Almacenamiento y dispensación de medicamentos; cadena de frío"
+   },
+   {"patron": "Urgencias$", "fila_cuadro4": "Urgencias"},
+   {"patron": "Atención del parto \\(TPR\\)$", "fila_cuadro4": "Salas de partos"},
+   {"patron": "Hospitalización \\(adultos", "fila_cuadro4": "Hospitalización"},
+   {"patron": "Consulta externa|Odontología", "fila_cuadro4": "Consulta externa y odontología"}
+  ]
+ },
+ "decisiones": [
+  "Puerta principal en la fachada occidental en y = -8,8 (no en y ≈ -13 de programa.json): abre a una galería de entrada de 2,40 m que lleva derecho a la escalera sur, a la escalera principal y a admisiones; la plaza y el acceso peatonal no cambian.",
+  "Sin puerta de servicio en la fachada sur del piso 1: esa franja la ocupan la toma de muestras especiales, los cubículos y el personal de urgencias; el servicio (residuos, cadáveres, suministros) va por el pasaje del bloque técnico al patio oriente y entra por la galería al vestíbulo de ascensores.",
+  "El personal de urgencias (vestidores, descanso, referencia y coordinación) queda en la franja sur del piso 1, unido a urgencias por el pasillo sur y el corredor general: en y -10 a 22,4 no cabe con todo el programa clínico.",
+  "Piso 2: el laboratorio ocupa todo el sur (sobre la toma de muestras) con un corredor propio; biología molecular (GeneXpert) y la ducha de emergencia con lavaojos son recintos no programados (16.2). El montacargas de muestras sube en (-7,4; -14,95) de la preparación de muestras del piso 1 a la recepción interna del piso 2.",
+  "Piso 2: la espera de consulta externa es lineal sobre el eje B (2,55 m) y la farmacia queda frente a la llegada de la escalera principal, con su espera; los consultorios de medicina general dan a la fachada occidental.",
+  "Piso 3: la escalera sur se abre desde el corredor interno de la estación (puerta en su costado occidental); el estacionamiento de camillas une la estación con ese corredor. Depósitos de partos, triage obstétrico y estar del personal quedan al sur por área.",
+  "Piso 4: la escalera sur abre a la sala de espera de consulta y, por su descanso de piso, a la terraza solar del piso 3.",
+  "Escalera principal abierta (pisos 1 y 2): tramos de 1,30 m con la columna C2 en el ojo y descanso de piso de 0,55 m abierto a la galería.",
+  "Corredores de evacuación de 2,55 m a ejes (≥ 2,40 m libres, Res. 1633 num. 3.3.6 b.1); los 2,80 m recomendados para camillas no caben en la huella (aviso V13).",
+  "Exteriores con bordes ortogonales (estimación de los polígonos de programa.json); el patio de urgencias baja hasta y = -3,3 para incluir la entrada a descontaminación.",
+  "Bloque técnico: el banco de baterías de 400 kWh del nodo hospital (P7) va en el cuarto de tableros generales (fila 212, 23,6 m²); andén de servicio y escalera exterior a la plaza son estimaciones.",
+  "Paneles solares: 96 módulos en la pérgola de la cubierta del piso 4, 56 en la terraza del piso 3 sur y 30 en la marquesina de la bahía = 182 módulos de 0,55 kWp (100,1 kWp).",
+  "Consulta externa del piso 2 (ajuste de B2b, inventario): las puertas de los consultorios de medicina general a la espera van en pareja junto al muro que comparten dos consultorios vecinos, para dejar 3,2 m de muro libre entre parejas: así caben 8 tándems de 4 puestos en la espera de 2,49 m (3 de espaldas a los consultorios y 5 enfrente, con 1,10 m de paso).",
+  "Partos, piso 3 (ajuste de B2b, inventario): las puertas de la recepción y entrega de pacientes se corren al oriente (centros en x = 2,30 y 2,40) para que la camilla de transporte quepa estacionada contra el muro occidental, como pide el programa («con estacionamiento de camillas»)."
+ ]
+}

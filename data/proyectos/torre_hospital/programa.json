@@ -3956,8 +3956,10 @@
     "tipo": "cálculo propio",
     "valor_m2_pesos_2017": 2761911,
     "factor_ipc_2017_a_2026": 1.649512,
-    "valor_m2_pesos_2026": 4555830,
-    "nota": "Costo directo de construcción del prototipo de un piso, sin dotación ni interventoría; solo como referencia, no como presupuesto de la torre."
+    "valor_m2_pesos_2026": 4555806,
+    "nota": "Sobre 320,6 m² construidos; docs/11 §6.2 usa $5,42 M por m² sobre los 270 m² del presupuesto del tipo. Costo directo de construcción del prototipo de un piso, sin dotación ni interventoría; solo como referencia, no como presupuesto de la torre.",
+    "area_base_m2": 320.6,
+    "metodo": "$885.468.754 de costo directo de 2017 × 1,649512 (IPC 2017 → 2026) / 320,6 m² construidos = $4.555.806 por m² de 2026 (cálculo de la investigación del proyecto tipo, 23-oct-2026)."
    },
    "que_se_toma": "Modulación estructural, aleros y circulaciones cubiertas, ventilación cruzada, árboles en fachadas oriente y occidente, retiros mínimos."
   },
