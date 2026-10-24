@@ -1619,6 +1619,106 @@ Mismas reglas del 5 (instanciado, LOD, dimensiones reales, `mergeGeometries` sin
 
 ---
 
+## 17. Modelo BIM, NSR-10 en amenaza intermedia, cimentación y refuerzo (pedido del usuario, 24-oct-2026)
+
+Pedido literal: «En la torre, aplica la metodología BIM, para poder observar todo su comportamiento; incluye esto de manera profesional
+cumpliendo la norma sismo resistente intermedia para la zona de Antioquia; deja ver los cimientos estructurales de manera clara, también su
+refuerzo en metal y dónde va; todo esto alineado con el proyecto tipo». Esta sección **prevalece** sobre el 7.2 y el 14 donde choquen.
+
+### 17.1 Norma y sistema estructural (cambia el 7.2)
+
+- Yondó: Aa = Av = 0,15 → **zona de amenaza sísmica intermedia** (NSR-10 A.2.3: 0,10 < Aa ≤ 0,20; numeral por confirmar). La torre es
+  grupo IV (I = 1,5). El prediseño se hace con **capacidad moderada de disipación de energía (DMO)**, que es lo que la NSR-10 exige como
+  mínimo en amenaza intermedia, en lugar del DES que fijaba el 7.2. A2 debe **verificar** en la NSR-10 (A.3, tablas de sistemas, y C.21)
+  que no haya una exigencia adicional para el grupo IV en zona intermedia; si la hay, se aplica y se explica. R0, Ω0 y Cd del sistema
+  (combinado o dual) se toman de la fila DMO de la tabla correspondiente.
+- Detallado con los requisitos DMO del capítulo C.21 (pórticos y muros estructurales DMO) y lo general de C.7 (ganchos, separación de
+  barras, recubrimientos), C.12 (desarrollo y traslapos), C.10/C.11 (flexión, flexocompresión y cortante), C.13 (losas nervadas), C.15
+  (cimentaciones: dados, **vigas de amarre** con la fuerza axial de C.15.13, numeral por confirmar) y el título H (pilotes). Todo numeral
+  sin confirmar va marcado «por confirmar».
+
+### 17.2 Cimentación (ahora en alcance; sin interacción suelo-estructura en el análisis dinámico)
+
+- Supuesto de prediseño (de `presupuesto.json`, capítulo 2, **estimación** hasta el estudio geotécnico): pilotes preexcavados de concreto de
+  0,60 m de diámetro, ≈ 12 m de largo, 3-4 por dado, bajo 28 dados de ≈ 2,2 × 2,2 × 1,1 m; vigas de cimentación/amarre entre dados en las
+  dos direcciones; losa de contrapiso de 0,15 m; fosos de ascensor y cisternas.
+- A2 los **dimensiona**: carga por columna (gravedad + sismo con Ω0 donde aplique), número de pilotes por dado con una capacidad de pilote
+  estimada (fuste y punta con parámetros típicos de suelo aluvial tipo D, con fuente, «estimación — la fija el estudio geotécnico»),
+  revisión de punzonamiento y flexión del dado, vigas de amarre con su fuerza axial y su momento por asentamiento diferencial estimado,
+  refuerzo de pilotes (canasta: longitudinal y espiral o estribos, longitud armada). Salida en `torre_hospital_estructura.json →
+  cimentacion` (elementos con geometría, cargas, chequeos y refuerzo). En la simulación la base sigue empotrada en la cara superior de
+  los dados (se dice en la web).
+
+### 17.3 Refuerzo: despiece por elemento
+
+- A2 entrega en `torre_hospital_estructura.json → refuerzo` el armado de **cada** elemento (no solo secciones tipo): columnas (barras
+  longitudinales por cara con diámetro, estribos y ganchos suplementarios, zona confinada lo y separación so, resto, traslapos en la mitad
+  central), vigas (superior e inferior por tramo con bastones y cortes, estribos en 2h y en el centro, ganchos sísmicos de 135°), viguetas y
+  loseta de la losa nervada (con malla de temperatura), muros (mallas, elementos de borde si aplican), escaleras, pilotes, dados y vigas
+  de cimentación; con designación colombiana de barras (N° 3 a N° 8, NTC 2289, fy = 420 MPa) y recubrimientos. Debe ser coherente con las
+  propiedades de rótula (My, Mn, Vn) que usa el motor.
+- Cantidades: kg de acero y m³ de concreto por elemento y por tipo, comparados con las cuantías de `presupuesto.json` (kg/m³ por capítulo);
+  si difieren, se informa la diferencia y su efecto en pesos (sin editar el presupuesto: queda como pendiente con su cifra).
+
+### 17.4 Modelo BIM (equipo F, después de A y B)
+
+- **Datos**: `data/bim/torre_hospital.bim.json` (generado por `scripts/bim/generar_bim.py` desde plantas, estructura con cimentación y
+  refuerzo, inventario, presupuesto, APU y cronograma): modelo federado por disciplinas — ARQ (espacios = recintos, muros, puertas,
+  ventanas, losas de piso y cubierta, escaleras), EST (columnas, vigas, losas nervadas, muros estructurales), CIM (pilotes, dados, vigas
+  de cimentación, contrapiso, fosos), REF (refuerzo con parámetros compactos que la web convierte en barras), MEP/fijo (equipamiento fijo e
+  infraestructura del inventario), DOT (dotación). Cada elemento: GlobalId IFC determinista de 22 caracteres, clase IFC4 (IfcColumn,
+  IfcBeam, IfcSlab, IfcWall, IfcFooting, IfcPile, IfcReinforcingBar, IfcSpace, IfcDoor, IfcWindow, IfcStair, IfcMedicalDevice,
+  IfcFurnishingElement, IfcFlowTerminal…), nivel (IfcBuildingStorey), geometría, material, conjuntos de propiedades (Pset comunes de IFC
+  y uno propio con tipo de dato, fuente y norma), cantidades (Qto), vínculo **5D** (ítem de `presupuesto.json` y su APU), **4D** (fase y
+  fechas del cronograma de `docs/11` sección 10) y vínculo con el **análisis** (id del elemento en la estructura sísmica, para pintar D/C,
+  rótulas y derivas del último cálculo).
+- **IFC4 real**: `scripts/bim/exportar_ifc.py` (Python, solo biblioteca estándar, escritor STEP propio) → `web/models/torre_hospital.ifc`
+  (georreferenciado con IfcMapConversion al Origen Nacional, EPSG:9377, desde el ancla del 0) con todo lo anterior, incluido el refuerzo
+  como IfcReinforcingBar con su geometría de barra. Validación con ifcopenshell en el venv de validación (no dependencia del sitio):
+  esquema IFC4 sin errores, conteos por clase y cantidades iguales a las del JSON. Tamaño razonable para descargar (si pasa de ≈ 15 MB,
+  dividir en un IFC de arquitectura+estructura+cimentación y otro de refuerzo).
+- **Plan de ejecución BIM** en `docs/16-bim-torre.md`: alcance y usos del modelo (coordinación, cantidades 5D, 4D, análisis estructural,
+  dotación y habilitación, mantenimiento), términos de ISO 19650 y del marco BIM de Colombia (Estrategia Nacional BIM 2020-2026; norma de
+  la entidad si aplica, por confirmar), LOIN/LOD por disciplina (arquitectura ≈ 300, estructura ≈ 350, refuerzo ≈ 400 en el despiece,
+  cimentación ≈ 350, dotación ≈ 200-300), codificación de elementos, georreferenciación, detección de interferencias y sus resultados,
+  cantidades contra el presupuesto, y límites («modelo de prefactibilidad: no reemplaza los diseños firmados»).
+- **Interferencias**: `scripts/bim/interferencias.py` (equipos o puertas contra columnas y muros estructurales, ductos y fosos contra
+  vigas de cimentación, separación libre del refuerzo contra el mínimo de C.7.6 y el tamaño del agregado, recubrimientos); resultado en
+  `data/bim/interferencias.json` y en la web.
+
+### 17.5 Modo «Modelo BIM» en la vista (equipo F; D integra)
+
+- Árbol del modelo por disciplina → nivel → clase → elemento, con contadores; buscar; aislar, ocultar y transparencia por disciplina.
+- Panel de propiedades del elemento seleccionado (Psets, cantidades, 5D, 4D, norma) y su refuerzo.
+- **Cortes**: planos de sección horizontales por nivel y verticales por eje (A-D, 1-7), con tapa de corte; vista de corte del elemento.
+- **Cimentación clara**: terreno semitransparente o cortado, pilotes completos hasta la punta con su cota, dados, vigas de amarre, fosos y
+  cisternas, con etiquetas de dimensiones y cargas.
+- **Refuerzo y dónde va**: al seleccionar un elemento (o «refuerzo del eje») se ve su armado en 3D — barras longitudinales, estribos y
+  ganchos, zonas confinadas, traslapos, canastas de pilotes, parrillas de dados — con etiquetas («12 N° 7», «E N° 4 c/0,10 en lo = 0,60 m»)
+  y el concreto transparente; un esquema 2D del despiece (sección y alzado) al lado.
+- **Comportamiento**: colorear la estructura con los resultados del último cálculo sísmico (D/C, rótulas, deriva) y abrir el simulador
+  desde el elemento; **5D**: tabla de cantidades y costo por disciplina y capítulo, comparada con el presupuesto; **4D**: deslizador del
+  cronograma (cimentación → estructura piso a piso → cerramientos → redes → dotación); **interferencias**: lista con «Ir a».
+- Descarga del IFC. Presupuesto de dibujo: el refuerzo solo del elemento o eje elegido (instanciado), nunca de toda la torre a la vez.
+
+### 17.6 Alineado con el proyecto tipo
+
+- Se mantiene la lógica estructural del proyecto tipo DNP 2018 (pórticos de concreto reforzado modulares, retícula repetible) escalada a la
+  retícula de 7,20 m múltiplo del módulo de 1,20 m (Res. 1633). El contraste (equipo E) agrega filas para sistema estructural, capacidad de
+  disipación, cimentación, cuantías de acero y concreto por m², luces y alturas, frente al tipo (lo que el tipo traiga; lo que no, «por
+  confirmar»), y `docs/16` lo resume.
+
+### 17.7 Reparto y aceptación
+
+- A2 (carril A) hace 17.1-17.3. F (carril BIM, después de A y B) hace 17.4-17.5 con permiso de editar `web/index.html` y
+  `web/js/scenes/torre.js` solo dentro de bloques marcados `bim` (D revisa en la integración). E agrega 17.6 al contraste y a los documentos.
+- Aceptación: `python3 scripts/sismo/estructura_torre.py --verificar` con los chequeos DMO, de cimentación y de refuerzo en verde;
+  `python3 scripts/bim/generar_bim.py && python3 scripts/bim/exportar_ifc.py` deterministas; validación IFC sin errores con ifcopenshell;
+  `python3 scripts/bim/interferencias.py` sin interferencias duras (o cada una explicada); QA del modo BIM en claro, oscuro y teléfono
+  (cortes, cimentación, refuerzo de una columna, una viga, un dado y un pilote, 5D, 4D, colores del sismo, descarga del IFC).
+
+---
+
 ## Anexo A · Ejemplos mínimos (fixtures del contrato)
 
 Los productores los escriben completos en la ola 0 en `scripts/fixtures/torre/` (no se publican) y deben pasar sus validadores.
