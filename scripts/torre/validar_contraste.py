@@ -28,7 +28,7 @@ Reglas (duras salvo que se diga):
   K8  vigencia: toda mención de la Res. 1732 dice que fue revocada y la Res. 482 de 2018 solo aparece como reemplazada.
   K9  normas.json (9.3) y proyecto_tipo.json (9.1): normas agregadas con su esquema y nivel de verificación, la 1732
       «revocada», la lista de modificaciones de la 3100 con la de 2022 por confirmar, el marcapasos externo y los criterios
-      18.14 y 18.15 por confirmar, y `escalamiento_a_torre.estado`.
+      18.14 y 18.15 por confirmar (también en reglas_planta.json y en las plantas generadas), y `escalamiento_a_torre.estado`.
   K10 filas del 17.6 (alineado con el proyecto tipo): en `contraste_capitulos`, con `seccion: "17.6"`, una fila por tema
       (sistema estructural, capacidad de disipación de energía, cimentación, cuantías de acero y concreto por m², luces y
       alturas), cada una con veredicto y tipo de dato (con su fuente); lo que el tipo no trae dice «por confirmar» (y la fila lleva
@@ -114,11 +114,11 @@ def cifras_17_6(est, pres, prog, costo_m2) -> dict:
     dados = [g for g in cim['dados'] if g['tipo'] == 'dado']
     losas = [g for g in cim['dados'] if g['tipo'] != 'dado']
     por_dado = sorted({g['pilotes'] for g in dados})
-    q = can['por_tipo']
-    sup = ('columnas', 'muros', 'vigas', 'losas', 'escaleras')
-    m3s = sum(q[k]['m3'] for k in sup)
-    m3c = sum(v['m3'] for k, v in q.items() if k not in sup)
-    kgs, kgc = can['acero_superestructura_kg'], can['acero_cimentacion_kg']
+    # Misma base en concreto y en acero: superestructura con los arranques bajo el piso 1, cimentación sin el contrapiso
+    # (el contrapiso lo paga el ítem 2.12 por m² y va aparte, con su concreto y su malla).
+    tot = can['totales']
+    m3s, m3c, m3p = tot['superestructura']['m3'], tot['cimentacion']['m3'], tot['contrapiso']['m3']
+    kgs, kgc = tot['superestructura']['kg'], tot['cimentacion']['kg']
     items = {it.get('codigo'): it for c_ in pres['capitulos'] for it in c_['items']}
     kg_pres_s, kg_pres_c = items['3.05']['cantidad'], items['2.13']['cantidad']
     est_cap = next(x for x in costo_m2['por_capitulo'] if x['torre_capitulos'] == ['2', '3'])
@@ -167,6 +167,7 @@ def cifras_17_6(est, pres, prog, costo_m2) -> dict:
             ('acero por m³', f'{ent((kgs + kgc) / (m3s + m3c))} kg/m³'),
             ('superestructura', f'{dec(m3s / area, 2)} m³/m² y {dec(kgs / area, 1)} kg/m²'),
             ('cimentación', f'{dec(m3c / area, 2)} m³/m² y {dec(kgc / area, 1)} kg/m²'),
+            ('contrapiso aparte', f'{dec(m3p, 1)} m³'),
             ('acero del presupuesto por m²', f'{dec((kg_pres_s + kg_pres_c) / area, 1)} kg/m²'),
             ('acero del presupuesto en la superestructura y en la cimentación', f'{dec(kg_pres_s / area, 1)} en la superestructura y {dec(kg_pres_c / area, 1)} en la cimentación'),
             ('área de la torre', f'{dec(area, 1)} m²'),
@@ -636,6 +637,16 @@ def validar(archivo: Path = CONTRASTE) -> C.Informe:
     for ruta, t in textos(n):
         if re.search(r'criterio 18\.1[45]', t) and 'por confirmar' not in t:
             inf.error('K9', f'normas.json → {ruta}: el criterio 18.14 o 18.15 debe quedar «por confirmar»')
+    # lo mismo en las reglas de la planta y en las plantas que se publican (revisión final: dos mínimos de observación de
+    # urgencias citaban el criterio 18.15 como dato oficial)
+    for nombre, ruta in (('reglas_planta.json', C.TORRE / 'reglas_planta.json'),
+                         ('torre_hospital_plantas.json', C.DATOS / 'edificios' / 'torre_hospital_plantas.json')):
+        if not ruta.exists():
+            continue
+        inf.revisado('K9')
+        for r_, t in textos(C.cargar_json(ruta)):
+            if re.search(r'criterio 18\.1[45]', t) and 'por confirmar' not in t:
+                inf.error('K9', f'{nombre} → {r_}: el criterio 18.14 o 18.15 debe quedar «por confirmar»')
     pt = C.cargar_json(PROYECTO_TIPO)
     inf.revisado('K9')
     if pt.get('escalamiento_a_torre', {}).get('estado') != 'escenario inicial superado por programa.json (4 pisos, 3.369,6 m²)':

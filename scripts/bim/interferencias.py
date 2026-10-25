@@ -222,7 +222,7 @@ def unidades_y_puertas(M, E, Rg):
                     Rg.add('unidad contra estructura', 'dura' if pen > 0.05 else 'leve', [e['id'], sid], [g['centro'][0], g['centro'][1], g['centro'][2] + g['dim'][2] / 2],
                            f'«{e["nombre"]}» se mete {pen * 100:.1f} cm en {_min(E[sid]["nombre"])}.',
                            f'Correr la unidad al menos {pen * 100 + 1:.0f} cm hacia el recinto (regla de ubicación del inventario).', 'B',
-                           medida={'penetracion_m': r(pen, 3)}, norma='Res. 3100 de 2019 (ubicación de la dotación) y NSR-10 A.9 (anclaje)')
+                           medida={'penetracion_m': r(pen, 3)}, norma='Res. 3100 de 2019 (ubicación de la dotación) y NSR-10 A.9 (anclaje; numeral por confirmar)')
     n_p = 0
     for e in M['elementos']:
         v = e.get('vano')
@@ -239,7 +239,7 @@ def unidades_y_puertas(M, E, Rg):
                 Rg.add('puerta contra estructura', 'dura', [e['id'], sid], [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, a[2] + 1.0],
                        f'El vano de «{e["nombre"]}» ({e.get("ancho_total")} m) se mete {pen * 100:.1f} cm en {_min(E[sid]["nombre"])}.',
                        f'Correr la puerta {pen * 100 + 2:.0f} cm a lo largo del muro (o reducir la hoja si el ancho mínimo lo permite).', 'B',
-                       medida={'penetracion_m': r(pen, 3)}, norma='NSR-10 K.3.14 y C.21 (no se perforan columnas ni muros estructurales)')
+                       medida={'penetracion_m': r(pen, 3)}, norma='NSR-10 K.3.14 y C.21 (no se perforan columnas ni muros estructurales; numerales por confirmar)')
     return {'unidades_revisadas': n_u, 'puertas_revisadas': n_p}
 
 
@@ -408,7 +408,7 @@ def ductos(M, E, pl, Rg):
                         Rg.add('ducto contra estructura', 'dura', [rc['id'], e['id']], [(env[0] + env[2]) / 2, (env[1] + env[3]) / 2, z - 0.4],
                                f'La {_min(e["nombre"])} atraviesa el ducto vertical {rc["id"]} ({o[0]:.2f} × {o[1]:.2f} m de la sección del ducto).',
                                'Retirar el borde del ducto a la cara de la viga (el ducto queda libre bajo la viga) o desviar los montantes.', 'B',
-                               medida={'area_m2': r(area, 3)}, norma='NSR-10 C.21 (no se perforan vigas de pórticos DMO sin diseño)')
+                               medida={'area_m2': r(area, 3)}, norma='NSR-10 C.21 (no se perforan vigas de pórticos DMO sin diseño; por confirmar)')
                     break
             else:
                 continue
@@ -471,7 +471,7 @@ def ductos(M, E, pl, Rg):
                            f'las redes que bajan del ducto (desagües y acometidas, ≈ −0,60 a −1,00 m) la cruzan en {o[0]:.2f} × {o[1]:.2f} m.',
                            'Dejar pases con camisa en la viga de amarre (fuera del tercio central de su altura no; en su mitad) o sacar las redes '
                            'por el costado del ducto que no tiene cimentación debajo; coordinar con el diseño hidrosanitario.', 'A y B',
-                           medida={'cara_superior_m': r(b[2], 3), 'area_m2': r(area, 3)}, norma='NSR-10 C.15.13 y C.6.3 (pases)')
+                           medida={'cara_superior_m': r(b[2], 3), 'area_m2': r(area, 3)}, norma='NSR-10 C.15.13 y C.6.3 (pases) (por confirmar)')
                     break
     return {'ductos': sorted(duct)}
 
@@ -909,7 +909,7 @@ def choques_barras(M, E, Rg):
                f'hasta {g["pen"] * 1000:.0f} mm una en otra.',
                'Correr una de las capas en el detallado (en obra se desplazan hasta un diámetro) o ajustar la posición en el despiece.',
                'A y F', medida={'penetracion_max_mm': r(g['pen'] * 1000, 1), 'cruces': g['n']}, casos=g['n'],
-               norma='NSR-10 C.7.5 (colocación del refuerzo) y C.7.6')
+               norma='NSR-10 C.7.5 (colocación del refuerzo) y C.7.6 (por confirmar)')
     return {'instancias': len(inst), 'parejas_revisadas': len(pares), 'grupos_con_cruces': len(agrupado)}
 
 
@@ -1140,7 +1140,7 @@ def coherencia(M, E, est, pl, Rg):
                f'arriba (p. ej. {fuera[0][0]}: de {fuera[0][1]:.2f} a {fuera[0][2]:.2f} m; la mitad central va de {fuera[0][3]:.2f} '
                f'a {fuera[0][4]:.2f} m). El modelo lo dibuja donde lo pone el prediseño.',
                'Ubicar el traslapo en la mitad central de la altura libre del piso de arriba (C.21.6.3.2).', 'A',
-               medida={'columnas': len(fuera)}, norma='NSR-10 C.21.6.3.2 y C.12.17')
+               medida={'columnas': len(fuera)}, norma='NSR-10 C.21.6.3.2 y C.12.17 (por confirmar)')
     if mas_arriba:
         Rg.add('coherencia del despiece', 'media', sorted({m_[0] for m_ in mas_arriba})[:12], None,
                f'En {len(mas_arriba)} tramos de columna el piso de arriba lleva más acero que el de abajo (p. ej. {mas_arriba[0][0]}: '

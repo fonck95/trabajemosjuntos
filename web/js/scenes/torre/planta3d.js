@@ -282,6 +282,80 @@ export function cotaParte(p, x, y) {
   t = Math.max(0, Math.min(1, t));
   return +p.z0 + t * (+p.z1 - +p.z0);
 }
+// Bordes ABIERTOS de las partes de una escalera, los que no se cruzan caminando y llevan baranda: los tramos de los dos
+// costados de cada tramo (los lados paralelos a la subida; por el arranque y por la llegada sí se pasa) y de los lados de
+// los descansos que dan a un piso transitable con un desnivel de más de PASO_BORDE. Cada lado se mira en muestras cada
+// 0,05 m, a 0,08 m de él: abierto si allí hay un recinto transitable del nivel que no es núcleo de escalera, fuera de
+// muros, ojos y partes (la escalera principal al vestíbulo), y la parte queda a más de PASO_BORDE de su piso (un descanso,
+// por su cota; un tramo, por su escalón más alto o más bajo: la baranda sigue el costado entero, también donde los
+// escalones todavía van bajos cerca del arranque). Lo que da contra un muro, el ojo, otra parte o la franja del núcleo no
+// se marca: allí ya bloquean el muro, el ojo o la franja (celdas del núcleo sin parte), con el mismo carril en el tramo y
+// en el descanso; un borde más corría el carril del tramo una celda y el caminante se trababa al pasar del descanso.
+// La rejilla de colisión los marca como un muro y el dibujo les pone baranda.
+// Devuelve [{ p, a: [x, y], b: [x, y], abierto: true }]. Se calcula una vez por escalera (la rejilla se arma varias
+// veces por nivel).
+const PASO_BORDE = 0.3, bordesHechos = new WeakMap();
+export function bordesEscalera(nivel, esc, ix = null) {
+  if (bordesHechos.has(esc)) return bordesHechos.get(esc);
+  ix = ix || indice(nivel);
+  const out = [], escs = nivel.escaleras || [];
+  const partes = escs.flatMap((e) => (e.partes || []).map((q) => q.rect)), ojos = escs.map((e) => e.ojo).filter(Boolean), nucleos = new Set(escs.map((e) => e.recinto));
+  // muros no abiertos cerca de la escalera (a menos de 0,5 m de la caja de sus partes)
+  const rs = (esc.partes || []).map((q) => q.rect);
+  const cx0 = Math.min(...rs.map((r) => r[0])) - 0.5, cy0 = Math.min(...rs.map((r) => r[1])) - 0.5, cx1 = Math.max(...rs.map((r) => r[2])) + 0.5, cy1 = Math.max(...rs.map((r) => r[3])) + 0.5;
+  const muros = (nivel.muros || []).filter((m) => m.tipo !== 'abierto' && +m.espesor > 0 && Math.max(m.a[0], m.b[0]) >= cx0 && Math.min(m.a[0], m.b[0]) <= cx1 && Math.max(m.a[1], m.b[1]) >= cy0 && Math.min(m.a[1], m.b[1]) <= cy1);
+  // recinto de piso del nivel en (x, y), o null si allí hay un muro, un ojo, una parte de escalera o un núcleo
+  const pisoEn = (x, y) => {
+    if (muros.some((m) => distSegmento(x, y, m.a, m.b) <= +m.espesor / 2 + 0.02)) return null;
+    if (ojos.some((r) => enRect(x, y, r, 0.01)) || partes.some((r) => enRect(x, y, r, 0.01))) return null;
+    const id = ix.recintoEn(x, y), r = id ? ix.porId.get(id)?.r : null;
+    return r && r.transitable !== false && !nucleos.has(id) ? r : null;
+  };
+  for (const p of esc.partes || []) {
+    const [x0, y0, x1, y1] = p.rect, tramo = p.tipo === 'tramo', dx = tramo ? DIR(p.sube_hacia_deg)[0] : 0, zp = +p.z || 0;
+    // lados con su normal hacia afuera
+    for (const [a, b, n] of [[[x0, y0], [x1, y0], [0, -1]], [[x1, y0], [x1, y1], [1, 0]], [[x1, y1], [x0, y1], [0, 1]], [[x0, y1], [x0, y0], [-1, 0]]]) {
+      if (tramo && (dx ? n[0] : n[1])) continue;   // arranque o llegada
+      const L = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L, uy = (b[1] - a[1]) / L, k = Math.max(1, Math.round(L / 0.05));
+      const abierto = [];
+      for (let i = 0; i < k; i++) {
+        const s = ((i + 0.5) / k) * L, x = a[0] + ux * s + n[0] * 0.08, y = a[1] + uy * s + n[1] * 0.08, r = pisoEn(x, y);
+        const zf = r ? cotaPiso(r, x, y) : 0, dz = tramo ? Math.max(Math.abs(+p.z0 - zf), Math.abs(+p.z1 - zf)) : Math.abs(zp - zf);
+        abierto.push(!!r && dz > PASO_BORDE);
+      }
+      const P = (i) => [a[0] + ux * (i / k) * L, a[1] + uy * (i / k) * L];
+      for (let i = 0, j; i < k; i = j) {
+        for (j = i; j < k && abierto[j] === abierto[i];) j++;
+        if (abierto[i]) out.push({ p, a: P(i), b: P(j), abierto: true });
+      }
+    }
+  }
+  bordesHechos.set(esc, out);
+  return out;
+}
+// baranda en los bordes abiertos (bordesEscalera): vidrio entre parales a no más de 1,1 m y riel bajo; en los tramos llega
+// al pasamanos (0,90 m sobre la línea de huellas), en los descansos sube a 1,10 m con su propio pasamanos, como la baranda
+// del hueco de la escalera abierta
+function armarBarandas(op, vi, bordes, zOff) {
+  for (const { p, a, b, abierto } of bordes) {
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    if (!abierto || L < 0.05) continue;
+    const tramo = p.tipo === 'tramo', H = tramo ? 0.9 : 1.1;
+    // 0,05 m adentro de la parte, en la línea del pasamanos
+    let nx = -(b[1] - a[1]) / L, ny = (b[0] - a[0]) / L;
+    if (((p.rect[0] + p.rect[2]) / 2 - a[0]) * nx + ((p.rect[1] + p.rect[3]) / 2 - a[1]) * ny < 0) { nx = -nx; ny = -ny; }
+    const A = [a[0] + nx * 0.05, a[1] + ny * 0.05], B = [b[0] + nx * 0.05, b[1] + ny * 0.05];
+    const zA = zOff + cotaParte(p, A[0], A[1]), zB = zOff + cotaParte(p, B[0], B[1]);
+    vi.quad([A[0], A[1], zA + 0.1], [B[0], B[1], zB + 0.1], [B[0], B[1], zB + H - 0.04], [A[0], A[1], zA + H - 0.04], C.vidrio);
+    op.barra([A[0], A[1], zA + 0.1], [B[0], B[1], zB + 0.1], 0.03, C.baranda);
+    if (!tramo) op.barra([A[0], A[1], zA + H], [B[0], B[1], zB + H], 0.05, C.baranda);
+    const n = Math.max(1, Math.ceil(L / 1.1));
+    for (let i = 0; i <= n; i++) {
+      const f = i / n, px = A[0] + (B[0] - A[0]) * f, py = A[1] + (B[1] - A[1]) * f, pz = zA + (zB - zA) * f;
+      op.caja(px - 0.02, py - 0.02, pz, px + 0.02, py + 0.02, pz + H, C.baranda);
+    }
+  }
+}
 function armarEscalera(op, esc, zOff) {
   for (const p of esc.partes || []) {
     const [x0, y0, x1, y1] = p.rect;
@@ -431,7 +505,7 @@ export function construirPiso(nivel, {
 
   // ---- escaleras: las del nivel y, si hay piso abajo, las del nivel inferior completas (el hueco se ve entero) con los
   // muros de su núcleo
-  for (const e of escaleras) armarEscalera(op, e, 0);
+  for (const e of escaleras) { armarEscalera(op, e, 0); armarBarandas(op, vi, bordesEscalera(nivel, e, ix), 0); }
   if (abajo) {
     const dz = (+abajo.z || 0) - (+nivel.z || 0);
     const pAbajo = new Map(), vAbajo = new Map();
@@ -441,6 +515,7 @@ export function construirPiso(nivel, {
       const eb = escAbajo.get(e.id);
       if (!eb) continue;
       armarEscalera(op, eb, dz);
+      armarBarandas(op, vi, bordesEscalera(abajo, eb), dz);
       for (const m of abajo.muros || []) if ((m.lados || []).includes(eb.recinto)) armarMuro(op, vi, m, abajo, pAbajo.get(m.id) || [], vAbajo.get(m.id) || [], dz);
       // piso del núcleo de abajo, si es el primer nivel de la escalera
       const rb = (abajo.recintos || []).find((r) => r.id === eb.recinto);
@@ -647,7 +722,9 @@ function inflar(g, nx, ny, umbral) {
   return out;
 }
 // Códigos de celda: 0 libre, 1 bloqueada, 2 zona de escalera (libre si alguna parte de escalera la cubre a una altura
-// continua con la del caminante: eso lo decide quien camina, con las partes de todos los niveles).
+// continua con la del caminante: eso lo decide quien camina, con las partes de todos los niveles). Los costados de los
+// tramos y los lados de los descansos abiertos a un piso con desnivel (bordesEscalera) bloquean como un muro, a los dos
+// lados.
 // op.obstaculos: huellas de equipos grandes [{ x, y, w, d, rot }] (rectángulos girados) y polígonos extra; op.partes:
 // rectángulos de las partes de escalera (de este nivel y de los vecinos) que cuentan como piso dentro de los núcleos;
 // op.llegadas: bordes altos de los tramos que llegan desde abajo (en el hueco de la escalera abierta no llevan baranda).
@@ -726,11 +803,14 @@ export function rejillaColision(nivel, { celda = 0.10, radio = 0.30, obstaculos 
     const [a0, b0, a1, b1] = caja2(pol);
     marcarOBB((a0 + a1) / 2, (b0 + b1) / 2, 1, 0, (a1 - a0) / 2 + margen, (b1 - b0) / 2 + margen, alto, h);
   };
+  // un segmento más delgado que la celda (baranda de 0,06 m del hueco, cerramiento de 0,10 m) se marca con el ancho de una
+  // celda y un poco más: con menos, el que cae justo en el borde entre dos filas de celdas no toca ningún centro y no
+  // bloquea (la baranda norte del hueco de la escalera principal, en y = −9,40, dejaba al caminante a 0,01 m del vacío)
   const segmento = (ax, ay, bx, by, t) => {
     const L = Math.hypot(bx - ax, by - ay);
     if (L < 1e-4) return;
     const ux = (bx - ax) / L, uy = (by - ay) / L;
-    marcarOBB((ax + bx) / 2, (ay + by) / 2, ux, uy, L / 2, Math.max(t, celda * 0.6) / 2);
+    marcarOBB((ax + bx) / 2, (ay + by) / 2, ux, uy, L / 2, Math.max(t, celda * 1.01) / 2);
   };
   const puertasPorMuro = new Map();
   for (const p of nivel.puertas || []) { if (!puertasPorMuro.has(p.muro)) puertasPorMuro.set(p.muro, []); puertasPorMuro.get(p.muro).push(p); }
@@ -744,8 +824,21 @@ export function rejillaColision(nivel, { celda = 0.10, radio = 0.30, obstaculos 
   }
   for (const c of nivel.columnas || []) marcarOBB(c.x, c.y, 1, 0, (+c.b || 0.6) / 2, (+c.h || 0.6) / 2);
   for (const e of nivel.escaleras || []) if (e.ojo) { const [a, b, c2, d] = e.ojo; marcarOBB((a + c2) / 2, (b + d) / 2, 1, 0, (c2 - a) / 2, (d - b) / 2); }
+  // bordes abiertos de las escaleras (bordesEscalera: costados de los tramos y lados de los descansos que dan a un piso
+  // con desnivel): bloquean como la baranda del hueco, con el radio del caminante también del lado del piso. Las celdas de
+  // escalera no se inflan y solo el desnivel máximo de un paso detenía al que llegaba del vestíbulo al costado abierto del
+  // tramo de la escalera principal: quedaba a 0,01 m del borde, con los escalones ya a 1,5 m, y donde todavía van bajos
+  // (cerca del arranque) se subía al tramo de lado
+  for (const e of nivel.escaleras || []) for (const s of bordesEscalera(nivel, e, ix)) segmento(s.a[0], s.a[1], s.b[0], s.b[1], 0.06);
   // obstáculos del recorrido: el hueco de la escalera abierta pasa a zona de escalera (solo se pisa el tramo que baja y
-  // continúa a la altura del piso); su borde, salvo la llegada, es baranda
+  // continúa a la altura del piso); su borde, salvo la llegada, es baranda donde da a un piso (un recinto transitable o una
+  // parte de escalera, fuera de muros, columnas y ojos). Contra un muro o la franja del núcleo ya bloquean ellos, con el
+  // mismo carril que en el nivel de abajo: la baranda de más, marcada con el ancho de una celda sobre el borde de una fila,
+  // corría una celda el carril del tramo que llega y el caminante se trababa al pasar a él desde el descanso de piso
+  const pisable = (x, y) => {
+    const i = Math.floor((x - x0) / celda), j = Math.floor((y - y0) / celda);
+    return i >= 0 && j >= 0 && i < nx && j < ny && g[j * nx + i] !== 1 && !crudo[j * nx + i];
+  };
   for (const o of nivel.obstaculos_recorrido || []) {
     if (/hueco/i.test(o.id)) {
       llenar(o.poligono, (k, x, y) => { g[k] = cubierta(x, y) ? 2 : 1; });
@@ -753,9 +846,18 @@ export function rejillaColision(nivel, { celda = 0.10, radio = 0.30, obstaculos 
       for (let i = 0; i < pol.length; i++) {
         const a = pol[i], b = pol[(i + 1) % pol.length];
         const libres = llegadas.filter(([q, r]) => colineales(a, b, q, r));
+        const L = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L, uy = (b[1] - a[1]) / L;
+        // normal hacia afuera del hueco
+        let nx0 = -uy, ny0 = ux;
+        if (enPoligono((a[0] + b[0]) / 2 + nx0 * 0.05, (a[1] + b[1]) / 2 + ny0 * 0.05, pol)) { nx0 = -nx0; ny0 = -ny0; }
         for (const [s0, s1] of restarIntervalos(a, b, libres)) {
-          const L = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / L, uy = (b[1] - a[1]) / L;
-          segmento(a[0] + ux * s0, a[1] + uy * s0, a[0] + ux * s1, a[1] + uy * s1, 0.06);
+          // en muestras cada 0,05 m, a 0,08 m afuera del borde
+          const k = Math.max(1, Math.round((s1 - s0) / 0.05)), da = (s1 - s0) / k, afuera = [];
+          for (let q = 0; q < k; q++) { const s = s0 + (q + 0.5) * da; afuera.push(pisable(a[0] + ux * s + nx0 * 0.08, a[1] + uy * s + ny0 * 0.08)); }
+          for (let q = 0, r; q < k; q = r) {
+            for (r = q; r < k && afuera[r] === afuera[q];) r++;
+            if (afuera[q]) segmento(a[0] + ux * (s0 + q * da), a[1] + uy * (s0 + q * da), a[0] + ux * (s0 + r * da), a[1] + uy * (s0 + r * da), 0.06);
+          }
         }
       }
       continue;

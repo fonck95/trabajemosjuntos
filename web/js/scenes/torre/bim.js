@@ -624,7 +624,7 @@ export async function montar(ctx) {
     if (!tel) {
       add(`<b>−1,00 m</b> nivel freático estimado`, P3(xr, yr, -1.0));
       const vc = L.find((x) => x.e.tipo_predefinido === 'FOOTING_BEAM');
-      if (vc) { const b = m3d.cajaProyecto(giDe(vc.e.id)); add(`<b>Viga de amarre ${n(vc.e.qto?.Qto_FootingBaseQuantities?.Width)} × ${n(vc.e.qto?.Qto_FootingBaseQuantities?.Height)} m</b><br><small>${esc((vc.e.analisis?.une || []).join(' con '))}; NSR-10 C.15.13</small>`, P3((b[0] + b[3]) / 2, (b[1] + b[4]) / 2, b[5])); }
+      if (vc) { const b = m3d.cajaProyecto(giDe(vc.e.id)); add(`<b>Viga de amarre ${n(vc.e.qto?.Qto_FootingBaseQuantities?.Width)} × ${n(vc.e.qto?.Qto_FootingBaseQuantities?.Height)} m</b><br><small>${esc((vc.e.analisis?.une || []).join(' con '))}; NSR-10 C.15.13, por confirmar</small>`, P3((b[0] + b[3]) / 2, (b[1] + b[4]) / 2, b[5])); }
       for (const x of L.filter((q) => q.e.clase === 'IfcElementAssembly' && !/montacargas/i.test(q.e.nombre))) {
         const b = m3d.caja(gisDe(giDe(x.e.id)));
         add(`<b>${esc(x.e.nombre)}</b>`, new THREE.Vector3((b.min.x + b.max.x) / 2, b.max.y + 0.3, (b.min.z + b.max.z) / 2));

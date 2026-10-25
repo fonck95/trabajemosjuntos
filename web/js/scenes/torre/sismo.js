@@ -29,7 +29,14 @@ const GOBIERNA = ['flexión', 'cortante', 'rotación plástica'];
 const REGIMEN = { cortical: 'cortical', intraplaca_profunda: 'intraplaca profunda', transicion: 'transición', auto: 'automático' };
 const EXAGERACIONES = [1, 2, 5, 10, 20, 50, 100, 200];
 const ESTADO_MURO_TXT = { sin_dano: 'sin daño', leve: 'leve', moderado: 'moderado', extenso: 'extenso', colapso: 'colapso' };
-const REGIMEN_EQ = { desliza: 'desliza', balancea: 'empieza a balancearse', frontera: 'frontera (desliza o se balancea)', anclado: 'anclado', estable: 'estable' };
+// Qué le pasó a cada equipo en el cálculo (revisión final): se clasifica por lo que ocurrió (desliza e inicia_balanceo),
+// no por el modo previsto (regimen, de Shenton), que el motor deja aunque el equipo no se haya movido. La misma función da
+// la tabla de variables, la nota, las filas, el color en 3D y la leyenda.
+const QUE_PASO = { anclado: 'anclado', ambos: 'desliza y se balancea', balancea: 'empieza a balancearse', desliza: 'desliza', quieto: 'quieto' };
+const PREVISTO = { desliza: 'si se moviera, deslizaría antes de balancearse', balancea: 'si se moviera, se balancearía antes de deslizar', frontera: 'si se moviera, podría deslizar o balancearse' };
+const quePaso = (q) => (!q ? null : q.regimen === 'anclado' ? 'anclado' : q.desliza && q.inicia_balanceo ? 'ambos' : q.inicia_balanceo ? 'balancea' : q.desliza ? 'desliza' : 'quieto');
+const COLOR_PASO = { anclado: 'muted', ambos: 's7', balancea: 'bad', desliza: 'warn', quieto: 'good' };
+const cuentaEquipos = (L) => { const c = { anclado: 0, ambos: 0, balancea: 0, desliza: 0, quieto: 0 }; for (const q of L) c[quePaso(q)]++; return c; };
 
 const n = (v, d = 1) => (Number.isFinite(+v) ? (+v).toLocaleString('es-CO', { maximumFractionDigits: d, minimumFractionDigits: d }) : '—');
 const nv = (v, d = 2) => (Number.isFinite(+v) ? (+v).toLocaleString('es-CO', { maximumFractionDigits: d }) : '—');
@@ -373,7 +380,7 @@ export async function montar(ctx) {
     const [t, d] = CAMPOS[campo];
     const mez = 'color-mix(in srgb-linear, var(--good) 50%, var(--warn))';
     const muros = info?.muros?.length;
-    out('leyenda').innerHTML = `<p><b>${t}:</b> ${d}.</p>
+    out('leyenda').innerHTML = `<p><b>${t}:</b> ${d}. ${campo === 'rotacion' ? '' : 'Incluye las cargas de gravedad (peso propio y uso): la parte que agrega el sismo es la diferencia con el estado inicial.'}</p>
       <ul class="sismo-bins">
         <li><i style="background:var(--good)"></i>≤ ${n(CORTES_DC[0], 1)}</li><li><i style="background:${mez}"></i>${n(CORTES_DC[0], 1)} a ${n(CORTES_DC[1], 1)}</li>
         <li><i style="background:var(--warn)"></i>${n(CORTES_DC[1], 1)} a ${n(CORTES_DC[2], 1)}</li><li><i style="background:var(--bad)"></i>más de ${n(CORTES_DC[2], 1)}${campo === 'rotacion' ? ': superó IO' : ': supera la capacidad esperada'}</li>
@@ -528,7 +535,8 @@ export async function montar(ctx) {
       const j = mapaE.get(id), el = listo.elementos[j];
       if (!E) return '';
       const thi = E.thp_max?.[j * 2], thj = E.thp_max?.[j * 2 + 1], tfi = E.t_primera_fluencia?.[j * 2], tfj = E.t_primera_fluencia?.[j * 2 + 1];
-      return `<dt>Pórtico ${escH(el.portico)}</dt><dd>D/C máx. ${n(E.dc_max[j], 2)} (${GOBIERNA[E.gobierna?.[j]] || '—'}) a los ${n(E.t_dc_max?.[j], 2)} s</dd>
+      const dc0 = R?.dc && R.t?.[0] === 0 ? R.dc[j] / 100 : null;      // salida 0: antes del movimiento, solo gravedad
+      return `<dt>Pórtico ${escH(el.portico)}</dt><dd>D/C máx. ${n(E.dc_max[j], 2)} (${GOBIERNA[E.gobierna?.[j]] || '—'}) a los ${n(E.t_dc_max?.[j], 2)} s${dc0 != null ? `; con la gravedad sola, ${n(dc0, 2)}` : ''}</dd>
         <dt>Momento máx. i / j</dt><dd>${nv(E.Mi_max?.[j], 1)} / ${nv(E.Mj_max?.[j], 1)} kN·m</dd>
         <dt>Cortante máx.</dt><dd>${nv(E.V_max?.[j], 1)} kN${sec.Vn_e_kN ? ` (Vn esperado ${nv(sec.Vn_e_kN, 0)} kN)` : ''}</dd>
         <dt>Axial (tracción +)</dt><dd>${nv(E.N_min?.[j], 1)} a ${nv(E.N_max?.[j], 1)} kN</dd>
@@ -543,7 +551,7 @@ export async function montar(ctx) {
         <dt>En este paso</dt><dd data-o="el-paso">—</dd>
         ${filas}
       </dl>
-      <p class="note">Sus series en el tiempo y el lazo M–θp de sus rótulas están abajo, en «Lo que calculó el simulador».</p>`;
+      <p class="note">El D/C incluye las cargas de gravedad (peso propio y uso); la parte que agrega el sismo es la diferencia con el estado inicial. Sus series en el tiempo y el lazo M–θp de sus rótulas están abajo, en «Lo que calculó el simulador».</p>`;
     fichaPaso();
   }
   function fichaPaso() {
@@ -648,7 +656,7 @@ export async function montar(ctx) {
       fila(`Período T${k + 1}`, `${nv(T, 3)} s`, `Masa que mueve: ${pct(mp.x?.[k], 0)} en x, ${pct(mp.y?.[k], 0)} en y, ${pct(mp.rz?.[k], 0)} en giro`);
     });
     if (am.periodos_ancla_s) fila('Amortiguamiento de Rayleigh', `ξ = 5 % en ${nv(am.periodos_ancla_s[0], 3)} s y ${nv(am.periodos_ancla_s[1], 3)} s`, `ξ efectivo de los modos: ${Array.from(am.xi_modos || []).slice(0, 12).map((x) => n(x * 100, 1)).join(' · ')} %`);
-    if (R.opciones?.escala === 'nsr10') fila('Factor de escala NSR-10', `×${n(R.factor_escala, 3)}`, `Escenario hipotético; el ajuste del suelo dio ${R.iteraciones_escala ?? 0} vueltas`);
+    if (R.opciones?.escala === 'nsr10') fila('Factor de escala NSR-10', `×${n(R.factor_escala, 3)}`, `Escenario hipotético; el ajuste del suelo dio ${R.iteraciones_escala ?? 0} ${R.iteraciones_escala === 1 ? 'vuelta' : 'vueltas'}`);
     fila('Paso de cálculo', `${nv(R.opciones?.dt_s, 3)} s`, R.opciones?.calidad === 'baja' ? 'calidad baja: paso de 0,01 s sobre el registro filtrado' : 'Newmark de aceleración promedio con Newton-Raphson; salida cada 0,02 s');
     if (E.deriva_vector_max) {
       let k = 0; for (let q = 1; q < N; q++) if (E.deriva_vector_max[q] > E.deriva_vector_max[k]) k = q;
@@ -656,8 +664,8 @@ export async function montar(ctx) {
     }
     if (R.calidad_numerica) {
       const q = R.calidad_numerica;
-      fila('Índice de estabilidad máximo', G.sig(q.indice_estabilidad_max, 3), 'P-Delta: peso de encima por deriva sobre cortante por altura (NSR-10 A.6.2.3); bajo 0,1 el efecto es pequeño');
-      fila('Calidad numérica', `${nv(q.pasos, 0)} pasos · ${nv(q.no_convergidos, 0)} sin converger`, `${nv(q.iteraciones_promedio, 2)} iteraciones por paso; error del balance de energía ${G.sig((q.error_energia_max || 0) * 100, 2)} %`);
+      fila('Índice de estabilidad máximo', G.sig(q.indice_estabilidad_max, 3), 'P-Delta: peso de encima por deriva sobre cortante por altura (NSR-10 A.6.2.3, por confirmar); bajo 0,1 el efecto es pequeño');
+      fila('Calidad numérica', `${nv(q.pasos, 0)} pasos · ${nv(q.no_convergidos, 0)} sin converger`, `${nv(q.iteraciones_promedio, 2)} ${q.iteraciones_promedio === 1 ? 'iteración' : 'iteraciones'} por paso; error del balance de energía ${G.sig((q.error_energia_max || 0) * 100, 2)} %`);
     }
     if (E.dc_max) {
       let k = 0; for (let q = 1; q < nE; q++) if (E.dc_max[q] > E.dc_max[k]) k = q;
@@ -677,41 +685,36 @@ export async function montar(ctx) {
       fila('Muros de mampostería', ESTADOS_MURO.filter((s) => c[s]).map((s) => `${c[s]} ${ESTADO_MURO_TXT[s]}`).join(' · '), 'Por el estado de daño que alcanzó cada uno con su deriva');
     }
     if (R.equipos?.length) {
-      const d = R.equipos.filter((q) => q.desliza), b = R.equipos.filter((q) => q.inicia_balanceo), fr = R.equipos.filter((q) => q.regimen === 'frontera');
-      fila('Equipos sin anclar', `${d.length} deslizan · ${b.length} empiezan a balancearse`, `${fr.length} en la frontera; deslizamiento máximo ${nv(Math.max(0, ...d.map((q) => q.deslizamiento_max_m)) * 100, 2)} cm; si se caen no se calcula`);
+      const c = cuentaEquipos(R.equipos), d = R.equipos.filter((q) => q.desliza);
+      fila('Equipos sin anclar', `${c.desliza + c.ambos} deslizan · ${c.balancea + c.ambos} empiezan a balancearse`,
+        `${c.ambos} deslizan y se balancean, ${c.quieto} quedan quietos; deslizamiento máximo ${nv(Math.max(0, ...d.map((q) => q.deslizamiento_max_m)) * 100, 2)} cm; si se caen no se calcula`);
     }
     out('tabla').innerHTML = `<table class="fichas sismo-tabla"><thead><tr><th>Variable</th><th class="n">Valor</th><th>Qué es</th></tr></thead><tbody>${filas.join('')}</tbody></table>`;
   }
   // los equipos que más sufrieron primero: los que se balancean o quedan en la frontera, después los que deslizan (por lo
   // que deslizaron), los estables por su cociente de vuelco y al final los anclados por la fuerza en su anclaje
   const MAX_FILAS_EQ = 30;
-  const gravedadEq = (q) => (q.regimen === 'anclado' ? 0 : q.regimen === 'frontera' ? 4 : q.inicia_balanceo || q.regimen === 'balancea' ? 3 : q.desliza ? 2 : 1);
+  const GRAVEDAD_PASO = { anclado: 0, quieto: 1, desliza: 2, balancea: 3, ambos: 4 };
+  const gravedadEq = (q) => GRAVEDAD_PASO[quePaso(q)];
   function listaEquipos() {
     const el = out('equipos');
     if (!R?.equipos?.length) { el.innerHTML = ''; return; }
     const nombre = (u) => { const l = eqPorUnidad.get(u); return l ? esc(l.nombre) : escH(u); };
     const pisoDe = new Map(unidades.map((q) => [q.unidad, q.piso]));
     const orden = [...R.equipos].sort((a, b) => gravedadEq(b) - gravedadEq(a) || (b.deslizamiento_max_m || 0) - (a.deslizamiento_max_m || 0) || (b.razon_vuelco || 0) - (a.razon_vuelco || 0) || (b.fuerza_anclaje_kN || 0) - (a.fuerza_anclaje_kN || 0));
-    const c = { desliza: 0, balancea: 0, frontera: 0, anclado: 0, estable: 0 };
-    for (const q of R.equipos) {
-      if (q.regimen === 'anclado') c.anclado++;
-      else if (q.regimen === 'frontera') c.frontera++;
-      else if (q.inicia_balanceo || q.regimen === 'balancea') c.balancea++;
-      else if (q.desliza) c.desliza++;
-      else c.estable++;
-    }
+    const c = cuentaEquipos(R.equipos);
     const filas = orden.slice(0, MAX_FILAS_EQ);
     el.innerHTML = `<h4>Equipos de la dotación en el sismo</h4>
-      <p class="note">${nv(R.equipos.length, 0)} equipos entraron al cálculo: ${nv(c.desliza, 0)} deslizan, ${nv(c.balancea, 0)} empiezan a balancearse, ${nv(c.frontera, 0)} quedan en la frontera (deslizan y se balancean), ${nv(c.estable, 0)} quedan quietos y ${nv(c.anclado, 0)} están anclados. Cada uno es un bloque rígido sobre su losa: si la fricción alcanza antes, desliza; si no, empieza a balancearse (si se vuelca no se calcula). Los anclados reportan la fuerza que debe resistir el anclaje, sin los factores de la NSR-10.${R.equipos.length > MAX_FILAS_EQ ? ` Aquí van los ${MAX_FILAS_EQ} que más sufrieron.` : ''}</p>
+      <p class="note">${nv(R.equipos.length, 0)} equipos entraron al cálculo: ${nv(c.desliza, 0)} solo deslizan, ${nv(c.balancea, 0)} solo empiezan a balancearse, ${nv(c.ambos, 0)} deslizan y se balancean, ${nv(c.quieto, 0)} quedan quietos y ${nv(c.anclado, 0)} están anclados. Cada uno es un bloque rígido sobre su losa: si la fricción alcanza antes, desliza; si no, empieza a balancearse (si se vuelca no se calcula). Los anclados reportan la fuerza que debe resistir el anclaje, sin los factores de la NSR-10.${R.equipos.length > MAX_FILAS_EQ ? ` Aquí van los ${MAX_FILAS_EQ} que más sufrieron.` : ''}</p>
       <div class="tbl-wrap"><table class="fichas sismo-equipos"><thead><tr><th>Equipo</th><th>Dónde</th><th>Qué le pasó</th><th class="n">Aceleración máx.</th><th class="n">Deslizamiento</th><th class="n">Balanceo o anclaje</th></tr></thead><tbody>
-      ${filas.map((q) => `<tr><td>${nombre(q.unidad)}</td><td data-th="Dónde">${pisoDe.has(q.unidad) ? nombrePiso(pisoDe.get(q.unidad)) : '—'}</td><td data-th="Qué le pasó"><span class="sismo-eq" style="--c:${colorEq(q, true)}"></span>${REGIMEN_EQ[q.regimen] || escH(q.regimen)}</td><td class="n" data-th="Aceleración máx.">${nv(q.a_max_m_s2 / g0, 3)} g</td><td class="n" data-th="Deslizamiento">${q.desliza ? `${nv(q.deslizamiento_max_m * 1000, 1)} mm` : '—'}</td><td class="n" data-th="Balanceo o anclaje">${q.fuerza_anclaje_kN != null ? `${nv(q.fuerza_anclaje_kN, 2)} kN` : q.razon_vuelco != null ? `${nv(q.razon_vuelco, 2)} de la que lo hace balancear` : '—'}</td></tr>`).join('')}
+      ${filas.map((q) => `<tr><td>${nombre(q.unidad)}</td><td data-th="Dónde">${pisoDe.has(q.unidad) ? nombrePiso(pisoDe.get(q.unidad)) : '—'}</td><td data-th="Qué le pasó"><span class="sismo-eq" style="--c:${colorEq(q, true)}"></span>${QUE_PASO[quePaso(q)]}${quePaso(q) === 'quieto' && PREVISTO[q.regimen] ? ` <small class="note">(${PREVISTO[q.regimen]})</small>` : ''}</td><td class="n" data-th="Aceleración máx.">${nv(q.a_max_m_s2 / g0, 3)} g</td><td class="n" data-th="Deslizamiento">${q.desliza ? `${nv(q.deslizamiento_max_m * 1000, 1)} mm` : '—'}</td><td class="n" data-th="Balanceo o anclaje">${q.fuerza_anclaje_kN != null ? `${nv(q.fuerza_anclaje_kN, 2)} kN` : q.razon_vuelco != null ? `${nv(q.razon_vuelco, 2)} de la que lo hace balancear` : '—'}</td></tr>`).join('')}
       </tbody></table></div>`;
   }
 
   // ================================================================ dotación sobre las losas (8.3)
   const colorEq = (q, css = false) => {
     // sin resultado (no entró al cálculo) con el color de las líneas; anclado en gris
-    const k = !q ? 'line' : q.regimen === 'anclado' ? 'muted' : q.regimen === 'frontera' ? 's7' : q.inicia_balanceo || q.regimen === 'balancea' ? 'bad' : q.desliza ? 'warn' : 'good';
+    const k = !q ? 'line' : COLOR_PASO[quePaso(q)];
     if (css) return `var(--${k})`;
     const t = tokens(); return k === 's7' ? t.s[6] : t[k];
   };
@@ -748,7 +751,7 @@ export async function montar(ctx) {
     const s = ctl('piso-eq'), pisos = [...new Set(unidades.map((q) => q.piso))].sort((a, b) => String(a).localeCompare(String(b), 'es', { numeric: true }));
     s.innerHTML = opt('', 'Ninguno', !pisoEq) + pisos.map((p) => opt(p, nombrePiso(p), String(p) === String(pisoEq))).join('');
     s.disabled = !pisos.length;
-    out('piso-eq').textContent = pisos.length ? 'Cada equipo va sobre la losa de su piso, se mueve con ella y se colorea por lo que le pasó en el cálculo: verde estable, amarillo desliza, rojo empieza a balancearse, violeta en la frontera (las dos cosas), gris anclado. El anillo alrededor de los que deslizan mide lo que deslizaron, a escala real (el cálculo da cuánto, no hacia dónde).' : 'El inventario ubicado de la dotación todavía no está publicado: cuando esté, aquí se podrán ver los equipos sobre su losa.';
+    out('piso-eq').textContent = pisos.length ? 'Cada equipo va sobre la losa de su piso, se mueve con ella y se colorea por lo que le pasó en el cálculo: verde quieto, amarillo desliza, rojo empieza a balancearse, violeta desliza y se balancea, gris anclado. El anillo alrededor de los que deslizan mide lo que deslizaron, a escala real (el cálculo da cuánto, no hacia dónde).' : 'El inventario ubicado de la dotación todavía no está publicado: cuando esté, aquí se podrán ver los equipos sobre su losa.';
   }
   // nivel (1…N; 0 = el suelo) sobre el que descansa una unidad: piso p → nivel p − 1; bloque técnico → suelo (es otra
   // estructura); cubierta → el nivel más alto cuyo contorno la contiene (la del piso 4 o la terraza del piso 3)
@@ -893,7 +896,7 @@ export async function montar(ctx) {
     listaEquipos();
     ponerEquipos();
     const fe = R.opciones?.escala === 'nsr10' && Number.isFinite(+R.factor_escala);
-    out('factor').textContent = fe ? `En este cálculo el registro se multiplicó por ${n(R.factor_escala, 2)}; el ajuste del suelo dio ${nv(R.iteraciones_escala ?? 0, 0)} vueltas.` : '';
+    out('factor').textContent = fe ? `En este cálculo el registro se multiplicó por ${n(R.factor_escala, 2)}; el ajuste del suelo dio ${nv(R.iteraciones_escala ?? 0, 0)} ${R.iteraciones_escala === 1 ? 'vuelta' : 'vueltas'}.` : '';
     out('g-estado').textContent = `Sismo de Mw ${n(R.params?.Mw, 1)} a ${nv(R.params?.distancia_epicentral_km, 0)} km y ${nv(R.params?.profundidad_km, 0)} km de profundidad · ${nt} pasos de ${n(R.opciones?.dt_salida_s || 0.02, 2)} s · motor: ${NOMBRE_MOTOR[motor?.tipo] || motor?.tipo}.`;
     // paso inicial: el de mayor desplazamiento de la cubierta (el más informativo); sin movimiento reducido, se reproduce
     const N = NLv(), k = nivelSuperior();

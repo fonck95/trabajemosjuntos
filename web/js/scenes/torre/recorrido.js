@@ -6,9 +6,11 @@
 //
 // Cómo se mueve (6.4 y 6.8): el caminante vive en coordenadas de planta (x al este, y al norte; h = altura de sus pies
 // sobre el piso terminado del nivel). Cada cuadro, una sola función registrada con st.onFrame lee las intenciones de
-// controles_fp.js, mueve al caminante por la rejilla de colisión del nivel (planta3d.js, celdas de 0,10 m, muros y equipos
-// grandes inflados 0,20 m —RADIO—, deslizamiento por ejes) y pone la cámara en los ojos (1,60 m) con controls.target medio metro
-// adelante: OrbitControls.update() reproduce la misma posición y orientación y adaptDepth deja el plano cercano en 0,05 m.
+// controles_fp.js, mueve al caminante por la rejilla de colisión del nivel (planta3d.js, celdas de 0,10 m, muros, costados
+// abiertos de escalera y equipos grandes inflados 0,20 m —RADIO—, deslizamiento por ejes y, en las escaleras, un ajuste de
+// lado de hasta media celda para no trabarse al pasar del descanso al tramo) y pone la cámara en los ojos (1,60 m) con
+// controls.target medio metro adelante: OrbitControls.update() reproduce la misma posición y orientación y adaptDepth deja
+// el plano cercano en 0,05 m.
 // En las celdas de escalera el piso es la parte (tramo o descanso) de este nivel, del de abajo o del descanso del de
 // arriba que queda más cerca de los pies: así se sube y se baja caminando, y el nivel cambia cuando los ojos pasan su losa.
 // Las puertas que unen niveles (exteriores, bloque técnico, terraza) llevan al otro nivel al cruzarlas; el ascensor tiene
@@ -636,34 +638,90 @@ export async function montar(ctx) {
   }
   // piso y tope (piso + lo que tapa la celda) adonde puede pasar el caminante: caminando sube hasta PASO_Z (un escalón o
   // un equipo bajo); en el aire, solo por encima de lo que queda bajo sus pies y por debajo de lo que tenga encima (un
-  // dintel, una lámpara o el tramo de una escalera lo detienen como un muro)
-  function paso(x, y) {
-    const zf = superficie(x, y, w.hp);
+  // dintel, una lámpara o el tramo de una escalera lo detienen como un muro). pasoDesde lo mide para quien pisa el piso hp
+  // con los pies a la altura h (el ajuste de lado en las escaleras prueba así posiciones seguidas sin mover al caminante)
+  function pasoDesde(x, y, hp, h, aire) {
+    const zf = superficie(x, y, hp);
     if (zf == null) return null;
     const tope = zf + encima(x, y);
-    if (tope > w.h + (w.aire ? 0.02 : PASO_Z)) return null;
+    if (tope > h + (aire ? 0.02 : PASO_Z)) return null;
     // de pie no cabe (una lámpara sobre la cama) o, en el aire, la cabeza va más alta que lo que hay encima
     const t = techoPies(x, y, zf);
-    if (t < tope - 0.01 || (w.aire && w.h > t + 0.01)) return null;
+    if (t < tope - 0.01 || (aire && h > t + 0.01)) return null;
     return [zf, tope];
   }
+  function paso(x, y) { return pasoDesde(x, y, w.hp, w.h, w.aire); }
   function pisar(zf, tope) {
     w.hp = zf;
     if (w.aire) return;
     // caminando: sigue los escalones y rampas; al salir del borde de un equipo, cae
     if (tope >= w.h - PASO_Z) w.h = tope; else { w.aire = true; w.vz = 0; }
   }
+  // en una escalera o en su borde: la celda de (x, y) o alguna de sus ocho vecinas es de escalera
+  function cercaDeEscalera(x, y) {
+    const R = cur.rejilla, i = Math.floor((x - R.x0) / R.celda), j = Math.floor((y - R.y0) / R.celda);
+    for (let jj = j - 1; jj <= j + 1; jj++) for (let ii = i - 1; ii <= i + 1; ii++) {
+      if (ii >= 0 && jj >= 0 && ii < R.nx && jj < R.ny && R.datos[jj * R.nx + ii] === 2) return true;
+    }
+    return false;
+  }
+  // Paso de (sx, sy) en sub-pasos de 0,04 m. Si el paso está tapado, desliza a lo largo de los ejes, primero el de su
+  // componente mayor (así quien camina casi en la dirección del eje no se queda corriéndose de lado por la componente
+  // menor); en una escalera o en su borde, antes de la componente menor prueba ajustarEnEscalera
   function moverCaminante(dx, dy) {
     const n = Math.max(1, Math.ceil(Math.hypot(dx, dy) / 0.04)), sx = dx / n, sy = dy / n;
+    const mayorX = Math.abs(sx) >= Math.abs(sy);
     let bloqueado = false, z;
     for (let k = 0; k < n; k++) {
       if ((z = paso(w.x + sx, w.y + sy))) { w.x += sx; w.y += sy; pisar(...z); continue; }
       bloqueado = true;
-      if (sx && (z = paso(w.x + sx, w.y))) { w.x += sx; pisar(...z); continue; }
-      if (sy && (z = paso(w.x, w.y + sy))) { w.y += sy; pisar(...z); continue; }
+      if (mayorX && sx && (z = paso(w.x + sx, w.y))) { w.x += sx; pisar(...z); continue; }
+      if (!mayorX && sy && (z = paso(w.x, w.y + sy))) { w.y += sy; pisar(...z); continue; }
+      if (ajustarEnEscalera(sx, sy)) continue;
+      if (!mayorX && sx && (z = paso(w.x + sx, w.y))) { w.x += sx; pisar(...z); continue; }
+      if (mayorX && sy && (z = paso(w.x, w.y + sy))) { w.y += sy; pisar(...z); continue; }
       break;
     }
     return bloqueado;
+  }
+  // Paso tapado en una escalera o en su borde, que tampoco desliza a lo largo del eje de su componente mayor: sigue por ese
+  // eje con un ajuste perpendicular de hasta AJUSTE (media celda) por sub-paso, hacia el lado por donde, a no más de
+  // AJUSTE_MAX, el paso por el eje queda libre (el más cercano; a igual distancia, el de la componente menor del paso). Así
+  // quien camina justo en la dirección del eje no se traba en franjas de una o dos celdas entre el carril de un descanso y
+  // el de un tramo, ni contra la punta redondeada del ojo al pasar del descanso al tramo. Cada posición, la del costado y
+  // la de adelante, se prueba con pasoDesde() como cualquier paso (con el piso y la altura de los pies de la posición
+  // anterior, también en el aire): no cruza muros, barandas ni el hueco, no pasa bajo un dintel más bajo que la cabeza y no
+  // se sube de lado a un tramo (sus costados son muro, ojo, franja del núcleo o baranda). Un costado desde el que se caería
+  // (el borde de un equipo) no sirve. Sin salida a menos de AJUSTE_MAX (de frente contra un muro, una baranda o el ojo), no
+  // se mueve.
+  const AJUSTE = 0.05, AJUSTE_MAX = 0.25;
+  function ajustarEnEscalera(sx, sy) {
+    if (!cercaDeEscalera(w.x, w.y)) return false;
+    const mayorX = Math.abs(sx) >= Math.abs(sy), ax = mayorX ? sx : 0, ay = mayorX ? 0 : sy, px = mayorX ? 0 : 1, py = mayorX ? 1 : 0;
+    if (!ax && !ay) return false;
+    const menor = mayorX ? sy : sx, pasos = Math.round(AJUSTE_MAX / 0.01);
+    let mejor = null;
+    for (const s of menor < 0 ? [-1, 1] : [1, -1]) {
+      // de lado, de a 0,01 m mientras el costado esté libre, hasta el primer punto desde el que el paso por el eje queda libre
+      const lado = [];
+      let hp = w.hp, h = w.h;
+      for (let q = 1; q <= pasos && (!mejor || q < mejor.q); q++) {
+        const x = w.x + s * px * q * 0.01, y = w.y + s * py * q * 0.01, zl = pasoDesde(x, y, hp, h, w.aire);
+        if (!zl || (!w.aire && zl[1] < h - PASO_Z)) break;
+        lado.push(zl);
+        hp = zl[0];
+        if (!w.aire) h = zl[1];
+        const za = pasoDesde(x + ax, y + ay, hp, h, w.aire);
+        if (za) { mejor = { q, s, za, lado }; break; }
+      }
+    }
+    if (!mejor) return false;
+    const q = Math.min(mejor.q, Math.round(AJUSTE / 0.01));
+    w.x += mejor.s * px * q * 0.01; w.y += mejor.s * py * q * 0.01;
+    pisar(...mejor.lado[q - 1]);
+    // ajuste y paso; si el ajuste no alcanzó, el paso sigue en el sub-paso siguiente
+    if (q === mejor.q) { w.x += ax; w.y += ay; pisar(...mejor.za); }
+    return true;
   }
   // en el suelo, sin velocidad vertical, sobre el piso z (o sobre lo que tape la celda, si se cae encima)
   function aterrizar(z) { w.h = w.hp = z; w.vz = 0; w.aire = false; }
@@ -1086,7 +1144,7 @@ export async function montar(ctx) {
     const exig = pr ? (pr.exigencias || pr.exig || []).length : 0;
     const area = r.area_ejes_m2 ? `${(+r.area_ejes_m2).toLocaleString('es-CO', { maximumFractionDigits: 1 })} m² a ejes${r.area_libre_m2 ? ` (${(+r.area_libre_m2).toLocaleString('es-CO', { maximumFractionDigits: 1 })} libres)` : ''}` : '';
     pSub.innerHTML = [esc(CORTO_NIVEL[cur.id]), r.servicio_programa ? esc(r.servicio_programa) : '', area,
-      e ? `cumplimiento en dotación e infraestructura: <b>${esc((ESTADOS_R[e] || e).toLowerCase())}</b> (${exig - (pr?.por_confirmar || 0)} exigibles${pr?.por_confirmar ? `, ${pr.por_confirmar} por confirmar` : ''})` : ''].filter(Boolean).join(' · ');
+      e ? `cumplimiento en dotación e infraestructura: <b>${esc((ESTADOS_R[e] || e).toLowerCase())}</b> (${exig - (pr?.por_confirmar || 0)} ${exig - (pr?.por_confirmar || 0) === 1 ? 'exigible' : 'exigibles'}${pr?.por_confirmar ? `, ${pr.por_confirmar} por confirmar` : ''})` : ''].filter(Boolean).join(' · ');
     pLista.innerHTML = modelo ? modelo.listaRecinto(id) : '';
   }
   pLista.addEventListener('click', (ev) => {
@@ -1339,33 +1397,38 @@ export async function montar(ctx) {
     }
     if (espectador) {
       if (!saltando && volar(i, dt)) mover = true;
-    } else {
-      if ((i.adelante || i.lado) && !saltando) {
-        const v = (i.rapido ? VEL_RAPIDA : VEL) * dt;
-        const c = Math.cos(w.yaw), s = Math.sin(w.yaw);
-        _dir.set(c * i.adelante + s * i.lado, s * i.adelante - c * i.lado);
-        if (_dir.lengthSq() > 1) _dir.normalize();
-        const dx = _dir.x * v, dy = _dir.y * v;
-        const bloqueado = moverCaminante(dx, dy);
-        if (bloqueado && !w.aire) cruzarPuerta(dx, dy);
-        mover = true;
-      }
-      if (i.salto && !w.aire && !saltando) { w.vz = V_SALTO; w.aire = true; }
-      // sin apoyo (se quitó de la rejilla lo que tenía bajo los pies), cae
-      if (!w.aire && !saltando && w.h > (superficie(w.x, w.y, w.hp) ?? w.hp) + encima(w.x, w.y) + 0.02) { w.aire = true; w.vz = 0; }
-      if (w.aire && !saltando) { caer(dt); mover = true; }
-      // escaleras: el nivel cambia cuando los ojos de quien camina pasan la losa de arriba o bajan de la propia (con el
-      // piso que pisa y ya en el suelo: un salto no cambia de nivel y el techo del otro nivel no lo corta en el aire)
-      if (mover && !w.aire && enEscalera(w.x, w.y)) {
-        if (cur.arriba && w.hp > cur.dzArriba - SUBE) cambiarPorEscalera(cur.arriba);
-        else if (cur.abajo && w.hp < -BAJA) cambiarPorEscalera(cur.abajo);
-      }
-    }
+    } else mover = andar(i, dt, mover);
     if (!mover) return false;
     colocarCamara();
     despuesDeMover();
     recortarEtiquetas();
     return true;
+  }
+  // un cuadro de caminata con las intenciones i ({ adelante, lado, rapido, salto }) durante dt segundos: mueve al caminante
+  // (y cruza las puertas que llevan a otro nivel), salta, cae y cambia de nivel en la escalera; mover: si el cuadro ya
+  // tenía algo que dibujar (giro, cambio de tamaño). Devuelve si hay que dibujar. Lo usan cuadro() y el gancho de QA caminar
+  function andar(i, dt, mover = false) {
+    if ((i.adelante || i.lado) && !saltando) {
+      const v = (i.rapido ? VEL_RAPIDA : VEL) * dt;
+      const c = Math.cos(w.yaw), s = Math.sin(w.yaw);
+      _dir.set(c * (i.adelante || 0) + s * (i.lado || 0), s * (i.adelante || 0) - c * (i.lado || 0));
+      if (_dir.lengthSq() > 1) _dir.normalize();
+      const dx = _dir.x * v, dy = _dir.y * v;
+      const bloqueado = moverCaminante(dx, dy);
+      if (bloqueado && !w.aire) cruzarPuerta(dx, dy);
+      mover = true;
+    }
+    if (i.salto && !w.aire && !saltando) { w.vz = V_SALTO; w.aire = true; }
+    // sin apoyo (se quitó de la rejilla lo que tenía bajo los pies), cae
+    if (!w.aire && !saltando && w.h > (superficie(w.x, w.y, w.hp) ?? w.hp) + encima(w.x, w.y) + 0.02) { w.aire = true; w.vz = 0; }
+    if (w.aire && !saltando) { caer(dt); mover = true; }
+    // escaleras: el nivel cambia cuando los ojos de quien camina pasan la losa de arriba o bajan de la propia (con el
+    // piso que pisa y ya en el suelo: un salto no cambia de nivel y el techo del otro nivel no lo corta en el aire)
+    if (mover && !w.aire && enEscalera(w.x, w.y)) {
+      if (cur.arriba && w.hp > cur.dzArriba - SUBE) cambiarPorEscalera(cur.arriba);
+      else if (cur.abajo && w.hp < -BAJA) cambiarPorEscalera(cur.abajo);
+    }
+    return mover;
   }
   // puertas que llevan a otro nivel (exteriores ↔ piso 1, exteriores ↔ bloque técnico, piso 4 ↔ terraza): se cruzan caminando
   function cruzarPuerta(dx, dy) {
@@ -1737,8 +1800,19 @@ export async function montar(ctx) {
       camara: () => ({ near: st.camera.near, fov: st.camera.fov, aspect: st.camera.aspect, hfov: grados(2 * Math.atan(Math.tan(rad(st.camera.fov / 2)) * st.camera.aspect)), posicion: st.camera.position.toArray() }),
       antes: () => camaraAntes,
       controles: () => { const c = st.controls; return { minDistance: c.minDistance, maxDistance: c.maxDistance, minPolarAngle: c.minPolarAngle, maxPolarAngle: c.maxPolarAngle, enableDamping: c.enableDamping, enableRotate: c.enableRotate, enableZoom: c.enableZoom, enablePan: c.enablePan, fov: st.camera.fov }; },
-      nivel: () => (cur ? { id: cur.id, calidad: cur.calidad, ms: tiempoNivel, tiempos, planta: cur.planta.stats(), contexto: cur.plantaCtx?.stats() || null, equipos: cur.capa?.stats() || null, implementos: cur.impl ? cur.impl.mallas.reduce((a, m) => a + m.count, 0) : 0, huellas: cur.huellas } : null),
+      nivel: () => (cur ? { id: cur.id, calidad: cur.calidad, ms: tiempoNivel, tiempos, planta: cur.planta.stats(), contexto: cur.plantaCtx?.stats() || null, equipos: cur.capa?.stats() || null, implementos: cur.impl ? cur.impl.mallas.reduce((a, m) => a + m.count, 0) : 0, huellas: cur.huellas, radio: cur.rejilla.radio, celda: cur.rejilla.celda } : null),
       ficha: () => fichaActual,
+      // texto de la ficha de la primera unidad cuya línea cita la exigencia exId, o de la primera que coincide con el texto
+      // (revisión final: origen de cada exigencia y chip del laboratorio que no está en comodato)
+      fichaTexto({ exigencia = null, texto = null } = {}) {
+        if (!modelo) return null;
+        const u = exigencia ? modelo.unidades.find((q) => (q.extra?.exig || q.linea?.exigencias || []).some((r) => r.id === exigencia))
+          : modelo.buscar({ texto }).unidades[0];
+        if (!u) return null;
+        const d = document.createElement('div');
+        d.innerHTML = modelo.fichaUnidad(u.id);
+        return { id: u.id, texto: d.textContent, items: [...d.querySelectorAll('.reco-exig li')].map((li) => li.textContent), chips: [...d.querySelectorAll('p .pill')].map((x) => x.textContent) };
+      },
       ultimoFundido: () => ultimoFundido,
       unidades: (filtro = {}) => (modelo ? modelo.buscar(filtro).unidades.map((u) => ({ id: u.id, nombre: u.nombre, nivel: u.nivel, recinto: u.recinto, capa: u.capa, modelo: u.modelo, items: modelo.itemsDe(u).length, montaje: u.montaje, estado: u.estado })) : []),
       // proyecta un punto de planta (x, y, z sobre el piso del nivel) a la pantalla, para los clics de la QA
@@ -1770,6 +1844,23 @@ export async function montar(ctx) {
       },
       // gira la mirada sin moverse (para los guiones de QA)
       girar(rumbo, pitch = null) { w.yaw = rad(rumbo); if (pitch != null) w.pitch = rad(pitch); forzar = true; st.invalidate(); },
+      // «Ir a» sin fundido (para los guiones de QA): el caminante queda allí al volver
+      colocar(d) { irASinFundido(d); return api.estado(); },
+      // camina sin teclas ni dibujo (para los guiones de QA): n cuadros de dt segundos con las intenciones { adelante, lado,
+      // rapido }, por la misma función que mueve al caminante en cada cuadro (andar, con su caída si queda en el aire);
+      // devuelve por cuadro [nivel, x, y, h, 1 si quedó en una celda de muro (lo duro, como en_muro de estado())]
+      caminar({ adelante = 1, lado = 0, rapido = false, n = 30, dt = 1 / 30 } = {}) {
+        if (!cur || espectador) return null;
+        const rastro = [];
+        for (let k = 0; k < n; k++) {
+          andar({ adelante, lado, rapido }, dt);
+          const c = celda(w.x, w.y);
+          rastro.push([cur.id, +w.x.toFixed(4), +w.y.toFixed(4), +w.h.toFixed(4), c < 0 || cur.rejilla.crudoDuro[c] === 1 ? 1 : 0]);
+        }
+        forzar = true;
+        st.invalidate();
+        return rastro;
+      },
       etiquetas: () => etiquetas.filter((o) => o.visible).map((o) => o.element.textContent),
     };
   }

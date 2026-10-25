@@ -191,6 +191,8 @@ carga axial del sismo), sin interacción suelo-estructura, sin componente vertic
 | `ejes`, `sistema`, `prediseno`, `generado_por`, `fecha` | raíz | Trazabilidad (ver «Prediseño de la torre») | E13 |
 | `My_e_kNm` (y `My_e_pos_kNm`, `My_e_neg_kNm`), `Mn_e_kNm`, `Vn_e_kN`, `theta_y_e` | secciones | Propiedades **esperadas** que usa la simulación: factores de material esperado de ASCE/SEI 41-17 para f'c y fy (declarados en `calculo`; por confirmar) y φ = 1. Si faltan, el motor usa `My_kNm`, `Mn_kNm`, `Vn_kN` y `theta_y` (y el validador avisa) | E16 |
 | `theta_p_IO`, `theta_p_LS`, `theta_p_CP`, `theta_p_b` | secciones | Límites de rotación plástica de ocupación inmediata, seguridad de la vida y prevención del colapso, y el parámetro «b» de modelado (ASCE/SEI 41-17, tablas de vigas, columnas y muros de concreto; por confirmar). `theta_p_cap` («a») conserva su significado: inicio de la pérdida de resistencia. Si faltan los límites, `dc_rotacion` usa `theta_p_cap` y no se marcan los bits de IO, LS y CP | E16 |
+| `z` | nodos de la base (nivel 0) | Cota de la base de ese apoyo, por debajo del nivel 1 (en la torre, la cara superior de su dado o losa de pilotes: el tramo de arranque bajo el piso 1 es parte del entrepiso 1 de la columna o el muro). Si falta, la base está en 0. `xyz` la trae igual. La altura del entrepiso 1 (`altura_entrepiso`, que usan la deriva y el P-Delta) sigue siendo la del nivel: los divisorios se apoyan en el contrapiso, que se mueve con el suelo | E17 |
+| `seccion_i` | columnas | Sección de la cara de abajo (extremo i) cuando sus barras son otras que las del resto del elemento: en la torre, el traslapo de columnas va en la mitad central del piso de arriba, así que la cara de abajo del piso k tiene las barras del piso k − 1. La rótula del extremo i usa su `My_e` y la flexión del extremo i se compara con su `Mn_e`; la rigidez elástica, el cortante y los límites de rotación son los de `seccion`. Si falta, los dos extremos usan `seccion` | E18 |
 
 `P_sobre_entrepiso_kN` se conserva como **dato informativo** (carga total por encima del entrepiso); el motor ya no
 lo usa para P-Delta (E14).
@@ -473,6 +475,39 @@ nivel 4,50 (vigas de borde de la abertura de la escalera) y la cimentación del 
   muro de contención. `cantidades.por_tipo.muros_de_contencion` (nuevo; su concreto entra en la fila 2.09 de la
   comparación con el presupuesto) y el chequeo `CIM-BT` (dados bajo el piso del pasaje, vigas de amarre enteras dentro
   de sus dos apoyos y muro de contención con φMn ≥ Mu y φVn ≥ Vu).
+
+**Correcciones de la revisión final (25-oct-2026).** La base del modelo y lo que se publicaba como «empotrada en la cara
+superior de los dados» no coincidían: el modelo empotraba la base en ±0,00 y los arranques bajo el piso 1 (de 0,40 a
+1,65 m) no estaban ni en el análisis ni en el despiece. Ahora:
+
+- **Base en la cara superior de los dados (E17).** Cada nodo de la base trae su `z`: la cara superior de su dado o losa de
+  pilotes (`cotas_base`), así el tramo de arranque es parte del elemento del entrepiso 1. Como la cimentación sale del
+  análisis, `armar()` repite análisis, diseño y cimentación hasta que esas cotas no cambien (los espesores de los dados solo
+  crecen de una vuelta a la otra). La deriva del entrepiso 1 se sigue midiendo sobre su altura de 4,50 m: los divisorios se
+  apoyan en el contrapiso, que tiene juntas de aislamiento y se mueve con el suelo. Con los arranques la deriva de la esquina
+  suroccidental pasaba del 1 % (los de la línea 1 bajan 1,65 m bajo el pasaje del bloque técnico): el paso 5 del historial
+  pone vigas de 0,50 × 0,90 m en el pórtico de la línea 1 (`dimensiones_adoptadas.vx_linea`).
+- **Arranques en el despiece.** `refuerzo.columnas[]` del piso 1 trae `arranque` (de la cara del dado al piso 1, confinado
+  entero como la zona lo, 1 cm más ancho por cara contra el relleno) y `refuerzo.muros[]` del piso 1 también (la cortina
+  horizontal y los estribos de borde siguen hasta la losa de pilotes; las verticales y las barras de borde ya bajaban).
+  `cantidades.por_tipo.arranques` los cuenta y entran en los ítems 3.01 y 3.02 de la comparación con el presupuesto.
+  `cantidades.totales` da superestructura (con los arranques), cimentación (sin el contrapiso), contrapiso y el total con la
+  misma base en concreto y en acero.
+- **Brazo del cortante en la cimentación.** Las reacciones salen en la cara superior del dado, así que el momento en la
+  cabeza de los pilotes suma el cortante por el espesor del dado (antes, en los dados bajo el pasaje, se sumaba aparte el
+  tramo de arranque que el modelo no tenía). La cimentación suma el peso del arranque de cada columna.
+- **Contrapiso.** Pasa por encima de los dados y las losas de pilotes (su cara superior queda bajo el fondo del contrapiso):
+  `cimentacion.contrapiso.area_m2` descuenta solo los fosos y los arranques de columnas y muros, como el modelo BIM.
+- **Vigas de enlace columna C – muro (limitación declarada).** Siguen fuera del modelo, pero su cortante de capacidad
+  2·Mpr/ln de los niveles de encima se suma a la carga axial sísmica de la columna C de su línea (los dos signos) y, con el
+  signo contrario, a la del muro en x: con la tracción en el borde i (el de la viga) el muro gana compresión y con la
+  tracción en el borde j la pierde (`pu_cara`). `prediseno.cortante_por_capacidad` trae `N_vigas_de_enlace_kN`, y
+  `refuerzo.vigas[VA-…].kg_estribos` ya no es 0.
+- **Cara de abajo de las columnas (E18).** Donde el piso de abajo tiene otro armado, la cara de abajo del piso k lleva sus
+  barras: el elemento trae `seccion_i` (rótula del extremo i y su `Mn_e`) y el cortante por capacidad usa
+  Ve = (Mpr de abajo + Mpr de arriba)/ln.
+- **Tramos de muro de encima.** La envolvente lineal de momentos se corre también la altura del arranque (la zona crítica
+  empieza en la base, bajo el piso 1), del lado seguro.
 
 Campos agregados (todos opcionales para el motor, que no los usa salvo lo dicho):
 
@@ -1007,6 +1042,8 @@ node scripts/sismo/test_motor.mjs --solo F1,F2,F3,F4,R0
 | E14 | P-Delta por nivel con el peso y el centro de masa de cada nivel; `P_sobre_entrepiso_kN` informativo | Campos; Motor |
 | E15 | Transición de profundidad de 40 a 70 km | amenaza.json |
 | E16 | Propiedades esperadas y límites IO, LS y CP; demanda/capacidad con `Mn_e`, `Vn_e` y `θp_IO` (**Cambio de regla**) | Campos; Reglas |
+| E17 | `z` en los nodos de la base (revisión final: base en la cara superior de los dados) | Campos |
+| E18 | `seccion_i` en columnas (revisión final: cara de abajo con las barras del piso de abajo) | Campos |
 
 ### Correcciones de la revisión A6 (desviaciones del contrato)
 

@@ -43,6 +43,10 @@ export const VERIFICACION = {
   por_confirmar: 'por confirmar',
 };
 export const verificacion = (v) => VERIFICACION[v] || limpio(v);
+// clase de riesgo de un equipo (Decreto 4725): las claves de los datos en palabras (revisión final: la tarjeta «Dotación por
+// servicio» mostraba «clase no_dm»); la usan torre.js y el inventario del recorrido
+export const CLASES_RIESGO = { I: 'I', IIa: 'IIa', IIb: 'IIb', III: 'III', ivd: 'diagnóstico in vitro', no_dm: 'no es dispositivo médico', por_confirmar: 'por confirmar' };
+export const claseRiesgo = (c) => CLASES_RIESGO[c] || limpio(String(c ?? '').replace(/_/g, ' '));
 const NIV = new RegExp(String.raw`'?\b(${Object.keys(VERIFICACION).sort((a, b) => b.length - a.length).join('|')})\b'?`, 'g');
 
 // cita de archivo: «data/edificios/hospital.json», «fuentes_investigacion/res3100_apoyo_diagnostico.json#servicios[0]»
@@ -71,6 +75,8 @@ const limpiar = (s, inicio) => s
   .replace(NIV, (m, k) => VERIFICACION[k])
   .replace(/,?\s*\b[a-z]+(?:_[a-z0-9]+)+(?:\.[a-z0-9_]+)+(?:\[\d+\])*/g, '')                // rutas de claves «escalamiento_a_torre.orden…»
   .replace(/'([a-z]+(?:_[a-z]+)+)'/g, (m, k) => `«${k.replace(/_/g, ' ')}»`)
+  // el repositorio de código no es algo que el lector conozca: es «el estudio» (revisión final)
+  .replace(/\b(del|el|en el) repo(?:sitorio)?\b/g, (m, a) => `${a} estudio`).replace(/\bvía repositorio\b/g, 'según el estudio').replace(/(?<![\w_])repo(?:sitorio)?\b/g, 'estudio')
   .replace(/\bde el\b/g, 'del').replace(/\ba el\b/g, 'al')
   .replace(/\bm2\b/g, 'm²').replace(/\bm3\b/g, 'm³')
   .replace(/\b(\d+)\.(\d{1,2}) veces\b/g, '$1,$2 veces');                                     // «1.04 veces» → «1,04 veces»

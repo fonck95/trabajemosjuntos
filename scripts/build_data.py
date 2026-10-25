@@ -949,6 +949,36 @@ if _tdir.exists():
     }
     for k in ('presupuesto', 'apu', 'financiacion', 'proyectos'):
         if k in _t: TORRE[k] = _t[k]
+    # ajuste pendiente del prediseño estructural (revisión final): el presupuesto no se edita, pero su total va en la web con
+    # la salvedad de cuánto cuesta cumplir la NSR-10, calculado aquí con las cantidades del prediseño y del modelo BIM y los
+    # valores unitarios del presupuesto (las mismas cifras que docs/11 §6.3 y docs/16 §9)
+    def _ajuste_prediseno(pres):
+        try:
+            est_ = json.loads((R / 'data/sismo/torre_hospital_estructura.json').read_text(encoding='utf-8'))
+            bim_ = json.loads((R / 'data/bim/torre_hospital.bim.json').read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            return None
+        cpa = {x['item']: x for x in (est_.get('cantidades') or {}).get('comparacion_presupuesto') or []}
+        cpb = {x['item']: x for x in bim_.get('comparacion_presupuesto') or [] if x.get('capitulo') in ('2', '3')}
+        if not cpa or not cpb:
+            return None
+        fac = (pres.get('aiu_valores') or {}).get('factor')
+        cap = lambda cp, c: round(sum(x.get('efecto_cop') or 0 for k_, x in cp.items() if k_.split('.')[0] == c))
+        ta, tb = round(sum(x.get('efecto_cop') or 0 for x in cpa.values())), round(sum(x.get('efecto_cop') or 0 for x in cpb.values()))
+        tot = pres.get('totales') or {}
+        return {'costo_directo_cop': [ta, tb], 'con_aiu_cop': [round(ta * fac), round(tb * fac)] if fac else None,
+                'factor_aiu': fac, 'por_capitulo_cop': {'2': [cap(cpa, '2'), cap(cpb, '2')], '3': [cap(cpa, '3'), cap(cpb, '3')]},
+                'valor_obra_cop': [round((pres.get('valor_obra') or 0) + ta * fac), round((pres.get('valor_obra') or 0) + tb * fac)] if fac else None,
+                'total_torre_sin_ajuste_cop': tot.get('total_torre'),
+                'tipo_dato': 'cálculo propio',
+                'fuente': 'cantidades del prediseño estructural que cumple la NSR-10 (despiece) y del modelo BIM (geometría y barras '
+                          'dibujadas) con los valores unitarios del presupuesto; el presupuesto no se edita en esta versión',
+                'texto': ('sin el ajuste pendiente del prediseño estructural que cumple la NSR-10 (sistema dual con capacidad '
+                          'moderada de disipación de energía, DMO): columnas de 0,80 y 0,90 m, muros de 0,35 m y 146 pilotes de 15 m')}
+    if 'presupuesto' in TORRE:
+        _aj = _ajuste_prediseno(TORRE['presupuesto'])
+        if _aj:
+            TORRE['presupuesto'] = {**TORRE['presupuesto'], 'ajuste_pendiente_prediseno': _aj}
     # de los APU, la vista muestra el resumen y el detalle de cada análisis (materiales con su precio, equipo, mano de obra y
     # AIU): la lista de insumos, la de equipos base y el método no se dibujan y quedan en data/ (así torre.json cabe en 620 KB)
     if 'apu' in TORRE:

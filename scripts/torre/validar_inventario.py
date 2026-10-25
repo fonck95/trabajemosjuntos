@@ -700,7 +700,10 @@ class ValidadorDatos:
             cuenta = {}
             for e in s.get('exigencias', []) or []:
                 revisar(e, sid, cuenta)
-            if s.get('habilitable') == 'si':
+            if s.get('exigencias'):
+                # el resumen va en todos los servicios con exigencias (también los que no se habilitan como tales)
+                if not s.get('resumen'):
+                    self.err('I7', f'{sid}: sin «resumen» aunque tiene {len(s["exigencias"])} exigencias')
                 res = s.get('resumen') or {}
                 for c in cortes:
                     for esc in escenarios:

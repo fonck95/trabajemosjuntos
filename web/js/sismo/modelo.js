@@ -114,7 +114,10 @@ export function armarModelo(estructura, opciones = {}) {
         const apoyo = apoyos[n.id] ?? null;
         if (apoyo !== null && apoyo !== 'empotrado' && apoyo !== 'articulado') fallo(`nodo ${n.id}: apoyo «${apoyo}»`);
         if (n.nivel === 0 && apoyo === null) fallo(`nodo ${n.id}: nodo de base sin apoyo`);
-        const z = zb[n.nivel];
+        // E17: un nodo de la base puede traer su propia cota «z» (la cara superior de su dado: el arranque bajo el piso
+        // 1 es parte del entrepiso 1); si no, la base está en 0
+        if (n.z !== undefined && n.z !== null && !(n.nivel === 0 && esNum(n.z) && n.z < zb[1])) fallo(`nodo ${n.id}: «z» solo en la base y bajo el nivel 1`);
+        const z = n.nivel === 0 && esNum(n.z) ? n.z : zb[n.nivel];
         const reg = {
           id: n.id, portico: p.id, ip, s: n.s, nivel: n.nivel, z, apoyo, carga: esNum(n.carga_kN) ? n.carga_kN : 0,
           xyz: dir === 0 ? [n.s, c, z] : [c, n.s, z], orden: nodosP.length, lat: -1, iv: -1, it: -1,
@@ -160,7 +163,14 @@ export function armarModelo(estructura, opciones = {}) {
         if (!sec) fallo(`elemento ${e.id}: sección «${e.seccion}» no existe`);
         const mat = mats[sec.material];
         if (!mat) fallo(`sección ${e.seccion}: material «${sec.material}» no existe`);
-        elems.push({ e, tipo, ni, nj, sec, mat, P, ib, blq });
+        // E18: «seccion_i» (solo columnas) es la de la cara de abajo cuando sus barras son las del piso de abajo
+        let secI = null;
+        if (e.seccion_i !== undefined && e.seccion_i !== null) {
+          if (tipo !== COLUMNA) fallo(`elemento ${e.id}: «seccion_i» solo en columnas`);
+          secI = secs[e.seccion_i];
+          if (!secI) fallo(`elemento ${e.id}: sección «${e.seccion_i}» no existe`);
+        }
+        elems.push({ e, tipo, ni, nj, sec, secI, mat, P, ib, blq });
       }
       P.e1 = elems.length;
       ncTot += nc;
@@ -181,7 +191,7 @@ export function armarModelo(estructura, opciones = {}) {
     th0: new Float64Array(2 * nE), Lf: new Float64Array(nE), L: new Float64Array(nE), w: new Float64Array(nE),
     EI: new Float64Array(nE),
     rmod: new Int8Array(2 * nE), sup: new Float64Array(2 * nE), inf: new Float64Array(2 * nE), H: new Float64Array(2 * nE),
-    Mn: new Float64Array(nE), Vn: new Float64Array(nE), IO: new Float64Array(nE), LS: new Float64Array(nE), CP: new Float64Array(nE),
+    Mn: new Float64Array(nE), MnI: new Float64Array(nE), Vn: new Float64Array(nE), IO: new Float64Array(nE), LS: new Float64Array(nE), CP: new Float64Array(nE),
     conLimites: new Uint8Array(nE),
     id: new Array(nE), info: new Array(nE),
   };
@@ -191,7 +201,7 @@ export function armarModelo(estructura, opciones = {}) {
   // rótula del muro va solo ahí; los tramos de encima son elásticos, como el diseño por capacidad de muros)
   const jMuro = new Set(elems.filter((x) => x.tipo === MURO).map((x) => x.nj.id));
   elems.forEach((x, ie) => {
-    const { e, tipo, ni, nj, sec, mat, P } = x;
+    const { e, tipo, ni, nj, sec, secI, mat, P } = x;
     const Ec = mat.Ec_MPa ?? mat.E_MPa ?? mat.Es_MPa;
     if (!esNum(Ec) || !(Ec > 0)) fallo(`material ${sec.material}: falta el módulo de elasticidad`);
     for (const c of ['A', 'I', 'factor_fisuracion']) if (!esNum(sec[c])) fallo(`sección ${e.seccion}: falta «${c}»`);
@@ -283,6 +293,11 @@ export function armarModelo(estructura, opciones = {}) {
       el.sup[h2] = Mpos; el.inf[h2] = Mneg; el.sup[h2 + 1] = Infinity; el.inf[h2 + 1] = Infinity;
     } else {
       el.sup[h2] = el.inf[h2] = el.sup[h2 + 1] = el.inf[h2 + 1] = MyE;
+      if (secI) {
+        // cara de abajo con las barras del piso de abajo (E18): su propio My esperado
+        if (!esNum(secI.My_kNm)) fallo(`sección ${e.seccion_i}: falta «My_kNm»`);
+        el.sup[h2] = el.inf[h2] = esNum(secI.My_e_kNm) ? secI.My_e_kNm : secI.My_kNm;
+      }
     }
     el.rmod[h2] = tipo === MURO && jMuro.has(ni.id) ? SIN_ROTULA : modelo;
     el.rmod[h2 + 1] = tipo === MURO ? SIN_ROTULA : modelo;
@@ -290,6 +305,7 @@ export function armarModelo(estructura, opciones = {}) {
     if (!(el.sup[h2] > 0 && el.inf[h2] > 0)) fallo(`sección ${e.seccion}: momentos de fluencia deben ser positivos`);
 
     el.Mn[ie] = esNum(sec.Mn_e_kNm) ? sec.Mn_e_kNm : esNum(sec.Mn_kNm) ? sec.Mn_kNm : MyE;
+    el.MnI[ie] = secI ? (esNum(secI.Mn_e_kNm) ? secI.Mn_e_kNm : esNum(secI.Mn_kNm) ? secI.Mn_kNm : el.sup[h2]) : el.Mn[ie];
     el.Vn[ie] = esNum(sec.Vn_e_kN) ? sec.Vn_e_kN : esNum(sec.Vn_kN) ? sec.Vn_kN : Infinity;
     const conL = esNum(sec.theta_p_IO);
     el.conLimites[ie] = conL ? 1 : 0;
@@ -298,7 +314,7 @@ export function armarModelo(estructura, opciones = {}) {
     el.CP[ie] = esNum(sec.theta_p_CP) ? sec.theta_p_CP : Infinity;
     el.info[ie] = {
       id: e.id, tipo: NOMBRE_TIPO[tipo], portico: P.id, nivel: esNum(e.nivel) ? e.nivel : piso, fisico: e.fisico ?? e.id,
-      i: e.i, j: e.j, xyz_i: ni.xyz, xyz_j: nj.xyz, seccion: e.seccion,
+      i: e.i, j: e.j, xyz_i: ni.xyz, xyz_j: nj.xyz, seccion: e.seccion, seccion_i: e.seccion_i ?? null,
     };
   });
   // cargas puntuales en los nodos (hacia abajo)

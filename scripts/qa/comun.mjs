@@ -209,8 +209,9 @@ export async function desborde(page) {
     return { ok: sw <= ancho, scrollWidth: sw, innerWidth: ancho, culpables };
   });
 }
-// Texto visible de un elemento (o de la página) que cita rutas o claves internas (13.4 y 13.6)
-export const RE_INTERNO = /\.json|→\s*[a-z]+_[a-z_]+|data\//;
+// Texto visible de un elemento (o de la página) que cita rutas o claves internas (13.4 y 13.6). Revisión final: también
+// las claves con guion bajo sueltas («clase no_dm», «referencia_repo») y el «repo» del repositorio de código
+export const RE_INTERNO = /\.json|→\s*[a-z]+_[a-z_]+|data\/|(?<![\w/.@-])[a-z]{2,}_[a-z0-9_]+\b|\brepo(?:sitorio)?\b/;
 export async function textosInternos(page, selector = 'main') {
   return page.evaluate(({ selector, re }) => {
     const rx = new RegExp(re), out = [];

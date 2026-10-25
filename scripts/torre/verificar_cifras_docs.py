@@ -221,7 +221,16 @@ def controles_dotacion(ctrl: Control):
         ctrl.agregar('DT3', 'docs/15', 'unidades del inventario', 'pendiente', 'no existe inventario_dotacion.json', 2)
     else:
         n = len(inv.get('unidades') or [])
-        buscar(ctrl, 'DT3', DOC15, f'unidades del inventario ({entero(n)})', [[entero(n)]], ola=2, seccion='En pocas palabras')
+        # y su desglose por capa, que debe sumar el total (revisión final: faltaban las 2 unidades de contexto)
+        pc = obtener(inv, 'totales.unidades.por_capa') or {}
+        capa = lambda k: pc.get(k, 0) + pc.get(f'{k} (componentes)', 0)
+        partes = [('de dotación', capa('dotacion')), ('de infraestructura', capa('infraestructura')), ('de equipamiento fijo', capa('fijo')),
+                  ('analizadores de laboratorio', capa('laboratorio')), ('del cierre de brechas', capa('cierre_brechas')), ('de contexto', capa('contexto'))]
+        if pc and sum(v for _, v in partes) != n:
+            ctrl.agregar('DT3', 'data/proyectos/torre_hospital/inventario_dotacion.json', 'desglose de las unidades por capa', 'falta',
+                         f'las capas suman {sum(v for _, v in partes)} y hay {n} unidades', 2)
+        buscar(ctrl, 'DT3', DOC15, f'unidades del inventario ({entero(n)}) y su desglose por capa',
+               [[entero(n)]] + [[f'{entero(v)} {t}'] for t, v in partes if v], ola=2, seccion='En pocas palabras')
     # cierre de brechas por proyecto (ola 2)
     tc = obtener(dot, 'cierre_brechas_habilitacion.totales')
     if not tc:

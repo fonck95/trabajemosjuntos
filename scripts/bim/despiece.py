@@ -461,7 +461,9 @@ def _amarres_columna(x, y, z, b, rec, barras, cc, nf, ng, num, num_e):
     """Estribo cerrado y ganchos suplementarios de un armado (posiciones relativas al centro) en la altura z:
     [(rol, forma, etiqueta corta)]. Los ganchos en x van a +de y los de y a +2·de sobre el estribo."""
     db, de = db_de(num), db_de(num_e)
-    hh = b / 2 - rec - de / 2
+    # ceñido a las barras: si las barras van ubicadas para un estribo más grueso (el del otro piso del traslapo), este
+    # estribo queda con algo más de recubrimiento en lugar de separarse de ellas
+    hh = min(b / 2 - rec - de / 2, cc + (db + de) / 2)
     out = [('estribo', estribo_cerrado([x, y, z], [1, 0, 0], [0, 1, 0], hh, hh, num_e, [0, 0, -1], db_esq=db))]
     inter = [-cc + 2 * cc * j / (nf - 1) for j in range(1, nf - 1)]
     for direc, dz in (('x', de), ('y', 2 * de)):
@@ -540,8 +542,14 @@ def columnas(J, est, bases, capas_nudo=None):
         # traslapo se dibuja donde A lo pone y los amarres siguen a las barras que hay en cada altura (bajo el traslapo, las
         # del piso de abajo; desde el traslapo, las del piso de arriba), sea cual sea el piso que los cuenta
         armado = []
-        for c in pisos:
-            bb_, cc_, nf_ = _caras_columna(c['longitudinal']['n'], c['longitudinal']['num'], c['b'], rec, c['estribos']['num'])
+        for i_c, c in enumerate(pisos):
+            # las barras del piso suben hasta su traslapo en el piso de arriba: van con el recubrimiento al estribo más grueso
+            # de los dos pisos (si no, el estribo N.º 5 de un piso se monta sobre barras ubicadas para el N.º 4 del otro);
+            # el estribo más delgado las abraza con algo más de recubrimiento (_amarres_columna)
+            num_e_arm = c['estribos']['num']
+            if i_c + 1 < len(pisos) and c['longitudinal'].get('traslapo') and abs(pisos[i_c + 1]['b'] - c['b']) < 1e-9:
+                num_e_arm = max(num_e_arm, pisos[i_c + 1]['estribos']['num'])
+            bb_, cc_, nf_ = _caras_columna(c['longitudinal']['n'], c['longitudinal']['num'], c['b'], rec, num_e_arm)
             armado.append({'barras': bb_, 'cc': cc_, 'nf': nf_, 'num': c['longitudinal']['num'],
                            'ng': c['estribos']['ganchos_suplementarios_por_direccion']})
         trans = {}                                        # i → cambio del armado del piso i al i + 1
@@ -662,7 +670,11 @@ def columnas(J, est, bases, capas_nudo=None):
                 # límite de arriba: el primer estribo del piso siguiente (a 0,05 m de su cara) o, en el último piso, la cara
                 # de la cubierta; el paso hasta él también es de la zona confinada
                 z_fin = z1 + 0.05 if i + 1 < N else z1
-                cand = _estribos_nudo(len(nudo), max(resto), z_fin, z0 + ln_ + 0.02, z1 - 0.06, capas, de, e['s_lo_m'],
+                # el primer estribo del nudo puede ir hasta 4 cm bajo la cara de las vigas (sin acercarse al último de la zona
+                # confinada): cuando las barras inferiores de las vigas en x y en y quedan a la misma altura (vigas del mismo
+                # peralte, como en la esquina A-1 con la línea 1 de 0,90 m), su franja no deja otro sitio a menos de s
+                z_min_n = min(z0 + ln_ + 0.02, max(max(resto) + 3 * de + 0.004, z0 + ln_ - 0.04))
+                cand = _estribos_nudo(len(nudo), max(resto), z_fin, z_min_n, z1 - 0.06, capas, de, e['s_lo_m'],
                                       [z0 + ln_ + (q + 0.5) * h_viga / len(nudo) for q in range(len(nudo))])
                 conteo['nudo'] = len(cand)
                 conteo['nudo_extra'] = max(len(cand) - len(nudo), 0)
@@ -705,16 +717,20 @@ def columnas(J, est, bases, capas_nudo=None):
                              'paso_max_nudo_m': r(paso_max(z_nudo), 4),
                              'hueco_bajo_el_nudo_m': r(min(z_nudo) - max(z_resto), 4) if z_nudo and z_resto else None,
                              'hueco_sobre_el_nudo_m': r((z1 + 0.05 if i + 1 < N else z1) - max(zs), 4)}
-            # ---- arranque (entre la cara superior del dado y el piso 1): estribos a s_lo
+            # ---- arranque (entre la cara superior del dado y el piso 1): es parte del entrepiso 1 del modelo de A (la base
+            # está en la cara del dado) y va confinado como la zona lo, con estribos y ganchos suplementarios a s_lo
             if k == 1:
                 za, zb_ = base['z_tope'], z0
                 n_a = n_estribos(zb_ - za, e['s_lo_m'])
                 if n_a:
                     zsa = [za + 0.05 + j * e['s_lo_m'] for j in range(n_a)]
-                    forma = estribo_cerrado([x, y, zsa[0]], [1, 0, 0], [0, 1, 0], hh, hh, num_e, [0, 0, -1], db_esq=db)
-                    J.agregar(base['host_arranque'], 'estribo', num_e, forma, [[0, 0, z - zsa[0]] for z in zsa],
-                              f'E N.º {num_e} c/{_es(e["s_lo_m"], 3)} en el arranque', ganchos='135°', nivel='CIM',
-                              nota='el arranque no está en el despiece de A; se confina como la zona lo (criterio del modelo)', grupo=linea)
+                    bb_a, cc_a, nf_a, num_a = armado[i]['barras'], armado[i]['cc'], armado[i]['nf'], armado[i]['num']
+                    for rol_, forma in _amarres_columna(x, y, zsa[0], b, rec, bb_a, cc_a, nf_a, armado[i]['ng'], num_a, num_e):
+                        J.agregar(base['host_arranque'], rol_, num_e, forma, [[0, 0, z - zsa[0]] for z in zsa],
+                                  (f'E N.º {num_e} c/{_es(e["s_lo_m"], 3)} en el arranque' if rol_ == 'estribo'
+                                   else f'gancho suplementario N.º {num_e} en {rol_[-1]}, en el arranque'),
+                                  ganchos='135°' if rol_ == 'estribo' else '135° en los dos extremos', nivel='CIM',
+                                  nota='arranque de A (refuerzo.columnas[].arranque): confinado como la zona lo', grupo=linea)
     return resumen
 
 
@@ -1215,7 +1231,7 @@ def muros(J, est, bases_muro):
                                 (bases_muro[mid]['host_arranque'], [zz for zz in zs_todos if zz < z0 - 1e-9])):
                     if not zs:
                         continue
-                    nota_a = None if hst == host else 'el arranque no está en el despiece de A: el confinamiento del borde sigue hasta la losa de pilotes (criterio del modelo)'
+                    nota_a = None if hst == host else 'arranque de A (refuerzo.muros[].arranque): el confinamiento del borde sigue hasta la losa de pilotes'
                     niv_ = f'P{k}' if hst == host else 'CIM'
                     o = _mu(eje, uc, c, zs[0])
                     forma = estribo_cerrado(o, ea, eb, hl, ht, e['num'], [0, 0, -1], db_esq=db)
@@ -1270,7 +1286,7 @@ def muros(J, est, bases_muro):
                 if not zz_:
                     continue
                 niv_ = f'P{k}' if hst == host else 'CIM'
-                nota_a = None if hst == host else 'el arranque no está en el despiece de A: la cortina horizontal sigue hasta la losa de pilotes (criterio del modelo)'
+                nota_a = None if hst == host else 'arranque de A (refuerzo.muros[].arranque): la cortina horizontal sigue hasta la losa de pilotes'
                 for s in (-1, 1):
                     J.agregar(hst, 'cortina_horizontal', numh, [_mu(eje, ua, c + s * off_h, zz_[0]), _mu(eje, ub, c + s * off_h, zz_[0])],
                               [[0, 0, zz - zz_[0]] for zz in zz_], f'N.º {numh} c/{_es(sh, 3)} horizontal ({"cara 1" if s < 0 else "cara 2"})',
@@ -2184,7 +2200,7 @@ def muros_contencion(J, est, rect_contrapiso, holgura=0.0015):
     del contrapiso (o recubrimiento si el muro llega a ±0,00 fuera de él). Horizontales por dentro de las verticales: ldh con
     gancho de 90° en los arranques de las columnas (la cola hacia el centro de la columna; la capa más lejana, 3 cm más
     adentro) y, en un extremo libre, una horquilla en U como en los muros estructurales. Cada barra se corre lo justo (hasta
-    4 cm a lo largo, hasta 3 cm hacia adentro del muro o, las horizontales, hasta 5 cm en altura) para pasar entre las barras
+    4 cm a lo largo, hasta 3 cm hacia adentro del muro o, las horizontales, hasta 8 cm en altura, entre los estribos y ganchos suplementarios del arranque) para pasar entre las barras
     de la viga, del dado, de la columna y de la malla del contrapiso (criterio del modelo, C.7.5). Las verticales se
     reparten sobre el apoyo (dado o viga de amarre) con su recubrimiento: un extremo del muro fuera del dado queda sin
     verticales (lo informa interferencias.py). Devuelve {id: resumen}."""
@@ -2312,7 +2328,7 @@ def muros_contencion(J, est, rect_contrapiso, holgura=0.0015):
         filas = []
         for zn in zs_nom:
             elegido = None
-            for dz, dy in _candidatos(0.05, 0.0025, 0.03, 0.0025, peso_b=1.5):
+            for dz, dy in _candidatos(0.08, 0.0025, 0.03, 0.0025, peso_b=1.5):
                 z = zn + dz
                 if z < za - 1e-9 or z > zb + 1e-9:
                     continue

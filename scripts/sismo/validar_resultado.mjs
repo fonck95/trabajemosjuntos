@@ -45,12 +45,14 @@ export function dimensiones(est) {
     for (const p of b.porticos || []) {
       porticos.push({ ...p, bloque: b.id, base_nivel: base });
       const ns = new Map(p.nodos.map((n) => [n.id, n]));
-      for (const n of p.nodos) nodos.push({ ...n, portico: p.id, z: z[n.nivel] });
+      // E17: un nodo de la base puede traer su cota «z» (la cara superior de su dado)
+      const zn = (n) => (n.nivel === 0 && esNum(n.z) ? n.z : z[n.nivel]);
+      for (const n of p.nodos) nodos.push({ ...n, portico: p.id, z: zn(n) });
       for (const e of p.elementos || []) {
         const ni = ns.get(e.i), nj = ns.get(e.j);
         const [di, dj] = e.brazo_rigido_m || [0, 0];
         let L = NaN;
-        if (ni && nj) L = e.tipo === 'viga' ? Math.abs(nj.s - ni.s) : z[nj.nivel] - z[ni.nivel];
+        if (ni && nj) L = e.tipo === 'viga' ? Math.abs(nj.s - ni.s) : zn(nj) - zn(ni);
         elementos.push({ ...e, portico: p.id, L, Lf: L - di - dj, nivel_i: ni?.nivel, nivel_j: nj?.nivel,
           altura_entrepiso: b.niveles[(e.nivel || 1) - 1]?.altura_entrepiso });
       }
@@ -65,8 +67,9 @@ export function dimensiones(est) {
 export function filasThetaY(est) {
   const dim = dimensiones(est);
   const filas = [];
-  for (const e of dim.elementos) {
-    const s = est.secciones?.[e.seccion];
+  for (const e0 of dim.elementos) for (const sid of [e0.seccion, ...(e0.seccion_i ? [e0.seccion_i] : [])]) {
+    const e = { ...e0, seccion: sid };
+    const s = est.secciones?.[sid];
     const m = s && est.materiales?.[s.material];
     if (!s || !m || !esNum(m.Ec_MPa)) continue;
     const EI = m.Ec_MPa * 1000 * s.I * s.factor_fisuracion;
@@ -149,6 +152,7 @@ export function validarEstructura(est) {
         ns.set(n.id, n);
         if (!esNum(n.s) || !Number.isInteger(n.nivel) || n.nivel < 0 || n.nivel > N) E(`nodo ${n.id}: «s» o «nivel» inválidos`);
         if (n.nivel === 0 && !(p.apoyos || {})[n.id]) E(`nodo ${n.id}: nodo de base sin apoyo`);
+        if (n.z !== undefined && !(n.nivel === 0 && esNum(n.z) && n.z < (b.niveles[0]?.z ?? 0))) E(`nodo ${n.id}: «z» solo en la base y bajo el nivel 1 (E17)`);
       }
       const ejes = est.ejes?.[p.direccion];
       if (Array.isArray(ejes)) {
@@ -162,6 +166,7 @@ export function validarEstructura(est) {
         unico(e.id, 'elemento');
         if (!['columna', 'viga', 'muro_concreto'].includes(e.tipo)) E(`elemento ${e.id}: tipo «${e.tipo}» desconocido`);
         if (!est.secciones[e.seccion]) E(`elemento ${e.id}: sección «${e.seccion}» no existe`);
+        if (e.seccion_i !== undefined && (e.tipo !== 'columna' || !est.secciones[e.seccion_i])) E(`elemento ${e.id}: «seccion_i» solo en columnas y con una sección que exista (E18)`);
         const ni = ns.get(e.i), nj = ns.get(e.j);
         if (!ni || !nj) { E(`elemento ${e.id}: nodos fuera de su pórtico`); continue; }
         if (e.tipo === 'viga') {

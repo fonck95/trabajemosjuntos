@@ -23,14 +23,22 @@ export function sig(v, n = 3) {
 const fx = (v) => (Math.round(v * 10) / 10).toString();
 
 // ---------------------------------------------------------------- escalas y marcas de los ejes
+// paso «lindo» (1, 2 o 5 por una potencia de 10) más cercano al paso bruto rango/n (antes se redondeaba siempre hacia
+// arriba: con ±40.490 kN el paso salía de 50.000 y solo quedaba la marca del 0)
 function pasoLindo(rango, n) {
   const bruto = rango / Math.max(1, n), p = Math.pow(10, Math.floor(Math.log10(bruto))), r = bruto / p;
-  return (r >= 5 ? 10 : r >= 2 ? 5 : r >= 1 ? 2 : 1) * p;
+  return (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * p;
 }
+const pasoMenor = (p) => { const e = Math.pow(10, Math.floor(Math.log10(p) + 1e-9)), m = Math.round(p / e); return (m === 1 ? 0.5 : m === 2 ? 1 : 2) * e; };
 function marcasLin(a, b, n = 5) {
   if (!(b > a)) { b = a + 1; }
-  const p = pasoLindo(b - a, n), out = [];
-  for (let v = Math.ceil(a / p) * p; v <= b + p * 1e-6; v += p) out.push(Math.abs(v) < p * 1e-9 ? 0 : v);
+  let p = pasoLindo(b - a, n), out = [];
+  for (let k = 0; k < 4; k++) {
+    out = [];
+    for (let v = Math.ceil(a / p - 1e-9) * p; v <= b + p * 1e-6; v += p) out.push(Math.abs(v) < p * 1e-9 ? 0 : +v.toPrecision(12));
+    if (out.length >= 3) break;                    // al menos 3 marcas dentro del rango
+    p = pasoMenor(p);
+  }
   return out;
 }
 function marcasLog(a, b) {
@@ -183,7 +191,10 @@ const logX = (a, b, p, q) => { const la = Math.log10(a), k = (q - p) / (Math.log
 export function serieTiempo(el, { t, series = [], referencias = [], unidad: u0 = '', titulo = 'Serie de tiempo', nota = '', aria, simetrico = true, dec = 2 } = {}) {
   const unidad = u0 || series[0]?.unidad || '';   // la unidad puede venir en la gráfica o en la serie (8.4)
   const cols = series.map((s, k) => s.color || C[k % C.length]);
-  const m = marco(el, { titulo, nota, aria, leyenda: [...series.map((s, k) => ({ nombre: s.nombre, color: cols[k] })), ...referencias.map((r) => ({ nombre: r.etiqueta, color: 'var(--muted)', trazo: '5 3' }))] });
+  // cada referencia con su propio trazo (y su valor al final de la línea), para distinguirlas
+  const TRAZOS_REF = ['7 3', '2 3', '10 2 2 2'];
+  const trazoRef = (r, k) => r.trazo || TRAZOS_REF[k % TRAZOS_REF.length];
+  const m = marco(el, { titulo, nota, aria, leyenda: [...series.map((s, k) => ({ nombre: s.nombre, color: cols[k] })), ...referencias.map((r, k) => ({ nombre: r.etiqueta, color: 'var(--muted)', trazo: trazoRef(r, k) }))] });
   const g = { M: { l: 50, r: 10, t: 16, b: 22 } };
   const tc = cursorTiempo(m, g, t);
   const [y0, y1] = rangoDe([...series.map((s) => s.y), referencias.length ? referencias.flatMap((r) => (simetrico ? [r.valor, -r.valor] : [r.valor])) : null], simetrico);
@@ -193,7 +204,14 @@ export function serieTiempo(el, { t, series = [], referencias = [], unidad: u0 =
     const [Y] = linX(y0 * 1.06, y1 * 1.06, H - M.b, M.t);
     Object.assign(g, { W, H, xv: t });
     let s = ejes({ W, H, M, xs: marcasLin(0, tmax || 1, Math.max(3, Math.round(W / 90))), ys: marcasLin(y0, y1, 4), X: g.X, Y, xEt: 's', yEt: unidad });
-    for (const r of referencias) for (const v of simetrico ? [r.valor, -r.valor] : [r.valor]) if (Number.isFinite(v)) s += `<line x1="${M.l}" x2="${W - M.r}" y1="${fx(Y(v))}" y2="${fx(Y(v))}" style="stroke:var(--muted);stroke-width:1px;stroke-dasharray:5 3"/>`;
+    referencias.forEach((r, k) => {
+      for (const v of simetrico ? [r.valor, -r.valor] : [r.valor]) {
+        if (!Number.isFinite(v)) continue;
+        s += `<line x1="${M.l}" x2="${W - M.r}" y1="${fx(Y(v))}" y2="${fx(Y(v))}" style="stroke:var(--muted);stroke-width:${k ? 1.2 : 1}px;stroke-dasharray:${trazoRef(r, k)}"/>`;
+        // el valor de la referencia al final de su línea (solo la de arriba, para no repetirlo)
+        if (v > 0) s += `<text x="${W - M.r - 2}" y="${fx(Y(v) - 3)}" text-anchor="end" class="sg-et">${r.etiqueta} ${rotulo(v)}${unidad ? ` ${unidad}` : ''}</text>`;
+      }
+    });
     s += `<line class="sg-cero" x1="${M.l}" x2="${W - M.r}" y1="${fx(Y(0))}" y2="${fx(Y(0))}"/>`;
     series.forEach((se, k) => { s += linea(trazo(t, se.y, g.X, Y), cols[k], { ancho: series.length > 2 ? 1.5 : 2 }); });
     m.svg.innerHTML = s;

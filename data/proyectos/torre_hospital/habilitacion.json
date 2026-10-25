@@ -4,8 +4,8 @@
  "generado_por": "scripts/torre/generar_inventario.py",
  "fecha": "2026-10-24",
  "insumos_sha1": {
-  "inventario_dotacion.json": "352f21e3d2e4564c98415c6b833d91e4d4444b87",
-  "torre_hospital_plantas.json": "bd846949aaec54eef3f01a89003622b3059a8960",
+  "inventario_dotacion.json": "5e28dffd29382309d2757b7f82cff74d5a4b78e6",
+  "torre_hospital_plantas.json": "fb3d24627d34569c11b3017ebbfe09e72e6364c8",
   "exigencias_3100.json": "747f9137790e7bcac2d35f2d7cf2d29c6f10877e"
  },
  "norma": "Res. 3100 de 2019 y modificaciones",
@@ -78,6 +78,7 @@
      "que_exige": "Oxígeno y succión en el servicio, de pared o portátiles.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {"fila": 17, "nombre": "Sala de reanimación, 2 camillas"},
@@ -226,6 +227,7 @@
      "que_exige": "Instrumental ginecobstétrico y equipo de atención de partos en urgencias.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 16, "nombre": "Sala de procedimientos (suturas, curaciones)"},
@@ -265,6 +267,7 @@
      "que_exige": "Elementos para sujetar al paciente agitado.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 33, "nombre": "Depósito de equipos y dispositivos médicos"}],
      "recintos": ["P1-A033-01"],
@@ -301,6 +304,7 @@
      "que_exige": "Instrumental para drenar el tórax.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 17, "nombre": "Sala de reanimación, 2 camillas"}],
      "recintos": ["P1-A017-01"],
@@ -337,6 +341,7 @@
      "que_exige": "Un carro de paro con elementos para adultos y niños.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 17, "nombre": "Sala de reanimación, 2 camillas"}],
      "recintos": ["P1-A017-01"],
@@ -387,6 +392,7 @@
      "que_exige": "Monitor de signos vitales con ECG, presión no invasiva, oximetría y batería.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 17, "nombre": "Sala de reanimación, 2 camillas"},
@@ -439,6 +445,7 @@
      "que_exige": "Oxímetro, bomba de infusión, electrocardiógrafo de 12 derivaciones y nebulizador disponibles.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 29, "nombre": "Estación de enfermería: puesto de enfermería"},
@@ -498,6 +505,7 @@
      "que_exige": "Dotación de cada consultorio de urgencias.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 15, "nombre": "Consultorio de urgencias con unidad sanitaria"},
@@ -568,6 +576,7 @@
      "que_exige": "Camilla con barandas, ruedas y freno, lámpara, equipo de pequeña cirugía, oxígeno y succión en la sala de procedimientos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 16, "nombre": "Sala de procedimientos (suturas, curaciones)"}],
      "recintos": ["P1-A016-01"],
@@ -624,6 +633,7 @@
      "que_exige": "Cada puesto de observación con camilla con barandas, ruedas y freno, y oxígeno por camilla.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {"fila": 24, "nombre": "Observación adultos hombres, 2 camillas"},
@@ -708,6 +718,7 @@
      "que_exige": "Por cada camilla de reanimación: camilla rodante con freno y baranda, mesa auxiliar rodante y aspirador; en la sala, monitor, marcapasos externo y carro de paro.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 17, "nombre": "Sala de reanimación, 2 camillas"}],
      "recintos": ["P1-A017-01"],
@@ -779,6 +790,7 @@
      "que_exige": "Ambientes de urgencias en un solo servicio: acceso directo desde el exterior, sala de espera, unidades sanitarias, estacionamiento de camillas, descontaminación, consultorios, triage, estación de enfermería, procedimientos, reanimación, observación por sexo y pediátrica, aislamiento (resumen de normas.json del repo).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {"fila": 3, "nombre": "Esclusa de acceso desde la bahía de ambulancias (cortavientos)"},
@@ -834,6 +846,7 @@
      "que_exige": "Sala de procedimientos de 8 m² o más con mesón, poceta si se requiere y lavamanos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 16, "nombre": "Sala de procedimientos (suturas, curaciones)"}],
      "recintos": ["P1-A016-01"],
@@ -870,6 +883,7 @@
      "que_exige": "Alarma de la red de gases medicinales visible para enfermería.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 29, "nombre": "Estación de enfermería: puesto de enfermería"}],
      "recintos": ["P1-A029-01"],
@@ -913,6 +927,7 @@
      "que_exige": "Llamado de enfermería en camillas de observación, aislamiento, reanimación y baños de pacientes.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {"fila": 24, "nombre": "Observación adultos hombres, 2 camillas"},
@@ -989,6 +1004,7 @@
      "que_exige": "Respaldo eléctrico para los equipos del servicio.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "parafrasis_por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 17, "nombre": "Sala de reanimación, 2 camillas"},
@@ -1043,6 +1059,7 @@
      "que_exige": "Procedimiento escrito para el manejo de gases medicinales, emergencias y alarmas.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 29, "nombre": "Estación de enfermería: puesto de enfermería"}],
      "recintos": ["P1-A029-01"],
@@ -1073,6 +1090,7 @@
      "que_exige": "Contenido mínimo del carro de paro de urgencias.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 17, "nombre": "Sala de reanimación, 2 camillas"}],
      "recintos": ["P1-A017-01"],
@@ -1116,6 +1134,7 @@
      "que_exige": "Inventario de cada equipo biomédico del servicio con nombre, registro sanitario INVIMA (o permiso de comercialización si es de tecnología controlada) y clase de riesgo.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 33, "nombre": "Depósito de equipos y dispositivos médicos"}],
      "recintos": ["P1-A033-01"],
@@ -1146,6 +1165,7 @@
      "que_exige": "Plan de mantenimiento preventivo según fabricante y una hoja de vida por equipo con sus mantenimientos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 33, "nombre": "Depósito de equipos y dispositivos médicos"}],
      "recintos": ["P1-A033-01"],
@@ -1176,6 +1196,7 @@
      "que_exige": "Capacitar al personal en el uso de los equipos que lo requieran (monitores, desfibrilador, bombas, autoclaves).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 33, "nombre": "Depósito de equipos y dispositivos médicos"}],
      "recintos": ["P1-A033-01"],
@@ -1206,6 +1227,7 @@
      "que_exige": "Tener suficientes equipos e instrumental para que, mientras unos se esterilizan, haya otros disponibles.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 33, "nombre": "Depósito de equipos y dispositivos médicos"}],
      "recintos": ["P1-A033-01"],
@@ -1236,6 +1258,7 @@
      "que_exige": "Termohigrómetro con registro en cada depósito de medicamentos y dispositivos del servicio.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 36, "nombre": "Depósito de medicamentos e insumos de urgencias"}],
      "recintos": ["P1-A036-01"],
@@ -1276,6 +1299,7 @@
      "que_exige": "Programa de tecnovigilancia (reporte de incidentes y eventos adversos con dispositivos médicos) y seguimiento en los comités.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 33, "nombre": "Depósito de equipos y dispositivos médicos"}],
      "recintos": ["P1-A033-01"],
@@ -1419,6 +1443,7 @@
      "que_exige": "Una cama hospitalaria por cada cama ofertada.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {"fila": 119, "nombre": "Habitación doble de adultos con baño PMR y guardarropa (2 camas)"},
@@ -1506,6 +1531,7 @@
      "que_exige": "Al menos un carro de paro en el servicio y uno por piso.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 125, "nombre": "Estación de enfermería: puesto central"}],
      "recintos": ["P3-A125-01"],
@@ -1557,6 +1583,7 @@
      "que_exige": "Equipos disponibles en el servicio, en versión adulta y pediátrica.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {"fila": 125, "nombre": "Estación de enfermería: puesto central"},
@@ -1627,6 +1654,7 @@
      "que_exige": "Oxígeno medicinal disponible para los hospitalizados.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 119, "nombre": "Habitación doble de adultos con baño PMR y guardarropa (2 camas)"},
@@ -1734,6 +1762,7 @@
      "que_exige": "Lo que pidan los procedimientos que el hospital documente.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "parafrasis_por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 124, "nombre": "Sala de procedimientos de hospitalización"},
@@ -1797,6 +1826,7 @@
      "que_exige": "Máximo 4 camas por habitación de adultos, 7 m² libres por cama y una barrera entre camas.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 119, "nombre": "Habitación doble de adultos con baño PMR y guardarropa (2 camas)"},
@@ -1845,6 +1875,7 @@
      "que_exige": "Máximo 6 camas por habitación pediátrica, 6 m² libres por cama y barrera entre camas.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 122, "nombre": "Habitación doble pediátrica con área para acompañante y baño PMR (2 camas)"}],
      "recintos": ["P3-A122-01", "P3-A122-02"],
@@ -1880,6 +1911,7 @@
      "que_exige": "Llamado de enfermería en cada cama y en cada baño de pacientes.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {"fila": 119, "nombre": "Habitación doble de adultos con baño PMR y guardarropa (2 camas)"},
@@ -1963,6 +1995,7 @@
      "que_exige": "Alarma de gases medicinales visible desde la estación de enfermería del piso 3.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 125, "nombre": "Estación de enfermería: puesto central"}],
      "recintos": ["P3-A125-01"],
@@ -2006,6 +2039,7 @@
      "que_exige": "Procedimiento escrito para gases medicinales.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 125, "nombre": "Estación de enfermería: puesto central"}],
      "recintos": ["P3-A125-01"],
@@ -2036,6 +2070,7 @@
      "que_exige": "Contenido mínimo del carro de paro de hospitalización (adultos y niños).",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 125, "nombre": "Estación de enfermería: puesto central"}],
      "recintos": ["P3-A125-01"],
@@ -2078,6 +2113,7 @@
      "que_exige": "Inventario de cada equipo biomédico del servicio con nombre, registro sanitario INVIMA (o permiso de comercialización si es de tecnología controlada) y clase de riesgo.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 129, "nombre": "Depósito de equipos"}],
      "recintos": ["P3-A129-01"],
@@ -2108,6 +2144,7 @@
      "que_exige": "Plan de mantenimiento preventivo según fabricante y una hoja de vida por equipo con sus mantenimientos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 129, "nombre": "Depósito de equipos"}],
      "recintos": ["P3-A129-01"],
@@ -2138,6 +2175,7 @@
      "que_exige": "Capacitar al personal en el uso de los equipos que lo requieran (monitores, desfibrilador, bombas, autoclaves).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 129, "nombre": "Depósito de equipos"}],
      "recintos": ["P3-A129-01"],
@@ -2168,6 +2206,7 @@
      "que_exige": "Tener suficientes equipos e instrumental para que, mientras unos se esterilizan, haya otros disponibles.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 129, "nombre": "Depósito de equipos"}],
      "recintos": ["P3-A129-01"],
@@ -2198,6 +2237,7 @@
      "que_exige": "Termohigrómetro con registro en cada depósito de medicamentos y dispositivos del servicio.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 133, "nombre": "Depósito de medicamentos (con chapa de seguridad)"}],
      "recintos": ["P3-A133-01"],
@@ -2238,6 +2278,7 @@
      "que_exige": "Programa de tecnovigilancia (reporte de incidentes y eventos adversos con dispositivos médicos) y seguimiento en los comités.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 129, "nombre": "Depósito de equipos"}],
      "recintos": ["P3-A129-01"],
@@ -2407,6 +2448,7 @@
      "que_exige": "Cama para el trabajo de parto.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -2446,6 +2488,7 @@
      "que_exige": "Monitor fetal para vigilar al bebé durante el trabajo de parto.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -2485,6 +2528,7 @@
      "que_exige": "Lámpara de techo para el parto.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -2533,6 +2577,7 @@
      "que_exige": "Mesa (o cama) donde ocurre el parto.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -2572,6 +2617,7 @@
      "que_exige": "Instrumental de parto.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"},
@@ -2618,6 +2664,7 @@
      "que_exige": "Instrumental para hacer y suturar la episiotomía.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -2667,6 +2714,7 @@
      "que_exige": "Succión para la madre y el recién nacido.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -2718,6 +2766,7 @@
      "que_exige": "Fuente de calor para recibir al recién nacido.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -2761,6 +2810,7 @@
      "que_exige": "Pesar y medir al recién nacido.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -2807,6 +2857,7 @@
      "que_exige": "Cinta para medir perímetros del recién nacido.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -2846,6 +2897,7 @@
      "que_exige": "Oximetría del recién nacido.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -2892,6 +2944,7 @@
      "que_exige": "Laringoscopio para reanimar al recién nacido.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -2937,6 +2990,7 @@
      "que_exige": "Equipos disponibles en el servicio de partos.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "parafrasis_por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 159, "nombre": "Puesto de enfermería de las habitaciones TPR"}],
      "recintos": ["P3-A159-01"],
@@ -2986,6 +3040,7 @@
      "que_exige": "Camilla para trasladar a la paciente (por ejemplo, a remisión).",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "parafrasis_por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 145, "nombre": "Recepción y entrega de pacientes (con estacionamiento de camillas)"}],
      "recintos": ["P3-A145-01"],
@@ -3022,6 +3077,7 @@
      "que_exige": "Kit listo para la hemorragia obstétrica (código rojo).",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 159, "nombre": "Puesto de enfermería de las habitaciones TPR"}],
      "recintos": ["P3-A159-01"],
@@ -3058,6 +3114,7 @@
      "que_exige": "Guardar en frío los medicamentos que lo pidan (la oxitocina, según la ficha de cada fabricante, suele pedir 2 a 8 °C) y notificar al INVIMA si se rompe la cadena de frío.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 156, "nombre": "Depósito de medicamentos (con chapa)"}],
      "recintos": ["P3-A156-01"],
@@ -3088,6 +3145,7 @@
      "que_exige": "Habitación TPR con las condiciones de infraestructura del servicio.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"},
@@ -3135,6 +3193,7 @@
      "que_exige": "Edificio exclusivo de salud y uniones piso-muro en media caña (fáciles de limpiar).",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "parafrasis_por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 151, "nombre": "Habitación de trabajo de parto, parto y recuperación (TPR)"}],
      "recintos": ["P3-A151-01", "P3-A151-02"],
@@ -3165,6 +3224,7 @@
      "que_exige": "El carro de paro de partos debe servir también para reanimar a la madre (adulta).",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 159, "nombre": "Puesto de enfermería de las habitaciones TPR"}],
      "recintos": ["P3-A159-01"],
@@ -3212,6 +3272,7 @@
      "que_exige": "Inventario de cada equipo biomédico del servicio con nombre, registro sanitario INVIMA (o permiso de comercialización si es de tecnología controlada) y clase de riesgo.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 157, "nombre": "Depósito de insumos"}],
      "recintos": ["P3-A157-01"],
@@ -3242,6 +3303,7 @@
      "que_exige": "Plan de mantenimiento preventivo según fabricante y una hoja de vida por equipo con sus mantenimientos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 157, "nombre": "Depósito de insumos"}],
      "recintos": ["P3-A157-01"],
@@ -3272,6 +3334,7 @@
      "que_exige": "Capacitar al personal en el uso de los equipos que lo requieran (monitores, desfibrilador, bombas, autoclaves).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 157, "nombre": "Depósito de insumos"}],
      "recintos": ["P3-A157-01"],
@@ -3302,6 +3365,7 @@
      "que_exige": "Tener suficientes equipos e instrumental para que, mientras unos se esterilizan, haya otros disponibles.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 157, "nombre": "Depósito de insumos"}],
      "recintos": ["P3-A157-01"],
@@ -3332,6 +3396,7 @@
      "que_exige": "Termohigrómetro con registro en cada depósito de medicamentos y dispositivos del servicio.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 156, "nombre": "Depósito de medicamentos (con chapa)"}],
      "recintos": ["P3-A156-01"],
@@ -3370,6 +3435,7 @@
      "que_exige": "Programa de tecnovigilancia (reporte de incidentes y eventos adversos con dispositivos médicos) y seguimiento en los comités.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 157, "nombre": "Depósito de insumos"}],
      "recintos": ["P3-A157-01"],
@@ -3608,6 +3674,28 @@
    "nombre": "Esterilización",
    "habilitable": "sin_habilitacion_propia",
    "marco": "Proceso de la Res. 3100, num. 11.1, hasta el 2-ene-2027; Res. 914 de 2025 desde el 3-ene-2027",
+   "resumen": {
+    "corte_2026": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 1, "parcial": 1, "falta": 1, "documento_pendiente": 5},
+      "por_confirmar": {"cumple": 2, "parcial": 1, "falta": 0, "documento_pendiente": 1}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 3, "parcial": 0, "falta": 0, "documento_pendiente": 5},
+      "por_confirmar": {"cumple": 3, "parcial": 0, "falta": 0, "documento_pendiente": 1}
+     }
+    },
+    "apertura": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 1, "parcial": 1, "falta": 1, "documento_pendiente": 3},
+      "por_confirmar": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 2}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 3, "parcial": 0, "falta": 0, "documento_pendiente": 3},
+      "por_confirmar": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 2}
+     }
+    }
+   },
    "exigencias": [
     {
      "id": "EX-EST-001",
@@ -3618,6 +3706,7 @@
      "que_exige": "Áreas separadas para cada paso del reprocesamiento, en un solo sentido de sucio a estéril.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "parafrasis_por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 161, "nombre": "Recepción y lavado de material contaminado (zona sucia)"},
@@ -3675,6 +3764,7 @@
      "que_exige": "Requisitos complementarios de los ambientes de esterilización (por confirmar).",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "parafrasis_por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 162, "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)"}],
      "recintos": ["P3-A162-01"],
@@ -3705,6 +3795,7 @@
      "que_exige": "Cuarto de aseo solo para la central.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "parafrasis_por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 165, "nombre": "Ambiente de aseo"}],
      "recintos": ["P3-A165-01"],
@@ -3741,6 +3832,7 @@
      "que_exige": "Procedimientos escritos de todo el proceso, verificación de que los paquetes estén íntegros y control de calidad con indicadores.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {"fila": 162, "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)"},
@@ -3774,6 +3866,7 @@
      "que_exige": "Registro de cada carga, resultados de control de calidad, lista del contenido de cada paquete y etiqueta de trazabilidad.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 162, "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)"}],
      "recintos": ["P3-A162-01"],
@@ -3816,6 +3909,7 @@
      "que_exige": "Contrato escrito si se terceriza la esterilización.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 163, "nombre": "Almacenamiento y entrega de material estéril"}],
      "recintos": ["P3-A163-01"],
@@ -3846,6 +3940,7 @@
      "que_exige": "Tener instrumental suficiente para cubrir los tiempos de lavado y esterilización.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 163, "nombre": "Almacenamiento y entrega de material estéril"}],
      "recintos": ["P3-A163-01"],
@@ -3888,6 +3983,7 @@
      "que_exige": "Desde 2027 la central se evalúa con el manual DMER.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "parafrasis_por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 161, "nombre": "Recepción y lavado de material contaminado (zona sucia)"},
@@ -3922,6 +4018,7 @@
      "que_exige": "Inventario de cada equipo biomédico del servicio con nombre, registro sanitario INVIMA (o permiso de comercialización si es de tecnología controlada) y clase de riesgo.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 162, "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)"}],
      "recintos": ["P3-A162-01"],
@@ -3952,6 +4049,7 @@
      "que_exige": "Plan de mantenimiento preventivo según fabricante y una hoja de vida por equipo con sus mantenimientos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 162, "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)"}],
      "recintos": ["P3-A162-01"],
@@ -3982,6 +4080,7 @@
      "que_exige": "Capacitar al personal en el uso de los equipos que lo requieran (monitores, desfibrilador, bombas, autoclaves).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 162, "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)"}],
      "recintos": ["P3-A162-01"],
@@ -4012,6 +4111,7 @@
      "que_exige": "Termohigrómetro con registro en cada depósito de medicamentos y dispositivos del servicio.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 163, "nombre": "Almacenamiento y entrega de material estéril"}],
      "recintos": ["P3-A163-01"],
@@ -4052,6 +4152,7 @@
      "que_exige": "Programa de tecnovigilancia (reporte de incidentes y eventos adversos con dispositivos médicos) y seguimiento en los comités.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [{"fila": 162, "nombre": "Preparación y empaque con autoclave de doble puerta (zona limpia)"}],
      "recintos": ["P3-A162-01"],
@@ -4186,6 +4287,28 @@
    "nombre": "Sala de expansión",
    "habilitable": "no",
    "marco": "Res. 2065 de 2025 (sedes transitorias en emergencias); sus exigencias de dotación son por analogía con 11.6.1 y van como referencia",
+   "resumen": {
+    "corte_2026": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     }
+    },
+    "apertura": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     }
+    }
+   },
    "exigencias": [
     {
      "id": "EX-EXP-001",
@@ -4196,6 +4319,7 @@
      "que_exige": "En tiempo normal el salón del piso 4 no puede tener pacientes en observación; solo como extensión de urgencias durante una emergencia, con la autorización que pida la norma vigente.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {
@@ -4231,6 +4355,7 @@
      "que_exige": "Si la sala opera como observación, cada puesto necesita camilla con barandas, ruedas y freno y oxígeno.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {
@@ -4282,6 +4407,7 @@
      "que_exige": "Succión disponible para las 8 camillas.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {
@@ -4323,6 +4449,7 @@
      "que_exige": "Elementos de reanimación en el piso 4 cuando la sala opere.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {
@@ -4358,6 +4485,7 @@
      "que_exige": "Equipos básicos para valorar a los pacientes de la sala.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "fragmento_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {
@@ -4399,6 +4527,7 @@
      "que_exige": "Los equipos guardados también llevan mantenimiento y hoja de vida, y se prueban en los simulacros.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "fragmento_normograma",
      "exigible": "si",
      "ambientes": [
       {
@@ -4434,6 +4563,7 @@
      "que_exige": "Las tomas de la sala deben ir a circuitos respaldados por la planta.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "parafrasis_por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [
       {
@@ -4578,6 +4708,7 @@
      "que_exige": "Una camilla fija en cada consultorio donde se hace examen físico.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 66, "nombre": "Consultorio de medicina general"},
@@ -4665,6 +4796,7 @@
      "que_exige": "Una escalerilla junto a cada camilla de examen.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 66, "nombre": "Consultorio de medicina general"},
@@ -4748,6 +4880,7 @@
      "que_exige": "Tensiómetro con brazaletes para adulto y, donde se atienden niños, pediátrico.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 66, "nombre": "Consultorio de medicina general"},
@@ -4854,6 +4987,7 @@
      "que_exige": "Fonendoscopio de adulto y, en consultorios que atienden niños, pediátrico.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 66, "nombre": "Consultorio de medicina general"},
@@ -4916,6 +5050,7 @@
      "que_exige": "Otoscopio y oftalmoscopio en cada consultorio de examen.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 66, "nombre": "Consultorio de medicina general"},
@@ -5022,6 +5157,7 @@
      "que_exige": "Martillo de reflejos. La lista completa de 11 ítems del criterio 19 solo aparece en una guía comercial; en la compilación oficial se ve el martillo dentro del criterio 24 (modalidad extramural).",
      "texto_disponible": false,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "solo_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 66, "nombre": "Consultorio de medicina general"},
@@ -5105,6 +5241,7 @@
      "que_exige": "Tallímetro o infantómetro, cinta métrica y termómetro cuando se requiera (lista de fuente secundaria).",
      "texto_disponible": false,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "solo_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 66, "nombre": "Consultorio de medicina general"},
@@ -5160,6 +5297,7 @@
      "que_exige": "Báscula grado médico en cada consultorio de examen y pesabebés donde se atiendan menores de 2 años.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 66, "nombre": "Consultorio de medicina general"},
@@ -5269,6 +5407,7 @@
      "que_exige": "Negatoscopio o sistema de visualización de imágenes según la tecnología del prestador.",
      "texto_disponible": false,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "solo_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 66, "nombre": "Consultorio de medicina general"},
@@ -5350,6 +5489,7 @@
      "que_exige": "Consultorio sin examen físico ni procedimientos (entrevista): no se exige dotación biomédica adicional a la de todos los servicios.",
      "texto_disponible": false,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "solo_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 176, "nombre": "Consultorio de psicología (entrevista)"}],
      "recintos": ["P4-A176-01"],
@@ -5406,6 +5546,7 @@
      "que_exige": "Consultorio donde se hacen procedimientos: la dotación del consultorio de examen físico más los equipos que exijan los procedimientos documentados en el estándar de procesos prioritarios (contenido confirmado en la compilación del ICBF; redacción por confirmar).",
      "texto_disponible": false,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 67, "nombre": "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos)"},
@@ -5463,6 +5604,7 @@
      "que_exige": "Sala de procedimientos con la dotación necesaria para los procedimientos documentados en el estándar de procesos prioritarios (contenido confirmado; redacción por confirmar).",
      "texto_disponible": false,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {
@@ -5552,6 +5694,7 @@
      "que_exige": "Camilla con barandas, ruedas y freno cuando los procedimientos la requieran.",
      "texto_disponible": false,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {
@@ -5593,6 +5736,7 @@
      "que_exige": "Si se habilita la modalidad extramural: fonendoscopio, tensiómetro, equipo de órganos de los sentidos, oxímetro, glucómetro, martillo de reflejos, [...] y báscula (subnumerales 24.7 y 24.8 por confirmar).",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [],
      "recintos": [],
@@ -5623,6 +5767,7 @@
      "que_exige": "Lo de consulta general más lo que exijan los procedimientos de cada especialidad: en ginecobstetricia, camilla ginecológica, lámpara y Doppler fetal; en pediatría, pesabebés e infantómetro; en medicina interna, electrocardiógrafo.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 68, "nombre": "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)"},
@@ -5685,6 +5830,7 @@
      "que_exige": "Consultorio de 10 m² o más con área de entrevista, área de examen y lavamanos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 66, "nombre": "Consultorio de medicina general"},
@@ -5768,6 +5914,7 @@
      "que_exige": "Consultorio de procedimientos: área de entrevista, área de procedimientos separada por barrera física fija, mesón de trabajo, poceta si el procedimiento la requiere y lavamanos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {
@@ -5809,6 +5956,7 @@
      "que_exige": "Equipos compartidos suficientes para el volumen del piso 2.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {
@@ -6032,6 +6180,7 @@
      "que_exige": "Una unidad odontológica fija por puesto de atención.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 180, "nombre": "Consultorio odontológico con 3 unidades separadas por barrera"}],
      "recintos": ["P4-A180-01"],
@@ -6078,6 +6227,7 @@
      "que_exige": "Lámpara de fotocurado (o amalgamador si se usa amalgama).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 180, "nombre": "Consultorio odontológico con 3 unidades separadas por barrera"}],
      "recintos": ["P4-A180-01"],
@@ -6114,6 +6264,7 @@
      "que_exige": "Pantalla para ver las radiografías digitales.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 180, "nombre": "Consultorio odontológico con 3 unidades separadas por barrera"}],
      "recintos": ["P4-A180-01"],
@@ -6152,6 +6303,7 @@
      "que_exige": "Succión, que puede ser el eyector de la unidad.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 180, "nombre": "Consultorio odontológico con 3 unidades separadas por barrera"},
@@ -6185,6 +6337,7 @@
      "que_exige": "Compresor de aire de uso odontológico.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 183, "nombre": "Cuarto de compresor y succión odontológica"}],
      "recintos": ["P4-A183-01"],
@@ -6221,6 +6374,7 @@
      "que_exige": "Instrumental suficiente para atender mientras el resto se esteriliza.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 180, "nombre": "Consultorio odontológico con 3 unidades separadas por barrera"},
@@ -6291,6 +6445,7 @@
      "que_exige": "Consultorio de 10 m² para la primera unidad más área por cada unidad adicional, barrera física (fija o móvil) entre unidades, mesón con poceta y, desde 3 unidades, un ambiente con mesón de trabajo y poceta (para lavar y esterilizar).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 180, "nombre": "Consultorio odontológico con 3 unidades separadas por barrera"},
@@ -6330,6 +6485,7 @@
      "que_exige": "Equipo de rayos X odontológico con sus equipos biomédicos y mantenimientos (la lista exacta del estándar no se pudo recuperar).",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 182, "nombre": "Rayos X odontológico periapical (blindado)"}],
      "recintos": ["P4-A182-01"],
@@ -6368,6 +6524,7 @@
      "que_exige": "Elementos de protección radiológica para el paciente (delantal y collar de tiroides).",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 182, "nombre": "Rayos X odontológico periapical (blindado)"}],
      "recintos": ["P4-A182-01"],
@@ -6409,6 +6566,7 @@
      "que_exige": "Licencia de práctica médica vigente para el equipo de rayos X (radiación ionizante), con su estudio de blindaje.",
      "texto_disponible": false,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 182, "nombre": "Rayos X odontológico periapical (blindado)"}],
      "recintos": ["P4-A182-01"],
@@ -6451,6 +6609,28 @@
    "nombre": "Telemedicina (prestador remisor)",
    "habilitable": "modalidad",
    "marco": "Modalidad de prestación, sin código de servicio propio",
+   "resumen": {
+    "corte_2026": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 2, "parcial": 0, "falta": 0, "documento_pendiente": 2},
+      "por_confirmar": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 2, "parcial": 0, "falta": 0, "documento_pendiente": 2},
+      "por_confirmar": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     }
+    },
+    "apertura": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 2, "parcial": 0, "falta": 0, "documento_pendiente": 2},
+      "por_confirmar": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 2, "parcial": 0, "falta": 0, "documento_pendiente": 2},
+      "por_confirmar": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     }
+    }
+   },
    "exigencias": [
     {
      "id": "EX-TEL-001",
@@ -6461,6 +6641,7 @@
      "que_exige": "Periféricos que capten la información que necesita el especialista a distancia, con certificado del ingeniero biomédico.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 178, "nombre": "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"}],
      "recintos": ["P4-A178-01"],
@@ -6506,6 +6687,7 @@
      "que_exige": "Equipos de videoconferencia sincrónica con buena fidelidad de imagen y sonido para el remisor y el de referencia.",
      "texto_disponible": false,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 178, "nombre": "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"}],
      "recintos": ["P4-A178-01"],
@@ -6547,6 +6729,7 @@
      "que_exige": "Software que se adapte a variaciones del ancho de banda sin perder la conexión y, si se graba, con seguridad informática que proteja la confidencialidad. Certificado de un ingeniero de sistemas con tarjeta profesional vigente.",
      "texto_disponible": false,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 178, "nombre": "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"}],
      "recintos": ["P4-A178-01"],
@@ -6577,6 +6760,7 @@
      "que_exige": "Los equipos de captura deben producir información equivalente a la original, para que su reproducción conserve calidad y confiabilidad (aplica a la telerradiología de rayos X).",
      "texto_disponible": false,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 178, "nombre": "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"}],
      "recintos": ["P4-A178-01"],
@@ -6625,6 +6809,7 @@
      "que_exige": "Conectividad con integridad y continuidad, energía o baterías para los equipos e iluminación homogénea en el ambiente de telemedicina.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 178, "nombre": "Consultorio de telemedicina (teleexperticia y telemedicina interactiva)"}],
      "recintos": ["P4-A178-01"],
@@ -6702,6 +6887,7 @@
      "que_exige": "Refrigerador de vacunas precalificado por la OMS.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 95, "nombre": "Almacenamiento y alistamiento de termos (cadena de frío)"}],
      "recintos": ["P2-A095-01"],
@@ -6743,6 +6929,7 @@
      "que_exige": "Regulador o estabilizador independiente por refrigerador eléctrico, o conexión a fuente regulada con indicador de polo a tierra.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 95, "nombre": "Almacenamiento y alistamiento de termos (cadena de frío)"}],
      "recintos": ["P2-A095-01"],
@@ -6784,6 +6971,7 @@
      "que_exige": "Termos y cajas de transporte precalificados por la OMS, y papelería del programa.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 95, "nombre": "Almacenamiento y alistamiento de termos (cadena de frío)"},
@@ -6835,6 +7023,7 @@
      "que_exige": "Congelador con capacidad para los paquetes fríos del alistamiento de todas las cajas térmicas y termos.",
      "texto_disponible": false,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 95, "nombre": "Almacenamiento y alistamiento de termos (cadena de frío)"}],
      "recintos": ["P2-A095-01"],
@@ -6871,6 +7060,7 @@
      "que_exige": "Ambiente para alistar termos y cajas térmicas y ambiente de cadena de frío; el consultorio de vacunación aparte (opción de dos ambientes).",
      "texto_disponible": false,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 94, "nombre": "Consultorio para administración de biológicos"},
@@ -6913,6 +7103,7 @@
      "que_exige": "Planta eléctrica que respalde la cadena de frío.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 95, "nombre": "Almacenamiento y alistamiento de termos (cadena de frío)"}],
      "recintos": ["P2-A095-01"],
@@ -6956,6 +7147,7 @@
      "que_exige": "Control y registro de temperatura de las vacunas; si se interrumpe la cadena de frío, notificar según el procedimiento del INVIMA (fuente secundaria).",
      "texto_disponible": false,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "solo_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 95, "nombre": "Almacenamiento y alistamiento de termos (cadena de frío)"}],
      "recintos": ["P2-A095-01"],
@@ -7001,6 +7193,7 @@
      "que_exige": "Vacunación segura y manejo y reporte de eventos supuestamente atribuidos a la vacunación (ESAVI). La norma no nombra un kit de anafilaxia en lo que se pudo leer.",
      "texto_disponible": false,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "solo_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 94, "nombre": "Consultorio para administración de biológicos"}],
      "recintos": ["P2-A094-01"],
@@ -7078,6 +7271,7 @@
      "que_exige": "Estanterías, estibas, mobiliario de dispensación y de seguridad propios del servicio.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 98, "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"},
@@ -7151,6 +7345,7 @@
      "que_exige": "Termohigrómetro con registro en cada ambiente donde se guardan medicamentos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 96, "nombre": "Recepción técnica de medicamentos y dispositivos"},
@@ -7207,6 +7402,7 @@
      "que_exige": "Ambiente de almacenamiento que garantice la temperatura y humedad que recomienda el fabricante, con cadena de frío.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 98, "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"}],
      "recintos": ["P2-A098-01"],
@@ -7246,6 +7442,7 @@
      "que_exige": "Área separada para medicamentos de control especial, cuando aplique, y área para productos rechazados, devueltos o retirados.",
      "texto_disponible": false,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 99, "nombre": "Medicamentos de control especial (seguro)"},
@@ -7285,6 +7482,7 @@
      "que_exige": "Para baja complejidad, cumplir las condiciones locativas y los procesos del manual de la Res. 1403 de 2007.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "solo_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 96, "nombre": "Recepción técnica de medicamentos y dispositivos"},
@@ -7323,6 +7521,7 @@
      "que_exige": "Planta eléctrica que respalde la farmacia y sus refrigeradores.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 98, "nombre": "Almacenamiento con control de temperatura y humedad (incluye cadena de frío)"}],
      "recintos": ["P2-A098-01"],
@@ -7413,6 +7612,7 @@
      "que_exige": "No se encontró una lista de equipos propia del servicio: aplica lo de todos los servicios y la dotación que permita hacer los procedimientos que el prestador documente en procesos prioritarios.",
      "texto_disponible": false,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 189, "nombre": "Cubículo de atención individual (electroterapia, camilla)"},
@@ -7469,6 +7669,7 @@
      "que_exige": "Un equipo de electroterapia por cubículo si se atiende en paralelo.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 189, "nombre": "Cubículo de atención individual (electroterapia, camilla)"}],
      "recintos": ["P4-A189-01", "P4-A189-02", "P4-A189-03"],
@@ -7510,6 +7711,7 @@
      "que_exige": "Oxígeno en la sala de terapia respiratoria.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 191, "nombre": "Sala de procedimientos de terapia respiratoria (nebulizaciones, espirometría)"}],
      "recintos": ["P4-A191-01"],
@@ -7551,6 +7753,7 @@
      "que_exige": "Para valorar al paciente: tensiómetro, fonendoscopio, goniómetro, cinta métrica y martillo de reflejos.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 188, "nombre": "Ambiente de entrevista y evaluación"}],
      "recintos": ["P4-A188-01"],
@@ -7581,6 +7784,7 @@
      "que_exige": "No se pudo leer qué ambientes exige la 3100 a terapias; programa.json sigue la Res. 1633 de 2025, Anexo 1, Cuadro 13.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 188, "nombre": "Ambiente de entrevista y evaluación"},
@@ -7725,6 +7929,7 @@
      "que_exige": "Recepción al público, información y entrega de resultados.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 50, "nombre": "Recepción de muestras, información y entrega de resultados (2 puestos)"},
@@ -7767,6 +7972,7 @@
      "que_exige": "Mesón de trabajo en cada ambiente técnico, con poceta donde el procedimiento la use (tinciones, uroanálisis, coprológico, lavado).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 80, "nombre": "Área técnica: centrifugación y alícuotas (preanalítica)"},
@@ -7840,6 +8046,7 @@
      "que_exige": "Una ducha manual o lavaojos al que se llegue desde todos los ambientes técnicos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 82, "nombre": "Área técnica: química clínica e inmunoensayo"}],
      "recintos": ["P2-A082-01"],
@@ -7876,6 +8083,7 @@
      "que_exige": "Un área para neveras de reactivos y muestras (o un cuarto frío).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 87, "nombre": "Área de neveras (reactivos y muestras)"}],
      "recintos": ["P2-A087-01"],
@@ -7918,6 +8126,7 @@
      "que_exige": "Lavamanos en el servicio (aparato exclusivo para lavarse las manos, con grifería y sifón con rejilla, según el glosario).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 84, "nombre": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad"},
@@ -7956,6 +8165,7 @@
      "que_exige": "Ambiente oscuro solo si alguna técnica lo pide (por ejemplo, lectura de fluorescencia).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 84, "nombre": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad"}],
      "recintos": ["P2-A084-01"],
@@ -7986,6 +8196,7 @@
      "que_exige": "Depósito propio de materiales, insumos y reactivos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 88, "nombre": "Depósito de materiales, insumos y reactivos"},
@@ -8035,6 +8246,7 @@
      "que_exige": "Los equipos que pida cada prueba del menú, sea por compra o por comodato.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 80, "nombre": "Área técnica: centrifugación y alícuotas (preanalítica)"},
@@ -8100,6 +8312,7 @@
      "que_exige": "Cabina de bioseguridad cuando haya anaerobios, micosis profundas o biología molecular. El GeneXpert (PCR en tiempo real) y la opción de ADN-VPH son biología molecular.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 84, "nombre": "Área técnica: microbiología y baciloscopia, con antecámara y cabina de bioseguridad"}],
      "recintos": ["P2-A084-01"],
@@ -8136,6 +8349,7 @@
      "que_exige": "Microscopio para gota gruesa (malaria) y otras pruebas de enfermedades transmitidas por vectores. Yondó es zona endémica de malaria (docs/11 y laboratorio.json).",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 85, "nombre": "Área técnica: uroanálisis, coprológico, parasitología y gota gruesa (malaria)"},
@@ -8179,6 +8393,7 @@
      "que_exige": "Control de calidad interno en cada corrida, participación en programas de evaluación externa y registro del control de calidad de las pruebas rápidas que se hacen fuera del laboratorio (urgencias, partos, consulta).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {
@@ -8214,6 +8429,7 @@
      "que_exige": "Contrato o convenio con cada laboratorio de referencia (pruebas remitidas).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {
@@ -8249,6 +8465,7 @@
      "que_exige": "Planta eléctrica para la edificación.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {
@@ -8297,6 +8514,7 @@
      "que_exige": "Termohigrómetros con registro en neveras, depósito y áreas técnicas donde se guarden reactivos de diagnóstico in vitro e insumos.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 87, "nombre": "Área de neveras (reactivos y muestras)"},
@@ -8364,6 +8582,7 @@
      "que_exige": "Programa de reactivovigilancia y de tecnovigilancia; todos los reactivos con registro sanitario del Invima (categorías I, II y III del Decreto 3770 de 2004).",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {
@@ -8425,6 +8644,28 @@
    "codigo_reps": "712 (por confirmar)",
    "habilitable": "sin_habilitacion_propia",
    "marco": "No requiere habilitación propia si el laboratorio de la misma sede toma las muestras (Res. 3100, num. 11.3.12, texto de compilación)",
+   "resumen": {
+    "corte_2026": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 4, "parcial": 0, "falta": 1, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 0, "documento_pendiente": 1}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 5, "parcial": 0, "falta": 0, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 0, "documento_pendiente": 1}
+     }
+    },
+    "apertura": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 4, "parcial": 0, "falta": 1, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 0, "documento_pendiente": 1}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 5, "parcial": 0, "falta": 0, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 0, "documento_pendiente": 1}
+     }
+    }
+   },
    "exigencias": [
     {
      "id": "EX-TOM-001",
@@ -8435,6 +8676,7 @@
      "que_exige": "Un área de recepción de muestras, información y entrega de resultados (distinta del sitio donde se toma la muestra).",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 50, "nombre": "Recepción de muestras, información y entrega de resultados (2 puestos)"}],
      "recintos": ["P1-A050-01"],
@@ -8471,6 +8713,7 @@
      "que_exige": "Al menos un cubículo, con barrera física fija o móvil, para un solo paciente a la vez.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 52, "nombre": "Cubículo de toma de muestras (flebotomía)"}],
      "recintos": ["P1-A052-01", "P1-A052-02", "P1-A052-03", "P1-A052-04"],
@@ -8512,6 +8755,7 @@
      "que_exige": "La norma no trae una lista cerrada: la dotación sale del manual de toma de muestras que escriba la E.S.E. (qué muestras toma, en qué posición, cómo las conserva y las transporta). Para el menú de laboratorio.json eso implica: silla o sillón de flebotomía por cubículo, camilla para pacientes con riesgo de desmayo o pediátricos, nevera de 2-8 °C para conservar muestras y cavas para transportarlas.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 52, "nombre": "Cubículo de toma de muestras (flebotomía)"},
@@ -8574,6 +8818,7 @@
      "que_exige": "Procedimiento documentado y registros de cada muestra desde la toma hasta la remisión (incluido el envío al laboratorio de referencia).",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {
@@ -8610,6 +8855,7 @@
      "que_exige": "Termohigrómetro con registro donde se guarden tubos, agujas, lancetas, medios de transporte y demás dispositivos médicos de la toma.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {
@@ -8660,6 +8906,7 @@
      "que_exige": "Unidades sanitarias para pacientes (muestras de orina y materia fecal, curvas de glucosa).",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {
@@ -8710,6 +8957,7 @@
      "que_exige": "Recipientes de residuos por punto de generación (biosanitarios, cortopunzantes y no peligrosos) en cada cubículo y en la toma especial.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 52, "nombre": "Cubículo de toma de muestras (flebotomía)"},
@@ -8837,6 +9085,7 @@
      "que_exige": "Un equipo de rayos X que sirva para los exámenes que se ofrezcan.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 44, "nombre": "Sala de rayos X convencional digital (con blindaje en plomo)"}],
      "recintos": ["P1-A044-01"],
@@ -8878,6 +9127,7 @@
      "que_exige": "Delantal plomado y protector de tiroides para pacientes, acompañantes y personal. El protector de gónadas aparece en la Res. 2003 de 2014 (derogada) y en guías comerciales; en la 3100 no se confirmó.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 44, "nombre": "Sala de rayos X convencional digital (con blindaje en plomo)"}],
      "recintos": ["P1-A044-01"],
@@ -8919,6 +9169,7 @@
      "que_exige": "Monitor grado médico para ver e interpretar las imágenes.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 48, "nombre": "Oficina del radiólogo y lectura (telerradiología)"}],
      "recintos": ["P1-A048-01"],
@@ -8960,6 +9211,7 @@
      "que_exige": "Sala solo para el equipo, del tamaño que pida su ficha técnica.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 44, "nombre": "Sala de rayos X convencional digital (con blindaje en plomo)"}],
      "recintos": ["P1-A044-01"],
@@ -8990,6 +9242,7 @@
      "que_exige": "Puesto de comando desde el que se vea al paciente (visor plomado o cámara).",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 45, "nombre": "Control y comando del equipo"}],
      "recintos": ["P1-A045-01"],
@@ -9026,6 +9279,7 @@
      "que_exige": "Vestidor para pacientes con casilleros donde dejar la ropa y objetos metálicos.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 46, "nombre": "Vestidor de pacientes (2 cubículos con casilleros)"}],
      "recintos": ["P1-A046-01"],
@@ -9066,6 +9320,7 @@
      "que_exige": "Licencia de práctica médica vigente para el rayos X (y para el periapical) antes de habilitar. Para la licencia, la Res. 1811 de 2025 pide, entre otros, registros dosimétricos de un servicio de dosimetría personal autorizado (o el contrato con ese servicio si es la primera licencia) y constancia del curso de protección radiológica de los trabajadores.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 44, "nombre": "Sala de rayos X convencional digital (con blindaje en plomo)"}],
      "recintos": ["P1-A044-01"],
@@ -9096,6 +9351,7 @@
      "que_exige": "Pruebas periódicas de control de calidad del equipo y de la imagen, con acciones correctivas.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 45, "nombre": "Control y comando del equipo"}],
      "recintos": ["P1-A045-01"],
@@ -9126,6 +9382,7 @@
      "que_exige": "Planta eléctrica para la edificación.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {
@@ -9174,6 +9431,7 @@
      "que_exige": "Termohigrómetro en el almacenamiento de dispositivos e insumos de rayos X.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 47, "nombre": "Almacenamiento de dispositivos médicos e insumos"}],
      "recintos": ["P1-A047-01"],
@@ -9219,6 +9477,7 @@
      "que_exige": "Recipientes de residuos por punto de generación en la sala de rayos X y en la de ecografía.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [
       {"fila": 105, "nombre": "Sala de ecografía (obstétrica, abdominal y transvaginal)"},
@@ -9401,6 +9660,7 @@
      "que_exige": "Un ecógrafo con los transductores que pidan los exámenes ofrecidos (obstétrico, abdominal, transvaginal).",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 105, "nombre": "Sala de ecografía (obstétrica, abdominal y transvaginal)"}],
      "recintos": ["P2-A105-01"],
@@ -9442,6 +9702,7 @@
      "que_exige": "Camilla de examen para ecografía y lo demás que pida la atención.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 105, "nombre": "Sala de ecografía (obstétrica, abdominal y transvaginal)"}],
      "recintos": ["P2-A105-01"],
@@ -9478,6 +9739,7 @@
      "que_exige": "Unidad sanitaria asociada a la sala cuando se hagan ecografías que la necesiten (pélvica con vejiga llena, transvaginal).",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [{"fila": 106, "nombre": "Unidad sanitaria PMR de ecografía"}],
      "recintos": ["P2-A106-01"],
@@ -9514,6 +9776,7 @@
      "que_exige": "Desinfección de alto nivel del transductor endocavitario entre pacientes, con fundas de un solo uso.",
      "texto_disponible": false,
      "verificacion_texto": "por_confirmar",
+     "verificacion_origen": "por_confirmar",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 105, "nombre": "Sala de ecografía (obstétrica, abdominal y transvaginal)"}],
      "recintos": ["P2-A105-01"],
@@ -9592,6 +9855,7 @@
      "que_exige": "Un equipo de rayos X odontológico que sirva para los exámenes que se ofrezcan (periapical).",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "solo_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 182, "nombre": "Rayos X odontológico periapical (blindado)"}],
      "recintos": ["P4-A182-01"],
@@ -9630,6 +9894,7 @@
      "que_exige": "Delantal plomado en talla adulto y, si se atienden niños, pediátrico. El protector de tiroides y de gónadas aparece en una compilación pero no se leyó el texto.",
      "texto_disponible": true,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "solo_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 182, "nombre": "Rayos X odontológico periapical (blindado)"}],
      "recintos": ["P4-A182-01"],
@@ -9671,6 +9936,7 @@
      "que_exige": "Licencia de práctica médica (categoría I) para el periapical, con dosimetría personal y curso del personal.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [{"fila": 182, "nombre": "Rayos X odontológico periapical (blindado)"}],
      "recintos": ["P4-A182-01"],
@@ -9701,6 +9967,7 @@
      "que_exige": "Protocolo de toma de radiografías y control de calidad del equipo.",
      "texto_disponible": false,
      "verificacion_texto": "fuente_secundaria",
+     "verificacion_origen": "solo_fuente_secundaria",
      "exigible": "por_confirmar",
      "ambientes": [{"fila": 182, "nombre": "Rayos X odontológico periapical (blindado)"}],
      "recintos": ["P4-A182-01"],
@@ -9743,6 +10010,28 @@
    "nombre": "TIC y apoyo",
    "habilitable": "no",
    "marco": "Soporte de los demás servicios (historia clínica y telerradiología)",
+   "resumen": {
+    "corte_2026": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     }
+    },
+    "apertura": {
+     "dotacion_actual": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     },
+     "con_cierre_de_brechas": {
+      "exigibles": {"cumple": 1, "parcial": 0, "falta": 0, "documento_pendiente": 1},
+      "por_confirmar": {"cumple": 0, "parcial": 0, "falta": 0, "documento_pendiente": 0}
+     }
+    }
+   },
    "exigencias": [
     {
      "id": "EX-TIC-001",
@@ -9753,6 +10042,7 @@
      "que_exige": "Historia clínica electrónica segura e inalterable, con puestos de registro en cada ambiente asistencial. Marco complementario: Ley 2015 de 2020 (historia clínica electrónica interoperable), Res. 866 de 2021 y Res. 1888 de 2025 (resumen digital de atención), artículos por confirmar.",
      "texto_disponible": true,
      "verificacion_texto": "literal_compilacion",
+     "verificacion_origen": "literal_confirmado",
      "exigible": "si",
      "ambientes": [
       {"fila": 50, "nombre": "Recepción de muestras, información y entrega de resultados (2 puestos)"},
@@ -9868,6 +10158,7 @@
      "que_exige": "Plataforma de telerradiología que conserve la calidad diagnóstica de la imagen, con certificaciones técnicas firmadas.",
      "texto_disponible": true,
      "verificacion_texto": "contenido_compilacion",
+     "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
      "exigible": "si",
      "ambientes": [
       {"fila": 57, "nombre": "Cuarto principal de telecomunicaciones y UPS"},
@@ -9977,6 +10268,7 @@
     "que_exige": "Inventario de equipos biomédicos con nombre, marca, modelo, serie, registro sanitario o permiso de comercialización del INVIMA y clase de riesgo. El registro sanitario y la clasificación (I, IIa, IIb, III) los regula el Decreto 4725 de 2005 (artículos por confirmar).",
     "texto_disponible": true,
     "verificacion_texto": "contenido_compilacion",
+    "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
     "exigible": "si",
     "ambientes": [],
     "recintos": [],
@@ -10007,6 +10299,7 @@
     "que_exige": "Programa de mantenimiento preventivo según el fabricante (o protocolo propio si el fabricante no lo define) y una hoja de vida por equipo con sus mantenimientos.",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [],
     "recintos": [],
@@ -10037,6 +10330,7 @@
     "que_exige": "Tener suficientes equipos e instrumental para el volumen de atención, contando el tiempo en que el instrumental está en esterilización.",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [],
     "recintos": [],
@@ -10116,6 +10410,7 @@
     "que_exige": "Donde un servicio exija carro de paro, debe tener desfibrilador bifásico con visualización integrada, cardioversión, marcapasos transcutáneo y paletas adulto y pediátricas según aplique, resucitador pulmonar manual, aspirador o sistema de vacío y monitor de signos vitales con trazado electrocardiográfico y presión no invasiva (lista recuperada de las compilaciones del Invima y la Cancillería; el laringoscopio solo aparece en una guía comercial).",
     "texto_disponible": true,
     "verificacion_texto": "contenido_compilacion",
+    "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
     "exigible": "si",
     "ambientes": [],
     "recintos": [],
@@ -10157,6 +10452,7 @@
     "que_exige": "Registro de medicamentos (principio activo, forma farmacéutica, concentración, lote, fecha de vencimiento, presentación, unidad de medida y registro sanitario vigente del INVIMA) y de dispositivos; programas de farmacovigilancia, tecnovigilancia (Res. 4816 de 2008) y reactivovigilancia (estos programas solo se confirmaron en fuentes secundarias).",
     "texto_disponible": true,
     "verificacion_texto": "contenido_compilacion",
+    "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
     "exigible": "si",
     "ambientes": [],
     "recintos": [],
@@ -10187,6 +10483,7 @@
     "que_exige": "Termohigrómetro o equivalente en cada sitio donde se guarden medicamentos o dispositivos, con registro y control.",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [],
     "recintos": [],
@@ -10241,6 +10538,7 @@
     "que_exige": "Planta eléctrica para la edificación (aquí, por vacunación, servicio farmacéutico y cadena de frío, además de urgencias, partos, laboratorio, hospitalización e imágenes).",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [],
     "recintos": [],
@@ -10284,6 +10582,7 @@
     "que_exige": "Inventario de todos los equipos biomédicos (también los de comodato) con nombre, marca, modelo, serie, registro sanitario o permiso de comercialización del Invima y clase de riesgo. Clases I, IIa, IIb y III del Decreto 4725 de 2005 (art. 5); registro sanitario automático para clases I y IIa no controladas y permiso de comercialización para equipos de tecnología controlada (artículos exactos por confirmar).",
     "texto_disponible": true,
     "verificacion_texto": "contenido_compilacion",
+    "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
     "exigible": "si",
     "ambientes": [
      {
@@ -10319,6 +10618,7 @@
     "que_exige": "Programa anual de mantenimiento preventivo según el fabricante y hoja de vida por equipo.",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [
      {
@@ -10354,6 +10654,7 @@
     "que_exige": "Personal idóneo (propio o contratado) para el mantenimiento.",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [
      {
@@ -10389,6 +10690,7 @@
     "que_exige": "Capacitación del personal en el uso de los equipos que lo requieran (analizadores, rayos X, ecógrafo, cabina, autoclave).",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [
      {
@@ -10424,6 +10726,7 @@
     "que_exige": "Cantidad de equipos acorde con el volumen.",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [{"fila": 52, "nombre": "Cubículo de toma de muestras (flebotomía)"}],
     "recintos": ["P1-A052-01", "P1-A052-02", "P1-A052-03", "P1-A052-04"],
@@ -10454,6 +10757,7 @@
     "que_exige": "Planta eléctrica.",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [
      {
@@ -10502,6 +10806,7 @@
     "que_exige": "Licencia de práctica médica para rayos X y periapical (Res. 1811 de 2025).",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [
      {"fila": 44, "nombre": "Sala de rayos X convencional digital (con blindaje en plomo)"},
@@ -10535,6 +10840,7 @@
     "que_exige": "Termohigrómetros con registro en todo sitio de almacenamiento.",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [
      {"fila": 87, "nombre": "Área de neveras (reactivos y muestras)"},
@@ -10591,6 +10897,7 @@
     "que_exige": "Programas documentados de tecnovigilancia (Res. 4816 de 2008, citada por el Invima) y reactivovigilancia.",
     "texto_disponible": true,
     "verificacion_texto": "contenido_compilacion",
+    "verificacion_origen": "contenido_confirmado_redaccion_por_confirmar",
     "exigible": "si",
     "ambientes": [
      {
@@ -10626,6 +10933,7 @@
     "que_exige": "Permite compartir ambientes entre servicios de la misma edificación.",
     "texto_disponible": true,
     "verificacion_texto": "literal_compilacion",
+    "verificacion_origen": "literal_confirmado",
     "exigible": "si",
     "ambientes": [{"fila": 50, "nombre": "Recepción de muestras, información y entrega de resultados (2 puestos)"}],
     "recintos": ["P1-A050-01"],
@@ -10656,6 +10964,7 @@
     "que_exige": "No se encontró que laboratorio, toma de muestras, rayos X sin contraste, ecografía o radiología odontológica exijan carro de paro en la 3100 (por confirmar).",
     "texto_disponible": true,
     "verificacion_texto": "por_confirmar",
+    "verificacion_origen": "por_confirmar",
     "exigible": "por_confirmar",
     "ambientes": [{"fila": 52, "nombre": "Cubículo de toma de muestras (flebotomía)"}],
     "recintos": ["P1-A052-01", "P1-A052-02", "P1-A052-03", "P1-A052-04"],

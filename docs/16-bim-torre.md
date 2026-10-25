@@ -8,10 +8,10 @@
 
 ## En pocas palabras
 
-- **Qué es:** 4.583 elementos con su clase IFC4, su nivel, su geometría, su material, sus conjuntos de propiedades y cantidades, su ítem del presupuesto y su fase de obra, más 6.170 juegos de barras de refuerzo (64.849 barras, 292.289 kg) con su forma real. Se descarga en dos archivos IFC4: el principal (7,3 MB) y el del refuerzo (12,26 MB).
-- **Validado:** el esquema IFC4 no tiene errores; los 31 tipos de elemento y todas las cantidades coinciden con el modelo; 30.638 identificadores globales en el archivo principal y 39.677 en el del refuerzo, sin repetidos (cálculo propio con IfcOpenShell 0.9.0).
-- **Coordinación:** la primera corrida del modelo federado (24-oct-2026) encontró **280 interferencias duras** (201 del prediseño estructural, 46 del anteproyecto de plantas y 33 compartidas). Después de corregir sus causas en la estructura, en la planta y en el modelo, quedan **0 duras**; siguen 683 medias (sobre todo congestión de barras que se resuelve en el detallado) y 7 leves (cálculo propio).
-- **Lo que cuesta cumplir la norma:** el prediseño que cumple la NSR-10 (columnas de 0,80-0,90 m, muros de 0,35 m y 146 pilotes de 15 m) cuesta más que el presupuesto vigente: **entre $1.310 M y $1.390 M más de costo directo** en estructura y cimentación, **$1.742 M a $1.848 M con AIU** (cálculo propio). Con las secciones del presupuesto, la deriva llegaba a 2,09 % y no cumplía el 1 %. El presupuesto no se cambió: es un **ajuste pendiente del prediseño estructural** (documento 11, presupuesto).
+- **Qué es:** 4.583 elementos con su clase IFC4, su nivel, su geometría, su material, sus conjuntos de propiedades y cantidades, su ítem del presupuesto y su fase de obra, más 6.393 juegos de barras de refuerzo (64.570 barras, 301.139 kg) con su forma real, incluidos los arranques de columnas y muros bajo el piso 1. Se descarga en dos archivos IFC4: el principal (7,31 MB) y el del refuerzo (12,48 MB).
+- **Validado:** el esquema IFC4 no tiene errores; los 31 tipos de elemento y todas las cantidades coinciden con el modelo; 30.662 identificadores globales en el archivo principal y 41.015 en el del refuerzo, sin repetidos (cálculo propio con IfcOpenShell 0.9.0).
+- **Coordinación:** la primera corrida del modelo federado (24-oct-2026) encontró **280 interferencias duras** (201 del prediseño estructural, 46 del anteproyecto de plantas y 33 compartidas). Después de corregir sus causas en la estructura, en la planta y en el modelo, quedan **0 duras**; siguen 681 medias (sobre todo congestión de barras que se resuelve en el detallado) y 7 leves (cálculo propio).
+- **Lo que cuesta cumplir la norma:** el prediseño que cumple la NSR-10 (columnas de 0,80-0,90 m, muros de 0,35 m y 146 pilotes de 15 m) cuesta más que el presupuesto vigente: **entre $1.523 M y $1.539 M más de costo directo** en estructura y cimentación, **$2.025 M a $2.046 M con AIU** (cálculo propio). Con las secciones del presupuesto, la deriva llegaba a 2,45 % y no cumplía el 1 %. El presupuesto no se cambió: es un **ajuste pendiente del prediseño estructural** (documento 11, presupuesto).
 - **LOIN:** arquitectura ≈ 300, estructura y cimentación ≈ 350, refuerzo ≈ 400 y dotación ≈ 200-300 como objetivo; hoy cada disciplina está en prefactibilidad y dice qué información le falta para llegar.
 
 ## 1. Qué es este modelo y qué no es
@@ -55,7 +55,7 @@
 | Arquitectura | Espacios (recintos), muros, puertas, ventanas, pisos y cielos, losas no estructurales, escaleras | 2.236 | 322 espacios, 922 muros, 310 puertas, 126 ventanas, 506 recubrimientos de piso y cielo, 23 losas, 9 escaleras con 18 tramos |
 | Estructura | Columnas, vigas, losas nervadas y muros estructurales | 394 | 104 columnas, 187 vigas, 83 losas, 20 tramos de muro |
 | Cimentación | Arranques de columna, pilotes, dados y losas de pilotes, vigas de amarre, muros de contención, contrapiso, fosos y cisternas | 254 | 146 pilotes, 59 zapatas (dados, losas de pilotes y vigas de amarre), 28 arranques, 13 muros |
-| Refuerzo | Juegos de barras con su geometría (despiece del prediseño) | 6.170 juegos (64.849 barras) | Barras de refuerzo |
+| Refuerzo | Juegos de barras con su geometría (despiece del prediseño, con los arranques bajo el piso 1) | 6.393 juegos (64.570 barras) | Barras de refuerzo |
 | Equipamiento fijo e infraestructura | Aparatos sanitarios, tomas de gases, seguridad, energía, bombas, tanques, paneles solares, ascensores | 627 | 259 aparatos sanitarios, 64 extintores y gabinetes contra incendio, 58 señales de evacuación con luz, 55 tomas de gases en cabecera, 25 filas de paneles solares |
 | Dotación | Equipos biomédicos, mobiliario y laboratorio | 1.072 | 702 dispositivos médicos, 247 muebles, 123 equipos eléctricos |
 
@@ -79,8 +79,8 @@ El nivel de desarrollo **objetivo** es el de un modelo coordinado para el diseñ
 ## 6. Codificación de los elementos
 
 - **Identificadores estables del proyecto**, iguales en las plantas, la estructura, el inventario, el simulador y el modelo: recintos por piso y fila del programa (por ejemplo, P2-A066-01 es el primer consultorio de medicina general del piso 2), columnas por eje y piso (C-A1-1 es la columna A-1 del piso 1), vigas por dirección, eje, tramo y nivel (VX-1-AB-1), muros por núcleo (MX-3, MY-N6), dados y losas de pilotes (D-A1, LP-escalera_sur), pilotes por dado y unidades del inventario por servicio y línea.
-- **Identificador global IFC** de 22 caracteres, determinista: sale del identificador estable, así que regenerar el modelo no cambia los identificadores de lo que no cambió. 30.638 en el archivo principal y 39.677 en el del refuerzo, todos únicos y con formato válido; los dos archivos comparten solo los 47 del proyecto, el sitio, el edificio, los niveles, las fases y el programa.
-- **Conjuntos de propiedades:** los de IFC4 (por ejemplo, propiedades comunes de columnas, de concreto y del paso de estribos) y tres propios del atlas: uno con el tipo de dato, la fuente, la norma y el numeral de cada elemento; uno con el refuerzo y uno con las cantidades. La validación revisó 3.566 conjuntos y 16.679 propiedades contra las plantillas de IFC4: 0 problemas.
+- **Identificador global IFC** de 22 caracteres, determinista: sale del identificador estable, así que regenerar el modelo no cambia los identificadores de lo que no cambió. 30.662 en el archivo principal y 41.015 en el del refuerzo, todos únicos y con formato válido; los dos archivos comparten solo los 47 del proyecto, el sitio, el edificio, los niveles, las fases y el programa.
+- **Conjuntos de propiedades:** los de IFC4 (por ejemplo, propiedades comunes de columnas, de concreto y del paso de estribos) y tres propios del atlas: uno con el tipo de dato, la fuente, la norma y el numeral de cada elemento; uno con el refuerzo y uno con las cantidades. La validación revisó 3.578 conjuntos y 16.733 propiedades del archivo principal contra las plantillas de IFC4: 0 problemas.
 
 ## 7. Georreferenciación
 
@@ -96,7 +96,7 @@ El eje x del proyecto es el este verdadero; en la cuadrícula del Origen Naciona
 
 ## 8. Coordinación: detección de interferencias y su resultado
 
-**Qué se revisa** (cálculo propio): 1.699 unidades del inventario y 310 puertas contra columnas y muros estructurales; 2.449 sólidos de concreto entre sí; 922 muros de mampostería contra la estructura; los ductos de los 4 pisos contra vigas y cimentación; 18 tramos de escalera con su altura libre (≥ 2,05 m sobre la nariz de los peldaños); 146 pilotes dentro de sus dados; 64.849 barras en 582.942 parejas (cruces), 48.098 puntos de separación libre entre barras (contra el mínimo de NSR-10 C.7.6 y el tamaño máximo del agregado, 19 mm) y el recubrimiento de cada juego. Tolerancias: 10 mm entre sólidos y 1,5 mm entre barras.
+**Qué se revisa** (cálculo propio): 1.699 unidades del inventario y 310 puertas contra columnas y muros estructurales; 2.449 sólidos de concreto entre sí; 922 muros de mampostería contra la estructura; los ductos de los 4 pisos contra vigas y cimentación; 18 tramos de escalera con su altura libre (≥ 2,05 m sobre la nariz de los peldaños); 146 pilotes dentro de sus dados; 64.570 barras en 588.073 parejas (cruces), 48.369 puntos de separación libre entre barras (contra el mínimo de NSR-10 C.7.6 y el tamaño máximo del agregado, 19 mm) y el recubrimiento de cada juego. Tolerancias: 10 mm entre sólidos y 1,5 mm entre barras.
 
 **Severidad:** **dura**, choque físico o incumplimiento de norma: hay que corregirlo antes del diseño definitivo; **media**, congestión o falta de holgura: se resuelve en el detallado o en obra con una instrucción; **leve**, contacto o diferencia dentro de las tolerancias de construcción. Se aceptan sin contar el empotramiento de 0,10 m de la cabeza de los pilotes en los dados, las barras longitudinales en el doblez de su estribo (≤ 6,5 mm) y los traslapos de contacto (C.12.14.2.1).
 
@@ -104,14 +104,14 @@ El eje x del proyecto es el este verdadero; en la cuadrícula del Origen Naciona
 
 | Responsable | Duras antes | Duras después | Medias antes | Medias después | Leves antes | Leves después |
 |---|---:|---:|---:|---:|---:|---:|
-| Prediseño estructural (A) | 201 | 0 | 123 | 75 | 0 | 0 |
+| Prediseño estructural (A) | 201 | 0 | 123 | 73 | 0 | 0 |
 | Prediseño estructural y anteproyecto de plantas (A y B) | 33 | 0 | 6 | 1 | 0 | 0 |
 | Prediseño estructural y modelo BIM (A y F) | 0 | 0 | 495 | 607 | 0 | 0 |
 | Anteproyecto de plantas (B) | 46 | 0 | 21 | 0 | 0 | 0 |
 | Modelo BIM (F) | 0 | 0 | 0 | 0 | 7 | 7 |
-| **Total** | **280** | **0** | **645** | **683** | **7** | **7** |
+| **Total** | **280** | **0** | **645** | **681** | **7** | **7** |
 
-En total, 932 interferencias antes y 690 después (cálculo propio).
+En total, 932 interferencias antes y 688 después (cálculo propio).
 
 **Resultado por tipo** (duras antes → después): refuerzo fuera del concreto, 140 → 0; coherencia de la cimentación, 33 → 0; mampostería contra estructura, 30 → 0; escalera contra estructura, 25 → 0; ducto contra estructura, 13 → 0; puerta contra estructura, 9 → 0; foso contra cimentación, 7 → 0; pilote fuera del dado, 7 → 0; unidad del inventario contra estructura, 6 → 0; viga de amarre contra dado o losa de pilotes, 6 → 0; coherencia de la estructura y del despiece, 4 → 0.
 
@@ -119,15 +119,15 @@ En total, 932 interferencias antes y 690 después (cálculo propio).
 
 - **Prediseño estructural:** barras que se salían del concreto en nudos y bordes de muro (estribos y ganchos recalculados, bordes con acopladores); dados de 3 pilotes centrados en su grupo con los pilotes a 0,45 m o más de las caras; vigas de amarre enteras dentro de sus dos apoyos y con su cara superior a la del apoyo más bajo; foso de ascensores apoyado en el suelo, fuera de la huella de dados y losas de pilotes; esquinas de los muros asignadas a un solo muro; vigas banda del ancho del muro; traslapos de columnas en la mitad central del piso de arriba; aberturas de losa con vigas de borde para el ducto y la escalera principal; muros de contención en el borde del pasaje del bloque técnico.
 - **Anteproyecto de plantas:** la escalera principal abierta pasó a un solo vano (antes una viga cruzaba un tramo con 0,41 m libres); los ductos quedaron al oriente de su viga de borde; las puertas y las unidades del inventario se corrieron de columnas y muros estructurales; los muros del bloque técnico se ajustaron a la cimentación.
-- **Modelo BIM:** traslapos de columnas en el piso de arriba, estribos agregados en los nudos donde los del prediseño no cabían entre las barras de las vigas (14 estribos en 7 columnas, 76 kg), y los muros de contención y el contrapiso con su planta real.
+- **Modelo BIM:** traslapos de columnas en el piso de arriba, estribos agregados en los nudos donde los del prediseño no cabían entre las barras de las vigas (13 estribos en 13 columnas, 68 kg), los muros de contención y el contrapiso con su planta real, los arranques de columnas y muros bajo el piso 1 con sus estribos y ganchos, y las barras de las columnas ubicadas para el estribo más grueso de los dos pisos de su traslapo (con estribos N.º 5 en un piso y N.º 4 en el otro, los ganchos quedaban con 36 mm de recubrimiento).
 
-**Lo que queda** (no bloquea el prediseño): 607 cruces de barras de hasta unos 12 mm (se corren en el detallado o en obra hasta un diámetro; NSR-10 C.7.5 y C.7.6), 73 puntos con separación libre bajo el mínimo (congestión en nudos y bordes de muro), 2 de coherencia de la cimentación, 1 ducto junto a la cimentación y 7 contactos leves entre sólidos de concreto. Las medias «A y F» subieron de 495 a 607 sobre todo porque la coordinación agregó barras (cortinas continuas, estribos en nudos y bordes confinados en los arranques): hay más barras en los mismos nudos.
+**Lo que queda** (no bloquea el prediseño): 607 cruces de barras de hasta unos 12 mm (se corren en el detallado o en obra hasta un diámetro; NSR-10 C.7.5 y C.7.6), 71 puntos con separación libre bajo el mínimo (congestión en nudos y bordes de muro), 2 de coherencia de la cimentación, 1 ducto junto a la cimentación y 7 contactos leves entre sólidos de concreto. Las medias «A y F» subieron de 495 a 607 sobre todo porque la coordinación agregó barras (cortinas continuas, estribos en nudos y bordes confinados en los arranques): hay más barras en los mismos nudos.
 
 ## 9. Cantidades contra el presupuesto (5D)
 
 ### 9.1 Estructura y cimentación: el ajuste pendiente del prediseño estructural
 
-**Por qué cambia.** El presupuesto vigente supuso columnas de 0,60 × 0,60 m, vigas de 0,40 × 0,60 m, ≈ 45 m de muro de 0,30 m y ≈ 100 pilotes de 12 m. Con esas secciones, el modelo sísmico del prediseño daba una deriva vectorial de diseño de **2,09 %** (y 2,17 % al equilibrar la torsión), el doble del 1 % que permite la NSR-10 (Tabla A.6.4-1), y un cociente torsional de 1,561, en el rango de la torsión extrema (más de 1,4), que el prediseño se impuso evitar por ser un edificio indispensable. Para cumplir, el prediseño llevó las columnas a 0,80 m (0,90 m en la fachada occidental), las vigas a 0,40 × 0,80 m (0,50 × 0,90 m en ese eje), los muros a 0,35 m en 5 paños y la losa nervada a 0,45 m: la deriva bajó a **0,939 %** (documento 14). Las cargas mayores y el sismo de capacidad pidieron pilotes de 15 m (con 12 m no alcanzaba la capacidad estimada) y más pilotes: **146**, con losas de pilotes bajo los dos núcleos de escaleras.
+**Por qué cambia.** El presupuesto vigente supuso columnas de 0,60 × 0,60 m, vigas de 0,40 × 0,60 m, ≈ 45 m de muro de 0,30 m y ≈ 100 pilotes de 12 m. Con esas secciones, el modelo sísmico del prediseño (con la base en la cara superior de los dados) daba una deriva vectorial de diseño de **2,45 %** (y 2,36 % al equilibrar la torsión), casi dos veces y media el 1 % que permite la NSR-10 (Tabla A.6.4-1), y un cociente torsional de 1,672, en el rango de la torsión extrema (más de 1,4), que el prediseño se impuso evitar por ser un edificio indispensable. Para cumplir, el prediseño llevó las columnas a 0,80 m (0,90 m en la fachada occidental), las vigas a 0,40 × 0,80 m (0,50 × 0,90 m en ese eje y en la fachada sur), los muros a 0,35 m en 5 paños y la losa nervada a 0,45 m: la deriva bajó a **0,940 %** (documento 14). Las cargas mayores y el sismo de capacidad pidieron pilotes de 15 m (con 12 m no alcanzaba la capacidad estimada) y más pilotes: **146**, con losas de pilotes bajo los dos núcleos de escaleras.
 
 **Cuánto cambia** (cálculo propio con los valores unitarios del presupuesto; costo directo, sin AIU):
 
@@ -135,32 +135,32 @@ En total, 932 interferencias antes y 690 después (cálculo propio).
 |---|---|---|---:|---:|---:|---:|---:|
 | 2.04 | Pilote preexcavado de 0,60 m | ml | 1.200 | 2.190 | 2.190 | $526.716.630 | $526.716.630 |
 | 2.05 | Descabezado de pilotes | un | 100 | 146 | 146 | $3.910.000 | $3.910.000 |
-| 2.07 | Concreto en dados y losas de pilotes | m³ | 149 | 478,2 | 478,2 | $390.870.995 | $390.870.817 |
-| 2.08 | Concreto en vigas de cimentación | m³ | 112 | 30,0 | 30,0 | −$98.991.438 | −$98.991.670 |
+| 2.07 | Concreto en dados y losas de pilotes | m³ | 149 | 517,7 | 517,7 | $437.834.046 | $437.833.868 |
+| 2.08 | Concreto en vigas de cimentación | m³ | 112 | 29,3 | 29,3 | −$99.860.845 | −$99.861.077 |
 | 2.09 | Concreto en cisternas, fosos y muros de contención | m³ | 85 | 83,4 | 82,2 | −$2.068.483 | −$3.754.745 |
-| 2.12 | Losa de contrapiso | m² | 1.050,8 | 741,7 | 865,9 | −$48.584.277 | −$29.056.673 |
-| 2.13 | Acero de refuerzo de cimentación | kg | 57.020 | 144.143 | 147.292 | $703.956.092 | $729.395.659 |
-| 3.01 | Concreto en columnas | m³ | 160 | 303,8 | 319,7 | $186.727.366 | $207.338.524 |
-| 3.02 | Concreto en muros estructurales | m³ | 200 | 173,6 | 181,0 | −$34.314.718 | −$24.693.097 |
-| 3.03 | Concreto en vigas y losa nervada | m³ | 834 | 624,9 | 642,1 | −$257.947.326 | −$236.705.265 |
+| 2.12 | Losa de contrapiso | m² | 1.050,8 | 1.009,6 | 1.006,7 | −$6.482.628 | −$6.925.202 |
+| 2.13 | Acero de refuerzo de cimentación | kg | 57.020 | 151.623 | 155.850 | $764.389.423 | $798.549.551 |
+| 3.01 | Concreto en columnas, con sus arranques bajo el piso 1 | m³ | 160 | 319,7 | 319,7 | $207.338.187 | $207.338.524 |
+| 3.02 | Concreto en muros estructurales, con sus arranques | m³ | 200 | 181,7 | 181,0 | −$23.742.514 | −$24.693.097 |
+| 3.03 | Concreto en vigas y losa nervada | m³ | 834 | 631,7 | 649,4 | −$249.561.555 | −$227.696.629 |
 | 3.04 | Concreto en escaleras | m³ | 45 | 80,2 | 82,0 | $45.647.058 | $47.999.976 |
-| 3.05 | Acero de refuerzo de la superestructura | kg | 160.200 | 147.142 | 144.997 | −$105.506.884 | −$122.838.139 |
-| | **Cimentación (capítulo 2)** | | | | | **$1.475.809.519** | **$1.519.090.018** |
-| | **Superestructura (capítulo 3)** | | | | | **−$165.394.504** | **−$128.898.001** |
-| | **Total de costo directo** | | | | | **$1.310.415.015** | **$1.390.192.017** |
+| 3.05 | Acero de refuerzo de la superestructura (con los arranques) | kg | 160.200 | 150.184 | 145.288 | −$80.929.269 | −$120.487.182 |
+| | **Cimentación (capítulo 2)** | | | | | **$1.624.438.143** | **$1.656.469.025** |
+| | **Superestructura (capítulo 3)** | | | | | **−$101.248.093** | **−$117.538.408** |
+| | **Total de costo directo** | | | | | **$1.523.190.050** | **$1.538.930.617** |
 
-**Lectura.** Casi todo el aumento está en la **cimentación**: más metros de pilote (+$527 M), dados y losas de pilotes más grandes (+$391 M) y el doble y medio de acero (+$704 M a $729 M). La superestructura cuesta **menos** que lo presupuestado: las columnas y escaleras suben, pero la losa nervada de 0,45 m gasta menos concreto que los 0,24 m³ por m² del presupuesto y el acero de la superestructura baja entre 8 % y 9,5 %. Las dos columnas de efecto difieren porque el modelo mide la geometría (columnas de piso a piso, vigas entre caras de columnas, losas con nervios y riostras, barras dibujadas con sus traslapos y estribos de nudo) y el prediseño mide con espesores equivalentes sobre el área a ejes; la suma de vigas y losas casi no cambia.
+**Lectura.** Casi todo el aumento está en la **cimentación**: más metros de pilote (+$527 M), dados y losas de pilotes más grandes (+$438 M) y más de dos veces y media el acero presupuestado (+$764 M a $799 M). La superestructura cuesta **menos** que lo presupuestado: las columnas (con sus arranques bajo el piso 1) y las escaleras suben, pero la losa nervada de 0,45 m gasta menos concreto que los 0,24 m³ por m² del presupuesto y el acero de la superestructura baja entre 6 % y 9 %. El contrapiso pasa por encima de los dados y las losas de pilotes y solo descuenta los fosos y los arranques, igual en el prediseño y en el modelo. Las dos columnas de efecto difieren porque el modelo mide la geometría (columnas de piso a piso, vigas entre caras de columnas, losas con nervios y riostras, barras dibujadas con sus traslapos y estribos de nudo) y el prediseño mide con espesores equivalentes sobre el área a ejes; la suma de vigas y losas casi no cambia.
 
 **Efecto en el presupuesto** (cálculo propio; documento 11):
 
-- Costo directo: **+$1.310 M a +$1.390 M** (6,6 % a 7,0 % del costo directo de la obra, $19.727 M); los capítulos 2 y 3 pasan de $4.813 M a $6.123 M o $6.203 M (+27,2 % a +28,9 %).
-- Con AIU (factor 1,3295 del presupuesto: 24 % de administración, 3 % de imprevistos y 5 % de utilidad con su IVA): **+$1.742 M a +$1.848 M**; el valor de la obra pasaría de $26.228 M a $27.970 M o $28.076 M ($7,73 M a $7,75 M por m² construido, sobre 3.620,6 m²).
-- Si además se recalculan los rubros que el presupuesto calcula como porcentaje del valor de obra (interventoría 7 %, contingencia 5 % y diseños y licencia ≈ 6,0 %), el total de la torre subiría ≈ $2.055 M a $2.180 M (5,5 % a 5,9 %), de $37.137 M a ≈ $39.193 M o $39.318 M (estimación).
+- Costo directo: **+$1.523 M a +$1.539 M** (7,7 % a 7,8 % del costo directo de la obra, $19.727 M); los capítulos 2 y 3 pasan de $4.813 M a $6.336 M o $6.352 M (+31,6 % a +32,0 %).
+- Con AIU (factor 1,3295 del presupuesto: 24 % de administración, 3 % de imprevistos y 5 % de utilidad con su IVA): **+$2.025 M a +$2.046 M**; el valor de la obra pasaría de $26.228 M a $28.253 M o $28.274 M ($7,80 M a $7,81 M por m² construido, sobre 3.620,6 m²).
+- Si además se recalculan los rubros que el presupuesto calcula como porcentaje del valor de obra (interventoría 7 %, contingencia 5 % y diseños y licencia ≈ 6,0 %), el total de la torre subiría ≈ $2.389 M a $2.414 M (6,4 % a 6,5 %), de $37.137 M a ≈ $39.526 M o $39.551 M (estimación).
 - **El presupuesto no se edita en esta versión:** el ajuste queda pendiente con estas cifras, para que lo haga el equipo del presupuesto con el diseño estructural y el estudio geotécnico (que puede bajar o subir el número y el largo de los pilotes).
 
 ### 9.2 Lo demás del modelo frente al presupuesto
 
-En las demás partidas medibles el modelo da, en neto, **−$296,9 M** de costo directo frente al presupuesto: más muro de bloque (+$273,1 M en el ítem 4.01) y de cerramiento, y menos fachada de ladrillo, piso vinílico, cielo raso, impermeabilización y puertas (cálculo propio). Son mediciones del **anteproyecto ilustrativo**: no se adoptan como ajuste hasta tener el diseño arquitectónico. Los ítems globales (redes, equipos, solar) se enlazan sin cantidad propia y no cambian.
+En las demás partidas medibles el modelo da, en neto, **−$297,9 M** de costo directo frente al presupuesto: más muro de bloque (+$273,1 M en el ítem 4.01) y de cerramiento, y menos fachada de ladrillo, piso vinílico, cielo raso, impermeabilización y puertas (cálculo propio). Son mediciones del **anteproyecto ilustrativo**: no se adoptan como ajuste hasta tener el diseño arquitectónico. Los ítems globales (redes, equipos, solar) se enlazan sin cantidad propia y no cambian.
 
 En la dotación, la suma de las unidades del modelo es igual al indirecto del presupuesto: **$3.251.187.277** en la dotación biomédica y el mobiliario clínico, sin diferencia; también cuadran el laboratorio, los equipos TIC y el generador de oxígeno (cálculo propio). Los equipos que van dentro de los kits y carros (urgencias, consulta externa, partos y hospitalización) están en el modelo, cada uno con su registro y su clase de riesgo, pero no suman precio: el del kit ya los incluye (documento 15, implementos internos). Antes el modelo los sumaba aparte y contaba $257,9 M dos veces. Con la misma regla, el cierre de brechas del modelo suma $46.904.906, lo mismo que `dotacion.json`.
 
@@ -182,14 +182,14 @@ En el archivo IFC, 28 de las 29 tareas tienen elementos asignados (la de puesta 
 
 | Archivo | Tamaño | Entidades | Esquema | Contenido |
 |---|---:|---:|---|---|
-| Torre del hospital (arquitectura, estructura, cimentación, equipamiento y dotación) | 7,3 MB | 83.243 | IFC4, 0 errores | 4.583 elementos de 31 clases con sus cantidades, 66 partidas 5D y 29 tareas 4D |
-| Refuerzo | 12,26 MB | 156.852 | IFC4, 0 errores | 64.849 barras con su geometría (292.289 kg) y 2 partidas 5D |
+| Torre del hospital (arquitectura, estructura, cimentación, equipamiento y dotación) | 7,31 MB | 83.348 | IFC4, 0 errores | 4.583 elementos de 31 clases con sus cantidades, 66 partidas 5D y 29 tareas 4D |
+| Refuerzo | 12,48 MB | 159.850 | IFC4, 0 errores | 64.570 barras con su geometría (301.139 kg) y 2 partidas 5D |
 
 Se partió en dos porque un solo archivo pasaba de ≈ 15 MB. Validación con IfcOpenShell 0.9.0 en un entorno aparte (no es dependencia del sitio; cálculo propio):
 
 - Esquema IFC4 y reglas EXPRESS: 0 errores en los dos archivos.
 - Los 4.583 elementos del modelo están en el IFC, con los mismos conteos en las 31 clases.
-- Concreto: 2.600,1 m³ en las cantidades y 2.598,7 m³ medidos sobre la geometría (diferencia de 1,3 m³, 0,05 %); acero: 292.289 kg en las cantidades y en el modelo, con las 64.849 barras dibujadas.
+- Concreto: 2.646,2 m³ en las cantidades y 2.644,9 m³ medidos sobre la geometría (diferencia de 1,3 m³, 0,05 %); acero: 301.139 kg en las cantidades y en el modelo, con las 64.570 barras dibujadas.
 - Una muestra de 79 elementos y 43 barras tiene la misma caja envolvente que el modelo, con diferencias de 0,5 mm o menos.
 - 5D: las 66 y 2 partidas del presupuesto llevan el mismo valor que el presupuesto; 4D: 29 tareas, 0 errores.
 - Georreferenciación igual en los dos archivos y en el modelo.
@@ -204,10 +204,10 @@ La torre mantiene la lógica estructural del proyecto tipo DNP 2018 (pórticos d
 
 | Tema | Proyecto tipo DNP 2018 | Torre | Frente al tipo |
 |---|---|---|---|
-| Sistema estructural | Pórticos de concreto de un piso con viga-canal en voladizo; placa maciza de 0,12 m | Dual: 5 muros de concreto de 0,35 m en los núcleos y pórticos con columnas de 0,80 m (0,90 m en el eje A) y vigas de 0,40 × 0,80 m | Se aparta: 4 pisos y edificación indispensable |
+| Sistema estructural | Pórticos de concreto de un piso con viga-canal en voladizo; placa maciza de 0,12 m | Dual: 5 muros de concreto de 0,35 m en los núcleos y pórticos con columnas de 0,80 m (0,90 m en el eje A) y vigas de 0,40 × 0,80 m (0,50 × 0,90 m en las fachadas occidental y sur) | Se aparta: 4 pisos y edificación indispensable |
 | Capacidad de disipación | Por confirmar en el PDF del tipo | Moderada (DMO), R = 4,86, con criterios de capacidad especial en columnas | Mejora (por confirmar) |
 | Cimentación | Superficial, en concreto de 3.000 psi | 146 pilotes de 0,60 m × 15 m bajo 20 dados y 2 losas de pilotes | Se aparta: suelo aluvial y 4 pisos |
-| Cuantías por m² | Por confirmar en el PDF; estructura con cimentación a $1.541.451 por m² | 0,74 m³ de concreto y 86,4 kg de acero por m² construido de la torre; estructura con cimentación a $2.248.544 por m² con el prediseño (1,46 veces el tipo; 1,15 veces con el presupuesto vigente) | Se aparta (por confirmar) |
+| Cuantías por m² | Por confirmar en el PDF; estructura con cimentación a $1.541.451 por m² | 0,73 m³ de concreto y 89,6 kg de acero por m² construido de la torre (superestructura con los arranques y cimentación sin el contrapiso, la misma base en concreto y en acero); estructura con cimentación a $2.326.676 por m² con el prediseño (1,51 veces el tipo; 1,15 veces con el presupuesto vigente) | Se aparta (por confirmar) |
 | Luces | 7,60 × 4,30 m | 7,20 m en x; de 4,80 a 8,40 m en y, múltiplos de 1,20 m | Se aparta: módulo de la Res. 1633 |
 | Alturas | 1 piso de ≈ 4,36 m | Entrepisos de 4,50 m y 4,20 m; 3,00 m libres bajo cielo raso; 0,40 m entre las vigas y el cielo para redes | Mejora (por confirmar) |
 
@@ -223,11 +223,11 @@ El detalle está en la tarjeta «Contraste con el proyecto tipo» de la vista y 
 
 ## 15. Lo que falta y próximos pasos
 
-- Ajustar el presupuesto con el prediseño estructural (+$1.310 M a +$1.390 M de costo directo) cuando el diseño estructural y el estudio geotécnico lo confirmen.
+- Ajustar el presupuesto con el prediseño estructural (+$1.523 M a +$1.539 M de costo directo) cuando el diseño estructural y el estudio geotécnico lo confirmen.
 - Llevar el modelo a LOD 300-350 con los diseños firmados: modelar las redes y repetir la detección de interferencias con ellas.
 - Confirmar la adopción colombiana de la serie ISO 19650, el texto de la Estrategia Nacional BIM 2020-2026 y si la entidad que financie exige BIM y con qué requisitos de información.
 - Confirmar la altura del ±0,00, el tipo de suelo, la capacidad de los pilotes y el nivel freático.
-- Resolver en el detallado las 683 interferencias medias (cruces y separación de barras en nudos y bordes de muro).
+- Resolver en el detallado las 681 interferencias medias (cruces y separación de barras en nudos y bordes de muro).
 
 ## 16. Fuentes
 

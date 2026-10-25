@@ -327,7 +327,7 @@
   {
    "codigo": "2",
    "capitulo": "Movimiento de tierras y cimentación",
-   "nota": "Supuesto de prediseño: pilotes preexcavados bajo dados por suelo aluvial del Magdalena (perfil D o E probable, normas.json). Lo define el estudio geotécnico; si permite zapatas, el capítulo baja.",
+   "nota": "Supuesto de prediseño: pilotes preexcavados bajo dados por suelo aluvial del Magdalena (perfil D o E probable, normas.json). Lo define el estudio geotécnico; si permite zapatas, el capítulo baja. Ajuste pendiente: el prediseño que cumple la NSR-10 lleva 146 pilotes de 15 m bajo 20 dados y 2 losas de pilotes; estas cantidades no se cambian en esta versión (documento 11, sección 6.3).",
    "items": [
     {
      "codigo": "2.01",
@@ -571,7 +571,7 @@
   {
    "codigo": "3",
    "capitulo": "Estructura en concreto reforzado (NSR-10, grupo IV, coeficiente de importancia 1,5)",
-   "nota": "Pórticos con muros en los núcleos de escaleras y ascensores (sistema combinado). Cantidades de prediseño: 0,36 m³ de concreto y 62 kg de acero por m² de placa; las fija el diseño estructural.",
+   "nota": "Pórticos con muros en los núcleos de escaleras y ascensores (sistema combinado). Cantidades de prediseño: 0,36 m³ de concreto y 62 kg de acero por m² de placa; las fija el diseño estructural. Ajuste pendiente: el prediseño que cumple la NSR-10 adoptó un sistema dual con capacidad moderada de disipación de energía (DMO), con columnas de 0,80 y 0,90 m y muros de 0,35 m; estas cantidades no se cambian en esta versión (documento 11, sección 6.3).",
    "items": [
     {
      "codigo": "3.01",

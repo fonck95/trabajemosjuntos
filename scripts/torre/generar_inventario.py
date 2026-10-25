@@ -2863,7 +2863,8 @@ class Matriz:
             uni = list(dict.fromkeys(ev['dotacion_actual'][3] + ev['con_cierre_de_brechas'][3]))
             d = {'id': x['id'], 'estandar': x.get('estandar'), 'numeral': x.get('numeral'), 'numeral_confirmado': x.get('numeral_confirmado'),
                  'texto_corto': corto, 'que_exige': x.get('que_exige'), 'texto_disponible': x.get('texto_disponible'),
-                 'verificacion_texto': x.get('verificacion_texto'), 'exigible': x.get('exigible'),
+                 'verificacion_texto': x.get('verificacion_texto'), 'verificacion_origen': x.get('verificacion_origen'),
+                 'exigible': x.get('exigible'),
                  'ambientes': [{'fila': a['fila'], 'nombre': a['nombre']} for a in x.get('ambientes', []) or []], 'recintos': recs,
                  'regla': x.get('regla'), 'requerido': ev['dotacion_actual'][1],
                  'encontrado': {esc: ev[esc][2] for esc in ESCENARIOS}, 'unidades': uni,
@@ -2893,8 +2894,10 @@ class Matriz:
             ps = por_servicio.get(sid, {'propias': [], 'compartidas': []})
             s = {'id': sid}
             s.update(meta)
-            if meta.get('habilitable') == 'si':
-                s['resumen'] = self.resumen(ps['propias'])
+            # el resumen va en todos los servicios (revisión final: en los que no se habilitan como tales, como esterilización o
+            # toma de muestras, la tabla de la web los mostraba en cero aunque tienen exigencias que faltan); «habilitable»
+            # dice con qué condición se leen
+            s['resumen'] = self.resumen(ps['propias'])
             s['exigencias'] = ps['propias']
             if ps['compartidas']:
                 s['exigencias_compartidas'] = ps['compartidas']

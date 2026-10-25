@@ -8,16 +8,26 @@
 //   · niveles: entra al recorrido y captura cada nivel (exteriores, pisos 1 a 4, bloque técnico y cubierta) en claro, oscuro
 //     y teléfono (390 × 844, táctil): consola sin errores, sin desborde horizontal, etiquetas dentro del recuadro, el minimapa
 //     no tapa «Rendimiento» y la barra no tapa el joystick; cada botón de la barra cabe en ella sin tocar «Rendimiento» y el
-//     recinto actual se lee sobre el recuadro; textos sin rutas ni claves internas.
+//     recinto actual se lee sobre el recuadro; textos sin rutas ni claves internas; ninguna vista sale de un solo color (un
+//     punto de vista pegado a un muro). Los pisos 2 a 4 y la cubierta miran desde una entrada del recorrido de la planta.
 //   · alcance: recorrido en anchura sobre la rejilla de colisión de cada nivel desde sus entradas, pasos, ascensores y
 //     escaleras: falla si queda un recinto transitable al que no se llega caminando (16.1).
 //   · unidades: «Ir a» cada una de las unidades de la torre y un clic en el punto que dejó a la vista: debe seleccionarla (o
 //     a su contenedor); las que ningún lugar deja ver por su ubicación en los datos se listan aparte.
 //   · guion: camina con teclas por los 4 pisos, los exteriores, el bloque técnico y la cubierta sin quedar en un muro; cruza
-//     la puerta principal (exteriores → piso 1); sube y baja una escalera caminando; cambia de piso en el ascensor; no pisa
-//     el hueco de la escalera abierta del piso 2; abre las fichas del carro de paro (implementos), de un analizador en
-//     comodato (reactivos), de un panel solar, del manifold de gases y de un lavamanos; usa «Ir a» desde el buscador;
-//     cámara (plano cercano, rumbo tras 60 cuadros, campo horizontal) y selección (clic en muro, arrastre).
+//     la puerta principal (exteriores → piso 1); sube y baja una escalera caminando; sube la escalera principal abierta;
+//     los costados de las escaleras y los descansos altos que dan a un piso (la escalera principal, abierta al vestíbulo)
+//     lo detienen como un muro, quieto cerca del borde y sin subirlo a ellos; en todas las juntas entre descanso y tramo de
+//     todas las escaleras el carril de la rejilla es continuo y el caminante pasa sin trabarse, subiendo y bajando, a lo
+//     ancho del carril (bordes junto al ojo y al muro incluidos) y a ±15° del eje, y con teclas sube la escalera principal
+//     desde el muro del descanso; sale del piso 4 a la terraza y vuelve; cambia de piso en el ascensor;
+//     la baranda del hueco de la escalera abierta del piso 2 lo detiene como un muro y solo se entra en él bajando; la
+//     entrada del botón «Laboratorio» está libre, en la puerta y se cruza; abre las fichas del carro de paro (implementos),
+//     de un analizador en comodato (reactivos), de un panel solar, del manifold de gases y de un lavamanos; usa «Ir a»
+//     desde el buscador; cámara (plano cercano, rumbo tras 60 cuadros, campo horizontal) y selección (clic en muro,
+//     arrastre). La escalera principal y sus costados, la terraza, el hueco y la entrada del laboratorio toman sus puntos y
+//     metas de la planta publicada (escaleras[].partes, pasos_entre_niveles, obstaculos_recorrido y entradas_recorrido), no
+//     de cifras fijas.
 //   · juego: entra caminando desde el corredor a la escalera de evacuación norte del piso 2 (por su puerta); salta (los
 //     pies suben ≈ 1,2 m y vuelven al piso; bajo un dintel se detiene) y queda parado sobre una cama y sobre una fila de
 //     paneles de la terraza; el modo espectador (V) sube con Espacio a través
@@ -29,7 +39,8 @@
 //   · teclado: solo teclado (botón → recuadro → flechas → Tab al panel → Enter abre una ficha), atajos del navegador sin
 //     interceptar, escribir en el buscador no mueve, perder el foco detiene; con prefers-reduced-motion, saltos sin fundido.
 //   · presupuesto: llamadas de dibujo y triángulos de cada nivel (5.2 y 16.6): baja en 390 × 844 y media en 1400 × 900.
-//   · salida: al salir, fov 36° y controles como antes, y «Con la torre» se ve igual que antes de entrar.
+//   · salida: al salir, fov 36° y controles como antes, y «Con la torre» se ve igual que antes de entrar (cada captura con el
+//     cuadro ya quieto, no tras una espera fija, y a la misma resolución adaptativa del motor).
 // Sale con código 1 si algo falla. Las capturas y el informe (recorrido_qa.json) quedan en --salida.
 import { opciones, servidor, navegador, abrir, esperar, desborde, textosInternos, captura, informe, guardarJSON } from './comun.mjs';
 
@@ -105,9 +116,11 @@ async function niveles() {
     const { page, registro, cerrar } = await pagina({ tema, telefono });
     await page.evaluate(() => document.querySelector('#v-torre .stage').scrollIntoView({ block: 'center' }));
     if (!comprobar(await entrar(page), `${nombre}: entra al recorrido`)) { await cerrar(); continue; }
-    // un punto de vista representativo de cada nivel
+    // un punto de vista representativo de cada nivel; los pisos 2 a 4 y la cubierta, desde una entrada del recorrido de la
+    // planta (punto y rumbo de entradas_recorrido): un punto fijo puede quedar pegado a un muro cuando cambia el trazado
+    // (el del piso 2 quedó a 0,4 m de uno y la vista salía gris entera)
     const vistas = {
-      EXT: { nivel: 'EXT', posicion: [-27, -15], rumbo_deg: 28, pitch_deg: 6 }, P1: { nivel: 'P1', posicion: [-11.4, -8.8], rumbo_deg: 10 }, P2: { nivel: 'P2', posicion: [-1.7, -10.9], rumbo_deg: 270, pitch_deg: -12 },
+      EXT: { nivel: 'EXT', posicion: [-27, -15], rumbo_deg: 28, pitch_deg: 6 }, P1: { nivel: 'P1', posicion: [-11.4, -8.8], rumbo_deg: 10 }, P2: { nivel: 'P2', entrada: 'laboratorio' },
       P3: { nivel: 'P3', entrada: 'estacion' }, P4: { nivel: 'P4', entrada: 'terapias' }, BT: { nivel: 'BT', posicion: [5.9, -22.3], rumbo_deg: 180, pitch_deg: -8 },
       CUB: { nivel: 'CUB', entrada: 'cubierta' },
     };
@@ -117,6 +130,9 @@ async function niveles() {
       await cuadros(page, 4);
       comprobar(e?.nivel === id && !e.en_muro, `${nombre} ${id}: ${nivelTxt(e)}`);
       await captura(page, op, `recorrido-${id}-${nombre}`);
+      // la vista no es de un solo color: el más frecuente (a 16 niveles por canal) cubre menos del 70 % del recuadro
+      const v = variedad(png(await page.locator('#v-torre .stage').screenshot()));
+      comprobar(v.dominante < 0.7 && v.sd >= 6, `${nombre} ${id}: la vista no es de un solo color (el más frecuente cubre ${(v.dominante * 100).toFixed(0)} % del recuadro; desviación de la luminancia ${v.sd.toFixed(1)})`);
       // diseño sobre el recuadro: etiquetas dentro, minimapa sin tapar «Rendimiento», barra sin tapar el joystick
       const d = await page.evaluate(() => {
         const st = document.querySelector('#v-torre .stage').getBoundingClientRect(), R = (s) => document.querySelector(s)?.getBoundingClientRect();
@@ -470,6 +486,141 @@ async function girarHasta(page, rumbo, pitch = 0) {
   return estado(page);
 }
 const dentroRect = ([x, y], [x0, y0, x1, y1], m = 0) => x >= x0 - m && x <= x1 + m && y >= y0 - m && y <= y1 + m;
+// distancia de un punto a un rectángulo, negativa si está adentro
+const distRect = ([x, y], [x0, y0, x1, y1]) => (dentroRect([x, y], [x0, y0, x1, y1]) ? -Math.min(x - x0, x1 - x, y - y0, y1 - y) : Math.hypot(Math.max(x0 - x, 0, x - x1), Math.max(y0 - y, 0, y - y1)));
+// geometría de la planta publicada (torre_plantas.json): las comprobaciones de escaleras, pasos, huecos y entradas leen de
+// allí sus puntos y metas, no cifras fijas (la planta cambia con el trazado y con la coordinación BIM)
+// radio del caminante y celda de la rejilla de colisión (planta3d.js con el RADIO de recorrido.js): guion() los lee del
+// nivel armado (__recorridoQA.nivel()), así los márgenes de los costados, del hueco y del ojo siguen a la colisión
+let RADIO = 0.20, CELDA = 0.10;
+const rumboHacia = ([x0, y0], [x1, y1]) => ((Math.atan2(y1 - y0, x1 - x0) * 180) / Math.PI + 360) % 360;
+const enPoligono = (x, y, pol) => { let d = false; for (let i = 0, j = pol.length - 1; i < pol.length; j = i++) { const [xi, yi] = pol[i], [xj, yj] = pol[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) d = !d; } return d; };
+const distSegmento = ([x, y], [ax, ay], [bx, by]) => { const vx = bx - ax, vy = by - ay, t = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / (vx * vx + vy * vy || 1))); return Math.hypot(ax + t * vx - x, ay + t * vy - y); };
+// distancia de un punto al borde de un polígono, negativa si está adentro
+const distPoligono = (p, pol) => { const d = Math.min(...pol.map((a, i) => distSegmento(p, a, pol[(i + 1) % pol.length]))); return enPoligono(p[0], p[1], pol) ? -d : d; };
+const recintoEn = (nivel, [x, y]) => (nivel?.recintos || []).find((r) => enPoligono(x, y, r.poligono)) || null;
+// eje de un tramo de escalera: índice de la coordenada a lo largo (k), sentido de subida (s), bordes bajo y alto a lo
+// largo y centro del carril a través
+function ejeTramo(p) {
+  const r = (+p.sube_hacia_deg * Math.PI) / 180, dx = Math.round(Math.cos(r)), dy = Math.round(Math.sin(r)), [x0, y0, x1, y1] = p.rect;
+  const k = dx ? 0 : 1, s = dx || dy, lo = k ? y0 : x0, hi = k ? y1 : x1;
+  return { k, s, bajo: s > 0 ? lo : hi, alto: s > 0 ? hi : lo, carril: k ? (x0 + x1) / 2 : (y0 + y1) / 2, rumbo: ((+p.sube_hacia_deg % 360) + 360) % 360 };
+}
+const enEje = (k, a, c) => (k === 0 ? [a, c] : [c, a]);
+// mantiene teclas oprimidas hasta que el caminante queda quieto (menos de 3 mm en cada una de tres tandas seguidas de 3
+// cuadros de la página: no depende de la cadencia de cuadros del navegador sin GPU) o se acaba el tiempo
+async function caminarHastaParar(page, teclas, { ms = 10000, nombre = '' } = {}) {
+  await alRecuadro(page);
+  await page.evaluate(() => document.querySelector('#v-torre .stage').focus({ preventScroll: true }));
+  for (const t of teclas) await page.keyboard.down(t);
+  const t0 = Date.now();
+  let e = await estado(page), quieto = 0, enMuro = 0;
+  try {
+    while (Date.now() - t0 < ms && quieto < 3) {
+      await cuadros(page, 3);
+      const q = await estado(page);
+      if (!q) break;
+      if (q.en_muro) enMuro++;
+      quieto = q.nivel === e.nivel && Math.hypot(q.posicion[0] - e.posicion[0], q.posicion[1] - e.posicion[1]) < 0.003 ? quieto + 1 : 0;
+      e = q;
+    }
+  } finally { for (const t of [...teclas].reverse()) await page.keyboard.up(t); }
+  if (enMuro) falla(`${nombre}: el caminante quedó ${enMuro} veces en una celda de muro`);
+  return { detenido: quieto >= 3, e };
+}
+// Pasos entre descanso y tramo en todas las escaleras de la planta publicada. Por cada extremo de cada tramo, su descanso:
+// el de piso o el intermedio del mismo nivel que lo toca a la misma cota, o el de piso del nivel de arriba (la llegada, que
+// se prueba en ese nivel). En cada junta:
+//   · carril continuo en la rejilla: el carril del tramo (celdas libres seguidas a lo ancho, a 0,6 m de la junta) tiene en el
+//     descanso, del lado que no da al ojo, el mismo borde: la celda de afuera que lo cierra en el tramo también está tapada
+//     en el descanso a 0,15 y 0,35 m de la junta (salvo donde el descanso da a un piso a su misma altura: el de piso de la
+//     escalera principal, al vestíbulo). Una celda de más en el descanso es un escalón donde quien camina justo en la
+//     dirección del eje se traba;
+//   · caminando (gancho caminar de __recorridoQA: la misma función que mueve al caminante en cada cuadro, en cuadros de
+//     1/30 s, sin teclas): del descanso al tramo y del tramo al descanso, desde 0,45 m antes de la junta, con 5
+//     desplazamientos a lo ancho del carril (sus dos bordes, junto al ojo y junto al muro o la baranda, incluidos) y, del
+//     descanso al tramo, también a 2 celdas afuera de cada borde si allí el descanso está libre (frente a la punta del ojo);
+//     con el rumbo del eje y ±15°. Debe pasar la junta por 0,45 m en no más de 3 s, sin quedar nunca en una celda de muro
+//     y desde el punto pedido (libre).
+async function transiciones(page, NV, R) {
+  const juntas = [];
+  for (const [id, n] of NV) for (const esc of n.escaleras || []) for (const p of esc.partes || []) {
+    if (p.tipo !== 'tramo') continue;
+    const t = ejeTramo(p), kc = 1 - t.k;
+    for (const fin of ['bajo', 'alto']) {
+      const J = t[fin], z = fin === 'bajo' ? +p.z0 : +p.z1, dirIn = fin === 'bajo' ? t.s : -t.s;
+      const toca = (q, dz = 0) => q.tipo !== 'tramo' && Math.abs(+q.z + dz - z) < 0.05 && Math.abs((dirIn > 0 ? q.rect[t.k + 2] : q.rect[t.k]) - J) < 0.02;
+      let marco = id, d = (esc.partes || []).find((q) => toca(q));
+      const ar = esc.sube_a && NV.get(esc.sube_a);
+      if (!d && ar) { d = ((ar.escaleras || []).find((x) => x.id === esc.id)?.partes || []).find((q) => toca(q, ar.z - n.z)); if (d) marco = ar.id; }
+      juntas.push({ txt: `${id} ${esc.id} ${fin === 'bajo' ? 'arranque' : 'llegada'} del tramo ${p.rect.join(',')}${marco !== id ? ` (en ${marco})` : ''}`, marco, k: t.k, kc, c0: p.rect[kc], c1: p.rect[kc + 2], J, dirIn, rectD: d?.rect || null, ojo: esc.ojo ? [esc.ojo[kc] - (RADIO + CELDA), esc.ojo[kc + 2] + (RADIO + CELDA)] : null });
+    }
+  }
+  const malos = juntas.filter((j) => !j.rectD).map((j) => `${j.txt}: sin descanso a su cota`);
+  let casos = 0, escalones = 0;
+  const carriles = [];
+  for (const marco of [...new Set(juntas.filter((j) => j.rectD).map((j) => j.marco))]) {
+    await irA(page, { nivel: marco });
+    const res = await page.evaluate(([marco, js]) => {
+      const Q = window.__recorridoQA, out = [];
+      const cod = (x, y) => Q.sondeo(x, y)?.codigo;
+      for (const j of js) {
+        if (Q.colocar({ nivel: marco, posicion: [j.rectD[0] + 0.05, j.rectD[1] + 0.05] })?.nivel !== marco) { out.push({ j, error: `no se arma ${marco}` }); continue; }
+        const P = (a, c) => (j.k === 0 ? [a, c] : [c, a]);
+        // carril del tramo a 0,6 m de la junta: el intervalo más largo de celdas libres a lo ancho, de a 0,01 m
+        const aL = j.J + j.dirIn * 0.6, tramos = [];
+        let ini = null;
+        for (let c = j.c0 + 0.005; c <= j.c1; c += 0.01) { const libre = cod(...P(aL, c)) !== 1; if (libre && ini == null) ini = c; if (!libre && ini != null) { tramos.push([ini, c - 0.01]); ini = null; } }
+        if (ini != null) tramos.push([ini, j.c1 - 0.005]);
+        const L = tramos.sort((a, b) => b[1] - b[0] - (a[1] - a[0]))[0];
+        if (!L || L[1] - L[0] < 0.2) { out.push({ j, error: 'el tramo no tiene carril libre' }); continue; }
+        out.push({ j, carril: [+L[0].toFixed(2), +L[1].toFixed(2)] });
+        // carril continuo: la celda que cierra cada borde del carril en el tramo, del lado que no da al ojo, también está
+        // tapada en el descanso (salvo si de ese lado el descanso da a un piso a su altura)
+        for (const o of [L[0] - 0.05, L[1] + 0.05]) {
+          if (j.ojo && o >= j.ojo[0] && o <= j.ojo[1]) continue;
+          const abierto = (a) => [0.15, 0.25, 0.35].some((dd) => cod(...P(a, o < L[0] ? j.rectD[j.kc] - dd : j.rectD[j.kc + 2] + dd)) === 0);
+          const a = [0.15, 0.35].map((d) => j.J - j.dirIn * d).find((a) => cod(...P(a, o)) !== 1 && !abierto(a));
+          if (a != null) out.push({ j, escalon: `en el descanso queda libre ${P(a, o).map((v) => v.toFixed(2)).join(', ')}, que en el tramo cierra el carril [${L.map((v) => v.toFixed(2)).join(', ')}]` });
+        }
+        const e0 = L[0] + 0.01, e1 = L[1] - 0.01, anchos = [0, 1, 2, 3, 4].map((i) => e0 + ((e1 - e0) * i) / 4);
+        for (const sentido of ['al tramo', 'al descanso']) {
+          const dir = sentido === 'al tramo' ? j.dirIn : -j.dirIn, a0 = j.J - dir * 0.45, eje = j.k === 0 ? (dir > 0 ? 0 : 180) : (dir > 0 ? 90 : 270);
+          const lista = anchos.map((c) => ({ c, afuera: false }));
+          if (sentido === 'al tramo') for (const c of [e0 - 0.2, e1 + 0.2]) if (c > j.c0 && c < j.c1 && cod(...P(a0, c)) !== 1) lista.push({ c, afuera: true });
+          for (const { c, afuera } of lista) for (const dr of [-15, 0, 15]) {
+            const p0 = P(a0, c), e = Q.colocar({ nivel: marco, posicion: p0, rumbo_deg: eje + dr, pitch_deg: 0 });
+            const corrido = Math.hypot(e.posicion[0] - p0[0], e.posicion[1] - p0[1]);
+            let paso = -1, muro = 0, f = null;
+            for (let q = 0; q < 90 && corrido < 0.02; q++) { f = Q.caminar({ n: 1, dt: 1 / 30 })[0]; if (f[4]) muro++; if ((f[1 + j.k] - j.J) * dir >= 0.45) { paso = q; break; } }
+            out.push({ j, caso: { sentido, c: +c.toFixed(3), afuera, dr, ok: corrido < 0.02 && paso >= 0 && !muro, corrido: +corrido.toFixed(3), muro, fin: f || [e.nivel, ...e.posicion, e.altura] } });
+          }
+        }
+      }
+      return out;
+    }, [marco, juntas.filter((j) => j.marco === marco && j.rectD)]);
+    for (const q of res) {
+      if (q.error) malos.push(`${q.j.txt}: ${q.error}`);
+      else if (q.carril) carriles.push(`${q.j.txt}: [${q.carril.join(', ')}]`);
+      else if (q.escalon) { escalones++; malos.push(`${q.j.txt}: escalón de una celda (${q.escalon})`); }
+      else {
+        casos++;
+        const c = q.caso;
+        if (!c.ok) malos.push(`${q.j.txt} ${c.sentido} desde ${c.c}${c.afuera ? ' (afuera del carril)' : ''} a ${c.dr >= 0 ? '+' : ''}${c.dr}°: ${c.corrido >= 0.02 ? `el punto de arranque no está libre (corrido ${c.corrido} m)` : `${c.muro ? `${c.muro} cuadros en un muro; ` : ''}queda en ${c.fin.slice(0, 4).join(', ')}`}`);
+      }
+    }
+  }
+  R.transiciones = { juntas: juntas.length, casos, carriles, malos };
+  comprobar(juntas.length >= 2 && casos >= juntas.length * 20 && !malos.length,
+    `en las ${juntas.length} juntas entre descanso y tramo de las escaleras (${[...new Set(juntas.map((j) => j.txt.split(' ').slice(0, 2).join(' ')))].join(', ')}) el carril es continuo (${escalones} escalones) y en ${casos} pasos, subiendo y bajando, a lo ancho del carril y a ±15° del eje, el caminante nunca se traba${malos.length ? `; mal (${malos.length}): ${malos.slice(0, 12).join('; ')}` : ''}`);
+}
+// normal de la puerta (de su muro) que apunta hacia adentro del polígono pol
+function normalPuerta(nivel, puerta, pol) {
+  const m = (nivel.muros || []).find((q) => q.id === puerta.muro);
+  if (!m) return null;
+  const L = Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1]) || 1, n = [-(m.b[1] - m.a[1]) / L, (m.b[0] - m.a[0]) / L];
+  return enPoligono(puerta.centro[0] + n[0] * 0.3, puerta.centro[1] + n[1] * 0.3, pol) ? n : [-n[0], -n[1]];
+}
 
 // ---------------------------------------------------------------- guion del 13.3 y el 16.6 (escritorio)
 async function guion() {
@@ -478,6 +629,11 @@ async function guion() {
   await page.evaluate(() => document.querySelector('#v-torre .stage').scrollIntoView({ block: 'center' }));
   comprobar(await entrar(page), 'entra al recorrido');
   const R = {};
+  const NV = new Map(((await page.evaluate(() => window.__torreQA.datos('torre_plantas.json')))?.niveles || []).map((n) => [n.id, n]));
+  {
+    const rj = await page.evaluate(() => window.__recorridoQA.nivel());
+    if (comprobar(rj && rj.radio > 0 && rj.celda > 0, `la rejilla de colisión del nivel da su radio y su celda (${rj?.radio} m y ${rj?.celda} m)`)) { RADIO = rj.radio; CELDA = rj.celda; }
+  }
   let e = await estado(page);
   comprobar(e.nivel === 'EXT', `empieza en los exteriores frente a la puerta principal (${nivelTxt(e)})`);
   // las flechas giran a 120 °/s
@@ -531,27 +687,135 @@ async function guion() {
   r = await caminar(page, ['KeyW'], (q) => q.posicion[1] < 15.9 && Math.abs(q.altura) < 0.05, { ms: 25000, nombre: 'escalera bajando tramo 1' });
   comprobar(r.cumplio && r.e.nivel === 'P1', `baja caminando al piso 1 (${nivelTxt(r.e)})`);
 
-  // escalera principal abierta del vestíbulo: piso 1 → piso 2 caminando (llega a la espera de farmacia)
-  e = await irA(page, { nivel: 'P1', posicion: [0.41, -10.3], rumbo_deg: 270, pitch_deg: -12 });
-  await captura(page, op, 'recorrido-escalera-principal-P1');
-  r = await caminar(page, ['KeyW'], (q) => q.posicion[1] < -14.4, { ms: 30000, nombre: 'escalera principal tramo 1' });
-  const hP = r.e.altura;
-  await girarHasta(page, 0);
-  r = await caminar(page, ['KeyW'], (q) => q.posicion[0] > 2.3, { ms: 15000, nombre: 'escalera principal descanso' });
-  await girarHasta(page, 90);
-  r = await caminar(page, ['KeyW'], (q) => q.nivel === 'P2' && q.posicion[1] > -10.5, { ms: 30000, nombre: 'escalera principal tramo 2' });
-  comprobar(hP > 2 && r.cumplio && Math.abs(r.e.altura) < 0.05, `sube por la escalera principal abierta: descanso a ${hP} m y llega al piso 2 (${nivelTxt(r.e)})`);
-  await captura(page, op, 'recorrido-escalera-principal-llegada-P2');
+  // escalera principal abierta del vestíbulo: piso 1 → piso 2 caminando, con el arranque, los tramos, el descanso
+  // intermedio y la llegada de escaleras[].partes del piso 1; arriba sigue hasta la entrada «escalera_principal» del piso 2
+  // (la espera desde donde se baja) y debe quedar en su recinto
+  {
+    const P1 = NV.get('P1'), esc = (P1?.escaleras || []).find((x) => /principal/i.test(x.nombre || '') && x.sube_a);
+    const tramos = (esc?.partes || []).filter((p) => p.tipo === 'tramo').sort((a, b) => a.z0 - b.z0), di = esc?.partes.find((p) => p.tipo === 'descanso_intermedio');
+    const arriba = esc && NV.get(esc.sube_a), entP = arriba?.entradas_recorrido?.find((x) => x.id === 'escalera_principal');
+    if (!esc || tramos.length !== 2 || !di || !entP) falla(`escalera principal: faltan en la planta sus dos tramos, el descanso intermedio o la entrada de llegada (${esc?.id})`);
+    else {
+      const [t1, t2] = tramos.map(ejeTramo), kC = 1 - t1.k, lado = Math.sign(t2.carril - t1.carril);
+      const p0 = enEje(t1.k, t1.bajo - t1.s * 0.9, t1.carril), cDi = [(di.rect[0] + di.rect[2]) / 2, (di.rect[1] + di.rect[3]) / 2];
+      e = await irA(page, { nivel: 'P1', posicion: p0, rumbo_deg: t1.rumbo, pitch_deg: -12 });
+      const arranque = e.nivel === 'P1' && Math.hypot(e.posicion[0] - p0[0], e.posicion[1] - p0[1]) < 0.15;
+      await captura(page, op, 'recorrido-escalera-principal-P1');
+      await girarHasta(page, t1.rumbo);
+      r = await caminar(page, ['KeyW'], (q) => q.posicion[t1.k] * t1.s >= cDi[t1.k] * t1.s, { ms: 30000, nombre: 'escalera principal tramo 1' });
+      const hP = r.e.altura, enDescanso = r.cumplio && dentroRect(r.e.posicion, di.rect);
+      await girarHasta(page, rumboHacia([0, 0], enEje(kC, lado, 0)));
+      r = await caminar(page, ['KeyW'], (q) => q.posicion[kC] * lado >= t2.carril * lado, { ms: 15000, nombre: 'escalera principal descanso' });
+      const cruza = r.cumplio && Math.abs(r.e.altura - hP) < 0.05;
+      await girarHasta(page, t2.rumbo);
+      const llega = await caminar(page, ['KeyW'], (q) => q.nivel === esc.sube_a && q.posicion[t2.k] * t2.s >= t2.alto * t2.s + 0.3, { ms: 30000, nombre: 'escalera principal tramo 2' });
+      await captura(page, op, 'recorrido-escalera-principal-llegada-P2');
+      const recEnt = recintoEn(arriba, entP.punto);
+      r = await caminar(page, ['KeyW'], (q) => q.posicion[t2.k] * t2.s >= entP.punto[t2.k] * t2.s, { ms: 10000, nombre: 'llegada de la escalera principal' });
+      R.escalera_principal = { escalera: esc.id, arranque: p0, descanso_m: hP, llegada: llega.e?.posicion, fin: r.e?.posicion, recinto: r.e?.recinto };
+      comprobar(arranque && enDescanso && Math.abs(hP - +di.z) < 0.05 && cruza && llega.cumplio && Math.abs(llega.e.altura) < 0.05 && r.cumplio && r.e.nivel === esc.sube_a && r.e.recinto === recEnt?.id,
+        `sube por la escalera principal abierta (${esc.id}): arranca en ${p0.map((v) => v.toFixed(2)).join(', ')} (${arranque}), descanso a ${hP} m (planta: ${di.z} m), llega al ${esc.sube_a} a ${llega.e?.altura} m y sigue a «${entP.nombre}» en ${recEnt?.id} (${nivelTxt(r.e)}, ${r.e?.recinto})`);
+    }
+  }
 
-  // piso 4 → terraza del piso 3 (nivel de la cubierta, 4,20 m abajo) por la puerta del descanso de la escalera sur, y de vuelta
-  e = await irA(page, { nivel: 'P4', posicion: [5.85, -6.6], rumbo_deg: 270 });
-  r = await caminar(page, ['KeyW'], (q) => q.nivel === 'CUB', { ms: 15000, nombre: 'puerta a la terraza' });
-  comprobar(r.cumplio && Math.abs(r.e.altura + 4.2) < 0.05, `del piso 4 sale caminando a la terraza solar del piso 3 (${nivelTxt(r.e)})`);
-  await caminar(page, ['KeyW'], () => false, { ms: 1200, nombre: 'terraza' });
-  await captura(page, op, 'recorrido-terraza-CUB');
-  await girarHasta(page, 90);
-  r = await caminar(page, ['KeyW'], (q) => q.nivel === 'P4', { ms: 15000, nombre: 'vuelta de la terraza' });
-  comprobar(r.cumplio, `y vuelve al piso 4 por la misma puerta (${nivelTxt(r.e)})`);
+  // costados de las escaleras: los lados de cada tramo paralelos a la subida (no su arranque ni su llegada) y los de los
+  // descansos más altos que el piso (escaleras[].partes de cada nivel), a 0,1, 0,5 y 0,9 de su largo, pero no a menos de su
+  // radio más dos celdas de sus extremos (junto a la esquina lo detiene antes la columna o el muro de al lado, a más de esa
+  // distancia del borde). Desde el piso de al lado, quien camina hacia ellos se detiene como ante un muro: camina hasta
+  // quedar quieto y debe quedar a no menos de su radio menos media celda del borde (no se sube de lado al tramo) y a no más
+  // de su radio más dos celdas (lo detuvo el borde, no otra cosa antes ni el tiempo), en el piso y a su altura. Se arranca
+  // de la celda de piso más lejana (hasta 1,2 m) de las seguidas desde 0,45 m afuera: contra un muro, el ojo, la franja del
+  // núcleo u otra parte no hay ninguna. La escalera principal, abierta al vestíbulo, tiene al menos uno
+  {
+    const probados = [], malos = [];
+    let capturado = false;
+    for (const id of NIVELES) {
+      const n = NV.get(id), bordes = [];
+      for (const esc of n?.escaleras || []) for (const p of esc.partes || []) {
+        const [x0, y0, x1, y1] = p.rect, t = p.tipo === 'tramo' ? ejeTramo(p) : null;
+        if (!t && !(+p.z > 0.3)) continue;   // descanso a la altura del piso: se entra por cualquier lado
+        for (const [a, b, nn] of [[[x0, y0], [x1, y0], [0, -1]], [[x1, y0], [x1, y1], [1, 0]], [[x1, y1], [x0, y1], [0, 1]], [[x0, y1], [x0, y0], [-1, 0]]]) {
+          if (t && nn[t.k]) continue;   // arranque o llegada del tramo
+          const L = Math.hypot(b[0] - a[0], b[1] - a[1]), m = Math.min(L / 2, RADIO + 2 * CELDA), vistos = new Set();
+          for (const f of [0.1, 0.5, 0.9]) {
+            const q = Math.min(L - m, Math.max(m, f * L)) / L, pm = [a[0] + (b[0] - a[0]) * q, a[1] + (b[1] - a[1]) * q], k = pm.map((v) => v.toFixed(3)).join();
+            if (!vistos.has(k)) { vistos.add(k); bordes.push({ esc: esc.id, p, f, nn, pm }); }
+          }
+        }
+      }
+      if (!bordes.length) continue;
+      await irA(page, { nivel: id });
+      for (const bd of bordes) {
+        bd.arranque = await page.evaluate(([pm, nn]) => {
+          let ult = null;
+          for (let d = 0.45; d <= 1.2001; d += 0.05) { const x = pm[0] + nn[0] * d, y = pm[1] + nn[1] * d; if (window.__recorridoQA.sondeo(x, y)?.codigo !== 0) break; ult = [x, y]; }
+          return ult;
+        }, [bd.pm, bd.nn]);
+      }
+      for (const bd of bordes.filter((q) => q.arranque)) {
+        const e0 = await irA(page, { nivel: id, posicion: bd.arranque, rumbo_deg: rumboHacia(bd.arranque, bd.pm), pitch_deg: 0 });
+        r = await caminarHastaParar(page, ['KeyW'], { nombre: `costado ${bd.esc} ${bd.p.tipo}` });
+        const d = distRect(r.e.posicion, bd.p.rect), txt = `${id} ${bd.esc} ${bd.p.tipo} en ${bd.pm.map((v) => v.toFixed(2)).join(', ')}`;
+        probados.push(`${txt} → a ${d.toFixed(2)} m, h=${r.e.altura}${r.detenido ? '' : ', sin detenerse'}`);
+        if (!r.detenido || r.e.nivel !== id || d < RADIO - CELDA / 2 || d > RADIO + 2 * CELDA + 1e-6 || Math.abs(r.e.altura - e0.altura) > 0.05 || r.e.en_muro) malos.push(`${txt}: ${nivelTxt(r.e)} a ${d.toFixed(2)} m del borde${r.detenido ? '' : ' (no se detuvo)'}`);
+        if (!capturado && bd.p.tipo === 'tramo' && bd.f === 0.5) { await captura(page, op, `recorrido-escalera-costado-${id}`); capturado = true; }
+      }
+    }
+    R.costados = { probados, malos };
+    comprobar(probados.length >= 1 && !malos.length, `los costados de las escaleras que dan a un piso detienen al caminante como un muro, quieto entre ${(RADIO - CELDA / 2).toFixed(2)} y ${(RADIO + 2 * CELDA).toFixed(2)} m del borde, sin subirlo a ellas (${probados.length} puntos: ${probados.join('; ')})${malos.length ? `; mal: ${malos.join('; ')}` : ''}`);
+  }
+
+  // pasos entre descanso y tramo en todas las escaleras (escaleras[].partes de cada nivel): cada extremo de cada tramo con
+  // su descanso (el de piso o el intermedio del mismo nivel, o el de piso del nivel de arriba en la llegada), en los dos
+  // sentidos (del descanso al tramo y del tramo al descanso: así se sube y se baja por cada junta)
+  await transiciones(page, NV, R);
+  // y con teclas, lo que encontró la revisión: sube el tramo 1 de la escalera principal, cruza el descanso hasta el muro del
+  // lado del tramo 2, gira al rumbo del tramo 2 corrido 2,2° hacia ese muro y camina: debe llegar al piso de arriba
+  {
+    const P1 = NV.get('P1'), esc = (P1?.escaleras || []).find((x) => /principal/i.test(x.nombre || '') && x.sube_a);
+    const tramos = (esc?.partes || []).filter((p) => p.tipo === 'tramo').sort((a, b) => a.z0 - b.z0), di = esc?.partes.find((p) => p.tipo === 'descanso_intermedio');
+    if (esc && tramos.length === 2 && di) {
+      const [t1, t2] = tramos.map(ejeTramo), kC = 1 - t1.k, lado = Math.sign(t2.carril - t1.carril), cDi = [(di.rect[0] + di.rect[2]) / 2, (di.rect[1] + di.rect[3]) / 2];
+      e = await irA(page, { nivel: 'P1', posicion: enEje(t1.k, t1.bajo - t1.s * 0.9, t1.carril), rumbo_deg: t1.rumbo, pitch_deg: 0 });
+      r = await caminar(page, ['KeyW'], (q) => q.posicion[t1.k] * t1.s >= cDi[t1.k] * t1.s, { ms: 30000, nombre: 'principal junto al muro: tramo 1' });
+      await girarHasta(page, rumboHacia([0, 0], enEje(kC, lado, 0)));
+      const alMuro = await caminarHastaParar(page, ['KeyW'], { nombre: 'principal junto al muro: descanso' });
+      // el rumbo del tramo 2 corrido 2,2° hacia el muro
+      const rumbo = [t2.rumbo + 2.2, t2.rumbo - 2.2].find((g) => Math.sign([Math.cos((g * Math.PI) / 180), Math.sin((g * Math.PI) / 180)][kC]) === lado);
+      await girarHasta(page, rumbo);
+      const sube = await caminar(page, ['KeyW'], (q) => q.nivel === esc.sube_a, { ms: 20000, nombre: 'principal junto al muro: tramo 2' });
+      R.principal_muro = { descanso: alMuro.e.posicion, rumbo, fin: sube.e.posicion, nivel: sube.e.nivel };
+      comprobar(alMuro.detenido && Math.abs(alMuro.e.altura - +di.z) < 0.05 && sube.cumplio,
+        `por la escalera principal, desde el muro del descanso (${alMuro.e.posicion.map((v) => v.toFixed(2)).join(', ')}, h=${alMuro.e.altura}) y con rumbo ${rumbo.toFixed(1)}° sube con teclas el tramo 2 hasta el ${esc.sube_a} (${nivelTxt(sube.e)})`);
+    }
+  }
+
+  // piso 4 → terraza del piso 3 (en la cubierta, más abajo) por la puerta del paso entre niveles del piso 4
+  // (pasos_entre_niveles), y de vuelta por el paso de la terraza que lleva a la misma puerta. Se arranca 1 m adentro de la
+  // puerta, frente a ella; la cota de llegada es la de su recinto en la cubierta (z_piso_m)
+  {
+    const P4 = NV.get('P4'), CUB = NV.get('CUB'), paso = (P4?.pasos_entre_niveles || []).find((p) => p.otro_nivel === 'CUB');
+    const pu = paso && (P4.puertas || []).find((q) => q.id === paso.puerta), recP = paso && (P4.recintos || []).find((q) => q.id === paso.recinto);
+    const recT = paso && (CUB?.recintos || []).find((q) => q.id === paso.otro_recinto), vuelta = (CUB?.pasos_entre_niveles || []).find((p) => p.otro_nivel === 'P4' && p.puerta_del_otro_nivel === paso?.puerta);
+    const n = pu && recP && normalPuerta(P4, pu, recP.poligono);
+    if (!paso || !pu || !recT || !vuelta || !n) falla(`terraza: falta el paso del piso 4 a la cubierta con su puerta, su recinto de llegada o el paso de vuelta (${JSON.stringify(paso)})`);
+    else {
+      const p0 = [paso.punto[0] + n[0], paso.punto[1] + n[1]], zT = +recT.z_piso_m || 0;
+      e = await irA(page, { nivel: 'P4', posicion: p0, rumbo_deg: rumboHacia(p0, paso.punto) });
+      const arranque = e.nivel === 'P4' && e.recinto === paso.recinto && Math.hypot(e.posicion[0] - p0[0], e.posicion[1] - p0[1]) < 0.15;
+      r = await caminar(page, ['KeyW'], (q) => q.nivel === 'CUB', { ms: 15000, nombre: 'puerta a la terraza' });
+      comprobar(arranque && r.cumplio && r.e.recinto === recT.id && Math.abs(r.e.altura - zT) < 0.05 && Math.hypot(r.e.posicion[0] - vuelta.punto[0], r.e.posicion[1] - vuelta.punto[1]) < 1.5,
+        `del piso 4 sale caminando por ${pu.id} («${pu.nombre}», ${pu.ancho} m) a ${recT.id} a ${zT} m (${nivelTxt(r.e)}, ${r.e.recinto})`);
+      await caminar(page, ['KeyW'], () => false, { ms: 1200, nombre: 'terraza' });
+      await captura(page, op, 'recorrido-terraza-CUB');
+      e = await girarHasta(page, rumboHacia((await estado(page)).posicion, vuelta.punto));
+      const enTerraza = e.nivel === 'CUB';
+      r = await caminar(page, ['KeyW'], (q) => q.nivel === 'P4', { ms: 15000, nombre: 'vuelta de la terraza' });
+      comprobar(enTerraza && r.cumplio && r.e.recinto === paso.recinto && Math.abs(r.e.altura) < 0.05 && Math.hypot(r.e.posicion[0] - paso.punto[0], r.e.posicion[1] - paso.punto[1]) < 1.5,
+        `y desde la terraza vuelve caminando al piso 4 por la misma puerta, a ${paso.recinto} (${nivelTxt(r.e)}, ${r.e.recinto})`);
+      R.terraza = { puerta: pu.id, arranque: p0, llegada_terraza: recT.id, z_terraza_m: zT };
+    }
+  }
 
   // exteriores → bloque técnico por el pasaje de servicio en rampa
   e = await irA(page, { nivel: 'EXT', posicion: [10.25, -18.2], rumbo_deg: 270 });
@@ -588,14 +852,66 @@ async function guion() {
   e = await estado(page);
   comprobar(e.nivel === 'P3', `AvPág baja al piso 3 (${nivelTxt(e)})`);
 
-  // hueco de la escalera abierta del piso 2: no se pisa (baranda), salvo bajando por la escalera
-  const HUECO = [-0.24, -15.19, 3.04, -10.61];
-  e = await irA(page, { nivel: 'P2', posicion: [-1.2, -12.8], rumbo_deg: 0 });
-  r = await caminar(page, ['KeyW'], (q) => dentroRect(q.posicion, HUECO, -0.05), { ms: 3500, nombre: 'hueco por el occidente' });
-  const desdeOeste = r.e;
-  e = await irA(page, { nivel: 'P2', posicion: [0.4, -10.3], rumbo_deg: 270 });
-  r = await caminar(page, ['KeyW'], (q) => dentroRect(q.posicion, HUECO, -0.05) || q.nivel !== 'P2', { ms: 3500, nombre: 'hueco por el norte' });
-  comprobar(!dentroRect(desdeOeste.posicion, HUECO, -0.05) && !dentroRect(r.e.posicion, HUECO, -0.05) && r.e.nivel === 'P2', `no pisa el hueco de la escalera abierta del piso 2 (se detiene en ${desdeOeste.posicion.join(', ')} y ${r.e.posicion.join(', ')})`);
+  // hueco de la escalera abierta del piso 2 (obstaculos_recorrido): su baranda detiene al caminante como un muro (a no
+  // menos de su radio menos media celda del borde) por cada tramo de borde con baranda al que se llega caminando, y solo
+  // se entra en él bajando por el tramo que llega del piso 1 (borde alto de sus tramos que llegan a la cota del piso 2)
+  {
+    const P2 = NV.get('P2'), hueco = (P2?.obstaculos_recorrido || []).find((o) => /hueco/i.test(o.id)), pol = hueco?.poligono;
+    const nAb = P2 && (P2.escaleras || []).map((x) => NV.get(x.baja_a)).find(Boolean);
+    const llegadas = (nAb?.escaleras || []).flatMap((x) => (x.partes || []).filter((p) => p.tipo === 'tramo' && Math.abs(+p.z1 - (P2.z - nAb.z)) < 0.05)).map((p) => {
+      const t = ejeTramo(p), [x0, y0, x1, y1] = p.rect;
+      return { t, seg: t.k ? [[x0, t.alto], [x1, t.alto]] : [[t.alto, y0], [t.alto, y1]] };
+    });
+    if (!pol || !llegadas.length) falla(`hueco del piso 2: no está en obstaculos_recorrido o no le llega ningún tramo del piso de abajo (${hueco?.id})`);
+    else {
+      await irA(page, { nivel: 'P2' });
+      // tramos de cada borde: los que coinciden con una llegada no llevan baranda
+      const bordes = [];
+      for (let i = 0; i < pol.length; i++) {
+        const a = pol[i], b = pol[(i + 1) % pol.length], L = Math.hypot(b[0] - a[0], b[1] - a[1]), u = [(b[0] - a[0]) / L, (b[1] - a[1]) / L];
+        // normal hacia afuera del hueco
+        let nn = [-u[1], u[0]];
+        if (enPoligono((a[0] + b[0]) / 2 + nn[0] * 0.05, (a[1] + b[1]) / 2 + nn[1] * 0.05, pol)) nn = [-nn[0], -nn[1]];
+        const s = (p) => (p[0] - a[0]) * u[0] + (p[1] - a[1]) * u[1];
+        const libres = llegadas.filter(({ seg: [q, w] }) => distSegmento(q, a, b) < 0.08 && distSegmento(w, a, b) < 0.08)
+          .map(({ seg: [q, w], t }) => ({ s0: Math.min(s(q), s(w)), s1: Math.max(s(q), s(w)), t })).sort((x, y) => x.s0 - y.s0);
+        let c0 = 0;
+        for (const l of libres) { if (l.s0 - c0 > 0.6) bordes.push({ baranda: true, a, u, nn, s0: c0, s1: l.s0 }); bordes.push({ baranda: false, a, u, nn, s0: l.s0, s1: l.s1, t: l.t }); c0 = Math.max(c0, l.s1); }
+        if (L - c0 > 0.6) bordes.push({ baranda: true, a, u, nn, s0: c0, s1: L });
+      }
+      // punto de arranque afuera de cada tramo de borde: el más lejano (hasta 1,2 m) de las celdas libres seguidas desde 0,45 m
+      for (const bd of bordes) {
+        const m = (bd.s0 + bd.s1) / 2, pm = [bd.a[0] + bd.u[0] * m, bd.a[1] + bd.u[1] * m];
+        bd.medio = pm;
+        bd.arranque = await page.evaluate(([pm, nn]) => {
+          let ult = null;
+          for (let d = 0.45; d <= 1.2001; d += 0.05) { const x = pm[0] + nn[0] * d, y = pm[1] + nn[1] * d; if (!window.__recorridoQA.api.libre(x, y)) break; ult = [x, y]; }
+          return ult;
+        }, [pm, bd.nn]);
+      }
+      const probados = [], malos = [];
+      for (const bd of bordes.filter((x) => x.baranda && x.arranque)) {
+        e = await irA(page, { nivel: 'P2', posicion: bd.arranque, rumbo_deg: rumboHacia(bd.arranque, bd.medio) });
+        r = await caminar(page, ['KeyW'], (q) => q.nivel !== 'P2' || distPoligono(q.posicion, pol) < 0, { ms: 3500, nombre: `hueco por ${bd.medio.map((v) => v.toFixed(2)).join(', ')}` });
+        const d = distPoligono(r.e.posicion, pol);
+        probados.push(`${bd.medio.map((v) => v.toFixed(2)).join(', ')} → se detiene a ${d.toFixed(2)} m`);
+        if (r.e.nivel !== 'P2' || d < RADIO - CELDA / 2 || Math.abs(r.e.altura) > 0.05 || r.e.en_muro) malos.push(`${bd.medio.map((v) => v.toFixed(2)).join(', ')}: ${nivelTxt(r.e)} a ${d.toFixed(2)} m del borde`);
+      }
+      const sinAcceso = bordes.filter((x) => x.baranda && !x.arranque).length;
+      comprobar(probados.length >= 1 && !malos.length, `la baranda del hueco ${hueco.id} detiene al caminante a ≥ ${(RADIO - CELDA / 2).toFixed(2)} m del borde por los ${probados.length} tramos con baranda a los que se llega (${probados.join('; ')}; ${sinAcceso} sin acceso, contra muros)${malos.length ? `; mal: ${malos.join('; ')}` : ''}`);
+      // la llegada: se entra al hueco solo bajando por el tramo, que lleva al piso de abajo
+      const bajadas = [];
+      for (const bd of bordes.filter((x) => !x.baranda)) {
+        if (!bd.arranque) { bajadas.push({ ok: false, txt: `llegada en ${bd.medio.map((v) => v.toFixed(2)).join(', ')} sin celda libre afuera` }); continue; }
+        e = await irA(page, { nivel: 'P2', posicion: bd.arranque, rumbo_deg: rumboHacia(bd.arranque, bd.medio) });
+        let sobreVacio = 0;
+        r = await caminar(page, ['KeyW'], (q) => { if (q.nivel === 'P2' && distPoligono(q.posicion, pol) < -0.1 && q.altura >= 0) sobreVacio++; return q.nivel === nAb.id; }, { ms: 15000, nombre: 'bajando por la llegada del hueco' });
+        bajadas.push({ ok: r.cumplio && !sobreVacio && r.e.altura > 0, txt: `${bd.medio.map((v) => v.toFixed(2)).join(', ')} → ${nivelTxt(r.e)}${sobreVacio ? ` (${sobreVacio} veces a la cota del piso dentro del hueco)` : ''}` });
+      }
+      comprobar(bajadas.length >= 1 && bajadas.every((b) => b.ok), `al hueco solo se entra bajando por la escalera: desde la llegada baja al ${nAb.id} por el tramo (${bajadas.map((b) => b.txt).join('; ')})`);
+      R.hueco = { id: hueco.id, probados, sin_acceso: sinAcceso, bajadas: bajadas.map((b) => b.txt) };
+    }
+  }
 
   // fichas: carro de paro, analizador en comodato con reactivos, panel solar, manifold de gases y lavamanos
   const buscarU = (f) => page.evaluate((f) => window.__recorridoQA.unidades(f), f);
@@ -633,6 +949,15 @@ async function guion() {
       comprobar(n >= 3, `el analizador en comodato lista sus reactivos (${n} implementos)`);
     }
   }
+  // origen de cada exigencia en la ficha (revisión final): EX-PAR-014 es una paráfrasis por confirmar, no una guía secundaria
+  const fx = await page.evaluate(() => window.__recorridoQA.fichaTexto({ exigencia: 'EX-PAR-014' }));
+  const liPar = (fx?.items || []).find((t) => /11\.6\.4/.test(t)) || '';
+  comprobar(fx && /paráfrasis/.test(liPar) && !/guía secundaria/.test(liPar) && !/texto oficial\)/.test(liPar),
+    `la ficha con la exigencia EX-PAR-014 la da como paráfrasis por confirmar, no como guía secundaria (${liPar.slice(0, 140)})`);
+  // el GeneXpert es por programa o compra (no presupuestado): ni «En la dotación» ni comodato
+  const gx = await page.evaluate(() => window.__recorridoQA.fichaTexto({ texto: 'GeneXpert' }));
+  comprobar(gx && gx.chips.some((c) => /programa o compra/.test(c)) && !gx.chips.some((c) => /^En la dotación$|en comodato \(no suma\)/.test(c)),
+    `la ficha del GeneXpert dice «por programa o compra, no presupuestado» (${(gx?.chips || []).join(' · ')})`);
   // implementos a la vista en el laboratorio (cajas de reactivos y frascos, solo en el recinto actual)
   e = await irA(page, { nivel: 'P2', recinto: 'P2-A082-01' });
   const nImpl = await page.evaluate(() => window.__recorridoQA.nivel().implementos);
@@ -708,10 +1033,32 @@ async function guion() {
   const base1 = await page.evaluate(() => document.querySelector('[data-slot="torre.ficha.base"]').innerHTML);
   comprobar(base0 === base1, 'los clics del recorrido no cambian la ficha de «Pisos por servicio» (pisos ocultos)');
 
-  // entrada del botón «Laboratorio» (16.2): parado en la puerta del laboratorio del piso 2, mirando hacia adentro
-  e = await irA(page, { laboratorio: true });
-  comprobar(e.nivel === 'P2' && Math.hypot(e.posicion[0] - 3.85, e.posicion[1] + 10.6) < 0.3 && dAng(e.rumbo_deg, 270) < 1, `irA({ laboratorio: true }) deja al caminante en la puerta del laboratorio mirando hacia adentro (${nivelTxt(e)})`);
-  await captura(page, op, 'recorrido-entrada-laboratorio');
+  // entrada del botón «Laboratorio» (16.2): parado en la puerta del laboratorio del piso 2, mirando hacia adentro. El punto
+  // y el rumbo son los de entradas_recorrido del piso 2; además: celda libre (ni en una columna ni en un muro), a menos de
+  // 1 m de una puerta de su recinto, mirando por la normal de esa puerta hacia adentro, en un recinto que da a uno del
+  // laboratorio clínico, y la puerta se cruza caminando hacia afuera y de vuelta
+  {
+    const P2 = NV.get('P2'), ent = (P2?.entradas_recorrido || []).find((x) => x.id === 'laboratorio'), rec = ent && recintoEn(P2, ent.punto);
+    const pu = rec && (P2.puertas || []).filter((p) => p.desde === rec.id || p.hacia === rec.id).map((p) => [Math.hypot(p.centro[0] - ent.punto[0], p.centro[1] - ent.punto[1]), p]).sort((a, b) => a[0] - b[0])[0];
+    if (!ent || !rec || !pu) falla(`entrada del laboratorio: falta en entradas_recorrido del piso 2, su recinto o una puerta del recinto (${JSON.stringify(ent)})`);
+    else {
+      const [dPu, puerta] = pu, n = normalPuerta(P2, puerta, rec.poligono), otro = puerta.desde === rec.id ? puerta.hacia : puerta.desde;
+      const daAlLab = (rec.acceso || []).some((id) => /laborat/i.test((P2.recintos || []).find((q) => q.id === id)?.servicio_programa || ''));
+      e = await irA(page, { laboratorio: true });
+      const ok0 = e.nivel === 'P2' && Math.hypot(e.posicion[0] - ent.punto[0], e.posicion[1] - ent.punto[1]) < 0.3 && dAng(e.rumbo_deg, +ent.mirando_deg) < 1 && e.libre && !e.en_muro && e.recinto === rec.id
+        && dPu <= 1.0 && n && dAng(+ent.mirando_deg, rumboHacia([0, 0], n)) <= 30 && daAlLab;
+      await captura(page, op, 'recorrido-entrada-laboratorio');
+      // se sale por la puerta hacia el recinto del otro lado y se vuelve a la entrada
+      await girarHasta(page, rumboHacia(e.posicion, puerta.centro));
+      const sale = await caminar(page, ['KeyW'], (q) => q.recinto === otro && (q.posicion[0] - puerta.centro[0]) * n[0] + (q.posicion[1] - puerta.centro[1]) * n[1] < -0.5, { ms: 8000, nombre: 'salida por la puerta del laboratorio' });
+      await girarHasta(page, rumboHacia(sale.e.posicion, ent.punto));
+      const fondo = (p) => (p[0] - puerta.centro[0]) * n[0] + (p[1] - puerta.centro[1]) * n[1];   // cuánto adentro de la puerta
+      const vuelve = await caminar(page, ['KeyW'], (q) => q.recinto === rec.id && fondo(q.posicion) >= fondo(ent.punto) - 0.05, { ms: 8000, nombre: 'vuelta a la entrada del laboratorio' });
+      comprobar(ok0 && sale.cumplio && vuelve.cumplio,
+        `irA({ laboratorio: true }) deja al caminante en «${ent.nombre}» (${rec.id}, a ${dPu.toFixed(2)} m de ${puerta.id}) mirando hacia adentro (${nivelTxt(e)}; libre ${e.libre}); la puerta se cruza a ${otro} (${sale.cumplio}) y de vuelta (${vuelve.cumplio})`);
+      R.laboratorio = { entrada: ent.punto, recinto: rec.id, puerta: puerta.id, otro };
+    }
+  }
 
   // capas: faltantes, cumplimiento, contraste e infraestructura
   for (const c of ['faltantes', 'estado', 'contraste', 'infraestructura']) {
@@ -856,6 +1203,8 @@ async function presupuesto() {
 
 // ---------------------------------------------------------------- salida: la vista vuelve a ser la de antes
 import { inflateSync } from 'node:zlib';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 function png(buf) {
   // decodificador mínimo de PNG (8 bits, RGB o RGBA, sin entrelazado): lo que produce Chromium en las capturas
   let p = 8, ancho = 0, alto = 0, tipo = 0;
@@ -879,6 +1228,19 @@ function png(buf) {
   }
   return { ancho, alto, bpp, px: out };
 }
+// variedad de una captura: parte del recuadro que cubre el color más frecuente (cuantizado a 16 niveles por canal) y
+// desviación estándar de la luminancia (una vista contra un muro sale de un solo gris)
+function variedad(img) {
+  const n = img.ancho * img.alto, cuenta = new Map();
+  let s = 0, s2 = 0;
+  for (let i = 0; i < n; i++) {
+    const r = img.px[i * img.bpp], g = img.px[i * img.bpp + 1], b = img.px[i * img.bpp + 2], l = 0.2126 * r + 0.7152 * g + 0.0722 * b, k = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+    s += l; s2 += l * l;
+    cuenta.set(k, (cuenta.get(k) || 0) + 1);
+  }
+  const m = s / n;
+  return { dominante: Math.max(...cuenta.values()) / n, sd: Math.sqrt(Math.max(0, s2 / n - m * m)) };
+}
 function diferencia(a, b) {
   if (a.ancho !== b.ancho || a.alto !== b.alto) return 1;
   let dist = 0;
@@ -890,37 +1252,72 @@ function diferencia(a, b) {
   }
   return dist / n;
 }
+// resolución del motor (pixel ratio de la resolución adaptativa de core.js): la lee y, con dpr, la fija. Los cuadros lentos
+// del recorrido (WebGL por software, más con la máquina cargada) la bajan de 1,5 a 1,25 o 1 en el teléfono y ya no vuelve
+// a subir; dibujada a otra resolución la misma vista cambia en los bordes (el 2 % de los píxeles), así que las vistas de
+// antes y de después se comparan a la misma
+const resolucion = (page, dpr = null) => page.evaluate(async (dpr) => {
+  const { engine } = await import(new URL('js/core.js', document.baseURI).href);
+  if (dpr != null && engine.dpr !== dpr && engine.active) { engine.dpr = dpr; engine.applyDpr(engine.active); engine.active.invalidate(true); }
+  return engine.dpr;
+}, dpr);
+// espera a que el recuadro deje de cambiar (vuelos de cámara, fundidos, cargas perezosas) en vez de una espera fija, que con
+// la máquina cargada se queda corta: capturas del recorte cada 3 cuadros y 150 ms hasta que tres seguidas salen iguales
+// (menos del 0,1 % de píxeles distintos entre cada par), con la resolución dpr si se pide; devuelve la última y si se
+// estabilizó
+async function cuadroEstable(page, recorte, { ms = 30000, dpr = null } = {}) {
+  const t0 = Date.now();
+  let prev = null, iguales = 0, img = null, buf = null;
+  while (Date.now() - t0 < ms) {
+    if (dpr != null) await resolucion(page, dpr);
+    await cuadros(page, 3); await pausa(150);
+    img = png(buf = await page.screenshot({ clip: recorte }));
+    iguales = prev && diferencia(prev, img) < 0.001 ? iguales + 1 : 0;
+    if (iguales >= 2) return { img, buf, estable: true, ms: Date.now() - t0 };
+    prev = img;
+  }
+  return { img, buf, estable: false, ms: Date.now() - t0 };
+}
 async function salida() {
   console.log('salida: controles, fov y la vista «Con la torre» como antes');
   for (const telefono of [false, true]) {
     const nombre = telefono ? 'teléfono' : 'escritorio';
     const { page, registro, cerrar } = await pagina({ telefono, movimientoReducido: true });
     await page.evaluate(() => document.querySelector('#v-torre .stage').scrollIntoView({ block: 'center' }));
-    await pausa(3000);
+    await cuadros(page, 5);
     const recorte = await page.evaluate(() => { const r = document.querySelector('#v-torre .stage').getBoundingClientRect(); return { x: r.left, y: r.top, width: r.width, height: r.height }; });
-    // «Hoy» y «Con la torre» antes de entrar
-    await page.evaluate(() => window.__torreQA.modo('hoy')); await pausa(2500);
-    const hoy0 = png(await page.screenshot({ clip: recorte }));
-    await page.evaluate(() => window.__torreQA.modo('torre')); await pausa(2500);
-    const antes = png(await page.screenshot({ clip: recorte }));
+    await cuadroEstable(page, recorte);
+    // «Hoy» y «Con la torre» antes de entrar, cada uno con el cuadro ya quieto, a la resolución de entonces
+    const dpr0 = await resolucion(page);
+    await page.evaluate(() => window.__torreQA.modo('hoy'));
+    const hoy0 = await cuadroEstable(page, recorte, { dpr: dpr0 });
+    await page.evaluate(() => window.__torreQA.modo('torre'));
+    const antes = await cuadroEstable(page, recorte, { dpr: dpr0 });
     await entrar(page, { nivel: 'P2', entrada: 'laboratorio' });
     await irA(page, { nivel: 'P3' });
     const c0 = await page.evaluate(() => window.__recorridoQA.antes());
     // sale la persona (botón «Salir» de la barra)
     await page.click('.reco-barra [data-acc="salir"]');
-    await pausa(2500); await cuadros(page, 3);
+    const dpr1 = await resolucion(page);
+    const despues = await cuadroEstable(page, recorte, { dpr: dpr0 });
     const c1 = await page.evaluate(() => window.__recorridoQA.controles());
     const iguales = Object.keys(c0).every((k) => (typeof c0[k] === 'number' ? Math.abs(c0[k] - c1[k]) < 1e-6 : c0[k] === c1[k]));
     comprobar(iguales && Math.abs(c1.fov - 36) < 1e-6, `${nombre}: al salir, fov = ${c1.fov}° y los controles como antes (${JSON.stringify(c1)})`);
     const ext = await page.evaluate(() => window.__torreQA.exterior());
     comprobar(ext === null, `${nombre}: el exterior vuelve a verse entero (oculto: ${ext})`);
-    const despues = png(await page.screenshot({ clip: recorte }));
-    const d1 = diferencia(antes, despues);
-    await page.evaluate(() => window.__torreQA.modo('hoy')); await pausa(2500);
-    const hoy1 = png(await page.screenshot({ clip: recorte }));
-    const d2 = diferencia(hoy0, hoy1);
+    const d1 = diferencia(antes.img, despues.img);
+    await page.evaluate(() => window.__torreQA.modo('hoy'));
+    const hoy1 = await cuadroEstable(page, recorte, { dpr: dpr0 });
+    const d2 = diferencia(hoy0.img, hoy1.img);
     await captura(page, op, `recorrido-salida-hoy-${telefono ? 'telefono' : 'escritorio'}`);
-    comprobar(d1 < 0.02 && d2 < 0.02, `${nombre}: «Con la torre» y «Hoy» se ven igual que antes de entrar (píxeles distintos: ${(d1 * 100).toFixed(2)} % y ${(d2 * 100).toFixed(2)} %)`);
+    // las dos vistas se distinguen entre sí: cada captura es de su modo y no la del anterior que todavía no cambiaba
+    const quietos = [hoy0, antes, despues, hoy1].every((q) => q.estable), tiempos = [hoy0, antes, despues, hoy1].map((q) => (q.ms / 1000).toFixed(1)).join(', ');
+    const d0 = diferencia(hoy0.img, antes.img);
+    if (!(quietos && d0 > 0.02 && d1 < 0.02 && d2 < 0.02)) {
+      await mkdir(op.salida, { recursive: true });
+      for (const [k, q] of Object.entries({ hoy0, antes, despues, hoy1 })) await writeFile(join(op.salida, `recorrido-salida-${telefono ? 'telefono' : 'escritorio'}-${k}.png`), q.buf);
+    }
+    comprobar(quietos && d0 > 0.02 && d1 < 0.02 && d2 < 0.02, `${nombre}: «Con la torre» y «Hoy» se ven igual que antes de entrar (píxeles distintos: ${(d1 * 100).toFixed(2)} % y ${(d2 * 100).toFixed(2)} %; entre las dos vistas, ${(d0 * 100).toFixed(1)} %; cuadro quieto en ${tiempos} s; resolución ×${dpr0}${dpr1 !== dpr0 ? `, que el recorrido bajó a ×${dpr1} y se devolvió para comparar` : ''}${quietos ? '' : ', alguno sin quedar quieto en 30 s'})`);
     if (!informar(registro, `recorrido salida ${nombre}`)) falla(`salida ${nombre}: consola con errores`);
     await cerrar();
   }

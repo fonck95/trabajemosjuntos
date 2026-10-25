@@ -10,6 +10,9 @@ const ESTADOS = { cumple: 'cumple', parcial: 'parcial', falta: 'falta', document
 const CLASE_ESTADO = { cumple: 'hab-ok', parcial: 'hab-parcial', falta: 'hab-falta', documento_pendiente: 'hab-doc', no_aplica: 'hab-na' };
 const ESTANDAR = { dotacion: 'Dotación', infraestructura: 'Infraestructura', medicamentos_dispositivos: 'Medicamentos, dispositivos e insumos', procesos_prioritarios: 'Procesos prioritarios', todos_los_servicios: 'Todos los servicios' };
 const palabras = (s) => String(s ?? '').replace(/_/g, ' ');
+// condición de los servicios que no se habilitan como tales (la fila de la tabla la dice)
+const CONDICION = { sin_habilitacion_propia: 'sin habilitación propia', modalidad: 'modalidad', no: 'no se habilita aparte' };
+const plural = (n, uno, varios) => `${fmtN(n)} ${n === 1 ? uno : varios}`;
 
 export function pintarHabilitacion(el, habilitacion, inventario, { verEn3D, textos, plantas = null } = {}) {
   if (!el) return;
@@ -70,24 +73,44 @@ export function pintarHabilitacion(el, habilitacion, inventario, { verEn3D, text
     return `<li class="hab-ex">
       <div class="hab-ex-c">${pill(est)} <b>${esc(String(e.numeral || e.id))}</b> <small class="note">· ${esc(ESTANDAR[e.estandar] || palabras(e.estandar))} · ${esc(e.exigible === 'si' ? 'exigible' : e.exigible === 'por_confirmar' ? 'por confirmar' : palabras(e.exigible))}</small></div>
       <p>${texto}</p>
-      <p class="note"><small>${esc(nivelVerificacion(e.verificacion_texto || 'por_confirmar'))}${enlace(e.fuente_url)}${e.requerido != null ? ` · se requieren ${fmtN(e.requerido)}; hay ${fmtN(e.encontrado?.dotacion_actual ?? 0)}${e.encontrado?.con_cierre_de_brechas != null && e.encontrado.con_cierre_de_brechas !== e.encontrado.dotacion_actual ? ` (${fmtN(e.encontrado.con_cierre_de_brechas)} con el cierre)` : ''}` : ''}${e.nota_estado ? ` · ${esc(e.nota_estado)}` : ''}</small></p>
+      <p class="note"><small>${esc(nivelVerificacion(e.verificacion_origen || e.verificacion_texto || 'por_confirmar'))}${enlace(e.fuente_url)}${e.requerido != null ? ` · se requieren ${fmtN(e.requerido)}; hay ${fmtN(e.encontrado?.dotacion_actual ?? 0)}${e.encontrado?.con_cierre_de_brechas != null && e.encontrado.con_cierre_de_brechas !== e.encontrado.dotacion_actual ? ` (${fmtN(e.encontrado.con_cierre_de_brechas)} con el cierre)` : ''}` : ''}${e.nota_estado ? ` · ${esc(e.nota_estado)}` : ''}</small></p>
       ${cierre}${unidadesHTML}
     </li>`;
   }
   const resumenServicio = (s) => {
-    const r = s.resumen?.[corte.valor]?.[escenario.valor] || {}, ex = r.exigibles || {}, pc = r.por_confirmar || {};
+    let r = s.resumen?.[corte.valor]?.[escenario.valor];
+    if (!r) {
+      // sin resumen publicado: se cuenta aquí con el corte y el escenario elegidos (las de referencia y las que no
+      // aplican no cuentan)
+      r = { exigibles: {}, por_confirmar: {} };
+      for (const e of s.exigencias || []) {
+        const est = estadoDe(e);
+        if (e.referencia || est === 'no_aplica') continue;
+        const g = e.exigible === 'si' ? r.exigibles : r.por_confirmar;
+        g[est] = (g[est] || 0) + 1;
+      }
+    }
+    const ex = r.exigibles || {}, pc = r.por_confirmar || {};
     const sum = (o) => Object.values(o).reduce((a, b) => a + (+b || 0), 0);
     return { ex, pc, nEx: sum(ex), nPc: sum(pc) };
+  };
+  // columna «Cierre propuesto»: ítems, la suma de los que tienen precio (con su tipo) y los que están por cotizar
+  const cierreTxt = (f) => {
+    if (!f || !f.items_cierre) return '—';
+    const sin = +f.items_sin_precio || 0, con = f.items_cierre - sin, inv = +f.inversion_con_precio_cop_2026 || 0;
+    if (!con) return `${plural(f.items_cierre, 'ítem', 'ítems')} por cotizar (sin precio)`;
+    return `${plural(f.items_cierre, 'ítem', 'ítems')} · ${fmtCOP(inv)} de ${plural(con, 'ítem con precio', 'ítems con precio')} (cálculo propio)${sin ? ` + ${plural(sin, 'por cotizar', 'por cotizar')}` : ''}`;
   };
   function pintar() {
     const falt = Object.fromEntries((H.faltantes_por_servicio?.tabla || []).map((f) => [f.servicio, f]));
     el.querySelector('.hab-tabla tbody').innerHTML = servicios.map((s) => {
       const { ex, nEx, nPc } = resumenServicio(s), f = falt[s.id];
-      return `<tr><td><a href="#hab-${escH(s.id)}" data-abrir="${escH(s.id)}">${esc(s.nombre)}</a></td>
+      const cond = CONDICION[s.habilitable];
+      return `<tr><td><a href="#hab-${escH(s.id)}" data-abrir="${escH(s.id)}">${esc(s.nombre)}</a>${cond ? ` <small class="note">(${esc(cond)})</small>` : ''}</td>
         <td class="n" data-th="Cumplen">${fmtN(ex.cumple || 0)}</td><td class="n" data-th="Parciales">${fmtN(ex.parcial || 0)}</td>
         <td class="n${ex.falta ? ' hab-falta-n' : ''}" data-th="Faltan">${fmtN(ex.falta || 0)}</td><td class="n" data-th="Documento pendiente">${fmtN(ex.documento_pendiente || 0)}</td>
         <td class="n" data-th="Exigibles">${fmtN(nEx)}</td><td class="n" data-th="Por confirmar">${fmtN(nPc)}</td>
-        <td class="n" data-th="Cierre propuesto">${f && f.items_cierre ? `${fmtN(f.items_cierre)} ítems · ${fmtCOP(f.inversion_con_precio_cop_2026 || 0)}` : '—'}</td></tr>`;
+        <td class="n" data-th="Cierre propuesto">${esc(cierreTxt(f))}</td></tr>`;
     }).join('');
     // los servicios ya abiertos se vuelven a pintar con el corte y el escenario elegidos
     el.querySelectorAll('details.hab-srv[open]').forEach((d) => llenar(d));

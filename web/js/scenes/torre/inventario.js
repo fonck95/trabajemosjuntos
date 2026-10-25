@@ -4,7 +4,7 @@
 // mantenimiento, contenido e implementos internos), la ficha de un recinto, la lista de dotación del recinto actual y el
 // buscador con filtros, totales e «Ir a». Todos los textos de los datos pasan por textos.esc (13.6): nada de rutas ni claves.
 import { fmtCOP, fmtN } from '../../core.js';
-import { verificacion as nivelVerificacion } from './textos.js';
+import { verificacion as nivelVerificacion, CLASES_RIESGO } from './textos.js';
 
 export const NIVELES = ['EXT', 'P1', 'P2', 'P3', 'P4', 'BT', 'CUB'];
 export const NOMBRE_NIVEL = { EXT: 'Exteriores', P1: 'Piso 1', P2: 'Piso 2', P3: 'Piso 3', P4: 'Piso 4', BT: 'Bloque técnico', CUB: 'Cubierta' };
@@ -19,12 +19,16 @@ const SERVICIOS = {
 export const CAPAS = { dotacion: 'Dotación', fijo: 'Equipamiento fijo', laboratorio: 'Laboratorio (comodato, programa u opcional)', cierre_brechas: 'Cierre de brechas propuesto', infraestructura: 'Infraestructura', contexto: 'Contexto (no es de la torre)' };
 const ESTADOS_U = { en_dotacion: 'En la dotación', cierre_brechas_propuesto: 'Faltante: cierre propuesto', infraestructura: 'Infraestructura de obra', contexto: 'Contexto', fuera_de_la_torre: 'Fuera de la torre' };
 export const ESTADOS_R = { cumple: 'Cumple', parcial: 'Parcial', falta: 'Falta', documento_pendiente: 'Documento pendiente', no_aplica: 'No aplica' };
-const CLASES = { I: 'I', IIa: 'IIa', IIb: 'IIb', III: 'III', ivd: 'diagnóstico in vitro', no_dm: 'no es dispositivo médico', por_confirmar: 'por confirmar' };
+const CLASES = CLASES_RIESGO;
 const PRIORIDAD = { habilitacion: 'exigida para la habilitación', recomendado: 'recomendado', por_confirmar: 'por confirmar', no_aplica: 'no aplica' };
 const TIPO_PRECIO = {
   referencia_secop_ajustada_ipc: 'referencia de compras públicas (SECOP) llevada a pesos de 2026 con el IPC', estimacion: 'estimación', calculo_propio: 'cálculo propio',
-  cotizacion: 'cotización', dato_oficial: 'dato oficial',
+  cotizacion: 'cotización', dato_oficial: 'dato oficial', referencia_repo: 'mismo precio de la línea igual de la dotación', por_cotizar: 'por cotizar (sin precio)',
 };
+// tipo de precio en palabras (también los compuestos, «referencia_secop_ajustada_ipc + estimacion»)
+const tipoPrecio = (t) => String(t || '—').split(/\s*\+\s*/).map((p) => TIPO_PRECIO[p] || palabras(p)).join(' y ');
+// cómo se consigue un equipo del laboratorio (laboratorio.json): solo el comodato es valor de mercado que no suma
+const ADQUISICION = { comodato: 'Laboratorio en comodato (no suma)', programa_o_compra: 'Laboratorio: por programa o compra, no presupuestado', opcional: 'Laboratorio: opcional, no presupuestado' };
 const ANCLAJE = { ruedas_con_freno: 'ruedas con freno', anclado: 'anclado a la estructura', apoyado: 'apoyado, sin anclaje', sobre: 'sobre otro mueble', dentro: 'dentro de otro elemento', pared: 'fijo a la pared', colgado: 'colgado', empotrado: 'empotrado' };
 const MONTAJE = { piso: 'en el piso', pared: 'en la pared', sobre: 'sobre otro mueble', dentro: 'dentro de otro elemento', cielo: 'en el cielo raso', en_nucleo: 'en el núcleo' };
 const palabras = (s) => String(s ?? '').replace(/_/g, ' ');
@@ -117,13 +121,15 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
   };
   const clase = (c) => (c?.vigente ? CLASES[c.vigente] || c.vigente : '—');
   const pill = (txt, cls = '') => `<span class="pill ${cls}">${esc(txt)}</span>`;
-  const exigibleTxt = (e) => (e === 'si' ? 'exigido (texto oficial)' : e === 'por_confirmar' ? 'según guía secundaria; por confirmar' : e === 'no' ? 'no exigible' : palabras(e));
+  // estado de la exigencia (igual que la tarjeta de habilitación); el origen del texto va aparte, con su nivel de verificación
+  const exigibleTxt = (e) => (e === 'si' ? 'exigible' : e === 'por_confirmar' ? 'por confirmar' : e === 'no' ? 'no exigible' : palabras(e));
   const enlace = (url, txt = 'fuente') => (/^https?:\/\//.test(String(url || '')) ? ` <a href="${escH(url)}" target="_blank" rel="noopener">${esc(txt)}</a>` : '');
   const fuenteTexto = (s) => { const m = String(s || '').match(/https?:\/\/\S+/); return `${esc(String(s || '').replace(/:?\s*https?:\/\/\S+/, ''))}${m ? enlace(m[0]) : ''}`; };
 
   function exigenciaHTML(ref) {
     const e = exig.get(ref.id);
-    const verif = e ? nivelVerificacion(e.verificacion_texto || '') : '';
+    // el origen del dato sale de su nivel de verificación (paráfrasis, guía secundaria, compilación oficial…), no del estado
+    const verif = e ? nivelVerificacion(e.verificacion_origen || e.verificacion_texto || 'por_confirmar') : '';
     const texto = e ? (e.texto_disponible ? `«${esc(e.texto_corto || e.que_exige || '')}»` : `${esc(e.que_exige || e.texto_corto || '')} <small class="note">(resumen; texto oficial no obtenido)</small>`) : '';
     return `<li><b>${esc(e?.numeral ? `Res. 3100, num. ${String(e.numeral).replace(/^Manual, num\. /, '')}` : ref.id)}</b> · ${esc(exigibleTxt(ref.exigible))}${texto ? `<br>${texto}` : ''}${verif ? `<br><small class="note">${esc(verif)}${e?.fuente_url ? enlace(e.fuente_url) : ''}</small>` : ''}</li>`;
   }
@@ -157,11 +163,11 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
     const precio = u.capa === 'infraestructura' || u.capa === 'contexto'
       ? `<dt>Precio</dt><dd>Sin precio de dotación: es obra${(l.cita_presupuesto || []).length ? ` (presupuesto de obra, ítem ${esc(l.cita_presupuesto.map((c) => c.item).join(', '))})` : ''}</dd>`
       : `<dt>Precio unitario</dt><dd>${l.precio ? fmtCOP(l.precio) : 'por cotizar'}${u.valor === 0 && madre ? '<br><small class="note">incluido en el precio del kit</small>' : ''}${l.rango ? `<br><small class="note">rango ${fmtCOP(l.rango[0])} a ${fmtCOP(l.rango[1])}</small>` : ''}</dd>
-        <dt>Tipo de precio</dt><dd>${esc(TIPO_PRECIO[l.tipo_precio] || palabras(l.tipo_precio || '—'))}</dd>`;
+        <dt>Tipo de precio</dt><dd>${esc(tipoPrecio(l.tipo_precio))}</dd>`;
     const hijos = (hijosComp.get(u.i) || []), dentro = (hijosDentro.get(u.i) || []).filter((h) => !hijos.includes(h));
     const lista = (L, t) => (L.length ? `<details class="fold" open><summary>${esc(t)} (${L.length})</summary><ul class="tight">${L.map((h) => `<li><button type="button" class="reco-link" data-unidad="${escH(h.id)}">${esc(h.nombre)}</button>${h.clase?.vigente ? ` ${pill(`clase ${clase(h.clase)}`)}` : ''}${h.registro?.requerido ? ` <small class="note">registro INVIMA ${esc(h.registro.requerido === 'si' ? 'requerido' : palabras(h.registro.requerido))}</small>` : ''}</li>`).join('')}</ul></details>` : '');
     return `<h4>${esc(u.nombre)}</h4>
-      <p>${pill(CAPAS[u.capa] || palabras(u.capa))} ${pill(ESTADOS_U[u.estado] || palabras(u.estado), u.estado === 'cierre_brechas_propuesto' ? 'p1' : '')}</p>
+      <p>${pill(CAPAS[u.capa] || palabras(u.capa))} ${u.capa === 'laboratorio' && ADQUISICION[l.adquisicion] ? pill(ADQUISICION[l.adquisicion], l.adquisicion === 'comodato' ? '' : 'p1') : pill(ESTADOS_U[u.estado] || palabras(u.estado), u.estado === 'cierre_brechas_propuesto' ? 'p1' : '')}</p>
       ${l.especificacion ? `<p class="note">${esc(l.especificacion)}</p>` : ''}
       <dl class="kv reco-kv">
         <dt>Servicio</dt><dd>${esc(nombreServicio(l.servicio))}</dd>
@@ -170,7 +176,7 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
         ${madre ? `<dt>Parte de</dt><dd><button type="button" class="reco-link" data-unidad="${escH(madre.id)}">${esc(madre.nombre)}</button></dd>` : ''}
         <dt>Clase de riesgo</dt><dd>${esc(clase(cl))}${cl.estado && cl.estado !== 'coherente' ? `<br><small class="note">${esc(palabras(cl.estado))}${cl.revision?.valor ? `: revisión ${esc(CLASES[cl.revision.valor] || cl.revision.valor)}` : ''}</small>` : ''}${cl.regla || cl.revision?.regla ? `<br><small class="note">${esc(cl.regla || cl.revision.regla)}</small>` : ''}</dd>
         <dt>Registro INVIMA</dt><dd>${esc(rg.requerido === 'si' ? 'requerido' : rg.requerido === 'no' ? 'no requerido' : palabras(rg.requerido || '—'))}${rg.via ? `<br><small class="note">${esc(via(rg.via))}</small>` : ''}${rg.usado_permitido === false ? '<br><small class="note">no se puede comprar ni recibir usado</small>' : ''}${rg.nota ? `<br><small class="note">${esc(rg.nota)}</small>` : ''}</dd>
-        <dt>Prioridad</dt><dd>${esc(PRIORIDAD[l.prioridad] || palabras(l.prioridad || '—'))}${l.prioridad_revisada ? `<br><small class="note">revisada: ${esc(PRIORIDAD[l.prioridad_revisada] || palabras(l.prioridad_revisada))}${l.norma_base ? ` (${esc(l.norma_base)})` : ''}</small>` : ''}</dd>
+        <dt>Prioridad</dt><dd>${esc(l.adquisicion === 'programa_o_compra' || l.adquisicion === 'opcional' ? `${PRIORIDAD[l.prioridad] || palabras(l.prioridad || '—')} (no presupuestado: ${l.adquisicion === 'opcional' ? 'opcional' : 'por programa o compra'})` : PRIORIDAD[l.prioridad] || palabras(l.prioridad || '—'))}${l.prioridad_revisada ? `<br><small class="note">revisada: ${esc(PRIORIDAD[l.prioridad_revisada] || palabras(l.prioridad_revisada))}${l.norma_base ? ` (${esc(l.norma_base)})` : ''}</small>` : ''}</dd>
         <dt>Mantenimiento</dt><dd>${mt.anual_pct != null ? `${fmtN(mt.anual_pct, 1)} % al año` : '—'}${mt.vida_util_anios ? ` · vida útil ${fmtN(mt.vida_util_anios)} años` : ''}${mt.personal_inscrito_invima ? '<br><small class="note">por personal inscrito en el INVIMA</small>' : ''}${mt.calibracion ? '<br><small class="note">con calibración</small>' : ''}${preventivo ? `<br><small class="note">${esc(preventivo)}</small>` : ''}</dd>
         ${precio}
         ${l.nota_precio ? `<dt>Nota</dt><dd><small>${esc(l.nota_precio)}</small></dd>` : ''}
@@ -240,7 +246,7 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
   function buscar({ texto = '', nivel = '', servicio = '', recinto = '', capa = '', clase: cl = '', estado = '' } = {}) {
     const q = normal(texto).trim().split(/\s+/).filter(Boolean);
     const out = [];
-    let valor = 0, comodato = 0;
+    let valor = 0, comodato = 0, sinPresupuesto = 0;
     for (const u of U) {
       if (u.nivel === 'fuera_de_la_torre') continue;
       if (nivel && u.nivel !== nivel) continue;
@@ -255,7 +261,11 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
       if (q.length && !q.every((p) => u.busca.includes(p)) && !(u.buscaItems && itemsDe(u).some((it) => { const t = textoItem(it); return q.every((p) => t.includes(p)); }))) continue;
       out.push(u);
       valor += sumaValor(u);
-      if (u.capa === 'laboratorio' && u.componente < 0) comodato += +u.linea.precio || 0;
+      // solo el comodato es valor de mercado que no suma; los de programa o compra y el opcional no están presupuestados
+      if (u.capa === 'laboratorio' && u.componente < 0) {
+        if (u.linea.adquisicion === 'comodato') comodato += +u.linea.precio || 0;
+        else if (u.linea.adquisicion === 'programa_o_compra' || u.linea.adquisicion === 'opcional') sinPresupuesto += +u.linea.precio || 0;
+      }
     }
     // con texto, primero lo que coincide en el nombre, después en la especificación o el recinto y al final en los
     // implementos internos
@@ -263,7 +273,7 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
       const orden = (u) => (u._nom ??= normal(u.nombre), q.every((p) => u._nom.includes(p)) ? 0 : q.every((p) => u.busca.includes(p)) ? 1 : 2);
       out.sort((a, b) => orden(a) - orden(b));
     }
-    return { unidades: out, valor, comodato };
+    return { unidades: out, valor, comodato, sinPresupuesto };
   }
   const opciones = () => {
     const srv = [...new Set(U.map((u) => u.linea.servicio).filter(Boolean))].sort((a, b) => nombreServicio(a).localeCompare(nombreServicio(b), 'es'));
@@ -278,6 +288,16 @@ export function crearInventario(inv, { plantas = null, habilitacion = null, text
     total: U.length,
   };
 }
+
+// centro de un recinto (de su polígono) y su zona en la planta, para distinguir recintos con el mismo nombre
+const centroDe = (r) => { const p = r?.poligono || r?.poligono_ejes || []; if (!p.length) return [0, 0]; let x = 0, y = 0; for (const q of p) { x += q[0]; y += q[1]; } return [x / p.length, y / p.length]; };
+const centroX = (r) => centroDe(r)[0], centroY = (r) => centroDe(r)[1];
+// la torre va de y = −19,6 (sur) a 22,4 (norte) y de x = −13,0 (occidente) a 8,6 (oriente)
+const zonaDe = (r) => {
+  const [x, y] = centroDe(r);
+  const ns = y > 8 ? 'norte' : y < -6 ? 'sur' : '', eo = x < -5 ? 'occidental' : x > 1 ? 'oriental' : '';
+  return ns && eo ? `ala ${ns}, lado ${eo}` : ns ? `ala ${ns}` : eo ? `lado ${eo}` : 'centro';
+};
 
 // ---------------------------------------------------------------- buscador (panel del recorrido)
 // op: { irA(idUnidad, { implementos }), textos }. Devuelve { refrescar(), filtrar(valores), resultados() }.
@@ -306,7 +326,19 @@ export function montarBuscador(el, modelo, { irA, textos }) {
     const nivel = f('nivel').value, sel = f('recinto'), previo = sel.value;
     const ids = [...modelo.porRecinto.keys()].filter((id) => !nivel || modelo.recintos.get(id)?.nivel === nivel)
       .sort((a, b) => modelo.nombreRecinto(a).localeCompare(modelo.nombreRecinto(b), 'es'));
-    sel.innerHTML = `<option value="">Todos</option>${ids.map((id) => `<option value="${escH(id)}">${esc(modelo.nombreRecinto(id))}${nivel ? '' : ` (${esc(NOMBRE_NIVEL[modelo.recintos.get(id)?.nivel] || '')})`}</option>`).join('')}`;
+    // los recintos con el mismo nombre en el mismo nivel llevan su número de orden y su zona («3 de 8, ala norte»)
+    const clave = (id) => `${modelo.recintos.get(id)?.nivel}|${modelo.nombreRecinto(id)}`;
+    const grupos = new Map();
+    for (const id of ids) { const k = clave(id); if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(id); }
+    for (const g of grupos.values()) g.sort((a, b) => { const ra = modelo.recintos.get(a), rb = modelo.recintos.get(b); return (centroY(rb) - centroY(ra)) || (centroX(ra) - centroX(rb)) || a.localeCompare(b); });
+    const rotulo = (id) => {
+      const g = grupos.get(clave(id)), r = modelo.recintos.get(id);
+      const nom = modelo.nombreRecinto(id), niv = NOMBRE_NIVEL[r?.nivel] || '';
+      if (g.length < 2) return `${nom}${nivel ? '' : ` (${niv})`}`;
+      const k = g.indexOf(id) + 1, zona = zonaDe(r);
+      return `${nom} ${k} de ${g.length} (${[nivel ? '' : niv, zona].filter(Boolean).join(', ')})`;
+    };
+    sel.innerHTML = `<option value="">Todos</option>${ids.map((id) => `<option value="${escH(id)}">${esc(rotulo(id))}</option>`).join('')}`;
     if (ids.includes(previo)) sel.value = previo;
   };
   const fila = (u) => {
@@ -324,7 +356,7 @@ export function montarBuscador(el, modelo, { irA, textos }) {
   function refrescar() {
     const r = modelo.buscar({ texto: f('texto').value, nivel: f('nivel').value, servicio: f('servicio').value, recinto: f('recinto').value, capa: f('capa').value, clase: f('clase').value, estado: f('estado').value });
     lista = r.unidades; n = Math.min(POR_PAGINA, lista.length);
-    tot.innerHTML = `<b>${fmtN(lista.length)}</b> unidades · <b>${fmtCOP(r.valor)}</b> en dotación, equipamiento fijo y cierre de brechas${r.comodato ? ` <small class="note">(más ${fmtCOP(r.comodato)} de valor de mercado del laboratorio en comodato, que no suma)</small>` : ''}`;
+    tot.innerHTML = `<b>${fmtN(lista.length)}</b> ${lista.length === 1 ? 'unidad' : 'unidades'} · <b>${fmtCOP(r.valor)}</b> en dotación, equipamiento fijo y cierre de brechas${r.comodato ? ` <small class="note">(más ${fmtCOP(r.comodato)} de valor de mercado del laboratorio en comodato, que no suma)</small>` : ''}${r.sinPresupuesto ? ` <small class="note">(más ${fmtCOP(r.sinPresupuesto)} de laboratorio por programa o compra u opcional, no presupuestado: si se compra, suma)</small>` : ''}`;
     pintar();
   }
   let tEscribir = 0;
