@@ -1317,12 +1317,22 @@ export async function montar(ctx) {
     const L = Math.hypot(dx, dy);
     if (!L) return false;
     for (const p of cur.pasos) {
-      const vx = p.punto[0] - w.x, vy = p.punto[1] - w.y, d = Math.hypot(vx, vy);
-      if (d > 0.95 || (d > 0.05 && (vx * dx + vy * dy) / (L * d) < 0.3)) continue;
       // dirección de cruce: la normal del muro de la puerta, hacia donde camina la persona
       let ux = dx / L, uy = dy / L;
       const pu = p.puerta && (cur.nivel.puertas || []).find((q) => q.id === p.puerta), m = pu && cur.muros.get(pu.muro);
-      if (m) { const Lm = Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1]) || 1; let nx = -(m.b[1] - m.a[1]) / Lm, ny = (m.b[0] - m.a[0]) / Lm; if (nx * dx + ny * dy < 0) { nx = -nx; ny = -ny; } ux = nx; uy = ny; }
+      if (m) {
+        // frente al vano: dentro de su ancho a lo largo del muro, a menos de 0,95 m de él y caminando hacia él. Así se cruza
+        // también pegado al marco de una puerta ancha (con el ángulo al centro, desde un costado no cruzaba)
+        const Lm = Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1]) || 1, ex = (m.b[0] - m.a[0]) / Lm, ey = (m.b[1] - m.a[1]) / Lm;
+        let nx = -ey, ny = ex;
+        if (nx * dx + ny * dy < 0) { nx = -nx; ny = -ny; }
+        const rx = w.x - p.punto[0], ry = w.y - p.punto[1], s = rx * nx + ry * ny;
+        if (Math.abs(rx * ex + ry * ey) > (+pu.ancho || 0.9) / 2 || s < -0.95 || s > 0.1 || (nx * dx + ny * dy) / L < 0.3) continue;
+        ux = nx; uy = ny;
+      } else {
+        const vx = p.punto[0] - w.x, vy = p.punto[1] - w.y, d = Math.hypot(vx, vy);
+        if (d > 0.95 || (d > 0.05 && (vx * dx + vy * dy) / (L * d) < 0.3)) continue;
+      }
       const destino = niveles.get(p.otro_nivel);
       if (!destino) continue;
       const tx = p.punto[0] + ux * 0.7, ty = p.punto[1] + uy * 0.7;
