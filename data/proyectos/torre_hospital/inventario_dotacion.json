@@ -6,14 +6,14 @@
  "insumos_sha1": {
   "dotacion.json": "ed6e5fe87fc6f33c37e4943c33aeb53a41b713e5",
   "laboratorio.json": "335c5b851c03ab10181dc32b057ce4834bb2fb1b",
-  "torre_hospital_plantas.json": "bd846949aaec54eef3f01a89003622b3059a8960",
+  "torre_hospital_plantas.json": "fb3d24627d34569c11b3017ebbfe09e72e6364c8",
   "reglas_ubicacion.json": "e35a82feba4fc424c6380eb4ef37d0530fd81bf3",
   "catalogo_equipos.json": "781551b3b81eca79ba580b57855bb199e1f6f03e",
   "implementos.json": "088d3f5ceed9a1c3abfcbb8049ee75fac29fb6b1",
   "exigencias_3100.json": "747f9137790e7bcac2d35f2d7cf2d29c6f10877e",
   "normas_4725_1732.json": "dd3af29475c3dad1377b8f3a594df510b740c514",
   "programa.json": "f04e3e3e6e25d189927c24e2ad83c277c9738dd0",
-  "presupuesto.json": "a1de29304d5d89d1d969cae9b848dc6fd476089c"
+  "presupuesto.json": "3b333d07a3213a019cc4923f1aca5b952d218fe9"
  },
  "sha256_dotacion": "337473d3f17694cfb11620f85563aee5c45eefe5e8baa87eafbd71622ad71851",
  "moneda_y_base": "Pesos constantes de 2026 (promedio enero-septiembre de 2026 del IPC del DANE).",

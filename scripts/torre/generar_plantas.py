@@ -181,11 +181,12 @@ class Generador:
         v = self.est['vigas']
         col = self.est['columnas']
         pe = float(v['peralte_m'])
-        pe_a = max([pe] + [float(o['peralte_m']) for o in (v.get('por_eje_x') or {}).values()])
+        pe_a = max([pe] + [float(o['peralte_m']) for o in list((v.get('por_eje_x') or {}).values()) + list((v.get('por_linea_y') or {}).values())])
         H = float(tn['altura_entrepiso_m'])
         d = {'columnas_m': col['lado_m'], 'columnas_por_eje_x_m': col.get('por_eje_x', {}),
              'vigas_m': {'ancho': v['ancho_m'], 'peralte': pe},
              'vigas_por_eje_x_m': {k: {'ancho': o['ancho_m'], 'peralte': o['peralte_m']} for k, o in (v.get('por_eje_x') or {}).items()},
+             'vigas_por_linea_y_m': {k: {'ancho': o['ancho_m'], 'peralte': o['peralte_m']} for k, o in (v.get('por_linea_y') or {}).items()},
              'losa_nervada_m': v['losa_nervada_m'],
              'altura_libre_bajo_viga_m': r2(H - pe), 'altura_libre_bajo_viga_min_m': r2(H - pe_a),
              'altura_libre_bajo_losa_m': r2(H - float(v['losa_nervada_m'])),

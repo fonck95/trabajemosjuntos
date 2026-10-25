@@ -11,6 +11,9 @@ import * as TEXTOS from './textos.js';
 const VEREDICTOS = ['mejora', 'cumple igual', 'se aparta', 'falta'];
 const PLURAL = { mejora: 'mejoran', 'cumple igual': 'igual', 'se aparta': 'se apartan', falta: 'faltan' };
 const PLURAL_NORMA = { mejora: 'sobre el mínimo', 'cumple igual': 'en el mínimo', 'se aparta': 'se apartan', falta: 'por debajo o por confirmar' };
+// con un solo ambiente el verbo va en singular («1 falta», no «1 faltan»)
+const SINGULAR = { faltan: 'falta', mejoran: 'mejora', 'se apartan': 'se aparta' };
+const cuenta = (n, txt) => `${n} ${n === 1 ? SINGULAR[txt] || txt : txt}`;
 const ESTADO_PAR = { cubre: 'cubre', 'cubre en parte': 'cubre en parte', compartido: 'compartido', falta: 'falta', 'se aparta': 'se aparta', sobra: 'sobra en la torre' };
 // colores fijos solo para el 3D (la tarjeta usa los tokens del tema: --good, --s1, --warn, --bad con texto --ink)
 const COLORES_3D = { mejora: '#2f6b4f', 'cumple igual': '#6b8fb3', 'se aparta': '#c9a227', falta: '#b5562f' };
@@ -73,7 +76,7 @@ export function pintarContraste(el, c, { verEn3D, textos } = {}) {
     const v = x.valor;
     if (x.id === 'ambientes_tipo' || x.id === 'ambientes_norma') {
       const pl = x.id === 'ambientes_tipo' ? PLURAL : PLURAL_NORMA;
-      return `<span class="tc-cuentas">${VEREDICTOS.map((k) => pill(k, `${v?.[k] ?? 0} ${pl[k]}`)).join(' ')}</span>`;
+      return `<span class="tc-cuentas">${VEREDICTOS.map((k) => pill(k, cuenta(v?.[k] ?? 0, pl[k]))).join(' ')}</span>`;
     }
     if (x.id === 'costo_obra_civil' && Array.isArray(v)) return `<b>+${fmtF(v[0])} % a +${fmtF(v[1])} %</b>`;
     if (x.id === 'dotacion' && Array.isArray(v)) return `<b>${fmtF(v[0])} veces</b><span class="tc-sub">${fmtF(v[1])} veces por m²</span>`;

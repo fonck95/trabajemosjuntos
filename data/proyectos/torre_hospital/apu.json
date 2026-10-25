@@ -601,7 +601,7 @@
    "id": "APU-06",
    "item": "Acero de refuerzo fy = 420 MPa (grado 60) figurado y amarrado",
    "unidad": "kg",
-   "descripcion": "Suministro, transporte a Yondó, corte, figurado y amarre de acero corrugado según planos estructurales (NSR-10, capacidad de disipación especial).",
+   "descripcion": "Suministro, transporte a Yondó, corte, figurado y amarre de acero corrugado según planos estructurales (NSR-10, título C, capacidad moderada de disipación de energía, DMO, con el confinamiento de columnas y muros del prediseño; numerales por confirmar).",
    "materiales": [
     {
      "insumo": "Acero corrugado G-60 (fy = 420 MPa) figurado",

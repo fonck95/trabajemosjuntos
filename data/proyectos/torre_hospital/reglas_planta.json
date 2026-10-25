@@ -166,16 +166,16 @@
    "ambiente": {"fila": 24, "nombre": "Observación adultos hombres, 2 camillas"},
    "m2": 12.0,
    "lado_m": 3.0,
-   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15",
-   "tipo_dato": "dato oficial",
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15 (por confirmar: la investigación de urgencias no confirmó los criterios de infraestructura)",
+   "tipo_dato": "dato oficial (Res. 1633); por confirmar (Res. 3100)",
    "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_observacion_por_camilla"
   },
   {
    "ambiente": {"fila": 25, "nombre": "Observación adultos mujeres, 2 camillas"},
    "m2": 12.0,
    "lado_m": 3.0,
-   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15",
-   "tipo_dato": "dato oficial",
+   "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15 (por confirmar: la investigación de urgencias no confirmó los criterios de infraestructura)",
+   "tipo_dato": "dato oficial (Res. 1633); por confirmar (Res. 3100)",
    "fuente": "normas.json → parametros_diseno.areas_minimas_m2.urgencias_observacion_por_camilla"
   },
   {
@@ -1398,9 +1398,10 @@
    "ancho_m": 0.4,
    "peralte_m": 0.8,
    "por_eje_x": {"A": {"ancho_m": 0.5, "peralte_m": 0.9}},
+   "por_linea_y": {"1": {"ancho_m": 0.5, "peralte_m": 0.9}},
    "losa_nervada_m": 0.45,
    "viga_banda_m": 0.45,
-   "nota": "Vigas de 0,40 × 0,80 m (0,50 × 0,90 m en el eje A) y vigas banda de 0,45 m entre la columna C y los muros; losa nervada de 0,45 m (nervios de 0,12 m cada 0,80 m, loseta de 0,05 m). La altura libre bajo viga es la de entrepiso menos el peralte; el cielo raso (altura_libre_m) debe quedar por debajo."
+   "nota": "Vigas de 0,40 × 0,80 m (0,50 × 0,90 m en el eje A y en la línea 1, la fachada sur) y vigas banda de 0,45 m entre la columna C y los muros; losa nervada de 0,45 m (nervios de 0,12 m cada 0,80 m, loseta de 0,05 m). La altura libre bajo viga es la de entrepiso menos el peralte; el cielo raso (altura_libre_m) debe quedar por debajo."
   },
   "muros_estructurales": {
    "espesor_m": 0.35,

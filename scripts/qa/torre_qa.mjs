@@ -305,7 +305,12 @@ async function etapaModos() {
     // tarjetas de abajo (se cargan al acercarse): habilitación y contraste, sin textos internos y con la Res. 1732 revocada
     for (const s of ['torre.habilitacion', 'torre.tipo']) { await page.evaluate((s) => document.querySelector(`[data-slot="${s}"]`).scrollIntoView({ block: 'center' }), s); await pausa(1200); }
     const tarjetas = await esperar(page, () => document.querySelector('[data-slot="torre.habilitacion"]').innerText.length > 200 && document.querySelector('[data-slot="torre.tipo"]').innerText.length > 200, { ms: 30000 });
+    // con los desplegables de las tarjetas abiertos (revisión final: «clase no_dm» estaba dentro de uno cerrado)
+    const cerrados = await page.evaluate(() => { const L = [...document.querySelectorAll('#v-torre .card details:not([open])')]; L.forEach((d) => { d.open = true; }); return L.length; });
+    await pausa(800);
     const internosT = await textosInternos(page, '#v-torre'), r1732 = await sin1732(page), dT = await desborde(page);
+    await page.evaluate(() => document.querySelectorAll('#v-torre .card details[open]').forEach((d) => { d.open = false; }));
+    if (!cerrados) registro.avisos.push('ningún desplegable cerrado en las tarjetas');
     comprobar(tarjetas && !internosT.length && !r1732.length && dT.ok,
       `${combo}: tarjetas de habilitación y contraste cargadas, sin textos internos${internosT.length ? ` (${internosT.slice(0, 3).join(' | ')})` : ''}, la Res. 1732 siempre como revocada${r1732.length ? ` (falla en: ${r1732.slice(0, 2).join(' | ')})` : ''} y sin desborde`);
     comprobar(informe(registro, `torre ${combo}`), `${combo}: consola sin errores`);

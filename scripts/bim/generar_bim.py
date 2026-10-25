@@ -59,7 +59,7 @@ MATERIALES = {
                     'fuente': 'presupuesto.json, capítulos 2 y 3; data/sismo/torre_hospital_estructura.json → materiales'},
     'concreto_21': {'nombre': 'Concreto de 21 MPa (contrapiso)', 'categoria': 'concrete', 'fuente': 'presupuesto.json, ítem 2.12'},
     'acero_420': {'nombre': 'Acero de refuerzo NTC 2289 grado 420 (fy = 420 MPa)', 'categoria': 'steel',
-                  'fuente': 'NSR-10 C.3.5.3; data/sismo/torre_hospital_estructura.json → refuerzo.convenciones'},
+                  'fuente': 'NSR-10 C.3.5.3 (por confirmar); data/sismo/torre_hospital_estructura.json → refuerzo.convenciones'},
     'malla_electrosoldada': {'nombre': 'Malla electrosoldada (NTC 5806)', 'categoria': 'steel', 'fuente': 'despiece de A'},
     'ladrillo_fachada': {'nombre': 'Ladrillo a la vista de 15 cm con pañete interior', 'categoria': 'brick', 'fuente': 'presupuesto.json, ítem 4.03'},
     'bloque_arcilla': {'nombre': 'Bloque de arcilla N.º 5 con pañete', 'categoria': 'block', 'fuente': 'presupuesto.json, ítem 4.01'},
@@ -718,7 +718,7 @@ def arquitectura(M, pl, S, cost, cat_niveles, bases=None):
                                                   'NetSideArea': r(L * h, 3), 'GrossVolume': r(L * h * e_, 4), 'NetVolume': r(L * h * e_, 4)}}
                 ps = {'Pset_WallCommon': {'Reference': t, 'IsExternal': bool(es_fach), 'LoadBearing': False,
                                           'ExtendToStructure': alt == 'entrepiso'}}
-                at = atlas_pset(TD_B, F_PL + ' y ' + tipos_muro[t].get('fuente', ''), 'NSR-10 A.9 (elementos no estructurales)',
+                at = atlas_pset(TD_B, F_PL + ' y ' + tipos_muro[t].get('fuente', ''), 'NSR-10 A.9 (elementos no estructurales; numeral por confirmar)',
                                 'A.9.4 (por confirmar)', tipos_muro[t]['material'][:200])
                 e = elemento(wid, 'ARQ', 'IfcWall', tipo_ifc, f'Muro de {tipos_muro[t]["material"].split(":")[0].split(" con ")[0]}',
                              nid, geo, TIPO_MURO_MATERIAL[t], at, qto, ps, costo, fase_de('ARQ', nid),
@@ -768,7 +768,7 @@ def arquitectura(M, pl, S, cost, cat_niveles, bases=None):
             ps = {'Pset_DoorCommon': {'Reference': p.get('categoria'), 'IsExternal': bool(ext),
                                       'FireRating': '90 min' if p.get('categoria') == 'evacuacion' else None,
                                       'HandicapAccessible': w >= 0.9, 'FireExit': p.get('categoria') == 'evacuacion'}}
-            at = atlas_pset(TD_B, F_PL, 'NSR-10 K.3.14 (puertas de salida) y Res. 1633 de 2025', None, p.get('cita_ancho'))
+            at = atlas_pset(TD_B, F_PL, 'NSR-10 K.3.14 (puertas de salida; numeral por confirmar) y Res. 1633 de 2025', None, p.get('cita_ancho'))
             vano = None
             if host:
                 vid = p['id'] + '-V'
@@ -852,12 +852,18 @@ def arquitectura(M, pl, S, cost, cat_niveles, bases=None):
                                    prisma(rc['poligono'], zn - 0.15, zn), 'concreto_21',
                                    atlas_pset('estimación', 'presupuesto.json, ítem 17.13; ' + F_PL),
                                    {'Qto_SlabBaseQuantities': {'Depth': 0.15, 'GrossArea': r(Ar, 3), 'NetArea': r(Ar, 3), 'GrossVolume': r(Ar * 0.15, 3), 'NetVolume': r(Ar * 0.15, 3)}},
-                                   {'Pset_SlabCommon': {'LoadBearing': True, 'IsExternal': False}}, [cost.v('17.13', Ar)], fase_de('ARQ', 'BT')))
+                                   {'Pset_SlabCommon': {'LoadBearing': True, 'IsExternal': False}},
+                                   # la losa de piso es del ítem 2.12 (su supuesto incluye los 18 m² de residuos); 17.13 son los acabados
+                                   [cost.v('2.12', Ar, 'losa de piso de residuos: el ítem 2.12 la incluye (18 m² de su supuesto)'), cost.v('17.13', Ar)],
+                                   fase_de('ARQ', 'BT')))
             M.agregar(elemento('BT-PISO', 'ARQ', 'IfcSlab', 'BASESLAB', 'Losa de piso del bloque técnico', 'BT', prisma(pol, zn - 0.15, zn),
                                'concreto_21', atlas_pset('estimación', 'presupuesto.json, ítem 17.12; ' + F_PL,
                                                          nota='el bloque técnico es una estructura independiente con junta; su estructura no está en el prediseño de A'),
                                {'Qto_SlabBaseQuantities': {'Depth': 0.15, 'GrossArea': r(A, 3), 'NetArea': r(A, 3), 'GrossVolume': r(A * 0.15, 3), 'NetVolume': r(A * 0.15, 3)}},
-                               {'Pset_SlabCommon': {'LoadBearing': True, 'IsExternal': False}}, [cost.v('17.12', A)], fase_de('ARQ', 'BT')))
+                               {'Pset_SlabCommon': {'LoadBearing': True, 'IsExternal': False}},
+                               # la losa de piso es del ítem 2.12 (su supuesto incluye los 125,6 m² del bloque técnico); 17.12 es el m² del bloque
+                               [cost.v('2.12', A, 'losa de piso del bloque técnico: el ítem 2.12 la incluye (125,6 m² de su supuesto)'), cost.v('17.12', A)],
+                               fase_de('ARQ', 'BT')))
             M.agregar(elemento('BT-CUB', 'ARQ', 'IfcSlab', 'ROOF', 'Cubierta del bloque técnico', 'BT',
                                prisma(pol, zn + n['altura_entrepiso_m'] - 0.12, zn + n['altura_entrepiso_m']), 'concreto_21',
                                atlas_pset('estimación', 'presupuesto.json, ítem 17.12; ' + F_PL),
@@ -1147,13 +1153,15 @@ def cimentacion(M, S, cost, est, bases):
             M.agregar(elemento(b['host_arranque'], 'CIM', 'IfcColumn', 'COLUMN', f'Arranque (pedestal) de la columna {c["eje"]} sobre {b["apoyo"]}', 'CIM',
                                caja(c['x'] - ba / 2, c['y'] - ha / 2, z0, c['x'] + ba / 2, c['y'] + ha / 2, z1), 'concreto_28',
                                atlas_pset(TD_F, F_EST + ' (cotas de la cara superior del dado y del piso 1)', NSR_C, 'C.7.7.1 (recubrimiento contra el relleno) y C.15.8 (por confirmar)',
-                                          'El despiece de A empieza la columna en el piso 1 (z = 0); el arranque llena el tramo hasta la cara superior del '
-                                          'dado y es 1 cm más ancho por lado que la columna para dar 50 mm de recubrimiento contra el relleno.'),
+                                          'El arranque es el tramo de la columna entre la cara superior del dado y el piso 1: parte del entrepiso 1 '
+                                          'del modelo sísmico (la base está en la cara del dado) y del despiece de A, confinado como la zona lo; es '
+                                          '1 cm más ancho por lado que la columna para dar 50 mm de recubrimiento contra el relleno.'),
                                {'Qto_ColumnBaseQuantities': {'Length': r(z1 - z0, 3), 'CrossSectionArea': r(ba * ha, 4), 'GrossVolume': r(V, 4), 'NetVolume': r(V, 4)}},
                                {'Pset_ColumnCommon': {'Reference': 'arranque', 'LoadBearing': True, 'IsExternal': False},
                                 'Pset_ConcreteElementGeneral': {'StrengthClass': "f'c = 28 MPa", 'ConcreteCover': 0.04}},
-                               [cost.v('3.01', V, 'arranque bajo el piso 1: no está en las cantidades de A')], 'F7-DAD',
-                               analisis={'elementos': [], 'nota': 'la base del modelo de A está empotrada en la cara superior del dado'}))
+                               [cost.v('3.01', V, 'arranque bajo el piso 1 (en las cantidades de A: cantidades.por_tipo.arranques)')], 'F7-DAD',
+                               analisis={'elementos': sorted(S.analisis_col.get(c['id'], [])), 'fisico': c['id'],
+                                         'nota': 'tramo de arranque del elemento del entrepiso 1: la base del modelo de A está empotrada en la cara superior del dado'}))
         else:
             ms = [m for m in S.muros if m['muro'] == linea and m['nivel'] == 1][0]
             z0, z1 = b['z_tope'], 0.0
@@ -1166,8 +1174,9 @@ def cimentacion(M, S, cost, est, bases):
                                           'piso 1, 1,5 cm más ancho por lado para el recubrimiento contra el relleno'),
                                {'Qto_WallBaseQuantities': {'Height': r(z1 - z0, 3), 'GrossVolume': r(V, 4), 'NetVolume': r(V, 4)}},
                                {'Pset_WallCommon': {'Reference': 'arranque de muro estructural', 'LoadBearing': True, 'IsExternal': False}},
-                               [cost.v('3.02', V, 'arranque bajo el piso 1: no está en las cantidades de A')], 'F7-DAD',
-                               analisis={'elementos': [], 'nota': 'base del muro empotrada en la losa de pilotes en el modelo de A'}))
+                               [cost.v('3.02', V, 'arranque bajo el piso 1 (en las cantidades de A: cantidades.por_tipo.arranques)')], 'F7-DAD',
+                               analisis={'elementos': [ms['id']], 'muro': ms['muro'],
+                                         'nota': 'tramo de arranque del elemento del entrepiso 1: la base del muro está empotrada en la losa de pilotes en el modelo de A'}))
     # pilotes
     for g in C['pilotes']:
         for kp, (px, py) in enumerate(g['posiciones']):
@@ -2020,9 +2029,12 @@ def notas_frente_a_A(frente_A):
         'columnas': (f'{kg("columnas")}: el modelo reparte los estribos del centro desde el último de la zona confinada (el paso '
                      'no pasa de s en la transición) y agrega estribos en el nudo para no cruzar las barras de las vigas; el prediseño cuenta '
                      'cada piso con su largo más el traslapo.'),
-        'muros': (f'{kg("muros")}: el modelo lleva la cortina horizontal continua a través de las losas y por el arranque hasta la '
-                  'losa de pilotes, con horquillas en U en los extremos (y bajo la cubierta, en las verticales), y confina los '
-                  'bordes también en el arranque; el prediseño no cuenta esas barras.'),
+        'muros': (f'{kg("muros")}: el modelo lleva la cortina horizontal continua a través de las losas, con horquillas en U en '
+                  'los extremos (y bajo la cubierta, en las verticales); el prediseño no cuenta esas barras. Las del tramo de '
+                  'arranque, bajo el piso 1, van en «arranques» en los dos.'),
+        'arranques': (f'{kg("arranques")}: los dos confinan el arranque entero como la zona lo; el modelo pone el primer juego '
+                      'a 5 cm de la cara del dado y reparte los estribos y ganchos suplementarios con su paso, y su concreto es '
+                      '1,5 cm más ancho por cara en los muros y descuenta lo que comparte con los fosos.'),
         'losas': (f'{kg("losas")}: la malla de la loseta se corta en columnas y muros; el prediseño la cuenta sobre el área a ejes.'),
     }
 

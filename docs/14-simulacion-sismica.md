@@ -11,10 +11,10 @@
 ## En pocas palabras
 
 - La torre es una **edificación indispensable** (grupo de uso IV de la NSR-10): tiene que seguir funcionando después de un sismo fuerte y quedar **sin daño** en uno frecuente. Yondó está en **amenaza sísmica intermedia** (Aa = Av = 0,15), así que el concreto se diseña con **capacidad moderada de disipación de energía (DMO)**.
-- El prediseño que cumple es un **sistema dual**: 5 muros de concreto de 0,35 m en los núcleos de escaleras y pórticos con columnas de 0,80 m (0,90 m en la fachada occidental), sobre 146 pilotes de 15 m. Con las secciones del presupuesto (columnas de 0,60 m) la deriva llegaba a 2,09 % y no cumplía el 1 %; con las adoptadas queda en **0,939 %** (cálculo propio).
+- El prediseño que cumple es un **sistema dual**: 5 muros de concreto de 0,35 m en los núcleos de escaleras y pórticos con columnas de 0,80 m (0,90 m en la fachada occidental), sobre 146 pilotes de 15 m, con la base de columnas y muros en la cara superior de los dados. Con las secciones del presupuesto (columnas de 0,60 m) la deriva llegaba a 2,45 % y no cumplía el 1 %; con las adoptadas (vigas de 0,50 × 0,90 m en las fachadas occidental y sur) queda en **0,940 %** (cálculo propio).
 - El movimiento del suelo se fabrica con el **método estocástico de Boore (2003)**: la magnitud de momento Mw, la profundidad, la distancia y el suelo cambian el sismo de forma continua. La magnitud que se mueve es **Mw**, no la «escala de Richter», que se satura en sismos grandes.
-- En el escenario por defecto (nido de Bucaramanga, como el 10-mar-2015) la torre se mueve muy poco: deriva vectorial máxima de **0,056 %** y ningún elemento fluye. En el sismo local hipotético bajo Yondó (Mw 6,0 a 10 km), la deriva llega a **0,416 %** y fluyen 40 elementos, ninguno más allá de ocupación inmediata; 260 equipos sueltos deslizan (cálculo propio con el motor).
-- El motor se validó contra soluciones exactas (44 pruebas en verde) y contra OpenSees 3.8 con la misma idealización: los 6 primeros períodos difieren a lo sumo **0,054 %**, la deriva y el cortante basal elásticos **0,16 %** y **0,047 %**, y en la corrida no lineal fluyen los mismos 155 elementos en los dos programas (cálculo propio).
+- En el escenario por defecto (nido de Bucaramanga, como el 10-mar-2015) la torre se mueve muy poco: deriva vectorial máxima de **0,060 %** y ningún elemento fluye. En el sismo local hipotético bajo Yondó (Mw 6,0 a 10 km), la deriva llega a **0,466 %** y fluyen 66 elementos, ninguno más allá de ocupación inmediata; 267 equipos sueltos deslizan. Llevado al nivel de diseño de la NSR-10 (hipotético), la deriva en el tiempo llega a 1,01-1,08 % en el entrepiso 1 (cálculo propio con el motor).
+- El motor se validó contra soluciones exactas (44 pruebas en verde) y contra OpenSees 3.8 con la misma idealización: los 6 primeros períodos difieren a lo sumo **0,054 %**, la deriva y el cortante basal elásticos **0,13 %** y **0,056 %**, y en la corrida no lineal fluyen los mismos 141 elementos en los dos programas (cálculo propio).
 
 ## 1. Para qué sirve y qué no es
 
@@ -96,7 +96,7 @@ Así, mover la profundidad 1 km cambia la aceleración pico a lo sumo un 9 % ent
 
 ### 3.5 Escala «nivel de diseño NSR-10» (hipotética)
 
-El escenario por defecto casi no produce esfuerzos (PGA ≈ 0,028 g). Para ver la estructura cerca de su diseño, el control de escala multiplica el registro para que su espectro, entre 0,8 y 1,2 veces el período fundamental en cada dirección, iguale en promedio el espectro de diseño de Yondó con I = 1,5 (rango de A.2.7, por confirmar). No cambia la física de la fuente: es un escenario hipotético. La vista muestra el factor y cuántas vueltas dio el ajuste del suelo no lineal (5 vueltas y un factor de 18,04 para el nido; 2,85 para Cimitarra y 2,46 para el sismo local, cálculo propio).
+El escenario por defecto casi no produce esfuerzos (PGA ≈ 0,028 g). Para ver la estructura cerca de su diseño, el control de escala multiplica el registro para que su espectro, entre 0,8 y 1,2 veces el período fundamental en cada dirección, iguale en promedio el espectro de diseño de Yondó con I = 1,5 (rango de A.2.7, por confirmar). No cambia la física de la fuente: es un escenario hipotético. La vista muestra el factor y cuántas vueltas dio el ajuste del suelo no lineal (5 vueltas y un factor de 18,27 para el nido; 4 vueltas y 2,89 para Cimitarra y 4 vueltas y 2,53 para el sismo local, cálculo propio).
 
 ## 4. La norma: amenaza intermedia, DMO y grupo IV
 
@@ -124,74 +124,77 @@ Pisos 1 a 3 de 21,60 × 42,00 m y piso 4 de 21,60 × 30,00 m (retrocede 12 m en 
 
 | Nivel | Masa | Peso sísmico | Centro de masa (x; y) | Centro de rigidez (x; y) | Excentricidad (x; y) |
 |---|---:|---:|---|---|---|
-| Losa del piso 2 (4,5 m) | 1.370,2 t | 13.437 kN | (−1,64; 1,68) | (1,28; 5,22) | (2,92; 3,54) m |
-| Losa del piso 3 (8,7 m) | 1.341,9 t | 13.160 kN | (−1,66; 1,69) | (0,68; 5,54) | (2,34; 3,85) m |
-| Losa del piso 4 (12,9 m) | 1.295,4 t | 12.703 kN | (−1,66; 2,46) | (0,00; 5,47) | (1,66; 3,00) m |
-| Cubierta (17,1 m) | 886,0 t | 8.688 kN | (−1,04; 7,39) | (−0,36; 5,70) | (0,68; −1,69) m |
-| **Total** | **4.893,4 t** | **47.988 kN** | | | |
+| Losa del piso 2 (4,5 m) | 1.376,4 t | 13.498 kN | (−1,64; 1,58) | (1,45; 6,36) | (3,09; 4,78) m |
+| Losa del piso 3 (8,7 m) | 1.348,2 t | 13.221 kN | (−1,67; 1,59) | (0,69; 5,90) | (2,36; 4,31) m |
+| Losa del piso 4 (12,9 m) | 1.301,6 t | 12.765 kN | (−1,66; 2,36) | (−0,04; 5,42) | (1,63; 3,06) m |
+| Cubierta (17,1 m) | 886,0 t | 8.688 kN | (−1,04; 7,39) | (−0,43; 5,51) | (0,61; −1,88) m |
+| **Total** | **4.912,2 t** | **48.172 kN** | | | |
 
-Con el retroceso, el centro de masa de la cubierta queda ≈ 5,7 m al norte del de los niveles de abajo. Los núcleos están al oriente y al norte del centro de masa: la torsión es física real del prediseño, no un error, y se ve en las esquinas.
+La losa del piso 2 lleva además la mitad del peso de los arranques de columnas y muros bajo el piso 1. Con el retroceso, el centro de masa de la cubierta queda ≈ 5,8 m al norte del de los niveles de abajo. Los núcleos están al oriente y al norte del centro de masa: la torsión es física real del prediseño, no un error, y se ve en las esquinas.
 
 ### 5.2 Cómo se llegó al prediseño
 
-El presupuesto traía columnas de 0,60 × 0,60 m, vigas de 0,40 × 0,60 m y ≈ 45 m de muro de 0,30 m. Con eso **no cumplía**: el prediseño se ajustó en cuatro pasos (cálculo propio):
+El presupuesto traía columnas de 0,60 × 0,60 m, vigas de 0,40 × 0,60 m y ≈ 45 m de muro de 0,30 m. Con eso **no cumplía** (deriva de 2,45 % frente al 1 %): el prediseño se ajustó en cinco pasos (cálculo propio, todos con la base en la cara superior de los dados):
 
 | Paso | Cambio | T1 | Deriva máxima de diseño | Deriva del umbral de daño | Cociente torsional (x) |
 |---|---|---:|---:|---:|---:|
-| 0 | Secciones del presupuesto con los 7 paños de núcleo posibles | 0,571 s | 2,09 % | 0,295 % | 1,561 |
-| 1 | Paños de muro que equilibran la torsión (sin la cara sur de la escalera norte ni el foso de ascensores) | 0,592 s | 2,17 % | 0,329 % | 1,397 |
-| 2 | Pórticos más rígidos: columnas de 0,80 m y vigas de 0,40 × 0,80 m | 0,494 s | 1,18 % | 0,208 % | 1,314 |
-| 3 | Pórtico de la fachada occidental (eje A, el más lejano de los núcleos) con columnas de 0,90 m y vigas de 0,50 × 0,90 m | 0,468 s | 0,94 % | 0,181 % | 1,296 |
-| 4 | **Adoptado:** muros de 0,35 m (más alma para el cortante por capacidad) | 0,455 s | 0,94 % | 0,178 % | 1,306 |
+| 0 | Secciones del presupuesto con los 7 paños de núcleo posibles | 0,6155 s | 2,454 % | 0,337 % | 1,672 |
+| 1 | Paños de muro que equilibran la torsión (sin la cara sur de la escalera norte ni el foso de ascensores) | 0,6335 s | 2,358 % | 0,356 % | 1,480 |
+| 2 | Pórticos más rígidos: columnas de 0,80 m y vigas de 0,40 × 0,80 m | 0,5242 s | 1,278 % | 0,231 % | 1,407 |
+| 3 | Pórtico de la fachada occidental (eje A, el más lejano de los núcleos) con columnas de 0,90 m y vigas de 0,50 × 0,90 m | 0,5014 s | 1,115 % | 0,215 % | 1,387 |
+| 4 | Muros de 0,35 m (más alma para el cortante por capacidad) | 0,4891 s | 1,111 % | 0,210 % | 1,396 |
+| 5 | **Adoptado:** pórtico de la fachada sur (línea 1) con vigas de 0,50 × 0,90 m | 0,4809 s | 0,940 % | 0,183 % | 1,368 |
+
+El paso 5 viene de la revisión final: la base estaba empotrada en el nivel ±0,00 y los arranques de 0,40 a 1,65 m bajo el piso 1 no entraban en el análisis. Con la base en la cara superior de los dados, el entrepiso 1 es más flexible (los arranques de la línea 1 bajan 1,65 m bajo el pasaje del bloque técnico) y la deriva de la esquina suroccidental pasaba del 1 % con las secciones del paso 4.
 
 ### 5.3 Sistema estructural, R y período
 
-- **Sistema adoptado: dual.** Con el modelo elástico, los pórticos toman en el entrepiso 1 el **16,3 %** del cortante en x y el **25,4 %** en y (el resto, los muros); en el entrepiso 4, el 56,5 % y el 84,3 %. La NSR-10 (A.3.2.1.4, por confirmar) no clasifica el sistema por esa fracción: exige que el pórtico, capaz de llevar las cargas verticales, se diseñe para resistir por sí solo al menos el 25 % del cortante de diseño. El prediseño lo hace (envolvente del modelo completo y del modelo de solo pórticos con el 25 % de la fuerza horizontal equivalente y su torsión accidental).
-- **Coeficiente de capacidad de disipación:** R = φa·φp·φr·R0 = 0,9 × 0,9 × 1,0 × 6,0 = **4,86**. φa = 0,9 por la irregularidad geométrica en altura 3A (42/30 = 1,40 > 1,30); φp = 0,9 por la irregularidad torsional 1aP (cociente 1,306); φr = 1,0 porque ningún muro tiene relación altura del piso/longitud mayor que 1,0 (máximo 0,91) y perder el momento en los dos extremos de una viga quita a lo sumo el 9,6 % de la resistencia del piso (prueba de ASCE/SEI 7-16 a falta del texto de A.3.3.8, por confirmar). Con φr = 0,75, R sería 3,645 y las fuerzas de diseño, 33 % mayores.
-- **Período:** con muros, la fila «otros sistemas» de la Tabla A.4.2-1 (Ct = 0,049; α = 0,75; por confirmar) da Ta = **0,412 s** y Cu·Ta = **0,558 s**, con Cu = 1,75 − 1,2·Av·Fv = 1,354. Períodos del modelo de prediseño: T1 = **0,455 s** (en y, con 43,0 % de la masa en y, 21,5 % en x y 12,5 % en torsión) y **0,444 s** en x; el tercero, 0,400 s, es torsional (58,7 % de la masa en giro). Los dos primeros están por debajo de Cu·Ta, así que la fuerza horizontal equivalente usa el período del modelo.
-- **Cortante basal de diseño:** con Sa = 0,844 g y W = 47.988 kN, la fuerza horizontal equivalente sin reducir es Vs = **40.490 kN** (**8.331 kN** dividida por R), repartida en 5.023, 9.511, 13.614 y 12.342 kN de abajo arriba. El análisis modal (12 modos, CQC) da 30.026 kN en x y 28.578 kN en y; como la estructura es irregular, se ajusta al 90 % de la fuerza horizontal equivalente con factores de 1,214 y 1,275 (NSR-10 A.5.4.5, por confirmar).
+- **Sistema adoptado: dual.** Con el modelo elástico, los pórticos toman en el entrepiso 1 el **15,3 %** del cortante en x y el **22,0 %** en y (el resto, los muros); en el entrepiso 4, el 59,8 % y el 88,8 %. La NSR-10 (A.3.2.1.4, por confirmar) no clasifica el sistema por esa fracción: exige que el pórtico, capaz de llevar las cargas verticales, se diseñe para resistir por sí solo al menos el 25 % del cortante de diseño. El prediseño lo hace (envolvente del modelo completo y del modelo de solo pórticos con el 25 % de la fuerza horizontal equivalente y su torsión accidental).
+- **Coeficiente de capacidad de disipación:** R = φa·φp·φr·R0 = 0,9 × 0,9 × 1,0 × 6,0 = **4,86**. φa = 0,9 por la irregularidad geométrica en altura 3A (42/30 = 1,40 > 1,30); φp = 0,9 por la irregularidad torsional 1aP (cociente 1,368); φr = 1,0 porque ningún muro tiene relación altura del piso/longitud mayor que 1,0 (máximo 0,91) y perder el momento en los dos extremos de una viga quita a lo sumo el 9,7 % de la resistencia del piso (prueba de ASCE/SEI 7-16 a falta del texto de A.3.3.8, por confirmar). Con φr = 0,75, R sería 3,645 y las fuerzas de diseño, 33 % mayores.
+- **Período:** con muros, la fila «otros sistemas» de la Tabla A.4.2-1 (Ct = 0,049; α = 0,75; por confirmar) da Ta = **0,412 s** y Cu·Ta = **0,558 s**, con Cu = 1,75 − 1,2·Av·Fv = 1,354. Períodos del modelo de prediseño: T1 = **0,481 s** (en y, con 40,5 % de la masa en y, 29,2 % en x y 10,3 % en torsión) y **0,469 s** en x (45,8 % de la masa en x); el tercero, 0,415 s, es torsional (63,3 % de la masa en giro). Los dos primeros están por debajo de Cu·Ta, así que la fuerza horizontal equivalente usa el período del modelo.
+- **Cortante basal de diseño:** con Sa = 0,844 g y W = 48.172 kN, la fuerza horizontal equivalente sin reducir es Vs = **40.645 kN** (**8.363 kN** dividida por R), repartida en 5.049, 9.561, 13.687 y 12.349 kN de abajo arriba. El análisis modal (12 modos, CQC) da 30.919 kN en x y 29.839 kN en y; como la estructura es irregular, se ajusta al 90 % de la fuerza horizontal equivalente con factores de 1,183 y 1,226 (NSR-10 A.5.4.5, por confirmar).
 
 ### 5.4 Irregularidades, torsión y retroceso
 
-- **Torsional (1aP/1bP):** deriva máxima en un borde frente al promedio de los dos bordes, contra 1,2 y 1,4: 1,306; 1,270; 1,217 y 1,171 en x (entrepisos 1 a 4) y 1,150 a 1,081 en y. Es irregular (1aP) pero no extrema (1bP), lo que el prediseño se impuso por ser edificación indispensable. La torsión accidental se amplifica con Ax = (δmax/1,2·δprom)²: hasta 1,185 en el entrepiso 1.
+- **Torsional (1aP/1bP):** deriva máxima en un borde frente al promedio de los dos bordes, contra 1,2 y 1,4: 1,368; 1,246; 1,178 y 1,146 en x (entrepisos 1 a 4) y 1,149 a 1,07 en y. Es irregular (1aP) pero no extrema (1bP), lo que el prediseño se impuso por ser edificación indispensable. La torsión accidental se amplifica con Ax = (δmax/1,2·δprom)²: hasta 1,299 en el entrepiso 1.
 - **Geométrica en altura (3A):** el piso 4 tiene 30 m en y frente a 42 m de los pisos 1 a 3: 42/30 = 1,40 > 1,30 (NSR-10 Tabla A.3-7, por confirmar). Entra en φa.
-- **Sin piso flexible (1A) ni irregularidad de masa (2A):** la rigidez de cada entrepiso es 1,54 a 2,11 veces la del de arriba, y la masa de un nivel es a lo sumo 1,46 veces la del de arriba (el límite es 1,5; Tabla A.3-7, por confirmar).
+- **Sin piso flexible (1A) ni irregularidad de masa (2A):** la rigidez de cada entrepiso es 1,51 a 2,12 veces la del de arriba, y la masa de un nivel es a lo sumo 1,47 veces la del de arriba (el límite es 1,5; Tabla A.3-7, por confirmar).
 
 ### 5.5 Secciones, núcleos y refuerzo
 
-- **Columnas** de 0,80 × 0,80 m (28 por piso en los pisos 1 a 3 y 20 en el piso 4) y de 0,90 × 0,90 m en el eje A; **vigas** de 0,40 × 0,80 m (0,50 × 0,90 m en el eje A) y vigas banda de 0,35 m entre la columna C y los muros; **losa nervada** de 0,45 m (nervios de 0,12 m cada 0,80 m y loseta de 0,05 m); concreto de 28 MPa y acero de fy = 420 MPa (NTC 2289).
+- **Columnas** de 0,80 × 0,80 m (28 por piso en los pisos 1 a 3 y 20 en el piso 4) y de 0,90 × 0,90 m en el eje A; **vigas** de 0,40 × 0,80 m (0,50 × 0,90 m en el eje A y en la línea 1, la fachada sur) y vigas banda de 0,35 × 0,45 m entre la columna C y los muros; **losa nervada** de 0,45 m (nervios de 0,12 m cada 0,80 m y loseta de 0,05 m); concreto de 28 MPa y acero de fy = 420 MPa (NTC 2289).
 - **Muros de núcleo:** 5 paños de 0,35 m que equilibran la torsión (las dos caras occidentales de las escaleras, al norte de sus puertas; la cara norte de la escalera norte y las caras sur y norte de la escalera sur): 27,42 m de alma y 29,0 m de concreto en planta, frente a ≈ 45 m del presupuesto. Los demás paños de los núcleos van en mampostería separada de la estructura. Cada muro trabaja con sus **aletas efectivas** (el menor entre 0,25 veces la altura, la longitud real y la mitad de la distancia al alma vecina; NSR-10 C.21.9.5.2, por confirmar): 4,28 m en las esquinas de las escaleras.
-- **Refuerzo por elemento** (despiece del prediseño, con barras N.º 3 a N.º 8 de la NTC 2289): la columna típica lleva 24 N.º 6 (1,07 %) y estribos N.º 4 de 6 ramas cada 0,15 m en la zona confinada; las del eje A, 16 N.º 8 (1,01 %); las que rematan los muros, hasta 28 N.º 7 (1,69 %). La viga típica, 2 N.º 8 arriba y abajo con estribos N.º 3 cada 0,15 a 0,175 m en 2h. Los muros, dos cortinas N.º 4 (verticales cada 0,25 m y horizontales cada 0,15 m) y **elementos de borde especiales** en los 10 tramos (por esfuerzo, C.21.9.6.3; las barras de borde se unen con acopladores, sin traslapos). Cuantías: columnas de 1,01 % a 1,69 % (entre 1 % y 4 %) y vigas hasta 0,79 % (≤ 2,5 %).
-- **Columna fuerte-viga débil:** ΣMnc ≥ 1,2·ΣMnb en todos los nudos con columna encima; el peor nudo da **1,886** (cabeza de la columna D3 del piso 1, en el plano y). El cortante por capacidad (con Mpr = 1,25·fy y φ = 1) queda cubierto en vigas, columnas y muros.
+- **Refuerzo por elemento** (despiece del prediseño, con barras N.º 3 a N.º 8 de la NTC 2289): la columna típica lleva 24 N.º 6 (1,07 %) y estribos N.º 4 de 6 ramas cada 0,15 m en la zona confinada; las del eje A, 16 N.º 8 (1,01 %); las que rematan los muros, 24 N.º 7 (1,45 %) o 24 N.º 8 (1,91 %). La viga típica, 2 N.º 8 arriba y abajo con estribos N.º 3 cada 0,125 a 0,175 m en 2h; las de la fachada sur, 5 N.º 6 arriba y abajo. Los muros, dos cortinas: verticales N.º 4 cada 0,25 m y horizontales N.º 4 cada 0,15 a 0,25 m (N.º 5 cada 0,15 m en la base de los muros que más cortante toman), con **elementos de borde especiales** en 6 de los 20 tramos (por esfuerzo, C.21.9.6.3) y el confinamiento de C.21.9.6.5 en los demás; las barras de borde se unen con acopladores, sin traslapos. Los arranques bajo el piso 1 llevan las barras de su columna o muro y van confinados enteros como la zona confinada. Cuantías: columnas de 1,01 % a 1,91 % (entre 1 % y 4 %) y vigas hasta 0,79 % (≤ 2,5 %).
+- **Columna fuerte-viga débil:** ΣMnc ≥ 1,2·ΣMnb en todos los nudos con columna encima; el peor nudo da **1,917** (cabeza de la columna B1 del piso 2, en el plano x). El cortante por capacidad (con Mpr = 1,25·fy y φ = 1) queda cubierto en vigas, columnas y muros.
 
 ### 5.6 La cimentación (en el prediseño, no en el análisis dinámico)
 
-**146 pilotes** preexcavados de 0,60 m de diámetro y **15 m** de largo (2.190 m) bajo 20 dados de 3 a 6 pilotes y 2 losas de pilotes bajo los núcleos de escaleras (30 y 36 pilotes), 37 vigas de amarre, 5 muros de contención junto al pasaje del bloque técnico, contrapiso de 0,15 m, foso de ascensores y cisternas. Capacidad estimada por pilote: 632 kN de servicio (factor de seguridad 3) y 1.265 kN con el sismo de servicio, con un suelo aluvial supuesto (relleno, limo arcilloso hasta 6 m y arena media a densa; nivel freático a 1,0 m). Con 12 m no alcanzaba; 15 m es el largo con menos metros totales que resuelve todos los grupos (cálculo propio con los métodos de O'Neill y Reese y de la FHWA; **estimación: la fijan el estudio geotécnico y las pruebas de carga**, NSR-10 H.4 y H.6, por confirmar). **En la simulación la base sigue empotrada en la cara superior de los dados**: la interacción suelo-estructura queda fuera de alcance.
+**146 pilotes** preexcavados de 0,60 m de diámetro y **15 m** de largo (2.190 m) bajo 20 dados de 3 a 6 pilotes y 2 losas de pilotes bajo los núcleos de escaleras (30 y 36 pilotes), 37 vigas de amarre, 5 muros de contención junto al pasaje del bloque técnico, contrapiso de 0,15 m, foso de ascensores y cisternas. Capacidad estimada por pilote: 632 kN de servicio (factor de seguridad 3) y 1.265 kN con el sismo de servicio, con un suelo aluvial supuesto (relleno, limo arcilloso hasta 6 m y arena media a densa; nivel freático a 1,0 m). Con 12 m no alcanzaba; 15 m es el largo con menos metros totales que resuelve todos los grupos (cálculo propio con los métodos de O'Neill y Reese y de la FHWA; **estimación: la fijan el estudio geotécnico y las pruebas de carga**, NSR-10 H.4 y H.6, por confirmar). **En el análisis y en la simulación, la base de cada columna y cada muro está empotrada en la cara superior de su dado o losa de pilotes**, entre 0,40 y 1,65 m bajo el piso 1 (1,65 m bajo el pasaje del bloque técnico): los arranques son parte del entrepiso 1 del modelo, con su peso, su rigidez y su refuerzo, y el contrapiso lleva juntas de aislamiento alrededor de ellos para no arriostrarlos. El momento en la cabeza de los pilotes suma el cortante por el espesor del dado. La interacción suelo-estructura queda fuera de alcance.
 
 ### 5.7 Derivas y umbral de daño
 
-- **Deriva de diseño** (espectro sin reducir, como vector en los vértices del contorno, con 100 % de una dirección y 30 % de la otra): 0,465 %, 0,842 %, **0,939 %** y 0,801 % en los entrepisos 1 a 4. La máxima está en el entrepiso 3, en la esquina suroccidental (−13,0; −19,6), la más lejana de los núcleos. Límite: 1 % (NSR-10 A.6.3.1 y Tabla A.6.4-1). Cumple.
-- **Umbral de daño** (Ad = 0,04, ξ = 2 %): máxima de **0,178 %** con los muros de mampostería aislados (límite 0,4 %) y de **0,127 %** con la mampostería adherida (límite 0,2 %), las dos en el entrepiso 3 (NSR-10 A.12 y Tabla A.12.5-1). Cumple.
-- **Estabilidad (P-Delta):** índice máximo θ = 0,0047 (entrepiso 2), muy por debajo de 0,10: no hace falta amplificar (A.6.2.3, por confirmar).
+- **Deriva de diseño** (espectro sin reducir, como vector en los vértices del contorno, con 100 % de una dirección y 30 % de la otra): 0,628 %, 0,881 %, **0,940 %** y 0,811 % en los entrepisos 1 a 4. La máxima está en el entrepiso 3, en la esquina suroccidental (−13,0; −19,6), la más lejana de los núcleos. La del entrepiso 1 se mide sobre su altura de 4,50 m (los divisorios se apoyan en el contrapiso, que se mueve con el suelo), aunque sus columnas y muros nacen más abajo. Límite: 1 % (NSR-10 A.6.3.1 y Tabla A.6.4-1). Cumple.
+- **Umbral de daño** (Ad = 0,04, ξ = 2 %): máxima de **0,183 %** con los muros de mampostería aislados (límite 0,4 %) y de **0,131 %** con la mampostería adherida (límite 0,2 %), las dos en el entrepiso 3 (NSR-10 A.12 y Tabla A.12.5-1). Cumple.
+- **Estabilidad (P-Delta):** índice máximo θ = 0,0051 (entrepiso 2), muy por debajo de 0,10: no hace falta amplificar (A.6.2.3, por confirmar).
 
 ## 6. El modelo no lineal
 
 - **Pseudotridimensional** (Wilson y Dovey, 1972): cada nivel es un diafragma rígido con tres grados de libertad (ux, uy, rz) en su centro de masa; los 16 pórticos y muros son planos y sus grados de libertad sin masa se condensan en cada iteración (370 elementos: 196 tramos de columna, 154 vigas y 20 tramos de muro, más 42 resortes de mampostería). La misma columna aparece en dos pórticos (como en TABS): su rigidez axial se suma dos veces (limitación conocida, documentada).
-- **Elemento de Giberson (1969):** cada viga, columna y muro es una parte elástica (flexión y cortante, con zona rígida en los nudos e inercias fisuradas: 0,70 en columnas y 0,35 en vigas y muros) con un resorte plástico en cada extremo. Una rótula positiva dentro del vano (lejos de los extremos) no se captura.
+- **Elemento de Giberson (1969):** cada viga, columna y muro es una parte elástica (flexión y cortante, con zona rígida en los nudos e inercias fisuradas: 0,70 en columnas y 0,35 en vigas y muros) con un resorte plástico en cada extremo. Donde una columna cambia de armado, su extremo de abajo lleva las barras del piso de abajo (el traslapo va en la mitad central del piso de arriba): su rótula y su resistencia son las de esa sección. Una rótula positiva dentro del vano (lejos de los extremos) no se captura.
 - **Histéresis:** bilineal con endurecimiento cinemático (por defecto) o Clough (rigidez de recarga hacia el pico anterior). La mampostería de fachada y divisoria tiene su propio modelo (Tomaževič) con estados de daño leve, moderado, extenso y colapso.
 - **Propiedades esperadas** (ASCE/SEI 41-17, factores 1,5·f'c y 1,25·fy; por confirmar): la simulación compara con la resistencia esperada y no con la nominal de diseño; los límites de rotación plástica son los de ocupación inmediata (IO), seguridad de la vida (LS) y prevención del colapso (CP).
 - **Gravedad primero:** un análisis estático no lineal con las cargas de gravedad; el sismo arranca de ese estado.
 - **P-Delta con el peso de cada nivel:** cada entrepiso recibe el peso de todos los niveles de encima en la posición de su centro de masa (con el retroceso, el de la cubierta está desplazado), lo que equivale a cuatro columnas articuladas por nivel.
-- **Amortiguamiento de Rayleigh del 5 %:** C = a0·M + a1·ΣK0,e, con la rigidez inicial de la **parte elástica** de los elementos; las rótulas nunca amortiguan (así no aparece una fuerza de amortiguamiento espuria cuando fluyen). Períodos ancla: T1 = 0,456 s y 0,0912 s (el de 90 % de masa acumulada o 0,2·T1); a0 = 1,147 s⁻¹ y a1 = 0,00121 s. Amortiguamiento efectivo de los 12 primeros modos: 5,00; 4,92; 4,61; 4,27; 4,58; 4,94; 6,98; 8,01; 9,00; 9,73; 11,18 y 12,63 % (los 12 modos llevan el 94,5 % de la masa en x y el 94,2 % en y). Con los muros de mampostería «sin aislar», el motor recalcula las anclas para que el primer modo siga en 5 % (prueba S5).
+- **Amortiguamiento de Rayleigh del 5 %:** C = a0·M + a1·ΣK0,e, con la rigidez inicial de la **parte elástica** de los elementos; las rótulas nunca amortiguan (así no aparece una fuerza de amortiguamiento espuria cuando fluyen). Períodos ancla: T1 = 0,482 s y 0,0964 s (el de 90 % de masa acumulada o 0,2·T1); a0 = 1,085 s⁻¹ y a1 = 0,00128 s. Amortiguamiento efectivo de los 12 modos: 5,00; 4,92; 4,56; 4,26; 4,57; 4,99; 7,06; 8,14; 9,24; 10,05; 11,62 y 13,19 % (los 12 modos son todos los del modelo de diafragmas; el 90 % de la masa se alcanza en el quinto, con 90,2 % en x y 93,0 % en y). Con los muros de mampostería «sin aislar», el motor recalcula las anclas para que el primer modo siga en 5 % (prueba S5).
 
 ## 7. El método numérico
 
 - **Newmark de aceleración promedio** (γ = 1/2, β = 1/4): incondicionalmente estable en lo lineal y sin disipación numérica.
-- **Newton-Raphson completo** en cada paso, con tangente consistente de las rótulas; si un paso no converge en 20 iteraciones, se parte en dos hasta 4 veces; si aun así no converge, el cálculo se detiene con resultados parciales y lo dice. En los seis escenarios de referencia ningún paso dejó de converger y el promedio fue de 1 a 1,21 iteraciones por paso.
+- **Newton-Raphson completo** en cada paso, con tangente consistente de las rótulas; si un paso no converge en 20 iteraciones, se parte en dos hasta 4 veces; si aun así no converge, el cálculo se detiene con resultados parciales y lo dice. En los seis escenarios de referencia ningún paso dejó de converger y el promedio fue de 1 a 1,2 iteraciones por paso.
 - **Paso de tiempo:** 0,005 s (igual al del registro). En «calidad baja» (dispositivos lentos), 0,01 s sobre el registro filtrado a 20 Hz y tomado cada 2 muestras; la vista lo dice. Las cifras de este documento se calculan con 0,005 s.
-- **Alargamiento del período** de Newmark: T̄/T − 1 ≈ (π²/3)·(Δt/T)²; con Δt = 0,005 s y T1 = 0,456 s es del orden de 0,04 % (cálculo propio; la prueba T1 mide el valor exacto contra la fórmula cerrada con error de 10⁻⁷).
+- **Alargamiento del período** de Newmark: T̄/T − 1 ≈ (π²/3)·(Δt/T)²; con Δt = 0,005 s y T1 = 0,482 s es del orden de 0,04 % (cálculo propio; la prueba T1 mide el valor exacto contra la fórmula cerrada con error de 10⁻⁷).
 - **Qué se evalúa en cada paso** (no en la salida cada 0,02 s): envolventes, primera fluencia, niveles de desempeño, derivas vectoriales y el riesgo de los equipos.
-- **Balance de energía** (formulación relativa, Uang y Bertero, 1990): entrada = cinética + amortiguada + elástica + histerética + trabajo de P-Delta, con un control independiente por la energía de deformación. Error máximo en los escenarios de referencia: 2,5 × 10⁻¹⁴ (es decir, cerrado hasta la precisión de la máquina). Índice de estabilidad máximo en el tiempo: 0,0151 (sismo local a nivel de diseño).
+- **Balance de energía** (formulación relativa, Uang y Bertero, 1990): entrada = cinética + amortiguada + elástica + histerética + trabajo de P-Delta, con un control independiente por la energía de deformación. Error máximo en los escenarios de referencia: 7 × 10⁻¹² (es decir, cerrado a la precisión numérica). Índice de estabilidad máximo en el tiempo: 0,0192 (sismo local a nivel de diseño).
 
 ## 8. Cómo leer la pantalla
 
@@ -205,27 +208,27 @@ El presupuesto traía columnas de 0,60 × 0,60 m, vigas de 0,40 × 0,60 m y ≈ 
 
 ## 9. Resultados de los escenarios de referencia
 
-Calculados con el motor del simulador sobre el prediseño, con Δt = 0,005 s, semilla 2028, Vs30 = 270 m/s, ángulo de 0°, muros de mampostería aislados, la histéresis de cada sección y P-Delta (cálculo propio; una sola semilla por escenario: otra semilla da otras cifras). Peso sísmico: 47.988 kN; 785 equipos evaluados, de los cuales 212 están anclados.
+Calculados con el motor del simulador sobre el prediseño, con Δt = 0,005 s, semilla 2028, Vs30 = 270 m/s, ángulo de 0°, muros de mampostería aislados, la histéresis de cada sección y P-Delta (cálculo propio; una sola semilla por escenario: otra semilla da otras cifras). Peso sísmico: 48.172 kN; 785 equipos evaluados, de los cuales 212 están anclados.
 
 | Escenario | PGA del registro (x / y) | Deriva vectorial máxima (entrepiso y vértice) | Cortante basal pico (x / y) y fracción del peso | Elementos que fluyen: total y por nivel (1 / 2 / 3 / 4) | Equipos sueltos que deslizan / se balancean |
 |---|---|---|---|---|---|
-| Nido de Bucaramanga, como el 10-mar-2015 | 0,037 g / 0,022 g | 0,056 % (entrepiso 3, esquina (−13,0; −19,6)) | 2.942 kN / 2.157 kN (6,1 % / 4,5 %) | 0 | 102 / 0 (máx. 1,3 cm) |
-| Falla de Cimitarra | 0,224 g / 0,131 g | 0,304 % (entrepiso 3, esquina (−13,0; −19,6)) | 15.230 kN / 10.850 kN (31,7 % / 22,6 %) | 14: 9 / 2 / 3 / 0 (10 vigas y 4 muros); ninguno más allá de ocupación inmediata | 190 / 11 (máx. 22,6 cm) |
-| Sismo local hipotético bajo Yondó | 0,271 g / 0,151 g | 0,416 % (entrepiso 3, esquina (−13,0; −19,6)) | 17.480 kN / 11.750 kN (36,4 % / 24,5 %) | 40: 17 / 10 / 11 / 2 (33 vigas, 2 columnas y 5 muros); ninguno más allá de ocupación inmediata | 260 / 15 (máx. 12,8 cm) |
-| Nido de Bucaramanga con escala «nivel de diseño NSR-10» (×18,04, hipotético) | 0,488 g / 0,276 g | 0,841 % (entrepiso 2, esquina (−13,0; −19,6)) | 21.900 kN / 16.690 kN (45,6 % / 34,8 %) | 160: 69 / 31 / 37 / 23 (127 vigas, 28 columnas y 5 muros); 1 extremo más allá de ocupación inmediata | 491 / 1 (máx. 18,7 cm) |
-| Falla de Cimitarra a nivel de diseño (×2,85, hipotético) | 0,532 g / 0,304 g | 0,874 % (entrepiso 2, esquina (−13,0; −19,6)) | 21.510 kN / 17.920 kN (44,8 % / 37,4 %) | 177: 77 / 36 / 37 / 27 (140 vigas, 32 columnas y 5 muros); 2 extremos más allá de ocupación inmediata | 533 / 1 (máx. 67,5 cm) |
-| Sismo local a nivel de diseño (×2,46, hipotético) | 0,562 g / 0,304 g | 0,884 % (entrepiso 2, esquina (−13,0; −19,6)) | 21.910 kN / 16.970 kN (45,7 % / 35,4 %) | 155: 64 / 33 / 35 / 23 (125 vigas, 25 columnas y 5 muros); 3 extremos más allá de ocupación inmediata | 532 / 1 (máx. 29,0 cm) |
+| Nido de Bucaramanga, como el 10-mar-2015 | 0,037 g / 0,022 g | 0,060 % (entrepiso 3, esquina (−13,0; −19,6)) | 3.233 kN / 2.434 kN (6,7 % / 5,1 %) | 0 | 102 / 0 (máx. 1,5 cm) |
+| Falla de Cimitarra | 0,224 g / 0,131 g | 0,338 % (entrepiso 3, esquina (−13,0; −19,6)) | 14.880 kN / 11.560 kN (30,9 % / 24,0 %) | 35: 15 / 8 / 10 / 2 (30 vigas y 5 muros); ninguno más allá de ocupación inmediata | 189 / 11 (máx. 20,2 cm) |
+| Sismo local hipotético bajo Yondó | 0,271 g / 0,151 g | 0,466 % (entrepiso 3, esquina (−13,0; −19,6)) | 16.720 kN / 10.780 kN (34,7 % / 22,4 %) | 66: 22 / 16 / 18 / 10 (59 vigas, 2 columnas y 5 muros); ninguno más allá de ocupación inmediata | 267 / 6 (máx. 13,2 cm) |
+| Nido de Bucaramanga con escala «nivel de diseño NSR-10» (×18,27, hipotético) | 0,493 g / 0,278 g | 1,014 % (entrepiso 1, esquina (−13,0; −19,6)) | 21.090 kN / 16.050 kN (43,8 % / 33,3 %) | 160: 68 / 35 / 35 / 22 (128 vigas, 27 columnas y 5 muros); 3 extremos más allá de ocupación inmediata | 533 / 1 (máx. 20,9 cm) |
+| Falla de Cimitarra a nivel de diseño (×2,89, hipotético) | 0,538 g / 0,307 g | 1,069 % (entrepiso 1, esquina (−13,0; −19,6)) | 21.030 kN / 16.430 kN (43,7 % / 34,1 %) | 181: 76 / 38 / 39 / 28 (145 vigas, 31 columnas y 5 muros); 11 extremos más allá de ocupación inmediata | 533 / 0 (máx. 69,6 cm) |
+| Sismo local a nivel de diseño (×2,53, hipotético) | 0,574 g / 0,311 g | 1,083 % (entrepiso 1, esquina (−13,0; −19,6)) | 22.330 kN / 15.730 kN (46,4 % / 32,7 %) | 141: 63 / 28 / 30 / 20 (111 vigas, 25 columnas y 5 muros); 11 extremos más allá de ocupación inmediata | 533 / 0 (máx. 27,7 cm) |
 
 | Escenario | D/C máxima | Muros de mampostería | Energía que entra / disipada en las rótulas |
 |---|---|---|---|
-| Nido de Bucaramanga, como el 10-mar-2015 | 0,43 (flexión de una viga de la cubierta) | 42 sin daño | 28,1 kJ / 0 |
-| Falla de Cimitarra | 0,91 (flexión de una viga de la fachada sur, en la losa del piso 2) | 37 con daño leve, 5 sin daño | 799,8 kJ / 121,7 kJ (15 %) |
-| Sismo local hipotético | 0,95 (flexión de una viga de la fachada sur, en la losa del piso 4) | 33 leve, 6 moderado, 3 sin daño | 758,6 kJ / 196,5 kJ (26 %) |
-| Nido a nivel de diseño | 1,14 (rotación plástica en la base del muro sur de la escalera sur) | 17 moderado, 13 leve, 12 extenso | 6.241 kJ / 3.927 kJ (63 %) |
-| Cimitarra a nivel de diseño | 1,22 (el mismo muro) | 19 moderado, 15 extenso, 8 leve | 6.221 kJ / 4.020 kJ (65 %) |
-| Sismo local a nivel de diseño | 1,24 (el mismo muro) | 16 extenso, 15 leve, 11 moderado | 4.707 kJ / 2.953 kJ (63 %) |
+| Nido de Bucaramanga, como el 10-mar-2015 | 0,43 (flexión de una viga de la cubierta) | 42 sin daño | 31,2 kJ / 0 |
+| Falla de Cimitarra | 0,93 (flexión de una viga de la fachada sur, en la losa del piso 2) | 38 con daño leve, 3 moderado, 1 sin daño | 976,4 kJ / 185,8 kJ (19 %) |
+| Sismo local hipotético | 0,96 (flexión de la misma viga) | 27 leve, 13 moderado, 2 sin daño | 1.039 kJ / 288,0 kJ (28 %) |
+| Nido a nivel de diseño | 1,45 (rotación plástica en la base del muro sur de la escalera sur) | 23 extenso, 15 leve, 4 moderado | 6.981 kJ / 4.456 kJ (64 %) |
+| Cimitarra a nivel de diseño | 1,58 (el mismo muro) | 25 extenso, 14 moderado, 2 leve, 1 colapso | 6.975 kJ / 4.578 kJ (66 %) |
+| Sismo local a nivel de diseño | 1,61 (el mismo muro) | 25 extenso, 16 leve, 1 colapso | 5.287 kJ / 3.480 kJ (66 %) |
 
-**Lectura.** Con los sismos que se esperan, la torre queda prácticamente elástica: el del nido de Bucaramanga la mueve 0,056 % (menos de un séptimo del 0,4 % del umbral de daño) y los corticales cercanos llegan a 0,304 % y 0,416 %, alrededor de ese 0,4 % (que la norma verifica con un sismo menor, Ad = 0,04), con rótulas casi solo en vigas y bases de muro, todas dentro de ocupación inmediata. Lo que sí sufre son los **contenidos y la mampostería**: en el sismo local deslizan 260 equipos sueltos y 6 muros de mampostería tienen daño moderado. Llevado al nivel de diseño de la NSR-10 (hipotético), la deriva llega a 0,84-0,88 %, todavía bajo el 1 %, fluyen 155 a 177 elementos y la base del muro sur de la escalera sur pasa un poco el límite de ocupación inmediata (D/C de 1,14 a 1,24), sin llegar a seguridad de la vida. Por eso el atlas insiste en **anclar los equipos** y en **separar la mampostería** de la estructura (Índice de Seguridad Hospitalaria y NSR-10 A.9).
+**Lectura.** Con los sismos que se esperan, la torre queda prácticamente elástica: el del nido de Bucaramanga la mueve 0,060 % (menos de un sexto del 0,4 % del umbral de daño) y los corticales cercanos llegan a 0,338 % y 0,466 %, alrededor de ese 0,4 % (que la norma verifica con un sismo menor, Ad = 0,04), con rótulas casi solo en vigas y bases de muro, todas dentro de ocupación inmediata. Lo que sí sufre son los **contenidos y la mampostería**: en el sismo local deslizan 267 equipos sueltos y 13 muros de mampostería tienen daño moderado. Llevado al nivel de diseño de la NSR-10 (hipotético), la deriva en el tiempo llega a 1,01-1,08 % en el entrepiso 1, en la esquina suroccidental: un poco por encima del 1 % que la norma pide al análisis con el espectro de diseño (0,940 % en el prediseño, sección 5.7). La simulación en el tiempo no es esa verificación (usa la resistencia esperada y un registro de una sola semilla), pero muestra que el entrepiso 1, ahora con los arranques, es el que más se deforma. Fluyen 141 a 181 elementos y la base del muro sur de la escalera sur pasa el límite de ocupación inmediata (D/C de 1,45 a 1,61), sin llegar a seguridad de la vida; en dos de los tres escenarios colapsa un muro de mampostería. Por eso el atlas insiste en **anclar los equipos** y en **separar la mampostería** de la estructura (Índice de Seguridad Hospitalaria y NSR-10 A.9).
 
 ## 10. Validación
 
@@ -247,21 +250,21 @@ Modelo tridimensional con la **misma idealización** (pórticos con nodos propio
 |---|---:|---:|
 | Control 1: un piso con tres pórticos contra la condensación exacta | 8,9 × 10⁻⁶ | 10⁻⁵ |
 | Control 2: ciclo de una rótula contra la tabla de T7 | 0,20 % | 0,5 % |
-| Torre: períodos de los 6 primeros modos (0,4562 s en el motor y 0,4564 s en OpenSees) | 0,054 % | 1 % |
-| Torre elástica (nido_2015): deriva vectorial máxima por piso | 0,16 % | 3 % |
-| Torre elástica: cortante basal pico | 0,047 % | 3 % |
-| Torre no lineal (sismo local a nivel de diseño): desplazamiento de la cubierta | 0,084 % | 10 % |
-| Torre no lineal: deriva vectorial máxima por piso | 0,12 % | 10 % |
-| Torre no lineal: elementos que fluyen (índice de Jaccard) | 1,0: los mismos 155 elementos | ≥ 0,8 |
-| Torre no lineal: primera fluencia | 3,39 s en los dos | ±0,1 s |
-| Torre no lineal: energía amortiguada | 0,071 % | 5 % |
+| Torre: períodos de los 6 primeros modos (0,4821 s en el motor y 0,4823 s en OpenSees) | 0,054 % | 1 % |
+| Torre elástica (nido de Bucaramanga, como el 10-mar-2015): deriva vectorial máxima por piso | 0,13 % | 3 % |
+| Torre elástica: cortante basal pico | 0,056 % | 3 % |
+| Torre no lineal (sismo local a nivel de diseño): desplazamiento de la cubierta | 0,053 % | 10 % |
+| Torre no lineal: deriva vectorial máxima por piso | 0,085 % | 10 % |
+| Torre no lineal: elementos que fluyen (índice de Jaccard) | 1,0: los mismos 141 elementos | ≥ 0,8 |
+| Torre no lineal: primera fluencia | 3,20 s en los dos | ±0,1 s |
+| Torre no lineal: energía amortiguada | 0,008 % | 5 % |
 
-La energía histerética de la corrida no lineal es 2.953,4 kJ en el motor y 2.955,7 kJ en OpenSees.
+La energía histerética de la corrida no lineal es 3.480,4 kJ en el motor y 3.479,6 kJ en OpenSees. Los dos modelos tienen la base en la cara superior de los dados y la cara de abajo de las columnas con su propio armado.
 
 ## 11. Limitaciones e incertidumbres
 
-- **Prediseño, no diseño:** secciones, refuerzo, masas y cimentación son de prediseño (estimación); sin estudio de suelos, la capacidad de los pilotes es supuesta y la base se supone empotrada sobre los dados.
-- **Idealización:** diafragmas rígidos; pórticos planos; rótulas concentradas en los extremos (no dentro del vano); núcleos como muros planos con aletas efectivas, sin compatibilidad vertical en las esquinas y sin cambio de resistencia con la carga axial del sismo (interacción P-M en una fase posterior); sin degradación de resistencia (modelo de Ibarra-Medina-Krawinkler fuera de alcance); sin interacción suelo-estructura; sin componente vertical; la rigidez axial de una columna compartida se cuenta en sus dos pórticos.
+- **Prediseño, no diseño:** secciones, refuerzo, masas y cimentación son de prediseño (estimación); sin estudio de suelos, la capacidad de los pilotes es supuesta y la base se supone empotrada en la cara superior de los dados.
+- **Idealización:** diafragmas rígidos; pórticos planos; rótulas concentradas en los extremos (no dentro del vano); núcleos como muros planos con aletas efectivas, sin compatibilidad vertical en las esquinas y sin cambio de resistencia con la carga axial del sismo (interacción P-M en una fase posterior); sin degradación de resistencia (modelo de Ibarra-Medina-Krawinkler fuera de alcance); sin interacción suelo-estructura; sin componente vertical; la rigidez axial de una columna compartida se cuenta en sus dos pórticos. Las vigas banda entre la columna C y los muros no están en el modelo: se diseñan por capacidad y su cortante de capacidad se suma a la carga axial sísmica de la columna C y, con el signo contrario, a la del muro. La deriva del entrepiso 1 se mide sobre 4,50 m aunque sus columnas y muros nacen entre 0,40 y 1,65 m más abajo.
 - **Movimiento:** parámetros de regiones análogas (oeste de Norteamérica, centro de México), calibrados contra ecuaciones de predicción publicadas; sin registros locales para calibrar; las ecuaciones intraplaca se extrapolan a 150 km de profundidad (calibradas hasta ≈ 120-125 km); contexto sismotectónico por confirmar; una sola semilla por escenario.
 - **Modelo del edificio en 3D:** el modelo GLB de la torre reparte entrepisos iguales de 4,30 m; el simulador lo oculta y dibuja su propia estructura con los niveles reales (regenerar el GLB queda fuera de alcance).
 - **Equipos sin anclar:** bloque rígido con fricción de catálogo (estimación); el anclaje real lo define el diseño de los elementos no estructurales.
@@ -275,7 +278,8 @@ La energía histerética de la corrida no lineal es 2.953,4 kJ en el motor y 2.9
 - Sismotectónica: centro y profundidad del nido de Bucaramanga, Mw del sismo del 10-mar-2015, distancias a las fallas, magnitudes máximas y ecuaciones de predicción del modelo nacional del SGC.
 - Epicentro, profundidad y tipo de magnitud del terremoto del 10-ago-2026 (OPS: San José del Palmar; anexo C: Pereira).
 - El cruce de ductos y bandejas bajo las vigas de 0,80 y 0,90 m (quedan 0,40 m sobre el cielo raso en los pisos 2 a 4): pases en las vigas o cielos más bajos, en el diseño de redes.
-- La base del muro sur de la escalera sur pasa el límite de ocupación inmediata en los tres escenarios a nivel de diseño (D/C de 1,14 a 1,24): el diseño definitivo debe revisar su refuerzo de borde o su longitud.
+- La base del muro sur de la escalera sur pasa el límite de ocupación inmediata en los tres escenarios a nivel de diseño (D/C de 1,45 a 1,61): el diseño definitivo debe revisar su refuerzo de borde o su longitud.
+- En esos mismos escenarios hipotéticos la deriva en el tiempo del entrepiso 1 llega a 1,01-1,08 % en la esquina suroccidental: el diseño definitivo debe revisar la rigidez del pórtico de la fachada sur y de los arranques bajo el pasaje del bloque técnico, y si conviene subir la cara superior de esos dados.
 
 ## 13. Fuentes
 

@@ -1148,19 +1148,19 @@
   {
    "tema": "Sistema estructural",
    "tipo": "Pórticos de concreto de un piso con viga-canal en voladizo; placa maciza de 0,12 m; cubierta metálica.",
-   "torre": "Dual (NSR-10, Tabla A.3-4): 5 muros de concreto de 0,35 m en los núcleos (27,42 m de alma) con pórticos resistentes a momento; columnas de 0,80 × 0,80 m (0,90 × 0,90 m en el eje A), vigas de 0,40 × 0,80 m (0,50 × 0,90 m en el eje A), losa nervada de 0,45 m. Los pórticos toman el 16,3 % (x) y el 25,4 % (y) del cortante y se diseñan solos para el 25 %.",
+   "torre": "Dual (NSR-10, Tabla A.3-4): 5 muros de concreto de 0,35 m en los núcleos (27,42 m de alma) con pórticos resistentes a momento; columnas de 0,80 × 0,80 m (0,90 × 0,90 m en el eje A), vigas de 0,40 × 0,80 m (0,50 × 0,90 m en el eje A y en la fachada sur), losa nervada de 0,45 m. Los pórticos toman el 15,3 % (x) y el 22,0 % (y) del cortante y se diseñan solos para el 25 %.",
    "veredicto": "se aparta",
-   "explicacion": "Mismo pórtico repetible del tipo, con muros porque la torre tiene 4 pisos y es indispensable. Con las secciones del presupuesto (columnas de 0,60 m) la deriva llegaba a 2,09 % y no cumplía el 1 %; con las adoptadas, 0,94 %.",
+   "explicacion": "Mismo pórtico repetible del tipo, con muros porque la torre tiene 4 pisos y es indispensable. Con las secciones del presupuesto (columnas de 0,60 m) la deriva llegaba a 2,45 % y no cumplía el 1 %; con las adoptadas, 0,94 % (base en la cara superior de los dados).",
    "tipo_dato": "dato oficial (tipo DNP 2018) y cálculo propio (prediseño del 25-oct-2026, sin firmar)",
    "seccion": "17.6"
   },
   {
    "tema": "Capacidad de disipación de energía",
    "tipo": "Por confirmar en el PDF del tipo (un piso).",
-   "torre": "Moderada (DMO), la mínima para concreto en amenaza intermedia (Aa = Av = 0,15); grupo IV, I = 1,5. R0 = 6,0, Ω0 = 2,5 y R = 0,9 × 0,9 × 1,0 × 6,0 = 4,86 por el retroceso (3A: 1,40) y la torsión (1aP: 1,306).",
+   "torre": "Moderada (DMO), la mínima para concreto en amenaza intermedia (Aa = Av = 0,15); grupo IV, I = 1,5. R0 = 6,0, Ω0 = 2,5 y R = 0,9 × 0,9 × 1,0 × 6,0 = 4,86 por el retroceso (3A: 1,40) y la torsión (1aP: 1,368).",
    "veredicto": "mejora",
    "por_confirmar": true,
-   "explicacion": "Suma confinamiento especial en columnas, cortante por capacidad y columna fuerte-viga débil (1,89 como mínimo). Que el grupo IV no pida más queda por confirmar (A.3).",
+   "explicacion": "Suma confinamiento especial en columnas, cortante por capacidad y columna fuerte-viga débil (1,92 como mínimo). Que el grupo IV no pida más queda por confirmar (A.3).",
    "tipo_dato": "dato oficial (tipo DNP 2018) y cálculo propio (prediseño del 25-oct-2026, sin firmar)",
    "seccion": "17.6",
    "agregada": true
@@ -1195,10 +1195,10 @@
   {
    "tema": "Cuantías de acero y concreto por m²",
    "tipo": "Por confirmar en el PDF. Estructura con cimentación: $1.541.451 por m² (sobre 269,6 m²).",
-   "torre": "2.483,1 m³ de concreto (0,74 m³/m²) y 291.285 kg de acero (86,4 kg/m², 117 kg/m³) sobre 3.369,6 m²: superestructura 0,35 m³/m² y 43,7 kg/m²; cimentación 0,39 m³/m² y 42,8 kg/m². Presupuesto: 64,5 kg/m² (47,5 en la superestructura y 16,9 en la cimentación).",
+   "torre": "2.462,9 m³ de concreto (0,73 m³/m²) y 301.807 kg de acero (89,6 kg/m², 123 kg/m³) sobre 3.369,6 m²: superestructura con arranques 0,36 m³/m² y 44,6 kg/m²; cimentación 0,37 m³/m² y 45,0 kg/m² (sin el contrapiso, 129,9 m³ aparte). Presupuesto: 64,5 kg/m² (47,5 en la superestructura y 16,9 en la cimentación).",
    "veredicto": "se aparta",
    "por_confirmar": true,
-   "explicacion": "La cimentación casi triplica el acero presupuestado. Por m² (con AIU, sobre 3.620,6 m²): $1.767.354 presupuestado (1,15 veces el tipo) y $2.248.544 con el prediseño (1,46 veces), ajuste pendiente.",
+   "explicacion": "La cimentación casi triplica el acero presupuestado. Por m² (con AIU, sobre 3.620,6 m²): $1.767.354 presupuestado (1,15 veces el tipo) y $2.326.676 con el prediseño (1,51 veces), ajuste pendiente.",
    "tipo_dato": "cálculo propio (prediseño y presupuesto); dato oficial del tipo DNP 2018 con IPC",
    "seccion": "17.6",
    "agregada": true

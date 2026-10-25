@@ -656,7 +656,9 @@ export class Analisis {
       const Va = aVi >= aVj ? aVi : aVj;
       const tpi = thp[2 * ie], tpj = thp[2 * ie + 1], ati = Math.abs(tpi), atj = Math.abs(tpj);
       const aMi = Math.abs(Mi), aMj = Math.abs(Mj);
-      const fl = (aMi > aMj ? aMi : aMj) / el.Mn[ie];
+      // flexión: cada extremo contra su Mn (la cara de abajo de una columna puede tener las barras del piso de abajo, E18)
+      const fi = aMi / el.MnI[ie], fj = aMj / el.Mn[ie];
+      const fl = fi > fj ? fi : fj;
       const co = Va / el.Vn[ie];
       const ro = (ati > atj ? ati : atj) / el.IO[ie];
       const dcm = fl >= co ? (fl >= ro ? fl : ro) : co >= ro ? co : ro;

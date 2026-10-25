@@ -272,6 +272,6 @@ export function despiece(e, { caja, sols, juegos, formas, opc = {}, ancho = 320 
     ? `${nf(nb, 0)} barras y ${nf(kg, 0)} kg de acero de 420 MPa de este tramo (${nf(kgT, 0)} kg con las barras corridas de los otros tramos que pasan por él; cálculo propio con el despiece del prediseño).`
     : `${nf(nb, 0)} barras y ${nf(kg, 0)} kg de acero de 420 MPa en este elemento (cálculo propio con el despiece del prediseño).`;
   return `<div class="bd">${out.filter((o) => o.svg).map((o) => `<figure class="bd-fig"><figcaption>${escS(o.v.titulo)}</figcaption>${o.svg}</figure>`).join('')}
-    <ul class="bd-juegos">${[...grupos.values()].map((g) => `<li><i style="background:${COLOR[g.fam]}"></i><span><b>${escS(g.etiqueta)}</b><small> · ${escS(g.tipo)}${g.zona ? ` · ${escS(g.zona)}` : ''}${g.ganchos ? ` · ganchos de ${escS(g.ganchos)}` : ''} · ${nf(g.n, 0)} barras, ${nf(g.kg, 0)} kg</small></span></li>`).join('')}</ul>
+    <ul class="bd-juegos">${[...grupos.values()].map((g) => `<li><i style="background:${COLOR[g.fam]}"></i><span><b>${escS(g.etiqueta)}</b><small> · ${escS(g.tipo)}${g.zona ? ` · ${escS(g.zona)}` : ''}${g.ganchos ? ` · ganchos de ${escS(g.ganchos)}` : ''} · ${nf(g.n, 0)} ${g.n === 1 ? 'barra' : 'barras'}, ${nf(g.kg, 0)} kg</small></span></li>`).join('')}</ul>
     <p class="note bd-total">${total}</p>${opc.notaDibujo ? `<p class="note bd-total">${escS(opc.notaDibujo)}</p>` : ''}</div>`;
 }

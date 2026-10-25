@@ -915,6 +915,7 @@
     "columnas_por_eje_x_m": {"A": 0.9},
     "vigas_m": {"ancho": 0.4, "peralte": 0.8},
     "vigas_por_eje_x_m": {"A": {"ancho": 0.5, "peralte": 0.9}},
+    "vigas_por_linea_y_m": {"1": {"ancho": 0.5, "peralte": 0.9}},
     "losa_nervada_m": 0.45,
     "altura_libre_bajo_viga_m": 3.7,
     "altura_libre_bajo_viga_min_m": 3.6,
@@ -1648,8 +1649,8 @@
      "minimo_1633": {
       "m2": 12.0,
       "lado_m": 3.0,
-      "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15",
-      "tipo_dato": "dato oficial"
+      "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15 (por confirmar: la investigación de urgencias no confirmó los criterios de infraestructura)",
+      "tipo_dato": "dato oficial (Res. 1633); por confirmar (Res. 3100)"
      },
      "acceso": ["P1-A029-01"],
      "puertas": ["P1-PT-025"],
@@ -1684,8 +1685,8 @@
      "minimo_1633": {
       "m2": 12.0,
       "lado_m": 3.0,
-      "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15",
-      "tipo_dato": "dato oficial"
+      "cita": "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15 (por confirmar: la investigación de urgencias no confirmó los criterios de infraestructura)",
+      "tipo_dato": "dato oficial (Res. 1633); por confirmar (Res. 3100)"
      },
      "acceso": ["P1-A028-01"],
      "puertas": ["P1-PT-026"],
@@ -8367,6 +8368,7 @@
     "columnas_por_eje_x_m": {"A": 0.9},
     "vigas_m": {"ancho": 0.4, "peralte": 0.8},
     "vigas_por_eje_x_m": {"A": {"ancho": 0.5, "peralte": 0.9}},
+    "vigas_por_linea_y_m": {"1": {"ancho": 0.5, "peralte": 0.9}},
     "losa_nervada_m": 0.45,
     "altura_libre_bajo_viga_m": 3.4,
     "altura_libre_bajo_viga_min_m": 3.3,
@@ -14719,6 +14721,7 @@
     "columnas_por_eje_x_m": {"A": 0.9},
     "vigas_m": {"ancho": 0.4, "peralte": 0.8},
     "vigas_por_eje_x_m": {"A": {"ancho": 0.5, "peralte": 0.9}},
+    "vigas_por_linea_y_m": {"1": {"ancho": 0.5, "peralte": 0.9}},
     "losa_nervada_m": 0.45,
     "altura_libre_bajo_viga_m": 3.4,
     "altura_libre_bajo_viga_min_m": 3.3,
@@ -20911,6 +20914,7 @@
     "columnas_por_eje_x_m": {"A": 0.9},
     "vigas_m": {"ancho": 0.4, "peralte": 0.8},
     "vigas_por_eje_x_m": {"A": {"ancho": 0.5, "peralte": 0.9}},
+    "vigas_por_linea_y_m": {"1": {"ancho": 0.5, "peralte": 0.9}},
     "losa_nervada_m": 0.45,
     "altura_libre_bajo_viga_m": 3.4,
     "altura_libre_bajo_viga_min_m": 3.3,
@@ -26666,7 +26670,7 @@
   "normas.json → climatizacion_cuadro4 (Aislamiento de paciente infectocontagioso); Res. 1633, Anexo 1, Cuadro 4",
   "Res. 1633 de 2025, Anexo 1, Cuadro 92 (aislamiento con baño accesible y guardarropa, con antecámara)",
   "Res. 1633 de 2025, Anexo 1 (ambiente de aseo: todos los servicios, uno por piso o nivel; numeral por confirmar)",
-  "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15",
+  "Res. 1633 de 2025, Anexo 1, Cuadro 92 (observación: 6 m² por camilla; 2 camillas); Res. 3100, num. 11.6.1, criterio 18.15 (por confirmar: la investigación de urgencias no confirmó los criterios de infraestructura)",
   "Res. 1633 de 2025, Anexo 1, Cuadro 94 (observación pediátrica: 6 m² por camilla o 4 m² por cuna; 1 camilla y 1 cuna)",
   "Res. 1633 de 2025, Anexo 1, Cuadro 92 (estacionamiento de camillas)",
   "normas.json → climatizacion_cuadro4 (Salas de espera); Res. 1633, Anexo 1, Cuadro 4",
@@ -26771,7 +26775,7 @@
  ],
  "insumos_sha1": {
   "torre_hospital_trazado.json": "b2c6ef8bc7cab820f0d1e8a0f830dc898200613e",
-  "reglas_planta.json": "f0e3b6e3858b5faa9038eb61e4a68f4fdebe1b6f",
+  "reglas_planta.json": "b378d63b199d8f4f52f546603a5cd11ee5d6d49a",
   "programa.json": "f04e3e3e6e25d189927c24e2ad83c277c9738dd0",
   "normas.json": "de7e23ea1f85d7712fd4c62ae53eb6982594639a"
  }
