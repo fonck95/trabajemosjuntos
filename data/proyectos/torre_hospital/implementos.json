@@ -1,0 +1,4086 @@
+{
+ "id": "implementos",
+ "version": 1,
+ "fecha": "2026-10-24",
+ "descripcion": "Insumo escrito a mano (contrato, 4.4 y 16.2): contenido de contenedores, kits, instrumental y del laboratorio. Los insumos, el instrumental, los medicamentos y los dispositivos que no son equipo biomédico son informativos y no suman precio (su costo va en la línea madre o en el inventario inicial de 72 horas). Los equipos biomédicos de un kit se inventarían como unidades componentes, con precio 0, clase de riesgo, registro y mantenimiento.",
+ "tipos": ["equipo_biomedico", "dispositivo", "instrumental", "insumo", "medicamento"],
+ "verificacion": {
+  "dato del repositorio": "Sale del nombre o la especificación de la línea, o de los archivos del laboratorio y de la revisión del Decreto 4725.",
+  "fuente_secundaria": "Lista típica tomada de guías o de compras de otros hospitales; no es texto normativo.",
+  "por_confirmar": "Lista típica; la fija el protocolo de la E.S.E. (por ejemplo, el de reanimación).",
+  "estimacion": "Insumo nombrado de forma genérica a partir de la prueba y su método; marca, presentación y cantidad las fija el proveedor."
+ },
+ "almacenamiento": {
+  "nevera": "Nevera de reactivos del laboratorio (2-8 °C), en el área de neveras",
+  "estante": "Estantería del depósito de reactivos (15-30 °C)"
+ },
+ "nota_laboratorio": "Control interno: dos niveles en cada corrida (química, hematología, coagulación, gases y HbA1c), dos o tres en inmunoensayo; reglas de Westgard en el sistema de información del laboratorio (dato del laboratorio)",
+ "plantillas": {
+  "bioseguridad_cabina": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-e-c48f86", "nombre": "Cabina de bioseguridad clase II tipo A2 (4 pies)"}],
+   "descripcion": "Elementos de la cabina de bioseguridad de microbiología.",
+   "items": [
+    {
+     "nombre": "Certificado anual de la cabina (NSF/ANSI 49)",
+     "cantidad": 1,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "fuente": "bioseguridad del laboratorio (dato del laboratorio)",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Desinfectante de superficies y alcohol al 70 %",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "fuente": "gestión de bioseguridad del laboratorio",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Recipiente de descarte con hipoclorito y guardián",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "fuente": "gestión de bioseguridad del laboratorio",
+     "verificacion": "estimacion"
+    }
+   ]
+  },
+  "bioseguridad_laboratorio": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-laboratorio-m-15df99",
+     "nombre": "Lockers y mueble de vestidor y descanso del personal (servicio 24 horas)"
+    }
+   ],
+   "descripcion": "Elementos de bioseguridad del personal del laboratorio (servicio 24 horas).",
+   "items": [
+    {
+     "nombre": "Batas antifluido de manga larga",
+     "cantidad": null,
+     "compartimiento": "casillero 1",
+     "tipo": "insumo",
+     "fuente": "gestión de bioseguridad del laboratorio",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Guantes de nitrilo y respiradores N95 (microbiología y tuberculosis)",
+     "cantidad": null,
+     "compartimiento": "casillero 2",
+     "tipo": "insumo",
+     "fuente": "gestión de bioseguridad del laboratorio",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Gafas y caretas de protección",
+     "cantidad": null,
+     "compartimiento": "casillero 3",
+     "tipo": "insumo",
+     "fuente": "gestión de bioseguridad del laboratorio",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Kit para derrames biológicos (absorbente, hipoclorito, pinzas y bolsas rojas)",
+     "cantidad": 1,
+     "compartimiento": "casillero 4",
+     "tipo": "insumo",
+     "fuente": "gestión de bioseguridad del laboratorio",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Protocolo de accidente biológico y registro de vacunación del personal (hepatitis B)",
+     "cantidad": 1,
+     "compartimiento": "casillero 5",
+     "tipo": "insumo",
+     "fuente": "bioseguridad del laboratorio (dato del laboratorio)",
+     "verificacion": "dato del repositorio"
+    }
+   ]
+  },
+  "canecas_residuos": {
+   "lineas_que_la_usan": [
+    {"linea": "L-urgencias-m-aed834", "nombre": "Canecas para residuos (verde, gris y roja con pedal) y guardián"},
+    {
+     "linea": "L-consulta_externa-m-0a43f0",
+     "nombre": "Canecas para residuos (verde, gris y roja con pedal) y guardián"
+    },
+    {"linea": "L-imagenes-x-aff555", "nombre": "Recipientes de residuos por punto de generación (imágenes)"},
+    {
+     "linea": "L-toma_muestras-x-583cff",
+     "nombre": "Recipientes de residuos por punto de generación (toma de muestras)"
+    },
+    {"linea": "L-laboratorio-x-e692e8", "nombre": "Recipientes de residuos por punto de generación (laboratorio)"}
+   ],
+   "descripcion": "Recipientes de residuos por punto de generación y guardián.",
+   "norma": "Gestión integral de residuos (Res. 591 de 2024, citada en la revisión de la Res. 3100)",
+   "items": [
+    {
+     "nombre": "Caneca verde (no aprovechables)",
+     "cantidad": 1,
+     "compartimiento": "caneca 1",
+     "tipo": "insumo",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Caneca gris (aprovechables)",
+     "cantidad": 1,
+     "compartimiento": "caneca 2",
+     "tipo": "insumo",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Caneca roja con pedal (biosanitarios)",
+     "cantidad": 1,
+     "compartimiento": "caneca 3",
+     "tipo": "insumo",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Guardián (cortopunzantes)",
+     "cantidad": 1,
+     "compartimiento": "guardián",
+     "tipo": "insumo",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    }
+   ]
+  },
+  "carro_curaciones": {
+   "lineas_que_la_usan": [
+    {"linea": "L-urgencias-m-f11d28", "nombre": "Carro de curaciones en acero inoxidable"},
+    {"linea": "L-hospitalizacion-m-8bb769", "nombre": "Carro de curaciones"}
+   ],
+   "descripcion": "Carro de curaciones.",
+   "items": [
+    {
+     "nombre": "Gasas, apósitos, vendas y esparadrapo",
+     "cantidad": null,
+     "compartimiento": "bandeja superior",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Solución salina para irrigación y antisépticos (clorhexidina, yodopovidona)",
+     "cantidad": null,
+     "compartimiento": "bandeja superior",
+     "tipo": "medicamento",
+     "presentacion": "frascos",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Guantes estériles y no estériles",
+     "cantidad": null,
+     "compartimiento": "cajón",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Guardián de cortopunzantes",
+     "cantidad": 1,
+     "compartimiento": "bandeja inferior",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Bolsas de residuos biosanitarios (rojas)",
+     "cantidad": null,
+     "compartimiento": "bandeja inferior",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "carro_medicamentos": {
+   "lineas_que_la_usan": [
+    {"linea": "L-urgencias-m-541295", "nombre": "Carro de medicamentos"},
+    {"linea": "L-hospitalizacion-m-5ef25b", "nombre": "Carro de medicamentos (unidosis)"},
+    {"linea": "L-farmacia-m-e1d44b", "nombre": "Carro de distribución de medicamentos (unidosis)"}
+   ],
+   "descripcion": "Carro de medicamentos en dosis unitaria.",
+   "items": [
+    {
+     "nombre": "Medicamentos en dosis unitaria por paciente (24 horas)",
+     "cantidad": null,
+     "compartimiento": "gavetas de unidosis",
+     "tipo": "medicamento",
+     "presentacion": "unidosis",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Jeringas, agujas y equipos de venoclisis",
+     "cantidad": null,
+     "compartimiento": "cajón inferior",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Formato de administración de medicamentos",
+     "cantidad": null,
+     "compartimiento": "superficie",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "carro_paro_adulto_pediatrico": {
+   "lineas_que_la_usan": [
+    {"linea": "L-urgencias-m-11a7bd", "nombre": "Carro de paro (mueble) adulto-pediátrico con tabla de reanimación"},
+    {"linea": "L-hospitalizacion-m-a7568f", "nombre": "Carro de paro (mueble) adulto-pediátrico para hospitalización"}
+   ],
+   "descripcion": "Contenido del carro de paro adulto y pediátrico, por cajón. Los equipos que son líneas propias de la dotación (desfibrilador, laringoscopio, resucitador, aspirador, glucómetro) están en el inventario como unidades dentro o encima del carro.",
+   "definicion": {
+    "texto": "Conjunto de medicamentos, dispositivos médicos y equipos biomédicos utilizados en la reanimación cardio cerebro pulmonar.",
+    "cita": "Res. 3100 de 2019, Manual, definiciones (texto de compilación; criterio 8 de todos los servicios según guía secundaria; por confirmar)"
+   },
+   "items": [
+    {
+     "nombre": "Tabla de reanimación",
+     "cantidad": 1,
+     "compartimiento": "lateral",
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Adrenalina (epinefrina) 1 mg/mL",
+     "cantidad": 10,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Atropina 1 mg/mL",
+     "cantidad": 5,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Amiodarona 150 mg/3 mL",
+     "cantidad": 4,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Adenosina 6 mg/2 mL",
+     "cantidad": 4,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Lidocaína al 2 % sin epinefrina",
+     "cantidad": 2,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "frascos",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Bicarbonato de sodio 1 mEq/mL",
+     "cantidad": 4,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Dextrosa al 50 % y al 10 %",
+     "cantidad": 4,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas o bolsas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Sulfato de magnesio al 20 %",
+     "cantidad": 2,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Gluconato de calcio al 10 %",
+     "cantidad": 2,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Naloxona 0,4 mg/mL",
+     "cantidad": 2,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Midazolam 5 mg/5 mL",
+     "cantidad": 2,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Hidrocortisona 100 mg",
+     "cantidad": 2,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "viales",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Salbutamol inhalador con espaciador adulto y pediátrico",
+     "cantidad": 1,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "inhalador",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Cánulas orofaríngeas (tallas 0 a 5)",
+     "cantidad": 6,
+     "compartimiento": "cajón 2",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Tubos endotraqueales con y sin balón (2,5 a 8,0)",
+     "cantidad": 12,
+     "compartimiento": "cajón 2",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Guía o estilete de intubación (adulto y pediátrico)",
+     "cantidad": 2,
+     "compartimiento": "cajón 2",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Máscaras laríngeas (tallas 1 a 5)",
+     "cantidad": 5,
+     "compartimiento": "cajón 2",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "IIa",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Máscaras faciales con reservorio (adulto, pediátrica y neonatal)",
+     "cantidad": 3,
+     "compartimiento": "cajón 2",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Cánulas nasales de oxígeno adulto y pediátrica",
+     "cantidad": 4,
+     "compartimiento": "cajón 2",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Sondas de succión (6 a 18 Fr) y cánula de Yankauer",
+     "cantidad": 10,
+     "compartimiento": "cajón 3",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Catéteres intravenosos periféricos (14 a 24 G)",
+     "cantidad": 20,
+     "compartimiento": "cajón 3",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "IIa",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Equipos de macrogoteo y microgoteo",
+     "cantidad": 6,
+     "compartimiento": "cajón 3",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "IIa",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Jeringas de 1, 3, 5, 10 y 20 mL",
+     "cantidad": 30,
+     "compartimiento": "cajón 3",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Agujas para punción intraósea (adulto y pediátrica)",
+     "cantidad": 2,
+     "compartimiento": "cajón 3",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "IIa",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Torniquete, apósitos transparentes, gasas y esparadrapo",
+     "cantidad": null,
+     "compartimiento": "cajón 3",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Solución salina al 0,9 % y lactato de Ringer de 500 mL",
+     "cantidad": 6,
+     "compartimiento": "cajón 4",
+     "tipo": "medicamento",
+     "presentacion": "bolsas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Electrodos de ECG adulto y pediátrico y gel conductor",
+     "cantidad": null,
+     "compartimiento": "cajón 4",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Parches de desfibrilación adulto y pediátrico",
+     "cantidad": 2,
+     "compartimiento": "cajón 4",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Guantes estériles y no estériles, tapabocas, gafas y bata antifluido",
+     "cantidad": null,
+     "compartimiento": "cajón 5",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Guardián (contenedor de cortopunzantes)",
+     "cantidad": 1,
+     "compartimiento": "superficie",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Lista de chequeo del carro y registro de revisión diaria",
+     "cantidad": 1,
+     "compartimiento": "superficie",
+     "tipo": "insumo",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "carro_paro_neonatal": {
+   "lineas_que_la_usan": [{"linea": "L-partos-m-6568c3", "nombre": "Carro de paro (mueble) con módulo neonatal"}],
+   "descripcion": "Carro de paro de partos con módulo neonatal: sirve a la madre y al recién nacido (EX-PAR-019). El laringoscopio neonatal con resucitador, el desfibrilador y el glucómetro son líneas propias de la dotación.",
+   "definicion": {
+    "texto": "Conjunto de medicamentos, dispositivos médicos y equipos biomédicos utilizados en la reanimación cardio cerebro pulmonar.",
+    "cita": "Res. 3100 de 2019, Manual, definiciones (texto de compilación; criterio 8 de todos los servicios según guía secundaria; por confirmar)"
+   },
+   "items": [
+    {
+     "nombre": "Tabla de reanimación",
+     "cantidad": 1,
+     "compartimiento": "lateral",
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Adrenalina (epinefrina) 1 mg/mL (con jeringas para dilución neonatal)",
+     "cantidad": 10,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Oxitocina 10 UI/mL (en la nevera del depósito de medicamentos si el fabricante lo pide)",
+     "cantidad": 10,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Sulfato de magnesio al 20 %",
+     "cantidad": 4,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Atropina, amiodarona, dextrosa al 10 % y bicarbonato",
+     "cantidad": null,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Naloxona 0,4 mg/mL",
+     "cantidad": 2,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Vitamina K (fitomenadiona) 1 mg",
+     "cantidad": 4,
+     "compartimiento": "cajón 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Tubos endotraqueales neonatales (2,5 a 4,0) y de adulto",
+     "cantidad": 10,
+     "compartimiento": "cajón 2",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Máscaras neonatales (prematuro y a término) y de adulto",
+     "cantidad": 4,
+     "compartimiento": "cajón 2",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Sondas de succión neonatales (6, 8 y 10 Fr) y aspirador de meconio",
+     "cantidad": 8,
+     "compartimiento": "cajón 3",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Catéteres umbilicales (3,5 y 5 Fr) y equipo de cateterismo umbilical",
+     "cantidad": 2,
+     "compartimiento": "cajón 3",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "IIb",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Catéteres intravenosos (14 a 24 G) y equipos de venoclisis",
+     "cantidad": 20,
+     "compartimiento": "cajón 3",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "IIa",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Gorro, frazada térmica y bolsa plástica para prematuro",
+     "cantidad": null,
+     "compartimiento": "cajón 4",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Solución salina y lactato de Ringer de 500 mL",
+     "cantidad": 6,
+     "compartimiento": "cajón 4",
+     "tipo": "medicamento",
+     "presentacion": "bolsas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Electrodos neonatales y de adulto",
+     "cantidad": null,
+     "compartimiento": "cajón 4",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Guantes, tapabocas, gafas y bata antifluido",
+     "cantidad": null,
+     "compartimiento": "cajón 5",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Guardián (contenedor de cortopunzantes)",
+     "cantidad": 1,
+     "compartimiento": "superficie",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "cava_transporte_muestras": {
+   "lineas_que_la_usan": [{"linea": "L-toma_muestras-e-0a9d07", "nombre": "Cava de transporte de muestras con registrador"}],
+   "descripcion": "Cava de transporte de muestras con registrador de temperatura.",
+   "items": [
+    {
+     "nombre": "Gradillas y geles refrigerantes",
+     "cantidad": null,
+     "compartimiento": "interior",
+     "tipo": "insumo",
+     "presentacion": "unidades",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "modelo3d": "gradilla_tubos"
+    },
+    {
+     "nombre": "Registrador de temperatura de la cava",
+     "cantidad": 1,
+     "compartimiento": "interior",
+     "tipo": "insumo",
+     "presentacion": "unidad",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    }
+   ]
+  },
+  "control_especial": {
+   "lineas_que_la_usan": [{"linea": "L-farmacia-m-bc5871", "nombre": "Gabinete de seguridad para medicamentos de control especial"}],
+   "descripcion": "Medicamentos de control especial bajo llave (libro oficial de control).",
+   "items": [
+    {
+     "nombre": "Opioides y benzodiacepinas de control especial del formulario de la E.S.E.",
+     "cantidad": null,
+     "compartimiento": "entrepaño 1",
+     "tipo": "medicamento",
+     "presentacion": "ampollas y tabletas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Libro de registro de control especial",
+     "cantidad": 1,
+     "compartimiento": "entrepaño 2",
+     "tipo": "insumo",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "dea_gabinete": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-consulta_externa-e-79a94d",
+     "nombre": "Desfibrilador externo automático (DEA) para el piso de consulta"
+    },
+    {"linea": "L-consulta_externa-x-0d00b0", "nombre": "Desfibrilador externo automático (DEA) para el piso 4"}
+   ],
+   "descripcion": "Gabinete de pared del desfibrilador externo automático.",
+   "items": [
+    {
+     "nombre": "Parches de desfibrilación de repuesto (adulto y pediátrico)",
+     "cantidad": 2,
+     "compartimiento": "gabinete",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Rasuradora, tijera, toalla y guantes",
+     "cantidad": null,
+     "compartimiento": "gabinete",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Señal del DEA y registro de revisión mensual",
+     "cantidad": 1,
+     "compartimiento": "gabinete",
+     "tipo": "insumo",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "equipo_partos": {
+   "lineas_que_la_usan": [
+    {"linea": "L-urgencias-e-3bca11", "nombre": "Equipo de partos e instrumental ginecoobstétrico para urgencias"},
+    {"linea": "L-partos-e-4aa91c", "nombre": "Equipo de parto (instrumental)"}
+   ],
+   "descripcion": "Equipo de parto (instrumental): incluye lo de la episiotomía y la episiorrafia (ajuste de especificación de la versión 2).",
+   "items": [
+    {
+     "nombre": "Tijera de episiotomía (Braun-Stadler)",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Tijera de cordón",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Pinzas Kelly o Rochester para pinzar el cordón",
+     "cantidad": 2,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Porta agujas",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Pinza de disección con garra",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Pinza de anillos (Foerster)",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Valva vaginal",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Riñonera y cubeta",
+     "cantidad": 2,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Clamp umbilical, suturas y gasas",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "estante_medicamentos": {
+   "lineas_que_la_usan": [{"linea": "L-farmacia-m-79a72c", "nombre": "Estantería metálica para almacenamiento (módulos)"}],
+   "descripcion": "Estantería del almacenamiento del servicio farmacéutico.",
+   "items": [
+    {
+     "nombre": "Medicamentos y dispositivos del inventario, por grupo farmacológico y fecha de vencimiento",
+     "cantidad": null,
+     "compartimiento": "entrepaño 2",
+     "tipo": "medicamento",
+     "presentacion": "cajas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "estante_reactivos_laboratorio": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}],
+   "descripcion": "Depósito de reactivos a temperatura ambiente: kits de tamizaje (pruebas rápidas), cartuchos que no piden frío y material de reserva.",
+   "items": [
+    {
+     "nombre": "Reactivo para prueba rápida de VIH 1 y 2",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de 20 a 40 casetes",
+     "metodo": "Inmunocromatografía",
+     "pruebas": ["vih_rapida"],
+     "pruebas_mes": 141,
+     "almacenamiento": {
+      "condicion": "2-30 °C según el inserto",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para prueba treponémica rápida para sífilis",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de 20 a 40 casetes",
+     "metodo": "Inmunocromatografía",
+     "pruebas": ["sifilis_rapida"],
+     "pruebas_mes": 106,
+     "almacenamiento": {
+      "condicion": "2-30 °C según el inserto",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para antígeno de superficie de hepatitis B (prueba rápida)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de 20 a 40 casetes",
+     "metodo": "Inmunocromatografía",
+     "pruebas": ["hbsag_rapida"],
+     "pruebas_mes": 40,
+     "almacenamiento": {
+      "condicion": "2-30 °C según el inserto",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para prueba rápida para hepatitis C",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de 20 a 40 casetes",
+     "metodo": "Inmunocromatografía",
+     "pruebas": ["hcv_rapida"],
+     "pruebas_mes": 27,
+     "almacenamiento": {
+      "condicion": "2-30 °C según el inserto",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para dengue NS1 + IgM/IgG (prueba rápida combinada)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de 20 a 40 casetes",
+     "metodo": "Inmunocromatografía",
+     "pruebas": ["dengue_rapida"],
+     "pruebas_mes": 60,
+     "almacenamiento": {
+      "condicion": "2-30 °C según el inserto",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para prueba rápida de malaria (P. falciparum / P. vivax)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de 20 a 40 casetes",
+     "metodo": "Inmunocromatografía",
+     "pruebas": ["malaria_rapida"],
+     "pruebas_mes": 30,
+     "almacenamiento": {
+      "condicion": "2-30 °C según el inserto",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para prueba de embarazo en orina (cualitativa)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de 20 a 40 casetes",
+     "metodo": "Inmunocromatografía",
+     "pruebas": ["bhcg_orina"],
+     "pruebas_mes": 108,
+     "almacenamiento": {
+      "condicion": "2-30 °C según el inserto",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para sangre oculta en materia fecal inmunoquímica (FIT)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de 20 a 40 casetes",
+     "metodo": "Inmunoquímico (casete cualitativo con umbral de 50 ng/mL o analizador cuantitativo si supera 300 al mes)",
+     "pruebas": ["fit"],
+     "pruebas_mes": 49,
+     "almacenamiento": {
+      "condicion": "2-30 °C según el inserto",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para antígenos en heces: rotavirus/adenovirus y Helicobacter pylori (promedio)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de 20 a 40 casetes",
+     "metodo": "Inmunocromatografía",
+     "pruebas": ["copro_antigenos"],
+     "pruebas_mes": 22,
+     "almacenamiento": {
+      "condicion": "2-30 °C según el inserto",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Controles positivos y negativos de las pruebas rápidas (por lote y cada semana)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": [
+      "vih_rapida",
+      "sifilis_rapida",
+      "hbsag_rapida",
+      "hcv_rapida",
+      "dengue_rapida",
+      "malaria_rapida",
+      "bhcg_orina",
+      "fit",
+      "copro_antigenos"
+     ],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Microcubetas del hemoglobinómetro portátil (el equipo no está en la dotación de la torre: lo usan los equipos extramurales)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frascos",
+     "pruebas": ["hemoglobina_poct"],
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Tubos, puntas, guantes y material de reserva",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "modelo3d": "reactivo_caja"
+    }
+   ]
+  },
+  "inmovilizacion": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-urgencias-e-629802",
+     "nombre": "Elementos de inmovilización (tabla espinal, collares cervicales, férulas, inmovilizador de cabeza)"
+    }
+   ],
+   "descripcion": "Elementos de inmovilización de la línea.",
+   "items": [
+    {
+     "nombre": "Tabla espinal larga con correas",
+     "cantidad": 1,
+     "compartimiento": null,
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Collares cervicales (tallas adulto y pediátrica)",
+     "cantidad": 4,
+     "compartimiento": null,
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Inmovilizador lateral de cabeza",
+     "cantidad": 1,
+     "compartimiento": null,
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Férulas de miembros superiores e inferiores",
+     "cantidad": 4,
+     "compartimiento": null,
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    }
+   ]
+  },
+  "instrumental_basico_odontologia": {
+   "lineas_que_la_usan": [{"linea": "L-odontologia-e-218c6a", "nombre": "Juego de instrumental básico de odontología"}],
+   "descripcion": "Juego básico de instrumental de odontología (uno por paciente en cada turno de esterilización).",
+   "items": [
+    {
+     "nombre": "Espejo bucal",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Explorador",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Pinza algodonera",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Sonda periodontal",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Cucharilla de dentina",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    }
+   ]
+  },
+  "instrumental_especialidades_odontologia": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-odontologia-e-46b2e1",
+     "nombre": "Instrumental de operatoria, periodoncia, endodoncia simple y cirugía oral (juegos)"
+    }
+   ],
+   "descripcion": "Instrumental de operatoria, periodoncia, endodoncia simple y cirugía oral (juegos).",
+   "items": [
+    {
+     "nombre": "Fórceps y elevadores (cirugía oral)",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Curetas y raspadores periodontales",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Limas y tiranervios de endodoncia",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Instrumental de operatoria (atacadores, bruñidores, espátulas)",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    }
+   ]
+  },
+  "kit_examen_basico": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-urgencias-e-cf53be",
+     "nombre": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)"
+    },
+    {
+     "linea": "L-consulta_externa-e-9b1266",
+     "nombre": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)"
+    },
+    {
+     "linea": "L-partos-e-8456df",
+     "nombre": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)"
+    },
+    {
+     "linea": "L-hospitalizacion-e-8478ff",
+     "nombre": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)"
+    },
+    {"linea": "L-expansion_emergencias-x-e7f79a", "nombre": "Kit de examen básico para la sala de expansión"}
+   ],
+   "descripcion": "Los 8 componentes que nombra la línea. Los equipos biomédicos del kit se inventarían como unidades componentes, con su clase de riesgo, registro y mantenimiento (precio 0: el precio está en la línea).",
+   "items": [
+    {
+     "nombre": "Báscula digital de grado médico (hasta 200 kg)",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "equipo_biomedico",
+     "fuente": "nombre de la línea y revisión del Decreto 4725 (los kits se inventarían por componente)",
+     "verificacion": "dato del repositorio",
+     "clase_riesgo": "I",
+     "nota_clase": "Regla 12 del Decreto 4725 (revisión del Decreto 4725)",
+     "registro_invima": {"requerido": "si", "via": "automatico (clase I o IIa, Decreto 4725, art. 17)"},
+     "mantenimiento": {"anual_pct": 5, "calibracion": true, "personal_inscrito_invima": false},
+     "modelo3d": "bascula_piso"
+    },
+    {
+     "nombre": "Tensiómetro aneroide adulto con brazaletes pediátrico y de obeso",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "nota_clase": "I si es aneroide; IIa si es electrónico (revisión del Decreto 4725)",
+     "fuente": "nombre de la línea y revisión del Decreto 4725 (los kits se inventarían por componente)",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Fonendoscopio de doble campana",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "nombre de la línea y revisión del Decreto 4725 (los kits se inventarían por componente)",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Equipo de órganos de los sentidos portátil (otoscopio y oftalmoscopio con batería recargable)",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "equipo_biomedico",
+     "fuente": "nombre de la línea y revisión del Decreto 4725 (los kits se inventarían por componente)",
+     "verificacion": "dato del repositorio",
+     "clase_riesgo": "I",
+     "nota_clase": "I probable (revisión del Decreto 4725: ilumina en el espectro visible)",
+     "registro_invima": {"requerido": "si", "via": "automatico (clase I o IIa, Decreto 4725, art. 17)"},
+     "mantenimiento": {"anual_pct": 5, "calibracion": false, "personal_inscrito_invima": false}
+    },
+    {
+     "nombre": "Oxímetro de pulso de dedo",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "equipo_biomedico",
+     "fuente": "nombre de la línea y revisión del Decreto 4725 (los kits se inventarían por componente)",
+     "verificacion": "dato del repositorio",
+     "clase_riesgo": "IIa",
+     "nota_clase": "Regla 10 del Decreto 4725",
+     "registro_invima": {"requerido": "si", "via": "automatico (clase I o IIa, Decreto 4725, art. 17)"},
+     "mantenimiento": {"anual_pct": 5, "calibracion": true, "personal_inscrito_invima": false}
+    },
+    {
+     "nombre": "Termómetro infrarrojo",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "equipo_biomedico",
+     "fuente": "nombre de la línea y revisión del Decreto 4725 (los kits se inventarían por componente)",
+     "verificacion": "dato del repositorio",
+     "clase_riesgo": "IIa",
+     "nota_clase": "Regla 10; el ABC del INVIMA pone el termómetro electrónico como IIa",
+     "registro_invima": {"requerido": "si", "via": "automatico (clase I o IIa, Decreto 4725, art. 17)"},
+     "mantenimiento": {"anual_pct": 5, "calibracion": true, "personal_inscrito_invima": false}
+    },
+    {
+     "nombre": "Cinta métrica",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "nombre de la línea y revisión del Decreto 4725 (los kits se inventarían por componente)",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Tallímetro",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "nombre de la línea y revisión del Decreto 4725 (los kits se inventarían por componente)",
+     "verificacion": "dato del repositorio"
+    }
+   ]
+  },
+  "kit_hemorragia_obstetrica": {
+   "lineas_que_la_usan": [{"linea": "L-partos-e-0d537b", "nombre": "Traje antichoque no neumático (hemorragia posparto)"}],
+   "descripcion": "Kit de hemorragia obstétrica (código rojo) que acompaña el traje antichoque no neumático.",
+   "items": [
+    {
+     "nombre": "Traje antichoque no neumático (la línea)",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Oxitocina 10 UI (en la nevera del depósito de medicamentos si el fabricante lo pide)",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Misoprostol 200 mcg",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "medicamento",
+     "presentacion": "tabletas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Ácido tranexámico 500 mg",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Catéteres de 14 y 16 G, sonda vesical y tubos para muestras",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "IIa",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Algoritmo del código rojo y formato de registro",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "insumo",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "kit_rehabilitacion": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-terapias-m-5aa3f1",
+     "nombre": "Kit de rehabilitación (mancuernas, tobilleras, balones, bandas elásticas, colchonetas, rodillos)"
+    }
+   ],
+   "descripcion": "Kit de rehabilitación de la línea.",
+   "items": [
+    {
+     "nombre": "Mancuernas",
+     "cantidad": null,
+     "compartimiento": "estante 1",
+     "tipo": "dispositivo",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Tobilleras con peso",
+     "cantidad": null,
+     "compartimiento": "estante 1",
+     "tipo": "dispositivo",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Balones terapéuticos",
+     "cantidad": null,
+     "compartimiento": "estante 2",
+     "tipo": "dispositivo",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Bandas elásticas",
+     "cantidad": null,
+     "compartimiento": "estante 2",
+     "tipo": "dispositivo",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Colchonetas",
+     "cantidad": null,
+     "compartimiento": "estante 3",
+     "tipo": "dispositivo",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Rodillos",
+     "cantidad": null,
+     "compartimiento": "estante 3",
+     "tipo": "dispositivo",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    }
+   ]
+  },
+  "lab_coagulacion": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-c-305e1b", "nombre": "Coagulómetro semiautomático de 4 canales"}],
+   "descripcion": "Reactivos del coagulómetro semiautomático.",
+   "items": [
+    {
+     "nombre": "Tromboplastina para tiempo de protrombina (con su ISI)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales",
+     "metodo": "Coagulométrico (detección mecánica u óptica)",
+     "pruebas": ["coagulacion"],
+     "pruebas_mes": 60,
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo de TTPa y cloruro de calcio",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales",
+     "metodo": "Coagulométrico (detección mecánica u óptica)",
+     "pruebas": ["coagulacion"],
+     "pruebas_mes": 60,
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo de trombina (método de Clauss) y tampón",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales",
+     "metodo": "Clauss",
+     "pruebas": ["fibrinogeno"],
+     "pruebas_mes": 8,
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Plasmas control normal y anormal",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["coagulacion", "fibrinogeno"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Cubetas y esferas del coagulómetro",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["coagulacion"]
+    }
+   ]
+  },
+  "lab_gases": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-c-eb724d", "nombre": "Analizador de gases y electrolitos por cartucho (lector portátil)"}],
+   "descripcion": "Cartuchos y controles del analizador de gases y electrolitos (comodato pagado con cartuchos).",
+   "items": [
+    {
+     "nombre": "Cartuchos de gases, electrolitos, lactato y glucosa",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de cartuchos",
+     "metodo": "Electrodos y biosensores en cartucho de un solo uso",
+     "pruebas": ["gases"],
+     "pruebas_mes": 34,
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Controles líquidos de 3 niveles",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["gases"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Jeringas heparinizadas para gases",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["gases"]
+    }
+   ]
+  },
+  "lab_genexpert": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-c-35c160", "nombre": "GeneXpert de 4 módulos (PCR en tiempo real en cartucho)"}],
+   "descripcion": "Cartuchos del GeneXpert (compra o entrega del programa nacional de tuberculosis; no presupuestado).",
+   "items": [
+    {
+     "nombre": "Cartuchos Xpert MTB/RIF Ultra y reactivo de muestra",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de 10 cartuchos",
+     "metodo": "PCR en tiempo real en cartucho cerrado",
+     "pruebas": ["xpert_mtb"],
+     "pruebas_mes": 25,
+     "almacenamiento": {
+      "condicion": "2-28 °C",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Cartuchos Xpert HPV",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de 10 cartuchos",
+     "metodo": "PCR en tiempo real en cartucho cerrado",
+     "pruebas": ["xpert_vph"],
+     "pruebas_mes": 34,
+     "almacenamiento": {
+      "condicion": "2-28 °C",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Viales de recolección de esputo y medio de transporte para ADN-VPH",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["xpert_mtb", "xpert_vph"]
+    },
+    {
+     "nombre": "Controles externos de calidad (paneles)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["xpert_mtb", "xpert_vph"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    }
+   ]
+  },
+  "lab_hba1c": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-c-219f91", "nombre": "Analizador de hemoglobina glicosilada por HPLC (certificado NGSP)"}],
+   "descripcion": "Reactivos del analizador de HbA1c por HPLC (certificado NGSP).",
+   "items": [
+    {
+     "nombre": "Soluciones tampón de elución (A y B)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "bolsas",
+     "metodo": "Cromatografía líquida de alta resolución (HPLC) certificada NGSP",
+     "pruebas": ["hba1c"],
+     "pruebas_mes": 121,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Solución de hemólisis y lavado",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frasco",
+     "metodo": "Cromatografía líquida de alta resolución (HPLC) certificada NGSP",
+     "pruebas": ["hba1c"],
+     "pruebas_mes": 121,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Columna de HPLC",
+     "cantidad": 1,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "unidad",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["hba1c"]
+    },
+    {
+     "nombre": "Calibradores de HbA1c",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["hba1c"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Controles de HbA1c de 2 niveles",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["hba1c"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    }
+   ]
+  },
+  "lab_hematologia_3p": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-laboratorio-c-0c19c4",
+     "nombre": "Analizador hematológico de 3 partes (respaldo y urgencias nocturnas)"
+    }
+   ],
+   "descripcion": "Reactivos del analizador de 3 partes (respaldo y urgencias nocturnas; incluido en el contrato de hematología).",
+   "items": [
+    {
+     "nombre": "Diluyente isotónico",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "bidón de 10 a 20 L",
+     "metodo": "Citometría de flujo y fluorescencia con impedancia",
+     "pruebas": ["hemograma"],
+     "pruebas_mes": 618,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo lisante",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frasco",
+     "metodo": "Citometría de flujo y fluorescencia con impedancia",
+     "pruebas": ["hemograma"],
+     "pruebas_mes": 618,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Controles hematológicos de 3 niveles",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["hemograma"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    }
+   ]
+  },
+  "lab_hematologia_5p": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-c-c43cf6", "nombre": "Analizador hematológico de 5 partes con cargador automático"}],
+   "descripcion": "Reactivos y consumibles del analizador hematológico de 5 partes (comodato pagado con reactivos).",
+   "items": [
+    {
+     "nombre": "Diluyente isotónico",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "bidón de 10 a 20 L",
+     "metodo": "Citometría de flujo y fluorescencia con impedancia",
+     "pruebas": ["hemograma"],
+     "pruebas_mes": 618,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo lisante para el diferencial de 5 partes",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frasco",
+     "metodo": "Citometría de flujo y fluorescencia con impedancia",
+     "pruebas": ["hemograma"],
+     "pruebas_mes": 618,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo lisante para hemoglobina (sin cianuro)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frasco",
+     "metodo": "Citometría de flujo y fluorescencia con impedancia",
+     "pruebas": ["hemograma"],
+     "pruebas_mes": 618,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo fluorescente para reticulocitos (según modelo)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frasco",
+     "metodo": "Citometría o azul de cresil brillante",
+     "pruebas": ["reticulocitos"],
+     "pruebas_mes": 10,
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Solución de limpieza enzimática",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frasco",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["hemograma"],
+     "modelo3d": "frasco_reactivo"
+    },
+    {
+     "nombre": "Calibrador hematológico",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["hemograma"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Controles hematológicos de 3 niveles",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["hemograma", "reticulocitos"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Recipiente de desechos líquidos",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "bidón",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["hemograma"]
+    }
+   ]
+  },
+  "lab_hemoclasificacion": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-e-47e89f", "nombre": "Centrífuga de mesa de 24 tubos"}],
+   "descripcion": "Reactivos de hemoclasificación y material de centrifugación.",
+   "items": [
+    {
+     "nombre": "Antisueros anti-A, anti-B y anti-D",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frascos gotero",
+     "metodo": "Aglutinación en tubo o tarjeta de gel",
+     "pruebas": ["hemoclasificacion"],
+     "pruebas_mes": 45,
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Tubos de vidrio de 12 × 75 mm y gradillas",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["hemoclasificacion"],
+     "modelo3d": "gradilla_tubos"
+    },
+    {
+     "nombre": "Tubos y pipetas de Westergren (VSG)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["vsg"]
+    }
+   ]
+  },
+  "lab_hemocultivos": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-c-5446e9", "nombre": "Sistema automatizado de hemocultivos (40-60 frascos)"}],
+   "descripcion": "Frascos del sistema automatizado de hemocultivos (comodato pagado con frascos).",
+   "items": [
+    {
+     "nombre": "Frascos de hemocultivo aerobio adulto",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de frascos",
+     "metodo": "Detección colorimétrica continua de CO2 y subcultivo",
+     "pruebas": ["hemocultivo"],
+     "pruebas_mes": 17,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Frascos de hemocultivo pediátrico",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de frascos",
+     "metodo": "Detección colorimétrica continua de CO2 y subcultivo",
+     "pruebas": ["hemocultivo"],
+     "pruebas_mes": 17,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Frascos de hemocultivo anaerobio",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de frascos",
+     "metodo": "Detección colorimétrica continua de CO2 y subcultivo",
+     "pruebas": ["hemocultivo"],
+     "pruebas_mes": 17,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Adaptadores de toma para frascos",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["hemocultivo"]
+    }
+   ]
+  },
+  "lab_identificacion_antibiograma": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-c-f7c2cb", "nombre": "Sistema semiautomatizado de identificación y antibiograma"}],
+   "descripcion": "Paneles del sistema semiautomatizado de identificación y antibiograma (opcional: cuando haya más de 150 aislamientos al mes).",
+   "items": [
+    {
+     "nombre": "Paneles de identificación (Gram positivos, Gram negativos y levaduras)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "metodo": "Siembra cuantitativa, identificación bioquímica y antibiograma por difusión en disco (CLSI)",
+     "pruebas": ["urocultivo"],
+     "pruebas_mes": 101,
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Paneles de sensibilidad antimicrobiana",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "metodo": "Siembra cuantitativa, identificación bioquímica y antibiograma por difusión en disco (CLSI)",
+     "pruebas": ["urocultivo"],
+     "pruebas_mes": 101,
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Solución salina y estándar de McFarland",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frascos",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["urocultivo", "cultivos_otros"]
+    },
+    {
+     "nombre": "Cepas de referencia ATCC de control",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["urocultivo", "cultivos_otros"],
+     "almacenamiento": {
+      "condicion": "-20 °C o menos",
+      "donde": {"linea": "L-laboratorio-e-32fa41", "nombre": "Congelador de -20 °C a -30 °C (seroteca y muestras de vigilancia)"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    }
+   ]
+  },
+  "lab_inmunoensayo": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-c-aac95c", "nombre": "Analizador de inmunoensayo por quimioluminiscencia de mesa"}],
+   "descripcion": "Reactivos del analizador de inmunoensayo por quimioluminiscencia (comodato pagado con reactivos).",
+   "items": [
+    {
+     "nombre": "Reactivo para hormona estimulante del tiroides (TSH)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "Quimioluminiscencia",
+     "pruebas": ["tsh"],
+     "pruebas_mes": 75,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para tiroxina libre (T4 libre)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "Quimioluminiscencia",
+     "pruebas": ["t4l"],
+     "pruebas_mes": 26,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para tSH neonatal en sangre de cordón (tamizaje de hipotiroidismo congénito)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "Quimioluminiscencia",
+     "pruebas": ["tsh_neonatal"],
+     "pruebas_mes": 14,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para antígeno prostático específico (PSA) total",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "Quimioluminiscencia",
+     "pruebas": ["psa"],
+     "pruebas_mes": 24,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para ferritina",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "Quimioluminiscencia",
+     "pruebas": ["ferritina"],
+     "pruebas_mes": 40,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para gonadotropina coriónica subunidad beta cuantitativa",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "Quimioluminiscencia",
+     "pruebas": ["bhcg_cuant"],
+     "pruebas_mes": 35,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para troponina I de alta sensibilidad",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "Quimioluminiscencia (respaldo: casete de fluorescencia)",
+     "pruebas": ["troponina"],
+     "pruebas_mes": 21,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para toxoplasma IgG",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "Quimioluminiscencia",
+     "pruebas": ["toxo_igg"],
+     "pruebas_mes": 29,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para toxoplasma IgM (incluye tamizaje mensual de gestantes seronegativas)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "Quimioluminiscencia",
+     "pruebas": ["toxo_igm"],
+     "pruebas_mes": 100,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para rubéola IgG",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "Quimioluminiscencia",
+     "pruebas": ["rubeola_igg"],
+     "pruebas_mes": 8,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para anticuerpos contra Trypanosoma cruzi (Chagas)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "ELISA o quimioluminiscencia con antígenos totales (sensibilidad ≥ 98 %)",
+     "pruebas": ["chagas"],
+     "pruebas_mes": 29,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para pruebas confirmatorias o de segunda línea por quimioluminiscencia: VIH Ag/Ac de 4.ª generación, HBsAg, anti-VHC, anticuerpos treponémicos (promedio)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "Quimioluminiscencia",
+     "pruebas": ["serologias_confirmatorias"],
+     "pruebas_mes": 45,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para dengue IgM (diagnóstico después del día 5 de fiebre)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "paquete de reactivo del analizador",
+     "metodo": "ELISA o quimioluminiscencia",
+     "pruebas": ["dengue_igm"],
+     "pruebas_mes": 25,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Calibradores por analito",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": [
+      "tsh",
+      "t4l",
+      "tsh_neonatal",
+      "psa",
+      "ferritina",
+      "bhcg_cuant",
+      "troponina",
+      "toxo_igg",
+      "toxo_igm",
+      "rubeola_igg",
+      "chagas",
+      "serologias_confirmatorias",
+      "dengue_igm"
+     ],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Controles de hormonas, marcadores y cardiacos (3 niveles)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["tsh", "t4l", "tsh_neonatal", "psa", "ferritina", "bhcg_cuant", "troponina"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Controles de serología infecciosa (positivo y negativo)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["toxo_igg", "toxo_igm", "rubeola_igg", "chagas", "serologias_confirmatorias", "dengue_igm"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Sustrato quimioluminiscente y solución de lavado",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frascos",
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": [
+      "tsh",
+      "t4l",
+      "tsh_neonatal",
+      "psa",
+      "ferritina",
+      "bhcg_cuant",
+      "troponina",
+      "toxo_igg",
+      "toxo_igm",
+      "rubeola_igg",
+      "chagas",
+      "serologias_confirmatorias",
+      "dengue_igm"
+     ],
+     "modelo3d": "frasco_reactivo"
+    },
+    {
+     "nombre": "Cubetas o puntas de reacción",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": [
+      "tsh",
+      "t4l",
+      "tsh_neonatal",
+      "psa",
+      "ferritina",
+      "bhcg_cuant",
+      "troponina",
+      "toxo_igg",
+      "toxo_igm",
+      "rubeola_igg",
+      "chagas",
+      "serologias_confirmatorias",
+      "dengue_igm"
+     ],
+     "modelo3d": "reactivo_caja"
+    }
+   ]
+  },
+  "lab_microbiologia_medios": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-e-fe95a5", "nombre": "Incubadora bacteriológica 35-37 °C"}],
+   "descripcion": "Placas sembradas en incubación (35-37 °C) y material de siembra.",
+   "items": [
+    {
+     "nombre": "Placas y caldos sembrados en incubación",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "placas de Petri",
+     "almacenamiento": {"condicion": "35-37 °C"},
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["urocultivo", "cultivos_otros", "estreptococo_b"],
+     "modelo3d": "reactivo_caja"
+    },
+    {
+     "nombre": "Asas calibradas, hisopos con medio de transporte (Stuart o Amies) e incinerador de asas",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["urocultivo", "cultivos_otros"]
+    }
+   ]
+  },
+  "lab_microscopia": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-e-9fb69d", "nombre": "Microscopio binocular con objetivo de inmersión"}],
+   "descripcion": "Colorantes y material de microscopía (gota gruesa, extendido, coprológico, Gram, baciloscopia y leishmania).",
+   "items": [
+    {
+     "nombre": "Colorante de Wright",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frasco",
+     "metodo": "Tinción de Wright y lectura",
+     "pruebas": ["extendido"],
+     "pruebas_mes": 60,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Colorante de Giemsa y solución amortiguadora",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frasco",
+     "metodo": "Tinción de Giemsa y microscopía",
+     "pruebas": ["gota_gruesa", "leishmania"],
+     "pruebas_mes": 280,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Colorantes de Ziehl-Neelsen (fucsina, alcohol-ácido y azul de metileno)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frascos",
+     "metodo": "Microscopía de luz",
+     "pruebas": ["baciloscopia"],
+     "pruebas_mes": 12,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Colorantes de Gram (cristal violeta, lugol, alcohol-acetona y safranina) e hidróxido de potasio al 10 %",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frascos",
+     "metodo": "Microscopía",
+     "pruebas": ["gram_koh_fresco"],
+     "pruebas_mes": 130,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Solución salina y lugol para coprológico",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frascos",
+     "metodo": "Microscopía",
+     "pruebas": ["coprologico"],
+     "pruebas_mes": 98,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Azul de cresil brillante (método manual)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frasco",
+     "metodo": "Citometría o azul de cresil brillante",
+     "pruebas": ["reticulocitos"],
+     "pruebas_mes": 10,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Aceite de inmersión",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frasco",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["gota_gruesa", "baciloscopia"],
+     "modelo3d": "frasco_reactivo"
+    },
+    {
+     "nombre": "Portaobjetos y cubreobjetos",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["gota_gruesa", "extendido", "coprologico"],
+     "modelo3d": "reactivo_caja"
+    },
+    {
+     "nombre": "Laminario para el control externo del INS y del Laboratorio Departamental (gota gruesa y baciloscopia)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["gota_gruesa", "baciloscopia"]
+    }
+   ]
+  },
+  "lab_poct_fluorescencia": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-laboratorio-e-02804b",
+     "nombre": "Lector de inmunoensayo por fluorescencia de punto de atención (respaldo de TSH, troponina, procalcitonina)"
+    }
+   ],
+   "descripcion": "Casetes del lector de inmunoensayo por fluorescencia (respaldo de TSH, troponina y procalcitonina; nombre de la línea).",
+   "items": [
+    {
+     "nombre": "Casetes de troponina I",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de casetes",
+     "metodo": "Quimioluminiscencia (respaldo: casete de fluorescencia)",
+     "pruebas": ["troponina"],
+     "pruebas_mes": 21,
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Casetes de TSH",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de casetes",
+     "metodo": "Quimioluminiscencia",
+     "pruebas": ["tsh"],
+     "pruebas_mes": 75,
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Casetes de procalcitonina",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas de casetes",
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Controles del lector",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["troponina", "tsh"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    }
+   ]
+  },
+  "lab_quimica": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-laboratorio-c-4046db",
+     "nombre": "Analizador de química clínica automatizado con módulo de electrolitos (ISE)"
+    }
+   ],
+   "descripcion": "Reactivos del analizador de química clínica con módulo de electrolitos (comodato pagado con reactivos). Los reactivos van a bordo refrigerados; los de repuesto, en la nevera de reactivos.",
+   "items": [
+    {
+     "nombre": "Reactivo para glucosa en suero (incluye prueba de tolerancia oral a la glucosa de 75 g: 3 muestras)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cartucho o frasco del analizador",
+     "metodo": "Enzimático (hexoquinasa o glucosa oxidasa)",
+     "pruebas": ["glucosa"],
+     "pruebas_mes": 526,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para creatinina en suero",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cartucho o frasco del analizador",
+     "metodo": "Jaffé cinético o enzimático",
+     "pruebas": ["creatinina"],
+     "pruebas_mes": 437,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para nitrógeno ureico (BUN)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cartucho o frasco del analizador",
+     "metodo": "Ureasa cinético",
+     "pruebas": ["bun"],
+     "pruebas_mes": 88,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para perfil lipídico: colesterol total, HDL, triglicéridos y LDL calculado (se cuentan 3 determinaciones medidas)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cartucho o frasco del analizador",
+     "metodo": "Enzimático colorimétrico; HDL directo; LDL por fórmula",
+     "pruebas": ["perfil_lipidico"],
+     "pruebas_mes": 243,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para transaminasas AST y ALT (par)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cartucho o frasco del analizador",
+     "metodo": "Cinético UV (IFCC)",
+     "pruebas": ["transaminasas"],
+     "pruebas_mes": 51,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para bilirrubina total y directa (par)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cartucho o frasco del analizador",
+     "metodo": "Diazo o vanadato",
+     "pruebas": ["bilirrubinas"],
+     "pruebas_mes": 29,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para otras de química: fosfatasa alcalina, proteínas totales, albúmina, ácido úrico, amilasa, calcio, magnesio, fósforo, LDH, CK (promedio por prueba)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cartucho o frasco del analizador",
+     "metodo": "Fotométricos",
+     "pruebas": ["quimica_otros"],
+     "pruebas_mes": 136,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para proteína C reactiva cuantitativa",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cartucho o frasco del analizador",
+     "metodo": "Inmunoturbidimetría",
+     "pruebas": ["pcr"],
+     "pruebas_mes": 135,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivo para relación albúmina/creatinina en orina (microalbuminuria)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cartucho o frasco del analizador",
+     "metodo": "Inmunoturbidimetría y creatinina urinaria",
+     "pruebas": ["rac"],
+     "pruebas_mes": 114,
+     "almacenamiento": {
+      "condicion": "a bordo del analizador (2-8 °C) mientras está en uso; repuestos en la nevera de reactivos",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Electrodos de sodio, potasio, cloro y de referencia (módulo ISE)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "electrodos",
+     "metodo": "Electrodo ion selectivo (ISE)",
+     "pruebas": ["electrolitos"],
+     "pruebas_mes": 158,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Soluciones de calibración del módulo ISE",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "bolsas o frascos",
+     "metodo": "Electrodo ion selectivo (ISE)",
+     "pruebas": ["electrolitos"],
+     "pruebas_mes": 158,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Calibrador multiparamétrico de química",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["glucosa", "creatinina", "bun", "perfil_lipidico", "transaminasas", "bilirrubinas", "quimica_otros", "pcr", "rac"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Calibrador de proteínas específicas (PCR y microalbúmina)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["pcr", "rac"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Controles de química clínica de 2 niveles",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": [
+      "glucosa",
+      "creatinina",
+      "bun",
+      "perfil_lipidico",
+      "transaminasas",
+      "bilirrubinas",
+      "quimica_otros",
+      "pcr",
+      "rac",
+      "electrolitos"
+     ],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Cubetas de reacción, solución de lavado y detergente del analizador",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas y bidones",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["glucosa", "creatinina", "bun", "perfil_lipidico", "transaminasas", "bilirrubinas", "quimica_otros", "pcr", "rac"]
+    },
+    {
+     "nombre": "Copas de muestra y tubos",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "bolsas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["glucosa", "creatinina", "bun", "perfil_lipidico", "transaminasas", "bilirrubinas", "quimica_otros", "pcr", "rac"],
+     "modelo3d": "gradilla_tubos"
+    },
+    {
+     "nombre": "Agua purificada tipo II (purificador del analizador)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "equipo de purificación",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["glucosa", "creatinina", "bun", "perfil_lipidico", "transaminasas", "bilirrubinas", "quimica_otros", "pcr", "rac"]
+    }
+   ]
+  },
+  "lab_serologia_rpr": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-e-be5cdc", "nombre": "Baño serológico y rotador de VDRL"}],
+   "descripcion": "Reactivo no treponémico y material del rotador.",
+   "items": [
+    {
+     "nombre": "Antígeno de RPR (cardiolipina) con controles reactivo y no reactivo",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "kit",
+     "metodo": "Floculación",
+     "pruebas": ["rpr"],
+     "pruebas_mes": 18,
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Tarjetas de RPR y dispensadores",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["rpr"]
+    }
+   ]
+  },
+  "lab_uroanalisis": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-laboratorio-c-02f05f",
+     "nombre": "Lector automático de tiras de orina y analizador de sedimento por imagen"
+    }
+   ],
+   "descripcion": "Reactivos del lector de tiras y del analizador de sedimento.",
+   "items": [
+    {
+     "nombre": "Tiras reactivas de orina de 10 a 11 parámetros",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "frascos de 100 tiras",
+     "metodo": "Reflectometría de tiras y sedimento por imagen automatizada o microscopía",
+     "pruebas": ["uroanalisis"],
+     "pruebas_mes": 538,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Reactivos y celdas del analizador de sedimento",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "kit",
+     "metodo": "Reflectometría de tiras y sedimento por imagen automatizada o microscopía",
+     "pruebas": ["uroanalisis"],
+     "pruebas_mes": 538,
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "regimen": "reactivo de diagnóstico in vitro (Decreto 3770 de 2004): registro sanitario por reactivo; categoría según su registro",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Controles de orina (tiras y sedimento) de 2 niveles",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "viales liofilizados o líquidos del fabricante",
+     "pruebas": ["uroanalisis"],
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Tubos cónicos y frascos de orina",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "bolsas",
+     "almacenamiento": {
+      "condicion": "15-30 °C, lejos de la luz solar",
+      "donde": {"linea": "L-laboratorio-m-d811a5", "nombre": "Estantería para almacén de reactivos y archivo de láminas"}
+     },
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "pruebas": ["uroanalisis"],
+     "modelo3d": "gradilla_tubos"
+    }
+   ]
+  },
+  "laringoscopio_resucitador_neonatal": {
+   "lineas_que_la_usan": [{"linea": "L-partos-e-d181b6", "nombre": "Laringoscopio neonatal y resucitador neonatal con mezclador de oxígeno"}],
+   "descripcion": "Accesorios del laringoscopio neonatal y del resucitador con mezclador (los dos equipos son componentes de la línea, con su clase).",
+   "items": [
+    {
+     "nombre": "Hojas Miller 0 y 1",
+     "cantidad": 2,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Pilas y bombillos de repuesto",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Máscaras del resucitador (prematuro y a término)",
+     "cantidad": 2,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "maletin_reanimacion_expansion": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-expansion_emergencias-x-e90b50",
+     "nombre": "Desfibrilador externo automático (DEA) con maletín de reanimación adulto-pediátrico"
+    }
+   ],
+   "descripcion": "Gabinete del DEA y maletín de reanimación de la sala de expansión (hospital seguro; recomendado).",
+   "items": [
+    {
+     "nombre": "Resucitador manual adulto y pediátrico con reservorio",
+     "cantidad": 2,
+     "compartimiento": "gabinete",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "IIa",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Cánulas orofaríngeas y nasofaríngeas",
+     "cantidad": 8,
+     "compartimiento": "gabinete",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Máscaras laríngeas (tallas 3 a 5)",
+     "cantidad": 3,
+     "compartimiento": "gabinete",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "IIa",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Parches de desfibrilación de repuesto (adulto y pediátrico)",
+     "cantidad": 2,
+     "compartimiento": "gabinete",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Adrenalina 1 mg/mL",
+     "cantidad": 5,
+     "compartimiento": "gabinete",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Tijera de trauma, rasuradora, guantes y gasas",
+     "cantidad": null,
+     "compartimiento": "gabinete",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "material_toma_muestras": {
+   "lineas_que_la_usan": [{"linea": "L-toma_muestras-m-00ee8b", "nombre": "Mesón con gavetas para preparación, embalaje y remisión"}],
+   "descripcion": "Material de toma de muestras del mesón de preparación y de los cubículos.",
+   "items": [
+    {
+     "nombre": "Tubos al vacío: tapa lila (EDTA), roja o amarilla (gel), azul (citrato) y gris (fluoruro)",
+     "cantidad": null,
+     "compartimiento": "gaveta 1",
+     "tipo": "insumo",
+     "presentacion": "cajas de 100",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "modelo3d": "gradilla_tubos"
+    },
+    {
+     "nombre": "Agujas para tubo al vacío, holders y lancetas",
+     "cantidad": null,
+     "compartimiento": "gaveta 1",
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "modelo3d": "reactivo_caja"
+    },
+    {
+     "nombre": "Torniquetes, algodón, alcohol y curitas",
+     "cantidad": null,
+     "compartimiento": "gaveta 2",
+     "tipo": "insumo",
+     "presentacion": "unidades",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Frascos de orina y de heces, hisopos y medios de transporte",
+     "cantidad": null,
+     "compartimiento": "bajo mesón",
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "modelo3d": "reactivo_caja"
+    },
+    {
+     "nombre": "Etiquetas de código de barras",
+     "cantidad": null,
+     "compartimiento": "gaveta 2",
+     "tipo": "insumo",
+     "presentacion": "rollos",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Embalaje triple para envío de muestras (UN3373, sustancia biológica categoría B)",
+     "cantidad": null,
+     "compartimiento": "bajo mesón",
+     "tipo": "insumo",
+     "presentacion": "unidades",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "modelo3d": "reactivo_caja"
+    }
+   ]
+  },
+  "material_vidrio_laboratorio": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-laboratorio-m-7da1bf",
+     "nombre": "Mesones de laboratorio en acero inoxidable o resina con pocetas (módulos de 1,5 m)"
+    }
+   ],
+   "descripcion": "Material de vidrio y consumibles de los mesones del laboratorio.",
+   "items": [
+    {
+     "nombre": "Gradillas y tubos de ensayo",
+     "cantidad": null,
+     "compartimiento": "gaveta 1",
+     "tipo": "insumo",
+     "presentacion": "unidades",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "modelo3d": "gradilla_tubos"
+    },
+    {
+     "nombre": "Pipetas Pasteur, puntas para micropipeta y tubos de microcentrífuga",
+     "cantidad": null,
+     "compartimiento": "gaveta 1",
+     "tipo": "insumo",
+     "presentacion": "cajas",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "modelo3d": "reactivo_caja"
+    },
+    {
+     "nombre": "Probetas, vasos de precipitado y frascos lavadores",
+     "cantidad": null,
+     "compartimiento": "bajo mesón",
+     "tipo": "insumo",
+     "presentacion": "unidades",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "modelo3d": "frasco_reactivo"
+    },
+    {
+     "nombre": "Cronómetros y marcadores",
+     "cantidad": null,
+     "compartimiento": "gaveta 2",
+     "tipo": "insumo",
+     "presentacion": "unidades",
+     "almacenamiento": null,
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    }
+   ]
+  },
+  "nevera_muestras_toma": {
+   "lineas_que_la_usan": [{"linea": "L-toma_muestras-e-89afd7", "nombre": "Nevera de muestras 2-8 °C con registrador de temperatura"}],
+   "descripcion": "Muestras en espera del montacargas o de remisión (2-8 °C).",
+   "items": [
+    {
+     "nombre": "Muestras en espera, en gradillas",
+     "cantidad": null,
+     "compartimiento": "entrepaño 1",
+     "tipo": "insumo",
+     "presentacion": "gradillas",
+     "almacenamiento": {"condicion": "2-8 °C"},
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion",
+     "modelo3d": "gradilla_tubos"
+    },
+    {
+     "nombre": "Geles refrigerantes para las cavas",
+     "cantidad": null,
+     "compartimiento": "entrepaño 2",
+     "tipo": "insumo",
+     "presentacion": "unidades",
+     "almacenamiento": {"condicion": "congelados"},
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    }
+   ]
+  },
+  "nevera_reactivos_laboratorio": {
+   "lineas_que_la_usan": [{"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}],
+   "descripcion": "Nevera de reactivos (2-8 °C): reactivos de repuesto de los analizadores, controles, calibradores, medios de cultivo y antisueros (ver el contenido de cada analizador).",
+   "items": [
+    {
+     "nombre": "Reactivos de repuesto de química, inmunoensayo, coagulación y gases",
+     "cantidad": null,
+     "compartimiento": "entrepaño 1",
+     "tipo": "insumo",
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Calibradores y controles de los analizadores",
+     "cantidad": null,
+     "compartimiento": "entrepaño 2",
+     "tipo": "insumo",
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Medios de cultivo preparados (agar sangre, chocolate, MacConkey, cromogénico de orina, Sabouraud, Mueller-Hinton y caldo selectivo para estreptococo del grupo B)",
+     "cantidad": null,
+     "compartimiento": "entrepaño 3",
+     "tipo": "insumo",
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "pruebas": ["urocultivo", "cultivos_otros", "estreptococo_b"],
+     "modelo3d": "reactivo_caja",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    },
+    {
+     "nombre": "Discos de antibióticos para antibiograma (CLSI)",
+     "cantidad": null,
+     "compartimiento": "entrepaño 4",
+     "tipo": "insumo",
+     "almacenamiento": {
+      "condicion": "2-8 °C",
+      "donde": {"linea": "L-laboratorio-e-a54108", "nombre": "Refrigerador de laboratorio 2-8 °C para reactivos"}
+     },
+     "pruebas": ["urocultivo", "cultivos_otros"],
+     "modelo3d": "frasco_reactivo",
+     "tipo_dato": "estimacion",
+     "fuente": "menú de pruebas del laboratorio (prueba y método); el reactivo se nombra genérico: marca y presentación las fija el proveedor",
+     "verificacion": "estimacion"
+    }
+   ]
+  },
+  "organos_sentidos_pared": {
+   "lineas_que_la_usan": [
+    {"linea": "L-urgencias-e-28ba88", "nombre": "Equipo de órganos de los sentidos de pared"},
+    {"linea": "L-consulta_externa-e-a46945", "nombre": "Equipo de órganos de los sentidos de pared"},
+    {"linea": "L-hospitalizacion-e-2d9cec", "nombre": "Equipo de órganos de los sentidos de pared"}
+   ],
+   "descripcion": "Accesorios del equipo de órganos de los sentidos de pared (otoscopio y oftalmoscopio con transformador).",
+   "items": [
+    {
+     "nombre": "Espéculos auriculares desechables (adulto y pediátrico)",
+     "cantidad": null,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "presentacion": "caja",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Bombillos de repuesto del otoscopio y del oftalmoscopio",
+     "cantidad": 2,
+     "compartimiento": null,
+     "tipo": "insumo",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "pequena_cirugia_sutura": {
+   "lineas_que_la_usan": [
+    {"linea": "L-urgencias-e-faf7d3", "nombre": "Equipo de pequeña cirugía y sutura (instrumental)"},
+    {
+     "linea": "L-consulta_externa-e-68e09e",
+     "nombre": "Equipo de pequeña cirugía (instrumental) para sala de procedimientos"
+    }
+   ],
+   "descripcion": "Equipo de pequeña cirugía y sutura (instrumental reutilizable, se esteriliza en la central).",
+   "items": [
+    {
+     "nombre": "Porta agujas Mayo-Hegar de 14 cm",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Pinza de disección con garra y sin garra",
+     "cantidad": 2,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Tijera de Metzenbaum y tijera de material",
+     "cantidad": 2,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Mango de bisturí n.º 3",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Pinzas hemostáticas Kelly (curvas y rectas)",
+     "cantidad": 4,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Pinza de Allis",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Riñonera y cubeta de acero",
+     "cantidad": 2,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Suturas (nylon, poliglactina), hojas de bisturí y campos estériles",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "proteccion_radiologica": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-odontologia-e-c0a623",
+     "nombre": "Elementos de protección radiológica (delantal plomado con protector de tiroides)"
+    },
+    {
+     "linea": "L-imagenes-e-1f46f0",
+     "nombre": "Elementos de protección radiológica (delantales, protectores de tiroides y gónadas, gafas, biombo plomado)"
+    }
+   ],
+   "descripcion": "Elementos de protección radiológica, en tallas adulto y pediátrica (ajuste de especificación de la versión 2).",
+   "items": [
+    {
+     "nombre": "Delantal plomado (adulto y pediátrico)",
+     "cantidad": 2,
+     "compartimiento": "percha",
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Protector de tiroides",
+     "cantidad": 2,
+     "compartimiento": "percha",
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    },
+    {
+     "nombre": "Protector de gónadas y gafas plomadas (rayos X)",
+     "cantidad": null,
+     "compartimiento": "percha",
+     "tipo": "dispositivo",
+     "clase_riesgo": "I",
+     "fuente": "el nombre de la línea de dotación",
+     "verificacion": "dato del repositorio"
+    }
+   ]
+  },
+  "refrigerador_medicamentos": {
+   "lineas_que_la_usan": [
+    {"linea": "L-farmacia-e-d0d900", "nombre": "Refrigerador grado médico para medicamentos (400-700 L)"},
+    {"linea": "L-farmacia-e-72e002", "nombre": "Refrigerador grado médico para urgencias/dispensación (150-250 L)"}
+   ],
+   "descripcion": "Refrigerador de grado médico del servicio farmacéutico (2-8 °C).",
+   "items": [
+    {
+     "nombre": "Insulinas",
+     "cantidad": null,
+     "compartimiento": "entrepaño 1",
+     "tipo": "medicamento",
+     "presentacion": "viales y plumas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Oxitocina y otros medicamentos que pidan frío según su fabricante",
+     "cantidad": null,
+     "compartimiento": "entrepaño 2",
+     "tipo": "medicamento",
+     "presentacion": "ampollas",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Antisueros y vacunas de uso hospitalario (si aplica)",
+     "cantidad": null,
+     "compartimiento": "entrepaño 3",
+     "tipo": "medicamento",
+     "presentacion": "viales",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "refrigerador_vacunas": {
+   "lineas_que_la_usan": [
+    {
+     "linea": "L-vacunacion-e-93ee48",
+     "nombre": "Refrigerador de vacunas precalificado OMS (PQS E003) con registrador de 30 días"
+    }
+   ],
+   "descripcion": "Refrigerador de vacunas (cadena de frío, 2-8 °C).",
+   "items": [
+    {
+     "nombre": "Biológicos del esquema del programa ampliado de inmunizaciones (según la programación de la E.S.E.)",
+     "cantidad": null,
+     "compartimiento": "canasta 1",
+     "tipo": "medicamento",
+     "presentacion": "viales",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Diluyentes de las vacunas liofilizadas",
+     "cantidad": null,
+     "compartimiento": "canasta 2",
+     "tipo": "medicamento",
+     "presentacion": "viales",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Registro diario de temperatura (mañana y tarde)",
+     "cantidad": 1,
+     "compartimiento": "canasta 2",
+     "tipo": "insumo",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "revision_uterina_desgarros": {
+   "lineas_que_la_usan": [{"linea": "L-partos-e-6b547b", "nombre": "Equipo de revisión uterina y sutura de desgarros"}],
+   "descripcion": "Equipo de revisión uterina y sutura de desgarros.",
+   "items": [
+    {
+     "nombre": "Valvas vaginales anchas (2)",
+     "cantidad": 2,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Pinzas de anillos (Foerster)",
+     "cantidad": 2,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Porta agujas largo",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Tijera larga",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Espéculo vaginal grande",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Suturas absorbibles y gasas",
+     "cantidad": null,
+     "compartimiento": "estuche",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "sujecion_mecanica": {
+   "lineas_que_la_usan": [{"linea": "L-urgencias-e-825e44", "nombre": "Equipo de sujeción mecánica (juego)"}],
+   "descripcion": "Juego de sujeción mecánica para el paciente agitado (uso según protocolo).",
+   "items": [
+    {
+     "nombre": "Correas de sujeción de muñecas y tobillos",
+     "cantidad": 4,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Cinturón abdominal",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "termo_portavacunas": {
+   "lineas_que_la_usan": [{"linea": "L-vacunacion-e-296eb6", "nombre": "Termo portavacunas precalificado (PQS E004)"}],
+   "descripcion": "Termo portavacunas del día.",
+   "items": [
+    {
+     "nombre": "Paquetes fríos acondicionados",
+     "cantidad": 4,
+     "compartimiento": "interior",
+     "tipo": "insumo",
+     "presentacion": null,
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    },
+    {
+     "nombre": "Vacunas de la jornada",
+     "cantidad": null,
+     "compartimiento": "interior",
+     "tipo": "medicamento",
+     "presentacion": "viales",
+     "fuente": "su costo va en el inventario inicial de medicamentos e insumos de 72 horas del presupuesto (indirecto del proyecto de dotación); lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  },
+  "toracostomia": {
+   "lineas_que_la_usan": [{"linea": "L-urgencias-e-3ac4be", "nombre": "Equipo de toracostomía (instrumental)"}],
+   "descripcion": "Equipo de toracostomía (drenaje del tórax).",
+   "items": [
+    {
+     "nombre": "Pinzas Kelly largas curvas",
+     "cantidad": 2,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Pinza de disección larga",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Tijera de Mayo",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Porta agujas largo",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Mango de bisturí n.º 4",
+     "cantidad": 1,
+     "compartimiento": "estuche",
+     "tipo": "instrumental",
+     "clase_riesgo": "I",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "nombre": "Tubos de tórax (20 a 32 Fr) y sistema de drenaje con sello de agua",
+     "cantidad": 2,
+     "compartimiento": "estuche",
+     "tipo": "dispositivo",
+     "presentacion": null,
+     "clase_riesgo": "IIa",
+     "fuente": "lista típica de este tipo de elemento en hospitales de baja complejidad; la lista definitiva la fija el protocolo de la E.S.E.",
+     "verificacion": "por_confirmar"
+    }
+   ]
+  }
+ }
+}

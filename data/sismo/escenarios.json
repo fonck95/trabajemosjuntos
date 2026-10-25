@@ -1,0 +1,1160 @@
+{
+ "version": 1,
+ "generado_por": "scripts/sismo/escenarios.mjs",
+ "contrato": "ESPECIFICACION_INTEGRACION.md, 11.3 (punto 8) y 12.1 (ola 3)",
+ "tipo_dato": "calculo_propio",
+ "nota": "Cálculo propio con el motor del simulador (análisis no lineal en el tiempo con Δt = 0,005 s) sobre el prediseño de la torre (estimación) y movimientos sintéticos (estimación: Boore 2003 con los parámetros de amenaza.json). «Diseño NSR-10» es un escenario hipotético: el registro se multiplica para que su espectro, entre 0,8 y 1,2 veces el período fundamental en cada dirección, iguale en promedio el espectro de diseño de Yondó con I = 1,5. Una sola semilla por escenario: otra semilla da otras cifras (ver la dispersión en T15 de las pruebas del motor).",
+ "insumos_sha1": {
+  "data/sismo/torre_hospital_estructura.json": "bbbee157cedf27180c9a36b9c7b1d5bd65f96a6f",
+  "data/sismo/amenaza.json": "114d35e1bdb4b4eb0e1293c1045b0bfa233578b7"
+ },
+ "opciones": {
+  "dt_s": 0.005,
+  "dt_salida_s": 0.02,
+  "angulo_deg": 0,
+  "histeresis": "la de cada sección",
+  "no_estructurales": "aislados",
+  "p_delta": true,
+  "semilla": 2028,
+  "vs30_m_s": 270,
+  "referencia_diseno": "diseno_nsr10_local_hip"
+ },
+ "modelo": {
+  "niveles": 4,
+  "elementos": 370,
+  "masa_total_t": 4893.44,
+  "peso_kN": 47988.2,
+  "periodos_s": [
+   0.4562,
+   0.4453,
+   0.4008,
+   0.1197,
+   0.105,
+   0.09282,
+   0.05899,
+   0.05032,
+   0.04422,
+   0.04062,
+   0.035,
+   0.03078
+  ],
+  "T1x_s": 0.4453,
+  "T1y_s": 0.4562,
+  "masa_participativa": {
+   "x": [
+    0.216,
+    0.506,
+    0.0134,
+    0.0238,
+    0.131,
+    0.0546,
+    0.00635,
+    0.0254,
+    0.0139,
+    0.00246,
+    0.00424,
+    0.00288
+   ],
+   "y": [
+    0.429,
+    0.224,
+    0.0898,
+    0.101,
+    0.0664,
+    0.032,
+    0.0217,
+    0.0186,
+    0.00743,
+    0.00396,
+    0.00479,
+    0.00129
+   ],
+   "rz": [
+    0.125,
+    0.000887,
+    0.586,
+    0.0441,
+    0.000637,
+    0.188,
+    0.0211,
+    0.00467,
+    0.0182,
+    0.00368,
+    0.0000243,
+    0.00676
+   ]
+  },
+  "amortiguamiento": {
+   "a0": 1.147,
+   "a1": 0.001209,
+   "periodos_ancla_s": [
+    0.4562,
+    0.09124
+   ],
+   "xi_modos": [
+    0.05,
+    0.0492,
+    0.0461,
+    0.0427,
+    0.0458,
+    0.0494,
+    0.0698,
+    0.0801,
+    0.09,
+    0.0973,
+    0.112,
+    0.126
+   ]
+  },
+  "equipos_evaluados": 785
+ },
+ "escenarios": [
+  {
+   "id": "nido_2015",
+   "escenario": "Nido de Bucaramanga, como el 10-mar-2015 (por defecto)",
+   "params": {
+    "Mw": 6.2,
+    "profundidad_km": 150,
+    "distancia_epicentral_km": 92,
+    "vs30_m_s": 270,
+    "semilla": 2028
+   },
+   "escala": 1,
+   "factor": 1,
+   "iteraciones_escala": 0,
+   "duracion_s": 22.53,
+   "dt_s": 0.005,
+   "pga_g": {
+    "x": 0.0371,
+    "y": 0.02215,
+    "media_geometrica": 0.02867
+   },
+   "pgv_cm_s": {
+    "x": 2.918,
+    "y": 2.289
+   },
+   "d595_s": {
+    "x": 8.554,
+    "y": 9.884
+   },
+   "deriva_vector_max": 0.0005636,
+   "niveles": [
+    {
+     "nivel": 1,
+     "deriva_vector_max": 0.000308,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 4.5,
+     "deriva_x_max": 0.0002761,
+     "deriva_y_max": 0.0001634,
+     "u_max_m": [
+      0.000799,
+      0.000616
+     ],
+     "rz_max_rad": 0.00002118,
+     "a_abs_max_g": [
+      0.04704,
+      0.02373
+     ],
+     "elementos_que_fluyen": 0
+    },
+    {
+     "nivel": 2,
+     "deriva_vector_max": 0.0005354,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 4.505,
+     "deriva_x_max": 0.0004841,
+     "deriva_y_max": 0.0002916,
+     "u_max_m": [
+      0.002153,
+      0.001669
+     ],
+     "rz_max_rad": 0.00005376,
+     "a_abs_max_g": [
+      0.06035,
+      0.038
+     ],
+     "elementos_que_fluyen": 0
+    },
+    {
+     "nivel": 3,
+     "deriva_vector_max": 0.0005636,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 4.505,
+     "deriva_x_max": 0.0005147,
+     "deriva_y_max": 0.0003212,
+     "u_max_m": [
+      0.003612,
+      0.002854
+     ],
+     "rz_max_rad": 0.00008747,
+     "a_abs_max_g": [
+      0.07148,
+      0.05795
+     ],
+     "elementos_que_fluyen": 0
+    },
+    {
+     "nivel": 4,
+     "deriva_vector_max": 0.0004821,
+     "punto": [
+      -13,
+      -7.6
+     ],
+     "t_s": 4.5,
+     "deriva_x_max": 0.0004278,
+     "deriva_y_max": 0.000317,
+     "u_max_m": [
+      0.004589,
+      0.004004
+     ],
+     "rz_max_rad": 0.0001233,
+     "a_abs_max_g": [
+      0.0916,
+      0.08155
+     ],
+     "elementos_que_fluyen": 0
+    }
+   ],
+   "cortante_basal_max_kN": {
+    "Vx": 2942,
+    "Vy": 2157,
+    "torsor_kNm": 9934
+   },
+   "cortante_basal_sobre_peso": {
+    "x": 0.0613,
+    "y": 0.04495
+   },
+   "fluencia": {
+    "elementos": 0,
+    "por_tipo": {
+     "columna": 0,
+     "viga": 0,
+     "muro_concreto": 0
+    },
+    "extremos_mas_alla_de_IO": 0,
+    "de_LS": 0,
+    "de_CP": 0,
+    "cortante_mayor_que_Vn": 0,
+    "t_primera_s": null
+   },
+   "dc_max": {
+    "valor": 0.4262,
+    "elemento": "VY-B-67-4",
+    "gobierna": "flexión",
+    "elementos_con_dc_mayor_que_1": 0
+   },
+   "energia_final_kJ": {
+    "entrada": 28.08,
+    "cinetica": 0.0008709,
+    "elastica": 0.0002884,
+    "amortiguada": 28.08,
+    "histeretica": 0,
+    "trabajo_pdelta": -0.000002154
+   },
+   "muros_mamposteria": {
+    "sin_dano": 42
+   },
+   "equipos": {
+    "evaluados": 785,
+    "desliza": 102,
+    "balancea": 0,
+    "frontera": 0,
+    "anclado": 212,
+    "estable": 471,
+    "deslizamiento_max_m": 0.0132,
+    "fuerza_anclaje_max_kN": 6.51
+   },
+   "calidad_numerica": {
+    "pasos": 4506,
+    "iteraciones_promedio": 1,
+    "subdivisiones": 0,
+    "no_convergidos": 0,
+    "error_energia_max": 2.2e-14,
+    "indice_estabilidad_max": 0.00474
+   }
+  },
+  {
+   "id": "cimitarra",
+   "escenario": "Falla de Cimitarra, sismo cortical cercano",
+   "params": {
+    "Mw": 6.5,
+    "profundidad_km": 10,
+    "distancia_epicentral_km": 20,
+    "vs30_m_s": 270,
+    "semilla": 2028
+   },
+   "escala": 1,
+   "factor": 1,
+   "iteraciones_escala": 0,
+   "duracion_s": 28.735,
+   "dt_s": 0.005,
+   "pga_g": {
+    "x": 0.2242,
+    "y": 0.1306,
+    "media_geometrica": 0.1711
+   },
+   "pgv_cm_s": {
+    "x": 24.79,
+    "y": 17.64
+   },
+   "d595_s": {
+    "x": 8.884,
+    "y": 10.08
+   },
+   "deriva_vector_max": 0.003045,
+   "niveles": [
+    {
+     "nivel": 1,
+     "deriva_vector_max": 0.002221,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 7.395,
+     "deriva_x_max": 0.002052,
+     "deriva_y_max": 0.001108,
+     "u_max_m": [
+      0.005696,
+      0.003576
+     ],
+     "rz_max_rad": 0.0001691,
+     "a_abs_max_g": [
+      0.3133,
+      0.1482
+     ],
+     "elementos_que_fluyen": 9
+    },
+    {
+     "nivel": 2,
+     "deriva_vector_max": 0.003035,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 7.405,
+     "deriva_x_max": 0.002804,
+     "deriva_y_max": 0.001683,
+     "u_max_m": [
+      0.01339,
+      0.009059
+     ],
+     "rz_max_rad": 0.0003644,
+     "a_abs_max_g": [
+      0.3626,
+      0.2197
+     ],
+     "elementos_que_fluyen": 2
+    },
+    {
+     "nivel": 3,
+     "deriva_vector_max": 0.003045,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 7.43,
+     "deriva_x_max": 0.002847,
+     "deriva_y_max": 0.001759,
+     "u_max_m": [
+      0.02093,
+      0.01502
+     ],
+     "rz_max_rad": 0.0005468,
+     "a_abs_max_g": [
+      0.3338,
+      0.2912
+     ],
+     "elementos_que_fluyen": 3
+    },
+    {
+     "nivel": 4,
+     "deriva_vector_max": 0.002578,
+     "punto": [
+      -13,
+      -7.6
+     ],
+     "t_s": 7.43,
+     "deriva_x_max": 0.002349,
+     "deriva_y_max": 0.001724,
+     "u_max_m": [
+      0.02545,
+      0.02068
+     ],
+     "rz_max_rad": 0.0007427,
+     "a_abs_max_g": [
+      0.4658,
+      0.3944
+     ],
+     "elementos_que_fluyen": 0
+    }
+   ],
+   "cortante_basal_max_kN": {
+    "Vx": 15230,
+    "Vy": 10850,
+    "torsor_kNm": 52610
+   },
+   "cortante_basal_sobre_peso": {
+    "x": 0.3173,
+    "y": 0.2261
+   },
+   "fluencia": {
+    "elementos": 14,
+    "por_tipo": {
+     "columna": 0,
+     "viga": 10,
+     "muro_concreto": 4
+    },
+    "extremos_mas_alla_de_IO": 0,
+    "de_LS": 0,
+    "de_CP": 0,
+    "cortante_mayor_que_Vn": 0,
+    "t_primera_s": 7.295
+   },
+   "dc_max": {
+    "valor": 0.9078,
+    "elemento": "VX-1-AB-1",
+    "gobierna": "flexión",
+    "elementos_con_dc_mayor_que_1": 0
+   },
+   "energia_final_kJ": {
+    "entrada": 799.8,
+    "cinetica": 0.0001707,
+    "elastica": 0.2269,
+    "amortiguada": 677.9,
+    "histeretica": 121.7,
+    "trabajo_pdelta": -0.001393
+   },
+   "muros_mamposteria": {
+    "leve": 37,
+    "sin_dano": 5
+   },
+   "equipos": {
+    "evaluados": 785,
+    "desliza": 190,
+    "balancea": 11,
+    "frontera": 2,
+    "anclado": 212,
+    "estable": 370,
+    "deslizamiento_max_m": 0.226,
+    "fuerza_anclaje_max_kN": 35.5
+   },
+   "calidad_numerica": {
+    "pasos": 5747,
+    "iteraciones_promedio": 1.02,
+    "subdivisiones": 0,
+    "no_convergidos": 0,
+    "error_energia_max": 2.5e-14,
+    "indice_estabilidad_max": 0.00571
+   }
+  },
+  {
+   "id": "local_hip",
+   "escenario": "Sismo local hipotético bajo Yondó",
+   "params": {
+    "Mw": 6,
+    "profundidad_km": 10,
+    "distancia_epicentral_km": 5,
+    "vs30_m_s": 270,
+    "semilla": 2028
+   },
+   "escala": 1,
+   "factor": 1,
+   "iteraciones_escala": 0,
+   "duracion_s": 17.445,
+   "dt_s": 0.005,
+   "pga_g": {
+    "x": 0.2706,
+    "y": 0.1509,
+    "media_geometrica": 0.2021
+   },
+   "pgv_cm_s": {
+    "x": 21.2,
+    "y": 20.48
+   },
+   "d595_s": {
+    "x": 6.042,
+    "y": 6.233
+   },
+   "deriva_vector_max": 0.004156,
+   "niveles": [
+    {
+     "nivel": 1,
+     "deriva_vector_max": 0.002969,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 5.66,
+     "deriva_x_max": 0.002747,
+     "deriva_y_max": 0.001287,
+     "u_max_m": [
+      0.007446,
+      0.003981
+     ],
+     "rz_max_rad": 0.0002356,
+     "a_abs_max_g": [
+      0.3993,
+      0.1838
+     ],
+     "elementos_que_fluyen": 17
+    },
+    {
+     "nivel": 2,
+     "deriva_vector_max": 0.004011,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 5.68,
+     "deriva_x_max": 0.003696,
+     "deriva_y_max": 0.001935,
+     "u_max_m": [
+      0.01705,
+      0.009902
+     ],
+     "rz_max_rad": 0.0005136,
+     "a_abs_max_g": [
+      0.4267,
+      0.2533
+     ],
+     "elementos_que_fluyen": 10
+    },
+    {
+     "nivel": 3,
+     "deriva_vector_max": 0.004156,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 5.7,
+     "deriva_x_max": 0.003862,
+     "deriva_y_max": 0.001983,
+     "u_max_m": [
+      0.02653,
+      0.01617
+     ],
+     "rz_max_rad": 0.0007941,
+     "a_abs_max_g": [
+      0.3739,
+      0.3072
+     ],
+     "elementos_que_fluyen": 11
+    },
+    {
+     "nivel": 4,
+     "deriva_vector_max": 0.00348,
+     "punto": [
+      -13,
+      -7.6
+     ],
+     "t_s": 5.7,
+     "deriva_x_max": 0.003125,
+     "deriva_y_max": 0.001935,
+     "u_max_m": [
+      0.03176,
+      0.02196
+     ],
+     "rz_max_rad": 0.001087,
+     "a_abs_max_g": [
+      0.5065,
+      0.4699
+     ],
+     "elementos_que_fluyen": 2
+    }
+   ],
+   "cortante_basal_max_kN": {
+    "Vx": 17480,
+    "Vy": 11750,
+    "torsor_kNm": 66100
+   },
+   "cortante_basal_sobre_peso": {
+    "x": 0.3643,
+    "y": 0.2449
+   },
+   "fluencia": {
+    "elementos": 40,
+    "por_tipo": {
+     "columna": 2,
+     "viga": 33,
+     "muro_concreto": 5
+    },
+    "extremos_mas_alla_de_IO": 0,
+    "de_LS": 0,
+    "de_CP": 0,
+    "cortante_mayor_que_Vn": 0,
+    "t_primera_s": 4.21
+   },
+   "dc_max": {
+    "valor": 0.9451,
+    "elemento": "VX-1-BC-3",
+    "gobierna": "flexión",
+    "elementos_con_dc_mayor_que_1": 0
+   },
+   "energia_final_kJ": {
+    "entrada": 758.6,
+    "cinetica": 0.01572,
+    "elastica": 3.232,
+    "amortiguada": 558.9,
+    "histeretica": 196.5,
+    "trabajo_pdelta": -0.04767
+   },
+   "muros_mamposteria": {
+    "leve": 33,
+    "sin_dano": 3,
+    "moderado": 6
+   },
+   "equipos": {
+    "evaluados": 785,
+    "desliza": 260,
+    "balancea": 15,
+    "frontera": 6,
+    "anclado": 212,
+    "estable": 292,
+    "deslizamiento_max_m": 0.128,
+    "fuerza_anclaje_max_kN": 44.9
+   },
+   "calidad_numerica": {
+    "pasos": 3489,
+    "iteraciones_promedio": 1.03,
+    "subdivisiones": 0,
+    "no_convergidos": 0,
+    "error_energia_max": 8.2e-15,
+    "indice_estabilidad_max": 0.00648
+   }
+  },
+  {
+   "id": "diseno_nsr10_nido_2015",
+   "escenario": "Nido de Bucaramanga, como el 10-mar-2015 (por defecto)",
+   "params": {
+    "Mw": 6.2,
+    "profundidad_km": 150,
+    "distancia_epicentral_km": 92,
+    "vs30_m_s": 270,
+    "semilla": 2028
+   },
+   "escala": "nsr10",
+   "factor": 18.041,
+   "iteraciones_escala": 5,
+   "duracion_s": 22.53,
+   "dt_s": 0.005,
+   "pga_g": {
+    "x": 0.4884,
+    "y": 0.2755,
+    "media_geometrica": 0.3668
+   },
+   "pgv_cm_s": {
+    "x": 42.29,
+    "y": 32.55
+   },
+   "d595_s": {
+    "x": 8.476,
+    "y": 9.39
+   },
+   "deriva_vector_max": 0.008406,
+   "niveles": [
+    {
+     "nivel": 1,
+     "deriva_vector_max": 0.007192,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 4.62,
+     "deriva_x_max": 0.007042,
+     "deriva_y_max": 0.002389,
+     "u_max_m": [
+      0.0232,
+      0.008844
+     ],
+     "rz_max_rad": 0.000406,
+     "a_abs_max_g": [
+      0.5914,
+      0.3425
+     ],
+     "elementos_que_fluyen": 69
+    },
+    {
+     "nivel": 2,
+     "deriva_vector_max": 0.008406,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 4.63,
+     "deriva_x_max": 0.008176,
+     "deriva_y_max": 0.003204,
+     "u_max_m": [
+      0.04887,
+      0.02015
+     ],
+     "rz_max_rad": 0.000834,
+     "a_abs_max_g": [
+      0.6066,
+      0.4721
+     ],
+     "elementos_que_fluyen": 31
+    },
+    {
+     "nivel": 3,
+     "deriva_vector_max": 0.008349,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 4.635,
+     "deriva_x_max": 0.008145,
+     "deriva_y_max": 0.003204,
+     "u_max_m": [
+      0.07429,
+      0.03181
+     ],
+     "rz_max_rad": 0.001238,
+     "a_abs_max_g": [
+      0.4823,
+      0.4242
+     ],
+     "elementos_que_fluyen": 37
+    },
+    {
+     "nivel": 4,
+     "deriva_vector_max": 0.007227,
+     "punto": [
+      -13,
+      -7.6
+     ],
+     "t_s": 4.63,
+     "deriva_x_max": 0.007019,
+     "deriva_y_max": 0.003074,
+     "u_max_m": [
+      0.09284,
+      0.04277
+     ],
+     "rz_max_rad": 0.001652,
+     "a_abs_max_g": [
+      0.7195,
+      0.6899
+     ],
+     "elementos_que_fluyen": 23
+    }
+   ],
+   "cortante_basal_max_kN": {
+    "Vx": 21900,
+    "Vy": 16690,
+    "torsor_kNm": 76150
+   },
+   "cortante_basal_sobre_peso": {
+    "x": 0.4564,
+    "y": 0.3478
+   },
+   "fluencia": {
+    "elementos": 160,
+    "por_tipo": {
+     "columna": 28,
+     "viga": 127,
+     "muro_concreto": 5
+    },
+    "extremos_mas_alla_de_IO": 1,
+    "de_LS": 0,
+    "de_CP": 0,
+    "cortante_mayor_que_Vn": 0,
+    "t_primera_s": 2.5
+   },
+   "dc_max": {
+    "valor": 1.135,
+    "elemento": "MX-3D-1",
+    "gobierna": "rotación plástica",
+    "elementos_con_dc_mayor_que_1": 1
+   },
+   "energia_final_kJ": {
+    "entrada": 6241,
+    "cinetica": 0.1372,
+    "elastica": -6.099,
+    "amortiguada": 2321,
+    "histeretica": 3927,
+    "trabajo_pdelta": -1.113
+   },
+   "muros_mamposteria": {
+    "extenso": 12,
+    "moderado": 17,
+    "leve": 13
+   },
+   "equipos": {
+    "evaluados": 785,
+    "desliza": 491,
+    "balancea": 1,
+    "frontera": 33,
+    "anclado": 212,
+    "estable": 48,
+    "deslizamiento_max_m": 0.187,
+    "fuerza_anclaje_max_kN": 52.2
+   },
+   "calidad_numerica": {
+    "pasos": 4506,
+    "iteraciones_promedio": 1.21,
+    "subdivisiones": 0,
+    "no_convergidos": 0,
+    "error_energia_max": 5.8e-15,
+    "indice_estabilidad_max": 0.0137
+   }
+  },
+  {
+   "id": "diseno_nsr10_cimitarra",
+   "escenario": "Falla de Cimitarra, sismo cortical cercano",
+   "params": {
+    "Mw": 6.5,
+    "profundidad_km": 10,
+    "distancia_epicentral_km": 20,
+    "vs30_m_s": 270,
+    "semilla": 2028
+   },
+   "escala": "nsr10",
+   "factor": 2.8501,
+   "iteraciones_escala": 4,
+   "duracion_s": 28.735,
+   "dt_s": 0.005,
+   "pga_g": {
+    "x": 0.5325,
+    "y": 0.3039,
+    "media_geometrica": 0.4023
+   },
+   "pgv_cm_s": {
+    "x": 66.61,
+    "y": 46.61
+   },
+   "d595_s": {
+    "x": 8.862,
+    "y": 9.7
+   },
+   "deriva_vector_max": 0.00874,
+   "niveles": [
+    {
+     "nivel": 1,
+     "deriva_vector_max": 0.007518,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 7.5,
+     "deriva_x_max": 0.007408,
+     "deriva_y_max": 0.002708,
+     "u_max_m": [
+      0.02497,
+      0.01059
+     ],
+     "rz_max_rad": 0.0003995,
+     "a_abs_max_g": [
+      0.5605,
+      0.3745
+     ],
+     "elementos_que_fluyen": 77
+    },
+    {
+     "nivel": 2,
+     "deriva_vector_max": 0.00874,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 7.51,
+     "deriva_x_max": 0.008566,
+     "deriva_y_max": 0.003525,
+     "u_max_m": [
+      0.05239,
+      0.02353
+     ],
+     "rz_max_rad": 0.000814,
+     "a_abs_max_g": [
+      0.5881,
+      0.5173
+     ],
+     "elementos_que_fluyen": 36
+    },
+    {
+     "nivel": 3,
+     "deriva_vector_max": 0.008722,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 7.52,
+     "deriva_x_max": 0.008567,
+     "deriva_y_max": 0.00351,
+     "u_max_m": [
+      0.07982,
+      0.03677
+     ],
+     "rz_max_rad": 0.001209,
+     "a_abs_max_g": [
+      0.5064,
+      0.4423
+     ],
+     "elementos_que_fluyen": 37
+    },
+    {
+     "nivel": 4,
+     "deriva_vector_max": 0.007641,
+     "punto": [
+      -13,
+      -7.6
+     ],
+     "t_s": 7.515,
+     "deriva_x_max": 0.007484,
+     "deriva_y_max": 0.003373,
+     "u_max_m": [
+      0.1007,
+      0.04938
+     ],
+     "rz_max_rad": 0.001625,
+     "a_abs_max_g": [
+      0.7873,
+      0.7457
+     ],
+     "elementos_que_fluyen": 27
+    }
+   ],
+   "cortante_basal_max_kN": {
+    "Vx": 21510,
+    "Vy": 17920,
+    "torsor_kNm": 86180
+   },
+   "cortante_basal_sobre_peso": {
+    "x": 0.4483,
+    "y": 0.3735
+   },
+   "fluencia": {
+    "elementos": 177,
+    "por_tipo": {
+     "columna": 32,
+     "viga": 140,
+     "muro_concreto": 5
+    },
+    "extremos_mas_alla_de_IO": 2,
+    "de_LS": 0,
+    "de_CP": 0,
+    "cortante_mayor_que_Vn": 0,
+    "t_primera_s": 5.395
+   },
+   "dc_max": {
+    "valor": 1.218,
+    "elemento": "MX-3D-1",
+    "gobierna": "rotación plástica",
+    "elementos_con_dc_mayor_que_1": 2
+   },
+   "energia_final_kJ": {
+    "entrada": 6221,
+    "cinetica": 0.0008992,
+    "elastica": -7.979,
+    "amortiguada": 2210,
+    "histeretica": 4020,
+    "trabajo_pdelta": -1.068
+   },
+   "muros_mamposteria": {
+    "extenso": 15,
+    "moderado": 19,
+    "leve": 8
+   },
+   "equipos": {
+    "evaluados": 785,
+    "desliza": 533,
+    "balancea": 1,
+    "frontera": 39,
+    "anclado": 212,
+    "estable": 0,
+    "deslizamiento_max_m": 0.675,
+    "fuerza_anclaje_max_kN": 56.2
+   },
+   "calidad_numerica": {
+    "pasos": 5747,
+    "iteraciones_promedio": 1.16,
+    "subdivisiones": 0,
+    "no_convergidos": 0,
+    "error_energia_max": 8.8e-15,
+    "indice_estabilidad_max": 0.0147
+   }
+  },
+  {
+   "id": "diseno_nsr10_local_hip",
+   "escenario": "Sismo local hipotético bajo Yondó",
+   "params": {
+    "Mw": 6,
+    "profundidad_km": 10,
+    "distancia_epicentral_km": 5,
+    "vs30_m_s": 270,
+    "semilla": 2028
+   },
+   "escala": "nsr10",
+   "factor": 2.4621,
+   "iteraciones_escala": 4,
+   "duracion_s": 17.445,
+   "dt_s": 0.005,
+   "pga_g": {
+    "x": 0.5616,
+    "y": 0.3041,
+    "media_geometrica": 0.4133
+   },
+   "pgv_cm_s": {
+    "x": 45.55,
+    "y": 45.15
+   },
+   "d595_s": {
+    "x": 6.031,
+    "y": 6.227
+   },
+   "deriva_vector_max": 0.008838,
+   "niveles": [
+    {
+     "nivel": 1,
+     "deriva_vector_max": 0.007604,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 5.77,
+     "deriva_x_max": 0.007469,
+     "deriva_y_max": 0.002031,
+     "u_max_m": [
+      0.02559,
+      0.008363
+     ],
+     "rz_max_rad": 0.0003824,
+     "a_abs_max_g": [
+      0.6049,
+      0.3622
+     ],
+     "elementos_que_fluyen": 64
+    },
+    {
+     "nivel": 2,
+     "deriva_vector_max": 0.008838,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 5.78,
+     "deriva_x_max": 0.008623,
+     "deriva_y_max": 0.002963,
+     "u_max_m": [
+      0.05363,
+      0.01866
+     ],
+     "rz_max_rad": 0.0007772,
+     "a_abs_max_g": [
+      0.6068,
+      0.4478
+     ],
+     "elementos_que_fluyen": 33
+    },
+    {
+     "nivel": 3,
+     "deriva_vector_max": 0.008801,
+     "punto": [
+      -13,
+      -19.6
+     ],
+     "t_s": 5.79,
+     "deriva_x_max": 0.008606,
+     "deriva_y_max": 0.003063,
+     "u_max_m": [
+      0.08168,
+      0.02977
+     ],
+     "rz_max_rad": 0.001146,
+     "a_abs_max_g": [
+      0.5084,
+      0.4256
+     ],
+     "elementos_que_fluyen": 35
+    },
+    {
+     "nivel": 4,
+     "deriva_vector_max": 0.007785,
+     "punto": [
+      -13,
+      -7.6
+     ],
+     "t_s": 5.785,
+     "deriva_x_max": 0.00759,
+     "deriva_y_max": 0.002999,
+     "u_max_m": [
+      0.1035,
+      0.04037
+     ],
+     "rz_max_rad": 0.001535,
+     "a_abs_max_g": [
+      0.7765,
+      0.7268
+     ],
+     "elementos_que_fluyen": 23
+    }
+   ],
+   "cortante_basal_max_kN": {
+    "Vx": 21910,
+    "Vy": 16970,
+    "torsor_kNm": 83070
+   },
+   "cortante_basal_sobre_peso": {
+    "x": 0.4566,
+    "y": 0.3536
+   },
+   "fluencia": {
+    "elementos": 155,
+    "por_tipo": {
+     "columna": 25,
+     "viga": 125,
+     "muro_concreto": 5
+    },
+    "extremos_mas_alla_de_IO": 3,
+    "de_LS": 0,
+    "de_CP": 0,
+    "cortante_mayor_que_Vn": 0,
+    "t_primera_s": 3.39
+   },
+   "dc_max": {
+    "valor": 1.241,
+    "elemento": "MX-3D-1",
+    "gobierna": "rotación plástica",
+    "elementos_con_dc_mayor_que_1": 3
+   },
+   "energia_final_kJ": {
+    "entrada": 4707,
+    "cinetica": 0.05349,
+    "elastica": -4.55,
+    "amortiguada": 1760,
+    "histeretica": 2953,
+    "trabajo_pdelta": -1.474
+   },
+   "muros_mamposteria": {
+    "extenso": 16,
+    "moderado": 11,
+    "leve": 15
+   },
+   "equipos": {
+    "evaluados": 785,
+    "desliza": 532,
+    "balancea": 1,
+    "frontera": 40,
+    "anclado": 212,
+    "estable": 0,
+    "deslizamiento_max_m": 0.29,
+    "fuerza_anclaje_max_kN": 55.8
+   },
+   "calidad_numerica": {
+    "pasos": 3489,
+    "iteraciones_promedio": 1.19,
+    "subdivisiones": 0,
+    "no_convergidos": 0,
+    "error_energia_max": 3.5e-15,
+    "indice_estabilidad_max": 0.0151
+   }
+  }
+ ]
+}

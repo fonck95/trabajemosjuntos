@@ -1520,7 +1520,7 @@ grep -rn "482 de 2018" docs/*.md data/proyectos/torre_hospital/*.json web/data/t
 | Diferencias de idealización entre el motor y OpenSees que se confundan con errores | Misma formulación de amortiguamiento y de P-Delta en los dos, `Steel01` con `b` escalado y dos casos de control antes de la torre (7.9) |
 | Amortiguamiento que oculte aceleraciones de piso | Períodos ancla de E8 y ξ efectivo de cada modo publicado |
 
-**Fuera de alcance de esta iteración:** regenerar el GLB de la torre con los niveles 4,5/4,2/4,2/4,2 m y nodos por piso (`build_edificios.mjs:559, 601, 654, 831, 902, 961`); la cubierta técnica caminable; la interacción suelo-estructura con pilotes; la componente vertical; la degradación de resistencia (modelo de Ibarra-Medina-Krawinkler); la interacción P-M en rótulas y muros (E10, fase 2); la compatibilidad vertical en las esquinas de los núcleos (se usan aletas efectivas); las rótulas dentro del vano de las vigas; apoyar el modo «Laboratorio» en los recintos reales; actualizar `presupuesto.json`/`financiacion.json` con el cierre de brechas.
+**Fuera de alcance de esta iteración:** regenerar el GLB de la torre con los niveles 4,5/4,2/4,2/4,2 m y nodos por piso (`build_edificios.mjs:559, 601, 654, 831, 902, 961`); la interacción suelo-estructura con pilotes; la componente vertical; la degradación de resistencia (modelo de Ibarra-Medina-Krawinkler); la interacción P-M en rótulas y muros (E10, fase 2); la compatibilidad vertical en las esquinas de los núcleos (se usan aletas efectivas); las rótulas dentro del vano de las vigas; actualizar `presupuesto.json`/`financiacion.json` con el cierre de brechas.
 
 ---
 
@@ -1539,6 +1539,183 @@ grep -rn "482 de 2018" docs/*.md data/proyectos/torre_hospital/*.json web/data/t
 - ASCE/SEI 41-17: factores de material esperado para f'c y fy; parámetros «a» y «b» y límites IO, LS y CP de vigas, columnas y muros de concreto; longitud de rótula de muros.
 - Sismotectónica: centro y profundidad del nido de Bucaramanga, Mw del 10-mar-2015, distancias a las fallas, magnitudes máximas, GMPE del modelo nacional del SGC.
 - Proyecto tipo: el PDF del DNP (áreas por ambiente de los 6 módulos, lista de 59 ítems, AIU) y las «capacidades instaladas tipo» de la Res. 1211/1519.
+
+---
+
+## 16. Alcance ampliado: recorrer TODA la torre (pedido del usuario, 23-oct-2026)
+
+Pedido literal posterior: «Quiero poder caminar por cada parte de la torre e inspeccionar toda la dotación necesaria, así como el
+laboratorio, pero con TODO lo de la torre». Esta sección **prevalece** sobre lo que diga en contra el resto del documento (incluidos 6, 8.8,
+14 y el Anexo C) y la aplican B, C, D y E desde la ola 1.
+
+### 16.1 Qué se recorre (todo caminable, con colisión)
+
+| Nivel del recorrido | Qué tiene | Dueño de la planta |
+|---|---|---|
+| Exteriores inmediatos (cota 0) | Plaza de acceso bajo el mango grande, patio y retorno de urgencias, **bahía de ambulancias** con marquesina solar y 2 cupos (con 2 ambulancias como contexto, no dotación de la torre), galería cubierta al hospital actual, accesos de servicio, cerramiento | B (`trazado`, nivel `EXT`) |
+| Pisos 1 a 4 | Todos los recintos del programa (incluidos baños, depósitos, cuartos de aseo, ductos visitables, vestíbulos, esclusas) | B |
+| Núcleos | Escaleras norte y sur **caminables** entre pisos (rampa de colisión por tramo, o tramo con «subir/bajar» al llegar al descanso), vestíbulo de ascensores con cabinas y botón de piso, montacargas de muestras visible en la toma (piso 1) y en el laboratorio (piso 2) | B (geometría), C (interacción) |
+| Bloque técnico (`BT`) | Subestación y transformador de 300 kVA, planta eléctrica con transferencia, tableros generales, **cuarto de baterías del nodo hospital (400 kWh, P7) y UPS**, central de gases (manifold y generador de oxígeno PSA), equipos de presión y bombas sobre las cisternas (40 m³ agua potable, ≈ 30 m³ contra incendio), depósito de cadáveres con nevera mortuoria, cuarto central de residuos con canecas y báscula | B |
+| Cubierta técnica (`CUB`, piso 4 y terraza del piso 3 sur) | Caminable: **paneles solares** (los 182 módulos de 100,1 kWp, en filas con pasillos de mantenimiento), condensadoras de la climatización, tanques elevados si el programa los tiene, casetas de cubierta (107,4 m²), salida de escalera, baranda perimetral | B |
+
+Las cifras y la ubicación salen de `programa.json` (implantación, núcleos, cubierta técnica, bloque técnico, patios), de `dotacion.json`
+(`equipamiento_fijo`) y de `data/edificios/torre_hospital.json` (`adecuaciones`, solar y baterías). Si un dato no está, se marca
+«estimación» y se dice en la ficha.
+
+### 16.2 El laboratorio, completo y dentro del recorrido
+
+- Los recintos reales del laboratorio del piso 2 (recepción y registro, toma o paso de muestras desde el montacargas, hematología,
+  química, inmunología, microbiología y tamizaje con cabina de bioseguridad, biología molecular con el GeneXpert, uroanálisis y
+  coprología, lavado y esterilización de material, depósito de reactivos, neveras, área administrativa del bacteriólogo, ducha y lavaojos)
+  se dibujan con **todo** lo de `laboratorio.json` (analizadores en comodato, los de compra o programa y el opcional, marcados como tales)
+  y lo de `dotacion.json` del servicio `laboratorio` y `toma_muestras`.
+- **Implementos internos del laboratorio** (en `implementos.json`): por analizador, los reactivos, calibradores, controles y consumibles que
+  usa según las pruebas de `laboratorio.json` (nombre, presentación, condición de almacenamiento, nevera donde se guarda); kits de
+  tamizaje; material de vidrio y de toma; elementos de bioseguridad. Si `laboratorio.json` no detalla un insumo, se nombra genérico y
+  se marca «estimación».
+- El botón del modo **«Laboratorio»** abre el recorrido parado en la puerta del laboratorio (piso 2), mirando hacia adentro. La maqueta
+  vieja deja de usarse (D decide si se retira o queda como vista de conjunto).
+
+### 16.3 Infraestructura que se ve y se inspecciona (capa propia, no es dotación ni suma a su costo)
+
+Lo que los estándares de infraestructura de la Res. 3100 y de la Res. 1633 piden en cada ambiente y que condiciona la habilitación:
+lavamanos (con su regla por ambiente), unidades sanitarias, duchas, pocetas de aseo, lavachatas, **tomas de gases medicinales** (oxígeno,
+vacío, aire) por cama y camilla, tomas eléctricas de la red de emergencia donde aplique, llamado de enfermería, extintores y gabinetes
+contra incendio, señalización de evacuación, cortinas antifluido. Va en `inventario_dotacion.json` con `capa: "infraestructura"`
+(sin precio de dotación; si el presupuesto de obra lo tiene, se cita el ítem de `presupuesto.json`) y en la matriz de cumplimiento como
+evidencia de las exigencias de infraestructura. Se puede encender o apagar en el recorrido.
+
+### 16.4 Inspección de TODO
+
+- Todo objeto visible del recorrido (dotación, implemento a la vista, equipamiento fijo, infraestructura, recinto) se puede seleccionar y
+  abre su ficha: nombre, servicio, recinto, cantidad, especificación, clase de riesgo (Decreto 4725) y registro INVIMA, exigencia
+  (Res. 3100, numeral, nivel de verificación) o «recomendado», estado, precio y tipo de precio, mantenimiento, anclaje sísmico, y su
+  contenido (implementos internos) desplegable.
+- **Inventario completo navegable**: un buscador y una lista filtrable por piso/nivel, servicio, recinto, capa (dotación, fijo,
+  infraestructura, laboratorio en comodato), clase de riesgo y estado de cumplimiento, con el total de unidades y de valor de lo filtrado;
+  cada fila tiene «Ir a», que lleva al caminante frente a la unidad y la resalta.
+- **Por servicio**: la tarjeta de cumplimiento en dotación e infraestructura lista cada exigencia con sus unidades (cada una con «Ir a»)
+  y las faltantes resaltadas en el 3D.
+- La lista del recinto actual se actualiza al caminar.
+
+### 16.5 Catálogo 3D: modelos que se agregan al Anexo C
+
+`lavamanos`, `lavamanos_quirurgico`, `inodoro`, `ducha`, `poceta_aseo`, `lavachatas`, `barra_apoyo`, `extintor`, `gabinete_incendio`,
+`senal_evacuacion`, `toma_gases_cabecera` (panel de cabecera con O₂, vacío, aire y tomas), `llamado_enfermeria`, `transformador`,
+`tablero_electrico`, `banco_baterias` (racks del BESS), `bomba_agua`, `tanque_agua` (elevado o tapa de cisterna), `panel_solar_fila`
+(fila paramétrica de módulos sobre estructura), `caseta_cubierta`, `baranda`, `contenedor_residuos`, `bascula_residuos`,
+`ambulancia` (contexto), `montacargas_muestras`, `escalera_tramo` (si la escalera se dibuja como modelo), `reactivo_caja` y
+`frasco_reactivo` (implementos visibles en estantes y neveras del laboratorio, instanciados), `gradilla_tubos`, `pipeta_set`.
+Mismas reglas del 5 (instanciado, LOD, dimensiones reales, `mergeGeometries` sin `null`).
+
+### 16.6 Presupuesto y criterios que cambian
+
+- Un solo nivel visible a la vez (exteriores, pisos 1-4, `BT`, `CUB`); el presupuesto del 5.2 aplica por nivel. Los implementos internos
+  se dibujan solo en el recinto donde está el caminante (o como cajas resumen instanciadas) para no pasarse.
+- 13.2: los conteos de recintos incluyen los niveles `EXT`, `BT` y `CUB`; todo `equipamiento_fijo` de `dotacion.json` queda ubicado.
+- 13.3: el guion de QA recorre exteriores, los 4 pisos (incluido el laboratorio completo), el bloque técnico y la cubierta; abre la ficha de
+  un analizador en comodato con sus reactivos, la de un panel solar, la del manifold de gases y la de un lavamanos; usa «Ir a» desde el
+  buscador; sube y baja por una escalera caminando.
+
+---
+
+## 17. Modelo BIM, NSR-10 en amenaza intermedia, cimentación y refuerzo (pedido del usuario, 24-oct-2026)
+
+Pedido literal: «En la torre, aplica la metodología BIM, para poder observar todo su comportamiento; incluye esto de manera profesional
+cumpliendo la norma sismo resistente intermedia para la zona de Antioquia; deja ver los cimientos estructurales de manera clara, también su
+refuerzo en metal y dónde va; todo esto alineado con el proyecto tipo». Esta sección **prevalece** sobre el 7.2 y el 14 donde choquen.
+
+### 17.1 Norma y sistema estructural (cambia el 7.2)
+
+- Yondó: Aa = Av = 0,15 → **zona de amenaza sísmica intermedia** (NSR-10 A.2.3: 0,10 < Aa ≤ 0,20; numeral por confirmar). La torre es
+  grupo IV (I = 1,5). El prediseño se hace con **capacidad moderada de disipación de energía (DMO)**, que es lo que la NSR-10 exige como
+  mínimo en amenaza intermedia, en lugar del DES que fijaba el 7.2. A2 debe **verificar** en la NSR-10 (A.3, tablas de sistemas, y C.21)
+  que no haya una exigencia adicional para el grupo IV en zona intermedia; si la hay, se aplica y se explica. R0, Ω0 y Cd del sistema
+  (combinado o dual) se toman de la fila DMO de la tabla correspondiente.
+- Detallado con los requisitos DMO del capítulo C.21 (pórticos y muros estructurales DMO) y lo general de C.7 (ganchos, separación de
+  barras, recubrimientos), C.12 (desarrollo y traslapos), C.10/C.11 (flexión, flexocompresión y cortante), C.13 (losas nervadas), C.15
+  (cimentaciones: dados, **vigas de amarre** con la fuerza axial de C.15.13, numeral por confirmar) y el título H (pilotes). Todo numeral
+  sin confirmar va marcado «por confirmar».
+
+### 17.2 Cimentación (ahora en alcance; sin interacción suelo-estructura en el análisis dinámico)
+
+- Supuesto de prediseño (de `presupuesto.json`, capítulo 2, **estimación** hasta el estudio geotécnico): pilotes preexcavados de concreto de
+  0,60 m de diámetro, ≈ 12 m de largo, 3-4 por dado, bajo 28 dados de ≈ 2,2 × 2,2 × 1,1 m; vigas de cimentación/amarre entre dados en las
+  dos direcciones; losa de contrapiso de 0,15 m; fosos de ascensor y cisternas.
+- A2 los **dimensiona**: carga por columna (gravedad + sismo con Ω0 donde aplique), número de pilotes por dado con una capacidad de pilote
+  estimada (fuste y punta con parámetros típicos de suelo aluvial tipo D, con fuente, «estimación — la fija el estudio geotécnico»),
+  revisión de punzonamiento y flexión del dado, vigas de amarre con su fuerza axial y su momento por asentamiento diferencial estimado,
+  refuerzo de pilotes (canasta: longitudinal y espiral o estribos, longitud armada). Salida en `torre_hospital_estructura.json →
+  cimentacion` (elementos con geometría, cargas, chequeos y refuerzo). En la simulación la base sigue empotrada en la cara superior de
+  los dados (se dice en la web).
+
+### 17.3 Refuerzo: despiece por elemento
+
+- A2 entrega en `torre_hospital_estructura.json → refuerzo` el armado de **cada** elemento (no solo secciones tipo): columnas (barras
+  longitudinales por cara con diámetro, estribos y ganchos suplementarios, zona confinada lo y separación so, resto, traslapos en la mitad
+  central), vigas (superior e inferior por tramo con bastones y cortes, estribos en 2h y en el centro, ganchos sísmicos de 135°), viguetas y
+  loseta de la losa nervada (con malla de temperatura), muros (mallas, elementos de borde si aplican), escaleras, pilotes, dados y vigas
+  de cimentación; con designación colombiana de barras (N° 3 a N° 8, NTC 2289, fy = 420 MPa) y recubrimientos. Debe ser coherente con las
+  propiedades de rótula (My, Mn, Vn) que usa el motor.
+- Cantidades: kg de acero y m³ de concreto por elemento y por tipo, comparados con las cuantías de `presupuesto.json` (kg/m³ por capítulo);
+  si difieren, se informa la diferencia y su efecto en pesos (sin editar el presupuesto: queda como pendiente con su cifra).
+
+### 17.4 Modelo BIM (equipo F, después de A y B)
+
+- **Datos**: `data/bim/torre_hospital.bim.json` (generado por `scripts/bim/generar_bim.py` desde plantas, estructura con cimentación y
+  refuerzo, inventario, presupuesto, APU y cronograma): modelo federado por disciplinas — ARQ (espacios = recintos, muros, puertas,
+  ventanas, losas de piso y cubierta, escaleras), EST (columnas, vigas, losas nervadas, muros estructurales), CIM (pilotes, dados, vigas
+  de cimentación, contrapiso, fosos), REF (refuerzo con parámetros compactos que la web convierte en barras), MEP/fijo (equipamiento fijo e
+  infraestructura del inventario), DOT (dotación). Cada elemento: GlobalId IFC determinista de 22 caracteres, clase IFC4 (IfcColumn,
+  IfcBeam, IfcSlab, IfcWall, IfcFooting, IfcPile, IfcReinforcingBar, IfcSpace, IfcDoor, IfcWindow, IfcStair, IfcMedicalDevice,
+  IfcFurnishingElement, IfcFlowTerminal…), nivel (IfcBuildingStorey), geometría, material, conjuntos de propiedades (Pset comunes de IFC
+  y uno propio con tipo de dato, fuente y norma), cantidades (Qto), vínculo **5D** (ítem de `presupuesto.json` y su APU), **4D** (fase y
+  fechas del cronograma de `docs/11` sección 10) y vínculo con el **análisis** (id del elemento en la estructura sísmica, para pintar D/C,
+  rótulas y derivas del último cálculo).
+- **IFC4 real**: `scripts/bim/exportar_ifc.py` (Python, solo biblioteca estándar, escritor STEP propio) → `web/models/torre_hospital.ifc`
+  (georreferenciado con IfcMapConversion al Origen Nacional, EPSG:9377, desde el ancla del 0) con todo lo anterior, incluido el refuerzo
+  como IfcReinforcingBar con su geometría de barra. Validación con ifcopenshell en el venv de validación (no dependencia del sitio):
+  esquema IFC4 sin errores, conteos por clase y cantidades iguales a las del JSON. Tamaño razonable para descargar (si pasa de ≈ 15 MB,
+  dividir en un IFC de arquitectura+estructura+cimentación y otro de refuerzo).
+- **Plan de ejecución BIM** en `docs/16-bim-torre.md`: alcance y usos del modelo (coordinación, cantidades 5D, 4D, análisis estructural,
+  dotación y habilitación, mantenimiento), términos de ISO 19650 y del marco BIM de Colombia (Estrategia Nacional BIM 2020-2026; norma de
+  la entidad si aplica, por confirmar), LOIN/LOD por disciplina (arquitectura ≈ 300, estructura ≈ 350, refuerzo ≈ 400 en el despiece,
+  cimentación ≈ 350, dotación ≈ 200-300), codificación de elementos, georreferenciación, detección de interferencias y sus resultados,
+  cantidades contra el presupuesto, y límites («modelo de prefactibilidad: no reemplaza los diseños firmados»).
+- **Interferencias**: `scripts/bim/interferencias.py` (equipos o puertas contra columnas y muros estructurales, ductos y fosos contra
+  vigas de cimentación, separación libre del refuerzo contra el mínimo de C.7.6 y el tamaño del agregado, recubrimientos); resultado en
+  `data/bim/interferencias.json` y en la web.
+
+### 17.5 Modo «Modelo BIM» en la vista (equipo F; D integra)
+
+- Árbol del modelo por disciplina → nivel → clase → elemento, con contadores; buscar; aislar, ocultar y transparencia por disciplina.
+- Panel de propiedades del elemento seleccionado (Psets, cantidades, 5D, 4D, norma) y su refuerzo.
+- **Cortes**: planos de sección horizontales por nivel y verticales por eje (A-D, 1-7), con tapa de corte; vista de corte del elemento.
+- **Cimentación clara**: terreno semitransparente o cortado, pilotes completos hasta la punta con su cota, dados, vigas de amarre, fosos y
+  cisternas, con etiquetas de dimensiones y cargas.
+- **Refuerzo y dónde va**: al seleccionar un elemento (o «refuerzo del eje») se ve su armado en 3D — barras longitudinales, estribos y
+  ganchos, zonas confinadas, traslapos, canastas de pilotes, parrillas de dados — con etiquetas («12 N° 7», «E N° 4 c/0,10 en lo = 0,60 m»)
+  y el concreto transparente; un esquema 2D del despiece (sección y alzado) al lado.
+- **Comportamiento**: colorear la estructura con los resultados del último cálculo sísmico (D/C, rótulas, deriva) y abrir el simulador
+  desde el elemento; **5D**: tabla de cantidades y costo por disciplina y capítulo, comparada con el presupuesto; **4D**: deslizador del
+  cronograma (cimentación → estructura piso a piso → cerramientos → redes → dotación); **interferencias**: lista con «Ir a».
+- Descarga del IFC. Presupuesto de dibujo: el refuerzo solo del elemento o eje elegido (instanciado), nunca de toda la torre a la vez.
+
+### 17.6 Alineado con el proyecto tipo
+
+- Se mantiene la lógica estructural del proyecto tipo DNP 2018 (pórticos de concreto reforzado modulares, retícula repetible) escalada a la
+  retícula de 7,20 m múltiplo del módulo de 1,20 m (Res. 1633). El contraste (equipo E) agrega filas para sistema estructural, capacidad de
+  disipación, cimentación, cuantías de acero y concreto por m², luces y alturas, frente al tipo (lo que el tipo traiga; lo que no, «por
+  confirmar»), y `docs/16` lo resume.
+
+### 17.7 Reparto y aceptación
+
+- A2 (carril A) hace 17.1-17.3. F (carril BIM, después de A y B) hace 17.4-17.5 con permiso de editar `web/index.html` y
+  `web/js/scenes/torre.js` solo dentro de bloques marcados `bim` (D revisa en la integración). E agrega 17.6 al contraste y a los documentos.
+- Aceptación: `python3 scripts/sismo/estructura_torre.py --verificar` con los chequeos DMO, de cimentación y de refuerzo en verde;
+  `python3 scripts/bim/generar_bim.py && python3 scripts/bim/exportar_ifc.py` deterministas; validación IFC sin errores con ifcopenshell;
+  `python3 scripts/bim/interferencias.py` sin interferencias duras (o cada una explicada); QA del modo BIM en claro, oscuro y teléfono
+  (cortes, cimentación, refuerzo de una columna, una viga, un dado y un pilote, 5D, 4D, colores del sismo, descarga del IFC).
 
 ---
 

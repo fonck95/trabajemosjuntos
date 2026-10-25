@@ -674,6 +674,7 @@
  },
  "escalamiento_a_torre": {
   "idea": "Pasar de un puesto o centro de un piso (320,6 m²) a una torre de 3 pisos de unos 2.900 m² (rango 2.300-3.800 m²) apilando 'módulos' del proyecto tipo por servicio y separando flujos por piso.",
+  "estado": "escenario inicial superado por programa.json (4 pisos, 3.369,6 m²)",
   "pasos": [
    "1. Malla estructural de 7,20 × 7,20 m (6 × 1,20 m) en pórticos de concreto (o acero) diseñados para Grupo IV, con núcleo rígido de escaleras de evacuación de 2,40 m, ascensor camillero (2,20 × 1,20 m) y ductos.",
    "2. Piso 1 (nivel de acceso): urgencias completa en un solo piso con acceso directo y cubierto de ambulancias; imágenes y farmacia junto a urgencias; vestíbulo, admisión y toma de muestras para el público ambulatorio; ingreso de servicios generales aparte.",

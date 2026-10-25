@@ -217,7 +217,7 @@
    "fecha": "2019-11-25",
    "emisor": "MinSalud",
    "objeto": "Procedimientos y condiciones de inscripción de prestadores y habilitación de servicios; adopta el Manual de Inscripción de Prestadores y Habilitación de Servicios de Salud (estándares de talento humano, infraestructura, dotación, medicamentos, procesos prioritarios, historia clínica e interdependencia).",
-   "estado": "Vigente con modificaciones (entre otras Res. 1410 de 2022, 544 de 2023, 465 de 2025 y 914 de 2025; esta última deroga desde el 3-ene-2027 los criterios de esterilización del estándar de infraestructura y los traslada al manual de reprocesamiento de dispositivos médicos).",
+   "estado": "Vigente con modificaciones (entre otras Res. 2215 de 2020, 1317 de 2021, una resolución de 2022 (1138 o 1410; por confirmar en el normograma de Supersalud), 544 de 2023, 465 de 2025 y 914 de 2025; esta última deroga desde el 3-ene-2027 los criterios de esterilización del estándar de infraestructura y los traslada al manual de reprocesamiento de dispositivos médicos). La Res. 1732 de 2026, que iba a reemplazarla, fue revocada por la Res. 2080 de 2026 antes de regir: la 3100 sigue vigente sin solución de continuidad.",
    "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
    "url_pdf_original": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No.%203100%20de%202019.pdf",
    "fecha_consulta": "2026-10-22",
@@ -528,6 +528,314 @@
      "nota": "Lectura por OCR del PDF escaneado; verificar contra el original. La clasificación de Yondó como clima cálido húmedo es inferencia propia (altitud cercana a 75–100 m s. n. m. en el valle del Magdalena Medio)."
     }
    ]
+  },
+  {
+   "id": "res_2080_2026",
+   "numero": "Resolución 2080",
+   "anio": 2026,
+   "fecha": "2026-09-08",
+   "emisor": "Ministerio de Salud y Protección Social (MinSalud)",
+   "objeto": "Revoca en su integridad la Resolución 1732 del 5 de agosto de 2026 (el manual de habilitación que iba a reemplazar a la Res. 3100) y declara que la Res. 3100 de 2019 y sus modificaciones siguen vigentes sin solución de continuidad.",
+   "estado": "Vigente desde su expedición (8-sep-2026). Su publicación en el Diario Oficial está por confirmar (una de las fuentes lo advierte).",
+   "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No%202080%20de%202026.pdf",
+   "url_compilacion": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=194230",
+   "fecha_consulta": "2026-10-23",
+   "acceso": "Texto tomado de extractos de búsqueda (las páginas .gov.co no abrieron desde el entorno de investigación): cotejar con el Diario Oficial antes de radicar.",
+   "requisitos_aplicables": [
+    {
+     "tema": "Revocatoria de la Res. 1732 de 2026",
+     "requisito": "Revoca en su integridad la Resolución 1732 del 5 de agosto de 2026: la torre no debe citarla como requisito.",
+     "cita": "Art. 1 («Revocar en su integridad la Resolución 1732 del 5 de agosto de 2026»)",
+     "tipo": "dato_oficial",
+     "verificacion": "literal_compilacion"
+    },
+    {
+     "tema": "La Res. 3100 sigue vigente",
+     "requisito": "La Res. 3100 de 2019 y sus modificaciones continúan vigentes sin solución de continuidad: la habilitación de los servicios de la torre se prepara con ella.",
+     "cita": "Texto de la resolución («la Resolución 3100 de 2019 y sus modificaciones continúan vigentes, sin solución de continuidad»); artículo por confirmar",
+     "tipo": "dato_oficial",
+     "verificacion": "literal_compilacion"
+    },
+    {
+     "tema": "Fundamento",
+     "requisito": "Revocatoria directa (art. 93 de la Ley 1437 de 2011). La Imprenta Nacional certificó, con oficio 20261400007931 del 3-sep-2026, que la 1732 no se publicó en el Diario Oficial: nunca adquirió eficacia jurídica (art. 65 de la Ley 1437). Razones de fondo: los conceptos vinculantes del Ministerio en las visitas (art. 19 de la 1732) y el Plan de Adecuación Progresiva de hasta 4 años.",
+     "cita": "Considerandos (ubicación por confirmar)",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    }
+   ],
+   "lo_que_no_trae": "No trae requisitos de habilitación nuevos: deja la Res. 3100 como estaba. El Ministerio anunció una nueva actualización del régimen de habilitación; como la torre abriría hacia abril de 2030, el cruce con la norma se repite cuando se expida."
+  },
+  {
+   "id": "res_1732_2026",
+   "numero": "Resolución 1732 (revocada)",
+   "anio": 2026,
+   "fecha": "2026-08-05",
+   "emisor": "Ministerio de Salud y Protección Social (MinSalud)",
+   "objeto": "Manual de inscripción de prestadores y habilitación de servicios de salud, Tomos I y II, que iba a reemplazar a la Res. 3100 de 2019 con 12 meses de transición (título reconstruido de los extractos; texto literal por confirmar).",
+   "estado": "revocada",
+   "estado_detalle": "Revocada en su integridad por la Res. 2080 del 8-sep-2026, antes de regir: nunca se publicó en el Diario Oficial (oficio de la Imprenta Nacional 20261400007931 del 3-sep-2026, según las fuentes citadas). Se informa; no se aplica.",
+   "revocada_por": "res_2080_2026",
+   "url": "https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No%201732%20de%202026.pdf",
+   "url_compilacion": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=193984&dt=S",
+   "fecha_consulta": "2026-10-23",
+   "acceso": "Texto tomado de extractos de búsqueda (las páginas .gov.co no abrieron desde el entorno de investigación): cotejar con el Diario Oficial antes de radicar.",
+   "requisitos_aplicables": [
+    {
+     "tema": "Aplicación a la torre",
+     "requisito": "Ninguno. Revocada antes de regir: no se usa como requisito en el estudio, la MGA ni el documento de capacidad instalada. Su Plan de Adecuación Progresiva quedó sin efecto: la torre debe cumplir completos los estándares de la Res. 3100 desde la visita previa.",
+     "cita": "Res. 2080 de 2026, art. 1",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    }
+   ],
+   "lo_que_no_trae": "No modificaba el Decreto 4725 ni la Res. 1633 de 2025; el único cambio de dotación documentado (eliminar el numeral que exige equipos de esterilización según el método) quedó sin efecto."
+  },
+  {
+   "id": "res_914_2025",
+   "numero": "Resolución 914",
+   "anio": 2025,
+   "fecha": "2025-05-15",
+   "emisor": "Ministerio de Salud y Protección Social (MinSalud)",
+   "objeto": "Manual de buenas prácticas de reprocesamiento de dispositivos médicos y elementos reutilizables (DMER).",
+   "estado": "Expedida el 15-may-2025 y publicada el 3-jul-2025; rige desde el 3-ene-2027 (art. 15: 18 meses después de su publicación, según la compilación de Supersalud). Su art. 14 deroga desde esa fecha la Res. 2183 de 2004 y los numerales de esterilización de la Res. 3100 (la lista exacta difiere entre fuentes: por confirmar). Un proyecto de julio de 2026 la reemplazaría con un nuevo manual DMER; no expedido al 23-oct-2026.",
+   "url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_0914_2025.htm",
+   "url_compilacion": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=182733",
+   "fecha_consulta": "2026-10-23",
+   "acceso": "Texto tomado de extractos de búsqueda (las páginas .gov.co no abrieron desde el entorno de investigación): cotejar con el Diario Oficial antes de radicar.",
+   "requisitos_aplicables": [
+    {
+     "tema": "Vigencia y derogatoria",
+     "requisito": "Desde el 3-ene-2027 los requisitos de esterilización salen de la Res. 3100 y pasan al manual DMER. Como la torre abriría hacia abril de 2030, su central de esterilización se diseña con este manual (o con el que lo reemplace).",
+     "cita": "Arts. 14 y 15",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    },
+    {
+     "tema": "Requisitos de la central de esterilización",
+     "requisito": "Requisitos de reprocesamiento al abrir la torre (incluida la prioridad de la lavadora desinfectora y la secadora, la lupa y la etiquetadora del cierre de brechas): por confirmar hasta leer el manual DMER.",
+     "cita": "Manual DMER (anexo); numerales por confirmar",
+     "tipo": "por_confirmar",
+     "verificacion": "por_confirmar"
+    }
+   ],
+   "lo_que_no_trae": "Las investigaciones tienen una sola fila de la Res. 914, y es paráfrasis: el contenido del manual no se ha leído."
+  },
+  {
+   "id": "res_1811_2025",
+   "numero": "Resolución 1811",
+   "anio": 2025,
+   "fecha": "2025-09-04",
+   "emisor": "Ministerio de Salud y Protección Social (MinSalud)",
+   "diario_oficial": "53.234 (según la investigación; por confirmar en el Diario Oficial)",
+   "objeto": "Uso de equipos generadores de radiación ionizante, protección radiológica y control de calidad en las prácticas médicas.",
+   "estado": "Rige desde el 6-mar-2026 según MinSalud; ese día quedó derogada la Res. 482 de 2018, que reemplazó. Las citas a la Res. 482 de 2018 que quedan en el presupuesto deben leerse como Res. 1811 de 2025.",
+   "url": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/resolucion-1811-de-2025.pdf",
+   "fecha_consulta": "2026-10-23",
+   "acceso": "Texto tomado de extractos de búsqueda (las páginas .gov.co no abrieron desde el entorno de investigación): cotejar con el Diario Oficial antes de radicar.",
+   "requisitos_aplicables": [
+    {
+     "tema": "Licencia de práctica médica",
+     "requisito": "Licencia de práctica médica vigente para el rayos X convencional y para el periapical antes de habilitar; entre otros, con registros dosimétricos de un servicio de dosimetría personal autorizado (o el contrato con ese servicio en la primera licencia) y constancia del curso de protección radiológica de los trabajadores.",
+     "cita": "Res. 3100, num. 11.1.2, criterio 15 (según normas.json); Res. 1811 de 2025, artículos por confirmar",
+     "tipo": "dato_oficial",
+     "verificacion": "literal_compilacion",
+     "nota": "El texto literal confirmado es el de la Res. 3100 («cuenta con licencia de práctica médica vigente expedida por la entidad competente»); los requisitos de la licencia en la 1811 son contenido de fuentes coincidentes, artículos por confirmar."
+    },
+    {
+     "tema": "Control de calidad periódico",
+     "requisito": "Pruebas periódicas de control de calidad del equipo y de la imagen, hechas por un prestador de servicios de protección radiológica con licencia; el primer año está en el presupuesto y los siguientes son gasto de operación.",
+     "cita": "Res. 3100, num. 11.3.4.1 (procesos prioritarios, subnumeral por confirmar); Res. 1811 de 2025 (frecuencia por confirmar)",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    },
+    {
+     "tema": "Blindaje",
+     "requisito": "El cálculo de blindaje de la sala de rayos X y del periapical se hace con la Res. 1811 de 2025 (no con la 482 de 2018, que reemplazó).",
+     "cita": "Artículos por confirmar",
+     "tipo": "por_confirmar",
+     "verificacion": "por_confirmar"
+    }
+   ],
+   "lo_que_no_trae": "Sus anexos no se leyeron: la frecuencia del control de calidad, la categoría de cada práctica (el periapical intraoral sería categoría I según el Colegio de Odontólogos) y los requisitos del cálculo de blindaje están por confirmar."
+  },
+  {
+   "id": "res_2065_2025",
+   "numero": "Resolución 2065",
+   "anio": 2025,
+   "fecha": "2025-10-06",
+   "emisor": "Ministerio de Salud y Protección Social (MinSalud)",
+   "objeto": "Sedes transitorias o itinerantes para prestar servicios de salud en desastres, crisis humanitarias o fallas estructurales.",
+   "estado": "Vigente. Un proyecto de MinSalud de octubre de 2026 la derogaría y llevaría al manual de la Res. 3100 las reglas para ampliar capacidad y reconvertir servicios (autorizaciones de hasta 12 meses prorrogables); no expedido al 23-oct-2026.",
+   "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?dt=S&i=191017",
+   "fecha_consulta": "2026-10-23",
+   "acceso": "Texto tomado de extractos de búsqueda (las páginas .gov.co no abrieron desde el entorno de investigación): cotejar con el Diario Oficial antes de radicar.",
+   "requisitos_aplicables": [
+    {
+     "tema": "Marco de la sala de expansión",
+     "requisito": "La sala de expansión de 8 camillas del piso 4 no es un servicio de la Res. 3100: se activa en emergencias con este marco. Según su texto, la Res. 3100 no exige habilitación ni novedad a los servicios de un prestador inscrito que no pueden funcionar normalmente por una emergencia; la Circular Externa 030 de 2026 pide notificar a la Supersalud cuando una IPS opere sedes transitorias.",
+     "cita": "Artículos por confirmar",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    },
+    {
+     "tema": "Dotación de la sala de expansión",
+     "requisito": "Sus exigencias de dotación se toman por analogía con el num. 11.6.1 de la Res. 3100 (urgencias) y van como referencia, no como requisito: por eso el DEA, el segundo aspirador y los kits de examen del cierre de brechas son «recomendados» (hospital seguro).",
+     "cita": "Res. 3100, num. 11.6.1 (por analogía)",
+     "tipo": "por_confirmar",
+     "verificacion": "por_confirmar"
+    }
+   ],
+   "lo_que_no_trae": "No fija áreas ni dotación mínima para salas de expansión: el diseño sigue la Res. 1633 de 2025 (num. 3.2.1 d) y el Índice de Seguridad Hospitalaria."
+  },
+  {
+   "id": "decreto_4725_2005",
+   "numero": "Decreto 4725",
+   "anio": 2005,
+   "fecha": "2005-12-26",
+   "emisor": "Ministerio de la Protección Social (hoy Ministerio de Salud y Protección Social)",
+   "diario_oficial": "46.134 (por confirmar en el Diario Oficial: el número aparece en las compilaciones)",
+   "objeto": "Régimen de registros sanitarios, permiso de comercialización y vigilancia sanitaria de los dispositivos médicos para uso humano: clasificación por riesgo, registro INVIMA, equipos usados y repotenciados, mantenimiento, posventa y tecnovigilancia.",
+   "estado": "Vigente con modificaciones; el INVIMA lo presenta como norma vigente modificada por el Decreto 582 de 2017. Un proyecto de decreto publicado hacia diciembre de 2025 lo reemplazaría junto con el Decreto 3770 de 2004; no se encontró expedido al 23-oct-2026 (por confirmar en el Diario Oficial).",
+   "modificaciones": [
+    {
+     "norma": "Decreto 4562 de 2006",
+     "efecto": "Adiciona un parágrafo al art. 86 (régimen de transición y plazos).",
+     "verificacion": "contenido_compilacion"
+    },
+    {
+     "norma": "Decreto 3275 de 2009",
+     "efecto": "Modifica el art. 1 y adiciona un parágrafo al art. 18: el Ministerio fija los requisitos de los dispositivos médicos sobre medida.",
+     "verificacion": "contenido_compilacion",
+     "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=37226"
+    },
+    {
+     "norma": "Decreto 582 de 2017 (4-abr-2017, Diario Oficial 50.196)",
+     "efecto": "Modifica el art. 21 (procedimiento del registro sanitario), sustituye el art. 30 (modificación automática de registros y permisos) y, según la compilación del INVIMA, sustituye el art. 37 (equipo biomédico usado o repotenciado).",
+     "verificacion": "contenido_compilacion",
+     "url": "https://dapre.presidencia.gov.co/normativa/normativa/DECRETO%20582%20DEL%2004%20DE%20ABRIL%20DE%202017.pdf"
+    },
+    {
+     "norma": "Decretos 4957 de 2007, 38 de 2009 y 1313 de 2010",
+     "efecto": "Aparecen en la lista de normas que lo modifican de la compilación del ICBF; contenido por confirmar.",
+     "verificacion": "por_confirmar"
+    }
+   ],
+   "url": "https://normograma.invima.gov.co/normograma/compilacion/docs/decreto_4725_2005.htm",
+   "url_pdf_original": "https://www.minsalud.gov.co/sites/rid/lists/bibliotecadigital/ride/de/dij/decreto-4725-de-2005.pdf",
+   "fecha_consulta": "2026-10-23",
+   "acceso": "Texto tomado de extractos de búsqueda (las páginas .gov.co no abrieron desde el entorno de investigación): cotejar con el Diario Oficial antes de radicar.",
+   "requisitos_aplicables": [
+    {
+     "tema": "Clasificación por riesgo",
+     "requisito": "Cada dispositivo se clasifica en clase I (riesgo bajo), IIa (moderado), IIb (alto) o III (muy alto) con 18 reglas, según la duración del contacto, el grado de invasión y el efecto local o sistémico; si caben varias reglas, rige la más estricta. La clase que vale es la del registro sanitario del modelo comprado.",
+     "cita": "Arts. 5, 6 y 7 (la división exacta entre los arts. 5 y 6 está por confirmar; las reglas 3, 4, 5, 8 y 14 no se leyeron)",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    },
+    {
+     "tema": "Registro sanitario o permiso de comercialización",
+     "requisito": "Comprar solo dispositivos con registro sanitario o permiso de comercialización vigente del INVIMA: registro automático para las clases I y IIa que no son tecnología controlada; evaluación técnica previa y estudios clínicos para las clases IIb y III; permiso de comercialización para los equipos de tecnología controlada.",
+     "cita": "Arts. 17, 18 y 22 (el capítulo del permiso de comercialización, por confirmar)",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    },
+    {
+     "tema": "Equipos usados",
+     "requisito": "No se puede importar, comprar ni recibir en donación equipo biomédico usado de clases IIb y III (desfibriladores, monitores, bombas, ventiladores, incubadoras, rayos X…). Los usados de clase I o IIa necesitan permiso de comercialización y certificado de que no tienen más de 5 años.",
+     "cita": "Art. 37, sustituido por el art. 2 del Decreto 582 de 2017 según la compilación del INVIMA (otra compilación lo ubica como art. 36: por confirmar)",
+     "tipo": "dato_oficial",
+     "verificacion": "literal_compilacion"
+    },
+    {
+     "tema": "Mantenimiento",
+     "requisito": "El mantenimiento y la verificación de la calibración de los equipos IIb y III los hace una persona natural o jurídica con responsable técnico inscrito ante el INVIMA; para I y IIa no se exige inscripción. El mantenimiento preventivo, según el fabricante, queda en la hoja de vida de cada equipo.",
+     "cita": "Art. 39; Res. 3100, num. 11.1.3",
+     "tipo": "dato_oficial",
+     "verificacion": "literal_compilacion"
+    },
+    {
+     "tema": "Posventa y manuales",
+     "requisito": "El fabricante o su representante y el propietario responden por el buen funcionamiento en la posventa; los manuales de operación y mantenimiento de los equipos de tecnología controlada se entregan en castellano.",
+     "cita": "Art. 38",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    },
+    {
+     "tema": "Soporte técnico y repuestos",
+     "requisito": "Exigir al proveedor soporte técnico, repuestos y herramientas de mantenimiento y calibración durante la vida útil del equipo.",
+     "cita": "Art. 35, lit. b (según una transcripción técnica; por confirmar en el texto oficial)",
+     "tipo": "por_confirmar",
+     "verificacion": "fuente_secundaria"
+    },
+    {
+     "tema": "Tecnovigilancia",
+     "requisito": "El prestador tiene un programa institucional de tecnovigilancia y notifica al INVIMA los incidentes adversos, el uso indebido y las fallas de mantenimiento (detalle y plazos en la Res. 4816 de 2008).",
+     "cita": "Art. 61 y siguientes (artículo exacto por confirmar)",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    }
+   ],
+   "lo_que_no_trae": "No regula los reactivos de diagnóstico in vitro (Decreto 3770 de 2004) ni los equipos industriales de uso hospitalario. Por confirmar: definición del art. 2 (qué es dispositivo médico), reglas 3, 4, 5, 8 y 14, artículo de los usados (37 o 36), lista de tecnología controlada y concepto del INVIMA sobre la central de gases, el generador PSA, el PACS y los refrigeradores."
+  },
+  {
+   "id": "res_4816_2008",
+   "numero": "Resolución 4816",
+   "anio": 2008,
+   "fecha": "2008-11-27",
+   "emisor": "Ministerio de la Protección Social",
+   "diario_oficial": "47.201 (según la investigación)",
+   "objeto": "Reglamenta el Programa Nacional de Tecnovigilancia que ordena el art. 61 del Decreto 4725 de 2005: niveles nacional, departamental y local, y programa institucional en cada prestador.",
+   "estado": "Vigente: no se encontró norma que la sustituya hasta octubre de 2026.",
+   "url": "https://normograma.invima.gov.co/compilacion/docs/resolucion_minproteccion_4816_2008.htm",
+   "url_pdf_original": "https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/Resoluci%C3%B3n_4816_de_2008.pdf",
+   "fecha_consulta": "2026-10-23",
+   "acceso": "Texto tomado de extractos de búsqueda (las páginas .gov.co no abrieron desde el entorno de investigación): cotejar con el Diario Oficial antes de radicar.",
+   "requisitos_aplicables": [
+    {
+     "tema": "Programa institucional",
+     "requisito": "Responsable designado, formato de reporte (propio o del INVIMA) y sistema de gestión de los reportes.",
+     "cita": "Artículos por confirmar",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    },
+    {
+     "tema": "Reportes",
+     "requisito": "Reportar al INVIMA los eventos e incidentes adversos SERIOS dentro de las 72 horas siguientes a conocerlos, y los no serios en forma trimestral y consolidada.",
+     "cita": "«Enviar el formulario al INVIMA en caso de presentarse un evento o incidente adverso SERIO, dentro de las setenta y dos horas (72) siguientes al conocimiento de la ocurrencia del mismo» (el art. 15 como base del plazo, por confirmar)",
+     "tipo": "dato_oficial",
+     "verificacion": "literal_compilacion"
+    }
+   ],
+   "lo_que_no_trae": "No fija dotación ni infraestructura: es un proceso del prestador que la Res. 3100 verifica en el estándar de medicamentos y dispositivos (num. 11.1.4)."
+  },
+  {
+   "id": "decreto_3770_2004",
+   "numero": "Decreto 3770",
+   "anio": 2004,
+   "emisor": "Ministerio de la Protección Social",
+   "objeto": "Régimen de registros sanitarios y vigilancia sanitaria de los reactivos de diagnóstico in vitro para exámenes de especímenes de origen humano (régimen aparte del Decreto 4725).",
+   "estado": "Vigente, modificado por el Decreto 581 de 2017. El proyecto de nuevo régimen de dispositivos médicos (diciembre de 2025) lo reemplazaría junto con el Decreto 4725; no expedido al 23-oct-2026.",
+   "url": "https://www.invima.gov.co/node/71",
+   "fecha_consulta": "2026-10-23",
+   "acceso": "Texto tomado de extractos de búsqueda (las páginas .gov.co no abrieron desde el entorno de investigación): cotejar con el Diario Oficial antes de radicar.",
+   "requisitos_aplicables": [
+    {
+     "tema": "Registro de reactivos",
+     "requisito": "Todos los reactivos del laboratorio con registro sanitario del INVIMA según su categoría (I, II o III). Como van en comodato, el contrato debe exigir el registro vigente de cada reactivo y de cada analizador.",
+     "cita": "Artículos por confirmar",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    },
+    {
+     "tema": "Reactivovigilancia",
+     "requisito": "Programa de reactivovigilancia del prestador, junto con los de farmacovigilancia y tecnovigilancia, con información documentada de su planeación y ejecución.",
+     "cita": "Res. 3100, num. 11.1.4 (subnumeral y redacción por confirmar)",
+     "tipo": "dato_oficial",
+     "verificacion": "contenido_compilacion"
+    }
+   ],
+   "lo_que_no_trae": "Los analizadores son equipos de diagnóstico in vitro: su clase y registro siguen este régimen y no las 18 reglas del Decreto 4725 (8 equipos del laboratorio, según la revisión del Decreto 4725)."
   }
  ],
  "checklist_485": [
@@ -800,7 +1108,7 @@
    "res_1633": "Anexo 1, num. 4.5.1, Cuadros 92-95, hojas 144-154",
    "talento_humano": "Médico con formación en soporte vital avanzado y auxiliar de enfermería con soporte vital básico.",
    "infraestructura": "Acceso directo desde el exterior, en un solo piso; sala de espera; unidades sanitarias por sexo (una accesible); estacionamiento de camillas; descontaminación con ducha teléfono; consultorios (uno con unidad sanitaria); triage; estación de enfermería; sala de procedimientos; ERA, inmovilización, rehidratación y POCT cuando se requiera; aislamiento; reanimación; observación de adultos (por sexo) y pediátrica; área exclusiva cubierta para ambulancias.",
-   "dotacion_minima": "Instrumental ginecoobstétrico, equipo de partos, sujeción, toracostomía, carro de paro adulto y pediátrico, monitor de signos vitales (ECG, PNI, SpO2, temperatura, batería), oxímetro, bomba de infusión, electrocardiógrafo de 12 derivaciones, nebulizador, oxígeno y succión; reanimación con camilla rodante, aspirador por camilla, monitor, marcapasos externo y carro de paro.",
+   "dotacion_minima": "Instrumental ginecoobstétrico, equipo de partos, sujeción, toracostomía, carro de paro adulto y pediátrico, monitor de signos vitales (ECG, PNI, SpO2, temperatura, batería), oxímetro, bomba de infusión, electrocardiógrafo de 12 derivaciones, nebulizador, oxígeno y succión; reanimación con camilla rodante, aspirador por camilla, monitor y carro de paro; el marcapasos externo, según guía secundaria; por confirmar.",
    "interdependencia": "Disponibilidad de imágenes diagnósticas, laboratorio clínico, hospitalización, servicio farmacéutico, transporte asistencial y apoyos (alimentación, lavandería, vigilancia)."
   },
   {
@@ -1170,13 +1478,13 @@
    "urgencias_reanimacion": {
     "m2": "12 + 8 por camilla adicional",
     "lado_min_m": 3.0,
-    "cita": "Cuadro 92; Res. 3100, num. 11.6.1, criterio 18.14 (12 m²)"
+    "cita": "Cuadro 92; Res. 3100, num. 11.6.1, criterio 18.14 (12 m²) (por confirmar: la investigación de urgencias no confirmó los criterios de infraestructura)"
    },
    "urgencias_observacion_por_camilla": {
     "m2": 6.0,
     "lado_min_m": 3.0,
     "separacion_camillas_m": 1.0,
-    "cita": "Cuadro 92; Res. 3100, num. 11.6.1, criterio 18.15"
+    "cita": "Cuadro 92; Res. 3100, num. 11.6.1, criterio 18.15 (por confirmar: la investigación de urgencias no confirmó los criterios de infraestructura)"
    },
    "urgencias_observacion_pediatrica": {
     "m2": "6 por camilla o 4 por cuna",
