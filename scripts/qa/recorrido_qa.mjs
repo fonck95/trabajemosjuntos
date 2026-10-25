@@ -19,7 +19,8 @@
 //     comodato (reactivos), de un panel solar, del manifold de gases y de un lavamanos; usa «Ir a» desde el buscador;
 //     cámara (plano cercano, rumbo tras 60 cuadros, campo horizontal) y selección (clic en muro, arrastre).
 //   · juego: entra caminando desde el corredor a la escalera de evacuación norte del piso 2 (por su puerta); salta (los
-//     pies suben ≈ 1,2 m y vuelven al piso) y queda parado sobre una cama; el modo espectador (V) sube con Espacio a través
+//     pies suben ≈ 1,2 m y vuelven al piso; bajo un dintel se detiene) y queda parado sobre una cama y sobre una fila de
+//     paneles de la terraza; el modo espectador (V) sube con Espacio a través
 //     de la losa al piso 3, vuela en línea recta por donde no se camina y al volver a caminar queda en una celda libre del
 //     piso; pantalla completa (P): el recuadro ocupa la ventana, la ficha pasa a su lateral y Esc devuelve todo.
 //   · flujo: botón «Laboratorio», ficha a la vista tras tocar un equipo (y «Ver ficha» en el teléfono), «Ir a» desde el
@@ -946,19 +947,47 @@ async function juego() {
   });
   const hmax = Math.max(...alturas), hfin = alturas[alturas.length - 1];
   comprobar(hmax > e.altura + 0.9 && hmax <= e.altura + 1.21 && Math.abs(hfin - e.altura) < 0.01, `salta: los pies llegan a ${hmax.toFixed(2)} m y vuelven al piso (${hfin})`);
-  // sobre una cama del piso 3: salta hacia ella hasta quedar encima
-  const cama = await page.evaluate(() => window.__recorridoQA.unidades({ texto: 'cama' }).find((u) => u.nivel === 'P3' && u.montaje === 'piso'));
-  if (comprobar(!!cama, `hay una cama de piso en el piso 3 (${cama?.id})`)) {
-    e = await irA(page, { unidad: cama.id });
-    const v = await page.evaluate((id) => window.__recorridoQA.unidadVista(id), cama.id);
+  // bajo el dintel de una puerta (2,10 m) el salto se detiene: los pies no pasan de 2,10 − 1,72 = 0,38 m
+  e = await irA(page, { nivel: 'P2', posicion: [3.1, 15.3], rumbo_deg: 0 });
+  const enVano = await page.evaluate(async () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', key: ' ', bubbles: true }));
+    let m = 0;
+    for (let k = 0; k < 60; k++) { await new Promise((q) => requestAnimationFrame(q)); m = Math.max(m, window.__recorridoQA.api.estado().altura); }
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space', key: ' ', bubbles: true }));
+    return m;
+  });
+  comprobar(enVano > 0.2 && enVano <= 0.39, `bajo el dintel de la puerta de la escalera el salto se detiene (pies hasta ${enVano.toFixed(2)} m)`);
+  // salta hacia una unidad hasta quedar parado encima: una cama del piso 3 sin nada colgado encima y una fila de paneles
+  // de la terraza (4,20 m bajo el nivel de la cubierta: su altura se mide desde ese piso)
+  async function subirA(id) {
+    e = await irA(page, { unidad: id });
+    const v = await page.evaluate((u) => window.__recorridoQA.unidadVista(u), id);
     await girarHasta(page, (Math.atan2(v.y - e.posicion[1], v.x - e.posicion[0]) * 180) / Math.PI, 0);
-    let encima = false;
-    for (let k = 0; k < 6 && !encima; k++) {
+    const piso = e.altura;
+    for (let k = 0; k < 6; k++) {
       await page.keyboard.down('KeyW'); await page.keyboard.press('Space'); await pausa(700); await page.keyboard.up('KeyW'); await pausa(400);
       e = await estado(page);
-      encima = e.altura > 0.3;
+      if (e.altura > piso + 0.3) break;
     }
-    comprobar(encima, `queda parado sobre la cama (pies a ${e.altura} m)`);
+    return { e, piso, alto: v.dim[2] };
+  }
+  await irA(page, { nivel: 'P3', entrada: 'estacion' });
+  const cama = await page.evaluate(() => {
+    // lo que cuelga sobre la cabeza (como en techosBajos del recorrido): del cielo o de la pared desde 1,80 m, sin las cortinas
+    const Q = window.__recorridoQA, encima = Q.unidades({}).filter((u) => u.nivel === 'P3' && (u.montaje === 'cielo' || u.montaje === 'pared') && u.modelo !== 'riel_cortina')
+      .map((u) => Q.unidadVista(u.id)).filter((v) => v && v.z >= 1.8);
+    return Q.unidades({ texto: 'cama' }).filter((u) => u.nivel === 'P3' && u.montaje === 'piso')
+      .find((u) => { const v = Q.unidadVista(u.id); return v && v.dim[2] < 1.15 && !encima.some((q) => Math.hypot(q.x - v.x, q.y - v.y) < 1.6); });
+  });
+  if (comprobar(!!cama, `hay una cama de piso en el piso 3 sin nada colgado encima (${cama?.id})`)) {
+    const r1 = await subirA(cama.id);
+    comprobar(r1.e.altura > r1.piso + 0.3 && r1.e.libre && !r1.e.en_muro, `queda parado sobre la cama (pies a ${r1.e.altura} m; libre ${r1.e.libre}, en muro ${r1.e.en_muro})`);
+  }
+  await irA(page, { nivel: 'CUB', entrada: 'terraza' });
+  const fila = await page.evaluate(() => window.__recorridoQA.unidades({ texto: 'fotovolt' }).find((u) => u.nivel === 'CUB' && u.montaje === 'piso' && (window.__recorridoQA.unidadVista(u.id)?.z ?? 0) < -4));
+  if (comprobar(!!fila, `hay una fila de paneles en la terraza (${fila?.id})`)) {
+    const r2 = await subirA(fila.id);
+    comprobar(r2.e.nivel === 'CUB' && r2.e.altura > r2.piso + 0.3, `queda parado sobre la fila de paneles de la terraza (pies a ${r2.e.altura} m; piso ${r2.piso} m)`);
   }
   // espectador: sube con Espacio a través de la losa al piso 3, vuela al occidente por donde no se camina y aterriza
   e = await irA(page, { nivel: 'P2', entrada: 'ascensores' });

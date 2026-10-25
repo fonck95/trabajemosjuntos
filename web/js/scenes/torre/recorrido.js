@@ -405,14 +405,16 @@ export async function montar(ctx) {
     const despejes = despejesPuertas(nivel, muros);
     const obstaculos = [];
     let enPuerta = 0;
+    // la altura de cada unidad se mide desde el piso donde está (la terraza de la cubierta está 4,20 m abajo del nivel)
+    const pisoBajo = (x, y) => cotaPiso(planta.recinto(planta.recintoEn(x, y)), x, y);
     for (const n of unidades) {
       const d = dims.get(String(n.id));
-      if (!d || !d.dibujada || d.montaje !== 'piso' || n.estado === 'cierre_brechas_propuesto' || n.z > 0.5 || d.variante === 'elevada') continue;
+      if (!d || !d.dibujada || d.montaje !== 'piso' || n.estado === 'cierre_brechas_propuesto' || (+n.z || 0) - pisoBajo(n.x, n.y) > 0.5 || d.variante === 'elevada') continue;
       // las de más de 0,5 m² (6.4) y también las altas y angostas (neveras, estantes, lockers, carros): no se camina a través
       const area = d.dim[0] * d.dim[1];
       if (area < 0.5 && !(area >= 0.2 && d.dim[2] >= 0.85)) continue;
       // alto: lo que hay que saltar para pasar por encima o pararse en él
-      const ob = { x: n.x, y: n.y, w: d.dim[0], d: d.dim[1], rot: n.rot || 0, id: n.id, alto: (+n.z || 0) + (+d.dim[2] || 1) };
+      const ob = { x: n.x, y: n.y, w: d.dim[0], d: d.dim[1], rot: n.rot || 0, id: n.id, alto: Math.max(0.01, (+n.z || 0) - pisoBajo(n.x, n.y)) + (+d.dim[2] || 1) };
       if (despejes.some((q) => cruzanOBB(ob, q))) { enPuerta++; continue; }
       obstaculos.push(ob);
     }
@@ -437,6 +439,7 @@ export async function montar(ctx) {
       huellasQuitadas.set(claveH, quitar);
       if (quitar.size) rejilla = rejillaColision(nivel, { ...opRejilla, obstaculos: obstaculos.filter((o) => !quitar.has(String(o.id))) });
     }
+    const techos = techosBajos(nivel, muros, unidades, dims, rejilla, pisoBajo);
     const t4 = performance.now();
     // puertas por recinto, pasos a otros niveles y salidas al exterior sin paso
     const puertasDe = new Map();
@@ -450,13 +453,43 @@ export async function montar(ctx) {
     const escaleras = new Set((nivel.escaleras || []).map((e) => e.recinto));
     const celdaRec = new Array(rejilla.nx * rejilla.ny);
     const n = {
-      id, nivel, planta, plantaCtx, capa, unidades, dims, rejilla, superficies, puertasDe, muros, pasos, salidas, ascensores, cabinas, escaleras, celdaRec, calidad,
+      id, nivel, planta, plantaCtx, capa, unidades, dims, rejilla, techos, superficies, puertasDe, muros, pasos, salidas, ascensores, cabinas, escaleras, celdaRec, calidad,
       abajo: nAb ? idAb : null, arriba: nAr ? idAr : null, dzArriba: nAr ? nAr.z - nivel.z : 0, impl: null, implementos: implementosDelNivel(unidades, dims),
       huellas: { obstaculos: obstaculos.length - quitar.size, enPuerta, quitadas: quitar.size },
     };
     tiempoNivel = performance.now() - t0;
     tiempos = { planta: t1 - t0, contexto: t2 - t1, equipos: t3 - t2, rejilla: t4 - t3, resto: performance.now() - t4 };
     return n;
+  }
+  // Lo que queda sobre la cabeza más abajo que el cielo raso, por celda de la rejilla (altura sobre el piso; Infinity si
+  // nada): el dintel de cada puerta en su vano (y el radio del caminante a cada lado del muro) y las unidades colgadas del
+  // cielo o de la pared desde 1,80 m (lámparas, televisores, señales), con su huella inflada por el radio. Quien salta no
+  // pasa la cabeza a través de ellos: el salto se detiene y en el aire no se entra bajo uno más bajo que los ojos
+  function techosBajos(nivel, muros, unidades, dims, R, pisoBajo) {
+    const T = new Float32Array(R.nx * R.ny).fill(Infinity);
+    const marcar = (cx, cy, ux, uy, hl, hw, z) => {
+      const ext = Math.abs(ux) * hl + Math.abs(uy) * hw, eyt = Math.abs(uy) * hl + Math.abs(ux) * hw;
+      const i0 = Math.max(0, Math.floor((cx - ext - R.x0) / R.celda)), i1 = Math.min(R.nx - 1, Math.floor((cx + ext - R.x0) / R.celda));
+      const j0 = Math.max(0, Math.floor((cy - eyt - R.y0) / R.celda)), j1 = Math.min(R.ny - 1, Math.floor((cy + eyt - R.y0) / R.celda));
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const px = R.x0 + (i + 0.5) * R.celda - cx, py = R.y0 + (j + 0.5) * R.celda - cy, k = j * R.nx + i;
+        if (Math.abs(px * ux + py * uy) <= hl && Math.abs(-px * uy + py * ux) <= hw && z < T[k]) T[k] = z;
+      }
+    };
+    for (const p of nivel.puertas || []) {
+      const m = muros.get(p.muro);
+      if (!m || !p.centro) continue;
+      const L = Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1]) || 1;
+      marcar(p.centro[0], p.centro[1], (m.b[0] - m.a[0]) / L, (m.b[1] - m.a[1]) / L, (+p.ancho || 0.9) / 2, (+m.espesor || 0.2) / 2 + RADIO, +p.alto || 2.1);
+    }
+    for (const n of unidades) {
+      const d = dims.get(String(n.id));
+      if (!d || !d.dibujada || (d.montaje !== 'cielo' && d.montaje !== 'pared') || d.modelo === 'riel_cortina' || d.variante === 'elevada') continue;
+      const z = (+n.z || 0) - pisoBajo(n.x, n.y);
+      if (z < 1.8) continue;
+      marcar(n.x, n.y, Math.cos(n.rot || 0), Math.sin(n.rot || 0), d.dim[0] / 2 + RADIO, d.dim[1] / 2 + RADIO, z);
+    }
+    return T;
   }
   function soltarNivel() {
     if (!cur) return;
@@ -587,13 +620,28 @@ export async function montar(ctx) {
   // cielo raso sobre el piso z en (x, y): la altura libre del nivel; en la escalera, el tramo de arriba; en los exteriores
   // y la cubierta, el cielo
   const techo = (x, y, z) => (enEscalera(x, y) ? z + TECHO_ESCALERA : CIELO_ABIERTO.has(cur.id) ? Infinity : z + (+cur.nivel.altura_libre_m || 3));
+  // altura máxima de los pies en (x, y) con el piso en z: el cielo raso (o el tramo de arriba) y lo que cuelga más bajo
+  // (dinteles, lámparas); en la escalera, los ojos no pasan la losa de arriba (allí cambia de nivel quien sube caminando)
+  function techoPies(x, y, z) {
+    let t = techo(x, y, z);
+    const k = celda(x, y);
+    if (k >= 0 && cur.techos[k] < Infinity) t = Math.min(t, z + cur.techos[k]);
+    t -= OJOS + CABEZA;
+    if (cur.arriba && enEscalera(x, y)) t = Math.min(t, Math.max(z, cur.dzArriba - SUBE - 0.02));
+    return t;
+  }
   // piso y tope (piso + lo que tapa la celda) adonde puede pasar el caminante: caminando sube hasta PASO_Z (un escalón o
-  // un equipo bajo); en el aire, solo por encima de lo que queda bajo sus pies
+  // un equipo bajo); en el aire, solo por encima de lo que queda bajo sus pies y por debajo de lo que tenga encima (un
+  // dintel, una lámpara o el tramo de una escalera lo detienen como un muro)
   function paso(x, y) {
     const zf = superficie(x, y, w.hp);
     if (zf == null) return null;
     const tope = zf + encima(x, y);
-    return tope <= w.h + (w.aire ? 0.02 : PASO_Z) ? [zf, tope] : null;
+    if (tope > w.h + (w.aire ? 0.02 : PASO_Z)) return null;
+    // de pie no cabe (una lámpara sobre la cama) o, en el aire, la cabeza va más alta que lo que hay encima
+    const t = techoPies(x, y, zf);
+    if (t < tope - 0.01 || (w.aire && w.h > t + 0.01)) return null;
+    return [zf, tope];
   }
   function pisar(zf, tope) {
     w.hp = zf;
@@ -620,10 +668,7 @@ export async function montar(ctx) {
     // la parábola exacta del cuadro: el salto llega a la misma altura con 15 o con 60 cuadros por segundo
     w.h += w.vz * dt - 0.5 * GRAVEDAD * dt * dt;
     w.vz -= GRAVEDAD * dt;
-    const zf = superficie(w.x, w.y, w.hp) ?? w.hp, tope = zf + encima(w.x, w.y);
-    let t = techo(w.x, w.y, w.hp) - OJOS - CABEZA;
-    // en la escalera, un salto no lleva los ojos más allá de la losa de arriba (allí cambia de nivel quien sube caminando)
-    if (cur.arriba && enEscalera(w.x, w.y)) t = Math.min(t, Math.max(w.hp, cur.dzArriba - SUBE - 0.02));
+    const zf = superficie(w.x, w.y, w.hp) ?? w.hp, tope = zf + encima(w.x, w.y), t = techoPies(w.x, w.y, w.hp);
     if (w.h > t) { w.h = Math.max(t, tope); if (w.vz > 0) w.vz = 0; }
     if (w.h <= tope) { w.h = tope; w.hp = zf; w.vz = 0; w.aire = false; }
   }
@@ -1301,8 +1346,8 @@ export async function montar(ctx) {
       if (!w.aire && !saltando && w.h > (superficie(w.x, w.y, w.hp) ?? w.hp) + encima(w.x, w.y) + 0.02) { w.aire = true; w.vz = 0; }
       if (w.aire && !saltando) { caer(dt); mover = true; }
       // escaleras: el nivel cambia cuando los ojos de quien camina pasan la losa de arriba o bajan de la propia (con el
-      // piso que pisa: un salto no cambia de nivel)
-      if (mover && enEscalera(w.x, w.y)) {
+      // piso que pisa y ya en el suelo: un salto no cambia de nivel y el techo del otro nivel no lo corta en el aire)
+      if (mover && !w.aire && enEscalera(w.x, w.y)) {
         if (cur.arriba && w.hp > cur.dzArriba - SUBE) cambiarPorEscalera(cur.arriba);
         else if (cur.abajo && w.hp < -BAJA) cambiarPorEscalera(cur.abajo);
       }
@@ -1586,7 +1631,9 @@ export async function montar(ctx) {
       return {
         piso: /^P[1-4]$/.test(cur.id) ? +cur.id.slice(1) : cur.id, nivel: cur.id, recinto: recintoActual, subrecinto: subActual,
         posicion: [+w.x.toFixed(3), +w.y.toFixed(3)], altura: +w.h.toFixed(3), rumbo_deg: +normGrados(grados(Math.atan2(-d.z, d.x))).toFixed(3),
-        en_muro: k < 0 || cur.rejilla.crudo[k] === 1, libre: cur.rejilla.libre(w.x, w.y),
+        // en un muro: en lo duro (pararse sobre un equipo no es estar en un muro); libre: también parado encima de él
+        en_muro: k < 0 || cur.rejilla.crudoDuro[k] === 1,
+        libre: cur.rejilla.libre(w.x, w.y) || (k >= 0 && cur.rejilla.duro[k] !== 1 && encima(w.x, w.y) > 0 && w.h >= w.hp + encima(w.x, w.y) - 0.02),
         espectador, en_el_aire: w.aire, pantalla_completa: enPantalla,
       };
     },

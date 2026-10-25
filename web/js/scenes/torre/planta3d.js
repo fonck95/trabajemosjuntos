@@ -760,8 +760,9 @@ export function rejillaColision(nivel, { celda = 0.10, radio = 0.30, obstaculos 
       }
       continue;
     }
-    const h = +o.altura_m;
-    if (h > 0) { llenar(o.poligono, (k) => { bajo[k] = 1; }); marcarAlto(o.poligono, h); } else llenar(o.poligono, (k) => { crudo[k] = 1; });
+    // la vegetación (árboles, la isla con su palma) sigue siendo dura: sobre ella no se camina ni se para nadie
+    const h = +o.altura_m, vegetal = /árbol|arbol|palma|mango|tronco|isla/i.test(`${o.id} ${o.nombre || ''}`);
+    if (h > 0 && !vegetal) { llenar(o.poligono, (k) => { bajo[k] = 1; }); marcarAlto(o.poligono, h); } else llenar(o.poligono, (k) => { crudo[k] = 1; });
   }
   for (const ob of obstaculos) {
     const h = +ob.alto, en = h > 0 ? bajo : crudo;
@@ -780,7 +781,7 @@ export function rejillaColision(nivel, { celda = 0.10, radio = 0.30, obstaculos 
   const codigo = (x, y) => { const k = idx(x, y); return k < 0 ? 1 : final[k]; };
   const libre = (x, y) => codigo(x, y) !== 1;
   return {
-    x0, y0, nx, ny, celda, radio, datos: final, crudo: g, duro, alto,
+    x0, y0, nx, ny, celda, radio, datos: final, crudo: g, duro, alto, crudoDuro: gDuro,
     codigo,
     libre,
     // movimiento con deslizamiento a lo largo de los muros (por ejes), en pasos de media celda
