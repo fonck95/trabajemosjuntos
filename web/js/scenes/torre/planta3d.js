@@ -620,11 +620,40 @@ function restarIntervalos(a, b, libres) {
 }
 
 // ---------------------------------------------------------------- rejilla de colisión
+// inflado de una rejilla (1 = bloqueada) por el radio del caminante: distancia (chaflán 3-4) a la celda bloqueada más
+// cercana, y se bloquea lo que queda a menos del umbral (en unidades del chaflán, 3 por celda)
+function inflar(g, nx, ny, umbral) {
+  const INF = 1 << 20, dist = new Int32Array(nx * ny);
+  for (let k = 0; k < g.length; k++) dist[k] = g[k] === 1 ? 0 : INF;
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const k = j * nx + i;
+    if (!dist[k]) continue;
+    let d = dist[k];
+    if (i > 0) d = Math.min(d, dist[k - 1] + 3);
+    if (j > 0) { d = Math.min(d, dist[k - nx] + 3); if (i > 0) d = Math.min(d, dist[k - nx - 1] + 4); if (i < nx - 1) d = Math.min(d, dist[k - nx + 1] + 4); }
+    dist[k] = d;
+  }
+  for (let j = ny - 1; j >= 0; j--) for (let i = nx - 1; i >= 0; i--) {
+    const k = j * nx + i;
+    if (!dist[k]) continue;
+    let d = dist[k];
+    if (i < nx - 1) d = Math.min(d, dist[k + 1] + 3);
+    if (j < ny - 1) { d = Math.min(d, dist[k + nx] + 3); if (i < nx - 1) d = Math.min(d, dist[k + nx + 1] + 4); if (i > 0) d = Math.min(d, dist[k + nx - 1] + 4); }
+    dist[k] = d;
+  }
+  // la celda bloqueada se mide desde su centro: quien llama suma media celda al radio
+  const out = new Uint8Array(g);
+  for (let k = 0; k < g.length; k++) if (g[k] !== 1 && dist[k] < umbral) out[k] = 1;
+  return out;
+}
 // Códigos de celda: 0 libre, 1 bloqueada, 2 zona de escalera (libre si alguna parte de escalera la cubre a una altura
 // continua con la del caminante: eso lo decide quien camina, con las partes de todos los niveles).
 // op.obstaculos: huellas de equipos grandes [{ x, y, w, d, rot }] (rectángulos girados) y polígonos extra; op.partes:
 // rectángulos de las partes de escalera (de este nivel y de los vecinos) que cuentan como piso dentro de los núcleos;
 // op.llegadas: bordes altos de los tramos que llegan desde abajo (en el hueco de la escalera abierta no llevan baranda).
+// Un obstáculo con altura (op.obstaculos con «alto», o los de obstaculos_recorrido con altura_m) bloquea a quien camina
+// por el piso, pero no es duro: «duro» es la rejilla inflada sin ellos y «alto», la altura de lo que tapa cada celda sobre
+// su piso (la máxima de los obstáculos cuya huella inflada la cubre), para que quien salta pase por encima o se pare allí.
 export function rejillaColision(nivel, { celda = 0.10, radio = 0.30, obstaculos = [], partes = null, llegadas = [] } = {}) {
   const ix = indice(nivel);
   const [cx0, cy0, cx1, cy1] = caja2(nivel.contorno?.length ? nivel.contorno : ix.recs.flatMap((o) => o.pol));
@@ -633,6 +662,19 @@ export function rejillaColision(nivel, { celda = 0.10, radio = 0.30, obstaculos 
   const esc = new Set((nivel.escaleras || []).map((e) => e.recinto));
   const rectsEsc = partes || (nivel.escaleras || []).flatMap((e) => (e.partes || []).map((p) => p.rect));
   const cubierta = (x, y) => rectsEsc.some((r) => enRect(x, y, r, 1e-3));
+  // acceso de cada puerta de un núcleo de escalera: el vano y 0,45 m a cada lado del muro son piso, aunque el descanso
+  // empiece en la cara libre de la estructura (0,17 m dentro del recinto): sin esto la franja entre el eje del muro y el
+  // descanso queda bloqueada y la puerta no se puede cruzar
+  const muroDe = new Map((nivel.muros || []).map((m) => [m.id, m]));
+  const accesos = [];
+  for (const p of nivel.puertas || []) {
+    const m = muroDe.get(p.muro);
+    if (!m || !p.centro || !(esc.has(p.desde) || esc.has(p.hacia))) continue;
+    const L = Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1]) || 1;
+    accesos.push({ x: p.centro[0], y: p.centro[1], ux: (m.b[0] - m.a[0]) / L, uy: (m.b[1] - m.a[1]) / L, hl: (+p.ancho || 0.9) / 2, hw: (+m.espesor || 0.2) / 2 + 0.45,
+      adentro: p.desde !== 'exterior' && p.hacia !== 'exterior' });
+  }
+  const enAcceso = (x, y) => accesos.some((a) => { const px = x - a.x, py = y - a.y; return Math.abs(px * a.ux + py * a.uy) <= a.hl && Math.abs(-px * a.uy + py * a.ux) <= a.hw; });
   // 1) recintos transitables
   const llenar = (pol, fn) => {
     const [px0, py0, px1, py1] = caja2(pol);
@@ -652,19 +694,37 @@ export function rejillaColision(nivel, { celda = 0.10, radio = 0.30, obstaculos 
   };
   for (const { r, pol } of ix.recs) {
     if (r.transitable === false) continue;
-    if (esc.has(r.id)) llenar(pol, (k, x, y) => { g[k] = cubierta(x, y) ? 2 : 1; });
+    if (esc.has(r.id)) llenar(pol, (k, x, y) => { g[k] = cubierta(x, y) ? 2 : enAcceso(x, y) ? 0 : 1; });
     else llenar(pol, (k) => { g[k] = 0; });
   }
-  // 2) bloqueos crudos: muros (menos las puertas), columnas, ojos de escalera, obstáculos y equipos
-  const crudo = new Uint8Array(nx * ny);
-  const marcarOBB = (cx, cy, ux, uy, hl, hw) => {
+  // la franja del vano que no cae en ningún recinto (el del corredor llega a la cara del muro y el núcleo empieza en su
+  // eje) también es piso; las puertas al exterior no: afuera no hay rejilla
+  for (const a of accesos) {
+    if (!a.adentro) continue;
+    const ext = Math.abs(a.ux) * a.hl + Math.abs(a.uy) * a.hw, eyt = Math.abs(a.uy) * a.hl + Math.abs(a.ux) * a.hw;
+    const i0 = Math.max(0, Math.floor((a.x - ext - x0) / celda)), i1 = Math.min(nx - 1, Math.floor((a.x + ext - x0) / celda));
+    const j0 = Math.max(0, Math.floor((a.y - eyt - y0) / celda)), j1 = Math.min(ny - 1, Math.floor((a.y + eyt - y0) / celda));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const k = j * nx + i, px = x0 + (i + 0.5) * celda, py = y0 + (j + 0.5) * celda;
+      if (g[k] === 1 && enAcceso(px, py) && !ix.recs.some((o) => enPoligono(px, py, o.pol))) g[k] = 0;
+    }
+  }
+  // 2) bloqueos crudos: muros (menos las puertas), columnas, ojos de escalera, obstáculos y equipos; los obstáculos con
+  // altura van aparte (bajo) y dejan su altura en alto, sobre la huella inflada por el radio
+  const crudo = new Uint8Array(nx * ny), bajo = new Uint8Array(nx * ny), alto = new Float32Array(nx * ny);
+  const marcarOBB = (cx, cy, ux, uy, hl, hw, en = crudo, valor = 1) => {
     const ext = Math.abs(ux) * hl + Math.abs(uy) * hw, eyt = Math.abs(uy) * hl + Math.abs(ux) * hw;
     const i0 = Math.max(0, Math.floor((cx - ext - x0) / celda)), i1 = Math.min(nx - 1, Math.floor((cx + ext - x0) / celda));
     const j0 = Math.max(0, Math.floor((cy - eyt - y0) / celda)), j1 = Math.min(ny - 1, Math.floor((cy + eyt - y0) / celda));
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
       const px = x0 + (i + 0.5) * celda - cx, py = y0 + (j + 0.5) * celda - cy;
-      if (Math.abs(px * ux + py * uy) <= hl && Math.abs(-px * uy + py * ux) <= hw) crudo[j * nx + i] = 1;
+      if (Math.abs(px * ux + py * uy) <= hl && Math.abs(-px * uy + py * ux) <= hw) { const k = j * nx + i; if (en[k] < valor) en[k] = valor; }
     }
+  };
+  const margen = radio + celda;
+  const marcarAlto = (pol, h) => {
+    const [a0, b0, a1, b1] = caja2(pol);
+    marcarOBB((a0 + a1) / 2, (b0 + b1) / 2, 1, 0, (a1 - a0) / 2 + margen, (b1 - b0) / 2 + margen, alto, h);
   };
   const segmento = (ax, ay, bx, by, t) => {
     const L = Math.hypot(bx - ax, by - ay);
@@ -700,42 +760,27 @@ export function rejillaColision(nivel, { celda = 0.10, radio = 0.30, obstaculos 
       }
       continue;
     }
-    llenar(o.poligono, (k) => { crudo[k] = 1; });
+    const h = +o.altura_m;
+    if (h > 0) { llenar(o.poligono, (k) => { bajo[k] = 1; }); marcarAlto(o.poligono, h); } else llenar(o.poligono, (k) => { crudo[k] = 1; });
   }
   for (const ob of obstaculos) {
-    if (ob.poligono) { llenar(ob.poligono, (k) => { crudo[k] = 1; }); continue; }
+    const h = +ob.alto, en = h > 0 ? bajo : crudo;
+    if (ob.poligono) { llenar(ob.poligono, (k) => { en[k] = 1; }); if (h > 0) marcarAlto(ob.poligono, h); continue; }
     const c = Math.cos(ob.rot || 0), s = Math.sin(ob.rot || 0);
-    marcarOBB(ob.x, ob.y, c, s, ob.w / 2, ob.d / 2);
+    marcarOBB(ob.x, ob.y, c, s, ob.w / 2, ob.d / 2, en);
+    if (h > 0) marcarOBB(ob.x, ob.y, c, s, ob.w / 2 + margen, ob.d / 2 + margen, alto, h);
   }
-  for (let k = 0; k < g.length; k++) if (crudo[k]) g[k] = 1;
-  // 3) inflado por el radio del caminante: distancia (chaflán 3-4) a la celda bloqueada más cercana
-  const INF = 1 << 20, dist = new Int32Array(nx * ny);
-  for (let k = 0; k < g.length; k++) dist[k] = g[k] === 1 ? 0 : INF;
-  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-    const k = j * nx + i;
-    if (!dist[k]) continue;
-    let d = dist[k];
-    if (i > 0) d = Math.min(d, dist[k - 1] + 3);
-    if (j > 0) { d = Math.min(d, dist[k - nx] + 3); if (i > 0) d = Math.min(d, dist[k - nx - 1] + 4); if (i < nx - 1) d = Math.min(d, dist[k - nx + 1] + 4); }
-    dist[k] = d;
-  }
-  for (let j = ny - 1; j >= 0; j--) for (let i = nx - 1; i >= 0; i--) {
-    const k = j * nx + i;
-    if (!dist[k]) continue;
-    let d = dist[k];
-    if (i < nx - 1) d = Math.min(d, dist[k + 1] + 3);
-    if (j < ny - 1) { d = Math.min(d, dist[k + nx] + 3); if (i < nx - 1) d = Math.min(d, dist[k + nx + 1] + 4); if (i > 0) d = Math.min(d, dist[k + nx - 1] + 4); }
-    dist[k] = d;
-  }
-  // radio en unidades del chaflán (3 por celda); la celda bloqueada se mide desde su centro, así que se suma media celda
+  // 3) inflado por el radio del caminante: distancia (chaflán 3-4) a la celda bloqueada más cercana. Dos veces: con todo
+  // (lo que usa quien camina por el piso) y sin los obstáculos con altura (lo duro: muros, columnas, barandas, vacíos)
+  const gDuro = new Uint8Array(g);
+  for (let k = 0; k < g.length; k++) { if (crudo[k]) gDuro[k] = g[k] = 1; else if (bajo[k]) g[k] = 1; }
   const umbral = ((radio + celda / 2) / celda) * 3;
-  const final = new Uint8Array(g);
-  for (let k = 0; k < g.length; k++) if (g[k] !== 1 && dist[k] < umbral) final[k] = 1;
+  const final = inflar(g, nx, ny, umbral), duro = inflar(gDuro, nx, ny, umbral);
   const idx = (x, y) => { const i = Math.floor((x - x0) / celda), j = Math.floor((y - y0) / celda); return i < 0 || j < 0 || i >= nx || j >= ny ? -1 : j * nx + i; };
   const codigo = (x, y) => { const k = idx(x, y); return k < 0 ? 1 : final[k]; };
   const libre = (x, y) => codigo(x, y) !== 1;
   return {
-    x0, y0, nx, ny, celda, radio, datos: final, crudo: g,
+    x0, y0, nx, ny, celda, radio, datos: final, crudo: g, duro, alto,
     codigo,
     libre,
     // movimiento con deslizamiento a lo largo de los muros (por ejes), en pasos de media celda
