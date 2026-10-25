@@ -7,7 +7,7 @@
 // Cómo se mueve (6.4 y 6.8): el caminante vive en coordenadas de planta (x al este, y al norte; h = altura de sus pies
 // sobre el piso terminado del nivel). Cada cuadro, una sola función registrada con st.onFrame lee las intenciones de
 // controles_fp.js, mueve al caminante por la rejilla de colisión del nivel (planta3d.js, celdas de 0,10 m, muros y equipos
-// grandes inflados 0,30 m, deslizamiento por ejes) y pone la cámara en los ojos (1,60 m) con controls.target medio metro
+// grandes inflados 0,20 m —RADIO—, deslizamiento por ejes) y pone la cámara en los ojos (1,60 m) con controls.target medio metro
 // adelante: OrbitControls.update() reproduce la misma posición y orientación y adaptDepth deja el plano cercano en 0,05 m.
 // En las celdas de escalera el piso es la parte (tramo o descanso) de este nivel, del de abajo o del descanso del de
 // arriba que queda más cerca de los pies: así se sube y se baja caminando, y el nivel cambia cuando los ojos pasan su losa.
@@ -21,7 +21,7 @@
 import { THREE, tokens, onTheme, engine } from '../../core.js';
 import { crearCapaEquipos, unidadesDelPiso, geometria as geometriaEquipo, nominal as nominalEquipo, materiales as materialesEquipos } from '../../equipos3d.js';
 import { construirPiso, rejillaColision, cotaPiso, cotaParte, enPoligono, puntoInterior, bordeAlto } from './planta3d.js';
-import { crearControles } from './controles_fp.js';
+import { crearControles, ICONO_PANTALLA } from './controles_fp.js';
 import { crearMinimapa } from './minimapa.js';
 import { crearInventario, montarBuscador, NOMBRE_NIVEL, ESTADOS_R } from './inventario.js';
 
@@ -196,7 +196,7 @@ export async function montar(ctx) {
     <button type="button" data-acc="bt" class="reco-ancho" title="Ir al bloque técnico por su puerta exterior">Bloque técnico</button>
     <button type="button" data-acc="mirar" class="reco-raton" title="Mirar con el ratón (o doble clic); Esc lo suelta">Mirar con el ratón</button>
     <button type="button" data-acc="espectador" class="reco-ancho" aria-pressed="false" title="Modo espectador (V): vuela y atraviesa muros y losas; Espacio sube y Shift baja">Espectador</button>
-    <button type="button" data-acc="pantalla" class="reco-ancho" aria-pressed="false" title="Pantalla completa (P)">Pantalla completa</button>
+    <button type="button" data-acc="pantalla" class="reco-ancho reco-icono" aria-pressed="false" title="Pantalla completa (P)" aria-label="Pantalla completa (P)">${ICONO_PANTALLA}</button>
     <button type="button" data-acc="salir" title="Salir del recorrido (Esc)">Salir</button>`, { role: 'toolbar', 'aria-label': 'Recorrido por la torre' });
   const asc = el('div', 'reco-asc', '', { role: 'group', 'aria-label': 'Botones del ascensor' });
   asc.hidden = true;
@@ -236,6 +236,10 @@ export async function montar(ctx) {
   };
   const btnMapa = barra.querySelector('[data-acc="mapa"]'), btnPuntero = barra.querySelector('[data-acc="mirar"]');
   const btnEspectador = barra.querySelector('[data-acc="espectador"]'), btnPantalla = barra.querySelector('[data-acc="pantalla"]');
+  // en un recuadro de menos de 720 px (ventanas de 1.081 a 1.150 px con el panel al lado, o de 721 a 760 px) la barra no
+  // cabe: «Bloque técnico» se oculta (sigue en «Ir a otro lugar» del panel) y «Salir» no se corta
+  const angosto = new ResizeObserver(() => stage.classList.toggle('reco-angosto', stage.clientWidth < 720));
+  angosto.observe(stage);
   const mapa = crearMinimapa(hud, { alTocar: (x, y) => { const r = cur?.planta.recintoEn(x, y); if (r) irA({ nivel: cur.id, recinto: r, ficha: false }); } });
   let tAviso = 0;
   function avisar(txt, ms = 2600) { aviso.textContent = txt; aviso.hidden = false; clearTimeout(tAviso); tAviso = setTimeout(() => { aviso.hidden = true; }, ms); }
@@ -286,7 +290,7 @@ export async function montar(ctx) {
     activo: () => activo && st.isActive() && st.inView && !ctx.raiz.hidden,
     // en pantalla completa, un clic en el lienzo sin el puntero tomado lo toma (como en un juego); con él, el clic elige
     // lo que está en la mira
-    alSeleccionar: (e) => { if (enPantalla && !e.centro && ctl.puedeBloquear() && !ctl.tomado()) { ctl.tomarPuntero(); return; } seleccionar(e); },
+    alSeleccionar: (e) => { if (enPantalla && !e.centro && ctl.puedeBloquear() && !ctl.tomado() && ctl.tomarPuntero({ silencioso: true })) return; seleccionar(e); },
     alAccion: accion,
     contenedorJoystick: hud,
   });
@@ -907,8 +911,9 @@ export async function montar(ctx) {
       else if (d.posicion) {
         const id = idNivel(d.nivel ?? d.piso) || cur?.id || 'P1';
         ponerEnNivel(id, d.posicion[0], d.posicion[1], { yaw: d.rumbo_deg != null ? rad(+d.rumbo_deg) : null, pitch: d.pitch_deg != null ? rad(+d.pitch_deg) : 0 });
-        // un punto pedido dentro de un muro o de un equipo pasa a la celda libre más cercana
-        if (!cur.rejilla.libre(w.x, w.y)) { const [x, y] = libreCerca(w.x, w.y, null, 3); w.x = x; w.y = y; aterrizar(sueloEn(x, y)); }
+        // un punto pedido dentro de un muro o de un equipo pasa a la celda libre más cercana; sin ninguna a 3 m (fuera de la
+        // planta), a la entrada del nivel
+        if (!cur.rejilla.libre(w.x, w.y)) { const c = cur.rejilla.cercana(w.x, w.y, 3); if (c) { w.x = c[0]; w.y = c[1]; aterrizar(sueloEn(c[0], c[1])); } else irANivel(id); }
       } else {
         const id = idNivel(d.nivel ?? d.piso) || (d.entrada ? 'P2' : 'EXT');
         irANivel(id, d.entrada || null);
@@ -1126,13 +1131,15 @@ export async function montar(ctx) {
     const b = ev.target.closest('[data-acc]');
     if (!b) return;
     accion(b.dataset.acc);
-    // el foco vuelve al recuadro: con él en el botón, Espacio (saltar o subir) lo volvería a pulsar
-    if ((b.dataset.acc === 'espectador' || b.dataset.acc === 'pantalla') && activo) stage.focus({ preventScroll: true });
+    // el foco vuelve al recuadro tras un clic con el ratón (y siempre tras espectador y pantalla completa): con él en el
+    // botón, Espacio (saltar o subir) lo volvería a pulsar
+    if (activo && (ev.detail > 0 || b.dataset.acc === 'espectador' || b.dataset.acc === 'pantalla')) stage.focus({ preventScroll: true });
   });
   asc.addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-piso]');
     if (!b || !cur) return;
     const id = b.dataset.piso, cx = cur.ascensores.find((c) => c.id === asc.dataset.asc) || cur.ascensores[0];
+    if (ev.detail > 0) stage.focus({ preventScroll: true });
     if (id === cur.id) return;
     const p = cx?.puntos?.[CLAVE_PISO[id]];
     saltar(() => {
@@ -1162,7 +1169,7 @@ export async function montar(ctx) {
         // el panel está fuera del recuadro: en pantalla completa, primero se sale de ella
         if (enPantalla) ponerPantalla(false);
         pRec.focus({ preventScroll: true }); pRec.scrollIntoView({ block: 'nearest' }); return true;
-      case 'tab': { const f = panel.querySelector('button:not([disabled]), summary, input, select'); if (f) { f.focus(); return true; } return false; }
+      case 'tab': { if (enPantalla) return false; const f = panel.querySelector('button:not([disabled]), summary, input, select'); if (f) { f.focus(); return true; } return false; }
       case 'esc':
         // con el puntero tomado, el primer Esc lo suelta (el navegador) y el segundo sale del recorrido; en pantalla
         // completa, el siguiente sale de ella y solo después Esc sale del recorrido
@@ -1426,23 +1433,51 @@ export async function montar(ctx) {
     for (const r of n.recintos || []) if (r.poligono?.length && enPoligono(x, y, r.poligono)) return +r.z_piso_m || 0;
     return 0;
   }
-  function contiene(id, x, y, z, tol = 0) {
-    const n = niveles.get(id);
-    if (!n || id === 'EXT' || !n.contorno?.length || !enPoligono(x, y, n.contorno)) return null;
-    const base = n.z + pisoEn(n, x, y), arriba = id === 'CUB' ? Infinity : n.z + (+n.altura_entrepiso_m || 4.2);
-    return z >= base - tol && z < arriba + tol ? base : null;
+  // distancia de (x, y) al borde del polígono
+  function distBorde(pol, x, y) {
+    let d = Infinity;
+    for (let i = 0, j = pol.length - 1; i < pol.length; j = i++) {
+      const [ax, ay] = pol[j], vx = pol[i][0] - ax, vy = pol[i][1] - ay, t = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / (vx * vx + vy * vy || 1)));
+      d = Math.min(d, Math.hypot(x - ax - t * vx, y - ay - t * vy));
+    }
+    return d;
   }
-  function nivelDeLosOjos(x, y, z) {
+  // tolZ: margen en altura; tolXY > 0: también hasta esa distancia fuera del contorno; < 0: al menos esa distancia adentro
+  function contiene(id, x, y, z, tolZ = 0, tolXY = 0) {
+    const n = niveles.get(id);
+    if (!n || id === 'EXT' || !n.contorno?.length) return null;
+    const dentro = enPoligono(x, y, n.contorno);
+    if (dentro ? tolXY < 0 && distBorde(n.contorno, x, y) < -tolXY : !(tolXY > 0 && distBorde(n.contorno, x, y) <= tolXY)) return null;
+    const base = n.z + pisoEn(n, x, y), arriba = id === 'CUB' ? Infinity : n.z + (+n.altura_entrepiso_m || 4.2);
+    return z >= base - tolZ && z < arriba + tolZ ? base : null;
+  }
+  // con histéresis horizontal: se entra a un nivel 0,4 m adentro de su contorno (y el actual sigue hasta 0,4 m afuera), así
+  // volar pegado a una fachada no arma y desarma el nivel una y otra vez
+  function nivelDeLosOjos(x, y, z, tolXY = -0.4) {
     let mejor = 'EXT', zm = -Infinity;
-    for (const id of ordenNiveles) { const b = contiene(id, x, y, z); if (b != null && b > zm) { zm = b; mejor = id; } }
+    for (const id of ordenNiveles) { const b = contiene(id, x, y, z, 0, tolXY); if (b != null && b > zm) { zm = b; mejor = id; } }
+    return mejor;
+  }
+  // nivel donde aterriza quien deja de volar: el de los ojos o, si los ojos quedan bajo el piso 1 o el bloque técnico, o
+  // sobre la cubierta del bloque técnico, el nivel cuyo contorno contiene el punto, el más cercano en altura
+  function nivelParaBajar(x, y, z) {
+    const id = nivelDeLosOjos(x, y, z, 0);
+    if (id !== 'EXT') return id;
+    let mejor = 'EXT', dm = Infinity;
+    for (const k of ordenNiveles) {
+      const n = niveles.get(k);
+      if (k === 'EXT' || !n.contorno?.length || !enPoligono(x, y, n.contorno)) continue;
+      const base = n.z + pisoEn(n, x, y), arriba = k === 'CUB' ? Infinity : n.z + (+n.altura_entrepiso_m || 4.2), d = z < base ? base - z : z - arriba;
+      if (d < dm) { dm = d; mejor = k; }
+    }
     return mejor;
   }
   function revisarNivelVuelo() {
     const ahora = performance.now();
     if (ahora - tEspectador < 350) return;
     const z = cur.nivel.z + w.h + OJOS;
-    // con histéresis: el nivel actual sigue mientras lo contenga con 0,2 m de margen
-    if (cur.id !== 'EXT' && contiene(cur.id, w.x, w.y, z, 0.2) != null) return;
+    // con histéresis: el nivel actual sigue mientras lo contenga con 0,2 m de margen en altura y 0,4 m afuera del contorno
+    if (cur.id !== 'EXT' && contiene(cur.id, w.x, w.y, z, 0.2, 0.4) != null) return;
     const id = nivelDeLosOjos(w.x, w.y, z);
     if (id === cur.id) return;
     tEspectador = ahora;
@@ -1463,22 +1498,48 @@ export async function montar(ctx) {
     forzar = true;
     st.invalidate();
   }
-  // de vuelta a caminar: dentro de un muro, de un equipo o fuera de la planta, a la celda libre más cercana; bajo el piso
-  // o sobre el cielo raso, de pie en el piso; en el aire bajo el techo (o al aire libre), cae
+  // de vuelta a caminar: sobre un equipo, se queda y cae encima; dentro de un muro o fuera de la planta, a la celda libre
+  // más cercana; bajo el piso o sobre el cielo raso, de pie en el piso; en el aire bajo el techo (o al aire libre), cae. En
+  // la escalera, sobre la parte que queda bajo los pies (no la del tramo de arriba)
   function bajarDelVuelo() {
-    const z = cur.nivel.z + w.h + OJOS, id = nivelDeLosOjos(w.x, w.y, z);
+    const z = cur.nivel.z + w.h + OJOS, id = nivelParaBajar(w.x, w.y, z);
     if (id !== cur.id) ponerEnNivel(id, w.x, w.y, { h: z - OJOS - niveles.get(id).z });
+    const R = cur.rejilla, h = w.h, k = celda(w.x, w.y);
     let x = w.x, y = w.y;
-    if (!cur.rejilla.libre(x, y)) {
-      const c = cur.rejilla.cercana(x, y, 8);
-      if (!c) { const h = w.h; irANivel(cur.id); avisar(`De vuelta a caminar en ${limpio(entradaDe(cur.id).nombre || CORTO_NIVEL[cur.id])}.`); if (CIELO_ABIERTO.has(cur.id) && h > w.h) { w.h = h; w.aire = true; } return; }
+    if (k >= 0 && R.datos[k] === 1 && R.duro[k] !== 1 && R.alto[k] > 0) {
+      const zf = cotaPiso(recintoCelda(k, x, y), x, y), tope = zf + R.alto[k], t = techoPies(x, y, zf);
+      if (h >= tope - 0.02 && t >= tope) {
+        w.hp = zf; w.vz = 0;
+        if (h > tope + 0.02 && h <= t) { w.h = h; w.aire = true; } else { w.h = tope; w.aire = false; }
+        despuesDeMover(true);
+        return;
+      }
+    }
+    if (!R.libre(x, y)) {
+      const c = R.cercana(x, y, 8);
+      if (!c) { irANivel(cur.id); avisar(`De vuelta a caminar en ${limpio(entradaDe(cur.id).nombre || CORTO_NIVEL[cur.id])}.`); if (CIELO_ABIERTO.has(cur.id) && h > w.h) { w.h = h; w.aire = true; } return; }
       [x, y] = c;
     }
-    const h = w.h, zf = sueloEn(x, y);
+    const zf = sueloBajo(x, y, h);
     w.x = x; w.y = y;
     aterrizar(zf);
-    if (h > zf + 0.02 && h <= techo(x, y, zf) - OJOS - CABEZA) { w.h = h; w.aire = true; }
+    if (h > zf + 0.02 && h <= techoPies(x, y, zf)) { w.h = h; w.aire = true; }
     despuesDeMover(true);
+  }
+  // piso bajo los pies de quien llega desde arriba: en la escalera, la parte más alta que no quede por encima de los pies
+  // (si todas quedan encima, la más baja); en lo demás, el piso del recinto
+  function sueloBajo(x, y, h) {
+    const k = celda(x, y);
+    if (k < 0 || cur.rejilla.datos[k] !== 2) return sueloEn(x, y);
+    let debajo = -Infinity, min = Infinity;
+    for (const s of cur.superficies) {
+      const r = s.rect;
+      if (x < r[0] || x > r[2] || y < r[1] || y > r[3]) continue;
+      const z = s.dz + cotaParte(s.p, x, y);
+      if (z <= h + 0.05 && z > debajo) debajo = z;
+      if (z < min) min = z;
+    }
+    return debajo > -Infinity ? debajo : min < Infinity ? min : sueloEn(x, y);
   }
   function rueda(ev) {
     if (!activo || !espectador) return;
@@ -1533,12 +1594,20 @@ export async function montar(ctx) {
       tAyuda = setTimeout(() => { ayudaFs.hidden = true; }, 7000);
       ctl.tomarPuntero({ silencioso: true });
     } else {
-      if (fichaEn) { fichaEn.padre.insertBefore(ficha, fichaEn.sig); fichaEn = null; }
+      if (fichaEn) {
+        fichaEn.padre.insertBefore(ficha, fichaEn.sig); fichaEn = null;
+        // la tarjeta decide si se ve observando el atributo hidden de sus contenedores: mientras la ficha estuvo en el
+        // lateral no lo vio cambiar, así que se repite el valor para que vuelva a mirar
+        const h = ficha.hidden; ficha.hidden = !h; ficha.hidden = h;
+        revisarFicha();
+      }
       lateral.hidden = true; ayudaFs.hidden = true;
       // el Esc que sacó de la pantalla completa no saca del recorrido
       ultimoEsc = performance.now();
     }
-    if (activo) stage.focus({ preventScroll: true });
+    // el foco vuelve al recuadro salvo que la persona ya lo haya llevado a otra parte (I lleva al panel)
+    const a = document.activeElement;
+    if (activo && (on || !a || a === document.body || stage.contains(a))) stage.focus({ preventScroll: true });
     forzar = true;
     st.invalidate(true);
   }
@@ -1591,12 +1660,14 @@ export async function montar(ctx) {
   let ultimaPos = null;
   function salir({ porUsuario = false } = {}) {
     if (!activo) return;
-    if (cur) ultimaPos = { nivel: cur.id, posicion: [w.x, w.y], rumbo_deg: grados(w.yaw), pitch_deg: 0 };
     if (enPantalla) ponerPantalla(false);
+    // volando, primero aterriza: la posición que se guarda es una donde se puede caminar
     if (espectador) {
       espectador = false;
       btnEspectador.setAttribute('aria-pressed', 'false'); ctl.marcar({ espectador: false }); insignia.hidden = true; stage.classList.remove('reco-volando'); ctl.modoEspectador(false);
+      if (cur) bajarDelVuelo();
     }
+    if (cur) ultimaPos = { nivel: cur.id, posicion: [w.x, w.y], rumbo_deg: grados(w.yaw), pitch_deg: 0 };
     activo = false;
     ctl.vaciar();
     ctl.soltarPuntero();
@@ -1623,7 +1694,7 @@ export async function montar(ctx) {
     salir,
     irA: (d) => { if (!activo) entrar(d); else irA(d); },
     alReanudar() { if (activo) { ajustarControles(); forzar = true; st.invalidate(); } },
-    alDetener() { ctl.vaciar(); },
+    alDetener() { ctl.vaciar(); if (enPantalla) ponerPantalla(false); },
     capa: (nombre, on) => ponerCapa(nombre, on),
     estado() {
       if (!cur) return null;
@@ -1645,6 +1716,7 @@ export async function montar(ctx) {
       const k = st.frameFns.indexOf(cuadro);
       if (k >= 0) st.frameFns.splice(k, 1);
       stage.removeEventListener('wheel', rueda);
+      angosto.disconnect();
       document.removeEventListener('fullscreenchange', alCambiarPantalla);
       document.removeEventListener('webkitfullscreenchange', alCambiarPantalla);
       removeEventListener('resize', alCambiarPantalla);

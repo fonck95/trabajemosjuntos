@@ -9,6 +9,8 @@
 const EDITABLE = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
 const MOVER = { KeyW: ['adelante', 1], ArrowUp: ['adelante', 1], KeyS: ['adelante', -1], ArrowDown: ['adelante', -1], KeyA: ['lado', -1], KeyD: ['lado', 1], ArrowLeft: ['giro', 1], ArrowRight: ['giro', -1] };
 const ACCION = { KeyR: 'subir', PageUp: 'subir', KeyF: 'bajar', PageDown: 'bajar', KeyM: 'mapa', KeyI: 'panel', KeyV: 'espectador', KeyP: 'pantalla', Escape: 'esc' };
+// ícono de pantalla completa (cuatro esquinas), en la barra y en la columna táctil
+export const ICONO_PANTALLA = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6V1h5M10 1h5v5M15 10v5h-5M6 15H1v-5"/></svg>';
 // con el foco en un control, Espacio y Enter son del control (activar un botón), no del caminante
 const CONTROL = new Set(['BUTTON', 'A', 'SUMMARY', 'DETAILS']);
 // teclas que solo actúan con el foco dentro del recuadro (6.4)
@@ -35,7 +37,8 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
     if (ev.code === 'Tab' && document.activeElement === stage && !ev.shiftKey) { if (alAccion('tab') !== false) ev.preventDefault(); return; }
     if (ev.code === 'ShiftLeft' || ev.code === 'ShiftRight') { rapido = true; return; }
     if (ev.code === 'Space') {
-      if (CONTROL.has(ev.target?.tagName) || ev.target?.getAttribute?.('role') === 'button') return;
+      // como las flechas (6.4): solo con el foco dentro del recuadro o el puntero tomado; si no, Espacio desplaza la página
+      if ((!dentroRecuadro() && !tomado()) || CONTROL.has(ev.target?.tagName) || ev.target?.getAttribute?.('role') === 'button') return;
       ev.preventDefault();
       if (!ev.repeat) salto = true;
       espacio = true;
@@ -77,7 +80,8 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
     mirada.yaw -= dx * k; mirada.pitch -= dy * k;
   }
   function pArriba(ev) {
-    if (tomado() && ev.button === 0 && activo() && esLienzo(ev.target)) { alSeleccionar({ clientX: ev.clientX, clientY: ev.clientY, centro: true }); return; }
+    // con el puntero tomado el navegador entrega los eventos al elemento del bloqueo (el recuadro), no al lienzo
+    if (tomado() && ev.button === 0 && activo() && (esLienzo(ev.target) || stage.contains(ev.target))) { alSeleccionar({ clientX: ev.clientX, clientY: ev.clientY, centro: true }); return; }
     if (!arrastre || ev.pointerId !== arrastre.id) return;
     const a = arrastre;
     arrastre = null;
@@ -86,13 +90,15 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
   }
   const pCancelar = (ev) => { if (arrastre && ev.pointerId === arrastre.id) arrastre = null; };
   function dobleClic(ev) { if (activo() && esLienzo(ev.target) && fino.matches) tomarPuntero(); }
-  const alBloqueo = () => { vaciar(); alAccion('puntero', tomado()); };
+  const alBloqueo = () => { vaciar(); if (tomado()) negado = false; alAccion('puntero', tomado()); };
+  const alErrorBloqueo = () => { negado = true; };
 
   // ---- Pointer Lock (puede estar bloqueado en un iframe o un Artifact: entonces sigue el arrastre); silencioso: sin aviso
   // si el navegador no lo da (al entrar en pantalla completa se intenta sin que la persona lo pida)
+  let negado = false;   // el navegador ya negó el puntero (un iframe sin permiso): no se reintenta solo
   function tomarPuntero({ silencioso = false } = {}) {
-    if (!fino.matches || !stage.requestPointerLock || tomado()) return tomado();
-    const fallo = () => { if (!silencioso) alAccion('puntero_bloqueado'); };
+    if (!fino.matches || !stage.requestPointerLock || tomado() || (silencioso && negado)) return tomado();
+    const fallo = () => { negado = true; if (!silencioso) alAccion('puntero_bloqueado'); };
     try {
       const r = stage.requestPointerLock();
       if (r && typeof r.catch === 'function') r.catch(fallo);
@@ -129,7 +135,7 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
   // tiene lugar para ellos), saltar (en el espectador, subir) y bajar (solo en el espectador)
   const botones = document.createElement('div');
   botones.className = 'reco-saltos';
-  botones.innerHTML = `<button type="button" class="reco-b-fs" aria-label="Pantalla completa" aria-pressed="false">⛶</button>
+  botones.innerHTML = `<button type="button" class="reco-b-fs" aria-label="Pantalla completa" aria-pressed="false">${ICONO_PANTALLA}</button>
     <button type="button" class="reco-b-esp" aria-label="Modo espectador" aria-pressed="false">Vuelo</button>
     <button type="button" class="reco-b-sube" aria-label="Saltar">⤒</button><button type="button" class="reco-b-baja" aria-label="Bajar" hidden>⤓</button>`;
   contenedorJoystick?.append(botones);
@@ -152,6 +158,7 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
   window.addEventListener('blur', vaciar);
   document.addEventListener('visibilitychange', alVisibilidad);
   document.addEventListener('pointerlockchange', alBloqueo);
+  document.addEventListener('pointerlockerror', alErrorBloqueo);
   stage.addEventListener('pointerdown', pAbajo);
   window.addEventListener('pointermove', pMover);
   window.addEventListener('pointerup', pArriba);
@@ -177,7 +184,7 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
     soltarPuntero,
     tomado,
     tactil: () => grueso.matches,
-    puedeBloquear: () => fino.matches && !!stage.requestPointerLock,
+    puedeBloquear: () => fino.matches && !!stage.requestPointerLock && !negado,
     mostrarJoystick(on) { joyEl.hidden = botones.hidden = !on; if (!on) { joy.x = joy.y = 0; joy.id = null; tactil.arriba = tactil.abajo = false; ponerPomo(); } },
     // en el espectador, el botón de saltar sube y aparece el de bajar
     modoEspectador(on) { bBaja.hidden = !on; bSube.setAttribute('aria-label', on ? 'Subir' : 'Saltar'); if (!on) tactil.abajo = false; },
@@ -193,6 +200,7 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
       window.removeEventListener('blur', vaciar);
       document.removeEventListener('visibilitychange', alVisibilidad);
       document.removeEventListener('pointerlockchange', alBloqueo);
+      document.removeEventListener('pointerlockerror', alErrorBloqueo);
       stage.removeEventListener('pointerdown', pAbajo);
       window.removeEventListener('pointermove', pMover);
       window.removeEventListener('pointerup', pArriba);
