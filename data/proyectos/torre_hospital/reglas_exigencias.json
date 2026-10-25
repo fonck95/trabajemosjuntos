@@ -1,0 +1,1309 @@
+{
+ "id": "reglas_exigencias",
+ "version": 1,
+ "fecha": "2026-10-24",
+ "descripcion": "Insumo escrito a mano para scripts/torre/normalizar_exigencias.py (contrato, 4.2): la tabla cerrada que traduce cada servicio de las investigaciones de la Res. 3100 al servicio del programa, la escala única de verificación y, por exigencia, la regla de cumplimiento y los ítems que la cubren cuando no se pudieron resolver por nombre. Cada regla cita la exigencia por id y por origen; cada línea citada trae su nombre.",
+ "escala_verificacion": {
+  "fragmento_normograma": "literal_compilacion",
+  "literal_confirmado": "literal_compilacion",
+  "contenido_confirmado_redaccion_por_confirmar": "contenido_compilacion",
+  "fragmento_fuente_secundaria": "fuente_secundaria",
+  "solo_fuente_secundaria": "fuente_secundaria",
+  "parafrasis_por_confirmar": "por_confirmar",
+  "por_confirmar": "por_confirmar"
+ },
+ "archivos": [
+  {"archivo": "res3100_urgencias_e_internacion.json", "campo_verificacion": "nivel_verificacion", "todos": null},
+  {"archivo": "res3100_consulta_y_ambulatorio.json", "campo_verificacion": "verificacion_texto", "todos": "C"},
+  {"archivo": "res3100_apoyo_diagnostico.json", "campo_verificacion": "verificacion_texto", "todos": "A"}
+ ],
+ "servicio_a_programa": {
+  "res3100_urgencias_e_internacion.json": {
+   "urgencias": {
+    "srv": "URG",
+    "servicio": "urgencias",
+    "matriz": "urgencias",
+    "servicios_programa": ["Urgencias"],
+    "numeral_grupo": "11.6.1",
+    "codigo_reps": "1102"
+   },
+   "hospitalizacion": {
+    "srv": "HOS",
+    "servicio": "hospitalizacion",
+    "matriz": "hospitalizacion",
+    "servicios_programa": ["Hospitalización (adultos, pediatría y obstetricia)"],
+    "numeral_grupo": "11.4.1",
+    "codigo_reps": "129 (adultos) y 130 (pediátrica)"
+   },
+   "partos": {
+    "srv": "PAR",
+    "servicio": "partos",
+    "matriz": "partos",
+    "servicios_programa": ["Atención del parto (TPR)"],
+    "numeral_grupo": "11.6.4",
+    "codigo_reps": "1101"
+   },
+   "esterilizacion": {
+    "srv": "EST",
+    "servicio": "esterilizacion",
+    "matriz": "esterilizacion",
+    "servicios_programa": ["Esterilización (reprocesamiento de dispositivos médicos)"],
+    "numeral_grupo": "11.1",
+    "codigo_reps": null
+   },
+   "expansion_emergencias": {
+    "srv": "EXP",
+    "servicio": "expansion_emergencias",
+    "matriz": "sala_expansion",
+    "servicios_programa": ["Zona de expansión, telesalud y coordinación asistencial"],
+    "numeral_grupo": null,
+    "codigo_reps": null
+   }
+  },
+  "res3100_consulta_y_ambulatorio.json": {
+   "consulta_externa": {
+    "srv": "CEX",
+    "servicio": "consulta_externa",
+    "matriz": "consulta_externa",
+    "servicios_programa": [
+     "Consulta externa",
+     "Consulta externa: salud oral, salud mental, nutrición y telemedicina (piso 4)",
+     "Toma de muestras de cuello uterino y ginecológicas"
+    ],
+    "numeral_grupo": "11.2.1",
+    "codigo_reps": "328 (medicina general), 312 (enfermería) y 344 (ginecobstetricia por brigadas)"
+   },
+   "odontologia": {
+    "srv": "ODO",
+    "servicio": "odontologia",
+    "matriz": "odontologia",
+    "servicios_programa": ["Odontología y radiología odontológica"],
+    "numeral_grupo": "11.2.1",
+    "codigo_reps": "334"
+   },
+   "telemedicina": {
+    "srv": "TEL",
+    "servicio": "telemedicina",
+    "matriz": "telemedicina",
+    "servicios_programa": ["Consulta externa: salud oral, salud mental, nutrición y telemedicina (piso 4)"],
+    "numeral_grupo": "11.1.3",
+    "codigo_reps": null
+   },
+   "vacunacion": {
+    "srv": "VAC",
+    "servicio": "vacunacion",
+    "matriz": "vacunacion",
+    "servicios_programa": ["Vacunación"],
+    "numeral_grupo": "11.2.3",
+    "codigo_reps": "420"
+   },
+   "farmacia": {
+    "srv": "FAR",
+    "servicio": "farmacia",
+    "matriz": "farmacia",
+    "servicios_programa": ["Servicio farmacéutico"],
+    "numeral_grupo": "11.3.2",
+    "codigo_reps": "714"
+   },
+   "terapias": {
+    "srv": "TER",
+    "servicio": "terapias",
+    "matriz": "terapias",
+    "servicios_programa": ["Terapias (fisioterapia y terapia respiratoria)"],
+    "numeral_grupo": "11.3.1",
+    "codigo_reps": "739 (fisioterapia) y 729 (terapia respiratoria)"
+   }
+  },
+  "res3100_apoyo_diagnostico.json": {
+   "laboratorio": {
+    "srv": "LAB",
+    "servicio": "laboratorio",
+    "matriz": "laboratorio",
+    "servicios_programa": ["Laboratorio clínico"],
+    "numeral_grupo": "11.3.12",
+    "codigo_reps": "706"
+   },
+   "toma_muestras": {
+    "srv": "TOM",
+    "servicio": "toma_muestras",
+    "matriz": "toma_muestras",
+    "servicios_programa": ["Toma de muestras de laboratorio clínico"],
+    "numeral_grupo": "11.3.11",
+    "codigo_reps": "712"
+   },
+   "imagenes": {
+    "srv": "IMG",
+    "servicio": "imagenes",
+    "matriz": "imagenes",
+    "servicios_programa": ["Imágenes diagnósticas ionizantes (rayos X)", "Imágenes diagnósticas no ionizantes (ecografía)"],
+    "numeral_grupo": "11.3.4",
+    "codigo_reps": "744 (ionizantes) y 745 (no ionizantes)"
+   },
+   "odontologia": {
+    "srv": "ROD",
+    "servicio": "odontologia",
+    "matriz": "radiologia_odontologica",
+    "servicios_programa": ["Odontología y radiología odontológica"],
+    "numeral_grupo": "11.3.3",
+    "codigo_reps": "748"
+   },
+   "tic_apoyo": {
+    "srv": "TIC",
+    "servicio": "tic_apoyo",
+    "matriz": "tic_apoyo",
+    "servicios_programa": ["Vestíbulo y admisiones", "Apoyo y áreas técnicas del piso 1"],
+    "numeral_grupo": "11.1",
+    "codigo_reps": null
+   }
+  }
+ },
+ "todos_los_servicios": {
+  "C": {"servicio": null, "servicios_programa": [], "numeral_grupo": "11.1"},
+  "A": {"servicio": null, "servicios_programa": [], "numeral_grupo": "11.1"}
+ },
+ "superados": {
+  "res_482": {
+   "buscar": "Res. 482 de 2018",
+   "reemplazo": "Res. 1811 de 2025 (reemplazó a la 482 desde el 6-mar-2026)",
+   "nota": "Se reescribe en todos los campos de texto, salvo en los comentarios que ya explican el reemplazo (traen «1811»)."
+  },
+  "res_1732": {
+   "nota": "El aviso de transición de la Res. 1732 de 2026 de res3100_consulta_y_ambulatorio.json no se propaga: la Res. 2080 del 8-sep-2026 la revocó."
+  }
+ },
+ "vigencia": {
+  "res914": {
+   "vigencia_hasta": "2027-01-02",
+   "vigencia_desde_914": "2027-01-03",
+   "marca": "derogad",
+   "nota": "Exigencias de esterilización cuyos numerales deroga el art. 14 de la Res. 914 de 2025 desde el 3-ene-2027 (ubicación exacta por confirmar)."
+  }
+ },
+ "reglas": [
+  {
+   "id": "EX-URG-001",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[0].exigencias[0]",
+   "regla": {
+    "tipo": "por_puesto",
+    "n_por_puesto": 1,
+    "puestos": [
+     {"fila": 17, "nombre": "Sala de reanimación, 2 camillas", "n": 2},
+     {"fila": 24, "nombre": "Observación adultos hombres, 2 camillas", "n": 2},
+     {"fila": 25, "nombre": "Observación adultos mujeres, 2 camillas", "n": 2},
+     {
+      "fila": 26,
+      "nombre": "Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes",
+      "n": 2
+     },
+     {"fila": 16, "nombre": "Sala de procedimientos (suturas, curaciones)", "n": 1},
+     {"fila": 22, "nombre": "Ambiente individual de aislamiento con baño PMR", "n": 1},
+     {"fila": 18, "nombre": "Atención de enfermedad respiratoria aguda (ERA), 3 sillas", "n": 3},
+     {"fila": 19, "nombre": "Atención de enfermedad diarreica aguda (EDA), 2 camillas", "n": 2}
+    ],
+    "grupos": [
+     {
+      "lineas": [{"linea": "L-urgencias-e-a4d131", "nombre": "Flujómetro de oxígeno con humidificador"}],
+      "infra": ["toma_gases_cabecera"],
+      "puestos": [
+       {"fila": 17, "nombre": "Sala de reanimación, 2 camillas", "n": 2},
+       {"fila": 24, "nombre": "Observación adultos hombres, 2 camillas", "n": 2},
+       {"fila": 25, "nombre": "Observación adultos mujeres, 2 camillas", "n": 2},
+       {
+        "fila": 26,
+        "nombre": "Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes",
+        "n": 2
+       },
+       {"fila": 16, "nombre": "Sala de procedimientos (suturas, curaciones)", "n": 1},
+       {"fila": 22, "nombre": "Ambiente individual de aislamiento con baño PMR", "n": 1},
+       {"fila": 18, "nombre": "Atención de enfermedad respiratoria aguda (ERA), 3 sillas", "n": 3},
+       {"fila": 19, "nombre": "Atención de enfermedad diarreica aguda (EDA), 2 camillas", "n": 2}
+      ]
+     },
+     {
+      "lineas": [
+       {"linea": "L-urgencias-e-077095", "nombre": "Regulador de vacío de pared con frasco (succión por camilla)"},
+       {"linea": "L-urgencias-e-d1b44d", "nombre": "Aspirador de secreciones portátil"}
+      ],
+      "infra": ["toma_gases_cabecera"],
+      "puestos": [
+       {"fila": 17, "nombre": "Sala de reanimación, 2 camillas", "n": 2},
+       {"fila": 24, "nombre": "Observación adultos hombres, 2 camillas", "n": 2},
+       {"fila": 25, "nombre": "Observación adultos mujeres, 2 camillas", "n": 2},
+       {
+        "fila": 26,
+        "nombre": "Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes",
+        "n": 2
+       },
+       {"fila": 16, "nombre": "Sala de procedimientos (suturas, curaciones)", "n": 1},
+       {"fila": 22, "nombre": "Ambiente individual de aislamiento con baño PMR", "n": 1}
+      ]
+     }
+    ]
+   },
+   "nota": "Oxígeno (flujómetro o toma de la cabecera) en cada uno de los 15 puestos; succión (regulador de vacío, toma o aspirador portátil) en los 10 de reanimación, observación, procedimientos y aislamiento. La fila de origen pide en ERA solo oxígeno por silla («10 reguladores de vacío = 2 + 6 + 1 + 1»)."
+  },
+  {
+   "id": "EX-URG-010",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[0].exigencias[9]",
+   "regla": {
+    "tipo": "por_puesto",
+    "n_por_puesto": 1,
+    "puestos": [
+     {"fila": 24, "nombre": "Observación adultos hombres, 2 camillas", "n": 2},
+     {"fila": 25, "nombre": "Observación adultos mujeres, 2 camillas", "n": 2},
+     {
+      "fila": 26,
+      "nombre": "Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes",
+      "n": 2
+     }
+    ],
+    "grupos": [
+     {
+      "lineas": [
+       {"linea": "L-urgencias-m-f2529b", "nombre": "Camilla de observación hidráulica con barandas"},
+       {"linea": "L-urgencias-m-0109ea", "nombre": "Cuna de observación pediátrica"}
+      ]
+     },
+     {
+      "lineas": [{"linea": "L-urgencias-e-a4d131", "nombre": "Flujómetro de oxígeno con humidificador"}],
+      "infra": ["toma_gases_cabecera"]
+     }
+    ]
+   },
+   "nota": "Cada puesto de observación con su camilla (o cuna) y su salida de oxígeno."
+  },
+  {
+   "id": "EX-URG-011",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[0].exigencias[10]",
+   "regla": {
+    "tipo": "por_puesto",
+    "n_por_puesto": 1,
+    "puestos": [{"fila": 17, "nombre": "Sala de reanimación, 2 camillas", "n": 2}],
+    "grupos": [
+     {
+      "lineas": [{"linea": "L-urgencias-m-8a7f4e", "nombre": "Camilla de reanimación rodante con barandas y posiciones"}]
+     },
+     {
+      "lineas": [{"linea": "L-urgencias-m-c9c1ef", "nombre": "Mesa auxiliar rodante en acero inoxidable (sala de reanimación)"}]
+     },
+     {
+      "lineas": [
+       {"linea": "L-urgencias-e-077095", "nombre": "Regulador de vacío de pared con frasco (succión por camilla)"},
+       {"linea": "L-urgencias-e-d1b44d", "nombre": "Aspirador de secreciones portátil"}
+      ]
+     },
+     {
+      "lineas": [{"linea": "L-urgencias-e-73360b", "nombre": "Monitor multiparámetro avanzado con capnografía (reanimación)"}]
+     },
+     {
+      "lineas": [{"linea": "L-urgencias-e-a4d131", "nombre": "Flujómetro de oxígeno con humidificador"}],
+      "infra": ["toma_gases_cabecera"]
+     }
+    ]
+   },
+   "nota": "Por camilla de reanimación: camilla, mesa auxiliar, succión, monitor y oxígeno."
+  },
+  {
+   "id": "EX-URG-015",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[0].exigencias[14]",
+   "regla": {
+    "tipo": "por_puesto",
+    "n_por_puesto": 1,
+    "puestos": [
+     {"fila": 24, "nombre": "Observación adultos hombres, 2 camillas", "n": 2},
+     {"fila": 25, "nombre": "Observación adultos mujeres, 2 camillas", "n": 2},
+     {
+      "fila": 26,
+      "nombre": "Observación pediátrica, 1 camilla y 1 cuna, con área para bañar y vestir lactantes",
+      "n": 2
+     },
+     {"fila": 22, "nombre": "Ambiente individual de aislamiento con baño PMR", "n": 1},
+     {"fila": 27, "nombre": "Baños de observación con ducha (hombres, mujeres, pediátrico; PMR)", "n": 1},
+     {"fila": 17, "nombre": "Sala de reanimación, 2 camillas", "n": 2}
+    ],
+    "grupos": [{"lineas": [], "infra": ["llamado_enfermeria"]}]
+   },
+   "nota": "Un punto de llamado de enfermería por camilla o cuna y uno por baño de pacientes (capa de infraestructura)."
+  },
+  {
+   "id": "EX-URG-018",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[0].exigencias[17]",
+   "regla": {
+    "tipo": "contenido",
+    "dentro_de": {"linea": "L-urgencias-m-11a7bd", "nombre": "Carro de paro (mueble) adulto-pediátrico con tabla de reanimación"},
+    "items": [
+     {"linea": "L-urgencias-e-5feae5", "nombre": "Desfibrilador bifásico con monitor y marcapasos externo"},
+     {"linea": "L-urgencias-e-bd8f3b", "nombre": "Laringoscopio adulto y pediátrico (mango + hojas de fibra óptica)"},
+     {"linea": "L-urgencias-e-ae5241", "nombre": "Resucitador manual adulto, pediátrico y neonatal (juego)"},
+     {"linea": "L-urgencias-e-d1b44d", "nombre": "Aspirador de secreciones portátil"},
+     {"nombre": "Tabla de reanimación"},
+     {"nombre": "Adrenalina"}
+    ],
+    "n": 1
+   },
+   "nota": "Dentro o encima del carro de paro de reanimación (los medicamentos e insumos van en su plantilla de contenido)."
+  },
+  {
+   "id": "EX-URG-013",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[0].exigencias[12]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [{"lineas": [], "infra": ["lavamanos"]}, {"lineas": [], "infra": ["meson_obra"]}]
+   },
+   "nota": "Sala de procedimientos con lavamanos y mesón (capa de infraestructura); el área se verifica en la planta."
+  },
+  {
+   "id": "EX-URG-023",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[0].exigencias[22]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [{"linea": "L-urgencias-x-e5fa23", "nombre": "Termohigrómetro con registro (depósito de medicamentos)"}]
+     }
+    ]
+   },
+   "nota": "Un termohigrómetro en el depósito de medicamentos de urgencias (lo propone el cierre de brechas).",
+   "quitar_cubre_con": ["L-farmacia-e-f64493"]
+  },
+  {
+   "id": "EX-HOS-001",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[0]",
+   "regla": {
+    "tipo": "por_puesto",
+    "n_por_puesto": 1,
+    "puestos": [
+     {"fila": 119, "nombre": "Habitación doble de adultos con baño PMR y guardarropa (2 camas)", "n": 2},
+     {"fila": 120, "nombre": "Habitación individual de aislamiento con baño PMR (1 cama)", "n": 1},
+     {"fila": 122, "nombre": "Habitación doble pediátrica con área para acompañante y baño PMR (2 camas)", "n": 2},
+     {
+      "fila": 123,
+      "nombre": "Habitación doble de obstetricia y posparto, alojamiento conjunto madre y recién nacido (2 camas)",
+      "n": 2
+     }
+    ],
+    "grupos": [
+     {
+      "lineas": [
+       {
+        "linea": "L-hospitalizacion-m-85cc22",
+        "nombre": "Cama hospitalaria eléctrica de 3 funciones con barandas y colchón"
+       },
+       {"linea": "L-hospitalizacion-m-df7d45", "nombre": "Cama pediátrica con barandas altas"},
+       {"linea": "L-hospitalizacion-m-e6a731", "nombre": "Cuna hospitalaria pediátrica"}
+      ]
+     }
+    ]
+   },
+   "nota": "Una cama (o cuna) por cama ofertada en cada habitación."
+  },
+  {
+   "id": "EX-HOS-002",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[1]",
+   "regla": {
+    "tipo": "por_piso",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {
+        "linea": "L-hospitalizacion-m-a7568f",
+        "nombre": "Carro de paro (mueble) adulto-pediátrico para hospitalización"
+       }
+      ]
+     }
+    ],
+    "compartidas": [
+     {
+      "linea": "L-partos-e-3776b1",
+      "nombre": "Desfibrilador bifásico con monitor y marcapasos (piso 3: partos y hospitalización)",
+      "motivo": "Un desfibrilador por piso: el del piso 3 lo comparten partos y hospitalización (dotacion.json)."
+     }
+    ]
+   },
+   "nota": "Un carro de paro por piso del servicio."
+  },
+  {
+   "id": "EX-HOS-004",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[3]",
+   "regla": {
+    "tipo": "por_puesto",
+    "n_por_puesto": 1,
+    "puestos": [
+     {"fila": 119, "nombre": "Habitación doble de adultos con baño PMR y guardarropa (2 camas)", "n": 2},
+     {"fila": 120, "nombre": "Habitación individual de aislamiento con baño PMR (1 cama)", "n": 1},
+     {"fila": 122, "nombre": "Habitación doble pediátrica con área para acompañante y baño PMR (2 camas)", "n": 2},
+     {
+      "fila": 123,
+      "nombre": "Habitación doble de obstetricia y posparto, alojamiento conjunto madre y recién nacido (2 camas)",
+      "n": 2
+     }
+    ],
+    "grupos": [
+     {
+      "lineas": [{"linea": "L-hospitalizacion-e-ef59a4", "nombre": "Flujómetro de oxígeno con humidificador"}],
+      "infra": ["toma_gases_cabecera"]
+     }
+    ]
+   },
+   "nota": "Una salida de oxígeno por cama (flujómetro o toma de la cabecera)."
+  },
+  {
+   "id": "EX-HOS-006",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[5]",
+   "regla": {
+    "tipo": "area_libre_por_puesto",
+    "m2": 7.0,
+    "puestos": [
+     {"fila": 119, "nombre": "Habitación doble de adultos con baño PMR y guardarropa (2 camas)", "n": 2},
+     {
+      "fila": 123,
+      "nombre": "Habitación doble de obstetricia y posparto, alojamiento conjunto madre y recién nacido (2 camas)",
+      "n": 2
+     }
+    ]
+   },
+   "nota": "7 m² libres por cama de adultos (guía secundaria: por confirmar); se calcula con el área libre del recinto."
+  },
+  {
+   "id": "EX-HOS-007",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[6]",
+   "regla": {
+    "tipo": "area_libre_por_puesto",
+    "m2": 6.0,
+    "puestos": [{"fila": 122, "nombre": "Habitación doble pediátrica con área para acompañante y baño PMR (2 camas)", "n": 2}]
+   },
+   "nota": "6 m² libres por cama pediátrica (guía secundaria: por confirmar)."
+  },
+  {
+   "id": "EX-HOS-008",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[7]",
+   "regla": {
+    "tipo": "por_puesto",
+    "n_por_puesto": 1,
+    "puestos": [
+     {"fila": 119, "nombre": "Habitación doble de adultos con baño PMR y guardarropa (2 camas)", "n": 2},
+     {"fila": 120, "nombre": "Habitación individual de aislamiento con baño PMR (1 cama)", "n": 1},
+     {"fila": 122, "nombre": "Habitación doble pediátrica con área para acompañante y baño PMR (2 camas)", "n": 2},
+     {
+      "fila": 123,
+      "nombre": "Habitación doble de obstetricia y posparto, alojamiento conjunto madre y recién nacido (2 camas)",
+      "n": 2
+     }
+    ],
+    "grupos": [{"lineas": [], "infra": ["llamado_enfermeria"]}]
+   },
+   "nota": "Un punto de llamado de enfermería por cama (capa de infraestructura); los de los baños van aparte."
+  },
+  {
+   "id": "EX-HOS-011",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[10]",
+   "regla": {
+    "tipo": "contenido",
+    "dentro_de": {"linea": "L-hospitalizacion-m-a7568f", "nombre": "Carro de paro (mueble) adulto-pediátrico para hospitalización"},
+    "items": [
+     {
+      "linea": "L-hospitalizacion-x-97d759",
+      "nombre": "Laringoscopio adulto y pediátrico (mango + hojas de fibra óptica)"
+     },
+     {"linea": "L-hospitalizacion-x-4a56c2", "nombre": "Resucitador manual adulto, pediátrico y neonatal (juego)"}
+    ],
+    "n": 1
+   },
+   "nota": "El laringoscopio y el resucitador del carro de paro del piso 3 (propuestos en el cierre de brechas)."
+  },
+  {
+   "id": "EX-HOS-016",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[15]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [{"linea": "L-hospitalizacion-x-7a31d8", "nombre": "Termohigrómetro con registro (depósito de medicamentos)"}]
+     }
+    ]
+   },
+   "quitar_cubre_con": ["L-farmacia-e-f64493"]
+  },
+  {
+   "id": "EX-PAR-001",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[0]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [{"lineas": [{"linea": "L-partos-e-a87b50", "nombre": "Cama de partos multiposición para habitación TPR"}]}]
+   }
+  },
+  {
+   "id": "EX-PAR-002",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[1]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [{"lineas": [{"linea": "L-partos-e-06b0ab", "nombre": "Monitor fetal (cardiotocógrafo)"}]}]
+   }
+  },
+  {
+   "id": "EX-PAR-003",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[2]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {"linea": "L-partos-e-b7a265", "nombre": "Lámpara de techo LED para atención del parto (una por habitación TPR)"}
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "EX-PAR-007",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[6]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [{"linea": "L-partos-e-45f6ec", "nombre": "Aspirador de secreciones (adulto y neonatal)"}],
+      "infra": ["toma_gases_cabecera"]
+     }
+    ]
+   },
+   "nota": "Succión para la madre y el recién nacido en cada habitación TPR (aspirador o toma de vacío de la cabecera)."
+  },
+  {
+   "id": "EX-PAR-008",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[7]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [{"linea": "L-partos-e-96f08c", "nombre": "Lámpara de calor radiante (servocuna) para adaptación neonatal"}]
+     }
+    ]
+   }
+  },
+  {
+   "id": "EX-PAR-009",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[8]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {"linea": "L-partos-e-49238b", "nombre": "Báscula pesa bebés digital e infantómetro"},
+       {"linea": "L-partos-x-7f0593", "nombre": "Báscula pesa bebés digital e infantómetro (segundo juego)"}
+      ]
+     }
+    ]
+   },
+   "nota": "Una báscula con infantómetro por área de adaptación (habitación TPR)."
+  },
+  {
+   "id": "EX-PAR-010",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[9]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [{"lineas": [{"linea": "L-partos-x-d65b4f", "nombre": "Cinta métrica (área de adaptación neonatal)"}]}]
+   },
+   "nota": "Una cinta métrica por área de adaptación (la propone el cierre de brechas)."
+  },
+  {
+   "id": "EX-PAR-011",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[10]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {"linea": "L-partos-e-a4f131", "nombre": "Oxímetro de pulso neonatal"},
+       {"linea": "L-partos-x-c4bca5", "nombre": "Oxímetro de pulso neonatal (segundo)"}
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "EX-PAR-012",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[11]",
+   "regla": {
+    "tipo": "total_servicio",
+    "grupos": [
+     {
+      "lineas": [
+       {
+        "linea": "L-partos-e-d181b6",
+        "nombre": "Laringoscopio neonatal y resucitador neonatal con mezclador de oxígeno"
+       },
+       {"linea": "L-partos-x-5f8dba", "nombre": "Laringoscopio neonatal (segundo)"}
+      ],
+      "n": 2
+     }
+    ]
+   },
+   "nota": "Dos laringoscopios neonatales en el servicio (uno por área de adaptación), en el carro de paro con módulo neonatal."
+  },
+  {
+   "id": "EX-PAR-019",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[18]",
+   "regla": {
+    "tipo": "contenido",
+    "dentro_de": {"linea": "L-partos-m-6568c3", "nombre": "Carro de paro (mueble) con módulo neonatal"},
+    "items": [
+     {
+      "linea": "L-partos-e-3776b1",
+      "nombre": "Desfibrilador bifásico con monitor y marcapasos (piso 3: partos y hospitalización)"
+     },
+     {"linea": "L-partos-e-d181b6", "nombre": "Laringoscopio neonatal y resucitador neonatal con mezclador de oxígeno"},
+     {"linea": "L-partos-x-5056eb", "nombre": "Laringoscopio adulto (hojas Macintosh)"},
+     {"linea": "L-partos-x-aeee61", "nombre": "Resucitador manual adulto"}
+    ],
+    "n": 1
+   },
+   "nota": "El carro de partos con elementos para la madre (adulto) y para el recién nacido."
+  },
+  {
+   "id": "EX-PAR-024",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[23]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [{"lineas": [{"linea": "L-partos-x-b38795", "nombre": "Termohigrómetro con registro (depósito de medicamentos)"}]}]
+   },
+   "quitar_cubre_con": ["L-farmacia-e-f64493"]
+  },
+  {
+   "id": "EX-CEX-001",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[0]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {"lineas": [{"linea": "L-consulta_externa-m-ccf62f", "nombre": "Camilla de examen fija tapizada con portarrollo"}]}
+    ]
+   },
+   "nota": "Una camilla de examen en cada consultorio donde se hace examen físico."
+  },
+  {
+   "id": "EX-CEX-002",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[1]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [{"lineas": [{"linea": "L-consulta_externa-m-f6f3b8", "nombre": "Escalerilla de dos pasos"}]}]
+   }
+  },
+  {
+   "id": "EX-CEX-003",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[2]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {"linea": "L-consulta_externa-e-7363db", "nombre": "Tensiómetro aneroide de pared adulto-pediátrico"},
+       {
+        "linea": "L-consulta_externa-e-9b1266",
+        "nombre": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)"
+       }
+      ]
+     }
+    ]
+   },
+   "nota": "Tensiómetro de pared o el del kit de examen en cada consultorio."
+  },
+  {
+   "id": "EX-CEX-005",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[4]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {"linea": "L-consulta_externa-e-a46945", "nombre": "Equipo de órganos de los sentidos de pared"},
+       {
+        "linea": "L-consulta_externa-e-9b1266",
+        "nombre": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)"
+       }
+      ]
+     }
+    ]
+   },
+   "nota": "Otoscopio y oftalmoscopio de pared o el equipo portátil del kit en cada consultorio."
+  },
+  {
+   "id": "EX-CEX-006",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[5]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [{"lineas": [{"linea": "L-consulta_externa-x-73fd72", "nombre": "Martillo de reflejos"}]}]
+   },
+   "nota": "Un martillo de reflejos por consultorio (exigencia por confirmar; lo propone el cierre de brechas)."
+  },
+  {
+   "id": "EX-CEX-008",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[7]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {
+        "linea": "L-consulta_externa-e-9b1266",
+        "nombre": "Kit de examen básico (báscula digital, tensiómetro, fonendoscopio, equipo de órganos portátil, oxímetro de dedo, termómetro infrarrojo, cinta métrica, tallímetro)"
+       }
+      ]
+     },
+     {
+      "lineas": [
+       {"linea": "L-consulta_externa-e-3a8a0b", "nombre": "Báscula pesa bebés digital"},
+       {"linea": "L-consulta_externa-x-ab457a", "nombre": "Báscula pesa bebés digital (adicional)"}
+      ],
+      "ambientes": [
+       {"fila": 67, "nombre": "Consultorio de enfermería (promoción y mantenimiento, control prenatal, crónicos)"},
+       {"fila": 68, "nombre": "Consultorio especializado (ginecobstetricia, pediatría y medicina interna por brigadas)"}
+      ]
+     }
+    ]
+   },
+   "nota": "Báscula de grado médico (la del kit de examen) en cada consultorio, y una báscula pesabebés en cada consultorio que atiende lactantes (3 de enfermería y el especializado: 4; hay 2 en la dotación y el cierre de brechas agrega 2)."
+  },
+  {
+   "id": "EX-CEX-016",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[15]",
+   "regla": {"tipo": "por_recinto", "n": 1, "grupos": [{"lineas": [], "infra": ["lavamanos"]}]},
+   "nota": "Un lavamanos en cada consultorio (capa de infraestructura); el área de 10 m² se verifica en la planta."
+  },
+  {
+   "id": "EX-CEX-017",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[16]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [{"lineas": [], "infra": ["lavamanos"]}, {"lineas": [], "infra": ["meson_obra"]}]
+   },
+   "nota": "Consultorio de procedimientos con lavamanos y mesón con poceta (capa de infraestructura)."
+  },
+  {
+   "id": "EX-ODO-001",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[1].exigencias[0]",
+   "regla": {
+    "tipo": "por_puesto",
+    "n_por_puesto": 1,
+    "puestos": [{"fila": 180, "nombre": "Consultorio odontológico con 3 unidades separadas por barrera", "n": 3}],
+    "grupos": [
+     {
+      "lineas": [
+       {
+        "linea": "L-odontologia-e-25ebf2",
+        "nombre": "Unidad odontológica completa (sillón, lámpara de luz fría, módulo de 3 servicios, escupidera, eyector, jeringa triple, taburete)"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "EX-LAB-002",
+   "origen": "res3100_apoyo_diagnostico.json#servicios[0].exigencias[1]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {
+        "linea": "L-laboratorio-m-7da1bf",
+        "nombre": "Mesones de laboratorio en acero inoxidable o resina con pocetas (módulos de 1,5 m)"
+       }
+      ],
+      "infra": ["meson_obra"]
+     }
+    ]
+   },
+   "nota": "Un mesón en cada ambiente técnico del laboratorio."
+  },
+  {
+   "id": "EX-LAB-005",
+   "origen": "res3100_apoyo_diagnostico.json#servicios[0].exigencias[4]",
+   "regla": {"tipo": "total_servicio", "grupos": [{"lineas": [], "infra": ["lavamanos"]}]},
+   "nota": "Al menos un lavamanos en los ambientes técnicos del laboratorio (capa de infraestructura)."
+  },
+  {
+   "id": "EX-LAB-010",
+   "origen": "res3100_apoyo_diagnostico.json#servicios[0].exigencias[9]",
+   "regla": {
+    "tipo": "total_servicio",
+    "grupos": [
+     {
+      "lineas": [{"linea": "L-laboratorio-e-9fb69d", "nombre": "Microscopio binocular con objetivo de inmersión"}],
+      "n": 4
+     }
+    ]
+   },
+   "nota": "Cuatro microscopios por el menú de pruebas (dato de la revisión)."
+  },
+  {
+   "id": "EX-LAB-014",
+   "origen": "res3100_apoyo_diagnostico.json#servicios[0].exigencias[13]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {
+        "linea": "L-laboratorio-e-3904fd",
+        "nombre": "Termohigrómetros y registradores de temperatura con alarma remota"
+       }
+      ]
+     }
+    ]
+   },
+   "nota": "Un termohigrómetro o registrador en cada nevera, depósito y área técnica donde se guardan reactivos."
+  },
+  {
+   "id": "EX-FAR-002",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[4].exigencias[1]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [{"lineas": [{"linea": "L-farmacia-e-f64493", "nombre": "Termohigrómetros con registro"}]}]
+   },
+   "nota": "Un termohigrómetro en cada ambiente donde se guardan medicamentos (6, con las dos ventanillas de dispensación)."
+  },
+  {
+   "id": "EX-TOM-005",
+   "origen": "res3100_apoyo_diagnostico.json#servicios[1].exigencias[4]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {"linea": "L-toma_muestras-x-e647ac", "nombre": "Termohigrómetro con registro (preparación y envío de muestras)"}
+      ]
+     }
+    ]
+   },
+   "nota": "Termohigrómetro donde se guardan tubos, agujas y lancetas (lo propone el cierre de brechas)."
+  },
+  {
+   "id": "EX-TOM-006",
+   "origen": "res3100_apoyo_diagnostico.json#servicios[1].exigencias[5]",
+   "regla": {"tipo": "por_recinto", "n": 1, "grupos": [{"lineas": [], "infra": ["inodoro"]}]},
+   "nota": "Unidad sanitaria accesible para los pacientes de la toma de muestras (capa de infraestructura)."
+  },
+  {
+   "id": "EX-IMG-006",
+   "origen": "res3100_apoyo_diagnostico.json#servicios[2].exigencias[5]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [{"lineas": [{"linea": "L-imagenes-x-79c582", "nombre": "Casilleros del vestidor de pacientes (módulo de 2 a 4)"}]}]
+   },
+   "nota": "El vestidor de pacientes con casilleros (los casilleros los propone el cierre de brechas)."
+  },
+  {
+   "id": "EX-IMG-010",
+   "origen": "res3100_apoyo_diagnostico.json#servicios[2].exigencias[9]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {
+        "linea": "L-imagenes-x-dc5cf8",
+        "nombre": "Termohigrómetro con registro (almacenamiento de dispositivos médicos)"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "EX-IMG-013",
+   "origen": "res3100_apoyo_diagnostico.json#servicios[2].exigencias[12]",
+   "regla": {"tipo": "por_recinto", "n": 1, "grupos": [{"lineas": [], "infra": ["inodoro"]}]}
+  },
+  {
+   "id": "EX-EST-003",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[3].exigencias[2]",
+   "regla": {"tipo": "por_recinto", "n": 1, "grupos": [{"lineas": [], "infra": ["poceta_aseo"]}]}
+  },
+  {
+   "id": "EX-TER-003",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[5].exigencias[2]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [{"linea": "L-terapias-x-3d0ee9", "nombre": "Flujómetro de oxígeno con humidificador (terapia respiratoria)"}]
+     },
+     {"lineas": [], "infra": ["toma_gases_cabecera"]}
+    ]
+   },
+   "nota": "Oxígeno en la sala de terapia respiratoria: la toma va en la obra (capa de infraestructura) y el flujómetro lo propone el cierre de brechas."
+  },
+  {
+   "id": "EX-TIC-001",
+   "origen": "res3100_apoyo_diagnostico.json#servicios[4].exigencias[0]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {
+        "linea": "L-tic_apoyo-e-64dd81",
+        "nombre": "Computador todo en uno con UPS pequeña para puestos asistenciales y administrativos"
+       }
+      ]
+     }
+    ]
+   },
+   "nota": "Un puesto de registro de la historia clínica (computador) en cada ambiente citado."
+  },
+  {
+   "id": "EX-ODO-010",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[1].exigencias[9]",
+   "regla": {"tipo": "documental"},
+   "misma_que": "EX-ROD-003",
+   "nota": "Licencia de práctica médica del periapical con su estudio de blindaje: documento que tramita la E.S.E. (Res. 1811 de 2025); que exista el equipo no la cumple. Es la misma licencia de EX-ROD-003."
+  },
+  {
+   "id": "EX-TEL-001",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[2].exigencias[0]",
+   "regla": {
+    "tipo": "total_servicio",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [
+       {
+        "linea": "L-telemedicina-e-1464af",
+        "nombre": "Periféricos digitales: dermatoscopio, otoscopio, fonendoscopio y cámara de documentos"
+       }
+      ]
+     }
+    ],
+    "parte_documental": "Documento firmado por un ingeniero biomédico con tarjeta profesional vigente que certifique que los periféricos garantizan la información que necesita el prestador de referencia."
+   },
+   "nota": "Los periféricos están en la dotación; falta el certificado firmado del ingeniero biomédico (documento pendiente)."
+  },
+  {
+   "id": "EX-URG-024",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[0].exigencias[23]",
+   "regla": {"tipo": "documental"},
+   "nota": "Programa de tecnovigilancia (Res. 4816 de 2008): lo elabora la E.S.E.; no es un ítem de compra (comentario de la revisión de la Res. 3100)."
+  },
+  {
+   "id": "EX-HOS-017",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[1].exigencias[16]",
+   "regla": {"tipo": "documental"},
+   "nota": "Programa de tecnovigilancia (Res. 4816 de 2008): lo elabora la E.S.E.; no es un ítem de compra (comentario de la revisión de la Res. 3100).",
+   "misma_que": "EX-URG-024"
+  },
+  {
+   "id": "EX-PAR-025",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[2].exigencias[24]",
+   "regla": {"tipo": "documental"},
+   "nota": "Programa de tecnovigilancia (Res. 4816 de 2008): lo elabora la E.S.E.; no es un ítem de compra (comentario de la revisión de la Res. 3100).",
+   "misma_que": "EX-URG-024"
+  },
+  {
+   "id": "EX-EST-013",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[3].exigencias[12]",
+   "regla": {"tipo": "documental"},
+   "nota": "Programa de tecnovigilancia (Res. 4816 de 2008): lo elabora la E.S.E.; no es un ítem de compra (comentario de la revisión de la Res. 3100).",
+   "misma_que": "EX-URG-024"
+  },
+  {
+   "id": "EX-LAB-015",
+   "origen": "res3100_apoyo_diagnostico.json#servicios[0].exigencias[14]",
+   "regla": {"tipo": "documental"},
+   "misma_que": "EX-TOD-A09",
+   "nota": "Programas de reactivovigilancia y tecnovigilancia del laboratorio: documentos de la E.S.E. (mismo requisito de todos los servicios, EX-TOD-A09)."
+  },
+  {
+   "id": "EX-TOD-C07",
+   "origen": "res3100_consulta_y_ambulatorio.json#requisitos_todos_los_servicios[6]",
+   "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+   "misma_que": "EX-TOD-A06",
+   "nota_fuente_url": "La revisión citó un sitio privado; el mismo texto del criterio 14 (planta eléctrica) está en la compilación del normograma de Supersalud que cita EX-TOD-A06."
+  },
+  {
+   "id": "EX-VAC-006",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[3].exigencias[5]",
+   "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+   "misma_que": "EX-TOD-A06",
+   "nota_fuente_url": "La revisión citó un sitio privado; el mismo texto del criterio 14 (planta eléctrica) está en la compilación del normograma de Supersalud que cita EX-TOD-A06."
+  },
+  {
+   "id": "EX-FAR-006",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[4].exigencias[5]",
+   "fuente_url": "https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm",
+   "misma_que": "EX-TOD-A06",
+   "nota_fuente_url": "La revisión citó un sitio privado; el mismo texto del criterio 14 (planta eléctrica) está en la compilación del normograma de Supersalud que cita EX-TOD-A06."
+  },
+  {
+   "id": "EX-CEX-012",
+   "origen": "res3100_consulta_y_ambulatorio.json#servicios[0].exigencias[11]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [{"linea": "L-consulta_externa-e-e3866e", "nombre": "Electrobisturí para cirugía menor (sala de procedimientos)"}]
+     },
+     {
+      "lineas": [
+       {
+        "linea": "L-consulta_externa-e-a49fa8",
+        "nombre": "Lámpara de procedimientos LED rodable (sala de procedimientos)"
+       }
+      ]
+     },
+     {
+      "lineas": [
+       {
+        "linea": "L-consulta_externa-e-68e09e",
+        "nombre": "Equipo de pequeña cirugía (instrumental) para sala de procedimientos"
+       }
+      ]
+     },
+     {
+      "lineas": [{"linea": "L-consulta_externa-m-cb8cf1", "nombre": "Mesa de Mayo y mesa auxiliar en acero inoxidable"}]
+     },
+     {
+      "lineas": [
+       {
+        "linea": "L-consulta_externa-e-dd859d",
+        "nombre": "Electrocardiógrafo de 12 derivaciones (consulta de crónicos)"
+       }
+      ]
+     }
+    ]
+   },
+   "cubre_con": [
+    {
+     "tipo": "linea",
+     "linea": "L-consulta_externa-e-e3866e",
+     "nombre": "Electrobisturí para cirugía menor (sala de procedimientos)"
+    },
+    {
+     "tipo": "linea",
+     "linea": "L-consulta_externa-e-68e09e",
+     "nombre": "Equipo de pequeña cirugía (instrumental) para sala de procedimientos"
+    }
+   ],
+   "nota": "Los cinco ítems de la fila de origen (electrobisturí, lámpara, pequeña cirugía, mesa de Mayo y electrocardiógrafo), con las líneas de consulta externa, en la sala de procedimientos."
+  },
+  {
+   "id": "EX-EST-012",
+   "origen": "res3100_urgencias_e_internacion.json#servicios[3].exigencias[11]",
+   "regla": {
+    "tipo": "por_recinto",
+    "n": 1,
+    "grupos": [
+     {
+      "lineas": [{"linea": "L-esterilizacion-x-e5faa9", "nombre": "Termohigrómetro con registro (depósito de esterilización)"}]
+     }
+    ]
+   },
+   "quitar_cubre_con": ["L-farmacia-e-f64493"],
+   "nota": "Un termohigrómetro en el depósito de material estéril (lo propone el cierre de brechas): los del servicio farmacéutico están en sus recintos."
+  }
+ ],
+ "servicios_matriz": {
+  "urgencias": {
+   "nombre": "Servicio de urgencias",
+   "codigo_reps": "1102 (por confirmar)",
+   "numeral": "11.6.1",
+   "complejidad": "baja",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.6.1"
+  },
+  "hospitalizacion": {
+   "nombre": "Hospitalización (adultos y pediátrica)",
+   "codigo_reps": "129 y 130 (por confirmar)",
+   "numeral": "11.4.1",
+   "complejidad": "baja",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.4.1"
+  },
+  "partos": {
+   "nombre": "Atención del parto",
+   "codigo_reps": "1101 (por confirmar)",
+   "numeral": "11.6.4",
+   "complejidad": "baja",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.6.4 (cesáreas y alto riesgo se remiten)"
+  },
+  "esterilizacion": {
+   "nombre": "Esterilización",
+   "habilitable": "sin_habilitacion_propia",
+   "marco": "Proceso de la Res. 3100, num. 11.1, hasta el 2-ene-2027; Res. 914 de 2025 desde el 3-ene-2027"
+  },
+  "sala_expansion": {
+   "nombre": "Sala de expansión",
+   "habilitable": "no",
+   "marco": "Res. 2065 de 2025 (sedes transitorias en emergencias); sus exigencias de dotación son por analogía con 11.6.1 y van como referencia"
+  },
+  "consulta_externa": {
+   "nombre": "Consulta externa general",
+   "codigo_reps": "328, 312 y 344 (por confirmar)",
+   "numeral": "11.2.1",
+   "complejidad": "baja",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.2.1; la consulta especializada (11.2.2) sería de mediana complejidad (por confirmar)"
+  },
+  "odontologia": {
+   "nombre": "Odontología general",
+   "codigo_reps": "334 (por confirmar)",
+   "numeral": "11.2.1",
+   "complejidad": "baja",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.2.1"
+  },
+  "telemedicina": {
+   "nombre": "Telemedicina (prestador remisor)",
+   "habilitable": "modalidad",
+   "marco": "Modalidad de prestación, sin código de servicio propio"
+  },
+  "vacunacion": {
+   "nombre": "Vacunación",
+   "codigo_reps": "420 (por confirmar)",
+   "numeral": "11.2.3",
+   "complejidad": "baja",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.2.3"
+  },
+  "farmacia": {
+   "nombre": "Servicio farmacéutico",
+   "codigo_reps": "714 (por confirmar)",
+   "numeral": "11.3.2",
+   "complejidad": "baja",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.3.2"
+  },
+  "terapias": {
+   "nombre": "Terapias (fisioterapia y terapia respiratoria)",
+   "codigo_reps": "739 y 729 (por confirmar)",
+   "numeral": "11.3.1",
+   "complejidad": "no aplica (por confirmar)",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.3.1"
+  },
+  "laboratorio": {
+   "nombre": "Laboratorio clínico",
+   "codigo_reps": "706 (por confirmar)",
+   "numeral": "11.3.12",
+   "complejidad": "por confirmar",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.3.12"
+  },
+  "toma_muestras": {
+   "nombre": "Toma de muestras de laboratorio clínico",
+   "codigo_reps": "712 (por confirmar)",
+   "habilitable": "sin_habilitacion_propia",
+   "marco": "No requiere habilitación propia si el laboratorio de la misma sede toma las muestras (Res. 3100, num. 11.3.12, texto de compilación)"
+  },
+  "imagenes_744": {
+   "nombre": "Imágenes diagnósticas ionizantes (rayos X)",
+   "codigo_reps": "744 (por confirmar)",
+   "numeral": "11.3.4.1",
+   "complejidad": "baja",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.3.4.1"
+  },
+  "imagenes_745": {
+   "nombre": "Imágenes diagnósticas no ionizantes (ecografía)",
+   "codigo_reps": "745 (por confirmar)",
+   "numeral": "11.3.4.2",
+   "complejidad": "mediana",
+   "habilitable": "si",
+   "marco": "La compilación (num. 11.3.4) exige habilitar la ecografía en mediana complejidad"
+  },
+  "radiologia_odontologica": {
+   "nombre": "Radiología odontológica (periapical)",
+   "codigo_reps": "748 (por confirmar)",
+   "numeral": "11.3.3",
+   "complejidad": "por confirmar",
+   "habilitable": "si",
+   "marco": "Res. 3100, num. 11.3.3"
+  },
+  "tic_apoyo": {
+   "nombre": "TIC y apoyo",
+   "habilitable": "no",
+   "marco": "Soporte de los demás servicios (historia clínica y telerradiología)"
+  }
+ },
+ "reglas_formato": {
+  "grupos": "Cada grupo es un conjunto de líneas (y de elementos de la capa de infraestructura) que se cuentan juntos; la exigencia pide «n» por recinto, por puesto o en el servicio de cada grupo.",
+  "por_puesto": "puestos = [{fila, nombre, n}]: n puestos en cada recinto de esa fila; se pide n_por_puesto de cada grupo por puesto.",
+  "contenido": "Los ítems deben estar dentro o encima de una unidad de la línea «dentro_de»; los que solo traen nombre se buscan en su plantilla de implementos.",
+  "area_libre_por_puesto": "Área libre del recinto (planta) dividida por sus puestos, frente a «m2»."
+ },
+ "lineas_compartidas": {
+  "descripcion": "Centrales e instalaciones únicas de la torre que sirven a varios servicios: en la regla total_servicio cuentan aunque su unidad esté fuera de los recintos del servicio (bloque técnico, cuarto de telecomunicaciones). Cualquier otra línea cuenta solo en los recintos del servicio de la exigencia.",
+  "lineas": [
+   {
+    "linea": "L-fijo-f-208a65",
+    "nombre": "Planta eléctrica diésel de 300 kVA con transferencia automática",
+    "motivo": "Planta eléctrica única de la torre (bloque técnico): respalda a todos los servicios."
+   },
+   {
+    "linea": "L-fijo-f-d72e38",
+    "nombre": "UPS central en línea modular de 60 kVA (N+1) para cargas críticas",
+    "motivo": "UPS central de las cargas críticas de todos los pisos (cuarto de telecomunicaciones y UPS del piso 1)."
+   },
+   {
+    "linea": "L-fijo-f-e295f8",
+    "nombre": "Central de gases medicinales: oxígeno, aire medicinal y vacío",
+    "motivo": "Central de gases única (bloque técnico) con red a los servicios que tienen tomas; sus paneles de alarma van por zona."
+   },
+   {
+    "linea": "L-fijo-f-47208b",
+    "nombre": "Generador de oxígeno en sitio (tecnología PSA)",
+    "motivo": "Generador de oxígeno de la central de gases (bloque técnico)."
+   },
+   {
+    "linea": "L-fijo-f-cb541e",
+    "nombre": "Aire acondicionado y ventilación mecánica con control de presiones",
+    "motivo": "Sistema central de climatización de la torre (condensadoras en la cubierta)."
+   },
+   {
+    "linea": "L-fijo-f-7fbf0e",
+    "nombre": "Sistema de llamado de enfermería y códigos de emergencia",
+    "motivo": "Sistema central de llamado con puntos en cada cama y camilla."
+   },
+   {
+    "linea": "L-fijo-f-42ee72",
+    "nombre": "Red de voz y datos (cableado categoría 6A, equipos activos y Wi-Fi)",
+    "motivo": "Red única de la torre."
+   },
+   {"linea": "L-fijo-f-e91681", "nombre": "Detección y alarma de incendio", "motivo": "Sistema único de la torre."},
+   {
+    "linea": "L-tic_apoyo-e-55aca3",
+    "nombre": "PACS/RIS para imágenes con licencias y almacenamiento (telerradiología)",
+    "motivo": "Plataforma única de imágenes (servidor en el cuarto de telecomunicaciones) que usan rayos X, ecografía, periapical y telemedicina."
+   }
+  ]
+ }
+}

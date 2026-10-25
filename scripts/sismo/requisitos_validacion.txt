@@ -1,0 +1,8 @@
+# Requisitos de la validación del motor sísmico con OpenSees (scripts/sismo/validar_opensees.py) y del cálculo de
+# referencia independiente del cubo de prueba (scripts/sismo/referencia_min.py → scripts/fixtures/torre/referencia_min.json,
+# contra el que la prueba R0 compara el motor). No son dependencias del sitio ni del CI: el sitio y
+# los demás scripts del repositorio usan solo la biblioteca estándar.
+#   python3 -m venv /tmp/vo && /tmp/vo/bin/pip install -r scripts/sismo/requisitos_validacion.txt
+# openseespy==3.8.0 equivale a la versión publicada 3.8.0.0 (PEP 440 completa con ceros).
+openseespy==3.8.0
+numpy

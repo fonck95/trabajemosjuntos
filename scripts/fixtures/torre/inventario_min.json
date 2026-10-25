@@ -1,0 +1,137 @@
+{
+ "v": 2,
+ "catalogo": {
+  "camilla_examen": {
+   "f": "camilla",
+   "dim": [0.65, 1.85, 0.75],
+   "b": 0.325,
+   "mont": "piso",
+   "anc": "apoyado",
+   "masa": 40,
+   "hcg": 0.45,
+   "mu": 0.5,
+   "cont": false,
+   "comp": []
+  },
+  "carro_paro": {
+   "f": "carro",
+   "dim": [0.75, 0.55, 1.0],
+   "b": 0.275,
+   "mont": "piso",
+   "anc": "ruedas_con_freno",
+   "masa": 70,
+   "hcg": 0.5,
+   "mu": 0.3,
+   "cont": true,
+   "comp": ["superficie", "cajón 1", "cajón 2", "cajón 3", "cajón 4", "cajón 5", "lateral"]
+  },
+  "desfibrilador": {
+   "f": "biomedico",
+   "dim": [0.32, 0.27, 0.3],
+   "b": 0.135,
+   "mont": "sobre",
+   "anc": "sobre",
+   "masa": 7,
+   "hcg": 0.15,
+   "mu": 0.4,
+   "cont": false,
+   "comp": []
+  }
+ },
+ "lineas": [
+  {
+   "id": "L-consulta_externa-m-2d1bfe",
+   "nombre": "Camilla de examen de prueba",
+   "servicio": "consulta_externa",
+   "tipo": "mobiliario",
+   "cantidad": 1,
+   "modelo3d": "camilla_examen",
+   "clase": {"vigente": "I", "estado": "coherente", "revision": null},
+   "registro": {"requerido": "si", "via": "automatico", "usado_permitido": true},
+   "exigencias": [],
+   "prioridad": "habilitacion",
+   "prioridad_revisada": null,
+   "norma_base": null,
+   "mantenimiento": {"anual_pct": 3, "vida_util_anios": 10, "personal_inscrito_invima": false, "calibracion": false},
+   "componentes": [],
+   "plantilla": null,
+   "precio": 1500000,
+   "rango": [1200000, 1800000],
+   "tipo_precio": "estimacion",
+   "fuentes_precio": ["valor de prueba"],
+   "metodo_precio": "valor de prueba"
+  },
+  {
+   "id": "L-urgencias-m-a3f0fc",
+   "nombre": "Carro de paro de prueba",
+   "servicio": "urgencias",
+   "tipo": "mobiliario",
+   "cantidad": 1,
+   "modelo3d": "carro_paro",
+   "clase": {"vigente": "I", "estado": "coherente", "revision": null},
+   "registro": {"requerido": "si", "via": "automatico", "usado_permitido": true},
+   "exigencias": [{"id": "EX-URG-002", "exigible": "por_confirmar"}],
+   "prioridad": "habilitacion",
+   "prioridad_revisada": null,
+   "norma_base": null,
+   "mantenimiento": {"anual_pct": 3, "vida_util_anios": 10, "personal_inscrito_invima": false, "calibracion": false},
+   "componentes": [],
+   "plantilla": "carro_paro_adulto_pediatrico",
+   "precio": 6000000,
+   "rango": [5000000, 7000000],
+   "tipo_precio": "estimacion",
+   "fuentes_precio": ["valor de prueba"],
+   "metodo_precio": "valor de prueba"
+  },
+  {
+   "id": "L-urgencias-e-2cd8df",
+   "nombre": "Desfibrilador de prueba",
+   "servicio": "urgencias",
+   "tipo": "equipo",
+   "cantidad": 1,
+   "modelo3d": "desfibrilador",
+   "clase": {"vigente": "IIb", "estado": "coherente", "revision": null},
+   "registro": {"requerido": "si", "via": "evaluacion_tecnica", "usado_permitido": false},
+   "exigencias": [{"id": "EX-URG-001", "exigible": "si"}],
+   "prioridad": "habilitacion",
+   "prioridad_revisada": null,
+   "norma_base": null,
+   "mantenimiento": {"anual_pct": 6, "vida_util_anios": 8, "personal_inscrito_invima": true, "calibracion": true},
+   "componentes": [],
+   "plantilla": null,
+   "precio": 29126266,
+   "rango": [26955531, 31297000],
+   "tipo_precio": "referencia_secop_ajustada_ipc",
+   "fuentes_precio": ["valor de prueba"],
+   "metodo_precio": "valor de prueba"
+  }
+ ],
+ "columnas_unidades": [
+  "id",
+  "linea_idx",
+  "piso",
+  "recinto",
+  "x",
+  "y",
+  "z",
+  "rot_z",
+  "apoyo_idx",
+  "dentro_de_idx",
+  "componente_de_idx",
+  "montaje",
+  "estado"
+ ],
+ "unidades": [
+  ["U-consulta_externa-2d1bfe-001", 0, 1, "P1-A000-01", 1.8, 7.3, 0.0, 3.1416, -1, -1, -1, "piso", "en_dotacion"],
+  ["U-urgencias-a3f0fc-001", 1, 1, "P1-A001-01", 6.6, 7.9, 0.0, 3.1416, -1, -1, -1, "piso", "en_dotacion"],
+  ["U-urgencias-2cd8df-001", 2, 1, "P1-A001-01", 6.6, 7.9, 1.0, 3.1416, 1, -1, -1, "sobre", "en_dotacion"]
+ ],
+ "implementos": {
+  "carro_paro_adulto_pediatrico": [{"n": "Tabla de reanimación", "c": 1, "comp": "lateral", "tipo": "dispositivo", "verif": "dato del repositorio"}]
+ },
+ "recintos": {
+  "P1-A000-01": {"estado": {"corte_2026": "cumple", "apertura": "cumple"}, "exig": [], "por_confirmar": 0},
+  "P1-A001-01": {"estado": {"corte_2026": "cumple", "apertura": "cumple"}, "exig": ["EX-URG-001"], "por_confirmar": 1}
+ },
+ "totales": {}
+}

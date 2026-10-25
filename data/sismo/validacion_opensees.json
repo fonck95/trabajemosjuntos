@@ -1,0 +1,654 @@
+{
+ "version": 1,
+ "generado_por": "scripts/sismo/validar_opensees.py",
+ "contrato": "ESPECIFICACION_INTEGRACION.md, 7.9",
+ "entorno": {
+  "openseespy": "3.8.0.0",
+  "numpy": "2.5.4"
+ },
+ "idealizacion": "(modelo 3D, ndm 3, ndf 6; lo mismo que dice ESQUEMA.md):\n- Cada pórtico tiene sus propios nodos (como TABS). Los nodos de cada nivel son esclavos de `rigidDiaphragm 3` con\n  el maestro en el centro de masa: `mass(m, m, 0, 0, 0, Jz)` y `fix(0, 0, 1, 1, 1, 0)`. En los esclavos no se\n  restringe ux, uy ni rz; solo el giro fuera del plano (rx en los pórticos X, ry en los Y). Inercia fuera del plano y\n  torsión de los elementos despreciables (Iy = J = 10⁻⁶·I). Bases empotradas en los 6 gdl.\n- Parte elástica: `ElasticTimoshenkoBeam` con E, G = E/(2(1 + ν)), A, I·factor_fisuracion y Av sobre la longitud\n  flexible L_f; brazos rígidos como `elasticBeamColumn` 10³ veces más rígidos entre el nudo y la cara (no\n  `rigidLink`, que chocaría con el diafragma).\n- Rótulas: `zeroLength` rotacional entre la cara y el nodo interno del elemento elástico, sin Rayleigh, con\n  k0 = 10³·k_e (k_e = 6EI/L_f, o EI/lp en la base de los muros, la misma del motor) y pendiente después de la\n  fluencia b·k0 = α·k_e = H. Simétricas: `Steel01(My_e, k0, b = α/10³)`. Asimétricas (vigas y muros, E3):\n  `Parallel(ElasticPP(k0 − H, My_pos/k0, −My_neg/k0), Elastic(H))`, que es el mismo endurecimiento cinemático\n  bilineal (un resorte elastoplástico perfecto en paralelo con uno elástico: Masing) con fluencia distinta en cada\n  sentido. Los otros 5 gdl de la rótula: `equalDOF` cuando la cara no es esclava del diafragma; si lo es (nudo sin\n  brazo), el nodo interno también es esclavo del mismo diafragma (mismo punto: mismos ux, uy, rz) y uz se une con un\n  resorte de 10¹² kN/m (≥ 10⁵ veces la rigidez axial de cualquier elemento). Motivo, medido en este entorno: con el\n  manejador Transformation, un `equalDOF` cuyo nodo retenido es esclavo de `rigidDiaphragm` da desplazamientos\n  errados (restricciones encadenadas: 112 % de error en un pórtico de prueba).\n- Rayleigh `rayleigh(a0, 0, a1, 0)` con los a0 y a1 del motor (E8); los `zeroLength` no llevan Rayleigh y las\n  columnas de gravedad tampoco (región con factores nulos).\n- P-Delta con columnas de gravedad: por cada nivel j, 4 pilas articuladas (`geomTransf PDelta`, axial alta, flexión\n  despreciable) en CM_j ± r_j en x y en y, r_j = √(Jz_j/m_j), desde el nivel j hasta la base, con W_j/4 cada una y sus\n  nodos esclavos del diafragma de cada nivel.\n- Gravedad con `loadConst -time 0.0`; `integrator Newmark 0.5 0.25`; `constraints Transformation`.\n- Energía amortiguada de OpenSees: a0·∫u̇ᵀMu̇ en los maestros más a1·∫ėᵀK_e ė en la parte elástica de cada elemento,\n  con las velocidades de los extremos que da OpenSees (la misma regla del trapecio del motor).",
+ "criterios": [
+  {
+   "criterio": "Control 1: desplazamientos de OpenSees contra la condensación exacta (sin y con P-Delta)",
+   "valor": 8.903e-06,
+   "tolerancia": 1e-05,
+   "cumple": true,
+   "detalle": "motor contra la exacta: K 1.0e-15, K_PΔ 1.1e-16"
+  },
+  {
+   "criterio": "Control 2: ciclo cuasiestático de la rótula contra la tabla de T7 (y la asimétrica contra el motor)",
+   "valor": 0.001971,
+   "tolerancia": 0.005,
+   "cumple": true,
+   "detalle": ""
+  },
+  {
+   "criterio": "Torre: períodos de los 6 primeros modos",
+   "valor": 0.0005422,
+   "tolerancia": 0.01,
+   "cumple": true,
+   "detalle": ""
+  },
+  {
+   "criterio": "Torre elástica: deriva vectorial máxima por piso",
+   "valor": 0.001617,
+   "tolerancia": 0.03,
+   "cumple": true,
+   "detalle": ""
+  },
+  {
+   "criterio": "Torre elástica: cortante basal pico (Vx, Vy)",
+   "valor": 0.000467,
+   "tolerancia": 0.03,
+   "cumple": true,
+   "detalle": ""
+  },
+  {
+   "criterio": "Torre no lineal: desplazamiento máximo de la cubierta (x, y)",
+   "valor": 0.0008436,
+   "tolerancia": 0.1,
+   "cumple": true,
+   "detalle": ""
+  },
+  {
+   "criterio": "Torre no lineal: deriva vectorial máxima por piso",
+   "valor": 0.001199,
+   "tolerancia": 0.1,
+   "cumple": true,
+   "detalle": ""
+  },
+  {
+   "criterio": "Torre no lineal: elementos que fluyen (índice de Jaccard)",
+   "valor": 1.0,
+   "tolerancia": "≥ 0,8",
+   "cumple": true,
+   "detalle": "motor 155, OpenSees 155, comunes 155"
+  },
+  {
+   "criterio": "Torre no lineal: primera fluencia (s)",
+   "valor": 1.049e-07,
+   "tolerancia": 0.1,
+   "cumple": true,
+   "detalle": "motor 3.390000104904175 s, OpenSees 3.39 s"
+  },
+  {
+   "criterio": "Torre no lineal: energía amortiguada",
+   "valor": 0.0007089,
+   "tolerancia": 0.05,
+   "cumple": true,
+   "detalle": ""
+  }
+ ],
+ "control_1": {
+  "descripcion": "Un piso de 3,5 m, pórticos X-1 (y = 0, columnas 0,40 m), X-2 (y = 6, 0,50 m) y Y-A (x = 0, 0,45 m), vigas 0,30 × 0,50 m, Timoshenko con Av = 5A/6, CM en (2,4; 3,6); cargas F = (100 kN, 50 kN, 30 kN·m) en el CM.",
+  "referencia": "condensación pseudotridimensional exacta armada en este programa (Timoshenko de Przemieniecki, condensación estática y compatibilidad del diafragma; P-Delta con 4 columnas articuladas)",
+  "tolerancia": 1e-05,
+  "casos": [
+   {
+    "p_delta": false,
+    "modelo_opensees": "elástico (rótulas rígidas, como el motor antes de fluir)",
+    "u_exacta": [
+     0.0033827078,
+     0.0049445463,
+     0.00068796741
+    ],
+    "u_opensees": [
+     0.0033827017,
+     0.004944503,
+     0.00068795988
+    ],
+    "u_motor": [
+     0.0033827078,
+     0.0049445463,
+     0.00068796741
+    ],
+    "error_opensees": 8.75812e-06,
+    "error_motor": 2.0410002e-15,
+    "cumple": true
+   },
+   {
+    "p_delta": false,
+    "modelo_opensees": "con las rótulas zeroLength de k0 = 10³·k_e (informativo)",
+    "u_exacta": [
+     0.0033827078,
+     0.0049445463,
+     0.00068796741
+    ],
+    "u_opensees": [
+     0.0033856259,
+     0.0049488442,
+     0.00068860851
+    ],
+    "u_motor": [
+     0.0033827078,
+     0.0049445463,
+     0.00068796741
+    ],
+    "error_opensees": 0.00086921059,
+    "error_motor": 2.0410002e-15,
+    "cumple": true
+   },
+   {
+    "p_delta": true,
+    "modelo_opensees": "elástico (rótulas rígidas, como el motor antes de fluir)",
+    "u_exacta": [
+     0.0034040578,
+     0.0050271162,
+     0.00069917682
+    ],
+    "u_opensees": [
+     0.0034040516,
+     0.0050270715,
+     0.00069916907
+    ],
+    "u_motor": [
+     0.0034040578,
+     0.0050271162,
+     0.00069917682
+    ],
+    "error_opensees": 8.9026059e-06,
+    "error_motor": 1.9841713e-15,
+    "cumple": true
+   },
+   {
+    "p_delta": true,
+    "modelo_opensees": "con las rótulas zeroLength de k0 = 10³·k_e (informativo)",
+    "u_exacta": [
+     0.0034040578,
+     0.0050271162,
+     0.00069917682
+    ],
+    "u_opensees": [
+     0.0034070141,
+     0.0050315577,
+     0.00069983783
+    ],
+    "u_motor": [
+     0.0034040578,
+     0.0050271162,
+     0.00069917682
+    ],
+    "error_opensees": 0.00088351091,
+    "error_motor": 1.9841713e-15,
+    "cumple": true
+   }
+  ],
+  "motor_K_lateral_error": 1.004616e-15,
+  "motor_K_PDelta_error": 1.1270808e-16,
+  "error_con_fuera_del_plano_1e-9": 9.0143606e-09,
+  "cumple": true
+ },
+ "control_2": {
+  "descripcion": "Rótula con My = 100 kN·m, k_e = 10⁴ kN·m/rad, α = 0,03; giro total 0 → 0,030 → −0,030 → 0,030 rad.",
+  "tolerancia": 0.005,
+  "formas": [
+   {
+    "material": "Steel01(My, k0 = 10³·k_e, b = α/10³)",
+    "puntos": [
+     {
+      "theta": 0.01,
+      "M_tabla": 100,
+      "M_opensees": 99.9001,
+      "thp_tabla": 0,
+      "thp_opensees": -1.8634725e-20
+     },
+     {
+      "theta": 0.03,
+      "M_tabla": 105.825,
+      "M_opensees": 105.82233,
+      "thp_tabla": 0.019417,
+      "thp_opensees": 0.019407185
+     },
+     {
+      "theta": 0.019417476,
+      "M_tabla": 0,
+      "M_opensees": 0.1028069,
+      "thp_tabla": 0.019417,
+      "thp_opensees": 0.019407185
+     },
+     {
+      "theta": 0.01,
+      "M_tabla": -94.175,
+      "M_opensees": -93.97787,
+      "thp_tabla": 0.019417,
+      "thp_opensees": 0.019407185
+     },
+     {
+      "theta": -0.03,
+      "M_tabla": -105.825,
+      "M_opensees": -105.82233,
+      "thp_tabla": -0.019417,
+      "thp_opensees": -0.019407185
+     },
+     {
+      "theta": -0.019417476,
+      "M_tabla": 0,
+      "M_opensees": -0.1028069,
+      "thp_tabla": -0.019417,
+      "thp_opensees": -0.019407185
+     },
+     {
+      "theta": -0.01,
+      "M_tabla": 94.175,
+      "M_opensees": 93.97787,
+      "thp_tabla": -0.019417,
+      "thp_opensees": -0.019407185
+     }
+    ],
+    "error_max": 0.001971303,
+    "cumple": true
+   },
+   {
+    "material": "Parallel(ElasticPP(k0 − H, My/k0, −My/k0), Elastic(H))",
+    "puntos": [
+     {
+      "theta": 0.01,
+      "M_tabla": 100,
+      "M_opensees": 99.9001,
+      "thp_tabla": 0,
+      "thp_opensees": 0.0
+     },
+     {
+      "theta": 0.03,
+      "M_tabla": 105.825,
+      "M_opensees": 105.82233,
+      "thp_tabla": 0.019417,
+      "thp_opensees": 0.019407767
+     },
+     {
+      "theta": 0.019417476,
+      "M_tabla": 0,
+      "M_opensees": 0.1028069,
+      "thp_tabla": 0.019417,
+      "thp_opensees": 0.019407767
+     },
+     {
+      "theta": 0.01,
+      "M_tabla": -94.175,
+      "M_opensees": -93.97787,
+      "thp_tabla": 0.019417,
+      "thp_opensees": 0.019407767
+     },
+     {
+      "theta": -0.03,
+      "M_tabla": -105.825,
+      "M_opensees": -105.82233,
+      "thp_tabla": -0.019417,
+      "thp_opensees": -0.019407767
+     },
+     {
+      "theta": -0.019417476,
+      "M_tabla": 0,
+      "M_opensees": -0.1028069,
+      "thp_tabla": -0.019417,
+      "thp_opensees": -0.019407767
+     },
+     {
+      "theta": -0.01,
+      "M_tabla": 94.175,
+      "M_opensees": 93.97787,
+      "thp_tabla": -0.019417,
+      "thp_opensees": -0.019407767
+     }
+    ],
+    "error_max": 0.001971303,
+    "cumple": true
+   }
+  ],
+  "asimetrica": {
+   "My_pos": 100.0,
+   "My_neg": 60.0,
+   "theta": [
+    0.01,
+    0.03,
+    -0.03,
+    0.03,
+    -0.012,
+    0.0
+   ],
+   "M_motor": [
+    100,
+    105.82524,
+    -66.990291,
+    105.82524,
+    -61.747573,
+    58.252427
+   ],
+   "M_opensees": [
+    99.9001,
+    105.82233,
+    -66.988544,
+    105.82233,
+    -61.745825,
+    58.134295
+   ],
+   "error_max": 0.0011813255,
+   "cumple": true
+  },
+  "cumple": true
+ },
+ "torre": {
+  "estructura": {
+   "ruta": "data/sismo/torre_hospital_estructura.json",
+   "id": "torre_hospital",
+   "sha1": "bbbee157cedf27180c9a36b9c7b1d5bd65f96a6f"
+  },
+  "amortiguamiento": {
+   "a0": 1.14697,
+   "a1": 0.00120917,
+   "periodos_ancla_s": [
+    0.45618,
+    0.09124
+   ],
+   "xi_modos": [
+    0.0499999,
+    0.049205,
+    0.046088,
+    0.0427015,
+    0.0457956,
+    0.0494335,
+    0.0698253,
+    0.0801383,
+    0.0899903,
+    0.0972733,
+    0.111793,
+    0.126289
+   ],
+   "regla": "periodos_ancla_s de la estructura"
+  },
+  "modos": {
+   "periodos_motor_s": [
+    0.456179,
+    0.445251,
+    0.40075,
+    0.119725,
+    0.105026,
+    0.0928244
+   ],
+   "periodos_opensees_s": [
+    0.456426,
+    0.445449,
+    0.400923,
+    0.119762,
+    0.10505,
+    0.0928421
+   ],
+   "periodos_eigen_opensees_s": [
+    0.456426,
+    0.445449,
+    0.400923,
+    0.119762,
+    0.10505,
+    0.0928421
+   ],
+   "error_periodos": [
+    0.000542234,
+    0.000443972,
+    0.000430654,
+    0.000313116,
+    0.000223548,
+    0.000190159
+   ],
+   "error_periodos_eigen": [
+    0.000542234,
+    0.000443972,
+    0.000430654,
+    0.000313116,
+    0.000223548,
+    0.000190159
+   ],
+   "error_max": 0.000542234,
+   "tolerancia": 0.01,
+   "rigidez_lateral_error_max": 0.000497095,
+   "gravedad": {
+    "u_motor": [
+     1.59378e-06,
+     1.59035e-06,
+     9.66655e-09,
+     5.5989e-06,
+     5.52146e-06,
+     -1.17169e-08,
+     1.15171e-05,
+     1.4362e-05,
+     -1.40642e-07,
+     1.8522e-05,
+     1.48741e-05,
+     -6.57293e-08
+    ],
+    "u_opensees": [
+     1.59262e-06,
+     1.58869e-06,
+     9.79813e-09,
+     5.59248e-06,
+     5.51295e-06,
+     -1.12319e-08,
+     1.15016e-05,
+     1.4344e-05,
+     -1.39676e-07,
+     1.84888e-05,
+     1.48455e-05,
+     -6.41958e-08
+    ]
+   },
+   "cumple": true,
+   "nota": "Períodos con la rigidez inicial después de la gravedad, con P-Delta; los de OpenSees salen de la flexibilidad lateral condensada (3N cargas unitarias en los maestros) y, como control, de eigen."
+  },
+  "elastica": {
+   "escenario": {
+    "id": "nido_2015",
+    "nombre": "Nido de Bucaramanga, como el 10-mar-2015 (por defecto)",
+    "params": {
+     "Mw": 6.2,
+     "profundidad_km": 150,
+     "distancia_epicentral_km": 92,
+     "vs30_m_s": 270,
+     "semilla": 2028
+    }
+   },
+   "opciones": {
+    "dt_s": 0.005,
+    "duracion_s": 22.53,
+    "escala": 1,
+    "factor": 1,
+    "angulo_deg": 0,
+    "calidad": "normal",
+    "p_delta": true
+   },
+   "pga_g": [
+    0.0371017,
+    0.0221512
+   ],
+   "deriva_vector_max": {
+    "motor": [
+     0.000307996,
+     0.000535373,
+     0.000563601,
+     0.000482141
+    ],
+    "opensees": [
+     0.000308494,
+     0.000536228,
+     0.000564475,
+     0.000482752
+    ],
+    "error": [
+     0.00161692,
+     0.00159684,
+     0.00154955,
+     0.00126702
+    ]
+   },
+   "u_max_cubierta": {
+    "motor": [
+     0.00458878,
+     0.00400421
+    ],
+    "opensees": [
+     0.00459326,
+     0.00400987
+    ],
+    "error": [
+     0.000976145,
+     0.00141363
+    ]
+   },
+   "historia_cubierta_error": 0.00578777,
+   "cortante_basal_pico": {
+    "motor_kN": [
+     2941.8,
+     2157.02,
+     9934.45
+    ],
+    "opensees_kN": [
+     2942.79,
+     2158.03,
+     9968.4
+    ],
+    "error": [
+     0.000336221,
+     0.000467041,
+     0.00341788
+    ]
+   },
+   "fluencia": {
+    "motor": 0,
+    "opensees": 0,
+    "comunes": 0,
+    "jaccard": 1.0,
+    "solo_motor": [],
+    "solo_opensees": [],
+    "t_primera_motor_s": null,
+    "t_primera_opensees_s": null,
+    "dif_t_primera_s": null,
+    "dif_t_por_elemento_s": {
+     "mediana": null,
+     "maxima": null,
+     "fraccion_dentro_de_0_1_s": null
+    }
+   },
+   "energia_amortiguada_kJ": {
+    "motor": 28.0774,
+    "opensees": 28.082,
+    "opensees_a0": 23.0866,
+    "opensees_a1": 4.99535,
+    "error": 0.000161425
+   },
+   "energia_histeretica_kJ": {
+    "motor": 0,
+    "opensees": 2.01812e-07,
+    "error": null
+   },
+   "opensees_pasos_rescatados": 0,
+   "opensees_pasos_partidos": 0
+  },
+  "no_lineal": {
+   "escenario": {
+    "id": "local_hip",
+    "nombre": "Sismo local hipotético bajo Yondó",
+    "params": {
+     "Mw": 6,
+     "profundidad_km": 10,
+     "distancia_epicentral_km": 5,
+     "vs30_m_s": 270,
+     "semilla": 2028
+    }
+   },
+   "opciones": {
+    "dt_s": 0.005,
+    "duracion_s": 17.445,
+    "escala": "nsr10",
+    "factor": 2.46211,
+    "angulo_deg": 0,
+    "calidad": "normal",
+    "p_delta": true
+   },
+   "pga_g": [
+    0.561639,
+    0.304145
+   ],
+   "deriva_vector_max": {
+    "motor": [
+     0.00760445,
+     0.00883816,
+     0.00880052,
+     0.00778545
+    ],
+    "opensees": [
+     0.00761357,
+     0.00884724,
+     0.00880789,
+     0.00779129
+    ],
+    "error": [
+     0.00119874,
+     0.00102674,
+     0.000838007,
+     0.000751114
+    ]
+   },
+   "u_max_cubierta": {
+    "motor": [
+     0.103451,
+     0.0403739
+    ],
+    "opensees": [
+     0.103535,
+     0.0403399
+    ],
+    "error": [
+     0.0008136,
+     0.000843637
+    ]
+   },
+   "historia_cubierta_error": 0.00130777,
+   "cortante_basal_pico": {
+    "motor_kN": [
+     21913.0,
+     16968.3,
+     83072.7
+    ],
+    "opensees_kN": [
+     21918.8,
+     16945.6,
+     83183.1
+    ],
+    "error": [
+     0.000264663,
+     0.0013363,
+     0.00132867
+    ]
+   },
+   "fluencia": {
+    "motor": 155,
+    "opensees": 155,
+    "comunes": 155,
+    "jaccard": 1.0,
+    "solo_motor": [],
+    "solo_opensees": [],
+    "t_primera_motor_s": 3.39,
+    "t_primera_opensees_s": 3.39,
+    "dif_t_primera_s": 1.04904e-07,
+    "dif_t_por_elemento_s": {
+     "mediana": 1.52588e-07,
+     "maxima": 0.00500015,
+     "fraccion_dentro_de_0_1_s": 1.0
+    }
+   },
+   "energia_amortiguada_kJ": {
+    "motor": 1759.67,
+    "opensees": 1760.92,
+    "opensees_a0": 1464.14,
+    "opensees_a1": 296.78,
+    "error": 0.000708854
+   },
+   "energia_histeretica_kJ": {
+    "motor": 2953.36,
+    "opensees": 2955.69,
+    "error": 0.000790261
+   },
+   "opensees_pasos_rescatados": 103,
+   "opensees_pasos_partidos": 5
+  }
+ },
+ "cumple_todo": true
+}
