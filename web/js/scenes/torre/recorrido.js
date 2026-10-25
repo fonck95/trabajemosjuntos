@@ -776,12 +776,14 @@ export async function montar(ctx) {
     const padre = (recU && (modelo?.recintos.get(recU)?.padre || (cur.planta.recinto(recU) ? recU : null))) || cur.planta.recintoEn(n.x, n.y) || null;
     const sub = padre ? cur.planta.subrecintoEn(n.x, n.y, padre) : null;
     const z0 = cur.nivel.z + (n.z || 0);
-    // la sala del recinto (objetos pequeños y LOD0) y sus implementos deben estar armados para probar la vista
-    if (padre && padre !== recintoActual) { cur.capa?.entrarRecinto(padre); armarImplementos(padre); recintoActual = padre; subActual = null; }
-    // distancia de (px, py) al borde de la huella girada (0 dentro)
-    const fueraHuella = (px, py) => { const dx = px - n.x, dy = py - n.y, a = Math.abs(dx * lx + dy * ly) - W / 2, b = Math.abs(dx * fx + dy * fy) - D / 2; return Math.hypot(Math.max(0, a), Math.max(0, b)); };
     // lo que va en un núcleo (cabinas de ascensor y montacargas) se mira desde afuera, desde el vestíbulo
     const enNucleo = modelo?.unidad(n.id)?.montaje === 'en_nucleo';
+    // la sala del recinto (objetos pequeños y LOD0) y sus implementos deben estar armados para probar la vista. No la del
+    // núcleo: quien mira queda afuera, en otro recinto, y la unidad se ve como en el resto del piso (LOD1); probada con el
+    // LOD0 del núcleo, el punto de mira podía caer donde el LOD1 no tiene nada (el montacargas visto por su ventanilla)
+    if (padre && padre !== recintoActual && !enNucleo) { cur.capa?.entrarRecinto(padre); armarImplementos(padre); recintoActual = padre; subActual = null; }
+    // distancia de (px, py) al borde de la huella girada (0 dentro)
+    const fueraHuella = (px, py) => { const dx = px - n.x, dy = py - n.y, a = Math.abs(dx * lx + dy * ly) - W / 2, b = Math.abs(dx * fx + dy * fy) - D / 2; return Math.hypot(Math.max(0, a), Math.max(0, b)); };
     const mismoLugar = enNucleo ? () => true : (px, py) => (!padre || cur.planta.recintoEn(px, py) === padre) && (cur.planta.subrecintoEn(px, py, padre) || null) === sub;
     // puntos de mira: el centro (como máximo a 1,2 m de la base) y, si no se ve, puntos de su cara de frente y del medio a
     // varias alturas (una barra de apoyo o una ducha no tienen nada en el centro de su caja)
