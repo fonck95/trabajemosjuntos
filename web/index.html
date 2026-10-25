@@ -398,9 +398,9 @@ details.fold > summary:hover { color: var(--accent); }
 .reco-fundido.on { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .reco-fundido { transition: none; } }
 /* pantalla completa (P): la del navegador o, si no la da, el recuadro fijo sobre la página; la ficha va en un lateral */
-#v-torre .stage.reco-pantalla { height: 100%; border: 0; border-radius: 0; }
-#v-torre .stage.reco-pantalla:fullscreen { width: 100vw; height: 100vh; }
-#v-torre .stage.reco-fs { position: fixed; inset: 0; z-index: 1000; width: auto; height: auto; }
+/* el tamaño va solo con la pantalla completa de verdad (o la simulada): si el estado se desfasara, el recuadro conserva el suyo */
+#v-torre .stage.reco-pantalla:fullscreen { width: 100vw; height: 100vh; border: 0; border-radius: 0; }
+#v-torre .stage.reco-fs { position: fixed; inset: 0; z-index: 1000; width: auto; height: auto; border: 0; border-radius: 0; }
 html.reco-fs-doc, html.reco-fs-doc body { overflow: hidden; }
 #v-torre .stage.reco-pantalla .stage-hint, #v-torre .stage.reco-volando .stage-hint { display: none; }
 /* a la izquierda, bajo la barra: arriba a la derecha van «Rendimiento» y el minimapa */

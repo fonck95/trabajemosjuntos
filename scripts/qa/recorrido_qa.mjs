@@ -983,7 +983,8 @@ async function juego() {
   await pausa(600);
   const fs = await page.evaluate(() => { const st = document.querySelector('#v-torre .stage'); return { w: st.clientWidth, h: st.clientHeight, vw: innerWidth, vh: innerHeight, ficha: !!st.querySelector('.reco-fs-ficha [data-slot="torre.ficha.modo"]') }; });
   comprobar(fs.w >= fs.vw - 2 && fs.h >= fs.vh - 2 && fs.ficha, `pantalla completa: el recuadro ocupa ${fs.w} × ${fs.h} de ${fs.vw} × ${fs.vh} y la ficha pasa a su lateral`);
-  await captura(page, op, 'recorrido-pantalla-completa');
+  // la captura en pantalla completa puede no terminar en Chromium sin pantalla (espera tipografías): no decide la prueba
+  await captura(page, op, 'recorrido-pantalla-completa').catch((err) => console.log(`    aviso: sin captura en pantalla completa (${String(err.message || err).split('\n')[0]})`));
   for (let k = 0; k < 2 && (await page.evaluate(() => document.querySelector('#v-torre .stage').classList.contains('reco-pantalla'))); k++) { await page.keyboard.press('Escape'); await pausa(400); }
   const fin = await page.evaluate(() => ({ pantalla: document.querySelector('#v-torre .stage').classList.contains('reco-pantalla'), completa: !!document.fullscreenElement, ficha: !!document.querySelector('[data-slot="torre.ficha"] > [data-slot="torre.ficha.modo"]') }));
   e = await estado(page);

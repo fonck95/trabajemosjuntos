@@ -1266,6 +1266,7 @@ export async function montar(ctx) {
     const ahora = performance.now(), dt = Math.min(0.25, Math.max(0, (ahora - (tPrev || ahora)) / 1000));
     tPrev = ahora;
     if (!activo || !cur) return false;
+    if (enPantalla && !simulada && !enCompleta()) estadoPantalla(false);
     if (porMedir) recortarEtiquetas();
     let mover = forzar;
     forzar = false;
@@ -1445,7 +1446,7 @@ export async function montar(ctx) {
   // página. En escritorio se toma el puntero (clic en el lienzo para volver a tomarlo) y la ficha de lo tocado pasa a un
   // lateral del recuadro; al salir vuelve a su tarjeta
   const enCompleta = () => (document.fullscreenElement || document.webkitFullscreenElement) === stage;
-  let fichaEn = null, tAyuda = 0;
+  let fichaEn = null, tAyuda = 0, simulada = false;
   function ponerPantalla(on) {
     if (on === enPantalla) return;
     if (!on) {
@@ -1461,12 +1462,16 @@ export async function montar(ctx) {
     // en el mismo gesto: el navegador puede dar el puntero junto con la pantalla completa
     ctl.tomarPuntero({ silencioso: true });
   }
+  // la del navegador manda: si sale de ella sin avisar (o el aviso se pierde), el estado vuelve a cuadrar al primer cuadro,
+  // al cambiar el tamaño de la ventana o con fullscreenchange
   function alCambiarPantalla() {
+    if (enPantalla && simulada) return;
     const fs = enCompleta();
     if (fs !== enPantalla) estadoPantalla(fs);
   }
-  function estadoPantalla(on, simulada = false) {
+  function estadoPantalla(on, sim = false) {
     enPantalla = on;
+    simulada = on && sim;
     stage.classList.toggle('reco-fs', on && simulada);
     document.documentElement.classList.toggle('reco-fs-doc', on && simulada);
     if (!on) stage.classList.remove('reco-fs');
@@ -1492,6 +1497,7 @@ export async function montar(ctx) {
   }
   document.addEventListener('fullscreenchange', alCambiarPantalla);
   document.addEventListener('webkitfullscreenchange', alCambiarPantalla);
+  addEventListener('resize', alCambiarPantalla);
   lateral.querySelector('.reco-fs-cerrar').addEventListener('click', () => { ficha.hidden = true; stage.focus({ preventScroll: true }); });
 
   st.onFrame(cuadro);
@@ -1592,6 +1598,7 @@ export async function montar(ctx) {
       stage.removeEventListener('wheel', rueda);
       document.removeEventListener('fullscreenchange', alCambiarPantalla);
       document.removeEventListener('webkitfullscreenchange', alCambiarPantalla);
+      removeEventListener('resize', alCambiarPantalla);
       ctl.dispose();
       mapa.dispose();
       removeEventListener('scroll', revisarFicha);
