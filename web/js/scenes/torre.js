@@ -302,7 +302,7 @@ export function mount(root) {
   // ---------------------------------------------------------------- modos nuevos (6.8, 8.6 y 10.3)
   const capas = q('capas'), fichaModo = q('ficha.modo'), tarjetaSismo = q('sismo'), pistaEl = el.querySelector('.stage-hint'), pista0 = pistaEl?.textContent;
   const PISTAS = {
-    recorrido: 'W A S D o flechas para caminar · arrastra para mirar · R y F cambian de piso · Esc para salir',
+    recorrido: 'W A S D o flechas para caminar · Espacio salta · arrastra para mirar · V espectador · P pantalla completa · Esc para salir',
     sismo: 'Elige un sismo en el panel y calcula · el deslizador recorre los pasos calculados · toca un elemento para ver sus esfuerzos',
     // --- bim: inicio ---
     bim: 'Arrastra para girar · toca un elemento para ver su ficha · cortes, cimentación, refuerzo, 4D y 5D en el panel',

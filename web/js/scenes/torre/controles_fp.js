@@ -1,12 +1,18 @@
 // Controles en primera persona del recorrido de la torre (equipo C; especificación de integración, 6.4).
 // Teclado (un solo oyente keydown/keyup en window, con ev.code para que sirva con cualquier distribución), ratón (arrastrar
 // para mirar; Pointer Lock opcional con el botón «Mirar con el ratón» o con doble clic, solo en escritorio y si el navegador
-// lo permite), toque (arrastre para mirar y joystick virtual que avanza y gira) y selección por clic corto.
-// No mueve la cámara: entrega intenciones (avanzar, paso lateral, girar, mirar) que el recorrido aplica en su cuadro.
+// lo permite), toque (arrastre para mirar y joystick virtual que avanza y gira, con botones de saltar, subir y bajar) y
+// selección por clic corto. Espacio salta (y sube en el modo espectador, donde Shift baja, como en Minecraft).
+// No mueve la cámara: entrega intenciones (avanzar, paso lateral, girar, mirar, subir o bajar, saltar) que el recorrido
+// aplica en su cuadro.
 
 const EDITABLE = new Set(['INPUT', 'TEXTAREA', 'SELECT']);
 const MOVER = { KeyW: ['adelante', 1], ArrowUp: ['adelante', 1], KeyS: ['adelante', -1], ArrowDown: ['adelante', -1], KeyA: ['lado', -1], KeyD: ['lado', 1], ArrowLeft: ['giro', 1], ArrowRight: ['giro', -1] };
-const ACCION = { KeyR: 'subir', PageUp: 'subir', KeyF: 'bajar', PageDown: 'bajar', KeyM: 'mapa', KeyI: 'panel', Escape: 'esc' };
+const ACCION = { KeyR: 'subir', PageUp: 'subir', KeyF: 'bajar', PageDown: 'bajar', KeyM: 'mapa', KeyI: 'panel', KeyV: 'espectador', KeyP: 'pantalla', Escape: 'esc' };
+// ícono de pantalla completa (cuatro esquinas), en la barra y en la columna táctil
+export const ICONO_PANTALLA = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6V1h5M10 1h5v5M15 10v5h-5M6 15H1v-5"/></svg>';
+// con el foco en un control, Espacio y Enter son del control (activar un botón), no del caminante
+const CONTROL = new Set(['BUTTON', 'A', 'SUMMARY', 'DETAILS']);
 // teclas que solo actúan con el foco dentro del recuadro (6.4)
 const SOLO_RECUADRO = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown']);
 const SENS_RATON = 0.0042, SENS_TOQUE = 0.0065, SENS_BLOQUEO = 0.0024, RADIO_JOY = 42;
@@ -15,7 +21,8 @@ const SENS_RATON = 0.0042, SENS_TOQUE = 0.0065, SENS_BLOQUEO = 0.0024, RADIO_JOY
 //       contenedorJoystick (elemento del HUD donde va el joystick) }
 export function crearControles({ stage, activo, alSeleccionar, alAccion, contenedorJoystick }) {
   const teclas = new Map();          // code → [eje, signo]
-  let rapido = false;
+  let rapido = false, espacio = false, salto = false;
+  const tactil = { arriba: false, abajo: false };
   const mirada = { yaw: 0, pitch: 0 };
   const joy = { x: 0, y: 0, id: null };
   let arrastre = null;               // { id, x, y, t, movido }
@@ -29,6 +36,14 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
     if (SOLO_RECUADRO.has(ev.code) && !dentroRecuadro()) return;
     if (ev.code === 'Tab' && document.activeElement === stage && !ev.shiftKey) { if (alAccion('tab') !== false) ev.preventDefault(); return; }
     if (ev.code === 'ShiftLeft' || ev.code === 'ShiftRight') { rapido = true; return; }
+    if (ev.code === 'Space') {
+      // como las flechas (6.4): solo con el foco dentro del recuadro o el puntero tomado; si no, Espacio desplaza la página
+      if ((!dentroRecuadro() && !tomado()) || CONTROL.has(ev.target?.tagName) || ev.target?.getAttribute?.('role') === 'button') return;
+      ev.preventDefault();
+      if (!ev.repeat) salto = true;
+      espacio = true;
+      return;
+    }
     const m = MOVER[ev.code];
     if (m) { teclas.set(ev.code, m); ev.preventDefault(); return; }
     const a = ACCION[ev.code];
@@ -40,9 +55,10 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
   }
   function arriba(ev) {
     if (ev.code === 'ShiftLeft' || ev.code === 'ShiftRight') rapido = false;
+    if (ev.code === 'Space') espacio = false;
     teclas.delete(ev.code);
   }
-  const vaciar = () => { teclas.clear(); rapido = false; joy.x = joy.y = 0; arrastre = null; };
+  const vaciar = () => { teclas.clear(); rapido = espacio = salto = false; tactil.arriba = tactil.abajo = false; joy.x = joy.y = 0; arrastre = null; };
   const alVisibilidad = () => { if (document.hidden) vaciar(); };
 
   // ---- ratón y toque sobre el lienzo
@@ -64,7 +80,8 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
     mirada.yaw -= dx * k; mirada.pitch -= dy * k;
   }
   function pArriba(ev) {
-    if (tomado() && ev.button === 0 && activo() && esLienzo(ev.target)) { alSeleccionar({ clientX: ev.clientX, clientY: ev.clientY, centro: true }); return; }
+    // con el puntero tomado el navegador entrega los eventos al elemento del bloqueo (el recuadro), no al lienzo
+    if (tomado() && ev.button === 0 && activo() && (esLienzo(ev.target) || stage.contains(ev.target))) { alSeleccionar({ clientX: ev.clientX, clientY: ev.clientY, centro: true }); return; }
     if (!arrastre || ev.pointerId !== arrastre.id) return;
     const a = arrastre;
     arrastre = null;
@@ -73,16 +90,20 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
   }
   const pCancelar = (ev) => { if (arrastre && ev.pointerId === arrastre.id) arrastre = null; };
   function dobleClic(ev) { if (activo() && esLienzo(ev.target) && fino.matches) tomarPuntero(); }
-  const alBloqueo = () => { vaciar(); alAccion('puntero', tomado()); };
+  const alBloqueo = () => { vaciar(); if (tomado()) negado = false; alAccion('puntero', tomado()); };
+  const alErrorBloqueo = () => { negado = true; };
 
-  // ---- Pointer Lock (puede estar bloqueado en un iframe o un Artifact: entonces sigue el arrastre)
-  function tomarPuntero() {
-    if (!fino.matches || !stage.requestPointerLock) return false;
+  // ---- Pointer Lock (puede estar bloqueado en un iframe o un Artifact: entonces sigue el arrastre); silencioso: sin aviso
+  // si el navegador no lo da (al entrar en pantalla completa se intenta sin que la persona lo pida)
+  let negado = false;   // el navegador ya negó el puntero (un iframe sin permiso): no se reintenta solo
+  function tomarPuntero({ silencioso = false } = {}) {
+    if (!fino.matches || !stage.requestPointerLock || tomado() || (silencioso && negado)) return tomado();
+    const fallo = () => { negado = true; if (!silencioso) alAccion('puntero_bloqueado'); };
     try {
       const r = stage.requestPointerLock();
-      if (r && typeof r.catch === 'function') r.catch(() => alAccion('puntero_bloqueado'));
+      if (r && typeof r.catch === 'function') r.catch(fallo);
       return true;
-    } catch { alAccion('puntero_bloqueado'); return false; }
+    } catch { fallo(); return false; }
   }
   const soltarPuntero = () => { if (tomado()) document.exitPointerLock?.(); };
 
@@ -110,11 +131,34 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
   joyEl.addEventListener('pointerup', joyArriba);
   joyEl.addEventListener('pointercancel', joyArriba);
 
+  // ---- botones táctiles, a la derecha: pantalla completa y modo espectador (en pantallas angostas, donde la barra no
+  // tiene lugar para ellos), saltar (en el espectador, subir) y bajar (solo en el espectador)
+  const botones = document.createElement('div');
+  botones.className = 'reco-saltos';
+  botones.innerHTML = `<button type="button" class="reco-b-fs" aria-label="Pantalla completa" aria-pressed="false">${ICONO_PANTALLA}</button>
+    <button type="button" class="reco-b-esp" aria-label="Modo espectador" aria-pressed="false">Vuelo</button>
+    <button type="button" class="reco-b-sube" aria-label="Saltar">⤒</button><button type="button" class="reco-b-baja" aria-label="Bajar" hidden>⤓</button>`;
+  contenedorJoystick?.append(botones);
+  const bSube = botones.querySelector('.reco-b-sube'), bBaja = botones.querySelector('.reco-b-baja');
+  const bFs = botones.querySelector('.reco-b-fs'), bEsp = botones.querySelector('.reco-b-esp');
+  bFs.addEventListener('click', () => alAccion('pantalla'));
+  bEsp.addEventListener('click', () => alAccion('espectador'));
+  const tocar = (b, clave) => {
+    const fin = (ev) => { tactil[clave] = false; try { b.releasePointerCapture(ev.pointerId); } catch { /* */ } };
+    b.addEventListener('pointerdown', (ev) => { tactil[clave] = true; if (clave === 'arriba') salto = true; try { b.setPointerCapture(ev.pointerId); } catch { /* */ } ev.preventDefault(); });
+    b.addEventListener('pointerup', fin);
+    b.addEventListener('pointercancel', fin);
+    b.addEventListener('contextmenu', (ev) => ev.preventDefault());
+  };
+  tocar(bSube, 'arriba');
+  tocar(bBaja, 'abajo');
+
   window.addEventListener('keydown', abajo);
   window.addEventListener('keyup', arriba);
   window.addEventListener('blur', vaciar);
   document.addEventListener('visibilitychange', alVisibilidad);
   document.addEventListener('pointerlockchange', alBloqueo);
+  document.addEventListener('pointerlockerror', alErrorBloqueo);
   stage.addEventListener('pointerdown', pAbajo);
   window.addEventListener('pointermove', pMover);
   window.addEventListener('pointerup', pArriba);
@@ -122,24 +166,33 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
   stage.addEventListener('dblclick', dobleClic);
 
   return {
-    // intención de este cuadro: ejes en [-1, 1], rapidez y la mirada acumulada (se consume)
+    // intención de este cuadro: ejes en [-1, 1], rapidez, Espacio (o el botón de subir) mantenido, Shift o el botón de bajar
+    // mantenido, si se pidió un salto y la mirada acumulada (el salto y la mirada se consumen)
     leer() {
       let adelante = 0, lado = 0, giro = 0;
       for (const [eje, s] of teclas.values()) { if (eje === 'adelante') adelante += s; else if (eje === 'lado') lado += s; else giro += s; }
       adelante = Math.max(-1, Math.min(1, adelante + joy.y));
       giro = Math.max(-1, Math.min(1, giro - joy.x));
-      const out = { adelante, lado: Math.max(-1, Math.min(1, lado)), giro, rapido, dyaw: mirada.yaw, dpitch: mirada.pitch };
-      mirada.yaw = 0; mirada.pitch = 0;
+      const out = { adelante, lado: Math.max(-1, Math.min(1, lado)), giro, rapido, arriba: espacio || tactil.arriba, abajo: rapido || tactil.abajo, salto,
+        dyaw: mirada.yaw, dpitch: mirada.pitch };
+      mirada.yaw = 0; mirada.pitch = 0; salto = false;
       return out;
     },
-    ocupado: () => teclas.size > 0 || joy.x !== 0 || joy.y !== 0 || mirada.yaw !== 0 || mirada.pitch !== 0,
+    ocupado: () => teclas.size > 0 || espacio || tactil.arriba || tactil.abajo || joy.x !== 0 || joy.y !== 0 || mirada.yaw !== 0 || mirada.pitch !== 0,
     vaciar,
     tomarPuntero,
     soltarPuntero,
     tomado,
     tactil: () => grueso.matches,
-    puedeBloquear: () => fino.matches && !!stage.requestPointerLock,
-    mostrarJoystick(on) { joyEl.hidden = !on; if (!on) { joy.x = joy.y = 0; joy.id = null; ponerPomo(); } },
+    puedeBloquear: () => fino.matches && !!stage.requestPointerLock && !negado,
+    mostrarJoystick(on) { joyEl.hidden = botones.hidden = !on; if (!on) { joy.x = joy.y = 0; joy.id = null; tactil.arriba = tactil.abajo = false; ponerPomo(); } },
+    // en el espectador, el botón de saltar sube y aparece el de bajar
+    modoEspectador(on) { bBaja.hidden = !on; bSube.setAttribute('aria-label', on ? 'Subir' : 'Saltar'); if (!on) tactil.abajo = false; },
+    // estado de los botones de pantalla completa y espectador de la columna táctil
+    marcar({ espectador, pantalla } = {}) {
+      if (espectador != null) bEsp.setAttribute('aria-pressed', String(!!espectador));
+      if (pantalla != null) bFs.setAttribute('aria-pressed', String(!!pantalla));
+    },
     dispose() {
       soltarPuntero();
       window.removeEventListener('keydown', abajo);
@@ -147,12 +200,14 @@ export function crearControles({ stage, activo, alSeleccionar, alAccion, contene
       window.removeEventListener('blur', vaciar);
       document.removeEventListener('visibilitychange', alVisibilidad);
       document.removeEventListener('pointerlockchange', alBloqueo);
+      document.removeEventListener('pointerlockerror', alErrorBloqueo);
       stage.removeEventListener('pointerdown', pAbajo);
       window.removeEventListener('pointermove', pMover);
       window.removeEventListener('pointerup', pArriba);
       window.removeEventListener('pointercancel', pCancelar);
       stage.removeEventListener('dblclick', dobleClic);
       joyEl.remove();
+      botones.remove();
     },
   };
 }

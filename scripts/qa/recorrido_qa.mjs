@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // QA del recorrido en primera persona de la torre (equipo C; contrato de integración 6, 13.3 y 16.6).
 //
-//   PLAYWRIGHT_MODULE=… node scripts/qa/recorrido_qa.mjs --vendor <carpeta> [--salida <carpeta>] [--solo niveles,alcance,unidades,guion,flujo,teclado,presupuesto,salida]
+//   PLAYWRIGHT_MODULE=… node scripts/qa/recorrido_qa.mjs --vendor <carpeta> [--salida <carpeta>] [--solo niveles,alcance,unidades,guion,juego,flujo,teclado,presupuesto,salida]
 //
 // Sirve web/ con scripts/qa/comun.mjs (three y GSAP locales con --vendor), abre index.html?qa=1#torre en Chromium sin pantalla
 // (WebGL por software) y recorre la torre con el teclado y los ganchos __torreQA y __recorridoQA:
@@ -18,6 +18,11 @@
 //     el hueco de la escalera abierta del piso 2; abre las fichas del carro de paro (implementos), de un analizador en
 //     comodato (reactivos), de un panel solar, del manifold de gases y de un lavamanos; usa «Ir a» desde el buscador;
 //     cámara (plano cercano, rumbo tras 60 cuadros, campo horizontal) y selección (clic en muro, arrastre).
+//   · juego: entra caminando desde el corredor a la escalera de evacuación norte del piso 2 (por su puerta); salta (los
+//     pies suben ≈ 1,2 m y vuelven al piso; bajo un dintel se detiene) y queda parado sobre una cama y sobre una fila de
+//     paneles de la terraza; el modo espectador (V) sube con Espacio a través
+//     de la losa al piso 3, vuela en línea recta por donde no se camina y al volver a caminar queda en una celda libre del
+//     piso; pantalla completa (P): el recuadro ocupa la ventana, la ficha pasa a su lateral y Esc devuelve todo.
 //   · flujo: botón «Laboratorio», ficha a la vista tras tocar un equipo (y «Ver ficha» en el teléfono), «Ir a» desde el
 //     buscador y desde «Ir a otro lugar» con el recuadro a la vista y el foco, reactivos en el buscador, faltantes con su
 //     capa, tarjeta de habilitación con recintos y propuestas aparte, y torre.json tarde sin pisos en la selección.
@@ -29,7 +34,7 @@
 import { opciones, servidor, navegador, abrir, esperar, desborde, textosInternos, captura, informe, guardarJSON } from './comun.mjs';
 
 const op = opciones(process.argv.slice(2));
-const solo = new Set(String(op.solo || 'niveles,alcance,unidades,guion,flujo,teclado,presupuesto,salida').split(','));
+const solo = new Set(String(op.solo || 'niveles,alcance,unidades,guion,juego,flujo,teclado,presupuesto,salida').split(','));
 const NIVELES = ['EXT', 'P1', 'P2', 'P3', 'P4', 'BT', 'CUB'];
 const fallas = [], resultado = {};
 const falla = (txt) => { fallas.push(txt); console.log(`  FALLA ${txt}`); };
@@ -145,6 +150,18 @@ async function niveles() {
     const internos = await textosInternos(page, '#v-torre');
     comprobar(!internos.length, `${nombre}: textos sin rutas ni claves internas${internos.length ? `: ${internos.slice(0, 3).join(' | ')}` : ''}`);
     if (!informar(registro, `recorrido ${nombre}`)) falla(`${nombre}: consola con errores`);
+    await cerrar();
+  }
+  // la barra en anchos intermedios de escritorio (con el panel al lado el recuadro queda angosto): ningún botón cortado
+  for (const [ancho, alto] of [[1100, 800], [1200, 800], [760, 900]]) {
+    const { page, cerrar } = await abrir(nav, op, { url: URL0, ventana: { viewport: { width: ancho, height: alto }, deviceScaleFactor: 1 } });
+    await esperar(page, () => window.__torreQA?.listo?.(), { ms: 40000 });
+    await entrar(page);
+    const b = await page.evaluate(() => {
+      const bar = document.querySelector('.reco-barra'), R = bar.getBoundingClientRect(), rend = document.querySelector('#v-torre .hud-btn')?.getBoundingClientRect();
+      return { desborda: bar.scrollWidth > bar.clientWidth + 1, fuera: [...bar.querySelectorAll('button')].filter((x) => x.offsetParent && getComputedStyle(x).display !== 'none').map((x) => [x.textContent.trim() || x.getAttribute('aria-label'), x.getBoundingClientRect()]).filter(([, q]) => q.right > R.right + 0.5 || (rend && q.right > rend.left)).map(([t]) => t) };
+    });
+    comprobar(!b.desborda && !b.fuera.length, `${ancho} × ${alto}: la barra cabe con todos sus botones${b.fuera.length ? ` (cortados: ${b.fuera.join(', ')})` : ''}`);
     await cerrar();
   }
 }
@@ -909,12 +926,146 @@ async function salida() {
   }
 }
 
+// ---------------------------------------------------------------- juego: escalera de evacuación, salto, espectador y pantalla completa
+// mantiene teclas hasta la condición sin vigilar los muros (el espectador los atraviesa); devuelve el último estado
+async function mantener(page, teclas, cond, ms = 30000) {
+  await alRecuadro(page);
+  await page.evaluate(() => document.querySelector('#v-torre .stage').focus({ preventScroll: true }));
+  for (const t of teclas) await page.keyboard.down(t);
+  const t0 = Date.now();
+  let e = null;
+  try { while (Date.now() - t0 < ms) { await pausa(80); e = await estado(page); if (cond(e)) break; } } finally { for (const t of [...teclas].reverse()) await page.keyboard.up(t); }
+  await pausa(80);
+  return estado(page);
+}
+async function juego() {
+  console.log('juego: escalera de evacuación por su puerta, salto, espectador y pantalla completa');
+  const { page, registro, cerrar } = await pagina({ tema: 'claro' });
+  await page.evaluate(() => document.querySelector('#v-torre .stage').scrollIntoView({ block: 'center' }));
+  comprobar(await entrar(page), 'entra al recorrido');
+  // la puerta de la escalera norte del piso 2 está en el muro x = 3,1 (y = 15,3): desde el corredor, caminando al oriente
+  let e = await irA(page, { nivel: 'P2', posicion: [2.3, 15.3], rumbo_deg: 0 });
+  let r = await caminar(page, ['KeyW'], (q) => q.recinto === 'P2-A112-01', { ms: 20000, nombre: 'puerta de la escalera norte' });
+  comprobar(r.cumplio, `entra a la escalera de evacuación norte por su puerta desde el corredor (${nivelTxt(r.e)}, ${r.e.recinto})`);
+  // salto: la altura máxima de los pies en los cuadros que siguen a Espacio
+  e = await irA(page, { nivel: 'P2', entrada: 'ascensores' });
+  await page.evaluate(() => document.querySelector('#v-torre .stage').focus({ preventScroll: true }));
+  const alturas = await page.evaluate(async () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', key: ' ', bubbles: true }));
+    const out = [];
+    for (let k = 0; k < 90; k++) { await new Promise((q) => requestAnimationFrame(q)); out.push(window.__recorridoQA.api.estado().altura); }
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space', key: ' ', bubbles: true }));
+    return out;
+  });
+  const hmax = Math.max(...alturas), hfin = alturas[alturas.length - 1];
+  comprobar(hmax > e.altura + 0.9 && hmax <= e.altura + 1.21 && Math.abs(hfin - e.altura) < 0.01, `salta: los pies llegan a ${hmax.toFixed(2)} m y vuelven al piso (${hfin})`);
+  // bajo el dintel de una puerta (2,10 m) el salto se detiene: los pies no pasan de 2,10 − 1,72 = 0,38 m
+  e = await irA(page, { nivel: 'P2', posicion: [3.1, 15.3], rumbo_deg: 0 });
+  const enVano = await page.evaluate(async () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', key: ' ', bubbles: true }));
+    let m = 0;
+    for (let k = 0; k < 60; k++) { await new Promise((q) => requestAnimationFrame(q)); m = Math.max(m, window.__recorridoQA.api.estado().altura); }
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Space', key: ' ', bubbles: true }));
+    return m;
+  });
+  comprobar(enVano > 0.2 && enVano <= 0.39, `bajo el dintel de la puerta de la escalera el salto se detiene (pies hasta ${enVano.toFixed(2)} m)`);
+  // salta hacia una unidad hasta quedar parado encima: una cama del piso 3 sin nada colgado encima y una fila de paneles
+  // de la terraza (4,20 m bajo el nivel de la cubierta: su altura se mide desde ese piso)
+  async function subirA(id) {
+    e = await irA(page, { unidad: id });
+    const v = await page.evaluate((u) => window.__recorridoQA.unidadVista(u), id);
+    await girarHasta(page, (Math.atan2(v.y - e.posicion[1], v.x - e.posicion[0]) * 180) / Math.PI, 0);
+    const piso = e.altura;
+    // «Ir a» abre la ficha y el foco puede quedar en ella: Espacio solo salta con el foco en el recuadro (como las flechas)
+    await page.evaluate(() => document.querySelector('#v-torre .stage').focus({ preventScroll: true }));
+    for (let k = 0; k < 6; k++) {
+      await page.keyboard.down('KeyW'); await page.keyboard.press('Space'); await pausa(700); await page.keyboard.up('KeyW');
+      // con pocos cuadros por segundo el salto dura más que la pausa: se lee ya en el suelo (o encima)
+      await esperar(page, () => !window.__recorridoQA.api.estado()?.en_el_aire, { ms: 8000 });
+      e = await estado(page);
+      if (e.altura > piso + 0.3 && !e.en_el_aire) break;
+    }
+    return { e, piso, alto: v.dim[2] };
+  }
+  await irA(page, { nivel: 'P3', entrada: 'estacion' });
+  const cama = await page.evaluate(() => {
+    // lo que cuelga sobre la cabeza (como en techosBajos del recorrido): del cielo o de la pared desde 1,80 m, sin las cortinas
+    const Q = window.__recorridoQA, encima = Q.unidades({}).filter((u) => u.nivel === 'P3' && (u.montaje === 'cielo' || u.montaje === 'pared') && u.modelo !== 'riel_cortina')
+      .map((u) => Q.unidadVista(u.id)).filter((v) => v && v.z >= 1.8);
+    return Q.unidades({ texto: 'cama' }).filter((u) => u.nivel === 'P3' && u.montaje === 'piso')
+      .find((u) => { const v = Q.unidadVista(u.id); return v && v.dim[2] < 1.15 && !encima.some((q) => Math.hypot(q.x - v.x, q.y - v.y) < 1.6); });
+  });
+  if (comprobar(!!cama, `hay una cama de piso en el piso 3 sin nada colgado encima (${cama?.id})`)) {
+    const r1 = await subirA(cama.id);
+    comprobar(r1.e.altura > r1.piso + 0.3 && !r1.e.en_el_aire && r1.e.libre && !r1.e.en_muro, `queda parado sobre la cama (pies a ${r1.e.altura} m; libre ${r1.e.libre}, en muro ${r1.e.en_muro})`);
+  }
+  await irA(page, { nivel: 'CUB', entrada: 'terraza' });
+  const fila = await page.evaluate(() => window.__recorridoQA.unidades({ texto: 'fotovolt' }).find((u) => u.nivel === 'CUB' && u.montaje === 'piso' && (window.__recorridoQA.unidadVista(u.id)?.z ?? 0) < -4));
+  if (comprobar(!!fila, `hay una fila de paneles en la terraza (${fila?.id})`)) {
+    const r2 = await subirA(fila.id);
+    comprobar(r2.e.nivel === 'CUB' && r2.e.altura > r2.piso + 0.3 && !r2.e.en_el_aire, `queda parado sobre la fila de paneles de la terraza (pies a ${r2.e.altura} m; piso ${r2.piso} m)`);
+  }
+  // dejar de volar en una escalera: sobre el tramo bajo los pies (el del piso 1, ya en el nivel del piso 2), no sobre el de
+  // arriba (que llevaría al piso 3)
+  e = await irA(page, { nivel: 'P1', posicion: [4.45, 15.3], rumbo_deg: 90 });
+  r = await caminar(page, ['KeyW'], (q) => q.posicion[1] > 20.9, { ms: 30000, nombre: 'juego: escalera tramo 1' });
+  await girarHasta(page, 0);
+  r = await caminar(page, ['KeyW'], (q) => q.posicion[0] > 7.1, { ms: 15000, nombre: 'juego: escalera descanso' });
+  await girarHasta(page, 270);
+  r = await caminar(page, ['KeyW'], (q) => q.nivel === 'P2' && q.posicion[1] < 18.5, { ms: 25000, nombre: 'juego: escalera tramo 2' });
+  const hEsc = r.e.altura;
+  await page.keyboard.press('KeyV'); await cuadros(page, 3); await page.keyboard.press('KeyV'); await pausa(800);
+  e = await estado(page);
+  comprobar(r.cumplio && e.nivel === 'P2' && Math.abs(e.altura - hEsc) < 0.15 && !e.espectador, `al dejar de volar en la escalera queda sobre el tramo bajo los pies (${nivelTxt(e)}; antes a ${hEsc} m)`);
+  // espectador: sube con Espacio a través de la losa al piso 3, vuela al occidente por donde no se camina y aterriza
+  e = await irA(page, { nivel: 'P2', entrada: 'ascensores' });
+  await page.keyboard.press('KeyV');
+  await cuadros(page, 2);
+  comprobar(await page.evaluate(() => document.querySelector('.reco-barra [data-acc="espectador"]').getAttribute('aria-pressed') === 'true'), 'V activa el modo espectador');
+  e = await mantener(page, ['Space'], (q) => q.nivel === 'P3', 40000);
+  comprobar(e.nivel === 'P3', `el espectador sube a través de la losa al piso 3 (${nivelTxt(e)})`);
+  e = await girarHasta(page, 180, 0);
+  const p0 = e.posicion;
+  e = await mantener(page, ['KeyW'], (q) => p0[0] - q.posicion[0] > 6, 40000);
+  const tapados = await page.evaluate(([a, b]) => { let n = 0; for (let t = 0; t <= 1; t += 0.01) if (!window.__recorridoQA.api.libre(a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))) n++; return n; }, [p0, e.posicion]);
+  comprobar(p0[0] - e.posicion[0] > 6 && Math.abs(e.posicion[1] - p0[1]) < 0.05 && tapados > 0 && e.nivel === 'P3', `vuela ${(p0[0] - e.posicion[0]).toFixed(1)} m en línea recta por el piso 3 a través de ${tapados} puntos donde no se camina`);
+  await page.keyboard.press('KeyV');
+  await pausa(1500);
+  e = await estado(page);
+  comprobar(e.nivel === 'P3' && e.libre && !e.en_muro && Math.abs(e.altura) < 0.05, `al volver a caminar queda de pie en una celda libre del piso 3 (${nivelTxt(e)})`);
+  // pantalla completa: el botón, la ficha en el lateral y Esc (el primero puede soltar el puntero). Se entra sin ficha
+  // abierta y se elige algo adentro: al salir, la tarjeta de la ficha debe verse
+  if (cama) await irA(page, { unidad: cama.id });
+  await page.evaluate(() => { const f = document.querySelector('[data-slot="torre.ficha.modo"]'); f.innerHTML = ''; f.hidden = true; });
+  await alRecuadro(page);
+  await page.click('.reco-barra [data-acc="pantalla"]');
+  await esperar(page, () => document.querySelector('#v-torre .stage').classList.contains('reco-pantalla'), { ms: 10000 });
+  await pausa(600);
+  const fs = await page.evaluate(() => { const st = document.querySelector('#v-torre .stage'); return { w: st.clientWidth, h: st.clientHeight, vw: innerWidth, vh: innerHeight, ficha: !!st.querySelector('.reco-fs-ficha [data-slot="torre.ficha.modo"]') }; });
+  comprobar(fs.w >= fs.vw - 2 && fs.h >= fs.vh - 2 && fs.ficha, `pantalla completa: el recuadro ocupa ${fs.w} × ${fs.h} de ${fs.vw} × ${fs.vh} y la ficha pasa a su lateral`);
+  // la captura en pantalla completa puede no terminar en Chromium sin pantalla (espera tipografías): no decide la prueba
+  const elegidaFs = await page.evaluate(() => { const Q = window.__recorridoQA, o = Q.objetivo(), q = o && Q.pantalla(o.punto); if (q) Q.seleccionarEn(q.x, q.y); return Q.ficha()?.unidad || null; });
+  comprobar(!!elegidaFs, `en pantalla completa se elige la cama con un clic (${elegidaFs})`);
+  await captura(page, op, 'recorrido-pantalla-completa').catch((err) => console.log(`    aviso: sin captura en pantalla completa (${String(err.message || err).split('\n')[0]})`));
+  for (let k = 0; k < 2 && (await page.evaluate(() => document.querySelector('#v-torre .stage').classList.contains('reco-pantalla'))); k++) { await page.keyboard.press('Escape'); await pausa(400); }
+  await pausa(200);
+  const fin = await page.evaluate(() => {
+    const slot = document.querySelector('[data-slot="torre.ficha"] > [data-slot="torre.ficha.modo"]');
+    return { pantalla: document.querySelector('#v-torre .stage').classList.contains('reco-pantalla'), completa: !!document.fullscreenElement, ficha: !!slot && !slot.hidden && !document.querySelector('[data-slot="torre.ficha"]').hidden };
+  });
+  e = await estado(page);
+  comprobar(!fin.pantalla && !fin.completa && fin.ficha && !!e, `Esc sale de la pantalla completa, la ficha elegida adentro vuelve a su tarjeta y se ve, y el recorrido sigue (${JSON.stringify(fin)})`);
+  if (!informar(registro, 'recorrido juego')) falla('juego: consola con errores');
+  await cerrar();
+}
+
 await (async () => {
   try {
     if (solo.has('niveles')) await niveles();
     if (solo.has('alcance')) await alcance();
     if (solo.has('unidades')) await unidades();
     if (solo.has('guion')) await guion();
+    if (solo.has('juego')) await juego();
     if (solo.has('flujo')) await flujo();
     if (solo.has('teclado')) await teclado();
     if (solo.has('presupuesto')) await presupuesto();

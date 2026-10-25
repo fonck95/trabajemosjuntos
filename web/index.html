@@ -397,6 +397,32 @@ details.fold > summary:hover { color: var(--accent); }
 .reco-fundido { position: absolute; inset: 0; background: var(--bg); opacity: 0; transition: opacity 0.12s linear; pointer-events: none !important; }
 .reco-fundido.on { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .reco-fundido { transition: none; } }
+/* pantalla completa (P): la del navegador o, si no la da, el recuadro fijo sobre la página; la ficha va en un lateral */
+/* el tamaño va solo con la pantalla completa de verdad (o la simulada): si el estado se desfasara, el recuadro conserva el suyo */
+#v-torre .stage.reco-pantalla:fullscreen { width: 100vw; height: 100vh; border: 0; border-radius: 0; }
+#v-torre .stage.reco-fs { position: fixed; inset: 0; z-index: 1000; width: auto; height: auto; border: 0; border-radius: 0; }
+html.reco-fs-doc, html.reco-fs-doc body { overflow: hidden; }
+#v-torre .stage.reco-pantalla .stage-hint, #v-torre .stage.reco-volando .stage-hint { display: none; }
+/* a la izquierda, bajo la barra: arriba a la derecha van «Rendimiento» y el minimapa */
+.reco-fs-ficha { display: none; position: absolute; top: 84px; left: 10px; bottom: 10px; width: min(380px, calc(100% - 20px)); box-sizing: border-box; overflow: auto; padding: 10px 14px 14px; background: var(--surface); color: var(--ink); border: 1.5px solid var(--ink); border-radius: var(--r); box-shadow: 0 4px 18px color-mix(in srgb, var(--ink) 22%, transparent); }
+.reco-pantalla .reco-fs-ficha:has(> [data-slot]:not([hidden])) { display: block; }
+.reco-fs-cerrar { position: sticky; top: 0; float: right; width: 30px; height: 30px; margin: 0 0 4px 8px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--surface); color: var(--ink); font: 600 1rem/1 var(--f-mono); cursor: pointer; }
+.reco-fs-cerrar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reco-fs-ayuda { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: min(520px, calc(100% - 40px)); box-sizing: border-box; padding: 12px 16px; font: 0.78rem/1.55 var(--f-mono); color: var(--ink); background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: var(--r); pointer-events: none !important; }
+.reco-fs-ayuda p { margin: 0 0 4px; } .reco-fs-ayuda ul { margin: 0; padding-left: 18px; }
+.reco-fs-ayuda kbd { font: inherit; padding: 0 4px; border: 1px solid var(--line); border-radius: 4px; background: var(--raised); }
+/* abajo a la izquierda, donde va la pista del recuadro (que en el espectador se oculta): libre del ascensor y de «Salir» */
+.reco-espectador { position: absolute; left: 12px; bottom: 10px; max-width: calc(100% - 340px); box-sizing: border-box; margin: 0; padding: 3px 10px; font: 600 0.72rem/1.4 var(--f-mono); color: var(--bg); background: var(--ink); border: 1.5px solid var(--accent); border-radius: 8px; pointer-events: none !important; }
+/* columna táctil a la derecha, sobre «Salir del edificio», el ascensor y «Ver ficha» */
+.reco-saltos { position: absolute; right: 12px; bottom: 150px; display: grid; gap: 8px; }
+.reco-saltos button { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--ink); background: color-mix(in srgb, var(--surface) 70%, transparent); color: var(--ink); font: 600 1.2rem/1 var(--f-mono); touch-action: none; cursor: pointer; }
+.reco-saltos .reco-b-esp { font-size: 0.6rem; }
+.reco-saltos button svg, .reco-barra .reco-icono svg { display: block; margin: auto; }
+#v-torre .reco-barra .reco-icono { min-width: 30px; }
+#v-torre .stage.reco-angosto .reco-barra [data-acc="bt"] { display: none; }
+.reco-saltos button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.reco-saltos .reco-b-fs, .reco-saltos .reco-b-esp { display: none; }
+.reco-saltos[hidden], .reco-saltos button[hidden] { display: none; }
 .lbl-room.reco-senal { background: color-mix(in srgb, var(--surface) 86%, transparent); border-left: 3px solid var(--ink); padding: 1px 5px; border-radius: 2px; text-shadow: none; font-size: 9px; }
 .lbl-node.reco-lbl { font-size: 10.5px; }
 /* panel del recorrido */
@@ -464,6 +490,10 @@ ul.hab-unidades li { display: flex; flex-wrap: wrap; align-items: center; gap: 4
   #v-torre .stage.reco-on .stage-hint { display: none; }
   .reco-asc { bottom: 14px; } .reco-salida { bottom: 60px; }
   .reco-asc span { display: none; }
+  .reco-espectador { max-width: calc(100% - 150px); bottom: 136px; }
+  /* la ficha en pantalla completa, como hoja abajo: libre del joystick, de la columna táctil, del ascensor y de «Salir» */
+  .reco-fs-ficha { top: auto; left: 10px; right: 72px; width: auto; bottom: 140px; max-height: 45%; }
+  .reco-saltos .reco-b-fs, .reco-saltos .reco-b-esp { display: block; }
   .reco-filtros { grid-template-columns: minmax(0, 1fr); }
 }
 /* <<< torre-recorrido */
