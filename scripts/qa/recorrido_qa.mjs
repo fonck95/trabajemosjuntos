@@ -322,8 +322,12 @@ async function flujo() {
     await esperar(page, () => !!window.__torreQA?.recorrido?.estado?.(), { ms: 60000 });
     await pausa(600); await cuadros(page, 3);
     let e = await estado(page);
-    const lab = await page.evaluate(() => ({ modo: window.__torreQA.modo(), pulsado: document.querySelector('[data-modo-torre="laboratorio"]').getAttribute('aria-pressed') }));
-    comprobar(lab.modo === 'recorrido' && lab.pulsado === 'true' && e.nivel === 'P2' && dAng(e.rumbo_deg, 270) < 1 && Math.hypot(e.posicion[0] - 3.85, e.posicion[1] + 10.6) < 0.6,
+    // la puerta y el rumbo salen de la planta (entradas_recorrido del piso 2), no de cifras fijas: la entrada cambia con el trazado
+    const lab = await page.evaluate(async () => {
+      const pl = await window.__torreQA.datos('torre_plantas.json'), ent = pl?.niveles?.find((n) => n.id === 'P2')?.entradas_recorrido?.find((x) => x.id === 'laboratorio');
+      return { modo: window.__torreQA.modo(), pulsado: document.querySelector('[data-modo-torre="laboratorio"]').getAttribute('aria-pressed'), punto: ent?.punto, mirando: ent?.mirando_deg };
+    });
+    comprobar(lab.modo === 'recorrido' && lab.pulsado === 'true' && e.nivel === 'P2' && lab.punto && dAng(e.rumbo_deg, lab.mirando) < 1 && Math.hypot(e.posicion[0] - lab.punto[0], e.posicion[1] - lab.punto[1]) < 0.6,
       `el botón «Laboratorio» abre el recorrido en la puerta del laboratorio mirando hacia adentro (${nivelTxt(e)}; modo ${lab.modo}, «Laboratorio» pulsado: ${lab.pulsado})`);
     // la ficha de un equipo tocado en 3D queda a la vista junto al recuadro
     const carro = await page.evaluate(() => window.__recorridoQA.unidades({ texto: 'carro de paro' }).find((u) => u.modelo === 'carro_paro')?.id);

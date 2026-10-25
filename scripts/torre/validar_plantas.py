@@ -1,5 +1,7 @@
 """Valida la planta de la torre con las reglas V1 a V20 del contrato (ESPECIFICACION_INTEGRACION.md, 3.5), V21 y V22 de
-la sección 16 y V23 del prediseño estructural DMO (17.1).
+la sección 16, V23 del prediseño estructural DMO (17.1) y V24 y V25 de la coordinación con el modelo BIM (17.4): escaleras,
+ductos y puertas frente a columnas, vigas y muros estructurales del prediseño, muros sobre las cisternas (V24, duro) y lo que
+queda por coordinar con la cimentación o declarado pendiente en reglas_planta → coordinacion_pendiente (V25, aviso).
 
 Uso:
   python3 scripts/torre/validar_plantas.py                     # data/edificios/torre_hospital_plantas.json, todas las reglas
@@ -66,8 +68,21 @@ REGLAS = {
     'V23': ('Prediseño estructural DMO (17.1): columnas con la sección del prediseño; muros estructurales de concreto solo y '
             'completos sobre los paños del prediseño, sin puertas, vanos ni ventanas; cielo raso bajo las vigas; fosos y '
             'cisternas iguales a la cimentación', 'duro'),
+    'V24': ('Coordinación con la estructura (17.4): tramos y descansos de las escaleras sin columnas ni vigas encima (altura '
+            'libre ≥ 2,05 m sobre la nariz de los peldaños) ni descansos fundidos dentro de una viga; sección de los ductos '
+            'verticales fuera de las vigas del nivel de arriba y sin angostarse de un piso al de arriba; vanos de puertas (hoja '
+            'y marco de 5 cm) fuera de columnas y muros estructurales; muros y puertas del nivel de las cisternas fuera de su '
+            'huella', 'duro'),
+    'V25': ('Coordinación pendiente con el prediseño (17.2 y 17.4): muros bajo el ±0,00 sobre dados, vigas de amarre o '
+            'contrapiso de la torre; pisos en rampa bajo la cara superior de la cimentación; cota de la tapa de las cisternas '
+            'frente al patio; aberturas de las losas del prediseño frente a la parte común de los ductos; y las piezas de V24 '
+            'que reglas_planta (coordinacion_pendiente) declara pendientes de una decisión de programa o del prediseño, con su '
+            'motivo', 'aviso'),
 }
-SOLO_PROGRAMA = ('V2', 'V6', 'V15', 'V16', 'V20', 'V23')
+SOLO_PROGRAMA = ('V2', 'V6', 'V15', 'V16', 'V20', 'V23', 'V24', 'V25')
+ALTURA_LIBRE_ESCALERA_M = 2.05   # sobre la nariz de los peldaños (NSR-10 K.3.8, numeral por confirmar; igual al BIM)
+TOL_ESTRUCTURA_M = 0.01          # traslapo que se tolera entre una pieza de la planta y la estructura (como el BIM)
+TOL_DUCTO_M = 0.02               # traslapo de la sección de un ducto con una viga que se tolera (como el BIM)
 ESTRUCTURA = C.DATOS / 'sismo' / 'torre_hospital_estructura.json'
 MARCO_PUERTA_M = 0.05          # el vano de una puerta (hoja + marco) no puede tocar un muro estructural
 
@@ -93,6 +108,7 @@ REGLAS_PLANTA_DEFECTO = {
     'zonas': {},
     'accesos_permitidos': [],
     'niveles': {'piso_a_nivel': {'bloque técnico': 'BT'}, 'nivel_por_fila': {}},
+    'coordinacion_pendiente': {},
 }
 COLUMNA_LIBRE_PERMITIDA = re.compile(r'gimnasio|expansi[oó]n|espera|vest[ií]bulo', re.I)
 RE_PLOMADO = re.compile(r'rayos\s*x|periapical', re.I)
@@ -120,7 +136,7 @@ def cargar_reglas(ruta: Path | None) -> dict:
     r['fuente'] = 'valores por defecto del contrato (3.4)'
     if ruta and ruta.exists():
         dato = C.cargar_json(ruta)
-        for k in ('puertas', 'corredores', 'evacuacion', 'zonas', 'accesos_permitidos', 'niveles'):
+        for k in ('puertas', 'corredores', 'evacuacion', 'zonas', 'accesos_permitidos', 'niveles', 'coordinacion_pendiente'):
             if k in dato:
                 if k == 'puertas':
                     cats = {p['categoria']: p for p in r['puertas']}
@@ -1504,6 +1520,319 @@ class Validador:
                     abs(sum(C.area_interseccion(q, x) for x in sobre) - C.area_poligono(q)) > 1e-3:
                 self.err('V23', f'{nv.id}: la cisterna {c.get("id")} no queda bajo los recintos de sus compartimientos')
 
+    # ------------------------------------------------------------------------------------------------ V24 y V25
+    def vigas_prediseno(self) -> dict:
+        """{cota de la cara superior (m): [(x0, y0, x1, y1, alto, id)]}: huella en planta de las vigas de los pórticos del
+        prediseño (data/sismo/torre_hospital_estructura.json → bloques[].porticos[].elementos de tipo «viga»), de nodo a
+        nodo con el ancho de su sección. Las columnas son otra pieza (se revisan aparte)."""
+        est = self.estructura or {}
+        S = est.get('secciones') or {}
+        out = {}
+        for b in est.get('bloques') or []:
+            for po in b.get('porticos') or []:
+                nodos = {n.get('id'): n.get('xyz') for n in po.get('nodos') or [] if isinstance(n, dict)}
+                for e in po.get('elementos') or []:
+                    if e.get('tipo') != 'viga':
+                        continue
+                    pi, pj = nodos.get(e.get('i')), nodos.get(e.get('j'))
+                    sec = S.get(e.get('seccion')) or {}
+                    if not (pi and pj and num(sec.get('b')) and num(sec.get('h'))):
+                        continue
+                    w = float(sec['b']) / 2
+                    if abs(pi[1] - pj[1]) < 1e-6:
+                        r = (min(pi[0], pj[0]), pi[1] - w, max(pi[0], pj[0]), pi[1] + w)
+                    else:
+                        r = (pi[0] - w, min(pi[1], pj[1]), pi[0] + w, max(pi[1], pj[1]))
+                    out.setdefault(round(float(pi[2]), 2), []).append(r + (float(sec['h']), e.get('fisico') or e.get('id')))
+        return out
+
+    @staticmethod
+    def solape(a, b) -> tuple[float, float]:
+        return min(a[2], b[2]) - max(a[0], b[0]), min(a[3], b[3]) - max(a[1], b[1])
+
+    def v24(self, niveles: list[Nivel]):
+        """Coordinación con la estructura (17.4; las mismas revisiones que hace el modelo BIM con sus tolerancias): escaleras,
+        ductos verticales y puertas frente a columnas, vigas y muros estructurales del prediseño, y muros del nivel de las
+        cisternas fuera de su huella (el muro no se apoya en la cisterna, que es otra estructura)."""
+        vigas = self.vigas_prediseno()
+        if not vigas:
+            self.inf.omitir('V24', 'no se pudo leer el prediseño estructural (vigas de los pórticos)')
+            return
+        pend = (self.reglas.get('coordinacion_pendiente') or {}).get('elementos') or []
+        esc_pend = {e.get('id'): e for e in pend if isinstance(e, dict) and e.get('tipo') == 'escalera'}
+        # ductos: lo declarado sin «entre» cubre las vigas que atraviesan el ducto; con «entre» ([piso, piso de arriba]), que
+        # el ducto se angoste de un piso al de arriba
+        duc_pend = [e for e in pend if isinstance(e, dict) and e.get('tipo') == 'ducto' and e.get('ambiente') and not e.get('entre')]
+        duc_pend_ang = [e for e in pend if isinstance(e, dict) and e.get('tipo') == 'ducto' and isinstance(e.get('entre'), list)]
+
+        def falla(msg, decl=None):
+            # lo que reglas_planta declara pendiente (con motivo y quién decide) se informa como aviso de V25
+            if decl:
+                self.av('V25', f'{msg} (pendiente declarado; decide: {decl.get("decide", "por definir")})')
+            else:
+                self.err('V24', msg)
+
+        zs = {nv.id: float(nv.d.get('z') or 0.0) for nv in niveles}
+        por_id = {nv.id: nv for nv in niveles}
+        T = TOL_ESTRUCTURA_M
+        ductos_por_piso = {}
+        for nv in niveles:
+            z = zs[nv.id]
+            cols = rects_columnas(nv)
+            nucleo = [m for m in nv.muros_validos() if m.get('tipo') == 'nucleo' and num(m.get('espesor'))]
+            rects_nucleo = []
+            for m in nucleo:
+                e = float(m['espesor']) / 2
+                (ax, ay), (bx, by) = m['a'][:2], m['b'][:2]
+                if C.es_horizontal(m['a'], m['b']):
+                    rects_nucleo.append((min(ax, bx), ay - e, max(ax, bx), ay + e, m.get('id')))
+                else:
+                    rects_nucleo.append((ax - e, min(ay, by), ax + e, max(ay, by), m.get('id')))
+            # escaleras: columnas del nivel; el descanso de piso contra las vigas de su losa; tramos y descanso intermedio
+            # contra las vigas del nivel de llegada (altura libre)
+            for es in nv.d.get('escaleras', []) or []:
+                decl = esc_pend.get(es.get('id'))
+                destino = por_id.get(es.get('sube_a'))
+                z_arriba = zs.get(destino.id) if destino else None
+                for pa in es.get('partes') or []:
+                    r = pa.get('rect')
+                    if not (isinstance(r, list) and len(r) == 4 and all(num(v) for v in r)):
+                        continue
+                    self.inf.revisado('V24')
+                    q = f'{nv.id}: escalera {es.get("id")}: {pa.get("tipo")} {r}'
+                    for c in cols:
+                        sx, sy = self.solape(r, c)
+                        if sx > T and sy > T:
+                            falla(f'{q} se mete {min(sx, sy):.2f} m en la columna {c[4]}', decl)
+                    if pa.get('tipo') == 'descanso_piso' and z > 0:
+                        for v in vigas.get(round(z, 2), []):
+                            sx, sy = self.solape(r, v)
+                            if sx > T and sy > T:
+                                falla(f'{q}: el descanso de piso se funde con la viga {v[5]} de su losa '
+                                      f'({sx:.2f} × {sy:.2f} m); sus bordes van a la cara de la viga', decl)
+                    if z_arriba is None or pa.get('tipo') == 'descanso_piso':
+                        continue
+                    for v in vigas.get(round(z_arriba, 2), []):
+                        sx, sy = self.solape(r, v)
+                        if not (sx > T and sy > T):
+                            continue
+                        fondo = z_arriba - v[4]
+                        if pa.get('tipo') != 'tramo':
+                            libre = fondo - (z + float(pa.get('z') or 0.0))
+                            falla(f'{q}: pasa bajo la viga {v[5]} con {libre:.2f} m libres '
+                                  f'(mínimo {ALTURA_LIBRE_ESCALERA_M:.2f} m)', decl)
+                            continue
+                        # peldaño por peldaño (nariz de cada huella bajo la viga)
+                        ang = pa.get('sube_hacia_deg')
+                        n_ = pa.get('contrahuellas') or 1
+                        ch, g = float(pa.get('contrahuella_m') or 0.0), float(pa.get('huella_m') or 0.28)
+                        peor = None
+                        for k in range(n_ - 1):
+                            u = (k + 0.5) * g
+                            for f in (0.25, 0.5, 0.75):
+                                if ang in (90, 270):
+                                    x = r[0] + (r[2] - r[0]) * f
+                                    y = r[1] + u if ang == 90 else r[3] - u
+                                else:
+                                    y = r[1] + (r[3] - r[1]) * f
+                                    x = r[0] + u if ang == 0 else r[2] - u
+                                if v[0] <= x <= v[2] and v[1] <= y <= v[3]:
+                                    libre = fondo - (z + float(pa.get('z0') or 0.0) + (k + 1) * ch)
+                                    peor = libre if peor is None else min(peor, libre)
+                        if peor is not None and peor < ALTURA_LIBRE_ESCALERA_M - 1e-6:
+                            falla(f'{q}: pasa bajo la viga {v[5]} con {peor:.2f} m libres sobre la nariz del peldaño '
+                                  f'(mínimo {ALTURA_LIBRE_ESCALERA_M:.2f} m)', decl)
+            # ductos verticales: la sección (caja del polígono a ejes) fuera de las vigas del nivel de arriba
+            arriba = min((zz for zz in vigas if zz > z + 0.05), default=None) if nv.id in NIVELES_PISO else None
+            for rid, p in nv.pol.items():
+                if arriba is None or not str(nv.por_id[rid].get('ambiente', '')).startswith('Ductos verticales'):
+                    continue
+                self.inf.revisado('V24')
+                amb = str(nv.por_id[rid].get('ambiente', ''))
+                decl_d = next((e for e in duc_pend if amb.startswith(e['ambiente'])), None)
+                xs, ys = [v[0] for v in p], [v[1] for v in p]
+                caja = (min(xs), min(ys), max(xs), max(ys))
+                for v in vigas.get(arriba, []):
+                    sx, sy = self.solape(caja, v)
+                    if sx > TOL_DUCTO_M and sy > TOL_DUCTO_M:
+                        falla(f'{nv.id}: la viga {v[5]} del nivel {arriba:.2f} atraviesa el ducto {rid} '
+                              f'({sx:.2f} × {sy:.2f} m de su sección); el borde del ducto va a la cara de la viga', decl_d)
+                ductos_por_piso[nv.id] = (rid, p)
+            # puertas: vano con marco contra columnas y muros estructurales del nivel
+            for pt in nv.puertas:
+                m = nv.muros.get(pt.get('muro'))
+                if m is None or not punto(pt.get('centro')) or not num(pt.get('ancho')) or not punto(m.get('a')) \
+                        or pt.get('espejo_de'):
+                    continue
+                self.inf.revisado('V24')
+                e = float(m.get('espesor') or 0.0) / 2
+                a = float(pt['ancho']) / 2 + MARCO_PUERTA_M
+                cx, cy = pt['centro'][:2]
+                vano = (cx - a, cy - e, cx + a, cy + e) if C.es_horizontal(m['a'], m['b']) else (cx - e, cy - a, cx + e, cy + a)
+                for o in cols + [rn for rn in rects_nucleo if rn[4] != m.get('id')]:
+                    sx, sy = self.solape(vano, o)
+                    if sx > 1e-6 and sy > 1e-6:
+                        que = 'la columna' if any(o is c for c in cols) else 'el muro estructural'
+                        self.err('V24', f'{nv.id}: el vano de la puerta {pt.get("id")} ({pt["ancho"]} m y marco de 5 cm) se mete '
+                                        f'{min(sx, sy) * 100:.1f} cm en {que} {o[4]}')
+            # cisternas: muros y puertas del nivel fuera de su huella
+            for b in nv.d.get('bajo_rasante', []) or []:
+                if not isinstance(b, dict) or b.get('tipo') != 'cisterna' or not poligono_valido(b.get('poligono')):
+                    continue
+                xs, ys = [v[0] for v in b['poligono']], [v[1] for v in b['poligono']]
+                huella = (min(xs), min(ys), max(xs), max(ys))
+                for m in nv.muros_validos():
+                    if m.get('tipo') == 'abierto' or not num(m.get('espesor')) or m['espesor'] <= 0:
+                        continue
+                    self.inf.revisado('V24')
+                    e = float(m['espesor']) / 2
+                    (ax, ay), (bx, by) = m['a'][:2], m['b'][:2]
+                    r = ((min(ax, bx), ay - e, max(ax, bx), ay + e) if C.es_horizontal(m['a'], m['b'])
+                         else (ax - e, min(ay, by), ax + e, max(ay, by)))
+                    sx, sy = self.solape(r, huella)
+                    if sx > T and sy > T:
+                        self.err('V24', f'{nv.id}: el muro {m.get("id")} ({m.get("tipo")}, {m["espesor"]} m) se apoya '
+                                        f'{min(sx, sy) * 100:.0f} cm sobre la cisterna {b.get("id")}; va junto a ella, no encima')
+        # ductos verticales: de un piso al de arriba el ducto no se angosta (la losa cerraría la parte que no sigue; el modelo
+        # BIM lo informa como interferencia dura). Lo que reglas_planta declara pendiente (entre: [piso, piso de arriba]) es aviso.
+        pisos_d = [n for n in NIVELES_PISO if n in ductos_por_piso]
+        for a, b in zip(pisos_d, pisos_d[1:]):
+            (ra, pa), (rb, pb) = ductos_por_piso[a], ductos_por_piso[b]
+            self.inf.revisado('V24')
+            fuera = C.area_poligono(pa) - C.area_interseccion(pa, pb)
+            if fuera > 0.05:
+                decl = next((e for e in duc_pend_ang if e.get('entre') == [a, b]), None)
+                falla(f'{a}: el ducto {ra} se angosta en el piso de arriba ({rb}): {fuera:.2f} m² de su sección no siguen y la '
+                      'losa los cierra; el ducto de arriba crece o el de abajo se recorta', decl)
+        self._ductos_por_piso = ductos_por_piso
+
+    def v25(self, niveles: list[Nivel]):
+        """Bloque técnico y exteriores frente a la cimentación de la torre (aviso de coordinación con el equipo A): muros
+        de los niveles bajo el ±0,00 que caen sobre dados, vigas de amarre o el contrapiso de la torre, y la cota de la
+        tapa de las cisternas frente al piso del patio que las cubre."""
+        cim = (self.estructura or {}).get('cimentacion') or {}
+        if not cim:
+            self.inf.omitir('V25', 'no se pudo leer la cimentación del prediseño')
+            return
+        piezas = []
+        for d in cim.get('dados') or []:
+            if all(num(d.get(k)) for k in ('x0', 'y0', 'x1', 'y1', 'z_fondo', 'z_tope')):
+                piezas.append(((d['x0'], d['y0'], d['x1'], d['y1']), d['z_fondo'], d['z_tope'], f'el dado {d.get("id")}'))
+        for v in cim.get('vigas_amarre') or []:
+            if not (isinstance(v.get('tramo'), list) and all(num(v.get(k)) for k in ('coordenada', 'b', 'h', 'z_tope'))):
+                continue
+            t0, t1 = sorted(v['tramo'])
+            w = v['b'] / 2
+            r = (t0, v['coordenada'] - w, t1, v['coordenada'] + w) if v.get('direccion') == 'x' else \
+                (v['coordenada'] - w, t0, v['coordenada'] + w, t1)
+            piezas.append((r, v['z_tope'] - v['h'], v['z_tope'], f'la viga de amarre {v.get("id")}'))
+        torre = next((nv for nv in niveles if nv.id == 'P1'), None)
+        e_cp = float((cim.get('contrapiso') or {}).get('espesor_m') or 0.0)
+        if torre is not None and torre.contorno and e_cp > 0:
+            xs, ys = [v[0] for v in torre.contorno], [v[1] for v in torre.contorno]
+            piezas.append(((min(xs), min(ys), max(xs), max(ys)), -e_cp, 0.0, 'el contrapiso de la torre'))
+        for nv in niveles:
+            z = float(nv.d.get('z') or 0.0)
+            if z >= -1e-6:
+                continue
+            for m in nv.muros_validos():
+                if m.get('tipo') == 'abierto' or not num(m.get('espesor')) or m['espesor'] <= 0:
+                    continue
+                self.inf.revisado('V25')
+                e = float(m['espesor']) / 2
+                (ax, ay), (bx, by) = m['a'][:2], m['b'][:2]
+                r = ((min(ax, bx), ay - e, max(ax, bx), ay + e) if C.es_horizontal(m['a'], m['b'])
+                     else (ax - e, min(ay, by), ax + e, max(ay, by)))
+                z1 = z + float(m.get('altura') or 0.0)
+                for rr, za, zb, nombre in piezas:
+                    sx, sy = self.solape(r, rr)
+                    if sx > TOL_ESTRUCTURA_M and sy > TOL_ESTRUCTURA_M and min(z1, zb) - max(z, za) > TOL_ESTRUCTURA_M:
+                        self.av('V25', f'{nv.id}: el muro {m.get("id")} ({m.get("tipo")}), que arranca a {z:.2f} m, se mete en {nombre} '
+                                       f'(de {za:.2f} a {zb:.2f} m): coordinar con el prediseño de la cimentación')
+            # pisos en rampa (el pasaje del bloque técnico): el piso no puede quedar bajo la cara superior de la cimentación de
+            # la torre que tiene debajo (lo resuelve el prediseño bajando o recortando el elemento)
+            pend_cim = [e for e in ((self.reglas.get('coordinacion_pendiente') or {}).get('elementos') or [])
+                        if isinstance(e, dict) and e.get('tipo') == 'cimentacion']
+            for rid, p in nv.pol.items():
+                ra = (nv.por_id.get(rid) or {}).get('rampa')
+                if not (isinstance(ra, dict) and ra.get('eje') in ('x', 'y')
+                        and all(num(ra.get(k)) for k in ('desde', 'hasta', 'z0', 'z1')) and ra['hasta'] != ra['desde']):
+                    continue
+                xs, ys = [v[0] for v in p], [v[1] for v in p]
+                caja = (min(xs), min(ys), max(xs), max(ys))
+                k = 0 if ra['eje'] == 'x' else 1
+
+                def piso(u):
+                    f = min(1.0, max(0.0, (u - ra['desde']) / (ra['hasta'] - ra['desde'])))
+                    return z + ra['z0'] + (ra['z1'] - ra['z0']) * f
+                for rr, za, zb, nombre in piezas:
+                    sx, sy = self.solape(caja, rr)
+                    if not (sx > TOL_ESTRUCTURA_M and sy > TOL_ESTRUCTURA_M):
+                        continue
+                    self.inf.revisado('V25')
+                    u0, u1 = max(caja[k], rr[k]), min(caja[k + 2], rr[k + 2])
+                    pmin = min(piso(u0), piso(u1))
+                    if pmin < zb - TOL_ESTRUCTURA_M:
+                        decl = next((e for e in pend_cim if str(nv.por_id[rid].get('ambiente', '')).startswith(e.get('ambiente', '?'))), None)
+                        self.av('V25', f'{nv.id}: encima de {nombre} el piso en rampa de {rid} baja a {pmin:+.2f} m y la cara '
+                                       f'superior del elemento está a {zb:+.2f} m ({(zb - pmin) * 100:.0f} cm por encima del piso): el '
+                                       'prediseño baja ese elemento bajo el piso o lo recorta'
+                                       + (f' (pendiente declarado; decide: {decl.get("decide")})' if decl else ''))
+            for c in cim.get('cisternas') or []:
+                if not all(num(c.get(k)) for k in ('z_fondo', 'losa_fondo_e_m', 'h_interior_m', 'losa_tapa_e_m')):
+                    continue
+                b = next((x for x in nv.d.get('bajo_rasante', []) or [] if isinstance(x, dict) and x.get('id') == c.get('id')), None)
+                if b is None:
+                    continue
+                self.inf.revisado('V25')
+                tapa = c['z_fondo'] + c['losa_fondo_e_m'] + c['h_interior_m'] + c['losa_tapa_e_m']
+                if abs(tapa - z) > 0.05:
+                    self.av('V25', f'{nv.id}: la tapa de la cisterna {c.get("id")} queda a {tapa:+.2f} m en el prediseño y el '
+                                   f'patio que la cubre está a {z:+.2f} m ({(tapa - z) * 100:+.0f} cm): la planta la pone a la cota '
+                                   f'del patio (fondo a {z - b.get("profundidad_m", 0):+.2f} m); falta bajarla en el prediseño')
+        # ductos verticales: la abertura de cada losa del prediseño frente a la parte común del ducto de abajo y el de arriba
+        # (en la cubierta, el ducto del piso 4). Si la abertura deja losa dentro de esa parte o se sale del ducto de arriba
+        # (hueco bajo un recinto), el prediseño la ajusta (aviso de coordinación con el equipo A).
+        cb = ((self.estructura or {}).get('prediseno') or {}).get('coordinacion_bim') or {}
+        aberturas = [a for a in ((cb.get('ducto_vertical') or {}).get('aberturas_losa_m') or [])
+                     if isinstance(a, dict) and num(a.get('nivel_z')) and isinstance(a.get('x'), list) and isinstance(a.get('y'), list)]
+        ductos = getattr(self, '_ductos_por_piso', {}) or {}
+        zs = {nv.id: float(nv.d.get('z') or 0.0) for nv in niveles}
+        pisos_d = [n for n in NIVELES_PISO if n in ductos]
+        if aberturas and pisos_d:
+            def caja_de(p):
+                return (min(v[0] for v in p), min(v[1] for v in p), max(v[0] for v in p), max(v[1] for v in p))
+
+            def area_caja(c):
+                return max(0.0, c[2] - c[0]) * max(0.0, c[3] - c[1])
+
+            def inter(c1, c2):
+                return (max(c1[0], c2[0]), max(c1[1], c2[1]), min(c1[2], c2[2]), min(c1[3], c2[3]))
+            alturas = {nv.id: float(nv.d.get('altura_entrepiso_m') or 0.0) for nv in niveles}
+            for i, n in enumerate(pisos_d):
+                arriba = pisos_d[i + 1] if i + 1 < len(pisos_d) else None
+                z_losa = zs[arriba] if arriba else zs[n] + alturas.get(n, 0.0)
+                ab = next((a for a in aberturas if abs(a['nivel_z'] - z_losa) < 0.05), None)
+                rid = ductos[n][0]
+                d_ab = caja_de(ductos[n][1])
+                d_ar = caja_de(ductos[arriba][1]) if arriba else d_ab
+                comun = inter(d_ab, d_ar)
+                self.inf.revisado('V25')
+                if ab is None:
+                    self.av('V25', f'{n}: el prediseño no trae abertura en la losa del nivel {z_losa:.2f} para el ducto {rid}')
+                    continue
+                o = (min(ab['x']), min(ab['y']), max(ab['x']), max(ab['y']))
+                falta = area_caja(comun) - area_caja(inter(comun, o))
+                sobra = area_caja(o) - area_caja(inter(o, d_ar))
+                if falta > 0.05:
+                    self.av('V25', f'{n}: la losa del nivel {z_losa:.2f} cierra {falta:.2f} m² del ducto {rid} que sigue arriba '
+                                   f'(abertura del prediseño x {o[0]:.2f}-{o[2]:.2f}, y {o[1]:.2f}-{o[3]:.2f}; parte común del ducto '
+                                   f'x {comun[0]:.2f}-{comun[2]:.2f}, y {comun[1]:.2f}-{comun[3]:.2f}): el prediseño amplía la abertura')
+                if sobra > 0.05:
+                    self.av('V25', f'{n}: la abertura de la losa del nivel {z_losa:.2f} se sale {sobra:.2f} m² del ducto del piso de '
+                                   f'arriba (abertura x {o[0]:.2f}-{o[2]:.2f}, y {o[1]:.2f}-{o[3]:.2f}): el prediseño la ajusta a la '
+                                   'parte común del ducto')
+
     # ------------------------------------------------------------------------------------------------ todo
     def correr(self):
         self.v1_general()
@@ -1535,6 +1864,12 @@ class Validador:
             self.v16(niveles)
             self.v20(niveles)
             self.v23(niveles)
+            if isinstance(self.estructura, dict):
+                self.v24(niveles)
+                self.v25(niveles)
+            else:
+                for k in ('V24', 'V25'):
+                    self.inf.omitir(k, 'no se pudo leer data/sismo/torre_hospital_estructura.json (prediseño del equipo A)')
         self.v21(niveles)
         self.v22(niveles)
         if not (self.pl.get('zonas') if self.fixture else self.reglas.get('zonas')):

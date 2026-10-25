@@ -17,7 +17,8 @@ Insumos (todos versionados):
 
 Qué deriva (3.3): ids de la regla 1.3, polígonos a ejes y libres, áreas, muros con espesor y lados (uno por borde
 compartido; fachadas fundidas por lado), vanos de puertas, ventanas en fachada, columnas de la retícula, núcleos,
-conexiones verticales, tramos y descansos de las escaleras con sus cotas, pasos entre niveles y el resumen por nivel.
+conexiones verticales, tramos y descansos de las escaleras con sus cotas (desde la cara libre de muros, vigas y columnas del
+prediseño: holguras_escalera), pasos entre niveles y el resumen por nivel.
 Solo biblioteca estándar (Python 3.12). Salida determinista (comun.escribir_json; sin fecha del sistema).
 """
 from __future__ import annotations
@@ -340,14 +341,17 @@ class Generador:
         return salida
 
     # ------------------------------------------------------------------------------------------------ muros
-    def tipo_borde(self, N, tn, e1, e2, nucleo_ids, abiertos, forzados, estructural=None) -> str:
+    def tipo_borde(self, N, tn, e1, e2, nucleo_ids, abiertos, forzados, estructural=None, forzado_tramo=None) -> str:
         """Tipo de muro de un borde entre e1 y e2 (e2 None = afuera del contorno). `estructural` es el muro del prediseño
-        (MX-3, MY-N6…) si el borde cae sobre uno de sus paños: entonces es «nucleo» (concreto) sin excepción."""
+        (MX-3, MY-N6…) si el borde cae sobre uno de sus paños: entonces es «nucleo» (concreto) sin excepción.
+        `forzado_tramo` es el tipo que el trazado fija solo en un tramo del borde (muros_forzados con «tramo»)."""
         par = frozenset([e1['id'], e2['id'] if e2 else 'exterior'])
         if estructural:
-            if par in abiertos or par in forzados:
+            if par in abiertos or par in forzados or forzado_tramo:
                 raise ErrorTrazado(f'{N}: el borde {sorted(par)} es el muro estructural {estructural}: no se abre ni cambia de tipo')
             return 'nucleo'
+        if forzado_tramo:
+            return forzado_tramo
         if par in forzados:
             return forzados[par]
         cands = []
@@ -381,9 +385,22 @@ class Generador:
     def muros(self, N, tn, esp, contorno, nucleo_ids, tramos=()):
         pref = lambda x: x if x == 'exterior' or x.startswith(N + '-') else f'{N}-{x}'
         abiertos = {frozenset(pref(x) for x in par) for par in tn.get('abiertos', [])}
-        forzados = {frozenset(pref(x) for x in f['entre']): f['tipo'] for f in tn.get('muros_forzados', [])}
+        # muros forzados: en todo el borde común de los dos lados o, con «tramo» ([[x0, y0], [x1, y1]]), solo en esa parte del
+        # borde (coordinación con la cimentación: el pasaje del bloque técnico no lleva muro propio sobre los dados de la torre)
+        forzados, forzados_tramo = {}, []
+        for f in tn.get('muros_forzados', []):
+            par = frozenset(pref(x) for x in f['entre'])
+            if f.get('tramo'):
+                t0, t1 = ([float(c) for c in v] for v in f['tramo'])
+                if not (C.es_multiplo(t0[0], 0.05) and C.es_multiplo(t0[1], 0.05) and C.es_multiplo(t1[0], 0.05)
+                        and C.es_multiplo(t1[1], 0.05)):
+                    raise ErrorTrazado(f'{N}: el tramo del muro forzado {f} no está en múltiplos de 0,05 m')
+                forzados_tramo.append((par, t0, t1, f['tipo']))
+            else:
+                forzados[par] = f['tipo']
         por_id = {e['id']: e for e in esp}
-        cortes = [v for e in esp for v in e['_p']] + list(contorno) + [v for t0, t1, _ in tramos for v in (t0, t1)]
+        cortes = ([v for e in esp for v in e['_p']] + list(contorno) + [v for t0, t1, _ in tramos for v in (t0, t1)]
+                  + [v for _, t0, t1, _ in forzados_tramo for v in (t0, t1)])
         segs = {}
         for e in esp:
             for a, b in C.bordes(C.partir_bordes(e['_p'], cortes)):
@@ -401,7 +418,10 @@ class Generador:
                 e1, e2 = por_id[ids[0]], None
             else:
                 e1, e2 = por_id[ids[0]], por_id[ids[1]]
-            t = self.tipo_borde(N, tn, e1, e2, nucleo_ids, abiertos, forzados, self.en_tramo(a, b, tramos))
+            par = frozenset([e1['id'], e2['id'] if e2 else 'exterior'])
+            ft = next((tipo for p_, t0, t1, tipo in forzados_tramo
+                       if p_ == par and self.en_tramo(a, b, [(t0, t1, tipo)])), None)
+            t = self.tipo_borde(N, tn, e1, e2, nucleo_ids, abiertos, forzados, self.en_tramo(a, b, tramos), ft)
             if e2 is None:
                 clave = ('ext', t) if t == 'fachada' else ('ext1', e1['id'], t)
             else:
@@ -537,8 +557,10 @@ class Generador:
                 comunes = [((m['a'], m['b']), m) for m in cand]
             if not comunes:
                 raise ErrorTrazado(f'{N}: no hay muro entre {A} y {B} para la puerta {d}')
-            if any(m['tipo'] == 'abierto' for _, m in comunes):
+            if all(m['tipo'] == 'abierto' for _, m in comunes):
                 raise ErrorTrazado(f'{N}: {A} y {B} están unidos por un vano abierto; la puerta {d} sobra')
+            # un borde con un tramo abierto (muros_forzados con «tramo») conserva sus muros: la puerta va en uno de ellos
+            comunes = [c for c in comunes if c[1]['tipo'] != 'abierto']
             pos = d.get('pos', 0.5)
             if isinstance(pos, (int, float)):
                 (s0, s1), muro = max(comunes, key=lambda c: math.dist(c[0][0], c[0][1]))
@@ -755,13 +777,57 @@ class Generador:
         return salida
 
     # ------------------------------------------------------------------------------------------------ escaleras
+    def holguras_escalera(self, es) -> dict:
+        """Holgura de cada lado del núcleo de una escalera hasta la cara libre donde empiezan los tramos y los descansos
+        (coordinación BIM, 17.4): la mitad del muro del núcleo; si el lado cae sobre un eje de la retícula, al menos la
+        mitad del ancho de la viga de ese eje (la viga del piso de llegada pasa sobre ese borde y el descanso de llegada no
+        se puede fundir dentro de ella), y si en las esquinas hay columnas del prediseño, el lado que más esquinas con
+        columna tiene se retira hasta la cara de las columnas (los tramos y los descansos son rectángulos de lado a lado).
+        Sin prediseño en reglas_planta (estructura) queda solo la mitad del muro."""
+        x0, y0, x1, y1 = es['rect']
+        # muro_m: espesor del borde del núcleo, igual en los cuatro lados o por lado ({'oeste': 0, 'sur': 0.15, …}); una
+        # escalera abierta no lleva muro en los lados que dan a la circulación (holgura 0: el descanso llega al borde)
+        mm = es.get('muro_m', 0.30)
+        h = ({lado: float(mm.get(lado, 0.30)) / 2 for lado in ('oeste', 'este', 'sur', 'norte')} if isinstance(mm, dict)
+             else {lado: float(mm) / 2 for lado in ('oeste', 'este', 'sur', 'norte')})
+        if not self.est:
+            return h
+        ret = self.tz['reticula']
+        ejes_x = {round(e['x'], 6): e['id'] for e in ret['ejes_x']}
+        ejes_y = {round(e['y'], 6): e['id'] for e in ret['ejes_y']}
+        v = self.est['vigas']
+
+        def media_viga(eje_x=None):
+            o = (v.get('por_eje_x') or {}).get(eje_x) if eje_x else None
+            return float((o or v)['ancho_m']) / 2
+
+        for lado, cc, es_x in (('oeste', x0, True), ('este', x1, True), ('sur', y0, False), ('norte', y1, False)):
+            k = round(cc, 6)
+            if es_x and k in ejes_x:
+                h[lado] = max(h[lado], media_viga(ejes_x[k]))
+            elif not es_x and k in ejes_y:
+                h[lado] = max(h[lado], media_viga())
+        # columnas en las esquinas (las del prediseño están en todas las intersecciones de la retícula de los pisos)
+        esquinas = {('oeste', 'sur'): (x0, y0), ('este', 'sur'): (x1, y0), ('oeste', 'norte'): (x0, y1),
+                    ('este', 'norte'): (x1, y1)}
+        pendientes = {k for k, (px, py) in esquinas.items() if round(px, 6) in ejes_x and round(py, 6) in ejes_y}
+        while pendientes:
+            lado = max(('sur', 'norte', 'este', 'oeste'), key=lambda s: sum(1 for k in pendientes if s in k))
+            ex = ejes_x[round(x0 if lado == 'oeste' else x1, 6)] if lado in ('oeste', 'este') else None
+            media_col = self.lado_columna(ex) / 2 if ex else max(self.lado_columna(ejes_x[round(esquinas[k][0], 6)]) / 2
+                                                                  for k in pendientes if lado in k)
+            h[lado] = max(h[lado], media_col)
+            pendientes = {k for k in pendientes if lado not in k}
+        return h
+
     def escaleras(self, niveles_z: dict) -> dict:
-        """{nivel: [escalera]} con los tramos de la subida desde cada nivel (cotas relativas al piso del nivel)."""
+        """{nivel: [escalera]} con los tramos de la subida desde cada nivel (cotas relativas al piso del nivel). Los tramos y
+        los descansos empiezan en la cara libre del núcleo: muro, viga del eje y columnas de las esquinas (holguras_escalera)."""
         salida = {}
         for es in self.tz.get('escaleras', []):
             x0, y0, x1, y1 = es['rect']
-            m = es.get('muro_m', 0.30) / 2
-            cx0, cy0, cx1, cy1 = x0 + m, y0 + m, x1 - m, y1 - m
+            hg = self.holguras_escalera(es)
+            cx0, cy0, cx1, cy1 = x0 + hg['oeste'], y0 + hg['sur'], x1 - hg['este'], y1 - hg['norte']
             ancho_t = es['ancho_tramo_m']
             huellas = es['huellas_por_tramo']
             huella = es['huella_m']

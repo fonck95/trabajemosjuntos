@@ -179,6 +179,22 @@ class ValidadorDatos:
             dim = d['variantes'][var]['dim_m']
         return dim
 
+    def columnas_torre(self):
+        """[(z0, z1, polígono, id)] de las columnas de los pisos de la torre con su sección del prediseño y la altura del
+        piso (cotas absolutas)."""
+        if getattr(self, '_cols_torre', None) is None:
+            self._cols_torre = []
+            for nid, n in self.planta.niveles.items():
+                z0 = float(n.get('z') or 0.0)
+                z1 = z0 + float(n.get('altura_entrepiso_m') or 0.0)
+                for c in n.get('columnas', []) or []:
+                    if not all(isinstance(c.get(k), (int, float)) for k in ('x', 'y')):
+                        continue
+                    b, hh = float(c.get('b', 0.6)) / 2, float(c.get('h', 0.6)) / 2
+                    self._cols_torre.append((z0, z1, C.rect_a_poligono([c['x'] - b, c['y'] - hh, c['x'] + b, c['y'] + hh]),
+                                             f'{c.get("id")} del {nid}'))
+        return self._cols_torre
+
     def huella(self, u):
         dim = self.dim_de(u)
         pos = u.get('posicion')
@@ -544,6 +560,7 @@ class ValidadorDatos:
                 continue
             muros = [m for m in n.get('muros', []) if m.get('tipo') != 'abierto' and float(m.get('espesor') or 0) > 0]
             cajas = []
+            z_nivel = float(n.get('z') or 0.0)
             for u in us:
                 h = self.huella(u)
                 if h is None:
@@ -551,6 +568,13 @@ class ValidadorDatos:
                 dim = self.dim_de(u)
                 z = float(u['posicion'][2])
                 cajas.append((u, h, z, z + dim[2]))
+                # columnas de la torre a la misma altura, de cualquier piso (coordinación BIM, 17.4): la marquesina de la
+                # bahía y las filas de la terraza del piso 3 quedan junto a las columnas de los pisos 2 y 4
+                za, zb_u = z_nivel + z, z_nivel + z + dim[2]
+                for c_z0, c_z1, c_pol, c_id in self.columnas_torre():
+                    if min(zb_u, c_z1) - max(za, c_z0) > 0.01 and C.convexos_se_traslapan(h, c_pol, 0.005):
+                        self.err('I17', f'{u.get("id")} ({self.modelo_de(u)[0]}, {nid}): entra en la columna {c_id} '
+                                        f'(de {c_z0:.2f} a {c_z1:.2f} m)')
                 for m in muros:
                     e = float(m['espesor']) / 2
                     zb = float(m.get('z_base_m') or 0.0)

@@ -29,6 +29,12 @@ Reglas (duras salvo que se diga):
   K9  normas.json (9.3) y proyecto_tipo.json (9.1): normas agregadas con su esquema y nivel de verificación, la 1732
       «revocada», la lista de modificaciones de la 3100 con la de 2022 por confirmar, el marcapasos externo y los criterios
       18.14 y 18.15 por confirmar, y `escalamiento_a_torre.estado`.
+  K10 filas del 17.6 (alineado con el proyecto tipo): en `contraste_capitulos`, con `seccion: "17.6"`, una fila por tema
+      (sistema estructural, capacidad de disipación de energía, cimentación, cuantías de acero y concreto por m², luces y
+      alturas), cada una con veredicto y tipo de dato (con su fuente); lo que el tipo no trae dice «por confirmar» (y la fila lleva
+      `por_confirmar`); las cifras de la torre se rehacen desde el prediseño estructural
+      (data/sismo/torre_hospital_estructura.json), el presupuesto y el programa, y deben aparecer tal cual (es-CO) en la
+      fila. Las filas nuevas llevan `agregada: true` (K1 cuenta las 39 de la investigación aparte).
 Solo biblioteca estándar (Python 3.12).
 """
 from __future__ import annotations
@@ -67,7 +73,117 @@ REGLAS = {
     'K7': ('Tamaño del archivo web (≤ 150 KB)', 'duro'),
     'K8': ('Res. 1732 revocada y Res. 482 de 2018 reemplazada', 'duro'),
     'K9': ('normas.json (9.3) y proyecto_tipo.json (9.1)', 'duro'),
+    'K10': ('Filas del 17.6: estructura, disipación, cimentación, cuantías, luces y alturas frente al tipo', 'duro'),
 }
+ESTRUCTURA = C.DATOS / 'sismo' / 'torre_hospital_estructura.json'
+PRESUPUESTO = C.TORRE / 'presupuesto.json'
+TEMAS_17_6 = ('Sistema estructural', 'Capacidad de disipación de energía', 'Cimentación', 'Cuantías de acero y concreto por m²',
+              'Luces y modulación', 'Pisos y alturas')
+CAPITULOS_INVESTIGACION = 39
+
+
+def dec(x, d=1) -> str:
+    """Número en formato es-CO con d decimales («2.483,1»)."""
+    return f'{x:,.{d}f}'.replace(',', '§').replace('.', ',').replace('§', '.')
+
+
+def ent(x) -> str:
+    return f'{round(x):,}'.replace(',', '.')
+
+
+def cifras_17_6(est, pres, prog, costo_m2) -> dict:
+    """Cifras de la torre que debe decir cada fila del 17.6, rehechas desde el prediseño estructural (cálculo propio del
+    equipo A, estimación sin firmar), el presupuesto y el programa: {tema: [(qué es, texto es-CO), ...]}. Las usa
+    validar_contraste (K10) y, con los mismos números, quien escribe las filas."""
+    pre, dis, cim, can = est['prediseno'], est['diseno'], est['cimentacion'], est['cantidades']
+    sec = est['secciones'].values()
+    area = prog['totales']['m2_construido_torre']
+    m2_proy = prog['totales']['m2_construido_total_proyecto']
+    hist = pre['historial_de_ajustes']
+    col = sorted({s['b'] for k, s in est['secciones'].items() if k.startswith('C')})
+    vig = sorted({(s['b'], s['h']) for k, s in est['secciones'].items() if k.startswith('V')})
+    mur = sorted({s['b'] for k, s in est['secciones'].items() if k.startswith('MURO')})
+    fr = est['sistema']['fraccion_cortante_porticos']
+    losa = re.search(r'(\d+,\d+) m', pre['dimensiones_adoptadas']['losa']).group(1)
+    R = pre['R']
+    irr = pre['irregularidades']
+    cfvd = next(x['valor'] for x in pre['chequeos'] if x['id'] == 'CFVD')
+    pil = cim['pilotes']
+    n_pil = sum(p['n'] for p in pil)
+    L = sorted({p['L_m'] for p in pil})
+    dados = [g for g in cim['dados'] if g['tipo'] == 'dado']
+    losas = [g for g in cim['dados'] if g['tipo'] != 'dado']
+    por_dado = sorted({g['pilotes'] for g in dados})
+    q = can['por_tipo']
+    sup = ('columnas', 'muros', 'vigas', 'losas', 'escaleras')
+    m3s = sum(q[k]['m3'] for k in sup)
+    m3c = sum(v['m3'] for k, v in q.items() if k not in sup)
+    kgs, kgc = can['acero_superestructura_kg'], can['acero_cimentacion_kg']
+    items = {it.get('codigo'): it for c_ in pres['capitulos'] for it in c_['items']}
+    kg_pres_s, kg_pres_c = items['3.05']['cantidad'], items['2.13']['cantidad']
+    est_cap = next(x for x in costo_m2['por_capitulo'] if x['torre_capitulos'] == ['2', '3'])
+    aiu = pres['aiu_valores']['factor']
+    por_m2_ajuste = (est_cap['torre_costo_directo'] + can['efecto_total_costo_directo_cop']) * aiu / m2_proy
+    tipo_m2 = est_cap['tipo_dnp_por_m2_2026_sobre_269_6']
+    niveles = est['bloques'][0]['niveles']
+    xs = [e_['x'] for e_ in est['ejes']['x'] if not e_.get('auxiliar')]
+    ys = [e_['y'] for e_ in est['ejes']['y'] if not e_.get('auxiliar')]
+    luces_y = ' / '.join(dec(b - a, 2) for a, b in zip(ys, ys[1:]))
+    cols = (pre.get('cuantias') or {}).get('columnas') or {}
+    por_piso = {n: sum(1 for k in cols if k.endswith(f'-{n}')) for n in (1, 4)}
+    retro = niveles[3]['contorno'][0][1] - niveles[0]['contorno'][0][1]
+    m_lib = re.search(r'(\d+,\d+) m', prog['implantacion']['pisos_y_alturas']['altura_libre_interior'])
+    h_lib = float(m_lib.group(1).replace(',', '.'))
+    bajo_viga = niveles[1]['altura_entrepiso'] - h_lib - vig[0][1]
+    return {
+        'Sistema estructural': [
+            ('muros del prediseño', f'{len(pre["eleccion_muros"]["activos"])} muros de concreto de {dec(mur[0], 2)} m'),
+            ('alma de los muros', f'{dec(pre["eleccion_muros"]["longitud_alma_m"], 2)} m'),
+            ('columnas', f'{dec(col[0], 2)} × {dec(col[0], 2)} m'), ('columnas del eje A', f'{dec(col[-1], 2)} × {dec(col[-1], 2)} m'),
+            ('vigas', f'{dec(vig[0][0], 2)} × {dec(vig[0][1], 2)} m'), ('vigas del eje A', f'{dec(vig[-1][0], 2)} × {dec(vig[-1][1], 2)} m'),
+            ('losa nervada', f'{losa} m'), ('cortante de los pórticos en x', f'{dec(100 * fr["x"], 1)} %'),
+            ('cortante de los pórticos en y', f'{dec(100 * fr["y"], 1)} %'),
+            ('deriva con las secciones del presupuesto', f'{dec(hist[0]["deriva_max_pct"], 2)} %'),
+            ('deriva con las secciones adoptadas', f'{dec(hist[-1]["deriva_max_pct"], 2)} %')],
+        'Capacidad de disipación de energía': [
+            ('capacidad de disipación', dis['capacidad_disipacion']), ('Aa', f'Aa = Av = {dec(dis["Aa"], 2)}'),
+            ('coeficiente de importancia', f'I = {dec(dis["I"], 1)}'), ('R0', f'R0 = {dec(R["R0"], 1)}'),
+            ('Ω0', f'Ω0 = {dec(R["Omega0"], 1)}'),
+            ('R', f'{dec(R["phi_a"], 1)} × {dec(R["phi_p"], 1)} × {dec(R["phi_r"], 1)} × {dec(R["R0"], 1)} = {dec(R["R"], 2)}'),
+            ('irregularidad 3A', dec(irr['geometrica_3A']['cociente'], 2)), ('irregularidad 1aP', dec(irr['torsional_1P']['maximo']['x'], 3)),
+            ('columna fuerte-viga débil mínima', dec(cfvd, 2))],
+        'Cimentación': [
+            ('pilotes', f'{n_pil} pilotes'), ('pilote', f'{dec(pil[0]["D_m"], 2)} m × {ent(L[0])} m'),
+            ('metros de pilote', f'{ent(sum(p["ml"] for p in pil))} m'), ('dados', f'{len(dados)} dados de {por_dado[0]} a {por_dado[-1]} pilotes'),
+            ('losas de pilotes', f'{len(losas)} losas de pilotes'),
+            ('pilotes de las losas', ' y '.join(str(g['pilotes']) for g in losas)),
+            ('vigas de amarre', f'{len(cim["vigas_amarre"])} vigas de amarre'), ('muros de contención', f'{len(cim["muros_contencion"])} muros de contención'),
+            ('contrapiso', f'contrapiso de {dec(cim["contrapiso"]["espesor_m"], 2)} m'),
+            ('capacidad de servicio por pilote', f'{ent(cim["pilote"]["capacidad_kN"]["Qadm"])} kN'),
+            ('metros de pilote del presupuesto', f'{ent(items["2.04"]["cantidad"])} m')],
+        'Cuantías de acero y concreto por m²': [
+            ('concreto', f'{dec(m3s + m3c, 1)} m³'), ('concreto por m²', f'{dec((m3s + m3c) / area, 2)} m³/m²'),
+            ('acero', f'{ent(kgs + kgc)} kg'), ('acero por m²', f'{dec((kgs + kgc) / area, 1)} kg/m²'),
+            ('acero por m³', f'{ent((kgs + kgc) / (m3s + m3c))} kg/m³'),
+            ('superestructura', f'{dec(m3s / area, 2)} m³/m² y {dec(kgs / area, 1)} kg/m²'),
+            ('cimentación', f'{dec(m3c / area, 2)} m³/m² y {dec(kgc / area, 1)} kg/m²'),
+            ('acero del presupuesto por m²', f'{dec((kg_pres_s + kg_pres_c) / area, 1)} kg/m²'),
+            ('acero del presupuesto en la superestructura y en la cimentación', f'{dec(kg_pres_s / area, 1)} en la superestructura y {dec(kg_pres_c / area, 1)} en la cimentación'),
+            ('área de la torre', f'{dec(area, 1)} m²'),
+            ('estructura por m² en el presupuesto', '$' + ent(est_cap['torre_por_m2_con_aiu_sobre_3620_6'])),
+            ('estructura por m² con el prediseño', '$' + ent(por_m2_ajuste)),
+            ('estructura del tipo por m²', '$' + ent(tipo_m2)),
+            ('razón frente al tipo, presupuesto', dec(est_cap['torre_por_m2_con_aiu_sobre_3620_6'] / tipo_m2, 2)),
+            ('razón frente al tipo, prediseño', dec(por_m2_ajuste / tipo_m2, 2))],
+        'Luces y modulación': [
+            ('luces en x', f'{len(xs) - 1} luces de {dec(xs[1] - xs[0], 2)} m'), ('luces en y', f'{luces_y} m'),
+            ('columnas en los pisos 1 a 3', f'{por_piso[1]} columnas'), ('columnas en el piso 4', f'{por_piso[4]} en el piso 4')],
+        'Pisos y alturas': [
+            ('entrepiso del piso 1', f'{dec(niveles[0]["altura_entrepiso"], 2)} m en el piso 1'),
+            ('entrepiso de los pisos 2 a 4', f'{dec(niveles[1]["altura_entrepiso"], 2)} m en los pisos 2 a 4'),
+            ('cubierta del piso 4', f'{dec(niveles[3]["z"], 1)} m'), ('cubierta del piso 3 sur', f'{dec(niveles[2]["z"], 1)} m'),
+            ('retroceso', f'{ent(retro)} m'), ('altura libre', f'{dec(h_lib, 2)} m'), ('bajo las vigas', f'{dec(bajo_viga, 2)} m')],
+    }
 
 
 def num(x):
@@ -156,12 +272,14 @@ def validar(archivo: Path = CONTRASTE) -> C.Informe:
     amb = programa['ambientes']
 
     # ---------------------------------------------------------------- K1
-    esperado = {'referentes': 10, 'contraste_ambientes': 40, 'contraste_capitulos': 39, 'dotacion_por_ambiente': 12,
-                'inconsistencias_detectadas': 7}
+    agregadas = sum(1 for x in c.get('contraste_capitulos') or [] if x.get('seccion') == '17.6' and x.get('agregada'))
+    esperado = {'referentes': 10, 'contraste_ambientes': 40, 'contraste_capitulos': CAPITULOS_INVESTIGACION + agregadas,
+                'dotacion_por_ambiente': 12, 'inconsistencias_detectadas': 7}
     for k, n in esperado.items():
         inf.revisado('K1')
         if len(c.get(k) or []) != n:
-            inf.error('K1', f'{k}: {len(c.get(k) or [])} filas; la investigación trae {n}')
+            inf.error('K1', f'{k}: {len(c.get(k) or [])} filas; la investigación trae {n}'
+                            + (f' (con las {agregadas} agregadas del 17.6)' if k == 'contraste_capitulos' and agregadas else ''))
     for k in ('resumen_para_la_web', 'referente_principal', 'novedades_2025_2026', 'costo_m2', 'escalamiento', 'capa_contraste_3d',
               'conclusiones', 'fuentes', 'conteos_veredictos', 'convenciones'):
         inf.revisado('K1')
@@ -522,7 +640,65 @@ def validar(archivo: Path = CONTRASTE) -> C.Informe:
     inf.revisado('K9')
     if pt.get('escalamiento_a_torre', {}).get('estado') != 'escenario inicial superado por programa.json (4 pisos, 3.369,6 m²)':
         inf.error('K9', 'proyecto_tipo.json → escalamiento_a_torre.estado no tiene el texto del 9.1')
+
+    # ---------------------------------------------------------------- K10
+    validar_17_6(inf, c, programa)
     return inf
+
+
+def validar_17_6(inf: C.Informe, c: dict, programa: dict) -> None:
+    """K10: filas del 17.6 en contraste_capitulos, con las cifras de la torre rehechas desde el prediseño."""
+    caps = c.get('contraste_capitulos') or []
+    filas = [x for x in caps if x.get('seccion') == '17.6']
+    por_tema = {}
+    for x in filas:
+        por_tema.setdefault(x.get('tema'), []).append(x)
+    for tema in TEMAS_17_6:
+        inf.revisado('K10')
+        if len(por_tema.get(tema, [])) != 1:
+            inf.error('K10', f'el 17.6 pide una fila «{tema}» con seccion 17.6; hay {len(por_tema.get(tema, []))}')
+    for tema in por_tema:
+        if tema not in TEMAS_17_6:
+            inf.error('K10', f'fila «{tema}» marcada 17.6 que no es un tema del 17.6 ({", ".join(TEMAS_17_6)})')
+    temas = [x.get('tema') for x in caps]
+    if len(set(temas)) != len(temas):
+        inf.error('K10', 'contraste_capitulos: temas repetidos (las filas del 17.6 reemplazan las de la investigación con el mismo tema)')
+    for x in filas:
+        inf.revisado('K10')
+        t = x.get('tema')
+        if x.get('veredicto') not in VEREDICTOS:
+            inf.error('K10', f'«{t}»: veredicto «{x.get("veredicto")}» no está en {VEREDICTOS}')
+        for campo in ('tipo', 'torre', 'explicacion', 'tipo_dato'):
+            if not x.get(campo):
+                inf.error('K10', f'«{t}»: falta {campo}')
+        pc = 'por confirmar' in str(x.get('tipo', '')).lower()
+        if pc and not x.get('por_confirmar'):
+            inf.error('K10', f'«{t}»: el tipo dice «por confirmar» y la fila no lleva por_confirmar')
+        if x.get('por_confirmar') and not any('por confirmar' in str(x.get(k, '')).lower() for k in ('tipo', 'torre', 'explicacion')):
+            inf.error('K10', f'«{t}»: lleva por_confirmar y ningún texto dice qué está por confirmar')
+        if re.search(r'\.json|\b[a-z]+_[a-z0-9_]+\b', ' '.join(str(x.get(k, '')) for k in ('tipo', 'torre', 'explicacion'))):
+            inf.error('K10', f'«{t}»: el texto cita rutas o claves internas (la web no las muestra)')
+    if not ESTRUCTURA.exists():
+        inf.aviso('K10', 'todavía no existe el prediseño estructural: las cifras de las filas del 17.6 no se pudieron rehacer')
+        return
+    try:
+        est = C.cargar_json(ESTRUCTURA)
+        esperadas = cifras_17_6(est, C.cargar_json(PRESUPUESTO), programa, c.get('costo_m2') or {})
+    except (KeyError, StopIteration, AttributeError, IndexError, TypeError, ValueError) as e:
+        inf.error('K10', f'no se pudieron rehacer las cifras del 17.6 desde el prediseño: {type(e).__name__}: {e}')
+        return
+    viejos = [k for k, h in (est.get('insumos_sha1') or {}).items() if (C.RAIZ / k).exists() and C.sha1_archivo(C.RAIZ / k) != h]
+    if viejos:
+        inf.aviso('K10', f'el prediseño estructural está desactualizado frente a {", ".join(viejos)}: regenerarlo y revisar las cifras')
+    for tema, cifras in esperadas.items():
+        x = (por_tema.get(tema) or [None])[0]
+        if not x:
+            continue
+        texto = ' '.join(str(x.get(k, '')) for k in ('tipo', 'torre', 'explicacion')).replace('\u00a0', ' ').replace('\u202f', ' ')
+        for que, cifra in cifras:
+            inf.revisado('K10')
+            if cifra not in texto:
+                inf.error('K10', f'«{tema}»: no dice {cifra} ({que}, rehecho desde el prediseño, el presupuesto o el programa)')
 
 
 def main():

@@ -2,17 +2,20 @@
 
 **Demoler las construcciones del antiguo Centro Vida, al lado del hospital, y levantar allí una torre de 4 pisos que cumpla la norma sismorresistente para hospitales y toda la norma de salud, con urgencias, partos, hospitalización, consulta, rayos X, ecografía y un laboratorio clínico de 24 horas con tamizaje. El edificio actual, al que según la E.S.E. no conviene invertirle porque no cumple la norma sismorresistente para un hospital (su estudio de vulnerabilidad de 2024 no es público), pasa a oficinas, archivo, bodega y central de distribución.**
 
-> Estado: **prefactibilidad**, con fecha de corte del 22 de octubre de 2026. Cada cifra dice si es un **dato oficial** (copiado de la fuente), un **cálculo propio** (operación sobre datos oficiales, con el método a la vista) o una **estimación** (supuesto con rango, por confirmar). Pesos constantes de 2026 (IPC del DANE, base enero–septiembre de 2026). Los datos completos están en `data/proyectos/torre_hospital/`: `normas.json` y `proyecto_tipo.json` (norma y proyecto tipo), `programa.json` (demanda y programa por ambiente), `dotacion.json` y `laboratorio.json` (equipos y laboratorio), `presupuesto.json`, `apu.json`, `financiacion.json` y `proyectos.json` (este documento). El modelo 3D está en `data/edificios/torre_hospital.json`.
+> Estado: **prefactibilidad**, con fecha de corte del 22 de octubre de 2026 y actualización del 25 de octubre de 2026 (contraste con el proyecto tipo, plantas por piso, inventario para la habilitación, prediseño estructural con cimentación, simulador sísmico y modelo BIM; detalle en los documentos 14, 15 y 16). Cada cifra dice si es un **dato oficial** (copiado de la fuente), un **cálculo propio** (operación sobre datos oficiales, con el método a la vista) o una **estimación** (supuesto con rango, por confirmar). Pesos constantes de 2026 (IPC del DANE, base enero–septiembre de 2026). Los datos completos están en `data/proyectos/torre_hospital/`: `normas.json` y `proyecto_tipo.json` (norma y proyecto tipo), `programa.json` (demanda y programa por ambiente), `dotacion.json` y `laboratorio.json` (equipos y laboratorio), `presupuesto.json`, `apu.json`, `financiacion.json` y `proyectos.json` (este documento). El modelo 3D está en `data/edificios/torre_hospital.json`.
 >
 > **La “485”** es la Resolución 485 de 2025 de MinSalud: los requisitos para que el Ministerio (o la Secretaría Seccional de Salud) dé el *concepto técnico de viabilidad* a un proyecto de infraestructura, equipamiento fijo y dotación. La modificaron la Res. 1211 y la Res. 1519 de 2025 (esta última reescribió todo el artículo 7, que es el que rige hoy). El diseño sigue la Res. 1633 de 2025 (marco técnico de edificaciones de salud) y la habilitación, la Res. 3100 de 2019.
 
 ## En pocas palabras
 
-- **Por qué una torre y no reforzar.** Un hospital con urgencias es una *edificación indispensable* (grupo IV de la NSR-10): debe seguir funcionando después de un terremoto. El edificio actual funciona desde 1989 (parte en el antiguo hospital de la Shell) y su estudio de vulnerabilidad de 2024 ($182,6 M) no es público. El terremoto de 7,4 del 10 de agosto de 2026 en el Chocó dejó más de 300 muertos y colapsó parcialmente un ala del Hospital Universitario del Valle: un hospital que se cae no atiende a nadie. Llevar lo asistencial a una torre nueva y dejar el edificio viejo para funciones de apoyo baja el riesgo y evita invertir en un edificio que no cumple.
+- **Por qué una torre y no reforzar.** Un hospital con urgencias es una *edificación indispensable* (grupo IV de la NSR-10): debe seguir funcionando después de un terremoto. El edificio actual funciona desde 1989 (parte en el antiguo hospital de la Shell) y su estudio de vulnerabilidad de 2024 ($182,6 M) no es público. El terremoto de magnitud 7,4 del 10 de agosto de 2026 (epicentro por confirmar: San José del Palmar, Chocó, según la OPS, o Pereira, según la prensa del anexo C; ver 1.2) dejó más de 300 muertos y colapsó parcialmente un ala del Hospital Universitario del Valle: un hospital que se cae no atiende a nadie. Llevar lo asistencial a una torre nueva y dejar el edificio viejo para funciones de apoyo baja el riesgo y evita invertir en un edificio que no cumple.
 - **Sí hay proyecto tipo, pero pequeño.** MinSalud y el DNP solo tienen proyectos tipo de **puesto o centro de salud** (MinSalud 2017, 128,5 m²; DNP 2018, 320,6 m²). No existe un “hospital de primer nivel tipo”. La torre **se inspira en el proyecto tipo del DNP** (pórticos de concreto modulares, circulación central con aleros, bioclimática de clima cálido, materiales durables, dotación por ambiente) y se escala con las áreas de la Res. 1633.
+- **Frente al proyecto tipo.** La torre equivale a 10,5 veces el puesto tipo del DNP (base: 3.369,6 m² de la torre y 320,6 m² del tipo) y solo 30 % de su área útil tiene un ambiente equivalente en el tipo. De los 18 ambientes con equivalente, 9 mejoran, 4 igual, 4 se apartan y 1 falta; su obra civil cuesta entre 0,8 % y 19,9 % más por m² según el área con que se mida el tipo (cálculo propio, sección 3).
 - **Qué tiene.** 3.369,6 m² en 4 pisos (más bloque técnico, residuos y exteriores: 3.620,6 m²). **15 camas** (13 generales y 2 habitaciones de parto TPR), 6 camillas de observación, 15 consultorios, 3 unidades odontológicas, rayos X digital, ecografía, laboratorio de 24 horas, vacunación, farmacia, terapias y una sala de expansión de 8 camillas para emergencias. Hoy (REPS 2022) hay 9 camas, 4 camillas y 13 consultorios.
+- **Dotación por servicio frente a la norma.** 1.702 unidades ubicadas una por una en la planta, cada una con su exigencia de la Res. 3100, su clase de riesgo y su registro (Decreto 4725). Para cumplir en dotación e infraestructura faltan 42 ítems: $46,9 M con precio, 12 por cotizar y $4,1 M al año de operación; con ellos, 11 de los 12 servicios que se habilitan quedan sin faltantes exigibles (cálculo propio; sección 5.3 y documento 15). La matriz no revisa talento humano, historia clínica ni interdependencia.
 - **Laboratorio con tamizaje.** 55 pruebas en sitio (unas 5.365 al mes) con tiempos de respuesta definidos: urgencias en 60 minutos o menos, rutina en 4 a 6 horas y tamizaje en 24 a 72 horas, incluidos VPH y tuberculosis por PCR, TSH neonatal, HbA1c, sangre oculta, sífilis, VIH, hepatitis, Chagas, toxoplasma y malaria. Los analizadores van en comodato pagado con reactivos. Hoy el hospital paga **$440 M al año** a un laboratorio externo (SECOP, 2025).
-- **Cuánto cuesta.** **$37.137 M** (rango $27.363 M a $50.600 M). La obra vale $26.228 M con AIU ($19.727 M de costo directo); la dotación, el laboratorio, la TIC y el generador de oxígeno, $5.355 M; estudios, diseños y licencia, $1.832 M; interventoría, $1.836 M; gestión ambiental y social, $45 M; puesta en marcha, $250 M; contingencias, $1.592 M. **$7,24 M de obra por m²** ($5,46 M sin equipos ni solar, casi igual al contrato de obra de Monguí, Boyacá, de 2025, con $5,26 M, y al proyecto tipo del DNP, con $5,42 M). Los jornales ya incluyen la jornada de 42 horas semanales que rige desde julio de 2026.
+- **Qué le pasa en un sismo.** Con el prediseño que cumple la NSR-10 (sistema dual con capacidad moderada de disipación, DMO, para amenaza intermedia), el sismo del nido de Bucaramanga la mueve 0,056 % de la altura de cada piso y el sismo local hipotético bajo Yondó, 0,416 %: queda en ocupación inmediata; lo que sufre son los equipos sueltos y la mampostería (cálculo propio, sección 1.1 y documento 14).
+- **Cuánto cuesta.** **$37.137 M** (rango $27.363 M a $50.600 M), sin el ajuste pendiente del prediseño estructural: cumplir la NSR-10 con columnas de 0,80-0,90 m, muros de 0,35 m y 146 pilotes de 15 m cuesta $1.310 M a $1.390 M más de costo directo ($1.742 M a $1.848 M con AIU; sección 6.3). La obra vale $26.228 M con AIU ($19.727 M de costo directo); la dotación, el laboratorio, la TIC y el generador de oxígeno, $5.355 M; estudios, diseños y licencia, $1.832 M; interventoría, $1.836 M; gestión ambiental y social, $45 M; puesta en marcha, $250 M; contingencias, $1.592 M. **$7,24 M de obra por m²** ($5,46 M sin equipos ni solar, casi igual al contrato de obra de Monguí, Boyacá, de 2025, con $5,26 M, y al proyecto tipo del DNP, con $5,42 M). Los jornales ya incluyen la jornada de 42 horas semanales que rige desde julio de 2026.
 - **Quién la paga.** Ninguna fuente sola alcanza. Mezcla que cierra la torre (escenario base): MinSalud $12.000 M, regalías de Yondó $14.037 M, inversión regional y Gobernación $3.800 M, Obras por Impuestos $2.500 M, crédito $1.500 M y el resto entre FENOGE, MinTIC, municipio, E.S.E. y otros. MinSalud es la fuente más incierta: su inversión propia baja de $2,6 a $1,6 billones en 2027 y el terremoto compite por esa plata. Con los montos *probables* de `docs/06` (MinSalud $3.000 M, Obras por Impuestos $1.800 M, sin crédito) faltan $11.700 M.
 - **Cuántos proyectos.** **9**: 7 forman la torre y 2 la complementan (adecuar el edificio actual y una ambulancia medicalizada, $2.613 M). Se pueden presentar en 7 fichas MGA. El primero —estudios y diseños, $1.832 M— cabe hoy en las asignaciones directas de regalías 2025-2026 que el municipio todavía no ha aprobado para proyectos (≈ $9.569 M a octubre de 2026, cálculo propio con datos de MinHacienda).
 - **Cuándo.** Diseños en 2027, radicación ante MinSalud entre noviembre de 2027 y abril de 2028, obra de 18 meses desde agosto de 2028 y apertura hacia **abril de 2030**. Con la modalidad llave en mano (Res. 1211) podría abrir a finales de 2029.
@@ -25,10 +28,22 @@
 | Población a atender | 22.429 habitantes en 2026 (47 % rural) y 25.550 en 2035 | Dato oficial, DANE |
 | Grupo de uso sísmico | Grupo IV (edificación indispensable), coeficiente de importancia 1,5; Yondó tiene amenaza sísmica intermedia (Aa = Av = 0,15) | Dato oficial, NSR-10 A.2.5.1.1 y Apéndice A-4 |
 | Edificio actual | En uso desde 1989; estudio de vulnerabilidad sísmica contratado en 2024 por $182,6 M, sin publicar | Dato oficial, SECOP I (`docs/anexos/C-hospital-2028.md`) |
-| Terremoto del 10-ago-2026 (magnitud 7,4, San José del Palmar, Chocó) | 331 muertos y 4.519 heridos (OPS, 3-sep-2026); colapso parcial de un ala del Hospital Universitario del Valle | Dato oficial (OPS) y prensa: [OPS](https://www.paho.org/es/monitoreo-amenazas-naturales/monitoreo-amenazas-naturales-4-septiembre-2026), [Infobae](https://www.infobae.com/colombia/2026/08/11/asi-amanecieron-las-ciudades-mas-afectadas-por-el-terremoto-de-74-que-sacudio-a-colombia-el-10-de-agosto/) |
+| Terremoto del 10-ago-2026 (magnitud 7,4; epicentro por confirmar, ver 1.2) | 331 muertos y 4.519 heridos (OPS, 3-sep-2026); colapso parcial de un ala del Hospital Universitario del Valle | Dato oficial (OPS) y prensa: [OPS](https://www.paho.org/es/monitoreo-amenazas-naturales/monitoreo-amenazas-naturales-4-septiembre-2026), [Infobae](https://www.infobae.com/colombia/2026/08/11/asi-amanecieron-las-ciudades-mas-afectadas-por-el-terremoto-de-74-que-sacudio-a-colombia-el-10-de-agosto/) |
 | Demanda 2035 | 4 a 12 camas generales, 22.500 a 39.400 consultas médicas, 6.400 a 10.200 urgencias y 27.000 a 73.000 pruebas de laboratorio al año | Estimación con rango, `programa.json` |
 
 **La alternativa de reforzar** el edificio actual para grupo IV obligaría a intervenir todo un edificio de un piso, de los años ochenta, con los servicios funcionando adentro, y al final seguiría siendo un edificio viejo con circulaciones y áreas por debajo de la Res. 1633. La torre libera ese edificio para funciones que no son esenciales (oficinas, archivo, almacén, cocina, lavandería, mantenimiento, base de ambulancias), donde la exigencia sísmica es menor. Aun así, el edificio actual necesita la intervención que diga el estudio de 2024 para su nuevo uso (proyecto P8).
+
+### 1.1 ¿Qué le pasa a la torre en un sismo?
+
+- Yondó está en **amenaza sísmica intermedia** (Aa = Av = 0,15) y la torre es **grupo IV** (I = 1,5): el concreto se diseña con **capacidad moderada de disipación de energía (DMO)** y la torre debe quedar sin daño en el sismo frecuente del umbral de daño (NSR-10 A.2.3, A.3 y A.12; numerales por confirmar).
+- El prediseño que cumple es **dual**: 5 muros de concreto de 0,35 m en los núcleos de escaleras y pórticos con columnas de 0,80 m (0,90 m en la fachada occidental). Su deriva de diseño es 0,939 % (límite 1 %) y la del umbral de daño, 0,178 % (límite 0,4 %; cálculo propio).
+- En el sismo del nido de Bucaramanga como el del 10-mar-2015, la torre se mueve 0,056 % y ningún elemento fluye; en el sismo local hipotético bajo Yondó (Mw 6,0 a 10 km), 0,416 %, con 40 elementos que fluyen dentro de ocupación inmediata; llevado al nivel de diseño de la NSR-10 (hipotético), 0,884 % (cálculo propio con el simulador).
+- Lo vulnerable son los contenidos: en el sismo local deslizan 260 equipos sueltos y 6 muros de mampostería tienen daño moderado. Por eso se anclan los equipos y la mampostería va separada de la estructura.
+- El simulador, su física, su validación con OpenSees y sus límites están en el **documento 14** (`docs/14-simulacion-sismica.md`). Es un prediseño: no reemplaza el diseño estructural firmado ni el estudio de suelos.
+
+### 1.2 Nota sobre el epicentro del 10 de agosto de 2026
+
+Las fuentes del atlas dan dos epicentros para el terremoto de magnitud 7,4: la OPS (informe del 3-sep-2026) lo ubica en **San José del Palmar (Chocó)** y una nota de El Tiempo citada en el anexo C dice **«epicentro en Pereira»**. El atlas no escoge uno sin fuente primaria (el catálogo del Servicio Geológico Colombiano o del USGS, por confirmar), y tampoco su profundidad ni su tipo de magnitud. Las dos distancias a Yondó (≈ 342 km y ≈ 313 km, cálculo propio) quedan fuera del rango del simulador sísmico, que no lo usa como escenario.
 
 ## 2. Qué norma cumple: la lista de chequeo de la Res. 485
 
@@ -47,12 +62,12 @@ La Res. 485 (con el artículo 7 que reescribió la Res. 1519 de 2025) pide estos
 | 7.1.2.2 | Certificado de planeación: cumplimiento del EOT/PBOT (uso del suelo y condiciones urbanísticas) y que el predio no está en riesgo no mitigable. | Yondó está a orillas del Magdalena: pedir explícitamente el concepto de amenaza por inundación del lote y su cota frente a las crecientes. | Secretaría de Planeación de Yondó |
 | 7.1.2.3 | Certificación de disponibilidad de servicios (agua potable, alcantarillado, energía) o hoja de ruta para proveerlos. | Disponibilidad de acueducto y alcantarillado del prestador municipal y de energía de EPM para la nueva carga (incluida la planta y la solar). | Prestadores de servicios públicos |
 | 7.1.2.4 | Documento de Capacidad Instalada concertado entre la E.S.E. y la Subdirección de Prestación de Servicios de MinSalud, en el marco del PTRRM. | Definir camas, camillas, consultorios, salas y equipos de la torre y concertarlo; puede partir de la 'capacidad instalada tipo' que publique MinSalud (parágrafo 1, Res. 1519). | E.S.E. + MinSalud (Subdirección de Prestación de Servicios) |
-| 7.1.2.5 | Programa médico arquitectónico con áreas de cada ambiente, servicio y circulaciones. | Usar las áreas mínimas de la Res. 1633 (Anexo 1) y de la Res. 3100 (ver parametros_diseno). | Arquitecto diseñador |
+| 7.1.2.5 | Programa médico arquitectónico con áreas de cada ambiente, servicio y circulaciones. | Usar las áreas mínimas de la Res. 1633 (Anexo 1) y de la Res. 3100 (parámetros de diseño de las normas del atlas). | Arquitecto diseñador |
 | 7.1.2.6 | Diseños arquitectónicos (localización, plantas, cubiertas, cortes y fachadas) a escala 1:75, 1:100 o 1:125, acotados, amoblados y firmados con matrícula, que cumplan la n… | Diseño de la torre según Res. 1633 y 3100, NSR-10 Grupo IV y accesibilidad. | Arquitecto con matrícula |
 | 7.1.2.8 | Implantación de la propuesta en el levantamiento topográfico con curvas de nivel. | Levantamiento del lote (el prado queda unos 2 m por encima de la vía occidental, según Street View). | Topógrafo + arquitecto |
 | 7.1.2.9 | Estudios topográficos y de suelos; diseños estructural, hidrosanitario, contra incendio, eléctrico, redes de voz y datos, y mecánicos (gases medicinales, ventilación), fi… | Estructura Grupo IV (I = 1,5; umbral de daño), rociadores NFPA 13/NTC 2301, RETIE 3.28.3.2, gases medicinales, climatización según Cuadro 4 de la Res. 1633. | Especialistas con matrícula |
 | 7.1.2.10 | Presupuesto detallado de obra, fechado y firmado por quien lo elaboró y por el profesional de la entidad que lo revisó. | Presupuesto por capítulos con APU (ver tareas de presupuesto del proyecto). | Presupuestador + profesional de la entidad |
-| 7.1.2.11 | Mobiliario dentro del proyecto de infraestructura (solo para servicios exclusivos de primer nivel con desarrollo integral): listado con especificaciones y precios, cuadro… | Aplica si la torre se presenta como desarrollo integral (estudios, diseños y obra) de servicios exclusivos de primer nivel. Ojo: la ecografía es mediana complejidad en la Res. 3100 (ver servicios_3100… | E.S.E. |
+| 7.1.2.11 | Mobiliario dentro del proyecto de infraestructura (solo para servicios exclusivos de primer nivel con desarrollo integral): listado con especificaciones y precios, cuadro… | Aplica si la torre se presenta como desarrollo integral (estudios, diseños y obra) de servicios exclusivos de primer nivel. Ojo: la ecografía es mediana complejidad en la Res. 3100 (servicios de la 3100 en las normas del atlas)… | E.S.E. |
 | 7.1.5 | Equipamiento fijo: listado con especificaciones, cantidad, precio, justificación (nuevos servicios o incremento de capacidad), cuadro comparativo, planos con ubicación, c… | Planta eléctrica, transferencias y UPS, ascensor camillero, bombas y tanques, aire acondicionado y ventilación, central o manifold de gases, autoclave, lavachatas, sistema contra incendio. (Las autocl… | E.S.E. + ingeniería |
 | 7.1.6 a | Dotación biomédica: listado por servicio con especificaciones, cantidades, precios, cuadro comparativo, justificación con inventario existente, certificación de disponibi… | Dotación de urgencias, parto, hospitalización, consulta, odontología, laboratorio clínico (con tamizaje y analizadores), rayos X, ecografía, esterilización, vacunación y farmacia. Incluir inventario a… | E.S.E. + ingeniero biomédico |
 | 7.1.6 b | Dotación TIC: documento de software y hardware con licencias, especificaciones y manuales, plan de implementación y capacitación, listado con cotizaciones (2 marcas) y ce… | Sistema de información del laboratorio (LIS), PACS/RIS para imágenes, red de datos y telemedicina. | E.S.E. + ingeniero de sistemas |
@@ -65,9 +80,17 @@ La Res. 485 (con el artículo 7 que reescribió la Res. 1519 de 2025) pide estos
 
 **Control especial de oferta.** La infraestructura y el equipamiento fijo suman $26.228 M, más que el umbral de 5.000 salarios mínimos ($8.755 M en 2026): el proyecto necesita **concepto de MinSalud** y estar en el plan de inversiones del departamento (Plan Bienal o, desde 2025, el **PMIDS** de Antioquia). Cálculo propio.
 
-**Otras normas de diseño** (detalle en `normas.json`): Res. 1633 de 2025 (áreas mínimas, módulo de 1,20 m, corredores de 2,40-2,80 m, climatización por ambiente, adaptación al cambio climático), Res. 3100 de 2019 (estándares de los 13 servicios), NSR-10 títulos A, J y K (sismo, fuego y evacuación: rociadores en todo el edificio), RETIE 2024 y su modificación de 2026 (planta que entra en menos de 10 segundos, UPS en áreas críticas), NTC 2050 sección 517, Índice de Seguridad Hospitalaria de la OPS (reserva de agua y combustible para 72 horas), Res. 591 de 2024 (residuos) y NTC 6047 (accesibilidad).
+**Otras normas de diseño** (detalle en `normas.json`): Res. 1633 de 2025 (áreas mínimas, módulo de 1,20 m, corredores de 2,40-2,80 m, climatización por ambiente, adaptación al cambio climático), Res. 3100 de 2019 (estándares de los 13 servicios), NSR-10 títulos A, B, C, H, J y K (sismo en amenaza intermedia con concreto de capacidad moderada de disipación de energía, DMO; cargas; concreto; cimentación; fuego y evacuación: rociadores en todo el edificio), RETIE 2024 y su modificación de 2026 (planta que entra en menos de 10 segundos, UPS en áreas críticas), NTC 2050 sección 517, Índice de Seguridad Hospitalaria de la OPS (reserva de agua y combustible para 72 horas), Res. 591 de 2024 (residuos) y NTC 6047 (accesibilidad).
 
 **Tres choques entre normas y cómo se resolvieron:** reserva de agua (24 h en la 3100, 48 h en la 1633, 72 h en el índice de la OPS: se adopta 72 h); áreas mínimas (se toma siempre la mayor, por ejemplo habitación TPR de 24 m² y no de 16); ecografía (la 3100 la trata como mediana complejidad: hay que decidirlo en el Documento de Capacidad Instalada).
+
+### 2.1 Qué norma de habilitación rige
+
+- **La Res. 3100 de 2019 sigue vigente** «sin solución de continuidad», con sus modificaciones (2215 de 2020, 1317 de 2021, una de 2022, 544 de 2023, 465 de 2025 y 914 de 2025, entre otras). La de 2022 es la 1138 según la investigación de urgencias o la 1410 según las normas del atlas: **por confirmar** en el normograma de Supersalud.
+- **La Res. 1732 de 2026** (nuevo manual de habilitación, 5-ago-2026) **fue revocada** en su integridad por la **Res. 2080 del 8-sep-2026** antes de regir; nunca se publicó en el Diario Oficial. Se informa y no se usa como requisito: la torre debe cumplir la 3100 completa desde la visita previa.
+- **La Res. 914 de 2025** (manual de reprocesamiento de dispositivos médicos) rige desde el 3-ene-2027 y deroga los numerales de esterilización de la 3100: cambia la central de esterilización antes de la apertura prevista hacia abril de 2030. Sus requisitos quedan por confirmar hasta leer el manual.
+- **La Res. 1811 de 2025** (radiaciones ionizantes, desde el 6-mar-2026 según MinSalud) reemplazó a la Res. 482 de 2018: la licencia de rayos X y del periapical, la dosimetría y el control de calidad se tramitan con ella.
+- El **Decreto 4725 de 2005** (con los Decretos 3275 de 2009 y 582 de 2017) fija la clase de riesgo, el registro INVIMA, la prohibición de comprar usados IIb y III y el mantenimiento por personal inscrito; la Res. 4816 de 2008, la tecnovigilancia. Detalle, servicio por servicio, en el **documento 15**. Todos los textos vienen de compilaciones vistas por buscador: cotejar con el Diario Oficial antes de radicar.
 
 ## 3. El proyecto tipo que la inspira
 
@@ -81,6 +104,38 @@ La Res. 485 (con el artículo 7 que reescribió la Res. 1519 de 2025) pide estos
 **Búsquedas sin resultado** (22-oct-2026): no hay “centro de salud tipo” ni “hospital de primer nivel tipo” en la biblioteca de MinSalud; la Gobernación de Antioquia no publica prototipos; las “capacidades instaladas tipo” que prometió la Res. 1211 no están publicadas (`proyecto_tipo.json`).
 
 **Cómo se ve.** Volumen de concreto claro y pañete blanco con aleros y quiebrasoles; base y fachadas en ladrillo terracota que recuerdan las alas que se demuelen; celosías verticales en la fachada occidental; cubierta blanca con paneles solares; el mango grande del prado se conserva y da sombra a la plaza de entrada.
+
+### 3.1 Contraste ambiente por ambiente
+
+De los 40 ambientes comparados, solo **18 tienen un ambiente equivalente en el proyecto tipo** (consulta, odontología, toma de muestras, citologías, dispensación, espera, recepción y apoyo técnico); los otros 22 (urgencias, hospitalización, partos, laboratorio, imágenes, esterilización, vacunación, terapias, telemedicina, bahía y expansión) se comparan solo con el mínimo de la Res. 1633. Por eso cada ambiente lleva **dos veredictos** (cálculo propio; conteos del 24-oct-2026):
+
+| Frente a | Mejora | Cumple igual | Se aparta | Falta | Sin veredicto |
+|---|---:|---:|---:|---:|---:|
+| El proyecto tipo (18 ambientes con equivalente) | 9 mejoran | 4 igual | 4 se apartan | 1 falta | 22 sin equivalente |
+| El mínimo de área de la Res. 1633 (34 ambientes con mínimo) | 15 lo superan | 16 justo en el mínimo | 0 | 3 bajo el mínimo o por confirmar | 6 sin mínimo de área |
+
+La «falta» frente al tipo es un consultorio especializado que el tipo no tiene y que, si hace procedimientos (colposcopia, termoablación), pide 14 m² y tiene 12,96 m². Bajo el mínimo o por confirmar frente a la norma quedan ese consultorio y los ambientes de procesamiento de rayos X y de control y procesamiento de ecografía (Cuadros 22 y 27 de la Res. 1633, por confirmar con equipos digitales). En el recorrido 3D, la capa «Comparar con el proyecto tipo» tiñe los 18 ambientes con equivalente y deja en gris los demás.
+
+### 3.2 Costo por m² y dotación frente al tipo
+
+| Cifra | Valor | Tipo de dato y base de área |
+|---|---|---|
+| Tamaño | 10,5 veces el puesto tipo y ≈ 56 de sus módulos | Cálculo propio: 3.369,6 m² construidos de la torre frente a 320,6 m² del tipo y módulos de 59,65 m² |
+| Área con equivalente en el tipo | 30 % del área útil (601,9 de 2.018,4 m²) | Cálculo propio sobre el área útil de la torre |
+| Obra civil por m² | Entre 0,8 % y 19,9 % más que el tipo ($5.462.687 por m² frente a $5.417.624 o $4.555.806) | Cálculo propio: torre sobre 3.620,6 m²; tipo sobre 269,6 m² (presupuesto) o 320,6 m² (construidos) |
+| Obra completa por m² (con ascensores, planta, aire, gases, sistemas y solar) | De 1,34 a 1,59 veces el tipo ($7.243.986 por m²) | Cálculo propio, mismas bases |
+| Dotación | 21,7 veces la del tipo ($4.294 M frente a $198,1 M) y 2,1 veces por m² | Cálculo propio: 3.369,6 m² de la torre y 320,6 m² del tipo |
+| Estructura con cimentación por m² | 1,15 veces el tipo con el presupuesto vigente ($1.767.354) y 1,46 veces con el prediseño que cumple ($2.248.544), frente a $1.541.451 | Cálculo propio: torre con AIU sobre 3.620,6 m²; tipo sobre 269,6 m² |
+
+**Las dos cifras del tipo son la misma obra con dos áreas:** el proyecto tipo cuesta $5,42 M por m² de 2026 sobre los 270 m² de su presupuesto (269,6 m², la cifra que usa la sección 6.2) y $4.555.806 por m² sobre sus 320,6 m² construidos (la que usa el programa); por eso el costo de la obra civil de la torre frente al tipo se publica como rango, de 0,8 % a 19,9 % más (cálculo propio de la investigación del 23-oct-2026, con el IPC como deflactor).
+
+### 3.3 Dónde se aparta y por qué
+
+- **Escala y alcance:** el tipo es un puesto ambulatorio de un piso; la torre es la sede principal de primer nivel del municipio, con urgencias, partos e internación.
+- **Norma:** el tipo se diseñó con normas derogadas (Res. 4445 de 1996 y 2003 de 2014); la torre usa la Res. 1633 de 2025 y la 3100 de 2019, y toma siempre la exigencia mayor.
+- **Estructura:** se conserva la lógica del tipo (pórticos de concreto modulares sobre una retícula repetible), pero la luz de 7,60 × 4,30 m pasa a 7,20 m (múltiplo del módulo de 1,20 m); el sistema pasa a **dual** con muros de 0,35 m en los núcleos y columnas de 0,80-0,90 m, con capacidad moderada de disipación (DMO); la cimentación superficial pasa a **146 pilotes de 15 m**; las cuantías quedan en 0,74 m³ de concreto y 86,4 kg de acero por m² construido (las del tipo, por confirmar en su PDF); y los entrepisos de 4,20-4,50 m dejan 3,00 m libres bajo el cielo raso. Detalle en el documento 16, sección 13.
+- **Lote y clima:** fachadas largas al oriente y al occidente por la forma del lote (con celosías) y 5,3 m de separación con el hospital actual.
+- **Inconsistencias señaladas:** quiebrasoles de 0,90 m en el modelo 3D frente a 1,40 m presupuestados, muro cortina del piso 4 sin presupuesto y un posible duplicado del kit de examen ($67,5 M).
 
 ## 4. Programa por piso
 
@@ -96,9 +151,41 @@ La Res. 485 (con el artículo 7 que reescribió la Res. 1519 de 2025) pide estos
 
 **El edificio actual** (≈ 2.300 m²) queda para administración, archivo de historias clínicas, almacén y central de distribución, cocina, lavandería, mantenimiento, base de ambulancias y sede de los equipos extramurales.
 
+### 4.1 Plantas por piso (anteproyecto ilustrativo)
+
+**Planta ilustrativa: el diseño real lo hace el arquitecto con matrícula** (estimación; Res. 485, num. 7.1.2.6). El atlas dibujó todos los recintos del programa sobre la retícula de ejes A-D y 1-7, con los núcleos al oriente y las secciones del prediseño estructural, para poder recorrer la torre en 3D y ubicar la dotación.
+
+| Nivel | Recintos del programa | Circulaciones | Área a ejes | Avisos de área libre |
+|---|---:|---:|---:|---:|
+| Piso 1 | 82 | 6 | 907,2 m² | 20 |
+| Piso 2 | 69 | 6 | 907,2 m² | 12 |
+| Piso 3 | 69 | 5 | 907,2 m² | 9 |
+| Piso 4 | 42 | 4 | 648,0 m² | 6 |
+| Bloque técnico y cubierta | 19 | 5 | — | — |
+| Exteriores | 2 | 5 | — | — |
+
+- **Criterios:** módulo de 1,20 m; cada recinto a ejes con al menos el área del programa y el mínimo de la Res. 1633 (0 errores en 283 recintos); puertas del ancho de su categoría (camillas ≥ 1,10 m, NSR-10 K.3.14.2.3); salas de rayos X y periapical plomadas; ventana a fachada o patio en hospitalización, TPR, observación, consultorios y terapias (6 recintos sin ventana, aviso).
+- **Zonificación:** urgencias, rayos X, toma de muestras y admisiones en el piso 1; consulta, laboratorio, farmacia, vacunación y ecografía en el 2; hospitalización, partos y esterilización en el 3; terapias, odontología, telemedicina y expansión en el 4. El laboratorio queda sobre la toma de muestras, unido por un montacargas de muestras.
+- **Áreas a ejes y libres:** 47 recintos cumplen a ejes pero no con el área libre entre caras de muro (por ejemplo, reanimación con 18,60 m² libres frente a 20 m²): queda por confirmar si la Res. 1633 mide libre o a ejes (lista en el documento 15).
+- **Evacuación:** corredores de 2,55 m a ejes (≥ 2,40 m libres, Res. 1633, num. 3.3.6 b.1); la puerta de cada recinto a ≤ 30 m de una salida protegida y cualquier punto a ≤ 45 m. En la sección de las columnas de 0,80 y 0,90 m del prediseño quedan 2,02 a 2,09 m libres (aviso del validador; con las de 0,60 m eran 2,12 a 2,19 m); los 2,80 m recomendados para camillas no caben en la huella.
+- **Diferencias con el programa:** puerta principal en la fachada occidental en y = −8,9; sin puerta de servicio en la fachada sur del piso 1 (el servicio entra por el pasaje del bloque técnico); escalera principal abierta en un solo vano entre los ejes 2 y 3 para que ninguna viga cruce sus tramos. Por confirmar con quien apruebe el programa.
+
+### 4.2 Estructura y cimentación (prediseño)
+
+**Prediseño estructural, sin estudio de suelos ni diseño firmado** (cálculo propio; detalle en los documentos 14 y 16):
+
+- **Norma:** Yondó en amenaza sísmica intermedia (Aa = Av = 0,15), grupo de uso IV (I = 1,5), concreto con capacidad moderada de disipación de energía (DMO, NSR-10 C.21); sistema **dual** de la Tabla A.3-4 con R0 = 6,0 y Ω0 = 2,5 (por confirmar) y R = 4,86 por las irregularidades de retroceso y de torsión.
+- **Secciones:** columnas de 0,80 × 0,80 m (0,90 × 0,90 m en el eje A de la fachada occidental), vigas de 0,40 × 0,80 m (0,50 × 0,90 m en el eje A), 5 muros de concreto de 0,35 m en los núcleos de escaleras (27,42 m de alma) y losa nervada de 0,45 m, en concreto de 28 MPa con acero de 420 MPa. Con las secciones del presupuesto (columnas de 0,60 m) la deriva llegaba a 2,09 % y no cumplía el 1 %; con estas queda en 0,939 %.
+- **Cimentación:** 146 pilotes preexcavados de 0,60 m × 15 m (2.190 m) bajo 20 dados de 3 a 6 pilotes y 2 losas de pilotes bajo los núcleos, 37 vigas de amarre, 5 muros de contención y contrapiso de 0,15 m; capacidad de 632 kN de servicio por pilote con un suelo aluvial supuesto (estimación: la fijan el estudio geotécnico con análisis de licuación y las pruebas de carga).
+- **Refuerzo:** despiece de cada elemento con barras N.º 3 a N.º 8 (NTC 2289): 291.285 kg de acero (147.142 kg en la superestructura y 144.143 kg en la cimentación) y 2.483,1 m³ de concreto, es decir 86,4 kg de acero y 0,74 m³ de concreto por m² construido de la torre.
+
+### 4.3 Modelo BIM
+
+El atlas modeló la torre con la metodología BIM: un modelo federado por disciplinas (arquitectura, estructura, cimentación, refuerzo, equipamiento fijo e infraestructura, y dotación) con 4.583 elementos y 64.849 barras, exportado a dos archivos IFC4 georreferenciados (MAGNA-SIRGAS 2018 / Origen-Nacional) y validado sin errores de esquema con IfcOpenShell. Cada elemento lleva su ítem del presupuesto (5D), su fase de obra (4D, dentro del cronograma de la sección 10) y su vínculo con el simulador sísmico. La coordinación bajó las interferencias duras de 280 a 0. Es un **modelo de prefactibilidad: no reemplaza los diseños firmados**. Su plan de ejecución BIM, el nivel de información por disciplina y las cantidades frente al presupuesto están en el **documento 16** (`docs/16-bim-torre.md`).
+
 ## 5. Dotación y laboratorio
 
-La dotación biomédica y el mobiliario clínico suman **$4.294 M** (236 ítems con el equipamiento fijo; 37 con precio de referencia de SECOP y el resto estimados con rango). El equipamiento fijo (planta, UPS, ascensores, gases, aire, bombas, redes y sistemas especiales) se presupuesta dentro de la obra con los mismos precios de `dotacion.json` y no se suma dos veces.
+La dotación biomédica y el mobiliario clínico suman **$4.294 M** (236 líneas de los 15 servicios más 14 de equipamiento fijo (250); 37 de las 236 con precio de referencia de SECOP y el resto estimados con rango). El equipamiento fijo (planta, UPS, ascensores, gases, aire, bombas, redes y sistemas especiales) se presupuesta dentro de la obra con los mismos precios de `dotacion.json` y no se suma dos veces.
 
 | Servicio | Valor | Equipos más costosos |
 |---|---:|---|
@@ -160,6 +247,26 @@ Un bacteriólogo por turno las 24 horas, más uno de día para microbiología, t
 
 **Modelo de compra recomendado.** Analizadores en **comodato pagado con reactivos** (valor de mercado $956 M: en 7 años sale $822 M más barato que comprarlos, cálculo propio de `laboratorio.json`); la E.S.E. compra lo durable (microscopios, cabina de bioseguridad, centrífugas, neveras, autoclave); el GeneXpert se pide al programa nacional de tuberculosis. Indicadores: 90 % o más de urgencias en 60 minutos, menos de 2 % de muestras rechazadas, 100 % de valores críticos avisados en 30 minutos, 100 % de mujeres con VPH positivo contactadas en 2 semanas.
 
+### 5.2 Inventario para la habilitación
+
+Cada línea de la dotación, del equipamiento fijo y del laboratorio se convirtió en unidades físicas ubicadas en su recinto de la planta: **1.702 unidades** en 270 recintos (946 de dotación, 611 de infraestructura, 17 de equipamiento fijo, 12 analizadores y 114 del cierre de brechas; cálculo propio). Cada unidad dice qué exigencia de la Res. 3100 cubre (con su numeral y su nivel de verificación), su clase de riesgo y si requiere registro INVIMA (Decreto 4725), su mantenimiento y su anclaje sísmico, y se puede ver e inspeccionar en el recorrido 3D. La matriz de **cumplimiento en dotación e infraestructura** cruza las 199 exigencias normalizadas con el inventario, servicio por servicio y en dos cortes (23-oct-2026 con la 3100 y la apertura con la Res. 914): no revisa talento humano, historia clínica ni interdependencia, así que no dice si un servicio se puede habilitar. Matriz, clases de riesgo revisadas y obligaciones del prestador en el **documento 15** (`docs/15-dotacion-y-habilitacion.md`).
+
+### 5.3 Cierre de brechas
+
+Lo que falta para cumplir en dotación e infraestructura va aparte, **sin tocar los totales de la dotación ni el presupuesto** (cálculo propio):
+
+| Proyecto | Habilitación | Recomendado | Por confirmar | Total con precio |
+|---|---:|---:|---:|---:|
+| P4 · Dotación | $8.375.000 | $22.194.906 | $12.696.000 | $43.265.906 |
+| P5 · Laboratorio | $350.000 | $0 | $3.289.000 | $3.639.000 |
+| P6 · Sistemas de información | $0 | $0 | $0 | $0 |
+
+- **42 ítems**, $46.904.906 con precio (rango $36.009.906 a $61.999.906) y **12 ítems** por cotizar (sin precio y sin sumar cifras supuestas).
+- **Operación anual aparte:** $4.100.000 al año de dosimetría personal (el control de calidad de rayos X después del primer año, por cotizar); no se suma a la inversión.
+- **Cómo se financia:** cada ítem dice su proyecto. Mientras no se actualice el presupuesto, podría salir de la contingencia de su proyecto (P4: $175 M; P5: $26 M), **pero usar la contingencia reduce la reserva para el riesgo de cantidades y precios**. La operación anual no se paga con contingencias.
+- **GeneXpert:** si no lo entrega el programa nacional de tuberculosis, es un costo no presupuestado de **$144,0 M** si se compra.
+- Con el cierre, 11 de los 12 servicios que se habilitan quedan sin exigencias exigibles que falten o estén en parte; el que no, consulta externa, depende de si la E.S.E. habilita la modalidad extramural. Lista completa en el documento 15.
+
 ## 6. Presupuesto por capítulos
 
 Presupuesto de prefactibilidad (clase 4: precisión esperada de −25 % a +35 %). Las cantidades salen del programa con rendimientos por m² escritos en cada ítem de `presupuesto.json` (por ejemplo: 0,36 m³ de concreto y 62 kg de acero por m² de placa; 0,33 ml de muro por m²; un rociador cada 9 m²).
@@ -213,7 +320,7 @@ Presupuesto de prefactibilidad (clase 4: precisión esperada de −25 % a +35 %)
 
 ### 6.2 ¿Es caro o barato? Comparación por m²
 
-Valor de obra por m² construido: **$7,24 M** (rango $5,68 M–$9,48 M). Sin el equipamiento fijo ni la solar: **$5,46 M**. Costo total por m² (con dotación, diseños, interventoría y contingencias): $10,26 M. Todo sobre los 3.620,6 m² construidos del proyecto (cálculo propio).
+Valor de obra por m² construido: **$7,24 M** (rango $5,68 M–$9,48 M), sin el ajuste pendiente del prediseño estructural (sección 6.3). Sin el equipamiento fijo ni la solar: **$5,46 M**. Costo total por m² (con dotación, diseños, interventoría y contingencias): $10,26 M. Todo sobre los 3.620,6 m² construidos del proyecto (cálculo propio).
 
 | Proyecto | Año | Área | Costo por m² en pesos de 2026 | Qué incluye | Fuente |
 |---|---|---:|---:|---|---|
@@ -227,7 +334,24 @@ Valor de obra por m² construido: **$7,24 M** (rango $5,68 M–$9,48 M). Sin el 
 | Construcción de la infraestructura física de la E.S.E. Álvaro Ramírez González, San Martín (Cesar) | 2024 | no publicada | — (total $34.119 M) | Valor adjudicado en SECOP II (15 meses); área no publicada | [enlace](https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.5438578) |
 | Hospital de Majagual (Sucre): urgencias, consulta, obstetricia, cirugía ambulatoria, laboratorio | 2025 | no publicada | — (total $26.034 M) | Inversión total (Fondo Adaptación, MinSalud, Gobernación, Alcaldía y E.S.E.); 18 meses | [enlace](https://www.elheraldo.co/sucre/2025/10/30/arranca-construccion-de-un-hospital-en-la-mojana-de-sucre/) |
 
-**Lectura.** Hay dos comparables con cifra oficial y área: el **contrato de obra de Monguí** (SECOP II, 2025: $5,26 M por m²) y el **proyecto de Quimbaya** aprobado por el OCAD con viabilidad de MinSalud (2025: $6,69 M por m², construido y dotado, con los diseños pagados aparte). La obra civil de la torre ($5,46 M) queda 4 % por encima de Monguí y 1 % por encima del proyecto tipo del DNP: es razonable para un edificio de 4 pisos con pilotes en Yondó. Con ascensores, planta, aire acondicionado, gases, sistemas especiales, solar y baterías, la obra completa sube a $7,24 M. Frente a Quimbaya, la torre sin diseños ni contingencias ($9,31 M) es 39 % más cara por m²: la diferencia se explica por los 4 pisos con 2 ascensores camilleros, los pilotes, la solar con baterías ($1.734 M), el laboratorio de 24 horas y la dotación completa; no se sabe cuánta dotación incluye Quimbaya. Pasacaballos (2026, con dotación, sin contratar) da $10,75 M por m², un poco más que el costo total de la torre ($10,26 M). Santa Catalina de Sena (2017, edificio bajo) queda por debajo. El orden de magnitud que se había estimado escalando el proyecto tipo DNP ($7,0–9,8 M por m², `proyecto_tipo.json`) contiene la obra completa. Los totales de Guarne ($35.059 M), San Martín, Cesar ($34.119 M de 2026) y Majagual ($26.034 M de 2026) muestran que un hospital de primer nivel nuevo cuesta hoy entre $25.000 y $40.000 M. Cálculo propio (verificación V2).
+**Lectura.** Hay dos comparables con cifra oficial y área: el **contrato de obra de Monguí** (SECOP II, 2025: $5,26 M por m²) y el **proyecto de Quimbaya** aprobado por el OCAD con viabilidad de MinSalud (2025: $6,69 M por m², construido y dotado, con los diseños pagados aparte). La obra civil de la torre ($5,46 M) queda 4 % por encima de Monguí y 1 % por encima del proyecto tipo del DNP: es razonable para un edificio de 4 pisos con pilotes en Yondó. Con ascensores, planta, aire acondicionado, gases, sistemas especiales, solar y baterías, la obra completa sube a $7,24 M. Frente a Quimbaya, la torre sin diseños ni contingencias ($9,31 M) es 39 % más cara por m²: la diferencia se explica por los 4 pisos con 2 ascensores camilleros, los pilotes, la solar con baterías ($1.734 M), el laboratorio de 24 horas y la dotación completa; no se sabe cuánta dotación incluye Quimbaya. Pasacaballos (2026, con dotación, sin contratar) da $10,75 M por m², un poco más que el costo total de la torre ($10,26 M). Santa Catalina de Sena (2017, edificio bajo) queda por debajo. Sobre el proyecto tipo: sus $5,42 M por m² son sobre los 270 m² (269,6 m²) de su presupuesto; sobre sus 320,6 m² construidos el mismo costo da $4.555.806 por m² (la cifra que usa el programa), y frente a esa base la obra civil de la torre queda 19,9 % por encima en lugar de 0,8 % (sección 3.2). El orden de magnitud que se había estimado escalando el proyecto tipo DNP ($7,0–9,8 M por m², `proyecto_tipo.json`) contiene la obra completa. Los totales de Guarne ($35.059 M), San Martín, Cesar ($34.119 M de 2026) y Majagual ($26.034 M de 2026) muestran que un hospital de primer nivel nuevo cuesta hoy entre $25.000 y $40.000 M. Cálculo propio (verificación V2).
+
+### 6.3 Ajuste pendiente del prediseño estructural
+
+**Por qué cambia.** El presupuesto supuso columnas de 0,60 × 0,60 m, vigas de 0,40 × 0,60 m, ≈ 45 m de muro de 0,30 m y ≈ 100 pilotes de 12 m bajo 28 dados. Con esas secciones, el modelo sísmico del prediseño daba una deriva de diseño de **2,09 %**, el doble del 1 % de la NSR-10 (Tabla A.6.4-1). El prediseño que cumple (sección 4.2) lleva las columnas a 0,80-0,90 m, los muros a 0,35 m y la cimentación a **146 pilotes de 15 m** con losas de pilotes bajo los núcleos: la deriva baja a 0,939 % (documentos 14 y 16).
+
+**Cuánto cambia** (cálculo propio con los valores unitarios del presupuesto y las cantidades del prediseño y del modelo BIM):
+
+| Concepto | Con las cantidades del prediseño | Con las cantidades del modelo BIM |
+|---|---:|---:|
+| Cimentación (capítulo 2): más pilotes, dados y losas de pilotes y acero | $1.475.809.519 | $1.519.090.018 |
+| Estructura (capítulo 3): más columnas y escaleras, menos losa nervada, muros y acero | −$165.394.504 | −$128.898.001 |
+| **Costo directo** | **$1.310.415.015** (6,6 % del costo directo de la obra) | **$1.390.192.017** (7,0 %) |
+| **Con AIU** (factor 1,3295) | **$1.742.196.762** | **$1.848.260.287** |
+| Valor de la obra (hoy $26.228 M) | $27.970 M | $28.076 M |
+| Con interventoría (7 %), contingencia (5 %) y diseños y licencia (≈ 6,0 %) proporcionales | ≈ $2.055 M más: total de la torre ≈ $39.193 M | ≈ $2.180 M más: total ≈ $39.318 M |
+
+**Efecto.** El capítulo de estructura y cimentación pasa de $4.813 M a $6.123-6.203 M de costo directo (+27 % a +29 %); la obra de la torre (P2) sube $1.742 M a $1.848 M con AIU y la brecha de financiación de la sección 8 crece en esa cifra. **El presupuesto no se edita en esta versión:** queda como ajuste pendiente con estas cifras, para hacerlo con el diseño estructural y el estudio geotécnico (que pueden mover el número y el largo de los pilotes en los dos sentidos). La diferencia entre las dos columnas es de medición (el modelo mide la geometría de cada elemento y las barras dibujadas; el prediseño, espesores equivalentes sobre el área a ejes); detalle por ítem en el documento 16, sección 9.
 
 ## 7. Análisis de precios unitarios (APU) destacados
 
@@ -441,13 +565,18 @@ Pesos constantes de 2026: los presupuestos de cada año deben indexarse. La comp
 
 ## 11. Lo que falta verificar
 
-- Cantidades de prediseño sin planos ni estudio de suelos: la cimentación (pilotes o zapatas) y la cuantía de acero pueden mover el presupuesto ±10 %.
+- Cantidades de prediseño sin planos ni estudio de suelos: el prediseño estructural que cumple la NSR-10 ya sube el costo directo $1.310 M a $1.390 M (sección 6.3); el número y el largo de los pilotes, la cuantía de acero y si la torre requiere pilotes los fijan el estudio geotécnico (con análisis de licuación) y el diseño estructural.
+- NSR-10 (citada de memoria; el Título A no se pudo abrir): numerales de amenaza intermedia, de la fila del sistema dual DMO (R0 = 6,0 y Ω0 = 2,5), de las irregularidades, del umbral de daño y de C.21, C.15 y el Título H; si el grupo IV pide algo más en amenaza intermedia.
+- Norma de habilitación: texto oficial de las 199 exigencias de la Res. 3100; la modificación de 2022 (1138 o 1410); la publicación de la Res. 2080 de 2026 en el Diario Oficial; el manual de la Res. 914 de 2025 para la esterilización; si el mínimo de área de la Res. 1633 se mide libre o a ejes (47 recintos); los códigos REPS; las reglas 3, 4, 5, 8 y 14 y el art. 2 del Decreto 4725 (documento 15).
+- Proyecto tipo: el PDF del DNP (áreas por ambiente, lista de 59 ítems de dotación, cuantías y AIU) y las capacidades instaladas tipo de la Res. 1211 y 1519.
+- Sismotectónica: centro y profundidad del nido de Bucaramanga, distancias y magnitudes máximas de las fallas cercanas, y el epicentro, la profundidad y el tipo de magnitud del terremoto del 10-ago-2026 (sección 1.2).
+- Altura del ±0,00 sobre el mar y levantamiento topográfico (el modelo BIM supone 75 m).
 - La titularidad del lote, el uso del suelo, la amenaza por inundación y la norma del EOT no están verificados (normas.json).
 - Las estampillas, el ICA y el impuesto de delineación de Yondó no se revisaron.
 - El estudio de vulnerabilidad de 2024 del edificio actual no es público: el costo de P8 es un supuesto.
-- Los precios de los equipos de dotacion.json son en su mayoría estimaciones (37 de 236 ítems con referencia SECOP).
+- Los precios de los equipos de la dotación son en su mayoría estimaciones (37 de las 236 líneas de los servicios con referencia SECOP).
 - Los comparables por m² con cifra oficial son pocos: el área de Monguí sale de la prensa sectorial y no se sabe cuánta dotación trae el proyecto de Quimbaya. Hay que confirmarlos en los pliegos de SECOP II (piden captcha y no se pudieron abrir desde este entorno) y en la MGA del BPIN 2024000040010.
-- El AIU completo sobre los equipos de P3 es conservador: contratándolos como suministro e instalación aparte se podrían ahorrar del orden de $600-1.000 millones (ver supuestos.aiu_sobre_equipos).
+- El AIU completo sobre los equipos de P3 es conservador: contratándolos como suministro e instalación aparte se podrían ahorrar del orden de $600-1.000 millones (supuesto del presupuesto sobre el AIU de los equipos).
 - El presupuesto del SGR 2027-2028 por municipio no está publicado; la cifra de Yondó es una estimación proporcional.
 - No se verificó si el saldo del incentivo para OCAD Paz de 2025-2026 ya tiene destino.
 - La ley de presupuesto 2027 y el PND 2026-2030 pueden cambiar las líneas de MinSalud y los PMIDS.
@@ -461,6 +590,13 @@ Pesos constantes de 2026: los presupuestos de cada año deben indexarse. La comp
 - Res. 1211 de 2025, MinSalud: <https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_1211_2025.htm>
 - Res. 1633 de 2025, MinSalud, y sus anexos: <https://www.minsalud.gov.co/Normatividad_Nuevo/Resolucion%20No%201633%20de%202025.pdf>
 - Res. 3100 de 2019 (compilada): <https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_3100_2019.htm>
+- Res. 2080 de 2026, MinSalud (revoca la Res. 1732 de 2026): <https://www.minsalud.gov.co/Normatividad_Nuevo/Resoluci%C3%B3n%20No%202080%20de%202026.pdf>
+- Res. 914 de 2025 (reprocesamiento de dispositivos médicos): <https://normograma.supersalud.gov.co/compilacion/docs/resolucion_minsaludps_0914_2025.htm>
+- Res. 1811 de 2025 (radiaciones ionizantes; reemplazó a la Res. 482 de 2018): <https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/DE/DIJ/resolucion-1811-de-2025.pdf>
+- Decreto 4725 de 2005 (compilación del INVIMA): <https://normograma.invima.gov.co/normograma/compilacion/docs/decreto_4725_2005.htm>
+- NSR-10, Título A (Decreto 926 de 2010): <https://www.idrd.gov.co/sites/default/files/documentos/Construcciones/titulo-a-nsr-100.pdf>
+- OPS, monitoreo del terremoto del 10-ago-2026 (3-sep-2026): <https://www.paho.org/es/monitoreo-amenazas-naturales/monitoreo-amenazas-naturales-4-septiembre-2026>
+- Documentos del atlas: simulación sísmica (`docs/14-simulacion-sismica.md`), dotación y habilitación (`docs/15-dotacion-y-habilitacion.md`) y modelo BIM (`docs/16-bim-torre.md`).
 - Proyecto tipo DNP de infraestructura básica en salud (2018): <https://proyectostipo.dnp.gov.co/images/pdf/salud/PTsalud.pdf>
 - Puesto de salud tipo, MinSalud (2017): <https://www.minsalud.gov.co/sites/rid/Lists/BibliotecaDigital/RIDE/VS/PSA/puesto-salud-tipo.pdf>
 - Gobernación de Antioquia, Base de APU SIF 2020-II (ítems 1.2, 2.7, 2.8, 2.9, 2.11, 3.2, 3.3, 4.2.3, 5.1.3, 6.1.10, 6.1.19, 6.2.15, 6.2.30, 7.1.15, 10.1): <https://www.antioquia.gov.co/images/PDF2/Infraestructura/2020/08-agosto/apu-base-referencia-sif-2020-semestre-ii.pdf>

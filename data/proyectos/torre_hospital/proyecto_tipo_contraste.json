@@ -3,7 +3,7 @@
  "version": 2,
  "titulo": "Contraste de la torre de servicios de primer nivel del Hospital Héctor Abad Gómez (Yondó) con el proyecto tipo y los referentes oficiales de su alcance",
  "fecha_corte": "2026-10-23",
- "fecha_revision": "2026-10-24",
+ "fecha_revision": "2026-10-25",
  "origen": "fuentes_investigacion/proyecto_tipo_contraste.json (copia literal de la investigación del 23-oct-2026) con los agregados y correcciones del 9.1 de la especificación de integración",
  "proyecto": "Torre de servicios de primer nivel – E.S.E. Hospital Héctor Abad Gómez (Yondó, Antioquia)",
  "moneda_y_base": "Pesos constantes de 2026: promedio enero-septiembre de 2026 del IPC del DANE (índice 158,2844, base dic-2018 = 100). Factor 2017 → 2026 = 158,2844 / 95,9583 = 1,649512; 2016 → 2026 = 1,720701; 2023 → 2026 = 1,181514; 2025 → 2026 = 1,054058 (data/fuentes/ipc_dane.csv).",
@@ -18,8 +18,8 @@
    "se aparta": "la torre hace otra cosa, por una razón explicada (norma más nueva, escala, lote o clima)",
    "falta": "el referente lo trae y la torre no, o la norma lo pide y no aparece en los datos de la torre"
   },
-  "veredicto_tipo": "Veredicto frente al proyecto tipo; solo en los ambientes que tienen equivalente en el tipo (18 de 40).",
-  "veredicto_norma": "Veredicto frente al mínimo de área de la Res. 1633 de 2025. En las filas con ambiente del tipo es cálculo propio del 24-oct-2026 (m² de la torre frente a m2_min_comparado, con su metodo_norma); en las 22 sin equivalente es el veredicto de la investigación del 23-oct-2026. Las filas sin mínimo de área no lo llevan (sin_veredicto_norma dice por qué). por_confirmar solo aparece cuando es verdadero.",
+  "veredicto_tipo": "Frente al proyecto tipo; solo en los 18 de 40 ambientes con equivalente en el tipo.",
+  "veredicto_norma": "Frente al mínimo de área de la Res. 1633 de 2025: cálculo propio del 24-oct-2026 en las 18 filas con tipo y veredicto de la investigación del 23-oct-2026 en las 22 sin equivalente; sin mínimo de área no lleva veredicto.",
   "sin_ambiente_equivalente": "Sin ambiente equivalente en los proyectos tipo (DNP 2018 y MinSalud 2017); la Guía PMA 2010 trae esos servicios sin área unitaria.",
   "base_area": "Toda cifra por m² o comparación de tamaño dice sobre qué área se calcula (bases_de_area)."
  },
@@ -1147,20 +1147,32 @@
   },
   {
    "tema": "Sistema estructural",
-   "tipo": "Pórticos de concreto reforzado de un piso con viga-canal en voladizo sobre la circulación central; placa maciza de 0,12 m impermeabilizada; estructura metálica de cubierta.",
-   "torre": "Pórticos de concreto reforzado (columnas de 0,60 × 0,60 m) con losa nervada (0,24 m³ de concreto por m²) y muros estructurales de 0,30 m en los núcleos de escaleras y ascensores (presupuesto.json, capítulo 3). Diseño para grupo de uso IV, coeficiente de importancia 1,5, deriva al umbral de daño ≤ 0,4 % de la altura de piso.",
+   "tipo": "Pórticos de concreto de un piso con viga-canal en voladizo; placa maciza de 0,12 m; cubierta metálica.",
+   "torre": "Dual (NSR-10, Tabla A.3-4): 5 muros de concreto de 0,35 m en los núcleos (27,42 m de alma) con pórticos resistentes a momento; columnas de 0,80 × 0,80 m (0,90 × 0,90 m en el eje A), vigas de 0,40 × 0,80 m (0,50 × 0,90 m en el eje A), losa nervada de 0,45 m. Los pórticos toman el 16,3 % (x) y el 25,4 % (y) del cortante y se diseñan solos para el 25 %.",
    "veredicto": "se aparta",
+   "explicacion": "Mismo pórtico repetible del tipo, con muros porque la torre tiene 4 pisos y es indispensable. Con las secciones del presupuesto (columnas de 0,60 m) la deriva llegaba a 2,09 % y no cumplía el 1 %; con las adoptadas, 0,94 %.",
+   "tipo_dato": "dato oficial (tipo DNP 2018) y cálculo propio (prediseño del 25-oct-2026, sin firmar)",
+   "seccion": "17.6"
+  },
+  {
+   "tema": "Capacidad de disipación de energía",
+   "tipo": "Por confirmar en el PDF del tipo (un piso).",
+   "torre": "Moderada (DMO), la mínima para concreto en amenaza intermedia (Aa = Av = 0,15); grupo IV, I = 1,5. R0 = 6,0, Ω0 = 2,5 y R = 0,9 × 0,9 × 1,0 × 6,0 = 4,86 por el retroceso (3A: 1,40) y la torsión (1aP: 1,306).",
+   "veredicto": "mejora",
    "por_confirmar": true,
-   "explicacion": "Mismo material y la misma lógica de pórtico repetible, pero la torre suma muros en los núcleos (sistema combinado o dual, por definir en el diseño estructural) porque tiene 4 pisos, es edificación indispensable y debe seguir funcionando después de un sismo. El tipo es de un piso.",
-   "tipo_dato": "dato oficial (tipo) y dato del proyecto"
+   "explicacion": "Suma confinamiento especial en columnas, cortante por capacidad y columna fuerte-viga débil (1,89 como mínimo). Que el grupo IV no pida más queda por confirmar (A.3).",
+   "tipo_dato": "dato oficial (tipo DNP 2018) y cálculo propio (prediseño del 25-oct-2026, sin firmar)",
+   "seccion": "17.6",
+   "agregada": true
   },
   {
    "tema": "Luces y modulación",
    "tipo": "Luces de 7,60 × 4,30 m (pág. 27); módulo funcional de 59,65 m².",
-   "torre": "Malla de 3 luces de 7,20 m en sentido oriente-occidente y luces de 7,20 / 4,80 / 8,40 / 7,20 / 6,00 / 8,40 m de sur a norte, todas múltiplos del módulo hospitalario de 1,20 m (Res. 1633, num. 3.3.3). 28 columnas.",
+   "torre": "3 luces de 7,20 m de oriente a occidente y 7,20 / 4,80 / 8,40 / 7,20 / 6,00 / 8,40 m de sur a norte, múltiplos del módulo de 1,20 m (Res. 1633, num. 3.3.3); 28 columnas en los pisos 1 a 3 y 20 en el piso 4.",
    "veredicto": "se aparta",
-   "explicacion": "7,60 y 4,30 m no son múltiplos de 1,20 m; 7,20 m sí y permite dos consultorios de 3,60 m por luz. La Res. 1633 exige el módulo de 1,20 × 1,20 m en edificaciones nuevas, posterior al tipo.",
-   "tipo_dato": "dato oficial (tipo) y dato del proyecto"
+   "explicacion": "7,60 y 4,30 m no son múltiplos de 1,20 m; 7,20 m sí (dos consultorios de 3,60 m por luz).",
+   "tipo_dato": "dato oficial (tipo DNP 2018) y dato del proyecto",
+   "seccion": "17.6"
   },
   {
    "tema": "Resistencia de materiales estructurales",
@@ -1172,21 +1184,34 @@
   },
   {
    "tema": "Cimentación",
-   "tipo": "Cimentación superficial en concreto de 3.000 psi para lote plano (pendiente ≤ 5 % transversal y ≤ 2 % longitudinal).",
-   "torre": "≈ 100 pilotes preexcavados de 0,60 m × 12 m bajo 28 dados (suelo aluvial del Magdalena); si el estudio de suelos permite zapatas, baja $500-800 M.",
+   "tipo": "Superficial, en concreto de 3.000 psi (≈ 21 MPa), para lote plano.",
+   "torre": "146 pilotes de 0,60 m × 15 m (2.190 m) bajo 20 dados de 3 a 6 pilotes y 2 losas de pilotes (30 y 36 pilotes); 37 vigas de amarre, 5 muros de contención, contrapiso de 0,15 m. 632 kN de servicio por pilote (estimación). El presupuesto traía 1.200 m: ≈ 100 pilotes de 12 m.",
    "veredicto": "se aparta",
    "por_confirmar": true,
-   "explicacion": "El suelo aluvial y las cargas de 4 pisos piden cimentación profunda (estimación hasta el estudio geotécnico con análisis de licuación). El capítulo de cimentación pesa 9,7 % del costo directo de la torre.",
-   "tipo_dato": "dato oficial (tipo) y dato del proyecto"
+   "explicacion": "Suelo aluvial y 4 pisos piden pilotes; su número y largo los fija el estudio geotécnico (por confirmar).",
+   "tipo_dato": "dato oficial (tipo DNP 2018) y cálculo propio (prediseño del 25-oct-2026, sin firmar)",
+   "seccion": "17.6"
+  },
+  {
+   "tema": "Cuantías de acero y concreto por m²",
+   "tipo": "Por confirmar en el PDF. Estructura con cimentación: $1.541.451 por m² (sobre 269,6 m²).",
+   "torre": "2.483,1 m³ de concreto (0,74 m³/m²) y 291.285 kg de acero (86,4 kg/m², 117 kg/m³) sobre 3.369,6 m²: superestructura 0,35 m³/m² y 43,7 kg/m²; cimentación 0,39 m³/m² y 42,8 kg/m². Presupuesto: 64,5 kg/m² (47,5 en la superestructura y 16,9 en la cimentación).",
+   "veredicto": "se aparta",
+   "por_confirmar": true,
+   "explicacion": "La cimentación casi triplica el acero presupuestado. Por m² (con AIU, sobre 3.620,6 m²): $1.767.354 presupuestado (1,15 veces el tipo) y $2.248.544 con el prediseño (1,46 veces), ajuste pendiente.",
+   "tipo_dato": "cálculo propio (prediseño y presupuesto); dato oficial del tipo DNP 2018 con IPC",
+   "seccion": "17.6",
+   "agregada": true
   },
   {
    "tema": "Pisos y alturas",
-   "tipo": "1 piso; altura del volumen ≈ 4,36 m (citada como distancia de separación entre bloques). Altura libre interior: por confirmar en el PDF.",
-   "torre": "4 pisos: entrepiso de 4,50 m en el piso 1 y 4,20 m en los pisos 2-4; altura libre ≥ 3,00 m bajo cielo raso (la Res. 1633, num. 3.3.4, recomienda ≥ 2,80 m); 18,3 m al parapeto y 20,4 m a las casetas de escalera.",
+   "tipo": "1 piso de ≈ 4,36 m; altura libre por confirmar en el PDF.",
+   "torre": "Entrepisos de 4,50 m en el piso 1 y 4,20 m en los pisos 2 a 4; cubierta a 17,1 m y terraza sur a 12,9 m (retroceso de 12 m); 3,00 m libres bajo cielo raso (Res. 1633, num. 3.3.4: ≥ 2,80 m).",
    "veredicto": "mejora",
    "por_confirmar": true,
-   "explicacion": "3,00 m libres ayudan a la ventilación en clima cálido y dejan 1,0-1,2 m de entretecho para aire, gases y rociadores, que el tipo de un piso no necesita.",
-   "tipo_dato": "dato oficial (tipo) y dato del proyecto"
+   "explicacion": "Bajo las vigas de 0,80 m quedan 0,40 m sobre el cielo raso para cruzar ductos: pases en vigas o cielo más bajo, por confirmar en el diseño de redes.",
+   "tipo_dato": "dato oficial (tipo DNP 2018), dato del proyecto y cálculo propio",
+   "seccion": "17.6"
   },
   {
    "tema": "Circulaciones horizontales",
@@ -1787,7 +1812,7 @@
      "item_tipo": null,
      "items_torre": ["L-consulta_externa-e-9b1266", "L-consulta_externa-e-a46945", "L-consulta_externa-e-7363db"],
      "estado": "sobra",
-     "nota": "Posible duplicado: el kit trae tensiómetro y equipo de órganos portátiles y cada consultorio tiene además los de pared (13 consultorios de consulta, 3 de urgencias y 2 kits de hospitalización). Decisión pendiente de la E.S.E. con el ingeniero biomédico: los portátiles pueden servir a la atención extramural."
+     "nota": "Posible duplicado: el kit trae tensiómetro y equipo de órganos portátiles, y cada consultorio tiene los de pared. Decide la E.S.E.; los portátiles pueden servir a la atención extramural."
     },
     {
      "item_tipo": null,
@@ -2409,7 +2434,7 @@
     "expansion_emergencias",
     "tic_apoyo"
    ],
-   "nota_costo": "Esta fila suma los totales de esos servicios de dotacion.json (equipos y mobiliario) menos las líneas que ya cuentan otras filas (excluye_lineas, con la cantidad que cada una se lleva): así ninguna unidad se cuenta dos veces. Por el tamaño del archivo web se nombran los servicios y no sus líneas. El costo se calcula al publicar.",
+   "nota_costo": "Suma los totales de esos servicios menos las líneas que ya cuentan otras filas, para no contar ninguna unidad dos veces; el costo se calcula al publicar.",
    "pares": [],
    "sin_equivalente_tipo": true,
    "nota_veredicto": "Sin contraparte en el proyecto tipo: no lleva veredicto frente al tipo (la investigación decía «se aparta»).",
@@ -2705,7 +2730,7 @@
    "tipo": "cálculo propio",
    "id": "IN-01",
    "estado": "pendiente: se registra como nota (el modelo 3D y el presupuesto no se cambian en esta iteración)",
-   "nota_revision": "Revisado el 24-oct-2026 (cálculo propio): el modelo 3D pone quiebrasoles horizontales de 0,90 m solo en las fachadas norte (y = 22,4) y sur (y = −19,6) de los pisos 1 a 3; el piso 4 no los lleva (muro cortina). El ítem 4.06 del presupuesto paga 180 ml de 1,40 m en «las fachadas norte y sur de los 4 pisos»: 21,6 m × 8 tramos = 172,8 ml. Un tercio de la altura pide 1,40 m en los pisos 2 a 4 y 1,50 m en el piso 1."
+   "nota_revision": "Revisado el 24-oct-2026: el modelo pone quiebrasoles de 0,90 m solo en las fachadas norte y sur de los pisos 1 a 3; el ítem 4.06 paga 180 ml de 1,40 m (21,6 m × 8 tramos = 172,8 ml). Un tercio de la altura pide 1,40 m (1,50 m en el piso 1)."
   },
   {
    "donde": "data/edificios/torre_hospital.json (volumen torre_piso4)",
@@ -2747,7 +2772,7 @@
    "tipo": "cálculo propio",
    "id": "IN-06",
    "estado": "corregido en programa.json",
-   "nota_revision": "Corregido en programa.json: $885.468.754 × 1,649512 / 320,6 m² = $4.555.806 por m² de 2026. docs/11 (§6.2) usa $5,42 M por m² sobre los ≈ 270 m² del presupuesto del tipo: las dos cifras se publican juntas, cada una con su área."
+   "nota_revision": "Corregido: $885.468.754 × 1,649512 / 320,6 m² = $4.555.806 por m² de 2026; docs/11 usa $5,42 M por m² sobre los ≈ 270 m² del presupuesto del tipo, y las dos se publican juntas."
   },
   {
    "donde": "dotacion.json (toma_muestras, farmacia) y salas de espera",

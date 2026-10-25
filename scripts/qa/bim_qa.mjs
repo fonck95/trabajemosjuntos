@@ -10,7 +10,7 @@
 //     respeta el recorte y la transparencia), en «Cortado», en «Semitransparente» y en «Ver refuerzo» de un dado.
 //   · vistas, en claro y oscuro, en escritorio (1400 × 900) y teléfono (390 × 844, táctil): el modelo entero, la cimentación
 //     con el terreno cortado, cortes horizontales por nivel y verticales por eje con su tapa, el refuerzo de una columna, una
-//     viga, un dado y un pilote (barras, kilos frente al despiece y esquema 2D con sección y alzado), el refuerzo de un eje,
+//     viga, un dado, un pilote y un muro de contención (barras, kilos frente al despiece y esquema 2D con sección y alzado), el refuerzo de un eje,
 //     la vista de corte de un elemento (tapa y secciones de las barras), el 5D (colores por capítulo y «Ver en 3D» de un ítem),
 //     el 4D (lo construido crece con la fecha) y las interferencias con «Ir a»; en cada estado, llamadas de dibujo ≤ 60;
 //     al final, consola sin errores, sin desborde horizontal y sin rutas ni claves internas en el texto visible.
@@ -117,8 +117,9 @@ async function vistas() {
     }
     await api(page, 'quitarCorte');
 
-    // refuerzo de una columna, una viga, un dado y un pilote
-    const MUESTRAS = [['C-B2-2', 'columna', 'P2', 'de la columna'], ['VX-2-BC-2', 'viga', 'P3', 'de la viga'], ['D-B2', 'dado', 'CIM', 'del dado'], ['PIL-D-B2-1', 'pilote', 'CIM-PIL', 'del pilote']];
+    // refuerzo de una columna, una viga, un dado, un pilote y un muro de contención
+    const MUESTRAS = [['C-B2-2', 'columna', 'P2', 'de la columna'], ['VX-2-BC-2', 'viga', 'P3', 'de la viga'], ['D-B2', 'dado', 'CIM', 'del dado'], ['PIL-D-B2-1', 'pilote', 'CIM-PIL', 'del pilote'],
+      ['MC-1-AB', 'muro-contencion', 'CIM', 'del muro de contención']];
     for (const [id, tipo, nivel, deTipo] of MUESTRAS) {
       const r = await api(page, 'verRefuerzo', id);
       await cuadros(page);
@@ -205,10 +206,12 @@ async function vistas() {
 
     // interferencias
     await api(page, 'pestana', 'interferencias');
-    await esperar(page, () => document.querySelectorAll('.bim-panel ul.bim-int button[data-int]').length > 0, { ms: 30000 });
+    const conIrA = await esperar(page, () => document.querySelectorAll('.bim-panel ul.bim-int button[data-int]').length > 0, { ms: 30000 });
+    comprobar(conIrA, `${nombre}: la lista de interferencias abre con hallazgos y su «Ir a» (si no hay duras, abre en todas)`);
     const intf = await datos(page, 'torre_bim_interferencias.json');
     const conBarras = intf.interferencias.find((x) => x.barras?.length && x.posicion && x.severidad === 'media');
-    const r1 = await page.evaluate(() => { document.querySelector('.bim-panel ul.bim-int button[data-int]').click(); return document.querySelector('.bim-panel ul.bim-int button[data-int]').dataset.int; });
+    // el id se lee antes del clic: si el hallazgo tiene barras, «Ir a» abre su refuerzo y el panel cambia
+    const r1 = await page.evaluate(() => { const b = document.querySelector('.bim-panel ul.bim-int button[data-int]'); if (!b) return null; const id = b.dataset.int; b.click(); return id; });
     await pausa(600); await cuadros(page);
     e = await estado(page);
     comprobar(/^Interferencia/.test(e.rotulo || '') && e.seleccion, `${nombre}: «Ir a» la interferencia ${r1} elige su elemento (${e.seleccion}) y marca el punto`);
@@ -388,7 +391,10 @@ async function seleccion() {
     // disciplina transparente y aislada
     await api(page, 'modoDisciplina', 'CIM', 'aislar');
     e = await estado(page);
-    comprobar(e.visibles === 248, `${nombre}: aislar la cimentación deja sus ${e.visibles} elementos`);
+    // los elementos de la cimentación salen del índice del modelo (cambian con el prediseño: pilotes, dados, fosos…)
+    const idxS = await datos(page, 'torre_bim.json');
+    const nCIM = Object.values(idxS.arbol.CIM || {}).reduce((s, cl) => s + Object.values(cl).reduce((a, b) => a + b, 0), 0);
+    comprobar(nCIM > 0 && e.visibles === nCIM, `${nombre}: aislar la cimentación deja sus ${e.visibles} elementos (${nCIM} en el índice)`);
     await api(page, 'mostrarTodo');
     // buscador
     await page.fill('.bim-panel input[data-b="buscar"]', 'D-B2');

@@ -219,7 +219,7 @@ PANEL = {'anios': _panel.get('anios', []), 'indicadores': _panel.get('indicadore
 import hashlib
 AVISOS_WEB = []
 LIMITES_KB = {'torre.json': 620, 'torre_plantas.json': 500, 'torre_inventario.json': 700, 'torre_habilitacion.json': 300,
-              'torre_contraste.json': 150, 'sismo_torre_estructura.json': 420, 'sismo_amenaza.json': 90}
+              'torre_contraste.json': 150, 'sismo_torre_estructura.json': 250, 'sismo_amenaza.json': 90}
 # carpetas donde se buscan los insumos que nombra insumos_sha1 (por nombre de archivo, o por ruta desde la raíz si la trae)
 _CARPETAS_INSUMOS = [D / 'edificios', D / 'proyectos/torre_hospital', D / 'sismo', D, D / 'proyectos/torre_hospital/fuentes_investigacion', D / 'sismo/fuentes_investigacion']
 # campos internos que no llegan a la web (10.1): trazas de origen, notas internas, huellas y rutas de archivo
@@ -260,19 +260,41 @@ def _ruta_insumo(nombre):
         return R / nombre
     return next((c / nombre for c in _CARPETAS_INSUMOS if (c / nombre).exists()), None)
 
-def _al_dia(nombre_web, gen, ruta_gen):
-    """True si insumos_sha1 de gen coincide con los archivos actuales; si no, avisa por qué."""
-    hs = gen.get('insumos_sha1')
-    if not isinstance(hs, dict) or not hs:
-        _no_exportar(nombre_web, f'{ruta_gen.relative_to(R)} no trae insumos_sha1')
-        return False
+_CADENA = {}
+def _insumos_viejos(ruta_gen, gen=None, pila=()):
+    """Insumos de un archivo generado que cambiaron después de generarlo, siguiendo la cadena: si un insumo es a su vez un
+    generado (trae insumos_sha1) y está desactualizado, el archivo también lo está aunque el hash del insumo coincida (p. ej.
+    el inventario generado con unas plantas que ya no corresponden a su trazado)."""
+    clave = str(ruta_gen)
+    if clave in _CADENA:
+        return _CADENA[clave]
+    if gen is None:
+        try:
+            gen = json.loads(Path(ruta_gen).read_text(encoding='utf-8'))
+        except ValueError:
+            return []
+    hs = gen.get('insumos_sha1') if isinstance(gen, dict) else None
     malos = []
-    for n_, h in hs.items():
+    for n_, h in (hs or {}).items():
         r = _ruta_insumo(n_)
         if r is None:
             malos.append(f'{n_} (no se encuentra)')
         elif _sha(r) != h:
             malos.append(f'{n_} (cambió)')
+        elif r.suffix == '.json' and str(r) not in pila and r.stat().st_size < 50e6:
+            sub = _insumos_viejos(r, None, pila + (clave,))
+            if sub:
+                malos.append(f'{n_} (está desactualizado frente a {", ".join(sub)})')
+    _CADENA[clave] = malos
+    return malos
+
+def _al_dia(nombre_web, gen, ruta_gen):
+    """True si insumos_sha1 de gen coincide con los archivos actuales (y los de sus insumos generados); si no, avisa por qué."""
+    hs = gen.get('insumos_sha1')
+    if not isinstance(hs, dict) or not hs:
+        _no_exportar(nombre_web, f'{ruta_gen.relative_to(R)} no trae insumos_sha1')
+        return False
+    malos = _insumos_viejos(ruta_gen, gen)
     if malos:
         _no_exportar(nombre_web, f'{ruta_gen.relative_to(R)} está desactualizado frente a ' + ', '.join(malos) + '; hay que regenerarlo')
         return False
@@ -732,6 +754,12 @@ def torre_contraste_web(c, dot, lab, inv):
     (servicios_torre), el total de esos servicios en dotacion.json menos las líneas que ya cuentan otras filas (excluye_lineas).
     Es el mismo cálculo de validar_contraste.py (K6)."""
     out = {k: v for k, v in c.items() if k not in ('busquedas', 'acceso_a_fuentes')}
+    if inv is None:
+        # sin inventario al día no hay de dónde sacar las líneas de cada fila: se publica sin costos (un solo aviso)
+        _aviso('torre_contraste.json: el inventario no está al día; la dotación por ambiente se publica sin costo')
+        out['dotacion_por_ambiente'] = [{**{k: v for k, v in f.items() if not k.startswith('costo_torre')}, 'costo_torre_cop_2026': None}
+                                        for f in out.get('dotacion_por_ambiente') or []]
+        return _sin_internos(out)
     por_id = {l['id']: l for l in (inv or {}).get('lineas', [])}
     srv_dot = {s_.get('id'): s_ for s_ in dot.get('servicios', [])}
     filas, sin_base = [], 0
@@ -799,6 +827,34 @@ def _validar_inventario_web(web, cat):
         malos = [f'{r["regla"]}: {m}' for r in d['reglas'] for m in r['errores']][:5]
         _aviso(f'torre_inventario.json no pasa validar_inventario --web ({d["errores_duros"]} errores; p. ej. ' + ' · '.join(malos) + ')')
 
+# ------------------------------------------------------------------------------------------------ estructura sísmica (7.2 y 17)
+# El simulador (web/js/sismo/modelo.js y motor.js), la vista sísmica y el modo BIM leen de la estructura los bloques (niveles,
+# pórticos con nodos y elementos, resortes de mampostería), las secciones con sus propiedades de rótula, los materiales, el
+# diseño, el amortiguamiento y el sistema. Lo descriptivo del prediseño queda en data/sismo y no viaja a la web: el despiece,
+# la cimentación y las cantidades (el modo BIM los lee de su propio modelo), las tablas largas y los textos de método del
+# prediseño, y en cada sección el texto del cálculo, el refuerzo en palabras, el diagrama momento-curvatura, la interacción
+# P-M y las resistencias de diseño (φMn, φVn, Mpr) y de gravedad de los chequeos del prediseño, que ningún módulo web usa (el
+# motor usa las propiedades esperadas y nominales: My, Mn, Vn, θp). Así el archivo baja de ≈ 1,2 MB a menos de los 250 KB
+# del 10.1 sin cambiar un solo número de los que usa el motor: scripts/qa/torre_qa.mjs --solo datos corre el mismo cálculo
+# con los dos archivos y lo compara bit a bit.
+_EST_FUERA = ('insumos_sha1', 'generado_por', 'refuerzo', 'cimentacion', 'cantidades')
+_PREDISENO_FUERA = ('columna_fuerte_viga_debil', 'cortante_por_capacidad', 'cuantias', 'chequeos', 'coordinacion_bim', 'eleccion_muros',
+                    'historial_de_ajustes', 'metodo_secciones')
+_SECCION_FUERA = ('calculo', 'refuerzo', 'momento_curvatura', 'momento_curvatura_neg', 'interaccion_PM', 'Mpr_kNm', 'Mpr_pos_kNm', 'Mpr_neg_kNm',
+                  'phiMn_kNm', 'phiMn_pos_kNm', 'phiMn_neg_kNm', 'phiVn_kN', 'P_gravedad_kN', 'b_ala')
+_RESORTE_FUERA = ('calculo',)
+
+def sismo_estructura_web(est):
+    web = {k: v for k, v in est.items() if k not in _EST_FUERA}
+    if isinstance(web.get('prediseno'), dict):
+        web['prediseno'] = {k: v for k, v in web['prediseno'].items() if k not in _PREDISENO_FUERA}
+    if isinstance(web.get('secciones'), dict):
+        web['secciones'] = {k: {kk: vv for kk, vv in s.items() if kk not in _SECCION_FUERA} if isinstance(s, dict) else s
+                            for k, s in web['secciones'].items()}
+    web['bloques'] = [{**b, 'resortes': [{k: v for k, v in r.items() if k not in _RESORTE_FUERA} for r in b.get('resortes') or []]}
+                      if isinstance(b, dict) and 'resortes' in b else b for b in web.get('bloques') or []]
+    return web
+
 def _exportar_torre_y_sismo():
     tdir = D / 'proyectos/torre_hospital'
     dot = json.loads((tdir / 'dotacion.json').read_text(encoding='utf-8')) if (tdir / 'dotacion.json').exists() else {}
@@ -838,18 +894,19 @@ def _exportar_torre_y_sismo():
     # simulador sísmico (A): estructura (generada) y amenaza (a mano)
     est = _cargar_generado('sismo_torre_estructura.json', D / 'sismo/torre_hospital_estructura.json')
     if est is not None:
-        # el simulador no usa el despiece, la cimentación ni las cantidades (los lee el modelo BIM desde data/) ni las tablas
-        # largas del prediseño; sin ellos el archivo baja de ≈ 800 KB a ≈ 390 KB (≈ 60 KB comprimido)
-        largos = ('columna_fuerte_viga_debil', 'cortante_por_capacidad', 'cuantias', 'chequeos')
-        web = {k: v for k, v in est.items() if k not in ('insumos_sha1', 'generado_por', 'refuerzo', 'cimentacion', 'cantidades')}
-        if isinstance(web.get('prediseno'), dict):
-            web['prediseno'] = {k: v for k, v in web['prediseno'].items() if k not in largos}
-        _escribir_web('sismo_torre_estructura.json', web)
+        _escribir_web('sismo_torre_estructura.json', sismo_estructura_web(est))
     am = D / 'sismo/amenaza.json'
     if am.exists():
         _escribir_web('sismo_amenaza.json', json.loads(am.read_text(encoding='utf-8')))
     else:
         _ausente('sismo_amenaza.json', am)
+    # generados que no van a la web pero de los que salen cifras de la vista o de los documentos (escenarios del docs/14,
+    # exigencias de la matriz): solo se revisa que estén al día, con el mismo aviso
+    for ruta in (D / 'sismo/escenarios.json', tdir / 'exigencias_3100.json'):
+        if ruta.exists():
+            viejos = _insumos_viejos(ruta)
+            if viejos:
+                _aviso(f'{ruta.relative_to(R)} está desactualizado frente a ' + ', '.join(viejos) + '; hay que regenerarlo')
 
 # --- Torre de servicios de primer nivel (data/proyectos/torre_hospital/): archivo aparte que la vista carga al abrirse
 def _sel(d, keys):
@@ -914,7 +971,7 @@ if _tdir.exists():
         viejos = {p_.name for p_ in (R / 'web/data').glob('torre_bim*.json')}
         escritos = web_bim.exportar(_escribir_web, _aviso, _cargar_generado)
         for n_ in sorted(viejos - set(escritos)):                 # lo que ya no sale (modelo desactualizado o nivel vacío)
-            (R / 'web/data' / n_).unlink()
+            (R / 'web/data' / n_).unlink(missing_ok=True)         # (el índice ya lo borró _no_exportar si estaba desactualizado)
     try:
         _exportar_bim()
     except Exception as _e:                                       # el modelo BIM nunca detiene el resto de la exportación

@@ -14,7 +14,8 @@
 // Uso como biblioteca:
 //   import { opciones, servidor, abrir, desborde, captura, esperar, informe } from '../qa/comun.mjs';
 //   const op = opciones();                                   // --vendor, --raiz, --base, --salida (capturas; por omisión
-//                                                            // en la carpeta temporal del sistema, fuera del repositorio), --puerto
+//                                                            // en la carpeta temporal del sistema, fuera del repositorio), --puerto,
+//                                                            // --url (sitio ya servido: Caddy, un despliegue; no levanta servidor)
 //   const srv = await servidor(op);                          // { url, cerrar() }
 //   const nav = await navegador(op);                         // Chromium (PLAYWRIGHT_MODULE o «playwright»)
 //   const { page, registro } = await abrir(nav, op, { url: srv.url + '?qa=1#torre', tema: 'oscuro', telefono: true });
@@ -46,6 +47,7 @@ export function opciones(argv = process.argv.slice(2), defecto = {}) {
     else if (a === '--base') op.base = sig();
     else if (a === '--puerto') op.puerto = +sig();
     else if (a === '--salida') op.salida = sig();
+    else if (a === '--url') op.url = sig();
     else if (a.startsWith('--') && argv[i + 1] && !argv[i + 1].startsWith('--')) op[a.slice(2)] = sig();
     else if (a.startsWith('--')) op[a.slice(2)] = true;
     else op.resto.push(a);
@@ -72,6 +74,8 @@ export function envolverIndex(cuerpo) {
   return `<!doctype html>\n<html lang="es">\n<head>\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n${cuerpo.slice(0, fin)}\n</head>\n<body>\n${cuerpo.slice(fin)}\n</body>\n</html>\n`;
 }
 export async function servidor(op = opciones()) {
+  // --url: el sitio ya está servido por otro lado (Caddy con el Caddyfile del repositorio, un despliegue): no se levanta nada
+  if (typeof op.url === 'string') return { url: op.url.endsWith('/') ? op.url : `${op.url}/`, puerto: +new URL(op.url).port || 80, raiz: null, externo: true, cerrar: async () => {} };
   const raiz = op.raizAbs || resolve(RAIZ_REPO, op.raiz || 'web'), base = op.base || '/';
   const srv = http.createServer(async (req, res) => {
     try {

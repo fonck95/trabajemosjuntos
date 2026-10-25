@@ -1,6 +1,6 @@
 // Relleno «en construcción» de la vista de la torre (equipo D, ola 0 de la especificación de integración, 12.1).
 // torre.js carga cada módulo nuevo de forma perezosa con import('./torre/recorrido.js').catch(() => import('./torre/_relleno.js'))
-// (lo mismo con sismo.js, habilitacion.js y contraste.js): mientras el equipo dueño no suba su módulo, la vista usa este,
+// (lo mismo con sismo.js, bim.js, habilitacion.js y contraste.js): mientras el equipo dueño no suba su módulo, la vista usa este,
 // que tiene las mismas firmas (6.2, 8.6 y 9.2), no dibuja nada en 3D salvo la placa del proyecto tipo y solo escribe en los
 // contenedores que recibe. Cuando llegue el módulo real, este archivo deja de cargarse sin tocar torre.js.
 export const RELLENO = true;
@@ -8,12 +8,13 @@ export const RELLENO = true;
 const AVISOS = {
   recorrido: ['Recorrer por dentro', 'Aquí se podrá entrar a la torre y caminar por los cuatro pisos y el bloque técnico, ambiente por ambiente, con la dotación de cada uno ubicada en 3D y su ficha. Mientras tanto, el modelo muestra la torre por fuera.'],
   sismo: ['Simulador sísmico', 'Aquí se podrá elegir un sismo (magnitud Mw, profundidad, distancia y suelo) y ver, paso a paso, cómo se deforma la estructura de la torre y cuánto se esfuerza cada columna, viga y muro. Mientras tanto, el modelo muestra la torre por fuera.'],
+  bim: ['Modelo BIM', 'Aquí se podrá recorrer el modelo BIM de la torre por disciplinas (arquitectura, estructura, cimentación, refuerzo, redes y dotación), con cortes, la cimentación y el refuerzo de cada elemento, cantidades y costo (5D), cronograma (4D) y la descarga del archivo IFC. Mientras tanto, el modelo muestra la torre por fuera.'],
 };
 const caja = (titulo, texto) => `<h3>${titulo}</h3><p><span class="pill">en construcción</span></p><p class="note">${texto}</p>`;
 
-// recorrido (6.2) o simulador (8.6): el modo se deduce del contenedor del panel que trae el contexto
+// recorrido (6.2), simulador (8.6) o modelo BIM (17.5): el modo se deduce del contenedor del panel que trae el contexto
 export async function montar(ctx) {
-  const tipo = /sismo$/.test(ctx.panel?.dataset.slot || '') ? 'sismo' : 'recorrido';
+  const tipo = (ctx.panel?.dataset.slot || '').match(/\.(sismo|bim)$/)?.[1] || 'recorrido';
   const [titulo, texto] = AVISOS[tipo];
   let dentro = false;
   const mostrar = (on) => {

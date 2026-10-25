@@ -6,11 +6,16 @@
     python3 scripts/torre/verificar_cifras_docs.py --json                  # informe completo en JSON
 
 Lee las cifras clave de los JSON (contraste con el proyecto tipo, inventario, cierre de brechas, matriz de cumplimiento,
-exigencias, prediseño y validación del motor sísmico) y comprueba que aparecen tal cual, en formato es-CO, en
-docs/11-torre-hospital-nivel-1.md, docs/14-simulacion-sismica.md y docs/15-dotacion-y-habilitacion.md; que $4.555.806
+exigencias, prediseño, escenarios de referencia y validación del motor sísmico, modelo BIM, interferencias, validación
+de los IFC y cantidades frente al presupuesto) y comprueba que aparecen tal cual, en formato es-CO, en
+docs/11-torre-hospital-nivel-1.md, docs/14-simulacion-sismica.md, docs/15-dotacion-y-habilitacion.md y
+docs/16-bim-torre.md; que $4.555.806
 (sobre 320,6 m²) y $5,42 M (sobre 270 m²) aparecen juntas; que no quedan marcas «[CIFRA]» sin llenar; y que ninguna mención
 de la Res. 1732 la da como vigente ni ninguna de la Res. 482 de 2018 como norma que rige (en docs/, en los JSON de
 data/proyectos/torre_hospital/ y en web/data/torre*.json).
+
+El «antes» de las interferencias de docs/16 (primera corrida del modelo federado, 24-oct-2026) va como constante y, si hay
+historial de git, se coteja con `git show` (solo lectura).
 
 Estados de cada control: ok · falta (la fuente existe y el documento no trae la cifra) · pendiente (la fuente o el campo
 todavía no existe, o el documento todavía tiene la marca «[CIFRA]» de esa cifra, o es una sección de una ola posterior).
@@ -31,14 +36,17 @@ DOCS = C.RAIZ / 'docs'
 DOC11 = DOCS / '11-torre-hospital-nivel-1.md'
 DOC14 = DOCS / '14-simulacion-sismica.md'
 DOC15 = DOCS / '15-dotacion-y-habilitacion.md'
+DOC16 = DOCS / '16-bim-torre.md'
 SISMO = C.DATOS / 'sismo'
+BIM = C.DATOS / 'bim'
+PRESUPUESTO = C.TORRE / 'presupuesto.json'
 MARCA = '[CIFRA]'
 RE_MARCA = re.compile(r'\[CIFRA(?::[^\]]*)?\]')   # «[CIFRA]» o «[CIFRA: qué va]»
 RE_1732 = re.compile(r'(?<![\w_/.%-])1732(?![\d_])')
 RE_482 = re.compile(r'482 de 2018')
 # archivos cuyo dueño es este equipo (2.1): sus fallas de vigencia nunca se toleran como pendientes
 PROPIOS = {'docs/11-torre-hospital-nivel-1.md', 'docs/09-motor-3d-y-modelos.md', 'docs/14-simulacion-sismica.md',
-           'docs/15-dotacion-y-habilitacion.md', 'data/proyectos/torre_hospital/normas.json',
+           'docs/15-dotacion-y-habilitacion.md', 'docs/16-bim-torre.md', 'data/proyectos/torre_hospital/normas.json',
            'data/proyectos/torre_hospital/proyecto_tipo.json', 'data/proyectos/torre_hospital/proyecto_tipo_contraste.json',
            'data/proyectos/torre_hospital/programa.json'}
 
@@ -63,6 +71,25 @@ def millones(n, d=1) -> list[str]:
     if m >= 100:
         formas |= {f'${entero(m)} M', f'${entero(m)} M'}
     return sorted(formas)
+
+
+def pesos_signo(n) -> str:
+    """«$526.716.630» o «−$98.991.438» (signo menos tipográfico, como en los documentos)."""
+    return ('−' if n < 0 else '') + pesos(abs(n))
+
+
+def pct(x, d) -> str:
+    """Fracción → «0,939 %»."""
+    return f'{decimal(x * 100, d)} %'
+
+
+SUPER = str.maketrans('-0123456789', '⁻⁰¹²³⁴⁵⁶⁷⁸⁹')
+
+
+def cientifica(x, d=1) -> str:
+    """8.903e-06 → «8,9 × 10⁻⁶»."""
+    m, e = f'{x:.{d}e}'.split('e')
+    return f'{decimal(float(m), d)} × 10{str(int(e)).translate(SUPER)}'
 
 
 def normal(t: str) -> str:
@@ -246,47 +273,243 @@ def controles_dotacion(ctrl: Control):
 
 def controles_sismo(ctrl: Control):
     est = leer(SISMO / 'torre_hospital_estructura.json')
-    if est is None:
-        ctrl.agregar('SI1', 'docs/14', 'prediseño (sistema, R, T1, Ta, Cu·Ta, derivas)', 'pendiente', 'no existe data/sismo/torre_hospital_estructura.json (equipo A)', 2)
+    pre = (est or {}).get('prediseno') or {}
+    if not pre:
+        ctrl.agregar('SI1', 'docs/14', 'prediseño (sistema, R, T1, Ta, Cu·Ta, derivas)', 'pendiente',
+                     'no existe data/sismo/torre_hospital_estructura.json o no trae «prediseno» (equipo A)', 2)
     else:
-        pre = est.get('prediseno') or {}
-        cifras = []
-        for nombre, rutas, d in (('R', ('R', 'sistema.R', 'r.valor'), 2), ('T1', ('periodo_fundamental_s', 'T1_s', 'periodos.T1_s'), 2),
-                                 ('Cu·Ta', ('Cu_Ta_s', 'cu_ta_s', 'periodos.Cu_Ta_s'), 2)):
-            x = obtener(pre, *rutas)
-            if isinstance(x, (int, float)):
-                cifras.append([decimal(x, d)])
-        if not cifras:
-            ctrl.agregar('SI1', 'docs/14', 'prediseño', 'pendiente', 'la estructura no trae todavía prediseno con R, T1 y Cu·Ta reconocibles', 2)
-        else:
-            buscar(ctrl, 'SI1', DOC14, 'prediseño: R, T1 y Cu·Ta', cifras, ola=2, seccion='4. El modelo de la torre (prediseño)')
+        r, per = pre.get('R') or {}, pre.get('periodos') or {}
+        fhe = obtener(pre, 'cortante_basal.fhe.x') or {}
+        modal = obtener(pre, 'cortante_basal.modal') or {}
+        dv = [x['deriva'] for x in pre.get('derivas_vector') or []]
+        ua = [x['deriva'] for x in obtener(pre, 'derivas_umbral_dano.aislados') or []]
+        um = [x['deriva'] for x in obtener(pre, 'derivas_umbral_dano.mamposteria_adherida') or []]
+        theta = max((max(x['x'], x['y']) for x in pre.get('estabilidad') or []), default=None)
+        paso0 = next((h for h in pre.get('historial_de_ajustes') or [] if str(h.get('paso')) == '0'), {})
+        cifras = [[decimal(r['R'], 2)], [decimal(r['R0'], 1)], [decimal(r['Omega0'], 1)],
+                  [f'{decimal(per["T1y_s"], 3)} s'], [f'{decimal(per["T1x_s"], 3)} s'], [f'{decimal(per["Ta_s"], 3)} s'],
+                  [f'{decimal(per["CuTa_s"], 3)} s'], [decimal(per['Cu'], 3)],
+                  [f'{decimal(fhe["Sa_g"], 3)} g'], [f'{entero(fhe["W_kN"])} kN'],
+                  [f'{entero(fhe["Vs_kN"])} kN'], [f'{entero(fhe["Vs_reducido_kN"])} kN'],
+                  [f'{entero(modal["x"]["V_modal_kN"])} kN'], [f'{entero(modal["y"]["V_modal_kN"])} kN'],
+                  [decimal(modal['x']['factor_ajuste'], 3)], [decimal(modal['y']['factor_ajuste'], 3)]]
+        cifras += [[pct(x, 3)] for x in dv] + [[pct(max(ua), 3)], [pct(max(um), 3)]]
+        if theta is not None:
+            cifras.append([decimal(theta, 4)])
+        if paso0.get('deriva_max_pct'):
+            cifras.append([f'{decimal(paso0["deriva_max_pct"], 2)} %'])
+        buscar(ctrl, 'SI1', DOC14, 'prediseño: R, períodos, cortante basal, derivas de diseño y del umbral de daño, P-Delta y deriva '
+               'con las secciones del presupuesto', cifras, ola=2, seccion='5. El modelo de la torre (prediseño)')
+        # docs/11 §1.1 y §4.2, y docs/16 §9.1: las mismas cifras de cabecera
+        cab = [[pct(max(dv), 3)], [pct(max(ua), 3)], [decimal(r['R'], 2)]]
+        buscar(ctrl, 'SI4', DOC11, 'qué le pasa a la torre en un sismo (§1.1): deriva de diseño y del umbral de daño', cab[:2],
+               ola=2, seccion='1.1 ¿Qué le pasa a la torre en un sismo?')
+        buscar(ctrl, 'SI5', DOC11, 'estructura y cimentación (§4.2): R, deriva con las secciones del presupuesto y con las del prediseño',
+               [cab[2], [pct(max(dv), 3)], [f'{decimal(paso0.get("deriva_max_pct", 0), 2)} %']], ola=2,
+               seccion='4.2 Estructura y cimentación (prediseño)')
     val = leer(SISMO / 'validacion_opensees.json')
-    if val is None:
-        ctrl.agregar('SI2', 'docs/14', 'validación con OpenSees', 'pendiente', 'no existe data/sismo/validacion_opensees.json (equipo A, ola 2)', 2)
+    crit = (val or {}).get('criterios') or []
+    if not crit:
+        ctrl.agregar('SI2', 'docs/14', 'validación con OpenSees', 'pendiente', 'no existe data/sismo/validacion_opensees.json o no trae «criterios»', 2)
     else:
-        nums = [v for k, v in (val.get('resumen') or {}).items() if isinstance(v, (int, float))]
-        if not nums:
-            ctrl.agregar('SI2', 'docs/14', 'validación con OpenSees', 'pendiente', 'el archivo no trae un bloque «resumen» numérico reconocible', 2)
+        cifras = []
+        for c in crit:
+            nom, x, det = c.get('criterio', ''), c.get('valor'), c.get('detalle') or ''
+            if not isinstance(x, (int, float)):
+                continue
+            if nom.startswith('Control 1'):
+                cifras.append([cientifica(x, 1)])
+            elif 'Jaccard' in nom:
+                cifras.append([decimal(x, 1)])
+                cifras += [[n] for n in sorted(set(re.findall(r'comunes (\d+)', det)))]
+            elif 'primera fluencia' in nom:
+                cifras += [[f'{decimal(float(t), 2)} s'] for t in re.findall(r'OpenSees ([\d.]+) s', det)]
+            else:
+                cifras.append([pct(x, 2 if x * 100 >= 0.1 else 3)])
+        if val.get('cumple_todo') is not True:
+            ctrl.agregar('SI2', 'docs/14', 'validación con OpenSees', 'falta', 'validacion_opensees.json no cumple todo', 2)
         else:
-            buscar(ctrl, 'SI2', DOC14, 'validación con OpenSees: errores por criterio', [[decimal(x, 2), decimal(x, 1)] for x in nums], ola=2, seccion='9. Validación')
-    esc = leer(SISMO / 'escenarios_referencia.json')
+            buscar(ctrl, 'SI2', DOC14, 'validación con OpenSees: diferencia de cada criterio', cifras, ola=2, seccion='10. Validación')
+    esc = leer(SISMO / 'escenarios.json')
     if esc is None:
-        ctrl.agregar('SI3', 'docs/14', 'resultados de los escenarios de referencia (Δt = 0,005 s)', 'pendiente',
-                     'no existe data/sismo/escenarios_referencia.json (salida del motor de la ola 3; formato por acordar con A y D)', 3)
+        ctrl.agregar('SI3', 'docs/14', 'resultados de los escenarios de referencia (Δt = 0,005 s)', 'pendiente', 'no existe data/sismo/escenarios.json', 3)
     else:
         cifras = []
         for e in esc.get('escenarios') or []:
-            x = obtener(e, 'deriva_vector_max_pct', 'deriva_vectorial_max_pct')
-            if isinstance(x, (int, float)):
-                cifras.append([decimal(x, 2)])
-        buscar(ctrl, 'SI3', DOC14, 'resultados de los escenarios de referencia', cifras or [['(sin cifras reconocibles)']], ola=3,
-               seccion='8. Resultados de los escenarios de referencia')
+            cifras.append([pct(e['deriva_vector_max'], 3)])
+            v = e.get('cortante_basal_max_kN') or {}
+            cifras.append([f'{entero(v["Vx"])} kN / {entero(v["Vy"])} kN'])
+            fl = e.get('fluencia') or {}
+            n = fl.get('elementos', 0)
+            if n:
+                por_nivel = ' / '.join(str(x.get('elementos_que_fluyen', 0)) for x in e.get('niveles') or [])
+                cifras.append([f'{n}: {por_nivel}'])
+            eq = e.get('equipos') or {}
+            cifras.append([f'{eq.get("desliza", 0)} / {eq.get("balancea", 0)}'])
+            dc = obtener(e, 'dc_max.valor')
+            if isinstance(dc, (int, float)):
+                cifras.append([decimal(dc, 2)])
+            if e.get('factor') not in (None, 1):
+                cifras.append([f'×{decimal(e["factor"], 2)}'])
+        e0 = (esc.get('escenarios') or [{}])[0].get('equipos') or {}
+        if e0:
+            cifras += [[f'{e0["evaluados"]} equipos'], [f'{e0["anclado"]} están anclados']]
+        buscar(ctrl, 'SI3', DOC14, 'resultados de los escenarios de referencia: deriva, cortante, fluencia por nivel, equipos, D/C y escala',
+               cifras, ola=3, seccion='9. Resultados de los escenarios de referencia')
+
+
+# interferencias de la primera corrida del modelo federado (24-oct-2026, commit 59716cb), la base del «antes» de docs/16 §8
+INTERFERENCIAS_ANTES = {'fecha': '2026-10-24', 'commit': '59716cb', 'total': 932, 'por_responsable': {
+    'A': {'dura': 201, 'media': 123, 'leve': 0}, 'A y B': {'dura': 33, 'media': 6, 'leve': 0},
+    'A y F': {'dura': 0, 'media': 495, 'leve': 0}, 'B': {'dura': 46, 'media': 21, 'leve': 0}, 'F': {'dura': 0, 'media': 0, 'leve': 7}}}
+
+
+def antes_en_git():
+    """Cotejo de solo lectura de INTERFERENCIAS_ANTES con la versión guardada en el historial (si hay historial)."""
+    import subprocess
+    try:
+        r = subprocess.run(['git', 'show', f'{INTERFERENCIAS_ANTES["commit"]}:data/bim/interferencias.json'], cwd=C.RAIZ,
+                           capture_output=True, text=True, timeout=30)
+        if r.returncode != 0:
+            return None
+        return json.loads(r.stdout).get('resumen')
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+
+
+def controles_bim(ctrl: Control):
+    bim = leer(BIM / 'torre_hospital.bim.json')
+    inter = leer(BIM / 'interferencias.json')
+    vifc = leer(BIM / 'validacion_ifc.json')
+    est = leer(SISMO / 'torre_hospital_estructura.json') or {}
+    pres = leer(PRESUPUESTO) or {}
+    if bim is None or inter is None or vifc is None:
+        ctrl.agregar('BI0', 'docs/16', 'modelo BIM', 'pendiente', 'falta data/bim/torre_hospital.bim.json, interferencias.json o validacion_ifc.json', 3)
+        return
+    # BI1: totales y disciplinas (§4) y cabecera (En pocas palabras)
+    tot = bim.get('totales') or {}
+    por_disc = {k: sum(v.values()) for k, v in (bim.get('conteos') or {}).items()}
+    cab = [[entero(tot['elementos'])], [entero(tot['juegos_de_barras'])], [entero(tot['barras'])], [f'{entero(tot["acero_kg"])} kg']]
+    buscar(ctrl, 'BI1', DOC16, 'en pocas palabras: elementos, juegos de barras, barras y acero', cab, ola=3, seccion='En pocas palabras')
+    filas = []
+    for k, d in (bim.get('disciplinas') or {}).items():
+        n = por_disc.get(k)
+        if k == 'REF':
+            filas.append([f'{entero(tot["juegos_de_barras"])} juegos ({entero(tot["barras"])} barras)'])
+        elif n is not None:
+            filas.append([f'| {entero(n)} |'])
+    buscar(ctrl, 'BI1b', DOC16, 'organización: elementos por disciplina', filas, ola=3, seccion='4. Organización del modelo federado')
+    # BI2: LOD objetivo por disciplina (§5)
+    t16 = texto_doc(DOC16) or ''
+    malas = []
+    for k, d in (bim.get('disciplinas') or {}).items():
+        if not re.search(r'^\| ' + re.escape(d['nombre']) + r' \| ' + re.escape(str(d['lod_objetivo'])) + r' \|', t16, re.M):
+            malas.append(f'{d["nombre"]} (LOD {d["lod_objetivo"]})')
+    ctrl.agregar('BI2', C.relativa(DOC16), 'LOIN: LOD objetivo de cada disciplina en la tabla del §5', 'falta' if malas else 'ok',
+                 ('no cuadra: ' + ', '.join(malas)) if malas else '', 3)
+    # BI3: georreferenciación (§7)
+    g = bim.get('georreferenciacion') or {}
+    buscar(ctrl, 'BI3', DOC16, 'georreferenciación: sistema, este, norte, convergencia, factor de escala y altura', [
+        [g['crs']], [f'{decimal(g["este_m"], 2)} m'], [f'{decimal(g["norte_m"], 3)} m'], [f'{decimal(g["convergencia_deg"], 6)}°'],
+        [decimal(g['factor_escala_punto'], 7)], [f'{entero(g["altura_ortometrica_m"])} m']], ola=3, seccion='7. Georreferenciación')
+    # BI4: interferencias antes y después por responsable (§8)
+    res = inter.get('resumen') or {}
+    if res.get('duras_pendientes'):
+        ctrl.agregar('BI4', 'data/bim/interferencias.json', 'interferencias duras pendientes', 'falta', f'{res["duras_pendientes"]} duras pendientes', 3)
+    git = antes_en_git()
+    if git is not None and git.get('por_responsable') != INTERFERENCIAS_ANTES['por_responsable']:
+        ctrl.agregar('BI4', 'docs/16', 'interferencias «antes» frente al historial', 'falta',
+                     f'el historial ({INTERFERENCIAS_ANTES["commit"]}) no coincide con las cifras documentadas', 3)
+    ant, des = INTERFERENCIAS_ANTES['por_responsable'], res.get('por_responsable') or {}
+    lineas = {l.split('|')[1].strip(): l for l in t16.splitlines() if l.startswith('| ') and l.count('|') >= 8}
+    malas = []
+    for resp in sorted(set(ant) | set(des)):
+        a, d = ant.get(resp, {}), des.get(resp, {})
+        celdas = ' | '.join(str(x) for x in (a.get('dura', 0), d.get('dura', 0), a.get('media', 0), d.get('media', 0), a.get('leve', 0), d.get('leve', 0)))
+        linea = next((l for nombre, l in lineas.items() if nombre.endswith(f'({resp})')), None)
+        if linea is None or f'| {celdas} |' not in linea:
+            malas.append(f'{resp}: {celdas}')
+    suma = lambda r, k: sum(x.get(k, 0) for x in r.values())
+    total = ' | '.join(f'**{x}**' for x in (suma(ant, 'dura'), suma(des, 'dura'), suma(ant, 'media'), suma(des, 'media'), suma(ant, 'leve'), suma(des, 'leve')))
+    if f'| {total} |' not in t16:
+        malas.append(f'total: {total}')
+    if f'{entero(INTERFERENCIAS_ANTES["total"])} interferencias antes y {entero(res.get("total", 0))} después' not in t16:
+        malas.append(f'{INTERFERENCIAS_ANTES["total"]} antes y {res.get("total")} después')
+    ctrl.agregar('BI4', C.relativa(DOC16), 'coordinación: duras, medias y leves antes y después por responsable (§8)',
+                 'falta' if malas else 'ok', (('no cuadra: ' + '; '.join(malas)) if malas else '') +
+                 ('' if git is not None else ' (sin historial de git: «antes» con las cifras documentadas)'), 3)
+    cat = res.get('por_categoria') or {}
+    queda = [[f'{cat["barras que se cruzan"]["media"]} cruces'], [f'{cat["separación libre entre barras"]["media"]} puntos'],
+             [f'{cat["coherencia de la cimentación"]["media"]} de coherencia'], [f'{cat["ducto contra cimentación"]["media"]} ducto'],
+             [f'{cat["concreto contra concreto"]["leve"]} contactos leves']]
+    rv = inter.get('revisado') or {}
+    queda += [[f'{entero(obtener(rv, "unidades_y_puertas.unidades_revisadas"))} unidades'], [f'{entero(obtener(rv, "concreto.solidos"))} sólidos'],
+              [f'{entero(obtener(rv, "barras.parejas_revisadas"))} parejas'], [f'{entero(obtener(rv, "refuerzo.puntos_de_separacion"))} puntos de separación']]
+    buscar(ctrl, 'BI5', DOC16, 'coordinación: lo revisado y lo que queda', queda, ola=3, seccion='8. Coordinación: detección de interferencias y su resultado')
+    # BI6: cantidades frente al presupuesto (§9.1) y su efecto (docs/11 §6.3)
+    cpa = {x['item']: x for x in obtener(est, 'cantidades.comparacion_presupuesto') or []}
+    cpb = {x['item']: x for x in bim.get('comparacion_presupuesto') or [] if x.get('capitulo') in ('2', '3')}
+    if not cpa or not cpb:
+        ctrl.agregar('BI6', 'docs/16', 'cantidades contra el presupuesto', 'pendiente', 'sin comparación del prediseño o del modelo', 3)
+        return
+    cifras = []
+    for it in sorted(set(cpa) | set(cpb), key=lambda k: [int(p) for p in k.split('.')]):
+        for cp in (cpa, cpb):
+            if it in cp:
+                cifras.append([pesos_signo(round(cp[it]['efecto_cop']))])
+    cap = lambda cp, c: sum(x['efecto_cop'] for k, x in cp.items() if k.split('.')[0] == c)
+    ta, tb = sum(x['efecto_cop'] for x in cpa.values()), sum(x['efecto_cop'] for x in cpb.values())
+    total_a = est['cantidades'].get('efecto_total_costo_directo_cop')
+    if total_a is not None and round(total_a) != round(ta):
+        ctrl.agregar('BI6', 'data/sismo/torre_hospital_estructura.json', 'efecto total = suma de los ítems', 'falta', f'{total_a} ≠ {ta}', 3)
+    for c in ('2', '3'):
+        cifras += [[f'**{pesos_signo(round(cap(cpa, c)))}**'], [f'**{pesos_signo(round(cap(cpb, c)))}**']]
+    cifras += [[f'**{pesos(round(ta))}**'], [f'**{pesos(round(tb))}**']]
+    fac, cd, vo = obtener(pres, 'aiu_valores.factor'), pres.get('costo_directo'), pres.get('valor_obra')
+    m = lambda x: entero(x / 1e6)
+    efecto = [[f'+${m(ta)} M a +${m(tb)} M'], [f'+${m(ta * fac)} M a +${m(tb * fac)} M'],
+              [f'{decimal(ta / cd * 100, 1)} % a {decimal(tb / cd * 100, 1)} %'], [f'${m(cd)} M'],
+              [f'${m(vo + ta * fac)} M o ${m(vo + tb * fac)} M'], [decimal(fac, 4)]]
+    caps23 = sum(x.get('subtotal_costo_directo', 0) for x in pres.get('capitulos') or [] if str(x.get('codigo')) in ('2', '3'))
+    efecto += [[f'${m(caps23)} M a ${m(caps23 + ta)} M o ${m(caps23 + tb)} M']]
+    buscar(ctrl, 'BI6', DOC16, 'cantidades contra el presupuesto: efecto por ítem, por capítulo, total, con AIU y en el valor de la obra',
+           cifras + efecto, ola=3, seccion='9. Cantidades contra el presupuesto (5D)')
+    buscar(ctrl, 'BI7', DOC11, 'ajuste pendiente del prediseño estructural (§6.3): capítulos, total, porcentaje, AIU y valor de la obra', [
+        [pesos_signo(round(cap(cpa, '2')))], [pesos_signo(round(cap(cpb, '2')))], [pesos_signo(round(cap(cpa, '3')))], [pesos_signo(round(cap(cpb, '3')))],
+        [f'**{pesos(round(ta))}**'], [f'**{pesos(round(tb))}**'], [f'{decimal(ta / cd * 100, 1)} %'], [f'{decimal(tb / cd * 100, 1)} %'],
+        [f'**{pesos(round(ta * fac))}**'], [f'**{pesos(round(tb * fac))}**'], [f'${m(vo + ta * fac)} M'], [f'${m(vo + tb * fac)} M'],
+        [decimal(fac, 4)], [f'${m(caps23)} M']], ola=3, seccion='6.3 Ajuste pendiente del prediseño estructural')
+    buscar(ctrl, 'BI8', DOC11, 'cuánto cuesta (en pocas palabras): el ajuste con y sin AIU',
+           [[f'${m(ta)} M a ${m(tb)} M'], [f'${m(ta * fac)} M a ${m(tb * fac)} M']], ola=3, seccion='En pocas palabras')
+    # BI9: entregables IFC4 y su validación (§11) y codificación (§6)
+    arch = {Path(a['archivo']).name: a for a in vifc.get('archivos') or []}
+    pri, ref = arch.get('torre_hospital.ifc') or {}, arch.get('torre_hospital_refuerzo.ifc') or {}
+    if vifc.get('errores') != 0 or any((a.get('validacion_esquema') or {}).get('errores') for a in arch.values()):
+        ctrl.agregar('BI9', 'data/bim/validacion_ifc.json', 'IFC sin errores', 'falta', f'errores: {vifc.get("errores")}', 3)
+    mb = lambda x: decimal(x, 2 if round(x, 1) != x else 1)
+    conc = pri.get('concreto') or {}
+    ifc = [[f'{mb(pri["mb"])} MB'], [f'{mb(ref["mb"])} MB'], [entero(pri['entidades'])], [entero(ref['entidades'])],
+           [f'{entero(obtener(ref, "acero.barras_geometria"))} barras'], [f'{entero(obtener(ref, "acero.peso_qto_kg"))} kg'],
+           [f'{decimal(conc["qto_m3"], 1)} m³'], [f'{decimal(conc["geometria_ifcopenshell_m3"], 1)} m³'],
+           [f'{obtener(pri, "muestra_geometria.n")} elementos'], [f'{obtener(ref, "muestra_geometria.n")} barras'],
+           [f'{obtener(pri, "cinco_d.partidas")} partidas'], [f'{obtener(pri, "cuatro_d.tareas")} tareas']]
+    buscar(ctrl, 'BI9', DOC16, 'entregables IFC4: tamaño, entidades, refuerzo, concreto, muestra, 5D y 4D', ifc, ola=3,
+           seccion='11. Entregables IFC4 y su validación')
+    pl = pri.get('plantillas_ifc4') or {}
+    buscar(ctrl, 'BI10', DOC16, 'codificación: identificadores globales, compartidos y conjuntos de propiedades revisados', [
+        [entero(obtener(pri, 'globalid.total'))], [entero(obtener(ref, 'globalid.total'))], [f'{obtener(vifc, "federacion.guid_compartidos")} del proyecto'],
+        [f'{entero(pl.get("conjuntos_revisados", 0))} conjuntos'], [f'{entero(pl.get("propiedades_revisadas", 0))} propiedades']], ola=3,
+        seccion='6. Codificación de los elementos')
+    buscar(ctrl, 'BI11', DOC11, 'modelo BIM (§4.3): elementos, barras e interferencias duras antes y después', [
+        [f'{entero(tot["elementos"])} elementos'], [f'{entero(tot["barras"])} barras'],
+        [f'de {suma(ant, "dura")} a {suma(des, "dura")}']], ola=3, seccion='4.3 Modelo BIM')
 
 
 def controles_marcas(ctrl: Control):
-    for ruta in (DOC11, DOC14, DOC15):
+    for ruta in (DOC11, DOC14, DOC15, DOC16):
         t = texto_doc(ruta)
         if t is None:
+            ctrl.agregar('MC', C.relativa(ruta), 'el documento existe', 'pendiente', 'todavía no existe', 2)
             continue
         n = len(RE_MARCA.findall(t))
         ctrl.agregar('MC', C.relativa(ruta), f'marcas «{MARCA}» sin llenar', 'ok' if n == 0 else 'pendiente', f'{n} marcas' if n else '', 2)
@@ -345,6 +568,7 @@ def main():
     controles_contraste(ctrl)
     controles_dotacion(ctrl)
     controles_sismo(ctrl)
+    controles_bim(ctrl)
     controles_marcas(ctrl)
     controles_vigencia(ctrl)
     if a.permitir_pendientes:

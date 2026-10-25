@@ -7,8 +7,8 @@ Insumos (sin modificarlos): plantas de toda la torre (B), estructura con predise
 inventario de dotación y catálogo 3D (B), presupuesto y APU (T4) y el cronograma de docs/11, sección 10.
 
 Disciplinas: ARQ (espacios, muros, puertas, ventanas, pisos y cielos, cubierta, escaleras), EST (columnas, vigas, losas
-nervadas, muros estructurales), CIM (arranques, pilotes, dados y losas de pilotes, vigas de amarre, contrapiso, fosos y
-cisternas), REF (refuerzo: juegos de barras en geometría real), FIJO (equipamiento fijo e infraestructura del
+nervadas, muros estructurales), CIM (arranques, pilotes, dados y losas de pilotes, vigas de amarre, muros de contención,
+contrapiso, fosos y cisternas), REF (refuerzo: juegos de barras en geometría real), FIJO (equipamiento fijo e infraestructura del
 inventario) y DOT (dotación). Cada elemento lleva GlobalId IFC determinista, clase IFC4, nivel, geometría, material,
 conjuntos de propiedades comunes de IFC y uno propio (tipo de dato, fuente, norma y numeral), cantidades (Qto),
 vínculo 5D (ítem de presupuesto.json con su APU y su valor), 4D (fase y fechas del cronograma) y vínculo con el
@@ -158,7 +158,7 @@ def fases_4d(etapas):
     def f(id_, nombre, etapa, ini, fin, disc, niveles):
         F.append({'id': id_, 'nombre': nombre, 'etapa': etapa, 'inicio': ini, 'fin': fin, 'disciplina': disc, 'niveles': niveles})
     f('F7-PIL', 'Pilotes preexcavados (tras la demolición del antiguo Centro Vida)', 7, '2028-09-16', '2028-10-31', 'CIM', ['CIM-PIL'])
-    f('F7-DAD', 'Dados, losas de pilotes, arranques y vigas de amarre', 7, '2028-11-01', '2028-12-15', 'CIM', ['CIM'])
+    f('F7-DAD', 'Dados, losas de pilotes, arranques, vigas de amarre y muros de contención', 7, '2028-11-01', '2028-12-15', 'CIM', ['CIM'])
     f('F7-FOS', 'Fosos, cisternas y contrapiso', 7, '2028-12-01', '2028-12-31', 'CIM', ['CIM'])
     est = [('1', '+4,50', '2028-12-16', '2029-02-15'), ('2', '+8,70', '2029-02-16', '2029-03-31'),
            ('3', '+12,90', '2029-04-01', '2029-05-15'), ('4', '+17,10 (cubierta)', '2029-05-16', '2029-06-30')]
@@ -370,8 +370,8 @@ DISCIPLINAS = {
                           [('prediseño estructural DMO', 'cálculo propio'), ('diseño estructural y planos firmados', 'por confirmar')])},
     'CIM': {'nombre': 'Cimentación', 'lod_objetivo': '350',
             'estado_actual': 'geometría tipo 350 sobre un prediseño con capacidad de pilotes estimada; falta el estudio geotécnico',
-            'contenido': 'arranques, pilotes, dados, losas de pilotes, vigas de amarre, contrapiso, fosos y cisternas',
-            'loin': _loin('pilotes, dados, vigas de amarre, contrapiso, fosos y cisternas con sus cotas', 'cálculo propio (prediseño)',
+            'contenido': 'arranques, pilotes, dados, losas de pilotes, vigas de amarre, muros de contención, contrapiso, fosos y cisternas',
+            'loin': _loin('pilotes, dados, vigas de amarre, muros de contención, contrapiso, fosos y cisternas con sus cotas', 'cálculo propio (prediseño)',
                           [('código, GlobalId y clase IFC4', 'cálculo propio'), ('cargas de servicio y reacciones por pilote', 'cálculo propio'),
                            ('capacidad de los pilotes', 'estimación (la fija el estudio geotécnico)'),
                            ('parámetros del suelo y nivel freático', 'por confirmar')],
@@ -901,13 +901,28 @@ def escaleras_arq(M, pl, S, cost, est):
             tr_desp = []
             des_desp = []
             desc = [p for p in esc['partes'] if p['tipo'].startswith('descanso')]
+            sobre_losa = []
             # la escalera de cada piso lleva su descanso intermedio y el de llegada del nivel de arriba; su propio descanso
             # de piso es el de llegada de la escalera de abajo (en el piso 1, el contrapiso)
             sig = nivs[orden[i + 1]]
             llegada = [p for e2 in sig['escaleras'] if e2['id'] == esc['id'] for p in e2['partes'] if p['tipo'] == 'descanso_piso']
-            for p in [q for q in desc if q['tipo'] == 'descanso_intermedio'] + [dict(q, _z_abs=sig['z'] + q['z']) for q in llegada]:
+            # el descanso de llegada que cae sobre la losa del piso de arriba (la escalera abierta del vestíbulo, que llega a una
+            # franja de piso) es esa losa: no se modela aparte; si la losa lo cubre en parte, solo la parte que queda libre
+            piezas = [dict(q, _rect=q['rect']) for q in desc if q['tipo'] == 'descanso_intermedio']
+            for q in llegada:
+                z_ll = sig['z'] + q['z']
+                cubre = [[L_['x0'], L_['y0'], L_['x1'], L_['y1']] for L_ in S.losas if abs(L_['z'] - z_ll) < 1e-6]
+                libres_ = restar_rects(list(q['rect']), cubre)
+                a_tot = (q['rect'][2] - q['rect'][0]) * (q['rect'][3] - q['rect'][1])
+                a_lib = sum((w[2] - w[0]) * (w[3] - w[1]) for w in libres_)
+                if a_lib < 0.02 * a_tot:
+                    sobre_losa.append(f'El descanso de llegada (nivel {_m(z_ll)} m) es la losa de ese piso: no se modela aparte')
+                    continue
+                for w in (libres_ if a_lib < 0.98 * a_tot else [q['rect']]):
+                    piezas.append(dict(q, _z_abs=z_ll, _rect=w))
+            for p in piezas:
                 zt = p.get('_z_abs', zn + p['z'])
-                x0, y0, x1, y1 = p['rect']
+                x0, y0, x1, y1 = p['_rect']
                 g = caja(x0, y0, zt - t, x1, y1, zt)
                 vol = volumen(g)
                 vol_total += vol
@@ -995,7 +1010,7 @@ def escaleras_arq(M, pl, S, cost, est):
             M.agregar(elemento(sid, 'ARQ', 'IfcStair', 'HALF_TURN_STAIR' if len(tramos) == 2 else 'STRAIGHT_RUN_STAIR', esc['nombre'],
                                nid, {'tipo': 'compuesta', 'partes': []}, 'concreto_28',
                                dict(atlas_pset(TD_B, F_PL + '; refuerzo y espesor del despiece de A', 'NSR-10 K.3.8 (escaleras de evacuación)', 'por confirmar',
-                                               '; '.join(esc.get('notas', []))[:400]), Portante=True),
+                                               '; '.join(sobre_losa + esc.get('notas', []))[:400]), Portante=True),
                                {QTO_PROPIO: {'GrossVolume': r(vol_total, 4), 'NetVolume': r(vol_total, 4), 'Length': r(sum(alturas), 3)}},
                                {'Pset_StairCommon': {'NumberOfRiser': sum(tr['contrahuellas'] for tr in tramos),
                                                      'RiserHeight': tramos[0]['contrahuella_m'], 'TreadLength': tramos[0]['huella_m'],
@@ -1104,6 +1119,12 @@ def _m(v):
     return f'{v:.2f}'.replace('.', ',')
 
 
+def planta_contrapiso(est):
+    """[x0, y0, x1, y1] del contrapiso del prediseño (cimentacion.contrapiso.planta_m; antes de que A lo diera, la huella de
+    los pisos 1-3)."""
+    return list(est['cimentacion']['contrapiso'].get('planta_m') or [-13.0, -19.6, 8.6, 22.4])
+
+
 def _rect_pol(rr):
     x0, y0, x1, y1 = rr
     return [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
@@ -1205,9 +1226,36 @@ def cimentacion(M, S, cost, est, bases):
                            {'Pset_FootingCommon': {'Reference': 'viga de amarre', 'LoadBearing': True},
                             'Pset_ConcreteElementGeneral': {'StrengthClass': "f'c = 28 MPa", 'ConcreteCover': 0.05}},
                            [cost.v('2.08', V)], 'F7-DAD', analisis={'une': [v['desde'], v['hasta']]}, refuerzo_texto=v['texto'], kg_A=r(v['kg'], 1)))
+    # muros de contención del borde del pasaje del bloque técnico (sobre las vigas de amarre o en voladizo desde el dado)
+    for m in C.get('muros_contencion') or []:
+        x0, x1 = m['tramo']
+        y0, y1 = m['y']
+        g = caja(x0, y0, m['z_fondo'], x1, y1, m['z_tope'])
+        V = volumen(g)
+        L, h, t = x1 - x0, m['z_tope'] - m['z_fondo'], m['t_m']
+        rv, rh, emp = m['refuerzo']['vertical'], m['refuerzo']['horizontal'], m['empuje']
+        g_ = lambda v: f'{v:g}'.replace('.', ',')  # noqa: E731
+        nota = (f'{m["texto"]}. {m["nota"][0].upper()}{m["nota"][1:]}; {m["apoyo"]} ({m["sobre"]}). Empuje en reposo (K0 = {g_(emp["K0"])}) con agua '
+                f'y {g_(emp["sobrecarga_kPa"])} kPa de sobrecarga: Mu = {_m(emp["Mu_kNm_m"])} frente a φMn = {_m(emp["phiMn_kNm_m"])} kN·m/m y '
+                f'Vu = {_m(emp["Vu_kN_m"])} frente a φVn = {_m(emp["phiVn_kN_m"])} kN/m (cálculo propio del prediseño)')
+        M.agregar(elemento(m['id'], 'CIM', 'IfcWall', 'USERDEFINED',
+                           f'Muro de contención {m["id"]} ({_m(t)} × {_m(h)} m) del borde del pasaje del bloque técnico', 'CIM', g, 'concreto_28',
+                           atlas_pset(TD_A, F_EST + ' → cimentacion.muros_contencion', 'NSR-10 C.14.3 y título H (estructuras de contención)',
+                                      'numerales por confirmar', nota),
+                           {'Qto_WallBaseQuantities': {'Length': r(L, 3), 'Width': t, 'Height': r(h, 3), 'GrossSideArea': r(L * h, 3),
+                                                       'NetSideArea': r(L * h, 3), 'GrossVolume': r(V, 4), 'NetVolume': r(V, 4),
+                                                       'NetWeight': r(V * RHO_C, 1)}},
+                           {'Pset_WallCommon': {'Reference': 'muro de contención', 'LoadBearing': True, 'IsExternal': True},
+                            'Pset_ConcreteElementGeneral': {'StrengthClass': "f'c = 28 MPa", 'ConcreteCover': m['refuerzo']['recubrimiento_m']},
+                            'Pset_ReinforcementBarPitchOfWall': {'Reference': m['texto'][:120], 'VerticalBarPitch': rv['s_m'],
+                                                                 'HorizontalBarPitch': rh['s_m'], 'BarAllocationType': 'DOUBLE'}},
+                           [cost.v('2.09', V, 'muro de contención: su concreto entra en la fila de fosos y cisternas (prediseño)')], 'F7-DAD',
+                           objeto_tipo='RETAININGWALL', refuerzo_texto=m['texto'], kg_A=r(m['kg'], 1),
+                           analisis={'nota': 'no está en el modelo sísmico: retiene el relleno frente al pasaje del bloque técnico',
+                                     'sobre': m['sobre'], 'empuje': emp}))
     # contrapiso
     cp = C['contrapiso']
-    rect = [-13.0, -19.6, 8.6, 22.4]
+    rect = planta_contrapiso(est)
     huecos = []
     for f in C['fosos']:
         huecos.append([f['x'][0], f['y'][0], f['x'][1], f['y'][1]])
@@ -1232,16 +1280,22 @@ def cimentacion(M, S, cost, est, bases):
                        [cost.v('2.12', A)], 'F7-FOS', area_A=r(cp['area_m2'], 3)))
     # fosos y cisternas (conjuntos con su losa y sus muros)
     for f in C['fosos']:
-        x0, x1 = f['x']
-        y0, y1 = f['y']
+        hf = huella_foso(f, S, bases)
+        x0, x1 = hf['x']
+        y0, y1 = hf['y']
         zf = f['z_fondo']
         e, el = f['muro_e_m'], f['losa_e_m']
         zt = -cp['espesor_m']
         losa = caja(x0, y0, zf, x1, y1, zf + el)
-        muros_ = {'tipo': 'compuesta', 'partes': [caja(x0, y0, zf + el, x1, y0 + e, zt), caja(x0, y1 - e, zf + el, x1, y1, zt),
-                                                  caja(x0, y0 + e, zf + el, x0 + e, y1 - e, zt), caja(x1 - e, y0 + e, zf + el, x1, y1 - e, zt)]}
+        muros_ = {'tipo': 'compuesta', 'partes': muros_foso(x0, y0, x1, y1, e, zf + el, zt, hf['compartidos'])}
         Vl, Vm = volumen(losa), volumen(muros_)
-        at = atlas_pset(TD_A, F_EST + ' → cimentacion.fosos', 'NSR-10 C.15 y C.23 (estructuras estancas, por confirmar)', None, f['nota'])
+        nota_f = f['nota']
+        if hf['compartidos']:
+            nota_f += ('. Coordinación del modelo: ' + '; '.join(
+                f'el lado {lado} del foso es el arranque del muro {", ".join(ms)}' for lado, ms in sorted(hf['compartidos'].items()))
+                + ' (la huella del prediseño monta sobre ese muro; el modelo arranca la losa y los otros muros del foso en su cara, '
+                'sin un muro propio en ese lado)')
+        at = atlas_pset(TD_A, F_EST + ' → cimentacion.fosos', 'NSR-10 C.15 y C.23 (estructuras estancas, por confirmar)', None, nota_f)
         M.agregar(elemento(f['id'], 'CIM', 'IfcElementAssembly', 'USERDEFINED', f['nombre'], 'CIM', {'tipo': 'compuesta', 'partes': []}, 'concreto_28', at,
                            {QTO_PROPIO: {'GrossVolume': r(Vl + Vm, 4)}}, {}, [], 'F7-FOS', objeto_tipo='FOSO',
                            partes=[f['id'] + '-L', f['id'] + '-M'], refuerzo_texto=f['refuerzo']['muros'], kg_A=r(f['kg'], 1),
@@ -1283,6 +1337,58 @@ def cimentacion(M, S, cost, est, bases):
                                {qn: {'GrossVolume': r(V, 4), 'NetVolume': r(V, 4)}},
                                {'Pset_SlabCommon' if cls == 'IfcSlab' else 'Pset_WallCommon': {'LoadBearing': True, 'IsExternal': True}},
                                [cost.v('2.09', V)], 'F7-FOS', parte_de=c['id']))
+
+
+def huella_foso(f, S, bases):
+    """Huella del foso en el modelo. Si un lado de la huella del prediseño cae dentro del arranque de un muro estructural
+    que baja hasta el fondo del foso (el foso del montacargas junto a MX-4), ese muro es el lado del foso: la losa y los
+    otros muros del foso arrancan en su cara y ese lado no lleva muro propio. Devuelve {'x', 'y', 'compartidos': {lado:
+    [muros]}}."""
+    x0, x1 = f['x']
+    y0, y1 = f['y']
+    arr = []
+    for m in S.muros:
+        b = bases.get(m['muro'])
+        if m['nivel'] == 1 and b and b['z_tope'] <= f['z_fondo'] + 1e-6:
+            arr += [(m['muro'], rr) for rr in rects_arranque_muro(m, S)]
+
+    def cubre(iv, a, b_):
+        p_ = a
+        for u, v in sorted(iv):
+            if u > p_ + 1e-6:
+                return False
+            p_ = max(p_, v)
+        return p_ >= b_ - 1e-6
+    comp = {}
+    sur = [(mu, rr) for mu, rr in arr if rr[1] <= y0 + 1e-6 < rr[3] < y1 - 1e-6 and rr[0] < x1 and rr[2] > x0]
+    if sur and cubre([(max(rr[0], x0), min(rr[2], x1)) for _, rr in sur], x0, x1):
+        y0, comp['sur'] = min(rr[3] for _, rr in sur), sorted({mu for mu, _ in sur})
+    norte = [(mu, rr) for mu, rr in arr if y0 + 1e-6 < rr[1] < y1 - 1e-6 <= rr[3] and rr[0] < x1 and rr[2] > x0]
+    if norte and cubre([(max(rr[0], x0), min(rr[2], x1)) for _, rr in norte], x0, x1):
+        y1, comp['norte'] = max(rr[1] for _, rr in norte), sorted({mu for mu, _ in norte})
+    oeste = [(mu, rr) for mu, rr in arr if rr[0] <= x0 + 1e-6 < rr[2] < x1 - 1e-6 and rr[1] < y1 and rr[3] > y0]
+    if oeste and cubre([(max(rr[1], y0), min(rr[3], y1)) for _, rr in oeste], y0, y1):
+        x0, comp['oeste'] = min(rr[2] for _, rr in oeste), sorted({mu for mu, _ in oeste})
+    este = [(mu, rr) for mu, rr in arr if x0 + 1e-6 < rr[0] < x1 - 1e-6 <= rr[2] and rr[1] < y1 and rr[3] > y0]
+    if este and cubre([(max(rr[1], y0), min(rr[3], y1)) for _, rr in este], y0, y1):
+        x1, comp['este'] = max(rr[0] for _, rr in este), sorted({mu for mu, _ in este})
+    return {'x': [x0, x1], 'y': [y0, y1], 'compartidos': comp}
+
+
+def muros_foso(x0, y0, x1, y1, e, z0, z1, compartidos):
+    """Muros de un foso (cajas): los lados compartidos con un muro estructural no llevan muro propio."""
+    out = []
+    ys0 = y0 if 'sur' in compartidos else y0 + e
+    ys1 = y1 if 'norte' in compartidos else y1 - e
+    if 'sur' not in compartidos:
+        out.append(caja(x0, y0, z0, x1, y0 + e, z1))
+    if 'norte' not in compartidos:
+        out.append(caja(x0, y1 - e, z0, x1, y1, z1))
+    if 'oeste' not in compartidos:
+        out.append(caja(x0, ys0, z0, x0 + e, ys1, z1))
+    if 'este' not in compartidos:
+        out.append(caja(x1 - e, ys0, z0, x1, ys1, z1))
+    return out
 
 
 def rects_arranque_muro(ms, S):
@@ -1387,17 +1493,17 @@ ITEM_FIJO = {'planta_electrica': '10.03', 'ups_central': '10.05', 'ascensor_cabi
 
 
 def dims_unidad(u, l, cat):
+    """Medidas de la unidad como las usa el inventario (y el recorrido): primero las propias de la unidad (B las fija cuando
+    la pieza o la zona que ocupa no es la nominal de la línea, p. ej. una fila de paneles o una caneca más angosta), luego
+    las de la línea, la variante y el modelo del catálogo."""
     m = cat['modelos'].get(l.get('modelo3d')) or {}
-    dim = l.get('dim_m')
-    if not dim and l.get('variante') and (m.get('variantes') or {}).get(l['variante'], {}).get('dim_m'):
-        dim = m['variantes'][l['variante']]['dim_m']
+    var = u.get('variante') or l.get('variante')
+    dim = u.get('dim_m') or l.get('dim_m')
+    if not dim and var and (m.get('variantes') or {}).get(var, {}).get('dim_m'):
+        dim = m['variantes'][var]['dim_m']
     if not dim:
         dim = m.get('dim_m') or [0.5, 0.5, 0.5]
-    z = u['posicion'][2]
-    if l.get('modelo3d') == 'panel_solar_fila' and l.get('variante') == 'elevada' and z > dim[2]:
-        dim = [dim[0], dim[1], z + dim[2]]
-        z = 0.0
-    return [float(v) for v in dim], z
+    return [float(v) for v in dim], u['posicion'][2], var
 
 
 def inventario(M, inv, cat, pl, cost):
@@ -1422,13 +1528,25 @@ def inventario(M, inv, cat, pl, cost):
             excluidas['contexto'] += 1
             continue
         nid = u['nivel']
-        dim, zrel = dims_unidad(u, l, cat)
+        dim, zrel, var = dims_unidad(u, l, cat)
         x, y, _ = u['posicion']
         z = zs[nid] + zrel
-        geo = {'tipo': 'caja_girada', 'centro': rp([x, y, z]), 'dim': rp(dim, 3), 'rot': r(u.get('rotacion_z') or 0.0, 4)}
+        rot = r(u.get('rotacion_z') or 0.0, 4)
+        modelo = l.get('modelo3d')
+        if modelo == 'panel_solar_fila' and var == 'elevada' and zrel > dim[2]:
+            # marquesina o pérgola: el plano de módulos a su altura sobre dos postes de 0,15 m en los extremos que bajan
+            # hasta el piso del nivel (como la dibuja el recorrido)
+            c_, s_ = math.cos(rot), math.sin(rot)
+            partes_ = [{'tipo': 'caja_girada', 'centro': rp([x, y, z]), 'dim': rp(dim, 3), 'rot': rot}]
+            for sg in (-1, 1):
+                du = sg * (dim[0] / 2 - 0.08)
+                partes_.append({'tipo': 'caja_girada', 'centro': rp([x + du * c_, y + du * s_, zs[nid]]), 'dim': [0.15, 0.15, r(zrel, 3)],
+                                'rot': rot})
+            geo = {'tipo': 'compuesta', 'partes': partes_}
+        else:
+            geo = {'tipo': 'caja_girada', 'centro': rp([x, y, z]), 'dim': rp(dim, 3), 'rot': rot}
         es_fijo = l['capa'] in ('fijo', 'infraestructura')
         disc = 'FIJO' if es_fijo else 'DOT'
-        modelo = l.get('modelo3d')
         if es_fijo:
             clase, tipo = CLASE_MODELO.get(modelo, ('IfcBuildingElementProxy', 'NOTDEFINED'))
         else:
@@ -1726,7 +1844,7 @@ def refuerzo(M, S, est, bases, info_vigas, apoyos_x, tramos_esc, cost):
     DSP.pilotes(J, est, lambda g, k: f'PIL-{g}-{k + 1}')
     dados_dib = DSP.dados(J, est)
     DSP.vigas_amarre(J, est)
-    DSP.fosos_y_cisternas(J, est)
+    DSP.fosos_y_cisternas(J, est, {f['id']: huella_foso(f, S, bases) for f in est['cimentacion']['fosos']})
     huecos = []
     for c in S.columnas.values():
         if c['nivel'] == 1:
@@ -1737,7 +1855,13 @@ def refuerzo(M, S, est, bases, info_vigas, apoyos_x, tramos_esc, cost):
             huecos += rects_arranque_muro(m, S)
     for f in est['cimentacion']['fosos']:
         huecos.append([f['x'][0], f['y'][0], f['x'][1], f['y'][1]])
-    DSP.contrapiso(J, est, [-13.0, -19.6, 8.6, 22.4], huecos)
+    DSP.contrapiso(J, est, planta_contrapiso(est), huecos)
+    # los muros de contención al final: sus barras pasan entre las de la viga de amarre, el dado, el arranque y el contrapiso
+    res_mc = DSP.muros_contencion(J, est, planta_contrapiso(est))
+    for mid, q in sorted(res_mc.items()):
+        if q['sin_lugar']:
+            print(f'  aviso: {q["sin_lugar"]} barras del muro {mid} no encontraron lugar libre (quedan en su posición nominal): '
+                  + '; '.join(q.get('detalle', [])))
     # parrillas de los dados: lo dibujado frente al prediseño (barras, separación y área de acero) para la ficha
     for hid, info in dados_dib.items():
         e_ = M.por_id.get(hid)
@@ -1861,6 +1985,7 @@ def cantidades_y_5d(M, refs, cost, est):
         'dados_y_losas_de_pilotes': lambda e: e['clase'] == 'IfcFooting' and e['tipo_predefinido'] == 'PILE_CAP',
         'vigas_de_amarre': lambda e: e['clase'] == 'IfcFooting' and e['tipo_predefinido'] == 'FOOTING_BEAM',
         'fosos_y_cisternas': lambda e: e['id'].startswith(('FOSO', 'CIS')),
+        'muros_de_contencion': lambda e: e.get('objeto_tipo') == 'RETAININGWALL',
         'contrapiso': lambda e: e['id'] == 'CP-1',
         'arranques': lambda e: e['id'].startswith('ARR-'),
     }

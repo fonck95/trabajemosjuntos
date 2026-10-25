@@ -13,7 +13,7 @@ const escS = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '
 
 export function tipoDespiece(e) {
   if (e.clase === 'IfcColumn' || e.clase === 'IfcPile') return 'vertical';
-  if (e.clase === 'IfcWall' && e.tipo_predefinido === 'SHEAR') return 'muro';
+  if (e.clase === 'IfcWall' && (e.tipo_predefinido === 'SHEAR' || e.objeto_tipo === 'RETAININGWALL')) return 'muro';
   if (e.clase === 'IfcBeam' || e.tipo_predefinido === 'FOOTING_BEAM') return 'viga';
   if (e.clase === 'IfcStair' || e.clase === 'IfcStairFlight') return 'escalera';
   return 'placa';
@@ -27,18 +27,17 @@ function vistas(e, caja, sols, juegos, opc) {
   if (t === 'vertical') {
     let zc = e.clase === 'IfcPile' ? z1 - 1.0 : z0 + 0.3 * (z1 - z0), nota = '';
     if (e.clase === 'IfcColumn') {
-      // traslapo con las barras del piso de arriba (en gris): la sección se corta debajo de él si cabe; si no, se rotula
-      let arriba = Infinity, propias = -Infinity;
-      for (const c of opc.contexto || []) for (const j of c.juegos) for (const pl of polilineas(j, c.formas)) { const zmin = Math.min(...pl.map((q) => q[2])); if (zmin > z0 + 0.05) arriba = Math.min(arriba, zmin); }
-      for (const j of juegos) if (familia(j.rol) === 'longitudinal') for (const pl of polilineas(j, opc.formas || [])) for (const q of pl) propias = Math.max(propias, q[2]);
-      if (arriba < propias && zc > arriba - 0.02 && zc < propias + 0.02) {
-        if (arriba - z0 >= 0.4) zc = (z0 + arriba) / 2;
-        else nota = ' (en el traslapo: barras de este piso y, en gris, las del piso de arriba)';
-      }
+      // la sección se corta donde solo están las barras de este piso: por encima del traslapo con las del piso de abajo
+      // (en gris; con la convención del prediseño va a media altura de este piso) y por debajo del traslapo con las del
+      // piso de arriba; si no hay tramo libre de 0,4 m, se rotula
+      const { pmin, pmax, abajoMax, arribaMin } = alcanceBarras(z0, juegos, opc);
+      const a = Math.max(z0, pmin, abajoMax), b = Math.min(z1, pmax, arribaMin);
+      if (b - a >= 0.4) zc = (a + b) / 2;
+      else nota = ' (en el traslapo: barras de este piso y, en gris, las del piso de abajo o de arriba)';
     }
     return [
       { titulo: `Sección horizontal a la cota ${zt(zc)} m${nota}`, corte: { tipo: 'h', c: zc }, map: (p) => [p[0], p[1]], tipo: 'seccion', ejes: ['x', 'y'] },
-      { titulo: `Alzado (visto desde el sur${e.clase === 'IfcColumn' && (opc.contexto || []).length ? '; en gris, las barras de las columnas de abajo y de arriba' : ''})`, corte: { tipo: 'y', c: cy }, map: (p) => [p[0], p[2]], tipo: 'proyeccion', ejes: ['x', 'z'], recorteW: e.clase === 'IfcColumn' ? [z0 - 2.6, z1 + 0.35] : null },
+      { titulo: `Alzado (visto desde el sur${e.clase === 'IfcColumn' && (opc.contexto || []).length ? '; en gris, las barras de las columnas de abajo y de arriba' : ''})`, corte: { tipo: 'y', c: cy }, map: (p) => [p[0], p[2]], tipo: 'proyeccion', ejes: ['x', 'z'], recorteW: e.clase === 'IfcColumn' ? recorteColumna(z0, z1, juegos, opc) : null },
     ];
   }
   if (t === 'muro') {
@@ -73,6 +72,26 @@ function vistas(e, caja, sols, juegos, opc) {
   ];
 }
 
+// alcance en z de las barras longitudinales de una columna y de las de contexto (columnas de abajo y de arriba)
+function alcanceBarras(z0, juegos, opc) {
+  let pmin = Infinity, pmax = -Infinity, abajoMax = -Infinity, arribaMin = Infinity;
+  for (const j of juegos) if (familia(j.rol) === 'longitudinal') for (const pl of polilineas(j, opc.formas || [])) for (const q of pl) { pmin = Math.min(pmin, q[2]); pmax = Math.max(pmax, q[2]); }
+  for (const c of opc.contexto || []) for (const j of c.juegos) {
+    if (familia(j.rol) !== 'longitudinal') continue;
+    for (const pl of polilineas(j, c.formas)) {
+      const zs = pl.map((q) => q[2]), zmin = Math.min(...zs), zmax = Math.max(...zs);
+      if (zmin < z0 - 0.05) abajoMax = Math.max(abajoMax, zmax);
+      else if (zmin > z0 + 0.05) arribaMin = Math.min(arribaMin, zmin);
+    }
+  }
+  return { pmin, pmax, abajoMax, arribaMin };
+}
+// ventana en altura del alzado de una columna: sus barras completas (de traslapo a traslapo) y un margen
+function recorteColumna(z0, z1, juegos, opc) {
+  const { pmin, pmax } = alcanceBarras(z0, juegos, opc);
+  return [Math.min(z0, Number.isFinite(pmin) ? pmin : z0) - 0.35, Math.max(z1, Number.isFinite(pmax) ? pmax : z1) + 0.35];
+}
+
 // zonas del armado (intervalos en u o v de la vista de alzado) a partir del despiece y de los textos del prediseño
 function zonas(e, caja, juegos, formas, vista, opc) {
   const [, , z0, , , z1] = caja, t = tipoDespiece(e), Z = [], txt = `${e.refuerzo_texto || ''} ${juegos.map((j) => j.etiqueta).join(' ')}`;
@@ -84,10 +103,12 @@ function zonas(e, caja, juegos, formas, vista, opc) {
       if (zs - lo > z0 + lo) Z.push({ eje: 'v', a: zs - lo, b: zs, texto: `lo = ${nf(lo)} m (confinada)`, color: '#2471a3' });
       if (z1 - zs > 0.05) Z.push({ eje: 'v', a: zs, b: z1, texto: 'nudo con las vigas', color: '#7d8a96' });
     }
-    // las barras longitudinales arrancan en el piso de abajo: allí está su traslapo con las de ese piso
-    let bmin = Infinity;
-    for (const j of juegos) if (familia(j.rol) === 'longitudinal') for (const pl of polilineas(j, formas)) for (const q of pl) bmin = Math.min(bmin, q[2]);
-    if (bmin < z0 - 0.1) Z.push({ eje: 'v', a: bmin, b: z0, texto: 'arranque en el piso de abajo (traslapo en su mitad central)', color: '#c0392b' });
+    // traslapos: con el piso de abajo (sus barras, en gris, suben hasta aquí) y con el de arriba (las de este piso suben
+    // hasta la mitad de su altura libre); si las barras de este piso arrancan en el de abajo, allí está su traslapo
+    const { pmin, pmax, abajoMax, arribaMin } = alcanceBarras(z0, juegos, { ...opc, formas });
+    if (pmin < z0 - 0.1) Z.push({ eje: 'v', a: pmin, b: z0, texto: 'arranque en el piso de abajo (traslapo en su mitad central)', color: '#c0392b' });
+    else if (pmin > z0 + 0.1 && abajoMax > pmin) Z.push({ eje: 'v', a: pmin, b: Math.min(abajoMax, z1), texto: 'traslapo con las barras del piso de abajo', color: '#c0392b' });
+    if (pmax > z1 + 0.1 && arribaMin < pmax) Z.push({ eje: 'v', a: Math.max(arribaMin, z1), b: pmax, texto: 'traslapo en la mitad central del piso de arriba', color: '#c0392b' });
   } else if (e.clase === 'IfcPile') {
     for (const j of juegos) if (j.param?.tramos) for (const tr of j.param.tramos) Z.push({ eje: 'v', a: tr.z0, b: tr.z1, texto: `espiral c/${nf(tr.paso, tr.paso < 0.1 ? 3 : 2)}`, color: '#2471a3' });
   } else if (t === 'viga') {

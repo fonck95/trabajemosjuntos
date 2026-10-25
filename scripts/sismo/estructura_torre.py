@@ -8,7 +8,8 @@ con los pasos del contrato de integración (data/proyectos/torre_hospital/ESPECI
 con el umbral de daño, diseño de vigas, columnas y muros con capacidad moderada de disipación de energía (DMO),
 columna fuerte-viga débil, cortante por capacidad, propiedades de rótula (nominales y esperadas), cimentación
 (pilotes, dados, vigas de amarre, contrapiso, foso y cisternas) y el despiece del refuerzo de cada elemento con sus
-cantidades comparadas con presupuesto.json.
+cantidades comparadas con presupuesto.json. De la planta de B (data/edificios/torre_hospital_plantas.json) toma en cada
+corrida el ducto vertical, la escalera principal abierta y el pasaje del bloque técnico (revisión A8).
 
 Uso (Python 3.12, solo biblioteca estándar; determinista: misma salida byte a byte):
     python3 scripts/sismo/estructura_torre.py              # escribe el JSON e imprime el resumen de chequeos
@@ -47,7 +48,7 @@ INSUMOS = {
     'programa': 'data/proyectos/torre_hospital/programa.json',
     'amenaza': 'data/sismo/amenaza.json',
 }
-FECHA = '2026-10-24'
+FECHA = '2026-10-25'
 G = 9.80665                      # m/s² (ESQUEMA.md)
 
 
@@ -321,6 +322,134 @@ def validar_geometria(programa):
 # 2 h de resistencia al fuego para las escaleras, NSR-10 Tabla J.3.4-3, por confirmar).
 PUERTA_ESC_N = (14.7, 15.9)       # vano de la puerta de la escalera norte en x = 3,1 (planta de B: centro 15,3, ancho 1,2)
 PUERTA_ESC_S = (-6.9, -5.7)       # vano de la puerta de la escalera sur en x = 3,1 (planta de B, pisos 3 y 4: centro −6,3)
+# Ducto vertical, escalera principal abierta y pasaje del bloque técnico (coordinación BIM, revisiones A7 y A8). El
+# prediseño los toma de la planta de arquitectura de B (torre_hospital_plantas.json) en cada corrida (revisión A8: antes
+# el ducto estaba copiado a mano y la escalera principal y el pasaje no estaban): guarda solo los valores que usa
+# (prediseno.coordinacion_bim.planta_b), así un cambio de B que no los toca no cambia la estructura y uno que sí los toca
+# hace fallar --verificar hasta que se regenere.
+#  · Ducto: la abertura de la losa de cada nivel es la parte del ducto que sigue del piso de abajo al de arriba (en la
+#    cubierta, la del piso 4): va de la cara de la viga VB-N-56 (x = 3,1) a la cara de la viga del eje D y del borde sur de
+#    esa parte común (y_sur) a la cara de la viga del eje 6. Lo que el ducto de un piso tiene de más queda cerrado por la
+#    losa (no es ducto vertical: pendiente de B).
+#  · Escalera abierta (la que no está en un núcleo): abertura en la losa del piso al que llega, del tamaño de sus tramos y
+#    su descanso intermedio (llevada al borde del recinto si queda a 0,10 m o menos), con vigas de borde en los lados que
+#    cortan los nervios y nervio de borde en los otros dos.
+#  · Pasaje del bloque técnico (cota del nivel BT): los dados que quedan bajo él bajan su cara superior bajo su piso.
+PLANTAS = 'data/edificios/torre_hospital_plantas.json'
+DUCTO_X = (XN, 8.6)               # el ducto va de la cara occidental de los núcleos a la fachada del eje D
+LOSA_PASAJE = 0.15                # m: losa de piso del pasaje del bloque técnico sobre los dados (estimación)
+T_MURO_CONTENCION = 0.25          # m: muro de contención del borde del pasaje (dos capas de refuerzo)
+SOBREANCHO_ARRANQUE = 0.01        # m por cara: el arranque de la columna es 1 cm más ancho (recubrimiento contra el relleno)
+FRANJA_MIN = 1.0                  # m: franja mínima de losa nervada entre una abertura y la cara de una viga
+PLANTA_B = None                   # lo que el prediseño toma de la planta de B (lo llena armar() con leer_planta_b())
+
+
+def _celdas(pol):
+    """Rectángulos (x0, y0, x1, y1) que forman un polígono ortogonal: las celdas de la rejilla de sus coordenadas cuyo
+    centro queda dentro (el ducto de un piso puede tener forma de L)."""
+    xs = sorted({q[0] for q in pol})
+    ys = sorted({q[1] for q in pol})
+
+    def dentro(x, y):
+        c = False
+        for (x1, y1), (x2, y2) in zip(pol, pol[1:] + pol[:1]):
+            if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+                c = not c
+        return c
+    return [(x0, y0, x1, y1) for x0, x1 in zip(xs, xs[1:]) for y0, y1 in zip(ys, ys[1:])
+            if dentro((x0 + x1) / 2, (y0 + y1) / 2)]
+
+
+def _cortar(cs, qs):
+    """Parte de las celdas cs dentro de las celdas (o del rectángulo) qs."""
+    qs = [qs] if isinstance(qs, tuple) else qs
+    out = []
+    for a in cs:
+        for b in qs:
+            w = (max(a[0], b[0]), max(a[1], b[1]), min(a[2], b[2]), min(a[3], b[3]))
+            if w[2] - w[0] > 1e-9 and w[3] - w[1] > 1e-9:
+                out.append(w)
+    return out
+
+
+def _area_celdas(cs):
+    return sum((q[2] - q[0]) * (q[3] - q[1]) for q in cs)
+
+
+def _caja(pts):
+    return (min(p[0] for p in pts), min(p[1] for p in pts), max(p[0] for p in pts), max(p[1] for p in pts))
+
+
+def leer_planta_b():
+    """Lo que el prediseño toma de la planta de B: el ducto vertical de cada piso (y el borde sur de la parte común con el
+    piso de arriba), las escaleras abiertas que no están en los núcleos (abertura de la losa a la que llegan) y el pasaje
+    del bloque técnico que corre junto a la fachada sur (y = −19,6) con su cota y el muro de borde que B dibuja en él."""
+    pl = leer(PLANTAS)
+    niv = {n['id']: n for n in pl['niveles']}
+    pisos = ('P1', 'P2', 'P3', 'P4')
+    ductos = {}
+    vecinos = {}                      # recintos de cada piso junto al ducto (para decir qué queda bajo una abertura)
+    for k, nid in enumerate(pisos, start=1):
+        for rc in niv[nid]['recintos']:
+            if 'Ductos verticales' in rc['ambiente']:
+                ductos[k] = {'id': rc['id'], 'poligono': [[r(p[0], 3), r(p[1], 3)] for p in rc['poligono']]}
+        for rc in niv[nid]['recintos']:
+            c_ = _caja(rc['poligono'])
+            if 'Ductos verticales' not in rc['ambiente'] and c_[0] < DUCTO_X[1] and c_[2] > EJX['C'] and c_[1] < 14.0 and c_[3] > 8.0:
+                vecinos.setdefault(k, []).append({'id': rc['id'], 'nombre': rc['ambiente'].split(' (')[0].split(':')[0],
+                                                  'poligono': [[r(p[0], 3), r(p[1], 3)] for p in rc['poligono']]})
+    if sorted(ductos) != list(range(1, NIV + 1)):
+        raise SystemExit('la planta de B no tiene el ducto vertical en los cuatro pisos (torre_hospital_plantas.json)')
+    y_sur = {}
+    for k in range(1, NIV + 1):
+        com = _celdas(ductos[k]['poligono'])
+        if k < NIV:
+            com = _cortar(com, _celdas(ductos[k + 1]['poligono']))
+        com = _cortar(com, (DUCTO_X[0], -99.0, DUCTO_X[1], 99.0))
+        if not com:
+            raise SystemExit(f'el ducto vertical del piso {k} no tiene parte común con el de arriba al oriente de x = 3,1')
+        y_sur[k] = r(min(q[1] for q in com), 3)
+    escaleras = []
+    for k, nid in enumerate(pisos, start=1):
+        rcs = {rc['id']: rc for rc in niv[nid]['recintos']}
+        for e in niv[nid].get('escaleras', []):
+            partes = [p['rect'] for p in e.get('partes', []) if p['tipo'] != 'descanso_piso']
+            if not e.get('sube_a') or not partes:
+                continue
+            caja = _caja([(q[0], q[1]) for q in partes] + [(q[2], q[3]) for q in partes])
+            if any(nu['x'][0] - 1e-6 <= caja[0] and caja[2] <= nu['x'][1] + 1e-6 and nu['y'][0] - 1e-6 <= caja[1]
+                   and caja[3] <= nu['y'][1] + 1e-6 for nu in NUCLEOS.values()):
+                continue                              # las escaleras de los núcleos las modela el prediseño
+            rc = _caja(rcs[e['recinto']]['poligono']) if e.get('recinto') in rcs else caja
+            q = [rc[i] if abs(rc[i] - caja[i]) <= 0.10 + 1e-9 else caja[i] for i in range(4)]
+            escaleras.append({'id': e['id'], 'nombre': e['nombre'], 'recinto': e.get('recinto'), 'piso': k,
+                              'nivel_losa': k, 'llega_a': e['sube_a'], 'rect': [r(v, 3) for v in q],
+                              'tramos': [{'rect': [r(v, 3) for v in p['rect']], 'z0': p['z0'], 'z1': p['z1'],
+                                          'sube_hacia_deg': p['sube_hacia_deg'], 'contrahuellas': p['contrahuellas']}
+                                         for p in e['partes'] if p['tipo'] == 'tramo']})
+    y1 = EJY['1']
+    x_a, x_d = EJX['A'] - 1.5, EJX['D'] + 1.5
+    bt = niv.get('BT')
+    pasajes = []
+    cara = y1
+    abiertos = []
+    if bt is not None:
+        for rc in bt['recintos']:
+            c_ = _caja(rc['poligono'])
+            if abs(c_[3] - y1) < 1e-6 and c_[0] < x_d and c_[2] > x_a:
+                pasajes.append({'id': rc['id'], 'nombre': rc['ambiente'].split(' (')[0], 'rect': [r(v, 3) for v in c_],
+                                'rampa': rc.get('rampa')})
+        en_borde = [m for m in bt.get('muros', []) if abs(m['a'][1] - y1) < 1e-6 and abs(m['b'][1] - y1) < 1e-6
+                    and min(m['a'][0], m['b'][0]) < x_d and max(m['a'][0], m['b'][0]) > x_a]
+        esp = [m['espesor'] for m in en_borde if m['espesor'] > 0
+               and min(m['a'][0], m['b'][0]) < EJX['D'] and max(m['a'][0], m['b'][0]) > EJX['A']]
+        cara = y1 + (max(esp) / 2 if esp else 0.0)
+        abiertos = [(min(m['a'][0], m['b'][0]), max(m['a'][0], m['b'][0])) for m in en_borde if m['espesor'] <= 0]
+    return {'ductos': ductos, 'vecinos_ducto': vecinos, 'y_sur_ducto': y_sur, 'escaleras_abiertas': escaleras,
+            'pasaje': {'recintos': pasajes, 'z_piso': bt['z'] if bt is not None else None,
+                       'cara_muro_contencion_y': r(cara, 3), 'borde_y': y1,
+                       'borde_sin_muro_x': ([r(min(a for a, b in abiertos), 3), r(max(b for a, b in abiertos), 3)]
+                                            if abiertos else None)}}
 MUROS = [
     {'portico': 'MY-N6', 'dir': 'y', 'c': XN, 'alma': (PUERTA_ESC_N[1], 22.4), 'eje': '6',
      'tramo': 'N entre 6 y 7 (cara occidental de la escalera norte, de la puerta al eje 7)', 'nucleo': 'escalera_norte',
@@ -357,6 +486,9 @@ def geometria_muro(m, activos, t_de, cb):
     hw = H_TOTAL
     a0, a1 = m['alma']
     partes, notas, concreto = [], [], []
+    # planta extra (revisión de coordinación BIM): la esquina donde se cruzan dos almas es del muro en x (ahí se anclan
+    # las horizontales de los dos y las vigas banda de las líneas 3, 4 y 7) y el machón junto a la puerta es concreto
+    planta_extra = []
     u_ini, u_fin = a0, a1
     otros = [o for o in MUROS if o['portico'] in activos and o['dir'] == m['dir'] and o['portico'] != m['portico']]
 
@@ -384,6 +516,11 @@ def geometria_muro(m, activos, t_de, cb):
             lejos = f['alma'][1] if abs(f['alma'][1] - m['c']) > abs(f['alma'][0] - m['c']) else f['alma'][0]
             signo = 1 if lejos > m['c'] else -1
             aleta(s_a, signo, abs(lejos - m['c']) - t / 2, tf, f'alma del muro {ext[1]}')
+            if m['dir'] == 'x':
+                # la esquina (tf × t) no es del alma de ninguno de los dos: se le asigna a este muro en x
+                concreto.append(('esquina', (s_a - tf / 2, m['c'], s_a + tf / 2, m['c']), t))
+                planta_extra.append((s_a - tf / 2, m['c'] - t / 2, s_a + tf / 2, m['c'] + t / 2))
+                notas.append(f'esquina con {ext[1]} en u = {es(s_a)} ({es(tf)} × {es(t)} m): concreto de este muro')
             if lado == 'i':
                 u_ini = s_a + tf / 2
             else:
@@ -395,6 +532,11 @@ def geometria_muro(m, activos, t_de, cb):
             signo = 1 if c1 > c0 else -1
             aleta(s_a, signo, largo, tf, f'machón de {es(abs(c1 - c0))} m del muro x = {es(XN)} junto a la puerta')
             concreto.append(('machon', (XN, c0 + signo * t / 2, XN, c1) if m['dir'] == 'x' else (c0, XN, c1, XN), tf))
+            if m['dir'] == 'x':
+                concreto.append(('esquina', (s_a - tf / 2, m['c'], s_a + tf / 2, m['c']), t))
+                ya_, yb_ = sorted((c0 + signo * t / 2, c1))
+                planta_extra.append((XN - tf / 2, ya_, XN + tf / 2, yb_))
+                notas.append(f'machón en x = {es(XN)} de y = {es(ya_)} a {es(yb_)}: concreto de este muro (en planta y en el peso)')
             u_ini = s_a + tf / 2 if lado == 'i' else u_ini
             if lado == 'j':
                 u_fin = s_a - tf / 2
@@ -436,7 +578,7 @@ def geometria_muro(m, activos, t_de, cb):
     Av = sum((p['u1'] - p['u0']) * p['ancho'] for p in partes if p['tipo'] == 'alma')
     return {'partes': partes, 'rect': rect, 'notas': notas, 'concreto': concreto, 't': t, 'A': A, 'uc': uc, 'I': I,
             'Av': Av, 'u0': min(p['u0'] for p in partes), 'u1': max(p['u1'] for p in partes),
-            'l_alma': u_fin - u_ini}
+            'l_alma': u_fin - u_ini, 'planta_extra': planta_extra}
 
 
 def props_rectangulos(rect):
@@ -577,6 +719,13 @@ def t_equivalente_losa():
     nervios = NERVIO_B * (H_LOSA - LOSETA) / NERVIO_S
     riostra = NERVIO_B * (H_LOSA - LOSETA) / 7.2
     return LOSETA + nervios + riostra
+
+
+def seccion_borde_abertura(luz):
+    """(b, h) de una viga de borde de la abertura de una escalera abierta (revisión A8): recibe los nervios cortados de un
+    lado (hasta 5,4 m de luz) y la escalera; descolgada bajo la losa (va junto a los tramos, no sobre ellos), del ancho de
+    las vigas de los pórticos y con h ≥ luz/12 (holgura sobre el luz/16 de la Tabla C.9.5(a)); el chequeo SEC la revisa."""
+    return 0.40, (0.60 if luz <= 5.0 + 1e-9 else 0.80)
 
 
 def construir(dim, presupuesto):
@@ -772,7 +921,110 @@ def construir(dim, presupuesto):
         m = por_id[pid]['muro']
         return nodo_id(pid, m['eje'], k)
 
+    def apoyar_secundaria(ap, k, caso, W):
+        """Reacción W (kN) de una viga secundaria (o un dintel) en su apoyo: ('MX', n) el muro en x de la línea n (o las
+        vigas X C-D de esa línea si no es estructural), ('MY', 'N3') el muro en y, ('X', n) las vigas X C-D de la línea n
+        (como carga uniforme de la misma resultante); ('XS', n, x) la viga X de la línea n que pasa por x (las vigas de
+        borde de la abertura de la escalera principal, revisión A8)."""
+        tipo, lin = ap[0], ap[1]
+        if tipo == 'XS':
+            vx_ = vigas_x(lin, ap[2] - 1e-6, ap[2] + 1e-6, k)[:1]
+            if not vx_:
+                raise SystemExit(f'la viga secundaria no tiene viga X de la línea {lin} en x = {ap[2]:.2f} donde apoyarse')
+            carga_viga(vx_[0][0], caso, W / elem[vx_[0][0]][1]['L'])
+            return
+        pm_ = f'{tipo}-{lin}'
+        if tipo in ('MX', 'MY') and pm_ in activos:
+            carga_nodo(pm_, nodo_muro(pm_, k), caso, W)
+            return
+        for eid, frac in vigas_x(lin, 1.4, 8.6, k):
+            carga_viga(eid, caso, W * frac / elem[eid][1]['L'])
+
+    # ---- vigas secundarias de borde y dinteles (fuera del modelo sísmico; coordinación BIM, revisión A7) -------------
+    # Los paños de losa que terminan en una cara de núcleo sin muro estructural, el ducto vertical y las puertas de las
+    # escaleras necesitan una viga que reciba los nervios (antes el prediseño suponía esas vigas en las cargas pero no
+    # las diseñaba ni las entregaba al modelo BIM: los nervios quedaban sin apoyo). Cada una: (id base, dirección y,
+    # x del eje, y0, y1 entre caras de sus apoyos, apoyo en y0, apoyo en y1, qué es). Ancho = espesor de los muros.
+    b_sec = t_m
+    bx5, bx6 = h_viga_x('5')[0], h_viga_x('6')[0]
+    secundarias = []
+    if 'MY-N4' not in activos:
+        # borde occidental del foso de ascensores: la cara este de la viga queda en x = 3,1 (no entra al hueco)
+        secundarias.append(('VB-N-45', XN - b_sec / 2, 0.8 + t_de('MX-4') / 2, 8.0 - bx5 / 2,
+                            ('MX', '4'), ('X', '5'), 'viga de borde del foso de ascensores (cara occidental)'))
+    secundarias.append(('VB-61-45', 6.1 + b_sec / 2, 0.8 + t_de('MX-4') / 2, 8.0 - bx5 / 2,
+                        ('MX', '4'), ('X', '5'), 'viga de borde del foso de ascensores (cara de las puertas)'))
+    secundarias.append(('VB-N-56', XN - b_sec / 2, 8.0 + bx5 / 2, 14.0 - bx6 / 2,
+                        ('X', '5'), ('X', '6'), 'viga de borde del ducto vertical (cara occidental)'))
+    if 'MY-N3' in activos:
+        y_a = PUERTA_ESC_S[0] if 'MX-3' in activos else -7.6 + h_viga_x('3')[0] / 2
+        secundarias.append(('VD-N-3', XN, y_a, PUERTA_ESC_S[1], ('MX', '3') if 'MX-3' in activos else ('X', '3'),
+                            ('MY', 'N3'), 'dintel de la puerta de la escalera sur'))
+    if 'MY-N6' in activos:
+        y_a = PUERTA_ESC_N[0] if 'MX-6' in activos else 14.0 + bx6 / 2
+        secundarias.append(('VD-N-6', XN, y_a, PUERTA_ESC_N[1], ('MX', '6') if 'MX-6' in activos else ('X', '6'),
+                            ('MY', 'N6'), 'dintel de la puerta de la escalera norte'))
+    # escaleras abiertas de la planta de B (la principal del vestíbulo; revisión A8: antes la losa del nivel 4,50 pasaba
+    # sobre sus tramos a 0,12-1,33 m de los peldaños): abertura en la losa del nivel al que llegan. En cada paño que corta,
+    # los bordes de la abertura que cortan los nervios (paralelos a y) llevan una viga de borde de cara de viga X a cara de
+    # viga X (solo en ese nivel) y los otros dos, nervio de borde. La carga y la masa del paño siguen enteras: la escalera
+    # (losas, acabados y su carga viva) pesa del orden de la losa que reemplaza y llega a las vigas que rodean la abertura.
+    sec_niveles = {}                 # id → niveles donde existe (las de los núcleos, en todos)
+    sec_seccion = {}                 # id → (b, h) de las que no son del ancho del muro y el alto de la losa
+    aberturas = {}                   # (nivel, eje x del paño, línea y del paño) → abertura en ese paño
+    def muro_x_en(n, x0, x1):
+        """Muro estructural en x de la línea n que cubre [x0, x1] (en esa parte de la línea no hay viga X)."""
+        for m in MUROS:
+            if m['dir'] == 'x' and m['portico'] in activos and abs(m['c'] - EJY[n]) < 1e-9 and m['alma'][0] < x1 and m['alma'][1] > x0:
+                return m['portico']
+        return None
+
+    for esc in PLANTA_B['escaleras_abiertas']:
+        k_e = esc['nivel_losa']
+        ox0, oy0, ox1, oy1 = esc['rect']
+        for (na, xa), (nb, xb) in zip(EJES_X[:-1], EJES_X[1:]):
+            for (n0, y0), (n1, y1) in zip(EJES_Y[:-1], EJES_Y[1:]):
+                fw, fe = xa + h_viga_y(na)[0] / 2, xb - h_viga_y(nb)[0] / 2
+                # cara de la viga X de cada línea, o del muro en x si la línea es muro en ese paño
+                mx0, mx1 = muro_x_en(n0, xa, xb), muro_x_en(n1, xa, xb)
+                fs = y0 + (t_de(mx0) if mx0 else h_viga_x(n0)[0]) / 2
+                fn = y1 - (t_de(mx1) if mx1 else h_viga_x(n1)[0]) / 2
+                q = (max(ox0, fw), max(oy0, fs), min(ox1, fe), min(oy1, fn))
+                if q[2] - q[0] < 0.05 or q[3] - q[1] < 0.05:
+                    continue
+                # una franja de losa de menos de FRANJA_MIN entre la abertura y la cara de la viga no se arma: el borde va a
+                # la viga y esa franja es de la escalera (p. ej. su descanso de llegada, losa maciza apoyada en la viga)
+                q = (fw if q[0] - fw < FRANJA_MIN else q[0], fs if q[1] - fs < FRANJA_MIN else q[1],
+                     fe if fe - q[2] < FRANJA_MIN else q[2], fn if fn - q[3] < FRANJA_MIN else q[3])
+                if (na, nb) == ('C', 'D') and y0 >= -7.6 - 1e-9 and y1 <= 22.4 + 1e-9:
+                    raise SystemExit(f'la {esc["nombre"].lower()} cae en un paño de núcleo ({na}{nb}-{n0}{n1}): no se modela')
+                trim = {}
+                for lado, xe, hace_falta in (('O', q[0], q[0] > fw + 0.05), ('E', q[2], q[2] < fe - 0.05)):
+                    if not hace_falta:
+                        continue
+                    sid = f'VB-{esc["id"].split("-")[-1]}{lado}-{n0}{n1}'
+                    b_t, h_t = seccion_borde_abertura(fn - fs)
+                    x_t = xe - b_t / 2 if lado == 'O' else xe + b_t / 2
+                    ap0 = ('MX', n0) if mx0 and muro_x_en(n0, x_t, x_t) else ('XS', n0, x_t)
+                    ap1 = ('MX', n1) if mx1 and muro_x_en(n1, x_t, x_t) else ('XS', n1, x_t)
+                    secundarias.append((sid, x_t, fs, fn, ap0, ap1,
+                                        f'viga de borde de la abertura de la {esc["nombre"].lower()} (cara '
+                                        f'{"occidental" if lado == "O" else "oriental"}, entre los ejes {n0} y {n1})'))
+                    sec_niveles[sid] = {k_e}
+                    sec_seccion[sid] = (b_t, h_t)
+                    trim[lado] = sid
+                aberturas[(k_e, na, n0)] = {'q': q, 'trim': trim, 'caras': (fw, fe, fs, fn), 'escalera': esc['id'],
+                                            'paño': f'{na}{nb}-{n0}{n1}'}
+    sec_por_id = {s[0]: s for s in secundarias}
+    # ducto vertical (parte común del ducto de cada piso con el de arriba en la planta de B, libre de las vigas de los ejes
+    # 6 y D): abertura de la losa en todos los niveles, con la viga VB-N-56 al occidente, la viga del eje 6 al norte, la del
+    # eje D al oriente y el borde del paño (nervio de borde, paralelo a los nervios) al sur
+    y_ducto_de = PLANTA_B['y_sur_ducto']
+
     # ---- losas: paneles con viguetas en x (luz de 7,20 m entre los pórticos Y) ------------------------------------
+    # Cada panel: geometría (x0, x1, y0, y1: la que se entrega al modelo BIM, de apoyo a apoyo) y rectángulo de carga
+    # (el paño entre ejes que le toca, con la franja bajo la viga de borde): así el peso y la masa no cambian por llevar
+    # el borde a la viga.
     paneles = []
     for k in range(1, NIV + 1):
         for (na, xa), (nb, xb) in zip(EJES_X[:-1], EJES_X[1:]):
@@ -781,19 +1033,57 @@ def construir(dim, presupuesto):
                     continue
                 tipo = 'piso' if k <= 2 or (k == 3 and y0 >= Y_RETROCESO - 1e-9) else ('terraza' if k == 3 else 'cubierta')
                 sub = []
-                if (na, nb) == ('C', 'D') and (y0, y1) in ((14.0, 22.4), (-7.6, 0.8)):
-                    muro = 'MY-N6' if y0 == 14.0 else 'MY-N3'
-                    sub.append((xa, XN, y0, y1, ('Y', na), ('M', muro)))
+                if (na, nb) == ('C', 'D') and (y0, y1) == (14.0, 22.4):
+                    # escalera norte: del dintel de la puerta (desde la cara de la viga del eje 6) al muro MY-N6
+                    y_g = sec_por_id['VD-N-6'][2] if 'VD-N-6' in sec_por_id and 'MX-6' not in activos else y0
+                    sub.append((xa, XN, y_g, y1, ('Y', na), ('M', 'MY-N6'), (xa, XN, y0, y1)))
+                elif (na, nb) == ('C', 'D') and (y0, y1) == (-7.6, 0.8):
+                    sub.append((xa, XN, y0, y1, ('Y', na), ('M', 'MY-N3'), None))
                 elif (na, nb) == ('C', 'D') and (y0, y1) == (0.8, 8.0):
-                    sub.append((xa, xb, 0.8, 1.6, ('Y', na), ('Y', nb)))
-                    sub.append((xa, XN, 1.6, 7.2, ('Y', na), ('M', 'MY-N4')))
-                    sub.append((6.1, xb, 1.6, 7.2, ('VS', None), ('Y', nb)))
-                    sub.append((xa, xb, 7.2, 8.0, ('Y', na), ('Y', nb)))
+                    sub.append((xa, xb, 0.8, 1.6, ('Y', na), ('Y', nb), None))
+                    if 'VB-N-45' in sec_por_id:
+                        sub.append((xa, sec_por_id['VB-N-45'][1], 1.6, 7.2, ('Y', na), ('VS', 'VB-N-45'), (xa, XN, 1.6, 7.2)))
+                    else:
+                        sub.append((xa, XN, 1.6, 7.2, ('Y', na), ('M', 'MY-N4'), None))
+                    sub.append((sec_por_id['VB-61-45'][1], xb, 1.6, 7.2, ('VS', 'VB-61-45'), ('Y', nb), (6.1, xb, 1.6, 7.2)))
+                    sub.append((xa, xb, 7.2, 8.0, ('Y', na), ('Y', nb), None))
+                elif (na, nb) == ('C', 'D') and (y0, y1) == (8.0, 14.0):
+                    # paño del ducto vertical: al occidente de la viga VB-N-56 y, al oriente, solo al sur del ducto; los
+                    # dos van de la cara de la viga del eje 5 (y del eje 6) para que los nervios caigan en sus apoyos
+                    xv = sec_por_id['VB-N-56'][1]
+                    ya_, yb_ = sec_por_id['VB-N-56'][2], sec_por_id['VB-N-56'][3]
+                    y_ducto = y_ducto_de[k]
+                    sub.append((xa, xv, ya_, yb_, ('Y', na), ('VS', 'VB-N-56'), (xa, XN, y0, y1)))
+                    sub.append((xv, xb, ya_, y_ducto, ('VS', 'VB-N-56'), ('Y', nb), (XN, xb, y0, y_ducto)))
+                elif (k, na, n0) in aberturas:
+                    # paño con la abertura de la escalera abierta: franjas enteras al occidente y al oriente de las vigas de
+                    # borde (de cara a cara de las vigas X, para que los nervios caigan en ellas) y, entre las vigas de borde
+                    # (o los pórticos Y), las partes del paño al sur y al norte de la abertura; las cargas cubren el paño entero
+                    ab = aberturas[(k, na, n0)]
+                    qx0, qy0, qx1, qy1 = ab['q']
+                    _fw, _fe, fs, fn = ab['caras']
+                    to, te = ab['trim'].get('O'), ab['trim'].get('E')
+                    if to:
+                        sub.append((xa, sec_por_id[to][1], fs, fn, ('Y', na), ('VS', to), (xa, qx0, y0, y1)))
+                    if te:
+                        sub.append((sec_por_id[te][1], xb, fs, fn, ('VS', te), ('Y', nb), (qx1, xb, y0, y1)))
+                    xl, xr = (sec_por_id[to][1] if to else xa), (sec_por_id[te][1] if te else xb)
+                    cl, cr = (qx0 if to else xa), (qx1 if te else xb)
+                    apl, apr = (('VS', to) if to else ('Y', na)), (('VS', te) if te else ('Y', nb))
+                    sur, norte = qy0 > fs + 0.05, qy1 < fn - 0.05
+                    if not (sur or norte):
+                        raise SystemExit(f'la abertura de la escalera {ab["escalera"]} ocupa todo el paño {na}{nb}-{n0}{n1}')
+                    ym = (qy0 + qy1) / 2 if (sur and norte) else (y1 if sur else y0)
+                    ys_, yn_ = (fs, fn) if (to or te) else (y0, y1)
+                    if sur:
+                        sub.append((xl, xr, ys_, qy0, apl, apr, (cl, cr, y0, ym)))
+                    if norte:
+                        sub.append((xl, xr, qy1, yn_, apl, apr, (cl, cr, ym, y1)))
                 else:
-                    sub.append((xa, xb, y0, y1, ('Y', na), ('Y', nb)))
-                for (x0, x1, yy0, yy1, sw, se) in sub:
+                    sub.append((xa, xb, y0, y1, ('Y', na), ('Y', nb), None))
+                for (x0, x1, yy0, yy1, sw, se, rc_) in sub:
                     paneles.append({'nivel': k, 'tipo': tipo, 'x0': x0, 'x1': x1, 'y0': yy0, 'y1': yy1, 'apoyos': (sw, se),
-                                    'extra_D_kN': 0.0})
+                                    'extra_D_kN': 0.0, 'carga': rc_ or (x0, x1, yy0, yy1)})
     # equipos de cubierta (programa.json → cubierta_tecnica; pesos y posiciones: estimación)
     equipos = [
         {'id': 'tanques_respaldo', 'W_kN': 2 * (5.0 * 9.80665 + 5.0), 'x': -1.0, 'y': 18.0,
@@ -807,8 +1097,10 @@ def construir(dim, presupuesto):
             if p['nivel'] == 4 and p['x0'] <= eq['x'] <= p['x1'] and p['y0'] <= eq['y'] <= p['y1']:
                 p['extra_D_kN'] += eq['W_kN']
                 break
+    sec_cargas = {}                  # (id base de la viga secundaria, nivel) → cargas de los paños en kN (D, L, Lr)
     for p in paneles:
-        a = (p['x1'] - p['x0']) * (p['y1'] - p['y0'])
+        cx0, cx1, cy0, cy1 = p['carga']
+        a = (cx1 - cx0) * (cy1 - cy0)
         if p['tipo'] == 'piso':
             qD = q_losa + cm_['acabado_piso_kPa'][0] + q_ins + q_div
             qL, qLr = viva_piso(p['nivel'] + 1), 0.0
@@ -820,7 +1112,7 @@ def construir(dim, presupuesto):
         k = p['nivel']
         # masa: todo el panel en su nivel, menos los divisorios (mitad abajo y mitad arriba, ver más abajo)
         qD_masa = qD - (q_div if p['tipo'] == 'piso' else 0.0)
-        forma = ('rect', p['x0'], p['x1'], p['y0'], p['y1'])
+        forma = ('rect', cx0, cx1, cy0, cy1)
         masa(k, q_losa * a, 0, 0, 'losa', forma)
         masa(k, (qD_masa - q_losa) * a - p['extra_D_kN'], 0, 0, 'acabados_e_instalaciones', forma)
         if p['extra_D_kN']:
@@ -829,25 +1121,32 @@ def construir(dim, presupuesto):
                     masa(k, eq['W_kN'], eq['x'], eq['y'], 'equipos_de_cubierta')
         masa(k, FRACCION_VIVA_MASA * qL * a, 0, 0, 'viva_25pct', forma)
         # reparto a los apoyos: la mitad de la luz a cada lado (viguetas en una dirección)
-        luz = p['x1'] - p['x0']
+        luz = cx1 - cx0
         for apoyo in p['apoyos']:
             for caso, q in (('D', qD), ('L', qL), ('Lr', qLr)):
                 if q == 0:
                     continue
                 w_lineal = q * luz / 2                      # kN/m a lo largo del apoyo
                 if apoyo[0] == 'Y':
-                    for eid, frac in vigas_y(apoyo[1], p['y0'], p['y1'], k):
+                    for eid, frac in vigas_y(apoyo[1], cy0, cy1, k):
                         e = elem[eid][1]
                         # carga uniforme equivalente sobre el elemento (misma resultante)
                         carga_viga(eid, caso, w_lineal * frac)
                 elif apoyo[0] == 'M' and apoyo[1] in activos:
-                    carga_nodo(apoyo[1], nodo_muro(apoyo[1], k), caso, w_lineal * (p['y1'] - p['y0']))
+                    carga_nodo(apoyo[1], nodo_muro(apoyo[1], k), caso, w_lineal * (cy1 - cy0))
+                    # el tramo sobre la puerta lo recibe el dintel (para su diseño; su reacción llega al mismo muro)
+                    for s_ in secundarias:
+                        if s_[0].startswith('VD-') and s_[5] == ('MY', apoyo[1][3:]):
+                            sol_ = min(cy1, s_[3]) - max(cy0, s_[2])
+                            if sol_ > 1e-9:
+                                c_ = sec_cargas.setdefault((s_[0], k), {'D': 0.0, 'L': 0.0, 'Lr': 0.0})
+                                c_[caso] += w_lineal * sol_
                 elif apoyo[0] == 'M':
                     # cara del núcleo sin muro estructural: viga de borde en x = 3,1 entre los muros en x del núcleo
                     # (o entre las vigas X de esas líneas), la mitad de la carga a cada extremo
-                    W = w_lineal * (p['y1'] - p['y0'])
-                    lin0 = max((yv, n) for n, yv in EJES_Y if yv <= p['y0'] + 1e-9)[1]
-                    lin1 = min((yv, n) for n, yv in EJES_Y if yv >= p['y1'] - 1e-9)[1]
+                    W = w_lineal * (cy1 - cy0)
+                    lin0 = max((yv, n) for n, yv in EJES_Y if yv <= cy0 + 1e-9)[1]
+                    lin1 = min((yv, n) for n, yv in EJES_Y if yv >= cy1 - 1e-9)[1]
                     for nyl in (lin0, lin1):
                         pm_ = f'MX-{nyl}'
                         if pm_ in activos:
@@ -856,16 +1155,22 @@ def construir(dim, presupuesto):
                             for eid, frac in vigas_x(nyl, 1.4, 8.6, k):
                                 carga_viga(eid, caso, W / 2 / elem[eid][1]['L'])
                 else:
-                    # viga secundaria en x = 6,1 (borde del foso), de y = 0,8 a 8,0: la mitad al muro MX-4 y la mitad a
-                    # la viga X-5 C-D (como carga uniforme de la misma resultante)
-                    W = w_lineal * (p['y1'] - p['y0'])
-                    if 'MX-4' in activos:
-                        carga_nodo('MX-4', nodo_muro('MX-4', k), caso, W / 2)
-                    else:
-                        for eid, frac in vigas_x('4', 1.4, 8.6, k):
-                            carga_viga(eid, caso, W / 2 / elem[eid][1]['L'])
-                    for eid, frac in vigas_x('5', 1.4, 8.6, k):
-                        carga_viga(eid, caso, W / 2 / elem[eid][1]['L'])
+                    # viga secundaria (sec_por_id): la mitad a cada apoyo (muro en x o vigas X C-D de esa línea, como
+                    # carga uniforme de la misma resultante); la carga queda además para su propio diseño
+                    W = w_lineal * (cy1 - cy0)
+                    c_ = sec_cargas.setdefault((apoyo[1], k), {'D': 0.0, 'L': 0.0, 'Lr': 0.0})
+                    c_[caso] += W
+                    for ap_ in sec_por_id[apoyo[1]][4:6]:
+                        apoyar_secundaria(ap_, k, caso, W / 2)
+    # peso propio de las vigas secundarias y de los dinteles (la parte bajo el espesor equivalente de la losa, como en las
+    # vigas del modelo): la mitad a cada apoyo; la masa, en su línea
+    for sid, x_s, y_a, y_b, ap_a, ap_b, _que in secundarias:
+        b_s, h_s = sec_seccion.get(sid, (b_sec, H_LOSA))
+        for k in sorted(sec_niveles.get(sid, range(1, NIV + 1))):
+            W = b_s * (h_s - t_eq) * (y_b - y_a) * GAMMA_C
+            apoyar_secundaria(ap_a, k, 'D', W / 2)
+            apoyar_secundaria(ap_b, k, 'D', W / 2)
+            masa(k, W, 0, 0, 'vigas', ('linea', x_s, y_a, x_s, y_b))
     # franja de loseta sobre las vigas X (paralelas a las viguetas): media separación entre nervios a cada lado
     for P in porticos:
         if P['dir'] != 'x' or P['id'].startswith('M'):
@@ -1089,11 +1394,40 @@ def construir(dim, presupuesto):
         for k in niveles_de_linea_x(yl):
             cC = cb('C', ny)
             ln = (XN - t_de(f'MY-N{"6" if yl > 10 else "3"}') / 2) - (EJX['C'] + cC / 2)
-            # viga banda del alto de la losa nervada y del ancho de la columna: con ln/h > 2 no necesita refuerzo
-            # diagonal (C.21.9.7) y casi no acopla el pórtico con el muro, que es lo que supone el modelo
-            vb_, vh_ = cC, H_LOSA
+            # viga banda del alto de la losa nervada y del ancho del muro en x donde se ancla (coordinación BIM: con el
+            # ancho de la columna, 0,80 m, las barras de los lados quedaban fuera del muro de 0,35 m al anclarse): con
+            # ln/h > 2 no necesita refuerzo diagonal (C.21.9.7) y casi no acopla el pórtico con el muro, que es lo que
+            # supone el modelo
+            vb_, vh_ = t_de(f'MX-{ny}'), H_LOSA
             acoples.append({'id': f'VA-{ny}-CN-{k}', 'linea': ny, 'nivel': k, 'b': vb_, 'h': vh_, 'ln': ln,
                             'desde': ('C', EJX['C'] + cC / 2), 'hasta': (f'muro MX-{ny}', EJX['C'] + cC / 2 + ln), 'y': yl})
+
+    # ---- vigas secundarias y dinteles: cargas para su diseño (kN/m uniformes equivalentes por nivel) ------------------
+    sec_out = []
+    for sid, x_s, y_a, y_b, ap_a, ap_b, que in secundarias:
+        x_lin = (XN if abs(x_s - XN) < b_sec else 6.1) if sid not in sec_niveles else x_s
+        ln = y_b - y_a
+        b_s, h_s = sec_seccion.get(sid, (b_sec, H_LOSA))
+        for k in sorted(sec_niveles.get(sid, range(1, NIV + 1))):
+            c_ = sec_cargas.get((sid, k), {'D': 0.0, 'L': 0.0, 'Lr': 0.0})
+            w_pp = b_s * (h_s - t_eq) * GAMMA_C
+            # mampostería que se apoya en ella: los paños de núcleo de su línea (y, en el ducto, su muro occidental) del piso
+            # de arriba; en la cubierta, los muros del sobrerrecorrido de los ascensores (0,20 m × 1,8 m; estimación)
+            h_arr = (Z[k + 1] - Z[k]) if k < NIV else 0.0
+            w_m = 0.0
+            for _nom, (mx0, my0, mx1, my1) in nucleos_mamp:
+                if abs(mx0 - mx1) < 1e-9 and abs(mx0 - x_lin) < 1e-9:
+                    sol_ = min(max(my0, my1), y_b) - max(min(my0, my1), y_a)
+                    if sol_ > 1e-9:
+                        w_m += (w_mamp * h_arr if k < NIV else (0.20 * 1.8 * GAMMA_C if sid.startswith('VB-') and y_b < 8.0
+                                                                    else 0.0)) * sol_ / ln
+            if sid == 'VB-N-56' and k < NIV:
+                w_m += w_mamp * h_arr * (y_b - y_ducto_de[k]) / ln
+            sec_out.append({'id': f'{sid}-{k}', 'base': sid, 'nivel': k, 'que': que, 'x': x_s, 'y0': y_a, 'y1': y_b,
+                            'b': b_s, 'h': h_s, 'ln': ln, 'apoyos': (ap_a, ap_b), 'linea_x': x_lin,
+                            'de_abertura': sid in sec_niveles,
+                            'wD_kN_m': c_['D'] / ln + w_pp + w_m, 'wL_kN_m': c_['L'] / ln, 'wLr_kN_m': c_['Lr'] / ln,
+                            'w_mamposteria_kN_m': w_m, 'w_propio_kN_m': w_pp})
 
     # ---- niveles: masa, centro de masa, Jz y contorno ---------------------------------------------------------------
     niveles = []
@@ -1107,6 +1441,11 @@ def construir(dim, presupuesto):
 
     return {'dim': dim, 'porticos': porticos, 'por_id': por_id, 'elem': elem, 'muros': muros, 'paneles': paneles,
             'fachadas': fachadas, 'escaleras': escaleras, 'casetas': casetas, 'equipos': equipos, 'acoples': acoples,
+            'secundarias': sec_out,
+            'abertura_ducto': {k: [XN, y_ducto_de[k], 8.6 - h_viga_y('D')[0] / 2, 14.0 - bx6 / 2] for k in range(1, NIV + 1)},
+            'aberturas_escalera': [{'nivel': kk, 'paño': ab['paño'], 'escalera': ab['escalera'], 'q': ab['q'],
+                                    'vigas_de_borde': [ab['trim'][l_] for l_ in ('O', 'E') if l_ in ab['trim']]}
+                                   for (kk, na, n0), ab in sorted(aberturas.items())],
             'niveles': niveles, 'q': {'losa': q_losa, 't_eq': t_eq, 'div': q_div, 'fachada_m2': w_fach_m2,
                                       'celosia_m2': w_celosia_m2, 'alero_m': w_alero, 'instalaciones': q_ins,
                                       'antepecho_m': w_ant, 'paneles_frac': paneles_frac}}
@@ -2911,6 +3250,8 @@ def disenar(torre, A, R, Omega0):
                              'ln_h': ac['ln'] / h, 'requiere_diagonal': diagonal,
                              'Vn_max_ok': Ve <= 0.75 * 0.83 * math.sqrt(FC) * b * d * 1000}
 
+    secundarias = {s['id']: disenar_secundaria(s) for s in torre.get('secundarias', [])}
+
     # ---- nudos: ΣMnb por pórtico (vigas a cada lado; en las líneas con muro, la viga corta al oriente de C) ----------
     def sMnb(pm, nodo):
         izq = der = None
@@ -3052,6 +3393,19 @@ def disenar(torre, A, R, Omega0):
             b_col = next(p['ancho'] for p in mu['partes'] if p['tipo'] == 'columna')
         niveles = disenar_muro(mu, dem, mu['t'], col_b, delta_u, R, b_col)
         if fcols:
+            # el armado de la columna de borde no sube de un piso al de arriba (revisión A8, coordinación con el modelo
+            # BIM: el traslapo va a media altura del piso de arriba, así que la zona confinada de abajo de ese piso tiene las
+            # barras del de abajo): si el muro pide en un piso más acero que en el de abajo, el de abajo arranca con ese
+            # armado y se rehace el muro (las barras solo crecen, así que converge)
+            for _vuelta in range(4):
+                cb_ = [tuple(nv_['col_barras']) for nv_ in niveles]
+                mono = list(cb_)
+                for k_ in range(len(mono) - 2, -1, -1):
+                    if area(*mono[k_ + 1]) > area(*mono[k_]) + 1e-9:
+                        mono[k_] = mono[k_ + 1]
+                if mono == cb_:
+                    break
+                niveles = disenar_muro(mu, dem, mu['t'], mono, delta_u, R, b_col)
             # la columna es el borde j del muro: lleva todas las barras de ese extremo y, si el muro pide elemento de
             # borde especial en ese nivel, va confinada en toda la altura del piso (C.21.9.6.4)
             for f_, nv_ in zip(fcols, niveles):
@@ -3079,7 +3433,33 @@ def disenar(torre, A, R, Omega0):
             if sMnb:
                 c_['cvd'][plano] = (c_['Mnc'] + (arr or 0.0)) / sMnb
     return {'G': G_, 'vigas': vigas, 'acoples': acoples, 'columnas': columnas, 'muros': muros, 'E25': E25,
-            'res25': res25, 'mod25': mod25, 'sMnb': sMnb, 'E_el': E_el}
+            'res25': res25, 'mod25': mod25, 'sMnb': sMnb, 'E_el': E_el, 'secundarias': secundarias}
+
+
+def disenar_secundaria(s):
+    """Viga secundaria de borde o dintel (fuera del modelo sísmico; solo gravedad): simplemente apoyada en sus dos apoyos
+    (Mu⁺ = wu·ln²/8, del lado seguro), superior mínima anclada con gancho en los apoyos (C.10.5.1 y C.12.5), cortante
+    Vu = wu·ln/2 con estribos N.º 3 de 2 ramas a s ≤ d/2 (C.11.4.5.1) y altura sin cálculo de deflexiones ln/16
+    (Tabla C.9.5(a)); wu de B.2.4.2 con las cargas de los paños que recibe, su peso y la mampostería que lleva encima."""
+    b, h, ln = s['b'], s['h'], s['ln']
+    wD, wL, wLr = s['wD_kN_m'], s['wL_kN_m'], s['wLr_kN_m']
+    wu = max(1.4 * wD, 1.2 * wD + 1.6 * wL + 0.5 * wLr, 1.2 * wD + 1.0 * wL + 1.6 * wLr)
+    Mu = wu * ln ** 2 / 8
+    Vu = wu * ln / 2
+    d = h - REC['viga'] - 0.0095 - BARRAS[6][0] / 2000
+    As_i = max(as_requerida(Mu, b, d), as_minima_viga(b, d))
+    # barras de N.º 5 o N.º 6: su ldh con gancho (≤ 0,28 m) cabe en el muro de 0,35 m donde se anclan
+    inf = elegir_barras(b, As_i, REC['viga'], 3, nmin=2, nums=(5, 6)) or (8, 6)
+    sup = elegir_barras(b, as_minima_viga(b, d), REC['viga'], 3, nmin=2, nums=(5, 6)) or (2, 6)
+    sec = seccion_viga(b, h, b, sup, inf)
+    Mn, _c, _et, phi_f = sec.resistencia(0.0, 'sup')             # momento positivo: cara superior comprimida
+    phiMn = phi_f * Mn
+    Vc = 0.17 * math.sqrt(FC) * b * d * 1000
+    est = estribos(Vu, Vc, d, min(d / 2, 0.30), 3, 2)
+    phiVn = 0.75 * (Vc + est['Av'] * FY * 1000 * d / est['s'])
+    return {**s, 'wu_kN_m': wu, 'Mu_kNm': Mu, 'Vu_kN': Vu, 'd': d, 'sup': sup, 'inf': inf, 'phiMn_kNm': phiMn,
+            'phiVn_kN': phiVn, 'est': est, 'h_ln': h / ln, 'ok': phiMn >= Mu - 1e-6 and phiVn >= Vu - 1e-6
+            and ln / h <= 16 + 1e-9 and not est.get('no_alcanza')}
 
 
 
@@ -3579,6 +3959,94 @@ D_PILOTE = 0.60
 COTA_FONDO_DADO = 1.50          # m bajo el piso terminado del piso 1 (dado de 1,10 m bajo 0,40 m de relleno y contrapiso)
 S_PILOTES = 3 * D_PILOTE        # separación mínima entre centros (3·D; NSR-10 H.?, por confirmar)
 BORDE_PILOTE = D_PILOTE / 2 + 0.15
+# Fosos del piso 1 (programa.json → nucleos_verticales; profundidades: estimación, las fija el fabricante). 'apoyo' dice
+# cómo se resuelve con la cimentación (coordinación BIM, revisión A7): el de los ascensores se apoya en el suelo y los dados y
+# losas de pilotes no se meten bajo él; el del montacargas cae encima de la losa de pilotes de la escalera sur, que baja su
+# cara superior al fondo del foso (el foso se apoya en ella).
+FOSOS = [
+    {'id': 'FOSO-ASC', 'nombre': 'Foso de los ascensores camilleros (2 cabinas)', 'x': [XN, 6.1], 'y': [1.6, 7.2],
+     'profundidad_m': 1.50, 'muro_e_m': 0.25, 'losa_e_m': 0.35, 'apoyo': 'suelo',
+     'nota': 'profundidad de 1,50 m para ascensores camilleros de 1,0 m/s sin cuarto de máquinas (estimación; la fija '
+             'el fabricante); se apoya en el suelo (carga ≈ 40 kPa) y se revisa la subpresión con el freático a 1,0 m; los '
+             'dados y las losas de pilotes vecinos quedan por fuera de su huella'},
+    {'id': 'FOSO-MC', 'nombre': 'Foso del montacargas general', 'x': [XN, 6.1], 'y': [0.8, 1.6], 'profundidad_m': 0.60,
+     'muro_e_m': 0.20, 'losa_e_m': 0.25, 'apoyo': 'losa_de_pilotes',
+     'nota': 'montacargas de 0,80 × 0,80 m (estimación); se apoya en la losa de pilotes de la escalera sur, que tiene su '
+             'cara superior en el fondo del foso'},
+]
+
+
+Y_CENTRO = (EJES_Y[0][1] + EJES_Y[-1][1]) / 2      # centro de la planta en y (orientación de los triángulos de pilotes)
+HOLGURA_LOSA = 2.4      # m libres que deja una losa de pilotes al crecer hacia un dado vecino (dos veces la de fundirlos)
+
+
+def _toca(a, b):
+    return a[0] < b[2] - 1e-9 and a[2] > b[0] + 1e-9 and a[1] < b[3] - 1e-9 and a[3] > b[1] + 1e-9
+
+
+def recortar_fosos(caja):
+    """Una losa de pilotes no se mete bajo un foso que se apoya en el suelo: el lado que lo toca llega a la cara del
+    foso (el lado que menos recorta)."""
+    c_ = list(caja)
+    for f in FOSOS:
+        if f['apoyo'] != 'suelo':
+            continue
+        q = (f['x'][0], f['y'][0], f['x'][1], f['y'][1])
+        if not _toca(c_, q):
+            continue
+        _, i, v = min([(c_[2] - q[0], 2, q[0]), (q[2] - c_[0], 0, q[2]), (c_[3] - q[1], 3, q[1]), (q[3] - c_[1], 1, q[3])])
+        c_[i] = v
+    return c_
+
+
+def desplazamiento_fosos(cx, cy, Lc, B, b_col, dx, dy):
+    """Corrimiento (sx, sy), en múltiplos de 5 cm, de un grupo de pilotes y su dado (centro del dado en cx, cy) para que
+    el dado no se meta bajo un foso que se apoya en el suelo, sin que la columna quede a menos de 0,15 m de una cara."""
+    sx = sy = 0.0
+    for f in FOSOS:
+        if f['apoyo'] != 'suelo':
+            continue
+        q = (f['x'][0], f['y'][0], f['x'][1], f['y'][1])
+        d_ = (cx + sx - Lc / 2, cy + sy - B / 2, cx + sx + Lc / 2, cy + sy + B / 2)
+        if not _toca(d_, q):
+            continue
+        ops = []
+        for ex, ey in (((q[0] - d_[2]), 0.0), ((q[2] - d_[0]), 0.0), (0.0, (q[1] - d_[3])), (0.0, (q[3] - d_[1]))):
+            ex = math.copysign(math.ceil(abs(ex) / 0.05 - 1e-9) * 0.05, ex) if ex else 0.0
+            ey = math.copysign(math.ceil(abs(ey) / 0.05 - 1e-9) * 0.05, ey) if ey else 0.0
+            rx, ry = -(sx + ex + dx), -(sy + ey + dy)          # columna respecto al centro del dado
+            if abs(rx) + b_col / 2 + 0.15 <= Lc / 2 + 1e-9 and abs(ry) + b_col / 2 + 0.15 <= B / 2 + 1e-9:
+                ops.append((abs(ex) + abs(ey), ex, ey))
+        if ops:
+            _, ex, ey = min(ops)
+            sx, sy = sx + ex, sy + ey
+    return round(sx, 3), round(sy, 3)
+
+
+def cotas_grupo(g, h):
+    """Cotas (z_fondo, z_tope) de un dado o losa de pilotes de espesor h: fondo a COTA_FONDO_DADO (más lo que pase de
+    1,10 m), y la cara superior bajada al fondo de los fosos que se apoyan en ella."""
+    z_fondo = -(COTA_FONDO_DADO + max(h - 1.10, 0.0))
+    z_tope = z_fondo + h
+    if g.get('z_tope_max') is not None and z_tope > g['z_tope_max']:
+        z_tope = g['z_tope_max']
+        z_fondo = z_tope - h
+    return z_fondo, z_tope
+
+
+def disposicion_dado(n, b_col, orient=1):
+    """Pilotes (relativos a la columna, que queda en su centroide), largo Lc (x) y ancho B (y) del dado, y el centro
+    del dado respecto a la columna (dx, dy): el dado se centra en el grupo de pilotes y no en la columna (coordinación BIM:
+    en el triángulo de 3 pilotes, centrado en la columna, el pilote solo sobresalía de la cara). orient = −1 voltea el
+    triángulo (el pilote solo hacia el sur) para que el dado no salga de más hacia el exterior en el borde norte."""
+    pos = [(x, orient * y) for x, y in disposicion(n)]
+    xs = [x for x, y in pos]
+    ys = [y for x, y in pos]
+    Lc = max(max(xs) - min(xs) + 2 * BORDE_PILOTE, b_col + 0.30)
+    B = max(max(ys) - min(ys) + 2 * BORDE_PILOTE, b_col + 0.30)
+    Lc = round(math.ceil(Lc / 0.05 - 1e-9) * 0.05, 3)
+    B = round(math.ceil(B / 0.05 - 1e-9) * 0.05, 3)
+    return pos, Lc, B, (max(xs) + min(xs)) / 2, (max(ys) + min(ys)) / 2
 
 
 def sigma_v_ef(z):
@@ -3796,13 +4264,43 @@ def punzonamiento_vc(b0, d, beta=1.0, alfa_s=40):
     return k * math.sqrt(FC) * b0 * d * 1000
 
 
-def disenar_dado(apoyo, combos, pos, B, Lc, b_col, cap_pilote, nombre):
+def parrilla_dado(As, ancho, nums=(5, 6, 7, 8), s_max=0.30, s_min=0.10, rec=0.075):
+    """Parrilla de una dirección de un dado: (N.º, separación, n) con n = ⌊(ancho − 2·rec)/s⌋ + 1 barras (las que caben
+    entre los recubrimientos, como las cuenta el modelo BIM) y n·Ab ≥ As; la de menor área (desempate: menos barras).
+    Separación múltiplo de 2,5 cm entre s_min y s_max."""
+    mejor = None
+    for num in nums:
+        Ab = BARRAS[num][1] * 1e-6
+        s_ = math.floor(s_max / 0.025 + 1e-9) * 0.025
+        while s_ >= s_min - 1e-9:
+            n = int((ancho - 2 * rec) / s_) + 1               # como lo cuenta el modelo BIM (despiece.dados)
+            if n * Ab >= As - 1e-12:
+                clave = (round(n * Ab, 9), n, num)
+                if mejor is None or clave < mejor[0]:
+                    mejor = (clave, (num, round(s_, 3), n))
+                break
+            s_ = round(s_ - 0.025, 3)
+    if mejor is None:
+        n = int((ancho - 2 * rec) / s_min) + 1
+        return 8, s_min, n
+    return mejor[1]
+
+
+def disenar_dado(apoyo, combos, pos, B, Lc, b_col, cap_pilote, nombre, off=(0.0, 0.0), h_min=0.80):
     """Dado de un grupo de pilotes bajo una columna: espesor por punzonamiento de la columna y de la esquina, cortante
     en una dirección a d de la cara y flexión en la cara de la columna (NSR-10 C.15.5 y C.11.11), con las reacciones
-    mayoradas de los pilotes; parrilla inferior en las dos direcciones, parrilla superior y refuerzo lateral."""
+    mayoradas de los pilotes; parrilla inferior en las dos direcciones, parrilla superior y refuerzo lateral.
+    pos: pilotes respecto al centro del grupo (donde se llevan las cargas); off: centro del grupo respecto a la columna
+    (≠ 0 si el grupo se corre para no meterse bajo un foso). Las barras en x (las que toman el momento de los pilotes
+    en voladizo a lo largo de x) se reparten en el ancho B del dado y las de y en el largo Lc (revisión A7: antes se
+    repartían en el otro lado, y en los dados rectangulares las barras indicadas no cabían en el dado). h_min: espesor
+    mínimo (revisión A8: el dado al que llega una viga de amarre desde un dado bajado bajo el pasaje del bloque técnico se
+    alarga hacia abajo hasta el fondo de esa viga, con su cara superior donde estaba)."""
     rec = REC['dado_fondo']
     may = [c for c in combos if c[4] in ('mayorada',)]
-    for h in [x / 20 for x in range(16, 61)]:                   # 0,80 a 3,00 m
+    rel = [(x + off[0], y + off[1]) for x, y in pos]             # pilotes respecto a la columna
+    ancho = {'x': B, 'y': Lc}                                    # ancho de la sección que corta cada dirección
+    for h in [x / 20 for x in range(max(16, int(round(h_min * 20))), 61)]:      # 0,80 (o h_min) a 3,00 m
         d = h - rec - 0.10 - BARRAS[7][0] / 1000                 # el pilote entra 0,10 m en el dado
         ok = True
         peor = {}
@@ -3814,18 +4312,17 @@ def disenar_dado(apoyo, combos, pos, B, Lc, b_col, cap_pilote, nombre):
             Vu_p_max = max(Vu_p_max, max(Pi))
             # punzonamiento de la columna: pilotes con el centro fuera del perímetro crítico a d/2
             a = b_col / 2 + d / 2
-            fuera = sum(P for P, (x, y) in zip(Pi, pos) if abs(x) > a or abs(y) > a)
+            fuera = sum(P for P, (x, y) in zip(Pi, rel) if abs(x) > a or abs(y) > a)
             b0 = 4 * (b_col + d)
             if fuera > 0.75 * punzonamiento_vc(b0, d):
                 ok = False
             for eje, idx in (('x', 0), ('y', 1)):
                 for lado in (1, -1):
-                    sel = [(P, q[idx] * lado) for P, q in zip(Pi, pos) if q[idx] * lado > b_col / 2]
+                    sel = [(P, q[idx] * lado) for P, q in zip(Pi, rel) if q[idx] * lado > b_col / 2]
                     M = sum(P * (u - b_col / 2) for P, u in sel)
                     V = sum(P for P, u in sel if u > b_col / 2 + d)
                     Mu[eje] = max(Mu[eje], M)
                     Vu1[eje] = max(Vu1[eje], V)
-        ancho = {'x': Lc, 'y': B}
         for eje in ('x', 'y'):
             if Vu1[eje] > 0.75 * 0.17 * math.sqrt(FC) * ancho[eje] * d * 1000:
                 ok = False
@@ -3833,18 +4330,22 @@ def disenar_dado(apoyo, combos, pos, B, Lc, b_col, cap_pilote, nombre):
         b0p = math.pi * (D_PILOTE + d) / 2 + 2 * BORDE_PILOTE
         if Vu_p_max > 0.75 * punzonamiento_vc(b0p, d, 1.0, 20):
             ok = False
-        if any(as_requerida(Mu[e_], {'x': Lc, 'y': B}[e_], d) / {'x': Lc, 'y': B}[e_] > BARRAS[8][1] * 1e-6 / 0.10
-               for e_ in ('x', 'y')):
+        if any(as_requerida(Mu[e_], ancho[e_], d) / ancho[e_] > BARRAS[8][1] * 1e-6 / 0.10 for e_ in ('x', 'y')):
             ok = False
         if ok:
             break
-    # flexión: refuerzo inferior en las dos direcciones (≥ 0,0018·b·h, C.7.12; separación ≤ 0,30 m)
+    # flexión: refuerzo inferior en las dos direcciones (≥ 0,0018·b·h, C.7.12; separación ≤ 0,30 m); el número de barras
+    # es el que cabe entre los recubrimientos y su área cubre la requerida
     refuerzo = {}
-    for eje, ancho_ in (('x', Lc), ('y', B)):
+    for eje in ('x', 'y'):
+        ancho_ = ancho[eje]
         As = max(as_requerida(Mu[eje], ancho_, d), 0.0018 * ancho_ * h)
-        num, s_, Ar = barras_por_metro(As / ancho_)
-        refuerzo[f'inferior_{eje}'] = {'num': num, 's': s_, 'n': int((ancho_ - 2 * 0.075) / s_) + 1, 'As_req_mm2': As * 1e6,
-                                       'Mu_kNm': Mu[eje]}
+        # separación de 0,15 m o más si se puede (menos barras que esquivar entre las de los pilotes); si no, hasta 0,10 m
+        num, s_, n_ = parrilla_dado(As, ancho_, s_min=0.15)
+        if n_ * BARRAS[num][1] * 1e-6 < As - 1e-12:
+            num, s_, n_ = parrilla_dado(As, ancho_)
+        refuerzo[f'inferior_{eje}'] = {'num': num, 's': s_, 'n': n_, 'As_req_mm2': As * 1e6, 'Mu_kNm': Mu[eje],
+                                       'reparto_m': ancho_}
     # superior: tracción arriba solo con pilotes en tracción (0,9D − Ω0·E); mínimo de retracción en la cara superior
     Tmin = min(min(reacciones_pilotes(pos, N, Mx, My)) for _, N, Mx, My, t in combos if t in ('mayorada', 'capacidad'))
     num_s, s_s, _ = barras_por_metro(max(0.0009 * h, 0.0), nums=(5, 6), s_max=0.25)
@@ -3915,14 +4416,21 @@ def rect_planta_muro(mu):
             out.append((p['u0'], m['c'] - w / 2, p['u1'], m['c'] + w / 2))
         else:
             out.append((m['c'] - w / 2, p['u0'], m['c'] + w / 2, p['u1']))
+    # la esquina con el alma del otro muro y el machón junto a la puerta (coordinación BIM: sin ellos la esquina quedaba
+    # sin concreto en el modelo y la losa sin apoyo en ese tramo); la esquina del machón ya es la aleta de arriba
+    for q in mu.get('planta_extra', []):
+        if not any(all(abs(q[i] - o[i]) < 1e-9 for i in range(4)) for o in out):
+            out.append(tuple(q))
     return out
 
 
-def cimentacion(torre, D, A, S, presupuesto):
+def cimentacion(torre, D, A, S, presupuesto, programa=None, ajustes=None):
     """Prediseño de la cimentación (contrato 17.2): dados de pilotes bajo las columnas, losas de pilotes (dados
     combinados) bajo los núcleos, largo de pilote escogido por el menor total de metros, pilotes armados, vigas de
     amarre, contrapiso, fosos y cisternas. La base del modelo sísmico sigue empotrada en la cara superior de los
-    dados (sin interacción suelo-estructura, 17.2)."""
+    dados (sin interacción suelo-estructura, 17.2). ajustes (revisión A8, de ajustes_cimentacion): {grupo: {'motivo':
+    'pasaje' | 'viga_de_amarre', 'z_tope_max': cota máxima de la cara superior, 'h_min': espesor mínimo}} para los dados
+    que quedan bajo el pasaje del bloque técnico y los que se alargan hacia abajo para recibir sus vigas de amarre."""
     R, Om = S['R'], S['Omega0']
     reac = reacciones_base(torre, D, A, Om)
     # ---- grupos: un dado por columna; una losa de pilotes por núcleo con sus muros y las columnas que caen en ella --
@@ -3956,10 +4464,15 @@ def cimentacion(torre, D, A, S, presupuesto):
     for cid in columnas:
         if not any(cid in g['apoyos'] for g in grupos.values()):
             grupos[f'D-{cid[2:]}'] = {'tipo': 'dado', 'apoyos': [cid]}
+    for gid, aj in sorted((ajustes or {}).items()):
+        if gid in grupos and grupos[gid]['tipo'] == 'dado':
+            grupos[gid]['ajuste'] = dict(aj)
+            grupos[gid]['z_tope_max'] = aj['z_tope_max']
     for g in grupos.values():
         if g['tipo'] == 'losa':
             g['caja'] = [round(math.floor(g['caja'][0] / 0.05 + 1e-9) * 0.05, 3), round(math.floor(g['caja'][1] / 0.05 + 1e-9) * 0.05, 3),
                          round(math.ceil(g['caja'][2] / 0.05 - 1e-9) * 0.05, 3), round(math.ceil(g['caja'][3] / 0.05 - 1e-9) * 0.05, 3)]
+            g['caja'] = recortar_fosos(g['caja'])
 
     def cargas_grupo(g, xc, yc, h, W_propio):
         """Cargas del grupo llevadas al centro de la rejilla de pilotes (xc, yc), con el peso propio del dado y el
@@ -4002,20 +4515,54 @@ def cimentacion(torre, D, A, S, presupuesto):
     def resolver_grupo(g, cap, h):
         if g['tipo'] == 'dado':
             a = reac[g['apoyos'][0]]
+            # triángulo de 3 pilotes con el pilote solo hacia el interior de la planta (en y)
+            orient = 1 if a['y'] <= Y_CENTRO + 1e-9 else -1
             for n in opciones_pilotes():
-                pos, Lc, B = tamano_dado(n, a['b'])
-                W = Lc * B * h * GAMMA_C + Lc * B * 0.25 * SUELO['gamma_kN_m3'] + n * cap['peso']
-                cg = cargas_grupo(g, a['x'], a['y'], h, W)
+                pos, Lc, B, dx, dy = disposicion_dado(n, a['b'], orient)
+                # el grupo (y su dado) se corre lo justo para no meterse bajo un foso que se apoya en el suelo; la
+                # excentricidad con la columna entra en las cargas del grupo
+                sx, sy = desplazamiento_fosos(a['x'] + dx, a['y'] + dy, Lc, B, a['b'], dx, dy)
+                xc, yc = a['x'] + sx, a['y'] + sy
+                aj = g.get('ajuste')
+                if aj:
+                    # dado bajado bajo el pasaje o alargado hacia abajo (revisión A8): su peso con el relleno real hasta el
+                    # contrapiso y, si se bajó, el brazo del cortante con el tramo de arranque que crece
+                    h_ = max(h, aj.get('h_min', 0.0))
+                    zt_n = -(COTA_FONDO_DADO + max(h_ - 1.10, 0.0)) + h_
+                    zt = min(zt_n, aj['z_tope_max'])
+                    W = Lc * B * (h_ * GAMMA_C + max(-0.15 - zt, 0.0) * SUELO['gamma_kN_m3']) + n * cap['peso']
+                    cg = cargas_grupo(g, xc, yc, h_ + ((zt_n - zt) if aj['motivo'] == 'pasaje' else 0.0), W)
+                else:
+                    W = Lc * B * h * GAMMA_C + Lc * B * 0.25 * SUELO['gamma_kN_m3'] + n * cap['peso']
+                    cg = cargas_grupo(g, xc, yc, h, W)
                 combos = combinaciones_cimentacion(cg, R, Om)
                 ok, ext = verificar_grupo(combos, pos, cap)
                 if ok:
-                    return {'n': n, 'pos': pos, 'Lc': Lc, 'B': B, 'xc': a['x'], 'yc': a['y'], 'cargas': cg, 'combos': combos,
+                    return {'n': n, 'pos': pos, 'Lc': Lc, 'B': B, 'xc': xc, 'yc': yc, 'xd': xc + dx, 'yd': yc + dy,
+                            'off': (sx, sy), 'orient': orient, 'cargas': cg, 'combos': combos,
                             'ext': ext, 'cap_Qadm': cap['Qadm']}
             return None
-        for ampl in (0.0, 0.9, 1.8, 2.7):
+        topes = topes_losa(g)
+        for ampl in (0.0, 0.9, 1.8, 2.7, 3.6):
             # la losa crece por todos los lados (de media separación en media separación) hasta que los pilotes
-            # tengan brazo suficiente para el momento de vuelco de los muros
-            caja = [g['caja'][0] - ampl, g['caja'][1] - ampl, g['caja'][2] + ampl, g['caja'][3] + ampl]
+            # tengan brazo suficiente para el momento de vuelco de los muros, sin meterse bajo los fosos apoyados en el suelo
+            # ni acercarse a menos de 1,2 m de un dado vecino (revisión A7): lo que un lado no puede crecer lo crece el
+            # lado opuesto, hasta su propio tope
+            cre = [min(ampl, t_) for t_ in topes]
+            falta = [ampl - c_ for c_ in cre]
+            for i in range(4):
+                d_ = falta[i]
+                if d_ <= 1e-9:
+                    continue
+                o_ = (i + 2) % 4
+                add = min(d_, topes[o_] - cre[o_])
+                cre[o_] += add
+                d_ -= add
+                for p_ in ((i + 1) % 4, (i + 3) % 4):
+                    add = min(d_ / 2, topes[p_] - cre[p_])
+                    cre[p_] += add
+            cre = [round(math.floor(c_ / 0.05 + 1e-6) * 0.05, 3) for c_ in cre]
+            caja = recortar_fosos([g['caja'][0] - cre[0], g['caja'][1] - cre[1], g['caja'][2] + cre[2], g['caja'][3] + cre[3]])
             xc, yc = (caja[0] + caja[2]) / 2, (caja[1] + caja[3]) / 2
             Lc, B = caja[2] - caja[0], caja[3] - caja[1]
             for n, nx_, ny_, sx, sy, pos in rejillas_losa(caja):
@@ -4025,9 +4572,31 @@ def cimentacion(torre, D, A, S, presupuesto):
                 ok, ext = verificar_grupo(combos, pos, cap)
                 if ok:
                     return {'n': n, 'nx': nx_, 'ny': ny_, 'sx': sx, 'sy': sy, 'pos': pos, 'Lc': Lc, 'B': B, 'xc': xc,
-                            'yc': yc, 'caja': [round(q, 3) for q in caja], 'ampliacion_m': ampl, 'cargas': cg,
+                            'yc': yc, 'caja': [round(q, 3) for q in caja], 'ampliacion_m': ampl,
+                            'crecimiento_m': [round(c_, 3) for c_ in cre], 'cargas': cg,
                             'combos': combos, 'ext': ext, 'cap_Qadm': cap['Qadm']}
         return None
+
+    def topes_losa(g):
+        """Lo más que puede crecer cada lado (oeste, sur, este, norte) de una losa de pilotes: hasta la cara de un foso
+        apoyado en el suelo y hasta el tope que le haya puesto un dado vecino (g['topes'])."""
+        c_ = g['caja']
+        xm, ym = (c_[0] + c_[2]) / 2, (c_[1] + c_[3]) / 2
+        t_ = list(g.get('topes', [99.0] * 4))
+        for f in FOSOS:
+            if f['apoyo'] != 'suelo':
+                continue
+            if f['y'][0] < c_[3] and f['y'][1] > c_[1]:
+                if f['x'][1] <= xm:
+                    t_[0] = min(t_[0], c_[0] - f['x'][1])
+                if f['x'][0] >= xm:
+                    t_[2] = min(t_[2], f['x'][0] - c_[2])
+            if f['x'][0] < c_[2] and f['x'][1] > c_[0]:
+                if f['y'][1] <= ym:
+                    t_[1] = min(t_[1], c_[1] - f['y'][1])
+                if f['y'][0] >= ym:
+                    t_[3] = min(t_[3], f['y'][0] - c_[3])
+        return [max(x, 0.0) for x in t_]
 
     def huella_dado(cid, n):
         a = reac[cid]
@@ -4038,9 +4607,42 @@ def cimentacion(torre, D, A, S, presupuesto):
         return p_[0] < q_[2] and p_[2] > q_[0] and p_[1] < q_[3] and p_[3] > q_[1]
 
     # ---- largo de pilote: el de menor total de metros con todos los grupos resueltos --------------------------------
+    def poner_topes(cap):
+        """Resuelve los dados con la capacidad cap y, con sus huellas, fija hasta dónde puede crecer cada losa de pilotes sin
+        quedar a menos de HOLGURA_LOSA (2,4 m) de un dado vecino (revisión A7: así una losa que no puede crecer hacia un
+        foso crece hacia los otros lados en lugar de tragarse los dados vecinos, y la viga de amarre que queda entre los dos
+        tiene luz para el momento por asentamiento diferencial; con 1,2 m, el mínimo para no fundirlos, no se podía
+        diseñar). → soluciones de los dados."""
+        sd_ = {gid: resolver_grupo(g, cap, 1.10) for gid, g in grupos.items() if g['tipo'] == 'dado'}
+        hu = {gid: huella_grupo(grupos[gid], v) for gid, v in sd_.items() if v}
+        for g in grupos.values():
+            if g['tipo'] != 'losa':
+                continue
+            c_ = g['caja']
+            t_ = [99.0] * 4
+
+            def tope(i, v):
+                # un dado que ya queda a menos de la holgura de la losa sin crecer no le pone tope: se une a ella, como antes
+                if v >= -1e-9:
+                    t_[i] = min(t_[i], round(math.floor(v / 0.05 + 1e-6) * 0.05, 3))
+            for q in hu.values():
+                if q[1] < c_[3] and q[3] > c_[1]:
+                    if q[2] <= c_[0] + 1e-9:
+                        tope(0, c_[0] - q[2] - HOLGURA_LOSA)
+                    if q[0] >= c_[2] - 1e-9:
+                        tope(2, q[0] - c_[2] - HOLGURA_LOSA)
+                if q[0] < c_[2] and q[2] > c_[0]:
+                    if q[3] <= c_[1] + 1e-9:
+                        tope(1, c_[1] - q[3] - HOLGURA_LOSA)
+                    if q[1] >= c_[3] - 1e-9:
+                        tope(3, q[1] - c_[3] - HOLGURA_LOSA)
+            g['topes'] = t_
+        return sd_
+
     for _vuelta in range(6):
         cambio = False
         cap12 = capacidad_pilote(15.0)
+        soluciones_dados = poner_topes(cap12)
         for gid, g in list(grupos.items()):
             if g['tipo'] != 'losa':
                 continue
@@ -4050,8 +4652,9 @@ def cimentacion(torre, D, A, S, presupuesto):
                 if g2['tipo'] != 'dado':
                     continue
                 cid = g2['apoyos'][0]
-                sd = resolver_grupo(g2, cap12, 1.10)
-                if se_tocan(caja, huella_dado(cid, sd['n'] if sd else 9)):
+                sd = soluciones_dados.get(gid2)
+                hd = huella_grupo(g2, sd) if sd else huella_dado(cid, 9)
+                if se_tocan(caja, hd):
                     g['apoyos'].append(cid)
                     a = reac[cid]
                     c_ = g['caja']
@@ -4066,9 +4669,10 @@ def cimentacion(torre, D, A, S, presupuesto):
         elegido = None
         for L in (12.0, 15.0, 18.0, 21.0):
             cap = capacidad_pilote(L)
-            sol = {}
+            sol = dict(poner_topes(cap))
             for gid, g in grupos.items():
-                sol[gid] = resolver_grupo(g, cap, 1.10 if g['tipo'] == 'dado' else 1.40)
+                if g['tipo'] == 'losa':
+                    sol[gid] = resolver_grupo(g, cap, 1.40)
             if any(v is None for v in sol.values()):
                 estudio.append({'L_m': L, 'Qult_kN': r(cap['Qult'], 0), 'resuelve': False})
                 continue
@@ -4082,7 +4686,7 @@ def cimentacion(torre, D, A, S, presupuesto):
     def huella_sol(gid, sg):
         g = grupos[gid]
         if g['tipo'] == 'dado':
-            return (sg['xc'] - sg['Lc'] / 2, sg['yc'] - sg['B'] / 2, sg['xc'] + sg['Lc'] / 2, sg['yc'] + sg['B'] / 2)
+            return (sg['xd'] - sg['Lc'] / 2, sg['yd'] - sg['B'] / 2, sg['xd'] + sg['Lc'] / 2, sg['yd'] + sg['B'] / 2)
         return tuple(sg['caja'])
 
     # dados que quedan casi pegados (menos de 1,2 m libres entre caras en un eje) se funden en un dado combinado: una
@@ -4101,7 +4705,7 @@ def cimentacion(torre, D, A, S, presupuesto):
                     continue
                 h0, h1 = huella_sol(g0, sol[g0]), huella_sol(g1, sol[g1])
                 libre = (h1[0] - h0[2]) if d_ == 'x' else (h1[1] - h0[3])
-                if libre < 1.2:
+                if libre < 1.2 - 1e-6:
                     pegados = (g0, g1, libre, f'{lin}: {e0}-{e1}')
                     break
             if pegados:
@@ -4124,7 +4728,8 @@ def cimentacion(torre, D, A, S, presupuesto):
         sg = sol[gid]
         if g['tipo'] == 'dado':
             a = reac[g['apoyos'][0]]
-            dd = disenar_dado(a, sg['combos'], sg['pos'], sg['B'], sg['Lc'], a['b'], cap, gid)
+            dd = disenar_dado(a, sg['combos'], sg['pos'], sg['B'], sg['Lc'], a['b'], cap, gid, off=sg['off'],
+                              h_min=g.get('ajuste', {}).get('h_min', 0.80))
         else:
             dd = disenar_losa_pilotes(torre, g, sg, reac)
         sg['diseno'] = dd
@@ -4135,11 +4740,25 @@ def cimentacion(torre, D, A, S, presupuesto):
         sg['pilote'] = disenar_pilote(L_pil, cap, sg, Vg / sg['n'])
     V_tot = max(sum(sum(a_['E']['Vx'][c_] for a_ in reac.values()) for c_ in (0, 1)),
                 sum(sum(a_['E']['Vy'][c_] for a_ in reac.values()) for c_ in (0, 1)))
+    for f in FOSOS:
+        if f['apoyo'] != 'losa_de_pilotes':
+            continue
+        z_f = -(f['profundidad_m'] + f['losa_e_m'])
+        for gid, g, sg in elementos:
+            q = huella_sol(gid, sg)
+            if g['tipo'] == 'losa' and q[0] < f['x'][1] and q[2] > f['x'][0] and q[1] < f['y'][1] and q[3] > f['y'][0]:
+                g['z_tope_max'] = min(g.get('z_tope_max', 0.0), z_f)
+                g['fosos_encima'] = g.get('fosos_encima', []) + [f['id']]
     vigas_am = vigas_de_amarre(torre, elementos, reac, sol)
-    otros = fosos_contrapiso_cisternas(torre, elementos)
+    z_patio = None
+    if programa:
+        z_patio = next((h_['base'] for h_ in programa['implantacion']['huella'] if h_['id'] == 'bloque_tecnico'), None)
+    muros_c = [v['muro_contencion'] for v in vigas_am if v.get('muro_contencion')]
+    muros_c += muros_contencion_extremos(elementos, reac, muros_c)
+    otros = fosos_contrapiso_cisternas(torre, elementos, z_patio, min(m_['y'][0] for m_ in muros_c) if muros_c else None)
     return {'reacciones': reac, 'grupos': grupos, 'L_pilote': L_pil, 'capacidad': cap, 'estudio_largo': estudio,
             'fusiones': fusiones,
-            'elementos': elementos, 'vigas_amarre': vigas_am, 'otros': otros, 'V_base_kN': V_tot}
+            'elementos': elementos, 'vigas_amarre': vigas_am, 'muros_contencion': muros_c, 'otros': otros, 'V_base_kN': V_tot}
 
 
 def disenar_losa_pilotes(torre, g, sg, reac):
@@ -4268,14 +4887,15 @@ def vigas_de_amarre(torre, elementos, reac, sol):
     """Vigas de amarre entre dados vecinos en cada eje (NSR-10 C.15.13, por confirmar): fuerza axial de tracción o
     compresión 0,25·Aa·Pu de la columna más cargada que amarra; momento por el asentamiento diferencial entre los dos
     grupos de pilotes, M = 6·EI_fis·Δ/ln² (empotrada en los dos extremos), más el peso propio y el muro de fachada del
-    piso 1 en las de borde (w·ln²/10); refuerzo simétrico (el asentamiento puede ir en los dos sentidos)."""
+    piso 1 en las de borde (w·ln²/10); refuerzo simétrico (el asentamiento puede ir en los dos sentidos). Revisión A8: la
+    viga del borde del pasaje del bloque técnico entre dos dados bajados bajo su piso lleva encima el muro de contención
+    del borde (muro_contencion, de cara a cara de los arranques): su eje se corre bajo el muro y su carga suma el peso del
+    muro."""
     huella = {}
     for gid, g, sg in elementos:
-        if g['tipo'] == 'dado':
-            a = reac[g['apoyos'][0]]
-            huella[gid] = (a['x'] - sg['Lc'] / 2, a['y'] - sg['B'] / 2, a['x'] + sg['Lc'] / 2, a['y'] + sg['B'] / 2)
-        else:
-            huella[gid] = tuple(g['caja'])
+        # huella final de cada grupo (revisión A7: la de las losas de pilotes era la de antes de crecer, y las vigas de
+        # amarre se metían 0,90 m en ellas; la de los dados, centrada en la columna y no en los pilotes)
+        huella[gid] = huella_grupo(g, sg)
     grupo_de = {}
     for gid, g, sg in elementos:
         for aid in g['apoyos']:
@@ -4288,6 +4908,9 @@ def vigas_de_amarre(torre, elementos, reac, sol):
         # normalizadas de carga y asentamiento de pilotes preexcavados, O'Neill y Reese, 1999; estimación)
         s_serv[gid] = 0.01 * D_PILOTE * sg['ext']['estatico']['max'] / sol[gid]['cap_Qadm']
     w_fach = torre['q']['fachada_m2'] * (Z[1] - 0.6)
+    grupo_por_id = {gid: g for gid, g, sg in elementos}
+    cotas = {gid: cotas_grupo(g, sg['diseno']['h']) for gid, g, sg in elementos}
+    pas = (PLANTA_B or {}).get('pasaje') or {}
     out = []
     lineas = [('x', ny, yy, [(nx, xx) for nx, xx in EJES_X]) for ny, yy in EJES_Y] + \
              [('y', nx, xx, [(ny, yy) for ny, yy in EJES_Y]) for nx, xx in EJES_X]
@@ -4309,6 +4932,18 @@ def vigas_de_amarre(torre, elementos, reac, sol):
             if ln <= 0.05:
                 continue
             borde = lin in ('1', '7', 'A', 'D')
+            mc = None
+            if d_ == 'x' and pas.get('borde_y') is not None and abs(c - pas['borde_y']) < 1e-6 and all(
+                    (grupo_por_id[g_].get('ajuste') or {}).get('motivo') == 'pasaje' for g_ in (g0, g1)):
+                # borde del pasaje del bloque técnico: muro de contención sobre la viga, de cara a cara de los arranques,
+                # con su cara sur en el borde del pasaje (o contra el muro de borde que B dibuje ahí)
+                zt_ = min(cotas[g0][1], cotas[g1][1])
+                cara = pas['cara_muro_contencion_y']
+                mc = disenar_muro_contencion(-0.15 - zt_, T_MURO_CONTENCION, zt_)
+                b0_, b1_ = reac[f'C-{e0}{lin}']['b'], reac[f'C-{e1}{lin}']['b']
+                mc.update({'id': f'MC-{lin}-{e0}{e1}', 'linea': lin, 'sobre': f'VC-{lin}-{e0}{e1}',
+                           'tramo': [v0 + b0_ / 2 + SOBREANCHO_ARRANQUE, v1 - b1_ / 2 - SOBREANCHO_ARRANQUE],
+                           'y': [cara, cara + T_MURO_CONTENCION], 'z_fondo': zt_, 'z_tope': -0.15})
             T = 0.25 * AA * max(Pu_col[g0], Pu_col[g1])
             # asentamiento diferencial: el que dan las cargas más un 25 % del menor de los dos por la variabilidad del
             # suelo entre dos grupos de pilotes vecinos (estimación)
@@ -4317,7 +4952,7 @@ def vigas_de_amarre(torre, elementos, reac, sol):
                 d = h - REC['viga_amarre'] - 0.0095 - 0.0095
                 EIf = 0.35 * EC * 1000 * b * h ** 3 / 12
                 Ms = 6 * EIf * delta / ln ** 2
-                w = b * h * GAMMA_C + (w_fach if borde else 0.0)
+                w = b * h * GAMMA_C + (w_fach if borde else 0.0) + (mc['peso_kN_m'] if mc else 0.0)
                 Mg = w * ln ** 2 / 10
                 Mu = 1.2 * (Mg + Ms)
                 As = as_requerida(Mu, b, d) + T / (0.9 * FY * 1000) / 2
@@ -4330,40 +4965,142 @@ def vigas_de_amarre(torre, elementos, reac, sol):
                     and min(b, h) >= ln / 20
                 if ok:
                     break
-            out.append({'id': f'VC-{lin}-{e0}{e1}', 'linea': lin, 'direccion': d_, 'coordenada': c, 'desde': g0, 'hasta': g1,
+            out.append({'id': f'VC-{lin}-{e0}{e1}', 'linea': lin, 'direccion': d_,
+                        'coordenada': (mc['y'][0] + mc['y'][1]) / 2 if mc else c, 'desde': g0, 'hasta': g1,
                         'tramo': [a0, a1], 'ln': ln, 'b': b, 'h': h, 'T_kN': T, 'delta_m': delta, 'Ms_kNm': Ms, 'Mg_kNm': Mg,
                         'Mu_kNm': Mu,
                         'Vu_kN': Vu, 'superior': barras, 'inferior': barras, 'estribos': {'num': 3, 'ramas': 2,
                                                                                          's': math.floor(s_e / 0.025 + 1e-9) * 0.025},
-                        'borde': borde})
+                        'borde': borde, 'muro_contencion': mc,
+                        'excentricidad_m': ((mc['y'][0] + mc['y'][1]) / 2 - c) if mc else 0.0})
     return out
 
 
-def fosos_contrapiso_cisternas(torre, elementos):
+def disenar_muro_contencion(h_w, t, z_base, voladizo=False):
+    """Muro de contención del borde del pasaje del bloque técnico (revisión A8): retiene el relleno bajo el contrapiso del
+    piso 1 (±0,00) frente al pasaje (cota del nivel BT), empotrado en la viga de amarre del eje y apoyado arriba en el
+    contrapiso. Empuje en reposo (K0 = 0,5) del relleno (18 kN/m³; 8 kN/m³ sumergido), agua bajo el freático supuesto
+    (1,0 m bajo el piso 1) del lado de la torre con el pasaje drenado, y 10 kPa de sobrecarga del piso: losa vertical
+    empotrada abajo y apoyada arriba, Mu = 1,6·(p·h²/15 + K0·q·h²/8) en la base y Vu = 1,6·(0,4·p·h + 0,625·K0·q·h)
+    (carga triangular y uniforme; factor 1,6 del empuje de tierra, B.2.4). Refuerzo en las dos caras con los mínimos de
+    muros de C.14.3 (0,0012 vertical y 0,0020 horizontal, barras ≤ N.º 5, s ≤ 0,30 m); recubrimiento 50 mm contra el
+    relleno (C.7.7.1). La reacción horizontal de la base la toman la viga de amarre y el suelo bajo el pasaje (empuje
+    pasivo; no se diseña aparte en el prediseño). voladizo: los tramos más allá de las columnas extremas, sin contrapiso
+    arriba, en voladizo desde el dado: Mu = 1,6·(p·h²/6 + K0·q·h²/2) y Vu = 1,6·(p·h/2 + K0·q·h)."""
+    K0 = 0.5
+    prof = -z_base
+    p = K0 * sigma_v_ef(prof) + 10.0 * max(prof - SUELO['nivel_freatico_m'], 0.0)
+    q = K0 * 10.0
+    if voladizo:
+        Mu = 1.6 * (p * h_w ** 2 / 6 + q * h_w ** 2 / 2)
+        Vu = 1.6 * (p * h_w / 2 + q * h_w)
+    else:
+        Mu = 1.6 * (p * h_w ** 2 / 15 + q * h_w ** 2 / 8)
+        Vu = 1.6 * (0.4 * p * h_w + 0.625 * q * h_w)
+    rec = REC['foso']
+    d = t - rec - BARRAS[4][0] / 2000
+    As_v = max(as_requerida(Mu, 1.0, d), 0.0012 * t / 2)            # por cara (la del relleno, a tracción en la base)
+    As_h = 0.0020 * t / 2
+    num_v, s_v, A_v = barras_por_metro(As_v, nums=(4, 5), s_max=0.30)
+    num_h, s_h, A_h = barras_por_metro(As_h, nums=(4, 5), s_max=0.30)
+    a = A_v * FY / (0.85 * FC * 1.0)
+    phiMn = 0.9 * A_v * FY * 1000 * (d - a / 2)
+    phiVn = 0.75 * 0.17 * math.sqrt(FC) * 1.0 * d * 1000
+    return {'t_m': t, 'h_m': h_w, 'p_base_kPa': p, 'q_kPa': q, 'Mu_kNm_m': Mu, 'phiMn_kNm_m': phiMn, 'Vu_kN_m': Vu,
+            'apoyo': 'voladizo desde el dado' if voladizo else 'empotrado en la viga de amarre y apoyado en el contrapiso',
+            'phiVn_kN_m': phiVn, 'vertical': {'num': num_v, 's_m': s_v}, 'horizontal': {'num': num_h, 's_m': s_h},
+            'peso_kN_m': t * h_w * GAMMA_C, 'ok': phiMn >= Mu - 1e-9 and phiVn >= Vu - 1e-9}
+
+
+def muros_contencion_extremos(elementos, reac, muros_c):
+    """Tramos del borde del pasaje del bloque técnico que la planta de B deja sin muro más allá de las columnas extremas
+    del eje (revisión A8): muro de contención en voladizo desde el dado bajado, de la cara del arranque hasta donde B
+    deja el borde sin muro, con la cara superior al nivel del exterior (±0,00)."""
+    pas = (PLANTA_B or {}).get('pasaje') or {}
+    if not muros_c or not pas.get('borde_sin_muro_x'):
+        return []
+    x_w, x_e = pas['borde_sin_muro_x']
+    lin, zt, cara = muros_c[0]['linea'], muros_c[0]['z_fondo'], muros_c[0]['y'][0]
+    bajados = sorted((reac[a]['x'], reac[a]['b'], gid, a) for gid, g, sg in elementos
+                     if (g.get('ajuste') or {}).get('motivo') == 'pasaje' for a in g['apoyos']
+                     if a in reac and abs(reac[a]['y'] - pas['borde_y']) < 1e-6)
+    out = []
+    for (xc, b, gid, cid), lado in ((bajados[0], 'O'), (bajados[-1], 'E')) if bajados else ():
+        a0, a1 = ((x_w, xc - b / 2 - SOBREANCHO_ARRANQUE) if lado == 'O' else (xc + b / 2 + SOBREANCHO_ARRANQUE, x_e))
+        if a1 - a0 < 0.05:
+            continue
+        mc = disenar_muro_contencion(-zt, T_MURO_CONTENCION, zt, voladizo=True)
+        mc.update({'id': f'MC-{lin}-{cid[2]}{lado}', 'linea': lin, 'sobre': gid, 'tramo': [a0, a1],
+                   'y': [cara, cara + T_MURO_CONTENCION], 'z_fondo': zt, 'z_tope': 0.0})
+        out.append(mc)
+    return out
+
+
+def huella_grupo(g, sg):
+    """Huella final (x0, y0, x1, y1) de un dado (centrado en su grupo de pilotes) o de una losa de pilotes."""
+    if g['tipo'] == 'dado':
+        return (sg['xd'] - sg['Lc'] / 2, sg['yd'] - sg['B'] / 2, sg['xd'] + sg['Lc'] / 2, sg['yd'] + sg['B'] / 2)
+    return tuple(sg['caja'])
+
+
+def ajustes_cimentacion(C, previos):
+    """Cotas especiales de los dados (revisión A8, coordinación con el bloque técnico de la planta de B): (1) los dados cuya
+    huella queda bajo el pasaje que corre junto a la fachada sur bajan su cara superior a la cota del piso del pasaje
+    menos su losa (LOSA_PASAJE): antes quedaban 0,80 m por encima del piso del pasaje; (2) cada viga de amarre lleva la
+    cara superior del más bajo de sus dos apoyos y entra entera en los dos: si no cabe en la altura del más alto, ese dado
+    se alarga hacia abajo hasta el fondo de la viga con su cara superior donde estaba (h_min). Los ajustes solo crecen,
+    así que la iteración de armar() converge."""
+    aj = {gid: dict(v) for gid, v in previos.items()}
+    pas = PLANTA_B['pasaje']
+    if pas['z_piso'] is not None:
+        zt_p = r(pas['z_piso'] - LOSA_PASAJE, 3)
+        for gid, g, sg in C['elementos']:
+            if g['tipo'] != 'dado':
+                continue
+            q = huella_grupo(g, sg)
+            for rc in pas['recintos']:
+                p_ = rc['rect']
+                if min(q[2], p_[2]) - max(q[0], p_[0]) > 0.01 and min(q[3], p_[3]) - max(q[1], p_[1]) > 0.01:
+                    a_ = aj.setdefault(gid, {'motivo': 'pasaje', 'z_tope_max': zt_p})
+                    a_.update({'motivo': 'pasaje', 'z_tope_max': min(a_['z_tope_max'], zt_p), 'pasaje': rc['id']})
+    cotas, por_id = {}, {}
+    for gid, g, sg in C['elementos']:
+        g_ = dict(g)
+        if gid in aj:
+            g_['z_tope_max'] = min(g.get('z_tope_max', 0.0), aj[gid]['z_tope_max'])
+        cotas[gid] = cotas_grupo(g_, max(sg['diseno']['h'], aj.get(gid, {}).get('h_min', 0.0)))
+        por_id[gid] = g
+    for v in C['vigas_amarre']:
+        zt = min(cotas[v['desde']][1], cotas[v['hasta']][1])
+        for gx in (v['desde'], v['hasta']):
+            zf, ztx = cotas[gx]
+            if zt - v['h'] >= zf - 1e-6:
+                continue
+            if por_id[gx]['tipo'] != 'dado' or (aj.get(gx) or {}).get('motivo') == 'pasaje':
+                raise SystemExit(f'la viga de amarre {v["id"]} no cabe en la altura de {gx}')
+            a_ = aj.setdefault(gx, {'motivo': 'viga_de_amarre', 'z_tope_max': r(ztx, 3)})
+            h_req = round(math.ceil((a_['z_tope_max'] - (zt - v['h'])) / 0.05 - 1e-6) * 0.05, 3)
+            a_['h_min'] = max(a_.get('h_min', 0.0), h_req)
+            a_['vigas'] = sorted(set(a_.get('vigas', [])) | {v['id']})
+    return aj
+
+
+def fosos_contrapiso_cisternas(torre, elementos, z_patio=None, y_sur=None):
     """Contrapiso del piso 1 (lo que no ocupan dados y losas de pilotes), foso de los ascensores y del montacargas, y
     cisternas enterradas bajo el patio de servicio (programa.json: 40 m³ de agua potable, ≈ 30 m³ contra incendio y
     ≈ 20 m³ de aguas lluvias) con empuje de tierra en reposo y agua (NSR-10 C.23, tanques y compartimientos estancos:
-    esfuerzo del acero en servicio limitado para controlar la fisuración, por confirmar)."""
+    esfuerzo del acero en servicio limitado para controlar la fisuración, por confirmar). y_sur: borde sur del
+    contrapiso si hay muro de contención en el borde del pasaje del bloque técnico (su cara sur; revisión A8)."""
     # contrapiso: área de la huella de los pisos 1-3 menos la de dados y losas que caen dentro
-    x0, y0, x1, y1 = -13.0, -19.6, 8.6, 22.4
+    x0, y0, x1, y1 = -13.0, (y_sur if y_sur is not None else -19.6), 8.6, 22.4
     ocupado = 0.0
     for gid, g, sg in elementos:
-        if g['tipo'] == 'dado':
-            cx, cy = sg['xc'], sg['yc']
-            q = (cx - sg['Lc'] / 2, cy - sg['B'] / 2, cx + sg['Lc'] / 2, cy + sg['B'] / 2)
-        else:
-            q = g['caja']
+        q = huella_grupo(g, sg)
         ix = max(0.0, min(q[2], x1) - max(q[0], x0))
         iy = max(0.0, min(q[3], y1) - max(q[1], y0))
         ocupado += ix * iy
-    foso_asc = {'id': 'FOSO-ASC', 'nombre': 'Foso de los ascensores camilleros (2 cabinas)', 'x': [XN, 6.1], 'y': [1.6, 7.2],
-                'profundidad_m': 1.50, 'muro_e_m': 0.25, 'losa_e_m': 0.35,
-                'nota': 'profundidad de 1,50 m para ascensores camilleros de 1,0 m/s sin cuarto de máquinas (estimación; la fija '
-                        'el fabricante); se apoya en el suelo (carga ≈ 40 kPa) y se revisa la subpresión con el freático a 1,0 m'}
-    foso_mc = {'id': 'FOSO-MC', 'nombre': 'Foso del montacargas general', 'x': [XN, 6.1], 'y': [0.8, 1.6], 'profundidad_m': 0.60,
-               'muro_e_m': 0.20, 'losa_e_m': 0.25, 'nota': 'montacargas de 0,80 × 0,80 m (estimación)'}
     fosos = []
-    for f in (foso_asc, foso_mc):
+    for f in [dict(f_) for f_ in FOSOS]:
         Lx, Ly = f['x'][1] - f['x'][0], f['y'][1] - f['y'][0]
         prof = f['profundidad_m'] + f['losa_e_m']
         vol = Lx * Ly * f['losa_e_m'] + 2 * (Lx + Ly) * f['profundidad_m'] * f['muro_e_m']
@@ -4385,14 +5122,27 @@ def fosos_contrapiso_cisternas(torre, elementos):
         ocupado += Lx * Ly
     area_cp = (x1 - x0) * (y1 - y0) - ocupado
     contrapiso = {'area_m2': area_cp, 'espesor_m': 0.15, 'concreto': '21 MPa', 'volumen_m3': area_cp * 0.15,
+                  'planta_m': [r(x0, 3), r(y0, 3), r(x1, 3), r(y1, 3)],
                   'malla': 'malla electrosoldada de Ø 7 mm c/0,125 m en las dos direcciones (308 mm²/m = 0,21 % ≥ 0,18 %, C.7.12)',
                   'malla_kg_m2': 2 * 0.302 / 0.125, 'juntas': 'juntas de contracción cada 4,5 m como máximo (≈ 30 veces el '
                   'espesor; estimación con ACI 302/360) y juntas de aislamiento alrededor de columnas, dados y núcleos',
-                  'base': 'sobre 0,20 m de base granular y relleno seleccionado compactado (presupuesto.json 2.10 y 2.11)'}
+                  'base': 'sobre 0,20 m de base granular y relleno seleccionado compactado (presupuesto.json 2.10 y 2.11)'
+                          + ('; en el borde sur se apoya en el muro de contención del borde del pasaje del bloque técnico, '
+                             f'hasta su cara sur (y = {es(y0)})' if y_sur is not None else '')}
     # cisternas: caja enterrada con 3 compartimientos bajo el patio de servicio (x −19,5 a −10,5; y −28,0 a −24,8)
     cis = {'id': 'CIS-1', 'nombre': 'Cisternas enterradas (agua potable 40 m³, contra incendio 30 m³, lluvias 20 m³)',
            'x': [-19.5, -10.5], 'y': [-28.0, -24.8], 'muro_e_m': 0.30, 'losa_fondo_e_m': 0.35, 'losa_tapa_e_m': 0.25,
            'nota': 'estructura independiente de la torre (bajo el patio del bloque técnico); compartimientos de 40, 30 y 20 m³ útiles'}
+    # la tapa queda a la cota del patio de servicio (programa.json → implantacion.huella, bloque técnico: −1,50 m; revisión
+    # A7: antes quedaba a ±0,00, 1,50 m por encima del patio, y se metía en los muros y las puertas del bloque técnico).
+    # El freático supuesto (1,0 m bajo el piso 1) queda por encima del patio: se toma el agua en la tapa, del lado seguro.
+    z_t = z_patio if z_patio is not None else 0.0
+    nf_c = max(SUELO['nivel_freatico_m'] + z_t, 0.0)          # profundidad del freático bajo la tapa
+
+    def sv_c(z):
+        """Esfuerzo vertical efectivo (kPa) a la profundidad z bajo la tapa."""
+        return SUELO['gamma_kN_m3'] * min(z, nf_c) + SUELO['gamma_sum_kN_m3'] * max(z - nf_c, 0.0)
+
     t_m = cis['muro_e_m']
     Lx_i = (cis['x'][1] - cis['x'][0]) - 2 * t_m - 2 * 0.25            # dos tabiques internos de 0,25 m
     Ly_i = (cis['y'][1] - cis['y'][0]) - 2 * t_m
@@ -4404,12 +5154,12 @@ def fosos_contrapiso_cisternas(torre, elementos):
     vol = (Lx * Ly * (cis['losa_fondo_e_m'] + cis['losa_tapa_e_m']) + 2 * (Lx + Ly - 2 * t_m) * h_int * t_m
            + 2 * (Ly - 2 * t_m) * h_int * 0.25)
     W = vol * GAMMA_C
-    sub = 10.0 * max(prof - SUELO['nivel_freatico_m'], 0.0) * Lx * Ly
+    sub = 10.0 * max(prof - nf_c, 0.0) * Lx * Ly
     relleno_tapa = 0.0
     # muro exterior: losa vertical simplemente apoyada en la tapa y el fondo (luz h_int), con tierra en reposo (K0 = 0,5),
     # agua y 10 kPa de sobrecarga del patio (cisterna vacía); servicio con fs ≤ 140 MPa para controlar la fisuración
-    p_top = 0.5 * (sigma_v_ef(cis['losa_tapa_e_m']) + 10.0)
-    p_bot = 0.5 * (sigma_v_ef(prof) + 10.0) + 10.0 * max(prof - SUELO['nivel_freatico_m'], 0.0)
+    p_top = 0.5 * (sv_c(cis['losa_tapa_e_m']) + 10.0) + 10.0 * max(cis['losa_tapa_e_m'] - nf_c, 0.0)
+    p_bot = 0.5 * (sv_c(prof) + 10.0) + 10.0 * max(prof - nf_c, 0.0)
     Ls = h_int
     Ms = p_top * Ls ** 2 / 8 + (p_bot - p_top) * Ls ** 2 / (9 * math.sqrt(3))
     dm = t_m - 0.05 - 0.008
@@ -4418,6 +5168,7 @@ def fosos_contrapiso_cisternas(torre, elementos):
     As = max(As_serv, As_res, 0.0030 * t_m)
     num, s_, _ = barras_por_metro(As, nums=(5, 6), s_max=0.20)
     cis.update({'h_agua_m': h_agua, 'h_interior_m': h_int, 'profundidad_m': prof, 'volumen_m3': vol, 'peso_kN': W,
+                'z_tapa': z_t, 'z_fondo': z_t - prof, 'freatico_bajo_tapa_m': nf_c,
                 'subpresion_kN': sub, 'FS_flotacion': (W + relleno_tapa) / sub if sub > 0 else None,
                 'Ms_muro_kNm_m': Ms, 'As_muro_mm2_m': As * 1e6,
                 'refuerzo': {'muros': f'N.º {num} c/{es(s_, 3)} en las dos caras (vertical) y N.º 4 c/0,20 horizontal',
@@ -4426,6 +5177,8 @@ def fosos_contrapiso_cisternas(torre, elementos):
                              'num': num, 's': s_},
                 'impermeabilizacion': 'concreto con impermeabilizante integral y cristalizante en las caras interiores '
                                       '(presupuesto.json 2.09 y 2.14); cintas de PVC en las juntas de construcción'})
+    if z_patio is not None:
+        cis['nota'] += f'; la tapa queda a la cota del patio de servicio ({es(z_t)} m) y el fondo a {es(z_t - prof)} m'
     if cis['FS_flotacion'] is not None and cis['FS_flotacion'] < 1.2:
         # se alarga la losa de fondo en un talón que carga relleno hasta tener FS ≥ 1,2 (estimación)
         falta = 1.2 * sub - W
@@ -4556,10 +5309,29 @@ def n_estribos(largo, s, primero=0.05):
     return max(int(math.floor((largo - primero) / s + 1e-9)) + 1, 0) if largo > primero else 0
 
 
-def despiece_columnas(torre, D):
-    """Despiece de cada columna física por piso: barras por cara, traslapo en la mitad central de la altura libre
-    (clase B = 1,3·ld, C.12.15; en la mitad central como pide C.21.6.3.2), estribos cerrados con ganchos de 135° y
-    ganchos suplementarios en lo (zona confinada en los dos extremos) y en el nudo, separación mayor en el centro."""
+def juegos_entre_zonas(luz, zona, s_zona, s_centro, primero=0.05):
+    """Estribos de un tramo de luz libre «luz» con zona confinada «zona» en cada extremo (el primero a 0,05 m de la cara,
+    a s_zona) y el centro repartido entre el último estribo de una zona y el primero de la otra, n = ⌈hueco/s⌉ − 1
+    (así el paso no pasa de s_centro ni en la transición); si las dos zonas se tocan, toda la luz a s_zona. Es el conteo
+    del modelo BIM (revisión A7: antes el centro se contaba entre las caras de las zonas y daba un estribo menos)."""
+    n_z = n_estribos(zona, s_zona, primero)
+    if n_z == 0:
+        return 0
+    ult = primero + (n_z - 1) * s_zona
+    pri = luz - primero - (n_z - 1) * s_zona
+    if pri - ult < s_zona - 1e-9:
+        return int(math.ceil((luz - 2 * primero) / s_zona - 1e-9)) + 1
+    return 2 * n_z + max(int(math.ceil((pri - ult) / s_centro - 1e-9)) - 1, 0)
+
+
+def despiece_columnas(torre, D, C=None):
+    """Despiece de cada columna física por piso: barras por cara, traslapo clase B (1,3·ld, C.12.15) en la mitad
+    central de la altura libre del piso de ARRIBA (C.21.6.3.2: las barras de cada piso atraviesan el nudo de arriba con
+    su propio armado; revisión A7, acordado con el modelo BIM: antes el traslapo iba a media altura del mismo piso y el
+    nudo de arriba quedaba con el armado del piso siguiente), estribos cerrados con ganchos de 135° y ganchos
+    suplementarios en lo (zona confinada en los dos extremos) y en el nudo, separación mayor en el centro. El largo de
+    las barras va del traslapo de abajo (o de la parrilla inferior del dado, con gancho) al de arriba (o al gancho bajo la
+    cubierta), como las dibuja el modelo BIM."""
     out = []
     por_fis = {}
     for P in torre['porticos']:
@@ -4572,6 +5344,23 @@ def despiece_columnas(torre, D):
             if e['tipo'] == 'viga':
                 for nid in (e['i'], e['j']):
                     vigas_en.setdefault((P['id'], nid), []).append(e)
+    # altura libre de cada piso de cada columna y centro de su traslapo (en el piso de arriba)
+    ln_de = {f: (Z[e['nivel']] - Z[e['nivel'] - 1]) - max(ee['arms'][1] for _, ee in por_fis[f]) for f, ((_P, e), *_r) in por_fis.items()}
+
+    def traslapo_de(f, k):
+        f_arr = f'{f.rsplit("-", 1)[0]}-{k + 1}'
+        if f_arr not in D['columnas']:
+            return None
+        return Z[k] + ln_de[f_arr] / 2, traslapo(D['columnas'][f]['num'])
+    # cara superior de la parrilla inferior del dado o la losa de pilotes de cada columna (arranque de sus barras)
+    z_parr = {}
+    if C is not None:
+        for gid, g, sg in C['elementos']:
+            zf, _zt = cotas_grupo(g, sg['diseno']['h'])
+            ref_d = sg['diseno']['refuerzo']
+            zp = zf + REC['dado_fondo'] + BARRAS[ref_d['inferior_x']['num']][0] / 1000 + BARRAS[ref_d['inferior_y']['num']][0] / 1000
+            for aid in g['apoyos']:
+                z_parr[aid] = zp
     for f in sorted(por_fis, key=lambda q: (q.split('-')[1], int(q.split('-')[2]))):
         c = D['columnas'][f]
         P, e = por_fis[f][0]
@@ -4586,23 +5375,36 @@ def despiece_columnas(torre, D):
         num, n = c['num'], c['n']
         db = BARRAS[num][0] / 1000
         lap = traslapo(num)
-        arriba = f'{f.rsplit("-", 1)[0]}-{k + 1}' in D['columnas']
-        largo_long = h_ent + (lap if arriba else (h_viga - REC['columna'] + gancho_90(num) - h_viga))
+        tl = traslapo_de(f, k)
+        arriba = tl is not None
+        # de dónde a dónde van las barras de este piso
         if k == 1:
-            largo_long += ldh_sismico(num) + gancho_90(num)       # anclaje en el dado con gancho
+            z_ini = z_parr.get(f.rsplit('-', 1)[0], -COTA_FONDO_DADO + 0.12) + db / 2
+            extra = gancho_90(num)                                   # gancho de 90° sobre la parrilla del dado
+        else:
+            zc_ab, lap_ab = traslapo_de(f'{f.rsplit("-", 1)[0]}-{k - 1}', k - 1)
+            z_ini = zc_ab - lap_ab / 2
+            extra = 0.0
+        if arriba:
+            z_fin = tl[0] + tl[1] / 2
+        else:
+            z_fin = Z[k] - REC['columna'] - 0.0095 - 2 * BARRAS[8][0] / 1000 - db / 2
+            extra += gancho_90(num)                                  # gancho de 90° bajo la cubierta
+        largo_long = z_fin - z_ini + extra
         kg_long = kg_barra(num, largo_long, n)
         rec = REC['columna']
-        ne_lo = 2 * n_estribos(tr['lo'], tr['s_lo'])
-        ne_c = max(int(math.ceil((ln - 2 * tr['lo']) / tr['s_centro'] - 1e-9)) - 1, 0)
+        n_sets_luz = juegos_entre_zonas(ln, tr['lo'], tr['s_lo'], tr['s_centro'])
         ne_nudo = max(int(math.ceil(h_viga / tr['s_lo'] - 1e-9)), 1)
-        n_sets = ne_lo + ne_c + ne_nudo
+        n_sets = n_sets_luz + ne_nudo
         l_est = largo_estribo(b, b, rec, tr['num'])
         l_gs = (b - 2 * rec) + 2 * gancho_sismico(tr['num'])
         kg_tr = kg_barra(tr['num'], l_est, n_sets) + kg_barra(tr['num'], l_gs, n_sets * 2 * tr['ganchos_suplementarios'])
         vol = b * b * h_ent
         out.append({'id': f, 'eje': e['eje'], 'nivel': k, 'x': x, 'y': y, 'z0': Z[k - 1], 'z1': Z[k], 'b': b, 'h': b,
                     'longitudinal': {'n': n, 'num': num, 'por_cara': n // 4 + 1, 'recubrimiento_m': rec,
-                                     'traslapo': {'z_centro': r(Z[k - 1] + ln / 2, 3), 'largo_m': r(lap, 3)} if arriba else None,
+                                     'traslapo': {'z_centro': r(tl[0], 3), 'largo_m': r(tl[1], 3),
+                                                  'piso': k + 1} if arriba else None,
+                                     'largo_barra_m': r(largo_long, 3),
                                      'anclaje': ('en el dado: ldh + gancho de 90°' if k == 1 else
                                                  ('gancho de 90° en el nudo de cubierta' if not arriba else 'continúa al piso de arriba'))},
                     'estribos': {'num': tr['num'], 'ramas_por_direccion': tr['ramas'],
@@ -4670,8 +5472,9 @@ def despiece_vigas(torre, D):
                 kg += kg_barra(dv['extra_inf'][1], dv['vano_inf'][1] - dv['vano_inf'][0], dv['extra_inf'][0])
             eh, ec = dv['est_hz'], dv['est_c']
             zona = 2 * h
-            n_hz = 2 * n_estribos(zona, eh['s'])
-            n_c = max(int(math.ceil((Lf - 2 * zona) / ec['s'] - 1e-9)) - 1, 0)
+            n_tot = juegos_entre_zonas(Lf, zona, eh['s'], ec['s'])
+            n_hz = min(2 * n_estribos(zona, eh['s']), n_tot)
+            n_c = n_tot - n_hz
             l_e = largo_estribo(b, h, REC['viga'], eh['num'])
             kg_e = kg_barra(eh['num'], l_e, n_hz * eh['ramas'] / 2) + kg_barra(ec['num'], l_e, n_c * ec['ramas'] / 2)
             kg += kg_e
@@ -4708,6 +5511,52 @@ def despiece_vigas(torre, D):
                                  'juegos': n_e},
                     'texto': f'{n} N.º {num} arriba y abajo; E N.º {est["num"]} de {est["ramas"]} ramas c/{es(est["s"], 3)} en toda la luz',
                     'kg': kg, 'kg_estribos': 0.0, 'm3': b * max(h - torre['q']['t_eq'], 0.0) * ln})
+    # vigas secundarias de borde y dinteles (fuera del modelo sísmico; revisión A7): barras rectas con ldh y gancho de 90°
+    # dentro de sus apoyos; el volumen es el de la viga menos el espesor equivalente de la losa donde un paño la cubre
+    t_eq = torre['q']['t_eq']
+    for sid, sv in D.get('secundarias', {}).items():
+        b, h, ln, k = sv['b'], sv['h'], sv['ln'], sv['nivel']
+        ns, nums = sv['sup']
+        ni_, numi = sv['inf']
+        est = sv['est']
+        n_e = n_estribos(ln, est['s'])
+        kg_e = kg_barra(est['num'], largo_estribo(b, h, REC['viga'], est['num']), n_e * est['ramas'] / 2)
+        kg = (kg_barra(nums, ln + 2 * (ldh_sismico(nums) + gancho_90(nums)), ns)
+              + kg_barra(numi, ln + 2 * (ldh_sismico(numi) + gancho_90(numi)), ni_) + kg_e)
+        q = (sv['x'] - b / 2, sv['y0'], sv['x'] + b / 2, sv['y1'])
+        cubierto = sum(max(0.0, min(q[2], p['x1']) - max(q[0], p['x0'])) * max(0.0, min(q[3], p['y1']) - max(q[1], p['y0']))
+                       for p in torre['paneles'] if p['nivel'] == k)
+        ap_txt = {('MX', '4'): 'el muro MX-4', ('MX', '3'): 'el machón del muro MX-3', ('MX', '6'): 'el machón del muro MX-6',
+                  ('X', '3'): 'la viga del eje 3', ('X', '5'): 'la viga del eje 5', ('X', '6'): 'la viga del eje 6',
+                  ('MY', 'N3'): 'el muro MY-N3', ('MY', 'N6'): 'el muro MY-N6'}
+
+        def txt_ap(ap):
+            if ap[0] == 'XS':
+                return f'la viga del eje {ap[1]}'
+            if sv.get('de_abertura') and ap[0] == 'MX':
+                return f'el muro MX-{ap[1]}'
+            return ap_txt[ap]
+        es_dintel = sv['base'].startswith('VD-')
+        donde = f'x = {es(sv["x"])}' if sv.get('de_abertura') else f'N (x = {es(sv["x"])})'
+        out.append({'id': sid, 'portico': f'B-{sv["base"]}', 'eje': f'{donde} entre {txt_ap(sv["apoyos"][0])} y '
+                    f'{txt_ap(sv["apoyos"][1])}: {sv["que"]}', 'nivel': k,
+                    'xyz_i': [sv['x'], sv['y0'], Z[k]], 'xyz_j': [sv['x'], sv['y1'], Z[k]],
+                    'b': b, 'h': h, 'L': r(ln, 3), 'ln': r(ln, 3),
+                    'tipo': ('dintel de la puerta de la escalera (fuera del modelo)' if es_dintel else
+                             ('viga secundaria de borde de la abertura de la escalera abierta (fuera del modelo)'
+                              if sv.get('de_abertura') else 'viga secundaria de borde del núcleo (fuera del modelo)')),
+                    'superior': {'corridas': {'n': ns, 'num': nums}, 'bastones': None,
+                                 'anclaje': {'i': 'ldh con gancho de 90° en el apoyo', 'j': 'ldh con gancho de 90° en el apoyo'}},
+                    'inferior': {'corridas': {'n': ni_, 'num': numi}, 'vano': None},
+                    'estribos': {'num': est['num'], 'ramas': est['ramas'], 's_2h_m': est['s'], 'zona_m': r(ln, 3),
+                                 's_centro_m': est['s'], 'num_centro': est['num'], 'primer_estribo_m': 0.05, 'gancho': '135°',
+                                 'juegos': n_e},
+                    'cargas': {'wD_kN_m': r(sv['wD_kN_m'], 2), 'wL_kN_m': r(sv['wL_kN_m'], 2), 'wLr_kN_m': r(sv['wLr_kN_m'], 2),
+                               'wu_kN_m': r(sv['wu_kN_m'], 2), 'Mu_kNm': r(sv['Mu_kNm'], 1), 'phiMn_kNm': r(sv['phiMn_kNm'], 1),
+                               'Vu_kN': r(sv['Vu_kN'], 1), 'phiVn_kN': r(sv['phiVn_kN'], 1)},
+                    'texto': f'sup. {ns} N.º {nums}; inf. {ni_} N.º {numi}; E N.º {est["num"]} de {est["ramas"]} ramas '
+                             f'c/{es(est["s"], 3)} en toda la luz',
+                    'kg': kg, 'kg_estribos': kg_e, 'm3': max(b * h * ln - t_eq * cubierto, 0.0)})
     return out
 
 
@@ -4841,11 +5690,12 @@ def despiece_cimentacion(C):
     cisternas, con su geometría para el modelo BIM (cotas desde el piso terminado del piso 1, z = 0)."""
     L = C['L_pilote']
     pilotes, dados, vigas, = [], [], []
+    cotas = {}
     for gid, g, sg in C['elementos']:
         dd = sg['diseno']
         h = dd['h']
-        z_fondo = -(COTA_FONDO_DADO + max(h - 1.10, 0.0)) if g['tipo'] == 'dado' else -(COTA_FONDO_DADO + max(h - 1.10, 0.0))
-        z_tope = z_fondo + h
+        z_fondo, z_tope = cotas_grupo(g, h)
+        cotas[gid] = (z_fondo, z_tope)
         pil = sg['pilote']
         pos_abs = [[r(sg['xc'] + x, 3), r(sg['yc'] + y, 3)] for x, y in sg['pos']]
         pilotes.append({'grupo': gid, 'n': sg['n'], 'D_m': D_PILOTE, 'L_m': L, 'z_cabeza': r(z_fondo + 0.10, 3),
@@ -4876,9 +5726,15 @@ def despiece_cimentacion(C):
         per = 2 * (Lx + Ly)
         kg += kg_barra(4, per + 0.6, int((h - 2 * rec) / 0.30) + 1)
         vol = Lx * Ly * h
+        q_ = huella_grupo(g, sg)
+        extra = {}
+        if g['tipo'] == 'dado' and (abs(sg['off'][0]) > 1e-9 or abs(sg['off'][1]) > 1e-9):
+            extra['excentricidad_grupo_m'] = [r(sg['off'][0], 3), r(sg['off'][1], 3)]
+        if g.get('fosos_encima'):
+            extra['fosos_encima'] = g['fosos_encima']
         dados.append({'id': gid, 'tipo': 'dado' if g['tipo'] == 'dado' else 'losa_de_pilotes', 'apoyos': g['apoyos'],
-                      'x0': r(sg['xc'] - Lx / 2, 3), 'y0': r(sg['yc'] - Ly / 2, 3), 'x1': r(sg['xc'] + Lx / 2, 3),
-                      'y1': r(sg['yc'] + Ly / 2, 3), 'z_fondo': r(z_fondo, 3), 'z_tope': r(z_tope, 3), 'h': h,
+                      'x0': r(q_[0], 3), 'y0': r(q_[1], 3), 'x1': r(q_[2], 3),
+                      'y1': r(q_[3], 3), 'z_fondo': r(z_fondo, 3), 'z_tope': r(z_tope, 3), 'h': h, **extra,
                       'pilotes': sg['n'], 'refuerzo': {k_: {kk: (r(v, 3) if isinstance(v, float) else v) for kk, v in d_.items()}
                                                          for k_, d_ in ref.items()},
                       'texto': (f'{"dado" if g["tipo"] == "dado" else "losa de pilotes"} de {es(Lx)} × {es(Ly)} × {es(h)} m con '
@@ -4887,16 +5743,53 @@ def despiece_cimentacion(C):
                       'kg': kg, 'm3': vol})
     for v in C['vigas_amarre']:
         n, num = v['superior']
+        # cara superior a la del más bajo de sus dos apoyos: así entra entera en los dos (revisión A7: con la cara
+        # superior fija a −0,15 m quedaba 5 cm por encima de los dados de 0,80 m y su anclaje no tenía concreto)
+        zt_v = min(cotas[v['desde']][1], cotas[v['hasta']][1])
+        if zt_v - v['h'] < max(cotas[v['desde']][0], cotas[v['hasta']][0]) - 1e-9:
+            raise SystemExit(f'la viga de amarre {v["id"]} no cabe en la altura de sus apoyos')
         e = v['estribos']
         largo = v['ln'] + 2 * (ldh_sismico(num) + gancho_90(num))
         kg = kg_barra(num, largo, 2 * n) + kg_barra(3, largo_estribo(v['b'], v['h'], REC['viga_amarre'], 3), n_estribos(v['ln'], e['s']))
         kg += kg_barra(4, v['ln'] + 0.6, 2) if v['h'] >= 0.6 else 0.0           # piel en las de 0,60 m o más (C.10.6.7)
         vigas.append({'id': v['id'], 'linea': v['linea'], 'direccion': v['direccion'], 'coordenada': v['coordenada'],
                       'desde': v['desde'], 'hasta': v['hasta'], 'tramo': [r(q, 3) for q in v['tramo']], 'b': v['b'], 'h': v['h'],
-                      'z_tope': -0.15, 'superior': {'n': n, 'num': num}, 'inferior': {'n': n, 'num': num},
+                      'z_tope': r(zt_v, 3), 'superior': {'n': n, 'num': num}, 'inferior': {'n': n, 'num': num},
+                      **({'excentricidad_m': r(v['excentricidad_m'], 3), 'lleva': v['muro_contencion']['id']}
+                         if v.get('muro_contencion') else {}),
                       'estribos': {'num': 3, 'ramas': 2, 's_m': e['s']},
                       'texto': f'{n} N.º {num} arriba y abajo; E N.º 3 c/{es(e["s"], 3)}', 'kg': kg,
                       'm3': v['b'] * v['h'] * v['ln']})
+    # muros de contención del borde del pasaje del bloque técnico (revisión A8): sobre la viga de amarre del eje, de cara a
+    # cara de los arranques; verticales en las dos caras con gancho de 90° en la viga y 0,10 m dentro del contrapiso,
+    # horizontales en las dos caras ancladas en los arranques
+    muros_c = []
+    for mc in C.get('muros_contencion') or []:
+        L_ = mc['tramo'][1] - mc['tramo'][0]
+        nv, sv_ = mc['vertical']['num'], mc['vertical']['s_m']
+        nh, sh_ = mc['horizontal']['num'], mc['horizontal']['s_m']
+        n_v = int(L_ / sv_ + 1e-9) + 1
+        n_h = int(mc['h_m'] / sh_ + 1e-9) + 1
+        kg = (kg_barra(nv, mc['h_m'] + ldh_sismico(nv) + gancho_90(nv) + 0.10, 2 * n_v)
+              + kg_barra(nh, L_ + 2 * ldh_sismico(nh), 2 * n_h))
+        muros_c.append({'id': mc['id'], 'linea': mc['linea'], 'sobre': mc['sobre'], 'apoyo': mc['apoyo'],
+                        'tramo': [r(q, 3) for q in mc['tramo']], 'y': [r(q, 3) for q in mc['y']],
+                        'z_fondo': r(mc['z_fondo'], 3), 'z_tope': r(mc['z_tope'], 3), 't_m': mc['t_m'], 'h_m': r(mc['h_m'], 3),
+                        'empuje': {'K0': 0.5, 'p_base_kPa': r(mc['p_base_kPa'], 2), 'sobrecarga_kPa': 10.0,
+                                   'Mu_kNm_m': r(mc['Mu_kNm_m'], 2), 'phiMn_kNm_m': r(mc['phiMn_kNm_m'], 2),
+                                   'Vu_kN_m': r(mc['Vu_kN_m'], 2), 'phiVn_kN_m': r(mc['phiVn_kN_m'], 2)},
+                        'refuerzo': {'vertical': {'num': nv, 's_m': sv_, 'caras': 2, 'n_por_cara': n_v,
+                                                  'anclaje': ('gancho de 90° en el dado' if mc['sobre'].startswith('D-') else
+                                                              'gancho de 90° en la viga de amarre; 0,10 m dentro del contrapiso')},
+                                     'horizontal': {'num': nh, 's_m': sh_, 'caras': 2, 'n_por_cara': n_h,
+                                                    'anclaje': 'ldh en los arranques de las columnas'},
+                                     'recubrimiento_m': REC['foso']},
+                        'texto': (f'muro de contención de {es(mc["t_m"])} m: N.º {nv} c/{es(sv_, 3)} vertical y N.º {nh} '
+                                  f'c/{es(sh_, 3)} horizontal en las dos caras'),
+                        'nota': ('retiene el relleno del exterior (±0,00) frente al pasaje del bloque técnico, más allá de la '
+                                 'columna extrema, en voladizo desde el dado' if mc['sobre'].startswith('D-') else
+                                 'retiene el relleno del piso 1 frente al pasaje del bloque técnico; el contrapiso se apoya en él'),
+                        'kg': kg, 'm3': mc['t_m'] * mc['h_m'] * L_})
     o = C['otros']
     cp = o['contrapiso']
     fosos = []
@@ -4905,7 +5798,7 @@ def despiece_cimentacion(C):
         num, s_ = f['refuerzo']['num'], f['refuerzo']['s']
         area_caras = 2 * (Lx + Ly) * f['profundidad_m'] * 2 + Lx * Ly * 2
         kg = area_caras * 2 / s_ * BARRAS[num][2]
-        fosos.append({**{k_: f[k_] for k_ in ('id', 'nombre', 'x', 'y', 'profundidad_m', 'muro_e_m', 'losa_e_m', 'nota')},
+        fosos.append({**{k_: f[k_] for k_ in ('id', 'nombre', 'x', 'y', 'profundidad_m', 'muro_e_m', 'losa_e_m', 'apoyo', 'nota')},
                       'z_fondo': r(-(f['profundidad_m'] + f['losa_e_m']), 3), 'refuerzo': f['refuerzo'],
                       'kg': kg, 'm3': f['volumen_m3']})
     cisternas = []
@@ -4918,11 +5811,12 @@ def despiece_cimentacion(C):
         cisternas.append({**{k_: c_[k_] for k_ in ('id', 'nombre', 'x', 'y', 'muro_e_m', 'losa_fondo_e_m', 'losa_tapa_e_m', 'nota',
                                                     'impermeabilizacion')},
                           'h_interior_m': r(c_['h_interior_m'], 3), 'h_agua_m': r(c_['h_agua_m'], 3),
-                          'z_fondo': r(-c_['profundidad_m'], 3), 'talon_m': c_.get('talon_m', 0.0),
+                          'z_fondo': r(c_['z_fondo'], 3), 'z_tapa': r(c_['z_tapa'], 3), 'talon_m': c_.get('talon_m', 0.0),
+                          'freatico_bajo_tapa_m': r(c_['freatico_bajo_tapa_m'], 3),
                           'refuerzo': c_['refuerzo'], 'kg': kg, 'm3': c_['volumen_m3']})
     contrapiso = {**cp, 'kg': cp['area_m2'] * cp['malla_kg_m2'], 'm3': cp['volumen_m3']}
-    return {'pilotes': pilotes, 'dados': dados, 'vigas_amarre': vigas, 'contrapiso': contrapiso, 'fosos': fosos,
-            'cisternas': cisternas}
+    return {'pilotes': pilotes, 'dados': dados, 'vigas_amarre': vigas, 'muros_contencion': muros_c, 'contrapiso': contrapiso,
+            'fosos': fosos, 'cisternas': cisternas}
 
 
 def cantidades(ref, cim, presupuesto):
@@ -4942,13 +5836,15 @@ def cantidades(ref, cim, presupuesto):
         'vigas_de_amarre': (suma(cim['vigas_amarre'], 'm3'), suma(cim['vigas_amarre'], 'kg')),
         'fosos_y_cisternas': (suma(cim['fosos'], 'm3') + suma(cim['cisternas'], 'm3'),
                               suma(cim['fosos'], 'kg') + suma(cim['cisternas'], 'kg')),
+        'muros_de_contencion': (suma(cim['muros_contencion'], 'm3'), suma(cim['muros_contencion'], 'kg')),
         'contrapiso': (cim['contrapiso']['m3'], cim['contrapiso']['kg']),
     }
     por_tipo = {k: {'m3': r(v[0], 1), 'kg': r(v[1], 0), 'kg_m3': r(v[1] / v[0], 1) if v[0] else None} for k, v in tipos.items()}
     ml_pilotes = suma(cim['pilotes'], 'ml')
     n_pilotes = sum(p['n'] for p in cim['pilotes'])
     acero_sup = sum(tipos[k][1] for k in ('columnas', 'muros', 'vigas', 'losas', 'escaleras'))
-    acero_cim = sum(tipos[k][1] for k in ('pilotes', 'dados_y_losas_de_pilotes', 'vigas_de_amarre', 'fosos_y_cisternas'))
+    acero_cim = sum(tipos[k][1] for k in ('pilotes', 'dados_y_losas_de_pilotes', 'vigas_de_amarre', 'fosos_y_cisternas',
+                                          'muros_de_contencion'))
     filas = [
         ('3.01', 'Concreto en columnas', 'm3', tipos['columnas'][0]),
         ('3.02', 'Concreto en muros estructurales', 'm3', tipos['muros'][0]),
@@ -4959,7 +5855,9 @@ def cantidades(ref, cim, presupuesto):
         ('2.05', 'Descabezado de pilotes', 'un', n_pilotes),
         ('2.07', 'Concreto en dados (y losas de pilotes de los núcleos)', 'm3', tipos['dados_y_losas_de_pilotes'][0]),
         ('2.08', 'Concreto en vigas de cimentación', 'm3', tipos['vigas_de_amarre'][0]),
-        ('2.09', 'Concreto en cisternas y fosos', 'm3', tipos['fosos_y_cisternas'][0]),
+        ('2.09', 'Concreto en cisternas y fosos' + (' (y en los muros de contención del borde del pasaje del bloque técnico)'
+                                                    if tipos['muros_de_contencion'][0] else ''), 'm3',
+         tipos['fosos_y_cisternas'][0] + tipos['muros_de_contencion'][0]),
         ('2.12', 'Losa de contrapiso de la torre (el ítem incluye además 143,6 m² del bloque técnico y residuos)', 'm2',
          cim['contrapiso']['area_m2'] + 125.6 + 18.0),
         ('2.13', 'Acero de refuerzo de cimentación', 'kg', acero_cim),
@@ -5038,9 +5936,11 @@ def centro_de_rigidez(mod, niveles):
 
 def armar(insumos_sha1):
     """Corre todo el prediseño y devuelve (estructura JSON, chequeos, resumen para imprimir)."""
+    global PLANTA_B
     pres = leer(INSUMOS['presupuesto'])
     prog = leer(INSUMOS['programa'])
     validar_geometria(prog)
+    PLANTA_B = leer_planta_b()
     # ---- historial de ajustes ----------------------------------------------------------------------------------------
     historial = []
     for clave, texto, dim in AJUSTES[:-1]:
@@ -5057,10 +5957,22 @@ def armar(insumos_sha1):
     D = disenar(torre, A, S['R'], S['Omega0'])
     secciones, asignacion = secciones_y_rotulas(torre, D)
     am = amortiguamiento_y_anclas(A['modelo'])
-    C = cimentacion(torre, D, A, S, pres)
+    # cimentación con las cotas especiales del pasaje del bloque técnico (revisión A8): se resuelve, se ven qué dados
+    # quedan bajo el pasaje y cuáles tienen que alargarse para recibir sus vigas de amarre, y se resuelve otra vez con esos
+    # ajustes (pesos, brazos y espesores) hasta que no cambien
+    aj_cim = {}
+    for _vuelta in range(6):
+        C = cimentacion(torre, D, A, S, pres, prog, ajustes=aj_cim)
+        nuevo = ajustes_cimentacion(C, aj_cim)
+        if nuevo == aj_cim:
+            break
+        aj_cim = nuevo
+    else:
+        raise SystemExit('la cimentación no converge con los ajustes del pasaje del bloque técnico')
+    C['ajustes'] = aj_cim
     losas = disenar_losa(torre)
     escaleras = disenar_escaleras(torre)
-    ref = {'columnas': despiece_columnas(torre, D), 'vigas': despiece_vigas(torre, D), 'muros': despiece_muros(torre, D),
+    ref = {'columnas': despiece_columnas(torre, D, C), 'vigas': despiece_vigas(torre, D), 'muros': despiece_muros(torre, D),
            'losas': despiece_losas(losas), 'escaleras': despiece_escaleras(escaleras)}
     cim = despiece_cimentacion(C)
     cant = cantidades(ref, cim, pres)
@@ -5166,6 +6078,11 @@ def chequeos_prediseno(torre, A, S, D, C, losas, secciones, est):
             len(flex_v) + len(flex_c) + len(flex_m), 0, not (flex_v or flex_c or flex_m),
             'NSR-10 C.10, C.21 y C.21.9.2.3 a (por confirmar); Eurocódigo 8, 5.5.2.4.1',
             ', '.join(flex_v + flex_c + flex_m) or None)
+    sec_mal = [sid for sid, sv in D.get('secundarias', {}).items() if not sv['ok']]
+    chequeo(ch, 'SEC', 'Vigas secundarias de borde (foso de ascensores, ducto y abertura de la escalera principal) y dinteles '
+            'de las puertas de las escaleras, fuera del modelo sísmico: φMn ≥ Mu, φVn ≥ Vu y ln/h ≤ 16 sin cálculo de deflexiones',
+            len(sec_mal), 0, not sec_mal, 'NSR-10 Tabla C.9.5(a), C.10.5.1 y C.11.4 (por confirmar)',
+            ', '.join(sec_mal) or f'{len(D.get("secundarias", {}))} vigas')
     rho_c = [area(c['n'], c['num']) / (c['b'] ** 2) for c in D['columnas'].values()]
     rho_v = [max(dv['rho_sup'], dv['rho_inf']) for dv in D['vigas'].values()]
     chequeo(ch, 'CUANT', 'Cuantías: columnas entre 1 % y 4 % (C.21.6.3.1); vigas ≤ 2,5 % (C.21.5.2.1)',
@@ -5210,6 +6127,32 @@ def chequeos_prediseno(torre, A, S, D, C, losas, secciones, est):
     pil_mal = [gid for gid, g, sg in C['elementos'] if sg['pilote']['phiPn_max_kN'] < sg['pilote']['Pu_kN']]
     chequeo(ch, 'CIM-PIL', 'Pilotes: φPn,max ≥ Pu, P-M en la cabeza con el cortante de diseño y tracción de capacidad',
             len(pil_mal), 0, not pil_mal, 'NSR-10 C.10.3.6 y título H (por confirmar)', ', '.join(pil_mal) or None)
+    # pasaje del bloque técnico (revisión A8): dados bajo su piso, vigas de amarre enteras en sus dos apoyos y muro de
+    # contención del borde
+    cim_ = est['cimentacion']
+    pas = PLANTA_B['pasaje']
+    bt_mal = []
+    if pas['z_piso'] is not None:
+        tope = pas['z_piso'] - LOSA_PASAJE
+        for gid, g, sg in C['elementos']:
+            if g['tipo'] == 'dado' and any(min(huella_grupo(g, sg)[2], p_['rect'][2]) - max(huella_grupo(g, sg)[0], p_['rect'][0]) > 0.01
+                                           and min(huella_grupo(g, sg)[3], p_['rect'][3]) - max(huella_grupo(g, sg)[1], p_['rect'][1]) > 0.01
+                                           for p_ in pas['recintos']) and cotas_grupo(g, sg['diseno']['h'])[1] > tope + 1e-6:
+                bt_mal.append(f'{gid} (cara superior sobre el piso del pasaje)')
+    dados_ = {d['id']: d for d in cim_['dados']}
+    for v in cim_['vigas_amarre']:
+        for lado in ('desde', 'hasta'):
+            d = dados_[v[lado]]
+            if v['z_tope'] > d['z_tope'] + 1e-6 or v['z_tope'] - v['h'] < d['z_fondo'] - 1e-6:
+                bt_mal.append(f'{v["id"]} fuera de {d["id"]}')
+    bt_mal += [m_['id'] for m_ in cim_['muros_contencion']
+               if m_['empuje']['phiMn_kNm_m'] < m_['empuje']['Mu_kNm_m'] or m_['empuje']['phiVn_kN_m'] < m_['empuje']['Vu_kN_m']]
+    chequeo(ch, 'CIM-BT', 'Cimentación frente al bloque técnico de la planta de B: dados bajo el pasaje con la cara superior bajo '
+            'su piso menos su losa, vigas de amarre enteras dentro de sus dos apoyos y muro de contención del borde '
+            '(φMn ≥ Mu y φVn ≥ Vu con empuje en reposo, agua y sobrecarga)', len(bt_mal), 0, not bt_mal,
+            'NSR-10 C.15.13, C.14.3 y título H (estructuras de contención); numerales por confirmar', ', '.join(bt_mal) or
+            (f'{len(cim_["muros_contencion"])} muros de contención; ' if cim_['muros_contencion'] else '') +
+            f'{len(cim_["vigas_amarre"])} vigas de amarre')
     los_mal = [p['id'] for p in losas if p['ln'] > 0 and p['ln'] / H_LOSA > (16 if p['caso'] == 'simple' else
                                                                         (18.5 if p['caso'] == 'extrema' else 21)) + 1e-9]
     chequeo(ch, 'LOSA', 'Losa nervada: altura mínima sin cálculo de deflexiones (ln/16, ln/18,5 y ln/21)', len(los_mal), 0,
@@ -5267,6 +6210,173 @@ VERIFICACION_NSR10 = {
     'tablas': 'R0 = 6,0 y Ω0 = 2,5 de la fila de muros de concreto DMO con pórticos de concreto DMO de la Tabla A.3-4 '
               '(sistema dual); valores por confirmar con el texto',
 }
+
+
+def _libre_bajo_vigas(torre, esc):
+    """Altura libre sobre la nariz de los peldaños de cada tramo de una escalera abierta bajo las vigas de los pórticos
+    que lo cruzan en el nivel al que llega (como la mide el modelo BIM: el peldaño más alto con el centro de su huella
+    bajo la viga)."""
+    k = esc['nivel_losa']
+    out = []
+    for i, tr in enumerate(esc['tramos'], 1):
+        x0, y0, x1, y1 = tr['rect']
+        en_y = tr['sube_hacia_deg'] in (90, 270)
+        L = (y1 - y0) if en_y else (x1 - x0)
+        nr = tr['contrahuellas']
+        g_, rr = L / (nr - 1), (tr['z1'] - tr['z0']) / nr
+        for P in torre['porticos']:
+            if P['id'].startswith('M') or P['dir'] != ('x' if en_y else 'y'):
+                continue
+            c = P['c']
+            for e in P['elementos']:
+                if e['tipo'] != 'viga' or e['nivel'] != k:
+                    continue
+                a_, b_ = P['idx'][e['i']]['s'], P['idx'][e['j']]['s']
+                lo, hi = (x0, x1) if en_y else (y0, y1)
+                if min(b_, hi) - max(a_, lo) <= 0.05 or not (min(y0, y1) if en_y else min(x0, x1)) < c + e['b'] / 2 or \
+                        not c - e['b'] / 2 < ((y1 if en_y else x1)):
+                    continue
+                v0, v1 = (y0, y1) if en_y else (x0, x1)
+                u0, u1 = sorted(((c - e['b'] / 2 - v0), (c + e['b'] / 2 - v0)) if tr['sube_hacia_deg'] in (90, 0)
+                                else ((v1 - c - e['b'] / 2), (v1 - c + e['b'] / 2)))
+                pasos = [q for q in range(nr - 1) if u0 <= (q + 0.5) * g_ <= u1]       # huellas con el centro bajo la viga
+                if not pasos:
+                    continue
+                z_p = Z[k - 1] + tr['z0'] + (max(pasos) + 1) * rr
+                out.append({'tramo': i, 'viga': e['id'], 'eje': P['id'][2:], 'altura_libre_m': r(Z[k] - e['h'] - z_p, 2)})
+    return out
+
+
+def coordinacion_bim(torre, D, cim, C):
+    """Decisiones del prediseño que resuelven las interferencias de la coordinación con el modelo BIM (revisiones A7 y A8)
+    y lo que queda de otros equipos, con sus cifras (calculadas con la planta de B de esta corrida)."""
+    abs_ = torre['abertura_ducto']
+    secs = sorted({s['base']: s for s in torre['secundarias']}.values(), key=lambda s: s['base'])
+    va = cim['vigas_amarre']
+    PB = PLANTA_B
+    # ---- ducto vertical: lo que la losa cierra y lo que la abertura deja fuera del ducto -----------------------------
+    pend_d = []
+    for k in range(1, NIV + 1):
+        d_k = _celdas(PB['ductos'][k]['poligono'])
+        O = tuple(abs_[k])
+        if k < NIV:
+            d_up = _celdas(PB['ductos'][k + 1]['poligono'])
+            ang = _area_celdas(d_k) - _area_celdas(_cortar(d_k, d_up))
+            if ang > 0.05:
+                pend_d.append(f'piso {k}: {es(ang)} m² del ducto {PB["ductos"][k]["id"]} no siguen en el ducto del piso {k + 1} '
+                              f'y quedan cerrados por la losa del nivel {es(Z[k])} (B: si son ducto vertical, el de arriba tiene '
+                              'que crecer; si no, no son ducto)')
+        for kk, quien in ((k, 'abajo'), (k + 1, 'arriba')):
+            if kk > NIV:
+                continue
+            fuera = _area_celdas([O]) - _area_celdas(_cortar(_celdas(PB['ductos'][kk]['poligono']), O))
+            if fuera <= 0.05:
+                continue
+            noms = sorted({f'{v["nombre"].lower()} ({v["id"]})' for v in PB['vecinos_ducto'].get(kk, [])
+                           if _area_celdas(_cortar(_celdas(v['poligono']), O)) > 0.05})
+            pend_d.append(f'nivel {es(Z[k])}: la abertura (rectángulo de x {es(O[0])} a {es(O[2])} y de y {es(O[1])} a {es(O[3])}) '
+                          f'deja {es(fuera)} m² fuera del ducto del piso {kk}, {quien}' + (f', sobre {", ".join(noms)}' if noms else '')
+                          + f' (B: llevar el ducto del piso {kk} a todo el rectángulo o cerrar esa parte con su propia losa)')
+    # ---- escaleras abiertas ------------------------------------------------------------------------------------------
+    esc_out = []
+    for esc in PB['escaleras_abiertas']:
+        abs_e = [a for a in torre['aberturas_escalera'] if a['escalera'] == esc['id']]
+        vb = sorted({v_ for a in abs_e for v_ in a['vigas_de_borde']})
+        libres = [x for x in _libre_bajo_vigas(torre, esc) if x['altura_libre_m'] < 2.05]
+        caja_ = _caja([(a['q'][0], a['q'][1]) for a in abs_e] + [(a['q'][2], a['q'][3]) for a in abs_e]) if abs_e else None
+        esc_out.append({
+            'id': esc['id'], 'nombre': esc['nombre'], 'nivel_z': Z[esc['nivel_losa']],
+            'abertura_losa_m': ({'x': [r(caja_[0], 3), r(caja_[2], 3)], 'y': [r(caja_[1], 3), r(caja_[3], 3)]} if caja_ else None),
+            'por_paño': [{'paño': a['paño'], 'x': [r(a['q'][0], 3), r(a['q'][2], 3)], 'y': [r(a['q'][1], 3), r(a['q'][3], 3)],
+                          'vigas_de_borde': a['vigas_de_borde']} for a in abs_e],
+            'vigas_de_borde': [{'id': s_['base'], 'x_m': r(s_['x'], 3), 'y_m': [r(s_['y0'], 3), r(s_['y1'], 3)],
+                                'seccion_m': [s_['b'], s_['h']]} for s_ in secs if s_['base'] in vb],
+            'bordes': ('los bordes de la abertura que cortan los nervios llevan viga de borde descolgada (de cara a cara de las '
+                       'vigas de los pórticos X, solo en ese nivel) y los otros dos, nervio de borde; las vigas de los pórticos '
+                       'que cruzan la abertura y la columna que queda en el ojo de la escalera siguen'),
+            'origen': 'planta de B: tramos y descanso intermedio de la escalera, llevados al borde del recinto si quedan a 0,10 m o menos',
+            'pendiente': ([f'el tramo {x["tramo"]} pasa bajo la viga {x["viga"]} del pórtico del eje {x["eje"]} a '
+                           f'{es(x["altura_libre_m"])} m de la nariz de los peldaños (mínimo 2,05 m, NSR-10 K.3.8, por '
+                           'confirmar): la viga es del pórtico DMO y no se sube ni se quita; B tiene que reubicar o girar la '
+                           'escalera para que sus tramos no pasen bajo vigas de pórtico (la abertura sigue a la planta en la '
+                           'próxima corrida)' for x in libres] or None)})
+    # ---- pasaje del bloque técnico -----------------------------------------------------------------------------------
+    aj = C.get('ajustes') or {}
+    pas = PB['pasaje']
+    bajados = [d for d in cim['dados'] if (aj.get(d['id']) or {}).get('motivo') == 'pasaje']
+    alargados = [d for d in cim['dados'] if (aj.get(d['id']) or {}).get('motivo') == 'viga_de_amarre']
+    mcs = cim.get('muros_contencion') or []
+    pasaje = None
+    if pas['recintos']:
+        pasaje = {
+            'pasaje': [rc['id'] for rc in pas['recintos']], 'nombre': pas['recintos'][0]['nombre'],
+            'piso_m': pas['z_piso'], 'losa_del_pasaje_m': LOSA_PASAJE,
+            'dados_bajo_el_pasaje': [{'id': d['id'], 'z_tope': d['z_tope'], 'z_fondo': d['z_fondo'], 'h_m': d['h'],
+                                      'pilotes': d['pilotes']} for d in bajados],
+            'dados_alargados_hacia_abajo': [{'id': d['id'], 'z_tope': d['z_tope'], 'z_fondo': d['z_fondo'], 'h_m': d['h'],
+                                             'para': aj[d['id']].get('vigas', [])} for d in alargados],
+            'vigas_de_amarre_bajadas': [{'id': v['id'], 'z_tope': v['z_tope']} for v in va
+                                        if v['desde'] in {d['id'] for d in bajados} or v['hasta'] in {d['id'] for d in bajados}],
+            'muros_de_contencion': [m_['id'] for m_ in mcs],
+            'cara_sur_del_muro_y_m': (mcs[0]['y'][0] if mcs else None),
+            'contrapiso_borde_sur_y_m': cim['contrapiso']['planta_m'][1],
+            'criterio': (f'los dados cuya huella queda bajo el pasaje bajan su cara superior a {es(pas["z_piso"] - LOSA_PASAJE)} m '
+                         f'(piso del pasaje a {es(pas["z_piso"])} m menos {es(LOSA_PASAJE)} m de su losa) y las vigas de amarre '
+                         'que llegan a ellos van a esa cota; el dado vecino que recibe una de esas vigas se alarga hacia abajo hasta '
+                         'el fondo de la viga, con su cara superior donde estaba; entre los arranques del borde, un muro de '
+                         'contención sobre la viga de amarre (corrida bajo él) retiene el relleno del piso 1, y el contrapiso se '
+                         'apoya en él'),
+            'rampa': ('del lado seguro: la planta de B dice que el pasaje sube en rampa hacia el oriente, pero lo dibuja a la cota '
+                      'del nivel en todo su largo; con la rampa, los dados del oriente podrían quedar más altos (se afina en el '
+                      'diseño definitivo)'),
+            'pendiente_F': ('el modelo BIM tiene que dibujar los muros de contención (cimentacion.muros_contencion) y cortar el '
+                            'contrapiso con cimentacion.contrapiso.planta_m (hoy lo dibuja hasta y = −19,60 fijo)'),
+            'pendiente_B': ((f'la planta de B deja el borde del pasaje sin muro de x = {es(pas["borde_sin_muro_x"][0])} a '
+                             f'{es(pas["borde_sin_muro_x"][1])}: ese borde es el muro de contención (lo que vaya encima del ±0,00, '
+                             'como una baranda fuera de la fachada, es de B)') if pas.get('borde_sin_muro_x') and
+                            pas['cara_muro_contencion_y'] <= pas['borde_y'] + 1e-9 else
+                            'el muro de borde del pasaje de la planta de B queda contra la cara sur del muro de contención (es '
+                            'su revestimiento del lado del pasaje) o se quita entre las columnas'),
+        }
+    return {
+        'tipo_dato': 'cálculo propio (prediseño)',
+        'planta_b': {'archivo': PLANTAS,
+                     'ducto_borde_sur_comun_y_m': {f'{es(Z[k])}': PB['y_sur_ducto'][k] for k in sorted(PB['y_sur_ducto'])},
+                     'escaleras_abiertas': [{'id': e['id'], 'nivel_losa': e['nivel_losa']} for e in PB['escaleras_abiertas']],
+                     'pasaje': [{'id': rc['id'], 'rect': rc['rect']} for rc in pas['recintos']],
+                     'piso_del_pasaje_m': pas['z_piso'], 'cara_del_muro_de_borde_y_m': pas['cara_muro_contencion_y'],
+                     'nota': ('el prediseño toma estos valores de la planta de B en cada corrida (revisión A8; de la escalera '
+                              'abierta, la abertura que resulta en cada paño, en escaleras_abiertas); si B los cambia, --verificar '
+                              'falla hasta que se regenere la estructura')},
+        'ducto_vertical': {
+            'aberturas_losa_m': [{'nivel_z': Z[k], 'x': [r(abs_[k][0], 3), r(abs_[k][2], 3)], 'y': [r(abs_[k][1], 3), r(abs_[k][3], 3)]}
+                                 for k in sorted(abs_)],
+            'bordes': 'viga VB-N-56 al occidente (cara en x = 3,10), viga del eje 6 al norte, viga del eje D al oriente y '
+                      'nervio de borde del paño al sur (paralelo a los nervios)',
+            'origen': ('planta de B: la abertura de cada losa es la parte del ducto que sigue del piso de abajo al de arriba (en la '
+                       'cubierta, la del piso 4), al oriente de la viga VB-N-56'),
+            'pendiente': pend_d or None},
+        'escaleras_abiertas': esc_out,
+        'pasaje_bloque_tecnico': pasaje,
+        'vigas_secundarias': [{'id': s['base'], 'que': s['que'], 'x_m': r(s['x'], 3), 'y_m': [r(s['y0'], 3), r(s['y1'], 3)],
+                               'seccion_m': [s['b'], s['h']], 'niveles': sorted({s2['nivel'] for s2 in torre['secundarias']
+                                                                                if s2['base'] == s['base']})} for s in secs],
+        'esquinas_de_muros': 'la esquina donde se cruzan las almas de MX-4 con MY-N3 y de MX-7 con MY-N6 es del muro en x, y '
+                             'el machón de MX-3 junto a la puerta de la escalera sur va en su planta (antes no eran de ningún muro)',
+        'vigas_banda': 'del ancho del muro en x donde se anclan (0,35 m) en lugar del de la columna (0,80 m)',
+        'dados_de_3_pilotes': 'centrados en su grupo de pilotes (no en la columna), con el pilote solo hacia el interior de '
+                              'la planta: así los pilotes quedan a 0,45 m o más de las caras',
+        'vigas_de_amarre': (f'cara superior a la del más bajo de sus dos apoyos (de {es(min(v["z_tope"] for v in va))} a '
+                            f'{es(max(v["z_tope"] for v in va))} m), entera dentro de los dos (el más alto se alarga hacia abajo '
+                            'si hace falta), y tramo entre las caras finales de los dados y de las losas de pilotes'),
+        'fosos': 'el de los ascensores se apoya en el suelo y los dados y las losas de pilotes quedan por fuera de su huella; '
+                 'el del montacargas se apoya en la losa de pilotes de la escalera sur, cuya cara superior baja a su fondo',
+        'cisternas': 'tapa a la cota del patio de servicio del bloque técnico, con el agua en la tapa para la subpresión',
+        'traslapos_de_columnas': 'en la mitad central de la altura libre del piso de arriba; cada piso cruza su nudo de '
+                                 'arriba con su propio armado',
+        'estribos': 'el centro de cada columna y viga se cuenta desde el último estribo de la zona confinada, como en el '
+                    'modelo BIM (los que el modelo corre en los nudos para no cruzar las barras de las vigas no se cuentan)',
+    }
 
 
 def salida_json(torre, A, S, D, secciones, asignacion, resortes, am, C, losas, escaleras, ref, cim, cant, historial,
@@ -5446,6 +6556,7 @@ def salida_json(torre, A, S, D, secciones, asignacion, resortes, am, C, losas, e
         'cuantias': {'columnas': {f: r(area(c['n'], c['num']) / c['b'] ** 2, 5) for f, c in sorted(D['columnas'].items())},
                      'vigas': {eid: [r(dv['rho_sup'], 5), r(dv['rho_inf'], 5)] for eid, dv in sorted(D['vigas'].items())}},
         'verificacion_nsr10': VERIFICACION_NSR10,
+        'coordinacion_bim': coordinacion_bim(torre, D, cim, C),
     }
     # ---- cimentación (17.2) -----------------------------------------------------------------------------------------
     cap = C['capacidad']
@@ -5526,15 +6637,18 @@ def salida_json(torre, A, S, D, secciones, asignacion, resortes, am, C, losas, e
             'designacion': 'NTC 2289, fy = 420 MPa; N.º n = n/8 de pulgada (NSR-10 Tabla C.3.5.3-2)',
             'recubrimientos_m': REC, 'ganchos': 'estribos y ganchos suplementarios con 135° y 6·db ≥ 75 mm (C.7.1.3 y '
                                                 'C.21.1); barras ancladas en nudos exteriores con gancho de 90° y ldh de '
-                                                'C.21.7.5.1', 'traslapos': 'clase B = 1,3·ld (C.12.15); las barras de las zonas de borde de los muros no se '
-                                                'traslapan: acopladores mecánicos tipo 2 (C.21.1.6, por confirmar)',
+                                                'C.21.7.5.1', 'traslapos': 'clase B = 1,3·ld (C.12.15); las barras de cada piso de las columnas se traslapan '
+                                                'en la mitad central de la altura libre del piso de arriba (C.21.6.3.2); las barras '
+                                                'de las zonas de borde de los muros no se traslapan: acopladores mecánicos tipo 2 '
+                                                '(C.21.1.6, por confirmar)',
             'cotas': 'z desde el piso terminado del piso 1; columnas y muros por piso de z0 a z1; vigas por su eje en z del nivel'},
             **ref},
         'cantidades': cant,
         'fuentes': [
             'data/proyectos/torre_hospital/ESPECIFICACION_INTEGRACION.md (7.2, 13.1 y 17)',
             'data/proyectos/torre_hospital/presupuesto.json (capítulos 2, 3 y 4) y programa.json (geometría, núcleos, cubierta)',
-            'data/edificios/torre_hospital_plantas.json (vanos de las puertas de las escaleras; equipo B)',
+            'data/edificios/torre_hospital_plantas.json (equipo B): vanos de las puertas de las escaleras y, leídos en cada '
+            'corrida, el ducto vertical, la escalera principal abierta y el pasaje del bloque técnico',
             'data/sismo/amenaza.json → nsr10 (Aa, Av, Ad, Fa, Fv, I)',
             'NSR-10 (Decreto 926 de 2010 y sus modificaciones), títulos A, B, C y H; numerales «por confirmar» en cada texto',
             'Wilson, E. L. y Dovey, H. H. (1972), Three-dimensional analysis of building systems — TABS',
@@ -5555,6 +6669,10 @@ def salida_json(torre, A, S, D, secciones, asignacion, resortes, am, C, losas, e
             'Los paños de núcleo que no son estructurales se construyen en mampostería separada de la estructura; las '
             'puertas de las escaleras van apiladas en x = 3,1 (y = 15,3 al norte y y = −6,3 al sur) en todos los pisos.',
             'Las vigas banda entre la columna C y los muros no entran en el modelo (casi no acoplan); se diseñan por capacidad.',
+            'La escalera principal abierta pesa del orden de la losa que reemplaza su abertura (la carga y la masa del paño se '
+            'reparten enteras a las vigas que la rodean); sus tramos y descansos no están en el despiece del prediseño.',
+            'Pasaje del bloque técnico a la cota del nivel en todo su largo (del lado seguro frente a la rampa de la planta de '
+            'B); muros de contención con empuje en reposo, agua del lado de la torre y 10 kPa de sobrecarga.',
             'Cargas muertas de acabados, instalaciones, fachada y divisorios desde las cantidades del presupuesto (capítulo 4) '
             'con pesos unitarios del título B (por confirmar).',
         ],

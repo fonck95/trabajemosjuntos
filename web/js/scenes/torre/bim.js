@@ -1019,11 +1019,12 @@ export async function montar(ctx) {
     const C = IDX.cantidades?.frente_a_A || [], f = (t) => C.find((q) => q.tipo === t);
     const pil = L.filter((x) => x.e.clase === 'IfcPile'), largo = pil.reduce((s, x) => s + (x.e.geometria.z1 - x.e.geometria.z0), 0);
     const dad = L.filter((x) => x.e.tipo_predefinido === 'PILE_CAP').length, vc = L.filter((x) => x.e.tipo_predefinido === 'FOOTING_BEAM').length;
+    const mc = L.filter((x) => x.e.objeto_tipo === 'RETAININGWALL');
     const on = S.vista === 'cimentacion';
-    p.innerHTML = `<p class="note">Pilotes preexcavados de concreto bajo dados y losas de pilotes, vigas de amarre en las dos direcciones, contrapiso, fosos de ascensores y cisternas. <span class="bim-tipo">Prediseño: estimación hasta el estudio geotécnico.</span></p>
+    p.innerHTML = `<p class="note">Pilotes preexcavados de concreto bajo dados y losas de pilotes, vigas de amarre en las dos direcciones, ${mc.length ? 'muros de contención en el borde del pasaje del bloque técnico, ' : ''}contrapiso, fosos de ascensores y cisternas. <span class="bim-tipo">Prediseño: estimación hasta el estudio geotécnico.</span></p>
       <p class="bim-fila"><button type="button" class="btn${on ? ' ghost' : ''}" data-b="cim">${on ? 'Volver al modelo' : 'Ver la cimentación'}</button></p>
       <h4>Terreno</h4><div class="seg wrap-seg" role="group" aria-label="Terreno">${[['cortado', 'Cortado'], ['semi', 'Semitransparente'], ['opaco', 'Opaco']].map(([m, t]) => `<button type="button" data-t="${m}" aria-pressed="${S.terreno === m}">${t}</button>`).join('')}</div>
-      <dl class="kv bim-kv">${kvFila('Pilotes', `${n0(pil.length)} · ${n0(largo)} m en total`)}${kvFila('Dados y losas de pilotes', `${n0(dad)} dados`)}${kvFila('Vigas de amarre', n0(vc))}
+      <dl class="kv bim-kv">${kvFila('Pilotes', `${n0(pil.length)} · ${n0(largo)} m en total`)}${kvFila('Dados y losas de pilotes', `${n0(dad)} dados`)}${kvFila('Vigas de amarre', n0(vc))}${mc.length ? kvFila('Muros de contención', `${n0(mc.length)} · ${n(mc.reduce((s, x) => s + (x.e.qto?.Qto_WallBaseQuantities?.Length || 0), 0), 1)} m de largo`) : ''}
       ${f('pilotes') ? kvFila('Concreto de pilotes', `${n(f('pilotes').bim_m3, 1)} m³`) : ''}${f('dados_y_losas_de_pilotes') ? kvFila('Concreto de dados y losas', `${n(f('dados_y_losas_de_pilotes').bim_m3, 1)} m³`) : ''}
       ${kvFila('Concreto de la cimentación', `${n(IDX.cantidades?.por_disciplina?.CIM?.concreto_m3, 1)} m³`)}${kvFila('Acero de la cimentación', `${n0(IDX.cantidades?.por_disciplina?.CIM?.acero_kg)} kg`)}</dl>
       <p class="note">Cálculo propio con la geometría del modelo. En el simulador la base queda empotrada en la cara superior de los dados (sin interacción suelo-estructura).</p>
@@ -1099,13 +1100,16 @@ export async function montar(ctx) {
       <ol class="bim-fases">${F4.map((f) => `<li${av?.enObra.includes(f.id) ? ' class="on"' : ''}><button type="button" class="bim-link" data-f="${f.id}">${esc(f.nombre)}</button><br><small class="note">${fechaTxt(f.inicio)} a ${fechaTxt(f.fin)} · ${esc(NOM_DISC[f.disciplina] || f.disciplina)}</small></li>`).join('')}</ol>`;
     p.onclick = (ev) => { const b = ev.target.closest('button[data-f]'); if (!b) return; pararPlay(); const f = fases.get(b.dataset.f); fecha4D(Date.parse(`${f.fin}T12:00:00`)); };
   }
-  let filtroInt = { sev: 'dura', cat: '', resp: '' }, maxInt = 40;
+  // la lista abre en las duras si hay; si no hay ninguna pendiente, en todas (así nunca abre vacía)
+  let filtroInt = null, maxInt = 40;
   async function pintarPestInterferencias() {
     const p = tab('interferencias');
     if (!p) return;
     const res = IDX.interferencias?.resumen;
+    const nDuras = Object.values(res?.por_categoria || {}).reduce((s, c) => s + c.dura, 0);
+    filtroInt ??= { sev: nDuras ? 'dura' : '', cat: '', resp: '' };
     p.innerHTML = `<p class="note">Revisión automática del modelo: elementos y barras que chocan, recubrimientos, separación libre entre barras, apoyos de la cimentación y coherencia entre arquitectura y estructura. <span class="bim-tipo">Cálculo propio sobre el modelo de prefactibilidad.</span></p>
-      ${res ? `<dl class="kv bim-kv">${kvFila('Hallazgos', n0(res.total))}${kvFila('Duros (hay que corregirlos antes del diseño definitivo)', n0(Object.values(res.por_categoria).reduce((s, c) => s + c.dura, 0)))}${kvFila('Medios (se resuelven en el detallado)', n0(Object.values(res.por_categoria).reduce((s, c) => s + c.media, 0)))}${kvFila('Leves (dentro de las tolerancias)', n0(Object.values(res.por_categoria).reduce((s, c) => s + c.leve, 0)))}</dl>` : ''}
+      ${res ? `<dl class="kv bim-kv">${kvFila('Hallazgos', n0(res.total))}${kvFila('Duros (hay que corregirlos antes del diseño definitivo)', n0(nDuras))}${kvFila('Medios (se resuelven en el detallado)', n0(Object.values(res.por_categoria).reduce((s, c) => s + c.media, 0)))}${kvFila('Leves (dentro de las tolerancias)', n0(Object.values(res.por_categoria).reduce((s, c) => s + c.leve, 0)))}</dl>` : ''}
       <div class="bim-filtros"><label>Severidad <select data-fi="sev"><option value="">todas</option>${['dura', 'media', 'leve'].map((s) => `<option${filtroInt.sev === s ? ' selected' : ''}>${s}</option>`).join('')}</select></label>
       <label>Categoría <select data-fi="cat"><option value="">todas</option>${Object.keys(res?.por_categoria || {}).map((c) => `<option${filtroInt.cat === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
       <label>A cargo de <select data-fi="resp"><option value="">todos</option>${Object.keys(res?.por_responsable || {}).map((c) => `<option value="${escH(c)}"${filtroInt.resp === c ? ' selected' : ''}>${esc(responsable(c))}</option>`).join('')}</select></label></div>
@@ -1124,7 +1128,7 @@ export async function montar(ctx) {
     const p = tab('interferencias'), I = await interferencias(), ul = $(p, '[data-b="lint"]');
     if (!I) { ul.innerHTML = '<li class="note">No se pudo leer la lista de interferencias.</li>'; return; }
     const F = I.interferencias.filter((x) => (!filtroInt.sev || x.severidad === filtroInt.sev) && (!filtroInt.cat || x.categoria === filtroInt.cat) && (!filtroInt.resp || x.responsable === filtroInt.resp));
-    ul.innerHTML = F.slice(0, maxInt).map((x) => `<li><div class="bim-int-c"><span class="pill bim-sev-${x.severidad}">${esc(x.severidad)}</span> <b>${esc(x.categoria)}</b> <small class="note">${esc(x.id)} · ${esc(NIVEL_CORTO[x.nivel] || x.nivel || '')} · a cargo de: ${esc(responsable(x.responsable))}</small></div><p>${esc(x.descripcion)}</p>${x.propuesta ? `<p class="note"><b>Propuesta:</b> ${esc(x.propuesta)}</p>` : ''}${x.posicion ? `<button type="button" class="bim-ir" data-int="${escH(x.id)}">Ir a</button>` : ''}</li>`).join('') || '<li class="note">Ningún hallazgo con esos filtros.</li>';
+    ul.innerHTML = F.slice(0, maxInt).map((x) => `<li><div class="bim-int-c"><span class="pill bim-sev-${x.severidad}">${esc(x.severidad)}</span> <b>${esc(x.categoria)}</b> <small class="note">${esc(x.id)} · ${esc(NIVEL_CORTO[x.nivel] || x.nivel || '')} · a cargo de: ${esc(responsable(x.responsable))}</small></div><p>${esc(x.descripcion)}</p>${x.propuesta ? `<p class="note"><b>Propuesta:</b> ${esc(x.propuesta)}</p>` : ''}${x.posicion ? `<button type="button" class="bim-ir" data-int="${escH(x.id)}">Ir a</button>` : ''}</li>`).join('') || `<li class="note">${filtroInt.sev === 'dura' && !filtroInt.cat && !filtroInt.resp ? 'No hay interferencias duras pendientes.' : 'Ningún hallazgo con esos filtros.'}</li>`;
     $(p, '[data-b="mas"]').innerHTML = F.length > maxInt ? `<button type="button" class="btn ghost" data-b="mas">Ver ${n0(Math.min(60, F.length - maxInt))} más (de ${n0(F.length)})</button>` : `<small class="note">${n0(F.length)} hallazgos</small>`;
   }
   function pintarPestIFC() {

@@ -25,6 +25,9 @@ Lo que el despiece de A no fija y aquí se decide para dibujar (criterios del mo
   de las barras de borde y verticales por dentro de las horizontales; las horizontales empiezan a medio paso para no
   coincidir con los estribos de borde.
 - Cimentación: parrillas centradas en el dado; pilotes con canasta de 8 barras arriba y 6 abajo traslapadas y espiral.
+- Muros de contención: verticales por fuera con gancho de 90° en la viga de amarre o el dado (las de las dos caras corridas
+  6 cm entre sí) y horizontales por dentro con gancho de 90° en los arranques de las columnas; cada barra se corre lo justo
+  para pasar entre las barras que ya están (viga, dado, arranque y malla del contrapiso).
 
 Todas las cotas en metros, z desde el piso terminado del piso 1."""
 import bisect
@@ -387,6 +390,65 @@ def _evitar_capas(zs, zmin, zmax, capas, de, fallas=None):
     return out
 
 
+def _estribos_nudo(n_base, z_ini, z_fin, zmin, zmax, capas, de, s, base):
+    """Estribos del nudo de una columna. Primero, los n_base que cuenta A (repartidos en la altura de las vigas) corridos
+    fuera de las capas de las barras de las vigas que cruzan el nudo. Si así queda un paso mayor que s (contado desde el
+    último estribo de la zona confinada, entre ellos y hasta z_fin, el primer estribo del piso de arriba), se buscan
+    posiciones libres con el menor número de estribos (de abajo hacia arriba, cada uno lo más lejos del anterior sin pasar
+    de s) y se completan hasta n_base en los huecos mayores: solo se agregan estribos a los de A cuando ni así caben."""
+    sep = 3 * de + 0.002                                   # estribo y sus ganchos suplementarios (+de y +2·de) sin tocarse
+
+    def libre(z):
+        return all(abs(z + k * de - zc) >= (dc + de) / 2 + 0.002 for zc, dc in capas for k in (0, 1, 2))
+    libres = [z for z in (zmin + 0.0025 * q for q in range(int((zmax - zmin) / 0.0025 + 1e-9) + 1)) if libre(z)]
+    # las barras de las vigas ocupan franjas abajo y arriba del nudo: si por ellas no cabe un estribo a menos de s del
+    # último de la zona confinada (abajo) o del primero del piso de arriba, los límites son estribos en la posición libre
+    # más baja y en la más alta (los huecos sobre las franjas no se pueden cerrar y se informan aparte)
+    if libres:
+        z_ini = max(z_ini, min(libres) - s)
+        z_fin = min(z_fin, max(libres) + s)
+
+    def paso(zz):
+        return paso_max([z_ini] + sorted(zz) + [z_fin])
+    fallas = []
+    cand = _evitar_capas(base, zmin, zmax, capas, de, fallas)
+    if not fallas and paso(cand) <= s + 1e-6:
+        return cand
+    puestos, prev = [], z_ini
+    while z_fin - prev > s + 1e-6:
+        ok = [z for z in libres if prev + sep < z <= prev + s + 1e-9]
+        if not ok:
+            break
+        prev = max(ok)
+        puestos.append(prev)
+    if z_fin - prev > s + 1e-6:
+        # sin posiciones libres a paso s: la opción de A o con estribos de más que tenga menos faltas (lo informa la verificación)
+        opciones = []
+        for extra in range(5):
+            n_n = n_base + extra
+            f_ = []
+            c_ = _evitar_capas([zmin - 0.02 + (zmax + 0.06 - zmin + 0.02) * (q + 0.5) / n_n for q in range(n_n)] if extra else base,
+                               zmin, zmax, capas, de, f_)
+            opciones.append((len(f_) > 0, paso(c_) > s + 1e-6, extra, c_))
+            if not f_ and paso(c_) <= s + 1e-6:
+                break
+        return min(opciones, key=lambda q: (q[0], q[1], q[2]))[3]
+    while len(puestos) < n_base:
+        pts = [z_ini] + puestos + [z_fin]
+        puesto = False
+        for q in sorted(range(len(pts) - 1), key=lambda q: (-(pts[q + 1] - pts[q]), q)):
+            a, b_ = pts[q], pts[q + 1]
+            ok = [z for z in libres if a + sep < z < b_ - sep and all(abs(z - w) > sep for w in puestos)]
+            if ok:
+                puestos.append(min(ok, key=lambda z: (abs(z - (a + b_) / 2), z)))
+                puestos.sort()
+                puesto = True
+                break
+        if not puesto:
+            break
+    return sorted(puestos)
+
+
 def _d_punto_seg2(p, a, b):
     ax, ay = a[0], a[1]
     dx, dy = b[0] - ax, b[1] - ay
@@ -473,6 +535,53 @@ def columnas(J, est, bases, capas_nudo=None):
         pisos = sorted(por_linea[linea], key=lambda c: c['nivel'])
         N = len(pisos)
         base = bases[linea]
+        # armado de cada piso (barras en la sección) y cambios de armado en los traslapos. A ubica el traslapo de las barras
+        # del piso k en la mitad central de la altura libre del piso de arriba (C.21.6.3.2; antes, en el mismo piso): el
+        # traslapo se dibuja donde A lo pone y los amarres siguen a las barras que hay en cada altura (bajo el traslapo, las
+        # del piso de abajo; desde el traslapo, las del piso de arriba), sea cual sea el piso que los cuenta
+        armado = []
+        for c in pisos:
+            bb_, cc_, nf_ = _caras_columna(c['longitudinal']['n'], c['longitudinal']['num'], c['b'], rec, c['estribos']['num'])
+            armado.append({'barras': bb_, 'cc': cc_, 'nf': nf_, 'num': c['longitudinal']['num'],
+                           'ng': c['estribos']['ganchos_suplementarios_por_direccion']})
+        trans = {}                                        # i → cambio del armado del piso i al i + 1
+        for i, c in enumerate(pisos[:-1]):
+            lap = c['longitudinal']['traslapo']
+            cs = pisos[i + 1]
+            if not lap or abs(cs['b'] - c['b']) > 1e-9:
+                continue
+            # amarres en el traslapo: los del piso que lo contiene (el de arriba con la convención de A)
+            c_lap = next((q for q in pisos if q['z0'] - 1e-9 <= lap['z_centro'] <= q['z1'] + 1e-9), cs)
+            num_e_l = c_lap['estribos']['num']
+            de_l, db_i = db_de(num_e_l), db_de(c['longitudinal']['num'])
+            ng_c = max(armado[i]['ng'], armado[i + 1]['ng'])
+            up = armado[i + 1]
+            am_up = _amarres_columna(c['x'], c['y'], 0.0, c['b'], rec, up['barras'], up['cc'], up['nf'], ng_c, up['num'], num_e_l)
+            c_lim = c['b'] / 2 - rec - de_l - db_i / 2 + 1e-6
+            sitios = _ubicar_traslapo(armado[i]['barras'], up['barras'], am_up, c['x'], c['y'], db_i, db_de(up['num']), de_l, c_lim)
+            pareja = {}
+            for ((px, py), _n), (tx, ty) in zip(armado[i]['barras'], sitios):
+                if math.hypot(tx - px, ty - py) > 1e-6:
+                    pareja[(px, py)] = (tx, ty)
+            desv_max = max([math.hypot(tx - px, ty - py) for (px, py), (tx, ty) in pareja.items()] or [0.0])
+            zc0_ = lap['z_centro'] - lap['largo_m'] / 2
+            trans[i] = {'pareja': pareja, 'z': zc0_ - (max(6 * desv_max, 0.05) if pareja else 0.0) - 0.01,
+                        'z_fin': lap['z_centro'] + lap['largo_m'] / 2, 'ng': ng_c}
+
+        def armado_en(z, i):
+            """(índice del piso cuyas barras hay a la altura z, ganchos por dirección) para los amarres que cuenta el piso i."""
+            j = 0
+            for i_t in sorted(trans):
+                if trans[i_t]['z'] <= z + 1e-9:
+                    j = i_t + 1
+            j = min(j, N - 1)
+            if j != i:
+                return j, max(armado[i]['ng'], armado[j]['ng'])
+            t = trans.get(i - 1)
+            if t and t['z'] <= z + 1e-9 <= t['z_fin'] + 1e-9:
+                return j, t['ng']
+            return j, armado[i]['ng']
+
         for i, c in enumerate(pisos):
             k = c['nivel']
             host = c['id']
@@ -483,28 +592,11 @@ def columnas(J, est, bases, capas_nudo=None):
             b = c['b']
             x, y = c['x'], c['y']
             z0, z1 = c['z0'], c['z1']
-            barras, cc, nf = _caras_columna(n, num, b, rec, num_e)
+            barras, cc, nf = armado[i]['barras'], armado[i]['cc'], armado[i]['nf']
             R = radio_doblez(num)
             lap = c['longitudinal']['traslapo']
             lap_abajo = pisos[i - 1]['longitudinal']['traslapo'] if i > 0 else None
-            pareja = {}
-            cambio = None                                 # armado de arriba (amarres desde z_cambio)
-            if lap and i + 1 < N and abs(pisos[i + 1]['b'] - b) < 1e-9:
-                cs = pisos[i + 1]
-                num_up, n_up = cs['longitudinal']['num'], cs['longitudinal']['n']
-                arriba_b, cc_up, nf_up = _caras_columna(n_up, num_up, b, rec, cs['estribos']['num'])
-                db_up = db_de(num_up)
-                ng_c = max(e['ganchos_suplementarios_por_direccion'], cs['estribos']['ganchos_suplementarios_por_direccion'])
-                am_up = _amarres_columna(x, y, 0.0, b, rec, arriba_b, cc_up, nf_up, ng_c, num_up, num_e)
-                c_lim = b / 2 - rec - de - db / 2 + 1e-6
-                sitios = _ubicar_traslapo(barras, arriba_b, am_up, x, y, db, db_up, de, c_lim)
-                for ((px, py), _n), (tx, ty) in zip(barras, sitios):
-                    if math.hypot(tx - px, ty - py) > 1e-6:
-                        pareja[(px, py)] = (tx, ty)
-                desv_max = max([math.hypot(tx - px, ty - py) for (px, py), (tx, ty) in pareja.items()] or [0.0])
-                zc0_ = lap['z_centro'] - lap['largo_m'] / 2
-                cambio = {'z': zc0_ - (max(6 * desv_max, 0.05) if pareja else 0.0) - 0.01, 'barras': arriba_b, 'cc': cc_up,
-                          'nf': nf_up, 'ng': ng_c, 'num': num_up}
+            pareja = trans[i]['pareja'] if i in trans else {}
             # ---- longitudinales: un juego por dirección de gancho o doblez
             grupos = {}
             for (px, py), (nx, ny) in barras:
@@ -549,7 +641,8 @@ def columnas(J, est, bases, capas_nudo=None):
             for clave in sorted(grupos):
                 g = grupos[clave]
                 J.agregar(host, 'longitudinal', num, g['forma'], g['copias'], et,
-                          zona='traslapo en la mitad central' if lap else 'hasta la cubierta', ganchos=g['gancho'],
+                          zona=(('traslapo en la mitad central del piso de arriba' if lap['z_centro'] > z1 + 1e-9 else
+                                 'traslapo en la mitad central') if lap else 'hasta la cubierta'), ganchos=g['gancho'],
                           nivel=f'P{k}', grupo=linea)
             # ---- estribos y ganchos suplementarios
             h_ent = z1 - z0
@@ -566,34 +659,33 @@ def columnas(J, est, bases, capas_nudo=None):
                 ln_ = h_ent - h_viga
                 nudo = [z for z in zs if z > z0 + ln_ - 1e-9]
                 resto = [z for z in zs if z <= z0 + ln_ - 1e-9]
-                opciones = []
-                for extra in range(5):
-                    n_n = len(nudo) + extra
-                    fallas = []
-                    cand = _evitar_capas([z0 + ln_ + (i + 0.5) * h_viga / n_n for i in range(n_n)], z0 + ln_ + 0.02, z1 - 0.06,
-                                         capas, db_de(num_e), fallas)
-                    pm = paso_max([max(resto)] + cand)
-                    opciones.append((len(fallas) > 0, pm > e['s_lo_m'] + 1e-6, extra, cand))
-                    if not fallas and pm <= e['s_lo_m'] + 1e-6:
-                        break
-                # la primera opción sin estribos encima de las barras de las vigas y con paso ≤ s_lo; si no hay, la de menos faltas
-                cand = min(opciones, key=lambda q: (q[0], q[1], q[2]))[3]
+                # límite de arriba: el primer estribo del piso siguiente (a 0,05 m de su cara) o, en el último piso, la cara
+                # de la cubierta; el paso hasta él también es de la zona confinada
+                z_fin = z1 + 0.05 if i + 1 < N else z1
+                cand = _estribos_nudo(len(nudo), max(resto), z_fin, z0 + ln_ + 0.02, z1 - 0.06, capas, de, e['s_lo_m'],
+                                      [z0 + ln_ + (q + 0.5) * h_viga / len(nudo) for q in range(len(nudo))])
                 conteo['nudo'] = len(cand)
+                conteo['nudo_extra'] = max(len(cand) - len(nudo), 0)
                 zs = sorted(resto + cand)
+            z_nudo = [z for z in zs if z > z0 + h_ent - h_viga - 1e-9]
+            z_resto = [z for z in zs if z <= z0 + h_ent - h_viga - 1e-9]
             hh = b / 2 - rec - de / 2
             et_e = (f'E N.º {num_e} de {e["ramas_por_direccion"]} ramas c/{_es(e["s_lo_m"], 3)} en lo = {_es(e["lo_m"])} m '
                     f'y c/{_es(e["s_centro_m"], 3)} en el centro')
             zona_e = (f'lo abajo {conteo["lo_abajo"]}, centro {conteo["centro"]}, lo arriba {conteo["lo_arriba"]}, '
                       f'nudo {conteo["nudo"]}')
-            ng = e['ganchos_suplementarios_por_direccion']
-            tramos_z = [(zs, barras, cc, nf, ng, num, None)]
-            if cambio:
-                # desde el traslapo los amarres abrazan el armado de arriba (las barras de abajo quedan a su lado)
-                z_a = [z for z in zs if z < cambio['z']]
-                z_b = [z for z in zs if z >= cambio['z']]
-                tramos_z = ([(z_a, barras, cc, nf, ng, num, None)] if z_a else []) + \
-                    ([(z_b, cambio['barras'], cambio['cc'], cambio['nf'], cambio['ng'], cambio['num'],
-                       'desde el traslapo, con el armado del piso de arriba')] if z_b else [])
+            # amarres por tramos de altura con el mismo armado: bajo el traslapo abrazan las barras del piso de abajo y desde
+            # el traslapo las del piso de arriba (las barras que terminan quedan a su lado)
+            tramos_z = []
+            for z in zs:
+                j, ng_ = armado_en(z, i)
+                if tramos_z and tramos_z[-1][0] == (j, ng_):
+                    tramos_z[-1][1].append(z)
+                else:
+                    tramos_z.append(((j, ng_), [z]))
+            notas_ = {i - 1: 'bajo el traslapo, con el armado del piso de abajo', i + 1: 'desde el traslapo, con el armado del piso de arriba'}
+            tramos_z = [(zz, armado[j]['barras'], armado[j]['cc'], armado[j]['nf'], ng_, armado[j]['num'], notas_.get(j))
+                        for (j, ng_), zz in tramos_z]
             for zz, bb, cc_, nf_, ng_, num_, nota_ in tramos_z:
                 for rol_, forma in _amarres_columna(x, y, zz[0], b, rec, bb, cc_, nf_, ng_, num_, num_e):
                     cop = [[0, 0, z - zz[0]] for z in zz]
@@ -608,7 +700,11 @@ def columnas(J, est, bases, capas_nudo=None):
             resumen[host] = {'juegos_estribos': len(zs), 'juegos_A': e['juegos'], 'paso_max_m': r(paso_max(zs), 4),
                              'paso_max_lo_m': r(max(paso_max([z for z in lo_z if z <= z0 + e['lo_m'] + 1e-9]),
                                                     paso_max([z for z in lo_z if z > z0 + e['lo_m'] + 1e-9])), 4),
-                             's_lo_m': e['s_lo_m'], 's_centro_m': e['s_lo_m'] if e['confinada_toda_la_altura'] else e['s_centro_m']}
+                             's_lo_m': e['s_lo_m'], 's_centro_m': e['s_lo_m'] if e['confinada_toda_la_altura'] else e['s_centro_m'],
+                             'estribos_extra_nudo': conteo.get('nudo_extra', 0),
+                             'paso_max_nudo_m': r(paso_max(z_nudo), 4),
+                             'hueco_bajo_el_nudo_m': r(min(z_nudo) - max(z_resto), 4) if z_nudo and z_resto else None,
+                             'hueco_sobre_el_nudo_m': r((z1 + 0.05 if i + 1 < N else z1) - max(zs), 4)}
             # ---- arranque (entre la cara superior del dado y el piso 1): estribos a s_lo
             if k == 1:
                 za, zb_ = base['z_tope'], z0
@@ -709,7 +805,9 @@ def _corridas_linea(J, vs, capa, rec, info):
         filas = _filas(n, num, b, rec, num_e)
         c_lat = b / 2 - rec - de - db / 2
         c_esq = esquina_en_doblez(c_lat, b / 2 - rec - de / 2, num, num_e)
-        filas = [(kk, dd + (c_lat - c_esq) if fi == 0 else dd) for fi, (kk, dd) in enumerate(filas)]
+        # la primera fila se asienta en el doblez del estribo (un poco más adentro); las demás se corren lo mismo para
+        # conservar entre filas la separación libre de 25 mm (C.7.6.2)
+        filas = [(kk, dd + (c_lat - c_esq)) for (kk, dd) in filas]
         bajar = S8 if eje == 'y' else 0.0       # capas de las vigas en y: por debajo (o encima) de las de x en los nudos
         if capa == 'inferior':
             # los ganchos de abajo van por dentro de los de arriba para que sus colas no coincidan
@@ -790,12 +888,24 @@ def _corridas_linea(J, vs, capa, rec, info):
             if fila_i == 0:
                 for w in run['vigas']:
                     LATERALES[(w['id'], capa)] = list(lats)
+            # sentido del traslapo de contacto de cada barra: hacia adentro (las de un lado hacia +, las del otro hacia −).
+            # Donde cambia el sentido, los dos traslapos vecinos quedan a (separación − 3·db); si eso no da la separación
+            # libre de C.7.6.1 (también entre traslapos, C.7.6.4), el traslapo de la barra más cercana al centro va por
+            # dentro de la capa (encima de las de abajo o debajo de las de arriba): así queda a (separación − 2·db) de sus
+            # vecinos. Solo en la fila más interior, para no invadir el espacio entre filas.
+            sentido = {q: (-1 if lat > 1e-9 else 1) for q, lat in enumerate(lats)}
+            if fila_i == len(filas) - 1:
+                s_req = max(db, 0.025, 4 / 3 * 0.019) + 0.001
+                orden_l = sorted(range(len(lats)), key=lambda q: lats[q])
+                for qa, qb in zip(orden_l, orden_l[1:]):
+                    if sentido[qa] > 0 and sentido[qb] < 0 and (lats[qb] - lats[qa]) - 3 * db < s_req:
+                        sentido[qa if abs(lats[qa]) < abs(lats[qb]) - 1e-9 else qb] = 0
             for t in range(len(cortes) - 1):
                 sa = cortes[t] - (lap / 2 if t > 0 else 0.0)
                 sb = cortes[t + 1] + (lap / 2 if t < len(cortes) - 2 else 0.0)
                 grupos = {}
-                for lat in lats:
-                    sg = -1 if lat > 1e-9 else 1
+                for q_lat, lat in enumerate(lats):
+                    sg = sentido[q_lat]
                     pts = []
                     if t == 0 and i0['ext_i'] and not v0.get('tipo'):
                         pts.append(_p(eje, c, sa, lat, zb + signo_g * (cola_90(num) + R)))
@@ -804,9 +914,11 @@ def _corridas_linea(J, vs, capa, rec, info):
                     pts.append(_p(eje, c, sa, lat, zb))
                     if t < len(cortes) - 2:                 # traslapo al final de este tramo: doblez hacia adentro
                         s0 = cortes[t + 1] - lap / 2
+                        # sg = 0: por dentro de la capa (signo_g apunta hacia adentro de la viga)
+                        lat_t, z_t = (lat + sg * db, zb) if sg else (lat, zb + signo_g * db)
                         pts.append(_p(eje, c, s0 - 6 * db, lat, zb))
-                        pts.append(_p(eje, c, s0, lat + sg * db, zb))
-                        pts.append(_p(eje, c, sb, lat + sg * db, zb))
+                        pts.append(_p(eje, c, s0, lat_t, z_t))
+                        pts.append(_p(eje, c, sb, lat_t, z_t))
                     else:
                         pts.append(_p(eje, c, sb, lat, zb))
                         if (i1['ext_j'] and not v1.get('tipo')) or v1.get('tipo'):
@@ -1519,7 +1631,8 @@ def _colocar_1d(nom, prohibidos, s_min, lo, hi):
             i = bisect.bisect_right(inicios_, q) - 1
             if i >= 0 and iv_[i][0] < q < iv_[i][1]:
                 arriba, abajo = iv_[i][1], iv_[i][0]
-                q = abajo if (abajo >= lb and q - abajo <= arriba - q) else arriba
+                # el borde más cercano del intervalo; el de abajo también si el de arriba se sale del ancho
+                q = abajo if (abajo >= lb and (q - abajo <= arriba - q or arriba > hi_ + 1e-9)) else arriba
             out.append(q)
             prev = q
         return out if out[-1] <= hi_ + 1e-9 else None
@@ -1656,9 +1769,51 @@ def dados(J, est):
     return out
 
 
+def _armado_dado(J, did, eje, c):
+    """Barras del dado (o losa de pilotes) did que estorban a una viga de amarre en la dirección eje (línea c): posiciones
+    laterales (respecto a c) de las barras paralelas a la viga, cuyas patas verticales cruzan la cara por donde entra;
+    posiciones a lo largo de la viga de las perpendiculares (las cruzan los ganchos), y capas horizontales
+    perpendiculares (z, db) de las parrillas y de los anillos de piel."""
+    otro = 'y' if eje == 'x' else 'x'
+    k_lat, k_ax = (1, 0) if eje == 'x' else (0, 1)
+    lat, ax, capas = [], [], []
+    for j in J.lista:
+        if j['host'] != did or 'forma' not in j:
+            continue
+        f = j['forma']
+        if j['rol'] in (f'parrilla_superior_{eje}', f'parrilla_inferior_{eje}'):
+            lat += [(f[0][k_lat] + cp[k_lat] - c, j['db']) for cp in j['copias']]
+        elif j['rol'] in (f'parrilla_superior_{otro}', f'parrilla_inferior_{otro}'):
+            # la capa es el tramo horizontal: arriba en la parrilla superior (patas hacia abajo), abajo en la inferior (U)
+            zc = max(q[2] for q in f) if 'superior' in j['rol'] else min(q[2] for q in f)
+            ax += [(f[0][k_ax] + cp[k_ax], j['db'], zc) for cp in j['copias']]
+            capas.append((zc, j['db']))
+        elif j['rol'] == 'piel':
+            capas += [(f[0][2] + cp[2], j['db']) for cp in j['copias']]
+    return lat, ax, capas
+
+
+def _z_libre(z, db, capas, z_min, z_max):
+    """z más cercana a la dada, entre z_min y z_max, a la que una barra de diámetro db no toca las capas horizontales
+    (z, db) que cruza (primero hacia arriba si empatan: la barra superior gana recubrimiento sin el estribo)."""
+    def libre(q):
+        return all(abs(q - zc) >= (db + dc) / 2 + 0.002 for zc, dc in capas)
+    for k in range(0, 41):
+        for sg in (1, -1):
+            q = z + sg * k * 0.0025
+            if z_min - 1e-9 <= q <= z_max + 1e-9 and libre(q):
+                return q
+    return z
+
+
 def vigas_amarre(J, est):
+    """Vigas de amarre: barras corridas arriba y abajo ancladas en los dados (ldh con gancho de 90°) y estribos. Dentro de
+    cada dado o losa de pilotes las barras pasan entre las patas de su parrilla (por la cara por donde entran), por encima o
+    por debajo de sus capas y anillos, y el gancho cae entre las barras de la parrilla: un doblez 1:6 junto a la cara las
+    lleva a esa posición (criterio del modelo, C.7.5 y C.12.5)."""
     C = est['cimentacion']
     rec = 0.05
+    dados_ = {d['id']: d for d in C['dados']}
     for v in C['vigas_amarre']:
         host = v['id']
         a, b_ = v['tramo']
@@ -1668,6 +1823,8 @@ def vigas_amarre(J, est):
         h, b = v['h'], v['b']
         num_e = v['estribos']['num']
         de = db_de(num_e)
+        k_ax = 0 if eje == 'x' else 1
+        info = {lado: _armado_dado(J, v[lado], eje, c) for lado in ('desde', 'hasta')}
         for capa in ('superior', 'inferior'):
             n, num = v[capa]['n'], v[capa]['num']
             db = db_de(num)
@@ -1676,11 +1833,55 @@ def vigas_amarre(J, est):
             la = ldh_sismico(num)
             sg = -1 if capa == 'superior' else 1
             lats = _laterales(n, b, rec, num, num_e)
-            pts = [_p(eje, c, a - la, lats[0], z + sg * (cola_90(num) + R)), _p(eje, c, a - la, lats[0], z),
-                   _p(eje, c, b_ + la, lats[0], z), _p(eje, c, b_ + la, lats[0], z + sg * (cola_90(num) + R))]
-            cop = [[0, l_ - lats[0], 0] if eje == 'x' else [l_ - lats[0], 0, 0] for l_ in lats]
-            J.agregar(host, capa, num, doblar(pts, R), cop, f'{n} N.º {num} {"arriba" if capa == "superior" else "abajo"}',
-                      zona=f'ldh = {_es(la, 3)} m en cada dado', ganchos='90° en los dos extremos', nivel='CIM')
+            c_lat = max(abs(q) for q in lats)
+            cola = cola_90(num) + R
+            ends = {}
+            for lado, cara, sx in (('desde', a, -1), ('hasta', b_, 1)):
+                lat_p, ax_p, capas_ = info[lado]
+                d = dados_.get(v[lado])
+                proh = [(q - (db + dq) / 2 - 0.002, q + (db + dq) / 2 + 0.002) for q, dq in lat_p]
+                lats_d = _colocar_1d(lats, proh, db + max(db, 0.0254), -c_lat, c_lat) if proh else list(lats)
+                # dentro del dado no hay estribo: la barra de arriba puede subir hasta dejar el recubrimiento de la viga (rec)
+                zt_d = min(d['z_tope'], zt) if d else zt
+                if capa == 'superior':
+                    z_d = _z_libre(z, db, capas_, zt - h / 2, zt_d - rec - db / 2)
+                else:
+                    z_d = _z_libre(z, db, capas_, zt - h + rec + db / 2, zt - h / 2)
+                # largo de anclaje: ldh o un poco más, para que el gancho no caiga sobre una barra perpendicular
+                lim = None
+                if d:
+                    lim = (d['x1'] if eje == 'x' else d['y1']) - 0.08 if sx > 0 else -((d['x0'] if eje == 'x' else d['y0']) + 0.08)
+                la_d = la
+                for k in range(0, 61):
+                    q = la + k * 0.005
+                    s_end = cara + sx * q
+                    if lim is not None and sx * s_end > lim + 1e-9:
+                        break
+                    # ni el gancho ni su doblez (que empieza R + db antes) tocan las barras perpendiculares de las capas
+                    if all(sx * (pa - s_end) >= (db + dpa) / 2 + 0.002 or sx * (s_end - pa) >= R + db + (db + dpa) / 2 + 0.002
+                           for pa, dpa, _zc in ax_p):
+                        la_d = q
+                        break
+                ends[lado] = (lats_d, z_d, la_d)
+            # una barra por juego (cada una puede llevar su doblez propio a la entrada de cada dado)
+            luz = b_ - a
+            for i, lat in enumerate(lats):
+                pts = []
+                for lado, cara, sx in (('desde', a, -1), ('hasta', b_, 1)):
+                    lats_d, z_d, la_d = ends[lado]
+                    ld_, dz = lats_d[i] - lat, z_d - z
+                    desv = math.hypot(ld_, dz)
+                    s_end = cara + sx * la_d
+                    tramo_ = [_p(eje, c, s_end, lats_d[i], z_d + sg * cola), _p(eje, c, s_end, lats_d[i], z_d)]
+                    if desv > 1e-4:
+                        # el doblez va entre la cara del dado y el primer estribo (a 0,05 m) si el corrimiento es de una
+                        # fracción del estribo; si no, a 1:6
+                        cr = min(0.045 if desv <= de + 1e-9 else max(6 * desv, 0.05), luz / 3)
+                        tramo_ += [_p(eje, c, cara, lats_d[i], z_d), _p(eje, c, cara - sx * cr, lat, z)]
+                    pts += tramo_ if lado == 'desde' else list(reversed(tramo_))
+                forma = doblar(pts, R)
+                J.agregar(host, capa, num, forma, [[0, 0, 0]], f'{n} N.º {num} {"arriba" if capa == "superior" else "abajo"}',
+                          zona=f'ldh = {_es(la, 3)} m en cada dado', ganchos='90° en los dos extremos', nivel='CIM')
         s = v['estribos']['s_m']
         pos = [a + 0.05 + i * s for i in range(n_estribos(b_ - a, s))]
         hx, hy = b / 2 - rec - de / 2, h / 2 - rec - de / 2
@@ -1708,12 +1909,16 @@ def mallas_caja(J, host, caras, num, s, rec, etiqueta, nivel):
                       [[eb[i] * paso * k for i in range(3)] for k in range(n)], etiqueta, zona=f'cara {ci + 1}, dirección {direc + 1}', nivel=nivel)
 
 
-def fosos_y_cisternas(J, est):
+def fosos_y_cisternas(J, est, huellas=None):
+    """huellas: {id del foso: {'x', 'y', 'compartidos'}} del modelo (un lado compartido con el arranque de un muro
+    estructural no lleva muro propio ni sus mallas)."""
     C = est['cimentacion']
     for f in C['fosos']:
         host = f['id']
-        x0, x1 = f['x']
-        y0, y1 = f['y']
+        hf = (huellas or {}).get(host) or {'x': f['x'], 'y': f['y'], 'compartidos': {}}
+        x0, x1 = hf['x']
+        y0, y1 = hf['y']
+        comp = hf['compartidos']
         zf = f['z_fondo']
         e, el = f['muro_e_m'], f['losa_e_m']
         num, s = f['refuerzo']['num'], f['refuerzo']['s']
@@ -1724,9 +1929,12 @@ def fosos_y_cisternas(J, est):
         caras.append(([x0, y0, zf], [1, 0, 0], [0, 1, 0], x1 - x0, y1 - y0, [0, 0, 1]))
         caras.append(([x0, y0, zf + el], [1, 0, 0], [0, 1, 0], x1 - x0, y1 - y0, [0, 0, -1]))
         hm = ztop - (zf + el)
-        for (o, eu, Lu, nin) in (([x0, y0, zf + el], [1, 0, 0], x1 - x0, [0, 1, 0]), ([x0, y1, zf + el], [1, 0, 0], x1 - x0, [0, -1, 0]),
-                                 ([x0, y0 + e, zf + el], [0, 1, 0], y1 - y0 - 2 * e, [1, 0, 0]),
-                                 ([x1, y0 + e, zf + el], [0, 1, 0], y1 - y0 - 2 * e, [-1, 0, 0])):
+        ys0 = y0 if 'sur' in comp else y0 + e
+        ys1 = y1 if 'norte' in comp else y1 - e
+        lados = [('sur', ([x0, y0, zf + el], [1, 0, 0], x1 - x0, [0, 1, 0])), ('norte', ([x0, y1, zf + el], [1, 0, 0], x1 - x0, [0, -1, 0])),
+                 ('oeste', ([x0, ys0, zf + el], [0, 1, 0], ys1 - ys0, [1, 0, 0])),
+                 ('este', ([x1, ys0, zf + el], [0, 1, 0], ys1 - ys0, [-1, 0, 0]))]
+        for (o, eu, Lu, nin) in [q for lado, q in lados if lado not in comp]:
             caras.append((o, eu, [0, 0, 1], Lu, hm, nin))
             o2 = [o[i] + nin[i] * e for i in range(3)]
             caras.append((o2, eu, [0, 0, 1], Lu, hm, [-c for c in nin]))
@@ -1826,3 +2034,351 @@ def contrapiso(J, est, rect, huecos):
             cop = [[c - cs[0], 0, 0] for c in cs]
         J.agregar('CP-1', f'malla_{eje}', None, forma, cop, f'malla Ø 7 mm c/0,125 ({eje})', diam_mm=7.0,
                   kg_m=MALLA[7.0][1], nivel='CIM')
+
+
+# ============================================================================================ muros de contención
+def _dist_seg(p1, q1, p2, q2):
+    """Distancia mínima entre dos segmentos 3D."""
+    d1 = [q1[i] - p1[i] for i in range(3)]
+    d2 = [q2[i] - p2[i] for i in range(3)]
+    rr = [p1[i] - p2[i] for i in range(3)]
+    a = _dot(d1, d1)
+    e = _dot(d2, d2)
+    f = _dot(d2, rr)
+    if a <= 1e-12 and e <= 1e-12:
+        s = t = 0.0
+    elif a <= 1e-12:
+        s, t = 0.0, max(0.0, min(1.0, f / e))
+    else:
+        c = _dot(d1, rr)
+        if e <= 1e-12:
+            t, s = 0.0, max(0.0, min(1.0, -c / a))
+        else:
+            b = _dot(d1, d2)
+            den = a * e - b * b
+            s = max(0.0, min(1.0, (b * f - c * e) / den)) if den > 1e-14 else 0.0
+            t = (b * s + f) / e
+            if t < 0.0:
+                t, s = 0.0, max(0.0, min(1.0, -c / a))
+            elif t > 1.0:
+                t, s = 1.0, max(0.0, min(1.0, (b - c) / a))
+    return math.dist([p1[i] + d1[i] * s for i in range(3)], [p2[i] + d2[i] * t for i in range(3)])
+
+
+class _Obstaculos:
+    """Tramos rectos de las barras ya dibujadas cerca de una caja (x0, y0, z0, x1, y1, z1), en celdas de 0,25 m en planta,
+    para colocar barras nuevas sin cruzarlas."""
+
+    def __init__(self, J=None, caja=None, celda=0.25):
+        self.celda = celda
+        self.grid = {}
+        self.segs = []
+        if J is None:
+            return
+        x0, y0, z0, x1, y1, z1 = caja
+        for j in J.lista:
+            pl = polilinea(j)
+            a = [min(p[i] for p in pl) for i in range(3)]
+            b = [max(p[i] for p in pl) for i in range(3)]
+            for c in j['copias']:
+                if a[0] + c[0] > x1 or b[0] + c[0] < x0 or a[1] + c[1] > y1 or b[1] + c[1] < y0 or a[2] + c[2] > z1 or b[2] + c[2] < z0:
+                    continue
+                for p, q in zip(pl, pl[1:]):
+                    P = [p[i] + c[i] for i in range(3)]
+                    Q = [q[i] + c[i] for i in range(3)]
+                    if min(P[0], Q[0]) > x1 or max(P[0], Q[0]) < x0 or min(P[1], Q[1]) > y1 or max(P[1], Q[1]) < y0 \
+                            or min(P[2], Q[2]) > z1 or max(P[2], Q[2]) < z0:
+                        continue
+                    self.agregar(P, Q, j['db'])
+
+    def _celdas(self, lo, hi):
+        c = self.celda
+        for gx in range(int(math.floor(lo[0] / c)), int(math.floor(hi[0] / c)) + 1):
+            for gy in range(int(math.floor(lo[1] / c)), int(math.floor(hi[1] / c)) + 1):
+                yield (gx, gy)
+
+    def agregar(self, P, Q, db):
+        lo = [min(P[i], Q[i]) for i in range(3)]
+        hi = [max(P[i], Q[i]) for i in range(3)]
+        k = len(self.segs)
+        self.segs.append((P, Q, db, lo, hi))
+        for g in self._celdas(lo, hi):
+            self.grid.setdefault(g, []).append(k)
+
+    def agregar_barra(self, pts, db):
+        for p, q in zip(pts, pts[1:]):
+            self.agregar(p, q, db)
+
+    def libre(self, pts, db, holgura):
+        """True si ningún tramo de la polilínea pts (barra de diámetro db) queda a menos de (db + db2)/2 + holgura de un
+        tramo guardado."""
+        for p, q in zip(pts, pts[1:]):
+            m = db / 2 + 0.0254 / 2 + holgura
+            lo = [min(p[i], q[i]) - m for i in range(3)]
+            hi = [max(p[i], q[i]) + m for i in range(3)]
+            vistos = set()
+            for g in self._celdas(lo, hi):
+                for k in self.grid.get(g, ()):
+                    if k in vistos:
+                        continue
+                    vistos.add(k)
+                    P, Q, d2, a, b = self.segs[k]
+                    if a[0] > hi[0] or b[0] < lo[0] or a[1] > hi[1] or b[1] < lo[1] or a[2] > hi[2] or b[2] < lo[2]:
+                        continue
+                    if _dist_seg(p, q, P, Q) < (db + d2) / 2 + holgura:
+                        return False
+        return True
+
+
+def _candidatos(dmax_a, paso_a, dmax_b, paso_b, peso_b=2.0, signo_b=1.0, simetrico_b=False):
+    """Corrimientos (da, db) ordenados de menor a mayor costo |da| + peso_b·|db|; db solo con el signo dado (hacia adentro
+    del muro) salvo que simetrico_b."""
+    na, nb = int(round(dmax_a / paso_a)), int(round(dmax_b / paso_b))
+    A = sorted({0.0} | {s * k * paso_a for k in range(1, na + 1) for s in (-1, 1)}, key=abs)
+    B = sorted({0.0} | {s * k * paso_b for k in range(1, nb + 1) for s in ((-1, 1) if simetrico_b else (signo_b,))}, key=abs)
+    return sorted(((a, b) for a in A for b in B), key=lambda q: (abs(q[0]) + peso_b * abs(q[1]), abs(q[1]), q[0], q[1]))
+
+
+def _apoyos_muro(C, m):
+    """Tramos en x de los dados y vigas de amarre cuya cara superior recibe el muro de contención (huella que cubre su
+    espesor): [(x0, x1, id)] ordenados."""
+    y0, y1 = m['y']
+    x0, x1 = m['tramo']
+    zf = m['z_fondo']
+    out = []
+    for d in C['dados']:
+        if abs(d['z_tope'] - zf) < 0.01 and d['y0'] <= y0 + 1e-6 and d['y1'] >= y1 - 1e-6 and d['x1'] > x0 and d['x0'] < x1:
+            out.append((d['x0'], d['x1'], d['id']))
+    for v in C['vigas_amarre']:
+        if v['direccion'] != 'x':
+            continue
+        c, b = v['coordenada'], v['b']
+        a_, b_ = v['tramo']
+        if abs(v['z_tope'] - zf) < 0.01 and c - b / 2 <= y0 + 1e-6 and c + b / 2 >= y1 - 1e-6 and b_ > x0 and a_ < x1:
+            out.append((a_, b_, v['id']))
+    return sorted(out)
+
+
+def apoyo_continuo(C, m):
+    """(x0, x1) del apoyo continuo bajo el muro que contiene su centro (dados y vigas de amarre que se tocan), o None."""
+    ap = _apoyos_muro(C, m)
+    if not ap:
+        return None
+    grupos = []
+    for a, b, _id in ap:
+        if grupos and a <= grupos[-1][1] + 1e-6:
+            grupos[-1][1] = max(grupos[-1][1], b)
+        else:
+            grupos.append([a, b])
+    xc = sum(m['tramo']) / 2
+    for a, b in grupos:
+        if a - 1e-6 <= xc <= b + 1e-6:
+            return (a, b)
+    return tuple(max(grupos, key=lambda g: min(g[1], m['tramo'][1]) - max(g[0], m['tramo'][0])))
+
+
+def muros_contencion(J, est, rect_contrapiso, holgura=0.0015):
+    """Muros de contención del borde del pasaje del bloque técnico (cimentacion.muros_contencion de A): cortinas de N.º 4
+    en las dos caras. Verticales por fuera: abajo, ldh con gancho de 90° en la viga de amarre o en el dado (la cola hacia
+    adentro del muro; las de las dos caras corridas 6 cm entre sí para que sus colas no se crucen) y, arriba, 0,10 m dentro
+    del contrapiso (o recubrimiento si el muro llega a ±0,00 fuera de él). Horizontales por dentro de las verticales: ldh con
+    gancho de 90° en los arranques de las columnas (la cola hacia el centro de la columna; la capa más lejana, 3 cm más
+    adentro) y, en un extremo libre, una horquilla en U como en los muros estructurales. Cada barra se corre lo justo (hasta
+    4 cm a lo largo, hasta 3 cm hacia adentro del muro o, las horizontales, hasta 5 cm en altura) para pasar entre las barras
+    de la viga, del dado, de la columna y de la malla del contrapiso (criterio del modelo, C.7.5). Las verticales se
+    reparten sobre el apoyo (dado o viga de amarre) con su recubrimiento: un extremo del muro fuera del dado queda sin
+    verticales (lo informa interferencias.py). Devuelve {id: resumen}."""
+    C = est['cimentacion']
+    mcs = C.get('muros_contencion') or []
+    cols = [c for c in est['refuerzo']['columnas'] if c['nivel'] == 1]
+    xc0, yc0, xc1, yc1 = rect_contrapiso
+    res = {}
+    for m in mcs:
+        host = m['id']
+        x0, x1 = m['tramo']
+        y0, y1 = m['y']
+        zf, zt = m['z_fondo'], m['z_tope']
+        if x1 - x0 < y1 - y0:
+            raise SystemExit(f'{host}: el despiece de muros de contención supone muros a lo largo de x')
+        rec = m['refuerzo']['recubrimiento_m']
+        rv, rh = m['refuerzo']['vertical'], m['refuerzo']['horizontal']
+        numv, numh = rv['num'], rh['num']
+        dbv, dbh = db_de(numv), db_de(numh)
+        Rv, Rh = radio_doblez(numv), radio_doblez(numh)
+        ldh_v, ldh_h = ldh_sismico(numv), ldh_sismico(numh)
+        cola_v, cola_h = cola_90(numv) + Rv, cola_90(numh) + Rh
+        obst = _Obstaculos(J, (x0 - 1.0, y0 - 0.6, zf - 0.6, x1 + 1.0, y1 + 0.6, zt + 0.3))
+        propias = _Obstaculos()
+        sup = apoyo_continuo(C, m)
+        if sup is None:
+            raise SystemExit(f'{host}: no hay dado ni viga de amarre bajo el muro')
+        rec_ap = 0.075
+        lo = max(x0 + rec + dbv / 2, sup[0] + rec_ap + dbv / 2)
+        hi = min(x1 - rec - dbv / 2, sup[1] - rec_ap - dbv / 2)
+        en_cp = zt < -1e-6 and xc0 - 1e-6 <= x0 and x1 <= xc1 + 1e-6 and yc0 - 1e-6 <= y0 and y1 <= yc1 + 1e-6
+        z_sup = zt + 0.10 if en_cp else zt - rec
+        z_h = zf - ldh_v
+        n = rv['n_por_cara']
+        delta = 0.06
+        # ------------------------------------------------------------------ verticales
+        caras = (('sur', y0 + rec + dbv / 2, 1), ('norte', y1 - rec - dbv / 2, -1))
+        nom = [lo + (hi - delta - lo) * i / max(n - 1, 1) for i in range(n)]
+        ys_v = {}
+        corr = {'dx_max_mm': 0.0, 'dy_max_mm': 0.0, 'dz_max_mm': 0.0, 'sin_lugar': 0}
+        for ci, (cara, yv, sg) in enumerate(caras):
+            pos = []
+            for i, xn in enumerate(nom):
+                xn = xn + (delta if ci == 1 else 0.0)
+                elegido = None
+                # hacia adentro del muro hasta 3 cm; si no hay lugar, hacia afuera hasta 5 mm (recubrimiento ≥ 45 mm, sobre el
+                # mínimo de 40 mm de C.7.7.1 b)
+                for dx, dy in (_candidatos(0.04, 0.0025, 0.03, 0.0025, signo_b=sg)
+                               + [q for q in _candidatos(0.04, 0.0025, 0.005, 0.0005, signo_b=-sg) if q[1] != 0.0]):
+                    x = xn + dx
+                    if x < lo - 1e-9 or x > hi + 1e-9:
+                        continue
+                    if pos and x - pos[-1][0] < dbv + 0.0254:
+                        continue
+                    y = yv + dy
+                    forma = doblar([[x, y + sg * cola_v, z_h], [x, y, z_h], [x, y, z_sup]], Rv)
+                    if obst.libre(forma, dbv, holgura) and propias.libre(forma, dbv, 0.0005):
+                        elegido = (x, y, forma)
+                        if dy * sg < -1e-9:
+                            corr['rec_min_mm'] = min(corr.get('rec_min_mm', 1e9), (rec + dy * sg) * 1000)
+                        break
+                if elegido is None:
+                    corr['sin_lugar'] += 1
+                    corr.setdefault('detalle', []).append(f'vertical {cara} x = {xn:.3f}')
+                    x, y = xn, yv
+                    elegido = (x, y, doblar([[x, y + sg * cola_v, z_h], [x, y, z_h], [x, y, z_sup]], Rv))
+                pos.append(elegido)
+                corr['dx_max_mm'] = max(corr['dx_max_mm'], abs(elegido[0] - xn) * 1000)
+                corr['dy_max_mm'] = max(corr['dy_max_mm'], abs(elegido[1] - yv) * 1000)
+            for _x, _y, f in pos:
+                propias.agregar_barra(f, dbv)
+            ys_v[cara] = [p[1] for p in pos]
+            f0 = pos[0][2]
+            fuera_ = [p for p in pos if (p[1] - yv) * sg < -1e-6]
+            nota_v = (f'{len(fuera_)} barra{"s" if len(fuera_) > 1 else ""} corrida{"s" if len(fuera_) > 1 else ""} hasta '
+                      f'{max(abs(p[1] - yv) for p in fuera_) * 1000:.1f}'.replace('.', ',') + ' mm hacia la cara para pasar entre las barras de la viga de amarre y '
+                      f'de la parrilla del dado (recubrimiento de {(rec - max(abs(p[1] - yv) for p in fuera_)) * 1000:.0f} mm; la NSR-10 '
+                      'pide 40 mm, C.7.7.1 b, por confirmar)') if fuera_ else None
+            J.agregar(host, 'cortina_vertical', numv, f0, [[p[0] - pos[0][0], p[1] - pos[0][1], 0.0] for p in pos],
+                      f'N.º {numv} c/{_es(rv["s_m"], 3)} vertical (cara {cara})', nota=nota_v,
+                      zona=(f'ldh = {_es(ldh_v, 3)} m en el apoyo; ' + ('0,10 m dentro del contrapiso' if en_cp else 'arriba, recubrimiento de '
+                                                                       f'{_es(rec, 3)} m')),
+                      ganchos='90° en la base (cola hacia adentro del muro)', nivel='CIM')
+        # ------------------------------------------------------------------ horizontales
+        r_vh = (dbv + dbh) / 2 + 0.0005
+        yh = {'sur': max(ys_v['sur']) + r_vh, 'norte': min(ys_v['norte']) - r_vh}
+        sgs = {'sur': 1, 'norte': -1}
+        extremos = {}
+        for lado, xe, sx in (('i', x0, -1), ('j', x1, 1)):
+            col = None
+            for c in cols:
+                ca = c['x'] - sx * (c['b'] / 2 + 0.01)
+                if abs(ca - xe) < 0.02 and c['y'] - c['h'] / 2 <= y0 + 1e-6 and c['y'] + c['h'] / 2 >= y1 - 1e-6:
+                    col = c
+            extremos[lado] = (xe, sx, col)
+        nh = rh['n_por_cara']
+        za, zb = zf + rec + dbh / 2, zt - rec - dbh / 2
+        zs_nom = [za + (zb - za) * i / max(nh - 1, 1) for i in range(nh)]
+        lap_h = traslapo(numh)
+
+        def forma_h(cara, y, z, extra):
+            pts = []
+            for lado in ('i', 'j'):
+                xe, sx, col = extremos[lado]
+                if col is not None:
+                    ty = 1 if col['y'] > y else -1
+                    xt = xe + sx * (ldh_h + extra[lado])
+                    tramo = [[xt, y + ty * cola_h, z], [xt, y, z]]
+                else:
+                    tramo = [[xe - sx * (rec + 0.01), y, z]]
+                pts += tramo if lado == 'i' else list(reversed(tramo))
+            return doblar(pts, Rh)
+        # la capa más lejana del centro de la columna entra 3 cm más (su cola cruza la línea de la otra capa por detrás)
+        extra = {cara: {} for cara in yh}
+        for lado in ('i', 'j'):
+            col = extremos[lado][2]
+            if col is None:
+                continue
+            lejos = max(yh, key=lambda k: abs(col['y'] - yh[k]))
+            for cara in yh:
+                extra[cara][lado] = 0.03 if cara == lejos else 0.0
+        for cara in yh:
+            for lado in ('i', 'j'):
+                extra[cara].setdefault(lado, 0.0)
+        filas = []
+        for zn in zs_nom:
+            elegido = None
+            for dz, dy in _candidatos(0.05, 0.0025, 0.03, 0.0025, peso_b=1.5):
+                z = zn + dz
+                if z < za - 1e-9 or z > zb + 1e-9:
+                    continue
+                if filas and z - filas[-1][0] < dbh + 0.0254:
+                    continue
+                ok = True
+                fs = {}
+                for cara in ('sur', 'norte'):
+                    y = yh[cara] + sgs[cara] * abs(dy)
+                    f = forma_h(cara, y, z, extra[cara])
+                    if not (obst.libre(f, dbh, holgura) and propias.libre(f, dbh, 0.0002)):
+                        ok = False
+                        break
+                    fs[cara] = (y, f)
+                if ok:
+                    elegido = (z, fs)
+                    break
+            if elegido is None:
+                corr['sin_lugar'] += 1
+                corr.setdefault('detalle', []).append(f'horizontal z = {zn:.3f}')
+                elegido = (zn, {cara: (yh[cara], forma_h(cara, yh[cara], zn, extra[cara])) for cara in ('sur', 'norte')})
+            corr['dz_max_mm'] = max(corr['dz_max_mm'], abs(elegido[0] - zn) * 1000)
+            corr['dy_max_mm'] = max(corr['dy_max_mm'], max(abs(v[0] - yh[k]) for k, v in elegido[1].items()) * 1000)
+            filas.append(elegido)
+            for cara, (_y, f) in elegido[1].items():
+                propias.agregar_barra(f, dbh)
+        sep_h = (zb - za) / max(nh - 1, 1)
+        anc = ' y '.join(f'ldh = {_es(ldh_h, 3)} m con gancho de 90° en el arranque de {extremos[l][2]["id"].rsplit("-", 1)[0]}'
+                         for l in ('i', 'j') if extremos[l][2] is not None)
+        for cara in ('sur', 'norte'):
+            # una barra por fila (cada una puede llevar su corrimiento); juegos con la misma forma relativa
+            grupos = {}
+            for z, fs in filas:
+                y, f = fs[cara]
+                b0 = f[0]
+                clave = tuple(tuple(round(p[k] - b0[k], 4) for k in range(3)) for p in f)
+                grupos.setdefault(clave, []).append(f)
+            for clave, fs_ in grupos.items():
+                f0 = fs_[0]
+                J.agregar(host, 'cortina_horizontal', numh, f0, [[f[0][k] - f0[0][k] for k in range(3)] for f in fs_],
+                          f'N.º {numh} c/{_es(rh["s_m"], 3)} horizontal (cara {cara})',
+                          zona=f'{nh} por cara a {_es(sep_h, 3)} m' + (f'; {anc}' if anc else ''),
+                          ganchos='90° en los arranques de las columnas' if anc else None, nivel='CIM')
+        # horquillas en U en los extremos libres (un diámetro encima de cada fila, o debajo en la mitad de arriba para no comerse
+        # el recubrimiento de la cara superior; traslapo de contacto con las dos caras)
+        for lado in ('i', 'j'):
+            xe, sx, col = extremos[lado]
+            if col is not None:
+                continue
+            ue = xe - sx * (rec + 0.01)
+            fs_ = []
+            for z, fs in filas:
+                (ys_, _f1), (yn_, _f2) = fs['sur'], fs['norte']
+                zu = z + dbh if z <= (za + zb) / 2 else z - dbh
+                pts = [[ue - sx * lap_h, ys_, zu], [ue, ys_, zu], [ue, yn_, zu], [ue - sx * lap_h, yn_, zu]]
+                f = doblar(pts, Rh)
+                # con la fila que abraza va en contacto (traslapo): con las barras propias solo se revisa que no se metan
+                if not (obst.libre(f, dbh, holgura) and propias.libre(f, dbh, -0.0005)):
+                    corr['sin_lugar'] += 1
+                    corr.setdefault('detalle', []).append(f'horquilla z = {zu:.3f}')
+                fs_.append(f)
+            f0 = fs_[0]
+            J.agregar(host, 'cortina_horizontal_horquilla', numh, f0, [[f[0][k] - f0[0][k] for k in range(3)] for f in fs_],
+                      f'horquilla N.º {numh} en el extremo libre', zona=f'traslapo de {_es(lap_h)} m con las dos caras',
+                      ganchos='U de 180° alrededor del extremo', nivel='CIM')
+        sin_v = [round(max(0.0, sup[0] - x0), 3), round(max(0.0, x1 - sup[1]), 3)]
+        res[host] = {'apoyo_x': [r(sup[0], 3), r(sup[1], 3)], 'muro_fuera_del_apoyo_m': sin_v,
+                     **{k: r(v, 1) if k not in ('sin_lugar', 'detalle') else v for k, v in corr.items()}}
+    return res

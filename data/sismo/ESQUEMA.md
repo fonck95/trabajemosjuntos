@@ -381,6 +381,99 @@ irregularidad torsional extrema y cimentación revisada con el sismo de capacida
   perpendicular a la línea (y `reacciones_pilotes` lo descartaba en silencio); ahora rechaza ese caso y las esquinas
   llevan al menos 3 pilotes en triángulo.
 
+**Correcciones de la revisión A7 (coordinación con el modelo BIM, 24-oct-2026).** Las interferencias duras del modelo
+federado que eran del prediseño se corrigieron en su causa; el motor sísmico no cambia de formato (solo cambian un poco
+las masas y las cargas de gravedad por el concreto que ahora sí se cuenta):
+
+- **Esquinas y machones de los muros.** La esquina donde se cruzan las almas de MX-4 con MY-N3 y de MX-7 con MY-N6
+  (0,35 × 0,35 m) es del muro en x; el machón de MX-3 junto a la puerta de la escalera sur va en su planta. Están en
+  `refuerzo.muros[].planta` y en el peso del muro (antes no eran de ningún muro y la esquina quedaba sin concreto).
+- **Vigas banda** (`VA-…`, columna C – muro): del ancho del muro en x donde se anclan (0,35 m) y no del de la columna
+  (0,80 m): con el ancho de la columna las barras de los lados no tenían concreto para su anclaje.
+- **Vigas secundarias de borde y dinteles** (fuera del modelo sísmico; solo gravedad): `VB-N-45-k` y `VB-61-45-k` en los
+  bordes del foso de ascensores (caras en x = 3,1 y x = 6,1, al lado del hueco), `VB-N-56-k` en el borde occidental del
+  ducto vertical y `VD-N-3-k`, `VD-N-6-k` sobre las puertas de las escaleras (x = 3,1). Van en `refuerzo.vigas` con
+  `tipo` («viga secundaria de borde del núcleo (fuera del modelo)» o «dintel de la puerta de la escalera (fuera del
+  modelo)»), sus apoyos en `eje`, un bloque `cargas` (wD, wL, wLr, wu, Mu, φMn, Vu, φVn) y el chequeo `SEC`. Barras N.º 5
+  o N.º 6 (su ldh con gancho cabe en el muro de 0,35 m). Sus reacciones van en las cargas de gravedad del modelo (la mitad
+  a cada apoyo: muro en x o vigas X C-D de la línea) y su peso en la masa del nivel.
+- **Losas.** `refuerzo.losas[]` trae la geometría de apoyo a apoyo (los paños junto al foso y al ducto llegan al eje de su
+  viga secundaria y, en el ducto, a la cara de las vigas de los ejes 5 y 6), y las cargas y la masa siguen con el paño
+  entre ejes que le toca. **Ducto vertical**: abertura en cada losa con la parte del ducto que sigue del piso de abajo al
+  de arriba (x de 3,10 a la cara de la viga del eje D; y desde el borde sur de esa parte común hasta la cara de la viga
+  del eje 6; en la revisión A7 eran 11,00, 10,90, 11,80 y 11,80 en los niveles 4,50, 8,70, 12,90 y 17,10, y desde la
+  A8 salen de la planta de B en cada corrida), con la viga `VB-N-56` al occidente; `prediseno.coordinacion_bim` lo resume.
+- **Columnas.** `longitudinal.traslapo.z_centro` está ahora en la mitad central de la altura libre del piso de **arriba**
+  (`piso` dice cuál): las barras de cada piso atraviesan su nudo de arriba con su propio armado (C.21.6.3.2). Antes el
+  traslapo de la columna del piso k iba a media altura del mismo piso. `longitudinal.largo_barra_m` es el largo con el que
+  se pesa (del traslapo de abajo, o de la parrilla del dado con gancho, al de arriba o al gancho bajo la cubierta).
+- **Estribos de columnas y vigas** (`juegos`): el centro se cuenta desde el último estribo de cada zona confinada
+  (n = ⌈hueco/s⌉ − 1) y, si las dos zonas se tocan, toda la luz a la separación de la zona; los que el modelo BIM corre en
+  los nudos para no cruzar las barras de las vigas no se cuentan.
+- **Dados.** Centrados en su grupo de pilotes (en el de 3 pilotes, el triángulo con el pilote solo hacia el interior de la
+  planta): los pilotes quedan a D/2 + 0,15 m o más de las caras. Las barras de la parrilla inferior en x se reparten en el
+  ancho B del dado (en y) y las de y en el largo (antes se repartían en el otro lado); `inferior_x.n` y `inferior_y.n` son
+  las que caben entre recubrimientos, ⌊(ancho − 0,15)/s⌋ + 1, y su área cubre `As_req_mm2`; `reparto_m` es ese ancho. Si un
+  dado se tendría que meter bajo un foso apoyado en el suelo, el grupo se corre (en múltiplos de 5 cm) y la excentricidad
+  con la columna entra en sus cargas (`excentricidad_grupo_m`).
+- **Losas de pilotes.** No se meten bajo un foso apoyado en el suelo (`fosos[].apoyo = "suelo"`) y crecen sin quedar a menos
+  de 2,4 m de un dado vecino (con 1,2 m, el límite para fundirlos, la viga de amarre que quedaba entre los dos no se podía
+  diseñar); lo que un lado no puede crecer lo crece el opuesto o los otros dos. Un foso que se apoya en una losa de pilotes
+  (`apoyo = "losa_de_pilotes"`, el del montacargas) baja su cara superior al fondo del foso (`fosos_encima`).
+- **Vigas de amarre.** `z_tope` = la cara superior del más bajo de sus dos apoyos (antes −0,15 m fijo: quedaban 5 cm por
+  encima de los dados de 0,80 m); `tramo` entre las huellas finales de los dados y de las losas de pilotes.
+- **Cisternas.** La tapa queda a la cota del patio de servicio (`z_tapa`, del bloque técnico de `programa.json`) y
+  `z_fondo` es absoluto (desde el piso 1); la subpresión y el empuje se calculan con el agua en la tapa
+  (`freatico_bajo_tapa_m`), del lado seguro, porque el freático supuesto queda por encima del patio.
+
+**Correcciones de la revisión A8 (coordinación con el modelo BIM, 25-oct-2026).** Las interferencias duras que el
+prediseño compartía con la planta de B (ducto vertical, escalera principal abierta y pasaje del bloque técnico) se
+corrigieron en su causa. El motor sísmico no cambia de formato; cambian un poco las masas y las cargas de gravedad del
+nivel 4,50 (vigas de borde de la abertura de la escalera) y la cimentación del borde sur:
+
+- **La planta de B en cada corrida.** `estructura_torre.py` lee `data/edificios/torre_hospital_plantas.json` (antes el
+  ducto estaba copiado a mano y la escalera principal y el pasaje no estaban): el ducto vertical de cada piso, las
+  escaleras abiertas que no están en los núcleos y el pasaje del bloque técnico que corre junto a la fachada sur, con el
+  muro de borde que B dibuja ahí. Guarda solo esos valores en `prediseno.coordinacion_bim.planta_b` (no el sha1 del
+  archivo, que no va en `insumos_sha1`): un cambio de B que no los toca no cambia la estructura, y uno que sí los toca
+  hace fallar `--verificar` hasta que se regenere.
+- **Ducto vertical.** La abertura de cada losa es la parte común del ducto del piso con el del piso de arriba (en la
+  cubierta, la del piso 4), al oriente de `VB-N-56` y hasta las caras de las vigas de los ejes 6 y D.
+  `coordinacion_bim.ducto_vertical.pendiente` dice, con su área, lo que la losa cierra porque el ducto se angosta y lo
+  que el rectángulo de la abertura deja fuera del ducto de abajo o de arriba (con los recintos de B que quedan ahí).
+- **Escaleras abiertas** (la principal del vestíbulo). Abertura en la losa del nivel al que llegan: sus tramos y su
+  descanso intermedio, llevados al borde del recinto si quedan a 0,10 m o menos; si entre la abertura y la cara de una
+  viga queda una franja de menos de 1,0 m, el borde va a la viga (esa franja es de la escalera: su descanso de llegada,
+  losa maciza apoyada en la viga). Los bordes que cortan los nervios llevan vigas secundarias de borde
+  `VB-{escalera}{O|E}-{líneas}-{nivel}` solo en ese nivel (0,40 × 0,60 m hasta 5,0 m de luz y 0,40 × 0,80 m si es mayor,
+  descolgadas: van junto a los tramos, no sobre ellos), con apoyo `["XS", línea, x]` en la viga del pórtico X que pasa
+  por su x (su reacción, como carga uniforme de la misma resultante) y `tipo` «viga secundaria de borde de la abertura de
+  la escalera abierta (fuera del modelo)»; los otros dos bordes son nervio de borde. Los paños del borde llegan al eje de
+  esas vigas y la carga y la masa del paño se reparten enteras (la escalera pesa del orden de la losa que reemplaza).
+  `coordinacion_bim.escaleras_abiertas` trae la abertura de la losa (la que resulta en cada paño y su envolvente), las
+  vigas de borde y, si un tramo pasa bajo una viga de pórtico a menos de 2,05 m de la nariz de los peldaños, el
+  pendiente de B; `planta_b` guarda solo lo que cambia la estructura (así un ajuste de centímetros de B en la escalera
+  que no mueve la abertura no la cambia).
+- **Pasaje del bloque técnico.** Los dados cuya huella queda bajo el pasaje bajan su cara superior a la cota del piso
+  del pasaje menos su losa de 0,15 m (con el piso a −1,50: `z_tope` −1,65; antes quedaban a −0,70, 0,80 m por encima
+  del piso del pasaje); su peso lleva el relleno hasta el contrapiso y el brazo del cortante en la cabeza de los pilotes
+  suma el tramo de arranque que crece. Las vigas de amarre que llegan a ellos van a esa cota (la del más bajo de sus
+  apoyos, entera dentro de los dos) y el dado vecino que las recibe se alarga hacia abajo hasta el fondo de la viga, con
+  su cara superior donde estaba (`h` mayor que el que pide su diseño). Del lado seguro, el piso del pasaje se toma a la
+  cota del nivel en todo su largo (la planta de B dice que sube en rampa hacia el oriente pero lo dibuja plano).
+- **`cimentacion.muros_contencion`** (nuevo): muro de contención del borde del pasaje, `{id, linea, sobre (viga de
+  amarre o dado), apoyo, tramo [x0, x1], y [y0, y1], z_fondo, z_tope, t_m, h_m, empuje {K0, p_base_kPa, sobrecarga_kPa,
+  Mu_kNm_m, phiMn_kNm_m, Vu_kN_m, phiVn_kN_m}, refuerzo {vertical, horizontal, recubrimiento_m}, texto, nota, kg, m3}`.
+  Entre los arranques del eje va sobre la viga de amarre, de su cara superior a la cara inferior del contrapiso (−0,15),
+  empotrado abajo y apoyado en el contrapiso; más allá de las columnas extremas, hasta donde B deja el borde sin muro, va
+  en voladizo desde el dado hasta ±0,00. Su cara sur es el borde del pasaje (o la cara norte del muro de borde que B
+  dibuje ahí). La viga de amarre que lo lleva corre su eje bajo el muro: `vigas_amarre[].coordenada` deja de ser la del
+  eje y trae `excentricidad_m` y `lleva` (el muro), y su carga suma el peso del muro.
+- **`cimentacion.contrapiso.planta_m`** (nuevo): `[x0, y0, x1, y1]` del contrapiso, con el borde sur en la cara sur del
+  muro de contención. `cantidades.por_tipo.muros_de_contencion` (nuevo; su concreto entra en la fila 2.09 de la
+  comparación con el presupuesto) y el chequeo `CIM-BT` (dados bajo el piso del pasaje, vigas de amarre enteras dentro
+  de sus dos apoyos y muro de contención con φMn ≥ Mu y φVn ≥ Vu).
+
 Campos agregados (todos opcionales para el motor, que no los usa salvo lo dicho):
 
 | Campo | Dónde | Qué es |
@@ -408,18 +501,20 @@ Bloques de la raíz:
   `columna_fuerte_viga_debil` (cada columna y plano, los de cubierta exentos); `cortante_por_capacidad` (vigas,
   columnas y muros: Ve, φVn, Ωv; en muros además el momento de diseño de cada tramo con su envolvente, σ y si lleva
   elemento de borde especial); `cuantias`; `verificacion_nsr10`; `chequeos` (lista `{id, descripcion, valor, limite,
-  cumple, fuente, detalle?}`: todos deben cumplir).
+  cumple, fuente, detalle?}`: todos deben cumplir); `coordinacion_bim` (revisiones A7 y A8: lo que se toma de la planta
+  de B, aberturas del ducto y de la escalera principal, pasaje del bloque técnico, vigas secundarias y las demás
+  decisiones de la coordinación con el modelo BIM, con lo que queda pendiente de otros equipos).
 - `cimentacion` (17.2): `suelo_supuesto` (estimación con su fuente), `pilote` (D, L escogido por el menor total de
   metros, capacidades y factores de seguridad, `estudio_de_largo`), `reacciones` en la base por apoyo (D, L, Lr, E y
   Ecap), `grupos` (dados, dados combinados y losas de pilotes de los núcleos, con las reacciones extremas por tipo de
   combinación y el diseño de sus pilotes), y la geometría con el refuerzo para el modelo BIM: `pilotes` (posiciones,
   cotas de cabeza y punta, canasta en dos tramos y espiral), `dados` (caja en planta, cotas, parrillas),
-  `vigas_amarre`, `contrapiso`, `fosos` y `cisternas`. Cotas `z` desde el piso terminado del piso 1.
+  `vigas_amarre`, `muros_contencion`, `contrapiso`, `fosos` y `cisternas`. Cotas `z` desde el piso terminado del piso 1.
 - `refuerzo` (17.3): `convenciones` (barras N.º 3 a N.º 8 de NTC 2289, recubrimientos, ganchos y traslapos) y el
   despiece de **cada** elemento: `columnas` (por columna física y piso: barras por cara, traslapo, anclaje, estribos y
   ganchos suplementarios en lo, en el centro y en el nudo), `vigas` (corridas y bastones superiores con su largo desde
-  la cara, inferiores y del vano, estribos en 2h y en el centro; incluye las vigas banda columna-muro que no están en el
-  modelo), `muros` (por piso: cortinas, zonas de borde con sus parejas de barras, lb, cuantía,
+  la cara, inferiores y del vano, estribos en 2h y en el centro; incluye las vigas banda columna-muro, las vigas
+  secundarias de borde y los dinteles, que no están en el modelo y llevan `tipo`), `muros` (por piso: cortinas, zonas de borde con sus parejas de barras, lb, cuantía,
   estribos, acopladores y prolongaciones, o la columna de borde, y planta), `losas` (por paño: nervios con su refuerzo, riostras, malla)
   y `escaleras`; cada uno con `texto` (la etiqueta de la vista: «12 N.º 7», «E N.º 4 c/0,10 en lo = 0,60 m»), `kg` y
   `m3`.
@@ -924,3 +1019,4 @@ node scripts/sismo/test_motor.mjs --solo F1,F2,F3,F4,R0
 | BSSA14 solo para focos someros | peso `clamp((25 − h)/10, 0, 1)` de su parte; el resto a Zhao 2006 cortical; aviso | Movimiento del suelo; T19b |
 | Espectro de umbral de daño (A.12.3) | el mensaje `movimiento` usa el del prediseño (ξ = 2 %) y dice el ξ de cada curva | Mensajes; T14 y E1 |
 | Prediseño: φr, muros, bordes, columnas de borde, ramas y dados | ver «Correcciones de la revisión A6 (prediseño)» | Prediseño de la torre; S6 |
+| Coordinación con el modelo BIM (revisión A7) | esquinas y machones de muros, vigas banda, vigas secundarias y dinteles, aberturas del ducto, traslapo de columnas en el piso de arriba, conteo de estribos, dados centrados en sus pilotes, losas de pilotes y fosos, vigas de amarre y cisternas | Prediseño de la torre («Correcciones de la revisión A7») |

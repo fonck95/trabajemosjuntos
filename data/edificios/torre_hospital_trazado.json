@@ -9,7 +9,8 @@
   "ids": "fila y k del programa (regla 1.3: {nivel}-A{fila}-{k}); circ = circulación no programada ({nivel}-CIRC-nn); tec = recinto técnico o de apoyo no programado ({nivel}-TEC-nn, estimación)",
   "puertas": "entre dos recintos del nivel (o «exterior»), con pos como fracción del borde común o como punto [x, y] sobre él",
   "abiertos": "pares de recintos unidos sin muro (vano abierto: espera abierta al corredor, mostrador, galería)",
-  "cotas": "z de cada nivel = piso terminado sobre el ±0,00 de la torre; las cotas de escaleras, rampas y terrazas van relativas al piso del nivel"
+  "cotas": "z de cada nivel = piso terminado sobre el ±0,00 de la torre; las cotas de escaleras, rampas y terrazas van relativas al piso del nivel",
+  "muros_forzados": "tipo de muro que el trazado fija entre dos recintos (o con «exterior»); con «tramo» ([[x0, y0], [x1, y1]]) solo en esa parte del borde común, y el resto sigue la regla general (un tramo «abierto» no lleva muro ni admite puertas)"
  },
  "reticula": {
   "ejes_x": [{"id": "A", "x": -13.0}, {"id": "B", "x": -5.8}, {"id": "C", "x": 1.4}, {"id": "D", "x": 8.6}],
@@ -38,7 +39,7 @@
    "niveles": ["P1", "P2", "P3", "P4", "CUB"],
    "recintos": {"P1": "A059-01", "P2": "A112-01", "P3": "A171-01", "P4": "A205-01", "CUB": "A220-01"},
    "notas": [
-    "Dos tramos de 13 contrahuellas por piso, de 2,40 m libres, con descanso de piso y descanso intermedio dobles para girar camillas (programa.json); ojo de 0,40 m entre tramos. Estimación de este trazado.",
+    "Dos tramos de 13 contrahuellas por piso, de 2,40 m libres, con descanso de piso y descanso intermedio dobles para girar camillas (programa). Los tramos y los descansos empiezan en la cara libre de la estructura del prediseño: muro de concreto de 0,35 m al occidente, cara de las vigas de los ejes 3, 4, 6 y 7 (0,20 m desde el eje) y cara de las columnas del eje D al oriente (0,40 m desde el eje), para que ningún descanso quede fundido dentro de una viga ni pase bajo ella; el ojo entre tramos queda de 0,125 m. Estimación de este trazado.",
     "Muros del núcleo (prediseño DMO): concreto estructural de 0,35 m en los paños MY-N6 y MX-7 (norte) y MY-N3, MX-3 y MX-4 (sur), y mampostería separada de la estructura en el resto; los tramos se trazan con 0,35 m en todo el contorno (del lado seguro). La puerta de cada piso va en el vano de 1,20 m que deja el muro estructural en x = 3,1, con hoja de 1,10 m."
    ]
   },
@@ -55,25 +56,25 @@
    "niveles": ["P1", "P2", "P3", "P4", "CUB"],
    "recintos": {"P1": "A059-02", "P2": "A112-02", "P3": "A171-02", "P4": "A205-02", "CUB": "A220-02"},
    "notas": [
-    "Igual a la norte. En el piso 4 la terraza del piso 3 (paneles solares) se alcanza por la puerta de mantenimiento de la sala de espera, junto a la puerta de la escalera: el muro sur de la escalera (MX-3) es estructural y no lleva vanos.",
+    "Dos tramos de 13 contrahuellas por piso, de 2,40 m libres, con descanso de piso y descanso intermedio dobles para girar camillas (programa). Los tramos y los descansos empiezan en la cara libre de la estructura del prediseño: muro de concreto de 0,35 m al occidente, cara de las vigas de los ejes 3, 4, 6 y 7 (0,20 m desde el eje) y cara de las columnas del eje D al oriente (0,40 m desde el eje), para que ningún descanso quede fundido dentro de una viga ni pase bajo ella; el ojo entre tramos queda de 0,125 m. Estimación de este trazado.",
     "Muros del núcleo (prediseño DMO): concreto estructural de 0,35 m en los paños MY-N6 y MX-7 (norte) y MY-N3, MX-3 y MX-4 (sur), y mampostería separada de la estructura en el resto; los tramos se trazan con 0,35 m en todo el contorno (del lado seguro). La puerta de cada piso va en el vano de 1,20 m que deja el muro estructural en x = 3,1, con hoja de 1,10 m."
    ]
   },
   {
    "id": "ESC-P",
    "nombre": "Escalera principal abierta del vestíbulo",
-   "rect": [-0.3, -15.25, 3.1, -10.0],
-   "muro_m": 0.12,
-   "descanso_piso": "norte",
-   "carril_subida": "oeste",
+   "rect": [1.6, -12.0, 6.9, -9.4],
+   "muro_m": {"oeste": 0.0, "norte": 0.0, "sur": 0.0, "este": 0.15},
+   "descanso_piso": "oeste",
+   "carril_subida": "norte",
    "ancho_tramo_m": 1.2,
    "huella_m": 0.28,
    "huellas_por_tramo": 12,
-   "descanso_piso_m": 0.55,
+   "descanso_piso_m": 0.65,
    "niveles": ["P1", "P2"],
    "recintos": {"P1": "A064-01", "P2": "A117-01"},
    "notas": [
-    "Escalera en U de dos tramos de 1,20 m (la columna C2, de 0,80 × 0,80 m desde el prediseño DMO, queda en el ojo de 0,88 m) que sube del vestíbulo del piso 1 a la espera del piso 2; el descanso de piso es la franja de 0,55 m abierta a la galería. Estimación de este trazado; el ancho mínimo de una escalera que no es de evacuación queda por confirmar en la NSR-10 (Título K)."
+    "Escalera en U de dos tramos de 1,20 m en el vano C-D entre los ejes 2 y 3 (coordinación con el prediseño DMO, 17.4): los tramos y los descansos empiezan en la cara de la viga del eje C (x = 1,60) y de la columna C2 (y = −12,00); sube hacia el oriente por el carril norte desde el descanso de piso, abierto al vestíbulo y al paso de la galería, y vuelve por el carril sur hasta la llegada a la espera de farmacia del piso 2; los lados abiertos a la circulación no llevan muro, el oriental es el muro de 0,15 m del cuarto vecino y al sur queda una franja de 0,40 m hasta el muro de los descansos del personal (piso 1) y del laboratorio (piso 2). El hueco de la losa del piso 2 (x 2,25 a 6,825; y −12,00 a −9,40) queda dentro del vano, sin vigas encima de los tramos ni de los descansos. Estimación de este trazado; el ancho mínimo de una escalera que no es de evacuación queda por confirmar en la NSR-10 (Título K)."
    ]
   }
  ],
@@ -125,7 +126,7 @@
    "tipo": "escalera_abierta",
    "nombre": "Escalera principal abierta (pisos 1 y 2)",
    "pisos": [1, 2],
-   "puntos": {"1": [0.4, -10.4], "2": [2.4, -10.4]}
+   "puntos": {"1": [1.9, -10.0], "2": [1.9, -11.4]}
   }
  ],
  "niveles": [
@@ -144,7 +145,7 @@
     {
      "id": "FV-BAHIA",
      "nombre": "Marquesina solar de la bahía de ambulancias",
-     "centro": [-16.6, 15.0],
+     "centro": [-17.1, 15.0],
      "largo_m": 13.2,
      "ancho_m": 7.2,
      "rumbo_eje": 0,
@@ -157,7 +158,8 @@
      "modulo_m": [2.28, 1.13],
      "inclinacion_deg": 0,
      "tipo": "marquesina",
-     "fuente": "data/edificios/torre_hospital.json → adecuaciones.fv (marquesina)"
+     "fuente": "data/edificios/torre_hospital.json → adecuaciones.fv (marquesina)",
+     "nota": "Separada 0,50 m de la fachada occidental: la fila del oriente queda a 0,09 m de la cara de las columnas del eje A (0,90 × 0,90 m del prediseño) en los pisos 1 y 2 (coordinación BIM)."
     }
    ],
    "recintos": [
@@ -285,10 +287,10 @@
      "poligono": [
       [6.1, 0.8],
       [8.6, 0.8],
-      [8.6, 9.0],
-      [7.1, 9.0],
-      [7.1, 9.5],
-      [3.1, 9.5],
+      [8.6, 8.95],
+      [3.6, 8.95],
+      [3.6, 9.45],
+      [3.1, 9.45],
       [3.1, 8.0],
       [2.05, 8.0],
       [2.05, 7.2],
@@ -298,17 +300,33 @@
     {
      "fila": 65,
      "k": 1,
-     "poligono": [[3.1, 11.0], [7.1, 11.0], [7.1, 11.7], [8.6, 11.7], [8.6, 14.0], [1.25, 14.0], [1.25, 12.7], [3.1, 12.7]]
+     "rect": [3.1, 10.45, 8.4, 13.8],
+     "notas": [
+      "Coordinación con el modelo BIM (17.4): el ducto va a la cara de las vigas del prediseño (eje 6 en y = 13,80, eje D en x = 8,40 y viga de borde VB-N-56 en x = 3,10), así ninguna viga lo atraviesa, y es igual en los cuatro pisos (x 3,10 a 8,40; y 10,45 a 13,80; 17,76 m² a ejes), así la abertura de cada losa es el ducto mismo y no se angosta de un piso al de arriba. Estimación de este trazado."
+     ]
     },
-    {"fila": 58, "k": 1, "rect": [3.1, 9.5, 7.1, 11.0]},
-    {"fila": 56, "k": 1, "rect": [7.1, 9.0, 8.6, 11.7]},
+    {
+     "tec": 1,
+     "nombre": "Franja bajo las vigas de los ejes 6 y D (sin acceso)",
+     "servicio": "Circulación vertical y ductos",
+     "grupo": "circulacion",
+     "poligono": [[3.1, 13.8], [8.4, 13.8], [8.4, 10.45], [8.6, 10.45], [8.6, 14.0], [3.1, 14.0]],
+     "transitable": false,
+     "notas": [
+      "Recinto no programado: franja de 0,20 m bajo las vigas de los ejes 6 (0,40 × 0,80 m) y D, entre el muro del ducto, que va a la cara de la viga, y el de la escalera norte o la fachada; sin acceso (coordinación con el prediseño estructural, 17.4); estimación de este trazado."
+     ]
+    },
+    {"fila": 58, "k": 1, "rect": [1.25, 10.55, 3.1, 14.0]},
+    {"fila": 56, "k": 1, "poligono": [[3.6, 8.95], [5.95, 8.95], [5.95, 10.45], [3.1, 10.45], [3.1, 9.45], [3.6, 9.45]]},
     {
      "fila": 0,
      "k": 1,
      "poligono": [
       [-13.0, -10.0],
-      [4.6, -10.0],
-      [4.6, -7.6],
+      [1.6, -10.0],
+      [1.6, -9.4],
+      [6.9, -9.4],
+      [6.9, -7.6],
       [3.1, -7.6],
       [3.1, -5.7],
       [1.55, -5.7],
@@ -384,7 +402,7 @@
     {"fila": 27, "k": 1, "rect": [-3.25, 10.55, -1.75, 14.0]},
     {"fila": 27, "k": 2, "rect": [-1.75, 10.55, -0.25, 14.0]},
     {"fila": 27, "k": 3, "rect": [-0.25, 10.55, 1.25, 14.0]},
-    {"fila": 31, "k": 1, "rect": [1.25, 10.55, 3.1, 12.7]},
+    {"fila": 31, "k": 1, "rect": [5.95, 8.95, 8.6, 10.45]},
     {"fila": 9, "k": 1, "rect": [-3.25, 4.05, -1.7, 8.0]},
     {"fila": 36, "k": 1, "rect": [-1.7, 4.05, -0.65, 8.0]},
     {"fila": 37, "k": 1, "rect": [-0.65, 4.05, 0.85, 8.0]},
@@ -410,7 +428,7 @@
     {"fila": 47, "k": 1, "rect": [-1.0, -7.9, 0.15, -4.3]},
     {"fila": 49, "k": 1, "rect": [0.15, -7.9, 1.55, -5.7]},
     {"fila": 2, "k": 1, "rect": [-1.8, -15.25, -0.3, -12.0]},
-    {"fila": 57, "k": 1, "rect": [4.6, -10.0, 8.6, -7.6]},
+    {"fila": 57, "k": 1, "rect": [6.9, -12.4, 8.6, -7.6]},
     {"fila": 51, "k": 1, "rect": [-13.0, -15.25, -9.55, -10.0]},
     {"fila": 50, "k": 1, "rect": [-9.55, -12.55, -6.4, -10.0]},
     {
@@ -437,19 +455,23 @@
     {"fila": 2, "k": 3, "rect": [-5.3, -15.25, -3.5, -12.55]},
     {"fila": 37, "k": 2, "rect": [-3.5, -15.25, -1.8, -12.35]},
     {"fila": 55, "k": 1, "rect": [0.15, -5.7, 3.1, -4.3]},
-    {"fila": 64, "k": 1, "rect": [-0.3, -15.25, 3.1, -10.0]},
-    {"circ": 9, "nombre": "Paso de la galería al pasillo sur", "rect": [3.1, -15.25, 4.6, -10.0]},
+    {"fila": 64, "k": 1, "rect": [1.6, -12.4, 6.9, -9.4]},
+    {
+     "circ": 9,
+     "nombre": "Paso de la galería al pasillo sur",
+     "poligono": [[-0.3, -15.25], [1.4, -15.25], [1.4, -12.4], [1.6, -12.4], [1.6, -10.0], [-0.3, -10.0]]
+    },
     {
      "fila": 41,
      "k": 1,
-     "rect": [4.6, -12.5, 8.6, -10.0],
-     "banos": [{"rect": [6.6, -12.5, 8.6, -10.9], "nombre": "Baño", "puerta": {"pos": [7.2, -10.9]}}]
+     "banos": [{"rect": [2.95, -14.0, 4.95, -12.4], "nombre": "Baño", "puerta": {"pos": [3.6, -14.0]}}],
+     "rect": [1.4, -15.25, 4.95, -12.4]
     },
     {
      "fila": 42,
      "k": 1,
-     "rect": [4.6, -15.25, 8.6, -12.5],
-     "banos": [{"rect": [6.6, -14.1, 8.6, -12.5], "nombre": "Baño", "puerta": {"pos": [7.2, -14.1]}}]
+     "banos": [{"rect": [6.6, -15.25, 8.6, -13.65], "nombre": "Baño", "puerta": {"pos": [7.2, -13.65]}}],
+     "rect": [4.95, -15.25, 8.6, -12.4]
     },
     {
      "circ": 8,
@@ -525,6 +547,7 @@
     ["A000-01", "A051-01"],
     ["A000-01", "A001-01"],
     ["A000-01", "A064-01"],
+    ["CIRC-09", "A064-01"],
     ["A000-01", "CIRC-09"],
     ["CIRC-01", "CIRC-02"],
     ["CIRC-01", "CIRC-03"],
@@ -563,7 +586,7 @@
     },
     {"entre": ["A061-01", "A060-01"], "pos": [6.1, 5.8], "ancho": 1.2},
     {"entre": ["A061-01", "A060-02"], "pos": [6.1, 3.0], "ancho": 1.2},
-    {"entre": ["A061-01", "A062-01"], "pos": [6.1, 1.2], "ancho": 0.6},
+    {"entre": ["A061-01", "A062-01"], "pos": [6.1, 1.225], "ancho": 0.4},
     {
      "entre": ["A061-01", "exterior"],
      "pos": [8.6, 4.4],
@@ -574,7 +597,6 @@
      "nombre": "Galería al hospital actual",
      "lleva_a": {"nivel": "EXT", "recinto": "EXT-A228-01"}
     },
-    {"entre": ["A061-01", "A058-01"], "pos": [5.0, 9.5], "ancho": 0.9},
     {
      "entre": ["A000-01", "exterior"],
      "pos": [-13.0, -8.9],
@@ -586,15 +608,15 @@
      "lleva_a": {"nivel": "EXT", "recinto": "EXT-CIRC-02"}
     },
     {"entre": ["A051-01", "A050-01"], "pos": [-9.55, -11.3], "ancho": 1.0},
-    {"entre": ["A000-01", "A057-01"], "pos": [4.6, -8.8], "ancho": 1.0, "categoria": "tecnico"},
+    {"entre": ["A000-01", "A057-01"], "pos": [6.9, -8.5], "ancho": 1.0, "categoria": "tecnico"},
     {"entre": ["A000-01", "A048-01"], "pos": [-2.0, -7.9], "ancho": 0.9},
     {"entre": ["A000-01", "A047-01"], "pos": [-0.425, -7.9], "ancho": 0.9},
     {"entre": ["A000-01", "A049-01"], "pos": [1.55, -6.5], "ancho": 0.9},
     {"entre": ["A000-01", "A055-01"], "pos": [2.3, -5.7], "ancho": 0.9},
     {
      "entre": ["A003-01", "exterior"],
-     "pos": [-13.0, 15.35],
-     "ancho": 2.0,
+     "pos": [-13.0, 15.45],
+     "ancho": 1.8,
      "abre": "corrediza",
      "tipo": "automatica",
      "categoria": "exterior",
@@ -622,7 +644,7 @@
     {"entre": ["CIRC-02", "A043-01"], "pos": [2.3, 16.55], "ancho": 0.9},
     {"entre": ["CIRC-02", "A027-01"], "pos": [-2.5, 14.0], "ancho": 1.0},
     {"entre": ["CIRC-02", "A027-02"], "pos": [-1.0, 14.0], "ancho": 1.0},
-    {"entre": ["CIRC-02", "A027-03"], "pos": [0.5, 14.0], "ancho": 1.0},
+    {"entre": ["CIRC-02", "A027-03"], "pos": [0.4, 14.0], "ancho": 1.0},
     {"entre": ["A016-01", "A021-01"], "pos": [-9.8, 5.2], "ancho": 1.4},
     {"entre": ["CIRC-01", "A016-01"], "pos": [-5.8, 5.2], "ancho": 1.4},
     {"entre": ["CIRC-05", "A015-01"], "pos": [-11.3, 0.45], "ancho": 1.0},
@@ -642,7 +664,7 @@
     {"entre": ["A018-01", "A020-01"], "pos": [-10.7, -4.225], "ancho": 0.9},
     {"entre": ["CIRC-01", "A018-01"], "pos": [-5.8, -4.225], "ancho": 1.0},
     {"entre": ["A019-01", "A020-02"], "pos": [-10.7, -6.95], "ancho": 0.9},
-    {"entre": ["CIRC-01", "A019-01"], "pos": [-5.8, -6.6], "ancho": 1.2, "bisagra": "derecha"},
+    {"entre": ["CIRC-01", "A019-01"], "pos": [-5.8, -6.55], "ancho": 1.2, "abre": "adentro", "bisagra": "derecha"},
     {"entre": ["CIRC-01", "A009-01"], "pos": [-3.25, 6.0], "ancho": 1.0},
     {"entre": ["CIRC-03", "A036-01"], "pos": [-1.175, 8.0], "ancho": 0.9},
     {"entre": ["CIRC-03", "A037-01"], "pos": [0.1, 8.0], "ancho": 0.9},
@@ -652,7 +674,7 @@
     {"entre": ["A030-01", "A034-01"], "pos": [0.15, 1.4], "ancho": 0.9},
     {"entre": ["CIRC-01", "A044-01"], "pos": [-3.2, -1.1], "ancho": 1.4},
     {"entre": ["CIRC-01", "A045-01"], "pos": [-3.25, -3.65], "ancho": 1.0},
-    {"entre": ["A044-01", "A046-01"], "pos": [2.25, -3.05], "ancho": 0.9},
+    {"entre": ["A044-01", "A046-01"], "pos": [2.15, -3.05], "ancho": 0.9},
     {"entre": ["A050-01", "A054-01"], "pos": [-8.3, -12.55], "ancho": 0.9},
     {"entre": ["CIRC-08", "A054-01"], "pos": [-8.6, -15.25], "ancho": 0.9},
     {"entre": ["A054-01", "A063-01"], "pos": [-7.7, -14.95], "ancho": 0.5, "abre": "corrediza"},
@@ -660,8 +682,8 @@
     {"entre": ["CIRC-08", "A002-03"], "pos": [-4.4, -15.25], "ancho": 0.9},
     {"entre": ["CIRC-08", "A037-02"], "pos": [-2.6, -15.25], "ancho": 0.9},
     {"entre": ["CIRC-08", "A002-01"], "pos": [-1.05, -15.25], "ancho": 0.9},
-    {"entre": ["CIRC-09", "A041-01"], "pos": [4.6, -11.25], "ancho": 1.0},
-    {"entre": ["CIRC-09", "A042-01"], "pos": [4.6, -13.95], "ancho": 1.0},
+    {"entre": ["CIRC-09", "A041-01"], "pos": [1.4, -14.4], "ancho": 1.0},
+    {"entre": ["CIRC-08", "A042-01"], "pos": [5.8, -15.25], "ancho": 1.0},
     {"entre": ["CIRC-08", "A053-01"], "pos": [-10.9, -16.6], "ancho": 1.0},
     {"entre": ["CIRC-08", "A052-01"], "pos": [-8.25, -16.6], "ancho": 1.0, "abre": "corrediza"},
     {"entre": ["CIRC-08", "A052-02"], "pos": [-7.05, -16.6], "ancho": 1.0, "abre": "corrediza"},
@@ -675,14 +697,15 @@
     {"entre": ["CIRC-08", "A040-01"], "pos": [7.5, -16.6], "ancho": 0.9},
     {
      "entre": ["A058-01", "A065-01"],
-     "pos": [5.0, 11.0],
+     "pos": [3.1, 12.2],
      "ancho": 0.9,
      "categoria": "deposito",
      "nombre": "Registro de los ductos desde el cuarto eléctrico"
     },
-    {"entre": ["A061-01", "A056-01"], "pos": [7.85, 9.0], "ancho": 0.9},
+    {"entre": ["A061-01", "A056-01"], "pos": [4.8, 8.95], "ancho": 0.9},
     {"entre": ["A061-01", "A032-01"], "pos": [2.575, 7.2], "ancho": 0.9, "abre": "corrediza"},
-    {"entre": ["CIRC-03", "A031-01"], "pos": [2.575, 10.55], "ancho": 0.9, "abre": "corrediza"},
+    {"entre": ["A061-01", "A031-01"], "pos": [7.2, 8.95], "ancho": 0.9, "abre": "corrediza"},
+    {"entre": ["CIRC-03", "A058-01"], "pos": [2.2, 10.55], "ancho": 0.9},
     {"entre": ["A032-01", "A035-01"], "pos": [2.05, 6.0], "ancho": 0.9, "abre": "corrediza"}
    ],
    "sin_ventana": ["A044-01", "A063-01"],
@@ -690,7 +713,7 @@
     {"id": "principal", "punto": [-12.2, -8.9], "mirando_deg": 0, "nombre": "Puerta principal (galería de entrada)"},
     {
      "id": "urgencias",
-     "punto": [-12.0, 15.35],
+     "punto": [-12.0, 15.45],
      "mirando_deg": 0,
      "nombre": "Puerta de urgencias desde la bahía de ambulancias"
     },
@@ -715,19 +738,33 @@
     {
      "fila": 114,
      "k": 1,
-     "poligono": [[6.1, 0.8], [8.6, 0.8], [8.6, 9.25], [5.6, 9.25], [5.6, 10.75], [3.1, 10.75], [3.1, 7.2], [6.1, 7.2]]
+     "poligono": [[6.1, 0.8], [8.6, 0.8], [8.6, 9.25], [5.1, 9.25], [5.1, 10.45], [3.1, 10.45], [3.1, 7.2], [6.1, 7.2]]
     },
-    {"fila": 118, "k": 1, "rect": [3.1, 10.75, 8.6, 14.0]},
-    {"fila": 111, "k": 1, "rect": [5.6, 9.25, 8.6, 10.75]},
+    {
+     "fila": 118,
+     "k": 1,
+     "rect": [3.1, 10.45, 8.4, 13.8],
+     "notas": [
+      "Coordinación con el modelo BIM (17.4): el ducto va a la cara de las vigas del prediseño (eje 6 en y = 13,80, eje D en x = 8,40 y viga de borde VB-N-56 en x = 3,10), así ninguna viga lo atraviesa, y es igual en los cuatro pisos (x 3,10 a 8,40; y 10,45 a 13,80; 17,76 m² a ejes), así la abertura de cada losa es el ducto mismo y no se angosta de un piso al de arriba. Estimación de este trazado."
+     ]
+    },
+    {
+     "tec": 3,
+     "nombre": "Franja bajo las vigas de los ejes 6 y D (sin acceso)",
+     "servicio": "Circulación vertical y ductos",
+     "grupo": "circulacion",
+     "poligono": [[3.1, 13.8], [8.4, 13.8], [8.4, 10.45], [8.6, 10.45], [8.6, 14.0], [3.1, 14.0]],
+     "transitable": false,
+     "notas": [
+      "Recinto no programado: franja de 0,20 m bajo las vigas de los ejes 6 (0,40 × 0,80 m) y D, entre el muro del ducto, que va a la cara de la viga, y el de la escalera norte o la fachada; sin acceso (coordinación con el prediseño estructural, 17.4); estimación de este trazado."
+     ]
+    },
+    {"fila": 111, "k": 1, "rect": [5.1, 9.25, 8.6, 10.45]},
     {"fila": 110, "k": 1, "rect": [0.85, 6.15, 3.1, 7.95]},
-    {"fila": 117, "k": 1, "rect": [-0.3, -15.25, 3.1, -10.0]},
+    {"fila": 117, "k": 1, "rect": [1.6, -12.4, 6.9, -9.4]},
     {"fila": 116, "k": 1, "rect": [-7.7, -15.25, -7.1, -14.65]},
     {"circ": 1, "nombre": "Corredor del laboratorio", "rect": [-13.0, -16.85, 8.6, -15.25]},
-    {
-     "circ": 2,
-     "nombre": "Entrada del laboratorio (desde el vestíbulo de la escalera sur)",
-     "rect": [3.1, -15.25, 4.6, -10.0]
-    },
+    {"circ": 2, "nombre": "Entrada del laboratorio (desde la espera de farmacia)", "rect": [-0.3, -15.25, 1.4, -12.4]},
     {"fila": 93, "k": 1, "rect": [-13.0, -19.6, -11.9, -16.85]},
     {"fila": 87, "k": 1, "rect": [-11.9, -19.6, -10.4, -16.85]},
     {"fila": 86, "k": 1, "rect": [-10.4, -19.6, -8.2, -16.85]},
@@ -766,17 +803,17 @@
     },
     {"fila": 84, "k": 1, "rect": [-5.9, -15.25, -3.1, -10.25]},
     {"fila": 81, "k": 1, "rect": [-3.1, -15.25, -0.3, -10.95]},
-    {"fila": 85, "k": 1, "rect": [4.6, -15.25, 8.6, -12.25]},
-    {"fila": 83, "k": 1, "rect": [4.6, -12.25, 8.6, -10.25]},
+    {"fila": 85, "k": 1, "rect": [1.4, -15.25, 5.65, -12.4]},
+    {"fila": 83, "k": 1, "rect": [5.65, -15.25, 8.6, -12.4]},
     {
      "tec": 2,
      "nombre": "Biología molecular (GeneXpert)",
      "servicio": "Laboratorio clínico",
      "grupo": "apoyo_diagnostico_y_terapeutico",
-     "rect": [4.6, -10.25, 8.6, -7.6],
      "notas": [
       "Recinto no programado (16.2): área de biología molecular con el GeneXpert, contigua a inmunología; estimación de este trazado."
-     ]
+     ],
+     "rect": [6.9, -12.4, 8.6, -7.6]
     },
     {
      "fila": 104,
@@ -786,10 +823,12 @@
       [-3.1, -10.25],
       [-3.1, -10.95],
       [-0.3, -10.95],
-      [-0.3, -10.0],
-      [1.8, -10.0],
-      [1.8, -9.5],
-      [-0.6, -9.5],
+      [-0.3, -12.4],
+      [1.6, -12.4],
+      [1.6, -9.4],
+      [1.3, -9.4],
+      [1.3, -9.9],
+      [-0.6, -9.9],
       [-0.6, -9.35],
       [-3.0, -9.35],
       [-3.0, -8.6],
@@ -798,8 +837,8 @@
     },
     {
      "circ": 3,
-     "nombre": "Vestíbulo de la escalera sur y entrada del laboratorio",
-     "poligono": [[1.8, -10.0], [4.6, -10.0], [4.6, -7.6], [3.1, -7.6], [3.1, -5.7], [1.8, -5.7]]
+     "nombre": "Vestíbulo de la escalera sur",
+     "poligono": [[1.3, -9.4], [6.9, -9.4], [6.9, -7.6], [3.1, -7.6], [3.1, -5.7], [1.8, -5.7], [1.8, -7.75], [1.3, -7.75]]
     },
     {"fila": 73, "k": 1, "rect": [-8.35, -10.25, -5.8, 10.15]},
     {
@@ -847,7 +886,7 @@
     {"fila": 94, "k": 1, "rect": [-5.8, -0.55, -3.0, 4.1]},
     {"fila": 95, "k": 1, "rect": [-5.8, 4.1, -3.0, 6.7]},
     {"fila": 78, "k": 1, "rect": [-5.8, 6.7, -3.0, 7.95]},
-    {"fila": 96, "k": 1, "rect": [-0.6, -9.5, 1.8, -7.75]},
+    {"fila": 96, "k": 1, "rect": [-0.6, -9.9, 1.3, -7.75]},
     {"fila": 100, "k": 1, "rect": [-3.0, -9.35, -0.6, -7.6]},
     {"fila": 100, "k": 2, "rect": [0.55, -7.75, 1.8, -4.55]},
     {
@@ -866,11 +905,11 @@
       [-3.0, -2.65]
      ]
     },
-    {"fila": 103, "k": 1, "rect": [-3.0, -2.65, -1.3, 1.1]},
-    {"fila": 97, "k": 1, "rect": [-1.3, -2.65, -0.2, 1.1]},
-    {"fila": 99, "k": 1, "rect": [-0.2, -2.65, 0.9, 1.1]},
-    {"fila": 101, "k": 1, "rect": [0.9, -2.65, 2.0, 1.1]},
-    {"fila": 102, "k": 1, "rect": [2.0, -2.65, 3.1, 1.1]},
+    {"fila": 103, "k": 1, "rect": [-3.0, -2.65, -1.4, 1.1]},
+    {"fila": 97, "k": 1, "rect": [-1.4, -2.65, -0.3, 1.1]},
+    {"fila": 99, "k": 1, "rect": [-0.3, -2.65, 0.8, 1.1]},
+    {"fila": 101, "k": 1, "rect": [0.8, -2.65, 1.9, 1.1]},
+    {"fila": 102, "k": 1, "rect": [1.9, -2.65, 3.1, 1.1]},
     {
      "fila": 74,
      "k": 2,
@@ -954,14 +993,8 @@
     {"entre": ["CIRC-03", "A112-02"], "pos": [3.1, -6.3], "ancho": 1.1, "nombre": "Puerta de la escalera sur"},
     {"entre": ["A114-01", "A113-01"], "pos": [6.1, 5.8], "ancho": 1.2},
     {"entre": ["A114-01", "A113-02"], "pos": [6.1, 3.0], "ancho": 1.2},
-    {"entre": ["A114-01", "A115-01"], "pos": [6.1, 1.2], "ancho": 0.6},
+    {"entre": ["A114-01", "A115-01"], "pos": [6.1, 1.225], "ancho": 0.4},
     {"entre": ["A114-01", "A111-01"], "pos": [7.1, 9.25], "ancho": 0.9},
-    {
-     "entre": ["CIRC-03", "CIRC-02"],
-     "pos": [3.85, -10.0],
-     "ancho": 1.2,
-     "nombre": "Puerta del laboratorio (acceso restringido)"
-    },
     {"entre": ["A079-01", "A116-01"], "pos": [-7.1, -14.95], "ancho": 0.5, "abre": "corrediza"},
     {"entre": ["CIRC-01", "A079-01"], "pos": [-6.5, -15.25], "ancho": 1.0},
     {"entre": ["A079-01", "A080-01"], "pos": [-7.7, -12.5], "ancho": 1.0},
@@ -969,9 +1002,16 @@
     {"entre": ["CIRC-01", "A082-01"], "pos": [-11.2, -15.25], "ancho": 1.0},
     {"entre": ["CIRC-01", "A084-01"], "pos": [-4.5, -15.25], "ancho": 1.0},
     {"entre": ["CIRC-01", "A081-01"], "pos": [-1.7, -15.25], "ancho": 1.0},
-    {"entre": ["CIRC-02", "A085-01"], "pos": [4.6, -13.75], "ancho": 1.0},
-    {"entre": ["CIRC-02", "A083-01"], "pos": [4.6, -11.25], "ancho": 1.0},
-    {"entre": ["A083-01", "TEC-02"], "pos": [6.6, -10.25], "ancho": 1.0},
+    {
+     "entre": ["A104-01", "CIRC-02"],
+     "pos": [0.35, -12.4],
+     "ancho": 1.2,
+     "nombre": "Puerta del laboratorio (acceso restringido)",
+     "abre": "corrediza"
+    },
+    {"entre": ["CIRC-02", "A085-01"], "pos": [1.4, -13.9], "ancho": 1.0},
+    {"entre": ["CIRC-01", "A083-01"], "pos": [7.1, -15.25], "ancho": 1.0},
+    {"entre": ["A083-01", "TEC-02"], "pos": [7.6, -12.4], "ancho": 1.0},
     {"entre": ["CIRC-01", "A093-01"], "pos": [-12.45, -16.85], "ancho": 0.9},
     {"entre": ["CIRC-01", "A087-01"], "pos": [-11.15, -16.85], "ancho": 0.9},
     {"entre": ["CIRC-01", "A086-01"], "pos": [-9.3, -16.85], "ancho": 0.9},
@@ -995,15 +1035,15 @@
     {"entre": ["A073-01", "A072-01"], "pos": [-5.8, -2.1], "ancho": 1.0},
     {"entre": ["A073-01", "A094-01"], "pos": [-5.8, 1.8], "ancho": 1.0},
     {"entre": ["A094-01", "A095-01"], "pos": [-4.4, 4.1], "ancho": 0.9},
-    {"entre": ["A104-01", "A096-01"], "pos": [0.75, -9.5], "ancho": 1.0, "nombre": "Recepción técnica de medicamentos"},
+    {"entre": ["A104-01", "A096-01"], "pos": [0.4, -9.9], "ancho": 1.0, "nombre": "Recepción técnica de medicamentos"},
     {"entre": ["A096-01", "A098-01"], "pos": [0.0, -7.75], "ancho": 1.0},
     {"entre": ["A100-01", "A098-01"], "pos": [-1.8, -7.6], "ancho": 0.9},
     {"entre": ["A100-02", "A098-01"], "pos": [0.55, -5.9], "ancho": 0.9},
-    {"entre": ["A098-01", "A103-01"], "pos": [-2.15, -2.65], "ancho": 0.9},
-    {"entre": ["A098-01", "A097-01"], "pos": [-0.75, -2.65], "ancho": 0.9, "abre": "corrediza"},
-    {"entre": ["A098-01", "A099-01"], "pos": [0.35, -2.65], "ancho": 0.9, "abre": "corrediza"},
-    {"entre": ["A098-01", "A101-01"], "pos": [1.45, -2.65], "ancho": 0.9, "abre": "corrediza"},
-    {"entre": ["A098-01", "A102-01"], "pos": [2.55, -2.65], "ancho": 0.9, "abre": "corrediza"},
+    {"entre": ["A098-01", "A103-01"], "pos": [-2.2, -2.65], "ancho": 0.9},
+    {"entre": ["A098-01", "A097-01"], "pos": [-0.85, -2.65], "ancho": 0.9, "abre": "corrediza"},
+    {"entre": ["A098-01", "A099-01"], "pos": [0.25, -2.65], "ancho": 0.9, "abre": "corrediza"},
+    {"entre": ["A098-01", "A101-01"], "pos": [1.35, -2.65], "ancho": 0.9, "abre": "corrediza"},
+    {"entre": ["A098-01", "A102-01"], "pos": [2.4, -2.65], "ancho": 0.9, "abre": "corrediza"},
     {"entre": ["CIRC-05", "A074-02"], "pos": [-1.8, 7.95], "ancho": 1.0},
     {"entre": ["CIRC-05", "A107-01"], "pos": [0.1, 7.95], "ancho": 1.0},
     {"entre": ["A107-01", "A108-01"], "pos": [0.4, 3.6], "ancho": 0.9},
@@ -1021,17 +1061,17 @@
     {"entre": ["CIRC-06", "A067-02"], "pos": [-2.9, 16.55], "ancho": 1.0},
     {"entre": ["CIRC-06", "A067-03"], "pos": [-0.4, 16.55], "ancho": 1.0},
     {"entre": ["CIRC-06", "A070-01"], "pos": [1.975, 16.55], "ancho": 1.4},
-    {"entre": ["A114-01", "A118-01"], "pos": [5.0, 10.75], "ancho": 0.9, "categoria": "deposito"},
+    {"entre": ["A114-01", "A118-01"], "pos": [4.1, 10.45], "ancho": 0.9, "categoria": "deposito"},
     {"entre": ["CIRC-05", "A110-01"], "pos": [2.35, 7.95], "ancho": 0.9},
     {"entre": ["CIRC-05", "A078-01"], "pos": [-4.4, 7.95], "ancho": 0.9}
    ],
    "sin_ventana": ["A116-01", "A117-01"],
    "entradas_recorrido": [
-    {"id": "escalera_principal", "punto": [1.75, -9.6], "mirando_deg": 90, "nombre": "Llegada de la escalera principal"},
+    {"id": "escalera_principal", "punto": [0.85, -11.4], "mirando_deg": 0, "nombre": "Llegada de la escalera principal"},
     {"id": "ascensores", "punto": [4.6, 8.6], "mirando_deg": 180, "nombre": "Vestíbulo de ascensores"},
     {
      "id": "laboratorio",
-     "punto": [3.85, -10.6],
+     "punto": [0.35, -12.95],
      "mirando_deg": 270,
      "nombre": "Puerta del laboratorio, mirando hacia adentro"
     }
@@ -1040,7 +1080,7 @@
     {
      "id": "hueco_escalera_principal",
      "nombre": "Hueco de la escalera principal (baranda de 1,10 m)",
-     "rect": [-0.24, -15.19, 3.04, -10.61],
+     "rect": [2.25, -12.0, 6.825, -9.4],
      "altura_m": 1.1
     }
    ]
@@ -1062,11 +1102,33 @@
     {
      "fila": 173,
      "k": 1,
-     "poligono": [[6.1, 0.8], [8.6, 0.8], [8.6, 8.9], [4.6, 8.9], [4.6, 10.9], [3.1, 10.9], [3.1, 7.2], [6.1, 7.2]]
+     "poligono": [[6.1, 0.8], [8.6, 0.8], [8.6, 8.75], [4.55, 8.75], [4.55, 9.7], [3.1, 9.7], [3.1, 7.2], [6.1, 7.2]]
     },
-    {"fila": 175, "k": 1, "rect": [3.1, 10.9, 8.6, 14.0]},
-    {"fila": 167, "k": 1, "rect": [6.6, 8.9, 8.6, 10.9]},
-    {"fila": 166, "k": 1, "rect": [4.6, 8.9, 6.6, 10.9]},
+    {
+     "fila": 175,
+     "k": 1,
+     "rect": [3.1, 10.45, 8.4, 13.8],
+     "notas": [
+      "Coordinación con el modelo BIM (17.4): el ducto va a la cara de las vigas del prediseño (eje 6 en y = 13,80, eje D en x = 8,40 y viga de borde VB-N-56 en x = 3,10), así ninguna viga lo atraviesa, y es igual en los cuatro pisos (x 3,10 a 8,40; y 10,45 a 13,80; 17,76 m² a ejes), así la abertura de cada losa es el ducto mismo y no se angosta de un piso al de arriba. Estimación de este trazado."
+     ]
+    },
+    {
+     "tec": 1,
+     "nombre": "Franja bajo las vigas de los ejes 6 y D (sin acceso)",
+     "servicio": "Circulación vertical y ductos",
+     "grupo": "circulacion",
+     "poligono": [[3.1, 13.8], [8.4, 13.8], [8.4, 10.45], [8.6, 10.45], [8.6, 14.0], [3.1, 14.0]],
+     "transitable": false,
+     "notas": [
+      "Recinto no programado: franja de 0,20 m bajo las vigas de los ejes 6 (0,40 × 0,80 m) y D, entre el muro del ducto, que va a la cara de la viga, y el de la escalera norte o la fachada; sin acceso (coordinación con el prediseño estructural, 17.4); estimación de este trazado."
+     ]
+    },
+    {"fila": 167, "k": 1, "rect": [6.25, 8.75, 8.6, 10.45]},
+    {
+     "fila": 166,
+     "k": 1,
+     "poligono": [[4.55, 8.75], [6.25, 8.75], [6.25, 10.45], [3.1, 10.45], [3.1, 9.7], [4.55, 9.7]]
+    },
     {
      "circ": 1,
      "nombre": "Corredor de hospitalización",
@@ -1252,15 +1314,15 @@
     {"entre": ["CIRC-04", "A171-02"], "pos": [3.1, -6.3], "ancho": 1.1, "nombre": "Puerta de la escalera sur"},
     {"entre": ["A173-01", "A172-01"], "pos": [6.1, 5.8], "ancho": 1.2},
     {"entre": ["A173-01", "A172-02"], "pos": [6.1, 3.0], "ancho": 1.2},
-    {"entre": ["A173-01", "A174-01"], "pos": [6.1, 1.2], "ancho": 0.6},
-    {"entre": ["A173-01", "A167-01"], "pos": [7.6, 8.9], "ancho": 0.9},
+    {"entre": ["A173-01", "A174-01"], "pos": [6.1, 1.225], "ancho": 0.4},
+    {"entre": ["A173-01", "A167-01"], "pos": [7.4, 8.75], "ancho": 0.9},
     {"entre": ["CIRC-01", "A123-01"], "pos": [-5.8, 12.2], "ancho": 1.2},
     {"entre": ["CIRC-01", "A119-01"], "pos": [-5.8, 9.65], "ancho": 1.2},
     {"entre": ["CIRC-01", "A119-02"], "pos": [-5.8, 6.3], "ancho": 1.2},
     {"entre": ["CIRC-01", "A119-03"], "pos": [-5.8, 2.95], "ancho": 1.2},
     {"entre": ["CIRC-01", "A122-01"], "pos": [-5.8, -0.4], "ancho": 1.2},
     {"entre": ["CIRC-01", "A122-02"], "pos": [-5.8, -3.75], "ancho": 1.2},
-    {"entre": ["CIRC-01", "A121-01"], "pos": [-5.8, -8.6], "ancho": 1.2, "abre": "corrediza"},
+    {"entre": ["CIRC-01", "A121-01"], "pos": [-5.8, -8.65], "ancho": 1.2, "abre": "corrediza"},
     {"entre": ["A121-01", "A120-01"], "pos": [-7.4, -7.85], "ancho": 1.2, "abre": "corrediza"},
     {"entre": ["CIRC-01", "A149-01"], "pos": [-5.8, -10.85], "ancho": 1.0},
     {"entre": ["A149-01", "A150-01"], "pos": [-11.0, -10.85], "ancho": 0.9},
@@ -1271,7 +1333,7 @@
     {"entre": ["A151-01", "A152-01"], "pos": [-8.85, 20.85], "ancho": 1.0},
     {"entre": ["A151-02", "A152-02"], "pos": [-5.65, 20.85], "ancho": 1.0},
     {"entre": ["A159-01", "A147-01"], "pos": [-0.35, 19.15], "ancho": 0.9},
-    {"entre": ["CIRC-02", "A145-01"], "pos": [2.3, 16.55], "ancho": 1.2},
+    {"entre": ["CIRC-02", "A145-01"], "pos": [2.25, 16.55], "ancho": 1.2},
     {"entre": ["A145-01", "A146-01"], "pos": [2.4, 19.15], "ancho": 0.9},
     {"entre": ["CIRC-03", "A154-01"], "pos": [-1.8, 10.55], "ancho": 0.9},
     {"entre": ["CIRC-02", "A154-02"], "pos": [-1.8, 14.0], "ancho": 0.9},
@@ -1284,11 +1346,11 @@
     {"entre": ["CIRC-01", "A133-01"], "pos": [-3.25, -11.2], "ancho": 0.9},
     {"entre": ["CIRC-04", "A137-01"], "pos": [1.4, 6.55], "ancho": 0.9},
     {"entre": ["CIRC-04", "A137-02"], "pos": [1.4, 3.65], "ancho": 0.9},
-    {"entre": ["CIRC-04", "A128-01"], "pos": [1.4, 1.65], "ancho": 0.9, "bisagra": "derecha"},
+    {"entre": ["CIRC-04", "A128-01"], "pos": [1.4, 1.7], "ancho": 0.9, "abre": "corrediza"},
     {"entre": ["CIRC-04", "A130-01"], "pos": [1.4, -0.45], "ancho": 0.9},
     {"entre": ["CIRC-04", "A131-01"], "pos": [1.4, -2.25], "ancho": 0.9},
     {"entre": ["CIRC-04", "A134-01"], "pos": [1.4, -6.25], "ancho": 0.9},
-    {"entre": ["CIRC-04", "A134-02"], "pos": [1.4, -8.45], "ancho": 0.9},
+    {"entre": ["CIRC-04", "A134-02"], "pos": [1.4, -8.5], "ancho": 0.9},
     {"entre": ["CIRC-04", "A129-01"], "pos": [1.4, -10.45], "ancho": 0.9},
     {"entre": ["CIRC-04", "A161-01"], "pos": [3.1, -13.75], "ancho": 1.0, "nombre": "Recepción de material contaminado"},
     {
@@ -1301,7 +1363,7 @@
     {"entre": ["A164-01", "A162-01"], "pos": [6.6, -11.7], "ancho": 0.9},
     {"entre": ["A162-01", "A163-01"], "pos": [6.6, -10.0], "ancho": 0.9, "nombre": "Autoclave de doble puerta"},
     {"entre": ["CIRC-04", "A163-01"], "pos": [3.1, -10.0], "ancho": 1.0, "nombre": "Entrega de material estéril"},
-    {"entre": ["CIRC-04", "A165-01"], "pos": [3.1, -8.25], "ancho": 0.9, "bisagra": "derecha"},
+    {"entre": ["CIRC-04", "A165-01"], "pos": [3.1, -8.3], "ancho": 0.9, "bisagra": "derecha"},
     {"entre": ["CIRC-05", "A170-01"], "pos": [-10.9, -15.25], "ancho": 1.0},
     {"entre": ["CIRC-05", "A139-01"], "pos": [-7.35, -15.25], "ancho": 0.9},
     {"entre": ["CIRC-05", "A141-01"], "pos": [-4.9, -15.25], "ancho": 0.9},
@@ -1317,8 +1379,14 @@
     {"entre": ["CIRC-05", "A140-01"], "pos": [2.65, -16.65], "ancho": 1.0},
     {"entre": ["CIRC-05", "A138-01"], "pos": [5.725, -16.65], "ancho": 0.9},
     {"entre": ["CIRC-05", "A144-01"], "pos": [7.675, -16.65], "ancho": 0.9},
-    {"entre": ["A173-01", "A175-01"], "pos": [4.0, 10.9], "ancho": 0.9, "categoria": "deposito"},
-    {"entre": ["A173-01", "A166-01"], "pos": [5.6, 8.9], "ancho": 0.9}
+    {
+     "entre": ["A167-01", "A175-01"],
+     "pos": [7.3, 10.45],
+     "ancho": 0.9,
+     "categoria": "deposito",
+     "nombre": "Registro de los ductos desde el cuarto eléctrico"
+    },
+    {"entre": ["A173-01", "A166-01"], "pos": [5.25, 8.75], "ancho": 0.9}
    ],
    "entradas_recorrido": [
     {"id": "ascensores", "punto": [4.6, 8.6], "mirando_deg": 180, "nombre": "Vestíbulo de ascensores"},
@@ -1341,25 +1409,28 @@
     {"fila": 206, "k": 1, "rect": [3.1, 4.4, 6.1, 7.2]},
     {"fila": 206, "k": 2, "rect": [3.1, 1.6, 6.1, 4.4]},
     {"fila": 208, "k": 1, "rect": [3.1, 0.8, 6.1, 1.6]},
+    {"fila": 207, "k": 1, "poligono": [[6.1, 0.8], [8.6, 0.8], [8.6, 10.45], [3.1, 10.45], [3.1, 7.2], [6.1, 7.2]]},
     {
-     "fila": 207,
+     "fila": 209,
      "k": 1,
-     "poligono": [
-      [6.1, 0.8],
-      [8.6, 0.8],
-      [8.6, 8.8],
-      [7.1, 8.8],
-      [7.1, 9.8],
-      [5.1, 9.8],
-      [5.1, 11.8],
-      [3.1, 11.8],
-      [3.1, 7.2],
-      [6.1, 7.2]
+     "rect": [3.1, 10.45, 8.4, 13.8],
+     "notas": [
+      "Coordinación con el modelo BIM (17.4): el ducto va a la cara de las vigas del prediseño (eje 6 en y = 13,80, eje D en x = 8,40 y viga de borde VB-N-56 en x = 3,10), así ninguna viga lo atraviesa, y es igual en los cuatro pisos (x 3,10 a 8,40; y 10,45 a 13,80; 17,76 m² a ejes), así la abertura de cada losa es el ducto mismo y no se angosta de un piso al de arriba. Estimación de este trazado."
      ]
     },
-    {"fila": 209, "k": 1, "rect": [3.1, 11.8, 8.6, 14.0]},
-    {"fila": 203, "k": 1, "rect": [7.1, 8.8, 8.6, 11.8]},
-    {"fila": 202, "k": 1, "rect": [5.1, 9.8, 7.1, 11.8]},
+    {
+     "tec": 2,
+     "nombre": "Franja bajo las vigas de los ejes 6 y D (sin acceso)",
+     "servicio": "Circulación vertical y ductos",
+     "grupo": "circulacion",
+     "poligono": [[3.1, 13.8], [8.4, 13.8], [8.4, 10.45], [8.6, 10.45], [8.6, 14.0], [3.1, 14.0]],
+     "transitable": false,
+     "notas": [
+      "Recinto no programado: franja de 0,20 m bajo las vigas de los ejes 6 (0,40 × 0,80 m) y D, entre el muro del ducto, que va a la cara de la viga, y el de la escalera norte o la fachada; sin acceso (coordinación con el prediseño estructural, 17.4); estimación de este trazado."
+     ]
+    },
+    {"fila": 203, "k": 1, "rect": [1.25, 10.55, 3.1, 12.75]},
+    {"fila": 202, "k": 1, "rect": [-0.25, 10.55, 1.25, 13.25]},
     {
      "circ": 1,
      "nombre": "Corredor de terapias y consulta",
@@ -1427,10 +1498,10 @@
      "nombre": "Archivo y depósito de la coordinación asistencial",
      "servicio": "Zona de expansión, telesalud y coordinación asistencial",
      "grupo": "direccion_y_administracion",
-     "rect": [-0.25, 10.55, 3.1, 14.0],
      "notas": [
-      "Recinto no programado: espacio sobrante junto a los ascensores (archivo, insumos de oficina y equipos de la sala de crisis); estimación de este trazado."
-     ]
+      "Recinto no programado: espacio sobrante junto al corredor norte (archivo e insumos de oficina); estimación de este trazado. Cedió al cuarto eléctrico y a los residuos del piso, que salieron de junto al ducto para que el ducto del piso 4 sea igual al de los pisos de abajo (coordinación BIM, 17.4)."
+     ],
+     "poligono": [[-0.25, 13.25], [1.25, 13.25], [1.25, 12.75], [3.1, 12.75], [3.1, 14.0], [-0.25, 14.0]]
     },
     {"fila": 197, "k": 1, "rect": [-13.0, 16.55, -2.05, 22.4]},
     {"fila": 198, "k": 1, "rect": [-2.05, 16.55, -0.3, 22.4]},
@@ -1478,8 +1549,7 @@
     },
     {"entre": ["A207-01", "A206-01"], "pos": [6.1, 5.8], "ancho": 1.2},
     {"entre": ["A207-01", "A206-02"], "pos": [6.1, 3.0], "ancho": 1.2},
-    {"entre": ["A207-01", "A208-01"], "pos": [6.1, 1.2], "ancho": 0.6},
-    {"entre": ["A207-01", "A203-01"], "pos": [7.85, 8.8], "ancho": 0.9},
+    {"entre": ["A207-01", "A208-01"], "pos": [6.1, 1.225], "ancho": 0.4},
     {"entre": ["CIRC-04", "A189-01"], "pos": [-11.2, -4.8], "ancho": 1.0},
     {"entre": ["CIRC-04", "A189-02"], "pos": [-7.6, -4.8], "ancho": 1.0},
     {"entre": ["CIRC-04", "A189-03"], "pos": [-11.2, -3.5], "ancho": 1.0},
@@ -1509,12 +1579,20 @@
     {"entre": ["CIRC-02", "A201-02"], "pos": [-2.5, 14.0], "ancho": 0.9},
     {"entre": ["CIRC-03", "A195-01"], "pos": [-1.0, 10.55], "ancho": 0.9},
     {"entre": ["CIRC-02", "A195-02"], "pos": [-1.0, 14.0], "ancho": 0.9},
-    {"entre": ["CIRC-03", "TEC-01"], "pos": [1.4, 10.55], "ancho": 0.9},
     {"entre": ["CIRC-01", "A197-01"], "pos": [-4.5, 16.55], "ancho": 1.6, "hojas": 2, "categoria": "camas"},
     {"entre": ["A197-01", "A198-01"], "pos": [-2.05, 19.5], "ancho": 1.2},
     {"entre": ["CIRC-02", "A178-01"], "pos": [1.4, 16.55], "ancho": 1.0},
-    {"entre": ["A207-01", "A209-01"], "pos": [4.1, 11.8], "ancho": 0.9, "categoria": "deposito"},
-    {"entre": ["A207-01", "A202-01"], "pos": [6.1, 9.8], "ancho": 0.9}
+    {"entre": ["CIRC-03", "A202-01"], "pos": [0.5, 10.55], "ancho": 0.9},
+    {"entre": ["CIRC-03", "A203-01"], "pos": [2.2, 10.55], "ancho": 0.9},
+    {
+     "entre": ["A203-01", "A209-01"],
+     "pos": [3.1, 11.65],
+     "ancho": 0.9,
+     "categoria": "deposito",
+     "nombre": "Registro de los ductos desde el cuarto eléctrico"
+    },
+    {"entre": ["CIRC-02", "TEC-01"], "pos": [2.45, 14.0], "ancho": 0.9},
+    {"entre": ["A207-01", "A209-01"], "pos": [4.35, 10.45], "ancho": 0.9, "categoria": "deposito"}
    ],
    "entradas_recorrido": [
     {"id": "ascensores", "punto": [4.6, 8.6], "mirando_deg": 180, "nombre": "Vestíbulo de ascensores"},
@@ -1531,7 +1609,8 @@
    "altura_libre_m": 3.5,
    "muro_borde_exterior": "cerramiento",
    "notas": [
-    "Cotas estimadas (programa.json → implantacion.lote.niveles): patio de servicio ≈ -1,50; el pasaje sube en rampa hasta ±0,00 en el patio oriente."
+    "Cotas estimadas (programa.json → implantacion.lote.niveles): patio de servicio ≈ -1,50; el pasaje sube en rampa hasta ±0,00 en el patio oriente.",
+    "Coordinación con la cimentación (17.2): los cuartos técnicos empiezan en y = -20,95, al sur de los dados del eje 1 de la torre (llegan a y = -20,59), y sus muros del lado de las cisternas van en y = -24,70 y x = -10,45, junto a la caja de las cisternas y no encima. El pasaje (y -20,95 a -19,60) no cabe más al sur con las áreas del programa y el lindero del lote (y ≈ -25,0): sobre los dados D-A1 a D-D1 y las vigas de amarre del eje 1 (x -14,35 a 9,95) no lleva muro propio, lo limita el borde de la torre, y la llegada al patio oriente (x = 11,0) queda al oriente del dado D-D1. Al occidente de x ≈ -2,5 la rampa del pasaje queda bajo la cara superior de esos dados y vigas (-0,70): queda pendiente que el prediseño los baje bajo el piso del pasaje y resuelva la contención del borde de la torre."
    ],
    "recintos": [
     {
@@ -1549,26 +1628,26 @@
     {
      "fila": 229,
      "k": 1,
-     "rect": [-19.5, -20.8, 11.9, -19.6],
+     "rect": [-19.5, -20.95, 12.4, -19.6],
      "exterior": true,
-     "rampa": {"eje": "x", "desde": -19.5, "hasta": 11.9, "z0": 0.0, "z1": 1.5, "pendiente_pct": 4.8}
+     "rampa": {"eje": "x", "desde": -19.5, "hasta": 12.4, "z0": 0.0, "z1": 1.5, "pendiente_pct": 4.7}
     },
-    {"fila": 214, "k": 1, "rect": [-19.5, -24.8, -15.0, -20.8]},
-    {"fila": 211, "k": 1, "rect": [-15.0, -24.8, -8.0, -20.8]},
-    {"fila": 210, "k": 1, "rect": [-8.0, -24.8, -3.5, -20.8]},
+    {"fila": 214, "k": 1, "rect": [-19.5, -24.7, -14.7, -20.95]},
+    {"fila": 211, "k": 1, "rect": [-14.7, -24.7, -7.2, -20.95]},
+    {"fila": 210, "k": 1, "rect": [-7.2, -24.8, -2.5, -20.95]},
     {
      "fila": 212,
      "k": 1,
-     "rect": [-3.5, -24.8, 2.4, -20.8],
+     "rect": [-2.5, -24.8, 2.5, -20.95],
      "notas": [
-      "Aloja también el banco de baterías de 400 kWh / 150 kW del nodo hospital (proyecto P7, data/edificios/torre_hospital.json → adecuaciones.bess) y la UPS; 18 m² del programa son estrechos para los racks: se dibujan 23,6 m² (estimación)."
+      "Aloja también el banco de baterías de 400 kWh / 150 kW del nodo hospital (proyecto P7, data/edificios/torre_hospital.json → adecuaciones.bess) y la UPS; 18 m² del programa son estrechos para los racks: se dibujan 19,25 m² (estimación; el bloque se corrió al sur para no apoyarse en los dados del eje 1 de la torre)."
      ]
     },
-    {"fila": 213, "k": 1, "rect": [2.4, -24.8, 8.9, -20.8]},
-    {"fila": 215, "k": 1, "rect": [8.9, -24.8, 11.9, -20.8]},
-    {"fila": 216, "k": 1, "rect": [-19.5, -28.0, -15.55, -24.8], "exterior": true},
-    {"fila": 217, "k": 1, "rect": [-15.55, -28.0, -12.7, -24.8], "exterior": true},
-    {"fila": 218, "k": 1, "rect": [-12.7, -28.0, -10.5, -24.8], "exterior": true},
+    {"fila": 213, "k": 1, "rect": [2.5, -24.8, 9.25, -20.95]},
+    {"fila": 215, "k": 1, "rect": [9.25, -24.8, 12.4, -20.95]},
+    {"fila": 216, "k": 1, "rect": [-19.5, -28.0, -15.55, -24.7], "exterior": true},
+    {"fila": 217, "k": 1, "rect": [-15.55, -28.0, -12.7, -24.7], "exterior": true},
+    {"fila": 218, "k": 1, "rect": [-12.7, -28.0, -10.45, -24.7], "exterior": true},
     {"fila": 219, "k": 1, "rect": [-25.5, -28.0, -21.0, -24.0]}
    ],
    "abiertos": [
@@ -1579,25 +1658,34 @@
     ["CIRC-01", "A217-01"],
     ["CIRC-01", "A218-01"]
    ],
+   "muros_forzados": [
+    {
+     "entre": ["A229-01", "exterior"],
+     "tipo": "abierto",
+     "tramo": [[-14.45, -19.6], [10.0, -19.6]],
+     "nota": "Borde del pasaje contra la torre sobre los dados D-A1 a D-D1 y las vigas de amarre del eje 1 (prediseño de la cimentación): el pasaje no lleva muro propio allí; lo limitan la fachada sur de la torre y el borde de su cimentación, que el prediseño resuelve (contención y cotas de los dados bajo el piso del pasaje)."
+    }
+   ],
    "puertas": [
-    {"entre": ["A229-01", "A214-01"], "pos": [-17.25, -20.8], "ancho": 1.2},
+    {"entre": ["A229-01", "A214-01"], "pos": [-17.25, -20.95], "ancho": 1.2},
     {
      "entre": ["A216-01", "A214-01"],
-     "pos": [-17.25, -24.8],
+     "pos": [-17.25, -24.7],
      "ancho": 1.2,
      "nombre": "Puerta de bombas al patio de las cisternas"
     },
-    {"entre": ["A229-01", "A211-01"], "pos": [-11.5, -20.8], "ancho": 1.6, "hojas": 2},
+    {"entre": ["A229-01", "A211-01"], "pos": [-13.6, -20.95], "ancho": 1.6, "hojas": 2},
     {
-     "entre": ["A218-01", "A211-01"],
-     "pos": [-11.5, -24.8],
+     "entre": ["A217-01", "A211-01"],
+     "pos": [-13.6, -24.7],
      "ancho": 1.2,
-     "nombre": "Llenado de combustible y mantenimiento de la planta"
+     "nombre": "Llenado de combustible y mantenimiento de la planta",
+     "abre": "afuera"
     },
-    {"entre": ["A229-01", "A210-01"], "pos": [-5.75, -20.8], "ancho": 1.6, "hojas": 2},
-    {"entre": ["A229-01", "A212-01"], "pos": [-0.55, -20.8], "ancho": 1.2},
-    {"entre": ["A229-01", "A213-01"], "pos": [5.65, -20.8], "ancho": 1.6, "hojas": 2},
-    {"entre": ["A229-01", "A215-01"], "pos": [10.4, -20.8], "ancho": 1.2},
+    {"entre": ["A229-01", "A210-01"], "pos": [-5.75, -20.95], "ancho": 1.6, "hojas": 2},
+    {"entre": ["A229-01", "A212-01"], "pos": [-0.55, -20.95], "ancho": 1.2},
+    {"entre": ["A229-01", "A213-01"], "pos": [5.65, -20.95], "ancho": 1.6, "hojas": 2},
+    {"entre": ["A229-01", "A215-01"], "pos": [10.4, -20.95], "ancho": 1.2},
     {"entre": ["CIRC-02", "A219-01"], "pos": [-21.0, -26.0], "ancho": 1.6, "hojas": 2},
     {
      "entre": ["CIRC-01", "A219-01"],
@@ -1608,7 +1696,7 @@
     },
     {
      "entre": ["A229-01", "exterior"],
-     "pos": [10.25, -19.6],
+     "pos": [11.0, -19.6],
      "ancho": 1.2,
      "abre": "corrediza",
      "categoria": "exterior",
@@ -1636,7 +1724,7 @@
    "entradas_recorrido": [
     {
      "id": "pasaje",
-     "punto": [9.5, -20.2],
+     "punto": [11.0, -20.3],
      "mirando_deg": 180,
      "nombre": "Pasaje de servicio (llegada desde el patio oriente)"
     },

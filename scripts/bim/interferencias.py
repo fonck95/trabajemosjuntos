@@ -17,13 +17,15 @@ Revisa sobre data/bim/torre_hospital.bim.json (solo biblioteca estándar):
  9. refuerzo fuera del concreto (con su causa: un insumo que no cuadra o el dibujo del modelo) y pilotes dentro de su
     dado con la distancia al borde del prediseño y el recubrimiento del dado para su canasta;
 10. coherencia de los insumos (vigas de amarre que no se apoyan, esquinas de núcleo sin concreto, bordes de losa sin
-    apoyo, cotas de las cisternas frente al bloque técnico, área de acero de las parrillas de los dados frente a la
-    requerida, conteo y paso de los estribos y de las cortinas frente al diseño).
+    apoyo, cotas de las cisternas frente al bloque técnico, muros de contención que pasan la cara de su apoyo, área de
+    acero de las parrillas de los dados frente a la requerida, conteo y paso de los estribos y de las cortinas frente al
+    diseño).
 El recubrimiento corto es del modelo (F) si el que especifica el prediseño ya cumple la NSR-10, y del prediseño (A) si no.
 Cada interferencia lleva ids, posición, medida, severidad, propuesta, responsable y estado. Lo que es del modelo BIM
 (equipo F) se corrige en generar_bim.py/despiece.py; lo de otros equipos queda pendiente con su evidencia.
 Modelo de prefactibilidad: no reemplaza los diseños firmados."""
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -173,12 +175,19 @@ def dist_seg(p1, q1, p2, q2):
 
 
 # ================================================================================================= registro
+def coma_decimal(s):
+    """Cifras del texto con coma decimal (1.5 cm → 1,5 cm); los numerales de las normas (C.7.7.1) y los ítems del
+    presupuesto (ítem 2.09) no cambian."""
+    return re.sub(r'(?<![\w.])(?<!ítem )(?<!ítems )(?<!fila )(-?\d+)\.(\d+)(?![\w.])', r'\1,\2', s) if isinstance(s, str) else s
+
+
 class Registro:
     def __init__(self):
         self.lista = []
 
     def add(self, categoria, severidad, elementos, posicion, descripcion, propuesta, responsable, estado='pendiente', medida=None,
             norma=None, casos=1):
+        descripcion, propuesta = coma_decimal(descripcion), coma_decimal(propuesta)
         self.lista.append({'categoria': categoria, 'severidad': severidad, 'elementos': list(elementos),
                            'posicion': rp(posicion, 3) if posicion else None, 'medida': medida or {}, 'descripcion': descripcion,
                            'propuesta': propuesta, 'responsable': responsable, 'estado': estado, 'norma': norma, 'casos': casos})
@@ -201,16 +210,19 @@ def unidades_y_puertas(M, E, Rg):
         if e['disciplina'] not in ('DOT', 'FIJO'):
             continue
         n_u += 1
-        g = e['geometria']
-        (a, b, _t), = partes(g)
-        for i in idx.cerca(a, b):
-            b0, b1, sid = estr[i]
-            pen = obb_aabb(g, b0, b1)
-            if pen > TOL_SOLIDO:
-                Rg.add('unidad contra estructura', 'dura' if pen > 0.05 else 'leve', [e['id'], sid], [g['centro'][0], g['centro'][1], g['centro'][2] + g['dim'][2] / 2],
-                       f'«{e["nombre"]}» se mete {pen * 100:.1f} cm en {_min(E[sid]["nombre"])}.',
-                       f'Correr la unidad al menos {pen * 100 + 1:.0f} cm hacia el recinto (regla de ubicación del inventario).', 'B',
-                       medida={'penetracion_m': r(pen, 3)}, norma='Res. 3100 de 2019 (ubicación de la dotación) y NSR-10 A.9 (anclaje)')
+        vistos = set()
+        # una unidad es una caja girada; las filas solares elevadas son el plano de módulos y sus dos postes
+        for g in (e['geometria']['partes'] if e['geometria']['tipo'] == 'compuesta' else [e['geometria']]):
+            (a, b, _t), = partes(g)
+            for i in idx.cerca(a, b):
+                b0, b1, sid = estr[i]
+                pen = obb_aabb(g, b0, b1)
+                if pen > TOL_SOLIDO and sid not in vistos:
+                    vistos.add(sid)
+                    Rg.add('unidad contra estructura', 'dura' if pen > 0.05 else 'leve', [e['id'], sid], [g['centro'][0], g['centro'][1], g['centro'][2] + g['dim'][2] / 2],
+                           f'«{e["nombre"]}» se mete {pen * 100:.1f} cm en {_min(E[sid]["nombre"])}.',
+                           f'Correr la unidad al menos {pen * 100 + 1:.0f} cm hacia el recinto (regla de ubicación del inventario).', 'B',
+                           medida={'penetracion_m': r(pen, 3)}, norma='Res. 3100 de 2019 (ubicación de la dotación) y NSR-10 A.9 (anclaje)')
     n_p = 0
     for e in M['elementos']:
         v = e.get('vano')
@@ -355,39 +367,75 @@ def ductos(M, E, pl, Rg):
             est_sup.setdefault(e['nivel'], []).append(e)
     sig = {'P1': 'P2', 'P2': 'P3', 'P3': 'P4', 'P4': 'CUB'}
     from generar_bim import restar_rects  # noqa
+    def celdas(pol):
+        """Rectángulos que forman un polígono ortogonal (el ducto de un piso puede tener forma de L): las celdas de la
+        rejilla de sus coordenadas cuyo centro queda dentro."""
+        xs = sorted({q[0] for q in pol})
+        ys = sorted({q[1] for q in pol})
+
+        def dentro(x, y):
+            c = False
+            for (x1, y1), (x2, y2) in zip(pol, pol[1:] + pol[:1]):
+                if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+                    c = not c
+            return c
+        return [[x0, y0, x1, y1] for x0, x1 in zip(xs, xs[1:]) for y0, y1 in zip(ys, ys[1:]) if dentro((x0 + x1) / 2, (y0 + y1) / 2)]
+
+    def corte(cs, a, b, minimo):
+        """Parte de la planta de una caja (a, b) dentro del ducto: área y rectángulo envolvente."""
+        area, env = 0.0, None
+        for q in cs:
+            o = [min(q[2], b[0]) - max(q[0], a[0]), min(q[3], b[1]) - max(q[1], a[1])]
+            if min(o) > minimo:
+                area += o[0] * o[1]
+                w = [max(q[0], a[0]), max(q[1], a[1]), min(q[2], b[0]), min(q[3], b[1])]
+                env = w if env is None else [min(env[0], w[0]), min(env[1], w[1]), max(env[2], w[2]), max(env[3], w[3])]
+        return area, env
     for nid, rc in duct.items():
         pol = rc['poligono']
-        # el ducto es la parte rectangular común de su polígono (x, y)
+        # el ducto es su polígono (no el rectángulo que lo envuelve)
+        cs = celdas([list(q) for q in pol])
         xs = sorted({p[0] for p in pol})
         ys = sorted({p[1] for p in pol})
         rect = [min(xs), min(ys), max(xs), max(ys)]
         z = niveles[sig[nid]]['z']
         for e in est_sup.get(sig[nid], []):
             for (a, b, _t) in partes(e['geometria']):
-                o = [min(rect[2], b[0]) - max(rect[0], a[0]), min(rect[3], b[1]) - max(rect[1], a[1])]
-                if min(o) > 0.02 and a[2] < z + 0.01:
-                    area = o[0] * o[1]
+                area, env = corte(cs, a, b, 0.02)
+                if env and a[2] < z + 0.01:
+                    o = [env[2] - env[0], env[3] - env[1]]
                     if e['clase'] == 'IfcBeam':
-                        Rg.add('ducto contra estructura', 'dura', [rc['id'], e['id']], [(max(rect[0], a[0]) + min(rect[2], b[0])) / 2,
-                               (max(rect[1], a[1]) + min(rect[3], b[1])) / 2, z - 0.4],
+                        Rg.add('ducto contra estructura', 'dura', [rc['id'], e['id']], [(env[0] + env[2]) / 2, (env[1] + env[3]) / 2, z - 0.4],
                                f'La {_min(e["nombre"])} atraviesa el ducto vertical {rc["id"]} ({o[0]:.2f} × {o[1]:.2f} m de la sección del ducto).',
                                'Retirar el borde del ducto a la cara de la viga (el ducto queda libre bajo la viga) o desviar los montantes.', 'B',
                                medida={'area_m2': r(area, 3)}, norma='NSR-10 C.21 (no se perforan vigas de pórticos DMO sin diseño)')
                     break
             else:
                 continue
+        # la losa que cierra el ducto: donde el ducto sigue en el piso de arriba falta la abertura (A); donde el ducto de este
+        # piso es más grande que el de arriba (se angosta), primero B fija la forma del ducto y luego A ajusta la abertura
+        arriba = duct.get(sig[nid]) or rc
+        cs_ar = celdas([list(q) for q in arriba['poligono']])
+        cs_com = [w for q in cs for v in cs_ar for w in [[max(q[0], v[0]), max(q[1], v[1]), min(q[2], v[2]), min(q[3], v[3])]]
+                  if w[2] - w[0] > 1e-9 and w[3] - w[1] > 1e-9]
         losas = [e for e in est_sup.get(sig[nid], []) if e['clase'] == 'IfcSlab']
         for e in losas:
-            area = 0.0
+            area = area_com = 0.0
             for (a, b, _t) in partes(e['geometria']):
-                o = [min(rect[2], b[0]) - max(rect[0], a[0]), min(rect[3], b[1]) - max(rect[1], a[1])]
-                if min(o) > 0.0 and b[2] > z - 0.06:
-                    area += o[0] * o[1]
+                if b[2] > z - 0.06:
+                    area += corte(cs, a, b, 0.0)[0]
+                    area_com += corte(cs_com, a, b, 0.0)[0]
             if area > 0.05:
+                angosta = area - area_com > 0.05
                 Rg.add('ducto contra estructura', 'dura', [rc['id'], e['id']], [(rect[0] + rect[2]) / 2, (rect[1] + rect[3]) / 2, z],
-                       f'La losa {e["id"]} del nivel {z:.2f} no tiene abertura para el ducto vertical {rc["id"]} ({area:.1f} m² de losa dentro del ducto).',
-                       'Dejar la abertura del ducto en la losa nervada, con nervios y vigas de borde a su alrededor (prediseño de A).', 'A',
-                       medida={'area_m2': r(area, 2)}, norma='NSR-10 C.13.5 (aberturas en losas, por confirmar)')
+                       f'La losa {e["id"]} del nivel {z:.2f} no tiene abertura para el ducto vertical {rc["id"]} ({area:.1f} m² de losa dentro del ducto'
+                       + (f'; {area - area_com:.1f} m² en la parte del ducto que no sigue en el piso de arriba, donde el ducto se angosta)' if angosta else ')') + '.',
+                       ('Fijar la forma del ducto en los dos pisos (que el de arriba crezca o que el de abajo se recorte, equipo B) y dejar la '
+                        'abertura de la losa en la parte común, con nervios y vigas de borde a su alrededor (prediseño de A).') if angosta else
+                       'Dejar la abertura del ducto en la losa nervada, con nervios y vigas de borde a su alrededor (prediseño de A).',
+                       'A y B' if angosta else 'A',
+                       medida={'area_m2': r(area, 2), 'area_donde_se_angosta_m2': r(area - area_com, 2)},
+                       norma='NSR-10 C.13.5 (aberturas en losas, por confirmar)')
     # continuidad vertical del ducto (B)
     if len(duct) >= 2:
         com = None
@@ -410,22 +458,20 @@ def ductos(M, E, pl, Rg):
     # salida de redes bajo el ducto del piso 1 (−1,0 m) contra la cimentación
     if 'P1' in duct:
         rc = duct['P1']
-        xs = [p[0] for p in rc['poligono']]
-        ys = [p[1] for p in rc['poligono']]
-        rect = [min(xs), min(ys), max(xs), max(ys)]
+        cs = celdas([list(q) for q in rc['poligono']])
         for e in M['elementos']:
             if e['disciplina'] != 'CIM' or e['clase'] not in ('IfcFooting',):
                 continue
             for (a, b, _t) in partes(e['geometria']):
-                o = [min(rect[2], b[0]) - max(rect[0], a[0]), min(rect[3], b[1]) - max(rect[1], a[1])]
-                if min(o) > 0.02 and b[2] > -1.0:
-                    Rg.add('ducto contra cimentación', 'media', [rc['id'], e['id']], [(max(rect[0], a[0]) + min(rect[2], b[0])) / 2,
-                           (max(rect[1], a[1]) + min(rect[3], b[1])) / 2, b[2]],
+                area, env = corte(cs, a, b, 0.02)
+                if env and b[2] > -1.0:
+                    o = [env[2] - env[0], env[3] - env[1]]
+                    Rg.add('ducto contra cimentación', 'media', [rc['id'], e['id']], [(env[0] + env[2]) / 2, (env[1] + env[3]) / 2, b[2]],
                            f'Bajo el ducto {rc["id"]} queda {_min(e["nombre"])} con su cara superior a {b[2]:.2f} m: '
                            f'las redes que bajan del ducto (desagües y acometidas, ≈ −0,60 a −1,00 m) la cruzan en {o[0]:.2f} × {o[1]:.2f} m.',
                            'Dejar pases con camisa en la viga de amarre (fuera del tercio central de su altura no; en su mitad) o sacar las redes '
                            'por el costado del ducto que no tiene cimentación debajo; coordinar con el diseño hidrosanitario.', 'A y B',
-                           medida={'cara_superior_m': r(b[2], 3), 'area_m2': r(o[0] * o[1], 3)}, norma='NSR-10 C.15.13 y C.6.3 (pases)')
+                           medida={'cara_superior_m': r(b[2], 3), 'area_m2': r(area, 3)}, norma='NSR-10 C.15.13 y C.6.3 (pases)')
                     break
     return {'ductos': sorted(duct)}
 
@@ -518,6 +564,8 @@ def tipo_host(e):
         return 'cisterna'
     if i == 'CP-1':
         return 'contrapiso'
+    if e.get('objeto_tipo') == 'RETAININGWALL':
+        return 'muro_contencion'
     return 'otro'
 
 
@@ -527,7 +575,8 @@ def rec_especificado(est):
     C = est['cimentacion']
     return {'columna': c['columna'], 'viga': c['viga'], 'losa': min(c['vigueta'], c['loseta']), 'muro': c['muro'],
             'escalera': c['escalera'], 'pilote': C['pilotes'][0]['recubrimiento_m'], 'dado': c['dado_lados'],
-            'viga_amarre': c['viga_amarre'], 'foso': c['foso'], 'cisterna': c['foso']}
+            'viga_amarre': c['viga_amarre'], 'foso': c['foso'], 'cisterna': c['foso'],
+            **({'muro_contencion': min(m['refuerzo']['recubrimiento_m'] for m in C['muros_contencion'])} if C.get('muros_contencion') else {})}
 
 
 REC_ESPEC = {}
@@ -545,7 +594,8 @@ REC_MIN = {'columna': (0.040, 0.040, 'C.7.7.1 c: vigas y columnas no expuestas, 
            'viga_amarre': (0.040, 0.050, 'C.7.7.1 b: 40 mm (N.º 5 o menores) expuesto al suelo; 50 mm sobre el solado (ítem 2.06)'),
            'foso': (0.040, 0.050, 'C.7.7.1 b: muros expuestos al suelo 40 mm (N.º 5 o menores); losa de fondo sobre solado 50 mm'),
            'cisterna': (0.050, 0.050, 'C.7.7.1 b y C.23 (por confirmar): 50 mm en muros y fondo contra el suelo y el agua'),
-           'contrapiso': (0.040, 0.040, 'losa sobre el terreno con base granular (C.7.7.1 b, por confirmar)')}
+           'contrapiso': (0.040, 0.040, 'losa sobre el terreno con base granular (C.7.7.1 b, por confirmar)'),
+           'muro_contencion': (0.040, 0.040, 'C.7.7.1 b: concreto expuesto al suelo o a la intemperie, 40 mm (N.º 5 o menores)')}
 
 
 def causa_fuera(h, p, coh):
@@ -935,6 +985,22 @@ def coherencia(M, E, est, pl, Rg):
                        medida={'fondo_viga_m': r(fondo, 3), 'tope_dado_m': d['z_tope'], 'separacion_m': r(fondo - d['z_tope'], 3)},
                        norma='NSR-10 C.15.13 (vigas de amarre, por confirmar)')
                 break
+    # muros de contención: el muro entero sobre su apoyo (dado o viga de amarre) para anclar sus verticales
+    for m in C.get('muros_contencion') or []:
+        sup = DSP.apoyo_continuo(C, m)
+        x0, x1 = m['tramo']
+        fuera = [(lado, q) for lado, q in (('occidental', (sup[0] - x0) if sup else x1 - x0), ('oriental', (x1 - sup[1]) if sup else 0.0)) if q > 0.005]
+        for lado, q in fuera:
+            xe = x0 if lado == 'occidental' else x1
+            ap = m['sobre']
+            cara = (f'x = {sup[0] if lado == "occidental" else sup[1]:.2f}'.replace('.', ',')) if sup else 'sin apoyo'
+            Rg.add('coherencia de la cimentación', 'media', [m['id'], ap], [xe, sum(m['y']) / 2, m['z_fondo']],
+                   f'El extremo {lado} del muro de contención {m["id"]} pasa {q * 100:.0f} cm la cara de su apoyo ({ap}, {cara}): '
+                   'ese tramo queda sobre el relleno y sus barras verticales no tienen dónde anclarse (el modelo reparte las verticales '
+                   'sobre el dado).',
+                   f'Alargar {ap} {q * 100:.0f} cm hacia ese lado o terminar el muro en la cara del dado y cerrar el borde del pasaje '
+                   'de otra forma (prediseño y arquitectura).', 'A',
+                   medida={'fuera_del_apoyo_m': r(q, 3)}, norma='NSR-10 C.14.3, C.15 y título H (estructuras de contención); numerales por confirmar')
     # esquinas de los núcleos sin concreto (muros que se encuentran en L): el alma en x arranca en la cara del muro en y
     muros = [m for m in est['refuerzo']['muros'] if m['nivel'] == 1]
     todos = [rr for m in muros for rr in m['planta']]
@@ -996,33 +1062,51 @@ def coherencia(M, E, est, pl, Rg):
                    medida={'As_dibujada_mm2': q['As_dibujada_mm2'], 'As_req_mm2': req, 'faltante_pct': r(100 * max(falta, 0), 1),
                            'n_prediseno': nA, 'n_dibujadas': q['n_dibujadas'], 's_prediseno_m': q['s_A_m'], 's_dibujada_m': q['s_dibujada_m']},
                    norma='NSR-10 C.15.4 y C.10.5 (flexión del dado, por confirmar)')
-    # estribos: conteo y paso del modelo frente a los juegos de A (verificación de generar_bim)
+    # estribos: conteo y paso del modelo frente a los juegos de A (verificación de generar_bim). A cuenta los de cada zona
+    # (el centro desde el último estribo de la zona confinada, n = ⌈hueco/s⌉ − 1) y los del nudo a s_lo; no cuenta los que
+    # el modelo tenga que agregar en el nudo cuando, al correrlos fuera de las barras de las vigas, no hay sitio para
+    # mantener el paso s_lo con los suyos (criterio acordado en la revisión A7): esos van aparte, con su peso
     V = M.get('verificacion_estribos') or {}
+    extra_nudos = {}
     for tipo, nom, s_zona in (('columnas', 'columnas', 's_lo_m'), ('vigas', 'vigas', 's_2h_m')):
         filas = V.get(tipo) or {}
-        mas = {k: x['juegos_estribos'] - x['juegos_A'] for k, x in filas.items() if x['juegos_estribos'] != x['juegos_A']}
+        mas = {k: x['juegos_estribos'] - x.get('estribos_extra_nudo', 0) - x['juegos_A'] for k, x in filas.items()
+               if x['juegos_estribos'] - x.get('estribos_extra_nudo', 0) != x['juegos_A']}
+        if tipo == 'columnas':
+            extra_nudos = {k: x['estribos_extra_nudo'] for k, x in filas.items() if x.get('estribos_extra_nudo')}
         if mas:
-            ej = max(mas, key=lambda k: (mas[k], k))
+            ej = max(mas, key=lambda k: (abs(mas[k]), k))
             Rg.add('coherencia del despiece', 'media', sorted(mas)[:12], None,
-                   f'En {len(mas)} de {len(filas)} {nom} el modelo dibuja más estribos que los juegos que cuenta el prediseño '
-                   f'({sum(mas.values()):+d} en total; p. ej. {ej}: {filas[ej]["juegos_estribos"]} frente a {filas[ej]["juegos_A"]}). '
-                   'El prediseño reparte los estribos del centro entre las caras de la zona confinada (2h o lo) y no desde el último '
-                   'estribo de esa zona, y no cuenta los que hay que correr en el nudo para no cruzar las barras de las vigas: con su '
-                   'conteo el paso en la transición pasaría del máximo del centro. El modelo respeta el paso y agrega el estribo.',
-                   'Contar los estribos del centro desde el último de la zona confinada (n = ⌈hueco/s⌉ − 1) en el prediseño.', 'A',
-                   medida={'elementos': len(mas), 'estribos_de_mas': sum(mas.values())}, norma='NSR-10 C.21.3.4 y C.21.3.5 (por confirmar)')
+                   f'En {len(mas)} de {len(filas)} {nom} el modelo y el prediseño no cuentan los mismos estribos '
+                   f'({sum(mas.values()):+d} en total, sin los que el modelo agrega en los nudos; p. ej. {ej}: '
+                   f'{filas[ej]["juegos_estribos"] - filas[ej].get("estribos_extra_nudo", 0)} frente a {filas[ej]["juegos_A"]}). '
+                   'Los dos deben repartir el centro desde el último estribo de cada zona confinada (n = ⌈hueco/s⌉ − 1).',
+                   'Revisar el conteo de estribos del prediseño frente al reparto del modelo.', 'A',
+                   medida={'elementos': len(mas), 'estribos_de_diferencia': sum(mas.values())}, norma='NSR-10 C.21.3.4 y C.21.3.5 (por confirmar)')
         malos = {k: x for k, x in filas.items() if x['paso_max_m'] > x['s_centro_m'] + 1e-4 or
-                 x.get('paso_max_lo_m', x.get('paso_max_2h_m', 0.0)) > x[s_zona] + 1e-4}
+                 x.get('paso_max_lo_m', x.get('paso_max_2h_m', 0.0)) > x[s_zona] + 1e-4 or
+                 x.get('paso_max_nudo_m', 0.0) > x.get('s_lo_m', 9.9) + 1e-4}
         for k, x in sorted(malos.items()):
-            Rg.add('coherencia del despiece', 'dura', [k], None, f'En {k} el paso de los estribos llega a {x["paso_max_m"]:.3f} m.',
+            Rg.add('coherencia del despiece', 'dura', [k], None,
+                   f'En {k} el paso de los estribos llega a {max(x["paso_max_m"], x.get("paso_max_nudo_m", 0.0)):.3f} m.',
                    'Corregir el reparto de estribos del modelo.', 'F', medida=x)
+    kg_extra = 0.0
+    if extra_nudos:
+        # peso de un juego (estribo y sus ganchos suplementarios) de cada columna por los estribos agregados
+        por_juego = {}
+        for j in M['refuerzo']:
+            if j['host'] in extra_nudos and j['rol'] in ('estribo', 'gancho_suplementario_x', 'gancho_suplementario_y') and j['copias']:
+                por_juego.setdefault(j['host'], {}).setdefault(j['rol'], j['kg'] / len(j['copias']))
+        kg_extra = sum(sum(por_juego.get(h, {}).values()) * n_ for h, n_ in extra_nudos.items())
     for mid, x in sorted((V.get('cortinas') or {}).items()):
         if x['exceso_h_m'] > 1e-4 or x['exceso_v_m'] > 1e-4:
             Rg.add('coherencia del despiece', 'dura', [mid], None,
                    f'En el muro {mid} el paso de la cortina pasa del de diseño en {max(x["exceso_h_m"], x["exceso_v_m"]) * 1000:.0f} mm.',
                    'Corregir el reparto de la cortina en el modelo.', 'F', medida=x)
-    # traslapos de columnas: A los ubica a media altura libre del mismo piso (z_centro = z0 + ln/2) y cuenta cada piso con
-    # h + traslapo; con esa posición el nudo superior de cada piso queda con el armado del piso de arriba
+    # traslapos de columnas (C.21.6.3.2): las barras de cada piso atraviesan su nudo de arriba y se traslapan en la mitad
+    # central de la altura libre del piso de arriba. Se revisa que el traslapo de A quede ahí, que el piso de arriba no
+    # lleve más acero que el de abajo (bajo el traslapo su zona confinada de abajo tiene las barras del piso de abajo) y
+    # que el peso dibujado siga al de A (A pesa cada barra del traslapo de abajo, o del dado, al de arriba)
     cols = {}
     for c in est['refuerzo']['columnas']:
         cols.setdefault(c['id'].rsplit('-', 1)[0], []).append(c)
@@ -1030,32 +1114,54 @@ def coherencia(M, E, est, pl, Rg):
     for j in M['refuerzo']:
         if j['rol'] == 'longitudinal' and j['host'] in E and E[j['host']]['clase'] == 'IfcColumn':
             kg_mod[j['host']] = kg_mod.get(j['host'], 0.0) + j['kg']
-    menos, lineas, d_kg = [], 0, {}
+    fuera, mas_arriba, lineas, d_kg, kg_A = [], [], 0, {}, {}
     for lin, ps in sorted(cols.items()):
         ps = sorted(ps, key=lambda c: c['nivel'])
         lineas += 1
         for a, b in zip(ps, ps[1:]):
+            lap = a['longitudinal']['traslapo']
+            if lap:
+                ln_b = (b['z1'] - b['z0']) - b['estribos']['nudo']['alto_m']
+                q0, q1 = b['z0'] + ln_b / 4, b['z0'] + 3 * ln_b / 4
+                z_a, z_b = lap['z_centro'] - lap['largo_m'] / 2, lap['z_centro'] + lap['largo_m'] / 2
+                if z_a < q0 - 1e-3 or z_b > q1 + 1e-3:
+                    fuera.append((a['id'], r(z_a, 2), r(z_b, 2), r(q0, 2), r(q1, 2)))
             As_a = a['longitudinal']['n'] * DSP.BARRAS[a['longitudinal']['num']][1]
             As_b = b['longitudinal']['n'] * DSP.BARRAS[b['longitudinal']['num']][1]
-            if As_b < As_a - 1e-6:
-                menos.append((a['id'], r(As_a, 0), r(As_b, 0)))
+            if As_b > As_a + 1e-6:
+                mas_arriba.append((b['id'], r(As_a, 0), r(As_b, 0)))
         for c in ps:
             if c['id'] in kg_mod:
                 d_kg[c['nivel']] = d_kg.get(c['nivel'], 0.0) + kg_mod[c['id']] - c['kg_longitudinal']
-    if menos:
-        Rg.add('coherencia del despiece', 'media', sorted({m_[0] for m_ in menos})[:12], None,
-               f'A ubica el traslapo de las columnas a media altura libre del mismo piso (z₀ + ln/2) y no en el piso de arriba; el '
-               f'modelo sigue esa posición, así que el armado de cada piso termina a media altura y el nudo de arriba queda con el '
-               f'armado del piso siguiente. En {len(menos)} tramos de columna el piso de arriba tiene menos acero que el de abajo '
-               f'(p. ej. {menos[0][0]}: {menos[0][1]:.0f} mm² abajo y {menos[0][2]:.0f} mm² arriba). El peso de A cuenta cada piso con '
-               f'h + traslapo: frente al modelo, el piso 1 da {d_kg.get(1, 0):+.0f} kg y el último {d_kg.get(max(d_kg or [4]), 0):+.0f} kg '
-               f'(total {sum(d_kg.values()):+.0f} kg).',
-               'Ubicar el traslapo en la mitad central de la altura libre del piso de arriba (z₁ + ln/2), como pide C.21.6.3.2 '
-               'para las barras de cada piso, o confirmar que el armado del piso de arriba basta en el nudo.', 'A',
-               medida={'tramos_con_menos_acero_arriba': len(menos), 'lineas': lineas,
-                       'diferencia_kg_modelo_menos_A_por_piso': {str(k_): r(v_, 0) for k_, v_ in sorted(d_kg.items())}},
-               norma='NSR-10 C.21.6.3.2 y C.12.17')
-    return {'vigas_de_amarre': n}
+                kg_A[c['nivel']] = kg_A.get(c['nivel'], 0.0) + c['kg_longitudinal']
+    if fuera:
+        Rg.add('coherencia del despiece', 'media', sorted({f_[0] for f_ in fuera})[:12], None,
+               f'En {len(fuera)} columnas el traslapo de las barras no queda en la mitad central de la altura libre del piso de '
+               f'arriba (p. ej. {fuera[0][0]}: de {fuera[0][1]:.2f} a {fuera[0][2]:.2f} m; la mitad central va de {fuera[0][3]:.2f} '
+               f'a {fuera[0][4]:.2f} m). El modelo lo dibuja donde lo pone el prediseño.',
+               'Ubicar el traslapo en la mitad central de la altura libre del piso de arriba (C.21.6.3.2).', 'A',
+               medida={'columnas': len(fuera)}, norma='NSR-10 C.21.6.3.2 y C.12.17')
+    if mas_arriba:
+        Rg.add('coherencia del despiece', 'media', sorted({m_[0] for m_ in mas_arriba})[:12], None,
+               f'En {len(mas_arriba)} tramos de columna el piso de arriba lleva más acero que el de abajo (p. ej. {mas_arriba[0][0]}: '
+               f'{mas_arriba[0][2]:.0f} mm² frente a {mas_arriba[0][1]:.0f} mm² abajo): como el traslapo va a media altura del piso de '
+               'arriba, su zona confinada de abajo queda con las barras del piso de abajo.',
+               'Subir el armado del piso de abajo hasta el del piso de arriba o confirmar que la sección bajo el traslapo basta.', 'A',
+               medida={'tramos': len(mas_arriba)}, norma='NSR-10 C.21.6.3.2 y C.10.3 (por confirmar)')
+    peor = max(d_kg, key=lambda k_: abs(d_kg[k_]) / max(kg_A.get(k_, 1.0), 1.0)) if d_kg else None
+    if peor is not None and abs(d_kg[peor]) > 0.02 * kg_A[peor]:
+        Rg.add('coherencia del despiece', 'media', [], None,
+               f'El peso de las barras longitudinales de las columnas del piso {peor} en el modelo difiere {d_kg[peor]:+.0f} kg '
+               f'({100 * d_kg[peor] / kg_A[peor]:+.1f} %) del que calcula el prediseño.',
+               'Revisar el largo de las barras (traslapos, anclajes y ganchos) en el modelo y en el prediseño.', 'F',
+               medida={'diferencia_kg_modelo_menos_A_por_piso': {str(k_): r(v_, 0) for k_, v_ in sorted(d_kg.items())}})
+    return {'vigas_de_amarre': n,
+            'traslapos_columnas': {'lineas': lineas, 'fuera_de_la_mitad_central': len(fuera), 'piso_de_arriba_con_mas_acero': len(mas_arriba),
+                                   'diferencia_kg_modelo_menos_A_por_piso': {str(k_): r(v_, 0) for k_, v_ in sorted(d_kg.items())},
+                                   'diferencia_pct_por_piso': {str(k_): r(100 * v_ / kg_A[k_], 2) for k_, v_ in sorted(d_kg.items()) if kg_A.get(k_)}},
+            'estribos_extra_en_nudos': {'columnas': len(extra_nudos), 'estribos': sum(extra_nudos.values()), 'kg': r(kg_extra, 0),
+                                        'criterio': 'se agregan solo cuando, corridos fuera de las barras de las vigas, los estribos '
+                                                    'que cuenta el prediseño no caben con el paso de la zona confinada entre las franjas de barras de las vigas'}}
 
 
 # ========================================================================================================= main

@@ -775,12 +775,12 @@
     {
      "ambiente": {"fila": 19, "nombre": "Atención de enfermedad diarreica aguda (EDA), 2 camillas"},
      "por_recinto": 1,
-     "estrategia": "cabecera_a_pared",
-     "pared": "e",
-     "bandas": 1
+     "estrategia": "junto_a",
+     "junto_a": "camilla_eda",
+     "lado": "pies"
     }
    ],
-   "fuente_reparto": "Las 2 camillas a lo largo del muro norte, con la cabecera en los muros cortos; las puertas (corredor y unidad sanitaria) quedan al sur y el paso entre ellas libre (revisión adversarial: el mobiliario no tapa el paso entre las puertas del recinto (I17))."
+   "fuente_reparto": "Las 2 camillas en fila a lo largo del muro norte: la primera con la cabecera en el muro occidental y la segunda a sus pies; las puertas (corredor y unidad sanitaria) quedan al sur y el paso entre ellas libre (revisión adversarial: el mobiliario no tapa el paso entre las puertas del recinto (I17)). La puerta del corredor queda sobre la columna B-3 con su marco de 5 cm (coordinación con la estructura)."
   },
   {
    "linea": "L-urgencias-m-a689e1",

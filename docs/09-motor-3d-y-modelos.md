@@ -258,8 +258,56 @@ node render_vista.mjs hospital --orbita 210,30,70 --out /tmp/h.png --capa todo -
 
 ### Vista "Torre del hospital"
 
-- **Modos:** "Hoy" (las alas del antiguo Centro Vida), "Con la torre" (el modelo de `data/edificios/torre_hospital.json`), "Pisos por servicio" (cada piso aparte, con el color de su grupo de servicio y su área) y "Laboratorio".
-- **Laboratorio:** el piso 2 en planta de corte, con sus 14 salas a escala del área que da `laboratorio.areas` (muros bajos; salas analíticas al norte y de apoyo al sur), mesones con tope de resina y los equipos de cada sala: analizadores, neveras, cabina de bioseguridad, autoclave, centrífugas y microscopios.
+Contrato: `data/proyectos/torre_hospital/ESPECIFICACION_INTEGRACION.md` (secciones 5, 6, 8, 16 y 17). Documentos de contenido: `docs/11` (la torre), `docs/14` (simulador sísmico), `docs/15` (dotación y habilitación) y `docs/16` (modelo BIM).
+
+#### Modos y máquina de estados
+
+- **Modos:** "Hoy" (las alas del antiguo Centro Vida), "Con la torre" (el modelo de `data/edificios/torre_hospital.json`, con la capa "Proyecto tipo": una placa de 320,6 m² a escala, la del puesto tipo del DNP), "Pisos por servicio" (los cuatro pisos separados con la planta real del anteproyecto, coloreada por grupo de la Res. 1633), "Laboratorio" (abre el recorrido parado en la puerta del laboratorio del piso 2, mirando hacia adentro; la maqueta aérea anterior se retiró), "Recorrer por dentro", "Simulador sísmico" y "Modelo BIM".
+- **Un modo a la vez** (`web/js/scenes/torre.js`, dueño único): los módulos de cada modo (`web/js/scenes/torre/*.js`) se cargan de forma perezosa al entrar y, si fallan, cae el relleno «en construcción» (`_relleno.js`). Cada modo recibe en su `ctx` solo sus contenedores (`torre.panel.<modo>`, `torre.hud.<modo>`, `torre.ficha.modo`), los muestra u oculta él mismo y nunca escribe en el contenedor padre.
+- **Salir siempre igual:** `salir({ porUsuario })` vacía sus contenedores, devuelve lo que ocultó del exterior, quita su malla de la escena, restaura el campo de visión, los controles y los objetos seleccionables (`st.pickables` se vacía mientras el recorrido está activo, porque este hace su propio *raycast*), y no deja oyentes. Un cambio pedido mientras otro modo carga, calcula o vuela la cámara gana (contador de turno), así no quedan contenidos ni cámaras cruzados. `alReanudar` y `alDetener` repiten el ajuste del modo cuando la vista vuelve a arrancar o se detiene (`core.js` no se tocó).
+- **Textos:** todo texto de los datos pasa por `textos.limpio` (`web/js/scenes/torre/textos.js`), que cambia rutas y claves internas por palabras («el inventario», «la revisión de la Res. 3100»); la frase «servicio habilitado» no aparece: el estado se llama «cumplimiento en dotación e infraestructura».
+
+#### Recorrido en primera persona (`recorrido.js`, `controles_fp.js`, `planta3d.js`, `minimapa.js`, `inventario.js`, `habilitacion.js`)
+
+- **Qué se recorre:** toda la torre, un nivel armado a la vez: exteriores (plaza, patio de urgencias, bahía de ambulancias con marquesina solar, galería), pisos 1 a 4, escaleras caminables, ascensores con botones de piso, bloque técnico y cubierta técnica con los paneles solares.
+- **Controles:** teclado con `ev.code` (sirve con cualquier distribución) y solo con el foco dentro del recuadro; arrastrar para mirar, *Pointer Lock* opcional en escritorio («Mirar con el ratón» o doble clic) y, en pantallas táctiles, arrastre y joystick virtual; selección por clic corto (un arrastre no selecciona). R/F o RePág/AvPág saltan al vestíbulo de ascensores del nivel de arriba o de abajo.
+- **Cámara:** campo de visión vertical de ≈ 75° horizontales (se abre en recuadros verticales, como el teléfono); la cámara se conduce a través del objetivo de `OrbitControls` (ojos a 1,60 m y objetivo medio metro adelante, sin desactivar los controles), con el plano cercano en 0,05 m.
+- **Colisión:** rejilla de celdas de 0,10 m por nivel con muros, columnas, muros estructurales y equipos grandes inflados 0,30 m, y deslizamiento por ejes; en las escaleras el piso es el tramo o descanso más cercano a los pies, así que se sube y se baja caminando y el nivel cambia cuando los ojos pasan la losa. La QA comprueba que un caminante de radio 0,30 m llega a cada recinto desde las entradas.
+- **Minimapa** en un `<canvas>` 2D con los colores del grupo de cada recinto y el caminante como flecha (lleva `aria-hidden`; su alternativa accesible es la lista «Ir a…»).
+- **Capas:** dotación, equipamiento fijo, infraestructura (lavamanos, tomas de gases, extintores, señales) y laboratorio en comodato; faltantes del cierre de brechas como unidades fantasma; «Comparar con el proyecto tipo» (los colores los pasa `torre.js`, así el recorrido no importa el módulo del contraste).
+- **Inspección:** todo objeto visible abre su ficha (exigencia y numeral, clase de riesgo y registro, precio y tipo de precio, mantenimiento, anclaje y contenido desplegable); el inventario completo se busca y se filtra por nivel, servicio, recinto, capa, clase y estado, con «Ir a», que lleva al caminante frente a la unidad y la resalta.
+- **Presupuesto medido por nivel** (QA en Chromium, calidad media, 1400 × 900, 25-oct-2026): de 10 a 37 llamadas de dibujo (límite 45) y de 10.106 a 30.662 triángulos (límite 150.000) por nivel; cada nivel se arma en 20 a 80 ms (límite 300 ms). Los 147 modelos del catálogo dan geometría en sus dos niveles de detalle.
+
+#### Catálogo de equipos 3D (`web/js/equipos3d.js`)
+
+- **Lista cerrada** de modelos procedurales (cajas, cilindros y perfiles extruidos, sin texturas) para todos los `modelo3d` del inventario, con las medidas del catálogo (o las nominales del contrato, marcadas como estimación).
+- **Dos niveles de detalle:** LOD0 hasta 600 triángulos (1.500 en los equipos grandes) y LOD1 de cuatro cajas como máximo (48 triángulos). En calidad baja todo el piso va en LOD1 y los objetos pequeños solo se dibujan en el recinto donde está el caminante; en alta, si el LOD0 de todo el piso no cabe en el presupuesto, los modelos que más pesan pasan a LOD1.
+- **Agrupación:** `InstancedMesh` por modelo cuando hay 4 unidades o más; el resto se funde en una malla con una tabla de rangos para saber qué unidad se tocó. Las geometrías de cada pieza se normalizan antes de fundirlas (no indexadas, sin coordenadas de textura, con color y normales), así `mergeGeometries` nunca devuelve `null`.
+- **Malla fantasma** (translúcida) para lo que falta y caja de resaltado para «Ir a».
+
+#### Simulador sísmico en pantalla (`sismo.js`, `estructura3d.js`, `graficas.js`)
+
+- **Lo que se dibuja es lo calculado:** cada columna, viga y muro es una línea gruesa (`LineSegments2`) de 8 tramos cuya posición sale de los desplazamientos del diafragma rígido de cada nivel (ux, uy, rz en el centro de masa), de los giros de los nudos y de los polinomios de Hermite; la rotación plástica de una rótula se resta del giro del nudo para que el quiebre se vea. La exageración (×1 a ×200) se dice en medidas reales.
+- **Sin reservar memoria en cada paso:** la geometría se crea una vez y en cada paso se escriben los arreglos existentes (`instanceStart.data.array.set(…)` y `needsUpdate`), nunca `setPositions()`, que en three 0.160 crea búferes nuevos.
+- **Colores** de demanda/capacidad (≤ 0,5; 0,5-0,8; 0,8-1,0; > 1,0) desde los tokens del tema; rótulas como esferas con anillo del nivel de desempeño; mampostería con el color de su daño; equipos sueltos con un anillo de lo que deslizaron; deriva vectorial por nivel.
+- **Reproducción por pasos calculados:** el deslizador y el botón de reproducir recorren las salidas del motor (cada 0,02 s); no hay interpolación ni animación inventada.
+
+#### Trabajador de módulo y publicación
+
+- El motor corre en un **Web Worker de módulo** (`new Worker(new URL('../../sismo/trabajador.js', import.meta.url), { type: 'module' })`). Dentro del trabajador no se usa el importmap: los módulos del motor (`web/js/sismo/`) se importan con rutas relativas y extensión `.js`, y no dependen de three ni del DOM. Las URL de los datos se arman con `import.meta.url`, así funciona igual en la raíz y en una subruta.
+- **Cancelar** es `worker.terminate()` (la vista vuelve a pedir un trabajador nuevo). Si no hay `Worker` (por ejemplo, en un Artifact), el **respaldo** corre `motor.js` en el hilo principal por tramos de unos 12 ms y da los mismos resultados, bit a bit.
+- **Publicación:** GitHub Pages (subruta del repositorio) y Railway con Caddy sirven `site/`, que arman `scripts/build_data.py` y `scripts/build_site.py`, sin pasos nuevos en CI. Los datos de cada modo (`web/data/torre_*.json`, `sismo_*.json` y `torre_bim*.json`) se cargan solo al entrar al modo, nunca con `data.js`, y `build_data.py` no los escribe si un insumo cambió después de generarlos.
+
+#### Modo «Modelo BIM» (`bim.js`, `bim3d.js`, `bim_refuerzo.js`, `bim_despiece.js`)
+
+- El modelo federado (documento 16) se arma por disciplina y nivel, fundido en **una malla por disciplina y una de aristas**, con un índice de elemento por vértice y dos texturas de estado por elemento: ocultar, aislar, resaltar, colorear con el simulador o avanzar el 4D cambia unos bytes de una textura, sin crear mallas ni llamadas de dibujo.
+- **Cortes** horizontales por nivel y verticales por eje con planos de recorte y tapa rayada calculada con la geometría de cada elemento (el renderizador no tiene búfer de esténcil).
+- **Refuerzo** solo del elemento o del eje elegido, con barras instanciadas, y su despiece en 2D (SVG); descarga de los dos IFC4.
+- QA del 25-oct-2026 en claro, oscuro y teléfono: el modelo de 4.583 elementos carga en ≈ 2 s y se dibuja con 18 llamadas; el árbol, el buscador, aislar la cimentación (254 elementos), la descarga de los IFC (7,30 MB y 12,26 MB) y la salida a los demás modos quedan en verde.
+
+#### Herramientas de QA
+
+`scripts/qa/LEEME.md` dice cómo armar en cualquier máquina las copias locales de three@0.160.0 y gsap@3.12.5 (`npm pack`) y Playwright con Chromium. `scripts/qa/comun.mjs` sirve el sitio, desvía los CDN a esas copias y revisa consola, desborde y textos internos; lo usan `torre_qa.mjs` (QA global de la vista), `recorrido_qa.mjs`, `equipos_qa.mjs`, `bim_qa.mjs` y `scripts/sismo/qa_worker.mjs`. Cifras medidas del simulador (25-oct-2026): en escritorio, iniciar en 23 ms, sintetizar el movimiento en 92 ms y analizar 40 s con Δt = 0,005 s en 930 ms; en un teléfono simulado con la CPU 4 veces más lenta, 1,9 s con la calidad baja; memoria pico de 33,4 MB (límite 80 MB); cancelar en menos de 300 ms; y los mismos resultados en la raíz, en la subruta y sin trabajador.
 
 ## 5. Agregar un modelo profesional
 

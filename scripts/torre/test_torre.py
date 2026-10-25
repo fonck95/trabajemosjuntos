@@ -870,6 +870,23 @@ class TestInventarioReal(unittest.TestCase):
         self.assertEqual(rc, 0, errores(inf))
         self.assertEqual(sum(len(r['errores']) for r in inf['reglas'] if r['estado'] != 'omitida'), 0)
 
+    def test_unidades_sin_recinto_fuera_de_las_columnas(self):
+        """I17 (coordinación BIM): la marquesina solar de la bahía va a 5,30 m, a la altura del piso 2; si su fila del
+        oriente vuelve a quedar junto a la fachada, entra en la columna A-6 de ese piso."""
+        d = copy.deepcopy(self.inv)
+        u = next(x for x in d['unidades'] if (x.get('paneles') or {}).get('fila') == 'FV-BAHIA-F6')
+        u['posicion'] = [-13.6, u['posicion'][1], u['posicion'][2]]
+        tmp = Path(tempfile.mkdtemp(prefix='torre_inv_cols_'))
+        try:
+            ruta = tmp / 'inventario.json'
+            ruta.write_text(json.dumps(d, ensure_ascii=False), encoding='utf-8')
+            rc, inf = correr(VALIDAR_INVENTARIO, '--inventario', ruta)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        i17 = errores(inf).get('I17', [])
+        self.assertEqual(rc, 1)
+        self.assertTrue(any('columna A6 del P2' in x for x in i17), i17)
+
     def test_todas_ubicadas_y_conteos_por_nivel(self):
         t = self.inv['totales']['unidades']
         self.assertEqual(t['total'], len(self.inv['unidades']))
@@ -1059,10 +1076,19 @@ class TestPlantasTorre(unittest.TestCase):
                     self.assertLessEqual(t['contrahuella_m'], 0.18)
                     self.assertGreaterEqual(t['huella_m'], 0.28)
             self.assertIsNone(tramos[-1][1]['sube_a'])
-        # escalera principal abierta: la columna C2 queda en el ojo
+        # escalera principal abierta (coordinación BIM, 17.4): tramos y descansos dentro del vano C-D entre los ejes 2 y 3, a la
+        # cara de la viga del eje C (x = 1,60), de la columna C2 (y = −12,00) y lejos de las vigas de los ejes 3 y D; sube del
+        # piso 1 al 2 y llega al mismo descanso de piso
         esp = next(e for e in self.niv['P1']['escaleras'] if e['id'] == 'ESC-P')
-        ojo = esp['ojo']
-        self.assertTrue(ojo[0] + 0.3 <= 1.4 <= ojo[2] - 0.3 and ojo[1] + 0.3 <= -12.4 <= ojo[3] - 0.3, ojo)
+        self.assertEqual(esp['sube_a'], 'P2')
+        for pa in esp['partes']:
+            x0, y0, x1, y1 = pa['rect']
+            self.assertTrue(x0 >= 1.6 - 1e-6 and y0 >= -12.0 - 1e-6 and x1 <= 8.4 + 1e-6 and y1 <= -7.8 + 1e-6, pa)
+        tramos = [pa for pa in esp['partes'] if pa['tipo'] == 'tramo']
+        self.assertEqual(len(tramos), 2)
+        self.assertAlmostEqual(tramos[1]['z1'], 4.5, places=3)
+        llegada = next(e for e in self.niv['P2']['escaleras'] if e['id'] == 'ESC-P')
+        self.assertEqual([pa['tipo'] for pa in llegada['partes']], ['descanso_piso'])
 
     def test_laboratorio_sobre_la_toma_y_montacargas_alineado(self):
         mm1 = next(r for r in self.niv['P1']['recintos'] if r.get('fila') == 63)
@@ -1132,6 +1158,137 @@ class TestPlantasTorre(unittest.TestCase):
         v23 = errores(inf).get('V23', [])
         self.assertTrue(any('columna A1' in x for x in v23), v23)
         self.assertTrue(any('no es muro estructural en toda su longitud' in x for x in v23), v23)
+
+    def test_coordinacion_con_la_estructura(self):
+        """17.4 (coordinación BIM): escaleras de evacuación desde la cara de vigas y columnas, bloque técnico junto a las
+        cisternas y al sur de los dados del eje 1, y lo que no se resuelve aquí declarado con su motivo (aviso V25)."""
+        rc, inf = correr(VALIDAR_PLANTAS)
+        self.assertEqual(rc, 0, errores(inf))
+        estados = {r['regla']: r['estado'] for r in inf['reglas']}
+        self.assertEqual(estados.get('V24'), 'ok')
+        for N in ('P1', 'P2', 'P3', 'P4', 'CUB'):
+            for e in self.niv[N]['escaleras']:
+                if e['id'] not in ('ESC-N', 'ESC-S'):
+                    continue
+                y_eje = 14.0 if e['id'] == 'ESC-N' else -7.6
+                for pa in e['partes']:
+                    x0, y0, x1, y1 = pa['rect']
+                    self.assertLessEqual(x1, 8.2 + 1e-6, (N, e['id'], pa))           # cara de las columnas del eje D
+                    self.assertGreaterEqual(x0, 3.27 - 1e-6, (N, e['id'], pa))       # cara del muro de 0,35 m
+                    self.assertGreaterEqual(y0, y_eje + 0.2 - 1e-6, (N, e['id'], pa))  # cara de la viga (o del muro)
+                    self.assertLessEqual(y1, y_eje + 8.4 - 0.2 + 1e-6, (N, e['id'], pa))
+        bt = self.niv['BT']
+        cis = next(b for b in bt['bajo_rasante'] if b['tipo'] == 'cisterna')
+        xs, ys = [p[0] for p in cis['poligono']], [p[1] for p in cis['poligono']]
+        for m in bt['muros']:
+            if m['tipo'] == 'abierto':
+                continue
+            e = m['espesor'] / 2
+            hz = abs(m['a'][1] - m['b'][1]) < 1e-9
+            r = ((min(m['a'][0], m['b'][0]), m['a'][1] - e, max(m['a'][0], m['b'][0]), m['a'][1] + e) if hz else
+                 (m['a'][0] - e, min(m['a'][1], m['b'][1]), m['a'][0] + e, max(m['a'][1], m['b'][1])))
+            sx = min(r[2], max(xs)) - max(r[0], min(xs))
+            sy = min(r[3], max(ys)) - max(r[1], min(ys))
+            self.assertFalse(sx > 0.01 and sy > 0.01, m['id'])
+        cuartos = [r for r in bt['recintos'] if r.get('fila') in (210, 211, 212, 213, 214, 215)]
+        self.assertEqual(len(cuartos), 6)
+        self.assertTrue(all(max(p[1] for p in r['poligono']) <= -20.95 + 1e-9 for r in cuartos))
+        # ningún muro del bloque técnico se mete en la cimentación de la torre (dados, vigas de amarre y contrapiso): sobre el
+        # eje 1 el pasaje queda abierto contra el borde de la torre
+        est = C.cargar_json(C.DATOS / 'sismo' / 'torre_hospital_estructura.json')
+        cim = est['cimentacion']
+        piezas = [((d['x0'], d['y0'], d['x1'], d['y1']), d['z_fondo'], d['z_tope']) for d in cim['dados']]
+        for v in cim['vigas_amarre']:
+            t0, t1 = sorted(v['tramo'])
+            w = v['b'] / 2
+            r = ((t0, v['coordenada'] - w, t1, v['coordenada'] + w) if v['direccion'] == 'x'
+                 else (v['coordenada'] - w, t0, v['coordenada'] + w, t1))
+            piezas.append((r, v['z_tope'] - v['h'], v['z_tope']))
+        piezas.append(((-13.0, -19.6, 8.6, 22.4), -cim['contrapiso']['espesor_m'], 0.0))
+        for m in bt['muros']:
+            if m['tipo'] == 'abierto':
+                continue
+            e = m['espesor'] / 2
+            hz = abs(m['a'][1] - m['b'][1]) < 1e-9
+            r = ((min(m['a'][0], m['b'][0]), m['a'][1] - e, max(m['a'][0], m['b'][0]), m['a'][1] + e) if hz else
+                 (m['a'][0] - e, min(m['a'][1], m['b'][1]), m['a'][0] + e, max(m['a'][1], m['b'][1])))
+            z0, z1 = bt['z'], bt['z'] + m['altura']
+            for rr, za, zb in piezas:
+                sx = min(r[2], rr[2]) - max(r[0], rr[0])
+                sy = min(r[3], rr[3]) - max(r[1], rr[1])
+                self.assertFalse(sx > 0.01 and sy > 0.01 and min(z1, zb) - max(z0, za) > 0.01, (m['id'], rr))
+        abiertos = [m for m in bt['muros'] if m['tipo'] == 'abierto' and m['lados'] == ['BT-A229-01', 'exterior']]
+        self.assertEqual(len(abiertos), 1)
+        self.assertEqual(sorted([abiertos[0]['a'][0], abiertos[0]['b'][0]]), [-14.45, 10.0])
+        llegada = next(p for p in bt['puertas'] if p.get('nombre', '').startswith('Llegada del pasaje'))
+        self.assertGreaterEqual(llegada['centro'][0] - llegada['ancho'] / 2 - 0.05, 10.0 - 1e-6)
+        # ductos verticales a la cara de las vigas (eje 6 en y = 13,80, eje D en x = 8,40, VB-N-56 en x = 3,10), iguales en
+        # los cuatro pisos (no se angostan); las franjas bajo las vigas, sin acceso
+        cajas = {}
+        for N in ('P1', 'P2', 'P3', 'P4'):
+            d = next(r for r in self.niv[N]['recintos'] if r['ambiente'].startswith('Ductos verticales'))
+            x0, y0, x1, y1 = C.caja(d['poligono'])
+            self.assertTrue(x0 >= 3.1 - 1e-6 and x1 <= 8.4 + 1e-6 and y1 <= 13.8 + 1e-6, (N, d['poligono']))
+            self.assertGreaterEqual(d['area_ejes_m2'], d['area_programa_m2'] - 0.05)
+            cajas[N] = (x0, y0, x1, y1)
+            franja = next(r for r in self.niv[N]['recintos'] if r['ambiente'].startswith('Franja bajo las vigas'))
+            self.assertIs(franja.get('transitable'), False)
+            self.assertAlmostEqual(C.area_poligono(franja['poligono']) + C.area_poligono(d['poligono']),
+                                   5.5 * (14.0 - y0), places=6)
+        self.assertEqual(len(set(cajas.values())), 1, cajas)
+        # nada queda declarado pendiente: lo que reglas_planta declare debe traer motivo, propuesta y quién decide
+        pend = self.reglas['coordinacion_pendiente']['elementos']
+        self.assertEqual(pend, [])
+        self.assertTrue(all(e.get('motivo') and e.get('propuesta') and e.get('decide') for e in pend))
+        avisos = next(r for r in inf['reglas'] if r['regla'] == 'V25')['avisos']
+        self.assertFalse(any('ESC-P' in a for a in avisos), avisos)
+        self.assertFalse(any('atraviesa el ducto' in a or 'se angosta' in a for a in avisos), avisos)
+        self.assertFalse(any('se mete en' in a for a in avisos if a.startswith('BT')), avisos)
+
+    def test_v24_detecta_choques_con_la_estructura(self):
+        pl = C.cargar_json(C.PLANTAS)
+        niv = {n['id']: n for n in pl['niveles']}
+        pt = next(p for p in niv['P1']['puertas'] if p.get('nombre') == 'Puerta de urgencias (bahía de ambulancias)')
+        pt['centro'] = [-13.0, 15.35]                                     # el vano se mete en la columna A-6
+        esc = next(e for e in niv['P2']['escaleras'] if e['id'] == 'ESC-N')
+        esc['partes'][0]['rect'][1] = 14.0                                # descanso de llegada dentro de la viga del eje 6
+        duc = next(r for r in niv['P3']['recintos'] if r['ambiente'].startswith('Ductos verticales'))
+        duc['poligono'] = C.rect_a_poligono([3.1, 10.6, 8.6, 14.0])        # el ducto vuelve a pasar bajo las vigas de 6 y D
+        escp = next(e for e in niv['P1']['escaleras'] if e['id'] == 'ESC-P')
+        t2 = next(pa for pa in escp['partes'] if pa['tipo'] == 'tramo' and pa['z0'] > 0)
+        t2['rect'][1] -= 0.6                                               # el tramo de llegada pasa bajo la viga del eje 2
+        t2['rect'][3] -= 0.6
+        ruta = self.tmp / 'plantas_v24.json'
+        C.escribir_json(ruta, pl)
+        reglas = C.cargar_json(C.REGLAS_PLANTA)
+        reglas.pop('coordinacion_pendiente')                              # sin la declaración, lo pendiente vuelve a ser error
+        ruta_r = self.tmp / 'reglas_v24.json'
+        C.escribir_json(ruta_r, reglas)
+        rc, inf = correr(VALIDAR_PLANTAS, '--archivo', ruta, '--reglas', ruta_r)
+        self.assertEqual(rc, 1)
+        v24 = errores(inf).get('V24', [])
+        self.assertTrue(any('columna A6' in x for x in v24), v24)
+        self.assertTrue(any('se funde con la viga VX-6-CD' in x for x in v24), v24)
+        self.assertTrue(any('atraviesa el ducto P3' in x for x in v24), v24)
+        self.assertTrue(any('ESC-P' in x and 'VX-2-CD' in x for x in v24), v24)
+        self.assertTrue(any('se angosta' in x for x in v24), v24)       # el ducto del piso 3 ya no es el de los pisos 2 y 4
+
+    def test_v25_avisa_cimentacion_y_aberturas_del_prediseno(self):
+        """V25 (aviso): el piso en rampa del pasaje frente a la cara superior de los dados del eje 1 y la abertura de cada losa
+        del prediseño frente a la parte común del ducto (los dos los resuelve el equipo A)."""
+        est = C.cargar_json(C.DATOS / 'sismo' / 'torre_hospital_estructura.json')
+        d = next(x for x in est['cimentacion']['dados'] if x['id'] == 'D-A1')
+        d['z_fondo'], d['z_tope'] = -1.5, -0.7                             # el dado como estaba antes de la coordinación
+        ab = est['prediseno']['coordinacion_bim']['ducto_vertical']['aberturas_losa_m']
+        a45 = next(a for a in ab if abs(a['nivel_z'] - 4.5) < 0.05)
+        a45['y'] = [11.0, 13.8]                                           # abertura más chica que el ducto
+        ruta = self.tmp / 'estructura_v25.json'
+        C.escribir_json(ruta, est)
+        rc, inf = correr(VALIDAR_PLANTAS, '--estructura', ruta)
+        self.assertEqual(rc, 0, errores(inf))
+        avisos = next(r for r in inf['reglas'] if r['regla'] == 'V25')['avisos']
+        self.assertTrue(any(a.startswith('BT') and 'D-A1' in a and 'piso en rampa' in a for a in avisos), avisos)
+        self.assertTrue(any(a.startswith('P1') and 'nivel 4.50 cierra' in a for a in avisos), avisos)
 
     def test_paneles_solares_182_modulos(self):
         grupos = [g for n in self.pl['niveles'] for g in n.get('paneles_solares', [])]

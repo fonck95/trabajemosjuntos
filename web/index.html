@@ -357,6 +357,8 @@ details.fold > summary:hover { color: var(--accent); }
 [data-scene="torre"] .torre-hud { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
 [data-scene="torre"] .torre-hud > [data-slot] > * { pointer-events: auto; }
 #v-torre [data-slot="torre.capas"] { margin-top: 8px; }
+/* «Pisos por servicio»: en pantallas angostas, la etiqueta de cada servicio solo con su nombre corto */
+@media (max-width: 640px) { [data-scene="torre"] .lbl-largo { display: none; } }
 /* >>> torre-recorrido (equipo C) */
 /* Recorrido en primera persona (web/js/scenes/torre/recorrido.js y sus módulos) y tarjeta de habilitación (habilitacion.js).
    Sobre el recuadro: barra arriba a la izquierda, minimapa arriba a la derecha (debajo de «Rendimiento»), joystick abajo a la
