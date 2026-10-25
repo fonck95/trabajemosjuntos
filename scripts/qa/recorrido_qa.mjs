@@ -976,6 +976,8 @@ async function juego() {
     const v = await page.evaluate((u) => window.__recorridoQA.unidadVista(u), id);
     await girarHasta(page, (Math.atan2(v.y - e.posicion[1], v.x - e.posicion[0]) * 180) / Math.PI, 0);
     const piso = e.altura;
+    // «Ir a» abre la ficha y el foco puede quedar en ella: Espacio solo salta con el foco en el recuadro (como las flechas)
+    await page.evaluate(() => document.querySelector('#v-torre .stage').focus({ preventScroll: true }));
     for (let k = 0; k < 6; k++) {
       await page.keyboard.down('KeyW'); await page.keyboard.press('Space'); await pausa(700); await page.keyboard.up('KeyW');
       // con pocos cuadros por segundo el salto dura más que la pausa: se lee ya en el suelo (o encima)
