@@ -1589,6 +1589,13 @@ def inventario(M, inv, cat, pl, cost):
             elif precio is not None and l['capa'] == 'laboratorio':
                 costo = [cost.dot('LAB-MERCADO', precio, 'analizador de laboratorio.json (comodato, programa o compra): valor de '
                                                           'mercado; no suma a la dotación ni al presupuesto')]
+        # implemento interno de un kit o de un carro (componente_de): el precio de su unidad madre ya lo incluye, y el
+        # inventario le pone precio propio 0 (validar_inventario.py, I2, suma solo las unidades base); lo mismo con una
+        # unidad sin precio propio. Conserva la partida de su línea, sin cantidad ni valor, para no contarla dos veces
+        if u.get('componente_de') or ('precio_unitario_cop_2026' in u and not u['precio_unitario_cop_2026']):
+            nota = (f'componente de {u["componente_de"]}: precio incluido en el de la unidad madre' if u.get('componente_de')
+                    else 'sin precio propio en el inventario')
+            costo = [{**c, 'cantidad': None, 'valor_unitario': None, 'valor': None, 'nota': nota} for c in costo]
         rs = u.get('riesgo_sismico') or {}
         cr = l.get('clase_riesgo') or {}
         ps = {}

@@ -162,7 +162,7 @@ En total, 932 interferencias antes y 690 después (cálculo propio).
 
 En las demás partidas medibles el modelo da, en neto, **−$296,9 M** de costo directo frente al presupuesto: más muro de bloque (+$273,1 M en el ítem 4.01) y de cerramiento, y menos fachada de ladrillo, piso vinílico, cielo raso, impermeabilización y puertas (cálculo propio). Son mediciones del **anteproyecto ilustrativo**: no se adoptan como ajuste hasta tener el diseño arquitectónico. Los ítems globales (redes, equipos, solar) se enlazan sin cantidad propia y no cambian.
 
-En la dotación, la suma de las unidades del modelo supera el indirecto del presupuesto en $257,9 M; la diferencia es exactamente el valor de los equipos que van dentro de los kits y carros (urgencias, consulta externa, partos y hospitalización), cuyo precio ya está incluido en el del kit: es un **doble conteo del modelo** que queda por corregir en su cálculo de cantidades, no un costo nuevo (documento 15, implementos internos).
+En la dotación, la suma de las unidades del modelo es igual al indirecto del presupuesto: **$3.251.187.277** en la dotación biomédica y el mobiliario clínico, sin diferencia; también cuadran el laboratorio, los equipos TIC y el generador de oxígeno (cálculo propio). Los equipos que van dentro de los kits y carros (urgencias, consulta externa, partos y hospitalización) están en el modelo, cada uno con su registro y su clase de riesgo, pero no suman precio: el del kit ya los incluye (documento 15, implementos internos). Antes el modelo los sumaba aparte y contaba $257,9 M dos veces. Con la misma regla, el cierre de brechas del modelo suma $46.904.906, lo mismo que `dotacion.json`.
 
 ## 10. Programación de la obra (4D)
 
@@ -182,7 +182,7 @@ En el archivo IFC, 28 de las 29 tareas tienen elementos asignados (la de puesta 
 
 | Archivo | Tamaño | Entidades | Esquema | Contenido |
 |---|---:|---:|---|---|
-| Torre del hospital (arquitectura, estructura, cimentación, equipamiento y dotación) | 7,3 MB | 83.220 | IFC4, 0 errores | 4.583 elementos de 31 clases con sus cantidades, 66 partidas 5D y 29 tareas 4D |
+| Torre del hospital (arquitectura, estructura, cimentación, equipamiento y dotación) | 7,3 MB | 83.243 | IFC4, 0 errores | 4.583 elementos de 31 clases con sus cantidades, 66 partidas 5D y 29 tareas 4D |
 | Refuerzo | 12,26 MB | 156.852 | IFC4, 0 errores | 64.849 barras con su geometría (292.289 kg) y 2 partidas 5D |
 
 Se partió en dos porque un solo archivo pasaba de ≈ 15 MB. Validación con IfcOpenShell 0.9.0 en un entorno aparte (no es dependencia del sitio; cálculo propio):
@@ -224,7 +224,6 @@ El detalle está en la tarjeta «Contraste con el proyecto tipo» de la vista y 
 ## 15. Lo que falta y próximos pasos
 
 - Ajustar el presupuesto con el prediseño estructural (+$1.310 M a +$1.390 M de costo directo) cuando el diseño estructural y el estudio geotécnico lo confirmen.
-- Corregir el doble conteo de los equipos que van dentro de los kits en las cantidades 5D de la dotación ($257,9 M).
 - Llevar el modelo a LOD 300-350 con los diseños firmados: modelar las redes y repetir la detección de interferencias con ellas.
 - Confirmar la adopción colombiana de la serie ISO 19650, el texto de la Estrategia Nacional BIM 2020-2026 y si la entidad que financie exige BIM y con qué requisitos de información.
 - Confirmar la altura del ±0,00, el tipo de suelo, la capacidad de los pilotes y el nivel freático.
