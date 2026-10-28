@@ -11,7 +11,7 @@ export function crear(esc, datos) {
   const color = '--m-salud';
   const torre = esc.edificios.get('torre_hospital'), hosp = esc.edificios.get('hospital');
   const pT = torre ? [torre.e.x, torre.e.y] : [-342, -137], pH = hosp ? [hosp.e.x, hosp.e.y] : [-326, -121];
-  const cRed = esc.capa('salud.red'), cTorre = esc.capa('salud.torre'), cPuestos = esc.capa('salud.puestos');
+  const cRed = esc.capa('salud.red'), cTorre = esc.capa('salud.torre'), cPuestos = esc.capa('salud.puestos'), cHoy = esc.capa('salud.hoy');
   const alc = esc.edificios.get('alcaldia'), pA = alc ? [alc.e.x, alc.e.y] : [104, -199];
   const arco = (a, b, alto) => { const pts = []; for (let i = 0; i <= 40; i++) { const t = i / 40; pts.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 12 + alto * 4 * t * (1 - t)]); } return pts; };
   // enlace hospital → centro de control (alcaldía) con datos en movimiento
@@ -44,6 +44,8 @@ export function crear(esc, datos) {
   });
   esc.etiqueta('<b>Torre de servicios de primer nivel</b><small>urgencias · partos · hospitalización · laboratorio 24 h</small>', { pos: [pT[0], pT[1], 36], padre: cTorre, color: `var(${color})`, ancla: [0.5, 1] });
   esc.etiqueta('<b>Hospital Héctor Abad Gómez</b><small>sede actual: administración y apoyo</small>', { pos: [pH[0] + 30, pH[1] + 25, 14], padre: cTorre, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0, 0.5] });
+  // portadilla: el hospital de hoy, la única sede pública habilitada
+  esc.etiqueta('<b>E.S.E. Hospital Héctor Abad Gómez</b><small>única sede pública habilitada · edificio de 1989</small>', { pos: [pH[0], pH[1], 16], padre: cHoy, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] });
   esc.sincronizarEtiquetas();
 
   // la torre es la réplica del atlas en modo «proyecto», sin sus paneles ni la conexión de la microrred de sedes
@@ -60,7 +62,7 @@ export function crear(esc, datos) {
   return {
     completo: ['salud.torre'],
     pasos: {
-      portadilla: { capas: [], antes: () => verTorre(false), vista: () => esc.encuadrar(caja([pH, pT], 140), { rumbo: 165, elev: 38, margen: 0.9 }) },
+      portadilla: { capas: ['salud.hoy'], antes: () => verTorre(false), vista: () => esc.encuadrar(caja([pH, pT], 140), { rumbo: 165, elev: 38, margen: 0.9 }) },
       componentes: { capas: ['salud.torre', 'salud.red', 'salud.puestos'], antes: () => verTorre(true), vista: vistaRural, etiquetas: ['salud.puestos'] },
       torre: { capas: ['salud.torre'], antes: () => verTorre(true), vista: vistaTorre, animar: crecerTorre },
       telesalud: { capas: ['salud.red', 'salud.torre'], antes: () => verTorre(true), vista: vistaTele, etiquetas: ['salud.red', 'salud.torre'] },

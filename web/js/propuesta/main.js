@@ -192,7 +192,7 @@ const RENDER = {
     const porFuente = F.map((f) => ({ f, total: mods.reduce((a, m) => a + (m.financiacion || []).filter((x) => x.fuente === f.id).reduce((s, x) => s + (x.monto || 0), 0), 0) })).filter((x) => x.total > 0).sort((a, b) => b.total - a.total);
     const tot = porFuente.reduce((a, x) => a + x.total, 0) || 1;
     return {
-      cab: `<p class="ceja">Financiación</p><h2>${titulo(p.titulo || 'Cómo se financia todo')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Cómo se financia todo')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
       cuerpo: `${cifras(p.cifras)}<h3>Por fuente (millones de 2026)</h3>
         <div class="pila">${porFuente.map((x) => `<i style="--c:${x.f.color};width:${(100 * x.total) / tot}%" title="${esc(x.f.nombre)}"></i>`).join('')}</div>
         <div class="leyenda">${porFuente.map((x) => `<div><i style="--c:${x.f.color}"></i><span><b style="font:inherit;color:var(--ink)">${esc(x.f.corto || x.f.nombre)}</b> · ${esc(x.f.entidad || '')}</span><b>${fmtM(x.total)}</b></div>`).join('')}</div>
@@ -204,7 +204,7 @@ const RENDER = {
   fuentes(c, p) {
     const F = c.fuentes || [];
     return {
-      cab: `<p class="ceja">Financiación</p><h2>${titulo(p.titulo || 'Las fuentes, una por una')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Las fuentes, una por una')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
       cuerpo: `<div class="comps">${F.map((f) => `<div class="comp fuente" style="--mc:${f.color};cursor:default"><b>${esc(f.nombre)}</b><span class="v">${esc(f.tipo || '')}</span><span class="d">${esc(f.que_financia || '')}${f.requisito ? ` <br><i>Requisito clave:</i> ${esc(f.requisito)}` : ''}${f.url ? ` · <a href="${esc(f.url)}" target="_blank" rel="noopener">fuente</a>` : ''}</span></div>`).join('')}</div>`,
     };
   },
