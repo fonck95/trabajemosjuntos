@@ -238,6 +238,10 @@ a.chip:hover { border-color: var(--ink); }
 .lbl-pin::after { content: ""; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); border: 7px solid transparent; border-bottom: 0; border-top-color: var(--mc); }
 .lbl-pin > * { font: 400 0.95rem var(--f-display); text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap; }
 .lbl.fuera { visibility: hidden; }
+/* guía de un rótulo que quedó lejos de su punto (escena.js calcula largo, ángulo y punto) */
+/* (en un pin, la línea reemplaza a su punta) */
+.lbl-p.guia::after, .lbl-pin.guia::after { content: ""; position: absolute; left: calc(50% - 0.75px); top: var(--oy, 100%); bottom: auto; width: 1.5px; height: var(--gl, 0); border: 0; background: var(--mc, var(--ink)); transform-origin: 50% 0; transform: rotate(var(--ga, 0rad)); opacity: 0.9; }
+.lbl-p.guia::before, .lbl-pin.guia::before { content: ""; position: absolute; left: var(--ax, 50%); top: var(--ay, 100%); width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: var(--mc, var(--ink)); box-shadow: 0 0 0 1.5px var(--surface); }
 .lbl-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--mc); border: 2px solid #fff; box-shadow: 0 1px 4px color-mix(in srgb, #000 35%, transparent); }
 .lbl-geo { font: italic 12px var(--f-body); color: var(--muted); text-shadow: 0 0 4px var(--surface), 0 0 4px var(--surface); }
 .lbl.dim { opacity: 0.35; }
@@ -325,6 +329,8 @@ a.chip:hover { border-color: var(--ink); }
   .herr .opc { display: none; }
   .control { left: 10px; right: 10px; transform: none; justify-content: space-between; }
   .control .puntos { display: none; }
+  /* en el último paso el botón lleva el nombre del capítulo siguiente: se le quita relleno para que quepa el actual */
+  .control button.sig { padding: 0 12px; } .control .donde { padding: 0 4px; }
   .cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kv { grid-template-columns: minmax(0, 1fr); gap: 0 0; } .kv dd { margin-bottom: 6px; }
   .fichas article .cols { grid-template-columns: minmax(0, 1fr); }

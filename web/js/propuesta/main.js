@@ -384,6 +384,7 @@ function pasar3D(c, p) {
   escena.soloEtiquetas?.(def.etiquetas || (def.todos ? [...(m?.siempre || []), ...(def.capas || []), ...(p.capas || [])] : null));
   capasVisibles = ids;
   def.antes?.();
+  escena.st._obra = null;   // la vista del paso dice qué obra encuadra (los rótulos se apartan de ella en el celular)
   (def.vista || m?.vista)?.();
   if (gsap && !reducedMotion) def.animar?.(); else def.alFinal?.();
   // el mapa de sombras se recalcula a pedido: una vez más cuando ya terminaron de crecer las piezas del paso

@@ -55,7 +55,9 @@ export function crear(esc, datos) {
   const cP = esc.capa('agro.parque'), cF = esc.capa('agro.flujos');
   const parque = parqueAgro({ ...cfg, comps, zonas, lote: lotePoly, vias, restricciones: retiro ? [retiro.map(aLocal)] : [] }); cP.add(parque);
   const P = parque.userData.aModelo;
-  const lbl = (id, html, h = 22) => { const k = comps.find((x) => x.id === id); if (!k) return; const [x, y] = P(k.u, k.v); esc.etiqueta(html || `<b>${k.nombre.split(' (')[0]}</b>`, { pos: [x, y, h], padre: cP, color: `var(${color})`, cls: 'lbl-p mini' }); };
+  // rótulo de cada nave con el nombre corto (sin lo que va después de «:» o «(»)
+  const CORTO = { maquinaria: 'Banco de maquinaria', muelle: 'Muelle de carga' };
+  const lbl = (id, html, h = 22) => { const k = comps.find((x) => x.id === id); if (!k) return; const [x, y] = P(k.u, k.v); esc.etiqueta(html || `<b>${CORTO[id] || k.nombre.split(/[:(]/)[0].trim()}</b>`, { pos: [x, y, h], padre: cP, color: `var(${color})`, cls: 'lbl-p mini' }); };
   ['matadero', 'pescado', 'concentrados', 'trilladora', 'leche', 'maquinaria', 'frio', 'muelle'].forEach((id) => lbl(id));
   if (retiro) { const [x, y] = cen(retiro); esc.etiqueta('<b>Retiro de pozos</b><small>Casabe 980 y 394: concepto de Ecopetrol</small>', { pos: [x, y, 6], padre: cP, color: 'var(--bad)', cls: 'lbl-p mini' }); }
   const [lx, ly] = lotePoly ? P(...cen(lotePoly)) : P(0, 0);
@@ -65,10 +67,15 @@ export function crear(esc, datos) {
   const cSitio = esc.capa('agro.sitio');
   if (lote?.poligono) {
     esc.linea([...lote.poligono, lote.poligono[0]].map(([x, y]) => [x, y, 1.5]), { color, ancho: 3, punteada: true, guion: 10, padre: cSitio });
-    esc.etiqueta('<b>Lote del parque</b><small>8,3 ha al suroriente de la vía del puente</small>', { pos: [lx, ly, 10], padre: cSitio, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] });
+    // el rótulo, sobre el borde del lote más lejano a la cámara de la portadilla (rumbo 215: el nororiente), para no taparlo
+    const [nx, ny] = lote.poligono.reduce((a, q) => (q[0] * 0.574 + q[1] * 0.819 > a[0] * 0.574 + a[1] * 0.819 ? q : a));
+    esc.etiqueta('<b>Lote del parque</b><small>8,3 ha al suroriente de la vía del puente</small>', { pos: [nx, ny, 6], padre: cSitio, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] });
   }
   const est = sitio(datos, 'urbanismo', 'estribo');
-  if (est) esc.etiqueta('<b>Estribo del puente</b><small>orilla socavada en 2026</small>', { pos: [est.x, est.y, 8], padre: cSitio, color: 'var(--bad)', cls: 'lbl-p mini alerta', ancla: [0, 1] });
+  if (est) {
+    esc.etiqueta('', { cls: 'lbl-dot', pos: [est.x, est.y, 2], padre: cSitio, color: 'var(--bad)' });
+    esc.etiqueta('<b>Estribo del puente</b><small>orilla socavada en 2026</small>', { pos: [est.x, est.y, 8], padre: cSitio, color: 'var(--bad)', cls: 'lbl-p mini alerta', ancla: [1, 1] });
+  }
 
   // circuito: arcos de flujo entre componentes (colores de la cadena)
   const centroDe = (id) => { const k = comps.find((x) => x.id === id); return k ? P(k.u, k.v) : null; };
@@ -103,7 +110,7 @@ export function crear(esc, datos) {
   const rExp = rutaExport();
   if (rExp) esc.flujo(rExp, { color: '#2a78d6', potencia: 0.9, max: 60, tam: 2.4, tubo: 0.35, padre: cF });
   else if (puente && centroDe('frio')) esc.flujo(arco(centroDe('frio'), puente, 70), { color: '#2a78d6', potencia: 0.9, max: 30, tam: 2.2, tubo: 0.35, padre: cF });
-  if (puente) esc.etiqueta('<b>A Barrancabermeja</b><small>en carros refrigerados por el puente</small>', { pos: [puente[0], puente[1], 30], padre: cF, color: 'var(--m-aguas)', cls: 'lbl-p mini', ancla: [0, 1] });
+  if (tb) esc.etiqueta('<b>A Barrancabermeja</b><small>en carros refrigerados por el puente</small>', { pos: [tb[0][0], tb[0][1], 20], padre: cF, color: 'var(--m-aguas)', cls: 'lbl-p mini', ancla: [1, 1] });
   esc.sincronizarEtiquetas();
 
   const inv = () => esc.st.invalidate();
@@ -111,7 +118,8 @@ export function crear(esc, datos) {
   // el lote es largo (eje a 36,6°): se mira de través, desde el suroriente, para que no quede escorzado
   const vista = () => esc.encuadrar(parque.userData.contorno, { rumbo: 126, elev: 42, margen: 0.86, alto: 14 });
   const vistaLejos = () => esc.encuadrar([...parque.userData.contorno, ...(puente ? [puente] : []), ...(muelle ? [muelle] : []), [1511, 7885]], { rumbo: 215, elev: 44, margen: 0.94 });
-  const vistaCircuito = () => esc.encuadrar([...parque.userData.contorno, ...(muelle ? [muelle] : []), ...(tb ? [tb[0]] : [])], { rumbo: 128, elev: 42, margen: 0.9 });
+  // en el celular, sin el estribo: con él las naves quedan diminutas y no se siguen los flujos entre plantas
+  const vistaCircuito = () => esc.encuadrar([...parque.userData.contorno, ...(muelle ? [muelle] : []), ...(tb && innerWidth > 640 ? [tb[0]] : [])], { rumbo: 128, elev: 42, margen: 0.9 });
   const animar = () => {
     const O = parque.userData.partes.obras;
     O.children.forEach((g, i) => crecer(g, { duracion: 0.9, retraso: 0.5 + i * 0.06, onUpdate: inv }));
