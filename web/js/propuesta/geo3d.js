@@ -46,7 +46,7 @@ export function cinta(pts, ancho, h = 0.05) {
     let dx = b[0] - a[0], dy = b[1] - a[1]; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
     const k = pos.length / 3;
     pos.push(pts[i][0] - dy * w, h, -(pts[i][1] + dx * w), pts[i][0] + dy * w, h, -(pts[i][1] - dx * w));
-    if (i) idx.push(k - 2, k, k - 1, k - 1, k, k + 1);
+    if (i) idx.push(k - 2, k - 1, k, k - 1, k + 1, k);   // caras hacia arriba (normal +y): se ven desde la cámara
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
@@ -90,6 +90,15 @@ export function dentro([x, y], poly) {
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
     const [xi, yi] = poly[i], [xj, yj] = poly[j];
     if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) d = !d;
+  }
+  return d;
+}
+// distancia de un punto a una polilínea
+export function distLinea(p, linea) {
+  let d = Infinity;
+  for (let i = 1; i < linea.length; i++) {
+    const [a, b] = [linea[i - 1], linea[i]], dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)));
+    d = Math.min(d, Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy));
   }
   return d;
 }
@@ -195,7 +204,8 @@ export function nave(cx, cy, w, d, h, rot = 0, { techo = 'dosaguas', muro, cubie
   const caja = new THREE.Mesh(new THREE.BoxGeometry(w, h, d).translate(0, h / 2, 0), mm);
   let tg;
   if (techo === 'arco') {
-    tg = new THREE.CylinderGeometry(w / 2 + alero, w / 2 + alero, d + alero * 2, 20, 1, true, -Math.PI / 2, Math.PI).rotateZ(Math.PI / 2).rotateY(Math.PI / 2);
+    // medio cilindro con el eje a lo largo de la nave (z) y la bóveda hacia arriba
+    tg = new THREE.CylinderGeometry(w / 2 + alero, w / 2 + alero, d + alero * 2, 20, 1, true, -Math.PI / 2, Math.PI).rotateX(-Math.PI / 2);
     tg.scale(1, 0.45, 1); tg.translate(0, h, 0);
   } else if (techo === 'plano') {
     tg = new THREE.BoxGeometry(w + alero, 0.35, d + alero).translate(0, h + 0.17, 0);

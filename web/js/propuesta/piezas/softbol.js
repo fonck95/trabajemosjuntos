@@ -70,7 +70,7 @@ export function canchaSoftbol({ home, rumbo = 0 }) {
   [-1, 1].forEach((s) => cal.push(cinta([[s * 0.45, -0.9], [s * 1.35, -0.9], [s * 1.35, 1.2], [s * 0.45, 1.2], [s * 0.45, -0.9]], 0.06, 0.14)));
   const lb = M.bases * Math.SQRT1_2;
   [[lb, lb], [0, M.homeSegunda], [-lb, lb]].forEach(([u, v]) => cal.push(new THREE.BoxGeometry(0.38, 0.08, 0.38).translate(u, 0.16, -v)));
-  cal.push(losa([[-0.22, 0], [0.22, 0], [0.22, 0.22], [0, 0.43], [-0.22, 0.22]], 0.15));
+  cal.push(losa([[0, 0], [0.22, 0.22], [0.22, 0.43], [-0.22, 0.43], [-0.22, 0.22]], 0.15));   // punta atrás, lado plano al lanzador
   cal.push(new THREE.BoxGeometry(0.61, 0.06, 0.15).translate(0, 0.17, -cv));
   add(campo, unir(cal), C.cal);
 
@@ -119,7 +119,7 @@ export function canchaSoftbol({ home, rumbo = 0 }) {
   marc.add(new THREE.Mesh(new THREE.BoxGeometry(8.4, 3.8, 0.4).translate(0, 5.2, 0), C.oscuro));
   const pant = new THREE.Mesh(new THREE.PlaneGeometry(8, 3.5), new THREE.MeshBasicMaterial({ map: texturaMarcador() })); pant.position.set(0, 5.2, 0.21); marc.add(pant);
   [-3, 3].forEach((x) => marc.add(new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.4, 0.3).translate(x, 1.7, 0), C.oscuro)));
-  marc.position.set(0, 0, -Math.min(M.cercaCentro + 5, v1 - 2.2)); obras.add(sombra(marc));
+  marc.position.set(0, 0, -(M.cercaCentro + 0.7)); obras.add(sombra(marc));   // entre la cerca y el sendero perimetral
   // --- parqueadero de 20 cupos (dos filas de 10) al suroccidente, con algunos carros
   const pq = [[u0 + 2, v0 + 8], [u0 + 18, v0 + 8], [u0 + 18, v0 + 34], [u0 + 2, v0 + 34]];
   add(piso, losa(pq, 0.08), C.asfalto);
@@ -142,28 +142,29 @@ export function canchaSoftbol({ home, rumbo = 0 }) {
   [[u0 + 4, v0 + 43, 0], [u0 + 9, v0 + 48, 1], [u0 + 4.5, v0 + 53, 2], [u0 + 9, v0 + 57, 0]].forEach(([u, v, k]) => sombra(add(obras, new THREE.BoxGeometry(2.4, 1.6 + k * 0.4, 1.2).translate(u, 0.8 + k * 0.2, -v), C.juego[k])));
   // --- sendero perimetral, plazoleta de acceso y portal con letrero
   const s = 3;
-  add(piso, cinta([[u0 + 16, v0 + s / 2 + 0.5], [u1 - s / 2 - 0.5, v0 + s / 2 + 0.5], [u1 - s / 2 - 0.5, v1 - s / 2 - 0.5], [u0 + 18, v1 - s / 2 - 0.5]], s, 0.11), C.sendero);
+  add(piso, cinta([[u0 + 16, v0 + s / 2 + 0.5], [u1 - s / 2 - 0.5, v0 + s / 2 + 0.5], [u1 - s / 2 - 0.5, v1 - s / 2 - 0.5], [cu1 + 2, v1 - s / 2 - 0.5]], s, 0.11), C.sendero);
   add(piso, losa([[u0, v0], [u0 + 16, v0], [u0 + 16, v0 + 8], [u0, v0 + 8]], 0.11), C.sendero);
   add(piso, losa([[-13, -21], [13, -21], [13, -3], [-13, -3]], 0.11), C.sendero);
   const portal = new THREE.Group();
-  portal.add(new THREE.Mesh(new THREE.BoxGeometry(7, 3.2, 0.5).translate(5.2, 1.6, 0), C.concreto), new THREE.Mesh(new THREE.BoxGeometry(0.5, 3.4, 0.5).translate(0, 1.7, 0), C.oscuro), new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.35, 1.2).translate(-2.5, 3.3, 0), C.oscuro));
+  portal.add(new THREE.Mesh(new THREE.BoxGeometry(7, 3.2, 0.5).translate(5.2, 1.6, 0), C.concreto), new THREE.Mesh(new THREE.BoxGeometry(0.5, 3.4, 0.5).translate(0, 1.7, 0), C.oscuro),
+    new THREE.Mesh(new THREE.BoxGeometry(3, 0.35, 1.2).translate(-1.35, 3.3, 0), C.oscuro), new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.4, 0.3).translate(-2.7, 1.7, 0), C.oscuro));
   const letrero = document.createElement('canvas'); letrero.width = 512; letrero.height = 228;
   const lx = letrero.getContext('2d'); lx.fillStyle = '#d6d2c9'; lx.fillRect(0, 0, 512, 228); lx.fillStyle = '#23272b'; lx.font = 'bold 54px "Public Sans", Arial, sans-serif'; lx.textAlign = 'left';
   lx.fillText('CANCHA DE', 28, 72); lx.font = 'bold 74px "Public Sans", Arial, sans-serif'; lx.fillText('SÓFTBOL', 28, 146); lx.font = 'bold 54px "Public Sans", Arial, sans-serif'; lx.fillText('CASABE', 28, 206);
   const tl = new THREE.CanvasTexture(letrero); tl.colorSpace = THREE.SRGBColorSpace;
   const cartel = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 2.85), new THREE.MeshBasicMaterial({ map: tl })); cartel.position.set(5.2, 1.65, 0.26); portal.add(cartel);
-  portal.position.set(u0 + 3, 0, -(v0 + 0.3)); obras.add(sombra(portal));
+  portal.position.set(u0 + 3, 0, -(v0 + 0.7)); obras.add(sombra(portal));
 
   // --- torres de luz LED apuntando al cuadro, postes peatonales y verde: palmas en el borde y árboles en los jardines
   const foco = [0, 32];
-  const T = [[22, 2], [-22, 2], [u1 - 3, 40], [u0 + 3, 40], [30, v1 - 4], [-30, v1 - 4]].map(([u, v]) => [u, v, foco[0], foco[1]]);
+  const T = [[22, 2], [-22, 2], [u1 - 5, 40], [u0 + 3, 40], [30, v1 - 5.5], [-30, v1 - 5.5]].map(([u, v]) => [u, v, foco[0], foco[1]]);
   luces.add(torresLuz(T, 19));
-  luces.add(postes(aLoLargo([[u0 + 16, v0 + 2], [u1 - 2, v0 + 2], [u1 - 2, v1 - 2], [u0 + 18, v1 - 2]], 14), 4.2));
+  luces.add(postes(aLoLargo([[u0 + 16, v0 + 0.3], [u1 - 0.3, v0 + 0.3], [u1 - 0.3, v1 - 0.3], [cu1 + 2, v1 - 0.3]], 14), 4.2));
   const borde = aLoLargo([[u0 + 1, v0 + 1], [u1 - 1, v0 + 1], [u1 - 1, v1 - 1], [u0 + 1, v1 - 1], [u0 + 1, v0 + 10]], 9).map(([u, v]) => [u, v]);
-  verde.add(palmas(borde.filter(([u, v]) => !(u < u0 + 17 && v < v0 + 9)), { alto: 8.5, semilla: 21 }));
+  verde.add(palmas(borde.filter(([u, v]) => !(u < u0 + 17 && v < v0 + 9) && !(u < cu1 + 1.5 && v > cv0 - 1.5) && !(u < u0 + 13.5 && v > v0 + 36.5 && v < v0 + 61.5)), { alto: 8.5, semilla: 21 }));
   const jardines = [];
   for (let k = 0; k < 60; k++) { const a = -Math.PI / 4 + (k / 60) * (Math.PI / 2), r = cerca(a) + 4 + (k % 3) * 2.2; jardines.push([r * Math.sin(a), r * Math.cos(a)]); }
-  verde.add(arboles(jardines.filter(([u, v]) => u > u0 + 2 && u < u1 - 2 && v < v1 - 2 && !(u < cu1 + 2 && v > cv0 - 2)), { alto: 7, semilla: 33 }));
+  verde.add(arboles(jardines.filter(([u, v]) => u > u0 + 2 && u < u1 - 4 && v < v1 - 4 && !(u < cu1 + 2 && v > cv0 - 2) && Math.hypot(u, v - M.cercaCentro - 0.7) > 5.5), { alto: 7, semilla: 33 }));
   verde.add(arboles([[u1 - 6, v0 + 22], [u1 - 8, v0 + 30], [u1 - 5, v0 + 38], [u0 + 22, v0 + 14], [u0 + 26, v0 + 6], [18, -18], [-18, -18], [26, -12], [-26, -12]], { alto: 8, semilla: 41 }));
 
   raiz.userData.partes = { piso, campo, obras, cubierta, luces, verde };

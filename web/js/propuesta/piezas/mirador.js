@@ -8,7 +8,7 @@
 // Marco local: u a lo largo de la orilla aguas abajo y v hacia el río, con origen en el cruce del eje del puente con la
 // orilla; las piezas de geo3d reciben (u, −v).
 import { THREE, mat } from '../../core.js';
-import { losa, cinta, enrocado, arboles, palmas, postes, letras, aLoLargo, suave, unir, dentro, sembrar } from '../geo3d.js';
+import { losa, cinta, enrocado, arboles, palmas, postes, letras, aLoLargo, suave, unir, dentro, sembrar, distLinea } from '../geo3d.js';
 
 // prediseño de respaldo en el marco local (u, v); geo.json lo trae en metros del modelo y se convierte al marco
 const DISENO = {
@@ -35,14 +35,6 @@ function redondear(poly, r = 6, n = 6) {
   });
   return out;
 }
-const distLinea = (p, linea) => {
-  let d = Infinity;
-  for (let i = 1; i < linea.length; i++) {
-    const [a, b] = [linea[i - 1], linea[i]], dx = b[0] - a[0], dy = b[1] - a[1], t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)));
-    d = Math.min(d, Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy));
-  }
-  return d;
-};
 
 // { origen: [x, y] (eje del puente en la orilla), angulo: grados desde el oriente (antihorario) de la orilla aguas abajo,
 //   diseno: { zonaA, plaza, mirador, muelle, letras, deck, pasarela, acceso, orilla } en metros del modelo (opcional) }
@@ -97,21 +89,28 @@ export async function miradorMagdalena({ origen, angulo, diseno = null }) {
   // parqueadero sobre el borde de la vía y acceso desde la vía del puente (el empalme se acuerda con la concesión)
   const sur = [...D.plaza].sort((a, b) => a[1] - b[1]).slice(0, 2).sort((a, b) => a[0] - b[0]);
   if (sur.length === 2) {
-    const [a, b] = sur, u0 = a[0] + 4, u1 = Math.min(b[0] - 4, u0 + 50), v1 = Math.min(a[1], b[1]) - 1, v0 = v1 - 5.5;
+    const [a, b] = sur, u0 = a[0] - 1, u1 = Math.min(b[0] - 4, u0 + 50), v1 = Math.min(a[1], b[1]) - 1, v0 = v1 - 5.5;
     plaza.add(new THREE.Mesh(losa([[u0, v0], [u1, v0], [u1, v1], [u0, v1]].map(L), 0.1), C.asfalto));
     const rayas = []; for (let u = u0; u <= u1; u += 2.5) rayas.push(cinta([[u, v0 + 0.4], [u, v1 - 0.4]].map(L), 0.1, 0.11));
     plaza.add(new THREE.Mesh(unir(rayas), C.cal));
   }
   plaza.add(new THREE.Mesh(cinta(D.acceso.map(L), 7, 0.1), C.asfalto));
   // --- letras «YONDÓ» de colores (≈14 m), de frente a la plaza y con el río detrás
-  const ly = await letras('YONDO', { alto: 3.2, fondo: 0.8, colores: ['#7cc242', '#2a9fd6', '#e8452c', '#1f6fd1', '#f5b400'], acento: 4, separacion: 0.4 });
+  // (si la tipografía no se descarga, el mirador se arma igual, con el zócalo sin letras)
+  const ly = await letras('YONDO', { alto: 3.2, fondo: 0.8, colores: ['#7cc242', '#2a9fd6', '#e8452c', '#1f6fd1', '#f5b400'], acento: 4, separacion: 0.4 }).catch((e) => { console.warn('letras del mirador', e); return null; });
   const [lu, lv] = D.letras;
-  ly.position.set(lu, 0.7, lv); ly.rotation.y = Math.PI;   // el texto mira hacia −v (la plaza): la «Y» queda aguas abajo
   const zocalo = new THREE.Mesh(new THREE.BoxGeometry(15.5, 0.7, 2.4).translate(0, 0.35, 0), C.concreto); zocalo.position.set(lu, 0.05, lv);
-  letrasG.add(sombra(zocalo), sombra(ly));
+  letrasG.add(sombra(zocalo));
+  if (ly) { ly.position.set(lu, 0.7, lv); ly.rotation.y = Math.PI; letrasG.add(sombra(ly)); }   // el texto mira hacia −v (la plaza): la «Y» queda aguas abajo
 
   // --- sendero curvo en deck: sale de la plaza, cruza la ronda y corre por el borde del agua hasta el mirador
-  const ruta = suave(D.deck, 60), n = ruta.length, h0 = 0.8, h1 = 4.2, alto = (i) => h0 + (h1 - h0) * (i / (n - 1)) ** 0.85;
+  const md = D.mirador, mu = md.reduce((a, p) => a + p[0], 0) / md.length, mv = md.reduce((a, p) => a + p[1], 0) / md.length;
+  // la ruta se prolonga hasta entrar 0,5 m en la plataforma (el último punto del diseño puede quedar a un metro del borde)
+  const fin = D.deck[D.deck.length - 1], dirFin = [mu - fin[0], mv - fin[1]], lFin = Math.hypot(...dirFin) || 1;
+  let tFin = 0;
+  while (tFin < lFin && !dentro([fin[0] + (dirFin[0] / lFin) * tFin, fin[1] + (dirFin[1] / lFin) * tFin], md)) tFin += 0.25;
+  const pDeck = tFin > 0 && tFin < lFin ? [...D.deck, [fin[0] + (dirFin[0] / lFin) * (tFin + 0.5), fin[1] + (dirFin[1] / lFin) * (tFin + 0.5)]] : D.deck;
+  const ruta = suave(pDeck, 60), n = ruta.length, h0 = 0.8, h1 = 4.3, alto = (i) => h0 + (h1 - h0) * (i / (n - 1)) ** 0.85;
   const tablas = [], pilotes = [];
   for (let i = 1; i < n; i++) {
     const [a, b] = [ruta[i - 1], ruta[i]], h = (alto(i - 1) + alto(i)) / 2, Lg = Math.hypot(b[0] - a[0], b[1] - a[1]), ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
@@ -119,26 +118,30 @@ export async function miradorMagdalena({ origen, angulo, diseno = null }) {
     if (i % 4 === 0) [-1.35, 1.35].forEach((o) => { const x = a[0] - Math.sin(ang) * o, z = a[1] + Math.cos(ang) * o; pilotes.push(new THREE.CylinderGeometry(0.14, 0.14, h + 3, 6).translate(x, (h - 3) / 2, z)); });
   }
   deck.add(sombra(new THREE.Mesh(unir(tablas), C.madera)));
+  // barandas a los dos lados, cortadas donde el deck entra a la plataforma y donde sale la pasarela al muelle
+  const [pa, pb] = D.pasarela;
   const lado = (o) => ruta.map(([u, v], i) => { const [a, b] = [ruta[Math.max(0, i - 1)], ruta[Math.min(n - 1, i + 1)]], ang = Math.atan2(b[1] - a[1], b[0] - a[0]); return [u - Math.sin(ang) * o, v + Math.cos(ang) * o, alto(i)]; });
-  deck.add(barandaEn(lado(1.45), C.metal), barandaEn(lado(-1.45), C.metal));
+  const tramos = (pts) => { const out = [[]]; pts.forEach((p) => { if (dentro([p[0], p[1]], md) || (Math.hypot(p[0] - pa[0], p[1] - pa[1]) < 1.9 && Math.hypot(p[0] - pb[0], p[1] - pb[1]) < Math.hypot(pa[0] - pb[0], pa[1] - pb[1]))) { if (out[out.length - 1].length) out.push([]); } else out[out.length - 1].push(p); }); return out.filter((t) => t.length > 1); };
+  [1.45, -1.45].forEach((o) => tramos(lado(o)).forEach((t) => deck.add(barandaEn(t, C.metal))));
   // --- mirador: plataforma de 10 × 10 m sobre pilotes en el borde del agua, con pérgola de sombra
-  const md = D.mirador, mu = md.reduce((a, p) => a + p[0], 0) / md.length, mv = md.reduce((a, p) => a + p[1], 0) / md.length;
-  const plataforma = new THREE.Mesh(new THREE.ExtrudeGeometry(new THREE.Shape(md.map(L).map(([x, y]) => new THREE.Vector2(x, y))), { depth: 0.3, bevelEnabled: false }).rotateX(-Math.PI / 2).translate(0, h1 - 0.1, 0), C.madera);
+  const plataforma = new THREE.Mesh(new THREE.ExtrudeGeometry(new THREE.Shape(md.map(L).map(([x, y]) => new THREE.Vector2(x, y))), { depth: 0.3, bevelEnabled: false }).rotateX(-Math.PI / 2).translate(0, h1 - 0.2, 0), C.madera);
   deck.add(sombra(plataforma));
   md.forEach(([u, v]) => pilotes.push(new THREE.CylinderGeometry(0.2, 0.2, h1 + 4, 8).translate(u + (mu - u) * 0.08, (h1 - 4) / 2, v + (mv - v) * 0.08)));
   pilotes.push(new THREE.CylinderGeometry(0.22, 0.22, h1 + 4, 8).translate(mu, (h1 - 4) / 2, mv));
   deck.add(sombra(new THREE.Mesh(unir(pilotes), C.pilote)));
-  const borde = [...md, md[0]].map(([u, v]) => [u + (mu - u) * 0.04, v + (mv - v) * 0.04, h1 + 0.2]);
+  // baranda de la plataforma: un lazo abierto en el lado por donde llega el deck
+  const llegada = ruta[n - 1], ladoDeck = md.reduce((k, p, i) => { const q = md[(i + 1) % md.length], dm = (r) => Math.hypot((r[0] + r[2]) / 2 - llegada[0], (r[1] + r[3]) / 2 - llegada[1]); return dm([...p, ...q]) < dm([...md[k], ...md[(k + 1) % md.length]]) ? i : k; }, 0);
+  const borde = Array.from({ length: md.length }, (_, j) => md[(ladoDeck + 1 + j) % md.length]).map(([u, v]) => [u + (mu - u) * 0.04, v + (mv - v) * 0.04, h1 + 0.1]);
   deck.add(barandaEn(borde, C.metal));
   const pergola = [];
-  [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => pergola.push(new THREE.BoxGeometry(0.22, 2.7, 0.22).translate(mu + a * 3.2, h1 + 1.55, mv + b * 3.2)));
-  for (let k = -3; k <= 3; k++) pergola.push(new THREE.BoxGeometry(7.2, 0.14, 0.32).translate(mu, h1 + 2.95, mv + k * 1.05));
+  [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => pergola.push(new THREE.BoxGeometry(0.22, 2.7, 0.22).translate(mu + a * 3.2, h1 + 1.45, mv + b * 3.2)));
+  for (let k = -3; k <= 3; k++) pergola.push(new THREE.BoxGeometry(7.2, 0.14, 0.32).translate(mu, h1 + 2.85, mv + k * 1.05));
   deck.add(sombra(new THREE.Mesh(unir(pergola), C.madera)));
   // --- muelle flotante con pasarela articulada, la chalupa de toldo azul y dos lanchas
   const mm = D.muelle, au = mm.reduce((a, p) => a + p[0], 0) / mm.length, av = mm.reduce((a, p) => a + p[1], 0) / mm.length;
   const largoM = Math.hypot(mm[1][0] - mm[0][0], mm[1][1] - mm[0][1]), anchoM = Math.hypot(mm[2][0] - mm[1][0], mm[2][1] - mm[1][1]), angM = Math.atan2(mm[1][1] - mm[0][1], mm[1][0] - mm[0][0]);
   const ponton = new THREE.Mesh(new THREE.BoxGeometry(largoM, 0.6, anchoM).translate(0, 0.3, 0), C.madera); ponton.position.set(au, 0, av); ponton.rotation.y = -angM; muelle.add(sombra(ponton));
-  const [pa, pb] = D.pasarela, iPa = ruta.reduce((k, p, i) => (Math.hypot(p[0] - pa[0], p[1] - pa[1]) < Math.hypot(ruta[k][0] - pa[0], ruta[k][1] - pa[1]) ? i : k), 0);
+  const iPa = ruta.reduce((k, p, i) => (Math.hypot(p[0] - pa[0], p[1] - pa[1]) < Math.hypot(ruta[k][0] - pa[0], ruta[k][1] - pa[1]) ? i : k), 0);
   const hPa = alto(iPa), lp = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]), angP = Math.atan2(pb[1] - pa[1], pb[0] - pa[0]);
   const pas = new THREE.Mesh(new THREE.BoxGeometry(lp, 0.16, 2).translate(lp / 2, 0, 0), C.madera);
   pas.position.set(pa[0], hPa, pa[1]); pas.rotation.set(0, -angP, 0); pas.rotateZ(-Math.atan2(hPa - 0.6, lp)); muelle.add(sombra(pas));

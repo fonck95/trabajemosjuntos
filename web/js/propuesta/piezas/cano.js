@@ -4,7 +4,7 @@
 // las prolongaciones de las calles y luminarias. El corredor cambia de ancho por tramos, como lo midió el levantamiento:
 // cada tramo dice cuántos metros hay libres al occidente y al oriente del eje.
 import { THREE, mat } from '../../core.js';
-import { cinta, losa, arboles, palmas, postes, aLoLargo, puntoEn, largo, suave, V, unir, sembrar } from '../geo3d.js';
+import { cinta, losa, arboles, palmas, postes, aLoLargo, puntoEn, largo, suave, V, unir, sembrar, distLinea } from '../geo3d.js';
 
 // polilínea corrida off metros a la izquierda de su sentido (negativo: derecha); off puede ser una función del punto
 function paralela(pts, off) {
@@ -52,8 +52,10 @@ export function parqueLineal(eje, { tramos = [], humedales = [], bosques = [], p
   const oeste = aLoLargo(paralela(e, (p) => Math.min(W(p) - 1.5, cSen(p) + 5.5)), 9).filter(([x, y]) => W([x, y]) >= 14).map(([x, y]) => [x, y]);
   const este = aLoLargo(paralela(e, (p) => -(E(p) - 1.5)), 11, 0, 4).filter(([x, y]) => E([x, y]) >= 6).map(([x, y]) => [x, y]);
   const orilla = aLoLargo(paralela(e, 3.6), 13, 0, 6).map(([x, y]) => [x, y]);
-  verde.add(arboles([...oeste, ...este], { alto: 10, semilla: 61 }), arboles(orilla, { alto: 7, semilla: 62 }), palmas(aLoLargo(paralela(e, (p) => Math.min(W(p) - 2, cSen(p) + 4)), 48, 0, 20).filter(([x, y]) => W([x, y]) >= 12).map(([x, y]) => [x, y]), { alto: 10, semilla: 63 }));
-  bosques.forEach((poly, i) => verde.add(arboles(sembrar(poly, 60, 4.5, 70 + i), { alto: 12, semilla: 64 + i })));
+  verde.add(arboles([...oeste, ...este], { alto: 10, semilla: 61 }), arboles(orilla, { alto: 7, semilla: 62 }), palmas(aLoLargo(paralela(e, (p) => Math.min(W(p) - 2, cSen(p) + 4)), 48, 0, 20).filter(([x, y]) => W([x, y]) >= 14).map(([x, y]) => [x, y]), { alto: 10, semilla: 63 }));
+  // bosque inundable: los árboles, apartados del cauce y de las sendas que cruzan el polígono
+  const libre = (p) => distLinea(p, e) > 4 && distLinea(p, sen) > 2.5 && distLinea(p, cic) > 2.2;
+  bosques.forEach((poly, i) => verde.add(arboles(sembrar(poly, 60, 4.5, 70 + i).filter(libre), { alto: 12, semilla: 64 + i })));
   // puentes peatonales en arco sobre el cauce, con barandas
   const fraccion = (p) => { if (typeof p === 'number') return p; let mejor = 0, d = Infinity, acum = 0; for (let i = 1; i < e.length; i++) { const L = Math.hypot(e[i][0] - e[i - 1][0], e[i][1] - e[i - 1][1]); const dd = Math.hypot(e[i][0] - p[0], e[i][1] - p[1]); acum += L; if (dd < d) { d = dd; mejor = acum; } } return mejor / acum; };
   puentes.map(fraccion).forEach((f) => {

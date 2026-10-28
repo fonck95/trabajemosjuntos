@@ -7,7 +7,7 @@ export function crear(esc, datos) {
   const pines = pinesDe(datos);
   pines.forEach(({ m, i, x, y }) => {
     esc.linea([[x, y, 0], [x, y, 34]], { color: `--m-${m.id}`, ancho: 2.5, padre: capa });
-    esc.etiqueta(`<span>${i + 1}</span>`, { cls: 'lbl-pin', pos: [x, y, 36], padre: capa, color: `var(--m-${m.id})`, titulo: `${i + 1}. ${m.nombre}`, alClic: () => { location.hash = m.id; } });
+    esc.etiqueta(`<span>${i + 1}</span>`, { cls: 'lbl-pin', pos: [x, y, 34], padre: capa, color: `var(--m-${m.id})`, titulo: `${i + 1}. ${m.nombre}`, alClic: () => { location.hash = m.id; }, ancla: [0.5, 1.2] });
   });
   const casco = [[-650, -420], [700, -420], [700, 760], [-650, 760]];
   const todo = pines.map(({ x, y }) => [x, y]).concat([[-2400, 300], [1700, 8300]]);
