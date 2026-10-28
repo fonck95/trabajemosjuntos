@@ -39,6 +39,10 @@ export function crearEscena(el, datos) {
   st.onFrame(() => {
     const d = st.camera.position.distanceTo(st.controls.target);
     st.fogCfg.near = Math.max(1500, d * 1.6); st.fogCfg.far = Math.max(7000, d * 5.5);
+    // en el celular, las vistas de todo el municipio (puestos rurales a 11,5 km) alejan la cámara más de 40 km: el plano
+    // lejano crece con ella para que la maqueta no quede recortada
+    const lejos = Math.max(40000, d * 2.5);
+    if (Math.abs(st.camera.far - lejos) > lejos * 0.1) { st.camera.far = lejos; st.camera.updateProjectionMatrix(); }
     return false;
   });
 
@@ -191,37 +195,93 @@ export function crearEscena(el, datos) {
 
   // Etiquetas sin encimarse y dentro de la zona libre: tiene en cuenta el ancla de cada recuadro, corre en horizontal
   // las que el panel, la leyenda o el borde cortarían, sube lo justo las que chocan y oculta las de puntos que caen
-  // debajo del panel o fuera de la pantalla. Reemplaza el de core.js solo en esta página.
+  // debajo del panel o fuera de la pantalla. En pantallas chicas, además, los rótulos que caen encima de la obra que se
+  // encuadró se corren arriba (o abajo) de ella para que se vea entera. Si un rótulo queda lejos de su punto, una guía
+  // los une. Reemplaza el de core.js solo en esta página.
   st.declutterLabels = function () {
     const z = zonaPx(), v = new THREE.Vector3(), items = [];
+    let ob = null;
+    if (z.chico && this._obra?.length) {
+      const b = [Infinity, -Infinity, Infinity, -Infinity];
+      for (const p of this._obra) {
+        v.copy(p).project(this.camera); if (v.z > 1) continue;
+        const x = ((v.x + 1) / 2) * z.W, y = ((1 - v.y) / 2) * z.H;
+        b[0] = Math.min(b[0], x); b[1] = Math.max(b[1], x); b[2] = Math.min(b[2], y); b[3] = Math.max(b[3], y);
+      }
+      if (b[1] > b[0]) ob = { x0: b[0], x1: b[1], y0: b[2], y1: b[3] };
+    }
     for (const o of this._labels) {
       const e = o.element;
-      if (!e.isConnected || e.style.display === 'none' || !(e.classList.contains('lbl-p') || e.classList.contains('lbl-geo'))) continue;
+      const pin = e.classList.contains('lbl-pin');
+      if (!e.isConnected || e.style.display === 'none' || !(pin || e.classList.contains('lbl-p') || e.classList.contains('lbl-geo'))) continue;
       o.getWorldPosition(v).project(this.camera);
       if (v.z > 1) continue;
       const w = e.offsetWidth, h = e.offsetHeight;
       if (!w) continue;
       const ax = ((v.x + 1) / 2) * z.W, ay = ((1 - v.y) / 2) * z.H, x = ax + (0.5 - o.center.x) * w, y = ay + (0.5 - o.center.y) * h;
-      const fuera = ax < z.x0 - 14 || ax > z.x1 + 14 || ay < z.y0 - 14 || ay > z.y1 + 48;
-      items.push({ e, x, y, w, h, fuera, mini: e.classList.contains('mini') || e.classList.contains('lbl-geo'), x2: Math.min(Math.max(x, z.x0 + w / 2 + 6), Math.max(z.x0 + w / 2 + 6, z.x1 - w / 2 - 6)) });
+      const fuera = ax < z.x0 - 14 || ax > z.x1 + 14 || ay < z.y0 - 14 || ay > z.y1 + 48, geo = e.classList.contains('lbl-geo');
+      // los pines de los módulos (portada, pedidos) llevan el nombre: se corren para no salirse ni encimarse, pero nunca se
+      // ocultan; el de un sitio que queda fuera del cuadro se deja donde está (fuera de la pantalla)
+      if (pin && fuera) { e.style.marginLeft = ''; e.style.marginTop = ''; e.classList.remove('guia', 'fuera'); continue; }
+      items.push({ e, ax, ay, x, y, yn: y, w, h, fuera, geo, pin, aparte: pin, mini: geo || e.classList.contains('mini'), x2: Math.min(Math.max(x, z.x0 + w / 2 + 6), Math.max(z.x0 + w / 2 + 6, z.x1 - w / 2 - 6)) });
     }
+    // techo de cada rótulo: la barra, o el borde de la leyenda plegada si queda debajo de ella
+    const techo = (r) => (z.ley && r.x2 + r.w / 2 > z.ley.x0 - 6 && r.x2 - r.w / 2 < z.ley.x1 + 6 ? z.y0 : z.yTecho) + r.h / 2 + 4;
+    if (ob) items.forEach((r) => {
+      if (r.fuera || r.geo || r.pin) return;
+      const ix = Math.min(r.x2 + r.w / 2, ob.x1) - Math.max(r.x2 - r.w / 2, ob.x0), iy = Math.min(r.y + r.h / 2, ob.y1) - Math.max(r.y - r.h / 2, ob.y0);
+      if (ix <= 0 || iy <= 0 || ix * iy < r.w * r.h * 0.15) return;
+      // arriba o abajo de la obra, lo que quede más cerca; si queda muy lejos (vistas de conjunto, donde la obra es medio
+      // pueblo), el rótulo se queda sobre lo que nombra
+      const lados = [ob.y0 - 8 - r.h / 2, ob.y1 + 8 + r.h / 2].filter((y, i) => (i ? y + r.h / 2 <= z.y1 - 4 : y >= techo(r))).sort((a, b) => Math.abs(a - r.y) - Math.abs(b - r.y));
+      if (!lados.length) { if (r.mini) r.fuera = true; else { r.y = techo(r); r.aparte = true; } return; }
+      if (Math.abs(lados[0] - r.y) <= Math.max(120, (z.y1 - z.y0) * 0.6)) { r.bajo = lados[0] > ob.y1; r.y = lados[0]; r.aparte = true; }
+    });
     // primero los rótulos principales y después los chicos; cada uno sube lo justo para no chocar y, si arriba ya no cabe
-    // sin encimarse (pasa en el celular), se oculta
+    // sin encimarse (pasa en el celular), se oculta. Los que se apartaron de la obra prueban antes a correrse de lado,
+    // para quedar en fila y no apilados (la guía los une con su punto)
     const puestas = [], choca = (r, y) => puestas.find((p) => Math.abs(p.x - r.x2) < (p.w + r.w) / 2 + 4 && Math.abs(p.y - y) < (p.h + r.h) / 2 + 3);
+    const cabe = (r, x) => x - r.w / 2 >= z.x0 + 4 && x + r.w / 2 <= z.x1 - 4 && Math.abs(x - r.x) < 170;
     const colocar = (r) => {
       let y = Math.min(r.y, z.y1 - r.h / 2 - 4);
-      for (let k = 0; k < 14; k++) { const c = choca(r, y); if (!c) break; y = c.y - (c.h + r.h) / 2 - 3; }
-      const tope = z.y0 + r.h / 2 + 4;
-      if (y < tope) { y = tope; if (choca(r, y)) { r.fuera = true; return; } }
-      r.dx = r.x2 - r.x; r.dy = y - r.y; puestas.push({ x: r.x2, y, w: r.w, h: r.h });
+      for (let k = 0; r.aparte && k < 6; k++) {
+        const c = choca(r, y); if (!c) break;
+        const x0 = r.x2, lados = [c.x + (c.w + r.w) / 2 + 4, c.x - (c.w + r.w) / 2 - 4].filter((x) => cabe(r, x)).sort((a, b) => Math.abs(a - r.x) - Math.abs(b - r.x));
+        const libre = lados.find((x) => { r.x2 = x; const otro = choca(r, y); r.x2 = x0; return !otro; });
+        if (libre === undefined) break;
+        r.x2 = libre;
+      }
+      if (r.bajo) {
+        // debajo de la obra se apilan hacia abajo, hasta la hoja
+        for (let k = 0; k < 6; k++) { const c = choca(r, y); if (!c) break; y = c.y + (c.h + r.h) / 2 + 3; }
+        if (y + r.h / 2 > z.y1 - 4 || choca(r, y)) { r.fuera = true; return; }
+      } else {
+        for (let k = 0; k < 14; k++) { const c = choca(r, y); if (!c) break; y = c.y - (c.h + r.h) / 2 - 3; }
+        const tope = techo(r);
+        if (y < tope) { y = tope; if (choca(r, y) && !r.pin) { r.fuera = true; return; } }
+      }
+      r.dx = r.x2 - r.x; r.dy = y - r.yn; puestas.push({ x: r.x2, y, w: r.w, h: r.h });
     };
     const visibles = items.filter((r) => !r.fuera).sort((a, b) => b.y - a.y);
     visibles.filter((r) => !r.mini).forEach(colocar);
     visibles.filter((r) => r.mini).forEach(colocar);
     items.forEach((r) => {
-      r.e.classList.toggle('fuera', r.fuera);
-      r.e.style.marginLeft = !r.fuera && Math.abs(r.dx) > 0.5 ? `${r.dx}px` : '';
-      r.e.style.marginTop = !r.fuera && Math.abs(r.dy) > 0.5 ? `${r.dy}px` : '';
+      const { e } = r;
+      e.classList.toggle('fuera', r.fuera);
+      e.style.marginLeft = !r.fuera && Math.abs(r.dx) > 0.5 ? `${r.dx}px` : '';
+      e.style.marginTop = !r.fuera && Math.abs(r.dy) > 0.5 ? `${r.dy}px` : '';
+      // guía: del borde de arriba o de abajo del recuadro hasta su punto, cuando el punto quedó a más de 10 px
+      const cy = r.yn + (r.dy || 0), arriba = r.ay < cy - r.h / 2 - 10, abajo = r.ay > cy + r.h / 2 + 10 || (r.ay >= cy && Math.abs(r.ax - r.x2) > r.w / 2 + 6);
+      const guia = !r.fuera && !r.geo && (arriba || abajo);
+      e.classList.toggle('guia', guia);
+      if (!guia) return;
+      const px = r.ax - (r.x2 - r.w / 2) - e.clientLeft, py = r.ay - (cy - r.h / 2) - e.clientTop, oy = abajo ? e.clientHeight : 0;
+      const gx = px - e.clientWidth / 2, gy = py - oy;
+      e.style.setProperty('--gl', `${Math.max(0, Math.hypot(gx, gy) - 3).toFixed(1)}px`);
+      e.style.setProperty('--ga', `${Math.atan2(-gx, gy).toFixed(3)}rad`);
+      e.style.setProperty('--oy', `${oy}px`);
+      e.style.setProperty('--ax', `${px.toFixed(1)}px`);
+      e.style.setProperty('--ay', `${py.toFixed(1)}px`);
     });
   };
   // cubiertas del contexto en gris (para que se lean los techos que resalta un paso, como los mejoramientos)
@@ -235,14 +295,15 @@ export function crearEscena(el, datos) {
   // ---------------------------------------------------------------- encuadres que respetan el panel
   const elPanel = () => document.querySelector('.panel');
   // zona libre de la pantalla en coordenadas normalizadas (−1…1, y hacia arriba)
+  const pantallaChica = matchMedia('(max-width: 1080px)');
   function zonaPx() {
     const r = el.getBoundingClientRect(), W = r.width || 1, H = r.height || 1;
-    let x0 = 0, x1 = W, y0 = 0, y1 = H;
+    let x0 = 0, x1 = W, y0 = 0, y1 = H, yTecho = 0, leyArriba = null;
     const ley = document.querySelector('.leyenda3d'), bl = ley?.childElementCount ? ley.getBoundingClientRect() : null;
     if (bl?.height && bl.top - r.top > H / 2) y1 = Math.min(y1, bl.top - r.top - 8);
-    else if (bl?.height) y0 = Math.max(y0, bl.bottom - r.top + 6);   // en el celular la leyenda va arriba, bajo la barra
+    else if (bl?.height) { y0 = Math.max(y0, bl.bottom - r.top + 6); leyArriba = { x0: bl.left - r.left, x1: bl.right - r.left }; }   // en el celular la leyenda va arriba, bajo la barra
     const bar = document.querySelector('.barra')?.getBoundingClientRect(), ctl = document.querySelector('.control')?.getBoundingClientRect();
-    if (bar) y0 = Math.max(y0, bar.bottom - r.top + 6);
+    if (bar) { y0 = Math.max(y0, bar.bottom - r.top + 6); yTecho = bar.bottom - r.top + 6; }
     if (ctl) y1 = Math.min(y1, ctl.top - r.top - 6);
     const p = elPanel(), oculto = document.getElementById('pres')?.classList.contains('sin-panel');
     if (p && !oculto) {
@@ -251,16 +312,17 @@ export function crearEscena(el, datos) {
       else y1 = Math.min(y1, b.top - r.top - 8);
     }
     const riel = document.querySelector('.riel')?.getBoundingClientRect();
-    if (riel && riel.width > W * 0.7) y0 = Math.max(y0, riel.bottom - r.top + 4);
+    if (riel && riel.width > W * 0.7) { y0 = Math.max(y0, riel.bottom - r.top + 4); yTecho = Math.max(yTecho, riel.bottom - r.top + 4); }
     if (x1 - x0 < W * 0.25) { x0 = 0; x1 = W; }
     // con la hoja inferior del celular la franja libre puede ser baja, pero nunca se encuadra en la pantalla entera: la
     // obra quedaría debajo del texto. Se deja una franja mínima de 90 px.
     if (y1 - y0 < 90) y1 = Math.min(H, y0 + 90);
-    return { x0, x1, y0, y1, W, H };
+    return { x0, x1, y0, y1, W, H, yTecho: Math.min(yTecho, y0), ley: leyArriba, chico: pantallaChica.matches };
   }
+  // zona para encuadrar: en pantallas chicas deja arriba una franja para los rótulos, que no caben encima de la obra
   function zona() {
-    const { x0, x1, y0, y1, W, H } = zonaPx();
-    return { x0: (x0 / W) * 2 - 1, x1: (x1 / W) * 2 - 1, y0: 1 - (y1 / H) * 2, y1: 1 - (y0 / H) * 2 };
+    const { x0, x1, y0, y1, W, H, chico } = zonaPx(), franja = chico ? Math.min(36, (y1 - y0) * 0.16) : 0;
+    return { x0: (x0 / W) * 2 - 1, x1: (x1 / W) * 2 - 1, y0: 1 - (y1 / H) * 2, y1: 1 - ((y0 + franja) / H) * 2 };
   }
   // puntos 3D de lo que hay que encuadrar: caja, objeto, lista de [x, y(, h)] o polígono
   function puntosDe(obj) {
@@ -273,6 +335,7 @@ export function crearEscena(el, datos) {
     const pts = puntosDe(obj);
     if (!pts.length) return;
     if (alto) pts.push(...pts.map((p) => p.clone().setY(p.y + alto)));
+    st._obra = pts;   // lo que se encuadró: en el celular los rótulos se apartan de ahí
     const z = zona(), cam = st.camera.clone(); cam.far = 1e7; cam.updateProjectionMatrix();
     const az = THREE.MathUtils.degToRad(rumbo), el2 = THREE.MathUtils.degToRad(elev);
     const dir = new THREE.Vector3(Math.sin(az) * Math.cos(el2), Math.sin(el2), -Math.cos(az) * Math.cos(el2));

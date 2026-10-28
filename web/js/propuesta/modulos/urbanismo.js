@@ -175,9 +175,10 @@ export async function crear(esc, datos) {
   const listoMir = miradorMagdalena(cfgMir).then((m) => {
     mir = m; cMir.add(m);
     const U = m.userData;
+    // el mirador va primero: si en el celular no caben todos, es el último que se oculta
+    esc.etiqueta('<b>Mirador elevado</b><small>10 × 10 m sobre pilotes</small>', { pos: [...U.mirador, 12], padre: cMir, color: '#a8703f', cls: 'lbl-p mini' });
     esc.etiqueta('<b>Zona A · protección hidráulica</b><small>283 m de orilla: enrocado y vegetación de ribera</small>', { pos: [...U.zonaA, 8], padre: cMir, color: 'var(--m-aguas)', cls: 'lbl-p mini' });
     esc.etiqueta('<b>Zona B · plaza mirador</b><small>letras YONDÓ · jardineras · parqueadero</small>', { pos: [...U.zonaB, 12], padre: cMir, color: `var(${color})`, cls: 'lbl-p mini' });
-    esc.etiqueta('<b>Mirador elevado</b><small>10 × 10 m sobre pilotes</small>', { pos: [...U.mirador, 12], padre: cMir, color: '#a8703f', cls: 'lbl-p mini' });
     esc.etiqueta('<b>Muelle flotante</b><small>lanchas Barrancabermeja–Casabe</small>', { pos: [...U.muelle, 6], padre: cMir, color: '#a8703f', cls: 'lbl-p mini' });
     esc.sincronizarEtiquetas(); esc.st.updateShadows(); esc.st.invalidate();
     return m;
@@ -189,11 +190,14 @@ export async function crear(esc, datos) {
   const piezas = capasTodo.slice(1);   // en las vistas de conjunto, solo los rótulos de las cuatro piezas
   const inv = () => esc.st.invalidate();
   const vistaCiud = () => esc.encuadrar([...ciud, ...explanada], { rumbo: 200, elev: 48, margen: 0.8 });
-  const vistaSoft = () => esc.encuadrar(soft.userData.contorno, { rumbo: 200, elev: 34, margen: 1, alto: 10 });
+  const vistaSoft = () => esc.encuadrar(soft.userData.contorno, { rumbo: 200, elev: 34, margen: 0.9, alto: 10 });
   const vistaCano = () => esc.encuadrar(caja(pl.userData.eje, 24), { rumbo: 118, elev: 40, margen: 0.94 });
   const vistaAla = () => esc.encuadrar(caja([...ala, ...(conector || [])], 30), { rumbo: 196, elev: 46, margen: 0.94 });
-  const vistaInst = () => esc.encuadrar([...explanada, ...soft.userData.contorno], { rumbo: 208, elev: 38, margen: 0.94, alto: 10 });
-  const encuadrarMir = () => esc.encuadrar(mir ? mir.userData.contorno : caja([cfgMir.origen], 150), { rumbo: 221, elev: 30, margen: 0.92, alto: 12 });
+  // la explanada con el puente PP2, que la une con el estadio (con toda la cancha, en el celular la obra quedaba diminuta)
+  const pp2 = puentes.find((s) => s.id === 'pp2');
+  const vistaInst = () => esc.encuadrar([...explanada, ...(pp2 ? [[pp2.x, pp2.y]] : soft.userData.contorno)], { rumbo: 208, elev: 38, margen: 0.94, alto: 10 });
+  // la plaza, el deck, el mirador y el muelle, más las dos puntas de la zona A (la protección de la orilla que abre el paso)
+  const encuadrarMir = () => esc.encuadrar(mir ? [...mir.userData.contorno, ...mir.userData.contornoA] : caja([cfgMir.origen], 150), { rumbo: 221, elev: 30, margen: 0.92, alto: 12 });
   const vistaMir = () => { encuadrarMir(); if (!mir) listoMir.then((m) => { if (m && cMir.visible) encuadrarMir(); }); };
   const animSoft = () => {
     const P = soft.userData.partes;
