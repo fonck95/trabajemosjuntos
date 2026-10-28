@@ -196,14 +196,14 @@ export function crearEscena(el, datos) {
     const z = zonaPx(), v = new THREE.Vector3(), items = [];
     for (const o of this._labels) {
       const e = o.element;
-      if (!e.isConnected || e.style.display === 'none' || !e.classList.contains('lbl-p')) continue;
+      if (!e.isConnected || e.style.display === 'none' || !(e.classList.contains('lbl-p') || e.classList.contains('lbl-geo'))) continue;
       o.getWorldPosition(v).project(this.camera);
       if (v.z > 1) continue;
       const w = e.offsetWidth, h = e.offsetHeight;
       if (!w) continue;
       const ax = ((v.x + 1) / 2) * z.W, ay = ((1 - v.y) / 2) * z.H, x = ax + (0.5 - o.center.x) * w, y = ay + (0.5 - o.center.y) * h;
       const fuera = ax < z.x0 - 14 || ax > z.x1 + 14 || ay < z.y0 - 14 || ay > z.y1 + 48;
-      items.push({ e, x, y, w, h, fuera, mini: e.classList.contains('mini'), x2: Math.min(Math.max(x, z.x0 + w / 2 + 6), Math.max(z.x0 + w / 2 + 6, z.x1 - w / 2 - 6)) });
+      items.push({ e, x, y, w, h, fuera, mini: e.classList.contains('mini') || e.classList.contains('lbl-geo'), x2: Math.min(Math.max(x, z.x0 + w / 2 + 6), Math.max(z.x0 + w / 2 + 6, z.x1 - w / 2 - 6)) });
     }
     // primero los rótulos principales y después los chicos; cada uno sube lo justo para no chocar y, si arriba ya no cabe
     // sin encimarse (pasa en el celular), se oculta

@@ -282,6 +282,14 @@ a.chip:hover { border-color: var(--ink); }
   .panel { left: 10px; right: 10px; width: auto; top: auto; bottom: calc(var(--control) + 12px); height: var(--hoja, min(40vh, 380px)); max-height: none; transition: transform 0.45s cubic-bezier(.2,.7,.2,1), opacity 0.35s, height 0.32s cubic-bezier(.2,.7,.2,1); }
   .pres.arrastrando .panel { transition: none; }
   .pres.sin-panel .panel { transform: translateY(calc(100% + 120px)); }
+  /* toda la hoja se desplaza (título, entrada y cuerpo): con la altura media la entrada no siempre cabe */
+  .panel { display: block; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+  .panel-cuerpo { overflow: visible; }
+  .panel .asa { position: sticky; top: 0; margin-bottom: -22px; width: 100%; background: linear-gradient(color-mix(in srgb, var(--surface) 90%, transparent) 55%, transparent); }
+  /* la franja de color del capítulo va como sombra interna: un ::before absoluto se iría con el desplazamiento */
+  .panel::before { display: none; }
+  .panel { box-shadow: inset 6px 0 0 var(--mc, var(--accent)), var(--sombra); }
+  .panel.mas { -webkit-mask-image: linear-gradient(#000 calc(100% - 36px), transparent); mask-image: linear-gradient(#000 calc(100% - 36px), transparent); }
   .panel-cab { padding: 22px 18px 8px 22px; }
   .panel-cuerpo { padding: 0 18px 16px 22px; }
   .panel .asa { display: block; }
@@ -306,8 +314,8 @@ a.chip:hover { border-color: var(--ink); }
   .panel h2 { font-size: clamp(1.3rem, 6.4vw, 1.75rem); }
   .panel .lead { font-size: 0.94rem; line-height: 1.45; }
   .lbl-p { font-size: 10.5px; white-space: normal; max-width: min(62vw, 250px); }
-  .lbl-p small { font-size: 9px; }
-  .lbl-p.mini small { display: none; }
+  /* en el teléfono los rótulos llevan solo el título: el detalle está en la hoja */
+  .lbl-p small { display: none; }
   .marca span, .herr .txt { display: none; }
   .marca { padding: 5px 12px 5px 9px; } .marca b { font-size: 1rem; }
   .herr button, .herr a { padding: 0 10px; }
@@ -325,6 +333,9 @@ a.chip:hover { border-color: var(--ink); }
   .panel { top: calc(var(--barra) + 6px); bottom: calc(var(--control) + 10px); left: max(10px, env(safe-area-inset-left, 0px)); right: auto; width: min(44vw, 380px); height: auto; }
   .pres.sin-panel .panel { transform: translateX(calc(-100% - 40px)); }
   .panel .asa { display: none; }
+  .panel { display: flex; overflow: hidden; box-shadow: var(--sombra); }
+  .panel::before { display: block; }
+  .panel-cuerpo { overflow-y: auto; }
   .pres.hoja-mini .panel .lead, .pres.hoja-mini .panel-cuerpo { display: block; }
   .panel h2 { font-size: clamp(1.15rem, 3.2vw, 1.5rem); }
   .panel-cab { padding: 12px 16px 6px 20px; }

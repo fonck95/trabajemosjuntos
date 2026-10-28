@@ -231,8 +231,13 @@ const RENDER = {
   },
 };
 // el cuerpo del panel se desvanece abajo mientras haya más contenido para leer
-function marcarDesborde() { cuerpo.classList.toggle('mas', cuerpo.scrollTop + cuerpo.clientHeight < cuerpo.scrollHeight - 6); }
+function marcarDesborde() {
+  const p = $('.panel'), hojaEntera = getComputedStyle(p).overflowY === 'auto', el = hojaEntera ? p : cuerpo;
+  (hojaEntera ? cuerpo : p).classList.remove('mas');
+  el.classList.toggle('mas', el.scrollTop + el.clientHeight < el.scrollHeight - 6);
+}
 cuerpo.addEventListener('scroll', marcarDesborde, { passive: true });
+$('.panel').addEventListener('scroll', marcarDesborde, { passive: true });
 addEventListener('resize', marcarDesborde);
 // titular partido en palabras (para animarlas)
 // palabras del título (para animarlas); el número y su unidad («69 %», «24 horas») no se separan
@@ -321,7 +326,7 @@ async function pintarPanel(c, p, dir, conTelon) {
   const r = (RENDER[p.tipo] || RENDER.texto)(c, p);
   const salir = gsap && !reducedMotion && cab.innerHTML ? gsap.to([cab, cuerpo], { opacity: 0, y: dir > 0 ? -12 : 12, duration: 0.18, ease: 'power2.in' }) : null;
   if (salir) await salir;
-  cab.innerHTML = r.cab; cuerpo.innerHTML = r.cuerpo; cuerpo.scrollTop = 0;
+  cab.innerHTML = r.cab; cuerpo.innerHTML = r.cuerpo; cuerpo.scrollTop = 0; $('.panel').scrollTop = 0;
   if (hoja === 'mini') aplicarHoja('mini', { reencuadre: false });
   requestAnimationFrame(marcarDesborde);
   $('.panel').style.setProperty('--mc', colorDe(c.id));

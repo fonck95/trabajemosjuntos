@@ -115,8 +115,9 @@ export async function crear(esc, datos, cap) {
     g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     cRural.add(g);
   });
-  const f0 = fincas[2];
-  esc.etiqueta('<b>Prototipo VIVA · 50–60 m²</b><small>un piso · saneamiento propio · solar donde no llega la red</small>', { pos: [f0.x, f0.y, 14], padre: cRural, color: `var(${color})`, ancla: [0.5, 1] });
+  // el rótulo, encima de la casa más al norte (detrás de las demás en la vista), para no tapar ninguna
+  const f0 = fincas.reduce((a, f) => (f.y > a.y ? f : a), fincas[0]);
+  esc.etiqueta('<b>Prototipo VIVA · 50–60 m²</b><small>un piso · saneamiento propio · solar donde no llega la red</small>', { pos: [f0.x, f0.y, 22], padre: cRural, color: `var(${color})`, ancla: [0.5, 1] });
   esc.etiqueta('<b>200 casas rurales nuevas</b><small>en el lote de cada familia, en 60 veredas (muestra)</small>', { pos: [fincas[4].x, fincas[4].y, 10], padre: cRural, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0, 0.5] });
   esc.sincronizarEtiquetas();
 
