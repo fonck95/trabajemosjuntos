@@ -10,6 +10,7 @@ proyecto tipo citado exista; avisa lo que no cuadra sin detener la construcción
 Uso: python3 scripts/build_propuesta.py   (también lo llama scripts/build_data.py)
 """
 import json
+import re
 from pathlib import Path
 
 R = Path(__file__).resolve().parent.parent
@@ -75,11 +76,37 @@ out = {
     'geo': {k: v for k, v in geo.items() if k != 'zonas_intervencion'},
     'territorio': terr,
 }
+# espacios que no se cortan entre número y unidad («69 %», «10 × 22 m», «Lote 2», «1.ª etapa»): así una cifra no queda
+# partida entre dos líneas del panel. Solo en los textos de la presentación (no en geo ni territorio) y nunca en URL.
+NBSP = '\u00a0'
+UNIDAD = re.compile(r'(\d)[ \t](%|m²|m³|km²?\b|ha\b|m\b|L/s|L/día|kWp|MWp|kWh|MWh|kW\b|MW\b|kV\b|t/día|t/mes|t/h|t\b|horas?\b|días?\b|años?\b|meses\b|M\b|millones\b|billones\b)')
+POR = re.compile(r'(\d)[ \t]×[ \t](\d)')
+ROTULO = re.compile(r'\b(Lote|lote|Fase|fase|Sector|sector|Bloque|bloque|Etapa|etapa|Tramo|tramo|Calle|Carrera|manzana)[ \t](\d)')
+ORDINAL = re.compile(r'(\d\.[ªº])[ \t]')
+cambios = 0
+def sin_cortes(v, clave=''):
+    global cambios
+    if isinstance(v, dict):
+        return {k: sin_cortes(x, k) for k, x in v.items()}
+    if isinstance(v, list):
+        return [sin_cortes(x, clave) for x in v]
+    if isinstance(v, str) and clave != 'url' and not v.startswith('http'):
+        n = POR.sub(f'\\1{NBSP}×{NBSP}\\2', v)
+        n = UNIDAD.sub(f'\\1{NBSP}\\2', n)
+        n = ROTULO.sub(f'\\1{NBSP}\\2', n)
+        n = ORDINAL.sub(f'\\1{NBSP}', n)
+        cambios += n != v
+        return n
+    return v
+for k in ('meta', 'portada', 'modulos', 'financiacion', 'ruta', 'pedidos'):
+    out[k] = sin_cortes(out[k])
+
 dest = R / 'web/data/propuesta.json'
 dest.parent.mkdir(parents=True, exist_ok=True)
 dest.write_text(json.dumps(out, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
 total = sum((m.get('inversion') or {}).get('central') or 0 for m in modulos)
 print(f'propuesta.json {dest.stat().st_size / 1024:.0f} KB: {len(modulos)} módulos, inversión central {total:,.0f} M'.replace(',', '.'))
+print(f'Textos con cifras unidas a su unidad: {cambios}')
 print(f'Avisos de la propuesta: {len(avisos)}')
 for a in avisos:
     print('  -', a)

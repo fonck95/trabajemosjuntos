@@ -152,21 +152,21 @@ export function crearEscena(el, datos) {
   // CSS2DRenderer no hereda la visibilidad del padre: cada etiqueta se muestra solo si toda su cadena es visible
   // etiquetas visibles: las de las capas visibles; en las vistas de conjunto (soloEtiquetas) solo las de algunas capas
   let soloCapas = null;
-  function sincronizarEtiquetas() {
-    S.traverse((o) => {
-      if (!o.isCSS2DObject) return;
-      let v = o.userData.ver !== false, permitida = !soloCapas;
-      for (let p = o.parent; p; p = p.parent) { if (!p.visible) { v = false; break; } if (soloCapas?.has(p)) permitida = true; }
-      o.visible = v && permitida;
-    });
+  function verEtiqueta(o) {
+    let v = o.userData.ver !== false, permitida = !soloCapas;
+    for (let p = o.parent; p; p = p.parent) { if (!p.visible) { v = false; break; } if (soloCapas?.has(p)) permitida = true; }
+    o.visible = v && permitida;
   }
-  function etiqueta(html, { cls = 'lbl-p', pos = [0, 0, 0], padre = S, color, titulo, alClic } = {}) {
+  function sincronizarEtiquetas() { S.traverse((o) => { if (o.isCSS2DObject) verEtiqueta(o); }); }
+  // ancla: [cx, cy] del recuadro que cae sobre el punto (0,5 0,5 centrado; 0,5 1 el recuadro queda encima del punto)
+  function etiqueta(html, { cls = 'lbl-p', pos = [0, 0, 0], padre = S, color, titulo, alClic, ancla } = {}) {
     const div = document.createElement('div');
     div.className = `lbl ${cls}`; div.innerHTML = html;
     if (color) div.style.setProperty('--mc', color);
     if (titulo) div.title = titulo;
     if (alClic) { div.style.pointerEvents = 'auto'; div.style.cursor = 'pointer'; div.addEventListener('click', alClic); }
-    const o = new CSS2DObject(div); o.position.copy(V(pos[0], pos[1], pos[2] || 0)); padre.add(o); st._labels.push(o);
+    const o = new CSS2DObject(div); o.position.copy(V(pos[0], pos[1], pos[2] || 0)); if (ancla) o.center.set(ancla[0], ancla[1]); padre.add(o); st._labels.push(o);
+    verEtiqueta(o);   // nace oculta si su capa lo está (los módulos que cargan tarde no destapan rótulos de otro paso)
     return o;
   }
   // líneas de ancho fijo en pantalla (enlaces, redes, contornos); el ancho se recalcula con el tamaño del lienzo
@@ -189,12 +189,55 @@ export function crearEscena(el, datos) {
   }
   st.onFrame((dt) => { let n = false; flujos.forEach((f) => { let vis = true; for (let p = f.mesh; p; p = p.parent) if (!p.visible) { vis = false; break; } if (vis && f.update(dt) !== false) n = true; }); return n; });
 
+  // Etiquetas sin encimarse y dentro de la zona libre: tiene en cuenta el ancla de cada recuadro, corre en horizontal
+  // las que el panel, la leyenda o el borde cortarían, sube lo justo las que chocan y oculta las de puntos que caen
+  // debajo del panel o fuera de la pantalla. Reemplaza el de core.js solo en esta página.
+  st.declutterLabels = function () {
+    const z = zonaPx(), v = new THREE.Vector3(), items = [];
+    for (const o of this._labels) {
+      const e = o.element;
+      if (!e.isConnected || e.style.display === 'none' || !e.classList.contains('lbl-p')) continue;
+      o.getWorldPosition(v).project(this.camera);
+      if (v.z > 1) continue;
+      const w = e.offsetWidth, h = e.offsetHeight;
+      if (!w) continue;
+      const ax = ((v.x + 1) / 2) * z.W, ay = ((1 - v.y) / 2) * z.H, x = ax + (0.5 - o.center.x) * w, y = ay + (0.5 - o.center.y) * h;
+      const fuera = ax < z.x0 - 14 || ax > z.x1 + 14 || ay < z.y0 - 14 || ay > z.y1 + 48;
+      items.push({ e, x, y, w, h, fuera, x2: Math.min(Math.max(x, z.x0 + w / 2 + 6), Math.max(z.x0 + w / 2 + 6, z.x1 - w / 2 - 6)) });
+    }
+    const puestas = [];
+    items.filter((r) => !r.fuera).sort((a, b) => b.y - a.y).forEach((r) => {
+      let y = Math.min(r.y, z.y1 - r.h / 2 - 4);
+      for (let k = 0; k < 14; k++) {
+        const choque = puestas.find((p) => Math.abs(p.x - r.x2) < (p.w + r.w) / 2 + 4 && Math.abs(p.y - y) < (p.h + r.h) / 2 + 3);
+        if (!choque) break;
+        y = choque.y - (choque.h + r.h) / 2 - 3;
+      }
+      y = Math.max(y, z.y0 + r.h / 2 + 4);
+      r.dx = r.x2 - r.x; r.dy = y - r.y; puestas.push({ x: r.x2, y, w: r.w, h: r.h });
+    });
+    items.forEach((r) => {
+      r.e.classList.toggle('fuera', r.fuera);
+      r.e.style.marginLeft = !r.fuera && Math.abs(r.dx) > 0.5 ? `${r.dx}px` : '';
+      r.e.style.marginTop = !r.fuera && Math.abs(r.dy) > 0.5 ? `${r.dy}px` : '';
+    });
+  };
+  // cubiertas del contexto en gris (para que se lean los techos que resalta un paso, como los mejoramientos)
+  const colorCubierta = ctxMats.roof.color.clone();
+  function contextoGris(v) {
+    const m = ctxMats.roof;
+    if (m.vertexColors === !v) return;
+    m.vertexColors = !v; m.color.copy(v ? new THREE.Color('#c4c7c8') : colorCubierta); m.needsUpdate = true; st.invalidate();
+  }
+
   // ---------------------------------------------------------------- encuadres que respetan el panel
   const elPanel = () => document.querySelector('.panel');
   // zona libre de la pantalla en coordenadas normalizadas (−1…1, y hacia arriba)
-  function zona() {
+  function zonaPx() {
     const r = el.getBoundingClientRect(), W = r.width || 1, H = r.height || 1;
     let x0 = 0, x1 = W, y0 = 0, y1 = H;
+    const ley = document.querySelector('.leyenda3d'), bl = ley?.childElementCount ? ley.getBoundingClientRect() : null;
+    if (bl?.height) y1 = Math.min(y1, bl.top - r.top - 8);
     const bar = document.querySelector('.barra')?.getBoundingClientRect(), ctl = document.querySelector('.control')?.getBoundingClientRect();
     if (bar) y0 = Math.max(y0, bar.bottom - r.top + 6);
     if (ctl) y1 = Math.min(y1, ctl.top - r.top - 6);
@@ -208,6 +251,10 @@ export function crearEscena(el, datos) {
     if (riel && riel.width > W * 0.7) y0 = Math.max(y0, riel.bottom - r.top + 4);
     if (x1 - x0 < W * 0.25) { x0 = 0; x1 = W; }
     if (y1 - y0 < H * 0.2) { y0 = 0; y1 = H; }
+    return { x0, x1, y0, y1, W, H };
+  }
+  function zona() {
+    const { x0, x1, y0, y1, W, H } = zonaPx();
     return { x0: (x0 / W) * 2 - 1, x1: (x1 / W) * 2 - 1, y0: 1 - (y1 / H) * 2, y1: 1 - (y0 / H) * 2 };
   }
   // puntos 3D de lo que hay que encuadrar: caja, objeto, lista de [x, y(, h)] o polígono
@@ -256,7 +303,7 @@ export function crearEscena(el, datos) {
 
   return {
     st, S, T, M, el, edificios, huellas, listoHuellas, zonasHoy, puente,
-    capa: nuevaCapa, capas, etiqueta, linea, flujo, encuadrar, zona, sincronizarEtiquetas, css, tenir,
+    capa: nuevaCapa, capas, etiqueta, linea, flujo, encuadrar, zona, sincronizarEtiquetas, css, tenir, contextoGris,
     colorModulo: (id) => css(`--m-${id}`),
     // muestra solo las capas pedidas (las demás se ocultan) y devuelve las que acaban de aparecer
     verCapas(ids) {

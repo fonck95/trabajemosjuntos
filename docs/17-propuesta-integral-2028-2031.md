@@ -41,7 +41,7 @@ presentación.
 |---|---:|---:|---|---|
 | Vivienda | 106.271 | 75.252 – 137.693 | Perfil | SGR 37.200, Nación 31.900, Gobernación 15.900 |
 | Urbanismo | 26.200 | 17.250 – 39.600 | Perfil | SGR 8.200, Fondos 6.600, Nación 4.700 |
-| Agroindustria | 77.000 | 59.000 – 106.000 | Perfil | SGR 27.400, Privados 13.000, OxI 12.000 |
+| Agroindustria | 77.000 | 60.000 – 106.000 | Perfil | SGR 27.400, Privados 13.000, OxI 12.000 |
 | Salud | 48.679 | 34.635 – 65.640 | Prefactibilidad | SGR 18.337, Nación 17.200, OxI 3.750 |
 | Aguas | 11.950 | 8.316 – 17.741 | Perfil | SGR 4.850, Municipio 2.643, Nación 2.500 |
 | Aseo y saneamiento | 60.717 | 42.392 – 87.025 | Perfil | Nación 16.372, SGR 14.600, Gobernación 10.800 |
@@ -70,8 +70,9 @@ medir y no se publica. Están en `data/propuesta/geo.json`, en metros del modelo
     ciclorruta por la orilla occidental, que es la que está libre de casas, una laguna de retención de 893 m² junto al
     CIC y el bosque inundable del sur. Los puentes PP1 (vía a Barrancabermeja), PP2 (prolongación de la Calle 51,
     estadio–CIC) y PP3 (Calle 54) cosen el estadio con el occidente. El corredor varía de ancho por tramos (de 12 a 40 m
-    en la fase 1) y solo toca tres huellas de casas. El estrechamiento de la Calle 55 a la 57 (6 m, con casas en las dos
-    orillas) queda para la fase 2, con desvío por la Carrera 57.
+    en la fase 1). En la fase 1 solo toca una casa (sobre la orilla, junto a la vía a Barrancabermeja) y roza el borde de
+    otra edificación. El estrechamiento de la Calle 55 a la 57 (6 m, con casas en las dos orillas) queda para la fase 2,
+    con desvío por la Carrera 57.
   - *Alameda de 483 m.* Va solo por calles existentes: Calle 50, Carrera 54, carriles del coliseo y Calle 49 peatonal.
     Las calles miden 6,5 m entre fachadas, así que es calle compartida a nivel (zona 30), sin ensanches ni demoliciones.
     Los árboles de la maqueta se ponen solo donde no hay construcciones.
@@ -103,7 +104,7 @@ medir y no se publica. Están en `data/propuesta/geo.json`, en metros del modelo
 - **Vivienda.** Son dos lotes reales:
   - *Lote 1, predio José Domingo Oliveros:* 1,71 ha con el terraplén ya construido (BPIN 2023058930018). Allí van 200 VIP
     en 10 bloques de 5 pisos.
-  - *Lote 2, lote occidental:* 2,54 ha en una loma seca. Caben 138 casas en serie de 6 × 12 m; la primera etapa hace 100,
+  - *Lote 2, lote occidental:* 2,54 ha en una loma seca. Caben 128 casas en serie de 6 × 12 m; la primera etapa hace 100,
     y hay dos manzanas de cesión.
 - **Granja solar centralizada.** Reemplaza el modelo de paneles en cada sede. Tiene 1,2 MWp (1,0 MW CA) en el bloque A
   de 1,70 ha, frente a la subestación Yondó de EPM, conectada con 40 m de línea de 13,2 kV; el bloque B (0,49 ha) queda

@@ -137,7 +137,7 @@ export function parqueAgro({ centro, rumbo = 0, ancho = 360, fondo = 260, comps 
   const [pu, pv] = [poli.reduce((a, q) => a + q[0], 0) / poli.length, poli.reduce((a, q) => a + q[1], 0) / poli.length], borde = [];
   for (let i = 0; i < poli.length; i++) {
     const [a, b] = [poli[i], poli[(i + 1) % poli.length]], L = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.floor(L / 9));
-    for (let k = 0; k < n; k++) { const x = a[0] + ((b[0] - a[0]) * k) / n, y = a[1] + ((b[1] - a[1]) * k) / n, dd = Math.hypot(x - pu, y - pv) || 1; borde.push([x + ((x - pu) / dd) * 4, y + ((y - pv) / dd) * 4]); }
+    for (let k = 0; k < n; k++) { const x = a[0] + ((b[0] - a[0]) * k) / n, y = a[1] + ((b[1] - a[1]) * k) / n, dd = Math.hypot(x - pu, y - pv) || 1; borde.push([x - ((x - pu) / dd) * 3, y - ((y - pv) / dd) * 3]); }
   }
   verde.add(arboles(borde, { alto: 11, semilla: 93 }));
   raiz.userData.partes = { piso, obras, verde, zonas: zonasG, comps: partes };
@@ -148,25 +148,37 @@ export function parqueAgro({ centro, rumbo = 0, ancho = 360, fondo = 260, comps 
 
 // ---------------------------------------------------------------- granja solar centralizada
 // filas de módulos de 550 Wp (2,28 × 1,13 m) en estructura fija inclinada 10° al sur, dos módulos en vertical por mesa
-export function granjaSolar(poligono, { kwp = 1500, paso = 7.5 } = {}) {
+export function granjaSolar(poligono, { kwp = 1500, paso = 7.5, salida = null } = {}) {
   const raiz = new THREE.Group(), xs = poligono.map((p) => p[0]), ys = poligono.map((p) => p[1]);
   const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
   const dentro = ([x, y]) => { let d = false; for (let i = 0, j = poligono.length - 1; i < poligono.length; j = i++) { const [xi, yi] = poligono[i], [xj, yj] = poligono[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) d = !d; } return d; };
+  // las filas se llenan desde el lado de la salida de la línea, dejando una franja libre para inversores y subestación
+  const norte = salida ? salida[1] > (y0 + y1) / 2 : false, franja = salida ? 14 : 6, filas = [];
+  if (norte) for (let y = y1 - franja - 2.3; y >= y0 + 4; y -= paso) filas.push(y);
+  else for (let y = y0 + franja + 2.3; y <= y1 - 4; y += paso) filas.push(y);
   const mesas = [], n0 = Math.ceil((kwp * 1000) / 550 / 2);   // mesas de dos módulos en vertical
-  for (let y = y0 + 6; y <= y1 - 6 && mesas.length < n0; y += paso) for (let x = x0 + 6; x <= x1 - 6 && mesas.length < n0; x += 1.16) if (dentro([x, y]) && dentro([x, y + 4])) mesas.push([x, y]);
+  for (const y of filas) {
+    for (let x = x0 + 4; x <= x1 - 4 && mesas.length < n0; x += 1.16) if ([[-0.6, -2.3], [0.6, -2.3], [0.6, 2.3], [-0.6, 2.3]].every(([dx, dy]) => dentro([x + dx, y + dy]))) mesas.push([x, y]);
+    if (mesas.length >= n0) break;
+  }
   const panel = mat(new THREE.Color('#1c2b48'), { roughness: 0.25, metalness: 0.55 }), marcoM = mat(new THREE.Color('#9aa3aa'), { roughness: 0.5, metalness: 0.6 });
-  const geoP = new THREE.BoxGeometry(1.13, 0.04, 4.56).rotateX(-0.175).translate(0, 1.6, 0), geoS = new THREE.BoxGeometry(0.08, 1.6, 0.08).translate(0, 0.8, 0);
+  // módulos inclinados 10° hacia el sur (la normal mira al sur, −y del modelo = +z de three)
+  const geoP = new THREE.BoxGeometry(1.13, 0.04, 4.56).rotateX(0.175).translate(0, 1.6, 0), geoS = new THREE.BoxGeometry(0.08, 1.6, 0.08).translate(0, 0.8, 0);
   const P = new THREE.InstancedMesh(geoP, panel, mesas.length), S = new THREE.InstancedMesh(geoS, marcoM, mesas.length), m4 = new THREE.Matrix4();
   mesas.forEach(([x, y], i) => { m4.makeTranslation(x, 0, -y); P.setMatrixAt(i, m4); S.setMatrixAt(i, m4); });
   [P, S].forEach((o) => { o.castShadow = true; o.receiveShadow = true; o.computeBoundingSphere(); raiz.add(o); });
   raiz.userData.instancias = [P, S];
   const kw = Math.round((mesas.length * 2 * 550) / 1000);
-  // casetas de inversores y subestación elevadora a 13,2 kV en el borde sur
-  const cx = (x0 + x1) / 2, inv = new THREE.Group();
-  [-30, 0, 30].forEach((d) => inv.add(sombra(new THREE.Mesh(new THREE.BoxGeometry(6, 2.8, 2.6).translate(cx + d, 1.4, -(y0 + 1)), mat(new THREE.Color('#e8e8e4'))))));
-  inv.add(sombra(new THREE.Mesh(new THREE.BoxGeometry(9, 4, 7).translate(cx + 55, 2, -(y0 + 2)), mat(new THREE.Color('#7f878e'), { metalness: 0.4, roughness: 0.5 }))));
+  // subestación elevadora a 13,2 kV junto a la salida (dentro del predio) y casetas de inversores en la franja libre
+  const cx = xs.reduce((a, v) => a + v, 0) / xs.length, cy = ys.reduce((a, v) => a + v, 0) / ys.length;
+  let sp = salida ? [...salida] : [cx + 40, y0 + 6];
+  if (salida) for (let k = 0; k < 200 && !dentro(sp); k++) { const d = Math.hypot(cx - sp[0], cy - sp[1]) || 1; sp = [sp[0] + ((cx - sp[0]) / d) * 2, sp[1] + ((cy - sp[1]) / d) * 2]; }
+  if (salida) { const d = Math.hypot(cx - sp[0], cy - sp[1]) || 1; sp = [sp[0] + ((cx - sp[0]) / d) * 6, sp[1] + ((cy - sp[1]) / d) * 6]; }
+  const yF = norte ? y1 - franja / 2 : y0 + franja / 2, inv = new THREE.Group(), gris = mat(new THREE.Color('#e8e8e4')), acero = mat(new THREE.Color('#7f878e'), { metalness: 0.4, roughness: 0.5 });
+  [-24, -48, -72].map((d) => [sp[0] + d, yF]).filter((q) => dentro(q)).forEach(([x, y]) => inv.add(sombra(new THREE.Mesh(new THREE.BoxGeometry(6, 2.8, 2.6).translate(x, 1.4, -y), gris))));
+  inv.add(sombra(new THREE.Mesh(new THREE.BoxGeometry(9, 4, 7).translate(sp[0], 2, -sp[1]), acero)));
   raiz.add(inv);
   raiz.userData.kwp = kw; raiz.userData.mesas = mesas.length;
-  raiz.userData.subestacion = [cx + 55, y0 + 2];
+  raiz.userData.subestacion = sp;
   return raiz;
 }

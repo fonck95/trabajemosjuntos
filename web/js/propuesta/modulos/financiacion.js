@@ -6,7 +6,7 @@ import { V } from '../geo3d.js';
 import { pinesDe } from './comun.js';
 import { fmtM } from '../main.js';
 
-const M_POR_MILLON = 0.0042;   // metros de columna por millón de pesos (77.000 M ≈ 320 m)
+const M_POR_MILLON = 0.008;   // metros de columna por millón de pesos (77.000 M ≈ 620 m: se leen desde la vista del territorio)
 
 export function crear(esc, datos) {
   const capa = esc.capa('financiacion.columnas'), F = datos.financiacion?.fuentes || [];
@@ -14,7 +14,7 @@ export function crear(esc, datos) {
   const matDe = (f) => mats.get(f.id) || mats.set(f.id, new THREE.MeshStandardMaterial({ color: new THREE.Color(f.color || '#888'), roughness: 0.45, metalness: 0.1, emissive: new THREE.Color(f.color || '#888'), emissiveIntensity: 0.15 })).get(f.id);
   const columnas = pinesDe(datos).map(({ m, x, y }) => {
     const g = new THREE.Group(); g.position.copy(V(x, y)); capa.add(g);
-    const radio = 26;
+    const radio = 70;
     let h = 0;
     (m.financiacion || []).slice().sort((a, b) => b.monto - a.monto).forEach((f) => {
       const fu = F.find((k) => k.id === f.fuente) || { id: f.fuente, color: '#999' }, alto = (f.monto || 0) * M_POR_MILLON;
@@ -22,14 +22,15 @@ export function crear(esc, datos) {
       const o = new THREE.Mesh(geo, matDe(fu)); o.scale.set(radio, alto, radio); o.position.y = h; o.castShadow = true; g.add(o);
       h += alto;
     });
-    esc.etiqueta(`<b>${m.corto || m.nombre}</b><small>${fmtM(m.inversion?.central)}</small>`, { pos: [0, 0, h + 18], padre: g, color: `var(--m-${m.id})` });
+    esc.etiqueta(`<b>${m.corto || m.nombre}</b><small>${fmtM(m.inversion?.central)}</small>`, { pos: [0, 0, h + 20], padre: g, color: `var(--m-${m.id})`, ancla: [0.5, 1] });
     return { g, h };
   });
-  const todo = pinesDe(datos).map(({ x, y }) => [x, y, 0]).concat(pinesDe(datos).map(({ x, y }) => [x, y, 330]));
+  const todo = pinesDe(datos).map(({ x, y }) => [x, y, 0]).concat(columnas.map(({ g, h }) => [g.position.x, -g.position.z, h + 60]));
   const animar = () => {
     if (!gsap) return;
     columnas.forEach(({ g }, i) => gsap.fromTo(g.scale, { y: 0.001 }, { y: 1, duration: 1.4, delay: 0.5 + i * 0.12, ease: 'power3.out', onUpdate: () => esc.st.invalidate(), onComplete: () => esc.st.updateShadows() }));
   };
-  const vista = () => esc.encuadrar(todo, { rumbo: 210, elev: 34, margen: 0.94, duracion: 2.2 });
+  // desde el suroriente: así las columnas del casco (vivienda, salud y urbanismo, casi en línea hacia el nororiente) no se tapan
+  const vista = () => esc.encuadrar(todo, { rumbo: 135, elev: 30, margen: 0.9, duracion: 2.2 });
   return { completo: [], pasos: { '*': { capas: ['financiacion.columnas'], vista, animar } } };
 }

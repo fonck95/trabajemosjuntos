@@ -619,7 +619,7 @@
    },
    {
     "id": "mz_oeste_2",
-    "nombre": "Lote 2 · manzana 2 (20 lotes de 6 × 12 m)",
+    "nombre": "Lote 2 · manzana 2 (12 lotes de 6 × 12 m: un lado inclinado)",
     "rol": "manzana_casas",
     "x": -1074.5,
     "y": 140.5,
@@ -646,7 +646,7 @@
      ]
     ],
     "area_m2": 1499,
-    "lotes": 20
+    "lotes": 12
    },
    {
     "id": "mz_oeste_3",
@@ -762,7 +762,7 @@
    },
    {
     "id": "mz_oeste_7",
-    "nombre": "Lote 2 · manzana 7 (22 lotes de 6 × 12 m)",
+    "nombre": "Lote 2 · manzana 7 (20 lotes de 6 × 12 m: esquina cortada)",
     "rol": "manzana_casas",
     "x": -1064.8,
     "y": 29.3,
@@ -789,7 +789,7 @@
      ]
     ],
     "area_m2": 1688,
-    "lotes": 22
+    "lotes": 20
    },
    {
     "id": "mz_oeste_8",
@@ -2663,66 +2663,82 @@
     "id": "zona_limpia",
     "nombre": "Zona limpia",
     "rol": "zona",
-    "x": 1355.7,
-    "y": 7447.8,
+    "x": 1329.6,
+    "y": 7441.5,
     "poligono": [
      [
-      1287.1,
+      1287.2,
       7568.5
      ],
      [
-      1218.5,
-      7476.2
+      1218.6,
+      7476.1
      ],
      [
-      1399.1,
-      7342.1
+      1258.0,
+      7446.9
      ],
      [
-      1417.0,
+      1237.7,
+      7419.6
+     ],
+     [
+      1379.0,
+      7314.7
+     ],
+     [
+      1417.1,
       7366.1
      ],
      [
-      1402.6,
-      7405.5
+      1402.8,
+      7405.4
      ],
      [
-      1378.5,
-      7482.0
+      1378.6,
+      7481.9
      ],
      [
-      1387.4,
-      7494.0
+      1387.5,
+      7493.9
      ]
     ],
-    "area_m2": 20799,
+    "area_m2": 26784,
     "color": "#2a78d6"
    },
    {
     "id": "zona_sucia",
     "nombre": "Zona sucia",
     "rol": "zona",
-    "x": 1250.7,
-    "y": 7330.9,
+    "x": 1246.5,
+    "y": 7360.4,
     "poligono": [
      [
-      1218.5,
-      7476.2
+      1218.6,
+      7476.1
      ],
      [
-      1102.2,
-      7319.7
+      1102.4,
+      7319.6
      ],
      [
-      1282.9,
-      7185.5
+      1283.0,
+      7185.4
      ],
      [
-      1399.1,
-      7342.1
+      1379.0,
+      7314.7
+     ],
+     [
+      1237.7,
+      7419.6
+     ],
+     [
+      1258.0,
+      7446.9
      ]
     ],
-    "area_m2": 43872,
+    "area_m2": 37890,
     "color": "#b85f00"
    },
    {
@@ -2785,24 +2801,24 @@
     "id": "pescado",
     "nombre": "Planta de pescado y frío (2 t/día)",
     "rol": "componente",
-    "x": 1279.3,
-    "y": 7437.3,
+    "x": 1295.2,
+    "y": 7398.1,
     "poligono": [
      [
-      1282.1,
-      7466.3
+      1284.1,
+      7425.0
      ],
      [
-      1252.3,
-      7426.2
+      1266.2,
+      7401.0
      ],
      [
-      1276.4,
-      7408.3
+      1306.3,
+      7371.1
      ],
      [
-      1306.2,
-      7448.4
+      1324.2,
+      7395.2
      ]
     ],
     "area_m2": 1500,
@@ -2981,24 +2997,24 @@
     "id": "frio",
     "nombre": "Central de frío: fábrica de hielo, túnel y cuartos fríos (servicio común)",
     "rol": "componente",
-    "x": 1253.3,
-    "y": 7472.8,
+    "x": 1261.3,
+    "y": 7424.5,
     "poligono": [
      [
-      1251.8,
-      7492.6
+      1258.4,
+      7444.1
      ],
      [
-      1233.9,
-      7468.5
+      1241.7,
+      7421.6
      ],
      [
-      1254.8,
-      7453.0
+      1264.2,
+      7404.9
      ],
      [
-      1272.7,
-      7477.1
+      1280.9,
+      7427.4
      ]
     ],
     "area_m2": 780,
@@ -3223,6 +3239,59 @@
     "ancho_m": 5
    }
   ]
+ },
+ "salud": {
+  "sitios": [
+   {
+    "id": "san_miguel_del_tigre",
+    "nombre": "San Miguel del Tigre",
+    "rol": "puesto",
+    "x": -3849.4,
+    "y": 8964.4,
+    "lat": 7.0870282,
+    "lon": -73.94634,
+    "uso": "puesto nuevo de ≈320 m² (corregimiento)",
+    "distancia_km": 9.8,
+    "fuente": "OpenStreetMap (Nominatim), oct-2026"
+   },
+   {
+    "id": "san_luis_beltran",
+    "nombre": "San Luis Beltrán",
+    "rol": "puesto",
+    "x": -4767.7,
+    "y": -5598.3,
+    "lat": 6.95621,
+    "lon": -73.9546513,
+    "uso": "sede satélite",
+    "distancia_km": 7.4,
+    "fuente": "OpenStreetMap (Nominatim), oct-2026"
+   },
+   {
+    "id": "san_francisco",
+    "nombre": "San Francisco",
+    "rol": "puesto",
+    "x": -33070.4,
+    "y": -437.3,
+    "lat": 7.0025718,
+    "lon": -74.2108109,
+    "uso": "sede satélite",
+    "distancia_km": 33.1,
+    "fuente": "OpenStreetMap (Nominatim), oct-2026"
+   },
+   {
+    "id": "la_soledad",
+    "nombre": "La Soledad",
+    "rol": "puesto",
+    "x": -26719.7,
+    "y": -7031.8,
+    "lat": 6.943333,
+    "lon": -74.153333,
+    "uso": "sede satélite (posición de su escuela rural)",
+    "distancia_km": 27.6,
+    "fuente": "OpenStreetMap (Nominatim), oct-2026"
+   }
+  ],
+  "trazados": []
  },
  "aguas": {
   "sitios": [

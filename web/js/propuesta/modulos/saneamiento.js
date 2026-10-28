@@ -3,7 +3,7 @@
 // PTAR para todo el casco, con emisario de agua tratada al río; además, clausurar el relleno Las Américas y convertirlo
 // en parque ecotecnológico, y una estación de clasificación y aprovechamiento (ECA) de residuos.
 import { THREE, gsap } from '../../core.js';
-import { tubo, revelar, crecer, brotar } from '../geo3d.js';
+import { tubo, revelar, crecer, brotar, nave, largo, puntoEn } from '../geo3d.js';
 import { ptar } from '../piezas/plantas.js';
 import { sitios, sitio, trazado, trazados, caja } from './comun.js';
 
@@ -28,7 +28,8 @@ export function crear(esc, datos) {
   const vertidos = trazados(datos, 'saneamiento', 'vertimiento');
   ebars.forEach((e, i) => {
     const v = vertidos.find((t) => t.id === `vert_${e.id}`)?.puntos || [[e.x, e.y], [e.x + (e.x > 0 ? 160 : -160), e.y + (e.y > 0 ? 120 : -120)]];
-    esc.flujo(v.map(([x, y]) => [x, y, 1.5]), { color: '#8a5a2b', potencia: Math.min(1, (e.ls || 12) / 16), max: 26, tam: 2, tubo: 0.5, padre: cHoy });
+    esc.linea(v.map(([x, y]) => [x, y, 1.2]), { color: '#8a5a2b', ancho: 3, opacidad: 0.85, padre: cHoy });
+    esc.flujo(v.map(([x, y]) => [x, y, 1.5]), { color: '#8a5a2b', potencia: Math.min(1, (e.ls || 12) / 16), max: 26, tam: 3.5, tubo: 0.5, padre: cHoy });
     const g = new THREE.Group(); g.position.set(e.x, 0, -e.y);
     g.add(new THREE.Mesh(new THREE.BoxGeometry(7, 3.2, 5).translate(0, 1.6, 0), new THREE.MeshStandardMaterial({ color: 0xd8d2c4, roughness: 0.8 })), new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.3, 5.6).translate(0, 3.35, 0), new THREE.MeshStandardMaterial({ color: 0x3f464c, roughness: 0.5, metalness: 0.4 })));
     g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
@@ -49,14 +50,17 @@ export function crear(esc, datos) {
   const tubos = [...lineas, impulsion].map((pts) => { const m = new THREE.Mesh(tubo(pts, 1.6, 1.8), matCol); m.castShadow = true; cCol.add(m); return m; });
   lineas.forEach((pts) => esc.flujo(pts.map(([x, y]) => [x, y, 3.6]), { color: '#7a5a3a', potencia: 0.5, max: 18, tam: 1.6, tubo: 0.01, padre: cCol }));
   esc.flujo(impulsion.map(([x, y]) => [x, y, 3.6]), { color: '#7a5a3a', potencia: 0.9, max: 24, tam: 1.8, tubo: 0.01, padre: cCol });
+  esc.linea(impulsion.map(([x, y]) => [x, y, 4]), { color, ancho: 4, punteada: true, guion: 10, padre: cCol });
   esc.flujo(emisario.map(([x, y]) => [x, y, 2]), { color: '#3aa6d9', potencia: 0.9, max: 30, tam: 2, tubo: 0.5, padre: cPtar });
   const est = new THREE.Group(); est.position.set(pc[0], 0, -pc[1]);
   est.add(new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 4, 24).translate(0, 2, 0), new THREE.MeshStandardMaterial({ color: 0xd2cec4, roughness: 0.85 })), new THREE.Mesh(new THREE.BoxGeometry(8, 3, 6).translate(9, 1.5, 0), new THREE.MeshStandardMaterial({ color: 0xe8e4dc })));
   est.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); cCol.add(est);
-  esc.etiqueta('<b>Estación de bombeo central</b><small>recibe los cuatro interceptores</small>', { pos: [pc[0], pc[1], 14], padre: cCol, color: `var(${color})`, cls: 'lbl-p mini' });
-  const pm = pP.userData.aModelo(0, 0);
-  esc.etiqueta(`<b>PTAR central · sitio B</b><small>UASB + filtro percolador · 50 L/s${sp?.area_m2 ? ` · predio de ${(sp.area_m2 / 10000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} ha` : ''}</small>`, { pos: [pm[0], pm[1], 26], padre: cPtar, color: `var(${color})` });
-  esc.etiqueta('<b>Descarga al Magdalena</b><small>emisario de agua tratada con difusor</small>', { pos: [...emisario[emisario.length - 1], 10], padre: cPtar, color: 'var(--m-aguas)', cls: 'lbl-p mini' });
+  esc.etiqueta('<b>Estación de bombeo central</b><small>recibe los dos interceptores (las cuatro EBAR)</small>', { pos: [pc[0], pc[1], 12], padre: cCol, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] });
+  // rótulos fuera de la planta (encima de su borde norte) y a lo largo del emisario, que llega al río a casi 1 km
+  const pm = pP.userData.aModelo(0, 80);
+  esc.etiqueta(`<b>PTAR central · sitio B</b><small>UASB + filtro percolador · 50 L/s${sp?.area_m2 ? ` · predio de ${(sp.area_m2 / 10000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} ha` : ''}</small>`, { pos: [pm[0], pm[1], 14], padre: cPtar, color: `var(${color})`, ancla: [0.5, 1] });
+  const [qx, qy] = puntoEn(emisario, 0.3);
+  esc.etiqueta(`<b>Emisario al Magdalena</b><small>${Math.round(largo(emisario) / 5) * 5} m de agua tratada · difusor en el río</small>`, { pos: [qx, qy, 6], padre: cPtar, color: 'var(--m-aguas)', cls: 'lbl-p mini', ancla: [0, 0.5] });
   // los otros dos sitios evaluados para la PTAR: A (alternativa) y C (descartado por la cercanía a viviendas)
   const cSitios = esc.capa('san.sitios');
   [['ptar_a', '#8a8f94', 'Sitio A · alternativa', 'vierte a caños que se desbordan'], ['ptar_c', '#d9363e', 'Sitio C · descartado', 'cerca de viviendas de finca'], ['ptar', '#0d8f96', 'Sitio B · recomendado', 'aguas abajo · a 0,8 km del río']].forEach(([id, col, t, sub]) => {
@@ -68,8 +72,18 @@ export function crear(esc, datos) {
 
   // relleno Las Américas: clausura y parque ecotecnológico (la réplica del atlas en modo proyecto)
   const rel = esc.edificios.get('relleno_parque'), pR = rel ? [rel.e.x, rel.e.y] : [-2508, 835];
-  esc.etiqueta('<b>Relleno Las Américas</b><small>licencia vencida (2023) → clausura y parque ecotecnológico</small>', { pos: [pR[0], pR[1], 40], padre: cRel, color: `var(${color})` });
-  esc.etiqueta('<b>ECA de 10 t/día y compostaje</b><small>predio de servicios por definir, no sobre las celdas del relleno</small>', { pos: [pR[0] + 260, pR[1] - 160, 26], padre: cRes, color: `var(${color})`, cls: 'lbl-p mini' });
+  esc.etiqueta('<b>Relleno Las Américas</b><small>licencia vencida (2023) → clausura y parque ecotecnológico</small>', { pos: [pR[0], pR[1], 40], padre: cRel, color: `var(${color})`, ancla: [0.5, 1] });
+  // ECA y compostaje en una ubicación indicativa (el predio de servicios está por definir; no va sobre las celdas del
+  // relleno): nave de clasificación de 40 × 25 m y seis pilas de compostaje
+  const pE = [pR[0] + 260, pR[1] - 160], eca = new THREE.Group();
+  eca.add(nave(pE[0] - 18, pE[1], 40, 25, 8, 0));
+  const matComp = new THREE.MeshStandardMaterial({ color: 0x6f5233, roughness: 1 });
+  const pila = new THREE.ExtrudeGeometry(new THREE.Shape([new THREE.Vector2(-1.8, 0), new THREE.Vector2(1.8, 0), new THREE.Vector2(0, 1.6)]), { depth: 30, bevelEnabled: false }).translate(0, 0, -15);
+  for (let k = 0; k < 6; k++) { const m = new THREE.Mesh(pila, matComp); m.position.set(pE[0] + 16 + k * 5.5, 0, -pE[1]); m.castShadow = true; m.receiveShadow = true; eca.add(m); }
+  cRes.add(eca);
+  const predioEca = caja([[pE[0] - 42, pE[1] - 25], [pE[0] + 50, pE[1] + 25]]);
+  esc.linea([...predioEca, predioEca[0]].map(([x, y]) => [x, y, 1.2]), { color, ancho: 2.5, punteada: true, guion: 8, padre: cRes });
+  esc.etiqueta('<b>ECA de 10 t/día y compostaje</b><small>ubicación indicativa · no sobre las celdas del relleno</small>', { pos: [pE[0], pE[1], 14], padre: cRes, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] });
   const verRelleno = (v) => esc.modoEdificio('relleno_parque', v ? 'proyecto' : 'hoy', ['conexion']);
   esc.sincronizarEtiquetas();
 
@@ -77,9 +91,9 @@ export function crear(esc, datos) {
   const todo = [...ebars.map((e) => [e.x, e.y]), ...pP.userData.contorno];
   const vistaHoy = () => esc.encuadrar(ebars.map((e) => [e.x, e.y]).concat([[0, 0]]), { rumbo: 200, elev: 50, margen: 0.9 });
   const vistaPlan = () => esc.encuadrar(todo, { rumbo: 205, elev: 46, margen: 0.94 });
-  const vistaPtar = () => esc.encuadrar(caja(pP.userData.contorno, 240), { rumbo: 200, elev: 40, margen: 0.9, alto: 10 });
+  const vistaPtar = () => esc.encuadrar([...caja(pP.userData.contorno, 110), puntoEn(emisario, 0.3).slice(0, 2)], { rumbo: 200, elev: 40, margen: 0.9, alto: 10 });
   const vistaRel = () => esc.encuadrar(rel ? esc.cajaEdificio('relleno_parque') : caja([pR], 200), { rumbo: 200, elev: 40, margen: 0.85 });
-  const vistaRes = () => esc.encuadrar([...caja([pR], 160), [pR[0] + 300, pR[1] - 190]], { rumbo: 200, elev: 44, margen: 0.9 });
+  const vistaRes = () => esc.encuadrar([...caja([pR], 160), ...predioEca], { rumbo: 200, elev: 44, margen: 0.9 });
   return {
     completo: ['san.ebar', 'san.colectores', 'san.ptar'],
     salir: () => verRelleno(false),
@@ -89,7 +103,7 @@ export function crear(esc, datos) {
       colectores: { capas: ['san.hoy', 'san.ebar', 'san.colectores', 'san.ptar'], antes: () => verRelleno(false), vista: vistaPlan, animar: () => tubos.forEach((t, i) => revelar(t, { duracion: 1.6, retraso: 0.4 + i * 0.15, onUpdate: inv })) },
       ptar: { capas: ['san.ebar', 'san.colectores', 'san.ptar', 'san.sitios'], antes: () => verRelleno(false), vista: vistaPtar, animar: () => { crecer(pP.userData.partes.obras, { duracion: 1.2, retraso: 0.7, onUpdate: inv, alFinal: () => esc.st.updateShadows() }); brotar(pP.userData.partes.verde.children[0], { duracion: 1.6, retraso: 1, onUpdate: inv }); } },
       relleno: { capas: ['san.relleno'], antes: () => verRelleno(true), vista: vistaRel },
-      residuos: { capas: ['san.relleno', 'san.residuos'], antes: () => verRelleno(true), vista: vistaRes },
+      residuos: { capas: ['san.relleno', 'san.residuos'], antes: () => verRelleno(true), vista: vistaRes, etiquetas: ['san.residuos'], animar: () => crecer(eca, { duracion: 1, retraso: 0.7, onUpdate: inv }) },
       '*': { capas: ['san.ebar', 'san.colectores', 'san.ptar'], antes: () => verRelleno(false), vista: vistaPlan },
     },
   };

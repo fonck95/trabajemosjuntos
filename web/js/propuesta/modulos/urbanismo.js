@@ -95,28 +95,53 @@ export async function crear(esc, datos) {
   const puentes = sitios(datos, 'urbanismo', 'puente').filter((s) => s.fase === 1);
   const ciud = S('ciudadela')?.poligono || BASE.ciudadela, explanada = S('explanada_cic')?.poligono || BASE.explanada;
 
-  // --- ciudadela: contorno punteado y rótulos de lo que integra
+  // --- hoy (portadilla): el cerramiento del estadio y el caño canalizado, tal como están
+  const cHoy = esc.capa('urb.hoy'), cerr = S('softbol_cerramiento')?.poligono;
+  if (cerr) {
+    esc.linea([...cerr, cerr[0]].map(([x, y]) => [x, y, 1.2]), { color: '--muted', ancho: 2.5, padre: cHoy });
+    const [cx, cy] = [cerr.reduce((a, p) => a + p[0], 0) / cerr.length, cerr.reduce((a, p) => a + p[1], 0) / cerr.length];
+    esc.etiqueta('<b>Estadio de sóftbol (hoy)</b><small>cerramiento de 1,2 ha</small>', { pos: [cx, cy, 8], padre: cHoy, color: 'var(--muted)', cls: 'lbl-p mini', ancla: [0.5, 1] });
+  }
+  const ejeHoy = (Tz('cano_eje')?.puntos || ejeCano()).filter(([, y]) => y <= 430);
+  if (ejeHoy.length > 1) {
+    esc.linea(ejeHoy.map(([x, y]) => [x, y, 1.6]), { color: '--m-aguas', ancho: 3.5, padre: cHoy });
+    const [x, y] = ejeHoy[Math.floor(ejeHoy.length * 0.4)];
+    esc.etiqueta('<b>Caño Colector Shell (hoy)</b><small>canalizado, de espaldas al barrio</small>', { pos: [x - 12, y, 6], padre: cHoy, color: 'var(--m-aguas)', cls: 'lbl-p mini', ancla: [1, 0.5] });
+  }
+
+  // --- ciudadela: contorno punteado, la cancha de fútbol y rótulos (encima de lo que nombran) de lo que integra
   const cCiud = esc.capa('urb.ciudadela');
   esc.linea([...ciud, ciud[0]].map(([x, y]) => [x, y, 1.5]), { color, ancho: 3, punteada: true, guion: 10, padre: cCiud });
-  const rot = (txt, sub, [x, y], h = 16) => esc.etiqueta(`<b>${txt}</b>${sub ? `<small>${sub}</small>` : ''}`, { pos: [x, y, h], padre: cCiud, color: `var(${color})`, cls: 'lbl-p mini' });
-  rot('Coliseo Benito Arias', 'se integra', BASE.hitos.coliseo, 18);
-  rot('Parque Educativo', null, BASE.hitos.parque_edu, 10);
+  const rot = (txt, sub, [x, y], h = 16) => esc.etiqueta(`<b>${txt}</b>${sub ? `<small>${sub}</small>` : ''}`, { pos: [x, y, h], padre: cCiud, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] });
+  const futbol = S('cancha_futbol')?.poligono;
+  if (futbol) {
+    const [a, b, c, d] = futbol, mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2], m0 = mid(a, c);
+    const cesped = new THREE.Mesh(losa(futbol, 0.14), new THREE.MeshStandardMaterial({ color: 0x4f9a3d, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
+    cesped.receiveShadow = true; cCiud.add(cesped);
+    const circulo = Array.from({ length: 33 }, (_, i) => [m0[0] + 9.15 * Math.cos((i / 32) * 2 * Math.PI), m0[1] + 9.15 * Math.sin((i / 32) * 2 * Math.PI)]);
+    cCiud.add(new THREE.Mesh(unir([cinta([...futbol, a, b], 0.5, 0.2), cinta([mid(a, b), mid(c, d)], 0.5, 0.2), cinta(circulo, 0.45, 0.2)]), new THREE.MeshBasicMaterial({ color: 0xffffff })));
+  }
+  rot('Coliseo Benito Arias', 'se integra', BASE.hitos.coliseo, 20);
+  rot('Parque Educativo', null, BASE.hitos.parque_edu, 12);
   rot('Parque principal', null, BASE.hitos.parque_principal, 10);
-  rot('Cancha de fútbol', null, BASE.hitos.cancha, 8);
-  rot('CIC', null, BASE.hitos.cic, 10);
+  rot('Cancha de fútbol', null, futbol ? [S('cancha_futbol').x, S('cancha_futbol').y] : BASE.hitos.cancha, 6);
+  rot('CIC', null, BASE.hitos.cic, 12);
 
   // --- Cancha de Sóftbol Casabe
   const cSoft = esc.capa('urb.softbol'), soft = canchaSoftbol(cfgSoft);
   cSoft.add(soft);
-  const [hx, hy] = soft.userData.aModelo(0, 34);
-  esc.etiqueta('<b>Cancha de Sóftbol Casabe</b><small>109 × 102,9 m · luz LED · graderías cubiertas</small>', { pos: [hx, hy, 26], padre: cSoft, color: `var(${color})` });
+  // el rótulo, detrás de la cerca del jardín central (no sobre el diamante)
+  const [hx, hy] = soft.userData.aModelo(0, 88);
+  esc.etiqueta('<b>Cancha de Sóftbol Casabe</b><small>109 × 102,9 m · luz LED · graderías cubiertas</small>', { pos: [hx, hy, 12], padre: cSoft, color: `var(${color})`, ancla: [0.5, 1] });
 
   // --- parque lineal del caño colector (fase 1: del bosque del sur a la Calle 55)
   const cCano = esc.capa('urb.cano'), pl = parqueLineal(eje, { tramos, humedales, bosques, puentes: puentes.length ? puentes.map((s) => [s.x, s.y]) : undefined });
   cCano.add(pl);
+  // el rótulo, al oriente del eje (las sendas van por la orilla occidental); los de los puentes, en su propia capa
   const em = pl.userData.eje[Math.floor(pl.userData.eje.length * 0.62)];
-  esc.etiqueta('<b>Parque lineal del caño colector</b><small>cauce vivo · sendero y ciclorruta · laguna y bosque inundable</small>', { pos: [em[0] - 26, em[1], 18], padre: cCano, color: `var(${color})` });
-  puentes.forEach((s) => esc.etiqueta(`<b>${s.id.toUpperCase()}</b>`, { pos: [s.x, s.y, 7], padre: cCano, color: '#a8703f', cls: 'lbl-p mini', titulo: s.nombre }));
+  esc.etiqueta('<b>Parque lineal del caño colector</b><small>cauce vivo · sendero y ciclorruta · laguna y bosque inundable</small>', { pos: [em[0] + 22, em[1], 10], padre: cCano, color: `var(${color})`, ancla: [0, 0.5] });
+  const cPP = esc.capa('urb.puentes');
+  puentes.forEach((s) => esc.etiqueta(`<b>${s.id.toUpperCase()}</b>`, { pos: [s.x, s.y, 7], padre: cPP, color: '#a8703f', cls: 'lbl-p mini', titulo: s.nombre, ancla: [0.5, 1] }));
 
   // --- alameda: calle compartida a nivel por las calles existentes (Calle 50, Carrera 54, carriles del coliseo y Calle 49
   // peatonal), con árboles de sombra donde hay espacio (no sobre las casas) y luminarias LED; conector al CIC por el PP2
@@ -124,9 +149,9 @@ export async function crear(esc, datos) {
   const huellas = esc.huellas.filter((h) => !h.zona);
   const libre = (p, d = 2.2) => huellas.every((h) => Math.abs(h.cx - p[0]) > 40 || Math.abs(h.cy - p[1]) > 40 || distPoligono(p, h.pts) > d);
   const cAla = esc.capa('urb.alameda');
-  const pav = new THREE.MeshStandardMaterial({ color: 0xd8ccb4, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 });
+  const pav = new THREE.MeshStandardMaterial({ color: 0xc49a6c, roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 });
   const franja = new THREE.MeshStandardMaterial({ color: 0x14a06c, roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -7, polygonOffsetUnits: -7 });
-  const pisoAla = new THREE.Mesh(cinta(ala, 7.5, 0.1), pav), lineaAla = new THREE.Mesh(cinta(ala, 0.7, 0.12), franja);
+  const pisoAla = new THREE.Mesh(cinta(ala, 7.5, 0.1), pav), lineaAla = new THREE.Mesh(cinta(ala, 1.5, 0.12), franja);
   [pisoAla, lineaAla].forEach((o) => { o.receiveShadow = true; cAla.add(o); });
   esc.tenir(franja, color);
   if (conector) cAla.add(new THREE.Mesh(cinta(conector, 5, 0.1), pav));
@@ -139,32 +164,37 @@ export async function crear(esc, datos) {
   // --- canchas cubiertas y skatepark en la explanada al sur del CIC
   const cInst = esc.capa('urb.instalaciones'), inst = instalacionesCIC(explanada);
   cInst.add(inst);
-  esc.etiqueta('<b>Canchas cubiertas y skatepark</b><small>explanada al sur del CIC · a un puente del estadio</small>', { pos: [...inst.userData.centro, 20], padre: cInst, color: `var(${color})`, cls: 'lbl-p mini' });
+  esc.etiqueta('<b>Canchas cubiertas y skatepark</b><small>explanada al sur del CIC · a un puente del estadio</small>', { pos: [...inst.userData.centro, 16], padre: cInst, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0, 1] });
 
-  // --- Mirador Puerta del Magdalena (asíncrono: las letras usan una fuente que se descarga)
+  // --- Mirador Puerta del Magdalena: se arma aparte porque las letras usan una fuente que se descarga, y el capítulo no la
+  // espera (el paso del mirador vuelve a encuadrar y anima cuando llega)
   const cMir = esc.capa('urb.mirador');
-  const mir = await miradorMagdalena(cfgMir).catch((e) => { console.warn('mirador', e); return null; });
-  if (mir) {
-    cMir.add(mir);
-    const U = mir.userData;
+  const tb = datos.territorio?.puente?.tablero;
+  if (tb?.length > 1) esc.etiqueta('<b>Puente Guillermo Gaviria Correa</b><small>a Barrancabermeja</small>', { pos: [(tb[0][0] + tb[1][0]) / 2, (tb[0][1] + tb[1][1]) / 2, 30], padre: cMir, cls: 'lbl-p mini' });
+  let mir = null;
+  const listoMir = miradorMagdalena(cfgMir).then((m) => {
+    mir = m; cMir.add(m);
+    const U = m.userData;
     esc.etiqueta('<b>Zona A · protección hidráulica</b><small>283 m de orilla: enrocado y vegetación de ribera</small>', { pos: [...U.zonaA, 8], padre: cMir, color: 'var(--m-aguas)', cls: 'lbl-p mini' });
     esc.etiqueta('<b>Zona B · plaza mirador</b><small>letras YONDÓ · jardineras · parqueadero</small>', { pos: [...U.zonaB, 12], padre: cMir, color: `var(${color})`, cls: 'lbl-p mini' });
     esc.etiqueta('<b>Mirador elevado</b><small>10 × 10 m sobre pilotes</small>', { pos: [...U.mirador, 12], padre: cMir, color: '#a8703f', cls: 'lbl-p mini' });
     esc.etiqueta('<b>Muelle flotante</b><small>lanchas Barrancabermeja–Casabe</small>', { pos: [...U.muelle, 6], padre: cMir, color: '#a8703f', cls: 'lbl-p mini' });
-    const tb = datos.territorio?.puente?.tablero;
-    if (tb?.length > 1) esc.etiqueta('<b>Puente Guillermo Gaviria Correa</b><small>a Barrancabermeja</small>', { pos: [(tb[0][0] + tb[1][0]) / 2, (tb[0][1] + tb[1][1]) / 2, 30], padre: cMir, cls: 'lbl-p mini' });
-  }
+    esc.sincronizarEtiquetas(); esc.st.updateShadows(); esc.st.invalidate();
+    return m;
+  }).catch((e) => { console.warn('mirador', e); return null; });
   esc.sincronizarEtiquetas();
 
   // --- vistas y animaciones de cada paso
   const capasTodo = ['urb.ciudadela', 'urb.softbol', 'urb.cano', 'urb.alameda', 'urb.instalaciones'];
+  const piezas = capasTodo.slice(1);   // en las vistas de conjunto, solo los rótulos de las cuatro piezas
   const inv = () => esc.st.invalidate();
   const vistaCiud = () => esc.encuadrar([...ciud, ...explanada], { rumbo: 200, elev: 48, margen: 0.8 });
   const vistaSoft = () => esc.encuadrar(soft.userData.contorno, { rumbo: 200, elev: 34, margen: 1, alto: 10 });
   const vistaCano = () => esc.encuadrar(caja(pl.userData.eje, 24), { rumbo: 118, elev: 40, margen: 0.94 });
   const vistaAla = () => esc.encuadrar(caja([...ala, ...(conector || [])], 30), { rumbo: 196, elev: 46, margen: 0.94 });
   const vistaInst = () => esc.encuadrar([...explanada, ...soft.userData.contorno], { rumbo: 208, elev: 38, margen: 0.94, alto: 10 });
-  const vistaMir = () => esc.encuadrar(mir ? mir.userData.contorno : caja([cfgMir.origen], 150), { rumbo: 221, elev: 30, margen: 0.92, alto: 12 });
+  const encuadrarMir = () => esc.encuadrar(mir ? mir.userData.contorno : caja([cfgMir.origen], 150), { rumbo: 221, elev: 30, margen: 0.92, alto: 12 });
+  const vistaMir = () => { encuadrarMir(); if (!mir) listoMir.then((m) => { if (m && cMir.visible) encuadrarMir(); }); };
   const animSoft = () => {
     const P = soft.userData.partes;
     crecer(P.obras, { duracion: 1.1, retraso: 0.6, onUpdate: inv, alFinal: () => esc.st.updateShadows() });
@@ -182,7 +212,7 @@ export async function crear(esc, datos) {
   const animAla = () => { brotar(arbAla, { duracion: 2, retraso: 0.7, onUpdate: inv }); [pisoAla, lineaAla].forEach((m) => revelar(m, { duracion: 1.6, retraso: 0.5, onUpdate: inv })); };
   const animInst = () => { const P = inst.userData.partes; crecer(P.obras, { duracion: 1, retraso: 0.6, onUpdate: inv }); crecer(P.cubierta, { duracion: 1, retraso: 1.1, onUpdate: inv, alFinal: () => esc.st.updateShadows() }); };
   const animMir = () => {
-    if (!mir) return;
+    if (!mir) { listoMir.then((m) => { if (m && cMir.visible) animMir(); }); return; }
     const P = mir.userData.partes;
     crecer(P.zonaA, { duracion: 1, retraso: 0.8, onUpdate: inv });
     crecer(P.letras, { duracion: 1.1, retraso: 1.3, onUpdate: inv });
@@ -196,14 +226,14 @@ export async function crear(esc, datos) {
     alCompleto: () => hoy(false),
     salir: () => hoy(true),
     pasos: {
-      portadilla: { capas: ['urb.ciudadela'], antes: () => hoy(true), vista: vistaCiud },
-      componentes: { capas: capasTodo, antes: () => hoy(false), vista: vistaCiud, animar: () => { animSoft(); animCano(); animAla(); animInst(); } },
-      softbol: { capas: capasTodo, antes: () => hoy(false), vista: vistaSoft, animar: animSoft },
-      cano: { capas: capasTodo, antes: () => hoy(false), vista: vistaCano, animar: animCano },
-      alameda: { capas: capasTodo, antes: () => hoy(false), vista: vistaAla, animar: animAla },
-      instalaciones: { capas: capasTodo, antes: () => hoy(false), vista: vistaInst, animar: animInst },
+      portadilla: { capas: ['urb.ciudadela', 'urb.hoy'], antes: () => hoy(true), vista: vistaCiud },
+      componentes: { capas: capasTodo, antes: () => hoy(false), vista: vistaCiud, animar: () => { animSoft(); animCano(); animAla(); animInst(); }, etiquetas: piezas },
+      softbol: { capas: capasTodo, antes: () => hoy(false), vista: vistaSoft, animar: animSoft, etiquetas: ['urb.softbol'] },
+      cano: { capas: [...capasTodo, 'urb.puentes'], antes: () => hoy(false), vista: vistaCano, animar: animCano, etiquetas: ['urb.cano', 'urb.puentes'] },
+      alameda: { capas: capasTodo, antes: () => hoy(false), vista: vistaAla, animar: animAla, etiquetas: ['urb.alameda'] },
+      instalaciones: { capas: capasTodo, antes: () => hoy(false), vista: vistaInst, animar: animInst, etiquetas: ['urb.instalaciones'] },
       mirador: { capas: ['urb.mirador'], vista: vistaMir, animar: animMir },
-      '*': { capas: [...capasTodo], antes: () => hoy(false), vista: vistaCiud },
+      '*': { capas: [...capasTodo], antes: () => hoy(false), vista: vistaCiud, etiquetas: piezas },
     },
   };
 }

@@ -80,6 +80,8 @@ const cargas = caps.map(async (c) => {
 
 // ---------------------------------------------------------------- panel
 const madurezPasos = ['Idea', 'Perfil', 'Prefactibilidad', 'Factibilidad', 'Diseños', 'Radicado'];
+// con guiones blandos para que las palabras largas partan en las celdas angostas
+const madurezRotulos = { Prefactibilidad: 'Pre\u00adfacti\u00adbilidad', Factibilidad: 'Facti\u00adbilidad' };
 function cifras(lista = [], cls = '') {
   if (!lista.length) return '';
   return `<div class="cifras ${cls}">${lista.map((c) => `<div class="cifra ${c.tono || ''} ${c.ancha ? 'ancha' : ''}"><b data-cuenta>${esc(c.v)}</b><span>${esc(c.l)}</span>${c.fuente ? `<small>${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.fuente)}</a>` : esc(c.fuente)}</small>` : ''}</div>`).join('')}</div>`;
@@ -91,6 +93,13 @@ function chipsFuentes(ids = []) {
 function chipsTipo(lista = []) {
   if (!lista.length) return '';
   return `<div class="chips">${lista.map((t) => (t.url ? `<a class="chip tipo" href="${esc(t.url)}" target="_blank" rel="noopener" title="Proyecto tipo del DNP">${esc(t.nombre)}</a>` : `<span class="chip tipo">${esc(t.nombre)}</span>`)).join('')}</div>`;
+}
+// paso que desarrolla un componente: el que lo nombra o, para «mirador_proteccion», el de otro «mirador_…» (−1 si no hay)
+function pasoDeComp(c, id) {
+  const k = c.pasos.findIndex((x) => x.componente === id);
+  if (k >= 0 || !id.includes('_')) return k;
+  const pre = `${id.split('_')[0]}_`;
+  return c.pasos.findIndex((x) => x.componente?.startsWith(pre));
 }
 function rango(c) {
   if (!c?.central) return '';
@@ -128,9 +137,14 @@ const RENDER = {
   },
   componentes(c, p) {
     const comps = c.componentes || [], max = Math.max(1, ...comps.map((x) => x.costo?.central || 0));
+    // solo son botones las tarjetas que llevan a un paso propio; las demás son fichas fijas
+    const tarjeta = (x) => {
+      const dentro = `<b>${esc(x.nombre)}</b><span class="v">${fmtM(x.costo?.central)}</span><span class="d">${esc(x.resumen || '')}</span><span class="bar"><i style="--w:${(100 * (x.costo?.central || 0)) / max}%"></i></span>`;
+      return pasoDeComp(c, x.id) >= 0 ? `<button type="button" class="comp" data-comp="${esc(x.id)}">${dentro}</button>` : `<div class="comp">${dentro}</div>`;
+    };
     return {
       cab: `<p class="ceja"><span class="num">${c.n}</span>${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Qué se construye')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
-      cuerpo: `<div class="comps">${comps.map((x) => `<button type="button" class="comp" data-comp="${esc(x.id)}" aria-pressed="false"><b>${esc(x.nombre)}</b><span class="v">${fmtM(x.costo?.central)}</span><span class="d">${esc(x.resumen || '')}</span><span class="bar"><i style="--w:${(100 * (x.costo?.central || 0)) / max}%"></i></span></button>`).join('')}</div>
+      cuerpo: `<div class="comps">${comps.map(tarjeta).join('')}</div>
         ${c.inversion ? `<p class="nota" style="margin-top:10px">Total del módulo: <b>${fmtM(c.inversion.central)}</b> (rango ${fmtM(c.inversion.min)} a ${fmtM(c.inversion.max)}).</p>` : ''}`,
     };
   },
@@ -166,7 +180,7 @@ const RENDER = {
       cab: `<p class="ceja"><span class="num">${c.n}</span>${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Cómo se financia')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
       cuerpo: `${c.financiacion?.length ? `<h3>Mezcla de fuentes propuesta</h3>${pilaFinanciacion(c.financiacion)}` : ''}
         ${c.proyectos_tipo?.length ? `<h3>Proyectos tipo del DNP que sirven</h3>${chipsTipo(c.proyectos_tipo)}` : ''}
-        ${g.madurez ? `<h3>Madurez hoy</h3><div class="madurez">${madurezPasos.map((m, i) => `<span class="${i <= k ? 'si' : ''} ${i === k ? 'aqui' : ''}">${m}</span>`).join('')}</div>${g.madurez_nota ? `<p class="nota">${g.madurez_nota}</p>` : ''}` : ''}
+        ${g.madurez ? `<h3>Madurez hoy</h3><div class="madurez">${madurezPasos.map((m, i) => `<span class="${i <= k ? 'si' : ''} ${i === k ? 'aqui' : ''}" title="${m}">${madurezRotulos[m] || m}</span>`).join('')}</div>${g.madurez_nota ? `<p class="nota">${g.madurez_nota}</p>` : ''}` : ''}
         ${g.pedido ? `<div class="pedido"><b>Lo que pedimos al nivel central</b>${g.pedido}</div>` : ''}
         ${g.a_quien?.length ? `<h3>A quién tocar</h3><ul class="limpia">${g.a_quien.map((a) => `<li>· ${a}</li>`).join('')}</ul>` : ''}
         ${g.pasos?.length ? `<h3>Siguientes pasos</h3><ol style="margin:0 0 8px;padding-left:18px">${g.pasos.map((a) => `<li>${a}</li>`).join('')}</ol>` : ''}
@@ -178,7 +192,7 @@ const RENDER = {
     const porFuente = F.map((f) => ({ f, total: mods.reduce((a, m) => a + (m.financiacion || []).filter((x) => x.fuente === f.id).reduce((s, x) => s + (x.monto || 0), 0), 0) })).filter((x) => x.total > 0).sort((a, b) => b.total - a.total);
     const tot = porFuente.reduce((a, x) => a + x.total, 0) || 1;
     return {
-      cab: `<p class="ceja">Financiación</p><h2>${titulo(p.titulo || 'Cómo se financia todo')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Cómo se financia todo')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
       cuerpo: `${cifras(p.cifras)}<h3>Por fuente (millones de 2026)</h3>
         <div class="pila">${porFuente.map((x) => `<i style="--c:${x.f.color};width:${(100 * x.total) / tot}%" title="${esc(x.f.nombre)}"></i>`).join('')}</div>
         <div class="leyenda">${porFuente.map((x) => `<div><i style="--c:${x.f.color}"></i><span><b style="font:inherit;color:var(--ink)">${esc(x.f.corto || x.f.nombre)}</b> · ${esc(x.f.entidad || '')}</span><b>${fmtM(x.total)}</b></div>`).join('')}</div>
@@ -190,8 +204,8 @@ const RENDER = {
   fuentes(c, p) {
     const F = c.fuentes || [];
     return {
-      cab: `<p class="ceja">Financiación</p><h2>${titulo(p.titulo || 'Las fuentes, una por una')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
-      cuerpo: `<div class="comps">${F.map((f) => `<div class="comp" style="--mc:${f.color};cursor:default"><b>${esc(f.nombre)}</b><span class="v">${esc(f.tipo || '')}</span><span class="d">${esc(f.que_financia || '')}${f.requisito ? ` <br><i>Requisito clave:</i> ${esc(f.requisito)}` : ''}${f.url ? ` · <a href="${esc(f.url)}" target="_blank" rel="noopener">fuente</a>` : ''}</span></div>`).join('')}</div>`,
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Las fuentes, una por una')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
+      cuerpo: `<div class="comps">${F.map((f) => `<div class="comp fuente" style="--mc:${f.color};cursor:default"><b>${esc(f.nombre)}</b><span class="v">${esc(f.tipo || '')}</span><span class="d">${esc(f.que_financia || '')}${f.requisito ? ` <br><i>Requisito clave:</i> ${esc(f.requisito)}` : ''}${f.url ? ` · <a href="${esc(f.url)}" target="_blank" rel="noopener">fuente</a>` : ''}</span></div>`).join('')}</div>`,
     };
   },
   ruta(c, p) {
@@ -216,8 +230,16 @@ const RENDER = {
     };
   },
 };
+// el cuerpo del panel se desvanece abajo mientras haya más contenido para leer
+function marcarDesborde() { cuerpo.classList.toggle('mas', cuerpo.scrollTop + cuerpo.clientHeight < cuerpo.scrollHeight - 6); }
+cuerpo.addEventListener('scroll', marcarDesborde, { passive: true });
+addEventListener('resize', marcarDesborde);
 // titular partido en palabras (para animarlas)
-function titulo(t) { return String(t || '').split(/\s+/).map((w) => `<span class="w">${esc(w)}</span>`).join(' '); }
+// palabras del título (para animarlas); el número y su unidad («69 %», «24 horas») no se separan
+function titulo(t) {
+  return String(t || '').replace(/(\d)\s+(%|horas?\b|km\b|ha\b|L\/s|m³|MWp|kWp|MW\b|M\b|millones|billones)/g, '$1\u00a0$2')
+    .split(/[ \t\n]+/).filter(Boolean).map((w) => `<span class="w">${esc(w)}</span>`).join(' ');
+}
 // gráfico de 24 horas: horas con agua hoy (franja) frente a la meta (todo el día)
 function relojAgua(p) {
   const h0 = p.reloj?.desde ?? 4, h1 = p.reloj?.hasta ?? 13, R = 52, C = 64;
@@ -269,9 +291,13 @@ async function mostrar(ci, pi, { dir = 1, primera = false } = {}) {
   // telón al cambiar de capítulo (no en la primera carga)
   if (cambia && !primera && gsap && !reducedMotion) telonDe(c);
   await pintarPanel(c, p, dir, cambia && !primera);
-  // 3D: capas y cámara del paso (los módulos pueden tardar en cargar: se espera al suyo)
-  await Promise.race([cargas[ci], new Promise((r) => setTimeout(r, 4000))]);
+  // 3D: capas y cámara del paso (los módulos pueden tardar en cargar: se espera al suyo hasta 4 s y, si llega después,
+  // se vuelve a aplicar el paso); si mientras tanto se pasó a otro paso, este ya no toca la escena
+  const listo = await Promise.race([cargas[ci].then(() => true), new Promise((r) => setTimeout(() => r(false), 4000))]);
+  const vigente = () => estado.ci === ci && estado.pi === pi;
+  if (!vigente()) return;
   pasar3D(c, p);
+  if (!listo) cargas[ci].then(() => { if (vigente()) pasar3D(c, p); });
 }
 
 function telonDe(c) {
@@ -295,20 +321,22 @@ async function pintarPanel(c, p, dir, conTelon) {
   const salir = gsap && !reducedMotion && cab.innerHTML ? gsap.to([cab, cuerpo], { opacity: 0, y: dir > 0 ? -12 : 12, duration: 0.18, ease: 'power2.in' }) : null;
   if (salir) await salir;
   cab.innerHTML = r.cab; cuerpo.innerHTML = r.cuerpo; cuerpo.scrollTop = 0;
+  requestAnimationFrame(marcarDesborde);
   $('.panel').style.setProperty('--mc', colorDe(c.id));
   if (!gsap || reducedMotion) { gsap?.set([cab, cuerpo], { clearProps: 'all' }); return; }
   tlPanel?.kill();
-  tlPanel = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: conTelon ? 0.95 : 0 })
-    .set([cab, cuerpo], { opacity: 1, y: 0 })
-    .from($$('.ceja', cab), { opacity: 0, x: -10, duration: 0.35 }, 0)
-    .from($$('h2 .w', cab), { yPercent: 70, opacity: 0, duration: 0.5, stagger: 0.04 }, 0.05)
-    .from($$('.lead', cab), { opacity: 0, y: 10, duration: 0.45 }, 0.2)
-    .from([...cuerpo.children], { opacity: 0, y: 14, duration: 0.45, stagger: 0.06 }, 0.28)
-    .from($$('.cifra', cuerpo), { opacity: 0, y: 12, scale: 0.97, duration: 0.4, stagger: 0.07 }, 0.3)
-    .from($$('.comp .bar i, .pila i', cuerpo), { scaleX: 0, transformOrigin: 'left center', duration: 0.7, stagger: 0.04, ease: 'power2.out' }, 0.45)
-    .from($$('.rango .eje i, .rango .eje em, .madurez span', cuerpo), { opacity: 0, scaleX: 0.3, transformOrigin: 'left center', duration: 0.5, stagger: 0.04 }, 0.45)
-    .from($$('.gantt .barra-r', cuerpo), { scaleX: 0, transformOrigin: 'left center', duration: 0.6, stagger: 0.12 }, 0.4)
-    .add(() => $$('.cifra b[data-cuenta]', cuerpo).forEach((b) => countUp(b, 1.2)), 0.35);
+  tlPanel = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: conTelon ? 0.95 : 0 }).set([cab, cuerpo], { opacity: 1, y: 0 });
+  // cada grupo se anima solo si el paso lo tiene (GSAP avisa en la consola cuando la lista está vacía)
+  const desde = (el, vars, t) => { if (el.length) tlPanel.from(el, vars, t); };
+  desde($$('.ceja', cab), { opacity: 0, x: -10, duration: 0.35 }, 0);
+  desde($$('h2 .w', cab), { yPercent: 70, opacity: 0, duration: 0.5, stagger: 0.04 }, 0.05);
+  desde($$('.lead', cab), { opacity: 0, y: 10, duration: 0.45 }, 0.2);
+  desde([...cuerpo.children], { opacity: 0, y: 14, duration: 0.45, stagger: 0.06 }, 0.28);
+  desde($$('.cifra', cuerpo), { opacity: 0, y: 12, scale: 0.97, duration: 0.4, stagger: 0.07 }, 0.3);
+  desde($$('.comp .bar i, .pila i', cuerpo), { scaleX: 0, transformOrigin: 'left center', duration: 0.7, stagger: 0.04, ease: 'power2.out' }, 0.45);
+  desde($$('.rango .eje i, .rango .eje em, .madurez span', cuerpo), { opacity: 0, scaleX: 0.3, transformOrigin: 'left center', duration: 0.5, stagger: 0.04 }, 0.45);
+  desde($$('.gantt .barra-r', cuerpo), { scaleX: 0, transformOrigin: 'left center', duration: 0.6, stagger: 0.12 }, 0.4);
+  tlPanel.add(() => $$('.cifra b[data-cuenta]', cuerpo).forEach((b) => countUp(b, 1.2)), 0.35);
   const arco = $('.arco-hoy', cuerpo);
   if (arco) { const L = arco.getTotalLength(); gsap.fromTo(arco, { strokeDasharray: L, strokeDashoffset: L }, { strokeDashoffset: 0, duration: 1.1, delay: 0.6, ease: 'power2.out' }); }
 }
@@ -324,12 +352,15 @@ function pasar3D(c, p) {
   });
   escena.verCapas(ids);
   // en la visión de conjunto solo quedan las etiquetas del capítulo (si no, se enciman las de los siete módulos)
-  escena.soloEtiquetas?.(def.todos ? [...(m?.siempre || []), ...(def.capas || []), ...(p.capas || [])] : null);
+  escena.soloEtiquetas?.(def.etiquetas || (def.todos ? [...(m?.siempre || []), ...(def.capas || []), ...(p.capas || [])] : null));
   capasVisibles = ids;
   def.antes?.();
   (def.vista || m?.vista)?.();
   if (gsap && !reducedMotion) def.animar?.(); else def.alFinal?.();
+  // el mapa de sombras se recalcula a pedido: una vez más cuando ya terminaron de crecer las piezas del paso
+  clearTimeout(tSombras); tSombras = setTimeout(() => escena.st.updateShadows(), 3600);
 }
+let tSombras = 0;
 // al cambiar el tamaño de la pantalla (o al ocultar el panel) se vuelve a encuadrar el paso, salvo que la persona haya movido la cámara
 let tReenc = 0;
 function reencuadrar() {
@@ -379,11 +410,7 @@ document.addEventListener('click', (e) => {
   if (cap) { abrirIndice(false); ir(+cap.dataset.cap, 0); return; }
   if (paso) { ir(estado.ci, +paso.dataset.paso); return; }
   if (irA) { ir(+irA.dataset.ir, 0); return; }
-  if (comp) {
-    const c = caps[estado.ci], k = c.pasos.findIndex((x) => x.componente === comp.dataset.comp);
-    if (k >= 0) ir(estado.ci, k);
-    else { $$('[data-comp]').forEach((b) => b.setAttribute('aria-pressed', String(b === comp))); ctx3d[c.id]?.resaltar?.(comp.dataset.comp); }
-  }
+  if (comp) { const k = pasoDeComp(caps[estado.ci], comp.dataset.comp); if (k >= 0) ir(estado.ci, k); }
 });
 $('.panel .asa').addEventListener('click', () => { pres.classList.toggle('panel-grande'); setTimeout(reencuadrar, 300); });
 $('.marca').addEventListener('click', (e) => { e.preventDefault(); ir(0, 0); });
