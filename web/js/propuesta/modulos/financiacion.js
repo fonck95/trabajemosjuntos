@@ -4,7 +4,7 @@
 import { THREE, gsap } from '../../core.js';
 import { V } from '../geo3d.js';
 import { pinesDe } from './comun.js';
-import { fmtM } from '../main.js';
+import { rg } from '../main.js';
 
 const M_POR_MILLON = 0.008;   // metros de columna por millón de pesos (77.000 M ≈ 620 m: se leen desde la vista del territorio)
 
@@ -22,7 +22,7 @@ export function crear(esc, datos) {
       const o = new THREE.Mesh(geo, matDe(fu)); o.scale.set(radio, alto, radio); o.position.y = h; o.castShadow = true; g.add(o);
       h += alto;
     });
-    esc.etiqueta(`<b>${m.corto || m.nombre}</b><small>${fmtM(m.inversion?.central)}</small>`, { pos: [0, 0, h + 20], padre: g, color: `var(--m-${m.id})`, ancla: [0.5, 1] });
+    esc.etiqueta(`<b>${m.corto || m.nombre}</b><small>${rg(m.inversion)}</small>`, { pos: [0, 0, h + 20], padre: g, color: `var(--m-${m.id})`, ancla: [0.5, 1] });
     return { g, h };
   });
   const todo = pinesDe(datos).map(({ x, y }) => [x, y, 0]).concat(columnas.map(({ g, h }) => [g.position.x, -g.position.z, h + 60]));

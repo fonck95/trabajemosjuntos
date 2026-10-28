@@ -33,6 +33,22 @@ export const fmtM = (v) => {
   return `$${Math.round(v).toLocaleString('es-CO')} M`;
 };
 const colorDe = (id) => `var(--m-${id})`;
+// Los costos son de perfil o prefactibilidad: se muestran como umbral tentativo, no como cifra fija.
+// Dos cifras significativas (una estimación de perfil no pretende más precisión).
+const cifra2 = (v) => { if (!v) return 0; const k = 10 ** (Math.floor(Math.log10(Math.abs(v))) - 1); return Math.round(v / k) * k; };
+// rango aproximado en millones de 2026 («$54 – 100 mil M»); si mínimo y máximo coinciden, valor aproximado («≈ $77 mil M»)
+export const fmtRango = (min, max) => {
+  if (min == null || max == null || Number.isNaN(+min) || Number.isNaN(+max)) return '—';
+  const a = cifra2(Math.min(min, max)), b = cifra2(Math.max(min, max));
+  if (a === b) return `≈ ${fmtM(b)}`;
+  const u = b >= 1e6 ? [1e6, ' billones', 2] : b >= 1000 ? [1000, ' mil M', 1] : [1, ' M', 0];
+  const n = (x) => (x / u[0]).toLocaleString('es-CO', { maximumFractionDigits: u[2] });
+  return `$${n(a)} – ${n(b)}${u[1]}`;
+};
+// rango de un objeto {min, central, max}
+export const rg = (c) => (c ? fmtRango(c.min ?? c.central, c.max ?? c.central) : '—');
+// valor suelto (sin rango en los datos) como aproximación
+export const aprox = (v) => (v == null ? '' : `≈ ${fmtM(cifra2(v))}`);
 const leer = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
 const guardar = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch { /* sin almacenamiento */ } };
 
@@ -49,19 +65,22 @@ function cambiarTema() {
 // ---------------------------------------------------------------- datos y capítulos
 const datos = await fetch(new URL('../../data/propuesta.json', import.meta.url)).then((r) => { if (!r.ok) throw new Error(`data/propuesta.json (${r.status})`); return r.json(); });
 const caps = [
-  { id: 'portada', nombre: 'Portada', corto: 'Portada', n: '00', ...datos.portada },
-  ...datos.modulos.map((m, i) => ({ ...m, n: String(i + 1).padStart(2, '0'), modulo: true })),
-  { id: 'financiacion', nombre: 'Cómo se financia', corto: 'Financiación', n: 'Σ', ...datos.financiacion },
-  { id: 'ruta', nombre: 'Hoja de ruta', corto: 'Ruta', n: '→', ...datos.ruta },
-  { id: 'pedidos', nombre: 'Lo que pedimos', corto: 'Pedidos', n: '✓', ...datos.pedidos },
+  { id: 'portada', nombre: 'Portada', corto: 'Portada', ...datos.portada },
+  ...datos.modulos.map((m, i) => ({ ...m, modulo: true })),
+  { id: 'financiacion', nombre: 'Cómo se financia', corto: 'Financiación', ...datos.financiacion },
+  { id: 'ruta', nombre: 'Hoja de ruta', corto: 'Ruta', ...datos.ruta },
+  { id: 'pedidos', nombre: 'Lo que pedimos', corto: 'Pedidos', ...datos.pedidos },
 ];
 caps.forEach((c) => { c.pasos = (c.pasos || []).filter(Boolean); if (!c.pasos.length) c.pasos = [{ id: 'inicio', tipo: 'texto', titulo: c.nombre }]; });
 const totalPasos = caps.reduce((a, c) => a + c.pasos.length, 0);
 const inversionTotal = datos.modulos.reduce((a, m) => a + (m.inversion?.central || 0), 0);
+const inversionMin = datos.modulos.reduce((a, m) => a + (m.inversion?.min ?? m.inversion?.central ?? 0), 0);
+const inversionMax = datos.modulos.reduce((a, m) => a + (m.inversion?.max ?? m.inversion?.central ?? 0), 0);
+const rgTotal = () => fmtRango(inversionMin, inversionMax);
 
 // riel e índice
-riel.innerHTML = caps.map((c, i) => `${i === 1 || i === caps.length - 3 ? '<span class="sep" aria-hidden="true"></span>' : ''}<button type="button" data-cap="${i}" style="--mc:${colorDe(c.id)}" aria-label="${esc(c.nombre)}">${c.modulo ? `<span class="n">${c.n}</span>` : icono(c.id)}<span class="tip">${esc(c.nombre)}</span></button>`).join('');
-$('.rejilla', indice).innerHTML = caps.map((c, i) => `<button type="button" class="tarjeta" data-cap="${i}" style="--mc:${colorDe(c.id)}"><span class="n">${c.modulo ? c.n : icono(c.id)}</span><b>${esc(c.nombre)}</b><span>${esc(c.lema || c.subtitulo || '')}</span>${c.inversion ? `<em>${fmtM(c.inversion.central)}</em>` : ''}</button>`).join('');
+riel.innerHTML = caps.map((c, i) => `${i === 1 || i === caps.length - 3 ? '<span class="sep" aria-hidden="true"></span>' : ''}<button type="button" data-cap="${i}" style="--mc:${colorDe(c.id)}" aria-label="${esc(c.nombre)}">${icono(c.id)}<span class="tip">${esc(c.nombre)}</span></button>`).join('');
+$('.rejilla', indice).innerHTML = caps.map((c, i) => `<button type="button" class="tarjeta" data-cap="${i}" style="--mc:${colorDe(c.id)}"><span class="n">${icono(c.id)}</span><b>${esc(c.nombre)}</b><span>${esc(c.lema || c.subtitulo || '')}</span>${c.inversion ? `<em>${rg(c.inversion)}</em>` : ''}</button>`).join('');
 progreso.innerHTML = caps.map((c) => `<i style="--mc:${colorDe(c.id)};--k:${c.pasos.length}"><b></b></i>`).join('');
 
 // ---------------------------------------------------------------- escena 3D y módulos
@@ -104,17 +123,19 @@ function pasoDeComp(c, id) {
 function rango(c) {
   if (!c?.central) return '';
   const max = c.max || c.central, min = c.min || c.central, top = max * 1.05;
-  return `<div class="rango"><div class="eje"><i style="left:${(min / top) * 100}%;width:${((max - min) / top) * 100}%"></i><em style="left:${(c.central / top) * 100}%"></em></div><div class="lbls"><span>${fmtM(min)}</span><b>${fmtM(c.central)}</b><span>${fmtM(max)}</span></div></div>`;
+  return `<div class="rango"><div class="eje"><i style="left:${(min / top) * 100}%;width:${((max - min) / top) * 100}%"></i></div><div class="lbls"><span>${fmtM(cifra2(min))}</span><b>≈ rango estimado</b><span>${fmtM(cifra2(max))}</span></div></div>`;
 }
 function fuentesCitadas(lista = []) {
   if (!lista.length) return '';
   return `<details class="fuentes-cit"><summary>Fuentes (${lista.length})</summary><ol>${lista.map((f) => `<li>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.titulo || f.url)}</a>` : esc(f.titulo)}</li>`).join('')}</ol></details>`;
 }
-function pilaFinanciacion(fin = []) {
+function pilaFinanciacion(fin = [], inv = null) {
+  // cada aporte se muestra con el mismo margen (mínimo–máximo) que tiene la inversión de su módulo
+  const k0 = inv?.central ? (inv.min ?? inv.central) / inv.central : 1, k1 = inv?.central ? (inv.max ?? inv.central) / inv.central : 1;
   const F = datos.financiacion?.fuentes || [], tot = fin.reduce((a, f) => a + (f.monto || 0), 0) || 1;
   const col = (id) => (F.find((x) => x.id === id) || {}).color || 'var(--muted)';
   return `<div class="pila">${fin.map((f) => `<i style="--c:${col(f.fuente)};width:${(100 * (f.monto || 0)) / tot}%" title="${esc((F.find((x) => x.id === f.fuente) || {}).nombre || f.fuente)}"></i>`).join('')}</div>
-    <div class="leyenda">${fin.map((f) => { const d = F.find((x) => x.id === f.fuente) || { nombre: f.fuente }; return `<div><i style="--c:${col(f.fuente)}"></i><span><b style="font:inherit;color:var(--ink)">${esc(d.corto || d.nombre)}</b>${f.mecanismo ? ` · ${esc(f.mecanismo)}` : ''}</span><b>${fmtM(f.monto)}</b></div>`; }).join('')}</div>`;
+    <div class="leyenda">${fin.map((f) => { const d = F.find((x) => x.id === f.fuente) || { nombre: f.fuente }; return `<div><i style="--c:${col(f.fuente)}"></i><span><b style="font:inherit;color:var(--ink)">${esc(d.corto || d.nombre)}</b>${f.mecanismo ? ` · ${esc(f.mecanismo)}` : ''}</span><b>${fmtRango((f.monto || 0) * k0, (f.monto || 0) * k1)}</b></div>`; }).join('')}</div>`;
 }
 
 const RENDER = {
@@ -122,38 +143,38 @@ const RENDER = {
     return {
       cab: `<p class="ceja">${esc(datos.meta?.lugar || 'Yondó, Antioquia')} · ${esc(datos.meta?.periodo || '2028–2031')}</p><h2>${titulo(p.titulo || c.titulo)}</h2><p class="lead">${p.texto || c.lema || ''}</p>`,
       cuerpo: `${cifras(p.cifras || c.cifras)}
-        <h3>Siete módulos · ${fmtM(inversionTotal)}</h3>
-        <div class="comps">${datos.modulos.map((m, i) => `<button type="button" class="comp" data-ir="${i + 1}" style="--mc:${colorDe(m.id)}"><b>${String(i + 1).padStart(2, '0')} · ${esc(m.nombre)}</b><span class="v">${fmtM(m.inversion?.central)}</span><span class="d">${esc(m.lema || '')}</span><span class="bar"><i style="--w:${(100 * (m.inversion?.central || 0)) / Math.max(...datos.modulos.map((x) => x.inversion?.central || 0))}%"></i></span></button>`).join('')}</div>
+        <h3>Los módulos · inversión aproximada ${rgTotal()}</h3>
+        <div class="comps">${datos.modulos.map((m, i) => `<button type="button" class="comp" data-ir="${i + 1}" style="--mc:${colorDe(m.id)}"><b>${esc(m.nombre)}</b><span class="v">${rg(m.inversion)}</span><span class="d">${esc(m.lema || '')}</span><span class="bar"><i style="--w:${(100 * (m.inversion?.central || 0)) / Math.max(...datos.modulos.map((x) => x.inversion?.central || 0))}%"></i></span></button>`).join('')}</div>
         ${p.nota ? `<p class="nota" style="margin-top:12px">${p.nota}</p>` : ''}`,
     };
   },
   portadilla(c, p) {
     return {
-      cab: `<p class="ceja"><span class="num">${c.n}</span>${esc(c.nombre)}</p><h2>${titulo(p.titulo || c.lema)}</h2><p class="lead">${p.texto || c.problema || ''}</p>`,
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || c.lema)}</h2><p class="lead">${p.texto || c.problema || ''}</p>`,
       cuerpo: `${cifras(p.cifras || c.cifras)}
         ${c.propuesta ? `<h3>Lo que proponemos</h3><p>${c.propuesta}</p>` : ''}
-        ${c.inversion ? `<h3>Inversión estimada (millones de 2026)</h3>${rango(c.inversion)}` : ''}`,
+        ${c.inversion ? `<h3>Inversión aproximada (rango, millones de 2026)</h3>${rango(c.inversion)}` : ''}`,
     };
   },
   componentes(c, p) {
     const comps = c.componentes || [], max = Math.max(1, ...comps.map((x) => x.costo?.central || 0));
     // solo son botones las tarjetas que llevan a un paso propio; las demás son fichas fijas
     const tarjeta = (x) => {
-      const dentro = `<b>${esc(x.nombre)}</b><span class="v">${fmtM(x.costo?.central)}</span><span class="d">${esc(x.resumen || '')}</span><span class="bar"><i style="--w:${(100 * (x.costo?.central || 0)) / max}%"></i></span>`;
+      const dentro = `<b>${esc(x.nombre)}</b><span class="v">${rg(x.costo)}</span><span class="d">${esc(x.resumen || '')}</span><span class="bar"><i style="--w:${(100 * (x.costo?.central || 0)) / max}%"></i></span>`;
       return pasoDeComp(c, x.id) >= 0 ? `<button type="button" class="comp" data-comp="${esc(x.id)}">${dentro}</button>` : `<div class="comp">${dentro}</div>`;
     };
     return {
-      cab: `<p class="ceja"><span class="num">${c.n}</span>${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Qué se construye')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Qué se construye')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
       cuerpo: `<div class="comps">${comps.map(tarjeta).join('')}</div>
-        ${c.inversion ? `<p class="nota" style="margin-top:10px">Total del módulo: <b>${fmtM(c.inversion.central)}</b> (rango ${fmtM(c.inversion.min)} a ${fmtM(c.inversion.max)}).</p>` : ''}`,
+        ${c.inversion ? `<p class="nota" style="margin-top:10px">Total aproximado del módulo: <b>${rg(c.inversion)}</b> (cifras de perfil, en millones de 2026; se ajustan con los diseños).</p>` : ''}`,
     };
   },
   componente(c, p) {
     const x = (c.componentes || []).find((k) => k.id === p.componente) || {};
     return {
-      cab: `<p class="ceja"><span class="num">${c.n}</span>${esc(c.nombre)}</p><h2>${titulo(p.titulo || x.nombre)}</h2><p class="lead">${p.texto || x.descripcion || ''}</p>`,
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || x.nombre)}</h2><p class="lead">${p.texto || x.descripcion || ''}</p>`,
       cuerpo: `${x.especificaciones?.length ? `<h3>Especificaciones</h3><dl class="kv">${x.especificaciones.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>` : ''}
-        ${x.costo ? `<h3>Costo estimado</h3>${rango(x.costo)}${x.base_costo ? `<p class="nota">${x.base_costo}</p>` : ''}` : ''}
+        ${x.costo ? `<h3>Rango de costo estimado</h3>${rango(x.costo)}${x.base_costo ? `<p class="nota">${x.base_costo}</p>` : ''}` : ''}
         ${x.proyecto_tipo?.length ? `<h3>Proyecto tipo y referentes</h3>${chipsTipo(x.proyecto_tipo)}` : ''}
         ${x.fuentes?.length ? `<h3>Fuentes de financiación</h3>${chipsFuentes(x.fuentes)}` : ''}
         ${x.ubicacion ? `<h3>Dónde</h3><p>${x.ubicacion}</p>` : ''}
@@ -163,22 +184,22 @@ const RENDER = {
   },
   comparacion(c, p) {
     return {
-      cab: `<p class="ceja"><span class="num">${c.n}</span>${esc(c.nombre)}</p><h2>${titulo(p.titulo)}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo)}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
       cuerpo: `<div class="compara"><div class="no"><b>${esc(p.antes?.titulo || 'Antes')}</b>${p.antes?.texto || ''}</div><div class="si"><b>${esc(p.despues?.titulo || 'Propuesta')}</b>${p.despues?.texto || ''}</div></div>
         ${p.grafico === 'reloj' ? relojAgua(p) : ''}${cifras(p.cifras)}${p.nota ? `<p class="nota">${p.nota}</p>` : ''}`,
     };
   },
   texto(c, p) {
     return {
-      cab: `<p class="ceja">${c.modulo ? `<span class="num">${c.n}</span>` : ''}${esc(c.nombre)}</p><h2>${titulo(p.titulo || c.nombre)}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || c.nombre)}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
       cuerpo: `${p.lista?.length ? `<ul>${p.lista.map((l) => `<li>${l}</li>`).join('')}</ul>` : ''}${cifras(p.cifras)}${p.cuerpo || ''}${p.nota ? `<p class="nota">${p.nota}</p>` : ''}`,
     };
   },
   financiacion(c, p) {
     const g = c.gestion || {}, k = madurezPasos.indexOf(g.madurez);
     return {
-      cab: `<p class="ceja"><span class="num">${c.n}</span>${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Cómo se financia')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
-      cuerpo: `${c.financiacion?.length ? `<h3>Mezcla de fuentes propuesta</h3>${pilaFinanciacion(c.financiacion)}` : ''}
+      cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Cómo se financia')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
+      cuerpo: `${c.financiacion?.length ? `<h3>Mezcla de fuentes propuesta</h3>${pilaFinanciacion(c.financiacion, c.inversion)}` : ''}
         ${c.proyectos_tipo?.length ? `<h3>Proyectos tipo del DNP que sirven</h3>${chipsTipo(c.proyectos_tipo)}` : ''}
         ${g.madurez ? `<h3>Madurez hoy</h3><div class="madurez">${madurezPasos.map((m, i) => `<span class="${i <= k ? 'si' : ''} ${i === k ? 'aqui' : ''}" title="${m}">${madurezRotulos[m] || m}</span>`).join('')}</div>${g.madurez_nota ? `<p class="nota">${g.madurez_nota}</p>` : ''}` : ''}
         ${g.pedido ? `<div class="pedido"><b>Lo que pedimos al nivel central</b>${g.pedido}</div>` : ''}
@@ -189,15 +210,16 @@ const RENDER = {
   },
   matriz(c, p) {
     const F = c.fuentes || [], mods = datos.modulos;
-    const porFuente = F.map((f) => ({ f, total: mods.reduce((a, m) => a + (m.financiacion || []).filter((x) => x.fuente === f.id).reduce((s, x) => s + (x.monto || 0), 0), 0) })).filter((x) => x.total > 0).sort((a, b) => b.total - a.total);
+    const kde = (m) => (m.inversion?.central ? [(m.inversion.min ?? m.inversion.central) / m.inversion.central, (m.inversion.max ?? m.inversion.central) / m.inversion.central] : [1, 1]);
+    const porFuente = F.map((f) => { let total = 0, lo = 0, hi = 0; mods.forEach((m) => { const [k0, k1] = kde(m); (m.financiacion || []).filter((x) => x.fuente === f.id).forEach((x) => { total += x.monto || 0; lo += (x.monto || 0) * k0; hi += (x.monto || 0) * k1; }); }); return { f, total, lo, hi }; }).filter((x) => x.total > 0).sort((a, b) => b.total - a.total);
     const tot = porFuente.reduce((a, x) => a + x.total, 0) || 1;
     return {
       cab: `<p class="ceja">${esc(c.nombre)}</p><h2>${titulo(p.titulo || 'Cómo se financia todo')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
       cuerpo: `${cifras(p.cifras)}<h3>Por fuente (millones de 2026)</h3>
         <div class="pila">${porFuente.map((x) => `<i style="--c:${x.f.color};width:${(100 * x.total) / tot}%" title="${esc(x.f.nombre)}"></i>`).join('')}</div>
-        <div class="leyenda">${porFuente.map((x) => `<div><i style="--c:${x.f.color}"></i><span><b style="font:inherit;color:var(--ink)">${esc(x.f.corto || x.f.nombre)}</b> · ${esc(x.f.entidad || '')}</span><b>${fmtM(x.total)}</b></div>`).join('')}</div>
+        <div class="leyenda">${porFuente.map((x) => `<div><i style="--c:${x.f.color}"></i><span><b style="font:inherit;color:var(--ink)">${esc(x.f.corto || x.f.nombre)}</b> · ${esc(x.f.entidad || '')}</span><b>${fmtRango(x.lo, x.hi)}</b></div>`).join('')}</div>
         <h3>Por módulo</h3>
-        <table class="tabla"><thead><tr><th>Módulo</th><th class="n">Inversión</th><th>Fuentes principales</th></tr></thead><tbody>${mods.map((m) => `<tr><td><b style="color:${colorDe(m.id)}">●</b> ${esc(m.nombre)}</td><td class="n">${fmtM(m.inversion?.central)}</td><td>${(m.financiacion || []).slice().sort((a, b) => b.monto - a.monto).slice(0, 3).map((x) => esc((F.find((f) => f.id === x.fuente) || {}).corto || x.fuente)).join(', ')}</td></tr>`).join('')}<tr><td><b>Total</b></td><td class="n"><b>${fmtM(inversionTotal)}</b></td><td></td></tr></tbody></table>
+        <table class="tabla"><thead><tr><th>Módulo</th><th class="n">Inversión aproximada</th><th>Fuentes principales</th></tr></thead><tbody>${mods.map((m) => `<tr><td><b style="color:${colorDe(m.id)}">●</b> ${esc(m.nombre)}</td><td class="n">${rg(m.inversion)}</td><td>${(m.financiacion || []).slice().sort((a, b) => b.monto - a.monto).slice(0, 3).map((x) => esc((F.find((f) => f.id === x.fuente) || {}).corto || x.fuente)).join(', ')}</td></tr>`).join('')}<tr><td><b>Total</b></td><td class="n"><b>${rgTotal()}</b></td><td></td></tr></tbody></table>
         ${p.nota ? `<p class="nota" style="margin-top:10px">${p.nota}</p>` : ''}`,
     };
   },
@@ -225,7 +247,7 @@ const RENDER = {
     const E = c.entidades || [];
     return {
       cab: `<p class="ceja">Gestión</p><h2>${titulo(p.titulo || 'Lo que pedimos')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
-      cuerpo: `<div class="comps">${E.map((e) => `<div class="comp" style="cursor:default;--mc:${e.modulos?.[0] ? colorDe(e.modulos[0]) : 'var(--accent)'}"><b>${esc(e.entidad)}</b><span class="v">${e.monto ? fmtM(e.monto) : ''}</span><span class="d">${e.pedido}</span><span class="d">${(e.modulos || []).map((id) => `<span style="color:${colorDe(id)}">●</span> ${esc((datos.modulos.find((m) => m.id === id) || {}).corto || id)}`).join(' &nbsp; ')}</span></div>`).join('')}</div>
+      cuerpo: `<div class="comps">${E.map((e) => `<div class="comp" style="cursor:default;--mc:${e.modulos?.[0] ? colorDe(e.modulos[0]) : 'var(--accent)'}"><b>${esc(e.entidad)}</b><span class="v">${e.monto ? aprox(e.monto) : ''}</span><span class="d">${e.pedido}</span><span class="d">${(e.modulos || []).map((id) => `<span style="color:${colorDe(id)}">●</span> ${esc((datos.modulos.find((m) => m.id === id) || {}).corto || id)}`).join(' &nbsp; ')}</span></div>`).join('')}</div>
         ${p.nota ? `<p class="nota" style="margin-top:10px">${p.nota}</p>` : ''}`,
     };
   },
@@ -285,11 +307,11 @@ async function mostrar(ci, pi, { dir = 1, primera = false } = {}) {
   estado.ci = ci; estado.pi = pi;
   if (location.hash !== hashDe(ci, pi)) history.replaceState(null, '', hashDe(ci, pi));
   pres.style.setProperty('--mc', colorDe(c.id));
-  document.title = `${c.modulo ? `${c.n} ${c.nombre}` : c.nombre} · Yondó 2028–2031`;
+  document.title = `${c.nombre} · Yondó 2028–2031`;
   // riel, puntos, progreso y control
   $$('button', riel).forEach((b) => b.setAttribute('aria-current', +b.dataset.cap === ci ? 'step' : 'false'));
   puntos.innerHTML = c.pasos.map((x, i) => `<button type="button" data-paso="${i}" aria-label="Paso ${i + 1}: ${esc(x.titulo || '')}" aria-current="${i === pi ? 'step' : 'false'}"></button>`).join('');
-  $('.control .donde b').textContent = c.modulo ? `${c.n} · ${c.nombre}` : c.nombre;
+  $('.control .donde b').textContent = c.nombre;
   $('.control .sig span').textContent = ci === caps.length - 1 && pi === c.pasos.length - 1 ? 'Fin' : pi === c.pasos.length - 1 ? caps[ci + 1].corto || 'Siguiente' : 'Siguiente';
   $$('i', progreso).forEach((el, i) => el.style.setProperty('--p', i < ci ? 1 : i > ci ? 0 : (pi + 1) / c.pasos.length));
   leyenda.innerHTML = (p.leyenda || []).map((l) => `<span><i class="${l.forma || ''}" style="--c:${l.color || 'var(--mc)'}"></i><em>${esc(l.texto)}</em></span>`).join('');
@@ -310,7 +332,7 @@ function telonDe(c) {
   tlTelon?.kill();
   const banda = $('.banda', telon), n = $('.n', telon), t = $('.t', telon), l = $('.l', telon);
   telon.style.setProperty('--mc', colorDe(c.id));
-  n.textContent = c.modulo ? c.n : ''; t.innerHTML = [...(c.nombre || '')].map((ch) => `<span class="ch">${ch === ' ' ? '&nbsp;' : esc(ch)}</span>`).join(''); l.textContent = c.lema || '';
+  n.textContent = ''; t.innerHTML = [...(c.nombre || '')].map((ch) => `<span class="ch">${ch === ' ' ? '&nbsp;' : esc(ch)}</span>`).join(''); l.textContent = c.lema || '';
   tlTelon = gsap.timeline({ defaults: { ease: 'power3.inOut' } })
     .set(telon, { autoAlpha: 1 })
     .fromTo(banda, { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.45 })
@@ -391,11 +413,11 @@ function abrirFichas(v = fichas.hidden) {
   if (!v || fichas.dataset.listo) return;
   fichas.dataset.listo = '1';
   fichas.innerHTML = `<div class="cab"><h2>Fichas de la propuesta 2028–2031</h2><div class="herr"><button type="button" data-accion="imprimir">Imprimir o guardar en PDF</button><button type="button" data-accion="fichas">Cerrar</button></div></div>
-    <p class="nota">${esc(datos.meta?.moneda || 'Millones de pesos constantes de 2026')} · corte ${esc(datos.meta?.fecha_corte || '')} · inversión total estimada ${fmtM(inversionTotal)}</p>
-    ${datos.modulos.map((m, i) => `<article style="--mc:${colorDe(m.id)}"><p class="ceja"><span class="num">${String(i + 1).padStart(2, '0')}</span>${esc(m.nombre)}</p><h3>${esc(m.lema || '')}</h3>
+    <p class="nota">${esc(datos.meta?.moneda || 'Millones de pesos constantes de 2026')} · corte ${esc(datos.meta?.fecha_corte || '')} · inversión total aproximada ${rgTotal()} (rangos de perfil, no costos fijos)</p>
+    ${datos.modulos.map((m, i) => `<article style="--mc:${colorDe(m.id)}"><p class="ceja">${esc(m.nombre)}</p><h3>${esc(m.lema || '')}</h3>
       <div class="cols"><div><p>${m.problema || ''}</p><p><b>Propuesta.</b> ${m.propuesta || ''}</p>
-        <table class="tabla"><thead><tr><th>Componente</th><th class="n">Costo</th><th>Proyecto tipo</th></tr></thead><tbody>${(m.componentes || []).map((x) => `<tr><td>${esc(x.nombre)}</td><td class="n">${fmtM(x.costo?.central)}</td><td>${(x.proyecto_tipo || []).map((t) => esc(t.nombre)).join('; ') || '—'}</td></tr>`).join('')}<tr><td><b>Total</b></td><td class="n"><b>${fmtM(m.inversion?.central)}</b></td><td></td></tr></tbody></table></div>
-      <div>${pilaFinanciacion(m.financiacion || [])}${m.gestion?.pedido ? `<div class="pedido"><b>Lo que pedimos</b>${m.gestion.pedido}</div>` : ''}${m.metas?.length ? `<h4 style="margin:12px 0 4px">Metas</h4><ul>${m.metas.map((x) => `<li>${esc(x.indicador)}: ${esc(x.base ?? '')} → <b>${esc(x.meta)}</b></li>`).join('')}</ul>` : ''}</div></div></article>`).join('')}`;
+        <table class="tabla"><thead><tr><th>Componente</th><th class="n">Costo aproximado</th><th>Proyecto tipo</th></tr></thead><tbody>${(m.componentes || []).map((x) => `<tr><td>${esc(x.nombre)}</td><td class="n">${rg(x.costo)}</td><td>${(x.proyecto_tipo || []).map((t) => esc(t.nombre)).join('; ') || '—'}</td></tr>`).join('')}<tr><td><b>Total</b></td><td class="n"><b>${rg(m.inversion)}</b></td><td></td></tr></tbody></table></div>
+      <div>${pilaFinanciacion(m.financiacion || [], m.inversion)}${m.gestion?.pedido ? `<div class="pedido"><b>Lo que pedimos</b>${m.gestion.pedido}</div>` : ''}${m.metas?.length ? `<h4 style="margin:12px 0 4px">Metas</h4><ul>${m.metas.map((x) => `<li>${esc(x.indicador)}: ${esc(x.base ?? '')} → <b>${esc(x.meta)}</b></li>`).join('')}</ul>` : ''}</div></div></article>`).join('')}`;
 }
 function pantalla() { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.().catch(() => {}); }
 function alternarPanel(v) {
