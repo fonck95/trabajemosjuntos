@@ -201,7 +201,7 @@ const RENDER = {
       cab: `<p class="ceja">Hoja de ruta</p><h2>${titulo(p.titulo || 'De la idea a la obra')}</h2>${p.texto ? `<p class="lead">${p.texto}</p>` : ''}`,
       cuerpo: `<div class="gantt" style="position:relative;margin:8px 0 10px">
           <div style="display:grid;grid-template-columns:repeat(6,1fr);font:0.66rem var(--f-mono);color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:4px">${anios.map((a) => `<span>${a}</span>`).join('')}</div>
-          ${F.map((f) => `<div class="fila" style="position:relative;height:30px;margin-top:8px"><i class="barra-r" style="position:absolute;left:${x(f.desde)}%;width:${x(f.hasta) - x(f.desde)}%;top:0;height:22px;border-radius:6px;background:${f.color || 'var(--accent)'};opacity:0.9"></i><span style="position:absolute;left:calc(${x(f.desde)}% + 6px);top:3px;font:600 0.72rem var(--f-body);color:#fff;white-space:nowrap">${esc(f.nombre)}</span></div>`).join('')}
+          ${F.map((f) => { const l = x(f.desde), w = Math.min(100, x(f.hasta)) - l, der = l > 50; return `<div class="fila" style="position:relative;height:34px;margin-top:6px"><span style="position:absolute;${der ? `right:${100 - (l + w)}%;text-align:right` : `left:${l}%`};top:0;font:600 0.72rem var(--f-body);color:var(--ink);white-space:nowrap">${esc(f.nombre)}</span><i class="barra-r" style="position:absolute;left:${l}%;width:${w}%;top:17px;height:12px;border-radius:6px;background:${f.color || 'var(--accent)'};opacity:0.9"></i></div>`; }).join('')}
         </div>
         ${H.length ? `<h3>Compuertas</h3><ul class="limpia">${H.map((h) => `<li>◆ <b>${esc(h.fecha)}</b> · ${esc(h.texto)}</li>`).join('')}</ul>` : ''}
         ${p.lista?.length ? `<ul>${p.lista.map((l) => `<li>${l}</li>`).join('')}</ul>` : ''}`,
@@ -323,6 +323,8 @@ function pasar3D(c, p) {
     if (def.todos) { ids.push(...(x?.completo || [])); x?.alCompleto?.(); } else if (id !== c.id) x?.salir?.();
   });
   escena.verCapas(ids);
+  // en la visión de conjunto solo quedan las etiquetas del capítulo (si no, se enciman las de los siete módulos)
+  escena.soloEtiquetas?.(def.todos ? [...(m?.siempre || []), ...(def.capas || []), ...(p.capas || [])] : null);
   capasVisibles = ids;
   def.antes?.();
   (def.vista || m?.vista)?.();

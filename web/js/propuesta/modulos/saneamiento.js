@@ -63,7 +63,7 @@ export function crear(esc, datos) {
     const st = sitio(datos, 'saneamiento', id); if (!st?.poligono) return;
     esc.linea([...st.poligono, st.poligono[0]].map(([x, y]) => [x, y, 1.4]), { color: col, ancho: 3, punteada: true, guion: 8, padre: cSitios });
     const [cx, cy] = [st.poligono.reduce((a, q) => a + q[0], 0) / st.poligono.length, st.poligono.reduce((a, q) => a + q[1], 0) / st.poligono.length];
-    esc.etiqueta(`<b>${t}</b><small>${sub}</small>`, { pos: [cx, cy + (id === 'ptar' ? 80 : 0), 12], padre: cSitios, color: col, cls: 'lbl-p mini' });
+    if (id !== 'ptar') esc.etiqueta(`<b>${t}</b><small>${sub}</small>`, { pos: [cx, cy, 12], padre: cSitios, color: col, cls: 'lbl-p mini' });
   });
 
   // relleno Las Américas: clausura y parque ecotecnológico (la réplica del atlas en modo proyecto)
@@ -77,7 +77,7 @@ export function crear(esc, datos) {
   const todo = [...ebars.map((e) => [e.x, e.y]), ...pP.userData.contorno];
   const vistaHoy = () => esc.encuadrar(ebars.map((e) => [e.x, e.y]).concat([[0, 0]]), { rumbo: 200, elev: 50, margen: 0.9 });
   const vistaPlan = () => esc.encuadrar(todo, { rumbo: 205, elev: 46, margen: 0.94 });
-  const vistaPtar = () => esc.encuadrar([...pP.userData.contorno, ...impulsion, ...emisario], { rumbo: 200, elev: 40, margen: 0.92, alto: 10 });
+  const vistaPtar = () => esc.encuadrar(caja(pP.userData.contorno, 240), { rumbo: 200, elev: 40, margen: 0.9, alto: 10 });
   const vistaRel = () => esc.encuadrar(rel ? esc.cajaEdificio('relleno_parque') : caja([pR], 200), { rumbo: 200, elev: 40, margen: 0.85 });
   const vistaRes = () => esc.encuadrar([...caja([pR], 160), [pR[0] + 300, pR[1] - 190]], { rumbo: 200, elev: 44, margen: 0.9 });
   return {

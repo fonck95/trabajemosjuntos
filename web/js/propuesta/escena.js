@@ -150,12 +150,14 @@ export function crearEscena(el, datos) {
     return g;
   }
   // CSS2DRenderer no hereda la visibilidad del padre: cada etiqueta se muestra solo si toda su cadena es visible
+  // etiquetas visibles: las de las capas visibles; en las vistas de conjunto (soloEtiquetas) solo las de algunas capas
+  let soloCapas = null;
   function sincronizarEtiquetas() {
     S.traverse((o) => {
       if (!o.isCSS2DObject) return;
-      let v = o.userData.ver !== false;
-      for (let p = o.parent; v && p; p = p.parent) if (!p.visible) v = false;
-      o.visible = v;
+      let v = o.userData.ver !== false, permitida = !soloCapas;
+      for (let p = o.parent; p; p = p.parent) { if (!p.visible) { v = false; break; } if (soloCapas?.has(p)) permitida = true; }
+      o.visible = v && permitida;
     });
   }
   function etiqueta(html, { cls = 'lbl-p', pos = [0, 0, 0], padre = S, color, titulo, alClic } = {}) {
@@ -263,6 +265,7 @@ export function crearEscena(el, datos) {
       sincronizarEtiquetas(); st.updateShadows();
       return nuevas;
     },
+    soloEtiquetas(ids) { soloCapas = ids ? new Set(ids.map((id) => capas.get(id)).filter(Boolean)) : null; sincronizarEtiquetas(); },
     // estado de una zona de intervención: true muestra las casas de hoy, false las oculta (el proyecto ocupa el lote)
     verHoy(id, v) { const z = zonasHoy.find((zz) => zz.id === id); if (z) { z.grupo.visible = v; st.updateShadows(); } },
     modoEdificio(id, capa, sin = []) {

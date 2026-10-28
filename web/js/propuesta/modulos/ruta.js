@@ -3,7 +3,7 @@
 import { pinesDe } from './comun.js';
 
 export function crear(esc, datos) {
-  const pts = pinesDe(datos).map(({ x, y }) => [x, y]).filter(([x, y]) => Math.hypot(x, y) < 1500);
+  const pts = [...pinesDe(datos).map(({ x, y }) => [x, y]).filter(([x, y]) => Math.hypot(x, y) < 1500), [-650, -420], [700, -420], [700, 760], [-650, 760]];
   let girando = false;
   esc.st.onFrame(() => {
     const on = girando && !esc.st.flying && !esc.st.userMoved;

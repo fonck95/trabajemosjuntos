@@ -68,8 +68,8 @@ export function crear(esc, datos) {
   const inv = () => esc.st.invalidate();
   const vistaCasco = () => esc.encuadrar([[-650, -420], [700, -420], [700, 760], [-650, 760]], { rumbo: 196, elev: 52, margen: 0.94 });
   const vistaRed = () => esc.encuadrar([[-650, -420], [700, -420], [700, 760], pA, ...puntos.map((x) => x.p)], { rumbo: 196, elev: 52, margen: 0.94 });
-  const vistaGranja = () => esc.encuadrar([...poly, ...(res?.poligono || []), ...(rel ? [[rel.e.x, rel.e.y]] : []), [0, 0]], { rumbo: 200, elev: 46, margen: 0.94 });
-  const vistaGranjaCerca = () => esc.encuadrar(caja([...poly, ...(res?.poligono || []), ...(se ? [[se.x, se.y]] : [])], 30), { rumbo: 205, elev: 34, margen: 0.9, alto: 6 });
+  const vistaGranjaLejos = () => esc.encuadrar([...poly, ...(res?.poligono || []), ...(rel ? [[rel.e.x, rel.e.y]] : []), [0, 0]], { rumbo: 200, elev: 46, margen: 0.9 });
+  const vistaGranja = () => esc.encuadrar(caja([...poly, ...(res?.poligono || []), ...(se ? [[se.x, se.y]] : [])], 45), { rumbo: 200, elev: 36, margen: 0.86, alto: 6 });
   return {
     completo: ['tic.fibra', 'tic.granja'],
     salir: () => { panelesSedes(false); verRelleno(false); },
@@ -80,7 +80,7 @@ export function crear(esc, datos) {
       telemetria: { capas: ['tic.fibra', 'tic.telemetria'], antes: () => panelesSedes(false), vista: vistaRed },
       descartado: { capas: ['tic.descartado'], antes: () => { panelesSedes(true); verRelleno(false); }, vista: vistaCasco },
       granja: { capas: ['tic.granja'], antes: () => { panelesSedes(false); verRelleno(true); }, vista: vistaGranja, animar: () => brotar(granja, { duracion: 2.2, retraso: 0.6, onUpdate: inv, alFinal: () => esc.st.updateShadows() }) },
-      granja_cerca: { capas: ['tic.granja'], antes: () => { panelesSedes(false); verRelleno(true); }, vista: vistaGranjaCerca },
+      granja_cerca: { capas: ['tic.granja'], antes: () => { panelesSedes(false); verRelleno(true); }, vista: vistaGranjaLejos },
       '*': { capas: ['tic.fibra', 'tic.zonas', 'tic.granja'], antes: () => { panelesSedes(false); verRelleno(true); }, vista: vistaCasco },
     },
   };
