@@ -135,6 +135,10 @@ El contexto aprieta, por eso los proyectos grandes van al OCAD Paz, a la inversi
 
 - El presupuesto del SGR 2027–2028 baja 11 % ($27,54 billones) y en 2027 solo se podrá aprobar hasta el 60 % de los
   ingresos del bienio.
+- A Yondó le quedan ≈ $7.297 M de asignaciones directas 2025–2026 sin aprobar al 27 de octubre de 2026 (cálculo propio
+  con datos de MinHacienda). El Incentivo a la Producción del SGR solo se pide para las dos granjas solares, la municipal
+  (≈ $2.799 M) y la del relleno clausurado (≈ $1.747 M): son 2 proyectos y $4.546 M, dentro del tope de 2 proyectos y
+  $8.000 M por municipio. La torre del hospital no lo usa.
 - El PGN 2027 recorta 3 % en todas las entidades.
 - La reconstrucción tras el terremoto del 10 de agosto de 2026 es la prioridad nacional.
 - El crédito de Findeter ($9.445 M) cabe en la capacidad prudente del municipio ($5.141 M a $10.281 M), cerca de su

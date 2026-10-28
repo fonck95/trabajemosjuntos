@@ -16,7 +16,7 @@
   "total_con_complementarios": 39750245109,
   "fuente": "presupuesto.json"
  },
- "resumen": "La torre ($37.137 millones) no cabe en una sola fuente. En el escenario base la pagan MinSalud ($12.000 millones), las regalías de Yondó (directas $7.337 millones; incentivo para OCAD Paz $5.500; inversión local $1.200), la inversión regional y la Gobernación ($3.800), Obras por Impuestos ($2.500), FENOGE y MinTIC ($1.400), crédito ($1.500), aportes locales ($1.400) y otros ($500). Sin MinSalud, las regalías tendrían que poner ≈ $25.137 millones: posible en el papel (en 2025-2026 Yondó tuvo $57.382 millones de asignaciones directas e inversión local, más $14.025 millones de incentivo para el OCAD Paz), pero exige que el municipio dedique al hospital más de un tercio de sus asignaciones directas del bienio 2027-2028. Ojo: esta mezcla es la que cierra la torre, no la más probable. Con los montos probables de docs/06 para MinSalud ($3.000 millones), Obras por Impuestos ($1.800) y crédito ($0) faltan ≈ $11.700 millones, que solo pueden salir de más regalías, de partir la obra en etapas o de un CONPES de MinSalud.",
+ "resumen": "La torre ($37.137 millones) no cabe en una sola fuente. En el escenario base la pagan MinSalud ($12.000 millones), las regalías (directas de Yondó $7.337 millones; Asignación para la Paz del OCAD Paz $5.500; inversión local $1.200), la inversión regional y la Gobernación ($3.800), Obras por Impuestos ($2.500), FENOGE y MinTIC ($1.400), crédito ($1.500), aportes locales ($1.400) y otros ($500). El incentivo a la producción para el OCAD Paz ya no se cuenta: la propuesta 2028–2031 (docs/17) lo reserva para sus dos granjas solares, por el tope de 2 proyectos por municipio. Sin MinSalud, las regalías tendrían que poner ≈ $25.137 millones: posible en el papel (en 2025-2026 Yondó tuvo $57.382 millones de asignaciones directas e inversión local, y el OCAD Paz le aprobó $36.228 millones de la Asignación para la Paz), pero exige que el municipio dedique al hospital más de un tercio de sus asignaciones directas del bienio 2027-2028. Ojo: esta mezcla es la que cierra la torre, no la más probable. Con los montos probables de docs/06 para MinSalud ($3.000 millones), Obras por Impuestos ($1.800) y crédito ($0) faltan ≈ $11.700 millones, que solo pueden salir de más regalías, de partir la obra en etapas o de un CONPES de MinSalud.",
  "fuentes": [
   {
    "id": "sgr_ad",
@@ -34,8 +34,8 @@
    "requisitos": "Proyecto en MGA y en el SUIFP-SGR con los requisitos sectoriales de salud (Acuerdo Único de la Comisión Rectora; normas.json advierte que hay que confirmar si se exige concepto de MinSalud o de la Secretaría Seccional además de la Res. 485). Aprobación del alcalde como entidad beneficiaria.",
    "momento": "Ya: el saldo 2025-2026 sin aprobar alcanza para P1 (radicar nov-2026 a feb-2027). Bienio 2027-2028: el presupuesto se aprueba hasta el 5-dic-2026; radicar P2 en 2027-2028.",
    "probabilidad": "alta (depende solo de la decisión del municipio)",
-   "base_del_monto": "Bienio 2025-2026 (MinHacienda, corte oct-2026): Asignaciones Directas $34.178 millones presupuestadas y $26.481 aprobadas; anticipadas $15.162 y $13.290 → saldo sin aprobar ≈ $9.569 millones (cálculo propio). Bienio 2027-2028: el proyecto de ley de presupuesto del SGR (radicado el 2-oct-2026) baja 11 % el total nacional (de $30,96 a $27,54 billones) y asigna $5,37 billones a asignaciones directas; si Yondó baja en la misma proporción, tendría ≈ $28.000-36.000 millones de directas (estimación).",
-   "fuente": "https://www.datos.gov.co/d/g4qj-2p2e ; docs/anexos/B-finanzas-regalias.md (sección 2.4) ; https://www.portafolio.co/economia/gobierno/presupuesto-de-regalias-2027-2028-seria-de-27-54-billones-11-menos-503793 ; https://abceconomia.co/?p=55722",
+   "base_del_monto": "Bienio 2025-2026 (MinHacienda): al 27-oct-2026 quedan ≈ $7.297 millones de asignaciones directas sin aprobar (cálculo propio de la propuesta 2028–2031, docs/17; la cifra está en data/propuesta/modulos/salud.json, sin desglose entre directas y anticipadas), y alcanzan para P1. De ese saldo sale solo P1 ($1.832 millones); los otros $5.505 millones de directas de la mezcla (P2 y P6) son de los bienios siguientes. Con el corte de MinHacienda del 21-oct-2026, el que usó docs/11, el saldo era ≈ $9.569 millones (directas: $34.178 millones presupuestadas y $26.481 aprobadas; anticipadas: $15.162 y $13.290); la cifra que rige es la del 27 de octubre. Bienio 2027-2028: el proyecto de ley de presupuesto del SGR (radicado el 2-oct-2026) baja 11 % el total nacional (de $30,96 a $27,54 billones) y asigna $5,37 billones a asignaciones directas; si Yondó baja en la misma proporción, tendría ≈ $28.000-36.000 millones de directas (estimación).",
+   "fuente": "https://www.datos.gov.co/d/g4qj-2p2e ; docs/anexos/B-finanzas-regalias.md (sección 2.4) ; data/propuesta/modulos/salud.json (saldo al 27-oct-2026, propuesta 2028–2031) ; https://www.portafolio.co/economia/gobierno/presupuesto-de-regalias-2027-2028-seria-de-27-54-billones-11-menos-503793 ; https://abceconomia.co/?p=55722",
    "proyectos_que_financia": [
     "P1",
     "P2",
@@ -45,8 +45,8 @@
    "tipo": "calculo_propio sobre dato oficial"
   },
   {
-   "id": "sgr_ipaz",
-   "nombre": "SGR – Incentivo a la producción asignado a Yondó para proyectos del OCAD Paz y Asignación para la Paz (municipio PDET)",
+   "id": "sgr_aspaz",
+   "nombre": "SGR – Asignación para la Paz por convocatoria del OCAD Paz (municipio PDET)",
    "monto_posible_rango": [
     0,
     12000000000
@@ -57,11 +57,11 @@
     12000
    ],
    "monto_central_millones": 5500,
-   "requisitos": "Iniciativa del PATR del PDET Sur de Bolívar (pilar de salud rural; verificar que exista o incluirla), proyecto en MGA y aprobación del OCAD Paz.",
+   "requisitos": "Iniciativa del PATR del PDET Sur de Bolívar (pilar de salud rural; verificar que exista o incluirla), proyecto en MGA, postulación a una convocatoria del OCAD Paz y su aprobación.",
    "momento": "Convocatorias y sesiones del OCAD Paz en 2027-2028.",
-   "probabilidad": "media",
-   "base_del_monto": "Bienio 2025-2026: incentivo a la producción para OCAD Paz de Yondó $14.025 millones con solo $331 aprobados (saldo ≈ $13.694 millones, cálculo propio); además, Yondó ejecutó $36.228 millones de la Asignación para la Paz en 2025-2026 (vía Ye de Marley-San Francisco). Por verificar si ese saldo ya está comprometido.",
-   "fuente": "docs/anexos/B-finanzas-regalias.md (sección 2.4) ; https://www.datos.gov.co/d/e624-d9uy",
+   "probabilidad": "media (por el antecedente de 2025-2026, pero sin cupo reservado para Yondó)",
+   "base_del_monto": "Bolsa nacional que el OCAD Paz asigna por convocatorias a proyectos de los municipios PDET, no un saldo propio de Yondó: en 2025-2026 le aprobó a Yondó $36.228 millones en 7 proyectos, casi todo en dos vías, la Ye de Marley-San Francisco ($16.050 millones) y la de la Ruta del Cacao a San Miguel del Tigre ($19.027 millones). Ese antecedente sostiene la probabilidad media y el tope del rango ($12.000 millones, menos que cualquiera de las dos), pero ninguna fue de salud y no hay un cupo reservado para Yondó. Antes esta fuente sumaba el incentivo a la producción para el OCAD Paz de Yondó ($14.025 millones con solo $331 aprobados en 2025-2026: saldo ≈ $13.694 millones, cálculo propio), que ya no se cuenta para la torre: la propuesta integral 2028–2031 (docs/17; cifras en data/propuesta/modulos/tic.json y saneamiento.json) lo reserva para sus dos granjas solares, la municipal del módulo de TIC (≈ $2.799 millones) y la del relleno clausurado del módulo de Saneamiento (≈ $1.747 millones), 2 proyectos de energía por $4.546 millones, porque la convocatoria admite hasta 2 proyectos y $8.000 millones por municipio; la torre sería un tercer proyecto. La Asignación para la Paz es la fuente que usa el módulo de Salud de la propuesta para la torre y los puestos rurales (data/propuesta/modulos/salud.json).",
+   "fuente": "docs/anexos/B-finanzas-regalias.md (sección 2.4) ; https://www.datos.gov.co/d/e624-d9uy ; data/propuesta/modulos/salud.json, tic.json y saneamiento.json (propuesta 2028–2031, docs/17)",
    "proyectos_que_financia": [
     "P2",
     "P3"
@@ -383,7 +383,7 @@
  ],
  "mezcla_escenario_base": {
   "sgr_ad": 7337335459,
-  "sgr_ipaz": 5500000000,
+  "sgr_aspaz": 5500000000,
   "sgr_ail": 1200000000,
   "sgr_air": 1500000000,
   "sgr_ctei": 0,
@@ -403,7 +403,7 @@
  "escenario_probable_docs06": {
   "montos": {
    "sgr_ad": 7337335459,
-   "sgr_ipaz": 5500000000,
+   "sgr_aspaz": 5500000000,
    "sgr_ail": 1200000000,
    "sgr_air": 1500000000,
    "sgr_ctei": 0,
@@ -452,7 +452,7 @@
    },
    "P2": {
     "pgn_minsalud": 5828193163,
-    "sgr_ipaz": 5500000000,
+    "sgr_aspaz": 5500000000,
     "sgr_air": 1500000000,
     "gobernacion": 1740389797,
     "municipio": 1000000000,
@@ -473,7 +473,7 @@
   "tipo": "calculo_propio"
  },
  "escenario_sin_pgn_millones": {
-  "sgr_ipaz": 9000,
+  "sgr_aspaz": 9000,
   "sgr_ail": 2000,
   "sgr_air": 2500,
   "gobernacion": 3500,
@@ -490,10 +490,10 @@
   "sgr_ad": 11637
  },
  "escenario_sin_pgn_suma": 37137000000,
- "escenario_sin_pgn_lectura": "Cubre la torre solo si el municipio dedica ≈ $11.637 millones de directas y el OCAD Paz aprueba ≈ $9.000 millones. Si no, se puede partir la obra en dos etapas: pisos 1 a 3 con bloque técnico primero (≈ 85 % del valor, porque la cimentación, los núcleos y los equipos se hacen completos) y el piso 4 después. Urgencias, partos, hospitalización, consulta y laboratorio quedarían habilitados en la primera etapa; odontología, terapias y telemedicina seguirían un tiempo en el edificio actual.",
+ "escenario_sin_pgn_lectura": "Cubre la torre solo si el municipio dedica ≈ $11.637 millones de directas y el OCAD Paz le aprueba ≈ $9.000 millones de la Asignación para la Paz, más de lo que la propuesta 2028–2031 le pide al OCAD Paz para la torre y los puestos rurales juntos ($8.300 millones, data/propuesta/modulos/salud.json). Si no, se puede partir la obra en dos etapas: pisos 1 a 3 con bloque técnico primero (≈ 85 % del valor, porque la cimentación, los núcleos y los equipos se hacen completos) y el piso 4 después. Urgencias, partos, hospitalización, consulta y laboratorio quedarían habilitados en la primera etapa; odontología, terapias y telemedicina seguirían un tiempo en el edificio actual.",
  "por_proyecto_escenario_base": {
   "P1": "SGR directas (saldo 2025-2026) o recursos propios del municipio.",
-  "P2": "MinSalud + SGR (directas e incentivo OCAD Paz) + inversión regional + Gobernación + crédito + municipio.",
+  "P2": "MinSalud + SGR (directas y Asignación para la Paz del OCAD Paz) + inversión regional + Gobernación + crédito + municipio.",
   "P3": "MinSalud o SGR dentro del proyecto mixto con P2; el generador PSA puede ir por Obras por Impuestos.",
   "P4": "Obras por Impuestos + Gobernación + SGR (inversión local).",
   "P5": "SGR inversión local + E.S.E.; GeneXpert por el programa nacional de tuberculosis; analizadores en comodato.",
@@ -506,7 +506,7 @@
   "docs/06 y data/hospital2028.json calculaban un proyecto de $9.470 millones (reforzar y adecuar el hospital actual, energía, telesalud y equipos) con un escenario probable de $13.100 millones para 2027-2029. La torre nueva cuesta $37.137 millones más $2.613 millones de proyectos complementarios: se acerca al escenario ambicioso de docs/06 ($34.550 millones) y lo supera.",
   "El componente 'reforzamiento y adecuaciones' ($3.000 millones) de docs/06 se reemplaza por la torre (P2-P3) y por la adecuación del edificio actual para usos no asistenciales (P8, ≈ $1.963 millones).",
   "MinSalud: docs/06 suponía $3.000 millones (probable) y $13.500 millones (ambicioso). Aquí se suben a $12.000 millones en el escenario base porque una reposición de torre es la tipología que MinSalud cofinancia (Guarne, $35.059 millones), pero su probabilidad baja: el presupuesto 2027 recorta la inversión de MinSalud (de $2,6 a $1,6 billones) y el terremoto del 10-ago-2026 compite por esos recursos.",
-  "Regalías: docs/06 suponía $1.000-5.500 millones. Se suben a $7.337 millones de directas más $5.500 millones del incentivo para OCAD Paz, porque la torre sería la inversión principal del bienio y porque se encontró un saldo de ≈ $13.694 millones de ese incentivo sin aprobar en 2025-2026. El bienio 2027-2028 trae 11 % menos a nivel nacional.",
+  "Regalías: docs/06 suponía $1.000-5.500 millones. Se suben a $7.337 millones de directas más $5.500 millones de la Asignación para la Paz del OCAD Paz, porque la torre sería la inversión principal del bienio y porque en 2025-2026 el OCAD Paz le aprobó a Yondó, municipio PDET, $36.228 millones de esa asignación. Esos $5.500 millones salían antes del incentivo a la producción para el OCAD Paz (saldo ≈ $13.694 millones sin aprobar en 2025-2026), pero la propuesta 2028–2031 (docs/17) reserva el incentivo para sus dos granjas solares por el tope de 2 proyectos por municipio. El bienio 2027-2028 trae 11 % menos a nivel nacional.",
   "PMIDS: el anexo C (docs/anexos/C-hospital-2028.md, sección 3.4; Res. 592 de 2026) señalaba el plazo de remisión de iniciativas hacia el 10-oct-2026. Si no se registró, la torre debe entrar en la actualización obligatoria del primer semestre de 2028 (o en un ajuste que permita la Secretaría Seccional).",
   "MinTIC se mantiene en el mismo rango de docs/06 ($100-900 millones). FENOGE baja: docs/06 lo ponía entre $700 y $3.150 millones ($2.100 millones probable); aquí va de $600 a $1.734 millones ($1.000 millones en el escenario base), porque solo cubre la P7 de la torre. La solar y las baterías del hospital ahora se instalan en la torre (P7) y no en el edificio actual.",
   "Findeter: docs/06 lo ponía en $0-2.000 millones; aquí $0-5.000 millones, como deuda del municipio (la Res. 2316 también admite a la E.S.E. en saneamiento si avisa a MinHacienda, pero su caja no lo soporta).",
@@ -520,7 +520,7 @@
  ],
  "incertidumbres": [
   "El presupuesto del SGR 2027-2028 por municipio no está publicado; la cifra de Yondó es una estimación proporcional.",
-  "No se verificó si el saldo del incentivo para OCAD Paz de 2025-2026 ya tiene destino.",
+  "La Asignación para la Paz se reparte por convocatorias del OCAD Paz: no hay un cupo reservado para Yondó y no se sabe si las convocatorias de 2027-2028 admitirán infraestructura de salud.",
   "La ley de presupuesto 2027 y el PND 2026-2030 pueden cambiar las líneas de MinSalud y los PMIDS.",
   "No se revisó el PATR del PDET Sur de Bolívar para confirmar una iniciativa de infraestructura hospitalaria en Yondó.",
   "Los requisitos sectoriales del SGR para salud deben confirmarse con el Acuerdo Único vigente (normas.json)."

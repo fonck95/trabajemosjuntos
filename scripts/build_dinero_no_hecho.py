@@ -37,6 +37,12 @@ COMP = RAIZ / 'data' / 'comparativa'
 SALIDA = COMP / 'dinero_no_hecho.json'
 DOC = RAIZ / 'docs' / '10-dinero-no-hecho-por-gobierno.md'
 CORTE = '2026-10-21'
+# Saldo posterior de asignaciones directas sin aprobar del bienio 2025–2026 (millones de pesos de 2026), el que usa la propuesta
+# 2028–2031. No trae el desglose entre directas y anticipadas, así que no reemplaza el corte de MinHacienda de sgr_fondos.json
+# (CORTE): se da aparte, como salvedad, igual que en docs/11 (sección 8). Si CORTE llega a esa fecha, la salvedad desaparece.
+AD_SIN_APROBAR_POSTERIOR = {'fecha': '2026-10-27', 'valor': 7297,
+                            'fuente': 'data/propuesta/modulos/salud.json (propuesta 2028–2031; sin desglose entre directas y '
+                                      'anticipadas); docs/11, sección 8'}
 
 PANEL = json.load(open(COMP / 'panel_anual.json', encoding='utf-8'))
 FUGAS = json.load(open(COMP / 'fugas_secop.json', encoding='utf-8'))
@@ -119,6 +125,36 @@ def mmc(pesos, anio):
 
 def plural(n, singular, plural_):
     return f'{fmt(n)} {singular if n == 1 else plural_}'
+
+
+MESES = ('enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre')
+
+
+def fecha_corta(iso):
+    """2026-10-21 → 21-oct-2026"""
+    a, m, d = iso.split('-')
+    return f'{int(d)}-{MESES[int(m) - 1][:3]}-{a}'
+
+
+def fecha_larga(iso):
+    """2026-10-21 → 21 de octubre de 2026"""
+    a, m, d = iso.split('-')
+    return f'{int(d)} de {MESES[int(m) - 1]} de {a}'
+
+
+def salvedad_ad(ad_corte):
+    """Saldo posterior de asignaciones directas sin aprobar frente al de CORTE; vacío si no es posterior a CORTE."""
+    p = AD_SIN_APROBAR_POSTERIOR
+    if p['fecha'] <= CORTE:
+        return ''
+    return (f"al {fecha_corta(p['fecha'])} las asignaciones directas sin aprobar eran ≈ {mm(p['valor'])}, frente a {mm(ad_corte)} "
+            f"el {fecha_corta(CORTE)} (docs/11, sección 8)")
+
+
+def frase_salvedad_ad(ad_corte):
+    """La salvedad como frase aparte (con espacio inicial y punto final), o nada."""
+    s = salvedad_ad(ad_corte)
+    return f' {s[0].upper()}{s[1:]}.' if s else ''
 
 
 def pct(a, b, dec=0):
@@ -581,12 +617,16 @@ def saldos(pid):
         ]
         ctx += pend_items
         pendiente = {'total': r1(sum(i['valor'] for i in pend_items)), 'aprueba_municipio': r1(pend_items[0]['valor'] + pend_items[1]['valor']),
+                     'asignaciones_directas': r1(pend_items[0]['valor']),
                      'aprueba_ocad_paz': r1(pend_items[2]['valor']), 'en_caja_asignaciones_directas': r1(b['saldo_en_caja'] / 1e6), 'corte': CORTE,
                      'nota': 'Bienio abierto hasta diciembre de 2026: todavía se puede aprobar. No se suma a la plata quieta ni a "sin obra".'}
+        if salvedad_ad(pendiente['asignaciones_directas']):
+            pendiente['asignaciones_directas_posterior'] = dict(AD_SIN_APROBAR_POSTERIOR)
         det = (f"Al cierre del bienio 2023–2024 quedaban sin comprometer {mm(sum(i['valor'] for i in items))}, casi todo de asignaciones directas. Ese bienio "
                f"empezó en 2023, en el gobierno anterior: la mitad de su ejecución le corresponde a él, pero es el único bienio que ha cerrado en este periodo. "
-               f"Aparte, y sin sumar: el bienio 2025–2026 sigue abierto y a octubre de 2026 hay {mm(pendiente['total'])} por aprobar, {mm(pendiente['aprueba_municipio'])} "
-               f"que aprueba el municipio y {mm(pendiente['aprueba_ocad_paz'])} del incentivo a la producción que aprueba el OCAD Paz.")
+               f"Aparte, y sin sumar: el bienio 2025–2026 sigue abierto y con corte del {fecha_corta(CORTE)} había {mm(pendiente['total'])} por aprobar, "
+               f"{mm(pendiente['aprueba_municipio'])} que aprueba el municipio y {mm(pendiente['aprueba_ocad_paz'])} del incentivo a la producción que aprueba el "
+               f"OCAD Paz." + frase_salvedad_ad(pendiente['asignaciones_directas']))
     elif pid == '2012-2015':
         det = ('No hay un saldo oficial al cierre del bienio 2013–2014, el último que cerró en este gobierno. El bienio 2015–2016 cruza dos gobiernos y se muestra '
                'aparte en 2016–2019, sin sumarlo a ninguno.')
@@ -951,7 +991,7 @@ def calcular_periodo(pid):
         texto_pares = (f"Pares (bolsa IPAZ 2025–2026, corte oct-2026): " + ', '.join(f"{c['municipio']} {fmt(c['pct_aprobado'], 1)} %" for c in sorted(pares, key=lambda c: c['pct_aprobado']))
                        + f". Mediana {fmt(statistics.median(pp), 1)} %, rango {fmt(min(pp), 1)}–{fmt(max(pp), 1)} %; Yondó {fmt(yo_pct, 1)} %. En la mitad de los pares la bolsa está casi sin aprobar: "
                        f"Yondó está por debajo de la mediana, pero no es un caso aislado.")
-        flist.append({'fondo': 'Incentivo a la producción (lo aprueba el OCAD Paz; bolsa IPAZ en MinHacienda), con la línea "Territorios energéticos" (hasta $8.000 M por proyecto, pesos corrientes de 2025)', 'desde': f['desde'],
+        flist.append({'fondo': 'Incentivo a la producción (lo aprueba el OCAD Paz; bolsa IPAZ en MinHacienda), con la línea "Territorios energéticos" (hasta 2 proyectos y $8.000 M por municipio, pesos corrientes de 2025)', 'desde': f['desde'],
                       'monto_referencia': r1((f['yondo_obtuvo']['incentivos_al04_sin_usar_inicio_2023'] / 1e6 / factor_mes(2022, 12)) if pid == '2020-2023' else f['yondo_obtuvo']['saldo_sin_aprobar'] / 1e6),
                       'comparable': (f"Del incentivo a la producción pasaron sin usar {mmc(f['yondo_obtuvo']['incentivos_al04_sin_usar_inicio_2021'], 2020)} a 2021–2022 "
                                      f"y {mmc(f['yondo_obtuvo']['incentivos_al04_sin_usar_inicio_2023'], 2022)} a 2023–2024. Ya era plata de Yondó: se cuenta como plata quieta."
@@ -1180,12 +1220,15 @@ def pudo_hacerse(pid, c):
         ail_p = sorted(x['pct_aprobado'] for x in ail['comparables'] if x.get('pct_aprobado') is not None)
         ail_y = 100 * ail['yondo_obtuvo']['aprobado_2025_2026'] / ail['yondo_obtuvo']['presupuesto_2025_2026']
         out.append(item_pudo('Aprobar antes de diciembre de 2026 las regalías que ya están asignadas a Yondó', pend['total'], 'ptar_12000_hab',
-                             (f"Aún se puede. A octubre de 2026 siguen sin aprobar {mm(pend['aprueba_municipio'])} que aprueba el municipio (asignaciones directas e inversión "
-                              f"local) y {mm(pend['aprueba_ocad_paz'])} del incentivo a la producción, que el municipio formula y el OCAD Paz aprueba. En esa bolsa la "
-                              f"mediana de los pares aprobó {fmt(statistics.median(pares), 1)} % (rango {fmt(pares[0], 1)}–{fmt(pares[-1], 1)} %); en inversión local Yondó "
-                              f"aprobó {fmt(ail_y, 1)} %, por encima de la mediana de sus pares ({fmt(statistics.median(ail_p), 1)} %)."),
+                             (f"Aún se puede. Con corte del {fecha_corta(CORTE)} seguían sin aprobar {mm(pend['aprueba_municipio'])} que aprueba el municipio (asignaciones "
+                              f"directas e inversión local) y {mm(pend['aprueba_ocad_paz'])} del incentivo a la producción, que el municipio formula y el OCAD Paz aprueba. "
+                              f"En esa bolsa la mediana de los pares aprobó {fmt(statistics.median(pares), 1)} % (rango {fmt(pares[0], 1)}–{fmt(pares[-1], 1)} %); en "
+                              f"inversión local Yondó aprobó {fmt(ail_y, 1)} %, por encima de la mediana de sus pares ({fmt(statistics.median(ail_p), 1)} %)."
+                              + frase_salvedad_ad(pend['asignaciones_directas'])),
                              f'{URL_MINHAC} (corte oct-2026); {F_SGR}', so, cubierto=False))
-        out.append(item_pudo('Red Energética Pública: solar en 13 sedes, baterías en 7 sedes críticas y control (proyecto 1)', 7204, None,
+        # la Red Energética y el hospital, con los cambios del 22-oct-2026 (docs/05, docs/07 y docs/11)
+        out.append(item_pudo('Red Energética Pública: solar en 13 sedes, baterías en 7 sedes críticas y control (proyecto 1; $5.829 M sin el nodo del hospital, '
+                             'que pasó a la torre)', 7204, None,
                              f'Aún se puede: cabe en la línea "Territorios energéticos" del incentivo a la producción (hasta $8.000 M). El único proyecto de energía presentado en 2025 no cumplió requisitos; cada año de espera cuesta unos {mm(ESPERA_SOLAR)} en facturas.',
                              'docs/07-portafolio-presupuesto.md; docs/05-microrred-domotica-mintic.md; ' + F_CNH, so,
                              extra_eq='469 kWp solares en cubiertas y 770 kWh de baterías; compra 57 % menos energía'))
@@ -1193,7 +1236,8 @@ def pudo_hacerse(pid, c):
                              'Aún se puede empezar: los estudios del Plan Maestro ($2.898 M, pesos corrientes; 56 % de avance) están "inactivos"; terminarlos cuesta unos $1.800 M y son requisito de la PTAR.',
                              'docs/07-portafolio-presupuesto.md; ' + PTAR_FUENTE, so, [1800 + rngp[0], 1800 + rngp[1]]))
         out.append(item_pudo('Hospital seguro, verde e inteligente (red eléctrica, telesalud, ambulancia medicalizada, puesto rural)', 8100, None,
-                             'Aún se puede: la red eléctrica del hospital ($5.483 M, pesos corrientes) está en formulación desde 2017; la ventana de financiación es 2027–2029.',
+                             'Aún se puede: la red eléctrica del hospital ($5.483 M, pesos corrientes) está en formulación desde 2017; la ventana de financiación es 2027–2029. '
+                             'Actualización del 22-oct-2026: este proyecto lo reemplaza la torre de servicios de primer nivel ($37.137 M, docs/11).',
                              'docs/06-hospital-2028-financiacion.md; docs/07-portafolio-presupuesto.md', so,
                              extra_eq='red eléctrica nueva, telesalud, una ambulancia medicalizada y un puesto de salud rural'))
         gsa_prev = RESULTADOS['2020-2023']['gsa']['central']
@@ -1240,10 +1284,13 @@ def lectura(pid, c):
                 f"quedaban {mm(F['saldos_regalias']['valor'])} de regalías sin comprometer, que pasaron al bienio siguiente.")
     if pid == '2024-2027':
         p = c['pendiente_por_aprobar']
-        return (f"Periodo en curso (datos parciales a octubre de 2026). Lo más grande no es plata perdida sino plata por aprobar: {mm(p['total'])} de regalías del bienio "
-                f"2025–2026, {mm(p['aprueba_municipio'])} que aprueba el municipio y {mm(p['aprueba_ocad_paz'])} del incentivo a la producción que aprueba el OCAD Paz, y "
-                f"el bienio cierra en diciembre de 2026. Con eso y con fondos aún disponibles (OCAD Paz, FENOGE) se pueden financiar la red solar pública, el hospital y "
-                f"los estudios de la PTAR.")
+        sv = salvedad_ad(p['asignaciones_directas'])
+        return (f"Periodo en curso (datos parciales a octubre de 2026). Lo más grande no es plata perdida sino plata por aprobar: con corte del {fecha_corta(CORTE)} "
+                f"quedaban {mm(p['total'])} de regalías del bienio 2025–2026, {mm(p['aprueba_municipio'])} que aprueba el municipio y {mm(p['aprueba_ocad_paz'])} del "
+                f"incentivo a la producción que aprueba el OCAD Paz, y el bienio cierra en diciembre de 2026" + (f"; {sv}" if sv else '') + ". "
+                f"Con esa plata y con fondos aún disponibles (OCAD Paz, FENOGE) se pueden financiar la red solar pública, el hospital y los estudios de la PTAR: "
+                f"el incentivo va a proyectos de energía, como la red solar, y el hospital se paga con asignaciones directas, inversión local y la Asignación para "
+                f"la Paz del OCAD Paz (docs/11).")
     return ''
 
 
@@ -1287,7 +1334,8 @@ for g in GOB['periodos']:
         per['pendiente_por_aprobar'] = c['pendiente_por_aprobar']
     if pid == '2024-2027':
         per['nota'] = ('Periodo en curso. Ingresos, inversión, regalías, SGP e impuestos propios solo tienen 2024 completo (operaciones de caja del DNP); '
-                       'la contratación va de enero de 2024 al 20 de octubre de 2026 y las regalías por aprobar tienen corte de octubre de 2026.')
+                       'la contratación va de enero de 2024 al 20 de octubre de 2026 y las regalías por aprobar tienen corte del '
+                       f'{fecha_larga(CORTE)}.')
     if pid == '2004-2007':
         ing04 = IND['ingresos_totales']['serie'].get('2004') if 'ingresos_totales' in IND else None
         per['nota'] = (f'SECOP casi no tiene registros de estos años ({N_ALC_2007} contratos de la alcaldía en 2007): un cero aquí es "sin dato", no "cero pérdidas". '
@@ -1607,8 +1655,9 @@ def doc_md(d):
              + '; '.join(f"{p['id']}: {mm(p['sin_obra_comparable'])} ({fmt(p['sin_obra_comparable_pct_ingresos'], 1)} % de los ingresos)" for p in comp) + '.')
     L.append('')
     pend = next(p for p in d['periodos'] if p.get('pendiente_por_aprobar'))['pendiente_por_aprobar']
-    L.append(f"Regalías por aprobar del bienio 2025–2026 (abierto hasta diciembre de 2026; no se suman): {mm(pend['total'])}, de ellos {mm(pend['aprueba_municipio'])} "
-             f"que aprueba el municipio y {mm(pend['aprueba_ocad_paz'])} del incentivo a la producción que aprueba el OCAD Paz.")
+    L.append(f"Regalías por aprobar del bienio 2025–2026 (abierto hasta diciembre de 2026; no se suman), con corte del {fecha_corta(CORTE)}: {mm(pend['total'])}, "
+             f"de ellos {mm(pend['aprueba_municipio'])} que aprueba el municipio y {mm(pend['aprueba_ocad_paz'])} del incentivo a la producción que aprueba el OCAD Paz."
+             + frase_salvedad_ad(pend['asignaciones_directas']))
     L.append('')
     L.append('### Por categoría')
     L.append('')
