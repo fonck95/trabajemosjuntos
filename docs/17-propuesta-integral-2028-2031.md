@@ -110,7 +110,7 @@ medir y no se publica. Están en `data/propuesta/geo.json`, en metros del modelo
   de 1,70 ha, frente a la subestación Yondó de EPM, conectada con 40 m de línea de 13,2 kV; el bloque B (0,49 ha) queda
   de reserva. El tope de 1 MW CA de la autogeneración colectiva (Res. CREG 101 072 de 2025) limita la granja a ese
   tamaño. Con la granja de 997 kWp del relleno (`docs/12`), el municipio tendría ~2,2 MWp centralizados.
-- **Fibra y Zonas Digitales.** Un anillo de 4,6 km por calles y un ramal de 718 m a la EBAR La Victoria unen la
+- **Fibra y Zonas Digitales.** Un anillo de 4,6 km por calles y un ramal de ≈280 m a la EBAR La Victoria unen la
   alcaldía, donde va el centro de control (CCED), con las sedes, las EBAR y la PTAR. La primera fase tiene 5 Zonas
   Digitales y la segunda, 3.
 - **Sectores del acueducto (indicativos).** Son seis grupos de edificaciones del casco, sacados de las huellas por

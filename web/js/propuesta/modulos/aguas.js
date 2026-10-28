@@ -1,5 +1,6 @@
 // Aguas: el acueducto del casco de punta a punta. Pozos y PTAP (40 L/s las 24 horas), impulsión de 12" al tanque elevado
-// de 2.135 m³ y bajada por gravedad al pueblo, donde la red solo recibe agua 9 horas al día (4:00 a 13:00). La propuesta:
+// (350 m³; el depósito grande es el tanque de compensación de 2.135 m³) y bajada por gravedad al pueblo, donde la red solo
+// recibe agua 9 horas al día (4:00 a 13:00). La propuesta:
 // sectorizar la red con válvulas y macromedidores para pasar a 24 horas, micromedir, bajar pérdidas, telemetría y un
 // módulo de ampliación de la PTAP hacia ~60 L/s. El flujo de partículas muestra el agua; en el diagnóstico la red parpadea
 // (9 de 24 horas) y con la propuesta queda encendida.
@@ -34,7 +35,7 @@ export function crear(esc, datos) {
   const lbl = (html, p, h = 30, cls = 'lbl-p') => esc.etiqueta(html, { pos: [p[0], p[1], h], padre: cSis, color: `var(${color})`, cls });
   lbl('<b>Pozos profundos</b><small>captación</small>', capt, 16, 'lbl-p mini');
   lbl('<b>PTAP · 40 L/s</b><small>opera las 24 horas</small>', ptap, 24);
-  lbl('<b>Tanque elevado</b><small>2.135 m³ · impulsión de 12"</small>', tanque, 46);
+  lbl('<b>Tanque elevado</b><small>350 m³ · impulsión de 12"</small>', tanque, 46);
   const mid = baja[Math.floor(baja.length * 0.55)];
   lbl('<b>Conducción al casco</b><small>por gravedad</small>', mid, 18, 'lbl-p mini');
 

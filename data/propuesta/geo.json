@@ -3879,15 +3879,17 @@
     "id": "ebar_progreso",
     "nombre": "EBAR El Progreso",
     "rol": "ebar",
-    "x": 364,
-    "y": 481
+    "x": 499,
+    "y": 642,
+    "nota": "Posición de la Tabla 31 del EOT (MAGNA-SIRGAS Bogotá convertida al marco del modelo)."
    },
    {
     "id": "ebar_victoria",
     "nombre": "EBAR La Victoria",
     "rol": "ebar",
-    "x": 373,
-    "y": -234
+    "x": 504,
+    "y": -203,
+    "nota": "Posición de la Tabla 31 del EOT (MAGNA-SIRGAS Bogotá convertida al marco del modelo)."
    },
    {
     "id": "ebar_central",
@@ -4056,20 +4058,12 @@
     "tipo": "interceptor",
     "puntos": [
      [
-      373,
-      -234
-     ],
-     [
-      440,
-      -246
+      504,
+      -203
      ],
      [
       505,
-      -246
-     ],
-     [
-      505,
-      481
+      642
      ],
      [
       505,
@@ -4080,29 +4074,8 @@
       930
      ]
     ],
-    "longitud_m": 1334,
+    "longitud_m": 1158,
     "ancho_m": 0.3
-   },
-   {
-    "id": "ramal_progreso",
-    "nombre": "Ramal El Progreso",
-    "tipo": "interceptor",
-    "puntos": [
-     [
-      364,
-      481
-     ],
-     [
-      440,
-      486
-     ],
-     [
-      505,
-      481
-     ]
-    ],
-    "longitud_m": 141,
-    "ancho_m": 0.25
    },
    {
     "id": "impulsion",
@@ -4242,8 +4215,12 @@
     "tipo": "vertimiento",
     "puntos": [
      [
-      364,
-      481
+      499,
+      642
+     ],
+     [
+      518.8,
+      642
      ],
      [
       518.8,
@@ -4285,12 +4262,12 @@
     "tipo": "vertimiento",
     "puntos": [
      [
-      373,
-      -234
+      504,
+      -203
      ],
      [
       518.6,
-      -309.8
+      -203
      ],
      [
       518.8,
@@ -4465,15 +4442,15 @@
     "id": "tel_ebar_progreso",
     "nombre": "EBAR El Progreso",
     "rol": "telemetria",
-    "x": 364,
-    "y": 481
+    "x": 499,
+    "y": 642
    },
    {
     "id": "tel_ebar_victoria",
     "nombre": "EBAR La Victoria",
     "rol": "telemetria",
-    "x": 373,
-    "y": -234
+    "x": 504,
+    "y": -203
    },
    {
     "id": "tel_ebar_central",
@@ -4805,47 +4782,39 @@
     "tipo": "fibra",
     "puntos": [
      [
-      84.0,
-      -195.0
+      455.5,
+      47.0
      ],
      [
-      100.0,
-      -282.0
+      454.0,
+      -0.5
      ],
      [
-      88.0,
-      -294.0
+      477.5,
+      -1.5
      ],
      [
-      -30.5,
-      -320.0
+      480.0,
+      -15.5
      ],
      [
-      -17.5,
-      -369.5
+      489.0,
+      -81.0
      ],
      [
-      19.5,
-      -381.0
+      489.5,
+      -115.5
      ],
      [
-      50.5,
-      -380.5
+      490.5,
+      -197.0
      ],
      [
-      194.5,
-      -342.0
-     ],
-     [
-      285.0,
-      -226.0
-     ],
-     [
-      340.5,
-      -272.5
+      504,
+      -203
      ]
     ],
-    "longitud_m": 718
+    "longitud_m": 282
    },
    {
     "id": "conexion_granja",
