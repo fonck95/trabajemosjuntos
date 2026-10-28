@@ -349,7 +349,8 @@ async function pintarPanel(c, p, dir, conTelon) {
   const salir = gsap && !reducedMotion && cab.innerHTML ? gsap.to([cab, cuerpo], { opacity: 0, y: dir > 0 ? -12 : 12, duration: 0.18, ease: 'power2.in' }) : null;
   if (salir) await salir;
   cab.innerHTML = r.cab; cuerpo.innerHTML = r.cuerpo; cuerpo.scrollTop = 0; $('.panel').scrollTop = 0;
-  if (hoja === 'mini') aplicarHoja('mini', { reencuadre: false });
+  // la hoja toma de una vez (sin transición) la altura del texto nuevo, antes de que el paso encuadre la maqueta
+  if (hojaMQ.matches) { pres.classList.add('arrastrando'); aplicarHoja(hoja, { reencuadre: false }); void panelEl.offsetHeight; pres.classList.remove('arrastrando'); }
   requestAnimationFrame(marcarDesborde);
   $('.panel').style.setProperty('--mc', colorDe(c.id));
   if (!gsap || reducedMotion) { gsap?.set([cab, cuerpo], { clearProps: 'all' }); return; }
@@ -462,7 +463,9 @@ function alturaHoja(estado) {
     if (!antes) pres.classList.remove('hoja-mini');
     return Math.round(Math.min(h, libre * 0.4));
   }
-  return Math.round(Math.min(Math.max(190, innerHeight * 0.38), 380, libre * 0.62));
+  // media: la altura de siempre o, si el título y la entrada del paso no caben, la que necesiten (hasta el 55 % de lo libre)
+  const base = Math.min(Math.max(190, innerHeight * 0.38), 380, libre * 0.62);
+  return Math.round(Math.max(base, Math.min(cab.offsetHeight + 12, libre * 0.55)));
 }
 function aplicarHoja(estado = hoja, { reencuadre = true } = {}) {
   if (!hojaMQ.matches) { pres.classList.remove('hoja-mini', 'panel-grande'); pres.style.removeProperty('--hoja'); return; }

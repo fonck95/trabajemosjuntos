@@ -79,9 +79,9 @@ export async function crear(esc, datos, cap) {
   cNueva.add(verde2);
   [lote1, lote2].forEach((p) => esc.linea([...p, p[0]].map(([x, y]) => [x, y, 1.2]), { color, ancho: 3, punteada: true, padre: cNueva }));
   const [c1, c2] = [cen(lote1), cen(lote2)];
-  esc.etiqueta(`<b>Lote 1 · ${polBloques.length * 20 || 200} VIP en ${polBloques.length || 10} bloques</b><small>predio José Domingo Oliveros · ${(area(lote1) / 10000).toLocaleString('es-CO', { maximumFractionDigits: 2 })} ha · terraplén ya construido</small>`, { pos: [c1[0], Math.max(...lote1.map((q) => q[1])) + 10, 30], padre: cNueva, color: `var(${color})`, ancla: [0.5, 1] });
+  esc.etiqueta(`<b>Lote 1 · ${polBloques.length * 20 || 200} VIP en ${polBloques.length || 10} bloques</b><small>predio José Domingo Oliveros · ${(area(lote1) / 10000).toLocaleString('es-CO', { maximumFractionDigits: 2 })} ha · terraplén ya construido</small>`, { pos: [c1[0], Math.max(...lote1.map((q) => q[1])) + 10, 30], padre: cNueva, color: `var(${color})`, ancla: [0.5, 1], punto: [c1[0], c1[1], 8] });
   const cupo = lotes.length;   // los lotes de 6 × 12 m que caben de verdad en las manzanas (algunas tienen esquinas cortadas)
-  esc.etiqueta(`<b>Lote 2 · ${Math.min(etapa2, lotes.length)} casas VIS</b><small>cupo para ${cupo} casas · ${ces.length || 2} manzanas de cesión</small>`, { pos: [c2[0], Math.max(...lote2.map((q) => q[1])) + 10, 24], padre: cNueva, color: `var(${color})`, ancla: [0.5, 1] });
+  esc.etiqueta(`<b>Lote 2 · ${Math.min(etapa2, lotes.length)} casas VIS</b><small>cupo para ${cupo} casas · ${ces.length || 2} manzanas de cesión</small>`, { pos: [c2[0], Math.max(...lote2.map((q) => q[1])) + 10, 24], padre: cNueva, color: `var(${color})`, ancla: [0.5, 1], punto: [c2[0], c2[1], 3] });
 
   // mejoramientos: techos naranja sobre casas reales de los barrios con más carencias (casas pequeñas en la periferia)
   const metaMej = cap.componentes?.find((c) => c.id === 'mejoramientos')?.unidades || 400;
@@ -103,12 +103,12 @@ export async function crear(esc, datos, cap) {
   // propio y solar) en cinco fincas junto a la vía que va al acueducto, como muestra
   const via = trazado(datos, 'aguas', 'conduccion')?.puntos || [[-2356, 518], [-1500, 200], [-280, -4]];
   const enVia = (f) => { let L = 0; const seg = via.slice(1).map((b, i) => { const a = via[i], l = Math.hypot(b[0] - a[0], b[1] - a[1]); L += l; return { a, b, l }; }); let t = f * L; for (const q of seg) { if (t <= q.l) { const k = t / q.l, ang = Math.atan2(q.b[1] - q.a[1], q.b[0] - q.a[0]); return { x: q.a[0] + (q.b[0] - q.a[0]) * k, y: q.a[1] + (q.b[1] - q.a[1]) * k, ang }; } t -= q.l; } const u = seg[seg.length - 1]; return { x: u.b[0], y: u.b[1], ang: 0 }; };
-  const fincas = [0.4, 0.42, 0.44, 0.46, 0.48].map((f, i) => { const q = enVia(f), lado = i % 2 ? 1 : -1; return { x: q.x - Math.sin(q.ang) * 34 * lado, y: q.y + Math.cos(q.ang) * 34 * lado, ang: q.ang }; });
+  const fincas = [0.44, 0.4475, 0.455, 0.4625, 0.47].map((f, i) => { const q = enVia(f), lado = i % 2 ? 1 : -1; return { x: q.x - Math.sin(q.ang) * 20 * lado, y: q.y + Math.cos(q.ang) * 20 * lado, ang: q.ang }; });
   const MR = { muro: new THREE.MeshStandardMaterial({ color: 0xf4ecd8, roughness: 0.9 }), techo: new THREE.MeshStandardMaterial({ color: 0xb65a3c, roughness: 0.8 }), panel: new THREE.MeshStandardMaterial({ color: 0x1c2b48, roughness: 0.3, metalness: 0.5 }), tanque: new THREE.MeshStandardMaterial({ color: 0x2b2f35, roughness: 0.6 }), patio: new THREE.MeshStandardMaterial({ color: 0x8fbf6a, roughness: 1 }) };
   const techoG = new THREE.ExtrudeGeometry(new THREE.Shape([new THREE.Vector2(-4, 0), new THREE.Vector2(4, 0), new THREE.Vector2(0, 2)]), { depth: 8, bevelEnabled: false }).translate(0, 2.7, -4);
   fincas.forEach((f) => {
     const g = new THREE.Group(); g.position.set(f.x, 0, -f.y); g.rotation.y = f.ang;
-    g.add(new THREE.Mesh(new THREE.CircleGeometry(16, 24).rotateX(-Math.PI / 2).translate(0, 0.05, 0), MR.patio));
+    g.add(new THREE.Mesh(new THREE.CircleGeometry(12, 24).rotateX(-Math.PI / 2).translate(0, 0.05, 0), MR.patio));
     g.add(new THREE.Mesh(new THREE.BoxGeometry(7, 2.7, 7.2).translate(0, 1.35, 0), MR.muro), new THREE.Mesh(techoG, MR.techo));
     const pv = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.12, 2.2).translate(0, 0, 0), MR.panel); pv.position.set(-1.6, 3.7, 1.4); pv.rotation.z = 0.45; g.add(pv);
     g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 1.4, 16).translate(5.2, 2.6, -2.5), MR.tanque), new THREE.Mesh(new THREE.BoxGeometry(0.2, 2, 0.2).translate(5.2, 1, -2.5), MR.tanque));
@@ -117,14 +117,14 @@ export async function crear(esc, datos, cap) {
   });
   // el rótulo, encima de la casa más al norte (detrás de las demás en la vista), para no tapar ninguna
   const f0 = fincas.reduce((a, f) => (f.y > a.y ? f : a), fincas[0]);
-  esc.etiqueta('<b>Prototipo VIVA · 50–60 m²</b><small>un piso · saneamiento propio · solar donde no llega la red</small>', { pos: [f0.x, f0.y, 22], padre: cRural, color: `var(${color})`, ancla: [0.5, 1] });
+  esc.etiqueta('<b>Prototipo VIVA · 50–60 m²</b><small>un piso · saneamiento propio · solar donde no llega la red</small>', { pos: [f0.x, f0.y, 22], padre: cRural, color: `var(${color})`, ancla: [0.5, 1], punto: [f0.x, f0.y, 4] });
   esc.etiqueta('<b>200 casas rurales nuevas</b><small>en el lote de cada familia, en 60 veredas (muestra)</small>', { pos: [fincas[4].x, fincas[4].y, 10], padre: cRural, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0, 0.5] });
   esc.sincronizarEtiquetas();
 
   const inv = () => esc.st.invalidate();
   const vistaNueva = () => esc.encuadrar([...lote1, ...lote2], { rumbo: 196, elev: 44, margen: 0.7, alto: 30 });
-  const vistaCasco = () => esc.encuadrar([[-650, -420], [700, -420], [700, 760], [-650, 760], ...lote2, [-1450, 80]], { rumbo: 196, elev: 50, margen: 0.94 });
-  const vistaRural = () => esc.encuadrar(caja(fincas.map((f) => [f.x, f.y]), 40), { rumbo: 200, elev: 34, margen: 0.9, alto: 8 });
+  const vistaCasco = () => esc.encuadrar([[-650, -420], [880, -420], [880, 760], [-650, 760], ...lote2, [-1450, 80]], { rumbo: 196, elev: 50, margen: 0.94 });
+  const vistaRural = () => esc.encuadrar(caja(fincas.map((f) => [f.x, f.y]), 15), { rumbo: 200, elev: 34, margen: 0.9, alto: 8 });
   const vistaMej = () => esc.encuadrar(foco.length ? caja(foco, 40) : caja([cf], 200), { rumbo: 196, elev: 52, margen: 0.9 });
   const gris = (v) => esc.contextoGris?.(v);
   const animNueva = () => {
@@ -138,11 +138,11 @@ export async function crear(esc, datos, cap) {
     alCompleto: () => gris(false),
     pasos: {
       portadilla: { capas: [], antes: () => gris(false), vista: vistaCasco },
-      componentes: { capas: ['viv.nueva', 'viv.mejoramiento'], antes: () => gris(false), vista: vistaCasco },
+      componentes: { capas: ['viv.nueva', 'viv.mejoramiento'], antes: () => gris(true), vista: vistaCasco },
       nuevas: { capas: ['viv.nueva'], antes: () => gris(false), vista: vistaNueva, animar: animNueva },
       mejoramientos: { capas: ['viv.mejoramiento'], antes: () => gris(true), vista: vistaMej, animar: () => { if (gsap) gsap.fromTo(matMej, { opacity: 0 }, { opacity: 1, duration: 1, delay: 0.6, onUpdate: inv }); } },
       rural: { capas: ['viv.rural'], antes: () => gris(false), vista: vistaRural, etiquetas: ['viv.rural'] },
-      '*': { capas: ['viv.nueva', 'viv.mejoramiento'], antes: () => gris(false), vista: vistaCasco },
+      '*': { capas: ['viv.nueva', 'viv.mejoramiento'], antes: () => gris(true), vista: vistaCasco },
     },
   };
 }

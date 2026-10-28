@@ -83,6 +83,9 @@ UNIDAD = re.compile(r'(\d)[ \t](%|m²|m³|km²?\b|ha\b|m\b|L/s|L/día|kWp|MWp|kW
 POR = re.compile(r'(\d)[ \t]×[ \t](\d)')
 ROTULO = re.compile(r'\b(Lote|lote|Fase|fase|Sector|sector|Bloque|bloque|Etapa|etapa|Tramo|tramo|Calle|Carrera|manzana)[ \t](\d)')
 ORDINAL = re.compile(r'(\d\.[ªº])[ \t]')
+# y un rango con raya entre cifras («2028–2031», «$5–8 M») no se parte después de la raya (unión de palabras U+2060)
+RANGO = re.compile(r'(\d)–(?=\$?\d)')
+UNION = '\u2060'
 cambios = 0
 def sin_cortes(v, clave=''):
     global cambios
@@ -95,6 +98,7 @@ def sin_cortes(v, clave=''):
         n = UNIDAD.sub(f'\\1{NBSP}\\2', n)
         n = ROTULO.sub(f'\\1{NBSP}\\2', n)
         n = ORDINAL.sub(f'\\1{NBSP}', n)
+        n = RANGO.sub(f'\\1–{UNION}', n)
         cambios += n != v
         return n
     return v

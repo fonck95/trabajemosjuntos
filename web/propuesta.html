@@ -240,7 +240,7 @@ a.chip:hover { border-color: var(--ink); }
 .lbl.fuera { visibility: hidden; }
 /* guía de un rótulo que quedó lejos de su punto (escena.js calcula largo, ángulo y punto) */
 /* (en un pin, la línea reemplaza a su punta) */
-.lbl-p.guia::after, .lbl-pin.guia::after { content: ""; position: absolute; left: calc(50% - 0.75px); top: var(--oy, 100%); bottom: auto; width: 1.5px; height: var(--gl, 0); border: 0; background: var(--mc, var(--ink)); transform-origin: 50% 0; transform: rotate(var(--ga, 0rad)); opacity: 0.9; }
+.lbl-p.guia::after, .lbl-pin.guia::after { content: ""; position: absolute; left: calc(var(--gx0, 50%) - 0.75px); top: var(--oy, 100%); bottom: auto; width: 1.5px; height: var(--gl, 0); border: 0; background: var(--mc, var(--ink)); transform-origin: 50% 0; transform: rotate(var(--ga, 0rad)); opacity: 0.9; }
 .lbl-p.guia::before, .lbl-pin.guia::before { content: ""; position: absolute; left: var(--ax, 50%); top: var(--ay, 100%); width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: var(--mc, var(--ink)); box-shadow: 0 0 0 1.5px var(--surface); }
 .lbl-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--mc); border: 2px solid #fff; box-shadow: 0 1px 4px color-mix(in srgb, #000 35%, transparent); }
 .lbl-geo { font: italic 12px var(--f-body); color: var(--muted); text-shadow: 0 0 4px var(--surface), 0 0 4px var(--surface); }
@@ -294,7 +294,8 @@ a.chip:hover { border-color: var(--ink); }
   /* la franja de color del capítulo va como sombra interna: un ::before absoluto se iría con el desplazamiento */
   .panel::before { display: none; }
   .panel { box-shadow: inset 6px 0 0 var(--mc, var(--accent)), var(--sombra); }
-  .panel.mas { -webkit-mask-image: linear-gradient(#000 calc(100% - 36px), transparent); mask-image: linear-gradient(#000 calc(100% - 36px), transparent); }
+  /* abajo, un velo del color de la hoja indica que hay más texto (una máscara dejaría ver el mapa detrás de la última línea) */
+  .panel.mas::after { content: ""; position: sticky; bottom: 0; display: block; height: 36px; margin-top: -36px; background: linear-gradient(color-mix(in srgb, var(--surface) 0%, transparent), var(--surface) 85%); pointer-events: none; }
   .panel-cab { padding: 22px 18px 8px 22px; }
   .panel-cuerpo { padding: 0 18px 16px 22px; }
   .panel .asa { display: block; }
