@@ -1,0 +1,231 @@
+{
+  "id": "urbanismo",
+  "nombre": "Urbanismo",
+  "corto": "Urbanismo",
+  "lema": "Una ciudadela deportiva verde y una puerta al río",
+  "problema": "El estadio de sóftbol, el coliseo Benito Arias, el Parque Educativo, la cancha de fútbol y el parque principal caben en un trayecto de 300 m, pero no forman un conjunto: los separan calles de 6,5 m sin sombra y el Caño Colector Shell corre canalizado, a 80 m del estadio, de espaldas al barrio. Tres proyectos del caño por $13.004 M y dos de escenarios deportivos fueron devueltos a la MGA entre 2019 y 2021. En la entrada del municipio, junto al puente, la orilla del Magdalena se socava y el embarque de lanchas es informal.",
+  "propuesta": "Unir esos equipamientos en una ciudadela deportiva de 4,8 ha: renovar la Cancha de Sóftbol Casabe con medidas reglamentarias y luz LED, convertir 530 m del caño en un parque lineal con humedales, sendero y ciclorruta, enlazar todo con una alameda de 483 m por calles existentes y sumar canchas cubiertas en la explanada del CIC. Junto al puente, el Mirador Puerta del Magdalena protege 283 m de orilla y crea una plaza, un mirador y un muelle formal.",
+  "cifras": [
+    { "v": "4,8 ha", "l": "de ciudadela deportiva sin tocar una sola manzana de vivienda", "fuente": "Cálculo propio sobre OpenStreetMap e imagen satelital" },
+    { "v": "$13.004 M", "l": "en proyectos del caño devueltos a la MGA (2019–2021): hay que llegar con fase III", "fuente": "GESPROY/SGR (repositorio)", "tono": "alerta" },
+    { "v": "70 %", "l": "cofinancia Indeportes en adecuación de escenarios de municipios de categoría 6", "fuente": "Indeportes Antioquia, Circular 2025000013", "url": "https://indeportesantioquia.gov.co/wp-content/uploads/2025/02/Circular_2025000013_25_de_Febrero_Convocatoria_Mejoramientos2025.pdf" },
+    { "v": "$9.303 M", "l": "puso MinDeporte en una cancha de sóftbol municipal (Planeta Rica, 2025)", "fuente": "SECOP II, CO1.NTC.9080794", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9080794" }
+  ],
+  "inversion": { "min": 17250, "central": 26200, "max": 39600 },
+  "componentes": [
+    {
+      "id": "softbol",
+      "nombre": "Cancha de Sóftbol Casabe",
+      "resumen": "Estadio renovado: campo reglamentario, graderías cubiertas, luz LED y servicios",
+      "descripcion": "Renovar el estadio de sóftbol actual con el plano propuesto: home al sur, campo reglamentario con cercas de 67,06 a 76,20 m, dos graderías con cubierta tensada, dugouts, baños y vestidores, parqueadero, cancha múltiple, zona infantil y biosaludable, marcador «CASABE», seis torres de luz LED y un portal de acceso con letrero sobre la Calle 50. El lote de 109 × 110 m del plano no cabe exacto en la manzana: con 109 m de ancho caben 102,9 m de fondo, que alcanzan para la cerca de 76,2 m del jardín central.",
+      "especificaciones": [
+        ["Lote", "109 × 102,9 m dentro del cerramiento actual (12.333 m²)"],
+        ["Orientación", "home al sur, jardín central al rumbo 346,5°"],
+        ["Medidas de juego", "18,29 m entre bases · 13,11 m al lanzador · cercas de 67,06 a 76,20 m"],
+        ["Graderías", "2 de 20 × 4 m con cubierta tensada"],
+        ["Servicios", "2 dugouts de 10 × 3 m · baños y vestidores de 8 × 4 m · parqueadero de 20 cupos"],
+        ["Complementos", "cancha múltiple, zona infantil y biosaludable, marcador y 6 torres LED"],
+        ["Acceso", "portal con letrero sobre la Calle 50, esquina suroccidental"]
+      ],
+      "costo": { "min": 3500, "central": 5000, "max": 7000 },
+      "base_costo": "Estimación por partidas con AIU, interventoría y diseños, entre una adecuación grande (estadios de sóftbol de Montería, Momil y San Antero: $448 M a $1.400 M) y un escenario nuevo (Clemencia $5.245 M; Planeta Rica $9.303 M). La iluminación LED es el renglón más incierto.",
+      "proyecto_tipo": [
+        { "nombre": "Guía de proyectos de infraestructura deportiva (MinDeporte)", "url": "https://www.mindeporte.gov.co/files/a08e3699-fe3c-405f-b3bf-48e2d8622ec2/a08e4640-d878-4d98-b3af-15cef222c391/201001-GUIA-PROYECTOS-INF-RECREATIVA-Y-DEPORTIVA.pdf" },
+        { "nombre": "Referente: cancha de softball de Planeta Rica (MinDeporte, 2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9080794" },
+        { "nombre": "Referente: estadio de sóftbol de Clemencia (MinDeporte, 2021)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.2382614" }
+      ],
+      "fuentes": ["nacion", "gobernacion", "sgr", "oxi", "municipio"],
+      "plazo": "Diseños y licencia en 2028; obra en 2029 (8 a 10 meses)",
+      "ubicacion": "Estadio de sóftbol actual, entre la Calle 50 (sur), la Carrera 57 (occidente) y la Calle 51 (norte). No hay casas dentro de la manzana; la gradería occidental existente queda junto a la línea de tercera.",
+      "unidades": 1
+    },
+    {
+      "id": "parque_lineal",
+      "nombre": "Parque lineal del Caño Colector Shell, fase 1",
+      "resumen": "530 m de caño convertidos en parque: laguna, bosque, sendero, ciclorruta y puentes",
+      "descripcion": "El caño ya fue canalizado con regalías (BPIN 20142401060003, $5.161 M). La fase 1 lo convierte en parque desde el bosque del sur hasta la Calle 55: franjas verdes con drenaje sostenible, una laguna de retención con jardín de lluvia junto al CIC, el bosque inundable del sur conservado con sendero elevado, sendero peatonal y ciclorruta por la orilla occidental, que es la que está libre, y tres puentes peatonales. Antes hay que retirar las descargas de aguas residuales que lleguen al caño (módulo de Saneamiento).",
+      "especificaciones": [
+        ["Tramo", "≈530 m del eje, del bosque del sur a la Calle 55"],
+        ["Área", "≈1,2 ha en corredores de 12 a 40 m de ancho"],
+        ["Circulación", "sendero de 3 m y ciclorruta de 2,5 m por la orilla occidental"],
+        ["Puentes peatonales", "PP1 sobre el culvert de la vía a Barrancabermeja · PP2 prolongación de la Calle 51 (estadio–CIC) · PP3 Calle 54"],
+        ["Agua lluvia", "laguna de retención de 893 m² junto al CIC y bosque inundable de 3.049 m²"],
+        ["Fase 2", "Calle 55 a y 800: estrechamiento con desvío por la Carrera 57 y humedal norte de 3.120 m²"]
+      ],
+      "costo": { "min": 4800, "central": 7000, "max": 9500 },
+      "base_costo": "≈11.500 m² a $0,30–0,55 M/m² (parque La Primavera de MinVivienda ≈$0,42 M/m², 2024; unidad recreodeportiva de Moñitos ≈$0,76 M/m², 2025), más tres puentes peatonales y obras de drenaje sostenible (estimación). Queda por debajo de los parques lineales de Yopal (≈$16.000–23.000 M por km) porque el cauce ya está canalizado.",
+      "proyecto_tipo": [
+        { "nombre": "Proyecto tipo DNP: parque recreodeportivo (módulos biosaludables)", "url": "https://proyectostipo.dnp.gov.co/images/pdf/parque/mgaparque.pdf" },
+        { "nombre": "Referente: parque recreodeportivo La Primavera (MinVivienda, 2024)", "url": "https://minvivienda.gov.co/sala-de-prensa/519-familias-de-el-molino-la-guajira-ya-disfrutan-del-parque-recreodeportivo-la-primavera" }
+      ],
+      "fuentes": ["sgr", "oxi", "corantioquia", "nacion"],
+      "plazo": "Estudios hidráulico y de calidad del agua y diseños en 2028; obra en 2029–2030, después de retirar las descargas",
+      "ubicacion": "Caño Colector Shell, 10 a 25 m al occidente de la Carrera 57 y unos 80 m al occidente del estadio. El corredor solo toca tres huellas de casas; la ronda legal la acota Corantioquia.",
+      "unidades": 530
+    },
+    {
+      "id": "alameda",
+      "nombre": "Alameda de la ciudadela deportiva",
+      "resumen": "Eje peatonal arborizado de 483 m del estadio al parque principal",
+      "descripcion": "Une la entrada del estadio con el coliseo, el Parque Educativo, la biblioteca, la cancha de fútbol y el parque principal usando solo calles y senderos existentes. Como las calles miden 6,5 m entre fachadas, en la Calle 50 y la Carrera 54 la alameda es una calle compartida a nivel, de prioridad peatonal (zona 30), con sombra, luz LED y mobiliario; no exige ensanches ni demoliciones. Un conector de 80 m por la prolongación de la Calle 51 la lleva al parque lineal y al CIC.",
+      "especificaciones": [
+        ["Recorrido", "Calle 50 → Carrera 54 → carriles del coliseo → Calle 49 peatonal → parque principal"],
+        ["Longitud", "483 m, más un conector de 80 m al CIC"],
+        ["Sección", "≈10 m donde hay espacio; calle compartida a nivel en los tramos de 6,5 m"],
+        ["Elementos", "arborización de sombra, luminarias LED peatonales, bancas, señalización y cicloparqueaderos"],
+        ["Empalmes", "parque lineal (puente PP2) y vía peatonal de la Calle 49 construida con regalías"]
+      ],
+      "costo": { "min": 1300, "central": 2100, "max": 3000 },
+      "base_costo": "3.300 a 4.500 m² de espacio público a $0,35–0,65 M/m² con iluminación y redes, más AIU e interventoría (estimación). Referencia local: la vía peatonal de la Calle 49 y el parqueadero del coliseo costaron $642 M con regalías (2014–2019).",
+      "proyecto_tipo": [],
+      "fuentes": ["sgr", "municipio", "oxi"],
+      "plazo": "Diseño en 2028; obra en 2029, junto con la cancha de sóftbol",
+      "ubicacion": "Del frente sur del estadio, sobre la Calle 50, al centro del parque principal; pasa frente al coliseo Benito Arias (Carrera 54 # 50-19), el Parque Educativo y la biblioteca.",
+      "unidades": 483
+    },
+    {
+      "id": "instalaciones",
+      "nombre": "Nuevas instalaciones deportivas",
+      "resumen": "Cubierta para dos canchas múltiples y skatepark o gimnasio en la explanada del CIC",
+      "descripcion": "Completa la ciudadela con escenarios para niños, jóvenes y adultos mayores. En la explanada al sur del CIC (≈75 × 54 m), a 320 m del estadio por el puente PP2, caben una cubierta para dos canchas múltiples y un skatepark o un gimnasio al aire libre. La cancha sintética de fútbol 8 que también se propone necesita otro lote: no cabe junto a la cubierta y no hay un lote libre para pista atlética a menos de 400 m.",
+      "especificaciones": [
+        ["Sitio", "explanada al sur del CIC, ≈4.100 m²"],
+        ["Cubierta", "≈45 × 32 m para 2 canchas múltiples"],
+        ["Complemento", "skatepark de ≈1.200 m² o gimnasio al aire libre"],
+        ["Cancha sintética", "fútbol 8 o 9 con iluminación, en lote por confirmar"],
+        ["Condición", "verificar propiedad del lote y la estructura sin terminar al occidente del CIC"]
+      ],
+      "costo": { "min": 3000, "central": 4500, "max": 7000 },
+      "base_costo": "Cancha sintética de Segovia aprobada en el OCAD de Antioquia por $3.044,9 M (2019) y unidad recreodeportiva de Moñitos a ≈$0,76 M/m² (2025); el resto es estimación propia. Los valores de los proyectos tipo no se pudieron leer: el portal del DNP no respondió el 28-oct-2026.",
+      "proyecto_tipo": [
+        { "nombre": "Proyecto tipo DNP: placa polideportiva cubierta", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=134" },
+        { "nombre": "Proyecto tipo DNP: cancha en grama sintética", "url": "https://proyectostipo.dnp.gov.co/" },
+        { "nombre": "Proyecto tipo DNP: parque recreodeportivo", "url": "https://proyectostipo.dnp.gov.co/images/pdf/parque/mgaparque.pdf" }
+      ],
+      "fuentes": ["nacion", "sgr", "oxi"],
+      "plazo": "2030–2031",
+      "ubicacion": "Explanada al sur del CIC, entre el CIC y la vía de acceso, al otro lado del caño frente al estadio.",
+      "unidades": 3
+    },
+    {
+      "id": "mirador_proteccion",
+      "nombre": "Mirador Puerta del Magdalena · zona A: protección de la orilla",
+      "resumen": "283 m de orilla protegida contra la socavación junto al estribo del puente",
+      "descripcion": "Franja continua de 283 m de orilla (80 m aguas arriba y 200 m aguas abajo del eje del puente) y 36 m de ancho: los 30 m de ronda más 6 m de pie de enrocado dentro del agua. Lleva revestimiento del talud con geotextil y roca, pie contra socavación y vegetación de ribera, sin pavimento. Va primero y debe diseñarse con la solución definitiva del estribo, que la ANI y la concesión Ruta del Cacao tienen pendiente tras el cierre del puente en marzo de 2026: así el mirador entra como gestión del riesgo y no como ornato.",
+      "especificaciones": [
+        ["Longitud", "283 m de orilla (1,0 ha)"],
+        ["Ancho", "36 m: 30 m de ronda y 6 m de pie de enrocado en el agua"],
+        ["Obra", "geotextil, enrocado de talud y pie contra socavación; vegetación de ribera"],
+        ["Estudios", "batimetría, estudio hidráulico y de socavación, permiso de ocupación de cauce"],
+        ["Coordinación", "ANI y Ruta del Cacao (estribo), Cormagdalena y Corantioquia"]
+      ],
+      "costo": { "min": 1150, "central": 2100, "max": 4600 },
+      "base_costo": "$6–14 M por metro lineal de enrocado en río grande más $250–400 M de estudios (estimación); no se encontró un contrato con precio por metro. La cota alta es el tramo I de Barrancabermeja (≈$22,8 M/m, con tablestacas).",
+      "proyecto_tipo": [
+        { "nombre": "Referente: protección de orilla y espacio público de Puerto Nare", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.3110333" },
+        { "nombre": "Referente: protección de orilla en la terminal Yuma (Cormagdalena)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4979689" }
+      ],
+      "fuentes": ["fondos", "oxi", "sgr"],
+      "plazo": "Estudios en 2028; obra en aguas bajas de 2029",
+      "ubicacion": "Orilla izquierda del Magdalena junto al estribo de Yondó del puente Guillermo Gaviria Correa. El tramo del estribo (≈15 m a cada lado del eje) es de la concesión.",
+      "unidades": 283
+    },
+    {
+      "id": "mirador_plaza",
+      "nombre": "Mirador Puerta del Magdalena · zona B: plaza, mirador y muelle",
+      "resumen": "Plaza con letras YONDÓ, deck curvo, mirador elevado y muelle flotante",
+      "descripcion": "Una puerta turística al municipio sobre el embarcadero informal que ya existe, aguas abajo del puente: plaza con las letras «YONDÓ» de colores frente al río, jardineras con sombra, bancas y luminarias; un sendero curvo en deck de madera que cruza la ronda hasta un mirador elevado sobre pilotes; y un muelle flotante para las lanchas de la ruta Barrancabermeja–Casabe y el turismo fluvial. Se conservan los árboles grandes del sitio.",
+      "especificaciones": [
+        ["Plaza", "área de 4.588 m² (≈86 × 53 m) detrás de la ronda: ≈2.500 m² de plaza dura y el resto verde"],
+        ["Letras", "«YONDÓ» de 14 m, de cara a la plaza y con el río detrás"],
+        ["Deck", "sendero curvo de 82 m × 3 m sobre pilotes, pendiente máxima de 8 %"],
+        ["Mirador", "plataforma de 10 × 10 m sobre pilotes a 57 m del eje del puente"],
+        ["Muelle", "pontón flotante de 30 × 5 m con pasarela articulada de 16 m"],
+        ["Acceso", "vía y parqueadero desde la vía del puente (empalme con la concesión)"]
+      ],
+      "costo": { "min": 3500, "central": 5500, "max": 8500 },
+      "base_costo": "Partidas de plaza ($0,6–1,0 M/m²), deck y mirador sobre pilotes ($4–7 M/m²) y muelle flotante (≈$530–900 M), contrastadas con FONTUR: mirador de Arboletes $2.788,6 M (2024) y embarcaderos flotantes a ≈$531,7 M cada uno. Si se pavimentara toda el área, el malecón de Puerto Triunfo da del orden de $10.600 M.",
+      "proyecto_tipo": [
+        { "nombre": "Manual de programas y proyectos de FONTUR (M-DMI-001)", "url": "https://fontur.com.co/sites/default/files/2026-04/M-DMI-001Manual-Programas-y-Proyectos-04dic-2025.pdf" },
+        { "nombre": "Referente: mirador turístico de Arboletes (FONTUR, 2024)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.5250330" },
+        { "nombre": "Referente: malecón turístico de Puerto Triunfo", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.3280808" }
+      ],
+      "fuentes": ["fondos", "sgr", "oxi", "municipio"],
+      "plazo": "Estudio de mercado de FONTUR y diseños en 2028–2029; obra en 2030, después de la zona A",
+      "ubicacion": "Al noroccidente del estribo de Yondó (aguas abajo), entre 32 y 118 m del eje del puente, detrás de la ronda de 30 m. La esquina occidental queda a ≈10 m de la plataforma del pozo Casabe 207: cerramiento verde y concepto de Ecopetrol.",
+      "unidades": 1
+    }
+  ],
+  "financiacion": [
+    { "fuente": "sgr", "monto": 8200, "mecanismo": "Inversión local y Asignación para la Paz (PDET): parque lineal, alameda e instalaciones" },
+    { "fuente": "fondos", "monto": 6600, "mecanismo": "FONTUR (plaza, deck y muelle), Cormagdalena (0,5 % del SGR para municipios ribereños) y UNGRD (protección de orilla)" },
+    { "fuente": "nacion", "monto": 4700, "mecanismo": "MinDeporte: convenio de cofinanciación de la cancha de sóftbol y las nuevas instalaciones" },
+    { "fuente": "gobernacion", "monto": 3500, "mecanismo": "Indeportes Antioquia (adecuación de escenarios existentes) e inversión regional de la Gobernación" },
+    { "fuente": "oxi", "monto": 2000, "mecanismo": "Obras por impuestos con las iniciativas PDET 1305893152283 (protección contra inundaciones) y 1305893153497 (cauces)" },
+    { "fuente": "municipio", "monto": 700, "mecanismo": "Recursos propios: predios, topografía y contrapartida de diseños" },
+    { "fuente": "corantioquia", "monto": 500, "mecanismo": "Componente ambiental y drenaje sostenible del parque lineal" }
+  ],
+  "proyectos_tipo": [
+    { "nombre": "DNP: placa polideportiva cubierta", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=134" },
+    { "nombre": "DNP: parque recreodeportivo", "url": "https://proyectostipo.dnp.gov.co/images/pdf/parque/mgaparque.pdf" },
+    { "nombre": "DNP: cancha en grama sintética", "url": "https://proyectostipo.dnp.gov.co/" },
+    { "nombre": "FONTUR: ficha de infraestructura turística (obras tipo 2.3)", "url": "https://fontur.com.co/sites/default/files/2026-04/M-DMI-001Manual-Programas-y-Proyectos-04dic-2025.pdf" }
+  ],
+  "gestion": {
+    "madurez": "Perfil",
+    "madurez_nota": "Hay ubicación real, medidas y costos de referencia. Para pasar a prefactibilidad faltan topografía, estudio de títulos, acotamiento de la ronda del caño con Corantioquia, inventario de descargas al caño y estudio hidráulico y de socavación frente al puente.",
+    "pedido": "Que MinDeporte e Indeportes cofinancien la Cancha de Sóftbol Casabe y las instalaciones nuevas ($9.500 M); que FONTUR, Cormagdalena y la UNGRD tomen el Mirador Puerta del Magdalena ($7.600 M) y lo diseñen con la solución definitiva del estribo de la ANI; y que el OCAD Paz priorice el parque lineal del caño como proyecto PDET.",
+    "a_quien": [
+      "MinDeporte · Dirección de Infraestructura (convenios de cofinanciación)",
+      "Indeportes Antioquia · convocatoria de adecuación de escenarios",
+      "FONTUR y Viceministerio de Turismo · infraestructura turística",
+      "Cormagdalena y UNGRD · protección de orillas del Magdalena",
+      "ANI y concesión Ruta del Cacao · solución definitiva del estribo de Yondó",
+      "DNP · OCAD Paz y Agencia de Renovación del Territorio (PDET y obras por impuestos)"
+    ],
+    "pasos": [
+      "Nov-2026 a feb-2027: pedir que la ciudadela y el mirador entren al pacto regional del PND 2026–2030",
+      "2027: saneamiento predial del estadio, la explanada del CIC y las orillas del caño, con levantamiento topográfico",
+      "2027: acotar la ronda del caño con Corantioquia e inventariar las descargas de aguas residuales",
+      "2027: mesa con la ANI y Ruta del Cacao para el estudio hidráulico y de socavación del frente del puente",
+      "2028: diseños fase III y radicación por etapas que funcionen solas (sóftbol, alameda, parque lineal, mirador)"
+    ]
+  },
+  "metas": [
+    { "indicador": "Escenario de sóftbol reglamentario con juego nocturno", "base": "0 (2026)", "meta": "1 (2029)" },
+    { "indicador": "Caño convertido en parque lineal", "base": "0 m (2026)", "meta": "≈530 m (2030)" },
+    { "indicador": "Espacio público nuevo (parque lineal, alameda y plaza)", "base": "—", "meta": "≈2,1 ha (2031)" },
+    { "indicador": "Orilla protegida frente al puente", "base": "0 m (2026)", "meta": "283 m (2029)" },
+    { "indicador": "Muelle formal para las lanchas Barrancabermeja–Casabe", "base": "embarcadero informal (2026)", "meta": "muelle flotante en servicio (2030)" }
+  ],
+  "riesgos": [
+    { "riesgo": "Descargas de aguas residuales al caño: un parque junto a agua contaminada fracasa.", "mitigacion": "Medir la calidad del agua en 2027, retirar conexiones erradas y construir los interceptores del Plan Maestro antes de licitar el parque." },
+    { "riesgo": "Socavación y crecientes del Magdalena junto al estribo del puente.", "mitigacion": "Batimetría y estudio de socavación; la zona A antes que la plaza y diseñada con la ANI y la concesión." },
+    { "riesgo": "Proyectos devueltos a la MGA, como los del caño y los escenarios deportivos de 2019–2021.", "mitigacion": "Formular con estudios fase III, análisis de precios unitarios y revisión previa del ministerio o fondo." },
+    { "riesgo": "Doble gasto en el coliseo, que ya tiene el contrato 207-2026 de adecuación ($563,5 M).", "mitigacion": "Leer el alcance de ese contrato y no repetir obras en la ciudadela." }
+  ],
+  "pasos": [
+    { "id": "portadilla", "tipo": "portadilla", "titulo": "Una ciudadela deportiva verde y una puerta al río" },
+    { "id": "componentes", "tipo": "componentes", "titulo": "Seis piezas, un solo proyecto por etapas", "texto": "La ciudadela se presenta al nivel central como un solo proyecto de 4,8 ha que se construye por etapas que funcionan solas.", "leyenda": [ { "texto": "Ciudadela deportiva (4,8 ha)", "color": "var(--m-urbanismo)", "forma": "dash" }, { "texto": "Parque lineal del caño", "color": "#2a78d6" }, { "texto": "Alameda", "color": "#d8ccb4" } ] },
+    { "id": "softbol", "tipo": "componente", "componente": "softbol", "titulo": "Cancha de Sóftbol Casabe", "texto": "El plano propuesto, girado con el home al sur, cabe en la manzana del estadio actual sin tocar una casa. Se juega de noche con seis torres LED.", "leyenda": [ { "texto": "Campo de juego reglamentario", "color": "#4f9a3d", "forma": "area" }, { "texto": "Graderías cubiertas, dugouts y baños", "color": "var(--m-urbanismo)", "forma": "area" }, { "texto": "Torres de luz LED", "color": "#f2c230", "forma": "pt" } ] },
+    { "id": "cano", "tipo": "componente", "componente": "parque_lineal", "titulo": "El caño vuelve a ser parte del barrio", "texto": "El sendero y la ciclorruta van por la orilla occidental, que está libre; tres puentes cosen el estadio con el CIC y el Megacolegio.", "leyenda": [ { "texto": "Cauce renaturalizado", "color": "#2a78d6" }, { "texto": "Sendero y ciclorruta", "color": "#d8ccb4" }, { "texto": "Humedal y bosque inundable", "color": "#5f9e48", "forma": "area" }, { "texto": "Puentes peatonales", "color": "#a8703f", "forma": "pt" } ] },
+    { "id": "alameda", "tipo": "componente", "componente": "alameda", "titulo": "Una alameda por las calles que ya existen", "texto": "Del estadio al parque principal por la Calle 50, la Carrera 54, el coliseo y la Calle 49 peatonal: sombra y prioridad peatonal sin demoler nada.", "leyenda": [ { "texto": "Calle compartida a nivel", "color": "#d8ccb4" }, { "texto": "Árboles de sombra", "color": "#3f8a3a", "forma": "pt" } ] },
+    { "id": "instalaciones", "tipo": "componente", "componente": "instalaciones", "titulo": "Canchas cubiertas junto al CIC", "texto": "La explanada al sur del CIC recibe una cubierta para dos canchas múltiples y un skatepark, a un puente del estadio." },
+    { "id": "mirador", "tipo": "componente", "componente": "mirador_plaza", "titulo": "Mirador Puerta del Magdalena", "texto": "Primero se protege la orilla (zona A); detrás de la ronda va la plaza con las letras YONDÓ (zona B), el deck curvo al mirador y el muelle donde hoy atracan las lanchas.", "cifras": [ { "v": "283 m", "l": "de orilla protegida en la zona A ($2.100 M)" }, { "v": "5 días", "l": "de cierre total del puente por socavación en marzo de 2026", "fuente": "Vanguardia (jun-2026)", "url": "https://www.vanguardia.com/santander/barrancabermeja/2026/06/04/por-que-sigue-en-riesgo-el-puente-que-conecta-a-barrancabermeja-con-yondo-ruta-del-cacao-explico-las-causas/", "tono": "alerta" } ], "leyenda": [ { "texto": "Zona A · protección hidráulica", "color": "var(--m-aguas)", "forma": "area" }, { "texto": "Zona B · plaza mirador", "color": "var(--m-urbanismo)", "forma": "area" }, { "texto": "Deck, mirador y muelle", "color": "#a8703f" } ] },
+    { "id": "financiacion", "tipo": "financiacion", "titulo": "Deporte, turismo y gestión del riesgo", "texto": "Cada pieza tiene su ventanilla natural: MinDeporte e Indeportes para los escenarios, FONTUR, Cormagdalena y la UNGRD para el río, y el SGR con enfoque PDET para el parque lineal." }
+  ],
+  "fuentes_citadas": [
+    { "titulo": "Indeportes Antioquia, Circular 2025000013: convocatoria de adecuación de escenarios 2025–2027", "url": "https://indeportesantioquia.gov.co/wp-content/uploads/2025/02/Circular_2025000013_25_de_Febrero_Convocatoria_Mejoramientos2025.pdf" },
+    { "titulo": "MinDeporte, guía de proyectos de infraestructura recreativa y deportiva", "url": "https://www.mindeporte.gov.co/files/a08e3699-fe3c-405f-b3bf-48e2d8622ec2/a08e4640-d878-4d98-b3af-15cef222c391/201001-GUIA-PROYECTOS-INF-RECREATIVA-Y-DEPORTIVA.pdf" },
+    { "titulo": "SECOP II, convenio MinDeporte para la cancha de softball de Planeta Rica (2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9080794" },
+    { "titulo": "DNP, unidad recreodeportiva cofinanciada en Moñitos (2025)", "url": "https://www.dnp.gov.co/Prensa_/Noticias/Paginas/unidad-recreodeportiva-cofinanciada-por-beneficia-a-cerca-de-3-mil-personas-en-monitos-cordoba.aspx" },
+    { "titulo": "FONTUR, Manual de programas y proyectos M-DMI-001 (vigente desde mayo de 2026)", "url": "https://fontur.com.co/sites/default/files/2026-04/M-DMI-001Manual-Programas-y-Proyectos-04dic-2025.pdf" },
+    { "titulo": "SECOP II, mirador turístico de Arboletes (FONTUR, 2024)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.5250330" },
+    { "titulo": "SECOP II, malecón turístico de Puerto Triunfo", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.3280808" },
+    { "titulo": "Cormagdalena y FCM, Resolución 016 de 2025 (asignación para municipios ribereños)", "url": "https://www.fcm.org.co/wp-content/uploads/2025/04/RESOLUCION-N°-016-DE-2025-CORMAGDALENA-FCM-R-2025-016.pdf" },
+    { "titulo": "Vanguardia, Mirador del Río de Barrancabermeja sin recursos para terminar (abril de 2026)", "url": "https://www.vanguardia.com/santander/barrancabermeja/2026/04/17/mirador-del-rio-en-barrancabermeja-veeduria-alerta-sobre-la-falta-de-recursos-para-terminar-la-obra/" },
+    { "titulo": "MinVivienda, concepto 2023EE0056892 sobre drenaje urbano sostenible (Res. 0330 de 2017)", "url": "https://www.minvivienda.gov.co/sites/default/files/conceptos_juridicos/2023ee0056892.pdf" },
+    { "titulo": "Decreto-Ley 2811 de 1974, art. 83 (faja de 30 m de los cauces)", "url": "http://www.secretariasenado.gov.co/senado/basedoc/decreto_2811_1974_pr002.html" },
+    { "titulo": "Ley 1228 de 2008 (fajas de retiro de las vías nacionales)", "url": "http://www.secretariasenado.gov.co/senado/basedoc/ley_1228_2008.html" }
+  ]
+}

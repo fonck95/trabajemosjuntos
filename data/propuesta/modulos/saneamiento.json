@@ -1,0 +1,315 @@
+{
+  "id": "saneamiento",
+  "nombre": "Aseo y saneamiento",
+  "corto": "Saneamiento",
+  "lema": "Primera PTAR de Yondó y relleno clausurado con parque",
+  "problema": "Yondó no trata sus aguas residuales: las 4 estaciones de bombeo del casco solo criban, sedimentan y vierten 55,34 L/s a dos caños junto a los barrios (Superservicios, datos de 2019). El PSMV de Corantioquia, de 2014, ya venció y los estudios del Plan Maestro están al 56 % e inactivos. Además, el relleno Las Américas opera con la licencia vencida desde noviembre de 2023.",
+  "propuesta": "Terminar el Plan Maestro con un PSMV nuevo, recoger lo que hoy se vierte con dos interceptores (3,0 km) hasta una estación de bombeo central y construir la primera PTAR del casco (UASB + filtro percolador, 50 L/s) en un potrero de 6,8 ha al nororiente, con un emisario de 825 m al río Magdalena. En aseo, clausurar el relleno Las Américas y volverlo parque ecotecnológico con granja solar, y montar una ECA de 10 t/día y una planta de compostaje.",
+  "cifras": [
+    { "v": "0 %", "l": "de las aguas residuales del casco urbano recibe tratamiento", "fuente": "Superservicios, evaluación integral 2020 (datos de 2019)", "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf", "tono": "alerta" },
+    { "v": "55,34 L/s", "l": "de aguas residuales vertidos sin tratar a dos caños (2019)", "fuente": "Superservicios, evaluación integral 2020", "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf", "tono": "alerta" },
+    { "v": "78.000 t", "l": "de basura en el relleno Las Américas, con licencia vencida desde 2023", "fuente": "Repositorio, docs/12 (estimación)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/12-parque-ecotecnologico-relleno.md", "tono": "alerta" },
+    { "v": "50 L/s", "l": "de capacidad de la PTAR propuesta, para ≈20.000 habitantes en 2056", "fuente": "Cálculo propio con la Res. 0330 de 2017 (RAS)", "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0330_2017.htm", "tono": "meta" }
+  ],
+  "inversion": { "min": 42392, "central": 60717, "max": 87025 },
+  "componentes": [
+    {
+      "id": "plan_maestro",
+      "nombre": "Plan Maestro de Alcantarillado y PSMV nuevo",
+      "resumen": "Terminar los estudios (56 %), aforar, diseñar y renovar el PSMV vencido",
+      "descripcion": "Reactivar los estudios del Plan Maestro (BPIN 2024058930006, 56 % de avance, inactivos) y cerrarlos con aforos, catastro de redes, diseños de detalle de interceptores, PTAR y emisario, y la compra del predio del sitio B. Incluye el PSMV nuevo ante Corantioquia, porque el de 2014 ya venció. Es el requisito para pedir el apoyo de la Nación con la Resolución 0467 de 2026.",
+      "especificaciones": [
+        ["Estudios actuales", "BPIN 2024058930006: $2.898 M corrientes, 56 %, inactivo"],
+        ["Aforos", "24 h en época seca y de lluvias en las 4 EBAR (caudal, DBO y SST)"],
+        ["PSMV", "Nuevo ante Corantioquia (el de 2014 venció en 2024–2025)"],
+        ["Diseños", "Interceptores, EBAR central, PTAR y emisario, según el RAS"],
+        ["Predio", "Topografía, estudio de inundación y compra del sitio B"],
+        ["Horizonte", "25 años (2056), ≈20.000 habitantes (cálculo propio)"]
+      ],
+      "costo": { "min": 1800, "central": 2500, "max": 3300 },
+      "base_costo": "Terminar los estudios cuesta unos $1.800 M (docs/10 del repositorio); el PSMV, la topografía del predio y los diseños de PTAR e interceptores, si no están en el alcance, suman $700–1.500 M (estimación).",
+      "proyecto_tipo": [
+        { "nombre": "Referente: estudios del Plan Maestro de Acueducto y Alcantarillado de Yondó (BPIN 2024058930006)", "url": "https://mapainversiones.dnp.gov.co/" }
+      ],
+      "fuentes": ["nacion", "sgr", "municipio"],
+      "plazo": "2027–2028",
+      "ubicacion": "Todo el casco urbano (redes, 4 estaciones de bombeo y caños) y el predio de la PTAR en el sitio B, al nororiente."
+    },
+    {
+      "id": "interceptores",
+      "nombre": "Interceptores, impulsiones y EBAR central",
+      "resumen": "3,0 km de interceptores y una estación central: cero vertimientos a los caños",
+      "descripcion": "Las 4 estaciones de bombeo existentes dejan de verter a los caños y bombean a dos interceptores: el occidental recoge El Prado y El Paraíso, y el oriental, La Victoria y El Progreso. Ambos llegan a una estación de bombeo central nueva que impulsa todo el caudal 911 m hasta la PTAR. Así el Caño Colector Shell queda libre de aguas negras para el parque lineal del módulo de Urbanismo.",
+      "especificaciones": [
+        ["Interceptor occidental", "1.703 m (El Prado y El Paraíso)"],
+        ["Interceptor oriental", "1.334 m (La Victoria y El Progreso)"],
+        ["Ramales", "44 m (El Paraíso) y 141 m (El Progreso)"],
+        ["Diámetros", "DN 250–315 mm (estimado)"],
+        ["EBAR central", "Rejas, desarenador, aliviadero y planta eléctrica"],
+        ["Impulsión a la PTAR", "911 m, PEAD DN 355–400 mm (estimado)"],
+        ["EBAR existentes", "4, rehabilitadas como estaciones de rebombeo"]
+      ],
+      "costo": { "min": 8000, "central": 12000, "max": 18000 },
+      "base_costo": "Estimación por componentes: unos 4,1 km de tubería (interceptores, ramales e impulsión) a cerca de $2,0 M por metro con excavación de 3–4 m, entibado, pozos y AIU, más la EBAR central, con referencia en la EBAR La Playa de Turbo, primera etapa ($3.271 M, SECOP, ago-2025), y la rehabilitación de las 4 EBAR. El rango (−33 % / +50 %) refleja la incertidumbre de un perfil.",
+      "proyecto_tipo": [
+        { "nombre": "Referente: EBAR La Playa de Turbo, primera etapa ($3.271 M, 2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8518084" },
+        { "nombre": "Referente: convenio de Antioquia para el Plan Maestro de Alcantarillado de Sonsón, 3.ª etapa ($14.321 M, 2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8053105" }
+      ],
+      "fuentes": ["sgr", "oxi", "gobernacion"],
+      "plazo": "2029–2030 (antes del parque lineal)",
+      "ubicacion": "Occidental: de la EBAR El Prado por la vía de entrada y la Carrera 57 hasta el borde norte. Oriental: de la EBAR La Victoria por el corredor del canal oriental (Carrera 43). Ambos llegan a la EBAR central, en la esquina nororiental del casco (≈7,0149 N, −73,9065 O)."
+    },
+    {
+      "id": "ptar",
+      "nombre": "PTAR central del casco urbano (UASB + filtro percolador, 50 L/s)",
+      "resumen": "UASB + filtro percolador de 50 L/s en un potrero de 6,8 ha al nororiente",
+      "descripcion": "Pretratamiento, 2 reactores anaerobios UASB, filtros percoladores de alta tasa, sedimentadores y lechos de secado de lodos, con quema del biogás. Trata 50 L/s en caudal medio, suficiente para unos 20.000 habitantes en 2056, y gasta poca energía, así que la puede operar un prestador pequeño. Será la primera PTAR del casco urbano.",
+      "especificaciones": [
+        ["Tecnología", "UASB + filtro percolador de alta tasa"],
+        ["Capacidad", "50 L/s medio (2 × 25 L/s); ≈100 L/s máximo"],
+        ["Población de diseño", "≈20.000 habitantes en 2056 (cálculo propio)"],
+        ["Predio", "6,8 ha; la planta usa 1,5–2 ha"],
+        ["Distancias", "476 m a la edificación mapeada más cercana; norma: 200 m"],
+        ["Lodos y biogás", "Lechos de secado solar y quemador"],
+        ["Calidad", "≥80 % de remoción de DBO y SST (Res. 0631 de 2015)"]
+      ],
+      "costo": { "min": 15200, "central": 20900, "max": 30200 },
+      "base_costo": "Promedio de dos métodos: por habitante, $1.156.350 × 20.000 = $23.127 M (mediana del repositorio); por caudal, la PTAR de Tenjo indexada da $338 M por L/s × 55 L/s = $18.600 M. El mínimo usa 45 L/s y el máximo es el tope del repositorio ($30.176 M); la PTAR de Turbo ($33.711 M, 2025) confirma el orden de magnitud. No incluye interceptores ni emisario.",
+      "proyecto_tipo": [
+        { "nombre": "Referente: PTAR de Tenjo, 40 L/s para 12.000 habitantes ($9.300 M de 2021)", "url": "https://www.elespectador.com/bogota/tenjo-estrena-una-de-las-ptar-mas-modernas-de-cundinamarca/" },
+        { "nombre": "Referente: PTAR distrital de Turbo, Antioquia ($33.711 M, 2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8181874" }
+      ],
+      "fuentes": ["nacion", "gobernacion", "corantioquia", "cooperacion"],
+      "plazo": "2029–2031 (licitación en 2029, operación en 2031)",
+      "ubicacion": "Sitio B: potrero de 6,8 ha al nororiente del casco, camino al río (≈7,0159 N, −73,8970 O). Se prefiere a la reserva de ≈26,7 ha del EOT (≈7,0154 N, −73,9096 O), que está pegada al borde norte del casco, junto a la unión de los caños (riesgo de inundación medio-alto) y a 2,1 km del río, porque B queda aguas abajo, a 476 m de la edificación mapeada más cercana y a 0,8 km del Magdalena; el EOT deja que Corantioquia apruebe el sitio definitivo con el PSMV (cálculo propio)."
+    },
+    {
+      "id": "emisario",
+      "nombre": "Emisario final al río Magdalena",
+      "resumen": "825 m de tubería del agua tratada al Magdalena, con difusor sumergido",
+      "descripcion": "Lleva el agua tratada de la PTAR a la orilla occidental del Magdalena, con estructura de descarga, difusor sumergido, medidor de caudal y punto de muestreo para el PSMV. Reemplaza la idea de verter al Caño Colector Shell, que se va a renaturalizar como parque lineal y donde cumplir la norma de vertimientos sería más difícil por su poco caudal.",
+      "especificaciones": [
+        ["Longitud", "825 m"],
+        ["Tubería", "16–20 pulgadas (estimado)"],
+        ["Descarga", "Difusor sumergido, ≈30 m dentro del cauce"],
+        ["Control", "Medidor de caudal y punto de muestreo"],
+        ["Permisos", "Vertimiento y ocupación de cauce (Corantioquia)"]
+      ],
+      "costo": { "min": 1000, "central": 1400, "max": 2200 },
+      "base_costo": "Estimación: 825 m de tubería con excavación y AIU, más la estructura de descarga con difusor y la protección de la orilla; equivale a $1,2–2,7 M por metro. Falta el diseño hidráulico.",
+      "proyecto_tipo": [],
+      "fuentes": ["fondos", "municipio"],
+      "plazo": "2030–2031",
+      "ubicacion": "Del sitio B a la orilla occidental del Magdalena (descarga ≈7,0165 N, −73,8881 O); pasa al norte de unas casas de finca y cruza la franja de bosque ribereño."
+    },
+    {
+      "id": "eca",
+      "nombre": "Estación de clasificación y aprovechamiento (ECA) de 10 t/día",
+      "resumen": "Clasificación de reciclables con recicladores formalizados; proyecto tipo DNP",
+      "descripcion": "Nave de recepción, clasificación, empaque y bodega de reciclables, operada por recicladores de oficio formalizados y alimentada por rutas de recolección selectiva. Yondó genera unas 9–10 t/día, así que una ECA de 10 t/día cubre el casco. Baja las toneladas que viajan 40 km al relleno regional de Barrancabermeja.",
+      "especificaciones": [
+        ["Capacidad", "10 t/día"],
+        ["Residuos del municipio", "≈9–10 t/día (3.761 t en 2021)"],
+        ["Modelo", "Proyecto tipo ECA del DNP (v1.0, 2021)"],
+        ["Operación", "Recicladores de oficio formalizados"],
+        ["Meta", "Aprovechar 15–20 % (a fijar en el PGIRS)"]
+      ],
+      "costo": { "min": 2900, "central": 5000, "max": 5700 },
+      "base_costo": "Málaga (Santander) contrató en 2026 una «ECA tipo del DNP» de 10 t/día por $5.041 M (SECOP); el mínimo es la etapa 1 de La Pintada ($2.911 M, 2025) y el máximo, Málaga con interventoría ($5.690 M).",
+      "proyecto_tipo": [
+        { "nombre": "Proyecto tipo DNP: Construcción de estación de clasificación y aprovechamiento – ECA (v1.0, 2021)", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=259&Itemid=360" },
+        { "nombre": "Referente: ECA tipo DNP de 10 t/día de Málaga ($5.041 M, 2026)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10324446" },
+        { "nombre": "Referente: convenio de Corantioquia para la ECA de La Pintada ($2.854 M, 2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9091199" }
+      ],
+      "fuentes": ["corantioquia", "nacion", "sgr"],
+      "plazo": "2029",
+      "ubicacion": "Predio por definir en suelo de servicios del EOT, con acceso de camiones y junto a la planta de compostaje; no va sobre las celdas del relleno."
+    },
+    {
+      "id": "compostaje",
+      "nombre": "Planta de compostaje de residuos orgánicos",
+      "resumen": "Compost con los orgánicos de plazas, poda y grandes generadores (4–5 t/día)",
+      "descripcion": "Pilas con volteo bajo cubierta, maduración y cribado para la fracción orgánica que se separa en la fuente: plazas de mercado, poda y grandes generadores. El compost puede ir a los viveros y huertas del módulo agroindustrial. Es distinta del compostaje didáctico del parque ecotecnológico, que no recibe basura del pueblo.",
+      "especificaciones": [
+        ["Capacidad", "≈4–5 t/día de orgánicos"],
+        ["Área", "≈1.500–2.500 m² (estimado)"],
+        ["Proceso", "Pilas con volteo bajo cubierta, maduración y cribado"],
+        ["Insumos", "Plazas de mercado, poda y grandes generadores"],
+        ["Meta", "Desviar ≥30 % de los orgánicos del relleno regional"]
+      ],
+      "costo": { "min": 2000, "central": 2500, "max": 3000 },
+      "base_costo": "El Peñol (Antioquia) contrató la etapa 1 de su planta de compostaje por $1.924 M en 2023 (≈$2.200 M de 2026, indexación aproximada), con convenio del PDA de Antioquia, y obras de la etapa II por $380 M en 2026.",
+      "proyecto_tipo": [
+        { "nombre": "Referente: planta de compostaje de El Peñol, etapa 1 ($1.924 M, 2023)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4948246" },
+        { "nombre": "Referente: convenio del PDA de Antioquia con El Peñol ($2.127 M, 2023)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4643342" }
+      ],
+      "fuentes": ["gobernacion", "sgr"],
+      "plazo": "2029–2030",
+      "ubicacion": "Junto a la ECA, en el mismo predio de servicios."
+    },
+    {
+      "id": "relleno",
+      "nombre": "Clausura del relleno Las Américas y parque ecotecnológico",
+      "resumen": "Cierre técnico, granja solar de 997 kWp y parque con coworking (docs/12)",
+      "descripcion": "El relleno opera con la licencia vencida desde el 12 de noviembre de 2023. Se clausura con cobertura final, manejo de lixiviados y gases y 20 años de posclausura, y la basura pasa al relleno regional San Silvestre (Barrancabermeja, licencia hasta 2044). Sobre las celdas va una granja solar de 997 kWp para 2.236 hogares de estratos 1 y 2, y alrededor un parque con coworking rural, granja y circuito de 0,9 km.",
+      "especificaciones": [
+        ["Residuos acumulados", "≈78.000 t (estimación)"],
+        ["Clausura", "Cobertura con geomembrana, lixiviados, gases y monitoreo"],
+        ["Posclausura", "20 años, ≈$190 M al año (estimación)"],
+        ["Disposición regional", "San Silvestre, a 40 km, ≈$321 M al año"],
+        ["Granja solar", "997 kWp, 1,34 GWh al año"],
+        ["Beneficio", "Bloque de 50 kWh/mes para 2.236 hogares de estratos 1 y 2"],
+        ["Parque", "Coworking de 312 m², granja y circuito de 0,9 km"]
+      ],
+      "costo": { "min": 11492, "central": 16417, "max": 24625 },
+      "base_costo": "Presupuesto de prefactibilidad de docs/12 (clase 4: −30 % / +50 %): $4.194 M de estudios y clausura, $5.603 M de granja solar y conexión a EPM y $6.620 M de parque.",
+      "proyecto_tipo": [
+        { "nombre": "Proyecto tipo DNP: Construcción y dotación de centro TIC municipal (coworking)", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=145&Itemid=197" },
+        { "nombre": "Proyecto tipo DNP: Construcción y dotación parque recreodeportivo", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=132&Itemid=201" },
+        { "nombre": "Proyecto tipo DNP: Ciclo-infraestructura y servicios complementarios", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=144&Itemid=205" },
+        { "nombre": "Proyecto tipo DNP: Recuperación de cobertura vegetal en áreas disturbadas", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=263&Itemid=365" }
+      ],
+      "fuentes": ["sgr", "fondos", "nacion", "gobernacion", "municipio", "findeter", "cooperacion"],
+      "plazo": "2027–2030 (posclausura hasta 2048)",
+      "ubicacion": "Vereda Las Américas, a 3,9 km del parque principal por vía (7,0140 N, −73,9342 O)."
+    }
+  ],
+  "financiacion": [
+    { "fuente": "nacion", "monto": 16372, "mecanismo": "MinVivienda, Viceministerio de Agua: viabilidad y apoyo financiero de la Nación (Res. 0467 de 2026) para la PTAR, el Plan Maestro y la ECA; MinDeporte, MinTIC y MinCultura, $1.324 M del parque" },
+    { "fuente": "sgr", "monto": 14600, "mecanismo": "OCAD Paz (Asignación para la Paz, iniciativa PDET) para los interceptores; asignaciones directas para Plan Maestro, ECA y compostaje; $7.451 M del relleno (clausura, Incentivo a la Producción y parque)" },
+    { "fuente": "gobernacion", "monto": 10800, "mecanismo": "Plan Departamental de Aguas de Antioquia, por convenio como en Sonsón y El Peñol: PTAR, interceptores, compostaje y $1.200 M de la clausura (SGP y PDA)" },
+    { "fuente": "oxi", "monto": 4500, "mecanismo": "Obras por impuestos, modalidad ordinaria ZOMAC y PDET, con Ecopetrol (opera el campo Casabe): una etapa de los interceptores con viabilidad propia" },
+    { "fuente": "corantioquia", "monto": 4500, "mecanismo": "Tasa retributiva y convocatorias de saneamiento: PTAR y ECA (precedentes: ECA de La Pintada, $2.854 M; PTAR de Guachucal con Corponariño)" },
+    { "fuente": "fondos", "monto": 4000, "mecanismo": "Colombia Solar o FENOGE, $2.911 M de la granja solar del relleno; Cormagdalena (0,5 % del SGR para municipios ribereños), $1.089 M del emisario al Magdalena" },
+    { "fuente": "municipio", "monto": 2500, "mecanismo": "Tarifa de aseo y provisión de clausura ($600 M), recursos propios del parque ($993 M) y SGP de agua y saneamiento para el Plan Maestro y el emisario" },
+    { "fuente": "cooperacion", "monto": 2500, "mecanismo": "Ecopetrol (inversión social) y cooperación, $993 M del parque; cooperación o banca multilateral, por un programa nacional o departamental, para el arranque de la PTAR" },
+    { "fuente": "findeter", "monto": 945, "mecanismo": "Crédito «Municipios Territorios Energéticos» (tasa compensada, IBR + 0,7 %) para la granja solar del relleno" }
+  ],
+  "proyectos_tipo": [
+    { "nombre": "Construcción de estación de clasificación y aprovechamiento – ECA (v1.0, 2021)", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=259&Itemid=360" },
+    { "nombre": "Construcción y dotación de centro TIC municipal (coworking del parque)", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=145&Itemid=197" },
+    { "nombre": "Construcción y dotación parque recreodeportivo", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=132&Itemid=201" },
+    { "nombre": "Ciclo-infraestructura y servicios complementarios", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=144&Itemid=205" },
+    { "nombre": "Recuperación de cobertura vegetal en áreas disturbadas", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=263&Itemid=365" }
+  ],
+  "gestion": {
+    "madurez": "Perfil",
+    "madurez_nota": "Hay sitio, trazados y costos estimados y el relleno ya está en prefactibilidad (docs/12), pero los estudios del Plan Maestro siguen al 56 % e inactivos; faltan aforos, topografía y estudio de inundación del sitio B y el PSMV nuevo.",
+    "pedido": "Pedimos a la Nación $16.372 M, sobre todo apoyo financiero de MinVivienda para la PTAR con la Res. 0467 de 2026, y a la Gobernación $10.800 M por el Plan Departamental de Aguas. En regalías se buscan $14.600 M (OCAD Paz para los interceptores, asignaciones directas y el relleno), más $4.500 M de obras por impuestos con Ecopetrol y $4.500 M de Corantioquia.",
+    "a_quien": [
+      "MinVivienda · Viceministerio de Agua y Saneamiento Básico (viabilidad y apoyo financiero, Res. 0467 de 2026)",
+      "DNP · Secretaría Técnica del OCAD Paz (Asignación para la Paz, iniciativas PDET)",
+      "Gobernación de Antioquia · Gerencia de Servicios Públicos, gestor del Plan Departamental de Aguas",
+      "Corantioquia · PSMV, permiso de vertimiento y tasa retributiva",
+      "ART · banco de proyectos de obras por impuestos, con Ecopetrol",
+      "MinEnergía · Colombia Solar y FENOGE (granja solar del relleno)",
+      "Cormagdalena · asignación del 0,5 % del SGR para municipios ribereños"
+    ],
+    "pasos": [
+      "Nov-2026 a feb-2027: pedir que la PTAR de Yondó entre en las bases y el plan plurianual del PND 2026–2030 como cierre de brechas en un municipio PDET.",
+      "2027: reactivar los estudios del Plan Maestro (BPIN 2024058930006) y contratar aforos de 24 horas en las 4 EBAR, en época seca y de lluvias.",
+      "2027: radicar ante Corantioquia el PSMV nuevo con el sitio B y firmar un acuerdo de pago de la tasa retributiva.",
+      "2027: reformular el BPIN 20201301010649 (canalización de $67.640 M corrientes) como interceptor enterrado más parque lineal.",
+      "2027–2028: topografía, estudio de creciente de 100 años y compra o servidumbre del predio del sitio B; contrato de disposición en San Silvestre y plan de clausura del relleno.",
+      "2028: radicar la PTAR ante MinVivienda (Res. 0467 de 2026), los interceptores en el OCAD Paz y en el banco de obras por impuestos, y la granja solar en Colombia Solar."
+    ]
+  },
+  "metas": [
+    { "indicador": "Aguas residuales del casco tratadas en PTAR", "base": "0 % (2019)", "meta": "100 % del caudal de tiempo seco (2031)" },
+    { "indicador": "Vertimientos sin tratar a los caños", "base": "4 puntos, 55,34 L/s (2019)", "meta": "0 (2031)" },
+    { "indicador": "PSMV vigente aprobado por Corantioquia", "base": "Vencido; aprobado en 2014 (2026)", "meta": "PSMV nuevo aprobado (2028)" },
+    { "indicador": "Residuos dispuestos en un sitio con licencia vigente", "base": "0 %: licencia del relleno vencida en 2023 (2026)", "meta": "100 %, con el relleno clausurado (2028)" },
+    { "indicador": "Residuos aprovechados en la ECA y el compostaje", "base": "Sin medición (2026)", "meta": "15–20 % (2031)" }
+  ],
+  "riesgos": [
+    { "riesgo": "El alcantarillado es combinado: con lluvia el caudal se multiplica (los 55,34 L/s de 2019 son unas 4 veces el caudal doméstico teórico) y la PTAR puede rebosar.", "mitigacion": "Aforos de 24 horas en época seca y de lluvias antes de diseñar, aliviaderos en las EBAR y en la estación central, y PTAR por módulos de 25 L/s." },
+    { "riesgo": "El sitio B es un potrero privado en la llanura del Magdalena, con riesgo de inundación medio y sin vía de acceso.", "mitigacion": "Topografía y estudio de creciente de 100 años en 2027–2028, plataforma por encima de esa cota, compra o servidumbre temprana y acceso de 0,9 km por el corredor de la impulsión; el sitio A (4,0 ha) queda como alternativa." },
+    { "riesgo": "La canalización ya formulada (BPIN 20201301010649, $67.640 M corrientes) ocupa el corredor del interceptor y del parque lineal.", "mitigacion": "Reformularla como interceptor enterrado más parque lineal y construir primero el interceptor, para no romper después la obra." },
+    { "riesgo": "PTAR construida y abandonada porque el prestador no puede pagar la operación (la Superservicios reporta debilidades de Aguas y Aseo).", "mitigacion": "Tecnología de baja energía, tarifa de alcantarillado que cubra la operación, contrato de operación con capacitación y cooperación para el arranque asistido." }
+  ],
+  "pasos": [
+    {
+      "id": "portadilla",
+      "tipo": "portadilla",
+      "titulo": "Yondó vierte todas sus aguas residuales sin tratar",
+      "texto": "Las 4 estaciones de bombeo del casco solo criban y vierten a dos caños: El Paraíso 16,51 L/s, La Victoria 14,69, El Progreso 13,52 y El Prado 10,62 (2019). Yondó no tiene PTAR."
+    },
+    {
+      "id": "colectores",
+      "tipo": "componente",
+      "componente": "interceptores",
+      "titulo": "Dos interceptores recogen lo que hoy se vierte",
+      "texto": "En marrón, lo que cada estación vierte hoy sin tratar. Los interceptores occidental (1.703 m) y oriental (1.334 m) lo recogen y lo llevan a una estación de bombeo central en la esquina nororiental del casco.",
+      "leyenda": [
+        { "texto": "Vertimiento sin tratar (hoy)", "color": "#8a5a2b", "forma": "" },
+        { "texto": "Interceptor nuevo", "color": "var(--m-saneamiento)", "forma": "" },
+        { "texto": "Impulsión a presión", "color": "var(--m-saneamiento)", "forma": "dash" }
+      ],
+      "cifras": [
+        { "v": "3.037 m", "l": "de interceptores: occidental de 1.703 m y oriental de 1.334 m", "fuente": "Cálculo propio sobre el plano del casco" },
+        { "v": "911 m", "l": "de impulsión de la estación central a la PTAR", "fuente": "Cálculo propio sobre el plano del casco" }
+      ]
+    },
+    {
+      "id": "ptar",
+      "tipo": "componente",
+      "componente": "ptar",
+      "titulo": "La primera PTAR de Yondó, aguas abajo del pueblo",
+      "texto": "La planta va en el sitio B, un potrero de 6,8 ha a 1,05 km del borde nororiental del casco. Le llega la impulsión de 911 m desde la estación central y el agua tratada sale por un emisario de 825 m al río Magdalena.",
+      "leyenda": [
+        { "texto": "PTAR central, sitio B (6,8 ha)", "color": "var(--m-saneamiento)", "forma": "area" },
+        { "texto": "Impulsión desde la EBAR central", "color": "var(--m-saneamiento)", "forma": "dash" },
+        { "texto": "Emisario de agua tratada al río", "color": "#3aa6d9", "forma": "" }
+      ],
+      "cifras": [
+        { "v": "476 m", "l": "a la edificación mapeada más cercana; un UASB exige 200 m", "fuente": "Cálculo propio; Res. 0330 de 2017, tabla 28", "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0330_2017.htm" },
+        { "v": "0,8 km", "l": "del sitio B al Magdalena; la reserva del EOT está a 2,1 km", "fuente": "Cálculo propio; EOT de Yondó (Acuerdo 013 de 2022)", "url": "https://yondoantioquia.micolombiadigital.gov.co/sites/yondoantioquia/content/files/000406/20257_acuerdo-municipal-013-eot-2022-2035.pdf" }
+      ]
+    },
+    {
+      "id": "relleno",
+      "tipo": "componente",
+      "componente": "relleno",
+      "titulo": "Del relleno vencido a un parque con granja solar",
+      "texto": "El relleno Las Américas opera con la licencia vencida desde 2023. Se clausura, la basura pasa al relleno regional San Silvestre y sobre las celdas va una granja solar de 997 kWp, con un parque alrededor.",
+      "cifras": [
+        { "v": "997 kWp", "l": "de granja solar sobre las celdas, 1,34 GWh al año", "fuente": "Repositorio, docs/12 (cálculo propio)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/12-parque-ecotecnologico-relleno.md" },
+        { "v": "2.236", "l": "hogares de estratos 1 y 2 con un bloque solar de 50 kWh al mes", "fuente": "Repositorio, docs/12 (cálculo propio)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/12-parque-ecotecnologico-relleno.md", "tono": "meta" }
+      ]
+    },
+    {
+      "id": "residuos",
+      "tipo": "componente",
+      "componente": "eca",
+      "titulo": "Menos basura viaja 40 km a Barrancabermeja",
+      "texto": "Una ECA de 10 t/día, operada por recicladores formalizados, y una planta de compostaje de orgánicos bajan las toneladas que hay que llevar al relleno regional. La ECA sigue el proyecto tipo del DNP.",
+      "cifras": [
+        { "v": "3.761 t", "l": "de residuos dispuestos en 2021, unas 10,3 t por día", "fuente": "SUI en datos.gov.co", "url": "https://www.datos.gov.co/resource/urvy-i3ii.json" },
+        { "v": "15–20 %", "l": "de los residuos del casco aprovechados, meta a fijar en el PGIRS", "fuente": "Meta propuesta (2031)", "tono": "meta" }
+      ]
+    },
+    {
+      "id": "financiacion",
+      "tipo": "financiacion",
+      "titulo": "Nación, regalías y Gobernación ponen el 69 %",
+      "texto": "La Nación, las regalías y la Gobernación suman $41.772 M de los $60.717 M del módulo. La PTAR se radica ante MinVivienda con la Res. 0467 de 2026 y el relleno sigue la mezcla de fuentes de docs/12."
+    }
+  ],
+  "fuentes_citadas": [
+    { "titulo": "Superservicios, Evaluación integral de Aguas y Aseo de Yondó S.A. E.S.P. (2020)", "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf" },
+    { "titulo": "MinVivienda, Resolución 0330 de 2017, RAS, con la modificación de la 0799 de 2021 (2017)", "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0330_2017.htm" },
+    { "titulo": "MinVivienda, Resolución 0467 de 2026: viabilidad y apoyo financiero de la Nación (2026)", "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0467_2026.htm" },
+    { "titulo": "Concejo de Yondó, Acuerdo 013 de 2022, EOT 2022–2035 (2022)", "url": "https://yondoantioquia.micolombiadigital.gov.co/sites/yondoantioquia/content/files/000406/20257_acuerdo-municipal-013-eot-2022-2035.pdf" },
+    { "titulo": "Repositorio trabajemosjuntos, docs/12: Del relleno Las Américas al Parque Ecotecnológico (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/12-parque-ecotecnologico-relleno.md" },
+    { "titulo": "Repositorio trabajemosjuntos, docs/10: la plata que no se convirtió en obra a tiempo (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/10-dinero-no-hecho-por-gobierno.md" },
+    { "titulo": "DNP, MapaInversiones: BPIN 2024058930006 y 20201301010649 (consulta de 2026)", "url": "https://mapainversiones.dnp.gov.co/" },
+    { "titulo": "DNP, Proyecto tipo: estación de clasificación y aprovechamiento – ECA (2021)", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=259&Itemid=360" },
+    { "titulo": "SECOP II, ECA tipo DNP de 10 t/día de Málaga (2026)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10324446" },
+    { "titulo": "SECOP II, PTAR distrital de Turbo (2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8181874" },
+    { "titulo": "SECOP II, EBAR La Playa de Turbo, primera etapa (2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8518084" },
+    { "titulo": "SECOP II, convenio de Antioquia para el Plan Maestro de Alcantarillado de Sonsón (2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8053105" },
+    { "titulo": "SECOP II, convenio de Corantioquia para la ECA de La Pintada (2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9091199" },
+    { "titulo": "SECOP II, Corponariño: PTAR de Guachucal con tasa retributiva (2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7903011" },
+    { "titulo": "Cormagdalena, Resolución 016 de 2025: instancia de la asignación del SGR para municipios ribereños (2025)", "url": "https://www.fcm.org.co/wp-content/uploads/2025/04/RESOLUCION-N°-016-DE-2025-CORMAGDALENA-FCM-R-2025-016.pdf" }
+  ]
+}

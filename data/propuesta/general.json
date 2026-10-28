@@ -1,0 +1,249 @@
+{
+  "meta": {
+    "lugar": "Yondó, Antioquia",
+    "periodo": "2028–2031",
+    "fecha_corte": "2026-10-28",
+    "moneda": "Millones de pesos constantes de 2026"
+  },
+  "orden_modulos": ["vivienda", "urbanismo", "agroindustria", "salud", "aguas", "saneamiento", "tic"],
+  "portada": {
+    "titulo": "Yondó 2028–2031: siete proyectos para cerrar brechas",
+    "lema": "Cada pieza con sitio real, costo, proyecto tipo y fuente de financiación",
+    "cifras": [
+      { "v": "22.429", "l": "habitantes en 2026; 47 % vive en el campo", "fuente": "DANE, proyecciones 2018–2042", "url": "https://www.dane.gov.co/files/censo2018/proyecciones-de-poblacion/Municipal/PPED-AreaMun-2018-2042_VP.xlsx" },
+      { "v": "46,3 %", "l": "de pobreza multidimensional: más del doble que Antioquia (21,6 %)", "fuente": "DANE, IPM censal 2018", "url": "https://www.dane.gov.co/index.php/estadisticas-por-tema/pobreza-y-condiciones-de-vida/pobreza-multidimensional", "tono": "alerta" },
+      { "v": "139", "l": "iniciativas PDET; 25 respaldan los módulos de esta propuesta", "fuente": "ART, iniciativas PDET (sep-2026)", "url": "https://www.datos.gov.co/d/gmvf-t63e" },
+      { "v": "10.599", "l": "barriles diarios de petróleo en 2025; eran 23.120 en 2012", "fuente": "ANH, producción fiscalizada", "url": "https://www.datos.gov.co/d/fdvb-hsrf", "tono": "alerta" },
+      { "v": "42,2 GWh", "l": "al año produce la granja solar La Iguana en Yondó, pero va a la refinería", "fuente": "Forbes Colombia (dic-2025)", "url": "https://forbes.co/2025/12/04/economia-y-finanzas/ecopetrol-inauguro-granja-solar-la-iguana-y-suma-26-mwp-a-su-plan-de-autogeneracion-limpia/" },
+      { "v": "917 m", "l": "de puente, única vía a Barrancabermeja, cerrado el 16-mar-2026 por socavación", "fuente": "Vanguardia (jun-2026)", "url": "https://www.vanguardia.com/santander/barrancabermeja/2026/06/04/por-que-sigue-en-riesgo-el-puente-que-conecta-a-barrancabermeja-con-yondo-ruta-del-cacao-explico-las-causas/", "tono": "alerta" }
+    ],
+    "pasos": [
+      {
+        "id": "inicio",
+        "tipo": "portada",
+        "titulo": "Yondó 2028–2031: siete proyectos para cerrar brechas",
+        "texto": "Una propuesta integral para gestionar desde ya con el nivel central: cada pieza tiene un sitio real en el municipio, un costo de referencia, un proyecto tipo o un referente, una mezcla de fuentes y un pedido concreto.",
+        "nota": "Cifras en millones de pesos constantes de 2026, con corte al 28 de octubre de 2026. Los costos son de perfil o prefactibilidad y se ajustan con los diseños. Toca un módulo para ir a él."
+      },
+      {
+        "id": "territorio",
+        "tipo": "texto",
+        "titulo": "Un municipio petrolero con brechas de municipio rural",
+        "texto": "Yondó queda frente a Barrancabermeja, al otro lado del Magdalena. Las siete propuestas se reparten entre el casco urbano, el acueducto, 2,3 km al occidente, y la salida del puente, 7,9 km al norte.",
+        "lista": [
+          "<b>22.429 habitantes</b> en 1.895 km²: casi la mitad vive en 60 veredas y en el corregimiento de San Miguel del Tigre.",
+          "Pobreza multidimensional de <b>46,3 %</b> y NBI de 26,0 %, frente a 21,6 % y 10,7 % en Antioquia (censo 2018).",
+          "El petróleo cayó de 23.120 a <b>10.599 barriles diarios</b> entre 2012 y 2025: las regalías propias van a la baja.",
+          "Es <b>PDET y ZOMAC</b>: puede ir al OCAD Paz y a las obras por impuestos, con 139 iniciativas PDET de respaldo.",
+          "Depende de <b>un puente de 917 m</b> sobre el Magdalena que se cerró por socavación en marzo de 2026.",
+          "El EOT 2022–2035 reconoce un déficit de <b>2.070 viviendas</b> y reserva suelo para una PTAR que todavía no existe."
+        ],
+        "nota": "Fuentes: DANE, ANH, ART, EOT de Yondó (Acuerdo 013 de 2022) y prensa regional."
+      }
+    ]
+  },
+  "financiacion": {
+    "fuentes": [
+      {
+        "id": "sgr",
+        "nombre": "Sistema General de Regalías",
+        "corto": "SGR",
+        "color": "#2a78d6",
+        "entidad": "Alcaldía, OCAD Paz (DNP) y Gobernación de Antioquia",
+        "tipo": "No reembolsable",
+        "que_financia": "Asignaciones directas e inversión local (las aprueba la alcaldía), Asignación para la Paz e Incentivo a la Producción (OCAD Paz) e inversión regional (Gobernación y OCAD Eje Cafetero).",
+        "requisito": "Proyecto completo en MGA y SUIFP-SGR con los requisitos del sector; en 2027 solo se podrá aprobar hasta el 60 % de los ingresos del bienio.",
+        "url": "https://www.datos.gov.co/d/g4qj-2p2e"
+      },
+      {
+        "id": "nacion",
+        "nombre": "Presupuesto General de la Nación",
+        "corto": "Nación",
+        "color": "#eb6834",
+        "entidad": "MinVivienda, MinSalud, MinDeporte, MinAgricultura y ADR",
+        "tipo": "No reembolsable (cofinanciación)",
+        "que_financia": "Vivienda (Fonvivienda), agua y saneamiento con viabilidad de MinVivienda, infraestructura y dotación en salud (PMIDS), escenarios deportivos y desarrollo rural.",
+        "requisito": "Viabilidad del ministerio, contrapartida y diseños; el PGN 2027 obliga a recortar 3 % en todas las entidades.",
+        "url": "https://www.larepublica.co/economia/congreso-de-la-republica-dio-luz-verde-al-presupuesto-de-2027-por-634-9-billones-4506678"
+      },
+      {
+        "id": "oxi",
+        "nombre": "Obras por impuestos",
+        "corto": "OxI",
+        "color": "#1baf7a",
+        "entidad": "ART, DNP y empresas contribuyentes (Ecopetrol, Parex y otras)",
+        "tipo": "Impuesto de renta pagado en obras",
+        "que_financia": "Agua, energía, salud, educación, deporte, TIC, vías e infraestructura productiva en municipios ZOMAC y PDET; desde septiembre de 2026 también en modalidad reconstrucción (D.L. 1389).",
+        "requisito": "Proyecto viable en el banco de la ART y una empresa que lo escoja; cortes anuales (cupo nacional de $1,14 billones en 2026).",
+        "url": "https://www.portafolio.co/economia/el-cupo-anual-de-obras-por-impuestos-paso-de-250-000-millones-a-1-1-billones-entre-2018-y-2026-con-619-proyectos-499435"
+      },
+      {
+        "id": "gobernacion",
+        "nombre": "Gobernación de Antioquia",
+        "corto": "Gobernación",
+        "color": "#eda100",
+        "entidad": "Gobernación, VIVA, Indeportes, Secretaría de Salud, Plan Departamental de Aguas e IDEA",
+        "tipo": "Cofinanciación",
+        "que_financia": "Vivienda (VIVA), adecuación de escenarios deportivos (Indeportes: 70 % en categoría 6), salud, agua y saneamiento (PDA), maquinaria agrícola y la inversión regional del SGR (60 %).",
+        "requisito": "Estar en el plan de desarrollo departamental 2028–2031 y en la priorización de la Gobernación.",
+        "url": "https://indeportesantioquia.gov.co/wp-content/uploads/2025/02/Circular_2025000013_25_de_Febrero_Convocatoria_Mejoramientos2025.pdf"
+      },
+      {
+        "id": "findeter",
+        "nombre": "Findeter",
+        "corto": "Findeter",
+        "color": "#6250d6",
+        "entidad": "Findeter, con MinEnergía y MinSalud en las líneas de tasa compensada",
+        "tipo": "Crédito con tasa compensada",
+        "que_financia": "Reactiva Colombia (IBR + 0 %), Reactiva Agua (IBR + 0,30 %), Territorios Energéticos para granjas solares (IBR + 0,7 %) y salud con tasa compensada.",
+        "requisito": "Capacidad de endeudamiento (la prudente de Yondó está entre $5.141 M y $10.281 M), viabilidad del sector y autorización del Concejo.",
+        "url": "https://www.findeter.gov.co/productos-y-servicios/lineas-de-credito-de-redescuento/programa_reactiva_colombia_findeter"
+      },
+      {
+        "id": "municipio",
+        "nombre": "Recursos del municipio",
+        "corto": "Municipio",
+        "color": "#9a6a3a",
+        "entidad": "Alcaldía de Yondó",
+        "tipo": "Propios, SGP y tarifas",
+        "que_financia": "Predios, diseños, contrapartidas, SGP de agua potable y de salud, y tarifas de los servicios públicos.",
+        "requisito": "Plan de inversiones y marco fiscal de mediano plazo; Yondó ya paga $1.718,5 M de deuda en 2026.",
+        "url": "https://www.yondo-antioquia.gov.co/plan-de-desarrollo-2024--2027/plan-de-desarrollo-territorial-yondo-avanza-20242027"
+      },
+      {
+        "id": "fondos",
+        "nombre": "Fondos y agencias nacionales",
+        "corto": "Fondos",
+        "color": "#e87ba4",
+        "entidad": "FONTUR, Cormagdalena, UNGRD, FENOGE, Fondo Único de TIC y AUNAP",
+        "tipo": "No reembolsable (por convocatoria o ficha)",
+        "que_financia": "Turismo (FONTUR), río y orillas (Cormagdalena, 0,5 % del SGR para municipios ribereños), gestión del riesgo (UNGRD), energía y eficiencia (FENOGE), conectividad (MinTIC) y pesca (AUNAP).",
+        "requisito": "Ficha y manual de cada fondo; estudios de mercado, hidráulicos o de conexión según el caso.",
+        "url": "https://fontur.com.co/sites/default/files/2026-04/M-DMI-001Manual-Programas-y-Proyectos-04dic-2025.pdf"
+      },
+      {
+        "id": "corantioquia",
+        "nombre": "Corantioquia",
+        "corto": "Corantioquia",
+        "color": "#2f8f3a",
+        "entidad": "Corporación Autónoma Regional del Centro de Antioquia",
+        "tipo": "Cofinanciación ambiental",
+        "que_financia": "Tratamiento de aguas residuales (tasa retributiva), drenaje sostenible, rondas hídricas y residuos sólidos.",
+        "requisito": "Proyecto en el plan de acción de la corporación; permisos de vertimiento y de ocupación de cauce.",
+        "url": "https://www.corantioquia.gov.co/"
+      },
+      {
+        "id": "cooperacion",
+        "nombre": "Cooperación y responsabilidad social",
+        "corto": "Cooperación",
+        "color": "#0d8f96",
+        "entidad": "Cooperación internacional y responsabilidad social de Ecopetrol y los operadores del campo Casabe",
+        "tipo": "No reembolsable",
+        "que_financia": "Estudios, dotación, telesalud, agua y proyectos productivos con enfoque de paz.",
+        "requisito": "Contrapartida, operador con capacidad y alineación con el PDET.",
+        "url": null
+      },
+      {
+        "id": "privados",
+        "nombre": "Privados y comunidad",
+        "corto": "Privados",
+        "color": "#7a8590",
+        "entidad": "Hogares, cajas de compensación, productores, socios de la empresa mixta y banca (Finagro, Banco Agrario)",
+        "tipo": "Aportes, ahorro y crédito",
+        "que_financia": "Ahorro y crédito de los hogares para la vivienda, capital de los socios y crédito Finagro para las plantas del parque agroindustrial.",
+        "requisito": "Cierre financiero de cada hogar y empresa mixta con gobierno corporativo y paridad.",
+        "url": null
+      }
+    ],
+    "pasos": [
+      {
+        "id": "matriz",
+        "tipo": "matriz",
+        "titulo": "Cómo se financia la propuesta",
+        "texto": "Ninguna fuente sola alcanza. La mezcla reparte el riesgo entre regalías, Nación, Gobernación, obras por impuestos, crédito barato y aportes privados, y pone a cada proyecto en la ventanilla que le corresponde.",
+        "cifras": [
+          { "v": "$48.128 M", "l": "de regalías propias aprobó Yondó en 2025–2026 (de $71.418 M)", "fuente": "MinHacienda, ejecución de regalías", "url": "https://www.datos.gov.co/d/g4qj-2p2e" },
+          { "v": "$36.228 M", "l": "le aprobó el OCAD Paz en 7 proyectos (2025–2026)", "fuente": "MinHacienda, ejecución de regalías", "url": "https://www.datos.gov.co/d/g4qj-2p2e" },
+          { "v": "$13.694 M", "l": "del Incentivo a la Producción siguen sin aprobar", "fuente": "Cálculo propio con datos de MinHacienda", "url": "https://www.datos.gov.co/d/g4qj-2p2e", "tono": "alerta" },
+          { "v": "−11 %", "l": "baja el presupuesto del SGR en 2027–2028 ($27,54 billones)", "fuente": "Portafolio (oct-2026)", "url": "https://www.portafolio.co/economia/gobierno/presupuesto-de-regalias-2027-2028-seria-de-27-54-billones-11-menos-503793", "tono": "alerta" }
+        ],
+        "nota": "Las columnas sobre el mapa muestran la inversión de cada módulo partida por fuente. El crédito se limita a la capacidad prudente del municipio y a proyectos que generan ahorro o ingreso, como la granja solar."
+      },
+      {
+        "id": "fuentes",
+        "tipo": "fuentes",
+        "titulo": "Las diez fuentes, una por una",
+        "texto": "Qué financia cada una y el requisito que más pesa a la hora de radicar."
+      },
+      {
+        "id": "reglas",
+        "tipo": "texto",
+        "titulo": "Cinco reglas para que la plata se vuelva obra",
+        "texto": "Desde 2008 solo el 22 % de los 124 estudios y consultorías contratados en Yondó tuvo una obra después. Estas reglas cierran esa brecha.",
+        "lista": [
+          "<b>Nada se radica sin diseños fase III</b> y presupuesto con análisis de precios unitarios.",
+          "<b>Etapas que funcionan solas</b>: cada contrato entrega algo que sirve aunque la etapa siguiente se demore.",
+          "<b>Sin anticipos altos</b>: fiducia o patrimonio autónomo e interventoría externa en todas las obras.",
+          "<b>Pliegos tipo y competencia</b>: desde 2020 el 83 % de lo contratado por la alcaldía se adjudicó sin competencia.",
+          "<b>Cuentas abiertas</b>: tablero público de avance físico y financiero por proyecto, con datos de SECOP y GESPROY."
+        ],
+        "nota": "Fuente: análisis de 10.279 contratos de SECOP en este repositorio (docs/03 y docs/04)."
+      }
+    ]
+  },
+  "ruta": {
+    "fases": [
+      { "nombre": "Gestión ante el PND y preinversión", "desde": 2026.8, "hasta": 2028.0, "color": "#7a8590" },
+      { "nombre": "Estudios y diseños fase III", "desde": 2027.2, "hasta": 2028.7, "color": "#6250d6" },
+      { "nombre": "Radicación y aprobación", "desde": 2028.0, "hasta": 2029.3, "color": "#2a78d6" },
+      { "nombre": "Obras, primera ola", "desde": 2028.6, "hasta": 2030.4, "color": "#14a06c" },
+      { "nombre": "Obras, segunda ola", "desde": 2029.4, "hasta": 2031.9, "color": "#c98a00" },
+      { "nombre": "Operación y rendición de cuentas", "desde": 2030.0, "hasta": 2032.0, "color": "#d9363e" }
+    ],
+    "hitos": [
+      { "fecha": "15-nov-2026", "texto": "Bases del PND 2026–2030 al Consejo Nacional de Planeación: pedir que los siete módulos entren al pacto regional" },
+      { "fecha": "5-dic-2026", "texto": "Plazo del Congreso para el presupuesto del SGR 2027–2028" },
+      { "fecha": "31-dic-2026", "texto": "Vence la línea Reactiva Agua de Findeter (renovación por confirmar)" },
+      { "fecha": "7-feb-2027", "texto": "Radicación del PND en el Congreso" },
+      { "fecha": "5-may-2027", "texto": "Aprobación del PND: los proyectos deben quedar en su plan plurianual" },
+      { "fecha": "31-oct-2027", "texto": "Elecciones locales: empalme con fichas, MGA y diseños listos" },
+      { "fecha": "ene-2028", "texto": "Nuevos gobiernos municipal y departamental: planes de desarrollo 2028–2031" },
+      { "fecha": "2028–2029", "texto": "Convocatorias del OCAD Paz y cortes de obras por impuestos con proyectos completos" }
+    ],
+    "pasos": [
+      {
+        "id": "ruta",
+        "tipo": "ruta",
+        "titulo": "De la idea a la obra en cinco años",
+        "texto": "La gestión empieza ahora, con el PND en construcción; las obras se ejecutan en dos olas entre 2028 y 2031.",
+        "lista": [
+          "<b>Primera ola</b>: sectorización y medición del acueducto, Cancha de Sóftbol Casabe y alameda, torre del hospital, fibra y granja solar, rescate de las viviendas inconclusas.",
+          "<b>Segunda ola</b>: interceptores y PTAR, parque lineal del caño, mirador del Magdalena, parque agroindustrial y urbanizaciones nuevas."
+        ]
+      }
+    ]
+  },
+  "pedidos": {
+    "entidades": [
+      { "entidad": "DNP · OCAD Paz y regalías", "pedido": "Priorizar en las convocatorias 2027–2028 las iniciativas PDET de la propuesta: PTAR e interceptores, parque agroindustrial, parque lineal del caño, torre del hospital y granja solar.", "modulos": ["saneamiento", "agroindustria", "urbanismo", "salud", "tic"], "monto": 114394 },
+      { "entidad": "MinVivienda · Fonvivienda y Viceministerio de Agua", "pedido": "Cupos de Casa Milagro para 300 viviendas urbanas y 200 rurales, y viabilidad con la Res. 0467 de 2026 para la PTAR, los interceptores y la sectorización del acueducto.", "modulos": ["vivienda", "saneamiento", "aguas"], "monto": 50772 },
+      { "entidad": "Gobernación de Antioquia", "pedido": "VIVA para vivienda, Indeportes para el estadio, Plan Departamental de Aguas para agua y saneamiento, la mitad del banco de maquinaria y cofinanciación de la torre.", "modulos": ["vivienda", "saneamiento", "agroindustria", "urbanismo", "salud", "aguas"], "monto": 37719 },
+      { "entidad": "ART y empresas contribuyentes", "pedido": "Inscribir en el banco de obras por impuestos el matadero y frigorífico, la PTAR, la dotación de la torre y la protección de la orilla, y buscar empresa con Ecopetrol y los operadores del campo Casabe.", "modulos": ["agroindustria", "saneamiento", "salud", "urbanismo", "aguas"], "monto": 23750 },
+      { "entidad": "MinSalud", "pedido": "Inscribir la torre de primer nivel en el PMIDS 2027–2029 y cofinanciar su dotación y los equipos básicos de salud rurales.", "modulos": ["salud"], "monto": 17200 },
+      { "entidad": "FONTUR, Cormagdalena, UNGRD, FENOGE y MinTIC", "pedido": "Mirador Puerta del Magdalena (turismo, orilla y riesgo), energía de la granja del relleno y conectividad de las Zonas Digitales.", "modulos": ["urbanismo", "saneamiento", "tic", "salud", "aguas"], "monto": 13776 },
+      { "entidad": "Findeter", "pedido": "Crédito con tasa compensada para la granja solar (Territorios Energéticos), las plantas del parque agroindustrial y la torre, dentro de la capacidad prudente del municipio.", "modulos": ["agroindustria", "tic", "salud", "saneamiento"], "monto": 9445 },
+      { "entidad": "MinAgricultura y ADR", "pedido": "Cofinanciar el acopio de leche y la trilladora y apoyar la inclusión del matadero en el plan de racionalización de plantas de beneficio.", "modulos": ["agroindustria"], "monto": 5500 },
+      { "entidad": "MinDeporte", "pedido": "Convenio de cofinanciación para la Cancha de Sóftbol Casabe y las canchas cubiertas junto al CIC.", "modulos": ["urbanismo"], "monto": 4700 },
+      { "entidad": "ANI y concesión Ruta del Cacao", "pedido": "Diseñar la solución definitiva del estribo de Yondó junto con la protección de la orilla del mirador y el muelle de carga.", "modulos": ["urbanismo", "agroindustria"] }
+    ],
+    "pasos": [
+      {
+        "id": "pedidos",
+        "tipo": "pedidos",
+        "titulo": "Lo que pedimos, entidad por entidad",
+        "texto": "Un pedido por ventanilla, con su monto y los módulos que mueve. Los montos son la parte de cada fuente en la mezcla propuesta.",
+        "nota": "La ANI y la concesión no ponen plata en esta propuesta: se les pide coordinar el estribo con la protección de la orilla. MinVivienda, MinSalud, MinDeporte y MinAgricultura son parte de la fuente «Nación»."
+      }
+    ]
+  }
+}

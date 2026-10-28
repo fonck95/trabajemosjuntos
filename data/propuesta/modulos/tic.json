@@ -1,0 +1,258 @@
+{
+  "id": "tic",
+  "nombre": "Infraestructura TIC",
+  "corto": "TIC y energía",
+  "lema": "Fibra, wifi gratis y una granja solar para lo público",
+  "problema": "Yondó tiene 3,56 accesos fijos a internet por cada 100 habitantes (4T-2025), frente a 26,1 en Antioquia, y va en retroceso (7,64 en 2021); no tiene ni una Zona Digital urbana. Las sedes públicas, el alumbrado y el acueducto pagan la energía a tarifa oficial plena (991 $/kWh, oct-2026), no generan energía propia y consumirán ≈1,59 GWh al año en 2031 (estimado).",
+  "propuesta": "Un anillo de fibra de 4,6 km por las calles del casco, con el Centro de Control (CCED) en la alcaldía, une colegios, hospital, bomberos, CIC, coliseo y las 4 estaciones de bombeo de aguas residuales (EBAR); de él salen 5 Zonas Digitales y la telemetría de las EBAR y la PTAR. La energía de todas las cuentas oficiales sale de una granja solar pública de 1,2 MWp frente a la subestación de EPM, en lugar de paneles en cada sede, como autogeneración colectiva de una comunidad energética de la alcaldía, la E.S.E. y Aguas y Aseo.",
+  "cifras": [
+    { "v": "3,56", "l": "accesos fijos a internet por cada 100 habitantes; Antioquia: 26,1", "fuente": "DNP, TerriData con MinTIC (4T-2025)", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip", "tono": "alerta" },
+    { "v": "0", "l": "Zonas Digitales urbanas de wifi gratuito (registro de MinTIC, 2023)", "fuente": "MinTIC, datos abiertos wg2u-d8ji", "url": "https://www.datos.gov.co/resource/wg2u-d8ji.json", "tono": "alerta" },
+    { "v": "100 %", "l": "del consumo eléctrico oficial a 2031 lo cubriría la granja (estimado)", "fuente": "Cálculo propio: 1,62–1,80 GWh frente a 1,59 GWh al año", "tono": "meta" },
+    { "v": "1.394", "l": "millones al año de ahorro en las facturas oficiales (estimado)", "fuente": "Cálculo propio con tarifas de EPM (oct-2026) y la CREG 101 072", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_101-72_2025.htm", "tono": "meta" }
+  ],
+  "inversion": { "min": 5511, "central": 6733, "max": 9066 },
+  "componentes": [
+    {
+      "id": "fibra",
+      "nombre": "Anillo de fibra óptica y Centro de Control (CCED)",
+      "resumen": "Anillo de 4,6 km que une sedes, colegios, hospital y EBAR con el CCED de la alcaldía",
+      "descripcion": "Fibra óptica colgada en los postes de EPM: un anillo de 4,6 km por las calles del casco (tramos de 2.983 y 1.625 m) y un ramal de 718 m a la EBAR La Victoria. Une la alcaldía, donde va el Centro de Control (CCED), con el coliseo y la ciudadela deportiva, las dos sedes de la I.E. Luis Eduardo Díaz, el CPSAM, los bomberos, el Concejo, el CIC y el Megacolegio, el hospital y las 4 EBAR. El CCED reúne la gestión de energía, el monitoreo de la granja, de las Zonas Digitales y de la telemetría, y un tablero de datos abiertos.",
+      "especificaciones": [
+        ["Trazado", "anillo de 4,6 km (2.983 + 1.625 m) y ramal de 718 m"],
+        ["Cable", "autosoportado (ADSS) de 48 hilos en el anillo y 24 en ramales"],
+        ["Red", "pasiva GPON: OLT de 16 puertos y switch capa 3 en la alcaldía"],
+        ["Conexiones", "21 sedes y EBAR más el nodo de la alcaldía"],
+        ["CCED", "gestión de energía y SCADA como servicio en la nube; sala con UPS"],
+        ["Operación", "arriendo de postes ≈$0,9 M por km al año (tope de la CRC)"]
+      ],
+      "costo": { "min": 546, "central": 808, "max": 1112 },
+      "base_costo": "Cifras del repositorio sin contarlas dos veces: fibra, 21 conexiones y nodo GPON, $208 M (docs/13, que costeó 10,67 km porque seguía toda la red de 13,2 kV con sus ramales rurales a la PTAP, los pozos y el relleno; el anillo urbano nuevo mide 4,6 km más 718 m y lleva cable de 48 hilos), gestión de energía y SCADA, $450 M, y sala del CCED, $150 M (docs/05), con el rango de prefactibilidad de esas fuentes.",
+      "proyecto_tipo": [
+        { "nombre": "Lineamiento MinTIC (con MGA): ciudades y territorios inteligentes", "url": "https://www.mintic.gov.co/portal/715/articles-326715_tipologia_06_001.pdf" },
+        { "nombre": "Referente: APU de fibra y nodo GPON del repositorio (docs/13)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/13-red-de-distribucion.md" }
+      ],
+      "fuentes": ["sgr", "municipio"],
+      "plazo": "2028–2029",
+      "ubicacion": "Casco urbano: nodo y CCED en la alcaldía; el anillo pasa por la ciudadela deportiva, los colegios, el CPSAM, los bomberos, el Concejo, el CIC, el hospital y 3 EBAR, y un ramal llega a la EBAR La Victoria."
+    },
+    {
+      "id": "zonas",
+      "nombre": "Zonas Digitales",
+      "resumen": "5 zonas de wifi gratuito en parques y canchas con el proyecto tipo DNP–MinTIC",
+      "descripcion": "Wifi público gratuito al aire libre con el proyecto tipo DNP–MinTIC, en 5 sitios de la primera fase: Parque Principal, ciudadela deportiva (coliseo y Parque Educativo), Cancha de Sóftbol Casabe y parque lineal, plaza del Concejo, y CIC y Megacolegio. Cada zona tiene 2 o más puntos de acceso, 2.500 m² o más de cobertura y 200 usuarios a la vez, con el canal del anillo municipal. Villa María, la cancha de la alcaldía y la futura urbanización José Domingo Oliveros quedan para una segunda fase.",
+      "especificaciones": [
+        ["Zonas", "5 en la primera fase; 3 candidatas para la segunda"],
+        ["Cobertura", "2.500 m² o más y 2 o más puntos de acceso por zona"],
+        ["Capacidad", "200 usuarios a la vez; canal de 20 Mbps o más"],
+        ["Servicio", "24/7 con portal cautivo; 36 meses de operación incluidos"],
+        ["Canal", "sale del anillo municipal de fibra"]
+      ],
+      "costo": { "min": 520, "central": 749, "max": 1000 },
+      "base_costo": "Proyecto tipo de Zonas Digitales (base 2019) llevado a 2026 con el IPC (×1,5434): para 5 zonas y 36 meses, instalación $345,5 M, operación $307,3 M, supervisión $37 M y apropiación y promoción $59,5 M (cálculo propio); la operación cuesta menos si el canal sale del anillo municipal.",
+      "proyecto_tipo": [
+        { "nombre": "Proyecto tipo DNP–MinTIC: Zonas Digitales de Acceso Público Gratuito", "url": "https://www.mintic.gov.co/portal/715/articles-326715_tipologia_02_002.pdf" }
+      ],
+      "fuentes": ["fondos", "sgr"],
+      "plazo": "2028–2029; 36 meses de operación incluidos",
+      "ubicacion": "Parque Principal; ciudadela deportiva (coliseo Benito Arias y Parque Educativo); Cancha de Sóftbol Casabe y parque lineal; plaza del Concejo; CIC y Megacolegio.",
+      "unidades": 5
+    },
+    {
+      "id": "telemetria",
+      "nombre": "Telemetría de las EBAR y la PTAR en el CCED",
+      "resumen": "Unidades remotas en las EBAR y la PTAR que reportan al CCED nivel, bombas y caudal",
+      "descripcion": "Unidades remotas en las 4 EBAR del casco (El Prado, El Paraíso, El Progreso y La Victoria), en la EBAR central nueva y en la planta de tratamiento de aguas residuales (PTAR) que propone el módulo de Saneamiento, con nivel, estado de las bombas, caudal y consumo de energía. Las EBAR del casco reportan por el anillo de fibra y las dos nuevas por 4G hasta que se tienda su ramal; el CCED las ve en un solo tablero con alarmas. El SCADA del acueducto (pozos, PTAP y tanques) va en el módulo de Aguas y la telesalud en el de Salud.",
+      "especificaciones": [
+        ["Puntos", "6: 4 EBAR del casco, EBAR central nueva y PTAR"],
+        ["Equipos", "6 unidades remotas (RTU o PLC) y 2 macromedidores"],
+        ["Variables", "nivel, estado de las bombas, caudal y energía"],
+        ["Comunicación", "fibra del anillo; 4G en la EBAR central y la PTAR"],
+        ["Ciberseguridad", "red de operación separada y doble factor (IEC 62443)"],
+        ["No incluye", "SCADA del acueducto (Aguas) ni telesalud (Salud)"]
+      ],
+      "costo": { "min": 300, "central": 400, "max": 600 },
+      "base_costo": "Estimación propia, por cotizar, con los precios unitarios de la investigación: 6 unidades remotas × $35 M = $210 M, 2 macromedidores a la entrada y la salida de la PTAR × $35 M = $70 M, e integración al CCED y puesta en marcha, $120 M.",
+      "proyecto_tipo": [
+        { "nombre": "Guía FUTIC de MinTIC: ciudades y territorios inteligentes (servicios públicos)", "url": "https://gobiernodigital.mintic.gov.co/692/articles-392044_recurso_3.pdf" }
+      ],
+      "fuentes": ["sgr", "municipio"],
+      "plazo": "2028–2031, por etapas",
+      "ubicacion": "EBAR El Prado, El Paraíso, El Progreso y La Victoria, en el casco urbano; EBAR central y PTAR en el sitio B, al nororiente del casco, según el módulo de Saneamiento."
+    },
+    {
+      "id": "granja",
+      "nombre": "Granja solar pública centralizada (1,2 MWp)",
+      "resumen": "1,2 MWp en suelo frente a la subestación de EPM para todas las cuentas oficiales",
+      "descripcion": "Una sola granja en suelo de 1,2 MWp con inversores de 1,0 MW en corriente alterna (CA), en el bloque A (1,70 ha), frente a la subestación Yondó de EPM (34,5/13,2 kV), conectada con unos 40 m de línea de 13,2 kV; el bloque B (0,49 ha) queda de reserva. Produce 1,62–1,80 GWh al año, el 100 % del consumo oficial estimado a 2031 (1,59 GWh), y reparte la energía entre las cuentas públicas como autogenerador colectivo de una comunidad energética de la alcaldía, la E.S.E. y Aguas y Aseo. El estudio geográfico proponía 1,5 MWp en los dos bloques, pero el tope de 1 MW CA de la autogeneración colectiva (Res. CREG 101 072 de 2025) la limita a ≈1,2 MWp.",
+      "especificaciones": [
+        ["Potencia", "≈1.200 kWp con inversores de 1.000 kW CA"],
+        ["Módulos", "≈2.000 de ≈600 W"],
+        ["Predio", "bloque A, 1,70 ha; bloque B, 0,49 ha de reserva"],
+        ["Conexión", "≈40 m de línea de 13,2 kV a la subestación de EPM"],
+        ["Transformador", "1.250 kVA a 13,2 kV, con frontera y medición"],
+        ["Producción", "1,62–1,80 GWh al año (estimado)"],
+        ["Reparto", "11 a 20 cuentas oficiales, menos del 10 % cada una"]
+      ],
+      "costo": { "min": 4145, "central": 4776, "max": 6354 },
+      "base_costo": "Cálculo propio: 1.200 kWp a $2,7 M/kWp (precio de docs/12) = $3.240 M, más transformador, protecciones y medida ($280 M), cerramiento, vías, caseta, cámaras y monitoreo ($350 M), estudios, diseños, estudio de conexión y RETIE ($150 M) y conexión a EPM ($62 M, el valor de una derivación de 0,6 km que con 40 m de línea queda para la celda o el reconectador), con 17 % de interventoría e imprevistos: $4.776 M ($3,98 M/kWp), sin el predio; el rango de la investigación usa sistemas de $2,4 a $3,5 M/kWp, y en la contratación de FENOGE en UNIPAZ el kWp salió a ≈$6,4 M.",
+      "proyecto_tipo": [
+        { "nombre": "Referente: granja de FENOGE en Arroyohondo, Bolívar (1.102 kWp, predio municipal)", "url": "https://fenoge.gov.co/documentos-noticias/2025/Boletin_prensa_Arroyohondo_final.pdf" },
+        { "nombre": "Referente: granja Campo Gala, Barrancabermeja (≈1,0 MWp, MinEnergía y FENOGE)", "url": "https://www.minenergia.gov.co/es/sala-de-prensa/noticias-index/cerca-de-3000-habitantes-de-barrancabermeja-seran-beneficiados-con-nueva-granja-solar-de-1-megavatio/" },
+        { "nombre": "Referente: granja del relleno de Yondó (997 kWp, docs/12)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/12-parque-ecotecnologico-relleno.md" }
+      ],
+      "fuentes": ["sgr", "fondos", "findeter"],
+      "plazo": "Estructuración 2028; obra 2029–2030",
+      "ubicacion": "Bloque A (1,70 ha): potrero al sur de la vía, frente a la subestación Yondó de EPM, a ≈1,3 km al occidente de la alcaldía; bloque B (0,49 ha) de reserva, al oriente de la cárcava."
+    }
+  ],
+  "financiacion": [
+    { "fuente": "sgr", "monto": 3807, "mecanismo": "Incentivo a la Producción (OCAD Paz), «Territorios energéticos», para la granja ($2.799 M) y asignaciones directas para el anillo y la telemetría ($1.008 M)" },
+    { "fuente": "fondos", "monto": 1726, "mecanismo": "FENOGE, modelo Territorio Energético, para la granja ($977 M) y MinTIC · Fondo Único de TIC, proyecto tipo de Zonas Digitales ($749 M)" },
+    { "fuente": "findeter", "monto": 1000, "mecanismo": "Crédito directo con tasa compensada para la granja (Territorios Energéticos, Decreto 1223 de 2025), pagado con el ahorro en las facturas" },
+    { "fuente": "municipio", "monto": 200, "mecanismo": "Recursos propios: contrapartida del anillo, el CCED y la telemetría" }
+  ],
+  "proyectos_tipo": [
+    { "nombre": "Zonas Digitales de Acceso Público Gratuito (proyecto tipo DNP–MinTIC)", "url": "https://www.mintic.gov.co/portal/715/articles-326715_tipologia_02_002.pdf" },
+    { "nombre": "Ciudades y territorios inteligentes (lineamiento MinTIC con MGA, tipología 6)", "url": "https://www.mintic.gov.co/portal/715/articles-326715_tipologia_06_001.pdf" }
+  ],
+  "gestion": {
+    "madurez": "Perfil",
+    "madurez_nota": "La fibra y el CCED tienen costos de prefactibilidad (docs/13 y docs/05) y la granja está en perfil: para llegar a fase III faltan el aval de conexión de EPM, el predio y la topografía del bloque A y 12 facturas por cada cuenta oficial.",
+    "pedido": "A MinEnergía y al OCAD Paz, $2.799 M del Incentivo a la Producción del SGR para la granja; a FENOGE, $977 M; a Findeter, un crédito de $1.000 M con tasa compensada, y a MinTIC (Fondo Único de TIC), $749 M para las Zonas Digitales. El municipio pone $1.208 M de regalías directas y recursos propios (18 %) para el anillo y la telemetría.",
+    "a_quien": [
+      "Ministerio de Minas y Energía · Grupo de Regalías (convocatoria del Incentivo a la Producción) y OCAD Paz",
+      "FENOGE · Territorios Energéticos y ConEnergía",
+      "Findeter · crédito directo con tasa compensada (Decreto 1223 de 2025)",
+      "MinTIC · Fondo Único de TIC (Zonas Digitales)",
+      "EPM · subestación Yondó: celdas de 13,2 kV, capacidad y estudio de conexión",
+      "CREG · concepto sobre el reparto de la autogeneración colectiva"
+    ],
+    "pasos": [
+      "Nov-2026: derecho de petición a EPM por la subestación Yondó (celdas libres de 13,2 kV y capacidad para 1 MW CA).",
+      "Ene–jun 2027: 12 facturas por cada cuenta oficial (NIU) y placas de las bombas para fijar la demanda y los porcentajes de reparto.",
+      "2027: convenio asociativo de la comunidad energética (alcaldía, E.S.E. y Aguas y Aseo), consulta a la CREG sobre el reparto y gestión del predio del bloque A.",
+      "2027: estudio de conexión simplificado y topografía; MGA de la granja (sin proyecto tipo del DNP: referente Arroyohondo) y de las Zonas Digitales (proyecto tipo DNP–MinTIC).",
+      "2028: radicar la granja en fase III en la primera convocatoria del Incentivo a la Producción y, en paralelo, ante FENOGE y Findeter; contratar el anillo, el CCED y las Zonas Digitales."
+    ]
+  },
+  "metas": [
+    { "indicador": "Consumo eléctrico oficial cubierto con energía solar (balance anual)", "base": "0 % (2026)", "meta": "100 % (2031)" },
+    { "indicador": "Ahorro en las facturas de energía de las cuentas oficiales", "base": "$0 (2026)", "meta": "≈$1.394 M al año y ≈200 t de CO₂ evitadas (2031)" },
+    { "indicador": "Sedes públicas y EBAR conectadas por fibra al CCED", "base": "0 (2026)", "meta": "22, con el CCED operando las 24 horas (2029)" },
+    { "indicador": "Zonas Digitales urbanas en servicio", "base": "0 (2023)", "meta": "5, con 1.000 o más usuarios únicos al mes (2029)" },
+    { "indicador": "EBAR y PTAR que reportan en línea al CCED", "base": "0 (2026)", "meta": "6 de 6 (2031)" }
+  ],
+  "riesgos": [
+    { "riesgo": "No cumplir las condiciones del caso 1 (11 o más fronteras, menos del 10 % y no más de 100 kW por cuenta): el kWh bajaría de ≈877 $ a ≈404 $ y el ahorro, de $1.394 M a $642 M al año (retorno de 7,4 años).", "mitigacion": "Diseñar el reparto desde la fase 0 con todas las cuentas (NIU), partir el acueducto y el alumbrado en varias fronteras, mantener la granja en 1,0 MW CA y pedir concepto a la CREG y a EPM antes de estructurar." },
+    { "riesgo": "Conexión y predio sin confirmar: EPM no ha confirmado la subestación ni su capacidad, las dos granjas sumarían 1,8 MW CA en la misma red y el bloque A es un predio privado que no está en el costo.", "mitigacion": "Derecho de petición y estudio de conexión simplificado en 2027; compra, arriendo o servidumbre del bloque A, con el bloque B de reserva; fronteras y contratos de conexión separados para las dos granjas." },
+    { "riesgo": "Fuentes inciertas: la convocatoria del Incentivo a la Producción 2026–2027 no se ha publicado, el SGR 2027–2028 baja 11 % y la Res. MinEnergía 40509 de 2024 enfoca los recursos públicos para comunidades energéticas en personas naturales y comunidades, lo que puede dejar por fuera a una comunidad de entidades públicas.", "mitigacion": "Tener la granja en fase III con MGA para la primera convocatoria y mezclar fuentes (SGR, FENOGE y Findeter, con Obras por Impuestos en energía como alternativa)." },
+    { "riesgo": "Que las Zonas Digitales se apaguen cuando terminen los 36 meses de operación financiados.", "mitigacion": "Sacar el canal del anillo municipal para bajar el costo, incluir la operación en el presupuesto municipal y explorar publicidad o servicios premium, como sugiere el proyecto tipo." }
+  ],
+  "pasos": [
+    { "id": "portadilla", "tipo": "portadilla", "titulo": "Poco internet y energía pública a tarifa plena" },
+    {
+      "id": "fibra",
+      "tipo": "componente",
+      "componente": "fibra",
+      "titulo": "Un anillo de fibra une lo público",
+      "texto": "Un anillo de 4,6 km por las calles y un ramal de 718 m unen la alcaldía, donde va el Centro de Control (CCED), con el coliseo, los colegios, el hospital, los bomberos, el CIC y las 4 EBAR. De la misma red salen 5 Zonas Digitales de wifi gratis en la primera fase.",
+      "cifras": [
+        { "v": "34", "l": "accesos de fibra hasta el hogar en todo Yondó, de 1.062 fijos (2023)", "fuente": "MinTIC, datos abiertos n48w-gutb", "url": "https://www.datos.gov.co/resource/n48w-gutb.json?cod_municipio=05893", "tono": "alerta" },
+        { "v": "7,64", "l": "accesos fijos por cada 100 habitantes en 2021; en 2025 bajaron a 3,56", "fuente": "DNP, TerriData con MinTIC", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip", "tono": "alerta" }
+      ],
+      "leyenda": [
+        { "texto": "Anillo de fibra (4,6 km) y ramal a La Victoria", "color": "var(--data)", "forma": "dash" },
+        { "texto": "CCED: centro de control en la alcaldía", "color": "var(--data)", "forma": "pt" },
+        { "texto": "Zonas Digitales (5 en la primera fase)", "color": "var(--m-tic)", "forma": "pt" }
+      ]
+    },
+    {
+      "id": "telemetria",
+      "tipo": "componente",
+      "componente": "telemetria",
+      "titulo": "Las EBAR y la PTAR, vigiladas en línea",
+      "texto": "Las 4 EBAR del casco, la nueva EBAR central y la PTAR que propone el módulo de Saneamiento reportan al CCED nivel, bombas, caudal y energía. El SCADA del acueducto va en el módulo de Aguas y la telesalud en el de Salud: aquí no se cuentan.",
+      "leyenda": [
+        { "texto": "Datos de las EBAR y la PTAR hacia el CCED", "color": "var(--data)", "forma": "dash" },
+        { "texto": "CCED en la alcaldía", "color": "var(--data)", "forma": "pt" }
+      ]
+    },
+    {
+      "id": "descartado",
+      "tipo": "comparacion",
+      "titulo": "Por qué no paneles en cada sede",
+      "texto": "El modelo anterior (docs/05) repartía 469 kWp en cubiertas de las sedes, una marquesina y el acueducto, cada sitio como autogenerador de hasta 100 kW. La autogeneración colectiva permite cambiarlo por una sola granja que reparte su energía entre todas las cuentas oficiales.",
+      "antes": {
+        "titulo": "Paneles en cada sede",
+        "texto": "Los 469 kWp de docs/05 producían ≈0,63 GWh al año: el 48 % del consumo oficial de 1,31 GWh que calculaba el repositorio. Rinden menos en techo (1.346 kWh/kWp) y pedían inspección y refuerzo de cubiertas ($300 M con obras eléctricas y RETIE)."
+      },
+      "despues": {
+        "titulo": "Una granja centralizada",
+        "texto": "1,2 MWp en suelo rinden más (1.450 kWh/kWp) y producen 1,62–1,80 GWh al año: el 100 % del consumo oficial estimado a 2031 (1,59 GWh). Un solo predio y una conexión de 40 m; la energía se reparte entre las cuentas a ≈877 $/kWh, el mismo valor que tenían los excedentes de cada sede."
+      },
+      "cifras": [
+        { "v": "48 %", "l": "del consumo oficial cubrían los paneles en las sedes (docs/05)", "fuente": "Cálculo propio sobre docs/05 y data/microrred.json", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/05-microrred-domotica-mintic.md", "tono": "alerta" },
+        { "v": "100 %", "l": "del consumo oficial a 2031 cubre la granja de 1,2 MWp (estimado)", "fuente": "Cálculo propio con 1.450 kWh/kWp al año", "tono": "meta" }
+      ],
+      "nota": "Lo que se pierde: la granja no mantiene encendidas las sedes si EPM corta el servicio, como sí lo hacían las islas con baterías. El respaldo queda solo en las cargas críticas: la UPS de la sala del CCED, la torre del hospital (baterías y planta, docs/11) y el bombeo del acueducto, que se coordina con el módulo de Aguas."
+    },
+    {
+      "id": "granja",
+      "tipo": "componente",
+      "componente": "granja",
+      "titulo": "Una granja solar frente a la subestación",
+      "texto": "La granja de 1,2 MWp (1,0 MW CA) ocupa el bloque A (1,70 ha) y llega con 40 m de línea de 13,2 kV a la subestación Yondó de EPM; el bloque B (0,49 ha) queda de reserva. Con la granja del relleno (997 kWp, para hogares de estratos 1 y 2, en el módulo de Saneamiento), Yondó tendría ≈2,2 MWp centralizados.",
+      "cifras": [
+        { "v": "1,0 MW", "l": "tope en CA de la autogeneración colectiva: por eso 1,2 MWp y no 1,5", "fuente": "CREG 101 072 de 2025 y CREG 174 de 2021", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_101-72_2025.htm" },
+        { "v": "3,4 años", "l": "de retorno con $1.394 M de ahorro al año (7,4 en el caso 2)", "fuente": "Cálculo propio con tarifas de EPM (oct-2026)", "tono": "meta" }
+      ],
+      "leyenda": [
+        { "texto": "Mesas solares: 1.200 kWp en el bloque A", "color": "#1c2b48", "forma": "area" },
+        { "texto": "Línea de 13,2 kV a la subestación (40 m)", "color": "#f0a020", "forma": "" }
+      ]
+    },
+    {
+      "id": "granja_cerca",
+      "tipo": "texto",
+      "titulo": "Cómo funciona la comunidad energética",
+      "texto": "La granja es una frontera de inyección y cada cuenta oficial recibe un porcentaje fijo de lo que produce: es autogeneración colectiva (CREG 101 072 de 2025) de una comunidad energética pública (Decreto 2236 de 2023).",
+      "lista": [
+        "<b>Dueños:</b> la alcaldía, la E.S.E. Hospital Héctor Abad Gómez y Aguas y Aseo, unidas por un convenio asociativo e inscritas en el registro de comunidades energéticas de MinEnergía.",
+        "<b>Quién recibe la energía:</b> 11 a 20 cuentas oficiales (sedes, alumbrado, pozos, impulsión, EBAR y PTAR), cada una con un porcentaje fijo; las cargas grandes se parten en varias fronteras.",
+        "<b>Tope:</b> 1,0 MW en corriente alterna, la suma de los inversores; por eso la granja es de 1,2 MWp y no de 1,5. Cada cuenta recibe menos del 10 % y no más de 100 kW.",
+        "<b>Ahorros:</b> cada cuenta descuenta de su factura la energía de su porcentaje y cada kWh le ahorra ≈877 $ (la tarifa oficial menos el cargo de comercialización, Cv): ≈$1.394 M al año entre todas.",
+        "<b>Operación:</b> el representante de la comunidad (la alcaldía, en esta propuesta) declara los porcentajes ante EPM y contrata un operador técnico; el CCED vigila la producción en línea.",
+        "<b>Aparte:</b> la granja del relleno (997 kWp) es otra comunidad, de hogares de estratos 1 y 2, con su propia frontera; las dos no se mezclan."
+      ],
+      "cifras": [
+        { "v": "877 $/kWh", "l": "vale cada kWh repartido si se cumplen las condiciones del caso 1", "fuente": "CREG 101 072 de 2025, art. 20; tarifas de EPM (oct-2026)", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_101-72_2025.htm" },
+        { "v": "404 $/kWh", "l": "si una cuenta recibe el 10 % o más o pasa de 100 kW (caso 2)", "fuente": "CREG 101 072 de 2025, art. 20", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_101-72_2025.htm", "tono": "alerta" }
+      ],
+      "nota": "Falta verificar en derecho si la Policía (entidad nacional), los bomberos y el alumbrado público pueden entrar a la comunidad con fronteras propias."
+    },
+    {
+      "id": "financiacion",
+      "tipo": "financiacion",
+      "titulo": "Regalías, fondos y un crédito pagado con ahorro",
+      "texto": "La granja va al Incentivo a la Producción del SGR, que Yondó casi no ha usado: del bienio 2025–2026 tiene $14.025 M y solo ha aprobado $331 M (oct-2026). FENOGE, Findeter y el Fondo Único de TIC completan la mezcla; el municipio aporta $1.208 M de regalías directas y recursos propios."
+    }
+  ],
+  "fuentes_citadas": [
+    { "titulo": "DNP, TerriData: ficha de Yondó, accesos fijos a internet por cada 100 habitantes (2025)", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip" },
+    { "titulo": "MinTIC, Zonas Digitales: datos abiertos wg2u-d8ji (corte 2023)", "url": "https://www.datos.gov.co/resource/wg2u-d8ji.json" },
+    { "titulo": "MinTIC, accesos fijos a internet por tecnología: datos abiertos n48w-gutb (2023)", "url": "https://www.datos.gov.co/resource/n48w-gutb.json?cod_municipio=05893" },
+    { "titulo": "DNP y MinTIC, proyecto tipo Zonas Digitales de Acceso Público Gratuito (2023)", "url": "https://www.mintic.gov.co/portal/715/articles-326715_tipologia_02_002.pdf" },
+    { "titulo": "CREG, Resolución 101 072: comunidades energéticas y autogeneración colectiva (2025)", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_101-72_2025.htm" },
+    { "titulo": "CREG, Resolución 174: autogeneración a pequeña escala y capacidad instalada (2021)", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_0174_2021.htm" },
+    { "titulo": "Gobierno nacional, Decreto 2236: comunidades energéticas (2023)", "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=227230" },
+    { "titulo": "MinEnergía, granjas solares de 1 MW en Barrancabermeja: Campo Gala y UNIPAZ (2026)", "url": "https://www.minenergia.gov.co/es/sala-de-prensa/noticias-index/cerca-de-3000-habitantes-de-barrancabermeja-seran-beneficiados-con-nueva-granja-solar-de-1-megavatio/" },
+    { "titulo": "FENOGE, granja solar Territorio Energético de Arroyohondo, Bolívar (2025)", "url": "https://fenoge.gov.co/documentos-noticias/2025/Boletin_prensa_Arroyohondo_final.pdf" },
+    { "titulo": "MinEnergía, Convocatoria del Incentivo a la Producción del SGR (2025)", "url": "https://www.minenergia.gov.co/es/misional/sistema-general-de-regalias/convocatoria-ip-2025/" },
+    { "titulo": "Gobierno nacional, Decreto 1223: tasa compensada y crédito directo de Findeter (2025)", "url": "https://www.findeter.gov.co/sites/default/files/2026-01/DECRETO%201223%20DEL%2014%20DE%20NOVIEMBRE%20DE%202025.pdf" },
+    { "titulo": "Repositorio Atlas Yondó 2028, docs/05: Red Energética Pública y CCED (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/05-microrred-domotica-mintic.md" },
+    { "titulo": "Repositorio Atlas Yondó 2028, docs/12: parque ecotecnológico y granja del relleno (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/12-parque-ecotecnologico-relleno.md" },
+    { "titulo": "Repositorio Atlas Yondó 2028, docs/13: red de distribución de 13,2 kV y fibra (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/13-red-de-distribucion.md" },
+    { "titulo": "Repositorio Atlas Yondó 2028, anexo B: finanzas y regalías, bienio 2025–2026 (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/anexos/B-finanzas-regalias.md" }
+  ]
+}

@@ -1,0 +1,394 @@
+{
+  "id": "agroindustria",
+  "nombre": "Agroindustria",
+  "corto": "Agroindustria",
+  "lema": "Ganado, grano y pescado salen de Yondó ya transformados",
+  "problema": "Yondó tiene 124.698 bovinos y 13.901 búfalos (ICA 2026; el documento base usaba 129.414 y 11.536, de 2021) y 11.400 cerdos, pero ninguna planta para beneficiar, enfriar, secar o transformar: el ganado sale en pie, el arroz sin secar y el pescado sin frío. Solo está sembrado el 2,4 % de las 139.351 ha de frontera agrícola (2020) y el arroz produjo 2.404 t de paddy en 2025. El cierre del puente Guillermo Gaviria Correa del 16 al 20 de marzo de 2026 mostró el riesgo de depender del paso diario de animales e insumos.",
+  "propuesta": "Un parque agroindustrial de propiedad pública y operación asociativa, con seis componentes productivos que comparten predio, frío y tratamiento de residuos (matadero y frigorífico, planta de pescado, concentrados, trilladora, acopio de leche y banco de maquinaria), más un acopio satélite en Puerto Matilde. Va en un lote de 8,31 ha al suroriente de la vía del puente, a más de 300 m del río, con muelle de carga 140 m aguas arriba del puente: la propuesta inicial lo ponía sobre la orilla, pero allí todo es campo petrolero Casabe y la orilla se socava. Lo opera una empresa de economía mixta en la que gana participación la cooperativa de los 14 núcleos productivos.",
+  "cifras": [
+    { "v": "138.599", "l": "bovinos y búfalos, sin planta de beneficio: el ganado sale en pie", "fuente": "ICA, Censo Pecuario Nacional 2026", "url": "https://www.ica.gov.co/areas/pecuaria/servicios/epidemiologia-veterinaria/censos-2016/censo-2018", "tono": "alerta" },
+    { "v": "11.400", "l": "cerdos (79 % comerciales); el documento base usaba 1.085", "fuente": "ICA, Censo Pecuario Nacional 2026", "url": "https://www.ica.gov.co/areas/pecuaria/servicios/epidemiologia-veterinaria/censos-2016/censo-2018" },
+    { "v": "2.404 t", "l": "de arroz paddy en 2025, sin secado ni trilla en el municipio", "fuente": "UPRA-EVA en TerriData (DNP), 2025", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip", "tono": "alerta" },
+    { "v": "$13.819 M", "l": "de regalías para producir (incentivo, OCAD Paz) sin aprobar a oct-2026", "fuente": "MinHacienda-SPGR, SGR 2025–2026", "url": "https://www.datos.gov.co/d/g4qj-2p2e" }
+  ],
+  "inversion": { "min": 59000, "central": 77000, "max": 106000 },
+  "componentes": [
+    {
+      "id": "matadero",
+      "nombre": "Matadero y frigorífico municipal",
+      "resumen": "30 bovinos y 40 cerdos por turno, con frigorífico y autorización sanitaria del INVIMA",
+      "descripcion": "Planta de beneficio con líneas separadas de bovinos y búfalos y de porcinos, corrales de reposo, cuartos de oreo y frigorífico de canales. Beneficia unas 7.500 reses y 10.000 cerdos al año para Yondó y Barrancabermeja (unos 253.000 consumidores) y puede compartir corrales y básculas con la subasta ganadera. Sangre, contenido ruminal y estiércol van al biodigestor, no a la fábrica, por la prohibición de harinas de mamífero en alimento para rumiantes.",
+      "especificaciones": [
+        ["Capacidad", "30 bovinos y 40 porcinos por turno"],
+        ["Meta 2031", "7.500 reses y 10.000 cerdos al año"],
+        ["Categoría", "Nacional para vender en Barrancabermeja; autoconsumo solo abastece a Yondó"],
+        ["Planta", "≈1.800 m² con oreo y frigorífico, más 1.440 m² de corrales (estimado)"],
+        ["Normas", "Decreto 1500 de 2007, Resolución 240 de 2013 y autorización del INVIMA"],
+        ["Productores", "Vacunación al día, guía de movilización y registro SINIGÁN"],
+        ["Línea porcina", "11.400 cerdos en Yondó (ICA 2026), 79 % comerciales"]
+      ],
+      "costo": { "min": 16000, "central": 18000, "max": 27000 },
+      "base_costo": "Valor del documento base; por analogía con Cañasgordas (≈$16.300 M) y La Jagua de Ibirico (≈$27.200 M), plantas de categoría nacional en pesos de 2026, el contraste da ≈$20.000 M, y una planta de autoconsumo costaría de $2.000 a 6.200 M pero solo podría vender en Yondó.",
+      "proyecto_tipo": [
+        { "nombre": "Proyecto tipo DNP: Planta de Beneficio Animal Categoría Autoconsumo (solo si se elige autoconsumo)", "url": "https://proyectostipo.dnp.gov.co/" },
+        { "nombre": "Referente SGR: planta de beneficio de La Jagua de Ibirico (BPIN 2017204000002)", "url": "https://www.datos.gov.co/resource/mzgh-shtp.json?codigobpin=2017204000002" },
+        { "nombre": "Referente: planta de categoría nacional de Cañasgordas, Antioquia (2019)", "url": "https://www.contextoganadero.com/regiones/canasgordas-inauguro-moderna-planta-de-beneficio" }
+      ],
+      "fuentes": ["sgr", "oxi", "findeter", "privados"],
+      "plazo": "2030–2031 (diseños 2028–2029)",
+      "ubicacion": "Zona sucia del parque, al sur del lote y a unos 300 m de las casas del cruce, con puerta propia para ganado y residuos; el frigorífico se pega a la central de frío.",
+      "unidades": 1
+    },
+    {
+      "id": "pescado",
+      "nombre": "Planta de eviscerado de pescado y frío",
+      "resumen": "2 t/día de pescado eviscerado, fileteado y congelado, con la central de frío del parque",
+      "descripcion": "Recibe pescado de captura y de estanque para lavar, eviscerar, filetear, empacar y congelar, con hielo y cavas para los pescadores de las ciénagas. Incluye la central de frío del parque (fábrica de hielo, túnel de congelación y cuartos fríos), que comparten la carne y la leche, y despacha en carros refrigerados a Barrancabermeja, la alimentación escolar y la plaza. Las vísceras y los recortes van a la fábrica de concentrados como ensilaje o harina.",
+      "especificaciones": [
+        ["Capacidad", "2 t/día de pescado procesado"],
+        ["Procesos", "Lavado, eviscerado, fileteado, empaque y congelación"],
+        ["Central de frío", "Fábrica de hielo, túnel de congelación y cuartos fríos compartidos"],
+        ["Normas", "Resoluciones 776 de 2008 y 2674 de 2013; tallas y vedas de la AUNAP"],
+        ["Huella", "≈1.500 m² de planta y 780 m² de central de frío (estimado)"],
+        ["Línea base", "Sin cifras de desembarco: se levanta en la preparación"]
+      ],
+      "costo": { "min": 3000, "central": 4500, "max": 6500 },
+      "base_costo": "Valor del documento base; no se halló un referente público reciente (2024–2026) de una planta de eviscerado, así que el rango es amplio y se ajusta en la prefactibilidad.",
+      "proyecto_tipo": [],
+      "fuentes": ["sgr", "oxi"],
+      "plazo": "2028–2029",
+      "ubicacion": "Zona limpia del parque: recibo por el lado sucio y eviscerado junto a la central de frío; el pescado de río entra por el muelle de carga.",
+      "unidades": 1
+    },
+    {
+      "id": "puerto_matilde",
+      "nombre": "Acopio satélite de Puerto Matilde (hielo y frío)",
+      "resumen": "Hielo, cuarto frío y energía solar para el Valle del Río Cimitarra y el río Ité",
+      "descripcion": "Centro de acopio con fábrica de hielo, cuarto frío y energía solar que lleva la cadena de frío a la Zona de Reserva Campesina del Valle del Río Cimitarra y al río Ité. Lo coadministran la ACVC, las juntas de acción comunal y la COAM, y el producto llega frío por río hasta el muelle del parque. Una alternativa modular es una barcaza con cuarto frío como la que entregó la AUNAP en Bocas de Carare.",
+      "especificaciones": [
+        ["Equipos", "Fábrica de hielo, cuarto frío, cavas isotérmicas y paneles solares"],
+        ["Atiende", "Valle del Río Cimitarra y río Ité (ZRC)"],
+        ["Gestión", "ACVC, juntas de acción comunal y COAM"],
+        ["Salida", "Por río hasta el muelle de carga del parque"],
+        ["Alternativa", "Barcaza con cuarto frío de 6 t (AUNAP, Bocas de Carare)"],
+        ["Meta 2031", "1 acopio satélite en operación"]
+      ],
+      "costo": { "min": 1500, "central": 3200, "max": 4000 },
+      "base_costo": "Valor del documento base; no hay costo público de la barcaza de la AUNAP, y el mínimo de $1.500 M corresponde a una solución modular (estimado).",
+      "proyecto_tipo": [
+        { "nombre": "Referente: barcaza con cuarto frío y hielo de la AUNAP en Bocas de Carare (Santander)", "url": "https://www.agronegocios.co/agricultura/aunap-entrega-barcaza-para-la-conservacion-de-pescado-a-comunidad-en-santander-3058581" }
+      ],
+      "fuentes": ["sgr", "cooperacion"],
+      "plazo": "2028–2029",
+      "ubicacion": "Puerto Matilde, en la Zona de Reserva Campesina del Valle del Río Cimitarra.",
+      "unidades": 1
+    },
+    {
+      "id": "concentrados",
+      "nombre": "Fábrica de concentrados",
+      "resumen": "1.000 t/mes de alimento para peces, cerdos y ganado con maíz, soya y yuca de la región",
+      "descripcion": "Produce alimento balanceado para peces, cerdos, aves y bovinos con maíz, soya, yuca seca y subproductos de arroz y palma, e incluye un patio de secado y picado para comprar yuca fresca. Es la planta que más cadenas conecta: compra a los núcleos de granos y yuca y vende a los núcleos porcícola, piscícola y ganadero. La demanda local estimada (6.000 a 8.400 t/año, sobre todo cerdos; no hay granjas avícolas comerciales registradas) llena entre 50 % y 70 % de la planta, así que conviene arrancar con 500 t/mes.",
+      "especificaciones": [
+        ["Capacidad", "1.000 t/mes (12.000 t/año); fase 1 sugerida de 500 t/mes"],
+        ["Granos", "7.200 t de maíz y 2.400 t de soya al año (núcleo de granos)"],
+        ["Yuca", "1.000 t de yuca seca al año; ≈1.378 ha en 2025 (estimado; 721 ha en 2020)"],
+        ["Subproductos", "800 t de salvado y partido de la trilladora y 400 t de palmiste"],
+        ["Clientes", "Núcleos porcícola, piscícola, avícola y ganadero"],
+        ["Norma", "Resolución ICA 61252 de 2020"]
+      ],
+      "costo": { "min": 6000, "central": 9000, "max": 12000 },
+      "base_costo": "Valor del documento base; no se halló un referente público comparable de fábrica municipal, y la formulación de materias primas es indicativa (debe validarla un nutricionista animal).",
+      "proyecto_tipo": [
+        { "nombre": "Proyecto tipo DNP-MinAgricultura: Infraestructura Logística Agrícola (ILA), para acopio y secado de granos y yuca", "url": "https://www.dnp.gov.co/Prensa_/Noticias/Paginas/dnp-ministerio-agricultura-presentan-proyecto-tipo-infraestructura-logistica-agricola-ila-fortalecer-campo-colombiano.aspx" }
+      ],
+      "fuentes": ["oxi", "privados", "sgr"],
+      "plazo": "2030–2031",
+      "ubicacion": "Zona limpia del parque, junto a la trilladora, que le entrega salvado y arroz partido, con bodega de materias primas y patio de yuca.",
+      "unidades": 1
+    },
+    {
+      "id": "trilladora",
+      "nombre": "Trilladora de arroz con secado y silos",
+      "resumen": "Seca, guarda y trilla 2 a 3 t de paddy por hora; compra el arroz por contrato",
+      "descripcion": "Recibo, báscula, prelimpieza, secadora, silos, descascarado, pulido, clasificación y empaque. A 2,5 t/h en dos turnos procesa las 11.000 t de paddy de la meta 2031, unas 6.800 t de arroz blanco; el salvado y el partido van a concentrados y la cascarilla a los secadores. Yondó produjo 2.404 t de paddy en 2025 (el documento base usaba 2.750 t de 2020), así que conviene montar primero el secado y los silos, y la trilla cuando la producción pase de unas 5.000 t.",
+      "especificaciones": [
+        ["Capacidad", "2 a 3 t de paddy por hora (2,5 t/h en dos turnos)"],
+        ["Meta 2031", "11.000 t de paddy y ≈6.800 t de arroz blanco al año"],
+        ["Producción 2025", "2.404 t de paddy (4,0 t/ha); la meta es 4,6 veces eso"],
+        ["Subproductos", "Salvado y partido a concentrados; cascarilla a los secadores"],
+        ["Compra", "Agricultura por contrato a precio pactado, antes de la siembra"],
+        ["Huella", "≈1.920 m² con patio de recibo y silos (estimado)"]
+      ],
+      "costo": { "min": 7000, "central": 8000, "max": 14500 },
+      "base_costo": "Valor del documento base; por analogía con el molino de Palermo, Huila (≈$14.500 M de 2026 con secado, almacenamiento, trilla y empaque), el contraste da ≈$11.000 M, y ese referente fija el máximo del rango.",
+      "proyecto_tipo": [
+        { "nombre": "Proyecto tipo DNP-MinAgricultura: Infraestructura Logística Agrícola (ILA), para secado y almacenamiento", "url": "https://www.dnp.gov.co/Prensa_/Noticias/Paginas/dnp-ministerio-agricultura-presentan-proyecto-tipo-infraestructura-logistica-agricola-ila-fortalecer-campo-colombiano.aspx" },
+        { "nombre": "Referente: molino de arroz de Palermo, Huila (MinAgricultura, ADR y Fedearroz, 2024)", "url": "https://www.larepublica.co/economia/gobierno-invertira-13-000-millones-para-molino-de-arroz-en-huila-3853831" }
+      ],
+      "fuentes": ["sgr", "nacion", "oxi", "privados"],
+      "plazo": "2030–2031",
+      "ubicacion": "Zona limpia del parque, entre la fábrica de concentrados y el acopio de leche, con patio de recibo y silos.",
+      "unidades": 1
+    },
+    {
+      "id": "leche",
+      "nombre": "Acopio de leche refrigerada y módulo de lácteos",
+      "resumen": "5.000 L/día enfriados a 4 °C, 4 rutas veredales y pago por calidad; lácteos en fase 2",
+      "descripcion": "Módulo 1: centro de enfriamiento a 4 °C con laboratorio de recibo y cuatro rutas veredales con tanques comunitarios, que paga por calidad y vende leche fría a procesadores y a la alimentación escolar. Módulo 2: planta de quesos frescos y madurados, yogur, kumis y mozzarella de búfala; el lactosuero va al núcleo porcícola. Hay potencial para unos 13.800 L/día con 30.290 vacas y 4.182 búfalas adultas (cálculo propio con el censo ICA 2026).",
+      "especificaciones": [
+        ["Capacidad", "5.000 L/día enfriados a 4 °C"],
+        ["Rutas", "4 rutas veredales con tanques comunitarios"],
+        ["Pago", "Por calidad (Resolución 017 de 2012)"],
+        ["Módulo 2", "Quesos, yogur, kumis y mozzarella de búfala (Decreto 616 de 2006)"],
+        ["Mercado", "Mínimo 30 % de las compras públicas de alimentos a productores locales (Ley 2046)"],
+        ["Genética", "3.000 inseminaciones al año; 1.500 vacas y búfalas en control lechero"]
+      ],
+      "costo": { "min": 5000, "central": 6500, "max": 8000 },
+      "base_costo": "Valor del documento base, que incluye la planta de lácteos; un acopio con frío vale ≈$950 M (ADR-Fundacovi, en pesos de 2026), así que conviene hacer primero el módulo 1 (≈$1.500 M) y después el módulo 2 (≈$5.000 M).",
+      "proyecto_tipo": [
+        { "nombre": "Referente: centro de acopio de leche de la ADR con Fundacovi (Norte de Santander, 2023)", "url": "https://www.contextoganadero.com/regiones/pequenos-productores-de-norte-de-santander-reciben-centro-de-acopio-de-leche" }
+      ],
+      "fuentes": ["nacion", "sgr", "oxi"],
+      "plazo": "2028–2031 (acopio 2028–2029; lácteos 2030–2031)",
+      "ubicacion": "Zona limpia del parque, cerca de la portería para las rutas diarias; tanques comunitarios en las veredas.",
+      "unidades": 1
+    },
+    {
+      "id": "maquinaria",
+      "nombre": "Banco de maquinaria agrícola y amarilla",
+      "resumen": "Tractores, sembradoras, cosechadora y maquinaria amarilla para los 14 núcleos productivos",
+      "descripcion": "Flota compartida que administra la cooperativa de segundo nivel o la empresa mixta, con turnos que prioriza el comité de núcleos y tarifas más bajas para pequeños productores. Siembra y cosecha arroz, maíz y soya, prepara suelos para yuca y palma, y abre drenajes, estanques y vías terciarias. Es la primera inversión: sin maquinaria no hay materia prima para las plantas.",
+      "especificaciones": [
+        ["Agrícola", "Tractores de 90 a 120 HP, sembradoras, fumigadoras y cosechadora combinada"],
+        ["Amarilla", "Retroexcavadora, bulldozer, motoniveladora y volquetas"],
+        ["Usuarios", "14 núcleos productivos, con tarifa diferencial para pequeños"],
+        ["Operación", "Cooperativa de segundo nivel o empresa mixta"],
+        ["Cofinanciación", "50 % Gobernación y 50 % municipio, esquema ya usado en 54 municipios"],
+        ["Unidades", "Se definen en la prefactibilidad según las hectáreas por núcleo"],
+        ["Patio y taller", "≈3.480 m² en la zona logística (estimado)"]
+      ],
+      "costo": { "min": 7000, "central": 8800, "max": 10500 },
+      "base_costo": "Valor del documento base; cuadra con ≈$236 M por máquina en el programa 50/50 de la Gobernación (61 máquinas por $14.427 M) y con el banco agrícola de Tibú y Teorama (≈$2.200 M de 2026).",
+      "proyecto_tipo": [
+        { "nombre": "Referente SGR: banco de maquinaria agrícola de Tibú y Teorama (BPIN 2024004540106)", "url": "https://www.datos.gov.co/resource/mzgh-shtp.json?codigobpin=2024004540106" },
+        { "nombre": "Referente: maquinaria amarilla 50/50 de la Gobernación de Antioquia (54 municipios)", "url": "https://antioquia.gov.co/secretaria-infraestructura-oculto/54-municipios-de-antioquia-se-benefician-con-la-entrega-de-maquinaria-amarilla" }
+      ],
+      "fuentes": ["gobernacion", "municipio"],
+      "plazo": "2028–2029",
+      "ubicacion": "Patio y taller en la zona logística, junto a la portería y con salida directa a la vía del puente.",
+      "unidades": 1
+    },
+    {
+      "id": "predio",
+      "nombre": "Predio, urbanismo, redes y diseños",
+      "resumen": "Lote de 8,31 ha con tres zonas, dos accesos, redes, servicios comunes y muelle de carga",
+      "descripcion": "Compra del lote, estudios y diseños, urbanismo con circulación de lo sucio (sur) a lo limpio (centro) y a la salida (norte), redes, portería y básculas, bodegas, administración, laboratorio de calidad y aulas del SENA. Incluye el muelle de carga sobre el Magdalena, 140 m aguas arriba del puente, que es la salida del parque si el puente se cierra. Antes de comprar hay que tener el concepto de Ecopetrol sobre los pozos Casabe 980 y 394, que quedan dentro del lote, y el estudio hidráulico y de socavación.",
+      "especificaciones": [
+        ["Lote", "8,31 ha: logística 1,84 ha, limpia 2,08 ha y sucia 4,39 ha"],
+        ["Accesos", "Portería de carga en el cruce y puerta sur de ganado y residuos"],
+        ["Muelle de carga", "40 × 12 m, 140 m aguas arriba del puente; vía de servicio de 185 m"],
+        ["Servicios comunes", "Básculas, bodegas, administración, laboratorio y aulas SENA"],
+        ["Estudios", "Hidráulico y de socavación, geotécnico, títulos y uso del suelo"],
+        ["Restricciones", "Pozos Casabe 980 y 394 y vía de servicio de Ecopetrol dentro del lote"],
+        ["No incluye", "Protección de orilla del muelle (sin costo de referencia)"]
+      ],
+      "costo": { "min": 4500, "central": 6000, "max": 8500 },
+      "base_costo": "Valor del documento base; como referencia, los diseños de la planta de beneficio de Puerto Boyacá costaron ≈$1.250 M de 2026, y la protección de orilla que pida el estudio hidráulico no está costeada.",
+      "proyecto_tipo": [
+        { "nombre": "Referente SGR: estudios y diseños de la planta de beneficio de Puerto Boyacá (BPIN 2022155720036)", "url": "https://www.datos.gov.co/resource/mzgh-shtp.json?codigobpin=2022155720036" }
+      ],
+      "fuentes": ["municipio", "sgr", "findeter"],
+      "plazo": "2027–2029 (estudios en 2027, compra del lote en 2028)",
+      "ubicacion": "Al suroriente de la vía Barrancabermeja–Yondó, de 200 a 700 m del estribo del puente Guillermo Gaviria Correa y a más de 300 m del río; muelle 140 m aguas arriba del puente.",
+      "unidades": 1
+    },
+    {
+      "id": "biodigestor",
+      "nombre": "Biodigestor y compostaje",
+      "resumen": "Sangre, rumen y estiércol se vuelven biogás para los secadores, compost y biol",
+      "descripcion": "Recibe la sangre, el contenido ruminal y el estiércol del matadero y los corrales, que no pueden ir a la fábrica de concentrados. Produce biogás para calderas y secadores, y biol y compost para huertas, cacao, plátano y viveros, con lo que los residuos del matadero vuelven al campo.",
+      "especificaciones": [
+        ["Entradas", "Sangre, contenido ruminal y estiércol"],
+        ["Productos", "Biogás para calderas y secadores; biol y compost"],
+        ["Destino del compost", "Huertas, cacao, plátano y viveros"],
+        ["Energía del parque", "Red, biogás, cascarilla de arroz y paneles solares donde sea rentable"],
+        ["Huella", "≈4.080 m² en la punta sur, junto al bosque (estimado)"]
+      ],
+      "costo": { "min": 1000, "central": 1500, "max": 2000 },
+      "base_costo": "Valor del documento base; la investigación no halló un referente público de costo para este componente, así que el rango es estimado.",
+      "proyecto_tipo": [],
+      "fuentes": ["sgr", "corantioquia"],
+      "plazo": "2030–2031",
+      "ubicacion": "Punta sur de la zona sucia, junto a la PTAR, con el bosque como barrera de olores.",
+      "unidades": 1
+    },
+    {
+      "id": "agua",
+      "nombre": "Tratamiento y reúso de agua",
+      "resumen": "Una sola planta para todo el parque: ningún efluente llega sin tratar al Magdalena",
+      "descripcion": "Planta única de tratamiento de aguas industriales para el matadero, la planta de pescado, el acopio de leche y los lácteos, con permiso de vertimientos de Corantioquia. Reúsa el agua tratada en lavado y riego, y evita que los efluentes lleguen sin tratar al Magdalena, a los caños y a las ciénagas.",
+      "especificaciones": [
+        ["Atiende", "Matadero, pescado, leche y lácteos"],
+        ["Reúso", "Lavado y riego"],
+        ["Permiso", "Vertimientos ante Corantioquia"],
+        ["Etapas", "Primera etapa con la planta de pescado; completa con el matadero"],
+        ["Huella", "≈2.750 m² en la punta sur (estimado)"]
+      ],
+      "costo": { "min": 3000, "central": 3500, "max": 5000 },
+      "base_costo": "Valor del documento base; como referencia, la fase 1 de la PTAR de la planta de sacrificio de Apía cuesta ≈$1.500 M de 2026 (BPIN 2025660450001).",
+      "proyecto_tipo": [
+        { "nombre": "Referente SGR: PTAR de la planta de sacrificio de Apía, fase 1 (BPIN 2025660450001)", "url": "https://www.datos.gov.co/resource/mzgh-shtp.json?codigobpin=2025660450001" }
+      ],
+      "fuentes": ["sgr", "corantioquia"],
+      "plazo": "2029–2031",
+      "ubicacion": "Punta sur de la zona sucia, después del matadero y los corrales.",
+      "unidades": 1
+    },
+    {
+      "id": "capital",
+      "nombre": "Capital de trabajo y puesta en marcha",
+      "resumen": "Materia prima por contrato, personal, permisos INVIMA e ICA y arranque de cinco plantas",
+      "descripcion": "Financia la compra de materia prima con contrato, el personal formado por el SENA, los permisos del INVIMA y el ICA y el arranque de las cinco plantas hasta que se sostengan con sus ventas. En el documento base cubre también la subasta, la transformadora de yuca y la plaza de mercado; si quedan por fuera, baja a unos $5.000 M.",
+      "especificaciones": [
+        ["Cubre", "Materia prima, personal, permisos y arranque"],
+        ["Plantas", "5 con autorización del INVIMA o registro del ICA en 2031"],
+        ["Formación", "SENA: buenas prácticas, HACCP, frío, maquinaria, inseminación y cooperativismo"],
+        ["Crédito", "Finagro y Banco Agrario (LEC e ICR): $147.000 M para tasa e incentivos en 2026"],
+        ["Ajuste", "≈$5.000 M sin subasta, transformadora de yuca ni plaza (estimado)"]
+      ],
+      "costo": { "min": 5000, "central": 8000, "max": 8000 },
+      "base_costo": "Valor del documento base, que incluye la subasta, la transformadora de yuca y la plaza de mercado; sin ellos se estima en ≈$5.000 M, el mínimo del rango.",
+      "proyecto_tipo": [],
+      "fuentes": ["privados"],
+      "plazo": "2029–2031",
+      "ubicacion": "Empresa mixta y cooperativa del parque (operación en el lote y en las veredas).",
+      "unidades": 5
+    }
+  ],
+  "financiacion": [
+    { "fuente": "sgr", "monto": 27400, "mecanismo": "OCAD Paz · incentivo a la producción de Yondó ($13.819 M sin aprobar a oct-2026 y los de los bienios siguientes) y Asignación para la Paz (PDET Sur de Bolívar)" },
+    { "fuente": "privados", "monto": 13000, "mecanismo": "Socios de la empresa mixta (APP en concentrados y trilladora) y crédito Finagro/Banco Agrario (LEC e ICR) para el capital de trabajo" },
+    { "fuente": "oxi", "monto": 12000, "mecanismo": "Obras por impuestos ZOMAC/PDET para las plantas, con Ecopetrol, Parex y otros contribuyentes del campo Casabe" },
+    { "fuente": "municipio", "monto": 6400, "mecanismo": "Recursos propios: aporte al predio ($2.000 M) y 50 % del banco de maquinaria ($4.400 M)" },
+    { "fuente": "findeter", "monto": 6000, "mecanismo": "Crédito con tasa compensada para el matadero y las redes del parque, dentro de la capacidad prudente de endeudamiento del municipio" },
+    { "fuente": "nacion", "monto": 5500, "mecanismo": "MinAgricultura · ADR (PIDAR, de $1.000 a $4.000 M por proyecto regional) para el acopio de leche y la trilladora" },
+    { "fuente": "gobernacion", "monto": 4400, "mecanismo": "50 % del banco de maquinaria, con el esquema 50/50 ya usado en 54 municipios" },
+    { "fuente": "corantioquia", "monto": 1500, "mecanismo": "Inversión ambiental y tasa retributiva para la planta de tratamiento, el biodigestor y el compostaje" },
+    { "fuente": "cooperacion", "monto": 800, "mecanismo": "Cooperación internacional y responsabilidad social de Ecopetrol y Parex (acuerdo Casabe 2026–2031) para Puerto Matilde" }
+  ],
+  "proyectos_tipo": [
+    { "nombre": "Infraestructura Logística Agrícola (ILA), DNP y MinAgricultura (2025): acopio, secado y almacenamiento de granos y yuca", "url": "https://www.dnp.gov.co/Prensa_/Noticias/Paginas/dnp-ministerio-agricultura-presentan-proyecto-tipo-infraestructura-logistica-agricola-ila-fortalecer-campo-colombiano.aspx" },
+    { "nombre": "Planta de Beneficio Animal Categoría Autoconsumo (DNP): solo si el matadero es de autoconsumo", "url": "https://proyectostipo.dnp.gov.co/" }
+  ],
+  "gestion": {
+    "madurez": "Perfil",
+    "madurez_nota": "Hay perfil con capacidades, costos indicativos, lote identificado y modelo de gestión; para pasar a prefactibilidad, donde los costos pueden variar entre 30 % y 50 %, faltan el concepto de Ecopetrol sobre los pozos, el estudio hidráulico, el uso del suelo, la categoría del matadero y las líneas base de leche y pesca.",
+    "pedido": "Que el OCAD Paz financie con regalías $27.400 M del parque, empezando en 2028 por la fase de arranque con el incentivo a la producción de Yondó ($13.819 M sin aprobar a oct-2026). Que la ART y los contribuyentes del campo Casabe tomen las plantas por obras por impuestos ($12.000 M), la ADR cofinancie el acopio de leche y la trilladora ($5.500 M) y la Gobernación ponga la mitad del banco de maquinaria ($4.400 M).",
+    "a_quien": [
+      "DNP · OCAD Paz (incentivo a la producción y Asignación para la Paz) y apoyo a la estructuración",
+      "ART · banco de proyectos de obras por impuestos e iniciativas PDET Sur de Bolívar",
+      "Ecopetrol y Parex · campo Casabe: pozos del lote, obras por impuestos e inversión social",
+      "MinAgricultura · ADR (PIDAR) y Finagro/Banco Agrario (LEC e ICR)",
+      "Gobernación de Antioquia · Secretarías de Agricultura (plantas de beneficio) e Infraestructura (maquinaria 50/50)",
+      "INVIMA e ICA · categoría sanitaria del matadero y registro de las plantas",
+      "ANI, Ruta del Cacao, Cormagdalena y Corantioquia · accesos, muelle de carga, ronda y vertimientos"
+    ],
+    "pasos": [
+      "Nov-2026 a feb-2027: pedir que el parque entre como iniciativa PDET de reactivación económica en las bases del PND 2026–2030 (radicación el 7-feb-2027)",
+      "1.er semestre de 2027: concepto de Ecopetrol sobre los pozos del lote (Casabe 980 y 394) y los vecinos (1125, 997 y 207), estudio hidráulico y de socavación, uso del suelo en el EOT (mapas FR 2, FR 3 y FR 5) y títulos del predio",
+      "2027: confirmar con la Gobernación si Yondó está en el Plan de Racionalización de plantas de beneficio y definir con el INVIMA la categoría del matadero",
+      "2027: formular la prefactibilidad en la MGA con apoyo del DNP, levantar las líneas base de leche y pesca, concertar con los productores y la ACVC, y llevar el parque a los programas de gobierno (elecciones del 31-oct-2027)",
+      "Ene-jun 2028: incluir el parque en los planes de desarrollo 2028–2031, comprar el lote y constituir la empresa mixta y la cooperativa (condición de paso: estudios y predio aprobados)",
+      "Jul-2028: presentar la fase de arranque al OCAD Paz, el banco de maquinaria a la Gobernación y las plantas al banco de obras por impuestos de la ART"
+    ]
+  },
+  "metas": [
+    { "indicador": "Reses y cerdos beneficiados en planta local", "base": "0 (2026)", "meta": "7.500 reses y 10.000 cerdos al año (2031)" },
+    { "indicador": "Pescado y leche en frío", "base": "0 (2026)", "meta": "2 t/día de pescado y 5.000 L/día de leche (2031)" },
+    { "indicador": "Arroz paddy secado y trillado en Yondó", "base": "0; se produjeron 2.404 t (2025)", "meta": "11.000 t al año (2031)" },
+    { "indicador": "Plantas con autorización del INVIMA o registro del ICA", "base": "0 (2026)", "meta": "5 (2031)" },
+    { "indicador": "Empleos formales en el parque", "base": "0; informalidad laboral de 81,9 % (DANE, 2018; el documento base citaba 83,4 %)", "meta": "250 (2031)" }
+  ],
+  "riesgos": [
+    { "riesgo": "El lote está dentro del campo petrolero Casabe, con los pozos Casabe 980 y 394 adentro, y el muelle queda en la orilla que la socavación hizo fallar en marzo y mayo de 2026.", "mitigacion": "Concepto de Ecopetrol sobre los pozos y sus retiros antes de comprar; estudio hidráulico y de socavación; diseñar el muelle con la solución definitiva del estribo (ANI y Ruta del Cacao) o llevarlo aguas abajo." },
+    { "riesgo": "Falta de materia prima: Yondó produjo 2.404 t de paddy en 2025 frente a 11.000 t de meta, y la demanda local de concentrado (6.000 a 8.400 t/año) no llena las 12.000 t de la fábrica.", "mitigacion": "Fases con condición de paso: maquinaria y contratos de compra firmados antes de las plantas grandes; plantas modulares; compras a municipios vecinos y ventas a la alimentación escolar (Ley 2046)." },
+    { "riesgo": "Una planta de autoconsumo solo puede abastecer a Yondó (Decreto 2016 de 2023), no a Barrancabermeja, y no se ha confirmado si Yondó está en el Plan de Racionalización de Antioquia, donde 5 plantas están cerradas y 75 % de las públicas requiere inversión sanitaria (2024).", "mitigacion": "Definir la categoría en la prefactibilidad (2027); si es nacional, diseñar con estándar INVIMA, formar a los operarios con el SENA y buscar un socio frigorífico para la empresa mixta." },
+    { "riesgo": "Menos regalías (SGR 2027–2028 con −11 % y solo 60 % aprobable en 2027), la reconstrucción tras el terremoto como prioridad nacional, baja ejecución local y cambio de gobierno en enero de 2028.", "mitigacion": "Arrancar con el saldo ya asignado del incentivo a la producción y la maquinaria 50/50; estructurar con apoyo del DNP y un ejecutor con capacidad; adoptar el parque por acuerdo municipal y llevarlo a los programas de gobierno." }
+  ],
+  "pasos": [
+    {
+      "id": "portadilla",
+      "tipo": "portadilla",
+      "titulo": "Yondó produce mucho y transforma casi nada",
+      "texto": "A la salida del puente Guillermo Gaviria Correa, Yondó vende en bruto lo que produce: el ganado sale en pie, el arroz sin secar y el pescado sin frío. Con el producto se van el valor agregado y el empleo formal."
+    },
+    {
+      "id": "componentes",
+      "tipo": "componentes",
+      "titulo": "Seis componentes productivos en 8,3 hectáreas",
+      "texto": "Las naves van en tres zonas en fila, de lo sucio (sur) a lo limpio (centro) y a la logística junto al cruce, y comparten frío, agua tratada y biodigestor. El documento base calcula $77.000 M, que pueden variar entre 30 % y 50 % en la prefactibilidad; el contraste con plantas parecidas da ≈$82.000 M, sobre todo por el matadero y la trilladora.",
+      "leyenda": [
+        { "texto": "Zona logística · 1,84 ha", "color": "#6250d6", "forma": "area" },
+        { "texto": "Zona limpia · 2,08 ha", "color": "#2a78d6", "forma": "area" },
+        { "texto": "Zona sucia · 4,39 ha", "color": "#b85f00", "forma": "area" }
+      ]
+    },
+    {
+      "id": "matadero",
+      "tipo": "componente",
+      "componente": "matadero",
+      "titulo": "Matadero: la pieza más cara y decisiva",
+      "texto": "Beneficia 30 bovinos y 40 cerdos por turno en la zona sucia, con el frigorífico pegado a la central de frío. Antes de diseñarlo hay que elegir la categoría: nacional, para vender en Barrancabermeja y llegar a 7.500 reses al año, o autoconsumo, que cuesta la cuarta parte pero solo abastece a Yondó.",
+      "cifras": [
+        { "v": "7.500", "l": "reses al año en 2031: exige planta de categoría nacional", "fuente": "Documento base del parque", "tono": "meta" },
+        { "v": "1.700", "l": "reses al año: lo que vendería una planta de autoconsumo (estimado)", "fuente": "Estimación propia sobre el consumo de Yondó", "tono": "alerta" }
+      ],
+      "leyenda": [
+        { "texto": "Zona sucia: corrales, matadero, PTAR y biodigestor", "color": "#b85f00", "forma": "area" },
+        { "texto": "Zona limpia: frigorífico y central de frío", "color": "#2a78d6", "forma": "area" }
+      ]
+    },
+    {
+      "id": "circuito",
+      "tipo": "texto",
+      "titulo": "Un circuito del grano al frío y al puente",
+      "texto": "Cada planta le compra o le vende a otra: lo que entra como grano o como animal sale empacado y frío hacia Barrancabermeja.",
+      "lista": [
+        "<b>Maquinaria y granos → concentrados:</b> la maquinaria siembra maíz, soya y yuca, que con el salvado y el partido de la trilladora y la torta de palmiste se vuelven 12.000 t/año de alimento.",
+        "<b>Concentrados → animales → matadero:</b> el alimento va a cerdos, peces y ganado, que vuelven al parque para el beneficio en la zona sucia.",
+        "<b>Todo al frío:</b> canales, pescado eviscerado y leche a 4 °C pasan por la central de frío y salen en carros refrigerados por el puente hacia Barrancabermeja, la alimentación escolar y la plaza.",
+        "<b>Subproductos → biodigestor:</b> sangre, rumen y estiércol dan biogás para los secadores, y compost y biol para los cultivos; las vísceras de pescado van a concentrados.",
+        "<b>El río como respaldo:</b> el muelle de carga, 140 m aguas arriba del puente, recibe el pescado de Puerto Matilde y es la salida si el puente se cierra, como del 16 al 20 de marzo de 2026."
+      ],
+      "nota": "Las cantidades de materias primas son una formulación indicativa que debe validar un nutricionista animal.",
+      "leyenda": [
+        { "texto": "Granos, alimento y animales", "color": "#c98a00", "forma": "dash" },
+        { "texto": "Frío y salida por el puente a Barrancabermeja", "color": "#2a78d6", "forma": "dash" },
+        { "texto": "Subproductos al biodigestor", "color": "#6b8f3a", "forma": "dash" }
+      ]
+    },
+    {
+      "id": "financiacion",
+      "tipo": "financiacion",
+      "titulo": "Regalías y obras por impuestos ponen la mitad",
+      "texto": "El SGR aporta $27.400 M por el OCAD Paz y las obras por impuestos $12.000 M; los socios y el crédito Finagro, $13.000 M. El municipio pone el aporte al predio y la mitad del banco de maquinaria ($6.400 M) y la Gobernación la otra mitad ($4.400 M)."
+    }
+  ],
+  "fuentes_citadas": [
+    { "titulo": "ICA, Censo Pecuario Nacional 2026 (bovinos, búfalos y porcinos por municipio)", "url": "https://www.ica.gov.co/areas/pecuaria/servicios/epidemiologia-veterinaria/censos-2016/censo-2018" },
+    { "titulo": "DNP, TerriData: Evaluaciones Agropecuarias (UPRA-EVA) de Yondó, 2022–2025", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip" },
+    { "titulo": "DANE, pobreza multidimensional municipal con base en el CNPV 2018", "url": "https://www.dane.gov.co/files/investigaciones/condiciones_vida/pobreza/2018/informacion-censal/anexo-censal-pobreza-municipal-2018.xlsx" },
+    { "titulo": "MinHacienda-SPGR, ejecución presupuestal del SGR 2025–2026 (corte oct-2026)", "url": "https://www.datos.gov.co/d/g4qj-2p2e" },
+    { "titulo": "Repositorio, Anexo B: finanzas y regalías de Yondó (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/anexos/B-finanzas-regalias.md" },
+    { "titulo": "DNP, proyecto tipo Infraestructura Logística Agrícola (ILA) (2025)", "url": "https://www.dnp.gov.co/Prensa_/Noticias/Paginas/dnp-ministerio-agricultura-presentan-proyecto-tipo-infraestructura-logistica-agricola-ila-fortalecer-campo-colombiano.aspx" },
+    { "titulo": "DNP-GESPROY, planta de beneficio de La Jagua de Ibirico (BPIN 2017204000002)", "url": "https://www.datos.gov.co/resource/mzgh-shtp.json?codigobpin=2017204000002" },
+    { "titulo": "Gobernación de Antioquia, Decreto 2024070003925 sobre plantas de beneficio animal (2024)", "url": "https://www.antioquia.gov.co/images/normativa/decretos/2024/2024070003925.pdf" },
+    { "titulo": "Gobernación de Antioquia, maquinaria amarilla 50/50 para 54 municipios", "url": "https://antioquia.gov.co/secretaria-infraestructura-oculto/54-municipios-de-antioquia-se-benefician-con-la-entrega-de-maquinaria-amarilla" },
+    { "titulo": "La República, molino de arroz de Palermo, Huila (2024)", "url": "https://www.larepublica.co/economia/gobierno-invertira-13-000-millones-para-molino-de-arroz-en-huila-3853831" },
+    { "titulo": "Occidente.co, cofinanciación de proyectos PIDAR de la ADR (2026)", "url": "https://occidente.co/regionales/valle-del-cauca/proyectos-de-desarrollo-rural-en-el-valle/" },
+    { "titulo": "Agronegocios, MinAgricultura asigna $147.000 M para crédito e inversión en el campo (2026)", "url": "https://www.agronegocios.co/agricultura/minagricultura-asigna-147-000-millones-para-impulsar-el-credito-y-la-inversion-en-el-campo-4373481" },
+    { "titulo": "Portafolio, acuerdo Ecopetrol-Parex en Casabe y otros campos del Magdalena Medio (2026)", "url": "https://www.portafolio.co/energia/ecopetrol-y-parex-activan-acuerdo-por-us-250-millones-para-impulsar-produccion-petrolera-en-el-magdalena-medio-499447" },
+    { "titulo": "Vanguardia, por qué sigue en riesgo el puente Barrancabermeja–Yondó (jun-2026)", "url": "https://www.vanguardia.com/santander/barrancabermeja/2026/06/04/por-que-sigue-en-riesgo-el-puente-que-conecta-a-barrancabermeja-con-yondo-ruta-del-cacao-explico-las-causas/" },
+    { "titulo": "Colombia Compra Eficiente, concepto C-1657 de 2025 sobre la Ley 2046 de 2020", "url": "https://relatoria.colombiacompra.gov.co/conceptos/c-1657-de-2025/" }
+  ]
+}
