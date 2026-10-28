@@ -1,4 +1,4 @@
-// Hoja de ruta: la visión completa, con las capas principales de los siete módulos a la vez y la cámara girando
+// Hoja de ruta: la visión completa, con las capas principales de las siete áreas a la vez y la cámara girando
 // despacio sobre el territorio mientras el panel cuenta las fases 2026–2031.
 import { pinesDe } from './comun.js';
 

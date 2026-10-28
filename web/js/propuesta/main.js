@@ -1,4 +1,4 @@
-// Presentación de la propuesta integral Yondó 2028–2031. Capítulos (portada, siete módulos, financiación, hoja de ruta y
+// Presentación de la propuesta integral Yondó 2028–2031. Capítulos (portada, siete áreas, financiación, hoja de ruta y
 // lo que se pide al nivel central) y pasos dentro de cada capítulo. Cada paso cambia el panel con GSAP, mueve la cámara
 // sobre el territorio real y muestra las capas 3D de ese paso. El contenido sale de data/propuesta.json (generado desde
 // data/propuesta/ por scripts/build_data.py); lo 3D de cada módulo vive en js/propuesta/modulos/<id>.js.
@@ -380,7 +380,7 @@ function pasar3D(c, p) {
     if (def.todos) { ids.push(...(x?.completo || [])); x?.alCompleto?.(); } else if (id !== c.id) x?.salir?.();
   });
   escena.verCapas(ids);
-  // en la visión de conjunto solo quedan las etiquetas del capítulo (si no, se enciman las de los siete módulos)
+  // en la visión de conjunto solo quedan las etiquetas del capítulo (si no, se enciman las de las siete áreas)
   escena.soloEtiquetas?.(def.etiquetas || (def.todos ? [...(m?.siempre || []), ...(def.capas || []), ...(p.capas || [])] : null));
   capasVisibles = ids;
   def.antes?.();

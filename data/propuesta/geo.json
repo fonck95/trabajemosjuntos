@@ -22,8 +22,8 @@
    300
   ],
   "saneamiento": [
-   1605,
-   1050
+   -70,
+   1652
   ],
   "tic": [
    -1282.3,
@@ -3893,37 +3893,38 @@
    },
    {
     "id": "ebar_central",
-    "nombre": "EBAR central (nueva)",
+    "nombre": "Estación de bombeo de llegada (nueva)",
     "rol": "ebar_central",
-    "x": 548,
-    "y": 930
+    "x": -118,
+    "y": 1546
    },
    {
     "id": "ptar",
-    "nombre": "PTAR central · sitio B (recomendado)",
+    "nombre": "PTAR central · aguas abajo de la unión de los caños (recomendado)",
     "rol": "ptar",
-    "x": 1605,
-    "y": 1050,
+    "x": -70,
+    "y": 1652,
     "poligono": [
      [
-      1450,
-      940
+      -150,
+      1528
      ],
      [
-      1760,
-      940
+      12,
+      1528
      ],
      [
-      1760,
-      1160
+      12,
+      1786
      ],
      [
-      1450,
-      1160
+      -150,
+      1786
      ]
     ],
-    "area_m2": 68200,
-    "orientacion_grados": 0
+    "area_m2": 41796,
+    "orientacion_grados": 90,
+    "nota": "Al norte del casco, en el costado oriental del Caño Colector Shell y de la Carrera 57, ≈200 m aguas abajo de su unión con el canal oriental; el agua tratada vuelve al caño ≈120 m más abajo."
    },
    {
     "id": "ptar_a",
@@ -3950,6 +3951,33 @@
      ]
     ],
     "area_m2": 40425
+   },
+   {
+    "id": "ptar_b",
+    "nombre": "Sitio B (descartado)",
+    "rol": "descartado",
+    "x": 1605,
+    "y": 1050,
+    "poligono": [
+     [
+      1450,
+      940
+     ],
+     [
+      1760,
+      940
+     ],
+     [
+      1760,
+      1160
+     ],
+     [
+      1450,
+      1160
+     ]
+    ],
+    "area_m2": 68200,
+    "nota": "Hacia el río: exigía una impulsión de 911 m y un emisario de 825 m al Magdalena."
    },
    {
     "id": "ptar_c",
@@ -3979,10 +4007,44 @@
    },
    {
     "id": "descarga",
-    "nombre": "Descarga al Magdalena con difusor",
+    "nombre": "Descarga al Caño Colector Shell, aguas abajo de la PTAR",
     "rol": "descarga",
-    "x": 2585,
-    "y": 1110
+    "x": -183,
+    "y": 1768
+   },
+   {
+    "id": "ptar_laguna",
+    "nombre": "Laguna de pulimento",
+    "rol": "pulimento",
+    "x": -70,
+    "y": 1764,
+    "poligono": [
+     [
+      -132,
+      1748
+     ],
+     [
+      -8,
+      1748
+     ],
+     [
+      -8,
+      1780
+     ],
+     [
+      -132,
+      1780
+     ]
+    ],
+    "area_m2": 3968
+   },
+   {
+    "id": "union_canos",
+    "nombre": "Unión del Caño Colector Shell con el canal oriental",
+    "rol": "referencia",
+    "x": -185,
+    "y": 1453,
+    "nota": "Fin del canal oriental en el Caño Colector Shell (OpenStreetMap); de ahí el caño sigue hacia el norte junto a la Carrera 57."
    }
   ],
   "trazados": [
@@ -4016,23 +4078,27 @@
       905
      ],
      [
-      100,
-      905
+      -175,
+      1200
      ],
      [
-      300,
-      895
+      -175,
+      1430
      ],
      [
-      480,
-      905
+      -172,
+      1476
      ],
      [
-      548,
-      930
+      -150,
+      1512
+     ],
+     [
+      -118,
+      1546
      ]
     ],
-    "longitud_m": 1703,
+    "longitud_m": 1634,
     "ancho_m": 0.3
    },
    {
@@ -4070,61 +4136,73 @@
       905
      ],
      [
-      548,
-      930
+      526,
+      926
+     ],
+     [
+      492,
+      1060
+     ],
+     [
+      365,
+      1186
+     ],
+     [
+      -140,
+      1474
+     ],
+     [
+      -136,
+      1510
+     ],
+     [
+      -118,
+      1546
      ]
     ],
-    "longitud_m": 1158,
+    "longitud_m": 2113,
     "ancho_m": 0.3
    },
    {
     "id": "impulsion",
-    "nombre": "Impulsión EBAR central → PTAR",
+    "nombre": "Impulsión de la estación de llegada a la PTAR",
     "tipo": "impulsion",
     "puntos": [
      [
-      548,
-      930
+      -118,
+      1546
      ],
      [
-      700,
-      960
+      -92,
+      1556
      ],
      [
-      1000,
-      1010
-     ],
-     [
-      1450,
-      1050
+      -70,
+      1566
      ]
     ],
-    "longitud_m": 911,
+    "longitud_m": 52,
     "ancho_m": 0.4
    },
    {
     "id": "emisario",
-    "nombre": "Emisario al Magdalena",
+    "nombre": "Descarga del agua tratada al Caño Colector Shell",
     "tipo": "emisario",
     "puntos": [
      [
-      1760,
-      1100
+      -90,
+      1738
      ],
      [
-      2150,
-      1105
+      -90,
+      1764
      ],
      [
-      2555,
-      1110
-     ],
-     [
-      2585,
-      1110
+      -183,
+      1768
      ]
     ],
-    "longitud_m": 825,
+    "longitud_m": 119,
     "ancho_m": 0.45
    },
    {
@@ -4454,17 +4532,17 @@
    },
    {
     "id": "tel_ebar_central",
-    "nombre": "Estación de bombeo central",
+    "nombre": "Estación de bombeo de llegada",
     "rol": "telemetria",
-    "x": 548,
-    "y": 930
+    "x": -118,
+    "y": 1546
    },
    {
     "id": "tel_ptar",
     "nombre": "PTAR central",
     "rol": "telemetria",
-    "x": 1605,
-    "y": 1050
+    "x": -70,
+    "y": 1652
    }
   ],
   "trazados": [

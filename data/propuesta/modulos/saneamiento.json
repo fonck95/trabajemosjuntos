@@ -4,7 +4,7 @@
   "corto": "Saneamiento",
   "lema": "Primera PTAR de Yondó y relleno clausurado con parque",
   "problema": "Yondó no trata sus aguas residuales: las 4 estaciones de bombeo del casco solo criban, sedimentan y vierten 55,34 L/s a dos caños junto a los barrios (Superservicios, datos de 2019). El Plan de Saneamiento y Manejo de Vertimientos (PSMV), aprobado por Corantioquia en 2014, ya venció y los estudios del Plan Maestro están al 56 % e inactivos. Además, el relleno Las Américas opera con la licencia vencida desde noviembre de 2023.",
-  "propuesta": "Terminar el Plan Maestro con un PSMV nuevo, recoger lo que hoy se vierte con dos interceptores (3,0 km) hasta una estación de bombeo central y construir la primera PTAR del casco (UASB + filtro percolador, 50 L/s) en un potrero de 6,8 ha al nororiente, con un emisario de 825 m al río Magdalena. En aseo, clausurar el relleno Las Américas y volverlo parque ecotecnológico con granja solar, y montar una ECA de 10 t/día y una planta de compostaje.",
+  "propuesta": "Terminar el Plan Maestro con un PSMV nuevo, recoger lo que hoy se vierte con dos interceptores (≈3,8 km) que siguen los dos caños hasta su unión, al norte del casco, y construir allí, aguas abajo de la unión, la primera PTAR del casco (UASB + filtro percolador, 50 L/s); el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo. En aseo, clausurar el relleno Las Américas y volverlo parque ecotecnológico con granja solar, y montar una ECA de 10 t/día y una planta de compostaje.",
   "cifras": [
     { "v": "0 %", "l": "de las aguas residuales del casco urbano recibe tratamiento", "fuente": "Superservicios, evaluación integral 2020 (datos de 2019)", "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf", "tono": "alerta" },
     { "v": "55,34 L/s", "l": "de aguas residuales vertidos sin tratar a dos caños (2019)", "fuente": "Superservicios, evaluación integral 2020", "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf", "tono": "alerta" },
@@ -17,13 +17,13 @@
       "id": "plan_maestro",
       "nombre": "Plan Maestro de Alcantarillado y PSMV nuevo",
       "resumen": "Terminar los estudios (56 %), aforar, diseñar y renovar el PSMV vencido",
-      "descripcion": "Reactivar los estudios del Plan Maestro (BPIN 2024058930006, 56 % de avance, inactivos) y cerrarlos con aforos, catastro de redes, diseños de detalle de interceptores, PTAR y emisario, y la compra del predio del sitio B. Incluye el PSMV nuevo ante Corantioquia, porque el de 2014 ya venció. Es el requisito para pedir el apoyo de la Nación con la Resolución 0467 de 2026.",
+      "descripcion": "Reactivar los estudios del Plan Maestro (BPIN 2024058930006, 56 % de avance, inactivos) y cerrarlos con aforos, catastro de redes, diseños de detalle de interceptores, PTAR y descarga al caño, y la compra del predio de la PTAR. Incluye el PSMV nuevo ante Corantioquia, porque el de 2014 ya venció. Es el requisito para pedir el apoyo de la Nación con la Resolución 0467 de 2026.",
       "especificaciones": [
         ["Estudios actuales", "BPIN 2024058930006: $2.898 M corrientes, 56 %, inactivo"],
         ["Aforos", "24 h en época seca y de lluvias en las 4 estaciones de bombeo de aguas residuales (EBAR): caudal, DBO y SST"],
         ["PSMV", "Nuevo ante Corantioquia (el de 2014 venció en 2024–2025)"],
-        ["Diseños", "Interceptores, EBAR central, PTAR y emisario, según el RAS"],
-        ["Predio", "Topografía, estudio de inundación y compra del sitio B"],
+        ["Diseños", "Interceptores, estación de llegada, PTAR y descarga al caño, según el RAS"],
+        ["Predio", "Topografía, estudio de inundación y compra del predio de la PTAR"],
         ["Horizonte", "25 años (2056), ≈20.000 habitantes (cálculo propio)"]
       ],
       "costo": { "min": 1800, "central": 2500, "max": 3300 },
@@ -33,74 +33,74 @@
       ],
       "fuentes": ["nacion", "sgr", "municipio"],
       "plazo": "2027–2028",
-      "ubicacion": "Todo el casco urbano (redes, 4 estaciones de bombeo y caños) y el predio de la PTAR en el sitio B, al nororiente."
+      "ubicacion": "Todo el casco urbano (redes, 4 estaciones de bombeo y caños) y el predio de la PTAR, al norte del casco, aguas abajo de la unión de los caños."
     },
     {
       "id": "interceptores",
-      "nombre": "Interceptores, impulsiones y EBAR central",
-      "resumen": "3,0 km de interceptores y una estación central: cero vertimientos en tiempo seco",
-      "descripcion": "Las 4 estaciones de bombeo existentes dejan de verter a los caños y bombean a dos interceptores: el occidental recoge El Prado y El Paraíso, y el oriental, La Victoria y El Progreso. Ambos llegan a una estación de bombeo central nueva que impulsa todo el caudal 911 m hasta la PTAR. Así, en tiempo seco, el Caño Colector Shell queda libre de aguas negras para el parque lineal del módulo de Urbanismo.",
+      "nombre": "Interceptores y estación de bombeo de llegada",
+      "resumen": "≈3,8 km de interceptores por los corredores de los caños: cero vertimientos en tiempo seco",
+      "descripcion": "Las 4 estaciones de bombeo existentes dejan de verter a los caños y bombean a dos interceptores: el occidental recoge El Prado y El Paraíso, y el oriental, La Victoria y El Progreso. Siguen los corredores de los dos caños (la Carrera 57 y el canal oriental) hasta su unión, al norte del casco, donde una estación de bombeo de llegada sube el agua a la PTAR. Así, en tiempo seco, el Caño Colector Shell queda libre de aguas negras para el parque lineal del módulo de Urbanismo.",
       "especificaciones": [
-        ["Interceptor occidental", "≈1,7 km (El Prado y El Paraíso; trazado indicativo)"],
-        ["Interceptor oriental", "≈1,3 km (La Victoria y El Progreso; trazado indicativo)"],
-        ["Ramales", "Cortos, a ajustar con las coordenadas de las EBAR del EOT (Tabla 31)"],
+        ["Interceptor occidental", "≈1,6 km por la Carrera 57, junto al Caño Colector Shell (El Prado y El Paraíso; trazado indicativo)"],
+        ["Interceptor oriental", "≈2,1 km por el corredor del canal oriental (La Victoria y El Progreso; trazado indicativo)"],
+        ["Ramales", "44 m a la EBAR El Paraíso; El Progreso y La Victoria quedan sobre el interceptor oriental (Tabla 31 del EOT)"],
         ["Diámetros", "DN 250–315 mm (estimado)"],
-        ["EBAR central", "Rejas, desarenador, aliviadero y planta eléctrica"],
-        ["Impulsión a la PTAR", "911 m, PEAD DN 355–400 mm (estimado)"],
+        ["Estación de llegada", "En el predio de la PTAR: rejas, aliviadero y planta eléctrica"],
+        ["Impulsión a la PTAR", "≈50 m dentro del predio (el sitio B, hacia el río, exigía 911 m)"],
         ["EBAR existentes", "4, rehabilitadas como estaciones de rebombeo"]
       ],
       "costo": { "min": 8000, "central": 12000, "max": 18000 },
-      "base_costo": "Estimación por componentes: unos 4,1 km de tubería (interceptores, ramales e impulsión) a cerca de $2,0 M por metro con excavación de 3–4 m, entibado, pozos y AIU, más la EBAR central, con referencia en la EBAR La Playa de Turbo, primera etapa ($3.271 M, SECOP, ago-2025), y la rehabilitación de las 4 EBAR. El rango (−33 % / +50 %) refleja la incertidumbre de un perfil.",
+      "base_costo": "Estimación por componentes: unos 3,8 km de tubería (interceptores, ramal e impulsión) a cerca de $2,0 M por metro con excavación de 3–4 m, entibado, pozos y AIU, más la estación de llegada, con referencia en la EBAR La Playa de Turbo, primera etapa ($3.271 M, SECOP, ago-2025), y la rehabilitación de las 4 EBAR. El rango (−33 % / +50 %) refleja la incertidumbre de un perfil.",
       "proyecto_tipo": [
         { "nombre": "Referente: EBAR La Playa de Turbo, primera etapa ($3.271 M, 2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8518084" },
         { "nombre": "Referente: convenio de Antioquia para el Plan Maestro de Alcantarillado de Sonsón, 3.ª etapa ($14.321 M, 2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8053105" }
       ],
       "fuentes": ["sgr", "oxi", "gobernacion"],
       "plazo": "2029–2030 (antes del parque lineal); el caño deja de recibir vertimientos cuando opere la PTAR, en 2031",
-      "ubicacion": "Occidental: de la EBAR El Prado por la vía de entrada y la Carrera 57 hasta el borde norte. Oriental: de la EBAR La Victoria por el corredor del canal oriental (Carrera 43). Ambos llegan a la EBAR central, en la esquina nororiental del casco (≈7,0149 N, 73,9065 O)."
+      "ubicacion": "Occidental: de la EBAR El Prado por la vía de entrada y la Carrera 57, junto al Caño Colector Shell, hasta la unión de los caños. Oriental: de la EBAR La Victoria por el corredor del canal oriental (Carrera 43) y luego por su orilla norte hasta la misma unión. Ambos llegan a la estación de llegada, en el predio de la PTAR (≈7,0204 N, 73,9126 O)."
     },
     {
       "id": "ptar",
       "nombre": "PTAR central del casco urbano (UASB + filtro percolador, 50 L/s)",
-      "resumen": "UASB + filtro percolador de 50 L/s en un potrero de 6,8 ha al nororiente",
+      "resumen": "UASB + filtro percolador de 50 L/s aguas abajo de la unión de los caños, al norte del casco",
       "descripcion": "Pretratamiento, 2 reactores anaerobios UASB, filtros percoladores de alta tasa, sedimentadores y lechos de secado de lodos, con quema del biogás. Trata 50 L/s en caudal medio, suficiente para unos 20.000 habitantes en 2056, y gasta poca energía, así que la puede operar un prestador pequeño. Será la primera PTAR del casco urbano.",
       "especificaciones": [
         ["Tecnología", "UASB + filtro percolador de alta tasa"],
         ["Capacidad", "50 L/s medio (2 × 25 L/s); ≈100 L/s máximo"],
         ["Población de diseño", "≈20.000 habitantes en 2056 (cálculo propio)"],
-        ["Predio", "6,8 ha; la planta usa 1,5–2 ha"],
-        ["Distancias", "476 m a la edificación mapeada más cercana y unos 420 m a casas de finca vistas en satélite; norma: 200 m"],
+        ["Predio", "≈4,2 ha: la planta usa ≈1,9 ha y la laguna de pulimento ≈0,4 ha"],
+        ["Distancias", "≈700 m a la edificación mapeada más cercana (norma: 200 m) y ≈60 m del caño, fuera de su ronda de 30 m; las casas de finca se revisan en campo"],
         ["Lodos y biogás", "Lechos de secado solar y quemador"],
         ["Calidad", "≥80 % de remoción de DBO y SST (meta del proyecto) y vertimiento dentro de los límites de la Res. 0631 de 2015"]
       ],
       "costo": { "min": 15200, "central": 20900, "max": 30200 },
-      "base_costo": "Promedio de dos métodos: por habitante, $1.156.350 × 20.000 = $23.127 M (mediana del repositorio); por caudal, la PTAR de Tenjo indexada da $338 M por L/s × 55 L/s (caudal medido en 2019) = $18.600 M. El mínimo usa 45 L/s y el máximo es el tope del repositorio para una PTAR de 12.000 habitantes ($30.176 M); la PTAR de Turbo ($33.711 M, 2025) confirma el orden de magnitud. No incluye interceptores ni emisario.",
+      "base_costo": "Promedio de dos métodos: por habitante, $1.156.350 × 20.000 = $23.127 M (mediana del repositorio); por caudal, la PTAR de Tenjo indexada da $338 M por L/s × 55 L/s (caudal medido en 2019) = $18.600 M. El mínimo usa 45 L/s y el máximo es el tope del repositorio para una PTAR de 12.000 habitantes ($30.176 M); la PTAR de Turbo ($33.711 M, 2025) confirma el orden de magnitud. No incluye interceptores ni la descarga.",
       "proyecto_tipo": [
         { "nombre": "Referente: PTAR de Tenjo, 40 L/s para 12.000 habitantes ($9.300 M de 2021)", "url": "https://www.elespectador.com/bogota/tenjo-estrena-una-de-las-ptar-mas-modernas-de-cundinamarca/" },
         { "nombre": "Referente: PTAR distrital de Turbo, Antioquia ($33.711 M, 2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8181874" }
       ],
       "fuentes": ["nacion", "gobernacion", "corantioquia", "cooperacion"],
       "plazo": "2029–2031 (licitación en 2029, operación en 2031)",
-      "ubicacion": "Sitio B: potrero de 6,8 ha al nororiente del casco, camino al río (≈7,0159 N, 73,8970 O). Se prefiere a la reserva de ≈26,7 ha del EOT (≈7,0154 N, 73,9096 O), que está pegada al borde norte del casco, junto a la unión de los caños (riesgo de inundación medio-alto) y a 2,1 km del río, porque B queda aguas abajo, a 476 m de la edificación mapeada más cercana y a 0,8 km del Magdalena (cálculo propio); el EOT deja que Corantioquia apruebe el sitio definitivo con el PSMV."
+      "ubicacion": "Al norte del casco, aguas abajo de la unión del Caño Colector Shell con el canal oriental, en el costado oriental del caño y de la Carrera 57 (≈7,0213 N, 73,9121 O). Le llegan los dos interceptores, que siguen la pendiente natural de los caños, y el agua tratada vuelve al mismo caño, más abajo. Se prefiere al sitio B, hacia el río, que exigía bombear 911 m y un emisario de 825 m al Magdalena, y a la reserva del EOT pegada al casco, aguas arriba de la unión. Por estar junto a los caños va sobre una plataforma por encima de la creciente de 100 años; el EOT deja que Corantioquia apruebe el sitio definitivo con el PSMV."
     },
     {
       "id": "emisario",
-      "nombre": "Emisario final al río Magdalena",
-      "resumen": "825 m de tubería del agua tratada al Magdalena, con difusor sumergido",
-      "descripcion": "Lleva el agua tratada de la PTAR a la orilla occidental del Magdalena, con estructura de descarga, difusor sumergido, medidor de caudal y punto de muestreo para el PSMV. Reemplaza la idea de verter al Caño Colector Shell, que se va a renaturalizar como parque lineal y donde cumplir la norma de vertimientos sería más difícil por su poco caudal.",
+      "nombre": "Laguna de pulimento y descarga al Caño Colector Shell",
+      "resumen": "El agua tratada pasa por una laguna de pulimento y vuelve al caño ≈120 m más abajo",
+      "descripcion": "El agua tratada pasa por una laguna de pulimento de ≈0,4 ha y por una cámara de descarga con escalones de aireación, medidor de caudal y punto de muestreo para el PSMV, y vuelve al Caño Colector Shell aguas abajo de la PTAR, después de la unión de los caños. El pulimento hace falta porque el caño lleva poco caudal para diluir; el tramo del parque lineal, dentro del casco, queda aguas arriba y no recibe el agua de la planta.",
       "especificaciones": [
-        ["Longitud", "825 m"],
-        ["Tubería", "16–20 pulgadas (estimado)"],
-        ["Descarga", "Difusor sumergido, ≈30 m dentro del cauce"],
+        ["Longitud", "≈120 m de la PTAR al caño"],
+        ["Pulimento", "Laguna de ≈0,4 ha dentro del predio"],
+        ["Descarga", "Cámara con escalones de aireación sobre la orilla del caño"],
         ["Control", "Medidor de caudal y punto de muestreo"],
-        ["Permisos", "Vertimiento y ocupación de cauce (Corantioquia)"]
+        ["Permisos", "Vertimiento y ocupación de cauce (Corantioquia, con el PSMV)"]
       ],
       "costo": { "min": 1000, "central": 1400, "max": 2200 },
-      "base_costo": "Estimación: 825 m de tubería con excavación y AIU, más la estructura de descarga con difusor y la protección de la orilla; equivale a $1,2–2,7 M por metro. Falta el diseño hidráulico.",
+      "base_costo": "Estimación por partidas: laguna de pulimento de ≈0,4 ha con impermeabilización y bordes ($600–1.200 M), ≈120 m de tubería con excavación y AIU ($200–400 M) y cámara de descarga con aireación en cascada, medidor y protección de la orilla ($200–600 M). Falta el diseño hidráulico.",
       "proyecto_tipo": [],
       "fuentes": ["fondos", "municipio"],
       "plazo": "2030–2031",
-      "ubicacion": "Del sitio B a la orilla occidental del Magdalena (descarga ≈7,0165 N, 73,8881 O); pasa al norte de unas casas de finca y cruza la franja de bosque ribereño."
+      "ubicacion": "Dentro del predio de la PTAR (la laguna, al norte de la planta) y su borde occidental: la descarga cae al Caño Colector Shell ≈120 m aguas abajo de la planta (≈7,0224 N, 73,9132 O)."
     },
     {
       "id": "eca",
@@ -194,7 +194,7 @@
   ],
   "gestion": {
     "madurez": "Perfil",
-    "madurez_nota": "Hay sitio, trazados y costos estimados y el relleno ya está en prefactibilidad (estudio del parque ecotecnológico, 2026), pero los estudios del Plan Maestro siguen al 56 % e inactivos; faltan aforos, topografía y estudio de inundación del sitio B y el PSMV nuevo.",
+    "madurez_nota": "Hay sitio, trazados y costos estimados y el relleno ya está en prefactibilidad (estudio del parque ecotecnológico, 2026), pero los estudios del Plan Maestro siguen al 56 % e inactivos; faltan aforos, topografía y estudio de inundación del predio de la PTAR y el PSMV nuevo.",
     "pedido": "Pedimos a la Nación $16.372 M: $15.048 M de apoyo financiero de MinVivienda para la PTAR, el Plan Maestro y la ECA (Res. 0467 de 2026) y $1.324 M de MinDeporte, MinTIC y MinCultura para el parque del relleno; a la Gobernación, $10.800 M por el Plan Departamental de Aguas. En regalías se buscan $14.600 M (OCAD Paz para los interceptores, asignaciones directas y el relleno, con $1.747 M del Incentivo a la Producción para su granja solar), más $4.500 M de obras por impuestos con Ecopetrol y $4.500 M de Corantioquia.",
     "a_quien": [
       "MinVivienda · Viceministerio de Agua y Saneamiento Básico (viabilidad y apoyo financiero, Res. 0467 de 2026)",
@@ -208,9 +208,9 @@
     "pasos": [
       "Nov-2026 a feb-2027: pedir que la PTAR de Yondó entre en las bases y el plan plurianual del PND 2026–2030 como cierre de brechas en un municipio PDET.",
       "2027: reactivar los estudios del Plan Maestro (BPIN 2024058930006) y contratar aforos de 24 horas en las 4 EBAR, en época seca y de lluvias.",
-      "2027: radicar ante Corantioquia el PSMV nuevo con el sitio B y firmar un acuerdo de pago de la tasa retributiva.",
+      "2027: radicar ante Corantioquia el PSMV nuevo con la PTAR aguas abajo de la unión de los caños y firmar un acuerdo de pago de la tasa retributiva.",
       "2027: reformular el BPIN 20201301010649 (canalización de $67.640 M corrientes) como interceptor enterrado más parque lineal.",
-      "2027–2028: topografía, estudio de creciente de 100 años y compra o servidumbre del predio del sitio B; contrato de disposición en San Silvestre y plan de clausura del relleno.",
+      "2027–2028: topografía, estudio de creciente de 100 años y compra o servidumbre del predio de la PTAR; contrato de disposición en San Silvestre y plan de clausura del relleno.",
       "2028: radicar la PTAR ante MinVivienda (Res. 0467 de 2026), los interceptores en el OCAD Paz y en el banco de obras por impuestos, y la granja solar en Colombia Solar y en la convocatoria del Incentivo a la Producción."
     ]
   },
@@ -222,8 +222,8 @@
     { "indicador": "Residuos aprovechados en la ECA y el compostaje", "base": "Sin medición (2026)", "meta": "15–20 % (2031)" }
   ],
   "riesgos": [
-    { "riesgo": "El alcantarillado es combinado: con lluvia el caudal se multiplica y la PTAR puede rebosar. Además, los 55,34 L/s de 2019, declarados como caudal seco, ya son unas 4 veces el caudal doméstico teórico (infiltración, conexiones erradas o capacidad de bombeo reportada).", "mitigacion": "Aforos de 24 horas en época seca y de lluvias antes de diseñar, aliviaderos en las EBAR y en la estación central, y PTAR por módulos de 25 L/s." },
-    { "riesgo": "El sitio B es un potrero, al parecer privado (falta consultar el catastro), en la llanura del Magdalena, con riesgo de inundación medio y sin vía de acceso.", "mitigacion": "Topografía y estudio de creciente de 100 años en 2027–2028, plataforma por encima de esa cota, compra o servidumbre temprana y acceso de 0,9 km por el corredor de la impulsión; el sitio A (4,0 ha, al norte del casco, dentro de la reserva del EOT) queda como alternativa." },
+    { "riesgo": "El alcantarillado es combinado: con lluvia el caudal se multiplica y la PTAR puede rebosar. Además, los 55,34 L/s de 2019, declarados como caudal seco, ya son unas 4 veces el caudal doméstico teórico (infiltración, conexiones erradas o capacidad de bombeo reportada).", "mitigacion": "Aforos de 24 horas en época seca y de lluvias antes de diseñar, aliviaderos en las EBAR y en la estación de llegada, y PTAR por módulos de 25 L/s." },
+    { "riesgo": "El predio de la PTAR queda junto a la unión de los caños, en terreno bajo con riesgo de inundación, y al parecer es privado (falta consultar el catastro).", "mitigacion": "Topografía y estudio de creciente de 100 años en 2027–2028, plataforma y dique por encima de esa cota, compra o servidumbre temprana y acceso directo desde la Carrera 57; el sitio A (4,0 ha, en la reserva del EOT, pegado al casco) queda como alternativa." },
     { "riesgo": "La canalización ya formulada (BPIN 20201301010649, $67.640 M corrientes) ocupa el corredor del interceptor y del parque lineal.", "mitigacion": "Reformularla como interceptor enterrado más parque lineal y construir primero el interceptor, para no romper después la obra." },
     { "riesgo": "PTAR construida y abandonada porque el prestador no puede pagar la operación (la Superservicios reporta debilidades de Aguas y Aseo).", "mitigacion": "Tecnología de baja energía, tarifa de alcantarillado que cubra la operación, contrato de operación con capacitación y cooperación para el arranque asistido." }
   ],
@@ -243,15 +243,15 @@
       "tipo": "componente",
       "componente": "interceptores",
       "titulo": "Dos interceptores recogen lo que hoy se vierte",
-      "texto": "En marrón, lo que cada estación vierte hoy sin tratar. Los interceptores occidental (≈1,7 km) y oriental (≈1,3 km) lo recogen y lo llevan a una estación de bombeo central en la esquina nororiental del casco.",
+      "texto": "En marrón, lo que cada estación vierte hoy sin tratar. Los interceptores occidental (≈1,6 km, por la Carrera 57) y oriental (≈2,1 km, por el canal oriental) lo recogen y lo llevan, siguiendo los caños, hasta la PTAR, aguas abajo de su unión.",
       "leyenda": [
         { "texto": "Vertimiento sin tratar (hoy)", "color": "#8a5a2b", "forma": "" },
         { "texto": "Interceptor nuevo", "color": "var(--m-saneamiento)", "forma": "" },
         { "texto": "Impulsión a presión", "color": "var(--m-saneamiento)", "forma": "dash" }
       ],
       "cifras": [
-        { "v": "3,0 km", "l": "de interceptores: occidental de ≈1,7 km y oriental de ≈1,3 km", "fuente": "Cálculo propio sobre el plano del casco (trazado indicativo)" },
-        { "v": "911 m", "l": "de impulsión de la estación central a la PTAR", "fuente": "Cálculo propio sobre el plano del casco" }
+        { "v": "3,8 km", "l": "de interceptores: occidental de ≈1,6 km y oriental de ≈2,1 km", "fuente": "Cálculo propio sobre el plano del casco (trazado indicativo)" },
+        { "v": "≈50 m", "l": "de impulsión, de la estación de llegada a la planta (el sitio B, hacia el río, exigía 911 m)", "fuente": "Cálculo propio sobre el plano del casco" }
       ]
     },
     {
@@ -259,16 +259,15 @@
       "tipo": "componente",
       "componente": "ptar",
       "titulo": "La primera PTAR de Yondó, aguas abajo del pueblo",
-      "texto": "La planta va en el sitio B, un potrero de 6,8 ha a 1,05 km del borde nororiental del casco. Le llega la impulsión de 911 m desde la estación central y el agua tratada sale por un emisario de 825 m al río Magdalena.",
+      "texto": "La planta va aguas abajo de la unión de los dos caños, al norte del casco, en un predio de ≈4,2 ha. Le llegan los dos interceptores, y el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo: no hay que bombear 911 m ni llevar un emisario al río.",
       "leyenda": [
-        { "texto": "PTAR central, sitio B (6,8 ha)", "color": "var(--m-saneamiento)", "forma": "area" },
-        { "texto": "Impulsión desde la estación de bombeo central", "color": "var(--m-saneamiento)", "forma": "dash" },
-        { "texto": "Emisario de agua tratada al río", "color": "#3aa6d9", "forma": "" },
-        { "texto": "Sitios evaluados: A, alternativa dentro de la reserva del EOT; C, descartado", "color": "#8a8f94", "forma": "dash" }
+        { "texto": "PTAR central, aguas abajo de la unión de los caños (4,2 ha)", "color": "var(--m-saneamiento)", "forma": "area" },
+        { "texto": "Laguna de pulimento y descarga al caño", "color": "#3aa6d9", "forma": "" },
+        { "texto": "Sitios evaluados: A, alternativa en la reserva del EOT; B (hacia el río) y C, descartados", "color": "#8a8f94", "forma": "dash" }
       ],
       "cifras": [
-        { "v": "476 m", "l": "a la edificación mapeada más cercana; un UASB exige 200 m", "fuente": "Cálculo propio; Res. 0330 de 2017, tabla 28", "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0330_2017.htm" },
-        { "v": "0,8 km", "l": "del sitio B al Magdalena; la reserva del EOT está a 2,1 km", "fuente": "Cálculo propio; EOT de Yondó (Acuerdo 013 de 2022)", "url": "https://yondoantioquia.micolombiadigital.gov.co/sites/yondoantioquia/content/files/000406/20257_acuerdo-municipal-013-eot-2022-2035.pdf" }
+        { "v": "≈700 m", "l": "a la edificación mapeada más cercana; un UASB exige 200 m", "fuente": "Cálculo propio; Res. 0330 de 2017, tabla 28", "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0330_2017.htm" },
+        { "v": "≈120 m", "l": "de descarga al Caño Colector Shell; desde el sitio B, hacia el río, eran 1,7 km de impulsión y emisario", "fuente": "Cálculo propio sobre el plano del casco" }
       ]
     },
     {
@@ -310,8 +309,8 @@
       "leyenda": [
         { "texto": "Interceptor nuevo", "color": "var(--m-saneamiento)", "forma": "" },
         { "texto": "Impulsión a presión", "color": "var(--m-saneamiento)", "forma": "dash" },
-        { "texto": "PTAR central, sitio B", "color": "var(--m-saneamiento)", "forma": "area" },
-        { "texto": "Emisario de agua tratada al río", "color": "#3aa6d9", "forma": "" }
+        { "texto": "PTAR central, aguas abajo de la unión de los caños", "color": "var(--m-saneamiento)", "forma": "area" },
+        { "texto": "Descarga del agua tratada al caño", "color": "#3aa6d9", "forma": "" }
       ]
     }
   ],
