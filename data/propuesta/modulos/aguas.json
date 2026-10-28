@@ -3,24 +3,24 @@
   "nombre": "Aguas",
   "corto": "Aguas",
   "lema": "De 9 a 24 horas de agua en el casco",
-  "problema": "Los pozos y la PTAP producen 40 L/s las 24 horas, pero la red del casco urbano solo recibe agua 9 horas al día, de 4:00 a 13:00; el resto del tiempo el tanque de 2.135 m³ se llena como un depósito. En esas 9 horas pasan unos 106,7 L/s, 28,5 % más que el caudal máximo horario de diseño (83,04 L/s), lo que aumenta fugas y roturas. Las pérdidas pasaban del 30 % y los macromedidores de captación estaban fuera de servicio (Superservicios, 2020).",
+  "problema": "Los pozos y la planta de tratamiento (PTAP) producen 40 L/s las 24 horas, pero la red del casco urbano solo recibe agua 9 horas al día, de 4:00 a 13:00; el resto del tiempo el tanque de compensación de 2.135 m³ se llena como un depósito. En esas 9 horas pasan en promedio unos 106,7 L/s, 28,5 % más que el caudal máximo horario de diseño (83,04 L/s), lo que aumenta fugas y roturas. Las pérdidas pasaban del 30 % y todos los macromedidores estaban fuera de servicio (Superservicios, 2020).",
   "propuesta": "Hacer la Fase 2 de la optimización, «agua 24 horas»: dividir la red del casco en 6 sectores con entrada medida y presión controlada, medir la producción y a cada suscriptor (3.700 medidores), bajar las pérdidas a 25 % y operar con telemetría, para pasar de 9 a 24 horas en 2030 con el agua que ya se produce. Después, entre 2030 y 2032 y según la demanda medida, ampliar la PTAP de 40 a 60 L/s en su predio de la vereda Las Américas.",
   "cifras": [
     {
       "v": "15 h",
       "l": "al día sin agua en la red urbana: solo llega de 4:00 a 13:00",
-      "fuente": "Diagnóstico técnico del acueducto (diseños de 2019 frente a la operación actual)",
+      "fuente": "Diagnóstico técnico del acueducto, 2025–2026 (diseños de 2019 frente a la operación actual)",
       "tono": "alerta"
     },
     {
       "v": "106,7 L/s",
-      "l": "en la red durante esas 9 h: 28,5 % sobre el caudal máximo de diseño",
+      "l": "en la red en esas 9 h: 28,5 % más que el máximo horario de diseño",
       "fuente": "Diagnóstico técnico del acueducto; cálculo propio",
       "tono": "alerta"
     },
     {
       "v": "35 %",
-      "l": "de agua no contabilizada en el balance de la Superservicios (2019)",
+      "l": "de agua no contabilizada según el prestador (Superservicios, 2020)",
       "fuente": "Superservicios, Evaluación integral (2020)",
       "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
       "tono": "alerta"
@@ -38,14 +38,14 @@
       "id": "linea_base",
       "nombre": "Línea base y diseño de la sectorización",
       "resumen": "Tres meses de medición, balance hídrico y diseño actualizado de los sectores",
-      "descripcion": "Tres meses de medición con registradores de presión y caudal, balance hídrico con la metodología IWA, catastro de redes y usuarios y un modelo hidráulico calibrado. Con eso se actualiza a la Res. 0330 de 2017 el diseño de sectores y válvulas del estudio de 2019 y se resuelve la contradicción entre las 9 horas del diagnóstico y las 18 del PDM 2024. Va junto con la reactivación del Plan Maestro (BPIN 2024058930006, 56 %, inactivo), que no se suma aquí.",
+      "descripcion": "Tres meses de medición con registradores de presión y caudal, balance hídrico con la metodología de la IWA (Asociación Internacional del Agua), catastro de redes y usuarios y un modelo hidráulico calibrado. Con eso se actualiza a la Res. 0330 de 2017 el diseño de sectores y válvulas del estudio de 2019 y se resuelve la contradicción entre las 9 horas del diagnóstico y las 18 del PDM 2024. Va junto con la reactivación del Plan Maestro (BPIN 2024058930006, 56 % de avance, inactivo), que se costea en el módulo de Saneamiento; aquí solo se suman la medición, el catastro, el modelo y el diseño de los sectores del acueducto.",
       "especificaciones": [
         ["Medición", "3 meses con registradores de presión y caudal"],
         ["Balance hídrico", "Metodología IWA, con pérdidas por sector"],
         ["Catastro", "Redes y usuarios (3.701 en 2020; 3.275 en el PDM 2024)"],
-        ["Modelo", "Hidráulico calibrado; presión de 15 a 50 m.c.a."],
+        ["Modelo", "Hidráulico calibrado; presión de 15 a 50 m.c.a. (metros de columna de agua)"],
         ["Diseño", "Sectores y válvulas de 2019 ajustados a la Res. 0330 de 2017"],
-        ["Duración", "6 a 8 meses, con interventoría"]
+        ["Duración", "6 meses (enero a junio de 2028), con interventoría"]
       ],
       "costo": { "min": 180, "central": 300, "max": 450 },
       "base_costo": "Estudios de sectorización de Córdoba (Quindío), 2023: $112,7 M más $42,0 M de interventoría (SECOP II), unos $182,8 M de 2026; como Yondó tiene más redes y usuarios, el rango va de 1 a 2,5 veces ese valor (estimado).",
@@ -65,13 +65,13 @@
       "especificaciones": [
         ["Sectores", "6, de unos 600 suscriptores cada uno"],
         ["Estación de entrada", "Macromedidor de 4\" a 8\", VRP, compuertas, filtro en Y, ventosa y cámara"],
-        ["Telemetría", "Registrador GPRS con sensor de presión"],
+        ["Telemetría", "Registrador con transmisión celular (GPRS) y sensor de presión"],
         ["Válvulas de cierre", "Unas 40, con caja"],
         ["Presión objetivo", "15 a 50 m.c.a. las 24 horas"],
         ["Obra", "12 meses, por sectores, con interventoría"]
       ],
       "costo": { "min": 691, "central": 907, "max": 1231 },
-      "base_costo": "Precios unitarios de la sectorización del sector 56 de Dosquebradas (2023) llevados a 2026 con el IPC: 6 estaciones de $80/100/130 M y 40 válvulas de $4/6/9 M, más 8 % de interventoría (cálculo propio; el precio de la VRP no está verificado).",
+      "base_costo": "6 estaciones de $80/100/130 M, estimadas a partir de los precios unitarios del sector 56 de Dosquebradas (2023) llevados a 2026 con el IPC más una VRP de precio no verificado, y 40 válvulas de cierre con caja de $4/6/9 M (estimado), más 8 % de interventoría (cálculo propio).",
       "proyecto_tipo": [
         { "nombre": "Referente: sectorización del sector 56 de Dosquebradas (BPIN 2023661700004)", "url": "https://mail.dosquebradas.gov.co/web/component/jdownloads/send/746-proyectos-2023/7365-construccion-de-obras-para-la-sectorizacion-y-optimizacion-del-sistema-de-acueducto-sector-56-en-los-barrios-la-pradera-y-santa-monica-en-el-municipio-de-dosquebradas-bpin-2023661700004?Itemid=778" },
         { "nombre": "Referente: control de presiones y pérdidas en Medina, Cundinamarca (2026)", "url": "https://www.cundinamarca.gov.co/noticias/mas-de-2500-millones-impulsan-la-modernizacion-del-acueducto-de-medina-y-mejoran-el-servicio-para-4340-habitantes" }
@@ -84,10 +84,10 @@
       "id": "macromedicion",
       "nombre": "Macromedición de producción y entrega",
       "resumen": "4 macromedidores con telemetría: 2 pozos, impulsión de 12\" y entrega del tanque a la red",
-      "descripcion": "Instala o repone 4 macromedidores grandes con telemetría para saber cuánta agua se produce y cuánta se entrega: salida de cada uno de los 2 pozos, impulsión de 12\" PEAD hacia el tanque y salida del tanque hacia la red. La Superservicios encontró en 2020 los macromedidores de captación fuera de servicio. Con estos datos se hace el balance hídrico mensual y se reporta al SUI.",
+      "descripcion": "Instala o repone 4 macromedidores grandes con telemetría para saber cuánta agua se produce y cuánta se entrega: salida de cada uno de los 2 pozos, impulsión de 12\" de polietileno de alta densidad (PEAD) hacia el tanque de compensación y salida de ese tanque hacia la red. En mayo de 2020, según la Superservicios, estaban fuera de servicio todos los macromedidores del prestador: el de la captación (entonces la Laguna del Miedo), los de salida de las PTAP y los de los tanques. Con estos datos se hace el balance hídrico mensual y se reporta al SUI (Sistema Único de Información de la Superservicios).",
       "especificaciones": [
         ["Cantidad", "4 macromedidores"],
-        ["Puntos", "2 pozos, impulsión de 12\" PEAD y salida del tanque de 2.135 m³"],
+        ["Puntos", "2 pozos, impulsión de 12\" PEAD y salida del tanque de compensación (2.135 m³)"],
         ["Tecnología", "Ultrasónico o electromagnético, calibrado"],
         ["Datos", "Telemetría al SCADA del acueducto"],
         ["Uso", "Balance hídrico mensual (IWA) y reporte al SUI desde 2029"]
@@ -98,14 +98,14 @@
         { "nombre": "Referente: macromedidor ultrasónico DN200 de ESPUCAL, La Calera (SECOP II, 2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9016328" }
       ],
       "fuentes": ["oxi"],
-      "plazo": "2028 (segundo semestre)",
-      "ubicacion": "Pozos y PTAP (vereda Las Américas, vía a Barrancabermeja) y tanque elevado; la medición de entrega puede ir a la salida del tanque o en la entrada del casco por la Vía Barrancabermeja–Yondó, al final de la conducción de unos 2,6 km (trazado indicativo)"
+      "plazo": "2029",
+      "ubicacion": "Pozos y PTAP (vereda Las Américas, vía a Barrancabermeja) y tanque de compensación; la medición de entrega puede ir a la salida del tanque o en la entrada del casco por la Vía Barrancabermeja–Yondó, al final de la conducción de unos 2,6 km (trazado indicativo)"
     },
     {
       "id": "impulsion",
       "nombre": "Verificación y ajuste de la impulsión",
       "resumen": "Bombas de 60 HP, variadores, protección contra golpe de ariete y reparación del tanque",
-      "descripcion": "Revisa la eficiencia de las motobombas de 60 HP y de la impulsión de 12\" PEAD, y estudia los transitorios (golpe de ariete) del paso a 24 horas. Incluye variadores de velocidad, válvulas de alivio o anticipadoras de onda, control automático de nivel y la prueba de estanqueidad y reparación del tanque de 2.135 m³, para que regule presiones en vez de guardar agua 15 horas. Se coordina con la granja solar pública de la propuesta, porque pozos, PTAP y bombeo son la mayor carga eléctrica del acueducto.",
+      "descripcion": "Revisa la eficiencia de las motobombas de 60 HP y de la impulsión de 12\" PEAD, y estudia los transitorios (golpe de ariete) del paso a 24 horas. Incluye variadores de velocidad, válvulas de alivio o anticipadoras de onda, control automático de nivel y la prueba de estanqueidad y reparación del tanque de compensación de 2.135 m³, para que regule presiones en vez de guardar agua 15 horas. Se coordina con la granja solar pública de la propuesta, porque pozos, PTAP y bombeo son la mayor carga eléctrica del acueducto.",
       "especificaciones": [
         ["Equipos", "Motobombas de 60 HP e impulsión de 12\" PEAD"],
         ["Estudios", "Eficiencia electromecánica y transitorios (golpe de ariete)"],
@@ -119,17 +119,17 @@
       "proyecto_tipo": [],
       "fuentes": ["municipio"],
       "plazo": "2028",
-      "ubicacion": "Estación de bombeo e impulsión en el predio de la PTAP (vereda Las Américas) y tanque elevado"
+      "ubicacion": "Estación de bombeo e impulsión en el predio de la PTAP (vereda Las Américas) y tanque de compensación"
     },
     {
       "id": "micromedicion",
       "nombre": "Micromedición: 3.700 medidores",
       "resumen": "3.700 medidores domiciliarios con caja y válvula antifraude, listos para lectura remota",
-      "descripcion": "Instala los medidores que faltan (261 suscriptores no tenían en enero de 2020) y repone por sectores los que cumplieron su vida útil, con caja, válvula antifraude y preparación para lectura remota. Se instalan después de cada estación de sector, para cobrar por consumo real y ubicar las pérdidas. Un concepto de la CRA de 2026 dice que la nueva regulación no reconoce su reposición como inversión en pérdidas técnicas; por eso se pagan con obras por impuestos, SGP y aporte de los usuarios (Ley 142, art. 144).",
+      "descripcion": "Instala los medidores que faltan (261 suscriptores no tenían en enero de 2020) y repone por sectores los que cumplieron su vida útil, con caja, válvula antifraude y preparación para lectura remota. Se instalan después de cada estación de sector, para cobrar por consumo real y ubicar las pérdidas. Un concepto de la CRA de 2026 (no vinculante) dice que la nueva regulación no reconoce su reposición como inversión en pérdidas técnicas; por eso se pagan con obras por impuestos, SGP y aporte de los usuarios (Ley 142, art. 144).",
       "especificaciones": [
         ["Cantidad", "3.700 medidores (3.701 suscriptores urbanos en 2020)"],
         ["Faltantes", "261 suscriptores sin medidor (ene-2020)"],
-        ["Funcionando hoy", "88,2 % de los suscriptores (dic-2019)"],
+        ["Con medidor funcionando", "88,2 % de los suscriptores (dic-2019, último dato oficial)"],
         ["Equipo", "Medidor, caja y válvula antifraude, listo para lectura remota"],
         ["Orden", "Por sectores, después de cada estación"],
         ["Subsidio", "SGP para estratos 1 y 2"]
@@ -157,7 +157,7 @@
         ["Meta", "25 % en 2030 y 20 % en 2031"]
       ],
       "costo": { "min": 1450, "central": 2050, "max": 3300 },
-      "base_costo": "Equipo y campaña de $250/400/600 M (estimado) más 3 km de reposición a $0,40/0,55/0,90 mil M por km, supuesto del repositorio para red urbana de 3\" a 6\" con rotura y reposición de vía; confianza baja hasta tener el catastro.",
+      "base_costo": "Equipo y campaña de $250/400/600 M (estimado) más 3 km de reposición a $400/550/900 M por km: el central y el máximo son el supuesto del repositorio para red urbana de 3\" a 6\" con rotura y reposición de vía, y el mínimo es estimado, porque el del repositorio ($76 M por km) es para tubería rural sin pavimento; confianza baja hasta tener el catastro.",
       "proyecto_tipo": [],
       "fuentes": ["nacion", "municipio", "gobernacion"],
       "plazo": "2028–2031",
@@ -167,12 +167,12 @@
       "id": "scada",
       "nombre": "Telemetría y SCADA del acueducto",
       "resumen": "6 estaciones remotas en pozos, PTAP, impulsión y tanques, con alarmas y tablero público",
-      "descripcion": "Estaciones remotas (RTU) en los pozos, la PTAP, la impulsión y los tanques, más los 6 registradores de las entradas de sector, con alarmas de nivel y presión y datos cada 15 minutos. El acueducto se opera desde el centro de control del municipio (módulo TIC), que publica la continuidad y la presión en línea; la telemetría de las estaciones de bombeo de aguas residuales y de la PTAR va en ese módulo. Permite reportar al SUI de forma automática.",
+      "descripcion": "Estaciones remotas (RTU) en los pozos, la PTAP, la impulsión y los tanques, más los 6 registradores de las entradas de sector, con alarmas de nivel y presión y datos cada 15 minutos: es el SCADA (sistema de supervisión y control a distancia) del acueducto. Aguas y Aseo de Yondó lo opera desde su centro de control, y los datos se replican en el centro de control del municipio (CCED, módulo TIC), que publica la continuidad y la presión en línea; la telemetría de las estaciones de bombeo de aguas residuales y de la PTAR va en ese módulo. Permite reportar al SUI de forma automática.",
       "especificaciones": [
         ["Estaciones remotas", "6 RTU en pozos, PTAP, impulsión y tanques"],
         ["Sectores", "Integra los 6 registradores de entrada de sector"],
         ["Datos", "Cada 15 minutos; alarmas de nivel y presión"],
-        ["Centro de control", "El del municipio (módulo TIC)"],
+        ["Centro de control", "Aguas y Aseo de Yondó, con réplica en el CCED (módulo TIC)"],
         ["Tablero público", "Continuidad y presión en línea"],
         ["Alcance", "Solo acueducto; aguas residuales y PTAR van en TIC"]
       ],
@@ -183,7 +183,7 @@
       ],
       "fuentes": ["sgr", "fondos"],
       "plazo": "2029",
-      "ubicacion": "Pozos, PTAP e impulsión (vereda Las Américas), tanques y entradas de sector; centro de control del municipio"
+      "ubicacion": "Pozos, PTAP e impulsión (vereda Las Américas), tanques y entradas de sector; sede de Aguas y Aseo y CCED de la alcaldía"
     },
     {
       "id": "ptap",
@@ -199,7 +199,7 @@
         ["Disparador", "Demanda máxima diaria de más de 34 L/s con pérdidas en 25 % (sugerido)"]
       ],
       "costo": { "min": 3200, "central": 4800, "max": 7450 },
-      "base_costo": "PTAP regional Baranoa–Polonuevo (Atlántico): 100 L/s más por $22.910 M, unos $229 M por L/s (prensa, sin fecha), que dan unos $4.580 M por 20 L/s, más el pozo (unos $217 M de 2026, contrato de Yondó de 2018) y los diseños (estimado); confianza baja.",
+      "base_costo": "PTAP regional Baranoa–Polonuevo (Atlántico): 100 L/s más por $22.910 M (prensa, sin fecha), unos $229 M por L/s, que dan unos $4.580 M por 20 L/s; con el pozo (unos $217 M de 2026, contrato de Yondó de 2018) y los diseños (unos $250 M, estimado) serían unos $5.050 M, y se toman $4.800 M porque el referente incluye una captación nueva y aquí se reutilizan el terreno y la captación actual (cálculo propio; confianza baja).",
       "proyecto_tipo": [
         { "nombre": "Referente: PTAP regional Baranoa–Polonuevo, Atlántico (prensa, sin fecha)", "url": "https://www.lafm.com.co/colombia/inauguran-planta-que-garantizara-agua-potable-en-atlantico" },
         { "nombre": "Referente: pozo profundo en Yondó (SECOP I, 2018)", "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=18-11-8084637" }
@@ -210,37 +210,37 @@
     }
   ],
   "financiacion": [
-    { "fuente": "sgr", "monto": 4850, "mecanismo": "Asignaciones directas e inversión local (las aprueba la alcaldía) y OCAD Paz si se amarra al PATR: PTAP y telemetría" },
-    { "fuente": "municipio", "monto": 2643, "mecanismo": "SGP Agua Potable ($3.233 M en 2026), usuarios y tarifa (Ley 142, art. 144): medidores, impulsión y contrapartidas" },
+    { "fuente": "sgr", "monto": 4850, "mecanismo": "Asignaciones directas e inversión local (las aprueba la alcaldía) y OCAD Paz si se amarra al PATR (Plan de Acción para la Transformación Regional del PDET): PTAP y telemetría" },
+    { "fuente": "municipio", "monto": 2643, "mecanismo": "SGP Agua Potable ($3.233 M en 2026) y aporte de los usuarios (Ley 142, art. 144) para los medidores; SGP y tarifa para la impulsión y las contrapartidas" },
     { "fuente": "nacion", "monto": 2500, "mecanismo": "MinVivienda · apoyo financiero de la Nación con concepto de viabilidad (Res. 0467 de 2026): sectorización y pérdidas" },
     { "fuente": "oxi", "monto": 1500, "mecanismo": "Obras por impuestos, modalidad ordinaria ZOMAC/PDET (convenio o fiducia), con Ecopetrol u otro contribuyente: macro y micromedición" },
-    { "fuente": "gobernacion", "monto": 307, "mecanismo": "Plan Departamental de Agua de Antioquia (Gerencia de Servicios Públicos, fondo FIA): línea base y pérdidas" },
+    { "fuente": "gobernacion", "monto": 307, "mecanismo": "Plan Departamental de Agua de Antioquia (Gerencia de Servicios Públicos, fondo fiduciario FIA del PDA): línea base y pérdidas" },
     { "fuente": "fondos", "monto": 150, "mecanismo": "Fondo Único de TIC (MinTIC) · cofinanciación de territorios inteligentes: equipos IoT y nube de la telemetría" }
   ],
   "proyectos_tipo": [],
   "gestion": {
     "madurez": "Perfil",
-    "madurez_nota": "Hay diagnóstico técnico y diseños de 2019 sin actualizar, y no se encontró proyecto tipo del DNP; para pedir la viabilidad de MinVivienda falta medir la línea base, terminar el Plan Maestro y ajustar los diseños a la Res. 0330 de 2017.",
-    "pedido": "A MinVivienda: concepto de viabilidad y $2.500 M de apoyo financiero de la Nación (Res. 0467 de 2026, que prioriza el rezago en continuidad) para sectorizar y bajar pérdidas. A la ART, $1.500 M en obras por impuestos para la medición; a la Gobernación (PDA), $307 M, y a MinTIC, $150 M del Fondo Único de TIC; el municipio pone $2.643 M y $4.850 M de regalías.",
+    "madurez_nota": "Hay diagnóstico técnico y diseños de 2019 sin actualizar, y no se pudo confirmar si hay proyecto tipo del DNP (el portal no respondió en oct-2026); para pedir la viabilidad de MinVivienda falta medir la línea base, terminar el Plan Maestro y ajustar los diseños a la Res. 0330 de 2017.",
+    "pedido": "A MinVivienda: concepto de viabilidad y $2.500 M de apoyo financiero de la Nación (Res. 0467 de 2026, que prioriza el rezago en continuidad) para sectorizar y bajar pérdidas. A la ART, aprobar en su banco de obras por impuestos el proyecto de medición ($1.500 M), para que lo pague un contribuyente (Ecopetrol u otro); a la Gobernación (PDA), $307 M, y a MinTIC, $150 M del Fondo Único de TIC. El municipio pone $2.643 M de contrapartida, y los $4.850 M de regalías salen de sus asignaciones directas e inversión local o del OCAD Paz.",
     "a_quien": [
       "MinVivienda · Viceministerio de Agua y Saneamiento Básico: concepto de viabilidad y Comité de Apoyo Financiero (Res. 0467 de 2026)",
-      "ART · banco de proyectos de obras por impuestos, con Ecopetrol como contribuyente",
+      "ART · banco de proyectos de obras por impuestos, con Ecopetrol u otro contribuyente",
       "Gobernación de Antioquia · Gerencia de Servicios Públicos (Plan Departamental de Agua)",
       "DNP · OCAD Paz y SUIFP-SGR (regalías)",
       "MinTIC · Fondo Único de TIC (territorios inteligentes)",
       "Corantioquia · concesión de aguas subterráneas de los pozos y del caudal ampliado"
     ],
     "pasos": [
-      "Nov-2026 a dic-2027: pedir a la alcaldía y a Aguas y Aseo que reactiven el Plan Maestro (BPIN 2024058930006) y tramiten ante Corantioquia la concesión de los pozos",
+      "Nov-2026 a dic-2027: pedir a la alcaldía y a Aguas y Aseo que reactiven el Plan Maestro (BPIN 2024058930006), le sumen la medición de la línea base y tramiten ante Corantioquia la concesión de los pozos",
       "Ene–mar 2028: medir 3 meses presiones y caudales con registradores y cerrar el balance hídrico (línea base)",
       "Ene–may 2028: incluir el paquete en el Plan de Desarrollo 2028–2031 y en el plan anual del PDA de Antioquia",
       "Abr–jun 2028: actualizar el diseño de sectores de 2019 a la Res. 0330 de 2017 y formular el proyecto en MGA",
       "Jul–sep 2028: radicar ante MinVivienda para el concepto de viabilidad (Res. 0467 de 2026) e inscribir la medición en el banco de obras por impuestos de la ART",
-      "Oct–dic 2028: contratar con pliegos tipo los macromedidores y el sector piloto, que pasa a 24 horas en 2029"
+      "Oct–dic 2028: contratar con pliegos tipo el sector piloto, que pasa a 24 horas en 2029, y acordar con el contribuyente la obra por impuestos de la macromedición"
     ]
   },
   "metas": [
-    { "indicador": "Horas de servicio al día en la red urbana", "base": "9 h, de 4:00 a 13:00 (diagnóstico técnico)", "meta": "24 h en el sector piloto (2029) y en todo el casco (2030)" },
+    { "indicador": "Horas de servicio al día en la red urbana", "base": "9 h, de 4:00 a 13:00 (diagnóstico técnico, 2025–2026)", "meta": "24 h en el sector piloto (2029) y en todo el casco (2030)" },
     { "indicador": "Presión en la red de distribución", "base": "Sin presión 15 h al día y sin medición por sectores (2026)", "meta": "Entre 15 y 50 m.c.a. las 24 h en cada sector (2030)" },
     { "indicador": "Agua no contabilizada (IANC)", "base": "Más de 30 % en 10 de 14 meses (Superservicios, 2019–2020)", "meta": "25 % (2030) y 20 % (2031)" },
     { "indicador": "Suscriptores con medidor funcionando", "base": "88,2 % (dic-2019)", "meta": "100 % (2030)" },
@@ -249,7 +249,7 @@
   "riesgos": [
     { "riesgo": "Línea base contradictoria (9 h según el diagnóstico, 18 h según el PDM 2024 y 7 a 8 h según la Superservicios en 2019) y diseños de 2019 desactualizados: el proyecto no pasa la viabilidad", "mitigacion": "Medir 3 meses con registradores, terminar el Plan Maestro y ajustar el diseño a la Res. 0330 de 2017 antes de radicar" },
     { "riesgo": "Al pasar a 24 horas bajan las presiones en los barrios lejanos y aparecen roturas y golpes de ariete en una red que lleva años vaciándose cada día", "mitigacion": "Ir sector por sector desde un piloto, con estudio de transitorios, VRP, ventosas, llenado lento y reparación previa de las fugas visibles" },
-    { "riesgo": "Concesión de aguas subterráneas sin confirmar para los pozos urbanos y sin cupo para 60 L/s", "mitigacion": "Tramitar con Corantioquia en 2027–2028, con prueba de bombeo y monitoreo de niveles, y renovar la concesión de la Laguna del Miedo como reserva" },
+    { "riesgo": "Concesión de aguas subterráneas sin confirmar para los pozos urbanos y sin cupo para 60 L/s", "mitigacion": "Tramitar con Corantioquia la concesión de los pozos actuales en 2027 y su ampliación a 60 L/s en 2029–2030, con prueba de bombeo y monitoreo de niveles, y renovar la concesión de la Laguna del Miedo como reserva" },
     { "riesgo": "Menos regalías (SGR 2027–2028 con −11 %) y reglas en transición (Res. 0467 de 2026, PND 2026–2030 en preparación)", "mitigacion": "Tener la MGA y la viabilidad listas en 2028 para presentarlas a varias fuentes; la PTAP puede esperar si bajan las pérdidas" }
   ],
   "pasos": [
@@ -267,13 +267,13 @@
       "id": "sistema",
       "tipo": "texto",
       "titulo": "Así funciona hoy el acueducto",
-      "texto": "El agua sale de los pozos, se potabiliza, sube al tanque elevado y baja por gravedad al casco. La vista sigue ese recorrido con partículas de agua.",
+      "texto": "El agua sale de los pozos, se potabiliza, sube por impulsión al tanque de compensación y baja por gravedad al casco. La vista sigue ese recorrido con partículas de agua.",
       "lista": [
         "<b>Pozos y PTAP:</b> captan y potabilizan 40 L/s las 24 horas, 3.456 m³ al día.",
-        "<b>Impulsión:</b> bombas de 60 HP suben el agua por una tubería de 12\" PEAD al tanque elevado.",
-        "<b>Tanque de 2.135 m³:</b> se llena 15 horas y se vacía en 9; funciona como depósito, no como regulación.",
+        "<b>Impulsión:</b> bombas de 60 HP suben el agua por una tubería de 12\" de polietileno de alta densidad (PEAD) al tanque de compensación.",
+        "<b>Tanque de compensación de 2.135 m³:</b> se llena 15 horas y se vacía en 9; funciona como depósito, no como regulación.",
         "<b>Red del casco:</b> recibe agua de 4:00 a 13:00; las otras 15 horas queda sin presión y puede entrar contaminación por succión.",
-        "<b>Pico de 106,7 L/s:</b> supera el caudal máximo horario de diseño (83,04 L/s) y aumenta fugas, roturas y golpes de ariete."
+        "<b>106,7 L/s en promedio durante esas 9 horas:</b> supera el caudal máximo horario de diseño (83,04 L/s) y aumenta fugas, roturas y golpes de ariete."
       ],
       "nota": "Cifras del diagnóstico técnico del acueducto, que compara los diseños de 2019 con la operación actual.",
       "leyenda": [
@@ -294,7 +294,7 @@
       },
       "despues": {
         "titulo": "Propuesta: 24 horas por sectores",
-        "texto": "6 sectores con macromedidor, válvula reductora de presión y registrador en la entrada, unas 40 válvulas de cierre y 3.700 medidores domiciliarios. Se pasa a 24 horas sector por sector, con presión entre 15 y 50 m.c.a.: piloto en 2029 y todo el casco en 2030."
+        "texto": "6 sectores con macromedidor, válvula reductora de presión y registrador en la entrada, unas 40 válvulas de cierre y 3.700 medidores domiciliarios. Se pasa a 24 horas sector por sector, con presión entre 15 y 50 metros de columna de agua (m.c.a.): piloto en 2029 y todo el casco en 2030."
       },
       "cifras": [
         {
@@ -306,7 +306,7 @@
         },
         {
           "v": "25 %",
-          "l": "tope de agua no contabilizada en 2030 (hoy, más de 30 %)",
+          "l": "tope de agua no contabilizada en 2030 (más de 30 % en 2019–2020)",
           "fuente": "Meta de la propuesta; base: Superservicios (2020)",
           "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
           "tono": "meta"
@@ -347,7 +347,12 @@
       "id": "financiacion",
       "tipo": "financiacion",
       "titulo": "Cómo se paga el agua 24 horas",
-      "texto": "Regalías y Nación ponen $7.350 M (61,5 %) y el municipio, $2.643 M de contrapartida (22,1 %). Primero va el paquete «agua 24 horas» ($7.150 M); la PTAP ($4.800 M) puede esperar a 2030–2032 si bajan las pérdidas."
+      "texto": "Regalías y Nación ponen $7.350 M (61,5 %) y el municipio, $2.643 M de contrapartida (22,1 %). Primero va el paquete «agua 24 horas» ($7.150 M); la PTAP ($4.800 M) puede esperar a 2030–2032 si bajan las pérdidas.",
+      "leyenda": [
+        { "texto": "Sectores hidráulicos (indicativos)", "color": "#2a78d6", "forma": "area" },
+        { "texto": "Válvula y macromedidor en la entrada de sector", "color": "#1f5fb8", "forma": "pt" },
+        { "texto": "Red con agua las 24 horas", "color": "var(--m-aguas)", "forma": "" }
+      ]
     }
   ],
   "fuentes_citadas": [
