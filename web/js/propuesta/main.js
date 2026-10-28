@@ -506,7 +506,6 @@ asa.addEventListener('keydown', (e) => { if (e.key === 'ArrowUp') { e.preventDef
 cab.addEventListener('click', () => { if (hoja === 'mini' && hojaMQ.matches) aplicarHoja('medio'); });
 addEventListener('resize', () => aplicarHoja(hoja, { reencuadre: false }));
 aplicarHoja('medio', { reencuadre: false });
-$('.marca').addEventListener('click', (e) => { e.preventDefault(); ir(0, 0); });
 addEventListener('keydown', (e) => {
   if (e.altKey || e.ctrlKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   const k = e.key;

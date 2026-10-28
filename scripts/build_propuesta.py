@@ -6,11 +6,14 @@ Entradas (data/propuesta/):
   geo.json            sitios y trazados de cada propuesta en metros del modelo (x al oriente, y al norte)
   territorio.json     río Magdalena, vías y puente (lo genera scripts/geo/territorio_propuesta.py)
 Revisa que las sumas cuadren (componentes y fuentes contra la inversión de cada módulo) y que cada fuente, componente y
-proyecto tipo citado exista; avisa lo que no cuadra sin detener la construcción.
+proyecto tipo citado exista, y que el Home (web/index.html) siga repitiendo el nombre y el lema de cada área, con su
+enlace y su imagen; avisa lo que no cuadra sin detener la construcción.
 Uso: python3 scripts/build_propuesta.py   (también lo llama scripts/build_data.py)
+     python3 scripts/build_propuesta.py --estricto   (la CI: termina con error si hay avisos)
 """
 import json
 import re
+import sys
 from pathlib import Path
 
 R = Path(__file__).resolve().parent.parent
@@ -105,6 +108,26 @@ def sin_cortes(v, clave=''):
 for k in ('meta', 'portada', 'modulos', 'financiacion', 'ruta', 'pedidos'):
     out[k] = sin_cortes(out[k])
 
+# El Home repite en cada tarjeta el nombre y el lema del área y enlaza a su capítulo: si el módulo cambia, el Home se queda
+# atrás sin que nadie lo note
+home = R / 'web/index.html'
+if home.exists():
+    h = home.read_text(encoding='utf-8')
+    plano = lambda t: re.sub(r'\s+', ' ', t.replace('&nbsp;', ' ').replace('\u00a0', ' ').replace('\u2060', '')).strip().lower()
+    hp = plano(h)
+    for m in modulos:
+        if f'propuesta.html#{m["id"]}' not in h:
+            aviso(f'el Home no enlaza el área {m["id"]} (web/index.html)')
+        if not any(t and plano(t) in hp for t in (m.get('corto'), m.get('nombre'))):
+            aviso(f'el Home no nombra el área {m["id"]} ({m.get("nombre")}) (web/index.html)')
+        if m.get('lema') and plano(m['lema']) not in hp:
+            aviso(f'el lema de {m["id"]} cambió y el Home sigue con el anterior: «{m["lema"]}» (web/index.html)')
+        if not (R / f'web/img/home/area-{m["id"]}.webp').exists():
+            aviso(f'falta la imagen del Home para {m["id"]} (web/img/home/area-{m["id"]}.webp)')
+    for ref in sorted(set(re.findall(r'(?:src="|url\(|href=")(img/home/[^")]+)', h))):
+        if not (R / 'web' / ref).exists():
+            aviso(f'el Home cita una imagen que no existe: web/{ref}')
+
 dest = R / 'web/data/propuesta.json'
 dest.parent.mkdir(parents=True, exist_ok=True)
 dest.write_text(json.dumps(out, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
@@ -114,3 +137,5 @@ print(f'Textos con cifras unidas a su unidad: {cambios}')
 print(f'Avisos de la propuesta: {len(avisos)}')
 for a in avisos:
     print('  -', a)
+if avisos and '--estricto' in sys.argv:
+    raise SystemExit(1)

@@ -19,7 +19,7 @@
 //     trabajador); se informa además el factor de freno medido con el mismo análisis a ×1. Memoria del trabajador:
 //     montón de V8 y almacenamiento de los ArrayBuffer (Runtime.getHeapUsage del trabajador por CDP, después de
 //     recoger la basura) más los Resultados transferidos.
-//  5. Con --vendor (three y GSAP locales, scripts/qa/LEEME.md): la vista real (index.html?qa=1#torre, modo sismo) bajo
+//  5. Con --vendor (three y GSAP locales, scripts/qa/LEEME.md): la vista real (atlas.html?qa=1#torre, modo sismo) bajo
 //     /trabajemosjuntos/: usa el trabajador, el botón «Cancelar» deja «Cálculo cancelado.» en ≤ 300 ms y vuelve a
 //     calcular; sin Worker usa el respaldo y llega a los mismos Resultados. Si web/data todavía no trae
 //     sismo_torre_estructura.json (lo exporta build_data.py), la prueba le sirve data/sismo/torre_hospital_estructura.json.
@@ -375,7 +375,7 @@ async function pruebasDeVista(nav) {
         return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', todo)), (b) => b.toString(16).padStart(2, '0')).join('');
       };
     });
-    await page.goto(`${srv.url}?qa=1#torre`, { waitUntil: 'load' });
+    await page.goto(`${srv.url}atlas.html?qa=1#torre`, { waitUntil: 'load' });
     const hay = await esperar(page, () => window.__torreQA?.listo?.(), { ms: 60000 });
     if (!hay) { chequeo(`${etiqueta}: la vista de la torre carga`, false, 'sin __torreQA.listo()'); await cerrar(); continue; }
     // entrar al modo sismo: calcula nido_2015 por defecto

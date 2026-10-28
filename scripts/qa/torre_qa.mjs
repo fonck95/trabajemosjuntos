@@ -142,7 +142,7 @@ function etapaDatos() {
     const ruta = join(RAIZ_REPO, dir, f);
     if (statSync(ruta).isFile() && /servicio habilitado/i.test(readFileSync(ruta, 'utf8'))) conFrase.push(`${dir}/${f}`);
   }
-  if (/servicio habilitado/i.test(readFileSync(join(WEB, 'index.html'), 'utf8'))) conFrase.push('web/index.html');
+  if (/servicio habilitado/i.test(readFileSync(join(WEB, 'atlas.html'), 'utf8'))) conFrase.push('web/atlas.html');
   comprobar(!conFrase.length, `«servicio habilitado» no aparece en la web${conFrase.length ? `: ${conFrase.join(', ')}` : ''}`);
   resultado.etapas.datos = r;
 }
@@ -152,7 +152,7 @@ const ESPERADOS = [];
 let srv = null, nav = null;
 async function pagina(o = {}) {
   const r = await abrir(nav, op, { esperados: ESPERADOS, ...o, url: undefined });
-  await r.page.goto(`${srv.url}?qa=1${o.q || ''}#torre`, { waitUntil: 'load' });
+  await r.page.goto(`${srv.url}atlas.html?qa=1${o.q || ''}#torre`, { waitUntil: 'load' });
   r.listo = await esperar(r.page, () => window.__torreQA?.listo?.() && document.querySelector('#v-torre canvas.gl'), { ms: 60000 });
   await alRecuadro(r.page);
   return r;
@@ -425,7 +425,7 @@ async function etapaVistas() {
   const r = {};
   for (const [tema, tel] of COMBOS) {
     const combo = nombreCombo(tema, tel);
-    const { page, registro, cerrar } = await abrir(nav, op, { url: `${srv.url}#dinero`, tema, telefono: tel, esperados: ESPERADOS });
+    const { page, registro, cerrar } = await abrir(nav, op, { url: `${srv.url}atlas.html#dinero`, tema, telefono: tel, esperados: ESPERADOS });
     const vistas = await page.evaluate(() => [...document.querySelectorAll('nav.tabs a[data-view]')].map((a) => a.dataset.view).filter((v) => v !== 'torre'));
     if (!comprobar(vistas.length === 9, `${combo}: el sitio tiene 9 vistas además de la torre (${vistas.join(', ')})`)) { await cerrar(); continue; }
     for (const v of vistas) {
@@ -450,11 +450,11 @@ async function etapaPublicado() {
   // por omisión, site/ bajo /trabajemosjuntos/ (GitHub Pages); con --url, el que esté servido allí (Caddy, Railway)
   const externo = typeof op.url === 'string';
   const sop = externo ? op : { ...op, raiz: 'site', raizAbs: resolve(RAIZ_REPO, 'site'), base: '/trabajemosjuntos/' };
-  if (!externo && !comprobar(existsSync(join(RAIZ_REPO, 'site/index.html')), 'site/ está construido (python3 scripts/build_site.py)')) return;
+  if (!externo && !comprobar(existsSync(join(RAIZ_REPO, 'site/atlas.html')), 'site/ está construido (python3 scripts/build_site.py)')) return;
   const s2 = await servidor(sop);
   console.log(`\n== publicado: ${s2.url}`);
   const r = { url: s2.url };
-  const { page, registro, cerrar } = await abrir(nav, sop, { url: `${s2.url}?qa=1#torre` });
+  const { page, registro, cerrar } = await abrir(nav, sop, { url: `${s2.url}atlas.html?qa=1#torre` });
   const listo = await esperar(page, () => window.__torreQA?.listo?.() && document.querySelector('#v-torre canvas.gl'), { ms: 60000 });
   const doc = await page.evaluate(() => document.compatMode);
   comprobar(listo && doc === 'CSS1Compat', `la vista de la torre carga (modo del documento ${doc})`);
@@ -504,7 +504,7 @@ async function etapaRendimiento() {
   r.freno = +(ms4 / ms1).toFixed(2);
   comprobar(r.freno > 2.5, `la CPU de la página va frenada: la misma cuenta tarda ${r.freno} veces más (${ms1.toFixed(0)} → ${ms4.toFixed(0)} ms)`);
   const t0 = Date.now();
-  await page.goto(`${srv.url}?qa=1#torre`, { waitUntil: 'load' });
+  await page.goto(`${srv.url}atlas.html?qa=1#torre`, { waitUntil: 'load' });
   const listo = await esperar(page, () => window.__torreQA?.listo?.() && document.querySelector('#v-torre canvas.gl'), { ms: 180000 });
   r.carga_s = (Date.now() - t0) / 1000;
   await alRecuadro(page);

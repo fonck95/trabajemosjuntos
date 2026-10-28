@@ -2,7 +2,7 @@
 // Las usan scripts/qa/torre_qa.mjs (D), scripts/qa/recorrido_qa.mjs (C) y scripts/sismo/qa_worker.mjs (A).
 //
 // - servidor estático de web/ (o de site/), en la raíz o bajo una subruta como la de GitHub Pages, con los tipos MIME y el
-//   «nosniff» de Caddy; web/index.html se sirve envuelto en <!doctype>/<head>/<body> igual que lo hace build_site.py;
+//   «nosniff» de Caddy; web/atlas.html se sirve envuelto en <!doctype>/<head>/<body> igual que lo hace build_site.py;
 // - desvío de los CDN (cdn.jsdelivr.net, unpkg.com, cdnjs.cloudflare.com, Google Fonts) a copias locales en la carpeta
 //   --vendor (three@0.160.0 y gsap@3.12.5 sacados con «npm pack»: ver scripts/qa/LEEME.md); cualquier otro sitio externo
 //   se corta, así la prueba no depende de la red;
@@ -18,7 +18,7 @@
 //                                                            // --url (sitio ya servido: Caddy, un despliegue; no levanta servidor)
 //   const srv = await servidor(op);                          // { url, cerrar() }
 //   const nav = await navegador(op);                         // Chromium (PLAYWRIGHT_MODULE o «playwright»)
-//   const { page, registro } = await abrir(nav, op, { url: srv.url + '?qa=1#torre', tema: 'oscuro', telefono: true });
+//   const { page, registro } = await abrir(nav, op, { url: srv.url + 'atlas.html?qa=1#torre', tema: 'oscuro', telefono: true });
 //   … await desborde(page); await captura(page, op, 'torre-oscuro-tel'); informe(registro);
 // Uso directo (prueba de humo de varias vistas):
 //   node scripts/qa/comun.mjs --vendor <carpeta> [--raiz web|site] [--vistas dinero,torre] [--temas claro,oscuro] [--telefono]
@@ -66,8 +66,9 @@ const TIPOS = {
   '.ktx2': 'image/ktx2', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml',
   '.csv': 'text/csv; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.woff2': 'font/woff2', '.ico': 'image/x-icon',
 };
-// web/index.html no trae <!doctype>/<head>/<body> (se publica también como Artifact, que los agrega): se envuelve como en
-// scripts/build_site.py para que el navegador no la lea en modo «quirks»
+// web/atlas.html no trae <!doctype>/<head>/<body> (se publica también como Artifact, que los agrega): se envuelve como en
+// scripts/build_site.py para que el navegador no la lea en modo «quirks». Las páginas que ya traen <!doctype> (el Home en
+// index.html, propuesta.html) pasan tal cual
 export function envolverIndex(cuerpo) {
   if (/^\s*<!doctype/i.test(cuerpo)) return cuerpo;
   const fin = cuerpo.indexOf('</style>') + '</style>'.length;
@@ -88,7 +89,7 @@ export async function servidor(op = opciones()) {
       const st = await stat(ruta).catch(() => null);
       if (!st || !st.isFile()) { res.writeHead(404, { 'content-type': 'text/plain' }); res.end('no encontrado'); return; }
       let cuerpo = await readFile(ruta);
-      if (rel === 'index.html') cuerpo = Buffer.from(envolverIndex(cuerpo.toString('utf8')));
+      if (extname(rel).toLowerCase() === '.html') cuerpo = Buffer.from(envolverIndex(cuerpo.toString('utf8')));
       res.writeHead(200, { 'content-type': TIPOS[extname(ruta).toLowerCase()] || 'application/octet-stream', 'x-content-type-options': 'nosniff', 'cache-control': 'no-store' });
       res.end(req.method === 'HEAD' ? undefined : cuerpo);
     } catch (e) { res.writeHead(500); res.end(String(e)); }
@@ -252,7 +253,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   const srv = await servidor(op), nav = await navegador(op);
   let todo = true;
   for (const tema of temas) for (const tel of op.telefono ? [false, true] : [false]) for (const v of vistas) {
-    const { page, registro, cerrar } = await abrir(nav, op, { url: `${srv.url}#${v}`, tema, telefono: tel });
+    const { page, registro, cerrar } = await abrir(nav, op, { url: `${srv.url}atlas.html#${v}`, tema, telefono: tel });
     const visto = await esperar(page, (x) => { const s = document.getElementById(`v-${x}`); return s && !s.hidden && s.querySelector('canvas.gl'); }, { arg: v });
     await page.waitForTimeout(+op.espera || 4000);
     const d = await desborde(page), nombre = `${v}-${tema}${tel ? '-telefono' : ''}`;

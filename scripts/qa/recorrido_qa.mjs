@@ -3,7 +3,7 @@
 //
 //   PLAYWRIGHT_MODULE=… node scripts/qa/recorrido_qa.mjs --vendor <carpeta> [--salida <carpeta>] [--solo niveles,alcance,unidades,guion,juego,flujo,teclado,presupuesto,salida]
 //
-// Sirve web/ con scripts/qa/comun.mjs (three y GSAP locales con --vendor), abre index.html?qa=1#torre en Chromium sin pantalla
+// Sirve web/ con scripts/qa/comun.mjs (three y GSAP locales con --vendor), abre atlas.html?qa=1#torre en Chromium sin pantalla
 // (WebGL por software) y recorre la torre con el teclado y los ganchos __torreQA y __recorridoQA:
 //   · niveles: entra al recorrido y captura cada nivel (exteriores, pisos 1 a 4, bloque técnico y cubierta) en claro, oscuro
 //     y teléfono (390 × 844, táctil): consola sin errores, sin desborde horizontal, etiquetas dentro del recuadro, el minimapa
@@ -44,7 +44,7 @@ const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const srv = await servidor({ ...op, raiz: op.raiz || 'web' });
 const nav = await navegador(op);
-const URL0 = `${srv.url}?qa=1#torre`;
+const URL0 = `${srv.url}atlas.html?qa=1#torre`;
 
 async function pagina({ tema = 'claro', telefono = false, movimientoReducido = false } = {}) {
   const p = await abrir(nav, op, { url: URL0, tema, telefono, movimientoReducido });

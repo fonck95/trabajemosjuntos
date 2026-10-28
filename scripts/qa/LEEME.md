@@ -18,7 +18,7 @@ tar xzf gsap-3.12.5.tgz -C gsap --strip-components=1
 ls three/build/three.module.js three/examples/jsm/controls/OrbitControls.js gsap/dist/gsap.min.js   # deben existir
 ```
 
-Las versiones deben ser exactamente las del importmap y del `<script>` de `web/index.html` (three 0.160.0 y GSAP 3.12.5); si no coinciden, `comun.mjs` avisa en la consola. Sirve también una carpeta `node_modules` de un `npm install three@0.160.0 gsap@3.12.5`: la estructura es la misma (`<carpeta>/three/…`, `<carpeta>/gsap/…`).
+Las versiones deben ser exactamente las del importmap y del `<script>` de `web/atlas.html` (three 0.160.0 y GSAP 3.12.5); si no coinciden, `comun.mjs` avisa en la consola. Sirve también una carpeta `node_modules` de un `npm install three@0.160.0 gsap@3.12.5`: la estructura es la misma (`<carpeta>/three/…`, `<carpeta>/gsap/…`).
 
 Tipografías (opcional): si la carpeta trae `fonts.css` (la hoja de Google Fonts guardada) y sus `.woff2` en `fonts/`, se usan; si no, se sirve una hoja vacía y el navegador usa las tipografías de respaldo (las capturas cambian un poco, la QA no).
 
@@ -52,7 +52,7 @@ Opciones comunes a todos los guiones que usan `comun.mjs`:
 | `--puerto <n>` | libre | Puerto del servidor local |
 | `--url <sitio>` | — | No levanta servidor: usa el sitio ya servido en esa dirección (Caddy con el `Caddyfile` del repositorio, un despliegue) |
 
-`web/index.html` no trae `<!doctype>`, `<head>` ni `<body>` (se publica también como Artifact, que los agrega): el servidor de QA lo envuelve igual que `scripts/build_site.py`, para que el navegador no lo lea en modo «quirks».
+`web/atlas.html` no trae `<!doctype>`, `<head>` ni `<body>` (se publica también como Artifact, que los agrega): el servidor de QA lo envuelve igual que `scripts/build_site.py`, para que el navegador no lo lea en modo «quirks». El Home (`web/index.html`) y la propuesta (`web/propuesta.html`) son documentos completos y pasan tal cual; el Home manda a `atlas.html` los enlaces viejos con vista en el «hash» (`index.html?qa=1#torre`, `#dinero`…).
 
 ## 3. Guiones de QA
 
@@ -94,7 +94,7 @@ const op = opciones();                                  // lee --vendor, --raiz,
 const srv = await servidor(op);                         // { url, puerto, cerrar() }
 const nav = await navegador(op);                        // Chromium de Playwright con WebGL por software
 const { page, registro, cerrar } = await abrir(nav, op, {
-  url: `${srv.url}?qa=1#torre`,                         // la marca de QA va en la consulta, no en el «hash» (8.7)
+  url: `${srv.url}atlas.html?qa=1#torre`,               // la marca de QA va en la consulta, no en el «hash» (8.7)
   tema: 'oscuro',                                       // 'claro' | 'oscuro'
   telefono: true,                                       // 390 × 844, táctil, ×2
   esperados: [/\/js\/scenes\/torre\/recorrido\.js$/],   // URL que pueden fallar sin contar como error
@@ -115,6 +115,6 @@ await cerrar(); await nav.close(); await srv.cerrar();
 
 ## 5. Ganchos de la vista de la torre (`?qa=1`)
 
-Con `index.html?qa=1#torre`, `torre.js` publica `window.__torreQA` (8.7): `modo()` (modo actual), `modo(m, op)` (cambia de modo y devuelve una promesa), `stats()` (`{ llamadas, triangulos }` de un cuadro; el primer cuadro después de un cambio puede incluir el mapa de sombras, que se dibuja una sola vez: para el presupuesto se mide el siguiente), `recorrido.{ irA, estado, libre }`, `sismo.{ calcular, ultimo, motor, cubiertaDibujada }`, `bim.api()` (la API del modo BIM ya montado: `estado()`, `pestana(id)`, `comportamiento(campo)`…), y para la QA de integración `relleno(m)` (si el modo usa el relleno), `listo()` (si llegaron los datos de la vista), `exterior()` (qué oculta del modelo el modo en curso), `seleccionables()` (objetos que reciben clics del Stage: 0 en los modos con módulo propio), `pisos()` («Pisos por servicio»: `{ pisos, planta, sep, elegido, grupos }`) y `datos(archivo)` (promesa con un archivo de `web/data` tal como lo recibe cada modo, con las partes ya juntas; `null` si no está publicado). Sin `?qa` no existe.
+Con `atlas.html?qa=1#torre`, `torre.js` publica `window.__torreQA` (8.7): `modo()` (modo actual), `modo(m, op)` (cambia de modo y devuelve una promesa), `stats()` (`{ llamadas, triangulos }` de un cuadro; el primer cuadro después de un cambio puede incluir el mapa de sombras, que se dibuja una sola vez: para el presupuesto se mide el siguiente), `recorrido.{ irA, estado, libre }`, `sismo.{ calcular, ultimo, motor, cubiertaDibujada }`, `bim.api()` (la API del modo BIM ya montado: `estado()`, `pestana(id)`, `comportamiento(campo)`…), y para la QA de integración `relleno(m)` (si el modo usa el relleno), `listo()` (si llegaron los datos de la vista), `exterior()` (qué oculta del modelo el modo en curso), `seleccionables()` (objetos que reciben clics del Stage: 0 en los modos con módulo propio), `pisos()` («Pisos por servicio»: `{ pisos, planta, sep, elegido, grupos }`) y `datos(archivo)` (promesa con un archivo de `web/data` tal como lo recibe cada modo, con las partes ya juntas; `null` si no está publicado). Sin `?qa` no existe.
 
 **Archivos de datos partidos por tamaño.** Si un archivo de la torre pasa su límite del 10.1, `build_data.py` lo parte: el principal (`torre_plantas.json`, `torre_inventario.json`, `torre_habilitacion.json`) queda con `partes: { archivos, nota }` y cada parte (`torre_plantas_P1.json`, `torre_inventario_P2.json`, `torre_inventario_implementos.json`, `torre_habilitacion_1.json`…) trae trozos de listas, que se concatenan en el orden de `archivos`, y de diccionarios, que se suman. La planta y las unidades del inventario se parten por nivel (EXT, P1-P4, BT, CUB); la matriz, por grupos de servicios. `torre.js` las junta antes de pasar los datos a cada modo, así que C y E reciben el mismo esquema que con un solo archivo; un guion que lea `web/data` directamente debe juntarlas igual. `validar_inventario.py --web` revisa un solo archivo: `build_data.py` corre esa misma validación sobre la forma completa e imprime el resultado.
