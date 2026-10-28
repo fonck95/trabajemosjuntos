@@ -1,5 +1,5 @@
 // Portada: el casco urbano con un pin por módulo en el sitio real de cada propuesta; el segundo paso se aleja hasta
-// abarcar el territorio completo (del acueducto, 2,3 km al occidente, al puente sobre el Magdalena, 7,9 km al norte).
+// abarcar el territorio completo (del acueducto, 2,3 km al occidente, al puente sobre el Magdalena, a unos 8 km al norte).
 import { pinesDe } from './comun.js';
 
 export function crear(esc, datos) {
@@ -11,7 +11,7 @@ export function crear(esc, datos) {
   });
   // territorio: los nombres que cita el texto (río, puente y Barrancabermeja), solo en el segundo paso
   const geo = esc.capa('portada.geo'), tb = datos.territorio?.puente?.tablero;
-  esc.etiqueta('Río Magdalena', { cls: 'lbl-geo', pos: [1450, 8100, 4], padre: geo });
+  esc.etiqueta('Río Magdalena', { cls: 'lbl-geo', pos: [2600, 6800, 4], padre: geo });   // dentro del cauce, 1,5 km aguas arriba del puente
   if (tb?.length > 1) {
     const [m, f] = [tb[1], tb[tb.length - 1]];
     esc.etiqueta('Puente Guillermo Gaviria Correa', { cls: 'lbl-geo', pos: [m[0], m[1], 24], padre: geo, ancla: [0.5, 1] });
@@ -22,7 +22,7 @@ export function crear(esc, datos) {
   // aparecen en el paso del territorio
   const tic = pines.find(({ m }) => m.id === 'tic');
   const casco = [[-650, -420], [700, -420], [700, 760], [-650, 760], ...(tic ? [[tic.x, tic.y]] : [])];
-  const todo = pines.map(({ x, y }) => [x, y]).concat([[-2400, 300], [1700, 8300]], tb?.length ? [[tb[tb.length - 1][0] + 260, tb[tb.length - 1][1]]] : []);
+  const todo = pines.map(({ x, y }) => [x, y]).concat([[-2400, 300], [1700, 8300], [2700, 6800]], tb?.length ? [[tb[tb.length - 1][0] + 260, tb[tb.length - 1][1]]] : []);
   return {
     completo: ['portada.pines'],
     pasos: {

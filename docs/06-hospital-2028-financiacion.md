@@ -6,7 +6,7 @@
 
 ## 1. La tesis
 
-La E.S.E. Hospital Héctor Abad Gómez es la única entidad de Yondó que puede recibir a la vez recursos de **salud** (MinSalud, PMIDS de Antioquia), **energía** (FENOGE, Incentivo a la Producción del SGR), **conectividad** (MinTIC, telesalud) y **Obras por Impuestos** (municipio PDET). Además, en 2028 coinciden los plazos que deciden quién gestiona y con qué plan. Si el hospital llega a 2028 con proyectos radicados y no con ideas, puede mover entre **$13.100 M (escenario probable)** y **$34.550 M (ambicioso)** en 2027–2029. Si llega sin proyectos, el escenario conservador es de unos $3.000 M.
+La E.S.E. Hospital Héctor Abad Gómez es la única entidad de Yondó que puede recibir a la vez recursos de **salud** (MinSalud, PMIDS de Antioquia), **energía** (FENOGE), **conectividad** (MinTIC, telesalud) y **Obras por Impuestos** (municipio PDET). El Incentivo a la Producción del SGR no se cuenta para los proyectos del hospital: la propuesta 2028–2031 (`docs/17`; cifras en `data/propuesta/modulos/tic.json` y `saneamiento.json`) lo reserva para dos granjas solares, porque su convocatoria admite hasta 2 proyectos por municipio. Además, en 2028 coinciden los plazos que deciden quién gestiona y con qué plan. Si el hospital llega a 2028 con proyectos radicados y no con ideas, puede mover entre **$13.100 M (escenario probable)** y **$34.550 M (ambicioso)** en 2027–2029. Si llega sin proyectos, el escenario conservador es de unos $3.000 M.
 
 ## 2. Ficha del hospital
 

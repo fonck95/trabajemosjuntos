@@ -110,7 +110,7 @@ medir y no se publica. Están en `data/propuesta/geo.json`, en metros del modelo
   de 1,70 ha, frente a la subestación Yondó de EPM, conectada con 40 m de línea de 13,2 kV; el bloque B (0,49 ha) queda
   de reserva. El tope de 1 MW CA de la autogeneración colectiva (Res. CREG 101 072 de 2025) limita la granja a ese
   tamaño. Con la granja de 997 kWp del relleno (`docs/12`), el municipio tendría ~2,2 MWp centralizados.
-- **Fibra y Zonas Digitales.** Un anillo de 4,6 km por calles y un ramal de 718 m a la EBAR La Victoria unen la
+- **Fibra y Zonas Digitales.** Un anillo de 4,6 km por calles y un ramal de ≈280 m a la EBAR La Victoria unen la
   alcaldía, donde va el centro de control (CCED), con las sedes, las EBAR y la PTAR. La primera fase tiene 5 Zonas
   Digitales y la segunda, 3.
 - **Sectores del acueducto (indicativos).** Son seis grupos de edificaciones del casco, sacados de las huellas por
@@ -135,10 +135,15 @@ El contexto aprieta, por eso los proyectos grandes van al OCAD Paz, a la inversi
 
 - El presupuesto del SGR 2027–2028 baja 11 % ($27,54 billones) y en 2027 solo se podrá aprobar hasta el 60 % de los
   ingresos del bienio.
+- A Yondó le quedan ≈ $7.297 M de asignaciones directas 2025–2026 sin aprobar al 27 de octubre de 2026 (cálculo propio
+  con datos de MinHacienda). El Incentivo a la Producción del SGR solo se pide para las dos granjas solares, la municipal
+  (≈ $2.799 M) y la del relleno clausurado (≈ $1.747 M): son 2 proyectos y $4.546 M, dentro del tope de 2 proyectos y
+  $8.000 M por municipio. La torre del hospital no lo usa.
 - El PGN 2027 recorta 3 % en todas las entidades.
 - La reconstrucción tras el terremoto del 10 de agosto de 2026 es la prioridad nacional.
-- El crédito de Findeter se limita a la capacidad prudente del municipio ($5.141 M a $10.281 M) y a proyectos que
-  generan ahorro, como la granja solar.
+- El crédito de Findeter ($9.445 M) cabe en la capacidad prudente del municipio ($5.141 M a $10.281 M), cerca de su
+  techo, y va sobre todo a proyectos que generan ahorro o ingreso: las dos granjas solares y el parque agroindustrial
+  (para este, la línea está por confirmar), más $1.500 M con tasa compensada de salud para cerrar la obra de la torre.
 
 El capítulo «Lo que pedimos» resume un pedido por entidad, con su monto y los módulos que mueve.
 
@@ -154,8 +159,9 @@ La gestión empieza ya, mientras se arma el PND 2026–2030 «Colombia, la Patri
 
 Las obras van en dos olas:
 
-- **2028–2030:** acueducto, sóftbol y alameda, torre, fibra y granja, y rescate de las viviendas inconclusas.
-- **2029–2031:** interceptores y PTAR, parque lineal, mirador, parque agroindustrial y urbanizaciones.
+- **2028–2030:** acueducto, sóftbol y alameda, torre, fibra y granja, rescate de las viviendas inconclusas, y banco
+  de maquinaria y acopios del parque agroindustrial.
+- **2029–2031:** interceptores y PTAR, parque lineal, mirador, plantas del parque agroindustrial y urbanizaciones.
 
 ## Ideas incorporadas de los renders del usuario
 

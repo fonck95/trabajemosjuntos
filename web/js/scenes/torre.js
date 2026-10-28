@@ -621,7 +621,7 @@ export function mount(root) {
         <dt><b>Precio unitario con AIU</b></dt><dd><b>${cop(x.precio_unitario_con_aiu)}</b> / ${esc(x.unidad || '')}</dd></dl>
       ${x.comparacion?.lectura ? `<p class="note"><b>Contraste:</b> ${esc(x.comparacion.lectura)}</p>` : ''}${x.uso_en_presupuesto ? `<p class="note"><b>Uso:</b> ${esc(x.uso_en_presupuesto)}</p>` : ''}`;
   }
-  const CORTO_F = { sgr_ad: 'SGR directas de Yondó', sgr_ipaz: 'SGR incentivo OCAD Paz', sgr_ail: 'SGR inversión local', sgr_air: 'SGR inversión regional', sgr_ctei: 'SGR ciencia y tecnología', pgn_minsalud: 'MinSalud (PGN)', gobernacion: 'Gobernación de Antioquia', oxi: 'Obras por Impuestos', fenoge: 'FENOGE', mintic: 'MinTIC', municipio: 'Municipio', ese: 'E.S.E.', credito: 'Crédito Findeter', ecopetrol: 'Ecopetrol', cooperacion: 'Cooperación' };
+  const CORTO_F = { sgr_ad: 'SGR directas de Yondó', sgr_aspaz: 'SGR Asignación para la Paz', sgr_ail: 'SGR inversión local', sgr_air: 'SGR inversión regional', sgr_ctei: 'SGR ciencia y tecnología', pgn_minsalud: 'MinSalud (PGN)', gobernacion: 'Gobernación de Antioquia', oxi: 'Obras por Impuestos', fenoge: 'FENOGE', mintic: 'MinTIC', municipio: 'Municipio', ese: 'E.S.E.', credito: 'Crédito Findeter', ecopetrol: 'Ecopetrol', cooperacion: 'Cooperación' };
   function renderFinanciacion(f) {
     const L = f.fuentes || [], totM = Object.values(f.mezcla_escenario_base || {}).reduce((a, v) => a + (+v || 0), 0) || 1;
     const nombre = (id) => CORTO_F[id] || (L.find((x) => x.id === id)?.nombre || id).split(/[–(]/)[0].trim();

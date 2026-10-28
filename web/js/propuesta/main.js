@@ -231,8 +231,13 @@ const RENDER = {
   },
 };
 // el cuerpo del panel se desvanece abajo mientras haya más contenido para leer
-function marcarDesborde() { cuerpo.classList.toggle('mas', cuerpo.scrollTop + cuerpo.clientHeight < cuerpo.scrollHeight - 6); }
+function marcarDesborde() {
+  const p = $('.panel'), hojaEntera = getComputedStyle(p).overflowY === 'auto', el = hojaEntera ? p : cuerpo;
+  (hojaEntera ? cuerpo : p).classList.remove('mas');
+  el.classList.toggle('mas', el.scrollTop + el.clientHeight < el.scrollHeight - 6);
+}
 cuerpo.addEventListener('scroll', marcarDesborde, { passive: true });
+$('.panel').addEventListener('scroll', marcarDesborde, { passive: true });
 addEventListener('resize', marcarDesborde);
 // titular partido en palabras (para animarlas)
 // palabras del título (para animarlas); el número y su unidad («69 %», «24 horas») no se separan
@@ -287,7 +292,8 @@ async function mostrar(ci, pi, { dir = 1, primera = false } = {}) {
   $('.control .donde b').textContent = c.modulo ? `${c.n} · ${c.nombre}` : c.nombre;
   $('.control .sig span').textContent = ci === caps.length - 1 && pi === c.pasos.length - 1 ? 'Fin' : pi === c.pasos.length - 1 ? caps[ci + 1].corto || 'Siguiente' : 'Siguiente';
   $$('i', progreso).forEach((el, i) => el.style.setProperty('--p', i < ci ? 1 : i > ci ? 0 : (pi + 1) / c.pasos.length));
-  leyenda.innerHTML = (p.leyenda || []).map((l) => `<span><i class="${l.forma || ''}" style="--c:${l.color || 'var(--mc)'}"></i>${esc(l.texto)}</span>`).join('');
+  leyenda.innerHTML = (p.leyenda || []).map((l) => `<span><i class="${l.forma || ''}" style="--c:${l.color || 'var(--mc)'}"></i><em>${esc(l.texto)}</em></span>`).join('');
+  leyenda.classList.remove('abierta');
   // telón al cambiar de capítulo (no en la primera carga)
   if (cambia && !primera && gsap && !reducedMotion) telonDe(c);
   await pintarPanel(c, p, dir, cambia && !primera);
@@ -320,7 +326,8 @@ async function pintarPanel(c, p, dir, conTelon) {
   const r = (RENDER[p.tipo] || RENDER.texto)(c, p);
   const salir = gsap && !reducedMotion && cab.innerHTML ? gsap.to([cab, cuerpo], { opacity: 0, y: dir > 0 ? -12 : 12, duration: 0.18, ease: 'power2.in' }) : null;
   if (salir) await salir;
-  cab.innerHTML = r.cab; cuerpo.innerHTML = r.cuerpo; cuerpo.scrollTop = 0;
+  cab.innerHTML = r.cab; cuerpo.innerHTML = r.cuerpo; cuerpo.scrollTop = 0; $('.panel').scrollTop = 0;
+  if (hoja === 'mini') aplicarHoja('mini', { reencuadre: false });
   requestAnimationFrame(marcarDesborde);
   $('.panel').style.setProperty('--mc', colorDe(c.id));
   if (!gsap || reducedMotion) { gsap?.set([cab, cuerpo], { clearProps: 'all' }); return; }
@@ -412,7 +419,67 @@ document.addEventListener('click', (e) => {
   if (irA) { ir(+irA.dataset.ir, 0); return; }
   if (comp) { const k = pasoDeComp(caps[estado.ci], comp.dataset.comp); if (k >= 0) ir(estado.ci, k); }
 });
-$('.panel .asa').addEventListener('click', () => { pres.classList.toggle('panel-grande'); setTimeout(reencuadrar, 300); });
+leyenda.addEventListener('click', () => leyenda.classList.toggle('abierta'));
+
+// ---------------------------------------------------------------- hoja inferior (celular y tableta en vertical)
+// Tres alturas: «mini» deja solo la ceja y el título, «medio» (la de partida) muestra el texto y deja la mitad de arriba
+// para la maqueta, y «grande» es para leer. Se cambia tocando el asa (mini ↔ medio) o arrastrándola; al soltar se ajusta
+// a la altura más cercana y la cámara vuelve a encuadrar en lo que queda libre encima.
+const hojaMQ = matchMedia('(max-width: 1080px) and (orientation: portrait), (max-width: 1080px) and (min-height: 561px)');
+const panelEl = $('.panel'), asa = $('.panel .asa');
+let hoja = 'medio';
+function alturaHoja(estado) {
+  const ctl = $('.control').getBoundingClientRect(), bar = $('.barra').getBoundingClientRect();
+  const libre = Math.max(160, ctl.top - 12 - (bar.bottom + 10));
+  if (estado === 'grande') return Math.round(libre);
+  if (estado === 'mini') {
+    const antes = pres.classList.contains('hoja-mini');
+    pres.classList.add('hoja-mini');
+    const h = cab.offsetHeight + 6;
+    if (!antes) pres.classList.remove('hoja-mini');
+    return Math.round(Math.min(h, libre * 0.4));
+  }
+  return Math.round(Math.min(Math.max(190, innerHeight * 0.38), 380, libre * 0.62));
+}
+function aplicarHoja(estado = hoja, { reencuadre = true } = {}) {
+  if (!hojaMQ.matches) { pres.classList.remove('hoja-mini', 'panel-grande'); pres.style.removeProperty('--hoja'); return; }
+  hoja = estado;
+  pres.style.setProperty('--hoja', `${alturaHoja(estado)}px`);
+  pres.classList.toggle('hoja-mini', estado === 'mini');
+  pres.classList.toggle('panel-grande', estado === 'grande');
+  asa.setAttribute('aria-label', estado === 'mini' ? 'Mostrar el texto del paso' : 'Achicar el panel para ver la maqueta');
+  asa.setAttribute('aria-expanded', String(estado !== 'mini'));
+  requestAnimationFrame(marcarDesborde);
+  if (reencuadre) setTimeout(reencuadrar, 360);
+}
+let arrastre = null;
+asa.addEventListener('pointerdown', (e) => {
+  if (!hojaMQ.matches) return;
+  arrastre = { y0: e.clientY, h0: panelEl.getBoundingClientRect().height, movio: false, min: alturaHoja('mini'), max: alturaHoja('grande') };
+  asa.setPointerCapture(e.pointerId);
+});
+asa.addEventListener('pointermove', (e) => {
+  if (!arrastre) return;
+  const dy = arrastre.y0 - e.clientY;
+  if (!arrastre.movio && Math.abs(dy) < 6) return;
+  arrastre.movio = true; pres.classList.add('arrastrando');
+  pres.style.setProperty('--hoja', `${Math.round(Math.min(arrastre.max, Math.max(arrastre.min, arrastre.h0 + dy)))}px`);
+});
+function soltarHoja() {
+  const a = arrastre; arrastre = null;
+  if (!a) return;
+  pres.classList.remove('arrastrando');
+  if (!a.movio) { aplicarHoja(hoja === 'mini' ? 'medio' : hoja === 'medio' ? 'mini' : 'medio'); return; }
+  const h = panelEl.getBoundingClientRect().height, d = alturaHoja('medio');
+  aplicarHoja(h < (a.min + d) / 2 ? 'mini' : h < (d + a.max) / 2 ? 'medio' : 'grande');
+}
+asa.addEventListener('pointerup', soltarHoja);
+asa.addEventListener('pointercancel', soltarHoja);
+asa.addEventListener('keydown', (e) => { if (e.key === 'ArrowUp') { e.preventDefault(); aplicarHoja(hoja === 'mini' ? 'medio' : 'grande'); } else if (e.key === 'ArrowDown') { e.preventDefault(); aplicarHoja(hoja === 'grande' ? 'medio' : 'mini'); } });
+// con la hoja en mini, tocar el título la abre
+cab.addEventListener('click', () => { if (hoja === 'mini' && hojaMQ.matches) aplicarHoja('medio'); });
+addEventListener('resize', () => aplicarHoja(hoja, { reencuadre: false }));
+aplicarHoja('medio', { reencuadre: false });
 $('.marca').addEventListener('click', (e) => { e.preventDefault(); ir(0, 0); });
 addEventListener('keydown', (e) => {
   if (e.altKey || e.ctrlKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;

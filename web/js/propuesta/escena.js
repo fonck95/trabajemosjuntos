@@ -196,26 +196,28 @@ export function crearEscena(el, datos) {
     const z = zonaPx(), v = new THREE.Vector3(), items = [];
     for (const o of this._labels) {
       const e = o.element;
-      if (!e.isConnected || e.style.display === 'none' || !e.classList.contains('lbl-p')) continue;
+      if (!e.isConnected || e.style.display === 'none' || !(e.classList.contains('lbl-p') || e.classList.contains('lbl-geo'))) continue;
       o.getWorldPosition(v).project(this.camera);
       if (v.z > 1) continue;
       const w = e.offsetWidth, h = e.offsetHeight;
       if (!w) continue;
       const ax = ((v.x + 1) / 2) * z.W, ay = ((1 - v.y) / 2) * z.H, x = ax + (0.5 - o.center.x) * w, y = ay + (0.5 - o.center.y) * h;
       const fuera = ax < z.x0 - 14 || ax > z.x1 + 14 || ay < z.y0 - 14 || ay > z.y1 + 48;
-      items.push({ e, x, y, w, h, fuera, x2: Math.min(Math.max(x, z.x0 + w / 2 + 6), Math.max(z.x0 + w / 2 + 6, z.x1 - w / 2 - 6)) });
+      items.push({ e, x, y, w, h, fuera, mini: e.classList.contains('mini') || e.classList.contains('lbl-geo'), x2: Math.min(Math.max(x, z.x0 + w / 2 + 6), Math.max(z.x0 + w / 2 + 6, z.x1 - w / 2 - 6)) });
     }
-    const puestas = [];
-    items.filter((r) => !r.fuera).sort((a, b) => b.y - a.y).forEach((r) => {
+    // primero los rótulos principales y después los chicos; cada uno sube lo justo para no chocar y, si arriba ya no cabe
+    // sin encimarse (pasa en el celular), se oculta
+    const puestas = [], choca = (r, y) => puestas.find((p) => Math.abs(p.x - r.x2) < (p.w + r.w) / 2 + 4 && Math.abs(p.y - y) < (p.h + r.h) / 2 + 3);
+    const colocar = (r) => {
       let y = Math.min(r.y, z.y1 - r.h / 2 - 4);
-      for (let k = 0; k < 14; k++) {
-        const choque = puestas.find((p) => Math.abs(p.x - r.x2) < (p.w + r.w) / 2 + 4 && Math.abs(p.y - y) < (p.h + r.h) / 2 + 3);
-        if (!choque) break;
-        y = choque.y - (choque.h + r.h) / 2 - 3;
-      }
-      y = Math.max(y, z.y0 + r.h / 2 + 4);
+      for (let k = 0; k < 14; k++) { const c = choca(r, y); if (!c) break; y = c.y - (c.h + r.h) / 2 - 3; }
+      const tope = z.y0 + r.h / 2 + 4;
+      if (y < tope) { y = tope; if (choca(r, y)) { r.fuera = true; return; } }
       r.dx = r.x2 - r.x; r.dy = y - r.y; puestas.push({ x: r.x2, y, w: r.w, h: r.h });
-    });
+    };
+    const visibles = items.filter((r) => !r.fuera).sort((a, b) => b.y - a.y);
+    visibles.filter((r) => !r.mini).forEach(colocar);
+    visibles.filter((r) => r.mini).forEach(colocar);
     items.forEach((r) => {
       r.e.classList.toggle('fuera', r.fuera);
       r.e.style.marginLeft = !r.fuera && Math.abs(r.dx) > 0.5 ? `${r.dx}px` : '';
@@ -237,7 +239,8 @@ export function crearEscena(el, datos) {
     const r = el.getBoundingClientRect(), W = r.width || 1, H = r.height || 1;
     let x0 = 0, x1 = W, y0 = 0, y1 = H;
     const ley = document.querySelector('.leyenda3d'), bl = ley?.childElementCount ? ley.getBoundingClientRect() : null;
-    if (bl?.height) y1 = Math.min(y1, bl.top - r.top - 8);
+    if (bl?.height && bl.top - r.top > H / 2) y1 = Math.min(y1, bl.top - r.top - 8);
+    else if (bl?.height) y0 = Math.max(y0, bl.bottom - r.top + 6);   // en el celular la leyenda va arriba, bajo la barra
     const bar = document.querySelector('.barra')?.getBoundingClientRect(), ctl = document.querySelector('.control')?.getBoundingClientRect();
     if (bar) y0 = Math.max(y0, bar.bottom - r.top + 6);
     if (ctl) y1 = Math.min(y1, ctl.top - r.top - 6);
@@ -250,7 +253,9 @@ export function crearEscena(el, datos) {
     const riel = document.querySelector('.riel')?.getBoundingClientRect();
     if (riel && riel.width > W * 0.7) y0 = Math.max(y0, riel.bottom - r.top + 4);
     if (x1 - x0 < W * 0.25) { x0 = 0; x1 = W; }
-    if (y1 - y0 < H * 0.2) { y0 = 0; y1 = H; }
+    // con la hoja inferior del celular la franja libre puede ser baja, pero nunca se encuadra en la pantalla entera: la
+    // obra quedaría debajo del texto. Se deja una franja mínima de 90 px.
+    if (y1 - y0 < 90) y1 = Math.min(H, y0 + 90);
     return { x0, x1, y0, y1, W, H };
   }
   function zona() {

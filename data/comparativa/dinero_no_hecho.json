@@ -3278,7 +3278,7 @@
      "suma_en_total": false
     },
     {
-     "fondo": "Incentivo a la producción (lo aprueba el OCAD Paz; bolsa IPAZ en MinHacienda), con la línea \"Territorios energéticos\" (hasta $8.000 M por proyecto, pesos corrientes de 2025)",
+     "fondo": "Incentivo a la producción (lo aprueba el OCAD Paz; bolsa IPAZ en MinHacienda), con la línea \"Territorios energéticos\" (hasta 2 proyectos y $8.000 M por municipio, pesos corrientes de 2025)",
      "desde": 2017,
      "monto_referencia": 4631.2,
      "comparable": "Del incentivo a la producción pasaron sin usar $4.079 M en pesos corrientes de 2020 a 2021–2022 y $3.687 M en pesos corrientes de 2022 a 2023–2024. Ya era plata de Yondó: se cuenta como plata quieta.",
@@ -3638,7 +3638,7 @@
      "min": null,
      "max": null,
      "tipo": "plata quieta",
-     "detalle": "Al cierre del bienio 2023–2024 quedaban sin comprometer $5.851 M, casi todo de asignaciones directas. Ese bienio empezó en 2023, en el gobierno anterior: la mitad de su ejecución le corresponde a él, pero es el único bienio que ha cerrado en este periodo. Aparte, y sin sumar: el bienio 2025–2026 sigue abierto y a octubre de 2026 hay $25.558 M por aprobar, $11.864 M que aprueba el municipio y $13.694 M del incentivo a la producción que aprueba el OCAD Paz.",
+     "detalle": "Al cierre del bienio 2023–2024 quedaban sin comprometer $5.851 M, casi todo de asignaciones directas. Ese bienio empezó en 2023, en el gobierno anterior: la mitad de su ejecución le corresponde a él, pero es el único bienio que ha cerrado en este periodo. Aparte, y sin sumar: el bienio 2025–2026 sigue abierto y con corte del 21-oct-2026 había $25.558 M por aprobar, $11.864 M que aprueba el municipio y $13.694 M del incentivo a la producción que aprueba el OCAD Paz. Al 27-oct-2026 las asignaciones directas sin aprobar eran ≈ $7.297 M, frente a $9.569 M el 21-oct-2026 (docs/11, sección 8).",
      "items": [
       {
        "nombre": "Asignaciones directas presupuestadas y sin comprometer al cierre del bienio 2023–2024 (CHIP)",
@@ -3715,10 +3715,16 @@
      "pendiente_por_aprobar": {
       "total": 25557.8,
       "aprueba_municipio": 11863.6,
+      "asignaciones_directas": 9568.8,
       "aprueba_ocad_paz": 13694.2,
       "en_caja_asignaciones_directas": 21099.0,
       "corte": "2026-10-21",
-      "nota": "Bienio abierto hasta diciembre de 2026: todavía se puede aprobar. No se suma a la plata quieta ni a \"sin obra\"."
+      "nota": "Bienio abierto hasta diciembre de 2026: todavía se puede aprobar. No se suma a la plata quieta ni a \"sin obra\".",
+      "asignaciones_directas_posterior": {
+       "fecha": "2026-10-27",
+       "valor": 7297,
+       "fuente": "data/propuesta/modulos/salud.json (propuesta 2028–2031; sin desglose entre directas y anticipadas); docs/11, sección 8"
+      }
      }
     },
     {
@@ -3911,12 +3917,12 @@
      "que": "Aprobar antes de diciembre de 2026 las regalías que ya están asignadas a Yondó",
      "costo": 25557.8,
      "equivalencia": "≈ 1,8 PTAR como la que necesita el casco urbano",
-     "por_que_no": "Aún se puede. A octubre de 2026 siguen sin aprobar $11.864 M que aprueba el municipio (asignaciones directas e inversión local) y $13.694 M del incentivo a la producción, que el municipio formula y el OCAD Paz aprueba. En esa bolsa la mediana de los pares aprobó 10,2 % (rango 0,0–82,6 %); en inversión local Yondó aprobó 71,5 %, por encima de la mediana de sus pares (62,8 %).",
+     "por_que_no": "Aún se puede. Con corte del 21-oct-2026 seguían sin aprobar $11.864 M que aprueba el municipio (asignaciones directas e inversión local) y $13.694 M del incentivo a la producción, que el municipio formula y el OCAD Paz aprueba. En esa bolsa la mediana de los pares aprobó 10,2 % (rango 0,0–82,6 %); en inversión local Yondó aprobó 71,5 %, por encima de la mediana de sus pares (62,8 %). Al 27-oct-2026 las asignaciones directas sin aprobar eran ≈ $7.297 M, frente a $9.569 M el 21-oct-2026 (docs/11, sección 8).",
      "fuente": "https://www.datos.gov.co/d/e624-d9uy (corte oct-2026); data/comparativa/sgr_fondos.json",
      "cubierto_con_plata_sin_obra_pct": null
     },
     {
-     "que": "Red Energética Pública: solar en 13 sedes, baterías en 7 sedes críticas y control (proyecto 1)",
+     "que": "Red Energética Pública: solar en 13 sedes, baterías en 7 sedes críticas y control (proyecto 1; $5.829 M sin el nodo del hospital, que pasó a la torre)",
      "costo": 7204.0,
      "equivalencia": "469 kWp solares en cubiertas y 770 kWh de baterías; compra 57 % menos energía",
      "por_que_no": "Aún se puede: cabe en la línea \"Territorios energéticos\" del incentivo a la producción (hasta $8.000 M). El único proyecto de energía presentado en 2025 no cumplió requisitos; cada año de espera cuesta unos $566 M en facturas.",
@@ -3939,7 +3945,7 @@
      "que": "Hospital seguro, verde e inteligente (red eléctrica, telesalud, ambulancia medicalizada, puesto rural)",
      "costo": 8100.0,
      "equivalencia": "red eléctrica nueva, telesalud, una ambulancia medicalizada y un puesto de salud rural",
-     "por_que_no": "Aún se puede: la red eléctrica del hospital ($5.483 M, pesos corrientes) está en formulación desde 2017; la ventana de financiación es 2027–2029.",
+     "por_que_no": "Aún se puede: la red eléctrica del hospital ($5.483 M, pesos corrientes) está en formulación desde 2017; la ventana de financiación es 2027–2029. Actualización del 22-oct-2026: este proyecto lo reemplaza la torre de servicios de primer nivel ($37.137 M, docs/11).",
      "fuente": "docs/06-hospital-2028-financiacion.md; docs/07-portafolio-presupuesto.md",
      "cubierto_con_plata_sin_obra_pct": 42.8
     },
@@ -4044,7 +4050,7 @@
      "suma_en_total": false
     },
     {
-     "fondo": "Incentivo a la producción (lo aprueba el OCAD Paz; bolsa IPAZ en MinHacienda), con la línea \"Territorios energéticos\" (hasta $8.000 M por proyecto, pesos corrientes de 2025)",
+     "fondo": "Incentivo a la producción (lo aprueba el OCAD Paz; bolsa IPAZ en MinHacienda), con la línea \"Territorios energéticos\" (hasta 2 proyectos y $8.000 M por municipio, pesos corrientes de 2025)",
      "desde": 2017,
      "monto_referencia": 13694.2,
      "comparable": "Pares (bolsa IPAZ 2025–2026, corte oct-2026): Segovia 0,0 %, Puerto Berrío 0,4 %, Puerto Nare 0,4 %, Simití 4,3 %, Barrancabermeja 16,0 %, Remedios 37,3 %, Cantagallo 42,7 %, San Pablo 82,6 %. Mediana 10,2 %, rango 0,0–82,6 %; Yondó 2,4 %. En la mitad de los pares la bolsa está casi sin aprobar: Yondó está por debajo de la mediana, pero no es un caso aislado. Ya es plata asignada a Yondó: se muestra como \"por aprobar\".",
@@ -4052,16 +4058,22 @@
      "suma_en_total": false
     }
    ],
-   "lectura": "Periodo en curso (datos parciales a octubre de 2026). Lo más grande no es plata perdida sino plata por aprobar: $25.558 M de regalías del bienio 2025–2026, $11.864 M que aprueba el municipio y $13.694 M del incentivo a la producción que aprueba el OCAD Paz, y el bienio cierra en diciembre de 2026. Con eso y con fondos aún disponibles (OCAD Paz, FENOGE) se pueden financiar la red solar pública, el hospital y los estudios de la PTAR.",
+   "lectura": "Periodo en curso (datos parciales a octubre de 2026). Lo más grande no es plata perdida sino plata por aprobar: con corte del 21-oct-2026 quedaban $25.558 M de regalías del bienio 2025–2026, $11.864 M que aprueba el municipio y $13.694 M del incentivo a la producción que aprueba el OCAD Paz, y el bienio cierra en diciembre de 2026; al 27-oct-2026 las asignaciones directas sin aprobar eran ≈ $7.297 M, frente a $9.569 M el 21-oct-2026 (docs/11, sección 8). Con esa plata y con fondos aún disponibles (OCAD Paz, FENOGE) se pueden financiar la red solar pública, el hospital y los estudios de la PTAR: el incentivo va a proyectos de energía, como la red solar, y el hospital se paga con asignaciones directas, inversión local y la Asignación para la Paz del OCAD Paz (docs/11).",
    "pendiente_por_aprobar": {
     "total": 25557.8,
     "aprueba_municipio": 11863.6,
+    "asignaciones_directas": 9568.8,
     "aprueba_ocad_paz": 13694.2,
     "en_caja_asignaciones_directas": 21099.0,
     "corte": "2026-10-21",
-    "nota": "Bienio abierto hasta diciembre de 2026: todavía se puede aprobar. No se suma a la plata quieta ni a \"sin obra\"."
+    "nota": "Bienio abierto hasta diciembre de 2026: todavía se puede aprobar. No se suma a la plata quieta ni a \"sin obra\".",
+    "asignaciones_directas_posterior": {
+     "fecha": "2026-10-27",
+     "valor": 7297,
+     "fuente": "data/propuesta/modulos/salud.json (propuesta 2028–2031; sin desglose entre directas y anticipadas); docs/11, sección 8"
+    }
    },
-   "nota": "Periodo en curso. Ingresos, inversión, regalías, SGP e impuestos propios solo tienen 2024 completo (operaciones de caja del DNP); la contratación va de enero de 2024 al 20 de octubre de 2026 y las regalías por aprobar tienen corte de octubre de 2026."
+   "nota": "Periodo en curso. Ingresos, inversión, regalías, SGP e impuestos propios solo tienen 2024 completo (operaciones de caja del DNP); la contratación va de enero de 2024 al 20 de octubre de 2026 y las regalías por aprobar tienen corte del 21 de octubre de 2026."
   }
  ],
  "totales_por_categoria": [
