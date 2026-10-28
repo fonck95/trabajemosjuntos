@@ -1019,3 +1019,7 @@ for k, v in fill.items():
 print(f'Avisos de los datos de la torre y del simulador: {len(AVISOS_WEB)}')
 for a_ in AVISOS_WEB:
     print('  -', a_)
+
+# --- Presentación de la propuesta integral 2028–2031 (web/propuesta.html): sus datos van aparte, en web/data/propuesta.json
+import runpy
+runpy.run_path(str(R / 'scripts/build_propuesta.py'), run_name='__main__')
