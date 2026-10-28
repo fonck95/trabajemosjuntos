@@ -3,8 +3,8 @@
   "nombre": "Vivienda",
   "corto": "Vivienda",
   "lema": "Terminar lo pagado y dar vivienda digna a 1.300 hogares",
-  "problema": "En el censo de 2018, el 61,9 % de los hogares de Yondó (3.383) tenía déficit de vivienda y el 37,8 % (2.066) vivía en casas que hay que reponer, sobre todo de madera o tabla; en Antioquia esa última cifra era 6,6 %. La Encuesta de Calidad de Vida de Antioquia de 2021 contó 1.309 viviendas del casco en esa situación, y el Plan de Desarrollo 2024–2027 registra 800 hogares que necesitan titulación o legalización. Además, hay tres obras de vivienda pagadas y sin terminar: las 100 casas rurales llevan 88 % pagado y 9 % de obra.",
-  "propuesta": "Primero, terminar las tres obras inconclusas y titular 800 predios. Luego, 300 viviendas urbanas en dos lotes reales del casco: 200 VIP en 10 bloques de 5 pisos sobre el terraplén que ya existe en el predio José Domingo Oliveros y 100 casas VIS de 2 pisos en el lote occidental. Además, 200 casas rurales en el lote de cada familia y 800 mejoramientos, 400 urbanos y 400 rurales.",
+  "problema": "En el censo de 2018, el 61,9 % de los hogares de Yondó (3.383) tenía déficit de vivienda y el 37,8 % (2.066) vivía en casas que hay que reponer, sobre todo de madera o tabla; en Antioquia esa última cifra era 6,6 %. La Encuesta de Calidad de Vida de Antioquia de 2021, que es por muestra, estimó 1.309 viviendas del casco en esa situación, y el Plan de Desarrollo 2024–2027 registra 800 hogares que necesitan titulación o legalización. Además, hay tres obras de vivienda pagadas y sin terminar: las 100 casas rurales llevan 88 % pagado y 9 % de obra.",
+  "propuesta": "Primero, terminar las tres obras inconclusas y titular 800 predios. Luego, 300 viviendas urbanas en dos lotes reales, uno en el casco y otro en su borde occidental: 200 VIP en 10 bloques de 5 pisos sobre el terraplén que ya existe en el predio José Domingo Oliveros y 100 casas VIS de 2 pisos en el lote occidental. Además, 200 casas rurales en el lote de cada familia y 800 mejoramientos, 400 urbanos y 400 rurales.",
   "cifras": [
     { "v": "61,9 %", "l": "de los hogares tenía déficit de vivienda en 2018 (3.383)", "fuente": "DANE, déficit habitacional CNPV 2018", "url": "https://www.dane.gov.co/files/investigaciones/deficit-habitacional/deficit-hab-2020-anexo-nueva-metodologia.xlsx", "tono": "alerta" },
     { "v": "2.066", "l": "hogares en casas por reponer: 37,8 %, frente a 6,6 % en Antioquia", "fuente": "DANE, déficit habitacional CNPV 2018", "url": "https://www.dane.gov.co/files/investigaciones/deficit-habitacional/deficit-hab-2020-anexo-nueva-metodologia.xlsx", "tono": "alerta" },
@@ -17,17 +17,17 @@
       "id": "rescate",
       "nombre": "Rescate de las obras de vivienda inconclusas",
       "resumen": "Terminar La Paz, las 100 casas rurales y las 60 casas de Yondó del proyecto regional",
-      "descripcion": "Tres obras de vivienda pagadas con regalías están sin terminar: la reubicación del barrio La Paz (88 % de obra), las 100 casas rurales en sitio propio (9 % de obra y 88 % pagado) y las 60 casas de Yondó en el proyecto regional con Puerto Nare y Yolombó (17 % de obra). Se terminan con auditoría técnica, cobro de pólizas, liquidación o cesión de contratos, interventoría externa y pagos solo contra avance. Es la condición para que el DNP y los OCAD aprueben recursos nuevos.",
+      "descripcion": "Tres obras de vivienda pagadas con regalías están sin terminar: la reubicación del barrio La Paz (88 % de obra), las 100 casas rurales en sitio propio (9 % de obra y 88 % pagado) y las 60 casas de Yondó en el proyecto regional con Puerto Nare y Yolombó (17 % de obra). Se terminan con auditoría técnica, cobro de pólizas, liquidación o cesión de contratos, interventoría externa y pagos solo contra avance. Sin ese rescate, es difícil que el DNP y los OCAD aprueben recursos nuevos.",
       "especificaciones": [
         ["La Paz · BPIN 2019058930066", "$13.336 M · 88 % de obra y 79 % pagado"],
         ["Adición de La Paz", "$2.816 M aprobados en 2025–2026, aún sin pagar"],
         ["Rurales · BPIN 2022003050034", "100 casas · $6.801 M · 9 % de obra y 88 % pagado"],
         ["Regional · BPIN 2022003050005", "150 casas (60 en Yondó) · $9.351 M · 17 % de obra y 89 % pagado"],
-        ["Alerta del DNP (ago-2024)", "Alto riesgo de pérdida por anticipo del 90 % y sin interventoría (no es hallazgo fiscal)"],
+        ["Alerta del DNP (ago-2024)", "Rurales y regional: alto riesgo de pérdida por anticipo del 90 % y sin interventoría identificada (no es hallazgo fiscal)"],
         ["Cómo se rescata", "Auditoría técnica, pólizas, interventoría externa y pago contra avance"]
       ],
       "costo": { "min": 2816.0, "central": 8444.4, "max": 14072.7 },
-      "base_costo": "Mínimo: solo la adición ya aprobada para La Paz ($2.816 M), si las otras dos obras se terminan con saldos y pólizas; máximo: esa adición más volver a financiar las 91 casas rurales que faltan a $123,7 M cada una ($11.257 M); central: la mitad de ese refinanciamiento (estimación que depende del estado jurídico de cada contrato).",
+      "base_costo": "Mínimo: solo la adición ya aprobada para La Paz ($2.816 M), si las otras dos obras se terminan con saldos y pólizas; máximo: esa adición más volver a financiar las 91 casas rurales que faltan a $123,7 M cada una ($11.257 M); central: la mitad de ese refinanciamiento. En los tres escenarios, las 60 casas de Yondó del proyecto regional (17 % de obra) se terminan con sus saldos y pólizas, sin plata nueva; es una estimación que depende del estado jurídico de cada contrato.",
       "proyecto_tipo": [
         { "nombre": "Obra a terminar: VIS para reubicar el barrio La Paz (BPIN 2019058930066)", "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-1-206747" },
         { "nombre": "Obra a terminar: 100 casas rurales con prototipos de VIVA (BPIN 2022003050034)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/anexos/B-finanzas-regalias.md" },
@@ -41,18 +41,18 @@
       "id": "nuevas",
       "nombre": "Urbanización VIP/VIS urbana (Lote 1 y Lote 2)",
       "resumen": "200 VIP en 10 bloques (Lote 1) y 100 casas VIS de 2 pisos (Lote 2)",
-      "descripcion": "300 viviendas nuevas en dos lotes reales del casco. En el Lote 1, el predio José Domingo Oliveros, el municipio ya construyó el terraplén: allí van 200 VIP en 10 bloques de 5 pisos para reubicar familias de zonas inundables, porque las 300 casas de 2 pisos de la idea inicial no caben en sus 1,71 ha. En el Lote 2, al occidente, una primera etapa de 100 casas VIS de 2 pisos para hogares que ganan de 2 a 4 salarios mínimos y pueden tomar crédito; de ese lote falta verificar propiedad, suelo y amenaza.",
+      "descripcion": "300 viviendas nuevas en dos lotes reales: uno en el casco y otro en su borde occidental. En el Lote 1, el predio José Domingo Oliveros, el municipio ya construyó el terraplén: allí van 200 VIP en 10 bloques de 5 pisos para reubicar familias de zonas inundables, porque 300 casas de 2 pisos no caben en sus 1,71 ha. En el Lote 2, al occidente, una primera etapa de 100 casas VIS de 2 pisos para hogares que ganan de 2 a 4 salarios mínimos y pueden tomar crédito; de ese lote falta verificar propiedad, suelo, amenaza y si está dentro del perímetro urbano.",
       "especificaciones": [
         ["Lote 1 · José Domingo Oliveros", "1,71 ha de terraplén · 10 bloques de 10 × 22 m"],
         ["Bloques", "5 pisos sin ascensor · 4 apartamentos por piso · 200 VIP"],
-        ["Meta oficial del predio", "350 viviendas (certificado del alcalde, 2025): pide 7 pisos con ascensor o más predio"],
+        ["Meta oficial del predio", "350 viviendas (certificado del alcalde, 2025): exigirían 7 pisos con ascensor o más predio"],
         ["Lote 2 · occidental", "2,54 ha · 8 manzanas: 6 de casas y 2 de cesión"],
-        ["Casas del Lote 2", "Lotes de 6 × 12 m · cupo para 138 · 1.ª etapa: 100 VIS de 2 pisos"],
+        ["Casas del Lote 2", "Lotes de 6 × 12 m · cupo para 128 · 1.ª etapa: 100 VIS de 2 pisos"],
         ["Cesiones del Lote 2", "Parque, juegos y salón comunal"],
         ["Topes 2026", "VIP: 90 SMMLV = $157,6 M · VIS: 135 SMMLV = $236,4 M"]
       ],
       "costo": { "min": 34500.0, "central": 47274.4, "max": 56729.3 },
-      "base_costo": "Precio por unidad para las 300: mínimo $115 M (56 m² a unos $1,8 M/m² más 15 % de redes y urbanismo, cálculo propio con un rango de mercado), central el tope VIP de 90 SMMLV ($157,6 M) y máximo 20 % más ($189,1 M) por relleno o elevación sobre la cota de inundación y vías completas; es el mismo valor para apartamentos y casas y no incluye el lote.",
+      "base_costo": "Precio por unidad para las 300: mínimo $115 M (56 m² a unos $1,8 M/m² más 15 % de redes y urbanismo, cálculo propio con un rango de mercado), central el tope VIP de 90 SMMLV ($157,6 M) y máximo 20 % más ($189,1 M) por relleno o elevación sobre la cota de inundación y vías completas; como una VIP no puede valer más de 90 SMMLV, en el Lote 1 ese sobrecosto se financiaría aparte, como urbanismo y obras de mitigación. Es el mismo valor para apartamentos y casas y no incluye el lote.",
       "proyecto_tipo": [
         { "nombre": "Referente: urbanismo y terraplén del predio José Domingo Oliveros (BPIN 2023058930018)", "url": "https://antioquia.gov.co/images/PDF2/Planeacion/OCAD-SecretariaPlaneacion/2025/Aprobacion-de-ajustes/Regional/Documentos%20aprobacion%20ajuste%20-%202023058930018%20-%20Acueducto%20Jose%20Oliveros%20Yondo/3.%20Balance%20ejecucion%20-%202023058930018.pdf" },
         { "nombre": "Referente: vivienda nueva en José Domingo Oliveros, devuelto a la MGA (BPIN 2020058930063)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/data/comparativa/sgr_fondos.json" }
@@ -66,20 +66,21 @@
       "id": "rural",
       "nombre": "Vivienda rural nueva en sitio propio",
       "resumen": "200 casas VIP en el lote de cada familia para reponer casas de madera o tabla",
-      "descripcion": "200 viviendas VIP rurales construidas en el lote de cada familia para reponer casas de madera o tabla, con saneamiento individual y energía solar donde no llegue la red (se coordina con los módulos de agua y energía). Se priorizan las veredas con iniciativas PDET y los hogares con jefatura femenina. Para postular, el lote debe tener título: por eso va de la mano de la titulación.",
+      "descripcion": "200 viviendas VIP rurales construidas en el lote de cada familia para reponer casas de madera o tabla, con saneamiento individual y energía solar donde no llegue la red. Se priorizan las veredas con iniciativas PDET y los hogares con jefatura femenina. Para postular, el lote debe tener título: por eso va de la mano de la titulación.",
       "especificaciones": [
         ["Prototipo de VIVA", "50 o 60,46 m² · 3 alcobas, sala-comedor, cocina, baño y zona de ropas"],
         ["Servicios", "Saneamiento individual y energía solar donde no llegue la red"],
-        ["Costo real en Yondó", "$68,0 M por casa en 2022 (≈$89,8 M de 2026)"],
+        ["Valor aprobado en Yondó", "$68,0 M por casa en 2022 (≈$89,8 M de 2026)"],
         ["Subsidio en especie", "Hasta 90 SMMLV ($157,6 M), Decreto 0584 de 2025"],
         ["PDET", "Iniciativa 1305893152262 (vivienda rural nueva)"],
         ["Requisito", "Lote propio con título y hogar focalizado"]
       ],
       "costo": { "min": 17960.0, "central": 24740.0, "max": 31516.3 },
-      "base_costo": "Precio por casa para las 200: mínimo, lo contratado en Yondó en 2022 indexado con el IPC ($89,8 M, BPIN 2022003050034); central, el punto medio ($123,7 M); máximo, el tope del subsidio en especie de 90 SMMLV ($157,6 M, Decreto 0584 de 2025).",
+      "base_costo": "Precio por casa para las 200: mínimo, el valor aprobado en Yondó en 2022 indexado con el IPC ($89,8 M, BPIN 2022003050034); central, el punto medio ($123,7 M); máximo, el tope del subsidio en especie de 90 SMMLV ($157,6 M, Decreto 0584 de 2025).",
       "proyecto_tipo": [
         { "nombre": "Referente: prototipos rurales de VIVA de 50 y 60,46 m² (BPIN 2022003050034)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/anexos/B-finanzas-regalias.md" },
-        { "nombre": "Pliego y contrato de referencia de vivienda rural (Colombia Compra, 2015)", "url": "https://www.colombiacompra.gov.co/archivos/manual/proyecto-construccion-de-vivienda-de-interes-social-rural" }
+        { "nombre": "Pliego y contrato de referencia de vivienda rural (Colombia Compra, 2015)", "url": "https://www.colombiacompra.gov.co/archivos/manual/proyecto-construccion-de-vivienda-de-interes-social-rural" },
+        { "nombre": "Proyecto tipo DNP: Celdas solares uso residencial (viviendas rurales aisladas)", "url": "https://proyectostipo.dnp.gov.co/" }
       ],
       "fuentes": ["nacion", "sgr", "gobernacion", "municipio"],
       "plazo": "2029–2031",
@@ -100,7 +101,7 @@
         ["Focalización", "Inventario con Sisbén IV, catastro y visitas"]
       ],
       "costo": { "min": 5189.7, "central": 8404.3, "max": 12606.5 },
-      "base_costo": "Valor por hogar para los 400: mínimo, lo que asignó Fonvivienda en Antioquia en 2026 ($13,0 M, Res. 0093 y 0776); central, el tope de 12 SMMLV de 2026 ($21,0 M); máximo, 18 SMMLV ($31,5 M) para los estructurales (estimación: ese tope no se verificó).",
+      "base_costo": "Valor por hogar para los 400: mínimo, lo que asignó Fonvivienda en Antioquia en 2026 ($13,0 M, Res. 0093 y 0776); central, el tope de 12 SMMLV del esquema asociativo con el salario de 2026 ($21,0 M, Circular 0003 de 2024); máximo, 18 SMMLV ($31,5 M), el tope del art. 2.1.1.7.10 del Decreto 1077 de 2015 que cita la Res. 0093 de 2026 para las intervenciones locativas.",
       "proyecto_tipo": [
         { "nombre": "Modalidades de mejoramiento del Decreto 1077 de 2015", "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=77216" },
         { "nombre": "Referente: mejoramientos Fonvivienda–VIVA en Antioquia (Res. 0093 de 2026)", "url": "https://minvivienda.gov.co/sites/default/files/normativa/0093-2026.pdf" }
@@ -137,29 +138,29 @@
       "id": "titulacion",
       "nombre": "Titulación y legalización de predios",
       "resumen": "800 títulos registrados y legalización de los barrios de origen informal",
-      "descripcion": "Titular 800 predios y legalizar los asentamientos de origen informal del casco: sin título, los hogares no acceden a mejoramiento, a vivienda en sitio propio ni a crédito. Se hace por cesión gratuita de predios fiscales, saneamiento según la Ley 2044 de 2020 y legalización urbanística conforme al EOT 2022–2035, junto con el mejoramiento de entorno del módulo de Urbanismo y las redes de alcantarillado, sin contar dos veces esos costos.",
+      "descripcion": "Titular 800 predios y legalizar los asentamientos de origen informal del casco: sin título, los hogares no acceden a mejoramiento, a vivienda en sitio propio ni a crédito. Se hace por cesión gratuita de predios fiscales, saneamiento según la Ley 2044 de 2020 y legalización urbanística conforme al EOT 2022–2035; el mejoramiento del entorno y las redes de esos barrios no están costeados en esta propuesta.",
       "especificaciones": [
         ["Predios", "800 hogares sin tenencia segura (Plan de Desarrollo 2024–2027)"],
         ["Instrumentos", "Ley 1955 de 2019 (art. 277), Ley 2044 de 2020 y Decreto 523 de 2021"],
         ["Título", "Resolución administrativa registrada"],
         ["Condiciones", "10 años o más de ocupación, hogar VIS y predio fuera de riesgo no mitigable"],
-        ["Apoyo nacional", "Cesión gratuita de MinVivienda hasta 2027 (BPIN 2017011000091)"],
+        ["Apoyo nacional", "Cesión gratuita de MinVivienda (BPIN 2017011000091) hasta 2027; después, según el PND 2026–2030"],
         ["Predios rurales", "Formalización con la Agencia Nacional de Tierras"]
       ],
       "costo": { "min": 1200.0, "central": 2000.0, "max": 3200.0 },
-      "base_costo": "De $1,5 M a $4,0 M por predio, con central de $2,5 M (levantamiento, estudio de títulos, resolución y registro): estimación propia, porque no hay una referencia publicada.",
+      "base_costo": "De $1,5 M a $4,0 M por predio, con central de $2,5 M (levantamiento, estudio de títulos, resolución y registro): estimación propia, porque no se encontró una referencia publicada.",
       "proyecto_tipo": [
         { "nombre": "Referente: cesión gratuita de predios fiscales de MinVivienda (Decreto 523 de 2021)", "url": "https://www.minvivienda.gov.co/sites/default/files/normativa/decreto-523-del-14-de-mayo-de-2021.pdf" }
       ],
       "fuentes": ["nacion", "municipio", "sgr"],
-      "plazo": "2028–2030 (antes de los mejoramientos)",
+      "plazo": "2028–2030 (por etapas, antes de postular cada grupo de hogares)",
       "ubicacion": "Casco urbano (barrios de origen informal) y centros poblados; los predios rurales, con la Agencia Nacional de Tierras.",
       "unidades": 800
     }
   ],
   "financiacion": [
     { "fuente": "sgr", "monto": 37200, "mecanismo": "Regalías directas e inversión local de Yondó, inversión regional de Antioquia y OCAD Paz (vivienda rural PDET)" },
-    { "fuente": "nacion", "monto": 31900, "mecanismo": "Fonvivienda: mejoramiento urbano y rural, vivienda rural en especie y Casa Milagro (aún sin reglamentar)" },
+    { "fuente": "nacion", "monto": 31900, "mecanismo": "MinVivienda y Fonvivienda: mejoramiento urbano y rural, vivienda rural en especie, titulación y Casa Milagro (aún sin reglamentar)" },
     { "fuente": "gobernacion", "monto": 15900, "mecanismo": "VIVA: subsidio VIVA Mi Casa (20 % de la VIP y 10 % de la VIS), prototipos y convenios de mejoramiento" },
     { "fuente": "privados", "monto": 12771.1, "mecanismo": "Hogares VIS (ahorro y crédito del FNA o la banca) y subsidio de las cajas de compensación" },
     { "fuente": "municipio", "monto": 8500, "mecanismo": "Recursos propios: urbanismo, licencias, catastro, titulación y contrapartidas" }
@@ -167,13 +168,14 @@
   "proyectos_tipo": [
     { "nombre": "Prototipos rurales de VIVA, 50 y 60,46 m² (BPIN 2022003050034)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/anexos/B-finanzas-regalias.md" },
     { "nombre": "Pliego de referencia de vivienda rural (Colombia Compra, 2015)", "url": "https://www.colombiacompra.gov.co/archivos/manual/proyecto-construccion-de-vivienda-de-interes-social-rural" },
+    { "nombre": "Proyecto tipo DNP: Celdas solares uso residencial (viviendas rurales aisladas)", "url": "https://proyectostipo.dnp.gov.co/" },
     { "nombre": "Modalidades de mejoramiento (Decreto 1077 de 2015)", "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=77216" },
     { "nombre": "Cesión gratuita de predios fiscales (Decreto 523 de 2021)", "url": "https://www.minvivienda.gov.co/sites/default/files/normativa/decreto-523-del-14-de-mayo-de-2021.pdf" }
   ],
   "gestion": {
     "madurez": "Perfil",
     "madurez_nota": "Hay lotes reales, cantidades y costos de referencia, y el Lote 1 ya tiene terraplén y diseños de redes (2022); para pasar a prefactibilidad faltan estudios de suelos y amenaza, el esquema de los bloques y verificar la propiedad del Lote 2.",
-    "pedido": "Pedimos a MinVivienda y Fonvivienda $31.900 M para 2028–2031: cupos de mejoramiento urbano y rural, subsidio de vivienda rural en especie y que Casa Milagro cofinancie las 200 VIP del Lote 1. Al SGR (OCAD Paz, inversión regional y regalías propias) le pedimos $37.200 M y a VIVA $15.900 M; hogares y cajas ponen $12.771 M y el municipio $8.500 M.",
+    "pedido": "Pedimos a MinVivienda y Fonvivienda $31.900 M para 2028–2031: cupos de mejoramiento urbano y rural, subsidio de vivienda rural en especie, apoyo a la titulación y que Casa Milagro cofinancie las 200 VIP del Lote 1. Al SGR (OCAD Paz, inversión regional y regalías propias) le pedimos $37.200 M y a VIVA $15.900 M; hogares y cajas ponen $12.771 M y el municipio $8.500 M.",
     "a_quien": [
       "MinVivienda · Fonvivienda (mejoramiento urbano y rural, vivienda rural en especie y Casa Milagro)",
       "MinVivienda · Dirección de Espacio Urbano y Territorial (titulación y legalización)",
@@ -202,22 +204,22 @@
     { "riesgo": "La reconstrucción tras el terremoto del 10-ago-2026 ($54 billones, unos $19 billones en vivienda) se lleva primero la bolsa de Casa Milagro, y según el ministro a MinVivienda le quedarían unos $700.000 M para 2027", "mitigacion": "Llegar con el 70 % del paquete financiado sin el presupuesto nacional (SGR, VIVA, hogares, cajas y municipio) y pedir a la Nación líneas que ya existen: mejoramiento, vivienda rural en especie y titulación" },
     { "riesgo": "Obras pagadas casi del todo y sin terminar (anticipos del 90 % y sin interventoría) restan credibilidad ante el DNP y los OCAD", "mitigacion": "Rescate primero; nada de anticipos altos; fiducia o patrimonio autónomo, interventoría externa, pagos contra avance y avance publicado en SECOP y GESPROY" },
     { "riesgo": "Suelo: el terraplén del Lote 1 está 2 a 4 m sobre el caño y debe cargar bloques de 5 pisos; del Lote 2 no se sabe el dueño, si está en el perímetro urbano ni su amenaza", "mitigacion": "Estudios de suelos, de estabilidad del terraplén y de amenaza antes de diseñar; respetar la ronda del caño (30 m, por confirmar con Corantioquia); si el Lote 2 no sirve, buscar suelo en las 63 ha de expansión del EOT" },
-    { "riesgo": "Lotes sin título bloquean la vivienda en sitio propio y los mejoramientos", "mitigacion": "Titular en 2028–2029, antes de postular hogares a Fonvivienda o a VIVA" }
+    { "riesgo": "Lotes sin título bloquean la vivienda en sitio propio y los mejoramientos", "mitigacion": "Titular por etapas entre 2028 y 2030 y postular a Fonvivienda o a VIVA solo a los hogares que ya tengan título" }
   ],
   "pasos": [
-    { "id": "portadilla", "tipo": "portadilla", "titulo": "Seis de cada diez hogares, con déficit de vivienda" },
-    { "id": "componentes", "tipo": "componentes", "titulo": "Primero lo pagado, luego lo nuevo", "texto": "Se terminan las obras pagadas y se titulan los predios; con eso se piden recursos para 300 viviendas urbanas, 200 rurales y 800 mejoramientos, por $106.271 M en 2028–2031." },
+    { "id": "portadilla", "tipo": "portadilla", "titulo": "Seis de cada diez hogares con déficit (censo 2018)" },
+    { "id": "componentes", "tipo": "componentes", "titulo": "Primero lo pagado, luego lo nuevo", "texto": "Se terminan las obras pagadas y se titulan los predios; con eso se piden recursos para 300 viviendas urbanas, 200 rurales y 800 mejoramientos. Todo el paquete, con el rescate y la titulación, suma $106.271 M en 2028–2031." },
     {
       "id": "nuevas", "tipo": "componente", "componente": "nuevas",
-      "titulo": "300 viviendas en dos lotes reales del casco",
-      "texto": "Las 300 casas de 2 pisos de la idea inicial no caben en el Lote 1; por eso, sobre el terraplén que el municipio ya construyó allí, van 200 VIP en 10 bloques de 5 pisos. En el Lote 2, al occidente, una primera etapa de 100 casas VIS de 2 pisos y dos manzanas de cesión para parque y salón comunal; de ese lote falta verificar propiedad, suelo y amenaza.",
+      "titulo": "300 viviendas en dos lotes reales",
+      "texto": "En el Lote 1 no caben 300 casas de 2 pisos; por eso, sobre el terraplén que el municipio ya construyó allí, van 200 VIP en 10 bloques de 5 pisos. En el Lote 2, en el borde occidental del casco, una primera etapa de 100 casas VIS de 2 pisos y dos manzanas de cesión para parque y salón comunal; de ese lote falta verificar propiedad, suelo, amenaza y perímetro urbano.",
       "cifras": [
-        { "v": "$6.291 M", "l": "ya ejecutados en el Lote 1, casi todo en el terraplén (63 %, ene-2025)", "fuente": "Balance del BPIN 2023058930018 (Gobernación de Antioquia, 2025)", "url": "https://antioquia.gov.co/images/PDF2/Planeacion/OCAD-SecretariaPlaneacion/2025/Aprobacion-de-ajustes/Regional/Documentos%20aprobacion%20ajuste%20-%202023058930018%20-%20Acueducto%20Jose%20Oliveros%20Yondo/3.%20Balance%20ejecucion%20-%202023058930018.pdf" },
+        { "v": "$6.291 M", "l": "ejecutados a ene-2025, casi todo en terraplén (oct-2026: 69 % de obra)", "fuente": "Balance del BPIN 2023058930018 (Gobernación de Antioquia, 2025) y GESPROY (oct-2026)", "url": "https://antioquia.gov.co/images/PDF2/Planeacion/OCAD-SecretariaPlaneacion/2025/Aprobacion-de-ajustes/Regional/Documentos%20aprobacion%20ajuste%20-%202023058930018%20-%20Acueducto%20Jose%20Oliveros%20Yondo/3.%20Balance%20ejecucion%20-%202023058930018.pdf" },
         { "v": "+400", "l": "familias en zonas de alto riesgo por inundación, por reubicar", "fuente": "Certificado del alcalde, BPIN 2023058930018 (2025)", "url": "https://antioquia.gov.co/images/PDF2/Planeacion/OCAD-SecretariaPlaneacion/2025/Aprobacion-de-ajustes/Regional/Documentos%20aprobacion%20ajuste%20-%202023058930018%20-%20Acueducto%20Jose%20Oliveros%20Yondo/4.%20Certificado%20impacto%20regional.pdf", "tono": "alerta" }
       ],
       "leyenda": [
-        { "texto": "Lote 1 · 10 bloques de 5 pisos (200 VIP)", "color": "var(--m-vivienda)", "forma": "area" },
-        { "texto": "Lote 2 · casas de 2 pisos (100 VIS)", "color": "var(--m-vivienda)", "forma": "area" },
+        { "texto": "Lote 1 · 10 bloques de 5 pisos · 200 VIP", "color": "var(--m-vivienda)", "forma": "dash" },
+        { "texto": "Lote 2 · casas de 2 pisos · 100 VIS", "color": "var(--m-vivienda)", "forma": "dash" },
         { "texto": "Cesiones · parque y salón comunal", "color": "#5f9e48", "forma": "area" }
       ]
     },
@@ -228,6 +230,10 @@
       "cifras": [
         { "v": "314", "l": "viviendas urbanas en déficit cualitativo (encuesta de Antioquia, 2021)", "fuente": "Plan de Desarrollo de Yondó 2024–2027 (ECV 2021)", "url": "https://repositoriocdim.esap.edu.co/server/api/core/bitstreams/2f9d7b9c-6c2b-4d4e-931b-dee7306d97aa/content", "tono": "alerta" },
         { "v": "0", "l": "cupos para Yondó en el convenio Fonvivienda–VIVA de $18.915 M (2024)", "fuente": "Fonvivienda, resoluciones 0093 y 0776 de 2026", "url": "https://minvivienda.gov.co/sites/default/files/normativa/0093-2026.pdf", "tono": "alerta" }
+      ],
+      "leyenda": [
+        { "texto": "Techos de casas tipo a mejorar (muestra)", "color": "var(--m-vivienda)", "forma": "area" },
+        { "texto": "Resto de las cubiertas del casco, en gris", "color": "#c4c7c8", "forma": "area" }
       ]
     },
     {
@@ -236,10 +242,14 @@
       "texto": "Se reponen casas de madera o tabla con el prototipo de VIVA de 50 o 60,46 m², con saneamiento propio y energía solar donde no llega la red. Antes hay que terminar las 100 casas rurales que ya se pagaron y titular los lotes.",
       "cifras": [
         { "v": "1.997", "l": "hogares con paredes de madera burda o tabla (censo de 2018)", "fuente": "DANE, déficit habitacional CNPV 2018", "url": "https://www.dane.gov.co/files/investigaciones/deficit-habitacional/deficit-hab-2020-anexo-nueva-metodologia.xlsx", "tono": "alerta" },
-        { "v": "$89,8 M", "l": "por casa rural en Yondó: contrato de 2022 llevado a pesos de 2026", "fuente": "BPIN 2022003050034 ($6.801 M por 100 casas), indexado con el IPC", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/anexos/B-finanzas-regalias.md" }
+        { "v": "$89,8 M", "l": "por casa rural en Yondó: valor aprobado en 2022, en pesos de 2026", "fuente": "BPIN 2022003050034 ($6.801 M por 100 casas), indexado con el IPC", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/anexos/B-finanzas-regalias.md" }
+      ],
+      "leyenda": [
+        { "texto": "Prototipo VIVA de un piso, con panel solar y tanque (5 casas de muestra)", "color": "#b65a3c", "forma": "area" },
+        { "texto": "Lote de cada familia, junto a la vía al acueducto", "color": "#8fbf6a", "forma": "area" }
       ]
     },
-    { "id": "financiacion", "tipo": "financiacion", "titulo": "El 70 % no depende del presupuesto nacional", "texto": "A la Nación se le piden $31.900 M en líneas que ya existen (mejoramiento, vivienda rural en especie y titulación) y un cupo en Casa Milagro, el programa que reemplaza a Mi Casa Ya, que aún no está reglamentado y que tras el terremoto del 10 de agosto atenderá primero las zonas afectadas. No hay proyecto tipo del DNP para vivienda: se usan los prototipos de VIVA y las reglas de Fonvivienda." }
+    { "id": "financiacion", "tipo": "financiacion", "titulo": "El 70 % no depende del presupuesto nacional", "texto": "A la Nación se le piden $31.900 M en líneas que ya existen (mejoramiento, vivienda rural en especie y titulación) y en Casa Milagro para las 200 VIP; ese programa reemplaza a Mi Casa Ya, aún no está reglamentado y, tras el terremoto del 10 de agosto, atenderá primero las zonas afectadas. No encontramos un proyecto tipo vigente del DNP para construir vivienda, así que se usan los prototipos de VIVA y las reglas de Fonvivienda; para la energía solar de las casas rurales aisladas sirve el proyecto tipo «Celdas solares uso residencial»." }
   ],
   "fuentes_citadas": [
     { "titulo": "DANE, déficit habitacional municipal del CNPV 2018, anexo con la metodología de 2020 (2020)", "url": "https://www.dane.gov.co/files/investigaciones/deficit-habitacional/deficit-hab-2020-anexo-nueva-metodologia.xlsx" },
@@ -248,7 +258,7 @@
     { "titulo": "Alcaldía de Yondó, certificado de impacto regional del BPIN 2023058930018 (2025)", "url": "https://antioquia.gov.co/images/PDF2/Planeacion/OCAD-SecretariaPlaneacion/2025/Aprobacion-de-ajustes/Regional/Documentos%20aprobacion%20ajuste%20-%202023058930018%20-%20Acueducto%20Jose%20Oliveros%20Yondo/4.%20Certificado%20impacto%20regional.pdf" },
     { "titulo": "Repositorio, Anexo B: finanzas y regalías, estado en GESPROY de los proyectos de vivienda (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/anexos/B-finanzas-regalias.md" },
     { "titulo": "Repositorio, Anexo A: contrato 134-2023 con la EDU y alerta del DNP (2026)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/anexos/A-gobiernos-2004-2027.md" },
-    { "titulo": "SECOP I, contrato 19-1-206747: vivienda para reubicar el barrio La Paz (2019)", "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-1-206747" },
+    { "titulo": "SECOP I, proceso 19-1-206747 (contrato de obra 498-2019 con el Consorcio MD): vivienda para reubicar el barrio La Paz (2019)", "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=19-1-206747" },
     { "titulo": "Fonvivienda, Resolución 0093 de 2026: mejoramiento de vivienda urbana en Antioquia (2026)", "url": "https://minvivienda.gov.co/sites/default/files/normativa/0093-2026.pdf" },
     { "titulo": "Fonvivienda, Resolución 0782 de 2026: mejoramiento de vivienda rural (2026)", "url": "https://minvivienda.gov.co/sites/default/files/normativa/0782-2026.pdf" },
     { "titulo": "Decreto 0584 de 2025: subsidio en especie de hasta 90 SMMLV (2025)", "url": "https://normas.cra.gov.co/gestor/docs/decreto_0584_2025.htm" },
