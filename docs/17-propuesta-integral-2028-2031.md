@@ -137,8 +137,9 @@ El contexto aprieta, por eso los proyectos grandes van al OCAD Paz, a la inversi
   ingresos del bienio.
 - El PGN 2027 recorta 3 % en todas las entidades.
 - La reconstrucción tras el terremoto del 10 de agosto de 2026 es la prioridad nacional.
-- El crédito de Findeter se limita a la capacidad prudente del municipio ($5.141 M a $10.281 M) y a proyectos que
-  generan ahorro, como la granja solar.
+- El crédito de Findeter ($9.445 M) cabe en la capacidad prudente del municipio ($5.141 M a $10.281 M), cerca de su
+  techo, y va sobre todo a proyectos que generan ahorro o ingreso: las dos granjas solares y el parque agroindustrial
+  (para este, la línea está por confirmar), más $1.500 M con tasa compensada de salud para cerrar la obra de la torre.
 
 El capítulo «Lo que pedimos» resume un pedido por entidad, con su monto y los módulos que mueve.
 
@@ -154,8 +155,9 @@ La gestión empieza ya, mientras se arma el PND 2026–2030 «Colombia, la Patri
 
 Las obras van en dos olas:
 
-- **2028–2030:** acueducto, sóftbol y alameda, torre, fibra y granja, y rescate de las viviendas inconclusas.
-- **2029–2031:** interceptores y PTAR, parque lineal, mirador, parque agroindustrial y urbanizaciones.
+- **2028–2030:** acueducto, sóftbol y alameda, torre, fibra y granja, rescate de las viviendas inconclusas, y banco
+  de maquinaria y acopios del parque agroindustrial.
+- **2029–2031:** interceptores y PTAR, parque lineal, mirador, plantas del parque agroindustrial y urbanizaciones.
 
 ## Ideas incorporadas de los renders del usuario
 

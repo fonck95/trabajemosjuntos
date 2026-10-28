@@ -1,5 +1,5 @@
 // Portada: el casco urbano con un pin por módulo en el sitio real de cada propuesta; el segundo paso se aleja hasta
-// abarcar el territorio completo (del acueducto, 2,3 km al occidente, al puente sobre el Magdalena, 7,9 km al norte).
+// abarcar el territorio completo (del acueducto, 2,3 km al occidente, al puente sobre el Magdalena, a unos 8 km al norte).
 import { pinesDe } from './comun.js';
 
 export function crear(esc, datos) {

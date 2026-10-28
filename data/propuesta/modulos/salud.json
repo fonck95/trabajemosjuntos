@@ -178,7 +178,7 @@
   "gestion": {
     "madurez": "Prefactibilidad",
     "madurez_nota": "La torre (76 % del módulo) está en prefactibilidad, con programa, prediseño estructural, presupuesto con APU y modelo BIM, y le faltan los estudios y diseños (P1, $1.832 M); telesalud, puestos y ambulancias están en perfil, y los EBS operaron en 2024 y 2025 (en SECOP I no hay contratos de 2026).",
-    "pedido": "A MinSalud, $12.000 M para la torre (concepto técnico de viabilidad, Res. 485 de 2025) y sostener la asignación de los EBS en al menos $1.200 M al año ($4.800 M en 4 años; en 2025 la E.S.E. contrató $1.537 M); al OCAD Paz, $8.300 M de la Asignación para la Paz con destino a la torre y los puestos rurales. A la ART, inscribir $3.750 M de dotación y ambulancias en el banco de obras por impuestos, y a la Gobernación, $2.812 M con registro en el PMIDS de 2028.",
+    "pedido": "A MinSalud, $12.000 M para la torre (concepto técnico de viabilidad, Res. 485 de 2025) y sostener la asignación de los EBS en al menos $1.200 M al año ($4.800 M en 4 años; en 2025 la E.S.E. contrató $1.537 M); a MinTIC, $400 M para la telemedicina y la conectividad de la torre; al OCAD Paz, $8.300 M de la Asignación para la Paz con destino a la torre y los puestos rurales. A la ART, inscribir $3.750 M de dotación y ambulancias en el banco de obras por impuestos, y a la Gobernación, $2.812 M con registro en el PMIDS de 2028.",
     "a_quien": [
       "MinSalud · concepto técnico de viabilidad (Res. 485) y Subdirección de Prestación de Servicios (Documento de Capacidad Instalada)",
       "MinSalud · Dirección de Promoción y Prevención (asignación anual de los EBS)",
@@ -186,7 +186,7 @@
       "Agencia de Renovación del Territorio · banco de proyectos de obras por impuestos",
       "Gobernación de Antioquia · Secretaría Seccional de Salud (PMIDS y cofinanciación)",
       "Findeter · crédito con tasa compensada para infraestructura en salud",
-      "FENOGE · programa Con Energía; MinTIC · Fondo Único de TIC",
+      "MinTIC · telemedicina y conectividad de la torre ($400 M)", "FENOGE · programa Con Energía; Fondo Único de TIC · conectividad rural",
       "Ecopetrol · inversión social y obras por impuestos (campos Casabe y Llanito)"
     ],
     "pasos": [
