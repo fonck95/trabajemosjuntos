@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Yondó 2028–2031 · Propuesta integral</title>
-<meta name="description" content="Presentación 3D de la propuesta integral de inversión para Yondó (Antioquia) 2028–2031: vivienda, urbanismo, agroindustria, salud, agua, saneamiento y TIC, con costos, proyectos tipo y fuentes de financiación del nivel central.">
+<meta name="description" content="Presentación 3D de la propuesta integral de inversión para Yondó (Antioquia) 2028–2031: vivienda, urbanismo, agroindustria, salud, agua, saneamiento y TIC, con rangos de costo aproximados, proyectos tipo y fuentes de financiación del nivel central.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
@@ -222,6 +222,7 @@ a.chip:hover { border-color: var(--ink); }
 .indice .tarjeta::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--mc); }
 .indice .tarjeta:hover { border-color: var(--mc); box-shadow: var(--sombra); }
 .indice .tarjeta .n { font: 400 2.4rem/1 var(--f-display); color: var(--mc); }
+.indice .tarjeta .n svg { width: 34px; height: 34px; display: block; }
 .indice .tarjeta b { font: 400 1.35rem/1.05 var(--f-display); text-transform: uppercase; letter-spacing: 0.01em; }
 .indice .tarjeta span { font-size: 0.84rem; color: var(--muted); }
 .indice .tarjeta em { margin-top: auto; font: 600 0.8rem var(--f-mono); font-style: normal; }
@@ -233,9 +234,9 @@ a.chip:hover { border-color: var(--ink); }
 .lbl-p b { font-weight: 800; } .lbl-p small { font: 600 10px var(--f-mono); color: var(--muted); }
 .lbl-p.mini { font-size: 10.5px; padding: 2px 7px 2px 6px; border-left-width: 4px; }
 .lbl-p.alerta { border-color: var(--bad); } .lbl-p.alerta small { color: var(--bad); }
-.lbl-pin { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--mc); color: #fff; box-shadow: 0 6px 18px color-mix(in srgb, #000 30%, transparent); pointer-events: auto; cursor: pointer; }
+.lbl-pin { position: relative; display: grid; place-items: center; min-width: 34px; height: 34px; padding: 0 12px; border-radius: 999px; background: var(--mc); color: #fff; box-shadow: 0 6px 18px color-mix(in srgb, #000 30%, transparent); pointer-events: auto; cursor: pointer; }
 .lbl-pin::after { content: ""; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); border: 7px solid transparent; border-bottom: 0; border-top-color: var(--mc); }
-.lbl-pin > * { font: 400 0.95rem var(--f-display); }
+.lbl-pin > * { font: 400 0.95rem var(--f-display); text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap; }
 .lbl.fuera { visibility: hidden; }
 .lbl-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--mc); border: 2px solid #fff; box-shadow: 0 1px 4px color-mix(in srgb, #000 35%, transparent); }
 .lbl-geo { font: italic 12px var(--f-body); color: var(--muted); text-shadow: 0 0 4px var(--surface), 0 0 4px var(--surface); }
@@ -316,6 +317,8 @@ a.chip:hover { border-color: var(--ink); }
   .lbl-p { font-size: 10.5px; white-space: normal; max-width: min(62vw, 250px); }
   /* en el teléfono los rótulos llevan solo el título: el detalle está en la hoja */
   .lbl-p small { display: none; }
+  .lbl-pin { height: 28px; padding: 0 9px; }
+  .lbl-pin > * { font-size: 0.78rem; }
   .marca span, .herr .txt { display: none; }
   .marca { padding: 5px 12px 5px 9px; } .marca b { font-size: 1rem; }
   .herr button, .herr a { padding: 0 10px; }
@@ -385,7 +388,7 @@ a.chip:hover { border-color: var(--ink); }
   <div class="telon" aria-hidden="true"><div class="banda"></div><div class="txt"><span class="n"></span><span class="t"></span><span class="l"></span></div></div>
 
   <section class="indice" hidden aria-label="Índice">
-    <h2>Siete módulos, un territorio</h2>
+    <h2>Los módulos de la propuesta, un territorio</h2>
     <p>Elija un capítulo. Las flechas del teclado (o el control de presentación) avanzan paso a paso; la tecla I abre este índice, H oculta el panel y F pone la pantalla completa.</p>
     <div class="rejilla"></div>
     <div class="herr cerrar"><button type="button" data-accion="indice">Cerrar (Esc)</button></div>
