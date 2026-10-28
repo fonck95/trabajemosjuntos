@@ -1,0 +1,33 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  presentacion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Genera los datos de la propuesta
+        run: python3 scripts/build_propuesta.py
+      - name: Sintaxis de los módulos JS de la presentación
+        run: |
+          set -e
+          for f in web/js/propuesta/*.js web/js/propuesta/modulos/*.js web/js/propuesta/piezas/*.js; do
+            cp "$f" /tmp/check.mjs
+            node --check /tmp/check.mjs || { echo "error de sintaxis en $f"; exit 1; }
+          done
+      - name: La presentación no numera los capítulos
+        run: |
+          if grep -nE 'padStart\(2, ?.0.\)|class="num"|\$\{c\.n\}|\$\{i \+ 1\}\.' web/js/propuesta/main.js web/js/propuesta/modulos/*.js; then
+            echo 'La presentación muestra el nombre del punto, no un número de 1 a 7'
+            exit 1
+          fi

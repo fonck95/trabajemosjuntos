@@ -7,7 +7,7 @@ export function crear(esc, datos) {
   const pines = pinesDe(datos);
   pines.forEach(({ m, i, x, y }) => {
     esc.linea([[x, y, 0], [x, y, 34]], { color: `--m-${m.id}`, ancho: 2.5, padre: capa });
-    esc.etiqueta(`<span>${i + 1}</span>`, { cls: 'lbl-pin', pos: [x, y, 34], padre: capa, color: `var(--m-${m.id})`, titulo: `${i + 1}. ${m.nombre}`, alClic: () => { location.hash = m.id; }, ancla: [0.5, 1.2] });
+    esc.etiqueta(`<span>${m.corto || m.nombre}</span>`, { cls: 'lbl-pin', pos: [x, y, 34], padre: capa, color: `var(--m-${m.id})`, titulo: m.nombre, alClic: () => { location.hash = m.id; }, ancla: [0.5, 1.2] });
   });
   // territorio: los nombres que cita el texto (río, puente y Barrancabermeja), solo en el segundo paso
   const geo = esc.capa('portada.geo'), tb = datos.territorio?.puente?.tablero;
