@@ -55,12 +55,15 @@ function marcoDe(poly) {
 export function rellenoNuevo({ predio, celdas, futuras = [], lixiviados = [], eca, compostaje, porteria, entrada }) {
   const raiz = new THREE.Group();
   const piso = capa(raiz, 'piso'), cerro = capa(raiz, 'celdas'), obras = capa(raiz, 'obras'), verde = capa(raiz, 'verde');
+  // las losas del piso (predio, celdas futuras y entrada) se adelantan solo unas unidades de profundidad, sin el término
+  // de la pendiente: de lejos y en ángulo bajo ese término las adelantaba metros y tapaban las lagunas, las pilas de
+  // compostaje y la báscula, que van pocos centímetros por encima. Las unidades bastan para que no titilen contra el piso
   const M = {
-    predio: mat(new THREE.Color('#c9bfa4'), { roughness: 1, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
-    futura: mat(new THREE.Color('#d8cfb4'), { roughness: 1, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }),
+    predio: mat(new THREE.Color('#c9bfa4'), { roughness: 1, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -2 }),
+    futura: mat(new THREE.Color('#d8cfb4'), { roughness: 1, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -3 }),
     cubierta: mat(new THREE.Color('#7f9f5a'), { roughness: 1 }), talud: mat(new THREE.Color('#a39577'), { roughness: 1 }),
     geomembrana: mat(new THREE.Color('#2b3833'), { roughness: 0.45, metalness: 0.1 }), lixiviado: mat(new THREE.Color('#55603f'), { roughness: 0.2 }),
-    borde: mat(new THREE.Color('#bdb8ad'), { roughness: 0.9 }), via: mat(new THREE.Color('#a8997f'), { roughness: 1, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }),
+    borde: mat(new THREE.Color('#bdb8ad'), { roughness: 0.9 }), via: mat(new THREE.Color('#a8997f'), { roughness: 1, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -4 }),
     compost: mat(new THREE.Color('#6f5233'), { roughness: 1 }), placa: mat(new THREE.Color('#3f464c'), { roughness: 0.6, metalness: 0.3 }),
     caseta: mat(new THREE.Color('#ece8e0'), { roughness: 0.85 }),
   };

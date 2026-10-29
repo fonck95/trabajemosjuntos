@@ -334,7 +334,7 @@
         { "texto": "Recomendado: Kilómetro Cinco, en la reserva del EOT (8,8 ha)", "color": "var(--m-saneamiento)", "forma": "area" },
         { "texto": "Alternativas: occidente cercano y lomas de Casabe", "color": "#8a8f94", "forma": "dash" },
         { "texto": "Descartado: ampliar junto a Las Américas", "color": "#d9363e", "forma": "dash" },
-        { "texto": "Vía de acceso desde el borde del casco (≈6,5 km)", "color": "#6f5233", "forma": "" },
+        { "texto": "Vía de acceso desde el borde del casco (≈6,5 km)", "color": "var(--basura)", "forma": "" },
         { "texto": "Borde del radio de 13 km del aeropuerto Yariguíes (Aerocivil)", "color": "#8e44ad", "forma": "dash" }
       ],
       "cifras": [

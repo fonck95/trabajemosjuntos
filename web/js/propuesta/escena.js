@@ -197,15 +197,17 @@ export function crearEscena(el, datos) {
 
   // Etiquetas sin encimarse y dentro de la zona libre: tiene en cuenta el ancla de cada recuadro, corre en horizontal
   // las que el panel, la leyenda o el borde cortarían, sube lo justo las que chocan y oculta las de puntos que caen
-  // debajo del panel o fuera de la pantalla. En pantallas chicas, además, los rótulos que caen encima de la obra que se
-  // encuadró se apartan arriba o abajo de ella, centrados sobre su punto y sin que su guía cruce otro rótulo; si no caben,
-  // los chicos se ocultan y los principales se quedan en su sitio. Ningún recuadro tapa el punto de otro. Si un rótulo
-  // queda lejos de su punto, una guía los une. Reemplaza el de core.js solo en esta página.
+  // debajo del panel o fuera de la pantalla. En pantallas chicas (y en las vistas que lo piden), además, los rótulos que
+  // caen encima de la obra que se encuadró se apartan arriba o abajo de ella, centrados sobre su punto y sin que su guía
+  // cruce otro rótulo; si no caben, los chicos se ocultan y los principales se quedan en su sitio. Ningún recuadro tapa
+  // el punto de otro. Si un rótulo queda lejos de su punto, una guía los une. Reemplaza el de core.js solo en esta página.
   st.declutterLabels = function () {
     const z = zonaPx(), v = new THREE.Vector3(), items = [];
     const pantalla = (p) => { v.copy(p).project(this.camera); return v.z > 1 ? null : [((v.x + 1) / 2) * z.W, ((1 - v.y) / 2) * z.H]; };
+    // los rótulos se apartan de la obra en pantallas chicas y, si la vista lo pide (encuadrar con apartar), en las grandes
+    const apartar = z.chico || !!this._obra?.apartar;
     let ob = null;
-    if (z.chico && this._obra?.length) {
+    if (apartar && this._obra?.length) {
       const b = [Infinity, -Infinity, Infinity, -Infinity];
       for (const p of this._obra) { const q = pantalla(p); if (!q) continue; b[0] = Math.min(b[0], q[0]); b[1] = Math.max(b[1], q[0]); b[2] = Math.min(b[2], q[1]); b[3] = Math.max(b[3], q[1]); }
       if (b[1] > b[0]) ob = { x0: b[0], x1: b[1], y0: b[2], y1: b[3] };
@@ -246,9 +248,9 @@ export function crearEscena(el, datos) {
       if (Math.abs(lados[0].y - r.y) > Math.max(120, (z.y1 - z.y0) * 0.6)) return;
       r.lados = lados; r.aparte = true;
     });
-    // en el celular, el punto de cada rótulo y de cada pin es un obstáculo: ningún recuadro tapa el punto de otro
+    // en el celular (y donde se apartan), el punto de cada rótulo y de cada pin es un obstáculo: ningún recuadro tapa el de otro
     const puestas = [], guias = [];
-    if (z.chico) items.forEach((r) => { if (!r.fuera && !r.geo) puestas.push({ x: r.tx, y: r.ty, w: 12, h: 12, de: r }); });
+    if (apartar) items.forEach((r) => { if (!r.fuera && !r.geo) puestas.push({ x: r.tx, y: r.ty, w: 12, h: 12, de: r }); });
     const choca = (r, x, y) => puestas.find((p) => p.de !== r && Math.abs(p.x - x) < (p.w + r.w) / 2 + 4 && Math.abs(p.y - y) < (p.h + r.h) / 2 + 3);
     // ¿el segmento a–b pasa por la caja c (con m px de margen)? se prueba punto por punto, cada 4 px
     const corta = (a, b, c, m = 4) => {
@@ -259,12 +261,16 @@ export function crearEscena(el, datos) {
     // la guía sale del borde del recuadro más cercano al punto, a la altura de su x (casi vertical)
     const guiaDe = (r, x, y) => [[Math.min(Math.max(r.tx, x - r.w / 2 + 8), x + r.w / 2 - 8), r.ty > y ? y + r.h / 2 : y - r.h / 2], [r.tx, r.ty]];
     const lejos = (r, x, y) => Math.abs(r.ty - y) > r.h / 2 + 10 || Math.abs(r.tx - x) > r.w / 2 + 6;
+    // en las vistas que lo piden (encuadrar con sinCruces), la guía de un apartado tampoco corta otra guía ya puesta
+    const sinCruces = !!this._obra?.sinCruces;
+    const cruzan = (a, b, c, d) => { const o = (p, q, s) => Math.sign((q[0] - p[0]) * (s[1] - p[1]) - (q[1] - p[1]) * (s[0] - p[0])); return o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0; };
     const libre = (r, x, y) => {
       if (choca(r, x, y)) return false;
       const caja = { x, y, w: r.w, h: r.h };
       if (guias.some(([a, b, q]) => q !== r && corta(a, b, caja, 2))) return false;   // no tapa la guía de otro
       if (!lejos(r, x, y)) return true;
       const [a, b] = guiaDe(r, x, y);
+      if (sinCruces && guias.some(([c, d, q]) => q !== r && cruzan(a, b, c, d))) return false;
       return !puestas.some((p) => p.de !== r && !p.de && corta(a, b, p));            // su guía no cruza otro recuadro
     };
     const poner = (r, x, y) => {
@@ -379,12 +385,14 @@ export function crearEscena(el, datos) {
   }
   // encuadra (rumbo: desde dónde se mira, en grados desde el norte en sentido horario; elev: grados sobre el horizonte)
   // obra: lo que los rótulos deben esquivar en el celular, si no es todo lo encuadrado (por ejemplo, un lote dentro de una
-  // vista que también muestra el río y el puente)
-  function encuadrar(obj, { rumbo = 200, elev = 38, margen = 0.86, duracion = 1.8, alto = 0, minDist = 60, obra } = {}) {
+  // vista que también muestra el río y el puente); sinCruces: los rótulos apartados no ponen su guía cruzando otra;
+  // apartar: los rótulos que caen sobre la obra se apartan arriba o abajo de ella también en pantalla grande
+  function encuadrar(obj, { rumbo = 200, elev = 38, margen = 0.86, duracion = 1.8, alto = 0, minDist = 60, obra, sinCruces = false, apartar = false } = {}) {
     const pts = puntosDe(obj);
     if (!pts.length) return;
     if (alto) pts.push(...pts.map((p) => p.clone().setY(p.y + alto)));
     st._obra = obra ? puntosDe(obra) : pts;
+    st._obra.sinCruces = sinCruces; st._obra.apartar = apartar;
     const z = zona(), cam = st.camera.clone(); cam.far = 1e7; cam.updateProjectionMatrix();
     const az = THREE.MathUtils.degToRad(rumbo), el2 = THREE.MathUtils.degToRad(elev);
     const dir = new THREE.Vector3(Math.sin(az) * Math.cos(el2), Math.sin(el2), -Math.cos(az) * Math.cos(el2));

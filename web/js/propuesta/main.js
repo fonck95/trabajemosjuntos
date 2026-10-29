@@ -470,9 +470,10 @@ function alturaHoja(estado) {
 function aplicarHoja(estado = hoja, { reencuadre = true } = {}) {
   if (!hojaMQ.matches) { pres.classList.remove('hoja-mini', 'panel-grande'); pres.style.removeProperty('--hoja'); return; }
   hoja = estado;
-  pres.style.setProperty('--hoja', `${alturaHoja(estado)}px`);
+  // las clases van antes de medir: con hoja-mini puesta el título mide menos y la hoja media volvía más baja
   pres.classList.toggle('hoja-mini', estado === 'mini');
   pres.classList.toggle('panel-grande', estado === 'grande');
+  pres.style.setProperty('--hoja', `${alturaHoja(estado)}px`);
   asa.setAttribute('aria-label', estado === 'mini' ? 'Mostrar el texto del paso' : 'Achicar el panel para ver la maqueta');
   asa.setAttribute('aria-expanded', String(estado !== 'mini'));
   requestAnimationFrame(marcarDesborde);

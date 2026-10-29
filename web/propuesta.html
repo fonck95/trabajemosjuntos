@@ -15,7 +15,7 @@
 :root {
   --bg: #eef0ec; --surface: #ffffff; --raised: #f6f7f4; --ink: #111111; --muted: #565651; --line: #d9dad3;
   --accent: #e3141b; --accent-ink: #ffffff; --accent-soft: rgba(227, 20, 27, 0.08);
-  --ground: #e2e4dc; --water: #8aa7b4; --wall: #fbfbf9; --roof: #a3a69f; --sun: #e09b00; --data: #6250d6; --power: #b85f00;
+  --ground: #e2e4dc; --water: #8aa7b4; --wall: #fbfbf9; --roof: #a3a69f; --sun: #e09b00; --data: #6250d6; --power: #b85f00; --basura: #6f5233;
   --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
   --good: #0ca30c; --warn: #fab219; --bad: #d03b3b;
   /* color de cada módulo */
@@ -31,7 +31,7 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0b0c0c; --surface: #151617; --raised: #1c1d1e; --ink: #f2f2ee; --muted: #a8a8a1; --line: #2f3030;
   --accent: #ff4545; --accent-soft: rgba(255, 69, 69, 0.12);
-  --ground: #1e211d; --water: #284b58; --wall: #8e9391; --roof: #5c605d; --sun: #f2b533; --data: #9085e9; --power: #f6a23a;
+  --ground: #1e211d; --water: #284b58; --wall: #8e9391; --roof: #5c605d; --sun: #f2b533; --data: #9085e9; --power: #f6a23a; --basura: #b48a5a;
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
   --m-portada: #ff4545; --m-vivienda: #f07a45; --m-urbanismo: #2cc287; --m-agroindustria: #e3a51c; --m-salud: #f0575e;
   --m-aguas: #4b98f0; --m-saneamiento: #22b5bd; --m-tic: #9085e9; --m-financiacion: #f2f2ee; --m-ruta: #f2f2ee; --m-pedidos: #ff4545;
@@ -40,7 +40,7 @@
 :root[data-theme="dark"] {
   --bg: #0b0c0c; --surface: #151617; --raised: #1c1d1e; --ink: #f2f2ee; --muted: #a8a8a1; --line: #2f3030;
   --accent: #ff4545; --accent-soft: rgba(255, 69, 69, 0.12);
-  --ground: #1e211d; --water: #284b58; --wall: #8e9391; --roof: #5c605d; --sun: #f2b533; --data: #9085e9; --power: #f6a23a;
+  --ground: #1e211d; --water: #284b58; --wall: #8e9391; --roof: #5c605d; --sun: #f2b533; --data: #9085e9; --power: #f6a23a; --basura: #b48a5a;
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
   --m-portada: #ff4545; --m-vivienda: #f07a45; --m-urbanismo: #2cc287; --m-agroindustria: #e3a51c; --m-salud: #f0575e;
   --m-aguas: #4b98f0; --m-saneamiento: #22b5bd; --m-tic: #9085e9; --m-financiacion: #f2f2ee; --m-ruta: #f2f2ee; --m-pedidos: #ff4545;
@@ -319,7 +319,8 @@ a.chip:hover { border-color: var(--ink); }
   .riel { display: none; }
   .panel h2 { font-size: clamp(1.3rem, 6.4vw, 1.75rem); }
   .panel .lead { font-size: 0.94rem; line-height: 1.45; }
-  .lbl-p { font-size: 10.5px; white-space: normal; max-width: min(62vw, 250px); }
+  /* ancho propio: con el ancho disponible, el margen que pone el reparto partía el rótulo en dos renglones y lo hacía saltar */
+  .lbl-p { font-size: 10.5px; white-space: normal; width: max-content; max-width: min(62vw, 250px); }
   /* en el teléfono los rótulos llevan solo el título: el detalle está en la hoja */
   .lbl-p small { display: none; }
   .lbl-pin { height: 28px; padding: 0 9px; }
