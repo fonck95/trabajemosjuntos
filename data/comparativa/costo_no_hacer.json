@@ -3383,7 +3383,7 @@
    "Superservicios (evaluación integral de Aguas & Aseo de Yondó, sep-2020): 'el vertimiento se realiza sin tratamiento alguno a cuerpos de agua cercanos a las estaciones de vertimiento, con excepción del cribado y sedimentación' en las estaciones de bombeo. Caudales vertidos en 2019: Progreso 13,52 L/s, Paraíso 16,51, Prado 10,62 y Victoria 14,69 (55,34 L/s en total). https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf",
    "El mismo informe registra cuentas por pagar a Corantioquia por $175 M con más de 360 días 'desde 2018', por tasa por uso del agua y tasa retributiva, y anota que podría no haberse causado ni pagado lo de 2018 y 2019.",
    "El Plan de Saneamiento y Manejo de Vertimientos (PSMV) lo aprobó Corantioquia en 2014; las dos tablas del informe le dan 10 y 11 años de vigencia (vencería en 2024-2025).",
-   "Yondó no tiene PTAR en 2026 (data/gobiernos.json); los estudios del nuevo Plan Maestro (BPIN 2024058930006) figuran inactivos."
+   "El casco urbano de Yondó no tiene PTAR en 2026 (data/gobiernos.json); la vereda La Represa tiene una desde 2022 (BPIN 20201301011453, data/comparativa/sgr_fondos.json). Los estudios del nuevo Plan Maestro (BPIN 2024058930006) figuran inactivos."
   ],
   "tasa_retributiva": {
    "tipo": "estimado",

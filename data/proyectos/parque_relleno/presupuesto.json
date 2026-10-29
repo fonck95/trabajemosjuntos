@@ -640,14 +640,14 @@
   "posclausura": 190,
   "operacion_parque": 520,
   "om_granja_solar": 58.5,
-  "disposicion_regional": 320.7,
   "mantenimiento_ruta_ciclista_3_8_km": 29.2,
-  "tipo_dato": "estimacion"
+  "tipo_dato": "estimacion",
+  "nota": "No incluyen la disposición de la basura: desde 2030 va al relleno nuevo de la vereda Kilómetro Cinco, que es otro proyecto de la propuesta 2028–2031."
  },
  "comparacion": {
   "ampliar_el_relleno_bpin_2025058930015_millones": 3901.4,
   "operar_el_relleno_promedio_2019_2023_millones_por_anio": 576.2,
-  "lectura": "La clausura (fases 0 y 1) cuesta del orden de lo que se pensaba gastar en ampliar el relleno, pero resuelve el problema para siempre y libera el predio para la granja solar y el parque."
+  "lectura": "La clausura (fases 0 y 1) cuesta del orden de lo que se pensaba gastar en ampliar el relleno, pero cierra un sitio que opera sin licencia y libera el predio para la granja solar y el parque. La ampliación quedó descartada: la propuesta 2028–2031 reformula ese BPIN como el relleno nuevo de Kilómetro Cinco, que va aparte."
  },
  "sensibilidad_a_la_huella_de_residuos": {
   "tipo_dato": "calculo_propio",

@@ -1040,7 +1040,8 @@ def aguas_residuales(soc):
             "El mismo informe registra cuentas por pagar a Corantioquia por $175 M con más de 360 días 'desde 2018', por tasa por uso del agua y "
             "tasa retributiva, y anota que podría no haberse causado ni pagado lo de 2018 y 2019.",
             "El Plan de Saneamiento y Manejo de Vertimientos (PSMV) lo aprobó Corantioquia en 2014; las dos tablas del informe le dan 10 y 11 años de vigencia (vencería en 2024-2025).",
-            "Yondó no tiene PTAR en 2026 (data/gobiernos.json); los estudios del nuevo Plan Maestro (BPIN 2024058930006) figuran inactivos.",
+            "El casco urbano de Yondó no tiene PTAR en 2026 (data/gobiernos.json); la vereda La Represa tiene una desde 2022 (BPIN 20201301011453, "
+            "data/comparativa/sgr_fondos.json). Los estudios del nuevo Plan Maestro (BPIN 2024058930006) figuran inactivos.",
         ],
         "tasa_retributiva": {
             "tipo": "estimado",

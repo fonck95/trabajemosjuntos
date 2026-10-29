@@ -22,7 +22,7 @@ Ingresos y regalías: Operaciones Efectivas de Caja (DNP–FUT vía TerriData); 
 | Desempeño fiscal (IDF, DNP) | **67** (66,7) | **79** (78,7) | **80** (79,7) | **78** (78,4) | **65** (64,6 · IDF nuevo) | **64** (64,5 · IDF nuevo) | Índice de Desempeño Fiscal tal como lo publica el DNP (0–100). Hasta 2019 metodología antigua; desde 2020 la nueva, más exigente: no son comparables en nivel. |
 | Desempeño municipal (IDI 2006–2015 · MDM 2016–2024, DNP) | — | — | **67** (67,3) | **52** (51,6) | **59** (59,0) | **64** (64,0) | Promedio del índice del DNP en los años del periodo (0–100). El IDI y la MDM son metodologías distintas. |
 | Competencia en la contratación de la alcaldía (SECOP) | — | **46** (54,2 % directa) | **45** (54,9 % directa) | **69** (30,9 % directa) | **18** (82,4 % directa) | **17** (83,4 % directa) | 100 − % del valor contratado sin pluralidad de oferentes (contratación directa, convenios, régimen especial). 2004–2007 sin registros suficientes. |
-| Calidad del agua (100 − IRCA, INS) | — | **70** (IRCA 29,7) | **94** (IRCA 5,8) | **98** (IRCA 1,7) | **93** (IRCA 6,8) | **99** (IRCA 0,8) | 100 menos el IRCA promedio (0 = sin riesgo). El IRCA rural, cuando se mide, es "inviable sanitariamente" (82–97 en 2021–2023), y no hay PTAR. |
+| Calidad del agua (100 − IRCA, INS) | — | **70** (IRCA 29,7) | **94** (IRCA 5,8) | **98** (IRCA 1,7) | **93** (IRCA 6,8) | **99** (IRCA 0,8) | 100 menos el IRCA promedio (0 = sin riesgo). El IRCA rural, cuando se mide, es "inviable sanitariamente" (82–97 en 2021–2023), y el casco urbano no tiene PTAR. |
 | Cobertura neta en educación media (MEN) | **14** (14,0 %) | **20** (20,3 %) | **22** (21,5 %) | **26** (25,5 %) | **30** (29,7 %) | **31** (31,4 %) | Porcentaje de jóvenes de 15–16 años matriculados en media (meta 100). |
 | Mortalidad infantil frente a Colombia (DANE/MinSalud) | **84** (23,9 ‰) | **84** (22,0 ‰) | **91** (19,1 ‰) | **78** (16,4 ‰) | **94** (12,2 ‰) | **100** (9,5 ‰) | 100 × (tasa nacional ÷ tasa de Yondó), tope 100. 100 = igual o mejor que el país. |
 | Homicidios frente a Antioquia (MinDefensa) | **59** (72,1 por 100 mil) | **70** (67,5 por 100 mil) | **65** (67,4 por 100 mil) | **99** (25,2 por 100 mil) | **40** (76,0 por 100 mil) | **21** (134,4 por 100 mil) | 100 × (tasa de Antioquia ÷ tasa de Yondó), tope 100. En 2025 Yondó tuvo 185,8 homicidios por 100.000 habitantes, 7,5 veces Antioquia. |
@@ -34,7 +34,7 @@ Ingresos y regalías: Operaciones Efectivas de Caja (DNP–FUT vía TerriData); 
 
 - **El dinero subió, la competencia bajó.** Los ingresos en caja pasaron de $93.088 M (2004–2007) a $252.429 M (2020–2023), pero desde 2020 más del 80 % del valor contratado se adjudica sin competencia.
 - **La gestión fiscal pasó de "solvente" a "vulnerable".** Parte de la caída se explica por el cambio de metodología del DNP en 2020, pero el municipio sigue dependiendo de transferencias en un 56 % (2024).
-- **El agua urbana mejoró; la rural no.** El IRCA urbano está "sin riesgo" desde 2015, pero el rural fue "inviable sanitariamente" en 2021–2023 y Yondó no tiene planta de tratamiento de aguas residuales.
+- **El agua urbana mejoró; la rural no.** El IRCA urbano está "sin riesgo" desde 2015, pero el rural fue "inviable sanitariamente" en 2021–2023 y el casco urbano no tiene planta de tratamiento de aguas residuales; la vereda La Represa tiene una desde 2022 (BPIN 20201301011453).
 - **La educación media avanza despacio**: la cobertura neta pasó de 14 % a 31 % en veinte años.
 - **La seguridad empeoró en los dos últimos periodos**: de 25 homicidios por 100.000 habitantes en 2016–2019 a 134 en 2024–2025, con 2025 como el peor año de la serie.
 - **La conectividad retrocedió**: Yondó tiene la séptima parte de la penetración de internet fijo de Antioquia.
@@ -55,7 +55,7 @@ Ingresos y regalías: Operaciones Efectivas de Caja (DNP–FUT vía TerriData); 
 **Lo que pudo hacerse y no se hizo**
 
 - El plan se apoyó en un Plan Maestro de Acueducto y Alcantarillado; veinte años después, los estudios de un nuevo Plan Maestro (BPIN 2024058930006) figuran como "inactivos".
-- No se construyó planta de tratamiento de aguas residuales; Yondó sigue vertiendo sin tratar en 2026.
+- No se construyó la planta de tratamiento de aguas residuales del casco urbano, que sigue vertiendo sin tratar en 2026.
 - El NBI era de 59 % en 2005: el doble del promedio nacional.
 
 *Contexto:* SECOP casi no tiene registros de estos años (41 contratos en 2007): la contratación del periodo no se puede auditar con datos abiertos.
@@ -171,7 +171,7 @@ Ingresos y regalías: Operaciones Efectivas de Caja (DNP–FUT vía TerriData); 
 
 ## 4. Los cuatro patrones que se repiten
 
-1. **Los grandes compromisos de agua y saneamiento se reciclan.** El Plan Maestro de Acueducto y Alcantarillado aparece en el plan de 2005 y sus estudios siguen inactivos en 2026; la PTAR nunca se construyó.
+1. **Los grandes compromisos de agua y saneamiento se reciclan.** El Plan Maestro de Acueducto y Alcantarillado aparece en el plan de 2005 y sus estudios siguen inactivos en 2026; la PTAR del casco urbano nunca se construyó.
 2. **Los estudios no tienen dueño de la obra.** La Ciudadela Educativa (diseños 2014), la revisión del EOT (2019, suspendida), la Transversal de las Américas (diseños 2021 sin obra) y el Plan Maestro (2024, inactivo) son el mismo patrón en gobiernos distintos.
 3. **La ejecución se delega y se pierde el control.** En 2020–2023, $84.016 M pasaron por la EDU de Medellín; los proyectos de vivienda quedaron con 9 % y 17 % de avance físico y cerca del 90 % de los recursos girados.
 4. **La nómina paralela crece y no responde por productos.** De 91 OPS en 2008–2011 a más de 1.200 por periodo desde 2012; 425 contratos para "formular proyectos" sin un solo producto radicado exigido en su objeto.

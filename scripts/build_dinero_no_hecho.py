@@ -902,7 +902,7 @@ def calcular_periodo(pid):
     # --- G. tasa retributiva evitable ----------------------------------------
     tv = sum(TASA[a]['tasa_fr1_mm_2026'] * (MESES_2026 / 12 if a == 2026 else 1) for a in anios if a in TASA) * TASA_EVITABLE
     fac = TASA_INFO['anual_2026_por_caudal_medido_fr1_mm'][1] / TASA_INFO['anual_2026_fr1_mm']
-    det = (f"Yondó no tiene PTAR: en 2019 vertía 55,34 L/s sin tratar (Superservicios, 2020). Se cuenta el 80 % de la tasa estimada con factor regional 1, la parte "
+    det = (f"El casco urbano no tiene PTAR: en 2019 vertía 55,34 L/s sin tratar (Superservicios, 2020). Se cuenta el 80 % de la tasa estimada con factor regional 1, la parte "
            f"que una PTAR evitaría; con el caudal medido en 2019 sería hasta {fmt(fac, 2)} veces. La paga Aguas y Aseo, no la alcaldía. En 2020 Aguas y Aseo debía "
            f"$175 M (pesos corrientes de 2020) a Corantioquia por tasas desde 2018 (hecho).") if tv else ''
     if pid == '2024-2027' and tv:

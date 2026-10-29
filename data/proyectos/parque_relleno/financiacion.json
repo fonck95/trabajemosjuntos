@@ -40,7 +40,7 @@
     2000,
     5000
    ],
-   "condiciones": "Reformular el BPIN 2025058930015 (ampliación, devuelto) como clausura con uso futuro y el BPIN 2025058930008 (vía de acceso) como vía del parque y ruta ciclista. El Decreto 1784 exige analizar la regionalización para cofinanciar.",
+   "condiciones": "La clausura va como proyecto nuevo, con uso futuro, y se radica en el bienio 2029–2030 con el parque y la granja: el BPIN 2025058930015 (ampliación de Las Américas, devuelto) se reformula como el relleno nuevo de Kilómetro Cinco, otro proyecto, porque su objetivo es capacidad de disposición. El BPIN 2025058930008 (vía de acceso) se reformula como vía del parque y ruta ciclista. El Decreto 1784 exige analizar la regionalización para cofinanciar: el PGIRS de 2027 debe dejar escrito por qué la opción regional no sirve.",
    "certeza": "estimacion",
    "url": "data/comparativa/sgr_fondos.json"
   },
@@ -73,7 +73,7 @@
     3000,
     5800
    ],
-   "condiciones": "Yondó está entre los 209 municipios beneficiarios; en 2025 su único proyecto no cumplió. Presentar la granja en la próxima convocatoria.",
+   "condiciones": "Yondó está entre los 209 municipios beneficiarios; en 2025 su único proyecto no cumplió. Presentar la granja en la convocatoria de 2029–2030, el bienio en que se radican la clausura y el parque, para montar sus primeros ≈530 kWp en 2031: un proyecto del SGR debe abrir su contratación en 6 meses desde su aprobación, prorrogables 12 (Ley 2056 de 2020, art. 37). La de 2027–2028 lleva la granja municipal de la propuesta, así que cada convocatoria tiene un solo proyecto del municipio.",
    "certeza": "estimacion",
    "url": "https://www.minenergia.gov.co/es/misional/sistema-general-de-regalias/convocatoria-ip-2025/"
   },
@@ -188,7 +188,7 @@
  "compuertas": [
   "No se licita la granja solar sin la delimitación de residuos (apiques y georradar) y sin el concepto de Corantioquia sobre el uso futuro.",
   "No se construye nada con gente sin la línea base de biogás.",
-  "No se cierra el relleno sin el contrato de disposición regional firmado y un plan de contingencia por el puente.",
+  "No se cubren las celdas viejas sin el plan de cierre por partes, con fecha, acordado con Corantioquia, ni se cierra el frente activo antes de que abra, con su licencia, el relleno nuevo de Kilómetro Cinco (2030); San Silvestre, en Barrancabermeja, entra en el plan de contingencia solo para emergencias.",
   "Cada fuente se radica con su MGA; los proyectos tipo del DNP ahorran hasta el 70 % de la preinversión."
  ],
  "incertidumbres": [

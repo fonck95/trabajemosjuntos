@@ -73,7 +73,7 @@ for p in PER:
 irca = {a: v for a, v in serie('irca_total').items() if a >= 2009}
 n_agua = por_periodo(lambda a: None if a not in irca else 100 - irca[a])
 a_agua = area('agua', 'Calidad del agua (100 − IRCA, INS)', 'Agua', 4, 'INS–SIVICAP',
-              '100 menos el IRCA promedio (0 = sin riesgo). El IRCA rural, cuando se mide, es "inviable sanitariamente" (82–97 en 2021–2023), y no hay PTAR.',
+              '100 menos el IRCA promedio (0 = sin riesgo). El IRCA rural, cuando se mide, es "inviable sanitariamente" (82–97 en 2021–2023), y el casco urbano no tiene PTAR.',
               n_agua, lambda p: f"IRCA {fmt(100 - n_agua[p][0])}")
 
 # 5. Educación media: cobertura neta

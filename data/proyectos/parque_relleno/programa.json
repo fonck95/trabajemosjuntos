@@ -38,7 +38,7 @@
   {
    "proyecto_tipo": "Construcción de estación de clasificación y aprovechamiento – ECA (v1.0, 2021) y Zonas digitales",
    "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=259&Itemid=360",
-   "que_se_toma": "Proyectos complementarios: una ECA en el casco urbano baja las toneladas que viajan a Barrancabermeja; la zona wifi del parque sigue el esquema de Zonas Digitales."
+   "que_se_toma": "Proyectos complementarios: la ECA de 10 t/día va en el predio del relleno nuevo de Kilómetro Cinco y baja las toneladas que llegan a sus celdas; la zona wifi del parque sigue el esquema de Zonas Digitales."
   },
   {
    "nota": "No hay un proyecto tipo del DNP para granjas solares interconectadas ni para clausura de rellenos; para esas partes se usan el Decreto 1784 de 2017, la Res. 938 de 2019 y la guía EPA/NREL de 2022."
@@ -315,27 +315,27 @@
   {
    "fase": "0",
    "anios": "2027",
-   "que": "Topografía, apiques, georradar, línea base ambiental; contrato de disposición regional; plan de clausura ante Corantioquia; formulación con MGA y postulación a fuentes"
+   "que": "Topografía, apiques, georradar y línea base ambiental, para delimitar la huella de los residuos; PGIRS con el análisis de alternativas, incluida la opción regional y por qué no sirve; plan de cierre por partes, con fecha, ante Corantioquia; formulación con MGA de la clausura como proyecto nuevo (el BPIN 2025058930015 de la ampliación se reformula como relleno nuevo) y postulación a fuentes"
   },
   {
    "fase": "1",
-   "anios": "2027–2028",
-   "que": "Traslado de la basura a San Silvestre; clausura técnica (reconformación, cobertura, canales, chimeneas, lagunas y humedal, pozos de monitoreo)"
+   "anios": "2028–2031",
+   "que": "Clausura técnica por partes (reconformación, cobertura con geomembrana, canales, chimeneas, lagunas y humedal, pozos de monitoreo): desde 2028 se cubren las celdas viejas, empezando por la norte, y la basura va solo al frente activo; en 2030 abre el relleno nuevo de Kilómetro Cinco (proyecto aparte) y Las Américas deja de recibir basura; en 2030–2031 se cierra el frente activo"
   },
   {
    "fase": "2",
-   "anios": "2029–2030",
-   "que": "Granja solar bloque A (≈0,77 MWp) y conexión a EPM; constitución y registro de la comunidad energética; bloque B si los apiques lo permiten"
+   "anios": "2031–2034",
+   "que": "Granja solar por partes, cuando la cobertura haya asentado: ≈530 kWp en 2031 sobre las celdas viejas, cubiertas desde 2028, y el resto hacia 2033–2034 (lo que queda del bloque A, sobre el frente activo, y el bloque B si los apiques lo permiten); conexión a EPM; constitución y registro de la comunidad energética"
   },
   {
    "fase": "3",
-   "anios": "2028–2030",
-   "que": "Coworking, cafetería, taller, granja, circuito, mirador y ruta ciclista al pueblo (fuera de las celdas: puede empezar en paralelo con la clausura cuando los apiques y la línea base de biogás descarten residuos bajo la zona de servicios)"
+   "anios": "2031",
+   "que": "Coworking, cafetería, taller, granja, circuito, mirador y ruta ciclista al pueblo (fuera de las celdas: va en 2031, cuando Las Américas ya no recibe basura, si los apiques y la línea base de biogás descartan residuos bajo la zona de servicios)"
   },
   {
    "fase": "posclausura",
-   "anios": "2028–2048",
-   "que": "Monitoreo y mantenimiento por 20 años como mínimo (Res. 938 de 2019)"
+   "anios": "2031–2051",
+   "que": "Monitoreo y mantenimiento por 20 años como mínimo (Res. 938 de 2019), desde el cierre del frente activo hasta ≈2051"
   }
  ],
  "incertidumbres": [
