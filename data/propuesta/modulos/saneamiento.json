@@ -4,7 +4,7 @@
   "corto": "Saneamiento",
   "lema": "Primera PTAR del casco, relleno nuevo y parque en el viejo",
   "problema": "El casco urbano de Yondó no trata sus aguas residuales: sus 4 estaciones de bombeo solo criban, sedimentan y vierten 55,34 L/s a dos caños junto a los barrios (Superservicios, datos de 2019). El Plan de Saneamiento y Manejo de Vertimientos (PSMV), aprobado por Corantioquia en 2014, ya venció y los estudios del Plan Maestro están al 56 % e inactivos. Además, el relleno Las Américas opera con la licencia vencida desde noviembre de 2023 y sin vida útil, y el municipio no tiene otro sitio: el relleno licenciado más cercano está en Barrancabermeja, al otro lado de un puente que se cerró en marzo de 2026.",
-  "propuesta": "Terminar el Plan Maestro con un PSMV nuevo, recoger lo que hoy se vierte con dos interceptores (≈3,8 km) que siguen los dos caños hasta su unión, al norte del casco, y construir allí, aguas abajo de la unión, la primera PTAR del casco (UASB + filtro percolador, 50 L/s); el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo. En aseo, construir un relleno sanitario nuevo en la vereda Kilómetro Cinco, en el sitio que ya reserva el EOT, con la ECA de 10 t/día y la planta de compostaje en el mismo predio; cerrar Las Américas por partes desde 2028 y del todo cuando abra el relleno nuevo, en 2030, y volverlo parque ecotecnológico con granja solar.",
+  "propuesta": "Terminar el Plan Maestro con un PSMV nuevo, recoger lo que hoy se vierte con dos interceptores (≈3,8 km) que siguen los dos caños hasta su unión, al norte del casco, y construir allí, aguas abajo de la unión, la primera PTAR del casco (UASB + filtro percolador, 50 L/s); el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo. En aseo, construir un relleno sanitario nuevo en la vereda Kilómetro Cinco, en el sitio que ya reserva el EOT, con la ECA de 10 t/día y la planta de compostaje en el mismo predio; cerrar Las Américas por partes desde 2028 y del todo entre 2030 y 2031, y volverlo parque ecotecnológico con granja solar. El relleno viejo deja de recibir basura en 2030, cuando abre el nuevo.",
   "cifras": [
     { "v": "0 %", "l": "de las aguas residuales del casco urbano recibe tratamiento", "fuente": "Superservicios, evaluación integral 2020 (datos de 2019)", "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf", "tono": "alerta" },
     { "v": "55,34 L/s", "l": "de aguas residuales vertidos sin tratar a dos caños (2019)", "fuente": "Superservicios, evaluación integral 2020", "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf", "tono": "alerta" },
@@ -354,7 +354,7 @@
         { "texto": "Lagunas de lixiviados", "color": "#55603f", "forma": "area" },
         { "texto": "ECA de 10 t/día", "color": "var(--m-saneamiento)", "forma": "area" },
         { "texto": "Pilas de compostaje de orgánicos", "color": "#6f5233", "forma": "area" },
-        { "texto": "Reserva del EOT y planta de lodos vecina (Tabla 34)", "color": "#8a8f94", "forma": "dash" }
+        { "texto": "Reserva del EOT (Tabla 35) y planta de lodos vecina (Tabla 34)", "color": "#8a8f94", "forma": "dash" }
       ],
       "cifras": [
         { "v": "3.763 t", "l": "de residuos dispuestos en 2024, unas 10,3 t por día", "fuente": "Superservicios, Informe Nacional de Disposición Final 2024 (dic-2025)", "url": "https://www.superservicios.gov.co/sites/default/files/2025-12/Informe-Nacional-de-Disposicion-Final-de-Residuos-Solidos-en-Combia-2024.pdf" },
@@ -366,7 +366,7 @@
       "tipo": "componente",
       "componente": "relleno",
       "titulo": "Del relleno vencido a un parque con granja solar",
-      "texto": "El relleno Las Américas opera con la licencia vencida desde 2023 y ya no tiene vida útil. Desde 2028 se cubren sus celdas viejas y la basura va solo al frente activo, que se cierra cuando abre el relleno nuevo, en 2030. La granja solar de 997 kWp se monta por partes, cuando la cobertura asienta, desde 2031, con un parque alrededor.",
+      "texto": "El relleno Las Américas opera con la licencia vencida desde 2023 y ya no tiene vida útil. Desde 2028 se cubren sus celdas viejas y la basura va solo al frente activo. En 2030 abre el relleno nuevo y Las Américas deja de recibir basura; el frente activo se cierra entre 2030 y 2031. La granja solar de 997 kWp se monta por partes, cuando la cobertura asienta, desde 2031, con un parque alrededor.",
       "leyenda": [
         { "texto": "Granja solar de 997 kWp sobre las celdas clausuradas", "color": "#1c2b48", "forma": "area" },
         { "texto": "Parque ecotecnológico: coworking, granja y circuito de 0,9 km", "color": "#7f9a52", "forma": "area" }

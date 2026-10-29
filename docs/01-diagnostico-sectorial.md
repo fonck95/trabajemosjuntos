@@ -79,7 +79,7 @@ En agosto de 2024 el DNP alertó "alto riesgo de pérdida de recursos" en los do
 - **Continuidad**: el servicio llega unas 8 horas al día (evaluación de Superservicios).
 - **Calidad**: IRCA urbano "sin riesgo" desde 2015; IRCA rural "inviable sanitariamente" (82,6–97,4) en 2021–2023.
 - **Cobertura (censo)**: acueducto del 47,7 % (2005) al 73,8 % (2018); en la cabecera, 91,6 %.
-- **Aguas residuales**: **no hay PTAR**; se vierten sin tratar.
+- **Aguas residuales**: **el casco urbano no tiene PTAR**; se vierten sin tratar. La vereda La Represa tiene una desde 2022 (BPIN 20201301011453).
 - **Estudios del Plan Maestro** (2024, $2.898 M): 56 % de avance físico, estado "inactivo".
 
 ## 7. Educación

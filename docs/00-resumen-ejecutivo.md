@@ -1,6 +1,6 @@
 # 00 · Resumen ejecutivo
 
-**Yondó (Antioquia) recibió más de un billón de pesos en veinte años y sigue con más del doble de la pobreza de Antioquia, sin planta de tratamiento de aguas residuales, con agua rural inviable, 3,6 accesos a internet por cada 100 habitantes y un hospital en saneamiento fiscal. El problema no es la falta de plata: es cómo se convierte en obras y servicios. 2028 es la ventana para cambiarlo.**
+**Yondó (Antioquia) recibió más de un billón de pesos en veinte años y sigue con más del doble de la pobreza de Antioquia, sin planta de tratamiento de aguas residuales en el casco urbano, con agua rural inviable, 3,6 accesos a internet por cada 100 habitantes y un hospital en saneamiento fiscal. El problema no es la falta de plata: es cómo se convierte en obras y servicios. 2028 es la ventana para cambiarlo.**
 
 ## Lo que encontramos
 

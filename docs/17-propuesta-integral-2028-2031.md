@@ -157,18 +157,18 @@ medir y no se publica. Están en `data/propuesta/geo.json`, en metros del modelo
     como aporte, son ≈$320 M al año más que llevar la basura a Barrancabermeja (≈$485 M más con el costo regional de
     `docs/12`, que supuso $60.000/t de disposición y 20 km de tramo excedente, frente a $95.000/t, el incentivo regional
     y 33 km más de transporte en la investigación de costos); con la inversión, el relleno propio cuesta 2,5 a 3 veces
-    la opción regional. La tarifa (Res. CRA 1040 de 2026) recogería ≈$681 M al año, ≈$100–150 M menos que la operación,
-    más el cobro de lixiviados, que falta calcular. La decisión se sostiene en no depender del puente ni de otra
-    autoridad ambiental, no en el costo. El sitio sale de un análisis propio con OpenStreetMap, el modelo de elevación
-    Copernicus GLO-30, ESA WorldCover, huellas de Microsoft, Google y OSM y los polígonos del EOT, convertidos desde
-    MAGNA-SIRGAS Bogotá. Antes de comprar hay que cruzarlo con las zonas de recarga de acuíferos del EOT (art. 42.2,
-    mapa FR_1_2): el predio está sobre la Formación Mesa y, si cae en una zona de alto potencial de recarga, no sirve.
-    Faltan además topografía 1:1.000, apiques, hidrogeología, el estudio de creciente de 100 años (el borde sur queda a
-    4–6 m sobre el río en el modelo de elevación), el aprovechamiento forestal de ≈1,4 ha de bosque en la zona de celdas
-    (sin las dos celdas que son bosque, los 25 años dependen de aprovechar el 15–20 %) y las determinantes de
-    Corantioquia, y confirmar en campo las tres casas a 165–178 m del lindero, la planta de tratamiento y disposición de
-    lodos del EOT al occidente (con una nave a ≈90 m del lindero), unos estanques al otro lado de la vía y la captación
-    del acueducto veredal.
+    la opción regional. La tarifa (Res. CRA 1040 de 2026) recogería ≈$681 M al año (pesos de diciembre de 2025),
+    ≈$100–150 M menos que la operación, más el cobro de lixiviados, que falta calcular. La decisión se sostiene en no
+    depender del puente ni de otra autoridad ambiental, no en el costo. El sitio sale de un análisis propio con
+    OpenStreetMap, el modelo de elevación Copernicus GLO-30, ESA WorldCover, huellas de Microsoft, Google y OSM y los
+    polígonos del EOT, convertidos desde MAGNA-SIRGAS Bogotá. Antes de comprar hay que cruzarlo con las zonas de recarga
+    de acuíferos del EOT (art. 42.2, mapa FR_1_2): el predio está sobre la Formación Mesa y, si cae en una zona de alto
+    potencial de recarga, no sirve. Faltan además topografía 1:1.000, apiques, hidrogeología, el estudio de creciente de
+    100 años (el borde sur queda a 4–6 m sobre el río en el modelo de elevación), el aprovechamiento forestal de ≈1,4 ha
+    de bosque en la zona de celdas (sin las dos celdas que son bosque, los 25 años dependen de aprovechar el 15–20 %) y
+    las determinantes de Corantioquia, y confirmar en campo las tres casas a 165–178 m del lindero, la planta de
+    tratamiento y disposición de lodos del EOT al occidente (con una nave a ≈90 m del lindero), unos estanques al otro
+    lado de la vía y la captación del acueducto veredal.
 - **Vivienda.** Son dos lotes reales:
   - *Lote 1, predio José Domingo Oliveros:* 1,71 ha con el terraplén ya construido (BPIN 2023058930018). Allí van 200 VIP
     en 10 bloques de 5 pisos.

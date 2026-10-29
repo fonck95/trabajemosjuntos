@@ -12,7 +12,7 @@
    ],
    "falto": [
     "El plan se apoyó en un Plan Maestro de Acueducto y Alcantarillado; veinte años después, los estudios de un nuevo Plan Maestro (BPIN 2024058930006) figuran como \"inactivos\".",
-    "No se construyó planta de tratamiento de aguas residuales; Yondó sigue vertiendo sin tratar en 2026.",
+    "No se construyó la planta de tratamiento de aguas residuales del casco urbano, que sigue vertiendo sin tratar en 2026.",
     "El NBI era de 59 % en 2005: el doble del promedio nacional."
    ],
    "alertas": [],
@@ -211,7 +211,7 @@
    "corto": "Agua",
    "slot": 4,
    "fuente": "INS–SIVICAP",
-   "metodo": "100 menos el IRCA promedio (0 = sin riesgo). El IRCA rural, cuando se mide, es \"inviable sanitariamente\" (82–97 en 2021–2023), y no hay PTAR.",
+   "metodo": "100 menos el IRCA promedio (0 = sin riesgo). El IRCA rural, cuando se mide, es \"inviable sanitariamente\" (82–97 en 2021–2023), y el casco urbano no tiene PTAR.",
    "valores": {
     "2004-2007": null,
     "2008-2011": 70.3,
