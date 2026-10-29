@@ -935,7 +935,7 @@ archivo del repositorio): `cargado`, `listo`, `movimiento` (Float32Array transfe
 `resultado` tipado y `serie_elemento` después del resultado; cancelar a la mitad (`terminate` y aviso) ≤ 300 ms y un
 trabajador nuevo que vuelve a calcular; el respaldo por tramos con los mismos Resultados (SHA-256 de todos los arreglos
 y campos, sin `duracion_calculo_ms` ni `id`) y su tramo más largo sin ceder; los tiempos del 7.7. Con `--vendor`, además
-la vista real (`index.html?qa=1#torre`, modo sismo, bajo `/trabajemosjuntos/`): usa el trabajador, el botón «Cancelar»
+la vista real (`atlas.html?qa=1#torre`, modo sismo, bajo `/trabajemosjuntos/`): usa el trabajador, el botón «Cancelar»
 deja «Cálculo cancelado.» en ≤ 300 ms, vuelve a calcular, y sin `Worker` usa el respaldo con los mismos Resultados.
 Si `web/data` todavía no trae `sismo_torre_estructura.json`, la prueba le sirve la estructura de `data/sismo/`.
 

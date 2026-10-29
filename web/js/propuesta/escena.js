@@ -163,13 +163,15 @@ export function crearEscena(el, datos) {
   }
   function sincronizarEtiquetas() { S.traverse((o) => { if (o.isCSS2DObject) verEtiqueta(o); }); }
   // ancla: [cx, cy] del recuadro que cae sobre el punto (0,5 0,5 centrado; 0,5 1 el recuadro queda encima del punto)
-  function etiqueta(html, { cls = 'lbl-p', pos = [0, 0, 0], padre = S, color, titulo, alClic, ancla } = {}) {
+  // punto: [x, y, h] que marca la guía cuando el rótulo se aparta (si no, el pie del ancla)
+  function etiqueta(html, { cls = 'lbl-p', pos = [0, 0, 0], padre = S, color, titulo, alClic, ancla, punto } = {}) {
     const div = document.createElement('div');
     div.className = `lbl ${cls}`; div.innerHTML = html;
     if (color) div.style.setProperty('--mc', color);
     if (titulo) div.title = titulo;
     if (alClic) { div.style.pointerEvents = 'auto'; div.style.cursor = 'pointer'; div.addEventListener('click', alClic); }
     const o = new CSS2DObject(div); o.position.copy(V(pos[0], pos[1], pos[2] || 0)); if (ancla) o.center.set(ancla[0], ancla[1]); padre.add(o); st._labels.push(o);
+    if (punto) o.userData.punto = V(punto[0], punto[1], punto[2] || 0);
     verEtiqueta(o);   // nace oculta si su capa lo está (los módulos que cargan tarde no destapan rótulos de otro paso)
     return o;
   }
@@ -196,92 +198,137 @@ export function crearEscena(el, datos) {
   // Etiquetas sin encimarse y dentro de la zona libre: tiene en cuenta el ancla de cada recuadro, corre en horizontal
   // las que el panel, la leyenda o el borde cortarían, sube lo justo las que chocan y oculta las de puntos que caen
   // debajo del panel o fuera de la pantalla. En pantallas chicas, además, los rótulos que caen encima de la obra que se
-  // encuadró se corren arriba (o abajo) de ella para que se vea entera. Si un rótulo queda lejos de su punto, una guía
-  // los une. Reemplaza el de core.js solo en esta página.
+  // encuadró se apartan arriba o abajo de ella, centrados sobre su punto y sin que su guía cruce otro rótulo; si no caben,
+  // los chicos se ocultan y los principales se quedan en su sitio. Ningún recuadro tapa el punto de otro. Si un rótulo
+  // queda lejos de su punto, una guía los une. Reemplaza el de core.js solo en esta página.
   st.declutterLabels = function () {
     const z = zonaPx(), v = new THREE.Vector3(), items = [];
+    const pantalla = (p) => { v.copy(p).project(this.camera); return v.z > 1 ? null : [((v.x + 1) / 2) * z.W, ((1 - v.y) / 2) * z.H]; };
     let ob = null;
     if (z.chico && this._obra?.length) {
       const b = [Infinity, -Infinity, Infinity, -Infinity];
-      for (const p of this._obra) {
-        v.copy(p).project(this.camera); if (v.z > 1) continue;
-        const x = ((v.x + 1) / 2) * z.W, y = ((1 - v.y) / 2) * z.H;
-        b[0] = Math.min(b[0], x); b[1] = Math.max(b[1], x); b[2] = Math.min(b[2], y); b[3] = Math.max(b[3], y);
-      }
+      for (const p of this._obra) { const q = pantalla(p); if (!q) continue; b[0] = Math.min(b[0], q[0]); b[1] = Math.max(b[1], q[0]); b[2] = Math.min(b[2], q[1]); b[3] = Math.max(b[3], q[1]); }
       if (b[1] > b[0]) ob = { x0: b[0], x1: b[1], y0: b[2], y1: b[3] };
     }
+    const enX = (r, x) => Math.min(Math.max(x, z.x0 + r.w / 2 + 6), Math.max(z.x0 + r.w / 2 + 6, z.x1 - r.w / 2 - 6));
+    const pie = new THREE.Vector3();
     for (const o of this._labels) {
-      const e = o.element;
-      const pin = e.classList.contains('lbl-pin');
+      const e = o.element, pin = e.classList.contains('lbl-pin');
       if (!e.isConnected || e.style.display === 'none' || !(pin || e.classList.contains('lbl-p') || e.classList.contains('lbl-geo'))) continue;
-      o.getWorldPosition(v).project(this.camera);
-      if (v.z > 1) continue;
+      o.getWorldPosition(pie);
+      const a = pantalla(pie);
+      if (!a) continue;
       const w = e.offsetWidth, h = e.offsetHeight;
       if (!w) continue;
-      const ax = ((v.x + 1) / 2) * z.W, ay = ((1 - v.y) / 2) * z.H, x = ax + (0.5 - o.center.x) * w, y = ay + (0.5 - o.center.y) * h;
+      const [ax, ay] = a, x = ax + (0.5 - o.center.x) * w, y = ay + (0.5 - o.center.y) * h;
       const fuera = ax < z.x0 - 14 || ax > z.x1 + 14 || ay < z.y0 - 14 || ay > z.y1 + 48, geo = e.classList.contains('lbl-geo');
-      // los pines de los módulos (portada, pedidos) llevan el nombre: se corren para no salirse ni encimarse, pero nunca se
+      // los pines de las áreas (portada, pedidos) llevan el nombre: se corren para no salirse ni encimarse, pero nunca se
       // ocultan; el de un sitio que queda fuera del cuadro se deja donde está (fuera de la pantalla)
       if (pin && fuera) { e.style.marginLeft = ''; e.style.marginTop = ''; e.classList.remove('guia', 'fuera'); continue; }
-      items.push({ e, ax, ay, x, y, yn: y, w, h, fuera, geo, pin, aparte: pin, mini: geo || e.classList.contains('mini'), x2: Math.min(Math.max(x, z.x0 + w / 2 + 6), Math.max(z.x0 + w / 2 + 6, z.x1 - w / 2 - 6)) });
+      // el punto que marca la guía: el que dio el módulo o, si no, el pie del ancla (el ancla suele ir en alto, sobre la obra)
+      const t = pantalla(o.userData.punto || pie.setY(0)) || a;
+      const r = { e, ax, ay, tx: t[0], ty: t[1], x, y, yn: y, w, h, fuera, geo, pin, mini: geo || e.classList.contains('mini'), n: items.length };
+      r.x2 = enX(r, x);
+      items.push(r);
     }
     // techo de cada rótulo: la barra, o el borde de la leyenda plegada si queda debajo de ella
-    const techo = (r) => (z.ley && r.x2 + r.w / 2 > z.ley.x0 - 6 && r.x2 - r.w / 2 < z.ley.x1 + 6 ? z.y0 : z.yTecho) + r.h / 2 + 4;
+    const techo = (r, x = r.x2) => (z.ley && x + r.w / 2 > z.ley.x0 - 6 && x - r.w / 2 < z.ley.x1 + 6 ? z.y0 : z.yTecho) + r.h / 2 + 4;
     if (ob) items.forEach((r) => {
       if (r.fuera || r.geo || r.pin) return;
       const ix = Math.min(r.x2 + r.w / 2, ob.x1) - Math.max(r.x2 - r.w / 2, ob.x0), iy = Math.min(r.y + r.h / 2, ob.y1) - Math.max(r.y - r.h / 2, ob.y0);
       if (ix <= 0 || iy <= 0 || ix * iy < r.w * r.h * 0.15) return;
-      // arriba o abajo de la obra, lo que quede más cerca; si queda muy lejos (vistas de conjunto, donde la obra es medio
-      // pueblo), el rótulo se queda sobre lo que nombra
-      const lados = [ob.y0 - 8 - r.h / 2, ob.y1 + 8 + r.h / 2].filter((y, i) => (i ? y + r.h / 2 <= z.y1 - 4 : y >= techo(r))).sort((a, b) => Math.abs(a - r.y) - Math.abs(b - r.y));
-      if (!lados.length) { if (r.mini) r.fuera = true; else { r.y = techo(r); r.aparte = true; } return; }
-      if (Math.abs(lados[0] - r.y) <= Math.max(120, (z.y1 - z.y0) * 0.6)) { r.bajo = lados[0] > ob.y1; r.y = lados[0]; r.aparte = true; }
+      // arriba y abajo de la obra (primero el más cercano); si los dos quedan muy lejos (vistas de conjunto, donde la obra
+      // es medio pueblo), el rótulo se queda sobre lo que nombra
+      const lados = [{ y: ob.y0 - 8 - r.h / 2, bajo: false }, { y: ob.y1 + 8 + r.h / 2, bajo: true }]
+        .filter((l) => (l.bajo ? l.y + r.h / 2 <= z.y1 - 4 : l.y >= techo(r, enX(r, r.tx))))
+        .sort((p, q) => Math.abs(p.y - r.y) - Math.abs(q.y - r.y));
+      if (!lados.length) { if (r.mini) r.fuera = true; return; }
+      if (Math.abs(lados[0].y - r.y) > Math.max(120, (z.y1 - z.y0) * 0.6)) return;
+      r.lados = lados; r.aparte = true;
     });
-    // primero los rótulos principales y después los chicos; cada uno sube lo justo para no chocar y, si arriba ya no cabe
-    // sin encimarse (pasa en el celular), se oculta. Los que se apartaron de la obra prueban antes a correrse de lado,
-    // para quedar en fila y no apilados (la guía los une con su punto)
-    const puestas = [], choca = (r, y) => puestas.find((p) => Math.abs(p.x - r.x2) < (p.w + r.w) / 2 + 4 && Math.abs(p.y - y) < (p.h + r.h) / 2 + 3);
-    const cabe = (r, x) => x - r.w / 2 >= z.x0 + 4 && x + r.w / 2 <= z.x1 - 4 && Math.abs(x - r.x) < 170;
-    const colocar = (r) => {
-      let y = Math.min(r.y, z.y1 - r.h / 2 - 4);
-      for (let k = 0; r.aparte && k < 6; k++) {
-        const c = choca(r, y); if (!c) break;
-        const x0 = r.x2, lados = [c.x + (c.w + r.w) / 2 + 4, c.x - (c.w + r.w) / 2 - 4].filter((x) => cabe(r, x)).sort((a, b) => Math.abs(a - r.x) - Math.abs(b - r.x));
-        const libre = lados.find((x) => { r.x2 = x; const otro = choca(r, y); r.x2 = x0; return !otro; });
-        if (libre === undefined) break;
-        r.x2 = libre;
-      }
-      if (r.bajo) {
-        // debajo de la obra se apilan hacia abajo, hasta la hoja
-        for (let k = 0; k < 6; k++) { const c = choca(r, y); if (!c) break; y = c.y + (c.h + r.h) / 2 + 3; }
-        if (y + r.h / 2 > z.y1 - 4 || choca(r, y)) { r.fuera = true; return; }
-      } else {
-        for (let k = 0; k < 14; k++) { const c = choca(r, y); if (!c) break; y = c.y - (c.h + r.h) / 2 - 3; }
-        const tope = techo(r);
-        if (y < tope) { y = tope; if (choca(r, y) && !r.pin) { r.fuera = true; return; } }
-      }
-      r.dx = r.x2 - r.x; r.dy = y - r.yn; puestas.push({ x: r.x2, y, w: r.w, h: r.h });
+    // en el celular, el punto de cada rótulo y de cada pin es un obstáculo: ningún recuadro tapa el punto de otro
+    const puestas = [], guias = [];
+    if (z.chico) items.forEach((r) => { if (!r.fuera && !r.geo) puestas.push({ x: r.tx, y: r.ty, w: 12, h: 12, de: r }); });
+    const choca = (r, x, y) => puestas.find((p) => p.de !== r && Math.abs(p.x - x) < (p.w + r.w) / 2 + 4 && Math.abs(p.y - y) < (p.h + r.h) / 2 + 3);
+    // ¿el segmento a–b pasa por la caja c (con m px de margen)? se prueba punto por punto, cada 4 px
+    const corta = (a, b, c, m = 4) => {
+      const n = Math.max(2, Math.min(80, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 4)));
+      for (let i = 1; i < n; i++) { const x = a[0] + ((b[0] - a[0]) * i) / n, y = a[1] + ((b[1] - a[1]) * i) / n; if (Math.abs(x - c.x) < c.w / 2 + m && Math.abs(y - c.y) < c.h / 2 + m) return true; }
+      return false;
     };
-    const visibles = items.filter((r) => !r.fuera).sort((a, b) => b.y - a.y);
-    visibles.filter((r) => !r.mini).forEach(colocar);
-    visibles.filter((r) => r.mini).forEach(colocar);
+    // la guía sale del borde del recuadro más cercano al punto, a la altura de su x (casi vertical)
+    const guiaDe = (r, x, y) => [[Math.min(Math.max(r.tx, x - r.w / 2 + 8), x + r.w / 2 - 8), r.ty > y ? y + r.h / 2 : y - r.h / 2], [r.tx, r.ty]];
+    const lejos = (r, x, y) => Math.abs(r.ty - y) > r.h / 2 + 10 || Math.abs(r.tx - x) > r.w / 2 + 6;
+    const libre = (r, x, y) => {
+      if (choca(r, x, y)) return false;
+      const caja = { x, y, w: r.w, h: r.h };
+      if (guias.some(([a, b, q]) => q !== r && corta(a, b, caja, 2))) return false;   // no tapa la guía de otro
+      if (!lejos(r, x, y)) return true;
+      const [a, b] = guiaDe(r, x, y);
+      return !puestas.some((p) => p.de !== r && !p.de && corta(a, b, p));            // su guía no cruza otro recuadro
+    };
+    const poner = (r, x, y) => {
+      r.x2 = x; r.dx = x - r.x; r.dy = y - r.yn;
+      puestas.push({ x, y, w: r.w, h: r.h });
+      if (lejos(r, x, y)) guias.push([...guiaDe(r, x, y), r]);
+    };
+    // los apartados: en la franja de arriba o de abajo de la obra, centrados sobre su punto o pegados al lado de los
+    // recuadros de la fila; si la fila está llena, la siguiente (más lejos de la obra)
+    const colocarAparte = (r) => {
+      for (const lado of r.lados) {
+        let y = lado.y;
+        for (let fila = 0; fila < 4; fila++) {
+          if (lado.bajo ? y + r.h / 2 > z.y1 - 4 : y < z.yTecho + r.h / 2 + 4) break;
+          // sobre el punto, pegado a cada recuadro de la fila o contra los bordes; el más cercano al punto que quepa
+          // (bajo la leyenda plegada el techo es más bajo)
+          const cand = [enX(r, r.tx), enX(r, -1e9), enX(r, 1e9)];
+          puestas.forEach((p) => { if (!p.de && Math.abs(p.y - y) < (p.h + r.h) / 2 + 3) cand.push(enX(r, p.x + (p.w + r.w) / 2 + 4), enX(r, p.x - (p.w + r.w) / 2 - 4)); });
+          cand.sort((a, b) => Math.abs(a - r.tx) - Math.abs(b - r.tx));
+          const x = cand.find((xx) => (lado.bajo || y >= techo(r, xx)) && libre(r, xx, y));
+          if (x !== undefined) { poner(r, x, y); return true; }
+          y += lado.bajo ? r.h + 3 : -(r.h + 3);
+        }
+      }
+      return false;
+    };
+    // los demás: suben lo justo para no chocar; arriba del todo, los chicos que no caben se ocultan y los principales y
+    // los pines se quedan donde estén
+    const colocar = (r) => {
+      if (r.aparte && colocarAparte(r)) return;
+      if (r.aparte && r.mini) { r.fuera = true; return; }
+      let y = Math.min(r.yn, z.y1 - r.h / 2 - 4);
+      const x = r.x2;
+      for (let k = 0; k < 14; k++) { const c = choca(r, x, y); if (!c) break; y = c.y - (c.h + r.h) / 2 - 3; }
+      const tope = techo(r);
+      if (y < tope) { y = tope; if (choca(r, x, y)) { if (r.mini) { r.fuera = true; return; } y = Math.min(r.yn, z.y1 - r.h / 2 - 4); } }
+      poner(r, x, y);
+    };
+    const visibles = items.filter((r) => !r.fuera);
+    // los apartados, primero los que marcan la obra encuadrada (su punto cae dentro de ella) y, entre ellos, en el orden en
+    // que el módulo creó los rótulos (el de la pieza principal del paso va primero)
+    const enObra = (r) => ob && r.tx > ob.x0 - 30 && r.tx < ob.x1 + 30 && r.ty > ob.y0 - 30 && r.ty < ob.y1 + 30;
+    const orden = (lista) => [...lista.filter((r) => !r.aparte).sort((a, b) => b.y - a.y), ...lista.filter((r) => r.aparte).sort((a, b) => (enObra(b) - enObra(a)) || a.n - b.n)];
+    orden(visibles.filter((r) => !r.mini)).forEach(colocar);
+    orden(visibles.filter((r) => r.mini)).forEach(colocar);
     items.forEach((r) => {
       const { e } = r;
       e.classList.toggle('fuera', r.fuera);
       e.style.marginLeft = !r.fuera && Math.abs(r.dx) > 0.5 ? `${r.dx}px` : '';
       e.style.marginTop = !r.fuera && Math.abs(r.dy) > 0.5 ? `${r.dy}px` : '';
-      // guía: del borde de arriba o de abajo del recuadro hasta su punto, cuando el punto quedó a más de 10 px
-      const cy = r.yn + (r.dy || 0), arriba = r.ay < cy - r.h / 2 - 10, abajo = r.ay > cy + r.h / 2 + 10 || (r.ay >= cy && Math.abs(r.ax - r.x2) > r.w / 2 + 6);
-      const guia = !r.fuera && !r.geo && (arriba || abajo);
+      // guía: del borde de arriba o de abajo del recuadro hasta su punto, cuando el punto quedó lejos (en un pin, cuando
+      // se corrió: su punta ya no señala el sitio)
+      const cy = r.yn + (r.dy || 0), corrido = Math.abs(r.dx || 0) > 6 || Math.abs(r.dy || 0) > 6;
+      const guia = !r.fuera && !r.geo && (r.pin ? corrido : lejos(r, r.x2, cy));
       e.classList.toggle('guia', guia);
       if (!guia) return;
-      const px = r.ax - (r.x2 - r.w / 2) - e.clientLeft, py = r.ay - (cy - r.h / 2) - e.clientTop, oy = abajo ? e.clientHeight : 0;
-      const gx = px - e.clientWidth / 2, gy = py - oy;
+      const [[ox, oy], [tx, ty]] = guiaDe(r, r.x2, cy), izq = r.x2 - r.w / 2 + e.clientLeft, arr = cy - r.h / 2 + e.clientTop;
+      const gx = tx - ox, gy = ty - oy;
+      e.style.setProperty('--gx0', `${(ox - izq).toFixed(1)}px`);
+      e.style.setProperty('--oy', `${(oy - arr).toFixed(1)}px`);
       e.style.setProperty('--gl', `${Math.max(0, Math.hypot(gx, gy) - 3).toFixed(1)}px`);
       e.style.setProperty('--ga', `${Math.atan2(-gx, gy).toFixed(3)}rad`);
-      e.style.setProperty('--oy', `${oy}px`);
-      e.style.setProperty('--ax', `${px.toFixed(1)}px`);
-      e.style.setProperty('--ay', `${py.toFixed(1)}px`);
+      e.style.setProperty('--ax', `${(tx - izq).toFixed(1)}px`);
+      e.style.setProperty('--ay', `${(ty - arr).toFixed(1)}px`);
     });
   };
   // cubiertas del contexto en gris (para que se lean los techos que resalta un paso, como los mejoramientos)
@@ -331,11 +378,13 @@ export function crearEscena(el, datos) {
     return obj.map(([x, y, h]) => V(x, y, h || 0));
   }
   // encuadra (rumbo: desde dónde se mira, en grados desde el norte en sentido horario; elev: grados sobre el horizonte)
-  function encuadrar(obj, { rumbo = 200, elev = 38, margen = 0.86, duracion = 1.8, alto = 0, minDist = 60 } = {}) {
+  // obra: lo que los rótulos deben esquivar en el celular, si no es todo lo encuadrado (por ejemplo, un lote dentro de una
+  // vista que también muestra el río y el puente)
+  function encuadrar(obj, { rumbo = 200, elev = 38, margen = 0.86, duracion = 1.8, alto = 0, minDist = 60, obra } = {}) {
     const pts = puntosDe(obj);
     if (!pts.length) return;
     if (alto) pts.push(...pts.map((p) => p.clone().setY(p.y + alto)));
-    st._obra = pts;   // lo que se encuadró: en el celular los rótulos se apartan de ahí
+    st._obra = obra ? puntosDe(obra) : pts;
     const z = zona(), cam = st.camera.clone(); cam.far = 1e7; cam.updateProjectionMatrix();
     const az = THREE.MathUtils.degToRad(rumbo), el2 = THREE.MathUtils.degToRad(elev);
     const dir = new THREE.Vector3(Math.sin(az) * Math.cos(el2), Math.sin(el2), -Math.cos(az) * Math.cos(el2));

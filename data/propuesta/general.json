@@ -7,7 +7,7 @@
   },
   "orden_modulos": ["vivienda", "urbanismo", "agroindustria", "salud", "aguas", "saneamiento", "tic"],
   "portada": {
-    "titulo": "Yondó 2028–2031: siete proyectos para cerrar brechas",
+    "titulo": "Yondó 2028–2031: siete áreas para cerrar brechas",
     "lema": "Cada pieza con sitio real, costo, proyecto tipo o referente y fuente de financiación",
     "cifras": [
       { "v": "22.429", "l": "habitantes en 2026; 47 % vive en el campo", "fuente": "DANE, proyecciones 2018–2042", "url": "https://www.dane.gov.co/files/censo2018/proyecciones-de-poblacion/Municipal/PPED-AreaMun-2018-2042_VP.xlsx" },
@@ -21,7 +21,7 @@
       {
         "id": "inicio",
         "tipo": "portada",
-        "titulo": "Yondó 2028–2031: siete proyectos para cerrar brechas",
+        "titulo": "Yondó 2028–2031: siete áreas para cerrar brechas",
         "texto": "Una propuesta integral para gestionar desde ya con el nivel central: cada pieza tiene un sitio real en el municipio, un costo de referencia, un proyecto tipo o un referente, una mezcla de fuentes y un pedido concreto.",
         "nota": "Cifras en millones de pesos constantes de 2026, con corte al 28 de octubre de 2026. Los costos son de perfil o prefactibilidad y se ajustan con los diseños. Toca un módulo para ir a él."
       },
@@ -29,7 +29,7 @@
         "id": "territorio",
         "tipo": "texto",
         "titulo": "Un municipio petrolero con brechas de municipio rural",
-        "texto": "Yondó queda frente a Barrancabermeja, al otro lado del Magdalena. Las siete propuestas se reparten entre el casco urbano y sus alrededores, el acueducto, 2,3 km al occidente, y la salida del puente, a unos 8 km al norte.",
+        "texto": "Yondó queda frente a Barrancabermeja, al otro lado del Magdalena. Las siete áreas se reparten entre el casco urbano y sus alrededores, el acueducto, 2,3 km al occidente, y la salida del puente, a unos 8 km al norte.",
         "lista": [
           "<b>22.429 habitantes</b> en 1.895 km²: casi la mitad vive en 60 veredas y en el corregimiento de San Miguel del Tigre.",
           "Pobreza multidimensional de <b>46,3 %</b> y NBI de 26,0 %, frente a 21,6 % y 10,7 % en Antioquia (censo 2018).",
@@ -219,7 +219,7 @@
       { "nombre": "Operación y rendición de cuentas", "desde": 2030.0, "hasta": 2032.0, "color": "#d9363e" }
     ],
     "hitos": [
-      { "fecha": "15-nov-2026", "texto": "Bases del PND 2026–2030 al Consejo Nacional de Planeación: pedir que los siete módulos entren al pacto regional" },
+      { "fecha": "15-nov-2026", "texto": "Bases del PND 2026–2030 al Consejo Nacional de Planeación: pedir que las siete áreas entren al pacto regional" },
       { "fecha": "5-dic-2026", "texto": "Plazo del Congreso para el presupuesto del SGR 2027–2028" },
       { "fecha": "31-dic-2026", "texto": "Vence la línea Reactiva Agua de Findeter (renovación por confirmar)" },
       { "fecha": "7-feb-2027", "texto": "Radicación del PND en el Congreso" },
@@ -248,7 +248,7 @@
       { "entidad": "Gobernación de Antioquia", "pedido": "VIVA para vivienda; Plan Departamental de Aguas para la PTAR, los interceptores, el compostaje y la clausura del relleno, y para la línea base y las pérdidas del acueducto; la mitad del banco de maquinaria; Indeportes para renovar el estadio existente, y la Secretaría Seccional de Salud para la torre y los puestos, con registro en el PMIDS de 2028. Además, revisar si Yondó entra en el Plan de Racionalización de plantas de beneficio, por si el matadero es de autoconsumo.", "modulos": ["vivienda", "saneamiento", "agroindustria", "urbanismo", "salud", "aguas"], "monto": 37719 },
       { "entidad": "ART y empresas contribuyentes", "pedido": "Inscribir en el banco de obras por impuestos las plantas del parque agroindustrial, una etapa de los interceptores de saneamiento, la dotación de la torre y de los puestos de salud, más dos ambulancias, la protección de la orilla del mirador y el parque lineal del caño, y la macro y micromedición del acueducto; y buscar empresa con Ecopetrol, Parex y los demás contribuyentes del campo Casabe.", "modulos": ["agroindustria", "saneamiento", "salud", "urbanismo", "aguas"], "monto": 23750 },
       { "entidad": "MinSalud", "pedido": "Concepto técnico de viabilidad de la torre (Res. 485 de 2025) con $12.000 M para su obra y equipamiento fijo, y $4.800 M para sostener los equipos básicos de salud rurales entre 2028 y 2031.", "modulos": ["salud"], "monto": 16800 },
-      { "entidad": "FONTUR, Cormagdalena, UNGRD, FENOGE y Fondo Único de TIC", "pedido": "Mirador Puerta del Magdalena (FONTUR, Cormagdalena y UNGRD: turismo, orilla y riesgo) y emisario al río (Cormagdalena); energía de las dos granjas solares y de la torre (FENOGE y Colombia Solar), y conectividad de las Zonas Digitales, la salud rural y la telemetría del acueducto (Fondo Único de TIC).", "modulos": ["urbanismo", "saneamiento", "tic", "salud", "aguas"], "monto": 13776 },
+      { "entidad": "FONTUR, Cormagdalena, UNGRD, FENOGE y Fondo Único de TIC", "pedido": "Mirador Puerta del Magdalena (FONTUR, Cormagdalena y UNGRD: turismo, orilla y riesgo) y la laguna y la descarga de la PTAR (Cormagdalena); energía de las dos granjas solares y de la torre (FENOGE y Colombia Solar), y conectividad de las Zonas Digitales, la salud rural y la telemetría del acueducto (Fondo Único de TIC).", "modulos": ["urbanismo", "saneamiento", "tic", "salud", "aguas"], "monto": 13776 },
       { "entidad": "Findeter", "pedido": "Crédito para las dos granjas solares con la tasa compensada de Territorios Energéticos ($1.000 M la municipal y $945 M la del relleno), para cerrar la obra de la torre con la tasa compensada de salud o Reactiva Colombia ($1.500 M) y para el matadero y las redes del parque agroindustrial ($6.000 M, línea por confirmar). Suma $9.445 M, cerca del techo de la capacidad prudente del municipio ($5.141 M a $10.281 M).", "modulos": ["agroindustria", "salud", "tic", "saneamiento"], "monto": 9445 },
       { "entidad": "MinDeporte, MinTIC y MinCultura", "pedido": "MinDeporte, por convenio de cofinanciación de infraestructura deportiva: Cancha de Sóftbol Casabe y canchas cubiertas junto al CIC ($4.700 M). MinTIC: telemedicina y conectividad de la torre ($400 M). Entre deporte, TIC y cultura, $1.324 M para el parque ecotecnológico del relleno.", "modulos": ["urbanismo", "saneamiento", "salud"], "monto": 6424 },
       { "entidad": "MinAgricultura y ADR", "pedido": "Cofinanciar con PIDAR (de $1.000 M a $4.000 M por proyecto regional) el acopio de leche y la trilladora del parque agroindustrial.", "modulos": ["agroindustria"], "monto": 5500 },

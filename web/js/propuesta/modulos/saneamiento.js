@@ -1,9 +1,9 @@
 // Aseo y saneamiento: hoy cuatro estaciones de bombeo vierten ~55 L/s de aguas residuales sin tratar. La propuesta del
-// Plan Maestro de alcantarillado: interceptores que recogen lo que hoy se vierte, una estación de bombeo central y una
-// PTAR para todo el casco, con emisario de agua tratada al río; además, clausurar el relleno Las Américas y convertirlo
+// Plan Maestro de alcantarillado: interceptores que siguen los dos caños hasta su unión, al norte del casco, y allí,
+// aguas abajo, una PTAR para todo el casco que devuelve el agua tratada al mismo caño (con laguna de pulimento); además, clausurar el relleno Las Américas y convertirlo
 // en parque ecotecnológico, y una estación de clasificación y aprovechamiento (ECA) de residuos.
 import { THREE, gsap } from '../../core.js';
-import { tubo, revelar, crecer, brotar, nave, largo, puntoEn } from '../geo3d.js';
+import { tubo, revelar, crecer, brotar, nave, largo, puntoEn, losa, cinta } from '../geo3d.js';
 import { ptar } from '../piezas/plantas.js';
 import { sitios, sitio, trazado, trazados, caja } from './comun.js';
 
@@ -14,7 +14,7 @@ const EBAR = [
   { id: 'ebar_prado', nombre: 'EBAR El Prado', x: 600, y: -160, ls: 10.62 },
   { id: 'ebar_victoria', nombre: 'EBAR La Victoria', x: -110, y: -380, ls: 14.69 },
 ];
-const PTAR = { x: 1250, y: 820, rumbo: 20 };
+const PTAR = { x: -70, y: 1652, rumbo: 90 };
 
 export function crear(esc, datos) {
   const color = '--m-saneamiento';
@@ -55,15 +55,24 @@ export function crear(esc, datos) {
   const est = new THREE.Group(); est.position.set(pc[0], 0, -pc[1]);
   est.add(new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 4, 24).translate(0, 2, 0), new THREE.MeshStandardMaterial({ color: 0xd2cec4, roughness: 0.85 })), new THREE.Mesh(new THREE.BoxGeometry(8, 3, 6).translate(9, 1.5, 0), new THREE.MeshStandardMaterial({ color: 0xe8e4dc })));
   est.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); cCol.add(est);
-  esc.etiqueta('<b>Estación de bombeo central</b><small>recibe los dos interceptores (las cuatro EBAR)</small>', { pos: [pc[0], pc[1], 12], padre: cCol, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] });
-  // rótulos fuera de la planta (encima de su borde norte) y a lo largo del emisario, que llega al río a casi 1 km
-  const pm = pP.userData.aModelo(0, 80);
-  esc.etiqueta(`<b>PTAR central · sitio B</b><small>UASB + filtro percolador · 50 L/s${sp?.area_m2 ? ` · predio de ${(sp.area_m2 / 10000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} ha` : ''}</small>`, { pos: [pm[0], pm[1], 14], padre: cPtar, color: `var(${color})`, ancla: [0.5, 1] });
-  const [qx, qy] = puntoEn(emisario, 0.3);
-  esc.etiqueta(`<b>Emisario al Magdalena</b><small>${Math.round(largo(emisario) / 5) * 5} m de agua tratada · difusor en el río</small>`, { pos: [qx, qy, 6], padre: cPtar, color: 'var(--m-aguas)', cls: 'lbl-p mini', ancla: [0, 0.5] });
-  // los otros dos sitios evaluados para la PTAR: A (alternativa) y C (descartado por la cercanía a viviendas)
+  esc.etiqueta('<b>Estación de bombeo de llegada</b><small>recibe los dos interceptores y sube el agua a la PTAR</small>', { pos: [pc[0], pc[1], 12], padre: cCol, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0.5, 1] });
+  // laguna de pulimento al norte de la planta: el caño lleva poco caudal para diluir, así que el agua se pule antes de volver
+  const lag = sitio(datos, 'saneamiento', 'ptar_laguna')?.poligono;
+  if (lag) {
+    cPtar.add(new THREE.Mesh(losa(lag, 0.35), new THREE.MeshStandardMaterial({ color: 0x4f8f8a, roughness: 0.15, metalness: 0.1 })));
+    cPtar.add(new THREE.Mesh(cinta([...lag, lag[0], lag[1]], 1.6, 0.6), new THREE.MeshStandardMaterial({ color: 0xbdb8ad, roughness: 0.9 })));
+  }
+  // la unión de los dos caños: la PTAR va aguas abajo de ella y la descarga vuelve al mismo caño, más abajo
+  const union = sitio(datos, 'saneamiento', 'union_canos');
+  if (union) esc.etiqueta('<b>Unión de los caños</b><small>Caño Colector Shell y canal oriental</small>', { pos: [union.x, union.y, 4], padre: esc.capa('san.sitios'), color: 'var(--m-aguas)', cls: 'lbl-p mini', ancla: [1, 0.5] });   // solo en el paso de la PTAR
+  // rótulos fuera de la planta (del lado oriental, lejos del caño) y a lo largo de la descarga, que vuelve al caño
+  const pm = pP.userData.aModelo(0, -80);
+  esc.etiqueta(`<b>PTAR central</b><small>aguas abajo de la unión de los caños · UASB + filtro percolador · 50 L/s${sp?.area_m2 ? ` · predio de ${(sp.area_m2 / 10000).toLocaleString('es-CO', { maximumFractionDigits: 1 })} ha` : ''}</small>`, { pos: [pm[0], pm[1], 14], padre: cPtar, color: `var(${color})`, ancla: [0.5, 1] });
+  const [qx, qy] = puntoEn(emisario, 0.7);
+  esc.etiqueta(`<b>Descarga al Caño Colector Shell</b><small>${Math.round(largo(emisario) / 5) * 5} m · el agua tratada vuelve al caño, aguas abajo</small>`, { pos: [qx, qy, 6], padre: cPtar, color: 'var(--m-aguas)', cls: 'lbl-p mini', ancla: [1, 0.5] });
+  // los otros sitios evaluados para la PTAR: A (alternativa), B (hacia el río) y C (cerca de viviendas), descartados
   const cSitios = esc.capa('san.sitios');
-  [['ptar_a', '#8a8f94', 'Sitio A · alternativa', 'vierte a caños que se desbordan'], ['ptar_c', '#d9363e', 'Sitio C · descartado', 'cerca de viviendas de finca'], ['ptar', '#0d8f96', 'Sitio B · recomendado', 'aguas abajo · a 0,8 km del río']].forEach(([id, col, t, sub]) => {
+  [['ptar_a', '#8a8f94', 'Sitio A · alternativa', 'reserva del EOT, pegada al casco'], ['ptar_b', '#d9363e', 'Sitio B · descartado', 'hacia el río: 911 m de bombeo y emisario'], ['ptar_c', '#d9363e', 'Sitio C · descartado', 'cerca de viviendas de finca'], ['ptar', '#0d8f96', '', '']].forEach(([id, col, t, sub]) => {
     const st = sitio(datos, 'saneamiento', id); if (!st?.poligono) return;
     esc.linea([...st.poligono, st.poligono[0]].map(([x, y]) => [x, y, 1.4]), { color: col, ancho: 3, punteada: true, guion: 8, padre: cSitios });
     const [cx, cy] = [st.poligono.reduce((a, q) => a + q[0], 0) / st.poligono.length, st.poligono.reduce((a, q) => a + q[1], 0) / st.poligono.length];
@@ -91,7 +100,7 @@ export function crear(esc, datos) {
   const todo = [...ebars.map((e) => [e.x, e.y]), ...pP.userData.contorno];
   const vistaHoy = () => esc.encuadrar(ebars.map((e) => [e.x, e.y]).concat([[0, 0]]), { rumbo: 200, elev: 50, margen: 0.9 });
   const vistaPlan = () => esc.encuadrar(todo, { rumbo: 205, elev: 46, margen: 0.94 });
-  const vistaPtar = () => esc.encuadrar([...caja(pP.userData.contorno, 110), puntoEn(emisario, 0.3).slice(0, 2)], { rumbo: 200, elev: 40, margen: 0.9, alto: 10 });
+  const vistaPtar = () => esc.encuadrar([...caja(pP.userData.contorno, 90), puntoEn(emisario, 0.7).slice(0, 2), ...(union ? [[union.x, union.y]] : [])], { rumbo: 200, elev: 40, margen: 0.9, alto: 10 });
   const vistaRel = () => esc.encuadrar(rel ? esc.cajaEdificio('relleno_parque') : caja([pR], 200), { rumbo: 200, elev: 40, margen: 0.85 });
   const vistaRes = () => esc.encuadrar([...caja([pR], 160), ...predioEca], { rumbo: 200, elev: 44, margen: 0.9 });
   return {

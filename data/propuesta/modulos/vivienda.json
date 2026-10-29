@@ -208,7 +208,7 @@
   ],
   "pasos": [
     { "id": "portadilla", "tipo": "portadilla", "titulo": "Seis de cada diez hogares con déficit (censo 2018)" },
-    { "id": "componentes", "tipo": "componentes", "titulo": "Primero lo pagado, luego lo nuevo", "texto": "Se terminan las obras pagadas y se titulan los predios; con eso se piden recursos para 300 viviendas urbanas, 200 rurales y 800 mejoramientos. Todo el paquete, con el rescate y la titulación, suma $106.271 M en 2028–2031." },
+    { "id": "componentes", "tipo": "componentes", "titulo": "Primero lo pagado, luego lo nuevo", "texto": "Se terminan las obras pagadas y se titulan los predios; con eso se piden recursos para 300 viviendas urbanas, 200 rurales y 800 mejoramientos. Todo el paquete, con el rescate y la titulación, suma $106.271 M en 2028–2031.", "leyenda": [{ "texto": "Lote 1 y Lote 2 · vivienda nueva", "color": "var(--m-vivienda)", "forma": "dash" }, { "texto": "Techos de casas tipo a mejorar (muestra)", "color": "var(--m-vivienda)", "forma": "area" }, { "texto": "Resto de las cubiertas del casco, en gris", "color": "#c4c7c8", "forma": "area" }] },
     {
       "id": "nuevas", "tipo": "componente", "componente": "nuevas",
       "titulo": "300 viviendas en dos lotes reales",
@@ -249,7 +249,7 @@
         { "texto": "Lote de cada familia, junto a la vía al acueducto", "color": "#8fbf6a", "forma": "area" }
       ]
     },
-    { "id": "financiacion", "tipo": "financiacion", "titulo": "El 70 % no depende del presupuesto nacional", "texto": "A la Nación se le piden $31.900 M en líneas que ya existen (mejoramiento, vivienda rural en especie y titulación) y en Casa Milagro para las 200 VIP; ese programa reemplaza a Mi Casa Ya, aún no está reglamentado y, tras el terremoto del 10 de agosto, atenderá primero las zonas afectadas. No encontramos un proyecto tipo vigente del DNP para construir vivienda, así que se usan los prototipos de VIVA y las reglas de Fonvivienda; para la energía solar de las casas rurales aisladas sirve el proyecto tipo «Celdas solares uso residencial»." }
+    { "id": "financiacion", "tipo": "financiacion", "titulo": "El 70 % no depende del presupuesto nacional", "texto": "A la Nación se le piden $31.900 M en líneas que ya existen (mejoramiento, vivienda rural en especie y titulación) y en Casa Milagro para las 200 VIP; ese programa reemplaza a Mi Casa Ya, aún no está reglamentado y, tras el terremoto del 10 de agosto, atenderá primero las zonas afectadas. No encontramos un proyecto tipo vigente del DNP para construir vivienda, así que se usan los prototipos de VIVA y las reglas de Fonvivienda; para la energía solar de las casas rurales aisladas sirve el proyecto tipo «Celdas solares uso residencial».", "leyenda": [{ "texto": "Lote 1 y Lote 2 · vivienda nueva", "color": "var(--m-vivienda)", "forma": "dash" }, { "texto": "Techos de casas tipo a mejorar (muestra)", "color": "var(--m-vivienda)", "forma": "area" }, { "texto": "Resto de las cubiertas del casco, en gris", "color": "#c4c7c8", "forma": "area" }] }
   ],
   "fuentes_citadas": [
     { "titulo": "DANE, déficit habitacional municipal del CNPV 2018, anexo con la metodología de 2020 (2020)", "url": "https://www.dane.gov.co/files/investigaciones/deficit-habitacional/deficit-hab-2020-anexo-nueva-metodologia.xlsx" },

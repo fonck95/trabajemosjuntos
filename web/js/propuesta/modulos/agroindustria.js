@@ -106,7 +106,13 @@ export function crear(esc, datos) {
   }
   [['maquinaria', 'concentrados', '#c98a00'], ['trilladora', 'concentrados', '#e3b23c'], ['concentrados', 'corrales', '#8c6d3f'], ['corrales', 'matadero', '#b0533c'],
     ['matadero', 'frio', '#2a78d6'], ['pescado', 'frio', '#2a78d6'], ['leche', 'frio', '#7fb2e5'], ['matadero', 'biodigestor', '#6b8f3a'], ['muelle', 'pescado', '#2a78d6']]
-    .forEach(([a, b, col]) => { const A = centroDe(a), Bp = centroDe(b); if (A && Bp) esc.flujo(arco(A, Bp, Math.min(90, 26 + Math.hypot(Bp[0] - A[0], Bp[1] - A[1]) * 0.08)), { color: col, potencia: 0.6, max: 14, tam: 1.6, tubo: 0.25, padre: cF }); });
+    .forEach(([a, b, col]) => {
+      const A = centroDe(a), Bp = centroDe(b); if (!A || !Bp) return;
+      const pts = arco(A, Bp, Math.min(90, 26 + Math.hypot(Bp[0] - A[0], Bp[1] - A[1]) * 0.08));
+      // el arco también como línea: las partículas solas no se leen cuando el parque se ve pequeño (en el celular)
+      esc.linea(pts, { color: col, ancho: 2, opacidad: 0.75, padre: cF });
+      esc.flujo(pts, { color: col, potencia: 0.6, max: 14, tam: 1.6, tubo: 0.25, padre: cF });
+    });
   const rExp = rutaExport();
   if (rExp) esc.flujo(rExp, { color: '#2a78d6', potencia: 0.9, max: 60, tam: 2.4, tubo: 0.35, padre: cF });
   else if (puente && centroDe('frio')) esc.flujo(arco(centroDe('frio'), puente, 70), { color: '#2a78d6', potencia: 0.9, max: 30, tam: 2.2, tubo: 0.35, padre: cF });
@@ -117,9 +123,12 @@ export function crear(esc, datos) {
   const muelle = centroDe('muelle');
   // el lote es largo (eje a 36,6°): se mira de través, desde el suroriente, para que no quede escorzado
   const vista = () => esc.encuadrar(parque.userData.contorno, { rumbo: 126, elev: 42, margen: 0.86, alto: 14 });
-  const vistaLejos = () => esc.encuadrar([...parque.userData.contorno, ...(puente ? [puente] : []), ...(muelle ? [muelle] : []), [1511, 7885]], { rumbo: 215, elev: 44, margen: 0.94 });
-  // en el celular, sin el estribo: con él las naves quedan diminutas y no se siguen los flujos entre plantas
-  const vistaCircuito = () => esc.encuadrar([...parque.userData.contorno, ...(muelle ? [muelle] : []), ...(tb && innerWidth > 640 ? [tb[0]] : [])], { rumbo: 128, elev: 42, margen: 0.9 });
+  const vistaLejos = () => esc.encuadrar([...parque.userData.contorno, ...(puente ? [puente] : []), ...(muelle ? [muelle] : []), [1511, 7885]], { rumbo: 215, elev: 44, margen: 0.94, obra: lote?.poligono || parque.userData.contorno });
+  // en el celular, solo el parque (sin el muelle ni el estribo): con ellos las naves quedan diminutas y no se siguen los
+  // flujos entre plantas
+  const vistaCircuito = () => (innerWidth > 640
+    ? esc.encuadrar([...parque.userData.contorno, ...(muelle ? [muelle] : []), ...(tb ? [tb[0]] : [])], { rumbo: 128, elev: 42, margen: 0.9 })
+    : esc.encuadrar(parque.userData.contorno, { rumbo: 128, elev: 48, margen: 0.9, alto: 14 }));
   const animar = () => {
     const O = parque.userData.partes.obras;
     O.children.forEach((g, i) => crecer(g, { duracion: 0.9, retraso: 0.5 + i * 0.06, onUpdate: inv }));

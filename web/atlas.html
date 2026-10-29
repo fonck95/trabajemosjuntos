@@ -1,0 +1,1193 @@
+<meta charset="utf-8">
+<title>Atlas Yondó 2028</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Investigación 3D sobre gestión pública, dinero y energía en Yondó (Antioquia), 2004–2031.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
+<style>
+/* Layout: cartel ciudadano — titulares condensados negros que atraviesan un globo de diálogo de contorno rojo (como "¡Trabajemos juntos!"); debajo, escenario 3D + carpeta lateral de datos. */
+:root {
+  --bg: #f2f2ef; --surface: #ffffff; --raised: #f8f8f6; --ink: #111111; --muted: #5a5a56; --line: #dadad4;
+  --accent: #e3141b; --accent-fill: #e3141b; --accent-ink: #ffffff; --accent-soft: rgba(227, 20, 27, 0.07);
+  --ground: #e2e4dc; --water: #8aa7b4; --wall: #fbfbf9; --roof: #a3a69f; --sun: #e09b00; --data: #6250d6; --power: #b85f00;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
+  --good: #0ca30c; --warn: #fab219; --bad: #d03b3b;
+  --f-display: "Anton", Impact, "Haettenschweiler", "Arial Narrow Bold", "Arial Black", sans-serif;
+  --f-body: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --stroke: 5px; --r: 14px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d0d0d; --surface: #161616; --raised: #1d1d1d; --ink: #f3f3f0; --muted: #a5a59f; --line: #2e2e2b;
+  --accent: #ff4545; --accent-fill: #e3141b; --accent-ink: #ffffff; --accent-soft: rgba(255, 69, 69, 0.1);
+  --ground: #1e211d; --water: #284b58; --wall: #8e9391; --roof: #5c605d; --sun: #f2b533; --data: #9085e9; --power: #f6a23a;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0d0d0d; --surface: #161616; --raised: #1d1d1d; --ink: #f3f3f0; --muted: #a5a59f; --line: #2e2e2b;
+  --accent: #ff4545; --accent-fill: #e3141b; --accent-ink: #ffffff; --accent-soft: rgba(255, 69, 69, 0.1);
+  --ground: #1e211d; --water: #284b58; --wall: #8e9391; --roof: #5c605d; --sun: #f2b533; --data: #9085e9; --power: #f6a23a;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+  color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1480px; margin: 0 auto; }
+
+/* ---------- cabecera */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 3px solid var(--ink); }
+header.top .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 28px; padding-block: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
+.brand svg { width: 34px; height: 30px; flex: none; }
+.brand h1 { font-family: var(--f-display); font-weight: 400; font-size: 1.7rem; letter-spacing: 0.01em; margin: 0; line-height: 1; text-transform: uppercase; }
+.brand span { font-family: var(--f-mono); font-size: 0.7rem; color: var(--muted); letter-spacing: 0.04em; }
+nav.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+nav.tabs a { position: relative; font-family: var(--f-display); font-size: 1rem; letter-spacing: 0.02em; text-decoration: none; color: var(--muted); padding: 5px 12px; border: 2.5px solid transparent; border-radius: 10px; }
+nav.tabs a:hover { color: var(--ink); }
+header.top .alterna { margin-left: auto; font-family: var(--f-display); font-size: 1rem; letter-spacing: 0.02em; text-decoration: none; color: var(--surface); background: var(--ink); padding: 6px 14px; border-radius: 10px; white-space: nowrap; }
+header.top .alterna:hover { background: var(--accent); }
+header.top .alterna:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+nav.tabs a[aria-current="page"] { color: var(--ink); border-color: var(--accent); }
+nav.tabs a[aria-current="page"]::after { content: ""; position: absolute; left: 14px; bottom: -9px; width: 10px; height: 10px; background: var(--surface); border-right: 2.5px solid var(--accent); border-bottom: 2.5px solid var(--accent); transform: skewX(-25deg) rotate(45deg); }
+nav.tabs a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+main { padding-block: 26px 40px; }
+.view { display: grid; gap: 24px; }
+
+/* ---------- titular en globo de diálogo (firma visual) */
+.intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 14px 36px; align-items: end; }
+.bubble { --cross: 46px; position: relative; display: inline-block; max-width: calc(100% - var(--cross)); border: var(--stroke) solid var(--accent); border-radius: 24px; padding: 14px 10px 18px 0; margin: 0 0 30px var(--cross); }
+.bubble .eyebrow { position: relative; z-index: 1; margin: 0 0 12px 14px; }
+.bubble h2 { position: relative; left: calc(-1 * var(--cross)); display: inline; margin: 0; font-family: var(--f-display); font-weight: 400; font-size: clamp(2.2rem, 5vw, 4.1rem); line-height: 1.04; letter-spacing: 0.005em; color: var(--ink); background: var(--bg); padding: 0 0.1em 0 0; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.bubble .tail { position: absolute; left: 18%; bottom: calc(-1 * var(--stroke) - 30px); width: 54px; height: 36px; overflow: visible; }
+.bubble .tail .gap { fill: var(--bg); }
+.bubble .tail .edge { fill: none; stroke: var(--accent); stroke-width: var(--stroke); stroke-linejoin: miter; }
+.eyebrow { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin: 0 0 4px; font-weight: 600; }
+.lede { margin: 0; max-width: 68ch; color: var(--muted); font-size: 1.02rem; }
+.stamp { font-family: var(--f-mono); font-size: 0.72rem; color: var(--muted); border-left: 4px solid var(--accent); padding: 4px 0 4px 12px; margin: 0; }
+
+/* ---------- tablero */
+.board { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
+.stage { position: relative; height: clamp(420px, 68vh, 760px); background: var(--raised); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; touch-action: none; }
+.stage canvas.gl { display: block; position: absolute; inset: 0; }
+.label-layer { position: absolute; inset: 0; pointer-events: none; }
+/* ayuda de la esquina: sobre un fondo del color de la superficie para que se lea encima de calles, árboles y techos */
+.stage-hint { position: absolute; left: 12px; bottom: 10px; max-width: calc(100% - 24px); box-sizing: border-box; font-family: var(--f-mono); font-size: 0.68rem; line-height: 1.4; color: var(--ink); background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; box-shadow: 0 1px 4px color-mix(in srgb, var(--ink) 14%, transparent); pointer-events: none; z-index: 2; }
+.hud-btn { position: absolute; top: 10px; right: 10px; z-index: 3; font: 600 0.72rem var(--f-mono); background: var(--surface); color: var(--ink); border: 1.5px solid var(--ink); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.hud-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.hud { position: absolute; top: 42px; right: 10px; z-index: 3; font: 0.72rem/1.5 var(--f-mono); background: var(--surface); color: var(--ink); border: 1.5px solid var(--ink); border-radius: 10px; padding: 8px 10px; min-width: 210px; }
+.hud b { font-size: 1rem; color: var(--accent); }
+.folder { display: grid; gap: 14px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 15px 17px; min-width: 0; }
+.card h3 { font-family: var(--f-display); font-weight: 400; font-size: 1.25rem; letter-spacing: 0.01em; margin: 0 0 9px; line-height: 1.1; }
+.card h4 { font-family: var(--f-body); font-weight: 800; font-size: 1rem; margin: 0 0 6px; }
+.card p { margin: 0 0 8px; }
+.note { font-size: 0.84rem; color: var(--muted); }
+.kv { display: grid; grid-template-columns: minmax(0, 1fr) fit-content(60%); gap: 4px 12px; margin: 0; font-size: 0.88rem; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-family: var(--f-mono); font-size: 0.82rem; text-align: right; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tile { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; container-type: inline-size; }
+/* la cifra no se parte ("$16,6 mil M" sin la "M" sola abajo) y su tamaño sigue el ancho de la ficha para que quepa */
+.tile b { display: block; font-family: var(--f-display); font-weight: 400; font-size: clamp(1.15rem, 6vw, 1.75rem); font-size: clamp(1.15rem, 17cqi, 1.75rem); line-height: 1.05; letter-spacing: 0.01em; white-space: nowrap; }
+.tile span { font-size: 0.78rem; color: var(--muted); }
+.ctl { display: grid; gap: 10px; }
+.ctl label { display: grid; gap: 4px; font-size: 0.85rem; }
+.ctl .row { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.ctl .row label { display: flex; align-items: center; gap: 6px; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; }
+button.btn, label.btn { display: inline-flex; align-items: center; gap: 6px; font: 400 1rem var(--f-display); letter-spacing: 0.03em; background: var(--accent-fill); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 7px 15px; cursor: pointer; }
+button.btn.ghost, label.btn.ghost { background: transparent; color: var(--ink); border: 2px solid var(--ink); }
+.seg { display: inline-flex; border: 2px solid var(--ink); border-radius: 10px; overflow: hidden; flex-wrap: wrap; }
+.seg button { font: 600 0.8rem var(--f-body); background: transparent; color: var(--ink); border: 0; padding: 6px 11px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg.wrap-seg { display: flex; border: 0; gap: 6px; border-radius: 0; overflow: visible; }
+.seg.wrap-seg button { border: 2px solid var(--ink); border-radius: 999px; padding: 4px 10px; font-size: 0.76rem; }
+.read { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.folder .read { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.read div { background: var(--raised); border-radius: 10px; padding: 6px 8px; min-width: 0; }
+.read b { display: block; font-family: var(--f-mono); font-size: 0.86rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.read span { font-size: 0.7rem; color: var(--muted); }
+svg.mr-chart { width: 100%; height: auto; display: block; }
+svg.mr-chart text { font: 9px var(--f-mono); fill: var(--muted); }
+svg.mr-chart .grid { stroke: var(--line); stroke-width: 1; }
+svg.mr-chart .pv { fill: var(--sun); opacity: 0.35; stroke: var(--sun); stroke-width: 1.5; }
+svg.mr-chart .dem { fill: none; stroke: var(--s1); stroke-width: 2; }
+svg.mr-chart .soc { fill: none; stroke: var(--good); stroke-width: 2; stroke-dasharray: 4 3; }
+svg.mr-chart .now { stroke: var(--accent); stroke-width: 1.5; }
+#v-microrred svg.mr-chart .soc-t { fill: var(--good); font-weight: 600; } /* rótulo del 100 % de la batería, del color de su curva */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.78rem; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.pill { display: inline-block; font: 600 0.7rem var(--f-mono); padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; }
+.pill.p1 { color: var(--bad); } .pill.p2 { color: var(--s4); } .pill.p3 { color: var(--muted); }
+
+/* ---------- etiquetas 3D */
+.lbl { font-family: var(--f-body); color: var(--ink); white-space: nowrap; pointer-events: none; }
+.lbl-node { background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1.5px solid var(--ink); border-radius: 6px; padding: 2px 6px; font-size: 11px; line-height: 1.25; }
+.lbl-room { font: 700 9.5px var(--f-mono); text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink); text-shadow: 0 0 3px var(--surface), 0 0 3px var(--surface); white-space: nowrap; pointer-events: none; }
+.lbl-node b { font-weight: 700; } .lbl-node .lv { font-family: var(--f-mono); color: var(--muted); margin-left: 4px; }
+.lbl-node.off { opacity: 0.55; text-decoration: line-through; }
+.lbl-node { transition: opacity 0.25s, border-color 0.2s, box-shadow 0.2s; }
+.lbl-node.hover, .lbl-node.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.lbl-node.on { z-index: 2; } .lbl-node.dim { opacity: 0.38; }
+.lbl-node.sel { border-color: var(--accent); } .lbl-node.wrap { white-space: normal; max-width: 132px; }
+.lbl-cx { display: grid; gap: 1px; font: 600 10.5px/1.35 var(--f-mono); background: var(--surface); border: 1.5px solid var(--power); border-radius: 8px; padding: 4px 9px 4px 7px; box-shadow: 0 2px 8px color-mix(in srgb, var(--ink) 14%, transparent); }
+.lbl-cx span { display: flex; align-items: center; gap: 6px; }
+.lbl-cx span::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 2.5px color-mix(in srgb, currentColor 25%, transparent); }
+.lbl-cx .pw { color: var(--power); } .lbl-cx .dt { color: var(--data); }
+.leyenda-servicios i { width: 10px; height: 10px; border-radius: 2px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.checklist { max-height: 320px; overflow: auto; padding-right: 6px; font-size: 0.85rem; }
+.barras details.fold summary { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) 6.5em; gap: 10px; align-items: center; padding: 4px 0; }
+.barras .bar { height: 12px; background: var(--line); border-radius: 999px; overflow: hidden; } .barras .bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.barras .bar-v { font: 600 0.82rem var(--f-mono); text-align: right; } .barras .bar-l { font-size: 0.88rem; }
+.gantt-head, .gantt-row summary { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 2fr); gap: 10px; align-items: center; }
+.gantt-head { font: 600 0.75rem var(--f-mono); color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.gantt-head .g-bar b { position: absolute; top: 0; padding-left: 3px; font-weight: 600; }
+.gantt-row summary { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.g-bar { position: relative; height: 14px; border-radius: 4px; }
+.g-bar i { position: absolute; top: 2px; bottom: 2px; background: var(--accent); border-radius: 4px; }
+/* las barras y el Gantt usan <span> dentro del summary: anula el estilo de "ver más" de details.fold */
+.barras details.fold summary span, .gantt details.fold summary span { white-space: normal; color: inherit; font-weight: inherit; display: block; }
+.barras .bar-l { min-width: 0; overflow-wrap: anywhere; }
+.apu-sel { display: block; } .apu-sel select { display: block; width: 100%; max-width: 100%; margin-top: 4px; }
+@media (max-width: 720px) { .gantt-head, .gantt-row summary { grid-template-columns: minmax(0, 1fr); gap: 4px; } .gantt-head > span:first-child { display: none; } .barras details.fold summary { grid-template-columns: minmax(0, 1fr) auto; } .barras details.fold summary .bar { grid-column: 1 / -1; grid-row: 2; } }
+.g-n { font-size: 0.88rem; }
+.mezcla { display: flex; height: 16px; border-radius: 999px; overflow: hidden; margin: 8px 0; } .mezcla i { display: block; height: 100%; }
+.mezcla-ley { columns: 2; font-size: 0.82rem; } @media (max-width: 720px) { .mezcla-ley { columns: 1; } }
+.g-bar { background-image: linear-gradient(90deg, var(--line) 1px, transparent 1px); background-color: transparent; }
+.lbl-km { font: 700 10px var(--f-mono); color: var(--power); background: var(--surface); border: 1.5px solid var(--power); border-radius: 999px; padding: 1px 6px; transition: opacity 0.2s; } .lbl-km.dim { opacity: 0.3; }
+.lbl-cx:hover { border-color: var(--accent); }
+.cx-ruta { margin: 4px 0 0; padding: 0; list-style: none; font-size: 0.85rem; }
+.cx-ruta li { display: flex; gap: 8px; align-items: baseline; } .cx-ruta li::before { content: ''; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--power); transform: translateY(-1px); }
+.cx-ruta li.dt::before { background: var(--data); }
+.nav3d { position: absolute; top: 10px; left: 10px; z-index: 3; display: flex; align-items: center; gap: 2px; max-width: calc(100% - 132px); background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 999px; padding: 3px; font: 600 0.74rem var(--f-mono); }
+.nav3d button { flex: none; min-width: 30px; height: 30px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: var(--ink); font: inherit; cursor: pointer; }
+.nav3d button[data-nav="prev"], .nav3d button[data-nav="next"] { font-size: 1.15rem; line-height: 1; padding: 0 6px; }
+.nav3d button:hover { background: var(--accent-soft); } .nav3d button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.nav3d button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.nav3d-name { min-width: 0; max-width: 230px; padding: 0 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav3d .sep { flex: none; width: 1px; align-self: stretch; margin: 3px 3px; background: var(--line); }
+.leyenda3d { position: absolute; right: 10px; bottom: 10px; z-index: 2; display: grid; gap: 2px; font: 0.68rem/1.45 var(--f-mono); color: var(--ink); background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; pointer-events: none; }
+.leyenda3d i { display: inline-block; vertical-align: middle; margin-right: 7px; }
+.leyenda3d .ln { width: 22px; border-top: 3px dashed var(--data); } .leyenda3d .ln.pw { border-top: 3px solid var(--power); }
+.leyenda3d .pt { width: 9px; height: 9px; margin-left: 6px; margin-right: 14px; border-radius: 50%; } .leyenda3d .pw { background: var(--power); } .leyenda3d .dt { background: var(--data); }
+.lbl-small { font: 10px var(--f-mono); color: var(--muted); }
+.lbl-geo { font: italic 12px var(--f-body); color: var(--muted); }
+.lbl-data { font: 600 11px var(--f-mono); color: var(--data); }
+.lbl-alert { font: 700 12px var(--f-mono); color: var(--accent); background: var(--surface); border: 2px solid var(--accent); padding: 2px 6px; border-radius: 6px; }
+.lbl-h { font: 400 20px var(--f-display); color: var(--accent); }
+.lbl-axis { font: 600 11px var(--f-mono); color: var(--muted); }
+.lbl-val { font: 600 11px var(--f-mono); color: var(--ink); background: color-mix(in srgb, var(--surface) 88%, transparent); padding: 1px 4px; border-radius: 3px; }
+.lbl-title { font: 400 14px var(--f-display); letter-spacing: 0.02em; color: var(--ink); }
+.lbl-pila { background: color-mix(in srgb, var(--surface) 90%, transparent); padding: 3px 8px; border-radius: 6px; text-align: center; line-height: 1.15; }
+.lbl-money { font: 700 12px var(--f-mono); color: var(--ink); background: var(--surface); border: 2px solid var(--accent); padding: 3px 7px; border-radius: 8px; }
+.lbl-money small { display: block; font: 500 10px var(--f-body); color: var(--muted); }
+/* La plata y Seis gobiernos: cifras de cada pila en renglones; el rótulo corto de periodo es solo para el teléfono */
+[data-scene="dinero"] .lbl-money span { display: block; } [data-scene="dinero"] .lbl-money .ct { font-weight: 500; } [data-scene="dinero"] .lbl-money .nt { font: 500 10px var(--f-body); color: var(--muted); }
+[data-scene="periodos"] .lbl-money small.sin { color: var(--bad); font-weight: 600; } [data-scene="periodos"] .per-c, [data-scene="dinero"] .per-c { display: none; }
+[data-slot="periodos.seg"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* Hospital 2028: nombre completo de la fuente en escritorio (el corto es para el teléfono) y aviso de la decisión vigente */
+[data-scene="hospital"] .lbl-money .fc { display: none; }
+[data-scene="ruta"] .lbl-node { font-size: 10px; } /* Hoja de ruta: rótulos de hito más compactos para que la franja de atrás no se encime */
+/* Microrred: baterías, planta, barra y CCED con fondo propio, para que se lean sobre techos, árboles y flujos */
+[data-scene="microrred"] .lbl-small, [data-scene="microrred"] .lbl-data { background: color-mix(in srgb, var(--surface) 88%, transparent); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--line); }
+[data-scene="microrred"] .lbl-small { color: var(--ink); } [data-scene="microrred"] .lbl-data { border-color: color-mix(in srgb, var(--data) 60%, transparent); }
+/* Sedes reales: la ficha se lee como texto (valores en letra normal, alineados a la izquierda) con sus apartados
+   largos plegados; la ayuda del escenario no se mete debajo de la leyenda de la derecha */
+#v-ciudad [data-slot="ciudad.ficha"] .kv { grid-template-columns: 6.5em minmax(0, 1fr); }
+#v-ciudad [data-slot="ciudad.ficha"] .kv dd { font-family: var(--f-body); font-size: 0.86rem; text-align: left; }
+#v-ciudad [data-slot="ciudad.ficha"] details { margin: 0 0 8px; } #v-ciudad [data-slot="ciudad.ficha"] details > summary { padding: 2px 0; }
+#v-ciudad .stage-hint { max-width: calc(100% - 336px); }
+/* en escritorio la maqueta acompaña la lectura de la ficha (que es más larga) en vez de dejar un hueco debajo */
+@media (min-width: 1081px) { #v-ciudad .board > .stage { position: sticky; top: 112px; } }
+#v-hospital .decision { margin: 0; padding: 10px 14px; max-width: 110ch; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: var(--r); font-size: 0.95rem; }
+
+/* ---------- contenido */
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.cols.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+ul.tight, ol.tight { margin: 0; padding-left: 18px; } ul.tight li, ol.tight li { margin: 2px 0; }
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--f-mono); font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+td.n, th.n { text-align: right; font-family: var(--f-mono); font-size: 0.8rem; white-space: nowrap; }
+.nw, .rango { white-space: nowrap; } /* montos y rangos de plata que no se parten entre renglones (.rango sí parte en el teléfono, entre las dos cifras) */
+/* tablas en el teléfono: las de cuatro o más columnas se deslizan de lado con columnas legibles y la primera columna
+   queda fija, para no perder de qué fila es cada cifra al llegar a ella; los encabezados de cifras parten en dos renglones */
+@media (max-width: 720px) {
+  th.n, .rango { white-space: normal; }
+  .tbl-wrap > table:not(.fichas):has(tr > :nth-child(4)) { min-width: 500px; }
+  .tbl-wrap > table:not(.fichas):has(tr > :nth-child(5)) { min-width: 600px; }
+  .tbl-wrap > table:not(.fichas):has(tr > :nth-child(6)) { min-width: 680px; }
+  .tbl-wrap > table:not(.fichas):has(tr > :nth-child(4)) tr > :first-child { position: sticky; left: 0; z-index: 1; max-width: 38vw; background: var(--surface); box-shadow: 6px 0 6px -6px color-mix(in srgb, var(--ink) 40%, transparent); }
+  /* sombra en el borde derecho mientras quede tabla por ver (se tapa al llegar al final) */
+  .tbl-wrap:has(> table:not(.fichas) tr > :nth-child(4)) { background: linear-gradient(to left, var(--surface) 35%, transparent) right / 28px 100% no-repeat local, radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 42%, transparent), transparent) right / 12px 100% no-repeat scroll; }
+  /* table.fichas: cada fila se apila como una ficha (nombre arriba y debajo cada cifra con su rótulo, tomado de data-th),
+     así todas las cifras quedan a la vista sin deslizar; td.ancho ocupa todo el ancho (textos largos) */
+  table.fichas, table.fichas tbody, table.fichas tfoot, table.fichas td { display: block; }
+  table.fichas thead { display: none; }
+  table.fichas tr { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  table.fichas td { padding: 0; border: 0; text-align: left; white-space: normal; }
+  table.fichas td:first-child, table.fichas td.ancho { grid-column: 1 / -1; } table.fichas td.sin-ficha { display: none; }
+  table.fichas td[data-th]::before { content: attr(data-th); display: block; font: 600 0.62rem var(--f-mono); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+}
+tfoot td { font-weight: 700; border-top: 3px solid var(--ink); }
+.tag { font: 600 0.68rem var(--f-mono); text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 6px; border-radius: 4px; background: var(--raised); border: 1px solid var(--line); color: var(--muted); }
+.tag.ver { color: var(--good); border-color: currentColor; } .tag.est { color: var(--s4); border-color: currentColor; } .tag.sup { color: var(--muted); }
+.period-detail h4 { font-size: 1.15rem; }
+.gate { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 6px 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.gate time { font-family: var(--f-mono); font-size: 0.78rem; color: var(--accent); font-weight: 600; }
+.gate b { display: block; }
+pre.cmd { margin: 6px 0 0; padding: 10px 12px; background: var(--ink); color: var(--bg); border-radius: 10px; font: 0.76rem/1.5 var(--f-mono); overflow-x: auto; white-space: pre; }
+.drop { position: absolute; inset: 12px; z-index: 4; border: var(--stroke) dashed var(--accent); border-radius: 18px; background: color-mix(in srgb, var(--bg) 82%, transparent); display: grid; place-items: center; font: 400 1.6rem var(--f-display); color: var(--ink); pointer-events: none; }
+.caps { display: flex; flex-wrap: wrap; gap: 6px; }
+.caps span { font: 600 0.7rem var(--f-mono); padding: 3px 8px; border-radius: 999px; border: 1.5px solid var(--line); }
+.caps span.on { border-color: var(--good); color: var(--good); }
+.caps span.mid { border-color: var(--s4); color: var(--s4); }
+
+/* ---------- llamado final */
+footer { padding-block: 10px 40px; }
+.cta { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: 20px 40px; align-items: center; padding-block: 24px; border-top: 3px solid var(--ink); }
+.cta .bubble { margin-bottom: 34px; }
+.cta .bubble h2 { font-size: clamp(2.4rem, 6vw, 4.6rem); }
+.cta p { margin: 0 0 8px; max-width: 70ch; }
+footer .note { max-width: 90ch; }
+a { color: var(--accent); }
+
+@media (max-width: 1080px) { .board { grid-template-columns: minmax(0, 1fr); } .cols { grid-template-columns: minmax(0, 1fr); } .intro { grid-template-columns: minmax(0, 1fr); } .cta { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 720px) {
+  header.top { position: static; }
+  nav.tabs { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 10px; }
+  nav.tabs a { white-space: nowrap; }
+  .brand h1 { font-size: 1.4rem; }
+  .stage { height: clamp(360px, 60vh, 540px); }
+  .cols.two { grid-template-columns: minmax(0, 1fr); }
+  .read { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lbl-node { font-size: 9.5px; }
+  .nav3d [data-nav-modo], .nav3d .sep, .leyenda3d { display: none; }
+  /* en el teléfono la barra de recorrido va abajo, a todo el ancho, y reemplaza la ayuda */
+  .nav3d { top: auto; bottom: 10px; right: 10px; max-width: none; justify-content: space-between; }
+  .nav3d-name { flex: 1; max-width: none; text-align: center; }
+  [data-scene="ciudad"] .stage-hint { display: none; }
+  /* Sedes reales en el teléfono: rótulos de una línea (los kWp están en la ficha y la tabla), sin las distancias en km
+     en la vista general y, con una sede elegida, sin los rótulos atenuados de las demás; se ocultan con display para
+     que el reacomodo de etiquetas no les guarde lugar */
+  [data-scene="ciudad"] .lbl-node:not(.on) br, [data-scene="ciudad"] .lbl-node:not(.on) small { display: none; }
+  [data-scene="ciudad"]:not(.con-sede) .lbl-km, [data-scene="ciudad"] .lbl-node.dim, [data-scene="ciudad"] .lbl-km.dim { display: none; }
+  .lbl-small, .lbl-geo, .lbl-money small { display: none; }
+  [data-scene="microrred"] .lbl-data { font-size: 9.5px; } /* Microrred: el rótulo del CCED tan compacto como los de las sedes */
+  /* Hospital 2028 en el teléfono: cada cifra con el nombre corto de su fuente; sin la etiqueta del edificio (tapaba el modelo) */
+  [data-scene="hospital"] .lbl-money small { display: block; font-size: 9px; } [data-scene="hospital"] .lbl-money .fl { display: none; } [data-scene="hospital"] .lbl-money .fc { display: inline; }
+  [data-scene="hospital"] .lbl-hosp { display: none; } #v-hospital .stage { height: clamp(340px, 50vh, 430px); } /* la maqueta es apaisada: recuadro más bajo, sin vacío arriba y abajo */
+  /* Hoja de ruta en el teléfono: la maqueta es apaisada, así que el recuadro es más bajo (sin franjas vacías arriba y abajo) */
+  #v-ruta .stage { height: clamp(280px, 40vh, 360px); } [data-scene="ruta"] .lbl-node { font-size: 9.5px; }
+  [data-scene="modelos"] .lbl-cx { font-size: 9px; padding: 2px 6px 2px 5px; } /* Modelos 3D: etiqueta de conexión compacta */
+  /* La plata y Seis gobiernos en el teléfono: periodos con rótulo corto, pastillas compactas y sin "sin obra",
+     "1 fajo" ni los nombres de categoría o área en 3D (ya están en la leyenda, las tarjetas y las tablas de abajo) */
+  [data-scene="periodos"] .lbl-fajo, [data-scene="periodos"] .lbl-area, [data-scene="dinero"] .lbl-cat { display: none; }
+  [data-scene="periodos"] .per-l, [data-scene="dinero"] .per-l { display: none; } [data-scene="periodos"] .per-c, [data-scene="dinero"] .per-c { display: inline; }
+  /* tablas de Seis gobiernos: las de tres columnas se leen como fichas; en La plata y Seis gobiernos una sombra en
+     el borde de las tablas que se deslizan de lado avisa que hay más */
+  [data-slot="periodos.pudo"] .tbl-wrap table, [data-slot="periodos.pudo"] .tbl-wrap tbody { display: block; }
+  [data-slot="periodos.pudo"] .tbl-wrap thead { display: none; }
+  [data-slot="periodos.pudo"] .tbl-wrap tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  [data-slot="periodos.pudo"] .tbl-wrap td { padding: 0; border: 0; } [data-slot="periodos.pudo"] .tbl-wrap td:first-child { grid-column: 1 / -1; }
+  /* matriz de indicadores: cada área como ficha, con sus seis periodos en una grilla de tres (el periodo encima de la cifra) */
+  #v-periodos [data-slot="periodos.table"] table, #v-periodos [data-slot="periodos.table"] tbody { display: block; min-width: 0; }
+  #v-periodos [data-slot="periodos.table"] thead { display: none; }
+  #v-periodos [data-slot="periodos.table"] tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  #v-periodos [data-slot="periodos.table"] tr > td { padding: 0; border: 0; } #v-periodos [data-slot="periodos.table"] tr > td:first-child { grid-column: 1 / -1; position: static; max-width: none; box-shadow: none; }
+  #v-periodos [data-slot="periodos.table"] td.n { text-align: left; white-space: normal; } #v-periodos [data-slot="periodos.table"] td .note { font-size: 0.75rem; }
+  #v-periodos [data-slot="periodos.table"] td.n::before { content: attr(data-p); display: block; font: 600 0.66rem var(--f-mono); color: var(--muted); }
+  #v-periodos .tbl-wrap, #v-dinero .tbl-wrap { background: linear-gradient(to right, var(--surface) 30%, transparent) left / 28px 100% no-repeat local, linear-gradient(to left, var(--surface) 30%, transparent) right / 28px 100% no-repeat local, radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--ink) 22%, transparent), transparent) left / 12px 100% no-repeat scroll, radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--ink) 22%, transparent), transparent) right / 12px 100% no-repeat scroll; }
+  .lbl-pila { font-size: 11px; padding: 2px 5px; } .lbl-pila small { display: none; }
+  .lbl-money { font-size: 10px; padding: 2px 5px; }
+  :root { --stroke: 4px; }
+  .bubble { --cross: 30px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+/* comparativa: cifras grandes, barras, equivalencias y panel anual */
+.money-big { display: grid; gap: 8px; margin: 6px 0 10px; }
+.money-big div { border-left: 4px solid var(--ink); padding: 2px 0 2px 10px; }
+.money-big div.bad { border-color: var(--bad); } .money-big div.ghost { border-left-style: dashed; border-color: var(--accent); }
+.money-big div.ind { border-color: color-mix(in srgb, var(--warn) 60%, transparent); } .money-big div.quieta { border-color: var(--data); }
+.money-big .ind b, .money-big .quieta b { font-size: 1.25rem; }
+.money-big b { display: block; font: 400 1.7rem/1.05 var(--f-display); letter-spacing: 0.01em; }
+.money-big .bad b { color: var(--bad); } .money-big span { font-size: 0.78rem; color: var(--muted); }
+svg.cuenta { width: 100%; height: auto; display: block; margin-top: 8px; }
+svg.cuenta g.row { cursor: pointer; } svg.cuenta g.row:hover .per, svg.cuenta g.row.on .per { fill: var(--accent); }
+svg.cuenta .per { font: 400 15px var(--f-display); fill: var(--ink); } svg.cuenta .who { font: 10px var(--f-body); fill: var(--muted); }
+svg.cuenta .b0 { fill: var(--ink); opacity: 0.85; } svg.cuenta .b1 { fill: var(--bad); } svg.cuenta .b2 { fill: var(--warn); }
+svg.cuenta .b2i { fill: var(--warn); opacity: 0.45; } svg.cuenta .b4 { fill: var(--data); opacity: 0.55; }
+svg.cuenta .b3 { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 3; }
+svg.cuenta g.row:not(.on) rect { opacity: 0.55; } svg.cuenta g.row.on rect.b0 { opacity: 0.95; }
+svg.cuenta .v { font: 600 11px var(--f-mono); fill: var(--bad); } svg.cuenta .v2 { font: 11px var(--f-mono); fill: var(--accent); }
+#v-periodos svg.cuenta.m .v2 { font-size: 10px; }
+.legend i.hollow { border: 2px dashed var(--accent); box-sizing: border-box; }
+.eqs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 10px 0 16px; }
+.eq { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.eq b { display: block; font: 400 2rem/1 var(--f-display); color: var(--bad); } .eq span { font-size: 0.8rem; color: var(--muted); }
+.eq .icons { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 8px; }
+.eq .icons svg { width: 15px; height: 15px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.eq .icons em { font-size: 0.8rem; color: var(--muted); }
+.cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.cols2 h4 { margin: 0 0 6px; }
+details.fold summary { list-style: none; cursor: pointer; } details.fold summary::-webkit-details-marker { display: none; }
+details.fold summary span { color: var(--accent); font-weight: 600; white-space: nowrap; } details.fold[open] summary span { display: none; }
+/* señal de que la sección se abre: un triángulo antes del título que gira al abrir; en las barras y el Gantt va antes
+   del nombre (no se agrega a la fila para no mover las barras) y el resumen con "Ver más" ya tiene su propia señal */
+details.fold > summary::before, .barras details.fold > summary > .bar-l::before, .gantt details.fold > summary > .g-n::before {
+  content: ''; display: inline-block; width: 0; height: 0; margin-right: 7px; vertical-align: 0.1em;
+  border-left: 6px solid var(--accent); border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; transition: transform 0.2s;
+}
+details.fold[open] > summary::before, .barras details.fold[open] > summary > .bar-l::before, .gantt details.fold[open] > summary > .g-n::before { transform: rotate(90deg); }
+.barras details.fold > summary::before, .gantt details.fold > summary::before, details.fold > summary.note::before { content: none; }
+details.fold > summary:hover { color: var(--accent); }
+.sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 12px; }
+.spark p { margin: 0; font-size: 0.82rem; line-height: 1.25; } .spark .src { font-size: 0.66rem; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+.spark svg { width: 100%; height: auto; display: block; margin: 4px 0 2px; }
+.spark svg path { fill: none; stroke: var(--ink); stroke-width: 1.8; } .spark svg circle { fill: var(--ink); }
+.spark svg .band { fill: var(--line); opacity: 0.25; } .spark svg .band.alt { opacity: 0.12; } .spark svg .band.on { fill: var(--accent); opacity: 0.16; }
+.spark svg text { font: 8px var(--f-mono); fill: var(--muted); }
+.spark .delta { font: 600 0.72rem var(--f-mono); color: var(--muted); } .spark .delta.good { color: var(--good); } .spark .delta.bad { color: var(--bad); }
+/* Torre del hospital: contenedores de los modos nuevos (recorrido y simulador, especificación de integración 10.3). La capa
+   del recuadro no recibe clics (la cámara sigue funcionando); lo que cada modo ponga dentro de su contenedor, sí */
+[data-scene="torre"] .torre-hud { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+[data-scene="torre"] .torre-hud > [data-slot] > * { pointer-events: auto; }
+#v-torre [data-slot="torre.capas"] { margin-top: 8px; }
+/* «Pisos por servicio»: en pantallas angostas, la etiqueta de cada servicio solo con su nombre corto */
+@media (max-width: 640px) { [data-scene="torre"] .lbl-largo { display: none; } }
+/* >>> torre-recorrido (equipo C) */
+/* Recorrido en primera persona (web/js/scenes/torre/recorrido.js y sus módulos) y tarjeta de habilitación (habilitacion.js).
+   Sobre el recuadro: barra arriba a la izquierda, minimapa arriba a la derecha (debajo de «Rendimiento»), joystick abajo a la
+   izquierda en pantallas táctiles, ascensor y salida abajo a la derecha. Solo tokens del tema. */
+#v-torre [data-slot="torre.hud.recorrido"] { position: absolute; inset: 0; pointer-events: none; }
+#v-torre .stage.reco-on:focus { outline: none; }
+#v-torre .stage.reco-on:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+#v-torre .stage.reco-on .stage-hint { max-width: calc(100% - 330px); }
+#v-torre .nav3d.reco-barra { top: 10px; left: 10px; bottom: auto; right: auto; max-width: calc(100% - 132px); justify-content: flex-start; }
+#v-torre .nav3d.reco-barra { overflow: hidden; }
+#v-torre .reco-barra .nav3d-name { flex: 0 1 auto; min-width: 0; max-width: 150px; }
+.reco-barra .reco-corto { display: none; }
+.reco-donde { position: absolute; top: 50px; left: 10px; max-width: calc(100% - 200px); margin: 0; padding: 2px 8px; font: 600 0.72rem/1.4 var(--f-mono); color: var(--ink); background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid var(--line); border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none !important; }
+.reco-donde:empty { display: none; }
+.reco-verficha { position: absolute; right: 10px; bottom: 100px; max-width: min(320px, calc(100% - 150px)); font: 600 0.74rem var(--f-mono); color: var(--bg); background: var(--ink); border: 1.5px solid var(--accent); border-radius: 999px; padding: 7px 12px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reco-verficha:focus-visible, .reco-ficha:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reco-ficha:focus { outline: none; }
+.reco-contiene { color: var(--muted); font-size: 0.78rem; }
+#v-torre .reco-barra button { padding: 0 8px; }
+.reco-mapa { position: absolute; top: 44px; right: 10px; border: 1.5px solid var(--ink); border-radius: 8px; background: var(--surface); cursor: pointer; }
+#v-torre .stage:has(> .hud:not([hidden])) .reco-mapa { display: none; }
+.reco-joy { position: absolute; left: 16px; bottom: 16px; width: 110px; height: 110px; border-radius: 50%; border: 2px solid var(--ink); background: color-mix(in srgb, var(--surface) 70%, transparent); touch-action: none; display: grid; place-items: center; }
+.reco-joy-pomo { width: 44px; height: 44px; border-radius: 50%; background: var(--ink); opacity: 0.8; pointer-events: none; }
+.reco-asc { position: absolute; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 4px; padding: 4px 6px 4px 10px; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 999px; font: 600 0.72rem var(--f-mono); color: var(--ink); max-width: calc(100% - 20px); }
+.reco-asc span { margin-right: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.reco-asc button { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--surface); color: var(--ink); font: 600 0.8rem var(--f-mono); cursor: pointer; }
+.reco-asc button[aria-current="true"] { background: var(--ink); color: var(--bg); }
+.reco-asc button:focus-visible, .reco-salida:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reco-salida { position: absolute; right: 10px; bottom: 56px; font: 600 0.74rem var(--f-mono); color: var(--bg); background: var(--ink); border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; }
+.reco-pista, .reco-aviso { position: absolute; left: 50%; transform: translateX(-50%); max-width: calc(100% - 360px); margin: 0; padding: 3px 9px; font: 0.72rem/1.4 var(--f-mono); color: var(--ink); background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1px solid var(--line); border-radius: 8px; text-align: center; pointer-events: none !important; }
+.reco-pista { top: 82px; }
+.reco-aviso { top: 112px; border-color: var(--ink); }
+.reco-mira { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; pointer-events: none !important; }
+.reco-mira::before, .reco-mira::after { content: ''; position: absolute; background: var(--accent); }
+.reco-mira::before { left: 8px; top: 0; width: 2px; height: 18px; } .reco-mira::after { top: 8px; left: 0; width: 18px; height: 2px; }
+.reco-fundido { position: absolute; inset: 0; background: var(--bg); opacity: 0; transition: opacity 0.12s linear; pointer-events: none !important; }
+.reco-fundido.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .reco-fundido { transition: none; } }
+/* pantalla completa (P): la del navegador o, si no la da, el recuadro fijo sobre la página; la ficha va en un lateral */
+/* el tamaño va solo con la pantalla completa de verdad (o la simulada): si el estado se desfasara, el recuadro conserva el suyo */
+#v-torre .stage.reco-pantalla:fullscreen { width: 100vw; height: 100vh; border: 0; border-radius: 0; }
+#v-torre .stage.reco-fs { position: fixed; inset: 0; z-index: 1000; width: auto; height: auto; border: 0; border-radius: 0; }
+html.reco-fs-doc, html.reco-fs-doc body { overflow: hidden; }
+#v-torre .stage.reco-pantalla .stage-hint, #v-torre .stage.reco-volando .stage-hint { display: none; }
+/* a la izquierda, bajo la barra: arriba a la derecha van «Rendimiento» y el minimapa */
+.reco-fs-ficha { display: none; position: absolute; top: 84px; left: 10px; bottom: 10px; width: min(380px, calc(100% - 20px)); box-sizing: border-box; overflow: auto; padding: 10px 14px 14px; background: var(--surface); color: var(--ink); border: 1.5px solid var(--ink); border-radius: var(--r); box-shadow: 0 4px 18px color-mix(in srgb, var(--ink) 22%, transparent); }
+.reco-pantalla .reco-fs-ficha:has(> [data-slot]:not([hidden])) { display: block; }
+.reco-fs-cerrar { position: sticky; top: 0; float: right; width: 30px; height: 30px; margin: 0 0 4px 8px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--surface); color: var(--ink); font: 600 1rem/1 var(--f-mono); cursor: pointer; }
+.reco-fs-cerrar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reco-fs-ayuda { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: min(520px, calc(100% - 40px)); box-sizing: border-box; padding: 12px 16px; font: 0.78rem/1.55 var(--f-mono); color: var(--ink); background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: var(--r); pointer-events: none !important; }
+.reco-fs-ayuda p { margin: 0 0 4px; } .reco-fs-ayuda ul { margin: 0; padding-left: 18px; }
+.reco-fs-ayuda kbd { font: inherit; padding: 0 4px; border: 1px solid var(--line); border-radius: 4px; background: var(--raised); }
+/* abajo a la izquierda, donde va la pista del recuadro (que en el espectador se oculta): libre del ascensor y de «Salir» */
+.reco-espectador { position: absolute; left: 12px; bottom: 10px; max-width: calc(100% - 340px); box-sizing: border-box; margin: 0; padding: 3px 10px; font: 600 0.72rem/1.4 var(--f-mono); color: var(--bg); background: var(--ink); border: 1.5px solid var(--accent); border-radius: 8px; pointer-events: none !important; }
+/* columna táctil a la derecha, sobre «Salir del edificio», el ascensor y «Ver ficha» */
+.reco-saltos { position: absolute; right: 12px; bottom: 150px; display: grid; gap: 8px; }
+.reco-saltos button { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--ink); background: color-mix(in srgb, var(--surface) 70%, transparent); color: var(--ink); font: 600 1.2rem/1 var(--f-mono); touch-action: none; cursor: pointer; }
+.reco-saltos .reco-b-esp { font-size: 0.6rem; }
+.reco-saltos button svg, .reco-barra .reco-icono svg { display: block; margin: auto; }
+#v-torre .reco-barra .reco-icono { min-width: 30px; }
+#v-torre .stage.reco-angosto .reco-barra [data-acc="bt"] { display: none; }
+.reco-saltos button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.reco-saltos .reco-b-fs, .reco-saltos .reco-b-esp { display: none; }
+.reco-saltos[hidden], .reco-saltos button[hidden] { display: none; }
+.lbl-room.reco-senal { background: color-mix(in srgb, var(--surface) 86%, transparent); border-left: 3px solid var(--ink); padding: 1px 5px; border-radius: 2px; text-shadow: none; font-size: 9px; }
+.lbl-node.reco-lbl { font-size: 10.5px; }
+/* panel del recorrido */
+.reco-panel h3 { margin: 2px 0 4px; }
+.reco-panel h3:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.reco-panel h4 { margin: 12px 0 6px; font-size: 0.92rem; }
+.reco-panel .reco-p-nivel { margin: 0; }
+.reco-rec-sub { margin-bottom: 6px; }
+.reco-rec-acc { margin: 0 0 8px; } .reco-rec-acc .btn { font-size: 0.86rem; padding: 4px 11px; }
+.reco-capas { margin: 4px 0; }
+.reco-leyenda { margin: 6px 0 0; } .reco-leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 4px 0 6px; vertical-align: -1px; }
+ul.reco-lista, ul.reco-recintos, ul.reco-res { list-style: none; margin: 0; padding: 0; }
+ul.reco-lista { display: grid; gap: 3px; max-height: 300px; overflow: auto; }
+ul.reco-lista button { display: block; width: 100%; text-align: left; font: 0.84rem/1.35 var(--f-body); color: var(--ink); background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; cursor: pointer; }
+ul.reco-lista button:hover { border-color: var(--accent); }
+ul.reco-lista .reco-n { font: 600 0.8rem var(--f-mono); } ul.reco-lista .pill { margin-left: 2px; }
+.reco-niveles { margin: 6px 0; }
+ul.reco-recintos { display: flex; flex-wrap: wrap; gap: 4px; max-height: 220px; overflow: auto; }
+ul.reco-recintos button, button.reco-link { font: 0.8rem/1.3 var(--f-body); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; cursor: pointer; text-align: left; }
+button.reco-link { display: inline; border: 0; padding: 0; color: var(--accent); text-decoration: underline; white-space: normal; }
+ul.reco-recintos button:hover { border-color: var(--accent); }
+ul.reco-recintos .reco-sep { width: 100%; font: 600 0.7rem var(--f-mono); color: var(--muted); margin-top: 4px; }
+button.reco-ir { flex: none; font: 600 0.72rem var(--f-mono); color: var(--bg); background: var(--ink); border: 0; border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.reco-busca { margin-top: 8px; }
+.reco-busca input[type=search], .reco-busca select { font: 0.85rem var(--f-body); color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px; padding: 5px 8px; width: 100%; max-width: 100%; min-width: 0; }
+.reco-filtros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 8px; }
+.reco-filtros label { font-size: 0.78rem; }
+.reco-totales { font-size: 0.84rem; margin: 2px 0; }
+ul.reco-res { display: grid; gap: 2px; max-height: 380px; overflow: auto; }
+ul.reco-res li { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); }
+ul.reco-res .reco-r-n { flex: 1; min-width: 0; font-size: 0.84rem; overflow-wrap: anywhere; }
+.reco-mas { margin-top: 6px; }
+/* fichas del recorrido: los valores se leen como texto */
+.reco-ficha .kv { grid-template-columns: 7.5em minmax(0, 1fr); }
+.reco-ficha .kv dd { font-family: var(--f-body); font-size: 0.84rem; text-align: left; overflow-wrap: anywhere; }
+.reco-ficha h5 { margin: 10px 0 4px; font-size: 0.86rem; }
+.reco-ficha .pill { margin-right: 3px; }
+.reco-ficha details.fold { margin: 6px 0; }
+.reco-impl h5 { margin: 8px 0 2px; font: 600 0.74rem var(--f-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+ul.reco-exig li { margin: 4px 0; font-size: 0.84rem; }
+.reco-ficha-ir { margin: 8px 0 0; }
+/* tarjeta «Dotación para la habilitación» */
+.hab-alcance { border-left: 3px solid var(--accent); padding-left: 10px; }
+.hab-ctl { display: grid; gap: 6px; margin: 8px 0; }
+.pill.hab-ok { color: var(--good); } .pill.hab-parcial { color: var(--s4); } .pill.hab-falta { color: var(--bad); } .pill.hab-doc { color: var(--data); } .pill.hab-na { color: var(--muted); }
+.hab-tabla td a { color: var(--ink); } .hab-tabla td.hab-falta-n { color: var(--bad); font-weight: 700; }
+.hab-servicios { display: grid; gap: 4px; margin-top: 10px; }
+ul.hab-lista { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 8px; }
+.hab-ex { border-bottom: 1px solid var(--line); padding-bottom: 6px; font-size: 0.86rem; }
+.hab-ex p { margin: 3px 0; }
+.hab-ex-c { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
+ul.hab-unidades li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.hab-cierre { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+@media (pointer: coarse) { #v-torre .stage.reco-on .stage-hint { display: none; } }
+@media (max-width: 720px) {
+  #v-torre .nav3d.reco-barra { top: 10px; bottom: auto; right: auto; max-width: calc(100% - 132px); justify-content: flex-start; }
+  #v-torre .reco-barra .nav3d-name { flex: 0 1 auto; min-width: 0; max-width: 56px; padding: 0 3px 0 5px; }
+  .reco-barra .reco-largo { display: none; } .reco-barra .reco-corto { display: inline; }
+  .reco-donde { max-width: calc(100% - 20px); }
+  #v-torre .reco-barra .sep { display: none; }
+  #v-torre .reco-barra .reco-ancho, #v-torre .reco-barra .reco-raton { display: none; }
+  #v-torre .reco-barra button { min-width: 26px; padding: 0 5px; }
+  .reco-pista, .reco-aviso { max-width: calc(100% - 20px); }
+  .reco-pista { top: 80px; } .reco-aviso { top: 110px; }
+  #v-torre .stage.reco-on .stage-hint { display: none; }
+  .reco-asc { bottom: 14px; } .reco-salida { bottom: 60px; }
+  .reco-asc span { display: none; }
+  .reco-espectador { max-width: calc(100% - 150px); bottom: 136px; }
+  /* la ficha en pantalla completa, como hoja abajo: libre del joystick, de la columna táctil, del ascensor y de «Salir» */
+  .reco-fs-ficha { top: auto; left: 10px; right: 72px; width: auto; bottom: 140px; max-height: 45%; }
+  .reco-saltos .reco-b-fs, .reco-saltos .reco-b-esp { display: block; }
+  .reco-filtros { grid-template-columns: minmax(0, 1fr); }
+}
+/* <<< torre-recorrido */
+/* >>> torre-sismo (equipo D) */
+/* Simulador sísmico (web/js/scenes/torre/sismo.js, estructura3d.js y graficas.js): panel, barra de tiempo y leyenda sobre
+   el recuadro, gráficas SVG y tablas. Solo tokens del tema; sin transiciones (todo lo que se mueve es del cálculo). */
+.sismo-panel h3 { margin-bottom: 6px; }
+.sismo-panel h4 { margin: 14px 0 6px; font-size: 0.95rem; }
+.sismo-panel .ctl { gap: 8px; }
+.sismo-panel .ctl > .note { margin: -3px 0 2px; font-size: 0.78rem; line-height: 1.45; }
+.sismo-panel select, .sismo-panel input[type=number], .sismo-graficas select { font: 0.85rem var(--f-body); color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px; padding: 5px 8px; width: 100%; max-width: 100%; min-width: 0; }
+.sismo-rango > span { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.sismo-rango output { font: 600 0.86rem var(--f-mono); color: var(--ink); }
+.sismo-rango small.note { font-size: 0.76rem; }
+.sismo-op { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 4px; }
+.sismo-op legend { padding: 0; margin-bottom: 3px; font-size: 0.85rem; }
+.sismo-op > label { display: flex; align-items: center; gap: 6px; font-size: 0.84rem; }
+.sismo-op .seg { max-width: 100%; }
+.sismo-op .seg button { padding: 5px 9px; font-size: 0.76rem; }
+.sismo-aviso { color: var(--ink); border-left: 3px solid var(--warn); padding-left: 8px; }
+.sismo-acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+.sismo-estado { display: grid; gap: 5px; }
+.sismo-estado p { margin: 0; font-size: 0.84rem; }
+.sismo-estado progress { width: 100%; height: 8px; accent-color: var(--accent); }
+.sismo-avisos:empty { display: none; }
+.sismo-avisos li { margin: 2px 0; }
+.sismo-richter p { margin: 6px 0 0; }
+.sismo-ficha h4 { margin-bottom: 8px; }
+.sismo-ficha .kv dd { overflow-wrap: anywhere; }
+/* sobre el recuadro: la capa no atrapa el puntero (se puede girar la torre); sí la barra de tiempo y la leyenda */
+#v-torre .sismo-hud { position: absolute; inset: 0; pointer-events: none; }
+#v-torre .sismo-hud > * { pointer-events: auto; }
+.sismo-tiempo { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 6px 10px; padding: 5px 8px; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 12px; font: 0.74rem var(--f-mono); color: var(--ink); }
+.sismo-tiempo > button { flex: none; font: 600 0.74rem var(--f-mono); color: var(--bg); background: var(--ink); border: 0; border-radius: 999px; padding: 5px 11px; cursor: pointer; min-width: 92px; }
+.sismo-tiempo > button:disabled { opacity: 0.45; cursor: default; }
+.sismo-tiempo input[type=range] { flex: 1 1 140px; min-width: 0; margin: 0; }
+.sismo-t { flex: none; white-space: nowrap; }
+.sismo-vel { flex: none; border-width: 1.5px; border-radius: 999px; }
+.sismo-vel button { padding: 3px 8px; font: 600 0.7rem var(--f-mono); }
+.sismo-ley { position: absolute; top: 10px; left: 10px; max-width: min(280px, calc(100% - 140px)); max-height: calc(100% - 84px); overflow: auto; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 10px; padding: 4px 9px; font: 0.72rem/1.45 var(--f-body); color: var(--ink); }
+.sismo-ley summary { cursor: pointer; font: 600 0.72rem var(--f-mono); }
+.sismo-ley p { margin: 4px 0; }
+.sismo-bins { list-style: none; margin: 4px 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 10px; font-family: var(--f-mono); }
+.sismo-bins i, .sismo-rot, .sismo-an, .sismo-ln, .sismo-mm, .sismo-eq { display: inline-block; vertical-align: -1px; margin-right: 5px; }
+.sismo-bins i { width: 14px; height: 9px; border-radius: 2px; }
+.sismo-rot { width: 9px; height: 9px; border-radius: 50%; background: var(--ink); }
+.sismo-an { width: 11px; height: 11px; border-radius: 50%; border: 2.5px solid var(--c); margin: 0 3px 0 6px; }
+.sismo-ln { width: 16px; height: 0; border-top: 1.5px solid var(--muted); vertical-align: 3px; }
+.sismo-mm { width: 12px; height: 9px; background: color-mix(in srgb, var(--good) 50%, transparent); border: 1px solid var(--line); }
+.sismo-eq { width: 10px; height: 10px; border-radius: 3px; background: var(--c); border: 1px solid var(--line); }
+.sismo-sel { display: inline-block; width: 16px; height: 0; border-top: 4px solid var(--data); vertical-align: 2px; margin-right: 5px; }
+#v-torre .stage:has([data-slot="torre.hud.sismo"]:not([hidden])) .stage-hint { bottom: 62px; }
+/* etiqueta de deriva de cada entrepiso: ancla sin tamaño en el vértice; la caja se abre hacia la izquierda */
+.lbl.sismo-lbl { width: 0; height: 0; overflow: visible; }
+.sismo-lbl > .lbl-node { position: absolute; right: 4px; bottom: 2px; font-size: 10.5px; white-space: nowrap; }
+/* tarjeta «Lo que calculó el simulador»: gráficas en rejilla, que bajan a una columna en el teléfono */
+.sismo-rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 430px), 1fr)); gap: 16px 22px; margin: 8px 0 16px; }
+.sismo-rejilla > div:empty { display: none; }
+.sismo-graficas h4 { margin: 16px 0 6px; }
+.sismo-el-sel { display: grid; gap: 4px; font-size: 0.85rem; max-width: 520px; }
+.sismo-honestidad { border-left: 3px solid var(--line); padding-left: 10px; margin-top: 14px; }
+.sismo-tabla td:first-child { font-weight: 600; }
+.sismo-tabla td.ancho { min-width: 16em; }
+figure.sg { margin: 0; min-width: 0; display: grid; gap: 6px; }
+figure.sg figcaption { display: grid; gap: 2px; font-size: 0.88rem; }
+figure.sg figcaption .note { font-size: 0.76rem; line-height: 1.45; }
+.sg-caja { position: relative; min-width: 0; }
+.sg-caja svg.mr-chart { touch-action: pan-y; }
+svg.mr-chart .sg-v { stroke-dasharray: 2 3; }
+svg.mr-chart .sg-et { fill: var(--ink); }
+svg.mr-chart .sg-cero { stroke: var(--muted); stroke-width: 1; }
+svg.mr-chart .sg-cruz { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 3 3; }
+.sg-lectura { position: absolute; top: 4px; left: 60px; display: grid; gap: 1px; max-width: calc(100% - 8px); padding: 4px 8px; background: var(--surface); border: 1.5px solid var(--ink); border-radius: 8px; font: 0.72rem/1.4 var(--f-mono); color: var(--ink); pointer-events: none; z-index: 1; }
+.sg-lectura span { white-space: nowrap; }
+.sg-lectura i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; background: var(--c); margin-right: 5px; }
+.sg-ley { gap: 4px 12px; font-size: 0.74rem; }
+.sg-ley .sg-k { margin-right: 5px; }
+.sg-k.ln { width: 16px; height: 0; border-radius: 0; border-top: 2.5px solid var(--c); vertical-align: 3px; }
+.sg-k.ln[style*="--d"] { border-top-style: dashed; }
+.sg-k.banda { width: 14px; height: 9px; background: color-mix(in srgb, var(--c) 35%, transparent); border: 1px solid var(--c); }
+.sg-k.pt { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+@media (max-width: 720px) {
+  .sismo-tiempo { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "play rango rango" "t t vel"; gap: 5px 8px; bottom: 8px; left: 8px; right: 8px; padding: 5px 7px; }
+  .sismo-tiempo > button { grid-area: play; min-width: 84px; }
+  .sismo-tiempo input[type=range] { grid-area: rango; }
+  .sismo-t { grid-area: t; min-width: 0; align-self: center; white-space: normal; line-height: 1.3; }
+  .sismo-vel { grid-area: vel; }
+  .sismo-ley { max-width: calc(100% - 128px); max-height: calc(100% - 120px); }
+  .sismo-bins { grid-template-columns: minmax(0, 1fr); }
+  #v-torre .stage:has([data-slot="torre.hud.sismo"]:not([hidden])) .stage-hint { display: none; }
+  .sismo-tabla td.ancho { min-width: 0; }
+}
+/* <<< torre-sismo */
+/* bim: inicio (equipo F) */
+/* Modo «Modelo BIM» (web/js/scenes/torre/bim.js, bim3d.js, bim_refuerzo.js y bim_despiece.js): panel con pestañas, ficha con el
+   despiece en SVG, rótulo, leyenda, atajos y barra del 4D sobre el recuadro, y la tarjeta 5D. Solo tokens del tema (los colores
+   fijos son del 3D y de las barras, que el despiece repite). */
+#v-torre .bim-hud { position: absolute; inset: 0; pointer-events: none; }
+#v-torre .bim-hud > * { pointer-events: auto; }
+#v-torre .bim-hud > .bim-chip { pointer-events: none; }
+.bim-chip { position: absolute; top: 10px; left: 10px; max-width: calc(100% - 150px); margin: 0; padding: 3px 9px; font: 600 0.72rem/1.4 var(--f-mono); color: var(--ink); background: color-mix(in srgb, var(--surface) 92%, transparent); border: 1.5px solid var(--ink); border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bim-ley { position: absolute; top: 42px; left: 10px; max-width: min(290px, calc(100% - 20px)); max-height: calc(100% - 118px); overflow: auto; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 10px; padding: 4px 9px; font: 0.72rem/1.45 var(--f-body); color: var(--ink); }
+.bim-chip[hidden] + .bim-ley { top: 10px; }
+.bim-ley summary { cursor: pointer; font: 600 0.72rem var(--f-mono); }
+.bim-ley-t { margin: 4px 0 2px; font-weight: 700; }
+.bim-ley-n { margin: 4px 0; color: var(--muted); }
+ul.bim-ley-l { list-style: none; margin: 2px 0; padding: 0; display: grid; gap: 2px; }
+ul.bim-ley-l i { display: inline-block; width: 12px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+ul.bim-ley-l i.bim-zona { background: color-mix(in srgb, #2471a3 30%, transparent); border: 1px solid #2471a3; }
+ul.bim-ley-l i.bim-esfera { width: 9px; height: 9px; border-radius: 50%; background: var(--ink); }
+.bim-acc { position: absolute; right: 10px; bottom: 10px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: calc(100% - 20px); }
+.bim-acc:empty { display: none; }
+.bim-acc button { font: 600 0.74rem var(--f-mono); color: var(--bg); background: var(--ink); border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; }
+.bim-acc button:focus-visible, .bim-4d button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bim-4d { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 6px 10px; padding: 5px 8px; background: color-mix(in srgb, var(--surface) 94%, transparent); border: 1.5px solid var(--ink); border-radius: 12px; font: 0.72rem var(--f-mono); color: var(--ink); }
+.bim-4d > button { flex: none; font: 600 0.74rem var(--f-mono); color: var(--bg); background: var(--ink); border: 0; border-radius: 999px; padding: 5px 11px; cursor: pointer; min-width: 84px; }
+.bim-4d input[type=range] { flex: 1 1 140px; min-width: 0; margin: 0; accent-color: var(--accent); }
+.bim-4d-t { flex: 0 1 46%; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#v-torre .bim-hud:has(.bim-4d:not([hidden])) .bim-acc { bottom: 58px; }
+#v-torre .stage:has([data-slot="torre.hud.bim"]:not([hidden])) .stage-hint { max-width: calc(100% - 300px); }
+#v-torre .stage:has([data-slot="torre.hud.bim"]:not([hidden]) .bim-4d:not([hidden])) .stage-hint, #v-torre .stage:has([data-slot="torre.hud.bim"]:not([hidden]) .bim-acc:not(:empty)) .stage-hint { display: none; }
+.lbl-node.bim-lbl { font-size: 10.5px; white-space: normal; max-width: 220px; }
+.lbl.bim-ancla { width: 0; height: 0; overflow: visible; }
+/* la línea sale del ancla hacia la caja, a cualquier lado: largo --l y ángulo --a los pone bim.js */
+.lbl.bim-ancla::before { content: ''; position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 1.5px var(--surface); }
+.lbl.bim-ancla::after { content: ''; position: absolute; left: 0; top: -1px; width: var(--l, 22px); height: 1.5px; background: var(--ink); transform-origin: 0 50%; transform: rotate(var(--a, 0deg)); }
+.bim-ancla > .bim-llamada { position: absolute; left: var(--dx, 22px); top: calc(-11px + var(--dy, 0px)); white-space: nowrap; max-width: none; }
+.bim-nota-parrilla { font-size: 0.8rem; }
+.bim-lod { color: var(--muted); }
+.lbl.bim-ancla.izq > .bim-llamada { left: auto; right: var(--dx, 22px); }
+.lbl.bim-ancla.fuera::before, .lbl.bim-ancla.fuera::after, .lbl.bim-ancla.fuera > .bim-llamada { display: none; }
+.lbl-node.bim-lbl small { color: var(--muted); }
+.bim-fam { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+/* panel */
+.bim-panel h3 { margin-bottom: 4px; }
+.bim-panel h4 { margin: 14px 0 6px; font-size: 0.92rem; }
+.bim-panel .note { font-size: 0.82rem; }
+.bim-aviso { border-left: 3px solid var(--warn); padding-left: 8px; }
+.bim-tipo { color: var(--muted); font-style: italic; }
+.bim-pestanas { margin: 8px 0 4px; }
+.bim-pestanas button { padding: 5px 9px; font-size: 0.76rem; }
+.bim-estado { margin: 4px 0 0; font: 0.76rem var(--f-mono); color: var(--muted); min-height: 1.2em; }
+.bim-estado:empty { min-height: 0; }
+.bim-pest .seg { max-width: 100%; }
+.bim-pest .seg button { padding: 5px 9px; font-size: 0.76rem; }
+.bim-pest .seg button small { font: 0.66rem var(--f-mono); opacity: 0.8; }
+ul.bim-disc { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+ul.bim-disc > li { display: grid; gap: 3px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 0.84rem; }
+.bim-d-cab { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; }
+ul.bim-disc small.note { font-size: 0.74rem; line-height: 1.35; }
+.bim-pest .seg.bim-modo { border-width: 1.5px; border-radius: 8px; justify-self: start; }
+.bim-pest .seg.bim-modo button { padding: 3px 8px; font-size: 0.72rem; }
+a.bim-descarga { display: inline-flex; align-items: center; gap: 6px; font: 600 0.86rem var(--f-body); color: var(--accent-ink); background: var(--accent-fill); border-radius: 10px; padding: 6px 13px; text-decoration: none; }
+a.bim-descarga:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.bim-check { display: flex; gap: 6px; align-items: center; font-size: 0.82rem; margin: 8px 0; }
+.bim-buscar, .bim-panel select { font: 0.85rem var(--f-body); color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px; padding: 5px 8px; width: 100%; max-width: 100%; min-width: 0; }
+ul.bim-res, ul.bim-els, ul.bim-lista, ul.bim-int, ul.bim-ifc { list-style: none; margin: 4px 0; padding: 0; }
+ul.bim-res { display: grid; gap: 2px; max-height: 260px; overflow: auto; }
+ul.bim-res li, ul.bim-els li, ul.bim-lista li { padding: 2px 0; font-size: 0.82rem; overflow-wrap: anywhere; }
+ul.bim-res button, ul.bim-els button, button.bim-link { font: 0.82rem/1.35 var(--f-body); color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-align: left; text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+ul.bim-els button[aria-current="true"] { color: var(--ink); font-weight: 700; text-decoration: none; }
+.bim-arbol details.fold { margin: 2px 0 2px 0; }
+.bim-arbol details.fold details.fold { margin-left: 12px; }
+.bim-arbol summary { font-size: 0.84rem; }
+.bim-panel .bim-n { font: 600 0.72rem var(--f-mono); color: var(--muted); margin-left: 4px; }
+.bim-ojo { float: right; font-size: 0.72rem; display: inline-flex; gap: 3px; align-items: center; }
+ul.bim-els { max-height: 280px; overflow: auto; margin-left: 12px; }
+.bim-fila { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.bim-fila .btn, .bim-botones .btn, .bim-acciones .btn, .bim-eje .btn { font-size: 0.84rem; padding: 4px 11px; }
+.bim-botones { display: flex; flex-wrap: wrap; gap: 6px; }
+.bim-botones .btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.bim-eje { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 6px 8px; align-items: end; }
+.bim-eje label { font-size: 0.8rem; display: grid; gap: 2px; }
+.bim-stat { font-size: 0.84rem; margin: 8px 0 2px; }
+.bim-kv { margin: 8px 0; }
+.bim-kv dd { font-size: 0.8rem; }
+.bim-filtros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 8px; margin: 6px 0; }
+.bim-filtros label { font-size: 0.76rem; display: grid; gap: 2px; }
+ul.bim-int { display: grid; gap: 4px; max-height: 520px; overflow: auto; }
+ul.bim-int li { border-bottom: 1px solid var(--line); padding: 6px 0; font-size: 0.82rem; }
+ul.bim-int p { margin: 3px 0; }
+.bim-int-c { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.pill.bim-sev-dura { color: var(--bad); } .pill.bim-sev-media { color: var(--s4); } .pill.bim-sev-leve { color: var(--muted); }
+button.bim-ir { font: 600 0.72rem var(--f-mono); color: var(--bg); background: var(--ink); border: 0; border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+ol.bim-fases { margin: 6px 0; padding-left: 18px; display: grid; gap: 4px; font-size: 0.82rem; }
+ol.bim-fases li.on { border-left: 3px solid var(--warn); padding-left: 6px; margin-left: -9px; }
+ul.bim-ifc { display: grid; gap: 10px; }
+/* ficha */
+.bim-ficha h4 { margin-bottom: 6px; }
+.bim-ficha h5 { margin: 12px 0 4px; font-size: 0.86rem; }
+.bim-id { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; }
+.bim-ficha .kv { grid-template-columns: 8.5em minmax(0, 1fr); }
+.bim-ficha .kv dd { font-family: var(--f-body); font-size: 0.82rem; text-align: left; overflow-wrap: anywhere; }
+.bim-ficha code { font: 0.76rem var(--f-mono); }
+.bim-ficha details.fold { margin: 4px 0; }
+.bim-acciones { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+ul.bim-costo li { font-size: 0.82rem; margin: 3px 0; }
+.bim-juego { border-left: 3px solid var(--accent); padding-left: 8px; margin-bottom: 8px; }
+/* despiece en SVG (bim_despiece.js) */
+.bd { display: grid; gap: 10px; }
+figure.bd-fig { margin: 0; display: grid; gap: 4px; min-width: 0; }
+figure.bd-fig figcaption { font: 600 0.74rem var(--f-mono); color: var(--muted); }
+svg.bd-svg { width: 100%; height: auto; max-width: 100%; display: block; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; }
+svg.bd-svg .bd-conc { fill: color-mix(in srgb, var(--muted) 14%, transparent); stroke: var(--ink); stroke-width: 1.1; }
+svg.bd-svg .bd-cortado { fill: color-mix(in srgb, var(--muted) 30%, transparent); }
+svg.bd-svg .bd-cota line, svg.bd-svg .bd-escala line { stroke: var(--ink); stroke-width: 0.9; }
+svg.bd-svg text { font: 9.5px var(--f-mono); fill: var(--ink); }
+svg.bd-svg .bd-zona line { stroke: var(--c); stroke-width: 1.4; }
+svg.bd-svg .bd-zona text { fill: var(--ink); font-size: 9px; }
+ul.bd-juegos { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.8rem; }
+ul.bd-juegos li { display: flex; gap: 6px; align-items: baseline; }
+ul.bd-juegos i { flex: none; width: 12px; height: 9px; border-radius: 2px; }
+ul.bd-juegos small { color: var(--muted); }
+.bd-total { margin: 0; }
+/* tarjeta 5D */
+.bim-tablas h4 { margin: 14px 0 6px; }
+table.bim-t5d td.n, table.bim-comp td.n { white-space: nowrap; }
+@media (max-width: 720px) {
+  .bim-chip { max-width: calc(100% - 128px); }
+  .bim-ley { max-height: calc(100% - 140px); }
+  .bim-4d { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "play rango" "t t"; gap: 4px 8px; left: 8px; right: 8px; bottom: 8px; }
+  .bim-4d > button { grid-area: play; min-width: 78px; }
+  .bim-4d input[type=range] { grid-area: rango; }
+  .bim-4d-t { grid-area: t; white-space: normal; line-height: 1.3; }
+  #v-torre .bim-hud:has(.bim-4d:not([hidden])) .bim-acc { bottom: 82px; }
+  #v-torre .stage:has([data-slot="torre.hud.bim"]:not([hidden])) .stage-hint { display: none; }
+  .bim-filtros { grid-template-columns: minmax(0, 1fr); }
+  .bim-ancla > .bim-llamada { white-space: normal; width: max-content; max-width: 150px; }
+  .bim-eje { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bim-eje .btn { grid-column: 1 / -1; justify-self: start; }
+  .bim-ficha .kv { grid-template-columns: 7.5em minmax(0, 1fr); }
+}
+/* bim: fin */
+/* >>> torre-contraste (equipo E) */
+/* Tarjeta «Contraste con el proyecto tipo» (web/js/scenes/torre/contraste.js). Píldoras de veredicto con los tokens del
+   tema y texto --ink: mejora --good, cumple igual --s1, se aparta --warn, falta --bad (los colores fijos son solo del 3D) */
+.tc { display: grid; gap: 18px; min-width: 0; }
+.tc section { min-width: 0; }
+.tc h4 { margin: 0 0 8px; }
+.tc-v { --tc-c: var(--line); display: inline-block; font: 600 0.7rem/1.5 var(--f-mono); padding: 0 8px; border-radius: 999px; color: var(--ink); border: 1.5px solid var(--tc-c); background: color-mix(in srgb, var(--tc-c) 24%, var(--surface)); white-space: nowrap; vertical-align: 0.05em; }
+.tc-v[data-v="mejora"], .tc-v[data-v="cubre"] { --tc-c: var(--good); }
+.tc-v[data-v="cumple igual"], .tc-v[data-v="cubre en parte"], .tc-v[data-v="compartido"] { --tc-c: var(--s1); }
+.tc-v[data-v="se aparta"] { --tc-c: var(--warn); }
+.tc-v[data-v="falta"] { --tc-c: var(--bad); }
+.tc-v[data-v="sobra"], .tc-v[data-v="sin"] { --tc-c: var(--muted); background: transparent; }
+.tc-ley { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin: 0 0 6px; font-size: 0.78rem; color: var(--muted); }
+.tc-cifras { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.tc-cifra { background: var(--raised); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; display: grid; gap: 4px; align-content: start; }
+.tc-cifra .tc-tit { font: 600 0.68rem var(--f-mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.tc-cifra b { font-family: var(--f-display); font-weight: 400; font-size: 1.45rem; line-height: 1.08; letter-spacing: 0.01em; overflow-wrap: anywhere; }
+.tc-cifra p { margin: 0; }
+.tc-cifra .tc-txt { font-size: 0.82rem; }
+.tc-cifra .tc-base { font-size: 0.72rem; color: var(--muted); }
+.tc-cuentas { display: flex; flex-wrap: wrap; gap: 4px; }
+.tc-sub { font-size: 0.86rem; margin: 6px 0 4px; }
+.tc-lista { margin: 4px 0 8px; padding-left: 18px; font-size: 0.86rem; }
+.tc-lista li { margin: 2px 0; }
+.tc-tabla td, .tc-pares td { vertical-align: top; }
+.tc-mas, .tc-metodo { margin-top: 2px; }
+.tc-mas > summary, .tc-metodo > summary { font-size: 0.74rem; }
+.tc-3d { font: 600 0.72rem var(--f-mono); background: transparent; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 999px; padding: 2px 9px; cursor: pointer; white-space: nowrap; }
+.tc-3d:hover, .tc-3d:focus-visible { border-color: var(--accent); color: var(--accent); }
+.tc-oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.tc-dot { border-top: 1px solid var(--line); padding: 4px 0; }
+.tc-dot > summary, .tc-tema > summary { padding: 4px 0; font-weight: 600; }
+.tc-tema { padding-left: 12px; }
+.tc-barras { display: grid; gap: 7px; margin-bottom: 8px; }
+.tc-barra { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 2fr) auto; gap: 10px; align-items: center; font-size: 0.84rem; }
+.tc-barra .bar { height: 12px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.tc-barra .bar i { display: block; height: 100%; border-radius: 999px; background: var(--s1); }
+.tc-barra[data-quien="torre"] .bar i { background: var(--s4); }
+.tc-barra[data-quien="referente"] .bar i { background: var(--muted); }
+.tc-barra .v { font: 600 0.8rem var(--f-mono); white-space: nowrap; text-align: right; }
+.tc-bl { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 720px) {
+  .tc-barra { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; }
+  .tc-barra .bar { grid-column: 1 / -1; grid-row: 2; }
+  .tc-cifras { grid-template-columns: minmax(0, 1fr); }
+  .tc-tema { padding-left: 0; }
+}
+/* <<< torre-contraste */
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./" title="Inicio · Trabajemos juntos">
+      <svg viewBox="0 0 34 30" aria-hidden="true"><path d="M4 2.5h26a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H14l-6 7v-7H4a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2z" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/></svg>
+      <h1>Atlas Yondó 2028</h1><span>Antioquia · DANE 05893 · 2004–2031</span>
+    </a>
+    <nav class="tabs" aria-label="Vistas">
+      <a href="#dinero" data-view="dinero">La plata</a>
+      <a href="#periodos" data-view="periodos">Seis gobiernos</a>
+      <a href="#embudo" data-view="embudo">Estudio → obra</a>
+      <a href="#microrred" data-view="microrred">Microrred</a>
+      <a href="#ciudad" data-view="ciudad">Sedes reales</a>
+      <a href="#hospital" data-view="hospital">Hospital 2028</a>
+      <a href="#torre" data-view="torre">Torre del hospital</a>
+      <a href="#parque" data-view="parque">Parque del relleno</a>
+      <a href="#ruta" data-view="ruta">Hoja de ruta</a>
+      <a href="#modelos" data-view="modelos">Modelos 3D</a>
+    </nav>
+    <a class="alterna" href="propuesta.html" title="Presentación aparte para gestionar recursos con el nivel central">Propuesta 2028–2031 <span aria-hidden="true">↗</span></a>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- ======================= LA PLATA ======================= -->
+  <section class="view" id="v-dinero" data-view="dinero" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">Contratación pública 2007–2026 · SECOP I y II</p><h2>Dónde terminó la plata de Yondó</h2></div>
+        <p class="lede" data-t="dinero.lede"></p>
+      </div>
+      <p class="stamp" data-t="dinero.stamp"></p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="dinero"><span class="stage-hint">Arrastra para girar · rueda para acercar · toca una columna</span></div>
+      <div class="folder">
+        <div class="card">
+          <h3>Ver</h3>
+          <div class="ctl">
+            <div class="seg" role="group" aria-label="Entidad">
+              <button type="button" data-ent="ALCALDIA" aria-pressed="true">Alcaldía</button>
+              <button type="button" data-ent="HOSPITAL" aria-pressed="false">Hospital</button>
+              <button type="button" data-ent="AGUAS" aria-pressed="false">Aguas y Aseo</button>
+            </div>
+            <div class="seg" role="group" aria-label="Medida">
+              <button type="button" data-med="valor" aria-pressed="true">Valor (COP)</button>
+              <button type="button" data-med="n" aria-pressed="false">Número de contratos</button>
+            </div>
+            <div class="seg" role="group" aria-label="Disposición">
+              <button type="button" data-modo="matriz" aria-pressed="true">Por categoría</button>
+              <button type="button" data-modo="pila" aria-pressed="false">Contratado vs. lo que entró</button>
+            </div>
+          </div>
+        </div>
+        <div class="card"><h3>Lectura rápida</h3><div class="tiles" data-slot="dinero.tiles"></div></div>
+        <div class="card" data-slot="dinero.pick"><p class="note">Toca una columna para ver el detalle del periodo.</p></div>
+        <div class="card"><h3>Categorías</h3><div class="legend" data-slot="dinero.legend"></div></div>
+      </div>
+    </div>
+    <div class="card"><h3>Lo que entró a Yondó</h3><div data-t="dinero.entro"></div></div>
+    <div class="cols" data-slot="dinero.findings"></div>
+    <div class="card">
+      <h3>Tabla de datos: valor contratado por periodo y categoría (millones de COP)</h3>
+      <div class="tbl-wrap" data-slot="dinero.table"></div>
+      <p class="note" data-t="dinero.metodo"></p>
+    </div>
+  </section>
+
+  <!-- ======================= PERIODOS ======================= -->
+  <section class="view" id="v-periodos" data-view="periodos" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">Marco comparativo 2004–2027 · pesos constantes de 2026</p><h2>Seis gobiernos: la plata que no se volvió obra</h2></div>
+        <p class="lede" data-t="periodos.lede"></p>
+      </div>
+      <p class="stamp" data-t="periodos.stamp"></p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="periodos"><span class="stage-hint">Toca una pila o el nombre de un gobierno</span></div>
+      <div class="folder">
+        <div class="card">
+          <h3>Ver</h3>
+          <div class="ctl">
+            <div class="seg" role="group" aria-label="Modo">
+              <button type="button" data-modo-periodos="plata" aria-pressed="true">La plata</button>
+              <button type="button" data-modo-periodos="indicadores" aria-pressed="false">Indicadores 0–100</button>
+            </div>
+            <div class="seg" role="group" aria-label="Gobierno" data-slot="periodos.seg"></div>
+          </div>
+        </div>
+        <div class="card period-detail" data-slot="periodos.detail"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>La cuenta de cada gobierno</h3>
+      <div class="legend" data-slot="periodos.leyenda"></div>
+      <div data-slot="periodos.cuenta"></div>
+      <p class="note" data-t="periodos.cuentanota"></p>
+    </div>
+    <div class="card" data-slot="periodos.pudo"></div>
+    <div class="card">
+      <h3>Panel anual 2004–2026: cómo cambió Yondó con cada gobierno</h3>
+      <div class="seg wrap-seg" role="group" aria-label="Área" data-slot="periodos.areas"></div>
+      <div class="sparks" data-slot="periodos.panel"></div>
+      <p class="note" data-t="periodos.panelnota"></p>
+    </div>
+    <div class="card"><h3>Matriz de indicadores normalizados</h3><div class="tbl-wrap" data-slot="periodos.table"></div><p class="note" data-t="periodos.nota"></p></div>
+  </section>
+
+  <!-- ======================= EMBUDO ======================= -->
+  <section class="view" id="v-embudo" data-view="embudo" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">El ciclo consultoría → MGA → nada</p><h2>De cada diez estudios, ¿cuántos se volvieron obra?</h2></div>
+        <p class="lede" data-t="embudo.lede"></p>
+      </div>
+      <p class="stamp" data-t="embudo.stamp"></p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="embudo"><span class="stage-hint">Cada anillo es una etapa; su ancho, cuántos proyectos llegan</span></div>
+      <div class="folder">
+        <div class="card"><h3>Etapas</h3><div data-slot="embudo.stages"></div></div>
+        <div class="card"><h3>Dónde se rompe</h3><div data-slot="embudo.break"></div></div>
+      </div>
+    </div>
+    <div class="card"><h3>Estudios, diseños y consultorías de la alcaldía con mayor valor</h3><div class="tbl-wrap" data-slot="embudo.table"></div><p class="note" data-t="embudo.nota"></p></div>
+  </section>
+
+  <!-- ======================= MICRORRED ======================= -->
+  <section class="view" id="v-microrred" data-view="microrred" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">Proyecto 1 · Energía + domótica + MinTIC</p><h2>Red Energética Pública de Yondó</h2></div>
+        <p class="lede" data-t="microrred.lede"></p>
+      </div>
+      <p class="stamp">Esquema ilustrativo, no a escala · consumos supuestos por tipología hasta tener 12 facturas por cuenta</p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="microrred"><span class="stage-hint">Toca un edificio o una batería · amarillo = excedente solar, azul = compra</span></div>
+      <div class="folder">
+        <div class="card">
+          <h3>Simular un día <span class="tag" data-o="hora">12:00</span></h3>
+          <div class="ctl">
+            <label for="mr-hour">Hora del día<input id="mr-hour" type="range" min="0" max="95" value="48"></label>
+            <div class="row"><button class="btn" id="mr-play" type="button" aria-pressed="true">Pausar</button></div>
+            <label for="mr-nub">Nubosidad<input id="mr-nub" type="range" min="0" max="100" value="30"></label>
+            <div class="row">
+              <label for="mr-isla"><input id="mr-isla" type="checkbox"> Falla de red 24 h</label>
+              <label for="mr-dr"><input id="mr-dr" type="checkbox" checked> Bombeo en horas de sol</label>
+              <label for="mr-dom"><input id="mr-dom" type="checkbox" checked> Domótica</label>
+            </div>
+            <div class="row">
+              <label for="mr-l-energy"><input id="mr-l-energy" type="checkbox" checked> Flujos de energía</label>
+              <label for="mr-l-data"><input id="mr-l-data" type="checkbox" checked> Capa IoT</label>
+              <label for="mr-labels"><input id="mr-labels" type="checkbox" checked> Etiquetas</label>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="read">
+            <div><b data-o="pv">—</b><span>Solar</span></div>
+            <div><b data-o="dem">—</b><span>Demanda atendida</span></div>
+            <div><b data-o="soc">—</b><span>Carga de baterías</span></div>
+            <div><b data-o="bat">—</b><span>Flujo de baterías</span></div>
+            <div><b data-o="red">—</b><span>Red</span></div>
+            <div><b data-o="gen">—</b><span>Planta</span></div>
+          </div>
+          <svg class="mr-chart" viewBox="0 0 320 120" role="img" aria-label="Curva de 24 horas: solar, demanda y batería"></svg>
+          <div class="legend"><span><i style="background:var(--sun)"></i>Solar kW</span><span><i style="background:var(--s1)"></i>Demanda kW</span><span><i style="background:var(--good)"></i>Batería % (escala 0–100)</span></div>
+        </div>
+        <div class="card">
+          <div class="tiles">
+            <div class="tile"><b data-o="auto">—</b><span data-o="auto-l">Autosuficiencia del día</span></div>
+            <div class="tile"><b data-o="crit">—</b><span>Cargas críticas atendidas</span></div>
+            <div class="tile"><b data-o="ahorro">—</b><span>Ahorro anual en factura</span></div>
+            <div class="tile"><b data-o="co2">—</b><span>CO₂ evitado al año</span></div>
+          </div>
+        </div>
+        <div class="card node-info"></div>
+      </div>
+    </div>
+    <div class="cols" data-slot="microrred.cols"></div>
+    <div class="card"><h3>Presupuesto de inversión (COP 2026)</h3><div class="tbl-wrap" data-slot="microrred.budget"></div><p class="note" data-t="microrred.budgetnote"></p></div>
+  </section>
+
+  <!-- ======================= SEDES REALES ======================= -->
+  <section class="view" id="v-ciudad" data-view="ciudad" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">Réplicas levantadas con satélite y Street View</p><h2>Las sedes reales, listas para el proyecto</h2></div>
+        <p class="lede" data-t="ciudad.lede"></p>
+      </div>
+      <p class="stamp" data-t="ciudad.stamp"></p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="ciudad"><span class="stage-hint">‹ › o flechas: recorrer sedes · doble clic: acercar · arrastrar: girar · clic derecho: mover</span></div>
+      <div class="folder">
+        <div class="card">
+          <h3>Ver</h3>
+          <div class="ctl">
+            <div class="seg" role="group" aria-label="Estado">
+              <button type="button" data-modo-ciudad="hoy" aria-pressed="false">Hoy</button>
+              <button type="button" data-modo-ciudad="proyecto" aria-pressed="true">Con el proyecto</button>
+            </div>
+            <div class="row">
+              <label for="cd-flujos"><input id="cd-flujos" type="checkbox" checked> Red de datos al centro de control</label>
+              <label for="cd-red"><input id="cd-red" type="checkbox" checked> Red eléctrica propuesta (km por la vía)</label>
+              <label for="cd-etiquetas"><input id="cd-etiquetas" type="checkbox" checked> Etiquetas</label>
+            </div>
+          </div>
+        </div>
+        <div class="card"><h3>Sedes</h3><div class="seg wrap-seg" role="group" aria-label="Sede" data-slot="ciudad.lista"></div></div>
+        <div class="card"><div class="tiles" data-slot="ciudad.tiles"></div></div>
+        <div class="card" data-slot="ciudad.ficha"><p class="note">Toca una sede para ver lo que se le instala, las obras previas y cómo se verificó.</p></div>
+      </div>
+    </div>
+    <div class="card"><h3>Lo que cabe de verdad en cada cubierta</h3><div class="tbl-wrap" data-slot="ciudad.tabla"></div><p class="note" data-t="ciudad.metodo"></p></div>
+    <div class="card"><h3>Distancias por la vía y red de distribución</h3><div data-slot="ciudad.red"></div></div>
+  </section>
+
+  <!-- ======================= HOSPITAL ======================= -->
+  <!-- ======================= PARQUE DEL RELLENO ======================= -->
+  <section class="view" id="v-parque" data-view="parque" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">Proyecto · Relleno sanitario Las Américas</p><h2>Del relleno a un parque solar, verde y conectado</h2></div>
+        <p class="lede" data-t="parque.lede"></p>
+      </div>
+      <p class="stamp" data-t="parque.stamp"></p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="parque"><span class="stage-hint">Arrastra para girar · rueda para acercar</span></div>
+      <div class="folder">
+        <div class="card">
+          <h3>Ver</h3>
+          <div class="seg" role="group" aria-label="Estado del sitio">
+            <button type="button" data-modo-parque="hoy" aria-pressed="false">Hoy</button>
+            <button type="button" data-modo-parque="parque" aria-pressed="true">Con el parque</button>
+          </div>
+          <div class="tiles" style="margin-top:10px" data-slot="parque.tiles"></div>
+        </div>
+        <div class="card"><h3>El relleno hoy</h3><div data-slot="parque.relleno"></div></div>
+      </div>
+    </div>
+    <div class="cols two">
+      <div class="card"><h3>Energía para hogares de estratos 1 y 2</h3><div data-slot="parque.energia"></div></div>
+      <div class="card"><h3>Programa del parque</h3><div class="tbl-wrap" data-slot="parque.programa"></div></div>
+    </div>
+    <div class="cols two">
+      <div class="card"><h3>Presupuesto por capítulos e ítems</h3><div data-slot="parque.presupuesto"></div></div>
+      <div class="card"><h3>Financiación</h3><div class="tbl-wrap" data-slot="parque.financiacion"></div></div>
+    </div>
+  </section>
+
+  <!-- ======================= TORRE DEL HOSPITAL ======================= -->
+  <section class="view" id="v-torre" data-view="torre" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">Proyecto · Resolución 485 de 2025 de MinSalud</p><h2>Una torre para los servicios de primer nivel</h2></div>
+        <p class="lede" data-t="torre.lede"></p>
+      </div>
+      <p class="stamp" data-t="torre.stamp"></p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="torre"><span class="stage-hint">Arrastra para girar · en «Pisos por servicio» toca un piso para ver sus ambientes</span><div class="leyenda3d leyenda-servicios" aria-hidden="true" data-slot="torre.leyenda"></div><div class="torre-hud" data-slot="torre.hud"><div data-slot="torre.hud.recorrido" hidden></div><div data-slot="torre.hud.sismo" hidden></div><!-- bim: inicio --><div data-slot="torre.hud.bim" hidden></div><!-- bim: fin --></div></div>
+      <div class="folder">
+        <div class="card">
+          <h3>Ver</h3>
+          <div class="seg wrap-seg" role="group" aria-label="Vista de la torre">
+            <button type="button" data-modo-torre="hoy" aria-pressed="false">Hoy</button>
+            <button type="button" data-modo-torre="torre" aria-pressed="true">Con la torre</button>
+            <button type="button" data-modo-torre="pisos" aria-pressed="false">Pisos por servicio</button>
+            <button type="button" data-modo-torre="laboratorio" aria-pressed="false">Laboratorio</button>
+            <button type="button" data-modo-torre="recorrido" aria-pressed="false">Recorrer por dentro</button>
+            <button type="button" data-modo-torre="sismo" aria-pressed="false">Simulador sísmico</button>
+            <!-- bim: inicio --><button type="button" data-modo-torre="bim" aria-pressed="false">Modelo BIM</button><!-- bim: fin -->
+          </div>
+          <div class="seg wrap-seg" role="group" aria-label="Capas de «Con la torre»" data-slot="torre.capas">
+            <button type="button" data-capa-torre="tipo" aria-pressed="false" title="Muestra junto a la torre, a la misma escala, el área del puesto de salud tipo del DNP">Proyecto tipo</button>
+          </div>
+          <div class="tiles" style="margin-top:10px" data-slot="torre.tiles"></div>
+        </div>
+        <div class="card" data-slot="torre.panel" hidden><div data-slot="torre.panel.recorrido" hidden></div><div data-slot="torre.panel.sismo" hidden></div><!-- bim: inicio --><div data-slot="torre.panel.bim" hidden></div><!-- bim: fin --></div>
+        <div class="card" data-slot="torre.ficha"><div data-slot="torre.ficha.base"><p class="note">En «Pisos por servicio», toca un piso para ver sus ambientes y áreas.</p></div><div data-slot="torre.ficha.modo" hidden></div></div>
+      </div>
+    </div>
+    <div class="card" data-slot="torre.sismo" hidden><h3>Lo que calculó el simulador</h3><div data-slot="torre.sismo.graficas"></div></div>
+    <!-- bim: inicio -->
+    <div class="card" data-slot="torre.bim" hidden><h3>Cantidades y costo del modelo BIM (5D)</h3><div data-slot="torre.bim.tablas"></div></div>
+    <!-- bim: fin -->
+    <div class="card"><h3>Dotación para la habilitación, servicio por servicio</h3><div data-slot="torre.habilitacion"></div></div>
+    <div class="cols two">
+      <div class="card"><h3>Programa por piso</h3><div class="tbl-wrap" data-slot="torre.pisos"></div></div>
+      <div class="card"><h3>Lo que pide la norma para la viabilidad</h3><div data-slot="torre.norma"></div></div>
+    </div>
+    <div class="card"><h3>Presupuesto por capítulos e ítems</h3><div data-slot="torre.presupuesto"></div></div>
+    <div class="cols two">
+      <div class="card"><h3>Análisis de precios unitarios (APU)</h3><div data-slot="torre.apu"></div></div>
+      <div class="card"><h3>Fuentes de financiación</h3><div data-slot="torre.financiacion"></div></div>
+    </div>
+    <div class="card"><h3>Proyectos que hay que articular</h3><div data-slot="torre.proyectos"></div></div>
+    <div class="cols two">
+      <div class="card"><h3>Dotación por servicio</h3><div class="tbl-wrap" data-slot="torre.dotacion"></div></div>
+      <div class="card"><h3>Laboratorio clínico con tamizaje</h3><div data-slot="torre.laboratorio"></div></div>
+    </div>
+    <div class="card"><h3>Contraste con el proyecto tipo</h3><div data-slot="torre.tipo"></div></div>
+  </section>
+
+  <section class="view" id="v-hospital" data-view="hospital" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">Proyecto 2 · Ventana de financiación 2027–2029</p><h2>El hospital, puerta de entrada del dinero en 2028</h2></div>
+        <p class="lede" data-t="hospital.lede"></p>
+      </div>
+      <p class="stamp" data-t="hospital.stamp"></p>
+    </div>
+    <p class="decision"><b>Decisión actual:</b> en lugar de reforzar el edificio actual del hospital, se construye la <a href="#torre">torre de servicios de primer nivel</a>. El edificio actual pasa a administración, archivo, bodega y central de distribución. Las fuentes y montos de esta página se calcularon para el proyecto anterior (reforzar y adecuar el edificio); la mezcla de fuentes que paga la torre está en su página.</p>
+    <div class="board">
+      <div class="stage" data-scene="hospital"><span class="stage-hint">Modelo GLB con nivel de detalle · cada corriente es una fuente de recursos</span></div>
+      <div class="folder">
+        <div class="card">
+          <h3>Escenario de gestión</h3>
+          <div class="seg" role="group" aria-label="Escenario">
+            <button type="button" data-esc="min" aria-pressed="false">Conservador</button>
+            <button type="button" data-esc="med" aria-pressed="true">Probable</button>
+            <button type="button" data-esc="max" aria-pressed="false">Ambicioso</button>
+          </div>
+          <div class="tiles" style="margin-top:10px" data-slot="hospital.tiles"></div>
+        </div>
+        <div class="card" data-slot="hospital.pick"><p class="note">Toca una fuente para ver requisitos y calendario.</p></div>
+      </div>
+    </div>
+    <div class="cols two">
+      <div class="card"><h3>Ficha del hospital</h3><div data-slot="hospital.ficha"></div></div>
+      <div class="card"><h3>El proyecto anterior: hospital seguro, verde e inteligente</h3><div class="tbl-wrap" data-slot="hospital.proyecto"></div></div>
+    </div>
+    <div class="card"><h3>Fuentes de financiación gestionables vía la E.S.E.</h3><div class="tbl-wrap" data-slot="hospital.table"></div><p class="note" data-t="hospital.nota"></p></div>
+    <div class="cols" data-slot="hospital.cols"></div>
+  </section>
+
+  <!-- ======================= RUTA ======================= -->
+  <section class="view" id="v-ruta" data-view="ruta" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">2026 → 2031</p><h2>Hoja de ruta para romper el ciclo</h2></div>
+        <p class="lede" data-t="ruta.lede"></p>
+      </div>
+      <p class="stamp">Cada hito tiene una compuerta: si no se cumple, no se contrata lo siguiente</p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="ruta"><span class="stage-hint">Camina la ruta: toca un hito</span></div>
+      <div class="folder"><div class="card" data-slot="ruta.pick"></div><div class="card"><h3>Reglas de oro</h3><div data-slot="ruta.reglas"></div></div></div>
+    </div>
+    <div class="card"><h3>Hitos y compuertas</h3><div data-slot="ruta.gates"></div></div>
+    <div class="card"><h3>Portafolio priorizado con presupuesto</h3><div class="tbl-wrap" data-slot="ruta.portafolio"></div></div>
+  </section>
+
+  <!-- ======================= MODELOS 3D ======================= -->
+  <section class="view" id="v-modelos" data-view="modelos" hidden>
+    <div class="intro">
+      <div>
+        <div class="bubble"><p class="eyebrow">Visor profesional · glTF 2.0 / GLB</p><h2>Trae tus modelos 3D</h2></div>
+        <p class="lede">Carga planos de arquitectura, modelos BIM o escaneos exportados a GLB y míralos con iluminación física. El visor lee archivos comprimidos con Draco, Meshopt y texturas KTX2, y muestra cuánto cuesta cada modelo en la tarjeta gráfica antes de ponerlo en el atlas.</p>
+      </div>
+      <p class="stamp">El archivo no sale de tu navegador: se lee en local y no se sube a ningún servidor</p>
+    </div>
+    <div class="board">
+      <div class="stage" data-scene="modelos"><span class="stage-hint">Arrastra un archivo .glb sobre el escenario</span><div class="drop" data-slot="modelos.drop" hidden>Suelta el modelo aquí</div></div>
+      <div class="folder">
+        <div class="card">
+          <h3>Modelos del atlas</h3>
+          <div class="seg wrap-seg" role="group" aria-label="Modelo" data-slot="modelos.lista"></div>
+          <div class="row" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+            <label class="btn" for="md-file">Cargar GLB</label>
+            <input id="md-file" type="file" accept=".glb,model/gltf-binary" hidden>
+          </div>
+          <p class="note" style="margin-top:8px" data-slot="modelos.estado">Elige un modelo o carga el tuyo.</p>
+        </div>
+        <div class="card"><h3>Lo que cuesta en GPU</h3><dl class="kv" data-slot="modelos.stats"></dl></div>
+        <div class="card">
+          <h3>Vista</h3>
+          <div class="ctl"><div class="row">
+            <label for="md-wire"><input id="md-wire" type="checkbox"> Malla</label>
+            <label for="md-shadow"><input id="md-shadow" type="checkbox" checked> Sombras</label>
+            <label for="md-env"><input id="md-env" type="checkbox" checked> Luz de entorno</label>
+            <label for="md-rot"><input id="md-rot" type="checkbox" checked> Girar</label>
+          </div></div>
+        </div>
+        <div class="card"><h3>Este navegador</h3><div class="caps" data-slot="modelos.caps"></div></div>
+      </div>
+    </div>
+    <div class="cols" data-slot="modelos.guia"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="cta">
+      <div class="bubble"><h2>¡Trabajemos juntos!</h2><svg class="tail" viewBox="0 0 54 36" aria-hidden="true"><rect class="gap" x="3" y="-8" width="44" height="10"/><path class="edge" d="M4 0 L14 33 L46 0"/></svg></div>
+      <div>
+        <p><b>Este atlas es abierto.</b> Cada cifra trae su fuente y se puede verificar o corregir. Llévalo a la veeduría, al Concejo y a los candidatos de 2027, y súmale los expedientes, fotos de obra y facturas que todavía faltan.</p>
+        <p class="note" data-t="footer"></p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+<script type="module" src="js/main.js"></script>

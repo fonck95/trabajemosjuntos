@@ -240,7 +240,7 @@ a.chip:hover { border-color: var(--ink); }
 .lbl.fuera { visibility: hidden; }
 /* guía de un rótulo que quedó lejos de su punto (escena.js calcula largo, ángulo y punto) */
 /* (en un pin, la línea reemplaza a su punta) */
-.lbl-p.guia::after, .lbl-pin.guia::after { content: ""; position: absolute; left: calc(50% - 0.75px); top: var(--oy, 100%); bottom: auto; width: 1.5px; height: var(--gl, 0); border: 0; background: var(--mc, var(--ink)); transform-origin: 50% 0; transform: rotate(var(--ga, 0rad)); opacity: 0.9; }
+.lbl-p.guia::after, .lbl-pin.guia::after { content: ""; position: absolute; left: calc(var(--gx0, 50%) - 0.75px); top: var(--oy, 100%); bottom: auto; width: 1.5px; height: var(--gl, 0); border: 0; background: var(--mc, var(--ink)); transform-origin: 50% 0; transform: rotate(var(--ga, 0rad)); opacity: 0.9; }
 .lbl-p.guia::before, .lbl-pin.guia::before { content: ""; position: absolute; left: var(--ax, 50%); top: var(--ay, 100%); width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: var(--mc, var(--ink)); box-shadow: 0 0 0 1.5px var(--surface); }
 .lbl-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--mc); border: 2px solid #fff; box-shadow: 0 1px 4px color-mix(in srgb, #000 35%, transparent); }
 .lbl-geo { font: italic 12px var(--f-body); color: var(--muted); text-shadow: 0 0 4px var(--surface), 0 0 4px var(--surface); }
@@ -294,7 +294,8 @@ a.chip:hover { border-color: var(--ink); }
   /* la franja de color del capítulo va como sombra interna: un ::before absoluto se iría con el desplazamiento */
   .panel::before { display: none; }
   .panel { box-shadow: inset 6px 0 0 var(--mc, var(--accent)), var(--sombra); }
-  .panel.mas { -webkit-mask-image: linear-gradient(#000 calc(100% - 36px), transparent); mask-image: linear-gradient(#000 calc(100% - 36px), transparent); }
+  /* abajo, un velo del color de la hoja indica que hay más texto (una máscara dejaría ver el mapa detrás de la última línea) */
+  .panel.mas::after { content: ""; position: sticky; bottom: 0; display: block; height: 36px; margin-top: -36px; background: linear-gradient(color-mix(in srgb, var(--surface) 0%, transparent), var(--surface) 85%); pointer-events: none; }
   .panel-cab { padding: 22px 18px 8px 22px; }
   .panel-cuerpo { padding: 0 18px 16px 22px; }
   .panel .asa { display: block; }
@@ -360,7 +361,7 @@ a.chip:hover { border-color: var(--ink); }
   <div class="escena" id="escena" aria-label="Maqueta 3D de Yondó con las propuestas"><p class="cargando">Cargando el casco urbano…</p></div>
 
   <header class="barra">
-    <a class="marca" href="#portada" title="Volver a la portada">
+    <a class="marca" href="./" title="Inicio · Trabajemos juntos">
       <svg viewBox="0 0 34 30" aria-hidden="true"><path d="M4 2.5h26a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H14l-6 7v-7H4a2 2 0 0 1-2-2v-14a2 2 0 0 1 2-2z" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/></svg>
       <span><b>Yondó 2028–2031</b><br>Propuesta integral · gestión de recursos</span>
     </a>
@@ -370,7 +371,7 @@ a.chip:hover { border-color: var(--ink); }
       <button type="button" data-accion="panel" aria-pressed="false" title="Ocultar el panel para mostrar solo el 3D (H)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3zM9 5v14" fill="none" stroke="currentColor" stroke-width="2"/></svg><span class="txt">Solo 3D</span></button>
       <button type="button" data-accion="tema" title="Tema claro u oscuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
       <button type="button" data-accion="pantalla" class="opc" title="Pantalla completa (F)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
-      <a class="atlas" href="./" title="Volver al atlas de investigación"><span class="txt">Atlas</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2"/></svg></a>
+      <a class="atlas" href="atlas.html" title="Atlas de investigación: la plata pública desde 2004"><span class="txt">Atlas</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2"/></svg></a>
     </nav>
   </header>
 

@@ -2,9 +2,9 @@
 
 Esta es una presentación aparte del atlas. El atlas cuenta qué pasó con la plata pública desde 2004 y qué proyectos
 caben en 2028. Esta presentación va dirigida a quienes gestionan recursos en el nivel central: DNP, ministerios, OCAD,
-Findeter, la Gobernación de Antioquia, los fondos nacionales y la cooperación. Junta siete propuestas en un solo
-paquete. Cada una tiene un sitio real en el municipio, un costo de referencia, el proyecto tipo o referente que aplica,
-una mezcla de fuentes, su grado de madurez y un pedido concreto.
+Findeter, la Gobernación de Antioquia, los fondos nacionales y la cooperación. Junta siete áreas, cada una con varios
+proyectos, en un solo paquete. Cada área tiene un sitio real en el municipio, un costo de referencia, el proyecto tipo
+o referente que aplica, una mezcla de fuentes, su grado de madurez y un pedido concreto.
 
 - **Página:** `web/propuesta.html`. En el sitio publicado es `propuesta.html`, y el atlas la enlaza desde su cabecera con
   «Propuesta 2028–2031 ↗». No comparte vistas, rutas ni estado con el atlas.
@@ -13,7 +13,7 @@ una mezcla de fuentes, su grado de madurez y un pedido concreto.
 
 ## Cómo se recorre
 
-La presentación tiene once capítulos: portada, los siete módulos, financiación, hoja de ruta y lo que se pide. Cada
+La presentación tiene once capítulos: portada, las siete áreas, financiación, hoja de ruta y lo que se pide. Cada
 capítulo se divide en pasos. En cada paso pasan tres cosas:
 
 - el panel cambia con animaciones de GSAP (telón de capítulo, titulares palabra por palabra, cifras que cuentan y barras que crecen);
@@ -35,9 +35,9 @@ hospital de `docs/11`.
 La dirección guarda el paso (`propuesta.html#urbanismo/4`), así se puede enviar un enlace directo a un punto de la
 presentación.
 
-## Las siete propuestas
+## Las siete áreas
 
-| Módulo | Inversión central | Rango | Madurez | Fuentes principales |
+| Área | Inversión central | Rango | Madurez | Fuentes principales |
 |---|---:|---:|---|---|
 | Vivienda | 106.271 | 75.252 – 137.693 | Perfil | SGR 37.200, Nación 31.900, Gobernación 15.900 |
 | Urbanismo | 26.200 | 17.250 – 39.600 | Perfil | SGR 8.200, Fondos 6.600, Nación 4.700 |
@@ -94,13 +94,15 @@ medir y no se publica. Están en `data/propuesta/geo.json`, en metros del modelo
   - El documento base ponía el parque sobre la orilla. Pero todo el entorno es el campo petrolero Casabe, con una
     plataforma de pozo cada ~200 m, y la orilla se socava.
   - Dentro del lote quedan dos pozos (Casabe 980 y 394) cuyo retiro debe confirmar Ecopetrol.
-- **PTAR central (la primera del municipio).** Va en el sitio B, un potrero de 6,8 ha al nororiente del casco.
-  - Queda aguas abajo, a 476 m de la edificación mapeada más cercana y a 0,8 km del Magdalena.
-  - Las cuatro estaciones de bombeo dejan de verter: un interceptor occidental de 1.703 m y uno oriental de 1.334 m
-    llegan a una estación central, que bombea a la PTAR por una impulsión de 911 m. Un emisario de 825 m lleva el agua
-    tratada al río.
-  - Se evaluaron otros dos sitios: A, la alternativa, y C, descartado por estar cerca de viviendas. B se prefiere a la
-    reserva del EOT, que queda pegada al borde norte del casco, junto a la unión de los caños.
+- **PTAR central (la primera del casco urbano).** Va al norte del casco, aguas abajo de la unión del Caño Colector Shell
+  con el canal oriental, en un predio de ≈4,2 ha junto a la Carrera 57.
+  - Queda a ≈700 m de la edificación mapeada más cercana (la norma pide 200 m) y a ≈60 m del caño, fuera de su ronda.
+  - Las cuatro estaciones de bombeo dejan de verter: un interceptor occidental de 1.634 m (por la Carrera 57) y uno
+    oriental de 2.113 m (por el canal oriental) siguen los caños hasta su unión, donde una estación de llegada sube el
+    agua a la planta. El agua tratada pasa por una laguna de pulimento y vuelve al mismo caño, ≈120 m más abajo.
+  - Se evaluaron otros tres sitios: A, la alternativa, en la reserva del EOT pegada al casco; B, hacia el río,
+    descartado porque exigía bombear 911 m y un emisario de 825 m al Magdalena; y C, descartado por estar cerca de
+    viviendas.
 - **Vivienda.** Son dos lotes reales:
   - *Lote 1, predio José Domingo Oliveros:* 1,71 ha con el terraplén ya construido (BPIN 2023058930018). Allí van 200 VIP
     en 10 bloques de 5 pisos.

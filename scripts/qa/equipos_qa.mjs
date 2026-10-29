@@ -21,9 +21,9 @@ const op = opciones(process.argv.slice(2), { raiz: '.' });
 const solo = new Set(String(op.solo || 'api,grilla,piso,telefono').split(','));
 const POR_PAGINA = 24;
 
-// tokens de color del sitio (claro y oscuro), copiados de web/index.html para que el 3D use los mismos
+// tokens de color del sitio (claro y oscuro), copiados de web/atlas.html para que el 3D use los mismos
 function tokensCSS() {
-  const html = readFileSync(join(RAIZ_REPO, 'web', 'index.html'), 'utf8');
+  const html = readFileSync(join(RAIZ_REPO, 'web', 'atlas.html'), 'utf8');
   const a = html.indexOf(':root {'), b = html.indexOf('* { box-sizing');
   return a >= 0 && b > a ? html.slice(a, b) : ':root { --bg: #f2f2ef; --surface: #fff; --ink: #111; --muted: #5a5a56; --line: #dadad4; --accent: #e3141b; --data: #6250d6; }';
 }

@@ -1,4 +1,4 @@
-// Presentación de la propuesta integral Yondó 2028–2031. Capítulos (portada, siete módulos, financiación, hoja de ruta y
+// Presentación de la propuesta integral Yondó 2028–2031. Capítulos (portada, siete áreas, financiación, hoja de ruta y
 // lo que se pide al nivel central) y pasos dentro de cada capítulo. Cada paso cambia el panel con GSAP, mueve la cámara
 // sobre el territorio real y muestra las capas 3D de ese paso. El contenido sale de data/propuesta.json (generado desde
 // data/propuesta/ por scripts/build_data.py); lo 3D de cada módulo vive en js/propuesta/modulos/<id>.js.
@@ -349,7 +349,8 @@ async function pintarPanel(c, p, dir, conTelon) {
   const salir = gsap && !reducedMotion && cab.innerHTML ? gsap.to([cab, cuerpo], { opacity: 0, y: dir > 0 ? -12 : 12, duration: 0.18, ease: 'power2.in' }) : null;
   if (salir) await salir;
   cab.innerHTML = r.cab; cuerpo.innerHTML = r.cuerpo; cuerpo.scrollTop = 0; $('.panel').scrollTop = 0;
-  if (hoja === 'mini') aplicarHoja('mini', { reencuadre: false });
+  // la hoja toma de una vez (sin transición) la altura del texto nuevo, antes de que el paso encuadre la maqueta
+  if (hojaMQ.matches) { pres.classList.add('arrastrando'); aplicarHoja(hoja, { reencuadre: false }); void panelEl.offsetHeight; pres.classList.remove('arrastrando'); }
   requestAnimationFrame(marcarDesborde);
   $('.panel').style.setProperty('--mc', colorDe(c.id));
   if (!gsap || reducedMotion) { gsap?.set([cab, cuerpo], { clearProps: 'all' }); return; }
@@ -380,7 +381,7 @@ function pasar3D(c, p) {
     if (def.todos) { ids.push(...(x?.completo || [])); x?.alCompleto?.(); } else if (id !== c.id) x?.salir?.();
   });
   escena.verCapas(ids);
-  // en la visión de conjunto solo quedan las etiquetas del capítulo (si no, se enciman las de los siete módulos)
+  // en la visión de conjunto solo quedan las etiquetas del capítulo (si no, se enciman las de las siete áreas)
   escena.soloEtiquetas?.(def.etiquetas || (def.todos ? [...(m?.siempre || []), ...(def.capas || []), ...(p.capas || [])] : null));
   capasVisibles = ids;
   def.antes?.();
@@ -462,7 +463,9 @@ function alturaHoja(estado) {
     if (!antes) pres.classList.remove('hoja-mini');
     return Math.round(Math.min(h, libre * 0.4));
   }
-  return Math.round(Math.min(Math.max(190, innerHeight * 0.38), 380, libre * 0.62));
+  // media: la altura de siempre o, si el título y la entrada del paso no caben, la que necesiten (hasta el 55 % de lo libre)
+  const base = Math.min(Math.max(190, innerHeight * 0.38), 380, libre * 0.62);
+  return Math.round(Math.max(base, Math.min(cab.offsetHeight + 12, libre * 0.55)));
 }
 function aplicarHoja(estado = hoja, { reencuadre = true } = {}) {
   if (!hojaMQ.matches) { pres.classList.remove('hoja-mini', 'panel-grande'); pres.style.removeProperty('--hoja'); return; }
@@ -503,7 +506,6 @@ asa.addEventListener('keydown', (e) => { if (e.key === 'ArrowUp') { e.preventDef
 cab.addEventListener('click', () => { if (hoja === 'mini' && hojaMQ.matches) aplicarHoja('medio'); });
 addEventListener('resize', () => aplicarHoja(hoja, { reencuadre: false }));
 aplicarHoja('medio', { reencuadre: false });
-$('.marca').addEventListener('click', (e) => { e.preventDefault(); ir(0, 0); });
 addEventListener('keydown', (e) => {
   if (e.altKey || e.ctrlKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   const k = e.key;

@@ -18,10 +18,10 @@ export function crear(esc, datos) {
     esc.etiqueta('Barrancabermeja →', { cls: 'lbl-geo', pos: [f[0] + 90, f[1], 4], padre: geo, ancla: [0, 0.5] });
   }
   esc.sincronizarEtiquetas();
-  // el casco con el pin de la granja solar (1,3 km al suroccidente); el del acueducto y el del parque agroindustrial
-  // aparecen en el paso del territorio
-  const tic = pines.find(({ m }) => m.id === 'tic');
-  const casco = [[-650, -420], [700, -420], [700, 760], [-650, 760], ...(tic ? [[tic.x, tic.y]] : [])];
+  // el casco con los pines de la granja solar (1,3 km al suroccidente) y de la PTAR (al norte, aguas abajo de la unión de
+  // los caños); el del acueducto y el del parque agroindustrial aparecen en el paso del territorio
+  const tic = pines.find(({ m }) => m.id === 'tic'), san = pines.find(({ m }) => m.id === 'saneamiento');
+  const casco = [[-650, -420], [880, -420], [880, 760], [-650, 760], ...[tic, san].filter(Boolean).map(({ x, y }) => [x, y])];
   const todo = pines.map(({ x, y }) => [x, y]).concat([[-2400, 300], [1700, 8300], [2700, 6800]], tb?.length ? [[tb[tb.length - 1][0] + 260, tb[tb.length - 1][1]]] : []);
   return {
     completo: ['portada.pines'],

@@ -657,7 +657,7 @@ export function mount(root) {
       ${mga ? `<p class="note"><b>Fichas MGA (${Array.isArray(mga) ? mga.length : ''}):</b> ${esc(Array.isArray(mga) ? mga.map((g) => [].concat(g).join(' + ')).join(' · ') : typeof mga === 'string' ? mga : String(mga.resumen || '').slice(0, 600))}</p>` : ''}`;
   }
 
-  // ganchos de QA (8.7): solo con «?qa» en la consulta de la URL (index.html?qa=1#torre)
+  // ganchos de QA (8.7): solo con «?qa» en la consulta de la URL (atlas.html?qa=1#torre)
   if (new URLSearchParams(location.search).has('qa')) {
     const sim = () => instancias.sismo, rec = () => instancias.recorrido;
     window.__torreQA = {

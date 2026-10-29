@@ -3,7 +3,7 @@
 //
 //   PLAYWRIGHT_MODULE=… node scripts/qa/bim_qa.mjs --vendor <carpeta> [--salida <carpeta>] [--solo terreno,vistas,sismo,seleccion,ifc,salida,movimiento]
 //
-// Sirve web/ con scripts/qa/comun.mjs (three y GSAP locales con --vendor), abre index.html?qa=1#torre en Chromium sin pantalla
+// Sirve web/ con scripts/qa/comun.mjs (three y GSAP locales con --vendor), abre atlas.html?qa=1#torre en Chromium sin pantalla
 // (WebGL por software) y recorre el modo con la API que publica torre.js en __torreQA.bim.api() (la misma que usan los botones):
 //   · terreno: se entra a la cimentación antes de que llegue el suelo del sitio; cuando llega, todo el suelo a la vista lleva
 //     la copia del modo (recortado o transparente) y un dado y la punta de dos pilotes se ven desde la cámara (rayo que
@@ -41,7 +41,7 @@ const nf = (v, d = 0) => (+v).toLocaleString('es-CO', { maximumFractionDigits: d
 
 const srv = await servidor({ ...op, raiz: op.raiz || 'web' });
 const nav = await navegador(op);
-const URL0 = `${srv.url}?qa=1#torre`;
+const URL0 = `${srv.url}atlas.html?qa=1#torre`;
 const CAP = { timeout: 120000 };
 
 async function pagina({ tema = 'claro', telefono = false, movimientoReducido = true } = {}) {

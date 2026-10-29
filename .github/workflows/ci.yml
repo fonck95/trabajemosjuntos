@@ -16,8 +16,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Genera los datos de la propuesta
-        run: python3 scripts/build_propuesta.py
+      - name: Genera los datos de la propuesta y revisa que el Home siga al día con las áreas
+        run: python3 scripts/build_propuesta.py --estricto
       - name: Sintaxis de los módulos JS de la presentación
         run: |
           set -e

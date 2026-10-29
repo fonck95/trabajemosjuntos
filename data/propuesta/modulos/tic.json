@@ -4,7 +4,7 @@
   "corto": "TIC y energía",
   "lema": "Fibra, wifi gratis y una granja solar para lo público",
   "problema": "Yondó tiene 3,56 accesos fijos a internet por cada 100 habitantes (4T-2025), frente a 26,1 en Antioquia, y va en retroceso (7,64 en 2021); en el registro de MinTIC (corte 2023) no figura ninguna Zona Digital urbana. Las sedes públicas, el alumbrado y el acueducto pagan la energía a tarifa plena de EPM (oficial, 991 $/kWh; acueducto, 1.090 $/kWh; oct-2026), no generan energía propia y consumirán ≈1,59 GWh al año en 2031 (estimado).",
-  "propuesta": "Un anillo de fibra de 4,6 km por las calles del casco, con el Centro de Control (CCED) en la alcaldía, une colegios, hospital, bomberos, el Centro de Integración Ciudadana (CIC), el coliseo y las 4 estaciones de bombeo de aguas residuales (EBAR); de él salen 5 Zonas Digitales y la telemetría de esas EBAR, y la EBAR central nueva y la PTAR reportan al CCED por 4G. Una granja solar pública de 1,2 MWp frente a la subestación de EPM, en lugar de paneles en cada sede, cubre en balance anual el consumo oficial estimado, como autogeneración colectiva de una comunidad energética de la alcaldía, la E.S.E. y Aguas y Aseo.",
+  "propuesta": "Un anillo de fibra de 4,6 km por las calles del casco, con el Centro de Control (CCED) en la alcaldía, une colegios, hospital, bomberos, el Centro de Integración Ciudadana (CIC), el coliseo y las 4 estaciones de bombeo de aguas residuales (EBAR); de él salen 5 Zonas Digitales y la telemetría de esas EBAR, y la estación de bombeo de llegada nueva y la PTAR reportan al CCED por 4G. Una granja solar pública de 1,2 MWp frente a la subestación de EPM, en lugar de paneles en cada sede, cubre en balance anual el consumo oficial estimado, como autogeneración colectiva de una comunidad energética de la alcaldía, la E.S.E. y Aguas y Aseo.",
   "cifras": [
     { "v": "3,56", "l": "accesos fijos a internet por cada 100 habitantes; Antioquia: 26,1", "fuente": "DNP, TerriData con MinTIC (4T-2025)", "url": "https://terridata.dnp.gov.co/assets/docs/txt/entidades/TerriData05893.txt.zip", "tono": "alerta" },
     { "v": "0", "l": "Zonas Digitales urbanas de wifi gratuito (registro de MinTIC, 2023)", "fuente": "MinTIC, datos abiertos wg2u-d8ji", "url": "https://www.datos.gov.co/resource/wg2u-d8ji.json", "tono": "alerta" },
@@ -62,12 +62,12 @@
       "id": "telemetria",
       "nombre": "Telemetría de las EBAR y la PTAR en el CCED",
       "resumen": "Unidades remotas en las EBAR y la PTAR que reportan al CCED nivel, bombas y caudal",
-      "descripcion": "Unidades remotas en las 4 EBAR del casco (El Prado, El Paraíso, El Progreso y La Victoria), en la EBAR central nueva y en la planta de tratamiento de aguas residuales (PTAR) que propone el módulo de Saneamiento, con nivel, estado de las bombas, caudal y consumo de energía. Las EBAR del casco reportan por el anillo de fibra y las dos nuevas por 4G hasta que se tienda su ramal; el CCED las ve en un solo tablero con alarmas. El SCADA del acueducto (pozos, PTAP y tanques) va en el módulo de Aguas y la telesalud en el de Salud.",
+      "descripcion": "Unidades remotas en las 4 EBAR del casco (El Prado, El Paraíso, El Progreso y La Victoria), en la estación de bombeo de llegada nueva y en la planta de tratamiento de aguas residuales (PTAR) que propone el módulo de Saneamiento, con nivel, estado de las bombas, caudal y consumo de energía. Las EBAR del casco reportan por el anillo de fibra y las dos nuevas por 4G hasta que se tienda su ramal; el CCED las ve en un solo tablero con alarmas. El SCADA del acueducto (pozos, PTAP y tanques) va en el módulo de Aguas y la telesalud en el de Salud.",
       "especificaciones": [
-        ["Puntos", "6: 4 EBAR del casco, EBAR central nueva y PTAR"],
+        ["Puntos", "6: 4 EBAR del casco, estación de llegada nueva y PTAR"],
         ["Equipos", "6 unidades remotas (RTU o PLC) y 2 macromedidores"],
         ["Variables", "nivel, estado de las bombas, caudal y energía"],
-        ["Comunicación", "fibra del anillo; 4G en la EBAR central y la PTAR"],
+        ["Comunicación", "fibra del anillo; 4G en la estación de llegada y la PTAR"],
         ["Ciberseguridad", "red de operación separada y doble factor (IEC 62443)"],
         ["No incluye", "SCADA del acueducto (Aguas) ni telesalud (Salud)"]
       ],
@@ -78,7 +78,7 @@
       ],
       "fuentes": ["sgr", "municipio"],
       "plazo": "2028–2031, por etapas",
-      "ubicacion": "EBAR El Prado, El Paraíso, El Progreso y La Victoria, en el casco urbano; EBAR central nueva en la esquina nororiental del casco y PTAR en el sitio B, a ≈1 km al nororiente, según el módulo de Saneamiento."
+      "ubicacion": "EBAR El Prado, El Paraíso, El Progreso y La Victoria, en el casco urbano; estación de llegada nueva y PTAR al norte del casco, aguas abajo de la unión de los caños, según el módulo de Saneamiento."
     },
     {
       "id": "granja",
@@ -180,11 +180,11 @@
       "tipo": "componente",
       "componente": "telemetria",
       "titulo": "Las EBAR y la PTAR, vigiladas en línea",
-      "texto": "Las 4 EBAR del casco (por el anillo de fibra), la nueva EBAR central y la PTAR que propone el módulo de Saneamiento (por 4G) reportan al CCED nivel, bombas, caudal y energía. El SCADA del acueducto va en el módulo de Aguas y la telesalud en el de Salud: aquí no se cuentan.",
+      "texto": "Las 4 EBAR del casco (por el anillo de fibra), la nueva estación de llegada y la PTAR que propone el módulo de Saneamiento (por 4G) reportan al CCED nivel, bombas, caudal y energía. El SCADA del acueducto va en el módulo de Aguas y la telesalud en el de Salud: aquí no se cuentan.",
       "leyenda": [
         { "texto": "Datos de las EBAR y la PTAR hacia el CCED", "color": "var(--data)", "forma": "dash" },
         { "texto": "CCED en la alcaldía", "color": "var(--data)", "forma": "pt" },
-        { "texto": "EBAR central y PTAR: obras nuevas del módulo de Saneamiento", "color": "var(--m-saneamiento)", "forma": "dash" }
+        { "texto": "Estación de llegada y PTAR: obras nuevas del módulo de Saneamiento", "color": "var(--m-saneamiento)", "forma": "dash" }
       ]
     },
     {

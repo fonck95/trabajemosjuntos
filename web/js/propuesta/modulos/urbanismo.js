@@ -132,14 +132,14 @@ export async function crear(esc, datos) {
   cSoft.add(soft);
   // el rótulo, detrás de la cerca del jardín central (no sobre el diamante)
   const [hx, hy] = soft.userData.aModelo(0, 88);
-  esc.etiqueta('<b>Cancha de Sóftbol Casabe</b><small>109 × 102,9 m · luz LED · graderías cubiertas</small>', { pos: [hx, hy, 12], padre: cSoft, color: `var(${color})`, ancla: [0.5, 1] });
+  esc.etiqueta('<b>Cancha de Sóftbol Casabe</b><small>109 × 102,9 m · luz LED · graderías cubiertas</small>', { pos: [hx, hy, 12], padre: cSoft, color: `var(${color})`, ancla: [0.5, 1], punto: [...soft.userData.aModelo(0, 30), 1] });
 
   // --- parque lineal del caño colector (fase 1: del bosque del sur a la Calle 55)
   const cCano = esc.capa('urb.cano'), pl = parqueLineal(eje, { tramos, humedales, bosques, puentes: puentes.length ? puentes.map((s) => [s.x, s.y]) : undefined });
   cCano.add(pl);
   // el rótulo, al oriente del eje (las sendas van por la orilla occidental); los de los puentes, en su propia capa
   const em = pl.userData.eje[Math.floor(pl.userData.eje.length * 0.62)];
-  esc.etiqueta('<b>Parque lineal del caño colector</b><small>cauce vivo · sendero y ciclorruta · laguna y bosque inundable</small>', { pos: [em[0] + 22, em[1], 10], padre: cCano, color: `var(${color})`, ancla: [0, 0.5] });
+  esc.etiqueta('<b>Parque lineal del caño colector</b><small>cauce vivo · sendero y ciclorruta · laguna y bosque inundable</small>', { pos: [em[0] + 22, em[1], 10], padre: cCano, color: `var(${color})`, ancla: [0, 0.5], punto: [em[0], em[1], 1] });
   const cPP = esc.capa('urb.puentes');
   puentes.forEach((s) => esc.etiqueta(`<b>${s.id.toUpperCase()}</b>`, { pos: [s.x, s.y, 7], padre: cPP, color: '#a8703f', cls: 'lbl-p mini', titulo: s.nombre, ancla: [0.5, 1] }));
 
@@ -164,7 +164,7 @@ export async function crear(esc, datos) {
   // --- canchas cubiertas y skatepark en la explanada al sur del CIC
   const cInst = esc.capa('urb.instalaciones'), inst = instalacionesCIC(explanada);
   cInst.add(inst);
-  esc.etiqueta('<b>Canchas cubiertas y skatepark</b><small>explanada al sur del CIC · a un puente del estadio</small>', { pos: [...inst.userData.centro, 16], padre: cInst, color: `var(${color})`, cls: 'lbl-p mini', ancla: [0, 1] });
+  esc.etiqueta('<b>Canchas cubiertas y skatepark</b><small>explanada al sur del CIC · a un puente del estadio</small>', { pos: [...inst.userData.centro, 16], padre: cInst, color: `var(${color})`, ancla: [0, 1], punto: [...inst.userData.centro, 2] });
 
   // --- Mirador Puerta del Magdalena: se arma aparte porque las letras usan una fuente que se descarga, y el capítulo no la
   // espera (el paso del mirador vuelve a encuadrar y anima cuando llega)
@@ -196,8 +196,9 @@ export async function crear(esc, datos) {
   // la explanada con el puente PP2, que la une con el estadio (con toda la cancha, en el celular la obra quedaba diminuta)
   const pp2 = puentes.find((s) => s.id === 'pp2');
   const vistaInst = () => esc.encuadrar([...explanada, ...(pp2 ? [[pp2.x, pp2.y]] : soft.userData.contorno)], { rumbo: 208, elev: 38, margen: 0.94, alto: 10 });
-  // la plaza, el deck, el mirador y el muelle, más las dos puntas de la zona A (la protección de la orilla que abre el paso)
-  const encuadrarMir = () => esc.encuadrar(mir ? [...mir.userData.contorno, ...mir.userData.contornoA] : caja([cfgMir.origen], 150), { rumbo: 221, elev: 30, margen: 0.92, alto: 12 });
+  // la plaza, el deck, el mirador y el muelle, más toda la zona A (la protección de la orilla que abre el paso); en el
+  // celular, sin los 280 m de orilla, que dejarían el mirador diminuto (solo el punto del rótulo de la zona A)
+  const encuadrarMir = () => esc.encuadrar(mir ? [...mir.userData.contorno, ...(innerWidth > 640 ? mir.userData.contornoA : [mir.userData.zonaA])] : caja([cfgMir.origen], 150), { rumbo: 221, elev: 30, margen: 0.92, alto: 12 });
   const vistaMir = () => { encuadrarMir(); if (!mir) listoMir.then((m) => { if (m && cMir.visible) encuadrarMir(); }); };
   const animSoft = () => {
     const P = soft.userData.partes;

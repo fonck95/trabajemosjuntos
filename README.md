@@ -2,11 +2,13 @@
 
 Investigación abierta sobre **cómo se ha gastado el dinero público en Yondó (Antioquia) desde 2004**, qué hizo y qué dejó de hacer cada gobierno, y **qué proyectos concretos, con presupuesto, pueden financiarse a partir de 2028**, con la E.S.E. Hospital Héctor Abad Gómez como puerta de entrada de los recursos y una red energética pública con domótica apoyada por MinTIC como proyecto bandera.
 
-El repositorio incluye un **atlas 3D interactivo** (Three.js + GSAP) que muestra los hallazgos y los proyectos propuestos:
+El sitio abre con el **Home de la campaña** (`index.html`): una portada visual, con la maqueta 3D del casco urbano y el globo «¡Trabajemos juntos!», que lleva con botones aparte a la propuesta 2028–2031 y al atlas, y muestra las siete áreas con su render.
+
+El repositorio incluye un **atlas 3D interactivo** (`atlas.html`, Three.js + GSAP) que muestra los hallazgos y los proyectos propuestos:
 - **La plata que no se volvió obra, gobierno por gobierno** (pesos constantes de 2026): pilas de billetes con lo que entró, lo que no se convirtió en obra según registros, lo estimado y lo que pudo gestionarse o ahorrarse, con equivalencias en aulas, viviendas, km de placa huella o plantas de tratamiento, y un **panel anual 2004–2026 de 132 indicadores** (`docs/10`).
 - **Las sedes reales**: réplicas 3D de cada dependencia pública levantadas con satélite, Google Street View y fotos, en su posición real sobre el casco urbano, con el conmutador **Hoy / Con el proyecto** que muestra cuántos paneles caben de verdad en cada cubierta, dónde van las baterías y qué obras hay que hacer antes. Son 22 puntos: las sedes públicas, incluido el acueducto rural, más la torre del hospital y el parque del relleno que se proponen; se recorren uno por uno y cada uno muestra de cerca cómo se conecta: tablero con medidor bidireccional, gateway IoT, acometida de EPM y enlace de datos al centro de control (`docs/09`).
 - **La torre del hospital por dentro**: recorrido en primera persona por los cuatro pisos con sus equipos, un simulador de sismos que mueve la estructura prediseñada con la NSR-10 y el modelo BIM federado con sus interferencias y cantidades (`docs/14`, `docs/15` y `docs/16`).
-- **Propuesta integral 2028–2031** (`propuesta.html`, aparte del atlas y enlazada desde su cabecera): una presentación con GSAP para gestionar recursos con el nivel central. Siete módulos sobre la maqueta 3D del territorio real: vivienda en dos lotes reales, ciudadela deportiva con la Cancha de Sóftbol Casabe y el parque lineal del caño, Mirador Puerta del Magdalena, parque agroindustrial junto al puente, torre del hospital y salud rural, agua 24 horas, la primera PTAR del municipio y una granja solar centralizada. Cada uno trae costo, fuentes, proyecto tipo, madurez y pedido (`docs/17`).
+- **Propuesta integral 2028–2031** (`propuesta.html`, aparte del atlas, con su botón en el Home y enlazada desde la cabecera del atlas): una presentación con GSAP para gestionar recursos con el nivel central. Siete áreas, cada una con varios proyectos, sobre la maqueta 3D del territorio real: vivienda en dos lotes reales, ciudadela deportiva con la Cancha de Sóftbol Casabe y el parque lineal del caño, Mirador Puerta del Magdalena, parque agroindustrial junto al puente, torre del hospital y salud rural, agua 24 horas, la primera PTAR del casco urbano y una granja solar centralizada. Cada uno trae costo, fuentes, proyecto tipo, madurez y pedido (`docs/17`).
 - Flujos de contratación, el embudo estudio → obra, la microrred simulada hora a hora, el hospital como nodo financiero de 2028, la hoja de ruta con compuertas y un **visor de modelos 3D profesionales** (glTF/GLB con Draco, Meshopt y KTX2). El motor dibuja bajo demanda, ajusta la resolución según el rendimiento y comparte un solo contexto WebGL entre vistas.
 
 ## Hallazgos en cinco líneas
@@ -38,14 +40,14 @@ El repositorio incluye un **atlas 3D interactivo** (Three.js + GSAP) que muestra
 | `docs/14-simulacion-sismica.md` | Simulador sísmico de la torre: Richter frente a magnitud de momento, efecto de la profundidad, NSR-10 (amenaza intermedia, DMO, grupo IV), prediseño con deriva de 0,939 % frente al límite de 1 %, escenarios con resultados y validación contra OpenSees |
 | `docs/15-dotacion-y-habilitacion.md` | Dotación de la torre por servicio frente a la Resolución 3100 de 2019: 1.702 unidades en 270 recintos, matriz de habilitación y cierre de brechas |
 | `docs/16-bim-torre.md` | Plan de ejecución BIM de la torre: modelo federado IFC4, nivel de información (LOIN), coordinación de interferencias (280 duras antes, 0 después), cantidades 4D/5D y el ajuste pendiente del prediseño estructural |
-| `docs/17-propuesta-integral-2028-2031.md` | Presentación aparte para gestionar recursos con el nivel central (`web/propuesta.html`): siete módulos (vivienda, urbanismo, agroindustria, salud, aguas, aseo y saneamiento, TIC) por $337.550 M, cada uno con sitio real en 3D, costo, proyecto tipo, fuentes, madurez y pedido |
+| `docs/17-propuesta-integral-2028-2031.md` | Presentación aparte para gestionar recursos con el nivel central (`web/propuesta.html`): siete áreas (vivienda, urbanismo, agroindustria, salud, aguas, aseo y saneamiento, TIC) por $337.550 M, cada uno con sitio real en 3D, costo, proyecto tipo, fuentes, madurez y pedido |
 | `docs/anexos/` | Cinco informes de investigación con cada dato y su URL: gobiernos, finanzas y regalías, hospital, energía y MinTIC, indicadores sociales |
 | `data/` | Datos estructurados (JSON) que alimentan el atlas y los documentos |
 | `data/comparativa/` | Panel anual 2004–2026, fugas en la contratación (SECOP), regalías y fondos no gestionados, costo de no hacer y la síntesis por gobierno |
 | `data/edificios/` | Levantamiento de cada sede pública (formato en `ESPECIFICACION.md`) |
 | `scripts/geo/` | Herramientas de levantamiento: satélite, cobertura y vistas de Street View, superposición de la huella, calles de OpenStreetMap y huellas de edificaciones |
 | `scripts/` | Descarga y análisis de SECOP, simulación de la microrred, construcción del sitio |
-| `web/` | El atlas 3D (HTML + módulos JavaScript + Three.js + GSAP); `web/models/` modelos GLB; `web/vendor/` decodificadores Draco y Basis |
+| `web/` | El sitio: Home de la campaña (`index.html`), atlas 3D (`atlas.html`) y propuesta (`propuesta.html`), con módulos JavaScript + Three.js + GSAP; `web/img/home/` renders propios de la maqueta para el Home (sin imágenes satelitales); `web/models/` modelos GLB; `web/vendor/` decodificadores Draco y Basis |
 | `scripts/modelos/` | Generación y optimización de los modelos GLB (gltf-transform + Draco), réplicas de las sedes (`build_edificios.mjs`) y render de comparación con Street View (`render_vista.mjs`) |
 
 ## Ver el atlas 3D
@@ -59,10 +61,10 @@ python3 scripts/build_dinero_no_hecho.py   # plata no hecha por gobierno + docs/
 python3 scripts/build_data.py      # genera web/js/data.js desde data/*.json
 python3 scripts/build_site.py      # empaqueta el sitio autónomo en site/
 cd site && python3 -m http.server 8000
-# abrir http://localhost:8000
+# abrir http://localhost:8000 (Home), /atlas.html (atlas) y /propuesta.html (propuesta)
 ```
 
-Al hacer *push* a `main`, el flujo `.github/workflows/pages.yml` publica el atlas en GitHub Pages (hay que activar Pages con origen "GitHub Actions" en la configuración del repositorio). Railway lo construye con Railpack: `railpack.json` corre los mismos dos scripts y `Staticfile` + `Caddyfile` sirven `site/` con Caddy.
+Al hacer *push* a `main`, el flujo `.github/workflows/pages.yml` publica el sitio (Home, atlas y propuesta) en GitHub Pages (hay que activar Pages con origen "GitHub Actions" en la configuración del repositorio). Railway lo construye con Railpack: `railpack.json` corre los mismos dos scripts y `Staticfile` + `Caddyfile` sirven `site/` con Caddy.
 
 ## Reproducir el análisis de contratación
 

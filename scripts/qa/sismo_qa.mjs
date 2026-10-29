@@ -6,7 +6,7 @@
 //   PLAYWRIGHT_MODULE=… node scripts/qa/sismo_qa.mjs --vendor <carpeta> [--salida <carpeta>] [--solo simulado,real,respaldo,sin_estructura,revision]
 //
 // Sirve la raíz del repositorio con scripts/qa/comun.mjs (para que existan los fixtures de scripts/fixtures/torre/) y abre
-// web/index.html?qa=1#torre envuelto como lo hace build_site.py:
+// web/atlas.html?qa=1#torre envuelto como lo hace build_site.py:
 //   · simulado: trabajador simulado del equipo A (fixtures del Anexo A; «&motor=simulado»), en claro y oscuro, escritorio y
 //     teléfono: ganchos, las 6 gráficas, cubierta dibujada = cm + u × escala, presupuesto de dibujo, textos de honestidad y
 //     de Richter, tabla de variables, barra de tiempo, leyenda y etiquetas de deriva dentro del recuadro, series de un
@@ -32,7 +32,7 @@ const op = opciones(process.argv.slice(2), { raiz: '.', salida: join(tmpdir(), '
 if (!op.vendor) { console.error('Falta --vendor <carpeta> con three/ y gsap/ (ver scripts/qa/LEEME.md)'); process.exit(2); }
 const solo = new Set(String(op.solo || 'simulado,real,respaldo,sin_estructura,revision').split(','));
 const srv = await servidor(op), nav = await navegador(op);
-const base = `${srv.url}web/index.html`;
+const base = `${srv.url}web/atlas.html`;
 let fallas = 0;
 const ok = (c, m) => { console.log(`  ${c ? 'ok' : 'FALLA'} ${m}`); if (!c) fallas++; return c; };
 const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -40,7 +40,7 @@ const ESPERADOS = [];
 
 async function pagina({ tema = 'claro', telefono = false, sinWorker = false, movimientoReducido = false, q = '', retrasoTorre = 0, sinEstructura = false } = {}) {
   const r = await abrir(nav, op, { tema, telefono, sinWorker, movimientoReducido, esperados: sinEstructura ? [/sismo_torre_estructura\.json$/] : ESPERADOS });
-  await r.page.route(/\/web\/index\.html(\?.*)?$/, (ruta) => ruta.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: envolverIndex(readFileSync(join(RAIZ_REPO, 'web/index.html'), 'utf8')) }));
+  await r.page.route(/\/web\/atlas\.html(\?.*)?$/, (ruta) => ruta.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: envolverIndex(readFileSync(join(RAIZ_REPO, 'web/atlas.html'), 'utf8')) }));
   if (sinEstructura) await r.page.route(/\/web\/data\/sismo_torre_estructura\.json$/, (ruta) => ruta.fulfill({ status: 404, contentType: 'text/plain', body: 'no encontrado' }));
   if (retrasoTorre) await r.page.route(/\/web\/data\/torre\.json$/, async (ruta) => { await pausa(retrasoTorre); await ruta.continue(); });
   await r.page.goto(`${base}?qa=1${q}#torre`, { waitUntil: 'load' });
