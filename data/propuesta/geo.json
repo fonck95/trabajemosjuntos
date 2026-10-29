@@ -4045,6 +4045,673 @@
     "x": -185,
     "y": 1453,
     "nota": "Fin del canal oriental en el Caño Colector Shell (OpenStreetMap); de ahí el caño sigue hacia el norte junto a la Carrera 57."
+   },
+   {
+    "id": "relleno_nuevo",
+    "nombre": "Relleno sanitario nuevo · Kilómetro Cinco (recomendado)",
+    "rol": "relleno_nuevo",
+    "x": -3764.2,
+    "y": -3954.8,
+    "poligono": [
+     [
+      -3822.0,
+      -4115.0
+     ],
+     [
+      -3865.0,
+      -4041.0
+     ],
+     [
+      -3925.0,
+      -4002.0
+     ],
+     [
+      -3944.0,
+      -3800.0
+     ],
+     [
+      -3686.0,
+      -3815.0
+     ],
+     [
+      -3653.0,
+      -3880.0
+     ],
+     [
+      -3588.5,
+      -3934.3
+     ],
+     [
+      -3573.1,
+      -3954.7
+     ],
+     [
+      -3563.5,
+      -3969.2
+     ],
+     [
+      -3547.2,
+      -4001.3
+     ],
+     [
+      -3609.9,
+      -4042.2
+     ],
+     [
+      -3625.7,
+      -4056.3
+     ],
+     [
+      -3645.8,
+      -4081.9
+     ],
+     [
+      -3666.9,
+      -4115.0
+     ]
+    ],
+    "area_m2": 88354,
+    "rotulo": "en la reserva del EOT · 7,6 km por vía",
+    "celdas_m2": 30045,
+    "vida_util_anios": "25 o más",
+    "nota": "Predio útil de ≈8,8 ha dentro de la reserva del EOT para el relleno nuevo (Acuerdo 013 de 2022, art. 17.4 y Tabla 35, ≈16,4 ha): queda a 44 m o más del eje de la vía (la lectura más exigente del EOT: 30 m de faja de primer orden más 14 m de franja de aislamiento del corredor suburbano), a 45 m o más de los drenajes del modelo de elevación y a ≈165 m o más de toda vivienda mapeada; la planta de tratamiento y disposición de lodos del EOT (Tabla 34), al occidente, tiene edificaciones a ≈90–120 m del lindero y a ≈105 m de la zona de celdas. Fuera del radio de 13 km del aeropuerto Yariguíes (16,2 km del ARP), a 4,2 km del perímetro urbano, a 4,3 km de los pozos del acueducto y a 3,6 km del Caño Colector Shell; drena al Magdalena, lejos del sistema de abastecimiento. Su borde sur queda a 4–6 m sobre la lámina del río en el modelo de elevación. Portería en ≈6,9706 N, 73,9438 O. Análisis de sitios propio (29-oct-2026); faltan el cruce con las zonas de recarga de acuíferos del EOT, topografía 1:1.000, apiques, hidrogeología y estudio de creciente."
+   },
+   {
+    "id": "relleno_reserva_eot",
+    "nombre": "Reserva del EOT para el relleno nuevo (Tabla 35)",
+    "rol": "relleno_reserva_eot",
+    "x": -3754.7,
+    "y": -3949.3,
+    "poligono": [
+     [
+      -3952.1,
+      -3717.8
+     ],
+     [
+      -3909.3,
+      -4163.6
+     ],
+     [
+      -3819.8,
+      -4186.5
+     ],
+     [
+      -3759.3,
+      -4228.5
+     ],
+     [
+      -3663,
+      -4175.7
+     ],
+     [
+      -3593.2,
+      -4080.7
+     ],
+     [
+      -3511.1,
+      -4029.4
+     ],
+     [
+      -3510,
+      -4000.3
+     ],
+     [
+      -3588.7,
+      -3869.8
+     ],
+     [
+      -3588.9,
+      -3815.7
+     ],
+     [
+      -3714.3,
+      -3671.5
+     ],
+     [
+      -3767.8,
+      -3729.9
+     ],
+     [
+      -3810.4,
+      -3735.8
+     ],
+     [
+      -3878.1,
+      -3708.2
+     ],
+     [
+      -3907.7,
+      -3705.7
+     ]
+    ],
+    "area_m2": 163611,
+    "nota": "Polígono de la Tabla 35 del EOT (Acuerdo 013 de 2022, pág. 93), convertido desde MAGNA-SIRGAS Bogotá (EPSG:3116, supuesto; confianza media). Se compra completo: lo que queda fuera del predio útil, casi todo bosque, sirve de aislamiento y de retiro de la vía."
+   },
+   {
+    "id": "relleno_vecino_lodos",
+    "nombre": "Planta de tratamiento y disposición de lodos del EOT (Tabla 34), vecina",
+    "rol": "relleno_vecino",
+    "x": -4117.6,
+    "y": -4084.8,
+    "poligono": [
+     [
+      -3952.1,
+      -3717.8
+     ],
+     [
+      -3909.3,
+      -4163.6
+     ],
+     [
+      -3955.0,
+      -4201.7
+     ],
+     [
+      -3967.7,
+      -4241.7
+     ],
+     [
+      -3926.5,
+      -4323.2
+     ],
+     [
+      -3926.1,
+      -4345.7
+     ],
+     [
+      -3944.6,
+      -4371.4
+     ],
+     [
+      -4085.7,
+      -4419.0
+     ],
+     [
+      -4149.7,
+      -4504.1
+     ],
+     [
+      -4184.2,
+      -4498.2
+     ],
+     [
+      -4250.5,
+      -4435.9
+     ],
+     [
+      -4304.3,
+      -4335.7
+     ],
+     [
+      -4239.7,
+      -4204.7
+     ],
+     [
+      -4239.3,
+      -4119.8
+     ],
+     [
+      -4281.9,
+      -4066.4
+     ],
+     [
+      -4333.3,
+      -4048.1
+     ],
+     [
+      -4379.9,
+      -4006.6
+     ],
+     [
+      -4286.8,
+      -3800.2
+     ],
+     [
+      -4180.2,
+      -3757.5
+     ],
+     [
+      -4038.4,
+      -3743.8
+     ]
+    ],
+    "area_m2": 244697,
+    "rotulo": "nave a ≈90 m del lindero",
+    "nota": "Polígono de la Tabla 34 del EOT (Acuerdo 013 de 2022, págs. 92–93), convertido desde MAGNA-SIRGAS Bogotá (EPSG:3116, supuesto; confianza media); comparte los vértices 1 y 2 con la reserva del relleno (Tabla 35). Adentro hay una nave grande y otras edificaciones (inventario visual y huellas de Microsoft y Google) a ≈90–170 m del lindero del relleno. Hay que confirmar en campo quién la opera y para qué."
+   },
+   {
+    "id": "relleno_celda_f1",
+    "nombre": "Celda de la fase 1 (2030–2036)",
+    "rol": "relleno_celda",
+    "x": -3794.8,
+    "y": -3922.1,
+    "poligono": [
+     [
+      -3839,
+      -3885.9
+     ],
+     [
+      -3757,
+      -3889
+     ],
+     [
+      -3743,
+      -3955
+     ],
+     [
+      -3839,
+      -3955
+     ]
+    ],
+    "area_m2": 6001,
+    "nota": "Polígono convexo de ≈0,6 ha (96 × 69 m) en la esquina nororiental de la zona de celdas, junto a la vía interna y la ECA, sin zonas bajas; el lixiviado baja a las lagunas, al sur. Con 2 m de excavación y taludes 3H:1V da hasta ≈36.000 m³: de 5 a 7 años sin aprovechamiento y de 6 a 8 con el 15 % (desde 2030). Costo según la investigación de costos (≈6.000 m² de fondo y ≈6.600 m² impermeabilizados). La pieza 3D la dibuja como un cerro de tres terrazas de 3 m que se retiran 9 m."
+   },
+   {
+    "id": "relleno_celdas_futuras_1",
+    "nombre": "Celda futura 1 (al occidente y al sur de la fase 1)",
+    "rol": "relleno_celda_futura",
+    "x": -3823.4,
+    "y": -3960.5,
+    "poligono": [
+     [
+      -3890,
+      -3884
+     ],
+     [
+      -3839,
+      -3885.9
+     ],
+     [
+      -3839,
+      -3955
+     ],
+     [
+      -3743,
+      -3955
+     ],
+     [
+      -3733,
+      -4002
+     ],
+     [
+      -3866,
+      -4008
+     ]
+    ],
+    "area_m2": 9772,
+    "nota": "La mitad del polígono es bosque (ESA WorldCover 2021): usar esa parte exige permiso de aprovechamiento forestal y revisar el bosque protector del EOT."
+   },
+   {
+    "id": "relleno_celdas_futuras_2",
+    "nombre": "Celda futura 2 (loma central, al sur)",
+    "rol": "relleno_celda_futura",
+    "x": -3785.4,
+    "y": -4032.7,
+    "poligono": [
+     [
+      -3866,
+      -4008
+     ],
+     [
+      -3733,
+      -4002
+     ],
+     [
+      -3724,
+      -4062
+     ],
+     [
+      -3815,
+      -4066
+     ]
+    ],
+    "area_m2": 6758
+   },
+   {
+    "id": "relleno_celdas_futuras_3",
+    "nombre": "Celda futura 3 (franja occidental, hoy bosque)",
+    "rol": "relleno_celda_futura",
+    "x": -3894.9,
+    "y": -3944.5,
+    "poligono": [
+     [
+      -3921,
+      -3884
+     ],
+     [
+      -3890,
+      -3884
+     ],
+     [
+      -3866,
+      -4008
+     ],
+     [
+      -3905,
+      -3995
+     ]
+    ],
+    "area_m2": 3982,
+    "nota": "Hoy es bosque (ESA WorldCover 2021): usarla exige permiso de aprovechamiento forestal y revisar el bosque protector del EOT (Tabla 30). Es la parte más baja de la zona de celdas."
+   },
+   {
+    "id": "relleno_celdas_futuras_4",
+    "nombre": "Celda futura 4 (esquina noroccidental, hoy bosque)",
+    "rol": "relleno_celda_futura",
+    "x": -3888.4,
+    "y": -3857.2,
+    "poligono": [
+     [
+      -3921,
+      -3830
+     ],
+     [
+      -3856,
+      -3830
+     ],
+     [
+      -3856,
+      -3885.3
+     ],
+     [
+      -3890,
+      -3884
+     ],
+     [
+      -3921,
+      -3884
+     ]
+    ],
+    "area_m2": 3532,
+    "nota": "Hoy es bosque (ESA WorldCover 2021): usarla exige permiso de aprovechamiento forestal y revisar el bosque protector del EOT (Tabla 30)."
+   },
+   {
+    "id": "relleno_celdas_total",
+    "nombre": "Zona de celdas (fase 1 y futuras)",
+    "rol": "relleno_zona_celdas",
+    "x": -3826.3,
+    "y": -3954.8,
+    "poligono": [
+     [
+      -3724,
+      -4062
+     ],
+     [
+      -3815,
+      -4066
+     ],
+     [
+      -3866,
+      -4008
+     ],
+     [
+      -3905,
+      -3995
+     ],
+     [
+      -3921,
+      -3884
+     ],
+     [
+      -3921,
+      -3830
+     ],
+     [
+      -3856,
+      -3830
+     ],
+     [
+      -3856,
+      -3885.3
+     ],
+     [
+      -3839,
+      -3885.9
+     ],
+     [
+      -3757,
+      -3889
+     ],
+     [
+      -3743,
+      -3955
+     ],
+     [
+      -3733,
+      -4002
+     ]
+    ],
+    "area_m2": 30045,
+    "nota": "Envolvente de la celda de la fase 1 y las cuatro futuras (≈3,0 ha): con 12 a 15 m de altura, taludes 3H:1V y 2 m de excavación da ≈266.000–287.000 m³. Desde la apertura, en 2030, Yondó dispondría ≈144.000–218.000 m³ en 25 años y ≈178.000–277.000 m³ en 30 años sin aprovechar nada: los 25 años caben con holgura y los 30, en el escenario alto, solo con la ECA y el compostaje. Sin las celdas futuras 3 y 4, que son bosque, quedan ≈200.000–213.000 m³. No se dibuja aparte."
+   },
+   {
+    "id": "relleno_lixiviados_1",
+    "nombre": "Laguna de lixiviados 1 (28 × 24 m)",
+    "rol": "relleno_lixiviados",
+    "x": -3694,
+    "y": -4016,
+    "poligono": [
+     [
+      -3708,
+      -4004
+     ],
+     [
+      -3680,
+      -4004
+     ],
+     [
+      -3680,
+      -4028
+     ],
+     [
+      -3708,
+      -4028
+     ]
+    ],
+    "area_m2": 672
+   },
+   {
+    "id": "relleno_lixiviados_2",
+    "nombre": "Laguna de lixiviados 2 (28 × 24 m)",
+    "rol": "relleno_lixiviados",
+    "x": -3694,
+    "y": -4046,
+    "poligono": [
+     [
+      -3708,
+      -4034
+     ],
+     [
+      -3680,
+      -4034
+     ],
+     [
+      -3680,
+      -4058
+     ],
+     [
+      -3708,
+      -4058
+     ]
+    ],
+    "area_m2": 672
+   },
+   {
+    "id": "relleno_eca",
+    "nombre": "ECA de 10 t/día (nave de clasificación y bodega)",
+    "rol": "relleno_eca",
+    "x": -3701,
+    "y": -3950,
+    "poligono": [
+     [
+      -3719,
+      -3976
+     ],
+     [
+      -3683,
+      -3976
+     ],
+     [
+      -3683,
+      -3924
+     ],
+     [
+      -3719,
+      -3924
+     ]
+    ],
+    "area_m2": 1872,
+    "nota": "Rectángulo de 36 × 52 m al oriente de la vía interna, entre la portería (a ≈110 m) y las celdas, fuera de ellas."
+   },
+   {
+    "id": "relleno_compostaje",
+    "nombre": "Planta de compostaje de orgánicos (4–5 t/día)",
+    "rol": "relleno_compostaje",
+    "x": -3815,
+    "y": -3848,
+    "poligono": [
+     [
+      -3840,
+      -3868
+     ],
+     [
+      -3790,
+      -3868
+     ],
+     [
+      -3790,
+      -3828
+     ],
+     [
+      -3840,
+      -3828
+     ]
+    ],
+    "area_m2": 2000,
+    "nota": "Rectángulo de 50 × 40 m con pilas bajo cubierta, al norte de la celda de la fase 1, a ≈270 m de la casa más cercana."
+   },
+   {
+    "id": "relleno_porteria",
+    "nombre": "Portería con báscula de camiones",
+    "rol": "relleno_porteria",
+    "x": -3573.4,
+    "y": -4000.3,
+    "nota": "Junto al lindero oriental (≈15 m adentro y a ≈60 m del eje de la vía), con una entrada nueva de ≈63 m desde la vía a Puerto Berrío."
+   },
+   {
+    "id": "relleno_monitoreo_1",
+    "nombre": "Pozo de monitoreo de agua subterránea (de referencia, aguas arriba)",
+    "rol": "relleno_monitoreo",
+    "x": -3930,
+    "y": -3812
+   },
+   {
+    "id": "relleno_monitoreo_2",
+    "nombre": "Pozo de monitoreo de agua subterránea (aguas abajo)",
+    "rol": "relleno_monitoreo",
+    "x": -3672,
+    "y": -4068
+   },
+   {
+    "id": "relleno_monitoreo_3",
+    "nombre": "Pozo de monitoreo de agua subterránea (aguas abajo)",
+    "rol": "relleno_monitoreo",
+    "x": -3790,
+    "y": -4095
+   },
+   {
+    "id": "relleno_monitoreo_4",
+    "nombre": "Pozo de monitoreo de agua subterránea (aguas abajo)",
+    "rol": "relleno_monitoreo",
+    "x": -3880,
+    "y": -4022
+   },
+   {
+    "id": "relleno_alt_a",
+    "nombre": "Occidente cercano (alternativa)",
+    "rol": "relleno_alternativa",
+    "x": -3190,
+    "y": -820,
+    "poligono": [
+     [
+      -3257.6,
+      -983.3
+     ],
+     [
+      -3026.7,
+      -887.6
+     ],
+     [
+      -3122.4,
+      -656.7
+     ],
+     [
+      -3353.3,
+      -752.4
+     ]
+    ],
+    "area_m2": 62473,
+    "rotulo": "drena hacia los pozos del acueducto · fuera del EOT",
+    "distancia_por_via_km": 4.46,
+    "nota": "Candidato B del análisis de sitios: loma sobre la vía terciaria al occidente del casco, a 4,5 km por vía desde el parque. Pasa los tamices, pero todo el predio drena por el valle que pasa a 418 m de los pozos del acueducto y a 477 m de la PTAP; no está en el EOT (habría que incorporarlo antes de pedir cofinanciación a la Nación); un pozo petrolero a 410 m y 13 edificaciones a menos de 500 m."
+   },
+   {
+    "id": "relleno_alt_b",
+    "nombre": "Lomas de Casabe (alternativa)",
+    "rol": "relleno_alternativa",
+    "x": -3700,
+    "y": -1270,
+    "poligono": [
+     [
+      -3781.9,
+      -1447.2
+     ],
+     [
+      -3540.4,
+      -1382.5
+     ],
+     [
+      -3618.1,
+      -1092.8
+     ],
+     [
+      -3859.6,
+      -1157.5
+     ]
+    ],
+    "area_m2": 74990,
+    "rotulo": "7 pozos petroleros a menos de 500 m · fuera del EOT",
+    "distancia_por_via_km": 6.49,
+    "nota": "Candidato C del análisis de sitios: lomas sobre la vía veredal al occidente, a 6,5 km por vía. Pocas casas (5 a menos de 500 m) y fuera de la cuenca de los pozos del casco, pero en pleno campo Casabe (el pozo más cercano a 281 m), fuera del EOT y su drenaje pasa a 906 m de la captación de la Laguna del Miedo."
+   },
+   {
+    "id": "relleno_alt_c",
+    "nombre": "Junto a Las Américas (descartado)",
+    "rol": "relleno_descartado",
+    "x": -2501.8,
+    "y": 1195.3,
+    "poligono": [
+     [
+      -2411.4,
+      1021.9
+     ],
+     [
+      -2306.4,
+      1203.8
+     ],
+     [
+      -2592.2,
+      1368.8
+     ],
+     [
+      -2697.2,
+      1186.9
+     ]
+    ],
+    "area_m2": 69312,
+    "rotulo": "vega inundable, pozo petrolero y caserío",
+    "distancia_por_via_km": 3.81,
+    "nota": "Ampliar en un lote nuevo junto a Las Américas es lo que la norma prioriza (áreas ya impactadas, Res. 938 de 2019), pero el 89 % del lote está a menos de 5 m sobre el drenaje, tiene un pozo petrolero y dos edificaciones adentro y 27 a menos de 500 m, queda a 507 m del tanque del acueducto y choca con la clausura y el parque ecotecnológico."
    }
   ],
   "trazados": [
@@ -4352,6 +5019,649 @@
       914.1
      ]
     ]
+   },
+   {
+    "id": "via_relleno",
+    "nombre": "Vía de acceso al relleno nuevo, del borde del casco a la portería",
+    "tipo": "via",
+    "puntos": [
+     [
+      -406.4,
+      -605.7
+     ],
+     [
+      -446.9,
+      -719.5
+     ],
+     [
+      -487.5,
+      -833.4
+     ],
+     [
+      -528,
+      -947.3
+     ],
+     [
+      -586,
+      -1060.2
+     ],
+     [
+      -628.6,
+      -1181.7
+     ],
+     [
+      -671.1,
+      -1303.2
+     ],
+     [
+      -704.5,
+      -1379.4
+     ],
+     [
+      -737.8,
+      -1455.5
+     ],
+     [
+      -765.4,
+      -1532.3
+     ],
+     [
+      -792.9,
+      -1609
+     ],
+     [
+      -811.8,
+      -1607.9
+     ],
+     [
+      -952.4,
+      -1556.7
+     ],
+     [
+      -1056.3,
+      -1544.7
+     ],
+     [
+      -1136,
+      -1524.4
+     ],
+     [
+      -1156.4,
+      -1525.1
+     ],
+     [
+      -1171.7,
+      -1536.2
+     ],
+     [
+      -1208.7,
+      -1607.9
+     ],
+     [
+      -1222.9,
+      -1703.9
+     ],
+     [
+      -1332.6,
+      -1758.1
+     ],
+     [
+      -1344.2,
+      -1770.8
+     ],
+     [
+      -1343.9,
+      -1796.1
+     ],
+     [
+      -1310.4,
+      -1837.8
+     ],
+     [
+      -1306.1,
+      -1862.9
+     ],
+     [
+      -1326.3,
+      -1922.1
+     ],
+     [
+      -1408.7,
+      -2021
+     ],
+     [
+      -1409.3,
+      -2088.9
+     ],
+     [
+      -1442,
+      -2117
+     ],
+     [
+      -1542.2,
+      -2139
+     ],
+     [
+      -1569,
+      -2157.6
+     ],
+     [
+      -1571.8,
+      -2189.9
+     ],
+     [
+      -1544.5,
+      -2243.9
+     ],
+     [
+      -1542.4,
+      -2286.6
+     ],
+     [
+      -1563.1,
+      -2312.7
+     ],
+     [
+      -1614.3,
+      -2325.4
+     ],
+     [
+      -1635.4,
+      -2342.5
+     ],
+     [
+      -1645,
+      -2458.4
+     ],
+     [
+      -1658.7,
+      -2485.9
+     ],
+     [
+      -1679.8,
+      -2495
+     ],
+     [
+      -1732.6,
+      -2498.4
+     ],
+     [
+      -1833.7,
+      -2477.6
+     ],
+     [
+      -1923.5,
+      -2451.3
+     ],
+     [
+      -2013.3,
+      -2424.9
+     ],
+     [
+      -2047.8,
+      -2441.1
+     ],
+     [
+      -2104.3,
+      -2500.2
+     ],
+     [
+      -2169.9,
+      -2530.6
+     ],
+     [
+      -2193.7,
+      -2530.3
+     ],
+     [
+      -2267.6,
+      -2511
+     ],
+     [
+      -2312,
+      -2523.8
+     ],
+     [
+      -2414.7,
+      -2529
+     ],
+     [
+      -2433.9,
+      -2540.5
+     ],
+     [
+      -2500.9,
+      -2606.4
+     ],
+     [
+      -2529.7,
+      -2647.5
+     ],
+     [
+      -2536.8,
+      -2683.8
+     ],
+     [
+      -2524.2,
+      -2746.7
+     ],
+     [
+      -2529.9,
+      -2771.3
+     ],
+     [
+      -2555.4,
+      -2817
+     ],
+     [
+      -2574.9,
+      -2822.9
+     ],
+     [
+      -2613.2,
+      -2810.9
+     ],
+     [
+      -2658.4,
+      -2811.1
+     ],
+     [
+      -2707.4,
+      -2839
+     ],
+     [
+      -2721.8,
+      -2841.2
+     ],
+     [
+      -2757.6,
+      -2825.4
+     ],
+     [
+      -2794.1,
+      -2742.6
+     ],
+     [
+      -2893.9,
+      -2688.6
+     ],
+     [
+      -2968.9,
+      -2638.1
+     ],
+     [
+      -3036,
+      -2565.7
+     ],
+     [
+      -3054,
+      -2560.2
+     ],
+     [
+      -3201.7,
+      -2565.6
+     ],
+     [
+      -3225.3,
+      -2572.9
+     ],
+     [
+      -3258.1,
+      -2595.5
+     ],
+     [
+      -3345.8,
+      -2692.8
+     ],
+     [
+      -3433.5,
+      -2790.1
+     ],
+     [
+      -3453.3,
+      -2913.5
+     ],
+     [
+      -3472.1,
+      -2974.5
+     ],
+     [
+      -3482.8,
+      -2992.3
+     ],
+     [
+      -3552.1,
+      -3058.6
+     ],
+     [
+      -3573.2,
+      -3115.8
+     ],
+     [
+      -3572.9,
+      -3147.6
+     ],
+     [
+      -3545.5,
+      -3228.2
+     ],
+     [
+      -3518.1,
+      -3308.8
+     ],
+     [
+      -3486.6,
+      -3358.3
+     ],
+     [
+      -3437.1,
+      -3406.9
+     ],
+     [
+      -3427,
+      -3430.7
+     ],
+     [
+      -3434.4,
+      -3462.6
+     ],
+     [
+      -3463.8,
+      -3518
+     ],
+     [
+      -3517.2,
+      -3591
+     ],
+     [
+      -3521,
+      -3628.9
+     ],
+     [
+      -3506.5,
+      -3684
+     ],
+     [
+      -3511.5,
+      -3714.5
+     ],
+     [
+      -3567.2,
+      -3780.1
+     ],
+     [
+      -3583.5,
+      -3815.3
+     ],
+     [
+      -3581.5,
+      -3857.3
+     ],
+     [
+      -3571.1,
+      -3883.2
+     ],
+     [
+      -3525.1,
+      -3946
+     ],
+     [
+      -3499.8,
+      -3996.8
+     ],
+     [
+      -3497.6,
+      -4016.9
+     ],
+     [
+      -3524.4,
+      -4039.9
+     ],
+     [
+      -3573.4,
+      -4000.3
+     ]
+    ],
+    "longitud_m": 6463,
+    "ancho_m": 6,
+    "por_mejorar_m": 2738,
+    "nota": "Ruta de OSRM sobre OpenStreetMap: Calle 46, vía secundaria sin nombre y vía a Puerto Berrío (way 499367195), más una entrada nueva de ≈63 m hasta la portería (OSRM midió 6.464 m hasta la entrada anterior, 25 m más corta). Los primeros ≈2,7 km se ven en afirmado (por mejorar) y el resto con superficie gris uniforme, probable placa huella (imagen de referencia; confianza baja a media)."
+   },
+   {
+    "id": "relleno_via_interna",
+    "nombre": "Vía interna en afirmado: portería, ECA, celdas y compostaje",
+    "tipo": "via_interna",
+    "puntos": [
+     [
+      -3573.4,
+      -4000.3
+     ],
+     [
+      -3600.0,
+      -3993.0
+     ],
+     [
+      -3650.0,
+      -3986.0
+     ],
+     [
+      -3700.0,
+      -3984.0
+     ],
+     [
+      -3726.0,
+      -3984.0
+     ],
+     [
+      -3745.0,
+      -3878.0
+     ],
+     [
+      -3790.0,
+      -3876.0
+     ],
+     [
+      -3848.0,
+      -3876.0
+     ]
+    ],
+    "longitud_m": 365,
+    "ancho_m": 7
+   },
+   {
+    "id": "relleno_ramal_lagunas",
+    "nombre": "Ramal de la vía interna a las lagunas de lixiviados",
+    "tipo": "via_interna",
+    "puntos": [
+     [
+      -3716,
+      -3984
+     ],
+     [
+      -3716,
+      -4062
+     ]
+    ],
+    "longitud_m": 78,
+    "ancho_m": 7
+   },
+   {
+    "id": "relleno_franja",
+    "nombre": "Franja de aislamiento de 15 m con árboles nativos (eje a 7,5 m del lindero)",
+    "tipo": "franja_arboles",
+    "puntos": [
+     [
+      -3817.7,
+      -4107.5
+     ],
+     [
+      -3859.4,
+      -4035.7
+     ],
+     [
+      -3917.9,
+      -3997.7
+     ],
+     [
+      -3935.7,
+      -3808.0
+     ],
+     [
+      -3690.7,
+      -3822.2
+     ],
+     [
+      -3659.0,
+      -3884.8
+     ],
+     [
+      -3594.0,
+      -3939.5
+     ],
+     [
+      -3579.2,
+      -3959.0
+     ],
+     [
+      -3570.0,
+      -3973.0
+     ],
+     [
+      -3556.9,
+      -3998.7
+     ],
+     [
+      -3614.5,
+      -4036.2
+     ],
+     [
+      -3631.2,
+      -4051.1
+     ],
+     [
+      -3651.9,
+      -4077.6
+     ],
+     [
+      -3671.0,
+      -4107.5
+     ],
+     [
+      -3817.7,
+      -4107.5
+     ]
+    ],
+    "ancho_m": 15,
+    "area_m2": 16811,
+    "nota": "La pieza 3D siembra los árboles a partir del lindero del predio; este trazado documenta el eje de la franja."
+   },
+   {
+    "id": "radio_aerocivil_13km",
+    "nombre": "Borde occidental del radio de 13 km del aeropuerto Yariguíes (RAC 14 de la Aerocivil)",
+    "tipo": "radio_aerocivil",
+    "puntos": [
+     [
+      5023,
+      13258
+     ],
+     [
+      4066,
+      12645
+     ],
+     [
+      3166,
+      11950
+     ],
+     [
+      2330,
+      11178
+     ],
+     [
+      1564,
+      10336
+     ],
+     [
+      874,
+      9431
+     ],
+     [
+      265,
+      8468
+     ],
+     [
+      -259,
+      7455
+     ],
+     [
+      -693,
+      6400
+     ],
+     [
+      -1033,
+      5311
+     ],
+     [
+      -1279,
+      4197
+     ],
+     [
+      -1426,
+      3065
+     ],
+     [
+      -1476,
+      1925
+     ],
+     [
+      -1426,
+      784
+     ],
+     [
+      -1278,
+      -348
+     ],
+     [
+      -1032,
+      -1462
+     ],
+     [
+      -691,
+      -2551
+     ],
+     [
+      -256,
+      -3605
+     ],
+     [
+      267,
+      -4618
+     ],
+     [
+      877,
+      -5581
+     ],
+     [
+      1567,
+      -6486
+     ],
+     [
+      2334,
+      -7328
+     ],
+     [
+      3170,
+      -8099
+     ],
+     [
+      4069,
+      -8794
+     ],
+     [
+      5026,
+      -9407
+     ]
+    ],
+    "nota": "Círculo de 13 km alrededor del ARP del AIP (7,02380 N; 73,80720 O; x = 11.524, y = 1.926 en el modelo). Adentro, un relleno, una planta de compostaje, una planta de tratamiento, una laguna o un matadero necesitan autorización previa de la Aerocivil (Res. 04072 de 2010, num. 14.3.4.2.7.2). El casco, la PTAR y su laguna (≈11,6 km) y el parque agroindustrial (≈11,6 km) quedan adentro; Las Américas (14,1 km) y Kilómetro Cinco (16,2 km), afuera."
    }
   ]
  },

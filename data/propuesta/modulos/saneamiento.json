@@ -2,16 +2,16 @@
   "id": "saneamiento",
   "nombre": "Aseo y saneamiento",
   "corto": "Saneamiento",
-  "lema": "Primera PTAR del casco y relleno clausurado con parque",
-  "problema": "Yondó no trata sus aguas residuales: las 4 estaciones de bombeo del casco solo criban, sedimentan y vierten 55,34 L/s a dos caños junto a los barrios (Superservicios, datos de 2019). El Plan de Saneamiento y Manejo de Vertimientos (PSMV), aprobado por Corantioquia en 2014, ya venció y los estudios del Plan Maestro están al 56 % e inactivos. Además, el relleno Las Américas opera con la licencia vencida desde noviembre de 2023.",
-  "propuesta": "Terminar el Plan Maestro con un PSMV nuevo, recoger lo que hoy se vierte con dos interceptores (≈3,8 km) que siguen los dos caños hasta su unión, al norte del casco, y construir allí, aguas abajo de la unión, la primera PTAR del casco (UASB + filtro percolador, 50 L/s); el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo. En aseo, clausurar el relleno Las Américas y volverlo parque ecotecnológico con granja solar, y montar una ECA de 10 t/día y una planta de compostaje.",
+  "lema": "Primera PTAR del casco, relleno nuevo y parque en el viejo",
+  "problema": "El casco urbano de Yondó no trata sus aguas residuales: sus 4 estaciones de bombeo solo criban, sedimentan y vierten 55,34 L/s a dos caños junto a los barrios (Superservicios, datos de 2019). El Plan de Saneamiento y Manejo de Vertimientos (PSMV), aprobado por Corantioquia en 2014, ya venció y los estudios del Plan Maestro están al 56 % e inactivos. Además, el relleno Las Américas opera con la licencia vencida desde noviembre de 2023 y sin vida útil, y el municipio no tiene otro sitio: el relleno licenciado más cercano está en Barrancabermeja, al otro lado de un puente que se cerró en marzo de 2026.",
+  "propuesta": "Terminar el Plan Maestro con un PSMV nuevo, recoger lo que hoy se vierte con dos interceptores (≈3,8 km) que siguen los dos caños hasta su unión, al norte del casco, y construir allí, aguas abajo de la unión, la primera PTAR del casco (UASB + filtro percolador, 50 L/s); el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo. En aseo, construir un relleno sanitario nuevo en la vereda Kilómetro Cinco, en el sitio que ya reserva el EOT, con la ECA de 10 t/día y la planta de compostaje en el mismo predio; cerrar Las Américas por partes desde 2028 y del todo cuando abra el relleno nuevo, en 2030, y volverlo parque ecotecnológico con granja solar.",
   "cifras": [
     { "v": "0 %", "l": "de las aguas residuales del casco urbano recibe tratamiento", "fuente": "Superservicios, evaluación integral 2020 (datos de 2019)", "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf", "tono": "alerta" },
     { "v": "55,34 L/s", "l": "de aguas residuales vertidos sin tratar a dos caños (2019)", "fuente": "Superservicios, evaluación integral 2020", "url": "https://www.superservicios.gov.co/sites/default/files/inline-files/evaluacion_integral_aguas_aseo_yondo_s.a._e.s.p.pdf", "tono": "alerta" },
     { "v": "78.000 t", "l": "de basura en el relleno Las Américas, con licencia vencida desde 2023", "fuente": "Repositorio, docs/12 (estimación)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/12-parque-ecotecnologico-relleno.md", "tono": "alerta" },
     { "v": "50 L/s", "l": "de capacidad de la PTAR propuesta, para ≈20.000 habitantes en 2056", "fuente": "Cálculo propio con la Res. 0330 de 2017 (RAS)", "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0330_2017.htm", "tono": "meta" }
   ],
-  "inversion": { "min": 42392, "central": 60717, "max": 87025 },
+  "inversion": { "min": 48412, "central": 70537, "max": 105295 },
   "componentes": [
     {
       "id": "plan_maestro",
@@ -27,7 +27,7 @@
         ["Horizonte", "25 años (2056), ≈20.000 habitantes (cálculo propio)"]
       ],
       "costo": { "min": 1800, "central": 2500, "max": 3300 },
-      "base_costo": "Terminar los estudios cuesta unos $1.800 M (docs/10 del repositorio); el PSMV, la topografía del predio y los diseños de PTAR e interceptores, si no están en el alcance, suman $700–1.500 M (estimación). La compra o servidumbre del sitio B no está costeada aparte.",
+      "base_costo": "Terminar los estudios cuesta unos $1.800 M (docs/10 del repositorio); el PSMV, la topografía del predio y los diseños de PTAR e interceptores, si no están en el alcance, suman $700–1.500 M (estimación). La compra o servidumbre del predio de la PTAR no está costeada aparte.",
       "proyecto_tipo": [
         { "nombre": "Proyecto en curso: estudios del Plan Maestro de Acueducto y Alcantarillado de Yondó (BPIN 2024058930006, 56 %, inactivo)", "url": "https://mapainversiones.dnp.gov.co/" }
       ],
@@ -71,7 +71,8 @@
         ["Predio", "≈4,2 ha: la planta usa ≈1,9 ha y la laguna de pulimento ≈0,4 ha"],
         ["Distancias", "≈700 m a la edificación mapeada más cercana (norma: 200 m) y ≈60 m del caño, fuera de su ronda de 30 m; las casas de finca se revisan en campo"],
         ["Lodos y biogás", "Lechos de secado solar y quemador"],
-        ["Calidad", "≥80 % de remoción de DBO y SST (meta del proyecto) y vertimiento dentro de los límites de la Res. 0631 de 2015"]
+        ["Calidad", "≥80 % de remoción de DBO y SST (meta del proyecto) y vertimiento dentro de los límites de la Res. 0631 de 2015"],
+        ["Permisos", "Autorización previa de la Aerocivil por peligro aviario: queda a ≈11,6 km del aeropuerto Yariguíes, dentro del radio de 13 km (RAC 14, num. 14.3.4.2.7.2); vertimiento con el PSMV ante Corantioquia"]
       ],
       "costo": { "min": 15200, "central": 20900, "max": 30200 },
       "base_costo": "Promedio de dos métodos: por habitante, $1.156.350 × 20.000 = $23.127 M (mediana del repositorio); por caudal, la PTAR de Tenjo indexada da $338 M por L/s × 55 L/s (caudal medido en 2019) = $18.600 M. El mínimo usa 45 L/s y el máximo es el tope del repositorio para una PTAR de 12.000 habitantes ($30.176 M); la PTAR de Turbo ($33.711 M, 2025) confirma el orden de magnitud. No incluye interceptores ni la descarga.",
@@ -93,7 +94,7 @@
         ["Pulimento", "Laguna de ≈0,4 ha dentro del predio"],
         ["Descarga", "Cámara con escalones de aireación sobre la orilla del caño"],
         ["Control", "Medidor de caudal y punto de muestreo"],
-        ["Permisos", "Vertimiento y ocupación de cauce (Corantioquia, con el PSMV)"]
+        ["Permisos", "Vertimiento y ocupación de cauce (Corantioquia, con el PSMV) y autorización previa de la Aerocivil para la laguna, un cuerpo de agua artificial a ≈11,6 km del aeropuerto (RAC 14, num. 14.3.4.2.7.2)"]
       ],
       "costo": { "min": 1000, "central": 1400, "max": 2200 },
       "base_costo": "Estimación por partidas: laguna de pulimento de ≈0,4 ha con impermeabilización y bordes ($600–1.200 M), ≈120 m de tubería con excavación y AIU ($200–400 M) y cámara de descarga con aireación en cascada, medidor y protección de la orilla ($200–600 M). Falta el diseño hidráulico.",
@@ -103,66 +104,102 @@
       "ubicacion": "Dentro del predio de la PTAR (la laguna, al norte de la planta) y su borde occidental: la descarga cae al Caño Colector Shell ≈120 m aguas abajo de la planta (≈7,0224 N, 73,9132 O)."
     },
     {
+      "id": "relleno_nuevo",
+      "nombre": "Relleno sanitario nuevo en la vereda Kilómetro Cinco",
+      "resumen": "Relleno municipal en el sitio que ya reserva el EOT, con celdas para 25 años o más; abre en 2030 y entonces Las Américas deja de recibir basura",
+      "descripcion": "Un relleno sanitario mecanizado de categoría I (menos de 50 t/día) en la vereda Kilómetro Cinco, en el polígono que el EOT ya reserva para el relleno nuevo (Acuerdo 013 de 2022, art. 17.4 y Tabla 35). Se compra la reserva, de ≈16 ha, y se usa un predio de ≈8,8 ha, a 44 m o más del eje de la vía: ≈3 ha de celdas por fases, dos lagunas de lixiviados, chimeneas con quema del biogás, canales de aguas lluvias, piezómetros, portería con báscula, cerramiento y una franja de árboles de 15 m. La ECA y la planta de compostaje van en el mismo predio. Abre en 2030, y solo entonces Las Américas deja de recibir basura. Se escogió frente a otros tres sitios y frente a llevar la basura a Barrancabermeja, que depende de un solo puente, de otra autoridad ambiental y de un operador privado. Antes de comprar hay que cruzarlo con las zonas de recarga de acuíferos del EOT.",
+      "especificaciones": [
+        ["Categoría", "I: menos de 50 t/día; Yondó dispuso 3.763 t en 2024, unas 10,3 t/día (Superservicios)"],
+        ["Sitio", "Reserva del EOT en Kilómetro Cinco (≈16 ha); predio útil de ≈8,8 ha, a 44 m o más del eje de la vía a Puerto Berrío, la lectura más exigente del retiro en el EOT"],
+        ["Norma", "El EOT ya delimita esta área para el relleno nuevo y la nombra área de contingencia (art. 17.4 y Tabla 35), como pide la Nación para cofinanciar (Decreto 1077 de 2015, arts. 2.3.2.3.7 y 2.3.2.3.9). Cumple los descartes de la Res. 938 de 2019 (art. 1) que se pudieron revisar: a 4,2 km del suelo urbano y de expansión, a 2,0 km del centro poblado más cercano, fuera de la reserva forestal de Ley 2.ª y fuera del radio de 13 km y del cono de aproximación del aeropuerto"],
+        ["Celdas", "≈3 ha en cinco celdas: ≈266.000–287.000 m³ con 12–15 m de altura. Dan 25 años o más aun sin aprovechar nada (la norma pide 25) y 30 con la ECA y el compostaje; sin las dos celdas en bosque (≈200.000–213.000 m³), los 25 años dependen de aprovechar el 15–20 %"],
+        ["Fase 1", "≈0,6 ha y hasta ≈36.000 m³ con taludes 3H:1V: de 5 a 7 años desde 2030 sin aprovechar y de 6 a 8 con el 15 %"],
+        ["Fondo", "Suelo de 10⁻⁷ cm/s, arcilla compactada de 0,45 m y geomembrana de PEAD"],
+        ["Lixiviados", "Dos lagunas de 28 × 24 m: igualación con recirculación a la celda y humedal de pulimento antes del vertimiento"],
+        ["Operación", "Mecanizada: compactación a 0,85 t/m³ o más, cobertura diaria y frente abierto de 500 m² o menos"],
+        ["Distancias", "4,2 km del perímetro urbano, 4,3 km de los pozos del acueducto, 3,6 km del Caño Colector Shell, 6,4 km de la PTAR del casco y 16,2 km del aeropuerto, fuera del radio de 13 km"],
+        ["Acceso", "7,6 km por vía desde el parque principal; ≈2,7 km en afirmado por mejorar y una entrada nueva de ≈63 m"],
+        ["Vecinos", "3 casas y una caseta a 165–178 m del lindero, al otro lado de la vía; las celdas, a 260 m o más. Al occidente, la planta de tratamiento y disposición de lodos del EOT (Tabla 34) tiene una nave a ≈90 m del lindero y a ≈105 m de la zona de celdas"],
+        ["Áreas protegidas", "Fuera de la Reserva Forestal del Río Magdalena (Ley 2.ª de 1959), en la zona sustraída SDL2_303; el área protegida más cercana del RUNAP está a 11,2 km"],
+        ["Por confirmar", "Cruce con las zonas de recarga de acuíferos (mapa FR_1_2) y con el riesgo no mitigable del EOT, cota de la creciente de 100 años en el borde sur y permiso de aprovechamiento forestal para las celdas en bosque"]
+      ],
+      "costo": { "min": 6020, "central": 9820, "max": 18270 },
+      "base_costo": "Suma de partidas de perfil, en pesos de 2026: compra de la reserva del EOT (16,4 ha a $12–35 M/ha, más 5 % de avalúo, títulos y escritura), $340 M (de $210 M a $600 M); estudios, EIA y licencia, $650 M; celda de la fase 1, $1.750 M; lixiviados, $750 M; mejora de ≈2,7 km de vía, $1.770 M; cerramiento, báscula, edificaciones, drenajes, energía y pozos de monitoreo, $2.200 M; buldócer y volqueta, $1.810 M, e interventoría, $550 M. Referentes: celda de 55 × 100 m de Olaya Herrera ($1.805 M en 2025, $1.902 M de 2026), cierre y celda nueva de Acandí con apoyo de la Nación ($6.437 M en 2025, $6.785 M de 2026) y Vera II de Segovia ($4.707 M en 2023, $5.562 M de 2026). El máximo cubre placa huella en el tramo en afirmado y el arreglo del resto del camino, por si lo que parece placa huella no lo es. No incluye la ECA ni el compostaje, que son componentes aparte, ni las celdas de las fases siguientes, que se pagan con la tarifa o con nuevos aportes; si la celda de la fase 1 se agranda, cada 1.000 m² impermeabilizados suman $104–114 M.",
+      "proyecto_tipo": [
+        { "nombre": "Referente: cierre del relleno y celda nueva de Acandí, Chocó, con apoyo de la Nación ($6.437 M, 2025)", "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-1-243295" },
+        { "nombre": "Referente: relleno Vera II de Segovia, Antioquia, fase I ($4.707 M, 2023)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4697837" },
+        { "nombre": "Referente: celda de 55 × 100 m de Olaya Herrera, Nariño ($1.805 M, 2025)", "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-1-243204" },
+        { "nombre": "Proyecto tipo DNP: Recuperación de cobertura vegetal en áreas disturbadas (franja de aislamiento)", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=263&Itemid=365" }
+      ],
+      "fuentes": ["nacion", "sgr", "oxi", "gobernacion", "corantioquia", "municipio"],
+      "plazo": "2027–2030: cruce con las zonas de recarga antes de comprar, predio y estudios en 2027–2028, licencia en 2028–2029, obra de la fase 1 en 2029 y operación desde 2030",
+      "ubicacion": "Vereda Kilómetro Cinco, en la reserva del EOT para el relleno nuevo (Tabla 35), junto a la vía a Puerto Berrío: 7,6 km por vía desde el parque principal, unos 9 minutos (portería en ≈6,9706 N, 73,9438 O). Son lomas de 83 a 113 m que drenan directo al Magdalena, a 4,3 km de los pozos y la PTAP, a 3,6 km del Caño Colector Shell y a 6,4 km de la PTAR del casco. El borde sur del predio queda apenas 4 a 6 m sobre la lámina del río en el modelo de elevación: las celdas y las lagunas van por encima de la creciente de 100 años. Al occidente está la planta de tratamiento y disposición de lodos del EOT (Tabla 34).",
+      "unidades": 1
+    },
+    {
       "id": "eca",
       "nombre": "Estación de clasificación y aprovechamiento (ECA) de 10 t/día",
       "resumen": "Clasificación de reciclables con recicladores formalizados; proyecto tipo DNP",
-      "descripcion": "Nave de recepción, clasificación, empaque y bodega de reciclables, operada por recicladores de oficio formalizados y alimentada por rutas de recolección selectiva. Yondó dispone unas 10 t/día de residuos y la ECA solo recibe la fracción reciclable separada en la fuente, así que 10 t/día cubre el casco con margen. Baja las toneladas que viajan 40 km al relleno regional de Barrancabermeja.",
+      "descripcion": "Nave de recepción, clasificación, empaque y bodega de reciclables, operada por recicladores de oficio formalizados y alimentada por rutas de recolección selectiva. Va en el predio del relleno nuevo, sobre la vía interna, entre la portería y las celdas, y comparte con él la vía, la báscula y el cerramiento. Yondó dispone unas 10 t/día de residuos y la ECA solo recibe la fracción reciclable separada en la fuente, así que 10 t/día cubre el casco con margen. Lo que se recupera no ocupa celda y alarga la vida del relleno.",
       "especificaciones": [
         ["Capacidad", "10 t/día"],
-        ["Residuos del municipio", "≈10 t/día (3.761 t en 2021, unas 10,3 t/día)"],
+        ["Residuos del municipio", "≈10,3 t/día (3.763 t en 2024, Superservicios)"],
         ["Modelo", "Proyecto tipo ECA del DNP (v1.0, 2021)"],
-        ["Operación", "Recicladores de oficio formalizados"],
+        ["Operación", "Organizaciones de recicladores de oficio, que tienen la exclusividad del aprovechamiento por 15 años (Decreto 1381 de 2024)"],
+        ["Lote", "36 × 52 m en el predio del relleno nuevo, fuera de las celdas"],
         ["Meta", "Aprovechar 15–20 % (a fijar en el PGIRS)"]
       ],
       "costo": { "min": 2900, "central": 5000, "max": 5700 },
-      "base_costo": "Málaga (Santander) contrató en 2026 una «ECA tipo del DNP» de 10 t/día por $5.041 M (SECOP); el mínimo es la etapa 1 de La Pintada ($2.911 M, 2025) y el máximo, Málaga con interventoría ($5.690 M).",
+      "base_costo": "Málaga (Santander) contrató en 2026 una «ECA tipo del DNP» de 10 t/día por $5.041 M (SECOP); el mínimo es la etapa 1 de La Pintada ($2.911 M, 2025) y el máximo, Málaga con interventoría ($5.690 M). En el predio del relleno no paga lote, vía de acceso, cerramiento ni báscula de camiones, que van en el componente del relleno nuevo; ese ahorro se precisa con el diseño.",
       "proyecto_tipo": [
         { "nombre": "Proyecto tipo DNP: Construcción de estación de clasificación y aprovechamiento – ECA (v1.0, 2021)", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=259&Itemid=360" },
         { "nombre": "Referente: ECA tipo DNP de 10 t/día de Málaga ($5.041 M, 2026)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.10324446" },
         { "nombre": "Referente: convenio de Corantioquia para la ECA de La Pintada ($2.854 M, 2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9091199" }
       ],
       "fuentes": ["corantioquia", "nacion", "sgr"],
-      "plazo": "2029",
-      "ubicacion": "Predio por definir en suelo de servicios del EOT, con acceso de camiones y junto a la planta de compostaje; no va sobre las celdas del relleno. En la maqueta se muestra junto al relleno Las Américas, en una ubicación indicativa."
+      "plazo": "2029–2030 (con las obras del relleno nuevo)",
+      "ubicacion": "En el predio del relleno nuevo de Kilómetro Cinco, al oriente de la vía interna, entre la portería (a ≈110 m) y las celdas, fuera de ellas (≈6,9710 N, 73,9450 O)."
     },
     {
       "id": "compostaje",
       "nombre": "Planta de compostaje de residuos orgánicos",
       "resumen": "Compost con los orgánicos de plazas, poda y grandes generadores (4–5 t/día)",
-      "descripcion": "Pilas con volteo bajo cubierta, maduración y cribado para la fracción orgánica que se separa en la fuente: plazas de mercado, poda y grandes generadores. El compost puede ir a los viveros y huertas del módulo agroindustrial. Es distinta del compostaje didáctico del parque ecotecnológico, que no recibe basura del pueblo.",
+      "descripcion": "Pilas con volteo bajo cubierta, maduración y cribado para la fracción orgánica que se separa en la fuente: plazas de mercado, poda y grandes generadores. Va en el predio del relleno nuevo, al norte de la celda de la fase 1: el EOT pide que el relleno tenga sitios para estabilizar los residuos biodegradables separados en la fuente. El compost puede ir a los viveros y huertas del módulo agroindustrial. Es distinta del compostaje didáctico del parque ecotecnológico, que no recibe basura del pueblo.",
       "especificaciones": [
         ["Capacidad", "≈4–5 t/día de orgánicos"],
-        ["Área", "≈1.500–2.500 m² (estimado)"],
+        ["Área", "≈2.000 m² (50 × 40 m) en el predio del relleno nuevo"],
         ["Proceso", "Pilas con volteo bajo cubierta, maduración y cribado"],
         ["Insumos", "Plazas de mercado, poda y grandes generadores"],
-        ["Meta", "Desviar ≥30 % de los orgánicos del relleno regional"]
+        ["Meta", "Desviar de las celdas ≥30 % de los orgánicos"],
+        ["Permisos", "Sin licencia ambiental (menos de 20.000 t/año); registro en el SUI y báscula calibrada desde 2027 (Decreto 772 de 2026)"]
       ],
       "costo": { "min": 2000, "central": 2500, "max": 3000 },
-      "base_costo": "El Peñol (Antioquia) contrató la etapa 1 de su planta de compostaje por $1.924 M en 2023 (≈$2.200 M de 2026, indexación aproximada), con convenio del PDA de Antioquia, y obras de la etapa II por $380 M en 2026.",
+      "base_costo": "El Peñol (Antioquia) contrató la etapa 1 de su planta de compostaje por $1.924 M en 2023 (≈$2.200 M de 2026, indexación aproximada), con convenio del PDA de Antioquia, y obras de la etapa II por $380 M en 2026. En el predio del relleno comparte vía, báscula y cerramiento.",
       "proyecto_tipo": [
         { "nombre": "Referente: planta de compostaje de El Peñol, etapa 1 ($1.924 M, 2023)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4948246" },
         { "nombre": "Referente: convenio del PDA de Antioquia con El Peñol ($2.127 M, 2023)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4643342" }
       ],
       "fuentes": ["gobernacion", "sgr"],
-      "plazo": "2029–2030",
-      "ubicacion": "Junto a la ECA, en el mismo predio de servicios."
+      "plazo": "2029–2030 (con las obras del relleno nuevo)",
+      "ubicacion": "En el predio del relleno nuevo de Kilómetro Cinco, al norte de la celda de la fase 1 y al final de la vía interna, a ≈270 m de la casa más cercana."
     },
     {
       "id": "relleno",
       "nombre": "Clausura del relleno Las Américas y parque ecotecnológico",
-      "resumen": "Cierre técnico, granja solar de 997 kWp y parque con coworking (docs/12)",
-      "descripcion": "El relleno opera con la licencia vencida desde el 12 de noviembre de 2023. Se clausura con cobertura final, manejo de lixiviados y gases y 20 años de posclausura, y la basura pasa al relleno regional San Silvestre (Barrancabermeja, licencia hasta 2044). Sobre las celdas va una granja solar de 997 kWp para 2.236 hogares de estratos 1 y 2, y alrededor un parque con coworking rural, granja y circuito de 0,9 km.",
+      "resumen": "Cierre por partes desde 2028 y total cuando abra el relleno nuevo, granja solar de 997 kWp y parque con coworking (docs/12)",
+      "descripcion": "El relleno opera con la licencia vencida desde el 12 de noviembre de 2023 y ya no tiene vida útil. Recibe basura solo hasta que abra el relleno nuevo de Kilómetro Cinco, en 2030, y solo en el frente activo: desde 2028, el plan de cierre acordado con Corantioquia pone la cobertura final en las celdas viejas, empezando por la norte, y en 2030–2031 se cierra el frente activo. La clausura lleva manejo de lixiviados y gases y 20 años de posclausura, e incluye el botadero de los años noventa que, según una nota de prensa de 2020, estaba donde hoy están los pozos del acueducto (sin delimitar; se confirma con apiques y georradar). La granja solar de 997 kWp, para 2.236 hogares de estratos 1 y 2, se monta cuando la cobertura haya asentado: ≈530 kWp en 2031 sobre las celdas cubiertas desde 2028 y el resto hacia 2033–2034. Alrededor va un parque con coworking rural, granja y circuito de 0,9 km.",
       "especificaciones": [
-        ["Residuos acumulados", "≈78.000 t (estimación)"],
-        ["Clausura", "Cobertura con geomembrana, lixiviados, gases y monitoreo"],
-        ["Posclausura", "20 años, ≈$190 M al año (estimación)"],
-        ["Disposición regional", "San Silvestre, a 40 km, ≈$321 M al año (estimación)"],
-        ["Granja solar", "997 kWp, 1,34 GWh al año"],
+        ["Residuos acumulados", "≈78.000 t a 2026 (estimación) y ≈12.000–17.000 t más entre 2027 y 2030 (cálculo propio)"],
+        ["Transición", "Recibe basura solo hasta 2030 y solo en el frente activo, con un plan de cierre acordado con Corantioquia; ya no se pueden abrir celdas transitorias (Res. 1529 de 2010 y 1890 de 2011)"],
+        ["Clausura", "Por partes: cobertura con geomembrana de las celdas viejas desde 2028 y del frente activo en 2030–2031, con lixiviados, gases y monitoreo"],
+        ["Botadero antiguo", "Según una nota de prensa de 2020, estaba donde hoy están los pozos del acueducto: no está delimitado, se confirma con apiques y georradar, y entra en la clausura y en el monitoreo del agua subterránea"],
+        ["Posclausura", "20 años (Res. 938 de 2019), ≈$190 M al año (estimación)"],
+        ["Granja solar", "997 kWp, 1,34 GWh al año: ≈530 kWp en 2031 sobre las celdas cubiertas desde 2028 y el resto hacia 2033–2034, cuando asiente la cobertura del frente activo"],
         ["Beneficio", "Bloque de 50 kWh/mes para 2.236 hogares de estratos 1 y 2"],
         ["Parque", "Coworking de 312 m², granja y circuito de 0,9 km"]
       ],
       "costo": { "min": 11492, "central": 16417, "max": 24625 },
-      "base_costo": "Presupuesto de prefactibilidad de docs/12 (clase 4: −30 % / +50 %): $4.194 M de estudios y clausura, $5.603 M de granja solar y conexión a EPM y $6.620 M de parque.",
+      "base_costo": "Presupuesto de prefactibilidad de docs/12 (clase 4: −30 % / +50 %): $4.194 M de estudios y clausura, $5.603 M de granja solar y conexión a EPM y $6.620 M de parque. Se calculó para cerrar todo en 2027–2028: la basura que llegue hasta 2030 y el cierre por partes pueden subir el costo de la clausura.",
       "proyecto_tipo": [
         { "nombre": "Proyecto tipo DNP: Construcción y dotación de centro TIC municipal (coworking)", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=145&Itemid=197" },
         { "nombre": "Proyecto tipo DNP: Construcción y dotación parque recreodeportivo", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=132&Itemid=201" },
@@ -170,20 +207,20 @@
         { "nombre": "Proyecto tipo DNP: Recuperación de cobertura vegetal en áreas disturbadas", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=263&Itemid=365" }
       ],
       "fuentes": ["sgr", "fondos", "nacion", "gobernacion", "municipio", "findeter", "cooperacion"],
-      "plazo": "2027–2030 (posclausura hasta 2048)",
+      "plazo": "2028–2031 (cierre de las celdas viejas desde 2028 y del frente activo en 2030–2031; parque y primera parte de la granja solar en 2031; el resto de la granja hacia 2033–2034; posclausura hasta ≈2051)",
       "ubicacion": "Vereda Las Américas, a 3,9 km del parque principal por vía (7,0140 N, 73,9342 O; ubicación inferida por satélite, confianza media). El EOT (Tabla 32) delimita el polígono del relleno unos 830 m al suroriente, junto al de la planta municipal: hay que conciliarlo con el catastro (lote 893-000-033-00210)."
     }
   ],
   "financiacion": [
-    { "fuente": "nacion", "monto": 16372, "mecanismo": "MinVivienda, Viceministerio de Agua: viabilidad y apoyo financiero de la Nación (Res. 0467 de 2026) para la PTAR, el Plan Maestro y la ECA; MinDeporte, MinTIC y MinCultura, $1.324 M del parque" },
-    { "fuente": "sgr", "monto": 14600, "mecanismo": "OCAD Paz (Asignación para la Paz, iniciativa PDET) para los interceptores; asignaciones directas para Plan Maestro, ECA y compostaje; $7.451 M del relleno: clausura $2.394 M, parque $3.310 M y granja solar $1.747 M del Incentivo a la Producción (con la granja de TIC, 2 proyectos y $4.546 M, dentro del tope de 2 proyectos y $8.000 M por municipio)" },
-    { "fuente": "gobernacion", "monto": 10800, "mecanismo": "Plan Departamental de Aguas de Antioquia, por convenio como en Sonsón y El Peñol: PTAR, interceptores, compostaje y $1.200 M de la clausura (SGP y PDA)" },
-    { "fuente": "oxi", "monto": 4500, "mecanismo": "Obras por impuestos, modalidad ordinaria ZOMAC y PDET, con Ecopetrol (opera el campo Casabe): una etapa de los interceptores con viabilidad propia" },
-    { "fuente": "corantioquia", "monto": 4500, "mecanismo": "Tasa retributiva y convocatorias de saneamiento: PTAR y ECA (precedentes: ECA de La Pintada, $2.854 M; PTAR de Guachucal con Corponariño)" },
-    { "fuente": "fondos", "monto": 4000, "mecanismo": "Colombia Solar o FENOGE, $2.911 M de la granja solar del relleno; Cormagdalena (0,5 % del SGR para municipios ribereños), $1.089 M de la laguna de pulimento y la descarga al Caño Colector Shell" },
-    { "fuente": "municipio", "monto": 2500, "mecanismo": "Tarifa de aseo y provisión de clausura ($600 M), recursos propios del parque ($993 M) y SGP de agua y saneamiento para el Plan Maestro y el emisario" },
-    { "fuente": "cooperacion", "monto": 2500, "mecanismo": "Ecopetrol (inversión social) y cooperación, $993 M del parque; cooperación o banca multilateral, por un programa nacional o departamental, para el arranque de la PTAR" },
-    { "fuente": "findeter", "monto": 945, "mecanismo": "Crédito «Municipios Territorios Energéticos» de Findeter y MinEnergía (tasa compensada, IBR + 0,7 %) para la granja solar del relleno, dentro de la capacidad prudente de endeudamiento del municipio ($5.141 M a $10.281 M), compartida con salud, TIC y agroindustria" }
+    { "fuente": "nacion", "monto": 18122, "mecanismo": "MinVivienda, Viceministerio de Agua: viabilidad y apoyo financiero de la Nación (Res. 0467 de 2026) para la PTAR, el Plan Maestro, la ECA (Programa Basura Cero) y la celda de la fase 1 del relleno nuevo ($1.750 M), que se sustenta con los criterios del art. 27 de esa resolución (Yondó es PDET y ZOMAC, y el relleno nuevo permite cerrar un sitio que opera sin licencia) y con el análisis de regionalización que exige el Decreto 1077 de 2015 (art. 2.3.2.3.7); MinDeporte, MinTIC y MinCultura, $1.324 M del parque de Las Américas" },
+    { "fuente": "sgr", "monto": 16500, "mecanismo": "OCAD Paz (Asignación para la Paz, iniciativa PDET) para los interceptores; asignaciones directas para el Plan Maestro, la ECA, el compostaje y los estudios, la interventoría y parte de las obras del relleno nuevo ($1.900 M, reformulando el BPIN 2025058930015, que pedía ampliar Las Américas); $7.451 M de Las Américas, radicados en el bienio 2029–2030: clausura $2.394 M, parque $3.310 M y granja solar $1.747 M del Incentivo a la Producción (es el único proyecto del municipio en esa convocatoria, porque la granja municipal de TIC va en la de 2027–2028; el tope es de 2 proyectos y $8.000 M por municipio)" },
+    { "fuente": "gobernacion", "monto": 12955, "mecanismo": "Plan Departamental de Aguas de Antioquia, por convenio como en Sonsón, El Peñol y San Rafael: PTAR, interceptores, compostaje, $1.200 M de la clausura de Las Américas (SGP y PDA) y $1.250 M de las obras complementarias del relleno nuevo; y $905 M, la mitad de la maquinaria del relleno nuevo, por la línea de maquinaria 50/50" },
+    { "fuente": "oxi", "monto": 6270, "mecanismo": "Obras por impuestos, modalidad ordinaria ZOMAC y PDET, con Ecopetrol (opera el campo Casabe): una etapa de los interceptores con viabilidad propia y la vía de acceso al relleno nuevo ($1.770 M) como vía terciaria de la iniciativa PDET 1305893152122" },
+    { "fuente": "corantioquia", "monto": 5500, "mecanismo": "Tasa retributiva y convocatorias de saneamiento: PTAR y ECA (precedentes: ECA de La Pintada, $2.854 M; PTAR de Guachucal con Corponariño); y un convenio para el tratamiento de lixiviados y los pozos de monitoreo del relleno nuevo ($1.000 M), como los que firmó en 2025 con Yalí, Campamento y Anorí" },
+    { "fuente": "fondos", "monto": 4000, "mecanismo": "Colombia Solar o FENOGE, $2.911 M de la granja solar de Las Américas; Cormagdalena (0,5 % del SGR para municipios ribereños), $1.089 M de la laguna de pulimento y la descarga al Caño Colector Shell" },
+    { "fuente": "municipio", "monto": 3745, "mecanismo": "Tarifa de aseo y provisión de clausura ($600 M), recursos propios del parque de Las Américas ($993 M), compra de la reserva del EOT para el relleno nuevo ($340 M, que la Nación no financia) y la otra mitad de su maquinaria ($905 M), y SGP de agua y saneamiento para el Plan Maestro, la laguna de pulimento y la descarga" },
+    { "fuente": "cooperacion", "monto": 2500, "mecanismo": "Ecopetrol (inversión social) y cooperación, $993 M del parque de Las Américas; cooperación o banca multilateral, por un programa nacional o departamental, para el arranque de la PTAR" },
+    { "fuente": "findeter", "monto": 945, "mecanismo": "Crédito «Municipios Territorios Energéticos» de Findeter y MinEnergía (tasa compensada, IBR + 0,7 %) para la granja solar de Las Américas, dentro de la capacidad prudente de endeudamiento del municipio ($5.141 M a $10.281 M), compartida con salud, TIC y agroindustria" }
   ],
   "proyectos_tipo": [
     { "nombre": "Construcción de estación de clasificación y aprovechamiento – ECA (v1.0, 2021)", "url": "https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=259&Itemid=360" },
@@ -194,44 +231,61 @@
   ],
   "gestion": {
     "madurez": "Perfil",
-    "madurez_nota": "Hay sitio, trazados y costos estimados y el relleno ya está en prefactibilidad (estudio del parque ecotecnológico, 2026), pero los estudios del Plan Maestro siguen al 56 % e inactivos; faltan aforos, topografía y estudio de inundación del predio de la PTAR y el PSMV nuevo.",
-    "pedido": "Pedimos a la Nación $16.372 M: $15.048 M de apoyo financiero de MinVivienda para la PTAR, el Plan Maestro y la ECA (Res. 0467 de 2026) y $1.324 M de MinDeporte, MinTIC y MinCultura para el parque del relleno; a la Gobernación, $10.800 M por el Plan Departamental de Aguas. En regalías se buscan $14.600 M (OCAD Paz para los interceptores, asignaciones directas y el relleno, con $1.747 M del Incentivo a la Producción para su granja solar), más $4.500 M de obras por impuestos con Ecopetrol y $4.500 M de Corantioquia.",
+    "madurez_nota": "Hay sitio, trazados y costos estimados: el relleno Las Américas ya está en prefactibilidad (estudio del parque ecotecnológico, 2026) y el relleno nuevo tiene sitio reservado en el EOT y una distribución de perfil, pero los estudios del Plan Maestro siguen al 56 % e inactivos; faltan aforos, topografía y estudio de inundación del predio de la PTAR, el PSMV nuevo y, para el relleno nuevo, el cruce con las zonas de recarga de acuíferos, la topografía, el estudio del subsuelo, el estudio de creciente y el EIA.",
+    "pedido": "Pedimos a la Nación $18.122 M: $16.798 M de apoyo financiero de MinVivienda para la PTAR, el Plan Maestro, la ECA y la celda de la fase 1 del relleno nuevo (Res. 0467 de 2026) y $1.324 M de MinDeporte, MinTIC y MinCultura para el parque de Las Américas; a la Gobernación, $12.955 M por el Plan Departamental de Aguas y la maquinaria 50/50. En regalías se buscan $16.500 M (OCAD Paz para los interceptores y asignaciones directas para el relleno nuevo y Las Américas, con $1.747 M del Incentivo a la Producción para su granja solar en la convocatoria de 2029–2030), más $6.270 M de obras por impuestos con Ecopetrol (interceptores y vía al relleno nuevo) y $5.500 M de Corantioquia.",
     "a_quien": [
-      "MinVivienda · Viceministerio de Agua y Saneamiento Básico (viabilidad y apoyo financiero, Res. 0467 de 2026)",
+      "MinVivienda · Viceministerio de Agua y Saneamiento Básico (viabilidad y apoyo financiero, Res. 0467 de 2026; la ECA, en el Programa Basura Cero)",
       "DNP · Secretaría Técnica del OCAD Paz (Asignación para la Paz, iniciativas PDET)",
-      "Gobernación de Antioquia · Gerencia de Servicios Públicos, gestor del Plan Departamental de Aguas",
-      "Corantioquia · PSMV, permiso de vertimiento y tasa retributiva",
+      "Gobernación de Antioquia · Gerencia de Servicios Públicos, gestor del Plan Departamental de Aguas, y línea de maquinaria 50/50",
+      "Corantioquia · PSMV, permiso de vertimiento, tasa retributiva, licencia del relleno nuevo (con el aprovechamiento forestal) y plan de cierre de Las Américas",
       "ART · banco de proyectos de obras por impuestos, con Ecopetrol",
-      "MinEnergía · Colombia Solar, FENOGE y convocatoria del Incentivo a la Producción (granja solar del relleno)",
+      "MinInterior · Dirección de la Autoridad Nacional de Consulta Previa: determinación de procedencia y oportunidad de la consulta previa para el relleno nuevo",
+      "Aerocivil · autorización previa por peligro aviario de la PTAR y su laguna, a ≈11,6 km del aeropuerto Yariguíes (RAC 14)",
+      "MinEnergía · Colombia Solar, FENOGE y convocatoria del Incentivo a la Producción (granja solar de Las Américas)",
       "Cormagdalena · asignación del 0,5 % del SGR para municipios ribereños"
     ],
     "pasos": [
-      "Nov-2026 a feb-2027: pedir que la PTAR de Yondó entre en las bases y el plan plurianual del PND 2026–2030 como cierre de brechas en un municipio PDET.",
+      "Nov-2026 a feb-2027: pedir que la PTAR de Yondó y el relleno nuevo entren en las bases y el plan plurianual del PND 2026–2030 como cierre de brechas en un municipio PDET.",
       "2027: reactivar los estudios del Plan Maestro (BPIN 2024058930006) y contratar aforos de 24 horas en las 4 EBAR, en época seca y de lluvias.",
       "2027: radicar ante Corantioquia el PSMV nuevo con la PTAR aguas abajo de la unión de los caños y firmar un acuerdo de pago de la tasa retributiva.",
       "2027: reformular el BPIN 20201301010649 (canalización de $67.640 M corrientes) como interceptor enterrado más parque lineal.",
-      "2027–2028: topografía, estudio de creciente de 100 años y compra o servidumbre del predio de la PTAR; contrato de disposición en San Silvestre y plan de clausura del relleno.",
-      "2028: radicar la PTAR ante MinVivienda (Res. 0467 de 2026), los interceptores en el OCAD Paz y en el banco de obras por impuestos, y la granja solar en Colombia Solar y en la convocatoria del Incentivo a la Producción."
+      "2027: actualizar el PGIRS con el análisis de alternativas del relleno, incluida la opción regional de Barrancabermeja y por qué no sirve (Decreto 1077 de 2015, art. 2.3.2.3.7); acordar con Corantioquia el plan de cierre de Las Américas (desde 2028 se cubren las celdas viejas y la basura va solo al frente activo, hasta que abra el relleno nuevo), y reformular el BPIN 2025058930015 (ampliación de Las Américas, devuelto) como relleno nuevo.",
+      "2027, antes de comprar el predio de Kilómetro Cinco: cruzarlo con el mapa de recarga de acuíferos del EOT (FR_1_2), con el modelo hidrogeológico de Corantioquia y la UNAL (2017) y con el bosque protector; pedir a Planeación la sección vial de la vía a Puerto Berrío y el certificado de uso del suelo, y a la Autoridad Nacional de Consulta Previa del MinInterior la determinación de procedencia y oportunidad de la consulta previa.",
+      "2027–2028: topografía, estudio de creciente de 100 años y compra o servidumbre del predio de la PTAR, y autorización previa de la Aerocivil para la PTAR y su laguna (RAC 14); compra de la reserva del EOT en Kilómetro Cinco (≈16 ha) y topografía, estudio del subsuelo, hidrogeología, estudio de creciente de 100 años con la serie de la estación Peñas Blancas del IDEAM, EIA y diseños del relleno nuevo.",
+      "2028: radicar ante MinVivienda la PTAR y la celda de la fase 1 del relleno (Res. 0467 de 2026); ante Corantioquia, la licencia del relleno, con el aprovechamiento forestal si las celdas futuras entran en bosque; los interceptores en el OCAD Paz y en el banco de obras por impuestos, con la vía al relleno; y empezar a cubrir las celdas viejas de Las Américas con la parte de la Gobernación ($1.200 M) y la provisión de clausura ($600 M).",
+      "2029–2030: radicar en el SGR la clausura, el parque y la granja solar de Las Américas (la granja, en la convocatoria del Incentivo a la Producción) y la granja en Colombia Solar o FENOGE; construir la fase 1, la vía, las obras complementarias, la ECA y el compostaje; en 2030 abre el relleno nuevo y Las Américas deja de recibir basura.",
+      "2030–2031: cerrar el frente activo de Las Américas; en 2031, el parque y la primera parte de la granja solar sobre las celdas cubiertas desde 2028; el resto de la granja, hacia 2033–2034, y la posclausura, hasta ≈2051."
     ]
   },
   "metas": [
     { "indicador": "Aguas residuales del casco tratadas en PTAR", "base": "0 % (2019)", "meta": "100 % del caudal de tiempo seco (2031)" },
     { "indicador": "Vertimientos sin tratar a los caños", "base": "4 puntos, 55,34 L/s (2019)", "meta": "0 en tiempo seco; con lluvia, solo alivios por aliviadero (2031)" },
     { "indicador": "PSMV vigente aprobado por Corantioquia", "base": "Vencido; aprobado en 2014 (2026)", "meta": "PSMV nuevo aprobado (2028)" },
-    { "indicador": "Residuos dispuestos en un sitio con licencia vigente", "base": "0 %: licencia del relleno vencida en 2023 (2026)", "meta": "100 %, con el relleno clausurado (2028)" },
+    { "indicador": "Residuos dispuestos en un sitio con licencia vigente", "base": "0 %: licencia del relleno vencida en 2023 (2026)", "meta": "100 %, en el relleno nuevo de Kilómetro Cinco (2030)" },
+    { "indicador": "Vida útil del sitio de disposición final", "base": "Vencida: −1 año a diciembre de 2024 (Superservicios)", "meta": "25 años o más en el relleno nuevo (2030)" },
+    { "indicador": "Relleno Las Américas", "base": "Recibe basura con la licencia vencida (2026)", "meta": "Celdas viejas cubiertas (2028), sin recibir basura desde 2030 y clausurado, en posclausura (2031)" },
     { "indicador": "Residuos aprovechados en la ECA y el compostaje", "base": "Sin medición (2026)", "meta": "15–20 % (2031)" }
   ],
   "riesgos": [
     { "riesgo": "El alcantarillado es combinado: con lluvia el caudal se multiplica y la PTAR puede rebosar. Además, los 55,34 L/s de 2019, declarados como caudal seco, ya son unas 4 veces el caudal doméstico teórico (infiltración, conexiones erradas o capacidad de bombeo reportada).", "mitigacion": "Aforos de 24 horas en época seca y de lluvias antes de diseñar, aliviaderos en las EBAR y en la estación de llegada, y PTAR por módulos de 25 L/s." },
     { "riesgo": "El predio de la PTAR queda junto a la unión de los caños, en terreno bajo con riesgo de inundación, y al parecer es privado (falta consultar el catastro).", "mitigacion": "Topografía y estudio de creciente de 100 años en 2027–2028, plataforma y dique por encima de esa cota, compra o servidumbre temprana y acceso directo desde la Carrera 57; el sitio A (4,0 ha, en la reserva del EOT, pegado al casco) queda como alternativa." },
     { "riesgo": "La canalización ya formulada (BPIN 20201301010649, $67.640 M corrientes) ocupa el corredor del interceptor y del parque lineal.", "mitigacion": "Reformularla como interceptor enterrado más parque lineal y construir primero el interceptor, para no romper después la obra." },
-    { "riesgo": "PTAR construida y abandonada porque el prestador no puede pagar la operación (la Superservicios reporta debilidades de Aguas y Aseo).", "mitigacion": "Tecnología de baja energía, tarifa de alcantarillado que cubra la operación, contrato de operación con capacitación y cooperación para el arranque asistido." }
+    { "riesgo": "PTAR construida y abandonada porque el prestador no puede pagar la operación (la Superservicios reporta debilidades de Aguas y Aseo).", "mitigacion": "Tecnología de baja energía, tarifa de alcantarillado que cubra la operación, contrato de operación con capacitación y cooperación para el arranque asistido." },
+    { "riesgo": "La PTAR y su laguna de pulimento quedan a ≈11,6 km del aeropuerto Yariguíes, dentro del radio de 13 km en el que la Aerocivil debe autorizar antes las plantas de tratamiento y los cuerpos de agua artificiales, y puede negarlo si atraen aves (RAC 14, num. 14.3.4.2.7.2).", "mitigacion": "Pedir la autorización en 2027–2028, con los diseños, y diseñar para no atraer aves: lechos de secado cubiertos, laguna sin vegetación emergente y con hilos o malla contra aves, o un pulimento sin espejo de agua abierto (humedal de flujo subsuperficial)." },
+    { "riesgo": "La licencia del relleno nuevo se demora (consulta previa, determinantes de Corantioquia, recarga de acuíferos o bosque) y Las Américas, sin vida útil, sigue recibiendo basura sin licencia.", "mitigacion": "Comprar el predio y contratar los estudios en 2027, pedir desde el comienzo a la Autoridad Nacional de Consulta Previa del MinInterior la determinación de procedencia y oportunidad de la consulta previa y acordar con Corantioquia un plan de cierre de Las Américas con fecha. El predio está fuera de la Reserva Forestal del Río Magdalena (zona sustraída) y a 11,2 km del área protegida más cercana. Ya no se pueden abrir celdas transitorias (Res. 1529 de 2010 y 1890 de 2011)." },
+    { "riesgo": "El predio está sobre la Formación Mesa, como los pozos del casco. El EOT declara suelo de protección las zonas de alto y muy alto potencial de recarga de acuíferos (4.121,91 ha, mapa FR_1_2) y prohíbe construir en ellas (art. 42.2); ese mapa no está publicado en formato vectorial y el cruce no se pudo hacer. Si el predio cae adentro, el sitio no sirve.", "mitigacion": "Condición previa a la compra: cruzar el predio con el mapa FR_1_2 del EOT y con el modelo hidrogeológico de Corantioquia y la UNAL (2017) en 2027. Si queda adentro, pasar a la alternativa y ajustar el EOT antes de pedir cofinanciación." },
+    { "riesgo": "Creciente del Magdalena en el borde sur del predio: allí el terreno queda apenas 4 a 6 m sobre la lámina del río en el modelo de elevación (Copernicus GLO-30), y en Barrancabermeja el río sube de 5 a 7 m entre aguas bajas y altas en la mayoría de los años (IDEAM, 2007–2018).", "mitigacion": "Estudio de creciente de 100 años en 2027–2028 con la serie de la estación limnimétrica Peñas Blancas del IDEAM (activa desde 1977, a 1,7 km del predio) y topografía 1:1.000; lagunas y celdas por encima de esa cota, con borde libre, y la vaguada sur solo como franja verde." },
+    { "riesgo": "Los 25 años o más de vida útil cuentan con ≈1,4 ha de bosque dentro de la zona de celdas (ESA WorldCover 2021: las celdas futuras 3 y 4, todas, y la mitad de la futura 1), y el EOT trata el bosque como suelo de protección y parte de la estructura ecológica principal (Tabla 30 y art. 60).", "mitigacion": "Cruzar las celdas con el mapa de bosque protector del EOT y con Corantioquia en 2027 e incluir el aprovechamiento forestal y su compensación en la licencia. Sin las dos celdas en bosque quedan ≈200.000–213.000 m³: los 25 años se cumplen si se aprovecha el 15–20 % (meta de la ECA y el compostaje)." },
+    { "riesgo": "La clausura de Las Américas se presupuestó para cerrar todo en 2027–2028: las ≈12.000–17.000 t que llegan entre 2027 y 2030 y el cierre por partes agrandan la obra y pueden subir el costo.", "mitigacion": "Delimitar la huella de los residuos con apiques en 2027, cubrir primero las celdas viejas y operar el frente activo con cobertura diaria y sin abrir frentes nuevos; ajustar el diseño de la clausura antes de radicarla." },
+    { "riesgo": "Operar el relleno propio costaría ≈$806 M al año (entre $622 M y $1.432 M). Si la inversión llega como aporte, la tarifa recogería ≈$681 M (Res. CRA 1040 de 2026: 300 t al mes, 20 años de posclausura y 35 % de descuento, en pesos de diciembre de 2025), ≈$100–150 M menos que esa operación y sin contar el cobro de lixiviados, que falta calcular. Frente a llevar la basura a 40 km, son ≈$320 M al año más en operación (≈$485 M con el costo regional de docs/12); con la inversión, el relleno propio cuesta 2,5 a 3 veces la opción regional (cálculos propios).", "mitigacion": "Inversión como aporte bajo condición, operación mecanizada austera con el prestador, báscula para cobrar lo real, IAT (≈$50 M al año) para la ECA y el compostaje, y subsidios con SGP. Ese mayor costo es el precio de no depender del puente ni de otra autoridad ambiental." },
+    { "riesgo": "Vecinos: 3 casas y una caseta a 165–178 m del lindero, al otro lado de la vía y a sotavento de los vientos del suroccidente; tres estanques que no están en los mapas, y al occidente la planta de tratamiento y disposición de lodos del EOT (Tabla 34), con una nave a ≈90 m del lindero y a ≈105 m de la zona de celdas.", "mitigacion": "Celdas a 260 m o más de las casas, franja de árboles de 15 m, cobertura diaria y frente de máximo 500 m²; socializar desde los estudios y confirmar en campo los estanques, la captación del acueducto veredal de Kilómetro Cinco y quién opera la planta de lodos y para qué." },
+    { "riesgo": "La vía de acceso tiene ≈2,7 km en afirmado por mejorar y el resto no se ha revisado en campo: si no es placa huella, su costo se triplica.", "mitigacion": "Recorrido con pendientes y drenajes en 2027 y financiarla aparte como vía terciaria PDET (obras por impuestos u OCAD Paz) o con la Gobernación." }
   ],
   "pasos": [
     {
       "id": "portadilla",
       "tipo": "portadilla",
-      "titulo": "Yondó vierte todas sus aguas residuales sin tratar",
+      "titulo": "El casco de Yondó vierte todas sus aguas residuales sin tratar",
       "texto": "Las 4 estaciones de bombeo del casco solo criban y vierten a dos caños: El Paraíso 16,51 L/s, La Victoria 14,69, El Progreso 13,52 y El Prado 10,62 (2019). El casco urbano no tiene planta de tratamiento de aguas residuales (PTAR).",
       "leyenda": [
         { "texto": "Vertimiento sin tratar de cada estación (2019)", "color": "#8a5a2b", "forma": "" },
@@ -271,11 +325,48 @@
       ]
     },
     {
+      "id": "relleno_nuevo",
+      "tipo": "componente",
+      "componente": "relleno_nuevo",
+      "titulo": "Un relleno nuevo en Yondó, en el sitio que ya reserva el EOT",
+      "texto": "Las Américas tiene la licencia vencida desde 2023 y ya no tiene vida útil, y llevar la basura a Barrancabermeja la dejaría a 40 km, detrás de un puente que la socavación cerró en marzo de 2026 y bajo otra autoridad ambiental. El relleno nuevo va en la vereda Kilómetro Cinco, en el sitio que el EOT reservó en 2022, como pide la Nación para cofinanciar: fuera del radio de 13 km del aeropuerto, a 4,2 km del casco y lejos de los pozos del acueducto. Se compararon otros tres sitios.",
+      "leyenda": [
+        { "texto": "Recomendado: Kilómetro Cinco, en la reserva del EOT (8,8 ha)", "color": "var(--m-saneamiento)", "forma": "area" },
+        { "texto": "Alternativas: occidente cercano y lomas de Casabe", "color": "#8a8f94", "forma": "dash" },
+        { "texto": "Descartado: ampliar junto a Las Américas", "color": "#d9363e", "forma": "dash" },
+        { "texto": "Vía de acceso desde el borde del casco (≈6,5 km)", "color": "#6f5233", "forma": "" },
+        { "texto": "Borde del radio de 13 km del aeropuerto Yariguíes (Aerocivil)", "color": "#8e44ad", "forma": "dash" }
+      ],
+      "cifras": [
+        { "v": "7,6 km", "l": "por vía desde el parque principal; San Silvestre, en Barrancabermeja, queda a 40 km, al otro lado del puente", "fuente": "Cálculo propio con OSRM sobre OpenStreetMap (oct-2026)" },
+        { "v": "16,2 km", "l": "del aeropuerto Yariguíes: fuera del radio de 13 km en que la Aerocivil debe autorizar un relleno", "fuente": "Cálculo propio; RAC 14 (Res. Aerocivil 04072 de 2010)", "url": "https://corpouraba.gov.co/wp-content/uploads/RESOLUCI%C3%93N-4072-DE-2010.pdf" }
+      ]
+    },
+    {
+      "id": "residuos",
+      "tipo": "componente",
+      "componente": "eca",
+      "titulo": "Menos basura a la celda: ECA y compostaje en el mismo predio",
+      "texto": "En el predio van la celda de la fase 1, dos lagunas de lixiviados, la portería con báscula y, sobre la vía interna, una estación de clasificación y aprovechamiento (ECA) de 10 t/día, con el proyecto tipo del DNP y operada por recicladores de oficio, y una planta de compostaje de orgánicos al norte de la celda. Comparten vía, báscula y cerramiento, y lo que recuperan no ocupa celda: el relleno dura más.",
+      "leyenda": [
+        { "texto": "Celda de la fase 1: tres terrazas de 3 m, cara activa con geomembrana", "color": "#7f9f5a", "forma": "area" },
+        { "texto": "Celdas de las fases siguientes", "color": "#d8cfb4", "forma": "area" },
+        { "texto": "Lagunas de lixiviados", "color": "#55603f", "forma": "area" },
+        { "texto": "ECA de 10 t/día", "color": "var(--m-saneamiento)", "forma": "area" },
+        { "texto": "Pilas de compostaje de orgánicos", "color": "#6f5233", "forma": "area" },
+        { "texto": "Reserva del EOT y planta de lodos vecina (Tabla 34)", "color": "#8a8f94", "forma": "dash" }
+      ],
+      "cifras": [
+        { "v": "3.763 t", "l": "de residuos dispuestos en 2024, unas 10,3 t por día", "fuente": "Superservicios, Informe Nacional de Disposición Final 2024 (dic-2025)", "url": "https://www.superservicios.gov.co/sites/default/files/2025-12/Informe-Nacional-de-Disposicion-Final-de-Residuos-Solidos-en-Combia-2024.pdf" },
+        { "v": "15–20 %", "l": "de los residuos del casco aprovechados, meta a fijar en el PGIRS", "fuente": "Meta propuesta (2031)", "tono": "meta" }
+      ]
+    },
+    {
       "id": "relleno",
       "tipo": "componente",
       "componente": "relleno",
       "titulo": "Del relleno vencido a un parque con granja solar",
-      "texto": "El relleno Las Américas opera con la licencia vencida desde 2023. Se clausura, la basura pasa al relleno regional San Silvestre y sobre las celdas va una granja solar de 997 kWp, con un parque alrededor.",
+      "texto": "El relleno Las Américas opera con la licencia vencida desde 2023 y ya no tiene vida útil. Desde 2028 se cubren sus celdas viejas y la basura va solo al frente activo, que se cierra cuando abre el relleno nuevo, en 2030. La granja solar de 997 kWp se monta por partes, cuando la cobertura asienta, desde 2031, con un parque alrededor.",
       "leyenda": [
         { "texto": "Granja solar de 997 kWp sobre las celdas clausuradas", "color": "#1c2b48", "forma": "area" },
         { "texto": "Parque ecotecnológico: coworking, granja y circuito de 0,9 km", "color": "#7f9a52", "forma": "area" }
@@ -286,26 +377,10 @@
       ]
     },
     {
-      "id": "residuos",
-      "tipo": "componente",
-      "componente": "eca",
-      "titulo": "Menos basura viaja 40 km a Barrancabermeja",
-      "texto": "Una estación de clasificación y aprovechamiento (ECA) de 10 t/día, con el proyecto tipo del DNP y operada por recicladores formalizados, y una planta de compostaje de orgánicos bajan las toneladas que hay que llevar al relleno regional. En la vista van junto al relleno, en una ubicación indicativa: el predio está por definir y no va sobre las celdas.",
-      "leyenda": [
-        { "texto": "ECA y compostaje: predio de ubicación indicativa", "color": "var(--m-saneamiento)", "forma": "dash" },
-        { "texto": "Pilas de compostaje de orgánicos", "color": "#6f5233", "forma": "area" },
-        { "texto": "Relleno clausurado, con granja solar y parque", "color": "#1c2b48", "forma": "area" }
-      ],
-      "cifras": [
-        { "v": "3.761 t", "l": "de residuos dispuestos en 2021, unas 10,3 t por día", "fuente": "SUI en datos.gov.co", "url": "https://www.datos.gov.co/resource/urvy-i3ii.json" },
-        { "v": "15–20 %", "l": "de los residuos del casco aprovechados, meta a fijar en el PGIRS", "fuente": "Meta propuesta (2031)", "tono": "meta" }
-      ]
-    },
-    {
       "id": "financiacion",
       "tipo": "financiacion",
-      "titulo": "Nación, regalías y Gobernación ponen el 69 %",
-      "texto": "La Nación, las regalías y la Gobernación suman $41.772 M de los $60.717 M del módulo. La PTAR se radica ante MinVivienda con la Res. 0467 de 2026, y la granja solar del relleno ($1.747 M) va al Incentivo a la Producción del SGR junto con la granja municipal de TIC: dos proyectos y $4.546 M, dentro del tope de la convocatoria.",
+      "titulo": "Nación, regalías y Gobernación ponen el 67 %",
+      "texto": "La Nación, las regalías y la Gobernación suman $47.577 M de los $70.537 M del módulo. La PTAR y la celda del relleno nuevo se radican ante MinVivienda con la Res. 0467 de 2026, la vía al relleno va a obras por impuestos y la granja solar de Las Américas ($1.747 M) va al Incentivo a la Producción del SGR en la convocatoria de 2029–2030, para montarla en 2031; la granja municipal de TIC va en la de 2027–2028: un proyecto por convocatoria, dentro del tope.",
       "leyenda": [
         { "texto": "Interceptor nuevo", "color": "var(--m-saneamiento)", "forma": "" },
         { "texto": "Impulsión a presión", "color": "var(--m-saneamiento)", "forma": "dash" },
@@ -329,6 +404,34 @@
     { "titulo": "SECOP II, convenio de Antioquia para el Plan Maestro de Alcantarillado de Sonsón (2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8053105" },
     { "titulo": "SECOP II, convenio de Corantioquia para la ECA de La Pintada (2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9091199" },
     { "titulo": "SECOP II, Corponariño: PTAR de Guachucal con tasa retributiva (2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.7903011" },
-    { "titulo": "Cormagdalena, Resolución 016 de 2025: instancia de la asignación del SGR para municipios ribereños (2025)", "url": "https://www.fcm.org.co/wp-content/uploads/2025/04/RESOLUCION-N°-016-DE-2025-CORMAGDALENA-FCM-R-2025-016.pdf" }
+    { "titulo": "Cormagdalena, Resolución 016 de 2025: instancia de la asignación del SGR para municipios ribereños (2025)", "url": "https://www.fcm.org.co/wp-content/uploads/2025/04/RESOLUCION-N°-016-DE-2025-CORMAGDALENA-FCM-R-2025-016.pdf" },
+    { "titulo": "Superservicios, Informe Nacional de Disposición Final de Residuos Sólidos 2024 (2025)", "url": "https://www.superservicios.gov.co/sites/default/files/2025-12/Informe-Nacional-de-Disposicion-Final-de-Residuos-Solidos-en-Combia-2024.pdf" },
+    { "titulo": "Superservicios, SUI en datos.gov.co: autorización ambiental del relleno Las Américas (consulta de 2026)", "url": "https://www.datos.gov.co/resource/wu2p-623h.json" },
+    { "titulo": "MinVivienda, Resolución 0938 de 2019: rellenos sanitarios (2019)", "url": "https://minvivienda.gov.co/sites/default/files/normativa/0938%20-%202019.pdf" },
+    { "titulo": "Decreto 1784 de 2017: disposición final de residuos sólidos (2017)", "url": "https://normas.cra.gov.co/gestor/docs/decreto_1784_2017.htm" },
+    { "titulo": "Decreto 1076 de 2015, sector ambiente: licencia ambiental de rellenos sanitarios (2015)", "url": "https://normas.cra.gov.co/gestor/docs/decreto_1076_2015.htm" },
+    { "titulo": "Decreto 1077 de 2015, sector vivienda, con el Decreto 1381 de 2024 sobre recicladores (2024)", "url": "https://normas.cra.gov.co/gestor/docs/decreto_1077_2015.htm" },
+    { "titulo": "Decreto 0670 de 2025: Programa Basura Cero (2025)", "url": "https://normas.cra.gov.co/gestor/docs/decreto_0670_2025.htm" },
+    { "titulo": "Decreto 0772 de 2026: tratamiento de residuos y plantas de compostaje (2026)", "url": "https://normas.cra.gov.co/gestor/docs/decreto_0772_2026.htm" },
+    { "titulo": "MAVDT, Resolución 1890 de 2011: fin de las celdas transitorias (2011)", "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minambientevdt_1890_2011.htm" },
+    { "titulo": "Aerocivil, Resolución 04072 de 2010 (RAC 14): peligro aviario a 13 km de los aeródromos (2010)", "url": "https://corpouraba.gov.co/wp-content/uploads/RESOLUCI%C3%93N-4072-DE-2010.pdf" },
+    { "titulo": "CRA, Resolución 1040 de 2026: costos de disposición final y aporte bajo condición (2026)", "url": "https://normas.cra.gov.co/gestor/docs/resolucion_cra_1040_2026.htm" },
+    { "titulo": "DNP en datos.gov.co: BPIN 2025058930015, ampliación del relleno Las Américas, devuelto (consulta de 2026)", "url": "https://www.datos.gov.co/resource/cf9k-55fw.json?bpin=2025058930015" },
+    { "titulo": "Vanguardia, por qué sigue en riesgo el puente que conecta a Barrancabermeja con Yondó (2026)", "url": "https://www.vanguardia.com/santander/barrancabermeja/2026/06/04/por-que-sigue-en-riesgo-el-puente-que-conecta-a-barrancabermeja-con-yondo-ruta-del-cacao-explico-las-causas/" },
+    { "titulo": "SECOP I, cierre del relleno y celda nueva de Acandí (2025)", "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-1-243295" },
+    { "titulo": "SECOP II, relleno Vera II de Segovia, fase I (2023)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4697837" },
+    { "titulo": "SECOP I, celda de relleno de 55 × 100 m de Olaya Herrera (2025)", "url": "https://www.contratos.gov.co/consultas/detalleProceso.do?numConstancia=25-1-243204" },
+    { "titulo": "SECOP II, convenio de Corantioquia con Campamento para áreas de disposición final (2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.8761227" },
+    { "titulo": "SECOP II, convenio del PDA de Antioquia para las obras complementarias del relleno de San Rafael (2023)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4645789" },
+    { "titulo": "SECOP II, buldócer para el relleno sanitario de Miraflores (2025)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.9288404" },
+    { "titulo": "SECOP II, placa huella de San Andrés de Cuerquia (2023)", "url": "https://community.secop.gov.co/Public/Tendering/OpportunityDetail/Index?noticeUID=CO1.NTC.4292681" },
+    { "titulo": "MAVDT, Resolución 1529 de 2010: plazo final de las celdas transitorias (2010)", "url": "https://normas.cra.gov.co/gestor/docs/resolucion_minambientevdt_1529_2010.htm" },
+    { "titulo": "Noticias Caracol, pozos del acueducto en el antiguo relleno sanitario de Yondó (2020)", "url": "https://www.noticiascaracol.com/antioquia/denuncian-construccion-de-pozos-de-agua-para-consumo-humano-en-antiguo-relleno-sanitario" },
+    { "titulo": "MinAmbiente, Reserva Forestal de Ley 2.ª y sus sustracciones, servicio geográfico (consulta de 2026)", "url": "https://geo.minambiente.gov.co/server/rest/services/OTL/OTL_Reserva_Forestal_Ley_2da/MapServer" },
+    { "titulo": "Parques Nacionales, Registro Único Nacional de Áreas Protegidas (RUNAP), servicio WFS (consulta de 2026)", "url": "https://mapas.parquesnacionales.gov.co/services/pnn/wfs" },
+    { "titulo": "ESA WorldCover 2021 v200, cobertura del suelo a 10 m (2022)", "url": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N06W075_Map.tif" },
+    { "titulo": "Copernicus DEM GLO-30, modelo de elevación (consulta de 2026)", "url": "https://copernicus-dem-30m.s3.amazonaws.com/" },
+    { "titulo": "IDEAM en datos.gov.co, catálogo de estaciones: Peñas Blancas, 0023167010 (consulta de 2026)", "url": "https://www.datos.gov.co/resource/hp9r-jxuu.json?codigo=0023167010" },
+    { "titulo": "IDEAM en datos.gov.co, nivel máximo del río por estación (consulta de 2026)", "url": "https://www.datos.gov.co/d/vfth-yucv" }
   ]
 }

@@ -1,6 +1,7 @@
 // Portada: el casco urbano con un pin por módulo en el sitio real de cada propuesta; el segundo paso se aleja hasta
-// abarcar el territorio completo (del acueducto, 2,3 km al occidente, al puente sobre el Magdalena, a unos 8 km al norte).
-import { pinesDe } from './comun.js';
+// abarcar el territorio completo (del relleno nuevo de Kilómetro Cinco, a unos 5,5 km al suroccidente, y el acueducto, 2,3 km
+// al occidente, al puente sobre el Magdalena, a unos 8 km al norte).
+import { pinesDe, sitio } from './comun.js';
 
 export function crear(esc, datos) {
   const capa = esc.capa('portada.pines');
@@ -9,8 +10,10 @@ export function crear(esc, datos) {
     esc.linea([[x, y, 0], [x, y, 34]], { color: `--m-${m.id}`, ancho: 2.5, padre: capa });
     esc.etiqueta(`<span>${m.corto || m.nombre}</span>`, { cls: 'lbl-pin', pos: [x, y, 34], padre: capa, color: `var(--m-${m.id})`, titulo: m.nombre, alClic: () => { location.hash = m.id; }, ancla: [0.5, 1.2] });
   });
-  // territorio: los nombres que cita el texto (río, puente y Barrancabermeja), solo en el segundo paso
+  // territorio: los nombres que cita el texto (río, puente, Barrancabermeja y el relleno nuevo), solo en el segundo paso
   const geo = esc.capa('portada.geo'), tb = datos.territorio?.puente?.tablero;
+  const km5 = sitio(datos, 'saneamiento', 'relleno_nuevo'), pKm5 = km5 ? [km5.x, km5.y] : [-3764, -3955];
+  esc.etiqueta('Relleno nuevo · Kilómetro Cinco', { cls: 'lbl-geo', pos: [pKm5[0], pKm5[1], 4], padre: geo });
   esc.etiqueta('Río Magdalena', { cls: 'lbl-geo', pos: [2600, 6800, 4], padre: geo });   // dentro del cauce, 1,5 km aguas arriba del puente
   if (tb?.length > 1) {
     const [m, f] = [tb[1], tb[tb.length - 1]];
@@ -22,7 +25,7 @@ export function crear(esc, datos) {
   // los caños); el del acueducto y el del parque agroindustrial aparecen en el paso del territorio
   const tic = pines.find(({ m }) => m.id === 'tic'), san = pines.find(({ m }) => m.id === 'saneamiento');
   const casco = [[-650, -420], [880, -420], [880, 760], [-650, 760], ...[tic, san].filter(Boolean).map(({ x, y }) => [x, y])];
-  const todo = pines.map(({ x, y }) => [x, y]).concat([[-2400, 300], [1700, 8300], [2700, 6800]], tb?.length ? [[tb[tb.length - 1][0] + 260, tb[tb.length - 1][1]]] : []);
+  const todo = pines.map(({ x, y }) => [x, y]).concat([[-2400, 300], [1700, 8300], [2700, 6800], pKm5], tb?.length ? [[tb[tb.length - 1][0] + 260, tb[tb.length - 1][1]]] : []);
   return {
     completo: ['portada.pines'],
     pasos: {

@@ -95,11 +95,11 @@
         ["Reparto", "11 a 20 cuentas oficiales, menos del 10 % cada una"]
       ],
       "costo": { "min": 4145, "central": 4776, "max": 6354 },
-      "base_costo": "Cálculo propio: 1.200 kWp a $2,7 M/kWp (el precio del estudio de la granja del relleno) = $3.240 M, más transformador, protecciones y medida ($280 M), cerramiento, vías, caseta, cámaras y monitoreo ($350 M), estudios, diseños, estudio de conexión y RETIE ($150 M) y conexión a EPM ($62 M: se conserva el valor de una derivación de 0,6 km, que con solo 40 m de línea alcanza para la celda o el reconectador de la subestación), con 17 % de interventoría e imprevistos: $4.776 M ($3,98 M/kWp), sin el predio; el rango de la investigación usa sistemas de $2,4 a $3,5 M/kWp, y la granja de UNIPAZ (Barrancabermeja), en estructuración, anuncia ≈$7.000 M por 1,1 MWp (≈$6,4 M/kWp).",
+      "base_costo": "Cálculo propio: 1.200 kWp a $2,7 M/kWp (el precio del estudio de la granja de Las Américas) = $3.240 M, más transformador, protecciones y medida ($280 M), cerramiento, vías, caseta, cámaras y monitoreo ($350 M), estudios, diseños, estudio de conexión y RETIE ($150 M) y conexión a EPM ($62 M: se conserva el valor de una derivación de 0,6 km, que con solo 40 m de línea alcanza para la celda o el reconectador de la subestación), con 17 % de interventoría e imprevistos: $4.776 M ($3,98 M/kWp), sin el predio; el rango de la investigación usa sistemas de $2,4 a $3,5 M/kWp, y la granja de UNIPAZ (Barrancabermeja), en estructuración, anuncia ≈$7.000 M por 1,1 MWp (≈$6,4 M/kWp).",
       "proyecto_tipo": [
         { "nombre": "Referente: granja de FENOGE en Arroyohondo, Bolívar (1.102 kWp, predio municipal)", "url": "https://fenoge.gov.co/documentos-noticias/2025/Boletin_prensa_Arroyohondo_final.pdf" },
         { "nombre": "Referente: granja Campo Gala, Barrancabermeja (≈1,0 MWp, MinEnergía y FENOGE)", "url": "https://www.minenergia.gov.co/es/sala-de-prensa/noticias-index/cerca-de-3000-habitantes-de-barrancabermeja-seran-beneficiados-con-nueva-granja-solar-de-1-megavatio/" },
-        { "nombre": "Referente: granja del relleno de Yondó (997 kWp, docs/12)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/12-parque-ecotecnologico-relleno.md" }
+        { "nombre": "Referente: granja del relleno Las Américas de Yondó (997 kWp, docs/12)", "url": "https://github.com/fonck95/trabajemosjuntos/blob/main/docs/12-parque-ecotecnologico-relleno.md" }
       ],
       "fuentes": ["sgr", "fondos", "findeter"],
       "plazo": "Estructuración 2028; obra 2029–2030",
@@ -107,7 +107,7 @@
     }
   ],
   "financiacion": [
-    { "fuente": "sgr", "monto": 3807, "mecanismo": "Incentivo a la Producción (convocatoria de MinEnergía, aprobación del OCAD Paz), «Territorios energéticos», para la granja ($2.799 M; con la granja del relleno de Saneamiento, 2 proyectos y $4.546 M, dentro del tope) y asignaciones directas para el anillo y la telemetría ($1.008 M)" },
+    { "fuente": "sgr", "monto": 3807, "mecanismo": "Incentivo a la Producción (convocatoria de MinEnergía, aprobación del OCAD Paz), «Territorios energéticos», para la granja ($2.799 M, en la convocatoria de 2027–2028; la de Las Américas, de Saneamiento, va en la de 2029–2030: un proyecto por convocatoria, dentro del tope) y asignaciones directas para el anillo y la telemetría ($1.008 M)" },
     { "fuente": "fondos", "monto": 1726, "mecanismo": "FENOGE, modelo Territorio Energético, para la granja ($977 M) y MinTIC · Fondo Único de TIC, proyecto tipo de Zonas Digitales ($749 M)" },
     { "fuente": "findeter", "monto": 1000, "mecanismo": "Crédito directo con tasa compensada para la granja (línea «Municipios Territorios Energéticos» de Findeter y MinEnergía, Decreto 1223 de 2025), pagado con el ahorro en las facturas; usa parte de la capacidad prudente de endeudamiento del municipio ($5.141 M a $10.281 M), que comparten salud, saneamiento, TIC y agroindustria" },
     { "fuente": "municipio", "monto": 200, "mecanismo": "Recursos propios: contrapartida del anillo, el CCED y la telemetría" }
@@ -133,7 +133,7 @@
       "Ene–jun 2027: 12 facturas de cada cuenta oficial (número de cuenta en EPM, NIU) y placas de las bombas para fijar la demanda y los porcentajes de reparto.",
       "2027: convenio asociativo de la comunidad energética (alcaldía, E.S.E. y Aguas y Aseo), consulta a la CREG sobre el reparto y gestión del predio del bloque A.",
       "2027: estudio de conexión simplificado y topografía; MGA de la granja (sin proyecto tipo del DNP: referente Arroyohondo) y de las Zonas Digitales (proyecto tipo DNP–MinTIC).",
-      "2028: radicar la granja en fase III en la primera convocatoria del Incentivo a la Producción, junto con la granja del relleno (los 2 proyectos del municipio), y en paralelo ante FENOGE y Findeter; contratar el anillo, el CCED y las Zonas Digitales."
+      "2028: radicar la granja en fase III en la primera convocatoria del Incentivo a la Producción (la granja de Las Américas va en la de 2029–2030, cuando asiente la cobertura de sus celdas viejas), y en paralelo ante FENOGE y Findeter; contratar el anillo, el CCED y las Zonas Digitales."
     ]
   },
   "metas": [
@@ -146,7 +146,7 @@
   "riesgos": [
     { "riesgo": "No cumplir las condiciones del caso 1 (11 o más fronteras, menos del 10 % y no más de 100 kW por cuenta): el kWh bajaría de ≈877 $ a ≈404 $ y el ahorro, de $1.394 M a $642 M al año (retorno de 7,4 años).", "mitigacion": "Diseñar el reparto desde la fase 0 con todas las cuentas oficiales de EPM, partir el acueducto y el alumbrado en varias fronteras, mantener la granja en 1,0 MW CA y pedir concepto a la CREG y a EPM antes de estructurar." },
     { "riesgo": "Conexión y predio sin confirmar: EPM no ha confirmado la subestación ni su capacidad, las dos granjas sumarían 1,8 MW CA en la misma red y el bloque A es un predio privado que no está en el costo.", "mitigacion": "Derecho de petición y estudio de conexión simplificado en 2027; compra, arriendo o servidumbre del bloque A, con el bloque B de reserva; fronteras y contratos de conexión separados para las dos granjas." },
-    { "riesgo": "Fuentes inciertas: la convocatoria del Incentivo a la Producción 2026–2027 no se ha publicado y en 2025 admitía hasta 2 proyectos y $8.000 M por municipio, cupo de proyectos que ocupan las dos granjas (la municipal y la del relleno, $4.546 M); el SGR 2027–2028 baja 11 % y la Res. MinEnergía 40509 de 2024 enfoca los recursos públicos para comunidades energéticas en personas naturales y comunidades, lo que puede dejar por fuera a una comunidad de entidades públicas.", "mitigacion": "Tener la granja en fase III con MGA para la primera convocatoria y mezclar fuentes (SGR, FENOGE y Findeter, con Obras por Impuestos en energía como alternativa)." },
+    { "riesgo": "Fuentes inciertas: la convocatoria del Incentivo a la Producción 2026–2027 no se ha publicado y en 2025 admitía hasta 2 proyectos y $8.000 M por municipio, y las dos granjas van en convocatorias distintas (la municipal en la de 2027–2028 y la de Las Américas en la de 2029–2030); el SGR 2027–2028 baja 11 % y la Res. MinEnergía 40509 de 2024 enfoca los recursos públicos para comunidades energéticas en personas naturales y comunidades, lo que puede dejar por fuera a una comunidad de entidades públicas.", "mitigacion": "Tener la granja en fase III con MGA para la primera convocatoria y mezclar fuentes (SGR, FENOGE y Findeter, con Obras por Impuestos en energía como alternativa)." },
     { "riesgo": "Que las Zonas Digitales se apaguen cuando terminen los 36 meses de operación financiados.", "mitigacion": "Sacar el canal del anillo municipal para bajar el costo, incluir la operación en el presupuesto municipal y explorar publicidad o servicios premium, como sugiere el proyecto tipo." }
   ],
   "pasos": [
@@ -214,7 +214,7 @@
       "tipo": "componente",
       "componente": "granja",
       "titulo": "Una granja solar frente a la subestación",
-      "texto": "La granja de 1,2 MWp (1,0 MW CA) ocupa el bloque A (1,70 ha) y llega con 40 m de línea de 13,2 kV a la subestación Yondó de EPM; el bloque B (0,49 ha) queda de reserva. Con la granja del relleno (997 kWp, para hogares de estratos 1 y 2, en el módulo de Saneamiento), Yondó tendría ≈2,2 MWp centralizados.",
+      "texto": "La granja de 1,2 MWp (1,0 MW CA) ocupa el bloque A (1,70 ha) y llega con 40 m de línea de 13,2 kV a la subestación Yondó de EPM; el bloque B (0,49 ha) queda de reserva. Con la granja del relleno Las Américas (997 kWp, para hogares de estratos 1 y 2, en el módulo de Saneamiento, completa hacia 2033–2034), Yondó tendría ≈2,2 MWp centralizados.",
       "cifras": [
         { "v": "1,0 MW", "l": "máximo en CA del caso 1 (crédito 1:1): por eso 1,2 MWp y no 1,5", "fuente": "CREG 101 072 de 2025 (mod. 101 087) y CREG 174 de 2021", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_101-72_2025.htm" },
         { "v": "3,4 años", "l": "de retorno simple con $1.394 M al año, sin predio ni operación (caso 2: 7,4)", "fuente": "Cálculo propio con tarifas de EPM (oct-2026)", "tono": "meta" }
@@ -236,7 +236,7 @@
         "<b>Tope:</b> 1,0 MW en corriente alterna, la suma de los inversores, para quedar en el caso 1 (por encima, la energía se vende en el mercado mayorista); por eso la granja es de 1,2 MWp y no de 1,5. Cada cuenta recibe menos del 10 % y no más de 100 kW.",
         "<b>Ahorros:</b> cada cuenta descuenta de su factura la energía de su porcentaje y cada kWh le ahorra ≈877 $ (la tarifa oficial menos el cargo de comercialización, Cv): ≈$1.394 M al año entre todas.",
         "<b>Operación:</b> el representante de la comunidad (la alcaldía, en esta propuesta) declara los porcentajes ante EPM y contrata un operador técnico; el CCED vigila la producción en línea.",
-        "<b>Aparte:</b> la granja del relleno (997 kWp) es otra comunidad, de hogares de estratos 1 y 2, con su propia frontera; las dos no se mezclan."
+        "<b>Aparte:</b> la granja de Las Américas (997 kWp) es otra comunidad, de hogares de estratos 1 y 2, con su propia frontera; las dos no se mezclan."
       ],
       "cifras": [
         { "v": "877 $/kWh", "l": "vale cada kWh repartido si se cumplen las condiciones del caso 1", "fuente": "CREG 101 072 de 2025 (mod. 101 087), art. 20; tarifas de EPM (oct-2026)", "url": "https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_101-72_2025.htm" },
@@ -248,7 +248,7 @@
       "id": "financiacion",
       "tipo": "financiacion",
       "titulo": "Regalías, fondos y un crédito pagado con ahorro",
-      "texto": "La granja va a la convocatoria del Incentivo a la Producción del SGR, que Yondó casi no ha usado: del bienio 2025–2026 tiene $14.025 M y solo ha aprobado $331 M, así que quedan $13.694 M sin aprobar (oct-2026); con la granja del relleno (Saneamiento, $1.747 M) son 2 proyectos de energía por $4.546 M, dentro del tope de 2025 (2 proyectos y $8.000 M por municipio). FENOGE, Findeter y el Fondo Único de TIC completan la mezcla, y el municipio aporta $1.208 M de regalías directas y recursos propios.",
+      "texto": "La granja va a la convocatoria del Incentivo a la Producción del SGR, que Yondó casi no ha usado: del bienio 2025–2026 tiene $14.025 M y solo ha aprobado $331 M, así que quedan $13.694 M sin aprobar (oct-2026); la granja de Las Américas (Saneamiento, $1.747 M) va en la convocatoria de 2029–2030, así que en cada una el municipio pide un solo proyecto de energía, dentro del tope de 2025 (2 proyectos y $8.000 M por municipio). FENOGE, Findeter y el Fondo Único de TIC completan la mezcla, y el municipio aporta $1.208 M de regalías directas y recursos propios.",
       "leyenda": [
         { "texto": "Anillo de fibra y ramal a La Victoria", "color": "var(--data)", "forma": "dash" },
         { "texto": "Zonas Digitales (5 en la primera fase)", "color": "var(--m-tic)", "forma": "pt" },
