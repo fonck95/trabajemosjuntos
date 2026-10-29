@@ -2,7 +2,7 @@
   "id": "saneamiento",
   "nombre": "Aseo y saneamiento",
   "corto": "Saneamiento",
-  "lema": "Primera PTAR de Yondó y relleno clausurado con parque",
+  "lema": "Primera PTAR del casco y relleno clausurado con parque",
   "problema": "Yondó no trata sus aguas residuales: las 4 estaciones de bombeo del casco solo criban, sedimentan y vierten 55,34 L/s a dos caños junto a los barrios (Superservicios, datos de 2019). El Plan de Saneamiento y Manejo de Vertimientos (PSMV), aprobado por Corantioquia en 2014, ya venció y los estudios del Plan Maestro están al 56 % e inactivos. Además, el relleno Las Américas opera con la licencia vencida desde noviembre de 2023.",
   "propuesta": "Terminar el Plan Maestro con un PSMV nuevo, recoger lo que hoy se vierte con dos interceptores (≈3,8 km) que siguen los dos caños hasta su unión, al norte del casco, y construir allí, aguas abajo de la unión, la primera PTAR del casco (UASB + filtro percolador, 50 L/s); el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo. En aseo, clausurar el relleno Las Américas y volverlo parque ecotecnológico con granja solar, y montar una ECA de 10 t/día y una planta de compostaje.",
   "cifras": [
@@ -180,7 +180,7 @@
     { "fuente": "gobernacion", "monto": 10800, "mecanismo": "Plan Departamental de Aguas de Antioquia, por convenio como en Sonsón y El Peñol: PTAR, interceptores, compostaje y $1.200 M de la clausura (SGP y PDA)" },
     { "fuente": "oxi", "monto": 4500, "mecanismo": "Obras por impuestos, modalidad ordinaria ZOMAC y PDET, con Ecopetrol (opera el campo Casabe): una etapa de los interceptores con viabilidad propia" },
     { "fuente": "corantioquia", "monto": 4500, "mecanismo": "Tasa retributiva y convocatorias de saneamiento: PTAR y ECA (precedentes: ECA de La Pintada, $2.854 M; PTAR de Guachucal con Corponariño)" },
-    { "fuente": "fondos", "monto": 4000, "mecanismo": "Colombia Solar o FENOGE, $2.911 M de la granja solar del relleno; Cormagdalena (0,5 % del SGR para municipios ribereños), $1.089 M del emisario al Magdalena" },
+    { "fuente": "fondos", "monto": 4000, "mecanismo": "Colombia Solar o FENOGE, $2.911 M de la granja solar del relleno; Cormagdalena (0,5 % del SGR para municipios ribereños), $1.089 M de la laguna de pulimento y la descarga al Caño Colector Shell" },
     { "fuente": "municipio", "monto": 2500, "mecanismo": "Tarifa de aseo y provisión de clausura ($600 M), recursos propios del parque ($993 M) y SGP de agua y saneamiento para el Plan Maestro y el emisario" },
     { "fuente": "cooperacion", "monto": 2500, "mecanismo": "Ecopetrol (inversión social) y cooperación, $993 M del parque; cooperación o banca multilateral, por un programa nacional o departamental, para el arranque de la PTAR" },
     { "fuente": "findeter", "monto": 945, "mecanismo": "Crédito «Municipios Territorios Energéticos» de Findeter y MinEnergía (tasa compensada, IBR + 0,7 %) para la granja solar del relleno, dentro de la capacidad prudente de endeudamiento del municipio ($5.141 M a $10.281 M), compartida con salud, TIC y agroindustria" }
@@ -232,7 +232,7 @@
       "id": "portadilla",
       "tipo": "portadilla",
       "titulo": "Yondó vierte todas sus aguas residuales sin tratar",
-      "texto": "Las 4 estaciones de bombeo del casco solo criban y vierten a dos caños: El Paraíso 16,51 L/s, La Victoria 14,69, El Progreso 13,52 y El Prado 10,62 (2019). Yondó no tiene planta de tratamiento de aguas residuales (PTAR).",
+      "texto": "Las 4 estaciones de bombeo del casco solo criban y vierten a dos caños: El Paraíso 16,51 L/s, La Victoria 14,69, El Progreso 13,52 y El Prado 10,62 (2019). El casco urbano no tiene planta de tratamiento de aguas residuales (PTAR).",
       "leyenda": [
         { "texto": "Vertimiento sin tratar de cada estación (2019)", "color": "#8a5a2b", "forma": "" },
         { "texto": "Estaciones de bombeo de aguas residuales (EBAR) que vierten hoy", "color": "var(--bad)", "forma": "pt" }
@@ -258,7 +258,7 @@
       "id": "ptar",
       "tipo": "componente",
       "componente": "ptar",
-      "titulo": "La primera PTAR de Yondó, aguas abajo del pueblo",
+      "titulo": "La primera PTAR del casco, aguas abajo del pueblo",
       "texto": "La planta va aguas abajo de la unión de los dos caños, al norte del casco, en un predio de ≈4,2 ha. Le llegan los dos interceptores, y el agua tratada pasa por una laguna de pulimento y vuelve al Caño Colector Shell, más abajo: no hay que bombear 911 m ni llevar un emisario al río.",
       "leyenda": [
         { "texto": "PTAR central, aguas abajo de la unión de los caños (4,2 ha)", "color": "var(--m-saneamiento)", "forma": "area" },

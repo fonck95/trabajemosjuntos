@@ -108,25 +108,43 @@ def sin_cortes(v, clave=''):
 for k in ('meta', 'portada', 'modulos', 'financiacion', 'ruta', 'pedidos'):
     out[k] = sin_cortes(out[k])
 
-# El Home repite en cada tarjeta el nombre y el lema del área y enlaza a su capítulo: si el módulo cambia, el Home se queda
-# atrás sin que nadie lo note
+# El Home repite en cada tarjeta el nombre y el lema del área, enlaza a su capítulo y muestra su imagen: si el módulo cambia,
+# el Home se queda atrás sin que nadie lo note. Se revisa tarjeta por tarjeta, no el archivo entero (los ids del área
+# también salen en las variables CSS y en los nombres de archivo). También se revisa que la lista de vistas del atlas que
+# el Home manda a atlas.html sea la de las pestañas del atlas.
 home = R / 'web/index.html'
 if home.exists():
     h = home.read_text(encoding='utf-8')
-    plano = lambda t: re.sub(r'\s+', ' ', t.replace('&nbsp;', ' ').replace('\u00a0', ' ').replace('\u2060', '')).strip().lower()
-    hp = plano(h)
+    plano = lambda t: re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', t).replace('&nbsp;', ' ').replace('\u00a0', ' ').replace('\u2060', '')).strip().lower()
+    tarjetas = {m.group(1): m.group(2) for m in re.finditer(r'<a class="area[^"]*"[^>]*href="propuesta\.html#([\w-]+)"[^>]*>(.*?)</a>', h, re.S)}
     for m in modulos:
-        if f'propuesta.html#{m["id"]}' not in h:
-            aviso(f'el Home no enlaza el área {m["id"]} (web/index.html)')
-        if not any(t and plano(t) in hp for t in (m.get('corto'), m.get('nombre'))):
-            aviso(f'el Home no nombra el área {m["id"]} ({m.get("nombre")}) (web/index.html)')
-        if m.get('lema') and plano(m['lema']) not in hp:
-            aviso(f'el lema de {m["id"]} cambió y el Home sigue con el anterior: «{m["lema"]}» (web/index.html)')
+        t = tarjetas.pop(m['id'], None)
+        if t is None:
+            aviso(f'el Home no tiene la tarjeta del área {m["id"]} (web/index.html)')
+            continue
+        nombre, nombres = re.search(r'<b>(.*?)</b>', t, re.S), list(dict.fromkeys(x for x in (m.get('corto'), m.get('nombre')) if x))
+        if not nombre or plano(nombre.group(1)) not in {plano(x) for x in nombres}:
+            aviso(f'la tarjeta de {m["id"]} en el Home no lleva su nombre ({" o ".join(f"«{x}»" for x in nombres)}) (web/index.html)')
+        frase = re.search(r'<span class="frase">(.*?)</span>', t, re.S)
+        if m.get('lema') and (not frase or plano(frase.group(1)) != plano(m['lema'])):
+            aviso(f'el lema de {m["id"]} cambió y el Home sigue con otro: «{m["lema"]}» (web/index.html)')
+        img = re.search(r'src="(img/home/[^"]+)"', t)
+        if not img or img.group(1) != f'img/home/area-{m["id"]}.webp':
+            aviso(f'la tarjeta de {m["id"]} en el Home no muestra img/home/area-{m["id"]}.webp (web/index.html)')
         if not (R / f'web/img/home/area-{m["id"]}.webp').exists():
             aviso(f'falta la imagen del Home para {m["id"]} (web/img/home/area-{m["id"]}.webp)')
-    for ref in sorted(set(re.findall(r'(?:src="|url\(|href=")(img/home/[^")]+)', h))):
+    for sobra in tarjetas:
+        aviso(f'el Home tiene una tarjeta de un área que no está en la propuesta: {sobra} (web/index.html)')
+    for ref in sorted(set(re.findall(r'(?:src="|url\(|href="|content=")(img/home/[^")]+)', h))):
         if not (R / 'web' / ref).exists():
             aviso(f'el Home cita una imagen que no existe: web/{ref}')
+    atlas = R / 'web/atlas.html'
+    vistas = re.search(r'VISTAS_ATLAS = \[([^\]]*)\]', h)
+    if atlas.exists() and vistas:
+        enlaces = re.findall(r"'([\w-]+)'", vistas.group(1))
+        pestanas = re.findall(r'<a href="#([\w-]+)" data-view="\1"', atlas.read_text(encoding='utf-8'))
+        if sorted(enlaces) != sorted(pestanas):
+            aviso(f'las vistas del atlas que el Home redirige ({", ".join(enlaces)}) no son las pestañas del atlas ({", ".join(pestanas)}) (web/index.html)')
 
 dest = R / 'web/data/propuesta.json'
 dest.parent.mkdir(parents=True, exist_ok=True)

@@ -94,7 +94,7 @@ medir y no se publica. Están en `data/propuesta/geo.json`, en metros del modelo
   - El documento base ponía el parque sobre la orilla. Pero todo el entorno es el campo petrolero Casabe, con una
     plataforma de pozo cada ~200 m, y la orilla se socava.
   - Dentro del lote quedan dos pozos (Casabe 980 y 394) cuyo retiro debe confirmar Ecopetrol.
-- **PTAR central (la primera del municipio).** Va al norte del casco, aguas abajo de la unión del Caño Colector Shell
+- **PTAR central (la primera del casco urbano).** Va al norte del casco, aguas abajo de la unión del Caño Colector Shell
   con el canal oriental, en un predio de ≈4,2 ha junto a la Carrera 57.
   - Queda a ≈700 m de la edificación mapeada más cercana (la norma pide 200 m) y a ≈60 m del caño, fuera de su ronda.
   - Las cuatro estaciones de bombeo dejan de verter: un interceptor occidental de 1.634 m (por la Carrera 57) y uno
