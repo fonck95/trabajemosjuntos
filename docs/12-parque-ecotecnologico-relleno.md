@@ -1,6 +1,8 @@
 # 12 · Del relleno Las Américas al Parque Ecotecnológico de Yondó
 
-**Cerrar bien el relleno sanitario, llevar la basura a un relleno regional con licencia y convertir el predio en un parque: una granja solar de 1 MWp sobre las celdas que baja la factura de los hogares de estratos 1 y 2, un coworking rural con internet y energía propia, una granja que enseña a producir y compostar, y un circuito para correr y pedalear a 4 km del parque principal.**
+> **Actualización del 29 de octubre de 2026: la basura de Yondó se queda en Yondó.** La propuesta integral 2028–2031 cambió la decisión de este documento sobre a dónde va la basura. El relleno nuevo va en la vereda Kilómetro Cinco, en la reserva del EOT (Acuerdo 013 de 2022, art. 17.4 y Tabla 35), y abre en 2030. Las Américas recibe basura hasta entonces, solo en el frente activo, con las celdas viejas cubiertas desde 2028, y se clausura en 2030–2031; la granja solar se monta por partes desde 2031. San Silvestre (Barrancabermeja), que la versión del 22 de octubre recomendaba, queda descartado como destino y solo vale como contingencia de emergencia; sus datos siguen en la sección 2.3 como antecedente. Cambian sobre todo el resumen, el destino de la basura (sección 2.3), las compuertas (sección 8), la hoja de ruta (sección 9) y lo que se dice del BPIN 2025058930015 (secciones 7 y 8). Ver `docs/17` y `data/propuesta/modulos/saneamiento.json`.
+
+**Cerrar bien el relleno sanitario cuando abra el relleno nuevo de Yondó, en la vereda Kilómetro Cinco, y convertir el predio en un parque: una granja solar de 1 MWp sobre las celdas que baja la factura de los hogares de estratos 1 y 2, un coworking rural con internet y energía propia, una granja que enseña a producir y compostar, y un circuito para correr y pedalear a 4 km del parque principal.**
 
 > Estado: **prefactibilidad**, con fecha de corte del 22 de octubre de 2026. Cada cifra dice si es un **dato oficial** (copiado de la fuente), un **cálculo propio** (operación sobre datos oficiales, con el método a la vista) o una **estimación** (supuesto con rango, por confirmar). Pesos constantes de 2026 (IPC del DANE, base enero–septiembre de 2026). Los datos completos están en `data/proyectos/parque_relleno/` (diagnóstico, energía, programa, presupuesto y financiación) y el modelo 3D en `data/edificios/relleno_parque.json`.
 >
@@ -9,12 +11,13 @@
 ## En pocas palabras
 
 - **El relleno opera vencido.** Yondó dispone su basura desde 1999 en el relleno Las Américas (vereda Las Américas, predio del municipio, operado por Aguas y Aseo). Según el SUI, su licencia de Corantioquia venció el **12 de noviembre de 2023** y su vida útil terminó en 2023 (dato oficial). Aun así, en noviembre de 2025 se contrató una obra de mantenimiento y adecuación y en mayo de 2026 se publicaron procesos de maquinaria, material de cobertura y arreglo de la vía (SECOP).
-- **Toca clausurarlo** con cobertura final, manejo de lixiviados y gases, y un **plan de posclausura de al menos 20 años** (Resolución 938 de 2019, art. 4). La basura iría al **Parque Tecnológico Ambiental San Silvestre** (Barrancabermeja), con licencia hasta 2044, a **40 km** por vía (cálculo propio). Cuesta unos **$321 millones al año** (estimación, $221–466 M), menos que operar el relleno local (unos $576 M al año en contratos, 2019–2023) y sin los $3.900 M que costaría ampliarlo.
-- **Sobre las celdas cabe una granja solar de 997 kWp** (1.812 módulos de 550 Wp) que produce unos **1,34 GWh al año** (cálculo propio, rango 1,30–1,45 GWh).
+- **Toca clausurarlo** con cobertura final, manejo de lixiviados y gases, y un **plan de posclausura de al menos 20 años** (Resolución 938 de 2019, art. 4). Va **por partes**: desde 2028 se cubren las celdas viejas, empezando por la norte, y la basura va solo al frente activo, que se cierra en 2030–2031, cuando abre el relleno nuevo. La posclausura sigue hasta cerca de 2051.
+- **La basura se queda en Yondó.** Va al **relleno nuevo de la vereda Kilómetro Cinco**, en la reserva que el EOT ya tiene para eso (Acuerdo 013 de 2022, art. 17.4 y Tabla 35), a 7,6 km por vía del parque principal, en un predio útil de unas 8,8 ha. Abre en **2030** y cuesta unos **$9.820 M** (estimación, $6.020–18.270 M), según `docs/17` y `data/propuesta/modulos/saneamiento.json`. El **Parque Tecnológico Ambiental San Silvestre** (Barrancabermeja, a 40 km) **queda descartado como destino**: depende de un solo puente, que se cerró del 16 al 20 de marzo de 2026, de otra autoridad ambiental (la CAS) y de un operador privado, y la Corte Constitucional mandó revisar su licencia (Sentencia T-227 de 2017). Solo vale como contingencia de emergencia. Quedarse cuesta más: aun si la inversión llega como aporte, operar el relleno propio vale unos **$320 M al año más** que llevar la basura a 40 km (sección 2.3).
+- **Sobre las celdas cabe una granja solar de 997 kWp** (1.812 módulos de 550 Wp) que produce unos **1,34 GWh al año** (cálculo propio, rango 1,30–1,45 GWh). Se monta por partes, cuando la cobertura asienta: unos 530 kWp en 2031, sobre las celdas cubiertas desde 2028, y el resto hacia 2033–2034.
 - **Esa energía alcanza para un bloque solar de 50 kWh al mes para 2.236 hogares de estratos 1 y 2** (el 27 % de los 8.193 hogares de esos estratos que atiende EPM): un ahorro de **$21.352 al mes en estrato 1 (31 % de la factura típica)** y de $26.690 en estrato 2 (22 %). Si reemplaza consumo subsidiado, la Nación deja de pagar unos **$721 millones al año** en subsidios y los hogares se ahorran unos **$608 millones** (cálculo propio).
 - **La figura legal:** una **comunidad energética** de hogares de estratos 1 y 2 (Decreto 2236 de 2023) que actúa como **autogenerador colectivo** (Resolución CREG 101 072 de 2025) y se postula a **Colombia Solar** (Decreto 0972 de 2025 y Resolución 40159 de 2026), que cambia subsidios por paneles.
 - **El parque** pone todo lo que tiene gente **fuera de las celdas y a 30 m o más de las celdas y lagunas que se ven** (la zona de servicios hay que revisarla con apiques antes de diseñar, ver la sección 1.2): coworking de 312 m² con 40 puestos, cafetería y duchas, taller de bicicletas, granja con invernadero, huerta, compostaje y apiario, módulo recreodeportivo, mirador y un circuito de 0,9 km conectado con el pueblo por una ruta ciclista de 3,9 km.
-- **Cuánto cuesta:** unos **$16.417 millones** (rango de prefactibilidad $11.492–24.625 M): $4.194 M para estudios y clausura, $5.603 M para la granja solar y la conexión a EPM, y $6.620 M para el parque. La línea a EPM va con el precio rural de la base de la red ya corregida (sección 7).
+- **Cuánto cuesta:** unos **$16.417 millones** (rango de prefactibilidad $11.492–24.625 M): $4.194 M para estudios y clausura, $5.603 M para la granja solar y la conexión a EPM, y $6.620 M para el parque. La línea a EPM va con el precio rural de la base de la red ya corregida (sección 7). El relleno nuevo va aparte, en la propuesta, y la clausura se calculó para cerrar todo de una vez: con el cierre por partes puede subir (sección 7).
 
 ## 1. Dónde está el relleno y cómo está hoy
 
@@ -90,6 +93,8 @@ No se encontró una prórroga, una licencia nueva ni sanciones publicadas.
 
 ### 2.2 El plan de clausura
 
+La clausura va por partes (sección 9): primero las celdas viejas, desde 2028, empezando por la norte, y en 2030–2031 el frente activo, cuando abra el relleno nuevo de Kilómetro Cinco.
+
 1. **Delimitar** los residuos (topografía con dron, 20–30 apiques, georradar), incluido el botadero antiguo.
 2. **Reconformar** las celdas hasta pendientes de 3–5 % en la parte alta.
 3. **Cobertura final** de baja permeabilidad: 0,45 m de arcilla compactada, geomembrana de polietileno de 1,0 mm, geodrén, 0,45 m de suelo, 0,15 m de capa orgánica y pasto rastrero nativo.
@@ -103,13 +108,22 @@ No se encontró una prórroga, una licencia nueva ni sanciones publicadas.
 
 | Opción | Distancia por vía | Licencia | Comentario |
 |---|---|---|---|
-| **Parque Tecnológico Ambiental San Silvestre** (Veolia), Barrancabermeja | **40,2 km** (OSRM, 44 min) | CAS, Resolución 1121 de 2014, **hasta el 27 de diciembre de 2044** (SUI) | Recomendada. Riesgos: el puente Guillermo Gaviria Correa tuvo socavación y cierres en marzo de 2026 (Vanguardia); organizaciones locales denuncian daños ambientales y Veolia dice que la operación está normalizada (Global Witness) |
+| **Relleno nuevo en la vereda Kilómetro Cinco**, Yondó, en la reserva del EOT (Acuerdo 013 de 2022, art. 17.4 y Tabla 35) | **7,6 km** desde el parque principal (OSRM, unos 9 min) | Por tramitar ante Corantioquia: licencia en 2028–2029 | **Elegida** en la propuesta 2028–2031. Predio útil de unas 8,8 ha, con celdas para 25 años o más; abre en 2030 y cuesta unos $9.820 M (estimación, $6.020–18.270 M). Es la única área que el EOT ya delimita para el relleno nuevo, como pide la Nación para cofinanciar. Antes de comprar el predio hay que cruzarlo con las zonas de recarga de acuíferos del EOT: si cae adentro, no sirve (`docs/17`) |
+| Parque Tecnológico Ambiental San Silvestre (Veolia), Barrancabermeja | 40,2 km (OSRM, 44 min) | CAS, Resolución 1121 de 2014, hasta el 27 de diciembre de 2044 (SUI) | **Descartada como destino; solo contingencia de emergencia.** Era la recomendada en la versión del 22 de octubre de 2026. Depende de un solo puente, el Guillermo Gaviria Correa, que la socavación cerró del 16 al 20 de marzo de 2026 (Vanguardia; `docs/anexos/A-gobiernos-2004-2027.md`), de otra autoridad ambiental (la CAS) y de un operador privado, y la Corte Constitucional mandó revisar su licencia (Sentencia T-227 de 2017). Organizaciones locales denuncian daños ambientales y Veolia dice que la operación está normalizada (Global Witness) |
 | Registros de Rediba y Yerbabuena, Barrancabermeja | — | Misma licencia de la CAS (Resolución 1121 de 2014) que San Silvestre (SUI) | No son otra opción: son registros del mismo relleno, que Veolia le compró a Rediba en 2019 (Global Witness). Rediba tuvo una condena penal de su exgerente y la Sentencia T-227 de 2017 sigue a cargo del operador |
+| Ampliar junto a Las Américas | — | — | Descartada. La norma la pondría primero por ser un área ya impactada, pero el lote vecino es vega inundable, tiene un pozo petrolero y dos edificaciones adentro y choca con la clausura y el parque (`docs/17`) |
+| Occidente cercano y lomas de Casabe, Yondó | — | — | Alternativas del análisis de sitios; ninguna está en el EOT. El occidente drena por el valle que pasa a 418 m de los pozos del acueducto y las lomas de Casabe tienen siete pozos petroleros a menos de 500 m (`docs/17`) |
 | Relleno La Tabaca, Puerto Berrío | unos 141 km | vencida el 2 de septiembre de 2021 (SUI) | Descartada |
 
-**Costo de la disposición regional:** unos **$321 M al año** (estimación): 3.900 t/año (3.500–4.300) × [tarifa de disposición de $60.000/t (45.000–80.000) + 20,2 km de tramo excedente a $1.100/t·km (900–1.400)]. Las tarifas reales salen del contrato con el operador y de la metodología de la CRA. Una estación de clasificación y aprovechamiento (proyecto tipo ECA del DNP) y el compostaje bajan las toneladas.
+**Por qué Kilómetro Cinco.** La propuesta 2028–2031 decidió no depender de un puente que ya se cerró, de otra autoridad ambiental ni de un operador privado, y el EOT ya escogió una solución propia. Para cofinanciar un relleno, la Nación pide que el área esté delimitada en el EOT y que el estudio de factibilidad evalúe la regionalización (Decreto 1077 de 2015, arts. 2.3.2.3.7 y 2.3.2.3.9, modificados por el Decreto 1784 de 2017): por eso el PGIRS que se actualice en 2027 debe dejar escrito por qué la opción regional no sirve. La ECA de 10 t/día y la planta de compostaje van en el mismo predio del relleno nuevo y le alargan la vida útil. El análisis del sitio está en `docs/17`.
 
-**Hace falta un plan de contingencia** por el puente (ruta alterna y acuerdo temporal con otro sitio licenciado).
+**Lo que costaba la opción regional (antecedente):** unos **$321 M al año** (estimación, $221–466 M): 3.900 t/año (3.500–4.300) × [tarifa de disposición de $60.000/t (45.000–80.000) + 20,2 km de tramo excedente a $1.100/t·km (900–1.400)]. La investigación de costos de la propuesta la sube a unos $486 M al año, con $95.000/t de disposición (fórmula de la Resolución CRA 720 de 2015 más lixiviados), el incentivo de $4.027/t para Barrancabermeja y 32,8 km más de transporte.
+
+**Lo que cuesta quedarse, con honestidad.** Operar el relleno nuevo cuesta unos **$806 M al año** (estimación, $622–1.432 M). Si la inversión llega como aporte, son unos **$320 M al año más** que llevar la basura a 40 km con el costo de la investigación, o unos $485 M más frente a los $321 M de arriba; si se cuenta la inversión, el relleno propio cuesta de 2,5 a 3 veces la opción regional. La tarifa (Resolución CRA 1040 de 2026) recogería unos $681 M al año, de $100 M a $150 M menos que la operación, más el cobro de lixiviados, que falta calcular (cálculos propios de la propuesta: `docs/17` y `saneamiento.json`, riesgo de operación). La decisión se sostiene en no depender del puente ni de otra autoridad ambiental, no en el costo.
+
+**San Silvestre, solo para emergencias.** Es el relleno licenciado más cercano, así que el plan de emergencia y contingencia del servicio de aseo (Resolución 154 de 2014 de MinVivienda) puede nombrarlo como destino temporal si Las Américas o el relleno nuevo no pueden recibir basura. No es el destino de la basura.
+
+**Mientras abre el relleno nuevo.** Ya no se pueden abrir celdas transitorias (Resoluciones 1529 de 2010 y 1890 de 2011), así que Las Américas sigue recibiendo basura hasta 2030, solo en el frente activo y con un plan de cierre, con fecha, acordado con Corantioquia. Si la licencia del relleno nuevo se demora, Las Américas seguiría recibiendo basura sin licencia: esa licencia es la ruta crítica.
 
 ## 3. La granja solar sobre las celdas
 
@@ -128,7 +142,7 @@ No se encontró una prórroga, una licencia nueva ni sanciones publicadas.
 **Cómo se monta sin dañar la cobertura** (guía EPA/NREL, 2022, secciones 4.2 y 5):
 
 - **Lastres de concreto prefabricados** (unos 430 bloques de 0,4 m³): nada perfora la geomembrana ni la arcilla.
-- **Asentamientos:** mesas cortas, uniones flexibles, nivelación ajustable en cada pórtico y hitos con lectura semestral. La granja se monta cuando la cobertura haya asentado (los desarrolladores evitan rellenos tapados hace menos de 2–3 años); se empieza por la celda norte, la más antigua.
+- **Asentamientos:** mesas cortas, uniones flexibles, nivelación ajustable en cada pórtico y hitos con lectura semestral. La granja se monta cuando la cobertura haya asentado (los desarrolladores evitan rellenos tapados hace menos de 2–3 años); se empieza por la celda norte, la más antigua. Con el cierre por partes, unos 530 kWp del bloque A, los de las celdas norte y occidental, cubiertas desde 2028, se montan en 2031, y el resto, hacia 2033–2034 (cálculo propio, sección 9).
 - **Drenaje:** pendientes de 3–5 % en la parte alta (la guía considera ideales 2–3 % y un máximo de 5–10 %) y canales que no crucen las chimeneas.
 - **Biogás:** chimeneas en los pasillos, sensores de metano en el centro de transformación y en el coworking, y cables en bandeja o ducto superficial, sin zanjas profundas.
 - **Pasto** rastrero nativo bajo las mesas, cortado con guadaña u ovejas. **Nunca cultivos de comida sobre las celdas.**
@@ -245,7 +259,7 @@ El ahorro real queda entre $541 M y $1.330 M al año, según cómo reconozca la 
 | [Ciclo-infraestructura y servicios complementarios](https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=144&Itemid=205) (v2.0, 2022) | Sección bidireccional de 2,6 m con bordillos; $2.110 M por 8 km de ciclo-infraestructura sobre vía (precios de 2022), unos $348 M/km de 2026; mantenimiento de $5,8 M/km al año |
 | [Recuperación de cobertura vegetal en áreas disturbadas](https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=263&Itemid=365) (v1.0, 2022) | Método de restauración con especies nativas para la cobertura, la cerca viva y el borde del caño |
 | [Señalización turística urbana](https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=269&Itemid=380) (2022) | Tipologías y costo por señal ($130,7 M por 18 señales) |
-| [Estación de clasificación y aprovechamiento – ECA](https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=259&Itemid=360) (v1.0, 2021) y Zonas Digitales | Proyectos complementarios: menos toneladas para el relleno regional y wifi público en el parque |
+| [Estación de clasificación y aprovechamiento – ECA](https://proyectostipo.dnp.gov.co/index.php?option=com_k2&view=item&layout=item&id=259&Itemid=360) (v1.0, 2021) y Zonas Digitales | Proyectos complementarios: menos toneladas para el relleno nuevo (la ECA va en su predio, en Kilómetro Cinco) y wifi público en el parque |
 
 Los proyectos tipo ahorran hasta el 70 % de la preinversión y ya traen MGA. **No hay** proyecto tipo para granjas solares conectadas a la red ni para clausura de rellenos.
 
@@ -300,27 +314,32 @@ La diferencia es de $219,5 M (1,3 % del total). `presupuesto.json`, `financiacio
 
 **Ojo con la huella de los residuos.** La cobertura del capítulo 2 está calculada para unos 10.000–12.000 m². Si los apiques confirman la huella del Manual de Operaciones (1,85 ha), la clausura técnica pasa de $2.550 M a unos $3.860 M; si llega a unas 4 ha, a unos $7.180 M (cálculo propio). Eso supera el margen de prefactibilidad, por eso la delimitación de residuos va primero.
 
-**Para comparar:** ampliar el relleno (BPIN 2025058930015) costaba unos $3.901 M de 2026 y seguir operándolo, unos $576 M al año. La clausura cuesta del mismo orden que la ampliación, pero resuelve el problema para siempre y libera el predio.
+**Y con el cierre por partes.** El presupuesto se hizo para cerrar todo en 2027–2028. Con la clausura por partes y las 12.000–17.000 t que siguen llegando entre 2027 y 2030 (cálculo propio de la propuesta), la obra crece y puede costar más. Por eso se delimita la huella con apiques en 2027, se cubren primero las celdas viejas, el frente activo se opera con cobertura diaria y sin abrir frentes nuevos, y el diseño de la clausura se ajusta antes de radicarla (`saneamiento.json`, riesgos).
+
+**Para comparar:** ampliar el relleno (BPIN 2025058930015) costaba unos $3.901 M de 2026 y seguir operándolo, unos $576 M al año. La clausura cuesta del mismo orden que la ampliación, pero cierra un sitio que opera sin licencia y libera el predio. La ampliación quedó descartada (sección 2.3): la propuesta 2028–2031 reformula ese BPIN como relleno nuevo en Kilómetro Cinco (unos $9.820 M, que no están en este presupuesto) y la clausura va como proyecto nuevo (sección 8).
 
 ## 8. Cómo se paga
 
 | Fase | Fuentes | Mezcla sugerida (millones) |
 |---|---|---|
-| 0–1. Clausura ($4.194 M) | Provisión de clausura y tarifa de aseo (Decreto 1784, art. 2.3.2.3.17); SGP de agua potable y saneamiento y Plan Departamental de Agua; regalías (reformular el BPIN de la ampliación como clausura con uso futuro) | tarifa 600; SGP y PDA 1.200; SGR 2.394 |
-| 2. Granja solar ($5.603 M) | Colombia Solar o FENOGE (ConEnergía para municipios PDET); SGR, Incentivo a la Producción (hasta $8.000 M y dos proyectos por municipio; en 2025 el único proyecto de Yondó no cumplió); Findeter "Municipios Territorios Energéticos" (IBR + 0,7 %, granjas de 1 MW); obras por impuestos (Yondó es ZOMAC y PDET); o un privado con contrato de compra de energía | Colombia Solar o FENOGE 2.911; SGR 1.747; Findeter o privado 945 |
+| 0–1. Clausura ($4.194 M) | Provisión de clausura y tarifa de aseo (Decreto 1784, art. 2.3.2.3.17) y SGP de agua potable y saneamiento y Plan Departamental de Agua: con ellos se cubren las celdas viejas desde 2028; regalías: la clausura va como proyecto nuevo, con uso futuro, radicado en el bienio 2029–2030 (el BPIN 2025058930015 de la ampliación se reformula como relleno nuevo) | tarifa 600; SGP y PDA 1.200; SGR 2.394 |
+| 2. Granja solar ($5.603 M) | Colombia Solar o FENOGE (ConEnergía para municipios PDET); SGR, Incentivo a la Producción, en la convocatoria de 2029–2030 (hasta $8.000 M y dos proyectos por municipio; en 2025 el único proyecto de Yondó no cumplió); Findeter "Municipios Territorios Energéticos" (IBR + 0,7 %, granjas de 1 MW); obras por impuestos (Yondó es ZOMAC y PDET); o un privado con contrato de compra de energía | Colombia Solar o FENOGE 2.911; SGR 1.747; Findeter o privado 945 |
 | 3. Parque ($6.620 M) | Regalías (y el BPIN 2025058930008 de la vía de acceso como ruta ciclista); MinTIC (Zonas Digitales); Ministerio del Deporte e INDER (proyectos tipo de parque y ciclo-infraestructura); Ecopetrol (inversión social, comunidades energéticas); cooperación internacional; recursos propios | SGR 3.310; deporte, TIC y cultura 1.324; Ecopetrol y cooperación 993; propios 993 |
 
-**Compuertas:** no se licita la granja solar sin delimitar los residuos y sin el concepto de Corantioquia sobre el uso futuro; no se construye nada con gente sin la línea base de biogás; no se cierra el relleno sin el contrato de disposición regional y un plan de contingencia por el puente; cada fuente se radica con su MGA.
+**Compuertas:** no se licita la granja solar sin delimitar los residuos y sin el concepto de Corantioquia sobre el uso futuro; no se construye nada con gente sin la línea base de biogás; no se cubren las celdas viejas sin el plan de cierre por partes, con fecha, acordado con Corantioquia, y no se cierra el frente activo hasta que abra el relleno nuevo de Kilómetro Cinco con su licencia (y su predio no se compra sin cruzarlo antes con las zonas de recarga de acuíferos del EOT); San Silvestre entra en el plan de contingencia solo para emergencias; cada fuente se radica con su MGA.
 
 ## 9. Hoja de ruta
 
 | Fase | Años | Qué |
 |---|---|---|
-| 0 | 2027 | Topografía, apiques, georradar y línea base ambiental; contrato con el relleno regional; plan de clausura ante Corantioquia; MGA y postulaciones |
-| 1 | 2027–2028 | Traslado de la basura a San Silvestre; clausura técnica |
-| 2 | 2029–2030 | Granja solar, bloque A (unos 0,77 MWp), y conexión a EPM; constitución de la comunidad energética; bloque B si los apiques lo permiten |
-| 3 | 2028–2030 | Coworking, cafetería, taller, granja, circuito, mirador y ruta ciclista (pueden empezar en paralelo con la clausura porque están fuera de las celdas, cuando los apiques y la línea base de biogás descarten residuos bajo la zona de servicios) |
-| Posclausura | 2028–2048 | Monitoreo y mantenimiento por 20 años como mínimo |
+| 0 | 2027 | Topografía, apiques, georradar y línea base ambiental; plan de cierre por partes, con fecha, ante Corantioquia; PGIRS con el análisis de alternativas, incluida la opción regional y por qué no sirve; el BPIN 2025058930015 se reformula como relleno nuevo; MGA y postulaciones |
+| Relleno nuevo | 2027–2030 | Va aparte, en la propuesta: cruce con las zonas de recarga antes de comprar, predio y estudios en 2027–2028, licencia en 2028–2029, obra de su fase 1 con la vía, la ECA y el compostaje en 2029 y operación desde 2030 |
+| 1 | 2028–2031 | Clausura por partes: desde 2028, cobertura final de las celdas viejas, empezando por la norte, mientras la basura va solo al frente activo; en 2030 abre el relleno nuevo y Las Américas deja de recibir basura; en 2030–2031 se cierra el frente activo |
+| 2 | 2031–2034 | Granja solar: unos 530 kWp en 2031, sobre las celdas cubiertas desde 2028, con la conexión a EPM y la constitución de la comunidad energética; el resto (lo que queda del bloque A, sobre el frente activo, y el bloque B si los apiques lo permiten) hacia 2033–2034, cuando asiente la cobertura del frente activo |
+| 3 | 2031 | Coworking, cafetería, taller, granja, circuito, mirador y ruta ciclista (fuera de las celdas, cuando los apiques y la línea base de biogás descarten residuos bajo la zona de servicios) |
+| Posclausura | 2031 hasta cerca de 2051 | Monitoreo y mantenimiento por 20 años como mínimo |
+
+La clausura, el parque y la granja ($7.451 M de regalías) se radican en el bienio 2029–2030, y la granja va a la convocatoria del Incentivo a la Producción de ese bienio, porque un proyecto del SGR debe abrir su contratación en 6 meses desde su aprobación, prorrogables 12 (Ley 2056 de 2020, art. 37). Las fechas salen de `saneamiento.json` (componentes `relleno_nuevo` y `relleno` y pasos de gestión) y de `docs/17`.
 
 ## 10. Lo que todavía no sabemos
 
@@ -329,7 +348,8 @@ La diferencia es de $219,5 M (1,3 % del total). `presupuesto.json`, `financiacio
 - Las cuatro piscinas se interpretan como lagunas de lixiviados; podrían ser de aguas lluvias.
 - El botadero antiguo de los años noventa no está delimitado; está cerca de los pozos del acueducto según la nota de 2020.
 - El predio del municipio puede no incluir todo el potrero del sur donde van los servicios: hay que revisar el certificado de tradición y el catastro.
-- Las tarifas de disposición regional, la ruta y el costo de la línea de 13,2 kV y la capacidad de la red los definen el operador del relleno y EPM. La ubicación de la subestación sale de un lugar de Google y del satélite; EPM no la ha publicado.
+- La fecha de cierre de Las Américas depende del relleno nuevo. Falta cruzar el predio de Kilómetro Cinco con las zonas de recarga de acuíferos del EOT (si cae adentro, no sirve y se pasa a una alternativa), con el bosque protector y con el riesgo no mitigable, y saber si Corantioquia acepta que Las Américas reciba basura hasta 2030 con el plan de cierre por partes (`docs/17` y `saneamiento.json`).
+- La ruta y el costo de la línea de 13,2 kV y la capacidad de la red los define EPM. La ubicación de la subestación sale de un lugar de Google y del satélite; EPM no la ha publicado.
 - Las reglas de Colombia Solar para soluciones colectivas están en reglamentación y los subsidios de la Ley 1117 están prorrogados solo hasta el 30 de junio de 2027.
 - Los consumos por estrato salen de seis meses del SUI; los meses varían por los ciclos de facturación.
 
@@ -345,11 +365,16 @@ La diferencia es de $219,5 M (1,3 % del total). `presupuesto.json`, `financiacio
 - Noticias Caracol, "Denuncian construcción de pozos de agua para consumo humano en antiguo relleno sanitario" (23-sep-2020): https://www.noticiascaracol.com/antioquia/denuncian-construccion-de-pozos-de-agua-para-consumo-humano-en-antiguo-relleno-sanitario
 - Vanguardia, riesgo del puente Barrancabermeja–Yondó (4-jun-2026): https://www.vanguardia.com/santander/barrancabermeja/2026/06/04/por-que-sigue-en-riesgo-el-puente-que-conecta-a-barrancabermeja-con-yondo-ruta-del-cacao-explico-las-causas/
 - Global Witness, "Cicatrices de por vida" (San Silvestre): https://globalwitness.org/es/campaigns/land-and-environmental-defenders/colombia-report-es/
+- Propuesta integral 2028–2031 (actualización del 29-oct-2026): `docs/17-propuesta-integral-2028-2031.md` y `data/propuesta/modulos/saneamiento.json` (componentes `relleno_nuevo`, `relleno`, `eca` y `compostaje`, riesgos y pasos de gestión)
+- EOT de Yondó, Acuerdo 013 de 2022 (art. 17.4 y Tabla 35: reserva para el relleno nuevo): https://yondoantioquia.micolombiadigital.gov.co/sites/yondoantioquia/content/files/000406/20257_acuerdo-municipal-013-eot-2022-2035.pdf
+- Corte Constitucional, Sentencia T-227 de 2017: https://www.corteconstitucional.gov.co/relatoria/2017/t-227-17.htm
 
 **Normas**
 - Decreto 1784 de 2017: https://normas.cra.gov.co/gestor/docs/decreto_1784_2017.htm
 - Resolución MVCT 938 de 2019 (Diario Oficial 51.185): https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0938_2019.htm
 - Resolución 0330 de 2017 con las modificaciones de la 0799 de 2021: https://normas.cra.gov.co/gestor/docs/resolucion_minviviendact_0330_2017.htm
+- Resoluciones MAVDT 1529 de 2010 y 1890 de 2011 (fin de las celdas transitorias): https://normas.cra.gov.co/gestor/docs/resolucion_minambientevdt_1529_2010.htm y https://normas.cra.gov.co/gestor/docs/resolucion_minambientevdt_1890_2011.htm
+- Resolución CRA 1040 de 2026 (costos de disposición final y aporte bajo condición): https://normas.cra.gov.co/gestor/docs/resolucion_cra_1040_2026.htm
 - Resolución CREG 174 de 2021: https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_0174_2021.htm
 - Resolución CREG 101 072 de 2025 (comunidades energéticas): https://gestornormativo.creg.gov.co/gestor/entorno/docs/originales/Resoluci%C3%B3n_CREG_101_072_2025/Resoluci%C3%B3n_CREG_101_072_2025.pdf
 - Resolución CREG 105 006 de 2023 (prórroga de subsidios, Ley 2294 de 2023, art. 272): https://gestornormativo.creg.gov.co/gestor/entorno/docs/resolucion_creg_105-6_2023.htm
