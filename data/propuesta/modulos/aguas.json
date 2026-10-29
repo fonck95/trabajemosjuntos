@@ -249,7 +249,7 @@
   "riesgos": [
     { "riesgo": "Línea base contradictoria (9 h según el diagnóstico, 18 h según el PDM 2024 y 7 a 8 h según la Superservicios en 2019) y diseños de 2019 desactualizados: el proyecto no pasa la viabilidad", "mitigacion": "Medir 3 meses con registradores, terminar el Plan Maestro y ajustar el diseño a la Res. 0330 de 2017 antes de radicar" },
     { "riesgo": "Al pasar a 24 horas bajan las presiones en los barrios lejanos y aparecen roturas y golpes de ariete en una red que lleva años vaciándose cada día", "mitigacion": "Ir sector por sector desde un piloto, con estudio de transitorios, VRP, ventosas, llenado lento y reparación previa de las fugas visibles" },
-    { "riesgo": "Concesión de aguas subterráneas sin confirmar para los pozos urbanos y sin cupo para 60 L/s", "mitigacion": "Tramitar con Corantioquia la concesión de los pozos actuales en 2027 y su ampliación a 60 L/s en 2029–2030, con prueba de bombeo y monitoreo de niveles, y renovar la concesión de la Laguna del Miedo como reserva" },
+    { "riesgo": "Concesión de aguas subterráneas sin confirmar para los pozos urbanos y sin cupo para 60 L/s; además, según una nota de Noticias Caracol de 2020, los pozos están donde funcionó el botadero de los años noventa, que no está delimitado", "mitigacion": "Tramitar con Corantioquia la concesión de los pozos actuales en 2027 y su ampliación a 60 L/s en 2029–2030, con prueba de bombeo y monitoreo de niveles; antes de ampliar, medir la calidad del agua subterránea en los pozos y en la prueba de bombeo, con la delimitación del botadero (apiques y georradar) que hace la clausura de Las Américas en el módulo de Saneamiento, y renovar la concesión de la Laguna del Miedo como reserva" },
     { "riesgo": "Menos regalías (SGR 2027–2028 con −11 %) y reglas en transición (Res. 0467 de 2026, PND 2026–2030 en preparación)", "mitigacion": "Tener la MGA y la viabilidad listas en 2028 para presentarlas a varias fuentes; la PTAP puede esperar si bajan las pérdidas" }
   ],
   "pasos": [
@@ -370,6 +370,7 @@
     { "titulo": "CRA, concepto 0095551 de 2026 sobre micromedidores y pérdidas técnicas", "url": "https://normas.cra.gov.co/gestor/docs/concepto_cra_0095551_2026.htm" },
     { "titulo": "Gobernación de Antioquia, Plan Departamental de Agua (Gerencia de Servicios Públicos)", "url": "https://antioquia.gov.co/noticias-gerencia-servicios-publicos/gobernador-de-antioquia-plantea-reestructurar-el-plan-departamental-de-agua" },
     { "titulo": "Alcaldía de Yondó, Plan de Desarrollo «Yondó avanza» 2024–2027", "url": "https://repositoriocdim.esap.edu.co/items/143f23fc-e675-4f46-b428-7cd698841ee2" },
-    { "titulo": "MinTIC, Gobierno Digital: cofinanciación FUTIC de ciudades y territorios inteligentes", "url": "https://gobiernodigital.mintic.gov.co/692/articles-392044_recurso_3.pdf" }
+    { "titulo": "MinTIC, Gobierno Digital: cofinanciación FUTIC de ciudades y territorios inteligentes", "url": "https://gobiernodigital.mintic.gov.co/692/articles-392044_recurso_3.pdf" },
+    { "titulo": "Noticias Caracol, pozos del acueducto en el antiguo relleno sanitario de Yondó (2020)", "url": "https://www.noticiascaracol.com/antioquia/denuncian-construccion-de-pozos-de-agua-para-consumo-humano-en-antiguo-relleno-sanitario" }
   ]
 }

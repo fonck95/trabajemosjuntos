@@ -23,7 +23,7 @@
         ["Meta 2031", "7.500 reses y 10.000 cerdos al año"],
         ["Categoría", "Nacional para vender en Barrancabermeja; autoconsumo solo abastece a Yondó"],
         ["Planta", "≈1.800 m² con oreo y frigorífico, más 1.440 m² de corrales (estimado)"],
-        ["Normas", "Decreto 1500 de 2007, Resolución 240 de 2013 y autorización del INVIMA"],
+        ["Normas", "Decreto 1500 de 2007, Resolución 240 de 2013, autorización del INVIMA y, por estar a ≈11,6 km del aeropuerto Yariguíes, la previa de la Aerocivil (RAC 14, num. 14.3.4.2.7.2)"],
         ["Productores", "Vacunación al día, guía de movilización y registro SINIGÁN"],
         ["Línea porcina", "11.400 cerdos en Yondó (ICA 2026), 79 % comerciales"]
       ],
@@ -292,6 +292,7 @@
       "Findeter · crédito de $6.000 M para el matadero y las redes del parque (línea por confirmar)",
       "Gobernación de Antioquia · Secretarías de Agricultura (plantas de beneficio) e Infraestructura (maquinaria 50/50)",
       "INVIMA e ICA · categoría sanitaria del matadero y registro de las plantas",
+      "Aerocivil · autorización previa por peligro aviario del matadero y frigorífico y de las demás plantas que atraigan aves, a ≈11,6 km del aeropuerto Yariguíes (RAC 14)",
       "ANI, Ruta del Cacao, Cormagdalena y Corantioquia · accesos, muelle de carga, ronda y vertimientos"
     ],
     "pasos": [
@@ -312,6 +313,7 @@
   ],
   "riesgos": [
     { "riesgo": "El lote está dentro del campo petrolero Casabe, con los pozos Casabe 980 y 394 adentro, y el muelle queda en la orilla que la socavación hizo fallar en marzo y mayo de 2026.", "mitigacion": "Concepto de Ecopetrol sobre los pozos y sus retiros antes de comprar; estudio hidráulico y de socavación; diseñar el muelle con la solución definitiva del estribo (ANI y Ruta del Cacao) o llevarlo aguas abajo, más allá de la zona A del mirador (a más de 220 m del eje del puente)." },
+    { "riesgo": "El matadero y frigorífico queda a ≈11,6 km del aeropuerto Yariguíes, dentro del radio de 13 km en el que la Aerocivil debe autorizar antes los mataderos y frigoríficos, y puede negarlo si atraen aves (RAC 14, num. 14.3.4.2.7.2; Res. 04072 de 2010). La misma norma nombra el procesamiento de vísceras y otros derivados animales, las plantas de tratamiento de residuos orgánicos y los cuerpos de agua artificiales, como las plantas de tratamiento, así que también cubre la planta de pescado, el biodigestor y el tratamiento de agua del parque.", "mitigacion": "Consultar a la Aerocivil en 2027, antes de comprar el lote, y pedir la autorización con los diseños, en 2028; diseñar para no atraer aves: corrales, beneficio, eviscerado y vísceras bajo techo, residuos en recipientes tapados hasta el biodigestor o la fábrica, compostaje cubierto y tratamiento de agua sin lagunas abiertas." },
     { "riesgo": "Falta de materia prima: Yondó produjo 2.404 t de paddy en 2025 frente a 11.000 t de meta, y la demanda local de concentrado (6.000 a 8.400 t/año) no llena las 12.000 t de la fábrica.", "mitigacion": "Fases con condición de paso: maquinaria y contratos de compra firmados antes de las plantas grandes; plantas modulares; compras a municipios vecinos y ventas a la alimentación escolar (Ley 2046)." },
     { "riesgo": "Una planta de autoconsumo solo puede abastecer a Yondó (Decreto 2016 de 2023), no a Barrancabermeja, y no se ha confirmado si Yondó está en el Plan de Racionalización de Antioquia, donde 5 plantas están cerradas y 75 % de las públicas requiere inversión sanitaria (2024).", "mitigacion": "Definir la categoría en la prefactibilidad (2027); si es nacional, diseñar con estándar INVIMA, formar a los operarios con el SENA y buscar un socio frigorífico para la empresa mixta." },
     { "riesgo": "Menos regalías (SGR 2027–2028 con −11 % y solo 60 % aprobable en 2027), la reconstrucción tras el terremoto como prioridad nacional, baja ejecución local y cambio de gobierno en enero de 2028.", "mitigacion": "Arrancar con la maquinaria 50/50 y llevar la fase de arranque a las convocatorias del OCAD Paz de 2028, amarrada a las iniciativas PDET; estructurar con apoyo del DNP y un ejecutor con capacidad; adoptar el parque por acuerdo municipal y llevarlo a los programas de gobierno." }
@@ -394,6 +396,7 @@
     { "titulo": "Agronegocios, MinAgricultura asigna $147.000 M para crédito e inversión en el campo (2026)", "url": "https://www.agronegocios.co/agricultura/minagricultura-asigna-147-000-millones-para-impulsar-el-credito-y-la-inversion-en-el-campo-4373481" },
     { "titulo": "Portafolio, acuerdo Ecopetrol-Parex en Casabe y otros campos del Magdalena Medio (2026)", "url": "https://www.portafolio.co/energia/ecopetrol-y-parex-activan-acuerdo-por-us-250-millones-para-impulsar-produccion-petrolera-en-el-magdalena-medio-499447" },
     { "titulo": "Vanguardia, por qué sigue en riesgo el puente Barrancabermeja–Yondó (jun-2026)", "url": "https://www.vanguardia.com/santander/barrancabermeja/2026/06/04/por-que-sigue-en-riesgo-el-puente-que-conecta-a-barrancabermeja-con-yondo-ruta-del-cacao-explico-las-causas/" },
-    { "titulo": "Colombia Compra Eficiente, concepto C-1657 de 2025 sobre la Ley 2046 de 2020", "url": "https://relatoria.colombiacompra.gov.co/conceptos/c-1657-de-2025/" }
+    { "titulo": "Colombia Compra Eficiente, concepto C-1657 de 2025 sobre la Ley 2046 de 2020", "url": "https://relatoria.colombiacompra.gov.co/conceptos/c-1657-de-2025/" },
+    { "titulo": "Aerocivil, Resolución 04072 de 2010 (RAC 14): peligro aviario a 13 km de los aeródromos (2010)", "url": "https://corpouraba.gov.co/wp-content/uploads/RESOLUCI%C3%93N-4072-DE-2010.pdf" }
   ]
 }
