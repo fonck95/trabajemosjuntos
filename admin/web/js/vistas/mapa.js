@@ -93,7 +93,8 @@ export async function vistaMapa(el, { q, ir }) {
     ultimoMax = max;
     map.getSource('hex').setData(geo);
     const radio = radioActual();
-    map.setPaintProperty('hex-3d', 'fill-extrusion-height', ['*', ['get', 't'], Math.min(2600, radio * 3.4)]);
+    // Columnas más bajas en hexágonos pequeños: de cerca no deben tapar el casco urbano
+    map.setPaintProperty('hex-3d', 'fill-extrusion-height', ['*', ['get', 't'], Math.min(2600, radio * (radio < 300 ? 1.8 : 3))]);
   }
 
   function pintarRampa() {
@@ -127,14 +128,17 @@ export async function vistaMapa(el, { q, ir }) {
       map.addSource('hex', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       map.addLayer({ id: 'hex-3d', type: 'fill-extrusion', source: 'hex', paint: {
         'fill-extrusion-color': ['interpolate', ['linear'], ['get', 't'], 0, r[0], 0.25, r[1], 0.5, r[2], 0.75, r[3], 1, r[4]],
-        'fill-extrusion-height': ['*', ['get', 't'], 1000], 'fill-extrusion-opacity': 0.88, 'fill-extrusion-vertical-gradient': true } });
+        'fill-extrusion-height': ['*', ['get', 't'], 1000], 'fill-extrusion-vertical-gradient': true,
+        'fill-extrusion-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0.9, 15, 0.5] } });
       map.addSource('puntos', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       map.addLayer({ id: 'calor', type: 'heatmap', source: 'puntos', maxzoom: 17, paint: {
         'heatmap-weight': 1,
-        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 9, 0.6, 15, 1.6],
-        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 9, 6, 12, 14, 15, 26, 17, 40],
-        'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(0,0,0,0)', 0.15, '#2a78d6', 0.35, '#1baf7a', 0.55, '#eda100', 0.8, '#eb6834', 1, '#e3141b'],
-        'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 14, 0.85, 17, 0.35] } });
+        // Segunda escala secuencial (las columnas van en azul): un solo tono naranja, de transparente a intenso
+        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 8, 0.35, 12, 0.55, 15, 0.9, 17, 1.2],
+        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 8, 4, 12, 9, 15, 18, 17, 30],
+        'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(235,104,52,0)', 0.12, 'rgba(251,217,201,0.55)',
+          0.35, '#f6b391', 0.6, '#f08550', 0.85, '#eb6834', 1, '#b9431a'],
+        'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 14, 0.8, 17, 0.35] } });
       map.addLayer({ id: 'puntos', type: 'circle', source: 'puntos', minzoom: 13.5, paint: {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 13.5, 2.2, 17, 6],
         'circle-color': ['case', ['<=', ['get', 'p'], 1], '#e3141b', ['>', ['get', 'r'], 0], '#eda100', oscuro ? '#cfcfc8' : '#3d3d3a'],
