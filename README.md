@@ -48,6 +48,7 @@ El repositorio incluye un **atlas 3D interactivo** (`atlas.html`, Three.js + GSA
 | `scripts/geo/` | Herramientas de levantamiento: satélite, cobertura y vistas de Street View, superposición de la huella, calles de OpenStreetMap y huellas de edificaciones |
 | `scripts/` | Descarga y análisis de SECOP, simulación de la microrred, construcción del sitio |
 | `web/` | El sitio: Home de la campaña (`index.html`), atlas 3D (`atlas.html`) y propuesta (`propuesta.html`), con módulos JavaScript + Three.js + GSAP; `web/img/home/` renders propios de la maqueta para el Home (sin imágenes satelitales); `web/models/` modelos GLB; `web/vendor/` decodificadores Draco y Basis |
+| `admin/` | **Panel de administración privado** (FastAPI + MongoDB, otro servicio de Railway): base única de habitantes cruzada por nombre, direcciones normalizadas y georreferenciadas, mapa 3D con mapa de calor, reuniones y enriquecimiento de perfiles. No versiona datos personales; ver `admin/README.md` |
 | `scripts/modelos/` | Generación y optimización de los modelos GLB (gltf-transform + Draco), réplicas de las sedes (`build_edificios.mjs`) y render de comparación con Street View (`render_vista.mjs`) |
 
 ## Ver el atlas 3D
