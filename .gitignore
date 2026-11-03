@@ -8,3 +8,13 @@ node_modules/
 data/geo/img/
 data/geo/sv_coverage.json
 .claude/worktrees/
+
+# Panel de administración: credenciales y datos personales NUNCA van al repositorio (el repo es público)
+.env
+admin/.env
+admin/var/
+admin/**/*.xlsx
+admin/**/*.xlsm
+admin/**/*.csv
+admin/.venv/
+.pytest_cache/

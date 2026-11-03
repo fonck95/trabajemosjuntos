@@ -31,3 +31,39 @@ jobs:
             echo 'La presentación muestra el nombre del punto, no un número de 1 a 7'
             exit 1
           fi
+  panel:
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7
+        ports: ['27017:27017']
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pip install -r requirements-dev.txt
+      - name: Pruebas del panel (datos inventados, MongoDB de servicio)
+        run: python -m pytest -q tests
+        env:
+          TEST_MONGODB_URI: mongodb://127.0.0.1:27017
+      - name: Sintaxis de los módulos JS del panel
+        run: |
+          set -e
+          for f in web/js/*.js web/js/vistas/*.js; do
+            cp "$f" /tmp/check.mjs
+            node --check /tmp/check.mjs || { echo "error de sintaxis en $f"; exit 1; }
+          done
+      - name: Ningún Excel ni .env en el repositorio
+        working-directory: .
+        run: |
+          if git ls-files | grep -E '(^|/)\.env$|^admin/.*\.(xlsx|xlsm|csv)$'; then
+            echo 'El panel no versiona datos personales ni credenciales'
+            exit 1
+          fi

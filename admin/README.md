@@ -1,0 +1,126 @@
+# Panel de administración · Base única de habitantes de Yondó
+
+Aplicación privada (con usuario y clave) para administrar la base de habitantes que se arma cruzando:
+
+1. **Trámites por vereda**: una fila por solicitud (ID, Número de ficha, Fecha, «TRÁMITE - NOMBRE», Dirección, Correo, Teléfono, Paquete).
+2. **Base unificada con cédula**: una fila por cédula, con listas de origen, puesto de votación, edad y sexo.
+
+El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferencia** a cada persona, muestra un
+**mapa 3D del municipio con mapa de calor** y permite **enriquecer los perfiles reunión a reunión**.
+
+> **Ningún dato personal va al repositorio** (es público). Los Excel se suben por el panel, se procesan en memoria
+> y se descartan; los datos quedan solo en MongoDB. En `admin/geo/` solo hay geografía pública.
+
+## Qué hace
+
+| Módulo | Qué ofrece |
+|---|---|
+| **Panel** | Indicadores: habitantes, % con cédula, % georreferenciados y con dirección exacta, contactables, alcanzados en reuniones, completitud media del perfil, autorizaciones de datos, coincidencias por revisar. Ranking por barrio/vereda, calidad de la ubicación, zona, trámites por mes, pirámide de edad y sexo, necesidades, listas de origen y actividad. |
+| **Mapa 3D** | Relieve real del terreno, edificios 3D, columnas hexagonales extruidas (altura y color = personas), mapa de calor, puntos individuales al acercarse, polígonos de las 62 veredas catastrales, límite municipal del DANE y reuniones. Filtros (zona, fuente, precisión, asistencia, necesidad, lista), tamaño de hexágono, mapa base (oscuro, claro, satélite), recorridos al casco urbano y a San Miguel del Tigre, giro automático. Al tocar un hexágono: cuántos, de qué barrios y el enlace a la lista. |
+| **Habitantes** | Directorio con búsqueda (nombre, cédula, teléfono, dirección, ficha), 10 filtros combinables, orden por completitud o contacto, exportación a Excel de lo filtrado. |
+| **Ficha** | Datos editables, necesidades/intereses/roles, campos propios, autorización de datos, ubicación con minimapa y ajuste manual del punto, historial (reuniones, notas, trámites), origen de cada dato y registro de cambios. Unir fichas duplicadas y suprimir datos (derecho de supresión). |
+| **Reuniones** | Agenda con asistentes y personas nuevas por reunión. **Modo reunión**: buscar y agregar asistentes en segundos, registrar personas nuevas (con aviso de posibles duplicados) y «Completar» el perfil de cada asistente ahí mismo (cédula, celular, ocupación, hogar, necesidades, autorización y lo que pidió, que queda en su historial). Exporta asistentes a CSV. |
+| **Calidad de datos** | Cola de coincidencias por nombre para confirmar o descartar lado a lado; barrios y veredas sin punto para ubicarlos con un clic en el mapa; nombres escritos que no se reconocen, para crearlos o agregarlos como alias. |
+| **Importar y exportar** | Subir los Excel (se reconocen por sus columnas) cuantas veces se quiera; historial de importaciones; exportar la base única. |
+| **Ajustes** | Campos propios del perfil (texto, número, sí/no, lista, fecha), catálogo de necesidades, grupos y roles, y auditoría completa. |
+
+## Cómo se cruzan y se ubican los datos
+
+- **Agrupar trámites por persona.** Nombre normalizado (mayúsculas, sin tildes, sin signos). Dos escrituras parecidas
+  («FABIO MAURICO» / «FABIO MAURICIO») se unen solo si además comparten teléfono, correo o ficha.
+- **Cruce por nombre con la base de cédulas** (`app/pipeline/cruce.py`). Cada palabra pesa según lo rara que es (un
+  «MARIA» pesa poco; un «ZAPATEIRO», mucho), se toleran errores de digitación (Jaro-Winkler) y variantes fonéticas
+  (JHON/JOHN, NUVIA/NUBIA, YANETH/JANETH), y no importa el orden de nombres y apellidos. Un nombre de pila distinto
+  resta (hermanos, madre e hija). Compartir teléfono o correo confirma un nombre parecido, pero no vuelve parecido un
+  nombre distinto: en una familia todos dan el mismo celular. Lo seguro se une solo; lo dudoso va a **Calidad de datos**.
+- **Normalización de direcciones** (`app/pipeline/direcciones.py`). «BARRIO TRES DE OCTUBRE CALLE 49 # 45  12» →
+  `CL 49 # 45-12, B. TRES DE OCTUBRE`; «CLL 52 N 4610» → `CL 52 # 46-10`; «VEREDA X-10» y «K-5» se reconocen; corrige
+  palabras pegadas («ESPERANZAMANZANA»), manzana/lote, fincas y referencias («FRENTE AL PARQUE»).
+- **Georreferenciación** (`app/pipeline/geocodificador.py`), de lo más preciso a lo menos:
+  1. *Dirección con placa en el casco urbano*: una grilla de nomenclatura armada con los cruces de calles y carreras
+     de OpenStreetMap (`geo/grilla_casco.json`) se ajusta localmente y ubica la placa, incluso en calles que OSM no
+     tiene con nombre.
+  2. *Barrio, vereda, caserío o centro poblado* del nomenclátor (`geo/gazetteer.json`: 62 veredas catastrales de la
+     Gobernación de Antioquia con polígono, centros poblados del DANE, OSM, sedes educativas). En las veredas se usa
+     el núcleo poblado (caserío o escuela) y no el centro del polígono.
+  3. Barrios sin coordenada pública: la mediana de las direcciones con placa que caen en ellos; si no hay, el
+     administrador los ubica una vez en **Calidad de datos → Barrios y veredas** y todas sus personas quedan ubicadas.
+
+  Cada coordenada guarda su precisión. El mapa dispersa visualmente los puntos de barrio o vereda para el mapa de
+  calor, sin tocar el dato guardado. Los barrios que no tienen coordenada pública aparecen en el panel como «lugares
+  sin punto» y se resuelven ubicándolos una vez en el mapa.
+- **La importación nunca pisa lo editado**: solo completa campos vacíos. Los trámites se identifican por su ID.
+
+## Seguridad
+
+- Usuario y clave en las variables `ADMIN` y `password` (también `admin` / `PASSWORD`), comparadas en tiempo constante.
+- Sesión con token aleatorio en cookie `HttpOnly`, `SameSite=Strict` y `Secure` en producción; en MongoDB solo
+  queda el hash y la sesión caduca sola (índice TTL). CSRF obligatorio en todo lo que cambia datos.
+- Bloqueo tras 5 intentos fallidos por IP (o 30 en total) durante 15 minutos.
+- Cabeceras: CSP estricta sin scripts de terceros (MapLibre va incluido en el repositorio), `X-Frame-Options: DENY`,
+  `noindex`, `no-store` en la API, HSTS en producción. Sin documentación pública de la API.
+- Auditoría de cada ingreso, edición, fusión, exportación e importación (usuario, fecha, IP y qué cambió).
+- Exportaciones protegidas contra inyección de fórmulas en Excel.
+
+## Protección de datos personales (Ley 1581 de 2012)
+
+La base tiene datos personales y algunos **sensibles** (afiliación política, condición de víctima, salud). Exigen
+autorización previa, expresa e informada del titular, una finalidad informada y atender consultas, correcciones y
+supresiones. Para eso están el campo **Autorización de datos** (con fecha) de cada ficha, el indicador del panel y la
+opción **Suprimir datos**. Los datos que provienen de bases oficiales (por ejemplo, las del SISBÉN) solo pueden usarse
+para la finalidad con la que se recogieron; revise con un abogado el uso que se le dará a la base antes de operarla.
+
+## Desplegar en Railway
+
+El sitio público (Home, atlas, propuesta) sigue siendo estático. El panel es **otro servicio** del mismo repositorio:
+
+1. En el proyecto de Railway: **+ New → Database → MongoDB** (si aún no existe).
+2. **+ New → GitHub Repo →** `trabajemosjuntos`. En *Settings* del servicio nuevo: **Root Directory = `admin`**.
+   Railway lee `admin/railway.json` (arranque con uvicorn y chequeo de salud en `/salud`).
+3. En *Variables* del servicio del panel:
+   - `ADMIN` = usuario, `password` = clave (larga: 12 caracteres o más).
+   - `MONGODB_URI` = `${{MongoDB.MONGO_URL}}` (referencia al plugin) o la URI de Atlas.
+
+   Si estas variables quedaron en el servicio del sitio estático, cópielas al del panel (o conviértalas en
+   *Shared Variables*): el sitio estático no las usa.
+4. *Settings → Networking → Generate Domain*. Abra la dirección, ingrese y suba los dos Excel en **Importar y exportar**.
+
+## Trabajar en local
+
+```bash
+cd admin
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements-dev.txt
+cp .env.example .env        # y complete ADMIN, password y MONGODB_URI
+uvicorn app.main:app --reload
+```
+
+Un MongoDB local sirve con `docker run -d -p 27017:27017 mongo:7`. Comandos útiles:
+
+```bash
+python -m app.cli importar ruta/tramites.xlsx ruta/cedulas.xlsx
+python -m app.cli georreferenciar
+python -m app.cli nomenclator
+python -m app.cli resumen
+```
+
+Pruebas (solo con datos inventados; las de la API necesitan MongoDB):
+
+```bash
+python -m pytest -q tests
+```
+
+## Estructura
+
+| Ruta | Contenido |
+|---|---|
+| `app/main.py` | Aplicación FastAPI, cabeceras y estáticos |
+| `app/config.py`, `app/seguridad.py`, `app/db.py` | Variables de entorno, autenticación y sesiones, MongoDB (índices, nomenclátor, fusión, completitud) |
+| `app/api/` | Endpoints: tablero y mapa, personas, reuniones, calidad, sistema (sesión, importación, exportación, catálogos, auditoría) |
+| `app/pipeline/` | Lectura de los Excel, normalización, direcciones, cruce por nombre, georreferenciación e importación |
+| `geo/` | Geografía pública: límite municipal (DANE MGN 2025), nomenclátor de veredas, barrios y centros poblados, grilla de calles (OSM) y los scripts que los generan |
+| `web/` | Interfaz (HTML, CSS y módulos JS sin compilación) con MapLibre GL incluido |
+| `tests/` | Pruebas con personas inventadas |
+
+Geografía: © colaboradores de OpenStreetMap (ODbL); DANE (MGN y DIVIPOLA); Gobernación de Antioquia (catastro);
+MinEducación (sedes). Mapas base: OpenFreeMap / OpenMapTiles, Esri World Imagery; relieve: Mapzen Terrain Tiles.
