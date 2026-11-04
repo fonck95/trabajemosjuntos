@@ -1,15 +1,22 @@
-"""Autenticación del administrador, sesiones, CSRF, límite de intentos y cabeceras de seguridad.
+"""Autenticación, sesiones, CSRF, límite de intentos y cabeceras de seguridad.
 
-* Usuario y clave salen de las variables de entorno `ADMIN` y `password`; se comparan en tiempo constante.
+* El administrador entra con las variables de entorno `ADMIN` y `password` (se comparan en tiempo constante); los
+  coordinadores, planilleros y consultores, con su usuario de la colección `usuarios` (ver app/acceso.py).
 * La sesión es un token aleatorio en una cookie HttpOnly + SameSite=Strict (Secure en producción); en MongoDB
   solo se guarda su hash SHA-256, y la sesión caduca sola (índice TTL).
-* Cada sesión guarda una huella de usuario y clave: si cambian ADMIN o password, las sesiones abiertas dejan de valer.
+* Cada sesión guarda una huella: la del administrador sale de ADMIN y password; la de un usuario, además, de su `_id`
+  y su `version`. Si cambian ADMIN o password, ninguna sesión vale; si sube la `version` de un usuario (desactivarlo,
+  cambiarle el rol o la clave, «Cerrar sesiones»), se cierran solo las suyas.
+* Las sesiones de un usuario duran como mucho `ajustes.sesion.horas_max`, caen tras `inactividad_min` sin uso y no
+  pasan de `max_por_usuario` (las más viejas se cierran).
 * Toda petición que cambia datos debe traer la cabecera X-CSRF-Token de la sesión.
-* Cinco intentos fallidos por IP en 15 minutos bloquean esa IP (como mucho 15 minutos). Con más de 100 fallos en
-  total, cada intento espera un retroceso exponencial corto (como mucho 60 s): el ingreso nunca queda bloqueado
-  indefinidamente.
+* Cinco intentos fallidos por IP en 15 minutos bloquean esa IP (como mucho 15 minutos). Un navegador con la marca de
+  un ingreso correcto a la cuenta que se intenta solo cuenta sus propios fallos (IP compartida). Con más de 100 fallos
+  en total, cada intento espera un retroceso exponencial corto (como mucho 60 s): el ingreso nunca queda bloqueado
+  indefinidamente. No hay bloqueo por nombre: nadie puede dejar a otro sin entrar.
 * Ninguna ruta /api/* (salvo /api/login y /api/yo) se atiende sin sesión y el cuerpo de la petición tiene tamaño
-  máximo: las dos cosas se comprueban antes de leerlo.
+  máximo: las dos cosas se comprueban antes de leerlo. Un usuario con la clave por cambiar o el compromiso por
+  aceptar solo llega a su cuenta, e importar es solo del administrador.
 * Si MongoDB se cae o se cuelga, la API responde 503 al instante durante unos segundos sin tocar la base
   (`Cortacircuitos`) y deja una sola línea en el registro, sin traza ni URI.
 """
@@ -25,13 +32,16 @@ import time
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
-from fastapi import Depends, HTTPException, Request, Response
+from fastapi import HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from pymongo.database import Database
 from pymongo.errors import ConnectionFailure, DuplicateKeyError
 from starlette.datastructures import Headers
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from . import db as bd
+from . import modelo
 
 log = logging.getLogger("panel")
 COOKIE = "yj_sesion"
@@ -45,6 +55,13 @@ METODOS_SEGUROS = {"GET", "HEAD", "OPTIONS"}
 MB = 1 << 20
 LIMITE_JSON = 256 * 1024  # el JSON más grande del panel (una ficha o una reunión) cabe de sobra
 RUTAS_SIN_SESION = {"/api/login", "/api/yo"}
+# Con la clave temporal sin cambiar o el compromiso sin aceptar, un usuario solo llega a estas rutas (3.5)
+RUTAS_DE_CUENTA = {"/api/yo", "/api/yo/clave", "/api/yo/compromiso", "/api/logout"}
+ROLES_USUARIO = ("coordinador", "planillero", "consultor")  # los que viven en la colección `usuarios`
+# Los que administran (adenda 1): A y el coordinador manejan los datos sin recorte, presupuesto ni límite de frecuencia
+ROLES_ADMIN = frozenset({"admin", "coordinador"})
+SIN_PERMISO = {"mensaje": "Su rol no permite esta acción", "codigo": "permiso"}
+ACTIVIDAD_S = 60  # `ultima_actividad` de una sesión de usuario se escribe como mucho cada minuto
 USUARIO_DESCONOCIDO = "desconocido"  # en la auditoría de un ingreso fallido con otro usuario
 PAUSA_S = 5  # tras un fallo de conexión con MongoDB, la API responde 503 sin tocar la base durante este tiempo
 SIN_BASE = "El panel se está conectando a la base de datos. Intente de nuevo en unos segundos."
@@ -109,19 +126,26 @@ def _segundos(t: timedelta) -> int:
     return max(1, math.ceil(t.total_seconds()))
 
 
-def reservar_intento(db: Database, ip: str, conocido: bool = False):
+def reservar_intento(db: Database, ip: str, conocido: bool = False, marca_h: str | None = None,
+                     nombre_h: str | None = None):
     """Registra el intento ANTES de comprobar la clave y decide si se atiende.
 
     Devuelve (id del intento, 0) si se puede comprobar la clave, o (None, segundos de espera) si no. Se cuenta
     después de insertar, incluidos el propio intento y los simultáneos: una ráfaga en paralelo no pasa del límite.
     Los intentos rechazados se borran: no alargan el bloqueo ni cuentan para el límite global.
-    `conocido`: el navegador trae la marca de un ingreso correcto anterior (ver `dispositivo_conocido`); no compite
-    por el turno del freno global, así una inundación desde muchas IPs no deja fuera al administrador."""
+    `conocido`: el navegador trae la marca de un ingreso correcto anterior a la cuenta que se intenta (ver
+    `dispositivo_valido`); no compite por el turno del freno global, así una inundación desde muchas IPs no deja fuera
+    al administrador. Con `marca_h` (el hash de esa marca), el límite por IP cuenta solo los fallos hechos con la misma
+    marca: en una IP compartida, los fallos ajenos no bloquean a quien ya entró antes desde ese navegador.
+    `nombre_h` (HMAC del nombre escrito, exista o no) sirve para la alerta de ingresos y para desbloquear."""
     ahora = datetime.now(timezone.utc)
     desde = ahora - timedelta(seconds=VENTANA_S)
     clave = _clave_ip(ip)
-    iid = db.intentos.insert_one({"ip": clave, "ts": ahora, "ok": False}).inserted_id
+    iid = db.intentos.insert_one({"ip": clave, "ts": ahora, "ok": False, "nombre_h": nombre_h,
+                                  "marca_h": marca_h}).inserted_id
     de_ip = {"ip": clave, "ok": False, "ts": {"$gt": desde}}
+    if marca_h:
+        de_ip["marca_h"] = marca_h
     n = db.intentos.count_documents(de_ip)
     if n > MAX_POR_IP:
         db.intentos.delete_one({"_id": iid})
@@ -144,11 +168,15 @@ def reservar_intento(db: Database, ip: str, conocido: bool = False):
     return iid, 0
 
 
-def resolver_intento(db: Database, iid, ip: str, ok: bool) -> None:
-    """El intento reservado queda como fallo; si la clave era correcta, se marca y se limpian los fallos de esa IP."""
+def resolver_intento(db: Database, iid, ip: str, ok: bool, nombre_h: str | None = None) -> None:
+    """El intento reservado queda como fallo; si la clave era correcta, se marca y se limpian los fallos de esa IP con
+    el mismo nombre (los errores de tipeo propios, no los intentos contra otras cuentas)."""
     if ok:
         db.intentos.update_one({"_id": iid}, {"$set": {"ok": True}})
-        db.intentos.delete_many({"ip": _clave_ip(ip), "ok": False})
+        q = {"ip": _clave_ip(ip), "ok": False}
+        if nombre_h:
+            q["nombre_h"] = nombre_h
+        db.intentos.delete_many(q)
 
 
 def _hash(token: str) -> str:
@@ -166,24 +194,53 @@ def huella(cfg) -> str:
     return hmac.new(_llave(cfg.usuario or "", cfg.clave or ""), b"sesion", hashlib.sha256).hexdigest()
 
 
+def huella_usuario(cfg, u: dict) -> str:
+    """Huella de las sesiones de un usuario: cambia con la credencial de .env (se cierran todas) y con la `version`
+    del usuario (se cierran solo las suyas)."""
+    return hmac.new(_llave(cfg.usuario or "", cfg.clave or ""), f"usuario|{u['_id']}|{u.get('version')}".encode(),
+                    hashlib.sha256).hexdigest()
+
+
 def _firma_dispositivo(cfg, marca: str) -> str:
     return hmac.new(_llave(cfg.usuario or "", cfg.clave or ""), b"dispositivo|" + marca.encode(), hashlib.sha256).hexdigest()
 
 
-def marcar_dispositivo(cfg, response: Response, base: str = "") -> None:
-    """Tras un ingreso correcto, el navegador recibe una marca firmada con la credencial vigente (sin datos)."""
+def _firma_usuario(cfg, uid: int, version, marca: str) -> str:
+    return hmac.new(_llave(cfg.usuario or "", cfg.clave or ""), f"dispositivo|{uid}|{version}|{marca}".encode(),
+                    hashlib.sha256).hexdigest()
+
+
+def marcar_dispositivo(cfg, response: Response, base: str = "", uid: int = 0, version=None) -> None:
+    """Tras un ingreso correcto, el navegador recibe una marca firmada con la credencial vigente (sin datos). La de un
+    usuario lleva su uid y su versión: solo vale para su cuenta."""
     marca = secrets.token_urlsafe(18)
-    response.set_cookie(COOKIE_DISPOSITIVO, f"{marca}.{_firma_dispositivo(cfg, marca)}", max_age=DIAS_DISPOSITIVO * 86400,
+    valor = f"u{uid}.{marca}.{_firma_usuario(cfg, uid, version, marca)}" if uid else f"{marca}.{_firma_dispositivo(cfg, marca)}"
+    response.set_cookie(COOKIE_DISPOSITIVO, valor, max_age=DIAS_DISPOSITIVO * 86400,
                         httponly=True, secure=cfg.cookie_segura, samesite="strict", path=f"{base}/api/login")
 
 
-def dispositivo_conocido(cfg, request: Request) -> bool:
-    """¿El navegador ya ingresó antes con la credencial vigente? Si cambian ADMIN o password, la marca deja de valer."""
+def dispositivo_valido(cfg, request: Request, cuenta: int | None, version=None) -> str | None:
+    """La marca del navegador si es de un ingreso correcto a `cuenta` (0: el administrador; un uid: ese usuario, con
+    su `version` vigente); si no, None. Una marca solo vale para su cuenta, y deja de valer si cambian ADMIN o
+    password (o la versión del usuario)."""
     valor = request.cookies.get(COOKIE_DISPOSITIVO) or ""
-    marca, _, firma = valor.partition(".")
-    if not marca or len(valor) > 200 or not cfg.usuario or not cfg.clave:
-        return False
-    return hmac.compare_digest(firma.encode(), _firma_dispositivo(cfg, marca).encode())
+    if cuenta is None or not valor or len(valor) > 200 or not cfg.usuario or not cfg.clave:
+        return None
+    partes = valor.split(".")
+    if cuenta == 0 and len(partes) == 2:
+        marca, firma = partes
+        esperada = _firma_dispositivo(cfg, marca)
+    elif cuenta and len(partes) == 3 and partes[0] == f"u{cuenta}":
+        marca, firma = partes[1:]
+        esperada = _firma_usuario(cfg, cuenta, version, marca)
+    else:
+        return None
+    return valor if marca and hmac.compare_digest(firma.encode(), esperada.encode()) else None
+
+
+def dispositivo_conocido(cfg, request: Request) -> bool:
+    """¿El navegador ya ingresó antes como administrador con la credencial vigente?"""
+    return dispositivo_valido(cfg, request, 0) is not None
 
 
 def _ruta_cookie(request: Request) -> str:
@@ -200,13 +257,27 @@ def _borrar_cookie_vieja(request: Request, response: Response) -> None:
                                secure=request.app.state.cfg.cookie_segura)
 
 
-def crear_sesion(db: Database, cfg, response: Response, usuario: str, request: Request) -> str:
+def crear_sesion(db: Database, cfg, response: Response, usuario: str, request: Request, uid: int = 0,
+                 rol: str = "admin", version=None, horas: float | None = None) -> str:
+    """Abre una sesión y deja la cookie. La de un usuario (`uid` > 0) dura como mucho `horas` y, al abrirla, se cierran
+    sus sesiones más viejas por encima de `ajustes.sesion.max_por_usuario`."""
     token = secrets.token_urlsafe(32)
     csrf = secrets.token_urlsafe(24)
-    expira = datetime.now(timezone.utc) + timedelta(hours=cfg.horas_sesion)
-    db.sesiones.insert_one({"_id": _hash(token), "usuario": usuario, "csrf": csrf, "huella": huella(cfg),
-                            "creada": datetime.now(timezone.utc), "expira": expira, "ip": ip_de(request),
+    ahora = datetime.now(timezone.utc)
+    if uid:
+        firma = huella_usuario(cfg, {"_id": uid, "version": version})
+        duracion = min(cfg.horas_sesion, horas or cfg.horas_sesion)
+    else:
+        firma, duracion = huella(cfg), cfg.horas_sesion
+    db.sesiones.insert_one({"_id": _hash(token), "usuario": usuario, "uid": uid or 0, "rol": rol, "version": version,
+                            "csrf": csrf, "huella": firma, "creada": ahora, "expira": ahora + timedelta(hours=duracion),
+                            "ultima_actividad": ahora, "ip": ip_de(request),
                             "agente": (request.headers.get("user-agent") or "")[:200]})
+    if uid:
+        maximo = max(1, int(modelo.leer_ajustes(db)["sesion"].get("max_por_usuario") or 2))
+        viejas = [x["_id"] for x in db.sesiones.find({"uid": uid}, {"_id": 1}).sort([("creada", -1), ("_id", 1)]).skip(maximo)]
+        if viejas:
+            db.sesiones.delete_many({"_id": {"$in": viejas}})
     _borrar_cookie_vieja(request, response)
     response.set_cookie(COOKIE, token, max_age=cfg.horas_sesion * 3600, httponly=True, secure=cfg.cookie_segura,
                         samesite="strict", path=_ruta_cookie(request))
@@ -223,47 +294,97 @@ def cerrar_sesion(db: Database, request: Request, response: Response) -> None:
 
 
 def sesion_actual(db: Database, request: Request) -> dict | None:
+    """La sesión de la cookie, si vale. La de un usuario exige que siga activo, con un rol válido (con otro valor la
+    sesión no vale: falla cerrada), la huella de su versión vigente y uso reciente. Lleva en `_usuario` y `_ajustes`
+    el usuario y los ajustes leídos (no se guardan en la base)."""
     token = request.cookies.get(COOKIE)
     if not token or len(token) > 100:
         return None
     s = db.sesiones.find_one({"_id": _hash(token)})
-    if s is None or s["expira"] < datetime.now(timezone.utc):
+    ahora = datetime.now(timezone.utc)
+    if s is None or s["expira"] < ahora:
         return None
-    # Solo valen las sesiones de la credencial vigente
-    if not hmac.compare_digest(str(s.get("huella") or ""), huella(request.app.state.cfg)):
+    cfg = request.app.state.cfg
+    if s.get("uid") in (None, 0):
+        # Solo valen las sesiones de la credencial vigente
+        return s if hmac.compare_digest(str(s.get("huella") or ""), huella(cfg)) else None
+    u = db.usuarios.find_one({"_id": s["uid"], "activo": True}, {"clave": 0})
+    if u is None or u.get("rol") not in ROLES_USUARIO:
         return None
+    if not hmac.compare_digest(str(s.get("huella") or ""), huella_usuario(cfg, u)):
+        return None
+    aj = modelo.leer_ajustes(db)
+    ultima = s.get("ultima_actividad") or s.get("creada")
+    if ultima is not None and ahora - ultima > timedelta(minutes=float(aj["sesion"].get("inactividad_min") or 60)):
+        db.sesiones.delete_one({"_id": s["_id"]})
+        return None
+    if ultima is None or ahora - ultima > timedelta(seconds=ACTIVIDAD_S):
+        db.sesiones.update_one({"_id": s["_id"]}, {"$set": {"ultima_actividad": ahora}})
+    s["_usuario"], s["_ajustes"] = u, aj
     return s
 
 
+def rechazo_de_cuenta(s: dict, ruta: str, db: Database | None = None) -> dict | None:
+    """Por qué la sesión `s` no puede usar `ruta` (3.5), o None. Aplica a los usuarios de la base (coordinador,
+    planillero y consultor): importar es del administrador y del coordinador, y con la clave temporal sin cambiar o el
+    compromiso vigente sin aceptar solo se llega a `RUTAS_DE_CUENTA`. Sin `_usuario` en la sesión, lo lee de `db`; si
+    no hay cómo saber el rol, importar se rechaza (falla cerrada)."""
+    if s.get("uid") in (None, 0):
+        return None
+    u = s.get("_usuario")
+    if u is None and db is not None and ruta not in RUTAS_DE_CUENTA:
+        u = db.usuarios.find_one({"_id": s["uid"]}, {"rol": 1, "debe_cambiar_clave": 1, "compromiso_version": 1})
+    u = u or {}
+    if ruta == "/api/importar" and u.get("rol") not in ROLES_ADMIN:
+        return dict(SIN_PERMISO)
+    if ruta in RUTAS_DE_CUENTA:
+        return None
+    if u.get("debe_cambiar_clave"):
+        return {"mensaje": "Cambie su clave temporal para continuar", "codigo": "cambiar_clave"}
+    aj = s.get("_ajustes") or (modelo.leer_ajustes(db) if db is not None else {})
+    if u.get("compromiso_version") != aj.get("compromiso_version"):
+        return {"mensaje": "Acepte el compromiso de confidencialidad para continuar", "codigo": "compromiso"}
+    return None
+
+
 def limpiar_al_iniciar(db: Database, cfg) -> None:
-    """Al arrancar: cierra las sesiones de otra credencial y borra lo que se escribió como usuario en los ingresos
-    fallidos auditados antes de este cambio (podía ser la clave)."""
-    db.sesiones.delete_many({"huella": {"$ne": huella(cfg)}})
-    db.auditoria.update_many({"accion": "ingreso_fallido", "usuario": {"$nin": [cfg.usuario, USUARIO_DESCONOCIDO]}},
+    """Al arrancar: cierra las sesiones de otra credencial (y las de usuarios inactivos o con otra versión), borra lo
+    que se escribió como usuario en los ingresos fallidos auditados antes de este cambio (podía ser la clave), pone
+    `uid` 0 a las entradas viejas del administrador y desactiva al usuario que tenga su nombre."""
+    db.sesiones.delete_many({"uid": {"$in": [None, 0]}, "huella": {"$ne": huella(cfg)}})
+    usuarios = list(db.usuarios.find({}, {"usuario": 1, "version": 1, "activo": 1}))
+    for u in usuarios:
+        q = {"uid": u["_id"], "huella": {"$ne": huella_usuario(cfg, u)}} if u.get("activo") else {"uid": u["_id"]}
+        db.sesiones.delete_many(q)
+    db.sesiones.delete_many({"uid": {"$nin": [None, 0, *(u["_id"] for u in usuarios)]}})
+    nombres = [u["usuario"] for u in usuarios if u.get("usuario")]
+    db.auditoria.update_many({"accion": "ingreso_fallido",
+                              "usuario": {"$nin": [cfg.usuario, USUARIO_DESCONOCIDO, *nombres]}},
                              {"$set": {"usuario": USUARIO_DESCONOCIDO}})
+    if not cfg.usuario:
+        return
+    db.auditoria.update_many({"uid": {"$exists": False}, "usuario": cfg.usuario}, {"$set": {"uid": 0, "rol": "admin"}})
+    choque = db.usuarios.find_one({"usuario": cfg.usuario.strip().lower(), "activo": True}, {"usuario": 1})
+    if choque:
+        log.error("El usuario %s tiene el nombre del administrador: queda desactivado", choque["_id"])
+        db.usuarios.update_one({"_id": choque["_id"]}, {"$set": {"activo": False, "desactivado_en": bd.ahora(),
+                                                                 "actualizado_en": bd.ahora()}, "$inc": {"version": 1}})
+        db.sesiones.delete_many({"uid": choque["_id"]})
+        bd.auditar(db, "sistema", "conflicto_admin", "usuario", choque["_id"], {"usuario": choque["usuario"]})
 
 
 def obtener_db(request: Request) -> Database:
     return request.app.state.db
 
 
-class Admin:
-    """Usuario autenticado de la petición (para auditoría)."""
-
-    def __init__(self, usuario: str, ip: str):
-        self.usuario = usuario
-        self.ip = ip
-
-
-def requiere_admin(request: Request, db: Database = Depends(obtener_db)) -> Admin:
-    s = sesion_actual(db, request)
-    if s is None:
-        raise HTTPException(401, "Inicie sesión")
-    if request.method not in METODOS_SEGUROS:
-        enviado = request.headers.get("x-csrf-token", "")
-        if not hmac.compare_digest(enviado.encode(), s["csrf"].encode()):
-            raise HTTPException(403, "Token CSRF inválido; recargue la página")
-    return Admin(s["usuario"], ip_de(request))
+def __getattr__(nombre: str):
+    """`requiere_admin` y `Admin` vienen de app/acceso.py: `requiere("admin")` (denegar por defecto) y `Quien`. Se
+    cargan al pedirlos, porque acceso importa este módulo."""
+    if nombre in ("requiere_admin", "Admin"):
+        from . import acceso
+        globals().update(requiere_admin=acceso.requiere_admin, Admin=acceso.Quien)
+        return globals()[nombre]
+    raise AttributeError(f"module {__name__!r} has no attribute {nombre!r}")
 
 
 class CuerpoDemasiadoGrande(HTTPException):
@@ -345,7 +466,10 @@ class GuardiaApi:
     esto, un anónimo podía llenar la memoria con un JSON enorme o el disco con una subida a /api/importar.
     * Limita el tamaño del cuerpo, por su Content-Length y contando lo que llega por partes.
     * Mientras MongoDB no está listo o el `Cortacircuitos` está en pausa, /api/* y /salud responden 503 al instante.
-    * Rechaza sin sesión válida toda ruta /api/*, salvo /api/login y /api/yo. El CSRF sigue en `requiere_admin`.
+    * Rechaza sin sesión válida toda ruta /api/*, salvo /api/login y /api/yo. El CSRF, el rol y los permisos siguen
+      en `acceso.requiere`, que recibe la sesión en scope["state"].
+    * A un usuario de la base con la clave temporal o el compromiso pendientes solo lo deja llegar a su cuenta, y a
+      planilleros y consultores les rechaza /api/importar sin leer la subida.
     Va por fuera del manejador de excepciones de FastAPI: los fallos de conexión de su propia consulta se atrapan
     aquí."""
 
@@ -374,6 +498,12 @@ class GuardiaApi:
                 return await sin_base(ruta)(scope, receive, send)
             if s is None:
                 return await JSONResponse({"detail": "Inicie sesión"}, 401)(scope, receive, send)
+            # Usuarios (3.3 y 3.5): la sesión queda para `requiere`; un usuario con la clave por cambiar o el
+            # compromiso por aceptar solo llega a su cuenta, e importar se le rechaza antes de leer la subida
+            scope.setdefault("state", {})["sesion"] = s
+            rechazo = rechazo_de_cuenta(s, ruta)
+            if rechazo is not None:
+                return await JSONResponse({"detail": rechazo}, 403)(scope, receive, send)
         recibidos = 0
 
         async def recibir():
