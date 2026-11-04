@@ -26,7 +26,7 @@
 //     contenedores del otro ni mueve la cámara del modo nuevo.
 //   · vistas: las otras 9 vistas del sitio en claro, oscuro y teléfono, con su lienzo 3D, sin errores ni desborde.
 //   · publicado: el sitio servido como en GitHub Pages (site/ bajo /trabajemosjuntos/, después de build_site.py) o el que
-//     diga --url (Caddy con el Caddyfile del repositorio, un despliegue): la vista junta los archivos partidos, el simulador
+//     diga --url (admin/servidor.py como en Railway, un despliegue): la vista junta los archivos partidos, el simulador
 //     corre en el Worker de módulo y los dos IFC se descargan (ISO-10303-21, IFC4).
 //   · rendimiento: prueba de humo en teléfono con la CPU ×4 (CDP): entrar al recorrido, calcular un sismo y abrir el modelo
 //     BIM; tiempos y tareas largas en el informe. El trabajador no se frena con la CPU de la página (Chromium solo frena
@@ -447,7 +447,7 @@ async function etapaVistas() {
 
 // ================================================================================================ sitio publicado
 async function etapaPublicado() {
-  // por omisión, site/ bajo /trabajemosjuntos/ (GitHub Pages); con --url, el que esté servido allí (Caddy, Railway)
+  // por omisión, site/ bajo /trabajemosjuntos/ (GitHub Pages); con --url, el que esté servido allí (admin/servidor.py, Railway)
   const externo = typeof op.url === 'string';
   const sop = externo ? op : { ...op, raiz: 'site', raizAbs: resolve(RAIZ_REPO, 'site'), base: '/trabajemosjuntos/' };
   if (!externo && !comprobar(existsSync(join(RAIZ_REPO, 'site/atlas.html')), 'site/ está construido (python3 scripts/build_site.py)')) return;
