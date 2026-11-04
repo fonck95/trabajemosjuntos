@@ -24,6 +24,7 @@ jobs:
       - run: python3 scripts/build_data.py && python3 scripts/build_site.py
         env:
           SITE_URL: ${{ steps.pages.outputs.base_url }}
+          PANEL_URL: ${{ vars.PANEL_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
