@@ -5,8 +5,8 @@ o en admin/.env)
 """
 from __future__ import annotations
 
+import asyncio
 import logging
-import re
 from html import escape
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -15,15 +15,18 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pymongo.errors import ConnectionFailure
 from starlette.middleware.gzip import GZipMiddleware
 
 from . import config, db
 from .api import calidad, personas, reuniones, sistema, tablero
-from .seguridad import CabecerasSeguras, GuardiaApi, base_de, limpiar_al_iniciar
+from .seguridad import (CabecerasSeguras, Cortacircuitos, GuardiaApi, base_de, limpiar_al_iniciar, ruta_interna,
+                        sin_base)
 
 WEB = Path(__file__).resolve().parents[1] / "web"
 INDICE = (WEB / "index.html").read_text(encoding="utf-8")
 log = logging.getLogger("panel")
+INTENTOS_ARRANQUE = 3  # panel solo: intentos de conectar a MongoDB (2 s entre uno y otro) antes de cortar el arranque
 
 
 def preparar(app: FastAPI) -> None:
@@ -38,7 +41,7 @@ def preparar(app: FastAPI) -> None:
         db.inicializar(app.state.db)
     except Exception:
         log.error("No se pudo conectar o preparar MongoDB en %s: revise la variable MONGODB_URI",
-                  re.sub(r"//[^@/]*@", "//", cfg.mongodb_uri))  # sin usuario ni clave de la URI
+                  config.sin_credenciales(cfg.mongodb_uri))
         raise
     limpiar_al_iniciar(app.state.db, cfg)
     app.state.listo = True
@@ -46,8 +49,16 @@ def preparar(app: FastAPI) -> None:
 
 @asynccontextmanager
 async def ciclo(app: FastAPI):
-    # Panel solo (uvicorn app.main:app): si MongoDB no responde, el arranque se corta y el despliegue falla
-    preparar(app)
+    # Panel solo (uvicorn app.main:app): si MongoDB no responde tras unos intentos, el arranque se corta y el
+    # despliegue falla. Los intentos compensan la espera corta de pymongo (db.TIEMPOS_MS) en un arranque en frío.
+    for intento in range(1, INTENTOS_ARRANQUE + 1):
+        try:
+            await asyncio.to_thread(preparar, app)
+            break
+        except ConnectionFailure:
+            if intento == INTENTOS_ARRANQUE:
+                raise
+            await asyncio.sleep(2)
     yield
     app.state.cliente.close()
 
@@ -56,6 +67,7 @@ def crear_app(cfg: config.Config | None = None) -> FastAPI:
     app = FastAPI(title="Panel Yondó", docs_url=None, redoc_url=None, openapi_url=None, lifespan=ciclo)
     app.state.cfg = cfg or config.cargar()
     app.state.cliente, app.state.db = db.conectar(app.state.cfg.mongodb_uri, app.state.cfg.mongodb_db or None)
+    app.state.cortacircuitos = Cortacircuitos()
     # La guardia va por dentro de las demás: nada lee el cuerpo antes que ella, y sus respuestas llevan las cabeceras
     app.add_middleware(GuardiaApi)
     app.add_middleware(GZipMiddleware, minimum_size=1024)
@@ -68,13 +80,22 @@ def crear_app(cfg: config.Config | None = None) -> FastAPI:
         errores = [f"{'.'.join(str(x) for x in e['loc'][1:])}: {e['msg']}" for e in exc.errors()]
         return JSONResponse({"detail": "; ".join(errores) or "Datos no válidos"}, status_code=422)
 
+    @app.exception_handler(ConnectionFailure)
+    async def _sin_conexion(request: Request, exc: ConnectionFailure):
+        # MongoDB caído o colgado: 503 con una línea en el registro (no un 500 con la traza) y una pausa sin tocarlo
+        app.state.cortacircuitos.fallo(exc)
+        return sin_base(ruta_interna(request.scope))
+
     @app.get("/salud", include_in_schema=False)
     def salud():
+        # Mientras conecta o en la pausa del cortacircuitos, la guardia responde 503 sin llegar aquí
         try:
             app.state.db.command("ping")
-            return {"ok": True}
+        except ConnectionFailure:
+            raise
         except Exception:
             return JSONResponse({"ok": False, "detail": "Sin conexión a MongoDB"}, status_code=503)
+        return {"ok": True}
 
     app.mount("/static", StaticFiles(directory=WEB), name="static")
 
