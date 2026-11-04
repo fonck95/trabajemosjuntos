@@ -34,10 +34,11 @@ class Ubicacion:
 
 
 def _valor(num: str | None) -> float | None:
-    """«47» → 47, «47D» → 47.6, «47 BIS» → 47.1."""
+    """«47» → 47, «47D» → 47.6, «47 BIS» → 47.1, «47 BIS A» (de leer(): «47 BISA») → 47.108, «47A BIS» → 47.25."""
     if not num:
         return None
-    m = re.match(r"^(\d{1,3})\s*([A-F])?(\s*BIS)?", num)
+    # La letra no puede ser la B de «BIS»
+    m = re.match(r"^(\d{1,3})\s*([A-F](?!IS))?(?:\s*(BIS)\s*([A-F])?)?", num)
     if not m:
         return None
     v = float(m.group(1))
@@ -45,6 +46,8 @@ def _valor(num: str | None) -> float | None:
         v += ("ABCDEF".index(m.group(2)) + 1) * 0.15
     if m.group(3):
         v += 0.1
+        if m.group(4):  # entre «47 BIS» y «47A»
+            v += ("ABCDEF".index(m.group(4)) + 1) * 0.008
     return v
 
 
@@ -119,15 +122,15 @@ class Geocodificador:
 
     def ubicar(self, texto: object) -> tuple[Direccion, Ubicacion]:
         d = leer(texto)
-        lugar, todos, conf = self.nom.reconocer(d)
+        r = self.grilla.ubicar_direccion(d) if d.tiene_placa else None
+        # Una placa que cae en la grilla del casco decide entre homónimos («LA PAZ» barrio o vereda)
+        lugar, todos, conf = self.nom.reconocer(d, casco=r is not None and r[2] <= 2.5)
         zona = lugar.zona if lugar else zona_por_texto(d)
         en_casco = zona != "rural" and (lugar is None or (lugar.zona == "urbana" and lugar.padre in (None, "", CASCO)))
-        if d.tiene_placa and en_casco:
-            r = self.grilla.ubicar_direccion(d)
-            if r:
-                lat, lon, dist = r
-                return d, Ubicacion(round(lat, 6), round(lon, 6), "direccion" if dist <= 2.5 else "direccion_aprox",
-                                    "urbana", lugar, 1.0 if dist <= 2.5 else 0.7 if dist <= 4 else 0.5)
+        if r and en_casco:
+            lat, lon, dist = r
+            return d, Ubicacion(round(lat, 6), round(lon, 6), "direccion" if dist <= 2.5 else "direccion_aprox",
+                                "urbana", lugar, 1.0 if dist <= 2.5 else 0.7 if dist <= 4 else 0.5)
         if lugar is not None:
             if lugar.lat is not None:
                 return d, Ubicacion(lugar.lat, lugar.lon, lugar.tipo, lugar.zona, lugar, conf)
