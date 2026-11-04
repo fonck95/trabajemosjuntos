@@ -122,7 +122,7 @@ API responde 503 y el panel se conecta solo cuando MongoDB aparece (vea *Deploy 
 aparecer líneas `GET /api/...` al buscar.
 
 **Panel en un servicio aparte (opcional).** Cree otro servicio del mismo repositorio con **Root Directory = `admin`**:
-Railpack lee `admin/railpack.json` (`uvicorn app.main:app`, el panel solo en la raíz) y `admin/Procfile` de respaldo;
+Railpack lee `admin/railpack.json` (arranca `app.main` con `--no-access-log`, el panel solo en la raíz) y `admin/Procfile` de respaldo;
 ponga *Healthcheck Path* = `/salud` y las mismas variables. Para enlazarlo desde el sitio, defina en el servicio del
 sitio `PANEL_URL` = su dirección `https://…`. En GitHub Pages (sin panel) el enlace solo aparece si existe la variable
 de repositorio `PANEL_URL`.
