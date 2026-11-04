@@ -55,6 +55,28 @@ def sesion(cliente):
     return cliente
 
 
+@pytest.fixture
+def bases():
+    """Crea bases de datos nuevas e inicializadas (para usar el pipeline sin la API) y las borra al terminar."""
+    if not MONGO:
+        pytest.skip("No hay MongoDB para las pruebas de la base")
+    import pymongo
+    from app import db as bd
+    cli = pymongo.MongoClient(URI, tz_aware=True)
+    creadas = []
+
+    def nueva():
+        b = cli[f"prueba_{uuid.uuid4().hex[:10]}"]
+        creadas.append(b.name)
+        bd.inicializar(b)
+        return b
+
+    yield nueva
+    for n in creadas:
+        cli.drop_database(n)
+    cli.close()
+
+
 def excel_tramites(ruta: Path, filas: list[tuple]) -> Path:
     wb = openpyxl.Workbook()
     ws = wb.active

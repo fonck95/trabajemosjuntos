@@ -6,10 +6,15 @@ Colecciones (todas con `_id` entero para que las direcciones del panel sean cort
   original de cada fuente, así una ficha se lee de una sola vez.
 * `lugares`, `reuniones`, `coincidencias`, `etiquetas`, `campos`, `importaciones`.
 * `sesiones` e `intentos` (con caducidad automática), `auditoria`, `contadores`.
+* `meta` (marcas y la clave secreta de las huellas) y `suprimidos` (huellas HMAC de quienes pidieron la supresión,
+  sin ningún dato en claro, para que una importación no los vuelva a crear).
 """
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
+import secrets
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -41,8 +46,13 @@ PERSONA_VACIA: dict[str, Any] = {
     "personas_hogar": None, "lider": False, "consentimiento": "pendiente", "consentimiento_fecha": None,
     "observaciones": None, "extra": {}, "fuentes": [], "clave_tramites": None, "completitud": 0, "ultimo_contacto": None,
     "fusionada_en": None, "eliminado": False, "listas": [], "etiquetas": [], "tramites": [], "notas": [], "origen": [],
-    "asistencias": [],
+    "asistencias": [], "claves_tramites": [], "reunion_origen": None,
 }
+# geo_manual: False (automática), "lugar" (barrio o vereda elegido a mano: la persona sigue el punto de ese lugar) o
+# "punto" (puesto a mano en el mapa: no se mueve). Las fichas viejas con True se tratan como "punto".
+PUNTO_MANUAL = (True, "punto")
+# Campos de la ubicación: al unir fichas se toman en bloque de una sola de ellas
+GEO = ("lat", "lon", "geo_precision", "lugar_id", "lugar_texto", "zona", "direccion_norm", "geo_manual")
 
 
 def ahora() -> str:
@@ -86,10 +96,16 @@ def inicializar(db: Database) -> None:
     db.sesiones.create_index("expira", expireAfterSeconds=0)
     db.intentos.create_index("ts", expireAfterSeconds=24 * 3600)
     db.intentos.create_index([("ip", ASCENDING), ("ts", ASCENDING)])
-    if db.etiquetas.estimated_document_count() == 0:
-        primero = siguiente_id(db, "etiquetas", len(ETIQUETAS_INICIALES))
-        db.etiquetas.insert_many([{"_id": primero + i, "nombre": n, "grupo": g, "orden": i}
-                                  for i, (n, g) in enumerate(ETIQUETAS_INICIALES)])
+    # El catálogo inicial se siembra una sola vez (en una base nueva): si el administrador lo borra, no vuelve
+    if db.meta.find_one({"_id": "etiquetas_sembradas"}) is None:
+        if db.etiquetas.count_documents({}) == 0 and db.contadores.find_one({"_id": "etiquetas"}) is None:
+            primero = siguiente_id(db, "etiquetas", len(ETIQUETAS_INICIALES))
+            db.etiquetas.insert_many([{"_id": primero + i, "nombre": n, "grupo": g, "orden": i}
+                                      for i, (n, g) in enumerate(ETIQUETAS_INICIALES)])
+        db.meta.update_one({"_id": "etiquetas_sembradas"}, {"$set": {"ts": ahora()}}, upsert=True)
+    # Fichas viejas: geo_manual=True por un barrio o vereda elegido a mano (el punto puesto en el mapa es «manual»)
+    p.update_many({"geo_manual": True, "geo_precision": {"$ne": "manual"}, "lugar_id": {"$ne": None}},
+                  {"$set": {"geo_manual": "lugar"}})
     sembrar_lugares(db)
 
 
@@ -179,7 +195,7 @@ def recalcular_completitud(db: Database, ids: Iterable[int] | None = None) -> No
 
 def nueva_persona(db: Database, datos: dict, fuente: str) -> dict:
     doc = {**PERSONA_VACIA, "extra": {}, "fuentes": [fuente], "listas": [], "etiquetas": [], "tramites": [], "notas": [],
-           "origen": [], "asistencias": [], **datos}
+           "origen": [], "asistencias": [], "claves_tramites": [], **datos}
     if "_id" not in datos:
         doc["_id"] = siguiente_id(db, "personas")
     doc["nombre_norm"] = tx.nombre_norm(doc["nombre"])
@@ -203,7 +219,9 @@ def completar_doc(doc: dict, datos: dict) -> list[str]:
 
 
 def fusionar(db: Database, destino: int, origen: int, usuario: str | None, ip: str | None = None) -> None:
-    """Une `origen` en `destino`: completa vacíos y junta trámites, listas, etiquetas, reuniones, notas y fuentes."""
+    """Une `origen` en `destino`: completa vacíos y junta trámites, listas, etiquetas, reuniones, notas y fuentes.
+
+    El origen queda solo como enlace (`fusionada_en`), sin datos personales: no se duplican en la base."""
     if destino == origen:
         return
     d = db.personas.find_one({"_id": destino})
@@ -214,8 +232,12 @@ def fusionar(db: Database, destino: int, origen: int, usuario: str | None, ip: s
     db.personas.update_one({"_id": origen}, {"$set": {"cedula": None, "clave_tramites": None}})
     if o.get("telefono") and d.get("telefono") and o["telefono"] != d["telefono"] and not d.get("telefono2"):
         d["telefono2"] = o["telefono"]
+    # La ubicación pasa en bloque (no mezclar el barrio de una con las coordenadas de la otra). Gana la puesta a mano
+    # y, si ninguna lo es, la del destino salvo que no tenga punto.
+    if not d.get("geo_manual") and (o.get("geo_manual") or (d.get("lat") is None and o.get("lat") is not None)):
+        d.update({k: o.get(k, PERSONA_VACIA[k]) for k in GEO})
     escalares = [k for k in PERSONA_VACIA if not isinstance(PERSONA_VACIA[k], (list, dict, bool))
-                 and k not in ("nombre", "nombre_norm", "fusionada_en", "completitud", "consentimiento")]
+                 and k not in ("nombre", "nombre_norm", "fusionada_en", "completitud", "consentimiento", *GEO)]
     completar_doc(d, {k: o.get(k) for k in escalares})
     if d.get("consentimiento") == "pendiente" and o.get("consentimiento") in ("si", "no"):
         d["consentimiento"], d["consentimiento_fecha"] = o["consentimiento"], o.get("consentimiento_fecha")
@@ -223,8 +245,17 @@ def fusionar(db: Database, destino: int, origen: int, usuario: str | None, ip: s
     d["extra"] = {**(o.get("extra") or {}), **(d.get("extra") or {})}
     for k in ("fuentes", "listas", "etiquetas"):
         d[k] = list(dict.fromkeys([*(d.get(k) or []), *(o.get(k) or [])]))
-    ya = {t.get("id_externo") for t in d.get("tramites", [])}
-    d["tramites"] = [*d.get("tramites", []), *[t for t in o.get("tramites", []) if t.get("id_externo") not in ya]]
+    # Trámites: por su ID; los que no tienen ID, por su contenido completo
+    ya = {t["id_externo"] for t in d.get("tramites", []) if t.get("id_externo")}
+    d["tramites"] = list(d.get("tramites", []))
+    for t in o.get("tramites", []):
+        if (t["id_externo"] in ya) if t.get("id_externo") else (t in d["tramites"]):
+            continue
+        d["tramites"].append(t)
+    # Las claves de nombre de los dos grupos de trámites: así una importación posterior encuentra la ficha unida
+    claves = [d.get("clave_tramites"), *(d.get("claves_tramites") or []), o.get("clave_tramites"),
+              *(o.get("claves_tramites") or [])]
+    d["claves_tramites"] = list(dict.fromkeys(c for c in claves if c))
     d["notas"] = [*d.get("notas", []), *o.get("notas", [])]
     d["origen"] = [*d.get("origen", []), *o.get("origen", [])]
     reus = {a["reunion_id"] for a in d.get("asistencias", [])}
@@ -233,8 +264,105 @@ def fusionar(db: Database, destino: int, origen: int, usuario: str | None, ip: s
     d["actualizado_en"] = ahora()
     d["completitud"] = completitud(d)
     db.personas.replace_one({"_id": destino}, d)
-    db.personas.update_one({"_id": origen}, {"$set": {"fusionada_en": destino, "actualizado_en": ahora()}})
+    db.personas.replace_one({"_id": origen}, {**PERSONA_VACIA, "_id": origen, "nombre": "FUSIONADA", "fusionada_en": destino,
+                                              "eliminado": False, "actualizado_en": ahora()})
+    db.personas.update_many({"fusionada_en": origen}, {"$set": {"fusionada_en": destino}})
     par = {"$or": [{"persona_id": origen, "candidato_id": destino}, {"persona_id": destino, "candidato_id": origen}]}
     db.coincidencias.update_many({**par, "estado": "pendiente"}, {"$set": {"estado": "aceptada"}})
     db.coincidencias.delete_many({"estado": "pendiente", "$or": [{"persona_id": origen}, {"candidato_id": origen}]})
+    cerrar_coincidencias_imposibles(db, [destino])
     auditar(db, usuario, "fusionar", "persona", destino, {"origen": origen}, ip)
+
+
+def cerrar_coincidencias_imposibles(db: Database, ids: Iterable[int] | None = None) -> int:
+    """Cierra las coincidencias pendientes que ya no se pueden aceptar: una de las dos fichas ya no está activa (se
+    unió con otra o se suprimió) o las dos tienen cédulas distintas. Quedan con estado «cerrada» (no se borran, así
+    una importación no las vuelve a proponer)."""
+    q: dict = {"estado": "pendiente"}
+    if ids is not None:
+        ids = list(ids)
+        q["$or"] = [{"persona_id": {"$in": ids}}, {"candidato_id": {"$in": ids}}]
+    pendientes = list(db.coincidencias.find(q, {"persona_id": 1, "candidato_id": 1}))
+    if not pendientes:
+        return 0
+    pids = list({c["persona_id"] for c in pendientes} | {c["candidato_id"] for c in pendientes})
+    cedulas = {p["_id"]: p.get("cedula") for p in db.personas.find({"_id": {"$in": pids}, **ACTIVA}, {"cedula": 1})}
+
+    def imposible(c: dict) -> bool:
+        if c["persona_id"] not in cedulas or c["candidato_id"] not in cedulas:
+            return True
+        a, b = cedulas[c["persona_id"]], cedulas[c["candidato_id"]]
+        return bool(a and b and a != b)
+
+    cerrar = [c["_id"] for c in pendientes if imposible(c)]
+    if cerrar:
+        db.coincidencias.update_many({"_id": {"$in": cerrar}, "estado": "pendiente"},
+                                     {"$set": {"estado": "cerrada", "resuelto_por": "sistema", "resuelto_en": ahora()}})
+    return len(cerrar)
+
+
+# ───────────────────────────── Supresión (Ley 1581) ─────────────────────────────
+
+def clave_supresion(db: Database) -> bytes:
+    """Clave secreta (aleatoria, creada la primera vez) de las huellas de personas suprimidas."""
+    m = db.meta.find_one_and_update({"_id": "clave_supresion"}, {"$setOnInsert": {"valor": secrets.token_hex(32)}},
+                                    upsert=True, return_document=ReturnDocument.AFTER)
+    return bytes.fromhex(m["valor"])
+
+
+def huella(clave: bytes, tipo: str, valor: Any) -> str | None:
+    """HMAC-SHA256 de una cédula, una clave de nombre o un ID de trámite ya normalizados. None si está vacío."""
+    if valor in (None, ""):
+        return None
+    v = (tx.cedula(valor) or str(valor).strip()) if tipo == "cedula" else tx.nombre_norm(valor) if tipo == "clave" \
+        else str(valor).strip()
+    return hmac.new(clave, f"{tipo}:{v}".encode(), hashlib.sha256).hexdigest() if v else None
+
+
+def registrar_huellas(db: Database, pares: Iterable[tuple[str, Any]], clave: bytes | None = None) -> set[str]:
+    """Guarda en `suprimidos` las huellas de los pares (tipo, valor) y las devuelve."""
+    clave = clave or clave_supresion(db)
+    hs = {h for tipo, v in pares if (h := huella(clave, tipo, v))}
+    if hs:
+        db.suprimidos.bulk_write([UpdateOne({"_id": h}, {"$setOnInsert": {"creado_en": ahora()}}, upsert=True) for h in hs],
+                                 ordered=False)
+    return hs
+
+
+def grupo_fusion(db: Database, pid: int) -> list[int]:
+    """La ficha y todas las unidas con ella: sube por `fusionada_en` hasta la raíz y baja por todas sus ramas."""
+    raiz, vistos = pid, {pid}
+    while True:
+        p = db.personas.find_one({"_id": raiz}, {"fusionada_en": 1})
+        if not p or not p.get("fusionada_en") or p["fusionada_en"] in vistos:
+            break
+        raiz = p["fusionada_en"]
+        vistos.add(raiz)
+    ids, frontera = set(vistos), [raiz]
+    while frontera:
+        hijos = [x["_id"] for x in db.personas.find({"fusionada_en": {"$in": frontera}}, {"_id": 1})]
+        frontera = [h for h in hijos if h not in ids]
+        ids.update(frontera)
+    return sorted(ids)
+
+
+def suprimir(db: Database, pid: int, usuario: str | None, ip: str | None = None) -> list[int]:
+    """Borra los datos personales de la ficha y de todas las unidas con ella, limpia su rastro en la auditoría y
+    deja las huellas (HMAC, sin datos en claro) para que una importación no la vuelva a crear."""
+    ids = grupo_fusion(db, pid)
+    pares: set[tuple[str, Any]] = set()
+    for p in db.personas.find({"_id": {"$in": ids}}):
+        pares.add(("cedula", p.get("cedula")))
+        pares.update(("cedula", o.get("clave")) for o in p.get("origen") or [] if o.get("fuente") == "cedulas")
+        pares.update(("clave", c) for c in [p.get("clave_tramites"), *(p.get("claves_tramites") or [])])
+        if "tramites" in (p.get("fuentes") or []):
+            pares.add(("clave", p.get("nombre_norm")))
+        pares.update(("tramite", t.get("id_externo")) for t in p.get("tramites") or [])
+    registrar_huellas(db, pares)
+    for i in ids:
+        db.personas.replace_one({"_id": i}, {**PERSONA_VACIA, "_id": i, "nombre": "SUPRIMIDO", "nombre_norm": "",
+                                             "eliminado": True, "actualizado_en": ahora()})
+    db.coincidencias.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"candidato_id": {"$in": ids}}]})
+    db.auditoria.update_many({"entidad": "persona", "entidad_id": {"$in": ids}}, {"$set": {"detalle": None}})
+    auditar(db, usuario, "suprimir", "persona", pid, {"fichas": len(ids)}, ip)
+    return ids
