@@ -1,7 +1,7 @@
 // Piezas compartidas entre vistas: alta rápida de personas y selector de ubicación en el mapa.
 import { api, ErrorApi } from '../api.js';
-import { BASES, CASCO, baseSegunTema, cargarMapLibre } from '../mapa3d.js';
-import { $, aviso, datosForm, dialogo, html, titulo } from '../ui.js';
+import { BASES, CASCO, baseSegunTema, cargarMapLibre, dentroDeYondo } from '../mapa3d.js';
+import { $, aviso, datosForm, dialogo, hoy, html, titulo } from '../ui.js';
 
 export function opcionesLugares(cat, valor) {
   const grupos = { barrio: 'Barrios del casco', sector: 'Sectores', centro_poblado: 'Centros poblados', corregimiento: 'Corregimientos', caserio: 'Caseríos', vereda: 'Veredas' };
@@ -32,13 +32,17 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   });
   const form = $('#f-nueva', el);
   form.addEventListener('click', (e) => { const c = e.target.closest('[data-et]'); if (c) c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') !== 'true'); });
-  let forzar = false;
+  let forzar = false, enCurso = false;
+  const boton = $('#guardar', el);
   async function guardar() {
-    if (!form.reportValidity()) return;
+    // Un doble clic (o Enter y clic) no debe crear dos fichas: una sola petición a la vez
+    if (enCurso || !form.reportValidity()) return;
     const d = datosForm(form);
     d.lugar_id = d.lugar_id ? Number(d.lugar_id) : null;
     d.etiquetas = [...form.querySelectorAll('[data-et][aria-pressed="true"]')].map((b) => Number(b.dataset.et));
-    if (d.consentimiento === 'si') d.consentimiento_fecha = new Date().toISOString().slice(0, 10);
+    if (d.consentimiento === 'si') d.consentimiento_fecha = hoy(); // fecha local, no la de UTC
+    enCurso = true;
+    boton.disabled = true;
     try {
       const p = await api.post('/api/personas', { ...d, forzar, reunion_id: reunionId });
       cerrar();
@@ -56,9 +60,12 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
           if (b) { cerrar(); alCrear?.({ id: Number(b.dataset.elegir), existente: true }); }
         });
       } else aviso(e.message, 'error');
+    } finally {
+      enCurso = false;
+      boton.disabled = false;
     }
   }
-  $('#guardar', el).addEventListener('click', guardar);
+  boton.addEventListener('click', guardar);
   form.addEventListener('submit', (e) => { e.preventDefault(); guardar(); });
 }
 
@@ -75,11 +82,21 @@ export async function elegirPunto({ titulo: t = 'Ubicar en el mapa', inicial = n
     center: inicial || CASCO.center, zoom: inicial ? 16 : 14, attributionControl: { compact: true } });
   map.addControl(new maplibregl.NavigationControl(), 'top-right');
   const marca = new maplibregl.Marker({ color: '#e3141b', draggable: true }).setLngLat(inicial || CASCO.center).addTo(map);
-  const mostrar = () => { const p = marca.getLngLat(); $('#coord', el).textContent = `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`; };
+  // El servidor solo acepta puntos en Yondó y sus alrededores: fuera de ese rango no se deja elegir
+  const mostrar = () => {
+    const p = marca.getLngLat();
+    const ok = dentroDeYondo(p.lng, p.lat);
+    $('#coord', el).textContent = ok ? `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}` : 'Ese punto queda fuera de Yondó';
+    $('#usar', el).disabled = !ok;
+  };
   mostrar();
   marca.on('dragend', mostrar);
   map.on('click', (e) => { marca.setLngLat(e.lngLat); mostrar(); });
   let elegido = null;
-  $('#usar', el).addEventListener('click', () => { const p = marca.getLngLat(); elegido = [p.lng, p.lat]; cerrar(elegido); });
+  $('#usar', el).addEventListener('click', () => {
+    const p = marca.getLngLat();
+    if (!dentroDeYondo(p.lng, p.lat)) return;
+    elegido = [p.lng, p.lat]; cerrar(elegido);
+  });
   return listo.then(() => { map.remove(); return elegido; });
 }

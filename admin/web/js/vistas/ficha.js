@@ -2,7 +2,7 @@
 import { api, ErrorApi } from '../api.js';
 import { refrescarInsignias } from '../app.js';
 import { BASES, baseSegunTema, cargarMapLibre } from '../mapa3d.js';
-import { $, $$, FUENTES, aviso, chipPrecision, confirmar, datosForm, dialogo, fecha, html, iniciales, montar, num, titulo } from '../ui.js';
+import { $, $$, FUENTES, aviso, avisoError, chipPrecision, confirmar, crudo, datosForm, dialogo, fecha, html, iniciales, montar, num, titulo } from '../ui.js';
 import { elegirPunto, opcionesLugares } from './comunes.js';
 
 const NIVELES = ['Ninguno', 'Primaria', 'Secundaria', 'Técnico', 'Tecnólogo', 'Universitario', 'Posgrado'];
@@ -16,11 +16,27 @@ export async function vistaFicha(el, { params, ir }) {
     if (e instanceof ErrorApi && e.estado === 409 && e.detalle?.id) { ir(`/personas/${e.detalle.id}`, { reemplazar: true }); return; }
     throw e;
   }
+  if (!el.isConnected) return; // mientras cargaba se pidió otra vista
   let pestana = 'datos';
-  let mini = null;
+  let mini = null, turnoMini = 0;
+  let formInicial = null; // valores del formulario tal como se pintaron
 
-  function pintar() {
-    const campoTxt = (k, t, extra = '') => html`<label class="campo"><span>${t}</span><input name="${k}" value="${p[k] ?? ''}" ${extra}></label>`;
+  // Valores del formulario de datos (y chips de etiquetas) para no perder lo escrito al volver a pintar
+  function leerForm() {
+    const f = $('#f-datos', el);
+    if (!f) return null;
+    const v = {};
+    for (const x of f.elements) if (x.name) v[x.name] = x.type === 'checkbox' ? x.checked : x.value;
+    for (const b of $$('[data-et]', f)) v['et:' + b.dataset.et] = b.getAttribute('aria-pressed');
+    return v;
+  }
+
+  function pintar({ conservar = true } = {}) {
+    // Lo cambiado y no guardado sobrevive a las acciones que vuelven a pintar la ficha (nota, ubicación, unir)
+    const ahora = conservar ? leerForm() : null;
+    const pendientes = ahora && formInicial ? Object.entries(ahora).filter(([k, v]) => formInicial[k] !== v) : [];
+    // `extra` son atributos escritos en este archivo: van sin escapar
+    const campoTxt = (k, t, extra = '') => html`<label class="campo"><span>${t}</span><input name="${k}" value="${p[k] ?? ''}" ${crudo(extra)}></label>`;
     const sel = (k, t, ops) => html`<label class="campo"><span>${t}</span><select name="${k}">${ops.map(([v, tx]) => html`<option value="${v}" ${String(p[k] ?? '') === String(v) ? 'selected' : ''}>${tx}</option>`)}</select></label>`;
     const campos = cat.campos.filter((c) => c.activo);
     const grupos = { necesidad: 'Necesidades', interes: 'Grupo poblacional e intereses', rol: 'Rol en la comunidad' };
@@ -57,7 +73,7 @@ export async function vistaFicha(el, { params, ir }) {
           <div class="pestanas" role="tablist">
             ${[['datos', 'Datos y necesidades'], ['historial', `Historial (${eventos.length})`], ['origen', 'Origen de los datos'], ['cambios', 'Cambios']].map(([k, t]) => html`<button role="tab" data-tab="${k}" aria-selected="${pestana === k}">${t}</button>`)}
           </div>
-          <div ${pestana === 'datos' ? '' : 'hidden'}>
+          <div data-panel="datos" ${pestana === 'datos' ? '' : 'hidden'}>
             <form id="f-datos">
               <div class="form">
                 ${campoTxt('nombre', 'Nombre completo', 'required')}
@@ -83,7 +99,9 @@ export async function vistaFicha(el, { params, ir }) {
                   const nombre = `extra.${c.clave}`;
                   if (c.tipo === 'opcion') return html`<label class="campo"><span>${c.etiqueta}</span><select name="${nombre}"><option value="">—</option>${c.opciones.map((o) => html`<option ${o === v ? 'selected' : ''}>${o}</option>`)}</select></label>`;
                   if (c.tipo === 'si_no') return html`<label class="campo"><span>${c.etiqueta}</span><select name="${nombre}"><option value="">—</option><option ${v === 'Sí' ? 'selected' : ''}>Sí</option><option ${v === 'No' ? 'selected' : ''}>No</option></select></label>`;
-                  return html`<label class="campo"><span>${c.etiqueta}</span><input name="${nombre}" value="${v}" type="${c.tipo === 'numero' ? 'number' : c.tipo === 'fecha' ? 'date' : 'text'}"></label>`;
+                  // step="any": los números propios pueden tener decimales (hectáreas, metros)
+                  if (c.tipo === 'numero') return html`<label class="campo"><span>${c.etiqueta}</span><input name="${nombre}" value="${v}" type="number" step="any" inputmode="decimal"></label>`;
+                  return html`<label class="campo"><span>${c.etiqueta}</span><input name="${nombre}" value="${v}" type="${c.tipo === 'fecha' ? 'date' : 'text'}"></label>`;
                 })}
                 <label class="campo ancho"><span>Observaciones</span><textarea name="observaciones">${p.observaciones ?? ''}</textarea></label>
               </div>
@@ -95,14 +113,14 @@ export async function vistaFicha(el, { params, ir }) {
               </div>
             </form>
           </div>
-          <div ${pestana === 'historial' ? '' : 'hidden'}>
+          <div data-panel="historial" ${pestana === 'historial' ? '' : 'hidden'}>
             <form id="f-nota" style="display:flex;gap:8px;margin-bottom:18px"><input class="entrada" name="texto" placeholder="Agregar una nota o lo que se habló con esta persona…" required maxlength="4000"><button class="btn oscuro">Anotar</button></form>
             ${eventos.length ? html`<div class="linea-tiempo">${eventos.map((e) => html`<div class="ev"><span class="punto ${e.tipo}"></span><div>
               <div class="t">${e.href ? html`<a href="${e.href}" data-ruta>${e.t}</a>` : e.t}</div>
               <div class="m">${fecha(e.f, e.tipo === 'nota')}${e.m ? ' · ' + e.m : ''} ${e.nota ? html`<button class="btn fantasma chico" data-borrar-nota="${e.nota}">Borrar</button>` : ''}</div></div></div>`)}</div>`
               : html`<div class="vacio"><b>Sin historial</b>Registre su asistencia a una reunión o agregue una nota.</div>`}
           </div>
-          <div ${pestana === 'origen' ? '' : 'hidden'}>
+          <div data-panel="origen" ${pestana === 'origen' ? '' : 'hidden'}>
             ${p.origen.length ? p.origen.map((o) => html`<h3 style="font-size:14px;margin:6px 0 10px">${FUENTES[o.fuente] || o.fuente}</h3><div class="datos">
               ${Object.entries(o.datos).filter(([k]) => !['extra'].includes(k)).map(([k, v]) => html`<div><span>${k.replace(/_/g, ' ')}</span><b>${Array.isArray(v) ? v.join(', ') : v}</b></div>`)}</div>`) : ''}
             <h3 style="font-size:14px;margin:20px 0 10px">Trámites (${p.tramites.length})</h3>
@@ -110,7 +128,7 @@ export async function vistaFicha(el, { params, ir }) {
               <tbody>${p.tramites.map((t) => html`<tr style="cursor:default"><td>${fecha(t.fecha)}</td><td>${titulo(t.tipo || '')}</td><td class="sec">${t.ficha}</td><td>${t.direccion}</td><td>${(t.telefono || '').replace(/;/g, ', ')}</td></tr>`)}</tbody></table></div>`
               : html`<p class="sec">No aparece en la base de trámites.</p>`}
           </div>
-          <div ${pestana === 'cambios' ? '' : 'hidden'}>
+          <div data-panel="cambios" ${pestana === 'cambios' ? '' : 'hidden'}>
             ${p.historial.length ? html`<div class="linea-tiempo">${p.historial.map((h) => html`<div class="ev"><span class="punto"></span><div>
               <div class="t">${h.usuario || 'sistema'} · ${h.accion.replace(/_/g, ' ')}</div><div class="m">${fecha(h.ts, true)}</div>
               ${h.detalle ? html`<pre style="white-space:pre-wrap;font:12px/1.4 var(--f-mono);color:var(--muted);margin:4px 0 0">${resumenDetalle(h.detalle)}</pre>` : ''}</div></div>`)}</div>`
@@ -144,14 +162,27 @@ export async function vistaFicha(el, { params, ir }) {
           </section>
         </div>
       </div>`);
+    formInicial = leerForm();
+    if (pendientes.length) {
+      const f = $('#f-datos', el);
+      for (const [k, v] of pendientes) {
+        if (k.startsWith('et:')) { $(`[data-et="${k.slice(3)}"]`, f)?.setAttribute('aria-pressed', v); continue; }
+        const x = f.elements.namedItem(k);
+        if (x) x[x.type === 'checkbox' ? 'checked' : 'value'] = v;
+      }
+      $('#estado-form', el).textContent = 'Cambios sin guardar';
+    }
     pintarMini();
   }
 
   async function pintarMini() {
+    const turno = ++turnoMini;
     if (mini) { mini.remove(); mini = null; }
     if (p.lat == null) return;
     const maplibregl = await cargarMapLibre();
-    const cont = $('#minimapa');
+    // Mientras cargaba el motor de mapas se volvió a pintar la ficha o se salió de ella: ese mapa ya no va
+    if (turno !== turnoMini || !el.isConnected) return;
+    const cont = $('#minimapa', el);
     if (!cont) return;
     mini = new maplibregl.Map({ container: cont, style: BASES[baseSegunTema()], center: [p.lon, p.lat],
       zoom: p.geo_precision === 'vereda' ? 13 : 16.2, pitch: 45, attributionControl: { compact: true }, interactive: true });
@@ -160,19 +191,30 @@ export async function vistaFicha(el, { params, ir }) {
 
   el.addEventListener('click', async (e) => {
     const tab = e.target.closest('[data-tab]');
-    if (tab) { pestana = tab.dataset.tab; pintar(); return; }
+    if (tab) {
+      // Cambiar de pestaña no vuelve a pintar: lo escrito y no guardado sigue en el formulario
+      pestana = tab.dataset.tab;
+      for (const b of $$('[data-tab]', el)) b.setAttribute('aria-selected', b === tab);
+      for (const panel of $$('[data-panel]', el)) panel.hidden = panel.dataset.panel !== pestana;
+      return;
+    }
     const et = e.target.closest('[data-et]');
-    if (et) { et.setAttribute('aria-pressed', et.getAttribute('aria-pressed') !== 'true'); $('#estado-form').textContent = 'Cambios sin guardar'; return; }
+    if (et) { et.setAttribute('aria-pressed', et.getAttribute('aria-pressed') !== 'true'); $('#estado-form', el).textContent = 'Cambios sin guardar'; return; }
     const bn = e.target.closest('[data-borrar-nota]');
     if (bn && await confirmar('¿Borrar esta nota?', { si: 'Borrar', peligro: true })) {
-      p = await api.del(`/api/personas/${id}/notas/${bn.dataset.borrarNota}`); pintar(); return;
+      try { p = await api.del(`/api/personas/${id}/notas/${bn.dataset.borrarNota}`); pintar(); } catch (err) { avisoError(err); }
+      return;
     }
     if (e.target.closest('#ubicar')) {
       const punto = await elegirPunto({ inicial: p.lat != null ? [p.lon, p.lat] : null, titulo: `Ubicar a ${titulo(p.nombre)}` });
-      if (punto) { p = await api.put(`/api/personas/${id}/ubicacion`, { lon: punto[0], lat: punto[1] }); aviso('Ubicación guardada'); pintar(); }
+      if (!punto) return;
+      try { p = await api.put(`/api/personas/${id}/ubicacion`, { lon: punto[0], lat: punto[1] }); aviso('Ubicación guardada'); pintar(); } catch (err) { avisoError(err); }
       return;
     }
-    if (e.target.closest('#automatica')) { p = await api.del(`/api/personas/${id}/ubicacion`); pintar(); return; }
+    if (e.target.closest('#automatica')) {
+      try { p = await api.del(`/api/personas/${id}/ubicacion`); pintar(); } catch (err) { avisoError(err); }
+      return;
+    }
     if (e.target.closest('#suprimir')) {
       if (await confirmar(`Se borrarán todos los datos personales de ${p.nombre} (derecho de supresión, Ley 1581). Queda solo el registro de auditoría. ¿Continuar?`, { si: 'Suprimir', peligro: true })) {
         await api.del(`/api/personas/${id}`); aviso('Datos suprimidos'); ir('/personas');
@@ -181,12 +223,15 @@ export async function vistaFicha(el, { params, ir }) {
     }
     if (e.target.closest('#unir')) unir();
   });
-  el.addEventListener('input', (e) => { if (e.target.closest('#f-datos')) $('#estado-form').textContent = 'Cambios sin guardar'; });
+  el.addEventListener('input', (e) => { if (e.target.closest('#f-datos')) $('#estado-form', el).textContent = 'Cambios sin guardar'; });
   el.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (e.target.id === 'f-nota') {
-      p = await api.post(`/api/personas/${id}/notas`, { texto: e.target.texto.value });
-      aviso('Nota guardada'); pintar(); return;
+      try {
+        p = await api.post(`/api/personas/${id}/notas`, { texto: e.target.texto.value });
+        aviso('Nota guardada'); pintar();
+      } catch (err) { avisoError(err); }
+      return;
     }
     if (e.target.id !== 'f-datos') return;
     const d = datosForm(e.target);
@@ -201,7 +246,7 @@ export async function vistaFicha(el, { params, ir }) {
     try {
       p = await api.patch(`/api/personas/${id}`, cuerpo);
       aviso('Ficha actualizada');
-      pintar();
+      pintar({ conservar: false });
     } catch (err) {
       if (err instanceof ErrorApi && err.detalle?.id) aviso(`${err.message} (ficha ${err.detalle.id})`, 'error', 6000);
       else aviso(err.message, 'error', 6000);
@@ -231,7 +276,7 @@ export async function vistaFicha(el, { params, ir }) {
   }
 
   pintar();
-  return () => mini?.remove();
+  return () => { turnoMini++; mini?.remove(); mini = null; };
 }
 
 function resumenDetalle(txt) {
