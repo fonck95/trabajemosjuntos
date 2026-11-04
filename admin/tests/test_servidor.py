@@ -6,6 +6,7 @@ import hashlib
 import importlib.util
 import json
 import logging
+import os
 import shutil
 import socket
 import struct
@@ -325,6 +326,11 @@ def test_build_site_cambia_el_cdn_por_la_copia_local(build_site, web, tmp_path):
     ("js/otro.js", "const x = () => import('https://cdn.skypack.dev/x');\n", "importa https://cdn.skypack.dev/x"),
     ("js/otro.js", "const x = () => import(`//cdn.skypack.dev/x`);\n", "importa //cdn.skypack.dev/x"),
     ("js/otro.js", "import 'data:text/javascript,alert(1)';\n", "importa data:text/javascript,alert(1)"),
+    ("js/otro.js", "/* confeti */ import 'https://esm.sh/x@1';\n", "importa https://esm.sh/x@1"),
+    ("js/otro.js", "import { a } from './a.js'; import 'https://esm.sh/x@1';\n", "importa https://esm.sh/x@1"),
+    ("js/otro.js", "const k = 1; import('//esm.sh/x@1');\n", "importa //esm.sh/x@1"),
+    ("js/otro.js", "const x = () => import(/* c */ 'https://ga.jspm.io/x.js');\n", "https://ga.jspm.io/x.js"),
+    ("js/otro.js", "const U = 'https://esm.sh/x@1'; const x = () => import(U);\n", "pide https://esm.sh/x@1"),
     ("vendor/three-0.160.0/examples/jsm/utils/Ayuda.js", "import { m } from './Falta.js';\n", "falta vendor/three-0.160.0/examples/jsm/utils/Falta.js, que importa three/addons/utils/Ayuda.js"),
 ])
 def test_build_site_falla_con_codigo_de_fuera(build_site, web, tmp_path, rel, texto, motivo):
@@ -419,7 +425,9 @@ def _glb_con_ktx2() -> bytes:
             + gltf + struct.pack("<2I", len(binario), 0x004E4942) + binario)
 
 
-@pytest.mark.skipif(not _hay_playwright(), reason="Sin Node con Playwright (PLAYWRIGHT_MODULE o NODE_PATH; vea scripts/qa/LEEME.md)")
+# En el CI (CI=true) no se omite: el job instala Playwright y, si faltara, la prueba falla en vez de pasar en silencio
+@pytest.mark.skipif(not _hay_playwright() and not os.environ.get("CI"),
+                    reason="Sin Node con Playwright (PLAYWRIGHT_MODULE o NODE_PATH; vea scripts/qa/LEEME.md)")
 def test_modelos_glb_con_ktx2_bajo_la_csp_del_sitio(build_site, tmp_path, monkeypatch):
     """Con la CSP del sitio el transcodificador Basis no arranca (necesita evaluar código) y un GLB propio con texturas
     KTX2 se quedaba en «Leyendo…» para siempre. Ahora termina en un aviso, Draco sigue cargando y la página no deja

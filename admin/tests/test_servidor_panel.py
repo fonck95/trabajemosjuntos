@@ -133,6 +133,7 @@ def test_tiempos_de_espera_de_mongodb():
     ("mongodb+srv://ana:SECRETO xyz@cluster0.ejemplo.invalid/b?retryWrites=true",
      "mongodb+srv://cluster0.ejemplo.invalid/b?retryWrites=true"),
     ("mongodb://h:1/b?tls=true", "mongodb://h:1/b?tls=true"),
+    ("mongodb://ana:SECRETO@h:1?appName=x@y", "mongodb://h:1?appName=x@y"),  # la autoridad termina en «?», como en pymongo
     ("No se pudo en mongodb://ana:SECRETO xyz@h:1/b: falló", "No se pudo en mongodb://h:1/b: falló"),
 ])
 def test_sin_credenciales_por_la_estructura_de_la_uri(uri, queda):
