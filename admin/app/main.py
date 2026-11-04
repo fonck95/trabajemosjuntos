@@ -1,6 +1,6 @@
 """Panel de administración de la base única de habitantes de Yondó.
 
-Arranque local:  uvicorn app.main:app --reload --no-access-log   (desde admin/, con ADMIN, password y MONGODB_URI en el entorno
+Arranque local:  uvicorn app.main:app --reload --no-access-log --no-server-header   (desde admin/, con ADMIN, password y MONGODB_URI en el entorno
 o en admin/.env)
 """
 from __future__ import annotations
