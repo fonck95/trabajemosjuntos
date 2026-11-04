@@ -43,16 +43,17 @@ export function ir(ruta, { reemplazar = false } = {}) {
 function armarEstructura() {
   montar($('#raiz'), html`
     <div class="app" id="app">
-      <div class="barra-movil"><button id="abrir-menu" aria-label="Menú">${icono('menu')}</button><b>Yondó · Base única</b></div>
-      <aside class="lateral" aria-label="Navegación">
+      <div class="barra-movil"><button id="abrir-menu" aria-label="Menú" aria-expanded="false" aria-controls="menu-lateral">${icono('menu')}</button><b>Yondó · Base única</b></div>
+      <aside class="lateral" id="menu-lateral" aria-label="Navegación">
         <a class="marca" href="/panel" data-ruta><span class="sello">Y</span><span><b>Yondó</b><small>Base única · Panel</small></span></a>
-        <nav class="nav" id="nav">${NAV.map(([k, t, href]) => html`<a href="${href}" data-ruta data-nav="${k}">${icono(k)}<span>${t}</span>${k === 'calidad' ? html`<span class="insignia oculto" id="insignia-calidad"></span>` : ''}</a>`)}</nav>
+        <nav class="nav" id="nav">${NAV.map(([k, t, href]) => html`<a href="${href}" data-ruta data-nav="${k}">${icono(k)}<span>${t}</span>${k === 'calidad' ? html`<span class="insignia oculto" id="insignia-calidad" title="Personas con coincidencias por revisar"></span>` : ''}</a>`)}</nav>
         <div class="pie">
           <span>Sesión: <b id="usuario"></b></span>
           <button id="cambiar-tema">${icono('luna')} Cambiar tema</button>
           <button id="salir">${icono('salir')} Cerrar sesión</button>
         </div>
       </aside>
+      <div class="velo" id="velo"></div>
       <main class="contenido" id="vista" tabindex="-1"></main>
     </div>`);
   $('#usuario').textContent = sesion.usuario;
@@ -61,7 +62,14 @@ function armarEstructura() {
     location.href = '/';
   };
   $('#cambiar-tema').onclick = () => aplicarTema(temaOscuro() ? 'light' : 'dark');
-  $('#abrir-menu').onclick = () => $('#app').classList.toggle('menu-abierto');
+  $('#abrir-menu').onclick = () => abrirMenu(!$('#app').classList.contains('menu-abierto'));
+  // En el celular el menú abierto tapa su botón: se cierra tocando fuera o con Escape
+  $('#velo').onclick = () => abrirMenu(false);
+}
+
+function abrirMenu(abrir) {
+  $('#app')?.classList.toggle('menu-abierto', abrir);
+  $('#abrir-menu')?.setAttribute('aria-expanded', abrir);
 }
 
 export async function refrescarInsignias() {
@@ -78,7 +86,7 @@ async function render() {
   const ruta = location.pathname.replace(/\/+$/, '') || '/';
   const r = RUTAS.find((x) => x.re.test(ruta));
   const vista = $('#vista');
-  $('#app')?.classList.remove('menu-abierto');
+  abrirMenu(false);
   if (!r) { montar(vista, html`<div class="vacio"><b>No existe esta página</b><a href="/panel" data-ruta>Volver al panel</a></div>`); return; }
   for (const a of document.querySelectorAll('#nav a')) {
     if (a.dataset.nav === r.nav) a.setAttribute('aria-current', 'page');
@@ -95,14 +103,18 @@ async function render() {
     const cont = document.createElement('div');
     cont.className = r.lleno ? 'vista lleno' : 'vista';
     vista.replaceChildren(cont);
-    limpiarVista = (await fn(cont, { params, q, ir })) || null;
+    const limpiar = await fn(cont, { params, q, ir });
+    // Si mientras cargaba se pidió otra vista, esta ya sobra: se limpia en el acto (mapas, temporizadores…)
+    if (g !== generacion) { try { limpiar?.(); } catch { /* nada */ } return; }
+    limpiarVista = limpiar || null;
   } catch (e) {
     if (g !== generacion) return;
     if (e instanceof ErrorApi && e.estado === 401) return;
     console.error(e);
     montar(vista, html`<div class="vacio"><b>No se pudo cargar</b>${e.message}</div>`);
   }
-  vista.focus({ preventScroll: true });
+  // El foco va al campo con autofocus de la vista (buscador de la reunión) o, si no hay, a la vista
+  (vista.querySelector('[autofocus]') || vista).focus({ preventScroll: true });
 }
 
 document.addEventListener('click', (e) => {
@@ -112,6 +124,13 @@ document.addEventListener('click', (e) => {
   ir(a.getAttribute('href'));
 });
 window.addEventListener('popstate', render);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && $('#app')?.classList.contains('menu-abierto')) { abrirMenu(false); $('#abrir-menu').focus(); }
+});
+// Red de seguridad: un error de la API que ninguna acción atrapó se muestra en vez de perderse en la consola
+window.addEventListener('unhandledrejection', (e) => {
+  if (e.reason instanceof ErrorApi && e.reason.estado !== 401) aviso(e.reason.message, 'error', 6000);
+});
 
 async function iniciar() {
   aplicarTema(tema());

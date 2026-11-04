@@ -25,6 +25,11 @@ export function cargarMapLibre() {
 
 export const CASCO = { center: [-73.9112, 7.0062], zoom: 14.6, pitch: 58, bearing: -18 };
 export const BBOX_YONDO = [[-74.35, 6.55], [-73.83, 7.35]];
+// Rango de coordenadas que acepta el servidor para personas, lugares y reuniones ([[lon, lat] mín., [lon, lat] máx.])
+export const RANGO_YONDO = [[-74.6, 6.3], [-73.6, 7.5]];
+export const dentroDeYondo = (lon, lat) => lon >= RANGO_YONDO[0][0] && lon <= RANGO_YONDO[1][0] && lat >= RANGO_YONDO[0][1] && lat <= RANGO_YONDO[1][1];
+// Máximo de personas que viajan en el enlace «Ver la lista» de un hexágono (el servidor tampoco acepta más)
+export const MAX_IDS = 500;
 
 const FUENTES = 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf';
 const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
@@ -120,7 +125,7 @@ export function hexagonos(puntos, radio) {
     }
     const top = [...c.lugares.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
     features.push({ type: 'Feature', geometry: { type: 'Polygon', coordinates: [anillo] },
-      properties: { n: c.n, t: Math.sqrt(c.n / max), ids: c.ids.slice(0, 500).join(','), lugares: JSON.stringify(top) } });
+      properties: { n: c.n, t: Math.sqrt(c.n / max), ids: c.ids.slice(0, MAX_IDS).join(','), lugares: JSON.stringify(top) } });
   }
   return { geo: { type: 'FeatureCollection', features }, max };
 }

@@ -1,7 +1,7 @@
 // Mapa 3D del municipio: relieve, edificios, columnas hexagonales 3D y mapa de calor de la población.
 import { api } from '../api.js';
 import { temaOscuro } from '../app.js';
-import { BASES, BBOX_YONDO, CASCO, baseSegunTema, cajaDe, cargarMapLibre, decorar, dispersar, hexagonos, rampa } from '../mapa3d.js';
+import { BASES, BBOX_YONDO, CASCO, MAX_IDS, baseSegunTema, cajaDe, cargarMapLibre, decorar, dispersar, hexagonos, rampa } from '../mapa3d.js';
 import { $, $$, esc, html, montar, num, pct, titulo } from '../ui.js';
 
 const RADIOS = { auto: null, 150: 150, 400: 400, 1000: 1000 };
@@ -54,13 +54,15 @@ export async function vistaMapa(el, { q, ir }) {
     </div>`);
 
   const [maplibregl, cat] = await Promise.all([cargarMapLibre(), api.get('/api/catalogos')]);
+  // Mientras cargaba se pidió otra vista: no se crea un mapa sobre un contenedor que ya no está
+  if (!el.isConnected) return;
   estado.cat = cat;
-  $('#f-etiqueta').append(...cat.etiquetas.map((e) => new Option(`${e.nombre} (${e.n})`, e.id)));
-  $('#f-lista').append(...cat.listas.map((l) => new Option(l, l)));
+  $('#f-etiqueta', el).append(...cat.etiquetas.map((e) => new Option(`${e.nombre} (${e.n})`, e.id)));
+  $('#f-lista', el).append(...cat.listas.map((l) => new Option(l, l)));
   for (const s of $$('[data-f]', el)) s.value = estado.filtros[s.dataset.f] || '';
 
   const map = new maplibregl.Map({
-    container: $('#mapa'), style: BASES[baseSegunTema()], bounds: BBOX_YONDO, fitBoundsOptions: { padding: 40 },
+    container: $('#mapa', el), style: BASES[baseSegunTema()], bounds: BBOX_YONDO, fitBoundsOptions: { padding: 40 },
     pitch: 50, bearing: -15, maxPitch: 80, attributionControl: { compact: true }, hash: false,
   });
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
@@ -99,7 +101,7 @@ export async function vistaMapa(el, { q, ir }) {
 
   function pintarRampa() {
     const r = rampa(temaOscuro() || estado.base === 'oscuro' || estado.base === 'satelite');
-    $('#rampa').style.background = `linear-gradient(90deg, ${r.join(',')})`;
+    $('#rampa', el).style.background = `linear-gradient(90deg, ${r.join(',')})`;
   }
 
   function agregarCapas() {
@@ -172,9 +174,10 @@ export async function vistaMapa(el, { q, ir }) {
 
   async function cargarDatos() {
     const d = await api.get('/api/mapa/puntos', estado.filtros);
+    if (!el.isConnected) return;
     estado.datos = d;
-    $('#cifra').textContent = num(d.ubicadas);
-    $('#cifra-d').textContent = `ubicadas de ${num(d.total)} (${pct(d.ubicadas, d.total)} %)`;
+    $('#cifra', el).textContent = num(d.ubicadas);
+    $('#cifra-d', el).textContent = `ubicadas de ${num(d.total)} (${pct(d.ubicadas, d.total)} %)`;
     if (map.getSource('puntos')) {
       map.getSource('puntos').setData(geoPuntos(puntosVisibles()));
       actualizarHex();
@@ -198,31 +201,38 @@ export async function vistaMapa(el, { q, ir }) {
       if (p[3] === 0) exactas++;
     }
     const top = [...porLugar.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
-    montar($('#en-vista'), html`<div class="gran-cifra" style="font-size:30px">${num(dentro.length)}</div>
+    // Cada barrio enlaza al directorio con los filtros del mapa; «Sin barrio o vereda» no tiene filtro posible
+    const fila = (id, n) => html`<span>${nombreLugar(id)}</span>
+        <span><span class="b" style="width:${(n / (top[0]?.[1] || 1)) * 100}%"></span></span><span class="n">${num(n)}</span>`;
+    montar($('#en-vista', el), html`<div class="gran-cifra" style="font-size:30px">${num(dentro.length)}</div>
       <div class="sec">personas · ${pct(exactas, dentro.length)} % con dirección exacta</div>
-      <div class="lista-barras" style="margin-top:12px">${top.map(([id, n]) => html`<a class="f" href="/personas?lugar_id=${id || ''}" data-ruta><span>${nombreLugar(id)}</span>
-        <span><span class="b" style="width:${(n / (top[0]?.[1] || 1)) * 100}%"></span></span><span class="n">${num(n)}</span></a>`)}</div>`);
+      <div class="lista-barras" style="margin-top:12px">${top.map(([id, n]) => (id
+        ? html`<a class="f" href="/personas?${new URLSearchParams({ ...estado.filtros, lugar_id: id })}" data-ruta>${fila(id, n)}</a>`
+        : html`<div class="f">${fila(id, n)}</div>`))}</div>`);
   }
 
   function mostrarHex(props, lngLat) {
     const lugares = JSON.parse(props.lugares || '[]');
     const ids = props.ids;
-    montar($('#detalle'), html`<h3>Hexágono seleccionado</h3>
+    montar($('#detalle', el), html`<h3>Hexágono seleccionado</h3>
       <div class="gran-cifra" style="font-size:30px">${num(props.n)}</div><div class="sec">personas en ~${radioActual() * 2} m de ancho</div>
       <div class="lista-barras" style="margin-top:10px">${lugares.map(([id, n]) => html`<div class="f"><span>${nombreLugar(id)}</span><span></span><span class="n">${num(n)}</span></div>`)}</div>
-      <a class="btn chico" style="margin-top:12px" href="/personas?ids=${ids}" data-ruta>Ver la lista</a>`);
+      <a class="btn chico" style="margin-top:12px" href="/personas?ids=${ids}" data-ruta>Ver la lista</a>
+      ${props.n > MAX_IDS ? html`<p class="sec" style="margin:8px 0 0">La lista muestra ${num(MAX_IDS)} de ${num(props.n)} personas. Acérquese o elija un hexágono más pequeño para verlas todas.</p>` : ''}`);
     popup.setLngLat(lngLat).setHTML(`<b>${esc(num(props.n))} personas</b><br><span class="sec">${esc(lugares.map(([id]) => nombreLugar(id)).join(', '))}</span>`).addTo(map);
   }
 
   map.on('style.load', agregarCapas);
   map.on('load', async () => {
     estado.capasGeo = await api.get('/api/mapa/capas');
+    if (!el.isConnected) return; // se salió del mapa mientras cargaba
     agregarCapas();
     await cargarDatos();
-    $('#cargador').style.opacity = 0;
-    setTimeout(() => $('#cargador')?.remove(), 450);
+    if (!el.isConnected) return;
+    $('#cargador', el).style.opacity = 0;
+    setTimeout(() => $('#cargador', el)?.remove(), 450);
     if (estado.capasGeo.limite) map.fitBounds(cajaDe(estado.capasGeo.limite), { padding: 50, pitch: 52, bearing: -15, duration: 0 });
-    setTimeout(() => map.flyTo({ ...CASCO, zoom: 13.2, pitch: 60, duration: 4200, essential: true }), 900);
+    setTimeout(() => el.isConnected && map.flyTo({ ...CASCO, zoom: 13.2, pitch: 60, duration: 4200, essential: true }), 900);
   });
   let zPrev = 0;
   map.on('moveend', () => {

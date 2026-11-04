@@ -44,13 +44,17 @@ export const titulo = (s) => (s || '').toLowerCase().replace(/(^|\s)(\S)/g, (m, 
 export const iniciales = (n) => (n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('');
 export const hoy = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
+/** Retrasa `fn` hasta que dejen de llamarla; `.cancel()` descarta la llamada pendiente (al salir de una vista). */
 export function debounce(fn, ms = 250) {
   let t;
-  return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+  const f = (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+  f.cancel = () => clearTimeout(t);
+  return f;
 }
 
 export function aviso(msg, tipo = 'ok', ms = 3600) {
-  const caja = document.getElementById('avisos');
+  // Con un diálogo abierto el aviso va dentro de él: fuera quedaría debajo del fondo del modal
+  const caja = [...document.querySelectorAll('dialog[open] > .avisos')].pop() || document.getElementById('avisos');
   const el = document.createElement('div');
   el.className = 'aviso' + (tipo === 'error' ? ' error' : '');
   el.textContent = msg;
@@ -58,12 +62,18 @@ export function aviso(msg, tipo = 'ok', ms = 3600) {
   setTimeout(() => el.remove(), ms);
 }
 
+/** Muestra el error de una acción (el 401 ya lo avisa api.js al cerrar la sesión). */
+export function avisoError(err, ms = 6000) {
+  if (err?.estado === 401) return;
+  aviso(err?.message || 'Error inesperado', 'error', ms);
+}
+
 /** Diálogo modal. `cuerpo` es HTML (crudo); devuelve {el, cerrar, listo} donde `listo` resuelve al cerrar. */
 export function dialogo({ titulo: t, cuerpo, pie = '', ancho = false, alAbrir }) {
   const d = document.createElement('dialog');
   if (ancho) d.classList.add('ancho');
   d.innerHTML = String(html`<div class="cab"><h2>${t}</h2><button class="btn fantasma chico" data-cerrar aria-label="Cerrar">✕</button></div>
-    <div class="cuerpo">${cuerpo}</div>${pie ? html`<div class="pie">${pie}</div>` : ''}`);
+    <div class="cuerpo">${cuerpo}</div>${pie ? html`<div class="pie">${pie}</div>` : ''}<div class="avisos" role="status" aria-live="polite"></div>`);
   document.body.append(d);
   let resolver;
   const listo = new Promise((r) => (resolver = r));
