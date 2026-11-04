@@ -1,4 +1,4 @@
-// Carga de modelos glTF/GLB profesionales: Draco, Meshopt y KTX2, con detección de WebAssembly,
+// Carga de modelos glTF/GLB profesionales: Draco, Meshopt y KTX2 (donde se puede), con detección de WebAssembly,
 // caché por URL, niveles de detalle progresivos, auto-encuadre y métricas de costo en GPU.
 import { THREE, engine } from './core.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -14,6 +14,34 @@ export function wasmAllowed() {
   try { new WebAssembly.Module(Uint8Array.of(0, 97, 115, 109, 1, 0, 0, 0)); return true; } catch { return false; }
 }
 
+// El transcodificador Basis de KTX2Loader corre en un worker blob: y necesita evaluar código (embind arma funciones
+// con new Function). El worker hereda la CSP de la página: con la del sitio publicado en Railway (sin 'unsafe-eval')
+// el transcodificador falla al arrancar y la carga del modelo se quedaba esperando para siempre. Se prueba en un
+// worker igual, que además no deja reportes de CSP en la página. En el Artifact y en GitHub Pages sí se puede.
+function workerEvalua(ms = 3000) {
+  return new Promise((ok) => {
+    let w, t, u;
+    const fin = (v) => { clearTimeout(t); w?.terminate(); if (u) URL.revokeObjectURL(u); ok(v); };
+    try {
+      u = URL.createObjectURL(new Blob(["let r = true; try { new Function(''); } catch (e) { r = false; } postMessage(r);"], { type: 'text/javascript' }));
+      w = new Worker(u);
+    } catch { fin(false); return; }
+    w.onmessage = (e) => fin(e.data === true);
+    w.onerror = () => fin(false);
+    t = setTimeout(() => fin(false), ms);
+  });
+}
+
+// Sin KTX2, GLTFLoader cae con un error en inglés: se avisa antes, con lo que hay que hacer
+const SIN_KTX2 = 'usa texturas KTX2 (KHR_texture_basisu), que aquí no se pueden decodificar: no están disponibles en el sitio publicado. Vuelve a exportarlo con texturas WebP o PNG (--texture-compress webp).';
+function extensionesExigidas(buf) {
+  try {
+    const dv = new DataView(buf);
+    if (dv.getUint32(0, true) !== 0x46546c67 || dv.getUint32(16, true) !== 0x4e4f534a) return []; // «glTF» y su bloque JSON
+    return JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, dv.getUint32(12, true)))).extensionsRequired || [];
+  } catch { return []; }
+}
+
 export function getLoader() {
   if (loaderPromise) return loaderPromise;
   loaderPromise = (async () => {
@@ -24,17 +52,20 @@ export function getLoader() {
     loader.setDRACOLoader(draco);
     const caps = { draco: wasm ? 'wasm' : 'js', ktx2: false, meshopt: false };
     if (wasm) {
-      try {
-        const ktx2 = new KTX2Loader().setTranscoderPath(new URL('vendor/basis/', base).href).detectSupport(renderer);
-        loader.setKTX2Loader(ktx2);
-        caps.ktx2 = true;
-      } catch (e) { console.warn('KTX2 no disponible', e); }
+      const evalua = workerEvalua();
       try {
         const { MeshoptDecoder } = await import('three/addons/libs/meshopt_decoder.module.js');
         await MeshoptDecoder.ready;
         loader.setMeshoptDecoder(MeshoptDecoder);
         caps.meshopt = true;
       } catch (e) { console.warn('Meshopt no disponible', e); }
+      if (await evalua) {
+        try {
+          const ktx2 = new KTX2Loader().setTranscoderPath(new URL('vendor/basis/', base).href).detectSupport(renderer);
+          loader.setKTX2Loader(ktx2);
+          caps.ktx2 = true;
+        } catch (e) { console.warn('KTX2 no disponible', e); }
+      }
     }
     return { loader, caps };
   })();
@@ -69,15 +100,21 @@ async function fetchGLB(abs) {
   return u8.buffer;
 }
 
+async function parse(buf, ruta) {
+  const { loader, caps } = await getLoader();
+  if (!caps.ktx2 && extensionesExigidas(buf).includes('KHR_texture_basisu')) throw new Error(SIN_KTX2);
+  return loader.parseAsync(buf, ruta);
+}
+
 // Carga (una sola vez por URL) y devuelve { gltf, ms, bytes }
 export async function loadModel(url) {
   const abs = new URL(url, base).href;
   if (!cache.has(abs)) {
     cache.set(abs, (async () => {
-      const { loader } = await getLoader();
+      await getLoader();
       const t0 = performance.now();
       const buf = await fetchGLB(abs);
-      const gltf = await loader.parseAsync(buf, abs.replace(/[^/]*$/, ''));
+      const gltf = await parse(buf, abs.replace(/[^/]*$/, ''));
       prepare(gltf.scene);
       return { gltf, ms: performance.now() - t0, bytes: buf.byteLength };
     })());
@@ -87,10 +124,10 @@ export async function loadModel(url) {
 
 // Modelo desde un archivo local (arrastrar y soltar). No se cachea.
 export async function parseFile(file) {
-  const { loader } = await getLoader();
+  await getLoader();
   const t0 = performance.now();
   const buf = await file.arrayBuffer();
-  const gltf = await loader.parseAsync(buf, '');
+  const gltf = await parse(buf, '');
   prepare(gltf.scene);
   return { gltf, ms: performance.now() - t0, bytes: buf.byteLength };
 }

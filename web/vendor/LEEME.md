@@ -9,7 +9,7 @@ sitio no admite scripts de terceros.
 |---|---|---|---|
 | `gsap-3.12.5/gsap.min.js` | GSAP 3.12.5 | `dist/gsap.min.js` de `https://registry.npmjs.org/gsap/-/gsap-3.12.5.tgz`; idéntico byte a byte al de cdnjs | Licencia estándar de GSAP (https://gsap.com/standard-license), que permite usarlo y alojarlo sin costo; el aviso va en la cabecera del archivo |
 | `three-0.160.0/` | three.js 0.160.0: `build/three.module.js`, los 28 módulos de `examples/jsm/` que usa `web/js` (con lo que ellos importan) y `examples/fonts/helvetiker_bold.typeface.json` (letras 3D de la propuesta) | `https://registry.npmjs.org/three/-/three-0.160.0.tgz`, sin cambios | MIT (`three-0.160.0/LICENSE`); la fuente, MgOpen (`three-0.160.0/examples/fonts/LICENSE`) |
-| `draco/`, `basis/` | Decodificadores de Draco y Basis (KTX2) que cargan `DRACOLoader` y `KTX2Loader` desde `web/js/assets.js` | Ya estaban. `basis/` es igual al de `examples/jsm/libs/basis/` de three 0.160.0; `draco/` es otra compilación del decodificador de Draco | Apache 2.0 |
+| `draco/`, `basis/` | Decodificadores de Draco y Basis (KTX2) que cargan `DRACOLoader` y `KTX2Loader` desde `web/js/assets.js`. El transcodificador de Basis necesita evaluar código (embind usa `new Function`) y la CSP del sitio en Railway no lo deja (`'wasm-unsafe-eval'` solo cubre WebAssembly): ahí `assets.js` no registra `KTX2Loader` y un GLB que exige KTX2 termina en un aviso. Sí se usa en el Artifact y en GitHub Pages | Ya estaban. `basis/` es igual al de `examples/jsm/libs/basis/` de three 0.160.0; `draco/` es otra compilación del decodificador de Draco | Apache 2.0 |
 
 Los dos paquetes se comprobaron contra `dist.integrity` del registro de npm (`https://registry.npmjs.org/three/0.160.0`
 y `https://registry.npmjs.org/gsap/3.12.5`):

@@ -99,6 +99,11 @@ jobs:
       - name: Las dependencias del servicio único (requirements.txt de la raíz) son las del panel
         working-directory: .
         run: diff <(grep -v '^#' requirements.txt) <(grep -v '^#' admin/requirements.txt)
+      - name: Playwright con Chromium (la prueba de la CSP del sitio con un navegador real)
+        run: |
+          npm i --no-save --no-audit --no-fund --prefix "$RUNNER_TEMP/pw" playwright@1.63.0
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium
+          echo "PLAYWRIGHT_MODULE=$RUNNER_TEMP/pw/node_modules/playwright" >> "$GITHUB_ENV"
       - name: Pruebas del panel (datos inventados, MongoDB de servicio)
         run: python -m pytest -q tests
         env:

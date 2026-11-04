@@ -4,11 +4,19 @@ Solo datos inventados."""
 import base64
 import hashlib
 import importlib.util
+import json
 import logging
+import os
+import shutil
+import socket
+import struct
+import subprocess
+import threading
 import time
 from pathlib import Path
 
 import pytest
+import uvicorn
 from fastapi.testclient import TestClient
 
 from conftest import MONGO
@@ -311,6 +319,18 @@ def test_build_site_cambia_el_cdn_por_la_copia_local(build_site, web, tmp_path):
     ("extra.html", '<a href=" javascript:alert(1)">x</a>', "código en el atributo <a href"),
     ("js/otro.js", "import { Nuevo } from 'three/addons/loaders/Nuevo.js';\n", "falta vendor/three-0.160.0/examples/jsm/loaders/Nuevo.js, que importa otro.js"),
     ("js/otro.js", "fetch('https://unpkg.com/algo@1/x.json');\n", "js/otro.js: pide https://unpkg.com/algo@1/x.json"),
+    # Un import de un dominio que no es CDN conocido: la CSP del sitio lo bloquea y el atlas queda sin vistas
+    ("js/otro.js", "import 'https://esm.sh/x@1';\n", "js/otro.js: importa https://esm.sh/x@1 de otro dominio"),
+    ("js/otro.js", "import confeti from 'https://ga.jspm.io/npm:x@1/x.mjs';\n", "importa https://ga.jspm.io/npm:x@1/x.mjs"),
+    ("js/propuesta/otro.js", "export { y } from '//esm.sh/y@2';\n", "js/propuesta/otro.js: importa //esm.sh/y@2"),
+    ("js/otro.js", "const x = () => import('https://cdn.skypack.dev/x');\n", "importa https://cdn.skypack.dev/x"),
+    ("js/otro.js", "const x = () => import(`//cdn.skypack.dev/x`);\n", "importa //cdn.skypack.dev/x"),
+    ("js/otro.js", "import 'data:text/javascript,alert(1)';\n", "importa data:text/javascript,alert(1)"),
+    ("js/otro.js", "/* confeti */ import 'https://esm.sh/x@1';\n", "importa https://esm.sh/x@1"),
+    ("js/otro.js", "import { a } from './a.js'; import 'https://esm.sh/x@1';\n", "importa https://esm.sh/x@1"),
+    ("js/otro.js", "const k = 1; import('//esm.sh/x@1');\n", "importa //esm.sh/x@1"),
+    ("js/otro.js", "const x = () => import(/* c */ 'https://ga.jspm.io/x.js');\n", "https://ga.jspm.io/x.js"),
+    ("js/otro.js", "const U = 'https://esm.sh/x@1'; const x = () => import(U);\n", "pide https://esm.sh/x@1"),
     ("vendor/three-0.160.0/examples/jsm/utils/Ayuda.js", "import { m } from './Falta.js';\n", "falta vendor/three-0.160.0/examples/jsm/utils/Falta.js, que importa three/addons/utils/Ayuda.js"),
 ])
 def test_build_site_falla_con_codigo_de_fuera(build_site, web, tmp_path, rel, texto, motivo):
@@ -338,3 +358,107 @@ def test_vendor_del_repositorio_cubre_lo_que_importa_web():
     assert faltan == {} and len(hay) >= 20
     for local in [*m.CDN.values(), *m.CDN_JS.values()]:
         assert (RAIZ / "web" / local).exists(), local
+
+
+# ───────────────────────────── Modelos 3D bajo la CSP del sitio ─────────────────────────────
+
+GUION_MODELOS = r"""// Sube GLB propios a la vista Modelos 3D y dice cómo terminó cada uno. Uso: node <guion> <url del atlas> <glb>...
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const [url, ...glbs] = process.argv.slice(2);
+(async () => {
+  const nav = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+  const salida = { csp: [], archivos: [] };
+  try {
+    const ctx = await nav.newContext();
+    await ctx.route((u) => u.origin !== new URL(url).origin, (r) => r.abort());
+    await ctx.exposeBinding('__csp', (_, v) => salida.csp.push(v));
+    await ctx.addInitScript(() => addEventListener('securitypolicyviolation', (e) => window.__csp(`${e.effectiveDirective} ${e.blockedURI}`), true));
+    const page = await ctx.newPage();
+    await page.goto(url, { waitUntil: 'load' });
+    await page.evaluate(() => document.querySelector('nav.tabs a[data-view="modelos"]').click());
+    await page.waitForFunction(() => document.querySelector('[data-slot="modelos.caps"]')?.children.length, null, { timeout: 60000 });
+    const estado = '[data-slot="modelos.estado"]';
+    for (const g of glbs) {
+      const t0 = Date.now();
+      await page.setInputFiles('#md-file', g);
+      const fin = await page.waitForFunction((s) => { const t = document.querySelector(s).textContent; return /cargado desde tu equipo|No se pudo leer/.test(t) && t; }, estado, { timeout: 30000 }).then((h) => h.jsonValue(), () => null);
+      salida.archivos.push({ fin, ms: Date.now() - t0, estado: fin || await page.$eval(estado, (e) => e.textContent) });
+    }
+  } finally { await nav.close(); }
+  console.log(JSON.stringify(salida));
+})().catch((e) => { console.error(e); process.exit(1); });
+"""
+
+
+def _hay_playwright() -> bool:
+    return bool(shutil.which("node")) and subprocess.run(
+        ["node", "-e", "require(process.env.PLAYWRIGHT_MODULE || 'playwright')"], capture_output=True).returncode == 0
+
+
+def _glb_con_ktx2() -> bytes:
+    """GLB inventado: un triángulo con una textura KTX2 (UASTC de 4 × 4, un bloque) que exige KHR_texture_basisu."""
+    ktx2 = bytearray(176)
+    ktx2[:12] = bytes([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x32, 0x30, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A])
+    struct.pack_into("<9I", ktx2, 12, 0, 1, 4, 4, 0, 0, 1, 1, 0)  # vkFormat … supercompresión
+    struct.pack_into("<4I2Q", ktx2, 48, 104, 44, 0, 0, 0, 0)     # dfd, kvd, sgd
+    struct.pack_into("<3Q", ktx2, 80, 160, 16, 16)               # nivel 0
+    struct.pack_into("<2I2H", ktx2, 104, 44, 0, 2, 40)
+    ktx2[116:132] = bytes([166, 1, 2, 0, 3, 3, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0])
+    struct.pack_into("<HBB3I", ktx2, 132, 0, 127, 0, 0, 0, 0xFFFFFFFF)
+    binario = struct.pack("<9f", 0, 0, 0, 1, 0, 0, 0, 1, 0) + struct.pack("<6f", 0, 0, 1, 0, 0, 1) + bytes(ktx2)
+    gltf = json.dumps({
+        "asset": {"version": "2.0"}, "extensionsUsed": ["KHR_texture_basisu"], "extensionsRequired": ["KHR_texture_basisu"],
+        "scene": 0, "scenes": [{"nodes": [0]}], "nodes": [{"mesh": 0}],
+        "meshes": [{"primitives": [{"attributes": {"POSITION": 0, "TEXCOORD_0": 1}, "material": 0}]}],
+        "materials": [{"pbrMetallicRoughness": {"baseColorTexture": {"index": 0}}}],
+        "textures": [{"extensions": {"KHR_texture_basisu": {"source": 0}}}],
+        "images": [{"bufferView": 2, "mimeType": "image/ktx2"}],
+        "accessors": [{"bufferView": 0, "componentType": 5126, "count": 3, "type": "VEC3", "min": [0, 0, 0], "max": [1, 1, 0]},
+                      {"bufferView": 1, "componentType": 5126, "count": 3, "type": "VEC2"}],
+        "bufferViews": [{"buffer": 0, "byteOffset": 0, "byteLength": 36}, {"buffer": 0, "byteOffset": 36, "byteLength": 24},
+                        {"buffer": 0, "byteOffset": 60, "byteLength": len(ktx2)}],
+        "buffers": [{"byteLength": len(binario)}],
+    }).encode()
+    gltf += b" " * (-len(gltf) % 4)
+    binario += b"\0" * (-len(binario) % 4)
+    return (struct.pack("<3I", 0x46546C67, 2, 28 + len(gltf) + len(binario)) + struct.pack("<2I", len(gltf), 0x4E4F534A)
+            + gltf + struct.pack("<2I", len(binario), 0x004E4942) + binario)
+
+
+# En el CI (CI=true) no se omite: el job instala Playwright y, si faltara, la prueba falla en vez de pasar en silencio
+@pytest.mark.skipif(not _hay_playwright() and not os.environ.get("CI"),
+                    reason="Sin Node con Playwright (PLAYWRIGHT_MODULE o NODE_PATH; vea scripts/qa/LEEME.md)")
+def test_modelos_glb_con_ktx2_bajo_la_csp_del_sitio(build_site, tmp_path, monkeypatch):
+    """Con la CSP del sitio el transcodificador Basis no arranca (necesita evaluar código) y un GLB propio con texturas
+    KTX2 se quedaba en «Leyendo…» para siempre. Ahora termina en un aviso, Draco sigue cargando y la página no deja
+    violaciones de CSP. Corre con uvicorn de verdad y el sitio que arma build_site.py."""
+    from app import config
+
+    def sin_panel():
+        raise RuntimeError("Falta la variable MONGODB_URI en el servicio del panel")
+    monkeypatch.setattr(config, "cargar", sin_panel)
+    build_site.construir(RAIZ / "web", tmp_path / "site")
+    (tmp_path / "ktx2.glb").write_bytes(_glb_con_ktx2())
+    (tmp_path / "modelos.cjs").write_text(GUION_MODELOS, encoding="utf-8")
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", 0))
+    srv = uvicorn.Server(uvicorn.Config(servidor.crear_servidor(None, tmp_path / "site"), http="h11", log_level="warning"))
+    hilo = threading.Thread(target=srv.run, kwargs={"sockets": [sock]}, daemon=True)
+    hilo.start()
+    try:
+        fin = time.time() + 15
+        while not srv.started and time.time() < fin:
+            time.sleep(0.05)
+        r = subprocess.run(["node", str(tmp_path / "modelos.cjs"), f"http://127.0.0.1:{sock.getsockname()[1]}/atlas",
+                            str(tmp_path / "ktx2.glb"), str(RAIZ / "web/models/hospital_lod1.glb")],
+                           capture_output=True, text=True, timeout=240)
+    finally:
+        srv.should_exit = True
+        hilo.join(15)
+        sock.close()
+    assert r.returncode == 0, r.stderr
+    salida = json.loads(r.stdout.strip().splitlines()[-1])
+    ktx2, draco = salida["archivos"]
+    assert ktx2["fin"] and ktx2["estado"].startswith("No se pudo leer ktx2.glb: usa texturas KTX2"), ktx2
+    assert draco["estado"] == "hospital_lod1.glb cargado desde tu equipo.", draco
+    assert salida["csp"] == []
