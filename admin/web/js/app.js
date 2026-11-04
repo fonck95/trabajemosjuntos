@@ -2,6 +2,7 @@
 import { api, configurar, ErrorApi, sesion } from './api.js';
 import { $, aviso, html, icono, montar } from './ui.js';
 import { vistaLogin } from './vistas/login.js';
+import { sinBase, url } from './base.js';
 
 const RUTAS = [
   { re: /^\/$|^\/panel$/, nav: 'panel', carga: () => import('./vistas/panel.js').then((m) => m.vistaPanel) },
@@ -15,7 +16,7 @@ const RUTAS = [
   { re: /^\/ajustes$/, nav: 'ajustes', carga: () => import('./vistas/ajustes.js').then((m) => m.vistaAjustes) },
 ];
 const NAV = [
-  ['panel', 'Panel', '/panel'], ['mapa', 'Mapa 3D', '/mapa'], ['personas', 'Habitantes', '/personas'],
+  ['panel', 'Panel', '/'], ['mapa', 'Mapa 3D', '/mapa'], ['personas', 'Habitantes', '/personas'],
   ['reuniones', 'Reuniones', '/reuniones'], ['calidad', 'Calidad de datos', '/calidad'], ['importar', 'Importar y exportar', '/importar'],
   ['ajustes', 'Ajustes', '/ajustes'],
 ];
@@ -35,8 +36,9 @@ function aplicarTema(t) {
 export const temaOscuro = () => (document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
 
 export function ir(ruta, { reemplazar = false } = {}) {
-  if (reemplazar) history.replaceState({}, '', ruta);
-  else history.pushState({}, '', ruta);
+  const destino = url(sinBase(ruta)); // acepta «/personas» o «/panel/personas»
+  if (reemplazar) history.replaceState({}, '', destino);
+  else history.pushState({}, '', destino);
   render();
 }
 
@@ -45,7 +47,7 @@ function armarEstructura() {
     <div class="app" id="app">
       <div class="barra-movil"><button id="abrir-menu" aria-label="Menú" aria-expanded="false" aria-controls="menu-lateral">${icono('menu')}</button><b>Yondó · Base única</b></div>
       <aside class="lateral" id="menu-lateral" aria-label="Navegación">
-        <a class="marca" href="/panel" data-ruta><span class="sello">Y</span><span><b>Yondó</b><small>Base única · Panel</small></span></a>
+        <a class="marca" href="/" data-ruta><span class="sello">Y</span><span><b>Yondó</b><small>Base única · Panel</small></span></a>
         <nav class="nav" id="nav">${NAV.map(([k, t, href]) => html`<a href="${href}" data-ruta data-nav="${k}">${icono(k)}<span>${t}</span>${k === 'calidad' ? html`<span class="insignia oculto" id="insignia-calidad" title="Personas con coincidencias por revisar"></span>` : ''}</a>`)}</nav>
         <div class="pie">
           <span>Sesión: <b id="usuario"></b></span>
@@ -59,7 +61,7 @@ function armarEstructura() {
   $('#usuario').textContent = sesion.usuario;
   $('#salir').onclick = async () => {
     try { await api.post('/api/logout'); } catch { /* ya cerrada */ }
-    location.href = '/';
+    location.href = url('/');
   };
   $('#cambiar-tema').onclick = () => aplicarTema(temaOscuro() ? 'light' : 'dark');
   $('#abrir-menu').onclick = () => abrirMenu(!$('#app').classList.contains('menu-abierto'));
@@ -83,11 +85,11 @@ export async function refrescarInsignias() {
 async function render() {
   const g = ++generacion;
   if (limpiarVista) { try { limpiarVista(); } catch { /* nada */ } limpiarVista = null; }
-  const ruta = location.pathname.replace(/\/+$/, '') || '/';
+  const ruta = sinBase(location.pathname).replace(/\/+$/, '') || '/';
   const r = RUTAS.find((x) => x.re.test(ruta));
   const vista = $('#vista');
   abrirMenu(false);
-  if (!r) { montar(vista, html`<div class="vacio"><b>No existe esta página</b><a href="/panel" data-ruta>Volver al panel</a></div>`); return; }
+  if (!r) { montar(vista, html`<div class="vacio"><b>No existe esta página</b><a href="/" data-ruta>Volver al panel</a></div>`); return; }
   for (const a of document.querySelectorAll('#nav a')) {
     if (a.dataset.nav === r.nav) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
@@ -144,7 +146,6 @@ async function iniciar() {
     const configurado = e instanceof ErrorApi ? e.detalle?.configurado !== false : true;
     vistaLogin($('#raiz'), { configurado, alEntrar: (d) => {
       configurar({ token: d.csrf, usuario: d.usuario, expira: expiro });
-      if (location.pathname === '/' ) history.replaceState({}, '', '/panel');
       armarEstructura();
       render();
       refrescarInsignias();

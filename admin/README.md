@@ -97,37 +97,35 @@ para la finalidad con la que se recogieron; revise con un abogado el uso que se 
 
 ## Desplegar en Railway
 
-El sitio público (Home, atlas, propuesta) sigue siendo estático. El panel es **otro servicio** del mismo repositorio:
+**Un solo servicio (lo habitual).** El servicio del sitio público sirve también el panel: la raíz del repositorio
+tiene `railpack.json`, que instala `requirements.txt`, construye el sitio (`scripts/build_data.py` y
+`scripts/build_site.py` con `PANEL_URL=/panel/`) y arranca `admin/servidor.py`:
 
-1. En el proyecto de Railway: **+ New → Database → MongoDB** (si aún no existe).
-2. **+ New → GitHub Repo →** `trabajemosjuntos`. En *Settings* del servicio nuevo:
-   - *Source* → **Root Directory = `admin`**. Railway solo baja esa carpeta y Railpack la construye con Python 3.12
-     (`.python-version`, `requirements.txt`). El arranque sale de **`admin/railpack.json`** (`deploy.startCommand`:
-     uvicorn con `--no-access-log`); `admin/Procfile` trae el mismo comando de respaldo. Deje vacío
-     *Deploy → Custom Start Command*: si lo llena, reemplaza ese arranque y tendría que llevar también `--no-access-log`.
-   - *Deploy* → **Healthcheck Path = `/salud`**. Railway solo pasa el tráfico al despliegue nuevo cuando `/salud`
-     responde 200, es decir, cuando el panel ya se conectó a MongoDB; si no, ese despliegue falla y el anterior sigue
-     atendiendo. En un servicio nuevo este chequeo solo se activa ahí.
+| Dirección | Qué sirve |
+|---|---|
+| `/` , `/atlas`, `/propuesta` | El sitio público, igual que antes con Caddy (mismas cabeceras y atajos, sin CSP) |
+| `/panel/` | El panel: ingreso con `ADMIN` y `password`; al pie del Home, el enlace **Ingreso del equipo** lleva aquí |
+| `/health` | Siempre 200: el sitio no depende de MongoDB ni del panel |
 
-   `admin/railway.json` (*Config as Code*) no basta: Railway no lo busca dentro del Root Directory, ya no deja activar
-   *Config as Code* en servicios nuevos y deja de leer esos archivos el **1 de diciembre de 2026**. Solo lo usa un
-   servicio creado antes que ya tenga `/admin/railway.json` en *Settings → Config-as-code → Railway Config File*
-   (lleva el mismo arranque y el chequeo en `/salud`); aun así, configure el *Healthcheck Path* para cuando Railway
-   deje de leerlo.
-3. En *Variables* del servicio del panel:
-   - `ADMIN` = usuario, `password` = clave (larga: 12 caracteres o más).
-   - `MONGODB_URI` = `${{MongoDB.MONGO_URL}}` (referencia al plugin) o la URI de Atlas. Es obligatoria: en Railway el
-     panel no usa un MongoDB local por defecto, así que sin ella no arranca y el registro del despliegue lo indica.
+Pasos, en el servicio que ya publica el sitio:
 
-   Si estas variables quedaron en el servicio del sitio estático, cópielas al del panel (o conviértalas en
-   *Shared Variables*): el sitio estático no las usa.
-4. *Settings → Networking → Generate Domain*. Abra la dirección, ingrese y suba los dos Excel en **Importar y exportar**.
-5. Compruebe en el detalle del despliegue que figuren el chequeo de salud en `/salud` y el comando con
-   `--no-access-log`, y que en *Deploy Logs* no aparezcan líneas `GET /api/...` al buscar.
-6. Para entrar desde el sitio público: en *Variables* del servicio **del sitio estático** (no del panel) agregue
-   `PANEL_URL` = la dirección del paso 4 (por ejemplo `https://panel-xxxx.up.railway.app`) y vuelva a desplegarlo.
-   Al pie del Home aparece el enlace discreto **Ingreso del equipo**. Sin esa variable el enlace no aparece, y la
-   dirección no queda escrita en el repositorio. En GitHub Pages se usa la variable de repositorio `PANEL_URL`.
+1. En el proyecto: **+ New → Database → MongoDB** (si aún no existe).
+2. En *Variables* del servicio del sitio: `ADMIN` = usuario, `password` = clave (12 caracteres o más) y
+   `MONGODB_URI` = `${{MongoDB.MONGO_URL}}` (referencia al plugin) o la URI de Atlas.
+3. Deje vacío *Settings → Deploy → Custom Start Command* (el arranque sale de `railpack.json`, con
+   `--no-access-log`) y, si tiene *Healthcheck Path*, que sea `/health`.
+4. Despliegue (un *push* a `main` lo hace solo). Abra `https://<su-dominio>/panel/`, ingrese y suba los dos Excel en
+   **Importar y exportar**.
+
+Si faltan variables o MongoDB no responde, el sitio sigue en línea: `/panel/` muestra un aviso con lo que falta, la
+API responde 503 y el panel se conecta solo cuando MongoDB aparece (vea *Deploy Logs*). En *Deploy Logs* no deben
+aparecer líneas `GET /api/...` al buscar.
+
+**Panel en un servicio aparte (opcional).** Cree otro servicio del mismo repositorio con **Root Directory = `admin`**:
+Railpack lee `admin/railpack.json` (`uvicorn app.main:app`, el panel solo en la raíz) y `admin/Procfile` de respaldo;
+ponga *Healthcheck Path* = `/salud` y las mismas variables. Para enlazarlo desde el sitio, defina en el servicio del
+sitio `PANEL_URL` = su dirección `https://…`. En GitHub Pages (sin panel) el enlace solo aparece si existe la variable
+de repositorio `PANEL_URL`.
 
 ## Trabajar en local
 
@@ -153,6 +151,13 @@ Pruebas (solo con datos inventados; las de la API necesitan MongoDB):
 
 ```bash
 python -m pytest -q tests
+```
+
+Para probar el servicio único como en Railway (sitio en `/` y panel en `/panel/`), desde la raíz del repositorio:
+
+```bash
+python3 scripts/build_data.py && PANEL_URL=/panel/ python3 scripts/build_site.py
+uvicorn servidor:app --app-dir admin --port 8000 --no-access-log
 ```
 
 ## Estructura

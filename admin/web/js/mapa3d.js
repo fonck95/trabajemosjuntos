@@ -1,7 +1,8 @@
 // Motor de mapas: carga MapLibre (compilación CSP, sin blob:), mapas base, relieve, edificios 3D y hexágonos.
 import { temaOscuro } from './app.js';
+import { url } from './base.js';
 
-const V = '/static/vendor/maplibre-gl-5.24.0';
+const V = url('/static/vendor/maplibre-gl-5.24.0');
 let promesa = null;
 
 export function cargarMapLibre() {

@@ -1,4 +1,5 @@
 // Cliente de la API: cookie de sesión HttpOnly + cabecera CSRF en todo lo que cambia datos.
+import { url } from './base.js';
 
 let csrf = null;
 let alExpirar = () => {};
@@ -29,7 +30,7 @@ async function pedir(metodo, ruta, cuerpo, { formulario = false } = {}) {
       op.body = JSON.stringify(cuerpo);
     }
   }
-  const r = await fetch(ruta, op);
+  const r = await fetch(url(ruta), op);
   if (r.status === 401 && ruta !== '/api/login' && ruta !== '/api/yo') {
     alExpirar();
     throw new ErrorApi(401, 'La sesión terminó');
@@ -55,13 +56,13 @@ export const api = {
 /** Descarga un archivo de la API (exportaciones) respetando la sesión. */
 export async function descargar(ruta, params) {
   const q = params ? '?' + new URLSearchParams(Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== '')) : '';
-  const r = await fetch(ruta + q, { credentials: 'same-origin' });
+  const r = await fetch(url(ruta) + q, { credentials: 'same-origin' });
   if (!r.ok) throw new ErrorApi(r.status, 'No se pudo descargar');
   const nombre = /filename="([^"]+)"/.exec(r.headers.get('content-disposition') || '')?.[1] || 'descarga';
-  const url = URL.createObjectURL(await r.blob());
-  const a = Object.assign(document.createElement('a'), { href: url, download: nombre });
+  const enlace = URL.createObjectURL(await r.blob());
+  const a = Object.assign(document.createElement('a'), { href: enlace, download: nombre });
   document.body.append(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  setTimeout(() => URL.revokeObjectURL(enlace), 2000);
 }

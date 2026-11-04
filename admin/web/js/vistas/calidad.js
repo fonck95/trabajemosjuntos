@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { refrescarInsignias } from '../app.js';
 import { $, aviso, avisoError, datosForm, dialogo, html, montar, num, titulo } from '../ui.js';
 import { elegirPunto } from './comunes.js';
+import { url } from '../base.js';
 
 export async function vistaCalidad(el, { q }) {
   let pestana = q.get('p') || 'coincidencias';
@@ -20,7 +21,7 @@ export async function vistaCalidad(el, { q }) {
 
   async function pintar() {
     for (const b of el.querySelectorAll('[data-tab]')) b.setAttribute('aria-selected', b.dataset.tab === pestana);
-    history.replaceState({}, '', `/calidad?p=${pestana}`);
+    history.replaceState({}, '', url(`/calidad?p=${pestana}`));
     const c = $('#cuerpo', el);
     montar(c, html`<div class="cargando"><div class="giro"></div></div>`);
     c.onclick = null;

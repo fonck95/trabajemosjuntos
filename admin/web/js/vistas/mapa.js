@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import { temaOscuro } from '../app.js';
 import { BASES, BBOX_YONDO, CASCO, MAX_IDS, baseSegunTema, cajaDe, cargarMapLibre, decorar, dispersar, hexagonos, rampa } from '../mapa3d.js';
 import { $, $$, esc, html, montar, num, pct, titulo } from '../ui.js';
+import { url } from '../base.js';
 
 const RADIOS = { auto: null, 150: 150, 400: 400, 1000: 1000 };
 const PRECISIONES = ['Dirección exacta', 'Dirección aproximada', 'Barrio', 'Caserío / centro poblado', 'Vereda', 'Corregimiento'];
@@ -266,7 +267,7 @@ export async function vistaMapa(el, { q, ir }) {
     const f = e.target.closest('[data-f]');
     if (f) {
       if (f.value) estado.filtros[f.dataset.f] = f.value; else delete estado.filtros[f.dataset.f];
-      history.replaceState({}, '', '/mapa?' + new URLSearchParams(estado.filtros));
+      history.replaceState({}, '', url('/mapa?' + new URLSearchParams(estado.filtros)));
       await cargarDatos();
     }
   });

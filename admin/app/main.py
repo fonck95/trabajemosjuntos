@@ -7,25 +7,27 @@ from __future__ import annotations
 
 import logging
 import re
+from html import escape
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.gzip import GZipMiddleware
 
 from . import config, db
 from .api import calidad, personas, reuniones, sistema, tablero
-from .seguridad import CabecerasSeguras, GuardiaApi, limpiar_al_iniciar
+from .seguridad import CabecerasSeguras, GuardiaApi, base_de, limpiar_al_iniciar
 
 WEB = Path(__file__).resolve().parents[1] / "web"
+INDICE = (WEB / "index.html").read_text(encoding="utf-8")
 log = logging.getLogger("panel")
 
 
-@asynccontextmanager
-async def ciclo(app: FastAPI):
+def preparar(app: FastAPI) -> None:
+    """Conecta y prepara MongoDB (índices, nomenclátor, etiquetas). Lanza la excepción si MongoDB no responde."""
     cfg = app.state.cfg
     # Los avisos van antes de conectar: si MongoDB no responde, el arranque se corta ahí
     if not cfg.usuario or not cfg.clave:
@@ -39,6 +41,13 @@ async def ciclo(app: FastAPI):
                   re.sub(r"//[^@/]*@", "//", cfg.mongodb_uri))  # sin usuario ni clave de la URI
         raise
     limpiar_al_iniciar(app.state.db, cfg)
+    app.state.listo = True
+
+
+@asynccontextmanager
+async def ciclo(app: FastAPI):
+    # Panel solo (uvicorn app.main:app): si MongoDB no responde, el arranque se corta y el despliegue falla
+    preparar(app)
     yield
     app.state.cliente.close()
 
@@ -70,13 +79,23 @@ def crear_app(cfg: config.Config | None = None) -> FastAPI:
     app.mount("/static", StaticFiles(directory=WEB), name="static")
 
     @app.get("/{ruta:path}", include_in_schema=False)
-    def spa(ruta: str):
+    def spa(ruta: str, request: Request):
         # Toda ruta que no sea de la API ni un archivo estático carga la aplicación (enrutado en el navegador)
         if ruta.startswith("api/"):
             return JSONResponse({"detail": "No existe"}, status_code=404)
-        return FileResponse(WEB / "index.html", headers={"Cache-Control": "no-cache"})
+        # El panel puede ir montado bajo un prefijo (/panel dentro del sitio): las rutas absolutas de la página lo
+        # llevan, y el navegador lo lee de <meta name="panel-base"> para la API y el enrutado
+        base = base_de(request)
+        pagina = INDICE.replace('"/static/', f'"{base}/static/').replace(
+            '<meta charset="utf-8">', f'<meta charset="utf-8">\n<meta name="panel-base" content="{escape(base)}">')
+        return HTMLResponse(pagina, headers={"Cache-Control": "no-cache"})
 
     return app
 
 
-app = crear_app()
+def __getattr__(nombre: str):
+    """`uvicorn app.main:app` (panel solo) crea la aplicación al pedirla; importar el módulo no la crea."""
+    if nombre == "app":
+        globals()["app"] = crear_app()
+        return globals()["app"]
+    raise AttributeError(nombre)
