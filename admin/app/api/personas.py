@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 from typing import Any, Literal
 
 from bson import ObjectId
@@ -113,6 +114,18 @@ def ver(pid: int, db: Database = Depends(obtener_db), _: Admin = Depends(requier
     return _persona(db, pid)
 
 
+def fecha_iso(v: str | None) -> str | None:
+    """Valida una fecha AAAA-MM-DD que además exista (1985-02-30 no). La usan las fichas y las reuniones."""
+    if v:
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", v):
+            raise ValueError("Use el formato AAAA-MM-DD")
+        try:
+            date.fromisoformat(v)
+        except ValueError:
+            raise ValueError(f"Fecha inexistente: {v}") from None
+    return v
+
+
 class PersonaIn(BaseModel):
     nombre: str | None = Field(None, max_length=160)
     cedula: str | None = Field(None, max_length=20)
@@ -139,9 +152,7 @@ class PersonaIn(BaseModel):
     @field_validator("fecha_nacimiento", "consentimiento_fecha")
     @classmethod
     def _fecha(cls, v):
-        if v and not re.match(r"^\d{4}-\d{2}-\d{2}$", v):
-            raise ValueError("Use el formato AAAA-MM-DD")
-        return v or None
+        return fecha_iso(v) or None
 
 
 def _limpiar_entrada(datos: dict) -> dict:
