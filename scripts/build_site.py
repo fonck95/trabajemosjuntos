@@ -9,7 +9,8 @@ esas URL (y la de la fuente que web/js/propuesta pide a jsdelivr) pasan a la cop
 web/vendor/LEEME.md), con rutas relativas que sirven igual en GitHub Pages. En Railway el sitio comparte origen con el
 panel (/panel/), así que ahí solo debe correr código del repositorio: el build falla si en site/ queda un <script src>
 externo, una URL externa en un importmap, un destino del importmap que no existe, un módulo de three/addons sin copia
-local, una URL de CDN en site/js o código en atributos on* (la CSP del sitio no lo deja correr).
+local, un import (estático o dinámico) de otro dominio o una URL de CDN en site/js, o código en atributos on* (la CSP
+del sitio no lo deja correr).
 
 Uso: python3 scripts/build_data.py && python3 scripts/build_site.py
      python3 scripts/build_site.py --three-desde <carpeta package del tgz de three>   (rehace web/vendor/three-0.160.0/)
@@ -106,7 +107,7 @@ def existe_en(sitio: Path, pagina: Path, url: str) -> bool:
 
 _IMPORT = re.compile(r"""^[ \t]*(?:import|export)\b[^'";]*?\bfrom\s*['"]([^'"\n]+)['"]"""  # import … from '…'
                      r"""|^[ \t]*import\s*['"]([^'"\n]+)['"]"""                          # import '…'
-                     r"""|\bimport\s*\(\s*['"]([^'"\n]+)['"]""", re.M)                 # import('…')
+                     r"""|\bimport\s*\(\s*['"`]([^'"`\n]+)['"`]""", re.M)              # import('…') o import(`…`)
 
 
 def especificadores(js: str) -> set:
@@ -165,8 +166,10 @@ def revisar(sitio: Path) -> list:
         _, faltan = modulos_three(sitio / 'js', sitio / THREE / 'examples' / 'jsm')
         malos += [f'falta {THREE}examples/jsm/{m}, que importa {q} (vea web/vendor/LEEME.md)' for m, q in sorted(faltan.items())]
         for f in sorted((sitio / 'js').rglob('*.js')):
-            malos += [f'{f.relative_to(sitio).as_posix()}: pide {u} (la CSP del sitio no deja salir a un CDN)'
-                      for u in sorted(set(RE_CDN.findall(f.read_text(encoding='utf-8'))))]
+            nombre, js = f.relative_to(sitio).as_posix(), f.read_text(encoding='utf-8')
+            malos += [f'{nombre}: importa {e} de otro dominio (la CSP del sitio lo bloquea)'
+                      for e in sorted(especificadores(js)) if es_externa(e)]
+            malos += [f'{nombre}: pide {u} (la CSP del sitio no deja salir a un CDN)' for u in sorted(set(RE_CDN.findall(js)))]
     return malos
 
 

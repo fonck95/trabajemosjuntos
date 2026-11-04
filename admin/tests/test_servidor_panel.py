@@ -2,6 +2,8 @@
 ruta de la cookie de sesión. Solo datos inventados."""
 import asyncio
 import logging
+import socket
+import threading
 import time
 from dataclasses import replace
 
@@ -9,6 +11,7 @@ import anyio
 import httpx
 import pymongo
 import pytest
+import uvicorn
 from fastapi.testclient import TestClient
 from pymongo.errors import ConfigurationError
 
@@ -118,6 +121,36 @@ def test_tiempos_de_espera_de_mongodb():
     assert config.sin_credenciales("x mongodb://ana:secreta@h:1/b y ana:secreta@otro") == "x mongodb://h:1/b y otro"
 
 
+@pytest.mark.parametrize("uri, queda", [
+    ("mongodb://ana:SECRETO xyz@h:1/b", "mongodb://h:1/b"),
+    ("mongodb://ana:SECRETO\txyz@h:1/b", "mongodb://h:1/b"),
+    ("mongodb://ana:SECRETO\xa0xyz@h:1/b", "mongodb://h:1/b"),
+    ("mongodb://ana:SECRETOxyz @h:1/b", "mongodb://h:1/b"),
+    ("mongodb://ana SECRETO:clave@h:1/b", "mongodb://h:1/b"),
+    ("mongodb://ana:SECRETO@xyz@h:1/b", "mongodb://h:1/b"),
+    ("mongodb://ana:SECRETO xyz@h1:1,h2:2,h3:3/b?replicaSet=rs", "mongodb://h1:1,h2:2,h3:3/b?replicaSet=rs"),
+    ("mongodb://ana:SECRETO xyz@h:1?authSource=admin", "mongodb://h:1?authSource=admin"),
+    ("mongodb+srv://ana:SECRETO xyz@cluster0.ejemplo.invalid/b?retryWrites=true",
+     "mongodb+srv://cluster0.ejemplo.invalid/b?retryWrites=true"),
+    ("mongodb://h:1/b?tls=true", "mongodb://h:1/b?tls=true"),
+    ("No se pudo en mongodb://ana:SECRETO xyz@h:1/b: falló", "No se pudo en mongodb://h:1/b: falló"),
+])
+def test_sin_credenciales_por_la_estructura_de_la_uri(uri, queda):
+    """pymongo acepta la clave sin escapar con espacios o tabuladores: la expresión anterior la dejaba entera."""
+    assert config.sin_credenciales(uri) == queda
+
+
+def test_la_clave_de_mongodb_no_sale_en_el_registro(cfg, caplog):
+    from app.main import crear_app, preparar
+    app = crear_app(replace(cfg, mongodb_uri="mongodb://ana:SECRETO xyz@127.0.0.1:1/b?serverSelectionTimeoutMS=200"))
+    try:
+        with caplog.at_level(logging.ERROR), pytest.raises(pymongo.errors.ConnectionFailure):
+            preparar(app)
+    finally:
+        app.state.cliente.close()
+    assert "mongodb://127.0.0.1:1/b?serverSelectionTimeoutMS=200" in caplog.text and "SECRETO" not in caplog.text
+
+
 # ───────────────────────────── Límite de concurrencia del panel ─────────────────────────────
 
 def _app_lenta(segundos):
@@ -172,6 +205,133 @@ def test_el_panel_no_acapara_los_hilos_del_sitio(cfg, sitio, monkeypatch):
         app.state.panel.state.cliente.close()
     assert sitio_s < 0.5, sitio_s
     assert estados == [401] * 3 + [503] * 12
+
+
+@pytest.fixture
+def en_uvicorn(cfg, sitio):
+    """Arranca el servidor con uvicorn de verdad (h11, como en Railway) en un puerto libre y devuelve (base, puerto).
+    El servidor lee sus constantes al crearse: cámbielas antes de arrancarlo."""
+    if not MONGO:
+        pytest.skip("No hay MongoDB para las pruebas del servidor")
+    corriendo = []
+
+    def arrancar():
+        app = servidor.crear_servidor(cfg, sitio)
+        sock = socket.socket()
+        sock.bind(("127.0.0.1", 0))
+        srv = uvicorn.Server(uvicorn.Config(app, http="h11", lifespan="on", log_level="warning", access_log=False,
+                                            server_header=False, proxy_headers=True, forwarded_allow_ips="*",
+                                            timeout_graceful_shutdown=2))
+        hilo = threading.Thread(target=srv.run, kwargs={"sockets": [sock]}, daemon=True)
+        hilo.start()
+        corriendo.append((srv, hilo, sock))
+        _esperar(lambda: srv.started and app.state.panel is not None and app.state.panel.state.listo)
+        puerto = sock.getsockname()[1]
+        return f"http://127.0.0.1:{puerto}", puerto
+
+    try:
+        yield arrancar
+    finally:
+        for srv, hilo, sock in corriendo:
+            srv.should_exit = True
+            hilo.join(15)
+            sock.close()
+        with pymongo.MongoClient(URI) as m:
+            m.drop_database(cfg.mongodb_db)
+
+
+def _a_medias(puerto, ruta, n, largo=100, inicio=b"{"):
+    """n conexiones que mandan las cabeceras de un POST y el comienzo del cuerpo, y nada más."""
+    conexiones = []
+    for _ in range(n):
+        s = socket.create_connection(("127.0.0.1", puerto))
+        s.sendall(f"POST {ruta} HTTP/1.1\r\nHost: t\r\nContent-Type: application/json\r\nContent-Length: {largo}\r\n"
+                  "\r\n".encode() + inicio)
+        conexiones.append(s)
+    return conexiones
+
+
+def _leer(s, segundos, hasta_cierre=False):
+    """(código de estado o None, ¿el servidor cerró la conexión?) de lo que llega en `segundos`. Sin `hasta_cierre`,
+    para en cuanto llegan las cabeceras de la respuesta."""
+    fin, datos, cerrada = time.monotonic() + segundos, b"", False
+    while not cerrada and time.monotonic() < fin and (hasta_cierre or b"\r\n\r\n" not in datos):
+        s.settimeout(max(0.01, fin - time.monotonic()))
+        try:
+            parte = s.recv(65536)
+        except TimeoutError:
+            break
+        except ConnectionResetError:
+            parte = b""
+        cerrada, datos = not parte, datos + parte
+    return (int(datos.split()[1]) if datos.startswith(b"HTTP/1.1 ") else None), cerrada
+
+
+def test_conexiones_anonimas_a_medias_no_dejan_fuera_al_admin(en_uvicorn, cfg, monkeypatch):
+    """16 conexiones sin credenciales que mandan las cabeceras de un ingreso y no terminan el cuerpo retenían los 16
+    cupos del panel mientras el atacante quisiera: 503 en la API, las páginas y los archivos del panel."""
+    monkeypatch.setattr(servidor, "PLAZO_CUERPO_S", 2, raising=False)
+    base, puerto = en_uvicorn()
+    n = servidor.CUPOS_PANEL + 4
+    # El resto de /api/* no lee el cuerpo sin sesión: la guardia responde 401 al instante y suelta el cupo
+    importar = _a_medias(puerto, "/panel/api/importar", n, largo=5000, inicio=b"x")
+    ingreso = []
+    try:
+        assert [_leer(s, 3)[0] for s in importar] == [401] * n
+        ingreso = _a_medias(puerto, "/panel/api/login", n)
+        time.sleep(0.3)
+        with httpx.Client(base_url=base, timeout=10) as c:
+            t = time.perf_counter()
+            r = c.post("/panel/api/login", json={"usuario": cfg.usuario, "clave": cfg.clave})
+            assert r.status_code == 200, r.text
+            assert c.get("/panel/api/yo").status_code == 200
+            assert c.get("/panel/").status_code == 200 and c.get("/panel/static/js/app.js").status_code == 200
+            assert time.perf_counter() - t < servidor.ESPERA_CUPO_S
+        # Vencido el plazo, cada una recibe 408 y el servidor cierra la conexión
+        assert [_leer(s, servidor.PLAZO_CUERPO_S + 5, hasta_cierre=True) for s in ingreso] == [(408, True)] * n
+    finally:
+        for s in ingreso + importar:
+            s.close()
+
+
+def test_el_ingreso_lee_el_cuerpo_por_partes_con_plazo_total_y_tope(en_uvicorn, cfg, monkeypatch):
+    monkeypatch.setattr(servidor, "PLAZO_CUERPO_S", 2, raising=False)
+    _, puerto = en_uvicorn()
+    cuerpo = ('{"usuario": "%s", "clave": "%s"}' % (cfg.usuario, cfg.clave)).encode()
+    cabeceras = "POST /panel/api/login HTTP/1.1\r\nHost: t\r\nContent-Type: application/json\r\n"
+    # Por partes, dentro del plazo: la app recibe el cuerpo entero
+    with socket.create_connection(("127.0.0.1", puerto)) as s:
+        s.sendall(f"{cabeceras}Content-Length: {len(cuerpo)}\r\n\r\n".encode())
+        for parte in (cuerpo[:3], cuerpo[3:20], cuerpo[20:]):
+            time.sleep(0.3)
+            s.sendall(parte)
+        assert _leer(s, 5)[0] == 200
+    with socket.create_connection(("127.0.0.1", puerto)) as s:
+        s.sendall(f"{cabeceras}Transfer-Encoding: chunked\r\n\r\n".encode())
+        for parte in (cuerpo[:10], cuerpo[10:]):
+            time.sleep(0.3)
+            s.sendall(b"%x\r\n%s\r\n" % (len(parte), parte))
+        s.sendall(b"0\r\n\r\n")
+        assert _leer(s, 5)[0] == 200
+    # El plazo es total: un byte cada 0,3 s no lo alarga
+    with socket.create_connection(("127.0.0.1", puerto)) as s:
+        s.sendall(f"{cabeceras}Content-Length: 100\r\n\r\n".encode())
+        t, estado = time.perf_counter(), None
+        while estado is None and time.perf_counter() - t < servidor.PLAZO_CUERPO_S + 3:
+            try:
+                s.sendall(b" ")
+            except OSError:
+                break
+            estado = _leer(s, 0.3)[0]
+        assert estado == 408 and time.perf_counter() - t < servidor.PLAZO_CUERPO_S + 1
+    # Tope: el JSON del panel. Por Content-Length, sin leer nada; por partes, al pasarlo
+    with socket.create_connection(("127.0.0.1", puerto)) as s:
+        s.sendall(f"{cabeceras}Content-Length: {seg.LIMITE_JSON + 1}\r\n\r\n".encode())
+        assert _leer(s, 3, hasta_cierre=True) == (413, True)
+    with socket.create_connection(("127.0.0.1", puerto)) as s:
+        s.sendall(f"{cabeceras}Transfer-Encoding: chunked\r\n\r\n".encode() + b"%x\r\n" % (seg.LIMITE_JSON + 1)
+                  + b" " * (seg.LIMITE_JSON + 1) + b"\r\n")
+        assert _leer(s, 3)[0] == 413
 
 
 # ───────────────────────────── Reintentos al crear el panel ─────────────────────────────

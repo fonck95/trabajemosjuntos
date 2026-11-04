@@ -55,8 +55,17 @@ def _entero(nombre: str, defecto: int) -> int:
 
 
 def sin_credenciales(texto: str) -> str:
-    """Quita usuario y clave de una URI (o de un mensaje de error que la cite) antes de escribirla en el registro."""
-    return re.sub(r"[^\s/@]*:[^\s/@]*@", "", re.sub(r"//[^\s/@]*@", "//", texto))
+    """Quita usuario y clave de una URI (o de un mensaje de error que la cite) antes de escribirla en el registro.
+
+    Una URI se corta por su estructura y no con una expresión: pymongo acepta claves sin escapar con espacios o
+    tabuladores, y con la expresión salían enteras en el registro. La autoridad va de «://» a la primera «/» y la
+    credencial, hasta su última «@» (como la separa pymongo). En un mensaje, lo mismo tras cada «//» y, aparte,
+    cualquier «usuario:clave@» suelto."""
+    esquema, sep, resto = texto.partition("://")
+    if sep and re.fullmatch(r"[A-Za-z][A-Za-z0-9+.-]*", esquema):
+        autoridad, barra, ruta = resto.partition("/")
+        return f"{esquema}://{autoridad.rpartition('@')[2]}{barra}{ruta}"
+    return re.sub(r"[^\s/@]*:[^\s/@]*@", "", re.sub(r"//[^/]*@", "//", texto))
 
 
 def en_railway() -> bool:

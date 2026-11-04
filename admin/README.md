@@ -122,7 +122,9 @@ Pasos, en el servicio que ya publica el sitio:
 Si faltan variables o MongoDB no responde, el sitio sigue en línea: `/panel/` muestra un aviso con lo que falta y el
 panel se conecta solo cuando MongoDB aparece (vea *Deploy Logs*); con Atlas (`mongodb+srv://`), si el DNS falla al
 arrancar, vuelve a intentar crear el panel. Con MongoDB caído, la API del panel responde 503 al instante
-(cortacircuitos) y el panel tiene su propio límite de peticiones simultáneas: no frena el sitio. En *Deploy Logs* no
+(cortacircuitos) y la API del panel tiene su propio límite de peticiones simultáneas: no frena el sitio. Las páginas y
+archivos del panel no cuentan para ese límite, y el ingreso cuenta solo cuando su cuerpo llegó entero (si no llega en
+10 s, 408): conexiones anónimas a medio enviar no dejan fuera al administrador. En *Deploy Logs* no
 deben aparecer líneas `GET /api/...` al buscar.
 
 **Aislamiento máximo (opcional).** En el servicio único, sitio y panel comparten origen: cada uno lleva su CSP y la
