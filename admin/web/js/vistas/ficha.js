@@ -37,6 +37,9 @@ export async function vistaFicha(el, { params, ir }) {
     const pendientes = ahora && formInicial ? Object.entries(ahora).filter(([k, v]) => formInicial[k] !== v) : [];
     // `extra` son atributos escritos en este archivo: van sin escapar
     const campoTxt = (k, t, extra = '') => html`<label class="campo"><span>${t}</span><input name="${k}" value="${p[k] ?? ''}" ${crudo(extra)}></label>`;
+    // El correo no es type="email": el navegador bloquearía guardar toda la ficha por un correo viejo que nadie tocó.
+    // Lo valida el servidor (422 «Correo no válido»); inputmode deja el teclado de correo en el celular
+    const attrCorreo = 'inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false"';
     const sel = (k, t, ops) => html`<label class="campo"><span>${t}</span><select name="${k}">${ops.map(([v, tx]) => html`<option value="${v}" ${String(p[k] ?? '') === String(v) ? 'selected' : ''}>${tx}</option>`)}</select></label>`;
     const campos = cat.campos.filter((c) => c.activo);
     const grupos = { necesidad: 'Necesidades', interes: 'Grupo poblacional e intereses', rol: 'Rol en la comunidad' };
@@ -83,7 +86,7 @@ export async function vistaFicha(el, { params, ir }) {
                 ${campoTxt('fecha_nacimiento', 'Fecha de nacimiento', 'type="date"')}
                 ${campoTxt('telefono', 'Celular', 'inputmode="tel"')}
                 ${campoTxt('telefono2', 'Otro teléfono', 'inputmode="tel"')}
-                ${campoTxt('correo', 'Correo', 'type="email"')}
+                ${campoTxt('correo', 'Correo', attrCorreo)}
                 <label class="campo ancho"><span>Dirección</span><input name="direccion" value="${p.direccion ?? ''}"></label>
                 <label class="campo"><span>Barrio / vereda</span><select name="lugar_id">${opcionesLugares(cat, p.lugar_id)}</select></label>
                 ${campoTxt('ocupacion', 'Ocupación')}
@@ -163,6 +166,16 @@ export async function vistaFicha(el, { params, ir }) {
         </div>
       </div>`);
     formInicial = leerForm();
+    // Un dato guardado que su campo no puede mostrar (una fecha que no existe, como 1985-02-30) se ve vacío: se dice
+    // cuál es. Al guardar otros cambios no se borra, porque solo se envía lo que el usuario cambió
+    for (const x of $$('#f-datos input', el)) {
+      const guardado = x.getAttribute('value');
+      if (!guardado || x.value) continue;
+      const n = document.createElement('small');
+      n.className = 'nota';
+      n.textContent = `Valor guardado: ${guardado}, que no es válido. Se conserva mientras no cambie este campo.`;
+      x.after(n);
+    }
     if (pendientes.length) {
       const f = $('#f-datos', el);
       for (const [k, v] of pendientes) {
@@ -235,8 +248,13 @@ export async function vistaFicha(el, { params, ir }) {
     }
     if (e.target.id !== 'f-datos') return;
     const d = datosForm(e.target);
+    // Solo va lo que cambió frente a lo que se pintó (`formInicial`), no frente a `p`: si el navegador vació un valor que
+    // no puede mostrar (fecha imposible, número con letras, opción que ya no existe) y nadie lo tocó, no se borra
+    const ahora = leerForm();
+    const tocado = (k) => !formInicial || ahora[k] !== formInicial[k];
     const cuerpo = { extra: {} };
     for (const [k, v] of Object.entries(d)) {
+      if (!tocado(k)) continue;
       if (k.startsWith('extra.')) { cuerpo.extra[k.slice(6)] = v; continue; }
       const antes = k === 'lugar_id' ? p.lugar_id : p[k];
       const val = k === 'lugar_id' ? (v ? Number(v) : null) : k === 'lider' ? v : v;

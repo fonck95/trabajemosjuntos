@@ -15,7 +15,7 @@ from pymongo.database import Database
 
 from .. import db as bd
 from ..seguridad import Admin, obtener_db, requiere_admin
-from .personas import mapa_lugares
+from .personas import fecha_iso, mapa_lugares
 
 r = APIRouter(prefix="/api/reuniones", tags=["reuniones"])
 
@@ -35,9 +35,7 @@ class ReunionIn(BaseModel):
     @field_validator("fecha")
     @classmethod
     def _f(cls, v):
-        if v is not None and not re.match(r"^\d{4}-\d{2}-\d{2}$", v):
-            raise ValueError("Use el formato AAAA-MM-DD")
-        return v
+        return fecha_iso(v)  # vacía la rechazan crear y editar («necesita título y fecha»)
 
     @field_validator("titulo")
     @classmethod

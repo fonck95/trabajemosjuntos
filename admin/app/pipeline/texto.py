@@ -116,7 +116,8 @@ def telefonos(s: object) -> list[str]:
     return salida
 
 
-_CORREO = re.compile(r"^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$")
+# Dominio por etiquetas: sin «..», sin punto al inicio o al final y sin etiquetas que empiecen o terminen en guion
+_CORREO = re.compile(r"^[a-z0-9._%+\-]+@(?:[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$")
 _ARREGLOS_DOMINIO = {
     "gmail.comk": "gmail.com", "gmail.co": "gmail.com", "gmial.com": "gmail.com", "gmai.com": "gmail.com",
     "gmail.con": "gmail.com", "gamil.com": "gmail.com", "hotmail.con": "hotmail.com", "hotmal.com": "hotmail.com",
