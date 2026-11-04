@@ -42,17 +42,20 @@ class LoginIn(BaseModel):
 
 
 def datos_sesion(cfg, s: dict, csrf: str | None = None, u: dict | None = None, ajustes: dict | None = None) -> dict:
-    """Lo que devuelven /api/login y /api/yo: quién es, su rol y permisos, el CSRF y lo que tiene pendiente."""
+    """Lo que devuelven /api/login y /api/yo: quién es, su rol y permisos (con `excepto`, lo que el coordinador no
+    tiene aunque tenga «*»), el CSRF y lo que tiene pendiente."""
     expira = s["expira"].isoformat() if isinstance(s.get("expira"), datetime) else s.get("expira")
     if u is None:
         q = acceso.quien_admin(cfg)
         return {"uid": 0, "usuario": q.usuario, "nombre": q.nombre, "rol": "admin", "permisos": sorted(q.permisos),
-                "csrf": csrf or s["csrf"], "expira": expira, "debe_cambiar_clave": False,
+                "excepto": acceso.excepto("admin"), "csrf": csrf or s["csrf"], "expira": expira,
+                "debe_cambiar_clave": False,
                 "compromiso_pendiente": False, "compromiso": None}
     aj = ajustes or {}
     vigente = aj.get("compromiso_version")
     return {"uid": u["_id"], "usuario": u["usuario"], "nombre": u.get("nombre"), "rol": u["rol"],
-            "permisos": sorted(acceso.PERMISOS.get(u["rol"], ())), "csrf": csrf or s["csrf"], "expira": expira,
+            "permisos": sorted(acceso.PERMISOS.get(u["rol"], ())), "excepto": acceso.excepto(u["rol"]),
+            "csrf": csrf or s["csrf"], "expira": expira,
             "debe_cambiar_clave": bool(u.get("debe_cambiar_clave")),
             "compromiso_pendiente": u.get("compromiso_version") != vigente,
             "compromiso": {"version": vigente, "puntos": acceso.texto_compromiso(vigente),
@@ -415,10 +418,10 @@ def _coincide(request: Request, etag: str) -> bool:
 def catalogos(request: Request, response: Response, db: Database = Depends(obtener_db),
               quien: Quien = Depends(requiere("catalogos.ver"))):
     """Catálogos del rol, con `ETag`: el navegador los guarda durante la sesión y los revalida con If-None-Match. Para P
-    y C la etiqueta es la versión de los catálogos (304 sin calcular nada); para A, que recibe conteos de uso, es el
-    resumen de la respuesta."""
+    y C la etiqueta es la versión de los catálogos (304 sin calcular nada); para A y K, que reciben los catálogos
+    completos con conteos de uso, es el resumen de la respuesta."""
     aj = modelo.leer_ajustes(db)
-    if quien.es_admin:
+    if quien.administra:
         cuerpo = _catalogos_admin(db, aj)
         resumen = hashlib.sha256(json.dumps(cuerpo, sort_keys=True, default=str).encode()).hexdigest()[:16]
         etag = f'W/"admin-{resumen}"'
@@ -460,6 +463,12 @@ def crear_campo(body: CampoIn, db: Database = Depends(obtener_db), adm: Quien = 
 @r.patch("/campos/{cid}")
 def editar_campo(cid: int, body: CampoIn, db: Database = Depends(obtener_db), adm: Quien = Depends(requiere("admin"))):
     datos = body.model_dump(exclude_unset=True)
+    # Marcar o desmarcar un campo como sensible decide qué roles lo ven: es un permiso, solo de A (adenda 1)
+    if "sensible" in datos and not adm.puede("permisos.modificar"):
+        actual = db.campos.find_one({"_id": cid}, {"sensible": 1})
+        if actual is not None and bool(datos["sensible"]) != bool(actual.get("sensible")):
+            raise HTTPException(403, {**acceso.SIN_PERMISO, "campos": ["sensible"],
+                                      "mensaje": "Solo el administrador cambia qué campos son sensibles"})
     if datos:
         db.campos.update_one({"_id": cid}, {"$set": datos})
         subir_version_catalogos(db)

@@ -1,10 +1,9 @@
 // Arranque del panel: sesión, menú lateral según el rol y enrutado en el navegador.
-import { api, borrarBorrador, configurar, ErrorApi, olvidarCatalogos, puede, sesion } from './api.js';
+import { api, borrarBorrador, configurar, ErrorApi, nombreRol, olvidarCatalogos, puede, sesion } from './api.js';
 import { $, aviso, html, icono, montar } from './ui.js';
 import { dialogoIngreso, vistaLogin } from './vistas/login.js';
 import { sinBase, url } from './base.js';
 import { olvidarLlamada, revisarLlamadasPendientes } from './llamadas.js';
-import { NOMBRES_ROL } from './modelo.js';
 
 // Cada ruta lleva el permiso que pide (la interfaz solo oculta: el servidor decide)
 const RUTAS = [
@@ -22,7 +21,8 @@ const RUTAS = [
   { re: /^\/usuarios\/(\d+)$/, nav: 'usuarios', permiso: 'usuarios.gestionar', carga: () => import('./vistas/usuarios.js').then((m) => m.vistaUsuario) },
   { re: /^\/cuenta$/, nav: 'cuenta', permiso: 'cuenta', carga: () => import('./vistas/cuenta.js').then((m) => m.vistaCuenta) },
 ];
-// [clave, texto, ruta, permiso]: el menú muestra solo lo que el rol puede abrir, en este orden
+// [clave, texto, ruta, permiso]: el menú muestra solo lo que el rol puede abrir, en este orden. El coordinador ve el
+// mismo menú que el administrador; lo que no puede (coordinadores, roles, ajustes de permisos) se oculta en cada vista
 const NAV = [
   ['panel', 'Panel', '/', 'tablero.ver'], ['mapa', 'Mapa 3D', '/mapa', 'mapa.ver'],
   ['personas', 'Habitantes', '/personas', 'personas.listar'], ['trabajo', 'Mi trabajo', '/trabajo', 'trabajo.ver'],
@@ -56,7 +56,7 @@ function cargarEstilos() {
   document.head.append(l);
 }
 
-/** Inicio según el rol: el panel para el administrador, «Mi trabajo» para planilleros y consultores. */
+/** Inicio según el rol: el panel para el administrador y el coordinador, «Mi trabajo» para planilleros y consultores. */
 const inicio = () => (puede('tablero.ver') ? '/' : '/trabajo');
 const conPendientes = () => sesion.debeCambiarClave || sesion.compromisoPendiente;
 
@@ -86,7 +86,7 @@ function armarEstructura() {
       <div class="velo" id="velo"></div>
       <main class="contenido" id="vista" tabindex="-1"></main>
     </div>`);
-  $('#usuario').textContent = `${sesion.nombre || sesion.usuario} · ${NOMBRES_ROL[sesion.rol] || sesion.rol}`;
+  $('#usuario').textContent = `${sesion.nombre || sesion.usuario} · ${nombreRol(sesion.rol)}`;
   $('#salir').onclick = async () => {
     try { await api.post('/api/logout'); } catch { /* ya cerrada */ }
     olvidar();
@@ -211,9 +211,10 @@ window.addEventListener('unhandledrejection', (e) => {
   if (avisarError(e.reason)) e.preventDefault();
 });
 
-// Lo que devuelven /api/yo y /api/login: usuario, csrf y, con usuarios, uid, rol, permisos, nombre y pendientes
+// Lo que devuelven /api/yo y /api/login: usuario, csrf y, con usuarios, uid, rol, permisos (y sus excepciones),
+// nombre y pendientes
 const datosSesion = (d) => ({
-  token: d.csrf, usuario: d.usuario, uid: d.uid, rol: d.rol, permisos: d.permisos, nombre: d.nombre,
+  token: d.csrf, usuario: d.usuario, uid: d.uid, rol: d.rol, permisos: d.permisos, excepto: d.excepto, nombre: d.nombre,
   debe_cambiar_clave: d.debe_cambiar_clave, compromiso_pendiente: d.compromiso_pendiente,
 });
 

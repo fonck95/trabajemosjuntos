@@ -1,13 +1,18 @@
-"""Usuarios del panel: alta, roles, claves, sesiones, desbloqueo y asignación (solo el administrador), la cuenta
-propia (cambio de clave, compromiso de confidencialidad e indicadores) e indicadores por usuario (5.1) y por zona (5.3).
+"""Usuarios del panel: alta, roles, claves, sesiones, desbloqueo y asignación, la cuenta propia (cambio de clave,
+compromiso de confidencialidad e indicadores) e indicadores por usuario (5.1) y por zona (5.3).
 
+* Gestionan usuarios el administrador (A) y el coordinador (K). K crea planilleros y consultores, edita su nombre y
+  asignación, los desactiva, reactiva, desbloquea y les restablece la clave, y ve a todos con sus indicadores; no crea
+  coordinadores, no toca la cuenta de otro coordinador y no cambia roles (403 `permiso`). Eso es solo de A.
+* Los coordinadores no tienen asignación: como A, trabajan sobre toda la base.
 * Los usuarios nunca se borran: se desactivan. Desactivar, cambiar el rol, restablecer la clave y «Cerrar sesiones»
   suben su `version`, y sus sesiones caen en la petición siguiente.
 * La clave temporal se muestra una sola vez (en la respuesta del alta o del restablecimiento), vence a las 72 h y no
   va a la auditoría ni a ningún GET.
 * Los indicadores de varios usuarios se calculan con un `$group` por usuario, no con una consulta por usuario:
   planilleros sobre `auditoria` (lo suyo y lo que capturaron en planillas), consultores sobre `acercamientos` (sin los
-  anulados; los anonimizados por una supresión se siguen contando) y fichas vistas sobre `lecturas`.
+  anulados; los anonimizados por una supresión se siguen contando) y fichas vistas sobre `lecturas`. El bloque
+  `administracion` (importaciones, exportaciones, uniones, supresiones y usuarios creados) sale de `auditoria`.
 """
 from __future__ import annotations
 
@@ -31,6 +36,10 @@ r = APIRouter(prefix="/api", tags=["usuarios"])
 GESTIONAR = requiere("usuarios.gestionar")
 CUENTA = requiere("cuenta")
 AGRUPAR = {"dia": "%Y-%m-%d", "semana": "%G-S%V", "mes": "%Y-%m"}
+# Trabajo de administración que cuenta en los indicadores (el de A y K): acción de la auditoría → indicador
+ACCIONES_ADMINISTRACION = {"importar": "importaciones", "exportar": "exportaciones",
+                           "exportar_asistentes": "exportaciones", "fusionar": "uniones", "suprimir": "supresiones",
+                           "crear_usuario": "usuarios_creados"}
 
 
 # ───────────────────────────── Periodo ─────────────────────────────
@@ -79,6 +88,10 @@ def _vacio_consultor() -> dict:
             "cedulas_dictadas": 0, "fuera_de_horario": 0}
 
 
+def _vacio_administracion() -> dict:
+    return {k: 0 for k in dict.fromkeys(ACCIONES_ADMINISTRACION.values())}
+
+
 def _base_auditoria(uids: list[int], ts_desde: str, ts_hasta: str) -> list[dict]:
     """Entradas sobre personas del periodo, atribuidas a quien capturó la planilla o, si no hay, a quien actuó."""
     return [
@@ -99,9 +112,11 @@ def _base_acercamientos(uids: list[int], ts_desde: str, ts_hasta: str) -> dict:
 
 
 def indicadores(db: Database, uids: list[int], d: date, h: date, ts_desde: str, ts_hasta: str) -> dict[int, dict]:
-    """Indicadores del periodo de cada usuario de `uids`: `{uid: {planillero: {...}, consultor: {...}}}`."""
+    """Indicadores del periodo de cada usuario de `uids`: `{uid: {planillero: {...}, consultor: {...},
+    administracion: {...}}}`."""
     uids = list(dict.fromkeys(uids))
-    out = {u: {"planillero": _vacio_planillero(), "consultor": _vacio_consultor()} for u in uids}
+    out = {u: {"planillero": _vacio_planillero(), "consultor": _vacio_consultor(),
+               "administracion": _vacio_administracion()} for u in uids}
     if not uids:
         return out
     edicion = list(modelo.ACCIONES_EDICION)
@@ -197,6 +212,14 @@ def indicadores(db: Database, uids: list[int], d: date, h: date, ts_desde: str, 
             if isinstance(k, str):
                 d_ = out[x["_id"]["u"]]["consultor"][clave]
                 d_[k] = d_.get(k, 0) + x["n"]
+    # Importó, exportó, unió, suprimió o creó usuarios (lo de A y K; los demás quedan en cero)
+    for x in db.auditoria.aggregate([
+            {"$match": {"uid": {"$in": uids}, "accion": {"$in": list(ACCIONES_ADMINISTRACION)},
+                        "ts": {"$gte": ts_desde, "$lt": ts_hasta}}},
+            {"$group": {"_id": {"u": "$uid", "a": "$accion"}, "n": {"$sum": 1}}}]):
+        a = out[x["_id"]["u"]]["administracion"]
+        clave = ACCIONES_ADMINISTRACION[x["_id"]["a"]]
+        a[clave] += x["n"]
     return out
 
 
@@ -253,17 +276,30 @@ class Asignacion(BaseModel):
 class UsuarioNuevo(BaseModel):
     usuario: str = Field(..., min_length=3, max_length=40)
     nombre: str = Field(..., min_length=3, max_length=80)
-    rol: Literal["planillero", "consultor"]
+    rol: Literal["coordinador", "planillero", "consultor"]
     telefono: str | None = Field(None, max_length=30)
     asignacion: Asignacion | None = None
 
 
 class UsuarioCambio(BaseModel):
     nombre: str | None = Field(None, min_length=3, max_length=80)
-    rol: Literal["planillero", "consultor"] | None = None
+    rol: Literal["coordinador", "planillero", "consultor"] | None = None
     activo: bool | None = None
     telefono: str | None = Field(None, max_length=30)
     asignacion: Asignacion | None = None
+
+
+def _exigir_sobre(adm: Quien, rol: str | None) -> None:
+    """403 si `adm` no puede crear ni tocar la cuenta de un usuario con ese `rol`: los coordinadores (y cualquier rol
+    que no sea de campo: falla cerrada) solo los gestiona A."""
+    if rol not in acceso.ROLES_CAMPO and not adm.puede("usuarios.coordinadores"):
+        raise HTTPException(403, {**acceso.SIN_PERMISO,
+                                  "mensaje": "Solo el administrador gestiona a los coordinadores"})
+
+
+def _sin_asignacion(rol: str | None, asignacion: dict) -> None:
+    if rol in acceso.ROLES_ADMIN and (asignacion["lugares"] or asignacion["areas"]):
+        raise HTTPException(422, "Un coordinador no tiene asignación: trabaja sobre toda la base")
 
 
 def _reservado(cfg, usuario: str) -> bool:
@@ -304,7 +340,7 @@ def _estado(db: Database, usuarios: list[dict]) -> dict:
 
 
 def _fila(u: dict, est: dict, ind: dict | None = None) -> dict:
-    """Lo que A ve de un usuario: nunca la clave ni su hash."""
+    """Lo que A y K ven de un usuario: nunca la clave ni su hash."""
     vencida = acceso.clave_vencida(u)
     alertas = []
     if u["_id"] in est["bloqueados"]:
@@ -360,6 +396,7 @@ def listar(desde: str | None = None, hasta: str | None = None, db: Database = De
 
 @r.post("/usuarios", status_code=201)
 def crear(body: UsuarioNuevo, request: Request, db: Database = Depends(obtener_db), adm: Quien = Depends(GESTIONAR)):
+    _exigir_sobre(adm, body.rol)
     usuario = body.usuario.strip().lower()
     if not acceso.USUARIO_VALIDO.fullmatch(usuario):
         raise HTTPException(422, "El usuario lleva de 3 a 40 letras sin tildes, números, punto, guion o guion bajo")
@@ -368,6 +405,7 @@ def crear(body: UsuarioNuevo, request: Request, db: Database = Depends(obtener_d
     if db.usuarios.find_one({"usuario": usuario}, {"_id": 1}):
         raise HTTPException(409, "Ya existe un usuario con ese nombre")
     asignacion = _asignacion(db, body.asignacion)
+    _sin_asignacion(body.rol, asignacion)
     temporal, vence = acceso.clave_temporal(), acceso.vence_temporal()
     clave = acceso.hashear_clave(temporal)
     uid, ahora = bd.siguiente_id(db, "usuarios"), bd.ahora()
@@ -394,6 +432,7 @@ def indicadores_todos(desde: str | None = None, hasta: str | None = None, db: Da
               "activo": bool(u.get("activo")), **ind[u["_id"]]} for u in usuarios]
     suma = lambda f: sum(f(x) for x in filas)  # noqa: E731
     totales = {
+        "coordinadores_activos": sum(1 for u in usuarios if u.get("activo") and u.get("rol") == "coordinador"),
         "planilleros_activos": sum(1 for u in usuarios if u.get("activo") and u.get("rol") == "planillero"),
         "consultores_activos": sum(1 for u in usuarios if u.get("activo") and u.get("rol") == "consultor"),
         "creadas": suma(lambda x: x["planillero"]["creadas"]),
@@ -467,10 +506,16 @@ def ver(uid: int, db: Database = Depends(obtener_db), _: Quien = Depends(GESTION
 def editar(uid: int, body: UsuarioCambio, request: Request, db: Database = Depends(obtener_db),
            adm: Quien = Depends(GESTIONAR)):
     datos = body.model_dump(exclude_unset=True)
+    if "rol" in datos and not adm.puede("usuarios.roles"):  # el rol se fija al crear; cambiarlo es solo de A
+        raise HTTPException(403, {**acceso.SIN_PERMISO, "mensaje": "Solo el administrador cambia el rol de un usuario"})
     for k in ("nombre", "rol", "activo"):
         if k in datos and datos[k] is None:
             raise HTTPException(422, f"{k}: no puede quedar vacío")
     u = _usuario(db, uid)
+    _exigir_sobre(adm, u.get("rol"))
+    if "rol" in datos:
+        _exigir_sobre(adm, datos["rol"])
+    rol = datos.get("rol") or u.get("rol")
     cambios: dict = {}
     if "nombre" in datos and " ".join(datos["nombre"].split()) != u.get("nombre"):
         cambios["nombre"] = " ".join(datos["nombre"].split())
@@ -482,11 +527,15 @@ def editar(uid: int, body: UsuarioCambio, request: Request, db: Database = Depen
         cambios["activo"] = datos["activo"]
     if "telefono" in datos and _telefono(datos["telefono"]) != u.get("telefono"):
         cambios["telefono"] = _telefono(datos["telefono"])
+    antes = {"lugares": list((u.get("asignacion") or {}).get("lugares") or []),
+             "areas": list((u.get("asignacion") or {}).get("areas") or [])}
     if "asignacion" in datos:
         a = _asignacion(db, body.asignacion)
-        if a != {"lugares": list((u.get("asignacion") or {}).get("lugares") or []),
-                 "areas": list((u.get("asignacion") or {}).get("areas") or [])}:
+        _sin_asignacion(rol, a)
+        if a != antes:
             cambios["asignacion"] = a
+    elif rol in acceso.ROLES_ADMIN and (antes["lugares"] or antes["areas"]):
+        cambios["asignacion"] = {"lugares": [], "areas": []}  # al pasar a coordinador deja la asignación
     if not cambios:
         return _detalle(db, u)
     cierra = "rol" in cambios or "activo" in cambios
@@ -505,7 +554,7 @@ def editar(uid: int, body: UsuarioCambio, request: Request, db: Database = Depen
 
 @r.post("/usuarios/{uid}/clave")
 def restablecer_clave(uid: int, db: Database = Depends(obtener_db), adm: Quien = Depends(GESTIONAR)):
-    _usuario(db, uid)
+    _exigir_sobre(adm, _usuario(db, uid).get("rol"))
     temporal, vence = acceso.clave_temporal(), acceso.vence_temporal()
     db.usuarios.update_one({"_id": uid}, {"$set": {"clave": acceso.hashear_clave(temporal), "debe_cambiar_clave": True,
                                                    "clave_temporal_vence": vence, "actualizado_en": bd.ahora()},
@@ -517,7 +566,7 @@ def restablecer_clave(uid: int, db: Database = Depends(obtener_db), adm: Quien =
 
 @r.delete("/usuarios/{uid}/sesiones")
 def cerrar_sesiones(uid: int, db: Database = Depends(obtener_db), adm: Quien = Depends(GESTIONAR)):
-    _usuario(db, uid)
+    _exigir_sobre(adm, _usuario(db, uid).get("rol"))
     n = acceso.cerrar_sesiones(db, uid)
     bd.auditar(db, adm, "cerrar_sesiones", "usuario", uid, {"cerradas": n})
     return {"cerradas": n}
@@ -526,6 +575,7 @@ def cerrar_sesiones(uid: int, db: Database = Depends(obtener_db), adm: Quien = D
 @r.delete("/usuarios/{uid}/bloqueo")
 def desbloquear(uid: int, db: Database = Depends(obtener_db), adm: Quien = Depends(GESTIONAR)):
     u = _usuario(db, uid)
+    _exigir_sobre(adm, u.get("rol"))
     n = db.intentos.delete_many({"nombre_h": acceso.nombre_h(db, u.get("usuario")), "ok": False}).deleted_count
     bd.auditar(db, adm, "desbloquear", "usuario", uid, {"fallos": n})
     return {"ok": True}

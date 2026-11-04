@@ -1,7 +1,7 @@
 """Autenticación, sesiones, CSRF, límite de intentos y cabeceras de seguridad.
 
 * El administrador entra con las variables de entorno `ADMIN` y `password` (se comparan en tiempo constante); los
-  planilleros y consultores, con su usuario de la colección `usuarios` (ver app/acceso.py).
+  coordinadores, planilleros y consultores, con su usuario de la colección `usuarios` (ver app/acceso.py).
 * La sesión es un token aleatorio en una cookie HttpOnly + SameSite=Strict (Secure en producción); en MongoDB
   solo se guarda su hash SHA-256, y la sesión caduca sola (índice TTL).
 * Cada sesión guarda una huella: la del administrador sale de ADMIN y password; la de un usuario, además, de su `_id`
@@ -57,7 +57,9 @@ LIMITE_JSON = 256 * 1024  # el JSON más grande del panel (una ficha o una reuni
 RUTAS_SIN_SESION = {"/api/login", "/api/yo"}
 # Con la clave temporal sin cambiar o el compromiso sin aceptar, un usuario solo llega a estas rutas (3.5)
 RUTAS_DE_CUENTA = {"/api/yo", "/api/yo/clave", "/api/yo/compromiso", "/api/logout"}
-ROLES_USUARIO = ("planillero", "consultor")  # los que viven en la colección `usuarios`
+ROLES_USUARIO = ("coordinador", "planillero", "consultor")  # los que viven en la colección `usuarios`
+# Los que administran (adenda 1): A y el coordinador manejan los datos sin recorte, presupuesto ni límite de frecuencia
+ROLES_ADMIN = frozenset({"admin", "coordinador"})
 SIN_PERMISO = {"mensaje": "Su rol no permite esta acción", "codigo": "permiso"}
 ACTIVIDAD_S = 60  # `ultima_actividad` de una sesión de usuario se escribe como mucho cada minuto
 USUARIO_DESCONOCIDO = "desconocido"  # en la auditoría de un ingreso fallido con otro usuario
@@ -323,19 +325,20 @@ def sesion_actual(db: Database, request: Request) -> dict | None:
 
 
 def rechazo_de_cuenta(s: dict, ruta: str, db: Database | None = None) -> dict | None:
-    """Por qué la sesión `s` no puede usar `ruta` (3.5), o None. Solo aplica a P y C: importar es del administrador, y
-    con la clave temporal sin cambiar o el compromiso vigente sin aceptar solo se llega a `RUTAS_DE_CUENTA`. Sin
-    `_usuario` en la sesión, lo lee de `db`."""
+    """Por qué la sesión `s` no puede usar `ruta` (3.5), o None. Aplica a los usuarios de la base (coordinador,
+    planillero y consultor): importar es del administrador y del coordinador, y con la clave temporal sin cambiar o el
+    compromiso vigente sin aceptar solo se llega a `RUTAS_DE_CUENTA`. Sin `_usuario` en la sesión, lo lee de `db`; si
+    no hay cómo saber el rol, importar se rechaza (falla cerrada)."""
     if s.get("uid") in (None, 0):
         return None
-    if ruta == "/api/importar":
+    u = s.get("_usuario")
+    if u is None and db is not None and ruta not in RUTAS_DE_CUENTA:
+        u = db.usuarios.find_one({"_id": s["uid"]}, {"rol": 1, "debe_cambiar_clave": 1, "compromiso_version": 1})
+    u = u or {}
+    if ruta == "/api/importar" and u.get("rol") not in ROLES_ADMIN:
         return dict(SIN_PERMISO)
     if ruta in RUTAS_DE_CUENTA:
         return None
-    u = s.get("_usuario")
-    if u is None and db is not None:
-        u = db.usuarios.find_one({"_id": s["uid"]}, {"debe_cambiar_clave": 1, "compromiso_version": 1})
-    u = u or {}
     if u.get("debe_cambiar_clave"):
         return {"mensaje": "Cambie su clave temporal para continuar", "codigo": "cambiar_clave"}
     aj = s.get("_ajustes") or (modelo.leer_ajustes(db) if db is not None else {})
@@ -465,8 +468,8 @@ class GuardiaApi:
     * Mientras MongoDB no está listo o el `Cortacircuitos` está en pausa, /api/* y /salud responden 503 al instante.
     * Rechaza sin sesión válida toda ruta /api/*, salvo /api/login y /api/yo. El CSRF, el rol y los permisos siguen
       en `acceso.requiere`, que recibe la sesión en scope["state"].
-    * A un planillero o consultor con la clave temporal o el compromiso pendientes solo lo deja llegar a su cuenta, y
-      le rechaza /api/importar sin leer la subida.
+    * A un usuario de la base con la clave temporal o el compromiso pendientes solo lo deja llegar a su cuenta, y a
+      planilleros y consultores les rechaza /api/importar sin leer la subida.
     Va por fuera del manejador de excepciones de FastAPI: los fallos de conexión de su propia consulta se atrapan
     aquí."""
 

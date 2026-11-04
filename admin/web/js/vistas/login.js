@@ -1,5 +1,5 @@
-// Ingreso al panel (administrador, planilleros y consultores), con un campo de puntos animado de fondo (la población
-// que se va a mapear), y el diálogo de reingreso cuando la sesión vence con algo escrito.
+// Ingreso al panel (administrador, coordinadores, planilleros y consultores), con un campo de puntos animado de
+// fondo (la población que se va a mapear), y el diálogo de reingreso cuando la sesión vence con algo escrito.
 import { api } from '../api.js';
 import { $, dialogo, html, montar } from '../ui.js';
 

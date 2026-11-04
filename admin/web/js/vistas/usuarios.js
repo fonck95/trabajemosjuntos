@@ -1,11 +1,18 @@
-// Usuarios (7.8, solo el administrador): planilleros y consultores, sus indicadores, alertas, acciones y asignación;
-// el avance por zona y el detalle de cada usuario. `pintarIndicadores` lo usan también «Mi cuenta» y «Mi trabajo».
-import { api, ErrorApi } from '../api.js';
+// Usuarios (7.8, administrador y coordinador): coordinadores, planilleros y consultores, sus indicadores, alertas,
+// acciones y asignación; el avance por zona y el detalle de cada usuario. El coordinador ve a todos, pero solo crea y
+// gestiona planilleros y consultores, y no cambia roles: esas acciones no se le muestran (y el servidor las rechaza).
+// `pintarIndicadores` lo usan también «Mi cuenta» y «Mi trabajo».
+import { api, ErrorApi, nombreRol, puede } from '../api.js';
 import { url } from '../base.js';
-import { CANALES, ETIQUETAS_CAMPOS, NOMBRES_ROL, RESULTADOS } from '../modelo.js';
+import { CANALES, ETIQUETAS_CAMPOS, RESULTADOS } from '../modelo.js';
 import { $, aviso, avisoError, confirmar, dialogo, fecha, html, montar, num, titulo } from '../ui.js';
 
-const ROLES = { planillero: 'Planillero', consultor: 'Consultor' };
+const ROLES = { coordinador: 'Coordinador', planillero: 'Planillero', consultor: 'Consultor' };
+const DE_CAMPO = ['planillero', 'consultor'];
+// Los coordinadores solo los crea y gestiona el administrador (como en el servidor: cualquier otro rol, también)
+const gestionable = (u) => DE_CAMPO.includes(u.rol) || puede('usuarios.coordinadores');
+const rolesQueCrea = () => Object.entries(ROLES).filter(([k]) => DE_CAMPO.includes(k) || puede('usuarios.coordinadores'));
+const rolHtml = (rol) => html`<span class="chip rol rol-${rol}">${nombreRol(rol)}</span>`;
 const ALERTAS = {
   bloqueo: ['Bloqueo', 'ambar', 'Tiene 5 o más ingresos fallidos en los últimos 15 minutos: su red puede estar bloqueada. «Desbloquear» los borra.'],
   volumen: ['Volumen', 'rojo', 'Hoy llegó al tope de personas consultadas.'],
@@ -68,8 +75,10 @@ export function pintarIndicadores(c, ind, { rol = ind.rol } = {}) {
   const p = ind.planillero || {};
   const k = ind.consultor || {};
   const comp = Object.entries(p.completados || {}).filter(([, n]) => n);
+  const adm = ind.administracion || {};
   const conPlanillero = rol !== 'consultor';
   const conConsultor = rol === 'consultor' || (k.acercamientos || 0) > 0;
+  const conAdministracion = rol === 'coordinador' || rol === 'admin' || Object.values(adm).some((n) => n > 0);
   const barras = (obj, etiquetas) => {
     const filas = Object.entries(obj || {}).filter(([, n]) => n).sort((a, b) => b[1] - a[1]);
     const max = Math.max(1, ...filas.map(([, n]) => n));
@@ -79,6 +88,13 @@ export function pintarIndicadores(c, ind, { rol = ind.rol } = {}) {
   const serie = ind.serie || [];
   montar(c, html`
     <p class="sec">Del ${fecha(ind.desde)} al ${fecha(ind.hasta)}.</p>
+    ${conAdministracion ? html`<div class="kpis kpis-administracion">
+      ${kpi('Importaciones', num(adm.importaciones), '', 'Importaciones de Excel que hizo.')}
+      ${kpi('Exportaciones', num(adm.exportaciones), '', 'Exportaciones de la base y de listas de asistentes.')}
+      ${kpi('Uniones', num(adm.uniones), '', 'Fichas duplicadas que unió.')}
+      ${kpi('Supresiones', num(adm.supresiones), '', 'Personas que suprimió a pedido del titular.')}
+      ${kpi('Usuarios creados', num(adm.usuarios_creados), '', 'Planilleros, consultores o coordinadores que creó.')}
+    </div>` : ''}
     ${conPlanillero ? html`<div class="kpis">
       ${kpi('Creadas', num(p.creadas), `${num(p.creadas_netas)} netas · ${num(p.creadas_por_planilla)} de planillas`, EXPLICA.creadas)}
       ${kpi('Actualizadas', num(p.actualizadas), `${num(p.correcciones)} correcciones`, EXPLICA.actualizadas)}
@@ -174,9 +190,10 @@ async function dialogoUsuario(u = null) {
       cuerpo: html`<form class="form" id="f-usuario" novalidate>
         ${u ? '' : html`<label class="campo"><span>Usuario *</span><input name="usuario" required minlength="3" maxlength="40" autocapitalize="none" spellcheck="false" placeholder="ana.perez"></label>`}
         <label class="campo"><span>Nombre completo *</span><input name="nombre" required minlength="3" maxlength="80" value="${u?.nombre || ''}"></label>
-        ${u ? '' : html`<label class="campo"><span>Rol *</span><select name="rol">${Object.entries(ROLES).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select></label>`}
+        ${u ? '' : html`<label class="campo"><span>Rol *</span><select name="rol">${rolesQueCrea().map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select></label>`}
         <label class="campo"><span>Teléfono de contacto</span><input name="telefono" maxlength="30" inputmode="tel" value="${u?.telefono || ''}"></label>
         ${asignacionHtml(cat, areas, u?.asignacion)}
+        <p class="sec ancho" data-sin-asignacion hidden>Los coordinadores no tienen asignación: trabajan sobre toda la base, como el administrador.</p>
         <div class="error ancho" role="alert"></div>
       </form>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" type="submit" form="f-usuario">${u ? 'Guardar' : 'Crear usuario'}</button>`,
@@ -184,12 +201,20 @@ async function dialogoUsuario(u = null) {
     enlazarFiltroLugares(el);
     listo.then((v) => resolver(!!v));
     const f = el.querySelector('#f-usuario');
+    // Un coordinador no lleva asignación: se oculta y no se envía
+    const coordinador = () => (u ? u.rol : f.rol.value) === 'coordinador';
+    const verAsignacion = () => {
+      f.querySelector('.asignacion').hidden = coordinador();
+      f.querySelector('[data-sin-asignacion]').hidden = !coordinador();
+    };
+    f.rol?.addEventListener('change', verAsignacion);
+    verAsignacion();
     f.addEventListener('submit', async (e) => {
       e.preventDefault();
       const boton = el.querySelector('button[type=submit]');
       const error = f.querySelector('.error');
       error.textContent = '';
-      const asignacion = { lugares: marcados(f, 'lugares'), areas: marcados(f, 'areas') };
+      const asignacion = coordinador() ? { lugares: [], areas: [] } : { lugares: marcados(f, 'lugares'), areas: marcados(f, 'areas') };
       const cuerpo = { nombre: f.nombre.value.trim(), telefono: f.telefono.value.trim() || null, asignacion };
       boton.disabled = true;
       try {
@@ -225,8 +250,8 @@ async function accion(nombre, u) {
       return true;
     }
     if (nombre === 'rol') {
-      const nuevo = u.rol === 'planillero' ? 'consultor' : 'planillero';
-      if (!await confirmar(`¿Cambiar el rol de ${u.usuario} a ${ROLES[nuevo]}? Sus sesiones se cierran.`, { si: `Pasar a ${ROLES[nuevo]}` })) return false;
+      const nuevo = await elegirRol(u);
+      if (!nuevo) return false;
       await api.patch(`/api/usuarios/${u.id}`, { rol: nuevo });
       aviso('Rol cambiado');
       return true;
@@ -251,12 +276,26 @@ async function accion(nombre, u) {
   return false;
 }
 
+/** Cambio de rol (solo el administrador): elige el rol nuevo y avisa que sus sesiones se cierran. */
+function elegirRol(u) {
+  const otros = Object.entries(ROLES).filter(([k]) => k !== u.rol);
+  const { el, cerrar, listo } = dialogo({
+    titulo: `Cambiar el rol de ${u.usuario}`,
+    cuerpo: html`<form class="form" id="f-rol"><label class="campo ancho"><span>Rol nuevo</span><select name="rol">${otros.map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select></label>
+      <p class="sec ancho">Sus sesiones se cierran. Un coordinador tiene todos los permisos del administrador salvo gestionar coordinadores, cambiar roles y los ajustes de permisos; al pasar a coordinador deja su asignación.</p></form>`,
+    pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn oscuro" type="submit" form="f-rol">Cambiar rol</button>`,
+  });
+  el.querySelector('#f-rol').addEventListener('submit', (e) => { e.preventDefault(); cerrar(e.target.rol.value); });
+  return listo;
+}
+
 function botonesAccion(u) {
+  if (!gestionable(u)) return html`<p class="sec">Solo el administrador gestiona a los coordinadores.</p>`;
   return html`<div class="acciones-usuario">
     <button class="btn chico" data-accion="editar" data-id="${u.id}">Editar</button>
     <button class="btn chico" data-accion="${u.activo ? 'desactivar' : 'activar'}" data-id="${u.id}">${u.activo ? 'Desactivar' : 'Activar'}</button>
     <button class="btn chico" data-accion="clave" data-id="${u.id}">Restablecer clave</button>
-    <button class="btn chico" data-accion="rol" data-id="${u.id}" title="Pasar a ${u.rol === 'planillero' ? 'consultor' : 'planillero'}">Cambiar rol</button>
+    ${puede('usuarios.roles') ? html`<button class="btn chico" data-accion="rol" data-id="${u.id}">Cambiar rol</button>` : ''}
     <button class="btn chico" data-accion="sesiones" data-id="${u.id}">Cerrar sesiones</button>
     ${u.bloqueado ? html`<button class="btn chico" data-accion="desbloquear" data-id="${u.id}">Desbloquear</button>` : ''}
   </div>`;
@@ -289,11 +328,11 @@ export async function vistaUsuarios(el, { q }) {
     filas = lista;
     const t = ind.totales;
     montar(el, html`
-      <div class="cabecera"><div><h1>Usuarios</h1><div class="sub">Planilleros y consultores: su trabajo, sus alertas y su asignación. Los usuarios no se borran: se desactivan.</div></div>
+      <div class="cabecera"><div><h1>Usuarios</h1><div class="sub">Coordinadores, planilleros y consultores: su trabajo, sus alertas y su asignación. Los usuarios no se borran: se desactivan.</div></div>
         <div class="acciones"><button class="btn primario" id="nuevo">Nuevo usuario</button></div></div>
       ${periodoHtml(ind.desde, ind.hasta)}
       <div class="kpis">
-        ${kpi('Activos', num(t.planilleros_activos + t.consultores_activos), `${plural(t.planilleros_activos, 'planillero', 'planilleros')} · ${plural(t.consultores_activos, 'consultor', 'consultores')}`)}
+        ${kpi('Activos', num((t.coordinadores_activos || 0) + t.planilleros_activos + t.consultores_activos), `${t.coordinadores_activos ? `${plural(t.coordinadores_activos, 'coordinador', 'coordinadores')} · ` : ''}${plural(t.planilleros_activos, 'planillero', 'planilleros')} · ${plural(t.consultores_activos, 'consultor', 'consultores')}`)}
         ${kpi('Creadas', num(t.creadas), `${num(t.creadas_netas)} netas`, EXPLICA.creadas)}
         ${kpi('Actualizadas', num(t.actualizadas), '', EXPLICA.actualizadas)}
         ${kpi('Cédulas agregadas', num(t.cedulas), '', EXPLICA.cedulas)}
@@ -315,14 +354,14 @@ export async function vistaUsuarios(el, { q }) {
           const comp = p.completados || {};
           return html`<tr data-fila="${u.id}" class="${u.activo ? '' : 'inactivo'}">
             <td data-titulo="Usuario"><a class="nombre" href="/usuarios/${u.id}" data-ruta>${u.usuario}</a><div class="sec">${u.nombre}</div></td>
-            <td data-titulo="Rol">${ROLES[u.rol] || u.rol}</td><td data-titulo="Estado">${estadoHtml(u)}</td>
+            <td data-titulo="Rol">${rolHtml(u.rol)}</td><td data-titulo="Estado">${estadoHtml(u)}</td>
             <td class="num" data-titulo="Creadas"><span>${num(p.creadas)} <span class="sec">(${num(p.creadas_netas)})</span></span></td>
             <td class="num" data-titulo="Actualizadas">${num(p.actualizadas)}</td><td class="num" data-titulo="Datos nuevos">${num(p.con_datos_nuevos)}</td>
             <td class="num" data-titulo="Cédulas">${num(comp.cedula || 0)}</td><td class="num" data-titulo="Puesto · mesa">${num(comp.puesto || 0)} · ${num(comp.mesa || 0)}</td>
             <td class="num" data-titulo="Acercamientos">${num(k.acercamientos)}</td><td class="num" data-titulo="Contactadas">${num(k.contactadas)}</td>
             <td class="num" data-titulo="Calidad">${num(cal.telefonos_luego_equivocados)} · ${num(cal.cedulas_en_conflicto)} · ${num(cal.duplicados_unidos)}</td>
             <td data-titulo="Último ingreso">${fecha(u.ultimo_ingreso, true)}</td><td data-titulo="Alertas"><div class="chips">${alertasHtml(u)}</div></td>
-            <td class="celda-acciones"><button class="btn chico" data-acciones="${u.id}" aria-haspopup="dialog">Acciones</button></td></tr>`;
+            <td class="celda-acciones">${gestionable(u) ? html`<button class="btn chico" data-acciones="${u.id}" aria-haspopup="dialog">Acciones</button>` : ''}</td></tr>`;
         })}</tbody></table></div>`
         : html`<div class="tarjeta vacio"><b>Todavía no hay usuarios</b>Cree planilleros para el trabajo de campo y consultores para llamar.</div>`}
       <section class="tarjeta avance">
@@ -406,14 +445,15 @@ export async function vistaUsuario(el, { params, q }) {
     const nombresAreas = new Map(areas.map((a) => [a.id ?? a._id, a.nombre]));
     montar(el, html`
       <div class="miga"><a href="/usuarios" data-ruta>Usuarios</a> › ${u.usuario}</div>
-      <div class="cabecera"><div><h1>${u.nombre || u.usuario}</h1><div class="sub">${u.usuario} · ${NOMBRES_ROL[u.rol] || u.rol} · ${estadoHtml(u)} ${alertasHtml(u)}</div></div>
+      <div class="cabecera"><div><h1>${u.nombre || u.usuario}</h1><div class="sub">${u.usuario} · ${rolHtml(u.rol)} · ${estadoHtml(u)} ${alertasHtml(u)}</div></div>
         <div class="acciones">${botonesAccion(u)}</div></div>
       ${periodoHtml(ind.desde, ind.hasta)}
       <div class="segmentado agrupar" role="group" aria-label="Agrupar la serie">${[['dia', 'Por día'], ['semana', 'Por semana'], ['mes', 'Por mes']].map(([k, t]) => html`<button data-agrupar="${k}" aria-pressed="${k === agrupar}">${t}</button>`)}</div>
       <div id="indicadores"></div>
       <div class="rejilla r-12">
         <section class="tarjeta c-6"><h2>Asignación</h2>
-          ${(u.asignacion.lugares.length || u.asignacion.areas.length) ? html`<div class="chips">
+          ${u.rol === 'coordinador' ? html`<p class="sec">Coordinador: trabaja sobre toda la base, sin asignación.</p>`
+            : (u.asignacion.lugares.length || u.asignacion.areas.length) ? html`<div class="chips">
             ${u.asignacion.lugares.map((l) => html`<span class="chip borde">${titulo(lugares.get(l) || `Lugar ${l}`)}</span>`)}
             ${u.asignacion.areas.map((a) => html`<span class="chip azul">${nombresAreas.get(a) || `Área ${a}`}</span>`)}</div>`
             : html`<p class="sec">Sin asignación: trabaja sobre toda la base.</p>`}

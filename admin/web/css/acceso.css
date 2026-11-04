@@ -34,6 +34,13 @@
 .lista-acciones .acciones-usuario { flex-direction: column; align-items: stretch; gap: 8px; }
 .lista-acciones .btn.chico { font-size: 14.5px; padding: 10px 14px; justify-content: flex-start; }
 .celda-acciones { text-align: right; }
+/* Insignias de rol: cada rol con su color; el texto se mezcla con la tinta para leerse en los dos temas */
+.chip.rol { white-space: nowrap; }
+.chip.rol-admin { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
+.chip.rol-coordinador { background: color-mix(in srgb, var(--s7) 16%, transparent); color: color-mix(in srgb, var(--s7) 70%, var(--ink)); }
+.chip.rol-planillero { background: color-mix(in srgb, var(--s1) 14%, transparent); color: color-mix(in srgb, var(--s1) 70%, var(--ink)); }
+.chip.rol-consultor { background: color-mix(in srgb, var(--s3) 16%, transparent); color: color-mix(in srgb, var(--s3) 60%, var(--ink)); }
+.kpis-administracion { margin-bottom: 16px; }
 .tarjeta.avance { margin-top: 16px; }
 .tarjeta.avance > header { flex-wrap: wrap; }
 .tarjeta.serie { margin-top: 16px; }
@@ -48,6 +55,7 @@
   margin: 14px 0 6px; }
 
 /* ───────── Alta y edición ───────── */
+#f-usuario [hidden], #f-rol [hidden] { display: none; }
 .asignacion { border: 1px solid var(--line-soft); border-radius: var(--r-s); padding: 12px 14px; margin: 0; min-width: 0; }
 .asignacion legend { font-weight: 700; padding: 0 6px; }
 .asignacion .sec { color: var(--muted); font-size: 13px; margin: 0 0 8px; }

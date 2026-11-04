@@ -1,22 +1,26 @@
 // Cliente de la API: cookie de sesión HttpOnly + cabecera CSRF en todo lo que cambia datos, tiempo límite,
 // Idempotency-Key, reingreso sin perder lo escrito y catálogos en memoria con ETag (7.0).
 import { url } from './base.js';
+import { NOMBRES_ROL } from './modelo.js';
 
 let csrf = null;
 let alExpirar = () => {};
 let alReingresar = null;   // abre el ingreso en un diálogo y resuelve con los datos de la sesión nueva
 let alPendiente = () => {}; // 403 cambiar_clave o compromiso: la cuenta tiene algo pendiente
 
-// uid 0 y permiso «*» son del administrador. Sin `rol` (un servidor anterior a los usuarios) la sesión es la suya
-export const sesion = { usuario: null, uid: null, rol: null, permisos: [], nombre: null, debeCambiarClave: false,
-  compromisoPendiente: false };
-export function configurar({ token, usuario, expira, uid, rol, permisos, nombre, debe_cambiar_clave, compromiso_pendiente,
-  reingresar, pendiente }) {
+// uid 0 y permiso «*» son del administrador. El coordinador también tiene «*», menos lo de `excepto` (gestionar
+// coordinadores, cambiar roles y los ajustes que son permisos). Sin `rol` (un servidor anterior a los usuarios) la
+// sesión es la del administrador
+export const sesion = { usuario: null, uid: null, rol: null, permisos: [], excepto: [], nombre: null,
+  debeCambiarClave: false, compromisoPendiente: false };
+export function configurar({ token, usuario, expira, uid, rol, permisos, excepto, nombre, debe_cambiar_clave,
+  compromiso_pendiente, reingresar, pendiente }) {
   csrf = token;
   sesion.usuario = usuario;
   sesion.rol = rol || 'admin';
   sesion.uid = uid ?? (rol ? null : 0);
   sesion.permisos = Array.isArray(permisos) ? permisos : (rol ? [] : ['*']);
+  sesion.excepto = Array.isArray(excepto) ? excepto : [];
   sesion.nombre = nombre ?? usuario ?? null;
   sesion.debeCambiarClave = !!debe_cambiar_clave;
   sesion.compromisoPendiente = !!compromiso_pendiente;
@@ -26,7 +30,12 @@ export function configurar({ token, usuario, expira, uid, rol, permisos, nombre,
 }
 
 /** ¿La sesión tiene el permiso? La interfaz solo oculta: el servidor decide. */
-export const puede = (permiso) => sesion.permisos.includes('*') || sesion.permisos.includes(permiso);
+export const puede = (permiso) => !sesion.excepto.includes(permiso)
+  && (sesion.permisos.includes('*') || sesion.permisos.includes(permiso));
+
+// Etiqueta visible de cada rol: la de modelo.js y, mientras su catálogo no lo traiga, «Coordinador»
+const ROLES_VISIBLES = { admin: 'Administrador', coordinador: 'Coordinador', planillero: 'Planillero', consultor: 'Consultor' };
+export const nombreRol = (rol) => NOMBRES_ROL[rol] || ROLES_VISIBLES[rol] || rol || '';
 
 export const SIN_CONEXION = 'Sin conexión. Lo escrito sigue aquí; intente de nuevo';
 // Tiempo límite: 15 s en lecturas y 30 s en escrituras. Lo que tarda por naturaleza (subir Excel, recalcular todas

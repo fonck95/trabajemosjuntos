@@ -1,8 +1,11 @@
 """Quién hace cada petición y qué puede hacer: roles, permisos, claves de los usuarios, máscaras, lecturas,
 frecuencia e idempotencia.
 
-* Tres roles: el administrador (la credencial de `.env`, uid 0, que no vive en `usuarios`), el planillero y el
-  consultor. Denegar por defecto: un rol desconocido no tiene permisos y una sesión con un rol inválido no vale.
+* Cuatro roles: el administrador (A, la credencial de `.env`, uid 0, que no vive en `usuarios`), el coordinador (K),
+  el planillero (P) y el consultor (C). K tiene todos los permisos de A salvo `SOLO_ADMIN` (gestionar coordinadores,
+  cambiar roles y cambiar los ajustes que son permisos); lo que es de A en el manejo de datos se comprueba con
+  `quien.puede(...)` o `quien.administra`, nunca con el rol. Denegar por defecto: un rol desconocido no tiene permisos
+  y una sesión con un rol inválido no vale.
 * `requiere(*permisos)` es la dependencia de cada ruta de la API: valida la sesión y el CSRF, arma el `Quien`,
   vuelve a exigir la clave cambiada y el compromiso al día (la guardia ya lo hizo) y responde 403
   `{codigo: "permiso"}` si el rol no tiene todos los permisos pedidos. Deja `dep.permisos` para que una prueba recorra
@@ -38,14 +41,19 @@ from pymongo.errors import DuplicateKeyError, OperationFailure
 
 from . import db as bd
 from . import modelo
-from .seguridad import (METODOS_SEGUROS, ROLES_USUARIO, SIN_PERMISO, huella, ip_de, obtener_db, rechazo_de_cuenta,
-                        ruta_interna, sesion_actual)
+from .seguridad import (METODOS_SEGUROS, ROLES_ADMIN, ROLES_USUARIO, SIN_PERMISO, huella, ip_de, obtener_db,
+                        rechazo_de_cuenta, ruta_interna, sesion_actual)
 
 log = logging.getLogger("panel")
 
-ROLES = {"admin", "planillero", "consultor"}
+ROLES = {"admin", "coordinador", "planillero", "consultor"}
+# Lo único que el coordinador no puede (adenda 1): solo A crea, edita, desactiva, reactiva o restablece la clave de un
+# coordinador, cambia el rol de un usuario y cambia los ajustes que son permisos o límites de acceso
+SOLO_ADMIN = frozenset({"usuarios.coordinadores", "usuarios.roles", "permisos.modificar"})
+ROLES_CAMPO = ("planillero", "consultor")  # con alcance, presupuesto diario y límite de frecuencia
 PERMISOS: dict[str, frozenset[str]] = {
     "admin": frozenset({"*"}),
+    "coordinador": frozenset({"*"}),  # «*» menos SOLO_ADMIN: lo resta `Quien.puede`
     "planillero": frozenset({
         "cuenta", "catalogos.ver", "insignias", "trabajo.ver", "personas.listar", "personas.buscar", "personas.ver",
         "personas.crear", "personas.editar", "personas.parecidas", "personas.notas", "personas.ubicar",
@@ -70,14 +78,28 @@ class Quien:
     nombre: str | None = None
     ip: str | None = None
     permisos: frozenset[str] = field(default_factory=frozenset)
-    asignacion: dict | None = None  # {lugares: [int], areas: [int]} de P y C; None para A (sin límite)
+    asignacion: dict | None = None  # {lugares: [int], areas: [int]} de P y C; None para A y K (sin límite)
 
     def puede(self, permiso: str) -> bool:
+        """¿Tiene el permiso? Lo de `SOLO_ADMIN` es solo de A, aunque otro rol tenga «*»."""
+        if permiso in SOLO_ADMIN and not self.es_admin:
+            return False
         return "*" in self.permisos or permiso in self.permisos
 
     @property
     def es_admin(self) -> bool:
-        return self.rol == "admin"
+        """¿Es el administrador de `.env` (uid 0)? Solo para lo exclusivo de A y para su sesión."""
+        return self.rol == "admin" and self.uid in (0, None)
+
+    @property
+    def administra(self) -> bool:
+        """¿Es A o K? Manejo de datos sin recorte, sin alcance, sin presupuesto diario ni límite de frecuencia."""
+        return self.rol in ROLES_ADMIN
+
+
+def excepto(rol: str | None) -> list[str]:
+    """Permisos que el rol no tiene aunque tenga «*» (los de `SOLO_ADMIN` para K): van a la interfaz con la sesión."""
+    return sorted(SOLO_ADMIN) if rol != "admin" and "*" in PERMISOS.get(rol or "", ()) else []
 
 
 def quien_admin(cfg, ip: str | None = None) -> Quien:
@@ -101,14 +123,15 @@ def _quien_de(db: Database, request: Request, s: dict) -> Quien:
     asignacion = u.get("asignacion") or {}
     return Quien(uid=uid, usuario=u.get("usuario"), nombre=u.get("nombre"), rol=rol, ip=ip_de(request),
                  permisos=PERMISOS.get(rol, frozenset()),
-                 asignacion={"lugares": list(asignacion.get("lugares") or []), "areas": list(asignacion.get("areas") or [])})
+                 asignacion=None if rol in ROLES_ADMIN else {"lugares": list(asignacion.get("lugares") or []),
+                                                             "areas": list(asignacion.get("areas") or [])})
 
 
 def requiere(*permisos: str, limitar: bool = False) -> Callable[..., Quien]:
     """Dependencia de una ruta: sesión (la que dejó la guardia en `scope["state"]["sesion"]`, o la de la cookie) +
     CSRF en lo que cambia datos + rol + todos los `permisos`. `limitar` marca las rutas con límite de frecuencia por
-    usuario (120 por minuto para P y C). Al terminar la petición libera la clave de idempotencia que la ruta tomó y
-    no guardó (falló o no la usó)."""
+    usuario (120 por minuto para P y C; A y K quedan exentos). Al terminar la petición libera la clave de
+    idempotencia que la ruta tomó y no guardó (falló o no la usó)."""
     pedidos = frozenset(permisos)
 
     def dep(request: Request, db: Database = Depends(obtener_db)):
@@ -129,7 +152,7 @@ def requiere(*permisos: str, limitar: bool = False) -> Callable[..., Quien]:
                 raise HTTPException(403, rechazo)
         if not all(quien.puede(p) for p in pedidos):
             raise HTTPException(403, dict(SIN_PERMISO))
-        if limitar and not quien.es_admin:
+        if limitar and not quien.administra:
             _frecuencia(db, quien.uid)
         try:
             yield quien
@@ -144,6 +167,38 @@ def requiere(*permisos: str, limitar: bool = False) -> Callable[..., Quien]:
 # Lo que usaban las rutas del administrador: ahora es `requiere("admin")` (seguridad.requiere_admin lo reexporta)
 requiere_admin = requiere("admin")
 Admin = Quien
+
+# ───────────────────────────── Ajustes que son permisos (adenda 1) ─────────────────────────────
+
+# Ajustes que fijan permisos o límites de acceso: solo A los cambia (`permisos.modificar`); K los ve en solo lectura
+AJUSTES_DE_PERMISOS = frozenset({
+    "presupuesto_diario", "sesion",  # límites de acceso de los usuarios
+    "politica", "contactar_pendientes", "dias_entre_intentos", "max_intentos_sin_exito", "seguimiento_activo",
+    "dias_seguimiento", "horario",  # política de contacto del consultor
+    "sensibles_activos", "tope_cedulas_dictadas", "compromiso_version",  # qué se ve y con qué condiciones se trabaja
+})
+
+
+def _cambia(actual: Any, nuevo: Any) -> bool:
+    if isinstance(nuevo, dict) and isinstance(actual, dict):
+        return any(_cambia(actual.get(k), v) for k, v in nuevo.items())
+    return nuevo != actual
+
+
+def ajustes_de_permisos(actuales: dict, cambios: dict) -> list[str]:
+    """Claves de `cambios` que dan a un ajuste de permisos un valor distinto del vigente. Un formulario que manda todo
+    sin tocar esos valores (o solo parte de un objeto, como `sesion`) no cuenta."""
+    return sorted(k for k, v in (cambios or {}).items()
+                  if k in AJUSTES_DE_PERMISOS and _cambia((actuales or {}).get(k), v))
+
+
+def exigir_ajustes(quien: Quien | None, actuales: dict, cambios: dict) -> None:
+    """Para PUT /api/ajustes: 403 `{codigo: "permiso", campos}` si `quien` cambia un ajuste de permisos sin
+    `permisos.modificar` (el coordinador). Los demás ajustes los cambian A y K."""
+    campos = ajustes_de_permisos(actuales, cambios)
+    if campos and not (quien is not None and quien.puede("permisos.modificar")):
+        raise HTTPException(403, {**SIN_PERMISO, "campos": campos,
+                                  "mensaje": "Solo el administrador cambia los permisos y límites de acceso"})
 
 # ───────────────────────────── Claves ─────────────────────────────
 
@@ -329,8 +384,8 @@ RECHAZOS_CIERRE = 20  # respuestas 429 por volumen en un día que cierran las se
 
 
 def presupuesto(db: Database, rol: str, ajustes: dict | None = None) -> int | None:
-    """Personas distintas por día que puede consultar el rol (None: sin tope)."""
-    if rol not in ROLES_USUARIO:
+    """Personas distintas por día que puede consultar el rol (None: sin tope, como A y K)."""
+    if rol not in ROLES_CAMPO:
         return None
     aj = ajustes or modelo.leer_ajustes(db)
     try:
@@ -340,8 +395,8 @@ def presupuesto(db: Database, rol: str, ajustes: dict | None = None) -> int | No
 
 
 def registrar_lecturas(db: Database, quien: Quien, pids: Iterable[int], ficha: bool = False) -> None:
-    """Anota en `lecturas` las personas servidas a `quien` (una por persona y día, también para el administrador) y,
-    para P y C, responde 429 `{codigo: "volumen"}` si con ellas pasa el presupuesto diario de personas distintas. Una
+    """Anota en `lecturas` las personas servidas a `quien` (una por persona y día, también para A y K) y, para P y
+    C, responde 429 `{codigo: "volumen"}` si con ellas pasa el presupuesto diario de personas distintas. Una
     ficha cuenta igual venga de un GET, un PATCH sin cambios o `?resumen=1`."""
     if quien is None or quien.uid is None:
         return
@@ -359,7 +414,7 @@ def registrar_lecturas(db: Database, quien: Quien, pids: Iterable[int], ficha: b
             cambio = {"$set": {"ts": ahora}, "$setOnInsert": {**nuevo, "ficha": False}}
         ops.append(UpdateOne({"_id": f"{quien.uid}|{pid}|{dia}"}, cambio, upsert=True))
     res = db.lecturas.bulk_write(ops, ordered=False)
-    tope = None if quien.es_admin else presupuesto(db, quien.rol)
+    tope = None if quien.administra else presupuesto(db, quien.rol)
     if tope is None or db.lecturas.count_documents({"uid": quien.uid, "dia": dia}) <= tope:
         return
     # Se pasó: las personas nuevas de esta respuesta no se sirven ni cuentan
