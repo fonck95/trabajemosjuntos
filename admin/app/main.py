@@ -6,6 +6,7 @@ o en admin/.env)
 from __future__ import annotations
 
 import logging
+import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -17,7 +18,7 @@ from starlette.middleware.gzip import GZipMiddleware
 
 from . import config, db
 from .api import calidad, personas, reuniones, sistema, tablero
-from .seguridad import CabecerasSeguras
+from .seguridad import CabecerasSeguras, GuardiaApi, limpiar_al_iniciar
 
 WEB = Path(__file__).resolve().parents[1] / "web"
 log = logging.getLogger("panel")
@@ -26,11 +27,18 @@ log = logging.getLogger("panel")
 @asynccontextmanager
 async def ciclo(app: FastAPI):
     cfg = app.state.cfg
-    db.inicializar(app.state.db)
+    # Los avisos van antes de conectar: si MongoDB no responde, el arranque se corta ahí
     if not cfg.usuario or not cfg.clave:
         log.warning("Faltan las variables ADMIN y password: nadie podrá ingresar al panel")
     elif len(cfg.clave) < 10:
         log.warning("La clave del panel tiene menos de 10 caracteres; use una más larga")
+    try:
+        db.inicializar(app.state.db)
+    except Exception:
+        log.error("No se pudo conectar o preparar MongoDB en %s: revise la variable MONGODB_URI",
+                  re.sub(r"//[^@/]*@", "//", cfg.mongodb_uri))  # sin usuario ni clave de la URI
+        raise
+    limpiar_al_iniciar(app.state.db, cfg)
     yield
     app.state.cliente.close()
 
@@ -39,6 +47,8 @@ def crear_app(cfg: config.Config | None = None) -> FastAPI:
     app = FastAPI(title="Panel Yondó", docs_url=None, redoc_url=None, openapi_url=None, lifespan=ciclo)
     app.state.cfg = cfg or config.cargar()
     app.state.cliente, app.state.db = db.conectar(app.state.cfg.mongodb_uri, app.state.cfg.mongodb_db or None)
+    # La guardia va por dentro de las demás: nada lee el cuerpo antes que ella, y sus respuestas llevan las cabeceras
+    app.add_middleware(GuardiaApi)
     app.add_middleware(GZipMiddleware, minimum_size=1024)
     app.add_middleware(CabecerasSeguras)
     for m in (sistema, tablero, personas, reuniones, calidad):

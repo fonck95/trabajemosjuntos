@@ -2,19 +2,25 @@
 
 * `ADMIN` (usuario) y `password` (clave) del administrador, tal como están en Railway. También `admin` / `PASSWORD`.
 * `MONGODB_URI`: conexión a MongoDB (la del plugin de Railway o de Atlas). `MONGODB_DB` opcional; si la URI no trae
-  base de datos se usa `panel_yondo`.
+  base de datos se usa `panel_yondo`. En Railway es obligatoria; en local se usa un MongoDB en 127.0.0.1.
 """
 from __future__ import annotations
 
+import logging
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
+MONGO_LOCAL = "mongodb://127.0.0.1:27017"
+log = logging.getLogger("panel")
 
 
 def _cargar_env(ruta: Path) -> None:
-    """Lee KEY=valor de un .env sin pisar variables que ya existan en el entorno."""
+    """Lee KEY=valor de un .env sin pisar variables que ya existan en el entorno.
+
+    Un valor sin comillas termina antes de un comentario en línea (` # ...`); entre comillas se toma tal cual."""
     if not ruta.is_file():
         return
     for linea in ruta.read_text(encoding="utf-8").splitlines():
@@ -23,8 +29,10 @@ def _cargar_env(ruta: Path) -> None:
             continue
         clave, _, valor = linea.partition("=")
         clave, valor = clave.strip(), valor.strip()
-        if len(valor) >= 2 and valor[0] == valor[-1] and valor[0] in "'\"":
-            valor = valor[1:-1]
+        if valor[:1] in ("'", '"') and valor.find(valor[0], 1) > 0:
+            valor = valor[1:valor.find(valor[0], 1)]
+        else:
+            valor = re.sub(r"(?:^|\s+)#.*$", "", valor)
         os.environ.setdefault(clave, valor)
 
 
@@ -34,6 +42,18 @@ def _primera(*nombres: str) -> str:
         if v:
             return v
     return ""
+
+
+def _entero(nombre: str, defecto: int) -> int:
+    v = _primera(nombre)
+    try:
+        return int(v) if v else defecto
+    except ValueError:
+        raise RuntimeError(f"La variable {nombre} debe ser un número entero (vale {v!r})") from None
+
+
+def en_railway() -> bool:
+    return any(os.environ.get(n) for n in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME", "RAILWAY_ENVIRONMENT_ID"))
 
 
 @dataclass(frozen=True)
@@ -52,13 +72,23 @@ def cargar() -> Config:
     _cargar_env(RAIZ.parent / ".env")
     # En Railway (o detrás de HTTPS) la cookie viaja solo cifrada; en local se permite http://localhost
     seguro = _primera("COOKIE_SECURE")
-    cookie_segura = seguro.lower() in ("1", "true", "si", "sí") if seguro else bool(os.environ.get("RAILWAY_ENVIRONMENT"))
+    cookie_segura = seguro.lower() in ("1", "true", "si", "sí") if seguro else en_railway()
+    uri = _primera("MONGODB_URI", "MONGO_URL", "MONGODB_URL")
+    if not uri:
+        if en_railway():
+            # Sin esto se intentaba 127.0.0.1 y el despliegue caía con un error que no nombraba la variable
+            msg = ("Falta la variable MONGODB_URI en el servicio del panel (en Railway: MONGODB_URI = "
+                   "${{MongoDB.MONGO_URL}}, o la URI de Atlas)")
+            log.error(msg)
+            raise RuntimeError(msg)
+        log.warning("MONGODB_URI no está definida: se usa el MongoDB local %s", MONGO_LOCAL)
+        uri = MONGO_LOCAL
     return Config(
         usuario=_primera("ADMIN", "admin"),
         clave=_primera("password", "PASSWORD"),
-        mongodb_uri=_primera("MONGODB_URI", "MONGO_URL", "MONGODB_URL") or "mongodb://127.0.0.1:27017",
+        mongodb_uri=uri,
         mongodb_db=_primera("MONGODB_DB"),
-        horas_sesion=int(_primera("SESSION_HOURS") or 12),
+        horas_sesion=_entero("SESSION_HOURS", 12),
         cookie_segura=cookie_segura,
-        max_subida_mb=int(_primera("MAX_UPLOAD_MB") or 25),
+        max_subida_mb=_entero("MAX_UPLOAD_MB", 25),
     )
