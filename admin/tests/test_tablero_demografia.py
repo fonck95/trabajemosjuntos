@@ -11,14 +11,14 @@ def test_claves_nuevas_y_denominadores_vigentes(sesion, como):
     hoy = modelo.hoy_local().isoformat()
     persona(db, nombre="TOMASA INVENTADA UNO", sexo="F", edad=30, edad_ref=hoy, cedula="96000001", telefono="3007000001",
             telefono2="3007000002", estado_civil="Casado(a)",
-            votacion={"puesto_id": 3, "mesa": 2, "eleccion": "2026-presidencial", "estado": "verificado"},
+            votacion={"puesto_id": 903, "mesa": 2, "eleccion": "2026-presidencial", "estado": "verificado"},
             abordaje={"n": 2, "efectivos": 1, "estado": "contactado"})
     persona(db, nombre="TOMASA INVENTADA DOS", sexo="M", edad=70, edad_ref=hoy,
             votacion={"puesto_texto": "OTRA ESCUELA", "eleccion": None, "estado": "sin_verificar", "donde": "yondo"})
     persona(db, nombre="TOMASA INVENTADA TRES", edad=10, edad_ref=hoy, consentimiento="si", contacto_habilitado=False)
     persona(db, nombre="TOMASA INVENTADA CUATRO", votacion={"donde": "otro_municipio", "municipio": "Barranca"})
     persona(db, nombre="TOMASA INVENTADA FALLECIDA", sexo="F", situacion={"estado": "fallecida", "confirmada": True})
-    db.puestos.insert_one({"_id": 3, "eleccion": "2026-presidencial", "codigo": "99-65", "nombre": "PUESTO INVENTADO",
+    db.puestos.insert_one({"_id": 903, "eleccion": "2026-presidencial", "codigo": "T-03", "nombre": "PUESTO INVENTADO",
                            "mesas": 5, "activo": True})
     d = sesion.get("/api/indicadores").json()
     k = d["kpi"]
@@ -30,7 +30,7 @@ def test_claves_nuevas_y_denominadores_vigentes(sesion, como):
     assert d["sexo"] == {"F": 1, "M": 1, "N": 0, "sin": 2} and d["sin_edad"] == 1
     assert d["rangos_edad"]["25-34"] == 1 and d["rangos_edad"]["65+"] == 1 and d["rangos_edad"]["<18"] == 1
     assert {"rango": "<18", "sexo": "sin", "n": 1} in d["edades"]
-    assert d["puestos"] == [{"id": 3, "codigo": "99-65", "nombre": "PUESTO INVENTADO", "n": 1, "con_mesa": 1, "mesas": 5}]
+    assert d["puestos"] == [{"id": 903, "codigo": "T-03", "nombre": "PUESTO INVENTADO", "n": 1, "con_mesa": 1, "mesas": 5}]
     assert d["puesto_sin_catalogo"] == 1 and d["demografia"]["estado_civil"] == {"Casado(a)": 1}
     assert d["autorizacion"]["por_confirmar"] == 1 and d["abordaje"]["contactado"] == 1
     assert {c["campo"] for c in d["completitud_campos"]} == set(modelo.CAMPOS_AVANCE)
@@ -39,7 +39,7 @@ def test_claves_nuevas_y_denominadores_vigentes(sesion, como):
     z = sesion.get("/api/indicadores", params={"alcance": "zona", "q": "TOMASA"}).json()
     assert z["pocas"] is True and z["kpi"] == {"personas": "<10"} and z["lugares"] == []
     m = sesion.get("/api/indicadores", params={"detalle": "mesas"}).json()
-    assert m["mesas"] == [{"puesto_id": 3, "mesa": 2, "n": 1}]
+    assert m["mesas"] == [{"puesto_id": 903, "mesa": 2, "n": 1}]
     # Solo A y K
     assert coordinador(sesion.app, db).get("/api/indicadores").status_code == 200
     for rol in ("planillero", "consultor"):

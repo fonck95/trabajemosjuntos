@@ -79,19 +79,19 @@ def test_sensibles_con_autorizacion(sesion, como):
 
 def test_votacion_desde_el_panel(sesion, como):
     db = sesion.app.state.db
-    puesto(db, 3, "I.E.R. SAN MIGUEL DEL TIGRE", "99-65", mesas=5)
-    puesto(db, 4, "COLISEO BENITO ARIAS", "00-02", mesas=4)
+    puesto(db, 903, "ESCUELA INVENTADA LAS GARZAS", "T-03", mesas=5)
+    puesto(db, 904, "COLISEO INVENTADO EL NARANJO", "T-04", mesas=4)
     pid = persona(db, nombre="DIGNA INVENTADA VOTA")
     p = como("planillero")
-    f = p.patch(f"/api/personas/{pid}", json={"puesto_texto": "SAN MIGUEL DEL TIGRE", "mesa": "Mesa # 2"}).json()
+    f = p.patch(f"/api/personas/{pid}", json={"puesto_texto": "inventada las garzas", "mesa": "Mesa # 2"}).json()
     v = f["votacion"]
-    assert (v["puesto_id"], v["mesa"], v["mesa_texto"], v["fuente"], v["estado"]) == (3, 2, "Mesa # 2", "panel", "sin_verificar")
-    assert f["puesto_votacion"] == "I.E.R. SAN MIGUEL DEL TIGRE" and f["mesa"] == "Mesa # 2"
+    assert (v["puesto_id"], v["mesa"], v["mesa_texto"], v["fuente"], v["estado"]) == (903, 2, "Mesa # 2", "panel", "sin_verificar")
+    assert f["puesto_votacion"] == "ESCUELA INVENTADA LAS GARZAS" and f["mesa"] == "Mesa # 2"
     assert v["eleccion"] == "2026-presidencial" and v["estado_efectivo"] == "sin_verificar"
     # Mesa fuera de rango: no se guarda como número y queda por confirmar; el anterior va a alternos
-    f = p.patch(f"/api/personas/{pid}", json={"puesto_id": 4, "mesa": 9}).json()
+    f = p.patch(f"/api/personas/{pid}", json={"puesto_id": 904, "mesa": 9}).json()
     assert f["votacion"]["mesa"] is None and f["votacion"]["estado"] == "por_confirmar" and f["votacion"]["mesa_texto"] == "9"
-    assert any(a["campo"] == "votacion" and a["valor"]["puesto_id"] == 3 for a in f["alternos"])
+    assert any(a["campo"] == "votacion" and a["valor"]["puesto_id"] == 903 for a in f["alternos"])
     # P no vacía el puesto; verificado con el titular
     assert p.patch(f"/api/personas/{pid}", json={"puesto_id": None}).status_code == 422
     f = p.patch(f"/api/personas/{pid}", json={"mesa": 3, "votacion_verificada": True}).json()

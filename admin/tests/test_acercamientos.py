@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from ayudas_g3 import autorizada, contactable, persona, tomar
+from ayudas_g3 import autorizada, contactable, persona, puesto, tomar
 
 LLAMADA = {"canal": "llamada", "telefono_indice": 0}
 
@@ -186,12 +186,11 @@ def test_cedula_dictada_respuesta_unica_y_tope(sesion, como):
     assert r.status_code == 422
     assert db.acercamientos.count_documents({"persona_id": pid}) == 0
     # Puesto y mesa dictados: solo si faltan, con fuente consultor y sin verificar
-    db.puestos.insert_one({"_id": 3, "eleccion": "2026-presidencial", "codigo": "99-65", "nombre": "PUESTO INVENTADO",
-                           "mesas": 5, "activo": True, "alias": [], "alias_ambiguos": []})
+    puesto(db, 903, "PUESTO INVENTADO DE PRUEBA", "T-03")
     r = c.post(f"/api/personas/{pid}/acercamientos", json={**LLAMADA, "resultado": "actualizo_datos",
-                                                            "datos_dictados": {"puesto_id": 3, "mesa": 2}})
+                                                            "datos_dictados": {"puesto_id": 903, "mesa": 2}})
     v = db.personas.find_one({"_id": pid})["votacion"]
-    assert (v["puesto_id"], v["mesa"], v["fuente"], v["estado"]) == (3, 2, "consultor", "sin_verificar")
+    assert (v["puesto_id"], v["mesa"], v["fuente"], v["estado"]) == (903, 2, "consultor", "sin_verificar")
     assert db.personas.find_one({"_id": pid})["mesa"] == "2"
 
 

@@ -44,10 +44,10 @@ def test_edades_sin_y_puesto(sesion):
     assert a in {f["id"] for f in sesion.get("/api/personas", params={"q": "PETRONILA", "con_cedula": 0}).json()["filas"]}
     # puesto_id=0: sin puesto del catálogo; sexo «sin»
     con = persona(db, nombre="QUINTINA INVENTADA PUESTO", sexo="F",
-                  votacion={"puesto_id": 3, "mesa": 2, "eleccion": "2026-presidencial", "estado": "sin_verificar"})
+                  votacion={"puesto_id": 903, "mesa": 2, "eleccion": "2026-presidencial", "estado": "sin_verificar"})
     sin = persona(db, nombre="QUINTINA INVENTADA SINPUESTO")
     assert {f["id"] for f in sesion.get("/api/personas", params={"q": "QUINTINA", "puesto_id": 0}).json()["filas"]} == {sin}
-    assert {f["id"] for f in sesion.get("/api/personas", params={"q": "QUINTINA", "puesto_id": 3}).json()["filas"]} == {con}
+    assert {f["id"] for f in sesion.get("/api/personas", params={"q": "QUINTINA", "puesto_id": 903}).json()["filas"]} == {con}
     assert {f["id"] for f in sesion.get("/api/personas", params={"q": "QUINTINA", "sexo": "sin"}).json()["filas"]} == {sin}
     assert _total(sesion, q="QUINTINA", con_mesa=1) == 1 and _total(sesion, q="QUINTINA", sin_puesto_mesa=1) == 1
     assert _total(sesion, q="QUINTINA", votacion_estado="sin_verificar") == 1
