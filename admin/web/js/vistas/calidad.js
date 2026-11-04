@@ -52,11 +52,11 @@ export async function vistaCalidad(el, { q }) {
     };
     montar(c, html`<p class="sec"><span id="cuenta-pares">${cuenta(lista.map((x) => x.persona.id))}</span> Si son la misma persona, se unen: la ficha de trámites recibe la cédula y las listas.</p>
       <div style="display:flex;flex-direction:column;gap:12px">${lista.map((x) => html`<div class="tarjeta" data-c="${x.id}" data-p="${x.persona.id}"><div class="par">
-        ${lado(x.persona, x.candidato, x.detalle.homonimo ? 'Mismo nombre, otra ficha' : 'Base con cédula')}
+        ${lado(x.persona, x.candidato, x.detalle.homonimo ? 'Mismo nombre, otra ficha' : x.detalle.variante ? 'Nombre parecido, misma ficha' : 'Base con cédula')}
         <div class="medio"><span class="puntaje">${Math.round(x.puntaje * 100)}%</span>
           <span class="sec" style="text-align:center">${x.detalle.palabras} palabras${x.detalle.telefono ? html`<br><span class="chip verde">mismo teléfono</span>` : ''}${x.detalle.correo ? html`<br><span class="chip verde">mismo correo</span>` : ''}</span>
           <button class="btn chico primario" data-d="aceptar">Es la misma</button><button class="btn chico" data-d="rechazar">Son distintas</button></div>
-        ${lado(x.candidato, x.persona, x.detalle.homonimo ? 'Mismo nombre, otra ficha' : 'Base de trámites')}</div></div>`)}</div>`);
+        ${lado(x.candidato, x.persona, x.detalle.homonimo ? 'Mismo nombre, otra ficha' : x.detalle.variante ? 'Nombre parecido, misma ficha' : 'Base de trámites')}</div></div>`)}</div>`);
     c.onclick = async (e) => {
       const b = e.target.closest('[data-d]');
       if (!b) return;
