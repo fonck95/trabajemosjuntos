@@ -95,6 +95,7 @@ def _persona(db: Database, pid: int) -> dict:
                           "reunion_id": n.get("reunion_id"), "reunion": (reus.get(n.get("reunion_id")) or {}).get("titulo")}
                          for n in p.get("notas", [])), key=lambda n: n["creado_en"], reverse=True)
     d["origen"] = [{"fuente": o["fuente"], "datos": o["datos"]} for o in p.get("origen", [])]
+    bd.cerrar_coincidencias_imposibles(db, [pid])
     coin = []
     for c in db.coincidencias.find({"estado": "pendiente", "$or": [{"persona_id": pid}, {"candidato_id": pid}]}):
         otro = c["candidato_id"] if c["persona_id"] == pid else c["persona_id"]
@@ -227,16 +228,16 @@ def editar(pid: int, body: PersonaIn, db: Database = Depends(obtener_db), adm: A
         if body.lugar_id and lg is None:
             raise HTTPException(422, "Lugar no existe")
         cambios.update({"lugar_id": lg["_id"] if lg else None, "zona": lg["zona"] if lg else None})
-        # El punto del barrio o vereda reemplaza al anterior salvo que ya haya uno exacto (placa o puesto a mano)
-        if antes.get("geo_precision") not in ("manual", "direccion"):
-            if lg and lg.get("lat") is not None:
-                cambios.update({"lat": lg["lat"], "lon": lg["lon"], "geo_precision": lg["tipo"], "geo_manual": True})
-            elif not lg:
-                cambios.update({"lat": None, "lon": None, "geo_precision": None})
+        # Barrio o vereda elegido a mano: se conserva al recalcular y la persona sigue el punto del lugar (o el de su
+        # placa). Un punto puesto en el mapa no se mueve. Quitar el lugar vuelve a la ubicación automática.
+        if antes.get("geo_manual") not in bd.PUNTO_MANUAL:
+            cambios["geo_manual"] = "lugar" if lg else False
         diff["lugar_id"] = {"antes": antes.get("lugar_id"), "despues": body.lugar_id}
     _guardar(db, pid, cambios)
-    if "direccion" in diff and not antes.get("geo_manual"):
+    if "direccion" in diff or "lugar_id" in diff:
         georreferenciar(db, [pid])
+    if "cedula" in diff:
+        bd.cerrar_coincidencias_imposibles(db, [pid])
     bd.recalcular_completitud(db, [pid])
     if diff:
         bd.auditar(db, adm.usuario, "editar", "persona", pid, diff, adm.ip)
@@ -253,6 +254,9 @@ class NuevaPersona(PersonaIn):
 def crear(body: NuevaPersona, db: Database = Depends(obtener_db), adm: Admin = Depends(requiere_admin)):
     datos = _limpiar_entrada(body.model_dump(exclude_unset=True, exclude={"forzar", "reunion_id", "etiquetas", "extra", "lugar_id"}))
     _cedula_libre(db, datos.get("cedula"))
+    lg = db.lugares.find_one({"_id": body.lugar_id}, {"zona": 1}) if body.lugar_id else None
+    if body.lugar_id and lg is None:
+        raise HTTPException(422, "Lugar no existe")
     if not body.forzar:
         parecidas = _parecidas(db, datos["nombre"], datos.get("telefono"))
         if parecidas:
@@ -264,16 +268,12 @@ def crear(body: NuevaPersona, db: Database = Depends(obtener_db), adm: Admin = D
     if reunion:
         doc["asistencias"] = [{"reunion_id": reunion["_id"], "rol": None, "nota": None, "creado_en": bd.ahora()}]
         doc["ultimo_contacto"] = reunion["fecha"]
+        doc["reunion_origen"] = reunion["_id"]  # la reunión donde se registró (cuenta como persona nueva de esa reunión)
+    if lg:  # barrio o vereda elegido a mano: georreferenciar lo conserva y toma su punto (o el de la placa)
+        doc.update({"lugar_id": lg["_id"], "zona": lg["zona"], "geo_manual": "lugar"})
     db.personas.insert_one(doc)
     pid = doc["_id"]
     georreferenciar(db, [pid])
-    if body.lugar_id:
-        lg = db.lugares.find_one({"_id": body.lugar_id})
-        p = db.personas.find_one({"_id": pid}, {"geo_precision": 1})
-        if lg and p.get("geo_precision") != "direccion":
-            _guardar(db, pid, {"lugar_id": lg["_id"], "zona": lg["zona"], "lat": lg.get("lat"), "lon": lg.get("lon"),
-                               "geo_precision": lg["tipo"] if lg.get("lat") is not None else None,
-                               "geo_manual": lg.get("lat") is not None})
     bd.recalcular_completitud(db, [pid])
     bd.auditar(db, adm.usuario, "crear", "persona", pid, {"fuente": fuente, **datos}, adm.ip)
     return _persona(db, pid)
@@ -339,7 +339,7 @@ def ubicar(pid: int, body: UbicacionIn, db: Database = Depends(obtener_db), adm:
     antes = db.personas.find_one({"_id": pid}, {"lat": 1, "lon": 1})
     if antes is None:
         raise HTTPException(404, "No existe")
-    _guardar(db, pid, {"lat": round(body.lat, 6), "lon": round(body.lon, 6), "geo_precision": "manual", "geo_manual": True})
+    _guardar(db, pid, {"lat": round(body.lat, 6), "lon": round(body.lon, 6), "geo_precision": "manual", "geo_manual": "punto"})
     bd.recalcular_completitud(db, [pid])
     bd.auditar(db, adm.usuario, "ubicar", "persona", pid,
                {"antes": [antes.get("lat"), antes.get("lon")], "despues": [body.lat, body.lon]}, adm.ip)
@@ -373,11 +373,9 @@ def fusionar(pid: int, body: FusionIn, db: Database = Depends(obtener_db), adm: 
 
 @r.delete("/personas/{pid}")
 def suprimir(pid: int, db: Database = Depends(obtener_db), adm: Admin = Depends(requiere_admin)):
-    """Supresión a pedido del titular (Ley 1581): borra los datos personales y deja solo el rastro de auditoría."""
+    """Supresión a pedido del titular (Ley 1581): borra los datos personales de la ficha y de las unidas con ella,
+    quita sus datos de la auditoría y deja una huella cifrada para que una importación no la vuelva a crear."""
     if not db.personas.find_one({"_id": pid}, {"_id": 1}):
         raise HTTPException(404, "No existe")
-    db.personas.replace_one({"_id": pid}, {**bd.PERSONA_VACIA, "_id": pid, "nombre": "SUPRIMIDO", "nombre_norm": "",
-                                           "eliminado": True, "actualizado_en": bd.ahora()})
-    db.coincidencias.delete_many({"$or": [{"persona_id": pid}, {"candidato_id": pid}]})
-    bd.auditar(db, adm.usuario, "suprimir", "persona", pid, None, adm.ip)
+    bd.suprimir(db, pid, adm.usuario, adm.ip)
     return {"ok": True}

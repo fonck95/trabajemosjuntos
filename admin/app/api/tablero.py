@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from pymongo.database import Database
 
-from ..db import ACTIVA
+from ..db import ACTIVA, cerrar_coincidencias_imposibles
 from ..seguridad import Admin, obtener_db, requiere_admin
 from .filtros import Filtros, filtro, filtros_query
 
@@ -69,6 +69,7 @@ def indicadores(db: Database = Depends(obtener_db), _: Admin = Depends(requiere_
     k["tramites"] = sum(tipos.values())
     k["reuniones"] = db.reuniones.count_documents({})
     k["completitud_media"] = round(suma_comp / k["personas"]) if k["personas"] else 0
+    cerrar_coincidencias_imposibles(db)  # las que ya no se pueden aceptar no cuentan como pendientes
     k["pendientes_revision"] = len(db.coincidencias.distinct("persona_id", {"estado": "pendiente"}))
     sin_punto = {l["_id"] for l in db.lugares.find({"lat": None}, {"_id": 1})}
     k["lugares_sin_punto"] = sum(1 for lid in lugares_n if lid in sin_punto)
