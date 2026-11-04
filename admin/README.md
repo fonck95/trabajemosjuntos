@@ -23,9 +23,9 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
 | **Habitantes** | Directorio con búsqueda (nombre, cédula, teléfono, dirección, ficha), 10 filtros combinables, orden por completitud o contacto, exportación a Excel de lo filtrado. |
 | **Ficha** | Datos editables, necesidades/intereses/roles, campos propios, autorización de datos, ubicación con minimapa y ajuste manual del punto, historial (reuniones, notas, trámites), origen de cada dato y registro de cambios. Unir fichas duplicadas y suprimir datos (derecho de supresión). |
 | **Reuniones** | Agenda con asistentes y personas nuevas por reunión. **Modo reunión**: buscar y agregar asistentes en segundos, registrar personas nuevas (con aviso de posibles duplicados) y «Completar» el perfil de cada asistente ahí mismo (cédula, celular, ocupación, hogar, necesidades, autorización y lo que pidió, que queda en su historial). Exporta asistentes a CSV. |
-| **Calidad de datos** | Cola de coincidencias por nombre para confirmar o descartar lado a lado; barrios y veredas sin punto para ubicarlos con un clic en el mapa; nombres escritos que no se reconocen, para crearlos o agregarlos como alias. |
-| **Importar y exportar** | Subir los Excel (se reconocen por sus columnas) cuantas veces se quiera; historial de importaciones; exportar la base única. |
-| **Ajustes** | Campos propios del perfil (texto, número, sí/no, lista, fecha), catálogo de necesidades, grupos y roles, y auditoría completa. |
+| **Calidad de datos** | Cola de coincidencias por nombre para confirmar o descartar lado a lado (con su motivo y la ficha que se conserva); conflictos de cédula (misma cédula con otro nombre, cédula anterior, posible error de digitación, cédula dictada al consultor) que nunca se mezclan solos; solicitudes de los titulares con sus plazos legales; personas reportadas como fallecidas o fuera de Yondó, para confirmar o revertir; barrios y veredas sin punto para ubicarlos con un clic en el mapa; nombres escritos que no se reconocen, para crearlos o agregarlos como alias. |
+| **Importar y exportar** | Subir los Excel (trámites, base con cédula y planillas de campo; se reconocen por sus columnas) cuantas veces se quiera, con «Capturado por» para las planillas y la plantilla para descargar; historial de importaciones, con la confirmación de las autorizaciones declaradas en planilla; exportar la base única. |
+| **Ajustes** | Política de contacto y horario, aviso de privacidad y Responsable, datos sensibles, presupuestos diarios y sesiones, puestos de votación y elección vigente, campos propios del perfil (texto, número, sí/no, lista, fecha; sensibles o no), catálogo de necesidades, grupos y roles, y auditoría con filtros. La política de contacto, los presupuestos y las sesiones solo los cambia el administrador; el coordinador los ve en solo lectura. |
 
 ## Cómo se cruzan y se ubican los datos
 
@@ -57,10 +57,31 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
   Cada coordenada guarda su precisión. El mapa dispersa visualmente los puntos de barrio o vereda para el mapa de
   calor, sin tocar el dato guardado. Los barrios que no tienen coordenada pública aparecen en el panel como «lugares
   sin punto» y se resuelven ubicándolos una vez en el mapa.
-- **La importación nunca pisa lo editado**: solo completa campos vacíos, y tampoco pisa lo que se edite en el panel
-  mientras corre. Los trámites se identifican por su ID o, si no lo tienen, por ficha, fecha, tipo y nombre. Las
-  personas suprimidas no se vuelven a crear. El barrio o vereda elegido a mano en una ficha se conserva, y si ese
-  lugar cambia de punto la persona se mueve con él; un punto puesto a mano en el mapa no se mueve.
+- **La cédula manda** (`app/pipeline/fuentes.py`, `importar.py`). Cada fila de una fuente con cédula (base unificada o
+  planilla de campo) sigue una cascada: la fila ya vinculada a una ficha la actualiza sin comparar nombres; una cédula
+  que ya existe solo completa esa ficha si el nombre coincide (si no, queda un *conflicto de cédula* y no se mezcla
+  nada); una cédula anterior de otra ficha también va a conflicto; el resto se cruza por nombre en lote, y una fila sin
+  cédula solo se une sola a una ficha con cédula si además comparten teléfono o correo. Dos cédulas distintas nunca se
+  unen, y una cédula que ya existe nunca cambia por importación. Una cédula a un dígito de otra con casi el mismo nombre
+  deja un aviso de posible digitación.
+- **Nada se pierde**: cada campo guarda de qué fuente vino (`procedencia`). Un campo vacío se llena; uno con otro valor
+  solo lo reemplaza una fuente de más confianza (planilla sobre base con cédula, base con cédula sobre trámites) y
+  nunca lo que puso una persona en el panel; el valor que no queda pasa a `alternos`. Todos los teléfonos de todas las
+  fuentes se suman a la lista de la persona: un número marcado como equivocado o retirado no se reactiva al reimportar.
+  Todo se decide en la escritura, con condiciones sobre lo guardado: lo que se edite en el panel mientras corre la
+  importación no se pisa. Los trámites se identifican por su ID o, si no lo tienen, por ficha, fecha, tipo y nombre.
+  Las personas suprimidas no se vuelven a crear (por ninguna de sus cédulas), y a quien no autorizó no se le agrega
+  ningún dato. El barrio o vereda elegido a mano en una ficha se conserva, y si ese lugar cambia de punto la persona
+  se mueve con él; un punto puesto a mano en el mapa no se mueve. Una sola importación corre a la vez.
+- **Planilla de campo**: la plantilla (`GET /api/plantillas/planilla.xlsx`, botón en **Importar y exportar**) trae
+  listas desplegables, la hoja «Puestos» con el catálogo vigente y la hoja «Aviso» con el aviso de privacidad para
+  imprimir. Se escribe la cédula dos veces: si no coinciden, la fila entra sin cédula y queda un aviso. Las
+  autorizaciones «declaradas en planilla» valen para la ficha pero no habilitan llamadas hasta que el administrador
+  las confirme con la evidencia física.
+- **Puestos de votación** (`geo/puestos_yondo.json`): catálogo DIVIPOL de las presidenciales de 2026 (7 puestos,
+  50 mesas, 16.121 habilitados), validado con el Boletín 98 de la Registraduría. «CABECERA MUNICIPAL» es ambigua
+  (dos puestos) y queda «por confirmar»; lo que viene de la base con cédula o de fichas viejas también, porque no se
+  sabe de qué elección es. Para otra elección se cargan sus puestos y se cambia la elección vigente en **Ajustes**.
 
 ## Seguridad
 
@@ -114,6 +135,7 @@ Pasos, en el servicio que ya publica el sitio:
 1. En el proyecto: **+ New → Database → MongoDB** (si aún no existe).
 2. En *Variables* del servicio del sitio: `ADMIN` = usuario, `password` = clave (12 caracteres o más) y
    `MONGODB_URI` = `${{MongoDB.MONGO_URL}}` (referencia al plugin) o la URI de Atlas.
+   Antes de desplegar una versión nueva, saque una copia (`mongodump`): el arranque migra la base (ver más abajo).
 3. Deje vacío *Settings → Deploy → Custom Start Command* (el arranque sale de `railpack.json`, con
    `--no-access-log` y `--no-server-header`) y, si tiene *Healthcheck Path*, que sea `/health`.
 4. Despliegue (un *push* a `main` lo hace solo). Abra `https://<su-dominio>/panel/`, ingrese y suba los dos Excel en
@@ -145,11 +167,13 @@ cp .env.example .env        # y complete ADMIN, password y MONGODB_URI
 uvicorn app.main:app --reload --no-access-log --no-server-header
 ```
 
-Un MongoDB local sirve con `docker run -d -p 27017:27017 mongo:7`. Comandos útiles (los Excel, fuera del repositorio o
-en `admin/var/`, que Git ignora):
+Un MongoDB local sirve con `docker run -d -p 27017:27017 mongo:7` (hace falta 4.2 o más). Comandos útiles (los
+Excel, fuera del repositorio o en `admin/var/`, que Git ignora):
 
 ```bash
+python -m app.cli migrar
 python -m app.cli importar var/tramites.xlsx var/cedulas.xlsx
+python -m app.cli importar var/planilla.xlsx --capturado-por 5
 python -m app.cli georreferenciar
 python -m app.cli nomenclator
 python -m app.cli resumen
@@ -168,19 +192,36 @@ python3 scripts/build_data.py && PANEL_URL=/panel/ python3 scripts/build_site.py
 uvicorn servidor:app --app-dir admin --port 8000 --no-access-log --no-server-header
 ```
 
+## Migración del esquema
+
+Cada arranque (`db.inicializar`, en el panel, la consola y las pruebas) lleva la base a la versión de esquema vigente
+(`app/migraciones.py`) antes de que el panel quede listo: arma la lista de teléfonos de cada persona (con los
+números que el administrador había quitado marcados como retirados), la procedencia de cada dato, el punto, la edad
+aproximada, la votación (por confirmar), los eventos de autorización y los acercamientos de las reuniones. Se puede
+repetir sin daño, un solo proceso migra a la vez y un error en una ficha se anota (`meta.migracion.errores`) sin cortar
+la migración. Además, en cada arranque se reconcilia lo que un código anterior haya escrito durante un despliegue o una
+vuelta atrás. Mientras migra, la API responde 503.
+
+Medido en local (MongoDB 8.0, datos inventados): migrar 12 000 fichas tarda unos 12 s y la reconciliación de cada
+arranque, menos de medio segundo; importar 12 000 trámites y 700 cédulas, unos 16 s (5 s al repetir la misma
+importación). En el panel desplegado aparte (chequeo de salud de 60 s), corra antes `python -m app.cli migrar` con la
+misma `MONGODB_URI`. La medición se repite con
+`PRUEBAS_LENTAS=1 python -m pytest -q tests/test_migracion.py -k medicion -s`.
+
 ## Estructura
 
 | Ruta | Contenido |
 |---|---|
 | `servidor.py` | Servidor único de Railway: el sitio público (`site/`) en la raíz, con sus cabeceras y su CSP, el panel en `/panel/` y `/health` |
 | `app/main.py` | Aplicación FastAPI, cabeceras y estáticos |
-| `app/config.py`, `app/seguridad.py`, `app/db.py` | Variables de entorno, autenticación y sesiones, MongoDB (índices, nomenclátor, fusión, completitud) |
-| `app/api/` | Endpoints: tablero y mapa, personas, reuniones, calidad, sistema (sesión, importación, exportación, catálogos, auditoría) |
-| `app/pipeline/` | Lectura de los Excel, normalización, direcciones, cruce por nombre, georreferenciación e importación |
-| `geo/` | Geografía pública: límite municipal (DANE MGN 2025), nomenclátor de veredas, barrios y centros poblados, grilla de calles (OSM) y los scripts que los generan |
+| `app/config.py`, `app/seguridad.py`, `app/db.py` | Variables de entorno, autenticación y sesiones, MongoDB (índices, nomenclátor, puestos, unión de fichas, supresión, completitud) |
+| `app/modelo.py`, `app/migraciones.py` | Catálogos y reglas de la ficha (teléfonos, votación, autorización, procedencia); migración idempotente y reconciliación |
+| `app/api/` | Endpoints: tablero y mapa, personas, reuniones, calidad (coincidencias, conflictos, solicitudes, situaciones, lugares), ajustes (ajustes, puestos, plantilla), sistema (sesión, importación, exportación, catálogos, auditoría) |
+| `app/pipeline/` | Registro de fuentes, lectura de los Excel (también la planilla de campo), normalización, direcciones, cruce por nombre, georreferenciación e importación |
+| `geo/` | Geografía pública: límite municipal (DANE MGN 2025), nomenclátor de veredas, barrios y centros poblados, grilla de calles (OSM), catálogo de puestos de votación (DIVIPOL 2026) y los scripts que los generan |
 | `web/` | Interfaz (HTML, CSS y módulos JS sin compilación) con MapLibre GL incluido |
 | `tests/` | Pruebas con personas inventadas |
 | `railpack.json`, `Procfile` | Arranque del panel en un servicio aparte (uvicorn sin log de acceso ni cabecera `server`); `railway.json` solo para servicios con *Config as Code* |
 
 Geografía: © colaboradores de OpenStreetMap (ODbL); DANE (MGN y DIVIPOLA); Gobernación de Antioquia (catastro);
-MinEducación (sedes). Mapas base: OpenFreeMap / OpenMapTiles, Esri World Imagery; relieve: Mapzen Terrain Tiles.
+MinEducación (sedes); Registraduría Nacional (DIVIPOL y Divipole georreferenciada, datos.gov.co, CC BY-SA 4.0). Mapas base: OpenFreeMap / OpenMapTiles, Esri World Imagery; relieve: Mapzen Terrain Tiles.
