@@ -28,7 +28,7 @@ export async function vistaImportar(el) {
       </section>
       <section class="tarjeta c-5">
         <h2>Exportar</h2>
-        <p class="sec">La base única completa en Excel: datos de contacto, dirección normalizada, coordenadas, precisión, necesidades, listas, reuniones y campos propios. Para exportar un grupo, aplique filtros en <a href="/personas" data-ruta>Habitantes</a> y exporte desde allí.</p>
+        <p class="sec">La base única completa en Excel: datos de contacto, dirección normalizada, coordenadas, precisión, necesidades, listas, reuniones y campos propios. Para exportar un grupo, aplique filtros en <a href="/personas" data-ruta>Habitantes</a> y exporte desde allí. Las exportaciones omiten a quien marcó «No autorizó» el tratamiento de sus datos.</p>
         <button class="btn oscuro" id="exportar">${icono('descargar')} Descargar base única (.xlsx)</button>
         <div class="aviso-legal" style="margin-top:16px">Cada exportación queda en la auditoría. Comparta el archivo solo por canales seguros y bórrelo cuando ya no lo necesite.</div>
       </section>
@@ -64,12 +64,13 @@ export async function vistaImportar(el) {
       const geo = r.geo.por_precision || {};
       const ubicadas = Object.entries(geo).filter(([k]) => k !== 'sin_ubicar').reduce((a, [, v]) => a + v, 0);
       montar($('#resultado', el), html`<div class="kpis" style="margin:0">
-        <div class="kpi"><div class="t">Personas nuevas</div><div class="v">${num(r.personas_nuevas)}</div><div class="d">${num(r.personas_actualizadas)} actualizadas</div></div>
+        <div class="kpi"><div class="t">Personas nuevas</div><div class="v">${num(r.personas_nuevas)}</div><div class="d">${num(r.personas_actualizadas)} actualizadas${r.suprimidas_omitidas ? ` · ${num(r.suprimidas_omitidas)} omitidas por supresión` : ''}</div></div>
         <div class="kpi"><div class="t">Trámites nuevos</div><div class="v">${num(r.tramites_nuevos)}</div></div>
         <div class="kpi"><div class="t">Cédulas cruzadas</div><div class="v">${num(r.cedulas_unidas_auto)}</div><div class="d">${num(r.cedulas_en_revision)} por revisar · ${num(r.cedulas_sin_coincidencia)} sin par</div></div>
         <div class="kpi"><div class="t">Ubicadas</div><div class="v">${num(ubicadas)}</div><div class="d">${num(geo.direccion || 0)} con dirección exacta</div></div>
       </div>
       <p class="sec">Archivos procesados: ${(r.archivos || []).map((a) => `${a.archivo} (${TIPOS[a.tipo] || a.tipo}, ${num(a.filas)} filas)`).join(' · ')}</p>
+      ${r.no_guardadas ? html`<div class="aviso-legal">${num(r.no_guardadas)} fichas no se guardaron porque cambiaron al mismo tiempo en el panel. Vuelva a importar el archivo para completarlas.</div>` : ''}
       ${r.cedulas_en_revision ? html`<p><a class="btn" href="/calidad" data-ruta>Revisar ${num(r.cedulas_en_revision)} coincidencias</a></p>` : ''}`);
       aviso('Importación terminada');
       refrescarInsignias();

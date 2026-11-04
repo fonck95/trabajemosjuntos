@@ -230,15 +230,17 @@ def importar(db: Database, rutas: list[Path], usuario: str | None = "sistema", n
     cedulas: list[lectores.FilaCedula] = []
     for i, ruta in enumerate(rutas):
         nombre = (nombres or [])[i] if nombres and i < len(nombres) else Path(ruta).name
-        tipo = lectores.tipo_de_archivo(ruta)
-        if tipo == "tramites":
-            filas = list(lectores.leer_tramites(ruta))
-            tramites += filas
-        elif tipo == "cedulas":
-            filas = list(lectores.leer_cedulas(ruta))
-            cedulas += filas
-        else:
-            raise ValueError(f"No reconozco el formato de {nombre}: faltan las columnas esperadas")
+        try:  # en el servidor los archivos se llaman 0.xlsx, 1.xlsx…: el error debe decir cuál de los subidos falló
+            tipo = lectores.tipo_de_archivo(ruta)
+            if tipo == "tramites":
+                filas = list(lectores.leer_tramites(ruta))
+            elif tipo == "cedulas":
+                filas = list(lectores.leer_cedulas(ruta))
+            else:
+                raise ValueError("faltan las columnas esperadas")
+        except ValueError as e:
+            raise ValueError(f"{nombre}: {e}") from e
+        (tramites if tipo == "tramites" else cedulas).extend(filas)
         res.archivos.append({"archivo": nombre, "tipo": tipo, "filas": len(filas)})
 
     imp_id = bd.siguiente_id(db, "importaciones")
@@ -261,7 +263,9 @@ def importar(db: Database, rutas: list[Path], usuario: str | None = "sistema", n
 
 
 def _importar_tramites(alm: _Almacen, filas, res: Resumen) -> None:
-    for g in cruce.agrupar_tramites(filas):
+    grupos = cruce.agrupar_tramites(filas)
+    pids: dict[str, int] = {}
+    for g in grupos:
         ids = [f.id_externo for f in g.filas if f.id_externo]
         nombres = {g.clave, *(tx.nombre_norm(n) for n in g.nombres)}
         if any(alm.suprimida("clave", n) for n in nombres) or any(alm.suprimida("tramite", i) for i in ids):
@@ -312,6 +316,14 @@ def _importar_tramites(alm: _Almacen, filas, res: Resumen) -> None:
             nuevos += 1
         res.tramites_nuevos += nuevos
         alm.contacto(d, max((f.fecha for f in g.filas if f.fecha), default=None))
+        pids[g.clave] = d["_id"]
+    # Mismo nombre con fichas y teléfonos distintos quedó como dos personas: que el administrador lo confirme
+    for g in grupos:
+        a, b = pids.get(g.clave), pids.get(g.separado_de) if g.separado_de else None
+        if a and b and a != b:
+            alm.coincidencias.append({"persona_id": a, "candidato_id": b, "puntaje": 1.0, "estado": "pendiente",
+                                      "detalle": {"homonimo": True, "puntaje_nombre": 1.0, "palabras": len(g.tokens()),
+                                                  "telefono": False, "correo": False}})
 
 
 def _importar_cedulas(alm: _Almacen, filas, imp_id: int, res: Resumen) -> None:
@@ -416,12 +428,12 @@ def registrar_lugares_de_datos(db: Database, minimo: int = 3) -> int:
         d = leer(p["direccion"])
         if not d.lugar_texto or d.tipo_lugar not in ("BARRIO", "VEREDA", "URBANIZACION", "SECTOR", "CASERIO"):
             continue
-        lugar, _, _ = nom.reconocer(d)
+        r = grilla.ubicar_direccion(d) if d.tiene_placa else None
+        placa_casco = bool(r and r[2] <= 2.5)
+        lugar, _, _ = nom.reconocer(d, casco=placa_casco)
         if lugar is None and len(d.lugar_texto) >= 3:
             conteo[(d.lugar_texto, d.tipo_lugar)] += 1
-            if d.tiene_placa:
-                r = grilla.ubicar_direccion(d)
-                en_casco[(d.lugar_texto, d.tipo_lugar)] += bool(r and r[2] <= 2.5)
+            en_casco[(d.lugar_texto, d.tipo_lugar)] += placa_casco
     nuevos = 0
     existentes = [l["nombre"] for l in db.lugares.find({}, {"nombre": 1})] + [a for l in db.lugares.find({}, {"alias": 1}) for a in l.get("alias", [])]
     for (nombre, palabra), n in conteo.most_common():

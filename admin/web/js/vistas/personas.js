@@ -25,14 +25,14 @@ export async function vistaPersonas(el, { q, ir }) {
     <div class="cabecera">
       <div><h1>Habitantes</h1><div class="sub" id="total">Cargando…</div></div>
       <div class="acciones">
-        <button class="btn" id="exportar">${icono('descargar')} Exportar a Excel</button>
+        <button class="btn" id="exportar" title="Exporta lo filtrado; omite a quien marcó «No autorizó» el tratamiento de sus datos">${icono('descargar')} Exportar a Excel</button>
         <button class="btn primario" id="nueva">${icono('mas')} Nueva persona</button>
       </div>
     </div>
     <div class="filtros">
       <label class="buscador"><span class="sr">Buscar</span>${icono('buscar')}<input class="entrada" id="q" placeholder="Nombre, cédula, teléfono, dirección o ficha" value="${f.q || ''}"></label>
       <select class="entrada" data-f="zona">${opciones([['', 'Zona'], ['urbana', 'Casco urbano'], ['rural', 'Rural'], ['sin', 'Sin zona']], f.zona)}</select>
-      <select class="entrada" data-f="lugar_id">${opciones([['', 'Barrio / vereda'], ...cat.lugares.map((l) => [l.id, titulo(l.nombre) + (l.tipo !== 'barrio' ? ` · ${l.tipo.replace('_', ' ')}` : '')])], f.lugar_id)}</select>
+      <select class="entrada" data-f="lugar_id">${opciones([['', 'Barrio / vereda'], ['0', 'Sin barrio o vereda'], ...cat.lugares.map((l) => [l.id, titulo(l.nombre) + (l.tipo !== 'barrio' ? ` · ${l.tipo.replace('_', ' ')}` : '')])], f.lugar_id)}</select>
       <select class="entrada" data-f="fuente">${opciones([['', 'Fuente'], ['tramites', 'Base de trámites'], ['cedulas', 'Base con cédula'], ['ambas', 'En las dos'], ['reunion', 'Registradas en reunión'], ['manual', 'Registro manual']], f.fuente)}</select>
       <select class="entrada" data-f="etiqueta">${opciones([['', 'Necesidad / etiqueta'], ...cat.etiquetas.map((e) => [e.id, e.nombre])], f.etiqueta)}</select>
       <select class="entrada" data-f="lista">${opciones([['', 'Lista'], ...cat.listas.map((l) => [l, l])], f.lista)}</select>

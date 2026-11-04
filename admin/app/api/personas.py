@@ -90,7 +90,7 @@ def _persona(db: Database, pid: int) -> dict:
     reus = {x["_id"]: x for x in db.reuniones.find({"_id": {"$in": list(rids)}}, {"titulo": 1, "fecha": 1, "lugar_texto": 1})}
     d["reuniones"] = sorted(({"id": a["reunion_id"], "titulo": reus[a["reunion_id"]]["titulo"], "fecha": reus[a["reunion_id"]]["fecha"],
                               "lugar_texto": reus[a["reunion_id"]].get("lugar_texto"), "rol": a.get("rol"), "nota": a.get("nota")}
-                             for a in p.get("asistencias", []) if a["reunion_id"] in reus), key=lambda x: x["fecha"], reverse=True)
+                             for a in p.get("asistencias", []) if a["reunion_id"] in reus), key=lambda x: x["fecha"] or "", reverse=True)
     d["notas"] = sorted(({"id": n["id"], "texto": n["texto"], "autor": n.get("autor"), "creado_en": n["creado_en"],
                           "reunion_id": n.get("reunion_id"), "reunion": (reus.get(n.get("reunion_id")) or {}).get("titulo")}
                          for n in p.get("notas", [])), key=lambda n: n["creado_en"], reverse=True)

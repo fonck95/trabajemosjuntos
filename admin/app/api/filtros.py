@@ -63,8 +63,8 @@ def filtro(f: Filtros) -> dict:
         y.append({"zona": f.zona})
     elif f.zona == "sin":
         y.append({"zona": None})
-    if f.lugar_id:
-        y.append({"lugar_id": f.lugar_id})
+    if f.lugar_id is not None:  # 0 = sin barrio ni vereda reconocidos
+        y.append({"lugar_id": f.lugar_id or None})
     if f.fuente == "ambas":
         y.append({"fuentes": {"$all": ["tramites", "cedulas"]}})
     elif f.fuente in ("tramites", "cedulas", "reunion", "manual"):

@@ -201,14 +201,13 @@ export async function vistaMapa(el, { q, ir }) {
       if (p[3] === 0) exactas++;
     }
     const top = [...porLugar.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
-    // Cada barrio enlaza al directorio con los filtros del mapa; «Sin barrio o vereda» no tiene filtro posible
+    // Cada barrio enlaza al directorio con los filtros del mapa; «Sin barrio o vereda» usa lugar_id=0
     const fila = (id, n) => html`<span>${nombreLugar(id)}</span>
         <span><span class="b" style="width:${(n / (top[0]?.[1] || 1)) * 100}%"></span></span><span class="n">${num(n)}</span>`;
     montar($('#en-vista', el), html`<div class="gran-cifra" style="font-size:30px">${num(dentro.length)}</div>
       <div class="sec">personas · ${pct(exactas, dentro.length)} % con dirección exacta</div>
-      <div class="lista-barras" style="margin-top:12px">${top.map(([id, n]) => (id
-        ? html`<a class="f" href="/personas?${new URLSearchParams({ ...estado.filtros, lugar_id: id })}" data-ruta>${fila(id, n)}</a>`
-        : html`<div class="f">${fila(id, n)}</div>`))}</div>`);
+      <div class="lista-barras" style="margin-top:12px">${top.map(([id, n]) =>
+        html`<a class="f" href="/personas?${new URLSearchParams({ ...estado.filtros, lugar_id: id || 0 })}" data-ruta>${fila(id, n)}</a>`)}</div>`);
   }
 
   function mostrarHex(props, lngLat) {

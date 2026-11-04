@@ -36,9 +36,14 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
   (JHON/JOHN, NUVIA/NUBIA, YANETH/JANETH), y no importa el orden de nombres y apellidos. Un nombre de pila distinto
   resta (hermanos, madre e hija). Compartir teléfono o correo confirma un nombre parecido, pero no vuelve parecido un
   nombre distinto: en una familia todos dan el mismo celular. Lo seguro se une solo; lo dudoso va a **Calidad de datos**.
+  Dos nombres de pila distintos no se unen aunque compartan ficha o celular, y un mismo nombre con fichas y teléfonos
+  distintos queda como dos personas que también pasan por revisión. Si dos cédulas apuntan a la misma ficha, gana la de
+  mayor puntaje y la otra va a revisión.
 - **Normalización de direcciones** (`app/pipeline/direcciones.py`). «BARRIO TRES DE OCTUBRE CALLE 49 # 45  12» →
   `CL 49 # 45-12, B. TRES DE OCTUBRE`; «CLL 52 N 4610» → `CL 52 # 46-10`; «VEREDA X-10» y «K-5» se reconocen; corrige
-  palabras pegadas («ESPERANZAMANZANA»), manzana/lote, fincas y referencias («FRENTE AL PARQUE»).
+  palabras pegadas («ESPERANZAMANZANA»), manzana/lote, fincas y referencias («FRENTE AL PARQUE»). Las referencias
+  («FRENTE A…», «DONDE…») y el nombre de la finca no cuentan como lugar, y una placa del casco decide entre un barrio
+  y una vereda que se llaman igual.
 - **Georreferenciación** (`app/pipeline/geocodificador.py`), de lo más preciso a lo menos:
   1. *Dirección con placa en el casco urbano*: una grilla de nomenclatura armada con los cruces de calles y carreras
      de OpenStreetMap (`geo/grilla_casco.json`) se ajusta localmente y ubica la placa, incluso en calles que OSM no
@@ -52,28 +57,38 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
   Cada coordenada guarda su precisión. El mapa dispersa visualmente los puntos de barrio o vereda para el mapa de
   calor, sin tocar el dato guardado. Los barrios que no tienen coordenada pública aparecen en el panel como «lugares
   sin punto» y se resuelven ubicándolos una vez en el mapa.
-- **La importación nunca pisa lo editado**: solo completa campos vacíos. Los trámites se identifican por su ID.
+- **La importación nunca pisa lo editado**: solo completa campos vacíos, y tampoco pisa lo que se edite en el panel
+  mientras corre. Los trámites se identifican por su ID o, si no lo tienen, por ficha, fecha, tipo y nombre. Las
+  personas suprimidas no se vuelven a crear. El barrio o vereda elegido a mano en una ficha se conserva, y si ese
+  lugar cambia de punto la persona se mueve con él; un punto puesto a mano en el mapa no se mueve.
 
 ## Seguridad
 
 - Usuario y clave en las variables `ADMIN` y `password` (también `admin` / `PASSWORD`), comparadas en tiempo constante.
 - Sesión con token aleatorio en cookie `HttpOnly`, `SameSite=Strict` y `Secure` en producción; en MongoDB solo
   queda el hash y la sesión caduca sola (índice TTL). CSRF obligatorio en todo lo que cambia datos.
-- Bloqueo tras 5 intentos fallidos por IP (o 30 en total) durante 15 minutos.
+- Límite de ingreso: 5 intentos fallidos por IP bloquean esa IP hasta 15 minutos; con muchos fallos en total cada
+  intento espera un retroceso corto y creciente (como mucho 60 s), así el administrador nunca queda fuera
+  indefinidamente. La IP sale de la cabecera que pone el borde de Railway, no de la que el cliente puede falsificar.
+- Las sesiones se invalidan solas si cambian `ADMIN` o `password`. Las peticiones a la API sin sesión se rechazan
+  antes de leer el cuerpo (no se procesan cargas de archivos anónimas).
+- El ingreso fallido no guarda lo que se escribió en el campo usuario.
 - Cabeceras: CSP estricta sin scripts de terceros (MapLibre va incluido en el repositorio), `X-Frame-Options: DENY`,
   `noindex`, `no-store` en la API, HSTS en producción. Sin documentación pública de la API.
 - Auditoría de cada ingreso, edición, fusión, exportación e importación (usuario, fecha, IP y qué cambió).
 - Las búsquedas no quedan en los registros: uvicorn arranca con `--no-access-log`, porque su log de acceso imprime
   la URL completa (`/api/buscar?q=<cédula>`, `/api/personas?q=<teléfono>`, `/api/exportar.xlsx?q=...`) y Railway
   guarda la salida del servicio. Según Railway, sus registros HTTP del borde guardan solo la ruta, sin `?q=...`.
-- Exportaciones protegidas contra inyección de fórmulas en Excel.
+- Exportaciones protegidas contra inyección de fórmulas en Excel; omiten a quien marcó «No autorizó».
 
 ## Protección de datos personales (Ley 1581 de 2012)
 
 La base tiene datos personales y algunos **sensibles** (afiliación política, condición de víctima, salud). Exigen
 autorización previa, expresa e informada del titular, una finalidad informada y atender consultas, correcciones y
 supresiones. Para eso están el campo **Autorización de datos** (con fecha) de cada ficha, el indicador del panel y la
-opción **Suprimir datos**. Los datos que provienen de bases oficiales (por ejemplo, las del SISBÉN) solo pueden usarse
+opción **Suprimir datos**, que vacía la ficha y todas las fichas que se unieron con ella, borra sus coincidencias y el
+detalle de su auditoría, y deja solo una huella cifrada (HMAC con una clave aleatoria guardada en la base) de la
+cédula, el nombre y los trámites para que las próximas importaciones no la vuelvan a crear. Los datos que provienen de bases oficiales (por ejemplo, las del SISBÉN) solo pueden usarse
 para la finalidad con la que se recogieron; revise con un abogado el uso que se le dará a la base antes de operarla.
 
 ## Desplegar en Railway

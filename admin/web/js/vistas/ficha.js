@@ -216,7 +216,7 @@ export async function vistaFicha(el, { params, ir }) {
       return;
     }
     if (e.target.closest('#suprimir')) {
-      if (await confirmar(`Se borrarán todos los datos personales de ${p.nombre} (derecho de supresión, Ley 1581). Queda solo el registro de auditoría. ¿Continuar?`, { si: 'Suprimir', peligro: true })) {
+      if (await confirmar(`Se borrarán todos los datos personales de ${p.nombre} (derecho de supresión, Ley 1581), también de las fichas que se unieron con ella y del detalle de su auditoría. Las próximas importaciones la omitirán: queda solo una huella cifrada para reconocerla. ¿Continuar?`, { si: 'Suprimir', peligro: true })) {
         await api.del(`/api/personas/${id}`); aviso('Datos suprimidos'); ir('/personas');
       }
       return;

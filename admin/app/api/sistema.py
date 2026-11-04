@@ -83,7 +83,9 @@ async def importar(request: Request, archivos: list[UploadFile] = File(...), db:
     tmp = Path(tempfile.mkdtemp(prefix="panel-import-"))
     try:
         rutas, nombres = [], []
-        for i, a in enumerate(archivos[:6]):
+        if len(archivos) > 6:
+            raise HTTPException(422, "Suba como máximo 6 archivos por importación")
+        for i, a in enumerate(archivos):
             if not (a.filename or "").lower().endswith((".xlsx", ".xlsm")):
                 raise HTTPException(422, f"{a.filename}: solo se aceptan archivos .xlsx")
             destino = tmp / f"{i}.xlsx"
