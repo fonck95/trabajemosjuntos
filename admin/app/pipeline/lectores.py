@@ -9,14 +9,27 @@ Reconoce cada archivo por sus encabezados, no por su nombre, para que se pueda v
 """
 from __future__ import annotations
 
+import zipfile
+import zlib
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, date
 from pathlib import Path
 from typing import Iterator
 
 import openpyxl
+from openpyxl.utils.exceptions import InvalidFileException
 
 from . import texto as tx
+
+# Topes del .xlsx descomprimido, para que un archivo pequeño no se infle en memoria al abrirlo (bomba zip)
+MAX_DESCOMPRIMIDO = 200 * 1024 * 1024   # bytes de todos los miembros del zip
+MAX_RAZON = 100                         # descomprimido / comprimido de un miembro grande (un Excel real ronda 5-15)
+MAX_MIEMBROS = 2000
+NO_ES_XLSX = "El archivo no es un Excel .xlsx válido (¿es un .xls antiguo o está dañado?)"
+# Lo que openpyxl lanza ante un archivo que no es un .xlsx o está dañado (SyntaxError cubre los XML rotos)
+_ERRORES_LIBRO = (zipfile.BadZipFile, zipfile.LargeZipFile, InvalidFileException, KeyError, OSError, EOFError,
+                  zlib.error, SyntaxError)
 
 
 @dataclass
@@ -95,21 +108,51 @@ TRAMITES = {"ID", "NUMERO", "FECHA", "NOMBRESOLICITANTE", "DIRECCION"}
 CEDULAS = {"CEDULA", "NOMBRECOMPLETO"}
 
 
-def tipo_de_archivo(ruta: str | Path) -> str | None:
-    wb = openpyxl.load_workbook(ruta, read_only=True, data_only=True)
+def validar_xlsx(ruta: str | Path) -> None:
+    """Revisa el .xlsx como zip antes de abrirlo: openpyxl carga entera la tabla de textos y no limita cuánto se
+    descomprime. Lanza ValueError (la API responde 422) si no es un zip o si se inflaría demasiado."""
     try:
+        with zipfile.ZipFile(ruta) as z:
+            miembros = z.infolist()
+    except (zipfile.BadZipFile, zipfile.LargeZipFile, OSError, EOFError) as e:
+        raise ValueError(NO_ES_XLSX) from e
+    if len(miembros) > MAX_MIEMBROS:
+        raise ValueError(f"El archivo tiene demasiadas partes ({len(miembros)}) para ser un Excel normal")
+    total = sum(m.file_size for m in miembros)
+    if total > MAX_DESCOMPRIMIDO:
+        raise ValueError(f"El Excel ocupa {total >> 20} MB al descomprimirlo (máximo {MAX_DESCOMPRIMIDO >> 20} MB)")
+    for m in miembros:
+        if m.file_size > (1 << 20) and m.file_size > MAX_RAZON * max(m.compress_size, 1):
+            raise ValueError("El Excel está comprimido de forma anómala (posible bomba zip) y no se abre")
+
+
+@contextmanager
+def _libro(ruta: str | Path):
+    """Libro de solo lectura; un archivo dañado o que no es .xlsx da ValueError, no un error 500."""
+    validar_xlsx(ruta)
+    try:
+        wb = openpyxl.load_workbook(ruta, read_only=True, data_only=True)
+    except _ERRORES_LIBRO as e:
+        raise ValueError(NO_ES_XLSX) from e
+    try:
+        yield wb
+    except (zipfile.BadZipFile, EOFError, zlib.error, SyntaxError) as e:  # partes que se leen al recorrer las filas
+        raise ValueError(NO_ES_XLSX) from e
+    finally:
+        wb.close()
+
+
+def tipo_de_archivo(ruta: str | Path) -> str | None:
+    with _libro(ruta) as wb:
         if _hoja_con(wb, TRAMITES)[0] is not None:
             return "tramites"
         if _hoja_con(wb, CEDULAS)[0] is not None:
             return "cedulas"
         return None
-    finally:
-        wb.close()
 
 
 def leer_tramites(ruta: str | Path) -> Iterator[FilaTramite]:
-    wb = openpyxl.load_workbook(ruta, read_only=True, data_only=True)
-    try:
+    with _libro(ruta) as wb:
         ws, fila_enc, enc = _hoja_con(wb, TRAMITES)
         if ws is None:
             raise ValueError("El archivo no tiene una hoja con ID, Número, Fecha, Nombre Solicitante y Dirección")
@@ -126,13 +169,15 @@ def leer_tramites(ruta: str | Path) -> Iterator[FilaTramite]:
                 nombre=nombre, direccion=_texto(g("DIRECCION")), correo=tx.correo(g("CORREO")),
                 telefonos=tx.telefonos(g("TELEFONO")), paquete=_texto(g("PAQUETE")),
             )
-    finally:
-        wb.close()
+
+
+# Cómo puede venir escrito el sexo; lo demás queda vacío («MUJER» no es «M»)
+_SEXO = {"F": "F", "FEM": "F", "FEMENINO": "F", "FEMENINA": "F", "MUJER": "F",
+         "M": "M", "MASC": "M", "MASCULINO": "M", "HOMBRE": "M", "H": "M"}
 
 
 def leer_cedulas(ruta: str | Path) -> Iterator[FilaCedula]:
-    wb = openpyxl.load_workbook(ruta, read_only=True, data_only=True)
-    try:
+    with _libro(ruta) as wb:
         ws, fila_enc, enc = _hoja_con(wb, CEDULAS)
         if ws is None:
             raise ValueError("El archivo no tiene una hoja con Cédula y Nombre completo")
@@ -158,17 +203,15 @@ def leer_cedulas(ruta: str | Path) -> Iterator[FilaCedula]:
                     edad = None
             except (TypeError, ValueError):
                 edad = None
-            sexo = _texto(busca(f, "SEXO")).upper()[:1]
+            sexo = _SEXO.get(tx.nombre_norm(busca(f, "SEXO")), "")
             listas = [s.strip() for s in _texto(busca(f, "LISTAS", "LISTA")).split(";") if s.strip()]
             yield FilaCedula(
                 cedula=ced, nombre=nombre, telefonos=tx.telefonos(busca(f, "TELEFONOS", "TELEFONO")),
                 correo=tx.correo(busca(f, "CORREO")), municipio=_texto(busca(f, "MUNICIPIO")),
                 puesto=_texto(busca(f, "PUESTODEVOTACION")), mesa=_texto(busca(f, "MESADONDEVOTA")),
                 mesa_testigo=_texto(busca(f, "MESACOMOTESTIGO")), partido=_texto(busca(f, "PARTIDOGRUPO")),
-                edad=edad, sexo=sexo if sexo in ("F", "M") else "", direccion=_texto(busca(f, "DIRECCION")),
+                edad=edad, sexo=sexo, direccion=_texto(busca(f, "DIRECCION")),
                 detalle=_texto(busca(f, "DETALLE")), listas=listas,
                 otros_nombres=_texto(busca(f, "OTROSNOMBRESREGISTRADOS")),
                 origen=_texto(busca(f, "ARCHIVOSDEORIGEN")),
             )
-    finally:
-        wb.close()

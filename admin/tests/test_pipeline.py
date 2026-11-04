@@ -13,6 +13,18 @@ def test_telefonos_y_correos():
     assert tx.correo("notiene@gmail.com") == ""
     assert tx.cedula(90000001.0) == "90000001"
     assert tx.cedula("1111111") == ""
+    # Celda numérica guardada como texto: el «.0» no es un dígito más; los separadores de miles sí se quitan
+    assert tx.cedula("12345678.0") == "12345678"
+    assert tx.cedula("71.234.000") == "71234000"
+    assert tx.cedula("98.000") == "98000"
+    assert tx.telefonos("3001234567.0") == ["3001234567"]
+    assert tx.telefonos("3001112233.0; 3014445566.0") == ["3001112233", "3014445566"]
+    # «Y» en mayúscula, un solo espacio o un guion también separan; un fijo de 7 o un 60X no se pierden
+    assert tx.telefonos("8612345 Y 3001234567") == ["8612345", "3001234567"]
+    assert tx.telefonos("8612345 3001234567") == ["8612345", "3001234567"]
+    assert tx.telefonos("3001234567 Y 6045551234") == ["3001234567", "6045551234"]
+    assert tx.telefonos("3001234567-6045551234") == ["3001234567", "6045551234"]
+    assert tx.telefonos("CC 12345678 3001234567") == ["3001234567"]
 
 
 def test_tramite_y_nombres():
@@ -35,6 +47,21 @@ def test_leer_direcciones():
     assert leer("VEREDA X-10 FINCA LOS ALMENDROS").lugar_texto == "X10"
     assert leer("VEREDA K -5").lugar_texto == "K5"
     assert leer("FINCA EL MANANTIAL").finca == "EL MANANTIAL"
+    # Guion tras la letra o el BIS del cruce
+    assert leer("KR 55 # 46A-16").via_texto() == "KR 55 # 46A-16"
+    assert leer("Cra. 55 No. 46A-16").via_texto() == "KR 55 # 46A-16"
+    assert leer("CALLE 48B # 45 A-12").via_texto() == "CL 48B # 45A-12"
+    assert leer("KR 46 # 45 BIS-12").via_texto() == "KR 46 # 45 BIS-12"
+    # «No.» solo como palabra suelta
+    assert leer("CL 49 NO. 45-12").via_texto() == "CL 49 # 45-12"
+    assert leer("VEREDA EL LLANO. CASA 3").lugar_texto == "EL LLANO"
+    # «B/» es barrio
+    d = leer("CL 50 # 47 B/ CENTRAL")
+    assert (d.cruce, d.lugar_texto, d.tipo_lugar) == ("47", "CENTRAL", "BARRIO")
+    assert leer("CALLE 45 NO 12-30 B/ LOS ALMENDROS").tipo_lugar == "BARRIO"
+    # Lo que escribe normalizada() se vuelve a leer igual
+    d = leer("CL 49 # 45-12, B. TRES DE OCTUBRE")
+    assert d.normalizada() == "CL 49 # 45-12, B. TRES DE OCTUBRE"
 
 
 LUGARES = [

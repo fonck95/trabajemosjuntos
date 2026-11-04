@@ -42,10 +42,11 @@ def nombre_norm(s: object) -> str:
 _DEL_PEGADO = re.compile(r"\bDEL(CARMEN|ROSARIO|SOCORRO|PILAR|CRISTO|VALLE|MAR|TRANSITO|PERPETUO|ROCIO|CARMEM)\b")
 
 
-def tokens_nombre(s: object) -> list[str]:
-    """Palabras del nombre que sí identifican (sin partículas ni iniciales sueltas). «DELCARMEN» → «CARMEN»."""
+def tokens_nombre(s: object, iniciales: bool = False) -> list[str]:
+    """Palabras del nombre que sí identifican (sin partículas ni, salvo que se pidan, iniciales sueltas).
+    «DELCARMEN» → «CARMEN»."""
     n = _DEL_PEGADO.sub(r"DEL \1", nombre_norm(s))
-    return [t for t in n.split() if t not in PARTICULAS and len(t) > 1]
+    return [t for t in n.split() if t not in PARTICULAS and (iniciales or len(t) > 1)]
 
 
 _FONETICA = [
@@ -76,6 +77,12 @@ def separar_tramite(s: object) -> tuple[str, str]:
     return limpiar(m.group(1)), nombre_visible(m.group(2))
 
 
+# Un número dentro de un trozo con varios: celular, fijo 60X de 10 dígitos o fijo de 7, con o sin +57
+_TEL = re.compile(r"(?<!\d)(?:\+?57[\s.-]?)?((?:3\d{2}|60\d)[\s.-]?\d{3}[\s.-]?\d{4}|\d{7})(?!\d)")
+# «3001234567.0»: número leído de una celda numérica guardada como texto
+_DECIMAL_CERO = re.compile(r"(?<![\d.,])(\d{7,12})[.,]0{1,2}(?![\d.,])")
+
+
 def telefonos(s: object) -> list[str]:
     """Teléfonos colombianos válidos en el texto (celular de 10 dígitos que empieza por 3, o fijo de 7 o 10).
 
@@ -87,17 +94,25 @@ def telefonos(s: object) -> list[str]:
     if isinstance(s, float) and s.is_integer():
         txt = str(int(s))
     salida: list[str] = []
-    for bruto in re.split(r"[;,/|]| - |\s{2,}|\by\b", txt):
+
+    def agregar(d: str) -> None:
+        if len(set(d)) > 2 and d not in salida:
+            salida.append(d)
+
+    for bruto in re.split(r"[;,/|]|\s-\s|\s{2,}|\b[yo]\b", txt, flags=re.I):
+        bruto = _DECIMAL_CERO.sub(r"\1", bruto)
         d = re.sub(r"\D", "", bruto)
         if d.startswith("57") and len(d) == 12:
             d = d[2:]
         if len(d) == 10 and d[0] in "36" or len(d) == 7:
-            if len(set(d)) > 2 and d not in salida:
-                salida.append(d)
-        elif len(d) == 20:  # dos celulares pegados
+            agregar(d)
+        elif len(d) == 20:  # dos números pegados
             for parte in (d[:10], d[10:]):
-                if parte[0] == "3" and len(set(parte)) > 2 and parte not in salida:
-                    salida.append(parte)
+                if parte[0] == "3" or parte.startswith("60"):
+                    agregar(parte)
+        else:  # varios números en el mismo trozo: «8612345 3001234567»
+            for m in _TEL.finditer(bruto):
+                agregar(re.sub(r"\D", "", m.group(1)))
     return salida
 
 
@@ -131,6 +146,11 @@ def cedula(s: object) -> str:
         return ""
     if isinstance(s, float) and s.is_integer():
         s = int(s)
+    if isinstance(s, str):
+        # «12345678.0» (celda numérica guardada como texto): el decimal no es parte de la cédula. Con separadores de
+        # miles («71.234.000») no se toca
+        m = re.fullmatch(r"\s*(\d+)[.,]0{1,2}\s*", s)
+        s = m.group(1) if m else s
     d = re.sub(r"\D", "", str(s))
     return d if 5 <= len(d) <= 11 and len(set(d)) > 1 else ""
 
