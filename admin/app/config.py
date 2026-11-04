@@ -54,6 +54,11 @@ def _entero(nombre: str, defecto: int) -> int:
         raise RuntimeError(f"La variable {nombre} debe ser un número entero (vale {v!r})") from None
 
 
+def sin_credenciales(texto: str) -> str:
+    """Quita usuario y clave de una URI (o de un mensaje de error que la cite) antes de escribirla en el registro."""
+    return re.sub(r"[^\s/@]*:[^\s/@]*@", "", re.sub(r"//[^\s/@]*@", "//", texto))
+
+
 def en_railway() -> bool:
     return any(os.environ.get(n) for n in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME", "RAILWAY_ENVIRONMENT_ID"))
 

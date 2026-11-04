@@ -65,8 +65,9 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
 ## Seguridad
 
 - Usuario y clave en las variables `ADMIN` y `password` (también `admin` / `PASSWORD`), comparadas en tiempo constante.
-- Sesión con token aleatorio en cookie `HttpOnly`, `SameSite=Strict` y `Secure` en producción; en MongoDB solo
-  queda el hash y la sesión caduca sola (índice TTL). CSRF obligatorio en todo lo que cambia datos.
+- Sesión con token aleatorio en cookie `HttpOnly`, `SameSite=Strict` y `Secure` en producción; en el servicio único
+  va con `Path=/panel/`, así el navegador no la manda al sitio público. En MongoDB solo queda el hash y la sesión
+  caduca sola (índice TTL). CSRF obligatorio en todo lo que cambia datos.
 - Límite de ingreso: 5 intentos fallidos por IP bloquean esa IP hasta 15 minutos; con muchos fallos en total cada
   intento espera un retroceso corto y creciente (como mucho 60 s). El navegador que ya ingresó guarda una marca
   firmada con la credencial vigente (sin datos) y no compite por ese turno: una inundación desde muchas IPs no deja
@@ -76,7 +77,8 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
   antes de leer el cuerpo (no se procesan cargas de archivos anónimas).
 - El ingreso fallido no guarda lo que se escribió en el campo usuario.
 - Cabeceras: CSP estricta sin scripts de terceros (MapLibre va incluido en el repositorio), `X-Frame-Options: DENY`,
-  `noindex`, `no-store` en la API, HSTS en producción. Sin documentación pública de la API.
+  `noindex`, `no-store` en la API, HSTS en producción. Sin documentación pública de la API. uvicorn arranca con
+  `--no-server-header`: ninguna respuesta anuncia `server: uvicorn`.
 - Auditoría de cada ingreso, edición, fusión, exportación e importación (usuario, fecha, IP y qué cambió).
 - Las búsquedas no quedan en los registros: uvicorn arranca con `--no-access-log`, porque su log de acceso imprime
   la URL completa (`/api/buscar?q=<cédula>`, `/api/personas?q=<teléfono>`, `/api/exportar.xlsx?q=...`) y Railway
@@ -103,8 +105,8 @@ tiene `railpack.json`, que instala `requirements.txt`, construye el sitio (`scri
 
 | Dirección | Qué sirve |
 |---|---|
-| `/` , `/atlas`, `/propuesta` | El sitio público, igual que antes con Caddy (mismas cabeceras y atajos, sin CSP) |
-| `/panel/` | El panel: ingreso con `ADMIN` y `password`; al pie del Home, el enlace **Ingreso del equipo** lleva aquí |
+| `/` , `/atlas`, `/propuesta` | El sitio público, con sus propias cabeceras y su CSP (`script-src 'self'` más los hashes de sus scripts en línea; `blob:` para las texturas del visor 3D). three y GSAP van como copias locales en `web/vendor/`: ningún script de un CDN de terceros. `/atlas/` redirige a `/atlas` |
+| `/panel/` | El panel, con su propia CSP y la cookie de sesión acotada a `/panel/`: ingreso con `ADMIN` y `password`; al pie del Home, el enlace **Ingreso del equipo** lleva aquí |
 | `/health` | Siempre 200: el sitio no depende de MongoDB ni del panel |
 
 Pasos, en el servicio que ya publica el sitio:
@@ -113,19 +115,25 @@ Pasos, en el servicio que ya publica el sitio:
 2. En *Variables* del servicio del sitio: `ADMIN` = usuario, `password` = clave (12 caracteres o más) y
    `MONGODB_URI` = `${{MongoDB.MONGO_URL}}` (referencia al plugin) o la URI de Atlas.
 3. Deje vacío *Settings → Deploy → Custom Start Command* (el arranque sale de `railpack.json`, con
-   `--no-access-log`) y, si tiene *Healthcheck Path*, que sea `/health`.
+   `--no-access-log` y `--no-server-header`) y, si tiene *Healthcheck Path*, que sea `/health`.
 4. Despliegue (un *push* a `main` lo hace solo). Abra `https://<su-dominio>/panel/`, ingrese y suba los dos Excel en
    **Importar y exportar**.
 
-Si faltan variables o MongoDB no responde, el sitio sigue en línea: `/panel/` muestra un aviso con lo que falta, la
-API responde 503 y el panel se conecta solo cuando MongoDB aparece (vea *Deploy Logs*). En *Deploy Logs* no deben
-aparecer líneas `GET /api/...` al buscar.
+Si faltan variables o MongoDB no responde, el sitio sigue en línea: `/panel/` muestra un aviso con lo que falta y el
+panel se conecta solo cuando MongoDB aparece (vea *Deploy Logs*); con Atlas (`mongodb+srv://`), si el DNS falla al
+arrancar, vuelve a intentar crear el panel. Con MongoDB caído, la API del panel responde 503 al instante
+(cortacircuitos) y el panel tiene su propio límite de peticiones simultáneas: no frena el sitio. En *Deploy Logs* no
+deben aparecer líneas `GET /api/...` al buscar.
 
-**Panel en un servicio aparte (opcional).** Cree otro servicio del mismo repositorio con **Root Directory = `admin`**:
-Railpack lee `admin/railpack.json` (arranca `app.main` con `--no-access-log`, el panel solo en la raíz) y `admin/Procfile` de respaldo;
-ponga *Healthcheck Path* = `/salud` y las mismas variables. Para enlazarlo desde el sitio, defina en el servicio del
-sitio `PANEL_URL` = su dirección `https://…`. En GitHub Pages (sin panel) el enlace solo aparece si existe la variable
-de repositorio `PANEL_URL`.
+**Aislamiento máximo (opcional).** En el servicio único, sitio y panel comparten origen: cada uno lleva su CSP y la
+cookie solo viaja a `/panel/`, pero la ruta de una cookie no separa orígenes. Para que el panel quede en otro origen,
+llévelo a un servicio aparte con dominio propio: cree otro servicio del mismo repositorio con **Root Directory =
+`admin`** (Railpack lee `admin/railpack.json`, que arranca `app.main` con `--no-access-log` y `--no-server-header`,
+el panel solo en la raíz, y `admin/Procfile` de respaldo), con *Healthcheck Path* = `/salud`, las mismas variables y
+su dominio (el de Railway o uno propio, como `panel.<su-dominio>`). En el servicio del sitio defina `PANEL_URL` =
+esa dirección `https://…`, para que el Home enlace allá, y quite `ADMIN`, `password` y `MONGODB_URI`, para que el
+sitio no tenga acceso a la base. En GitHub Pages (sin panel) el enlace solo aparece si existe la variable de
+repositorio `PANEL_URL`.
 
 ## Trabajar en local
 
@@ -134,7 +142,7 @@ cd admin
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements-dev.txt
 cp .env.example .env        # y complete ADMIN, password y MONGODB_URI
-uvicorn app.main:app --reload --no-access-log
+uvicorn app.main:app --reload --no-access-log --no-server-header
 ```
 
 Un MongoDB local sirve con `docker run -d -p 27017:27017 mongo:7`. Comandos útiles (los Excel, fuera del repositorio o
@@ -157,13 +165,14 @@ Para probar el servicio único como en Railway (sitio en `/` y panel en `/panel/
 
 ```bash
 python3 scripts/build_data.py && PANEL_URL=/panel/ python3 scripts/build_site.py
-uvicorn servidor:app --app-dir admin --port 8000 --no-access-log
+uvicorn servidor:app --app-dir admin --port 8000 --no-access-log --no-server-header
 ```
 
 ## Estructura
 
 | Ruta | Contenido |
 |---|---|
+| `servidor.py` | Servidor único de Railway: el sitio público (`site/`) en la raíz, con sus cabeceras y su CSP, el panel en `/panel/` y `/health` |
 | `app/main.py` | Aplicación FastAPI, cabeceras y estáticos |
 | `app/config.py`, `app/seguridad.py`, `app/db.py` | Variables de entorno, autenticación y sesiones, MongoDB (índices, nomenclátor, fusión, completitud) |
 | `app/api/` | Endpoints: tablero y mapa, personas, reuniones, calidad, sistema (sesión, importación, exportación, catálogos, auditoría) |
@@ -171,7 +180,7 @@ uvicorn servidor:app --app-dir admin --port 8000 --no-access-log
 | `geo/` | Geografía pública: límite municipal (DANE MGN 2025), nomenclátor de veredas, barrios y centros poblados, grilla de calles (OSM) y los scripts que los generan |
 | `web/` | Interfaz (HTML, CSS y módulos JS sin compilación) con MapLibre GL incluido |
 | `tests/` | Pruebas con personas inventadas |
-| `railpack.json`, `Procfile` | Arranque en Railway (uvicorn sin log de acceso); `railway.json` solo para servicios con *Config as Code* |
+| `railpack.json`, `Procfile` | Arranque del panel en un servicio aparte (uvicorn sin log de acceso ni cabecera `server`); `railway.json` solo para servicios con *Config as Code* |
 
 Geografía: © colaboradores de OpenStreetMap (ODbL); DANE (MGN y DIVIPOLA); Gobernación de Antioquia (catastro);
 MinEducación (sedes). Mapas base: OpenFreeMap / OpenMapTiles, Esri World Imagery; relieve: Mapzen Terrain Tiles.

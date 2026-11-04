@@ -10,14 +10,18 @@
   indefinidamente.
 * Ninguna ruta /api/* (salvo /api/login y /api/yo) se atiende sin sesión y el cuerpo de la petición tiene tamaño
   máximo: las dos cosas se comprueban antes de leerlo.
+* Si MongoDB se cae o se cuelga, la API responde 503 al instante durante unos segundos sin tocar la base
+  (`Cortacircuitos`) y deja una sola línea en el registro, sin traza ni URI.
 """
 from __future__ import annotations
 
 import hashlib
 import hmac
 import ipaddress
+import logging
 import math
 import secrets
+import time
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
@@ -25,10 +29,11 @@ from fastapi import Depends, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from pymongo.database import Database
-from pymongo.errors import DuplicateKeyError
+from pymongo.errors import ConnectionFailure, DuplicateKeyError
 from starlette.datastructures import Headers
 from starlette.middleware.base import BaseHTTPMiddleware
 
+log = logging.getLogger("panel")
 COOKIE = "yj_sesion"
 COOKIE_DISPOSITIVO = "yj_dispositivo"
 DIAS_DISPOSITIVO = 180
@@ -41,6 +46,8 @@ MB = 1 << 20
 LIMITE_JSON = 256 * 1024  # el JSON más grande del panel (una ficha o una reunión) cabe de sobra
 RUTAS_SIN_SESION = {"/api/login", "/api/yo"}
 USUARIO_DESCONOCIDO = "desconocido"  # en la auditoría de un ingreso fallido con otro usuario
+PAUSA_S = 5  # tras un fallo de conexión con MongoDB, la API responde 503 sin tocar la base durante este tiempo
+SIN_BASE = "El panel se está conectando a la base de datos. Intente de nuevo en unos segundos."
 
 
 def _h(s: str) -> bytes:
@@ -179,6 +186,20 @@ def dispositivo_conocido(cfg, request: Request) -> bool:
     return hmac.compare_digest(firma.encode(), _firma_dispositivo(cfg, marca).encode())
 
 
+def _ruta_cookie(request: Request) -> str:
+    """La cookie de sesión viaja solo a las rutas del panel: «/panel/» dentro del sitio público (no a /atlas ni a
+    /js/…), «/» con el panel solo."""
+    return f"{base_de(request)}/"
+
+
+def _borrar_cookie_vieja(request: Request, response: Response) -> None:
+    # Antes la cookie iba con Path=/ también dentro del sitio. El navegador manda las dos y Starlette se queda con la
+    # última, la vieja: si su sesión ya no vale, el ingreso volvería a pedir la clave hasta que caducara.
+    if base_de(request):
+        response.delete_cookie(COOKIE, path="/", httponly=True, samesite="strict",
+                               secure=request.app.state.cfg.cookie_segura)
+
+
 def crear_sesion(db: Database, cfg, response: Response, usuario: str, request: Request) -> str:
     token = secrets.token_urlsafe(32)
     csrf = secrets.token_urlsafe(24)
@@ -186,8 +207,9 @@ def crear_sesion(db: Database, cfg, response: Response, usuario: str, request: R
     db.sesiones.insert_one({"_id": _hash(token), "usuario": usuario, "csrf": csrf, "huella": huella(cfg),
                             "creada": datetime.now(timezone.utc), "expira": expira, "ip": ip_de(request),
                             "agente": (request.headers.get("user-agent") or "")[:200]})
+    _borrar_cookie_vieja(request, response)
     response.set_cookie(COOKIE, token, max_age=cfg.horas_sesion * 3600, httponly=True, secure=cfg.cookie_segura,
-                        samesite="strict", path="/")
+                        samesite="strict", path=_ruta_cookie(request))
     return csrf
 
 
@@ -195,7 +217,9 @@ def cerrar_sesion(db: Database, request: Request, response: Response) -> None:
     token = request.cookies.get(COOKIE)
     if token:
         db.sesiones.delete_one({"_id": _hash(token)})
-    response.delete_cookie(COOKIE, path="/")
+    _borrar_cookie_vieja(request, response)
+    response.delete_cookie(COOKIE, path=_ruta_cookie(request), httponly=True, samesite="strict",
+                           secure=request.app.state.cfg.cookie_segura)
 
 
 def sesion_actual(db: Database, request: Request) -> dict | None:
@@ -263,13 +287,67 @@ def base_de(request: Request) -> str:
     return (request.scope.get("root_path") or "").rstrip("/")
 
 
+def sin_base(ruta: str) -> JSONResponse:
+    """503 mientras MongoDB no responde: el navegador reintenta solo y el sitio no espera."""
+    cuerpo = {"ok": False, "detail": SIN_BASE} if ruta == "/salud" else {"detail": SIN_BASE}
+    return JSONResponse(cuerpo, 503, headers={"Retry-After": str(PAUSA_S)})
+
+
+class Cortacircuitos:
+    """Si MongoDB se cae o se cuelga, que el panel no lo espere en cada petición.
+
+    Cada petición que espera a MongoDB retiene un hilo hasta que vence el tiempo de espera de pymongo, y esos hilos
+    los comparte el sitio público. Tras un fallo de conexión (`ConnectionFailure`: AutoReconnect, NetworkTimeout,
+    ServerSelectionTimeoutError…) la API responde 503 durante `pausa_s` sin tocar la base. Pasada la pausa, una sola
+    petición comprueba con un ping si MongoDB volvió (las demás siguen en 503): si responde, todo sigue normal; si
+    no, empieza otra pausa. Vive en app.state: sirve igual con el panel solo y dentro del sitio. Solo se usa desde
+    el bucle de eventos, así que no necesita candados."""
+
+    def __init__(self, pausa_s: float = PAUSA_S):
+        self.pausa_s = pausa_s
+        self.caido = False      # hubo un fallo y todavía no se comprobó que MongoDB volvió
+        self.hasta = 0.0        # fin de la pausa (time.monotonic)
+        self.probando = False   # una petición está comprobando si MongoDB volvió
+
+    def fallo(self, exc: Exception) -> None:
+        # Una línea por caída, sin traza ni URI (el mensaje de pymongo nombra el servidor)
+        if not self.caido:
+            log.warning("MongoDB no responde (%s): la API responde 503 y vuelve a intentar cada %s s",
+                        type(exc).__name__, self.pausa_s)
+        self.caido = True
+        self.hasta = time.monotonic() + self.pausa_s
+
+    async def permitir(self, db: Database) -> bool:
+        """¿Puede esta petición tocar MongoDB?"""
+        if not self.caido:
+            return True
+        if self.probando or time.monotonic() < self.hasta:
+            return False
+        self.probando = True
+        try:
+            await run_in_threadpool(db.command, "ping")
+        except ConnectionFailure as e:
+            self.fallo(e)
+            return False
+        except Exception:  # MongoDB respondió, aunque con otro error (permisos…): lo verá la propia petición
+            pass
+        finally:
+            self.probando = False
+        self.caido = False
+        log.info("MongoDB volvió a responder")
+        return True
+
+
 class GuardiaApi:
     """Middleware ASGI que actúa antes de que nadie lea el cuerpo de la petición.
 
     FastAPI lee el cuerpo entero (y guarda en disco cada archivo subido) antes de resolver `requiere_admin`: sin
     esto, un anónimo podía llenar la memoria con un JSON enorme o el disco con una subida a /api/importar.
     * Limita el tamaño del cuerpo, por su Content-Length y contando lo que llega por partes.
-    * Rechaza sin sesión válida toda ruta /api/*, salvo /api/login y /api/yo. El CSRF sigue en `requiere_admin`."""
+    * Mientras MongoDB no está listo o el `Cortacircuitos` está en pausa, /api/* y /salud responden 503 al instante.
+    * Rechaza sin sesión válida toda ruta /api/*, salvo /api/login y /api/yo. El CSRF sigue en `requiere_admin`.
+    Va por fuera del manejador de excepciones de FastAPI: los fallos de conexión de su propia consulta se atrapan
+    aquí."""
 
     def __init__(self, app):
         self.app = app
@@ -283,12 +361,18 @@ class GuardiaApi:
         largo = Headers(scope=scope).get("content-length", "")
         if largo.isdigit() and int(largo) > limite:
             return await JSONResponse({"detail": "La petición es demasiado grande"}, 413)(scope, receive, send)
-        if ruta.startswith("/api/") and not getattr(app.state, "listo", True):
-            # Dentro del sitio, el panel arranca aunque MongoDB todavía no responda: la API espera hasta que conecte
-            return await JSONResponse({"detail": "El panel se está conectando a la base de datos. Intente de nuevo en "
-                                                 "unos segundos."}, 503, headers={"Retry-After": "5"})(scope, receive, send)
+        if ruta.startswith("/api/") or ruta == "/salud":
+            # Dentro del sitio, el panel arranca aunque MongoDB todavía no responda: la API espera hasta que conecte.
+            # Tras un fallo de conexión, espera la pausa del cortacircuitos
+            if not getattr(app.state, "listo", True) or not await app.state.cortacircuitos.permitir(app.state.db):
+                return await sin_base(ruta)(scope, receive, send)
         if ruta.startswith("/api/") and ruta not in RUTAS_SIN_SESION:
-            if await run_in_threadpool(sesion_actual, app.state.db, Request(scope)) is None:
+            try:
+                s = await run_in_threadpool(sesion_actual, app.state.db, Request(scope))
+            except ConnectionFailure as e:
+                app.state.cortacircuitos.fallo(e)
+                return await sin_base(ruta)(scope, receive, send)
+            if s is None:
                 return await JSONResponse({"detail": "Inicie sesión"}, 401)(scope, receive, send)
         recibidos = 0
 
