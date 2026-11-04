@@ -30,6 +30,8 @@ from starlette.datastructures import Headers
 from starlette.middleware.base import BaseHTTPMiddleware
 
 COOKIE = "yj_sesion"
+COOKIE_DISPOSITIVO = "yj_dispositivo"
+DIAS_DISPOSITIVO = 180
 VENTANA_S = 15 * 60
 MAX_POR_IP = 5
 MAX_GLOBAL = 100
@@ -79,7 +81,8 @@ def ip_de(request: Request) -> str:
     ip = _ip_valida(h.get("x-real-ip"))
     if ip is None and h.get("x-forwarded-for"):
         ip = _ip_valida(h["x-forwarded-for"].split(",")[-1])
-    return ip or (request.client.host if request.client else "?")[:64]
+    # El respaldo también se valida: con --forwarded-allow-ips=* uvicorn ya puso aquí el valor que escribió el cliente
+    return ip or _ip_valida(request.client.host if request.client else None) or "?"
 
 
 def _clave_ip(ip: str) -> str:
@@ -99,12 +102,14 @@ def _segundos(t: timedelta) -> int:
     return max(1, math.ceil(t.total_seconds()))
 
 
-def reservar_intento(db: Database, ip: str):
+def reservar_intento(db: Database, ip: str, conocido: bool = False):
     """Registra el intento ANTES de comprobar la clave y decide si se atiende.
 
     Devuelve (id del intento, 0) si se puede comprobar la clave, o (None, segundos de espera) si no. Se cuenta
     después de insertar, incluidos el propio intento y los simultáneos: una ráfaga en paralelo no pasa del límite.
-    Los intentos rechazados se borran: no alargan el bloqueo ni cuentan para el límite global."""
+    Los intentos rechazados se borran: no alargan el bloqueo ni cuentan para el límite global.
+    `conocido`: el navegador trae la marca de un ingreso correcto anterior (ver `dispositivo_conocido`); no compite
+    por el turno del freno global, así una inundación desde muchas IPs no deja fuera al administrador."""
     ahora = datetime.now(timezone.utc)
     desde = ahora - timedelta(seconds=VENTANA_S)
     clave = _clave_ip(ip)
@@ -117,7 +122,7 @@ def reservar_intento(db: Database, ip: str):
         x = next(db.intentos.find(de_ip, {"ts": 1}).sort("ts", 1).skip(max(0, n - MAX_POR_IP - 1)).limit(1), None)
         return None, _segundos(x["ts"] + timedelta(seconds=VENTANA_S) - ahora if x else timedelta(seconds=1))
     total = db.intentos.count_documents({"ok": False, "ts": {"$gt": desde}})
-    if total > MAX_GLOBAL:
+    if total > MAX_GLOBAL and not conocido:
         # Muchos fallos desde muchas IPs: cada intento atendido abre una espera corta (1, 2, 4… hasta 60 s). Un solo
         # documento hace de turno, así que dos intentos simultáneos no pasan a la vez.
         espera = min(2 ** min(total - MAX_GLOBAL - 1, 10), ESPERA_MAX_S)
@@ -151,6 +156,26 @@ def _llave(usuario: str, clave: str) -> bytes:
 def huella(cfg) -> str:
     """Huella HMAC de la credencial vigente: si cambian ADMIN o password, cambia y las sesiones viejas no valen."""
     return hmac.new(_llave(cfg.usuario or "", cfg.clave or ""), b"sesion", hashlib.sha256).hexdigest()
+
+
+def _firma_dispositivo(cfg, marca: str) -> str:
+    return hmac.new(_llave(cfg.usuario or "", cfg.clave or ""), b"dispositivo|" + marca.encode(), hashlib.sha256).hexdigest()
+
+
+def marcar_dispositivo(cfg, response: Response) -> None:
+    """Tras un ingreso correcto, el navegador recibe una marca firmada con la credencial vigente (sin datos)."""
+    marca = secrets.token_urlsafe(18)
+    response.set_cookie(COOKIE_DISPOSITIVO, f"{marca}.{_firma_dispositivo(cfg, marca)}", max_age=DIAS_DISPOSITIVO * 86400,
+                        httponly=True, secure=cfg.cookie_segura, samesite="strict", path="/api/login")
+
+
+def dispositivo_conocido(cfg, request: Request) -> bool:
+    """¿El navegador ya ingresó antes con la credencial vigente? Si cambian ADMIN o password, la marca deja de valer."""
+    valor = request.cookies.get(COOKIE_DISPOSITIVO) or ""
+    marca, _, firma = valor.partition(".")
+    if not marca or len(valor) > 200 or not cfg.usuario or not cfg.clave:
+        return False
+    return hmac.compare_digest(firma.encode(), _firma_dispositivo(cfg, marca).encode())
 
 
 def crear_sesion(db: Database, cfg, response: Response, usuario: str, request: Request) -> str:

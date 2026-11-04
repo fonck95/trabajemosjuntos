@@ -37,8 +37,8 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
   resta (hermanos, madre e hija). Compartir teléfono o correo confirma un nombre parecido, pero no vuelve parecido un
   nombre distinto: en una familia todos dan el mismo celular. Lo seguro se une solo; lo dudoso va a **Calidad de datos**.
   Dos nombres de pila distintos no se unen aunque compartan ficha o celular, y un mismo nombre con fichas y teléfonos
-  distintos queda como dos personas que también pasan por revisión. Si dos cédulas apuntan a la misma ficha, gana la de
-  mayor puntaje y la otra va a revisión.
+  distintos queda como dos personas que también pasan por revisión. Si dos cédulas apuntan a la misma ficha, ninguna se
+  une sola: las dos van a revisión.
 - **Normalización de direcciones** (`app/pipeline/direcciones.py`). «BARRIO TRES DE OCTUBRE CALLE 49 # 45  12» →
   `CL 49 # 45-12, B. TRES DE OCTUBRE`; «CLL 52 N 4610» → `CL 52 # 46-10`; «VEREDA X-10» y «K-5» se reconocen; corrige
   palabras pegadas («ESPERANZAMANZANA»), manzana/lote, fincas y referencias («FRENTE AL PARQUE»). Las referencias
@@ -68,8 +68,10 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
 - Sesión con token aleatorio en cookie `HttpOnly`, `SameSite=Strict` y `Secure` en producción; en MongoDB solo
   queda el hash y la sesión caduca sola (índice TTL). CSRF obligatorio en todo lo que cambia datos.
 - Límite de ingreso: 5 intentos fallidos por IP bloquean esa IP hasta 15 minutos; con muchos fallos en total cada
-  intento espera un retroceso corto y creciente (como mucho 60 s), así el administrador nunca queda fuera
-  indefinidamente. La IP sale de la cabecera que pone el borde de Railway, no de la que el cliente puede falsificar.
+  intento espera un retroceso corto y creciente (como mucho 60 s). El navegador que ya ingresó guarda una marca
+  firmada con la credencial vigente (sin datos) y no compite por ese turno: una inundación desde muchas IPs no deja
+  fuera al administrador. La IP sale de la cabecera que pone el borde de Railway, no de la que el cliente puede
+  falsificar.
 - Las sesiones se invalidan solas si cambian `ADMIN` o `password`. Las peticiones a la API sin sesión se rechazan
   antes de leer el cuerpo (no se procesan cargas de archivos anónimas).
 - El ingreso fallido no guarda lo que se escribió en el campo usuario.
@@ -87,8 +89,10 @@ La base tiene datos personales y algunos **sensibles** (afiliación política, c
 autorización previa, expresa e informada del titular, una finalidad informada y atender consultas, correcciones y
 supresiones. Para eso están el campo **Autorización de datos** (con fecha) de cada ficha, el indicador del panel y la
 opción **Suprimir datos**, que vacía la ficha y todas las fichas que se unieron con ella, borra sus coincidencias y el
-detalle de su auditoría, y deja solo una huella cifrada (HMAC con una clave aleatoria guardada en la base) de la
-cédula, el nombre y los trámites para que las próximas importaciones no la vuelvan a crear. Los datos que provienen de bases oficiales (por ejemplo, las del SISBÉN) solo pueden usarse
+detalle de su auditoría, y deja solo huellas cifradas (HMAC con una clave aleatoria guardada en la base) de su
+cédula, sus trámites y su ficha o celular junto con el nombre, para que las próximas importaciones no la vuelvan a
+crear. Nunca se guarda el nombre solo: otra persona con el mismo nombre sigue entrando. Los datos que provienen de
+bases oficiales (por ejemplo, las del SISBÉN) solo pueden usarse
 para la finalidad con la que se recogieron; revise con un abogado el uso que se le dará a la base antes de operarla.
 
 ## Desplegar en Railway

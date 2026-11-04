@@ -195,7 +195,7 @@ def test_cedula_repetida_en_la_misma_importacion(sesion, tmp_path):
     assert res["personas_nuevas"] == 1 and res["cedulas_ya_existian"] == 1
 
 
-def test_dos_cedulas_para_la_misma_ficha_gana_la_de_mayor_puntaje(bases, tmp_path):
+def test_dos_cedulas_para_la_misma_ficha_van_las_dos_a_revision(bases, tmp_path):
     from app.pipeline.importar import importar
     tram = excel_tramites(tmp_path / "t.xlsx", [
         ("3001", "0589300000301", "2/6/2025", "NUEVA ENCUESTA - EUSTAQUIO BARTOLOME ZAPATEIRO QUINTERO", "VEREDA LA CONDOR", "", "3001112233", 1)])
@@ -204,9 +204,12 @@ def test_dos_cedulas_para_la_misma_ficha_gana_la_de_mayor_puntaje(bases, tmp_pat
     for i, orden in enumerate(([parcial, completo], [completo, parcial])):
         db = bases()
         res = importar(db, [tram, excel_cedulas(tmp_path / f"c{i}.xlsx", orden)])
-        assert res.cedulas_unidas_auto == 1 and res.personas_nuevas == 2
+        # Conflicto: ninguna se une sola, sin importar el orden; las dos quedan para que una persona decida
+        assert res.cedulas_unidas_auto == 0 and res.cedulas_en_revision == 2 and res.personas_nuevas == 3
         ficha = db.personas.find_one({"tramites.id_externo": "3001"})
-        assert ficha["cedula"] == "90000041"
+        assert ficha["cedula"] is None
+        pares = list(db.coincidencias.find({"candidato_id": ficha["_id"], "estado": "pendiente"}))
+        assert len(pares) == 2
 
 
 def test_cedulas_empatadas_van_a_revision_y_la_otra_se_cierra_al_aceptar(sesion, tmp_path):

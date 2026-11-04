@@ -28,6 +28,31 @@ def _login(c, usuario="admin", clave=CLAVE, ip=None, **headers):
 
 # ───────────────────────────── Límite de intentos de ingreso ─────────────────────────────
 
+def test_dispositivo_conocido_no_compite_por_el_freno_global(cliente):
+    db = cliente.app.state.db
+    assert _login(cliente, ip="198.51.100.7").status_code == 200
+    marca = cliente.cookies.get(seg.COOKIE_DISPOSITIVO)
+    assert marca and "." in marca
+    cliente.cookies.clear()
+    # Inundación desde muchas IPs: el freno global está tomado por el atacante
+    ahora = datetime.now(timezone.utc)
+    db.intentos.insert_many([{"ip": f"ataque-{i}", "ts": ahora, "ok": False} for i in range(500)])
+    db.intentos.update_one({"_id": "freno_global"}, {"$set": {"hasta": ahora + timedelta(seconds=50)}}, upsert=True)
+    assert _login(cliente, ip="198.51.100.7").status_code == 429            # navegador desconocido: espera
+    assert _login(cliente, ip="198.51.100.7", Cookie=f"{seg.COOKIE_DISPOSITIVO}={marca}").status_code == 200
+    # Una marca inventada no sirve, y el límite por IP sigue valiendo aun con marca
+    assert _login(cliente, ip="198.51.100.8", Cookie=f"{seg.COOKIE_DISPOSITIVO}=abc.def").status_code == 429
+    for _ in range(seg.MAX_POR_IP):
+        _login(cliente, clave="mala", ip="198.51.100.9", Cookie=f"{seg.COOKIE_DISPOSITIVO}={marca}")
+    assert _login(cliente, ip="198.51.100.9", Cookie=f"{seg.COOKIE_DISPOSITIVO}={marca}").status_code == 429
+
+
+def test_ip_de_respaldo_invalida_no_cuenta_como_ip(cliente):
+    from starlette.requests import Request
+    req = Request({"type": "http", "headers": [], "client": ("<script>texto</script>", 1), "method": "GET", "path": "/"})
+    assert seg.ip_de(req) == "?"
+
+
 def test_bloqueo_por_ip_no_alcanza_a_otra_ip(cliente):
     for _ in range(seg.MAX_POR_IP):
         assert _login(cliente, clave="mala", ip="203.0.113.10").status_code == 401
@@ -52,6 +77,7 @@ def test_bloqueo_global_no_deja_fuera_al_administrador(cliente):
     for i in range(seg.MAX_GLOBAL):
         assert _login(cliente, clave="mala", ip=f"203.0.113.{i // seg.MAX_POR_IP + 1}").status_code == 401
     assert _login(cliente, ip="198.51.100.77").status_code == 200
+    cliente.cookies.clear()  # el resto simula un navegador que nunca ingresó (sin marca de dispositivo)
     # Un ataque mucho mayor solo impone esperas cortas, nunca un bloqueo indefinido
     ahora = datetime.now(timezone.utc)
     db.intentos.insert_many([{"ip": f"ataque-{i}", "ts": ahora, "ok": False} for i in range(500)])
@@ -304,10 +330,13 @@ def test_env_ignora_comentarios_en_linea(tmp_path, monkeypatch):
                    "PRUEBA_NUMERAL=abc#def\n"
                    'PRUEBA_COMILLAS="con # adentro"   # comentario\n'
                    "PRUEBA_VACIA=   # nada\n"
-                   "PRUEBA_SIMPLE='uno dos'\n", encoding="utf-8")
+                   "PRUEBA_SIMPLE='uno dos'\n"
+                   "PRUEBA_ALMOHADILLA=#clave-con-numeral\n", encoding="utf-8")
+    _sin_variables(monkeypatch, "PRUEBA_ALMOHADILLA")
     config._cargar_env(env)
     import os
     assert [os.environ[n] for n in nombres] == ["12", "1", "abc#def", "con # adentro", "", "uno dos"]
+    assert os.environ["PRUEBA_ALMOHADILLA"] == "#clave-con-numeral"
 
 
 def test_falta_mongodb_uri_en_railway(tmp_path, monkeypatch, caplog):

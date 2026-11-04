@@ -81,6 +81,8 @@ def filtro(f: Filtros) -> dict:
         y.append({"geo_precision": {"$in": ["direccion", "manual"]}})
     elif f.precision == "aproximada":
         y.append({"geo_precision": {"$in": APROXIMADAS}})
+    elif f.precision == "ubicada":  # cualquier coordenada: lo que se ve en el mapa
+        y.append({"lat": {"$ne": None}})
     elif f.precision == "sin":
         y.append({"lat": None})
     if f.reunion_id:
