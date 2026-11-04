@@ -1,4 +1,5 @@
 // Utilidades de interfaz: plantillas con escape, formato, avisos, diálogos e íconos.
+import { CANALES_AUTORIZACION, ESTADOS_AUTORIZACION, autorizacionDe, textoAbordaje } from './modelo.js';
 
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 export const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ESC[c]);
@@ -129,9 +130,19 @@ const P = {
   zona: '<path d="m5 7 8-4 8 7-4 10-12-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="5" cy="7" r="2"/><circle cx="13" cy="3" r="2"/><circle cx="21" cy="10" r="2"/><circle cx="17" cy="20" r="2"/><circle cx="5" cy="17" r="2"/>',
   telefono: '<path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .6 3.6 1 1 0 0 1-.25 1z"/>',
   acercamiento: '<path d="M4 4h16v12H9l-5 4zm4 5h8m-8 3h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  whatsapp: '<path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3zm4.4 12.4c-.2.5-1.1 1-1.6 1-.4.1-1 .1-1.6-.1a10 10 0 0 1-1.4-.5 11 11 0 0 1-4.3-3.8c-.5-.7-.9-1.5-.9-2.4 0-.9.5-1.4.7-1.6.2-.2.4-.3.6-.3h.4c.1 0 .3 0 .5.4l.7 1.6c.1.1.1.3 0 .4l-.3.5-.3.3c-.1.1-.2.3-.1.5.1.2.6 1 1.3 1.6.9.8 1.6 1 1.9 1.2.2.1.4.1.5-.1l.7-.8c.2-.2.3-.2.5-.1l1.5.7c.2.1.4.2.4.3.1.1.1.6-.2 1.2z"/>',
+  gps: '<circle cx="12" cy="12" r="3.5"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M12 5.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  puntos: '<circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>',
+  siguiente: '<path d="M5 12h13m-5-6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+  hogar: '<path d="m3 11 9-7 9 7M5 9.5V20h5v-6h4v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+  completar: '<path d="M4 20h4L19 9l-4-4L4 16zm9-13 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+  filtro: '<path d="M3 5h18l-7 8v6l-4 2v-8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
 };
-export const icono = (n) => crudo(`<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${P[n] || ''}</svg>`);
+// Los íconos salen de la tabla P (texto fijo de este archivo): por eso se marcan como HTML sin pasar por `crudo`
+export const icono = (n) => new Crudo(`<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${P[n] || ''}</svg>`);
 
+/** ¿Pantalla de celular? (la misma frontera de 900 px de app.css) */
+export const esMovil = () => matchMedia('(max-width: 900px)').matches;
 const NOMBRES_PRECISION = {
   direccion: 'Dirección exacta', manual: 'Puesta a mano', direccion_aprox: 'Dirección aproximada', barrio: 'Barrio', sector: 'Sector',
   caserio: 'Caserío', centro_poblado: 'Centro poblado', vereda: 'Vereda', corregimiento: 'Corregimiento', sin: 'Sin ubicar',
@@ -144,4 +155,20 @@ export const chipPrecision = (p) => {
 export const FUENTES = {
   tramites: 'Trámites', cedulas: 'Base con cédula', reunion: 'Reunión', manual: 'Registro manual',
   planilla: 'Planilla de campo', consultor: 'Consultor', otra_base: 'Otra base', panel: 'Panel',
+};
+
+/** Chip de abordaje de una fila o ficha (4.6). */
+export const chipAbordaje = (ab) => {
+  const { clase, texto } = textoAbordaje(ab);
+  return html`<span class="chip ${clase}">${texto}</span>`;
+};
+
+/** Chip de autorización, con los canales si autorizó. */
+export const chipAutorizacion = (p, { conCanales = true } = {}) => {
+  const a = autorizacionDe(p);
+  const clase = a.estado === 'si' ? 'verde' : a.estado === 'no' || a.estado === 'revocada' ? 'rojo' : 'ambar';
+  const canales = conCanales && a.estado === 'si' && a.canales?.length
+    ? ' · ' + a.canales.map((c) => CANALES_AUTORIZACION[c] || c).join(', ') : '';
+  const sinHabilitar = a.estado === 'si' && a.habilitado === false ? ' (por confirmar)' : '';
+  return html`<span class="chip ${clase}" title="Autorización de tratamiento de datos">${ESTADOS_AUTORIZACION[a.estado] || a.estado}${canales}${sinHabilitar}</span>`;
 };
