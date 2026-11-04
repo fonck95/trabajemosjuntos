@@ -59,8 +59,18 @@ def ahora() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
+# Tiempos de espera con MongoDB: si se cae o se cuelga, una petición del panel no retiene su hilo más de unos segundos
+# (los hilos los comparte el sitio público). connectTimeoutMS también limita la consulta DNS de una URI mongodb+srv://
+# y lo que tarda en notarse un servidor colgado. Con ~12 000 filas inventadas, el comando más lento de importar,
+# recalcular ubicaciones o exportar tarda 0,3 s en local: 20 s por operación dejan margen para un MongoDB lento.
+# Una opción escrita en la URI (?socketTimeoutMS=…) manda sobre estos valores.
+TIEMPOS_MS = {"serverSelectionTimeoutMS": 2500, "connectTimeoutMS": 5000, "socketTimeoutMS": 20000}
+
+
 def conectar(uri: str, nombre: str | None = None) -> tuple[MongoClient, Database]:
-    cliente = MongoClient(uri, serverSelectionTimeoutMS=8000, tz_aware=True, appname="panel-yondo")
+    en_uri = uri.lower()
+    tiempos = {k: v for k, v in TIEMPOS_MS.items() if f"{k.lower()}=" not in en_uri}
+    cliente = MongoClient(uri, tz_aware=True, appname="panel-yondo", **tiempos)
     try:
         db = cliente.get_default_database()
     except Exception:  # la URI no trae base de datos (Railway)
