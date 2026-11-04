@@ -1,0 +1,95 @@
+/* Usuarios, Mi cuenta, reingreso y «Sin acceso» (grupo 2). Usa las variables de app.css; app.js carga este archivo. */
+
+/* ───────── Sin acceso y avisos de cuenta ───────── */
+.sin-acceso a { display: inline-block; margin-top: 10px; }
+.aviso-cuenta { background: var(--accent-soft); color: var(--accent-text); border-radius: var(--r); padding: 12px 16px;
+  margin-bottom: 16px; font-size: 14.5px; }
+.aviso-cuenta b { color: inherit; }
+
+/* ───────── Mi cuenta ───────── */
+.form-cuenta { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
+.form-cuenta .error, .reingreso .error, #f-usuario .error { color: var(--crit); font-weight: 650; font-size: 14px; min-height: 20px; }
+.form-cuenta .sec, #t-clave .sec, #t-compromiso .sec, #t-indicadores .sec, .tarjeta.avance .sec, .tarjeta.serie .sec,
+#indicadores > .sec { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+.compromiso { margin: 0 0 12px; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 14.5px; }
+
+/* ───────── Reingreso (la sesión venció con algo escrito) ───────── */
+.reingreso { display: flex; flex-direction: column; gap: 12px; }
+.reingreso p { margin: 0; }
+.reingreso input[readonly] { background: var(--sunken); }
+.reingreso .legal { color: var(--muted); font-size: 12.5px; }
+
+/* ───────── Periodo ───────── */
+.periodo { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; margin-bottom: 16px; }
+.periodo .campo { width: 170px; }
+.periodo .segmentado { align-self: flex-end; min-height: 40px; }
+.segmentado.agrupar { display: inline-flex; margin-bottom: 16px; }
+
+/* ───────── Tabla de usuarios ───────── */
+.tabla-usuarios td { white-space: nowrap; }
+.tabla-usuarios td:first-child { white-space: normal; min-width: 150px; }
+.tabla-usuarios tbody tr { cursor: default; }
+.tabla-usuarios tr.inactivo td { color: var(--muted); }
+.acciones-usuario { display: flex; flex-wrap: wrap; gap: 4px; }
+.lista-acciones .acciones-usuario { flex-direction: column; align-items: stretch; gap: 8px; }
+.lista-acciones .btn.chico { font-size: 14.5px; padding: 10px 14px; justify-content: flex-start; }
+.celda-acciones { text-align: right; }
+/* Insignias de rol: cada rol con su color; el texto se mezcla con la tinta para leerse en los dos temas */
+.chip.rol { white-space: nowrap; }
+.chip.rol-admin { background: color-mix(in srgb, var(--ink) 10%, transparent); color: var(--ink); }
+.chip.rol-coordinador { background: color-mix(in srgb, var(--s7) 16%, transparent); color: color-mix(in srgb, var(--s7) 70%, var(--ink)); }
+.chip.rol-planillero { background: color-mix(in srgb, var(--s1) 14%, transparent); color: color-mix(in srgb, var(--s1) 70%, var(--ink)); }
+.chip.rol-consultor { background: color-mix(in srgb, var(--s3) 16%, transparent); color: color-mix(in srgb, var(--s3) 60%, var(--ink)); }
+.kpis-administracion { margin-bottom: 16px; }
+.tarjeta.avance { margin-top: 16px; }
+.tarjeta.avance > header { flex-wrap: wrap; }
+.tarjeta.serie { margin-top: 16px; }
+#indicadores .rejilla + .kpis { margin-top: 16px; }
+#indicadores + .rejilla { margin-top: 16px; }
+.ficha-usuario { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 14px 0 0; font-size: 14px; }
+.ficha-usuario dt { color: var(--muted); }
+.ficha-usuario dd { margin: 0; }
+.lista-simple { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.lista-simple .sec { color: var(--muted); font-size: 12.5px; word-break: break-word; }
+.sub-asignacion { display: block; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+  margin: 14px 0 6px; }
+
+/* ───────── Alta y edición ───────── */
+#f-usuario [hidden], #f-rol [hidden] { display: none; }
+.asignacion { border: 1px solid var(--line-soft); border-radius: var(--r-s); padding: 12px 14px; margin: 0; min-width: 0; }
+.asignacion legend { font-weight: 700; padding: 0 6px; }
+.asignacion .sec { color: var(--muted); font-size: 13px; margin: 0 0 8px; }
+.opciones-asignacion { max-height: 260px; overflow: auto; margin-top: 8px; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px 12px; }
+.opciones-asignacion.corto { max-height: 140px; }
+.opciones-asignacion .grupo { display: flex; flex-direction: column; gap: 2px; }
+.opciones-asignacion .grupo b { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 6px 0 2px; }
+.opciones-asignacion label { display: flex; align-items: center; gap: 8px; font-size: 14px; min-height: 30px; cursor: pointer; }
+.opciones-asignacion label[hidden] { display: none; }
+.clave-temporal { display: flex; align-items: center; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
+.clave-temporal code { font: 600 22px/1.2 var(--f-mono); letter-spacing: .06em; background: var(--sunken); border-radius: var(--r-s);
+  padding: 10px 14px; user-select: all; word-break: break-all; }
+
+/* ───────── Celular ───────── */
+@media (pointer: coarse) {
+  .acciones-usuario .btn.chico, .celda-acciones .btn.chico, .periodo .segmentado button, .segmentado.agrupar button,
+  .tarjeta.avance .segmentado button { min-height: 44px; }
+  .opciones-asignacion label { min-height: 44px; }
+}
+@media (max-width: 640px) {
+  .periodo .campo { width: calc(50% - 6px); }
+  /* La tabla de usuarios y la de avance pasan a tarjetas de dos columnas: cada celda lleva su título encima */
+  .tabla-usuarios, .tabla-usuarios tbody, .tabla-avance, .tabla-avance tbody { display: block; width: 100%; }
+  .tabla-usuarios thead, .tabla-avance thead { display: none; }
+  .tabla-usuarios tr, .tabla-avance tr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; padding: 12px 14px;
+    border-bottom: 1px solid var(--line); }
+  .tabla-usuarios td, .tabla-avance td, .tabla-usuarios td.num, .tabla-avance td.num { display: flex; flex-direction: column;
+    align-items: flex-start; gap: 1px; border: 0; padding: 0; text-align: left; white-space: normal; min-width: 0; }
+  .tabla-usuarios td[data-titulo]::before, .tabla-avance td[data-titulo]::before { content: attr(data-titulo); color: var(--muted);
+    font-size: 11.5px; font-weight: 650; text-transform: uppercase; letter-spacing: .03em; }
+  .tabla-usuarios td:first-child, .tabla-avance td:first-child, .tabla-usuarios td.celda-acciones,
+  .tabla-usuarios td[data-titulo="Alertas"], .tabla-avance td[data-titulo="Responsables"] { grid-column: 1 / -1; }
+  .tabla-usuarios td:first-child::before, .tabla-avance td:first-child::before { content: none; }
+  .tabla-usuarios td[data-titulo="Alertas"]:has(.chips:empty) { display: none; }
+  .tabla-usuarios td.celda-acciones { align-items: stretch; }
+}

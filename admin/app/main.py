@@ -18,7 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from pymongo.errors import ConnectionFailure
 from starlette.middleware.gzip import GZipMiddleware
 
-from . import config, db
+from . import acceso, config, db, migraciones
 from .api import acercamientos, ajustes, calidad, personas, reuniones, sistema, tablero, usuarios, zonas
 from .seguridad import (CabecerasSeguras, Cortacircuitos, GuardiaApi, base_de, limpiar_al_iniciar, ruta_interna,
                         sin_base)
@@ -39,10 +39,15 @@ def preparar(app: FastAPI) -> None:
         log.warning("La clave del panel tiene menos de 10 caracteres; use una más larga")
     try:
         db.inicializar(app.state.db)
+    except migraciones.ErrorMigracion as e:
+        # MongoDB responde, pero la migración del esquema falló: la causa real queda en el registro
+        log.error("No se pudo migrar la base de datos: %s", e)
+        raise
     except Exception:
         log.error("No se pudo conectar o preparar MongoDB en %s: revise la variable MONGODB_URI",
                   config.sin_credenciales(cfg.mongodb_uri))
         raise
+    acceso.preparar(app.state.db)
     limpiar_al_iniciar(app.state.db, cfg)
     app.state.listo = True
 
