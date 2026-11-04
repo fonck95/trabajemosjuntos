@@ -25,7 +25,8 @@ from pathlib import Path
 import anyio
 from starlette.applications import Starlette
 from starlette.middleware.gzip import GZipMiddleware
-from starlette.responses import HTMLResponse, PlainTextResponse, RedirectResponse
+from starlette.datastructures import Headers
+from starlette.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
@@ -124,8 +125,10 @@ def hashes_en_linea(directorio: Path) -> list[str]:
 def politica_sitio(directorio: Path) -> str:
     """CSP del sitio público, calculada al arrancar a partir de site/. Solo corren los scripts del propio origen y los
     <script> en línea que trae site/ (por su hash): ni CDN ni un <script> inyectado. 'wasm-unsafe-eval' deja compilar los
-    decodificadores WebAssembly de Draco (y de Basis y meshopt) y no habilita eval de JavaScript. blob: y data: son las
-    texturas, mallas y workers que arma three (DRACOLoader y KTX2Loader corren en workers blob:)."""
+    decodificadores WebAssembly de Draco y meshopt y no habilita eval de JavaScript. Por eso aquí no corre el
+    transcodificador Basis de KTX2Loader (embind arma funciones con new Function, también en su worker blob:, que hereda
+    esta política): web/js/assets.js no registra KTX2 si no se puede evaluar código y avisa con un GLB que lo exige.
+    blob: y data: son las texturas, mallas y workers que arma three (DRACOLoader corre en workers blob:)."""
     return "; ".join([
         "default-src 'self'",
         "script-src " + " ".join(["'self'", "'wasm-unsafe-eval'", *hashes_en_linea(directorio)]),
@@ -205,8 +208,10 @@ CONSEJO_REINTENTO = ("El panel lo vuelve a intentar solo: recargue esta página 
 REINTENTO = "No se pudo conectar con la base de datos."
 OCUPADO = "El panel está atendiendo muchas peticiones. Intente de nuevo en unos segundos."
 ESPERA_S = (2, 60)   # reintentos de crear el panel o de conectarlo a MongoDB: espera inicial y máxima
-CUPOS_PANEL = 16     # peticiones del panel atendidas a la vez (anyio presta 40 hilos a todo el servidor)
+CUPOS_PANEL = 16     # peticiones de la API del panel atendidas a la vez (anyio presta 40 hilos a todo el servidor)
 ESPERA_CUPO_S = 2    # sin cupo en este tiempo, 503
+PLAZO_CUERPO_S = 10  # el cuerpo de una petición sin sesión (el ingreso) llega entero en este tiempo, o 408
+SIN_CACHE = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex", "X-Content-Type-Options": "nosniff"}
 
 
 def panel_no_disponible(motivo: str, reintenta: bool = False):
@@ -269,22 +274,55 @@ class PanelDiferido:
         await self.destino(scope, receive, send)
 
 
+class CuerpoExcedido(Exception):
+    """El cuerpo de la petición pasa del tope."""
+
+
+def reglas_del_panel() -> tuple[frozenset, int]:
+    """Rutas del panel que no piden sesión y el tope de su cuerpo (app/seguridad.py). Si el panel no se puede
+    importar, en /panel/ queda el aviso 503, que no lee nada."""
+    try:
+        from app.seguridad import LIMITE_JSON, RUTAS_SIN_SESION
+    except Exception:
+        return frozenset(), 0
+    return frozenset(RUTAS_SIN_SESION), LIMITE_JSON
+
+
 class LimitePanel:
-    """Pocas peticiones del panel a la vez, para que el sitio público siempre tenga hilos libres.
+    """Pocas peticiones de la API del panel a la vez, para que el sitio público siempre tenga hilos libres.
 
     El panel (su guardia y sus endpoints) y los archivos del sitio (StaticFiles, FileResponse) usan el mismo grupo
-    de 40 hilos de anyio. Si MongoDB se cae o se cuelga, cada petición del panel retiene su hilo hasta que vence la
-    espera de pymongo; con este límite el panel nunca ocupa más de `cupos`. La que no consigue cupo en `espera_s`
+    de 40 hilos de anyio. Si MongoDB se cae o se cuelga, cada petición de la API retiene su hilo hasta que vence la
+    espera de pymongo; con este límite la API nunca ocupa más de `cupos`. La que no consigue cupo en `espera_s`
     recibe 503 con Retry-After. 16 cupos sobran para 1 a 3 administradores: cada vista pide 1 o 2 cosas a la API a la
-    vez y los archivos del panel se despachan en milisegundos."""
+    vez.
 
-    def __init__(self, app, cupos: int, espera_s: float):
+    Un cupo nunca espera bytes de un anónimo (16 conexiones que mandaban las cabeceras de un ingreso y no terminaban
+    el cuerpo dejaban al administrador fuera del panel mientras quisieran):
+    * Las páginas y los archivos del panel (todo lo que no es /api/* ni /salud) no tocan MongoDB y no piden cupo.
+    * En las rutas sin sesión (`sin_sesion`: el ingreso), el cuerpo se lee entero antes de pedir cupo, con un plazo
+      total (`plazo_s`: 408 y se cierra la conexión) y un tope (`limite`: 413), y se le entrega a la app.
+    * El resto de /api/* no lee el cuerpo sin sesión: la guardia del panel (GuardiaApi) responde 401 antes."""
+
+    def __init__(self, app, cupos: int, espera_s: float, sin_sesion=frozenset(), limite: int = 0,
+                 plazo_s: float = PLAZO_CUERPO_S):
         self.app, self.cupos, self.espera_s = app, cupos, espera_s
+        self.sin_sesion, self.limite, self.plazo_s = frozenset(sin_sesion), limite, plazo_s
         self._bucle = self._semaforo = None
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
+        ruta, raiz = scope["path"], scope.get("root_path", "")
+        ruta = (ruta[len(raiz):] or "/") if raiz and ruta.startswith(raiz) else ruta  # como seguridad.ruta_interna
+        if not ruta.startswith("/api/") and ruta != "/salud":
+            return await self.app(scope, receive, send)
+        if ruta in self.sin_sesion:
+            cabeceras = Headers(scope=scope)
+            if cabeceras.get("content-length", "0") != "0" or "transfer-encoding" in cabeceras:
+                receive = await self._cuerpo_entero(scope, receive, send, cabeceras)
+                if receive is None:
+                    return
         bucle = asyncio.get_running_loop()
         if self._bucle is not bucle:  # uno por bucle de eventos (en las pruebas, cada cliente abre el suyo)
             self._bucle, self._semaforo = bucle, asyncio.Semaphore(self.cupos)
@@ -293,12 +331,47 @@ class LimitePanel:
             await asyncio.wait_for(semaforo.acquire(), self.espera_s)
         except TimeoutError:
             return await PlainTextResponse(OCUPADO, 503, headers={
-                "Retry-After": "2", "Cache-Control": "no-store", "X-Robots-Tag": "noindex",
-                "X-Content-Type-Options": "nosniff"})(scope, receive, send)
+                "Retry-After": "2", **SIN_CACHE})(scope, receive, send)
         try:
             await self.app(scope, receive, send)
         finally:
             semaforo.release()
+
+    async def _cuerpo_entero(self, scope, receive, send, cabeceras):
+        """Lee el cuerpo entero y devuelve un `receive` que se lo entrega a la app. None si ya se respondió (408,
+        413) o si el cliente se fue."""
+        largo, partes, total = cabeceras.get("content-length", ""), [], 0
+        try:
+            if largo.isdigit() and int(largo) > self.limite:
+                raise CuerpoExcedido
+            async with asyncio.timeout(self.plazo_s):
+                while True:
+                    msg = await receive()
+                    if msg["type"] == "http.disconnect":
+                        return None
+                    partes.append(msg.get("body", b""))
+                    total += len(partes[-1])
+                    if total > self.limite:
+                        raise CuerpoExcedido
+                    if not msg.get("more_body", False):
+                        break
+        except TimeoutError:
+            await JSONResponse({"detail": "La petición tardó demasiado en llegar"}, 408, headers={
+                "Connection": "close", **SIN_CACHE})(scope, receive, send)
+            return None
+        except CuerpoExcedido:
+            await JSONResponse({"detail": "La petición es demasiado grande"}, 413, headers={
+                "Connection": "close", **SIN_CACHE})(scope, receive, send)
+            return None
+        cuerpo, entregado = b"".join(partes), False
+
+        async def recibir():
+            nonlocal entregado
+            if entregado:
+                return await receive()  # después del cuerpo solo queda la desconexión
+            entregado = True
+            return {"type": "http.request", "body": cuerpo, "more_body": False}
+        return recibir
 
 
 # ───────────────────────────── Aplicación ─────────────────────────────
@@ -342,7 +415,7 @@ def crear_servidor(cfg=None, sitio: Path | None = None) -> Starlette:
     rutas = [
         Route("/health", salud),
         Route(PREFIJO, al_panel),
-        Mount(PREFIJO, app=LimitePanel(montaje, CUPOS_PANEL, ESPERA_CUPO_S)),
+        Mount(PREFIJO, app=LimitePanel(montaje, CUPOS_PANEL, ESPERA_CUPO_S, *reglas_del_panel(), PLAZO_CUERPO_S)),
         Mount("/", app=sitio_publico(sitio)),
     ]
     app = Starlette(routes=rutas, lifespan=ciclo)

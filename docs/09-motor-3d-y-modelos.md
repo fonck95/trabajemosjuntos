@@ -75,7 +75,7 @@ La escena fija el volumen máximo de la sombra, el tamaño del mapa y, si quiere
 
 ## 2. Carga de modelos (`web/js/assets.js`)
 
-- **GLTFLoader** con **Draco** (decodificador WebAssembly o JavaScript, según lo que permita el navegador), **Meshopt** y **KTX2/Basis** (texturas comprimidas que se quedan comprimidas en la GPU). Los decodificadores están en `web/vendor/`, así funcionan sin depender de otro servidor.
+- **GLTFLoader** con **Draco** (decodificador WebAssembly o JavaScript, según lo que permita el navegador), **Meshopt** y **KTX2/Basis** (texturas comprimidas que se quedan comprimidas en la GPU). Los decodificadores están en `web/vendor/`, así funcionan sin depender de otro servidor. KTX2 solo se registra si la página deja evaluar código (lo prueba en un worker blob:, donde corre el transcodificador Basis): en el sitio publicado en Railway la CSP no lo deja y un GLB que exige KTX2 termina en un aviso, no en una carga que no acaba.
 - **Detección de WebAssembly**: si el entorno lo bloquea, Draco usa su versión JavaScript y el modelo carga igual.
 - **Caché por URL**: un modelo se descarga y decodifica una sola vez; las vistas lo reutilizan con copias que comparten geometría.
 - **Nivel de detalle progresivo** (`progressiveLOD`): primero aparece el modelo liviano y luego el detallado; three.js cambia entre ellos según la distancia de la cámara.
@@ -317,13 +317,13 @@ Contrato: `data/proyectos/torre_hospital/ESPECIFICACION_INTEGRACION.md` (seccion
 1. Exportar a **glTF binario (.glb)** desde Revit (complemento glTF o vía IFC → Blender), SketchUp, Rhino o Blender, en metros y con +Y arriba.
 2. Optimizar:
    ```bash
-   npx @gltf-transform/cli optimize entrada.glb salida_lod0.glb --compress draco --texture-compress ktx2
+   npx @gltf-transform/cli optimize entrada.glb salida_lod0.glb --compress draco --texture-compress webp
    npx @gltf-transform/cli simplify salida_lod0.glb salida_lod1.glb --ratio 0.25 --error 0.01
    ```
 3. Copiar a `web/models/` y agregarlo a `web/models/manifest.json` para verlo en la vista **Modelos 3D**, donde se puede revisar su costo antes de usarlo.
 4. Usarlo en una escena con `progressiveLOD([{ url: 'models/salida_lod0.glb', distance: 0 }, { url: 'models/salida_lod1.glb', distance: 85 }])`.
 
-Presupuesto recomendado para que funcione en teléfonos: menos de 300.000 triángulos visibles, menos de 50 llamadas de dibujo y texturas de 2048 px como máximo, en KTX2.
+Presupuesto recomendado para que funcione en teléfonos: menos de 300.000 triángulos visibles, menos de 50 llamadas de dibujo y texturas de 2048 px como máximo, en WebP (KTX2 no está disponible en el sitio publicado).
 
 ## 6. Diseño y transiciones
 

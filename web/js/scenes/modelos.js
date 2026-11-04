@@ -5,7 +5,7 @@ import { getLoader, loadModel, parseFile, fit, stats } from '../assets.js';
 
 const GUIA = [
   { tag: 'Paso 1', titulo: 'Exporta a glTF binario', html: '<ul class="tight"><li><b>Revit:</b> complemento de exportación glTF o paso por IFC → Blender.</li><li><b>SketchUp / Rhino / ArchiCAD:</b> exportador glTF o FBX → Blender.</li><li><b>Blender:</b> Archivo → Exportar → glTF 2.0, formato <code>.glb</code>, con modificadores aplicados y +Y arriba.</li><li>Unidades en metros: el visor encuadra cualquier escala.</li></ul>' },
-  { tag: 'Paso 2', titulo: 'Optimiza antes de publicar', html: '<p>Comprime geometría y texturas, une mallas por material e instancia lo repetido:</p><pre class="cmd">npx @gltf-transform/cli optimize \\\n  hospital.glb hospital_lod0.glb \\\n  --compress draco \\\n  --texture-compress ktx2\n\n# nivel de detalle bajo (25 % de triángulos)\nnpx @gltf-transform/cli simplify \\\n  hospital_lod0.glb hospital_lod1.glb \\\n  --ratio 0.25 --error 0.01</pre>' },
+  { tag: 'Paso 2', titulo: 'Optimiza antes de publicar', html: '<p>Comprime geometría y texturas, une mallas por material e instancia lo repetido:</p><pre class="cmd">npx @gltf-transform/cli optimize \\\n  hospital.glb hospital_lod0.glb \\\n  --compress draco \\\n  --texture-compress webp\n\n# nivel de detalle bajo (25 % de triángulos)\nnpx @gltf-transform/cli simplify \\\n  hospital_lod0.glb hospital_lod1.glb \\\n  --ratio 0.25 --error 0.01</pre><p class="note">Texturas en WebP o PNG: KTX2 no está disponible en el sitio publicado (su decodificador necesita evaluar código y la política de seguridad del sitio no lo deja).</p>' },
   { tag: 'Paso 3', titulo: 'Publícalo en el atlas', html: '<ol class="tight"><li>Copia el archivo a <code>web/models/</code>.</li><li>Agrégalo a <code>web/models/manifest.json</code> para que aparezca en este visor.</li><li>En una escena, cárgalo con <code>progressiveLOD([{url, distance: 0}, {url: lod1, distance: 85}])</code>: se ve primero el liviano y luego el detallado.</li><li>Objetivo para teléfonos: menos de 300.000 triángulos visibles y 50 llamadas de dibujo.</li></ol><p class="note">Los modelos del atlas se generan con <code>scripts/modelos/build_models.mjs</code>.</p>' },
 ];
 
@@ -25,6 +25,13 @@ function reticula(color, n = 40) {
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 4));
   return new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color, vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false }));
+}
+// Un decodificador colgado (un worker que nunca responde) no deja «Leyendo…» para siempre: a los PLAZO_S, error visible
+const PLAZO_S = 60;
+function conPlazo(promesa) {
+  let t;
+  const vence = new Promise((_, mal) => { t = setTimeout(() => mal(new Error(`no terminó en ${PLAZO_S} s`)), PLAZO_S * 1000); });
+  return Promise.race([promesa, vence]).finally(() => clearTimeout(t));
 }
 // nombre corto de cada sede para la lista: conserva la sede ("Luis Eduardo Díaz · sede Megacolegio") y corta lo demás
 const CORTO = { relleno_parque: 'Relleno → parque ecotecnológico' };
@@ -122,25 +129,32 @@ export function mount(root) {
   }
   Object.values(ctl).forEach((c) => c.addEventListener('input', applyView));
 
+  // la carga más reciente manda: una anterior que termina después (el primer modelo del catálogo mientras se lee un
+  // archivo propio) no la reemplaza ni tapa su mensaje
+  let turno = 0;
   async function loadUrl(m) {
+    const mio = ++turno;
     estado.textContent = `Cargando ${m.titulo}…`;
     try {
-      const info = await loadModel(m.archivo);
+      const info = await conPlazo(loadModel(m.archivo));
+      if (mio !== turno) return;
       currentIsFile = false;
       show(info, m.titulo, m);
       estado.textContent = `${m.titulo}: ${(m.bytes_sin_comprimir / 1024).toFixed(0)} KB sin comprimir → ${(m.bytes / 1024).toFixed(0)} KB con Draco.`;
-    } catch (e) { estado.textContent = `No se pudo cargar el modelo: ${e.message}`; }
+    } catch (e) { if (mio === turno) estado.textContent = `No se pudo cargar el modelo: ${e.message}`; }
   }
   async function loadFile(file) {
+    const mio = ++turno;
     if (!/\.glb$/i.test(file.name)) { estado.textContent = 'Usa un archivo .glb (glTF binario). Un .gltf con archivos externos no se puede abrir desde aquí.'; return; }
     estado.textContent = `Leyendo ${file.name}…`;
     try {
-      const info = await parseFile(file);
+      const info = await conPlazo(parseFile(file));
+      if (mio !== turno) return;
       currentIsFile = true;
       show(info, file.name);
       estado.textContent = `${file.name} cargado desde tu equipo.`;
       lista.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', 'false'));
-    } catch (e) { estado.textContent = `No se pudo leer ${file.name}: ${e.message}`; }
+    } catch (e) { if (mio === turno) estado.textContent = `No se pudo leer ${file.name}: ${e.message}`; }
   }
 
   // lista de modelos del atlas: réplicas de las sedes reales + modelos de componentes

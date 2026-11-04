@@ -3,6 +3,7 @@ import { api, configurar, ErrorApi, sesion } from './api.js';
 import { $, aviso, html, icono, montar } from './ui.js';
 import { vistaLogin } from './vistas/login.js';
 import { sinBase, url } from './base.js';
+import { revisarLlamadasPendientes } from './llamadas.js';
 
 const RUTAS = [
   { re: /^\/$|^\/panel$/, nav: 'panel', carga: () => import('./vistas/panel.js').then((m) => m.vistaPanel) },
@@ -14,6 +15,10 @@ const RUTAS = [
   { re: /^\/calidad$/, nav: 'calidad', carga: () => import('./vistas/calidad.js').then((m) => m.vistaCalidad) },
   { re: /^\/importar$/, nav: 'importar', carga: () => import('./vistas/importar.js').then((m) => m.vistaImportar) },
   { re: /^\/ajustes$/, nav: 'ajustes', carga: () => import('./vistas/ajustes.js').then((m) => m.vistaAjustes) },
+  { re: /^\/trabajo$/, nav: 'trabajo', carga: () => import('./vistas/trabajo.js').then((m) => m.vistaTrabajo) },
+  { re: /^\/usuarios$/, nav: 'usuarios', carga: () => import('./vistas/usuarios.js').then((m) => m.vistaUsuarios) },
+  { re: /^\/usuarios\/(\d+)$/, nav: 'usuarios', carga: () => import('./vistas/usuarios.js').then((m) => m.vistaUsuario) },
+  { re: /^\/cuenta$/, nav: 'cuenta', carga: () => import('./vistas/cuenta.js').then((m) => m.vistaCuenta) },
 ];
 const NAV = [
   ['panel', 'Panel', '/'], ['mapa', 'Mapa 3D', '/mapa'], ['personas', 'Habitantes', '/personas'],
@@ -109,6 +114,8 @@ async function render() {
     // Si mientras cargaba se pidió otra vista, esta ya sobra: se limpia en el acto (mapas, temporizadores…)
     if (g !== generacion) { try { limpiar?.(); } catch { /* nada */ } return; }
     limpiarVista = limpiar || null;
+    // Una llamada que quedó sin registrar se recuerda al cargar cualquier vista
+    try { revisarLlamadasPendientes(); } catch (err) { console.error(err); }
   } catch (e) {
     if (g !== generacion) return;
     if (e instanceof ErrorApi && e.estado === 401) return;
@@ -134,18 +141,21 @@ window.addEventListener('unhandledrejection', (e) => {
   if (e.reason instanceof ErrorApi && e.reason.estado !== 401) aviso(e.reason.message, 'error', 6000);
 });
 
+// Lo que devuelven /api/yo y /api/login: usuario, csrf y, con usuarios, uid, rol, permisos y nombre
+const datosSesion = (d) => ({ token: d.csrf, usuario: d.usuario, uid: d.uid, rol: d.rol, permisos: d.permisos, nombre: d.nombre });
+
 async function iniciar() {
   aplicarTema(tema());
   try {
     const yo = await api.get('/api/yo');
-    configurar({ token: yo.csrf, usuario: yo.usuario, expira: expiro });
+    configurar({ ...datosSesion(yo), expira: expiro });
     armarEstructura();
     await render();
     refrescarInsignias();
   } catch (e) {
     const configurado = e instanceof ErrorApi ? e.detalle?.configurado !== false : true;
     vistaLogin($('#raiz'), { configurado, alEntrar: (d) => {
-      configurar({ token: d.csrf, usuario: d.usuario, expira: expiro });
+      configurar({ ...datosSesion(d), expira: expiro });
       armarEstructura();
       render();
       refrescarInsignias();
