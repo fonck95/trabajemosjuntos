@@ -155,3 +155,11 @@ export function cajaDe(geojson) {
   for (const f of geojson.features || [geojson]) rec((f.geometry || f).coordinates);
   return [[w, s], [e, n]];
 }
+
+/** El anillo exterior más grande de un Polygon o MultiPolygon (para «Usar vereda»), o null. */
+export function anilloMayor(geometria) {
+  const g = geometria?.geometry || geometria;
+  const anillos = g?.type === 'Polygon' ? [g.coordinates[0]] : g?.type === 'MultiPolygon' ? g.coordinates.map((p) => p[0]) : [];
+  const plano = (a) => Math.abs(a.reduce((s, [x1, y1], i) => { const [x2, y2] = a[(i + 1) % a.length]; return s + x1 * y2 - x2 * y1; }, 0));
+  return anillos.filter((a) => a?.length >= 4).sort((a, b) => plano(b) - plano(a))[0] || null;
+}
