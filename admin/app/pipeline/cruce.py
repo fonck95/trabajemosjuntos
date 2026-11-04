@@ -2,9 +2,11 @@
 
 1. **Agrupar**: la base de trámites trae una fila por solicitud; la misma persona aparece varias veces (reencuesta,
    modificación de ficha…). Se agrupa por nombre normalizado y se unen variantes de digitación («FABIO MAURICO» /
-   «FABIO MAURICIO») solo cuando además comparten teléfono, correo o ficha; dos nombres de pila distintos
-   («JUAN CARLOS» / «JUAN CAMILO») no se unen aunque compartan la ficha del hogar. Un mismo nombre con fichas y
-   teléfonos sin nada en común son homónimos y quedan como personas separadas.
+   «FABIO MAURICIO», «ROJAS» / «ROJA», una inicial de más, los apellidos delante) solo cuando además comparten
+   teléfono, correo o ficha; dos nombres de pila distintos («JUAN CARLOS» / «JUAN CAMILO», «JOSE MARIA» /
+   «MARIA JOSE») no se unen aunque compartan la ficha del hogar, y uno casi igual («DANIEL» / «DANIELA»,
+   «ROSALBA» / «OSALBA») con la misma ficha y teléfono va a revisión. Un mismo nombre con fichas y teléfonos sin nada
+   en común son homónimos y quedan como personas separadas.
 2. **Cruzar**: cada persona con cédula se compara por nombre contra las personas de la base de trámites. El puntaje
    pondera cada palabra por lo rara que es (un «MARIA» pesa poco, un «ZAPATEIRO» mucho), tolera errores de digitación
    (Jaro-Winkler) y no depende del orden de nombres y apellidos. Compartir teléfono o correo suma evidencia. Lo dudoso
@@ -37,6 +39,9 @@ class PersonaTramites:
     telefonos: Counter = field(default_factory=Counter)
     correos: Counter = field(default_factory=Counter)
     filas: list[FilaTramite] = field(default_factory=list)
+    # Claves de grupos con la misma ficha y el mismo teléfono y un nombre de pila casi igual («ROSALBA»/«OSALBA»,
+    # «DANIEL»/«DANIELA»): errata o hermanos, lo decide el administrador
+    parecidos: list[str] = field(default_factory=list)
 
     @property
     def nombre(self) -> str:
@@ -79,21 +84,44 @@ def agrupar_tramites(filas: list[FilaTramite]) -> list[PersonaTramites]:
         u.find(k)
     # Variantes de un mismo nombre que comparten un dato de contacto o la ficha
     por_dato: dict[str, set[str]] = defaultdict(set)
+    fichas_de: dict[str, set[str]] = defaultdict(set)
+    tels_de: dict[str, set[str]] = defaultdict(set)
     for k, fs in por_nombre.items():
         for f in fs:
             for t in f.telefonos:
                 por_dato["t" + t].add(k)
+                tels_de[k].add(t)
             if f.correo:
                 por_dato["c" + f.correo].add(k)
             if f.ficha:
                 por_dato["f" + f.ficha].add(k)
+                fichas_de[k].add(f.ficha)
+    vistos: set[tuple[str, str]] = set()
+    con_inicial: list[tuple[str, str]] = []   # (nombre sin la inicial, nombre con ella)
+    dudosos: list[tuple[str, str, str]] = []  # (nombre, nombre, ficha común)
     for claves in por_dato.values():
         if 1 < len(claves) <= 12:
             cl = sorted(claves)
             for i, a in enumerate(cl):
                 for b in cl[i + 1:]:
-                    if _mismo_nombre_digitado(a, b, frec):
+                    if (a, b) in vistos:
+                        continue
+                    vistos.add((a, b))
+                    r = _comparar_nombres(a, b, frec)
+                    if r == "igual":
                         u.union(a, b)
+                    elif r == "inicial":
+                        con_inicial.append(tuple(sorted((a, b), key=lambda x: len(tx.tokens_nombre(x, True)))))
+                    elif r == "dudoso" and fichas_de[a] & fichas_de[b] and tels_de[a] & tels_de[b]:
+                        dudosos.append((a, b, min(fichas_de[a] & fichas_de[b])))
+    # Una inicial de más («JUAN C PEREZ GOMEZ» / «JUAN PEREZ GOMEZ») es la misma persona, salvo que el nombre sin
+    # inicial sirva también para otra («JUAN D PEREZ GOMEZ»): entonces no se sabe de cuál de los dos es
+    largos_de: dict[str, set[str]] = defaultdict(set)
+    for corto, largo in con_inicial:
+        largos_de[u.find(corto)].add(u.find(largo))
+    for raiz, largos in largos_de.items():
+        if len({u.find(x) for x in largos}) == 1:
+            u.union(raiz, next(iter(largos)))
 
     por_grupo: dict[str, list[FilaTramite]] = defaultdict(list)
     for k, fs in por_nombre.items():
@@ -115,6 +143,14 @@ def agrupar_tramites(filas: list[FilaTramite]) -> list[PersonaTramites]:
                 if f.correo:
                     g.correos[f.correo] += 1
             grupos.append(g)
+    # Los casi iguales que quedaron separados van a revisión entre las fichas que comparten
+    if dudosos:
+        grupo_de = {(tx.nombre_norm(f.nombre), f.ficha): g for g in grupos for f in g.filas}
+        for a, b, ficha in dudosos:
+            ga, gb = grupo_de.get((a, ficha)), grupo_de.get((b, ficha))
+            if ga is not None and gb is not None and ga is not gb and gb.clave not in ga.parecidos \
+                    and ga.clave not in gb.parecidos:
+                ga.parecidos.append(gb.clave)
     return grupos
 
 
@@ -141,38 +177,83 @@ def _separar_homonimos(filas: list[FilaTramite]) -> list[list[FilaTramite]]:
 
 
 def _mismo_nombre_digitado(a: str, b: str, frec: Counter | None = None) -> bool:
-    """Dos escrituras del mismo nombre completo (no dos parientes que comparten teléfono o ficha).
+    """Dos escrituras del mismo nombre completo (no dos parientes que comparten teléfono o ficha)."""
+    return _comparar_nombres(a, b, frec or Counter()) in ("igual", "inicial")
 
-    Palabra por palabra: todas iguales salvo a lo sumo una, y esa debe ser una errata («MAURICO»/«MAURICIO»,
-    «YESICA»/«JESSICA»), no otro nombre («CARLOS»/«CAMILO», «DANIEL»/«DANIELA», «JUAN C»/«JUAN D»)."""
+
+def _alineados(ta: list[str], tb: list[str]):
+    """(k, diferencias) entre `ta` y cada rotación de `tb`: k=0 es el mismo orden; las demás cubren «APELLIDOS NOMBRES»
+    frente a «NOMBRES APELLIDOS». Las diferencias son (posición, palabra de ta, palabra de tb)."""
+    for k in range(len(tb)):
+        rb = tb[k:] + tb[:k]
+        yield k, [(p, x, y) for p, (x, y) in enumerate(zip(ta, rb)) if x != y]
+
+
+def _comparar_nombres(a: str, b: str, frec: Counter) -> str:
+    """«igual»: el mismo nombre mal escrito; «inicial»: igual salvo una inicial de más («JUAN C PEREZ GOMEZ» /
+    «JUAN PEREZ GOMEZ»); «dudoso»: un nombre de pila casi igual que también puede ser el de un hermano
+    («ROSALBA»/«OSALBA», «DANIEL»/«DANIELA»); «distinto».
+
+    Palabra por palabra y en orden: todas iguales salvo a lo sumo una, y esa debe ser una errata («MAURICO»/«MAURICIO»,
+    «ROJAS»/«ROJA»), no otro nombre («CARLOS»/«CAMILO», «JUAN C»/«JUAN D»). Los mismos nombres de pila en otro orden
+    («JOSE MARIA»/«MARIA JOSE») son dos personas."""
     ta, tb = tx.tokens_nombre(a, iniciales=True), tx.tokens_nombre(b, iniciales=True)
-    if len(ta) != len(tb) or len(ta) < 2:
-        return False
-    sobra_a, sobra_b = list(ta), list(tb)
-    for t in ta:
-        if t in sobra_b:
-            sobra_a.remove(t)
-            sobra_b.remove(t)
-    if not sobra_a:
-        return True
-    return len(sobra_a) == 1 and _errata(sobra_a[0], sobra_b[0], frec or Counter())
+    if len(ta) < 2 or len(tb) < 2:
+        return "distinto"
+    if len(ta) != len(tb):
+        corto, largo = sorted((ta, tb), key=len)
+        if len(largo) == len(corto) + 1 and len(corto) >= 3:
+            for q, t in enumerate(largo):
+                if len(t) == 1 and any(not difs for _, difs in _alineados(corto, largo[:q] + largo[q + 1:])):
+                    return "inicial"
+        return "distinto"
+    n = len(ta)
+    resultado = "distinto"
+    for k, difs in _alineados(ta, tb):
+        if not difs:
+            return "igual"
+        if len(difs) == 1:
+            p, x, y = difs[0]
+            # En el orden de siempre, con tres palabras o más las dos últimas son apellidos; con dos, la segunda
+            r = _errata(x, y, frec, apellido=not k and p >= max(1, n - 2))
+            if r == "igual":
+                return "igual"
+            if r == "dudoso":
+                resultado = "dudoso"
+    return resultado
 
 
-def _errata(x: str, y: str, frec: Counter) -> bool:
-    """¿Son `x` y `y` la misma palabra mal escrita?"""
+def _errata(x: str, y: str, frec: Counter, apellido: bool = False) -> str:
+    """¿Son `x` y `y` la misma palabra mal escrita? «igual», «distinto» o «dudoso»: sería una errata en un apellido,
+    pero en un nombre de pila puede ser el de un hermano.
+
+    En un hogar dos personas se distinguen por el nombre de pila, no por una letra de un apellido: en los apellidos
+    vale cualquier errata pequeña («ROJAS»/«ROJA», «PEREZ»/«PREZ», «BUELVAS»/«BUELVSA»). En los nombres de pila, además,
+    la primera letra debe coincidir, la palabra corta debe tener 5 letras o más y no puede ser el masculino o el
+    femenino del otro (DANIEL/DANIELA, ANDRES/ANDREA, MARIO/MARIA)."""
     if tx.fonetico(x) == tx.fonetico(y):  # JHON/JOHN, YESICA/JESSICA, LEGUIZAMO/LEGUISAMO
-        return True
+        return "igual"
     corta, larga = sorted((x, y), key=len)
-    if x[0] != y[0] or len(corta) < 5:
-        return False
-    # Masculino y femenino son nombres distintos: DANIEL/DANIELA, ANDRES/ANDREA, FELIPE/FELIPA, MARIO/MARIA
-    if (x[-1] == "A") != (y[-1] == "A") and corta[:len(larga) - 2] == larga[:len(larga) - 2]:
-        return False
-    if OSA.distance(x, y) > (1 if len(corta) < 7 else 2):
-        return False
+    if len(corta) < 2 or OSA.distance(x, y) > (1 if len(corta) < 7 else 2):
+        return "distinto"
     # Dos grafías que se repiten en muchos nombres distintos son dos nombres reales (y no una errata del otro)
     fx, fy = frec.get(x, 0), frec.get(y, 0)
-    return not (min(fx, fy) >= 3 and min(fx, fy) >= 0.2 * max(fx, fy))
+    if min(fx, fy) >= 3 and min(fx, fy) >= 0.2 * max(fx, fy):
+        return "distinto"
+    if apellido:
+        return "igual"
+    if x[0] != y[0] or len(corta) < 5 or _genero(x, y):
+        return "dudoso"
+    return "igual"
+
+
+def _genero(x: str, y: str) -> bool:
+    """¿Difieren en la A final del femenino? DANIEL/DANIELA, MARIO/MARIA, ANDRES/ANDREA, también con otra errata
+    (GABRIIEL/GABRIELA); no una letra cambiada de sitio (BUELVAS/BUELVSA, FLORALBA/FLORALAB)."""
+    if (x[-1] == "A") == (y[-1] == "A"):
+        return False
+    a, o = (x, y) if x[-1] == "A" else (y, x)
+    return min(OSA.distance(a[:-1], o), OSA.distance(a[:-1], o[:-1])) < OSA.distance(a, o)
 
 
 # ───────────────────────────── Cruce por nombre ─────────────────────────────

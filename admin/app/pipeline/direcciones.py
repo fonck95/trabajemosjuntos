@@ -122,11 +122,23 @@ class Direccion:
         return d
 
 
+# Unidades que llevan una letra: en «MZ B. LT 5» o «LOTE B/ MZ 4» la B es la manzana o el lote, no «BARRIO»
+_UNIDAD_PREVIA = re.compile(r"(?:^|[^A-Z0-9])(?:MZ|MZA|MANZANA|MNZ|MANZ|LT|LOTE|LTE|CASA|CS|BLOQUE|TORRE|INTERIOR|ETAPA"
+                            r"|APTO|AP)$")
+
+
+def _b_barrio(m: re.Match) -> str:
+    return m.group(0) if _UNIDAD_PREVIA.search(m.string[:m.start()].rstrip(" .")) else " BARRIO "
+
+
 def _preparar(texto: str) -> str:
     s = limpiar(texto)  # (limpiar ya deja «N°» como «N» y «Nº» como «NO»)
-    # «B/ LA PAZ» y «B. LA PAZ» (así escribe normalizada()) son barrio; tras un número («47B/», «47 B.») es letra
-    s = re.sub(r"(?<![A-Z0-9])B\s*/\s*(?=[A-Z])", " BARRIO ", s)
-    s = re.sub(r"(?<![A-Z0-9])(?<!\d )B\.\s*(?=[A-Z]{2})", " BARRIO ", s)
+    # «B/ LA PAZ» y «B. LA PAZ» (así escribe normalizada()) son barrio; tras un número («47B/», «47 B.») o tras una
+    # unidad («MZ B. LT 5») es letra
+    s = re.sub(r"(?<![A-Z0-9])B\s*/\s*(?=[A-Z])", _b_barrio, s)
+    s = re.sub(r"(?<![A-Z0-9])(?<!\d )B\.\s*(?=[A-Z]{2})", _b_barrio, s)
+    # «S.N.», «S. N.», «S N.»: sin nomenclatura (antes de que su «N.» pase a «#»)
+    s = re.sub(r"\bS\s*[./ ]\s*N\b\s*\.?(?!\s*\d)", " S N ", s)
     # «No.», «Nro.», «N.» → «#», solo como palabra suelta («EL LLANO.» no se toca)
     s = re.sub(r"\bN(?:O|RO|UM)?\s*\.", " # ", s)
     s = re.sub(r"[()\[\]{}\"'`´,;:_/\\|*]", " ", s)
@@ -151,6 +163,41 @@ def _preparar(texto: str) -> str:
 
 def _es_num(t: str) -> bool:
     return bool(_NUM.match(t))
+
+
+# Signos con que se parte a mano una dirección en trozos («FRENTE A LA ESCUELA, LA CONDOR», «… TIENDA - CENTRAL»).
+# _preparar() los borra: se ubican antes para que una referencia no se trague el trozo siguiente
+_SEPARADOR = re.compile(r"[,;|]|/|\.(?=\s|$)|\s-\s(?=[A-Z])")
+_PALABRA_PREVIA = re.compile(r"(?:^|[^A-Z0-9])([A-Z0-9]+)\s*$")
+# Palabras clave que se abrevian con punto («BRR.», «CORR.», «MANZ.»): ese punto no parte la dirección
+_ABREVIADAS = set(VIAS) | set(LUGARES) | MANZANA | LOTE | CASA | NUMERO
+
+
+def _cortes(original: str, toks: list[str]) -> set[int]:
+    """Índices de los tokens que empiezan un trozo nuevo tras una coma, punto y coma, barra, guion suelto o el punto
+    que cierra una palabra. Vacío si los trozos no reproducen los mismos tokens (entonces no se usa ninguno)."""
+    s = limpiar(original)
+    trozos, ini = [], 0
+    for m in _SEPARADOR.finditer(s):
+        previa = _PALABRA_PREVIA.search(s[:m.start()])
+        palabra = previa.group(1) if previa else ""
+        if m.group() == "/" and palabra == "B":  # «B/ LA PAZ» es barrio
+            continue
+        if m.group() == "." and (len(palabra) < 4 or not palabra.isalpha() or palabra in _ABREVIADAS):
+            continue  # «SRA.», «PTO.», «12.», «BRR.»
+        trozos.append(s[ini:m.start()])
+        ini = m.end()
+    if not trozos:
+        return set()
+    trozos.append(s[ini:])
+    cortes: set[int] = set()
+    juntos: list[str] = []
+    for t in trozos:
+        tt = _preparar(t).split()
+        if tt and juntos:
+            cortes.add(len(juntos))
+        juntos += tt
+    return cortes if juntos == toks else set()
 
 
 def leer(texto: object) -> Direccion:
@@ -233,18 +280,24 @@ def leer(texto: object) -> Direccion:
             usados[i] = usados[i + 1] = True
 
     # 3) Referencias («FRENTE AL PARQUE», «AL LADO DE LA UNION»): llegan hasta la siguiente palabra clave de lugar o
-    # de vía, salvo que esta siga a la referencia sin más («CERCA AL BARRIO LA PAZ» es todo referencia)
+    # de vía, salvo que esta siga a la referencia sin más («CERCA AL BARRIO LA PAZ» es todo referencia), o hasta el
+    # siguiente trozo de la dirección («CERCA AL COLEGIO, PUERTO CASABE»; no «CERCA AL BARRIO, LA PAZ»)
     fuera = [False] * n
+    cortes = _cortes(original, toks)
     for i, t in enumerate(toks):
         if t not in REFERENCIA or usados[i] or fuera[i]:
             continue
         ini = i - 1 if t == "LADO" and i and toks[i - 1] in ("AL", "A") else i
-        if d.referencia is None:
-            d.referencia = " ".join(toks[ini:])[:120]
         j = i + 1
-        while j < n and not ((toks[j] in LUGARES or toks[j] in VIAS) and any(x not in ENLACE for x in toks[i + 1:j])):
-            j += 1
+        # «… # 47-20 ESQUINA BARRIO VILLA MARIA», «… ESQUINA, VILLA MARIA»: ESQUINA sin «DE/DEL…» detrás dice que la
+        # casa es esquinera, no remite a otro sitio («ESQUINA DEL PARQUE» sí es referencia)
+        if not (t == "ESQUINA" and (j >= n or toks[j] not in ENLACE)):
+            while j < n and not (j in cortes and toks[j - 1] not in LUGARES) and not (
+                    (toks[j] in LUGARES or toks[j] in VIAS) and any(x not in ENLACE for x in toks[i + 1:j])):
+                j += 1
         fuera[ini:j] = [True] * (j - ini)
+        if d.referencia is None:
+            d.referencia = " ".join(toks[ini:j])[:120]
 
     # 4) Lugar con palabra clave («BARRIO VILLA MARIA», «VEREDA LA CONDOR», «FINCA EL MANANTIAL»)
     def nombre_desde(j: int) -> tuple[str, int]:
@@ -268,9 +321,15 @@ def leer(texto: object) -> Direccion:
             usados[i:fin] = [True] * (fin - i)
     d.fuera = fuera
 
-    # 5) Sin palabra clave: el texto del comienzo es el lugar («JORGE ELIECER GAITAN, KR 54…», «LA CONDOR»)
+    # 5) Sin palabra clave: el texto del comienzo es el lugar («JORGE ELIECER GAITAN, KR 54…», «LA CONDOR»), o el del
+    # trozo que sigue a una referencia inicial («CERCA AL COLEGIO, BARBACOAS»)
     if d.lugar_texto is None:
         nombre, _ = nombre_desde(0)
+        if not nombre and n and fuera[0]:
+            sig = next((c for c in sorted(cortes) if not fuera[c]), None)
+            if sig is not None:
+                nombre, _ = nombre_desde(sig)
+                nombre = nombre if len(nombre) > 1 else ""
         if nombre and nombre not in NO_LUGAR:
             d.lugar_texto = nombre
     return d
@@ -308,6 +367,7 @@ class _Hallado(NamedTuple):
     conf: float
     palabra: str | None   # palabra clave que lo nombra («VEREDA»…) o None
     frase: str            # texto que casó
+    pos: int = -1         # token donde empieza la frase (-1: casó por parecido, no por alias exacto)
 
 
 def _del_casco(lg: Lugar) -> bool:
@@ -361,11 +421,17 @@ class Nomenclator:
                 # o si es todo el lugar escrito
                 if largo == 1 and not palabra and frase != (d.lugar_texto or ""):
                     continue
-                hallados.append(_Hallado(self._elegir(self.por_alias[frase], palabra, casco), 1.0, palabra, frase))
+                hallados.append(_Hallado(self._elegir(self.por_alias[frase], palabra, casco), 1.0, palabra, frase, i))
                 i += largo - 1
                 break
             i += 1
         return hallados
+
+    def _de_pueblo(self, d: Direccion, h: _Hallado) -> bool:
+        """«… DE LA CONDOR», «… DE SAN MIGUEL DEL TIGRE»: un centro poblado o corregimiento de dos palabras o más que
+        dice de dónde es lo nombrado en la referencia."""
+        return (h.pos > 0 and " " in h.frase and d.tokens[h.pos - 1] in ("DE", "DEL")
+                and any(c.tipo in ("centro_poblado", "corregimiento") for c in self.por_alias.get(h.frase, ())))
 
     def reconocer(self, d: Direccion, casco: bool = False) -> tuple[Lugar | None, list[Lugar], float]:
         """Devuelve (lugar elegido, todos los encontrados, confianza 0-1).
@@ -376,8 +442,10 @@ class Nomenclator:
         hallados = self._buscar(d, casco, fuera)
         if not hallados and not casco and any(fuera):
             # Solo hay lugares dentro de la referencia: «CERCA A LA VEREDA LA UNION» da al menos esa vereda, si la
-            # nombra con su palabra clave («CERCA DEL PARQUE LA PAZ» no da nada)
-            hallados = [h for h in self._buscar(d, casco, [False] * len(fuera)) if h.palabra in ANCLA]
+            # nombra con su palabra clave, y «FRENTE A LA ESCUELA DE LA CONDOR» el centro poblado de la escuela
+            # («CERCA DEL PARQUE LA PAZ» y «DETRAS DE LA CEIBA» no dan nada)
+            hallados = [h for h in self._buscar(d, casco, [False] * len(fuera))
+                        if h.palabra in ANCLA or self._de_pueblo(d, h)]
 
         if not hallados and d.lugar_texto and d.lugar_texto not in NO_LUGAR and len(d.lugar_texto) >= 4:
             factor = 1.0
