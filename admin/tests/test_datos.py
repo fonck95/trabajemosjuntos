@@ -2,6 +2,7 @@
 
 Solo personas inventadas."""
 import json
+import re
 
 import pytest
 
@@ -58,12 +59,16 @@ def test_suprimir_vacia_las_fichas_unidas_y_la_auditoria(importado):
     texto = json.dumps(list(db.auditoria.find({}, {"_id": 0})), default=str) + json.dumps(c.get("/api/auditoria").json())
     for dato in ("90000002", "3150001122", "3027778899", "YURANI", "ROSALBA"):
         assert dato not in texto
-    # Las huellas no guardan nada en claro
-    huellas = json.dumps(list(db.suprimidos.find()), default=str)
-    assert db.suprimidos.count_documents({}) >= 3
-    assert "90000002" not in huellas and "ROSALBA" not in huellas and "1004" not in huellas
+    # Las huellas no guardan nada en claro: cada documento es solo el HMAC (64 hex) y la fecha. Se comparan valores
+    # completos: buscar «1004» dentro de un hash aleatorio fallaba por azar en ~0,5 % de las corridas.
+    docs = list(db.suprimidos.find())
+    assert len(docs) >= 3
+    assert all(set(d) == {"_id", "creado_en"} and re.fullmatch(r"[0-9a-f]{64}", d["_id"]) for d in docs)
     secreto = db.meta.find_one({"_id": "clave_supresion"})["valor"]
     assert len(secreto) == 64
+    from app import db as bd
+    clave = bytes.fromhex(secreto)
+    assert {bd.huella(clave, "tramite", "1004"), bd.huella(clave, "cedula", "90000002")} <= {d["_id"] for d in docs}
 
 
 def test_suprimir_desde_la_ficha_unida_alcanza_a_la_raiz(importado):

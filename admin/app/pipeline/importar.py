@@ -57,6 +57,11 @@ class _Cand:
     correos: set
 
 
+def _base(clave: str) -> str:
+    """«JOSE GARCIA#0589300000002» → «JOSE GARCIA»: la clave de un homónimo separado lleva su ficha."""
+    return clave.split("#", 1)[0]
+
+
 def clave_contenido(ficha: str | None, fecha: str | None, tipo: str | None, nombre: str | None) -> str:
     """Identifica un trámite sin ID por su contenido (ficha, fecha, tipo y nombre normalizado) sin guardar el nombre."""
     return hashlib.sha1("|".join(x or "" for x in (ficha, fecha, tipo, nombre)).encode()).hexdigest()[:24]
@@ -79,6 +84,10 @@ class _Almacen:
             for c in d.get("claves_tramites") or []:
                 self.por_clave.setdefault(c, i)
         self.por_clave.update({d["clave_tramites"]: i for i, d in self.docs.items() if d.get("clave_tramites")})
+        # Personas por el nombre de su grupo de trámites sin el «#ficha» de los homónimos separados
+        self.por_base: dict[str, set[int]] = defaultdict(set)
+        for c, i in self.por_clave.items():
+            self.por_base[_base(c)].add(i)
         self.por_cedula = {d["cedula"]: i for i, d in self.docs.items() if d.get("cedula")}
         self.por_tramite = {t["id_externo"]: i for i, d in self.docs.items() for t in d.get("tramites", []) if t.get("id_externo")}
         self.por_contenido = {t.get("clave") or clave_contenido(t.get("ficha"), t.get("fecha"), t.get("tipo"),
@@ -109,9 +118,43 @@ class _Almacen:
         self.nuevas.add(d["_id"])
         if d.get("clave_tramites"):
             self.por_clave[d["clave_tramites"]] = d["_id"]
+            self.por_base[_base(d["clave_tramites"])].add(d["_id"])
         if d.get("cedula"):
             self.por_cedula[d["cedula"]] = d["_id"]
         return d
+
+    def por_evidencia(self, base: str, g: cruce.PersonaTramites, ids: list[str], contenido) -> int | None:
+        """Entre homónimos, la ficha a la que pertenece el grupo `g` por sus datos y no por su nombre: la que ya tiene
+        alguno de sus trámites o, si no, la que más fichas y teléfonos comparte con él entre las del mismo nombre."""
+        votos = Counter(self.por_tramite[i] for i in ids if i in self.por_tramite)
+        votos.update(self.por_contenido[k] for k in contenido if k in self.por_contenido)
+        if votos:
+            return votos.most_common(1)[0][0]
+        fichas, tels = set(g.fichas), set(g.telefonos)
+        comunes = []
+        for pid in self.por_base.get(base, ()):
+            d = self.docs[pid]
+            sus_fichas = {d.get("ficha"), *(t.get("ficha") for t in d.get("tramites", []))}
+            sus_tels = {d.get("telefono"), d.get("telefono2"),
+                        *(x for t in d.get("tramites", []) for x in (t.get("telefono") or "").split(";"))}
+            n = len(fichas & sus_fichas) + len(tels & sus_tels)
+            if n:
+                comunes.append((n, pid))
+        comunes.sort(reverse=True)
+        if comunes and (len(comunes) == 1 or comunes[0][0] > comunes[1][0]):
+            return comunes[0][1]
+        return None
+
+    def proponer(self, a: int, b: int, puntaje: float, detalle: dict) -> None:
+        """Coincidencia pendiente entre dos fichas de trámites, si el par no se propuso ya (en cualquier orden): uno
+        rechazado no vuelve a revisión al reimportar."""
+        if any({c["persona_id"], c["candidato_id"]} == {a, b} for c in self.coincidencias):
+            return
+        if self.db.coincidencias.find_one({"$or": [{"persona_id": a, "candidato_id": b},
+                                                   {"persona_id": b, "candidato_id": a}]}, {"_id": 1}):
+            return
+        self.coincidencias.append({"persona_id": a, "candidato_id": b, "puntaje": puntaje, "estado": "pendiente",
+                                   "detalle": detalle})
 
     def _cambio(self, d: dict) -> dict | None:
         if d["_id"] in self.nuevas:
@@ -265,11 +308,27 @@ def importar(db: Database, rutas: list[Path], usuario: str | None = "sistema", n
 def _importar_tramites(alm: _Almacen, filas, res: Resumen) -> None:
     grupos = cruce.agrupar_tramites(filas)
     pids: dict[str, int] = {}
+    ids_de = {g.clave: [f.id_externo for f in g.filas if f.id_externo] for g in grupos}
+    contenido_de = {g.clave: {id(f): clave_contenido(f.ficha, f.fecha, f.tramite, tx.nombre_norm(f.nombre))
+                              for f in g.filas if not f.id_externo} for g in grupos}
+    # Homónimos (el mismo nombre en varias fichas de la base o en varias partes de este archivo): cada parte va a la
+    # ficha que ya tiene sus trámites, su ficha o su teléfono, no a la de la clave sin «#ficha». Un archivo con solo
+    # uno de los dos, o en el que el otro tiene el trámite más antiguo, no los mezcla
+    partes = Counter(_base(g.clave) for g in grupos)
+    evidencia: dict[str, int] = {}
     for g in grupos:
-        ids = [f.id_externo for f in g.filas if f.id_externo]
+        base = _base(g.clave)
+        if partes[base] > 1 or len(alm.por_base.get(base, ())) > 1:
+            pid = alm.por_evidencia(base, g, ids_de[g.clave], contenido_de[g.clave].values())
+            if pid is not None:
+                evidencia[g.clave] = pid
+    tomadas = defaultdict(set)  # ficha que ya le corresponde a otra parte de este archivo
+    for c, pid in evidencia.items():
+        tomadas[_base(c)].add(pid)
+    for g in grupos:
+        ids = ids_de[g.clave]
         nombres = {g.clave, *(tx.nombre_norm(n) for n in g.nombres)}
-        contenido = {id(f): clave_contenido(f.ficha, f.fecha, f.tramite, tx.nombre_norm(f.nombre))
-                     for f in g.filas if not f.id_externo}
+        contenido = contenido_de[g.clave]
         # Una persona suprimida se reconoce por sus trámites o por ficha/teléfono + nombre, nunca por el nombre solo
         identidad = [*(("tramite", i) for i in ids), *(("contenido", k) for k in contenido.values()),
                      *bd.pares_identidad(nombres, (f.ficha for f in g.filas), g.telefonos)]
@@ -278,11 +337,21 @@ def _importar_tramites(alm: _Almacen, filas, res: Resumen) -> None:
             res.suprimidas_omitidas += len(g.filas)
             continue
         u = g.ultima
-        pid = alm.por_clave.get(g.clave)
+        base = _base(g.clave)
+        clave = g.clave
+        pid = evidencia.get(g.clave)
+        if pid is None:
+            pid = alm.por_clave.get(g.clave)
+            if pid is not None and pid in tomadas[base]:
+                # La ficha de esta clave es la de otra parte del archivo: esta es otra persona con el mismo nombre
+                pid = None
+                clave = f"{base}#{min(g.fichas)}" if g.fichas else g.clave
         if pid is None:  # ¿alguno de sus trámites ya está en la base (p. ej. tras una fusión)?
             pid = next((alm.por_tramite[i] for i in ids if i in alm.por_tramite), None)
         if pid is None:
             pid = next((alm.por_contenido[k] for k in contenido.values() if k in alm.por_contenido), None)
+        if pid is None and clave in alm.por_clave:  # la clave ya es de otra ficha (no se puede repetir)
+            pid = alm.por_clave[clave]
         tels = [t for t, _ in g.telefonos.most_common(2)]
         datos = {
             "telefono": tels[0] if tels else None, "telefono2": tels[1] if len(tels) > 1 else None,
@@ -292,14 +361,17 @@ def _importar_tramites(alm: _Almacen, filas, res: Resumen) -> None:
             "ficha": u.ficha or None,
         }
         if pid is None:
-            d = alm.nueva({"nombre": g.nombre, "clave_tramites": g.clave}, "tramites")
+            d = alm.nueva({"nombre": g.nombre, "clave_tramites": clave}, "tramites")
             res.personas_nuevas += 1
         else:
             d = alm.docs[pid]
             res.personas_actualizadas += 1
-            if g.clave not in alm.por_clave:  # otra escritura del nombre (de una ficha unida): se recuerda
-                alm.agregar(d, "claves_tramites", g.clave)
-                alm.por_clave[g.clave] = pid
+            # Otra escritura del nombre (de una ficha unida): se recuerda. No el «#ficha» que tocó a un homónimo ya
+            # conocido solo por el orden de las fechas de este archivo: a ese se lo encuentra por sus datos
+            if clave not in alm.por_clave and not ("#" in clave and pid in alm.por_base.get(base, ())):
+                alm.agregar(d, "claves_tramites", clave)
+                alm.por_clave[clave] = pid
+                alm.por_base[base].add(pid)
         alm.completar(d, datos)
         alm.agregar(d, "fuentes", "tramites")
         nuevos = 0
@@ -319,13 +391,22 @@ def _importar_tramites(alm: _Almacen, filas, res: Resumen) -> None:
         res.tramites_nuevos += nuevos
         alm.contacto(d, max((f.fecha for f in g.filas if f.fecha), default=None))
         pids[g.clave] = d["_id"]
-    # Mismo nombre con fichas y teléfonos distintos quedó como dos personas: que el administrador lo confirme
+    # Mismo nombre con fichas y teléfonos distintos quedó como dos personas, y un nombre de pila casi igual con la
+    # misma ficha y el mismo teléfono («ROSALBA»/«OSALBA», ¿errata o hermanos?) también: que el administrador lo confirme
+    grupo_de = {g.clave: g for g in grupos}
     for g in grupos:
         a, b = pids.get(g.clave), pids.get(g.separado_de) if g.separado_de else None
         if a and b and a != b:
-            alm.coincidencias.append({"persona_id": a, "candidato_id": b, "puntaje": 1.0, "estado": "pendiente",
-                                      "detalle": {"homonimo": True, "puntaje_nombre": 1.0, "palabras": len(g.tokens()),
-                                                  "telefono": False, "correo": False}})
+            alm.proponer(a, b, 1.0, {"homonimo": True, "puntaje_nombre": 1.0, "palabras": len(g.tokens()),
+                                     "telefono": False, "correo": False})
+        for c in g.parecidos:
+            b = pids.get(c)
+            if a and b and a != b:
+                otro = grupo_de[c]
+                parecido = round(fuzz.ratio(tx.nombre_norm(g.nombre), tx.nombre_norm(otro.nombre)) / 100, 4)
+                alm.proponer(a, b, parecido, {"variante": True, "puntaje_nombre": parecido, "palabras": len(g.tokens()),
+                                              "telefono": bool(set(g.telefonos) & set(otro.telefonos)),
+                                              "correo": bool(set(g.correos) & set(otro.correos))})
 
 
 def _importar_cedulas(alm: _Almacen, filas, imp_id: int, res: Resumen) -> None:

@@ -174,7 +174,8 @@ RENOMBRAR_VEREDA = {
 
 # Alias documentados en las fuentes (Alcaldía, MEN, DANE, Gobernación) o variantes de escritura.
 ALIAS_MANUALES = {
-    # veredas
+    # veredas (los alias de una sola palabra solo cuentan tras VEREDA/BARRIO o como texto completo del lugar)
+    "SAN LUIS BELTRAN": ["BELTRAN"],
     "X-10": ["X10", "X 10", "LA X-10", "LA X10", "VEREDA X-10", "EQUIS 10", "X DIEZ", "LA CONDOR X-10", "LA CONDOR X10"],
     "KILOMETRO CINCO": ["KILOMETRO 5", "KM 5", "KM5", "KM CINCO", "K-5", "K5", "K 5", "KM-5", "KILOMETRO5"],
     "LA ROMPIDA 1": ["LA ROMPIDA N 1", "LA ROMPIDA NO 1", "LA ROMPIDA UNO", "ROMPIDA UNO", "ROMPIDA 1", "ROMPIDA N 1",
@@ -203,10 +204,10 @@ ALIAS_MANUALES = {
     # centros poblados
     "CIENAGA DE BARBACOAS": ["CIENAGA DE BARBACOA", "CIENAGA DE BARBACOA - LA PUNTA", "CIENAGA DE BARBACOA LA PUNTA",
                              "LA PUNTA", "CIENAGA BARBACOAS"],
-    "PUERTO LOS MANGOS": ["LOS MANGOS", "PTO LOS MANGOS"],
+    "PUERTO LOS MANGOS": ["LOS MANGOS", "PTO LOS MANGOS", "MANGOS"],
     "PUERTO TOMAS": ["PTO TOMAS"],
-    "PUERTO MATILDE": ["PTO MATILDE"],
-    "CHORRO DE LAGRIMAS": ["CHORRO LAGRIMAS"],
+    "PUERTO MATILDE": ["PTO MATILDE", "MATILDE"],
+    "CHORRO DE LAGRIMAS": ["CHORRO LAGRIMAS", "LAGRIMAS"],
     "YONDO": ["CASABE", "YONDO CASABE", "CASCO URBANO", "CABECERA MUNICIPAL", "ZONA URBANA", "CABECERA"],
     # barrios
     "VILLA MARIA": ["VILLAMARIA", "VILLA MARIA YONDO"],

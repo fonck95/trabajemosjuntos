@@ -120,7 +120,8 @@ def reservar_intento(db: Database, ip: str, conocido: bool = False):
         db.intentos.delete_one({"_id": iid})
         # La IP se libera cuando sale de la ventana el fallo que sobra (como mucho 15 minutos)
         x = next(db.intentos.find(de_ip, {"ts": 1}).sort("ts", 1).skip(max(0, n - MAX_POR_IP - 1)).limit(1), None)
-        return None, _segundos(x["ts"] + timedelta(seconds=VENTANA_S) - ahora if x else timedelta(seconds=1))
+        espera = min(x["ts"] + timedelta(seconds=VENTANA_S) - ahora, timedelta(seconds=VENTANA_S)) if x else timedelta(seconds=1)
+        return None, _segundos(espera)
     total = db.intentos.count_documents({"ok": False, "ts": {"$gt": desde}})
     if total > MAX_GLOBAL and not conocido:
         # Muchos fallos desde muchas IPs: cada intento atendido abre una espera corta (1, 2, 4… hasta 60 s). Un solo

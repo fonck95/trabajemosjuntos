@@ -15,7 +15,7 @@ from pymongo.database import Database
 
 from .. import db as bd
 from ..seguridad import Admin, obtener_db, requiere_admin
-from .personas import mapa_lugares
+from .personas import fecha_iso, mapa_lugares
 
 r = APIRouter(prefix="/api/reuniones", tags=["reuniones"])
 
@@ -35,9 +35,7 @@ class ReunionIn(BaseModel):
     @field_validator("fecha")
     @classmethod
     def _f(cls, v):
-        if v is not None and not re.match(r"^\d{4}-\d{2}-\d{2}$", v):
-            raise ValueError("Use el formato AAAA-MM-DD")
-        return v
+        return fecha_iso(v)  # vacía la rechazan crear y editar («necesita título y fecha»)
 
     @field_validator("titulo")
     @classmethod
@@ -68,7 +66,8 @@ def _reunion(db: Database, rid: int) -> dict:
                       "lugar": (lugares.get(p.get("lugar_id")) or {}).get("nombre") or p.get("lugar_texto"),
                       "completitud": p.get("completitud", 0), "rol": a.get("rol"), "nota": a.get("nota"),
                       "creado_en": a.get("creado_en"), "etiquetas": [e["nombre"] for e in ets]})
-    d["asistentes"] = sorted(asist, key=lambda a: a["creado_en"] or "", reverse=True)
+    # Con la misma marca de segundo, el último registrado primero (el orden de llegada desempata)
+    d["asistentes"] = [a for _, a in sorted(enumerate(asist), key=lambda x: (x[1]["creado_en"] or "", x[0]), reverse=True)]
     d["necesidades"] = [{"nombre": n, "n": c} for n, c in necesidades.most_common()]
     return d
 
