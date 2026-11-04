@@ -47,8 +47,8 @@ El repositorio incluye un **atlas 3D interactivo** (`atlas.html`, Three.js + GSA
 | `data/edificios/` | Levantamiento de cada sede pública (formato en `ESPECIFICACION.md`) |
 | `scripts/geo/` | Herramientas de levantamiento: satélite, cobertura y vistas de Street View, superposición de la huella, calles de OpenStreetMap y huellas de edificaciones |
 | `scripts/` | Descarga y análisis de SECOP, simulación de la microrred, construcción del sitio |
-| `web/` | El sitio: Home de la campaña (`index.html`), atlas 3D (`atlas.html`) y propuesta (`propuesta.html`), con módulos JavaScript + Three.js + GSAP; `web/img/home/` renders propios de la maqueta para el Home (sin imágenes satelitales); `web/models/` modelos GLB; `web/vendor/` decodificadores Draco y Basis |
-| `admin/` | **Panel de administración privado** (FastAPI + MongoDB, otro servicio de Railway): base única de habitantes cruzada por nombre, direcciones normalizadas y georreferenciadas, mapa 3D con mapa de calor, reuniones y enriquecimiento de perfiles. No versiona datos personales; ver `admin/README.md` |
+| `web/` | El sitio: Home de la campaña (`index.html`), atlas 3D (`atlas.html`) y propuesta (`propuesta.html`), con módulos JavaScript + Three.js + GSAP; `web/img/home/` renders propios de la maqueta para el Home (sin imágenes satelitales); `web/models/` modelos GLB; `web/vendor/` decodificadores Draco y Basis y copias de three 0.160.0 y GSAP 3.12.5 (`web/` carga las del CDN porque `atlas.html` se publica también como Artifact; `build_site.py` las cambia por las copias en `site/`) |
+| `admin/` | **Panel de administración privado** (FastAPI + MongoDB, en `/panel/` del mismo servicio de Railway): base única de habitantes cruzada por nombre, direcciones normalizadas y georreferenciadas, mapa 3D con mapa de calor, reuniones y enriquecimiento de perfiles. No versiona datos personales; ver `admin/README.md` |
 | `scripts/modelos/` | Generación y optimización de los modelos GLB (gltf-transform + Draco), réplicas de las sedes (`build_edificios.mjs`) y render de comparación con Street View (`render_vista.mjs`) |
 
 ## Ver el atlas 3D
@@ -65,7 +65,7 @@ cd site && python3 -m http.server 8000
 # abrir http://localhost:8000 (Home), /atlas.html (atlas) y /propuesta.html (propuesta)
 ```
 
-Al hacer *push* a `main`, el flujo `.github/workflows/pages.yml` publica el sitio (Home, atlas y propuesta) en GitHub Pages (hay que activar Pages con origen "GitHub Actions" en la configuración del repositorio). Railway lo construye con Railpack: `railpack.json` instala `requirements.txt`, corre los mismos dos scripts y arranca `admin/servidor.py`, que sirve el sitio en la raíz, el panel de administración en `/panel/` (enlace «Ingreso del equipo» al pie del Home) y `/health`. Variables y pasos en `admin/README.md`.
+Al hacer *push* a `main`, el flujo `.github/workflows/pages.yml` publica el sitio (Home, atlas y propuesta) en GitHub Pages (hay que activar Pages con origen "GitHub Actions" en la configuración del repositorio). Railway lo construye con Railpack: `railpack.json` instala `requirements.txt`, corre los mismos dos scripts y arranca `admin/servidor.py` (uvicorn con `--no-access-log` y `--no-server-header`), que sirve el sitio en la raíz, el panel de administración en `/panel/` (enlace «Ingreso del equipo» al pie del Home) y `/health`. El sitio público lleva sus propias cabeceras y su CSP: solo scripts propios, ninguno de un CDN de terceros (`build_site.py` falla si queda un script externo). El panel, en el mismo dominio, tiene su propia CSP y la cookie de sesión acotada a `/panel/`. Para el aislamiento máximo (opcional), el panel puede ir en un servicio aparte con dominio propio (Root Directory = `admin` y `PANEL_URL` = `https://…` en el sitio) y quedar en otro origen. Variables y pasos en `admin/README.md`.
 
 ## Reproducir el análisis de contratación
 

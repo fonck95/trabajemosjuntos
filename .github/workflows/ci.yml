@@ -31,6 +31,53 @@ jobs:
             echo 'La presentación muestra el nombre del punto, no un número de 1 a 7'
             exit 1
           fi
+  despliegue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: El arranque no deja las búsquedas en los registros ni anuncia el servidor
+        run: |
+          # El servicio de Railway arranca desde railpack.json de la raíz: sitio y panel en un solo proceso
+          grep -qE '"startCommand": *"uvicorn servidor:app ' railpack.json || { echo 'railpack.json no arranca uvicorn servidor:app'; exit 1; }
+          for f in admin/Procfile admin/railpack.json admin/railway.json; do
+            grep -q 'uvicorn app\.main:app' "$f" || { echo "$f no arranca el panel con uvicorn"; exit 1; }
+          done
+          # Todo comando de arranque lleva --no-access-log (el log de acceso imprime la URL con ?q=: cédulas, teléfonos y
+          # nombres buscados irían a los registros de Railway) y --no-server-header (uvicorn agrega «server: uvicorn»).
+          # Un comando partido con «\» se junta con sus líneas siguientes y se revisa completo.
+          awk '
+            FNR == 1 { previo = "" }
+            { l = $0; if (previo != "") sub(/^[ \t]+/, "", l) }
+            l ~ /\\$/ { previo = previo substr(l, 1, length(l) - 1); next }
+            { linea = previo l; previo = "" }
+            linea ~ /uvicorn (app\.main|servidor):app/ {
+              split("--no-access-log --no-server-header", ops, " ")
+              for (i = 1; i <= 2; i++)
+                if (linea !~ ("(^|[ \t])" ops[i] "([^-A-Za-z0-9]|$)")) { print FILENAME ": falta " ops[i] " en: " linea; mal = 1 }
+            }
+            END { exit mal }
+          ' railpack.json README.md admin/Procfile admin/railpack.json admin/railway.json admin/README.md
+      - name: El sitio se construye como en Railway y no carga scripts de otro dominio
+        run: |
+          python3 scripts/build_data.py && PANEL_URL=/panel/ python3 scripts/build_site.py
+          # La CSP del sitio solo admite scripts propios (script-src 'self' y hashes de los scripts en línea): three y GSAP
+          # van como copias locales. Cada archivo se lee entero (-z); \x27 es la comilla simple y \x60 la invertida.
+          p='(?is)<script\b[^>]*\bsrc\s*=\s*["\x27]?(?:https?:)?//[^\s"\x27>]*'                        # <script src="http…"> o "//…"
+          p+='|<script\b[^>]*\bimportmap\b[^>]*>(?:(?!</script>).)*?["\x27](?:https?:)?//[^\s"\x27]*'  # URL externas en un importmap
+          p+='|<link\b(?=[^>]*\bmodulepreload\b)[^>]*\bhref\s*=\s*["\x27]?(?:https?:)?//[^\s"\x27>]*'  # modulepreload de otro dominio
+          p+='|<script\b[^>]*>(?:(?!</script>).)*?\b(?:from|import)\s*\(?\s*["\x27\x60](?:https?:)?//[^\s"\x27\x60]*'  # import
+          st=0
+          grep -aPzoH "$p" site/*.html > "$RUNNER_TEMP/externos" || st=$?
+          case $st in
+            0) tr '\0' '\n' < "$RUNNER_TEMP/externos"
+               echo 'El sitio no carga scripts de otro dominio: copia local en web/vendor/ y reescritura en build_site.py'
+               exit 1 ;;
+            1) echo 'site/*.html no carga scripts de otro dominio' ;;
+            *) echo 'No se pudo revisar site/*.html'; exit 1 ;;
+          esac
   panel:
     runs-on: ubuntu-latest
     services:
@@ -63,16 +110,6 @@ jobs:
             cp "$f" /tmp/check.mjs
             node --check /tmp/check.mjs || { echo "error de sintaxis en $f"; exit 1; }
           done
-      - name: El arranque no deja las búsquedas en los registros (--no-access-log)
-        run: |
-          for f in Procfile railpack.json railway.json; do
-            grep -q 'uvicorn app\.main:app' "$f" || { echo "$f no arranca el panel con uvicorn"; exit 1; }
-          done
-          # El log de acceso imprime la URL con ?q=: cédulas, teléfonos y nombres buscados irían a los registros de Railway
-          if grep -n 'uvicorn app\.main:app' Procfile railpack.json railway.json README.md | grep -v -- '--no-access-log'; then
-            echo 'Todo comando de arranque del panel lleva --no-access-log'
-            exit 1
-          fi
       - name: Ningún Excel, CSV del panel ni .env en el repositorio
         working-directory: .
         run: |

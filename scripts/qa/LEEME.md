@@ -2,7 +2,7 @@
 
 Herramientas para probar las vistas del atlas en un navegador real sin depender de la red: `scripts/qa/comun.mjs` (equipo D) y los guiones que la usan (sección 3): `torre_qa.mjs` y `sismo_qa.mjs` (D), `recorrido_qa.mjs` y `equipos_qa.mjs` (C), `bim_qa.mjs` (F) y `scripts/sismo/qa_worker.mjs` (A). Contrato: `data/proyectos/torre_hospital/ESPECIFICACION_INTEGRACION.md`, secciones 2.1, 12.1, 13 y 17.7.
 
-El sitio carga three.js y GSAP de CDN (`cdn.jsdelivr.net`, `cdnjs.cloudflare.com`) y las tipografías de Google Fonts. En el entorno de QA esos sitios pueden estar bloqueados, así que `comun.mjs` desvía esas peticiones a una carpeta local (`--vendor`) y corta cualquier otra petición externa. Nada de lo que piden los criterios de aceptación puede depender de archivos que solo estén en la carpeta temporal de una sesión: esta guía dice cómo armarlos en cualquier máquina.
+`web/` carga three.js y GSAP de CDN (`cdn.jsdelivr.net`, `cdnjs.cloudflare.com`), porque `atlas.html` se publica también como Artifact, y las tipografías de Google Fonts; en `site/`, `scripts/build_site.py` cambia esos scripts por las copias de `web/vendor/three-0.160.0/` y `web/vendor/gsap-3.12.5/`. En el entorno de QA los CDN pueden estar bloqueados, así que `comun.mjs` desvía esas peticiones a una carpeta local (`--vendor`) y corta cualquier otra petición externa. Nada de lo que piden los criterios de aceptación puede depender de archivos que solo estén en la carpeta temporal de una sesión: esta guía dice cómo armarlos en cualquier máquina.
 
 ## 1. Preparar three, GSAP y Playwright
 
@@ -50,7 +50,7 @@ Opciones comunes a todos los guiones que usan `comun.mjs`:
 | `--base /subruta/` | `/` | Sirve el sitio bajo una subruta, como GitHub Pages (`/trabajemosjuntos/`) |
 | `--salida <carpeta>` | carpeta temporal del sistema (`atlas_qa`) | Capturas e informes; nunca dentro del repositorio |
 | `--puerto <n>` | libre | Puerto del servidor local |
-| `--url <sitio>` | — | No levanta servidor: usa el sitio ya servido en esa dirección (Caddy con el `Caddyfile` del repositorio, un despliegue) |
+| `--url <sitio>` | — | No levanta servidor: usa el sitio ya servido en esa dirección (`admin/servidor.py` en local, como en Railway, o un despliegue) |
 
 `web/atlas.html` no trae `<!doctype>`, `<head>` ni `<body>` (se publica también como Artifact, que los agrega): el servidor de QA lo envuelve igual que `scripts/build_site.py`, para que el navegador no lo lea en modo «quirks». El Home (`web/index.html`) y la propuesta (`web/propuesta.html`) son documentos completos y pasan tal cual; el Home manda a `atlas.html` los enlaces viejos con vista en el «hash» (`index.html?qa=1#torre`, `#dinero`…).
 
@@ -81,7 +81,7 @@ node scripts/qa/equipos_qa.mjs --vendor $V
 node scripts/sismo/qa_worker.mjs --vendor $V
 ```
 
-**El sitio como en Railway (Caddy).** Railway sirve `site/` con el `Caddyfile` del repositorio a través de Railpack, que reemplaza `{{.StaticFileRoot}}` y quita los bloques `{{if .IndexFallback}}…{{end}}`. Para probarlo en local con un binario de Caddy 2: hacer esos dos reemplazos en una copia del `Caddyfile` (fuera del repositorio), `PORT=8137 caddy run --config <copia> --adapter caddyfile` y luego `node scripts/qa/torre_qa.mjs --vendor $V --solo publicado --url http://127.0.0.1:8137/`. Sin Caddy, `--solo publicado` sin `--url` sirve `site/` bajo `/trabajemosjuntos/` con el servidor de `comun.mjs` (mismos tipos MIME y `nosniff`).
+**El sitio como en Railway.** Railway construye `site/` con `railpack.json` y lo sirve con `admin/servidor.py` (el sitio en la raíz, con sus cabeceras y su CSP, y el panel en `/panel/`). Para probarlo en local, con las dependencias de `requirements.txt`: `python3 scripts/build_data.py && PANEL_URL=/panel/ python3 scripts/build_site.py`, `uvicorn servidor:app --app-dir admin --port 8137 --no-access-log --no-server-header` (el sitio no necesita MongoDB ni las variables del panel) y luego `node scripts/qa/torre_qa.mjs --vendor $V --solo publicado --url http://127.0.0.1:8137/`. Sin ese servidor, `--solo publicado` sin `--url` sirve `site/` bajo `/trabajemosjuntos/` con el servidor de `comun.mjs` (mismos tipos MIME y `nosniff`, sin la CSP).
 
 **Otras verificaciones (sin navegador).** Datos y motor: `python3 scripts/torre/validar_plantas.py`, `python3 scripts/torre/validar_inventario.py`, `python3 scripts/torre/test_torre.py`, `python3 scripts/torre/validar_contraste.py`, `python3 scripts/torre/verificar_cifras_docs.py` (13.2 y 13.5); `node scripts/sismo/test_motor.mjs`, `python3 scripts/sismo/estructura_torre.py --verificar`, `node scripts/sismo/validar_resultado.mjs <resultado.json>`, `python3 scripts/sismo/validar_opensees.py` en el entorno de validación de `scripts/sismo/requisitos_validacion.txt` (13.1); `python3 scripts/bim/validar_ifc.py` (con ifcopenshell) y `python3 scripts/bim/interferencias.py` (17.7); `node scripts/verificar_sim.mjs` (simulación de la microrred).
 

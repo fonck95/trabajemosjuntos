@@ -299,7 +299,7 @@ Contrato: `data/proyectos/torre_hospital/ESPECIFICACION_INTEGRACION.md` (seccion
 
 - El motor corre en un **Web Worker de módulo** (`new Worker(new URL('../../sismo/trabajador.js', import.meta.url), { type: 'module' })`). Dentro del trabajador no se usa el importmap: los módulos del motor (`web/js/sismo/`) se importan con rutas relativas y extensión `.js`, y no dependen de three ni del DOM. Las URL de los datos se arman con `import.meta.url`, así funciona igual en la raíz y en una subruta.
 - **Cancelar** es `worker.terminate()` (la vista vuelve a pedir un trabajador nuevo). Si no hay `Worker` (por ejemplo, en un Artifact), el **respaldo** corre `motor.js` en el hilo principal por tramos de unos 12 ms y da los mismos resultados, bit a bit.
-- **Publicación:** GitHub Pages (subruta del repositorio) y Railway con Caddy sirven `site/`, que arman `scripts/build_data.py` y `scripts/build_site.py`, sin pasos nuevos en CI. Los datos de cada modo (`web/data/torre_*.json`, `sismo_*.json` y `torre_bim*.json`) se cargan solo al entrar al modo, nunca con `data.js`, y `build_data.py` no los escribe si un insumo cambió después de generarlos.
+- **Publicación:** GitHub Pages (subruta del repositorio) y Railway (`admin/servidor.py`, con la CSP del sitio, que admite workers `blob:`) sirven `site/`, que arman `scripts/build_data.py` y `scripts/build_site.py`, sin pasos nuevos en CI. Los datos de cada modo (`web/data/torre_*.json`, `sismo_*.json` y `torre_bim*.json`) se cargan solo al entrar al modo, nunca con `data.js`, y `build_data.py` no los escribe si un insumo cambió después de generarlos.
 
 #### Modo «Modelo BIM» (`bim.js`, `bim3d.js`, `bim_refuerzo.js`, `bim_despiece.js`)
 
