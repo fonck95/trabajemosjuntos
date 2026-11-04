@@ -1,6 +1,9 @@
-// Ingreso del administrador, con un campo de puntos animado de fondo (la población que se va a mapear).
+// Ingreso al panel (administrador, planilleros y consultores), con un campo de puntos animado de fondo (la población
+// que se va a mapear), y el diálogo de reingreso cuando la sesión vence con algo escrito.
 import { api } from '../api.js';
-import { $, html, montar } from '../ui.js';
+import { $, dialogo, html, montar } from '../ui.js';
+
+const LEGAL = 'Acceso restringido. Contiene datos personales protegidos por la Ley 1581 de 2012; las consultas de fichas y todos los cambios quedan registrados.';
 
 export function vistaLogin(raiz, { configurado, alEntrar }) {
   montar(raiz, html`
@@ -12,13 +15,13 @@ export function vistaLogin(raiz, { configurado, alEntrar }) {
       </section>
       <section class="caja">
         <form id="f-login" autocomplete="on" novalidate>
-          <h2>Panel de administración</h2>
+          <h2>Panel Yondó · Base única</h2>
           ${configurado ? '' : html`<div class="aviso-legal">El servidor no tiene credenciales. Defina las variables <b>ADMIN</b> y <b>password</b> y reinicie.</div>`}
-          <label class="campo"><span>Usuario</span><input name="usuario" autocomplete="username" required autofocus></label>
+          <label class="campo"><span>Usuario</span><input name="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus></label>
           <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required></label>
           <div class="error" id="error" role="alert"></div>
           <button class="btn primario" type="submit" style="min-height:44px">Ingresar</button>
-          <p class="legal">Acceso restringido. Contiene datos personales protegidos por la Ley 1581 de 2012; cada consulta y cambio queda registrado.</p>
+          <p class="legal">${LEGAL}</p>
         </form>
       </section>
     </div>`);
@@ -41,6 +44,40 @@ export function vistaLogin(raiz, { configurado, alEntrar }) {
     }
   });
   const parar = animar($('#fondo'));
+}
+
+/** Reingreso sin salir de la vista: la sesión venció con un formulario a medias. Resuelve con los datos de la sesión
+ * nueva, o con null si se cancela (lo escrito sigue en el formulario). */
+export function dialogoIngreso({ usuario }) {
+  const { el, cerrar, listo } = dialogo({
+    titulo: 'La sesión terminó',
+    cuerpo: html`<form id="f-reingreso" class="reingreso" novalidate>
+      <p>Ingrese de nuevo para guardar lo que escribió. No se perdió nada.</p>
+      <label class="campo"><span>Usuario</span><input name="usuario" autocomplete="username" value="${usuario || ''}" readonly></label>
+      <label class="campo"><span>Clave</span><input name="clave" type="password" autocomplete="current-password" required autofocus></label>
+      <div class="error" role="alert"></div>
+      <p class="legal">${LEGAL}</p>
+    </form>`,
+    pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" type="submit" form="f-reingreso">Ingresar</button>`,
+  });
+  const f = el.querySelector('#f-reingreso');
+  f.clave.focus();
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const boton = el.querySelector('button[type=submit]');
+    boton.disabled = true;
+    f.querySelector('.error').textContent = '';
+    try {
+      cerrar(await api.post('/api/login', { usuario: f.usuario.value, clave: f.clave.value }));
+    } catch (err) {
+      f.querySelector('.error').textContent = err.message;
+      f.clave.value = '';
+      f.clave.focus();
+    } finally {
+      boton.disabled = false;
+    }
+  });
+  return listo;
 }
 
 function animar(canvas) {

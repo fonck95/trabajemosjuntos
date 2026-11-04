@@ -1,31 +1,49 @@
-"""Quién hace cada petición y qué puede hacer: roles, permisos, claves de los usuarios y máscaras.
+"""Quién hace cada petición y qué puede hacer: roles, permisos, claves de los usuarios, máscaras, lecturas,
+frecuencia e idempotencia.
 
 * Tres roles: el administrador (la credencial de `.env`, uid 0, que no vive en `usuarios`), el planillero y el
   consultor. Denegar por defecto: un rol desconocido no tiene permisos y una sesión con un rol inválido no vale.
-* `requiere(*permisos)` es la dependencia de cada ruta de la API: valida la sesión y el CSRF, arma el `Quien` y
-  responde 403 `{codigo: "permiso"}` si el rol no tiene todos los permisos pedidos. Deja `dep.permisos` para que una
-  prueba recorra las rutas y compare con la tabla de permisos.
+* `requiere(*permisos)` es la dependencia de cada ruta de la API: valida la sesión y el CSRF, arma el `Quien`,
+  vuelve a exigir la clave cambiada y el compromiso al día (la guardia ya lo hizo) y responde 403
+  `{codigo: "permiso"}` si el rol no tiene todos los permisos pedidos. Deja `dep.permisos` para que una prueba recorra
+  las rutas y compare con la tabla de permisos. Con `limitar=True`, P y C tienen además un límite de frecuencia.
 * Las claves de los usuarios van con scrypt (n=2^15, r=8, p=1: 32 MiB), como mucho dos a la vez.
-* `registrar_lecturas` y `idempotencia_*` tienen su firma final; todavía no hacen nada.
+* `registrar_lecturas` anota en `lecturas` las personas servidas a cada usuario (también al administrador) y aplica
+  el presupuesto diario de P y C. Con 20 rechazos por volumen en el día se cierran sus sesiones.
+* `idempotencia_previa` e `idempotencia_guardar`: con `Idempotency-Key`, un POST repetido devuelve la respuesta
+  guardada sin repetir efectos. Si la ruta falla o no guarda, la clave se libera al terminar la petición.
 """
 from __future__ import annotations
 
 import hashlib
 import hmac
+import json
+import logging
+import math
 import re
 import secrets
 import threading
+import time
+from collections import deque
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable, Iterable
 
 from fastapi import Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import Response
+from pymongo import ASCENDING, ReturnDocument, UpdateOne
 from pymongo.database import Database
+from pymongo.errors import DuplicateKeyError, OperationFailure
 
-from .seguridad import METODOS_SEGUROS, huella, ip_de, obtener_db, sesion_actual
+from . import db as bd
+from . import modelo
+from .seguridad import (METODOS_SEGUROS, ROLES_USUARIO, SIN_PERMISO, huella, ip_de, obtener_db, rechazo_de_cuenta,
+                        ruta_interna, sesion_actual)
+
+log = logging.getLogger("panel")
 
 ROLES = {"admin", "planillero", "consultor"}
-ROLES_USUARIO = ("planillero", "consultor")  # los que viven en la colección `usuarios`
 PERMISOS: dict[str, frozenset[str]] = {
     "admin": frozenset({"*"}),
     "planillero": frozenset({
@@ -41,7 +59,6 @@ PERMISOS: dict[str, frozenset[str]] = {
         "acercamientos.registrar", "acercamientos.ver", "puestos.ver", "solicitudes.crear",
     }),
 }
-SIN_PERMISO = {"mensaje": "Su rol no permite esta acción", "codigo": "permiso"}
 
 
 @dataclass(kw_only=True)
@@ -63,6 +80,11 @@ class Quien:
         return self.rol == "admin"
 
 
+def quien_admin(cfg, ip: str | None = None) -> Quien:
+    """El administrador de `.env` como `Quien` (uid 0)."""
+    return Quien(uid=0, usuario=cfg.usuario, nombre=cfg.usuario, rol="admin", ip=ip, permisos=PERMISOS["admin"])
+
+
 def _quien_de(db: Database, request: Request, s: dict) -> Quien:
     cfg = request.app.state.cfg
     uid = s.get("uid")
@@ -72,9 +94,9 @@ def _quien_de(db: Database, request: Request, s: dict) -> Quien:
             raise HTTPException(401, "Inicie sesión")
         return Quien(uid=0, usuario=s.get("usuario"), nombre=s.get("usuario"), rol="admin", ip=ip_de(request),
                      permisos=PERMISOS["admin"])
-    u = db.usuarios.find_one({"_id": uid, "activo": True})
+    u = s.get("_usuario") or db.usuarios.find_one({"_id": uid, "activo": True}, {"clave": 0})
     rol = (u or {}).get("rol")
-    if rol not in ROLES_USUARIO:  # usuario inactivo, borrado o con un rol inválido en la base: falla cerrada
+    if not (u or {}).get("activo") or rol not in ROLES_USUARIO:  # inactivo, borrado o rol inválido: falla cerrada
         raise HTTPException(401, "Inicie sesión")
     asignacion = u.get("asignacion") or {}
     return Quien(uid=uid, usuario=u.get("usuario"), nombre=u.get("nombre"), rol=rol, ip=ip_de(request),
@@ -85,10 +107,11 @@ def _quien_de(db: Database, request: Request, s: dict) -> Quien:
 def requiere(*permisos: str, limitar: bool = False) -> Callable[..., Quien]:
     """Dependencia de una ruta: sesión (la que dejó la guardia en `scope["state"]["sesion"]`, o la de la cookie) +
     CSRF en lo que cambia datos + rol + todos los `permisos`. `limitar` marca las rutas con límite de frecuencia por
-    usuario (lo aplica el grupo 2)."""
+    usuario (120 por minuto para P y C). Al terminar la petición libera la clave de idempotencia que la ruta tomó y
+    no guardó (falló o no la usó)."""
     pedidos = frozenset(permisos)
 
-    def dep(request: Request, db: Database = Depends(obtener_db)) -> Quien:
+    def dep(request: Request, db: Database = Depends(obtener_db)):
         s = (request.scope.get("state") or {}).get("sesion")
         if s is None:
             s = sesion_actual(db, request)
@@ -100,14 +123,27 @@ def requiere(*permisos: str, limitar: bool = False) -> Callable[..., Quien]:
             if not esperado or not hmac.compare_digest(enviado.encode(), esperado.encode()):
                 raise HTTPException(403, "Token CSRF inválido; recargue la página")
         quien = _quien_de(db, request, s)
+        if not quien.es_admin:
+            rechazo = rechazo_de_cuenta(s, ruta_interna(request.scope), db)
+            if rechazo is not None:
+                raise HTTPException(403, rechazo)
         if not all(quien.puede(p) for p in pedidos):
             raise HTTPException(403, dict(SIN_PERMISO))
-        return quien
+        if limitar and not quien.es_admin:
+            _frecuencia(db, quien.uid)
+        try:
+            yield quien
+        finally:
+            _soltar_idempotencia(db, request)
 
     dep.permisos = pedidos
     dep.limitar = limitar
     return dep
 
+
+# Lo que usaban las rutas del administrador: ahora es `requiere("admin")` (seguridad.requiere_admin lo reexporta)
+requiere_admin = requiere("admin")
+Admin = Quien
 
 # ───────────────────────────── Claves ─────────────────────────────
 
@@ -117,6 +153,7 @@ _TURNOS = threading.BoundedSemaphore(2)  # scrypt usa 32 MiB y ~0,1 s de CPU: co
 _SAL_FALSA = b"panel-yondo-sal!"
 _HASH_FALSO = bytes(SCRYPT_LARGO)
 LARGO_MINIMO = 10
+HORAS_CLAVE_TEMPORAL = 72
 CLAVES_COMUNES = frozenset({
     "1234567890", "0123456789", "0987654321", "9876543210", "12345678910", "123456789a", "a123456789", "1234567890a",
     "1q2w3e4r5t", "qwertyuiop", "qwerty1234", "asdfghjkl1", "abcdefghij", "abc1234567", "password12", "password123",
@@ -178,6 +215,72 @@ def validar_clave_nueva(usuario: str | None, c: str) -> None:
         raise HTTPException(422, "Esa clave es demasiado fácil de adivinar; elija otra")
 
 
+def vence_temporal() -> str:
+    """Vencimiento de una clave temporal recién generada (ISO UTC, como `bd.ahora()`)."""
+    return (datetime.now(timezone.utc) + timedelta(hours=HORAS_CLAVE_TEMPORAL)).replace(microsecond=0).isoformat()
+
+
+def clave_vencida(u: dict | None) -> bool:
+    """¿El usuario tiene una clave temporal sin cambiar que ya venció? Vencida, el ingreso da el 401 genérico."""
+    if not u or not u.get("debe_cambiar_clave") or not u.get("clave_temporal_vence"):
+        return False
+    vence = u["clave_temporal_vence"]
+    try:
+        vence = vence if isinstance(vence, datetime) else datetime.fromisoformat(str(vence))
+    except ValueError:
+        return True  # un vencimiento ilegible no se da por vigente
+    if vence.tzinfo is None:
+        vence = vence.replace(tzinfo=timezone.utc)
+    return vence <= datetime.now(timezone.utc)
+
+
+# ───────────────────────────── Usuarios ─────────────────────────────
+
+USUARIO_VALIDO = re.compile(r"[a-z0-9._-]{3,40}")
+# Nombres que no puede tener un usuario: los que la auditoría usa para otros actores
+RESERVADOS = frozenset({"sistema", "consola", "desconocido", "admin", "migración", "migracion"})
+
+
+def clave_ingresos(db: Database) -> bytes:
+    """Clave secreta (aleatoria, creada la primera vez) del HMAC de los nombres escritos al ingresar."""
+    m = db.meta.find_one_and_update({"_id": "clave_ingresos"}, {"$setOnInsert": {"valor": secrets.token_hex(32)}},
+                                    upsert=True, return_document=ReturnDocument.AFTER)
+    return bytes.fromhex(m["valor"])
+
+
+def nombre_h(db: Database, nombre: str | None, clave: bytes | None = None) -> str:
+    """HMAC del nombre escrito al ingresar (en minúsculas), exista o no la cuenta: cuenta los fallos por nombre sin
+    guardar lo escrito (a veces es la clave)."""
+    clave = clave or clave_ingresos(db)
+    return hmac.new(clave, b"ingreso|" + (nombre or "").strip().lower().encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def cerrar_sesiones(db: Database, uid: int) -> int:
+    """Sube la `version` del usuario (su huella cambia) y borra sus sesiones. Devuelve cuántas había."""
+    db.usuarios.update_one({"_id": uid}, {"$inc": {"version": 1}, "$set": {"actualizado_en": bd.ahora()}})
+    return db.sesiones.delete_many({"uid": uid}).deleted_count
+
+
+def preparar(db: Database) -> None:
+    """Índices de lo que usa este módulo (los mismos de 1.10, que `db.inicializar` también puede crear). Si ya
+    existe uno igual con otras opciones, se avisa en el registro y el arranque sigue."""
+    indices = [
+        (db.usuarios, [("usuario", ASCENDING)], {"unique": True}),
+        (db.sesiones, [("uid", ASCENDING)], {}),
+        (db.intentos, [("nombre_h", ASCENDING), ("ts", ASCENDING)], {}),
+        (db.intentos, [("ip", ASCENDING), ("marca_h", ASCENDING), ("ts", ASCENDING)], {}),
+        (db.lecturas, [("uid", ASCENDING), ("dia", ASCENDING)], {}),
+        (db.lecturas, [("ts", ASCENDING)], {"expireAfterSeconds": 90 * 86400}),
+        (db.idempotencia, [("ts", ASCENDING)], {"expireAfterSeconds": 86400}),
+        (db.idempotencia, [("persona_id", ASCENDING)], {}),
+    ]
+    for coleccion, claves, opciones in indices:
+        try:
+            coleccion.create_index(claves, **opciones)
+        except OperationFailure as e:
+            log.warning("Índice %s.%s con otras opciones: %s", coleccion.name, claves, e.code)
+
+
 # ───────────────────────────── Máscaras ─────────────────────────────
 
 MASCARA = "···"
@@ -195,21 +298,184 @@ def enmascarar_telefono(t: Any) -> str | None:
     return f"{MASCARA}{s[-4:]}" if s else None
 
 
-# ───────────────────────────── Lecturas e idempotencia (grupo 2) ─────────────────────────────
+# ───────────────────────────── Frecuencia ─────────────────────────────
+
+FRECUENCIA_MAX, FRECUENCIA_S = 120, 60
+_ventanas: dict[tuple[str, int], deque] = {}
+_candado_ventanas = threading.Lock()
+
+
+def _frecuencia(db: Database, uid: int) -> None:
+    """Ventana deslizante en memoria por usuario (y base): 120 peticiones limitadas por minuto. Vale por proceso; con
+    réplicas sería un límite por réplica."""
+    ahora = time.monotonic()
+    with _candado_ventanas:
+        if len(_ventanas) > 5000:  # se olvidan las ventanas ya vacías
+            for k in [k for k, v in _ventanas.items() if not v or v[-1] <= ahora - FRECUENCIA_S]:
+                del _ventanas[k]
+        v = _ventanas.setdefault((db.name, uid), deque())
+        while v and v[0] <= ahora - FRECUENCIA_S:
+            v.popleft()
+        if len(v) >= FRECUENCIA_MAX:
+            espera = max(1, math.ceil(v[0] + FRECUENCIA_S - ahora))
+            raise HTTPException(429, {"mensaje": "Demasiadas consultas seguidas. Espere un momento.",
+                                      "codigo": "frecuencia"}, headers={"Retry-After": str(espera)})
+        v.append(ahora)
+
+
+# ───────────────────────────── Lecturas ─────────────────────────────
+
+RECHAZOS_CIERRE = 20  # respuestas 429 por volumen en un día que cierran las sesiones del usuario
+
+
+def presupuesto(db: Database, rol: str, ajustes: dict | None = None) -> int | None:
+    """Personas distintas por día que puede consultar el rol (None: sin tope)."""
+    if rol not in ROLES_USUARIO:
+        return None
+    aj = ajustes or modelo.leer_ajustes(db)
+    try:
+        return int(aj["presupuesto_diario"].get(rol))
+    except (TypeError, ValueError, KeyError):
+        return int(modelo.AJUSTES_POR_DEFECTO["presupuesto_diario"][rol])
+
 
 def registrar_lecturas(db: Database, quien: Quien, pids: Iterable[int], ficha: bool = False) -> None:
-    """Anota en `lecturas` las personas servidas a `quien` y, para P y C, responde 429 `{codigo: "volumen"}` al pasar
-    el presupuesto diario. Todavía no hace nada."""
-    return None
+    """Anota en `lecturas` las personas servidas a `quien` (una por persona y día, también para el administrador) y,
+    para P y C, responde 429 `{codigo: "volumen"}` si con ellas pasa el presupuesto diario de personas distintas. Una
+    ficha cuenta igual venga de un GET, un PATCH sin cambios o `?resumen=1`."""
+    if quien is None or quien.uid is None:
+        return
+    ids = list(dict.fromkeys(p for p in pids or [] if isinstance(p, int) and not isinstance(p, bool)))
+    if not ids:
+        return
+    dia = modelo.hoy_local().isoformat()
+    ahora = datetime.now(timezone.utc)
+    ops = []
+    for pid in ids:
+        nuevo = {"uid": quien.uid, "pid": pid, "dia": dia}
+        if ficha:
+            cambio = {"$set": {"ts": ahora, "ficha": True}, "$setOnInsert": nuevo}
+        else:
+            cambio = {"$set": {"ts": ahora}, "$setOnInsert": {**nuevo, "ficha": False}}
+        ops.append(UpdateOne({"_id": f"{quien.uid}|{pid}|{dia}"}, cambio, upsert=True))
+    res = db.lecturas.bulk_write(ops, ordered=False)
+    tope = None if quien.es_admin else presupuesto(db, quien.rol)
+    if tope is None or db.lecturas.count_documents({"uid": quien.uid, "dia": dia}) <= tope:
+        return
+    # Se pasó: las personas nuevas de esta respuesta no se sirven ni cuentan
+    nuevas = list(res.upserted_ids.values())
+    if nuevas:
+        db.lecturas.delete_many({"_id": {"$in": nuevas}})
+    _rechazo_por_volumen(db, quien, dia, tope)
+    raise HTTPException(429, {"mensaje": f"Llegó al tope de {tope} personas consultadas hoy. Podrá seguir mañana.",
+                              "codigo": "volumen"})
 
 
-def idempotencia_previa(db: Database, quien: Quien, request: Request) -> JSONResponse | None:
+def _rechazo_por_volumen(db: Database, quien: Quien, dia: str, tope: int) -> None:
+    """Cuenta el rechazo del día en el usuario: el primero se audita como `alerta_volumen` (A la ve en Usuarios) y desde
+    el vigésimo cada rechazo cierra sus sesiones."""
+    u = db.usuarios.find_one_and_update({"_id": quien.uid}, [{"$set": {"volumen": {"$cond": [
+        {"$eq": [{"$ifNull": ["$volumen.dia", None]}, {"$literal": dia}]},
+        {"dia": {"$literal": dia}, "rechazos": {"$add": [{"$ifNull": ["$volumen.rechazos", 0]}, 1]}},
+        {"dia": {"$literal": dia}, "rechazos": 1}]}}}], projection={"volumen": 1}, return_document=ReturnDocument.AFTER)
+    n = ((u or {}).get("volumen") or {}).get("rechazos", 0)
+    if n == 1:
+        bd.auditar(db, quien, "alerta_volumen", "usuario", quien.uid, {"tope": tope})
+    if n >= RECHAZOS_CIERRE:
+        cerradas = cerrar_sesiones(db, quien.uid)
+        if n == RECHAZOS_CIERRE:
+            bd.auditar(db, "sistema", "cerrar_sesiones", "usuario", quien.uid, {"motivo": "volumen", "cerradas": cerradas})
+
+
+# ───────────────────────────── Idempotencia ─────────────────────────────
+
+CLAVE_IDEMPOTENCIA = re.compile(r"[A-Za-z0-9_.:-]{8,100}")
+EN_CURSO_S = 120  # una petición «en curso» más vieja que esto se da por perdida (el proceso se cayó a mitad)
+EN_PROCESO = {"mensaje": "Esta acción ya se está guardando. Espere un momento.", "codigo": "en_proceso"}
+
+
+def _ruta_de(request: Request) -> str:
+    return f"{request.method} {ruta_interna(request.scope)}"
+
+
+def idempotencia_previa(db: Database, quien: Quien, request: Request) -> Response | None:
     """Con `Idempotency-Key`: la respuesta guardada de esa clave, o 409 `{codigo: "en_proceso"}` mientras la primera
-    sigue en curso. Todavía no hace nada (devuelve None: la petición sigue)."""
-    return None
+    sigue en curso. Sin la cabecera (o con una clave nueva) devuelve None y la petición sigue: la ruta llama después a
+    `idempotencia_guardar` con su respuesta."""
+    clave = request.headers.get("idempotency-key")
+    if not clave or quien is None or quien.uid is None:
+        return None
+    if not CLAVE_IDEMPOTENCIA.fullmatch(clave):
+        raise HTTPException(422, "La cabecera Idempotency-Key no es válida")
+    _id, ruta = f"{quien.uid}:{clave}", _ruta_de(request)
+    for _ in range(3):
+        ahora = datetime.now(timezone.utc)
+        try:
+            db.idempotencia.insert_one({"_id": _id, "ruta": ruta, "estado": "en_curso", "codigo": None,
+                                        "respuesta": None, "persona_id": None, "ts": ahora})
+            request.state.idempotencia = _id
+            return None
+        except DuplicateKeyError:
+            doc = db.idempotencia.find_one({"_id": _id})
+        if doc is None:  # se borró entre medias: se vuelve a intentar
+            continue
+        if doc.get("ruta") != ruta:
+            raise HTTPException(422, "Esa clave de idempotencia ya se usó en otra acción")
+        if doc.get("estado") == "hecho":
+            return Response(doc.get("respuesta") or "null", status_code=doc.get("codigo") or 200,
+                            media_type="application/json", headers={"Idempotency-Replayed": "true"})
+        ts = doc.get("ts")
+        if ts is not None and ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        if ts is not None and ahora - ts > timedelta(seconds=EN_CURSO_S):
+            tomada = db.idempotencia.find_one_and_update({"_id": _id, "estado": "en_curso", "ts": doc["ts"]},
+                                                         {"$set": {"ts": ahora}})
+            if tomada is not None:
+                request.state.idempotencia = _id
+                return None
+            continue
+        raise HTTPException(409, dict(EN_PROCESO))
+    raise HTTPException(409, dict(EN_PROCESO))
 
 
 def idempotencia_guardar(db: Database, quien: Quien, request: Request, codigo: int, cuerpo: Any,
                          persona_id: int | None = None) -> None:
-    """Guarda la respuesta de una petición con `Idempotency-Key`. Todavía no hace nada."""
-    return None
+    """Guarda la respuesta de una petición con `Idempotency-Key` (la que tomó `idempotencia_previa`). Se guarda como
+    texto JSON, igual a lo que recibe el cliente; caduca a las 24 h y se borra al suprimir a la persona."""
+    _id = getattr(request.state, "idempotencia", None)
+    if not _id:
+        return
+    texto = json.dumps(jsonable_encoder(cuerpo), ensure_ascii=False, separators=(",", ":"))
+    db.idempotencia.update_one({"_id": _id, "estado": "en_curso"},
+                               {"$set": {"estado": "hecho", "codigo": int(codigo), "respuesta": texto,
+                                         "persona_id": persona_id, "ts": datetime.now(timezone.utc)}})
+    request.state.idempotencia = None
+
+
+def _soltar_idempotencia(db: Database, request: Request) -> None:
+    """Al terminar la petición: si la ruta tomó una clave y no guardó la respuesta (falló, o respondió sin guardar), la
+    clave se libera para que el reintento se procese de nuevo."""
+    _id = getattr(request.state, "idempotencia", None)
+    if _id:
+        request.state.idempotencia = None
+        db.idempotencia.delete_one({"_id": _id, "estado": "en_curso"})
+
+
+# ───────────────────────────── Compromiso de confidencialidad ─────────────────────────────
+
+# Texto versionado (3.5). Lo valida un abogado antes de desplegar (riesgo R-E); una versión nueva va en Ajustes
+COMPROMISOS = {
+    "2026-11-v1": [
+        "Guardaré la confidencialidad de los datos personales que conozca en este panel, también después de terminar "
+        "mi relación con el equipo (Ley 1581 de 2012, art. 4, literal h).",
+        "Usaré los datos solo para la finalidad informada al titular. No los copiaré, exportaré, fotografiaré ni "
+        "compartiré, ni haré capturas de pantalla.",
+        "No contactaré a quien no autorizó el tratamiento de sus datos ni a quien pidió no ser contactado.",
+        "Sé que las fichas que consulto, los cambios que hago y mis indicadores de trabajo quedan registrados.",
+    ],
+}
+
+
+def texto_compromiso(version: str | None) -> list[str]:
+    """Los puntos del compromiso de esa versión (o los de la más reciente, si la versión no tiene texto propio)."""
+    return list(COMPROMISOS.get(version or "") or COMPROMISOS[max(COMPROMISOS)])
