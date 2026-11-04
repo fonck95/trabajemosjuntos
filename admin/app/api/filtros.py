@@ -18,7 +18,7 @@ from fastapi import Depends, HTTPException, Query
 from pydantic import BaseModel, PrivateAttr
 from pymongo.database import Database
 
-from .. import geometria, modelo
+from .. import geometria, modelo, proyeccion
 from ..db import ACTIVA
 from ..pipeline import texto as tx
 from ..seguridad import obtener_db
@@ -85,6 +85,7 @@ class Filtros(BaseModel):
     sin_puesto: int | None = None
     sin_mesa: int | None = None
     sin_direccion: int | None = None
+    sin_puesto_mesa: int | None = None
     tratables: int | None = None
     mios: int | None = None
     poligono: str | None = None
@@ -143,7 +144,8 @@ def filtros_query(
     regimen_salud: str | None = Query(None, max_length=60), sin_cedula: int | None = None,
     sin_telefono: int | None = None, sin_sexo: int | None = None, sin_edad: int | None = None,
     sin_lugar: int | None = None, sin_puesto: int | None = None, sin_mesa: int | None = None,
-    sin_direccion: int | None = None, tratables: int | None = None, mios: int | None = None,
+    sin_direccion: int | None = None, sin_puesto_mesa: int | None = None, tratables: int | None = None,
+    mios: int | None = None,
     poligono: str | None = Query(None, max_length=4000), area_id: int | None = None,
     db: Database = Depends(obtener_db),
 ) -> Filtros:
@@ -366,6 +368,8 @@ def filtro(f: Filtros, hoy: date | None = None) -> dict:
     for campo in SIN_CAMPOS:
         if getattr(f, f"sin_{campo}"):
             y.append(falta(campo, hoy, f._dias_dato))
+    if f.sin_puesto_mesa:  # «Sin puesto o mesa» de Mi trabajo
+        y.append({"$or": [falta("puesto", hoy, f._dias_dato), falta("mesa", hoy, f._dias_dato)]})
     if f.mios and f._uid is not None:
         y.append({"$or": [{"creado_por.uid": f._uid}, {"actualizado_por.uid": f._uid}]})
     if f.poligono:
@@ -390,9 +394,9 @@ def asignacion_de(quien: Any) -> dict:
 
 def alcance_de(db: Database, quien: Any) -> dict | None:
     """Personas dentro de la asignación de un planillero o consultor: las de sus barrios o veredas (cubren a quien no
-    tiene coordenadas) y las que caen en sus áreas. None para A o para quien no tiene asignación (toda la base, con el
-    presupuesto). Una asignación cuyas áreas ya no existen no da acceso a nada."""
-    if quien is None or getattr(quien, "es_admin", False):
+    tiene coordenadas) y las que caen en sus áreas. None para A y K o para quien no tiene asignación (toda la base, con
+    el presupuesto). Una asignación cuyas áreas ya no existen no da acceso a nada."""
+    if proyeccion.administra(quien):
         return None
     a = asignacion_de(quien)
     if not a["lugares"] and not a["areas"]:
@@ -409,14 +413,14 @@ def alcance_de(db: Database, quien: Any) -> dict | None:
 
 def exigir_permitidos(db: Database, quien: Any, f: Filtros) -> None:
     """403 `permiso` si P o C usan un parámetro vedado (3.6) o un área que no tienen asignada."""
-    if quien is None or getattr(quien, "es_admin", False):
+    if proyeccion.administra(quien):
         return
     for p in VEDADOS:
         if getattr(f, p) not in (None, "", 0) or (p in ("lider", "menor") and getattr(f, p) is not None):
             raise _prohibido(f"Su rol no permite filtrar por «{p}»")
     if f.fuente in ("cedulas", "ambas"):
         raise _prohibido("Su rol no permite filtrar por esa fuente")
-    if f.etiqueta and db.etiquetas.find_one({"_id": f.etiqueta, "sensible": True}, {"_id": 1}):
+    if f.etiqueta and f.etiqueta in proyeccion.etiquetas_sensibles(db):
         raise _prohibido("Su rol no permite filtrar por esa etiqueta")
     if f.area_id is not None and f.area_id not in asignacion_de(quien)["areas"] \
             and getattr(quien, "uid", None) not in f._area_asignada_a:
@@ -441,8 +445,8 @@ def en_alcance(db: Database, quien: Any, pid: int) -> bool:
 
 def en_alcance_consultor(db: Database, p: dict, quien: Any) -> bool:
     """¿El consultor puede trabajar con esta persona? Sí si la tiene tomada (y no venció) o si le hizo un
-    acercamiento propio, no anulado, en los últimos 30 días. A siempre; P no usa esta regla."""
-    if quien is None or getattr(quien, "es_admin", False) or getattr(quien, "rol", None) != "consultor":
+    acercamiento propio, no anulado, en los últimos 30 días. A y K siempre; P no usa esta regla."""
+    if proyeccion.administra(quien) or getattr(quien, "rol", None) != "consultor":
         return True
     ec = p.get("en_curso") if isinstance(p.get("en_curso"), dict) else None
     ahora = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -456,3 +460,36 @@ def en_alcance_consultor(db: Database, p: dict, quien: Any) -> bool:
 def exigir_alcance_consultor(db: Database, p: dict, quien: Any) -> None:
     if not en_alcance_consultor(db, p, quien):
         raise _prohibido("Esta persona no está en su trabajo. Tómela desde la cola o el buscador.")
+
+
+# ───────────────────────────── Base de la cola del consultor (4.5) ─────────────────────────────
+
+def ahora_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def libre_para(uid: int | None) -> dict:
+    """Sin un `en_curso` vigente de otro usuario."""
+    return {"$or": [{"en_curso": None}, {"en_curso.uid": uid}, {"en_curso.hasta": {"$lte": ahora_iso()}}]}
+
+
+def base_cola(db: Database, quien: Any, hoy: date | None = None, ajustes: dict | None = None,
+              con_alcance: bool = True) -> dict:
+    """`BASE_COLA` (4.5): la usan todas las listas del consultor, `siguiente` y `tomar`. Gemela de
+    `proyeccion.motivo_no_contactable` más el teléfono, el alcance y `en_curso`."""
+    hoy = hoy or modelo.hoy_local()
+    aj = ajustes or modelo.leer_ajustes(db)
+    tel = list(proyeccion.CANALES_TELEFONO)
+    autorizada = {"consentimiento": "si", "contacto_habilitado": True, "consentimiento_canales": {"$in": tel}}
+    o = [autorizada]
+    if aj.get("contactar_pendientes"):
+        # Para pedirle la autorización; nunca a quien solo viene de la base de trámites (Ley 1581, art. 4 b)
+        o.append({"consentimiento": "pendiente", "fuentes": {"$elemMatch": {"$ne": "tramites"}}})
+    y = [modelo.filtro_vigente(), {"telefono": {"$ne": None}}, {"$or": o}, {"reclamo_en_tramite": {"$ne": True}},
+         modelo.filtro_adulto_conocido(hoy), {"abordaje.estado": {"$ne": "no_contactar"}},
+         libre_para(getattr(quien, "uid", None))]
+    if con_alcance:
+        alcance = alcance_de(db, quien)
+        if alcance:
+            y.append(alcance)
+    return {"$and": y}
