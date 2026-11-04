@@ -2,7 +2,9 @@
 
 1. **Agrupar**: la base de trámites trae una fila por solicitud; la misma persona aparece varias veces (reencuesta,
    modificación de ficha…). Se agrupa por nombre normalizado y se unen variantes de digitación («FABIO MAURICO» /
-   «FABIO MAURICIO») solo cuando además comparten teléfono, correo o ficha.
+   «FABIO MAURICIO») solo cuando además comparten teléfono, correo o ficha; dos nombres de pila distintos
+   («JUAN CARLOS» / «JUAN CAMILO») no se unen aunque compartan la ficha del hogar. Un mismo nombre con fichas y
+   teléfonos sin nada en común son homónimos y quedan como personas separadas.
 2. **Cruzar**: cada persona con cédula se compara por nombre contra las personas de la base de trámites. El puntaje
    pondera cada palabra por lo rara que es (un «MARIA» pesa poco, un «ZAPATEIRO» mucho), tolera errores de digitación
    (Jaro-Winkler) y no depende del orden de nombres y apellidos. Compartir teléfono o correo suma evidencia. Lo dudoso
@@ -15,7 +17,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 
 from rapidfuzz import fuzz, process
-from rapidfuzz.distance import JaroWinkler
+from rapidfuzz.distance import OSA, JaroWinkler
 
 from . import texto as tx
 from .lectores import FilaCedula, FilaTramite
@@ -28,7 +30,8 @@ MARGEN = 0.08            # distancia mínima con el segundo candidato para unir 
 
 @dataclass
 class PersonaTramites:
-    clave: str                         # nombre normalizado del grupo
+    clave: str                         # nombre normalizado del grupo («…#ficha» si es un homónimo separado)
+    separado_de: str | None = None     # clave del grupo con el mismo nombre del que se separó (para revisarlo)
     nombres: Counter = field(default_factory=Counter)
     fichas: Counter = field(default_factory=Counter)
     telefonos: Counter = field(default_factory=Counter)
@@ -68,6 +71,8 @@ def agrupar_tramites(filas: list[FilaTramite]) -> list[PersonaTramites]:
     por_nombre: dict[str, list[FilaTramite]] = defaultdict(list)
     for f in filas:
         por_nombre[tx.nombre_norm(f.nombre)].append(f)
+    # En cuántos nombres distintos aparece cada palabra (dos grafías frecuentes son dos nombres reales)
+    frec = Counter(t for k in por_nombre for t in set(tx.tokens_nombre(k)))
 
     u = _Union()
     for k in por_nombre:
@@ -87,31 +92,87 @@ def agrupar_tramites(filas: list[FilaTramite]) -> list[PersonaTramites]:
             cl = sorted(claves)
             for i, a in enumerate(cl):
                 for b in cl[i + 1:]:
-                    if _mismo_nombre_digitado(a, b):
+                    if _mismo_nombre_digitado(a, b, frec):
                         u.union(a, b)
 
-    grupos: dict[str, PersonaTramites] = {}
+    por_grupo: dict[str, list[FilaTramite]] = defaultdict(list)
     for k, fs in por_nombre.items():
-        r = u.find(k)
-        g = grupos.setdefault(r, PersonaTramites(clave=r))
-        for f in fs:
-            g.filas.append(f)
-            g.nombres[f.nombre] += 1
-            if f.ficha:
-                g.fichas[f.ficha] += 1
-            for t in f.telefonos:
-                g.telefonos[t] += 1
-            if f.correo:
-                g.correos[f.correo] += 1
-    return list(grupos.values())
+        por_grupo[u.find(k)].extend(fs)
+    grupos: list[PersonaTramites] = []
+    for r, fs in por_grupo.items():
+        partes = _separar_homonimos(fs)
+        for i, parte in enumerate(partes):
+            # El homónimo separado lleva su ficha en la clave para que reimportar lo vuelva a encontrar
+            g = PersonaTramites(clave=r if i == 0 else f"{r}#{min(f.ficha for f in parte if f.ficha)}",
+                                separado_de=r if i else None)
+            for f in parte:
+                g.filas.append(f)
+                g.nombres[f.nombre] += 1
+                if f.ficha:
+                    g.fichas[f.ficha] += 1
+                for t in f.telefonos:
+                    g.telefonos[t] += 1
+                if f.correo:
+                    g.correos[f.correo] += 1
+            grupos.append(g)
+    return grupos
 
 
-def _mismo_nombre_digitado(a: str, b: str) -> bool:
-    """Dos escrituras del mismo nombre completo (no dos parientes que comparten teléfono)."""
-    ta, tb = a.split(), b.split()
-    if abs(len(ta) - len(tb)) > 1:
+def _separar_homonimos(filas: list[FilaTramite]) -> list[list[FilaTramite]]:
+    """Parte un grupo cuando trae personas distintas con el mismo nombre: partes con ficha y teléfono propios y sin
+    ningún dato en común («JOSE GARCIA» de dos hogares). Lo que no tiene ficha y teléfono se queda con la primera
+    parte, porque la misma persona puede pedir una ficha nueva o no dar el teléfono."""
+    u = _Union()
+    for i, f in enumerate(filas):
+        u.find(f"#{i}")
+        for dato in [*("t" + t for t in f.telefonos), *(["c" + f.correo] if f.correo else []),
+                     *(["f" + f.ficha] if f.ficha else [])]:
+            u.union(f"#{i}", dato)
+    partes: dict[str, list[FilaTramite]] = defaultdict(list)
+    for i, f in enumerate(filas):
+        partes[u.find(f"#{i}")].append(f)
+    # La primera es la del trámite más antiguo: conserva la clave de siempre
+    orden = sorted(partes.values(), key=lambda p: min((f.fecha or "9999", f.id_externo) for f in p))
+    firmes = [p for p in orden if any(f.ficha for f in p) and any(f.telefonos for f in p)]
+    if len(firmes) < 2:
+        return [filas]
+    resto = [f for p in orden if not any(p is q for q in firmes) for f in p]
+    return [firmes[0] + resto, *firmes[1:]]
+
+
+def _mismo_nombre_digitado(a: str, b: str, frec: Counter | None = None) -> bool:
+    """Dos escrituras del mismo nombre completo (no dos parientes que comparten teléfono o ficha).
+
+    Palabra por palabra: todas iguales salvo a lo sumo una, y esa debe ser una errata («MAURICO»/«MAURICIO»,
+    «YESICA»/«JESSICA»), no otro nombre («CARLOS»/«CAMILO», «DANIEL»/«DANIELA», «JUAN C»/«JUAN D»)."""
+    ta, tb = tx.tokens_nombre(a, iniciales=True), tx.tokens_nombre(b, iniciales=True)
+    if len(ta) != len(tb) or len(ta) < 2:
         return False
-    return fuzz.token_sort_ratio(a, b) >= 90 and fuzz.ratio(a, b) >= 85
+    sobra_a, sobra_b = list(ta), list(tb)
+    for t in ta:
+        if t in sobra_b:
+            sobra_a.remove(t)
+            sobra_b.remove(t)
+    if not sobra_a:
+        return True
+    return len(sobra_a) == 1 and _errata(sobra_a[0], sobra_b[0], frec or Counter())
+
+
+def _errata(x: str, y: str, frec: Counter) -> bool:
+    """¿Son `x` y `y` la misma palabra mal escrita?"""
+    if tx.fonetico(x) == tx.fonetico(y):  # JHON/JOHN, YESICA/JESSICA, LEGUIZAMO/LEGUISAMO
+        return True
+    corta, larga = sorted((x, y), key=len)
+    if x[0] != y[0] or len(corta) < 5:
+        return False
+    # Masculino y femenino son nombres distintos: DANIEL/DANIELA, ANDRES/ANDREA, FELIPE/FELIPA, MARIO/MARIA
+    if (x[-1] == "A") != (y[-1] == "A") and corta[:len(larga) - 2] == larga[:len(larga) - 2]:
+        return False
+    if OSA.distance(x, y) > (1 if len(corta) < 7 else 2):
+        return False
+    # Dos grafías que se repiten en muchos nombres distintos son dos nombres reales (y no una errata del otro)
+    fx, fy = frec.get(x, 0), frec.get(y, 0)
+    return not (min(fx, fy) >= 3 and min(fx, fy) >= 0.2 * max(fx, fy))
 
 
 # ───────────────────────────── Cruce por nombre ─────────────────────────────

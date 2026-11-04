@@ -12,6 +12,7 @@ import openpyxl
 from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from pydantic import BaseModel, Field
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
@@ -19,8 +20,9 @@ from pymongo.errors import DuplicateKeyError
 from .. import db as bd
 from ..pipeline import importar as imp
 from ..pipeline import texto as tx
-from ..seguridad import (Admin, bloqueado, cerrar_sesion, credenciales_validas, crear_sesion, ip_de, obtener_db,
-                         registrar_intento, requiere_admin, sesion_actual)
+from ..seguridad import (USUARIO_DESCONOCIDO, Admin, cerrar_sesion, credenciales_validas, crear_sesion, ip_de,
+                         obtener_db, requiere_admin, reservar_intento, resolver_intento, sesion_actual,
+                         usuario_correcto)
 from .filtros import Filtros, filtro, filtros_query
 from .personas import mapa_lugares
 
@@ -38,12 +40,18 @@ def login(body: LoginIn, request: Request, response: Response, db: Database = De
     if not cfg.usuario or not cfg.clave:
         raise HTTPException(503, "El panel no tiene credenciales: defina las variables ADMIN y password")
     ip = ip_de(request)
-    if bloqueado(db, ip):
-        raise HTTPException(429, "Demasiados intentos. Espere 15 minutos.")
-    ok = credenciales_validas(cfg, body.usuario.strip(), body.clave)
-    registrar_intento(db, ip, ok)
+    iid, espera = reservar_intento(db, ip)
+    if iid is None:
+        texto = f"{espera} segundos" if espera < 120 else f"{-(-espera // 60)} minutos"
+        raise HTTPException(429, f"Demasiados intentos. Espere {texto}.", headers={"Retry-After": str(espera)})
+    usuario = body.usuario.strip()
+    ok = credenciales_validas(cfg, usuario, body.clave)
+    resolver_intento(db, iid, ip, ok)
     if not ok:
-        bd.auditar(db, body.usuario[:60], "ingreso_fallido", ip=ip)
+        # Lo escrito como usuario no se guarda (a veces es la clave): solo si coincidía con el configurado
+        correcto = usuario_correcto(cfg, usuario)
+        bd.auditar(db, cfg.usuario if correcto else USUARIO_DESCONOCIDO, "ingreso_fallido",
+                   detalle={"usuario_correcto": correcto}, ip=ip)
         raise HTTPException(401, "Usuario o clave incorrectos")
     csrf = crear_sesion(db, cfg, response, cfg.usuario, request)
     bd.auditar(db, cfg.usuario, "ingreso", ip=ip)
@@ -75,7 +83,9 @@ async def importar(request: Request, archivos: list[UploadFile] = File(...), db:
     tmp = Path(tempfile.mkdtemp(prefix="panel-import-"))
     try:
         rutas, nombres = [], []
-        for i, a in enumerate(archivos[:6]):
+        if len(archivos) > 6:
+            raise HTTPException(422, "Suba como máximo 6 archivos por importación")
+        for i, a in enumerate(archivos):
             if not (a.filename or "").lower().endswith((".xlsx", ".xlsm")):
                 raise HTTPException(422, f"{a.filename}: solo se aceptan archivos .xlsx")
             destino = tmp / f"{i}.xlsx"
@@ -116,22 +126,34 @@ COLUMNAS = [("id", "ID"), ("nombre", "Nombre"), ("cedula", "Cédula"), ("sexo", 
 
 
 def celda(v):
-    """Evita que Excel interprete un texto como fórmula (inyección en hojas de cálculo)."""
-    if isinstance(v, str) and v[:1] in ("=", "+", "-", "@", "\t", "\r"):
-        return "'" + v
+    """Quita los caracteres de control que XLSX no admite (con uno solo fallaba toda la exportación) y evita que
+    Excel interprete un texto como fórmula (inyección en hojas de cálculo)."""
+    if isinstance(v, str):
+        v = ILLEGAL_CHARACTERS_RE.sub("", v)  # antes de mirar el primer carácter: «\x01=X» queda «'=X»
+        if v[:1] in ("=", "+", "-", "@", "\t", "\r"):
+            return "'" + v
     return v
 
 
+def con_autorizacion(q: dict, incluir_sin_autorizacion: int) -> dict:
+    """Quien dijo que no autoriza el tratamiento de sus datos no sale en las exportaciones, salvo que se pida."""
+    return q if incluir_sin_autorizacion else {"$and": [q, {"consentimiento": {"$ne": "no"}}]}
+
+
 @r.get("/exportar.xlsx")
-def exportar(f: Filtros = Depends(filtros_query), db: Database = Depends(obtener_db), adm: Admin = Depends(requiere_admin)):
+def exportar(f: Filtros = Depends(filtros_query), incluir_sin_autorizacion: int = 0, db: Database = Depends(obtener_db),
+             adm: Admin = Depends(requiere_admin)):
     campos = list(db.campos.find({"activo": True}).sort([("orden", 1), ("_id", 1)]))
     lugares = mapa_lugares(db)
     etiquetas = {e["_id"]: e["nombre"] for e in db.etiquetas.find()}
     wb = openpyxl.Workbook(write_only=True)
     ws = wb.create_sheet("Base única")
-    ws.append([t for _, t in COLUMNAS] + [c["etiqueta"] for c in campos])
+    ws.append([t for _, t in COLUMNAS] + [celda(c["etiqueta"]) for c in campos])
     n = 0
-    for p in db.personas.find(filtro(f), {"tramites": 0, "notas": 0, "origen": 0}).sort("nombre_norm", 1):
+    q = filtro(f)
+    excluidas = 0 if incluir_sin_autorizacion else db.personas.count_documents({"$and": [q, {"consentimiento": "no"}]})
+    proy = {"tramites": 0, "notas": 0, "origen": 0}
+    for p in db.personas.find(con_autorizacion(q, incluir_sin_autorizacion), proy).sort("nombre_norm", 1):
         lg = lugares.get(p.get("lugar_id")) or {}
         valores = {**p, "id": p["_id"], "lugar": lg.get("nombre") or p.get("lugar_texto"), "lugar_tipo": lg.get("tipo"),
                    "etiquetas": ", ".join(etiquetas.get(e, "") for e in p.get("etiquetas", [])),
@@ -142,7 +164,8 @@ def exportar(f: Filtros = Depends(filtros_query), db: Database = Depends(obtener
         n += 1
     buf = io.BytesIO()
     wb.save(buf)
-    bd.auditar(db, adm.usuario, "exportar", None, None, {"filas": n, "filtros": f.model_dump(exclude_none=True)}, adm.ip)
+    bd.auditar(db, adm.usuario, "exportar", None, None, {"filas": n, "filtros": f.model_dump(exclude_none=True),
+                                                         "excluidas_sin_autorizacion": excluidas}, adm.ip)
     return StreamingResponse(iter([buf.getvalue()]),
                              media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                              headers={"Content-Disposition": f'attachment; filename="base-unica-yondo-{bd.ahora()[:10]}.xlsx"'})

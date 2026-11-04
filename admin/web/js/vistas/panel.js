@@ -48,7 +48,7 @@ export async function vistaPanel(el) {
       <a class="kpi" href="/personas?orden=-completitud" data-ruta><div class="t">Completitud media del perfil</div><div class="v">${k.completitud_media} %</div>
         <div class="d">Sube con cada dato que se agrega</div>${medidor(k.completitud_media, 100)}</a>
       <a class="kpi ${k.pendientes_revision ? 'alerta' : ''}" href="/calidad" data-ruta><div class="t">Por revisar</div><div class="v">${num(k.pendientes_revision)}</div>
-        <div class="d">coincidencias por nombre · ${num(k.lugares_sin_punto)} lugares sin punto</div></a>
+        <div class="d">personas con coincidencias por nombre · ${num(k.lugares_sin_punto)} lugares sin punto</div></a>
       <a class="kpi" href="/personas?consentimiento=si" data-ruta><div class="t">Autorización de datos</div><div class="v">${pct(k.consentimiento_si, k.personas)} %</div>
         <div class="d">${num(k.consentimiento_si)} con autorización firmada</div>${medidor(k.consentimiento_si, k.personas)}</a>
     </div>

@@ -1,7 +1,7 @@
 // Calidad de datos: confirmar coincidencias por nombre, ubicar lugares sin punto y reconocer nombres nuevos.
 import { api } from '../api.js';
 import { refrescarInsignias } from '../app.js';
-import { $, aviso, datosForm, dialogo, html, montar, num, titulo } from '../ui.js';
+import { $, aviso, avisoError, datosForm, dialogo, html, montar, num, titulo } from '../ui.js';
 import { elegirPunto } from './comunes.js';
 
 export async function vistaCalidad(el, { q }) {
@@ -14,18 +14,27 @@ export async function vistaCalidad(el, { q }) {
     </div>
     <div id="cuerpo"></div>`);
 
+  // Cada carga lleva un turno: si se cambió de pestaña mientras llegaba, no pinta encima de la nueva
+  let turno = 0;
+  const vigente = (t) => t === turno && el.isConnected;
+
   async function pintar() {
     for (const b of el.querySelectorAll('[data-tab]')) b.setAttribute('aria-selected', b.dataset.tab === pestana);
     history.replaceState({}, '', `/calidad?p=${pestana}`);
-    const c = $('#cuerpo');
+    const c = $('#cuerpo', el);
     montar(c, html`<div class="cargando"><div class="giro"></div></div>`);
-    if (pestana === 'coincidencias') return coincidencias(c);
-    if (pestana === 'lugares') return lugares(c);
-    return sinReconocer(c);
+    c.onclick = null;
+    const t = ++turno;
+    if (pestana === 'coincidencias') return coincidencias(c, t);
+    if (pestana === 'lugares') return lugares(c, t);
+    return sinReconocer(c, t);
   }
+  // Vuelve a cargar la pestaña después de una acción, solo si el usuario sigue en ella
+  const recargar = (fn, nombre, c) => { if (pestana === nombre && el.isConnected) fn(c, ++turno); };
 
-  async function coincidencias(c) {
+  async function coincidencias(c, mio) {
     const lista = await api.get('/api/coincidencias');
+    if (!vigente(mio)) return;
     if (!lista.length) { montar(c, html`<div class="tarjeta vacio"><b>Nada pendiente</b>Todas las coincidencias por nombre están resueltas.</div>`); return; }
     const marcar = (a, b) => {
       const tb = new Set((b || '').split(/\s+/));
@@ -36,13 +45,18 @@ export async function vistaCalidad(el, { q }) {
       <dt>Lugar</dt><dd>${titulo(p.lugar || '') || '—'}</dd><dt>Dirección</dt><dd>${p.direccion || '—'}</dd>
       ${p.edad ? html`<dt>Edad</dt><dd>${p.edad} · ${p.sexo || ''}</dd>` : ''}${p.tramites ? html`<dt>Trámites</dt><dd>${p.tramites}</dd>` : ''}
       ${p.listas ? html`<dt>Listas</dt><dd>${p.listas}</dd>` : ''}</dl></div>`;
-    montar(c, html`<p class="sec">${num(lista.length)} pares de fichas con nombres parecidos. Si son la misma persona, se unen: la ficha de trámites recibe la cédula y las listas.</p>
-      <div style="display:flex;flex-direction:column;gap:12px">${lista.map((x) => html`<div class="tarjeta" data-c="${x.id}"><div class="par">
-        ${lado(x.persona, x.candidato, 'Base con cédula')}
+    // Pares y, como en el panel y la insignia, personas con cédula por revisar (`ids`: una por par)
+    const cuenta = (ids) => {
+      const personas = new Set(ids).size;
+      return `${num(ids.length)} ${ids.length === 1 ? 'par' : 'pares'} de fichas con nombres parecidos (${num(personas)} ${personas === 1 ? 'persona' : 'personas'} por revisar).`;
+    };
+    montar(c, html`<p class="sec"><span id="cuenta-pares">${cuenta(lista.map((x) => x.persona.id))}</span> Si son la misma persona, se unen: la ficha de trámites recibe la cédula y las listas.</p>
+      <div style="display:flex;flex-direction:column;gap:12px">${lista.map((x) => html`<div class="tarjeta" data-c="${x.id}" data-p="${x.persona.id}"><div class="par">
+        ${lado(x.persona, x.candidato, x.detalle.homonimo ? 'Mismo nombre, otra ficha' : 'Base con cédula')}
         <div class="medio"><span class="puntaje">${Math.round(x.puntaje * 100)}%</span>
           <span class="sec" style="text-align:center">${x.detalle.palabras} palabras${x.detalle.telefono ? html`<br><span class="chip verde">mismo teléfono</span>` : ''}${x.detalle.correo ? html`<br><span class="chip verde">mismo correo</span>` : ''}</span>
           <button class="btn chico primario" data-d="aceptar">Es la misma</button><button class="btn chico" data-d="rechazar">Son distintas</button></div>
-        ${lado(x.candidato, x.persona, 'Base de trámites')}</div></div>`)}</div>`);
+        ${lado(x.candidato, x.persona, x.detalle.homonimo ? 'Mismo nombre, otra ficha' : 'Base de trámites')}</div></div>`)}</div>`);
     c.onclick = async (e) => {
       const b = e.target.closest('[data-d]');
       if (!b) return;
@@ -50,16 +64,26 @@ export async function vistaCalidad(el, { q }) {
       b.disabled = true;
       try {
         await api.post(`/api/coincidencias/${t.dataset.c}`, { decision: b.dataset.d });
-        t.style.transition = 'opacity .25s'; t.style.opacity = 0;
-        setTimeout(() => t.remove(), 260);
         aviso(b.dataset.d === 'aceptar' ? 'Fichas unidas' : 'Marcadas como personas distintas');
         refrescarInsignias();
-      } catch (err) { aviso(err.message, 'error'); b.disabled = false; }
+        // Unir borra en el servidor las demás coincidencias de esa ficha: se vuelve a pedir la lista
+        if (b.dataset.d === 'aceptar') { recargar(coincidencias, 'coincidencias', c); return; }
+        t.style.transition = 'opacity .25s'; t.style.opacity = 0;
+        setTimeout(() => {
+          t.remove();
+          const rotulo = $('#cuenta-pares', c);
+          if (rotulo) rotulo.textContent = cuenta([...c.querySelectorAll('[data-c]')].map((x) => x.dataset.p));
+        }, 260);
+      } catch (err) {
+        aviso(err.message, 'error'); b.disabled = false;
+        if (err.estado === 404) recargar(coincidencias, 'coincidencias', c); // ya resuelta: la tarjeta sobra
+      }
     };
   }
 
-  async function lugares(c) {
+  async function lugares(c, mio) {
     const ls = await api.get('/api/lugares');
+    if (!vigente(mio)) return;
     const sinPunto = ls.filter((l) => l.lat == null && l.n > 0);
     montar(c, html`
       ${sinPunto.length ? html`<div class="aviso-legal" style="margin-bottom:14px"><b>${num(sinPunto.length)} lugares con habitantes no tienen punto.</b> Ubíquelos en el mapa y todas sus personas quedarán georreferenciadas.</div>` : ''}
@@ -77,7 +101,11 @@ export async function vistaCalidad(el, { q }) {
         const l = ls.find((x) => x.id === Number(u.dataset.ubicar));
         const p = await elegirPunto({ titulo: `Ubicar ${titulo(l.nombre)}`, inicial: l.lat != null ? [l.lon, l.lat] : null,
           ayuda: 'Marque el centro del barrio o el caserío de la vereda. Las personas de este lugar sin dirección exacta tomarán este punto.' });
-        if (p) { await api.patch(`/api/lugares/${l.id}`, { lon: p[0], lat: p[1] }); aviso('Lugar ubicado y personas recalculadas'); lugares(c); }
+        if (!p) return;
+        try {
+          await api.patch(`/api/lugares/${l.id}`, { lon: p[0], lat: p[1] });
+          aviso('Lugar ubicado y personas recalculadas'); recargar(lugares, 'lugares', c);
+        } catch (err) { avisoError(err); }
         return;
       }
       const a = e.target.closest('[data-alias]');
@@ -87,18 +115,20 @@ export async function vistaCalidad(el, { q }) {
           cuerpo: html`<p class="sec" style="margin-top:0">Uno por línea: cómo lo escribe la gente en las direcciones.</p><textarea class="entrada" id="alias" style="min-height:140px">${l.alias.join('\n')}</textarea>`,
           pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Guardar</button>` });
         $('#g', d).onclick = async () => {
-          await api.patch(`/api/lugares/${l.id}`, { alias: $('#alias', d).value.split('\n').map((s) => s.trim()).filter(Boolean) });
-          cerrar(); aviso('Alias guardados; ubicaciones recalculadas'); lugares(c);
+          try {
+            await api.patch(`/api/lugares/${l.id}`, { alias: $('#alias', d).value.split('\n').map((s) => s.trim()).filter(Boolean) });
+            cerrar(); aviso('Alias guardados; ubicaciones recalculadas'); recargar(lugares, 'lugares', c);
+          } catch (err) { avisoError(err); }
         };
         return;
       }
-      if (e.target.closest('#nuevo-lugar')) nuevoLugar('', () => lugares(c));
+      if (e.target.closest('#nuevo-lugar')) nuevoLugar('', () => recargar(lugares, 'lugares', c));
     };
   }
 
-  async function sinReconocer(c) {
-    const ls = await api.get('/api/lugares/sin-reconocer');
-    const todos = await api.get('/api/lugares');
+  async function sinReconocer(c, mio) {
+    const [ls, todos] = await Promise.all([api.get('/api/lugares/sin-reconocer'), api.get('/api/lugares')]);
+    if (!vigente(mio)) return;
     montar(c, html`<p class="sec">Nombres escritos en las direcciones que no coinciden con ningún barrio o vereda. Créelos como lugar nuevo o agréguelos como otro nombre de uno existente.</p>
       ${ls.length ? html`<div class="envoltura-tabla"><table class="tabla"><thead><tr><th>Como lo escribieron</th><th class="num">Personas</th><th>Agregar como alias de…</th><th></th></tr></thead>
       <tbody>${ls.map((x) => html`<tr style="cursor:default" data-t="${x.texto}"><td><b>${x.texto}</b></td><td class="num">${num(x.n)}</td>
@@ -113,10 +143,12 @@ export async function vistaCalidad(el, { q }) {
         const dest = Number(tr.querySelector('[data-destino]').value);
         if (!dest) { aviso('Elija el lugar', 'error'); return; }
         const l = todos.find((x) => x.id === dest);
-        await api.patch(`/api/lugares/${dest}`, { alias: [...l.alias, texto] });
-        aviso(`«${texto}» ahora se reconoce como ${titulo(l.nombre)}`);
-        sinReconocer(c);
-      } else if (e.target.closest('[data-crear]')) nuevoLugar(texto, () => sinReconocer(c));
+        try {
+          await api.patch(`/api/lugares/${dest}`, { alias: [...l.alias, texto] });
+          aviso(`«${texto}» ahora se reconoce como ${titulo(l.nombre)}`);
+          recargar(sinReconocer, 'sin', c);
+        } catch (err) { avisoError(err); }
+      } else if (e.target.closest('[data-crear]')) nuevoLugar(texto, () => recargar(sinReconocer, 'sin', c));
     };
   }
 
@@ -143,9 +175,13 @@ export async function vistaCalidad(el, { q }) {
   el.addEventListener('click', async (e) => {
     const t = e.target.closest('[data-tab]');
     if (t) { pestana = t.dataset.tab; pintar(); }
-    if (e.target.closest('#regeo')) {
-      const r = await api.post('/api/georreferenciar');
-      aviso(`Ubicaciones recalculadas: ${num(Object.entries(r.por_precision).filter(([k]) => k !== 'sin_ubicar').reduce((a, [, v]) => a + v, 0))} ubicadas`);
+    const regeo = e.target.closest('#regeo');
+    if (regeo && !regeo.disabled) {
+      regeo.disabled = true;
+      try {
+        const r = await api.post('/api/georreferenciar');
+        aviso(`Ubicaciones recalculadas: ${num(Object.entries(r.por_precision).filter(([k]) => k !== 'sin_ubicar').reduce((a, [, v]) => a + v, 0))} ubicadas`);
+      } catch (err) { avisoError(err); } finally { regeo.disabled = false; }
     }
   });
   pintar();

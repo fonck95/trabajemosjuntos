@@ -28,6 +28,8 @@ def _resumen(p: dict, lugares: dict) -> dict:
 
 @r.get("/coincidencias")
 def coincidencias(estado: str = "pendiente", db: Database = Depends(obtener_db), _: Admin = Depends(requiere_admin)):
+    if estado == "pendiente":  # las que ya no se pueden aceptar no se muestran (quedan cerradas)
+        bd.cerrar_coincidencias_imposibles(db)
     lista = list(db.coincidencias.find({"estado": estado}).sort("puntaje", -1).limit(300))
     ids = {c["persona_id"] for c in lista} | {c["candidato_id"] for c in lista}
     personas = {p["_id"]: p for p in db.personas.find({"_id": {"$in": list(ids)}, **bd.ACTIVA},
@@ -49,10 +51,11 @@ def resolver(cid: int, body: Decision, db: Database = Depends(obtener_db), adm: 
         raise HTTPException(404, "Ya fue resuelta o no existe")
     marca = {"resuelto_por": adm.usuario, "resuelto_en": bd.ahora()}
     if body.decision == "aceptar":
-        a = db.personas.find_one({"_id": c["persona_id"]}, {"cedula": 1})
-        b = db.personas.find_one({"_id": c["candidato_id"]}, {"cedula": 1})
-        if a.get("cedula") and b.get("cedula") and a["cedula"] != b["cedula"]:
-            raise HTTPException(409, "Tienen cédulas distintas")
+        a = db.personas.find_one({"_id": c["persona_id"], **bd.ACTIVA}, {"cedula": 1})
+        b = db.personas.find_one({"_id": c["candidato_id"], **bd.ACTIVA}, {"cedula": 1})
+        if a is None or b is None or (a.get("cedula") and b.get("cedula") and a["cedula"] != b["cedula"]):
+            bd.cerrar_coincidencias_imposibles(db, [c["persona_id"]])
+            raise HTTPException(409, "Tienen cédulas distintas" if a and b else "Una de las fichas ya se unió o suprimió")
         # Se conserva la ficha de trámites (tiene historial y ubicación) y recibe la cédula
         db.coincidencias.update_one({"_id": cid}, {"$set": {"estado": "aceptada", **marca}})
         bd.fusionar(db, c["candidato_id"], c["persona_id"], adm.usuario, adm.ip)

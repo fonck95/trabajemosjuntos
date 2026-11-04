@@ -11,10 +11,20 @@ data/geo/sv_coverage.json
 
 # Panel de administración: credenciales y datos personales NUNCA van al repositorio (el repo es público)
 .env
-admin/.env
+.env.*
+!.env.example
 admin/var/
-admin/**/*.xlsx
-admin/**/*.xlsm
-admin/**/*.csv
 admin/.venv/
+# Hojas de cálculo en cualquier carpeta y con cualquier mezcla de mayúsculas (el repo no versiona ninguna)
+*.[xX][lL][sS][xX]
+*.[xX][lL][sS][mM]
+*.[xX][lL][sS][bB]
+*.[xX][lL][sS]
+*.[oO][dD][sS]
+# CSV solo en admin/ y en la raíz: data/ tiene CSV públicos legítimos
+admin/**/*.[cC][sS][vV]
+/*.[cC][sS][vV]
+# Exportaciones del panel, queden donde queden
+base-unica-*
+asistentes-*.[cC][sS][vV]
 .pytest_cache/

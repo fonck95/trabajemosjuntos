@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field, asdict
+from typing import NamedTuple
 
 from rapidfuzz import fuzz, process
 
@@ -37,13 +38,16 @@ MANZANA = {"MZ", "MZA", "MANZANA", "MNZ", "MANZ"}
 LOTE = {"LT", "LOTE", "LTE"}
 CASA = {"CASA", "CS"}
 NUMERO = {"#", "NO", "NRO", "N", "NUM", "NUMERO", "X", "CON"}
+REFERENCIA = {"FRENTE", "CERCA", "DETRAS", "JUNTO", "DIAGONAL", "ATRAS", "ESQUINA", "CERCANO", "DONDE", "ENTRADA",
+              "LADO", "CONTIGUO", "ENSEGUIDA", "ANTES", "DESPUES"}
+# Palabras que solo enlazan la referencia con lo que sigue («CERCA AL BARRIO…»)
+ENLACE = {"A", "AL", "DE", "DEL", "LA", "EL", "LOS", "LAS", "EN"}
 # Palabras que cortan el nombre de un lugar
-CORTE = set(VIAS) | set(LUGARES) | MANZANA | LOTE | CASA | {
+CORTE = set(VIAS) | set(LUGARES) | MANZANA | LOTE | CASA | REFERENCIA | {
     "#", "-", "EN", "FRENTE", "DIAGONAL", "CERCA", "DETRAS", "JUNTO", "AL", "CON", "VIA", "CUADRA", "POR", "ETAPA",
     "APTO", "AP", "PISO", "SIN", "S", "NOMENCLATURA", "KM", "KILOMETRO", "ENTRADA", "SALIDA", "LADO", "ATRAS",
     "ESQUINA", "LOCAL", "BLOQUE", "INTERIOR", "PRIMERA", "SEGUNDA", "TERCERA", "VIVIENDA", "CERCANO", "DONDE",
 }
-REFERENCIA = {"FRENTE", "CERCA", "DETRAS", "JUNTO", "DIAGONAL", "ATRAS", "ESQUINA", "CERCANO", "DONDE", "ENTRADA"}
 # Palabras sueltas que llegan como lugar y no lo son
 NO_LUGAR = {"", "X", "K", "Y", "NA", "N A", "SIN DATO", "NINGUNA", "NO", "NO TIENE", "SIN", "SN", "YONDO", "CASABE",
             "YONDO ANTIOQUIA", "ANTIOQUIA", "MUNICIPIO", "CENTRO POBLADO", "ZONA RURAL", "RURAL", "URBANO"}
@@ -69,6 +73,8 @@ class Direccion:
     referencia: str | None = None
     sin_nomenclatura: bool = False
     tokens: list[str] = field(default_factory=list, repr=False)
+    # Tokens que no nombran el lugar de la persona: referencias («FRENTE A LA CEIBA») y nombres de finca
+    fuera: list[bool] = field(default_factory=list, repr=False)
 
     @property
     def tiene_placa(self) -> bool:
@@ -112,12 +118,17 @@ class Direccion:
     def componentes(self) -> dict:
         d = asdict(self)
         d.pop("tokens", None)
+        d.pop("fuera", None)
         return d
 
 
 def _preparar(texto: str) -> str:
-    s = limpiar(texto)
-    s = s.replace("N°", " # ").replace("NO.", " # ").replace("Nº", " # ")
+    s = limpiar(texto)  # (limpiar ya deja «N°» como «N» y «Nº» como «NO»)
+    # «B/ LA PAZ» y «B. LA PAZ» (así escribe normalizada()) son barrio; tras un número («47B/», «47 B.») es letra
+    s = re.sub(r"(?<![A-Z0-9])B\s*/\s*(?=[A-Z])", " BARRIO ", s)
+    s = re.sub(r"(?<![A-Z0-9])(?<!\d )B\.\s*(?=[A-Z]{2})", " BARRIO ", s)
+    # «No.», «Nro.», «N.» → «#», solo como palabra suelta («EL LLANO.» no se toca)
+    s = re.sub(r"\bN(?:O|RO|UM)?\s*\.", " # ", s)
     s = re.sub(r"[()\[\]{}\"'`´,;:_/\\|*]", " ", s)
     s = s.replace(".", " ")
     # Palabras clave pegadas al nombre anterior: «ESPERANZAMANZANA 4» → «ESPERANZA MANZANA 4»
@@ -126,6 +137,8 @@ def _preparar(texto: str) -> str:
     s = re.sub(r"(?<=[A-Z])(?=\d)", " ", s)
     s = re.sub(r"(?<=\d)(?=[A-Z]{2,})", " ", s)
     s = re.sub(r"(?<=\d)\s*-\s*(?=\d)", " - ", s)
+    # También tras la letra o el BIS del cruce: «45A-12», «45 A-12», «45 BIS-12» (no toca «X-10» ni «K-5»)
+    s = re.sub(r"(?:(?<=\d[A-Z])|(?<=\d [A-JL-WYZ])|(?<=BIS))\s*-\s*(?=\d)", " - ", s)
     s = s.replace("#", " # ")
     s = re.sub(r"\s-\s(?!\d)|(?<!\d)\s?-\s?(?=[A-Z])", " ", s)
     # Veredas con nombre de kilómetro o de campo petrolero: «X-10», «X 1O», «K -5», «KM 5», «KILOMETRO CINCO» → «X10», «K5»
@@ -185,6 +198,10 @@ def leer(texto: object) -> Direccion:
                     d.cruce = toks[k]
                     usados[k] = True
                     k += 1
+                    if k < n and toks[k] == "BIS":  # «45 BIS-12»
+                        d.cruce += " BIS"
+                        usados[k] = True
+                        k += 1
                     if k < n and len(toks[k]) == 1 and toks[k].isalpha() and toks[k] not in NUMERO:
                         d.cruce += toks[k]
                         usados[k] = True
@@ -215,7 +232,21 @@ def leer(texto: object) -> Direccion:
             d.casa = d.casa or sig
             usados[i] = usados[i + 1] = True
 
-    # 3) Lugar con palabra clave («BARRIO VILLA MARIA», «VEREDA LA CONDOR», «FINCA EL MANANTIAL»)
+    # 3) Referencias («FRENTE AL PARQUE», «AL LADO DE LA UNION»): llegan hasta la siguiente palabra clave de lugar o
+    # de vía, salvo que esta siga a la referencia sin más («CERCA AL BARRIO LA PAZ» es todo referencia)
+    fuera = [False] * n
+    for i, t in enumerate(toks):
+        if t not in REFERENCIA or usados[i] or fuera[i]:
+            continue
+        ini = i - 1 if t == "LADO" and i and toks[i - 1] in ("AL", "A") else i
+        if d.referencia is None:
+            d.referencia = " ".join(toks[ini:])[:120]
+        j = i + 1
+        while j < n and not ((toks[j] in LUGARES or toks[j] in VIAS) and any(x not in ENLACE for x in toks[i + 1:j])):
+            j += 1
+        fuera[ini:j] = [True] * (j - ini)
+
+    # 4) Lugar con palabra clave («BARRIO VILLA MARIA», «VEREDA LA CONDOR», «FINCA EL MANANTIAL»)
     def nombre_desde(j: int) -> tuple[str, int]:
         palabras = []
         while j < n and toks[j] not in CORTE and not _DIG.match(toks[j]):
@@ -224,28 +255,24 @@ def leer(texto: object) -> Direccion:
         return " ".join(palabras), j
 
     for i, t in enumerate(toks):
-        if t in LUGARES and not usados[i]:
+        if t in LUGARES and not usados[i] and not fuera[i]:
             nombre, fin = nombre_desde(i + 1)
             if not nombre:
                 continue
             tipo = LUGARES[t]
             if tipo == "FINCA":
                 d.finca = d.finca or nombre
+                fuera[i + 1:fin] = [True] * (fin - i - 1)  # el nombre de la finca no compite como lugar
             elif d.lugar_texto is None or (d.tipo_lugar in ("SECTOR", "CASERIO", "ASENTAMIENTO") and tipo in ("BARRIO", "VEREDA", "CORREGIMIENTO")):
                 d.lugar_texto, d.tipo_lugar = nombre, tipo
             usados[i:fin] = [True] * (fin - i)
+    d.fuera = fuera
 
-    # 4) Sin palabra clave: el texto del comienzo es el lugar («JORGE ELIECER GAITAN, KR 54…», «LA CONDOR»)
+    # 5) Sin palabra clave: el texto del comienzo es el lugar («JORGE ELIECER GAITAN, KR 54…», «LA CONDOR»)
     if d.lugar_texto is None:
         nombre, _ = nombre_desde(0)
         if nombre and nombre not in NO_LUGAR:
             d.lugar_texto = nombre
-
-    # 5) Referencia («FRENTE AL PARQUE»)
-    for i, t in enumerate(toks):
-        if t in REFERENCIA:
-            d.referencia = " ".join(toks[i:])[:120]
-            break
     return d
 
 
@@ -270,6 +297,21 @@ TIPO_PALABRA = {"BARRIO": {"barrio", "sector"}, "URBANIZACION": {"barrio", "sect
 CASCO = "YONDO"  # los barrios del casco urbano tienen este «padre» en el nomenclátor
 # Cuánto vale cada tipo cuando varios lugares aparecen en la misma dirección: gana el más preciso
 PRIORIDAD = {"barrio": 5, "sector": 4, "caserio": 3, "centro_poblado": 3, "vereda": 2, "corregimiento": 1}
+# Palabras clave que dicen sin duda que el lugar es rural
+RURAL_EXPLICITO = {"VEREDA", "CORREGIMIENTO", "CASERIO"}
+# Lo nombrado con estas palabras manda sobre otros lugares que no estén dentro de él
+ANCLA = {"BARRIO", "URBANIZACION", "VEREDA", "CORREGIMIENTO"}
+
+
+class _Hallado(NamedTuple):
+    lugar: Lugar
+    conf: float
+    palabra: str | None   # palabra clave que lo nombra («VEREDA»…) o None
+    frase: str            # texto que casó
+
+
+def _del_casco(lg: Lugar) -> bool:
+    return lg.zona == "urbana" and lg.padre in (None, "", CASCO)
 
 
 class Nomenclator:
@@ -279,62 +321,110 @@ class Nomenclator:
         self.lugares = lugares
         self.por_alias: dict[str, list[Lugar]] = {}
         for lg in lugares:
+            variantes = set()
             for a in {limpiar(lg.nombre), *map(limpiar, lg.alias)}:
                 a = re.sub(r"[^A-Z0-9 ]", " ", a)
                 a = re.sub(r"\s+", " ", a).strip()
                 if a and a not in NO_LUGAR:
-                    self.por_alias.setdefault(a, []).append(lg)
+                    # «LA ROMPIDA N 1» también como «LA ROMPIDA # 1», que es como quedan «No. 1» y «#1» al leer
+                    variantes |= {a, re.sub(r"\b(?:N|NO|NRO|NUMERO)\s+(?=\d)", "# ", a)}
+            for a in variantes:
+                self.por_alias.setdefault(a, []).append(lg)
         self.max_n = max((len(a.split()) for a in self.por_alias), default=1)
         self._lista = list(self.por_alias)
 
-    def _elegir(self, candidatos: list[Lugar], palabra: str | None) -> Lugar:
+    def _elegir(self, candidatos: list[Lugar], palabra: str | None, casco: bool = False) -> Lugar:
         if palabra and palabra in TIPO_PALABRA:
             preferidos = [c for c in candidatos if c.tipo in TIPO_PALABRA[palabra]]
             if preferidos:
                 candidatos = preferidos
-        return max(candidatos, key=lambda c: (c.lat is not None, PRIORIDAD.get(c.tipo, 0)))
+        # Homónimos («LA PAZ» barrio y vereda): con BARRIO, o con placa del casco y sin VEREDA delante, gana el del casco
+        urbano = palabra in ("BARRIO", "URBANIZACION") or (casco and palabra not in RURAL_EXPLICITO)
+        return max(candidatos, key=lambda c: (urbano and _del_casco(c), c.lat is not None, PRIORIDAD.get(c.tipo, 0)))
 
-    def reconocer(self, d: Direccion) -> tuple[Lugar | None, list[Lugar], float]:
-        """Devuelve (lugar elegido, todos los encontrados, confianza 0-1)."""
+    def _buscar(self, d: Direccion, casco: bool, fuera: list[bool]) -> list[_Hallado]:
+        """Alias exactos en la dirección, del más largo al más corto, sin entrar en los tokens `fuera`."""
         toks = d.tokens
-        hallados: list[tuple[Lugar, int, int, float]] = []  # lugar, inicio, largo, confianza
+        hallados: list[_Hallado] = []
         i = 0
         while i < len(toks):
             for largo in range(min(self.max_n, len(toks) - i), 0, -1):
                 frase = " ".join(toks[i:i + largo])
-                if frase in self.por_alias:
-                    previa = toks[i - 1] if i else None
-                    palabra = LUGARES.get(previa or "", None)
-                    # Un nombre de una sola palabra («PARAISO», «GAITAN») solo cuenta si viene tras la palabra clave
-                    # o si es todo el lugar escrito
-                    if largo == 1 and not palabra and frase != (d.lugar_texto or ""):
-                        continue
-                    hallados.append((self._elegir(self.por_alias[frase], palabra), i, largo, 1.0))
-                    i += largo - 1
-                    break
+                # Las referencias («FRENTE A LA CEIBA») y el nombre de la finca no son el lugar de la persona, salvo
+                # que el alias incluya la palabra clave («HACIENDA ITE»)
+                if frase not in self.por_alias or fuera[i] or (any(fuera[i + 1:i + largo]) and toks[i] not in LUGARES):
+                    continue
+                previa = toks[i - 1] if i else None
+                # La palabra clave va delante o dentro del alias («BARRIO CENTRAL», «URBANIZACION LA PAZ»)
+                palabra = LUGARES.get(toks[i] if largo > 1 and toks[i] in LUGARES else previa or "")
+                # Un nombre de una sola palabra («PARAISO», «GAITAN») solo cuenta si viene tras la palabra clave
+                # o si es todo el lugar escrito
+                if largo == 1 and not palabra and frase != (d.lugar_texto or ""):
+                    continue
+                hallados.append(_Hallado(self._elegir(self.por_alias[frase], palabra, casco), 1.0, palabra, frase))
+                i += largo - 1
+                break
             i += 1
+        return hallados
+
+    def reconocer(self, d: Direccion, casco: bool = False) -> tuple[Lugar | None, list[Lugar], float]:
+        """Devuelve (lugar elegido, todos los encontrados, confianza 0-1).
+
+        `casco`: la dirección trae una placa que cae dentro de la grilla del casco urbano. Entonces gana el homónimo
+        del casco, y una vereda o un sector nombrados sin VEREDA/CORREGIMIENTO/CASERIO no se imponen a la placa."""
+        fuera = d.fuera if len(d.fuera) == len(d.tokens) else [False] * len(d.tokens)
+        hallados = self._buscar(d, casco, fuera)
+        if not hallados and not casco and any(fuera):
+            # Solo hay lugares dentro de la referencia: «CERCA A LA VEREDA LA UNION» da al menos esa vereda, si la
+            # nombra con su palabra clave («CERCA DEL PARQUE LA PAZ» no da nada)
+            hallados = [h for h in self._buscar(d, casco, [False] * len(fuera)) if h.palabra in ANCLA]
 
         if not hallados and d.lugar_texto and d.lugar_texto not in NO_LUGAR and len(d.lugar_texto) >= 4:
+            factor = 1.0
             m = process.extractOne(d.lugar_texto, self._lista, scorer=fuzz.ratio, score_cutoff=86)
             if m is None:
-                # «SAN MIGUEL DEL TIGRE BARR…»: el alias está contenido en el texto
-                m = process.extractOne(d.lugar_texto, self._lista, scorer=fuzz.partial_ratio, score_cutoff=93)
-                if m and len(m[0]) < 6:
-                    m = None
+                # «SAN MIGUEL DEL TIGRE BARR…»: el alias está contenido en el texto. Nunca al revés: «BOCAS» o
+                # «PUERTO» caben en muchos alias y no dicen cuál
+                cortos = [a for a in self._lista if 6 <= len(a) <= len(d.lugar_texto)]
+                m = process.extractOne(d.lugar_texto, cortos, scorer=fuzz.partial_ratio, score_cutoff=93)
+                factor = 0.7
+            if m is None and len(d.lugar_texto.split()) >= 2:
+                # Abreviado por sus primeras palabras («SAN MIGUEL», «SAN LUIS»), solo si todas llevan al mismo lugar
+                pref = [a for a in self._lista if a.startswith(d.lugar_texto + " ")]
+                if pref and len({lg.nombre for a in pref for lg in self.por_alias[a]}) == 1:
+                    m = (min(pref, key=len), 100.0)
             if m:
-                hallados.append((self._elegir(self.por_alias[m[0]], d.tipo_lugar), 0, 0, m[1] / 100))
+                lg = self._elegir(self.por_alias[m[0]], d.tipo_lugar, casco)
+                # Un parecido no basta para mandar a una vereda a quien escribió BARRIO o una placa del casco
+                if lg.zona != "rural" or not (casco or d.tipo_lugar in ("BARRIO", "URBANIZACION")):
+                    hallados.append(_Hallado(lg, round(m[1] / 100 * factor, 3), d.tipo_lugar, d.lugar_texto))
 
+        lugares = [h.lugar for h in hallados]
+        if casco:  # la placa del casco pesa más que una vereda o un sector nombrados sin su palabra clave
+            hallados = [h for h in hallados if not (h.lugar.zona == "rural" and h.palabra not in RURAL_EXPLICITO
+                                                    and h.lugar.tipo in ("vereda", "sector", "caserio"))]
         if not hallados:
-            return None, [], 0.0
-        lugares = [h[0] for h in hallados]
-        rurales = [lg for lg in lugares if lg.zona == "rural"]
+            return None, lugares, 0.0
         # Si la dirección nombra un corregimiento o vereda, un barrio del casco con el mismo nombre no aplica
-        if rurales and any(lg.tipo in ("corregimiento", "centro_poblado", "vereda") for lg in rurales):
-            candidatos = [h for h in hallados if h[0].zona == "rural" or (h[0].padre and h[0].padre != CASCO)]
+        # (con placa del casco, solo si lo nombra con su palabra clave)
+        if any(h.lugar.zona == "rural" and h.lugar.tipo in ("corregimiento", "centro_poblado", "vereda")
+               and (not casco or h.palabra in RURAL_EXPLICITO) for h in hallados):
+            candidatos = [h for h in hallados if h.lugar.zona == "rural" or (h.lugar.padre and h.lugar.padre != CASCO)]
         else:
             candidatos = hallados
-        mejor = max(candidatos, key=lambda h: (h[0].lat is not None, PRIORIDAD.get(h[0].tipo, 0), h[3]))
-        return mejor[0], lugares, mejor[3]
+        # Un lugar que contiene a otro de los nombrados es solo contexto («VEREDA EL TOTUMO SAN MIGUEL DEL TIGRE»)
+        padres = {h.lugar.padre for h in candidatos if h.lugar.padre and h.lugar.padre != h.lugar.nombre}
+        hojas = [h for h in candidatos if h.lugar.nombre not in padres] or candidatos
+        # Lo nombrado con BARRIO/VEREDA/CORREGIMIENTO (o el lugar escrito sin palabra clave) manda: otro lugar solo le
+        # gana por PRIORIDAD si está dentro de él. Así «VEREDA LA CONDOR SECTOR LAS FLORES» no se va al sector homónimo
+        # de otra vereda, y «VEREDA SAN LUIS BELTRAN SECTOR LA PRIMAVERA» sí da el sector
+        anclas = [h for h in candidatos if h.palabra in ANCLA or h.frase == d.lugar_texto]
+        if anclas:
+            dentro = {a.lugar.nombre for a in anclas} | {a.lugar.padre for a in anclas
+                                                          if a.lugar.tipo in ("centro_poblado", "caserio") and a.lugar.padre}
+            hojas = [h for h in hojas if h in anclas or h.lugar.padre in dentro] or hojas
+        mejor = max(hojas, key=lambda h: (h.lugar.lat is not None, PRIORIDAD.get(h.lugar.tipo, 0), h.conf))
+        return mejor.lugar, lugares, mejor.conf
 
 
 def zona_por_texto(d: Direccion) -> str | None:
