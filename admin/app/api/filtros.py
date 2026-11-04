@@ -416,7 +416,8 @@ def exigir_permitidos(db: Database, quien: Any, f: Filtros) -> None:
     if proyeccion.administra(quien):
         return
     for p in VEDADOS:
-        if getattr(f, p) not in (None, "", 0) or (p in ("lider", "menor") and getattr(f, p) is not None):
+        v = getattr(f, p)
+        if v is not None and v != "":
             raise _prohibido(f"Su rol no permite filtrar por «{p}»")
     if f.fuente in ("cedulas", "ambas"):
         raise _prohibido("Su rol no permite filtrar por esa fuente")

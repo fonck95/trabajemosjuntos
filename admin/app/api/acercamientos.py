@@ -343,7 +343,7 @@ def registrar(pid: int, body: AcercamientoIn, request: Request, db: Database = D
         db.acercamientos.update_one({"_id": aid}, {"$set": {"autorizacion_id": aut_id}})
     resumen = _tras_cambio(db, pid) or {}
     # Llegar al máximo de intentos crea `requiere_actualizacion{no_contesta}` (pasa a la lista de visitas de P)
-    if (resumen.get("intentos_sin_exito") or 0) >= int(aj.get("max_intentos_sin_exito") or 4):
+    if (resumen.get("intentos_sin_exito") or 0) >= _entero(aj, "max_intentos_sin_exito", 4):
         db.personas.update_one({"_id": pid, "requiere_actualizacion": None}, {"$set": {"requiere_actualizacion": {
             "motivo": "no_contesta", "uid": None, "usuario": None, "ts": bd.ahora(), "nota": None}}})
     bd.recalcular_completitud(db, [pid])
@@ -462,10 +462,17 @@ ORDEN_COLA = {
 }
 
 
+def _entero(aj: dict, clave: str, defecto: int) -> int:
+    try:
+        return int(aj.get(clave)) if aj.get(clave) is not None else defecto
+    except (TypeError, ValueError):
+        return defecto
+
+
 def _volver(hoy: date, aj: dict) -> dict:
-    limite = (hoy - timedelta(days=int(aj.get("dias_entre_intentos") or 0))).isoformat()
+    limite = (hoy - timedelta(days=_entero(aj, "dias_entre_intentos", 2))).isoformat()
     return {"abordaje.n": {"$gte": 1},
-            "abordaje.intentos_sin_exito": {"$lt": int(aj.get("max_intentos_sin_exito") or 4)},
+            "abordaje.intentos_sin_exito": {"$lt": _entero(aj, "max_intentos_sin_exito", 4)},
             "$or": [{"abordaje.proximo": {"$ne": None, "$lte": hoy.isoformat()}},
                     {"abordaje.ultimo_resultado": {"$in": list(modelo.SIN_EXITO)},
                      "abordaje.ultimo_fecha": {"$lte": limite}}]}
@@ -480,7 +487,7 @@ def condicion_lista(lista: str, hoy: date, aj: dict) -> dict | None:
     if lista == "seguimiento":
         if not aj.get("seguimiento_activo"):
             return None
-        limite = (hoy - timedelta(days=int(aj.get("dias_seguimiento") or 60))).isoformat()
+        limite = (hoy - timedelta(days=_entero(aj, "dias_seguimiento", 60))).isoformat()
         return {"$and": [{"abordaje.estado": "contactado", "abordaje.ultimo_fecha": {"$lte": limite}},
                          {"$nor": [_volver(hoy, aj)]}]}
     raise HTTPException(422, "Lista desconocida")
@@ -633,8 +640,25 @@ def _conteo_periodo(db: Database, quien: Quien, desde: date) -> dict:
                                                                "anulado": {"$ne": True}})}
 
 
+def _como_usuario(db: Database, uid: int) -> Quien:
+    """A y K ven «Mi trabajo» de un usuario (el selector de 7.7): su rol, su alcance y sus conteos."""
+    u = db.usuarios.find_one({"_id": uid}, {"clave": 0})
+    if u is None or u.get("rol") not in acceso.ROLES:
+        raise HTTPException(404, "El usuario no existe")
+    asig = u.get("asignacion") or {}
+    return Quien(uid=u["_id"], usuario=u.get("usuario"), nombre=u.get("nombre"), rol=u["rol"],
+                 permisos=acceso.PERMISOS.get(u["rol"], frozenset()),
+                 asignacion=None if u["rol"] in ("admin", "coordinador") else
+                 {"lugares": list(asig.get("lugares") or []), "areas": list(asig.get("areas") or [])})
+
+
 @r.get("/trabajo")
-def trabajo(db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("trabajo.ver"))):
+def trabajo(uid: int | None = None, db: Database = Depends(obtener_db),
+            quien: Quien = Depends(requiere("trabajo.ver"))):
+    if uid is not None and uid != quien.uid:
+        if not quien.administra:
+            raise per._prohibido("Solo ve su propio trabajo")
+        quien = _como_usuario(db, uid)
     hoy, aj = modelo.hoy_local(), modelo.leer_ajustes(db)
     alcance = alcance_de(db, quien)
     asig = per_asignacion(db, quien)

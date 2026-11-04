@@ -896,7 +896,7 @@ def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, 
             if actual and not (body.motivo_cambio_cedula or "").strip():
                 raise HTTPException(422, "Escriba el motivo del cambio de cédula")
             cedula_ocupada(db, nueva, pid)
-            if nueva and es_suprimida(db, nueva) and not adm:
+            if nueva and es_suprimida(db, nueva):  # también A: solo el alta sigue, con forzar_suprimida
                 raise HTTPException(409, dict(SUPRIMIDA))
             sets["cedula"] = _lit(nueva)
             sets["cedula_origen"] = _lit("panel" if nueva else None)
