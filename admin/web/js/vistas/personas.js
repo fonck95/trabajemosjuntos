@@ -2,6 +2,7 @@
 import { api, descargar } from '../api.js';
 import { $, $$, FUENTES, aviso, chipPrecision, debounce, fecha, html, icono, montar, num, titulo } from '../ui.js';
 import { formularioNuevaPersona } from './comunes.js';
+import { url } from '../base.js';
 
 const FILTROS = ['q', 'zona', 'lugar_id', 'fuente', 'lista', 'etiqueta', 'con_cedula', 'con_telefono', 'precision', 'asistio',
   'consentimiento', 'lider', 'sexo', 'completitud_max', 'ids', 'ids_total', 'reunion_id'];
@@ -57,7 +58,7 @@ export async function vistaPersonas(el, { q, ir }) {
     if (!el.isConnected) return;
     const mio = ++turno;
     const params = { ...f, orden, pagina, por_pagina: 50 };
-    history.replaceState({}, '', '/personas?' + new URLSearchParams(Object.entries(params).filter(([k, v]) => v && !(k === 'pagina' && v === 1) && k !== 'por_pagina')));
+    history.replaceState({}, '', url('/personas?') + new URLSearchParams(Object.entries(params).filter(([k, v]) => v && !(k === 'pagina' && v === 1) && k !== 'por_pagina')));
     $('#filas', el).innerHTML = String(html`${Array.from({ length: 8 }, () => html`<tr><td colspan="8"><div class="esqueleto" style="height:18px"></div></td></tr>`)}`);
     const d = await api.get('/api/personas', params);
     if (mio !== turno || !el.isConnected) return; // llegó tarde: ya se pidió otra página u otros filtros

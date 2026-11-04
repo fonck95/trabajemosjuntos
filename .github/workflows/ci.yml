@@ -49,6 +49,9 @@ jobs:
         with:
           node-version: 22
       - run: pip install -r requirements-dev.txt
+      - name: Las dependencias del servicio único (requirements.txt de la raíz) son las del panel
+        working-directory: .
+        run: diff <(grep -v '^#' requirements.txt) <(grep -v '^#' admin/requirements.txt)
       - name: Pruebas del panel (datos inventados, MongoDB de servicio)
         run: python -m pytest -q tests
         env:

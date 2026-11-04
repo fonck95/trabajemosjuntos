@@ -65,7 +65,7 @@ cd site && python3 -m http.server 8000
 # abrir http://localhost:8000 (Home), /atlas.html (atlas) y /propuesta.html (propuesta)
 ```
 
-Al hacer *push* a `main`, el flujo `.github/workflows/pages.yml` publica el sitio (Home, atlas y propuesta) en GitHub Pages (hay que activar Pages con origen "GitHub Actions" en la configuración del repositorio). Railway lo construye con Railpack: `railpack.json` corre los mismos dos scripts y `Staticfile` + `Caddyfile` sirven `site/` con Caddy. El panel `admin/` es otro servicio con *Root Directory* = `admin` y su propio `admin/railpack.json`; los pasos están en `admin/README.md`.
+Al hacer *push* a `main`, el flujo `.github/workflows/pages.yml` publica el sitio (Home, atlas y propuesta) en GitHub Pages (hay que activar Pages con origen "GitHub Actions" en la configuración del repositorio). Railway lo construye con Railpack: `railpack.json` instala `requirements.txt`, corre los mismos dos scripts y arranca `admin/servidor.py`, que sirve el sitio en la raíz, el panel de administración en `/panel/` (enlace «Ingreso del equipo» al pie del Home) y `/health`. Variables y pasos en `admin/README.md`.
 
 ## Reproducir el análisis de contratación
 

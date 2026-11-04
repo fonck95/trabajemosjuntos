@@ -38,19 +38,21 @@ if base:
         print('imagen para compartir:', f'{base}/img/home/compartir.jpg')
     else:
         print('aviso: el Home no trae la etiqueta og:image esperada; no se completó la dirección')
-# Enlace discreto al panel de administración, que es otro servicio con su propia dirección. Solo aparece si el
-# despliegue define PANEL_URL (variable del servicio del sitio en Railway, o de repositorio en GitHub Pages): así la
-# dirección del panel no queda escrita en el repositorio público.
+# Enlace discreto al panel de administración. En Railway el mismo servicio sirve el panel en /panel/ y railpack.json
+# construye con PANEL_URL=/panel/; si el panel vive en otro servicio, PANEL_URL es su dirección https:// (variable del
+# servicio del sitio, o de repositorio en GitHub Pages). Sin PANEL_URL el enlace no aparece (GitHub Pages no tiene
+# panel).
 home = out / 'index.html'
 h = home.read_text(encoding='utf-8')
 marca = '<!-- ingreso-equipo -->'
 panel = (os.environ.get('PANEL_URL') or '').strip().rstrip('/')
 if marca in h:
     enlace = ''
-    if panel and re.fullmatch(r'https://[A-Za-z0-9.-]+(:\d+)?(/[^\s"<>]*)?', panel):
+    if panel and (re.fullmatch(r'https://[A-Za-z0-9.-]+(:\d+)?(/[^\s"<>]*)?', panel)
+                  or re.fullmatch(r'(/(?!\.\.?(?:/|$))[A-Za-z0-9._~-]+)+', panel)):  # o una ruta del mismo dominio, como /panel
         enlace = f'<a class="ingreso" href="{escape(panel)}/" rel="nofollow noopener">Ingreso del equipo</a>'
         print('ingreso del equipo:', panel)
     elif panel:
-        print('aviso: PANEL_URL debe ser una dirección https://…; no se agregó el enlace al panel')
+        print('aviso: PANEL_URL debe ser una dirección https://… o una ruta como /panel/; no se agregó el enlace')
     home.write_text(h.replace(marca, enlace), encoding='utf-8')
 print('site/ listo:', sum(1 for _ in out.rglob('*')), 'archivos')

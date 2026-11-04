@@ -163,11 +163,11 @@ def _firma_dispositivo(cfg, marca: str) -> str:
     return hmac.new(_llave(cfg.usuario or "", cfg.clave or ""), b"dispositivo|" + marca.encode(), hashlib.sha256).hexdigest()
 
 
-def marcar_dispositivo(cfg, response: Response) -> None:
+def marcar_dispositivo(cfg, response: Response, base: str = "") -> None:
     """Tras un ingreso correcto, el navegador recibe una marca firmada con la credencial vigente (sin datos)."""
     marca = secrets.token_urlsafe(18)
     response.set_cookie(COOKIE_DISPOSITIVO, f"{marca}.{_firma_dispositivo(cfg, marca)}", max_age=DIAS_DISPOSITIVO * 86400,
-                        httponly=True, secure=cfg.cookie_segura, samesite="strict", path="/api/login")
+                        httponly=True, secure=cfg.cookie_segura, samesite="strict", path=f"{base}/api/login")
 
 
 def dispositivo_conocido(cfg, request: Request) -> bool:
@@ -247,6 +247,22 @@ class CuerpoDemasiadoGrande(HTTPException):
         super().__init__(413, "La petición es demasiado grande")
 
 
+def ruta_interna(scope) -> str:
+    """Ruta dentro del panel, sin el prefijo con que esté montado (p. ej. «/panel/api/yo» → «/api/yo»).
+
+    Starlette conserva en scope["path"] la ruta completa y pone el prefijo en root_path: los chequeos de ruta deben
+    mirar la ruta interna, o bajo /panel dejarían de aplicarse."""
+    ruta, raiz = scope["path"], scope.get("root_path", "")
+    if raiz and ruta.startswith(raiz):
+        ruta = ruta[len(raiz):] or "/"
+    return ruta
+
+
+def base_de(request: Request) -> str:
+    """Prefijo con que está montado el panel («» si va solo, «/panel» dentro del sitio)."""
+    return (request.scope.get("root_path") or "").rstrip("/")
+
+
 class GuardiaApi:
     """Middleware ASGI que actúa antes de que nadie lea el cuerpo de la petición.
 
@@ -261,12 +277,16 @@ class GuardiaApi:
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
-        app, ruta = scope["app"], scope["path"]
+        app, ruta = scope["app"], ruta_interna(scope)
         # Importar acepta hasta 6 Excel de max_subida_mb cada uno; el resto es JSON pequeño
         limite = (app.state.cfg.max_subida_mb * 6 + 1) * MB if ruta == "/api/importar" else LIMITE_JSON
         largo = Headers(scope=scope).get("content-length", "")
         if largo.isdigit() and int(largo) > limite:
             return await JSONResponse({"detail": "La petición es demasiado grande"}, 413)(scope, receive, send)
+        if ruta.startswith("/api/") and not getattr(app.state, "listo", True):
+            # Dentro del sitio, el panel arranca aunque MongoDB todavía no responda: la API espera hasta que conecte
+            return await JSONResponse({"detail": "El panel se está conectando a la base de datos. Intente de nuevo en "
+                                                 "unos segundos."}, 503, headers={"Retry-After": "5"})(scope, receive, send)
         if ruta.startswith("/api/") and ruta not in RUTAS_SIN_SESION:
             if await run_in_threadpool(sesion_actual, app.state.db, Request(scope)) is None:
                 return await JSONResponse({"detail": "Inicie sesión"}, 401)(scope, receive, send)
@@ -313,6 +333,6 @@ class CabecerasSeguras(BaseHTTPMiddleware):
         h["Cross-Origin-Opener-Policy"] = "same-origin"
         if request.app.state.cfg.cookie_segura:
             h["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        if request.url.path.startswith("/api/"):
+        if ruta_interna(request.scope).startswith("/api/"):
             h["Cache-Control"] = "no-store"
         return resp

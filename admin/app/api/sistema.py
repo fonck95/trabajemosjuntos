@@ -20,7 +20,7 @@ from pymongo.errors import DuplicateKeyError
 from .. import db as bd
 from ..pipeline import importar as imp
 from ..pipeline import texto as tx
-from ..seguridad import (Admin, USUARIO_DESCONOCIDO, cerrar_sesion, crear_sesion, credenciales_validas,
+from ..seguridad import (Admin, USUARIO_DESCONOCIDO, base_de, cerrar_sesion, crear_sesion, credenciales_validas,
                          dispositivo_conocido, ip_de, marcar_dispositivo, obtener_db, requiere_admin,
                          reservar_intento, resolver_intento, sesion_actual, usuario_correcto)
 from .filtros import Filtros, filtro, filtros_query
@@ -54,7 +54,7 @@ def login(body: LoginIn, request: Request, response: Response, db: Database = De
                    detalle={"usuario_correcto": correcto}, ip=ip)
         raise HTTPException(401, "Usuario o clave incorrectos")
     csrf = crear_sesion(db, cfg, response, cfg.usuario, request)
-    marcar_dispositivo(cfg, response)
+    marcar_dispositivo(cfg, response, base_de(request))
     bd.auditar(db, cfg.usuario, "ingreso", ip=ip)
     return {"usuario": cfg.usuario, "csrf": csrf}
 
