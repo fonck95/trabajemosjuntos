@@ -1,0 +1,226 @@
+{
+ "meta": {
+  "eleccion": "2026-presidencial",
+  "departamento": "01",
+  "municipio": "300",
+  "nombre_registraduria": "YONDO-CASABE",
+  "dane": "05893",
+  "puestos": 7,
+  "mesas": 50,
+  "habilitados": 16121,
+  "consultado": "2026-11-04",
+  "nota": "Catálogo DIVIPOL de las presidenciales 2026 (primera vuelta), validado con el Boletín 98. Las coordenadas vienen de la Divipole 2023. «CABECERA MUNICIPAL» es ambigua entre los dos puestos de la cabecera. Para 2027 hay que cargar el catálogo nuevo.",
+  "fuentes": [
+   {
+    "url": "https://www.datos.gov.co/resource/mv2e-prx5.json?$where=upper(municipio) like '%YOND%'",
+    "que": "6 puestos de Yondó 2023 (sin códigos ni mesas)",
+    "consultado": "2026-11-04",
+    "licencia": "CC BY-SA 4.0"
+   },
+   {
+    "url": "https://raw.githubusercontent.com/miltonrojasb/visualizador-electoral-2026/main/data/raw/DIVIPOL.TXT",
+    "que": "Copia de terceros (OcaDEM, U. de Medellín) del catálogo DIVIPOL de la Registraduría, presidenciales 2026; repo sin licencia",
+    "consultado": "2026-11-04"
+   },
+   {
+    "url": "https://larazon.co/wp-content/uploads/2026/05/BOLETIN-98-DETALLES-CENSO-ELECTORAL-ELECCIONES-PRESIDENCIALES-2026.pdf",
+    "que": "Boletín 98 de la Registraduría (28-may-2026), copia en larazon.co; usado para validar el DIVIPOL.TXT",
+    "consultado": "2026-11-04"
+   }
+  ]
+ },
+ "puestos": [
+  {
+   "eleccion": "2026-presidencial",
+   "divipole": "01-300-00-01",
+   "zona": "00",
+   "codigo": "00-01",
+   "nombre": "IE LUIS EDUARDO DIAZ SECCION PRIMARIA",
+   "alias": [],
+   "alias_ambiguos": [
+    "CABECERA MUNICIPAL",
+    "PUESTO CABECERA MUNICIPAL"
+   ],
+   "area": "cabecera",
+   "lugar_id": null,
+   "lat": 7.00721,
+   "lon": -73.910031,
+   "coord_fuente": "Divipole 2023 georreferenciada (datos.gov.co mv2e-prx5)",
+   "coord_dudosa": false,
+   "mesas": 35,
+   "habilitados": {
+    "mujeres": 5800,
+    "hombres": 6364,
+    "total": 12164
+   },
+   "activo": true,
+   "fuente": "DIVIPOL presidencial 2026 (Registraduría), validado con el Boletín 98",
+   "verificado": true,
+   "nota": "La coordenada es la del «PUESTO CABECERA MUNICIPAL» de la Divipole 2023 (COLISEO CUBIERTO INST. LUIS ED)."
+  },
+  {
+   "eleccion": "2026-presidencial",
+   "divipole": "01-300-00-02",
+   "zona": "00",
+   "codigo": "00-02",
+   "nombre": "COLISEO BENITO ARIAS",
+   "alias": [],
+   "alias_ambiguos": [
+    "CABECERA MUNICIPAL",
+    "PUESTO CABECERA MUNICIPAL"
+   ],
+   "area": "cabecera",
+   "lugar_id": null,
+   "lat": null,
+   "lon": null,
+   "coord_fuente": null,
+   "coord_dudosa": false,
+   "mesas": 4,
+   "habilitados": {
+    "mujeres": 484,
+    "hombres": 580,
+    "total": 1064
+   },
+   "activo": true,
+   "fuente": "DIVIPOL presidencial 2026 (Registraduría), validado con el Boletín 98",
+   "verificado": true,
+   "nota": "Sin coordenada publicada."
+  },
+  {
+   "eleccion": "2026-presidencial",
+   "divipole": "01-300-99-25",
+   "zona": "99",
+   "codigo": "99-25",
+   "nombre": "C.E.R CUATRO BOCAS",
+   "alias": [
+    "CUATRO BOCAS"
+   ],
+   "alias_ambiguos": [],
+   "area": "rural",
+   "lugar_id": null,
+   "lat": 7.210279,
+   "lon": -74.004432,
+   "coord_fuente": "Divipole 2023 georreferenciada (datos.gov.co mv2e-prx5)",
+   "coord_dudosa": false,
+   "mesas": 1,
+   "habilitados": {
+    "mujeres": 41,
+    "hombres": 71,
+    "total": 112
+   },
+   "activo": true,
+   "fuente": "DIVIPOL presidencial 2026 (Registraduría), validado con el Boletín 98",
+   "verificado": true,
+   "nota": null
+  },
+  {
+   "eleccion": "2026-presidencial",
+   "divipole": "01-300-99-32",
+   "zona": "99",
+   "codigo": "99-32",
+   "nombre": "I.E.R. ALTO CIMITARRA",
+   "alias": [
+    "SAN FRANCISCO",
+    "C.E.R ALTO CIMITARRA"
+   ],
+   "alias_ambiguos": [],
+   "area": "rural",
+   "lugar_id": null,
+   "lat": 7.133709,
+   "lon": -74.062816,
+   "coord_fuente": "Divipole 2023 georreferenciada (datos.gov.co mv2e-prx5)",
+   "coord_dudosa": false,
+   "mesas": 2,
+   "habilitados": {
+    "mujeres": 144,
+    "hombres": 305,
+    "total": 449
+   },
+   "activo": true,
+   "fuente": "DIVIPOL presidencial 2026 (Registraduría), validado con el Boletín 98",
+   "verificado": true,
+   "nota": "En la Divipole 2023 se llamaba SAN FRANCISCO (centro poblado DANE más cercano: EL BAGRE, a 0,12 km)."
+  },
+  {
+   "eleccion": "2026-presidencial",
+   "divipole": "01-300-99-50",
+   "zona": "99",
+   "codigo": "99-50",
+   "nombre": "C.E.R CAÑO BLANCO",
+   "alias": [
+    "CAÑO BLANCO"
+   ],
+   "alias_ambiguos": [],
+   "area": "rural",
+   "lugar_id": null,
+   "lat": 6.94117,
+   "lon": -74.175698,
+   "coord_fuente": "Divipole 2023 georreferenciada (datos.gov.co mv2e-prx5)",
+   "coord_dudosa": false,
+   "mesas": 1,
+   "habilitados": {
+    "mujeres": 90,
+    "hombres": 171,
+    "total": 261
+   },
+   "activo": true,
+   "fuente": "DIVIPOL presidencial 2026 (Registraduría), validado con el Boletín 98",
+   "verificado": true,
+   "nota": "En 2018 se llamaba EL PORVENIR; ese nombre no se agrega como alias."
+  },
+  {
+   "eleccion": "2026-presidencial",
+   "divipole": "01-300-99-60",
+   "zona": "99",
+   "codigo": "99-60",
+   "nombre": "I.E.R. SAN LUIS BELTRAN",
+   "alias": [
+    "SAN LUIS BELTRAN"
+   ],
+   "alias_ambiguos": [],
+   "area": "rural",
+   "lugar_id": null,
+   "lat": 7.065855,
+   "lon": -74.023448,
+   "coord_fuente": "Divipole 2023 georreferenciada (datos.gov.co mv2e-prx5)",
+   "coord_dudosa": true,
+   "mesas": 2,
+   "habilitados": {
+    "mujeres": 171,
+    "hombres": 322,
+    "total": 493
+   },
+   "activo": true,
+   "fuente": "DIVIPOL presidencial 2026 (Registraduría), validado con el Boletín 98",
+   "verificado": true,
+   "nota": "Coordenada dudosa: queda a 14,65 km del centro poblado DANE 05893002 SAN LUIS BELTRÁN."
+  },
+  {
+   "eleccion": "2026-presidencial",
+   "divipole": "01-300-99-65",
+   "zona": "99",
+   "codigo": "99-65",
+   "nombre": "I.E.R. SAN MIGUEL DEL TIGRE",
+   "alias": [
+    "SAN MIGUEL DEL TIGRE"
+   ],
+   "alias_ambiguos": [],
+   "area": "rural",
+   "lugar_id": null,
+   "lat": 7.08815,
+   "lon": -73.946147,
+   "coord_fuente": "Divipole 2023 georreferenciada (datos.gov.co mv2e-prx5)",
+   "coord_dudosa": false,
+   "mesas": 5,
+   "habilitados": {
+    "mujeres": 740,
+    "hombres": 838,
+    "total": 1578
+   },
+   "activo": true,
+   "fuente": "DIVIPOL presidencial 2026 (Registraduría), validado con el Boletín 98",
+   "verificado": true,
+   "nota": null
+  }
+ ]
+}

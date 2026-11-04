@@ -2,12 +2,13 @@
 
 Colecciones (todas con `_id` entero para que las direcciones del panel sean cortas, salvo sesiones y auditoría):
 
-* `personas`: una por habitante. Lleva adentro sus trámites, notas, listas, etiquetas, asistencias y el registro
-  original de cada fuente, así una ficha se lee de una sola vez.
-* `lugares`, `reuniones`, `coincidencias`, `etiquetas`, `campos`, `importaciones`.
-* `sesiones` e `intentos` (con caducidad automática), `auditoria`, `contadores`.
-* `meta` (marcas y la clave secreta de las huellas) y `suprimidos` (huellas HMAC de quienes pidieron la supresión,
-  sin ningún dato en claro, para que una importación no los vuelva a crear).
+* `personas`: una por habitante. Lleva adentro sus trámites, notas, listas, etiquetas, asistencias, teléfonos de todas
+  las fuentes y el registro original de cada fuente, así una ficha se lee de una sola vez.
+* `lugares`, `puestos`, `reuniones`, `coincidencias`, `conflictos_cedula`, `etiquetas`, `campos`, `importaciones`.
+* `autorizaciones` y `acercamientos` (de solo inserción), `solicitudes` de los titulares y `usuarios`.
+* `sesiones`, `intentos`, `lecturas` e `idempotencia` (con caducidad automática), `auditoria`, `contadores`.
+* `meta` (marcas, turnos, ajustes, la versión del esquema y la clave secreta de las huellas) y `suprimidos` (huellas
+  HMAC de quienes pidieron la supresión, sin ningún dato en claro, para que una importación no los vuelva a crear).
 """
 from __future__ import annotations
 
@@ -16,17 +17,21 @@ import hashlib
 import hmac
 import json
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from pymongo import ASCENDING, DESCENDING, MongoClient, ReturnDocument, UpdateOne
+from fastapi import HTTPException
+from pymongo import ASCENDING, DESCENDING, IndexModel, MongoClient, ReturnDocument, UpdateOne
 from pymongo.database import Database
+from pymongo.errors import DuplicateKeyError
 
+from . import modelo
 from .pipeline import texto as tx
 from .pipeline.direcciones import Lugar
 
 GAZETTEER = Path(__file__).resolve().parents[1] / "geo" / "gazetteer.json"
+PUESTOS = Path(__file__).resolve().parents[1] / "geo" / "puestos_yondo.json"
 ACTIVA = {"eliminado": {"$ne": True}, "fusionada_en": None}
 
 ETIQUETAS_INICIALES = [
@@ -37,8 +42,10 @@ ETIQUETAS_INICIALES = [
     ("Víctima del conflicto", "interes"), ("Campesino", "interes"), ("Pescador", "interes"), ("Joven", "interes"),
     ("Mujer cabeza de hogar", "interes"), ("Líder comunitario", "rol"), ("JAC", "rol"), ("Voluntario", "rol"),
 ]
+# Etiquetas que revelan datos sensibles (Ley 1581, art. 5): P y C no las ven
+ETIQUETAS_SENSIBLES = ("Discapacidad", "Víctima del conflicto", "JAC", "Líder comunitario")
 
-# Campos de la ficha con su valor inicial: así toda persona tiene la misma forma
+# Campos de la ficha con su valor inicial: así toda persona tiene la misma forma (1.1)
 PERSONA_VACIA: dict[str, Any] = {
     "nombre": None, "nombre_norm": None, "cedula": None, "sexo": None, "edad": None, "fecha_nacimiento": None,
     "telefono": None, "telefono2": None, "correo": None, "direccion": None, "direccion_norm": None, "lugar_id": None,
@@ -48,12 +55,34 @@ PERSONA_VACIA: dict[str, Any] = {
     "observaciones": None, "extra": {}, "fuentes": [], "clave_tramites": None, "completitud": 0, "ultimo_contacto": None,
     "fusionada_en": None, "eliminado": False, "listas": [], "etiquetas": [], "tramites": [], "notas": [], "origen": [],
     "asistencias": [], "claves_tramites": [], "reunion_origen": None,
+    # Identidad
+    "tipo_documento": None, "cedula_verificada": False, "cedula_origen": None, "cedulas_anteriores": [],
+    # Demografía (la edad declarada vale desde edad_ref; nac_* se derivan)
+    "edad_ref": None, "nac_aprox": None, "nac_exacta": False, "nac_base": {}, "estado_civil": None,
+    "situacion_laboral": None, "jefe_hogar": None, "tenencia_vivienda": None, "estrato": None, "regimen_salud": None,
+    "sensibles": {}, "sensibles_autorizados": [],
+    # Teléfonos de todas las fuentes (telefono y telefono2 se derivan) y votación (puesto_votacion y mesa se derivan)
+    "telefonos": [], "votacion": None,
+    # Autorización del titular (derivada de `autorizaciones`)
+    "consentimiento_medio": None, "consentimiento_canales": [], "contacto_habilitado": False,
+    "mayor_declarado": False, "autorizacion_ultima": None, "reclamo_en_tramite": False,
+    # Seguimiento
+    "abordaje": None, "abordaje_seq": 0, "requiere_actualizacion": None, "en_curso": None, "situacion": None,
+    "no_disponible": {},
+    # Búsqueda, autoría, procedencia y avance
+    "nombre_fon": [], "creado_por": None, "actualizado_por": None, "procedencia": {}, "alternos": [], "avance": {},
+    # Punto (GeoJSON) y ubicación por GPS
+    "punto": None, "geo_fuente": None, "precision_m": None,
 }
 # geo_manual: False (automática), "lugar" (barrio o vereda elegido a mano: la persona sigue el punto de ese lugar) o
 # "punto" (puesto a mano en el mapa: no se mueve). Las fichas viejas con True se tratan como "punto".
 PUNTO_MANUAL = (True, "punto")
 # Campos de la ubicación: al unir fichas se toman en bloque de una sola de ellas
-GEO = ("lat", "lon", "geo_precision", "lugar_id", "lugar_texto", "zona", "direccion_norm", "geo_manual")
+GEO = ("lat", "lon", "geo_precision", "lugar_id", "lugar_texto", "zona", "direccion_norm", "geo_manual", "punto",
+       "geo_fuente", "precision_m")
+# Fuente de un teléfono según la fuente con que se crea la ficha
+FUENTE_TELEFONO = {"manual": "panel", "panel": "panel", "reunion": "reunion", "tramites": "tramites",
+                   "cedulas": "cedulas", "planilla": "planilla", "consultor": "consultor"}
 
 
 def ahora() -> str:
@@ -88,36 +117,72 @@ def siguiente_id(db: Database, coleccion: str, cuantos: int = 1) -> int:
     return c["n"] - cuantos + 1
 
 
+INDICES_PERSONAS = (
+    "telefonos.numero", "cedulas_anteriores", "nombre_fon", "nac_aprox", "tipo_documento", "votacion.puesto_id",
+    "votacion.estado", "votacion.eleccion", "abordaje.ultimo_ts", "abordaje.estado", "abordaje.proximo",
+    "consentimiento", "contacto_habilitado", "creado_por.uid", "actualizado_por.uid", "actualizado_en",
+    "ultimo_contacto", "fusionada_en", "requiere_actualizacion.ts", "situacion.estado", "sexo", "en_curso.uid",
+)
+_SOLO_TEXTO = {"clave_migracion": {"$type": "string"}}
+
+
+def _indices() -> dict[str, list[IndexModel]]:
+    """Índices de cada colección (1.10). Se crean juntos, un comando por colección."""
+    i = IndexModel
+    personas = [i("nombre_norm"), i("cedula", unique=True, partialFilterExpression={"cedula": {"$type": "string"}}),
+                i("clave_tramites", unique=True, partialFilterExpression={"clave_tramites": {"$type": "string"}}),
+                *(i(c) for c in ("telefono", "lugar_id", "asistencias.reunion_id", "tramites.id_externo", "etiquetas",
+                                 "listas", "fuentes", "completitud")),
+                i([("eliminado", ASCENDING), ("fusionada_en", ASCENDING)]),
+                *(i(c) for c in INDICES_PERSONAS), i([("punto", "2dsphere")])]
+    por_persona_ts = [i([("persona_id", ASCENDING), ("ts", ASCENDING)]),
+                      i("clave_migracion", unique=True, partialFilterExpression=_SOLO_TEXTO)]
+    return {
+        "personas": personas,
+        "lugares": [i([("nombre", ASCENDING), ("tipo", ASCENDING)], unique=True)],
+        "coincidencias": [i([("persona_id", ASCENDING), ("candidato_id", ASCENDING)], unique=True), i("estado")],
+        "reuniones": [i([("fecha", DESCENDING)])],
+        "etiquetas": [i("nombre", unique=True)],
+        "campos": [i("clave", unique=True)],
+        "auditoria": [i([("entidad", ASCENDING), ("entidad_id", ASCENDING)]),
+                      *(i([(c, ASCENDING), ("ts", ASCENDING)]) for c in ("uid", "capturado_por", "accion"))],
+        "sesiones": [i("expira", expireAfterSeconds=0), i("uid")],
+        "intentos": [i("ts", expireAfterSeconds=24 * 3600), i([("ip", ASCENDING), ("ts", ASCENDING)]),
+                     i([("nombre_h", ASCENDING), ("ts", ASCENDING)]),
+                     i([("ip", ASCENDING), ("marca_h", ASCENDING), ("ts", ASCENDING)])],
+        "usuarios": [i("usuario", unique=True)],
+        "acercamientos": [*por_persona_ts, i([("uid", ASCENDING), ("ts", ASCENDING)]), i("ts")],
+        "autorizaciones": por_persona_ts,
+        "puestos": [i([("eleccion", ASCENDING), ("codigo", ASCENDING)], unique=True)],
+        "areas": [i("nombre", unique=True), i("asignada_a")],
+        "conflictos_cedula": [i("clave", unique=True), i("estado"), i("persona_id"), i("cedula")],
+        "solicitudes": [i("estado"), i("persona_id")],
+        "lecturas": [i([("uid", ASCENDING), ("dia", ASCENDING)]), i("ts", expireAfterSeconds=90 * 24 * 3600)],
+        "idempotencia": [i("ts", expireAfterSeconds=24 * 3600), i("persona_id")],
+    }
+
+
 def inicializar(db: Database) -> None:
+    """Índices, catálogos iniciales y migración del esquema (con la reconciliación de cada arranque). Solo se crean
+    índices nuevos: ninguno existente cambia de opciones (un create_index con otras opciones falla en cada arranque)."""
     p = db.personas
-    p.create_index("nombre_norm")
-    p.create_index("cedula", unique=True, partialFilterExpression={"cedula": {"$type": "string"}})
-    p.create_index("clave_tramites", unique=True, partialFilterExpression={"clave_tramites": {"$type": "string"}})
-    for campo in ("telefono", "lugar_id", "asistencias.reunion_id", "tramites.id_externo", "etiquetas", "listas",
-                  "fuentes", "completitud"):
-        p.create_index(campo)
-    p.create_index([("eliminado", ASCENDING), ("fusionada_en", ASCENDING)])
-    db.lugares.create_index([("nombre", ASCENDING), ("tipo", ASCENDING)], unique=True)
-    db.coincidencias.create_index([("persona_id", ASCENDING), ("candidato_id", ASCENDING)], unique=True)
-    db.coincidencias.create_index("estado")
-    db.reuniones.create_index([("fecha", DESCENDING)])
-    db.etiquetas.create_index("nombre", unique=True)
-    db.campos.create_index("clave", unique=True)
-    db.auditoria.create_index([("entidad", ASCENDING), ("entidad_id", ASCENDING)])
-    db.sesiones.create_index("expira", expireAfterSeconds=0)
-    db.intentos.create_index("ts", expireAfterSeconds=24 * 3600)
-    db.intentos.create_index([("ip", ASCENDING), ("ts", ASCENDING)])
+    for coleccion, indices in _indices().items():
+        db[coleccion].create_indexes(indices)
     # El catálogo inicial se siembra una sola vez (en una base nueva): si el administrador lo borra, no vuelve
     if db.meta.find_one({"_id": "etiquetas_sembradas"}) is None:
         if db.etiquetas.count_documents({}) == 0 and db.contadores.find_one({"_id": "etiquetas"}) is None:
             primero = siguiente_id(db, "etiquetas", len(ETIQUETAS_INICIALES))
-            db.etiquetas.insert_many([{"_id": primero + i, "nombre": n, "grupo": g, "orden": i}
+            db.etiquetas.insert_many([{"_id": primero + i, "nombre": n, "grupo": g, "orden": i,
+                                       "sensible": n in ETIQUETAS_SENSIBLES}
                                       for i, (n, g) in enumerate(ETIQUETAS_INICIALES)])
         db.meta.update_one({"_id": "etiquetas_sembradas"}, {"$set": {"ts": ahora()}}, upsert=True)
     # Fichas viejas: geo_manual=True por un barrio o vereda elegido a mano (el punto puesto en el mapa es «manual»)
     p.update_many({"geo_manual": True, "geo_precision": {"$ne": "manual"}, "lugar_id": {"$ne": None}},
                   {"$set": {"geo_manual": "lugar"}})
     sembrar_lugares(db)
+    sembrar_puestos(db)
+    from . import migraciones  # aquí: migraciones usa este módulo
+    migraciones.migrar(db)
 
 
 def sembrar_lugares(db: Database, ruta: Path = GAZETTEER) -> int:
@@ -151,13 +216,141 @@ def sembrar_lugares(db: Database, ruta: Path = GAZETTEER) -> int:
     return nuevos
 
 
+def sembrar_puestos(db: Database, ruta: Path = PUESTOS) -> int:
+    """Siembra una sola vez el catálogo de puestos de votación (geo/puestos_yondo.json, DIVIPOLE). Para otra elección,
+    el administrador crea los puestos nuevos y cambia la elección vigente en Ajustes."""
+    if db.meta.find_one({"_id": "puestos_sembrados"}) is not None or not ruta.exists():
+        return 0
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    nuevos = 0
+    for pu in datos.get("puestos", []):
+        if db.puestos.find_one({"eleccion": pu["eleccion"], "codigo": pu["codigo"]}, {"_id": 1}):
+            continue
+        try:
+            db.puestos.insert_one({"_id": siguiente_id(db, "puestos"), **pu, "editado": False, "creado_en": ahora()})
+            nuevos += 1
+        except DuplicateKeyError:  # otro proceso lo sembró al mismo tiempo
+            pass
+    db.meta.update_one({"_id": "puestos_sembrados"}, {"$set": {"ts": ahora(), "fuente": ruta.name}}, upsert=True)
+    return nuevos
+
+
+def puestos_vigentes(db: Database, eleccion: str | None = None) -> list[dict]:
+    """Puestos activos de la elección vigente (o de la pedida)."""
+    eleccion = eleccion or modelo.leer_ajustes(db)["eleccion_vigente"]
+    return list(db.puestos.find({"eleccion": eleccion, "activo": {"$ne": False}}).sort("codigo", 1))
+
+
 def lugares(db: Database) -> list[Lugar]:
     return [Lugar(l["_id"], l["nombre"], l["tipo"], l["zona"], l.get("lat"), l.get("lon"), tuple(l.get("alias") or ()),
                   l.get("padre")) for l in db.lugares.find({}, {"geom": 0})]
 
 
+def subir_catalogos_version(db: Database) -> int:
+    """`meta.catalogos_version`: sube al editar campos, etiquetas, lugares, puestos o ajustes (ETag de los catálogos)."""
+    m = db.meta.find_one_and_update({"_id": "catalogos_version"}, {"$inc": {"valor": 1}}, upsert=True,
+                                    return_document=ReturnDocument.AFTER)
+    return m["valor"]
+
+
+def catalogos_version(db: Database) -> int:
+    return (db.meta.find_one({"_id": "catalogos_version"}) or {}).get("valor", 0)
+
+
+# ───────────────────────────── Turnos con dueño (migración e importación) ─────────────────────────────
+
+def _instante() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def tomar_turno(db: Database, nombre: str, dueño: str, minutos: int) -> bool:
+    """Toma el turno `meta.<nombre>` si está libre (vencido) o ya es de `dueño`. False si lo tiene otro."""
+    ya = _instante()
+    try:
+        db.meta.find_one_and_update({"_id": nombre, "$or": [{"hasta": {"$lt": ya}}, {"dueño": dueño}]},
+                                    {"$set": {"dueño": dueño, "hasta": ya + timedelta(minutes=minutos), "desde": ya}},
+                                    upsert=True)
+        return True
+    except DuplicateKeyError:
+        return False
+
+
+def renovar_turno(db: Database, nombre: str, dueño: str, minutos: int) -> bool:
+    r = db.meta.update_one({"_id": nombre, "dueño": dueño}, {"$set": {"hasta": _instante() + timedelta(minutes=minutos)}})
+    return r.matched_count == 1
+
+
+def soltar_turno(db: Database, nombre: str, dueño: str) -> None:
+    # Un segundo atrás: la siguiente llamada (aun en el mismo instante) lo encuentra vencido
+    db.meta.update_one({"_id": nombre, "dueño": dueño}, {"$set": {"hasta": _instante() - timedelta(seconds=1)}})
+
+
+# ───────────────────────────── Auditoría ─────────────────────────────
+
 CLAVES_AUDITORIA = frozenset({"ts", "usuario", "accion", "entidad", "entidad_id", "detalle", "ip", "uid", "rol", "campos",
                               "completados"})
+OCULTO = "(oculto)"
+# Claves de `detalle` que llevan una cédula: quedan solo sus 3 últimos dígitos, para todos los roles
+CLAVES_CEDULA = frozenset({"cedula", "cedulas_anteriores", "cedula_en_traspaso", "cedula_correcta", "cedula_digitada",
+                           "cedula_repetida", "cedula_fila", "cedula_anterior"})
+
+
+def _mascara_cedula(v: Any) -> Any:
+    if isinstance(v, list):
+        return [_mascara_cedula(x) for x in v]
+    if isinstance(v, dict):
+        return {k: _mascara_cedula(x) for k, x in v.items()}
+    if isinstance(v, (str, int)) and not isinstance(v, bool):
+        s = str(v).strip()
+        return f"···{s[-3:]}" if s else v
+    return v
+
+
+def enmascarar(db: Database, detalle: Any) -> Any:
+    """`detalle` sin datos sensibles ni cédulas en claro (1.9): `sensibles`, `lider`, las etiquetas sensibles y los
+    campos propios sensibles quedan «(oculto)»; las cédulas, con sus 3 últimos dígitos."""
+    cache: dict[str, set] = {}
+
+    def sensibles(col: str, clave: str) -> set:
+        if col not in cache:
+            cache[col] = {x[clave] for x in db[col].find({"sensible": True}, {clave: 1})}
+        return cache[col]
+
+    def etiquetas(v: Any) -> Any:
+        if isinstance(v, list):
+            return [OCULTO if e in sensibles("etiquetas", "_id") else e for e in v]
+        if isinstance(v, dict):
+            return {k: etiquetas(x) for k, x in v.items()}
+        return v
+
+    def extra(v: Any) -> Any:
+        if not isinstance(v, dict):
+            return v
+        if v and set(v) <= {"antes", "despues"}:
+            return {k: extra(x) for k, x in v.items()}
+        return {k: OCULTO if k in sensibles("campos", "clave") else ir(x) for k, x in v.items()}
+
+    def ir(v: Any) -> Any:
+        if isinstance(v, list):
+            return [ir(x) for x in v]
+        if not isinstance(v, dict):
+            return v
+        out = {}
+        for k, x in v.items():
+            k = str(k)
+            if k in CLAVES_CEDULA:
+                out[k] = _mascara_cedula(x)
+            elif k in ("lider", "sensibles") or k.startswith("sensibles."):
+                out[k] = OCULTO
+            elif k == "etiquetas":
+                out[k] = etiquetas(x)
+            elif k == "extra":
+                out[k] = extra(x)
+            else:
+                out[k] = ir(x)
+        return out
+
+    return ir(detalle)
 
 
 def auditar(db: Database, quien: Any, accion: str, entidad: str | None = None, entidad_id: int | None = None,
@@ -168,12 +361,14 @@ def auditar(db: Database, quien: Any, accion: str, entidad: str | None = None, e
     `quien` es el nombre de usuario (texto, como siempre) o un `acceso.Quien`: con él la entrada lleva además `uid`
     (0 para el administrador) y `rol`, y su IP si no se pasa otra. `campos` y `completados` son solo nombres canónicos.
     `extra` va al nivel superior: campos no personales que los indicadores necesitan aun después de una supresión
-    (`capturado_por`, `canal`, `resultado`, `estado`…)."""
+    (`capturado_por`, `canal`, `resultado`, `estado`…). El detalle se enmascara (`enmascarar`). Toda entrada sobre una
+    persona usa entidad «persona» y su id: así la supresión limpia todo su rastro."""
     choque = CLAVES_AUDITORIA & set(extra)
     if choque:
         raise ValueError(f"auditar: {sorted(choque)} no van en extra")
     doc = {"ts": ahora(), "usuario": quien, "accion": accion, "entidad": entidad, "entidad_id": entidad_id,
-           "detalle": json.dumps(detalle, ensure_ascii=False, default=str) if detalle is not None else None, "ip": ip}
+           "detalle": json.dumps(enmascarar(db, detalle), ensure_ascii=False, default=str) if detalle is not None else None,
+           "ip": ip}
     if quien is not None and not isinstance(quien, str):
         doc.update(usuario=quien.usuario, uid=quien.uid, rol=quien.rol, ip=ip if ip is not None else quien.ip)
     if campos is not None:
@@ -184,42 +379,88 @@ def auditar(db: Database, quien: Any, accion: str, entidad: str | None = None, e
     db.auditoria.insert_one(doc)
 
 
-# ───────────────────────────── Completitud del perfil ─────────────────────────────
+def _nombre_de(quien: Any) -> str | None:
+    return quien if quien is None or isinstance(quien, str) else quien.usuario
+
+
+def _uid_de(quien: Any) -> int | None:
+    if quien is None or isinstance(quien, str):
+        return 0 if quien not in (None, "sistema") else None
+    return quien.uid
+
+
+# ───────────────────────────── Completitud del perfil (1.11) ─────────────────────────────
 
 PESOS = [  # (campo, puntos) — suma 100
-    ("cedula", 15), ("telefono", 15), ("direccion", 8), ("ubicacion", 15), ("sexo", 5), ("edad", 5), ("correo", 5),
-    ("ocupacion", 6), ("nivel_educativo", 5), ("personas_hogar", 5), ("necesidades", 10), ("consentimiento", 6),
+    ("cedula", 18), ("telefono", 14), ("direccion", 6), ("ubicacion", 12), ("sexo", 5), ("edad", 6), ("correo", 3),
+    ("ocupacion", 4), ("nivel_educativo", 4), ("personas_hogar", 3), ("puesto", 6), ("mesa", 4), ("necesidades", 8),
+    ("autorizacion", 7),
 ]
+CAMPOS_COMPLETITUD = {"cedula": 1, "telefono": 1, "telefono2": 1, "telefonos": 1, "direccion": 1, "geo_precision": 1,
+                      "sexo": 1, "edad": 1, "fecha_nacimiento": 1, "correo": 1, "ocupacion": 1, "situacion_laboral": 1,
+                      "nivel_educativo": 1, "personas_hogar": 1, "votacion": 1, "puesto_votacion": 1, "mesa": 1,
+                      "etiquetas": 1, "consentimiento": 1, "completitud": 1}
 
 
-def completitud(p: dict) -> int:
+def _puntos_puesto(p: dict, peso: int) -> int:
+    v = p.get("votacion")
+    if not isinstance(v, dict):
+        return peso // 2 if not modelo.vacio(p.get("puesto_votacion")) else 0
+    if v.get("puesto_id") is not None or v.get("donde") == "no_inscrito":
+        return peso
+    if not modelo.vacio(v.get("puesto_texto")) or v.get("donde") == "otro_municipio":
+        return peso // 2
+    return 0
+
+
+def completitud(p: dict, necesidades: set | None = None) -> int:
+    """Puntos (0-100) de lo que tiene la ficha. `necesidades`: ids de las etiquetas del grupo «necesidad» (sin él,
+    cualquier etiqueta cuenta). Lectura tolerante: una ficha sin `telefonos` o sin `votacion` usa los heredados."""
     pts = 0
     for campo, peso in PESOS:
-        if campo == "ubicacion":
+        if campo == "telefono":
+            ok = bool(modelo.usables(modelo.telefonos_de(p))) or not modelo.vacio(p.get("telefono"))
+        elif campo == "ubicacion":
             prec = p.get("geo_precision")
             pts += peso if prec in ("direccion", "manual") else (peso // 2 if prec else 0)
+            continue
         elif campo == "edad":
-            pts += peso if (p.get("edad") or p.get("fecha_nacimiento")) else 0
+            ok = modelo.tiene_dato(p, "edad")
+        elif campo == "ocupacion":
+            ok = not modelo.vacio(p.get("ocupacion")) or not modelo.vacio(p.get("situacion_laboral"))
+        elif campo == "puesto":
+            pts += _puntos_puesto(p, peso)
+            continue
+        elif campo == "mesa":
+            v = p.get("votacion")
+            ok = v.get("mesa") is not None if isinstance(v, dict) else not modelo.vacio(p.get("mesa"))
         elif campo == "necesidades":
-            pts += peso if p.get("etiquetas") else 0
-        elif campo == "consentimiento":
-            pts += peso if p.get("consentimiento") == "si" else 0
+            et = p.get("etiquetas") or []
+            ok = bool(et) if necesidades is None else any(e in necesidades for e in et)
+        elif campo == "autorizacion":
+            ok = p.get("consentimiento") == "si"
+        elif campo == "personas_hogar":
+            ok = p.get("personas_hogar") not in (None, "", 0)
         else:
-            pts += peso if p.get(campo) not in (None, "", 0) else 0
+            ok = not modelo.vacio(p.get(campo))
+        pts += peso if ok else 0
     return pts
+
+
+def ids_necesidad(db: Database) -> set:
+    return {e["_id"] for e in db.etiquetas.find({"grupo": "necesidad"}, {"_id": 1})}
 
 
 def recalcular_completitud(db: Database, ids: Iterable[int] | None = None) -> None:
     filtro = dict(ACTIVA) if ids is None else {"_id": {"$in": list(ids)}}
-    campos = {c: 1 for c, _ in PESOS if c not in ("ubicacion", "necesidades")}
-    campos |= {"geo_precision": 1, "fecha_nacimiento": 1, "etiquetas": 1, "completitud": 1}
+    necesidades = ids_necesidad(db)
     ops = []
-    for p in db.personas.find(filtro, campos):
-        c = completitud(p)
+    for p in db.personas.find(filtro, CAMPOS_COMPLETITUD):
+        c = completitud(p, necesidades)
         if c != p.get("completitud"):
             ops.append(UpdateOne({"_id": p["_id"]}, {"$set": {"completitud": c}}))
-    if ops:
-        db.personas.bulk_write(ops, ordered=False)
+    for k in range(0, len(ops), 1000):
+        db.personas.bulk_write(ops[k:k + 1000], ordered=False)
 
 
 # ───────────────────────────── Personas ─────────────────────────────
@@ -230,11 +471,29 @@ def persona_vacia() -> dict:
 
 
 def nueva_persona(db: Database, datos: dict, fuente: str) -> dict:
-    doc = {**PERSONA_VACIA, "extra": {}, "fuentes": [fuente], "listas": [], "etiquetas": [], "tramites": [], "notas": [],
-           "origen": [], "asistencias": [], "claves_tramites": [], **datos}
+    """Ficha nueva con todos los campos de PERSONA_VACIA (copias propias) y los derivados: nombre normalizado y
+    fonético, tipo de documento, teléfonos (de `telefono` y `telefono2` si no viene la lista), punto y edad."""
+    doc = persona_vacia()
+    doc["fuentes"] = [fuente]
+    doc.update(datos)
     if "_id" not in datos:
         doc["_id"] = siguiente_id(db, "personas")
     doc["nombre_norm"] = tx.nombre_norm(doc["nombre"])
+    if not datos.get("nombre_fon"):
+        doc["nombre_fon"] = modelo.claves_foneticas(doc["nombre"])
+    if doc.get("cedula") and not doc.get("tipo_documento"):
+        doc["tipo_documento"] = "CC"
+    if "telefonos" not in datos:
+        fte = FUENTE_TELEFONO.get(fuente, "panel")
+        doc["telefonos"] = modelo.unir_telefonos([], [modelo.telefono_nuevo(doc[k], fte)
+                                                      for k in ("telefono", "telefono2") if doc.get(k) not in (None, "")])
+    doc.update(modelo.derivar_telefonos(doc["telefonos"]))
+    if doc.get("punto") is None:
+        doc["punto"] = modelo.punto(doc.get("lat"), doc.get("lon"))
+    if doc.get("edad") is not None and not doc.get("edad_ref"):
+        doc["edad_ref"] = modelo.hoy_local().isoformat()
+    if doc.get("edad") is not None or not modelo.vacio(doc.get("fecha_nacimiento")):
+        doc.update(modelo.calcular_nac(doc))
     doc["creado_en"] = doc["actualizado_en"] = ahora()
     return doc
 
@@ -265,60 +524,377 @@ def _rango_ubicacion(p: dict) -> int:
     return 1 if p.get("lat") is not None else 0
 
 
-def fusionar(db: Database, destino: int, origen: int, usuario: str | None, ip: str | None = None) -> None:
-    """Une `origen` en `destino`: completa vacíos y junta trámites, listas, etiquetas, reuniones, notas y fuentes.
+# Gemelo de _rango_ubicacion sobre la ficha guardada (expresión)
+_EXPR_RANGO = {"$switch": {"branches": [
+    {"case": {"$in": [{"$ifNull": ["$geo_manual", False]}, ["punto", True]]}, "then": 4},
+    {"case": {"$eq": ["$geo_precision", "direccion"]}, "then": 3},
+    {"case": {"$eq": ["$geo_manual", "lugar"]}, "then": 2},
+    {"case": {"$ne": [{"$ifNull": ["$lat", None]}, None]}, "then": 1}], "default": 0}}
 
-    El origen queda solo como enlace (`fusionada_en`), sin datos personales: no se duplican en la base."""
+
+# ───────────────────────────── Autorizaciones ─────────────────────────────
+
+ESTADO_EFECTIVO = {"si": "si", "no": "no", "revocada": "no", "pendiente": "pendiente", None: "pendiente"}
+
+
+def autorizacion_doc(db: Database, persona_id: int | None, estado: str, medio: str, **campos) -> dict:
+    """Un evento de `autorizaciones` (1.6) con todos sus campos; `campos` pisa los valores por defecto."""
+    doc = {"_id": None, "persona_id": persona_id, "estado": estado, "medio": medio, "canales": [],
+           "canales_implicitos": False, "sensibles": [], "mayor_declarado": False, "evidencia": None,
+           "evidencia_sha256": None, "evidencia_fila": None, "texto_version": None, "fecha_declarada": None,
+           "nota": None, "reunion_id": None, "acercamiento_id": None, "uid": None, "usuario": None, "rol": None,
+           "capturado_por": None, "confirmada_por": None, "clave_migracion": None, "importacion_id": None,
+           "ts": ahora()}
+    doc.update(campos)
+    if doc["_id"] is None:
+        doc["_id"] = siguiente_id(db, "autorizaciones")
+    return doc
+
+
+def _canales_vigentes(p: dict) -> list[str]:
+    """Canales del «sí» de una ficha; una ficha vieja sin eventos con «si» vale con los implícitos."""
+    if p.get("consentimiento") != "si":
+        return []
+    if p.get("autorizacion_ultima"):
+        return list(p.get("consentimiento_canales") or [])
+    return list(modelo.CANALES_IMPLICITOS)
+
+
+def reconciliar_consentimiento(db: Database, ids: Iterable[int] | None = None) -> list[int]:
+    """Si el código viejo cambió `consentimiento` sin pasar por `autorizaciones`, inserta un evento «migrado» con el
+    valor actual (la clave evita duplicarlo). Devuelve las fichas corregidas."""
+    q: dict = {**ACTIVA, "$expr": {"$ne": [
+        {"$ifNull": ["$consentimiento", "pendiente"]},
+        {"$switch": {"branches": [{"case": {"$in": ["$autorizacion_ultima.estado", ["no", "revocada"]]}, "then": "no"},
+                                  {"case": {"$eq": ["$autorizacion_ultima.estado", "si"]}, "then": "si"}],
+                     "default": "pendiente"}}]}}
+    if ids is not None:
+        q["_id"] = {"$in": list(ids)}
+    hechos = []
+    for p in db.personas.find(q, {"consentimiento": 1, "consentimiento_fecha": 1, "autorizacion_ultima": 1}):
+        estado = p.get("consentimiento") or "pendiente"
+        if estado not in ESTADO_EFECTIVO:
+            continue
+        ultima = (p.get("autorizacion_ultima") or {}).get("id")
+        clave = f"consent:{p['_id']}" if ultima is None else f"reconc:{p['_id']}:{ultima}:{estado}"
+        ev = autorizacion_doc(db, p["_id"], estado, "migrado", canales_implicitos=estado == "si",
+                              fecha_declarada=p.get("consentimiento_fecha"), usuario="migración", clave_migracion=clave)
+        try:
+            db.autorizaciones.insert_one(ev)
+        except DuplicateKeyError:
+            pass
+        hechos.append(p["_id"])
+    return hechos
+
+
+def derivar(db: Database, ids: Iterable[int], reconciliar: bool = True) -> None:
+    """Recalcula lo derivado de cada ficha: nacimiento aproximado, autorización (de sus eventos), abordaje (de sus
+    acercamientos no anulados), claves fonéticas y completitud. Solo escribe lo que cambió."""
+    ids = list(dict.fromkeys(ids))
+    if not ids:
+        return
+    if reconciliar:
+        reconciliar_consentimiento(db, ids)
+    eventos: dict[int, list] = {}
+    for e in db.autorizaciones.find({"persona_id": {"$in": ids}}):
+        eventos.setdefault(e["persona_id"], []).append(e)
+    acerc: dict[int, list] = {}
+    for a in db.acercamientos.find({"persona_id": {"$in": ids}, "anulado": {"$ne": True}}):
+        acerc.setdefault(a["persona_id"], []).append(a)
+    necesidades = ids_necesidad(db)
+    ops = []
+    for p in db.personas.find({"_id": {"$in": ids}, **ACTIVA}):
+        nuevo: dict = {}
+        if p.get("edad") is not None or not modelo.vacio(p.get("fecha_nacimiento")) or p.get("nac_aprox"):
+            base = p.get("nac_base") or {}
+            if p.get("edad") is not None and (not p.get("edad_ref") or (base and p["edad"] != base.get("edad"))):
+                nuevo["edad_ref"] = modelo.hoy_local().isoformat()  # una edad nueva se toma como declarada hoy
+            nuevo.update(modelo.calcular_nac({**p, **nuevo}))
+        if p["_id"] in eventos:
+            nuevo.update(modelo.consentimiento_vigente(eventos[p["_id"]]))
+            if nuevo["consentimiento"] == "no":
+                nuevo.update(sensibles={}, sensibles_autorizados=[])
+        nuevo["nombre_fon"] = modelo.claves_foneticas(p.get("nombre"))
+        nuevo["completitud"] = completitud({**p, **nuevo}, necesidades)
+        cambios = {k: v for k, v in nuevo.items() if p.get(k) != v}
+        if cambios:
+            ops.append(UpdateOne({"_id": p["_id"], **ACTIVA}, {"$set": cambios}))
+        consentimiento = nuevo.get("consentimiento", p.get("consentimiento"))
+        ab = modelo.resumen_abordaje(acerc.get(p["_id"]), consentimiento)
+        if ab != p.get("abordaje"):
+            ops.append(UpdateOne({"_id": p["_id"], "abordaje_seq": p.get("abordaje_seq")}, {"$set": {"abordaje": ab}}))
+    for k in range(0, len(ops), 1000):
+        db.personas.bulk_write(ops[k:k + 1000], ordered=False)
+
+
+# ───────────────────────────── Unión de fichas (2.6) ─────────────────────────────
+
+class FusionImposible(HTTPException):
+    """La unión no se puede hacer (409): una ficha ya no está activa o tienen cédulas distintas."""
+
+    def __init__(self, mensaje: str):
+        super().__init__(409, mensaje)
+
+
+# Campos que se llenan desde el origen si el destino no los tiene, sin alternos (los que no tienen procedencia)
+FUSION_SIMPLES = ("ficha", "personas_hogar", "observaciones", "tenencia_vivienda", "estrato", "regimen_salud",
+                  "reunion_origen")
+_LISTAS_UNION = ("fuentes", "listas", "etiquetas", "claves_tramites", "cedulas_anteriores")
+
+
+def _lit(v: Any) -> dict:
+    return {"$literal": v}
+
+
+def _no_esta(lista: str, valor: str) -> dict:
+    return {"$not": [{"$in": [valor, {"$ifNull": [lista, []]}]}]}
+
+
+def _expr_telefonos_fusion(o_tels: list[dict]) -> dict:
+    """Une los teléfonos del origen a los del destino: el orden del destino primero; en los repetidos se suman fuentes
+    y fechas y gana el estado con `estado_en` más reciente."""
+    lit = _lit(o_tels)
+    cambios = {k: f"$$n.{k}" for k in modelo.CAMBIOS_TELEFONO}
+    existentes = {"$map": {"input": "$$a", "as": "t", "in": {"$let": {
+        "vars": {"n": {"$arrayElemAt": [{"$filter": {"input": lit, "as": "x",
+                                                      "cond": {"$eq": ["$$x.numero", "$$t.numero"]}}}, 0]}},
+        "in": {"$cond": [{"$eq": [{"$type": "$$n"}, "missing"]}, "$$t", {"$mergeObjects": [
+            "$$t",
+            {"$cond": [{"$gt": [{"$ifNull": ["$$n.estado_en", ""]}, {"$ifNull": ["$$t.estado_en", ""]}]}, cambios, {}]},
+            {"fuentes": modelo._expr_union("$$t.fuentes", "$$n.fuentes"),
+             "ultima_vez": {"$max": ["$$t.ultima_vez", "$$n.ultima_vez"]},
+             "primera_vez": {"$min": ["$$t.primera_vez", "$$n.primera_vez"]}}]}]}}}}}
+    agregados = {"$filter": {"input": lit, "as": "x", "cond": {"$not": [{"$in": [
+        "$$x.numero", {"$map": {"input": "$$a", "as": "t", "in": "$$t.numero"}}]}]}}}
+    return {"$let": {"vars": {"a": modelo.TELS_ACTUALES}, "in": {"$concatArrays": [existentes, agregados]}}}
+
+
+def _pipeline_fusion(o: dict, origen: int, uid: Any) -> list[dict]:
+    """Actualización (pipeline) del destino con los datos del origen `o` (pasos 3 de 2.6): parcial, sobre lo guardado,
+    y que se puede repetir sin daño."""
+    ts = ahora()
+    fuente = f"fusion:{origen}"
+    s: dict = {"actualizado_en": _lit(ts)}
+    alt: list = []
+    cedula_o = o.get("cedula") or o.get("cedula_en_traspaso")
+    valores = {**o, "cedula": cedula_o}
+    for campo in modelo.CAMPOS_PROCEDENCIA:
+        v = valores.get(campo)
+        if campo == "votacion" and not isinstance(v, dict):  # ficha vieja: el puesto y la mesa escritos
+            v = modelo.armar_votacion(o.get("puesto_votacion"), o.get("mesa"), [], fuente="panel", eleccion=None,
+                                      estado="por_confirmar", conservar_texto=True)
+        if modelo.vacio(v):
+            continue
+        vacio = modelo.expr_vacio(campo)
+        s[campo] = {"$cond": [vacio, _lit(v), f"${campo}"]}
+        if campo != "cedula":
+            alt.append({"$cond": [{"$and": [{"$not": [vacio]}, {"$ne": [modelo.expr_comparable(campo),
+                                                                         _lit(modelo.comparable(campo, v))]}]},
+                                  [{"campo": campo, "valor": _lit(modelo.comparable(campo, v)), "fuente": fuente,
+                                    "ts": ts, "uid": uid}], []]})
+    if "cedula" in s:
+        s["cedula_origen"] = {"$cond": [modelo.expr_vacio("cedula"), _lit(o.get("cedula_origen")), "$cedula_origen"]}
+        s["cedula_verificada"] = {"$cond": [modelo.expr_vacio("cedula"), _lit(bool(o.get("cedula_verificada"))),
+                                            {"$or": ["$cedula_verificada", {"$and": [
+                                                {"$eq": ["$cedula", _lit(cedula_o)]}, _lit(bool(o.get("cedula_verificada")))]}]}]}
+    if o.get("edad") is not None:
+        s["edad_ref"] = {"$cond": [modelo.expr_vacio("edad"), _lit(o.get("edad_ref")), "$edad_ref"]}
+    if o.get("jefe_hogar") is not None:
+        s["jefe_hogar"] = {"$ifNull": ["$jefe_hogar", _lit(o["jefe_hogar"])]}
+    for campo in FUSION_SIMPLES:
+        if not modelo.vacio(o.get(campo)):
+            s[campo] = {"$cond": [modelo.expr_vacio(campo), _lit(o[campo]), f"${campo}"]}
+    # La ubicación pasa en bloque (no mezclar el barrio de una con las coordenadas de la otra)
+    rango_o = _rango_ubicacion(o)
+    geo_o = {k: o.get(k, PERSONA_VACIA.get(k)) for k in GEO}
+    geo_o["punto"] = modelo.punto(o.get("lat"), o.get("lon"))
+    for campo in GEO:
+        s[campo] = {"$cond": [{"$gt": [rango_o, _EXPR_RANGO]}, _lit(geo_o[campo]), f"${campo}"]}
+    # Listas sin repetir
+    claves = [c for c in [o.get("clave_tramites"), *(o.get("claves_tramites") or [])] if c]
+    listas = {k: list(o.get(k) or []) for k in _LISTAS_UNION}
+    listas["claves_tramites"] = list(dict.fromkeys(claves))
+    for k, vals in listas.items():
+        if vals:
+            s[k] = modelo._expr_union(f"${k}", _lit(vals))
+    tramites = o.get("tramites") or []
+    con_id = [t for t in tramites if t.get("id_externo")]
+    sin_id = [t for t in tramites if not t.get("id_externo")]
+    if tramites:
+        actuales = {"$ifNull": ["$tramites", []]}
+        s["tramites"] = {"$concatArrays": [
+            actuales,
+            {"$filter": {"input": _lit(con_id), "as": "x", "cond": {"$not": [{"$in": [
+                "$$x.id_externo", {"$map": {"input": actuales, "as": "t", "in": "$$t.id_externo"}}]}]}}},
+            {"$filter": {"input": _lit(sin_id), "as": "x", "cond": {"$not": [{"$in": ["$$x", actuales]}]}}}]}
+    for k, llave in (("notas", "id"), ("asistencias", "reunion_id")):
+        if o.get(k):
+            actuales = {"$ifNull": [f"${k}", []]}
+            s[k] = {"$concatArrays": [actuales, {"$filter": {"input": _lit(o[k]), "as": "x", "cond": {"$not": [{"$in": [
+                f"$$x.{llave}", {"$map": {"input": actuales, "as": "t", "in": f"$$t.{llave}"}}]}]}}}]}
+    if o.get("origen"):
+        actuales = {"$ifNull": ["$origen", []]}
+        par = lambda v: {"f": f"{v}.fuente", "c": f"{v}.clave"}  # noqa: E731
+        s["origen"] = {"$concatArrays": [actuales, {"$filter": {"input": _lit(o["origen"]), "as": "x", "cond": {
+            "$not": [{"$in": [par("$$x"), {"$map": {"input": actuales, "as": "t", "in": par("$$t")}}]}]}}}]}
+    for k in ("procedencia", "extra", "no_disponible", "sensibles", "avance"):
+        if o.get(k):
+            s[k] = {"$mergeObjects": [_lit(o[k]), {"$ifNull": [f"${k}", {}]}]}
+    if o.get("requiere_actualizacion"):
+        s["requiere_actualizacion"] = {"$ifNull": ["$requiere_actualizacion", _lit(o["requiere_actualizacion"])]}
+    for k in ("reclamo_en_tramite", "lider"):
+        if o.get(k):
+            s[k] = True
+    if o.get("ultimo_contacto"):
+        s["ultimo_contacto"] = {"$max": ["$ultimo_contacto", _lit(o["ultimo_contacto"])]}
+    if o.get("creado_en"):
+        mas_viejo = {"$lt": [_lit(o["creado_en"]), {"$ifNull": ["$creado_en", "9999"]}]}
+        s["creado_por"] = {"$cond": [mas_viejo, _lit(o.get("creado_por")), "$creado_por"]}
+        s["creado_en"] = {"$cond": [mas_viejo, _lit(o["creado_en"]), "$creado_en"]}
+    s["telefonos"] = _expr_telefonos_fusion([{**modelo.telefono_nuevo(t.get("numero")), **t}
+                                             for t in modelo.telefonos_de(o) if t.get("numero") not in (None, "")])
+    o_alt = [a for a in o.get("alternos") or [] if isinstance(a, dict)]
+    s["__alt"] = {"$concatArrays": [_lit(o_alt), *alt]}
+    existentes = {"$map": {"input": {"$ifNull": ["$alternos", []]}, "as": "x", "in": {"c": "$$x.campo", "v": "$$x.valor"}}}
+    return [modelo.ETAPA_RECONCILIAR_TELEFONOS, {"$set": s},
+            {"$set": {"alternos": {"$slice": [{"$concatArrays": [{"$ifNull": ["$alternos", []]}, {"$filter": {
+                "input": "$__alt", "as": "y",
+                "cond": {"$not": [{"$in": [{"c": "$$y.campo", "v": "$$y.valor"}, existentes]}]}}}]}, -100]}}},
+            {"$unset": "__alt"}, modelo.ETAPA_DERIVAR_TELEFONOS, modelo.ETAPA_DERIVAR_VOTACION]
+
+
+def _consentimiento_unido(d: dict, o: dict) -> tuple[str, list[str], bool, str | None]:
+    """(estado, canales, habilita, fecha) que resulta de unir dos fichas: «no» gana; con dos «si», los canales comunes;
+    con uno, los suyos."""
+    a, b = ESTADO_EFECTIVO.get(d.get("consentimiento")), ESTADO_EFECTIVO.get(o.get("consentimiento"))
+    habilita = bool(d.get("contacto_habilitado") or o.get("contacto_habilitado"))
+    if "no" in (a, b):
+        fecha = d.get("consentimiento_fecha") if a == "no" else o.get("consentimiento_fecha")
+        return "no", [], False, fecha
+    if a == b == "si":
+        cb = _canales_vigentes(o)
+        return "si", [c for c in _canales_vigentes(d) if c in cb], habilita, d.get("consentimiento_fecha")
+    if "si" in (a, b):
+        x = d if a == "si" else o
+        return "si", _canales_vigentes(x), bool(x.get("contacto_habilitado")) or x.get("autorizacion_ultima") is None, \
+            x.get("consentimiento_fecha")
+    return "pendiente", [], False, None
+
+
+def _reapuntar_coincidencias(db: Database, origen: int, destino: int, marca: dict) -> None:
+    par = {"$or": [{"persona_id": origen, "candidato_id": destino}, {"persona_id": destino, "candidato_id": origen}]}
+    db.coincidencias.update_many({**par, "estado": "pendiente"}, {"$set": {"estado": "aceptada", **marca}})
+    cerrar = {"$set": {"estado": "cerrada", "resuelto_por": "sistema", "resuelto_en": ahora()}}
+    for c in db.coincidencias.find({"estado": "pendiente", "$or": [{"persona_id": origen}, {"candidato_id": origen}]}):
+        a = destino if c["persona_id"] == origen else c["persona_id"]
+        b = destino if c["candidato_id"] == origen else c["candidato_id"]
+        if a == b:
+            db.coincidencias.update_one({"_id": c["_id"]}, cerrar)
+            continue
+        try:
+            db.coincidencias.update_one({"_id": c["_id"], "estado": "pendiente"},
+                                        {"$set": {"persona_id": a, "candidato_id": b}})
+        except DuplicateKeyError:  # ese par ya existía con la otra ficha
+            db.coincidencias.update_one({"_id": c["_id"]}, cerrar)
+
+
+def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | None = None) -> None:
+    """Pasos 3 a 7 de la unión: se pueden repetir sin daño (la reparación al arrancar los repite)."""
+    origen = o["_id"]
+    uid = _uid_de(quien)
+    r = db.personas.update_one({"_id": destino, **ACTIVA}, _pipeline_fusion(o, origen, uid))
+    if r.matched_count == 0:
+        raise FusionImposible("La ficha de destino ya se unió o se suprimió")
+    for col in ("acercamientos", "autorizaciones", "solicitudes", "conflictos_cedula"):
+        db[col].update_many({"persona_id": origen}, {"$set": {"persona_id": destino}})
+    _reapuntar_coincidencias(db, origen, destino, {"resuelto_por": _nombre_de(quien), "resuelto_en": ahora()})
+    # Autorización: «no» gana; si el resultado difiere de lo que dicen los eventos unidos, un evento «fusion»
+    d = d_antes or db.personas.find_one({"_id": destino}) or {}
+    estado, canales, habilita, fecha = _consentimiento_unido(d, o)
+    vig = modelo.consentimiento_vigente(list(db.autorizaciones.find({"persona_id": destino})))
+    if (estado, sorted(canales)) != (vig["consentimiento"], sorted(vig["consentimiento_canales"])) \
+            and not (estado == "pendiente" and vig["consentimiento"] == "pendiente"):
+        db.autorizaciones.insert_one(autorizacion_doc(
+            db, destino, estado, "fusion", canales=canales, habilita=habilita, fecha_declarada=fecha,
+            mayor_declarado=bool(d.get("mayor_declarado") or o.get("mayor_declarado")), uid=uid,
+            usuario=_nombre_de(quien), rol=getattr(quien, "rol", None) or ("admin" if uid == 0 else None),
+            nota=f"Unión con la ficha {origen}"))
+    if estado == "no":
+        db.personas.update_one({"_id": destino}, {"$set": {"sensibles": {}, "sensibles_autorizados": []}})
+    derivar(db, [destino], reconciliar=False)
+    from .pipeline.importar import georreferenciar  # aquí: el pipeline usa este módulo
+    georreferenciar(db, [destino])
+    cerrar_coincidencias_imposibles(db, [destino])
+    db.personas.replace_one({"_id": origen, "fusionada_en": destino},
+                            {**persona_vacia(), "_id": origen, "nombre": "FUSIONADA", "fusionada_en": destino,
+                             "eliminado": False, "actualizado_en": ahora()})
+    db.personas.update_many({"fusionada_en": origen}, {"$set": {"fusionada_en": destino}})
+
+
+def fusionar(db: Database, destino: int, origen: int, quien: Any, ip: str | None = None) -> None:
+    """Une `origen` en `destino` (2.6): completa vacíos (lo distinto va a `alternos`), junta trámites, teléfonos,
+    listas, etiquetas, reuniones, notas y fuentes, reasigna lo ligado y combina la autorización («no» gana).
+
+    El origen se marca primero como unido (una sola operación) y queda solo como enlace, sin datos personales. Sin
+    transacciones: si se corta a mitad, la reparación al arrancar repite los pasos que faltan. 409 si una de las dos
+    ya no está activa o tienen cédulas distintas: dos cédulas distintas nunca se unen."""
     if destino == origen:
         return
-    d = db.personas.find_one({"_id": destino})
-    o = db.personas.find_one({"_id": origen})
-    if d is None or o is None:
-        return
-    # Libera primero las claves únicas del origen
-    db.personas.update_one({"_id": origen}, {"$set": {"cedula": None, "clave_tramites": None}})
-    if o.get("telefono") and d.get("telefono") and o["telefono"] != d["telefono"] and not d.get("telefono2"):
-        d["telefono2"] = o["telefono"]
-    # La ubicación pasa en bloque (no mezclar el barrio de una con las coordenadas de la otra). Gana la puesta a mano
-    # y, si ninguna lo es, la del destino salvo que no tenga punto.
-    if _rango_ubicacion(o) > _rango_ubicacion(d):
-        d.update({k: o.get(k, PERSONA_VACIA[k]) for k in GEO})
-    escalares = [k for k in PERSONA_VACIA if not isinstance(PERSONA_VACIA[k], (list, dict, bool))
-                 and k not in ("nombre", "nombre_norm", "fusionada_en", "completitud", "consentimiento", *GEO)]
-    completar_doc(d, {k: o.get(k) for k in escalares})
-    if d.get("consentimiento") == "pendiente" and o.get("consentimiento") in ("si", "no"):
-        d["consentimiento"], d["consentimiento_fecha"] = o["consentimiento"], o.get("consentimiento_fecha")
-    d["lider"] = bool(d.get("lider") or o.get("lider"))
-    d["extra"] = {**(o.get("extra") or {}), **(d.get("extra") or {})}
-    for k in ("fuentes", "listas", "etiquetas"):
-        d[k] = list(dict.fromkeys([*(d.get(k) or []), *(o.get(k) or [])]))
-    # Trámites: por su ID; los que no tienen ID, por su contenido completo
-    ya = {t["id_externo"] for t in d.get("tramites", []) if t.get("id_externo")}
-    d["tramites"] = list(d.get("tramites", []))
-    for t in o.get("tramites", []):
-        if (t["id_externo"] in ya) if t.get("id_externo") else (t in d["tramites"]):
+    reconciliar_consentimiento(db, [destino, origen])
+    d = db.personas.find_one({"_id": destino, **ACTIVA})
+    if d is None:
+        raise FusionImposible("La ficha de destino ya se unió o se suprimió")
+    filtro: dict = {"_id": origen, **ACTIVA}
+    if d.get("cedula"):
+        filtro["cedula"] = {"$in": [None, d["cedula"]]}
+    o = db.personas.find_one_and_update(filtro, [{"$set": {
+        "fusionada_en": destino, "cedula_en_traspaso": "$cedula", "cedula": None, "clave_tramites": None,
+        "claves_tramites": {"$concatArrays": [{"$ifNull": ["$claves_tramites", []]}, {"$cond": [
+            {"$and": [{"$ne": [{"$ifNull": ["$clave_tramites", None]}, None]},
+                      _no_esta("$claves_tramites", "$clave_tramites")]}, ["$clave_tramites"], []]}]}}}],
+        return_document=ReturnDocument.BEFORE)
+    if o is None:
+        otro = db.personas.find_one({"_id": origen}, {"cedula": 1, "fusionada_en": 1, "eliminado": 1})
+        if otro and not otro.get("eliminado") and otro.get("fusionada_en") is None:
+            raise FusionImposible("Las dos fichas tienen cédulas distintas: son personas diferentes")
+        raise FusionImposible("La ficha ya se unió o se suprimió")
+    try:
+        _unir_en(db, destino, o, quien, d)
+    except FusionImposible:
+        # El destino dejó de estar activo entre la lectura y la escritura: el origen vuelve a quedar como estaba
+        db.personas.update_one({"_id": origen, "fusionada_en": destino},
+                               {"$set": {"fusionada_en": None, "cedula": o.get("cedula")}, "$unset": {"cedula_en_traspaso": ""}})
+        raise
+    auditar(db, quien, "fusionar", "persona", destino, {"origen": origen}, ip)
+
+
+def reparar_fusiones(db: Database) -> int:
+    """Orígenes de uniones cortadas a mitad (todavía con datos o con `cedula_en_traspaso`): repite los pasos 3 a 7 sobre
+    la ficha activa en la que terminó la cadena de uniones."""
+    n = 0
+    for o in db.personas.find({"fusionada_en": {"$ne": None}, "eliminado": {"$ne": True},
+                               "$or": [{"cedula_en_traspaso": {"$exists": True}}, {"nombre": {"$ne": "FUSIONADA"}}]}):
+        destino, vistos = o["fusionada_en"], {o["_id"]}
+        while True:  # la ficha activa en la que terminó la cadena de uniones
+            if destino in vistos:
+                destino = None
+                break
+            vistos.add(destino)
+            d = db.personas.find_one({"_id": destino}, {"fusionada_en": 1, "eliminado": 1})
+            if d is None or d.get("eliminado"):
+                destino = None
+                break
+            if d.get("fusionada_en") is None:
+                break
+            destino = d["fusionada_en"]
+        if destino is None:
             continue
-        d["tramites"].append(t)
-    # Las claves de nombre de los dos grupos de trámites: así una importación posterior encuentra la ficha unida
-    claves = [d.get("clave_tramites"), *(d.get("claves_tramites") or []), o.get("clave_tramites"),
-              *(o.get("claves_tramites") or [])]
-    d["claves_tramites"] = list(dict.fromkeys(c for c in claves if c))
-    d["notas"] = [*d.get("notas", []), *o.get("notas", [])]
-    d["origen"] = [*d.get("origen", []), *o.get("origen", [])]
-    reus = {a["reunion_id"] for a in d.get("asistencias", [])}
-    d["asistencias"] = [*d.get("asistencias", []), *[a for a in o.get("asistencias", []) if a["reunion_id"] not in reus]]
-    d["ultimo_contacto"] = max(filter(None, [d.get("ultimo_contacto"), o.get("ultimo_contacto")]), default=None)
-    d["actualizado_en"] = ahora()
-    d["completitud"] = completitud(d)
-    db.personas.replace_one({"_id": destino}, d)
-    db.personas.replace_one({"_id": origen}, {**PERSONA_VACIA, "_id": origen, "nombre": "FUSIONADA", "fusionada_en": destino,
-                                              "eliminado": False, "actualizado_en": ahora()})
-    db.personas.update_many({"fusionada_en": origen}, {"$set": {"fusionada_en": destino}})
-    par = {"$or": [{"persona_id": origen, "candidato_id": destino}, {"persona_id": destino, "candidato_id": origen}]}
-    db.coincidencias.update_many({**par, "estado": "pendiente"}, {"$set": {"estado": "aceptada"}})
-    db.coincidencias.delete_many({"estado": "pendiente", "$or": [{"persona_id": origen}, {"candidato_id": origen}]})
-    cerrar_coincidencias_imposibles(db, [destino])
-    auditar(db, usuario, "fusionar", "persona", destino, {"origen": origen}, ip)
+        try:
+            _unir_en(db, destino, o, "sistema")
+            n += 1
+        except FusionImposible:
+            continue
+    return n
 
 
 def cerrar_coincidencias_imposibles(db: Database, ids: Iterable[int] | None = None) -> int:
@@ -412,26 +988,56 @@ def grupo_fusion(db: Database, pid: int) -> list[int]:
     return sorted(ids)
 
 
-def suprimir(db: Database, pid: int, usuario: str | None, ip: str | None = None) -> list[int]:
-    """Borra los datos personales de la ficha y de todas las unidas con ella, limpia su rastro en la auditoría y
-    deja las huellas (HMAC, sin datos en claro) para que una importación no la vuelva a crear."""
+FUENTES_CON_CEDULA = ("cedulas", "planilla")
+
+
+def cedulas_de(p: dict) -> set[str]:
+    """Todas las cédulas de una ficha: la actual, las anteriores, la que está en traspaso y la de cada registro de una
+    fuente con cédula."""
+    out = {p.get("cedula"), p.get("cedula_en_traspaso"), *(p.get("cedulas_anteriores") or [])}
+    for o in p.get("origen") or []:
+        out.add(o.get("cedula") or (o.get("clave") if o.get("fuente") == "cedulas" else None))
+    return {c for c in out if c}
+
+
+def limpiar_ligados(db: Database, ids: list[int], cedulas: Iterable[str] = ()) -> None:
+    """Lo ligado a fichas suprimidas: borra coincidencias, conflictos e idempotencia; anonimiza acercamientos y
+    autorizaciones (conservan uid, canal, resultado, efectivo y fecha para los indicadores) y deja las solicitudes
+    como constancia, sin su texto."""
+    cedulas = [c for c in cedulas if c]
+    db.coincidencias.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"candidato_id": {"$in": ids}}]})
+    db.conflictos_cedula.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"cedula": {"$in": cedulas}}]})
+    db.idempotencia.delete_many({"persona_id": {"$in": ids}})
+    db.acercamientos.update_many({"persona_id": {"$in": ids}}, {"$set": {
+        "persona_id": None, "telefono": None, "nota": None, "datos_dictados": [], "suprimido": True}})
+    db.autorizaciones.update_many({"persona_id": {"$in": ids}}, {"$set": {
+        "persona_id": None, "evidencia": None, "evidencia_fila": None, "nota": None, "suprimido": True}})
+    db.solicitudes.update_many({"persona_id": {"$in": ids}, "suprimido": {"$ne": True}},
+                               {"$set": {"descripcion": None, "respuesta": None, "suprimido": True}})
+
+
+def suprimir(db: Database, pid: int, quien: Any, ip: str | None = None) -> list[int]:
+    """Borra los datos personales de la ficha y de todas las unidas con ella, limpia su rastro en la auditoría y en lo
+    ligado (2.6) y deja las huellas (HMAC, sin datos en claro) para que una importación no la vuelva a crear."""
     ids = grupo_fusion(db, pid)
     pares: set[tuple[str, Any]] = set()
+    cedulas: set[str] = set()
     for p in db.personas.find({"_id": {"$in": ids}}):
-        pares.add(("cedula", p.get("cedula")))
-        pares.update(("cedula", o.get("clave")) for o in p.get("origen") or [] if o.get("fuente") == "cedulas")
+        cedulas |= cedulas_de(p)
         tramites = p.get("tramites") or []
         pares.update(("tramite", t.get("id_externo")) for t in tramites)
         pares.update(("contenido", t.get("clave")) for t in tramites if not t.get("id_externo"))
         nombres = [p.get("nombre_norm"), p.get("clave_tramites"), *(p.get("claves_tramites") or [])]
         fichas = [p.get("ficha"), *(t.get("ficha") for t in tramites)]
-        tels = [p.get("telefono"), p.get("telefono2"), *(x for t in tramites for x in (t.get("telefono") or "").split(";"))]
+        tels = [p.get("telefono"), p.get("telefono2"), *(t.get("numero") for t in p.get("telefonos") or []),
+                *(x for t in tramites for x in (t.get("telefono") or "").split(";"))]
         pares.update(pares_identidad(nombres, fichas, tels))
+    pares.update(("cedula", c) for c in cedulas)
     registrar_huellas(db, pares)
     for i in ids:
-        db.personas.replace_one({"_id": i}, {**PERSONA_VACIA, "_id": i, "nombre": "SUPRIMIDO", "nombre_norm": "",
+        db.personas.replace_one({"_id": i}, {**persona_vacia(), "_id": i, "nombre": "SUPRIMIDO", "nombre_norm": "",
                                              "eliminado": True, "actualizado_en": ahora()})
-    db.coincidencias.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"candidato_id": {"$in": ids}}]})
+    limpiar_ligados(db, ids, cedulas)
     db.auditoria.update_many({"entidad": "persona", "entidad_id": {"$in": ids}}, {"$set": {"detalle": None}})
-    auditar(db, usuario, "suprimir", "persona", pid, {"fichas": len(ids)}, ip)
+    auditar(db, quien, "suprimir", "persona", pid, {"fichas": len(ids)}, ip)
     return ids
