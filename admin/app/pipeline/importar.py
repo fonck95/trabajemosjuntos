@@ -267,7 +267,12 @@ def _actualizacion(c: dict) -> list[dict]:
     return [{"$set": s}]
 
 
-def importar(db: Database, rutas: list[Path], usuario: str | None = "sistema", nombres: list[str] | None = None) -> Resumen:
+def importar(db: Database, rutas: list[Path], usuario: str | None = "sistema", nombres: list[str] | None = None, *,
+             quien=None, capturado_por: int | None = None) -> Resumen:
+    """Importa los Excel de `rutas` (`nombres`: los nombres originales, para los mensajes de error).
+
+    `quien` (un `acceso.Quien`) es quien importa y `capturado_por` el uid del planillero que llenó la planilla: los
+    usa la auditoría por persona de la planilla. Por ahora no cambian nada."""
     res = Resumen()
     tramites: list[lectores.FilaTramite] = []
     cedulas: list[lectores.FilaCedula] = []

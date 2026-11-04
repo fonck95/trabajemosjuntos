@@ -19,7 +19,7 @@ from pymongo.errors import ConnectionFailure
 from starlette.middleware.gzip import GZipMiddleware
 
 from . import config, db
-from .api import calidad, personas, reuniones, sistema, tablero
+from .api import acercamientos, ajustes, calidad, personas, reuniones, sistema, tablero, usuarios, zonas
 from .seguridad import (CabecerasSeguras, Cortacircuitos, GuardiaApi, base_de, limpiar_al_iniciar, ruta_interna,
                         sin_base)
 
@@ -72,7 +72,7 @@ def crear_app(cfg: config.Config | None = None) -> FastAPI:
     app.add_middleware(GuardiaApi)
     app.add_middleware(GZipMiddleware, minimum_size=1024)
     app.add_middleware(CabecerasSeguras)
-    for m in (sistema, tablero, personas, reuniones, calidad):
+    for m in (sistema, tablero, personas, reuniones, calidad, usuarios, acercamientos, zonas, ajustes):
         app.include_router(m.r)
 
     @app.exception_handler(RequestValidationError)

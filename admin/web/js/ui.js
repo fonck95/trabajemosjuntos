@@ -123,6 +123,12 @@ const P = {
   menu: '<path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
   descargar: '<path d="M12 4v11m0 0-4-4m4 4 4-4M4 19h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   pin: '<path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 14.5 9 2.5 2.5 0 0 1 12 11.5z"/>',
+  trabajo: '<path d="M4 7h16v12H4zm5 0V4h6v3M4 12h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+  usuarios: '<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 10a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7.5M18 14a6 6 0 0 1 4 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  cuenta: '<path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm-8 9a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  zona: '<path d="m5 7 8-4 8 7-4 10-12-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="5" cy="7" r="2"/><circle cx="13" cy="3" r="2"/><circle cx="21" cy="10" r="2"/><circle cx="17" cy="20" r="2"/><circle cx="5" cy="17" r="2"/>',
+  telefono: '<path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.4 11.4 0 0 0 .6 3.6 1 1 0 0 1-.25 1z"/>',
+  acercamiento: '<path d="M4 4h16v12H9l-5 4zm4 5h8m-8 3h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
 };
 export const icono = (n) => crudo(`<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${P[n] || ''}</svg>`);
 
@@ -135,4 +141,7 @@ export const chipPrecision = (p) => {
   const clase = p === 'direccion' || p === 'manual' ? 'verde' : p ? 'azul' : 'ambar';
   return html`<span class="chip ${clase}">${precisionNombre(p)}</span>`;
 };
-export const FUENTES = { tramites: 'Trámites', cedulas: 'Base con cédula', reunion: 'Reunión', manual: 'Registro manual' };
+export const FUENTES = {
+  tramites: 'Trámites', cedulas: 'Base con cédula', reunion: 'Reunión', manual: 'Registro manual',
+  planilla: 'Planilla de campo', consultor: 'Consultor', otra_base: 'Otra base', panel: 'Panel',
+};

@@ -4,12 +4,22 @@ import { url } from './base.js';
 let csrf = null;
 let alExpirar = () => {};
 
-export const sesion = { usuario: null };
-export function configurar({ token, usuario, expira }) {
+// uid 0 y permiso «*» son del administrador. Sin `rol` (un servidor anterior a los usuarios) la sesión es la suya
+export const sesion = { usuario: null, uid: null, rol: null, permisos: [], nombre: null };
+export function configurar({ token, usuario, expira, uid, rol, permisos, nombre }) {
   csrf = token;
   sesion.usuario = usuario;
+  sesion.rol = rol || 'admin';
+  sesion.uid = uid ?? (rol ? null : 0);
+  sesion.permisos = Array.isArray(permisos) ? permisos : (rol ? [] : ['*']);
+  sesion.nombre = nombre ?? usuario ?? null;
   if (expira) alExpirar = expira;
 }
+
+/** ¿La sesión tiene el permiso? La interfaz solo oculta: el servidor decide. */
+export const puede = (permiso) => sesion.permisos.includes('*') || sesion.permisos.includes(permiso);
+
+export const SIN_CONEXION = 'Sin conexión. Lo escrito sigue aquí; intente de nuevo';
 
 export class ErrorApi extends Error {
   constructor(estado, detalle) {
@@ -20,9 +30,12 @@ export class ErrorApi extends Error {
   }
 }
 
-async function pedir(metodo, ruta, cuerpo, { formulario = false } = {}) {
+// Opciones de cada petición: `clave` va como Idempotency-Key (el formulario la genera al abrirse y la reusa en cada
+// reintento) y `timeout` (ms) corta la espera con «Sin conexión» sin perder lo escrito. Sin timeout se espera como antes.
+async function pedir(metodo, ruta, cuerpo, { formulario = false, clave = null, timeout = 0 } = {}) {
   const op = { method: metodo, credentials: 'same-origin', headers: {} };
   if (metodo !== 'GET') op.headers['X-CSRF-Token'] = csrf || '';
+  if (clave) op.headers['Idempotency-Key'] = clave;
   if (cuerpo !== undefined) {
     if (formulario) op.body = cuerpo;
     else {
@@ -30,27 +43,40 @@ async function pedir(metodo, ruta, cuerpo, { formulario = false } = {}) {
       op.body = JSON.stringify(cuerpo);
     }
   }
-  const r = await fetch(url(ruta), op);
-  if (r.status === 401 && ruta !== '/api/login' && ruta !== '/api/yo') {
-    alExpirar();
-    throw new ErrorApi(401, 'La sesión terminó');
+  let reloj = null;
+  if (timeout > 0) {
+    const control = new AbortController();
+    op.signal = control.signal;
+    reloj = setTimeout(() => control.abort(), timeout);
   }
-  const tipo = r.headers.get('content-type') || '';
-  const datos = tipo.includes('json') ? await r.json() : await r.text();
-  if (!r.ok) throw new ErrorApi(r.status, datos?.detail ?? datos);
-  return datos;
+  try {
+    const r = await fetch(url(ruta), op);
+    if (r.status === 401 && ruta !== '/api/login' && ruta !== '/api/yo') {
+      alExpirar();
+      throw new ErrorApi(401, 'La sesión terminó');
+    }
+    const tipo = r.headers.get('content-type') || '';
+    const datos = tipo.includes('json') ? await r.json() : await r.text();
+    if (!r.ok) throw new ErrorApi(r.status, datos?.detail ?? datos);
+    return datos;
+  } catch (e) {
+    if (e?.name === 'AbortError') throw new ErrorApi(0, SIN_CONEXION);
+    throw e;
+  } finally {
+    if (reloj) clearTimeout(reloj);
+  }
 }
 
 export const api = {
-  get: (ruta, params) => {
+  get: (ruta, params, op) => {
     const q = params ? '?' + new URLSearchParams(Object.entries(params).filter(([, v]) => v !== null && v !== undefined && v !== '')) : '';
-    return pedir('GET', ruta + q);
+    return pedir('GET', ruta + q, undefined, op);
   },
-  post: (ruta, cuerpo) => pedir('POST', ruta, cuerpo ?? {}),
-  patch: (ruta, cuerpo) => pedir('PATCH', ruta, cuerpo),
-  put: (ruta, cuerpo) => pedir('PUT', ruta, cuerpo),
-  del: (ruta) => pedir('DELETE', ruta),
-  subir: (ruta, formData) => pedir('POST', ruta, formData, { formulario: true }),
+  post: (ruta, cuerpo, op) => pedir('POST', ruta, cuerpo ?? {}, op),
+  patch: (ruta, cuerpo, op) => pedir('PATCH', ruta, cuerpo, op),
+  put: (ruta, cuerpo, op) => pedir('PUT', ruta, cuerpo, op),
+  del: (ruta, op) => pedir('DELETE', ruta, undefined, op),
+  subir: (ruta, formData, op) => pedir('POST', ruta, formData, { ...op, formulario: true }),
 };
 
 /** Descarga un archivo de la API (exportaciones) respetando la sesión. */

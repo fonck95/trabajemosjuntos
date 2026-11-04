@@ -11,6 +11,7 @@ Colecciones (todas con `_id` entero para que las direcciones del panel sean cort
 """
 from __future__ import annotations
 
+import copy
 import hashlib
 import hmac
 import json
@@ -155,12 +156,32 @@ def lugares(db: Database) -> list[Lugar]:
                   l.get("padre")) for l in db.lugares.find({}, {"geom": 0})]
 
 
-def auditar(db: Database, usuario: str | None, accion: str, entidad: str | None = None,
-            entidad_id: int | None = None, detalle: Any = None, ip: str | None = None) -> None:
-    db.auditoria.insert_one({
-        "ts": ahora(), "usuario": usuario, "accion": accion, "entidad": entidad, "entidad_id": entidad_id,
-        "detalle": json.dumps(detalle, ensure_ascii=False, default=str) if detalle is not None else None, "ip": ip,
-    })
+CLAVES_AUDITORIA = frozenset({"ts", "usuario", "accion", "entidad", "entidad_id", "detalle", "ip", "uid", "rol", "campos",
+                              "completados"})
+
+
+def auditar(db: Database, quien: Any, accion: str, entidad: str | None = None, entidad_id: int | None = None,
+            detalle: Any = None, ip: str | None = None, campos: list[str] | None = None,
+            completados: list[str] | None = None, **extra) -> None:
+    """Una entrada de la auditoría.
+
+    `quien` es el nombre de usuario (texto, como siempre) o un `acceso.Quien`: con él la entrada lleva además `uid`
+    (0 para el administrador) y `rol`, y su IP si no se pasa otra. `campos` y `completados` son solo nombres canónicos.
+    `extra` va al nivel superior: campos no personales que los indicadores necesitan aun después de una supresión
+    (`capturado_por`, `canal`, `resultado`, `estado`…)."""
+    choque = CLAVES_AUDITORIA & set(extra)
+    if choque:
+        raise ValueError(f"auditar: {sorted(choque)} no van en extra")
+    doc = {"ts": ahora(), "usuario": quien, "accion": accion, "entidad": entidad, "entidad_id": entidad_id,
+           "detalle": json.dumps(detalle, ensure_ascii=False, default=str) if detalle is not None else None, "ip": ip}
+    if quien is not None and not isinstance(quien, str):
+        doc.update(usuario=quien.usuario, uid=quien.uid, rol=quien.rol, ip=ip if ip is not None else quien.ip)
+    if campos is not None:
+        doc["campos"] = list(campos)
+    if completados is not None:
+        doc["completados"] = list(completados)
+    doc.update(extra)
+    db.auditoria.insert_one(doc)
 
 
 # ───────────────────────────── Completitud del perfil ─────────────────────────────
@@ -202,6 +223,11 @@ def recalcular_completitud(db: Database, ids: Iterable[int] | None = None) -> No
 
 
 # ───────────────────────────── Personas ─────────────────────────────
+
+def persona_vacia() -> dict:
+    """Copia independiente de PERSONA_VACIA: sus listas y objetos no se comparten con otras fichas."""
+    return copy.deepcopy(PERSONA_VACIA)
+
 
 def nueva_persona(db: Database, datos: dict, fuente: str) -> dict:
     doc = {**PERSONA_VACIA, "extra": {}, "fuentes": [fuente], "listas": [], "etiquetas": [], "tramites": [], "notas": [],
