@@ -124,6 +124,10 @@ El sitio público (Home, atlas, propuesta) sigue siendo estático. El panel es *
 4. *Settings → Networking → Generate Domain*. Abra la dirección, ingrese y suba los dos Excel en **Importar y exportar**.
 5. Compruebe en el detalle del despliegue que figuren el chequeo de salud en `/salud` y el comando con
    `--no-access-log`, y que en *Deploy Logs* no aparezcan líneas `GET /api/...` al buscar.
+6. Para entrar desde el sitio público: en *Variables* del servicio **del sitio estático** (no del panel) agregue
+   `PANEL_URL` = la dirección del paso 4 (por ejemplo `https://panel-xxxx.up.railway.app`) y vuelva a desplegarlo.
+   Al pie del Home aparece el enlace discreto **Ingreso del equipo**. Sin esa variable el enlace no aparece, y la
+   dirección no queda escrita en el repositorio. En GitHub Pages se usa la variable de repositorio `PANEL_URL`.
 
 ## Trabajar en local
 

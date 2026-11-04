@@ -5,7 +5,9 @@ copian tal cual. web/atlas.html se escribe sin <!doctype>/<head>/<body> porque t
 Claude, que añade ese esqueleto. Aquí se lo añadimos para que el sitio funcione solo.
 Uso: python3 scripts/build_data.py && python3 scripts/build_site.py
 """
+from html import escape
 import os
+import re
 import shutil
 from pathlib import Path
 
@@ -36,4 +38,19 @@ if base:
         print('imagen para compartir:', f'{base}/img/home/compartir.jpg')
     else:
         print('aviso: el Home no trae la etiqueta og:image esperada; no se completó la dirección')
+# Enlace discreto al panel de administración, que es otro servicio con su propia dirección. Solo aparece si el
+# despliegue define PANEL_URL (variable del servicio del sitio en Railway, o de repositorio en GitHub Pages): así la
+# dirección del panel no queda escrita en el repositorio público.
+home = out / 'index.html'
+h = home.read_text(encoding='utf-8')
+marca = '<!-- ingreso-equipo -->'
+panel = (os.environ.get('PANEL_URL') or '').strip().rstrip('/')
+if marca in h:
+    enlace = ''
+    if panel and re.fullmatch(r'https://[A-Za-z0-9.-]+(:\d+)?(/[^\s"<>]*)?', panel):
+        enlace = f'<a class="ingreso" href="{escape(panel)}/" rel="nofollow noopener">Ingreso del equipo</a>'
+        print('ingreso del equipo:', panel)
+    elif panel:
+        print('aviso: PANEL_URL debe ser una dirección https://…; no se agregó el enlace al panel')
+    home.write_text(h.replace(marca, enlace), encoding='utf-8')
 print('site/ listo:', sum(1 for _ in out.rglob('*')), 'archivos')
