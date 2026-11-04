@@ -60,10 +60,23 @@ jobs:
             cp "$f" /tmp/check.mjs
             node --check /tmp/check.mjs || { echo "error de sintaxis en $f"; exit 1; }
           done
-      - name: Ningún Excel ni .env en el repositorio
+      - name: El arranque no deja las búsquedas en los registros (--no-access-log)
+        run: |
+          for f in Procfile railpack.json railway.json; do
+            grep -q 'uvicorn app\.main:app' "$f" || { echo "$f no arranca el panel con uvicorn"; exit 1; }
+          done
+          # El log de acceso imprime la URL con ?q=: cédulas, teléfonos y nombres buscados irían a los registros de Railway
+          if grep -n 'uvicorn app\.main:app' Procfile railpack.json railway.json README.md | grep -v -- '--no-access-log'; then
+            echo 'Todo comando de arranque del panel lleva --no-access-log'
+            exit 1
+          fi
+      - name: Ningún Excel, CSV del panel ni .env en el repositorio
         working-directory: .
         run: |
-          if git ls-files | grep -E '(^|/)\.env$|^admin/.*\.(xlsx|xlsm|csv)$'; then
-            echo 'El panel no versiona datos personales ni credenciales'
+          # Hojas de cálculo en cualquier carpeta, .env y .env.* (salvo .env.example), CSV en admin/ o en la raíz
+          # y exportaciones del panel; sin distinguir mayúsculas. data/ sí versiona CSV públicos.
+          if git ls-files | grep -iE '\.(xlsx|xlsm|xlsb|xls|ods)$|(^|/)\.env(\..*)?$|^(admin/.*|[^/]*)\.csv$|(^|/)(asistentes-[^/]*\.csv|base-unica-[^/]*)$' \
+              | grep -viE '(^|/)\.env\.example$'; then
+            echo 'El repositorio es público: no versiona datos personales ni credenciales'
             exit 1
           fi
