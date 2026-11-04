@@ -37,7 +37,7 @@ def test_dispositivo_conocido_no_compite_por_el_freno_global(cliente):
     # Inundación desde muchas IPs: el freno global está tomado por el atacante
     ahora = datetime.now(timezone.utc)
     db.intentos.insert_many([{"ip": f"ataque-{i}", "ts": ahora, "ok": False} for i in range(500)])
-    db.intentos.update_one({"_id": "freno_global"}, {"$set": {"hasta": ahora + timedelta(seconds=50)}}, upsert=True)
+    db.intentos.update_one({"_id": "freno_global"}, {"$set": {"hasta": ahora + timedelta(hours=1)}}, upsert=True)
     assert _login(cliente, ip="198.51.100.7").status_code == 429            # navegador desconocido: espera
     assert _login(cliente, ip="198.51.100.7", Cookie=f"{seg.COOKIE_DISPOSITIVO}={marca}").status_code == 200
     # Una marca inventada no sirve, y el límite por IP sigue valiendo aun con marca
@@ -81,11 +81,11 @@ def test_bloqueo_global_no_deja_fuera_al_administrador(cliente):
     # Un ataque mucho mayor solo impone esperas cortas, nunca un bloqueo indefinido
     ahora = datetime.now(timezone.utc)
     db.intentos.insert_many([{"ip": f"ataque-{i}", "ts": ahora, "ok": False} for i in range(500)])
-    db.intentos.update_one({"_id": "freno_global"}, {"$set": {"hasta": ahora - timedelta(seconds=1)}})
+    db.intentos.update_one({"_id": "freno_global"}, {"$set": {"hasta": datetime(2000, 1, 1, tzinfo=timezone.utc)}})
     assert _login(cliente, clave="mala", ip="192.0.2.1").status_code == 401  # toma el turno
     r = _login(cliente, ip="198.51.100.77")
     assert r.status_code == 429 and 0 < int(r.headers["retry-after"]) <= seg.ESPERA_MAX_S
-    db.intentos.update_one({"_id": "freno_global"}, {"$set": {"hasta": datetime.now(timezone.utc) - timedelta(seconds=1)}})
+    db.intentos.update_one({"_id": "freno_global"}, {"$set": {"hasta": datetime(2000, 1, 1, tzinfo=timezone.utc)}})
     assert _login(cliente, ip="198.51.100.77").status_code == 200
 
 

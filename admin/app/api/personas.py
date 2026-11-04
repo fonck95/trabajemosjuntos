@@ -21,9 +21,12 @@ from .filtros import Filtros, filtro, filtros_query
 r = APIRouter(prefix="/api", tags=["personas"])
 
 ORDENES = {
-    "nombre": [("nombre_norm", ASCENDING)], "completitud": [("completitud", DESCENDING), ("nombre_norm", ASCENDING)],
-    "-completitud": [("completitud", ASCENDING), ("nombre_norm", ASCENDING)], "reciente": [("actualizado_en", DESCENDING)],
-    "contacto": [("ultimo_contacto", DESCENDING), ("nombre_norm", ASCENDING)],
+    # Siempre termina en _id: con empates (misma completitud, mismo segundo) las páginas no repiten ni saltan fichas
+    "nombre": [("nombre_norm", ASCENDING), ("_id", ASCENDING)],
+    "completitud": [("completitud", DESCENDING), ("nombre_norm", ASCENDING), ("_id", ASCENDING)],
+    "-completitud": [("completitud", ASCENDING), ("nombre_norm", ASCENDING), ("_id", ASCENDING)],
+    "reciente": [("actualizado_en", DESCENDING), ("_id", DESCENDING)],
+    "contacto": [("ultimo_contacto", DESCENDING), ("nombre_norm", ASCENDING), ("_id", ASCENDING)],
 }
 EDITABLES = {"nombre", "cedula", "sexo", "edad", "fecha_nacimiento", "telefono", "telefono2", "correo", "direccion",
              "ocupacion", "nivel_educativo", "personas_hogar", "lider", "consentimiento", "consentimiento_fecha",
@@ -95,6 +98,9 @@ def _persona(db: Database, pid: int) -> dict:
     d["notas"] = sorted(({"id": n["id"], "texto": n["texto"], "autor": n.get("autor"), "creado_en": n["creado_en"],
                           "reunion_id": n.get("reunion_id"), "reunion": (reus.get(n.get("reunion_id")) or {}).get("titulo")}
                          for n in p.get("notas", [])), key=lambda n: n["creado_en"], reverse=True)
+    # Notas del mismo segundo: la más reciente primero (se agregan al final de la lista, así que gana el orden inverso)
+    orden = {n["id"]: i for i, n in enumerate(p.get("notas", []))}
+    d["notas"].sort(key=lambda n: (n["creado_en"], orden.get(n["id"], 0)), reverse=True)
     d["origen"] = [{"fuente": o["fuente"], "datos": o["datos"]} for o in p.get("origen", [])]
     bd.cerrar_coincidencias_imposibles(db, [pid])
     coin = []

@@ -41,10 +41,14 @@ def cliente(cfg):
         pytest.skip("No hay MongoDB para las pruebas de la API")
     from fastapi.testclient import TestClient
     from app.main import crear_app
+    import pymongo
     app = crear_app(cfg)
-    with TestClient(app) as c:
-        yield c
-        app.state.cliente.drop_database(cfg.mongodb_db)
+    try:
+        with TestClient(app) as c:
+            yield c
+    finally:  # aunque falle el arranque o la prueba, no deja bases prueba_* huérfanas
+        with pymongo.MongoClient(URI, serverSelectionTimeoutMS=3000) as m:
+            m.drop_database(cfg.mongodb_db)
 
 
 @pytest.fixture

@@ -85,3 +85,21 @@ def test_fusion_conserva_la_mejor_ubicacion(sesion, tmp_path):
     unida = sesion.post(f"/api/personas/{zoila['id']}/fusionar", json={"con_id": otra["id"]}).json()
     # La placa exacta del casco gana sobre una vereda elegida a mano en la otra ficha
     assert unida["geo_precision"] == "direccion" and unida["lugar_nombre"] != vereda["nombre"]
+
+
+def test_paginacion_estable_con_empates(sesion):
+    # 30 fichas con la misma completitud: recorrer las páginas no repite ni salta ninguna
+    for i in range(30):
+        sesion.post("/api/personas", json={"nombre": "Persona Inventada Empate", "forzar": True})
+    vistos = []
+    for pagina in (1, 2, 3):
+        r = sesion.get("/api/personas", params={"orden": "completitud", "pagina": pagina, "por_pagina": 10}).json()
+        vistos += [f["id"] for f in r["filas"]]
+    assert len(vistos) == len(set(vistos)) == 30
+
+
+def test_notas_del_mismo_segundo_la_ultima_primero(sesion):
+    p = sesion.post("/api/personas", json={"nombre": "Persona Inventada Con Notas", "forzar": True}).json()
+    for texto in ("primera", "segunda", "tercera"):
+        ficha = sesion.post(f"/api/personas/{p['id']}/notas", json={"texto": texto}).json()
+    assert [n["texto"] for n in ficha["notas"]] == ["tercera", "segunda", "primera"]

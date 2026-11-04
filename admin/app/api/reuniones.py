@@ -66,7 +66,8 @@ def _reunion(db: Database, rid: int) -> dict:
                       "lugar": (lugares.get(p.get("lugar_id")) or {}).get("nombre") or p.get("lugar_texto"),
                       "completitud": p.get("completitud", 0), "rol": a.get("rol"), "nota": a.get("nota"),
                       "creado_en": a.get("creado_en"), "etiquetas": [e["nombre"] for e in ets]})
-    d["asistentes"] = sorted(asist, key=lambda a: a["creado_en"] or "", reverse=True)
+    # Con la misma marca de segundo, el último registrado primero (el orden de llegada desempata)
+    d["asistentes"] = [a for _, a in sorted(enumerate(asist), key=lambda x: (x[1]["creado_en"] or "", x[0]), reverse=True)]
     d["necesidades"] = [{"nombre": n, "n": c} for n, c in necesidades.most_common()]
     return d
 
