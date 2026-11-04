@@ -268,14 +268,16 @@ def _importar_tramites(alm: _Almacen, filas, res: Resumen) -> None:
     for g in grupos:
         ids = [f.id_externo for f in g.filas if f.id_externo]
         nombres = {g.clave, *(tx.nombre_norm(n) for n in g.nombres)}
-        if any(alm.suprimida("clave", n) for n in nombres) or any(alm.suprimida("tramite", i) for i in ids):
-            # Persona suprimida: no se vuelve a crear, y sus otras escrituras e IDs quedan bloqueados también
-            alm.bloquear([*(("clave", n) for n in nombres), *(("tramite", i) for i in ids)])
+        contenido = {id(f): clave_contenido(f.ficha, f.fecha, f.tramite, tx.nombre_norm(f.nombre))
+                     for f in g.filas if not f.id_externo}
+        # Una persona suprimida se reconoce por sus trámites o por ficha/teléfono + nombre, nunca por el nombre solo
+        identidad = [*(("tramite", i) for i in ids), *(("contenido", k) for k in contenido.values()),
+                     *bd.pares_identidad(nombres, (f.ficha for f in g.filas), g.telefonos)]
+        if any(alm.suprimida(t, v) for t, v in identidad):
+            alm.bloquear(identidad)  # sus trámites y datos nuevos quedan bloqueados también
             res.suprimidas_omitidas += len(g.filas)
             continue
         u = g.ultima
-        contenido = {id(f): clave_contenido(f.ficha, f.fecha, f.tramite, tx.nombre_norm(f.nombre))
-                     for f in g.filas if not f.id_externo}
         pid = alm.por_clave.get(g.clave)
         if pid is None:  # ¿alguno de sus trámites ya está en la base (p. ej. tras una fusión)?
             pid = next((alm.por_tramite[i] for i in ids if i in alm.por_tramite), None)
@@ -330,7 +332,9 @@ def _importar_cedulas(alm: _Almacen, filas, imp_id: int, res: Resumen) -> None:
     db = alm.db
     nuevas, repetidas, vistas = [], [], set()
     for f in filas:
-        if alm.suprimida("cedula", f.cedula) or alm.suprimida("clave", f.nombre):
+        identidad = bd.pares_identidad([f.nombre], [], f.telefonos)
+        if alm.suprimida("cedula", f.cedula) or any(alm.suprimida(t, v) for t, v in identidad):
+            alm.bloquear([("cedula", f.cedula), *identidad])
             res.suprimidas_omitidas += 1
             continue
         pid = alm.por_cedula.get(f.cedula)
@@ -358,21 +362,15 @@ def _cruzar_cedulas(alm: _Almacen, nuevas, imp_id: int, res: Resumen) -> None:
         tels |= {t for tr in d.get("tramites", []) for t in (tr.get("telefono") or "").split(";") if t}
         cands.append(_Cand(d["_id"], d["nombre"], tels, {d["correo"]} if d.get("correo") else set()))
     resultados = cruce.cruzar(cands, nuevas)
-    # Varias cédulas que se unirían solas con la misma ficha: gana la de mayor puntaje, sin importar el orden del
-    # archivo. Si empatan del todo, ninguna se une sola y todas van a revisión.
+    # Varias cédulas que se unirían solas con la misma ficha son un conflicto que decide una persona: ninguna se une
+    # sola y todas van a revisión contra esa ficha (sin importar el orden del archivo ni pequeñas diferencias de
+    # puntaje: dos personas distintas no pueden tener la misma ficha de trámites).
     por_cand: dict[int, list] = defaultdict(list)
     for r in resultados:
         if r.estado == "auto" and r.mejor:
             por_cand[cands[r.mejor.indice].id].append(r)
-    ganadoras, tomados = set(), set()
-    def puntos(r: cruce.ResultadoCruce) -> tuple[float, float]:
-        return r.mejor.puntaje, r.mejor.puntaje_nombre
-
-    for cid, rs in por_cand.items():
-        rs.sort(key=puntos, reverse=True)
-        if len(rs) == 1 or puntos(rs[0]) > puntos(rs[1]):
-            ganadoras.add(id(rs[0]))
-            tomados.add(cid)
+    ganadoras = {id(rs[0]) for rs in por_cand.values() if len(rs) == 1}
+    tomados = {cid for cid, rs in por_cand.items() if len(rs) == 1}
     for r in resultados:
         f, m = r.fila, r.mejor
         if id(r) in ganadoras:

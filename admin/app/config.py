@@ -20,19 +20,21 @@ log = logging.getLogger("panel")
 def _cargar_env(ruta: Path) -> None:
     """Lee KEY=valor de un .env sin pisar variables que ya existan en el entorno.
 
-    Un valor sin comillas termina antes de un comentario en línea (` # ...`); entre comillas se toma tal cual."""
+    Un valor sin comillas termina antes de un comentario en línea (` # ...`, con un espacio antes); un «#» pegado o
+    al inicio es parte del valor (claves como `#abc`). Entre comillas se toma tal cual."""
     if not ruta.is_file():
         return
     for linea in ruta.read_text(encoding="utf-8").splitlines():
         linea = linea.strip()
         if not linea or linea.startswith("#") or "=" not in linea:
             continue
-        clave, _, valor = linea.partition("=")
-        clave, valor = clave.strip(), valor.strip()
+        clave, _, crudo = linea.partition("=")
+        clave, valor = clave.strip(), crudo.strip()
         if valor[:1] in ("'", '"') and valor.find(valor[0], 1) > 0:
             valor = valor[1:valor.find(valor[0], 1)]
         else:
-            valor = re.sub(r"(?:^|\s+)#.*$", "", valor)
+            # « # comentario» tras un espacio (o tras «= ») se descarta; un «#» pegado al «=» es parte del valor
+            valor = "" if valor.startswith("#") and crudo[:1].isspace() else re.sub(r"\s+#.*$", "", valor)
         os.environ.setdefault(clave, valor)
 
 

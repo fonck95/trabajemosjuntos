@@ -4,10 +4,12 @@ import { $, $$, FUENTES, aviso, chipPrecision, debounce, fecha, html, icono, mon
 import { formularioNuevaPersona } from './comunes.js';
 
 const FILTROS = ['q', 'zona', 'lugar_id', 'fuente', 'lista', 'etiqueta', 'con_cedula', 'con_telefono', 'precision', 'asistio',
-  'consentimiento', 'lider', 'sexo', 'completitud_max', 'ids', 'reunion_id'];
+  'consentimiento', 'lider', 'sexo', 'completitud_max', 'ids', 'ids_total', 'reunion_id'];
 // Filtros que solo llegan por enlace (sin control propio): se muestran como chip para verlos y quitarlos
 const OCULTOS = {
-  ids: () => 'Selección del mapa',
+  // La lista de un hexágono lleva como mucho 500 ids: el chip dice cuántas de cuántas se ven
+  ids: (v, f) => (Number(f.ids_total) > (v || '').split(',').length
+    ? `Selección del mapa: ${num((v || '').split(',').length)} de ${num(Number(f.ids_total))}` : 'Selección del mapa'),
   lider: () => 'Solo líderes',
   sexo: (v) => (v === 'F' ? 'Mujeres' : v === 'M' ? 'Hombres' : `Sexo: ${v}`),
   completitud_max: (v) => `Perfil hasta ${v} %`,
@@ -38,11 +40,11 @@ export async function vistaPersonas(el, { q, ir }) {
       <select class="entrada" data-f="lista">${opciones([['', 'Lista'], ...cat.listas.map((l) => [l, l])], f.lista)}</select>
       <select class="entrada" data-f="con_cedula">${opciones([['', 'Cédula'], ['1', 'Con cédula'], ['0', 'Sin cédula']], f.con_cedula)}</select>
       <select class="entrada" data-f="con_telefono">${opciones([['', 'Celular'], ['1', 'Con celular'], ['0', 'Sin celular']], f.con_telefono)}</select>
-      <select class="entrada" data-f="precision">${opciones([['', 'Ubicación'], ['exacta', 'Dirección exacta'], ['aproximada', 'Aproximada'], ['sin', 'Sin ubicar']], f.precision)}</select>
+      <select class="entrada" data-f="precision">${opciones([['', 'Ubicación'], ['exacta', 'Dirección exacta'], ['aproximada', 'Aproximada'], ['ubicada', 'Con ubicación'], ['sin', 'Sin ubicar']], f.precision)}</select>
       <select class="entrada" data-f="asistio">${opciones([['', 'Reuniones'], ['1', 'Asistió'], ['0', 'Sin reunión']], f.asistio)}</select>
       <select class="entrada" data-f="consentimiento">${opciones([['', 'Autorización'], ['si', 'Autorizó'], ['pendiente', 'Pendiente'], ['no', 'No autorizó']], f.consentimiento)}</select>
       <select class="entrada" id="orden">${opciones([['nombre', 'Orden: nombre'], ['-completitud', 'Menos completos'], ['completitud', 'Más completos'], ['contacto', 'Contacto reciente'], ['reciente', 'Editados recientemente']], orden)}</select>
-      ${Object.entries(OCULTOS).filter(([k]) => f[k]).map(([k, t]) => html`<button class="chip rojo" data-quitar="${k}" aria-label="Quitar filtro: ${t(f[k])}">${t(f[k])} ✕</button>`)}
+      ${Object.entries(OCULTOS).filter(([k]) => f[k]).map(([k, t]) => html`<button class="chip rojo" data-quitar="${k}" aria-label="Quitar filtro: ${t(f[k], f)}">${t(f[k], f)} ✕</button>`)}
     </div>
     <div class="envoltura-tabla"><table class="tabla"><thead><tr>
       <th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Barrio / vereda</th><th>Ubicación</th><th>Fuentes</th><th class="num">Reuniones</th><th>Perfil</th>
@@ -59,7 +61,10 @@ export async function vistaPersonas(el, { q, ir }) {
     $('#filas', el).innerHTML = String(html`${Array.from({ length: 8 }, () => html`<tr><td colspan="8"><div class="esqueleto" style="height:18px"></div></td></tr>`)}`);
     const d = await api.get('/api/personas', params);
     if (mio !== turno || !el.isConnected) return; // llegó tarde: ya se pidió otra página u otros filtros
-    $('#total', el).textContent = `${num(d.total)} personas con estos filtros`;
+    const recortada = f.ids && Number(f.ids_total) > d.total;
+    $('#total', el).textContent = recortada
+      ? `${num(d.total)} de las ${num(Number(f.ids_total))} personas del hexágono (la selección del mapa llega hasta 500)`
+      : `${num(d.total)} personas con estos filtros`;
     montar($('#filas', el), d.filas.length ? html`${d.filas.map((p) => html`<tr data-id="${p.id}">
         <td><a class="nombre" href="/personas/${p.id}" data-ruta>${p.nombre}</a>${p.lider ? html`<span class="chip rojo">Líder</span> ` : ''}${p.ultimo_contacto ? html`<span class="sec">Último contacto ${fecha(p.ultimo_contacto)}</span>` : ''}</td>
         <td>${p.cedula || html`<span class="sec">—</span>`}</td>
@@ -80,7 +85,11 @@ export async function vistaPersonas(el, { q, ir }) {
   $('#q', el).addEventListener('input', buscar);
   for (const s of $$('[data-f]', el)) s.addEventListener('change', () => { f[s.dataset.f] = s.value || undefined; pagina = 1; cargar(); });
   $('#orden', el).addEventListener('change', (e) => { orden = e.target.value; pagina = 1; cargar(); });
-  for (const b of $$('[data-quitar]', el)) b.addEventListener('click', () => { delete f[b.dataset.quitar]; b.remove(); pagina = 1; cargar(); });
+  for (const b of $$('[data-quitar]', el)) b.addEventListener('click', () => {
+    delete f[b.dataset.quitar];
+    if (b.dataset.quitar === 'ids') delete f.ids_total;
+    b.remove(); pagina = 1; cargar();
+  });
   $('#paginacion', el).addEventListener('click', (e) => { const b = e.target.closest('[data-p]'); if (b) { pagina = Number(b.dataset.p); cargar(); el.scrollIntoView(); } });
   // El nombre es un enlace (teclado, lector de pantalla, abrir en otra pestaña); el resto de la fila también abre la ficha
   $('#filas', el).addEventListener('click', (e) => {

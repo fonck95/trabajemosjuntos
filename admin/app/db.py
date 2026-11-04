@@ -218,6 +218,17 @@ def completar_doc(doc: dict, datos: dict) -> list[str]:
     return cambios
 
 
+def _rango_ubicacion(p: dict) -> int:
+    """Qué tan confiable es la ubicación de una ficha, para quedarse con la mejor al unir dos."""
+    if p.get("geo_manual") in ("punto", True):
+        return 4
+    if p.get("geo_precision") == "direccion":
+        return 3
+    if p.get("geo_manual") == "lugar":
+        return 2
+    return 1 if p.get("lat") is not None else 0
+
+
 def fusionar(db: Database, destino: int, origen: int, usuario: str | None, ip: str | None = None) -> None:
     """Une `origen` en `destino`: completa vacíos y junta trámites, listas, etiquetas, reuniones, notas y fuentes.
 
@@ -234,7 +245,7 @@ def fusionar(db: Database, destino: int, origen: int, usuario: str | None, ip: s
         d["telefono2"] = o["telefono"]
     # La ubicación pasa en bloque (no mezclar el barrio de una con las coordenadas de la otra). Gana la puesta a mano
     # y, si ninguna lo es, la del destino salvo que no tenga punto.
-    if not d.get("geo_manual") and (o.get("geo_manual") or (d.get("lat") is None and o.get("lat") is not None)):
+    if _rango_ubicacion(o) > _rango_ubicacion(d):
         d.update({k: o.get(k, PERSONA_VACIA[k]) for k in GEO})
     escalares = [k for k in PERSONA_VACIA if not isinstance(PERSONA_VACIA[k], (list, dict, bool))
                  and k not in ("nombre", "nombre_norm", "fusionada_en", "completitud", "consentimiento", *GEO)]
@@ -310,13 +321,32 @@ def clave_supresion(db: Database) -> bytes:
     return bytes.fromhex(m["valor"])
 
 
+def _normalizar_huella(tipo: str, valor: Any) -> str:
+    if tipo == "cedula":
+        return tx.cedula(valor) or str(valor).strip()
+    if tipo == "clave":
+        return tx.nombre_norm(valor)
+    if tipo in ("ficha_nombre", "nombre_tel"):  # (ficha o teléfono, nombre): identifican a la persona, no al nombre
+        dato, nombre = valor
+        dato, nombre = str(dato or "").strip(), tx.nombre_norm(nombre)
+        return f"{dato}|{nombre}" if dato and nombre else ""
+    return str(valor).strip()
+
+
 def huella(clave: bytes, tipo: str, valor: Any) -> str | None:
-    """HMAC-SHA256 de una cédula, una clave de nombre o un ID de trámite ya normalizados. None si está vacío."""
-    if valor in (None, ""):
+    """HMAC-SHA256 de un dato de identidad ya normalizado: cédula, ID o contenido de un trámite, ficha+nombre o
+    teléfono+nombre. Nunca el nombre solo, que bloquearía a los homónimos. None si está vacío."""
+    if valor in (None, "", ()):
         return None
-    v = (tx.cedula(valor) or str(valor).strip()) if tipo == "cedula" else tx.nombre_norm(valor) if tipo == "clave" \
-        else str(valor).strip()
+    v = _normalizar_huella(tipo, valor)
     return hmac.new(clave, f"{tipo}:{v}".encode(), hashlib.sha256).hexdigest() if v else None
+
+
+def pares_identidad(nombres: Iterable[str], fichas: Iterable[str], telefonos: Iterable[str]) -> list[tuple[str, Any]]:
+    """Pares (tipo, valor) que identifican a una persona por ficha+nombre y teléfono+nombre."""
+    nombres = {n for n in nombres if n}
+    return [("ficha_nombre", (f, n)) for f in set(fichas) if f for n in nombres] + \
+           [("nombre_tel", (t, n)) for t in set(telefonos) if t for n in nombres]
 
 
 def registrar_huellas(db: Database, pares: Iterable[tuple[str, Any]], clave: bytes | None = None) -> set[str]:
@@ -354,10 +384,13 @@ def suprimir(db: Database, pid: int, usuario: str | None, ip: str | None = None)
     for p in db.personas.find({"_id": {"$in": ids}}):
         pares.add(("cedula", p.get("cedula")))
         pares.update(("cedula", o.get("clave")) for o in p.get("origen") or [] if o.get("fuente") == "cedulas")
-        pares.update(("clave", c) for c in [p.get("clave_tramites"), *(p.get("claves_tramites") or [])])
-        if "tramites" in (p.get("fuentes") or []):
-            pares.add(("clave", p.get("nombre_norm")))
-        pares.update(("tramite", t.get("id_externo")) for t in p.get("tramites") or [])
+        tramites = p.get("tramites") or []
+        pares.update(("tramite", t.get("id_externo")) for t in tramites)
+        pares.update(("contenido", t.get("clave")) for t in tramites if not t.get("id_externo"))
+        nombres = [p.get("nombre_norm"), p.get("clave_tramites"), *(p.get("claves_tramites") or [])]
+        fichas = [p.get("ficha"), *(t.get("ficha") for t in tramites)]
+        tels = [p.get("telefono"), p.get("telefono2"), *(x for t in tramites for x in (t.get("telefono") or "").split(";"))]
+        pares.update(pares_identidad(nombres, fichas, tels))
     registrar_huellas(db, pares)
     for i in ids:
         db.personas.replace_one({"_id": i}, {**PERSONA_VACIA, "_id": i, "nombre": "SUPRIMIDO", "nombre_norm": "",

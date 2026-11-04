@@ -20,9 +20,9 @@ from pymongo.errors import DuplicateKeyError
 from .. import db as bd
 from ..pipeline import importar as imp
 from ..pipeline import texto as tx
-from ..seguridad import (USUARIO_DESCONOCIDO, Admin, cerrar_sesion, credenciales_validas, crear_sesion, ip_de,
-                         obtener_db, requiere_admin, reservar_intento, resolver_intento, sesion_actual,
-                         usuario_correcto)
+from ..seguridad import (Admin, USUARIO_DESCONOCIDO, cerrar_sesion, crear_sesion, credenciales_validas,
+                         dispositivo_conocido, ip_de, marcar_dispositivo, obtener_db, requiere_admin,
+                         reservar_intento, resolver_intento, sesion_actual, usuario_correcto)
 from .filtros import Filtros, filtro, filtros_query
 from .personas import mapa_lugares
 
@@ -40,7 +40,7 @@ def login(body: LoginIn, request: Request, response: Response, db: Database = De
     if not cfg.usuario or not cfg.clave:
         raise HTTPException(503, "El panel no tiene credenciales: defina las variables ADMIN y password")
     ip = ip_de(request)
-    iid, espera = reservar_intento(db, ip)
+    iid, espera = reservar_intento(db, ip, conocido=dispositivo_conocido(cfg, request))
     if iid is None:
         texto = f"{espera} segundos" if espera < 120 else f"{-(-espera // 60)} minutos"
         raise HTTPException(429, f"Demasiados intentos. Espere {texto}.", headers={"Retry-After": str(espera)})
@@ -54,6 +54,7 @@ def login(body: LoginIn, request: Request, response: Response, db: Database = De
                    detalle={"usuario_correcto": correcto}, ip=ip)
         raise HTTPException(401, "Usuario o clave incorrectos")
     csrf = crear_sesion(db, cfg, response, cfg.usuario, request)
+    marcar_dispositivo(cfg, response)
     bd.auditar(db, cfg.usuario, "ingreso", ip=ip)
     return {"usuario": cfg.usuario, "csrf": csrf}
 

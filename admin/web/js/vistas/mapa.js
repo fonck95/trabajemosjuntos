@@ -201,13 +201,14 @@ export async function vistaMapa(el, { q, ir }) {
       if (p[3] === 0) exactas++;
     }
     const top = [...porLugar.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
-    // Cada barrio enlaza al directorio con los filtros del mapa; «Sin barrio o vereda» usa lugar_id=0
+    // Cada barrio enlaza al directorio con los filtros del mapa y solo a personas con ubicación (las que el mapa
+    // cuenta); «Sin barrio o vereda» usa lugar_id=0
     const fila = (id, n) => html`<span>${nombreLugar(id)}</span>
         <span><span class="b" style="width:${(n / (top[0]?.[1] || 1)) * 100}%"></span></span><span class="n">${num(n)}</span>`;
     montar($('#en-vista', el), html`<div class="gran-cifra" style="font-size:30px">${num(dentro.length)}</div>
       <div class="sec">personas · ${pct(exactas, dentro.length)} % con dirección exacta</div>
       <div class="lista-barras" style="margin-top:12px">${top.map(([id, n]) =>
-        html`<a class="f" href="/personas?${new URLSearchParams({ ...estado.filtros, lugar_id: id || 0 })}" data-ruta>${fila(id, n)}</a>`)}</div>`);
+        html`<a class="f" href="/personas?${new URLSearchParams({ ...estado.filtros, lugar_id: id || 0, precision: estado.filtros.precision || 'ubicada' })}" data-ruta>${fila(id, n)}</a>`)}</div>`);
   }
 
   function mostrarHex(props, lngLat) {
@@ -216,7 +217,7 @@ export async function vistaMapa(el, { q, ir }) {
     montar($('#detalle', el), html`<h3>Hexágono seleccionado</h3>
       <div class="gran-cifra" style="font-size:30px">${num(props.n)}</div><div class="sec">personas en ~${radioActual() * 2} m de ancho</div>
       <div class="lista-barras" style="margin-top:10px">${lugares.map(([id, n]) => html`<div class="f"><span>${nombreLugar(id)}</span><span></span><span class="n">${num(n)}</span></div>`)}</div>
-      <a class="btn chico" style="margin-top:12px" href="/personas?ids=${ids}" data-ruta>Ver la lista</a>
+      <a class="btn chico" style="margin-top:12px" href="/personas?ids=${ids}&ids_total=${props.n}" data-ruta>Ver la lista</a>
       ${props.n > MAX_IDS ? html`<p class="sec" style="margin:8px 0 0">La lista muestra ${num(MAX_IDS)} de ${num(props.n)} personas. Acérquese o elija un hexágono más pequeño para verlas todas.</p>` : ''}`);
     popup.setLngLat(lngLat).setHTML(`<b>${esc(num(props.n))} personas</b><br><span class="sec">${esc(lugares.map(([id]) => nombreLugar(id)).join(', '))}</span>`).addTo(map);
   }
