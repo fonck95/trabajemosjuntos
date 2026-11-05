@@ -712,7 +712,7 @@ def test_mascaras():
 
 
 def test_roles_y_permisos():
-    assert acceso.ROLES == {"admin", "planillero", "consultor"}
+    assert acceso.ROLES == {"admin", "coordinador", "planillero", "consultor"}  # adenda 1: rol coordinador
     assert acceso.PERMISOS["admin"] == frozenset({"*"})
     planillero = {"cuenta", "catalogos.ver", "insignias", "trabajo.ver", "personas.listar", "personas.buscar",
                   "personas.ver", "personas.crear", "personas.editar", "personas.parecidas", "personas.notas",

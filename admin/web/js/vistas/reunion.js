@@ -1,30 +1,35 @@
-// Modo reunión: buscar o registrar asistentes en segundos y enriquecer su perfil en el momento.
-import { api, descargar } from '../api.js';
+// Modo reunión (7.13): buscar o registrar asistentes en segundos y completar su perfil en el momento con «Completar»
+// (el mismo de Habitantes). La lista de asistentes llega con la proyección de fila del rol.
+import { api, descargar, nuevaClave, puede, sesion } from '../api.js';
 import { $, aviso, avisoError, confirmar, datosForm, debounce, dialogo, fecha, html, icono, montar, num, titulo } from '../ui.js';
-import { formularioNuevaPersona } from './comunes.js';
+import { administra, dialogoCompletar, formularioNuevaPersona, textoCedula, textoTelefono } from './comunes.js';
 
 export async function vistaReunion(el, { params, ir }) {
   const id = Number(params[0]);
-  let [r, cat] = await Promise.all([api.get(`/api/reuniones/${id}`), api.get('/api/catalogos')]);
+  let [r, cat] = await Promise.all([api.get(`/api/reuniones/${id}`), api.catalogos()]);
   if (!el.isConnected) return; // mientras cargaba se pidió otra vista
-  const necesidades = cat.etiquetas.filter((e) => e.grupo === 'necesidad');
+  const adm = administra();
+  const propia = r.creado_por_uid != null && r.creado_por_uid === sesion.uid;
+  const editable = adm || propia;
+  const lineaFila = (p) => [textoCedula(p), textoTelefono(p), titulo(p.lugar || '')].filter(Boolean).join(' · ');
 
   montar(el, html`
     <div class="miga"><a href="/reuniones" data-ruta>Reuniones</a> › ${fecha(r.fecha)}</div>
     <div class="cabecera">
-      <div><h1>${r.titulo}</h1><div class="sub">${fecha(r.fecha)}${r.hora ? ' · ' + r.hora : ''} · ${titulo(r.lugar_nombre || r.lugar_texto || 'Sin lugar')}${r.tema ? ' · ' + r.tema : ''}</div></div>
+      <div><h1>${r.titulo}</h1><div class="sub">${fecha(r.fecha)}${r.hora ? ' · ' + r.hora : ''} · ${titulo(r.lugar_nombre || r.lugar_texto || 'Sin lugar')}${r.tema ? ' · ' + r.tema : ''}</div>
+        ${r.abierta_a_equipo ? html`<div class="chips" style="margin-top:6px"><span class="chip azul">Abierta al equipo: los planilleros registran asistentes</span></div>` : ''}</div>
       <div class="acciones">
-        <button class="btn" id="editar">Editar</button>
-        <button class="btn" id="csv">${icono('descargar')} Asistentes (CSV)</button>
-        <button class="btn peligro" id="borrar">Borrar</button>
+        ${editable ? html`<button class="btn" id="editar">Editar</button>` : ''}
+        ${puede('exportar') ? html`<button class="btn" id="csv">${icono('descargar')} Asistentes (CSV)</button>` : ''}
+        ${adm ? html`<button class="btn peligro" id="borrar">Borrar</button>` : ''}
       </div>
     </div>
     <div class="registro">
       <section class="tarjeta">
         <header><h2>Registrar asistentes</h2><span class="nota">Busque por nombre, cédula o celular</span></header>
-        <label class="buscador grande">${icono('buscar')}<input class="entrada" id="buscar" placeholder="Escriba para buscar en la base única…" autocomplete="off" autofocus></label>
+        <label class="buscador grande">${icono('buscar')}<input class="entrada" id="buscar" type="search" placeholder="Escriba para buscar en la base única…" autocomplete="off" autofocus></label>
         <div class="resultados" id="resultados"></div>
-        <div id="nuevo-cta" style="margin-top:12px"><button class="btn oscuro" id="nuevo">${icono('mas')} Registrar persona nueva</button></div>
+        ${puede('personas.crear') ? html`<div id="nuevo-cta" style="margin-top:12px"><button class="btn oscuro" id="nuevo">${icono('mas')} Registrar persona nueva</button></div>` : ''}
       </section>
       <section class="tarjeta">
         <header><h2>Asistentes <span id="n-asist"></span></h2><span class="nota" id="nuevos"></span></header>
@@ -35,19 +40,22 @@ export async function vistaReunion(el, { params, ir }) {
     ${r.descripcion || r.compromisos ? html`<section class="tarjeta" style="margin-top:16px"><h2>Notas de la reunión</h2>
       ${r.descripcion ? html`<p>${r.descripcion}</p>` : ''}${r.compromisos ? html`<h3 style="font-size:14px">Compromisos</h3><p>${r.compromisos}</p>` : ''}</section>` : ''}`);
 
-  const ids = () => new Set(r.asistentes.map((a) => a.id));
+  const ids = () => new Set((r.asistentes || []).map((a) => a.id));
 
   function pintarAsistentes() {
-    $('#n-asist', el).textContent = `(${num(r.asistentes.length)})`;
-    montar($('#necesidades', el), html`${r.necesidades.map((n) => html`<span class="chip azul">${n.nombre} · ${n.n}</span>`)}`);
-    montar($('#asistentes', el), r.asistentes.length ? html`${r.asistentes.map((a) => html`<div class="asistente">
-        <div class="anillo" style="--p:${a.completitud};width:42px;height:42px"><span style="width:32px;height:32px;font-size:11px">${a.completitud}</span></div>
+    const asis = r.asistentes || [];
+    $('#n-asist', el).textContent = `(${num(asis.length)})`;
+    montar($('#necesidades', el), html`${(r.necesidades || []).map((n) => html`<span class="chip azul">${n.nombre} · ${n.n}</span>`)}`);
+    montar($('#asistentes', el), asis.length ? html`${asis.map((a) => html`<div class="asistente">
+        <div class="anillo" style="--p:${Number(a.completitud) || 0};width:42px;height:42px"><span style="width:32px;height:32px;font-size:11px">${Number(a.completitud) || 0}</span></div>
         <div class="q"><a href="/personas/${a.id}" data-ruta>${a.nombre}</a>
-          <div class="sec">${[a.cedula && 'CC ' + a.cedula, a.telefono, titulo(a.lugar || '')].filter(Boolean).join(' · ')}</div>
-          ${a.etiquetas.length ? html`<div class="chips" style="margin-top:4px">${a.etiquetas.map((e) => html`<span class="chip">${e}</span>`)}</div>` : ''}
+          <div class="sec">${lineaFila(a)}</div>
+          ${(a.etiquetas || []).length ? html`<div class="chips" style="margin-top:4px">${a.etiquetas.map((e) => html`<span class="chip">${typeof e === 'object' ? e.nombre : e}</span>`)}</div>` : ''}
           ${a.nota ? html`<div class="sec" style="margin-top:4px">“${a.nota}”</div>` : ''}</div>
-        <div style="display:flex;gap:4px"><button class="btn chico" data-enriquecer="${a.id}">Completar</button><button class="btn chico fantasma" data-quitar="${a.id}" aria-label="Quitar">✕</button></div>
-      </div>`)}` : html`<div class="vacio"><b>Nadie registrado aún</b>Busque a cada asistente a la izquierda.</div>`);
+        <div class="acciones-asistente">${puede('personas.editar') && a.consentimiento !== 'no' ? html`<button class="btn chico" data-completar="${a.id}">${icono('completar')} Completar</button>` : ''}
+          ${puede('personas.notas') ? html`<button class="btn chico fantasma" data-nota="${a.id}">Nota</button>` : ''}
+          <button class="btn chico fantasma" data-quitar="${a.id}" aria-label="Quitar a ${a.nombre}">✕</button></div>
+      </div>`)}` : html`<div class="vacio"><b>Nadie registrado aún</b>Busque a cada asistente.</div>`);
   }
 
   // Búsqueda: cada consulta lleva un turno; solo pinta la última y Enter solo usa resultados del texto escrito
@@ -64,7 +72,7 @@ export async function vistaReunion(el, { params, ir }) {
     if (agregando) return;
     agregando = true;
     try {
-      r = await api.post(`/api/reuniones/${id}/asistentes`, { persona_id: pid });
+      r = await api.post(`/api/reuniones/${id}/asistentes`, { persona_id: pid }, { clave: nuevaClave() });
       pintarAsistentes();
       limpiarBusqueda();
       $('#buscar', el).focus();
@@ -75,13 +83,15 @@ export async function vistaReunion(el, { params, ir }) {
   async function buscarYa(texto) {
     const mio = ++turno;
     if (texto.length < 2) { consultaPintada = ''; $('#resultados', el).replaceChildren(); return; }
-    const res = await api.get('/api/buscar', { q: texto });
+    let res;
+    try { res = await api.get('/api/buscar', { q: texto }); } catch (e) { if (mio === turno) avisoError(e); return; }
     if (mio !== turno) return; // ya se escribió otra cosa (o se agregó a alguien)
+    const lista = Array.isArray(res) ? res : res?.filas || [];
     const ya = ids();
-    montar($('#resultados', el), res.length ? html`${res.map((p) => html`<div class="resultado">
-        <div class="q"><b>${p.nombre}</b><small>${[p.cedula && 'CC ' + p.cedula, p.telefono, titulo(p.lugar || '')].filter(Boolean).join(' · ') || 'Sin datos de contacto'}</small></div>
+    montar($('#resultados', el), lista.length ? html`${lista.map((p) => html`<div class="resultado">
+        <div class="q"><b>${p.nombre}</b><small>${lineaFila(p) || 'Sin datos de contacto'}</small></div>
         ${ya.has(p.id) ? html`<span class="chip verde">Ya está</span>` : html`<button class="btn chico primario" data-agregar="${p.id}">Agregar</button>`}
-      </div>`)}` : html`<div class="sec">No aparece en la base. Regístrela como persona nueva.</div>`);
+      </div>`)}` : html`<div class="sec">No aparece en la base.${puede('personas.crear') ? ' Regístrela como persona nueva.' : ''}</div>`);
     consultaPintada = texto;
   }
   const buscar = debounce(buscarYa, 220);
@@ -101,6 +111,29 @@ export async function vistaReunion(el, { params, ir }) {
     const b = $('#resultados .resultado', el)?.querySelector('[data-agregar]');
     if (b) agregar(Number(b.dataset.agregar));
   });
+
+  // Nota de la reunión en el historial de la persona
+  async function nota(pid) {
+    const a = (r.asistentes || []).find((x) => x.id === pid);
+    const { el: d, cerrar } = dialogo({
+      titulo: `Nota · ${titulo(a?.nombre || '')}`,
+      cuerpo: html`<label class="campo"><span>Lo que dijo o pidió en la reunión</span><textarea name="nota" maxlength="4000" placeholder="Queda en su historial, ligado a esta reunión"></textarea>
+        <small class="nota-sensibles">No anote salud, política, religión ni otros datos sensibles.</small></label>`,
+      pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" data-ok>Guardar</button>`,
+    });
+    const clave = nuevaClave();
+    d.querySelector('[data-ok]').addEventListener('click', async (ev) => {
+      const texto = $('[name="nota"]', d).value.trim();
+      if (!texto) return;
+      ev.currentTarget.disabled = true;
+      try {
+        await api.post(`/api/personas/${pid}/notas`, { texto, reunion_id: id }, { clave });
+        r = await api.get(`/api/reuniones/${id}`);
+        pintarAsistentes(); cerrar(); aviso('Nota guardada');
+      } catch (err) { avisoError(err); ev.currentTarget.disabled = false; }
+    });
+  }
+
   el.addEventListener('click', async (e) => {
     const ag = e.target.closest('[data-agregar]');
     if (ag) return agregar(Number(ag.dataset.agregar));
@@ -109,10 +142,22 @@ export async function vistaReunion(el, { params, ir }) {
       try { r = await api.del(`/api/reuniones/${id}/asistentes/${qt.dataset.quitar}`); pintarAsistentes(); } catch (err) { avisoError(err); }
       return;
     }
-    const en = e.target.closest('[data-enriquecer]');
-    if (en) return enriquecer(Number(en.dataset.enriquecer));
+    const co = e.target.closest('[data-completar]');
+    if (co) {
+      try {
+        const p = await api.get(`/api/personas/${co.dataset.completar}`);
+        const res = await dialogoCompletar(p, cat);
+        if (res) { r = await api.get(`/api/reuniones/${id}`); pintarAsistentes(); }
+      } catch (err) { avisoError(err); }
+      return;
+    }
+    const no = e.target.closest('[data-nota]');
+    if (no) return nota(Number(no.dataset.nota));
     if (e.target.closest('#nuevo')) {
-      formularioNuevaPersona({ cat, reunionId: id, nombreInicial: $('#buscar', el).value.trim(), alCrear: async (p) => {
+      const t = $('#buscar', el).value.trim();
+      const dig = t.replace(/\D/g, '');
+      const prellenado = /\d/.test(t) && dig.length >= 5 ? (/^3\d{9}$/.test(dig) ? { telefono: dig } : { cedula: dig }) : { nombre: t };
+      formularioNuevaPersona({ cat, reunionId: id, prellenado, alCrear: async (p) => {
         if (p.existente) return agregar(p.id);
         r = await api.get(`/api/reuniones/${id}`); pintarAsistentes(); limpiarBusqueda();
       } });
@@ -124,48 +169,6 @@ export async function vistaReunion(el, { params, ir }) {
     if (e.target.closest('#editar')) editar();
   });
 
-  // Completar en el momento lo que más importa de cada asistente
-  async function enriquecer(pid) {
-    const p = await api.get(`/api/personas/${pid}`);
-    const tiene = new Set(p.etiquetas.map((x) => x.id));
-    const { el: d, cerrar } = dialogo({
-      titulo: `Completar: ${titulo(p.nombre)}`,
-      cuerpo: html`<form class="form" id="f-enr">
-        <label class="campo"><span>Cédula</span><input name="cedula" value="${p.cedula ?? ''}" inputmode="numeric"></label>
-        <label class="campo"><span>Celular</span><input name="telefono" value="${p.telefono ?? ''}" inputmode="tel"></label>
-        <label class="campo"><span>Ocupación</span><input name="ocupacion" value="${p.ocupacion ?? ''}"></label>
-        <label class="campo"><span>Personas en el hogar</span><input name="personas_hogar" type="number" min="0" max="40" value="${p.personas_hogar ?? ''}"></label>
-        <label class="campo"><span>Autorización de datos</span><select name="consentimiento">${[['pendiente', 'Pendiente'], ['si', 'Sí, autorizó'], ['no', 'No autorizó']].map(([v, t]) => html`<option value="${v}" ${p.consentimiento === v ? 'selected' : ''}>${t}</option>`)}</select></label>
-        <label class="interruptor" style="align-self:end"><span>Líder comunitario</span><input type="checkbox" name="lider" ${p.lider ? 'checked' : ''}></label>
-        <div class="campo ancho"><span>Necesidades</span><div class="chips">${necesidades.map((x) => html`<button type="button" class="chip" data-et="${x.id}" aria-pressed="${tiene.has(x.id)}">${x.nombre}</button>`)}</div></div>
-        <label class="campo ancho"><span>Lo que dijo o pidió en la reunión</span><textarea name="nota" placeholder="Queda en su historial, ligado a esta reunión" maxlength="4000"></textarea></label>
-      </form>`,
-      pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="guardar-enr">Guardar</button>`,
-    });
-    const f = $('#f-enr', d);
-    f.addEventListener('click', (ev) => { const c = ev.target.closest('[data-et]'); if (c) c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') !== 'true'); });
-    $('#guardar-enr', d).addEventListener('click', async (ev) => {
-      const boton = ev.currentTarget;
-      if (boton.disabled || !f.reportValidity()) return;
-      const datos = datosForm(f);
-      const nota = datos.nota; delete datos.nota;
-      for (const k of Object.keys(datos)) if (String(datos[k] ?? '') === String(p[k] ?? '') || (k === 'lider' && !!datos[k] === !!p[k])) delete datos[k];
-      if (datos.consentimiento === 'si' && p.consentimiento !== 'si') datos.consentimiento_fecha = r.fecha;
-      // El diálogo solo muestra necesidades: las etiquetas de los demás grupos (intereses, roles) se conservan
-      const mostradas = new Set(necesidades.map((x) => x.id));
-      const etiquetas = [...p.etiquetas.map((x) => x.id).filter((x) => !mostradas.has(x)),
-        ...[...f.querySelectorAll('[data-et][aria-pressed="true"]')].map((b) => Number(b.dataset.et))];
-      if (etiquetas.length !== tiene.size || etiquetas.some((x) => !tiene.has(x))) datos.etiquetas = etiquetas;
-      boton.disabled = true; // evita guardar dos veces (y duplicar la nota) con un doble clic
-      try {
-        await api.patch(`/api/personas/${pid}`, datos);
-        if (nota) await api.post(`/api/personas/${pid}/notas`, { texto: nota, reunion_id: id });
-        r = await api.get(`/api/reuniones/${id}`);
-        pintarAsistentes(); cerrar(); aviso('Perfil actualizado');
-      } catch (err) { avisoError(err); boton.disabled = false; }
-    });
-  }
-
   function editar() {
     const { el: d, cerrar } = dialogo({
       titulo: 'Editar reunión',
@@ -176,6 +179,7 @@ export async function vistaReunion(el, { params, ir }) {
         <label class="campo ancho"><span>Tema</span><input name="tema" value="${r.tema ?? ''}" maxlength="160"></label>
         <label class="campo ancho"><span>Descripción</span><textarea name="descripcion" maxlength="4000">${r.descripcion ?? ''}</textarea></label>
         <label class="campo ancho"><span>Compromisos</span><textarea name="compromisos" maxlength="4000">${r.compromisos ?? ''}</textarea></label>
+        ${adm ? html`<label class="casilla ancho"><input type="checkbox" name="abierta_a_equipo" ${r.abierta_a_equipo ? 'checked' : ''}> Permitir que planilleros registren asistentes</label>` : ''}
       </form>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g-ed">Guardar</button>`,
     });
@@ -184,8 +188,10 @@ export async function vistaReunion(el, { params, ir }) {
       const boton = ev.currentTarget;
       if (boton.disabled || !f.reportValidity()) return;
       boton.disabled = true;
+      const datos = datosForm(f);
+      if (!adm) delete datos.abierta_a_equipo;
       try {
-        await api.patch(`/api/reuniones/${id}`, datosForm(f));
+        await api.patch(`/api/reuniones/${id}`, datos);
         cerrar(); aviso('Reunión actualizada'); ir(`/reuniones/${id}`, { reemplazar: true });
       } catch (err) { avisoError(err); boton.disabled = false; }
     });

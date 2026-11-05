@@ -1,6 +1,8 @@
 // Gráficos del tablero en SVG/HTML, sin librerías. Marcas finas, extremos redondeados de 4px, separación de 2px,
 // rejilla tenue, un solo eje y globo de información al pasar el puntero (también con teclado vía foco).
-import { esc, html, mesCorto, num, crudo } from './ui.js';
+// Todo pasa por `html`, que escapa: los colores son variables CSS o hexadecimales del código y no cambian al escaparse.
+import { RANGOS_EDAD } from './modelo.js';
+import { html, mesCorto, num } from './ui.js';
 
 export const SERIES = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)', 'var(--s5)', 'var(--s6)', 'var(--s7)'];
 
@@ -37,31 +39,35 @@ document.addEventListener('focusin', (e) => { const el = e.target.closest?.('[da
 document.addEventListener('focusout', ocultar);
 document.addEventListener('scroll', ocultar, true);
 
-const g = (t, d = '') => crudo(` data-gt="${esc(t)}" data-gd="${esc(d)}"`);
+const g = (t, d = '') => html` data-gt="${t}" data-gd="${d}"`;
 
 // ───────── Lista de barras horizontales (ranking) ─────────
-export function barras(items, { color = 'var(--s1)', total, enlace } = {}) {
+export function barras(items, { color = 'var(--s1)', total, enlace, unidad = 'personas' } = {}) {
   if (!items.length) return html`<div class="vacio">Sin datos todavía</div>`;
   const max = Math.max(...items.map((i) => i.valor), 1);
   return html`<div class="lista-barras">${items.map((i) => {
     const pc = total ? ` · ${Math.round((i.valor / total) * 100)} %` : '';
     const ancho = Math.max(1, (i.valor / max) * 100);
-    const cuerpo = html`<span>${i.etiqueta}</span><span><span class="b" style="width:${ancho.toFixed(1)}%;background:${crudo(i.color || color)}"></span></span><span class="n">${num(i.valor)}</span>`;
+    const cuerpo = html`<span>${i.etiqueta}</span><span><span class="b" style="width:${ancho.toFixed(1)}%;background:${i.color || color}"></span></span><span class="n">${i.texto ?? num(i.valor)}</span>`;
     const href = enlace?.(i);
     return href
-      ? html`<a class="f" href="${href}" data-ruta tabindex="0"${g(i.etiqueta, num(i.valor) + ' personas' + pc)}>${cuerpo}</a>`
-      : html`<div class="f" tabindex="0"${g(i.etiqueta, num(i.valor) + pc)}>${cuerpo}</div>`;
+      ? html`<a class="f" href="${href}" data-ruta tabindex="0"${g(i.etiqueta, (i.texto ?? num(i.valor)) + ' ' + unidad + pc)}>${cuerpo}</a>`
+      : html`<div class="f" tabindex="0"${g(i.etiqueta, (i.texto ?? num(i.valor)) + pc)}>${cuerpo}</div>`;
   })}</div>`;
 }
 
 // ───────── Barra apilada (partes de un todo) con leyenda ─────────
-export function apilada(partes, { unidad = 'personas' } = {}) {
+export function apilada(partes, { unidad = 'personas', enlace } = {}) {
   const total = partes.reduce((a, p) => a + p.valor, 0) || 1;
   const visibles = partes.filter((p) => p.valor > 0);
   return html`<div class="apilada" role="img" aria-label="${visibles.map((p) => `${p.etiqueta}: ${p.valor}`).join(', ')}">
-      ${visibles.map((p) => html`<span tabindex="0" style="flex:${p.valor} 0 0;background:${crudo(p.color)}"${g(p.etiqueta, `${num(p.valor)} ${unidad} · ${Math.round((p.valor / total) * 100)} %`)}></span>`)}
+      ${visibles.map((p) => html`<span tabindex="0" style="flex:${p.valor} 0 0;background:${p.color}"${g(p.etiqueta, `${num(p.valor)} ${unidad} · ${Math.round((p.valor / total) * 100)} %`)}></span>`)}
     </div>
-    <div class="leyenda">${partes.map((p) => html`<span><i style="background:${crudo(p.color)}"></i>${p.etiqueta} <b>${Math.round((p.valor / total) * 100)} %</b></span>`)}</div>`;
+    <div class="leyenda">${partes.map((p) => {
+      const cuerpo = html`<i style="background:${p.color}"></i>${p.etiqueta} <b>${Math.round((p.valor / total) * 100)} %</b>`;
+      const href = enlace?.(p);
+      return href ? html`<a href="${href}" data-ruta>${cuerpo}</a>` : html`<span>${cuerpo}</span>`;
+    })}</div>`;
 }
 
 // ───────── Serie mensual (área + línea) con retícula y globo ─────────
@@ -83,27 +89,33 @@ export function serieMensual(datos, { alto = 200, color = 'var(--s1)', unidad = 
     ${marcas.map((v) => html`<line class="rejilla-l" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end">${num(v)}</text>`)}
     <line class="eje" x1="${m.l}" x2="${W - m.r}" y1="${y(0)}" y2="${y(0)}"/>
     ${etiquetasX.map(([d, i]) => html`<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${d.mes.slice(0, 4)}</text>`)}
-    <path d="${area}" fill="${crudo(color)}" fill-opacity=".1"/>
-    <path d="${linea}" fill="none" stroke="${crudo(color)}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-    <circle cx="${x(datos.length - 1)}" cy="${y(ultimo.n)}" r="4" fill="${crudo(color)}" stroke="var(--surface)" stroke-width="2"/>
+    <path d="${area}" fill="${color}" fill-opacity=".1"/>
+    <path d="${linea}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${x(datos.length - 1)}" cy="${y(ultimo.n)}" r="4" fill="${color}" stroke="var(--surface)" stroke-width="2"/>
     ${datos.map((d, i) => html`<rect class="golpe" x="${x(i) - ancho / 2}" y="${m.t}" width="${ancho}" height="${H - m.t - m.b}" tabindex="-1"${g(mesCorto(d.mes), `${num(d.n)} ${unidad}`)}/>`)}
   </svg></div>`;
 }
 
-// ───────── Pirámide de edades (mujeres a la izquierda, hombres a la derecha) ─────────
-export function piramide(filas) {
-  const rangos = ['60+', '41-59', '29-40', '18-28', '0-17'];
-  const v = (r, s) => filas.find((f) => f.rango === r && f.sexo === s)?.n || 0;
-  const max = Math.max(1, ...filas.map((f) => f.n));
+// ───────── Pirámide de edades (mujeres a la izquierda, hombres a la derecha, sin sexo en gris) ─────────
+// `filas` = [{rango, sexo, n}] con sexo F, M o sin dato; `rangos` de menor a mayor (arriba van los mayores).
+// `enlace(rango, sexo)` hace de cada barra un enlace a Habitantes con ese filtro.
+export function piramide(filas, rangos = RANGOS_EDAD, { enlace } = {}) {
   if (!filas.length) return html`<div class="vacio">Sin edades registradas</div>`;
-  return html`<div class="grafico" style="display:grid;grid-template-columns:1fr 54px 1fr;gap:6px 8px;align-items:center;font-size:12.5px">
-    ${rangos.map((r) => {
-      const f = v(r, 'F'), mm = v(r, 'M');
-      return html`<div style="display:flex;justify-content:flex-end;align-items:center;gap:6px"><span class="sec">${num(f)}</span><span tabindex="0" style="height:14px;width:${(f / max) * 100}%;min-width:2px;background:var(--s2);border-radius:4px 0 0 4px"${g(`Mujeres ${r} años`, num(f) + ' personas')}></span></div>
-        <div style="text-align:center;font-weight:650">${r}</div>
-        <div style="display:flex;align-items:center;gap:6px"><span tabindex="0" style="height:14px;width:${(mm / max) * 100}%;min-width:2px;background:var(--s1);border-radius:0 4px 4px 0"${g(`Hombres ${r} años`, num(mm) + ' personas')}></span><span class="sec">${num(mm)}</span></div>`;
-    })}
-  </div><div class="leyenda"><span><i style="background:var(--s2)"></i>Mujeres</span><span><i style="background:var(--s1)"></i>Hombres</span></div>`;
+  const sinSexo = (s) => s !== 'F' && s !== 'M';
+  const v = (r, s) => filas.filter((f) => f.rango === r && (s === 'sin' ? sinSexo(f.sexo) && f.sexo !== 'N' : f.sexo === s)).reduce((a, f) => a + (f.n || 0), 0);
+  const orden = [...rangos].reverse();
+  const max = Math.max(1, ...orden.flatMap((r) => [v(r, 'F'), v(r, 'M'), v(r, 'sin')]));
+  const hayGris = orden.some((r) => v(r, 'sin') > 0);
+  const barra = (r, s, n, clase0, texto) => {
+    const clase = n ? clase0 : `${clase0} cero`;
+    const cuerpo = html`<span class="barra-p ${clase}" style="width:${((n / max) * 100).toFixed(1)}%"></span>`;
+    const href = n && enlace ? enlace(r, s) : null;
+    return href ? html`<a class="celda-p ${clase}" href="${href}" data-ruta${g(texto, num(n) + ' personas')}>${cuerpo}<span class="sec">${num(n)}</span></a>`
+      : html`<span class="celda-p ${clase}" tabindex="0"${g(texto, num(n) + ' personas')}>${cuerpo}<span class="sec">${num(n)}</span></span>`;
+  };
+  return html`<div class="grafico piramide ${hayGris ? 'con-gris' : ''}">
+    ${orden.map((r) => html`${barra(r, 'F', v(r, 'F'), 'mujeres', `Mujeres ${r} años`)}<div class="rango-p">${r}</div>${barra(r, 'M', v(r, 'M'), 'hombres', `Hombres ${r} años`)}${hayGris ? barra(r, 'sin', v(r, 'sin'), 'sin-sexo', `Sin sexo registrado, ${r} años`) : ''}`)}
+  </div><div class="leyenda"><span><i style="background:var(--s2)"></i>Mujeres</span><span><i style="background:var(--s1)"></i>Hombres</span>${hayGris ? html`<span><i style="background:var(--axis)"></i>Sin sexo</span>` : ''}</div>`;
 }
 
 // ───────── Columnas (histograma corto) ─────────
@@ -116,7 +128,7 @@ export function columnas(items, { color = 'var(--s1)', alto = 150, unidad = 'per
       const h = Math.max(2, (it.valor / max) * (base - 18));
       const cx = banda * i + banda / 2, x0 = cx - ancho / 2, y0 = base - h, rr = Math.min(4, h / 2);
       const d = `M${x0},${base}V${y0 + rr}Q${x0},${y0} ${x0 + rr},${y0}H${x0 + ancho - rr}Q${x0 + ancho},${y0} ${x0 + ancho},${y0 + rr}V${base}Z`;
-      return html`<path d="${d}" fill="${crudo(it.color || color)}" tabindex="0"${g(it.etiqueta, `${num(it.valor)} ${unidad}`)}/>
+      return html`<path d="${d}" fill="${it.color || color}" tabindex="0"${g(it.etiqueta, `${num(it.valor)} ${unidad}`)}/>
         <text class="valor" x="${cx}" y="${y0 - 5}" text-anchor="middle">${num(it.valor)}</text>
         <text x="${cx}" y="${H - 6}" text-anchor="middle">${it.etiqueta}</text>`;
     })}

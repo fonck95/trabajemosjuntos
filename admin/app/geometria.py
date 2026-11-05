@@ -132,6 +132,23 @@ def validar_anillo(anillo: Any) -> list[list[float]]:
     return limpio
 
 
+def anillo_de(valor: Any) -> list[list[float]]:
+    """El anillo validado de lo que manda el cliente: una lista de vértices [lon, lat], un texto «lon,lat;…» o un
+    GeoJSON Polygon (su anillo exterior). 422 `{codigo: "poligono"}` con cualquier otra cosa."""
+    if isinstance(valor, str):
+        valor = decodificar(valor)
+    elif isinstance(valor, dict) and valor.get("type") == "Polygon" and isinstance(valor.get("coordinates"), list) \
+            and valor["coordinates"]:
+        valor = valor["coordinates"][0]
+    return validar_anillo(valor)
+
+
+def medidas(anillo: Iterable[Any]) -> dict:
+    """Área (m², redondeada al metro) y perímetro (m, al decímetro) de un anillo ya validado."""
+    a = list(anillo)
+    return {"area_m2": round(area_m2(a)), "perimetro_m": round(perimetro_m(a), 1)}
+
+
 def a_geojson(anillo: Iterable[Any]) -> dict:
     """GeoJSON Polygon (anillo cerrado) para `$geoWithin` con `$geometry`."""
     a = [list(v) for v in _abierto(anillo)]

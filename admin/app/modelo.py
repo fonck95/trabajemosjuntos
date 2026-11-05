@@ -56,7 +56,7 @@ SENSIBLES = {
                                  "Prefiere no decir"]},
     "victima": {"etiqueta": "Víctima del conflicto", "valores": ["Sí", "No", "Prefiere no decir"]},
 }
-NOMBRES_ROL = {"admin": "Administrador", "planillero": "Planillero", "consultor": "Consultor"}
+NOMBRES_ROL = {"admin": "Administrador", "coordinador": "Coordinador", "planillero": "Planillero", "consultor": "Consultor"}
 
 # ───────────────────────────── Autorización del titular (1.6) ─────────────────────────────
 
@@ -821,7 +821,8 @@ def consentimiento_vigente(eventos: Iterable[dict] | None) -> dict:
         return out
     u = ev[-1]
     out["autorizacion_ultima"] = {"id": u.get("_id"), "estado": u.get("estado")}
-    fecha = u.get("fecha_declarada") or fecha_local(u.get("ts"))
+    # Un evento migrado lleva la fecha que tenía la ficha (o ninguna): la de la migración no es la de la autorización
+    fecha = u.get("fecha_declarada") or (None if u.get("medio") == "migrado" else fecha_local(u.get("ts")))
     if u.get("estado") == "si":
         seguidos = []
         for e in reversed(ev):
@@ -831,8 +832,9 @@ def consentimiento_vigente(eventos: Iterable[dict] | None) -> dict:
         categorias = {c for e in seguidos if _autoriza_sensibles(e) for c in e.get("sensibles") or []}
         out.update(consentimiento="si", consentimiento_fecha=fecha, consentimiento_medio=u.get("medio"),
                    consentimiento_canales=canales_de(u),
-                   contacto_habilitado=u.get("medio") not in (None, "declarado_planilla")
-                   or u.get("confirmada_por") is not None,
+                   # `habilita: False`: un evento de fusión entre fichas que no estaban habilitadas no las habilita
+                   contacto_habilitado=(u.get("medio") not in (None, "declarado_planilla")
+                                        or u.get("confirmada_por") is not None) and u.get("habilita") is not False,
                    sensibles_autorizados=[c for c in SENSIBLES if c in categorias])
     elif u.get("estado") in ("no", "revocada"):
         out.update(consentimiento="no", consentimiento_fecha=fecha, consentimiento_medio=u.get("medio"))
@@ -901,6 +903,152 @@ def faltan(p: dict, hoy: date | None = None, dias: int = AJUSTES_POR_DEFECTO["di
 def claves_foneticas(nombre: Any) -> list[str]:
     """`nombre_fon`: clave fonética de cada palabra del nombre que identifica (YESICA y JESSICA dan la misma)."""
     return list(dict.fromkeys(c for t in tx.tokens_nombre(nombre) if (c := tx.fonetico(t))))
+
+
+# ───────────────────────────── Lo que escribe el código viejo (1.12) ─────────────────────────────
+
+def _tel_legado(campo: str) -> dict:
+    """Elemento de `telefonos` (expresión) para el número que el código viejo dejó en `telefono` o `telefono2`."""
+    return {"numero": f"${campo}", "tipo": {"$cond": [
+        {"$regexMatch": {"input": {"$toString": f"${campo}"}, "regex": "^3[0-9]{9}$"}}, "celular", "fijo"]},
+        "fuentes": ["panel"], "primera_vez": None, "ultima_vez": None, "estado": "sin_verificar", "whatsapp": None,
+        "no_contactar": False, "agregado_por": None, "estado_por": None, "estado_en": None, "nota": None}
+
+
+def _falta_en(campo: str, lista: str) -> dict:
+    return {"$and": [{"$not": [{"$in": [{"$ifNull": [f"${campo}", None]}, [None, ""]]}]},
+                     {"$not": [{"$in": [f"${campo}", {"$map": {"input": lista, "as": "t", "in": "$$t.numero"}}]}]}]}
+
+
+# Etapa $set que, antes de tocar los teléfonos, mete en la lista el `telefono` (posición 0) y el `telefono2` (posición 1)
+# que el código viejo haya escrito directamente sin pasar por `telefonos`: así derivarlos después no los pierde
+ETAPA_RECONCILIAR_TELEFONOS = {"$set": {"telefonos": {"$let": {"vars": {"a": TELS_ACTUALES}, "in": {"$let": {
+    "vars": {"b": {"$concatArrays": [{"$cond": [_falta_en("telefono", "$$a"), [_tel_legado("telefono")], []]}, "$$a"]}},
+    "in": {"$cond": [_falta_en("telefono2", "$$b"), {"$concatArrays": [
+        {"$slice": ["$$b", 1]}, [_tel_legado("telefono2")], {"$slice": ["$$b", 1, 100000]}]}, "$$b"]}}}}}}}
+
+
+def reconciliar_telefonos(p: dict) -> list[dict]:
+    """Gemelo de ETAPA_RECONCILIAR_TELEFONOS."""
+    lista = telefonos_de(p)
+    for pos, campo in ((0, "telefono"), (1, "telefono2")):
+        n = p.get(campo)
+        if n not in (None, "") and n not in [t.get("numero") for t in lista]:
+            lista.insert(min(pos, len(lista)), telefono_nuevo(n, "panel"))
+    return lista
+
+
+# ───────────────────────────── Procedencia (1.5) ─────────────────────────────
+
+PROTEGIDAS = frozenset({"panel", "reunion", "manual"})  # lo que viene de una persona nunca lo reemplaza una importación
+CLAVES_VOTACION = ("puesto_id", "puesto_texto", "mesa", "mesa_texto", "donde", "municipio")  # lo que distingue un dato
+
+
+def vacio(v: Any) -> bool:
+    return v is None or (isinstance(v, str) and not v.strip()) or v == [] or v == {}
+
+
+def comparable(campo: str, v: Any) -> Any:
+    """Lo que se compara de un valor: de la votación, solo puesto, mesa y lugar (no quién ni cuándo la registró)."""
+    if campo == "votacion":
+        return {k: v.get(k) for k in CLAVES_VOTACION} if isinstance(v, dict) else None
+    return v
+
+
+def expr_comparable(campo: str) -> Any:
+    """Gemelo de `comparable` sobre el valor guardado (expresión)."""
+    if campo == "votacion":
+        return {"$cond": [{"$eq": [{"$type": "$votacion"}, "object"]},
+                          {k: {"$ifNull": [f"$votacion.{k}", None]} for k in CLAVES_VOTACION}, None]}
+    return {"$ifNull": [f"${campo}", None]}
+
+
+def expr_vacio(campo: str) -> dict:
+    """¿El campo guardado está vacío? La votación cuenta como vacía solo si tampoco hay puesto ni mesa heredados."""
+    if campo == "votacion":
+        return {"$and": [{"$ne": [{"$type": "$votacion"}, "object"]},
+                         {"$in": [{"$ifNull": ["$puesto_votacion", None]}, [None, ""]]},
+                         {"$in": [{"$ifNull": ["$mesa", None]}, [None, ""]]}]}
+    return {"$in": [{"$ifNull": [f"${campo}", None]}, [None, "", [], {}]]}
+
+
+def valor_campo(p: dict, campo: str) -> Any:
+    """Valor de un campo con procedencia, con lectura tolerante de la votación heredada."""
+    if campo == "votacion" and not isinstance(p.get("votacion"), dict):
+        return None if vacio(p.get("puesto_votacion")) and vacio(p.get("mesa")) else \
+            {"puesto_texto": p.get("puesto_votacion"), "mesa_texto": p.get("mesa")}
+    return p.get(campo)
+
+
+def fuente_de(p: dict, campo: str) -> str | None:
+    """Fuente del valor actual: la de `procedencia`; un valor sin procedencia cuenta como del panel."""
+    if vacio(valor_campo(p, campo)):
+        return None
+    return ((p.get("procedencia") or {}).get(campo) or {}).get("fuente") or "panel"
+
+
+def puede_reemplazar(guardada: str | None, entrante: str) -> bool:
+    """¿Una fuente entrante reemplaza el valor de la guardada? Solo con más confianza y nunca lo que puso una persona."""
+    return guardada is not None and guardada not in PROTEGIDAS and CONFIANZA.get(guardada, 4) < CONFIANZA.get(entrante, 0)
+
+
+# ───────────────────────────── Votación desde un texto ─────────────────────────────
+
+def armar_votacion(puesto: Any, mesa: Any, puestos: Iterable[dict], *, fuente: str, eleccion: str | None,
+                   estado: str = "sin_verificar", municipio: Any = None, registrado_por: Any = None,
+                   registrado_en: str | None = None, conservar_texto: bool = False) -> dict | None:
+    """Subdocumento `votacion` a partir de lo escrito (planilla, base con cédula o fichas viejas).
+
+    El puesto se reconoce en el catálogo (`reconocer_puesto`); si no se reconoce o es ambiguo queda en `puesto_texto`
+    (con `conservar_texto`, siempre). La mesa debe estar entre 1 y las mesas del puesto (99 sin catálogo): fuera de
+    rango no se guarda como número y el estado queda «por_confirmar», igual que con un puesto ambiguo. `mesa_texto`
+    guarda el texto original. None si no hay nada."""
+    texto = str(puesto).strip() if not vacio(puesto) else None
+    muni = tx.limpiar(municipio) if not vacio(municipio) else ""
+    otro = bool(muni) and not muni.startswith("YONDO") and "CASABE" not in muni
+    if texto is None and vacio(mesa) and not otro:
+        return None
+    puestos = list(puestos)
+    pid, ambiguo = reconocer_puesto(texto, puestos) if texto else (None, False)
+    p = next((x for x in puestos if x.get("_id", x.get("id")) == pid), None) if pid is not None else None
+    n = normalizar_mesa(mesa)
+    tope = (p or {}).get("mesas") or MESAS_SIN_CATALOGO
+    fuera = n is not None and not 1 <= n <= tope
+    if isinstance(mesa, str):
+        mesa_texto = mesa.strip() or None
+    else:
+        mesa_texto = None if (vacio(mesa) or (n is not None and not fuera)) else str(mesa)
+    return {"puesto_id": pid, "puesto_nombre": (p or {}).get("nombre"),
+            "puesto_texto": texto if (pid is None or conservar_texto) else None,
+            "mesa": None if fuera else n, "mesa_texto": mesa_texto,
+            "donde": "otro_municipio" if otro else "yondo", "municipio": str(municipio).strip() if otro else None,
+            "eleccion": eleccion, "estado": "por_confirmar" if (ambiguo or fuera) else estado, "fuente": fuente,
+            "registrado_por": registrado_por, "registrado_en": registrado_en}
+
+
+# ───────────────────────────── Solicitudes de los titulares ─────────────────────────────
+
+TIPOS_SOLICITUD = {"consulta": "Consulta", "correccion": "Corrección", "supresion": "Supresión",
+                   "revocatoria": "Revocatoria", "otro": "Otro", "registro": "Pedido de registro"}
+# Días hábiles de plazo (Ley 1581, arts. 14 y 15): 10 la consulta y 15 los reclamos; el pedido de registro de un
+# consultor no tiene plazo legal
+PLAZOS_SOLICITUD = {"consulta": 10, "correccion": 15, "supresion": 15, "revocatoria": 15, "otro": 15, "registro": None}
+# Las que dejan la ficha con «reclamo en trámite» (sale de las colas mientras se resuelve)
+RECLAMOS = ("correccion", "supresion", "revocatoria")
+ESTADOS_SOLICITUD = {"pendiente": "Pendiente", "en_tramite": "En trámite", "resuelta": "Resuelta",
+                     "rechazada": "Rechazada"}
+ABIERTAS = ("pendiente", "en_tramite")
+
+
+def sumar_dias_habiles(desde: date, dias: int) -> date:
+    """`desde` más `dias` días hábiles (de lunes a viernes; los festivos no se descuentan: el plazo real es igual o
+    más largo)."""
+    d, n = desde, 0
+    while n < dias:
+        d += timedelta(days=1)
+        if d.weekday() < 5:
+            n += 1
+    return d
 
 
 # ───────────────────────────── Copia para el navegador ─────────────────────────────

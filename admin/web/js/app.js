@@ -1,30 +1,38 @@
-// Arranque del panel: sesión, menú lateral y enrutado en el navegador.
-import { api, configurar, ErrorApi, sesion } from './api.js';
+// Arranque del panel: sesión, menú lateral según el rol y enrutado en el navegador.
+import { api, borrarBorrador, configurar, ErrorApi, nombreRol, olvidarCatalogos, puede, sesion } from './api.js';
 import { $, aviso, html, icono, montar } from './ui.js';
-import { vistaLogin } from './vistas/login.js';
+import { dialogoIngreso, vistaLogin } from './vistas/login.js';
 import { sinBase, url } from './base.js';
-import { revisarLlamadasPendientes } from './llamadas.js';
+import { olvidarLlamada, revisarLlamadasPendientes } from './llamadas.js';
 
+// Cada ruta lleva el permiso que pide (la interfaz solo oculta: el servidor decide)
 const RUTAS = [
-  { re: /^\/$|^\/panel$/, nav: 'panel', carga: () => import('./vistas/panel.js').then((m) => m.vistaPanel) },
-  { re: /^\/mapa$/, nav: 'mapa', lleno: true, carga: () => import('./vistas/mapa.js').then((m) => m.vistaMapa) },
-  { re: /^\/personas$/, nav: 'personas', carga: () => import('./vistas/personas.js').then((m) => m.vistaPersonas) },
-  { re: /^\/personas\/(\d+)$/, nav: 'personas', carga: () => import('./vistas/ficha.js').then((m) => m.vistaFicha) },
-  { re: /^\/reuniones$/, nav: 'reuniones', carga: () => import('./vistas/reuniones.js').then((m) => m.vistaReuniones) },
-  { re: /^\/reuniones\/(\d+)$/, nav: 'reuniones', carga: () => import('./vistas/reunion.js').then((m) => m.vistaReunion) },
-  { re: /^\/calidad$/, nav: 'calidad', carga: () => import('./vistas/calidad.js').then((m) => m.vistaCalidad) },
-  { re: /^\/importar$/, nav: 'importar', carga: () => import('./vistas/importar.js').then((m) => m.vistaImportar) },
-  { re: /^\/ajustes$/, nav: 'ajustes', carga: () => import('./vistas/ajustes.js').then((m) => m.vistaAjustes) },
-  { re: /^\/trabajo$/, nav: 'trabajo', carga: () => import('./vistas/trabajo.js').then((m) => m.vistaTrabajo) },
-  { re: /^\/usuarios$/, nav: 'usuarios', carga: () => import('./vistas/usuarios.js').then((m) => m.vistaUsuarios) },
-  { re: /^\/usuarios\/(\d+)$/, nav: 'usuarios', carga: () => import('./vistas/usuarios.js').then((m) => m.vistaUsuario) },
-  { re: /^\/cuenta$/, nav: 'cuenta', carga: () => import('./vistas/cuenta.js').then((m) => m.vistaCuenta) },
+  { re: /^\/$|^\/panel$/, nav: 'panel', permiso: 'tablero.ver', carga: () => import('./vistas/panel.js').then((m) => m.vistaPanel) },
+  { re: /^\/mapa$/, nav: 'mapa', permiso: 'mapa.ver', lleno: true, carga: () => import('./vistas/mapa.js').then((m) => m.vistaMapa) },
+  { re: /^\/personas$/, nav: 'personas', permiso: 'personas.listar', carga: () => import('./vistas/personas.js').then((m) => m.vistaPersonas) },
+  { re: /^\/personas\/(\d+)$/, nav: 'personas', permiso: 'personas.ver', carga: () => import('./vistas/ficha.js').then((m) => m.vistaFicha) },
+  { re: /^\/reuniones$/, nav: 'reuniones', permiso: 'reuniones.ver', carga: () => import('./vistas/reuniones.js').then((m) => m.vistaReuniones) },
+  { re: /^\/reuniones\/(\d+)$/, nav: 'reuniones', permiso: 'reuniones.ver', carga: () => import('./vistas/reunion.js').then((m) => m.vistaReunion) },
+  { re: /^\/calidad$/, nav: 'calidad', permiso: 'calidad.ver', carga: () => import('./vistas/calidad.js').then((m) => m.vistaCalidad) },
+  { re: /^\/importar$/, nav: 'importar', permiso: 'importar', carga: () => import('./vistas/importar.js').then((m) => m.vistaImportar) },
+  { re: /^\/ajustes$/, nav: 'ajustes', permiso: 'ajustes.gestionar', carga: () => import('./vistas/ajustes.js').then((m) => m.vistaAjustes) },
+  { re: /^\/trabajo$/, nav: 'trabajo', permiso: 'trabajo.ver', carga: () => import('./vistas/trabajo.js').then((m) => m.vistaTrabajo) },
+  { re: /^\/usuarios$/, nav: 'usuarios', permiso: 'usuarios.gestionar', carga: () => import('./vistas/usuarios.js').then((m) => m.vistaUsuarios) },
+  { re: /^\/usuarios\/(\d+)$/, nav: 'usuarios', permiso: 'usuarios.gestionar', carga: () => import('./vistas/usuarios.js').then((m) => m.vistaUsuario) },
+  { re: /^\/cuenta$/, nav: 'cuenta', permiso: 'cuenta', carga: () => import('./vistas/cuenta.js').then((m) => m.vistaCuenta) },
 ];
+// [clave, texto, ruta, permiso]: el menú muestra solo lo que el rol puede abrir, en este orden. El coordinador ve el
+// mismo menú que el administrador; lo que no puede (coordinadores, roles, ajustes de permisos) se oculta en cada vista
 const NAV = [
-  ['panel', 'Panel', '/'], ['mapa', 'Mapa 3D', '/mapa'], ['personas', 'Habitantes', '/personas'],
-  ['reuniones', 'Reuniones', '/reuniones'], ['calidad', 'Calidad de datos', '/calidad'], ['importar', 'Importar y exportar', '/importar'],
-  ['ajustes', 'Ajustes', '/ajustes'],
+  ['panel', 'Panel', '/', 'tablero.ver'], ['mapa', 'Mapa 3D', '/mapa', 'mapa.ver'],
+  ['personas', 'Habitantes', '/personas', 'personas.listar'], ['trabajo', 'Mi trabajo', '/trabajo', 'trabajo.ver'],
+  ['reuniones', 'Reuniones', '/reuniones', 'reuniones.ver'], ['calidad', 'Calidad de datos', '/calidad', 'calidad.ver'],
+  ['importar', 'Importar y exportar', '/importar', 'importar'], ['usuarios', 'Usuarios', '/usuarios', 'usuarios.gestionar'],
+  ['ajustes', 'Ajustes', '/ajustes', 'ajustes.gestionar'], ['cuenta', 'Mi cuenta', '/cuenta', 'cuenta'],
 ];
+// Insignias del menú: { nav: clave de /api/insignias }
+const INSIGNIAS = { calidad: 'calidad', trabajo: 'trabajo' };
+const TITULOS_INSIGNIA = { calidad: 'Personas con coincidencias por revisar', trabajo: 'Pendientes de su trabajo' };
 
 let limpiarVista = null;
 let generacion = 0;
@@ -40,6 +48,18 @@ function aplicarTema(t) {
 }
 export const temaOscuro = () => (document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
 
+// Estilos de usuarios, cuenta e ingreso (web/css/acceso.css): se cargan aquí porque index.html no los enlaza
+function cargarEstilos() {
+  if (document.querySelector('link[data-acceso]')) return;
+  const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: url('/static/css/acceso.css') });
+  l.dataset.acceso = '';
+  document.head.append(l);
+}
+
+/** Inicio según el rol: el panel para el administrador y el coordinador, «Mi trabajo» para planilleros y consultores. */
+const inicio = () => (puede('tablero.ver') ? '/' : '/trabajo');
+const conPendientes = () => sesion.debeCambiarClave || sesion.compromisoPendiente;
+
 export function ir(ruta, { reemplazar = false } = {}) {
   const destino = url(sinBase(ruta)); // acepta «/personas» o «/panel/personas»
   if (reemplazar) history.replaceState({}, '', destino);
@@ -48,12 +68,17 @@ export function ir(ruta, { reemplazar = false } = {}) {
 }
 
 function armarEstructura() {
+  // Descargar es solo del administrador (adenda 2): para el coordinador la entrada es «Importar»
+  const nav = NAV.filter(([, , , p]) => puede(p))
+    .map((x) => (x[0] === 'importar' && !puede('exportar') ? [x[0], 'Importar', ...x.slice(2)] : x));
+  // Sin tablero, «Mi trabajo» es el inicio y va primero
+  if (!puede('tablero.ver')) nav.sort((x, y) => (y[0] === 'trabajo') - (x[0] === 'trabajo'));
   montar($('#raiz'), html`
     <div class="app" id="app">
       <div class="barra-movil"><button id="abrir-menu" aria-label="Menú" aria-expanded="false" aria-controls="menu-lateral">${icono('menu')}</button><b>Yondó · Base única</b></div>
       <aside class="lateral" id="menu-lateral" aria-label="Navegación">
-        <a class="marca" href="/" data-ruta><span class="sello">Y</span><span><b>Yondó</b><small>Base única · Panel</small></span></a>
-        <nav class="nav" id="nav">${NAV.map(([k, t, href]) => html`<a href="${href}" data-ruta data-nav="${k}">${icono(k)}<span>${t}</span>${k === 'calidad' ? html`<span class="insignia oculto" id="insignia-calidad" title="Personas con coincidencias por revisar"></span>` : ''}</a>`)}</nav>
+        <a class="marca" href="${inicio()}" data-ruta><span class="sello">Y</span><span><b>Yondó</b><small>Base única · Panel</small></span></a>
+        <nav class="nav" id="nav">${nav.map(([k, t, href]) => html`<a href="${href}" data-ruta data-nav="${k}">${icono(k)}<span>${t}</span>${INSIGNIAS[k] ? html`<span class="insignia oculto" id="insignia-${k}" title="${TITULOS_INSIGNIA[k]}"></span>` : ''}</a>`)}</nav>
         <div class="pie">
           <span>Sesión: <b id="usuario"></b></span>
           <button id="cambiar-tema">${icono('luna')} Cambiar tema</button>
@@ -63,9 +88,10 @@ function armarEstructura() {
       <div class="velo" id="velo"></div>
       <main class="contenido" id="vista" tabindex="-1"></main>
     </div>`);
-  $('#usuario').textContent = sesion.usuario;
+  $('#usuario').textContent = `${sesion.nombre || sesion.usuario} · ${nombreRol(sesion.rol)}`;
   $('#salir').onclick = async () => {
     try { await api.post('/api/logout'); } catch { /* ya cerrada */ }
+    olvidar();
     location.href = url('/');
   };
   $('#cambiar-tema').onclick = () => aplicarTema(temaOscuro() ? 'light' : 'dark');
@@ -74,32 +100,76 @@ function armarEstructura() {
   $('#velo').onclick = () => abrirMenu(false);
 }
 
+// Al cerrar sesión no queda nada de ella en el navegador
+function olvidar() {
+  olvidarCatalogos();
+  borrarBorrador();
+  try { olvidarLlamada(); } catch { /* nada */ }
+}
+
 function abrirMenu(abrir) {
   $('#app')?.classList.toggle('menu-abierto', abrir);
   $('#abrir-menu')?.setAttribute('aria-expanded', abrir);
 }
 
+function insignia(nav, n) {
+  const b = $(`#insignia-${nav}`);
+  if (b) { b.textContent = n || ''; b.classList.toggle('oculto', !n); }
+}
+
 export async function refrescarInsignias() {
   try {
-    const k = (await api.get('/api/indicadores')).kpi;
-    const b = $('#insignia-calidad');
-    if (b) { b.textContent = k.pendientes_revision; b.classList.toggle('oculto', !k.pendientes_revision); }
-  } catch { /* opcional */ }
+    const i = await api.get('/api/insignias');
+    for (const [nav, clave] of Object.entries(INSIGNIAS)) insignia(nav, i[clave]);
+  } catch (e) {
+    // Un servidor sin /api/insignias: el administrador ve las coincidencias como antes
+    if (e instanceof ErrorApi && e.estado === 404 && puede('tablero.ver')) {
+      try { insignia('calidad', (await api.get('/api/indicadores')).kpi.pendientes_revision); } catch { /* opcional */ }
+    }
+  }
+}
+
+/** Aviso de un error de la API según su código: permisos y límites sin recargar, cuenta pendiente a «Mi cuenta». */
+export function avisarError(e) {
+  if (!(e instanceof ErrorApi) || e.estado === 401) return false;
+  if (e.codigo === 'cambiar_clave' || e.codigo === 'compromiso') { irACuenta(e.codigo); return true; }
+  if (e.codigo === 'volumen' || e.codigo === 'frecuencia') { aviso(e.message, 'error', 8000); return true; }
+  aviso(e.message, 'error', 6000);
+  return true;
+}
+
+function irACuenta(codigo) {
+  if (codigo === 'cambiar_clave') sesion.debeCambiarClave = true;
+  if (codigo === 'compromiso') sesion.compromisoPendiente = true;
+  if (sinBase(location.pathname).replace(/\/+$/, '') !== '/cuenta') ir('/cuenta', { reemplazar: true });
 }
 
 async function render() {
   const g = ++generacion;
   if (limpiarVista) { try { limpiarVista(); } catch { /* nada */ } limpiarVista = null; }
-  const ruta = sinBase(location.pathname).replace(/\/+$/, '') || '/';
+  let ruta = sinBase(location.pathname).replace(/\/+$/, '') || '/';
+  // Con la clave temporal o el compromiso pendientes, solo «Mi cuenta»
+  if (conPendientes() && ruta !== '/cuenta') {
+    history.replaceState({}, '', url('/cuenta'));
+    ruta = '/cuenta';
+  } else if (ruta === '/' && !puede('tablero.ver')) {
+    history.replaceState({}, '', url(inicio()));
+    ruta = inicio();
+  }
   const r = RUTAS.find((x) => x.re.test(ruta));
   const vista = $('#vista');
   abrirMenu(false);
-  if (!r) { montar(vista, html`<div class="vacio"><b>No existe esta página</b><a href="/" data-ruta>Volver al panel</a></div>`); return; }
+  if (!r) { montar(vista, html`<div class="vacio"><b>No existe esta página</b><a href="${inicio()}" data-ruta>Volver al inicio</a></div>`); return; }
   for (const a of document.querySelectorAll('#nav a')) {
     if (a.dataset.nav === r.nav) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   }
   vista.classList.toggle('lleno', !!r.lleno);
+  if (!puede(r.permiso)) {
+    vista.classList.remove('lleno');
+    montar(vista, html`<div class="vacio sin-acceso"><b>Sin acceso</b>Su rol no permite abrir esta sección.<a href="${inicio()}" data-ruta>Volver al inicio</a></div>`);
+    return;
+  }
   montar(vista, html`<div class="cargando"><div class="giro"></div></div>`);
   try {
     const fn = await r.carga();
@@ -119,8 +189,10 @@ async function render() {
   } catch (e) {
     if (g !== generacion) return;
     if (e instanceof ErrorApi && e.estado === 401) return;
+    if (e instanceof ErrorApi && (e.codigo === 'cambiar_clave' || e.codigo === 'compromiso')) return;
     console.error(e);
-    montar(vista, html`<div class="vacio"><b>No se pudo cargar</b>${e.message}</div>`);
+    const motivo = e instanceof ErrorApi && e.estado === 403 && e.codigo === 'permiso' ? 'Sin acceso' : 'No se pudo cargar';
+    montar(vista, html`<div class="vacio"><b>${motivo}</b>${e.message}</div>`);
   }
   // El foco va al campo con autofocus de la vista (buscador de la reunión) o, si no hay, a la vista
   (vista.querySelector('[autofocus]') || vista).focus({ preventScroll: true });
@@ -138,32 +210,90 @@ document.addEventListener('keydown', (e) => {
 });
 // Red de seguridad: un error de la API que ninguna acción atrapó se muestra en vez de perderse en la consola
 window.addEventListener('unhandledrejection', (e) => {
-  if (e.reason instanceof ErrorApi && e.reason.estado !== 401) aviso(e.reason.message, 'error', 6000);
+  if (avisarError(e.reason)) e.preventDefault();
 });
 
-// Lo que devuelven /api/yo y /api/login: usuario, csrf y, con usuarios, uid, rol, permisos y nombre
-const datosSesion = (d) => ({ token: d.csrf, usuario: d.usuario, uid: d.uid, rol: d.rol, permisos: d.permisos, nombre: d.nombre });
+// Lo que devuelven /api/yo y /api/login: usuario, csrf y, con usuarios, uid, rol, permisos (y sus excepciones),
+// nombre y pendientes
+const datosSesion = (d) => ({
+  token: d.csrf, usuario: d.usuario, uid: d.uid, rol: d.rol, permisos: d.permisos, excepto: d.excepto, nombre: d.nombre,
+  debe_cambiar_clave: d.debe_cambiar_clave, compromiso_pendiente: d.compromiso_pendiente,
+});
+
+// Con algo escrito, una sesión vencida no recarga: se ingresa de nuevo en un diálogo (el mismo usuario) y la
+// petición se reintenta
+async function reingresar() {
+  const d = await dialogoIngreso({ usuario: sesion.usuario });
+  if (!d) throw new ErrorApi(401, 'La sesión terminó');
+  if (d.uid !== sesion.uid) { location.reload(); throw new ErrorApi(401, 'Otra cuenta'); }
+  configurar(datosSesion(d));
+  return d;
+}
+
+const ganchos = { expira: expiro, reingresar, pendiente: irACuenta };
+
+function entrar(d) {
+  configurar({ ...datosSesion(d), ...ganchos });
+  armarEstructura();
+  // Con la clave temporal o el compromiso pendiente, el servidor responde 403 a todo lo demás: sin insignias
+  return render().then(() => { if (!conPendientes()) refrescarInsignias(); });
+}
+
+// Sin MongoDB (503) o sin red, el arranque no pide la clave: la sesión sigue en la cookie. Se muestra el aviso y se
+// pregunta de nuevo cada ~5 s (o al tocar «Reintentar»); cuando la base vuelve, se entra con la misma sesión
+const REINTENTO_MS = 5000;
+let reloj = null;
+let preguntando = false;
+
+async function preguntarSesion() {
+  if (preguntando) return;
+  preguntando = true;
+  clearTimeout(reloj);
+  let yo;
+  try {
+    yo = await api.get('/api/yo');
+  } catch (e) {
+    preguntando = false;
+    if (e instanceof ErrorApi && e.estado === 401) {
+      vistaLogin($('#raiz'), { configurado: e.detalle?.configurado !== false, alEntrar: entrar });
+    } else {
+      sinConexion();
+    }
+    return;
+  }
+  preguntando = false;
+  await entrar(yo);
+}
+
+function sinConexion() {
+  const raiz = $('#raiz');
+  if (!$('#reintentar', raiz)) {
+    montar(raiz, html`
+      <div class="login sin-conexion">
+        <section class="caja">
+          <div class="estado-conexion" role="alert">
+            <h2>Sin conexión con la base de datos</h2>
+            <p class="sec">El panel vuelve a intentarlo solo cada 5 segundos. Su sesión no se pierde: no hace falta ingresar de nuevo.</p>
+            <button class="btn primario" id="reintentar" type="button">Reintentar</button>
+            <p class="sec" id="intento" aria-live="polite"></p>
+          </div>
+        </section>
+      </div>`);
+    $('#reintentar', raiz).addEventListener('click', () => preguntarSesion());
+  }
+  const hora = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  $('#intento', raiz).textContent = `Último intento: ${hora}`;
+  reloj = setTimeout(preguntarSesion, REINTENTO_MS);
+}
 
 async function iniciar() {
   aplicarTema(tema());
-  try {
-    const yo = await api.get('/api/yo');
-    configurar({ ...datosSesion(yo), expira: expiro });
-    armarEstructura();
-    await render();
-    refrescarInsignias();
-  } catch (e) {
-    const configurado = e instanceof ErrorApi ? e.detalle?.configurado !== false : true;
-    vistaLogin($('#raiz'), { configurado, alEntrar: (d) => {
-      configurar({ ...datosSesion(d), expira: expiro });
-      armarEstructura();
-      render();
-      refrescarInsignias();
-    } });
-  }
+  cargarEstilos();
+  await preguntarSesion();
 }
 
 function expiro() {
+  olvidar();
   aviso('La sesión terminó. Ingrese de nuevo.', 'error');
   setTimeout(() => location.reload(), 1200);
 }
