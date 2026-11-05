@@ -302,6 +302,8 @@ def filas_para(quien: Any, docs: Iterable[dict]) -> list[dict]:
                              "ultimo_fecha": ab.get("ultimo_fecha")}
             if d.get("menor"):
                 f["telefono_mascara"], f["telefonos_n"] = None, 0
+                if "faltan" in f:
+                    f["faltan"] = [x for x in f["faltan"] or [] if x != "telefono"]
         out.append(f)
     return out
 
@@ -354,6 +356,8 @@ def editables(p: dict, quien: Any) -> list[str]:
         return list(EDITABLES_A)
     if rol_de(quien) == "planillero":
         fuera = {"cedula", "tipo_documento"} if p.get("cedula") else set()
+        if modelo.es_menor(p):  # no ve los teléfonos de un menor ni los cambia (403)
+            fuera |= {"telefono", "telefono2"}
         return [k for k in EDITABLES_P if k not in fuera]
     faltan = modelo.faltan(p)
     return [k for k, f in (("cedula", "cedula"), ("puesto_id", "puesto"), ("mesa", "mesa")) if f in faltan]
@@ -574,7 +578,8 @@ def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> 
         "situacion": lambda: ({"estado": sit.get("estado")} if sit else None) if (rol == "consultor" and not adm) else sit,
         "no_disponible": lambda: dict(p.get("no_disponible") or {}),
         "faltan": lambda: [f for f in modelo.faltan(p, hoy, ctx.dias_dato)
-                           if adm or rol != "consultor" or f in ("cedula", "puesto", "mesa")],
+                           if adm or (rol != "consultor" and not (menor and f == "telefono"))
+                           or f in ("cedula", "puesto", "mesa")],
         "editables": lambda: editables(p, quien), "avisos": lambda: avisos(p, hoy, adm),
     }
     return {k: (valores[k]() if k in valores else p.get(k)) for k in sorted(permitidos)}

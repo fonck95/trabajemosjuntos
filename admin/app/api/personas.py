@@ -388,12 +388,14 @@ def numeros(texto: Any) -> list[str]:
 def cedula_ocupada(db: Database, c: str | None, pid: int | None = None, completo: bool = True) -> None:
     """409 `cedula_ocupada` si la cédula es de otra ficha activa (también como cédula anterior). Sin `completo` (P),
     si es de alguien cuya cédula P no ve (quien no autorizó) o una cédula anterior, el 409 no dice de quién: a esa
-    persona no se la ubica por un dato que P no ve."""
+    persona no se la ubica por un dato que P no ve. La que una unión está moviendo (`cedula_en_traspaso` del origen)
+    también está ocupada, y el 409 no dice de quién, para nadie."""
     if not c:
         return
     otro = db.personas.find_one({"$or": [{"cedula": c}, {"cedulas_anteriores": c}], **bd.ACTIVA, "_id": {"$ne": pid}},
                                 {"nombre": 1, "lugar_id": 1, "lugar_texto": 1, "consentimiento": 1, "cedula": 1})
-    if otro and not completo and (otro.get("consentimiento") == "no" or otro.get("cedula") != c):
+    if (otro and not completo and (otro.get("consentimiento") == "no" or otro.get("cedula") != c)) \
+            or (otro is None and bd.cedula_en_traspaso(db, c)):
         raise HTTPException(409, {"mensaje": "La cédula ya pertenece a otra ficha: pida la revisión al administrador",
                                   "codigo": "cedula_ocupada"})
     if otro:
@@ -749,20 +751,26 @@ def crear_solicitud(db: Database, pid: int | None, tipo: str, quien: Quien | Non
 
 def derivar_autorizacion(db: Database, pid: int) -> dict:
     """Escribe en la ficha los campos derivados de sus eventos (`consentimiento_vigente`) y recalcula el abordaje (que
-    pasa a «no contactar» con un «no»). Con «no», borra los sensibles."""
-    eventos = list(db.autorizaciones.find({"persona_id": pid}))
-    d = modelo.consentimiento_vigente(eventos)
-    cambios = dict(d)
-    if d["consentimiento"] == "no":
-        cambios.update(sensibles={}, sensibles_autorizados=[])
-    db.personas.update_one({"_id": pid}, {"$set": cambios})
+    pasa a «no contactar» con un «no»). Con «no», borra los sensibles. Si mientras tanto llegó otro evento (un «no» que
+    se dijo a la vez, una unión), vuelve a derivar: lo escrito nunca queda detrás de los eventos."""
+    for _ in range(3):
+        eventos = list(db.autorizaciones.find({"persona_id": pid}))
+        d = modelo.consentimiento_vigente(eventos)
+        cambios = dict(d)
+        if d["consentimiento"] == "no":
+            cambios.update(sensibles={}, sensibles_autorizados=[])
+        db.personas.update_one({"_id": pid}, {"$set": cambios})
+        if {e["_id"] for e in db.autorizaciones.find({"persona_id": pid}, {"_id": 1})} == {e["_id"] for e in eventos}:
+            break
     from . import acercamientos as ac  # aquí: acercamientos importa este módulo
     ac.recalcular_abordaje(db, pid)
     return d
 
 
 def registrar_autorizacion(db: Database, pid: int, quien: Quien, evento: dict, acercamiento_id: int | None = None) -> int:
-    """Inserta el evento (solo inserción) y deriva la ficha. «revocada» abre una solicitud de revocatoria."""
+    """Inserta el evento (solo inserción) y deriva la ficha. «revocada» abre una solicitud de revocatoria. Si la ficha
+    se unió con otra mientras tanto (pasó la comprobación de ficha activa antes de la unión), el evento y lo ligado
+    pasan a la ficha unida y se deriva esa (`bd.recoger_tardios`): un «no» nunca queda en una ficha vacía."""
     aid = bd.siguiente_id(db, "autorizaciones")
     aviso = modelo.leer_ajustes(db).get("aviso_privacidad") or {}
     db.autorizaciones.insert_one({
@@ -770,6 +778,7 @@ def registrar_autorizacion(db: Database, pid: int, quien: Quien, evento: dict, a
         "texto_version": aviso.get("version"), "acercamiento_id": acercamiento_id, "uid": quien.uid,
         "usuario": quien.usuario, "rol": quien.rol, "capturado_por": None, "confirmada_por": None,
         "clave_migracion": None, "ts": bd.ahora()})
+    pid = bd.recoger_tardios(db, pid) or pid
     derivar_autorizacion(db, pid)
     if evento["estado"] == "revocada":
         crear_solicitud(db, pid, "revocatoria", quien, "Revocó la autorización")
@@ -890,6 +899,10 @@ def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, 
         for k in VEDADOS_P:
             if k in datos and not (k == "consentimiento_fecha" and datos.get("consentimiento")):
                 raise _prohibido(f"Su rol no puede cambiar «{k}»", campo=k)
+        # Los teléfonos de un menor no los ve: el mismo 403 antes de mirar el valor (vaciar uno que tiene daba 422 y
+        # uno que no tiene, 200; uno nuevo pasaba a principal encima de los ocultos)
+        if "telefono" in datos or "telefono2" in datos:
+            exigir_telefonos_visibles(antes, quien)
     exigir_base_visible(base, quien, antes)
     condiciones = _condiciones_base(base)
     sets: dict = {}
@@ -1418,6 +1431,7 @@ def agregar_telefono(pid: int, body: TelefonoIn, request: Request, db: Database 
     p = proyeccion.persona_activa(db, pid)
     exigir_ficha_consultor(db, p, quien)
     proyeccion.exigir_tratable(p, quien, "telefonos")
+    exigir_telefonos_visibles(p, quien)  # el 200 cambiaba el principal oculto de un menor (y decía si tenía uno)
     nums = numeros(body.numero)
     consultor = _es_consultor(quien)
     # El que dicta el titular al consultor entra confirmado; en el panel, «sin verificar» salvo que lo confirme
@@ -1446,8 +1460,8 @@ class TelefonoCambio(BaseModel):
 
 
 def exigir_telefonos_visibles(p: dict, quien: Quien) -> None:
-    """403 `permiso` si P toca por su número un teléfono de un menor: no los ve, y el 404 o el 200 dirían si el número
-    que probó es suyo."""
+    """403 `permiso` si P toca los teléfonos de un menor (por su número, al agregar uno o con `telefono`/`telefono2` en
+    PATCH): no los ve, y un 404, 422 o 200 que dependiera de ellos diría cuáles tiene. Igual para todos los menores."""
     if _es_planillero(quien) and modelo.es_menor(p):
         raise _prohibido("Su rol no maneja los teléfonos de un menor de edad")
 

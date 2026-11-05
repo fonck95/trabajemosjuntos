@@ -25,7 +25,8 @@ from .. import db as bd
 from ..acceso import Quien, requiere
 from ..seguridad import obtener_db
 from . import personas as per
-from .filtros import alcance_de, base_cola, en_alcance_consultor, exigir_alcance_consultor, falta, telefonos_ocultos
+from .filtros import (Filtros, alcance_de, base_cola, consulta, en_alcance_consultor, exigir_alcance_consultor, falta,
+                      preparar, telefonos_ocultos)
 
 r = APIRouter(prefix="/api", tags=["acercamientos"])
 
@@ -689,10 +690,9 @@ def trabajo(uid: int | None = None, db: Database = Depends(obtener_db),
             listas.append({"clave": clave, "titulo": titulo, "n": n,
                            "enlace": f"/personas?situacion=vigentes&tratables=1&{enlace}"})
         if not quien.administra:
-            # Como su enlace a Habitantes (`mios=1`): sin quien no autorizó (quién la editó después no se ve)
-            n = db.personas.count_documents({"$and": [dict(bd.ACTIVA), {"consentimiento": {"$ne": "no"}},
-                                                      {"$or": [{"creado_por.uid": quien.uid},
-                                                               {"actualizado_por.uid": quien.uid}]}]})
+            # La misma consulta que su enlace a Habitantes (`mios=1`): con el alcance y sin quien no autorizó (quién
+            # la editó después no se ve). Una ficha fuera del alcance que editó no cuenta, porque el enlace no la trae
+            n = db.personas.count_documents(consulta(db, quien, preparar(db, Filtros(mios=1))))
             listas.append({"clave": "mis_recientes", "titulo": "Mis registros recientes", "n": n,
                            "enlace": "/personas?mios=1&orden=reciente"})
     semana = hoy - timedelta(days=hoy.weekday())

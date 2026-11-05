@@ -102,6 +102,9 @@ def exigir_cedula_libre(db: Database, cedula: str, salvo: int | None = None) -> 
     if otra:
         raise HTTPException(409, {"mensaje": f"La cédula ya pertenece a {otra['nombre']}", "codigo": "cedula_ocupada",
                                   "id": otra["_id"], "nombre": otra["nombre"]})
+    if bd.cedula_en_traspaso(db, cedula):
+        raise HTTPException(409, {"mensaje": "Esa cédula está pasando a otra ficha en una unión: inténtelo en un momento",
+                                  "codigo": "cedula_ocupada"})
     h = bd.huella(bd.clave_supresion(db), "cedula", cedula)
     if h and db.suprimidos.find_one({"_id": h}, {"_id": 1}):
         raise HTTPException(409, {"mensaje": "El titular de esa cédula pidió la supresión de sus datos",

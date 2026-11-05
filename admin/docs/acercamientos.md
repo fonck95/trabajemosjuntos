@@ -23,7 +23,9 @@ Toda respuesta con una ficha o con filas se arma con la lista de campos permitid
   `GET /api/personas/{pid}/sensibles`, que queda auditado sin los valores.
 - P: sin `lider`, `listas`, `origen`, `procedencia`, `historial`, `coincidencias`, `cedulas_anteriores`, `fuentes`
   ni etiquetas o campos propios sensibles. La fuente «cedulas» se muestra como «otra_base». No ve los teléfonos de un
-  menor. Sus filas llevan la cédula y el teléfono enmascarados (`···123`, `···2233`).
+  menor ni los toca: `telefono`/`telefono2` en PATCH, agregar un número, cambiarlo o hacerlo principal dan el mismo
+  403 para todo menor, y su ficha y su fila no dicen si tiene alguno (`faltan` y `editables` sin teléfono). Sus filas
+  llevan la cédula y el teléfono enmascarados (`···123`, `···2233`).
 - C: nombre, cédula enmascarada, rango de edad, sexo, barrio, puesto, la autorización, solo los números usables
   (`numero`, `tipo`, `whatsapp`, `estado` e `indice`), el abordaje y lo que le falta (cédula, puesto y mesa).
 - Quien dijo «no» sale para P y C como `{id, nombre, cedula_ult3, lugar, consentimiento, abordaje: {estado}}`, y
@@ -98,8 +100,8 @@ de otro) y dentro de su asignación.
 - `GET /api/trabajo`: tarjetas con conteos dentro del alcance (sin «no», sin no vigentes ni datos marcados «no
   disponible»), la política de contacto, los pendientes sin autorización y la actividad de hoy y de la semana. Las
   tarjetas de P enlazan a Habitantes con sus filtros (`sin_cedula`, `sin_puesto_mesa`, `votacion_estado`,
-  `requiere_actualizacion`, `sin_telefono`, `consentimiento`, `sin_lugar`, `mios`). A y K pasan `uid` para ver el de un
-  usuario.
+  `requiere_actualizacion`, `sin_telefono`, `consentimiento`, `sin_lugar`, `mios`) y cuentan lo mismo que ese enlace
+  («Mis registros recientes» usa la misma consulta, con el alcance). A y K pasan `uid` para ver el de un usuario.
 - `GET /api/insignias`: `{calidad, conflictos, solicitudes, situaciones, trabajo}`; `trabajo` es, para P, las
   pendientes de actualizar en su alcance y, para C, las de «volver a llamar» vencidas.
 

@@ -703,6 +703,10 @@ class _Almacen:
                 continue
             if estado == "si" and medio == "declarado_planilla":
                 self.res.autorizaciones_por_confirmar += 1
+        # Una ficha que se unió con otra mientras se importaba: su evento (un «no») pasa a la ficha unida
+        unidas = [o["_id"] for o in self.db.personas.find({"_id": {"$in": pids}, "fusionada_en": {"$ne": None}},
+                                                          {"_id": 1})]
+        pids += [fin for fin in (bd.recoger_tardios(self.db, pid) for pid in unidas) if fin is not None]
         bd.derivar(self.db, pids, reconciliar=False)
 
 
