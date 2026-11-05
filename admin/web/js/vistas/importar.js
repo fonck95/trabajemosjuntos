@@ -42,7 +42,7 @@ export async function vistaImportar(el) {
   if (!el.isConnected) return; // mientras cargaba se pidió otra vista
   const planilleros = (catalogos.usuarios || []).filter((u) => u.rol === 'planillero' && u.activo !== false);
   montar(el, html`
-    <div class="cabecera"><div><h1>Importar y exportar</h1><div class="sub">Suba versiones nuevas cuando quiera: nada se duplica, lo editado en el panel no se pisa y lo distinto queda como dato alterno.</div></div></div>
+    <div class="cabecera"><div><h1>${puede('exportar') ? 'Importar y exportar' : 'Importar'}</h1><div class="sub">Suba versiones nuevas cuando quiera: nada se duplica, lo editado en el panel no se pisa y lo distinto queda como dato alterno.</div></div></div>
     <div class="rejilla r-12">
       <section class="tarjeta c-7">
         <h2>Importar archivos de Excel</h2>

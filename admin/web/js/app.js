@@ -235,7 +235,8 @@ const ganchos = { expira: expiro, reingresar, pendiente: irACuenta };
 function entrar(d) {
   configurar({ ...datosSesion(d), ...ganchos });
   armarEstructura();
-  return render().then(() => refrescarInsignias());
+  // Con la clave temporal o el compromiso pendiente, el servidor responde 403 a todo lo demás: sin insignias
+  return render().then(() => { if (!conPendientes()) refrescarInsignias(); });
 }
 
 // Sin MongoDB (503) o sin red, el arranque no pide la clave: la sesión sigue en la cookie. Se muestra el aviso y se
