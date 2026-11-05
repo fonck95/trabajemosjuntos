@@ -62,6 +62,8 @@ a { color: inherit; }
 button, input, select, textarea { font: inherit; color: inherit; }
 h1, h2, h3 { margin: 0; line-height: 1.15; }
 .oculto { display: none !important; }
+/* `hidden` gana siempre: .campo, .btn o .form tienen su propio display y lo anularían */
+[hidden] { display: none !important; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -233,7 +235,7 @@ dialog.ancho { width: min(980px, calc(100vw - 32px)); }
 dialog::backdrop { background: rgb(0 0 0 / .45); backdrop-filter: blur(2px); }
 dialog .cab { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px 0; }
 dialog .cab h2 { font-size: 18px; }
-dialog .cuerpo { padding: 16px 22px; overflow: auto; max-height: calc(100vh - 170px); }
+dialog .cuerpo { padding: 16px 22px; overflow: auto; max-height: calc(100vh - 170px); max-height: calc(100dvh - 150px); }
 dialog .pie { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 22px 18px; border-top: 1px solid var(--line-soft); }
 
 /* ───────── Login ───────── */
@@ -381,3 +383,235 @@ dialog .pie { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 
 .zona-subida b { display: block; font-size: 17px; margin-bottom: 4px; }
 .aviso-legal { border-left: 4px solid var(--accent); background: var(--surface); border-radius: 0 12px 12px 0; padding: 12px 16px; font-size: 13.5px; color: var(--ink-2); }
 .vista.lleno { position: relative; height: 100%; }
+
+/* ═════════ Trabajo de campo en el celular (7.1, grupo 4) ═════════ */
+
+/* 1. iOS amplía la página si un campo tiene menos de 16 px */
+@media (max-width: 900px) { input, select, textarea { font-size: 16px; } }
+/* 2. Dedo: blancos de 44 px o más */
+@media (pointer: coarse) {
+  .btn.chico, .chip[data-et], button.chip, label.chip.opcion, .segmentado button, .pestanas button { min-height: 44px; }
+  .btn.chico { padding: 8px 12px; }
+  .casilla { min-height: 44px; }
+}
+/* 3. Pestañas desplazables, con un degradado que avisa que hay más */
+.pestanas { scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent); scroll-snap-type: x proximity; padding-right: 24px; }
+.pestanas::-webkit-scrollbar { display: none; }
+.pestanas button { scroll-snap-align: start; flex: none; }
+.pestanas .n { color: var(--muted); font-weight: 600; font-size: 12.5px; }
+/* 4. Diálogos que caben con el teclado abierto; en el celular, hoja que sube desde abajo */
+dialog { max-height: 100dvh; }
+@media (max-width: 640px) {
+  dialog, dialog.ancho { width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: 18px 18px 0 0; }
+  dialog .cab { padding: 14px 16px 0; }
+  dialog .cuerpo { padding: 12px 16px; max-height: calc(100dvh - 130px); }
+  dialog .pie { padding: 10px 16px calc(12px + env(safe-area-inset-bottom)); flex-wrap: wrap; }
+  dialog .pie .btn { flex: 1 1 auto; min-height: 44px; }
+}
+/* 8. Chips de listas: el texto largo baja de línea */
+.chips .chip { white-space: normal; text-align: left; }
+
+.casilla { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
+.casilla input { width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+label.chip.opcion { cursor: pointer; gap: 6px; padding: 4px 11px; }
+label.chip.opcion input { margin: 0; accent-color: var(--accent); }
+label.chip.opcion:has(input:checked) { background: var(--ink); color: var(--bg); }
+.fila-botones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.sub-tarjeta { font-size: 15px; margin: 22px 0 12px; }
+.una-columna { grid-template-columns: 1fr; }
+.grupo-campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.titulo-campo { font-size: 12.5px; font-weight: 650; color: var(--muted); }
+.fila-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.fila-campos input, .fila-campos select, .no-sabe select, .selector-usuario select { width: 100%; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 9px; padding: 8px 11px; min-height: 38px; }
+.no-sabe select { width: auto; min-height: 32px; padding: 4px 8px; font-size: 13px; color: var(--muted); }
+.opciones-radio { display: flex; flex-wrap: wrap; gap: 6px; }
+.nota-sensibles { color: var(--muted); font-size: 12px; }
+.campo small.nota, .campo .nota { color: var(--muted); font-size: 12px; }
+
+/* Autorización y aviso de privacidad */
+.bloque-autorizacion-ficha { border: 1px solid var(--line-soft); border-radius: var(--r-s); padding: 12px 14px; margin: 0; display: flex;
+  flex-direction: column; gap: 10px; min-width: 0; }
+.bloque-autorizacion-ficha legend { font-weight: 700; padding: 0 6px; }
+.recuadro-aviso { background: var(--raised); border: 1px dashed var(--line); border-radius: var(--r-s); padding: 10px 12px; font-size: 13px;
+  max-height: 160px; overflow: auto; }
+.recuadro-aviso p { margin: 4px 0; white-space: pre-line; }
+
+/* Franja «Llamada sin registrar» (7.0) y «Deshacer» (7.5) */
+.franja-pendiente { position: fixed; z-index: 150; top: 0; left: var(--side-w); right: 0; display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px; background: var(--warn); color: #1b1300; box-shadow: var(--sombra); font-size: 14px; }
+.franja-pendiente svg { width: 20px; height: 20px; flex: none; }
+.franja-pendiente span { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.franja-pendiente small { opacity: .8; }
+.franja-pendiente .btn.fantasma { color: inherit; }
+@media (max-width: 900px) { .franja-pendiente { left: 0; top: var(--barra-movil); } }
+body:has(#franja-llamada) .contenido:not(.lleno) { padding-top: 76px; }
+.barra-deshacer { position: fixed; z-index: 210; left: 50%; translate: -50% 0; bottom: calc(88px + env(safe-area-inset-bottom)); display: flex;
+  align-items: center; gap: 14px; background: var(--ink); color: var(--bg); padding: 10px 12px 10px 18px; border-radius: 12px;
+  box-shadow: var(--sombra); font-weight: 600; max-width: calc(100vw - 32px); animation: entra .2s ease-out; }
+.barra-deshacer .btn { background: transparent; color: var(--warn); border-color: transparent; font-weight: 800; }
+@media (min-width: 901px) { .barra-deshacer { bottom: 24px; } }
+
+/* Diálogo de acercamiento (7.5) */
+.acercamiento { display: flex; flex-direction: column; gap: 14px; }
+.segmentado.canales button { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 8px; min-height: 52px; }
+.segmentado.canales svg { width: 20px; height: 20px; }
+.rejilla-resultados { display: flex; flex-direction: column; gap: 12px; }
+.grupo-resultados h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 6px; }
+.botones-resultado { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.resultado-btn { min-height: 48px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); font-weight: 650;
+  font-size: 14px; padding: 8px 10px; cursor: pointer; text-align: center; line-height: 1.2; }
+.resultado-btn.rapido { background: var(--raised); }
+.resultado-btn:hover { border-color: var(--axis); }
+.resultado-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.resultado-btn:disabled { opacity: .5; }
+.ayuda-rapido { margin: 0; font-size: 12.5px; color: var(--muted); }
+.detalle-resultado { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
+.bloque-autorizacion, .bloque-dictados, details.bloque, .mas-datos { border: 1px solid var(--line-soft); border-radius: var(--r-s); padding: 10px 14px; }
+.bloque-autorizacion[open], .bloque-dictados[open], .mas-datos[open] { display: flex; flex-direction: column; gap: 10px; }
+.bloque-autorizacion summary, .bloque-dictados summary, details.bloque > summary, .mas-datos > summary { font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; min-height: 32px; }
+.guion { background: var(--raised); border-radius: var(--r-s); padding: 10px 12px; margin: 0; font-size: 14px; font-style: italic; }
+.aviso-privacidad summary { font-size: 13px; color: var(--muted); cursor: pointer; }
+.aviso-privacidad p { white-space: pre-line; font-size: 13px; }
+.avisos-acercamiento:empty { display: none; }
+.avisos-acercamiento .aviso-legal { margin: 0 0 6px; }
+
+/* Ficha (7.4): contacto primero en el celular, bloques plegables y barra de acciones por rol */
+.nombre-ficha { font-size: 32px; overflow-wrap: anywhere; }
+@media (max-width: 640px) { .nombre-ficha { font-size: 24px; } .perfil { gap: 12px; } .perfil .avatar { width: 48px; height: 48px; font-size: 20px; border-radius: 14px; } }
+.lateral-ficha { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (max-width: 1100px) { .ficha > .lateral-ficha { order: -1; } }
+details.bloque { margin-bottom: 12px; }
+details.bloque > .form, details.bloque > .datos { margin-top: 12px; }
+details.bloque > summary .chip { font-weight: 650; }
+.guardar-ficha { display: flex; gap: 8px; justify-content: flex-end; align-items: center; margin-top: 18px; position: sticky; bottom: 0;
+  background: var(--surface); padding: 10px 0; z-index: 2; }
+.guardar-ficha .sec { margin-right: auto; color: var(--muted); font-size: 13px; }
+.barra-acciones { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; }
+.barra-acciones .btn svg { width: 18px; height: 18px; }
+@media (max-width: 900px) {
+  .barra-acciones { position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; margin: 0; flex-wrap: nowrap; overflow-x: auto; gap: 6px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: var(--vidrio); backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4); border-top: 1px solid var(--line); scrollbar-width: none; }
+  .barra-acciones .btn { flex: 1 0 auto; flex-direction: column; gap: 2px; padding: 6px 8px; min-height: 54px; font-size: 12px; min-width: 72px; }
+  .contenido:has(.barra-acciones) { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .contenido:has(.barra-acciones) .guardar-ficha { bottom: calc(70px + env(safe-area-inset-bottom)); }
+}
+.pendiente-actualizar { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; border-left-color: var(--warn); }
+.nota-consultor { margin: 0; font-size: 15px; color: var(--ink); }
+.avisos-ficha { margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; border-left-color: var(--s1); }
+.faltan-ficha { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 14px; }
+.faltan { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.faltan .chip { font-size: 11.5px; padding: 1px 7px; }
+.no-disponible { align-self: center; }
+.alterno { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 12.5px; color: var(--ink-2); background: color-mix(in srgb, var(--s1) 8%, transparent);
+  border-radius: 8px; padding: 2px 4px 2px 8px; }
+.alterno .btn { padding: 2px 8px; }
+.registrar-autorizacion { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; align-items: flex-start; }
+.registrar-autorizacion .bloque-autorizacion-ficha { align-self: stretch; }
+.sub-origen { font-size: 14px; margin: 18px 0 10px; }
+.sub-origen:first-child { margin-top: 4px; }
+.detalle-cambio { white-space: pre-wrap; font: 12px/1.4 var(--f-mono); color: var(--muted); margin: 4px 0 0; }
+.nota-interna { display: flex; gap: 8px; margin-bottom: 18px; }
+.nota-interna[hidden] { display: none; }
+.linea-tiempo .punto.acercamiento { background: var(--s4); }
+.linea-tiempo .ev.anulado .t { text-decoration: line-through; color: var(--muted); }
+.minimapa.vacio-mapa { height: 120px; }
+.minimapa.vacio-mapa .vacio { padding: 40px 10px; }
+.telefonos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.tel { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 11px;
+  border: 1px solid var(--line-soft); background: var(--raised); }
+.tel.no-usable { opacity: .7; }
+.tel.no-usable .tel-num b { text-decoration: line-through; }
+.tel-num { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-width: 0; }
+.tel-num b { font-variant-numeric: tabular-nums; font-size: 15px; margin-right: 2px; }
+.tel-num small { flex-basis: 100%; }
+.tel-acciones { display: flex; gap: 4px; flex: none; }
+.tel-acciones .btn svg { width: 18px; height: 18px; }
+.tel-estado.estado-confirmado { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok-text); }
+.tel-estado.estado-equivocado, .tel-estado.estado-inexistente, .tel-estado.estado-retirado { background: var(--accent-soft); color: var(--accent-text); }
+.tel-estado.estado-no_usa { background: color-mix(in srgb, var(--warn) 22%, transparent); }
+.lista-acciones-tel { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.lista-acciones-tel .btn { min-height: 44px; }
+
+/* Habitantes (7.3): filtros plegables y filas que pasan a tarjetas */
+.boton-filtros { display: none; }
+.mas-filtros { display: contents; }
+@media (max-width: 900px) {
+  .filtros.plegables .buscador { flex: 1 1 200px; }
+  .boton-filtros { display: inline-flex; min-height: 40px; }
+  .mas-filtros { display: none; width: 100%; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .filtros.plegables.abiertos .mas-filtros { display: grid; }
+  .mas-filtros select { width: 100%; min-width: 0; }
+}
+#chips-ocultos:empty { display: none; }
+.chips-fila { margin-top: 4px; }
+.chips-fila:empty { display: none; }
+.tabla-personas td { vertical-align: top; }
+.tabla-personas .celda-acciones { text-align: right; white-space: nowrap; }
+.tabla-personas tr.recien td { background: color-mix(in srgb, var(--ok) 10%, transparent); transition: background 1s; }
+.aviso-tope { color: var(--accent-text); font-weight: 650; }
+.botones-pagina { display: flex; gap: 6px; }
+@media (max-width: 640px) {
+  .paginacion { flex-wrap: wrap; }
+  /* 5. Filas como tarjetas: cada celda lleva su título encima */
+  .tabla-tarjetas, .tabla-tarjetas tbody { display: block; width: 100%; }
+  .tabla-tarjetas thead { display: none; }
+  .tabla-tarjetas tr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .tabla-tarjetas td { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; border: 0; padding: 0; min-width: 0; white-space: normal; }
+  .tabla-tarjetas td[data-titulo]::before { content: attr(data-titulo); color: var(--muted); font-size: 11.5px; font-weight: 650;
+    text-transform: uppercase; letter-spacing: .03em; }
+  .tabla-tarjetas td:first-child, .tabla-tarjetas td.celda-acciones, .tabla-tarjetas td[data-titulo="Faltan"], .tabla-tarjetas td[colspan] { grid-column: 1 / -1; }
+  .tabla-tarjetas td:first-child::before { content: none; }
+  .tabla-tarjetas td:first-child .nombre { font-size: 16px; }
+  .tabla-tarjetas td.celda-acciones { align-items: stretch; }
+  .tabla-tarjetas td.celda-acciones:empty { display: none; }
+  .tabla-tarjetas tr.esqueleto-fila { display: block; }
+}
+
+/* Mi trabajo (7.7) */
+.selector-usuario { min-width: 220px; }
+.kpis-trabajo .kpi.en-cero .v { color: var(--muted); }
+.resumen-dia { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline; font-size: 14px; margin: 0 0 12px; }
+.resumen-dia > b { text-transform: uppercase; font-size: 12px; letter-spacing: .05em; color: var(--muted); }
+#alcance { margin-bottom: 16px; }
+.indicadores-trabajo { margin-top: 16px; }
+.persona-actual { margin-bottom: 16px; border: 2px solid var(--ink); }
+.persona-actual .etiqueta-actual { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; }
+.nombre-actual { font-size: 24px; margin: 4px 0 2px; }
+.nombre-actual a { text-decoration: none; }
+.numero-actual { font: 700 26px/1.2 var(--f-body); font-variant-numeric: tabular-nums; letter-spacing: .02em; margin: 6px 0 12px; }
+.numero-actual small { display: block; font-size: 13px; font-weight: 500; letter-spacing: 0; }
+.mas-datos .grupo-campo { margin-bottom: 8px; }
+.botones-actual .btn { min-height: 48px; }
+.sin-actual { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sin-actual p { margin: 2px 0 0; }
+.btn.grande { min-height: 52px; padding: 10px 22px; font-size: 16px; }
+.buscador-trabajo { display: block; margin-bottom: 6px; }
+.filas-cola { display: flex; flex-direction: column; gap: 10px; }
+.fila-cola { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; }
+.fila-cola .q { min-width: 0; flex: 1 1 220px; }
+.fila-cola .q b { font-size: 15.5px; }
+.cola-vacia { background: var(--surface); border-radius: var(--r); }
+#mas-cola { margin-top: 12px; width: 100%; }
+@media (max-width: 640px) { .fila-cola .fila-botones { width: 100%; } .fila-cola .fila-botones .btn { flex: 1 1 auto; min-height: 46px; } }
+
+/* Tablero (7.10): pirámide con barras enlazadas */
+.piramide { display: grid; grid-template-columns: 1fr 58px 1fr; gap: 6px 8px; align-items: center; font-size: 12.5px; }
+.piramide.con-gris { grid-template-columns: 1fr 58px 1fr minmax(60px, .45fr); }
+.celda-p { display: flex; align-items: center; gap: 6px; text-decoration: none; min-width: 0; }
+.celda-p.mujeres { flex-direction: row-reverse; }
+.barra-p { display: block; height: 14px; min-width: 2px; }
+.mujeres .barra-p { background: var(--s2); border-radius: 4px 0 0 4px; }
+.hombres .barra-p { background: var(--s1); border-radius: 0 4px 4px 0; }
+.sin-sexo .barra-p { background: var(--axis); border-radius: 4px; }
+a.celda-p:hover .barra-p { filter: brightness(1.12); }
+.celda-p.cero .barra-p { min-width: 0; }
+.celda-p.cero .sec { visibility: hidden; }
+.rango-p { text-align: center; font-weight: 650; }
+.actividad { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+
+/* Reunión */
+.acciones-asistente { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
