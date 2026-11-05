@@ -1,0 +1,124 @@
+/* Zonas del mapa (6): herramienta de dibujo, panel de la zona y hoja inferior del celular. La carga web/js/zona.js. */
+
+/* ───────── Dibujo ───────── */
+.mapa.zona-dibujo .maplibregl-canvas-container .maplibregl-canvas { cursor: crosshair; }
+/* Lazo: más específico que maplibre-gl.css (que se carga después). Sin esto el navegador del celular toma el trazo
+   como desplazamiento de la página y lo corta con pointercancel */
+.mapa.lazo .maplibregl-canvas-container .maplibregl-canvas { touch-action: none; cursor: crosshair; }
+
+.zona-mira { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; translate: -50% -50%; z-index: 3;
+  pointer-events: none; }
+.zona-mira::before, .zona-mira::after { content: ""; position: absolute; background: #111; box-shadow: 0 0 0 1.5px #fff; }
+.zona-mira::before { left: 50%; top: 0; bottom: 0; width: 2px; translate: -50% 0; }
+.zona-mira::after { top: 50%; left: 0; right: 0; height: 2px; translate: 0 -50%; }
+.zona-mira[hidden] { display: none; }
+
+/* Vértice: 44 px de área táctil y un punto visible de 14 px */
+.zona-vertice { width: 44px; height: 44px; display: grid; place-items: center; cursor: grab; touch-action: none;
+  -webkit-tap-highlight-color: transparent; outline: none; }
+.zona-vertice i { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid #2a78d6;
+  box-shadow: 0 1px 4px rgb(0 0 0 / .45); transition: transform .12s; }
+.zona-vertice:hover i, .zona-vertice:focus-visible i { transform: scale(1.3); }
+.zona-vertice:focus-visible i { outline: 2px solid var(--accent); outline-offset: 2px; }
+.zona-vertice.bloqueado { cursor: default; }
+.zona-vertice.primero i { width: 20px; height: 20px; border-color: #111; background: #ffd84d; }
+.maplibregl-marker.zona-vertice.oculto, .maplibregl-marker.zona-medio.oculto { display: none !important; }
+.zona-medio { width: 44px; height: 44px; display: grid; place-items: center; border: 0; padding: 0; background: transparent;
+  cursor: copy; color: #2a78d6; font: 800 15px/1 var(--f-body); -webkit-tap-highlight-color: transparent; }
+.zona-medio::before { content: ""; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: #fff;
+  border: 2px solid currentColor; opacity: .92; box-shadow: 0 1px 3px rgb(0 0 0 / .35); }
+.zona-medio { isolation: isolate; }
+.zona-medio::before { z-index: -1; }
+.zona-medio:focus-visible::before { outline: 2px solid var(--accent); outline-offset: 2px; }
+.zona-popup .maplibregl-popup-content { padding: 8px; }
+.zona-popup .btn { min-height: 40px; }
+
+/* ───────── Panel de la zona ───────── */
+.zona-panel h3 { margin-top: 0; }
+.zona-cab { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.zona-cab h3 { margin: 0; overflow-wrap: anywhere; }
+.zona-cab .btn { flex: none; }
+.zona-modos { margin-bottom: 8px; }
+.zona-botones { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.zona-botones .btn { flex: 1 1 auto; justify-content: center; }
+.zona-ayuda { font-size: 12.5px; margin: 6px 0; }
+.zona-msg { font-size: 13px; font-weight: 650; color: var(--accent-text); min-height: 0; margin: 4px 0; }
+.zona-msg:empty { display: none; }
+.zona-cifras { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+.zona-cifras div { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 10px; padding: 6px 9px; min-width: 0; }
+.zona-cifras b { display: block; font-size: 17px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zona-cifras span { font-size: 11.5px; color: var(--muted); }
+.zona-nota { font-size: 12px; margin: 6px 0; }
+.zona-panel h4 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; }
+.zona-panel .lista-barras { font-size: 12.5px; }
+.zona-acciones { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.zona-acciones .btn { flex: 1 1 45%; justify-content: center; }
+.zona-atajos { margin-top: 8px; font-size: 13px; }
+.zona-atajos summary { cursor: pointer; font-weight: 650; padding: 6px 0; }
+.zona-atajos .fila { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
+.zona-expandir { display: none; width: 100%; justify-content: center; }
+.zona-aviso { font-size: 12.5px; background: color-mix(in srgb, var(--warn) 18%, transparent); border-radius: 10px; padding: 8px 10px; margin: 8px 0; }
+.panel-mapa.der.dibujando #sec-vista { display: none; }
+.cerrar-hoja, .asa { display: none; }
+
+/* Guardar zona */
+.form-zona { display: flex; flex-direction: column; gap: 12px; }
+.form-zona label { display: flex; flex-direction: column; gap: 4px; font-weight: 650; font-size: 13.5px; }
+.form-zona fieldset { border: 0; padding: 0; margin: 0; }
+.form-zona legend { font-weight: 650; font-size: 13.5px; margin-bottom: 6px; }
+.zona-paleta .muestras { display: flex; flex-wrap: wrap; gap: 6px; }
+.zona-paleta label { position: relative; flex-direction: row; }
+.zona-paleta input { position: absolute; opacity: 0; width: 44px; height: 44px; margin: 0; cursor: pointer; }
+.zona-paleta span.color { width: 44px; height: 44px; border-radius: 12px; border: 3px solid transparent; box-shadow: inset 0 0 0 2px rgb(255 255 255 / .6); }
+.zona-paleta input:checked + span.color { border-color: var(--ink); }
+.zona-paleta input:focus-visible + span.color { outline: 2px solid var(--accent); outline-offset: 2px; }
+.zona-asignar { display: flex; flex-direction: column; gap: 2px; max-height: 220px; overflow: auto; }
+.zona-asignar label { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; min-height: 40px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Globo del punto */
+.globo-persona b { display: block; font-size: 14px; }
+.globo-persona .sec { display: block; }
+.globo-persona a { display: inline-block; margin-top: 6px; font-weight: 650; }
+
+/* Los controles de MapLibre suben con la hoja inferior (o con la barra de abajo) en el celular */
+.mapa .maplibregl-ctrl-bottom-left, .mapa .maplibregl-ctrl-bottom-right { bottom: var(--alto-hoja, 0px); transition: bottom .2s; }
+.panel-mapa.izq .cabeza-izq { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.panel-mapa.izq .plegar { flex: none; }
+.panel-mapa.izq.plegado .cuerpo-izq { display: none; }
+.zonas-guardadas { margin-top: 2px; }
+
+/* ───────── Celular: hoja inferior ───────── */
+@media (max-width: 900px) {
+  .panel-mapa.der.hoja { display: none; top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 60vh; max-height: 60dvh;
+    border-radius: 18px 18px 0 0; padding: 6px 16px calc(14px + env(safe-area-inset-bottom)); z-index: 6; overscroll-behavior: contain; }
+  .panel-mapa.der.hoja.abierta { display: block; }
+  .panel-mapa.der.hoja #sec-vista { display: none; }
+  .panel-mapa.der.hoja.abierta ~ .panel-mapa.abajo { display: none; }
+  .asa { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 2px auto 6px; }
+  .cerrar-hoja { display: inline-flex; position: absolute; top: 8px; right: 10px; min-width: 44px; min-height: 44px; justify-content: center; z-index: 1; }
+  .panel-mapa.der.hoja .zona-cab, .panel-mapa.der.hoja #detalle > h3:first-child { padding-right: 44px; }
+  .panel-mapa.der.dibujando .cerrar-hoja { display: none; }
+  .panel-mapa.der.dibujando .zona-cab { padding-right: 0; }
+  .zona-expandir { display: inline-flex; margin-top: 6px; }
+  .zona-panel:not(.expandida) .zona-detalle { display: none; }
+  /* Mientras se dibuja, la hoja queda baja (Modo · Deshacer · + Punto · Terminar · Cancelar y dos cifras): la retícula
+     del centro y el mapa siguen a la vista */
+  .zona-panel[data-fase="dibujo"] .zona-vivo, .zona-panel[data-fase="dibujo"] .zona-ayuda { display: none; }
+  /* La hoja crece hacia arriba: el aviso va arriba de los botones para que, al aparecer, no los corra bajo el dedo */
+  .zona-panel[data-fase="dibujo"] { display: flex; flex-direction: column; }
+  .zona-panel[data-fase="dibujo"] > .zona-cab { order: -2; }
+  .zona-panel[data-fase="dibujo"] > .zona-msg { order: -1; margin: 0 0 6px; }
+  .zona-panel[data-fase="dibujo"] .zona-cifras { display: flex; gap: 6px; margin: 4px 0; }
+  .zona-panel[data-fase="dibujo"] .zona-cifras div { flex: 1; padding: 3px 8px; }
+  .zona-panel[data-fase="dibujo"] .zona-cifras div:nth-child(n+3) { display: none; }
+  .zona-panel[data-fase="dibujo"] .zona-cifras b { font-size: 14px; }
+  .zona-panel[data-fase="dibujo"] .zona-cifras span { font-size: 11px; }
+  .zona-panel[data-fase="dibujo"] .zona-atajos { margin-top: 2px; }
+  .zona-botones .btn, .zona-modos button, .zona-acciones .btn, .zona-atajos button, .zona-atajos select, .zona-expandir { min-height: 44px; }
+  .zona-cab .btn { min-width: 44px; min-height: 44px; justify-content: center; }
+  .panel-mapa.izq { max-height: 42%; }
+  .panel-mapa.izq.plegado { max-height: none; }
+  .panel-mapa.izq.plegado .gran-cifra { font-size: 26px; }
+  .panel-mapa.izq.plegado h1 { font-size: 20px; }
+}
