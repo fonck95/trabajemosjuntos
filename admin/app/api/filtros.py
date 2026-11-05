@@ -92,7 +92,6 @@ class Filtros(BaseModel):
     area_id: int | None = None
     # Lo que `filtros_query` resuelve de la base: no sale en model_dump (ni en la auditoría de la exportación)
     _area: dict | None = PrivateAttr(default=None)
-    _area_asignada_a: list = PrivateAttr(default_factory=list)
     _eleccion: str | None = PrivateAttr(default=modelo.AJUSTES_POR_DEFECTO["eleccion_vigente"])
     _dias_dato: int = PrivateAttr(default=modelo.AJUSTES_POR_DEFECTO["dias_reintento_dato"])
     _uid: int | None = PrivateAttr(default=None)
@@ -114,11 +113,10 @@ def preparar(db: Database, f: Filtros) -> Filtros:
     f._eleccion = aj.get("eleccion_vigente")
     f._dias_dato = int(aj.get("dias_reintento_dato") or modelo.AJUSTES_POR_DEFECTO["dias_reintento_dato"])
     if f.area_id is not None:
-        a = db.areas.find_one({"_id": f.area_id}, {"poligono": 1, "asignada_a": 1})
+        a = db.areas.find_one({"_id": f.area_id}, {"poligono": 1})
         if a is None:
             raise HTTPException(404, "El área no existe")
         f._area = geometria_de_area(a) or {"type": "Polygon", "coordinates": [[]]}
-        f._area_asignada_a = list(a.get("asignada_a") or [])
     return f
 
 
@@ -423,8 +421,9 @@ def exigir_permitidos(db: Database, quien: Any, f: Filtros) -> None:
         raise _prohibido("Su rol no permite filtrar por esa fuente")
     if f.etiqueta and f.etiqueta in proyeccion.etiquetas_sensibles(db):
         raise _prohibido("Su rol no permite filtrar por esa etiqueta")
-    if f.area_id is not None and f.area_id not in asignacion_de(quien)["areas"] \
-            and getattr(quien, "uid", None) not in f._area_asignada_a:
+    # La asignación vale solo la del usuario (`usuarios.asignacion.areas`): `areas.asignada_a` es una copia que
+    # Usuarios no actualiza, y quitarle un área debe cortar también el filtro (integración G2×G3×G5)
+    if f.area_id is not None and f.area_id not in asignacion_de(quien)["areas"]:
         raise _prohibido("Esa área no le está asignada")
 
 

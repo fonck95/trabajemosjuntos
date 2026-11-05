@@ -77,14 +77,14 @@ def resolver(cid: int, body: Decision, db: Database = Depends(obtener_db), adm: 
         destino, origen = (a, b) if conservar == "persona" else (b, a)
         db.coincidencias.update_one({"_id": cid}, {"$set": {"estado": "aceptada", "conservada": destino["_id"], **marca}})
         try:
-            bd.fusionar(db, destino["_id"], origen["_id"], adm.usuario, adm.ip)
+            bd.fusionar(db, destino["_id"], origen["_id"], adm, adm.ip)
         except bd.FusionImposible:
             db.coincidencias.update_one({"_id": cid}, {"$set": {"estado": "pendiente"}})
             raise
         georreferenciar(db, [destino["_id"]])
         return {"ok": True, "id": destino["_id"]}
     db.coincidencias.update_one({"_id": cid}, {"$set": {"estado": "rechazada", **marca}})
-    bd.auditar(db, adm.usuario, "rechazar_coincidencia", "persona", c["persona_id"], {"candidato": c["candidato_id"]}, adm.ip)
+    bd.auditar(db, adm, "rechazar_coincidencia", "persona", c["persona_id"], {"candidato": c["candidato_id"]}, adm.ip)
     return {"ok": True}
 
 
@@ -472,7 +472,7 @@ def crear_lugar(body: LugarIn, db: Database = Depends(obtener_db), adm: Admin = 
             "precision": "manual" if body.lat is not None else None, "geom": None, "editado": True, "creado_en": bd.ahora()})
     except DuplicateKeyError:
         raise HTTPException(409, "Ya existe un lugar con ese nombre y tipo")
-    bd.auditar(db, adm.usuario, "crear", "lugar", lid, body.model_dump(), adm.ip)
+    bd.auditar(db, adm, "crear", "lugar", lid, body.model_dump(), adm.ip)
     bd.subir_catalogos_version(db)
     _recalcular(db)
     return {"id": lid}
@@ -491,7 +491,7 @@ def editar_lugar(lid: int, body: LugarIn, db: Database = Depends(obtener_db), ad
         datos.update({"precision": "manual", "fuente": "manual"})
     if datos:
         db.lugares.update_one({"_id": lid}, {"$set": {**datos, "editado": True}})
-        bd.auditar(db, adm.usuario, "editar", "lugar", lid, datos, adm.ip)
+        bd.auditar(db, adm, "editar", "lugar", lid, datos, adm.ip)
         bd.subir_catalogos_version(db)
         _recalcular(db)
     return {"ok": True}
@@ -501,5 +501,5 @@ def editar_lugar(lid: int, body: LugarIn, db: Database = Depends(obtener_db), ad
 def regeocodificar(db: Database = Depends(obtener_db), adm: Admin = Depends(requiere_admin)):
     res = georreferenciar(db)
     bd.recalcular_completitud(db)
-    bd.auditar(db, adm.usuario, "georreferenciar", None, None, res, adm.ip)
+    bd.auditar(db, adm, "georreferenciar", None, None, res, adm.ip)
     return res
