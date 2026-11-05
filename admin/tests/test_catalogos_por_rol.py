@@ -6,6 +6,7 @@ from conftest import insertar_personas
 
 def _preparar(sesion):
     db = sesion.app.state.db
+    db.puestos.delete_many({})  # integración: el grupo 1 siembra los 7 puestos al iniciar
     db.puestos.insert_many([
         {"_id": 1, "eleccion": "2026-presidencial", "codigo": "00-01", "nombre": "IE LUIS EDUARDO DIAZ SECCION PRIMARIA",
          "area": "cabecera", "mesas": 35, "lugar_id": None, "activo": True},

@@ -146,6 +146,8 @@ export async function vistaAjustes(el) {
       for (const id of ['#f-politica', '#f-limites']) {
         for (const c of $(id, el).querySelectorAll('input, select, textarea')) c.disabled = true;
       }
+      const dePermisos = new Set(aj.ajustes_de_permisos || []);  // datos sensibles y compromiso: también solo A
+      for (const c of $('#f-otros', el).querySelectorAll('[name]')) if (dePermisos.has(c.name)) c.disabled = true;
     }
   }
 

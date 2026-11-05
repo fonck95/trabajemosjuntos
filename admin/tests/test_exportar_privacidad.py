@@ -25,6 +25,7 @@ def _ultima_exportacion(db):
 @pytest.fixture
 def base(sesion):
     db = sesion.app.state.db
+    db.puestos.delete_many({})  # integración: el grupo 1 siembra los 7 puestos al iniciar
     db.puestos.insert_one({"_id": 3, "eleccion": "2026-presidencial", "codigo": "00-02", "nombre": "COLISEO BENITO ARIAS",
                            "mesas": 4, "activo": True})
     sensible = sesion.post("/api/etiquetas", json={"nombre": "Etiqueta sensible inventada", "sensible": True}).json()["id"]

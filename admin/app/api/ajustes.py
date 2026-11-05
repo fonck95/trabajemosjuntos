@@ -17,6 +17,7 @@ from pymongo.errors import DuplicateKeyError
 
 from .. import db as bd
 from .. import modelo
+from .. import acceso
 from ..acceso import Quien, requiere
 from ..seguridad import obtener_db
 
@@ -101,12 +102,10 @@ class AjustesIn(BaseModel):
 
 
 # Ajustes que son permisos o límites de acceso (adenda del coordinador): solo los cambia quien tiene
-# `permisos.modificar` (el administrador). El coordinador los ve en solo lectura.
-AJUSTES_DE_PERMISOS = frozenset({
-    "presupuesto_diario", "sesion", "tope_cedulas_dictadas",  # presupuestos y límites por rol, sesiones
-    "contactar_pendientes", "dias_entre_intentos", "max_intentos_sin_exito", "seguimiento_activo", "dias_seguimiento",
-    "horario",  # política de contacto del consultor
-})
+# `permisos.modificar` (el administrador). El coordinador los ve en solo lectura. La lista y la regla son las de
+# `acceso` (una sola fuente): presupuestos, sesiones, tope de cédulas dictadas, política de contacto, datos sensibles y
+# versión del compromiso.
+AJUSTES_DE_PERMISOS = acceso.AJUSTES_DE_PERMISOS
 
 
 def _vista_ajustes(db: Database, quien: Quien) -> dict:
@@ -133,10 +132,7 @@ def guardar_ajustes(body: AjustesIn, db: Database = Depends(obtener_db),
             datos[k] = v
     # Lo que no cambia el valor guardado no cuenta: el formulario del coordinador puede reenviar todo sin tocarlos
     datos = {k: v for k, v in datos.items() if v != actuales.get(k)}
-    if AJUSTES_DE_PERMISOS & datos.keys() and not quien.puede("permisos.modificar"):
-        raise HTTPException(403, {"mensaje": "Solo el administrador cambia presupuestos, sesiones y la política de "
-                                             "contacto", "codigo": "permiso",
-                                  "campos": sorted(AJUSTES_DE_PERMISOS & datos.keys())})
+    acceso.exigir_ajustes(quien, actuales, datos)
     if "eleccion_vigente" in datos and not db.puestos.find_one({"eleccion": datos["eleccion_vigente"]}, {"_id": 1}):
         raise HTTPException(422, "No hay puestos de esa elección: créelos antes de cambiar la elección vigente")
     if datos:

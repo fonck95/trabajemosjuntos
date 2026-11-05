@@ -12,6 +12,7 @@ DE_PERMISOS = [
     {"presupuesto_diario": {"planillero": 50}}, {"sesion": {"horas_max": 4}}, {"contactar_pendientes": True},
     {"horario": {"domingo": ["08:00", "12:00"]}}, {"max_intentos_sin_exito": 2}, {"dias_entre_intentos": 5},
     {"seguimiento_activo": True}, {"dias_seguimiento": 30}, {"tope_cedulas_dictadas": 5},
+    {"sensibles_activos": True}, {"compromiso_version": "2026-12-v2"},  # integración: la lista es la de acceso (G2)
 ]
 
 
@@ -93,7 +94,8 @@ def test_ajustes_de_permisos_exigen_permisos_modificar(sesion, monkeypatch):
     # Lo demás sí; reenviar los de permisos con su valor actual (el formulario completo) no estorba
     r = c.put("/api/ajustes", json={"aviso_privacidad": {"responsable": "Inventado S.A.S."}, "sesion": a["sesion"],
                                     "contactar_pendientes": a["contactar_pendientes"], "dias_reintento_dato": 60,
-                                    "sensibles_activos": True, "compromiso_version": "2026-12-v2"})
+                                    "sensibles_activos": a["sensibles_activos"],
+                                    "compromiso_version": a["compromiso_version"]})
     assert r.status_code == 200, r.text
     a = modelo.leer_ajustes(db)
     assert a["aviso_privacidad"]["responsable"] == "Inventado S.A.S." and a["dias_reintento_dato"] == 60

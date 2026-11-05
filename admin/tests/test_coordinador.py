@@ -82,7 +82,7 @@ def test_ajustes_de_permisos_solo_los_cambia_el_admin():
     K = acceso.Quien(uid=7, usuario="coordinador7", rol="coordinador", permisos=acceso.PERMISOS["coordinador"])
     A = acceso.Quien(uid=0, usuario="admin", rol="admin", permisos=acceso.PERMISOS["admin"])
     actuales = copy.deepcopy(modelo.AJUSTES_POR_DEFECTO)
-    for cambios in ({"presupuesto_diario": {"planillero": 5}}, {"sesion": {"horas_max": 4}},
+    for cambios in ({"presupuesto_diario": {"planillero": 50}}, {"sesion": {"horas_max": 4}},
                     {"sesion": {"max_por_usuario": 9}}, {"contactar_pendientes": True}, {"max_intentos_sin_exito": 9},
                     {"horario": {"domingo": ["08:00", "12:00"]}}, {"sensibles_activos": True}):
         with pytest.raises(HTTPException) as e:
@@ -324,13 +324,13 @@ def test_ajustes_de_permisos_por_la_api(sesion, coordinador):
         pytest.skip("PUT /api/ajustes llega con el grupo 1")
     k = coordinador()
     assert k.get("/api/ajustes").status_code == 200
-    for cambios in ({"presupuesto_diario": {"planillero": 5}}, {"sesion": {"horas_max": 4}},
+    for cambios in ({"presupuesto_diario": {"planillero": 50}}, {"sesion": {"horas_max": 4}},
                     {"contactar_pendientes": True}):
         assert _es_permiso(k.put("/api/ajustes", json=cambios)), cambios
         r = sesion.put("/api/ajustes", json=cambios)
         assert r.status_code < 300, (cambios, r.text)
     aj = modelo.leer_ajustes(sesion.app.state.db)
-    assert aj["presupuesto_diario"]["planillero"] == 5 and aj["sesion"]["horas_max"] == 4 and aj["contactar_pendientes"]
+    assert aj["presupuesto_diario"]["planillero"] == 50 and aj["sesion"]["horas_max"] == 4 and aj["contactar_pendientes"]
 
 
 # ───────────────────────────── Indicadores ─────────────────────────────
