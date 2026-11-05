@@ -1045,6 +1045,10 @@ TIPOS_SOLICITUD = {"consulta": "Consulta", "correccion": "Corrección", "supresi
 PLAZOS_SOLICITUD = {"consulta": 10, "correccion": 15, "supresion": 15, "revocatoria": 15, "otro": 15, "registro": None}
 # Las que dejan la ficha con «reclamo en trámite» (sale de las colas mientras se resuelve)
 RECLAMOS = ("correccion", "supresion", "revocatoria")
+# Las solicitudes que sacan a la persona de las colas del consultor mientras están abiertas (reclamo_en_tramite): toda
+# solicitud de derechos, también la consulta y «otro» (la interfaz manda «Pidió consultar, corregir o borrar sus datos»
+# como consulta), salvo el pedido de registro de un consultor
+NO_MARCAN_RECLAMO = ("registro",)
 ESTADOS_SOLICITUD = {"pendiente": "Pendiente", "en_tramite": "En trámite", "resuelta": "Resuelta",
                      "rechazada": "Rechazada"}
 ABIERTAS = ("pendiente", "en_tramite")

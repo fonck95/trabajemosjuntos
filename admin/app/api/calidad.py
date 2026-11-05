@@ -259,7 +259,7 @@ def _vence(tipo: str, desde: date | None = None) -> str | None:
 
 
 def _reclamo(db: Database, pid: int | None) -> None:
-    """`reclamo_en_tramite` de la ficha: hay alguna corrección, supresión o revocatoria abierta (`bd.reclamo_abierto`)."""
+    """`reclamo_en_tramite` de la ficha: hay alguna solicitud de derechos abierta (`bd.reclamo_abierto`)."""
     if pid is None:
         return
     db.personas.update_one({"_id": pid}, {"$set": {"reclamo_en_tramite": bd.reclamo_abierto(db, pid)}})

@@ -803,8 +803,8 @@ def sumar_dias_habiles(desde: date, dias: int) -> date:
 
 def crear_solicitud(db: Database, pid: int | None, tipo: str, quien: Quien | None, descripcion: str | None,
                     canal: str | None = None) -> int:
-    """`solicitudes` (1.8) con su plazo legal en días hábiles. Con un reclamo (corrección, supresión o revocatoria),
-    marca `reclamo_en_tramite` en la ficha: en la final, si se unió con otra mientras tanto (la solicitud pasa allí con
+    """`solicitudes` (1.8) con su plazo legal en días hábiles. Con una solicitud de derechos (todo menos el pedido de
+    registro), marca `reclamo_en_tramite` en la ficha: en la final, si se unió con otra mientras tanto (la solicitud pasa allí con
     `bd.recoger_tardios`, o al final de la unión en curso, que también pone la marca)."""
     plazos = {"consulta": 10, "registro": None}
     dias = plazos.get(tipo, 15)

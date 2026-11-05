@@ -240,6 +240,29 @@ def test_consultor_registra_una_supresion_mientras_se_une_y_el_reclamo_queda_en_
     assert det["registrado"] is True and det["id"] == destino and det["codigo"] == "unida"
 
 
+
+@pytest.mark.parametrize("rol", ["consultor", "planillero"])
+def test_solicitud_de_derechos_sin_tipo_saca_a_la_persona_de_la_cola(sesion, como, rol):
+    """La interfaz registra «Pidió consultar, corregir o borrar sus datos» sin solicitud_tipo (queda como consulta).
+    Mientras esté abierta, a esa persona no se le llama: sale de la cola y otro consultor recibe 409 al tomarla."""
+    db = sesion.app.state.db
+    lid = _lid(db)
+    pid, _ = _dos_contactables(db, lid)
+    quien = como(rol, asignacion={"lugares": [lid], "areas": []})
+    canal = "llamada" if rol == "consultor" else "visita"
+    if rol == "consultor":
+        tomar(quien, pid)
+    cuerpo = {"canal": canal, "resultado": "solicitud_derechos", "nota": "Pide saber qué datos tienen (inventado)"}
+    if canal == "llamada":
+        cuerpo["telefono_indice"] = 0
+    r = quien.post(f"/api/personas/{pid}/acercamientos", json=cuerpo)
+    assert r.status_code in (200, 201), r.text[:300]
+    assert db.solicitudes.find_one({"persona_id": pid})["tipo"] == "consulta"
+    assert db.personas.find_one({"_id": pid})["reclamo_en_tramite"] is True
+    otro = como("consultor", asignacion={"lugares": [lid], "areas": []}, usuario="cons.otro")
+    _fuera_de_la_cola(db, pid, otro, lid)
+
+
 # ───────────────────────────── 3. Completitud de un menor para P ─────────────────────────────
 
 def _vistas_p(p, pid: int, nombre: str) -> tuple:
