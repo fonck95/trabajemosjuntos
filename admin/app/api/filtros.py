@@ -256,6 +256,18 @@ def telefonos_ocultos(hoy: date | None = None) -> dict:
     return {"$or": [{"consentimiento": "no"}, modelo.filtro_menor(hoy)]}
 
 
+def expr_completitud_vista(hoy: date | None = None) -> dict:
+    """Expresión (agregación o `$expr`) de la completitud que ven P y C: la de un menor, sin su teléfono. Gemela de
+    `proyeccion.completitud_vista`; la usan el orden por completitud y `completitud_max`, así ni el lugar en la lista
+    ni el filtro dicen si un menor tiene teléfono."""
+    lim = modelo._limite_mayoria(hoy or modelo.hoy_local())
+    menor = {"$or": [{"$gt": ["$nac_aprox", lim]}, {"$eq": ["$tipo_documento", "TI"]}]}  # gemelo de filtro_menor
+    tel = {"$or": [{"$gt": [{"$size": modelo._USABLES}, 0]},
+                   {"$not": [{"$in": [{"$ifNull": ["$telefono", None]}, [None, ""]]}]}]}
+    c = {"$ifNull": ["$completitud", 0]}
+    return {"$cond": [{"$and": [menor, tel]}, {"$max": [0, {"$subtract": [c, proyeccion.PESO_TELEFONO]}]}, c]}
+
+
 def _numero_completo(q: str) -> str | None:
     """Los dígitos de una búsqueda que es solo un número con separadores («300 111 2233», «+57 300-111-2233»)."""
     if re.fullmatch(r"[\d\s+().-]+", q or "") and len(re.sub(r"\D", "", q)) >= 4:
@@ -379,8 +391,9 @@ def filtro(f: Filtros, hoy: date | None = None) -> dict:
         poner("sexo", _vacio("sexo"))
     if f.ids:
         poner("ids", {"_id": {"$in": [int(x) for x in re.findall(r"\d+", f.ids)[:500]]}})
-    if f.completitud_max is not None:
-        poner("completitud_max", {"completitud": {"$lte": f.completitud_max}})
+    if f.completitud_max is not None:  # P y C: la que ven (la de un menor, sin teléfono)
+        poner("completitud_max", {"$expr": {"$lte": [expr_completitud_vista(hoy), f.completitud_max]}} if rol
+              else {"completitud": {"$lte": f.completitud_max}})
     # Edad: rango de la fecha de nacimiento (exacta con la fecha; con la edad declarada, ±1 año)
     if f.edad_min is not None:
         poner("edad_min", {"nac_aprox": {"$ne": None, "$lte": _restar_anios(hoy, f.edad_min).isoformat()}})

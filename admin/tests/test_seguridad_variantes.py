@@ -212,13 +212,17 @@ def _union_cortada(db, cedula_destino: str | None = None) -> tuple[int, int]:
 def test_cedula_en_traspaso_esta_ocupada(sesion, como):
     db = sesion.app.state.db
     lid = db.lugares.find_one({"tipo": "barrio"})["_id"]
-    _union_cortada(db)
+    destino, origen = _union_cortada(db)
     otra = persona(db, nombre="TERCERA PERSONA INVENTADA", lugar_id=lid, tipo_documento="CC")
     p = como("planillero", asignacion={"lugares": [lid], "areas": []})
     for c in (sesion, p):
         r = c.post("/api/personas", json={"nombre": "LUZ INVENTADA OTRA ALTA", "cedula": CED_ORIGEN, "lugar_id": lid})
         assert r.status_code == 409 and r.json()["detail"]["codigo"] == "cedula_ocupada", r.text[:300]
-        assert "id" not in r.json()["detail"]
+        # A ve a qué ficha va la cédula (seg. 5, caso 4); P no
+        if c is sesion:
+            assert (r.json()["detail"]["id"], r.json()["detail"]["origen"]) == (destino, origen)
+        else:
+            assert "id" not in r.json()["detail"] and "origen" not in r.json()["detail"]
         r = c.patch(f"/api/personas/{otra}", json={"cedula": CED_ORIGEN})
         assert r.status_code == 409 and r.json()["detail"]["codigo"] == "cedula_ocupada", r.text[:300]
     assert db.personas.count_documents({"cedula": CED_ORIGEN}) == 0

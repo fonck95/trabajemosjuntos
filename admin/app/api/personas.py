@@ -30,7 +30,8 @@ from ..pipeline import texto as tx
 from ..pipeline.cruce import ComparadorNombres
 from ..pipeline.importar import georreferenciar
 from ..seguridad import obtener_db
-from .filtros import Filtros, consulta, exigir_alcance_consultor, filtro, filtros_query, rol_restringido
+from .filtros import (Filtros, alcance_de, consulta, exigir_alcance_consultor, expr_completitud_vista, filtro,
+                      filtros_query, rol_restringido)
 
 r = APIRouter(prefix="/api", tags=["personas"])
 
@@ -74,9 +75,34 @@ def autor(quien: Quien) -> dict:
     return {"uid": quien.uid, "usuario": quien.usuario, "rol": quien.rol}
 
 
-def ficha_respuesta(db: Database, quien: Quien, pid: int, avisos: list[str] | None = None) -> dict:
-    """La ficha del rol después de una escritura (cuenta como lectura) con los avisos de la operación."""
-    f = proyeccion.ficha_para(db, quien, pid)
+def registrado_en(fin: int) -> dict:
+    """El 409 de una escritura que sí quedó registrada, pero en la ficha `fin` porque la de la ruta se unió con ella
+    mientras tanto (`bd.unida_en`): `registrado: true` y el id final, para que nadie la repita."""
+    return {"mensaje": f"Quedó registrado en la ficha {fin}: esta ficha se unió con ella mientras tanto. No hace falta "
+                       "repetirlo", "codigo": "unida", "registrado": True, "id": fin}
+
+
+def exigir_sin_union(db: Database, quien: Quien, request: Request | None, pid: int) -> None:
+    """Después de registrar algo en `pid`: si `pid` se unió con otra mientras tanto, 409 `registrado_en` (guardado
+    para el reintento con la misma `Idempotency-Key`). Nada si sigue activa."""
+    fin = bd.unida_en(db, pid)
+    if fin is None:
+        return
+    detalle = registrado_en(fin)
+    if request is not None:
+        acceso.idempotencia_guardar(db, quien, request, 409, {"detail": detalle}, persona_id=fin)
+    raise HTTPException(409, detalle)
+
+
+def ficha_respuesta(db: Database, quien: Quien, pid: int, avisos: list[str] | None = None, menor: bool = False) -> dict:
+    """La ficha del rol después de una escritura (cuenta como lectura) con los avisos de la operación. Con `menor`, se
+    proyecta como la de un menor aunque ya no lo sea (como `proyeccion.ficha_para`, que no lo admite)."""
+    if menor:
+        p = proyeccion.cargar(db, pid)
+        acceso.registrar_lecturas(db, quien, [pid], ficha=True)
+        f = proyeccion.ficha_de(db, p, quien, menor=True)
+    else:
+        f = proyeccion.ficha_para(db, quien, pid)
     if avisos and "avisos" in f:
         f["avisos"] = list(dict.fromkeys([*avisos, *f["avisos"]]))
     return f
@@ -116,15 +142,26 @@ def exigir_listas_del_dia(db: Database, quien: Quien) -> None:
                                   "codigo": "volumen"})
 
 
+def _pagina_vista(db: Database, q: dict, orden_: list, salto: int, n: int) -> list[dict]:
+    """Una página en un orden que usa la completitud, con la que ven P y C (`filtros.expr_completitud_vista`: la de un
+    menor sin su teléfono), así su lugar en la lista no dice si tiene alguno."""
+    if not any(k == "completitud" for k, _ in orden_):
+        return list(db.personas.find(q, proyeccion.CAMPOS_PARA_FILA).sort(orden_).skip(salto).limit(n))
+    return list(db.personas.aggregate([
+        {"$match": q}, {"$addFields": {"_completitud_vista": expr_completitud_vista()}},
+        {"$sort": {("_completitud_vista" if k == "completitud" else k): d for k, d in orden_}},
+        {"$skip": salto}, {"$limit": n}, {"$project": proyeccion.CAMPOS_PARA_FILA}], allowDiskUse=True))
+
+
 def pagina_ordenada(db: Database, q: dict, orden: str, salto: int, n: int, completo: bool) -> list[dict]:
     """Una página de Habitantes en el orden pedido. Para P y C, un orden por un dato que no ven de quien no autorizó
     (perfil, dirección, abordaje, fechas) vale solo para las demás: las que no autorizaron van al final, por nombre, y
-    su lugar en la lista no dice nada de lo oculto."""
+    su lugar en la lista no dice nada de lo oculto. La completitud, la que ven (la de un menor, sin teléfono)."""
     orden_ = ORDENES.get(orden, ORDENES["nombre"])
     if completo or orden_ is ORDENES["nombre"]:
         return list(db.personas.find(q, proyeccion.CAMPOS_PARA_FILA).sort(orden_).skip(salto).limit(n))
     q_t = {"$and": [q, {"consentimiento": {"$ne": "no"}}]}
-    docs = list(db.personas.find(q_t, proyeccion.CAMPOS_PARA_FILA).sort(orden_).skip(salto).limit(n))
+    docs = _pagina_vista(db, q_t, orden_, salto, n)
     if len(docs) < n:
         n_t = salto + len(docs) if docs else db.personas.count_documents(q_t)
         docs += list(db.personas.find({"$and": [q, {"consentimiento": "no"}]}, proyeccion.CAMPOS_PARA_FILA)
@@ -132,10 +169,28 @@ def pagina_ordenada(db: Database, q: dict, orden: str, salto: int, n: int, compl
     return docs
 
 
+def consulta_como(db: Database, quien: Quien, como: int, f: Filtros) -> dict:
+    """«Ver como» (7.7): la consulta de Habitantes con el alcance, el rol y el uid (`mios`) del usuario `como`, la
+    misma con que Mi trabajo cuenta sus tarjetas. Solo A y K (403 para los demás); las filas siguen siendo las de
+    quien mira."""
+    if not quien.administra:
+        raise _prohibido("Su rol no permite ver Habitantes como otro usuario", campo="como")
+    usuario = acceso.quien_de_usuario(db, como)
+    f._uid = usuario.uid
+    f._rol = rol_restringido(usuario)
+    q = filtro(f)
+    alcance = alcance_de(db, usuario)
+    return {"$and": [q, alcance]} if alcance else q
+
+
 @r.get("/personas")
 def listar(f: Filtros = Depends(filtros_query), orden: str = "nombre", pagina: int = 1, por_pagina: int = 50,
+           como: int | None = Query(None, description="Solo A y K: el uid del usuario cuyo Habitantes se ve (7.7)"),
            db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("personas.listar", limitar=True))):
-    q = consulta(db, quien, f, con_alcance=True)  # vedados (403) y alcance obligatorio para P
+    if como is not None and como != quien.uid:
+        q = consulta_como(db, quien, como, f)
+    else:
+        q = consulta(db, quien, f, con_alcance=True)  # vedados (403) y alcance obligatorio para P
     exigir_listas_del_dia(db, quien)
     por_pagina = max(10, min(por_pagina, 200))
     pagina = max(1, min(pagina, 10_000))
@@ -187,9 +242,11 @@ def buscar(q: str = Query(..., max_length=120), db: Database = Depends(obtener_d
     f = Filtros(q=q)
     f._rol = rol_restringido(quien)
     docs = list(db.personas.find(filtro(f), proyeccion.CAMPOS_PARA_FILA).limit(60))
-    # El perfil de quien no autorizó no se ve: no pesa en el orden
+    # El perfil de quien no autorizó no se ve: no pesa en el orden; el de un menor, sin su teléfono (el que ve P)
+    hoy = modelo.hoy_local()
     docs.sort(key=lambda p: (not (p.get("nombre_norm") or "").startswith(inicio),
-                             -(p.get("completitud", 0) if f._rol is None or p.get("consentimiento") != "no" else 0)))
+                             -(proyeccion.completitud_vista(p, quien, modelo.es_menor(p, hoy))
+                               if f._rol is None or p.get("consentimiento") != "no" else 0)))
     docs = docs[:12]
     acceso.registrar_lecturas(db, quien, [p["_id"] for p in docs])
     ctx = proyeccion.contexto(db)
@@ -385,17 +442,29 @@ def numeros(texto: Any) -> list[str]:
 
 # ───────────────────────────── Cédula ─────────────────────────────
 
+def cedula_en_union(db: Database, t: dict) -> dict:
+    """El 409 de A y K para una cédula que una unión está moviendo (`bd.traspaso_de`): a qué ficha va y desde cuál."""
+    d = db.personas.find_one({"_id": t["destino"]}, {"nombre": 1}) or {}
+    return {"mensaje": f"La cédula está pasando a {d.get('nombre') or 'otra ficha'} por la unión con la ficha "
+                       f"{t['origen']}", "codigo": "cedula_ocupada", "id": t["destino"], "nombre": d.get("nombre"),
+            "origen": t["origen"]}
+
+
 def cedula_ocupada(db: Database, c: str | None, pid: int | None = None, completo: bool = True) -> None:
     """409 `cedula_ocupada` si la cédula es de otra ficha activa (también como cédula anterior). Sin `completo` (P),
     si es de alguien cuya cédula P no ve (quien no autorizó) o una cédula anterior, el 409 no dice de quién: a esa
-    persona no se la ubica por un dato que P no ve. La que una unión está moviendo (`cedula_en_traspaso` del origen)
-    también está ocupada, y el 409 no dice de quién, para nadie."""
+    persona no se la ubica por un dato que P no ve. La que una unión que todavía puede terminar está moviendo
+    (`bd.traspaso_de`) también está ocupada: a A y K el 409 les dice a qué ficha va; a P, no. Se mira primero: una
+    unión que ya no puede terminar devuelve su origen con la cédula, y entonces el 409 es el de esa ficha."""
     if not c:
         return
+    traspaso = bd.traspaso_de(db, c)
     otro = db.personas.find_one({"$or": [{"cedula": c}, {"cedulas_anteriores": c}], **bd.ACTIVA, "_id": {"$ne": pid}},
                                 {"nombre": 1, "lugar_id": 1, "lugar_texto": 1, "consentimiento": 1, "cedula": 1})
+    if otro is None and traspaso and completo:
+        raise HTTPException(409, cedula_en_union(db, traspaso))
     if (otro and not completo and (otro.get("consentimiento") == "no" or otro.get("cedula") != c)) \
-            or (otro is None and bd.cedula_en_traspaso(db, c)):
+            or (otro is None and traspaso):
         raise HTTPException(409, {"mensaje": "La cédula ya pertenece a otra ficha: pida la revisión al administrador",
                                   "codigo": "cedula_ocupada"})
     if otro:
@@ -734,7 +803,9 @@ def sumar_dias_habiles(desde: date, dias: int) -> date:
 
 def crear_solicitud(db: Database, pid: int | None, tipo: str, quien: Quien | None, descripcion: str | None,
                     canal: str | None = None) -> int:
-    """`solicitudes` (1.8) con su plazo legal en días hábiles. Marca `reclamo_en_tramite` en la ficha."""
+    """`solicitudes` (1.8) con su plazo legal en días hábiles. Con un reclamo (corrección, supresión o revocatoria),
+    marca `reclamo_en_tramite` en la ficha: en la final, si se unió con otra mientras tanto (la solicitud pasa allí con
+    `bd.recoger_tardios`, o al final de la unión en curso, que también pone la marca)."""
     plazos = {"consulta": 10, "registro": None}
     dias = plazos.get(tipo, 15)
     sid = bd.siguiente_id(db, "solicitudes")
@@ -744,8 +815,8 @@ def crear_solicitud(db: Database, pid: int | None, tipo: str, quien: Quien | Non
         "creado_por": autor(quien) if quien else None, "ts": ts,
         "vence": sumar_dias_habiles(modelo.hoy_local(), dias).isoformat() if dias else None,
         "estado": "pendiente", "respuesta": None, "resuelto_por": None, "resuelto_en": None})
-    if pid is not None and tipo != "registro":
-        db.personas.update_one({"_id": pid}, {"$set": {"reclamo_en_tramite": True}})
+    if pid is not None:
+        bd.marcar_reclamo(db, bd.recoger_tardios(db, pid) or pid)
     return sid
 
 
@@ -801,9 +872,16 @@ def autorizar(pid: int, body: AutorizacionIn, request: Request, db: Database = D
         raise HTTPException(409, dict(proyeccion.NO_AUTORIZO))
     evento = validar_autorizacion(db, body, quien)
     registrar_autorizacion(db, pid, quien, evento)
-    escribir(db, pid, [etapa_actualizado(quien)])
-    bd.recalcular_completitud(db, [pid])
-    return _guardar_idem(db, quien, request, 200, ficha_respuesta(db, quien, pid), pid)
+    exigir_sin_union(db, quien, request, pid)
+    try:
+        escribir(db, pid, [etapa_actualizado(quien)])
+        bd.recalcular_completitud(db, [pid])
+        cuerpo = ficha_respuesta(db, quien, pid)
+    except HTTPException as e:
+        if e.status_code == 409:  # se unió justo ahora: el evento ya pasó (o pasará) a la ficha unida
+            exigir_sin_union(db, quien, request, pid)
+        raise
+    return _guardar_idem(db, quien, request, 200, cuerpo, pid)
 
 
 # ───────────────────────────── Edición ─────────────────────────────
@@ -989,6 +1067,13 @@ def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, 
             poner("tipo_documento", datos["tipo_documento"])
     if p_rol and datos.get("cedula") and despues.get("tipo_documento") == "TI":
         raise HTTPException(422, "No se registran menores de edad")
+    # P no saca a nadie de la minoría de edad (con la edad, la fecha de nacimiento o el tipo de documento): vería sus
+    # teléfonos. Lo corrige A
+    era_menor = modelo.es_menor(antes)
+    if p_rol and era_menor and not modelo.es_menor(despues):
+        raise _prohibido("Pida la corrección al administrador: su rol no puede cambiar la edad, la fecha de nacimiento "
+                         "ni el documento que hacen menor de edad a esta persona",
+                         campo=next((k for k in ("edad", "fecha_nacimiento", "tipo_documento") if k in diff), "edad"))
     # Lugar
     if "lugar_id" in datos and datos["lugar_id"] != antes.get("lugar_id"):
         if datos["lugar_id"] is None and p_rol and antes.get("lugar_id") is not None:
@@ -1177,7 +1262,15 @@ def editar(pid: int, body: PersonaIn, modo: Literal["completar"] | None = None, 
     if diff:
         campos = sorted({CANONICO.get(k, k) for k in diff if k != "motivo_cambio_cedula"})
         bd.auditar(db, quien, "editar", "persona", pid, diff, campos=campos, completados=claves_avance)
-    return ficha_respuesta(db, quien, pid, avisos_op)
+    if hubo:  # lo escrito quedó en la ficha, aunque se haya unido con otra justo después
+        exigir_sin_union(db, quien, None, pid)
+    try:
+        # Lo que P edita de un menor se le muestra como de un menor (sin teléfonos), aunque otro lo haya cambiado
+        return ficha_respuesta(db, quien, pid, avisos_op, menor=era_menor and p_rol)
+    except HTTPException as e:
+        if hubo and e.status_code == 409:
+            exigir_sin_union(db, quien, None, pid)
+        raise
 
 
 # ───────────────────────────── Alta (2.4) ─────────────────────────────

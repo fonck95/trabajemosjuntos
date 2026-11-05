@@ -348,13 +348,21 @@ def registrar(pid: int, body: AcercamientoIn, request: Request, db: Database = D
     resumen = _tras_cambio(db, pid) or {}
     # Llegar al máximo de intentos crea `requiere_actualizacion{no_contesta}` (pasa a la lista de visitas de P)
     if (resumen.get("intentos_sin_exito") or 0) >= _entero(aj, "max_intentos_sin_exito", 4):
-        db.personas.update_one({"_id": pid, "requiere_actualizacion": None}, {"$set": {"requiere_actualizacion": {
-            "motivo": "no_contesta", "uid": None, "usuario": None, "ts": bd.ahora(), "nota": None}}})
+        db.personas.update_one({"_id": pid, **bd.ACTIVA, "requiere_actualizacion": None}, {"$set": {
+            "requiere_actualizacion": {"motivo": "no_contesta", "uid": None, "usuario": None, "ts": bd.ahora(),
+                                       "nota": None}}})
     bd.recalcular_completitud(db, [pid])
     bd.auditar(db, quien, "acercamiento", "persona", pid, {"acercamiento_id": aid, "fuera_de_horario": fuera},
                completados=[k for k in ("puesto", "mesa") if k in datos_dictados] or None,
                canal=body.canal, resultado=body.resultado)
-    cuerpo = per.ficha_respuesta(db, quien, pid, avisos)
+    # Si la ficha se unió con otra mientras tanto, lo registrado está en la unida: 409 `registrado`, no «se unió»
+    per.exigir_sin_union(db, quien, request, pid)
+    try:
+        cuerpo = per.ficha_respuesta(db, quien, pid, avisos)
+    except HTTPException as e:
+        if e.status_code == 409:
+            per.exigir_sin_union(db, quien, request, pid)
+        raise
     cuerpo["acercamiento_id"] = aid
     acceso.idempotencia_guardar(db, quien, request, 200, cuerpo, persona_id=pid)
     return cuerpo
@@ -646,23 +654,20 @@ def _conteo_periodo(db: Database, quien: Quien, desde: date) -> dict:
 
 def _como_usuario(db: Database, uid: int) -> Quien:
     """A y K ven «Mi trabajo» de un usuario (el selector de 7.7): su rol, su alcance y sus conteos."""
-    u = db.usuarios.find_one({"_id": uid}, {"clave": 0})
-    if u is None or u.get("rol") not in acceso.ROLES:
-        raise HTTPException(404, "El usuario no existe")
-    asig = u.get("asignacion") or {}
-    return Quien(uid=u["_id"], usuario=u.get("usuario"), nombre=u.get("nombre"), rol=u["rol"],
-                 permisos=acceso.PERMISOS.get(u["rol"], frozenset()),
-                 asignacion=None if u["rol"] in ("admin", "coordinador") else
-                 {"lugares": list(asig.get("lugares") or []), "areas": list(asig.get("areas") or [])})
+    return acceso.quien_de_usuario(db, uid)
 
 
 @r.get("/trabajo")
 def trabajo(uid: int | None = None, db: Database = Depends(obtener_db),
             quien: Quien = Depends(requiere("trabajo.ver"))):
+    como = ""
     if uid is not None and uid != quien.uid:
         if not quien.administra:
             raise per._prohibido("Solo ve su propio trabajo")
         quien = _como_usuario(db, uid)
+        # Las tarjetas cuentan lo de ese usuario: sus enlaces abren su Habitantes (su alcance y sus registros), no la
+        # de quien mira (`como`, que /api/personas acepta solo de A y K)
+        como = "" if quien.administra else f"&como={quien.uid}"
     hoy, aj = modelo.hoy_local(), modelo.leer_ajustes(db)
     alcance = alcance_de(db, quien)
     asig = per_asignacion(db, quien)
@@ -688,13 +693,13 @@ def trabajo(uid: int | None = None, db: Database = Depends(obtener_db),
         for clave, titulo, cond, enlace in _listas_p(hoy, aj, quien.administra):
             n = db.personas.count_documents({"$and": [*base, cond]})
             listas.append({"clave": clave, "titulo": titulo, "n": n,
-                           "enlace": f"/personas?situacion=vigentes&tratables=1&{enlace}"})
+                           "enlace": f"/personas?situacion=vigentes&tratables=1&{enlace}{como}"})
         if not quien.administra:
             # La misma consulta que su enlace a Habitantes (`mios=1`): con el alcance y sin quien no autorizó (quién
             # la editó después no se ve). Una ficha fuera del alcance que editó no cuenta, porque el enlace no la trae
             n = db.personas.count_documents(consulta(db, quien, preparar(db, Filtros(mios=1))))
             listas.append({"clave": "mis_recientes", "titulo": "Mis registros recientes", "n": n,
-                           "enlace": "/personas?mios=1&orden=reciente"})
+                           "enlace": f"/personas?mios=1&orden=reciente{como}"})
     semana = hoy - timedelta(days=hoy.weekday())
     return {"rol": quien.rol, "alcance": asig, "listas": listas,
             "politica": {k: aj.get(k) for k in ("contactar_pendientes", "dias_entre_intentos", "max_intentos_sin_exito",
