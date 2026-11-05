@@ -72,3 +72,30 @@ def test_yo_migra_la_cookie_vieja_a_la_ruta_del_panel(cfg, sitio):
 def test_yo_con_el_panel_solo_no_toca_la_cookie(sesion):
     r = sesion.get("/api/yo")
     assert r.status_code == 200 and not _cookies_de_sesion(r)
+
+
+# ───────────────────────────── Adenda 2: descargas solo del administrador ─────────────────────────────
+
+def test_descargas_solo_del_administrador(sesion, como):
+    from app import acceso
+    from conftest import insertar_personas, personas_inventadas
+    db = sesion.app.state.db
+    insertar_personas(db, personas_inventadas(5, semilla=7))
+    rid = sesion.post("/api/reuniones", json={"titulo": "Reunión inventada", "fecha": "2026-11-01"}).json()["id"]
+    p, c = como("planillero"), como("consultor")
+    k = como("planillero", usuario="coordinador.inventado")
+    db.usuarios.update_one({"_id": k.uid}, {"$set": {"rol": "coordinador", "asignacion": None}})
+    assert k.get("/api/yo").json()["rol"] == "coordinador"
+    descargas = ("/api/exportar.xlsx", f"/api/reuniones/{rid}/asistentes.csv")
+    for cliente in (k, p, c):
+        for ruta in descargas:
+            r = cliente.get(ruta)
+            assert r.status_code == 403 and r.json()["detail"]["codigo"] == "permiso", (cliente.usuario, ruta)
+    assert db.auditoria.count_documents({"accion": {"$in": ["exportar", "exportar_asistentes"]}}) == 0
+    for ruta in descargas:
+        assert sesion.get(ruta).status_code == 200, ruta
+    # La interfaz de K no muestra los botones: «exportar» va en `excepto`
+    assert "exportar" in k.get("/api/yo").json()["excepto"] and acceso.excepto("admin") == []
+    # La plantilla vacía de la planilla sigue para quien la tenía
+    assert p.get("/api/plantillas/planilla.xlsx").status_code == 200
+    assert k.get("/api/plantillas/planilla.xlsx").status_code == 200

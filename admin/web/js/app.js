@@ -68,7 +68,9 @@ export function ir(ruta, { reemplazar = false } = {}) {
 }
 
 function armarEstructura() {
-  const nav = NAV.filter(([, , , p]) => puede(p));
+  // Descargar es solo del administrador (adenda 2): para el coordinador la entrada es «Importar»
+  const nav = NAV.filter(([, , , p]) => puede(p))
+    .map((x) => (x[0] === 'importar' && !puede('exportar') ? [x[0], 'Importar', ...x.slice(2)] : x));
   // Sin tablero, «Mi trabajo» es el inicio y va primero
   if (!puede('tablero.ver')) nav.sort((x, y) => (y[0] === 'trabajo') - (x[0] === 'trabajo'));
   montar($('#raiz'), html`

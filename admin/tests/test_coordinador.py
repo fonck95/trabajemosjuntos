@@ -59,12 +59,13 @@ def _hay_ruta(app, metodo, ruta):
 
 def test_roles_y_permisos_del_coordinador():
     assert acceso.ROLES == {"admin", "coordinador", "planillero", "consultor"}
-    assert acceso.SOLO_ADMIN == frozenset({"usuarios.coordinadores", "usuarios.roles", "permisos.modificar"})
+    assert acceso.SOLO_ADMIN == frozenset({"usuarios.coordinadores", "usuarios.roles", "permisos.modificar",
+                                           "exportar"})  # adenda 2: las descargas son solo de A
     assert acceso.ROLES_ADMIN == frozenset({"admin", "coordinador"})
     K = acceso.Quien(uid=7, usuario="coordinador7", rol="coordinador", permisos=acceso.PERMISOS["coordinador"])
     A = acceso.Quien(uid=0, usuario="admin", rol="admin", permisos=acceso.PERMISOS["admin"])
     P = acceso.Quien(uid=5, usuario="planillero5", rol="planillero", permisos=acceso.PERMISOS["planillero"])
-    for p in ("admin", "importar", "exportar", "tablero.ver", "mapa.ver", "usuarios.gestionar", "calidad.ver",
+    for p in ("admin", "importar", "tablero.ver", "mapa.ver", "usuarios.gestionar", "calidad.ver",
               "calidad.resolver", "ajustes.gestionar", "zonas.gestionar", "personas.editar", "trabajo.cola"):
         assert K.puede(p), p
     for p in acceso.SOLO_ADMIN:
@@ -245,7 +246,7 @@ def test_coordinador_con_los_limites_de_sesion_de_los_usuarios(sesion, coordinad
 
 # ───────────────────────────── Datos como A ─────────────────────────────
 
-def test_coordinador_importa_exporta_y_ve_los_datos_como_el_admin(sesion, coordinador, tmp_path):
+def test_coordinador_importa_y_ve_los_datos_como_el_admin_pero_no_descarga(sesion, coordinador, tmp_path):
     db = sesion.app.state.db
     k = coordinador()
     a = excel_tramites(tmp_path / "t.xlsx", TRAMITES)
@@ -255,9 +256,10 @@ def test_coordinador_importa_exporta_y_ve_los_datos_como_el_admin(sesion, coordi
                                           ("archivos", ("cedulas.xlsx", fb.read()))])
     assert r.status_code == 200, r.text
     assert k.get("/api/importaciones").status_code == 200
+    # Adenda 2: descargar es solo de A; K consulta en pantalla
     r = k.get("/api/exportar.xlsx", params={"incluir_listas": 1, "motivo": "Revisión de listas inventadas"})
-    assert r.status_code == 200 and r.content[:2] == b"PK"
-    assert db.auditoria.find_one({"accion": "exportar", "uid": k.uid, "rol": "coordinador"})
+    assert _es_permiso(r)
+    assert not db.auditoria.find_one({"accion": "exportar", "uid": k.uid})
     # Datos políticos y cédula completa: la ficha de K tiene lo mismo que la de A
     p = db.personas.find_one({"cedula": "90000001", "fusionada_en": None}, {"_id": 1})
     db.personas.update_one({"_id": p["_id"]}, {"$set": {"lider": True}})
@@ -339,12 +341,12 @@ def test_indicadores_incluyen_a_los_coordinadores(sesion, coordinador):
     k = coordinador()
     assert k.post("/api/usuarios", json={"usuario": "pia.campo", "nombre": "Pía Campo Inventada",
                                          "rol": "planillero"}).status_code == 201
-    assert k.get("/api/exportar.xlsx").status_code == 200
+    assert _es_permiso(k.get("/api/exportar.xlsx"))  # adenda 2: un intento negado no cuenta
     for cliente in (sesion, k):  # A los ve, y K también
         ind = cliente.get("/api/usuarios/indicadores").json()
         fila = next(u for u in ind["usuarios"] if u["uid"] == k.uid)
         assert fila["rol"] == "coordinador"
-        assert fila["administracion"]["exportaciones"] == 1 and fila["administracion"]["usuarios_creados"] == 1
+        assert fila["administracion"]["exportaciones"] == 0 and fila["administracion"]["usuarios_creados"] == 1
         assert ind["totales"]["coordinadores_activos"] == 1
     yo = k.get("/api/yo/indicadores").json()
     assert yo["rol"] == "coordinador" and yo["administracion"]["usuarios_creados"] == 1

@@ -48,8 +48,9 @@ log = logging.getLogger("panel")
 
 ROLES = {"admin", "coordinador", "planillero", "consultor"}
 # Lo único que el coordinador no puede (adenda 1): solo A crea, edita, desactiva, reactiva o restablece la clave de un
-# coordinador, cambia el rol de un usuario y cambia los ajustes que son permisos o límites de acceso
-SOLO_ADMIN = frozenset({"usuarios.coordinadores", "usuarios.roles", "permisos.modificar"})
+# coordinador, cambia el rol de un usuario y cambia los ajustes que son permisos o límites de acceso. Adenda 2: toda
+# descarga con datos de personas (exportar.xlsx y asistentes.csv) es solo de A; los demás consultan en pantalla
+SOLO_ADMIN = frozenset({"usuarios.coordinadores", "usuarios.roles", "permisos.modificar", "exportar"})
 ROLES_CAMPO = ("planillero", "consultor")  # con alcance, presupuesto diario y límite de frecuencia
 PERMISOS: dict[str, frozenset[str]] = {
     "admin": frozenset({"*"}),

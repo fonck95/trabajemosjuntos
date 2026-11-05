@@ -1,5 +1,5 @@
 // Importación de los Excel (se procesan y se descartan; solo quedan los datos) y exportación de la base única.
-import { api, descargar } from '../api.js';
+import { api, descargar, puede } from '../api.js';
 import { refrescarInsignias } from '../app.js';
 import { $, aviso, avisoError, dialogo, fecha, html, icono, montar, num } from '../ui.js';
 
@@ -59,12 +59,12 @@ export async function vistaImportar(el) {
         <button class="btn primario" id="subir" disabled>Importar y cruzar</button>
         <div id="resultado" style="margin-top:16px"></div>
       </section>
-      <section class="tarjeta c-5">
+      ${puede('exportar') ? html`<section class="tarjeta c-5">
         <h2>Exportar</h2>
         <p class="sec">La base única completa en Excel: datos de contacto, dirección normalizada, coordenadas, precisión, necesidades, listas, reuniones y campos propios. Para exportar un grupo, aplique filtros en <a href="/personas" data-ruta>Habitantes</a> y exporte desde allí. Las exportaciones omiten a quien marcó «No autorizó» el tratamiento de sus datos.</p>
         <button class="btn oscuro" id="exportar">${icono('descargar')} Descargar base única (.xlsx)</button>
         <div class="aviso-legal" style="margin-top:16px">Cada exportación queda en la auditoría. Comparta el archivo solo por canales seguros y bórrelo cuando ya no lo necesite.</div>
-      </section>
+      </section>` : ''}
       <section class="tarjeta c-12">
         <h2>Historial de importaciones</h2>
         <div id="historial">${tablaHistorial(historial)}</div>
@@ -129,7 +129,7 @@ export async function vistaImportar(el) {
       } catch (err) { avisoError(err); }
     };
   });
-  $('#exportar', el).addEventListener('click', async () => {
+  $('#exportar', el)?.addEventListener('click', async () => {
     try { await descargar('/api/exportar.xlsx'); aviso('Exportación lista'); } catch (e) { aviso(e.message, 'error'); }
   });
 }

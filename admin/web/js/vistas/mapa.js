@@ -550,7 +550,7 @@ export async function vistaMapa(el, { q, ir }) {
     const enlace = `/personas?${new URLSearchParams({ ...estado.filtros, ...z })}`;
     return html`${listo && filtra ? html`<a class="btn chico" href="${enlace}" data-ruta>Ver en Habitantes</a>`
         : html`<button class="btn chico" type="button" disabled title="${motivo}">Ver en Habitantes</button>`}
-      <button class="btn chico" type="button" data-z="exportar" ${listo && filtra ? '' : 'disabled'} title="${filtra ? '' : motivo}">Exportar</button>
+      ${puede('exportar') ? html`<button class="btn chico" type="button" data-z="exportar" ${listo && filtra ? '' : 'disabled'} title="${filtra ? '' : motivo}">Exportar</button>` : ''}
       ${estado.zona ? html`${estado.zonaCambiada || estado.info?.fase === 'edicion' ? html`<button class="btn chico primario" type="button" data-z="guardar" ${listo ? '' : 'disabled'}>Guardar cambios</button>` : ''}
           <button class="btn chico" type="button" data-z="datos-zona">Nombre y asignación</button>
           <button class="btn chico peligro" type="button" data-z="borrar">Borrar</button>`

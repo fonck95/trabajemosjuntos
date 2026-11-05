@@ -3,9 +3,11 @@
 El panel tiene cuatro roles:
 
 - El **administrador** entra con la credencial de Railway (`ADMIN` y `password`). Puede todo.
-- Los **coordinadores** los crea el administrador. Tienen **todos los permisos del administrador** (importar, exportar,
-  unir, suprimir, mapa y zonas, tablero, calidad, auditoría, ver los datos políticos, la cédula completa y los
-  sensibles, crear planilleros y consultores…) **salvo** tres cosas que son solo del administrador:
+- Los **coordinadores** los crea el administrador. Tienen **todos los permisos del administrador** (importar, unir,
+  suprimir, mapa y zonas, tablero, calidad, auditoría, ver los datos políticos, la cédula completa y los sensibles,
+  crear planilleros y consultores…) **salvo** cuatro cosas que son solo del administrador:
+  - **descargar** datos de personas: la base única y lo filtrado en Excel, y los asistentes de una reunión en CSV.
+    Los demás consultan en pantalla (la plantilla vacía de la planilla sigue disponible);
   - crear, editar, desactivar, reactivar o restablecer la clave de un **coordinador**;
   - **cambiar el rol** de cualquier usuario (el rol se fija al crearlo);
   - cambiar los **ajustes que son permisos**: presupuestos diarios, sesiones, política de contacto del consultor,
@@ -111,6 +113,7 @@ Crear, desactivar o cambiar el rol de un usuario (también de un coordinador) qu
 
 ## Exportación
 
-Exportan el administrador y los coordinadores. Las **listas** y los **datos sensibles** salen solo si se marcan y se
+Exporta solo el administrador: `GET /api/exportar.xlsx` y `GET /api/reuniones/{id}/asistentes.csv` piden el permiso
+`exportar`, que nadie más tiene (el coordinador, los planilleros y los consultores reciben 403 y no ven los botones). Las **listas** y los **datos sensibles** salen solo si se marcan y se
 escribe un motivo; incluir a quien no autorizó admite un motivo opcional (por defecto, «operación interna»). Todo queda
 en la auditoría, y lo buscado se guarda solo como su largo, nunca en claro.
