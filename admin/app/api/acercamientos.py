@@ -25,7 +25,7 @@ from .. import db as bd
 from ..acceso import Quien, requiere
 from ..seguridad import obtener_db
 from . import personas as per
-from .filtros import alcance_de, base_cola, en_alcance_consultor, exigir_alcance_consultor, falta
+from .filtros import alcance_de, base_cola, en_alcance_consultor, exigir_alcance_consultor, falta, telefonos_ocultos
 
 r = APIRouter(prefix="/api", tags=["acercamientos"])
 
@@ -245,9 +245,12 @@ def registrar(pid: int, body: AcercamientoIn, request: Request, db: Database = D
         motivo = proyeccion.motivo_no_contactable(p, aj, hoy, body.canal)
         if motivo:
             raise _no_contactable(motivo)
-    # 3. Canales de P: visita o reunión
+    # 3. Canales de P: visita o reunión, que no usan un número. P no elige número: si lo eligiera, el acercamiento le
+    # devolvería entero uno que no ve (el de un menor) y el 422 de un índice inexistente diría cuántos hay
     if planillero and body.canal not in CANALES_P:
         raise per._prohibido("El planillero registra visitas y reuniones")
+    if planillero and (body.telefono_indice is not None or body.telefono):
+        raise HTTPException(422, "Una visita o una reunión no lleva número")
     # 2. Teléfono
     numero = _telefono_elegido(p, body)
     if body.resultado in ("numero_equivocado", "numero_inexistente") and not numero:
@@ -356,14 +359,10 @@ def registrar(pid: int, body: AcercamientoIn, request: Request, db: Database = D
     return cuerpo
 
 
-def _fila_acercamiento(a: dict, quien: Quien) -> dict:
-    d = {"id": a["_id"], "persona_id": a.get("persona_id"),
-         **{k: a.get(k) for k in proyeccion.CAMPOS_ACERCAMIENTO}, "datos_dictados": list(a.get("datos_dictados") or [])}
-    if not quien.administra and quien.rol == "planillero":
-        d.pop("nota")
-    if not quien.administra and quien.rol == "consultor":
-        d["telefono"] = acceso.enmascarar_telefono(d["telefono"])
-    return d
+def _fila_acercamiento(a: dict, quien: Quien, menor: bool = False) -> dict:
+    """La fila del rol (`proyeccion.acercamiento_para`) con el id de la persona."""
+    d = proyeccion.acercamiento_para(a, proyeccion.rol_de(quien), quien.administra, menor)
+    return {"id": d.pop("id"), "persona_id": a.get("persona_id"), **d}
 
 
 @r.get("/personas/{pid}/acercamientos")
@@ -375,8 +374,9 @@ def de_persona(pid: int, pagina: int = Query(1, ge=1, le=1000), db: Database = D
         raise HTTPException(409, dict(proyeccion.NO_AUTORIZO))
     q = {"persona_id": pid, "suprimido": {"$ne": True}}
     total = db.acercamientos.count_documents(q)
-    filas = [_fila_acercamiento(a, quien) for a in db.acercamientos.find(q).sort([("ts", DESCENDING), ("_id", DESCENDING)])
-             .skip((pagina - 1) * 50).limit(50)]
+    menor = modelo.es_menor(p)
+    filas = [_fila_acercamiento(a, quien, menor) for a in db.acercamientos.find(q)
+             .sort([("ts", DESCENDING), ("_id", DESCENDING)]).skip((pagina - 1) * 50).limit(50)]
     acceso.registrar_lecturas(db, quien, [pid])
     return {"total": total, "filas": filas}
 
@@ -604,10 +604,13 @@ def soltar(pid: int, db: Database = Depends(obtener_db), quien: Quien = Depends(
 
 # ───────────────────────────── Mi trabajo (7.7) ─────────────────────────────
 
-def _listas_p(hoy: date, aj: dict) -> list[tuple[str, str, dict, str]]:
-    """(clave, título, condición, enlace a Habitantes) de las tarjetas del planillero."""
+def _listas_p(hoy: date, aj: dict, completo: bool = True) -> list[tuple[str, str, dict, str]]:
+    """(clave, título, condición, enlace a Habitantes) de las tarjetas del planillero. Sin `completo` (P), la de los
+    teléfonos no cuenta a los menores (P no ve sus teléfonos), igual que su enlace a Habitantes (`filtros.filtro`)."""
     dias = int(aj.get("dias_reintento_dato") or 90)
     visitar = ["no_contesta", "sin_telefono_valido", "direccion"]
+    sin_tel = falta("telefono", hoy, dias) if completo else {"$and": [falta("telefono", hoy, dias),
+                                                                      {"$nor": [telefonos_ocultos(hoy)]}]}
     return [
         ("sin_cedula", "Sin cédula", falta("cedula", hoy, dias), "sin_cedula=1&orden=lugar"),
         ("sin_puesto_mesa", "Sin puesto o mesa", {"$or": [falta("puesto", hoy, dias), falta("mesa", hoy, dias)]},
@@ -619,7 +622,7 @@ def _listas_p(hoy: date, aj: dict) -> list[tuple[str, str, dict, str]]:
          "requiere_actualizacion=1"),
         ("visitar", "Visitar: no contestan o sin número", {"requiere_actualizacion.motivo": {"$in": visitar}},
          "requiere_actualizacion=" + ",".join(visitar)),
-        ("sin_telefono", "Sin teléfono", falta("telefono", hoy, dias), "sin_telefono=1"),
+        ("sin_telefono", "Sin teléfono", sin_tel, "sin_telefono=1"),
         ("sin_autorizacion", "Sin autorización", {"consentimiento": {"$in": ["pendiente", None]}},
          "consentimiento=pendiente"),
         ("sin_lugar", "Sin barrio o vereda", falta("lugar", hoy, dias), "sin_lugar=1"),
@@ -665,8 +668,10 @@ def trabajo(uid: int | None = None, db: Database = Depends(obtener_db),
     base = [modelo.filtro_vigente(), {"consentimiento": {"$ne": "no"}}]
     if alcance:
         base.append(alcance)
+    # Con teléfono: P y C no cuentan los de un menor (no los ven)
+    con_tel = [{"telefono": {"$ne": None}}] + ([] if quien.administra else [{"$nor": [modelo.filtro_menor(hoy)]}])
     pendientes = db.personas.count_documents({"$and": [*base, {"consentimiento": {"$in": ["pendiente", None]}},
-                                                       {"telefono": {"$ne": None}}]})
+                                                       *con_tel]})
     listas = []
     if not quien.administra and quien.rol == "consultor":
         for clave, titulo in LISTAS_C.items():
@@ -679,13 +684,15 @@ def trabajo(uid: int | None = None, db: Database = Depends(obtener_db),
                 n = db.personas.count_documents(q)
             listas.append({"clave": clave, "titulo": titulo, "n": n, "enlace": f"/trabajo?lista={clave}"})
     else:
-        for clave, titulo, cond, enlace in _listas_p(hoy, aj):
+        for clave, titulo, cond, enlace in _listas_p(hoy, aj, quien.administra):
             n = db.personas.count_documents({"$and": [*base, cond]})
             listas.append({"clave": clave, "titulo": titulo, "n": n,
                            "enlace": f"/personas?situacion=vigentes&tratables=1&{enlace}"})
         if not quien.administra:
-            n = db.personas.count_documents({"$and": [dict(bd.ACTIVA), {"$or": [{"creado_por.uid": quien.uid},
-                                                                                 {"actualizado_por.uid": quien.uid}]}]})
+            # Como su enlace a Habitantes (`mios=1`): sin quien no autorizó (quién la editó después no se ve)
+            n = db.personas.count_documents({"$and": [dict(bd.ACTIVA), {"consentimiento": {"$ne": "no"}},
+                                                      {"$or": [{"creado_por.uid": quien.uid},
+                                                               {"actualizado_por.uid": quien.uid}]}]})
             listas.append({"clave": "mis_recientes", "titulo": "Mis registros recientes", "n": n,
                            "enlace": "/personas?mios=1&orden=reciente"})
     semana = hoy - timedelta(days=hoy.weekday())
@@ -724,8 +731,10 @@ def insignias(db: Database = Depends(obtener_db), quien: Quien = Depends(requier
                                                           "situacion.confirmada": {"$ne": True}})
         out["trabajo"] = db.personas.count_documents(vigente_req)
     elif quien.rol == "planillero":
+        # Como «Pendientes de actualizar» de Mi trabajo: sin quien no autorizó (P no ve su `requiere_actualizacion`)
         alcance = alcance_de(db, quien)
-        out["trabajo"] = db.personas.count_documents({"$and": [vigente_req, alcance]} if alcance else vigente_req)
+        q = {"$and": [vigente_req, {"consentimiento": {"$ne": "no"}}, *([alcance] if alcance else [])]}
+        out["trabajo"] = db.personas.count_documents(q)
     elif quien.rol == "consultor":
         q = consulta_lista(db, quien, "volver_a_llamar", hoy, aj)
         out["trabajo"] = db.personas.count_documents(q) if q else 0

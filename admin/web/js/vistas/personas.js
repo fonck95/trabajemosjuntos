@@ -76,7 +76,7 @@ export async function vistaPersonas(el, { q, ir }) {
       </div>
     </div>
     <div class="filtros plegables" id="filtros">
-      <label class="buscador"><span class="sr">Buscar</span>${icono('buscar')}<input class="entrada" id="q" type="search" placeholder="Nombre, cédula, teléfono, dirección o ficha" value="${f.q || ''}"></label>
+      <label class="buscador"><span class="sr">Buscar</span>${icono('buscar')}<input class="entrada" id="q" type="search" placeholder="${adm ? 'Nombre, cédula, teléfono, dirección o ficha' : 'Nombre, dirección, o cédula o teléfono completos'}" value="${f.q || ''}"></label>
       <button class="btn boton-filtros" id="ver-filtros" aria-expanded="false" aria-controls="mas-filtros">${icono('filtro')} <span id="n-filtros">Filtros</span></button>
       <div class="mas-filtros" id="mas-filtros">
         <select class="entrada" data-f="sexo" aria-label="Sexo">${opciones([['', 'Sexo'], ...Object.entries(SEXOS), ['sin', 'Sin dato']], f.sexo)}</select>

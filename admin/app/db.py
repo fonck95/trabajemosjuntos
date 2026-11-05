@@ -636,6 +636,13 @@ class FusionImposible(HTTPException):
         super().__init__(409, mensaje)
 
 
+class CedulasDistintas(FusionImposible):
+    """Las dos fichas tienen (o acaban de recibir) cédulas distintas: son personas diferentes."""
+
+    def __init__(self):
+        super().__init__("Las dos fichas tienen cédulas distintas: son personas diferentes")
+
+
 # Campos que se llenan desde el origen si el destino no los tiene, sin alternos (los que no tienen procedencia)
 FUSION_SIMPLES = ("ficha", "personas_hogar", "observaciones", "tenencia_vivienda", "estrato", "regimen_salud",
                   "reunion_origen")
@@ -802,8 +809,17 @@ def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | No
     """Pasos 3 a 7 de la unión: se pueden repetir sin daño (la reparación al arrancar los repite)."""
     origen = o["_id"]
     uid = _uid_de(quien)
-    r = db.personas.update_one({"_id": destino, **ACTIVA}, _pipeline_fusion(o, origen, uid))
+    # La cédula manda (principio 2): el destino se escribe solo si su cédula sigue siendo compatible con la del origen.
+    # Quien leyó el destino sin cédula pudo perder la carrera con alguien que se la llenó con otra (PATCH del
+    # planillero entre la lectura y esta escritura): entonces son dos personas y la unión no se hace
+    cedula_o = o.get("cedula") or o.get("cedula_en_traspaso")
+    filtro: dict = {"_id": destino, **ACTIVA}
+    if cedula_o:
+        filtro["cedula"] = {"$in": [None, "", cedula_o]}
+    r = db.personas.update_one(filtro, _pipeline_fusion(o, origen, uid))
     if r.matched_count == 0:
+        if cedula_o and db.personas.count_documents({"_id": destino, **ACTIVA}, limit=1):
+            raise CedulasDistintas()
         raise FusionImposible("La ficha de destino ya se unió o se suprimió")
     for col in ("acercamientos", "autorizaciones", "solicitudes", "conflictos_cedula"):
         db[col].update_many({"persona_id": origen}, {"$set": {"persona_id": destino}})
@@ -861,7 +877,8 @@ def fusionar(db: Database, destino: int, origen: int, quien: Any, ip: str | None
     try:
         _unir_en(db, destino, o, quien, d)
     except FusionImposible:
-        # El destino dejó de estar activo entre la lectura y la escritura: el origen vuelve a quedar como estaba
+        # El destino dejó de estar activo, o recibió otra cédula, entre la lectura y la escritura: el origen vuelve a
+        # quedar como estaba (con su cédula) y no se une nada
         db.personas.update_one({"_id": origen, "fusionada_en": destino},
                                {"$set": {"fusionada_en": None, "cedula": o.get("cedula")}, "$unset": {"cedula_en_traspaso": ""}})
         raise
@@ -892,6 +909,15 @@ def reparar_fusiones(db: Database) -> int:
         try:
             _unir_en(db, destino, o, "sistema")
             n += 1
+        except CedulasDistintas:
+            # El destino recibió otra cédula mientras la unión estaba cortada: son dos personas. El origen vuelve a
+            # quedar activo con su cédula (si nadie la tomó entre tanto; si no, queda para revisión de A)
+            try:
+                db.personas.update_one({"_id": o["_id"], "fusionada_en": o["fusionada_en"]},
+                                       {"$set": {"fusionada_en": None, "cedula": o.get("cedula_en_traspaso")},
+                                        "$unset": {"cedula_en_traspaso": ""}})
+            except DuplicateKeyError:
+                pass
         except FusionImposible:
             continue
     return n

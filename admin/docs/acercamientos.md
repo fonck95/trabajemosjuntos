@@ -44,7 +44,9 @@ Toda respuesta con una ficha o con filas se arma con la lista de campos permitid
 
 - `telefono_indice` es la posición entre los **números usables** de la ficha (el campo `indice` de cada teléfono);
   también se acepta `telefono`. Es obligatorio en llamada, WhatsApp y SMS.
-- P registra solo visitas y reuniones; C, llamadas y mensajes.
+- P registra solo visitas y reuniones, sin número (`telefono_indice` o `telefono` → 422); C, llamadas y mensajes.
+  En la ficha y en el historial, P no ve el número de los acercamientos de un menor y C lo ve enmascarado (y de un
+  menor, nada).
 - Para C la persona debe ser contactable; si no, 409 `{codigo: "no_contactable", motivo}` con `no_autorizo`,
   `menor`, `edad_desconocida`, `reclamo`, `situacion`, `pendiente`, `no_habilitado` o `canal`.
 - Efectos: el número queda confirmado, equivocado, inexistente o con «no contactar»; `volver_llamar` agenda

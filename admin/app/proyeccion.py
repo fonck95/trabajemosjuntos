@@ -4,8 +4,9 @@ y quitando campos.
 * `CAMPOS_FICHA[rol]` y `CAMPOS_FILA[rol]`: claves de primer nivel de la ficha y de las filas que puede recibir cada
   rol. `sensibles` y `cedula_en_traspaso` no están en ninguna lista, tampoco en la de A.
 * Algunos campos llevan además un recorte por dentro, que aplica quien arma la respuesta (3.8): teléfonos solo usables
-  para C, sin teléfonos para P si es menor, acercamientos sin `nota` para P, trámites con `fecha`, `tipo` y `ficha`
-  para P, `situacion.estado` para C, `en_curso` propio, `abordaje` con solo `estado` en `CAMPOS_NO_AUTORIZO`.
+  para C, sin teléfonos para P si es menor (tampoco el número de sus acercamientos), acercamientos sin `nota` para P,
+  trámites con `fecha`, `tipo` y `ficha` para P, `situacion.estado` para C, `en_curso` propio, `abordaje` con solo
+  `estado` en `CAMPOS_NO_AUTORIZO`.
 * Para P y C la fuente «cedulas» se muestra como «otra_base» (`neutralizar_fuente`).
 * `exigir_tratable` va en toda escritura sobre una persona: a quien no autorizó, P y C no lo tratan.
 """
@@ -306,10 +307,19 @@ def filas_para(quien: Any, docs: Iterable[dict]) -> list[dict]:
 
 
 def fila_cola(p: dict, ctx: Contexto) -> dict:
-    """Fila de la cola del consultor (4.5): el número es el primero usable por un canal permitido."""
-    us = modelo.usables(modelo.telefonos_de(p))
+    """Fila de la cola del consultor (4.5): el número es el primero usable por un canal permitido. En «Hoy» puede
+    salir alguien que ya no se contacta: de quien no autorizó o de un menor no va ningún número, y de quien no
+    autorizó, solo lo de su fila mínima."""
+    no_autorizo = p.get("consentimiento") == "no"
+    us = [] if (no_autorizo or modelo.es_menor(p, ctx.hoy)) else modelo.usables(modelo.telefonos_de(p))
     lg = ctx.lugar(p.get("lugar_id"))
     ab = _abordaje(p) or {}
+    if no_autorizo:
+        d = {"id": p["_id"], "nombre": p.get("nombre"), "lugar": lg.get("nombre") or p.get("lugar_texto"), "zona": None,
+             "rango_edad": None, "telefono_indice": None, "telefono": None, "whatsapp": None, "canales_permitidos": [],
+             "consentimiento": "no", "abordaje": {"estado": ab.get("estado") or "no_contactar", "n": None,
+                                                  "ultimo_fecha": None, "ultimo_resultado": None}}
+        return {k: d[k] for k in CAMPOS_COLA}
     t = us[0] if us else {}
     d = {"id": p["_id"], "nombre": p.get("nombre"), "lugar": lg.get("nombre") or p.get("lugar_texto"),
          "zona": p.get("zona"), "rango_edad": modelo.rango_edad(modelo.edad_efectiva(p, ctx.hoy)),
@@ -413,17 +423,24 @@ def _votacion(p: dict, ctx: Contexto, adm: bool) -> dict | None:
     return d
 
 
-def _acercamientos(db: Database, pid: int, rol: str, adm: bool) -> list[dict]:
-    out = []
-    for a in db.acercamientos.find({"persona_id": pid, "suprimido": {"$ne": True}}).sort([("ts", -1), ("_id", -1)]).limit(50):
-        d = {"id": a["_id"], **{k: a.get(k) for k in CAMPOS_ACERCAMIENTO}}
-        d["datos_dictados"] = list(a.get("datos_dictados") or [])
-        if not adm and rol == "planillero":
-            d.pop("nota")
-        if not adm and rol == "consultor":
-            d["telefono"] = acceso.enmascarar_telefono(d["telefono"])
-        out.append(d)
-    return out
+def acercamiento_para(a: dict, rol: str, adm: bool, menor: bool) -> dict:
+    """Un acercamiento con los campos de `CAMPOS_ACERCAMIENTO` y los recortes del rol: P, sin `nota` y, si la persona
+    es menor, sin el número (P no ve sus teléfonos, tampoco por aquí); C, con el número enmascarado y ninguno de un
+    menor."""
+    d = {"id": a["_id"], **{k: a.get(k) for k in CAMPOS_ACERCAMIENTO}}
+    d["datos_dictados"] = list(a.get("datos_dictados") or [])
+    if not adm and rol == "planillero":
+        d.pop("nota")
+        if menor:
+            d["telefono"] = None
+    if not adm and rol == "consultor":
+        d["telefono"] = None if menor else acceso.enmascarar_telefono(d["telefono"])
+    return d
+
+
+def _acercamientos(db: Database, pid: int, rol: str, adm: bool, menor: bool) -> list[dict]:
+    return [acercamiento_para(a, rol, adm, menor) for a in db.acercamientos.find(
+        {"persona_id": pid, "suprimido": {"$ne": True}}).sort([("ts", -1), ("_id", -1)]).limit(50)]
 
 
 def _reuniones(db: Database, p: dict, adm: bool) -> tuple[list, dict]:
@@ -532,7 +549,7 @@ def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> 
         "autorizacion": lambda: _historial_autorizacion(db, pid),
         "reclamo_en_tramite": lambda: p.get("reclamo_en_tramite") is True,
         "abordaje": lambda: _abordaje(p), "abordaje_seq": lambda: p.get("abordaje_seq") or 0,
-        "acercamientos": lambda: _acercamientos(db, pid, rol, adm),
+        "acercamientos": lambda: _acercamientos(db, pid, rol, adm, menor),
         "en_curso": lambda: ec if (adm or (ec and ec.get("uid") == getattr(quien, "uid", None))) else None,
         "notas": lambda: _notas(p, reuniones()[1]),
         "listas": lambda: list(p.get("listas") or []), "lider": lambda: bool(p.get("lider")),
