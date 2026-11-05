@@ -26,8 +26,8 @@ from ..acceso import Quien, requiere
 from ..pipeline import importar as imp
 from ..pipeline import texto as tx
 from ..seguridad import (ROLES_USUARIO, USUARIO_DESCONOCIDO, base_de, cerrar_sesion, crear_sesion, credenciales_validas,
-                         dispositivo_valido, ip_de, marcar_dispositivo, obtener_db, reservar_intento, resolver_intento,
-                         sesion_actual, usuario_correcto)
+                         dispositivo_valido, ip_de, marcar_dispositivo, migrar_cookie, obtener_db, reservar_intento,
+                         resolver_intento, sesion_actual, usuario_correcto)
 from .filtros import Filtros, filtro, filtros_query
 from .personas import mapa_lugares
 
@@ -142,11 +142,12 @@ def logout(request: Request, response: Response, db: Database = Depends(obtener_
 
 
 @r.get("/yo")
-def yo(request: Request, db: Database = Depends(obtener_db)):
+def yo(request: Request, response: Response, db: Database = Depends(obtener_db)):
     s = sesion_actual(db, request)
     cfg = request.app.state.cfg
     if s is None:
         raise HTTPException(401, {"mensaje": "Inicie sesión", "configurado": bool(cfg.usuario and cfg.clave)})
+    migrar_cookie(request, response, s)  # una cookie de antes (Path=/) pasa a la ruta del panel sin pedir la clave
     return datos_sesion(cfg, s, None, s.get("_usuario"), s.get("_ajustes"))
 
 

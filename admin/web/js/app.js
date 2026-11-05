@@ -236,18 +236,57 @@ function entrar(d) {
   return render().then(() => refrescarInsignias());
 }
 
-async function iniciar() {
-  aplicarTema(tema());
-  cargarEstilos();
+// Sin MongoDB (503) o sin red, el arranque no pide la clave: la sesión sigue en la cookie. Se muestra el aviso y se
+// pregunta de nuevo cada ~5 s (o al tocar «Reintentar»); cuando la base vuelve, se entra con la misma sesión
+const REINTENTO_MS = 5000;
+let reloj = null;
+let preguntando = false;
+
+async function preguntarSesion() {
+  if (preguntando) return;
+  preguntando = true;
+  clearTimeout(reloj);
   let yo;
   try {
     yo = await api.get('/api/yo');
   } catch (e) {
-    const configurado = e instanceof ErrorApi ? e.detalle?.configurado !== false : true;
-    vistaLogin($('#raiz'), { configurado, alEntrar: entrar });
+    preguntando = false;
+    if (e instanceof ErrorApi && e.estado === 401) {
+      vistaLogin($('#raiz'), { configurado: e.detalle?.configurado !== false, alEntrar: entrar });
+    } else {
+      sinConexion();
+    }
     return;
   }
+  preguntando = false;
   await entrar(yo);
+}
+
+function sinConexion() {
+  const raiz = $('#raiz');
+  if (!$('#reintentar', raiz)) {
+    montar(raiz, html`
+      <div class="login sin-conexion">
+        <section class="caja">
+          <div class="estado-conexion" role="alert">
+            <h2>Sin conexión con la base de datos</h2>
+            <p class="sec">El panel vuelve a intentarlo solo cada 5 segundos. Su sesión no se pierde: no hace falta ingresar de nuevo.</p>
+            <button class="btn primario" id="reintentar" type="button">Reintentar</button>
+            <p class="sec" id="intento" aria-live="polite"></p>
+          </div>
+        </section>
+      </div>`);
+    $('#reintentar', raiz).addEventListener('click', () => preguntarSesion());
+  }
+  const hora = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  $('#intento', raiz).textContent = `Último intento: ${hora}`;
+  reloj = setTimeout(preguntarSesion, REINTENTO_MS);
+}
+
+async function iniciar() {
+  aplicarTema(tema());
+  cargarEstilos();
+  await preguntarSesion();
 }
 
 function expiro() {

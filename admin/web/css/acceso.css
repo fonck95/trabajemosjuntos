@@ -93,3 +93,9 @@
   .tabla-usuarios td[data-titulo="Alertas"]:has(.chips:empty) { display: none; }
   .tabla-usuarios td.celda-acciones { align-items: stretch; }
 }
+
+/* Arranque sin MongoDB o sin red: aviso con «Reintentar» en lugar del ingreso (la sesión sigue en la cookie) */
+.login.sin-conexion { grid-template-columns: 1fr; }
+.estado-conexion { width: min(420px, 100%); display: flex; flex-direction: column; gap: 14px; }
+.estado-conexion h2 { font: 30px/1.05 var(--f-display); text-transform: uppercase; }
+.estado-conexion .btn { min-height: 44px; align-self: flex-start; }

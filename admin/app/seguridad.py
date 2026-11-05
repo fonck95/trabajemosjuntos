@@ -284,6 +284,27 @@ def crear_sesion(db: Database, cfg, response: Response, usuario: str, request: R
     return csrf
 
 
+def migrar_cookie(request: Request, response: Response, s: dict) -> None:
+    """Con el panel dentro del sitio, pasa una sesión válida a la ruta nueva: borra la cookie con Path=/ (de antes de
+    acotarla al panel) y vuelve a emitir el mismo token con la ruta y los atributos de `crear_sesion`. La duración es
+    la que le queda a la sesión, así que no la alarga. `s` es la sesión que `sesion_actual` ya validó."""
+    token = request.cookies.get(COOKIE)
+    if not (token and base_de(request)):
+        return
+    cfg = request.app.state.cfg
+    expira = s.get("expira")
+    if isinstance(expira, datetime) and expira.tzinfo is None:
+        expira = expira.replace(tzinfo=timezone.utc)
+    resta = cfg.horas_sesion * 3600
+    if isinstance(expira, datetime):
+        resta = min(resta, int((expira - datetime.now(timezone.utc)).total_seconds()))
+    if resta <= 0:
+        return
+    _borrar_cookie_vieja(request, response)
+    response.set_cookie(COOKIE, token, max_age=resta, httponly=True, secure=cfg.cookie_segura,
+                        samesite="strict", path=_ruta_cookie(request))
+
+
 def cerrar_sesion(db: Database, request: Request, response: Response) -> None:
     token = request.cookies.get(COOKIE)
     if token:

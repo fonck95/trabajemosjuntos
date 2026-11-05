@@ -192,7 +192,7 @@ async function trabajoConsultor(el) {
   function alLlamar(a) {
     const pid = Number(a.dataset.llamar);
     marcarLlamada({ pid, indice: Number(a.dataset.indice) || 0, canal: a.dataset.canal });
-    api.post(`/api/trabajo/tomar/${pid}`).catch((e) => { if (e instanceof ErrorApi && e.codigo === 'tomada') aviso(`Ya la tiene ${e.detalle?.usuario || 'otro consultor'}`, 'error', 6000); });
+    api.post(`/api/trabajo/tomar/${pid}`, undefined, { keepalive: true }).catch((e) => { if (e instanceof ErrorApi && e.codigo === 'tomada') aviso(`Ya la tiene ${e.detalle?.usuario || 'otro consultor'}`, 'error', 6000); });
     if (!actual || actual.id !== pid) { guardarActual(pid); cargarActual(pid); }
   }
 

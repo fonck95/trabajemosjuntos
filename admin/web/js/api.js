@@ -80,14 +80,16 @@ function reingresar() {
 const NO_CAMBIO = Symbol('304');
 
 // Opciones de cada petición: `clave` va como Idempotency-Key y `timeout` (ms) corta la espera con «Sin conexión» sin
-// perder lo escrito (0: sin límite). `cabeceras` se suman a las de siempre; `alResponder(r)` recibe la respuesta
+// perder lo escrito (0: sin límite). `cabeceras` se suman a las de siempre; `alResponder(r)` recibe la respuesta.
+// `keepalive` deja terminar la petición aunque la página pase al marcador (tel:) o a WhatsApp
 async function pedir(metodo, ruta, cuerpo, op = {}, reintento = false) {
-  const { formulario = false, clave = null, cabeceras = null, alResponder = null } = op;
+  const { formulario = false, clave = null, cabeceras = null, alResponder = null, keepalive = false } = op;
   const sinLimite = SIN_LIMITE.some((r) => ruta === r || ruta.startsWith(r + '?'));
   const timeout = op.timeout ?? (sinLimite ? 0 : metodo === 'GET' ? ESPERA_LECTURA : ESPERA_ESCRITURA);
   const o = { method: metodo, credentials: 'same-origin', headers: { ...(cabeceras || {}) } };
   if (metodo !== 'GET') o.headers['X-CSRF-Token'] = csrf || '';
   if (clave) o.headers['Idempotency-Key'] = clave;
+  if (keepalive) o.keepalive = true;
   if (cuerpo !== undefined) {
     if (formulario) o.body = cuerpo;
     else {

@@ -639,7 +639,7 @@ export async function vistaFicha(el, { params, ir }) {
     if (ll) {
       // Llamar o escribir: se anota la llamada (sin número ni nombre) para la franja «Llamada sin registrar»
       marcarLlamada({ pid: id, indice: Number(ll.dataset.llamar), canal: ll.dataset.canal });
-      if (esC) api.post(`/api/trabajo/tomar/${id}`).catch(() => {});
+      if (esC) api.post(`/api/trabajo/tomar/${id}`, undefined, { keepalive: true }).catch(() => {});
       return; // el enlace sigue su curso (tel: o WhatsApp)
     }
     if (e.target.closest('[data-registrar]')) return registrar(esP ? { canal: 'visita' } : {});
