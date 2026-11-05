@@ -127,7 +127,9 @@ class AcercamientoIn(BaseModel):
     alcance: Literal["numero", "persona"] | None = None
     pedir_actualizacion: bool = False
     se_fue_del_municipio: bool = False
-    solicitud_tipo: Literal["consulta", "correccion", "supresion", "otro"] = "consulta"
+    # Sin tipo (la interfaz no lo pregunta: «Pidió consultar, corregir o borrar sus datos») queda «otro», sin clasificar:
+    # saca a la persona de las colas hasta que A la clasifique o la resuelva en Calidad
+    solicitud_tipo: Literal["consulta", "correccion", "supresion", "otro"] = "otro"
     autorizacion: per.AutorizacionIn | None = None
     datos_dictados: DictadosIn | None = None
     excepcion: str | None = Field(None, max_length=300)

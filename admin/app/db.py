@@ -835,8 +835,8 @@ LIGADOS = ("acercamientos", "autorizaciones", "solicitudes", "conflictos_cedula"
 
 
 def reclamo_abierto(db: Database, pid: int) -> bool:
-    """¿La ficha tiene abierta una solicitud de derechos (consulta, corrección, supresión, revocatoria u otra; no un pedido
-    de registro, `modelo.NO_MARCAN_RECLAMO`)? Mientras la tenga, no se le llama."""
+    """¿La ficha tiene abierta una corrección, supresión, revocatoria u otra solicitud sin clasificar (no una consulta ni un
+    pedido de registro, `modelo.NO_MARCAN_RECLAMO`)? Mientras la tenga, no se le llama."""
     return db.solicitudes.count_documents({"persona_id": pid, "tipo": {"$nin": list(modelo.NO_MARCAN_RECLAMO)},
                                            "estado": {"$in": list(modelo.ABIERTAS)}}, limit=1) > 0
 

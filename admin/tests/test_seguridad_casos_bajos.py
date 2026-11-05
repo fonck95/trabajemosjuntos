@@ -243,8 +243,8 @@ def test_consultor_registra_una_supresion_mientras_se_une_y_el_reclamo_queda_en_
 
 @pytest.mark.parametrize("rol", ["consultor", "planillero"])
 def test_solicitud_de_derechos_sin_tipo_saca_a_la_persona_de_la_cola(sesion, como, rol):
-    """La interfaz registra «Pidió consultar, corregir o borrar sus datos» sin solicitud_tipo (queda como consulta).
-    Mientras esté abierta, a esa persona no se le llama: sale de la cola y otro consultor recibe 409 al tomarla."""
+    """La interfaz registra «Pidió consultar, corregir o borrar sus datos» sin solicitud_tipo: queda «otro», sin
+    clasificar, y mientras esté abierta a esa persona no se le llama (sale de la cola)."""
     db = sesion.app.state.db
     lid = _lid(db)
     pid, _ = _dos_contactables(db, lid)
@@ -257,7 +257,7 @@ def test_solicitud_de_derechos_sin_tipo_saca_a_la_persona_de_la_cola(sesion, com
         cuerpo["telefono_indice"] = 0
     r = quien.post(f"/api/personas/{pid}/acercamientos", json=cuerpo)
     assert r.status_code in (200, 201), r.text[:300]
-    assert db.solicitudes.find_one({"persona_id": pid})["tipo"] == "consulta"
+    assert db.solicitudes.find_one({"persona_id": pid})["tipo"] == "otro"
     assert db.personas.find_one({"_id": pid})["reclamo_en_tramite"] is True
     otro = como("consultor", asignacion={"lugares": [lid], "areas": []}, usuario="cons.otro")
     _fuera_de_la_cola(db, pid, otro, lid)
