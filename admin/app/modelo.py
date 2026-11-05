@@ -56,7 +56,7 @@ SENSIBLES = {
                                  "Prefiere no decir"]},
     "victima": {"etiqueta": "Víctima del conflicto", "valores": ["Sí", "No", "Prefiere no decir"]},
 }
-NOMBRES_ROL = {"admin": "Administrador", "planillero": "Planillero", "consultor": "Consultor"}
+NOMBRES_ROL = {"admin": "Administrador", "coordinador": "Coordinador", "planillero": "Planillero", "consultor": "Consultor"}
 
 # ───────────────────────────── Autorización del titular (1.6) ─────────────────────────────
 

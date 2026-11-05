@@ -101,6 +101,7 @@ export const CATALOGOS = {
   },
   "NOMBRES_ROL": {
     "admin": "Administrador",
+    "coordinador": "Coordinador",
     "planillero": "Planillero",
     "consultor": "Consultor"
   },
