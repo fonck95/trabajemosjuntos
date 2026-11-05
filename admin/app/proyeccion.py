@@ -4,8 +4,9 @@ y quitando campos.
 * `CAMPOS_FICHA[rol]` y `CAMPOS_FILA[rol]`: claves de primer nivel de la ficha y de las filas que puede recibir cada
   rol. `sensibles` y `cedula_en_traspaso` no están en ninguna lista, tampoco en la de A.
 * Algunos campos llevan además un recorte por dentro, que aplica quien arma la respuesta (3.8): teléfonos solo usables
-  para C, sin teléfonos para P si es menor, acercamientos sin `nota` para P, trámites con `fecha`, `tipo` y `ficha`
-  para P, `situacion.estado` para C, `en_curso` propio, `abordaje` con solo `estado` en `CAMPOS_NO_AUTORIZO`.
+  para C, sin teléfonos para P si es menor (tampoco el número de sus acercamientos), acercamientos sin `nota` para P,
+  trámites con `fecha`, `tipo` y `ficha` para P, `situacion.estado` para C, `en_curso` propio, `abordaje` con solo
+  `estado` en `CAMPOS_NO_AUTORIZO`.
 * Para P y C la fuente «cedulas» se muestra como «otra_base» (`neutralizar_fuente`).
 * `exigir_tratable` va en toda escritura sobre una persona: a quien no autorizó, P y C no lo tratan.
 """
@@ -19,7 +20,7 @@ from fastapi import HTTPException
 from pymongo.database import Database
 
 from . import acceso, modelo
-from .db import ACTIVA, cerrar_coincidencias_imposibles
+from .db import ACTIVA, PESOS, cerrar_coincidencias_imposibles
 
 # ───────────────────────────── Ficha ─────────────────────────────
 
@@ -242,6 +243,27 @@ def puesto_codigo(p: dict, ctx: Contexto) -> str | None:
     return None
 
 
+PESO_TELEFONO = dict(PESOS)["telefono"]
+
+
+def tiene_telefono(p: dict) -> bool:
+    """¿La completitud de la ficha cuenta su teléfono? (como `db.completitud`)"""
+    return bool(modelo.usables(modelo.telefonos_de(p))) or not modelo.vacio(p.get("telefono"))
+
+
+def _sin_telefono(p: dict) -> int:
+    c = p.get("completitud", 0) or 0
+    return max(0, c - PESO_TELEFONO) if tiene_telefono(p) else c
+
+
+def completitud_vista(p: dict, quien: Any, menor: bool) -> int:
+    """La completitud que ve el rol. P (y C) no ven los teléfonos de un menor: la de un menor se les calcula sin
+    teléfono, así no dice si tiene alguno. Gemela de `filtros.expr_completitud_vista` (orden y filtro)."""
+    if menor and not administra(quien):
+        return _sin_telefono(p)
+    return p.get("completitud", 0)
+
+
 def fila_completa(p: dict, ctx: Contexto) -> dict:
     """Todos los valores que una fila puede llevar, calculados de la ficha. Nunca se envía tal cual: `filas_para`
     toma de aquí solo los campos del rol."""
@@ -255,6 +277,7 @@ def fila_completa(p: dict, ctx: Contexto) -> dict:
         "telefono": p.get("telefono"), "telefono_mascara": acceso.enmascarar_telefono(us[0]["numero"]) if us else None,
         "telefonos_n": len(us), "lugar": lg.get("nombre") or p.get("lugar_texto"), "lugar_tipo": lg.get("tipo"),
         "zona": p.get("zona"), "precision": p.get("geo_precision"), "completitud": p.get("completitud", 0),
+        "_completitud_sin_tel": _sin_telefono(p),
         "fuentes": list(p.get("fuentes") or []), "reuniones": len(p.get("asistencias") or []),
         "lider": bool(p.get("lider")), "consentimiento": p.get("consentimiento"),
         "ultimo_contacto": p.get("ultimo_contacto"), "sexo": p.get("sexo"),
@@ -301,15 +324,28 @@ def filas_para(quien: Any, docs: Iterable[dict]) -> list[dict]:
                              "ultimo_fecha": ab.get("ultimo_fecha")}
             if d.get("menor"):
                 f["telefono_mascara"], f["telefonos_n"] = None, 0
+                if "faltan" in f:
+                    f["faltan"] = [x for x in f["faltan"] or [] if x != "telefono"]
+                if "completitud" in f:  # sin el teléfono, como en su ficha (`completitud_vista`)
+                    f["completitud"] = d.get("_completitud_sin_tel", f["completitud"])
         out.append(f)
     return out
 
 
 def fila_cola(p: dict, ctx: Contexto) -> dict:
-    """Fila de la cola del consultor (4.5): el número es el primero usable por un canal permitido."""
-    us = modelo.usables(modelo.telefonos_de(p))
+    """Fila de la cola del consultor (4.5): el número es el primero usable por un canal permitido. En «Hoy» puede
+    salir alguien que ya no se contacta: de quien no autorizó o de un menor no va ningún número, y de quien no
+    autorizó, solo lo de su fila mínima."""
+    no_autorizo = p.get("consentimiento") == "no"
+    us = [] if (no_autorizo or modelo.es_menor(p, ctx.hoy)) else modelo.usables(modelo.telefonos_de(p))
     lg = ctx.lugar(p.get("lugar_id"))
     ab = _abordaje(p) or {}
+    if no_autorizo:
+        d = {"id": p["_id"], "nombre": p.get("nombre"), "lugar": lg.get("nombre") or p.get("lugar_texto"), "zona": None,
+             "rango_edad": None, "telefono_indice": None, "telefono": None, "whatsapp": None, "canales_permitidos": [],
+             "consentimiento": "no", "abordaje": {"estado": ab.get("estado") or "no_contactar", "n": None,
+                                                  "ultimo_fecha": None, "ultimo_resultado": None}}
+        return {k: d[k] for k in CAMPOS_COLA}
     t = us[0] if us else {}
     d = {"id": p["_id"], "nombre": p.get("nombre"), "lugar": lg.get("nombre") or p.get("lugar_texto"),
          "zona": p.get("zona"), "rango_edad": modelo.rango_edad(modelo.edad_efectiva(p, ctx.hoy)),
@@ -339,11 +375,13 @@ EDITABLES_P = ("nombre", "cedula", "tipo_documento", "cedula_verificada", "sexo"
 EDITABLES_A = EDITABLES_P + ("lider", "consentimiento_fecha", "puesto_votacion", "motivo_cambio_cedula")
 
 
-def editables(p: dict, quien: Any) -> list[str]:
+def editables(p: dict, quien: Any, menor: bool | None = None) -> list[str]:
     if administra(quien):
         return list(EDITABLES_A)
     if rol_de(quien) == "planillero":
         fuera = {"cedula", "tipo_documento"} if p.get("cedula") else set()
+        if modelo.es_menor(p) if menor is None else menor:  # no ve los teléfonos de un menor ni los cambia (403)
+            fuera |= {"telefono", "telefono2"}
         return [k for k in EDITABLES_P if k not in fuera]
     faltan = modelo.faltan(p)
     return [k for k, f in (("cedula", "cedula"), ("puesto_id", "puesto"), ("mesa", "mesa")) if f in faltan]
@@ -413,17 +451,24 @@ def _votacion(p: dict, ctx: Contexto, adm: bool) -> dict | None:
     return d
 
 
-def _acercamientos(db: Database, pid: int, rol: str, adm: bool) -> list[dict]:
-    out = []
-    for a in db.acercamientos.find({"persona_id": pid, "suprimido": {"$ne": True}}).sort([("ts", -1), ("_id", -1)]).limit(50):
-        d = {"id": a["_id"], **{k: a.get(k) for k in CAMPOS_ACERCAMIENTO}}
-        d["datos_dictados"] = list(a.get("datos_dictados") or [])
-        if not adm and rol == "planillero":
-            d.pop("nota")
-        if not adm and rol == "consultor":
-            d["telefono"] = acceso.enmascarar_telefono(d["telefono"])
-        out.append(d)
-    return out
+def acercamiento_para(a: dict, rol: str, adm: bool, menor: bool) -> dict:
+    """Un acercamiento con los campos de `CAMPOS_ACERCAMIENTO` y los recortes del rol: P, sin `nota` y, si la persona
+    es menor, sin el número (P no ve sus teléfonos, tampoco por aquí); C, con el número enmascarado y ninguno de un
+    menor."""
+    d = {"id": a["_id"], **{k: a.get(k) for k in CAMPOS_ACERCAMIENTO}}
+    d["datos_dictados"] = list(a.get("datos_dictados") or [])
+    if not adm and rol == "planillero":
+        d.pop("nota")
+        if menor:
+            d["telefono"] = None
+    if not adm and rol == "consultor":
+        d["telefono"] = None if menor else acceso.enmascarar_telefono(d["telefono"])
+    return d
+
+
+def _acercamientos(db: Database, pid: int, rol: str, adm: bool, menor: bool) -> list[dict]:
+    return [acercamiento_para(a, rol, adm, menor) for a in db.acercamientos.find(
+        {"persona_id": pid, "suprimido": {"$ne": True}}).sort([("ts", -1), ("_id", -1)]).limit(50)]
 
 
 def _reuniones(db: Database, p: dict, adm: bool) -> tuple[list, dict]:
@@ -478,9 +523,10 @@ def _historial_autorizacion(db: Database, pid: int) -> list[dict]:
             for e in db.autorizaciones.find({"persona_id": pid}).sort([("ts", -1), ("_id", -1)]).limit(50)]
 
 
-def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> dict:
+def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None, menor: bool = False) -> dict:
     """La ficha de `p` con los campos de `CAMPOS_FICHA[rol]` y sus recortes por dentro (3.8). Cada valor se calcula
-    solo si el rol lo puede ver: lo demás no se lee."""
+    solo si el rol lo puede ver: lo demás no se lee. Con `menor`, se arma como la de un menor aunque ya no lo sea (la
+    respuesta a quien editó a un menor)."""
     ctx = ctx or contexto(db)
     adm, rol = administra(quien), rol_de(quien)
     pid = p["_id"]
@@ -491,7 +537,7 @@ def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> 
                              "abordaje": _abordaje(p)})
     permitidos = CAMPOS_FICHA[rol]
     hoy = ctx.hoy
-    menor = modelo.es_menor(p, hoy)
+    menor = menor or modelo.es_menor(p, hoy)
     edad = modelo.edad_efectiva(p, hoy)
     v = p.get("votacion") if isinstance(p.get("votacion"), dict) else None
     sit = p.get("situacion") if isinstance(p.get("situacion"), dict) else None
@@ -532,7 +578,7 @@ def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> 
         "autorizacion": lambda: _historial_autorizacion(db, pid),
         "reclamo_en_tramite": lambda: p.get("reclamo_en_tramite") is True,
         "abordaje": lambda: _abordaje(p), "abordaje_seq": lambda: p.get("abordaje_seq") or 0,
-        "acercamientos": lambda: _acercamientos(db, pid, rol, adm),
+        "acercamientos": lambda: _acercamientos(db, pid, rol, adm, menor),
         "en_curso": lambda: ec if (adm or (ec and ec.get("uid") == getattr(quien, "uid", None))) else None,
         "notas": lambda: _notas(p, reuniones()[1]),
         "listas": lambda: list(p.get("listas") or []), "lider": lambda: bool(p.get("lider")),
@@ -552,13 +598,15 @@ def ficha_de(db: Database, p: dict, quien: Any, ctx: Contexto | None = None) -> 
                               for h in db.auditoria.find({"entidad": "persona", "entidad_id": pid}).sort("_id", -1).limit(40)],
         "coincidencias": lambda: _coincidencias(db, pid),
         "reuniones": lambda: reuniones()[0],
-        "fuentes": lambda: list(p.get("fuentes") or []), "completitud": lambda: p.get("completitud", 0),
+        "fuentes": lambda: list(p.get("fuentes") or []),
+        "completitud": lambda: completitud_vista(p, quien, menor),
         "claves_tramites": lambda: list(p.get("claves_tramites") or []),
         "situacion": lambda: ({"estado": sit.get("estado")} if sit else None) if (rol == "consultor" and not adm) else sit,
         "no_disponible": lambda: dict(p.get("no_disponible") or {}),
         "faltan": lambda: [f for f in modelo.faltan(p, hoy, ctx.dias_dato)
-                           if adm or rol != "consultor" or f in ("cedula", "puesto", "mesa")],
-        "editables": lambda: editables(p, quien), "avisos": lambda: avisos(p, hoy, adm),
+                           if adm or (rol != "consultor" and not (menor and f == "telefono"))
+                           or f in ("cedula", "puesto", "mesa")],
+        "editables": lambda: editables(p, quien, menor), "avisos": lambda: avisos(p, hoy, adm),
     }
     return {k: (valores[k]() if k in valores else p.get(k)) for k in sorted(permitidos)}
 

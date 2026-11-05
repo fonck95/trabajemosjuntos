@@ -88,6 +88,21 @@ pasarlo reciben «Llegó al tope de personas consultadas hoy», en Usuarios apar
 rechazos en el día, se cierran sus sesiones. Las búsquedas y listas tienen además un límite de 120 consultas por minuto. El administrador y los
 coordinadores no tienen presupuesto ni límite de frecuencia.
 
+La búsqueda y los filtros de planilleros y consultores solo miran lo que su rol ve, para que no sirvan de oráculo
+(armar una cédula o un teléfono oculto dígito a dígito con lo que aparece o con el total de Habitantes):
+
+- El planillero busca un número **entero** (cédula, teléfono o ficha) o por los últimos dígitos que la fila ya muestra
+  (los 3 de la cédula, los 4 del teléfono), nunca por un pedazo. La dirección, el lugar escrito y el correo cuentan
+  solo de quien no dijo «no».
+- A quien no autorizó se lo encuentra por el nombre (o los 3 últimos de la cédula); un filtro sobre algo que de esa
+  persona no se ve (sexo, edad, teléfono, puesto, zona…) no la incluye, y en un orden por un dato oculto (perfil,
+  dirección, abordaje, fechas) va al final, por nombre. De un menor, los filtros de teléfono no lo incluyen.
+- El consultor busca por nombre o por un número completo de 10 dígitos que se pueda usar, de un adulto que no dijo
+  «no».
+- Parecidas y «la cédula ya pertenece a…» tampoco ubican a quien no autorizó por su cédula o su teléfono.
+
+El administrador y los coordinadores buscan como siempre (prefijo de la cédula, pedazo del teléfono).
+
 ## Indicadores
 
 **Usuarios** muestra, para el periodo elegido (por defecto, los últimos 30 días), los de todos los usuarios, también

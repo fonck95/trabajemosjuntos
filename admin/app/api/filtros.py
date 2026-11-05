@@ -4,7 +4,8 @@ MongoDB, y el alcance de cada usuario.
 * `filtros_query` lee los parámetros y resuelve `area_id` (404 si no existe); deja en el objeto lo que `filtro()`
   necesita de la base (la geometría del área y los ajustes), así `filtro()` no consulta la base.
 * `consulta(db, quien, f)` es lo que usan las rutas abiertas a P y C: rechaza los parámetros vedados (403 `permiso`),
-  exige que el área esté asignada y suma el alcance obligatorio (3.6).
+  exige que el área esté asignada, suma el alcance obligatorio (3.6) y hace que `filtro()` mire solo lo que el rol ve
+  (ningún filtro, ni la búsqueda, ni el total, sirve de oráculo de un dato oculto).
 * `alcance_de(db, quien)`: personas de los lugares y áreas asignados a un planillero o consultor; None si no tiene
   asignación (toda la base, con el presupuesto diario).
 """
@@ -95,6 +96,8 @@ class Filtros(BaseModel):
     _eleccion: str | None = PrivateAttr(default=modelo.AJUSTES_POR_DEFECTO["eleccion_vigente"])
     _dias_dato: int = PrivateAttr(default=modelo.AJUSTES_POR_DEFECTO["dias_reintento_dato"])
     _uid: int | None = PrivateAttr(default=None)
+    # Rol sin acceso completo (P o C): la búsqueda y los filtros solo miran lo que su proyección muestra
+    _rol: str | None = PrivateAttr(default=None)
 
 
 def geometria_de_area(a: dict | None) -> dict | None:
@@ -229,152 +232,258 @@ def _sino(v: int | None, si: dict, no: dict) -> dict | None:
     return si if v else no
 
 
+# ───────────────────────────── Lo que P y C no ven (3.8) ─────────────────────────────
+# Para un rol sin acceso completo, la búsqueda y los filtros solo coinciden con lo que su proyección ya muestra: una
+# condición sobre un dato oculto nunca incluye a esa persona (ni en las filas ni en el total). Si no, la pertenencia
+# al resultado serviría de oráculo y reconstruiría el dato dígito a dígito.
+# * De quien no autorizó, P y C ven nombre, `cedula_ult3`, lugar, autorización y el estado del abordaje.
+# * De un menor, P ve todo menos los teléfonos.
+TRATABLE = {"consentimiento": {"$ne": "no"}}
+# Filtros sobre lo que se ve en la fila de quien no autorizó (`proyeccion.CAMPOS_NO_AUTORIZO`), más el área asignada:
+# es su alcance (que ya la incluye por su punto) y P no dibuja polígonos, así que no afina ninguna ubicación
+VISIBLES_NO_AUTORIZO = frozenset({"q", "lugar_id", "consentimiento", "tratables", "abordaje_estado", "con_cedula",
+                                  "area_id"})
+FILTROS_TELEFONO = frozenset({"con_telefono", "sin_telefono", "varios_telefonos", "telefono_estado"})
+
+
+def rol_restringido(quien: Any) -> str | None:
+    """None si `quien` ve todo (A y K); si no, su rol de proyección («planillero» o «consultor»)."""
+    return None if proyeccion.administra(quien) else proyeccion.rol_de(quien)
+
+
+def telefonos_ocultos(hoy: date | None = None) -> dict:
+    """Personas cuyos teléfonos P no ve: quien no autorizó y los menores."""
+    return {"$or": [{"consentimiento": "no"}, modelo.filtro_menor(hoy)]}
+
+
+def expr_completitud_vista(hoy: date | None = None) -> dict:
+    """Expresión (agregación o `$expr`) de la completitud que ven P y C: la de un menor, sin su teléfono. Gemela de
+    `proyeccion.completitud_vista`; la usan el orden por completitud y `completitud_max`, así ni el lugar en la lista
+    ni el filtro dicen si un menor tiene teléfono."""
+    lim = modelo._limite_mayoria(hoy or modelo.hoy_local())
+    menor = {"$or": [{"$gt": ["$nac_aprox", lim]}, {"$eq": ["$tipo_documento", "TI"]}]}  # gemelo de filtro_menor
+    tel = {"$or": [{"$gt": [{"$size": modelo._USABLES}, 0]},
+                   {"$not": [{"$in": [{"$ifNull": ["$telefono", None]}, [None, ""]]}]}]}
+    c = {"$ifNull": ["$completitud", 0]}
+    return {"$cond": [{"$and": [menor, tel]}, {"$max": [0, {"$subtract": [c, proyeccion.PESO_TELEFONO]}]}, c]}
+
+
+def _numero_completo(q: str) -> str | None:
+    """Los dígitos de una búsqueda que es solo un número con separadores («300 111 2233», «+57 300-111-2233»)."""
+    if re.fullmatch(r"[\d\s+().-]+", q or "") and len(re.sub(r"\D", "", q)) >= 4:
+        return re.sub(r"\D", "", q)
+    return None
+
+
+def _digitos_restringido(d: str, rol: str, hoy: date) -> dict:
+    """P: un número coincide solo entero (cédula, teléfono o ficha que su ficha muestra) o con los cuatro últimos
+    dígitos del teléfono que la fila ya muestra (···2233); nunca con un prefijo o una subcadena. Sin la cédula de quien
+    no autorizó ni los teléfonos de un menor. C busca números solo por la llamada entrante (`_buscar_consultor`)."""
+    if rol != "planillero":
+        return {"_id": {"$in": []}}
+    visible = {"$nor": [telefonos_ocultos(hoy)]}
+    tels = sorted({d, *tx.telefonos(d)})
+    alts: list[dict] = [{**TRATABLE, "cedula": {"$in": sorted({d, tx.cedula(d)} - {""})}}, {**TRATABLE, "ficha": d},
+                        {"$and": [visible, {"$or": [{"telefonos.numero": {"$in": tels}}, {"telefono": {"$in": tels}},
+                                                    {"telefono2": {"$in": tels}}]}]}]
+    if len(d) == 4:
+        alts.append({"$and": [visible, {"telefono": {"$regex": re.escape(d) + "$"}}]})
+    return {"$or": alts}
+
+
+def _condiciones_q(q: str, rol: str | None, hoy: date) -> list[dict]:
+    """Una condición por palabra de la búsqueda (hasta 6). Sin `rol` (A y K): prefijo de la cédula y subcadena de los
+    teléfonos y la ficha, y nombre, dirección, lugar o correo. Con `rol`: solo lo que ese rol ve (arriba)."""
+    out: list[dict] = []
+    numero = _numero_completo(q) if rol else None
+    for tok in [numero] if numero else tx.limpiar(q).split()[:6]:
+        digitos = re.sub(r"\D", "", tok)
+        if digitos and len(digitos) >= 4 and digitos == tok:
+            if rol:
+                out.append(_digitos_restringido(digitos, rol, hoy))
+                continue
+            rx = re.escape(digitos)
+            out.append({"$or": [{"cedula": {"$regex": "^" + rx}}, {"telefonos.numero": {"$regex": rx}},
+                                {"telefono": {"$regex": rx}}, {"telefono2": {"$regex": rx}}, {"ficha": {"$regex": rx}}]})
+            continue
+        limpio = re.sub(r"[^A-Z0-9@.]", "", tok)
+        if not limpio:
+            continue
+        rx = re.escape(limpio)
+        otros = [{"direccion_norm": {"$regex": rx}}, {"lugar_texto": {"$regex": rx}},
+                 {"correo": {"$regex": rx, "$options": "i"}}]
+        if not rol:
+            out.append({"$or": [{"nombre_norm": {"$regex": rx}}, *otros]})
+            continue
+        alts = [{"nombre_norm": {"$regex": rx}}]
+        if rol == "planillero":  # dirección, lugar escrito y correo: los ve de quien no dijo «no»
+            alts.append({**TRATABLE, "$or": otros})
+        if limpio.isdigit() and len(limpio) == 3:  # los tres últimos de la cédula (···123), que la fila ya muestra
+            alts.append({"cedula": {"$regex": rx + "$"}})
+        out.append({"$or": alts})
+    return out
+
+
 def filtro(f: Filtros, hoy: date | None = None) -> dict:
-    """Documento de consulta de MongoDB para los filtros dados (solo personas activas). No consulta la base."""
+    """Documento de consulta de MongoDB para los filtros dados (solo personas activas). No consulta la base.
+
+    Con `f._rol` (P o C: lo fijan `consulta` y la búsqueda) cada condición se mira contra lo que ese rol ve: una sobre
+    un dato que no ve de quien no autorizó deja fuera a quien no autorizó, y una sobre los teléfonos deja fuera además
+    a los menores. Así ningún filtro, ni el total, revela un dato oculto."""
     hoy = hoy or modelo.hoy_local()
+    rol = f._rol
     y: list[dict] = [dict(ACTIVA)]
+    solo_tratables: list[dict] = []
+    solo_telefonos: list[dict] = []
+
+    def poner(campo: str, cond: dict) -> None:
+        if not rol or campo in VISIBLES_NO_AUTORIZO:
+            y.append(cond)
+        elif campo in FILTROS_TELEFONO:
+            solo_telefonos.append(cond)
+        else:
+            solo_tratables.append(cond)
+
     if f.q:
-        for tok in tx.limpiar(f.q).split()[:6]:
-            digitos = re.sub(r"\D", "", tok)
-            if digitos and len(digitos) >= 4 and digitos == tok:
-                rx = re.escape(digitos)
-                y.append({"$or": [{"cedula": {"$regex": "^" + rx}}, {"telefonos.numero": {"$regex": rx}},
-                                  {"telefono": {"$regex": rx}}, {"telefono2": {"$regex": rx}}, {"ficha": {"$regex": rx}}]})
-            else:
-                limpio = re.sub(r"[^A-Z0-9@.]", "", tok)
-                if not limpio:
-                    continue
-                rx = re.escape(limpio)
-                y.append({"$or": [{"nombre_norm": {"$regex": rx}}, {"direccion_norm": {"$regex": rx}},
-                                  {"lugar_texto": {"$regex": rx}}, {"correo": {"$regex": rx, "$options": "i"}}]})
+        for cond in _condiciones_q(f.q, rol, hoy):
+            poner("q", cond)
     if f.zona in ("urbana", "rural"):
-        y.append({"zona": f.zona})
+        poner("zona", {"zona": f.zona})
     elif f.zona == "sin":
-        y.append({"zona": None})
+        poner("zona", {"zona": None})
     if f.lugar_id is not None:  # 0 = sin barrio ni vereda reconocidos
-        y.append({"lugar_id": f.lugar_id or None})
+        poner("lugar_id", {"lugar_id": f.lugar_id or None})
     if f.fuente == "ambas":
-        y.append({"fuentes": {"$all": ["tramites", "cedulas"]}})
+        poner("fuente", {"fuentes": {"$all": ["tramites", "cedulas"]}})
     elif f.fuente in ("tramites", "cedulas", "reunion", "manual", "planilla"):
-        y.append({"fuentes": f.fuente})
+        poner("fuente", {"fuentes": f.fuente})
     if f.lista:
-        y.append({"listas": f.lista})
+        poner("lista", {"listas": f.lista})
     if f.etiqueta:
-        y.append({"etiquetas": f.etiqueta})
+        poner("etiqueta", {"etiquetas": f.etiqueta})
     if f.con_cedula is not None:
-        y.append(_lleno("cedula") if f.con_cedula else _vacio("cedula"))
+        poner("con_cedula", _lleno("cedula") if f.con_cedula else _vacio("cedula"))
     if f.con_telefono is not None:
-        y.append({"telefono": {"$ne": None}} if f.con_telefono else {"telefono": None})
+        poner("con_telefono", {"telefono": {"$ne": None}} if f.con_telefono else {"telefono": None})
     if f.precision == "exacta":
-        y.append({"geo_precision": {"$in": ["direccion", "manual"]}})
+        poner("precision", {"geo_precision": {"$in": ["direccion", "manual"]}})
     elif f.precision == "aproximada":
-        y.append({"geo_precision": {"$in": APROXIMADAS}})
+        poner("precision", {"geo_precision": {"$in": APROXIMADAS}})
     elif f.precision == "ubicada":  # cualquier coordenada: lo que se ve en el mapa
-        y.append({"lat": {"$ne": None}})
+        poner("precision", {"lat": {"$ne": None}})
     elif f.precision == "sin":
-        y.append({"lat": None})
+        poner("precision", {"lat": None})
     if f.reunion_id:
-        y.append({"asistencias.reunion_id": f.reunion_id})
+        poner("reunion_id", {"asistencias.reunion_id": f.reunion_id})
     if f.asistio is not None:
-        y.append({"asistencias.0": {"$exists": bool(f.asistio)}})
+        poner("asistio", {"asistencias.0": {"$exists": bool(f.asistio)}})
     if f.consentimiento in ("si", "no", "pendiente"):
-        y.append({"consentimiento": f.consentimiento})
+        poner("consentimiento", {"consentimiento": f.consentimiento})
     elif f.consentimiento == "por_confirmar":  # «sí» declarado en planilla que A todavía no confirma
-        y.append({"consentimiento": "si", "contacto_habilitado": {"$ne": True}})
+        poner("consentimiento", {"consentimiento": "si", "contacto_habilitado": {"$ne": True}})
     if f.tratables:
-        y.append({"consentimiento": {"$ne": "no"}})
+        poner("tratables", dict(TRATABLE))
     if f.lider:
-        y.append({"lider": True})
+        poner("lider", {"lider": True})
     if f.sexo in modelo.SEXOS:
-        y.append({"sexo": f.sexo})
+        poner("sexo", {"sexo": f.sexo})
     elif f.sexo == "sin":
-        y.append(_vacio("sexo"))
+        poner("sexo", _vacio("sexo"))
     if f.ids:
-        y.append({"_id": {"$in": [int(x) for x in re.findall(r"\d+", f.ids)[:500]]}})
-    if f.completitud_max is not None:
-        y.append({"completitud": {"$lte": f.completitud_max}})
+        poner("ids", {"_id": {"$in": [int(x) for x in re.findall(r"\d+", f.ids)[:500]]}})
+    if f.completitud_max is not None:  # P y C: la que ven (la de un menor, sin teléfono)
+        poner("completitud_max", {"$expr": {"$lte": [expr_completitud_vista(hoy), f.completitud_max]}} if rol
+              else {"completitud": {"$lte": f.completitud_max}})
     # Edad: rango de la fecha de nacimiento (exacta con la fecha; con la edad declarada, ±1 año)
     if f.edad_min is not None:
-        y.append({"nac_aprox": {"$ne": None, "$lte": _restar_anios(hoy, f.edad_min).isoformat()}})
+        poner("edad_min", {"nac_aprox": {"$ne": None, "$lte": _restar_anios(hoy, f.edad_min).isoformat()}})
     if f.edad_max is not None:
-        y.append({"nac_aprox": {"$ne": None, "$gt": _restar_anios(hoy, f.edad_max + 1).isoformat()}})
+        poner("edad_max", {"nac_aprox": {"$ne": None, "$gt": _restar_anios(hoy, f.edad_max + 1).isoformat()}})
     if f.tipo_documento in modelo.TIPOS_DOCUMENTO:
-        y.append({"tipo_documento": f.tipo_documento})
+        poner("tipo_documento", {"tipo_documento": f.tipo_documento})
     if f.cedula_verificada is not None:
-        y.append({"cedula_verificada": True} if f.cedula_verificada else {"cedula_verificada": {"$ne": True}})
+        poner("cedula_verificada",
+              {"cedula_verificada": True} if f.cedula_verificada else {"cedula_verificada": {"$ne": True}})
     if f.puesto_id is not None:
-        y.append({"votacion.puesto_id": f.puesto_id or None})
-    for cond in (_sino(f.con_puesto, CON_PUESTO, {"$nor": [CON_PUESTO]}), _sino(f.con_mesa, CON_MESA, {"$nor": [CON_MESA]})):
+        poner("puesto_id", {"votacion.puesto_id": f.puesto_id or None})
+    for campo, cond in (("con_puesto", _sino(f.con_puesto, CON_PUESTO, {"$nor": [CON_PUESTO]})),
+                        ("con_mesa", _sino(f.con_mesa, CON_MESA, {"$nor": [CON_MESA]}))):
         if cond:
-            y.append(cond)
+            poner(campo, cond)
     if f.votacion_estado:
         if f.votacion_estado not in modelo.ESTADOS_VOTACION:
             raise HTTPException(422, "Estado de votación desconocido")
-        y.append(modelo.filtro_estado_votacion(f.votacion_estado, f._eleccion))
+        poner("votacion_estado", modelo.filtro_estado_votacion(f.votacion_estado, f._eleccion))
     if f.donde in modelo.DONDE_VOTA:
-        y.append({"votacion.donde": f.donde})
+        poner("donde", {"votacion.donde": f.donde})
     if f.abordado is not None:
-        y.append({"abordaje.n": {"$gte": 1}} if f.abordado else {"$nor": [{"abordaje.n": {"$gte": 1}}]})
+        poner("abordado", {"abordaje.n": {"$gte": 1}} if f.abordado else {"$nor": [{"abordaje.n": {"$gte": 1}}]})
     if f.contactado is not None:
-        y.append({"abordaje.efectivos": {"$gte": 1}} if f.contactado else {"$nor": [{"abordaje.efectivos": {"$gte": 1}}]})
+        poner("contactado", {"abordaje.efectivos": {"$gte": 1}} if f.contactado
+              else {"$nor": [{"abordaje.efectivos": {"$gte": 1}}]})
     if f.abordaje_estado == "sin_abordar":
-        y.append({"abordaje.estado": None})
+        poner("abordaje_estado", {"abordaje.estado": None})
     elif f.abordaje_estado in modelo.ESTADOS_ABORDAJE:
-        y.append({"abordaje.estado": f.abordaje_estado})
+        poner("abordaje_estado", {"abordaje.estado": f.abordaje_estado})
     if f.ultimo_resultado in modelo.RESULTADOS:
-        y.append({"abordaje.ultimo_resultado": f.ultimo_resultado})
+        poner("ultimo_resultado", {"abordaje.ultimo_resultado": f.ultimo_resultado})
     if f.sin_acercamiento_dias is not None:
         limite = (hoy - timedelta(days=f.sin_acercamiento_dias)).isoformat()
-        y.append({"$or": [{"abordaje.ultimo_fecha": None}, {"abordaje.ultimo_fecha": {"$lt": limite}}]})
+        poner("sin_acercamiento_dias",
+              {"$or": [{"abordaje.ultimo_fecha": None}, {"abordaje.ultimo_fecha": {"$lt": limite}}]})
     if f.proximo_vencido:
-        y.append({"abordaje.proximo": {"$ne": None, "$lte": hoy.isoformat()}})
+        poner("proximo_vencido", {"abordaje.proximo": {"$ne": None, "$lte": hoy.isoformat()}})
     if f.canal_autorizado in modelo.CANALES_AUTORIZACION:
         o = [{"consentimiento": "si", "consentimiento_canales": f.canal_autorizado}]
         if f.canal_autorizado in modelo.CANALES_IMPLICITOS:  # «sí» anterior a los canales: valen los implícitos
             o.append({"consentimiento": "si", "consentimiento_canales": {"$exists": False}})
-        y.append({"$or": o})
+        poner("canal_autorizado", {"$or": o})
     sit = filtro_situacion(f.situacion)
     if sit:
-        y.append(sit)
+        poner("situacion", sit)
     if f.creado_por is not None:
-        y.append({"creado_por.uid": f.creado_por})
+        poner("creado_por", {"creado_por.uid": f.creado_por})
     if f.actualizado_por is not None:
-        y.append({"actualizado_por.uid": f.actualizado_por})
+        poner("actualizado_por", {"actualizado_por.uid": f.actualizado_por})
     if f.menor is not None:
-        y.append(modelo.filtro_menor(hoy) if f.menor else {"$nor": [modelo.filtro_menor(hoy)]})
+        poner("menor", modelo.filtro_menor(hoy) if f.menor else {"$nor": [modelo.filtro_menor(hoy)]})
     if f.requiere_actualizacion not in (None, ""):
         v = f.requiere_actualizacion
         if v == "1":
-            y.append({"requiere_actualizacion": {"$ne": None}})
+            poner("requiere_actualizacion", {"requiere_actualizacion": {"$ne": None}})
         elif v == "0":
-            y.append({"requiere_actualizacion": None})
+            poner("requiere_actualizacion", {"requiere_actualizacion": None})
         else:
             motivos = [m for m in v.split(",") if m in modelo.MOTIVOS_ACTUALIZACION]
-            y.append({"requiere_actualizacion.motivo": {"$in": motivos}})
+            poner("requiere_actualizacion", {"requiere_actualizacion.motivo": {"$in": motivos}})
     if f.varios_telefonos is not None:
-        y.append({"telefono2": {"$ne": None}} if f.varios_telefonos else {"telefono2": None})
+        poner("varios_telefonos", {"telefono2": {"$ne": None}} if f.varios_telefonos else {"telefono2": None})
     if f.telefono_estado in modelo.ESTADOS_TELEFONO:
-        y.append({"telefonos.estado": f.telefono_estado})
+        poner("telefono_estado", {"telefonos.estado": f.telefono_estado})
     for campo in ("estado_civil", "nivel_educativo", "situacion_laboral", "tenencia_vivienda", "regimen_salud"):
         v = getattr(f, campo)
         if v == "sin":
-            y.append(_vacio(campo))
+            poner(campo, _vacio(campo))
         elif v:
-            y.append({campo: v})
+            poner(campo, {campo: v})
     if f.estrato is not None:
-        y.append({"estrato": f.estrato})
+        poner("estrato", {"estrato": f.estrato})
     for campo in SIN_CAMPOS:
         if getattr(f, f"sin_{campo}"):
-            y.append(falta(campo, hoy, f._dias_dato))
+            poner(f"sin_{campo}", falta(campo, hoy, f._dias_dato))
     if f.sin_puesto_mesa:  # «Sin puesto o mesa» de Mi trabajo
-        y.append({"$or": [falta("puesto", hoy, f._dias_dato), falta("mesa", hoy, f._dias_dato)]})
+        poner("sin_puesto_mesa", {"$or": [falta("puesto", hoy, f._dias_dato), falta("mesa", hoy, f._dias_dato)]})
     if f.mios and f._uid is not None:
-        y.append({"$or": [{"creado_por.uid": f._uid}, {"actualizado_por.uid": f._uid}]})
+        poner("mios", {"$or": [{"creado_por.uid": f._uid}, {"actualizado_por.uid": f._uid}]})
     if f.poligono:
         anillo = geometria.validar_anillo(geometria.decodificar(f.poligono))
-        y.append({"punto": {"$geoWithin": {"$geometry": geometria.a_geojson(anillo)}}})
+        poner("poligono", {"punto": {"$geoWithin": {"$geometry": geometria.a_geojson(anillo)}}})
     if f.area_id is not None:
-        y.append({"punto": {"$geoWithin": {"$geometry": f._area}}} if f._area else {"_id": {"$in": []}})
+        poner("area_id", {"punto": {"$geoWithin": {"$geometry": f._area}}} if f._area else {"_id": {"$in": []}})
+    if solo_tratables or solo_telefonos:
+        y += [dict(TRATABLE), *solo_tratables]
+    if solo_telefonos:
+        y += [{"$nor": [telefonos_ocultos(hoy)]}, *solo_telefonos]
     return {"$and": y}
 
 
@@ -431,6 +540,7 @@ def consulta(db: Database, quien: Any, f: Filtros, con_alcance: bool = True, hoy
     """La consulta de una ruta abierta a P y C: parámetros permitidos, filtros y, si se pide, el alcance."""
     exigir_permitidos(db, quien, f)
     f._uid = getattr(quien, "uid", None)
+    f._rol = rol_restringido(quien)
     q = filtro(f, hoy)
     alcance = alcance_de(db, quien) if con_alcance else None
     return {"$and": [q, alcance]} if alcance else q

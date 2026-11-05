@@ -397,9 +397,10 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     const caja = $('#conflicto', el);
     const det = e.detalle || {};
     if (e.codigo === 'cedula_ocupada') {
+      // Sin `id`: es de alguien cuya cédula el rol no ve (el servidor no dice de quién); solo queda avisar
       caja.innerHTML = String(html`<div class="aviso-legal"><b>${e.message || 'Esa cédula ya está registrada'}</b>${det.nombre ? html` en la ficha de ${det.nombre}${det.lugar ? ' · ' + titulo(det.lugar) : ''}` : ''}.
-        <div class="fila-botones"><a class="btn chico" href="/personas/${det.id}" data-ruta>Abrir esa ficha</a>
-        <button type="button" class="btn chico oscuro" data-completar-otra="${det.id}">Completar esa ficha con lo que escribí</button></div></div>`);
+        ${det.id != null ? html`<div class="fila-botones"><a class="btn chico" href="/personas/${det.id}" data-ruta>Abrir esa ficha</a>
+        <button type="button" class="btn chico oscuro" data-completar-otra="${det.id}">Completar esa ficha con lo que escribí</button></div>` : ''}</div>`);
     } else if (e.codigo === 'suprimida') {
       caja.innerHTML = String(html`<div class="aviso-legal"><b>Esta persona pidió que se borraran sus datos.</b> No se puede volver a registrar sin una nueva autorización del titular. ${administra() ? 'El administrador puede registrarla de nuevo con su autorización escrita.' : 'Si el titular lo pide, avise al administrador.'}</div>`);
     } else if (e.codigo === 'parecidas' || det.parecidas) {

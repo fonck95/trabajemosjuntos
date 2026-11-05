@@ -126,6 +126,16 @@ class _Almacen:
 
     def __init__(self, db: Database, ids=None, *, actor: dict | None = None):
         self.db = db
+        # La cédula que una unión está moviendo es de la ficha en que termina la unión, aunque todavía no la muestre:
+        # una fila con ella la completa (mismo nombre) o va a conflicto (otro nombre), como si la unión ya hubiera
+        # terminado; nunca crea otra ficha con esa cédula (la unión fallaría con un falso «cédulas distintas»). Se mira
+        # antes de cargar las fichas: la de una unión que ya no puede terminar vuelve a su ficha y se carga con ella
+        traspasos: dict[str, int] = {}
+        for o in db.personas.find({"cedula_en_traspaso": {"$nin": [None, ""]}, "fusionada_en": {"$ne": None},
+                                   "eliminado": {"$ne": True}}, {"cedula_en_traspaso": 1}):
+            t = bd.traspaso_de(db, o["cedula_en_traspaso"])
+            if t is not None:
+                traspasos.setdefault(o["cedula_en_traspaso"], t["destino"])
         filtro = dict(bd.ACTIVA) if ids is None else {"_id": {"$in": list(ids)}, **bd.ACTIVA}
         self.docs: dict[int, dict] = {d["_id"]: d for d in db.personas.find(filtro)}
         self.por_clave: dict[str, int] = {}
@@ -138,6 +148,9 @@ class _Almacen:
         for c, i in self.por_clave.items():
             self.por_base[_base(c)].add(i)
         self.por_cedula = {d["cedula"]: i for i, d in self.docs.items() if d.get("cedula")}
+        for c, destino in traspasos.items():
+            if destino in self.docs:
+                self.por_cedula.setdefault(c, destino)
         self.por_anterior = {c: i for i, d in self.docs.items() for c in d.get("cedulas_anteriores") or []}
         self.por_llave: dict[tuple, int] = {}
         for i, d in self.docs.items():
@@ -703,6 +716,10 @@ class _Almacen:
                 continue
             if estado == "si" and medio == "declarado_planilla":
                 self.res.autorizaciones_por_confirmar += 1
+        # Una ficha que se unió con otra mientras se importaba: su evento (un «no») pasa a la ficha unida
+        unidas = [o["_id"] for o in self.db.personas.find({"_id": {"$in": pids}, "fusionada_en": {"$ne": None}},
+                                                          {"_id": 1})]
+        pids += [fin for fin in (bd.recoger_tardios(self.db, pid) for pid in unidas) if fin is not None]
         bd.derivar(self.db, pids, reconciliar=False)
 
 
