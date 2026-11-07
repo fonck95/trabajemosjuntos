@@ -1,13 +1,16 @@
 // Mapa 3D del municipio: relieve, edificios, columnas hexagonales 3D y mapa de calor de la población. Zonas (6): dibujar
 // con ratón o dedo un polígono exacto, medirlo, ver su distribución, abrir esas personas en Habitantes, exportarlas y
 // guardar la zona con nombre y asignación. En el celular el detalle (hexágono o zona) va en una hoja inferior.
+// El asistente del panel también lo maneja (volar, filtros, capas, resaltar…): al terminar de cargar, la vista se
+// registra en agente-mapa.js con `aplicar(acciones)` y `estado()`, y lo que dibuja va en su propia fuente `agente`.
 import { api, descargar, puede } from '../api.js';
 import { temaOscuro } from '../app.js';
 import { BASES, BBOX_YONDO, CASCO, MAX_IDS, RANGO_YONDO, anilloMayor, baseSegunTema, cajaDe, cargarMapLibre, decorar, dentroDeYondo, dispersar, hexagonos, rampa } from '../mapa3d.js';
 import { apilada, barras, piramide } from '../graficos.js';
-import { ESTADOS_ABORDAJE, ESTADOS_AUTORIZACION, SEXOS } from '../modelo.js';
+import { ESTADOS_ABORDAJE, ESTADOS_AUTORIZACION, ETIQUETAS_CAMPOS, SEXOS } from '../modelo.js';
 import { $, $$, aviso, avisoError, confirmar, dialogo, html, icono, montar, num, pct, titulo } from '../ui.js';
 import { url } from '../base.js';
+import { registrarMapa } from '../agente-mapa.js';
 import { MAX_VERTICES, PALETA, cargarEstilos, codificar, crearHerramientaZona, decodificar, dentro, formatoArea, formatoLargo, seCruza, simplificar } from '../zona.js';
 
 const RADIOS = { auto: null, 150: 150, 400: 400, 1000: 1000 };
@@ -26,6 +29,49 @@ const FUENTES_N = { tramites: 'Base de trámites', cedulas: 'Base con cédula', 
 const modoPreferido = () => (matchMedia('(pointer: coarse)').matches ? 'mira' : 'puntos');
 const esNumero = (x) => typeof x === 'number' && Number.isFinite(x);
 
+// ── Control del asistente ──
+// Las acciones llegan validadas y resueltas por el servidor (docs/agente.md §6), pero las arma un modelo de lenguaje:
+// aquí se validan otra vez (tipos, rangos, dentro de Yondó, cantidades) antes de tocar el mapa
+const MAX_ACCIONES = 20;
+const PLAZO_ACCION_MS = 25000; // red de seguridad: una acción que se cuelga no deja la cola esperando para siempre
+const VUELO_MS = 2400;
+const COLOR_AGENTE = '#e3141b';
+const COLOR_OK = /^#[0-9a-fA-F]{6}$/;
+const BASES_OK = ['auto', 'oscuro', 'claro', 'satelite'];
+const RECORRIDOS = ['municipio', 'casco', 'tigre'];
+// Los filtros de Habitantes (`filtros.Filtros`) que el asistente puede poner en el mapa. Fuera: `poligono` y `area_id`
+// (son zonas: acción `zona`), `ids` (va por `resaltar`) y `mios` (no aplica al mapa)
+const CLAVES_FILTRO = new Set(['q', 'zona', 'lugar_id', 'fuente', 'lista', 'etiqueta', 'con_cedula', 'con_telefono', 'precision',
+  'reunion_id', 'asistio', 'consentimiento', 'lider', 'sexo', 'completitud_max', 'edad_min', 'edad_max', 'tipo_documento',
+  'cedula_verificada', 'puesto_id', 'con_puesto', 'con_mesa', 'votacion_estado', 'donde', 'abordado', 'contactado',
+  'abordaje_estado', 'ultimo_resultado', 'sin_acercamiento_dias', 'proximo_vencido', 'canal_autorizado', 'situacion',
+  'creado_por', 'actualizado_por', 'menor', 'requiere_actualizacion', 'varios_telefonos', 'telefono_estado', 'estado_civil',
+  'nivel_educativo', 'situacion_laboral', 'estrato', 'tenencia_vivienda', 'regimen_salud', 'tratables',
+  ...['cedula', 'telefono', 'sexo', 'edad', 'lugar', 'puesto', 'mesa', 'direccion', 'puesto_mesa'].map((c) => `sin_${c}`)]);
+const esObjeto = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
+const idValido = (x) => Number.isInteger(x) && x > 0 && x <= 2 ** 31;
+const fallo = (mensaje) => { throw new Error(mensaje); };
+// Etiqueta de un punto resaltado: se dibuja en WebGL (nunca como HTML), en una línea y con 80 caracteres como mucho.
+// Sin caracteres de control ni marcas de dirección del texto, que la desordenarían en pantalla
+function etiquetaSegura(v) {
+  if (typeof v !== 'string') return null;
+  const t = v.replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g, ' ').replace(/\s+/g, ' ').trim();
+  const letras = Array.from(t); // por puntos de código: no parte una tilde ni un emoji a la mitad
+  return !t ? null : letras.length > 80 ? letras.slice(0, 79).join('') + '…' : t;
+}
+// Valor de un filtro como lo lleva la URL: texto corto de una línea; sí/no como 1/0; null o vacío lo quita
+function valorFiltro(clave, v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'boolean') return v ? '1' : '0';
+  if (esNumero(v)) return String(v);
+  if (typeof v === 'string' && v.trim().length <= 120 && !/[\u0000-\u001f\u007f]/.test(v)) return v.trim() || null;
+  return fallo(`Valor no válido para el filtro ${clave}`);
+}
+const mismosFiltros = (a, b) => {
+  const ka = Object.keys(a);
+  return ka.length === Object.keys(b).length && ka.every((k) => Object.hasOwn(b, k) && String(b[k]) === String(a[k]));
+};
+
 export async function vistaMapa(el, { q, ir }) {
   const filtros = Object.fromEntries([...q.entries()]);
   const zonaUrl = { area_id: filtros.area_id, poligono: filtros.poligono };
@@ -39,6 +85,9 @@ export async function vistaMapa(el, { q, ir }) {
     // herramienta, la distribución del servidor y si el servidor ya filtra por polígono
     dibujo: false, zona: null, zonaCambiada: false, info: null, dist: null, soporteZona: null, turnoDist: 0, plano: null,
     hexSel: null, areas: [], expandida: !matchMedia('(max-width: 900px)').matches, faseVista: null,
+    // Del asistente: puntos resaltados (Feature de GeoJSON), el polígono del lugar al que voló, el turno de la carga de
+    // puntos (la última respuesta gana) y si alguien ya movió la cámara (la presentación inicial no la pisa)
+    resalte: [], foco: null, turnoDatos: 0, camaraTomada: false,
   };
   const capasLista = [['columnas', 'Columnas 3D por hexágono'], ['calor', 'Mapa de calor'], ['puntos', 'Personas (al acercarse)'], ['veredas', 'Veredas y lugares'],
     ['reuniones', 'Reuniones'], ['edificios', 'Edificios 3D'], ['relieve', 'Relieve del terreno'], ...(gestiona ? [['areas', 'Zonas guardadas']] : [])];
@@ -51,6 +100,7 @@ export async function vistaMapa(el, { q, ir }) {
       <div style="display:flex;align-items:baseline;gap:10px;margin-top:12px">
         <span class="gran-cifra" id="cifra">—</span><span class="sec" id="cifra-d"></span>
       </div>
+      <div id="filtros-asistente" hidden></div>
       <div class="cuerpo-izq" id="cuerpo-izq">
       ${gestiona ? html`<h3>Zonas guardadas</h3>
         <select class="entrada zonas-guardadas" id="zonas-guardadas" aria-label="Zonas guardadas"><option value="">Elegir una zona…</option></select>` : ''}
@@ -107,6 +157,14 @@ export async function vistaMapa(el, { q, ir }) {
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
   map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
   let girando = false, rafGiro = 0, herramienta = null, rafVivo = 0, tDist = 0, vivoClave = '', vivo = null;
+  // Presentación inicial pendiente, la función que quita el control del asistente y las esperas de eventos del mapa en
+  // curso (se sueltan todas al salir de la vista)
+  let tIntro = 0, quitarControl = null;
+  const esperas = new Set();
+  // MapLibre emite `load` dentro de un cuadro, cuando ya cargó todo: si la última tesela que faltaba respondió con error
+  // (un 404 del servidor de mapas) puede no venir otro cuadro y `load` no llega nunca (el cargador queda en pantalla y
+  // el asistente espera en vano). Pedir un cuadro cada tanto mientras carga lo destraba; se detiene en `load`.
+  const empujar = setInterval(() => map.triggerRepaint(), 2000);
   const popup = new maplibregl.Popup({ closeButton: true, maxWidth: '280px' });
   const hoja = $('#panel-der', el), abajo = $('#abajo', el), detalle = $('#detalle', el), izq = $('#panel-izq', el);
 
@@ -236,10 +294,32 @@ export async function vistaMapa(el, { q, ir }) {
       map.addLayer({ id: 'areas-relleno', type: 'fill', source: 'areas', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.08 } });
       map.addLayer({ id: 'areas-borde', type: 'line', source: 'areas', paint: { 'line-color': ['get', 'color'], 'line-width': 2, 'line-dasharray': [2, 1] } });
     }
+    // Lo que dibuja el asistente: el polígono del lugar al que voló y los puntos resaltados con su etiqueta. Como todo lo
+    // de aquí, se rehace desde `estado` en cada style.load: así sobrevive al cambio de mapa base (setStyle lo borra todo)
+    if (!map.getSource('agente')) {
+      map.addSource('agente', { type: 'geojson', data: geoAgente() });
+      const color = ['coalesce', ['get', 'color'], COLOR_AGENTE];
+      const poligono = ['match', ['geometry-type'], ['Polygon', 'MultiPolygon'], true, false];
+      map.addLayer({ id: 'agente-relleno', type: 'fill', source: 'agente', filter: poligono, paint: { 'fill-color': color, 'fill-opacity': 0.12 } });
+      map.addLayer({ id: 'agente-borde', type: 'line', source: 'agente', filter: poligono, layout: { 'line-join': 'round' },
+        paint: { 'line-color': color, 'line-width': 3 } });
+      map.addLayer({ id: 'agente-puntos', type: 'circle', source: 'agente', filter: ['match', ['geometry-type'], ['Point', 'MultiPoint'], true, false],
+        paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 5, 16, 8], 'circle-color': color,
+          'circle-stroke-color': '#fff', 'circle-stroke-width': 2.5 } });
+      // El nombre va como texto del mapa (WebGL): nunca pasa por HTML
+      map.addLayer({ id: 'agente-etiquetas', type: 'symbol', source: 'agente', filter: ['has', 'etiqueta'], layout: {
+        'text-field': ['get', 'etiqueta'], 'text-font': ['Noto Sans Bold'], 'text-size': 12, 'text-anchor': 'top',
+        'text-offset': [0, 0.9], 'text-max-width': 10 },
+        paint: { 'text-color': oscuro ? '#f3f3f0' : '#111', 'text-halo-color': oscuro ? 'rgba(0,0,0,.85)' : 'rgba(255,255,255,.9)', 'text-halo-width': 1.6 } });
+    }
     aplicarVisibilidad();
     repintarPuntos();
     pintarRampa();
   }
+
+  const geoAgente = () => ({ type: 'FeatureCollection', features: [...(estado.foco ? [estado.foco] : []), ...estado.resalte] });
+  // Mientras carga otro mapa base la fuente no existe: queda en `estado` y agregarCapas la crea con esto
+  const pintarAgente = () => map.getSource('agente')?.setData(geoAgente());
 
   function aplicarVisibilidad() {
     const vis = (id, on) => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
@@ -256,9 +336,19 @@ export async function vistaMapa(el, { q, ir }) {
     herramienta?.bloquear(estado.dibujo && estado.capas.relieve && !estado.plano);
   }
 
+  // Cada pedido lleva su turno: con la persona y el asistente cambiando filtros a la vez, las respuestas pueden llegar en
+  // otro orden y solo se pinta la del último pedido. Devuelve false si la respuesta ya sobraba. Los errores del último
+  // pedido se lanzan: quien llama decide (un aviso en la interfaz, un resultado con error para el asistente)
   async function cargarDatos() {
-    const d = await api.get('/api/mapa/puntos', estado.filtros);
-    if (!el.isConnected) return;
+    const turno = ++estado.turnoDatos;
+    let d;
+    try {
+      d = await api.get('/api/mapa/puntos', estado.filtros);
+    } catch (err) {
+      if (turno !== estado.turnoDatos || !el.isConnected) return false;
+      throw err;
+    }
+    if (turno !== estado.turnoDatos || !el.isConnected) return false;
     estado.datos = d;
     vivoClave = '';
     $('#cifra', el).textContent = num(d.ubicadas);
@@ -266,12 +356,65 @@ export async function vistaMapa(el, { q, ir }) {
     repintarPuntos();
     resumenVista();
     if (estado.dibujo) { actualizarZona(); programarDistribucion(); }
+    return true;
   }
 
   const nombreLugar = (id) => {
     const f = estado.capasGeo?.lugares.features.find((x) => x.properties.id === id) || (estado.cat.lugares || []).find((l) => l.id === id);
     return f ? titulo((f.properties || f).nombre) : 'Sin barrio o vereda';
   };
+
+  // ── Filtros sin control a la vista ──
+  // Los selects muestran seis filtros con sus opciones. El asistente (o un enlace) puede poner otros, o un valor que no
+  // está entre las opciones (el select se ve vacío): sin este aviso, el mapa filtraría en silencio
+  function filtrosOcultos() {
+    const selects = new Map($$('[data-f]', el).map((s) => [s.dataset.f, s]));
+    return Object.keys(estado.filtros).filter((k) => {
+      const v = String(estado.filtros[k] ?? '');
+      const s = selects.get(k);
+      return v !== '' && (!s || ![...s.options].some((o) => o.value === v));
+    });
+  }
+  function etiquetaFiltro(k, v) {
+    const s = String(v ?? '');
+    if (k === 'sexo') return `Sexo: ${SEXOS[s] || (s === 'sin' ? 'sin dato' : s)}`;
+    if (k === 'edad_min') return `Desde ${s} años`;
+    if (k === 'edad_max') return `Hasta ${s} años`;
+    if (k === 'lugar_id') return s === '0' ? 'Sin barrio o vereda' : nombreLugar(Number(s));
+    if (k === 'zona' && s === 'sin') return 'Sin zona';
+    if (k === 'consentimiento') return `Autorización: ${ESTADOS_AUTORIZACION[s] || s}`;
+    if (k === 'abordaje_estado') return `Abordaje: ${ESTADOS_ABORDAJE[s] || s}`;
+    if (k === 'completitud_max') return `Perfil hasta ${s} %`;
+    if (k === 'reunion_id') return `Asistentes de la reunión ${s}`;
+    if (k.startsWith('sin_') && s === '1') return `Sin ${(ETIQUETAS_CAMPOS[k.slice(4)] || k.slice(4).replace(/_/g, ' ')).toLowerCase()}`;
+    return `${k.replace(/_/g, ' ')}: ${s === '1' ? 'sí' : s === '0' ? 'no' : s}`;
+  }
+  function pintarFiltrosAsistente() {
+    const caja = $('#filtros-asistente', el);
+    if (!caja) return;
+    const ocultos = filtrosOcultos();
+    caja.hidden = !ocultos.length;
+    if (!ocultos.length) { montar(caja, ''); return; }
+    const texto = ocultos.map((k) => etiquetaFiltro(k, estado.filtros[k])).join(' · ');
+    montar(caja, html`<div class="chips" style="margin-top:10px;align-items:center">
+      <button class="chip rojo" type="button" data-quitar-asistente title="Quitar: ${texto}" aria-label="Quitar los filtros del asistente: ${texto}">Filtros del asistente · Quitar ✕</button>
+      <span class="sec" style="font-size:12.5px">${texto}</span></div>`);
+  }
+  function sincronizarFiltros() { for (const s of $$('[data-f]', el)) s.value = estado.filtros[s.dataset.f] || ''; }
+  function alCambiarFiltros() {
+    sincronizarFiltros();
+    ponerUrl();
+    pintarFiltrosAsistente();
+  }
+  async function quitarFiltrosAsistente() {
+    const ocultos = filtrosOcultos();
+    if (!ocultos.length) return;
+    const nuevos = { ...estado.filtros };
+    for (const k of ocultos) delete nuevos[k];
+    estado.filtros = nuevos;
+    alCambiarFiltros();
+    try { await cargarDatos(); } catch (err) { avisoError(err); }
+  }
 
   function resumenVista() {
     if (!estado.datos) return;
@@ -377,6 +520,71 @@ export async function vistaMapa(el, { q, ir }) {
     cancelAnimationFrame(rafGiro);
     $('[data-vista="girar"]', el)?.setAttribute('aria-pressed', 'false');
   }
+  // El giro es un rotateTo en cada cuadro, y cada rotateTo detiene la animación de cámara en curso: mientras gira no hay
+  // vuelo que llegue. Por eso toda acción de cámara (botones y asistente) lo detiene antes de moverse
+  function iniciarGiro() {
+    if (girando || estado.dibujo) return girando;
+    girando = true;
+    $('[data-vista="girar"]', el)?.setAttribute('aria-pressed', 'true');
+    const paso = () => { if (!girando) return; map.rotateTo(map.getBearing() + 0.08, { duration: 0 }); rafGiro = requestAnimationFrame(paso); };
+    paso();
+    return true;
+  }
+
+  // La presentación inicial (un vuelo al casco a los 0,9 s de cargar) no pisa una cámara que ya pidió alguien: un botón
+  // o una acción del asistente que esperaba en la cola a que el mapa terminara de cargar
+  function cancelarPresentacion() {
+    estado.camaraTomada = true;
+    clearTimeout(tIntro);
+  }
+  // Antes de que el asistente mueva la cámara: sin presentación, sin giro y sin la animación en curso (map.stop la corta
+  // y emite su moveend ya, no en medio del vuelo nuevo)
+  function tomarCamara() {
+    cancelarPresentacion();
+    pararGiro();
+    popup.remove();
+    map.stop();
+  }
+  const lugarTigre = () => estado.capasGeo?.lugares?.features?.find((f) => f.properties?.nombre?.includes('SAN MIGUEL DEL TIGRE'));
+  /** Recorridos de la barra de abajo (municipio, casco, tigre): false si no hay con qué (el límite o el punto). */
+  function irVista(k) {
+    pararGiro();
+    if (k === 'municipio') {
+      if (!estado.capasGeo?.limite) return false;
+      map.fitBounds(cajaDe(estado.capasGeo.limite), { padding: 50, pitch: estado.plano ? 0 : 50, bearing: -15, duration: 2500 });
+    } else if (k === 'casco') map.flyTo({ ...CASCO, ...(estado.plano ? { pitch: 0 } : {}), duration: 2600 });
+    else if (k === 'tigre') {
+      const t = lugarTigre();
+      if (!t) return false;
+      map.flyTo({ center: t.geometry.coordinates, zoom: 15, pitch: estado.plano ? 0 : 60, bearing: 20, duration: 2600 });
+    } else return false;
+    return true;
+  }
+  // Mapa base: auto (según el tema), oscuro, claro o satelite. Solo recarga si cambia el estilo que se ve: setStyle borra
+  // fuentes, capas, relieve y cielo (agregarCapas los rehace en style.load) y vuelve a pedir todas las teselas
+  const estiloDe = (base) => BASES[base || baseSegunTema()];
+  // El relieve es del mapa, no del estilo: si sigue puesto mientras carga el estilo nuevo, un cuadro intermedio lo dibuja
+  // sin proyección y MapLibre lanza (TypeError en useProgram). Se quita antes; agregarCapas lo vuelve a poner en
+  // style.load
+  function cambiarEstilo(estilo) {
+    try {
+      if (map.getTerrain()) map.setTerrain(null);
+    } catch { /* el estilo anterior todavía cargaba: aún no tenía relieve */ }
+    map.setStyle(estilo, { diff: false });
+  }
+  function ponerBase(k) {
+    $$('[data-base]', el).forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.base === k)));
+    const antes = estiloDe(estado.base);
+    estado.base = k === 'auto' ? null : k;
+    if (estiloDe(estado.base) === antes) { pintarRampa(); return false; }
+    cambiarEstilo(estiloDe(estado.base));
+    return true;
+  }
+  function ponerRadio(k) {
+    estado.radio = k;
+    $$('[data-radio]', el).forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.radio === k)));
+    actualizarHex();
+  }
 
   function entrarZona() {
     if (estado.dibujo) return;
@@ -426,10 +634,14 @@ export async function vistaMapa(el, { q, ir }) {
     if (encuadre) encuadrar(anillo);
   }
 
+  // La zona guardada: de la lista ya cargada o, si no está, de la API (lanza su error)
+  async function traerArea(id) {
+    return estado.areas.find((x) => x.id === +id) || api.get(`/api/areas/${+id}`);
+  }
   async function abrirArea(id) {
-    let a = estado.areas.find((x) => x.id === +id);
+    let a;
     try {
-      if (!a) a = await api.get(`/api/areas/${+id}`);
+      a = await traerArea(id);
     } catch (err) { avisoError(err); return; }
     if (!el.isConnected) return;
     cargarAnillo(a.poligono, { guardada: a, editable: false });
@@ -753,9 +965,19 @@ export async function vistaMapa(el, { q, ir }) {
   }
 
   // ───────── Mapa ─────────
+  pintarFiltrosAsistente(); // los de la URL que no tienen select (un enlace o el asistente que abrió el mapa con ellos)
   map.on('style.load', agregarCapas);
   map.on('load', async () => {
-    estado.capasGeo = await api.get('/api/mapa/capas');
+    clearInterval(empujar);
+    try {
+      estado.capasGeo = await api.get('/api/mapa/capas');
+    } catch (err) {
+      // Sin capas el mapa sigue sirviendo (puntos, hexágonos, el asistente con coordenadas): mejor que el cargador fijo
+      if (!el.isConnected) return;
+      avisoError(err);
+      const vacia = () => ({ type: 'FeatureCollection', features: [] });
+      estado.capasGeo = { limite: null, veredas: vacia(), lugares: vacia(), reuniones: vacia() };
+    }
     if (!el.isConnected) return; // se salió del mapa mientras cargaba
     agregarCapas();
     if (gestiona) {
@@ -777,8 +999,15 @@ export async function vistaMapa(el, { q, ir }) {
       });
       window.__zona = herramienta;
       await cargarAreas();
+      if (!el.isConnected) return;
     }
-    await cargarDatos();
+    try {
+      await cargarDatos();
+    } catch (err) {
+      // Un filtro de la URL que la API rechaza (422) no deja el mapa a medias: se avisa y el aviso de filtros permite
+      // quitarlo
+      if (el.isConnected) avisoError(err);
+    }
     if (!el.isConnected) return;
     $('#cargador', el).style.opacity = 0;
     setTimeout(() => $('#cargador', el)?.remove(), 450);
@@ -789,10 +1018,15 @@ export async function vistaMapa(el, { q, ir }) {
         const a = decodificar(zonaUrl.poligono);
         if (a && a.length >= 3) cargarAnillo(a); else aviso('El polígono del enlace no se puede leer', 'error');
       }
-      return;
+      if (!el.isConnected) return;
+    } else {
+      if (estado.capasGeo.limite) map.fitBounds(cajaDe(estado.capasGeo.limite), { padding: 50, pitch: 52, bearing: -15, duration: 0 });
+      tIntro = setTimeout(() => el.isConnected && !estado.dibujo && !estado.camaraTomada
+        && map.flyTo({ ...CASCO, zoom: 13.2, pitch: 60, duration: 4200, essential: true }), 900);
     }
-    if (estado.capasGeo.limite) map.fitBounds(cajaDe(estado.capasGeo.limite), { padding: 50, pitch: 52, bearing: -15, duration: 0 });
-    setTimeout(() => el.isConnected && !estado.dibujo && map.flyTo({ ...CASCO, zoom: 13.2, pitch: 60, duration: 4200, essential: true }), 900);
+    // Listo: capas, zonas y puntos cargados. Lo que el asistente dejó en cola mientras tanto se aplica ahora, después de
+    // programar la presentación (su primera acción de cámara la cancela)
+    quitarControl = registrarMapa({ aplicar: aplicarAcciones, estado: instantanea });
   });
   let zPrev = 0;
   map.on('moveend', () => {
@@ -803,13 +1037,11 @@ export async function vistaMapa(el, { q, ir }) {
   // Con una zona abierta, los clics de las capas no hacen nada (son para dibujar)
   map.on('click', 'hex-3d', (e) => {
     if (estado.dibujo) return;
-    if (map.queryRenderedFeatures(e.point, { layers: ['puntos', 'reuniones'].filter((l) => map.getLayer(l)) }).length) return;
+    if (map.queryRenderedFeatures(e.point, { layers: ['puntos', 'reuniones', 'agente-puntos'].filter((l) => map.getLayer(l)) }).length) return;
     const f = e.features[0];
     mostrarHex(f.properties, e.lngLat, f.geometry?.coordinates?.[0]);
   });
-  map.on('click', 'puntos', async (e) => {
-    if (estado.dibujo) return;
-    const id = e.features[0].properties.id;
+  async function mostrarPersona(id, lngLat) {
     let p;
     try {
       p = await api.get(`/api/personas/${id}`, { resumen: 1 });
@@ -818,17 +1050,28 @@ export async function vistaMapa(el, { q, ir }) {
     const lugar = p.lugar_nombre || p.direccion_norm || p.direccion;
     const datos = [SEXOS[p.sexo], p.rango_edad ? `${p.rango_edad} años` : null].filter(Boolean).join(' · ');
     const abordaje = ESTADOS_ABORDAJE[p.abordaje?.estado || p.abordaje] || null;
-    popup.setLngLat(e.lngLat).setDOMContent(globo(html`<div class="globo-persona"><b>${p.nombre}</b>
+    popup.setLngLat(lngLat).setDOMContent(globo(html`<div class="globo-persona"><b>${p.nombre}</b>
       ${lugar ? html`<span class="sec">${titulo(lugar)}</span>` : ''}${datos ? html`<span class="sec">${datos}</span>` : ''}
       <span class="sec">Completitud ${num(p.completitud ?? 0)} %${abordaje ? ` · ${abordaje}` : ''}${p.consentimiento ? ` · ${ESTADOS_AUTORIZACION[p.consentimiento] || p.consentimiento}` : ''}</span>
       <a href="/personas/${id}" data-ruta>Abrir ficha →</a></div>`)).addTo(map);
+  }
+  map.on('click', 'puntos', (e) => {
+    if (estado.dibujo) return;
+    // Encima hay un punto resaltado por el asistente: lo atiende su capa (un solo globo, una sola consulta)
+    if (map.getLayer('agente-puntos') && map.queryRenderedFeatures(e.point, { layers: ['agente-puntos'] }).length) return;
+    mostrarPersona(e.features[0].properties.id, e.lngLat);
+  });
+  map.on('click', 'agente-puntos', (e) => {
+    if (estado.dibujo) return;
+    const id = e.features[0]?.properties?.id;
+    if (idValido(id)) mostrarPersona(id, e.lngLat);
   });
   map.on('click', 'reuniones', (e) => {
     if (estado.dibujo) return;
     const r = e.features[0].properties;
     popup.setLngLat(e.lngLat).setDOMContent(globo(html`<b>${r.titulo}</b><br><span class="sec">${r.fecha} · ${r.n} asistentes</span><br><a href="/reuniones/${r.id}" data-ruta>Abrir →</a>`)).addTo(map);
   });
-  for (const l of ['hex-3d', 'puntos', 'reuniones']) {
+  for (const l of ['hex-3d', 'puntos', 'reuniones', 'agente-puntos']) {
     map.on('mouseenter', l, () => { if (!estado.dibujo) map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', l, () => (map.getCanvas().style.cursor = ''));
   }
@@ -852,10 +1095,12 @@ export async function vistaMapa(el, { q, ir }) {
     if (f) {
       if (f.value) estado.filtros[f.dataset.f] = f.value; else delete estado.filtros[f.dataset.f];
       ponerUrl();
-      await cargarDatos();
+      pintarFiltrosAsistente();
+      try { await cargarDatos(); } catch (err) { avisoError(err); }
     }
   });
   el.addEventListener('click', (e) => {
+    if (e.target.closest('[data-quitar-asistente]')) { quitarFiltrosAsistente(); return; }
     const zm = e.target.closest('[data-zmodo]');
     if (zm && herramienta) { herramienta.activar(zm.dataset.zmodo); return; }
     const z = e.target.closest('[data-z]');
@@ -885,42 +1130,325 @@ export async function vistaMapa(el, { q, ir }) {
     if (e.target.closest('#cerrar-hoja')) { popup.remove(); cerrarHoja(); return; }
     if (e.target.closest('#plegar')) { plegarIzq(!izq.classList.contains('plegado')); return; }
     const b = e.target.closest('[data-radio]');
-    if (b) {
-      estado.radio = b.dataset.radio;
-      $$('[data-radio]', el).forEach((x) => x.setAttribute('aria-pressed', x === b));
-      actualizarHex();
-      return;
-    }
+    if (b) { ponerRadio(b.dataset.radio); return; }
     const base = e.target.closest('[data-base]');
-    if (base) {
-      $$('[data-base]', el).forEach((x) => x.setAttribute('aria-pressed', x === base));
-      estado.base = base.dataset.base === 'auto' ? null : base.dataset.base;
-      map.setStyle(BASES[estado.base || baseSegunTema()], { diff: false });
-      return;
-    }
+    if (base) { ponerBase(base.dataset.base); return; }
     const v = e.target.closest('[data-vista]');
     if (v) {
       const k = v.dataset.vista;
-      if (k === 'municipio' && estado.capasGeo?.limite) map.fitBounds(cajaDe(estado.capasGeo.limite), { padding: 50, pitch: estado.plano ? 0 : 50, bearing: -15, duration: 2500 });
-      else if (k === 'casco') map.flyTo({ ...CASCO, ...(estado.plano ? { pitch: 0 } : {}), duration: 2600 });
-      else if (k === 'tigre') {
-        const t = estado.capasGeo?.lugares.features.find((f) => f.properties.nombre.includes('SAN MIGUEL DEL TIGRE'));
-        if (t) map.flyTo({ center: t.geometry.coordinates, zoom: 15, pitch: estado.plano ? 0 : 60, bearing: 20, duration: 2600 });
-      } else if (k === 'girar') {
+      if (RECORRIDOS.includes(k)) { cancelarPresentacion(); irVista(k); }
+      else if (k === 'girar') {
         if (estado.dibujo) return;
-        girando = !girando;
-        v.setAttribute('aria-pressed', girando);
-        const paso = () => { if (!girando) return; map.rotateTo(map.getBearing() + 0.08, { duration: 0 }); rafGiro = requestAnimationFrame(paso); };
-        if (girando) paso(); else cancelAnimationFrame(rafGiro);
+        if (girando) pararGiro();
+        else { cancelarPresentacion(); iniciarGiro(); }
       } else if (k === 'zona' && herramienta) {
         if (estado.dibujo) salirZona(); else empezarDibujo();
       }
     }
   });
-  const alTema = () => { if (!estado.base) map.setStyle(BASES[baseSegunTema()], { diff: false }); };
+
+  // ───────── Control del asistente (agente-mapa.js) ─────────
+  // Cada acción responde {tipo, ok, …} o {tipo, ok: false, error} y `aplicar` nunca lanza. Lo validado aquí es lo que
+  // el servidor ya validó: si algo no cumple, la acción falla con un motivo legible y el mapa no se toca.
+  function exigirVista() { if (!el.isConnected) fallo('El mapa se cerró'); }
+  function numero(v, nombre, min, max) {
+    if (v === undefined || v === null) return undefined;
+    if (!esNumero(v) || v < min || v > max) fallo(`${nombre}: un número entre ${min} y ${max}`);
+    return v;
+  }
+  function siNo(v, nombre, defecto) {
+    if (v === undefined || v === null) return defecto;
+    if (typeof v !== 'boolean') fallo(`${nombre}: true o false`);
+    return v;
+  }
+  // Espera un evento del mapa con tiempo límite: true si llegó, false si venció el plazo o se salió de la vista
+  function esperar(evento, ms) {
+    return new Promise((ok) => {
+      let hecho = false;
+      const fin = (llego) => {
+        if (hecho) return;
+        hecho = true;
+        clearTimeout(reloj);
+        map.off(evento, alEvento);
+        esperas.delete(fin);
+        ok(llego);
+      };
+      const alEvento = () => fin(true);
+      const reloj = setTimeout(() => fin(false), ms);
+      esperas.add(fin);
+      map.once(evento, alEvento);
+    });
+  }
+  // Tras pedir un movimiento: si animó, hasta su moveend; si fue un salto (movimiento reducido) o no cabía, ya terminó
+  const trasMover = (ms) => (map.isMoving() ? esperar('moveend', ms) : Promise.resolve(true));
+  const camara = () => ({ centro: map.getCenter().toArray().map((x) => +x.toFixed(6)), zoom: +map.getZoom().toFixed(2),
+    pitch: Math.round(map.getPitch()), bearing: Math.round(map.getBearing()) });
+  // El relleno de los paneles (relleno()) y, en el escritorio, el del asistente si está abierto sobre el mapa. Nunca
+  // tanto que no quepa el encuadre: MapLibre no mueve la cámara si el relleno no deja espacio
+  function rellenoAgente() {
+    const r = { ...relleno() };
+    const caja = map.getContainer().getBoundingClientRect();
+    const chat = document.getElementById('agente-panel');
+    if (chat && !chat.hidden && !movil.matches) {
+      const c = chat.getBoundingClientRect();
+      const encima = c.width > 0 && c.left < caja.right && c.right > caja.left && c.top < caja.bottom && c.bottom > caja.top;
+      if (encima && c.left > caja.left + caja.width / 2) r.right = Math.max(r.right, caja.right - c.left + 16);
+    }
+    const fx = Math.min(1, (caja.width * 0.7) / Math.max(1, r.left + r.right));
+    const fy = Math.min(1, (caja.height * 0.7) / Math.max(1, r.top + r.bottom));
+    return { top: r.top * fy, bottom: r.bottom * fy, left: r.left * fx, right: r.right * fx };
+  }
+
+  // volar {lugar?: {id, nombre, tipo, lat, lon, poligono}, lat?, lon?, zoom?, pitch?, bearing?}: con polígono encuadra la
+  // vereda entera (y la marca); si no, vuela a su punto
+  async function accVolar(a) {
+    const zoom = numero(a.zoom, 'zoom', 8, 19), pitch = numero(a.pitch, 'pitch', 0, 80), bearing = numero(a.bearing, 'bearing', -180, 180);
+    let poligono = null, centro = null, zoomPunto = 15, lugar = null;
+    if (a.lugar !== undefined && a.lugar !== null) {
+      const l = a.lugar;
+      if (!esObjeto(l) || !idValido(l.id)) fallo('volar: el lugar no es válido');
+      lugar = { id: l.id, nombre: typeof l.nombre === 'string' ? titulo(l.nombre.slice(0, 120)) : null };
+      if (l.poligono === true) {
+        const f = (estado.capasGeo?.veredas?.features || []).find((x) => x?.properties?.id === l.id);
+        if (f && anilloMayor(f)) poligono = f;
+      }
+      if (!poligono) {
+        let lat = l.lat, lon = l.lon;
+        if (!esNumero(lat) || !esNumero(lon)) {
+          const p = (estado.capasGeo?.lugares?.features || []).find((x) => x?.properties?.id === l.id);
+          [lon, lat] = p?.geometry?.coordinates || [];
+        }
+        if (!esNumero(lat) || !esNumero(lon) || !dentroDeYondo(lon, lat)) fallo(`${lugar.nombre || 'Ese lugar'} no tiene punto ni polígono en el mapa`);
+        centro = [lon, lat];
+        zoomPunto = l.tipo === 'barrio' ? 16.5 : 15;
+      }
+    } else {
+      if (!esNumero(a.lat) || !esNumero(a.lon)) fallo('volar: falta el destino (un lugar, o lat y lon)');
+      if (!dentroDeYondo(a.lon, a.lat)) fallo('Ese punto queda fuera de Yondó');
+      centro = [a.lon, a.lat];
+    }
+    tomarCamara();
+    const vista = { pitch: estado.plano ? 0 : pitch ?? map.getPitch(), bearing: bearing ?? map.getBearing(), duration: VUELO_MS };
+    estado.foco = poligono ? { type: 'Feature', geometry: poligono.geometry, properties: { color: COLOR_AGENTE } } : null;
+    pintarAgente();
+    if (poligono) map.fitBounds(cajaDe(poligono), { ...vista, padding: rellenoAgente(), maxZoom: zoom ?? 15.5 });
+    else map.flyTo({ ...vista, center: centro, zoom: zoom ?? zoomPunto });
+    await trasMover(VUELO_MS + 4000);
+    exigirVista();
+    return { ...camara(), ...(lugar ? { lugar } : {}), encuadre: poligono ? 'poligono' : 'punto' };
+  }
+
+  // filtros {valores: {clave: valor}, reemplazar}: los de Habitantes, con su URL; si la API los rechaza (422), vuelven
+  // los de antes
+  async function accFiltros(a) {
+    const valores = a.valores ?? {};
+    if (!esObjeto(valores)) fallo('filtros: valores debe ser un objeto');
+    const claves = Object.keys(valores);
+    if (claves.length > CLAVES_FILTRO.size) fallo('filtros: demasiadas claves');
+    const nuevos = siNo(a.reemplazar, 'reemplazar', false) ? {} : { ...estado.filtros };
+    for (const k of claves) {
+      if (!CLAVES_FILTRO.has(k)) fallo(`Filtro no disponible en el mapa: ${k.slice(0, 40)}`);
+      const v = valorFiltro(k, valores[k]);
+      if (v === null) delete nuevos[k]; else nuevos[k] = v;
+    }
+    if (!mismosFiltros(nuevos, estado.filtros) || !estado.datos) {
+      const antes = estado.filtros;
+      estado.filtros = nuevos;
+      alCambiarFiltros();
+      try {
+        await cargarDatos();
+      } catch (err) {
+        if (estado.filtros === nuevos) { estado.filtros = antes; alCambiarFiltros(); }
+        throw err;
+      }
+    }
+    return { filtros: { ...estado.filtros }, total: estado.datos?.total ?? null, ubicadas: estado.datos?.ubicadas ?? null };
+  }
+
+  // capas {valores: {calor?, columnas?, puntos?, veredas?, reuniones?, edificios?, relieve?, areas?}}: true o false
+  function accCapas(a) {
+    if (!esObjeto(a.valores)) fallo('capas: faltan los valores');
+    const claves = Object.keys(a.valores);
+    if (!claves.length) fallo('capas: indique al menos una capa');
+    for (const k of claves) {
+      if (!Object.hasOwn(estado.capas, k) || (k === 'areas' && !gestiona)) fallo(`Capa desconocida: ${k.slice(0, 40)}`);
+      if (typeof a.valores[k] !== 'boolean') fallo(`La capa ${k} va con true o false`);
+    }
+    for (const k of claves) estado.capas[k] = a.valores[k];
+    for (const c of $$('[data-capa]', el)) c.checked = !!estado.capas[c.dataset.capa];
+    aplicarVisibilidad();
+    const capas = { ...estado.capas };
+    if (!gestiona) delete capas.areas;
+    return { capas };
+  }
+
+  // base {base}: espera el estilo nuevo, así lo que sigue (resaltar, capas) ya encuentra sus capas
+  async function accBase(a) {
+    if (!BASES_OK.includes(a.base)) fallo('Mapa base: auto, oscuro, claro o satelite');
+    const cambia = estiloDe(a.base === 'auto' ? null : a.base) !== estiloDe(estado.base);
+    const listo = cambia ? esperar('style.load', 15000) : null;
+    ponerBase(a.base);
+    if (listo && !(await listo)) { exigirVista(); fallo('El mapa base no terminó de cargar'); }
+    exigirVista();
+    return { base: a.base, recargado: cambia };
+  }
+
+  function accHexagono(a) {
+    const k = esNumero(a.tamano) ? String(a.tamano) : a.tamano;
+    if (typeof k !== 'string' || !Object.hasOwn(RADIOS, k)) fallo('Tamaño del hexágono: auto, 150, 400 o 1000');
+    ponerRadio(k);
+    return { hexagono: k, radio_m: radioActual() };
+  }
+
+  async function accRecorrido(a) {
+    if (!RECORRIDOS.includes(a.nombre)) fallo('Recorrido: municipio, casco o tigre');
+    if (a.nombre === 'municipio' && !estado.capasGeo?.limite) fallo('El límite del municipio no está en el mapa');
+    if (a.nombre === 'tigre' && !lugarTigre()) fallo('San Miguel del Tigre no tiene coordenada en el mapa');
+    tomarCamara();
+    irVista(a.nombre);
+    await trasMover(7000);
+    exigirVista();
+    return camara();
+  }
+
+  function accGiro(a) {
+    const activo = siNo(a.activo, 'activo');
+    if (activo === undefined) fallo('giro: falta activo (true o false)');
+    if (activo) {
+      if (estado.dibujo) fallo('Con una zona abierta el mapa no gira');
+      cancelarPresentacion();
+      iniciarGiro();
+    } else pararGiro();
+    return { giro: girando };
+  }
+
+  // resaltar {puntos: [{id?, lat, lon, etiqueta?}], color?, encuadrar?, sumar?}: como mucho MAX_IDS a la vez y en total;
+  // los puntos fuera de Yondó se cuentan y no se pintan
+  async function accResaltar(a) {
+    if (!Array.isArray(a.puntos) || !a.puntos.length) fallo('resaltar: faltan los puntos');
+    if (a.puntos.length > MAX_IDS) fallo(`resaltar: como mucho ${num(MAX_IDS)} puntos`);
+    if (a.color != null && (typeof a.color !== 'string' || !COLOR_OK.test(a.color))) fallo('El color va como #rrggbb');
+    const color = a.color ? a.color.toLowerCase() : COLOR_AGENTE;
+    const encuadrar = siNo(a.encuadrar, 'encuadrar', true), sumar = siNo(a.sumar, 'sumar', false);
+    const nuevos = [];
+    let fuera = 0;
+    for (const p of a.puntos) {
+      if (!esObjeto(p) || !esNumero(p.lat) || !esNumero(p.lon) || !dentroDeYondo(p.lon, p.lat)) { fuera++; continue; }
+      const props = { color };
+      if (idValido(p.id)) props.id = p.id;
+      const etiqueta = etiquetaSegura(p.etiqueta);
+      if (etiqueta) props.etiqueta = etiqueta;
+      nuevos.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lon, p.lat] }, properties: props });
+    }
+    if (!nuevos.length) fallo('Ningún punto queda dentro de Yondó');
+    estado.resalte = (sumar ? [...estado.resalte, ...nuevos] : nuevos).slice(-MAX_IDS);
+    pintarAgente();
+    if (encuadrar) {
+      tomarCamara();
+      map.fitBounds(cajaDe({ type: 'FeatureCollection', features: estado.resalte }), { padding: rellenoAgente(), maxZoom: 16.5, duration: 1600 });
+      await trasMover(1600 + 4000);
+      exigirVista();
+    }
+    return { resaltados: estado.resalte.length, nuevos: nuevos.length, fuera_de_yondo: fuera };
+  }
+
+  function accLimpiar(a) {
+    const todo = siNo(a.todo, 'todo', false);
+    estado.resalte = [];
+    estado.foco = null;
+    pintarAgente();
+    popup.remove();
+    if (!estado.dibujo) cerrarHoja();
+    if (todo) {
+      pararGiro();
+      if (estado.dibujo) salirZona();
+    }
+    return { resaltados: 0 };
+  }
+
+  // zona {area_id? | lugar_id? | cerrar?}: abre como zona un área guardada o una vereda (con su distribución), o la cierra
+  async function accZona(a) {
+    if (!herramienta) fallo('Su rol no abre zonas en el mapa');
+    const cerrar = siNo(a.cerrar, 'cerrar', false);
+    if ([a.area_id != null, a.lugar_id != null, cerrar].filter(Boolean).length !== 1) fallo('zona: indique area_id, lugar_id o cerrar');
+    if (cerrar) {
+      if (estado.dibujo) salirZona();
+      return { zona: null };
+    }
+    if (a.area_id != null) {
+      if (!idValido(a.area_id)) fallo('zona: area_id no es válido');
+      const area = await traerArea(a.area_id);
+      exigirVista();
+      if (!Array.isArray(area?.poligono) || area.poligono.length < 3) fallo('Esa zona guardada no tiene polígono');
+      tomarCamara();
+      cargarAnillo(area.poligono, { guardada: area, editable: false });
+    } else {
+      if (!idValido(a.lugar_id)) fallo('zona: lugar_id no es válido');
+      const f = (estado.capasGeo?.veredas?.features || []).find((x) => x?.properties?.id === a.lugar_id);
+      const anillo = f && anilloMayor(f);
+      if (!anillo) fallo('Ese lugar no tiene polígono en el mapa: solo las veredas y el corregimiento');
+      if (aMaximo(anillo).filter(([lon, lat]) => dentroDeYondo(lon, lat)).length < 3) fallo('Ese polígono queda fuera de Yondó');
+      tomarCamara();
+      usarAnillo(anillo, titulo(f.properties.nombre));
+    }
+    await trasMover(5000);
+    exigirVista();
+    const i = estado.info;
+    return { zona: estado.zona ? { id: estado.zona.id, nombre: estado.zona.nombre } : null, fase: i?.fase ?? null,
+      puntos: i?.n ?? 0, area_m2: Math.round(i?.area || 0), personas_navegador: i ? contarDentro(i.anillo).n : 0 };
+  }
+
+  // Lo que ve la persona, para el asistente (contexto de cada mensaje) y para las pruebas: cámara, base, capas, filtros
+  // y cifras. Nunca nombres ni coordenadas de personas
+  function instantanea() {
+    const b = map.getBounds();
+    const i = estado.dibujo ? estado.info : null;
+    const capas = { ...estado.capas };
+    if (!gestiona) delete capas.areas;
+    return {
+      ...camara(), base: estado.base || 'auto', capas, hexagono: estado.radio, radio_m: radioActual(),
+      filtros: { ...estado.filtros }, total: estado.datos?.total ?? null, ubicadas: estado.datos?.ubicadas ?? null,
+      en_pantalla: (estado.datos?.puntos || []).filter((p) => b.contains([p[2], p[1]])).length, giro: girando,
+      resaltados: estado.resalte.length, foco: !!estado.foco,
+      zona: i ? { id: estado.zona?.id ?? null, nombre: estado.zona?.nombre ?? null, fase: i.fase, puntos: i.n,
+        area_m2: Math.round(i.area || 0), personas_navegador: contarDentro(i.anillo).n,
+        personas_servidor: esNumero(estado.dist?.kpi?.personas) ? estado.dist.kpi.personas : null } : null,
+    };
+  }
+
+  // Un Map y no un objeto: un `tipo` como «constructor» o «__proto__» no debe encontrar nada
+  const ACCIONES = new Map(Object.entries({ volar: accVolar, filtros: accFiltros, capas: accCapas, base: accBase,
+    hexagono: accHexagono, recorrido: accRecorrido, giro: accGiro, resaltar: accResaltar, limpiar: accLimpiar, zona: accZona }));
+  async function aplicarAcciones(lista) {
+    const out = [];
+    for (const [i, a] of (Array.isArray(lista) ? lista.slice(0, 100) : []).entries()) {
+      const tipo = esObjeto(a) && typeof a.tipo === 'string' ? a.tipo.slice(0, 40) : null;
+      let reloj = 0;
+      try {
+        if (i >= MAX_ACCIONES) fallo(`Se aplican como mucho ${MAX_ACCIONES} acciones por vez`);
+        exigirVista();
+        const fn = tipo ? ACCIONES.get(tipo) : null;
+        if (!fn) fallo(tipo ? `Acción desconocida: ${tipo}` : 'Acción no válida');
+        const plazo = new Promise((_, mal) => { reloj = setTimeout(() => mal(new Error('La acción tardó demasiado')), PLAZO_ACCION_MS); });
+        const r = await Promise.race([fn(a), plazo]);
+        out.push({ ...(esObjeto(r) ? r : {}), tipo, ok: true });
+      } catch (err) {
+        out.push({ tipo, ok: false, error: (typeof err?.message === 'string' && err.message.slice(0, 200)) || 'No se pudo aplicar' });
+      } finally {
+        clearTimeout(reloj);
+      }
+    }
+    return out;
+  }
+  const alTema = () => { if (!estado.base) cambiarEstilo(BASES[baseSegunTema()]); };
   window.addEventListener('tema', alTema);
   window.__mapa = map; // útil para depurar desde la consola (también la herramienta de zonas, en window.__zona)
   return () => {
+    quitarControl?.(); // el asistente ya no aplica aquí: la próxima acción vuelve a abrir el mapa
+    clearTimeout(tIntro);
+    clearInterval(empujar);
+    estado.turnoDatos++; // una respuesta de puntos en camino ya no pinta nada
+    for (const fin of [...esperas]) fin(false);
     girando = false;
     cancelAnimationFrame(rafGiro);
     cancelAnimationFrame(rafVivo);

@@ -178,6 +178,15 @@ AJUSTES_POR_DEFECTO: dict[str, Any] = {
     "sesion": {"horas_max": 10, "inactividad_min": 60, "max_por_usuario": 2},
     "tope_cedulas_dictadas": 20,
     "enlace_consulta_puesto": "https://wsp.registraduria.gov.co/censo/consultar/",
+    # El asistente (docs/agente.md). Dos claves de un nivel porque el PUT de Ajustes mezcla un solo nivel: con los
+    # topes anidados en `agente`, cambiar el de un rol borraría los de los demás. Denegar por defecto: sin
+    # planilleros ni consultores. `roles` va ordenada, como la deja la validación, porque un cambio se detecta
+    # comparando listas. Las escrituras siempre piden aprobación; Mnemo usa el token del administrador (los
+    # coordinadores, solo si él lo permite); las conversaciones se borran solas a los `retencion_dias`
+    "agente": {"roles": ["admin", "coordinador"], "escritura": True, "mnemo_coordinadores": False,
+               "retencion_dias": 30},
+    # Mensajes al asistente por persona y día (hora de Colombia), según el rol: acotan el gasto y el volumen
+    "agente_mensajes_diarios": {"admin": 300, "coordinador": 150, "planillero": 40, "consultor": 40},
 }
 
 

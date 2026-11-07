@@ -159,6 +159,13 @@ def _indices() -> dict[str, list[IndexModel]]:
         "solicitudes": [i("estado"), i("persona_id")],
         "lecturas": [i([("uid", ASCENDING), ("dia", ASCENDING)]), i("ts", expireAfterSeconds=90 * 24 * 3600)],
         "idempotencia": [i("ts", expireAfterSeconds=24 * 3600), i("persona_id")],
+        # El asistente (app/agente/conversaciones.py): `expira` es una fecha por documento (la retención de Ajustes se
+        # puede cambiar sin tocar el índice) y `personas`, a quién vio el modelo (la supresión borra la conversación)
+        "agente_conversaciones": [i("expira", expireAfterSeconds=0), i("personas"),
+                                  i([("uid", ASCENDING), ("actualizada", DESCENDING)])],
+        "agente_mensajes": [i([("conversacion", ASCENDING), ("seq", ASCENDING)], unique=True),
+                            i("expira", expireAfterSeconds=0)],
+        "agente_uso": [i("ts", expireAfterSeconds=180 * 24 * 3600), i([("uid", ASCENDING), ("dia", ASCENDING)])],
     }
 
 
@@ -1003,8 +1010,16 @@ def cedulas_de(p: dict) -> set[str]:
 def limpiar_ligados(db: Database, ids: list[int], cedulas: Iterable[str] = ()) -> None:
     """Lo ligado a fichas suprimidas: borra coincidencias, conflictos e idempotencia; anonimiza acercamientos y
     autorizaciones (conservan uid, canal, resultado, efectivo y fecha para los indicadores) y deja las solicitudes
-    como constancia, sin su texto."""
+    como constancia, sin su texto. Borra enteras las conversaciones del asistente en que el modelo vio a alguna de
+    esas personas (sus mensajes guardan lo que las herramientas le sirvieron): los mensajes antes y después de las
+    conversaciones, así un corte en el medio deja la conversación (la reconciliación la vuelve a encontrar) y un turno
+    que alcance a guardar un mensaje en el medio no deja mensajes sueltos."""
     cedulas = [c for c in cedulas if c]
+    conversaciones = [c["_id"] for c in db.agente_conversaciones.find({"personas": {"$in": list(ids)}}, {"_id": 1})]
+    if conversaciones:
+        db.agente_mensajes.delete_many({"conversacion": {"$in": conversaciones}})
+        db.agente_conversaciones.delete_many({"_id": {"$in": conversaciones}})
+        db.agente_mensajes.delete_many({"conversacion": {"$in": conversaciones}})
     db.coincidencias.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"candidato_id": {"$in": ids}}]})
     db.conflictos_cedula.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"cedula": {"$in": cedulas}}]})
     db.idempotencia.delete_many({"persona_id": {"$in": ids}})

@@ -3,13 +3,16 @@
 * `ADMIN` (usuario) y `password` (clave) del administrador, tal como están en Railway. También `admin` / `PASSWORD`.
 * `MONGODB_URI`: conexión a MongoDB (la del plugin de Railway o de Atlas). `MONGODB_DB` opcional; si la URI no trae
   base de datos se usa `panel_yondo`. En Railway es obligatoria; en local se usa un MongoDB en 127.0.0.1.
+* El asistente (`app/agente`, `docs/agente.md`): `ANTHROPIC_API_KEY` lo enciende; `AGENTE_MODELO` y `AGENTE_ESFUERZO`
+  son opcionales. `MNEMO_MCP_URL` y `MNEMO_TOKEN` (un token personal `mnemo_pat_…`) le dan las herramientas de Mnemo;
+  `MNEMO_HERRAMIENTAS` acota cuáles (lista separada por comas, o `*` para todas las que permita el token).
 """
 from __future__ import annotations
 
 import logging
 import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
@@ -72,6 +75,10 @@ def en_railway() -> bool:
     return any(os.environ.get(n) for n in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME", "RAILWAY_ENVIRONMENT_ID"))
 
 
+ESFUERZOS = ("low", "medium", "high", "xhigh", "max")
+MODELO_AGENTE = "claude-opus-5-5"
+
+
 @dataclass(frozen=True)
 class Config:
     usuario: str
@@ -81,6 +88,33 @@ class Config:
     horas_sesion: int
     cookie_segura: bool
     max_subida_mb: int
+    # El asistente. Las claves no salen en el repr: el de `Config` aparece en las trazas de pytest y en el registro
+    anthropic_api_key: str = field(default="", repr=False)
+    agente_modelo: str = MODELO_AGENTE
+    agente_esfuerzo: str = "medium"
+    mnemo_url: str = ""
+    mnemo_token: str = field(default="", repr=False)
+    mnemo_herramientas: str = ""
+
+    @property
+    def agente_configurado(self) -> bool:
+        return bool(self.anthropic_api_key)
+
+    @property
+    def mnemo_configurado(self) -> bool:
+        return bool(self.mnemo_url and self.mnemo_token)
+
+
+def _url_mnemo(v: str) -> str:
+    """La dirección del servidor MCP de Mnemo (`https://<host>/mcp`). Solo https, salvo en la propia máquina: el token
+    personal viaja en cada petición. Una dirección que no cumple se descarta con un aviso, sin cortar el arranque."""
+    v = v.strip().rstrip("/")
+    if not v:
+        return ""
+    if re.match(r"^https://[^\s/]+(/\S*)?$", v) or re.match(r"^http://(127\.0\.0\.1|localhost)(:\d+)?(/\S*)?$", v):
+        return v
+    log.warning("MNEMO_MCP_URL debe ser una dirección https://…/mcp: se ignora y el asistente queda sin Mnemo")
+    return ""
 
 
 def cargar() -> Config:
@@ -99,6 +133,10 @@ def cargar() -> Config:
             raise RuntimeError(msg)
         log.warning("MONGODB_URI no está definida: se usa el MongoDB local %s", MONGO_LOCAL)
         uri = MONGO_LOCAL
+    esfuerzo = _primera("AGENTE_ESFUERZO").strip().lower() or "medium"
+    if esfuerzo not in ESFUERZOS:
+        log.warning("AGENTE_ESFUERZO vale %r y debe ser uno de %s: se usa medium", esfuerzo, ", ".join(ESFUERZOS))
+        esfuerzo = "medium"
     return Config(
         usuario=_primera("ADMIN", "admin"),
         clave=_primera("password", "PASSWORD"),
@@ -107,4 +145,10 @@ def cargar() -> Config:
         horas_sesion=_entero("SESSION_HOURS", 12),
         cookie_segura=cookie_segura,
         max_subida_mb=_entero("MAX_UPLOAD_MB", 25),
+        anthropic_api_key=_primera("ANTHROPIC_API_KEY").strip(),
+        agente_modelo=_primera("AGENTE_MODELO").strip() or MODELO_AGENTE,
+        agente_esfuerzo=esfuerzo,
+        mnemo_url=_url_mnemo(_primera("MNEMO_MCP_URL")),
+        mnemo_token=_primera("MNEMO_TOKEN").strip(),
+        mnemo_herramientas=_primera("MNEMO_HERRAMIENTAS").strip(),
     )
