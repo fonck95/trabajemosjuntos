@@ -19,6 +19,7 @@ from pymongo.errors import ConnectionFailure
 from starlette.middleware.gzip import GZipMiddleware
 
 from . import acceso, config, db, migraciones
+from .agente import llm
 from .api import acercamientos, agente, ajustes, calidad, personas, reuniones, sistema, tablero, usuarios, zonas
 from .seguridad import (CabecerasSeguras, Cortacircuitos, GuardiaApi, base_de, limpiar_al_iniciar, ruta_interna,
                         sin_base)
@@ -27,6 +28,23 @@ WEB = Path(__file__).resolve().parents[1] / "web"
 INDICE = (WEB / "index.html").read_text(encoding="utf-8")
 log = logging.getLogger("panel")
 INTENTOS_ARRANQUE = 3  # panel solo: intentos de conectar a MongoDB (2 s entre uno y otro) antes de cortar el arranque
+# Las respuestas en flujo del asistente (NDJSON): cada evento tiene que llegar en cuanto sale
+RUTAS_EN_FLUJO = frozenset({"/api/agente/mensajes", "/api/agente/confirmaciones"})
+
+
+class GZipSalvoFlujos(GZipMiddleware):
+    """GZip para todo menos las respuestas en flujo del asistente.
+
+    El GZipMiddleware de Starlette (0.41) escribe cada trozo de una respuesta en flujo en un GzipFile sin vaciarlo:
+    zlib retiene la salida y el navegador recibía todos los eventos juntos al final del turno. Los navegadores siempre
+    piden gzip y `fetch` no lo puede evitar, así que esas rutas se excluyen aquí (las cabeceras de seguridad y la guardia
+    se aplican igual)."""
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and ruta_interna(scope) in RUTAS_EN_FLUJO:
+            await self.app(scope, receive, send)
+            return
+        await super().__call__(scope, receive, send)
 
 
 def preparar(app: FastAPI) -> None:
@@ -65,6 +83,7 @@ async def ciclo(app: FastAPI):
                 raise
             await asyncio.sleep(2)
     yield
+    await llm.cerrar(app)  # el cliente de Anthropic, si el asistente llegó a crearlo
     app.state.cliente.close()
 
 
@@ -75,7 +94,7 @@ def crear_app(cfg: config.Config | None = None) -> FastAPI:
     app.state.cortacircuitos = Cortacircuitos()
     # La guardia va por dentro de las demás: nada lee el cuerpo antes que ella, y sus respuestas llevan las cabeceras
     app.add_middleware(GuardiaApi)
-    app.add_middleware(GZipMiddleware, minimum_size=1024)
+    app.add_middleware(GZipSalvoFlujos, minimum_size=1024)
     app.add_middleware(CabecerasSeguras)
     for m in (sistema, tablero, personas, reuniones, calidad, usuarios, acercamientos, zonas, ajustes, agente):
         app.include_router(m.r)

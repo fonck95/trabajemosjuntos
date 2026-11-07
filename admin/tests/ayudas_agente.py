@@ -146,3 +146,170 @@ def TH(texto: str = "", firma: str = "firma") -> dict:
 
 def TU(id_: str, nombre: str, entrada: Any) -> dict:
     return {"type": "tool_use", "id": id_, "name": nombre, "input": entrada}
+
+
+# ───────────────────────────── El turno completo por la API (núcleo) ─────────────────────────────
+
+def encender(app, *guion, modelo: str | None = None) -> FakeAPI:
+    """Enciende el asistente en `app` con una clave inventada y la Messages API simulada (`guion` como en
+    `cliente_falso`). Devuelve el `FakeAPI` para mirar lo que se le mandó al modelo y agregar respuestas."""
+    import dataclasses
+    cambios = {"anthropic_api_key": "clave-falsa", **({"agente_modelo": modelo} if modelo else {})}
+    app.state.cfg = dataclasses.replace(app.state.cfg, **cambios)
+    app.state.agente_cliente, api = cliente_falso(*guion)
+    return api
+
+
+def ndjson(texto: str) -> list[dict]:
+    """Los eventos de una respuesta NDJSON (una línea JSON por evento; nunca líneas vacías)."""
+    lineas = texto.split("\n")
+    assert lineas[-1] == "", "el flujo termina con un salto de línea"
+    assert all(lineas[:-1]), "el flujo no tiene líneas vacías"
+    return [json.loads(x) for x in lineas[:-1]]
+
+
+def enviar(c, texto: str = "¿Cuántas personas hay?", conversacion: int | None = None, contexto: dict | None = None):
+    """POST /api/agente/mensajes: (respuesta, eventos). Sin flujo (4xx/5xx), los eventos son []."""
+    r = c.post("/api/agente/mensajes", json={"conversacion": conversacion, "texto": texto, "contexto": contexto})
+    return r, (ndjson(r.text) if r.status_code == 200 else [])
+
+
+def decidir(c, conversacion: int, **decisiones: bool):
+    """POST /api/agente/confirmaciones con {id: aprobar}: (respuesta, eventos)."""
+    r = c.post("/api/agente/confirmaciones", json={"conversacion": conversacion, "decisiones": [
+        {"id": k, "aprobar": v} for k, v in decisiones.items()]})
+    return r, (ndjson(r.text) if r.status_code == 200 else [])
+
+
+def tipos(eventos: list[dict]) -> list[str]:
+    """Los tipos de evento en orden, juntando los deltas seguidos del mismo tipo (texto, progreso)."""
+    out: list[str] = []
+    for e in eventos:
+        if e["tipo"] in ("texto", "progreso") and out and out[-1] == e["tipo"]:
+            continue
+        out.append(e["tipo"])
+    return out
+
+
+def texto_de(eventos: list[dict], tipo: str = "texto") -> str:
+    return "".join(e["texto"] for e in eventos if e["tipo"] == tipo)
+
+
+def herramientas_falsas():
+    """Herramientas inventadas para probar el bucle sin depender de las reales: (lista, registro de llamadas).
+
+    * `contar_falsa` (lectura, `personas.buscar`): {lugar, persona_id?} → un conteo; si trae `persona_id`, esa persona
+      queda en `Resultado.personas`. Manda una acción de mapa al navegador.
+    * `nota_falsa` (escritura, `personas.notas`): {persona_id, texto} → una nota de verdad por la API interna, con la
+      clave de idempotencia del contrato.
+    * `falla_falsa` (lectura): {modo: interno | error | fatal} → un error de cada tipo.
+    Cada llamada se anota en el registro: (nombre, entrada, conversacion_id, tool_use_id)."""
+    from pydantic import BaseModel, Field
+
+    from app.agente.herramientas.base import Confirmacion, ErrorHerramienta, Herramienta, Resultado
+    registro: list[tuple] = []
+
+    class Contar(BaseModel):
+        lugar: str = Field(..., min_length=1, max_length=80)
+        persona_id: int | None = None
+
+    class Nota(BaseModel):
+        persona_id: int
+        texto: str = Field(..., min_length=1, max_length=2000)
+
+    class Falla(BaseModel):
+        modo: str
+
+    async def contar(ctx, a: Contar):
+        registro.append(("contar_falsa", a.model_dump(), ctx.conversacion_id, ctx.tool_use_id))
+        return Resultado({"total": 3, "lugar": a.lugar}, resumen="3 personas",
+                         personas={a.persona_id} if a.persona_id else set(),
+                         acciones=[{"tipo": "mapa", "acciones": [{"tipo": "volar", "lat": 7.0, "lon": -73.9}]}])
+
+    async def preparar_nota(ctx, a: Nota):
+        return Confirmacion("Agregar una nota", [("Persona", f"#{a.persona_id}"), ("Nota", a.texto)],
+                            aviso="Queda en la ficha")
+
+    async def nota(ctx, a: Nota):
+        registro.append(("nota_falsa", a.model_dump(), ctx.conversacion_id, ctx.tool_use_id))
+        await ctx.api.post(f"/api/personas/{a.persona_id}/notas", {"texto": a.texto},
+                           clave=f"agente.{ctx.conversacion_id}.{ctx.tool_use_id}")
+        return Resultado({"ok": True}, resumen="Nota guardada", acciones=[{"tipo": "recargar"}],
+                         personas={a.persona_id})
+
+    async def falla(ctx, a: Falla):
+        registro.append(("falla_falsa", a.model_dump(), ctx.conversacion_id, ctx.tool_use_id))
+        if a.modo == "fatal":
+            raise ErrorHerramienta("Llegó al tope de personas consultadas hoy.", "volumen", fatal=True)
+        if a.modo == "error":
+            raise ErrorHerramienta("Esa persona no existe.", "no_existe")
+        raise RuntimeError("fallo interno inventado")
+
+    lista = [
+        Herramienta("contar_falsa", "Cuenta personas de un lugar (prueba).", Contar, "lectura", ("personas.buscar",),
+                    "Contando personas", contar),
+        Herramienta("nota_falsa", "Agrega una nota a una ficha (prueba).", Nota, "escritura", ("personas.notas",),
+                    "Agregando la nota", nota, confirmar=preparar_nota),
+        Herramienta("falla_falsa", "Siempre falla (prueba).", Falla, "lectura", ("personas.buscar",),
+                    "Probando un fallo", falla),
+    ]
+    return lista, registro
+
+
+def con_herramientas(monkeypatch, lista) -> None:
+    """Que el catálogo fijo del asistente sea `lista` (en lugar de personas + gestión + interfaz)."""
+    from app.agente import herramientas
+    monkeypatch.setattr(herramientas, "fijas", lambda: list(lista))
+
+
+class Corte:
+    """Para `FakeAPILenta`: una respuesta 200 que manda `eventos` y luego se corta con `error` (un fallo de transporte
+    a mitad del cuerpo, que el SDK no reintenta)."""
+
+    def __init__(self, eventos: list[dict], error: BaseException):
+        self.eventos, self.error = eventos, error
+
+
+class FakeAPILenta(FakeAPI):
+    """Como `FakeAPI`, pero cada evento SSE sale `pausa` segundos después del anterior: para ver la llegada por partes,
+    el latido y una desconexión a mitad de una ronda. Acepta además `Corte`."""
+
+    def __init__(self, guion, pausa: float = 0.3):
+        super().__init__(guion)
+        self.pausa = pausa
+
+    def __call__(self, req: httpx2.Request) -> httpx2.Response:
+        self.peticiones.append({"url": str(req.url), "cabeceras": dict(req.headers), "json": json.loads(req.content)})
+        if not self.guion:
+            raise AssertionError("FakeAPILenta: no quedan respuestas en el guion")
+        item = self.guion.popleft()
+        if isinstance(item, BaseException):
+            raise item
+        if isinstance(item, tuple):
+            return httpx2.Response(item[0], json=item[1])
+        corte = item.error if isinstance(item, Corte) else None
+        item = item.eventos if isinstance(item, Corte) else item
+        eventos = [f"event: {e['type']}\ndata: {json.dumps(e)}\n\n".encode() for e in item]
+        if corte is not None:
+            eventos = eventos[:len(eventos) // 2]
+        pausa = self.pausa
+
+        async def trozos():
+            import asyncio
+            for ev in eventos:
+                await asyncio.sleep(pausa)
+                yield ev
+            if corte is not None:
+                raise corte
+
+        return httpx2.Response(200, headers={"content-type": "text/event-stream"}, content=trozos())
+
+
+def encender_lento(app, *guion, pausa: float = 0.3) -> FakeAPILenta:
+    """`encender` con la Messages API lenta (`FakeAPILenta`)."""
+    import dataclasses
+    app.state.cfg = dataclasses.replace(app.state.cfg, anthropic_api_key="clave-falsa")
+    api = FakeAPILenta(guion, pausa)
+    http = httpx2.AsyncClient(transport=httpx2.MockTransport(api))
+    app.state.agente_cliente = anthropic.AsyncAnthropic(api_key="clave-falsa", http_client=http, max_retries=0)
+    return api

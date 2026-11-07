@@ -557,7 +557,8 @@ class _Migracion:
         return self.escribir(self.por_documento(docs, hacer))
 
     def r_suprimidas(self) -> int:
-        """Fichas suprimidas que todavía tienen acercamientos, autorizaciones, conflictos o idempotencia con datos."""
+        """Fichas suprimidas que todavía tienen acercamientos, autorizaciones, conflictos, idempotencia o
+        conversaciones del asistente con datos."""
         ids = [p["_id"] for p in self.db.personas.find({"eliminado": True}, {"_id": 1})]
         if not ids:
             return 0
@@ -566,6 +567,9 @@ class _Migracion:
             con_datos |= set(self.db[col].distinct("persona_id", {"persona_id": {"$in": ids}}))
         con_datos |= set(self.db.solicitudes.distinct("persona_id", {"persona_id": {"$in": ids},
                                                                      "suprimido": {"$ne": True}}))
+        # `personas` es una lista: `distinct` trae también a las demás personas de esas conversaciones, que no están
+        # suprimidas y no se deben tocar
+        con_datos |= set(self.db.agente_conversaciones.distinct("personas", {"personas": {"$in": ids}})) & set(ids)
         con_datos.discard(None)
         if con_datos:
             bd.limpiar_ligados(self.db, sorted(con_datos))
