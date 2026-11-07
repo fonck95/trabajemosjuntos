@@ -37,6 +37,7 @@ from app.config import Config
 URL = "https://mnemo.example.org/mcp"
 ORIGEN = "https://mnemo.example.org"
 SECRETO = TOKEN.rsplit("_", 1)[1]
+CON_MNEMO = SimpleNamespace(llamar=lambda *a, **k: None)  # un cliente cualquiera: la tarjeta no llama a Mnemo
 
 
 def correr(coro):
@@ -285,7 +286,7 @@ def test_plazo_vencido_corta_y_mnemo_cancela():
         return e, time.monotonic() - t0
 
     e, dt = correr(prueba())
-    assert e.codigo == mc.COD_PLAZO and "no respondió en 0 segundos" not in e.mensaje and dt < 2
+    assert e.codigo == mc.COD_PLAZO and "no respondió en 0.3 segundos" in e.mensaje and dt < 2
     assert falso.cancelaciones == 1
 
 
@@ -391,8 +392,10 @@ def test_el_token_no_aparece_en_ningun_error_ni_registro(caplog, monkeypatch):
             lambda req: (_ for _ in ()).throw(httpx2.ConnectError(f"sin red {req.headers['authorization']}",
                                                                   request=req))))
         await junta(caido.herramientas())                       # red, con el token en el texto de la excepción
+        acepta = mc.ACEPTA
         monkeypatch.setattr(mc, "ACEPTA", "*/*")
         await junta(_cliente(MnemoFalso()).herramientas())      # 406
+        monkeypatch.setattr(mc, "ACEPTA", acepta)
         cliente_ok, hs = await _herramientas(MnemoFalso())
         await junta(hs["mnemo_fetch"].ejecutar(_ctx(cliente_ok), hs["mnemo_fetch"].validar({"id": "doc_eco"})))
         return c
@@ -505,6 +508,44 @@ def test_definiciones_que_no_sirven_se_descartan():
     assert mnemo.desde_definiciones("no es una lista") == [] and mnemo.desde_definiciones(None) == []
 
 
+def test_una_escritura_conocida_no_pasa_por_lectura_aunque_lo_diga_la_pista():
+    """Las pistas de MCP las pone el servidor: una que se equivoque no le quita la tarjeta a una escritura de Mnemo."""
+    hs = mnemo.desde_definiciones([
+        {"name": "mnemo_create_event", "inputSchema": {"type": "object"}, "annotations": {"readOnlyHint": True}},
+        {"name": "mnemo_request_delete", "inputSchema": {"type": "object"}, "annotations": {"readOnlyHint": True}},
+        {"name": "mnemo_lee_algo", "inputSchema": {"type": "object"}, "annotations": {"readOnlyHint": True}}])
+    assert [(h.tipo, h.confirmar is not None) for h in hs] == [("escritura", True), ("escritura", True),
+                                                              ("lectura", False)]
+
+
+def test_json_anidado_sin_fin_no_rompe_al_cliente():
+    def atender(req: httpx2.Request) -> httpx2.Response:
+        cuerpo = json.loads(req.content)
+        if "id" not in cuerpo:
+            return httpx2.Response(202)
+        if cuerpo["method"] == "initialize":
+            return httpx2.Response(200, json={"jsonrpc": "2.0", "id": cuerpo["id"], "result": {
+                "protocolVersion": "2025-11-25", "capabilities": {}}})
+        return httpx2.Response(200, headers={"content-type": "text/event-stream"},
+                               content=("event: message\ndata: " + "[" * 200_000 + "\n\n").encode())
+
+    e = correr(_fallo(mc.ClienteMnemo(URL, TOKEN, transporte=httpx2.MockTransport(atender)).llamar("search", {})))
+    assert e.codigo == mc.COD_MNEMO and "sin contestar" in e.mensaje
+
+
+def test_codigos_raros_de_mnemo_no_llegan_al_registro(caplog):
+    caplog.set_level(logging.INFO)
+    falso = MnemoFalso()
+
+    async def raro(a):
+        return {"content": [{"type": "text", "text": json.dumps({"error": {
+            "code": "Ana Inventada 3001234567", "message": "x"}})}], "isError": True}
+
+    falso.manejadores["search"] = raro
+    e = correr(_fallo(_cliente(falso).llamar("search", {"query": "x"})))
+    assert e.detalle == {"code": "FAILED"} and "3001234567" not in caplog.text
+
+
 def test_la_entrada_es_un_objeto_que_cabe():
     h = mnemo.desde_definiciones([{"name": "search", "inputSchema": {"type": "object"}}])[0]
     assert h.validar({"query": "acta", "n": [1, 2]}).root == {"query": "acta", "n": [1, 2]}
@@ -520,7 +561,7 @@ def test_la_tarjeta_muestra_el_titulo_y_los_argumentos():
     h = hs["mnemo_create_event"]
     args = {"zeta": True, "notes": "n" * 2000, "start": "2026-11-09T09:00:00-05:00", "title": "Reunión inventada",
             "extra": {"a": [1, 2]}, "vacio": None}
-    conf = correr(h.confirmar(_ctx(object()), h.validar(args)))
+    conf = correr(h.confirmar(_ctx(CON_MNEMO), h.validar(args)))
     assert conf.titulo == "Crear un evento en el calendario de Mnemo"
     claves = [k for k, _ in conf.detalle]
     assert claves == ["title", "start", "notes", "extra", "vacio", "zeta"]  # el orden del esquema, luego el resto
@@ -529,12 +570,12 @@ def test_la_tarjeta_muestra_el_titulo_y_los_argumentos():
     assert valores["extra"] == '{"a": [1, 2]}' and valores["notes"].endswith("(2000 caracteres en total)")
     assert conf.aviso == "Lo hace Mnemo con el token del administrador."
     assert conf.para_interfaz()["detalle"][0] == ["title", "Reunión inventada"]
-    pedido = correr(hs["mnemo_request_share"].confirmar(_ctx(object()), hs["mnemo_request_share"].validar(
+    pedido = correr(hs["mnemo_request_share"].confirmar(_ctx(CON_MNEMO), hs["mnemo_request_share"].validar(
         {"id": "doc_acta1", "with": "equipo@example.org"})))
     assert pedido.titulo == "Pedir en Mnemo que se comparta"
     assert pedido.detalle == [("id", "doc_acta1"), ("with", "equipo@example.org")]
     assert "Aquí solo se pide" in pedido.aviso and "a la vista de otras personas" in pedido.aviso
-    cambio = correr(hs["mnemo_update_event"].confirmar(_ctx(object()), hs["mnemo_update_event"].validar(
+    cambio = correr(hs["mnemo_update_event"].confirmar(_ctx(CON_MNEMO), hs["mnemo_update_event"].validar(
         {"id": "event_1", "changes": {"title": "Otra"}})))
     assert "Puede cambiar o reemplazar" in cambio.aviso
     vacia = mnemo.confirmacion({"name": "x_y", "inputSchema": {"type": "object"}, "annotations": {}}, {})
@@ -551,7 +592,8 @@ def test_la_tarjeta_y_la_llamada_acotan_wait_seconds():
         await gen.ejecutar(_ctx(c), gen.validar({"topic": "Historia inventada"}))
         job = hs["mnemo_get_job"]
         for espera in (50, 10, None):
-            await job.ejecutar(_ctx(c), job.validar({"job_id": "job_1", **({"wait_seconds": espera} if espera else {})}))
+            args = {"job_id": "job_1", **({"wait_seconds": espera} if espera else {})}
+            await job.ejecutar(_ctx(c), job.validar(args))
         return conf
 
     conf = correr(prueba())
@@ -620,7 +662,8 @@ def test_imagen_como_bloque_base64():
     assert png.resumen == "Imagen de Mnemo" and png.texto_para_modelo().endswith("[Imagen adjunta]")
     # El tipo sale de la firma de los bytes: la API rechaza un `media_type` que no coincide
     assert jpeg.imagenes[0]["source"] == {"type": "base64", "media_type": "image/jpeg", "data": b64(JPEG_2x3)}
-    for r, motivo in ((enorme, "MB"), (gigante, "8000 píxeles"), (basura, "formato"), (mal, "bien codificada")):
+    for r, motivo in ((enorme, "demasiado pesada"), (gigante, "8000 píxeles"), (basura, "formato"),
+                      (mal, "bien codificada")):
         assert r.imagenes == [] and motivo in r.texto_para_modelo() and "[No se adjuntó" in r.texto_para_modelo()
 
 
@@ -725,8 +768,8 @@ def test_turno_con_una_lectura_de_mnemo(sesion, con_mnemo):
     assert r.status_code == 200, r.text
     primera = api.peticiones[0]["json"]
     nombres = [t["name"] for t in primera["tools"]]
-    assert nombres == [mnemo._nombre_panel(n) for n in mnemo.POR_DEFECTO
-                       if n in {t["name"] for t in con_mnemo.herramientas}]
+    assert nombres == [mnemo._nombre_panel(t["name"]) for t in con_mnemo.herramientas  # en el orden del servidor
+                       if t["name"] in mnemo.POR_DEFECTO]
     assert "Mnemo: también tienes herramientas" in primera["system"][0]["text"]
     assert "Mnemo is the person's personal AI workspace" in primera["system"][0]["text"]
     h = [e for e in ev if e["tipo"] == "herramienta"]
@@ -791,7 +834,11 @@ srv.listen(0, "127.0.0.1", () => console.log("LISTO http://127.0.0.1:" + srv.add
 def mnemo_real(tmp_path):
     """Mnemo de verdad, en memoria (`createTestApp` de sus pruebas: repositorios en memoria y un modelo de guion),
     servido en un puerto libre de 127.0.0.1 con un token personal recién creado. Necesita `MNEMO_E2E_DIR`: un checkout
-    de Mnemo con `npm ci` y `npm run build:shared` hechos (no se toca el repositorio original)."""
+    de Mnemo con `npm ci` y `npm run build:shared` hechos (no se toca el repositorio original). Corre en su propio grupo
+    de procesos (npx → tsx → node) para poder apagarlo entero."""
+    import queue
+    import signal
+    import threading
     raiz = os.environ.get("MNEMO_E2E_DIR", "")
     npx = shutil.which("npx")
     if not raiz or not os.path.isdir(os.path.join(raiz, "node_modules")) or not npx:
@@ -799,56 +846,79 @@ def mnemo_real(tmp_path):
     guion = tmp_path / "mnemo_e2e.mts"
     guion.write_text(GUION_MNEMO % {"raiz": raiz.rstrip("/")}, encoding="utf-8")
     proc = subprocess.Popen([npx, "tsx", str(guion)], cwd=os.path.join(raiz, "apps", "api"), stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT, text=True, env={**os.environ, "NODE_ENV": "test"})
+                            stderr=subprocess.STDOUT, text=True, env={**os.environ, "NODE_ENV": "test"},
+                            start_new_session=True)
+    lineas: queue.Queue = queue.Queue()
+    threading.Thread(target=lambda: [lineas.put(x) for x in proc.stdout], daemon=True).start()
     try:
         limite, linea = time.monotonic() + 120, ""
-        while time.monotonic() < limite:
-            linea = proc.stdout.readline()
-            if linea.startswith("LISTO ") or (not linea and proc.poll() is not None):
-                break
+        while time.monotonic() < limite and not linea.startswith("LISTO "):
+            try:
+                linea = lineas.get(timeout=1)
+            except queue.Empty:
+                if proc.poll() is not None:
+                    break
         if not linea.startswith("LISTO "):
             pytest.skip("Mnemo no arrancó en local")
         _, url, token = linea.split()
         yield url, token
     finally:
-        proc.terminate()
-        try:
-            proc.wait(10)
-        except subprocess.TimeoutExpired:
-            proc.kill()
+        for senal in (signal.SIGTERM, signal.SIGKILL):
+            try:
+                os.killpg(proc.pid, senal)
+                proc.wait(10)
+                break
+            except (ProcessLookupError, subprocess.TimeoutExpired):
+                continue
 
 
 def test_punta_a_punta_con_mnemo_real(mnemo_real):
+    """Contra el `/mcp` de Mnemo de verdad: inicio, catálogo, lista blanca, lecturas, una escritura, el pedido de
+    borrarla (aprobación en Mnemo, con su enlace vuelto absoluto) y los errores de Mnemo y del SDK."""
     url, token = mnemo_real
     cfg = _cfg(mnemo_url=url, mnemo_token=token)
+    origen = url.rsplit("/mcp", 1)[0]
 
     async def prueba():
         c = mc.ClienteMnemo(url, token, transporte=httpx2.AsyncHTTPTransport())
         todas = await c.herramientas()
         defs = await mnemo.definiciones(c, "")
-        hs = {h.nombre: h for h in mnemo.desde_definiciones(defs)}
-        json.dumps([h.definicion() for h in hs.values()])
+        hs = {h.nombre: h for h in mnemo.desde_definiciones(await mnemo.definiciones(c, "*"))}
         ctx = _ctx(c, cfg)
-        r_briefing = await hs["mnemo_get_briefing"].ejecutar(ctx, hs["mnemo_get_briefing"].validar({}))
-        memoria = await mnemo.desde_definiciones(await mnemo.definiciones(c, "mnemo_save_memory"))[0].ejecutar(
-            ctx, EntradaMnemo({"text": "El equipo inventado se reúne los lunes.", "kind": "fact"}))
-        no = await _fallo(hs["mnemo_fetch"].ejecutar(ctx, hs["mnemo_fetch"].validar({"id": "doc_000000000000000000000000"})))
-        invalido = await _fallo(hs["mnemo_fetch"].ejecutar(ctx, hs["mnemo_fetch"].validar({"id": 7})))
-        inexistente = await _fallo(c.llamar("mnemo_no_existe", {}))
-        await c.cerrar()
-        return c, todas, defs, hs, r_briefing, memoria, no, invalido, inexistente
 
-    from app.agente.herramientas.mnemo import EntradaMnemo
-    c, todas, defs, hs, r_briefing, memoria, no, invalido, inexistente = correr(prueba())
+        async def usar(nombre, args):
+            return await hs[nombre].ejecutar(ctx, hs[nombre].validar(args))
+
+        out = {"briefing": await usar("mnemo_get_briefing", {}),
+               "evento": await usar("mnemo_create_event", {"events": [{"title": "Reunión inventada de prueba",
+                                                                       "start": "2026-11-10T09:00:00-05:00"}]})}
+        evento = json.loads(out["evento"].texto_para_modelo())["created"][0]["id"]
+        out["tarjeta"] = await hs["mnemo_request_delete"].confirmar(ctx, hs["mnemo_request_delete"].validar(
+            {"ids": [evento]}))
+        out["borrar"] = await usar("mnemo_request_delete", {"ids": [evento], "note": "Prueba inventada"})
+        out["eventos"] = await usar("mnemo_list_events", {})
+        out["no"] = await _fallo(usar("mnemo_fetch", {"id": "doc_000000000000000000000000"}))
+        out["invalido"] = await _fallo(usar("mnemo_fetch", {"id": 7}))
+        out["inexistente"] = await _fallo(c.llamar("mnemo_no_existe", {}))
+        await c.cerrar()
+        return c, todas, defs, hs, out
+
+    c, todas, defs, hs, out = correr(prueba())
     assert c.servidor.get("name") == "mnemo" and c.version == "2025-11-25" and "mnemo_get_briefing" in c.instrucciones
-    assert len(todas) == 30
-    assert [d["name"] for d in defs] == [n for n in [t["name"] for t in todas] if n in mnemo.POR_DEFECTO]
-    assert len(defs) == len(mnemo.POR_DEFECTO)
+    assert len(todas) == 30 and len(hs) == 30
+    assert [d["name"] for d in defs] == [t["name"] for t in todas if t["name"] in mnemo.POR_DEFECTO]
+    assert len(defs) == len(mnemo.POR_DEFECTO)  # todas las de la lista blanca existen en Mnemo
+    json.dumps([h.definicion() for h in hs.values()])
     assert all(re.fullmatch(r"mnemo_[A-Za-z0-9_-]{1,58}", n) for n in hs)
-    assert {h.tipo for n, h in hs.items() if n in ("mnemo_create_event", "mnemo_request_share")} == {"escritura"}
+    assert all("$schema" not in h.definicion()["input_schema"] for h in hs.values())
     assert hs["mnemo_search"].tipo == "lectura" and hs["mnemo_fetch"].tipo == "lectura"
-    assert isinstance(r_briefing, Resultado) and r_briefing.texto_para_modelo()
-    assert isinstance(memoria, Resultado)
-    assert no.codigo == "mnemo" and no.detalle["code"] == "NOT_FOUND"
-    assert invalido.codigo == "mnemo" and "Input validation error" in invalido.mensaje
-    assert inexistente.codigo == mc.COD_NO_DISPONIBLE
+    assert {hs[n].tipo for n in ("mnemo_create_event", "mnemo_request_delete", "mnemo_save_memory")} == {"escritura"}
+    assert out["evento"].resumen == "Creado en Mnemo"
+    assert out["tarjeta"].titulo == "Pedir en Mnemo que se borre" and "Aquí solo se pide" in out["tarjeta"].aviso
+    borrar = json.loads(out["borrar"].texto_para_modelo())
+    assert out["borrar"].resumen == "Aprobación pendiente en Mnemo" and borrar["status"] == "needs_approval"
+    assert borrar["approval_url"].startswith(f"{origen}/aprobar/apr_")  # sin PUBLIC_BASE_URL Mnemo la da relativa
+    assert "Reunión inventada de prueba" in out["eventos"].texto_para_modelo()
+    assert out["no"].codigo == "mnemo" and out["no"].detalle["code"] == "NOT_FOUND"
+    assert out["invalido"].codigo == "mnemo" and "Input validation error" in out["invalido"].mensaje
+    assert out["inexistente"].codigo == mc.COD_NO_DISPONIBLE

@@ -84,6 +84,12 @@ async def ciclo(app: FastAPI):
             await asyncio.sleep(2)
     yield
     await llm.cerrar(app)  # el cliente de Anthropic, si el asistente llegó a crearlo
+    mnemo = getattr(app.state, "mnemo_cliente", None)  # y el de Mnemo
+    if mnemo is not None:
+        try:
+            await mnemo.cerrar()
+        except Exception as e:  # noqa: BLE001 - se está apagando: solo queda en el registro
+            log.warning("No se pudo cerrar el cliente de Mnemo (%s)", type(e).__name__)
     app.state.cliente.close()
 
 

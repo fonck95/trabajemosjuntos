@@ -27,7 +27,7 @@ from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from .base import Contexto, ErrorHerramienta, Herramienta, Resultado
 from .gestion import (FiltrosBase, Id, IdOCero, Lugar, Nomenclatura, Perezosa, TipoLugar, _Entrada, error_de_busqueda,
-                      esquema, exigir_permiso, miles, pedir, preparar_filtros)
+                      esquema, exigir_permiso, miles, orden_lugar, pedir, preparar_filtros)
 
 # Rango de coordenadas de Yondó que acepta el servidor (`RANGO_YONDO` de mapa3d.js, `ReunionIn`)
 LAT_MIN, LAT_MAX, LON_MIN, LON_MAX = 6.3, 7.5, -74.6, -73.6
@@ -258,9 +258,9 @@ def _destino(lg: Lugar) -> dict:
     """El lugar como lo usa el navegador para volar: con `poligono` encuadra el polígono de la capa `veredas`; si no,
     vuela a su punto."""
     if not lg.poligono_en_mapa and not lg.tiene_punto:
-        raise ErrorHerramienta(f"{lg.legible()} no tiene punto ni polígono en el nomenclátor: no se puede mostrar en el "
-                               "mapa. Se ubica en Calidad de datos > Barrios y veredas.", "sin_ubicacion", estado=409,
-                               detalle={"lugar": lg.para_modelo()})
+        raise ErrorHerramienta(f"{lg.legible()} no tiene punto ni polígono en el nomenclátor: no se puede mostrar en "
+                               "el mapa. Se ubica en Calidad de datos > Barrios y veredas.", "sin_ubicacion",
+                               estado=409, detalle={"lugar": lg.para_modelo()})
     return {"id": lg.id, "nombre": lg.nombre, "tipo": lg.tipo, "lat": lg.lat, "lon": lg.lon,
             "poligono": lg.poligono_en_mapa}
 
@@ -322,7 +322,8 @@ async def _filtros(ctx: Contexto, a: AccionFiltros, plan: _Plan, nom: Perezosa, 
     else:
         plan.filtros = dict(params)
     plan.modelo.append(out)
-    plan.frases.append(("Quité los filtros" if not params and a.reemplazar else "Filtré") + f": {_cifras(total, ubicadas)}")
+    accion = "Quité los filtros" if not params and a.reemplazar else "Filtré"
+    plan.frases.append(f"{accion}: {_cifras(total, ubicadas)}")
 
 
 async def _capas(ctx: Contexto, a: AccionCapas, plan: _Plan, *_: Any) -> None:
@@ -426,10 +427,12 @@ async def _zona(ctx: Contexto, a: AccionZona, plan: _Plan, nom: Perezosa, cuenta
         return
     lg, otros, parecido = await _resolver(nom, a.lugar, a.lugar_id, a.tipo_lugar)
     if not lg.poligono_en_mapa:
-        con_poligono = [o.para_modelo() for o in otros if o.poligono_en_mapa]
-        raise ErrorHerramienta(f"{lg.legible()} no tiene polígono: solo las veredas y el corregimiento se abren como "
-                               "zona. Use volar para ir a su punto.", "invalido", estado=422,
-                               detalle={"mismo_nombre": con_poligono} if con_poligono else None)
+        # Del mismo sitio en varios niveles (el centro poblado y su vereda), una zona se abre con el que tiene polígono
+        con_poligono = sorted((o for o in otros if o.poligono_en_mapa), key=orden_lugar)
+        if not con_poligono or a.lugar_id is not None:
+            raise ErrorHerramienta(f"{lg.legible()} no tiene polígono: solo las veredas y el corregimiento se abren "
+                                   "como zona. Use volar para ir a su punto.", "invalido", estado=422)
+        lg, otros = con_poligono[0], [o for o in (lg, *otros) if o.id != con_poligono[0].id]
     plan.navegador.append({"tipo": "zona", "lugar_id": lg.id})
     total, ubicadas = await cuentas({**plan.filtros, "lugar_id": str(lg.id)})
     plan.modelo.append({"tipo": "zona", **_para_modelo(lg, otros, parecido), "personas_del_lugar": total,

@@ -68,7 +68,11 @@ export function registrarPendiente(fn) {
   pendientes.add(fn);
   return () => pendientes.delete(fn);
 }
-const hayPendientes = () => [...pendientes].some((fn) => { try { return !!fn(); } catch { return false; } });
+const probar = (fn) => { try { return !!fn(); } catch { return false; } };
+const hayPendientes = () => [...pendientes].some(probar);
+/** ¿Hay algo escrito sin guardar en otro formulario? `salvo` es la función de quien pregunta, que no cuenta: el
+ * asistente se registra para no perder lo que se le escribe, pero recarga la vista solo si la vista no tiene cambios. */
+export const hayCambiosSinGuardar = (salvo = null) => [...pendientes].some((fn) => fn !== salvo && probar(fn));
 
 let reingreso = null; // un solo diálogo aunque fallen varias peticiones a la vez
 function reingresar() {
@@ -179,6 +183,103 @@ export const api = {
   subir: (ruta, formData, op) => pedir('POST', ruta, formData, { timeout: 0, ...op, formulario: true }),
   catalogos,
 };
+
+// ───────── Respuestas en flujo (el asistente, docs/agente.md) ─────────
+// Un POST cuya respuesta llega por partes: NDJSON, una línea JSON por evento. No pasa por `pedir` porque `pedir` junta
+// la respuesta entera, pero sigue sus reglas: CSRF, reingreso en un diálogo ante un 401 (una vez), «Mi cuenta» ante una
+// cuenta pendiente y el `detail` de la API en los errores de antes del flujo (409, 429, 503…).
+const FLUJO_INACTIVIDAD = 60000;      // el servidor manda un latido cada ~15 s: un minuto callado es una conexión muerta
+const FLUJO_LINEA_MAX = 2 * 1024 * 1024; // una línea sin fin de este tamaño no es del asistente
+const FLUJO_CALLADO = 'El asistente dejó de responder. Intente de nuevo.';
+export const FLUJO_CORTADO = 'Se cortó la conexión con el asistente antes de que terminara.';
+
+/** POST a `ruta` con `cuerpo` y respuesta NDJSON: llama `alEvento(evento)` por cada línea, en orden (solo objetos con
+ * `tipo`). Resuelve `true` cuando el servidor cierra el flujo y `false` si se cortó con `signal` («Detener»). Sin red,
+ * sin datos durante `inactividad` ms o con la conexión caída a mitad lanza `ErrorApi(0)` con `codigo` `red`, `callado`
+ * o `cortado`; un error de la API antes del flujo lanza `ErrorApi(estado, detail)`. */
+export async function flujo(ruta, cuerpo, { alEvento, signal = null, inactividad = FLUJO_INACTIVIDAD } = {},
+  reintento = false) {
+  if (signal?.aborted) return false;
+  const control = new AbortController();
+  let callado = false; // lo cortó el reloj de inactividad, no la persona
+  let reloj = null;
+  const cortar = () => control.abort();
+  const vigilar = () => {
+    clearTimeout(reloj);
+    reloj = setTimeout(() => { callado = true; control.abort(); }, inactividad);
+  };
+  const fallo = (codigo, mensaje) => new ErrorApi(0, { codigo, mensaje });
+  signal?.addEventListener('abort', cortar, { once: true });
+  vigilar();
+  let terminado = false;
+  try {
+    let r;
+    try {
+      r = await fetch(url(ruta), {
+        method: 'POST', credentials: 'same-origin', cache: 'no-store', signal: control.signal,
+        body: JSON.stringify(cuerpo ?? {}),
+        headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson', 'X-CSRF-Token': csrf || '' },
+      });
+    } catch {
+      if (signal?.aborted && !callado) return false;
+      throw callado ? fallo('callado', FLUJO_CALLADO) : fallo('red', SIN_CONEXION);
+    }
+    if (r.status === 401) {
+      clearTimeout(reloj); // el diálogo de ingreso espera a la persona: no es inactividad
+      if (!reintento && alReingresar) {
+        try { await reingresar(); } catch { throw new ErrorApi(401, 'La sesión terminó'); }
+        return flujo(ruta, cuerpo, { alEvento, signal, inactividad }, true);
+      }
+      alExpirar();
+      throw new ErrorApi(401, 'La sesión terminó');
+    }
+    if (!r.ok) {
+      let datos = null;
+      try { datos = await r.json(); } catch { /* no era JSON */ }
+      const e = new ErrorApi(r.status, datos?.detail ?? datos);
+      if (r.status === 403 && (e.codigo === 'cambiar_clave' || e.codigo === 'compromiso')) alPendiente(e.codigo);
+      throw e;
+    }
+    if (!r.body) throw fallo('cortado', FLUJO_CORTADO);
+    const lector = r.body.getReader();
+    const texto = new TextDecoder();
+    let resto = '';
+    const entregar = (linea) => {
+      if (!linea.trim()) return;
+      let ev;
+      try { ev = JSON.parse(linea); } catch { console.warn('Asistente: una línea del flujo no es JSON'); return; }
+      if (ev && typeof ev === 'object' && !Array.isArray(ev) && typeof ev.tipo === 'string') alEvento?.(ev);
+    };
+    for (;;) {
+      let parte;
+      try {
+        parte = await lector.read();
+      } catch {
+        if (signal?.aborted && !callado) return false;
+        throw callado ? fallo('callado', FLUJO_CALLADO) : fallo('cortado', FLUJO_CORTADO);
+      }
+      if (parte.done) break;
+      vigilar();
+      resto += texto.decode(parte.value, { stream: true });
+      let i;
+      while ((i = resto.indexOf('\n')) >= 0) {
+        const linea = resto.slice(0, i);
+        resto = resto.slice(i + 1);
+        entregar(linea);
+        if (signal?.aborted) return false; // «Detener» mientras se entregaban las líneas de un mismo trozo
+      }
+      if (resto.length > FLUJO_LINEA_MAX) throw fallo('cortado', FLUJO_CORTADO);
+    }
+    entregar(resto + texto.decode());
+    terminado = true;
+    return true;
+  } finally {
+    clearTimeout(reloj);
+    signal?.removeEventListener('abort', cortar);
+    // Al salir por un error o por «Detener», la conexión se cierra: el servidor deja de gastar en un turno sin lector
+    if (!terminado) control.abort();
+  }
+}
 
 /** Descarga un archivo de la API (exportaciones) respetando la sesión. */
 export async function descargar(ruta, params) {

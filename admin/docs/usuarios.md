@@ -11,7 +11,8 @@ El panel tiene cuatro roles:
   - crear, editar, desactivar, reactivar o restablecer la clave de un **coordinador**;
   - **cambiar el rol** de cualquier usuario (el rol se fija al crearlo);
   - cambiar los **ajustes que son permisos**: presupuestos diarios, sesiones, política de contacto del consultor,
-    datos sensibles, tope de cédulas dictadas, versión del compromiso y qué campos propios son sensibles. El
+    datos sensibles, tope de cédulas dictadas, versión del compromiso, qué campos propios son sensibles y los del
+    asistente (quiénes lo usan, si propone cambios, Mnemo para coordinadores, retención y mensajes por día). El
     coordinador los ve en **Ajustes**, en solo lectura.
 - Los **planilleros** (trabajo de campo) y los **consultores** (llaman y escriben) los crean el administrador o un
   coordinador en **Usuarios**.
@@ -70,6 +71,8 @@ Cambiar la clave del administrador en Railway cierra **todas** las sesiones, tam
 ## Permisos
 
 El servidor decide: cada ruta de la API declara sus permisos (`app/acceso.py`, `PERMISOS`) y la interfaz solo oculta.
+El permiso `agente.usar` (planilleros y consultores) deja entrar al asistente, pero solo si su rol está marcado en
+**Ajustes → Asistente** (ver [`agente.md`](agente.md)).
 
 | Rol | Menú |
 |---|---|

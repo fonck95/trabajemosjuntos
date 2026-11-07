@@ -48,6 +48,9 @@ TOPE_TURNO_S = 240.0         # pasado esto no empieza otra ronda (la que va term
 TOPE_ABSOLUTO_S = 600.0      # un turno nunca dura más que esto (el candado de MongoDB vence a los 11 min)
 PLAZO_HERRAMIENTA_S = 60.0
 PLAZO_MNEMO_S = 20.0
+# Lo que suman las imágenes (en base64) de los resultados de una ronda: van en un solo mensaje guardado en MongoDB,
+# que no admite documentos de más de 16 MB
+TOPE_IMAGENES = 8_000_000
 LATIDO_S = 15.0
 ESPERA_ARRANQUE_S = 30.0     # si la respuesta no empieza a leerse en este tiempo, el turno no corre
 REINTENTOS = 2
@@ -173,6 +176,27 @@ def _personas(ids: Any) -> set[int]:
         ids, (set, list, tuple, frozenset)) else set()
 
 
+def _plazo(h: Herramienta) -> float:
+    """El plazo de una herramienta. Las de Mnemo llevan el suyo (una escritura puede gastar modelo en Mnemo y pasar de
+    60 s) más el `initialize` que puede tocar en la primera llamada: cortarlas antes las cancelaría a medias allá."""
+    if h.nombre_remoto:
+        from . import mnemo_cliente as mc
+        return (mc.PLAZO_ESCRITURA_S if h.tipo == "escritura" else mc.PLAZO_LECTURA_S) + mc.PLAZO_CATALOGO_S + 5
+    return PLAZO_HERRAMIENTA_S
+
+
+def _entrada_pendiente(h: Herramienta, args: Any, crudo: Any) -> Any:
+    """La entrada de una escritura pendiente tal como quedó después de `confirmar` (lleva las huellas de lo que mostró
+    la tarjeta, con las que la herramienta detecta cambios entre la tarjeta y la aprobación), si vuelve a validar. Si
+    no, la que mandó el modelo."""
+    try:
+        d = args.model_dump(mode="json")
+        h.validar(d)
+        return d
+    except Exception:  # noqa: BLE001 - se guarda la entrada original
+        return crudo
+
+
 def _personas_de_entrada(args: Any) -> set[int]:
     """Las personas que nombra la entrada de una escritura: la tarjeta de confirmación pudo mostrar sus datos."""
     ids = {getattr(args, "persona_id", None)}
@@ -238,6 +262,7 @@ class Turno:
         self.sistema: list[dict] = []
         self.expira = None
         self.tokens = int((conv or {}).get("tokens_ultima") or 0)
+        self.imagenes_ronda = 0  # base64 de imágenes en los resultados de la ronda en curso (TOPE_IMAGENES)
 
     # ── El productor y la respuesta ──
     def lanzar(self, trabajo: Callable[[], Awaitable[str]]) -> None:
@@ -306,6 +331,15 @@ class Turno:
             self.cola.put_nowait(None)
 
     async def _soltar(self) -> None:
+        if self.expira is not None:
+            try:
+                # Si el administrador bajó la retención mientras corría el turno, lo guardado en él venía con el plazo
+                # viejo (se leyó al empezar): se vuelve a fijar con el vigente
+                _, agente = await run_in_threadpool(politica.leer, self.db)
+                if agente["retencion_dias"] < self.agente["retencion_dias"]:
+                    await run_in_threadpool(conv_db.renovar, self.db, self.cid, agente["retencion_dias"])
+            except Exception as e:  # noqa: BLE001 - el próximo turno lo vuelve a fijar
+                log.warning("Asistente: no se pudo revisar la retención al terminar (%s)", type(e).__name__)
         try:
             await run_in_threadpool(conv_db.soltar, self.db, self.cid, self.turno)
         except Exception as e:  # noqa: BLE001 - el candado de MongoDB vence solo
@@ -339,7 +373,11 @@ class Turno:
         except Exception as e:  # noqa: BLE001 - sin Mnemo la conversación sigue
             log.warning("Asistente: Mnemo no respondió al crear la conversación (%s)", type(e).__name__)
             defs_mnemo, de_mnemo, instrucciones = [], [], None
-            aviso = "Mnemo no respondió: esta conversación sigue sin sus herramientas."
+            if isinstance(e, ErrorHerramienta) and e.codigo == "mnemo_token":
+                # El administrador tiene que cambiar el token: el mensaje lo dice (nunca lleva el token)
+                aviso = f"{e.mensaje} Esta conversación sigue sin las herramientas de Mnemo."
+            else:
+                aviso = "Mnemo no respondió: esta conversación sigue sin sus herramientas."
         lista, defs = [], []
         for h in [*ofrecidas, *de_mnemo]:
             try:
@@ -451,6 +489,7 @@ class Turno:
         resultados = {r.get("tool_use_id"): r for r in pend.get("resultados") or [] if isinstance(r, dict)}
         ui = {h.get("id"): h for h in pend.get("ui") or [] if isinstance(h, dict)}
         fatal: ErrorHerramienta | None = None
+        self.imagenes_ronda = 0
         for ll in pend["llamadas"]:
             tid, nombre = str(ll.get("id")), str(ll.get("nombre"))
             etiqueta = ll.get("etiqueta") or nombre
@@ -631,6 +670,7 @@ class Turno:
         ui: list[dict] = []
         llamadas: list[dict] = []
         fatal: ErrorHerramienta | None = None
+        self.imagenes_ronda = 0
         for u in usos:
             tid, nombre = str(u.get("id")), _corto(u.get("name"), 64)
             h = self.herramientas.get(u.get("name"))
@@ -683,7 +723,7 @@ class Turno:
     async def _correr_herramienta(self, h: Herramienta, tid: str, args: Any) -> tuple:
         """Ejecuta una herramienta con plazo: (tool_result, estado, resumen, error fatal o None)."""
         try:
-            res = await asyncio.wait_for(h.ejecutar(self._contexto(tid), args), PLAZO_HERRAMIENTA_S)
+            res = await asyncio.wait_for(h.ejecutar(self._contexto(tid), args), _plazo(h))
             if not isinstance(res, Resultado):
                 raise TypeError("la herramienta no devolvió un Resultado")
             texto = res.texto_para_modelo()
@@ -698,7 +738,17 @@ class Turno:
             log.error("Asistente: la herramienta %s falló (%s)", h.nombre, type(e).__name__)
             return self._fallo(tid, h.nombre, h.etiqueta, ErrorHerramienta(
                 "La herramienta falló por un error interno del panel.", "error"))
-        imagenes = _imagenes(res.imagenes)
+        imagenes, omitidas = [], 0
+        for img in _imagenes(res.imagenes):
+            peso = len(str((img.get("source") or {}).get("data") or ""))
+            if self.imagenes_ronda + peso > TOPE_IMAGENES:
+                omitidas += 1
+                continue
+            self.imagenes_ronda += peso
+            imagenes.append(img)
+        if omitidas:
+            texto += (f"\n[{omitidas} imagen(es) omitida(s): esta ronda ya llevaba demasiadas. Pídelas de a una en "
+                      "otra llamada.]")
         personas = _personas(res.personas)
         if personas:
             await run_in_threadpool(conv_db.sumar_personas, self.db, self.cid, personas)
@@ -732,8 +782,8 @@ class Turno:
             await run_in_threadpool(conv_db.sumar_personas, self.db, self.cid, personas)
         self._herramienta(tid, h.nombre, h.etiqueta, "pendiente")
         self.emitir({"tipo": "confirmar", "id": tid, "nombre": h.nombre, "etiqueta": h.etiqueta, **tarjeta})
-        return {"id": tid, "nombre": h.nombre, "etiqueta": h.etiqueta, "entrada": conv_db.a_json(uso.get("input")),
-                "confirmacion": tarjeta}, None
+        return {"id": tid, "nombre": h.nombre, "etiqueta": h.etiqueta,
+                "entrada": conv_db.a_json(_entrada_pendiente(h, args, uso.get("input"))), "confirmacion": tarjeta}, None
 
     async def _aprobada(self, ll: dict) -> tuple:
         """Una escritura aprobada: se vuelven a comprobar los permisos (pudieron cambiar) y se ejecuta."""

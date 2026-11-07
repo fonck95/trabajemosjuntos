@@ -25,7 +25,8 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
 | **Reuniones** | Agenda con asistentes y personas nuevas por reunión. **Modo reunión**: buscar y agregar asistentes en segundos, registrar personas nuevas (con aviso de posibles duplicados) y «Completar» el perfil de cada asistente ahí mismo (cédula, celular, ocupación, hogar, necesidades, autorización y lo que pidió, que queda en su historial). Exporta asistentes a CSV. |
 | **Calidad de datos** | Cola de coincidencias por nombre para confirmar o descartar lado a lado (con su motivo y la ficha que se conserva); conflictos de cédula (misma cédula con otro nombre, cédula anterior, posible error de digitación, cédula dictada al consultor) que nunca se mezclan solos; solicitudes de los titulares con sus plazos legales; personas reportadas como fallecidas o fuera de Yondó, para confirmar o revertir; barrios y veredas sin punto para ubicarlos con un clic en el mapa; nombres escritos que no se reconocen, para crearlos o agregarlos como alias. |
 | **Importar y exportar** | Subir los Excel (trámites, base con cédula y planillas de campo; se reconocen por sus columnas) cuantas veces se quiera, con «Capturado por» para las planillas y la plantilla para descargar; historial de importaciones, con la confirmación de las autorizaciones declaradas en planilla; exportar la base única. |
-| **Ajustes** | Política de contacto y horario, aviso de privacidad y Responsable, datos sensibles, presupuestos diarios y sesiones, puestos de votación y elección vigente, campos propios del perfil (texto, número, sí/no, lista, fecha; sensibles o no), catálogo de necesidades, grupos y roles, y auditoría con filtros. La política de contacto, los presupuestos y las sesiones solo los cambia el administrador; el coordinador los ve en solo lectura. |
+| **Ajustes** | Política de contacto y horario, aviso de privacidad y Responsable, datos sensibles, presupuestos diarios y sesiones, el asistente (quiénes lo usan, si propone cambios, Mnemo para coordinadores, días que se guardan las conversaciones y mensajes por día), puestos de votación y elección vigente, campos propios del perfil (texto, número, sí/no, lista, fecha; sensibles o no), catálogo de necesidades, grupos y roles, y auditoría con filtros. La política de contacto, los presupuestos, las sesiones y el asistente solo los cambia el administrador; el coordinador los ve en solo lectura. |
+| **Asistente** | Un botón flotante abre, en cualquier vista, un asistente de IA (Claude, de Anthropic) que trabaja con la sesión de quien pregunta: busca personas, resume indicadores y pendientes, prepara reuniones, muestra cosas en el mapa (vuela a un lugar, filtra, resalta personas) y abre vistas y fichas. Lo que escribe en la base (notas, acercamientos, fichas, reuniones…) lo propone en una tarjeta con los valores exactos y solo se guarda si se aprueba. Con Mnemo conectado, también trabaja con los documentos, el calendario y los formularios de la administración. Por defecto lo usan el administrador y los coordinadores; planilleros y consultores, si el administrador los habilita. Ver [`docs/agente.md`](docs/agente.md). |
 
 ## Cómo se cruzan y se ubican los datos
 
@@ -105,6 +106,12 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
   la URL completa (`/api/buscar?q=<cédula>`, `/api/personas?q=<teléfono>`, `/api/exportar.xlsx?q=...`) y Railway
   guarda la salida del servicio. Según Railway, sus registros HTTP del borde guardan solo la ruta, sin `?q=...`.
 - Exportaciones protegidas contra inyección de fórmulas en Excel; omiten a quien marcó «No autorizó».
+- El asistente ([`docs/agente.md`](docs/agente.md)): la clave de Anthropic y el token de Mnemo solo viven en el
+  servidor; el navegador nunca los ve ni habla con Anthropic o Mnemo (CSP `connect-src 'self'`). Las herramientas
+  del panel llaman por dentro a la misma API con la sesión de quien conversa: los mismos permisos, alcances,
+  presupuestos, lecturas y auditoría que en la interfaz. No hay herramientas para exportar, importar, unir, suprimir,
+  usuarios ni ajustes, y toda escritura espera la aprobación de la persona. Su respuesta se pinta como texto, nunca
+  como HTML, y el registro solo guarda el tipo de cada error, nunca lo conversado.
 
 ## Protección de datos personales (Ley 1581 de 2012)
 
@@ -117,6 +124,12 @@ cédula, sus trámites y su ficha o celular junto con el nombre, para que las pr
 crear. Nunca se guarda el nombre solo: otra persona con el mismo nombre sigue entrando. Los datos que provienen de
 bases oficiales (por ejemplo, las del SISBÉN) solo pueden usarse
 para la finalidad con la que se recogieron; revise con un abogado el uso que se le dará a la base antes de operarla.
+
+El **asistente** le manda al modelo, que corre en Anthropic (en el exterior), lo mínimo de cada persona: cédula y
+teléfonos enmascarados, nunca datos sensibles ni listas, y nada de quien marcó «No autorizó». Sus conversaciones se
+borran solas a los días fijados en **Ajustes** (30 por defecto) y **Suprimir datos** borra también las conversaciones
+donde aparecía la persona. Es una transmisión internacional de datos personales: antes de encenderlo para el equipo,
+revise con un abogado el aviso de privacidad y la autorización ([`docs/agente.md`](docs/agente.md)).
 
 ## Desplegar en Railway
 
@@ -135,6 +148,9 @@ Pasos, en el servicio que ya publica el sitio:
 1. En el proyecto: **+ New → Database → MongoDB** (si aún no existe).
 2. En *Variables* del servicio del sitio: `ADMIN` = usuario, `password` = clave (12 caracteres o más) y
    `MONGODB_URI` = `${{MongoDB.MONGO_URL}}` (referencia al plugin) o la URI de Atlas.
+   Para el asistente (opcional): `ANTHROPIC_API_KEY` y, si se quiere, `AGENTE_MODELO`, `AGENTE_ESFUERZO` y, para
+   Mnemo, `MNEMO_MCP_URL`, `MNEMO_TOKEN` y `MNEMO_HERRAMIENTAS` (todas en [`docs/agente.md`](docs/agente.md)). Sin la
+   clave el panel funciona igual, sin asistente.
    Antes de desplegar una versión nueva, saque una copia (`mongodump`): el arranque migra la base (ver más abajo).
 3. Deje vacío *Settings → Deploy → Custom Start Command* (el arranque sale de `railpack.json`, con
    `--no-access-log` y `--no-server-header`) y, si tiene *Healthcheck Path*, que sea `/health`.
@@ -155,9 +171,9 @@ llévelo a un servicio aparte con dominio propio: cree otro servicio del mismo r
 `admin`** (Railpack lee `admin/railpack.json`, que arranca `app.main` con `--no-access-log` y `--no-server-header`,
 el panel solo en la raíz, y `admin/Procfile` de respaldo), con *Healthcheck Path* = `/salud`, las mismas variables y
 su dominio (el de Railway o uno propio, como `panel.<su-dominio>`). En el servicio del sitio defina `PANEL_URL` =
-esa dirección `https://…`, para que el Home enlace allá, y quite `ADMIN`, `password` y `MONGODB_URI`, para que el
-sitio no tenga acceso a la base. En GitHub Pages (sin panel) el enlace solo aparece si existe la variable de
-repositorio `PANEL_URL`.
+esa dirección `https://…`, para que el Home enlace allá, y quite `ADMIN`, `password` y `MONGODB_URI` (y las del
+asistente), para que el sitio no tenga acceso a la base ni a las claves. En GitHub Pages (sin panel) el enlace solo
+aparece si existe la variable de repositorio `PANEL_URL`.
 
 ## Trabajar en local
 
@@ -168,6 +184,10 @@ pip install -r requirements-dev.txt
 cp .env.example .env        # y complete ADMIN, password y MONGODB_URI
 uvicorn app.main:app --reload --no-access-log --no-server-header
 ```
+
+Para probar el asistente con el modelo real, agregue al `.env` una clave propia en `ANTHROPIC_API_KEY` (y, para Mnemo,
+`MNEMO_MCP_URL` y `MNEMO_TOKEN`); sin ella el panel funciona igual y las pruebas del asistente usan un modelo simulado
+([`docs/agente.md`](docs/agente.md)).
 
 Un MongoDB local sirve con `docker run -d -p 27017:27017 mongo:7` (hace falta 4.2 o más). Comandos útiles (los
 Excel, fuera del repositorio o en `admin/var/`, que Git ignora):
@@ -219,9 +239,13 @@ misma `MONGODB_URI`. La medición se repite con
 | `app/config.py`, `app/seguridad.py`, `app/db.py` | Variables de entorno, autenticación y sesiones, MongoDB (índices, nomenclátor, puestos, unión de fichas, supresión, completitud) |
 | `app/modelo.py`, `app/migraciones.py` | Catálogos y reglas de la ficha (teléfonos, votación, autorización, procedencia); migración idempotente y reconciliación |
 | `app/api/` | Endpoints: tablero y mapa, personas, reuniones, calidad (coincidencias, conflictos, solicitudes, situaciones, lugares), ajustes (ajustes, puestos, plantilla), sistema (sesión, importación, exportación, catálogos, auditoría) |
+| `app/api/agente.py` | Rutas del asistente: estado, conversaciones, mensajes y aprobaciones (respuesta en flujo NDJSON) |
+| `app/agente/` | El asistente: el turno con el modelo (`bucle.py`, `llm.py`), las conversaciones (`conversaciones.py`), sus instrucciones (`sistema.py`), quién lo usa (`politica.py`), las llamadas a la API con la sesión del usuario (`interno.py`), lo mínimo que llega al modelo (`minimizar.py`), las herramientas (`herramientas/`) y el cliente MCP de Mnemo (`mnemo_cliente.py`) |
 | `app/pipeline/` | Registro de fuentes, lectura de los Excel (también la planilla de campo), normalización, direcciones, cruce por nombre, georreferenciación e importación |
 | `geo/` | Geografía pública: límite municipal (DANE MGN 2025), nomenclátor de veredas, barrios y centros poblados, grilla de calles (OSM), catálogo de puestos de votación (DIVIPOL 2026) y los scripts que los generan |
 | `web/` | Interfaz (HTML, CSS y módulos JS sin compilación) con MapLibre GL incluido |
+| `web/js/agente.js`, `web/css/agente.css`, `web/js/agente-mapa.js` | El botón y el panel del asistente, y su puente con la vista del mapa |
+| `docs/` | Usuarios, sesiones y permisos (`usuarios.md`), acercamientos (`acercamientos.md`), zonas del mapa (`mapa-zonas.md`) y el asistente (`agente.md`: qué hace, Mnemo, privacidad, costos, configuración y pruebas) |
 | `tests/` | Pruebas con personas inventadas |
 | `railpack.json`, `Procfile` | Arranque del panel en un servicio aparte (uvicorn sin log de acceso ni cabecera `server`); `railway.json` solo para servicios con *Config as Code* |
 

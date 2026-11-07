@@ -272,10 +272,13 @@ class Busqueda:
     sugerencias: list[Lugar] = field(default_factory=list)
 
 
-def _orden(lg: Lugar) -> tuple:
+def orden_lugar(lg: Lugar) -> tuple:
     """El más preciso primero: con punto, luego por `PRIORIDAD` (barrio > sector > caserío y centro poblado > vereda >
     corregimiento), como elige el nomenclátor entre homónimos."""
     return (not lg.tiene_punto, -dirs.PRIORIDAD.get(lg.tipo, 0), lg.id)
+
+
+MISMO_PUNTO = 0.001  # grados (unos 110 m): dos niveles del mismo sitio comparten el punto del nomenclátor
 
 
 def _mismo_sitio(cs: list[Lugar]) -> bool:
@@ -284,7 +287,8 @@ def _mismo_sitio(cs: list[Lugar]) -> bool:
     sin punto y una vereda) no lo es."""
     if len({c.zona for c in cs}) != 1 or not all(c.tiene_punto for c in cs):
         return False
-    return len({(round(c.lat, 3), round(c.lon, 3)) for c in cs}) == 1
+    p = cs[0]
+    return all(abs(c.lat - p.lat) <= MISMO_PUNTO and abs(c.lon - p.lon) <= MISMO_PUNTO for c in cs)
 
 
 class Nomenclatura:
@@ -345,7 +349,7 @@ class Nomenclatura:
             return []
         out: dict[int, Lugar] = {}
         for clave, _, _ in process.extract(resto, self._claves, scorer=fuzz.ratio, limit=n * 3, score_cutoff=60):
-            for lg in sorted(self.por_clave[clave], key=_orden):
+            for lg in sorted(self.por_clave[clave], key=orden_lugar):
                 out.setdefault(lg.id, lg)
         return list(out.values())[:n]
 
@@ -362,9 +366,9 @@ class Nomenclatura:
                 parecido = True
         if not cs:
             return Busqueda(texto, "ninguno", sugerencias=self.sugerir(texto))
-        filtrados = sorted({c.id: c for c in self._por_tipo(cs, tipo, palabra)}.values(), key=_orden)
+        filtrados = sorted({c.id: c for c in self._por_tipo(cs, tipo, palabra)}.values(), key=orden_lugar)
         if not filtrados:  # el nombre existe, pero no de ese tipo: se sugieren los que hay
-            return Busqueda(texto, "ninguno", parecido=parecido, sugerencias=sorted(cs, key=_orden))
+            return Busqueda(texto, "ninguno", parecido=parecido, sugerencias=sorted(cs, key=orden_lugar))
         if len(filtrados) == 1:
             return Busqueda(texto, "unico", filtrados, filtrados[0], parecido)
         if _mismo_sitio(filtrados):
@@ -396,8 +400,8 @@ def error_de_busqueda(b: Busqueda, nom: Nomenclatura) -> ErrorHerramienta:
     texto = minimizar.texto_libre(b.texto, 80)
     if b.estado == "ambiguo":
         return ErrorHerramienta(
-            f"«{texto}» puede ser {len(b.candidatos)} lugares distintos de Yondó: pregunte a la persona cuál es y vuelva "
-            "a llamar con su lugar_id (o con el tipo de lugar). No se hizo nada.", "ambiguo", estado=409,
+            f"«{texto}» puede ser {len(b.candidatos)} lugares distintos de Yondó: pregunte a la persona cuál es y "
+            "vuelva a llamar con su lugar_id (o con el tipo de lugar). No se hizo nada.", "ambiguo", estado=409,
             detalle={"candidatos": [c.para_modelo() for c in b.candidatos[:8]]})
     sugerencias = b.sugerencias or nom.sugerir(b.texto)
     return ErrorHerramienta(
@@ -713,11 +717,29 @@ async def _listar_reuniones(ctx: Contexto, a: ListarReunionesEntrada) -> Resulta
 
 class VerReunionEntrada(_Entrada):
     reunion_id: Id
-    asistentes: int = Field(30, ge=0, le=100, description="Cuántos asistentes listar (0 = solo los conteos); cada "
-                                                          "uno cuenta como persona consultada")
+    asistentes: int = Field(30, ge=0, le=100, description="Cuántos asistentes listar. 0 = solo los datos básicos y "
+                                                          "los conteos, sin consultar a ninguna persona")
+
+
+async def _resumen_reunion(ctx: Contexto, rid: int) -> Resultado:
+    """La reunión sin sus asistentes, desde la lista del rol: ver el detalle registra como consultados a todos sus
+    asistentes (el tope diario del planillero), y para «cuándo fue» o «cuántos vinieron» no hace falta."""
+    reus, _ = await _reuniones(ctx)
+    x = next((x for x in reus if x.get("id") == rid), None)
+    if x is None:
+        raise ErrorHerramienta(f"La reunión #{rid} no existe o su rol no la ve (el planillero ve las suyas y las "
+                               "abiertas al equipo).", "no_existe", estado=404)
+    # En la lista, «asistentes» es el conteo: aquí va como asistentes_total, y la lista de personas, vacía
+    out = {**_fila_reunion(x), "asistentes_total": x.get("asistentes"), "asistentes": [],
+           "nota": "Sin consultar personas: para la descripción, los compromisos, las necesidades y los asistentes, "
+                   "pida asistentes mayor que 0."}
+    return Resultado({k: v for k, v in out.items() if v is not None},
+                     _plural(int(x.get("asistentes") or 0), "asistente", "asistentes"))
 
 
 async def _ver_reunion(ctx: Contexto, a: VerReunionEntrada) -> Resultado:
+    if a.asistentes == 0:
+        return await _resumen_reunion(ctx, a.reunion_id)
     try:
         d = await pedir(ctx, "GET", f"/api/reuniones/{a.reunion_id}")
     except ErrorHerramienta as e:
@@ -727,7 +749,7 @@ async def _ver_reunion(ctx: Contexto, a: VerReunionEntrada) -> Resultado:
     d = d if isinstance(d, dict) else {}
     asistentes = _lista(d.get("asistentes"))
     filas = minimizar.filas(asistentes[:a.asistentes])
-    sens_ids, sens_nombres = await run_in_threadpool(_nombres_sensibles, ctx.db)
+    _, sens_nombres = await run_in_threadpool(_nombres_sensibles, ctx.db)  # la API manda las necesidades por nombre
     lugar = d.get("lugar_nombre") or d.get("lugar_texto")
     out = {"id": d.get("id", a.reunion_id), "titulo": _texto(d.get("titulo"), 160), "fecha": d.get("fecha"),
            "hora": d.get("hora"), "lugar": _texto(lugar, 120), "lugar_id": d.get("lugar_id"),
@@ -741,7 +763,7 @@ async def _ver_reunion(ctx: Contexto, a: VerReunionEntrada) -> Resultado:
     if len(asistentes) > len(filas) and a.asistentes:
         out["aviso"] = f"Se muestran {len(filas)} de {len(asistentes)} asistentes."
     out = {k: v for k, v in out.items() if v is not None}
-    return Resultado(out, f"{_plural(len(asistentes), 'asistente', 'asistentes')}", personas=minimizar.ids_de(filas))
+    return Resultado(out, _plural(len(asistentes), "asistente", "asistentes"), personas=minimizar.ids_de(filas))
 
 
 def _fecha_legible(f: str | None) -> str:
@@ -1018,7 +1040,8 @@ async def _mi_trabajo(ctx: Contexto, a: MiTrabajoEntrada) -> Resultado:
     t = t if isinstance(t, dict) else {}
     listas = [{"clave": x.get("clave"), "titulo": x.get("titulo"), "n": x.get("n"), "ruta": x.get("enlace")}
               for x in _lista(t.get("listas"))]
-    out: dict[str, Any] = {"rol": t.get("rol"), "listas": listas,
+    # «listas_de_trabajo», no «listas»: en el panel «listas» son las listas de origen (políticas), que nunca salen
+    out: dict[str, Any] = {"rol": t.get("rol"), "listas_de_trabajo": listas,
                            "pendientes_sin_autorizacion": t.get("pendientes_sin_autorizacion"),
                            "hoy": _dict_numeros(t.get("hoy")), "semana": _dict_numeros(t.get("semana"))}
     if isinstance(t.get("alcance"), dict):
@@ -1030,7 +1053,7 @@ async def _mi_trabajo(ctx: Contexto, a: MiTrabajoEntrada) -> Resultado:
         c = await pedir(ctx, "GET", "/api/trabajo/cola", params={"lista": a.lista, "pagina": a.pagina})
         c = c if isinstance(c, dict) else {}
         filas = [_sin_numero(minimizar.fila(f)) for f in _lista(c.get("filas"))]
-        out["cola"] = {"lista": a.lista, "total": c.get("total", 0), "pagina": a.pagina, "filas": filas,
+        out["cola"] = {"nombre": a.lista, "total": c.get("total", 0), "pagina": a.pagina, "filas": filas,
                        "nota": "Sin números de teléfono: la llamada se hace desde la ficha (/personas/<id>)."}
         personas = minimizar.ids_de(filas)
         resumen += f" · cola: {_plural(int(c.get('total') or 0), 'persona', 'personas')}"
@@ -1262,8 +1285,9 @@ D_LISTAR_REUNIONES = (
 D_VER_REUNION = (
     "Detalle de una reunión: título, fecha, hora, lugar, tema, descripción, compromisos, las necesidades más "
     "mencionadas por los asistentes y la lista de asistentes con datos mínimos (nombre, barrio o vereda, autorización, "
-    "completitud; cédulas y teléfonos enmascarados). Ver asistentes cuenta como consulta de personas (el planillero "
-    "tiene un tope diario): pida solo los que necesite con `asistentes` (0 = solo los conteos).")
+    "completitud; cédulas y teléfonos enmascarados). Abrir el detalle cuenta como consulta de todos sus asistentes (el "
+    "planillero tiene un tope diario): para saber solo cuándo fue o cuántos vinieron, use `asistentes: 0`, que no "
+    "consulta a nadie.")
 D_CREAR_REUNION = (
     "Prepara una reunión nueva en el panel: no queda guardada hasta que la persona la aprueba en la tarjeta. Necesita "
     "título y fecha (AAAA-MM-DD; puede ser pasada, para registrar una que ya ocurrió); opcionales: hora (HH:MM de 24 "

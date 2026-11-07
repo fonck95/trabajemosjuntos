@@ -38,7 +38,8 @@ CAMBIO = {"readOnlyHint": False, "destructiveHint": True, "idempotentHint": Fals
 PEDIDO = {"readOnlyHint": False, "destructiveHint": True, "idempotentHint": False, "openWorldHint": True}
 
 # Una imagen PNG de 1×1 de verdad y una JPEG mínima (solo la firma y un SOF de 2×3)
-PNG_1x1 = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==")
+PNG_1x1 = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9aw"
+                           "AAAABJRU5ErkJggg==")
 JPEG_2x3 = (b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00"
             b"\xff\xc0\x00\x11\x08\x00\x03\x00\x02\x03\x01\x22\x00\x02\x11\x01\x03\x11\x01\xff\xd9")
 
@@ -49,7 +50,8 @@ def b64(datos: bytes) -> str:
 
 def png(ancho: int, alto: int) -> bytes:
     """Una cabecera PNG con esas dimensiones (no es una imagen completa: basta para leer el tamaño)."""
-    return b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + ancho.to_bytes(4, "big") + alto.to_bytes(4, "big") + b"\x08\x06"
+    return (b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + ancho.to_bytes(4, "big") + alto.to_bytes(4, "big")
+            + b"\x08\x06")
 
 
 def texto(datos: Any) -> dict:
@@ -179,9 +181,10 @@ class MnemoFalso:
         if cab.get("authorization") != f"Bearer {self.token}":
             desc = "Missing Authorization header" if "authorization" not in cab else \
                 "The token is not valid, was revoked or expired."
-            return await self._json(send, 401, {"error": "invalid_token", "error_description": desc}, {
-                "www-authenticate": f'Bearer error="invalid_token", error_description="{desc}", '
-                                    'resource_metadata="http://mnemo.invalid/.well-known/oauth-protected-resource/mcp"'})
+            prm = "http://mnemo.invalid/.well-known/oauth-protected-resource/mcp"
+            reto = f'Bearer error="invalid_token", error_description="{desc}", resource_metadata="{prm}"'
+            return await self._json(send, 401, {"error": "invalid_token", "error_description": desc},
+                                    {"www-authenticate": reto})
         if scope["path"].rstrip("/") != "/mcp":
             return await self._json(send, 404, {"error": "not_found"})
         if scope["method"] != "POST":

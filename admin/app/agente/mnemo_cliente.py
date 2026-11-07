@@ -1,7 +1,8 @@
 """Cliente del servidor MCP remoto de Mnemo (`<base>/mcp`): Streamable HTTP sin estado, revisión 2025-11-25.
 
 Lo usa el asistente para ofrecer las herramientas de Mnemo (`herramientas/mnemo.py`). Por qué está hecho así (el
-protocolo se verificó contra el montaje de `/mcp` de Mnemo y su SDK; ver `docs/agente.md`):
+protocolo se verificó contra el montaje de `/mcp` de Mnemo, `apps/api/src/agent-api/mcp.ts`, con su SDK MCP v2, y
+contra Mnemo levantado en local):
 
 * Todo es un POST de JSON-RPC a la misma dirección, con `Authorization: Bearer <token personal>`, `Content-Type:
   application/json`, `Accept: application/json, text/event-stream` (sin los dos valores Mnemo responde 406, y httpx
@@ -100,6 +101,7 @@ _CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 _CABECERA_SEGURA = re.compile(r"[\x21-\x7e]+")
 _SESION = re.compile(r"[\x21-\x7e]{1,200}")
 _NO_ENCONTRADA = re.compile(r"\btool\b.*\bnot found\b", re.IGNORECASE)
+_CODIGO_MNEMO = re.compile(r"[A-Z][A-Z0-9_]{0,39}")
 
 
 def _plano(v: Any, tope: int) -> str | None:
@@ -292,11 +294,12 @@ class ClienteMnemo:
                         and b.get("type") == "text" and isinstance(b.get("text"), str))
         try:
             cuerpo = json.loads(texto)
-        except ValueError:
+        except (ValueError, RecursionError):
             cuerpo = None
         err = cuerpo.get("error") if isinstance(cuerpo, dict) else None
         if isinstance(err, dict):
-            codigo = _plano(err.get("code"), 40) or "FAILED"
+            codigo = err.get("code") if isinstance(err.get("code"), str) else ""
+            codigo = codigo if _CODIGO_MNEMO.fullmatch(codigo) else "FAILED"  # va al registro: solo un código
             explicacion = EXPLICACIONES.get(codigo, "Mnemo no pudo hacerlo")
             detalle: dict[str, Any] = {"code": codigo}
             if err.get("details") is not None:
@@ -314,13 +317,13 @@ class ClienteMnemo:
         de un resultado entero, el que retuvo su control de seguridad)."""
         try:
             texto = json.dumps(valor, ensure_ascii=False)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, RecursionError):
             return None
         limpio = self._remoto(texto, tope)
         if len(texto) <= tope:
             try:
                 return json.loads(limpio)
-            except ValueError:
+            except (ValueError, RecursionError):
                 pass
         return limpio
 
@@ -366,7 +369,7 @@ class ClienteMnemo:
                     return await self._respuesta(r, mensaje.get("id"), metodo)
         except (TimeoutError, httpx2.TimeoutException):
             log.warning("Mnemo: %s no respondió a tiempo", metodo)
-            raise ErrorHerramienta(f"Mnemo no respondió en {plazo:.0f} segundos.", COD_PLAZO) from None
+            raise ErrorHerramienta(f"Mnemo no respondió en {plazo:g} segundos.", COD_PLAZO) from None
         except httpx2.HTTPError as e:  # sin el mensaje: el de httpx puede traer la petición
             log.warning("Mnemo: falló la conexión (%s)", type(e).__name__)
             raise ErrorHerramienta(MENSAJE_RED, COD_RED) from None
@@ -397,7 +400,7 @@ class ClienteMnemo:
         if tipo == "application/json" or tipo.endswith("+json"):
             try:
                 datos = json.loads(crudo)
-            except (ValueError, UnicodeDecodeError):
+            except (ValueError, UnicodeDecodeError, RecursionError):
                 datos = None
         if s >= 400:
             raise self._error_http(s, datos)
@@ -433,7 +436,7 @@ class ClienteMnemo:
                 return None
             try:
                 m = json.loads(texto)
-            except ValueError:
+            except (ValueError, RecursionError):
                 return None
             return m if (_es_respuesta(m, rid) or isinstance(m, list)) else None
 

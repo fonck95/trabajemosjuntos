@@ -75,6 +75,8 @@ TIPOS_IMAGEN = ("image/png", "image/jpeg", "image/gif", "image/webp")
 DETALLE_FILAS = 30
 DETALLE_VALOR = 1_500
 DETALLE_TOTAL = 12_000
+MAX_BLOQUES = 50           # Mnemo da 1–3 bloques por resultado
+MAX_EXTRAS = 4_000         # las notas sobre imágenes y enlaces que van tras los datos
 
 # Etiquetas (en gerundio) para la interfaz y títulos de la tarjeta de confirmación de las conocidas
 ETIQUETAS = {
@@ -131,6 +133,11 @@ TITULOS = {
 ESTADOS = {
     "needs_approval": "Aprobación pendiente en Mnemo",
     "pending": "Aprobación pendiente en Mnemo",
+    "created": "Creado en Mnemo",
+    "updated": "Actualizado en Mnemo",
+    "saved": "Guardado en Mnemo",
+    "proposed": "Propuesto en Mnemo: falta aceptarlo allá",
+    "nothing_to_do": "Nada que hacer en Mnemo",
     "approved": "Aprobada en Mnemo",
     "rejected": "Rechazada en Mnemo",
     "expired": "La aprobación venció en Mnemo",
@@ -276,7 +283,9 @@ def desde_definiciones(definiciones: list[dict]) -> list[Herramienta]:
 
 
 def _lectura(d: dict) -> bool:
-    return d["annotations"].get("readOnlyHint") is True
+    """¿Solo lee? Lo dice `readOnlyHint`, salvo para las escrituras conocidas de Mnemo, que siempre piden la tarjeta
+    (las pistas de MCP son del servidor: una que se equivoque no salta la aprobación)."""
+    return d["annotations"].get("readOnlyHint") is True and d["name"] not in TITULOS
 
 
 def _descripcion(d: dict, nombre: str) -> str:
@@ -524,7 +533,7 @@ def _imagen(b: dict) -> tuple[dict | None, str | None]:
     if _SIN_ESPACIOS.search(datos):
         datos = _SIN_ESPACIOS.sub("", datos)
     if len(datos) > IMAGEN_MAX_B64:
-        return None, f"una imagen de {len(datos) * 3 / 4 / 1_000_000:.1f} MB (el máximo es 1,9 MB)"
+        return None, f"una imagen demasiado pesada para el modelo (más de {IMAGEN_MAX_B64 * 3 // 4 // 1000} KB)"
     try:
         crudo = base64.b64decode(datos, validate=True)
     except (binascii.Error, ValueError):
@@ -573,7 +582,8 @@ def resultado_de(res: dict, origen: str | None) -> Resultado:
     textos: list[str] = []
     imagenes: list[dict] = []
     extras: list[str] = []
-    for b in res.get("content") or []:
+    bloques = res.get("content") if isinstance(res.get("content"), list) else []
+    for b in bloques[:MAX_BLOQUES]:
         if not isinstance(b, dict):
             continue
         tipo = b.get("type")
@@ -602,9 +612,9 @@ def resultado_de(res: dict, origen: str | None) -> Resultado:
     if datos is None and texto.strip()[:1] in ("{", "["):
         try:
             datos = json.loads(texto)
-        except ValueError:
+        except (ValueError, RecursionError):
             datos = None
-    cola = ("\n" + "\n".join(extras)) if extras else ""
+    cola = ("\n" + "\n".join(extras))[:MAX_EXTRAS] if extras else ""
     tope = MAX_CONTENIDO - len(cola) - 200
     if isinstance(datos, (dict, list)):
         datos = _absolutas(datos, origen)

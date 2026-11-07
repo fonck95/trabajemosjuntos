@@ -105,6 +105,34 @@ function olvidar() {
   olvidarCatalogos();
   borrarBorrador();
   try { olvidarLlamada(); } catch { /* nada */ }
+  try { sessionStorage.removeItem('yj_agente'); } catch { /* bloqueado */ }
+}
+
+/** La ruta del panel que abre `ruta` («/personas/12»): {nav, permitida} o null si no es de RUTAS. El asistente valida
+ * con esto lo que pide abrir y los enlaces de sus respuestas. */
+function rutaPanel(ruta) {
+  const r = RUTAS.find((x) => x.re.test(ruta));
+  return r ? { nav: r.nav, permitida: puede(r.permiso) } : null;
+}
+
+// El asistente (web/js/agente.js) se carga la primera vez que el rol lo puede usar y vive en document.body, fuera de
+// #raiz: sobrevive a los cambios de vista. Con la cuenta pendiente se oculta (el servidor también lo rechaza); si su
+// rol no está entre los que lo usan, el propio asistente no se muestra (lo dice /api/agente/estado)
+let agente = null;
+function asegurarAgente() {
+  if (conPendientes() || !puede('agente.usar')) {
+    agente?.then((a) => a.ocultar()).catch(() => {});
+    return;
+  }
+  agente ||= import('./agente.js').then((m) => m.montarAgente)
+    .then((montar) => montar({ ir, rutaPanel, insignias: refrescarInsignias }));
+  agente.then((a) => a.mostrar()).catch((e) => { console.error(e); agente = null; });
+}
+
+// Cada vista que termina de pintarse se anuncia (como 'tema'): el asistente devuelve el foco a su cuadro si la abrió él
+// y, en el celular, se pliega si la persona eligió otra vista
+function avisarVista(ruta, r, ok) {
+  window.dispatchEvent(new CustomEvent('vista', { detail: { ruta, nav: r?.nav ?? null, ok } }));
 }
 
 function abrirMenu(abrir) {
@@ -159,7 +187,12 @@ async function render() {
   const r = RUTAS.find((x) => x.re.test(ruta));
   const vista = $('#vista');
   abrirMenu(false);
-  if (!r) { montar(vista, html`<div class="vacio"><b>No existe esta página</b><a href="${inicio()}" data-ruta>Volver al inicio</a></div>`); return; }
+  asegurarAgente();
+  if (!r) {
+    montar(vista, html`<div class="vacio"><b>No existe esta página</b><a href="${inicio()}" data-ruta>Volver al inicio</a></div>`);
+    avisarVista(ruta, null, false);
+    return;
+  }
   for (const a of document.querySelectorAll('#nav a')) {
     if (a.dataset.nav === r.nav) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
@@ -168,9 +201,11 @@ async function render() {
   if (!puede(r.permiso)) {
     vista.classList.remove('lleno');
     montar(vista, html`<div class="vacio sin-acceso"><b>Sin acceso</b>Su rol no permite abrir esta sección.<a href="${inicio()}" data-ruta>Volver al inicio</a></div>`);
+    avisarVista(ruta, r, false);
     return;
   }
   montar(vista, html`<div class="cargando"><div class="giro"></div></div>`);
+  let ok = false;
   try {
     const fn = await r.carga();
     if (g !== generacion) return;
@@ -186,6 +221,7 @@ async function render() {
     limpiarVista = limpiar || null;
     // Una llamada que quedó sin registrar se recuerda al cargar cualquier vista
     try { revisarLlamadasPendientes(); } catch (err) { console.error(err); }
+    ok = true;
   } catch (e) {
     if (g !== generacion) return;
     if (e instanceof ErrorApi && e.estado === 401) return;
@@ -196,6 +232,7 @@ async function render() {
   }
   // El foco va al campo con autofocus de la vista (buscador de la reunión) o, si no hay, a la vista
   (vista.querySelector('[autofocus]') || vista).focus({ preventScroll: true });
+  avisarVista(ruta, r, ok);
 }
 
 document.addEventListener('click', (e) => {

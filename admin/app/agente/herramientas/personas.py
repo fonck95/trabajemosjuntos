@@ -476,6 +476,22 @@ class BuscarEntrada(_Entrada):
     por_pagina: int = Field(20, ge=10, le=50)
 
 
+NUMERO_EN_BUSQUEDA = re.compile(r"\d{4,}")
+SIN_DIGITOS_ENMASCARADOS = ("Búsqueda por número: las filas no traen los dígitos enmascarados de cédula ni teléfono "
+                            "(abra la ficha si hace falta).")
+
+
+def _sin_digitos_enmascarados(fs: list[dict], q: str | None) -> tuple[list[dict], bool]:
+    """En una búsqueda con un número (4 dígitos o más) la API compara la cédula por prefijo y los teléfonos por
+    contenido. Si además las filas traen los últimos dígitos enmascarados (`cedula_ult3`, `telefono_mascara`), unas
+    pocas búsquedas por prefijo bastarían para reconstruir una cédula o un teléfono que se enmascaró a propósito. Por
+    eso, en esas búsquedas, las filas van sin esos dígitos: el resultado sigue diciendo quién coincide con el número
+    que escribió la persona, sin sumarle el final."""
+    if not NUMERO_EN_BUSQUEDA.search(q or ""):
+        return fs, False
+    return [{k: v for k, v in f.items() if k not in ("cedula_ult3", "telefono_mascara")} for f in fs], True
+
+
 def _busca_lista(a: BuscarEntrada) -> bool:
     return bool(params_filtros(a.filtros)) or a.orden is not None or a.pagina > 1 or "por_pagina" in \
         a.model_fields_set or not a.q
@@ -501,17 +517,21 @@ async def _buscar(ctx: Contexto, a: BuscarEntrada) -> Resultado:
                   "por_pagina": a.por_pagina}
         d = await _pedir(ctx, "GET", "/api/personas", params=params)
         d = d if isinstance(d, dict) else {}
-        fs = minimizar.filas(d.get("filas") or [])
+        fs, numerica = _sin_digitos_enmascarados(minimizar.filas(d.get("filas") or []), a.q)
         total, pp = int(d.get("total") or 0), int(d.get("por_pagina") or a.por_pagina)
         paginas = max(1, math.ceil(total / pp)) if pp else 1
         contenido = {"tipo": "lista", "total": total, "pagina": d.get("pagina", a.pagina), "por_pagina": pp,
                      "paginas": paginas, "filas": fs}
+        if numerica:
+            contenido["nota"] = SIN_DIGITOS_ENMASCARADOS
         if not quien.administra:
             contenido["alcance"] = "Solo personas de su zona asignada (si tiene una)."
         return Resultado(contenido, _resumen_conteo(total, contenido["pagina"], paginas), personas=minimizar.ids_de(fs))
     d = await _pedir(ctx, "GET", "/api/buscar", params={"q": a.q})
-    fs = minimizar.filas(d if isinstance(d, list) else [])
+    fs, numerica = _sin_digitos_enmascarados(minimizar.filas(d if isinstance(d, list) else []), a.q)
     contenido = {"tipo": "busqueda_rapida", "total": len(fs), "pagina": 1, "filas": fs}
+    if numerica:
+        contenido["nota"] = SIN_DIGITOS_ENMASCARADOS
     consultor = not quien.administra and quien.rol == "consultor"
     digitos = re.sub(r"\D", "", a.q or "")
     tope = (3 if digitos else 10) if consultor else TOPE_BUSQUEDA
