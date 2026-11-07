@@ -1,0 +1,275 @@
+/* Asistente del panel (web/js/agente.js): botón flotante, conversación, tarjetas de aprobación e historial. Lo carga
+   agente.js. Usa los tokens de app.css, así sigue el tema claro u oscuro sin reglas propias.
+   Capa 28: debajo del velo (29) y del menú lateral (30) del celular, para que el menú abierto tape al asistente y
+   «Cerrar sesión» siempre se alcance; encima de la barra del celular (25) y de los paneles del mapa (5-6). */
+
+/* ───────── Botón flotante ───────── */
+.agente-boton { position: fixed; right: 24px; bottom: 24px; z-index: 28; width: 56px; height: 56px; padding: 0; border: 0;
+  border-radius: 50%; display: grid; place-items: center; cursor: pointer; background: var(--ink); color: var(--accent);
+  box-shadow: var(--sombra); transition: transform .15s ease, box-shadow .15s ease; }
+.agente-boton svg { width: 26px; height: 26px; display: block; }
+.agente-boton:hover { transform: translateY(-2px); }
+.agente-boton:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.agente-senal { position: absolute; top: 5px; right: 5px; width: 13px; height: 13px; border-radius: 50%; background: var(--accent);
+  border: 2px solid var(--ink); }
+.agente-boton[data-senal="trabajando"] .agente-senal { background: var(--s1); animation: agente-latido 1.4s ease-in-out infinite; }
+.agente-boton[data-senal="pendiente"] .agente-senal { background: var(--warn); }
+@keyframes agente-latido { 50% { transform: scale(.6); opacity: .55; } }
+/* En el mapa de escritorio, a la izquierda de los controles de navegación de MapLibre (abajo a la derecha) */
+body:has(#vista.lleno) .agente-boton { right: 71px; }
+/* Los avisos del panel suben para no quedar debajo del botón */
+body:has(#agente-boton:not([hidden])) #avisos { bottom: 92px; }
+
+/* ───────── Panel ───────── */
+.agente-panel { position: fixed; right: 24px; bottom: 24px; z-index: 28; display: flex; flex-direction: column;
+  width: min(420px, calc(100vw - var(--side-w) - 48px));
+  height: min(640px, calc(100vh - 48px)); height: min(640px, calc(100dvh - 48px));
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line-soft); border-radius: 18px;
+  box-shadow: var(--sombra); overflow: hidden; animation: agente-entra .16s ease-out; }
+@keyframes agente-entra { from { opacity: 0; transform: translateY(10px) scale(.985); } }
+/* Con la franja «Llamada sin registrar» arriba, el panel no se mete debajo de ella */
+body:has(#franja-llamada) .agente-panel {
+  height: min(640px, calc(100vh - 112px)); height: min(640px, calc(100dvh - 112px)); }
+
+.agente-cab { display: flex; align-items: center; gap: 4px; padding: 10px 8px 10px 14px;
+  border-bottom: 1px solid var(--line-soft); flex: none; }
+.agente-sello { width: 30px; height: 30px; border-radius: 9px; background: var(--accent); color: #fff; display: grid;
+  place-items: center; flex: none; margin-right: 6px; }
+.agente-sello svg { width: 18px; height: 18px; }
+.agente-sello.grande { width: 44px; height: 44px; border-radius: 13px; margin: 0; }
+.agente-sello.grande svg { width: 26px; height: 26px; }
+.agente-titulos { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.agente-titulos h2 { font: 20px/1 var(--f-display); text-transform: uppercase; letter-spacing: .02em; }
+.agente-titulos small { color: var(--muted); font-size: 12px; margin-top: 3px; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; }
+.btn.agente-icono { width: 36px; height: 36px; padding: 0; flex: none; }
+.btn.agente-icono svg { width: 18px; height: 18px; }
+.btn.agente-icono[aria-expanded="true"] { background: var(--sunken); }
+
+/* ───────── Mensajes ───────── */
+.agente-cuerpo { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
+.agente-mensajes { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px 14px 10px; display: flex;
+  flex-direction: column; gap: 14px; overflow-wrap: anywhere; }
+.agente-mensajes:focus-visible { outline-offset: -3px; }
+.agente-msj { min-width: 0; }
+.agente-msj.agente-persona { align-self: flex-end; max-width: 88%; background: var(--sunken);
+  border-radius: 16px 16px 4px 16px; padding: 8px 13px; font-size: 14.5px; line-height: 1.45; }
+.agente-msj.agente-persona p { margin: 0; white-space: pre-wrap; }
+.agente-msj.agente-persona.sin-enviar { opacity: .7; }
+.agente-sin-enviar { display: block; margin-top: 2px; color: var(--crit); font-size: 11.5px; font-weight: 700;
+  text-align: right; }
+.agente-msj.agente-respuesta { display: flex; flex-direction: column; align-items: stretch; gap: 8px; font-size: 14.5px;
+  line-height: 1.55; }
+.agente-msj.agente-respuesta:not(.trabajando):not(:has(> :not(.sr))) { display: none; } /* sin nada que mostrar */
+/* Mientras responde, tres puntos al final del mensaje */
+.agente-msj.agente-respuesta.trabajando::after { content: ""; display: block; width: 28px; height: 8px; margin: 2px 0 0 2px;
+  background: radial-gradient(circle at 4px 4px, var(--muted) 3px, transparent 3.5px) 0 0 / 10px 8px repeat-x;
+  animation: agente-puntos 1.2s ease-in-out infinite; }
+@keyframes agente-puntos { 50% { opacity: .35; } }
+
+/* Markdown de las respuestas */
+.agente-md { min-width: 0; }
+.agente-md > * { margin: 0 0 8px; }
+.agente-md > :last-child { margin-bottom: 0; }
+.agente-md h3, .agente-md h4 { font-size: 15px; font-weight: 750; line-height: 1.3; margin-top: 4px; }
+.agente-md h4 { font-size: 14px; }
+.agente-md ul, .agente-md ol { padding-left: 22px; }
+.agente-md li + li, .agente-md li > ul, .agente-md li > ol { margin-top: 3px; }
+.agente-md li > ul, .agente-md li > ol { margin-bottom: 0; padding-left: 18px; }
+.agente-md code { font: 13px/1.4 var(--f-mono); background: var(--sunken); border-radius: 5px; padding: 1px 5px; }
+.agente-md pre { background: var(--sunken); border-radius: 10px; padding: 10px 12px; overflow-x: auto; }
+.agente-md pre code { background: none; padding: 0; white-space: pre; overflow-wrap: normal; }
+.agente-md blockquote { border-left: 3px solid var(--line); padding: 0 0 0 11px; color: var(--ink-2); }
+.agente-md blockquote > * { margin: 0 0 6px; }
+.agente-md blockquote > :last-child { margin-bottom: 0; }
+.agente-md hr { border: 0; border-top: 1px solid var(--line-soft); }
+.agente-md a, .agente-explicacion a { color: var(--accent-text); font-weight: 650; text-decoration: underline;
+  text-underline-offset: 2px; }
+.agente-md a[target="_blank"]::after { content: " ↗"; font-weight: 600; }
+.md-tabla { overflow-x: auto; border: 1px solid var(--line-soft); border-radius: 10px; overflow-wrap: normal; }
+.md-tabla table { border-collapse: collapse; width: max-content; min-width: 100%; font-size: 13px; line-height: 1.4; }
+.md-tabla th, .md-tabla td { padding: 6px 10px; border-bottom: 1px solid var(--line-soft); text-align: left; vertical-align: top;
+  max-width: 260px; overflow-wrap: break-word; }
+.md-tabla th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); background: var(--raised); }
+.md-tabla tbody tr:last-child td { border-bottom: 0; }
+.md-tabla .der { text-align: right; font-variant-numeric: tabular-nums; }
+.md-tabla .centro { text-align: center; }
+
+/* Notas de progreso (lo que el modelo va contando mientras trabaja): en gris, a un lado */
+.agente-progreso { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; border-left: 2px solid var(--line);
+  padding: 1px 0 1px 10px; white-space: pre-wrap; }
+
+/* Avisos del turno */
+.agente-nota { margin: 0; display: flex; align-items: flex-start; flex-wrap: wrap; gap: 4px 8px; font-size: 13px;
+  color: var(--muted); }
+.agente-nota svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+.agente-nota > span { flex: 1 1 200px; min-width: 0; }
+.agente-nota.alerta { color: var(--ink-2); background: color-mix(in srgb, var(--warn) 16%, transparent); border-radius: 10px;
+  padding: 8px 10px; }
+.agente-nota.alerta svg { color: color-mix(in srgb, var(--warn) 60%, var(--ink)); }
+
+/* Herramientas: un chip por llamada, con su estado */
+.agente-herr { display: flex; align-items: flex-start; gap: 7px; align-self: flex-start; max-width: 100%; padding: 4px 11px 4px 7px;
+  border-radius: 12px; background: var(--raised); border: 1px solid var(--line-soft); font-size: 12.5px; line-height: 1.4;
+  color: var(--ink-2); }
+.agente-estado { width: 16px; height: 16px; flex: none; display: grid; place-items: center; margin-top: 1px; }
+.agente-estado svg { width: 14px; height: 14px; }
+.agente-herr .et { font-weight: 650; }
+.agente-herr .res { color: var(--muted); }
+.agente-herr[data-estado="ok"] .agente-estado { color: var(--ok-text); }
+.agente-herr[data-estado="error"] { border-color: color-mix(in srgb, var(--crit) 35%, transparent); }
+.agente-herr[data-estado="error"] .agente-estado, .agente-herr[data-estado="error"] .res { color: var(--crit); }
+.agente-herr[data-estado="pendiente"] { border-color: color-mix(in srgb, var(--warn) 55%, transparent); }
+.agente-herr[data-estado="pendiente"] .agente-estado { color: color-mix(in srgb, var(--warn) 60%, var(--ink)); }
+.agente-herr[data-estado="rechazada"] { opacity: .72; }
+.agente-giro { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent);
+  animation: giro .8s linear infinite; }
+
+/* Tarjetas de aprobación: lo que se va a escribir, con los valores exactos */
+.agente-tarjeta { border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 12px; background: var(--surface);
+  padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.agente-tarjeta-et { margin: 0; font-size: 11.5px; font-weight: 750; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--muted); }
+.agente-tarjeta h3 { font-size: 15px; font-weight: 750; line-height: 1.3; margin-top: -6px; }
+.agente-tarjeta dl { display: grid; grid-template-columns: minmax(72px, max-content) minmax(0, 1fr); gap: 5px 12px; margin: 0;
+  font-size: 13.5px; }
+.agente-tarjeta dl > div { display: contents; }
+.agente-tarjeta dt { color: var(--muted); font-weight: 650; font-size: 12.5px; }
+.agente-tarjeta dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.agente-tarjeta-aviso { margin: 0; display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink-2);
+  background: color-mix(in srgb, var(--warn) 14%, transparent); border-radius: 8px; padding: 8px 10px; }
+.agente-tarjeta-aviso svg { width: 16px; height: 16px; flex: none; margin-top: 1px;
+  color: color-mix(in srgb, var(--warn) 60%, var(--ink)); }
+.agente-tarjeta-botones { display: flex; gap: 8px; flex-wrap: wrap; }
+.agente-tarjeta-botones .btn { flex: 1 1 110px; min-height: 40px; }
+.agente-tarjeta-botones .btn[aria-pressed="true"] { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 22%, transparent); }
+.agente-tarjeta-estado { margin: 0; font-size: 13px; font-weight: 650; }
+.agente-tarjeta-estado:empty { display: none; }
+.agente-tarjeta[data-estado="ok"] { border-left-color: var(--ok); }
+.agente-tarjeta[data-estado="ok"] .agente-tarjeta-estado { color: var(--ok-text); }
+.agente-tarjeta[data-estado="error"] { border-left-color: var(--crit); }
+.agente-tarjeta[data-estado="error"] .agente-tarjeta-estado { color: var(--crit); }
+.agente-tarjeta[data-estado="rechazada"] { border-left-color: var(--line); }
+.agente-tarjeta[data-estado="rechazada"] .agente-tarjeta-estado { color: var(--muted); }
+.agente-tarjeta:not([data-estado="pendiente"]) .agente-tarjeta-et { display: none; }
+
+/* Errores del turno, con lo que se puede hacer */
+.agente-error { border: 1px solid color-mix(in srgb, var(--crit) 40%, transparent);
+  background: color-mix(in srgb, var(--crit) 8%, transparent); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
+.agente-error p { margin: 0; display: flex; gap: 8px; align-items: flex-start; }
+.agente-error svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--crit); }
+.agente-error-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.agente-cargando, .agente-vacio { color: var(--muted); font-size: 13.5px; margin: 0; }
+
+/* Bienvenida, sugerencias y explicación (sin clave o con el rol apagado) */
+.agente-bienvenida, .agente-explicacion { display: flex; flex-direction: column; gap: 8px; padding: 6px 2px; }
+.agente-hola { margin: 6px 0 0; font: 26px/1.05 var(--f-display); text-transform: uppercase; letter-spacing: .01em; }
+.agente-intro { margin: 0; color: var(--ink-2); font-size: 14px; }
+.agente-sugerencias { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.agente-sugerencia { text-align: left; border: 1px solid var(--line-soft); background: var(--raised); border-radius: 12px;
+  padding: 9px 12px; font-size: 13.5px; font-weight: 600; cursor: pointer; line-height: 1.35; min-height: 40px; }
+.agente-sugerencia:hover { border-color: var(--line); background: var(--sunken); }
+.agente-sugerencia:disabled { opacity: .5; cursor: not-allowed; }
+.agente-explicacion h3 { font-size: 16px; font-weight: 750; }
+.agente-explicacion p { margin: 0; font-size: 14px; }
+.agente-explicacion code { font: 12.5px/1.4 var(--f-mono); background: var(--sunken); border-radius: 5px; padding: 1px 5px;
+  overflow-wrap: anywhere; }
+
+/* Ir al final, cuando la persona subió a leer y llegó algo nuevo */
+.agente-bajar { position: absolute; right: 14px; bottom: 10px; z-index: 1; width: 38px; height: 38px; border-radius: 50%;
+  padding: 0; display: grid; place-items: center; border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  box-shadow: var(--sombra); cursor: pointer; }
+.agente-bajar svg { width: 18px; height: 18px; }
+
+/* ───────── Compositor ───────── */
+.agente-compositor { flex: none; border-top: 1px solid var(--line-soft); padding: 10px 12px 8px; background: var(--surface); }
+.agente-nota-pendiente { margin: 0 0 8px; font-size: 12.5px; color: var(--ink-2);
+  background: color-mix(in srgb, var(--warn) 14%, transparent); border-radius: 8px; padding: 6px 10px; }
+.agente-fila { display: flex; align-items: flex-end; gap: 8px; }
+.agente-fila textarea { flex: 1; min-width: 0; resize: none; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 12px; padding: 10px 12px; min-height: 44px; max-height: 160px; line-height: 1.4; font-size: 15px;
+  overflow-y: auto; }
+.agente-fila textarea:focus { outline: none; border-color: var(--ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 10%, transparent); }
+.btn.agente-enviar { width: 44px; height: 44px; padding: 0; border-radius: 12px; flex: none; }
+.btn.agente-enviar svg { width: 20px; height: 20px; }
+.btn.agente-detener { height: 44px; border-radius: 12px; flex: none; }
+.agente-pie { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2px 10px; margin: 6px 2px 0;
+  font-size: 11.5px; color: var(--muted); }
+.agente-pie .poco { color: var(--accent-text); font-weight: 650; }
+.agente-pie span:empty { display: none; }
+@media (pointer: coarse) { .agente-ayuda { display: none; } }
+
+/* ───────── Conversaciones anteriores ───────── */
+.agente-historial { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 12px 14px 14px; display: flex;
+  flex-direction: column; gap: 10px; }
+.agente-historial-cab { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.agente-historial-cab h3 { font-size: 15px; font-weight: 750; }
+.agente-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.agente-item { display: flex; align-items: center; gap: 4px; border: 1px solid var(--line-soft); border-radius: 12px;
+  background: var(--raised); padding: 2px 4px 2px 2px; }
+.agente-item[data-actual] { border-color: var(--ink); }
+.agente-abrir { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; border: 0; background: none;
+  padding: 8px 10px; cursor: pointer; border-radius: 10px; }
+.agente-abrir:hover { background: var(--sunken); }
+.agente-abrir b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agente-abrir small { color: var(--muted); font-size: 12px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.agente-abrir .chip { font-size: 11px; padding: 0 7px; }
+.agente-error-fila { color: var(--crit); font-size: 12px; padding: 0 8px; }
+.agente-historial-pie { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+
+/* ───────── Escritorio estrecho y celular ───────── */
+/* Entre 901 y 1100 px la ficha va en una columna y su barra «Guardar cambios» llega al borde: el botón sube */
+@media (min-width: 901px) and (max-width: 1100px) {
+  body:has(#vista .guardar-ficha) .agente-boton { bottom: 84px; }
+  body:has(#vista .guardar-ficha):has(#agente-boton:not([hidden])) #avisos { bottom: 152px; }
+}
+/* Con el panel abierto en escritorio, los avisos se corren a su izquierda */
+@media (min-width: 901px) {
+  body:has(#agente-panel:not([hidden])) #avisos { right: calc(min(420px, 100vw - var(--side-w) - 48px) + 40px); bottom: 24px; }
+}
+@media (max-width: 900px) {
+  .agente-boton { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+  /* Abajo están la barra de la ficha («Llamar», «Guardar cambios»…) o los paneles del mapa: el botón va a la barra de arriba */
+  body:has(#vista.lleno) .agente-boton, body:has(#vista .barra-acciones) .agente-boton { top: 10px; bottom: auto; right: 12px;
+    width: 40px; height: 40px; background: transparent; border: 1px solid rgb(255 255 255 / .22); box-shadow: none; }
+  body:has(#vista.lleno) .agente-boton svg, body:has(#vista .barra-acciones) .agente-boton svg { width: 22px; height: 22px; }
+  body:has(#vista.lleno) .agente-senal, body:has(#vista .barra-acciones) .agente-senal {
+    border-color: var(--side); top: 2px; right: 2px; }
+  body:has(#vista.lleno) #avisos, body:has(#vista .barra-acciones) #avisos { bottom: 18px; }
+  /* El título de la barra le deja lugar al botón (en 320 px se recorta con «…») */
+  body:has(#agente[data-usable]):has(#vista.lleno) .barra-movil,
+  body:has(#agente[data-usable]):has(#vista .barra-acciones) .barra-movil { padding-right: 60px; }
+  /* min-width: 0 en la barra (es un elemento de la rejilla de .app): si no, el título sin cortes la ensancharía */
+  body:has(#agente[data-usable]) .barra-movil { min-width: 0; }
+  body:has(#agente[data-usable]) .barra-movil b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Hoja completa debajo de la barra; sube con el teclado (agente.js pone --teclado) */
+  .agente-panel { inset: var(--barra-movil) 0 var(--teclado, 0px) 0; width: auto; height: auto; border-radius: 18px 18px 0 0;
+    border-bottom: 0; box-shadow: 0 -8px 30px -18px rgb(0 0 0 / .45); animation-name: agente-sube; }
+  body:has(#franja-llamada) .agente-panel { top: calc(var(--barra-movil) + 64px); height: auto; }
+  body:has(#agente-panel:not([hidden])) .barra-acciones { display: none; }
+  body:has(#agente-panel:not([hidden])) #avisos { bottom: calc(100px + env(safe-area-inset-bottom)); right: 16px; left: 16px; }
+  .btn.agente-icono { width: 44px; height: 44px; }
+  .agente-fila textarea { font-size: 16px; } /* menos de 16 px y iOS amplía la página */
+  .agente-compositor { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  .agente-mensajes { padding: 14px 14px 10px; }
+  .agente-sugerencia, .agente-tarjeta-botones .btn { min-height: 44px; }
+}
+@keyframes agente-sube { from { transform: translateY(24px); opacity: .4; } }
+@media (max-width: 640px) {
+  .agente-msj.agente-persona { max-width: 92%; }
+  .agente-tarjeta { padding: 12px; }
+}
+/* En pantallas muy angostas cada dato de la tarjeta va con su etiqueta encima */
+@media (max-width: 360px) {
+  .agente-tarjeta dl { grid-template-columns: minmax(0, 1fr); gap: 1px 0; }
+  .agente-tarjeta dl > div + div dt { margin-top: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agente-boton, .agente-panel { transition: none; animation: none; }
+  .agente-boton:hover { transform: none; }
+  .agente-boton[data-senal="trabajando"] .agente-senal { animation: none; }
+  .agente-giro { animation-duration: 2.4s; }
+  .agente-msj.agente-respuesta.trabajando::after { animation: none; }
+}

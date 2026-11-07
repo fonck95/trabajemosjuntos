@@ -209,7 +209,10 @@ REINTENTO = "No se pudo conectar con la base de datos."
 OCUPADO = "El panel está atendiendo muchas peticiones. Intente de nuevo en unos segundos."
 ESPERA_S = (2, 60)   # reintentos de crear el panel o de conectarlo a MongoDB: espera inicial y máxima
 CUPOS_PANEL = 16     # peticiones de la API del panel atendidas a la vez (anyio presta 40 hilos a todo el servidor)
+CUPOS_AGENTE = 4     # turnos del asistente en flujo a la vez: cupos propios, para no quitárselos a la API
 ESPERA_CUPO_S = 2    # sin cupo en este tiempo, 503
+# Las respuestas en flujo del asistente (app/api/agente.py): retienen la conexión todo el turno (hasta minutos)
+RUTAS_AGENTE = frozenset({"/api/agente/mensajes", "/api/agente/confirmaciones"})
 PLAZO_CUERPO_S = 10  # el cuerpo de una petición sin sesión (el ingreso) llega entero en este tiempo, o 408
 SIN_CACHE = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex", "X-Content-Type-Options": "nosniff"}
 
@@ -302,13 +305,18 @@ class LimitePanel:
     * Las páginas y los archivos del panel (todo lo que no es /api/* ni /salud) no tocan MongoDB y no piden cupo.
     * En las rutas sin sesión (`sin_sesion`: el ingreso), el cuerpo se lee entero antes de pedir cupo, con un plazo
       total (`plazo_s`: 408 y se cierra la conexión) y un tope (`limite`: 413), y se le entrega a la app.
-    * El resto de /api/* no lee el cuerpo sin sesión: la guardia del panel (GuardiaApi) responde 401 antes."""
+    * El resto de /api/* no lee el cuerpo sin sesión: la guardia del panel (GuardiaApi) responde 401 antes.
+
+    Los turnos del asistente (`RUTAS_AGENTE`) retienen su conexión mientras el modelo responde: tienen sus propios
+    `cupos_agente`, así unos chats largos no dejan la API en 503 (16 + 4 cupos caben en los 40 hilos: un turno en
+    flujo no retiene ninguno mientras espera)."""
 
     def __init__(self, app, cupos: int, espera_s: float, sin_sesion=frozenset(), limite: int = 0,
-                 plazo_s: float = PLAZO_CUERPO_S):
+                 plazo_s: float = PLAZO_CUERPO_S, *, cupos_agente: int = CUPOS_AGENTE):
         self.app, self.cupos, self.espera_s = app, cupos, espera_s
         self.sin_sesion, self.limite, self.plazo_s = frozenset(sin_sesion), limite, plazo_s
-        self._bucle = self._semaforo = None
+        self.cupos_agente = cupos_agente
+        self._bucle = self._semaforo = self._semaforo_agente = None
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -326,7 +334,8 @@ class LimitePanel:
         bucle = asyncio.get_running_loop()
         if self._bucle is not bucle:  # uno por bucle de eventos (en las pruebas, cada cliente abre el suyo)
             self._bucle, self._semaforo = bucle, asyncio.Semaphore(self.cupos)
-        semaforo = self._semaforo
+            self._semaforo_agente = asyncio.Semaphore(self.cupos_agente)
+        semaforo = self._semaforo_agente if ruta in RUTAS_AGENTE else self._semaforo
         try:
             await asyncio.wait_for(semaforo.acquire(), self.espera_s)
         except TimeoutError:
@@ -404,6 +413,11 @@ def crear_servidor(cfg=None, sitio: Path | None = None) -> Starlette:
         if tarea:
             tarea.cancel()
         if app.state.panel is not None:
+            try:  # el cliente de Anthropic del asistente, si llegó a crearse (el ciclo del panel no corre montado)
+                from app.agente import llm
+                await llm.cerrar(app.state.panel)
+            except Exception as e:  # noqa: BLE001 - apagando: no impide cerrar MongoDB
+                log.warning("No se pudo cerrar el cliente del asistente (%s)", type(e).__name__)
             app.state.panel.state.cliente.close()
 
     async def salud(request):
@@ -415,7 +429,8 @@ def crear_servidor(cfg=None, sitio: Path | None = None) -> Starlette:
     rutas = [
         Route("/health", salud),
         Route(PREFIJO, al_panel),
-        Mount(PREFIJO, app=LimitePanel(montaje, CUPOS_PANEL, ESPERA_CUPO_S, *reglas_del_panel(), PLAZO_CUERPO_S)),
+        Mount(PREFIJO, app=LimitePanel(montaje, CUPOS_PANEL, ESPERA_CUPO_S, *reglas_del_panel(), PLAZO_CUERPO_S,
+                                       cupos_agente=CUPOS_AGENTE)),
         Mount("/", app=sitio_publico(sitio)),
     ]
     app = Starlette(routes=rutas, lifespan=ciclo)

@@ -1,9 +1,10 @@
-"""Ajustes del panel (política de contacto, aviso de privacidad, presupuestos, sesiones, elección vigente…), catálogo
-de puestos de votación y plantilla de la planilla de campo."""
+"""Ajustes del panel (política de contacto, aviso de privacidad, presupuestos, sesiones, elección vigente, el
+asistente…), catálogo de puestos de votación y plantilla de la planilla de campo."""
 from __future__ import annotations
 
 import io
 import re
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 import openpyxl
@@ -11,7 +12,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.worksheet.datavalidation import DataValidation
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, field_validator, model_validator
+from pymongo import UpdateMany, UpdateOne
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
 
@@ -19,6 +21,7 @@ from .. import db as bd
 from .. import modelo
 from .. import acceso
 from ..acceso import Quien, requiere
+from ..agente import politica
 from ..seguridad import obtener_db
 
 r = APIRouter(prefix="/api", tags=["ajustes"])
@@ -67,6 +70,41 @@ class Sesion(BaseModel):
     max_por_usuario: int | None = Field(None, ge=1, le=10)
 
 
+# El asistente (docs/agente.md). Son permisos (`acceso.AJUSTES_DE_PERMISOS`): solo los cambia el administrador. Los
+# tipos son estrictos, a diferencia de los ajustes de arriba: un `"true"` o un `1` no deciden quién usa el asistente,
+# ni un `true` cuántos días se guardan las conversaciones. El formulario manda booleanos y enteros; lo demás, 422.
+# Los rangos son los mismos con que `agente.politica` lee lo guardado (una prueba lo comprueba).
+RolAgente = Literal["admin", "coordinador", "planillero", "consultor"]
+RETENCION_DIAS = (1, 365)
+MENSAJES_DIARIOS = (1, 5000)
+
+
+class Agente(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    # Lista vacía: el asistente queda apagado para todos, también para el administrador, sin tocar las variables
+    roles: list[RolAgente] | None = Field(None, max_length=4)
+    escritura: StrictBool | None = None
+    mnemo_coordinadores: StrictBool | None = None
+    retencion_dias: StrictInt | None = Field(None, ge=RETENCION_DIAS[0], le=RETENCION_DIAS[1])
+
+    @field_validator("roles")
+    @classmethod
+    def _roles(cls, v):
+        # Ordenada y sin repetidos, como el valor por defecto: `acceso.ajustes_de_permisos` compara listas por
+        # igualdad, y el mismo conjunto en otro orden no es un cambio (ni le cuesta un 403 al coordinador)
+        return None if v is None else sorted(set(v))
+
+
+class MensajesAgente(BaseModel):
+    """Mensajes al asistente por persona y día, por rol. Sin cero: para que un rol no lo use se lo quita de
+    `agente.roles` (este tope es de gasto, no de acceso)."""
+    model_config = ConfigDict(extra="forbid")
+    admin: StrictInt | None = Field(None, ge=MENSAJES_DIARIOS[0], le=MENSAJES_DIARIOS[1])
+    coordinador: StrictInt | None = Field(None, ge=MENSAJES_DIARIOS[0], le=MENSAJES_DIARIOS[1])
+    planillero: StrictInt | None = Field(None, ge=MENSAJES_DIARIOS[0], le=MENSAJES_DIARIOS[1])
+    consultor: StrictInt | None = Field(None, ge=MENSAJES_DIARIOS[0], le=MENSAJES_DIARIOS[1])
+
+
 class AjustesIn(BaseModel):
     """PUT parcial: solo cambia lo enviado (también dentro de los objetos). La vigencia de la base solo se muestra."""
     model_config = ConfigDict(extra="forbid")
@@ -85,6 +123,8 @@ class AjustesIn(BaseModel):
     sesion: Sesion | None = None
     tope_cedulas_dictadas: int | None = Field(None, ge=0, le=500)
     enlace_consulta_puesto: str | None = Field(None, max_length=300)
+    agente: Agente | None = None
+    agente_mensajes_diarios: MensajesAgente | None = None
 
     @field_validator("eleccion_vigente")
     @classmethod
@@ -103,16 +143,47 @@ class AjustesIn(BaseModel):
 
 # Ajustes que son permisos o límites de acceso (adenda del coordinador): solo los cambia quien tiene
 # `permisos.modificar` (el administrador). El coordinador los ve en solo lectura. La lista y la regla son las de
-# `acceso` (una sola fuente): presupuestos, sesiones, tope de cédulas dictadas, política de contacto, datos sensibles y
-# versión del compromiso.
+# `acceso` (una sola fuente): presupuestos, sesiones, tope de cédulas dictadas, política de contacto, datos sensibles,
+# versión del compromiso y el asistente.
 AJUSTES_DE_PERMISOS = acceso.AJUSTES_DE_PERMISOS
 
 
+def _vigentes(db: Database) -> dict:
+    """Los ajustes vigentes (`modelo.leer_ajustes`), con los del asistente como los aplica `agente.politica`: un valor
+    guardado que no tiene la forma esperada (escrito a mano en la base, o por otra versión del panel) se ve y se trata
+    como su valor por defecto. Así la pantalla muestra lo que de verdad rige, el coordinador no recibe un 403 por
+    reenviar lo que ve, y el siguiente guardado deja limpio el objeto entero."""
+    return politica.leer(db)[0]
+
+
 def _vista_ajustes(db: Database, quien: Quien) -> dict:
-    return {**modelo.leer_ajustes(db), "elecciones": sorted(x for x in db.puestos.distinct("eleccion") if x),
+    return {**_vigentes(db), "elecciones": sorted(x for x in db.puestos.distinct("eleccion") if x),
             "catalogos_version": bd.catalogos_version(db),
             "ajustes_de_permisos": sorted(AJUSTES_DE_PERMISOS),
             "puede_modificar_permisos": quien.puede("permisos.modificar")}
+
+
+def _acortar_conversaciones(db: Database, dias: int) -> int:
+    """Lleva el plazo de retención nuevo, más corto, a las conversaciones del asistente que ya existen: ninguna dura
+    más de `dias` desde su último mensaje. Cada turno fija la fecha de borrado (`expira`) con el plazo vigente, así que
+    sin esto bajarlo solo valdría desde el próximo mensaje de cada conversación y una vieja seguiría guardada hasta su
+    fecha anterior. Las que ya pasaron el plazo nuevo quedan vencidas y el índice TTL las borra (MongoDB lo revisa cada
+    minuto). La conversación y sus mensajes comparten la fecha y se mueven juntos: una conversación con mensajes de
+    menos no se podría volver a mandar al modelo. Solo acorta, nunca alarga. Devuelve cuántas conversaciones cambió."""
+    from ..agente import conversaciones as conv_db  # aquí y no arriba: lo demás de Ajustes no lo necesita
+    ahora = datetime.now(timezone.utc)
+    plazo = timedelta(days=dias)
+    convs, mensajes = [], []
+    for c in db[conv_db.CONVERSACIONES].find({"expira": {"$gt": ahora}}, {"actualizada": 1, "creada": 1, "expira": 1}):
+        base = next((x for x in (c.get("actualizada"), c.get("creada")) if isinstance(x, datetime)), ahora)
+        nueva = base + plazo
+        if nueva < c["expira"]:
+            convs.append(UpdateOne({"_id": c["_id"]}, {"$set": {"expira": nueva}}))
+            mensajes.append(UpdateMany({"conversacion": c["_id"]}, {"$set": {"expira": nueva}}))
+    if convs:
+        db[conv_db.CONVERSACIONES].bulk_write(convs, ordered=False)
+        db[conv_db.MENSAJES].bulk_write(mensajes, ordered=False)
+    return len(convs)
 
 
 @r.get("/ajustes")
@@ -123,7 +194,7 @@ def ver_ajustes(db: Database = Depends(obtener_db), quien: Quien = Depends(requi
 @r.put("/ajustes")
 def guardar_ajustes(body: AjustesIn, db: Database = Depends(obtener_db),
                     quien: Quien = Depends(requiere("ajustes.gestionar"))):
-    actuales = modelo.leer_ajustes(db)
+    actuales = _vigentes(db)
     datos = {}
     for k, v in body.model_dump(exclude_unset=True).items():
         if isinstance(v, dict):  # dentro de los objetos también es parcial
@@ -137,8 +208,13 @@ def guardar_ajustes(body: AjustesIn, db: Database = Depends(obtener_db),
         raise HTTPException(422, "No hay puestos de esa elección: créelos antes de cambiar la elección vigente")
     if datos:
         db.meta.update_one({"_id": "ajustes"}, {"$set": datos}, upsert=True)
+        detalle: dict = {"campos": sorted(datos)}
+        dias = (datos.get("agente") or {}).get("retencion_dias")
+        if dias is not None and dias < actuales["agente"]["retencion_dias"]:
+            # Después de guardar: un turno que empiece ya renueva con el plazo nuevo
+            detalle["conversaciones_acortadas"] = _acortar_conversaciones(db, dias)
         bd.subir_catalogos_version(db)
-        bd.auditar(db, quien, "ajustes", None, None, {"campos": sorted(datos)})
+        bd.auditar(db, quien, "ajustes", None, None, detalle)
     return _vista_ajustes(db, quien)
 
 

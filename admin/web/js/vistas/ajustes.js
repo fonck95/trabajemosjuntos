@@ -1,7 +1,7 @@
 // Ajustes (administrador y coordinador): política de contacto, aviso de privacidad, datos sensibles, presupuestos y
-// sesiones, puestos de votación y elección vigente, campos propios, etiquetas y auditoría con filtros. Los ajustes que son
-// permisos (política de contacto, presupuestos y sesiones) solo los cambia el administrador: el coordinador los ve en
-// solo lectura y el servidor se lo impide (403).
+// sesiones, el asistente, puestos de votación y elección vigente, campos propios, etiquetas y auditoría con filtros. Los
+// ajustes que son permisos (política de contacto, presupuestos, sesiones y el asistente) solo los cambia el
+// administrador: el coordinador los ve en solo lectura y el servidor se lo impide (403).
 import { api } from '../api.js';
 import { $, aviso, avisoError, confirmar, datosForm, dialogo, fecha, html, montar, num } from '../ui.js';
 
@@ -9,6 +9,9 @@ const TIPOS = { texto: 'Texto', numero: 'Número', si_no: 'Sí / No', opcion: 'L
 const GRUPOS = { necesidad: 'Necesidades', interes: 'Grupos e intereses', rol: 'Roles' };
 const DIAS = [['semana', 'Lunes a viernes'], ['sabado', 'Sábado'], ['domingo', 'Domingo']];
 const SOLO_ADMIN = html`<p class="sec ancho" style="margin:0">Solo el administrador cambia estos ajustes; usted los ve en solo lectura.</p>`;
+// Los roles del asistente (agente.roles y agente_mensajes_diarios): clave, quiénes lo usan y de quién es el tope
+const ROLES_AGENTE = [['admin', 'Administrador', 'administrador'], ['coordinador', 'Coordinadores', 'coordinador'],
+  ['planillero', 'Planilleros', 'planillero'], ['consultor', 'Consultores', 'consultor']];
 
 const casilla = (nombre, marcada, texto) => html`<label class="interruptor ancho"><span>${texto}</span><input type="checkbox" name="${nombre}" ${marcada ? 'checked' : ''}></label>`;
 const numero = (nombre, valor, texto, min, max) => html`<label class="campo"><span>${texto}</span><input type="number" name="${nombre}" value="${valor}" min="${min}" max="${max}" required></label>`;
@@ -21,15 +24,34 @@ function franja(clave, valor, texto) {
     <input class="entrada" type="time" data-hasta="${clave}" value="${activa ? valor[1] : '17:00'}" style="width:auto"></div></div>`;
 }
 
+// Si el asistente está encendido (la clave de Anthropic es una variable del servidor, no un ajuste) y, para el
+// administrador, si tiene Mnemo. `est` es GET /api/agente/estado, o null si no respondió: entonces no se dice nada
+function estadoAgente(est) {
+  if (!est) return '';
+  if (est.configurado === false) {
+    return html`<div class="aviso-legal ancho">El asistente está apagado: falta la variable <b>ANTHROPIC_API_KEY</b> en el servicio del panel (en Railway, <i>Variables</i>). Estos ajustes rigen en cuanto se defina.</div>`;
+  }
+  const rol = est.motivo === 'rol' ? ' Su rol no está entre quienes lo usan.' : '';
+  const mnemo = est.es_admin
+    ? (est.mnemo?.activo ? ' Mnemo está conectado.' : ' Mnemo no está conectado (variables MNEMO_MCP_URL y MNEMO_TOKEN).')
+    : '';
+  return html`<p class="sec ancho" style="margin:0">El asistente está encendido.${rol}${mnemo}</p>`;
+}
+
 export async function vistaAjustes(el) {
   let filtros = {};
 
   async function pintar() {
-    const [cat, aud, aj] = await Promise.all([api.get('/api/catalogos'), api.get('/api/auditoria', filtros), api.get('/api/ajustes')]);
+    // El estado del asistente es solo un aviso: si no responde, Ajustes se pinta igual
+    const [cat, aud, aj, est] = await Promise.all([api.get('/api/catalogos'), api.get('/api/auditoria', filtros), api.get('/api/ajustes'),
+      api.get('/api/agente/estado').catch(() => null)]);
     const puestos = await api.get('/api/puestos', { eleccion: aj.eleccion_vigente, todos: 1 });
     if (!el.isConnected) return;
     const av = aj.aviso_privacidad || {};
     const soloLectura = aj.puede_modificar_permisos === false;
+    const ag = aj.agente || {};
+    const rolesAgente = new Set(Array.isArray(ag.roles) ? ag.roles : []);
+    const mensajes = aj.agente_mensajes_diarios || {};
     montar(el, html`
       <div class="cabecera"><div><h1>Ajustes</h1><div class="sub">Reglas de contacto, privacidad y catálogos. Cada cambio queda en la auditoría.</div></div></div>
       <div class="rejilla r-12">
@@ -79,6 +101,20 @@ export async function vistaAjustes(el) {
             <label class="campo ancho"><span>Enlace para consultar el puesto (Registraduría; verifíquelo antes de usarlo)</span><input name="enlace_consulta_puesto" type="url" value="${aj.enlace_consulta_puesto || ''}" maxlength="300" placeholder="https://…"></label>
             <p class="sec ancho" style="margin:0">Vigencia de la base: ${aj.vigencia_base ? fecha(aj.vigencia_base) : 'sin definir'}. Cambiar la versión del compromiso pide a planilleros y consultores aceptarlo de nuevo.</p>
             <div class="ancho"><button class="btn primario">Guardar</button></div>
+          </form>
+        </section>
+        <section class="tarjeta c-12">
+          <h2>Asistente</h2>
+          <form id="f-agente" class="form" style="margin-top:12px">
+            ${estadoAgente(est)}
+            <div class="campo ancho"><span>Quiénes lo usan (cada uno con los permisos, el alcance y el presupuesto diario de su rol)</span>
+              <div class="chips">${ROLES_AGENTE.map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="rol_${k}" ${rolesAgente.has(k) ? 'checked' : ''}> ${t}</label>`)}</div></div>
+            ${casilla('escritura', ag.escritura !== false, 'Proponer cambios en la base (notas, acercamientos, fichas, reuniones…): cada uno se aprueba en una tarjeta antes de guardarse')}
+            ${casilla('mnemo_coordinadores', ag.mnemo_coordinadores === true, 'Los coordinadores también usan Mnemo, con el token del administrador: lo que hagan allá queda a nombre del administrador')}
+            ${numero('retencion_dias', ag.retencion_dias, 'Días que se guardan las conversaciones', 1, 365)}
+            ${ROLES_AGENTE.map(([k, , t]) => numero(`mensajes_${k}`, mensajes[k], `Mensajes por día · ${t}`, 1, 5000))}
+            <div class="aviso-legal ancho">Lo que el asistente consulta de la base viaja al proveedor del modelo (Anthropic, un tercero en el exterior): datos mínimos, cédulas y teléfonos enmascarados, nunca datos sensibles ni listas, y nada de quien no autorizó. Revise el aviso de privacidad y la autorización con un abogado antes de encenderlo para el equipo. Las conversaciones se borran solas a los días indicados desde su último mensaje; bajar el plazo acorta también las que ya existen.</div>
+            ${soloLectura ? SOLO_ADMIN : html`<div class="ancho"><button class="btn primario">Guardar asistente</button></div>`}
           </form>
         </section>
         <section class="tarjeta c-12">
@@ -142,8 +178,8 @@ export async function vistaAjustes(el) {
             en Calidad de datos y la opción «Suprimir datos» existen para eso. Los datos de bases oficiales (como las del SISBÉN) solo pueden usarse para la finalidad con la que se recogieron.</div>
         </section>
       </div>`);
-    if (soloLectura) {  // el coordinador ve la política y los límites, pero no los cambia
-      for (const id of ['#f-politica', '#f-limites']) {
+    if (soloLectura) {  // el coordinador ve la política, los límites y el asistente, pero no los cambia
+      for (const id of ['#f-politica', '#f-limites', '#f-agente']) {
         for (const c of $(id, el).querySelectorAll('input, select, textarea')) c.disabled = true;
       }
       const dePermisos = new Set(aj.ajustes_de_permisos || []);  // datos sensibles y compromiso: también solo A
@@ -219,6 +255,16 @@ export async function vistaAjustes(el) {
         await guardar({ sensibles_activos: f.sensibles_activos.checked, dias_reintento_dato: Number(v.dias_reintento_dato),
           compromiso_version: v.compromiso_version,
           ...(v.enlace_consulta_puesto ? { enlace_consulta_puesto: v.enlace_consulta_puesto } : {}) }, 'Ajustes guardados');
+      } else if (f.id === 'f-agente') {
+        const v = datosForm(f);
+        const roles = ROLES_AGENTE.map(([k]) => k).filter((k) => v[`rol_${k}`] === true);
+        // Quitarse a sí mismo lo apaga también para el administrador: que sea a propósito
+        if (!roles.includes('admin') && !await confirmar(roles.length
+          ? 'Sin el administrador marcado, a usted tampoco le aparecerá el asistente. ¿Guardar así?'
+          : 'Sin ningún rol marcado, el asistente queda apagado para todos, también para usted. ¿Guardar así?', { si: 'Guardar' })) return;
+        await guardar({ agente: { roles, escritura: v.escritura === true, mnemo_coordinadores: v.mnemo_coordinadores === true,
+          retencion_dias: Number(v.retencion_dias) },
+        agente_mensajes_diarios: Object.fromEntries(ROLES_AGENTE.map(([k]) => [k, Number(v[`mensajes_${k}`])])) }, 'Asistente guardado');
       } else if (f.id === 'f-campo') {
         await api.post('/api/campos', { etiqueta: f.etiqueta.value, tipo: f.tipo.value, sensible: f.sensible.checked,
           opciones: f.opciones.value.split(',').map((s) => s.trim()).filter(Boolean) });

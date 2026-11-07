@@ -258,9 +258,8 @@ def crear_solicitud(body: SolicitudIn, db: Database = Depends(obtener_db),
         p = db.personas.find_one({"_id": body.persona_id, **bd.ACTIVA})
         if p is None:
             raise HTTPException(404, "No existe")
-        en_alcance = getattr(filtros, "en_alcance_consultor", None)  # alcance del consultor (grupo 3)
-        if quien.rol == "consultor" and en_alcance is not None and not en_alcance(p, quien):
-            raise HTTPException(403, {"mensaje": "Su rol no permite esta acción", "codigo": "permiso"})
+        # El consultor solo con las personas de su trabajo, como en la ficha y en los acercamientos (A, K y P: libre)
+        filtros.exigir_alcance_consultor(db, p, quien)
     elif body.tipo not in ("registro", "otro", "consulta"):
         raise HTTPException(422, "Indique la persona de la solicitud")
     sid = bd.siguiente_id(db, "solicitudes")
