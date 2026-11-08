@@ -899,3 +899,161 @@ def test_conectar_mnemo_desde_ajustes(panel_y_mnemo, cfg, tmp_path):
     assert "estado" not in doc and "cifrado" not in doc and not doc.get("pendiente")
     acciones = [a["accion"] for a in db.auditoria.find({"accion": {"$regex": "^mnemo_"}}, sort=[("_id", 1)])]
     assert acciones == ["mnemo_conectar", "mnemo_conectar", "mnemo_desconectar"], acciones
+
+
+GUION_MNEMO = r"""// Conectar Mnemo desde Ajustes en Chromium, contra un Mnemo falso en otro sitio.
+// Uso: node <guion> <base del panel> <usuario> <clave> mnemo <dirección MCP de Mnemo> <coordinador> <su clave> <capturas>
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const [base, usuario, clave, modo, mcp, coordUsuario, coordClave, capturas] = process.argv.slice(2);
+const origen = new URL(base).origin;
+const origenMnemo = new URL(mcp).origin;
+const pref = new URL(base).pathname.replace(/\/+$/, '');
+const espera = { timeout: 20000 };
+
+async function abrir(nav, caso, quien) {
+  const ctx = await nav.newContext({ viewport: { width: 1280, height: 900 } });
+  await ctx.route((u) => u.origin !== origen && u.origin !== origenMnemo, (r) => r.abort()); // sin red: fuentes, teselas
+  await ctx.exposeBinding('__csp', (_, x) => caso.csp.push(`${quien}: ${x}`));
+  await ctx.addInitScript((o) => {
+    if (location.origin !== o) return;
+    addEventListener('securitypolicyviolation', (e) => window.__csp(`${e.effectiveDirective} ${e.blockedURI}`), true);
+    // Lo que hace la página, en orden: cada history.replaceState (ruta y consulta) y cada fetch (método y ruta)
+    const orden = (window.__orden = []);
+    window.__llegoConVuelta = /[?&]state=/.test(location.search) && /[?&](code|error)=/.test(location.search);
+    const reemplazar = history.replaceState;
+    history.replaceState = function (s, t, u) {
+      const d = new URL(String(u), location.href);
+      orden.push(`replaceState ${d.pathname}${d.search}`);
+      return reemplazar.apply(this, arguments);
+    };
+    const pedir = window.fetch;
+    window.fetch = function (u, op) {
+      orden.push(`${(op && op.method) || 'GET'} ${new URL(String(u), location.href).pathname}`);
+      return pedir.apply(this, arguments);
+    };
+  }, origen);
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => caso.errores.push(`${quien}: ${e}`));
+  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) caso.errores.push(`${quien}: ${m.text()}`); });
+  page.on('response', (x) => {
+    const u = new URL(x.url());
+    if (u.origin !== origen || x.status() < 400) return;
+    if (x.status() === 401 && u.pathname === pref + '/api/yo') return; // la pregunta del arranque («¿hay sesión?»)
+    const r = `${x.status()} ${u.pathname}`;
+    const i = caso.esperados.indexOf(r);
+    if (i >= 0) caso.esperados.splice(i, 1);
+    else caso.errores.push(`${quien}: ${r}`);
+  });
+  return { ctx, page };
+}
+
+async function ingresar(page, u, c) {
+  await page.goto(base + '/', { waitUntil: 'domcontentloaded' });
+  await page.fill('#f-login [name=usuario]', u);
+  await page.fill('#f-login [name=clave]', c);
+  await page.click('#f-login button[type=submit]');
+  await page.waitForSelector('#app #vista > .vista', espera);
+  await page.click('#nav a[data-nav="ajustes"]');
+  await page.waitForSelector('#mnemo-conexion', espera);
+}
+
+const bloque = (page) => page.evaluate(() => {
+  const b = document.querySelector('#mnemo-conexion');
+  return b && { estado: b.dataset.estado, texto: b.textContent.replace(/\s+/g, ' ').trim(),
+    botones: [...b.querySelectorAll('button')].map((x) => x.textContent.trim()),
+    campo: b.querySelector('#f-mnemo [name=url]')?.value ?? null,
+    permisos: [...b.querySelectorAll('.chips .chip')].map((x) => x.textContent.trim()),
+    resultado: b.querySelector('.mnemo-nota.resultado')?.textContent ?? null,
+    sinModelos: b.querySelector('.mnemo-nota.alerta:not(.resultado)')?.textContent ?? null };
+});
+
+// «Conectar con Mnemo» (o «Volver a conectar»): la página de permisos de Mnemo, la decisión y la vuelta a Ajustes
+async function conectar(page, caso, decision, { sinModelos = false } = {}) {
+  await page.fill('#f-mnemo [name=url]', mcp);
+  await page.click('#mnemo-conectar');
+  await page.waitForURL((u) => u.origin === origenMnemo, espera); // location.assign a la autorización de Mnemo
+  if (!caso.datos.autorizar) {
+    const a = new URL(page.url());
+    const q = a.searchParams;
+    caso.datos.autorizar = { ruta: a.pathname, response_type: q.get('response_type'), code_challenge_method: q.get('code_challenge_method'),
+      con_reto: !!q.get('code_challenge'), redirect_uri: q.get('redirect_uri'), resource: q.get('resource'), scope: q.get('scope'),
+      state_largo: (q.get('state') || '').length };
+  }
+  await page.waitForSelector('#permitir', espera);
+  if (sinModelos) await page.uncheck('input[name=scope][value="mnemo:model"]');
+  await page.click(decision === 'permitir' ? '#permitir' : '#cancelar');
+  // De vuelta en Ajustes: la página quitó la vuelta de la dirección y, después del POST a /volver, pintó la conexión
+  await page.waitForURL((u) => u.origin === origen && u.pathname === pref + '/ajustes', espera);
+  await page.waitForSelector('#mnemo-conexion', espera);
+  const o = await page.evaluate(() => ({ orden: window.__orden, llego: window.__llegoConVuelta, ruta: location.pathname + location.search }));
+  const i = o.orden.indexOf(`replaceState ${pref}/ajustes`);
+  const j = o.orden.indexOf(`POST ${pref}/api/agente/mnemo/volver`);
+  return { orden: o.orden, ruta: o.ruta,
+    vuelta_quitada_antes: o.llego && i >= 0 && j > i && o.ruta === pref + '/ajustes' && o.orden.filter((x) => x.includes('/mnemo/volver')).length === 1 };
+}
+
+(async () => {
+  const nav = await chromium.launch();
+  const caso = { nombre: 'mnemo', revisiones: {}, errores: [], csp: [], datos: {}, esperados: [] };
+  const v = caso.revisiones;
+  try {
+    const { ctx, page } = await abrir(nav, caso, 'administrador');
+    await ingresar(page, usuario, clave);
+    let b = await bloque(page);
+    caso.datos.inicio = b;
+    v.empieza_sin_conectar = b.estado === 'sin_conectar' && JSON.stringify(b.botones) === '["Conectar con Mnemo"]' && b.campo === '';
+    await page.locator('#mnemo-conexion').screenshot({ path: `${capturas}/ajustes-mnemo-sin-conectar.png` });
+
+    // 1. «Cancelar» en Mnemo: vuelve con error=access_denied (el panel responde 400 a /volver) y no conecta nada
+    caso.esperados.push(`400 ${pref}/api/agente/mnemo/volver`);
+    let r = await conectar(page, caso, 'cancelar');
+    b = await bloque(page);
+    caso.datos.cancelar = { ...r, bloque: b };
+    v.cancelar_no_conecta = r.vuelta_quitada_antes && b.estado === 'sin_conectar' && b.resultado === 'Se canceló el permiso en Mnemo: no se conectó nada.';
+
+    // 2. «Permitir»: «Conectado como …», con los permisos y los botones del administrador
+    r = await conectar(page, caso, 'permitir');
+    b = await bloque(page);
+    caso.datos.permitir = { ...r, bloque: b };
+    v.conectado = r.vuelta_quitada_antes && b.estado === 'conectada' && b.texto.includes('Conectado como Ana Inventada (ana.inventada@example.org) desde')
+      && b.texto.includes(`Dirección: ${mcp}`) && b.permisos.includes('Usar sus modelos de IA y sus créditos') && b.sinModelos === null
+      && b.resultado === null && JSON.stringify(b.botones) === '["Volver a conectar","Desconectar"]' && b.campo === mcp;
+    await page.locator('#mnemo-conexion').screenshot({ path: `${capturas}/ajustes-mnemo-conectado.png` });
+    await page.screenshot({ path: `${capturas}/ajustes-mnemo.png`, fullPage: false });
+
+    // 3. El coordinador ve el estado, sin la dirección ni los botones
+    const k = await abrir(nav, caso, 'coordinador');
+    await ingresar(k.page, coordUsuario, coordClave);
+    const bk = await bloque(k.page);
+    caso.datos.coordinador = bk;
+    v.coordinador_solo_ve = bk.estado === 'conectada' && bk.texto.includes('Conectado como Ana Inventada (ana.inventada@example.org)')
+      && bk.botones.length === 0 && bk.campo === null && bk.texto.includes('Solo el administrador conecta o desconecta Mnemo.');
+    await k.page.locator('#mnemo-conexion').screenshot({ path: `${capturas}/ajustes-mnemo-coordinador.png` });
+    await k.ctx.close();
+
+    // 4. «Volver a conectar» sin marcar el permiso de los modelos: Ajustes lo avisa
+    r = await conectar(page, caso, 'permitir', { sinModelos: true });
+    b = await bloque(page);
+    caso.datos.sin_modelos = { ...r, bloque: b };
+    v.avisa_sin_modelos = r.vuelta_quitada_antes && b.estado === 'conectada' && !b.permisos.includes('Usar sus modelos de IA y sus créditos')
+      && (b.sinModelos || '').startsWith('Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar y marque esa casilla');
+
+    // 5. «Desconectar», con confirmación
+    await page.click('#mnemo-desconectar');
+    await page.waitForSelector('dialog[open] [data-si]', espera);
+    v.pide_confirmacion = (await page.textContent('dialog[open]')).includes('¿Desconectar Mnemo?');
+    await page.click('dialog[open] [data-si]');
+    await page.waitForFunction(() => document.querySelector('#mnemo-conexion')?.dataset.estado === 'sin_conectar', null, espera);
+    b = await bloque(page);
+    caso.datos.desconectado = b;
+    v.desconectado = JSON.stringify(b.botones) === '["Conectar con Mnemo"]' && b.campo === mcp && b.resultado === null;
+    v.respuestas_esperadas = caso.esperados.length === 0;
+    await ctx.close();
+  } catch (e) {
+    v.sin_excepcion = String(e.stack || e).slice(0, 1500);
+  } finally {
+    await nav.close();
+  }
+  console.log(JSON.stringify({ casos: [caso] }));
+})().catch((e) => { console.error(e); process.exit(1); });
+"""
