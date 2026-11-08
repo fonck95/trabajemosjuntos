@@ -19,7 +19,7 @@ from pymongo.errors import ConnectionFailure
 from starlette.middleware.gzip import GZipMiddleware
 
 from . import acceso, config, db, migraciones
-from .agente import llm
+from .agente import proveedores
 from .api import (acercamientos, agente, agente_mnemo, ajustes, calidad, personas, reuniones, sistema, tablero,
                   usuarios, zonas)
 from .seguridad import (CabecerasSeguras, Cortacircuitos, GuardiaApi, base_de, limpiar_al_iniciar, ruta_interna,
@@ -84,13 +84,7 @@ async def ciclo(app: FastAPI):
                 raise
             await asyncio.sleep(2)
     yield
-    await llm.cerrar(app)  # el cliente de Anthropic, si el asistente llegó a crearlo
-    mnemo = getattr(app.state, "mnemo_cliente", None)  # y el de Mnemo
-    if mnemo is not None:
-        try:
-            await mnemo.cerrar()
-        except Exception as e:  # noqa: BLE001 - se está apagando: solo queda en el registro
-            log.warning("No se pudo cerrar el cliente de Mnemo (%s)", type(e).__name__)
+    await proveedores.cerrar(app)  # los clientes de Anthropic y de Mnemo del asistente, si llegaron a crearse
     app.state.cliente.close()
 
 

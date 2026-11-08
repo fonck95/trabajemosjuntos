@@ -1,10 +1,12 @@
 """Ajustes del asistente (docs/agente.md): valores por defecto, validación estricta, mezcla parcial, quién los cambia
 (solo el administrador; el coordinador los ve en solo lectura), el permiso `agente.usar` de planilleros y consultores,
 que el asistente aplica lo guardado (`agente.politica`, `GET /api/agente/estado`), que lo escrito a mano en la base se
-ve como su valor por defecto y que bajar la retención acorta las conversaciones que ya existen.
+ve como su valor por defecto y que bajar la retención acorta las conversaciones que ya existen. Y la conexión con
+Mnemo en la vista: sus textos y que solo el administrador ve los botones (el coordinador, el estado; el servidor le
+responde 403).
 
-Solo datos inventados. Nunca se llama a Anthropic: `encender` pone una clave inventada y el estado no habla con el
-modelo."""
+Solo datos inventados. Nunca se llama a Anthropic ni a Mnemo: `encender` pone una clave inventada, el estado no habla
+con el modelo y `conectar_mnemo` guarda una conexión con un Mnemo falso."""
 import json
 import re
 from datetime import datetime, timedelta, timezone
@@ -292,3 +294,67 @@ def test_la_vista_de_ajustes_tiene_la_seccion_del_asistente():
     for clave in ("agente: { roles, escritura:", "mnemo_coordinadores:", "retencion_dias: Number(",
                   "agente_mensajes_diarios: Object.fromEntries("):
         assert clave in js, clave
+
+
+# ───────────────────────────── La conexión con Mnemo ─────────────────────────────
+
+def test_la_conexion_con_mnemo_en_la_vista_de_ajustes():
+    """El bloque «Conexión con Mnemo» de Ajustes → Asistente: el estado, la cuenta y los permisos para el administrador
+    y el coordinador; la dirección y los botones (conectar, volver a conectar y desconectar, con confirmación) solo
+    para quien puede conectar. Los textos hablan de la cuenta de Mnemo, no de tokens ni de variables."""
+    js = AJUSTES_JS.read_text(encoding="utf-8")
+    bloque = js[js.index("function bloqueMnemo("):js.index("export async function vistaAjustes(")]
+    # Quién actúa lo dice el permiso `agente.conectar` (solo del administrador: el coordinador lo tiene en `excepto`)
+    assert "const admin = puede('agente.conectar');" in bloque
+    rama_admin = bloque[bloque.index("if (admin) {"):bloque.index("} else {\n    acciones")]
+    for texto in ("'Conectar con Mnemo'", "'Volver a conectar'", ">Desconectar</button>", 'id="f-mnemo"',
+                  "Dirección MCP de Mnemo", 'id="mnemo-conectar"', 'id="mnemo-desconectar"'):
+        assert texto in rama_admin and bloque.count(texto) == 1, texto
+    assert "Solo el administrador conecta o desconecta Mnemo." in bloque[bloque.index("} else {\n    acciones"):]
+    # Los tres estados y el aviso sin permiso para usar los modelos
+    for texto in ("Conectado como <b>", ">Sin conectar<", ">Conexión caída<", "if (!c.modelo) partes.push(",
+                  "data-estado=\"${estado}\""):
+        assert texto in bloque, texto
+    assert ("const SIN_PERMISO_MODELO = 'Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar y "
+            "marque esa casilla '") in js
+    assert ("Todos los roles que usan el asistente gastan los modelos y los créditos de esa cuenta; los mensajes por "
+            "día de cada rol (abajo) siguen valiendo.") in bloque
+    # El bloque va fuera del formulario de los ajustes (no son ajustes: el coordinador los ve en solo lectura)
+    seccion = js[js.index("<h2>Asistente</h2>"):js.index('<form id="f-agente"')]
+    assert "bloqueMnemo(est.mnemo.conexion, notaMnemo)" in seccion and "estadoAgente(est)" in seccion
+    # Desconectar pide confirmación antes de llamar a la API
+    desconectar = js[js.index("async function desconectarMnemo("):js.index("function horario(")]
+    assert "peligro: true" in desconectar
+    assert desconectar.index("await confirmar(") < desconectar.index("api.del('/api/agente/mnemo')")
+    # Ni tokens ni variables; el aviso legal nombra a Mnemo y al proveedor de la cuenta (y a Anthropic en modo directo)
+    assert "token" not in js.lower() and "ANTHROPIC_API_KEY" not in js and "MNEMO_" not in js
+    assert "con la cuenta de Mnemo del administrador: lo que hagan allá queda a nombre del administrador" in js
+    legal = js[js.index('<div class="aviso-legal ancho">Lo que el asistente consulta'):]
+    assert "a Mnemo y, de ahí, al proveedor de modelos que esa cuenta tenga elegido; en modo directo, a Anthropic" in legal
+
+
+def test_quien_conecta_mnemo_y_que_ve_cada_rol(sesion, coord, como):
+    """La vista muestra los botones con `puede('agente.conectar')`: el administrador lo tiene; el coordinador lo tiene en
+    `excepto` (ve el estado sin botones) y el servidor le responde 403 si lo intenta. Planilleros y consultores ni ven
+    Ajustes ni reciben la conexión en el estado."""
+    from ayudas_agente import conectar_mnemo
+    yo_a, yo_k = sesion.get("/api/yo").json(), coord.get("/api/yo").json()
+    assert "agente.conectar" not in (yo_a.get("excepto") or []) and "*" in yo_a["permisos"]
+    assert "agente.conectar" in yo_k["excepto"] and "*" in yo_k["permisos"]
+    # Los dos reciben la conexión en el estado, con lo que pinta la vista
+    claves = {"estado", "motivo", "url", "cuenta", "alcances", "modelo", "desde", "url_sugerida"}
+    for c in (sesion, coord):
+        con = c.get("/api/agente/estado").json()["mnemo"]["conexion"]
+        assert claves <= set(con) and con["estado"] == "sin_conectar" and con["modelo"] is False, con
+    p = como("planillero")
+    assert "conexion" not in p.get("/api/agente/estado").json()["mnemo"]
+    # Conectada: la cuenta, los permisos y si puede usar los modelos (lo que la vista muestra)
+    conectar_mnemo(sesion.app)
+    con = coord.get("/api/agente/estado").json()["mnemo"]["conexion"]
+    assert con["estado"] == "conectada" and con["cuenta"] == "Ana Inventada (ana.inventada@example.org)", con
+    assert con["modelo"] is True and "mnemo:model" in con["alcances"] and con["desde"]
+    # El coordinador no conecta, no termina una conexión ni desconecta: 403 permiso, y la conexión sigue
+    for r in (coord.post("/api/agente/mnemo/conectar", json={}), coord.delete("/api/agente/mnemo"),
+              coord.post("/api/agente/mnemo/volver", json={"state": "inventado"})):
+        assert _es_permiso(r), (r.status_code, r.text[:200])
+    assert sesion.get("/api/agente/estado").json()["mnemo"]["conexion"]["estado"] == "conectada"

@@ -1,13 +1,15 @@
 """API del asistente del panel (docs/agente.md).
 
 * GET /api/agente/estado — si el asistente está disponible para quien pregunta y por qué no (`requiere("cuenta")`:
-  cualquier rol lo consulta para saber si mostrar el botón). Para el administrador y el coordinador trae además la
-  conexión con Mnemo (`mnemo.conexion`, `mnemo_conexion.vista`); conectarla y desconectarla está en
-  `api/agente_mnemo.py`.
+  cualquier rol lo consulta para saber si mostrar el botón), y con qué proveedor del modelo empezaría una conversación
+  nueva (`proveedor`: «mnemo», «anthropic» o None; ver `agente/proveedores.py`). Para el administrador y el
+  coordinador trae además la conexión con Mnemo (`mnemo.conexion`, `mnemo_conexion.vista`); conectarla y
+  desconectarla está en `api/agente_mnemo.py`.
 * GET /api/agente/conversaciones, GET y DELETE /api/agente/conversaciones/{cid} — las conversaciones propias: solo
   su dueño las ve o las borra (de otra persona es un 404, como si no existiera).
 * POST /api/agente/mensajes y POST /api/agente/confirmaciones — un turno en flujo (NDJSON, `bucle.py`). Lo que impide
-  el turno sale antes como JSON normal (503, 403, 404, 409, 429).
+  el turno sale antes como JSON normal (503, 403, 404, 409, 429); entre ellos, 409 `proveedor` si la conversación es
+  de un proveedor del modelo que ya no está.
 
 El módulo del bucle (y con él el catálogo de herramientas) se importa al usarlo: `crear_app` no depende de que cada
 herramienta cargue, y una herramienta rota deja sin asistente, no sin panel."""
@@ -22,7 +24,7 @@ from pymongo.database import Database
 
 from ..acceso import Quien, requiere
 from ..agente import conversaciones as conv_db
-from ..agente import politica
+from ..agente import politica, proveedores
 from ..seguridad import obtener_db
 
 log = logging.getLogger("panel")
@@ -105,21 +107,24 @@ def _etiquetas(conv: dict) -> dict[str, str]:
 
 @r.get("/agente/estado")
 def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("cuenta"))):
-    """`mnemo`: `{"activo": bool (esta persona usa las herramientas de Mnemo), "origen": scheme://host de Mnemo |
-    None}` para todos y, para el administrador y el coordinador (que la ve en solo lectura en Ajustes), `"conexion"`:
-    `mnemo_conexion.vista(db, cfg)` (`estado`, `motivo`, `url`, `cuenta`, `alcances`, `modelo`, `desde` y
-    `url_sugerida`)."""
+    """`proveedor`: con qué proveedor del modelo empezaría una conversación nueva («mnemo» si hay una conexión con
+    `mnemo:model`, si no «anthropic» si hay `ANTHROPIC_API_KEY`, si no None, y entonces `motivo` es `sin_configurar`);
+    `configurado` es `proveedor` no None. `mnemo`: `{"activo": bool (esta persona usa las herramientas de Mnemo),
+    "origen": scheme://host de Mnemo | None}` para todos y, para el administrador y el coordinador (que la ve en solo
+    lectura en Ajustes), `"conexion"`: `mnemo_conexion.vista(db, cfg)` (`estado`, `motivo`, `url`, `cuenta`,
+    `alcances`, `modelo`, `desde` y `url_sugerida`)."""
     cfg = request.app.state.cfg
     ajustes, agente = politica.leer(db)
     sesion = (request.scope.get("state") or {}).get("sesion")
+    proveedor = proveedores.clave_para_nueva(cfg, db)
     motivo = politica.motivo(quien, cfg, agente, sesion, db)
     conexion = _conexion(db, cfg)
     activo = _mnemo_activo(quien, agente, cfg, conexion)
     mnemo: dict[str, Any] = {"activo": activo, "origen": politica.origen_mnemo(conexion.get("url")) if activo else None}
     if quien.administra:
         mnemo["conexion"] = conexion
-    return {"disponible": motivo is None, "motivo": motivo, "configurado": cfg.agente_configurado,
-            "es_admin": quien.es_admin, "escritura": agente["escritura"],
+    return {"disponible": motivo is None, "motivo": motivo, "configurado": proveedor is not None,
+            "proveedor": proveedor, "es_admin": quien.es_admin, "escritura": agente["escritura"],
             "limite": {"usados": conv_db.uso_de(db, quien.uid), "maximo": politica.mensajes_diarios(ajustes, quien.rol)},
             "mnemo": mnemo,
             "sugerencias": politica.sugerencias(quien.rol) if motivo is None else []}

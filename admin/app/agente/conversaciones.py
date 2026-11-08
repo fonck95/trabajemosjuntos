@@ -3,13 +3,15 @@ llama con `run_in_threadpool`.
 
 * `agente_conversaciones`: una por conversación, de un solo dueño (`uid`). Guarda congelados el `system` y la lista
   de herramientas con que se creó (la caché del proveedor y el razonamiento conservado exigen que el prefijo no
-  cambie), las definiciones de Mnemo, `personas` (los ids de las personas cuyos datos vio el modelo: si alguna se
-  suprime, la conversación se borra entera), lo que espera aprobación (`pendiente`) y el candado del turno en curso
-  (`ocupada_hasta`, que vence solo: un proceso caído no deja la conversación tomada).
+  cambie), las definiciones de Mnemo, el proveedor del modelo (`proveedor`: «mnemo» o «anthropic»; las de antes, sin
+  el campo, son de Anthropic) y el modelo que se le pidió (`modelo`), `personas` (los ids de las personas cuyos datos
+  vio el modelo: si alguna se suprime, la conversación se borra entera), lo que espera aprobación (`pendiente`) y el
+  candado del turno en curso (`ocupada_hasta`, que vence solo: un proceso caído no deja la conversación tomada).
 * `agente_mensajes`: un documento por mensaje, con `seq` creciente; nunca se edita lo guardado (append-only). Los
   bloques van como texto JSON (`contenido`): vuelven idénticos al reenviarlos y aceptan cualquier clave que escriba el
   modelo (también «$x» o «a.b»). `replay` dice si el mensaje se le reenvía al modelo (un rechazo o un aviso, no).
-* `agente_uso`: mensajes y tokens por persona y día (hora de Colombia), para el tope diario y para ver el gasto.
+* `agente_uso`: mensajes, tokens y (con Mnemo) créditos por persona y día (hora de Colombia), para el tope diario y
+  para ver el gasto.
 * Retención: `expira` (fecha) de la conversación y de sus mensajes se renueva en cada turno; los índices TTL de
   `db._indices()` los borran solos al vencer.
 """
@@ -33,6 +35,7 @@ LISTA_MAX = 30
 TITULO_MAX = 80
 TOPE_TOKENS = 300_000  # entrada de la última ronda: pasado esto la conversación no admite más (409 «larga»)
 TOPE_MENSAJES = 400
+PROVEEDOR_POR_DEFECTO = "anthropic"  # el de las conversaciones creadas antes de que se guardara
 
 
 class ConversacionBorrada(Exception):
@@ -88,15 +91,21 @@ def titulo_de(texto: str) -> str:
 # ───────────────────────────── Conversaciones ─────────────────────────────
 
 def crear(db: Database, cid: int, uid: int, titulo: str, sistema: str, herramientas: list[dict], mnemo: list[dict],
-          dias: int, turno: str, modelo_ia: str) -> dict:
-    """Crea la conversación ya tomada por el turno que la crea."""
+          dias: int, turno: str, modelo_ia: str, proveedor: str = PROVEEDOR_POR_DEFECTO) -> dict:
+    """Crea la conversación ya tomada por el turno que la crea, con su proveedor del modelo congelado."""
     t = ahora()
     doc = {"_id": cid, "uid": uid, "titulo": titulo, "sistema": sistema, "herramientas": a_json(herramientas),
-           "mnemo": a_json(mnemo), "modelo": modelo_ia, "personas": [], "n_mensajes": 0, "tokens_ultima": 0,
-           "pendiente": None, "creada": t, "actualizada": t, "expira": t + timedelta(days=dias),
+           "mnemo": a_json(mnemo), "proveedor": proveedor, "modelo": modelo_ia, "personas": [], "n_mensajes": 0,
+           "tokens_ultima": 0, "pendiente": None, "creada": t, "actualizada": t, "expira": t + timedelta(days=dias),
            "ocupada_hasta": t + ARRIENDO, "turno": turno}
     db[CONVERSACIONES].insert_one(doc)
     return doc
+
+
+def proveedor_de(conv: dict | None) -> str:
+    """El proveedor del modelo con que se creó la conversación («mnemo» o «anthropic»)."""
+    p = (conv or {}).get("proveedor")
+    return p if isinstance(p, str) and p else PROVEEDOR_POR_DEFECTO
 
 
 def de_usuario(db: Database, cid: int, uid: int) -> dict | None:
@@ -222,7 +231,11 @@ def mensajes_de(db: Database, cid: int) -> list[dict]:
 
 def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> dict:
     """La conversación como la pinta el widget: `mensajes` de la persona (su texto, sin el contexto del panel) y del
-    asistente (partes: texto, notas de progreso, herramientas con su estado y avisos) y lo que espera aprobación."""
+    asistente (partes: texto, notas de progreso, herramientas con su estado y avisos), lo que espera aprobación y su
+    `proveedor`. Las notas de progreso son los `thinking` de Anthropic (con `display: "updates"`); los de Mnemo son
+    resúmenes del razonamiento del modelo y no se muestran."""
+    proveedor = proveedor_de(conv)
+    notas = proveedor == "anthropic"
     mensajes: list[dict] = []
     actual: dict | None = None
     partes: dict[str, dict] = {}
@@ -256,7 +269,7 @@ def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> di
                         ps[-1]["texto"] += b["text"]
                     else:
                         ps.append({"tipo": "texto", "texto": b["text"]})
-                elif t == "thinking" and b.get("thinking") and b["thinking"] != CENTINELA:
+                elif t == "thinking" and notas and b.get("thinking") and b["thinking"] != CENTINELA:
                     del_asistente().append({"tipo": "progreso", "texto": b["thinking"]})
                 elif t == "tool_use":
                     nombre = str(b.get("name") or "")[:64]
@@ -280,7 +293,7 @@ def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> di
                                "etiqueta": ll.get("etiqueta") or ll.get("nombre"), "titulo": tarjeta.get("titulo"),
                                "detalle": tarjeta.get("detalle") or [], "aviso": tarjeta.get("aviso")})
     return {"id": conv["_id"], "titulo": conv.get("titulo") or "Conversación", "mensajes": mensajes,
-            "pendientes": pendientes}
+            "pendientes": pendientes, "proveedor": proveedor}
 
 
 # ───────────────────────────── Uso diario ─────────────────────────────
@@ -312,8 +325,13 @@ def uso_de(db: Database, uid: int) -> int:
     return int((d or {}).get("mensajes") or 0)
 
 
-def sumar_uso(db: Database, uid: int, entrada: int, salida: int, lectura: int, escritura: int) -> None:
+def sumar_uso(db: Database, uid: int, entrada: int, salida: int, lectura: int, escritura: int,
+              creditos: float | None = None) -> None:
+    """Suma una ronda al día de `uid`: tokens y, con Mnemo, los créditos de la cuenta conectada que gastó."""
     dia = _dia()
+    sumar: dict[str, Any] = {"entrada": entrada, "salida": salida, "cache_lectura": lectura,
+                             "cache_escritura": escritura}
+    if creditos:
+        sumar["creditos"] = float(creditos)
     db[USO].update_one({"_id": f"{uid}|{dia}"}, {
-        "$inc": {"entrada": entrada, "salida": salida, "cache_lectura": lectura, "cache_escritura": escritura},
-        "$set": {"ts": ahora()}, "$setOnInsert": {"uid": uid, "dia": dia, "mensajes": 0}}, upsert=True)
+        "$inc": sumar, "$set": {"ts": ahora()}, "$setOnInsert": {"uid": uid, "dia": dia, "mensajes": 0}}, upsert=True)

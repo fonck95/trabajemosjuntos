@@ -896,10 +896,12 @@ def test_resumen_por_estado(estado, resumen):
 @pytest.fixture
 def con_mnemo(sesion, monkeypatch):
     """El asistente con Mnemo conectado (OAuth falso, la conexión cifrada en la base) y su `/mcp` falso; sin
-    herramientas fijas (así se prueba solo lo de Mnemo, con el bucle de verdad). Devuelve el `MnemoFalso`."""
-    from ayudas_agente import con_herramientas, conectar_mnemo
+    herramientas fijas (así se prueba solo lo de Mnemo, con el bucle de verdad). Devuelve el `MnemoFalso`. La conexión
+    va sin `mnemo:model`: el modelo sigue siendo la Messages API simulada (con ese alcance lo pondría Mnemo, ver
+    `test_agente_modelo_mnemo.py`)."""
+    from ayudas_agente import ALCANCES_PANEL, con_herramientas, conectar_mnemo
     con_herramientas(monkeypatch, [])
-    return conectar_mnemo(sesion.app).mcp
+    return conectar_mnemo(sesion.app, alcances=[a for a in ALCANCES_PANEL if a != "mnemo:model"]).mcp
 
 
 def test_turno_con_una_lectura_de_mnemo(sesion, con_mnemo):

@@ -413,9 +413,10 @@ def crear_servidor(cfg=None, sitio: Path | None = None) -> Starlette:
         if tarea:
             tarea.cancel()
         if app.state.panel is not None:
-            try:  # el cliente de Anthropic del asistente, si llegó a crearse (el ciclo del panel no corre montado)
-                from app.agente import llm
-                await llm.cerrar(app.state.panel)
+            # Los clientes del asistente (Anthropic y Mnemo), si llegaron a crearse: el ciclo del panel no corre montado
+            try:
+                from app.agente import proveedores
+                await proveedores.cerrar(app.state.panel)
             except Exception as e:  # noqa: BLE001 - apagando: no impide cerrar MongoDB
                 log.warning("No se pudo cerrar el cliente del asistente (%s)", type(e).__name__)
             app.state.panel.state.cliente.close()

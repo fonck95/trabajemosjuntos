@@ -9,15 +9,29 @@
   «Reintentar» tras un 503 (reusa la burbuja), la sesión vencida (el diálogo de ingreso del panel y el reintento solo),
   lo guardado en la pestaña (y que vuelve al recargar) y que cerrar sesión lo borra. En el celular: que se pliega al
   navegar, que el botón no tapa la barra de la ficha ni el título de la barra y que «Cerrar sesión» se alcanza con el
-  menú abierto. El administrador sin ANTHROPIC_API_KEY ve qué variable falta. En todos: sin XSS, sin errores de
-  consola, sin violaciones de CSP, sin desborde horizontal y el panel dentro de la ventana.
+  menú abierto. En todos: sin XSS, sin errores de consola, sin violaciones de CSP, sin desborde horizontal y el panel
+  dentro de la ventana. Además:
+  - `sin_modelo`: el administrador sin modelo (Mnemo sin conectar, con la conexión caída o sin permiso para usar sus
+    modelos) ve el botón y adentro qué hacer, sin nombres de variables y con un enlace a Ajustes, que muestra la
+    conexión con sus botones.
+  - `mnemo`: con Mnemo como modelo, `texto_ronda` reemplaza el texto que llegó por partes; la conexión caída vuelve a
+    leer el estado; `proveedor` (409) ofrece «Nueva conversación» con el mensaje escrito; `mnemo_creditos` no ofrece
+    «Reintentar»; `llm_peticion` ofrece «Nueva conversación». El contexto no lleva `code`, `state` ni `iss`.
 * `test_flujo_real_por_partes_y_detener`: contra el núcleo de verdad (uvicorn, el panel en /panel y la Messages API
   simulada con pausas): el texto llega y se pinta por partes (el primer párrafo conserva su nodo mientras llega el
   resto), «Detener» corta el turno y el siguiente mensaje funciona (el servidor soltó el candado).
+* `test_conectar_mnemo_desde_ajustes`: el flujo OAuth entero contra un Mnemo falso servido por red en otro sitio
+  (`OAuthFalso` de ayudas_mcp.py en `http://localhost`, el panel en `127.0.0.1`), con una página de permisos como la de
+  Mnemo: «Conectar con Mnemo» va a Mnemo con `location.assign`; «Cancelar» vuelve con `error` y no conecta nada;
+  «Permitir» vuelve a `/panel/ajustes?code=…&state=…&iss=…` SIN la cookie de sesión (SameSite=Strict, navegación de
+  otro sitio), la página quita eso de la dirección antes del POST a /volver (que sí lleva la cookie) y muestra
+  «Conectado como …». El coordinador ve el estado sin botones; volver a conectar sin el permiso de los modelos lo
+  avisa; «Desconectar» (con confirmación) revoca con el token de renovación.
 
 Corre con uvicorn de verdad (el TestClient junta toda la respuesta) y un guion de Node, como test_servidor.py. Se
 salta si no hay Node con Playwright, salvo en el CI (allí falla en vez de pasar en silencio).
 """
+import html
 import json
 import os
 import shutil
@@ -25,13 +39,15 @@ import socket
 import subprocess
 import threading
 import time
+from contextlib import contextmanager
 from pathlib import Path
+from urllib.parse import parse_qs, parse_qsl, urlsplit
 
 import pymongo
 import pytest
 import uvicorn
 
-from conftest import MONGO, URI, insertar_personas, personas_inventadas
+from conftest import CLAVE_USUARIO, MONGO, URI, crear_usuario, insertar_personas, personas_inventadas
 
 
 def _hay_playwright() -> bool:
@@ -43,10 +59,11 @@ requiere_navegador = pytest.mark.skipif(not _hay_playwright() and not os.environ
                                         reason="Sin Node con Playwright (PLAYWRIGHT_MODULE o NODE_PATH)")
 
 
-@pytest.fixture
-def panel_vivo(cfg, tmp_path):
-    """El servidor único de verdad (uvicorn h11, el panel en /panel, como en Railway) en un puerto libre, con tres
-    personas inventadas. Devuelve (base del panel, app del panel, ids de las personas)."""
+@contextmanager
+def _servir(cfg, tmp_path, envolver=None):
+    """El servidor único de verdad (uvicorn h11, el panel en /panel, como en Railway) en un puerto libre de 127.0.0.1,
+    con tres personas inventadas. `envolver(app)` pone algo delante (un registro de las peticiones). Da (base del
+    panel, app del panel, ids de las personas, lo que devolvió `envolver` o None)."""
     if not MONGO:
         pytest.skip("No hay MongoDB para las pruebas con navegador")
     import servidor
@@ -54,10 +71,11 @@ def panel_vivo(cfg, tmp_path):
     sitio.mkdir()
     (sitio / "index.html").write_text("<!doctype html><title>Inicio</title>INICIO", encoding="utf-8")
     app = servidor.crear_servidor(cfg, sitio)
+    delante = envolver(app) if envolver else None
     sock = socket.socket()
     sock.bind(("127.0.0.1", 0))
-    srv = uvicorn.Server(uvicorn.Config(app, http="h11", lifespan="on", log_level="warning", access_log=False,
-                                        server_header=False, timeout_graceful_shutdown=2))
+    srv = uvicorn.Server(uvicorn.Config(delante or app, http="h11", lifespan="on", log_level="warning",
+                                        access_log=False, server_header=False, timeout_graceful_shutdown=2))
     hilo = threading.Thread(target=srv.run, kwargs={"sockets": [sock]}, daemon=True)
     hilo.start()
     try:
@@ -66,13 +84,20 @@ def panel_vivo(cfg, tmp_path):
             time.sleep(0.05)
         assert srv.started and app.state.panel is not None, "el servidor no arrancó"
         ids = insertar_personas(app.state.panel.state.db, personas_inventadas(3, semilla=41))
-        yield f"http://127.0.0.1:{sock.getsockname()[1]}/panel", app.state.panel, ids
+        yield f"http://127.0.0.1:{sock.getsockname()[1]}/panel", app.state.panel, ids, delante
     finally:
         srv.should_exit = True
         hilo.join(15)
         sock.close()
         with pymongo.MongoClient(URI) as m:
             m.drop_database(cfg.mongodb_db)
+
+
+@pytest.fixture
+def panel_vivo(cfg, tmp_path):
+    """El panel de verdad (`_servir`): (base del panel, app del panel, ids de las personas)."""
+    with _servir(cfg, tmp_path) as (base, panel, ids, _):
+        yield base, panel, ids
 
 
 def _correr(guion: str, tmp_path, *args: str) -> dict:
@@ -99,10 +124,22 @@ def _revisar(caso: dict) -> None:
 def test_widget_sigue_el_protocolo(panel_vivo, cfg, tmp_path):
     base, _, ids = panel_vivo
     res = _correr(GUION, tmp_path, base, cfg.usuario, cfg.clave, "protocolo", str(ids[1]))
-    assert [c["nombre"] for c in res["casos"]] == ["escritorio", "movil", "chico", "sin_clave"]
+    assert [c["nombre"] for c in res["casos"]] == ["escritorio", "movil", "chico", "sin_modelo", "mnemo"]
     for caso in res["casos"]:
         _revisar(caso)
-        if caso["nombre"] == "sin_clave":
+        if caso["nombre"] == "sin_modelo":
+            assert caso["mensajes"] == [] and caso["lecturas"] >= 6, caso["lecturas"]  # la vista y el widget, tres veces
+            continue
+        if caso["nombre"] == "mnemo":
+            mensajes = caso["mensajes"]
+            assert len(mensajes) == 5 and all(m["csrf"] for m in mensajes)
+            # El contexto solo lleva los filtros conocidos: nada de lo que trae la vuelta de Mnemo
+            ctx = mensajes[0]["cuerpo"]["contexto"]
+            assert ctx["ruta"] == "/reuniones" and ctx["filtros"] == {"zona": "rural"}, ctx
+            assert [m["cuerpo"]["conversacion"] for m in mensajes] == [None, 51, 51, None, 52]
+            # «Nueva conversación» trajo escrito el mensaje que no llegó (409 proveedor)
+            assert mensajes[3]["cuerpo"]["texto"] == mensajes[2]["cuerpo"]["texto"] == "¿Y las reuniones de mañana?"
+            assert caso["lecturas"] >= 2  # mnemo_conexion volvió a leer el estado
             continue
         # Lo que el navegador le mandó al servidor
         primero, segundo = caso["mensajes"][:2]
@@ -143,14 +180,25 @@ const [base, usuario, clave, modo, persona, capturas] = process.argv.slice(2);
 const origen = new URL(base).origin;
 const pref = new URL(base).pathname.replace(/\/+$/, '');
 const TEXTO_XSS = '<img src=x onerror="window.__xss=1"> ¿Quiénes viven en Tres de Octubre?';
+// La conexión con Mnemo como la da GET /api/agente/estado (mnemo.conexion) al administrador
+const CONEXION = { estado: 'conectada', motivo: null, url: 'https://mnemo.example.org/mcp', cuenta: 'Ana Inventada (ana.inventada@example.org)',
+  alcances: ['mnemo:model', 'mnemo:read', 'mnemo:workspace.write'], modelo: true, desde: '2026-11-08T10:00:00+00:00', url_sugerida: 'https://mnemo.example.org/mcp' };
+const SIN_CONECTAR = { estado: 'sin_conectar', motivo: null, url: null, cuenta: null, alcances: [], modelo: false, desde: null, url_sugerida: null };
+const CAIDA = { ...CONEXION, estado: 'caida', motivo: 'revocada', modelo: false };
+const SIN_PERMISO = { ...CONEXION, alcances: ['mnemo:read', 'mnemo:workspace.write'], modelo: false };
+// Sin modelo (ni Mnemo con permiso para usar sus modelos ni clave de Anthropic): el administrador ve el botón
+const SIN_MODELO = (conexion) => ({ disponible: false, motivo: 'sin_configurar', configurado: false, proveedor: null, es_admin: true,
+  escritura: true, limite: { usados: 0, maximo: 300 }, mnemo: { activo: conexion.estado === 'conectada', origen: null, conexion },
+  sugerencias: [] });
 const CASOS = {
   protocolo: [
     { nombre: 'escritorio', viewport: { width: 1400, height: 900 } },
     { nombre: 'movil', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
     { nombre: 'chico', viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
-    // El administrador sin ANTHROPIC_API_KEY ve el botón, y adentro qué variable falta
-    { nombre: 'sin_clave', viewport: { width: 1280, height: 800 }, estado: { disponible: false, motivo: 'sin_configurar', configurado: false,
-      es_admin: true, escritura: true, limite: { usados: 0, maximo: 300 }, mnemo: { activo: false, origen: null }, sugerencias: [] } },
+    // El administrador sin modelo ve el botón, y adentro qué hacer (sin nombres de variables); Ajustes, la conexión
+    { nombre: 'sin_modelo', viewport: { width: 1280, height: 800 }, estado: SIN_MODELO(SIN_CONECTAR) },
+    // Mnemo como modelo: `texto_ronda` y los códigos nuevos del proveedor del modelo
+    { nombre: 'mnemo', viewport: { width: 1280, height: 800 }, mnemo: true },
   ],
   real: [{ nombre: 'real', viewport: { width: 1280, height: 800 } }],
 }[modo];
@@ -212,23 +260,45 @@ const CONV = {
     { rol: 'asistente', partes: [{ tipo: 'texto', texto: 'La reunión tiene *12* asistentes.' }, { tipo: 'aviso', texto: 'Mnemo no respondió.', nivel: 'alerta' }] },
   ], pendientes: [{ id: 'toolu_9', nombre: 'crear_reunion', etiqueta: 'Creando la reunión', titulo: 'Crear la reunión', detalle: [['Fecha', '2026-11-20']], aviso: null }] },
 };
-const nd = (evs) => evs.map((e) => (typeof e === 'string' ? e : JSON.stringify(e))).join('\n') + '\n';
+// Con Mnemo como modelo (caso «mnemo»): el estado y lo que contesta POST /mensajes, en orden
+const ESTADO_MNEMO = { ...ESTADO, proveedor: 'mnemo', mnemo: { activo: true, origen: 'https://mnemo.example.org', conexion: CONEXION } };
+// Tras la caída: las conversaciones nuevas irían en modo directo (hay clave), así que sigue disponible
+const ESTADO_TRAS_CAIDA = { ...ESTADO, proveedor: 'anthropic', mnemo: { activo: false, origen: null, conexion: CAIDA } };
+const HM = (id, estado, resumen) => ({ tipo: 'herramienta', id, nombre: 'buscar_personas', etiqueta: 'Buscando habitantes', estado, ...(resumen ? { resumen } : {}) });
+const errorDe = (conversacion, codigo, mensaje) => [{ tipo: 'inicio', conversacion, titulo: 'Reuniones' }, { tipo: 'texto', texto: 'Un momen' },
+  { tipo: 'error', codigo, mensaje }, { tipo: 'fin', motivo: 'error', limite: { usados: 9, maximo: 300 } }];
+const MENSAJES_MNEMO = [
+  // Tres rondas: los trozos de texto son un adelanto y el texto final de cada ronda (`texto_ronda`) lo reemplaza; en la
+  // segunda no llegó ningún trozo y su texto va antes de su herramienta
+  [{ tipo: 'inicio', conversacion: 51, titulo: 'Reuniones' },
+    { tipo: 'texto', texto: 'Hola, mund' }, { tipo: 'texto', texto: 'o. Voy a busc' },
+    { tipo: 'texto_ronda', texto: 'Hola, mundo. Voy a buscar a **Ana**.' }, HM('toolu_m1', 'inicio'), HM('toolu_m1', 'ok', '1 persona'),
+    HM('toolu_m2', 'inicio'), { tipo: 'texto_ronda', texto: 'Encontré a Ana Inventada.' }, HM('toolu_m2', 'ok', '1 persona'),
+    { tipo: 'texto', texto: 'Listo, ya est' }, { tipo: 'texto_ronda', texto: 'Listo.' },
+    { tipo: 'fin', motivo: 'listo', limite: { usados: 4, maximo: 300 } }],
+  errorDe(51, 'mnemo_conexion', 'La conexión con Mnemo venció o se revocó: el administrador tiene que volver a conectarla en Ajustes → Asistente.'),
+  { estado: 409, detail: { codigo: 'proveedor', mensaje: 'Esta conversación se empezó con un modelo que ya no está disponible: empiece una nueva.' } },
+  errorDe(52, 'mnemo_creditos', 'A la cuenta de Mnemo se le acabaron los créditos.'),
+  errorDe(52, 'llm_peticion', 'El servicio del modelo rechazó la petición. Si se repite, empiece otra conversación.'),
+];
 
-async function servirAgente(ctx, reg, estado = ESTADO) {
+// Lo que contesta el «servidor»: el estado vigente (`reg.estado`, que la prueba puede cambiar) y, para POST
+// /mensajes, `reg.respuestas` en orden (un error antes del flujo es {estado, detail})
+async function servirAgente(ctx, reg) {
   await ctx.route((u) => u.pathname.startsWith(pref + '/api/agente/'), async (route) => {
     const req = route.request();
     const ruta = new URL(req.url()).pathname.slice(pref.length);
     const metodo = req.method();
     const json = (d, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(d) });
     const flujo = (evs) => route.fulfill({ status: 200, contentType: 'application/x-ndjson', headers: { 'cache-control': 'no-store' }, body: nd(evs) });
-    if (metodo === 'GET' && ruta === '/api/agente/estado') return json(estado);
+    if (metodo === 'GET' && ruta === '/api/agente/estado') { reg.lecturas++; return json(reg.estado); }
     if (metodo === 'GET' && ruta === '/api/agente/conversaciones') return json(LISTA);
     const c = /^\/api\/agente\/conversaciones\/(\d+)$/.exec(ruta);
     if (c && metodo === 'GET') return json(CONV[c[1]] || { detail: { codigo: 'no_existe', mensaje: 'No existe esa conversación.' } }, CONV[c[1]] ? 200 : 404);
     if (c && metodo === 'DELETE') { reg.borradas.push(+c[1]); return json({ ok: true }); }
     if (metodo === 'POST' && ruta === '/api/agente/mensajes') {
       reg.mensajes.push({ cuerpo: req.postDataJSON(), csrf: req.headers()['x-csrf-token'] || '' });
-      const r = MENSAJES[reg.mensajes.length - 1];
+      const r = reg.respuestas[reg.mensajes.length - 1];
       // Los errores a propósito llevan una marca para no contarlos como errores de la página
       if (!Array.isArray(r)) return route.fulfill({ status: r.estado, contentType: 'application/json', headers: { 'x-prueba': 'esperado' }, body: JSON.stringify({ detail: r.detail }) });
       return flujo(r);
@@ -499,19 +569,129 @@ async function protocolo(page, op, caso) {
   }
 }
 
-async function sinClave(page, caso) {
+// Sin modelo: el administrador ve el botón y adentro qué hacer según la conexión con Mnemo, sin nombres de variables y
+// con un enlace a Ajustes, donde está la conexión con sus botones. Se cambia el estado y se recarga para cada caso
+async function sinModelo(page, caso) {
   const v = caso.revisiones;
+  const sinVariables = (t) => !/ANTHROPIC|MNEMO_|AGENTE_|token|variable/i.test(t);
+  const explicacion = async () => {
+    if (await page.evaluate(() => document.querySelector('#agente-panel').hidden)) await page.click('#agente-boton');
+    await page.waitForSelector('#agente-panel:not([hidden]) .agente-explicacion', espera);
+    return page.evaluate(() => {
+      const e = document.querySelector('.agente-explicacion');
+      const a = e.querySelector('a');
+      return { titulo: e.querySelector('h3').textContent, texto: e.textContent, sub: document.querySelector('#agente-sub').textContent,
+        enlace: a && { texto: a.textContent, href: a.getAttribute('href'), ruta: a.hasAttribute('data-ruta') },
+        sinCompositor: document.querySelector('#agente-form').hidden && document.querySelector('#agente-nueva').hidden
+          && document.querySelector('#agente-ver-historial').hidden };
+    });
+  };
+  const bloque = async () => {
+    await page.waitForSelector('#mnemo-conexion', espera);
+    return page.evaluate(() => {
+      const b = document.querySelector('#mnemo-conexion');
+      return { estado: b.dataset.estado, texto: b.textContent.replace(/\s+/g, ' '), botones: [...b.querySelectorAll('button')].map((x) => x.textContent.trim()),
+        rige: document.querySelector('.asistente-cabeza').textContent.replace(/\s+/g, ' '), ruta: location.pathname };
+    });
+  };
+  const enlaceBueno = (e) => !!e.enlace && e.enlace.texto === 'Ajustes → Asistente' && e.enlace.href === pref + '/ajustes' && e.enlace.ruta;
+  caso.datos = {};
   await ingresar(page);
-  await page.click('#agente-boton');
-  await page.waitForSelector('#agente-panel:not([hidden]) .agente-explicacion', espera);
-  v.explica_la_variable = await page.evaluate(() => document.querySelector('.agente-explicacion').textContent.includes('ANTHROPIC_API_KEY')
-    && document.querySelector('#agente-form').hidden && document.querySelector('#agente-nueva').hidden
-    && document.querySelector('#agente-ver-historial').hidden && document.activeElement?.id === 'agente-cerrar');
+  // 1. Sin conectar
+  let e = await explicacion();
+  caso.datos.sin_conectar = e;
+  v.explica_sin_conectar = e.titulo === 'El asistente no está conectado' && e.sub === 'Sin conectar' && e.sinCompositor
+    && e.texto.includes('El asistente usa los modelos de su cuenta de Mnemo. El administrador lo conecta en Ajustes → Asistente: inicia sesión en Mnemo y da permiso; no hay que copiar claves.')
+    && sinVariables(e.texto) && enlaceBueno(e);
+  v.foco_en_cerrar = await page.evaluate(() => document.activeElement?.id === 'agente-cerrar');
   await page.waitForFunction(() => document.querySelector('#agente-panel').getAnimations().length === 0);
-  await page.screenshot({ path: `${capturas}/agente-sin-clave.png` });
+  await page.screenshot({ path: `${capturas}/agente-sin-modelo.png` });
+  // El enlace abre Ajustes (sin recargar): la conexión, con «Conectar con Mnemo»
+  await page.click('.agente-explicacion a');
+  let b = await bloque();
+  caso.datos.ajustes_sin_conectar = b;
+  v.ajustes_sin_conectar = b.ruta === pref + '/ajustes' && b.estado === 'sin_conectar' && JSON.stringify(b.botones) === '["Conectar con Mnemo"]'
+    && b.texto.includes('no hay que copiar claves') && b.rige.includes('El asistente está apagado: no tiene un modelo que usar.') && sinVariables(b.texto);
+  // 2. La conexión se cayó (Mnemo la revocó)
+  caso.estado = SIN_MODELO(CAIDA);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  e = await explicacion();
+  b = await bloque();
+  caso.datos.caida = { e, b };
+  v.explica_la_caida = e.titulo === 'Se cortó la conexión con Mnemo' && e.sub === 'Conexión caída' && e.texto.includes('se revocó en Mnemo')
+    && e.texto.includes('El administrador la vuelve a conectar en Ajustes → Asistente') && sinVariables(e.texto) && enlaceBueno(e);
+  v.ajustes_caida = b.estado === 'caida' && JSON.stringify(b.botones) === '["Volver a conectar","Desconectar"]' && b.texto.includes('Conexión caída')
+    && b.texto.includes('se revocó en Mnemo');
+  // 3. Conectado sin permiso para usar los modelos
+  caso.estado = SIN_MODELO(SIN_PERMISO);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  e = await explicacion();
+  b = await bloque();
+  caso.datos.sin_permiso = { e, b };
+  v.explica_sin_permiso = e.titulo === 'Mnemo está conectado sin permiso para usar sus modelos' && e.texto.includes('«Usar tus modelos de IA y tus créditos»')
+    && sinVariables(e.texto) && enlaceBueno(e);
+  v.ajustes_sin_permiso = b.estado === 'conectada' && b.texto.includes('Conectado como Ana Inventada (ana.inventada@example.org)')
+    && b.texto.includes('Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar y marque esa casilla')
+    && !b.texto.includes('Usar sus modelos de IA y sus créditos') && JSON.stringify(b.botones) === '["Volver a conectar","Desconectar"]';
+  await page.locator('#mnemo-conexion').screenshot({ path: `${capturas}/ajustes-mnemo-sin-permiso.png` });
   await page.keyboard.press('Escape');
   v.cierra = await page.evaluate(() => document.querySelector('#agente-panel').hidden && !document.querySelector('#agente-boton').hidden);
-  v.no_pidio_mensajes = caso.mensajes.length === 0;
+}
+
+// Mnemo como modelo, desde una vista cuya dirección trae lo de una vuelta de Mnemo (que no debe ir al modelo)
+async function conMnemo(page, caso) {
+  const v = caso.revisiones;
+  await ingresar(page);
+  await page.goto(`${base}/reuniones?zona=rural&code=c0de&state=st4te&iss=${encodeURIComponent('https://mnemo.example.org')}&error=x&error_description=y`,
+    { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('#app #vista > .vista', espera);
+  await page.click('#agente-boton');
+  await page.waitForSelector('#agente-panel:not([hidden]) .agente-sugerencia', espera);
+  const ultimoError = () => page.evaluate(() => {
+    const e = [...document.querySelectorAll('.agente-error')].pop();
+    return e && { texto: e.textContent, botones: [...e.querySelectorAll('button')].map((x) => x.textContent) };
+  });
+  // 1. `texto_ronda`: queda el texto final de cada ronda, en su lugar (antes de las herramientas que pidió)
+  await enviar(page, '¿Quién es Ana?');
+  await page.waitForFunction(() => document.querySelector('#agente-sub').textContent === 'Reuniones' && document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
+  await page.waitForTimeout(100);
+  const partes = await page.evaluate(() => [...[...document.querySelectorAll('.agente-msj.agente-respuesta')].pop().children]
+    .filter((x) => !x.classList.contains('sr'))
+    .map((x) => (x.classList.contains('agente-md') ? `md:${x.textContent}` : x.classList.contains('agente-herr') ? `herr:${x.dataset.estado}` : x.className)));
+  caso.datos = { partes };
+  v.texto_ronda = JSON.stringify(partes) === JSON.stringify(['md:Hola, mundo. Voy a buscar a Ana.', 'herr:ok', 'md:Encontré a Ana Inventada.', 'herr:ok', 'md:Listo.'])
+    && await page.evaluate(() => [...document.querySelectorAll('.agente-md strong')].some((x) => x.textContent === 'Ana'));
+  // 2. La conexión se cayó: el error sin «Reintentar» y el estado se vuelve a leer
+  caso.estado = ESTADO_TRAS_CAIDA;
+  const lecturas = caso.lecturas;
+  await enviar(page, '¿Y su teléfono?');
+  await page.waitForFunction(() => document.querySelectorAll('.agente-error').length === 1 && document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
+  for (let i = 0; i < 100 && caso.lecturas === lecturas; i++) await page.waitForTimeout(50);
+  let err = await ultimoError();
+  caso.datos.caida = err;
+  v.conexion_caida = err.texto.includes('volver a conectarla en Ajustes → Asistente') && err.botones.length === 0 && caso.lecturas === lecturas + 1;
+  // 3. La conversación es de un proveedor que ya no está (409): «Nueva conversación», con el mensaje escrito
+  await enviar(page, '¿Y las reuniones de mañana?');
+  await page.waitForFunction(() => document.querySelectorAll('.agente-error').length === 2 && document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
+  err = await ultimoError();
+  caso.datos.proveedor = err;
+  v.proveedor_ofrece_otra = err.texto.includes('empiece una nueva') && JSON.stringify(err.botones) === '["Nueva conversación"]'
+    && await page.evaluate(() => [...document.querySelectorAll('.agente-msj.agente-persona')].pop().textContent.includes('No se envió'));
+  await page.click('.agente-error .agente-reintentar');
+  await page.waitForSelector('.agente-bienvenida', espera);
+  v.nueva_con_el_mensaje = await page.evaluate(() => document.querySelector('#agente-texto').value === '¿Y las reuniones de mañana?'
+    && document.querySelector('#agente-sub').textContent === 'Nueva conversación');
+  // 4. Sin créditos: no se reintenta (el mensaje escrito se envía en la conversación nueva)
+  await page.press('#agente-texto', 'Enter');
+  await page.waitForFunction(() => document.querySelectorAll('.agente-error').length === 1 && document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
+  err = await ultimoError();
+  v.creditos_sin_reintento = err.texto.includes('se le acabaron los créditos') && err.botones.length === 0;
+  // 5. Petición rechazada: «Nueva conversación»
+  await enviar(page, 'Último');
+  await page.waitForFunction(() => document.querySelectorAll('.agente-error').length === 2 && document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
+  err = await ultimoError();
+  v.peticion_ofrece_otra = JSON.stringify(err.botones) === '["Nueva conversación"]';
+  await page.screenshot({ path: `${capturas}/agente-mnemo.png` });
 }
 
 async function real(page, caso) {
@@ -554,11 +734,12 @@ async function real(page, caso) {
   const nav = await chromium.launch();
   const res = { casos: [] };
   try {
-    for (const { nombre, estado, ...op } of CASOS) {
+    for (const { nombre, estado, mnemo, ...op } of CASOS) {
       const ctx = await nav.newContext(op);
-      const caso = { nombre, revisiones: {}, errores: [], csp: [], mensajes: [], confirmaciones: [], borradas: [], insignias: 0 };
+      const caso = { nombre, revisiones: {}, errores: [], csp: [], mensajes: [], confirmaciones: [], borradas: [], insignias: 0,
+        lecturas: 0, estado: estado || (mnemo ? ESTADO_MNEMO : ESTADO), respuestas: mnemo ? MENSAJES_MNEMO : MENSAJES };
       await ctx.route((u) => u.origin !== origen, (r) => r.abort()); // sin red: fuentes de Google, teselas
-      if (modo === 'protocolo') await servirAgente(ctx, caso, estado);
+      if (modo === 'protocolo') await servirAgente(ctx, caso);
       await ctx.exposeBinding('__csp', (_, x) => caso.csp.push(x));
       await ctx.addInitScript(() => {
         addEventListener('securitypolicyviolation', (e) => window.__csp(`${e.effectiveDirective} ${e.blockedURI}`), true);
@@ -574,13 +755,16 @@ async function real(page, caso) {
       });
       page.on('request', (x) => { if (new URL(x.url()).pathname === pref + '/api/insignias') caso.insignias++; });
       try {
-        if (nombre === 'sin_clave') await sinClave(page, caso);
+        if (nombre === 'sin_modelo') await sinModelo(page, caso);
+        else if (nombre === 'mnemo') await conMnemo(page, caso);
         else if (modo === 'protocolo') await protocolo(page, op, caso);
         else await real(page, caso);
       } catch (e) {
         caso.revisiones.sin_excepcion = String(e.stack || e).slice(0, 1500);
         try { await page.screenshot({ path: `${capturas}/agente-${nombre}-fallo.png` }); } catch { /* nada */ }
       }
+      delete caso.estado;
+      delete caso.respuestas;
       res.casos.push(caso);
       await ctx.close();
     }
@@ -588,3 +772,130 @@ async function real(page, caso) {
   console.log(JSON.stringify(res));
 })().catch((e) => { console.error(e); process.exit(1); });
 """
+
+
+# ───────────────────────────── Conectar Mnemo desde Ajustes (OAuth de punta a punta) ─────────────────────────────
+
+class _Registro:
+    """Delante del panel: anota de cada petición el método, la ruta, si traía la vuelta de Mnemo en la consulta (sin
+    guardar sus valores), si traía la cookie de sesión (sin su valor) y `Sec-Fetch-Site`/`Sec-Fetch-Mode`."""
+
+    def __init__(self, app):
+        self.app = app
+        self.peticiones: list[dict] = []
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            cab = {k.decode("latin-1").lower(): v.decode("latin-1") for k, v in scope["headers"]}
+            consulta = parse_qs(scope.get("query_string", b"").decode("latin-1"))
+            self.peticiones.append({"metodo": scope["method"], "ruta": scope["path"],
+                                    "vuelta": "state" in consulta and ("code" in consulta or "error" in consulta),
+                                    "sesion": "yj_sesion=" in cab.get("cookie", ""),
+                                    "sitio": cab.get("sec-fetch-site"), "modo": cab.get("sec-fetch-mode")})
+        return await self.app(scope, receive, send)
+
+
+class _ConPermisos:
+    """El `OAuthFalso` (ayudas_mcp.py) con una página de permisos en el origen de Mnemo, como la de verdad: GET
+    /oauth/authorize muestra los permisos pedidos (casillas, todas marcadas) con «Permitir» y «Cancelar», y el
+    formulario (un POST al mismo origen) responde 303 a la vuelta que arma `OAuthFalso.autorizar` (con `code`, `state`
+    e `iss`, o con `error=access_denied`). Así la vuelta al panel la empieza una página de Mnemo, como en producción:
+    es una navegación de otro sitio y la cookie SameSite=Strict del panel no viaja en ella."""
+
+    def __init__(self, falso):
+        self.falso = falso
+        self.paginas = 0
+
+    @staticmethod
+    async def _responder(send, estado: int, cuerpo: str = "", cabeceras: list | None = None) -> None:
+        crudo = cuerpo.encode()
+        await send({"type": "http.response.start", "status": estado, "headers": [
+            (b"content-type", b"text/html; charset=utf-8"), (b"content-length", str(len(crudo)).encode()),
+            *(cabeceras or [])]})
+        await send({"type": "http.response.body", "body": crudo})
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and scope["path"] == "/oauth/authorize" and scope["method"] == "GET":
+            consulta = dict(parse_qsl(scope.get("query_string", b"").decode()))
+            self.paginas += 1
+            pedidos = [a for a in (consulta.get("scope") or "").split() if a.startswith("mnemo:")]
+            casillas = "".join(f'<label><input type="checkbox" name="scope" value="{html.escape(a)}" checked> '
+                               f'{html.escape(a)}</label><br>' for a in pedidos)
+            pagina = (f'<!doctype html><meta charset="utf-8"><title>Mnemo</title>'
+                      f'<h1>{html.escape(self.falso.base)} quiere usar tu Mnemo</h1>'
+                      f'<form method="post" action="/oauth/permitir">'
+                      f'<input type="hidden" name="consulta" value="{html.escape(json.dumps(consulta))}">{casillas}'
+                      f'<button id="permitir" name="decision" value="allow">Permitir</button> '
+                      f'<button id="cancelar" name="decision" value="deny">Cancelar</button></form>')
+            return await self._responder(send, 200, pagina)
+        if scope["type"] == "http" and scope["path"] == "/oauth/permitir" and scope["method"] == "POST":
+            cuerpo = b""
+            while True:
+                m = await receive()
+                cuerpo += m.get("body", b"")
+                if not m.get("more_body"):
+                    break
+            form = parse_qs(cuerpo.decode())
+            self.falso.decision = "allow" if form.get("decision") == ["allow"] else "deny"
+            self.falso.marcar = set(form.get("scope", []))
+            try:
+                estado, destino = self.falso.autorizar(json.loads(form["consulta"][0]))
+            finally:
+                self.falso.decision, self.falso.marcar = "allow", None
+            if estado != 302:
+                return await self._responder(send, estado, destino)
+            return await self._responder(send, 303, "", [(b"location", destino.encode())])
+        return await self.falso(scope, receive, send)
+
+
+@pytest.fixture
+def panel_y_mnemo(cfg, tmp_path):
+    """El panel de verdad (con `_Registro` delante) en 127.0.0.1 y un Mnemo falso por red (`OAuthFalso` con su página
+    de permisos) en `http://localhost:<puerto>`: otro sitio para el navegador, como en producción. El panel habla con
+    él por red, sin transporte inyectado. Da (base del panel, app del panel, el OAuthFalso, el registro de las
+    peticiones al panel, la página de permisos)."""
+    from ayudas_mcp import EnHilo, OAuthFalso
+    falso = OAuthFalso()
+    permisos = _ConPermisos(falso)
+    with EnHilo(permisos) as mnemo:
+        falso.base = f"http://localhost:{urlsplit(mnemo.url).port}"
+        with _servir(cfg, tmp_path, envolver=_Registro) as (base, panel, _, registro):
+            yield base, panel, falso, registro, permisos
+
+
+@requiere_navegador
+def test_conectar_mnemo_desde_ajustes(panel_y_mnemo, cfg, tmp_path):
+    base, panel, falso, registro, permisos = panel_y_mnemo
+    db = panel.state.db
+    coord = crear_usuario(db, "planillero")  # se pasa a coordinador en la base, como ayudas_g3.coordinador
+    db.usuarios.update_one({"_id": coord["_id"]}, {"$set": {"rol": "coordinador", "usuario": f"coordinador{coord['_id']}"}})
+    res = _correr(GUION_MNEMO, tmp_path, base, cfg.usuario, cfg.clave, "mnemo", falso.recurso,
+                  f"coordinador{coord['_id']}", CLAVE_USUARIO)
+    (caso,) = res["casos"]
+    _revisar(caso)
+    d = caso["datos"]
+    # La dirección de autorización que armó el panel: PKCE S256, el recurso, la vuelta a Ajustes y los alcances
+    a = d["autorizar"]
+    assert a["ruta"] == "/oauth/authorize" and a["response_type"] == "code" and a["code_challenge_method"] == "S256"
+    assert a["redirect_uri"] == base + "/ajustes" and a["resource"] == falso.recurso and a["state_largo"] >= 40
+    assert {"openid", "profile", "email", "mnemo:model", "mnemo:read"} <= set(a["scope"].split())
+    assert "mnemo:forms.responses" not in a["scope"]
+    # Tres vueltas (cancelar, permitir y permitir sin los modelos): cada navegación de vuelta llegó desde otro sitio y SIN
+    # la cookie de sesión; el POST a /volver que hizo la página después, CON ella
+    vueltas = [p for p in registro.peticiones if p["metodo"] == "GET" and p["ruta"] == "/panel/ajustes" and p["vuelta"]]
+    assert len(vueltas) == 3, vueltas
+    assert all(not p["sesion"] and p["sitio"] == "cross-site" and p["modo"] == "navigate" for p in vueltas), vueltas
+    volver = [p for p in registro.peticiones if p["ruta"] == "/panel/api/agente/mnemo/volver"]
+    assert len(volver) == 3 and all(p["metodo"] == "POST" and p["sesion"] and p["sitio"] == "same-origin" for p in volver)
+    assert permisos.paginas == 3
+    # El panel se registró una vez y reusó el cliente; canjeó cada código con PKCE; reconectar la misma cuenta no
+    # revocó nada; desconectar revocó con el token de renovación (nunca con el de acceso)
+    assert falso.registros == 1
+    canjes = [p["form"] for p in falso.peticiones if p["ruta"] == "/oauth/token" and (p["form"] or {}).get("grant_type") == "authorization_code"]
+    assert len(canjes) == 2 and all(c.get("code_verifier") and c["redirect_uri"] == base + "/ajustes" for c in canjes)
+    assert [(r["tipo"], r["token_type_hint"]) for r in falso.revocaciones] == [("refresh", "refresh_token")]
+    # En la base: sin conexión, sin tokens a la vista y la auditoría de cada paso
+    doc = db.meta.find_one({"_id": "mnemo_conexion"}) or {}
+    assert "estado" not in doc and "cifrado" not in doc and not doc.get("pendiente")
+    acciones = [a["accion"] for a in db.auditoria.find({"accion": {"$regex": "^mnemo_"}}, sort=[("_id", 1)])]
+    assert acciones == ["mnemo_conectar", "mnemo_conectar", "mnemo_desconectar"], acciones

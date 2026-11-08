@@ -17,9 +17,37 @@ const MAX_TEXTO = 4000;                   // el tope de MensajeIn.texto en la AP
 const VIGENCIA_ESTADO_MS = 5 * 60 * 1000; // el estado (disponible, tope de mensajes) se vuelve a pedir al cambiar de vista
 const REINTENTO_ESTADO_MS = 30 * 1000;    // si no se pudo leer, no se insiste en cada vista
 const ESTADOS = new Set(['inicio', 'ok', 'error', 'pendiente', 'aprobada', 'rechazada']);
-// Errores del turno que no se arreglan repitiendo el mismo mensaje
+// Errores del turno que no se arreglan repitiendo el mismo mensaje. Los de Mnemo como modelo: la conexión se cayó, el
+// plan no incluye el chat, no quedan créditos o la cuenta no tiene un modelo que sirva; `llm_peticion`, el proveedor
+// rechazó la petición; `proveedor`, la conversación es de un proveedor del modelo que ya no está
 const SIN_REINTENTO = new Set(['volumen', 'borrada', 'sin_pendientes', 'permiso', 'larga', 'agente_apagado', 'sin_configurar',
-  'no_existe']);
+  'no_existe', 'proveedor', 'mnemo_conexion', 'mnemo_plan', 'mnemo_creditos', 'mnemo_sin_modelo', 'llm_peticion']);
+// Errores tras los que esta conversación ya no sirve: se ofrece «Nueva conversación»
+const CON_NUEVA = new Set(['larga', 'no_existe', 'borrada', 'proveedor', 'llm_peticion']);
+// Errores tras los que cambió el estado del asistente (el rol apagado, sin proveedor del modelo, la conexión con Mnemo
+// caída): se vuelve a leer, y al administrador se le explica qué hacer
+const RELEER_ESTADO = new Set(['agente_apagado', 'sin_configurar', 'mnemo_conexion']);
+// Las claves de la dirección que viajan al modelo como filtros de la vista: las de Habitantes y el mapa (`Filtros` de
+// api/filtros.py) y el estado de algunas vistas (orden y página del directorio, pestaña de Calidad, la persona de «Mi
+// trabajo», el periodo de Usuarios). Ninguna otra: la vuelta de Mnemo a Ajustes trae en la dirección `code`, `state`
+// e `iss` (o `error`), y una clave desconocida tampoco es asunto del modelo
+const CLAVES_CONTEXTO = new Set(['q', 'zona', 'lugar_id', 'fuente', 'lista', 'etiqueta', 'con_cedula', 'con_telefono',
+  'precision', 'reunion_id', 'asistio', 'consentimiento', 'lider', 'sexo', 'completitud_max', 'ids', 'edad_min', 'edad_max',
+  'tipo_documento', 'cedula_verificada', 'puesto_id', 'con_puesto', 'con_mesa', 'votacion_estado', 'donde', 'abordado',
+  'contactado', 'abordaje_estado', 'ultimo_resultado', 'sin_acercamiento_dias', 'proximo_vencido', 'canal_autorizado',
+  'situacion', 'creado_por', 'actualizado_por', 'menor', 'requiere_actualizacion', 'varios_telefonos', 'telefono_estado',
+  'estado_civil', 'nivel_educativo', 'situacion_laboral', 'estrato', 'tenencia_vivienda', 'regimen_salud', 'tratables',
+  'mios', 'poligono', 'area_id',
+  ...['cedula', 'telefono', 'sexo', 'edad', 'lugar', 'puesto', 'mesa', 'direccion', 'puesto_mesa'].map((c) => `sin_${c}`),
+  'ids_total', 'orden', 'pagina', 'p', 'uid', 'desde', 'hasta', 'por', 'agrupar']);
+const MAX_FILTROS = 30;
+const MAX_TEXTO_RONDA = 100000;           // `texto_ronda`: el texto final de una ronda (como en una conversación guardada)
+// Por qué se cayó la conexión con Mnemo (`mnemo.conexion.motivo` del estado)
+const CAIDA_MNEMO = {
+  revocada: 'Mnemo ya no la acepta: se revocó en Mnemo, venció por no usarse o la cuenta se desactivó.',
+  clave: 'Cambió la clave del administrador del panel y la conexión guardada ya no se puede leer.',
+  error: 'Mnemo respondió algo inesperado al renovarla.',
+};
 
 // ───────── Utilidades ─────────
 
@@ -83,6 +111,19 @@ export function destinoEnlace(destino, { origenMnemo = null, rutaPanel = () => n
   }
   if (origenMnemo && u.protocol === 'https:' && u.origin === origenMnemo) return { tipo: 'mnemo', href: u.href };
   return null;
+}
+
+/** Los filtros de la vista que van en el contexto de cada mensaje: de `consulta` (un `location.search`), solo las
+ * claves conocidas (CLAVES_CONTEXTO), la primera vez que aparece cada una, con el valor recortado a 200 caracteres y
+ * como mucho 30. Nunca lo que trae la vuelta de Mnemo (`code`, `state`, `iss`, `error`, `error_description`). */
+export function filtrosDe(consulta) {
+  const filtros = {};
+  let n = 0;
+  for (const [k, v] of new URLSearchParams(typeof consulta === 'string' ? consulta : '')) {
+    if (n >= MAX_FILTROS) break;
+    if (CLAVES_CONTEXTO.has(k) && !Object.hasOwn(filtros, k)) { filtros[k] = v.slice(0, 200); n++; }
+  }
+  return filtros;
 }
 
 /** El origen de Mnemo que da el estado, solo si es `https://host[:puerto]` (si no, ningún enlace sale del panel). */
@@ -562,16 +603,22 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   // ── Estado del asistente para esta persona ──
+  // `proveedor`: de dónde sale el modelo de las conversaciones nuevas (`mnemo`, `anthropic` o null si no hay ninguno).
+  // `conexion`: la conexión con Mnemo (solo llega al administrador y al coordinador): {estado, motivo, modelo} o null
   function normalizar(d) {
     const o = d && typeof d === 'object' ? d : {};
     const limite = o.limite && typeof o.limite === 'object' ? o.limite : {};
+    const c = o.mnemo?.conexion && typeof o.mnemo.conexion === 'object' ? o.mnemo.conexion : null;
     return {
       disponible: o.disponible === true,
       motivo: texto(o.motivo, 40) || null,
+      proveedor: ['mnemo', 'anthropic'].includes(o.proveedor) ? o.proveedor : null,
       esAdmin: o.es_admin === true,
       escritura: o.escritura !== false,
       limite: { usados: entero(limite.usados), maximo: entero(limite.maximo) },
       mnemo: { activo: o.mnemo?.activo === true, origen: origenSeguro(o.mnemo?.origen) },
+      conexion: c && ['sin_conectar', 'conectada', 'caida'].includes(c.estado)
+        ? { estado: c.estado, motivo: texto(c.motivo, 40) || null, modelo: c.modelo === true } : null,
       sugerencias: (Array.isArray(o.sugerencias) ? o.sugerencias : []).map((s) => texto(s, 200).trim()).filter(Boolean)
         .slice(0, 6),
     };
@@ -591,7 +638,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     return leyendo;
   }
 
-  // El administrador ve el botón aunque falte la clave o su rol esté apagado: adentro se explica qué hacer
+  // El administrador ve el botón aunque no haya modelo (Mnemo sin conectar) o su rol esté apagado: adentro se explica qué
+  // hacer
   const usable = () => !!info && (info.disponible || (info.esAdmin && info.motivo !== 'cuenta'));
 
   function aplicarEstado() {
@@ -603,7 +651,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     if (!util) { if (abierto) cerrar(); return; }
     if (!info.disponible) pintarExplicacion();
     else if (iniciado && log.dataset.explicacion) {
-      // Ya está disponible (se configuró o se encendió para su rol): la explicación da paso a la conversación
+      // Ya está disponible (se conectó Mnemo o se encendió para su rol): la explicación da paso a la conversación
       iniciado = false;
       delete log.dataset.explicacion;
       if (abierto) iniciar();
@@ -835,6 +883,40 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       else p.nodo.deleteData(largo, p.nodo.length - largo);
     }
     nuevaRonda();
+  }
+
+  /** `texto_ronda`: el texto final de la ronda en curso, cuando no coincide con lo que llegó por partes (con Mnemo los
+   * trozos son un adelanto: vale el resultado). Reemplaza el texto de la ronda, sin tocar lo de rondas anteriores: va
+   * en su primera parte de texto (o en una nueva) y las demás se quitan; vacío, la ronda queda sin texto. */
+  function textoRonda(t) {
+    vaciar();
+    const quitar = (p) => {
+      p.el.remove();
+      sucias.delete(p);
+      ronda.partes.splice(ronda.partes.indexOf(p), 1);
+      if (ultima === p) ultima = null;
+    };
+    const propias = ronda.partes.filter((p) => p.tipo === 'texto');
+    const heredadas = [...ronda.recortes].filter(([p]) => p.tipo === 'texto');
+    for (const [p, largo] of heredadas) { p.fuente = p.fuente.slice(0, largo); sucias.add(p); }
+    for (const p of propias.slice(1)) quitar(p);
+    let destino = propias[0] || heredadas[0]?.[0] || null;
+    if (destino && destino === propias[0]) destino.fuente = '';
+    if (!destino && t) {
+      // Una parte nueva, antes de las herramientas de la ronda (el modelo escribe y después las pide)
+      destino = { tipo: 'texto', el: el('div', 'agente-md'), fuente: '', bloques: [] };
+      const chip = ronda.partes.find((p) => p.tipo === 'chip' && p.el.isConnected);
+      if (chip) chip.el.before(destino.el);
+      else enAsistente().append(destino.el);
+      ronda.partes.push(destino);
+    }
+    if (destino) {
+      destino.fuente += t;
+      if (!destino.fuente && ronda.partes.includes(destino)) quitar(destino);
+      else sucias.add(destino);
+    }
+    programar();
+    if (t) aviseNovedad();
   }
 
   // ── Herramientas: un chip por tool_use, con su estado ──
@@ -1072,6 +1154,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
         break;
       case 'progreso': if (texto(ev.texto)) agregarProgreso(texto(ev.texto)); break;
       case 'texto': if (texto(ev.texto)) agregarTexto(texto(ev.texto)); break;
+      case 'texto_ronda': if (typeof ev.texto === 'string') textoRonda(texto(ev.texto, MAX_TEXTO_RONDA)); break;
       case 'herramienta': alHerramienta(ev); break;
       case 'accion':
         accion(ev.accion);
@@ -1214,7 +1297,12 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       entrada.focus({ preventScroll: true });
       enviar(t.texto, { reusar });
     }];
-    const otra = ['Nueva conversación', () => nuevaConversacion()];
+    // Si el mensaje no llegó a la conversación (un error antes del flujo), la nueva lo trae escrito para enviarlo ahí
+    const otra = ['Nueva conversación', () => {
+      nuevaConversacion();
+      if (t.tipo === 'mensaje' && !t.inicio && !entrada.value.trim()) { entrada.value = t.texto; autoAltura(); }
+    }];
+    const releer = (codigo) => { if (RELEER_ESTADO.has(codigo)) leerEstado().then(aplicarEstado); };
     const acciones = [];
     let mensaje = null;
     let duda = 'se cortó antes de confirmar el resultado; revise la vista'; // tarjeta aprobada sin respuesta final
@@ -1223,8 +1311,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       const codigo = e instanceof ErrorApi ? e.codigo : null;
       const reintentable = !SIN_REINTENTO.has(codigo) && ![404, 413, 422, 429].includes(e?.estado);
       mensaje = explicar(e);
-      if (codigo === 'larga' || codigo === 'no_existe' || e?.estado === 404) acciones.push(otra);
-      if (codigo === 'agente_apagado' || codigo === 'sin_configurar') leerEstado().then(aplicarEstado);
+      if (CON_NUEVA.has(codigo) || e?.estado === 404) acciones.push(otra);
+      releer(codigo);
       if (t.tipo === 'mensaje' && !t.inicio) {
         // El servidor no recibió el mensaje: la burbuja queda marcada, «Reintentar» la reusa y lo pendiente sigue
         for (const x of t.sinAprobar) if (!x.final) x.enviada = false;
@@ -1245,8 +1333,9 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       duda = 'se detuvo antes de confirmar el resultado; revise la vista';
     } else if (t.error) {
       mensaje = t.error.mensaje;
-      if (t.error.codigo === 'borrada' || t.error.codigo === 'larga') acciones.push(otra);
+      if (CON_NUEVA.has(t.error.codigo)) acciones.push(otra);
       else if (t.tipo === 'mensaje' && !SIN_REINTENTO.has(t.error.codigo)) acciones.push(reintento(null));
+      releer(t.error.codigo);
     } else if (!t.fin) {
       mensaje = FLUJO_CORTADO;
       if (t.tipo === 'mensaje') acciones.push(reintento(null));
@@ -1286,18 +1375,12 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   function contexto() {
     const ruta = rutaActual();
     const m = /^\/(personas|reuniones)\/(\d{1,12})$/.exec(ruta);
-    const filtros = {};
-    let n = 0;
-    for (const [k, v] of new URLSearchParams(location.search)) {
-      if (n >= 30) break;
-      if (/^[A-Za-z0-9_.-]{1,40}$/.test(k) && !(k in filtros)) { filtros[k] = v.slice(0, 200); n++; }
-    }
     return {
       ruta: ruta.slice(0, 300),
       vista: document.querySelector('#nav a[aria-current="page"]')?.dataset.nav || null,
       persona_id: m?.[1] === 'personas' ? Number(m[2]) : null,
       reunion_id: m?.[1] === 'reuniones' ? Number(m[2]) : null,
-      filtros,
+      filtros: filtrosDe(location.search),
       mapa: camara(),
     };
   }
@@ -1334,22 +1417,50 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     log.append(b);
   }
 
+  /** Por qué no hay modelo, según la conexión con Mnemo: `caida`, `sin_modelo` (conectada sin permiso para usar sus
+   * modelos) o `sin_conectar` (también si no se sabe). */
+  function faltaDeModelo() {
+    const c = info?.conexion;
+    if (c?.estado === 'caida') return 'caida';
+    return c?.estado === 'conectada' && !c.modelo ? 'sin_modelo' : 'sin_conectar';
+  }
+
   function pintarExplicacion() {
-    if (log.dataset.explicacion === info?.motivo) return;
+    const sinModelo = info?.motivo === 'sin_configurar';
+    const falta = sinModelo ? faltaDeModelo() : null;
+    const clave = sinModelo ? `sin_configurar:${falta}:${info?.conexion?.motivo || ''}` : info?.motivo || 'otro';
+    if (log.dataset.explicacion === clave) return;
     limpiarConversacion();
-    log.dataset.explicacion = info?.motivo || 'otro';
-    sub.textContent = sub.title = info?.motivo === 'sin_configurar' ? 'Sin configurar' : 'Apagado para su rol';
+    log.dataset.explicacion = clave;
+    sub.textContent = sub.title = !sinModelo ? 'Apagado para su rol'
+      : { caida: 'Conexión caída', sin_modelo: 'Sin permiso para usar los modelos' }[falta] || 'Sin conectar';
     const b = el('div', 'agente-explicacion');
-    if (info?.motivo === 'sin_configurar') {
-      b.append(el('h3', null, 'El asistente no está configurado'));
+    // «Ajustes → Asistente» enlaza a Ajustes para el administrador (quien conecta); para los demás es solo texto
+    const ajustes = () => {
+      const d = info?.esAdmin ? destinoEnlace('/ajustes', op) : null;
+      return d ? Object.assign(crearEnlace(d), { textContent: 'Ajustes → Asistente' }) : 'Ajustes → Asistente';
+    };
+    if (sinModelo && falta === 'caida') {
+      b.append(el('h3', null, 'Se cortó la conexión con Mnemo'));
+      const motivo = CAIDA_MNEMO[info.conexion.motivo];
+      b.append(el('p', null, 'El asistente usa los modelos de la cuenta de Mnemo conectada al panel, y esa conexión dejó '
+        + `de valer.${motivo ? ` ${motivo}` : ''}`));
       const p = el('p');
-      p.append('Para encenderlo, defina la variable de entorno ', el('code', null, 'ANTHROPIC_API_KEY'),
-        ' (la clave de la API de Anthropic) en el servicio del panel y reinícielo.');
-      const p2 = el('p', 'sec');
-      p2.append('Opcionales: ', el('code', null, 'AGENTE_MODELO'), ' y ', el('code', null, 'AGENTE_ESFUERZO'), '; ',
-        el('code', null, 'MNEMO_MCP_URL'), ' y ', el('code', null, 'MNEMO_TOKEN'), ' le dan las herramientas de Mnemo. ',
-        'Más detalle en ', el('code', null, 'admin/docs/agente.md'), '.');
-      b.append(p, p2);
+      p.append('El administrador la vuelve a conectar en ', ajustes(),
+        ': inicia sesión en Mnemo y da permiso; no hay que copiar claves.');
+      b.append(p);
+    } else if (sinModelo && falta === 'sin_modelo') {
+      b.append(el('h3', null, 'Mnemo está conectado sin permiso para usar sus modelos'));
+      const p = el('p');
+      p.append('Vuelva a conectar en ', ajustes(), ' y, en la página de permisos de Mnemo, marque la casilla «Usar tus '
+        + 'modelos de IA y tus créditos».');
+      b.append(p);
+    } else if (sinModelo) {
+      b.append(el('h3', null, 'El asistente no está conectado'));
+      const p = el('p');
+      p.append('El asistente usa los modelos de su cuenta de Mnemo. El administrador lo conecta en ', ajustes(),
+        ': inicia sesión en Mnemo y da permiso; no hay que copiar claves.');
+      b.append(p);
     } else {
       b.append(el('h3', null, 'El asistente está apagado para su rol'));
       const p = el('p');

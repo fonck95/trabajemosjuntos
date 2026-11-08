@@ -23,17 +23,22 @@
     JSON plano (`formato="json"`). Mientras una herramienta tarda, `: keepalive` cada `intervalo` segundos.
 * `peticiones` guarda cada petición (método HTTP, ruta, cabeceras y JSON) y `cancelaciones` cuenta las herramientas
   cortadas porque el cliente se fue (Mnemo cancela la llamada al cerrarse la conexión).
+* `ModeloFalso` (al final) agrega a un `MnemoFalso` la herramienta del modelo, `mnemo_model_complete`, con respuestas
+  en cola (`respuesta_modelo`, o errores de Mnemo con `fallo`), el texto a trozos por `notifications/progress` y los
+  argumentos de cada llamada en `pedidos`.
 """
 from __future__ import annotations
 
 import asyncio
 import base64
+import copy
 import hashlib
 import inspect
 import json
 import secrets
 import threading
 import time
+from collections import deque
 from typing import Any, Awaitable, Callable, Iterable
 from urllib.parse import parse_qs, urlencode, urlsplit
 
@@ -828,6 +833,109 @@ class _TransporteOAuth(httpx2.AsyncBaseTransport):
 
     async def aclose(self) -> None:
         return None
+
+
+# ───────────────────────────── El modelo de Mnemo, falso ─────────────────────────────
+
+MODELO = "mnemo_model_complete"
+MODELO_FALSO = {"provider": "proveedor-falso", "model": "modelo-inventado"}
+FINES_MODELO = ["end_turn", "tool_use", "max_tokens", "refusal", "other"]
+# Gastar modelo es una lectura (no escribe nada en Mnemo) que no es idempotente
+ANOTACIONES_MODELO = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": False, "openWorldHint": False}
+
+
+def herramienta_modelo() -> dict:
+    """`mnemo_model_complete` como la lista Mnemo (`catalog/model.ts`): el esquema de la entrada, resumido, y el de la
+    salida (`structuredContent`)."""
+    d = herramienta(MODELO, "Get a model response", {
+        "system": {"type": "string", "maxLength": 400000},
+        "messages": {"type": "array", "minItems": 1, "maxItems": 2000, "items": {"type": "object"}},
+        "tools": {"type": "array", "maxItems": 128, "items": {"type": "object"}},
+        "tool_choice": {"anyOf": [{"type": "string", "enum": ["auto", "none"]}, {"type": "object"}]},
+        "model": {"type": "object", "properties": {"provider": {"type": "string"}, "model": {"type": "string"}}},
+        "max_tokens": {"type": "integer", "minimum": 1, "maximum": 32000},
+        "temperature": {"type": "number", "minimum": 0, "maximum": 2},
+        "reasoning": {"type": "string", "enum": ["off", "low", "medium", "high"]},
+    }, ["messages"], ANOTACIONES_MODELO,
+        "Runs ONE step of your own agent loop on the person's Mnemo models and credits (inventada para pruebas).")
+    d["outputSchema"] = {"$schema": ESQUEMA, "type": "object", "required": ["content", "stop_reason", "model"],
+                         "properties": {"content": {"type": "array"},
+                                        "stop_reason": {"type": "string", "enum": FINES_MODELO},
+                                        "model": {"type": "object"}, "usage": {"type": "object"}}}
+    return d
+
+
+def respuesta_modelo(*bloques: dict, stop: str = "end_turn", uso: dict | None = None, modelo: dict | None = None,
+                     avance: list[str] | None = None) -> dict:
+    """Una respuesta guionizada de `mnemo_model_complete` para `ModeloFalso`: `{"datos": structuredContent, "avance":
+    trozos}`. `datos` lleva los bloques (`text`, `tool_use`, `thinking`; un `thinking` de la Messages API, con la clave
+    `thinking`, se pasa a la forma de Mnemo, con `text`), `stop_reason`, `model` (por defecto `MODELO_FALSO`) y `usage`
+    (por defecto 900 de entrada y 50 de salida; `uso` los cambia o agrega `credits`). `avance` son los trozos de texto
+    que llegan antes del resultado por `notifications/progress`: None, el texto de cada bloque en dos mitades; [],
+    ninguno."""
+    contenido = []
+    for b in bloques:
+        if b.get("type") == "thinking" and "thinking" in b:
+            b = {"type": "thinking", "text": b["thinking"], **({"signature": b["signature"]} if b.get("signature")
+                                                                else {})}
+        contenido.append(copy.deepcopy(b))
+    datos = {"content": contenido, "stop_reason": stop, "model": dict(modelo or MODELO_FALSO),
+             "usage": {"input_tokens": 900, "output_tokens": 50, **(uso or {})}}
+    return {"datos": datos, "avance": None if avance is None else list(avance)}
+
+
+def _mitades(texto: str) -> list[str]:
+    m = len(texto) // 2
+    return [t for t in (texto[:m], texto[m:]) if t]
+
+
+class ModeloFalso:
+    """`mnemo_model_complete` en un `MnemoFalso` (la agrega a su catálogo y a sus manejadores), con un guion.
+
+    * `cola`: lo que contesta cada llamada, en orden: una respuesta de `respuesta_modelo` (su `structuredContent`, con
+      el texto antes a trozos por `notifications/progress` si la llamada trajo `_meta.progressToken`), un error de
+      Mnemo (`fallo(codigo, mensaje, detalles)`), un `result` de MCP crudo (un dict con `content`) o una función
+      `async def f(args, avisar) -> result`. Sin nada en la cola contesta un error INTERNAL (la prueba lo nota).
+    * `pedidos`: los argumentos de cada llamada, tal como llegaron (para mirar qué se mandó).
+    * `quitar()`: Mnemo deja de ofrecerla (una conexión sin `mnemo:model`): `tools/call` da -32602.
+    * `mcp` es el `MnemoFalso` y `oauth`, su `OAuthFalso` si lo hay (`ayudas_agente.encender_mnemo`)."""
+
+    def __init__(self, mcp: MnemoFalso, *guion: Any, oauth: "OAuthFalso | None" = None):
+        self.mcp, self.oauth = mcp, oauth
+        self.cola: deque = deque(guion)
+        self.pedidos: list[dict] = []
+        if not any(h["name"] == MODELO for h in mcp.herramientas):
+            mcp.herramientas.append(herramienta_modelo())
+        mcp.manejadores[MODELO] = self.atender
+
+    def agregar(self, *guion: Any) -> None:
+        self.cola.extend(guion)
+
+    def quitar(self) -> None:
+        self.mcp.herramientas = [h for h in self.mcp.herramientas if h["name"] != MODELO]
+
+    def tokens_de_avance(self) -> list[Any]:
+        """El `_meta.progressToken` de cada `tools/call` del modelo que llegó (None si no lo trajo)."""
+        return [((p["json"].get("params") or {}).get("_meta") or {}).get("progressToken") for p in self.mcp.peticiones
+                if isinstance(p["json"], dict) and p["json"].get("method") == "tools/call"
+                and (p["json"].get("params") or {}).get("name") == MODELO]
+
+    async def atender(self, args: dict, avisar: Callable) -> dict:
+        self.pedidos.append(copy.deepcopy(args))
+        if not self.cola:
+            return fallo("INTERNAL", "ModeloFalso: no quedan respuestas en el guion.")
+        item = self.cola.popleft()
+        if callable(item):
+            return await item(args, avisar)
+        if isinstance(item, dict) and "datos" in item:
+            datos = copy.deepcopy(item["datos"])
+            avance = item.get("avance")
+            if avance is None:
+                avance = [t for b in datos["content"] if b.get("type") == "text" for t in _mitades(b.get("text") or "")]
+            for i, trozo in enumerate(avance, 1):
+                await avisar(i, trozo)
+            return correcto(datos)
+        return copy.deepcopy(item)
 
 
 # ───────────────────────────── Por red, en un hilo ─────────────────────────────

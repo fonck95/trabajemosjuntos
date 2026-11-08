@@ -1,8 +1,16 @@
 // Ajustes (administrador y coordinador): política de contacto, aviso de privacidad, datos sensibles, presupuestos y
-// sesiones, el asistente, puestos de votación y elección vigente, campos propios, etiquetas y auditoría con filtros. Los
-// ajustes que son permisos (política de contacto, presupuestos, sesiones y el asistente) solo los cambia el
-// administrador: el coordinador los ve en solo lectura y el servidor se lo impide (403).
-import { api } from '../api.js';
+// sesiones, el asistente y su conexión con Mnemo, puestos de votación y elección vigente, campos propios, etiquetas y
+// auditoría con filtros. Los ajustes que son permisos (política de contacto, presupuestos, sesiones y el asistente)
+// solo los cambia el administrador: el coordinador los ve en solo lectura y el servidor se lo impide (403). Conectar y
+// desconectar Mnemo también es solo del administrador (`agente.conectar`): el coordinador ve el estado.
+//
+// Conectar con Mnemo (docs/agente.md): POST /api/agente/mnemo/conectar da la dirección de autorización de Mnemo y el
+// navegador va ahí con location.assign (la CSP del panel no deja mandar un formulario a otro sitio, y no se abren
+// ventanas). El administrador inicia sesión en Mnemo, da permiso y Mnemo lo trae de vuelta a /ajustes?code=…&state=…
+// (o error=…): esta vista quita eso de la dirección antes de cualquier espera y lo manda a POST
+// /api/agente/mnemo/volver, ya con la cookie de la sesión y el CSRF.
+import { api, puede } from '../api.js';
+import { url } from '../base.js';
 import { $, aviso, avisoError, confirmar, datosForm, dialogo, fecha, html, montar, num } from '../ui.js';
 
 const TIPOS = { texto: 'Texto', numero: 'Número', si_no: 'Sí / No', opcion: 'Lista de opciones', fecha: 'Fecha' };
@@ -12,6 +20,52 @@ const SOLO_ADMIN = html`<p class="sec ancho" style="margin:0">Solo el administra
 // Los roles del asistente (agente.roles y agente_mensajes_diarios): clave, quiénes lo usan y de quién es el tope
 const ROLES_AGENTE = [['admin', 'Administrador', 'administrador'], ['coordinador', 'Coordinadores', 'coordinador'],
   ['planillero', 'Planilleros', 'planillero'], ['consultor', 'Consultores', 'consultor']];
+
+// Los permisos que puede dar una cuenta de Mnemo, como los ve el administrador (en la página de permisos de Mnemo salen
+// con su propio texto). `mnemo:model` es el que deja al asistente usar los modelos de la cuenta
+const PERMISOS_MNEMO = {
+  'mnemo:model': 'Usar sus modelos de IA y sus créditos', 'mnemo:read': 'Leer su información',
+  'mnemo:workspace.write': 'Crear y editar eventos, documentos y borradores de formularios',
+  'mnemo:memory.write': 'Proponer recuerdos', 'mnemo:share': 'Pedirle compartir', 'mnemo:publish': 'Pedirle publicar',
+  'mnemo:study.write': 'Crear y editar mazos', 'mnemo:business.write': 'Registrar ventas y productos',
+  'mnemo:forms.responses': 'Leer las respuestas de sus formularios', 'mnemo:delete': 'Pedirle borrar',
+};
+// Por qué se cayó la conexión (`motivo` de la conexión)
+const CAIDA_MNEMO = {
+  revocada: 'Mnemo ya no la acepta: se revocó en Mnemo (Tu cuenta → Agentes conectados), venció por no usarse o la cuenta se desactivó.',
+  clave: 'Cambió la clave del administrador del panel y la conexión guardada ya no se puede leer.',
+  error: 'Mnemo respondió algo inesperado al renovarla.',
+};
+const SIN_PERMISO_MODELO = 'Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar y marque esa casilla '
+  + '(«Usar tus modelos de IA y tus créditos»).';
+// Lo que trae la vuelta de Mnemo a /ajustes (RFC 6749 y RFC 9207), con los topes de POST /api/agente/mnemo/volver
+const VUELTA = [['state', 200], ['code', 2000], ['iss', 300], ['error', 100], ['error_description', 500]];
+const LOOPBACK = ['127.0.0.1', 'localhost', '[::1]'];
+
+/** La vuelta de Mnemo tras conectar (`/ajustes?code=…&state=…&iss=…`, o `error=…`): se lee de `q` y se quita de la
+ * dirección en el acto, de forma síncrona: así el código no queda en el historial ni en una recarga, y el asistente no
+ * lo manda al modelo como si fueran filtros. Devuelve lo que va a POST /api/agente/mnemo/volver (`{state, code?, iss?,
+ * error?, error_description?}`), `{}` si llegó sin `state` (no sirve de nada) o null si no es una vuelta de Mnemo. */
+export function tomarVuelta(q) {
+  if (!q || !VUELTA.some(([k]) => q.has(k))) return null;
+  const v = {};
+  for (const [k, max] of VUELTA) {
+    const x = q.get(k);
+    if (x) v[k] = x.slice(0, max);
+  }
+  history.replaceState(history.state, '', url('/ajustes'));
+  return v.state ? v : {};
+}
+
+/** La dirección de autorización que devolvió el panel, si se puede ir: https, o http a la máquina local (Mnemo en
+ * local). Sin usuario ni clave. Si no, null: no se va a ninguna parte. */
+export function direccionDeMnemo(d) {
+  if (typeof d !== 'string' || d.length > 4000) return null;
+  let u;
+  try { u = new URL(d); } catch { return null; }
+  if (u.username || u.password) return null;
+  return u.protocol === 'https:' || (u.protocol === 'http:' && LOOPBACK.includes(u.hostname)) ? u.href : null;
+}
 
 const casilla = (nombre, marcada, texto) => html`<label class="interruptor ancho"><span>${texto}</span><input type="checkbox" name="${nombre}" ${marcada ? 'checked' : ''}></label>`;
 const numero = (nombre, valor, texto, min, max) => html`<label class="campo"><span>${texto}</span><input type="number" name="${nombre}" value="${valor}" min="${min}" max="${max}" required></label>`;
@@ -24,22 +78,75 @@ function franja(clave, valor, texto) {
     <input class="entrada" type="time" data-hasta="${clave}" value="${activa ? valor[1] : '17:00'}" style="width:auto"></div></div>`;
 }
 
-// Si el asistente está encendido (la clave de Anthropic es una variable del servidor, no un ajuste) y, para el
-// administrador, si tiene Mnemo. `est` es GET /api/agente/estado, o null si no respondió: entonces no se dice nada
+// Si el asistente está encendido y con qué modelo (el de las conversaciones nuevas: cada una sigue con el que empezó).
+// Lo decide el servidor (`proveedor` de GET /api/agente/estado): Mnemo si está conectado con permiso para usar sus
+// modelos; si no, la clave de Anthropic del servidor (modo directo), si la hay. `est` es el estado, o null si no
+// respondió: entonces no se dice nada
 function estadoAgente(est) {
   if (!est) return '';
-  if (est.configurado === false) {
-    return html`<div class="aviso-legal ancho">El asistente está apagado: falta la variable <b>ANTHROPIC_API_KEY</b> en el servicio del panel (en Railway, <i>Variables</i>). Estos ajustes rigen en cuanto se defina.</div>`;
+  const sinModelo = est.motivo === 'sin_configurar' || est.proveedor === null;
+  if (sinModelo) {
+    return html`<div class="aviso-legal">El asistente está apagado: no tiene un modelo que usar. Se enciende cuando el administrador conecta Mnemo (aquí abajo) con permiso para usar sus modelos; estos ajustes rigen desde entonces.</div>`;
   }
   const rol = est.motivo === 'rol' ? ' Su rol no está entre quienes lo usan.' : '';
-  const mnemo = est.es_admin
-    ? (est.mnemo?.activo ? ' Mnemo está conectado.' : ' Mnemo no está conectado (variables MNEMO_MCP_URL y MNEMO_TOKEN).')
-    : '';
-  return html`<p class="sec ancho" style="margin:0">El asistente está encendido.${rol}${mnemo}</p>`;
+  const con = { mnemo: ' y usa los modelos de la cuenta de Mnemo conectada',
+    anthropic: ' en modo directo: usa la clave de Anthropic del servidor, porque Mnemo no está conectado con permiso para usar sus modelos' }[est.proveedor] || '';
+  return html`<p class="mnemo-rige">El asistente está encendido${con}.${rol}</p>`;
 }
 
-export async function vistaAjustes(el) {
+/** El bloque «Conexión con Mnemo» de la sección Asistente. `c` es `mnemo.conexion` de GET /api/agente/estado (la vista
+ * de la conexión, sin secretos: {estado, motivo, url, cuenta, alcances, modelo, desde, url_sugerida}); `nota`, lo que
+ * pasó al conectar o desconectar ({tipo: 'ok' | 'alerta' | 'error', texto}) o null. Los botones y la dirección son
+ * solo para quien puede conectar (el administrador); el coordinador ve el estado. */
+function bloqueMnemo(c, nota) {
+  const admin = puede('agente.conectar');
+  const estado = ['conectada', 'caida'].includes(c?.estado) ? c.estado : 'sin_conectar';
+  const chip = { conectada: html`<span class="chip verde">Conectado</span>`, caida: html`<span class="chip rojo">Conexión caída</span>`,
+    sin_conectar: html`<span class="chip borde">Sin conectar</span>` }[estado];
+  const partes = [];
+  if (estado === 'conectada') {
+    const desde = c.desde ? ` desde ${fecha(c.desde, true)}` : '';
+    partes.push(html`<p>Conectado como <b>${c.cuenta || 'una cuenta de Mnemo'}</b>${desde}.</p>`);
+    if (c.url) partes.push(html`<p class="mnemo-dato">Dirección: ${c.url}</p>`);
+    const orden = Object.keys(PERMISOS_MNEMO);
+    const alcances = (Array.isArray(c.alcances) ? c.alcances : []).filter((a) => typeof a === 'string')
+      .sort((a, b) => (orden.indexOf(a) + 1 || 99) - (orden.indexOf(b) + 1 || 99));
+    if (alcances.length) {
+      partes.push(html`<div class="chips" aria-label="Permisos que dio la cuenta">${alcances.map((a) => html`<span class="chip borde">${PERMISOS_MNEMO[a] || a}</span>`)}</div>`);
+    }
+    if (!c.modelo) partes.push(html`<p class="mnemo-nota alerta" role="alert">${SIN_PERMISO_MODELO}</p>`);
+  } else if (estado === 'caida') {
+    partes.push(html`<p>La conexión con Mnemo dejó de valer. ${CAIDA_MNEMO[c.motivo] || ''}</p>`);
+    partes.push(html`<p>${admin ? 'Vuelva a conectar para que el asistente use otra vez los modelos de la cuenta.'
+      : 'El administrador tiene que volver a conectarla.'}</p>`);
+  } else {
+    partes.push(html`<p>${admin
+      ? 'El asistente usa los modelos y los créditos de una cuenta de Mnemo. Conéctela aquí: se inicia sesión en Mnemo, se da permiso y se vuelve a esta página; no hay que copiar claves.'
+      : 'El asistente usa los modelos y los créditos de una cuenta de Mnemo, y la conecta el administrador.'}</p>`);
+  }
+  partes.push(html`<p class="mnemo-aviso">Todos los roles que usan el asistente gastan los modelos y los créditos de esa cuenta; los mensajes por día de cada rol (abajo) siguen valiendo. Con Mnemo conectado, lo que el asistente consulta de la base viaja a Mnemo y, de ahí, al proveedor de modelos que esa cuenta tenga elegido.</p>`);
+  if (nota) partes.push(html`<p class="mnemo-nota resultado ${nota.tipo}" role="${nota.tipo === 'ok' ? 'status' : 'alert'}">${nota.texto}</p>`);
+  let acciones;
+  if (admin) {
+    const dir = (estado !== 'sin_conectar' ? c.url : null) || c?.url_sugerida || '';
+    acciones = html`<form id="f-mnemo" class="form" novalidate>
+      <label class="campo ancho"><span>Dirección MCP de Mnemo</span><input name="url" type="url" inputmode="url" maxlength="300" value="${dir}" placeholder="https://…/mcp" autocomplete="off" spellcheck="false"></label>
+      <div class="ancho mnemo-botones"><button class="btn primario" id="mnemo-conectar">${estado === 'sin_conectar' ? 'Conectar con Mnemo' : 'Volver a conectar'}</button>
+        ${estado !== 'sin_conectar' ? html`<button type="button" class="btn peligro" id="mnemo-desconectar">Desconectar</button>` : ''}</div>
+      <p class="ancho mnemo-ayuda">Se abre Mnemo: inicie sesión con la cuenta que va a poner los modelos, deje marcado «Usar tus modelos de IA y tus créditos» y pulse «Permitir». Mnemo lo trae de vuelta aquí. Cambiar la dirección y volver a conectar cambia de Mnemo.</p>
+    </form>`;
+  } else {
+    acciones = html`<p class="mnemo-ayuda">Solo el administrador conecta o desconecta Mnemo.</p>`;
+  }
+  return html`<div class="mnemo-conexion" id="mnemo-conexion" data-estado="${estado}">
+    <h3>Conexión con Mnemo ${chip}</h3>${partes}${acciones}</div>`;
+}
+
+export async function vistaAjustes(el, { q } = {}) {
+  // Lo primero, antes de cualquier await: si es la vuelta de Mnemo, sale de la dirección
+  const vuelta = tomarVuelta(q);
   let filtros = {};
+  let notaMnemo = null; // lo que pasó al conectar o desconectar Mnemo, hasta la próxima acción
 
   async function pintar() {
     // El estado del asistente es solo un aviso: si no responde, Ajustes se pinta igual
@@ -105,15 +212,15 @@ export async function vistaAjustes(el) {
         </section>
         <section class="tarjeta c-12">
           <h2>Asistente</h2>
+          <div class="asistente-cabeza">${estadoAgente(est)}${est?.mnemo?.conexion ? bloqueMnemo(est.mnemo.conexion, notaMnemo) : ''}</div>
           <form id="f-agente" class="form" style="margin-top:12px">
-            ${estadoAgente(est)}
             <div class="campo ancho"><span>Quiénes lo usan (cada uno con los permisos, el alcance y el presupuesto diario de su rol)</span>
               <div class="chips">${ROLES_AGENTE.map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="rol_${k}" ${rolesAgente.has(k) ? 'checked' : ''}> ${t}</label>`)}</div></div>
             ${casilla('escritura', ag.escritura !== false, 'Proponer cambios en la base (notas, acercamientos, fichas, reuniones…): cada uno se aprueba en una tarjeta antes de guardarse')}
-            ${casilla('mnemo_coordinadores', ag.mnemo_coordinadores === true, 'Los coordinadores también usan Mnemo, con el token del administrador: lo que hagan allá queda a nombre del administrador')}
+            ${casilla('mnemo_coordinadores', ag.mnemo_coordinadores === true, 'Los coordinadores también usan las herramientas de Mnemo (documentos, calendario, formularios y memoria), con la cuenta de Mnemo del administrador: lo que hagan allá queda a nombre del administrador')}
             ${numero('retencion_dias', ag.retencion_dias, 'Días que se guardan las conversaciones', 1, 365)}
             ${ROLES_AGENTE.map(([k, , t]) => numero(`mensajes_${k}`, mensajes[k], `Mensajes por día · ${t}`, 1, 5000))}
-            <div class="aviso-legal ancho">Lo que el asistente consulta de la base viaja al proveedor del modelo (Anthropic, un tercero en el exterior): datos mínimos, cédulas y teléfonos enmascarados, nunca datos sensibles ni listas, y nada de quien no autorizó. Revise el aviso de privacidad y la autorización con un abogado antes de encenderlo para el equipo. Las conversaciones se borran solas a los días indicados desde su último mensaje; bajar el plazo acorta también las que ya existen.</div>
+            <div class="aviso-legal ancho">Lo que el asistente consulta de la base viaja al proveedor del modelo: con Mnemo conectado, a Mnemo y, de ahí, al proveedor de modelos que esa cuenta tenga elegido; en modo directo, a Anthropic. Son terceros, posiblemente en el exterior: datos mínimos, cédulas y teléfonos enmascarados, nunca datos sensibles ni listas, y nada de quien no autorizó. Revise el aviso de privacidad y la autorización con un abogado antes de encenderlo para el equipo. Las conversaciones se borran solas a los días indicados desde su último mensaje; bajar el plazo acorta también las que ya existen.</div>
             ${soloLectura ? SOLO_ADMIN : html`<div class="ancho"><button class="btn primario">Guardar asistente</button></div>`}
           </form>
         </section>
@@ -192,6 +299,88 @@ export async function vistaAjustes(el) {
     aviso(texto);
     await pintar();
   };
+
+  // ── La conexión con Mnemo (solo el administrador; el servidor también lo exige) ──
+  const fallo = (err, texto) => (err?.estado === 401 ? null : { tipo: 'error', texto: err?.message || texto });
+
+  /** Deja en el bloque de Mnemo lo que pasó (o lo quita), sin repintar la vista: no se pierde la dirección escrita. */
+  function anotarMnemo(nota) {
+    notaMnemo = nota;
+    const bloque = $('#mnemo-conexion', el);
+    bloque?.querySelector('.mnemo-nota.resultado')?.remove();
+    const form = bloque?.querySelector('#f-mnemo');
+    if (!nota || !form) return;
+    const p = document.createElement('p');
+    p.className = `mnemo-nota resultado ${nota.tipo}`;
+    p.setAttribute('role', nota.tipo === 'ok' ? 'status' : 'alert');
+    p.textContent = nota.texto;
+    form.before(p);
+  }
+
+  /** La vuelta de Mnemo, ya fuera de la dirección: el panel canjea el código con la sesión de quien empezó a conectar. */
+  async function volverDeMnemo(v) {
+    if (!puede('agente.conectar')) return;
+    if (!v.state) {
+      notaMnemo = { tipo: 'error', texto: 'La respuesta de Mnemo llegó incompleta: no se conectó nada. Vuelva a conectar.' };
+      return;
+    }
+    montar(el, html`<div class="cargando" role="status">Terminando de conectar con Mnemo…</div>`);
+    try {
+      const c = await api.post('/api/agente/mnemo/volver', v);
+      // Lo demás (la cuenta, los permisos y si falta el de los modelos) lo dice el bloque
+      if (c?.estado === 'conectada') aviso('Mnemo quedó conectado');
+    } catch (err) {
+      notaMnemo = fallo(err, 'No se pudo terminar de conectar con Mnemo.');
+      avisoError(err, 8000);
+    }
+  }
+
+  /** «Conectar con Mnemo» / «Volver a conectar»: el panel prepara la autorización y el navegador va a Mnemo. */
+  async function conectarMnemo(f) {
+    const boton = $('#mnemo-conectar', f);
+    const etiqueta = boton.textContent;
+    const dir = (f.elements.url?.value || '').trim();
+    boton.disabled = true;
+    try {
+      const r = await api.post('/api/agente/mnemo/conectar', dir ? { url: dir } : {});
+      const destino = direccionDeMnemo(r?.autorizar);
+      if (!destino) throw new Error('El panel devolvió una dirección de Mnemo que no es segura: no se abrió.');
+      boton.textContent = 'Abriendo Mnemo…';
+      // Si se vuelve con «Atrás» y el navegador restaura esta página tal cual, el botón sirve otra vez
+      addEventListener('pageshow', () => { boton.disabled = false; boton.textContent = etiqueta; }, { once: true });
+      location.assign(destino);
+    } catch (err) {
+      boton.disabled = false;
+      anotarMnemo(fallo(err, 'No se pudo conectar con Mnemo.'));
+      avisoError(err, 8000);
+    }
+  }
+
+  /** «Desconectar», con confirmación: el panel revoca la conexión en Mnemo y la olvida. */
+  async function desconectarMnemo(boton) {
+    const si = await confirmar('¿Desconectar Mnemo? El asistente deja de usar los modelos y las herramientas de esa cuenta '
+      + 'hasta que se vuelva a conectar, y la conexión se revoca en Mnemo.', { si: 'Desconectar', peligro: true });
+    if (!si) return;
+    const caida = $('#mnemo-conexion', el)?.dataset.estado === 'caida';
+    boton.disabled = true;
+    try {
+      const r = await api.del('/api/agente/mnemo');
+      if (r?.revocada === false) {
+        notaMnemo = { tipo: 'alerta', texto: 'El panel ya no usa la conexión, pero Mnemo no confirmó que la revocó: revóquela en '
+          + 'Mnemo, en Tu cuenta → Agentes conectados.' };
+      } else if (r?.revocada == null && caida) {
+        notaMnemo = { tipo: 'alerta', texto: 'El panel ya no guarda la conexión. Si todavía aparece en Mnemo (Tu cuenta → '
+          + 'Agentes conectados), revóquela ahí.' };
+      } else {
+        notaMnemo = null;
+      }
+      aviso(r?.revocada ? 'Mnemo quedó desconectado y la conexión, revocada en Mnemo' : 'Mnemo quedó desconectado');
+    } catch (err) {
+      notaMnemo = fallo(err, 'No se pudo desconectar Mnemo.');
+      avisoError(err);
+    }
+    await pintar();
+  }
 
   function horario(f) {
     const h = {};
@@ -276,6 +465,8 @@ export async function vistaAjustes(el) {
         const v = datosForm(f);
         filtros = Object.fromEntries(Object.entries(v).filter(([, x]) => x !== '' && x != null));
         await pintar();
+      } else if (f.id === 'f-mnemo') {
+        await conectarMnemo(f);
       }
     } catch (err) { avisoError(err); }
   });
@@ -295,10 +486,13 @@ export async function vistaAjustes(el) {
       return;
     }
     if (e.target.closest('#nuevo-puesto')) { editarPuesto(null); return; }
+    const d = e.target.closest('#mnemo-desconectar');
+    if (d) { await desconectarMnemo(d); return; }
     const b = e.target.closest('[data-borrar-et]');
     if (b && await confirmar('¿Borrar esta etiqueta? Se quitará de todas las personas.', { si: 'Borrar', peligro: true })) {
       await api.del(`/api/etiquetas/${b.dataset.borrarEt}`); pintar();
     }
   });
+  if (vuelta) await volverDeMnemo(vuelta);
   await pintar();
 }

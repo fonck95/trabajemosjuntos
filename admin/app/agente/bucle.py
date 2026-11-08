@@ -3,17 +3,21 @@
 Cómo corre un turno (docs/agente.md):
 
 * Antes de abrir el flujo, `abrir_mensaje` y `abrir_confirmacion` responden con JSON normal lo que impide el turno:
-  sin clave (503), rol apagado (403), conversación ajena o inexistente (404), larga u ocupada (409), sin pendientes
-  (409) o el tope diario de mensajes (429). Ahí también se toman los candados: uno por persona y por conversación en
-  este proceso (`Ocupacion`, con un tope de turnos a la vez) y el de MongoDB (`ocupada_hasta`, que vale entre
-  procesos y vence solo).
+  sin modelo (503), rol apagado (403), conversación ajena o inexistente (404), larga, ocupada o de un proveedor que ya
+  no está (409), sin pendientes (409) o el tope diario de mensajes (429). Ahí también se elige el proveedor del modelo
+  (`proveedores.py`: Mnemo o Anthropic; el de una conversación existente es el suyo, congelado) y se toman los
+  candados: uno por persona y por conversación en este proceso (`Ocupacion`, con un tope de turnos a la vez) y el de
+  MongoDB (`ocupada_hasta`, que vale entre procesos y vence solo).
 * El turno corre en una tarea propia (el productor) que escribe eventos en una cola; la respuesta (`Turno.eventos`)
   los lee y, si en 15 s no llega nada, manda un `latido`. Si el navegador se desconecta, Starlette cancela la respuesta:
-  se cancela la tarea, el `async with` cierra el flujo del SDK y el productor suelta los candados y cierra la API
-  interna. Solo se guardan mensajes completos: lo que el modelo estaba escribiendo se pierde.
-* Una ronda es una petición al modelo. El productor emite `progreso`, `texto` y `herramienta inicio` mientras llega,
-  guarda el mensaje del asistente al final y ejecuta las herramientas en orden: las de lectura e interfaz en el acto;
-  las de escritura quedan pendientes de aprobación (`confirmar`) y el turno termina hasta que la persona decide.
+  se cancela la tarea, la petición al modelo se corta (el flujo del SDK o la llamada a Mnemo) y el productor suelta
+  los candados y cierra la API interna. Solo se guardan mensajes completos: lo que el modelo estaba escribiendo se
+  pierde.
+* Una ronda es una petición al modelo (`Proveedor.generar`). El productor emite `progreso`, `texto` (y, con Mnemo,
+  `texto_ronda`) y `herramienta inicio` mientras llega, guarda el mensaje del asistente al final y ejecuta las
+  herramientas en orden: las de lectura e interfaz en el acto; las de escritura quedan pendientes de aprobación
+  (`confirmar`) y el turno termina hasta que la persona decide. Un fallo pasajero repite la ronda (`descartar`) tras la
+  espera que dice el proveedor, si cabe en el tope del turno.
 * Nada lanza fuera del flujo una vez abierto: cualquier fallo sale como `error` + `fin`, y al registro va solo el tipo
   de la excepción (nunca datos de personas ni lo que escribió el modelo).
 """
@@ -24,6 +28,7 @@ import json
 import logging
 import secrets
 import threading
+import time
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator, Awaitable, Callable
 
@@ -36,7 +41,7 @@ from pymongo.errors import ConnectionFailure
 from .. import db as bd
 from ..seguridad import SIN_BASE
 from . import conversaciones as conv_db
-from . import llm, politica, sistema
+from . import politica, proveedores, sistema
 from .herramientas.base import (Confirmacion, Contexto, ErrorHerramienta, Herramienta, Resultado,
                                 errores_de_validacion)
 from .interno import ApiInterna
@@ -49,13 +54,14 @@ TOPE_ABSOLUTO_S = 600.0      # un turno nunca dura más que esto (el candado de 
 PLAZO_HERRAMIENTA_S = 60.0
 PLAZO_MNEMO_S = 20.0
 # Lo que suman las imágenes (en base64) de los resultados de una ronda: van en un solo mensaje guardado en MongoDB,
-# que no admite documentos de más de 16 MB
+# que no admite documentos de más de 16 MB (y cada proveedor tiene además su tope: `Proveedor.tope_imagenes`)
 TOPE_IMAGENES = 8_000_000
 LATIDO_S = 15.0
 ESPERA_ARRANQUE_S = 30.0     # si la respuesta no empieza a leerse en este tiempo, el turno no corre
-REINTENTOS = 2
-ESPERA_REINTENTO_S = 0.5
+REINTENTOS = 2               # repeticiones de una ronda tras fallos pasajeros (cuáles y cuánto esperar: el proveedor)
 TURNOS_POR_PROCESO = 4
+# Cómo termina una ronda que se cortó: con `tool_use` no se ejecuta (la entrada puede estar a medias), sin él se avisa
+CORTES = frozenset({"max_tokens", "model_context_window_exceeded", "other"})
 ACCIONES = frozenset({"navegar", "recargar", "insignias", "mapa"})
 FLUJO = {"X-Accel-Buffering": "no", "Cache-Control": "no-store"}
 
@@ -65,13 +71,18 @@ INTERRUMPIDA = ("Interrumpida: el turno se cortó y esta herramienta no devolvi�
                 "vuelve a llamarla.")
 SIN_EJECUTAR = "No se ejecutó: el turno terminó por un error anterior."
 CORTADA = "No ejecutada: la entrada se cortó por max_tokens. Reintenta con una entrada más corta."
+INCOMPLETA = ("No ejecutada: la respuesta del modelo terminó antes de tiempo y la entrada puede estar incompleta. Si "
+              "todavía hace falta, vuelve a llamarla.")
 AVISO_RECHAZO = "El asistente no puede continuar con esta solicitud. Puede reformularla o pedir otra cosa."
 AVISO_LARGA = "La conversación ya es muy larga: empiece una nueva para seguir."
 AVISO_CORTADA = "La respuesta se cortó por larga. Pida que continúe o que lo resuma."
+AVISO_INCOMPLETA = "La respuesta del modelo terminó antes de tiempo. Pida que continúe o intente de nuevo."
 OCUPADA = {"codigo": "ocupada", "mensaje": "El asistente todavía está respondiendo otro mensaje suyo. Espere a que "
                                           "termine."}
 SATURADO = {"codigo": "saturado", "mensaje": "El asistente está atendiendo muchas conversaciones a la vez. Intente de "
                                             "nuevo en unos segundos."}
+PROVEEDOR = {"codigo": "proveedor", "mensaje": "Esta conversación se hizo con un modelo que el asistente ya no tiene "
+                                              "conectado: empiece una conversación nueva para seguir."}
 
 
 class FinDelTurno(Exception):
@@ -215,29 +226,20 @@ def _ahora() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _aviso_respaldo(bloque: dict) -> str:
-    destino = _corto(str((bloque.get("to") or {}).get("model") or ""), 60) or "otro modelo"
-    return f"El asistente pasó a un modelo de respaldo ({destino}) para seguir con la respuesta."
+def ahora_s() -> float:
+    """El reloj de los topes del turno (monótono). Las pruebas lo mueven junto con `dormir`."""
+    return time.monotonic()
 
 
-class _Notas:
-    """Notas de progreso de un bloque `thinking` (con `display: "updates"`): se emiten según llegan, salvo el texto
-    fijo que reemplaza trabajo cortado (`llm.CENTINELA`), que no es una nota para la persona."""
+async def dormir(segundos: float) -> None:
+    """La espera antes de repetir una ronda. Las pruebas la cambian para no esperar de verdad."""
+    await asyncio.sleep(segundos)
 
-    def __init__(self) -> None:
-        self.emitido = 0
 
-    def delta(self, acumulado: str) -> str:
-        if llm.CENTINELA.startswith(acumulado):
-            return ""  # todavía puede ser el centinela: se espera
-        nuevo, self.emitido = acumulado[self.emitido:], len(acumulado)
-        return nuevo
-
-    def cerrar(self, completo: str) -> str:
-        if completo == llm.CENTINELA:
-            return ""
-        resto, self.emitido = completo[self.emitido:], len(completo)
-        return resto
+def _tipo(e: BaseException) -> str:
+    """Para el registro: el tipo de la excepción y, si lo tiene, su código estable (nunca su mensaje)."""
+    codigo = getattr(e, "codigo", None)
+    return f"{type(e).__name__} {codigo}" if isinstance(codigo, str) else type(e).__name__
 
 
 # ───────────────────────────── El turno ─────────────────────────────
@@ -246,20 +248,20 @@ class Turno:
     """Un turno de una persona en una conversación: el productor (`_correr`) y la respuesta (`eventos`)."""
 
     def __init__(self, *, app: Any, quien: Any, ajustes: dict, agente: dict, api: ApiInterna, conv: dict | None,
-                 cid: int, titulo: str, turno: str, limite: dict | None):
+                 cid: int, titulo: str, turno: str, limite: dict | None, proveedor: proveedores.Proveedor):
         self.app, self.db, self.cfg = app, app.state.db, app.state.cfg
         self.quien, self.ajustes, self.agente, self.api = quien, ajustes, agente, api
         self.conv, self.cid, self.titulo, self.turno, self.limite = conv, cid, titulo, turno, limite
+        self.proveedor = proveedor  # el de la conversación (congelado) o, si es nueva, el que rige ahora
         self.cola: asyncio.Queue = asyncio.Queue()
         self.arrancado = asyncio.Event()
         self.tarea: asyncio.Task | None = None
         self.ocupacion = ocupacion_de(app)
-        self.cliente = None
         self.mnemo = None
         self.herramientas: dict[str, Herramienta] = {}
         self.permitidas: set[str] = set()
         self.definiciones: list[dict] = []
-        self.sistema: list[dict] = []
+        self.sistema = ""
         self.expira = None
         self.tokens = int((conv or {}).get("tokens_ultima") or 0)
         self.imagenes_ronda = 0  # base64 de imágenes en los resultados de la ronda en curso (TOPE_IMAGENES)
@@ -374,7 +376,7 @@ class Turno:
             log.warning("Asistente: Mnemo no respondió al crear la conversación (%s)", type(e).__name__)
             defs_mnemo, de_mnemo, instrucciones = [], [], None
             if isinstance(e, ErrorHerramienta) and e.codigo == "mnemo_token":
-                # El administrador tiene que cambiar el token: el mensaje lo dice (nunca lleva el token)
+                # La conexión venció o se cayó: el mensaje dice que el administrador la vuelva a conectar
                 aviso = f"{e.mensaje} Esta conversación sigue sin las herramientas de Mnemo."
             else:
                 aviso = "Mnemo no respondió: esta conversación sigue sin sus herramientas."
@@ -389,7 +391,7 @@ class Turno:
         texto = sistema.texto(self.quien, lista, instrucciones if de_mnemo else None)
         self.conv = await run_in_threadpool(conv_db.crear, self.db, self.cid, self.quien.uid, self.titulo, texto, defs,
                                             defs_mnemo, self.agente["retencion_dias"], self.turno,
-                                            self.cfg.agente_modelo)
+                                            self.proveedor.modelo, proveedor=self.proveedor.clave)
         self.expira = self.conv["expira"]
         return aviso
 
@@ -398,8 +400,7 @@ class Turno:
         permiten hoy: los permisos y los ajustes pudieron cambiar desde que se creó."""
         from . import herramientas as registro
         from .herramientas import mnemo as hmnemo
-        self.cliente = llm.cliente(self.app, self.cfg)
-        self.sistema = llm.sistema_para_peticion(self.conv["sistema"])
+        self.sistema = self.conv["sistema"]
         self.definiciones = conv_db.de_json(self.conv.get("herramientas"), [])
         nombres = [d.get("name") for d in self.definiciones if isinstance(d, dict)]
         fijas = registro.por_nombre()
@@ -539,116 +540,118 @@ class Turno:
 
     # ── Las rondas ──
     async def _rondas(self, historial: list[dict]) -> str:
-        reloj = asyncio.get_running_loop()
-        inicio, rondas, reintentos = reloj.time(), 0, 0
+        inicio, rondas, reintentos = ahora_s(), 0, 0
         while True:
-            if rondas >= MAX_RONDAS or (rondas and reloj.time() - inicio >= TOPE_TURNO_S):
+            if rondas >= MAX_RONDAS or (rondas and ahora_s() - inicio >= TOPE_TURNO_S):
                 return "pasos"
             if self.tokens > conv_db.TOPE_TOKENS:
                 await self._avisar(AVISO_LARGA, "alerta")
                 return "pasos"
             anunciadas: list[tuple[str, str, str]] = []
             try:
-                msg = await self._pedir(historial, anunciadas)
+                respuesta = await self._pedir(historial, anunciadas)
             except asyncio.CancelledError:
                 raise
             except Exception as e:  # noqa: BLE001 - se decide abajo: repetir la ronda o cerrar con un error claro
-                if llm.reintentable(e) and reintentos < REINTENTOS:
+                espera = self._espera(e, reintentos)
+                # Sin pasarse del tope del turno: una espera larga (Mnemo limitando el ritmo) al final no se hace
+                if espera is not None and ahora_s() - inicio + espera < TOPE_TURNO_S:
                     reintentos += 1
-                    log.warning("Asistente: se repite la ronda (%s)", type(e).__name__)
+                    log.warning("Asistente: se repite la ronda (%s)", _tipo(e))
                     self.emitir({"tipo": "descartar"})
-                    await asyncio.sleep(ESPERA_REINTENTO_S * 2 ** reintentos)
+                    await dormir(espera)
                     continue
-                log.warning("Asistente: falló la petición al modelo (%s)", type(e).__name__)
-                raise FinDelTurno(*llm.explicar(e)) from None
+                log.warning("Asistente: falló la petición al modelo (%s)", _tipo(e))
+                raise FinDelTurno(*self._explicar(e)) from None
             reintentos, rondas = 0, rondas + 1
-            motivo = await self._cerrar_ronda(msg, historial, anunciadas)
+            motivo = await self._cerrar_ronda(respuesta, historial, anunciadas)
             if motivo is not None:
                 return motivo
 
-    async def _pedir(self, historial: list[dict], anunciadas: list[tuple[str, str, str]]) -> Any:
-        """Una petición al modelo en flujo: emite lo que llega y devuelve el mensaje completo."""
-        kw: dict[str, Any] = {"system": self.sistema, "messages": llm.para_peticion(historial),
-                              **llm.parametros(self.cfg)}
-        if self.definiciones:
-            kw["tools"] = self.definiciones
-        notas: _Notas | None = None
-        async with self.cliente.beta.messages.stream(**kw) as flujo:
-            async for ev in flujo:
-                t = ev.type
-                if t == "text":
-                    if ev.text:
-                        self.emitir({"tipo": "texto", "texto": ev.text})
-                elif t == "thinking":
-                    nuevo = notas.delta(ev.snapshot) if notas is not None else ""
-                    if nuevo:
-                        self.emitir({"tipo": "progreso", "texto": nuevo})
-                elif t == "content_block_start":
-                    b = ev.content_block
-                    if b.type == "thinking":
-                        notas = _Notas()
-                    elif b.type == "tool_use":
-                        nombre = _corto(b.name, 64)
-                        h = self.herramientas.get(b.name)
-                        anunciadas.append((b.id, nombre, h.etiqueta if h else nombre))
-                        self._herramienta(b.id, nombre, anunciadas[-1][2], "inicio")
-                    elif b.type == "fallback":
-                        self.emitir({"tipo": "aviso", "texto": _aviso_respaldo(b.to_dict()), "nivel": "info"})
-                elif t == "content_block_stop":
-                    b = ev.content_block
-                    if b.type == "thinking" and notas is not None:
-                        resto = notas.cerrar(b.thinking or "")
-                        if resto:
-                            self.emitir({"tipo": "progreso", "texto": resto})
-                        notas = None
-            return await flujo.get_final_message()
+    def _espera(self, e: BaseException, reintentos: int) -> float | None:
+        """Los segundos antes de repetir la ronda tras `e`, o None si no se repite (no es pasajero o ya se repitió
+        `REINTENTOS` veces)."""
+        if reintentos >= REINTENTOS:
+            return None
+        try:
+            espera = self.proveedor.reintento(e, reintentos)
+        except Exception:  # noqa: BLE001 - ante la duda, no se repite
+            return None
+        return max(0.0, float(espera)) if isinstance(espera, (int, float)) and not isinstance(espera, bool) else None
 
-    async def _cerrar_ronda(self, msg: Any, historial: list[dict], anunciadas: list[tuple[str, str, str]]) -> str | None:
+    def _explicar(self, e: BaseException) -> tuple[str, str]:
+        try:
+            mensaje, codigo = self.proveedor.explicar(e)
+            return str(mensaje), str(codigo)
+        except Exception:  # noqa: BLE001
+            return "El asistente falló al responder. Intente de nuevo.", "error"
+
+    async def _pedir(self, historial: list[dict], anunciadas: list[tuple[str, str, str]]) -> proveedores.Respuesta:
+        """Una ronda con el proveedor: emite lo que llega (y anuncia cada herramienta con su etiqueta) y devuelve la
+        respuesta completa."""
+        def al_evento(ev: dict) -> None:
+            tipo = ev.get("tipo") if isinstance(ev, dict) else None
+            if tipo == "herramienta":
+                tid, crudo = str(ev.get("id")), ev.get("nombre")
+                nombre = _corto(crudo, 64)
+                h = self.herramientas.get(crudo) if isinstance(crudo, str) else None
+                anunciadas.append((tid, nombre, h.etiqueta if h else nombre))
+                self._herramienta(tid, nombre, anunciadas[-1][2], "inicio")
+            elif tipo in proveedores.EVENTOS:
+                self.emitir(ev)
+
+        return await self.proveedor.generar(self.sistema, historial, self.definiciones,
+                                            max_tokens=self.proveedor.max_tokens, esfuerzo=self.cfg.agente_esfuerzo,
+                                            al_evento=al_evento)
+
+    async def _cerrar_ronda(self, r: proveedores.Respuesta, historial: list[dict],
+                            anunciadas: list[tuple[str, str, str]]) -> str | None:
         """Guarda la ronda y ejecuta sus herramientas. Devuelve el motivo de fin, o None para seguir con otra."""
-        contenido = conv_db.limpio(llm.reenviable([b.to_dict() for b in msg.content]))
-        u = msg.usage
-        entrada, salida = u.input_tokens or 0, u.output_tokens or 0
-        lectura, escritura = u.cache_read_input_tokens or 0, u.cache_creation_input_tokens or 0
-        self.tokens = entrada + lectura + escritura
-        await run_in_threadpool(conv_db.sumar_uso, self.db, self.quien.uid, entrada, salida, lectura, escritura)
-        meta = {"modelo": msg.model, "fin": msg.stop_reason,
-                "uso": {"entrada": entrada, "salida": salida, "cache_lectura": lectura, "cache_escritura": escritura},
-                "detalles": conv_db.a_json(msg.stop_details.to_dict()) if msg.stop_details else None,
-                "transformaciones": conv_db.a_json([x.to_dict() for x in msg.input_transformations or []])}
+        contenido = conv_db.limpio(list(r.contenido))
+        u = r.uso
+        self.tokens = u.entrada + u.cache_lectura + u.cache_escritura
+        await run_in_threadpool(conv_db.sumar_uso, self.db, self.quien.uid, u.entrada, u.salida, u.cache_lectura,
+                                u.cache_escritura, u.creditos)
+        uso: dict[str, Any] = {"entrada": u.entrada, "salida": u.salida, "cache_lectura": u.cache_lectura,
+                               "cache_escritura": u.cache_escritura}
+        if u.creditos is not None:
+            uso["creditos"] = u.creditos
+        meta = {"modelo": r.modelo, "fin": r.fin, "uso": uso,
+                "detalles": conv_db.a_json(r.detalles) if r.detalles else None,
+                "transformaciones": conv_db.a_json(list(r.transformaciones))}
         ids = {b.get("id") for b in contenido if b.get("type") == "tool_use"}
         for tid, nombre, etiqueta in anunciadas:
             if tid not in ids:  # quedó antes de un cambio de modelo: no se ejecuta
                 self._herramienta(tid, nombre, etiqueta, "error", "Descartada")
-        respaldos = [_aviso_respaldo(b) for b in contenido if b.get("type") == "fallback"]
-        if msg.stop_reason == "refusal":
+        if r.fin == "refusal":
             # Solo para auditoría: no se reenvía (puede traer una herramienta a medias) y lo pintado se borra
-            categoria = (msg.stop_details.to_dict() if msg.stop_details else {}).get("category")
-            log.info("Asistente: el modelo no continuó (categoría %s)", categoria)
+            log.info("Asistente: el modelo no continuó (categoría %s)", (r.detalles or {}).get("category"))
             await self._guardar("assistant", contenido, replay=False, **meta)
             self.emitir({"tipo": "descartar"})
             await self._avisar(AVISO_RECHAZO, "alerta")
             return "rechazo"
         await self._guardar("assistant", contenido, tokens=self.tokens, **meta)
         historial.append({"role": "assistant", "content": contenido})
-        for texto in respaldos:  # ya se avisó al llegar el bloque: aquí queda en el historial
+        for texto in r.respaldos:  # ya se avisó al llegar el bloque: aquí queda en el historial
             await self._avisar(texto, "info", emitir=False)
-        if msg.stop_reason == "pause_turn":
+        if r.fin == "pause_turn":
             return None  # herramienta del servidor en pausa: se reenvía tal cual
         usos = [b for b in contenido if b.get("type") == "tool_use"]
-        if not usos or msg.stop_reason not in ("tool_use", "max_tokens", "model_context_window_exceeded"):
-            if msg.stop_reason in ("max_tokens", "model_context_window_exceeded"):
-                await self._avisar(AVISO_CORTADA, "info")
+        if not usos or (r.fin != "tool_use" and r.fin not in CORTES):
+            if r.fin in CORTES:
+                await self._avisar(AVISO_INCOMPLETA if r.fin == "other" else AVISO_CORTADA, "info")
             return "listo"
-        if msg.stop_reason == "tool_use":
+        if r.fin == "tool_use":
             bloques, ui, llamadas, fatal = await self._ejecutar(usos)
         else:  # entrada cortada: el analizador tolerante da un objeto parcial «válido», que no se ejecuta
             bloques, ui, llamadas, fatal = {}, [], [], None
+            motivo, resumen = (INCOMPLETA, "Respuesta incompleta") if r.fin == "other" else (CORTADA, "Entrada cortada")
             for b in usos:
-                bloques[b["id"]] = _resultado(b["id"], CORTADA, True)
-                ui.append({"id": b["id"], "estado": "error", "resumen": "Entrada cortada"})
+                bloques[b["id"]] = _resultado(b["id"], motivo, True)
+                ui.append({"id": b["id"], "estado": "error", "resumen": resumen})
                 h = self.herramientas.get(b.get("name"))
                 self._herramienta(b["id"], _corto(b.get("name"), 64), h.etiqueta if h else _corto(b.get("name"), 64),
-                                  "error", "Entrada cortada")
+                                  "error", resumen)
         orden = [b["id"] for b in usos]
         if llamadas:
             await run_in_threadpool(conv_db.poner_pendiente, self.db, self.cid, {
@@ -738,10 +741,14 @@ class Turno:
             log.error("Asistente: la herramienta %s falló (%s)", h.nombre, type(e).__name__)
             return self._fallo(tid, h.nombre, h.etiqueta, ErrorHerramienta(
                 "La herramienta falló por un error interno del panel.", "error"))
-        imagenes, omitidas = [], 0
+        imagenes, omitidas, pesadas = [], 0, 0
+        tope = min(TOPE_IMAGENES, self.proveedor.tope_imagenes)
         for img in _imagenes(res.imagenes):
             peso = len(str((img.get("source") or {}).get("data") or ""))
-            if self.imagenes_ronda + peso > TOPE_IMAGENES:
+            if peso > tope:  # sola ya no cabe: pedirla otra vez no sirve
+                pesadas += 1
+                continue
+            if self.imagenes_ronda + peso > tope:
                 omitidas += 1
                 continue
             self.imagenes_ronda += peso
@@ -749,6 +756,8 @@ class Turno:
         if omitidas:
             texto += (f"\n[{omitidas} imagen(es) omitida(s): esta ronda ya llevaba demasiadas. Pídelas de a una en "
                       "otra llamada.]")
+        if pesadas:
+            texto += f"\n[{pesadas} imagen(es) omitida(s): pesa(n) demasiado para mandársela(s) al modelo.]"
         personas = _personas(res.personas)
         if personas:
             await run_in_threadpool(conv_db.sumar_personas, self.db, self.cid, personas)
@@ -825,12 +834,27 @@ async def _liberar(app: Any, uid: Any, cid: int | None, turno: str, tomada: bool
     ocupacion_de(app).soltar(uid, cid)
 
 
+async def _proveedor(app: Any, conv: dict | None) -> proveedores.Proveedor:
+    """El proveedor del turno: el de la conversación (congelado; 409 `proveedor` si ya no está) o, para una nueva, el
+    que rige ahora (503 si no hay ninguno: se fue entre `exigir` y aquí)."""
+    db, cfg = app.state.db, app.state.cfg
+    if conv is not None:
+        proveedor = await run_in_threadpool(proveedores.de_conversacion, app, cfg, db, conv)
+        if proveedor is None:
+            raise HTTPException(409, dict(PROVEEDOR))
+        return proveedor
+    proveedor = await run_in_threadpool(proveedores.para_nueva, app, cfg, db)
+    if proveedor is None:
+        raise HTTPException(503, dict(politica.SIN_CONFIGURAR))
+    return proveedor
+
+
 async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, contexto: Any) -> StreamingResponse:
     """POST /api/agente/mensajes: las comprobaciones previas y el turno en flujo."""
     app = request.app
     db, cfg = app.state.db, app.state.cfg
     ajustes, agente = await run_in_threadpool(politica.leer, db)
-    politica.exigir(quien, cfg, agente)
+    await run_in_threadpool(politica.exigir, quien, cfg, agente, db)
     texto = conv_db.texto_valido(texto)
     conv = None
     if cid is not None:
@@ -840,6 +864,7 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
         if conv_db.larga(conv):
             raise HTTPException(409, {"codigo": "larga", "mensaje": "La conversación es demasiado larga: empiece "
                                                                     "una nueva."})
+    proveedor = await _proveedor(app, conv)
     turno_id, tomada = secrets.token_hex(8), False
     _reservar(app, quien.uid, cid)
     try:
@@ -861,7 +886,8 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
             raise HTTPException(429, {"codigo": "volumen", "mensaje": f"Llegó al tope de {maximo} mensajes al "
                                                                       "asistente por hoy. Podrá seguir mañana."})
         turno = Turno(app=app, quien=quien, ajustes=ajustes, agente=agente, api=ApiInterna.desde_peticion(request),
-                      conv=conv, cid=cid, titulo=titulo, turno=turno_id, limite={"usados": usados, "maximo": maximo})
+                      conv=conv, cid=cid, titulo=titulo, turno=turno_id, limite={"usados": usados, "maximo": maximo},
+                      proveedor=proveedor)
         turno.lanzar(lambda: turno.mensaje(texto, contexto))
     except BaseException:
         await _liberar(app, quien.uid, cid, turno_id, tomada)
@@ -874,7 +900,7 @@ async def abrir_confirmacion(request: Any, quien: Any, cid: int, decisiones: dic
     app = request.app
     db, cfg = app.state.db, app.state.cfg
     ajustes, agente = await run_in_threadpool(politica.leer, db)
-    politica.exigir(quien, cfg, agente)
+    await run_in_threadpool(politica.exigir, quien, cfg, agente, db)
     conv = await run_in_threadpool(conv_db.de_usuario, db, cid, quien.uid)
     if conv is None:
         raise HTTPException(404, {"codigo": "no_existe", "mensaje": "No existe esa conversación."})
@@ -882,6 +908,8 @@ async def abrir_confirmacion(request: Any, quien: Any, cid: int, decisiones: dic
                                                                                  "aprobación en esta conversación."})
     if conv_db.pendiente_de(conv) is None:
         raise sin_pendientes
+    # Antes de ejecutar nada de lo aprobado: sin el proveedor de la conversación, el turno no podría seguir
+    proveedor = await _proveedor(app, conv)
     turno_id, tomada = secrets.token_hex(8), False
     _reservar(app, quien.uid, cid)
     try:
@@ -897,7 +925,7 @@ async def abrir_confirmacion(request: Any, quien: Any, cid: int, decisiones: dic
         usados = await run_in_threadpool(conv_db.uso_de, db, quien.uid)
         turno = Turno(app=app, quien=quien, ajustes=ajustes, agente=agente, api=ApiInterna.desde_peticion(request),
                       conv=conv, cid=cid, titulo=conv.get("titulo") or "Conversación", turno=turno_id,
-                      limite={"usados": usados, "maximo": maximo})
+                      limite={"usados": usados, "maximo": maximo}, proveedor=proveedor)
         turno.lanzar(lambda: turno.confirmacion(decisiones))
     except BaseException:
         await _liberar(app, quien.uid, cid, turno_id, tomada)

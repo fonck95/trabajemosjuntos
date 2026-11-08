@@ -161,7 +161,7 @@ body:has(#franja-llamada) .agente-panel {
 .agente-error-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
 .agente-cargando, .agente-vacio { color: var(--muted); font-size: 13.5px; margin: 0; }
 
-/* Bienvenida, sugerencias y explicación (sin clave o con el rol apagado) */
+/* Bienvenida, sugerencias y explicación (sin conexión con Mnemo o con el rol apagado) */
 .agente-bienvenida, .agente-explicacion { display: flex; flex-direction: column; gap: 8px; padding: 6px 2px; }
 .agente-hola { margin: 6px 0 0; font: 26px/1.05 var(--f-display); text-transform: uppercase; letter-spacing: .01em; }
 .agente-intro { margin: 0; color: var(--ink-2); font-size: 14px; }
@@ -172,8 +172,6 @@ body:has(#franja-llamada) .agente-panel {
 .agente-sugerencia:disabled { opacity: .5; cursor: not-allowed; }
 .agente-explicacion h3 { font-size: 16px; font-weight: 750; }
 .agente-explicacion p { margin: 0; font-size: 14px; }
-.agente-explicacion code { font: 12.5px/1.4 var(--f-mono); background: var(--sunken); border-radius: 5px; padding: 1px 5px;
-  overflow-wrap: anywhere; }
 
 /* Ir al final, cuando la persona subió a leer y llegó algo nuevo */
 .agente-bajar { position: absolute; right: 14px; bottom: 10px; z-index: 1; width: 38px; height: 38px; border-radius: 50%;

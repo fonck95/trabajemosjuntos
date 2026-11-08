@@ -1,5 +1,5 @@
-"""La conversación con el modelo de Anthropic: el cliente, la forma de cada petición y las reglas para reenviar lo que
-el modelo respondió.
+"""El proveedor de Anthropic (`ProveedorAnthropic`, el «modo directo» con `ANTHROPIC_API_KEY`; ver `proveedores.py`):
+el cliente, la forma de cada petición, el flujo de cada ronda y las reglas para reenviar lo que el modelo respondió.
 
 * El cliente es `app.state.agente_cliente` si existe (las pruebas inyectan uno falso, sin red) o un `AsyncAnthropic`
   que se crea en la primera petición: nunca al importar ni en `crear_app`, que corren sin red y sin clave.
@@ -9,19 +9,26 @@ el modelo respondió.
   (`fallbacks: "default"`) y el descarte de razonamiento que ya no casa (`block_binding: drop_block`), en vez de un 400.
   Con otro modelo solo va `thinking: {type: adaptive}`: sin betas ni respaldo.
 * `reenviable`, `para_peticion` y `reintentable` vienen de la receta probada con el SDK 2.6.0 (ver docs/agente.md).
+* `ProveedorAnthropic.generar` es una ronda en flujo: emite el texto, las notas de progreso (`Notas`), el inicio de
+  cada herramienta y el aviso de un modelo de respaldo mientras llegan, y arma la `Respuesta` con el mensaje final.
 """
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 import anthropic
 import httpx2
 
+from .proveedores import ANTHROPIC, Evento, Respuesta, Uso
+
 log = logging.getLogger("panel")
 
 MAX_TOKENS = 32_000
+# Lo que suman las imágenes (en base64) de los resultados de una ronda (el bucle además acota por MongoDB)
+TOPE_IMAGENES = 8_000_000
+ESPERA_REINTENTO_S = 0.5  # una ronda que falló de paso se repite tras 1 s y tras 2 s
 BETA_RESPALDO = "server-side-fallback-2026-07-01"
 BETA_NOVEDADES = "thinking-display-updates-2026-08-18"
 BETA_VINCULO = "thinking-binding-controls-2026-08-01"
@@ -52,8 +59,9 @@ def capacidades(modelo: str) -> Capacidades:
     return CAPACIDADES.get(modelo, Capacidades())
 
 
-def parametros(cfg: Any) -> dict:
-    """Los parámetros de cada petición, salvo `system`, `tools` y `messages`."""
+def parametros(cfg: Any, *, max_tokens: int = MAX_TOKENS, esfuerzo: str | None = None) -> dict:
+    """Los parámetros de cada petición, salvo `system`, `tools` y `messages` (`esfuerzo`: por defecto
+    `AGENTE_ESFUERZO`)."""
     cap = capacidades(cfg.agente_modelo)
     pensar: dict[str, Any] = {"type": "adaptive"}
     betas = []
@@ -65,9 +73,9 @@ def parametros(cfg: Any) -> dict:
     if cap.vinculo:
         pensar["block_binding"] = {"prefix_mismatch_behavior": "drop_block"}
         betas.append(BETA_VINCULO)
-    p: dict[str, Any] = {"model": cfg.agente_modelo, "max_tokens": MAX_TOKENS, "thinking": pensar,
-                         "output_config": {"effort": cfg.agente_esfuerzo}, "cache_control": {"type": "ephemeral"},
-                         "timeout": PLAZO}
+    p: dict[str, Any] = {"model": cfg.agente_modelo, "max_tokens": max_tokens, "thinking": pensar,
+                         "output_config": {"effort": esfuerzo or cfg.agente_esfuerzo},
+                         "cache_control": {"type": "ephemeral"}, "timeout": PLAZO}
     if cap.respaldo:
         p["fallbacks"] = "default"
     if betas:
@@ -165,3 +173,94 @@ def explicar(e: BaseException) -> tuple[str, str]:
     if type(e) is ValueError:
         return "El modelo respondió algo que no se pudo leer. Intente de nuevo.", "llm_respuesta"
     return "El asistente falló al responder. Intente de nuevo.", "error"
+
+
+def aviso_respaldo(bloque: dict) -> str:
+    """El aviso de un bloque `fallback`: el modelo cambió a uno de respaldo a mitad de la respuesta."""
+    destino = " ".join(str((bloque.get("to") or {}).get("model") or "").split())[:60] or "otro modelo"
+    return f"El asistente pasó a un modelo de respaldo ({destino}) para seguir con la respuesta."
+
+
+class Notas:
+    """Notas de progreso de un bloque `thinking` (con `display: "updates"`): se emiten según llegan, salvo el texto
+    fijo que reemplaza trabajo cortado (`CENTINELA`), que no es una nota para la persona."""
+
+    def __init__(self) -> None:
+        self.emitido = 0
+
+    def delta(self, acumulado: str) -> str:
+        if CENTINELA.startswith(acumulado):
+            return ""  # todavía puede ser el centinela: se espera
+        nuevo, self.emitido = acumulado[self.emitido:], len(acumulado)
+        return nuevo
+
+    def cerrar(self, completo: str) -> str:
+        if completo == CENTINELA:
+            return ""
+        resto, self.emitido = completo[self.emitido:], len(completo)
+        return resto
+
+
+class ProveedorAnthropic:
+    """La Messages API de Anthropic con `ANTHROPIC_API_KEY` (ver `proveedores.Proveedor`). Cada ronda va en flujo con
+    el `system` y las herramientas congelados de la conversación y los parámetros de `parametros`."""
+
+    clave = ANTHROPIC
+    max_tokens = MAX_TOKENS
+    tope_imagenes = TOPE_IMAGENES
+
+    def __init__(self, app: Any, cfg: Any):
+        self.app, self.cfg = app, cfg
+        self.modelo = cfg.agente_modelo
+
+    def __repr__(self) -> str:  # sin la clave
+        return f"ProveedorAnthropic(modelo={self.modelo!r})"
+
+    async def generar(self, sistema: str, mensajes: list[dict], herramientas: list[dict], *, max_tokens: int,
+                      esfuerzo: str, al_evento: Callable[[Evento], None]) -> Respuesta:
+        kw: dict[str, Any] = {"system": sistema_para_peticion(sistema), "messages": para_peticion(mensajes),
+                              **parametros(self.cfg, max_tokens=max_tokens, esfuerzo=esfuerzo)}
+        if herramientas:
+            kw["tools"] = herramientas
+        notas: Notas | None = None
+        async with cliente(self.app, self.cfg).beta.messages.stream(**kw) as flujo:
+            async for ev in flujo:
+                t = ev.type
+                if t == "text":
+                    if ev.text:
+                        al_evento({"tipo": "texto", "texto": ev.text})
+                elif t == "thinking":
+                    nuevo = notas.delta(ev.snapshot) if notas is not None else ""
+                    if nuevo:
+                        al_evento({"tipo": "progreso", "texto": nuevo})
+                elif t == "content_block_start":
+                    b = ev.content_block
+                    if b.type == "thinking":
+                        notas = Notas()
+                    elif b.type == "tool_use":
+                        al_evento({"tipo": "herramienta", "id": b.id, "nombre": b.name})
+                    elif b.type == "fallback":
+                        al_evento({"tipo": "aviso", "texto": aviso_respaldo(b.to_dict()), "nivel": "info"})
+                elif t == "content_block_stop":
+                    b = ev.content_block
+                    if b.type == "thinking" and notas is not None:
+                        resto = notas.cerrar(b.thinking or "")
+                        if resto:
+                            al_evento({"tipo": "progreso", "texto": resto})
+                        notas = None
+            msg = await flujo.get_final_message()
+        contenido = reenviable([b.to_dict() for b in msg.content])
+        u = msg.usage
+        return Respuesta(
+            contenido=contenido, fin=msg.stop_reason, modelo=msg.model,
+            uso=Uso(entrada=u.input_tokens or 0, salida=u.output_tokens or 0,
+                    cache_lectura=u.cache_read_input_tokens or 0, cache_escritura=u.cache_creation_input_tokens or 0),
+            detalles=msg.stop_details.to_dict() if msg.stop_details else None,
+            transformaciones=[x.to_dict() for x in msg.input_transformations or []],
+            respaldos=[aviso_respaldo(b) for b in contenido if b.get("type") == "fallback"])
+
+    def reintento(self, e: BaseException, intento: int) -> float | None:
+        return ESPERA_REINTENTO_S * 2 ** (intento + 1) if reintentable(e) else None
+
+    def explicar(self, e: BaseException) -> tuple[str, str]:
+        return explicar(e)

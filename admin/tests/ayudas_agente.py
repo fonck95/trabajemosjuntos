@@ -8,6 +8,8 @@
   con turnos SSE realistas. `T`, `TH` y `TU` arman bloques de texto, de razonamiento o progreso y de `tool_use`.
 * `conectar_mnemo(app, alcances=…, cuenta=…)`: deja la aplicación conectada a un Mnemo falso (`ayudas_mcp.OAuthFalso`,
   sin red), con la conexión cifrada en la base como la dejaría Ajustes → Asistente.
+* `encender_mnemo(app, *respuestas)` y `R(*bloques, stop=…, uso=…)`: el asistente con el modelo de Mnemo (la conexión
+  falsa con `mnemo:model` y `mnemo_model_complete` guionizada, `ayudas_mcp.ModeloFalso`).
 """
 from __future__ import annotations
 
@@ -350,3 +352,26 @@ def conectar_mnemo(app, *, alcances: Iterable[str] = ALCANCES_PANEL, cuenta: dic
         "expira": falso.vida if vence_en is None else vence_en})
     app.state.mnemo_transporte = falso.transporte()
     return falso
+
+
+# ───────────────────────────── El modelo de Mnemo (falso) ─────────────────────────────
+
+def R(*bloques: dict, stop: str = "end_turn", uso: dict | None = None, modelo: dict | None = None,
+      avance: list[str] | None = None) -> dict:
+    """Una respuesta de `mnemo_model_complete` para `encender_mnemo`: bloques `T`, `TU` y `TH` (que viaja en la forma
+    de Mnemo, `{"type": "thinking", "text", "signature"}`), `stop` (su `stop_reason`), `uso` (`usage`: por defecto 900
+    de entrada y 50 de salida; con `credits` si la pagó el plan), `modelo` (`{"provider", "model"}`, inventado por
+    defecto) y `avance` (los trozos de texto que llegan antes por `notifications/progress`; por defecto, el texto de
+    cada bloque en dos mitades; [] ninguno). Ver `ayudas_mcp.respuesta_modelo`."""
+    from ayudas_mcp import respuesta_modelo
+    return respuesta_modelo(*bloques, stop=stop, uso=uso, modelo=modelo, avance=avance)
+
+
+def encender_mnemo(app, *respuestas, alcances: Iterable[str] = ALCANCES_PANEL, **conectar):
+    """El asistente de `app` con el modelo de Mnemo: la conecta a un Mnemo falso (`conectar_mnemo`, con `mnemo:model`
+    por defecto) y le pone `mnemo_model_complete` guionizada: cada ronda contesta con lo siguiente de `respuestas`
+    (`R(...)`, un error de Mnemo con `ayudas_mcp.fallo(...)` o una función, ver `ayudas_mcp.ModeloFalso`). Devuelve el
+    `ModeloFalso` (`pedidos`: los argumentos de cada ronda; `agregar`; `oauth` y `mcp`: los servidores falsos)."""
+    from ayudas_mcp import ModeloFalso
+    falso = conectar_mnemo(app, alcances=alcances, **conectar)
+    return ModeloFalso(falso.mcp, *respuestas, oauth=falso)

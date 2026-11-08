@@ -27,11 +27,15 @@ from app.agente import bucle
 from app.agente import conversaciones as conv_db
 
 
+async def _sin_espera(segundos):  # las rondas que fallan de paso se repiten sin esperar de verdad
+    return None
+
+
 @pytest.fixture
 def falsas(monkeypatch):
     lista, registro = herramientas_falsas()
     con_herramientas(monkeypatch, lista)
-    monkeypatch.setattr(bucle, "ESPERA_REINTENTO_S", 0)
+    monkeypatch.setattr(bucle, "dormir", _sin_espera)
     return registro
 
 
@@ -86,8 +90,8 @@ SIN_CONECTAR = {"estado": "sin_conectar", "motivo": None, "url": None, "cuenta":
 
 def test_estado_sin_clave(sesion):
     e = sesion.get("/api/agente/estado").json()
-    assert e == {"disponible": False, "motivo": "sin_configurar", "configurado": False, "es_admin": True,
-                 "escritura": True, "limite": {"usados": 0, "maximo": 300},
+    assert e == {"disponible": False, "motivo": "sin_configurar", "configurado": False, "proveedor": None,
+                 "es_admin": True, "escritura": True, "limite": {"usados": 0, "maximo": 300},
                  "mnemo": {"activo": False, "origen": None, "conexion": SIN_CONECTAR}, "sugerencias": []}
 
 
@@ -95,6 +99,7 @@ def test_estado_con_clave_y_tope_diario(sesion, falsas):
     _conversacion(sesion)
     e = sesion.get("/api/agente/estado").json()
     assert e["disponible"] is True and e["motivo"] is None and e["configurado"] is True
+    assert e["proveedor"] == "anthropic"  # sin Mnemo conectado, el modo directo
     assert e["limite"] == {"usados": 1, "maximo": 300} and e["sugerencias"]
     sesion.app.state.db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente_mensajes_diarios": {"admin": 7}}},
                                         upsert=True)
@@ -148,7 +153,11 @@ def test_ajustes_raros_toman_los_valores_por_defecto(sesion, falsas):
 def test_sin_clave_503(sesion):
     r, _ = enviar(sesion, "Hola")
     assert r.status_code == 503 and _detalle(r)["codigo"] == "sin_configurar"
-    assert "ANTHROPIC_API_KEY" in _detalle(r)["mensaje"]
+    # Sin nombres de variables: lo ve quien conversa, y lo que hay que hacer es conectar Mnemo en Ajustes
+    assert _detalle(r)["mensaje"] == ("El asistente no está conectado a un modelo: el administrador lo conecta con "
+                                      "Mnemo en Ajustes → Asistente.")
+    r = sesion.post("/api/agente/confirmaciones", json={"conversacion": 1, "decisiones": [{"id": "x", "aprobar": True}]})
+    assert r.status_code == 503 and _detalle(r)["codigo"] == "sin_configurar"
 
 
 def test_rol_apagado_403(sesion, falsas):

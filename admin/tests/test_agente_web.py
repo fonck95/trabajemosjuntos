@@ -6,6 +6,11 @@
 * agente.css existe y la carga agente.js (no index.html); app.js lo carga con la forma literal que pide
   test_web_imports.py y borra lo guardado en la pestaña al cerrar sesión; nada del asistente va a localStorage.
 * Con Node: los enlaces que acepta (`destinoEnlace`) y cómo parte el Markdown en bloques (`partirBloques`).
+* La conexión con Mnemo en Ajustes (vistas/ajustes.js): la vuelta de Mnemo sale de la dirección de forma síncrona,
+  antes de cualquier espera, y recién después va a POST /api/agente/mnemo/volver; «Conectar» va a Mnemo con
+  `location.assign` a una dirección https (o http de la propia máquina), nunca con un formulario ni una ventana.
+* El contexto que el widget manda al modelo solo lleva las claves de filtro conocidas: nunca `code`, `state`, `iss`,
+  `error` ni `error_description`. Y los códigos nuevos del proveedor del modelo (Mnemo) tienen su trato.
 La prueba con un navegador de verdad está en test_agente_navegador.py.
 """
 import json
@@ -20,7 +25,10 @@ from fastapi.routing import APIRoute
 RAIZ = Path(__file__).resolve().parents[1]
 JS = RAIZ / "web" / "js"
 AGENTE = (JS / "agente.js").read_text(encoding="utf-8")
+AJUSTES = (JS / "vistas" / "ajustes.js").read_text(encoding="utf-8")
 CSS = RAIZ / "web" / "css" / "agente.css"
+# Lo que trae la vuelta de Mnemo (OAuth): nunca va al modelo
+VUELTA = ("code", "state", "iss", "error", "error_description")
 
 
 def _sin_comentarios(texto: str) -> str:
@@ -229,3 +237,210 @@ def test_enlaces_y_bloques_con_node(base):
     assert b[textos[7]] == [{"tipo": "parrafo", "texto": "| solo cabecera |"}]  # sin separador todavía no es tabla
     assert b[textos[8]] == [{"tipo": "cita", "texto": "cita\nsigue"}, {"tipo": "regla"}]
     assert b[textos[9]] == [{"tipo": "parrafo", "texto": "2026. Un año"}]
+
+
+# ───────────────────────────── La conexión con Mnemo en Ajustes ─────────────────────────────
+
+def _funcion(texto: str, nombre: str) -> str:
+    """El cuerpo de `function nombre(…) {…}` (o `async function`), hasta la llave que lo cierra."""
+    m = re.search(rf"(?:async\s+)?function\s+{nombre}\s*\([^)]*\)\s*\{{", texto)
+    assert m, nombre
+    nivel, i = 1, m.end()
+    while nivel:
+        nivel += {"{": 1, "}": -1}.get(texto[i], 0)
+        i += 1
+    return texto[m.end():i - 1]
+
+
+def test_ajustes_usa_las_rutas_de_la_conexion_con_mnemo():
+    rutas = _rutas_api()
+    usadas = set()
+    for m in re.finditer(r"""api\.(get|post|del)\(\s*(['"`])(/api/agente[^'"`]*)\2""", _sin_comentarios(AJUSTES)):
+        metodo = {"get": "GET", "post": "POST", "del": "DELETE"}[m.group(1)]
+        assert any(p.match(m.group(3)) and metodo in met for p, met in rutas), (metodo, m.group(3))
+        usadas.add((metodo, m.group(3)))
+    assert usadas == {("GET", "/api/agente/estado"), ("POST", "/api/agente/mnemo/conectar"),
+                      ("POST", "/api/agente/mnemo/volver"), ("DELETE", "/api/agente/mnemo")}, usadas
+
+
+def test_la_vuelta_de_mnemo_sale_de_la_direccion_antes_de_cualquier_espera():
+    codigo = _sin_comentarios(AJUSTES)
+    vista = _funcion(codigo, "vistaAjustes")
+    # Lo primero de la vista, antes del primer await: tomar la vuelta (y con ella, quitarla de la dirección)
+    antes = vista[:vista.index("await ")]
+    assert "const vuelta = tomarVuelta(q);" in antes, antes
+    # tomarVuelta es síncrona: lee la consulta y llama a history.replaceState hacia /ajustes, sin esperar nada
+    tomar = _funcion(codigo, "tomarVuelta")
+    assert not re.search(r"\basync\s+function\s+tomarVuelta\b", codigo)
+    assert "await" not in tomar and "then(" not in tomar
+    assert "history.replaceState(history.state, '', url('/ajustes'));" in tomar
+    assert all(f"'{k}'" in codigo[codigo.index("const VUELTA"):codigo.index("const LOOPBACK")] for k in VUELTA)
+    # El POST a /volver sale solo de volverDeMnemo, que la vista llama con lo ya tomado
+    assert codigo.count("'/api/agente/mnemo/volver'") == 1
+    assert "api.post('/api/agente/mnemo/volver', v)" in _funcion(codigo, "volverDeMnemo")
+    assert vista.index("tomarVuelta(q)") < vista.index("if (vuelta) await volverDeMnemo(vuelta);")
+    # Y solo el administrador la manda (el coordinador no puede conectar: el servidor le respondería 403)
+    assert "if (!puede('agente.conectar')) return;" in _funcion(codigo, "volverDeMnemo")
+    # app.js le pasa la consulta a cada vista
+    assert "const limpiar = await fn(cont, { params, q, ir });" in (JS / "app.js").read_text(encoding="utf-8")
+
+
+def test_conectar_va_a_mnemo_con_location_assign_y_nunca_con_un_formulario():
+    codigo = _sin_comentarios(AJUSTES)
+    conectar = _funcion(codigo, "conectarMnemo")
+    assert "api.post('/api/agente/mnemo/conectar'" in conectar
+    # Solo a una dirección revisada (https, o http de la propia máquina) y con location.assign
+    assert conectar.index("const destino = direccionDeMnemo(r?.autorizar);") < conectar.index("location.assign(destino);")
+    assert "if (!destino) throw" in conectar
+    assert codigo.count("location.assign(") == 1
+    # La CSP del panel tiene form-action 'self': ningún formulario de web/js tiene `action`, nada lo envía por código ni
+    # se abren ventanas (con COOP same-origin no volverían)
+    for f in sorted(JS.rglob("*.js")):
+        texto = _sin_comentarios(f.read_text(encoding="utf-8"))
+        for malo in (r"<form\b[^>]*\baction\s*=", r"\bformaction\b", r"\.submit\(\)", r"\brequestSubmit\(",
+                     r"\bwindow\.open\(", r"\bopen\(\s*['\"`]http"):
+            assert not re.search(malo, texto, re.I), (f.name, malo)
+    assert re.search(r'<form id="f-mnemo" class="form" novalidate>', AJUSTES)
+    from app.seguridad import CSP
+    assert "form-action 'self'" in CSP and "connect-src 'self'" in CSP
+
+
+NODE_AJUSTES = r"""
+globalThis.document = { querySelector: (s) => (s === 'meta[name="panel-base"]' ? { content: process.argv[1] } : null),
+  documentElement: {} };
+globalThis.MutationObserver = class { observe() {} };
+globalThis.window = globalThis;
+globalThis.addEventListener ||= () => {};
+const llamadas = [];
+globalThis.history = { state: { previo: 1 }, replaceState: (s, t, u) => llamadas.push([s, u]) };
+const m = await import('./web/js/vistas/ajustes.js');
+const casos = JSON.parse(process.argv[2]).map((c) => {
+  const antes = llamadas.length;
+  const v = m.tomarVuelta(new URLSearchParams(c));
+  return [v, llamadas.slice(antes)];  // lo que hizo antes de volver: sin ninguna espera de por medio
+});
+const dirs = JSON.parse(process.argv[3]).map((d) => [d, m.direccionDeMnemo(d)]);
+console.log(JSON.stringify({ casos, dirs }));
+"""
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="sin Node para cargar web/js/vistas/ajustes.js")
+@pytest.mark.parametrize("base", ["", "/panel"])
+def test_tomar_la_vuelta_y_la_direccion_de_mnemo_con_node(base):
+    consultas = [
+        "?code=c0de&state=st4te&iss=https%3A%2F%2Fmnemo.example.org",
+        "?error=access_denied&error_description=El%20usuario%20cancel%C3%B3&state=st4te&iss=https%3A%2F%2Fmnemo.example.org",
+        "?error=access_denied",             # sin state: no sirve, pero igual sale de la dirección
+        "?code=" + "x" * 3000 + "&state=" + "s" * 300,  # recortado a los topes de la API
+        "?p=solicitudes",                   # no es una vuelta: no toca la dirección
+        "",
+    ]
+    direcciones = [
+        "https://mnemo.example.org/oauth/authorize?client_id=x&state=y",
+        "http://127.0.0.1:8080/oauth/authorize?x=1", "http://localhost:8080/oauth/authorize", "http://[::1]:8080/a",
+        # Lo demás no se abre
+        "http://mnemo.example.org/oauth/authorize", "javascript:alert(1)", "data:text/html,<b>x</b>",
+        "https://usuario:clave@mnemo.example.org/oauth/authorize", "/oauth/authorize", "//mnemo.example.org/x",
+        "ftp://mnemo.example.org/x", "", "https://" + "a" * 4000 + ".example.org/",
+    ]
+    r = subprocess.run(["node", "--input-type=module", "-e", NODE_AJUSTES, base, json.dumps(consultas),
+                        json.dumps(direcciones)], cwd=RAIZ, capture_output=True, text=True, timeout=30)
+    assert r.returncode == 0, r.stderr
+    salida = json.loads(r.stdout)
+    ajustes = f"{base}/ajustes"
+    a, b, c, d, e, f = salida["casos"]
+    assert a == [{"state": "st4te", "code": "c0de", "iss": "https://mnemo.example.org"}, [[{"previo": 1}, ajustes]]]
+    assert b == [{"state": "st4te", "iss": "https://mnemo.example.org", "error": "access_denied",
+                  "error_description": "El usuario canceló"}, [[{"previo": 1}, ajustes]]]
+    assert c == [{}, [[{"previo": 1}, ajustes]]]
+    assert d[0] == {"code": "x" * 2000, "state": "s" * 200} and d[1] == [[{"previo": 1}, ajustes]]
+    assert e == [None, []] and f == [None, []]
+    abiertas = {k: v for k, v in salida["dirs"] if v is not None}
+    assert abiertas == {
+        "https://mnemo.example.org/oauth/authorize?client_id=x&state=y": "https://mnemo.example.org/oauth/authorize?client_id=x&state=y",
+        "http://127.0.0.1:8080/oauth/authorize?x=1": "http://127.0.0.1:8080/oauth/authorize?x=1",
+        "http://localhost:8080/oauth/authorize": "http://localhost:8080/oauth/authorize",
+        "http://[::1]:8080/a": "http://[::1]:8080/a"}
+
+
+# ───────────────────────────── El contexto y los códigos del proveedor del modelo ─────────────────────────────
+
+NODE_FILTROS = r"""
+globalThis.document = { querySelector: () => null, documentElement: {} };
+globalThis.MutationObserver = class { observe() {} };
+globalThis.window = globalThis;
+globalThis.addEventListener ||= () => {};
+const m = await import('./web/js/agente.js');
+const claves = JSON.parse(process.argv[1]).filter((k) => Object.keys(m.filtrosDe(`?${encodeURIComponent(k)}=1`)).length);
+const consultas = JSON.parse(process.argv[2]).map((q) => m.filtrosDe(q));
+console.log(JSON.stringify({ claves, consultas }));
+"""
+# El estado de las vistas que va en la dirección, además de los filtros de Habitantes y el mapa
+CLAVES_DE_VISTA = {"ids_total", "orden", "pagina", "p", "uid", "desde", "hasta", "por", "agrupar"}
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="sin Node para cargar web/js/agente.js")
+def test_el_contexto_solo_lleva_claves_de_filtro_conocidas():
+    from app.api.filtros import Filtros
+    filtros = set(Filtros.model_fields)
+    candidatas = sorted(filtros | CLAVES_DE_VISTA | set(VUELTA) | {"session_state", "code_verifier", "token", "otra",
+                                                                  "__proto__", "constructor"})
+    consultas = [
+        "?code=c0de&state=st4te&iss=https%3A%2F%2Fmnemo.example.org&zona=rural&q=Ana&orden=nombre&p=solicitudes",
+        "?error=access_denied&error_description=No&state=x&otra=1&zona=urbana&zona=rural",
+        "&".join(f"{k}=1" for k in sorted(filtros)[:40]),  # como mucho 30 claves
+        "?q=" + "a" * 300,
+    ]
+    r = subprocess.run(["node", "--input-type=module", "-e", NODE_FILTROS, json.dumps(candidatas), json.dumps(consultas)],
+                       cwd=RAIZ, capture_output=True, text=True, timeout=30)
+    assert r.returncode == 0, r.stderr
+    salida = json.loads(r.stdout)
+    # Pasan los filtros de Habitantes y el mapa y el estado conocido de las vistas; nada de la vuelta de Mnemo
+    assert set(salida["claves"]) == filtros | CLAVES_DE_VISTA, set(salida["claves"]) ^ (filtros | CLAVES_DE_VISTA)
+    a, b, c, d = salida["consultas"]
+    assert a == {"zona": "rural", "q": "Ana", "orden": "nombre", "p": "solicitudes"}
+    assert b == {"zona": "urbana"}  # la primera vez que aparece cada clave
+    assert len(c) == 30 and d == {"q": "a" * 200}
+    # contexto() usa esa lista (y no toda la consulta)
+    contexto = _funcion(_sin_comentarios(AGENTE), "contexto")
+    assert "filtros: filtrosDe(location.search)," in contexto and "URLSearchParams" not in contexto
+
+
+def test_codigos_del_proveedor_del_modelo_en_el_widget():
+    codigo = _sin_comentarios(AGENTE)
+
+    def conjunto(nombre: str) -> set[str]:
+        m = re.search(rf"const {nombre} = new Set\(\[(.*?)\]\);", codigo, re.S)
+        assert m, nombre
+        return set(re.findall(r"'([a-z_]+)'", m.group(1)))
+
+    # Repetir el mismo mensaje no arregla ninguno de los fines nuevos (§4 del diseño): ni la conexión caída, ni el
+    # plan, ni los créditos, ni un modelo que no hay, ni una petición rechazada, ni otro proveedor
+    nuevos = {"proveedor", "mnemo_conexion", "mnemo_plan", "mnemo_creditos", "mnemo_sin_modelo", "larga", "llm_peticion"}
+    assert nuevos <= conjunto("SIN_REINTENTO")
+    # «Nueva conversación» cuando esta ya no sirve; la conexión caída vuelve a leer el estado
+    assert {"proveedor", "larga", "llm_peticion", "borrada", "no_existe"} <= conjunto("CON_NUEVA")
+    assert {"mnemo_conexion", "sin_configurar", "agente_apagado"} <= conjunto("RELEER_ESTADO")
+    cerrar = _funcion(codigo, "cerrarTurno")
+    assert "const releer = (codigo) => { if (RELEER_ESTADO.has(codigo)) leerEstado().then(aplicarEstado); };" in cerrar
+    assert "releer(codigo);" in cerrar and "releer(t.error.codigo);" in cerrar  # antes del flujo y en un `error`
+    assert cerrar.count("CON_NUEVA.has(") == 2  # antes del flujo y en un evento `error`
+    # El evento nuevo `texto_ronda` reemplaza el texto de la ronda en curso
+    assert "case 'texto_ronda': if (typeof ev.texto === 'string') textoRonda(texto(ev.texto, MAX_TEXTO_RONDA)); break;" in codigo
+    ronda = _funcion(codigo, "textoRonda")
+    assert "ronda.partes" in ronda and "ronda.recortes" in ronda
+
+
+def test_la_explicacion_no_nombra_variables_de_entorno():
+    # Sin modelo, el widget explica qué hacer (conectar Mnemo en Ajustes): sin nombres de variables ni tokens
+    variables = ("ANTHROPIC_API_KEY", "MNEMO_TOKEN", "MNEMO_MCP_URL", "MNEMO_MODELO", "MNEMO_HERRAMIENTAS", "AGENTE_MODELO",
+                 "AGENTE_ESFUERZO", "mnemo_pat_")
+    for nombre, texto in (("agente.js", AGENTE), ("ajustes.js", AJUSTES)):
+        codigo = _sin_comentarios(texto)
+        assert not [v for v in variables if v in codigo], nombre
+    explicacion = _funcion(_sin_comentarios(AGENTE), "pintarExplicacion")
+    assert ("El asistente usa los modelos de su cuenta de Mnemo. El administrador lo conecta en ', ajustes(),\n"
+            "        ': inicia sesión en Mnemo y da permiso; no hay que copiar claves.'") in explicacion
+    assert "info?.esAdmin ? destinoEnlace('/ajustes', op) : null" in explicacion
+    assert "'Se cortó la conexión con Mnemo'" in explicacion
+    assert "'Mnemo está conectado sin permiso para usar sus modelos'" in explicacion

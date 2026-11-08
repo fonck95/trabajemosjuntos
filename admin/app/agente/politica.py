@@ -8,6 +8,8 @@
   `agente.roles`, y un rol desconocido no tiene mensajes.
 * Ofrecer una herramienta no autoriza nada: cada llamada vuelve a pasar por los permisos de la API. Pero lo que se
   ofrece se decide en cada turno con los ajustes vigentes, porque pudieron cambiar desde que se creó la conversación.
+* Sin un proveedor del modelo (`proveedores.clave_para_nueva`: Mnemo conectado con `mnemo:model`, o
+  `ANTHROPIC_API_KEY`) el asistente no está disponible para nadie: motivo `sin_configurar` y 503 antes de un turno.
 """
 from __future__ import annotations
 
@@ -18,6 +20,7 @@ from fastapi import HTTPException
 
 from .. import modelo
 from ..seguridad import rechazo_de_cuenta
+from . import proveedores
 
 ROLES = ("admin", "coordinador", "planillero", "consultor")
 POR_DEFECTO: dict[str, Any] = {"roles": ["admin", "coordinador"], "escritura": True, "mnemo_coordinadores": False,
@@ -39,6 +42,10 @@ SUGERENCIAS = {
                   "Ayúdame a registrar el resultado de la llamada."],
 }
 SUGERENCIAS["coordinador"] = SUGERENCIAS["admin"]
+
+# El 503 de un turno sin proveedor del modelo (sin nombres de variables: lo ve quien conversa)
+SIN_CONFIGURAR = {"codigo": "sin_configurar", "mensaje": "El asistente no está conectado a un modelo: el administrador "
+                                                         "lo conecta con Mnemo en Ajustes → Asistente."}
 
 
 def _entero(v: Any, rango: tuple[int, int]) -> int | None:
@@ -80,9 +87,10 @@ def leer(db) -> tuple[dict, dict]:
 
 
 def motivo(quien: Any, cfg: Any, agente: dict, sesion: dict | None = None, db: Any = None) -> str | None:
-    """Por qué esta persona no puede usar el asistente ahora (None si puede): `sin_configurar` (falta la clave de
-    Anthropic), `rol` (su rol no está habilitado) o `cuenta` (debe cambiar la clave o aceptar el compromiso)."""
-    if not cfg.agente_configurado:
+    """Por qué esta persona no puede usar el asistente ahora (None si puede): `sin_configurar` (no hay proveedor del
+    modelo: ni Mnemo conectado con `mnemo:model` ni `ANTHROPIC_API_KEY`; sin `db` solo se mira la clave), `rol` (su
+    rol no está habilitado) o `cuenta` (debe cambiar la clave o aceptar el compromiso)."""
+    if proveedores.clave_para_nueva(cfg, db) is None:
         return "sin_configurar"
     if not quien.puede("agente.usar") or quien.rol not in agente["roles"]:
         return "rol"
@@ -91,12 +99,12 @@ def motivo(quien: Any, cfg: Any, agente: dict, sesion: dict | None = None, db: A
     return None
 
 
-def exigir(quien: Any, cfg: Any, agente: dict) -> None:
-    """Antes de abrir un turno: 503 sin la clave de Anthropic y 403 si el rol no está habilitado (respuestas JSON
-    normales, antes del flujo)."""
-    if not cfg.agente_configurado:
-        raise HTTPException(503, {"codigo": "sin_configurar",
-                                  "mensaje": "El asistente no está configurado: falta la variable ANTHROPIC_API_KEY."})
+def exigir(quien: Any, cfg: Any, agente: dict, db: Any) -> None:
+    """Antes de abrir un turno: 503 sin proveedor del modelo y 403 si el rol no está habilitado (respuestas JSON
+    normales, antes del flujo). Lee la conexión con Mnemo en MongoDB: desde código asíncrono, con
+    `run_in_threadpool`."""
+    if proveedores.clave_para_nueva(cfg, db) is None:
+        raise HTTPException(503, dict(SIN_CONFIGURAR))
     if not quien.puede("agente.usar") or quien.rol not in agente["roles"]:
         raise HTTPException(403, {"codigo": "agente_apagado",
                                   "mensaje": "El asistente no está habilitado para su rol."})

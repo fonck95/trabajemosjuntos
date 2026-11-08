@@ -21,12 +21,16 @@ from app.agente import conversaciones as conv_db
 BETAS = "server-side-fallback-2026-07-01,thinking-display-updates-2026-08-18,thinking-binding-controls-2026-08-01"
 
 
+async def _sin_espera(segundos):  # las rondas que fallan de paso se repiten sin esperar de verdad
+    return None
+
+
 @pytest.fixture
 def falsas(monkeypatch):
     """El catálogo fijo del asistente con las herramientas inventadas; sin esperas entre reintentos."""
     lista, registro = herramientas_falsas()
     con_herramientas(monkeypatch, lista)
-    monkeypatch.setattr(bucle, "ESPERA_REINTENTO_S", 0)
+    monkeypatch.setattr(bucle, "dormir", _sin_espera)
     return registro
 
 
