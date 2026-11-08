@@ -94,6 +94,9 @@ async def ciclo(app: FastAPI):
 
 
 def crear_app(cfg: config.Config | None = None) -> FastAPI:
+    # httpx2 (lo usan el asistente y el SDK de Anthropic) registra a INFO la URL completa de cada petición: las llamadas
+    # internas del asistente llevan cédulas y teléfonos en la consulta y no pueden quedar en el registro del servicio
+    logging.getLogger("httpx2").setLevel(logging.WARNING)
     app = FastAPI(title="Panel Yondó", docs_url=None, redoc_url=None, openapi_url=None, lifespan=ciclo)
     app.state.cfg = cfg or config.cargar()
     app.state.cliente, app.state.db = db.conectar(app.state.cfg.mongodb_uri, app.state.cfg.mongodb_db or None)
