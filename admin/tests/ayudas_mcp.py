@@ -1,8 +1,16 @@
-"""Un servidor MCP falso que imita al `/mcp` de Mnemo, para probar `mnemo_cliente.py` y `herramientas/mnemo.py` sin
-red y sin Mnemo. Solo datos inventados.
+"""Un servidor MCP falso que imita al `/mcp` de Mnemo, y su servidor de autorización OAuth, para probar
+`mnemo_cliente.py`, `mnemo_conexion.py` y `herramientas/mnemo.py` sin red y sin Mnemo. Solo datos inventados.
 
 * `MnemoFalso` es una aplicación ASGI: `transporte()` da el `httpx2.ASGITransport` que recibe `ClienteMnemo` (sin
   red), y `EnHilo(app)` la sirve con uvicorn en 127.0.0.1 para probar el flujo SSE de verdad (keepalive y plazos).
+* `OAuthFalso` (más abajo) envuelve un `MnemoFalso` con el OAuth de Mnemo: descubrimiento, registro dinámico,
+  autorización que aprueba con un 302 a la vuelta, tokens con PKCE y refresh que rota, revocación y el Bearer de
+  `/mcp` contra los tokens vigentes.
+* Herramientas falsas nuevas: se agrega su definición a `falso.herramientas` (con `herramienta(...)`) y su manejador
+  a `falso.manejadores[nombre]`: `async def h(args) -> dict` (un `result` de MCP: `correcto(datos)` o
+  `fallo(codigo, mensaje, detalles)`), o `async def h(args, avisar)` para mandar avance: `await avisar(progreso,
+  mensaje, total=None)` emite un `notifications/progress` por el SSE si la petición trajo `_meta.progressToken` (si
+  no, o con `formato="json"`, no hace nada). Los avisos emitidos quedan en `falso.avisos`.
 * Imita lo verificado contra Mnemo (su montaje de `/mcp` con el SDK MCP v2 en modo «legacy stateless»):
   - solo POST a `/mcp`; GET y DELETE dan 405 (JSON-RPC -32000); otra ruta, 404 `{"error": "not_found"}` (después del
     Bearer: sin token es 401);
@@ -20,10 +28,14 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
+import inspect
 import json
+import secrets
 import threading
 import time
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, Iterable
+from urllib.parse import parse_qs, urlencode, urlsplit
 
 import httpx2
 
@@ -137,6 +149,10 @@ class MnemoFalso:
         self.cancelaciones = 0
         self.forzar: dict[str, tuple[int, dict | str, dict]] = {}  # método → (estado, cuerpo, cabeceras)
         self.olvidar_sesion = False
+        # Sin `autorizar`, vale solo `Bearer <token>`; con ella (OAuthFalso), decide con el token recibido
+        self.autorizar: Callable[[str], bool] | None = None
+        self.prm = "http://mnemo.invalid/.well-known/oauth-protected-resource/mcp"  # el `resource_metadata` del 401
+        self.avisos: list[dict] = []  # los `notifications/progress` emitidos (sus `params`)
 
     def transporte(self) -> httpx2.ASGITransport:
         return httpx2.ASGITransport(app=self)
@@ -177,12 +193,17 @@ class MnemoFalso:
     async def _rpc_error(self, send: Callable, estado: int, codigo: int, mensaje: str) -> None:
         await self._json(send, estado, {"jsonrpc": "2.0", "error": {"code": codigo, "message": mensaje}, "id": None})
 
+    def _autorizado(self, cab: dict) -> bool:
+        bearer = cab.get("authorization", "")
+        if self.autorizar is not None:
+            return bearer.startswith("Bearer ") and self.autorizar(bearer[7:])
+        return bearer == f"Bearer {self.token}"
+
     async def _atender(self, scope: dict, cab: dict, datos: Any, send: Callable, receive: Callable) -> None:
-        if cab.get("authorization") != f"Bearer {self.token}":
+        if not self._autorizado(cab):
             desc = "Missing Authorization header" if "authorization" not in cab else \
                 "The token is not valid, was revoked or expired."
-            prm = "http://mnemo.invalid/.well-known/oauth-protected-resource/mcp"
-            reto = f'Bearer error="invalid_token", error_description="{desc}", resource_metadata="{prm}"'
+            reto = f'Bearer error="invalid_token", error_description="{desc}", resource_metadata="{self.prm}"'
             return await self._json(send, 401, {"error": "invalid_token", "error_description": desc},
                                     {"www-authenticate": reto})
         if scope["path"].rstrip("/") != "/mcp":
@@ -215,7 +236,7 @@ class MnemoFalso:
         params = datos.get("params") if isinstance(datos.get("params"), dict) else {}
         await self._responder(send, receive, rid, metodo, params)
 
-    async def _resultado(self, metodo: str, params: dict) -> dict:
+    async def _resultado(self, metodo: str, params: dict, avisar: Callable | None = None) -> dict:
         """El mensaje JSON-RPC (sin `id`) para un método."""
         if metodo == "initialize":
             pedida = params.get("protocolVersion")
@@ -238,8 +259,11 @@ class MnemoFalso:
             if nombre not in {h["name"] for h in self.herramientas} or nombre not in self.manejadores:
                 return {"error": {"code": -32602, "message": f"MCP error -32602: Tool {nombre} not found"}}
             self.llamadas.append((nombre, args))
+            manejador = self.manejadores[nombre]
             try:
-                return {"result": await self.manejadores[nombre](args)}
+                if len(inspect.signature(manejador).parameters) >= 2:  # quiere mandar avance
+                    return {"result": await manejador(args, avisar or _sin_avance)}
+                return {"result": await manejador(args)}
             except asyncio.CancelledError:
                 self.cancelaciones += 1
                 raise
@@ -247,8 +271,24 @@ class MnemoFalso:
 
     async def _responder(self, send: Callable, receive: Callable, rid: Any, metodo: str, params: dict) -> None:
         extra = [(b"mcp-session-id", self.sesion.encode())] if self.sesion and metodo == "initialize" else []
+        meta = params.get("_meta") if isinstance(params.get("_meta"), dict) else {}
+        token = meta.get("progressToken")
+
+        async def avisar(progreso: float, mensaje: str | None = None, total: float | None = None) -> None:
+            if token is None or self.formato == "json":
+                return
+            p: dict[str, Any] = {"progressToken": token, "progress": progreso}
+            if total is not None:
+                p["total"] = total
+            if mensaje is not None:
+                p["message"] = mensaje
+            self.avisos.append(p)
+            n = json.dumps({"jsonrpc": "2.0", "method": "notifications/progress", "params": p}, ensure_ascii=False)
+            await send({"type": "http.response.body", "body": f"event: message\ndata: {n}\n\n".encode(),
+                        "more_body": True})
+
         if self.formato == "json":
-            m = {"jsonrpc": "2.0", "id": rid, **(await self._resultado(metodo, params))}
+            m = {"jsonrpc": "2.0", "id": rid, **(await self._resultado(metodo, params, avisar))}
             crudo = json.dumps(m, ensure_ascii=False).encode()
             await send({"type": "http.response.start", "status": 200,
                         "headers": [(b"content-type", b"application/json"), *extra]})
@@ -258,7 +298,7 @@ class MnemoFalso:
             (b"content-type", b"text/event-stream"), (b"cache-control", b"no-cache"), *extra]})
         for _ in range(self.keepalives):
             await send({"type": "http.response.body", "body": b": keepalive\n\n", "more_body": True})
-        tarea = asyncio.ensure_future(self._resultado(metodo, params))
+        tarea = asyncio.ensure_future(self._resultado(metodo, params, avisar))
         vigia = asyncio.ensure_future(_desconexion(receive))
         try:
             while True:
@@ -279,6 +319,10 @@ class MnemoFalso:
         crudo = json.dumps(m, ensure_ascii=False, indent=2 if self.multilinea else None)
         cuerpo = "event: message\n" + "".join(f"data: {linea}\n" for linea in crudo.split("\n")) + "\n"
         await send({"type": "http.response.body", "body": cuerpo.encode(), "more_body": False})
+
+
+async def _sin_avance(progreso: float, mensaje: str | None = None, total: float | None = None) -> None:
+    return None
 
 
 async def _desconexion(receive: Callable) -> None:
@@ -408,6 +452,382 @@ _MANEJADORES: dict[str, Manejador] = {
     "mnemo_export_document": _exportar, "mnemo_request_share": _compartir, "mnemo_check_approval": _aprobacion_estado,
     "mnemo_get_job": _trabajo, "mnemo_generate_deck": _generar, "mnemo_query_business": _negocio, "lento": _lento,
 }
+
+
+# ───────────────────────────── El OAuth de Mnemo, falso ─────────────────────────────
+
+BASE = "https://mnemo.example.org"
+ALCANCES_MNEMO = ("mnemo:read", "mnemo:study.write", "mnemo:memory.write", "mnemo:workspace.write",
+                  "mnemo:business.write", "mnemo:forms.responses", "mnemo:share", "mnemo:publish", "mnemo:delete",
+                  "mnemo:model")
+OIDC = ("openid", "email", "profile")
+CUENTA = {"sub": "usr_ana_inventada", "name": "Ana Inventada", "email": "ana.inventada@example.org"}
+OTRA_CUENTA = {"sub": "usr_beto_inventado", "name": "Beto Inventado", "email": "beto.inventado@example.org"}
+INVALIDO = {"error": "invalid_grant", "error_description": "grant request is invalid"}
+
+
+def _b64(datos: bytes) -> str:
+    return base64.urlsafe_b64encode(datos).rstrip(b"=").decode()
+
+
+class OAuthFalso:
+    """El servidor de autorización de Mnemo y su `/mcp` (un `MnemoFalso` en `self.mcp`), como aplicación ASGI.
+    Imita lo verificado contra Mnemo (`mapa2/mnemo-oauth.md`):
+
+    * `GET /.well-known/oauth-protected-resource[/mcp]` (PRM: `resource` = `<base>/mcp`, `authorization_servers` =
+      [`<base>`]; `prm_extra` lo cambia) y `GET /.well-known/oauth-authorization-server` u `openid-configuration`
+      (los metadatos; `metadatos_extra` los cambia). El 401 de `/mcp` anuncia `ruta_prm` en `resource_metadata`.
+    * `POST /oauth/register` (JSON, RFC 7591): 201 con un `client_id` nuevo. `solo_loopback_http=True` rechaza una
+      vuelta http que no sea de loopback, como Mnemo.
+    * `GET /oauth/authorize`: cliente y vuelta registrados (si no, 400 con una página HTML que no vuelve); exige
+      `response_type=code`, PKCE S256 y `resource` exacto; con `decision="allow"` (y los alcances de `marcar`, o
+      todos los pedidos) responde 302 a la vuelta con `code`, `state` e `iss`; si no, con `error=access_denied`.
+      La cuenta es `cuenta` (cámbiela para «otra cuenta»). Una concesión por cliente y cuenta: reconectar la misma
+      reutiliza la misma, como Mnemo.
+    * `POST /oauth/token` (solo form-urlencoded; JSON da 400): `authorization_code` con PKCE, `redirect_uri` y
+      `resource` (reusar un `code` revoca la concesión); `refresh_token` que rota en cada uso (reusar uno ya usado
+      revoca la concesión entera y da `invalid_grant`); un `client_id` desconocido da 401 `invalid_client`. `demora`
+      espera antes de atender un refresh, sin cancelarse si el cliente se va (lo remoto sigue aunque se corte).
+    * `POST /oauth/revoke`: con un refresh revoca la concesión; con un access lo mata a él y a los refresh de su
+      concesión, pero la deja «zombi» (como Mnemo). Siempre 200. Quedan en `revocaciones`.
+    * `/mcp`: el Bearer tiene que ser un access vigente (no vencido, no revocado, de una concesión viva).
+
+    Para mirar y mover: `peticiones` (cada una, con `form`/`json` y `consulta`), `registros` y `renovaciones`
+    (cuántos registros y cuántos refresh de tokens conocidos atendió), `forzar[ruta] = (estado, cuerpo)`, `sin_red`
+    (rutas que fallan con un error de conexión en `transporte()`), `vencer_accesos()`, `olvidar_clientes()` (Mnemo
+    en memoria tras reiniciar), `seguir(url_autorizar)` (lo que haría el navegador: la query de la vuelta) y, sin
+    pasar por el flujo, `registrar(redirect_uri)` y `conceder(client_id, alcances, cuenta)`. `EnHilo(falso)` lo sirve
+    por red: después, `falso.base = servidor.url[:-4]` (o `http://localhost:<puerto>` si el panel corre en 127.0.0.1:
+    así la vuelta al panel viene de otro sitio, como en producción, y la cookie SameSite=Strict no viaja)."""
+
+    def __init__(self, base: str = BASE, *, mcp: MnemoFalso | None = None, cuenta: dict | None = None,
+                 vida: int = 3600):
+        self.base = base.rstrip("/")
+        self.mcp = mcp or MnemoFalso()
+        self.mcp.autorizar = self.vigente
+        self.cuenta = dict(cuenta or CUENTA)
+        self.vida = vida
+        self.decision = "allow"
+        self.marcar: set[str] | None = None
+        self.demora = 0.0
+        self.solo_loopback_http = False
+        self.prm_extra: dict = {}
+        self.ruta_prm = "/.well-known/oauth-protected-resource/mcp"  # la que anuncia el 401 de /mcp
+        self.metadatos_extra: dict = {}
+        self.forzar: dict[str, tuple[int, Any]] = {}
+        self.sin_red: set[str] = set()
+        self.clientes: dict[str, dict] = {}
+        self.codigos: dict[str, dict] = {}
+        self.concesiones: dict[str, dict] = {}
+        self.accesos: dict[str, dict] = {}
+        self.refrescos: dict[str, dict] = {}
+        self.peticiones: list[dict] = []
+        self.revocaciones: list[dict] = []
+        self.registros = 0
+        self.renovaciones = 0
+
+    # ── Lo que se ve de afuera ──
+    @property
+    def recurso(self) -> str:
+        return f"{self.base}/mcp"
+
+    def endpoints(self) -> dict:
+        return {"authorize": f"{self.base}/oauth/authorize", "token": f"{self.base}/oauth/token",
+                "register": f"{self.base}/oauth/register", "revoke": f"{self.base}/oauth/revoke"}
+
+    def prm(self) -> dict:
+        return {"resource": self.recurso, "authorization_servers": [self.base],
+                "scopes_supported": [a for a in ALCANCES_MNEMO if a != "mnemo:model"],
+                "bearer_methods_supported": ["header"], "resource_name": "Mnemo", **self.prm_extra}
+
+    def metadatos(self) -> dict:
+        e = self.endpoints()
+        return {"issuer": self.base, "authorization_endpoint": e["authorize"], "token_endpoint": e["token"],
+                "registration_endpoint": e["register"], "revocation_endpoint": e["revoke"],
+                "userinfo_endpoint": f"{self.base}/oauth/userinfo", "jwks_uri": f"{self.base}/oauth/jwks",
+                "code_challenge_methods_supported": ["S256"],
+                "token_endpoint_auth_methods_supported": ["none", "client_secret_post"],
+                "grant_types_supported": ["authorization_code", "refresh_token"], "response_types_supported": ["code"],
+                "response_modes_supported": ["query"], "authorization_response_iss_parameter_supported": True,
+                "client_id_metadata_document_supported": True, "scopes_supported": [*ALCANCES_MNEMO, *OIDC],
+                "id_token_signing_alg_values_supported": ["ES256"], **self.metadatos_extra}
+
+    def transporte(self) -> httpx2.AsyncBaseTransport:
+        return _TransporteOAuth(self)
+
+    # ── Estado de las concesiones ──
+    def vigente(self, token: str) -> bool:
+        """¿Vale este access para `/mcp`?"""
+        a = self.accesos.get(token)
+        return bool(a) and not a["revocado"] and a["expira"] > time.time() and \
+            not self.concesiones[a["gid"]]["revocada"]
+
+    def concesion_de(self, token: str) -> dict | None:
+        """La concesión de un access o un refresh (con `revocada`, `zombi`, `cuenta`, `alcances`, `client_id`)."""
+        t = self.accesos.get(token) or self.refrescos.get(token)
+        return self.concesiones.get(t["gid"]) if t else None
+
+    def revocar_concesion(self, gid: str) -> None:
+        self.concesiones[gid]["revocada"] = True
+
+    def vencer_accesos(self) -> None:
+        """Todos los access emitidos hasta ahora dejan de valer (como si vencieran); los refresh siguen vivos."""
+        for a in self.accesos.values():
+            a["expira"] = 0.0
+
+    def olvidar_clientes(self) -> None:
+        self.clientes.clear()
+
+    def registrar(self, redirect_uri: str, nombre: str = "Panel Trabajemos juntos") -> str:
+        cid = secrets.token_urlsafe(32)[:43]
+        self.clientes[cid] = {"redirect_uris": [redirect_uri], "client_name": nombre}
+        return cid
+
+    def conceder(self, client_id: str, alcances: Iterable[str], cuenta: dict | None = None,
+                 oidc: Iterable[str] = OIDC) -> dict:
+        """Una concesión ya consentida y sus tokens (la respuesta de `/oauth/token`, con `id_token`), sin pasar por la
+        autorización."""
+        gid = self._concesion(client_id, dict(cuenta or self.cuenta), list(alcances), list(oidc))
+        return self._emitir(gid, con_id_token=True)
+
+    def _concesion(self, client_id: str, cuenta: dict, alcances: list[str], oidc: list[str]) -> str:
+        for gid, g in self.concesiones.items():
+            if g["client_id"] == client_id and g["cuenta"]["sub"] == cuenta["sub"] and not g["revocada"]:
+                g.update(alcances=alcances, oidc=oidc, cuenta=cuenta, zombi=False)
+                return gid
+        gid = "grant_" + secrets.token_hex(6)
+        self.concesiones[gid] = {"client_id": client_id, "cuenta": cuenta, "alcances": alcances, "oidc": oidc,
+                                 "revocada": False, "zombi": False}
+        return gid
+
+    def _emitir(self, gid: str, *, con_id_token: bool) -> dict:
+        g = self.concesiones[gid]
+        access, refresh = "at_" + secrets.token_urlsafe(32), "rt_" + secrets.token_urlsafe(32)
+        self.accesos[access] = {"gid": gid, "expira": time.time() + self.vida, "revocado": False}
+        self.refrescos[refresh] = {"gid": gid, "usado": False, "muerto": False}
+        out = {"access_token": access, "token_type": "Bearer", "expires_in": self.vida, "refresh_token": refresh,
+               "scope": " ".join(g["alcances"])}
+        if con_id_token and "openid" in g["oidc"]:
+            out["id_token"] = self._id_token(g)
+        return out
+
+    def _id_token(self, g: dict) -> str:
+        ahora = int(time.time())
+        carga: dict[str, Any] = {"iss": self.base, "sub": g["cuenta"]["sub"], "aud": g["client_id"], "iat": ahora,
+                                 "exp": ahora + 3600}
+        if "profile" in g["oidc"] and g["cuenta"].get("name"):
+            carga["name"] = g["cuenta"]["name"]
+        if "email" in g["oidc"] and g["cuenta"].get("email"):
+            carga.update(email=g["cuenta"]["email"], email_verified=True)
+        cabeza = {"alg": "ES256", "typ": "JWT", "kid": "inventada"}
+        return ".".join((_b64(json.dumps(cabeza).encode()), _b64(json.dumps(carga).encode()),
+                         _b64(secrets.token_bytes(64))))
+
+    # ── La autorización (lo que haría el navegador en la página de Mnemo) ──
+    def autorizar(self, consulta: dict) -> tuple[int, str]:
+        """(302, la vuelta con su query) o (400, una página HTML de error que no vuelve al panel)."""
+        cid, vuelta = consulta.get("client_id"), consulta.get("redirect_uri")
+        cliente = self.clientes.get(cid)
+        if cliente is None:
+            return 400, "<!doctype html><p>invalid_client</p>"
+        if vuelta not in cliente["redirect_uris"]:
+            return 400, "<!doctype html><p>invalid_redirect_uri</p>"
+
+        def volver(**q: str) -> tuple[int, str]:
+            q = {**q, **({"state": consulta["state"]} if consulta.get("state") else {}), "iss": self.base}
+            return 302, vuelta + ("&" if "?" in vuelta else "?") + urlencode(q)
+
+        if consulta.get("response_type") != "code":
+            return volver(error="unsupported_response_type")
+        if consulta.get("code_challenge_method") != "S256" or not consulta.get("code_challenge"):
+            return volver(error="invalid_request", error_description="PKCE S256 is required")
+        recurso = consulta.get("resource")
+        if recurso is not None and recurso != self.recurso:
+            return volver(error="invalid_target")
+        pedidos = (consulta.get("scope") or "").split()
+        mnemo = [a for a in pedidos if a in ALCANCES_MNEMO] or [a for a in ALCANCES_MNEMO if a != "mnemo:model"]
+        elegidos = [a for a in mnemo if self.marcar is None or a in self.marcar]
+        if self.decision != "allow" or not elegidos:
+            return volver(error="access_denied")
+        gid = self._concesion(cid, dict(self.cuenta), elegidos, [a for a in pedidos if a in OIDC])
+        code = secrets.token_urlsafe(32)
+        self.codigos[code] = {"client_id": cid, "redirect_uri": vuelta, "reto": consulta["code_challenge"],
+                              "recurso": recurso or self.recurso, "gid": gid, "usado": False}
+        return volver(code=code)
+
+    def seguir(self, url: str) -> dict:
+        """Lo que trae la vuelta al panel tras `url` (la de autorización que devolvió `conectar`): `{code, state,
+        iss}` o `{error, state, iss}`."""
+        partes = urlsplit(url)
+        assert f"{partes.scheme}://{partes.netloc}{partes.path}" == self.endpoints()["authorize"], url
+        estado, destino = self.autorizar({k: v[0] for k, v in parse_qs(partes.query).items()})
+        assert estado == 302, destino
+        return {k: v[0] for k, v in parse_qs(urlsplit(destino).query).items()}
+
+    # ── ASGI ──
+    def url(self, ruta: str) -> str:
+        return self.base + ruta
+
+    async def __call__(self, scope: dict, receive: Callable, send: Callable) -> None:
+        if scope["type"] == "lifespan":
+            while (await receive())["type"] != "lifespan.shutdown":
+                pass
+            await send({"type": "lifespan.shutdown.complete"})
+            return
+        ruta = scope["path"]
+        if ruta.rstrip("/") == "/mcp":  # el cuerpo lo lee (y lo guarda en sus `peticiones`) el MnemoFalso
+            self.peticiones.append({"metodo_http": scope["method"], "ruta": ruta, "consulta": {}, "form": None,
+                                    "json": None, "tipo": ""})
+            self.mcp.prm = self.url(self.ruta_prm)
+            return await self.mcp(scope, receive, send)
+        cab = {k.decode().lower(): v.decode() for k, v in scope["headers"]}
+        cuerpo = b""
+        while True:
+            m = await receive()
+            cuerpo += m.get("body", b"")
+            if not m.get("more_body"):
+                break
+        tipo = cab.get("content-type", "")
+        form = {k: v[0] for k, v in parse_qs(cuerpo.decode()).items()} if tipo.startswith(
+            "application/x-www-form-urlencoded") else None
+        try:
+            datos = json.loads(cuerpo) if cuerpo and tipo.startswith("application/json") else None
+        except ValueError:
+            datos = None
+        consulta = {k: v[0] for k, v in parse_qs(scope.get("query_string", b"").decode()).items()}
+        self.peticiones.append({"metodo_http": scope["method"], "ruta": ruta, "consulta": consulta, "form": form,
+                                "json": datos, "tipo": tipo})
+        if ruta in self.forzar:
+            estado, respuesta = self.forzar[ruta]
+            return await _responder_json(send, estado, respuesta)
+        metodo = scope["method"]
+        if metodo == "GET" and ruta in ("/.well-known/oauth-protected-resource/mcp",
+                                        "/.well-known/oauth-protected-resource"):
+            return await _responder_json(send, 200, self.prm())
+        if metodo == "GET" and ruta in ("/.well-known/oauth-authorization-server", "/.well-known/openid-configuration"):
+            return await _responder_json(send, 200, self.metadatos())
+        if metodo == "POST" and ruta == "/oauth/register":
+            return await _responder_json(send, *self._registro(datos))
+        if metodo == "GET" and ruta == "/oauth/authorize":
+            estado, destino = self.autorizar(consulta)
+            if estado == 302:
+                await send({"type": "http.response.start", "status": 302, "headers": [(b"location", destino.encode()),
+                                                                                       (b"content-length", b"0")]})
+                await send({"type": "http.response.body", "body": b""})
+                return
+            return await _responder_json(send, estado, destino)
+        if metodo == "POST" and ruta == "/oauth/token":
+            # Lo remoto no se cancela porque el cliente se vaya: Mnemo rota aunque nadie lea la respuesta
+            estado, respuesta = await asyncio.shield(asyncio.ensure_future(self._token(form, tipo)))
+            return await _responder_json(send, estado, respuesta, {"cache-control": "no-store"})
+        if metodo == "POST" and ruta == "/oauth/revoke":
+            self._revocar(form or {})
+            return await _responder_json(send, 200, "")
+        return await _responder_json(send, 404, {"error": "not_found"})
+
+    def _registro(self, datos: Any) -> tuple[int, dict]:
+        self.registros += 1
+        uris = datos.get("redirect_uris") if isinstance(datos, dict) else None
+        if not isinstance(uris, list) or not uris or not all(isinstance(u, str) for u in uris):
+            return 400, {"error": "invalid_client_metadata", "error_description": "redirect_uris is mandatory"}
+        for u in uris:
+            p = urlsplit(u)
+            if p.fragment or "#" in u:
+                return 400, {"error": "invalid_redirect_uri", "error_description": "redirect_uris must not contain "
+                                                                                    "fragments"}
+            if p.scheme not in ("http", "https"):
+                return 400, {"error": "invalid_redirect_uri", "error_description": "redirect_uris must only contain "
+                                                                                    "web uris"}
+            if self.solo_loopback_http and p.scheme == "http" and p.hostname not in ("127.0.0.1", "localhost", "::1"):
+                return 400, {"error": "invalid_redirect_uri", "error_description": "redirect_uris may only use http "
+                             "with a loopback host (localhost, 127.0.0.1 or [::1])"}
+        cid = self.registrar(uris[0], str(datos.get("client_name") or ""))
+        self.clientes[cid]["redirect_uris"] = list(uris)
+        return 201, {"client_id": cid, "client_id_issued_at": int(time.time()), "client_name": datos.get("client_name"),
+                     "redirect_uris": uris, "token_endpoint_auth_method": "none", "application_type": "web",
+                     "response_modes": ["query"], "grant_types": ["authorization_code", "refresh_token"],
+                     "response_types": ["code"]}
+
+    async def _token(self, form: dict | None, tipo: str) -> tuple[int, dict]:
+        if form is None:
+            return 400, {"error": "invalid_request", "error_description": "only application/x-www-form-urlencoded "
+                                                                          "content-type bodies are supported on POST "
+                                                                          "/oauth/token"}
+        cid = form.get("client_id")
+        if cid not in self.clientes:
+            return 401, {"error": "invalid_client", "error_description": "client authentication failed"}
+        if form.get("grant_type") == "authorization_code":
+            c = self.codigos.get(form.get("code") or "")
+            if c is None or c["client_id"] != cid:
+                return 400, dict(INVALIDO)
+            if c["usado"]:  # reusar el code revoca la conexión entera
+                self.revocar_concesion(c["gid"])
+                return 400, dict(INVALIDO)
+            reto = _b64(hashlib.sha256((form.get("code_verifier") or "").encode()).digest())
+            if form.get("redirect_uri") != c["redirect_uri"] or reto != c["reto"]:
+                return 400, dict(INVALIDO)  # un PKCE o una vuelta erróneos no gastan el code
+            c["usado"] = True
+            if form.get("resource") not in (None, c["recurso"]):
+                return 400, {"error": "invalid_target"}  # un resource erróneo sí lo gasta
+            return 200, self._emitir(c["gid"], con_id_token=True)
+        if form.get("grant_type") == "refresh_token":
+            r = self.refrescos.get(form.get("refresh_token") or "")
+            if r is None or self.concesiones[r["gid"]]["client_id"] != cid:
+                return 400, dict(INVALIDO)
+            self.renovaciones += 1
+            if self.demora:
+                await asyncio.sleep(self.demora)
+            g = self.concesiones[r["gid"]]
+            if r["usado"]:  # reusar un refresh ya rotado revoca la concesión entera
+                self.revocar_concesion(r["gid"])
+                return 400, dict(INVALIDO)
+            if g["revocada"] or r["muerto"]:
+                return 400, dict(INVALIDO)
+            r["usado"] = True
+            return 200, self._emitir(r["gid"], con_id_token=False)
+        return 400, {"error": "unsupported_grant_type"}
+
+    def _revocar(self, form: dict) -> None:
+        token, cid = form.get("token") or "", form.get("client_id")
+        tipo = "refresh" if token in self.refrescos else "access" if token in self.accesos else None
+        self.revocaciones.append({"token": token, "token_type_hint": form.get("token_type_hint"), "client_id": cid,
+                                  "tipo": tipo})
+        g = self.concesion_de(token)
+        if g is None or g["client_id"] != cid:
+            return
+        if tipo == "refresh":
+            g["revocada"] = True
+        else:  # con el access: muere él y los refresh de su concesión, pero la concesión queda viva («zombi»)
+            gid = self.accesos[token]["gid"]
+            self.accesos[token]["revocado"] = True
+            for r in self.refrescos.values():
+                if r["gid"] == gid:
+                    r["muerto"] = True
+            g["zombi"] = True
+
+
+async def _responder_json(send: Callable, estado: int, cuerpo: Any, extra: dict | None = None) -> None:
+    crudo = json.dumps(cuerpo).encode() if not isinstance(cuerpo, str) else cuerpo.encode()
+    tipo = b"text/html" if isinstance(cuerpo, str) and cuerpo else b"application/json"
+    cab = [(b"content-type", tipo), (b"content-length", str(len(crudo)).encode())]
+    cab += [(k.encode(), v.encode()) for k, v in (extra or {}).items()]
+    await send({"type": "http.response.start", "status": estado, "headers": cab})
+    await send({"type": "http.response.body", "body": crudo})
+
+
+class _TransporteOAuth(httpx2.AsyncBaseTransport):
+    """El transporte ASGI del `OAuthFalso`, con las rutas de `sin_red` cayendo como una conexión rechazada."""
+
+    def __init__(self, falso: OAuthFalso):
+        self.falso, self.asgi = falso, httpx2.ASGITransport(app=falso)
+
+    async def handle_async_request(self, request: httpx2.Request) -> httpx2.Response:
+        if any(request.url.path.startswith(r) for r in self.falso.sin_red):
+            raise httpx2.ConnectError("conexión rechazada (prueba)", request=request)
+        return await self.asgi.handle_async_request(request)
+
+    async def aclose(self) -> None:
+        return None
 
 
 # ───────────────────────────── Por red, en un hilo ─────────────────────────────

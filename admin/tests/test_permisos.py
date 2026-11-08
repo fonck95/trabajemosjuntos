@@ -95,6 +95,10 @@ NUEVAS = [
     ("GET", "/api/plantillas/planilla.xlsx", {"plantillas"}, "G1"),
     ("GET", "/api/areas", A, "G5"), ("POST", "/api/areas", A, "G5"), ("GET", "/api/areas/{}", A, "G5"),
     ("PATCH", "/api/areas/{}", A, "G5"), ("DELETE", "/api/areas/{}", A, "G5"),
+    # El asistente: conectar y desconectar la cuenta de Mnemo del administrador (ni el coordinador)
+    ("POST", "/api/agente/mnemo/conectar", {"agente.conectar"}, "agente"),
+    ("POST", "/api/agente/mnemo/volver", {"agente.conectar"}, "agente"),
+    ("DELETE", "/api/agente/mnemo", {"agente.conectar"}, "agente"),
 ]
 TABLA = ACTUALES + NUEVAS
 # Rutas que ya existían antes de la ampliación: las de otros grupos se comparan cuando su grupo llega

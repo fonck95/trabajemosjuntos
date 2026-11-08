@@ -359,7 +359,7 @@ class Turno:
         ofrecidas = list(registro.para(self.quien, self.agente, self.cfg))
         defs_mnemo, de_mnemo, instrucciones, aviso = [], [], None, None
         try:
-            cliente = (mnemo_cliente.cliente_de(self.app, self.cfg)
+            cliente = (await run_in_threadpool(mnemo_cliente.cliente_de, self.app)
                        if hmnemo.disponible_para(self.quien, self.agente, self.cfg) else None)
             if cliente is not None:
                 defs_mnemo = list(await asyncio.wait_for(
@@ -416,7 +416,7 @@ class Turno:
             try:
                 from . import mnemo_cliente
                 if hmnemo.disponible_para(self.quien, self.agente, self.cfg):
-                    self.mnemo = mnemo_cliente.cliente_de(self.app, self.cfg)
+                    self.mnemo = mnemo_cliente.cliente_de(self.app)
             except Exception as e:  # noqa: BLE001 - sus herramientas quedan sin permiso en este turno
                 log.warning("Asistente: Mnemo no está disponible (%s)", type(e).__name__)
                 self.mnemo = None

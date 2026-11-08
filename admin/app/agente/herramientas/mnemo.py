@@ -4,7 +4,10 @@ Interfaz que usa el bucle (`bucle.py`):
 * `async definiciones(cliente, filtro) -> list[dict]`: las herramientas que ofrece el servidor (`tools/list`), acotadas
   por `MNEMO_HERRAMIENTAS` y limpias, como diccionarios JSON que la conversación guarda congelados.
 * `desde_definiciones(definiciones) -> list[Herramienta]`: las herramientas del asistente a partir de lo guardado.
-* `disponible_para(quien, ajustes_agente, cfg) -> bool`: si a esta persona se le ofrecen.
+* `disponible_para(quien, ajustes_agente, cfg) -> bool`: si a esta persona se le ofrecen (solo mira el rol y el
+  ajuste; que haya conexión lo decide `mnemo_cliente.cliente_de`, que da None sin ella).
+* `alcances(filtro) -> list[str]`: los alcances de Mnemo que necesitan las herramientas que se ofrecen (los pide la
+  conexión, `mnemo_conexion.py`).
 
 Por qué está hecho así:
 
@@ -14,7 +17,8 @@ Por qué está hecho así:
   se vuelve a validar al rehacerlo: viene de un servidor externo y pasó por MongoDB.
 * Lista blanca por defecto (`POR_DEFECTO`): las 30 de Mnemo pesan 10–15 k tokens, y estudiar, vender o generar mazos
   no es trabajo del panel. `MNEMO_HERRAMIENTAS` la cambia: nombres separados por comas, o `*` para todas las que
-  permita el token.
+  permita la conexión, salvo `NUNCA` (`mnemo_model_complete` es el modelo, no una herramienta para él). La conexión pide justo los alcances de esas herramientas (`ALCANCES`, sacados del catálogo de
+  Mnemo), nunca `mnemo:forms.responses`.
 * Nombres: el remoto si ya empieza por `mnemo_`; si no, `mnemo_<nombre>` (`search` y `fetch` son demasiado genéricos
   junto a las del panel, y el `system` reconoce a las de Mnemo por el prefijo). Sin repetir y con los caracteres que
   acepta la API de Anthropic. La descripción dice que es de Mnemo y cómo se llama allá (sus instrucciones y
@@ -27,13 +31,14 @@ Por qué está hecho así:
 * La entrada la valida Mnemo con su esquema (su error vuelve al modelo para que corrija); aquí solo se exige un objeto
   JSON que quepa. `wait_seconds` se acota a `TOPE_ESPERA_S`: si Mnemo espera más que el plazo, la conexión se corta y
   Mnemo cancela el trabajo; con poco, contesta `running` y el modelo sigue con `mnemo_get_job`.
-* Las usa el administrador (el token es suyo) y, si él lo permite en Ajustes (`mnemo_coordinadores`), los
-  coordinadores. Se decide en cada turno: el ajuste pudo cambiar desde que se creó la conversación.
+* Las usa el administrador (la conexión es con su cuenta de Mnemo) y, si él lo permite en Ajustes
+  (`mnemo_coordinadores`), los coordinadores. Se decide en cada turno: el ajuste pudo cambiar desde que se creó la
+  conversación.
 * El resultado: los datos (`structuredContent` o el texto) recortados sin romper su estructura, las imágenes como
   bloques `image` (validadas: un bloque roto dañaría la conversación entera, porque el historial se reenvía en cada
   ronda), los `resource_link` como texto, y los enlaces relativos de Mnemo (`approval_url`, descargas) con el origen
-  de `MNEMO_MCP_URL`, el mismo con que el widget los deja abrir. Nada de esto es de habitantes del panel: no suma a
-  `Resultado.personas`.
+  de la dirección de la conexión, el mismo con que el widget los deja abrir. Nada de esto es de habitantes del panel:
+  no suma a `Resultado.personas`.
 """
 from __future__ import annotations
 
@@ -58,6 +63,9 @@ POR_DEFECTO = (
     "mnemo_request_publish", "mnemo_request_share", "mnemo_check_approval", "mnemo_get_job",
 )
 PREFIJO = "mnemo_"
+# Lo de Mnemo que nunca es una herramienta para el modelo, ni con `*`: `mnemo_model_complete` ES el modelo (lo usa el
+# proveedor del modelo, alcance `mnemo:model`), no algo que el asistente llame
+NUNCA = frozenset({"mnemo_model_complete"})
 PERMISOS = ("agente.usar",)  # A y K lo tienen con «*»; quién más, lo decide `disponible_para`
 PISTAS = ("readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint")
 
@@ -148,6 +156,19 @@ ESTADOS = {
 }
 LISTAS = (("results", "resultados"), ("items", "elementos"), ("events", "eventos"), ("forms", "formularios"),
           ("documents", "documentos"), ("shared", "compartidos"))
+# El alcance de escritura que pide cada herramienta de Mnemo (su catálogo: `apps/api/src/agent-api/catalog/*.ts`); las
+# demás solo leen (`mnemo:read`). Nunca se pide `mnemo:forms.responses`: las respuestas de los formularios son datos de
+# otras personas y llegarían al modelo
+ALCANCES = {
+    "mnemo_create_event": "mnemo:workspace.write", "mnemo_update_event": "mnemo:workspace.write",
+    "mnemo_save_form_draft": "mnemo:workspace.write", "mnemo_create_document": "mnemo:workspace.write",
+    "mnemo_update_document": "mnemo:workspace.write", "mnemo_save_memory": "mnemo:memory.write",
+    "mnemo_request_share": "mnemo:share", "mnemo_unshare": "mnemo:share", "mnemo_request_publish": "mnemo:publish",
+    "mnemo_request_delete": "mnemo:delete", "mnemo_grade_answer": "mnemo:study.write",
+    "mnemo_create_deck": "mnemo:study.write", "mnemo_edit_cards": "mnemo:study.write",
+    "mnemo_generate_deck": "mnemo:study.write", "mnemo_record_sale": "mnemo:business.write",
+    "mnemo_manage_products": "mnemo:business.write",
+}
 
 _CONTROL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 _NO_NOMBRE = re.compile(r"[^A-Za-z0-9_-]")
@@ -160,10 +181,10 @@ _SIN_ESPACIOS = re.compile(r"\s+")
 # ───────────────────────────── Quién y cuáles ─────────────────────────────
 
 def disponible_para(quien: Any, ajustes_agente: dict, cfg: Any) -> bool:
-    """¿Se le ofrecen las herramientas de Mnemo? El token es del administrador: él siempre (si está configurado) y los
-    coordinadores solo si él lo permite (`agente.mnemo_coordinadores`). Planilleros y consultores, nunca."""
-    if not getattr(cfg, "mnemo_configurado", False):
-        return False
+    """¿Se le ofrecen las herramientas de Mnemo? La conexión es con la cuenta del administrador: él siempre y los
+    coordinadores solo si él lo permite (`agente.mnemo_coordinadores`). Planilleros y consultores, nunca. No mira si
+    hay conexión (`cfg` queda por la firma de `Herramienta.disponible`): eso lo resuelve `mnemo_cliente.cliente_de`,
+    que da None sin ella, y sin cliente sus herramientas no se ofrecen ni se dejan usar."""
     if getattr(quien, "es_admin", False) is True:
         return True
     return (getattr(quien, "rol", None) == "coordinador" and isinstance(ajustes_agente, dict)
@@ -179,11 +200,21 @@ def _filtro(texto: Any) -> frozenset[str] | None:
     return frozenset(partes) if partes else frozenset(POR_DEFECTO)
 
 
+def alcances(filtro: Any) -> list[str]:
+    """Los alcances de Mnemo que necesitan las herramientas que ofrece el panel con `MNEMO_HERRAMIENTAS` (`filtro`;
+    vacío, la lista blanca; `*`, todas las conocidas): `mnemo:read` y los de escritura de esas herramientas
+    (`ALCANCES`), en orden fijo. Los pide la conexión (`mnemo_conexion.py`); en la página de Mnemo la persona marca
+    cuáles da."""
+    elegidas = _filtro(filtro)
+    nombres = ALCANCES if elegidas is None else [n for n in ALCANCES if n in elegidas or _nombre_panel(n) in elegidas]
+    return ["mnemo:read", *sorted({ALCANCES[n] for n in nombres})]
+
+
 _AVISADOS: set[frozenset[str]] = set()
 
 
 async def definiciones(cliente: Any, filtro: str) -> list[dict]:
-    """Las herramientas que ofrece Mnemo a este token, acotadas por `filtro` y limpias (`_limpia`), en el orden del
+    """Las herramientas que ofrece Mnemo a esta conexión, acotadas por `filtro` y limpias (`_limpia`), en el orden del
     servidor. Lanza `ErrorHerramienta` si Mnemo no responde (el bucle sigue sin Mnemo)."""
     if cliente is None:
         return []
@@ -194,13 +225,15 @@ async def definiciones(cliente: Any, filtro: str) -> list[dict]:
         if d is None:
             log.warning("Mnemo: se descartó una herramienta con una definición que no sirve")
             continue
+        if d["name"] in NUNCA:
+            continue
         vistas |= {d["name"], _nombre_panel(d["name"])}
         if elegidas is None or d["name"] in elegidas or _nombre_panel(d["name"]) in elegidas:
             out.append(d)
     faltan = (elegidas or frozenset()) - vistas
     if faltan and faltan not in _AVISADOS and elegidas != frozenset(POR_DEFECTO):
         _AVISADOS.add(frozenset(faltan))  # una vez por proceso: es configuración, no un fallo de cada conversación
-        log.warning("Mnemo: MNEMO_HERRAMIENTAS nombra herramientas que Mnemo no ofrece a este token: %s",
+        log.warning("Mnemo: MNEMO_HERRAMIENTAS nombra herramientas que Mnemo no ofrece a esta conexión: %s",
                     ", ".join(sorted(faltan))[:500])
     return out
 
@@ -359,7 +392,7 @@ def confirmacion(d: dict, argumentos: dict) -> Confirmacion:
         total += len(v)
     if not detalle:
         detalle.append(("Argumentos", "(ninguno)"))
-    aviso = ["Lo hace Mnemo con el token del administrador."]
+    aviso = ["Lo hace Mnemo con la cuenta de Mnemo del administrador."]
     if remoto.startswith("mnemo_request_"):
         aviso.append("Aquí solo se pide: Mnemo devuelve un enlace y la acción se aprueba allá.")
     elif anot.get("destructiveHint") is True:
@@ -375,7 +408,7 @@ def confirmacion(d: dict, argumentos: dict) -> Confirmacion:
 def _cliente(ctx: Contexto) -> Any:
     cliente = getattr(ctx, "mnemo", None)
     if cliente is None or not callable(getattr(cliente, "llamar", None)):
-        raise ErrorHerramienta("Mnemo no está disponible en este turno (no está configurado o el rol ya no lo usa).",
+        raise ErrorHerramienta("Mnemo no está disponible en este turno (no está conectado o el rol ya no lo usa).",
                                mc.COD_NO_DISPONIBLE)
     return cliente
 
@@ -397,14 +430,10 @@ def _argumentos(argumentos: dict, esquema: dict) -> dict:
 
 
 def _origen(ctx: Contexto, cliente: Any) -> str | None:
-    """El origen de Mnemo para volver absolutos sus enlaces: el de `MNEMO_MCP_URL`, el mismo que el widget deja
-    abrir (`politica.origen_mnemo`)."""
-    try:
-        from .. import politica
-        origen = politica.origen_mnemo(ctx.cfg)
-    except Exception:  # noqa: BLE001 - sin la política se usa la dirección del cliente
-        origen = None
-    return origen or getattr(cliente, "origen", None)
+    """El origen de Mnemo para volver absolutos sus enlaces: el de la dirección de la conexión (la del cliente), el
+    mismo que el widget deja abrir (`GET /api/agente/estado` → `mnemo.origen`, `politica.origen_mnemo`)."""
+    origen = getattr(cliente, "origen", None)
+    return origen if isinstance(origen, str) and origen else None
 
 
 async def _ejecutar(ctx: Contexto, args: EntradaMnemo, d: dict) -> Resultado:

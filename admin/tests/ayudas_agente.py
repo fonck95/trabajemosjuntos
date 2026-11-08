@@ -6,12 +6,14 @@
   herramientas llaman a la API por ASGI y tienen que correr en el mismo bucle que la aplicación.
 * `FakeAPI`, `cliente_falso` y `sse`: la Messages API simulada con `httpx2.MockTransport` (el SDK de verdad, sin red),
   con turnos SSE realistas. `T`, `TH` y `TU` arman bloques de texto, de razonamiento o progreso y de `tool_use`.
+* `conectar_mnemo(app, alcances=…, cuenta=…)`: deja la aplicación conectada a un Mnemo falso (`ayudas_mcp.OAuthFalso`,
+  sin red), con la conexión cifrada en la base como la dejaría Ajustes → Asistente.
 """
 from __future__ import annotations
 
 import json
 from collections import deque
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 import anthropic
 import httpx2
@@ -313,3 +315,38 @@ def encender_lento(app, *guion, pausa: float = 0.3) -> FakeAPILenta:
     http = httpx2.AsyncClient(transport=httpx2.MockTransport(api))
     app.state.agente_cliente = anthropic.AsyncAnthropic(api_key="clave-falsa", http_client=http, max_retries=0)
     return api
+
+
+# ───────────────────────────── Mnemo conectado (OAuth falso) ─────────────────────────────
+
+# Lo que concede por defecto la conexión falsa: lo que pide el panel (con `mnemo:model`)
+ALCANCES_PANEL = ("mnemo:model", "mnemo:read", "mnemo:memory.write", "mnemo:publish", "mnemo:share",
+                  "mnemo:workspace.write")
+
+
+def conectar_mnemo(app, *, alcances: Iterable[str] = ALCANCES_PANEL, cuenta: dict | None = None, falso=None,
+                   vence_en: int | None = None, redirect_uri: str = "http://testserver/ajustes"):
+    """Conecta `app` con un Mnemo falso sin pasar por el navegador: registra un cliente en el `OAuthFalso` (`falso`, o
+    uno nuevo en https://mnemo.example.org), le hace emitir tokens inventados para `cuenta` (las claims de OpenID:
+    `{"sub", "name", "email"}`; por defecto `ayudas_mcp.CUENTA`) con `alcances`, y guarda la conexión «conectada» y
+    cifrada en la base con `mnemo_conexion.instalar`, como la dejaría `volver`. `vence_en` (segundos, distinto de 0)
+    fija cuánto le queda al access para el panel: con menos de 5 minutos (o negativo) la primera llamada lo renueva.
+    Deja `app.state.mnemo_transporte` apuntando al falso (así `mnemo_cliente.cliente_de(app)` y la renovación no usan
+    red) y devuelve el `OAuthFalso`: `falso.mcp` es su `MnemoFalso` (herramientas, `llamadas`, `peticiones`)."""
+    from ayudas_mcp import OAuthFalso
+
+    from app.agente import mnemo_conexion
+    falso = falso or OAuthFalso()
+    cid = falso.registrar(redirect_uri)
+    tokens = falso.conceder(cid, alcances, cuenta)
+    g = falso.concesion_de(tokens["access_token"])
+    claims = g["cuenta"]
+    datos = {"url_mcp": falso.recurso, "recurso": falso.recurso, "emisor": falso.base, "endpoints": falso.endpoints(),
+             "client_id": cid, "redirect_uri": redirect_uri, "alcances": tokens["scope"].split(),
+             "cuenta": {"sub": claims["sub"], **({"nombre": claims["name"]} if claims.get("name") else {}),
+                        **({"correo": claims["email"]} if claims.get("email") else {})}}
+    mnemo_conexion.instalar(app.state.db, app.state.cfg, datos, {
+        "access": tokens["access_token"], "refresh": tokens["refresh_token"],
+        "expira": falso.vida if vence_en is None else vence_en})
+    app.state.mnemo_transporte = falso.transporte()
+    return falso

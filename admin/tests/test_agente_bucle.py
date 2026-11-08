@@ -706,7 +706,7 @@ def mnemo_falso(monkeypatch):
     monkeypatch.setattr(mnemo, "disponible_para", lambda quien, ajustes, cfg: quien.es_admin)
     monkeypatch.setattr(mnemo, "definiciones", definiciones)
     monkeypatch.setattr(mnemo, "desde_definiciones", desde_definiciones)
-    monkeypatch.setattr(mnemo_cliente, "cliente_de", lambda app, cfg: cliente)
+    monkeypatch.setattr(mnemo_cliente, "cliente_de", lambda app: cliente)
     return cliente, llamadas, falla
 
 

@@ -112,11 +112,12 @@ def ofrecida(h: Any, quien: Any, agente: dict, cfg: Any) -> bool:
     return h.disponible is None or bool(h.disponible(quien, agente, cfg))
 
 
-def origen_mnemo(cfg: Any) -> str | None:
-    """`scheme://host` del servidor de Mnemo: el widget solo enlaza ahí (las aprobaciones) y a rutas del panel."""
-    if not cfg.mnemo_url:
+def origen_mnemo(url: Any) -> str | None:
+    """`scheme://host` del servidor de Mnemo a partir de la dirección MCP de la conexión (`mnemo_conexion.vista(db)
+    ["url"]`): el widget solo enlaza ahí (las aprobaciones) y a rutas del panel. None sin dirección."""
+    if not isinstance(url, str) or not url:
         return None
-    partes = urlsplit(cfg.mnemo_url)
+    partes = urlsplit(url)
     return f"{partes.scheme}://{partes.netloc}" if partes.scheme and partes.netloc else None
 
 

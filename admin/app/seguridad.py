@@ -194,6 +194,14 @@ def huella(cfg) -> str:
     return hmac.new(_llave(cfg.usuario or "", cfg.clave or ""), b"sesion", hashlib.sha256).hexdigest()
 
 
+def llave_mnemo(cfg) -> bytes:
+    """La clave (32 bytes) con que se cifran en la base los tokens de la conexión con Mnemo (`agente/cifrado.py`):
+    sale de la credencial del administrador (la derivación lenta de `_llave`) con una etiqueta propia, así no está en
+    la base. Nunca es la salida de `huella()`, que se guarda en `sesiones`. Si cambian ADMIN o password, lo cifrado
+    deja de descifrar y hay que volver a conectar Mnemo."""
+    return hmac.new(_llave(cfg.usuario or "", cfg.clave or ""), b"mnemo|tokens", hashlib.sha256).digest()
+
+
 def huella_usuario(cfg, u: dict) -> str:
     """Huella de las sesiones de un usuario: cambia con la credencial de .env (se cierran todas) y con la `version`
     del usuario (se cierran solo las suyas)."""

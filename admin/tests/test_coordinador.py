@@ -60,7 +60,8 @@ def _hay_ruta(app, metodo, ruta):
 def test_roles_y_permisos_del_coordinador():
     assert acceso.ROLES == {"admin", "coordinador", "planillero", "consultor"}
     assert acceso.SOLO_ADMIN == frozenset({"usuarios.coordinadores", "usuarios.roles", "permisos.modificar",
-                                           "exportar"})  # adenda 2: las descargas son solo de A
+                                           "exportar",  # adenda 2: las descargas son solo de A
+                                           "agente.conectar"})  # la conexión con la cuenta de Mnemo de A
     assert acceso.ROLES_ADMIN == frozenset({"admin", "coordinador"})
     K = acceso.Quien(uid=7, usuario="coordinador7", rol="coordinador", permisos=acceso.PERMISOS["coordinador"])
     A = acceso.Quien(uid=0, usuario="admin", rol="admin", permisos=acceso.PERMISOS["admin"])

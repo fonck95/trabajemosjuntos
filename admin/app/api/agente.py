@@ -1,7 +1,9 @@
 """API del asistente del panel (docs/agente.md).
 
 * GET /api/agente/estado — si el asistente está disponible para quien pregunta y por qué no (`requiere("cuenta")`:
-  cualquier rol lo consulta para saber si mostrar el botón).
+  cualquier rol lo consulta para saber si mostrar el botón). Para el administrador y el coordinador trae además la
+  conexión con Mnemo (`mnemo.conexion`, `mnemo_conexion.vista`); conectarla y desconectarla está en
+  `api/agente_mnemo.py`.
 * GET /api/agente/conversaciones, GET y DELETE /api/agente/conversaciones/{cid} — las conversaciones propias: solo
   su dueño las ve o las borra (de otra persona es un 404, como si no existiera).
 * POST /api/agente/mensajes y POST /api/agente/confirmaciones — un turno en flujo (NDJSON, `bucle.py`). Lo que impide
@@ -59,8 +61,24 @@ def _exigir_rol(quien: Quien, agente: dict) -> None:
         raise HTTPException(403, {"codigo": "agente_apagado", "mensaje": "El asistente no está habilitado para su rol."})
 
 
-def _mnemo_activo(quien: Quien, agente: dict, cfg: Any) -> bool:
-    if not cfg.mnemo_configurado:
+SIN_CONEXION = {"estado": "sin_conectar", "motivo": None, "url": None, "cuenta": None, "alcances": [],
+                "modelo": False, "desde": None}
+
+
+def _conexion(db: Database, cfg: Any) -> dict:
+    """La conexión con Mnemo (`mnemo_conexion.vista`, con la dirección sugerida). Si no se puede leer, sin conectar:
+    el estado nunca falla por Mnemo."""
+    try:
+        from ..agente import mnemo_conexion
+        return mnemo_conexion.vista(db, cfg)
+    except Exception as e:  # noqa: BLE001
+        log.warning("Asistente: no se pudo leer la conexión con Mnemo (%s)", type(e).__name__)
+        return {**SIN_CONEXION, "url_sugerida": getattr(cfg, "mnemo_url", "") or None}
+
+
+def _mnemo_activo(quien: Quien, agente: dict, cfg: Any, conexion: dict) -> bool:
+    """¿Esta persona usa las herramientas de Mnemo ahora? Hay una conexión «conectada» y su rol las tiene."""
+    if conexion.get("estado") != "conectada":
         return False
     try:
         from ..agente.herramientas import mnemo
@@ -87,15 +105,23 @@ def _etiquetas(conv: dict) -> dict[str, str]:
 
 @r.get("/agente/estado")
 def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("cuenta"))):
+    """`mnemo`: `{"activo": bool (esta persona usa las herramientas de Mnemo), "origen": scheme://host de Mnemo |
+    None}` para todos y, para el administrador y el coordinador (que la ve en solo lectura en Ajustes), `"conexion"`:
+    `mnemo_conexion.vista(db, cfg)` (`estado`, `motivo`, `url`, `cuenta`, `alcances`, `modelo`, `desde` y
+    `url_sugerida`)."""
     cfg = request.app.state.cfg
     ajustes, agente = politica.leer(db)
     sesion = (request.scope.get("state") or {}).get("sesion")
     motivo = politica.motivo(quien, cfg, agente, sesion, db)
-    mnemo = _mnemo_activo(quien, agente, cfg)
+    conexion = _conexion(db, cfg)
+    activo = _mnemo_activo(quien, agente, cfg, conexion)
+    mnemo: dict[str, Any] = {"activo": activo, "origen": politica.origen_mnemo(conexion.get("url")) if activo else None}
+    if quien.administra:
+        mnemo["conexion"] = conexion
     return {"disponible": motivo is None, "motivo": motivo, "configurado": cfg.agente_configurado,
             "es_admin": quien.es_admin, "escritura": agente["escritura"],
             "limite": {"usados": conv_db.uso_de(db, quien.uid), "maximo": politica.mensajes_diarios(ajustes, quien.rol)},
-            "mnemo": {"activo": mnemo, "origen": politica.origen_mnemo(cfg) if mnemo else None},
+            "mnemo": mnemo,
             "sugerencias": politica.sugerencias(quien.rol) if motivo is None else []}
 
 

@@ -58,7 +58,9 @@ def test_cada_ruta_declara_un_solo_requiere(cliente):
              for m in r.methods}
     assert set(rutas) == {("GET", "/api/agente/estado"), ("GET", "/api/agente/conversaciones"),
                           ("GET", "/api/agente/conversaciones/{cid}"), ("DELETE", "/api/agente/conversaciones/{cid}"),
-                          ("POST", "/api/agente/mensajes"), ("POST", "/api/agente/confirmaciones")}
+                          ("POST", "/api/agente/mensajes"), ("POST", "/api/agente/confirmaciones"),
+                          ("POST", "/api/agente/mnemo/conectar"), ("POST", "/api/agente/mnemo/volver"),
+                          ("DELETE", "/api/agente/mnemo")}
     for (m, ruta), r in rutas.items():
         pendientes, deps = list(r.dependant.dependencies), []
         while pendientes:
@@ -66,7 +68,8 @@ def test_cada_ruta_declara_un_solo_requiere(cliente):
             if hasattr(d.call, "permisos"):
                 deps.append(d.call.permisos)
             pendientes.extend(d.dependencies)
-        esperado = {"cuenta"} if ruta == "/api/agente/estado" else {"agente.usar"}
+        esperado = ({"cuenta"} if ruta == "/api/agente/estado" else
+                    {"agente.conectar"} if ruta.startswith("/api/agente/mnemo") else {"agente.usar"})
         assert deps == [frozenset(esperado)], (m, ruta, deps)
 
 
@@ -77,11 +80,15 @@ def test_sin_sesion_401(cliente):
 
 # ───────────────────────────── Estado ─────────────────────────────
 
+SIN_CONECTAR = {"estado": "sin_conectar", "motivo": None, "url": None, "cuenta": None, "alcances": [],
+                "modelo": False, "desde": None, "url_sugerida": None}
+
+
 def test_estado_sin_clave(sesion):
     e = sesion.get("/api/agente/estado").json()
     assert e == {"disponible": False, "motivo": "sin_configurar", "configurado": False, "es_admin": True,
-                 "escritura": True, "limite": {"usados": 0, "maximo": 300}, "mnemo": {"activo": False, "origen": None},
-                 "sugerencias": []}
+                 "escritura": True, "limite": {"usados": 0, "maximo": 300},
+                 "mnemo": {"activo": False, "origen": None, "conexion": SIN_CONECTAR}, "sugerencias": []}
 
 
 def test_estado_con_clave_y_tope_diario(sesion, falsas):
@@ -109,13 +116,21 @@ def test_estado_del_coordinador_y_del_planillero(sesion, como, falsas):
 def test_estado_con_mnemo(sesion, monkeypatch):
     from dataclasses import replace
 
+    from ayudas_agente import conectar_mnemo
+
     from app.agente.herramientas import mnemo
-    sesion.app.state.cfg = replace(sesion.app.state.cfg, mnemo_url="https://mnemo.example.org/mcp",
-                                   mnemo_token="mnemo_pat_inventado")
     monkeypatch.setattr(mnemo, "disponible_para", lambda quien, ajustes, cfg: quien.es_admin)
-    assert sesion.get("/api/agente/estado").json()["mnemo"] == {"activo": True, "origen": "https://mnemo.example.org"}
+    sesion.app.state.cfg = replace(sesion.app.state.cfg, mnemo_url="https://mnemo.example.org/mcp")
+    e = sesion.get("/api/agente/estado").json()["mnemo"]  # una dirección sugerida no es una conexión
+    assert e == {"activo": False, "origen": None, "conexion": {**SIN_CONECTAR,
+                                                               "url_sugerida": "https://mnemo.example.org/mcp"}}
+    conectar_mnemo(sesion.app)
+    e = sesion.get("/api/agente/estado").json()["mnemo"]
+    assert e["activo"] is True and e["origen"] == "https://mnemo.example.org"
+    assert e["conexion"]["estado"] == "conectada" and e["conexion"]["modelo"] is True
     monkeypatch.setattr(mnemo, "disponible_para", lambda quien, ajustes, cfg: False)
-    assert sesion.get("/api/agente/estado").json()["mnemo"] == {"activo": False, "origen": None}
+    e = sesion.get("/api/agente/estado").json()["mnemo"]
+    assert e["activo"] is False and e["origen"] is None and e["conexion"]["estado"] == "conectada"
 
 
 def test_ajustes_raros_toman_los_valores_por_defecto(sesion, falsas):
