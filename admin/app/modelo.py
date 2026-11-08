@@ -820,7 +820,11 @@ def consentimiento_vigente(eventos: Iterable[dict] | None) -> dict:
     * `consentimiento_canales`: `canales_de(evento)`; vacío si no es «si».
     * `contacto_habilitado`: «si» con un medio distinto de `declarado_planilla`, o confirmado por A.
     * `sensibles_autorizados`: categorías de los «si» seguidos al final con medio escrito o formulario, o con evidencia.
-    * `mayor_declarado`: algún «si» con `mayor_declarado`. `autorizacion_ultima`: {id, estado} del último."""
+    * `mayor_declarado`: algún «si» con `mayor_declarado`. `autorizacion_ultima`: {id, estado} del último.
+
+    El no gana en una unión (2.6): un evento «fusion» que no dice «no» solo combina los eventos que la unión leyó
+    (`considerados`). Si hay un «no» o una «revocada» que no vio (se dijo mientras se unían y quedó antes en el orden
+    porque tomó su hora o su número antes de escribirse), manda ese «no»."""
     ev = _cronologico(eventos)
     out = {"consentimiento": "pendiente", "consentimiento_fecha": None, "consentimiento_medio": None,
            "consentimiento_canales": [], "contacto_habilitado": False, "sensibles_autorizados": [],
@@ -829,6 +833,12 @@ def consentimiento_vigente(eventos: Iterable[dict] | None) -> dict:
     if not ev:
         return out
     u = ev[-1]
+    if u.get("medio") == "fusion" and u.get("estado") not in ("no", "revocada") \
+            and isinstance(u.get("considerados"), list):
+        vistos = set(u["considerados"])
+        no_vistos = [e for e in ev[:-1] if e.get("estado") in ("no", "revocada") and e.get("_id") not in vistos]
+        if no_vistos:
+            u = no_vistos[-1]
     out["autorizacion_ultima"] = {"id": u.get("_id"), "estado": u.get("estado")}
     # Un evento migrado lleva la fecha que tenía la ficha (o ninguna): la de la migración no es la de la autorización
     fecha = u.get("fecha_declarada") or (None if u.get("medio") == "migrado" else fecha_local(u.get("ts")))
@@ -1044,6 +1054,11 @@ TIPOS_SOLICITUD = {"consulta": "Consulta", "correccion": "Corrección", "supresi
 PLAZOS_SOLICITUD = {"consulta": 10, "correccion": 15, "supresion": 15, "revocatoria": 15, "otro": 15, "registro": None}
 # Las que dejan la ficha con «reclamo en trámite» (sale de las colas mientras se resuelve)
 RECLAMOS = ("correccion", "supresion", "revocatoria")
+# Las solicitudes que NO sacan a la persona de las colas del consultor mientras están abiertas: la consulta (solo pide
+# saber qué datos hay; la clasifica así quien la registra en Calidad) y el pedido de registro. Las demás sí, también
+# «otro»: es lo que queda cuando P o C registran «Pidió consultar, corregir o borrar sus datos» sin decir cuál, y hasta
+# que A la clasifique no se le vuelve a llamar
+NO_MARCAN_RECLAMO = ("registro", "consulta")
 ESTADOS_SOLICITUD = {"pendiente": "Pendiente", "en_tramite": "En trámite", "resuelta": "Resuelta",
                      "rechazada": "Rechazada"}
 ABIERTAS = ("pendiente", "en_tramite")

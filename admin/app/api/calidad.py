@@ -18,7 +18,7 @@ from ..pipeline import texto as tx
 from ..pipeline.importar import aplicar_registro, georreferenciar
 from ..seguridad import Admin, obtener_db, requiere_admin
 from . import filtros
-from .personas import mapa_lugares
+from .personas import cedula_en_union, mapa_lugares
 
 r = APIRouter(prefix="/api", tags=["calidad"])
 
@@ -97,11 +97,15 @@ def cedula_ocupada(db: Database, cedula: str, salvo: int | None = None) -> dict 
 
 
 def exigir_cedula_libre(db: Database, cedula: str, salvo: int | None = None) -> None:
-    """409 `cedula_ocupada` si otra ficha la tiene; 409 `suprimida` si su titular pidió la supresión."""
+    """409 `cedula_ocupada` si otra ficha la tiene (o una unión la está moviendo: dice a qué ficha); 409 `suprimida` si
+    su titular pidió la supresión. La unión se mira primero: si ya no puede terminar, su origen vuelve con la cédula."""
+    traspaso = bd.traspaso_de(db, cedula)
     otra = cedula_ocupada(db, cedula, salvo)
     if otra:
         raise HTTPException(409, {"mensaje": f"La cédula ya pertenece a {otra['nombre']}", "codigo": "cedula_ocupada",
                                   "id": otra["_id"], "nombre": otra["nombre"]})
+    if traspaso:
+        raise HTTPException(409, cedula_en_union(db, traspaso))
     h = bd.huella(bd.clave_supresion(db), "cedula", cedula)
     if h and db.suprimidos.find_one({"_id": h}, {"_id": 1}):
         raise HTTPException(409, {"mensaje": "El titular de esa cédula pidió la supresión de sus datos",
@@ -109,6 +113,7 @@ def exigir_cedula_libre(db: Database, cedula: str, salvo: int | None = None) -> 
 
 
 ESTADOS_CONFLICTO = ("pendiente", "aplicado", "corregido", "descartado", "reportado")
+MOTIVO_DEVUELTA = "Cédula devuelta a su ficha tras una unión que no se hizo"
 
 
 @r.get("/conflictos")
@@ -155,10 +160,12 @@ def _cerrar_conflicto(db: Database, c: dict, estado: str, quien: Quien, resoluci
 
 
 def _poner_cedula(db: Database, pid: int, cedula: str, origen: str, quien: Quien, antes: str | None,
-                  motivo: str | None = None) -> None:
+                  motivo: str | None = None, procedencia: dict | None = None) -> None:
     """Escribe la cédula solo si la ficha sigue activa y con la cédula que se leyó; la anterior pasa a
-    `cedulas_anteriores`."""
-    prov = {"fuente": "panel" if origen != "consultor" else "consultor", "ts": bd.ahora(), "uid": quien.uid}
+    `cedulas_anteriores`. `procedencia`: la de la cédula, si no es una escrita ahora en el panel o dictada (la que
+    tenía la ficha antes de una unión que no se hizo)."""
+    prov = procedencia or {"fuente": "panel" if origen != "consultor" else "consultor", "ts": bd.ahora(),
+                           "uid": quien.uid}
     s = {"cedula": cedula, "cedula_origen": origen, "actualizado_en": bd.ahora(),
          "tipo_documento": {"$ifNull": ["$tipo_documento", "CC"]},
          "procedencia": {"$mergeObjects": [{"$ifNull": ["$procedencia", {}]}, {"cedula": {"$literal": prov}}]},
@@ -175,7 +182,7 @@ def _poner_cedula(db: Database, pid: int, cedula: str, origen: str, quien: Quien
     bd.derivar(db, [pid])
     bd.auditar(db, quien, "editar", "persona", pid, {"cedula": {"antes": antes, "despues": cedula},
                                                      "motivo_cambio_cedula": motivo}, campos=["cedula"],
-               completados=[] if antes else ["cedula"])
+               completados=[] if (antes or procedencia) else ["cedula"])
 
 
 @r.post("/conflictos/{cid}")
@@ -216,7 +223,16 @@ def resolver_conflicto(cid: int, body: ConflictoIn, db: Database = Depends(obten
         if p.get("cedula"):
             raise HTTPException(409, {"mensaje": "La ficha ya tiene cédula", "codigo": "cambiada"})
         exigir_cedula_libre(db, c["cedula"], pid)
-        _poner_cedula(db, pid, c["cedula"], "consultor", quien, None, "Cédula dictada por el titular al consultor")
+        if c.get("fuente") == "fusion":
+            # La cédula era de la propia ficha antes de una unión que no se hizo (`bd._devolver_origen`): vuelve con
+            # su procedencia de entonces, no como dictada al consultor
+            reg = c.get("registro") or {}
+            prov = reg.get("procedencia") if isinstance(reg.get("procedencia"), dict) else None
+            _poner_cedula(db, pid, c["cedula"], reg.get("cedula_origen") or "panel", quien, None,
+                          MOTIVO_DEVUELTA, procedencia={k: prov.get(k) for k in ("fuente", "ts", "uid")} if prov
+                          else None)
+        else:
+            _poner_cedula(db, pid, c["cedula"], "consultor", quien, None, "Cédula dictada por el titular al consultor")
         _cerrar_conflicto(db, c, "aplicado", quien, {"decision": "aplicar"})
     elif c["motivo"] == "posible_digitacion":
         raise HTTPException(422, "Use «Corregir cédula» o «Descartar»: una posible digitación nunca une fichas")
@@ -243,12 +259,10 @@ def _vence(tipo: str, desde: date | None = None) -> str | None:
 
 
 def _reclamo(db: Database, pid: int | None) -> None:
-    """`reclamo_en_tramite` de la ficha: hay alguna corrección, supresión o revocatoria abierta."""
+    """`reclamo_en_tramite` de la ficha: hay un reclamo o una solicitud sin clasificar abierta (`bd.reclamo_abierto`)."""
     if pid is None:
         return
-    abierto = db.solicitudes.count_documents({"persona_id": pid, "tipo": {"$in": list(modelo.RECLAMOS)},
-                                              "estado": {"$in": list(modelo.ABIERTAS)}}) > 0
-    db.personas.update_one({"_id": pid}, {"$set": {"reclamo_en_tramite": abierto}})
+    db.personas.update_one({"_id": pid}, {"$set": {"reclamo_en_tramite": bd.reclamo_abierto(db, pid)}})
 
 
 @r.post("/solicitudes", status_code=201)
@@ -269,12 +283,17 @@ def crear_solicitud(body: SolicitudIn, db: Database = Depends(obtener_db),
         "descripcion": body.descripcion.strip(), "creado_por": {"uid": quien.uid, "usuario": quien.usuario, "rol": quien.rol},
         "ts": bd.ahora(), "vence": vence, "estado": "pendiente", "respuesta": None, "resuelto_por": None,
         "resuelto_en": None})
-    _reclamo(db, body.persona_id)
-    if body.persona_id is not None:
-        bd.auditar(db, quien, "solicitud_crear", "persona", body.persona_id, {"solicitud_id": sid, "tipo": body.tipo})
+    pid = body.persona_id
+    if pid is not None:
+        # Si la ficha se unió con otra mientras tanto, la solicitud (y su marca) va a la ficha unida: a quien pidió
+        # suprimir sus datos no se le llama desde ninguna de las dos. Crear una solicitud solo pone la marca (una
+        # lectura de las solicitudes mientras la unión las mueve no la quita)
+        pid = bd.unida_en(db, pid) or pid
+        bd.marcar_reclamo(db, pid)
+        bd.auditar(db, quien, "solicitud_crear", "persona", pid, {"solicitud_id": sid, "tipo": body.tipo})
     else:
         bd.auditar(db, quien, "solicitud_crear", "solicitud", sid, {"tipo": body.tipo})
-    return {"id": sid, "vence": vence}
+    return {"id": sid, "vence": vence, "persona_id": pid}
 
 
 @r.get("/solicitudes")

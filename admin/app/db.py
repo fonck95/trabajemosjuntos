@@ -16,6 +16,7 @@ import copy
 import hashlib
 import hmac
 import json
+import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -33,6 +34,7 @@ from .pipeline.direcciones import Lugar
 GAZETTEER = Path(__file__).resolve().parents[1] / "geo" / "gazetteer.json"
 PUESTOS = Path(__file__).resolve().parents[1] / "geo" / "puestos_yondo.json"
 ACTIVA = {"eliminado": {"$ne": True}, "fusionada_en": None}
+log = logging.getLogger("panel.migracion")
 
 ETIQUETAS_INICIALES = [
     ("Vivienda", "necesidad"), ("Agua potable", "necesidad"), ("Saneamiento", "necesidad"), ("Salud", "necesidad"),
@@ -396,6 +398,11 @@ def _uid_de(quien: Any) -> int | None:
     return quien.uid
 
 
+def autor_de(quien: Any) -> dict:
+    """`{uid, usuario, rol}` de quien hizo algo (como `creado_por` de los conflictos), también para «sistema»."""
+    return {"uid": _uid_de(quien), "usuario": _nombre_de(quien), "rol": getattr(quien, "rol", None)}
+
+
 # ───────────────────────────── Completitud del perfil (1.11) ─────────────────────────────
 
 PESOS = [  # (campo, puntos) — suma 100
@@ -594,17 +601,27 @@ def reconciliar_consentimiento(db: Database, ids: Iterable[int] | None = None) -
     return hechos
 
 
-def derivar(db: Database, ids: Iterable[int], reconciliar: bool = True) -> None:
+def _eventos_de(db: Database, ids: list[int]) -> set[tuple]:
+    return {(e["_id"], e["persona_id"]) for e in db.autorizaciones.find({"persona_id": {"$in": ids}}, {"persona_id": 1})}
+
+
+def derivar(db: Database, ids: Iterable[int], reconciliar: bool = True, _intentos: int = 3) -> None:
     """Recalcula lo derivado de cada ficha: nacimiento aproximado, autorización (de sus eventos), abordaje (de sus
-    acercamientos no anulados), claves fonéticas y completitud. Solo escribe lo que cambió."""
+    acercamientos no anulados), claves fonéticas y completitud. Solo escribe lo que cambió.
+
+    Si mientras tanto llegó (o se fue) un evento de autorización de una ficha, esa ficha se vuelve a derivar: así una
+    lectura vieja no deja escrita una autorización vencida encima de otra más nueva (un «no» que se dijo mientras se
+    derivaba)."""
     ids = list(dict.fromkeys(ids))
     if not ids:
         return
     if reconciliar:
         reconciliar_consentimiento(db, ids)
     eventos: dict[int, list] = {}
+    leidos: set[tuple] = set()
     for e in db.autorizaciones.find({"persona_id": {"$in": ids}}):
         eventos.setdefault(e["persona_id"], []).append(e)
+        leidos.add((e["_id"], e["persona_id"]))
     acerc: dict[int, list] = {}
     for a in db.acercamientos.find({"persona_id": {"$in": ids}, "anulado": {"$ne": True}}):
         acerc.setdefault(a["persona_id"], []).append(a)
@@ -632,6 +649,10 @@ def derivar(db: Database, ids: Iterable[int], reconciliar: bool = True) -> None:
             ops.append(UpdateOne({"_id": p["_id"], "abordaje_seq": p.get("abordaje_seq")}, {"$set": {"abordaje": ab}}))
     for k in range(0, len(ops), 1000):
         db.personas.bulk_write(ops[k:k + 1000], ordered=False)
+    if _intentos > 1:
+        cambiaron = {pid for _, pid in leidos ^ _eventos_de(db, ids)}
+        if cambiaron:
+            derivar(db, [i for i in ids if i in cambiaron], reconciliar=False, _intentos=_intentos - 1)
 
 
 # ───────────────────────────── Unión de fichas (2.6) ─────────────────────────────
@@ -641,6 +662,18 @@ class FusionImposible(HTTPException):
 
     def __init__(self, mensaje: str):
         super().__init__(409, mensaje)
+
+
+class CedulasDistintas(FusionImposible):
+    """Las dos fichas tienen (o acaban de recibir) cédulas distintas: son personas diferentes. O, con `mensaje`, otra
+    ficha tomó la cédula del origen mientras se unían."""
+
+    def __init__(self, mensaje: str | None = None):
+        super().__init__(mensaje or "Las dos fichas tienen cédulas distintas: son personas diferentes")
+
+
+CEDULA_TOMADA = ("Otra ficha tomó la cédula del origen mientras se unían: no se unieron, y la cédula quedó como "
+                 "conflicto en Calidad")
 
 
 # Campos que se llenan desde el origen si el destino no los tiene, sin alternos (los que no tienen procedencia)
@@ -805,29 +838,154 @@ def _reapuntar_coincidencias(db: Database, origen: int, destino: int, marca: dic
             db.coincidencias.update_one({"_id": c["_id"]}, cerrar)
 
 
-def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | None = None) -> None:
-    """Pasos 3 a 7 de la unión: se pueden repetir sin daño (la reparación al arrancar los repite)."""
-    origen = o["_id"]
+LIGADOS = ("acercamientos", "autorizaciones", "solicitudes", "conflictos_cedula")
+
+
+def reclamo_abierto(db: Database, pid: int) -> bool:
+    """¿La ficha tiene abierta una corrección, supresión, revocatoria u otra solicitud sin clasificar (no una consulta ni un
+    pedido de registro, `modelo.NO_MARCAN_RECLAMO`)? Mientras la tenga, no se le llama."""
+    return db.solicitudes.count_documents({"persona_id": pid, "tipo": {"$nin": list(modelo.NO_MARCAN_RECLAMO)},
+                                           "estado": {"$in": list(modelo.ABIERTAS)}}, limit=1) > 0
+
+
+def marcar_reclamo(db: Database, pid: int) -> bool:
+    """Pone `reclamo_en_tramite` si la ficha tiene un reclamo abierto (sale de las colas del consultor: a quien pidió
+    suprimir sus datos no se le llama). Solo la pone: la quita quien cierra la solicitud (`calidad._reclamo`)."""
+    if not reclamo_abierto(db, pid):
+        return False
+    db.personas.update_one({"_id": pid}, {"$set": {"reclamo_en_tramite": True}})
+    return True
+
+
+def _mover_ligados(db: Database, origen: int, destino: int) -> int:
+    """Paso 4 de 2.6: lo ligado al origen pasa al destino, que queda con «reclamo en trámite» si entre lo movido (o lo
+    que ya tenía) hay un reclamo abierto: la marca no sale de la foto del origen, que pudo leerse antes de que llegara
+    la solicitud. Devuelve cuántos documentos movió."""
+    n = sum(db[col].update_many({"persona_id": origen}, {"$set": {"persona_id": destino}}).modified_count
+            for col in LIGADOS)
+    marcar_reclamo(db, destino)
+    return n
+
+
+def fin_de_cadena(db: Database, pid: int) -> int | None:
+    """La ficha activa en la que terminó la cadena de uniones de `pid` (None si se suprimió o hay un ciclo)."""
+    destino, vistos = pid, set()
+    while True:
+        if destino in vistos:
+            return None
+        vistos.add(destino)
+        d = db.personas.find_one({"_id": destino}, {"fusionada_en": 1, "eliminado": 1})
+        if d is None or d.get("eliminado"):
+            return None
+        if d.get("fusionada_en") is None:
+            return destino
+        destino = d["fusionada_en"]
+
+
+def _union_terminada(o: dict) -> bool:
+    return "cedula_en_traspaso" not in o and o.get("nombre") == "FUSIONADA"
+
+
+def recoger_tardios(db: Database, pid: int) -> int | None:
+    """Una escritura que pasó la comprobación de ficha activa antes de una unión y llegó después (una autorización, un
+    acercamiento) quedó ligada al origen ya vacío: pasa a la ficha activa en que terminó la cadena, que se vuelve a
+    derivar. Devuelve esa ficha, o None si `pid` sigue activa o su unión todavía no termina (la unión, al terminar,
+    mueve lo que haya llegado)."""
+    o = db.personas.find_one({"_id": pid}, {"fusionada_en": 1, "eliminado": 1, "nombre": 1, "cedula_en_traspaso": 1})
+    if o is None or o.get("eliminado") or o.get("fusionada_en") is None or not _union_terminada(o):
+        return None
+    fin = fin_de_cadena(db, pid)
+    if fin is not None and _mover_ligados(db, pid, fin):
+        derivar(db, [fin], reconciliar=False)
+    return fin
+
+
+def unida_en(db: Database, pid: int) -> int | None:
+    """Después de registrar algo en `pid` (una autorización, un acercamiento, una solicitud): si `pid` ya no está
+    activa porque se unió con otra mientras tanto, la ficha activa en que termina la cadena, que es donde quedó lo
+    registrado (lo mueve `recoger_tardios` si la unión ya terminó, o el final de la unión en curso). None si `pid`
+    sigue activa, se suprimió o la cadena no termina en una ficha activa."""
+    o = db.personas.find_one({"_id": pid}, {"fusionada_en": 1, "eliminado": 1})
+    if o is None or o.get("eliminado") or o.get("fusionada_en") is None:
+        return None
+    return recoger_tardios(db, pid) or fin_de_cadena(db, o["fusionada_en"])
+
+
+def _lado(ficha: dict, eventos: list[dict]) -> dict:
+    """Autorización de un lado de la unión: la de sus eventos o, si no tiene (ficha vieja), la de la ficha. Un «no» en
+    cualquiera de los dos manda."""
+    if not eventos:
+        return ficha
+    vig = modelo.consentimiento_vigente(eventos)
+    if vig["consentimiento"] != "no" and ESTADO_EFECTIVO.get(ficha.get("consentimiento")) == "no":
+        return ficha
+    return {**ficha, **vig}
+
+
+def _unir_autorizaciones(db: Database, destino: int, o: dict, quien: Any, del_origen: set) -> str:
+    """Paso 5 de 2.6, sobre los eventos releídos después de moverlos (no sobre lo que se leyó al empezar la unión: un
+    «no» que el destino dijo mientras tanto cuenta). Cada lado se mira por separado: el destino con sus eventos y su
+    ficha de ahora, el origen con los eventos que traía y su ficha. «No» gana; si el resultado difiere de lo que dicen
+    los eventos unidos, un evento «fusion» que anota los que combinó (`considerados`): un «no» que no vio le gana
+    (`modelo.consentimiento_vigente`). Si al escribirlo ya llegó uno, queda además un «no» final. Devuelve el estado."""
     uid = _uid_de(quien)
-    r = db.personas.update_one({"_id": destino, **ACTIVA}, _pipeline_fusion(o, origen, uid))
-    if r.matched_count == 0:
-        raise FusionImposible("La ficha de destino ya se unió o se suprimió")
-    for col in ("acercamientos", "autorizaciones", "solicitudes", "conflictos_cedula"):
-        db[col].update_many({"persona_id": origen}, {"$set": {"persona_id": destino}})
-    _reapuntar_coincidencias(db, origen, destino, {"resuelto_por": _nombre_de(quien), "resuelto_en": ahora()})
-    # Autorización: «no» gana; si el resultado difiere de lo que dicen los eventos unidos, un evento «fusion»
-    d = d_antes or db.personas.find_one({"_id": destino}) or {}
-    estado, canales, habilita, fecha = _consentimiento_unido(d, o)
-    vig = modelo.consentimiento_vigente(list(db.autorizaciones.find({"persona_id": destino})))
-    if (estado, sorted(canales)) != (vig["consentimiento"], sorted(vig["consentimiento_canales"])) \
-            and not (estado == "pendiente" and vig["consentimiento"] == "pendiente"):
+    eventos = list(db.autorizaciones.find({"persona_id": destino}))
+    d = db.personas.find_one({"_id": destino}) or {}
+    lado_d = _lado(d, [e for e in eventos if e["_id"] not in del_origen])
+    lado_o = _lado(o, [e for e in eventos if e["_id"] in del_origen])
+    estado, canales, habilita, fecha = _consentimiento_unido(lado_d, lado_o)
+    vig = modelo.consentimiento_vigente(eventos)
+    vistos = [e["_id"] for e in eventos]
+
+    def evento(estado_: str, canales_: list[str], habilita_: bool, fecha_: str | None, considerados: list,
+               nota: str) -> None:
         db.autorizaciones.insert_one(autorizacion_doc(
-            db, destino, estado, "fusion", canales=canales, habilita=habilita, fecha_declarada=fecha,
+            db, destino, estado_, "fusion", canales=canales_, habilita=habilita_, fecha_declarada=fecha_,
             mayor_declarado=bool(d.get("mayor_declarado") or o.get("mayor_declarado")), uid=uid,
             usuario=_nombre_de(quien), rol=getattr(quien, "rol", None) or ("admin" if uid == 0 else None),
-            nota=f"Unión con la ficha {origen}"))
+            nota=nota, considerados=considerados))
+
+    if (estado, sorted(canales)) != (vig["consentimiento"], sorted(vig["consentimiento_canales"])) \
+            and not (estado == "pendiente" and vig["consentimiento"] == "pendiente"):
+        evento(estado, canales, habilita, fecha, vistos, f"Unión con la ficha {o['_id']}")
+    if estado != "no":
+        despues = list(db.autorizaciones.find({"persona_id": destino, "_id": {"$nin": vistos},
+                                               "estado": {"$in": ["no", "revocada"]}}))
+        if despues:
+            estado = "no"
+            evento("no", [], False, None, [*vistos, *(e["_id"] for e in despues)],
+                   f"Unión con la ficha {o['_id']}: dijo «no» mientras se unían")
     if estado == "no":
         db.personas.update_one({"_id": destino}, {"$set": {"sensibles": {}, "sensibles_autorizados": []}})
+    return estado
+
+
+def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | None = None) -> None:
+    """Pasos 3 a 7 de la unión: se pueden repetir sin daño (la reparación al arrancar los repite). `d_antes` queda por
+    compatibilidad: la autorización se calcula con el destino releído (`_unir_autorizaciones`)."""
+    origen = o["_id"]
+    uid = _uid_de(quien)
+    # La cédula manda (principio 2): el destino se escribe solo si su cédula sigue siendo compatible con la del origen.
+    # Quien leyó el destino sin cédula pudo perder la carrera con alguien que se la llenó con otra (PATCH del
+    # planillero entre la lectura y esta escritura): entonces son dos personas y la unión no se hace
+    cedula_o = o.get("cedula") or o.get("cedula_en_traspaso")
+    filtro: dict = {"_id": destino, **ACTIVA}
+    if cedula_o:
+        filtro["cedula"] = {"$in": [None, "", cedula_o]}
+    try:
+        r = db.personas.update_one(filtro, _pipeline_fusion(o, origen, uid))
+    except DuplicateKeyError:
+        # Otra ficha tomó la cédula del origen mientras estaba en traspaso (no pasó por `cedula_ocupada`): son dos
+        # fichas con la misma cédula y el destino no la puede recibir. Nada se escribió: no se une
+        raise CedulasDistintas(CEDULA_TOMADA) from None
+    if r.matched_count == 0:
+        if cedula_o and db.personas.count_documents({"_id": destino, **ACTIVA}, limit=1):
+            raise CedulasDistintas()
+        raise FusionImposible("La ficha de destino ya se unió o se suprimió")
+    del_origen = {e["_id"] for e in db.autorizaciones.find({"persona_id": origen}, {"_id": 1})}
+    _mover_ligados(db, origen, destino)
+    _reapuntar_coincidencias(db, origen, destino, {"resuelto_por": _nombre_de(quien), "resuelto_en": ahora()})
+    _unir_autorizaciones(db, destino, o, quien, del_origen)
     derivar(db, [destino], reconciliar=False)
     from .pipeline.importar import georreferenciar  # aquí: el pipeline usa este módulo
     georreferenciar(db, [destino])
@@ -836,6 +994,41 @@ def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | No
                             {**persona_vacia(), "_id": origen, "nombre": "FUSIONADA", "fusionada_en": destino,
                              "eliminado": False, "actualizado_en": ahora()})
     db.personas.update_many({"fusionada_en": origen}, {"$set": {"fusionada_en": destino}})
+    # Lo que llegó al origen después de moverlo (pasó la comprobación de ficha activa antes de la unión): también al
+    # destino. Lo que llegue desde ahora lo mueve quien lo escribe (`recoger_tardios`)
+    if _mover_ligados(db, origen, destino):
+        derivar(db, [destino], reconciliar=False)
+
+
+def _devolver_origen(db: Database, o: dict, destino: int, quien: Any) -> None:
+    """La unión no se hace: el origen vuelve a quedar activo con su cédula. Si otra ficha la tomó mientras estaba en
+    traspaso, vuelve sin ella y la cédula queda como conflicto a la vista de A (Calidad → Conflictos de cédula:
+    «Reportar duplicado» con la ficha que la tiene, o «Aplicar» si se libera)."""
+    pid = o["_id"]
+    cedula = o.get("cedula") or o.get("cedula_en_traspaso")
+    q = {"_id": pid, "fusionada_en": destino}
+    try:
+        db.personas.update_one(q, {"$set": {"fusionada_en": None, "cedula": cedula},
+                                   "$unset": {"cedula_en_traspaso": ""}})
+        return
+    except DuplicateKeyError:
+        pass
+    r = db.personas.update_one(q, {"$set": {"fusionada_en": None, "cedula": None}, "$unset": {"cedula_en_traspaso": ""}})
+    if not r.matched_count:
+        return
+    clave = hashlib.sha1(f"dictada|{cedula}|{pid}|fusion|{destino}".encode()).hexdigest()
+    prov = (o.get("procedencia") or {}).get("cedula") if isinstance(o.get("procedencia"), dict) else None
+    db.conflictos_cedula.update_one({"clave": clave}, {"$setOnInsert": {
+        "_id": siguiente_id(db, "conflictos_cedula"), "clave": clave, "cedula": cedula, "persona_id": pid,
+        "motivo": "dictada", "fuente": "fusion", "importacion_id": None,
+        # De dónde venía la cédula: «Aplicar» la devuelve con esa procedencia, no como dictada al consultor
+        "registro": {"nombre": o.get("nombre"), "cedula": cedula, "tipo_documento": o.get("tipo_documento"),
+                     "fuente": "fusion", "union_con": destino, "cedula_origen": o.get("cedula_origen"),
+                     "procedencia": prov if isinstance(prov, dict) else None},
+        "puntaje_nombre": None, "estado": "pendiente", "creado_por": autor_de(quien), "creado_en": ahora(),
+        "resuelto_por": None, "resuelto_en": None, "resolucion": None}}, upsert=True)
+    auditar(db, quien, "conflicto_cedula", "persona", pid, {"cedula": cedula, "motivo": "union_sin_cedula",
+                                                            "union_con": destino})
 
 
 def fusionar(db: Database, destino: int, origen: int, quien: Any, ip: str | None = None) -> None:
@@ -868,40 +1061,58 @@ def fusionar(db: Database, destino: int, origen: int, quien: Any, ip: str | None
     try:
         _unir_en(db, destino, o, quien, d)
     except FusionImposible:
-        # El destino dejó de estar activo entre la lectura y la escritura: el origen vuelve a quedar como estaba
-        db.personas.update_one({"_id": origen, "fusionada_en": destino},
-                               {"$set": {"fusionada_en": None, "cedula": o.get("cedula")}, "$unset": {"cedula_en_traspaso": ""}})
+        # El destino dejó de estar activo, o recibió otra cédula, entre la lectura y la escritura: el origen vuelve a
+        # quedar como estaba (con su cédula, si nadie la tomó) y no se une nada
+        _devolver_origen(db, o, destino, quien)
         raise
     auditar(db, quien, "fusionar", "persona", destino, {"origen": origen}, ip)
 
 
 def reparar_fusiones(db: Database) -> int:
     """Orígenes de uniones cortadas a mitad (todavía con datos o con `cedula_en_traspaso`): repite los pasos 3 a 7 sobre
-    la ficha activa en la que terminó la cadena de uniones."""
+    la ficha activa en la que terminó la cadena de uniones; si la cadena ya no termina en una ficha activa (su destino
+    se suprimió), el origen vuelve a quedar activo con su cédula. Corre en cada arranque y nunca lo aborta: un error en
+    una ficha queda en el registro y en la auditoría (a la vista de A) y esa ficha se reintenta en el próximo
+    arranque."""
     n = 0
     for o in db.personas.find({"fusionada_en": {"$ne": None}, "eliminado": {"$ne": True},
                                "$or": [{"cedula_en_traspaso": {"$exists": True}}, {"nombre": {"$ne": "FUSIONADA"}}]}):
-        destino, vistos = o["fusionada_en"], {o["_id"]}
-        while True:  # la ficha activa en la que terminó la cadena de uniones
-            if destino in vistos:
-                destino = None
-                break
-            vistos.add(destino)
-            d = db.personas.find_one({"_id": destino}, {"fusionada_en": 1, "eliminado": 1})
-            if d is None or d.get("eliminado"):
-                destino = None
-                break
-            if d.get("fusionada_en") is None:
-                break
-            destino = d["fusionada_en"]
-        if destino is None:
-            continue
         try:
-            _unir_en(db, destino, o, "sistema")
-            n += 1
-        except FusionImposible:
-            continue
+            destino = fin_de_cadena(db, o["fusionada_en"])
+            if destino is None:
+                # La unión ya no puede terminar (su destino se suprimió, o un ciclo): el origen vuelve a quedar activo
+                # con su cédula, que si no quedaría ocupada para siempre
+                _devolver_origen(db, o, o["fusionada_en"], "sistema")
+                continue
+            try:
+                _unir_en(db, destino, o, "sistema")
+                n += 1
+            except CedulasDistintas:
+                # El destino recibió otra cédula, u otra ficha tomó la del origen, mientras la unión estaba cortada:
+                # son dos personas. El origen vuelve a quedar activo (con su cédula, o sin ella y con un conflicto)
+                _devolver_origen(db, o, o["fusionada_en"], "sistema")
+            except FusionImposible:
+                continue
+        except Exception as e:  # noqa: BLE001 (una ficha no detiene el arranque del panel)
+            log.warning("Reparación de uniones: la ficha %s no se pudo reparar (se reintenta al arrancar): %s",
+                        o["_id"], e)
+            _avisar_union_cortada(db, o, e)
     return n
+
+
+def _avisar_union_cortada(db: Database, o: dict, e: Exception) -> None:
+    """Deja a la vista de A (Ajustes → Auditoría, acción «union_cortada», con el id del origen y el del destino) una
+    unión cortada que la reparación no pudo terminar: mientras tanto su cédula sigue ocupada y el 409 de A dice qué
+    ficha la tiene. Una vez por ficha y tipo de error, y sin el texto del error (puede traer la cédula)."""
+    error = type(e).__name__
+    try:
+        if not db.auditoria.count_documents({"accion": "union_cortada", "entidad_id": o["_id"], "error": error},
+                                            limit=1):
+            auditar(db, "sistema", "union_cortada", "persona", o["_id"],
+                    {"destino": o.get("fusionada_en"), "mensaje": "La unión quedó cortada y no se pudo terminar: se "
+                     "reintenta en cada arranque"}, error=error)
+    except Exception as e2:  # noqa: BLE001
+        log.warning("Reparación de uniones: no se pudo anotar el aviso de la ficha %s: %s", o["_id"], e2)
 
 
 def cerrar_coincidencias_imposibles(db: Database, ids: Iterable[int] | None = None) -> int:
@@ -996,6 +1207,27 @@ def grupo_fusion(db: Database, pid: int) -> list[int]:
 
 
 FUENTES_CON_CEDULA = ("cedulas", "planilla")
+
+
+def traspaso_de(db: Database, c: str | None) -> dict | None:
+    """La unión que está moviendo la cédula `c` y todavía puede terminar (en curso, o cortada hasta que la reparación
+    la termine): `{origen, nombre, destino}`, con `destino` la ficha activa en que termina la cadena. Mientras tanto
+    ninguna ficha activa muestra la cédula, pero está ocupada: un alta o un cambio con ella chocaría al escribir el
+    destino. Una unión que ya no puede terminar (su destino se suprimió, o un ciclo) no la ocupa: su origen vuelve a
+    quedar activo con su cédula (`_devolver_origen`), y quien llama la encuentra ahí."""
+    if not c:
+        return None
+    for o in db.personas.find({"cedula_en_traspaso": c, "fusionada_en": {"$ne": None}, "eliminado": {"$ne": True}}):
+        fin = fin_de_cadena(db, o["fusionada_en"])
+        if fin is not None:
+            return {"origen": o["_id"], "nombre": o.get("nombre"), "destino": fin}
+        _devolver_origen(db, o, o["fusionada_en"], "sistema")
+    return None
+
+
+def cedula_en_traspaso(db: Database, c: str | None) -> bool:
+    """¿Una unión que todavía puede terminar está moviendo esa cédula? (`traspaso_de`)"""
+    return traspaso_de(db, c) is not None
 
 
 def cedulas_de(p: dict) -> set[str]:

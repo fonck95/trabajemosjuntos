@@ -102,6 +102,19 @@ class Quien:
         return self.rol in ROLES_ADMIN
 
 
+def quien_de_usuario(db: Database, uid: int) -> Quien:
+    """Un usuario como `Quien` (su rol, sus permisos y su alcance), para que A y K vean lo que él ve: «Ver como» de Mi
+    trabajo (7.7) y sus enlaces a Habitantes (`como`). 404 si no existe."""
+    u = db.usuarios.find_one({"_id": uid}, {"clave": 0})
+    if u is None or u.get("rol") not in ROLES:
+        raise HTTPException(404, "El usuario no existe")
+    asig = u.get("asignacion") or {}
+    return Quien(uid=u["_id"], usuario=u.get("usuario"), nombre=u.get("nombre"), rol=u["rol"],
+                 permisos=PERMISOS.get(u["rol"], frozenset()),
+                 asignacion=None if u["rol"] in ROLES_ADMIN else
+                 {"lugares": list(asig.get("lugares") or []), "areas": list(asig.get("areas") or [])})
+
+
 def excepto(rol: str | None) -> list[str]:
     """Permisos que el rol no tiene aunque tenga «*» (los de `SOLO_ADMIN` para K): van a la interfaz con la sesión."""
     return sorted(SOLO_ADMIN) if rol != "admin" and "*" in PERMISOS.get(rol or "", ()) else []
