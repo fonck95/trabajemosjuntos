@@ -136,6 +136,24 @@ def test_bajar_la_retencion_durante_un_turno_vale_para_lo_que_ese_turno_guardo(s
     assert all(utc(m["expira"]) < limite for m in db.agente_mensajes.find({"conversacion": cid}))
 
 
+def test_las_llamadas_internas_no_dejan_datos_en_el_registro(sesion, caplog):
+    """El servidor único deja el registro en INFO (servidor.py) y httpx2 registra ahí la URL completa de cada petición:
+    las búsquedas internas del asistente llevan cédulas y teléfonos en la consulta."""
+    import logging
+
+    from app.agente.herramientas import por_nombre
+    h = por_nombre()["personas_parecidas"]
+    ctx = aa.contexto(sesion.app, sesion)
+    caplog.set_level(logging.INFO)  # lo que deja `logging.basicConfig(level=INFO)` en el servidor único
+    try:
+        aa.correr(sesion, aa.ejecutar, h, ctx, {"nombre": "ROSA INVENTADA", "cedula": "71234567",
+                                                 "telefono": "3001234567"})
+    finally:
+        aa.correr(sesion, ctx.api.cerrar)
+    texto = "\n".join(r.getMessage() for r in caplog.records)
+    assert "panel.interno" not in texto and "71234567" not in texto and "3001234567" not in texto
+
+
 @pytest.mark.parametrize("ruta", ["/api/agente/mensajes", "/api/agente/confirmaciones"])
 def test_las_rutas_en_flujo_no_se_comprimen_y_las_demas_si(sesion, ruta):
     """El GZip de Starlette retiene el flujo entero hasta el final: esas dos rutas van sin comprimir."""

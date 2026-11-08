@@ -23,6 +23,10 @@ from .herramientas.base import ErrorHerramienta
 log = logging.getLogger("panel")
 BASE_INTERNA = "http://panel.interno"
 PLAZO_S = 60.0
+# httpx2 (lo trae anthropic) registra a INFO cada petición con su URL completa, y el servidor único deja el registro en
+# INFO: las búsquedas del asistente llevan cédulas, teléfonos y nombres en la consulta (`/api/parecidas?cedula=…`).
+# Nada de httpx2 por debajo de WARNING llega al registro de Railway.
+logging.getLogger("httpx2").setLevel(logging.WARNING)
 
 
 def _detalle(r: httpx2.Response) -> Any:
