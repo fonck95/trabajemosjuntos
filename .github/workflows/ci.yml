@@ -84,6 +84,9 @@ jobs:
       mongo:
         image: mongo:7
         ports: ['27017:27017']
+        # Al terminar, Actions vuelca el registro del contenedor al final del job: con cada prueba creando y borrando
+        # su base son cientos de miles de líneas que tapan la salida de pytest. Se guarda solo lo último (100 KB).
+        options: --log-opt max-size=100k --log-opt max-file=1
     defaults:
       run:
         working-directory: admin
