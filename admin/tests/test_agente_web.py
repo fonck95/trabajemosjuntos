@@ -412,23 +412,75 @@ def test_codigos_del_proveedor_del_modelo_en_el_widget():
         assert m, nombre
         return set(re.findall(r"'([a-z_]+)'", m.group(1)))
 
-    # Repetir el mismo mensaje no arregla ninguno de los fines nuevos (§4 del diseño): ni la conexión caída, ni el
-    # plan, ni los créditos, ni un modelo que no hay, ni una petición rechazada, ni otro proveedor
-    nuevos = {"proveedor", "mnemo_conexion", "mnemo_plan", "mnemo_creditos", "mnemo_sin_modelo", "larga",
-              "llm_peticion"}
-    assert nuevos <= conjunto("SIN_REINTENTO")
-    # «Nueva conversación» cuando esta ya no sirve; la conexión caída vuelve a leer el estado
+    # Repetir el mismo mensaje no arregla la conexión caída, el plan, los créditos, una conversación que no cabe ni otro
+    # proveedor (§4 del diseño)
+    assert {"proveedor", "mnemo_conexion", "mnemo_plan", "mnemo_creditos", "larga"} <= conjunto("SIN_REINTENTO")
+    # Pero sí puede arreglar una petición rechazada (Mnemo da `llm_peticion` también ante una sobrecarga del proveedor a
+    # mitad de la respuesta) y una cuenta sin modelo disponible ahora (`mnemo_sin_modelo`, también con el proveedor caído
+    # un momento): ofrecen «Reintentar»
+    assert not {"llm_peticion", "mnemo_sin_modelo"} & conjunto("SIN_REINTENTO")
+    # «Nueva conversación» cuando esta puede no servir; la conexión caída o sin modelo vuelve a leer el estado
     assert {"proveedor", "larga", "llm_peticion", "borrada", "no_existe"} <= conjunto("CON_NUEVA")
-    assert {"mnemo_conexion", "sin_configurar", "agente_apagado"} <= conjunto("RELEER_ESTADO")
+    assert {"mnemo_conexion", "mnemo_sin_modelo", "sin_configurar", "agente_apagado"} <= conjunto("RELEER_ESTADO")
     cerrar = _funcion(codigo, "cerrarTurno")
-    assert "const releer = (codigo) => { if (RELEER_ESTADO.has(codigo)) leerEstado().then(aplicarEstado); };" in cerrar
+    assert "const releer = (codigo) => { if (RELEER_ESTADO.has(codigo)) releerEstado(); };" in cerrar
     assert "releer(codigo);" in cerrar and "releer(t.error.codigo);" in cerrar  # antes del flujo y en un `error`
     assert cerrar.count("CON_NUEVA.has(") == 2  # antes del flujo y en un evento `error`
+    # En un evento `error`, «Reintentar» no depende de «Nueva conversación»: `llm_peticion` ofrece las dos
+    en_error = cerrar[cerrar.index("} else if (t.error) {"):cerrar.index("} else if (!t.fin) {")]
+    assert ("if (t.tipo === 'mensaje' && !SIN_REINTENTO.has(t.error.codigo)) acciones.push(reintento(null));\n"
+            "      if (CON_NUEVA.has(t.error.codigo)) acciones.push(otra);") in en_error, en_error
     # El evento nuevo `texto_ronda` reemplaza el texto de la ronda en curso
     assert ("case 'texto_ronda': if (typeof ev.texto === 'string') textoRonda(texto(ev.texto, MAX_TEXTO_RONDA)); "
             "break;") in codigo
     ronda = _funcion(codigo, "textoRonda")
     assert "ronda.partes" in ronda and "ronda.recortes" in ronda
+
+
+def test_un_trozo_de_texto_largo_no_se_corta():
+    """Con Mnemo, un solo evento `texto` puede traer el texto entero de la ronda (un proveedor sin flujo, o lo que faltaba
+    al final), y el servidor no manda `texto_ronda` si coincide con lo que emitió: el trozo va con el tope de
+    `texto_ronda` (el de una conversación guardada), no con el de 4 000 de los demás textos."""
+    codigo = _sin_comentarios(AGENTE)
+    assert "const MAX_TEXTO_RONDA = 100000;" in codigo
+    caso = codigo[codigo.index("case 'texto': {"):codigo.index("case 'texto_ronda':")]
+    assert "const trozo = texto(ev.texto, MAX_TEXTO_RONDA);" in caso and "agregarTexto(trozo)" in caso, caso
+    # Al reabrirla desde el historial se pinta con el mismo tope
+    assert "texto(p.texto, 100000)" in _funcion(codigo, "pintarConversacion")
+
+
+def test_el_asistente_se_entera_de_que_se_conecto_mnemo_sin_recargar():
+    """«Lo vinculé y no se da»: al volver de Mnemo, el asistente lee su estado a la vez que Ajustes canjea el código y se
+    queda con el de antes (sin conectar) unos minutos. Ajustes le avisa con un evento después de conectar, de desconectar
+    y de guardar los ajustes del asistente; el asistente vuelve a pedir el estado esperando la lectura en curso (que es
+    de antes), también con el panel abierto. Y al abrirlo sin modelo lo vuelve a pedir (otra pestaña no avisa). La
+    prueba con el navegador está en test_agente_navegador.py (`test_conectar_mnemo_desde_ajustes`)."""
+    agente, ajustes = _sin_comentarios(AGENTE), _sin_comentarios(AJUSTES)
+    # El mismo evento en los dos lados
+    assert "const EVENTO_ESTADO = 'agente:estado';" in agente and "const EVENTO_ESTADO = 'agente:estado';" in ajustes
+    assert "window.addEventListener(EVENTO_ESTADO, () => { releerEstado(); });" in agente
+    assert "window.dispatchEvent(new Event(EVENTO_ESTADO));" in _funcion(ajustes, "avisarAlAsistente")
+    # Se vuelve a pedir esperando la lectura en curso (puede ser de antes del cambio), y se aplica si está a la vista
+    releer = _funcion(agente, "releerEstado")
+    assert releer.index("await listos;") < releer.index("if (leyendo) await leyendo;") < releer.index(
+        "await leerEstado();") < releer.index("if (visible) aplicarEstado();"), releer
+    # A mitad de un turno el panel no cambia: se aplica al terminarlo
+    assert "if (turno) { estadoPendiente = true; return; }" in _funcion(agente, "aplicarEstado")
+    correr = _funcion(agente, "correr")
+    assert correr.index("cerrarTurno(t, terminado);") < correr.index("if (estadoPendiente) {")
+    # Al abrirlo sin modelo, otra vez (salvo al restaurarlo al cargar la página, recién leído)
+    assert "if (releer && !info.disponible) releerEstado();" in _funcion(agente, "abrir")
+    assert "abrir({ foco: false, releer: false });" in _funcion(agente, "mostrar")
+    # Ajustes avisa tras el POST a /volver que salió bien, tras desconectar y al guardar los ajustes del asistente
+    volver = _funcion(ajustes, "volverDeMnemo")
+    assert volver.index("await api.post('/api/agente/mnemo/volver', v);") < volver.index("avisarAlAsistente();") < \
+        volver.index("} catch (err) {"), volver
+    desconectar = _funcion(ajustes, "desconectarMnemo")
+    assert desconectar.index("await api.del('/api/agente/mnemo')") < desconectar.index("avisarAlAsistente();") < \
+        desconectar.index("await pintar();"), desconectar
+    assert "if (asistente) avisarAlAsistente();" in ajustes and ajustes.count("{ asistente: true }") == 1
+    agente_form = ajustes[ajustes.index("} else if (f.id === 'f-agente') {"):ajustes.index("} else if (f.id === 'f-campo') {")]
+    assert "{ asistente: true }" in agente_form
 
 
 def test_la_explicacion_no_nombra_variables_de_entorno():
@@ -444,3 +496,42 @@ def test_la_explicacion_no_nombra_variables_de_entorno():
     assert "info?.esAdmin ? destinoEnlace('/ajustes', op) : null" in explicacion
     assert "'Se cortó la conexión con Mnemo'" in explicacion
     assert "'Mnemo está conectado sin permiso para usar sus modelos'" in explicacion
+
+
+def test_sin_permiso_de_modelos_no_manda_a_marcar_una_casilla_que_puede_no_estar():
+    """Conectado sin `mnemo:model`: puede que en Mnemo no se dejara marcado «Usar tus modelos de IA y tus créditos», o
+    que ese Mnemo todavía no lo ofrezca (uno sin actualizar no muestra la casilla, y volver a conectar daría lo mismo).
+    Ajustes y el widget dicen que se vuelva a conectar dejándolo marcado y, si Mnemo no lo muestra, que hay que
+    actualizar Mnemo; nunca solo «marque la casilla»."""
+    explicacion = _funcion(_sin_comentarios(AGENTE), "pintarExplicacion")
+    rama = explicacion[explicacion.index("falta === 'sin_modelo'"):explicacion.index("falta === 'otro'")]
+    ajustes = AJUSTES[AJUSTES.index("const SIN_PERMISO_MODELO = {"):AJUSTES.index("const EVENTO_ESTADO")]
+    for nombre, texto in (("agente.js", rama), ("ajustes.js", ajustes)):
+        plano = re.sub(r"'\s*\+\s*'", "", texto)  # las cadenas partidas en dos líneas, juntas
+        assert "dejando marcado «Usar tus modelos de IA y tus créditos»" in plano, nombre
+        assert "Si Mnemo no muestra esa casilla, hay que actualizar Mnemo." in plano, nombre
+        assert not re.search(r"\bmarque\b|\bmarcar la casilla\b|marque esa casilla", plano), nombre
+    # Al coordinador (no conecta) se le dice que lo hace el administrador
+    assert "SIN_PERMISO_MODELO[admin ? 'admin' : 'otro']" in AJUSTES
+    assert "el administrador tiene que volver a conectar" in re.sub(r"'\s*\+\s*'", "", ajustes)
+    # Si la vista dice que ese Mnemo no ofrece el permiso (`ofrece_modelo` false: conectado solo para sus herramientas,
+    # en modo directo), no hay casilla que marcar: hay que actualizar Mnemo
+    assert "c.ofrece_modelo === false ? NO_OFRECE_MODELO :" in AJUSTES
+    no_ofrece = re.sub(r"'\s*\+\s*'", "", AJUSTES[AJUSTES.index("const NO_OFRECE_MODELO"):])
+    assert "hay que actualizar Mnemo y volver a conectar" in no_ofrece.split(";")[0]
+    widget = _funcion(_sin_comentarios(AGENTE), "faltaDeModelo")
+    assert "c.modelo ? 'otro' : c.ofreceModelo ? 'sin_modelo' : 'no_ofrece'" in widget
+    assert "ofreceModelo: c.ofrece_modelo !== false" in AGENTE and "falta === 'no_ofrece'" in explicacion
+
+
+def test_cada_motivo_de_caida_tiene_su_explicacion():
+    """La conexión queda «caida» con un motivo (`_caer` en app/agente/mnemo_conexion.py): Ajustes y el widget explican
+    cada uno, también los que se agreguen (si no, solo dirían que dejó de valer)."""
+    conexion = (RAIZ / "app" / "agente" / "mnemo_conexion.py").read_text(encoding="utf-8")
+    motivos = set(re.findall(r"_caer,[^)\n]*\"([a-z_]+)\"\)", conexion))
+    assert {"revocada", "clave", "error"} <= motivos, motivos
+    for nombre, texto in (("agente.js", AGENTE), ("ajustes.js", AJUSTES)):
+        tabla = re.search(r"const CAIDA_MNEMO = \{(.*?)\n\};", texto, re.S)
+        assert tabla, nombre
+        claves = set(re.findall(r"^\s*([a-z_]+):", tabla.group(1), re.M))
+        assert motivos <= claves, (nombre, motivos - claves)

@@ -15,7 +15,8 @@ El panel tiene cuatro roles:
     asistente (quiénes lo usan, si propone cambios, Mnemo para coordinadores, retención y mensajes por día). El
     coordinador los ve en **Ajustes**, en solo lectura;
   - **conectar o desconectar Mnemo** (Ajustes → Asistente): la cuenta de Mnemo cuyos modelos y créditos usa el
-    asistente es la del administrador. El coordinador ve el estado de la conexión (`agente.conectar`).
+    asistente es la del administrador. El coordinador ve el estado de la conexión, sin el nombre ni el correo de esa
+    cuenta (`agente.conectar`).
 - Los **planilleros** (trabajo de campo) y los **consultores** (llaman y escriben) los crean el administrador o un
   coordinador en **Usuarios**.
 

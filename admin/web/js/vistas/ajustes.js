@@ -8,7 +8,9 @@
 // navegador va ahí con location.assign (la CSP del panel no deja mandar un formulario a otro sitio, y no se abren
 // ventanas). El administrador inicia sesión en Mnemo, da permiso y Mnemo lo trae de vuelta a /ajustes?code=…&state=…
 // (o error=…): esta vista quita eso de la dirección antes de cualquier espera y lo manda a POST
-// /api/agente/mnemo/volver, ya con la cookie de la sesión y el CSRF.
+// /api/agente/mnemo/volver, ya con la cookie de la sesión y el CSRF. Después (y al desconectar o guardar los ajustes
+// del asistente) le avisa al asistente con el evento `agente:estado`: así deja de decir «no está conectado» sin
+// recargar la página.
 import { api, puede } from '../api.js';
 import { url } from '../base.js';
 import { $, aviso, avisoError, confirmar, datosForm, dialogo, fecha, html, montar, num } from '../ui.js';
@@ -34,10 +36,24 @@ const PERMISOS_MNEMO = {
 const CAIDA_MNEMO = {
   revocada: 'Mnemo ya no la acepta: se revocó en Mnemo (Tu cuenta → Agentes conectados), venció por no usarse o la cuenta se desactivó.',
   clave: 'Cambió la clave del administrador del panel y la conexión guardada ya no se puede leer.',
+  alterada: 'Sus datos en la base del panel no coinciden con los que se guardaron cifrados (o se guardó con una versión anterior del panel): por seguridad, el panel dejó de usarla.',
   error: 'Mnemo respondió algo inesperado al renovarla.',
 };
-const SIN_PERMISO_MODELO = 'Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar y marque esa casilla '
-  + '(«Usar tus modelos de IA y tus créditos»).';
+// Conectada sin `mnemo:model`: en Mnemo no quedó marcado ese permiso, o ese Mnemo todavía no lo ofrece (uno sin
+// actualizar no muestra la casilla: no se manda a marcarla sin más)
+const SIN_PERMISO_MODELO = {
+  admin: 'Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar dejando marcado «Usar tus modelos de IA y '
+    + 'tus créditos». Si Mnemo no muestra esa casilla, hay que actualizar Mnemo.',
+  otro: 'Mnemo se conectó sin permiso para usar sus modelos: el administrador tiene que volver a conectar dejando marcado '
+    + '«Usar tus modelos de IA y tus créditos». Si Mnemo no muestra esa casilla, hay que actualizar Mnemo.',
+};
+// Conectada con un Mnemo que no ofrece ese permiso (`ofrece_modelo` false: uno sin actualizar; el panel lo conecta así
+// solo en modo directo, para sus herramientas). No hay casilla que marcar
+const NO_OFRECE_MODELO = 'Este Mnemo todavía no ofrece «Usar tus modelos de IA y tus créditos»: el asistente usa sus '
+  + 'herramientas, pero no sus modelos. Para usarlos hay que actualizar Mnemo y volver a conectar.';
+// El aviso al asistente (agente.js, EVENTO_ESTADO) de que su estado cambió: lo guarda unos minutos y, sin esto, seguiría
+// diciendo que no está conectado hasta recargar la página
+const EVENTO_ESTADO = 'agente:estado';
 // Lo que trae la vuelta de Mnemo a /ajustes (RFC 6749 y RFC 9207), con los topes de POST /api/agente/mnemo/volver
 const VUELTA = [['state', 200], ['code', 2000], ['iss', 300], ['error', 100], ['error_description', 500]];
 const LOOPBACK = ['127.0.0.1', 'localhost', '[::1]'];
@@ -65,6 +81,12 @@ export function direccionDeMnemo(d) {
   try { u = new URL(d); } catch { return null; }
   if (u.username || u.password) return null;
   return u.protocol === 'https:' || (u.protocol === 'http:' && LOOPBACK.includes(u.hostname)) ? u.href : null;
+}
+
+/** Le avisa al asistente que su estado cambió (se conectó o se desconectó Mnemo, se guardaron sus ajustes): lo vuelve a
+ * pedir en el acto, también con el panel abierto. Sin el asistente montado no pasa nada: lo pedirá al montarse. */
+function avisarAlAsistente() {
+  window.dispatchEvent(new Event(EVENTO_ESTADO));
 }
 
 const casilla = (nombre, marcada, texto) => html`<label class="interruptor ancho"><span>${texto}</span><input type="checkbox" name="${nombre}" ${marcada ? 'checked' : ''}></label>`;
@@ -95,9 +117,10 @@ function estadoAgente(est) {
 }
 
 /** El bloque «Conexión con Mnemo» de la sección Asistente. `c` es `mnemo.conexion` de GET /api/agente/estado (la vista
- * de la conexión, sin secretos: {estado, motivo, url, cuenta, alcances, modelo, desde, url_sugerida}); `nota`, lo que
- * pasó al conectar o desconectar ({tipo: 'ok' | 'alerta' | 'error', texto}) o null. Los botones y la dirección son
- * solo para quien puede conectar (el administrador); el coordinador ve el estado. */
+ * de la conexión, sin secretos: {estado, motivo, url, cuenta, alcances, modelo, ofrece_modelo, desde, url_sugerida};
+ * al coordinador le llega sin `cuenta` ni `url_sugerida`); `nota`, lo que pasó al conectar o desconectar ({tipo: 'ok' |
+ * 'alerta' | 'error', texto}) o null. Los botones y la dirección son solo para quien puede conectar (el
+ * administrador); el coordinador ve el estado. */
 function bloqueMnemo(c, nota) {
   const admin = puede('agente.conectar');
   const estado = ['conectada', 'caida'].includes(c?.estado) ? c.estado : 'sin_conectar';
@@ -114,7 +137,10 @@ function bloqueMnemo(c, nota) {
     if (alcances.length) {
       partes.push(html`<div class="chips" aria-label="Permisos que dio la cuenta">${alcances.map((a) => html`<span class="chip borde">${PERMISOS_MNEMO[a] || a}</span>`)}</div>`);
     }
-    if (!c.modelo) partes.push(html`<p class="mnemo-nota alerta" role="alert">${SIN_PERMISO_MODELO}</p>`);
+    if (!c.modelo) {
+      const sinModelo = c.ofrece_modelo === false ? NO_OFRECE_MODELO : SIN_PERMISO_MODELO[admin ? 'admin' : 'otro'];
+      partes.push(html`<p class="mnemo-nota alerta" role="alert">${sinModelo}</p>`);
+    }
   } else if (estado === 'caida') {
     partes.push(html`<p>La conexión con Mnemo dejó de valer. ${CAIDA_MNEMO[c.motivo] || ''}</p>`);
     partes.push(html`<p>${admin ? 'Vuelva a conectar para que el asistente use otra vez los modelos de la cuenta.'
@@ -296,8 +322,11 @@ export async function vistaAjustes(el, { q } = {}) {
     }
   }
 
-  const guardar = async (cuerpo, texto) => {
+  // `asistente`: lo guardado cambia el estado del asistente (si lo usa su rol, si propone cambios, cuántos mensajes le
+  // quedan): se le avisa
+  const guardar = async (cuerpo, texto, { asistente = false } = {}) => {
     await api.put('/api/ajustes', cuerpo);
+    if (asistente) avisarAlAsistente();
     aviso(texto);
     await pintar();
   };
@@ -328,6 +357,8 @@ export async function vistaAjustes(el, { q } = {}) {
     montar(el, html`<div class="cargando" role="status">Terminando de conectar con Mnemo…</div>`);
     try {
       const c = await api.post('/api/agente/mnemo/volver', v);
+      // El asistente leyó su estado al cargar la página, mientras se canjeaba el código: el de antes de conectar
+      avisarAlAsistente();
       // Lo demás (la cuenta, los permisos y si falta el de los modelos) lo dice el bloque
       if (c?.estado === 'conectada') aviso('Mnemo quedó conectado');
     } catch (err) {
@@ -380,6 +411,8 @@ export async function vistaAjustes(el, { q } = {}) {
       notaMnemo = fallo(err, 'No se pudo desconectar Mnemo.');
       avisoError(err);
     }
+    // También si falló: el panel pudo borrar la conexión antes del error, y releer el estado no cuesta nada
+    avisarAlAsistente();
     await pintar();
   }
 
@@ -454,7 +487,8 @@ export async function vistaAjustes(el, { q } = {}) {
           : 'Sin ningún rol marcado, el asistente queda apagado para todos, también para usted. ¿Guardar así?', { si: 'Guardar' })) return;
         await guardar({ agente: { roles, escritura: v.escritura === true, mnemo_coordinadores: v.mnemo_coordinadores === true,
           retencion_dias: Number(v.retencion_dias) },
-        agente_mensajes_diarios: Object.fromEntries(ROLES_AGENTE.map(([k]) => [k, Number(v[`mensajes_${k}`])])) }, 'Asistente guardado');
+        agente_mensajes_diarios: Object.fromEntries(ROLES_AGENTE.map(([k]) => [k, Number(v[`mensajes_${k}`])])) }, 'Asistente guardado',
+        { asistente: true });
       } else if (f.id === 'f-campo') {
         await api.post('/api/campos', { etiqueta: f.etiqueta.value, tipo: f.tipo.value, sensible: f.sensible.checked,
           opciones: f.opciones.value.split(',').map((s) => s.trim()).filter(Boolean) });

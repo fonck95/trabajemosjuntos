@@ -16,13 +16,19 @@ const GUARDADO = 'yj_agente';             // sessionStorage: {abierto, conversac
 const MAX_TEXTO = 4000;                   // el tope de MensajeIn.texto en la API
 const VIGENCIA_ESTADO_MS = 5 * 60 * 1000; // el estado (disponible, tope de mensajes) se vuelve a pedir al cambiar de vista
 const REINTENTO_ESTADO_MS = 30 * 1000;    // si no se pudo leer, no se insiste en cada vista
+// El aviso de que el estado cambió: lo manda Ajustes (vistas/ajustes.js) al conectar o desconectar Mnemo y al guardar
+// los ajustes del asistente, y el estado se vuelve a pedir en el acto (si no, valdría el de antes hasta 5 minutos)
+const EVENTO_ESTADO = 'agente:estado';
 const ESTADOS = new Set(['inicio', 'ok', 'error', 'pendiente', 'aprobada', 'rechazada']);
 // Errores del turno que no se arreglan repitiendo el mismo mensaje. Los de Mnemo como modelo: la conexión se cayó, el
-// plan no incluye el chat, no quedan créditos o la cuenta no tiene un modelo que sirva; `llm_peticion`, el proveedor
-// rechazó la petición; `proveedor`, la conversación es de un proveedor del modelo que ya no está
+// plan no incluye el chat o no quedan créditos; `proveedor`, la conversación es de un proveedor del modelo que ya no
+// está. `mnemo_sin_modelo` (la cuenta no tiene un modelo disponible ahora, también si su proveedor se cayó un momento) y
+// `llm_peticion` (el proveedor rechazó la petición, también por una sobrecarga a mitad de la respuesta) sí ofrecen
+// «Reintentar»: pueden ser pasajeros
 const SIN_REINTENTO = new Set(['volumen', 'borrada', 'sin_pendientes', 'permiso', 'larga', 'agente_apagado', 'sin_configurar',
-  'no_existe', 'proveedor', 'mnemo_conexion', 'mnemo_plan', 'mnemo_creditos', 'mnemo_sin_modelo', 'llm_peticion']);
-// Errores tras los que esta conversación ya no sirve: se ofrece «Nueva conversación»
+  'no_existe', 'proveedor', 'mnemo_conexion', 'mnemo_plan', 'mnemo_creditos']);
+// Errores tras los que esta conversación puede no servir: se ofrece «Nueva conversación» (con `llm_peticion`, además
+// de «Reintentar»)
 const CON_NUEVA = new Set(['larga', 'no_existe', 'borrada', 'proveedor', 'llm_peticion']);
 // Errores tras los que pudo cambiar el estado del asistente (el rol apagado, sin proveedor del modelo, la conexión con
 // Mnemo caída o sin permiso para usar sus modelos): se vuelve a leer, y al administrador se le explica qué hacer
@@ -46,6 +52,7 @@ const MAX_TEXTO_RONDA = 100000;           // `texto_ronda`: el texto final de un
 const CAIDA_MNEMO = {
   revocada: 'Mnemo ya no la acepta: se revocó en Mnemo, venció por no usarse o la cuenta se desactivó.',
   clave: 'Cambió la clave del administrador del panel y la conexión guardada ya no se puede leer.',
+  alterada: 'Sus datos en la base del panel no coinciden con los que se guardaron cifrados (o se guardó con una versión anterior del panel): por seguridad, dejó de usarse.',
   error: 'Mnemo respondió algo inesperado al renovarla.',
 };
 
@@ -506,7 +513,8 @@ let montado = null;
 /** Monta el asistente una sola vez (app.js lo llama en cada vista): `ir` es el enrutador del panel, `rutaPanel(ruta)`
  * dice si una ruta es de RUTAS y si el rol la abre, e `insignias()` refresca las del menú. Devuelve {mostrar, ocultar}:
  * `mostrar` lo enseña si el estado lo permite (pide /api/agente/estado), `ocultar` lo esconde y corta lo que esté en
- * curso (la cuenta quedó pendiente). */
+ * curso (la cuenta quedó pendiente). El estado vale unos minutos; antes se vuelve a pedir con EVENTO_ESTADO en window
+ * (lo manda Ajustes) y al abrir el panel sin modelo. */
 export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} } = {}) {
   if (montado) return montado;
   const listos = cargarEstilos();
@@ -556,6 +564,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   let info = null;            // GET /api/agente/estado, normalizado
   let infoT = 0;              // cuándo se leyó
   let leyendo = null;         // la lectura en curso (una sola)
+  let estadoPendiente = false; // el estado cambió a mitad de un turno: se aplica al terminarlo
   let visible = false;        // app.js lo quiere a la vista (rol con permiso y sin cuenta pendiente)
   let abierto = false;
   let iniciado = false;       // ya se pintó la conversación guardada o la bienvenida
@@ -603,8 +612,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   // ── Estado del asistente para esta persona ──
-  // `conexion`: la conexión con Mnemo (solo llega al administrador y al coordinador): {estado, motivo, modelo} o null.
-  // Con ella se explica por qué no hay modelo (`motivo` «sin_configurar»)
+  // `conexion`: la conexión con Mnemo (solo llega al administrador y al coordinador): {estado, motivo, modelo,
+  // ofreceModelo} o null. Con ella se explica por qué no hay modelo (`motivo` «sin_configurar»)
   function normalizar(d) {
     const o = d && typeof d === 'object' ? d : {};
     const limite = o.limite && typeof o.limite === 'object' ? o.limite : {};
@@ -617,7 +626,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       limite: { usados: entero(limite.usados), maximo: entero(limite.maximo) },
       mnemo: { activo: o.mnemo?.activo === true, origen: origenSeguro(o.mnemo?.origen) },
       conexion: c && ['sin_conectar', 'conectada', 'caida'].includes(c.estado)
-        ? { estado: c.estado, motivo: texto(c.motivo, 40) || null, modelo: c.modelo === true } : null,
+        ? { estado: c.estado, motivo: texto(c.motivo, 40) || null, modelo: c.modelo === true,
+          ofreceModelo: c.ofrece_modelo !== false } : null,
       sugerencias: (Array.isArray(o.sugerencias) ? o.sugerencias : []).map((s) => texto(s, 200).trim()).filter(Boolean)
         .slice(0, 6),
     };
@@ -637,11 +647,24 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     return leyendo;
   }
 
+  /** Vuelve a pedir el estado aunque esté vigente: Ajustes avisó que cambió (EVENTO_ESTADO), un turno terminó con un
+   * error que lo pudo cambiar o se abre el panel sin modelo (pudo conectarse en otra pestaña). La lectura que esté en
+   * curso puede ser de antes del cambio (al volver de Mnemo, la de mostrar() sale a la vez que el canje del código y
+   * suele terminar antes): se la espera y se pide otra. */
+  async function releerEstado() {
+    await listos;
+    if (leyendo) await leyendo;
+    await leerEstado();
+    if (visible) aplicarEstado();
+  }
+
   // El administrador ve el botón aunque no haya modelo (Mnemo sin conectar) o su rol esté apagado: adentro se explica qué
   // hacer
   const usable = () => !!info && (info.disponible || (info.esAdmin && info.motivo !== 'cuenta'));
 
   function aplicarEstado() {
+    // A mitad de una respuesta el panel no cambia (la explicación borraría lo que está llegando): al terminar el turno
+    if (turno) { estadoPendiente = true; return; }
     op.origenMnemo = info?.mnemo.origen || null;
     pintarRestantes();
     const util = visible && usable();
@@ -681,7 +704,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     restaurado = true;
     const g = leerGuardado();
     conv = info.disponible ? g.conversacion : null;
-    if (g.abierto) abrir({ foco: false });
+    if (g.abierto) abrir({ foco: false, releer: false }); // el estado se acaba de leer
   }
 
   function ocultar() {
@@ -693,7 +716,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   // ── Abrir y cerrar ──
-  function abrir({ foco = true } = {}) {
+  function abrir({ foco = true, releer = true } = {}) {
     if (!usable()) return;
     abierto = true;
     novedad = false;
@@ -706,6 +729,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     if (!iniciado) iniciar();
     alFinal(true);
     if (foco) (form.hidden ? cerrarBtn : entrada).focus({ preventScroll: true });
+    // Sin modelo, se vuelve a preguntar: pudo conectarse Mnemo (o encenderse para su rol) en otra pestaña, que no avisa
+    if (releer && !info.disponible) releerEstado();
   }
 
   function cerrar({ foco = false } = {}) {
@@ -1163,7 +1188,13 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
         nuevaRonda();
         break;
       case 'progreso': if (texto(ev.texto)) agregarProgreso(texto(ev.texto)); break;
-      case 'texto': if (texto(ev.texto)) agregarTexto(texto(ev.texto)); break;
+      case 'texto': {
+        // Con el tope de `texto_ronda`, no el de 4 000: con Mnemo un solo trozo puede traer el texto entero de la ronda
+        // (un proveedor sin flujo, o lo que faltaba al final) y nada lo corrige después
+        const trozo = texto(ev.texto, MAX_TEXTO_RONDA);
+        if (trozo) agregarTexto(trozo);
+        break;
+      }
       case 'texto_ronda': if (typeof ev.texto === 'string') textoRonda(texto(ev.texto, MAX_TEXTO_RONDA)); break;
       case 'herramienta': alHerramienta(ev); break;
       case 'accion':
@@ -1231,6 +1262,11 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     cerrarTurno(t, terminado);
     nuevaRonda();
     alFinal();
+    // Lo que cambió del estado mientras respondía (Ajustes avisó, o se cambió de vista), ahora que terminó
+    if (estadoPendiente) {
+      estadoPendiente = false;
+      aplicarEstado();
+    }
   }
 
   async function enviar(t, { reusar = null } = {}) {
@@ -1312,7 +1348,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       nuevaConversacion();
       if (t.tipo === 'mensaje' && !t.inicio && !entrada.value.trim()) { entrada.value = t.texto; autoAltura(); }
     }];
-    const releer = (codigo) => { if (RELEER_ESTADO.has(codigo)) leerEstado().then(aplicarEstado); };
+    const releer = (codigo) => { if (RELEER_ESTADO.has(codigo)) releerEstado(); };
     const acciones = [];
     let mensaje = null;
     let duda = 'se cortó antes de confirmar el resultado; revise la vista'; // tarjeta aprobada sin respuesta final
@@ -1343,8 +1379,9 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       duda = 'se detuvo antes de confirmar el resultado; revise la vista';
     } else if (t.error) {
       mensaje = t.error.mensaje;
+      // Puede ofrecer las dos cosas (`llm_peticion`): repetir el mensaje o empezar otra conversación
+      if (t.tipo === 'mensaje' && !SIN_REINTENTO.has(t.error.codigo)) acciones.push(reintento(null));
       if (CON_NUEVA.has(t.error.codigo)) acciones.push(otra);
-      else if (t.tipo === 'mensaje' && !SIN_REINTENTO.has(t.error.codigo)) acciones.push(reintento(null));
       releer(t.error.codigo);
     } else if (!t.fin) {
       mensaje = FLUJO_CORTADO;
@@ -1428,11 +1465,12 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   /** Por qué no hay modelo, según la conexión con Mnemo: `caida`, `sin_modelo` (conectada sin permiso para usar sus
-   * modelos), `otro` (conectada con ese permiso: el servidor no la pudo usar) o `sin_conectar` (también si no se sabe). */
+   * modelos), `no_ofrece` (conectada con un Mnemo que todavía no ofrece ese permiso), `otro` (conectada con ese
+   * permiso: el servidor no la pudo usar) o `sin_conectar` (también si no se sabe). */
   function faltaDeModelo() {
     const c = info?.conexion;
     if (c?.estado === 'caida') return 'caida';
-    if (c?.estado === 'conectada') return c.modelo ? 'otro' : 'sin_modelo';
+    if (c?.estado === 'conectada') return c.modelo ? 'otro' : c.ofreceModelo ? 'sin_modelo' : 'no_ofrece';
     return 'sin_conectar';
   }
 
@@ -1443,7 +1481,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     if (log.dataset.explicacion === clave) return;
     limpiarConversacion();
     log.dataset.explicacion = clave;
-    const subtitulos = { caida: 'Conexión caída', sin_modelo: 'Sin permiso para usar los modelos', otro: 'Sin modelo' };
+    const subtitulos = { caida: 'Conexión caída', sin_modelo: 'Sin permiso para usar los modelos',
+      no_ofrece: 'Mnemo sin actualizar', otro: 'Sin modelo' };
     sub.textContent = sub.title = !sinModelo ? 'Apagado para su rol' : subtitulos[falta] || 'Sin conectar';
     const b = el('div', 'agente-explicacion');
     // «Ajustes → Asistente» enlaza a Ajustes para el administrador (quien conecta); para los demás es solo texto
@@ -1461,11 +1500,19 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
         ': inicia sesión en Mnemo y da permiso; no hay que copiar claves.');
       b.append(p);
     } else if (sinModelo && falta === 'sin_modelo') {
+      // En Mnemo no quedó marcado ese permiso, o ese Mnemo todavía no lo ofrece: no se manda a marcar una casilla que
+      // puede no estar
       b.append(el('h3', null, 'Mnemo está conectado sin permiso para usar sus modelos'));
       const p = el('p');
       p.append(info.esAdmin ? 'Vuelva a conectar en ' : 'El administrador tiene que volver a conectarlo en ', ajustes(),
-        info.esAdmin ? ' y, en la página de permisos de Mnemo, marque la casilla «Usar tus modelos de IA y tus créditos».'
-          : ' y, en la página de permisos de Mnemo, marcar la casilla «Usar tus modelos de IA y tus créditos».');
+        ', dejando marcado «Usar tus modelos de IA y tus créditos» en la página de permisos de Mnemo. Si Mnemo no muestra '
+        + 'esa casilla, hay que actualizar Mnemo.');
+      b.append(p);
+    } else if (sinModelo && falta === 'no_ofrece') {
+      b.append(el('h3', null, 'Mnemo todavía no ofrece sus modelos'));
+      const p = el('p');
+      p.append('El Mnemo conectado no tiene «Usar tus modelos de IA y tus créditos»: hay que actualizar Mnemo y '
+        + `${info.esAdmin ? 'volver a conectar' : 'que el administrador vuelva a conectar'} en `, ajustes(), '.');
       b.append(p);
     } else if (sinModelo && falta === 'otro') {
       b.append(el('h3', null, 'El asistente no tiene un modelo que usar'));
@@ -1689,6 +1736,10 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     const a = e.target.closest('a[data-ruta]');
     if (a && !e.metaKey && !e.ctrlKey && !e.shiftKey) plegar();
   });
+
+  // Ajustes conectó o desconectó Mnemo, o guardó los ajustes del asistente: el estado se vuelve a pedir ya, sin recargar
+  // la página (si el panel está abierto, pasa de la explicación a la conversación o al revés)
+  window.addEventListener(EVENTO_ESTADO, () => { releerEstado(); });
 
   // Al terminar de pintar una vista (app.js): el foco vuelve al cuadro si la abrió el asistente; en el celular, una
   // vista nueva pliega el panel (la persona eligió otra cosa en el menú)

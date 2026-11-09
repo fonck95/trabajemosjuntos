@@ -59,7 +59,8 @@ A = administrador, K = coordinador, P = planillero. Las de Mnemo (`mnemo_…`) s
   bajo la barra superior. **Escape** lo cierra. Si el asistente no tiene un modelo que usar (Mnemo sin conectar, la
   conexión caída o sin permiso para usar sus modelos), el administrador ve el botón con lo que falta y un enlace a
   **Ajustes → Asistente**; los demás no ven nada. Si eso pasa mientras alguien conversa, el panel se lo dice en vez de
-  cerrarse.
+  cerrarse. Al conectar o desconectar Mnemo, o al guardar los ajustes del asistente, el asistente se entera en el acto,
+  sin recargar la página; en otra pestaña que decía que no tenía modelo, al abrirlo.
 - **Escribir.** Se escribe y se pulsa **Enviar**; **Detener** corta la respuesta en curso. La respuesta llega por
   partes: una marca por cada herramienta con su resultado («12 personas», «Nota guardada») y el texto (con Mnemo, lo
   que llega por partes es un adelanto: al terminar cada ronda queda el texto final). En modo directo, además, notas de
@@ -94,8 +95,9 @@ A = administrador, K = coordinador, P = planillero. Las de Mnemo (`mnemo_…`) s
 
 En **Ajustes → Asistente**. Arriba dice si el asistente está encendido y con qué modelo, y está la **Conexión con
 Mnemo** (ver [Conectar con Mnemo](#conectar-con-mnemo)): solo el administrador la conecta o la desconecta; el coordinador
-ve su estado. Lo demás son ajustes de permisos: solo los cambia el administrador; el coordinador los ve en solo
-lectura. Rigen desde el siguiente mensaje, sin desplegar.
+ve su estado (sin el nombre ni el correo de la cuenta, que son del administrador). Lo demás son ajustes de permisos:
+solo los cambia el administrador; el coordinador los ve en solo lectura. Rigen desde el siguiente mensaje, sin
+desplegar.
 
 | Ajuste | Por defecto | Qué decide |
 |---|---|---|
@@ -129,9 +131,11 @@ la estrategia de veredas?».
 2. Pulse **Conectar con Mnemo**. La misma pestaña va a Mnemo.
 3. Inicie sesión en Mnemo con la cuenta que va a poner los modelos, revise los permisos y pulse **Permitir**. Deje
    marcado **«Usar tus modelos de IA y tus créditos»**: sin él, Mnemo conecta solo las herramientas y Ajustes avisa
-   «Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar y marque esa casilla». Mnemo trae marcados
-   solo ese y «Leer tu información»: los de escritura (eventos y documentos, recuerdos, compartir, publicar) son para
-   que las herramientas de Mnemo también escriban (siempre con la aprobación de la tarjeta); márquelos si lo quiere.
+   «Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar dejando marcado «Usar tus modelos de IA y
+   tus créditos»». Mnemo trae marcados solo ese y «Leer tu información»: los de escritura (eventos y documentos,
+   recuerdos, compartir, publicar) son para que las herramientas de Mnemo también escriban (siempre con la aprobación
+   de la tarjeta); márquelos si lo quiere. Un Mnemo sin actualizar no tiene esa casilla: con él, **Conectar con
+   Mnemo** no va a Mnemo y avisa que hay que actualizarlo (ver «Lo que Mnemo necesita», más abajo).
 4. Mnemo lo trae de vuelta a Ajustes, que muestra **Conectado como** la cuenta (nombre y correo), desde cuándo, la
    dirección y los permisos. Si canceló en Mnemo, lo dice y no conecta nada.
 
@@ -156,18 +160,22 @@ los modelos de Mnemo al instante.
 |---|---|---|
 | Sin conectar | Nunca se conectó, o se desconectó | **Conectar con Mnemo** |
 | Conectado | Rige: el asistente usa esa cuenta | Nada |
-| Conectado, con el aviso «sin permiso para usar sus modelos» | En Mnemo no quedó marcado «Usar tus modelos de IA y tus créditos» (o esa versión de Mnemo todavía no lo tiene) | **Volver a conectar** y marcarlo |
+| Conectado, con el aviso «sin permiso para usar sus modelos» | En Mnemo no quedó marcado «Usar tus modelos de IA y tus créditos», o esa versión de Mnemo todavía no lo tiene | **Volver a conectar** dejándolo marcado; si Mnemo no muestra esa casilla, actualizar Mnemo |
+| Conectado, con el aviso «Este Mnemo todavía no ofrece…» | Solo en modo directo: Mnemo no está actualizado y se conectó solo para sus herramientas | Actualizar Mnemo y **Volver a conectar** |
 | Conexión caída: Mnemo ya no la acepta | Se revocó en Mnemo, venció (30 días sin usarse, o un año desde el último permiso) o la cuenta se desactivó | **Volver a conectar** |
 | Conexión caída: cambió la clave del administrador | Cambiaron `ADMIN` o `password` y lo guardado ya no se puede descifrar | **Volver a conectar**; la conexión vieja puede seguir en Mnemo: revóquela ahí |
+| Conexión caída: sus datos no coinciden con los cifrados | Alguien cambió en MongoDB la conexión guardada (por ejemplo, la dirección de Mnemo): el panel dejó de usarla sin mandar nada | Revisar quién puede escribir en la base y **Volver a conectar** |
 | Conexión caída: Mnemo respondió algo inesperado | La renovación del acceso falló | **Volver a conectar** |
 
 **Lo que Mnemo necesita.**
 
 - El inicio de sesión para agentes (OAuth) activo: en el despliegue de Mnemo, `PUBLIC_BASE_URL` (su dirección
   pública). Sin ella, conectar responde «Mnemo no tiene OAuth: falta PUBLIC_BASE_URL en su despliegue.»
-- Una versión con la herramienta `mnemo_model_complete` y el permiso «Usar tus modelos de IA y tus créditos». Con una
-  anterior, la conexión queda sin permiso para usar sus modelos (Ajustes lo avisa) y el asistente no tiene modelo,
-  salvo el modo directo.
+- Una versión con la herramienta `mnemo_model_complete` y el permiso «Usar tus modelos de IA y tus créditos» (lo
+  anuncia en `/.well-known/oauth-authorization-server`, en `scopes_supported`). Con una anterior, **Conectar con
+  Mnemo** no conecta nada y avisa «Este Mnemo todavía no ofrece «Usar tus modelos de IA y tus créditos»…: hay que
+  actualizar Mnemo». Solo en [modo directo](#modo-directo-sin-mnemo) la conecta igual, para sus herramientas, y
+  Ajustes avisa que ese Mnemo no ofrece sus modelos.
 - Que la cuenta pueda responder: un plan que incluya el chat o una clave propia de un proveedor de modelos configurada
   en Mnemo, y créditos. Si no, el asistente lo dice al responder (sin plan, sin créditos o sin un modelo disponible).
 
@@ -209,10 +217,13 @@ todos los roles habilitados, y no lee ni escribe nada del Mnemo del administrado
 Los tokens de la conexión (el de acceso, que dura una hora, y el de renovación, que Mnemo cambia en cada uso) se
 guardan cifrados (AES-GCM) en MongoDB, en el documento `mnemo_conexion` de `meta`, con una clave que sale de `ADMIN` y
 `password` y no está en la base: una copia de la base sola no da acceso al Mnemo del administrador ni a sus créditos.
-Por eso, si cambian `ADMIN` o `password`, la conexión queda caída y hay que volver a conectar. El panel renueva el
-acceso solo, con una sola renovación a la vez aunque corran varios procesos (Mnemo revoca la conexión entera si le
-llega un token de renovación ya usado). Los tokens nunca llegan al navegador, a las respuestas ni a los registros. La
-auditoría guarda `mnemo_conectar`, `mnemo_desconectar` y `mnemo_caida` (esta, del sistema), sin tokens.
+Por eso, si cambian `ADMIN` o `password`, la conexión queda caída y hay que volver a conectar. Las direcciones a las que
+el panel manda esos tokens (la de Mnemo y las de renovar y revocar, también las de una conexión a medias) van además
+dentro de lo cifrado: quien pueda escribir en la base tampoco puede desviarlos a otro sitio (si no coinciden con las
+cifradas, el panel no manda nada y la conexión queda caída). El panel renueva el acceso solo, con una sola renovación
+a la vez aunque corran varios procesos (Mnemo revoca la conexión entera si le llega un token de renovación ya usado).
+Los tokens nunca llegan al navegador, a las respuestas ni a los registros. La auditoría guarda `mnemo_conectar`,
+`mnemo_desconectar` y `mnemo_caida` (esta, del sistema), sin tokens.
 
 ## Modo directo (sin Mnemo)
 
@@ -326,7 +337,8 @@ muestra el gasto de la clave; ponga ahí un límite mensual.
   Mnemo como modelo, 1,5 MB por ronda).
 - Con Mnemo como modelo, cada ronda tiene en Mnemo unos 170 segundos y cada petición como mucho 3,9 MB: si no cabe,
   las imágenes de los mensajes viejos se cambian por una marca y, si aún no cabe, hay que empezar otra conversación.
-  Cuando Mnemo pide esperar (su tope por minuto), el panel reintenta solo, sin pasarse del tope del turno.
+  Cuando Mnemo pide esperar (su tope por minuto), el panel reintenta solo, sin pasarse del tope del turno; si responde
+  que la cuenta no tiene un modelo disponible (también cuando su proveedor falló un momento), repite la ronda una vez.
 - Por conversación: con más de 300.000 tokens de entrada en su última ronda o 400 mensajes no admite más: hay que
   empezar otra.
 - Un turno a la vez por persona y por conversación, y como mucho 4 a la vez por proceso del servidor («El asistente
@@ -397,7 +409,9 @@ se suba.
 - **Registros.** Solo el tipo de cada error: nunca lo que se escribió, lo que respondió el modelo ni datos de personas.
 - **En el navegador** no queda nada de la conversación: solo `sessionStorage` `yj_agente` (si el panel estaba abierto
   y qué conversación), que se borra al cerrar sesión. El widget sabe qué vista está abierta por el evento `vista` que
-  emite `app.js` al terminar de pintar cada una.
+  emite `app.js` al terminar de pintar cada una, y vuelve a pedir su estado (que guarda 5 minutos) con el evento
+  `agente:estado`, que emite Ajustes al volver de Mnemo, al desconectar y al guardar los ajustes del asistente; si se
+  abre sin modelo, también lo vuelve a pedir.
 
 ## Arquitectura
 
@@ -461,16 +475,20 @@ se suba.
 
 | Código | Qué hace el widget |
 |---|---|
-| `proveedor`, `larga`, `llm_peticion`, `borrada`, `no_existe` | Ofrece **Nueva conversación**: esta ya no sirve (si el mensaje no llegó, la nueva lo trae escrito) |
-| `mnemo_conexion`, `mnemo_sin_modelo`, `sin_configurar`, `agente_apagado` | Vuelve a leer el estado: si ya no hay modelo, al administrador le explica qué falta, con un enlace a Ajustes |
+| `proveedor`, `larga`, `borrada`, `no_existe` | Ofrece **Nueva conversación**: esta ya no sirve (si el mensaje no llegó, la nueva lo trae escrito) |
+| `llm_peticion` | Ofrece **Reintentar** y **Nueva conversación**: puede ser pasajero (con Mnemo, una sobrecarga del proveedor a mitad de la respuesta llega así) o no tener arreglo en esta conversación |
+| `mnemo_sin_modelo` | Ofrece **Reintentar** y vuelve a leer el estado: puede ser pasajero (el proveedor de la cuenta se cayó un momento) |
+| `mnemo_conexion`, `sin_configurar`, `agente_apagado` | Vuelve a leer el estado: si ya no hay modelo, al administrador le explica qué falta, con un enlace a Ajustes |
 | `mnemo_plan`, `mnemo_creditos`, `volumen`, `permiso`, `sin_pendientes` | Nada más |
 
-Ninguno de esos ofrece **Reintentar**: repetir el mismo mensaje no lo arregla. Los demás (la red, un plazo vencido, el
-modelo saturado o caído un momento) sí. Los de Mnemo como modelo: `mnemo_conexion` (no hay conexión, se cayó o Mnemo
-la rechazó aun después de renovarla), `mnemo_plan` (el plan de la cuenta no incluye el chat), `mnemo_creditos` (no
-quedan créditos), `mnemo_sin_modelo` (la cuenta no tiene un modelo disponible, o la conexión no tiene permiso para
-usar sus modelos), `larga` (la conversación no cabe en la ventana del modelo) y `llm_peticion` (otro rechazo de la
-petición).
+Salvo `llm_peticion` y `mnemo_sin_modelo`, ninguno de esos ofrece **Reintentar**: repetir el mismo mensaje no lo
+arregla. Los demás (la red, un plazo vencido, el modelo saturado o caído un momento) sí. Los de Mnemo como modelo:
+`mnemo_conexion` (no hay conexión, se cayó o Mnemo la rechazó aun después de renovarla), `mnemo_plan` (el plan de la
+cuenta no incluye el chat, o no incluye el modelo elegido en `MNEMO_MODELO`), `mnemo_creditos` (no quedan créditos),
+`mnemo_sin_modelo` (la cuenta no tiene un modelo disponible ahora, o la conexión no tiene permiso para usar sus
+modelos), `larga` (la conversación no cabe en la ventana del modelo) y `llm_peticion` (otro rechazo de la petición).
+El texto de una ronda puede llegar en un solo trozo largo (con Mnemo, si el proveedor de la cuenta no responde por
+partes): el widget lo pinta entero, con el mismo tope que `texto_ronda`.
 
 **En MongoDB**: `agente_conversaciones` (dueño, título, proveedor del modelo con que empezó, instrucciones y
 herramientas congeladas, personas vistas, lo pendiente de aprobar, candado del turno y fecha de borrado),
@@ -495,7 +513,8 @@ la Messages API simulada; `sse(...)` arma una respuesta del modelo con bloques `
 (una herramienta); `conectar_mnemo(app)` guarda una conexión con un Mnemo falso, cifrada como la deja Ajustes, y
 `encender_mnemo(app, *respuestas)` además le pone el modelo de Mnemo guionizado (cada ronda, un `R(...)` con bloques
 `T` y `TU`); `enviar` y `decidir` hacen un turno por la API y devuelven los eventos. `tests/test_agente_navegador.py`
-conecta Mnemo de punta a punta en Chromium (Ajustes, la página de permisos de un Mnemo falso y la vuelta).
+conecta Mnemo de punta a punta en Chromium (Ajustes, la página de permisos de un Mnemo falso y la vuelta) y revisa que
+el asistente se entere sin recargar la página.
 
 ```python
 from ayudas_agente import T, encender, enviar, sse

@@ -312,11 +312,16 @@ def test_la_conexion_con_mnemo_en_la_vista_de_ajustes():
         assert texto in rama_admin and bloque.count(texto) == 1, texto
     assert "Solo el administrador conecta o desconecta Mnemo." in bloque[bloque.index("} else {\n    acciones"):]
     # Los tres estados y el aviso sin permiso para usar los modelos
-    for texto in ("Conectado como <b>", ">Sin conectar<", ">Conexión caída<", "if (!c.modelo) partes.push(",
+    for texto in ("Conectado como <b>", ">Sin conectar<", ">Conexión caída<", "if (!c.modelo) {",
                   "data-estado=\"${estado}\""):
         assert texto in bloque, texto
-    assert ("const SIN_PERMISO_MODELO = 'Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar y "
-            "marque esa casilla '") in js
+    # Sin el permiso de los modelos: volver a conectar dejándolo marcado o, si ese Mnemo no lo ofrece, actualizarlo (no
+    # «marque esa casilla», que en un Mnemo sin actualizar no existe); al coordinador, que lo hace el administrador. Si
+    # la vista ya sabe que ese Mnemo no lo ofrece (`ofrece_modelo` false), solo lo segundo
+    assert ("admin: 'Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar dejando marcado «Usar tus "
+            "modelos de IA y '") in js
+    assert "SIN_PERMISO_MODELO[admin ? 'admin' : 'otro']" in bloque and "marque esa casilla" not in js
+    assert "c.ofrece_modelo === false ? NO_OFRECE_MODELO :" in bloque
     assert ("Todos los roles que usan el asistente gastan los modelos y los créditos de esa cuenta; los mensajes por "
             "día de cada rol (abajo) siguen valiendo.") in bloque
     # El bloque va fuera del formulario de los ajustes (no son ajustes: el coordinador los ve en solo lectura)
@@ -349,11 +354,14 @@ def test_quien_conecta_mnemo_y_que_ve_cada_rol(sesion, coord, como):
         assert claves <= set(con) and con["estado"] == "sin_conectar" and con["modelo"] is False, con
     p = como("planillero")
     assert "conexion" not in p.get("/api/agente/estado").json()["mnemo"]
-    # Conectada: la cuenta, los permisos y si puede usar los modelos (lo que la vista muestra)
+    # Conectada: la cuenta, los permisos y si puede usar los modelos (lo que la vista muestra). El nombre y el correo
+    # de la cuenta son del administrador: el coordinador no los recibe (la vista dice «una cuenta de Mnemo»)
     conectar_mnemo(sesion.app)
-    con = coord.get("/api/agente/estado").json()["mnemo"]["conexion"]
+    con = sesion.get("/api/agente/estado").json()["mnemo"]["conexion"]
     assert con["estado"] == "conectada" and con["cuenta"] == "Ana Inventada (ana.inventada@example.org)", con
-    assert con["modelo"] is True and "mnemo:model" in con["alcances"] and con["desde"]
+    con = coord.get("/api/agente/estado").json()["mnemo"]["conexion"]
+    assert con["estado"] == "conectada" and con["modelo"] is True and "mnemo:model" in con["alcances"] and con["desde"]
+    assert con["cuenta"] is None, con
     # El coordinador no conecta, no termina una conexión ni desconecta: 403 permiso, y la conexión sigue
     for r in (coord.post("/api/agente/mnemo/conectar", json={}), coord.delete("/api/agente/mnemo"),
               coord.post("/api/agente/mnemo/volver", json={"state": "inventado"})):

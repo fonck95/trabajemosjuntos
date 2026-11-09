@@ -11,13 +11,17 @@
   navegar, que el botón no tapa la barra de la ficha ni el título de la barra y que «Cerrar sesión» se alcanza con el
   menú abierto. En todos: sin XSS, sin errores de consola, sin violaciones de CSP, sin desborde horizontal y el panel
   dentro de la ventana. Además:
-  - `sin_modelo`: el administrador sin modelo (Mnemo sin conectar, con la conexión caída o sin permiso para usar sus
-    modelos) ve el botón y adentro qué hacer, sin nombres de variables y con un enlace a Ajustes, que muestra la
-    conexión con sus botones.
-  - `mnemo`: con Mnemo como modelo, `texto_ronda` reemplaza el texto que llegó por partes; la conexión caída vuelve a
-    leer el estado; `proveedor` (409) ofrece «Nueva conversación» con el mensaje escrito; `mnemo_creditos` no ofrece
-    «Reintentar»; `llm_peticion` ofrece «Nueva conversación». Quien no es el administrador y se queda sin modelo a
-    mitad ve qué pasó, sin que el panel se cierre de golpe. El contexto no lleva `code`, `state` ni `iss`.
+  - `sin_modelo`: el administrador sin modelo (Mnemo sin conectar, con la conexión caída, sin permiso para usar sus
+    modelos o con un Mnemo que todavía no los ofrece) ve el botón y adentro qué hacer, sin nombres de variables, sin
+    mandar a marcar una casilla que puede no estar y con un enlace a Ajustes, que muestra la conexión con sus botones.
+    «Conectar con Mnemo» contra un Mnemo sin actualizar (400 `sin_modelo`: no ofrece «Usar tus modelos…») lo dice en
+    el bloque y en un aviso, sin ir a ninguna parte.
+  - `mnemo`: con Mnemo como modelo, `texto_ronda` reemplaza el texto que llegó por partes; un solo trozo de más de
+    4 000 caracteres llega entero; la conexión caída vuelve a leer el estado; `proveedor` (409) ofrece «Nueva
+    conversación» con el mensaje escrito; `mnemo_creditos` no ofrece «Reintentar»; `llm_peticion` ofrece «Reintentar»
+    (que repite el mensaje) y «Nueva conversación»; `mnemo_sin_modelo` ofrece «Reintentar» y vuelve a leer el estado.
+    Quien no es el administrador y se queda sin modelo a mitad ve qué pasó, sin que el panel se cierre de golpe. El
+    contexto no lleva `code`, `state` ni `iss`.
 * `test_flujo_real_por_partes_y_detener`: contra el núcleo de verdad (uvicorn, el panel en /panel y la Messages API
   simulada con pausas): el texto llega y se pinta por partes (el primer párrafo conserva su nodo mientras llega el
   resto), «Detener» corta el turno y el siguiente mensaje funciona (el servidor soltó el candado).
@@ -28,8 +32,11 @@
   Mnemo: «Conectar con Mnemo» va a Mnemo con `location.assign`; «Cancelar» vuelve con `error` y no conecta nada;
   «Permitir» vuelve a `/panel/ajustes?code=…&state=…&iss=…` SIN la cookie de sesión (SameSite=Strict, navegación de
   otro sitio), la página quita eso de la dirección antes del POST a /volver (que sí lleva la cookie) y muestra
-  «Conectado como …». El coordinador ve el estado sin botones; volver a conectar sin el permiso de los modelos lo
-  avisa; «Desconectar» (con confirmación) revoca con el token de renovación.
+  «Conectado como …». El asistente se entera sin recargar la página: el abierto a medio conectar pasa solo de «no está
+  conectado» a «Nueva conversación», el de otra pestaña al abrirlo, y tras volver a conectar sin el permiso de los
+  modelos (o desconectar) dice qué falta (el POST a /volver se retiene hasta que el asistente leyó su estado, como pasa
+  en producción). El coordinador ve el estado sin botones; volver a conectar sin el permiso de los modelos lo avisa;
+  «Desconectar» (con confirmación) revoca con el token de renovación.
 * `test_punta_a_punta_con_mnemo_de_verdad` (opcional: se salta sin `MNEMO_E2E_DIR`): lo mismo contra un Mnemo de verdad
   en local (su API, su OAuth y su página de permisos, con un modelo con guion): conectar, conversar con el modelo de
   Mnemo usando una herramienta del panel (el texto llega por partes), volver a conectar sin y con el permiso de los
@@ -135,19 +142,24 @@ def test_widget_sigue_el_protocolo(panel_vivo, cfg, tmp_path):
     for caso in res["casos"]:
         _revisar(caso)
         if caso["nombre"] == "sin_modelo":
-            # El estado lo leyeron la vista y el widget, tres veces; ningún mensaje
-            assert caso["mensajes"] == [] and caso["lecturas"] >= 6, caso["lecturas"]
+            # El estado lo leyeron la vista y el widget, cuatro veces (y el widget otra vez al abrirlo sin modelo);
+            # ningún mensaje. «Conectar con Mnemo» pidió la autorización una vez (y el panel respondió que ese Mnemo no
+            # ofrece sus modelos)
+            assert caso["mensajes"] == [] and caso["lecturas"] >= 8, caso["lecturas"]
+            assert caso["conectar"] == [{}], caso["conectar"]
             continue
         if caso["nombre"] == "mnemo":
             mensajes = caso["mensajes"]
-            assert len(mensajes) == 6 and all(m["csrf"] for m in mensajes)
+            assert len(mensajes) == 9 and all(m["csrf"] for m in mensajes)
             # El contexto solo lleva los filtros conocidos: nada de lo que trae la vuelta de Mnemo
             ctx = mensajes[0]["cuerpo"]["contexto"]
             assert ctx["ruta"] == "/reuniones" and ctx["filtros"] == {"zona": "rural"}, ctx
-            assert [m["cuerpo"]["conversacion"] for m in mensajes] == [None, 51, 51, None, 52, 52]
+            assert [m["cuerpo"]["conversacion"] for m in mensajes] == [None, 51, 51, 51, None, 52, 52, 52, 52]
             # «Nueva conversación» trajo escrito el mensaje que no llegó (409 proveedor)
-            assert mensajes[3]["cuerpo"]["texto"] == mensajes[2]["cuerpo"]["texto"] == "¿Y las reuniones de mañana?"
-            assert caso["lecturas"] >= 4  # al cargar dos veces y tras cada mnemo_conexion
+            assert mensajes[4]["cuerpo"]["texto"] == mensajes[3]["cuerpo"]["texto"] == "¿Y las reuniones de mañana?"
+            # «Reintentar» tras `llm_peticion` repite el mismo mensaje en la misma conversación
+            assert mensajes[6]["cuerpo"]["texto"] == mensajes[5]["cuerpo"]["texto"] == "Último"
+            assert caso["lecturas"] >= 5  # al cargar dos veces, tras cada mnemo_conexion y tras mnemo_sin_modelo
             continue
         # Lo que el navegador le mandó al servidor
         primero, segundo = caso["mensajes"][:2]
@@ -228,6 +240,9 @@ const SIN_PERMISO = { ...CONEXION, alcances: ['mnemo:read', 'mnemo:workspace.wri
 const SIN_MODELO = (conexion) => ({ disponible: false, motivo: 'sin_configurar', configurado: false, proveedor: null, es_admin: true,
   escritura: true, limite: { usados: 0, maximo: 300 }, mnemo: { activo: conexion.estado === 'conectada', origen: null, conexion },
   sugerencias: [] });
+// Lo que responde POST /api/agente/mnemo/conectar (400 `sin_modelo`, `mnemo_conexion.MENSAJE_SIN_MODELO`) con un Mnemo que
+// no ofrece «Usar tus modelos…»
+const SIN_MODELO_EN_MNEMO = 'Este Mnemo todavía no ofrece «Usar tus modelos de IA y tus créditos», que es lo que usa el asistente: hay que actualizar Mnemo (desplegar su última versión) y volver a conectar.';
 const CASOS = {
   protocolo: [
     { nombre: 'escritorio', viewport: { width: 1400, height: 900 } },
@@ -308,6 +323,8 @@ const ESTADO_TRAS_CAIDA = { ...ESTADO, proveedor: 'anthropic', mnemo: { activo: 
 const HM = (id, estado, resumen) => ({ tipo: 'herramienta', id, nombre: 'buscar_personas', etiqueta: 'Buscando habitantes', estado, ...(resumen ? { resumen } : {}) });
 const errorDe = (conversacion, codigo, mensaje) => [{ tipo: 'inicio', conversacion, titulo: 'Reuniones' }, { tipo: 'texto', texto: 'Un momen' },
   { tipo: 'error', codigo, mensaje }, { tipo: 'fin', motivo: 'error', limite: { usados: 9, maximo: 300 } }];
+// Un texto de 6 799 caracteres en un solo trozo: con Mnemo llega así si el proveedor de la cuenta no responde por partes
+const LARGO = Array.from({ length: 200 }, (_, i) => `Línea ${String(i).padStart(4, '0')} de la respuesta larga.`).join('\n');
 const MENSAJES_MNEMO = [
   // Tres rondas: los trozos de texto son un adelanto y el texto final de cada ronda (`texto_ronda`) lo reemplaza; en la
   // segunda no llegó ningún trozo y su texto va antes de su herramienta
@@ -317,10 +334,17 @@ const MENSAJES_MNEMO = [
     HM('toolu_m2', 'inicio'), { tipo: 'texto_ronda', texto: 'Encontré a Ana Inventada.' }, HM('toolu_m2', 'ok', '1 persona'),
     { tipo: 'texto', texto: 'Listo, ya est' }, { tipo: 'texto_ronda', texto: 'Listo.' },
     { tipo: 'fin', motivo: 'listo', limite: { usados: 4, maximo: 300 } }],
+  // Todo el texto de la ronda en un solo trozo, sin `texto_ronda` (coincide con lo emitido): llega entero
+  [{ tipo: 'inicio', conversacion: 51, titulo: 'Reuniones' }, { tipo: 'texto', texto: LARGO },
+    { tipo: 'fin', motivo: 'listo', limite: { usados: 5, maximo: 300 } }],
   errorDe(51, 'mnemo_conexion', 'La conexión con Mnemo venció o se revocó: el administrador tiene que volver a conectarla en Ajustes → Asistente.'),
   { estado: 409, detail: { codigo: 'proveedor', mensaje: 'Esta conversación se empezó con un modelo que ya no está disponible: empiece una nueva.' } },
   errorDe(52, 'mnemo_creditos', 'A la cuenta de Mnemo se le acabaron los créditos.'),
-  errorDe(52, 'llm_peticion', 'El servicio del modelo rechazó la petición. Si se repite, empiece otra conversación.'),
+  // Rechazada (con Mnemo, también una sobrecarga del proveedor a mitad de la respuesta): «Reintentar» la repite y sale
+  errorDe(52, 'llm_peticion', 'El modelo rechazó la petición. Si se repite, empiece otra conversación.'),
+  [{ tipo: 'inicio', conversacion: 52, titulo: 'Reuniones' }, { tipo: 'texto', texto: 'Esta vez sí respondió.' },
+    { tipo: 'fin', motivo: 'listo', limite: { usados: 10, maximo: 300 } }],
+  errorDe(52, 'mnemo_sin_modelo', 'La cuenta de Mnemo conectada no tiene un modelo disponible ahora (sin un modelo configurado, con su clave rechazada o con el proveedor caído). Si se repite, avise al administrador.'),
   errorDe(52, 'mnemo_conexion', 'La conexión con Mnemo venció o se revocó: el administrador tiene que volver a conectarla en Ajustes → Asistente.'),
 ];
 
@@ -346,6 +370,12 @@ async function servirAgente(ctx, reg) {
       return flujo(r);
     }
     if (metodo === 'POST' && ruta === '/api/agente/confirmaciones') { reg.confirmaciones.push(req.postDataJSON()); return flujo(TURNO_CONFIRMAR); }
+    // «Conectar con Mnemo» contra un Mnemo sin actualizar: no ofrece «Usar tus modelos…» y el panel no sigue
+    if (metodo === 'POST' && ruta === '/api/agente/mnemo/conectar') {
+      reg.conectar.push(req.postDataJSON());
+      return route.fulfill({ status: 400, contentType: 'application/json', headers: { 'x-prueba': 'esperado' },
+        body: JSON.stringify({ detail: { codigo: 'sin_modelo', mensaje: SIN_MODELO_EN_MNEMO } }) });
+    }
     return json({ detail: 'No existe' }, 404);
   });
 }
@@ -656,6 +686,27 @@ async function sinModelo(page, caso) {
   caso.datos.ajustes_sin_conectar = b;
   v.ajustes_sin_conectar = b.ruta === pref + '/ajustes' && b.estado === 'sin_conectar' && JSON.stringify(b.botones) === '["Conectar con Mnemo"]'
     && b.texto.includes('no hay que copiar claves') && b.rige.includes('El asistente está apagado: no tiene un modelo que usar.') && sinVariables(b.texto);
+  // «Conectar con Mnemo» contra un Mnemo sin actualizar: el panel responde 400 `sin_modelo` y la página lo dice en el
+  // bloque (con el mensaje tal cual) y en un aviso, sin ir a ninguna parte; el botón sirve otra vez. El panel del
+  // asistente se cierra para no tapar nada y se vuelve a abrir después (así vuelve abierto al recargar)
+  await page.click('#agente-cerrar');
+  await page.click('#mnemo-conectar');
+  await page.waitForSelector('#mnemo-conexion .mnemo-nota.resultado.error', espera);
+  const n = await page.evaluate(() => {
+    const nota = document.querySelector('#mnemo-conexion .mnemo-nota.resultado.error');
+    const r = nota.getBoundingClientRect();
+    const caja = document.querySelector('#mnemo-conexion').getBoundingClientRect();
+    const boton = document.querySelector('#mnemo-conectar');
+    return { nota: nota.textContent, rol: nota.getAttribute('role'), visible: r.width > 0 && r.height > 0 && r.left >= caja.left && r.right <= caja.right,
+      avisos: [...document.querySelectorAll('#avisos .aviso.error')].map((x) => x.textContent), boton: boton.textContent.trim(), habilitado: !boton.disabled,
+      ruta: location.pathname, desborde: document.documentElement.scrollWidth > innerWidth };
+  });
+  caso.datos.conectar_sin_modelo = n;
+  v.conectar_sin_modelo_en_mnemo = n.nota === SIN_MODELO_EN_MNEMO && n.rol === 'alert' && n.visible && n.avisos.includes(SIN_MODELO_EN_MNEMO)
+    && n.boton === 'Conectar con Mnemo' && n.habilitado && n.ruta === pref + '/ajustes' && !n.desborde;
+  await page.locator('#mnemo-conexion').screenshot({ path: `${capturas}/ajustes-mnemo-sin-modelo-en-mnemo.png` });
+  await page.click('#agente-boton');
+  await page.waitForSelector('#agente-panel:not([hidden]) .agente-explicacion', espera);
   // 2. La conexión se cayó (Mnemo la revocó)
   caso.estado = SIN_MODELO(CAIDA);
   await page.reload({ waitUntil: 'domcontentloaded' });
@@ -672,12 +723,26 @@ async function sinModelo(page, caso) {
   e = await explicacion();
   b = await bloque();
   caso.datos.sin_permiso = { e, b };
-  v.explica_sin_permiso = e.titulo === 'Mnemo está conectado sin permiso para usar sus modelos' && e.texto.includes('«Usar tus modelos de IA y tus créditos»')
-    && sinVariables(e.texto) && enlaceBueno(e);
+  // Volver a conectar dejándolo marcado; si ese Mnemo no lo muestra, actualizarlo (nunca «marque la casilla» a secas)
+  const sinCasilla = (t) => !/marque|marcar la casilla/i.test(t) && t.includes('Si Mnemo no muestra esa casilla, hay que actualizar Mnemo.');
+  v.explica_sin_permiso = e.titulo === 'Mnemo está conectado sin permiso para usar sus modelos' && e.sub === 'Sin permiso para usar los modelos'
+    && e.texto.includes('Vuelva a conectar en Ajustes → Asistente, dejando marcado «Usar tus modelos de IA y tus créditos» en la página de permisos de Mnemo.')
+    && sinCasilla(e.texto) && sinVariables(e.texto) && enlaceBueno(e);
   v.ajustes_sin_permiso = b.estado === 'conectada' && b.texto.includes('Conectado como Ana Inventada (ana.inventada@example.org)')
-    && b.texto.includes('Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar y marque esa casilla')
-    && !b.texto.includes('Usar sus modelos de IA y sus créditos') && JSON.stringify(b.botones) === '["Volver a conectar","Desconectar"]';
+    && b.texto.includes('Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar dejando marcado «Usar tus modelos de IA y tus créditos».')
+    && sinCasilla(b.texto) && !b.texto.includes('Usar sus modelos de IA y sus créditos') && JSON.stringify(b.botones) === '["Volver a conectar","Desconectar"]';
   await page.locator('#mnemo-conexion').screenshot({ path: `${capturas}/ajustes-mnemo-sin-permiso.png` });
+  // 4. Conectado con un Mnemo que todavía no ofrece usar sus modelos (se conectó así para sus herramientas, en modo
+  // directo, y la clave ya no está): no hay casilla que marcar, hay que actualizar Mnemo
+  caso.estado = SIN_MODELO({ ...SIN_PERMISO, ofrece_modelo: false });
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  e = await explicacion();
+  b = await bloque();
+  caso.datos.no_ofrece = { e, b };
+  v.explica_que_mnemo_no_ofrece = e.titulo === 'Mnemo todavía no ofrece sus modelos' && e.sub === 'Mnemo sin actualizar'
+    && e.texto.includes('hay que actualizar Mnemo y volver a conectar en Ajustes → Asistente.') && sinVariables(e.texto) && enlaceBueno(e);
+  v.ajustes_no_ofrece = b.texto.includes('Este Mnemo todavía no ofrece «Usar tus modelos de IA y tus créditos»: el asistente usa sus '
+    + 'herramientas, pero no sus modelos. Para usarlos hay que actualizar Mnemo y volver a conectar.') && !b.texto.includes('dejando marcado');
   await page.focus('#agente-cerrar'); // volvió abierto tras recargar, sin tomar el foco: Escape vale con el foco adentro
   await page.keyboard.press('Escape');
   v.cierra = await page.evaluate(() => document.querySelector('#agente-panel').hidden && !document.querySelector('#agente-boton').hidden);
@@ -732,6 +797,18 @@ async function conMnemo(page, caso) {
   caso.datos = { partes };
   v.texto_ronda = JSON.stringify(partes) === JSON.stringify(['md:Hola, mundo. Voy a buscar a Ana.', 'herr:ok', 'md:Encontré a Ana Inventada.', 'herr:ok', 'md:Listo.'])
     && await page.evaluate(() => [...document.querySelectorAll('.agente-md strong')].some((x) => x.textContent === 'Ana'));
+  // 1b. Un solo trozo de más de 4 000 caracteres (todo el texto de la ronda) se pinta entero: nada lo corrige después
+  await enviar(page, 'Dame el informe completo');
+  await page.waitForFunction(() => document.querySelectorAll('.agente-msj.agente-respuesta').length === 2
+    && document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
+  const largo = await page.evaluate(() => {
+    const md = [...document.querySelectorAll('.agente-msj.agente-respuesta')].pop().querySelector('.agente-md');
+    return md && { lineas: md.querySelectorAll('br').length + 1, principio: md.textContent.slice(0, 33), final: md.textContent.slice(-33),
+      largo: md.textContent.length };
+  });
+  caso.datos.largo = largo;
+  v.trozo_largo_entero = !!largo && largo.lineas === 200 && largo.principio === 'Línea 0000 de la respuesta larga.'
+    && largo.final === 'Línea 0199 de la respuesta larga.' && largo.largo === LARGO.length - 199;
   // 2. La conexión se cayó: el error sin «Reintentar» y el estado se vuelve a leer
   caso.estado = ESTADO_TRAS_CAIDA;
   const lecturas = caso.lecturas;
@@ -757,13 +834,29 @@ async function conMnemo(page, caso) {
   await page.waitForFunction(() => document.querySelectorAll('.agente-error').length === 1 && document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
   err = await ultimoError();
   v.creditos_sin_reintento = err.texto.includes('se le acabaron los créditos') && err.botones.length === 0;
-  // 5. Petición rechazada: «Nueva conversación»
+  // 5. Petición rechazada (puede ser pasajera): «Reintentar», que repite el mensaje, y «Nueva conversación»
   await enviar(page, 'Último');
   await page.waitForFunction(() => document.querySelectorAll('.agente-error').length === 2 && document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
   err = await ultimoError();
-  v.peticion_ofrece_otra = JSON.stringify(err.botones) === '["Nueva conversación"]';
+  caso.datos.peticion = err;
+  v.peticion_ofrece_reintentar_y_otra = JSON.stringify(err.botones) === '["Reintentar","Nueva conversación"]';
   await page.screenshot({ path: `${capturas}/agente-mnemo.png` });
-  // 6. Quien no es el administrador se queda sin modelo a mitad (la conexión se cayó y no hay otro): el panel no se
+  await page.locator('.agente-error').last().locator('button', { hasText: 'Reintentar' }).click();
+  await page.waitForFunction(() => [...document.querySelectorAll('.agente-md')].pop()?.textContent === 'Esta vez sí respondió.'
+    && document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
+  v.reintentar_repite_el_mensaje = await page.evaluate(() => document.querySelectorAll('.agente-error').length === 1
+    && [...document.querySelectorAll('.agente-msj.agente-persona p')].filter((p) => p.textContent === 'Último').length === 2);
+  // 6. Sin un modelo disponible ahora en la cuenta (también si su proveedor se cayó un momento): «Reintentar», y el
+  // estado se vuelve a leer
+  const antesSinModelo = caso.lecturas;
+  await enviar(page, '¿Y mañana?');
+  await page.waitForFunction(() => document.querySelectorAll('.agente-error').length === 2 && document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
+  for (let i = 0; i < 100 && caso.lecturas === antesSinModelo; i++) await page.waitForTimeout(50);
+  err = await ultimoError();
+  caso.datos.sin_modelo = err;
+  v.sin_modelo_ofrece_reintentar = err.texto.includes('no tiene un modelo disponible ahora') && JSON.stringify(err.botones) === '["Reintentar"]'
+    && caso.lecturas === antesSinModelo + 1;
+  // 7. Quien no es el administrador se queda sin modelo a mitad (la conexión se cayó y no hay otro): el panel no se
   // cierra de golpe, dice qué pasó (sin enlace a Ajustes) y, al cerrarlo, el botón ya no vuelve
   caso.estado = { ...SIN_MODELO(CAIDA), es_admin: false };
   await enviar(page, '¿Sigues ahí?');
@@ -823,8 +916,8 @@ async function real(page, caso) {
   try {
     for (const { nombre, estado, mnemo, ...op } of CASOS) {
       const ctx = await nav.newContext(op);
-      const caso = { nombre, revisiones: {}, errores: [], csp: [], mensajes: [], confirmaciones: [], borradas: [], insignias: 0,
-        lecturas: 0, estado: estado || (mnemo ? ESTADO_MNEMO : ESTADO), respuestas: mnemo ? MENSAJES_MNEMO : MENSAJES };
+      const caso = { nombre, revisiones: {}, errores: [], csp: [], mensajes: [], confirmaciones: [], borradas: [], conectar: [],
+        insignias: 0, lecturas: 0, estado: estado || (mnemo ? ESTADO_MNEMO : ESTADO), respuestas: mnemo ? MENSAJES_MNEMO : MENSAJES };
       await ctx.route((u) => u.origin !== origen, (r) => r.abort()); // sin red: fuentes de Google, teselas
       if (modo === 'protocolo') await servirAgente(ctx, caso);
       await ctx.exposeBinding('__csp', (_, x) => caso.csp.push(x));
@@ -1057,8 +1150,22 @@ const bloque = (page) => page.evaluate(() => {
     sinModelos: b.querySelector('.mnemo-nota.alerta:not(.resultado)')?.textContent ?? null };
 });
 
-// «Conectar con Mnemo» (o «Volver a conectar»): la página de permisos de Mnemo, la decisión y la vuelta a Ajustes
-async function conectar(page, caso, decision, { sinModelos = false } = {}) {
+// Lo que muestra el asistente (abierto o no) y si llega a mostrar algo antes del plazo
+const asistente = (page) => page.evaluate(() => {
+  const ex = document.querySelector('#agente-mensajes .agente-explicacion');
+  return { abierto: !document.querySelector('#agente-panel').hidden, sub: document.querySelector('#agente-sub').textContent,
+    titulo: ex?.querySelector('h3')?.textContent ?? null, texto: ex?.textContent ?? null,
+    bienvenida: !!document.querySelector('#agente-mensajes .agente-bienvenida'), compositor: !document.querySelector('#agente-form').hidden };
+});
+const llega = (page, fn) => page.waitForFunction(fn, null, espera).then(() => true, () => false);
+
+// «Conectar con Mnemo» (o «Volver a conectar»): la página de permisos de Mnemo, la decisión y la vuelta a Ajustes. Al
+// volver, el asistente lee su estado a la vez que la página canjea el código y, en producción, esa lectura suele
+// responderse antes, con el estado de antes de conectar. Aquí siempre: el POST a /volver sale recién cuando el servidor
+// respondió esa lectura. Por defecto la lectura llega al asistente antes del POST (y la prueba hace `durante` con la
+// página a medio conectar); con `enVuelo`, llega después de que Ajustes le avisó que se conectó: el asistente tiene que
+// esperarla y pedir otra
+async function conectar(page, caso, decision, { sinModelos = false, durante = null, enVuelo = false } = {}) {
   await page.fill('#f-mnemo [name=url]', mcp);
   await page.click('#mnemo-conectar');
   await page.waitForURL((u) => u.origin === origenMnemo, espera); // location.assign a la autorización de Mnemo
@@ -1071,10 +1178,54 @@ async function conectar(page, caso, decision, { sinModelos = false } = {}) {
   }
   await page.waitForSelector('#permitir', espera);
   if (sinModelos) await page.uncheck('input[name=scope][value="mnemo:model"]');
+  // Solo la primera de cada una (el resto pasa sin más). Sin `times`: al vencer una ruta con otra retenida, Playwright
+  // soltaría la retenida
+  let soltarVolver, soltarLectura, leida;
+  const volverSuelto = new Promise((listo) => { soltarVolver = listo; });
+  const lecturaSuelta = new Promise((listo) => { soltarLectura = listo; });
+  const respondida = new Promise((listo) => { leida = listo; });
+  const esVolver = (u) => u.pathname === pref + '/api/agente/mnemo/volver';
+  const esEstado = (u) => u.pathname === pref + '/api/agente/estado';
+  let volverVisto = false, estadoVisto = false;
+  const alVolver = async (r) => {
+    if (volverVisto) return r.fallback();
+    volverVisto = true;
+    await volverSuelto;
+    await r.continue();
+  };
+  const alEstado = async (r) => {
+    if (estadoVisto) return r.fallback();
+    estadoVisto = true;
+    const respuesta = await r.fetch(); // la responde el servidor con lo de antes: el POST a /volver todavía no salió
+    leida();
+    await lecturaSuelta;
+    await r.fulfill({ response: respuesta });
+  };
+  await page.route(esVolver, alVolver);
+  await page.route(esEstado, alEstado);
+  const recibida = page.waitForResponse((x) => esEstado(new URL(x.url())), espera);
+  recibida.catch(() => {}); // con `enVuelo` no se espera: que un plazo vencido no tumbe el guion
   await page.click(decision === 'permitir' ? '#permitir' : '#cancelar');
   // De vuelta en Ajustes: la página quitó la vuelta de la dirección y, después del POST a /volver, pintó la conexión
   await page.waitForURL((u) => u.origin === origen && u.pathname === pref + '/ajustes', espera);
+  try {
+    await respondida;
+    if (enVuelo) {
+      await page.evaluate(() => { window.__avisado = new Promise((listo) => addEventListener('agente:estado', () => listo(true), { once: true })); });
+      soltarVolver();
+      caso.datos.avisado = await Promise.race([page.evaluate(() => window.__avisado), new Promise((listo) => setTimeout(() => listo(false), 15000))]);
+    } else {
+      soltarLectura();
+      await recibida;
+      if (durante) await durante();
+    }
+  } finally {
+    soltarLectura();
+    soltarVolver();
+  }
   await page.waitForSelector('#mnemo-conexion', espera);
+  await page.unroute(esVolver, alVolver);
+  await page.unroute(esEstado, alEstado);
   const o = await page.evaluate(() => ({ orden: window.__orden, llego: window.__llegoConVuelta, ruta: location.pathname + location.search }));
   const i = o.orden.indexOf(`replaceState ${pref}/ajustes`);
   const j = o.orden.indexOf(`POST ${pref}/api/agente/mnemo/volver`);
@@ -1101,13 +1252,43 @@ async function conectar(page, caso, decision, { sinModelos = false } = {}) {
     caso.datos.cancelar = { ...r, bloque: b };
     v.cancelar_no_conecta = r.vuelta_quitada_antes && b.estado === 'sin_conectar' && b.resultado === 'Se canceló el permiso en Mnemo: no se conectó nada.';
 
-    // 2. «Permitir»: «Conectado como …», con los permisos y los botones del administrador
-    r = await conectar(page, caso, 'permitir');
+    // Otra pestaña del administrador, abierta antes de conectar: su asistente dice que no está conectado y no se entera
+    // del aviso de esta (es otra página)
+    const otra = await ctx.newPage();
+    otra.on('pageerror', (e) => caso.errores.push(`otra pestaña: ${e}`));
+    otra.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) caso.errores.push(`otra pestaña: ${m.text()}`); });
+    await otra.goto(base + '/', { waitUntil: 'domcontentloaded' });
+    await otra.waitForSelector('#agente-boton:not([hidden])', espera);
+    await otra.evaluate(() => { window.__sinRecargar = true; });
+
+    // 2. «Permitir»: «Conectado como …», con los permisos y los botones del administrador. Con la página a medio
+    // conectar, el asistente (que ya leyó su estado: sin conectar) se abre y lo explica; cuando termina de conectar, pasa
+    // solo a «Nueva conversación», sin recargar la página
+    r = await conectar(page, caso, 'permitir', { durante: async () => {
+      await page.click('#agente-boton');
+      await page.waitForSelector('#agente-panel:not([hidden]) .agente-explicacion', espera);
+      caso.datos.asistente_conectando = await asistente(page);
+    } });
     b = await bloque(page);
     caso.datos.permitir = { ...r, bloque: b };
     v.conectado = r.vuelta_quitada_antes && b.estado === 'conectada' && b.texto.includes('Conectado como Ana Inventada (ana.inventada@example.org) desde')
       && b.texto.includes(`Dirección: ${mcp}`) && b.permisos.includes('Usar sus modelos de IA y sus créditos') && b.sinModelos === null
       && b.resultado === null && JSON.stringify(b.botones) === '["Volver a conectar","Desconectar"]' && b.campo === mcp;
+    const conectando = caso.datos.asistente_conectando;
+    const nueva = await llega(page, () => document.querySelector('#agente-sub').textContent === 'Nueva conversación'
+      && !document.querySelector('#agente-form').hidden && !!document.querySelector('#agente-panel:not([hidden]) .agente-bienvenida'));
+    caso.datos.asistente_conectado = await asistente(page);
+    v.asistente_se_entera_al_conectar = conectando.titulo === 'El asistente no está conectado' && conectando.sub === 'Sin conectar'
+      && !conectando.compositor && nueva;
+    await page.screenshot({ path: `${capturas}/ajustes-mnemo-asistente-conectado.png` });
+    await page.click('#agente-cerrar');
+    // La otra pestaña, al abrir su asistente sin modelo, vuelve a preguntar: ya está conectado
+    await otra.click('#agente-boton');
+    const enLaOtra = await llega(otra, () => document.querySelector('#agente-sub').textContent === 'Nueva conversación'
+      && !document.querySelector('#agente-form').hidden && !!document.querySelector('#agente-panel:not([hidden]) .agente-bienvenida'));
+    caso.datos.otra_pestana = await asistente(otra);
+    v.otra_pestana_al_abrir = enLaOtra && await otra.evaluate(() => window.__sinRecargar === true);
+    await otra.close();
     await page.locator('#mnemo-conexion').screenshot({ path: `${capturas}/ajustes-mnemo-conectado.png` });
     await page.screenshot({ path: `${capturas}/ajustes-mnemo.png`, fullPage: false });
     // En el celular el bloque cabe sin desbordar la página
@@ -1121,24 +1302,37 @@ async function conectar(page, caso, decision, { sinModelos = false } = {}) {
     await page.locator('#mnemo-conexion').screenshot({ path: `${capturas}/ajustes-mnemo-celular.png` });
     await page.setViewportSize({ width: 1280, height: 900 });
 
-    // 3. El coordinador ve el estado, sin la dirección ni los botones
+    // 3. El coordinador ve el estado, sin la dirección ni los botones, y sin la cuenta: el nombre y el correo son del
+    // administrador (no le llegan, y el bloque dice «una cuenta de Mnemo»)
     const k = await abrir(nav, caso, 'coordinador');
     await ingresar(k.page, coordUsuario, coordClave);
     const bk = await bloque(k.page);
     caso.datos.coordinador = bk;
-    v.coordinador_solo_ve = bk.estado === 'conectada' && bk.texto.includes('Conectado como Ana Inventada (ana.inventada@example.org)')
+    v.coordinador_solo_ve = bk.estado === 'conectada' && bk.texto.includes('Conectado como una cuenta de Mnemo desde')
+      && !bk.texto.includes('Ana Inventada') && !bk.texto.includes('ana.inventada@example.org') && bk.sinModelos === null
       && bk.botones.length === 0 && bk.campo === null && bk.texto.includes('Solo el administrador conecta o desconecta Mnemo.');
     await k.page.locator('#mnemo-conexion').screenshot({ path: `${capturas}/ajustes-mnemo-coordinador.png` });
     await k.ctx.close();
 
-    // 4. «Volver a conectar» sin marcar el permiso de los modelos: Ajustes lo avisa
-    r = await conectar(page, caso, 'permitir', { sinModelos: true });
+    // 4. «Volver a conectar» sin marcar el permiso de los modelos: Ajustes lo avisa (sin mandar a marcar una casilla que
+    // puede no estar). El asistente leyó su estado con la conexión anterior (con los modelos), y esa lectura le llega
+    // después del aviso de Ajustes: la espera, pide otra y, sin recargar, al abrirlo explica qué falta
+    r = await conectar(page, caso, 'permitir', { sinModelos: true, enVuelo: true });
     b = await bloque(page);
     caso.datos.sin_modelos = { ...r, bloque: b };
+    v.aviso_con_la_lectura_en_vuelo = caso.datos.avisado === true;
     v.avisa_sin_modelos = r.vuelta_quitada_antes && b.estado === 'conectada' && !b.permisos.includes('Usar sus modelos de IA y sus créditos')
-      && (b.sinModelos || '').startsWith('Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar y marque esa casilla');
+      && b.sinModelos === 'Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar dejando marcado «Usar tus modelos de IA y '
+        + 'tus créditos». Si Mnemo no muestra esa casilla, hay que actualizar Mnemo.';
+    await page.click('#agente-boton');
+    const sinPermiso = await llega(page, () => document.querySelector('#agente-sub').textContent === 'Sin permiso para usar los modelos'
+      && !!document.querySelector('#agente-panel:not([hidden]) .agente-explicacion'));
+    caso.datos.asistente_sin_modelos = await asistente(page);
+    v.asistente_se_entera_sin_modelos = sinPermiso
+      && (caso.datos.asistente_sin_modelos.texto || '').includes('Si Mnemo no muestra esa casilla, hay que actualizar Mnemo.');
+    await page.click('#agente-cerrar');
 
-    // 5. «Desconectar», con confirmación
+    // 5. «Desconectar», con confirmación; el asistente dice que no está conectado
     await page.click('#mnemo-desconectar');
     await page.waitForSelector('dialog[open] [data-si]', espera);
     v.pide_confirmacion = (await page.textContent('dialog[open]')).includes('¿Desconectar Mnemo?');
@@ -1147,6 +1341,10 @@ async function conectar(page, caso, decision, { sinModelos = false } = {}) {
     b = await bloque(page);
     caso.datos.desconectado = b;
     v.desconectado = JSON.stringify(b.botones) === '["Conectar con Mnemo"]' && b.campo === mcp && b.resultado === null;
+    await page.click('#agente-boton');
+    v.asistente_se_entera_al_desconectar = await llega(page, () => document.querySelector('#agente-sub').textContent === 'Sin conectar'
+      && document.querySelector('#agente-panel:not([hidden]) .agente-explicacion h3')?.textContent === 'El asistente no está conectado');
+    caso.datos.asistente_desconectado = await asistente(page);
     v.respuestas_esperadas = caso.esperados.length === 0;
     await ctx.close();
   } catch (e) {
@@ -1416,11 +1614,11 @@ async function conectar(page, { modelos = true, captura = null } = {}) {
 }
 
 // Abre el asistente y, de «Conversaciones», la única que hay (una sesión nueva del navegador, o un rato sin modelo,
-// empiezan sin conversación abierta)
+// empiezan sin conversación abierta; si la pestaña la tenía guardada, el asistente ya la trae)
 async function abrirLaConversacion(page, caso) {
   await sinAvisos(page);
   await page.click('#agente-boton');
-  await page.waitForSelector('#agente-panel:not([hidden]) .agente-sugerencia', espera);
+  await page.waitForSelector('#agente-panel:not([hidden]) :is(.agente-sugerencia, .agente-msj)', espera);
   await page.click('#agente-ver-historial');
   await page.waitForSelector('.agente-item .agente-abrir', espera);
   caso.datos.historial = await page.evaluate(() => [...document.querySelectorAll('.agente-item b')].map((x) => x.textContent));
@@ -1519,7 +1717,7 @@ async function seguirYDesconectar(page, caso) {
   let c = await conectar(page, { modelos: false });
   caso.datos.sin_modelos = c;
   v.avisa_sin_modelos = c.bloque.estado === 'conectada' && !c.bloque.permisos.includes(USAR_MODELOS)
-    && (c.bloque.sinModelos || '').startsWith('Mnemo se conectó sin permiso para usar sus modelos')
+    && (c.bloque.sinModelos || '').startsWith('Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar dejando marcado')
     && c.cabeza.includes('El asistente está apagado: no tiene un modelo que usar');
   let g = await concesiones(page);
   caso.datos.concesiones_sin_modelos = g;
