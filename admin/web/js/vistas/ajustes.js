@@ -133,7 +133,7 @@ function bloqueMnemo(c, nota) {
       <label class="campo ancho"><span>Dirección MCP de Mnemo</span><input name="url" type="url" inputmode="url" maxlength="300" value="${dir}" placeholder="https://…/mcp" autocomplete="off" spellcheck="false"></label>
       <div class="ancho mnemo-botones"><button class="btn primario" id="mnemo-conectar">${estado === 'sin_conectar' ? 'Conectar con Mnemo' : 'Volver a conectar'}</button>
         ${estado !== 'sin_conectar' ? html`<button type="button" class="btn peligro" id="mnemo-desconectar">Desconectar</button>` : ''}</div>
-      <p class="ancho mnemo-ayuda">Se abre Mnemo: inicie sesión con la cuenta que va a poner los modelos, deje marcado «Usar tus modelos de IA y tus créditos» y pulse «Permitir». Mnemo lo trae de vuelta aquí.${estado === 'sin_conectar' ? '' : ' Cambiar la dirección y volver a conectar cambia de Mnemo.'}</p>
+      <p class="ancho mnemo-ayuda">Se abre Mnemo: inicie sesión con la cuenta que va a poner los modelos, deje marcado «Usar tus modelos de IA y tus créditos» y pulse «Permitir». Mnemo lo trae de vuelta aquí. Las casillas de escritura (eventos y documentos, recuerdos, compartir, publicar) son para que el asistente también trabaje en ese Mnemo, siempre con su aprobación: márquelas si lo quiere.${estado === 'sin_conectar' ? '' : ' Cambiar la dirección y volver a conectar cambia de Mnemo.'}</p>
     </form>`;
   } else {
     acciones = html`<p class="mnemo-ayuda">Solo el administrador conecta o desconecta Mnemo.</p>`;

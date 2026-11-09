@@ -80,7 +80,8 @@ def _mensajes(sesion, cid):
 
 def test_un_turno_completo_con_el_modelo_de_mnemo(sesion, falsas):
     modelo = encender_mnemo(sesion.app,
-                            R(T("Consulto la base."), TU("toolu_1", "contar_falsa", {"lugar": "Casco"}), stop="tool_use"),
+                            R(T("Consulto la base."), TU("toolu_1", "contar_falsa", {"lugar": "Casco"}),
+                              stop="tool_use"),
                             R(T("En el casco hay 3 personas.")))
     r, ev = enviar(sesion, "¿Cuántas personas hay en el casco?")
     assert r.status_code == 200, r.text
@@ -170,14 +171,16 @@ def test_para_mnemo_quita_lo_que_mnemo_no_conoce_y_junta_los_mensajes():
             {"type": "server_tool_use", "id": "srv_1", "name": "web_search", "input": {}},
             {"type": "web_search_tool_result", "tool_use_id": "srv_1", "content": []},
             {"type": "redacted_thinking", "data": "x"},
-            {"type": "text", "text": "Miro."}, {"type": "tool_use", "id": "toolu_1", "name": "ver", "input": {"a": 1}}]},
+            {"type": "text", "text": "Miro."},
+            {"type": "tool_use", "id": "toolu_1", "name": "ver", "input": {"a": 1}}]},
         {"role": "user", "content": [
             {"type": "tool_result", "tool_use_id": "toolu_1", "content": [
                 {"type": "text", "text": '{"ok": true}'}, img,
                 {"type": "image", "source": {"type": "url", "url": "https://mnemo.example.org/x.png"}}]},
             {"type": "text", "text": "contexto 2"}, {"type": "text", "text": "Sigue"}]},
         {"role": "assistant", "content": []},  # vacío (un modelo que no dijo nada): no viaja
-        {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_2", "content": "x", "is_error": True}]},
+        {"role": "user", "content": [
+            {"type": "tool_result", "tool_use_id": "toolu_2", "content": "x", "is_error": True}]},
     ]
     out = modelo_mnemo.para_mnemo(historial)
     assert [m["role"] for m in out] == ["user", "assistant", "user"]

@@ -129,7 +129,9 @@ la estrategia de veredas?».
 2. Pulse **Conectar con Mnemo**. La misma pestaña va a Mnemo.
 3. Inicie sesión en Mnemo con la cuenta que va a poner los modelos, revise los permisos y pulse **Permitir**. Deje
    marcado **«Usar tus modelos de IA y tus créditos»**: sin él, Mnemo conecta solo las herramientas y Ajustes avisa
-   «Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar y marque esa casilla».
+   «Mnemo se conectó sin permiso para usar sus modelos: vuelva a conectar y marque esa casilla». Mnemo trae marcados
+   solo ese y «Leer tu información»: los de escritura (eventos y documentos, recuerdos, compartir, publicar) son para
+   que las herramientas de Mnemo también escriban (siempre con la aprobación de la tarjeta); márquelos si lo quiere.
 4. Mnemo lo trae de vuelta a Ajustes, que muestra **Conectado como** la cuenta (nombre y correo), desde cuándo, la
    dirección y los permisos. Si canceló en Mnemo, lo dice y no conecta nada.
 
@@ -426,7 +428,8 @@ se suba.
 2. Antes de abrir el flujo, el servidor responde con JSON normal lo que impide el turno: 503 `sin_configurar` (no hay
    modelo: ni Mnemo conectado con permiso para usar sus modelos ni clave de Anthropic) o `saturado` (ya hay 4 turnos
    en este proceso; trae `Retry-After`), 403 `agente_apagado` (su rol no está habilitado), 429 `volumen` (tope diario),
-   409 `ocupada` (ya hay un turno suyo en curso), `larga` (conversación demasiado larga) o `proveedor` (la
+   409 `ocupada` (ya hay un turno suyo en curso; si el anterior se está cerrando, como tras **Detener**, antes espera
+   hasta 5 segundos a que suelte la conversación), `larga` (conversación demasiado larga) o `proveedor` (la
    conversación es de un modelo que ya no está: hay que empezar otra), y 404 si la conversación no es suya o no
    existe.
 3. Abre el flujo y pide una ronda al modelo de la conversación (a Mnemo, con `mnemo_model_complete`, o a Anthropic) con
@@ -505,8 +508,17 @@ def test_un_turno_con_el_modelo_simulado(sesion):
     assert api.peticiones[0]["json"]["model"] == "claude-opus-5-5"  # lo que se le habría mandado a Anthropic
 ```
 
-La prueba de punta a punta contra un Mnemo de verdad levantado en local (`tests/test_agente_mnemo.py`) se salta sin
-`MNEMO_E2E_DIR` (un checkout de Mnemo con sus dependencias instaladas).
+Dos pruebas corren contra un Mnemo de verdad levantado en local (su API con almacenes en memoria y, en vez de un
+proveedor de modelos, uno con guion) y se saltan sin `MNEMO_E2E_DIR`, la carpeta de un checkout de Mnemo con
+`npm ci` y `npm run build:shared` hechos: la del cliente MCP (`tests/test_agente_mnemo.py`) y la punta a punta en
+Chromium (`tests/test_agente_navegador.py`, `test_punta_a_punta_con_mnemo_de_verdad`): conectar desde Ajustes en la
+página de permisos de Mnemo, conversar con el modelo de Mnemo usando una herramienta del panel, volver a conectar sin
+y con el permiso de los modelos y desconectar (la conexión queda revocada en Mnemo). Con `CAPTURAS_AGENTE=<carpeta>`
+deja ahí sus capturas (`mnemo-*.png`):
+
+```bash
+MNEMO_E2E_DIR=/ruta/a/Mnemo CAPTURAS_AGENTE=/tmp/capturas python -m pytest -q tests/test_agente_navegador.py -k punta_a_punta
+```
 
 Para probarlo con un modelo real, arranque como siempre y conecte un Mnemo desde **Ajustes → Asistente**: el de
 producción o uno local con `PUBLIC_BASE_URL` (en local el panel acepta `http://127.0.0.1` y `http://localhost`, por

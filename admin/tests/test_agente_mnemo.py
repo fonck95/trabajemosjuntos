@@ -1045,6 +1045,10 @@ def test_punta_a_punta_con_mnemo_real(mnemo_real):
         out["no"] = await _fallo(usar("mnemo_fetch", {"id": "doc_000000000000000000000000"}))
         out["invalido"] = await _fallo(usar("mnemo_fetch", {"id": 7}))
         out["inexistente"] = await _fallo(c.llamar("mnemo_no_existe", {}))
+        # Sin `mnemo:model` (el token no lo tiene), Mnemo no registra su herramienta del modelo: el error JSON-RPC del
+        # SDK («Tool mnemo_model_complete not found»), que el proveedor del modelo explica como «volver a conectar»
+        out["sin_modelo"] = await _fallo(c.llamar("mnemo_model_complete", {"messages": [
+            {"role": "user", "content": "Hola"}]}))
         await c.cerrar()
         return c, todas, defs, hs, out
 
@@ -1067,3 +1071,7 @@ def test_punta_a_punta_con_mnemo_real(mnemo_real):
     assert out["no"].codigo == "mnemo" and out["no"].detalle["code"] == "NOT_FOUND"
     assert out["invalido"].codigo == "mnemo" and "Input validation error" in out["invalido"].mensaje
     assert out["inexistente"].codigo == mc.COD_NO_DISPONIBLE
+    from app.agente.modelo_mnemo import ProveedorMnemo
+    assert out["sin_modelo"].codigo == mc.COD_NO_DISPONIBLE
+    mensaje, codigo = ProveedorMnemo(None, cfg).explicar(out["sin_modelo"])
+    assert codigo == "mnemo_sin_modelo" and "volver a conectarla en Ajustes → Asistente" in mensaje

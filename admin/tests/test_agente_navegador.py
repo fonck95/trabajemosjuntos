@@ -30,6 +30,10 @@
   otro sitio), la página quita eso de la dirección antes del POST a /volver (que sí lleva la cookie) y muestra
   «Conectado como …». El coordinador ve el estado sin botones; volver a conectar sin el permiso de los modelos lo
   avisa; «Desconectar» (con confirmación) revoca con el token de renovación.
+* `test_punta_a_punta_con_mnemo_de_verdad` (opcional: se salta sin `MNEMO_E2E_DIR`): lo mismo contra un Mnemo de verdad
+  en local (su API, su OAuth y su página de permisos, con un modelo con guion): conectar, conversar con el modelo de
+  Mnemo usando una herramienta del panel (el texto llega por partes), volver a conectar sin y con el permiso de los
+  modelos, seguir la conversación y desconectar (la conexión queda revocada en Mnemo).
 
 Corre con uvicorn de verdad (el TestClient junta toda la respuesta) y un guion de Node, como test_servidor.py. Se
 salta si no hay Node con Playwright, salvo en el CI (allí falla en vez de pasar en silencio).
@@ -1144,6 +1148,451 @@ async function conectar(page, caso, decision, { sinModelos = false } = {}) {
     caso.datos.desconectado = b;
     v.desconectado = JSON.stringify(b.botones) === '["Conectar con Mnemo"]' && b.campo === mcp && b.resultado === null;
     v.respuestas_esperadas = caso.esperados.length === 0;
+    await ctx.close();
+  } catch (e) {
+    v.sin_excepcion = String(e.stack || e).slice(0, 1500);
+  } finally {
+    await nav.close();
+  }
+  console.log(JSON.stringify({ casos: [caso] }));
+})().catch((e) => { console.error(e); process.exit(1); });
+"""
+
+
+# ───────────────────────────── De punta a punta con un Mnemo de verdad (opcional) ─────────────────────────────
+
+# El Mnemo de verdad, en local: su API (`createTestApp` de sus pruebas: almacenes en memoria, el catálogo, OAuth y
+# `mnemo_model_complete` reales) con PUBLIC_BASE_URL en `http://localhost:<puerto>` (otro sitio que el panel en
+# 127.0.0.1, como en producción) y un modelo con guion en vez de un proveedor: contesta a trozos; si la petición trae la
+# herramienta del panel que dice MNEMO_GUION, la pide (`tool_use`), y con su resultado responde con lo que encontró (un
+# enlace a la ficha de cada persona). GET /__guion dice qué le llegó al modelo. Escucha antes de crear la app: la
+# dirección pública tiene que llevar el puerto.
+SERVIDOR_MNEMO = r"""
+import { createServer } from "node:http";
+import type { AddressInfo } from "node:net";
+
+const { createTestApp } = await import("{RAIZ}/apps/api/test/helpers.ts");
+const { noteUsage, purposeOf } = await import("{RAIZ}/apps/api/src/llm/attribution.ts");
+
+type Bloque = { type: string; text?: string; content?: unknown; id?: string; name?: string; input?: unknown };
+type Peticion = { system: unknown; messages: Array<{ role: string; content: string | Bloque[] }>; tools?: Array<{ name: string }>; purpose?: string };
+const guion = JSON.parse(process.env.MNEMO_GUION || "{}");
+const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const recibidas: Peticion[] = [];
+let usos = 0;
+
+function responder(p: Peticion) {
+  const ultimo = p.messages.at(-1);
+  const bloques = Array.isArray(ultimo?.content) ? ultimo.content : [];
+  const resultado = bloques.find((b) => b.type === "tool_result");
+  if (resultado) {
+    const visto = typeof resultado.content === "string" ? resultado.content : JSON.stringify(resultado.content);
+    let encontrado = visto.slice(0, 400);
+    try {
+      const filas = JSON.parse(visto).filas ?? [];
+      if (filas.length) encontrado = filas.map((f: { id: number; nombre: string; consentimiento: string }) => `[${f.nombre}](/personas/${f.id}), con la autorización ${f.consentimiento}`).join("; ") + ".";
+    } catch { /* no es JSON: se cita tal cual */ }
+    return { content: [{ type: "text", text: `${guion.final} ${encontrado}` }], stopReason: "end_turn" };
+  }
+  if (guion.herramienta && p.tools?.some((t) => t.name === guion.herramienta)) {
+    usos += 1;
+    return { content: [{ type: "text", text: guion.texto }, { type: "tool_use", id: `toolu_guion_${usos}`, name: guion.herramienta, input: guion.entrada ?? {} }], stopReason: "tool_use" };
+  }
+  return { content: [{ type: "text", text: "Hola, soy el modelo de prueba de Mnemo." }], stopReason: "end_turn" };
+}
+
+const llm = {
+  model: "modelo-de-prueba",
+  async complete(p: Peticion) { return this.stream(p, () => undefined); },
+  async stream(p: Peticion, alEvento: (e: { type: "text_delta"; text: string }) => void) {
+    recibidas.push(p);
+    const r = { provider: "guion", model: "modelo-de-prueba", usage: { inputTokens: 1200, outputTokens: 60 }, ...responder(p) };
+    for (const b of r.content) {
+      if (b.type !== "text" || !b.text) continue;
+      for (const trozo of b.text.match(/.{1,8}/gsu) ?? []) {
+        alEvento({ type: "text_delta", text: trozo });
+        await dormir(guion.retraso_ms ?? 30);
+      }
+    }
+    noteUsage({ provider: r.provider, model: r.model, purpose: purposeOf(p.purpose), usage: r.usage, at: new Date() });
+    return r;
+  },
+};
+
+const servidor = createServer();
+await new Promise<void>((resolve) => servidor.listen(0, "127.0.0.1", resolve));
+const base = `http://localhost:${(servidor.address() as AddressInfo).port}`;
+const t = await createTestApp({ llm, env: { publicBaseUrl: base } });
+servidor.on("request", (peticion, respuesta) => {
+  if (peticion.url === "/__guion") {
+    respuesta.setHeader("content-type", "application/json");
+    respuesta.end(JSON.stringify({ peticiones: recibidas.length, recibidas }));
+    return;
+  }
+  t.app(peticion, respuesta);
+});
+console.log(`LISTO ${base} ${t.agentApi.oauth ? "oauth" : "sin-oauth"}`);
+process.on("SIGTERM", () => process.exit(0));
+"""
+
+
+@pytest.fixture
+def mnemo_de_verdad(tmp_path):
+    """Mnemo de verdad en local (`SERVIDOR_MNEMO`): necesita `MNEMO_E2E_DIR`, un checkout de Mnemo con
+    `mnemo_model_complete`, `npm ci` y `npm run build:shared` hechos (no se toca el repositorio). Corre en su propio
+    grupo de procesos (npx → tsx → node) para apagarlo entero. Da (base de Mnemo, nombre de la persona que el modelo
+    busca con `buscar_personas`: una de las que `_servir` inserta)."""
+    import queue
+    import signal
+    raiz = os.environ.get("MNEMO_E2E_DIR", "").rstrip("/")
+    npx = shutil.which("npx")
+    if not raiz or not os.path.isdir(os.path.join(raiz, "node_modules")) or not npx:
+        pytest.skip("Sin MNEMO_E2E_DIR (un checkout de Mnemo con node_modules) o sin npx")
+    if not os.path.isfile(os.path.join(raiz, "apps", "api", "src", "agent-api", "catalog", "model.ts")):
+        pytest.skip("Ese Mnemo no tiene mnemo_model_complete")
+    buscada = personas_inventadas(3, semilla=41)[1]["nombre"]
+    guion = tmp_path / "mnemo_modelo.mts"
+    guion.write_text(SERVIDOR_MNEMO.replace("{RAIZ}", raiz), encoding="utf-8")
+    entorno = {**os.environ, "NODE_ENV": "test", "NODE_OPTIONS": "--experimental-async-context-frame",
+               "MNEMO_GUION": json.dumps({
+                   "herramienta": "buscar_personas", "entrada": {"q": buscada}, "retraso_ms": 50,
+                   "texto": "Voy a buscarla en la base del panel.",
+                   "final": "Sí, está en la base. La busqué con la herramienta del panel y encontré a"})}
+    proc = subprocess.Popen([npx, "tsx", str(guion)], cwd=os.path.join(raiz, "apps", "api"), stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, text=True, env=entorno, start_new_session=True)
+    lineas: queue.Queue = queue.Queue()
+    threading.Thread(target=lambda: [lineas.put(x) for x in proc.stdout], daemon=True).start()
+    try:
+        limite, linea, salida = time.monotonic() + 120, "", []
+        while time.monotonic() < limite and not linea.startswith("LISTO "):
+            try:
+                linea = lineas.get(timeout=1)
+                salida.append(linea)
+            except queue.Empty:
+                if proc.poll() is not None:
+                    break
+        assert linea.startswith("LISTO "), "Mnemo no arrancó en local:\n" + "".join(salida)[-3000:]
+        _, url, oauth = linea.split()
+        assert oauth == "oauth", "Mnemo arrancó sin OAuth (PUBLIC_BASE_URL)"
+        yield url, buscada
+    finally:
+        for senal in (signal.SIGTERM, signal.SIGKILL):
+            try:
+                os.killpg(proc.pid, senal)
+                proc.wait(10)
+                break
+            except (ProcessLookupError, subprocess.TimeoutExpired):
+                continue
+
+
+@requiere_navegador
+def test_punta_a_punta_con_mnemo_de_verdad(mnemo_de_verdad, panel_vivo, cfg, tmp_path):
+    """La punta a punta con Mnemo de verdad (se salta sin `MNEMO_E2E_DIR`), en dos sesiones del navegador. Ya con
+    sesión en Mnemo, el administrador:
+
+    1. conecta el panel desde Ajustes → Asistente con la dirección MCP escrita: la página de permisos de Mnemo, con
+       «Usar tus modelos» marcado; vuelve conectado y el asistente se enciende con el modelo de Mnemo;
+    2. conversa: el modelo de Mnemo pide una herramienta del panel (`buscar_personas`), la recibe y responde con lo que
+       encontró, con el texto llegando por partes.
+
+    Entre las dos sesiones, el acceso vence y el panel lo renueva contra Mnemo (el token de renovación rota). Después:
+
+    3. sigue la conversación con el acceso renovado;
+    4. vuelve a conectar desmarcando «Usar tus modelos»: Ajustes lo avisa, el asistente se apaga y lo explica (Mnemo
+       actualiza la misma conexión, no deja otra suelta); vuelve a conectar marcándolo y sigue la conversación;
+    5. desconecta: en Mnemo la conexión queda revocada (con el token de renovación vigente, el que dio la renovación).
+
+    Con `CAPTURAS_AGENTE`, las capturas (`mnemo-*.png`) quedan ahí."""
+    import asyncio
+    from datetime import datetime, timedelta, timezone
+
+    import httpx
+
+    from app import seguridad
+    from app.agente import cifrado, mnemo_conexion
+
+    mnemo, buscada = mnemo_de_verdad
+    base, panel, ids = panel_vivo
+    db = panel.state.db
+    datos = (base, cfg.usuario, cfg.clave)
+    (caso,) = _correr(GUION_PUNTA_A_PUNTA, tmp_path, *datos, "conectar", mnemo, buscada, str(ids[1]))["casos"]
+    _revisar(caso)
+
+    # El acceso «vence»: el panel lo renueva contra Mnemo con el token de renovación, guarda los nuevos y la conexión
+    # sigue (lo que sigue en el navegador ya usa los renovados)
+    def tokens(doc):
+        return cifrado.descifrar(seguridad.llave_mnemo(cfg), doc["cifrado"],
+                                 f"mnemo_conexion|{doc['emisor']}|{doc['client_id']}")
+
+    antes = db.meta.find_one({"_id": "mnemo_conexion"})
+    viejos = tokens(antes)
+    db.meta.update_one({"_id": "mnemo_conexion"}, {"$set": {"vence": datetime.now(timezone.utc) - timedelta(minutes=1)},
+                                                   "$inc": {"version": 1}})
+    fuente = mnemo_conexion.FuenteTokens(panel)
+    acceso = asyncio.run(fuente.token())
+    despues = db.meta.find_one({"_id": "mnemo_conexion"})
+    nuevos = tokens(despues)
+    assert fuente.renovaciones == 1 and acceso == nuevos["access"] != viejos["access"]
+    assert nuevos["refresh"] != viejos["refresh"]  # Mnemo lo rota en cada uso
+    assert despues["estado"] == "conectada" and despues["renovada_en"] is not None
+    assert despues["vence"].replace(tzinfo=timezone.utc) > datetime.now(timezone.utc) + timedelta(minutes=50)
+
+    (caso,) = _correr(GUION_PUNTA_A_PUNTA, tmp_path, *datos, "seguir", mnemo, buscada, str(ids[1]))["casos"]
+    _revisar(caso)
+    # Lo que le llegó al modelo de Mnemo: las herramientas del panel y, en la segunda ronda de cada mensaje, el
+    # resultado de la búsqueda (la persona, con su nombre)
+    guion = httpx.get(f"{mnemo}/__guion", timeout=10).json()
+    assert guion["peticiones"] == 6, guion["peticiones"]
+    for pedido in guion["recibidas"]:
+        assert "buscar_personas" in [t["name"] for t in pedido["tools"]]
+    for pedido in guion["recibidas"][1::2]:
+        resultados = [b for b in pedido["messages"][-1]["content"] if b["type"] == "tool_result"]
+        assert len(resultados) == 1 and buscada in json.dumps(resultados[0]["content"], ensure_ascii=False)
+    # En el panel: una conversación, de Mnemo; sus rondas las respondió el modelo de la cuenta; la conexión se borró
+    (conv,) = list(db.agente_conversaciones.find())
+    assert conv["proveedor"] == "mnemo"
+    modelos = [m.get("modelo") for m in db.agente_mensajes.find({"conversacion": conv["_id"], "rol": "assistant"})]
+    assert modelos == ["guion/modelo-de-prueba"] * 6
+    assert not (db.meta.find_one({"_id": "mnemo_conexion"}) or {}).get("estado")
+    acciones = [a["accion"] for a in db.auditoria.find({"accion": {"$regex": "^mnemo_"}}, sort=[("_id", 1)])]
+    assert acciones == ["mnemo_conectar"] * 3 + ["mnemo_desconectar"], acciones
+
+
+GUION_PUNTA_A_PUNTA = r"""// La punta a punta del asistente con un Mnemo de verdad (en local, con un modelo con guion), en Chromium.
+// Uso: node <guion> <base del panel> <usuario> <clave> <fase> <base de Mnemo> <persona buscada> <su id> <capturas>
+// Fases: «conectar» (conectar y conversar) y «seguir» (seguir la conversación, volver a conectar sin y con el permiso
+// de los modelos y desconectar), cada una en una sesión nueva del navegador.
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const [base, usuario, clave, fase, mnemo, buscada, personaId, capturas] = process.argv.slice(2);
+const origen = new URL(base).origin;
+const origenMnemo = new URL(mnemo).origin;
+const pref = new URL(base).pathname.replace(/\/+$/, '');
+const espera = { timeout: 30000 };
+const ADMIN_MNEMO = { username: 'admin', password: 'correct horse battery staple' }; // `testEnv` de las pruebas de Mnemo
+const USAR_MODELOS = 'Usar sus modelos de IA y sus créditos';
+
+const bloque = (page) => page.evaluate(() => {
+  const b = document.querySelector('#mnemo-conexion');
+  return b && { estado: b.dataset.estado, texto: b.textContent.replace(/\s+/g, ' ').trim(),
+    botones: [...b.querySelectorAll('button')].map((x) => x.textContent.trim()),
+    permisos: [...b.querySelectorAll('.chips .chip')].map((x) => x.textContent.trim()),
+    sinModelos: b.querySelector('.mnemo-nota.alerta:not(.resultado)')?.textContent ?? null,
+    resultado: b.querySelector('.mnemo-nota.resultado')?.textContent ?? null };
+});
+const cabeza = (page) => page.textContent('.asistente-cabeza');
+
+// La última respuesta del asistente: sus partes en orden (texto, herramientas con su estado y su etiqueta)
+const respuesta = (page) => page.evaluate(() => {
+  const r = [...document.querySelectorAll('.agente-msj.agente-respuesta')].pop();
+  return r ? [...r.children].filter((x) => !x.classList.contains('sr')).map((x) => (x.classList.contains('agente-md')
+    ? `md:${x.textContent}` : x.classList.contains('agente-herr') ? `herr:${x.dataset.estado}:${x.querySelector('.et')?.textContent}`
+      : x.className)) : [];
+});
+
+// En Mnemo, con la sesión de la cuenta: las conexiones (concesiones) y el registro de llamadas
+const deMnemo = async (page, ruta, clave) => (await (await page.request.get(`${mnemo}${ruta}`)).json())[clave] || [];
+const concesiones = async (page) => (await deMnemo(page, '/api/me/agent-grants', 'grants'))
+  .map((g) => ({ cliente: g.client, alcances: g.scopes, revocada: !!g.revokedAt }));
+const respuestasDeMnemo = async (page) => (await deMnemo(page, '/api/me/agent-calls', 'calls'))
+  .filter((x) => x.tool === 'mnemo_model_complete' && x.outcome === 'ok').length;
+
+async function sinAvisos(page) {
+  await page.waitForFunction(() => !document.querySelector('#avisos .aviso'), null, espera);
+}
+
+// «Conectar con Mnemo» o «Volver a conectar»: la página de permisos de Mnemo, la decisión y la vuelta a Ajustes
+async function conectar(page, { modelos = true, captura = null } = {}) {
+  await page.fill('#f-mnemo [name=url]', `${mnemo}/mcp`);
+  await page.click('#mnemo-conectar');
+  await page.waitForURL((u) => u.origin === origenMnemo, espera);
+  await page.waitForSelector('button[name=decision][value=allow]', espera);
+  const permisos = await page.evaluate(() => [...document.querySelectorAll('input[name=scope]')].map((x) => [x.value, x.checked]));
+  if (captura) await page.screenshot({ path: `${capturas}/${captura}`, fullPage: true });
+  if (!modelos) await page.uncheck('input[name=scope][value="mnemo:model"]');
+  await page.click('button[name=decision][value=allow]');
+  await page.waitForURL((u) => u.origin === origen && u.pathname === pref + '/ajustes', espera);
+  await page.waitForFunction(() => document.querySelector('#mnemo-conexion')?.dataset.estado === 'conectada', null, espera);
+  return { permisos, direccion: page.url(), bloque: await bloque(page), cabeza: await cabeza(page) };
+}
+
+// Abre el asistente y, de «Conversaciones», la única que hay (una sesión nueva del navegador, o un rato sin modelo,
+// empiezan sin conversación abierta)
+async function abrirLaConversacion(page, caso) {
+  await sinAvisos(page);
+  await page.click('#agente-boton');
+  await page.waitForSelector('#agente-panel:not([hidden]) .agente-sugerencia', espera);
+  await page.click('#agente-ver-historial');
+  await page.waitForSelector('.agente-item .agente-abrir', espera);
+  caso.datos.historial = await page.evaluate(() => [...document.querySelectorAll('.agente-item b')].map((x) => x.textContent));
+  await page.click('.agente-item:first-child .agente-abrir');
+  await page.waitForFunction(() => document.querySelectorAll('.agente-msj.agente-respuesta').length > 0
+    && document.querySelector('#agente-panel').dataset.estado === 'listo', null, espera);
+  return caso.datos.historial.length === 1;
+}
+
+// Un mensaje al asistente; espera a que termine. `captura`: una de la respuesta a mitad (la herramienta ya respondió y
+// el texto final va llegando). Devuelve las partes de la respuesta y cuánto cambió el texto mientras llegaba.
+async function conversar(page, texto, captura = null) {
+  await page.evaluate(() => {
+    window.__largos = [];
+    const log = document.querySelector('#agente-mensajes');
+    window.__mirando?.disconnect();
+    window.__mirando = new MutationObserver(() => {
+      const r = [...log.querySelectorAll('.agente-msj.agente-respuesta')].pop();
+      const largo = r ? [...r.querySelectorAll('.agente-md')].reduce((n, x) => n + x.textContent.length, 0) : 0;
+      if (window.__largos.at(-1)?.[1] !== largo) window.__largos.push([Math.round(performance.now()), largo]);
+    });
+    window.__mirando.observe(log, { subtree: true, childList: true, characterData: true });
+  });
+  const antes = await page.evaluate(() => document.querySelectorAll('.agente-msj.agente-respuesta').length);
+  await page.fill('#agente-texto', texto);
+  await page.press('#agente-texto', 'Enter');
+  if (captura) {
+    await page.waitForFunction((n) => {
+      const rs = document.querySelectorAll('.agente-msj.agente-respuesta');
+      const md = rs.length > n ? [...rs[rs.length - 1].querySelectorAll('.agente-md')] : [];
+      return md.length >= 2 && md.at(-1).textContent.length > 30 && document.querySelector('#agente-panel').dataset.estado !== 'listo';
+    }, antes, espera);
+    await page.screenshot({ path: `${capturas}/${captura}` });
+  }
+  await page.waitForFunction((n) => document.querySelectorAll('.agente-msj.agente-respuesta').length > n
+    && document.querySelector('#agente-panel').dataset.estado === 'listo', antes, { timeout: 60000 });
+  const largos = (await page.evaluate(() => window.__largos)).filter(([, n]) => n > 0);
+  const enlaces = await page.evaluate(() => [...[...document.querySelectorAll('.agente-msj.agente-respuesta')].pop()
+    .querySelectorAll('.agente-md a')].map((a) => a.getAttribute('href')));
+  return { partes: await respuesta(page), cambios: largos.length, ms: largos.length ? largos.at(-1)[0] - largos[0][0] : 0, enlaces,
+    respuestas: await page.evaluate(() => document.querySelectorAll('.agente-msj.agente-respuesta').length),
+    error: await page.evaluate(() => [...document.querySelectorAll('.agente-error')].map((e) => e.textContent)) };
+}
+
+// La respuesta esperada: el texto de la primera ronda, la herramienta del panel y la respuesta con lo que encontró (con
+// el enlace a la ficha), llegada por partes
+const respondio = (r) => r.partes.length === 3 && r.partes[0] === 'md:Voy a buscarla en la base del panel.'
+  && r.partes[1].startsWith('herr:ok:Buscando habitantes')
+  && r.partes[2] === `md:Sí, está en la base. La busqué con la herramienta del panel y encontré a ${buscada}, con la autorización pendiente.`
+  && r.enlaces.length === 1 && r.enlaces[0].endsWith(`/personas/${personaId}`) && r.cambios >= 10 && r.ms > 500 && !r.error.length;
+
+// Fase 1: conectar desde Ajustes y conversar con el modelo de Mnemo
+async function conectarYConversar(page, caso) {
+  const v = caso.revisiones;
+  let b = await bloque(page);
+  caso.datos.inicio = b;
+  v.empieza_sin_conectar = b.estado === 'sin_conectar' && JSON.stringify(b.botones) === '["Conectar con Mnemo"]'
+    && (await cabeza(page)).includes('El asistente está apagado: no tiene un modelo que usar');
+  await page.locator('.asistente-cabeza').scrollIntoViewIfNeeded();
+  await page.locator('.asistente-cabeza').screenshot({ path: `${capturas}/mnemo-ajustes-sin-conectar.png` });
+
+  // «Conectar con Mnemo»: en la página de permisos de Mnemo viene marcado «Usar tus modelos»; de vuelta, conectado
+  const c = await conectar(page, { captura: 'mnemo-consentimiento.png' });
+  caso.datos.conectar = c;
+  v.usar_modelos_marcado = c.permisos.some(([a, marcado]) => a === 'mnemo:model' && marcado);
+  v.conectado = c.direccion === `${base}/ajustes` && c.bloque.texto.includes('Conectado como admin (admin@example.com)')
+    && c.bloque.texto.includes(`Dirección: ${mnemo}/mcp`) && c.bloque.permisos.includes(USAR_MODELOS) && c.bloque.sinModelos === null
+    && JSON.stringify(c.bloque.botones) === '["Volver a conectar","Desconectar"]'
+    && c.cabeza.includes('El asistente está encendido y usa los modelos de la cuenta de Mnemo conectada');
+  await sinAvisos(page);
+  await page.locator('.asistente-cabeza').screenshot({ path: `${capturas}/mnemo-ajustes-conectado.png` });
+
+  // El asistente con el modelo de Mnemo: pide una herramienta del panel, la recibe y responde, por partes
+  await page.click('#agente-boton');
+  await page.waitForSelector('#agente-panel:not([hidden]) .agente-sugerencia', espera);
+  const r = await conversar(page, `¿Está ${buscada} en la base?`, 'mnemo-widget-respondiendo.png');
+  caso.datos.respuesta = r;
+  v.respondio_con_la_herramienta_del_panel = respondio(r);
+  await page.screenshot({ path: `${capturas}/mnemo-widget-respuesta.png` });
+  v.respondio_el_modelo_de_mnemo = (await respuestasDeMnemo(page)) === 2;
+}
+
+// Fase 2: seguir la conversación (con el acceso renovado), volver a conectar sin y con el permiso de los modelos,
+// seguirla otra vez y desconectar
+async function seguirYDesconectar(page, caso) {
+  const v = caso.revisiones;
+  v.sigue_conectado = (await bloque(page)).estado === 'conectada';
+  v.abre_la_conversacion = await abrirLaConversacion(page, caso);
+  let r = await conversar(page, `¿Y ${buscada} sigue ahí?`);
+  caso.datos.respuesta_renovada = r;
+  v.sigue_con_el_acceso_renovado = respondio(r) && r.respuestas === 2 && (await respuestasDeMnemo(page)) === 4;
+  await page.click('#agente-cerrar');
+
+  // «Volver a conectar» sin «Usar tus modelos»: Ajustes lo avisa y el asistente se apaga (y lo explica); Mnemo
+  // actualiza la misma conexión
+  let c = await conectar(page, { modelos: false });
+  caso.datos.sin_modelos = c;
+  v.avisa_sin_modelos = c.bloque.estado === 'conectada' && !c.bloque.permisos.includes(USAR_MODELOS)
+    && (c.bloque.sinModelos || '').startsWith('Mnemo se conectó sin permiso para usar sus modelos')
+    && c.cabeza.includes('El asistente está apagado: no tiene un modelo que usar');
+  let g = await concesiones(page);
+  caso.datos.concesiones_sin_modelos = g;
+  v.mnemo_actualizo_la_misma = g.length === 1 && !g[0].revocada && !g[0].alcances.includes('mnemo:model');
+  await sinAvisos(page);
+  await page.locator('.asistente-cabeza').screenshot({ path: `${capturas}/mnemo-ajustes-sin-permiso-de-modelos.png` });
+  await page.click('#agente-boton');
+  await page.waitForSelector('.agente-explicacion', espera);
+  const ex = await page.evaluate(() => ({ titulo: document.querySelector('.agente-explicacion h3')?.textContent,
+    enlace: document.querySelector('.agente-explicacion a')?.getAttribute('href') }));
+  caso.datos.explicacion = ex;
+  v.explica_sin_modelos = ex.titulo === 'Mnemo está conectado sin permiso para usar sus modelos' && (ex.enlace || '').endsWith('/ajustes');
+  await page.click('#agente-cerrar');
+
+  // Otra vez con la casilla: la misma conexión, con los modelos, y la conversación sigue
+  c = await conectar(page);
+  caso.datos.reconectar = c;
+  g = await concesiones(page);
+  v.vuelve_con_modelos = c.bloque.permisos.includes(USAR_MODELOS) && c.bloque.sinModelos === null
+    && g.length === 1 && !g[0].revocada && g[0].alcances.includes('mnemo:model');
+  v.abre_la_conversacion_otra_vez = await abrirLaConversacion(page, caso);
+  r = await conversar(page, `¿Me confirmas si ${buscada} está?`);
+  caso.datos.respuesta_reconectada = r;
+  v.sigue_tras_volver_a_conectar = respondio(r) && r.respuestas === 3 && (await respuestasDeMnemo(page)) === 6;
+  await page.click('#agente-cerrar');
+
+  // «Desconectar», con confirmación: el panel revoca la conexión en Mnemo
+  await page.click('#mnemo-desconectar');
+  await page.waitForSelector('dialog[open] [data-si]', espera);
+  await page.click('dialog[open] [data-si]');
+  await page.waitForFunction(() => document.querySelector('#mnemo-conexion')?.dataset.estado === 'sin_conectar', null, espera);
+  const b = await bloque(page);
+  caso.datos.desconectado = b;
+  v.desconectado = JSON.stringify(b.botones) === '["Conectar con Mnemo"]' && b.resultado === null
+    && (await cabeza(page)).includes('El asistente está apagado');
+  g = await concesiones(page);
+  caso.datos.concesiones = g;
+  v.revocada_en_mnemo = g.length === 1 && g[0].revocada && g[0].alcances.includes('mnemo:model');
+  await sinAvisos(page);
+  await page.locator('.asistente-cabeza').screenshot({ path: `${capturas}/mnemo-ajustes-desconectado.png` });
+}
+
+(async () => {
+  const nav = await chromium.launch();
+  const caso = { nombre: `mnemo_${fase}`, revisiones: {}, errores: [], csp: [], datos: {} };
+  const v = caso.revisiones;
+  try {
+    const ctx = await nav.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2 });
+    await ctx.route((u) => u.origin !== origen && u.origin !== origenMnemo, (r) => r.abort()); // sin red: fuentes, teselas
+    await ctx.exposeBinding('__csp', (_, x) => caso.csp.push(x));
+    await ctx.addInitScript(() => {
+      addEventListener('securitypolicyviolation', (e) => window.__csp(`${location.origin} ${e.effectiveDirective} ${e.blockedURI}`), true);
+    });
+    const page = await ctx.newPage();
+    page.on('pageerror', (e) => caso.errores.push(String(e)));
+    page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) caso.errores.push(m.text()); });
+    page.on('response', (x) => {
+      const u = new URL(x.url());
+      if (u.origin !== origen || x.status() < 400) return;
+      if (x.status() === 401 && u.pathname === pref + '/api/yo') return; // la pregunta del arranque («¿hay sesión?»)
+      caso.errores.push(`${x.status()} ${u.pathname}`);
+    });
+    // La sesión en Mnemo, como quien ya entró en Mnemo en este navegador; y el panel, como administrador, en Ajustes
+    v.sesion_en_mnemo = (await page.request.post(`${mnemo}/api/auth/login`, { data: ADMIN_MNEMO, headers: { Origin: origenMnemo } })).ok();
+    await page.goto(base + '/', { waitUntil: 'domcontentloaded' });
+    await page.fill('#f-login [name=usuario]', usuario);
+    await page.fill('#f-login [name=clave]', clave);
+    await page.click('#f-login button[type=submit]');
+    await page.waitForSelector('#app #vista > .vista', espera);
+    await page.click('#nav a[data-nav="ajustes"]');
+    await page.waitForSelector('#mnemo-conexion', espera);
+    if (fase === 'conectar') await conectarYConversar(page, caso);
+    else await seguirYDesconectar(page, caso);
     await ctx.close();
   } catch (e) {
     v.sin_excepcion = String(e.stack || e).slice(0, 1500);

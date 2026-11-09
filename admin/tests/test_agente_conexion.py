@@ -25,7 +25,7 @@ from urllib.parse import parse_qs, urlsplit
 import pytest
 from starlette.datastructures import State
 
-from ayudas_agente import ALCANCES_PANEL, conectar_mnemo
+from ayudas_agente import conectar_mnemo
 from ayudas_g3 import coordinador
 from ayudas_mcp import CUENTA, OTRA_CUENTA, OAuthFalso
 
