@@ -24,9 +24,9 @@ const SIN_REINTENTO = new Set(['volumen', 'borrada', 'sin_pendientes', 'permiso'
   'no_existe', 'proveedor', 'mnemo_conexion', 'mnemo_plan', 'mnemo_creditos', 'mnemo_sin_modelo', 'llm_peticion']);
 // Errores tras los que esta conversación ya no sirve: se ofrece «Nueva conversación»
 const CON_NUEVA = new Set(['larga', 'no_existe', 'borrada', 'proveedor', 'llm_peticion']);
-// Errores tras los que cambió el estado del asistente (el rol apagado, sin proveedor del modelo, la conexión con Mnemo
-// caída): se vuelve a leer, y al administrador se le explica qué hacer
-const RELEER_ESTADO = new Set(['agente_apagado', 'sin_configurar', 'mnemo_conexion']);
+// Errores tras los que pudo cambiar el estado del asistente (el rol apagado, sin proveedor del modelo, la conexión con
+// Mnemo caída o sin permiso para usar sus modelos): se vuelve a leer, y al administrador se le explica qué hacer
+const RELEER_ESTADO = new Set(['agente_apagado', 'sin_configurar', 'mnemo_conexion', 'mnemo_sin_modelo']);
 // Las claves de la dirección que viajan al modelo como filtros de la vista: las de Habitantes y el mapa (`Filtros` de
 // api/filtros.py) y el estado de algunas vistas (orden y página del directorio, pestaña de Calidad, la persona de «Mi
 // trabajo», el periodo de Usuarios). Ninguna otra: la vuelta de Mnemo a Ajustes trae en la dirección `code`, `state`
@@ -603,8 +603,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   // ── Estado del asistente para esta persona ──
-  // `proveedor`: de dónde sale el modelo de las conversaciones nuevas (`mnemo`, `anthropic` o null si no hay ninguno).
-  // `conexion`: la conexión con Mnemo (solo llega al administrador y al coordinador): {estado, motivo, modelo} o null
+  // `conexion`: la conexión con Mnemo (solo llega al administrador y al coordinador): {estado, motivo, modelo} o null.
+  // Con ella se explica por qué no hay modelo (`motivo` «sin_configurar»)
   function normalizar(d) {
     const o = d && typeof d === 'object' ? d : {};
     const limite = o.limite && typeof o.limite === 'object' ? o.limite : {};
@@ -612,7 +612,6 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     return {
       disponible: o.disponible === true,
       motivo: texto(o.motivo, 40) || null,
-      proveedor: ['mnemo', 'anthropic'].includes(o.proveedor) ? o.proveedor : null,
       esAdmin: o.es_admin === true,
       escritura: o.escritura !== false,
       limite: { usados: entero(limite.usados), maximo: entero(limite.maximo) },
@@ -648,7 +647,18 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     const util = visible && usable();
     caja.toggleAttribute('data-usable', util); // la barra del celular le hace lugar al botón (agente.css)
     boton.hidden = !util || abierto;
-    if (!util) { if (abierto) cerrar(); return; }
+    if (!util) {
+      // Se quedó sin modelo con el panel abierto (la conexión con Mnemo se cayó a mitad de una conversación): en vez de
+      // cerrarlo de golpe, dice qué pasó; al cerrarlo, el botón ya no vuelve
+      if (abierto && visible && info?.motivo === 'sin_configurar') {
+        if (historialAbierto) verHistorial(false);
+        pintarExplicacion();
+        nuevaBtn.hidden = verHistBtn.hidden = true;
+        return;
+      }
+      if (abierto) cerrar();
+      return;
+    }
     if (!info.disponible) pintarExplicacion();
     else if (iniciado && log.dataset.explicacion) {
       // Ya está disponible (se conectó Mnemo o se encendió para su rol): la explicación da paso a la conversación
@@ -1418,11 +1428,12 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   /** Por qué no hay modelo, según la conexión con Mnemo: `caida`, `sin_modelo` (conectada sin permiso para usar sus
-   * modelos) o `sin_conectar` (también si no se sabe). */
+   * modelos), `otro` (conectada con ese permiso: el servidor no la pudo usar) o `sin_conectar` (también si no se sabe). */
   function faltaDeModelo() {
     const c = info?.conexion;
     if (c?.estado === 'caida') return 'caida';
-    return c?.estado === 'conectada' && !c.modelo ? 'sin_modelo' : 'sin_conectar';
+    if (c?.estado === 'conectada') return c.modelo ? 'otro' : 'sin_modelo';
+    return 'sin_conectar';
   }
 
   function pintarExplicacion() {
@@ -1432,8 +1443,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     if (log.dataset.explicacion === clave) return;
     limpiarConversacion();
     log.dataset.explicacion = clave;
-    sub.textContent = sub.title = !sinModelo ? 'Apagado para su rol'
-      : { caida: 'Conexión caída', sin_modelo: 'Sin permiso para usar los modelos' }[falta] || 'Sin conectar';
+    const subtitulos = { caida: 'Conexión caída', sin_modelo: 'Sin permiso para usar los modelos', otro: 'Sin modelo' };
+    sub.textContent = sub.title = !sinModelo ? 'Apagado para su rol' : subtitulos[falta] || 'Sin conectar';
     const b = el('div', 'agente-explicacion');
     // «Ajustes → Asistente» enlaza a Ajustes para el administrador (quien conecta); para los demás es solo texto
     const ajustes = () => {
@@ -1452,15 +1463,26 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     } else if (sinModelo && falta === 'sin_modelo') {
       b.append(el('h3', null, 'Mnemo está conectado sin permiso para usar sus modelos'));
       const p = el('p');
-      p.append('Vuelva a conectar en ', ajustes(), ' y, en la página de permisos de Mnemo, marque la casilla «Usar tus '
-        + 'modelos de IA y tus créditos».');
+      p.append(info.esAdmin ? 'Vuelva a conectar en ' : 'El administrador tiene que volver a conectarlo en ', ajustes(),
+        info.esAdmin ? ' y, en la página de permisos de Mnemo, marque la casilla «Usar tus modelos de IA y tus créditos».'
+          : ' y, en la página de permisos de Mnemo, marcar la casilla «Usar tus modelos de IA y tus créditos».');
       b.append(p);
-    } else if (sinModelo) {
+    } else if (sinModelo && falta === 'otro') {
+      b.append(el('h3', null, 'El asistente no tiene un modelo que usar'));
+      const p = el('p');
+      p.append('Mnemo figura conectado, pero el asistente no pudo usar sus modelos. ',
+        info.esAdmin ? 'Revise la conexión en ' : 'El administrador la revisa en ', ajustes(), '.');
+      b.append(p);
+    } else if (sinModelo && info.esAdmin) {
       b.append(el('h3', null, 'El asistente no está conectado'));
       const p = el('p');
       p.append('El asistente usa los modelos de su cuenta de Mnemo. El administrador lo conecta en ', ajustes(),
         ': inicia sesión en Mnemo y da permiso; no hay que copiar claves.');
       b.append(p);
+    } else if (sinModelo) {
+      b.append(el('h3', null, 'El asistente no está conectado'));
+      b.append(el('p', null, 'El asistente usa los modelos de la cuenta de Mnemo que conecta el administrador, y ahora '
+        + 'no tiene esa conexión. Avísele: la hace en Ajustes → Asistente.'));
     } else {
       b.append(el('h3', null, 'El asistente está apagado para su rol'));
       const p = el('p');

@@ -58,12 +58,14 @@ A = administrador, K = coordinador, P = planillero. Las de Mnemo (`mnemo_…`) s
   cuenta al día (clave cambiada y compromiso aceptado). Abre el panel del asistente; en el celular ocupa la pantalla
   bajo la barra superior. **Escape** lo cierra. Si el asistente no tiene un modelo que usar (Mnemo sin conectar, la
   conexión caída o sin permiso para usar sus modelos), el administrador ve el botón con lo que falta y un enlace a
-  **Ajustes → Asistente**; los demás no ven nada.
+  **Ajustes → Asistente**; los demás no ven nada. Si eso pasa mientras alguien conversa, el panel se lo dice en vez de
+  cerrarse.
 - **Escribir.** Se escribe y se pulsa **Enviar**; **Detener** corta la respuesta en curso. La respuesta llega por
-  partes: notas de progreso en gris (qué está haciendo), una marca por cada herramienta con su resultado («12
-  personas», «Nota guardada») y el texto. Una conversación vacía muestra sugerencias para el rol.
+  partes: una marca por cada herramienta con su resultado («12 personas», «Nota guardada») y el texto (con Mnemo, lo
+  que llega por partes es un adelanto: al terminar cada ronda queda el texto final). En modo directo, además, notas de
+  progreso en gris (qué está haciendo). Una conversación vacía muestra sugerencias para el rol.
 - **Sabe dónde está.** Con cada mensaje viaja la vista abierta: la ruta, la ficha o la reunión que se está viendo, los
-  filtros de la dirección y el encuadre del mapa. Por eso «¿qué le falta a esta ficha?» funciona. Es solo una pista:
+  filtros de la vista que están en la dirección (solo los que el panel conoce) y el encuadre del mapa. Por eso «¿qué le falta a esta ficha?» funciona. Es solo una pista:
   las herramientas vuelven a leer todo con los permisos de la persona.
 - **Aprobar.** Cuando el asistente propone escribir, aparece una tarjeta con lo que va a hacer y los valores exactos
   (al editar, «antes → después») y los botones **Aprobar** y **Rechazar**. Nada se guarda sin aprobar. Lo rechazado no
@@ -457,17 +459,21 @@ se suba.
 | Código | Qué hace el widget |
 |---|---|
 | `proveedor`, `larga`, `llm_peticion`, `borrada`, `no_existe` | Ofrece **Nueva conversación**: esta ya no sirve (si el mensaje no llegó, la nueva lo trae escrito) |
-| `mnemo_conexion`, `sin_configurar`, `agente_apagado` | Vuelve a leer el estado: al administrador le explica qué falta, con un enlace a Ajustes |
-| `mnemo_plan`, `mnemo_creditos`, `mnemo_sin_modelo`, `volumen`, `permiso`, `sin_pendientes` | No ofrece **Reintentar**: repetir el mismo mensaje no lo arregla |
+| `mnemo_conexion`, `mnemo_sin_modelo`, `sin_configurar`, `agente_apagado` | Vuelve a leer el estado: si ya no hay modelo, al administrador le explica qué falta, con un enlace a Ajustes |
+| `mnemo_plan`, `mnemo_creditos`, `volumen`, `permiso`, `sin_pendientes` | Nada más |
 
-Los de Mnemo como modelo: `mnemo_conexion` (la conexión se cayó o Mnemo la rechazó tras renovarla), `mnemo_plan` (el
-plan no incluye el chat), `mnemo_creditos` (no quedan créditos), `mnemo_sin_modelo` (la cuenta no tiene un modelo que
-responda), `larga` (la conversación no cabe en la ventana del modelo) y `llm_peticion` (otro rechazo de la petición).
+Ninguno de esos ofrece **Reintentar**: repetir el mismo mensaje no lo arregla. Los demás (la red, un plazo vencido, el
+modelo saturado o caído un momento) sí. Los de Mnemo como modelo: `mnemo_conexion` (no hay conexión, se cayó o Mnemo
+la rechazó aun después de renovarla), `mnemo_plan` (el plan de la cuenta no incluye el chat), `mnemo_creditos` (no
+quedan créditos), `mnemo_sin_modelo` (la cuenta no tiene un modelo disponible, o la conexión no tiene permiso para
+usar sus modelos), `larga` (la conversación no cabe en la ventana del modelo) y `llm_peticion` (otro rechazo de la
+petición).
 
-**En MongoDB**: `agente_conversaciones` (dueño, título, modelo con que empezó, instrucciones y herramientas
-congeladas, personas vistas, lo pendiente de aprobar, candado del turno y fecha de borrado), `agente_mensajes` (un
-documento por mensaje, con su número de orden), `agente_uso` (mensajes, tokens y créditos por persona y día) y, en
-`meta`, `mnemo_conexion` (la conexión con Mnemo, con los tokens cifrados). Los índices TTL borran lo vencido.
+**En MongoDB**: `agente_conversaciones` (dueño, título, proveedor del modelo con que empezó, instrucciones y
+herramientas congeladas, personas vistas, lo pendiente de aprobar, candado del turno y fecha de borrado),
+`agente_mensajes` (un documento por mensaje, con su número de orden), `agente_uso` (mensajes, tokens y créditos por
+persona y día) y, en `meta`, `mnemo_conexion` (la conexión con Mnemo, con los tokens cifrados). Los índices TTL borran
+lo vencido.
 
 ## Probar en local
 
@@ -483,9 +489,10 @@ python -m pytest -q tests/test_agente_*.py
 
 `tests/ayudas_agente.py` trae lo necesario para escribir una: `encender(app, *respuestas)` pone una clave inventada y
 la Messages API simulada; `sse(...)` arma una respuesta del modelo con bloques `T` (texto), `TH` (progreso) y `TU`
-(una herramienta); `conectar_mnemo(app)` guarda una conexión con un Mnemo falso, cifrada como la deja Ajustes; `enviar`
-y `decidir` hacen un turno por la API y devuelven los eventos. `tests/test_agente_navegador.py` conecta Mnemo de punta
-a punta en Chromium (Ajustes, la página de permisos de un Mnemo falso y la vuelta).
+(una herramienta); `conectar_mnemo(app)` guarda una conexión con un Mnemo falso, cifrada como la deja Ajustes, y
+`encender_mnemo(app, *respuestas)` además le pone el modelo de Mnemo guionizado (cada ronda, un `R(...)` con bloques
+`T` y `TU`); `enviar` y `decidir` hacen un turno por la API y devuelven los eventos. `tests/test_agente_navegador.py`
+conecta Mnemo de punta a punta en Chromium (Ajustes, la página de permisos de un Mnemo falso y la vuelta).
 
 ```python
 from ayudas_agente import T, encender, enviar, sse

@@ -182,14 +182,15 @@ def _de_usuario(bloques: list) -> list[dict]:
 
 def _de_asistente(bloques: list) -> list[dict]:
     """Texto, `tool_use` y el razonamiento que devolvió Mnemo, tal cual. Lo demás (respaldo, herramientas de servidor,
-    razonamiento con otra forma) no viaja."""
+    razonamiento con otra forma, texto vacío) no viaja."""
     out: list[dict] = []
     for b in bloques:
         if not isinstance(b, dict):
             continue
         t = b.get("type")
         if t == "text" and isinstance(b.get("text"), str):
-            out.append({"type": "text", "text": _texto(b["text"])})
+            if b["text"]:
+                out.append({"type": "text", "text": _texto(b["text"])})
         elif t == "tool_use":
             out.append({"type": "tool_use", "id": str(b.get("id") or ""), "name": str(b.get("name") or ""),
                         "input": b["input"] if isinstance(b.get("input"), dict) else {}})
@@ -319,14 +320,16 @@ def _nombre_herramienta(v: Any) -> str:
 
 def contenido_de(bloques: Any) -> list[dict]:
     """Los bloques que devolvió Mnemo en la forma que se guarda y se le reenvía: `text`, `tool_use` (con su entrada
-    como objeto) y `thinking` (con su firma). Lo que no tiene esa forma se descarta: reenviarlo sería inválido."""
+    como objeto) y `thinking` (con su firma). Lo que no tiene esa forma se descarta, y también un texto vacío:
+    reenviarlo sería inválido en cada ronda que siga."""
     out: list[dict] = []
     for b in bloques if isinstance(bloques, list) else []:
         if not isinstance(b, dict):
             continue
         t = b.get("type")
         if t == "text" and isinstance(b.get("text"), str):
-            out.append({"type": "text", "text": b["text"]})
+            if b["text"]:
+                out.append({"type": "text", "text": b["text"]})
         elif t == "tool_use":
             out.append({"type": "tool_use", "id": _id_herramienta(b.get("id")),
                         "name": _nombre_herramienta(b.get("name")),
@@ -396,8 +399,8 @@ class ProveedorMnemo:
 
     async def generar(self, sistema: str, mensajes: list[dict], herramientas: list[dict], *, max_tokens: int,
                       esfuerzo: str, al_evento: Callable[[Evento], None]) -> Respuesta:
-        args = ajustar(conv_db.limpio(argumentos(sistema, mensajes, herramientas, max_tokens=max_tokens,
-                                                 esfuerzo=esfuerzo, modelo=getattr(self.cfg, "mnemo_modelo", ""))))
+        # Fuera del bucle de eventos: con imágenes son megas de JSON que medir
+        args = await run_in_threadpool(self._argumentos, sistema, mensajes, herramientas, max_tokens, esfuerzo)
         cliente = await run_in_threadpool(mc.cliente_de, self.app)
         if cliente is None:
             raise await run_in_threadpool(_sin_cliente, self.app.state.db)
@@ -427,6 +430,11 @@ class ProveedorMnemo:
                 al_evento({"tipo": "herramienta", "id": b["id"], "nombre": b["name"]})
         return Respuesta(contenido=contenido, fin=fin, modelo=modelo_de(datos.get("model")),
                          uso=uso_de(datos.get("usage")))
+
+    def _argumentos(self, sistema: str, mensajes: list[dict], herramientas: list[dict], max_tokens: int,
+                    esfuerzo: str) -> dict:
+        return ajustar(conv_db.limpio(argumentos(sistema, mensajes, herramientas, max_tokens=max_tokens,
+                                                 esfuerzo=esfuerzo, modelo=getattr(self.cfg, "mnemo_modelo", ""))))
 
     def reintento(self, e: BaseException, intento: int) -> float | None:
         if not isinstance(e, ErrorHerramienta):

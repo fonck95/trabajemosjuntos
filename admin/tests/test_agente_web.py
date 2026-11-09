@@ -290,7 +290,8 @@ def test_conectar_va_a_mnemo_con_location_assign_y_nunca_con_un_formulario():
     conectar = _funcion(codigo, "conectarMnemo")
     assert "api.post('/api/agente/mnemo/conectar'" in conectar
     # Solo a una dirección revisada (https, o http de la propia máquina) y con location.assign
-    assert conectar.index("const destino = direccionDeMnemo(r?.autorizar);") < conectar.index("location.assign(destino);")
+    revisar, ir = "const destino = direccionDeMnemo(r?.autorizar);", "location.assign(destino);"
+    assert conectar.index(revisar) < conectar.index(ir)
     assert "if (!destino) throw" in conectar
     assert codigo.count("location.assign(") == 1
     # La CSP del panel tiene form-action 'self': ningún formulario de web/js tiene `action`, nada lo envía por código ni
@@ -329,7 +330,8 @@ console.log(JSON.stringify({ casos, dirs }));
 def test_tomar_la_vuelta_y_la_direccion_de_mnemo_con_node(base):
     consultas = [
         "?code=c0de&state=st4te&iss=https%3A%2F%2Fmnemo.example.org",
-        "?error=access_denied&error_description=El%20usuario%20cancel%C3%B3&state=st4te&iss=https%3A%2F%2Fmnemo.example.org",
+        "?error=access_denied&error_description=El%20usuario%20cancel%C3%B3&state=st4te"
+        "&iss=https%3A%2F%2Fmnemo.example.org",
         "?error=access_denied",             # sin state: no sirve, pero igual sale de la dirección
         "?code=" + "x" * 3000 + "&state=" + "s" * 300,  # recortado a los topes de la API
         "?p=solicitudes",                   # no es una vuelta: no toca la dirección
@@ -356,11 +358,7 @@ def test_tomar_la_vuelta_y_la_direccion_de_mnemo_con_node(base):
     assert d[0] == {"code": "x" * 2000, "state": "s" * 200} and d[1] == [[{"previo": 1}, ajustes]]
     assert e == [None, []] and f == [None, []]
     abiertas = {k: v for k, v in salida["dirs"] if v is not None}
-    assert abiertas == {
-        "https://mnemo.example.org/oauth/authorize?client_id=x&state=y": "https://mnemo.example.org/oauth/authorize?client_id=x&state=y",
-        "http://127.0.0.1:8080/oauth/authorize?x=1": "http://127.0.0.1:8080/oauth/authorize?x=1",
-        "http://localhost:8080/oauth/authorize": "http://localhost:8080/oauth/authorize",
-        "http://[::1]:8080/a": "http://[::1]:8080/a"}
+    assert abiertas == {d: d for d in direcciones[:4]}, abiertas  # https o la propia máquina, tal cual
 
 
 # ───────────────────────────── El contexto y los códigos del proveedor del modelo ─────────────────────────────
@@ -391,8 +389,8 @@ def test_el_contexto_solo_lleva_claves_de_filtro_conocidas():
         "&".join(f"{k}=1" for k in sorted(filtros)[:40]),  # como mucho 30 claves
         "?q=" + "a" * 300,
     ]
-    r = subprocess.run(["node", "--input-type=module", "-e", NODE_FILTROS, json.dumps(candidatas), json.dumps(consultas)],
-                       cwd=RAIZ, capture_output=True, text=True, timeout=30)
+    r = subprocess.run(["node", "--input-type=module", "-e", NODE_FILTROS, json.dumps(candidatas),
+                        json.dumps(consultas)], cwd=RAIZ, capture_output=True, text=True, timeout=30)
     assert r.returncode == 0, r.stderr
     salida = json.loads(r.stdout)
     # Pasan los filtros de Habitantes y el mapa y el estado conocido de las vistas; nada de la vuelta de Mnemo
@@ -416,7 +414,8 @@ def test_codigos_del_proveedor_del_modelo_en_el_widget():
 
     # Repetir el mismo mensaje no arregla ninguno de los fines nuevos (§4 del diseño): ni la conexión caída, ni el
     # plan, ni los créditos, ni un modelo que no hay, ni una petición rechazada, ni otro proveedor
-    nuevos = {"proveedor", "mnemo_conexion", "mnemo_plan", "mnemo_creditos", "mnemo_sin_modelo", "larga", "llm_peticion"}
+    nuevos = {"proveedor", "mnemo_conexion", "mnemo_plan", "mnemo_creditos", "mnemo_sin_modelo", "larga",
+              "llm_peticion"}
     assert nuevos <= conjunto("SIN_REINTENTO")
     # «Nueva conversación» cuando esta ya no sirve; la conexión caída vuelve a leer el estado
     assert {"proveedor", "larga", "llm_peticion", "borrada", "no_existe"} <= conjunto("CON_NUEVA")
@@ -426,15 +425,16 @@ def test_codigos_del_proveedor_del_modelo_en_el_widget():
     assert "releer(codigo);" in cerrar and "releer(t.error.codigo);" in cerrar  # antes del flujo y en un `error`
     assert cerrar.count("CON_NUEVA.has(") == 2  # antes del flujo y en un evento `error`
     # El evento nuevo `texto_ronda` reemplaza el texto de la ronda en curso
-    assert "case 'texto_ronda': if (typeof ev.texto === 'string') textoRonda(texto(ev.texto, MAX_TEXTO_RONDA)); break;" in codigo
+    assert ("case 'texto_ronda': if (typeof ev.texto === 'string') textoRonda(texto(ev.texto, MAX_TEXTO_RONDA)); "
+            "break;") in codigo
     ronda = _funcion(codigo, "textoRonda")
     assert "ronda.partes" in ronda and "ronda.recortes" in ronda
 
 
 def test_la_explicacion_no_nombra_variables_de_entorno():
     # Sin modelo, el widget explica qué hacer (conectar Mnemo en Ajustes): sin nombres de variables ni tokens
-    variables = ("ANTHROPIC_API_KEY", "MNEMO_TOKEN", "MNEMO_MCP_URL", "MNEMO_MODELO", "MNEMO_HERRAMIENTAS", "AGENTE_MODELO",
-                 "AGENTE_ESFUERZO", "mnemo_pat_")
+    variables = ("ANTHROPIC_API_KEY", "MNEMO_TOKEN", "MNEMO_MCP_URL", "MNEMO_MODELO", "MNEMO_HERRAMIENTAS",
+                 "AGENTE_MODELO", "AGENTE_ESFUERZO", "mnemo_pat_")
     for nombre, texto in (("agente.js", AGENTE), ("ajustes.js", AJUSTES)):
         codigo = _sin_comentarios(texto)
         assert not [v for v in variables if v in codigo], nombre

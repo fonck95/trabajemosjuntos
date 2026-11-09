@@ -197,7 +197,7 @@ def test_para_mnemo_quita_lo_que_mnemo_no_conoce_y_junta_los_mensajes():
 
 def test_lo_que_devuelve_mnemo_se_guarda_en_una_forma_que_se_pueda_reenviar():
     out = modelo_mnemo.contenido_de([
-        {"type": "text", "text": "Hola", "citations": []},
+        {"type": "text", "text": ""}, {"type": "text", "text": "Hola", "citations": []},
         {"type": "tool_use", "id": "toolu_1", "name": "contar_falsa", "input": {"lugar": "Casco"}},
         {"type": "tool_use", "id": "", "name": "no.vale/aqui", "input": "texto"},
         {"type": "thinking", "text": "x", "signature": ""},
@@ -288,6 +288,31 @@ def test_cada_trozo_sale_en_cuanto_llega(cliente):
     tiempos = [t for t, _ in eventos]
     assert tiempos[0] < total - 2 * pausa and all(b - a > pausa / 2 for a, b in zip(tiempos, tiempos[1:]))
     assert r.contenido == [{"type": "text", "text": "Hola, ya miro la base."}] and r.fin == "end_turn"
+
+
+def test_si_el_turno_se_corta_la_llamada_a_mnemo_tambien(cliente):
+    """El navegador se fue a mitad de una ronda (el turno se cancela): la llamada a Mnemo se corta, y Mnemo cancela la
+    del proveedor y devuelve los créditos que había apartado."""
+    app = cliente.app
+
+    async def lento(args, avisar):
+        await asyncio.sleep(30)
+        return correcto(R(T("No debería llegar."))["datos"])
+
+    modelo = encender_mnemo(app, lento)
+
+    async def prueba():
+        tarea = asyncio.ensure_future(modelo_mnemo.ProveedorMnemo(app, app.state.cfg).generar(
+            "Sistema inventado.", [{"role": "user", "content": [{"type": "text", "text": "Hola"}]}], [],
+            max_tokens=100, esfuerzo="medium", al_evento=lambda ev: None))
+        while not modelo.pedidos:
+            await asyncio.sleep(0.02)
+        tarea.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await tarea
+
+    asyncio.run(asyncio.wait_for(prueba(), 10))
+    assert modelo.mcp.cancelaciones == 1 and len(modelo.pedidos) == 1
 
 
 # ───────────────────────────── Herramientas y confirmaciones ─────────────────────────────

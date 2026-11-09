@@ -321,7 +321,7 @@ def test_la_conexion_con_mnemo_en_la_vista_de_ajustes():
             "día de cada rol (abajo) siguen valiendo.") in bloque
     # El bloque va fuera del formulario de los ajustes (no son ajustes: el coordinador los ve en solo lectura)
     seccion = js[js.index("<h2>Asistente</h2>"):js.index('<form id="f-agente"')]
-    assert "bloqueMnemo(est.mnemo.conexion, notaMnemo)" in seccion and "estadoAgente(est)" in seccion
+    assert "bloqueMnemo(est.mnemo.conexion, nota)" in seccion and "estadoAgente(est)" in seccion
     # Desconectar pide confirmación antes de llamar a la API
     desconectar = js[js.index("async function desconectarMnemo("):js.index("function horario(")]
     assert "peligro: true" in desconectar
@@ -330,7 +330,8 @@ def test_la_conexion_con_mnemo_en_la_vista_de_ajustes():
     assert "token" not in js.lower() and "ANTHROPIC_API_KEY" not in js and "MNEMO_" not in js
     assert "con la cuenta de Mnemo del administrador: lo que hagan allá queda a nombre del administrador" in js
     legal = js[js.index('<div class="aviso-legal ancho">Lo que el asistente consulta'):]
-    assert "a Mnemo y, de ahí, al proveedor de modelos que esa cuenta tenga elegido; en modo directo, a Anthropic" in legal
+    assert ("a Mnemo y, de ahí, al proveedor de modelos que esa cuenta tenga elegido; en modo directo, a "
+            "Anthropic") in legal
 
 
 def test_quien_conecta_mnemo_y_que_ve_cada_rol(sesion, coord, como):

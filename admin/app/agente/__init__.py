@@ -1,7 +1,11 @@
-"""El asistente del panel: un agente de Claude que conversa con el usuario que ingresó y usa herramientas.
+"""El asistente del panel: un agente que conversa con el usuario que ingresó y usa herramientas.
 
 Diseño en `admin/docs/agente.md`. En corto:
 
+* El modelo lo pone Mnemo: los modelos y los créditos de la cuenta que el administrador conectó en Ajustes →
+  Asistente (`modelo_mnemo.py`, alcance `mnemo:model`). Sin esa conexión, y solo entonces, la Messages API de
+  Anthropic con `ANTHROPIC_API_KEY` (`llm.py`, el modo directo). Cada conversación sigue con el proveedor con que se
+  creó (`proveedores.py`).
 * El turno corre en el servidor (`bucle.py`) y llega al navegador como NDJSON (`api/agente.py`). La clave de Anthropic
   y los tokens de la conexión con Mnemo nunca salen del servidor (los de Mnemo, además, van cifrados en la base).
 * Toda herramienta del panel (`herramientas/`) llama por dentro a la API que ya existe, con la sesión del usuario

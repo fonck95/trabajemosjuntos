@@ -564,6 +564,17 @@ def test_reintentable():
     assert not llm.reintentable(RuntimeError("x"))
 
 
+def test_proveedor_de_anthropic_reintenta_lo_pasajero_tras_1_y_2_segundos():
+    from types import SimpleNamespace
+    p = llm.ProveedorAnthropic(None, SimpleNamespace(agente_modelo="claude-opus-5-5"))
+    corte = httpx2.ReadError("corte")
+    assert [p.reintento(corte, n) for n in (0, 1)] == [1.0, 2.0]
+    assert p.reintento(RuntimeError("x"), 0) is None and p.reintento(ValueError("otra cosa"), 0) is None
+    assert p.explicar(corte) == llm.explicar(corte) == (
+        "No se pudo conectar con el servicio del modelo. Intente de nuevo en un rato.", "llm_conexion")
+    assert (p.clave, p.modelo, p.max_tokens, p.tope_imagenes) == ("anthropic", "claude-opus-5-5", 32_000, 8_000_000)
+
+
 def test_contexto_del_panel_se_limpia_y_se_acota():
     ahora = datetime(2026, 11, 7, 15, 30, tzinfo=timezone.utc)  # 10:30 en Colombia
     t = sistema.contexto_del_panel({

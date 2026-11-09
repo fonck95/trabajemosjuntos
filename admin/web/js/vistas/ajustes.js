@@ -107,7 +107,7 @@ function bloqueMnemo(c, nota) {
   if (estado === 'conectada') {
     const desde = c.desde ? ` desde ${fecha(c.desde, true)}` : '';
     partes.push(html`<p>Conectado como <b>${c.cuenta || 'una cuenta de Mnemo'}</b>${desde}.</p>`);
-    if (c.url) partes.push(html`<p class="mnemo-dato">Dirección: ${c.url}</p>`);
+    if (c.url) partes.push(html`<p>Dirección: ${c.url}</p>`);
     const orden = Object.keys(PERMISOS_MNEMO);
     const alcances = (Array.isArray(c.alcances) ? c.alcances : []).filter((a) => typeof a === 'string')
       .sort((a, b) => (orden.indexOf(a) + 1 || 99) - (orden.indexOf(b) + 1 || 99));
@@ -133,7 +133,7 @@ function bloqueMnemo(c, nota) {
       <label class="campo ancho"><span>Dirección MCP de Mnemo</span><input name="url" type="url" inputmode="url" maxlength="300" value="${dir}" placeholder="https://…/mcp" autocomplete="off" spellcheck="false"></label>
       <div class="ancho mnemo-botones"><button class="btn primario" id="mnemo-conectar">${estado === 'sin_conectar' ? 'Conectar con Mnemo' : 'Volver a conectar'}</button>
         ${estado !== 'sin_conectar' ? html`<button type="button" class="btn peligro" id="mnemo-desconectar">Desconectar</button>` : ''}</div>
-      <p class="ancho mnemo-ayuda">Se abre Mnemo: inicie sesión con la cuenta que va a poner los modelos, deje marcado «Usar tus modelos de IA y tus créditos» y pulse «Permitir». Mnemo lo trae de vuelta aquí. Cambiar la dirección y volver a conectar cambia de Mnemo.</p>
+      <p class="ancho mnemo-ayuda">Se abre Mnemo: inicie sesión con la cuenta que va a poner los modelos, deje marcado «Usar tus modelos de IA y tus créditos» y pulse «Permitir». Mnemo lo trae de vuelta aquí.${estado === 'sin_conectar' ? '' : ' Cambiar la dirección y volver a conectar cambia de Mnemo.'}</p>
     </form>`;
   } else {
     acciones = html`<p class="mnemo-ayuda">Solo el administrador conecta o desconecta Mnemo.</p>`;
@@ -146,9 +146,11 @@ export async function vistaAjustes(el, { q } = {}) {
   // Lo primero, antes de cualquier await: si es la vuelta de Mnemo, sale de la dirección
   const vuelta = tomarVuelta(q);
   let filtros = {};
-  let notaMnemo = null; // lo que pasó al conectar o desconectar Mnemo, hasta la próxima acción
+  let notaMnemo = null; // lo que pasó al volver de Mnemo o al desconectar: se muestra en el próximo repintado
 
   async function pintar() {
+    const nota = notaMnemo;
+    notaMnemo = null;
     // El estado del asistente es solo un aviso: si no responde, Ajustes se pinta igual
     const [cat, aud, aj, est] = await Promise.all([api.get('/api/catalogos'), api.get('/api/auditoria', filtros), api.get('/api/ajustes'),
       api.get('/api/agente/estado').catch(() => null)]);
@@ -212,7 +214,7 @@ export async function vistaAjustes(el, { q } = {}) {
         </section>
         <section class="tarjeta c-12">
           <h2>Asistente</h2>
-          <div class="asistente-cabeza">${estadoAgente(est)}${est?.mnemo?.conexion ? bloqueMnemo(est.mnemo.conexion, notaMnemo) : ''}</div>
+          <div class="asistente-cabeza">${estadoAgente(est)}${est?.mnemo?.conexion ? bloqueMnemo(est.mnemo.conexion, nota) : ''}</div>
           <form id="f-agente" class="form" style="margin-top:12px">
             <div class="campo ancho"><span>Quiénes lo usan (cada uno con los permisos, el alcance y el presupuesto diario de su rol)</span>
               <div class="chips">${ROLES_AGENTE.map(([k, t]) => html`<label class="chip opcion"><input type="checkbox" name="rol_${k}" ${rolesAgente.has(k) ? 'checked' : ''}> ${t}</label>`)}</div></div>
@@ -305,7 +307,6 @@ export async function vistaAjustes(el, { q } = {}) {
 
   /** Deja en el bloque de Mnemo lo que pasó (o lo quita), sin repintar la vista: no se pierde la dirección escrita. */
   function anotarMnemo(nota) {
-    notaMnemo = nota;
     const bloque = $('#mnemo-conexion', el);
     bloque?.querySelector('.mnemo-nota.resultado')?.remove();
     const form = bloque?.querySelector('#f-mnemo');

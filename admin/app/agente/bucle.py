@@ -81,8 +81,8 @@ OCUPADA = {"codigo": "ocupada", "mensaje": "El asistente todavía está respondi
                                           "termine."}
 SATURADO = {"codigo": "saturado", "mensaje": "El asistente está atendiendo muchas conversaciones a la vez. Intente de "
                                             "nuevo en unos segundos."}
-PROVEEDOR = {"codigo": "proveedor", "mensaje": "Esta conversación se hizo con un modelo que el asistente ya no tiene "
-                                              "conectado: empiece una conversación nueva para seguir."}
+PROVEEDOR = {"codigo": "proveedor", "mensaje": "Esta conversación se empezó con un modelo que ya no está disponible: "
+                                              "empiece una nueva."}
 
 
 class FinDelTurno(Exception):
@@ -97,8 +97,9 @@ class FinDelTurno(Exception):
 
 class Ocupacion:
     """Un turno a la vez por persona y por conversación, y como mucho `maximo` turnos a la vez en el proceso (cada
-    uno retiene una conexión con el navegador y otra con Anthropic). Complementa el candado de MongoDB, que es el que
-    vale entre procesos. Lo protege un candado de hilos: las pruebas atienden peticiones desde varios bucles."""
+    uno retiene una conexión con el navegador y otra con el modelo, Mnemo o Anthropic). Complementa el candado de
+    MongoDB, que es el que vale entre procesos. Lo protege un candado de hilos: las pruebas atienden peticiones desde
+    varios bucles."""
 
     def __init__(self, maximo: int = TURNOS_POR_PROCESO):
         self.maximo = maximo
@@ -395,7 +396,7 @@ class Turno:
         self.expira = self.conv["expira"]
         return aviso
 
-    def _preparar(self) -> None:
+    async def _preparar(self) -> None:
         """Las herramientas de la conversación (las congeladas, rehechas por nombre con el código vigente) y cuáles se
         permiten hoy: los permisos y los ajustes pudieron cambiar desde que se creó."""
         from . import herramientas as registro
@@ -417,7 +418,7 @@ class Turno:
             try:
                 from . import mnemo_cliente
                 if hmnemo.disponible_para(self.quien, self.agente, self.cfg):
-                    self.mnemo = mnemo_cliente.cliente_de(self.app)
+                    self.mnemo = await run_in_threadpool(mnemo_cliente.cliente_de, self.app)
             except Exception as e:  # noqa: BLE001 - sus herramientas quedan sin permiso en este turno
                 log.warning("Asistente: Mnemo no está disponible (%s)", type(e).__name__)
                 self.mnemo = None
@@ -458,7 +459,7 @@ class Turno:
             aviso = await self._crear()
         else:
             self.expira = await run_in_threadpool(conv_db.renovar, self.db, self.cid, self.agente["retencion_dias"])
-        self._preparar()
+        await self._preparar()
         historial = await run_in_threadpool(conv_db.historial, self.db, self.cid)
         pend, crudo = conv_db.pendiente_de(self.conv), self.conv.get("pendiente")
         if pend is not None:
@@ -482,7 +483,7 @@ class Turno:
         rechazado o sin decisión vuelve como rechazo, y el bucle sigue con todos los resultados en un mensaje."""
         self.emitir({"tipo": "inicio", "conversacion": self.cid, "titulo": self.titulo})
         self.expira = await run_in_threadpool(conv_db.renovar, self.db, self.cid, self.agente["retencion_dias"])
-        self._preparar()
+        await self._preparar()
         pend, crudo = conv_db.pendiente_de(self.conv), self.conv.get("pendiente")
         if pend is None:
             raise FinDelTurno("No hay acciones pendientes en esta conversación.", "sin_pendientes")

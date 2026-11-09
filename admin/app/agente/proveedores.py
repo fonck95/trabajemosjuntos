@@ -107,7 +107,11 @@ class Proveedor(Protocol):
 def _mnemo_con_modelo(db: Any) -> bool:
     if db is None:
         return False
-    from .mnemo_conexion import con_modelo  # aquí: la conexión carga el cliente MCP y el cifrado
+    try:
+        from .mnemo_conexion import con_modelo  # aquí: la conexión carga el cliente MCP y el cifrado
+    except ImportError as e:  # una dependencia rota deja sin Mnemo, no sin estado (MongoDB caído sí sube: 503)
+        log.error("Asistente: no se pudo cargar la conexión con Mnemo (%s)", type(e).__name__)
+        return False
     return con_modelo(db)
 
 
