@@ -1,6 +1,7 @@
-"""La API del asistente (app/api/agente.py): estado, conversaciones, las comprobaciones antes del flujo, el flujo
-NDJSON de verdad (uvicorn, sin gzip, por partes, con latido y desconexión), los cupos del servidor, la retención y la
-supresión. La Messages API va simulada (nunca se llama a Anthropic). Solo datos inventados."""
+"""La API del asistente (app/api/agente.py): estado, conversaciones, las comprobaciones antes del flujo (también el
+mensaje que llega mientras se cierra el turno anterior, tras «Detener»), el flujo NDJSON de verdad (uvicorn, sin gzip,
+por partes, con latido y desconexión), los cupos del servidor, la retención y la supresión. La Messages API va simulada
+(nunca se llama a Anthropic). Solo datos inventados."""
 import asyncio
 import json
 import socket
@@ -27,11 +28,15 @@ from app.agente import bucle
 from app.agente import conversaciones as conv_db
 
 
+async def _sin_espera(segundos):  # las rondas que fallan de paso se repiten sin esperar de verdad
+    return None
+
+
 @pytest.fixture
 def falsas(monkeypatch):
     lista, registro = herramientas_falsas()
     con_herramientas(monkeypatch, lista)
-    monkeypatch.setattr(bucle, "ESPERA_REINTENTO_S", 0)
+    monkeypatch.setattr(bucle, "dormir", _sin_espera)
     return registro
 
 
@@ -58,7 +63,9 @@ def test_cada_ruta_declara_un_solo_requiere(cliente):
              for m in r.methods}
     assert set(rutas) == {("GET", "/api/agente/estado"), ("GET", "/api/agente/conversaciones"),
                           ("GET", "/api/agente/conversaciones/{cid}"), ("DELETE", "/api/agente/conversaciones/{cid}"),
-                          ("POST", "/api/agente/mensajes"), ("POST", "/api/agente/confirmaciones")}
+                          ("POST", "/api/agente/mensajes"), ("POST", "/api/agente/confirmaciones"),
+                          ("POST", "/api/agente/mnemo/conectar"), ("POST", "/api/agente/mnemo/volver"),
+                          ("DELETE", "/api/agente/mnemo")}
     for (m, ruta), r in rutas.items():
         pendientes, deps = list(r.dependant.dependencies), []
         while pendientes:
@@ -66,7 +73,8 @@ def test_cada_ruta_declara_un_solo_requiere(cliente):
             if hasattr(d.call, "permisos"):
                 deps.append(d.call.permisos)
             pendientes.extend(d.dependencies)
-        esperado = {"cuenta"} if ruta == "/api/agente/estado" else {"agente.usar"}
+        esperado = ({"cuenta"} if ruta == "/api/agente/estado" else
+                    {"agente.conectar"} if ruta.startswith("/api/agente/mnemo") else {"agente.usar"})
         assert deps == [frozenset(esperado)], (m, ruta, deps)
 
 
@@ -77,17 +85,22 @@ def test_sin_sesion_401(cliente):
 
 # ───────────────────────────── Estado ─────────────────────────────
 
+SIN_CONECTAR = {"estado": "sin_conectar", "motivo": None, "url": None, "cuenta": None, "alcances": [],
+                "modelo": False, "ofrece_modelo": None, "desde": None, "url_sugerida": None}
+
+
 def test_estado_sin_clave(sesion):
     e = sesion.get("/api/agente/estado").json()
-    assert e == {"disponible": False, "motivo": "sin_configurar", "configurado": False, "es_admin": True,
-                 "escritura": True, "limite": {"usados": 0, "maximo": 300}, "mnemo": {"activo": False, "origen": None},
-                 "sugerencias": []}
+    assert e == {"disponible": False, "motivo": "sin_configurar", "configurado": False, "proveedor": None,
+                 "es_admin": True, "escritura": True, "limite": {"usados": 0, "maximo": 300},
+                 "mnemo": {"activo": False, "origen": None, "conexion": SIN_CONECTAR}, "sugerencias": []}
 
 
 def test_estado_con_clave_y_tope_diario(sesion, falsas):
     _conversacion(sesion)
     e = sesion.get("/api/agente/estado").json()
     assert e["disponible"] is True and e["motivo"] is None and e["configurado"] is True
+    assert e["proveedor"] == "anthropic"  # sin Mnemo conectado, el modo directo
     assert e["limite"] == {"usados": 1, "maximo": 300} and e["sugerencias"]
     sesion.app.state.db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente_mensajes_diarios": {"admin": 7}}},
                                         upsert=True)
@@ -109,13 +122,21 @@ def test_estado_del_coordinador_y_del_planillero(sesion, como, falsas):
 def test_estado_con_mnemo(sesion, monkeypatch):
     from dataclasses import replace
 
+    from ayudas_agente import conectar_mnemo
+
     from app.agente.herramientas import mnemo
-    sesion.app.state.cfg = replace(sesion.app.state.cfg, mnemo_url="https://mnemo.example.org/mcp",
-                                   mnemo_token="mnemo_pat_inventado")
     monkeypatch.setattr(mnemo, "disponible_para", lambda quien, ajustes, cfg: quien.es_admin)
-    assert sesion.get("/api/agente/estado").json()["mnemo"] == {"activo": True, "origen": "https://mnemo.example.org"}
+    sesion.app.state.cfg = replace(sesion.app.state.cfg, mnemo_url="https://mnemo.example.org/mcp")
+    e = sesion.get("/api/agente/estado").json()["mnemo"]  # una dirección sugerida no es una conexión
+    assert e == {"activo": False, "origen": None, "conexion": {**SIN_CONECTAR,
+                                                               "url_sugerida": "https://mnemo.example.org/mcp"}}
+    conectar_mnemo(sesion.app)
+    e = sesion.get("/api/agente/estado").json()["mnemo"]
+    assert e["activo"] is True and e["origen"] == "https://mnemo.example.org"
+    assert e["conexion"]["estado"] == "conectada" and e["conexion"]["modelo"] is True
     monkeypatch.setattr(mnemo, "disponible_para", lambda quien, ajustes, cfg: False)
-    assert sesion.get("/api/agente/estado").json()["mnemo"] == {"activo": False, "origen": None}
+    e = sesion.get("/api/agente/estado").json()["mnemo"]
+    assert e["activo"] is False and e["origen"] is None and e["conexion"]["estado"] == "conectada"
 
 
 def test_ajustes_raros_toman_los_valores_por_defecto(sesion, falsas):
@@ -133,7 +154,11 @@ def test_ajustes_raros_toman_los_valores_por_defecto(sesion, falsas):
 def test_sin_clave_503(sesion):
     r, _ = enviar(sesion, "Hola")
     assert r.status_code == 503 and _detalle(r)["codigo"] == "sin_configurar"
-    assert "ANTHROPIC_API_KEY" in _detalle(r)["mensaje"]
+    # Sin nombres de variables: lo ve quien conversa, y lo que hay que hacer es conectar Mnemo en Ajustes
+    assert _detalle(r)["mensaje"] == ("El asistente no está conectado a un modelo: el administrador lo conecta con "
+                                      "Mnemo en Ajustes → Asistente.")
+    r = sesion.post("/api/agente/confirmaciones", json={"conversacion": 1, "decisiones": [{"id": "x", "aprobar": True}]})
+    assert r.status_code == 503 and _detalle(r)["codigo"] == "sin_configurar"
 
 
 def test_rol_apagado_403(sesion, falsas):
@@ -189,14 +214,17 @@ def test_tope_diario_429(sesion, falsas):
     assert not sesion.app.state.agente_ocupacion.usuarios
 
 
-def test_ocupada_409(sesion, falsas):
+def test_ocupada_409(sesion, falsas, monkeypatch):
+    monkeypatch.setattr(bucle, "ESPERA_OCUPADA_S", 0.3)  # lo que espera a que se suelte un turno que se cierra
     db = sesion.app.state.db
     cid = _conversacion(sesion)
     db[conv_db.CONVERSACIONES].update_one({"_id": cid}, {"$set": {
         "ocupada_hasta": datetime.now(timezone.utc) + timedelta(minutes=5), "turno": "otro"}})
     encender(sesion.app, sse(T("No debería.")))
+    t0 = time.monotonic()
     r, _ = enviar(sesion, "Otra", conversacion=cid)
     assert r.status_code == 409 and _detalle(r)["codigo"] == "ocupada"
+    assert 0.3 <= time.monotonic() - t0 < 5  # esperó a que se soltara, y no más que eso
     # Un turno en otra conversación de la misma persona también la ocupa (uno a la vez por persona)
     r, _ = enviar(sesion, "Nueva")
     assert r.status_code == 409 and _detalle(r)["codigo"] == "ocupada"
@@ -213,6 +241,100 @@ def test_ocupada_409(sesion, falsas):
         assert r.status_code == 409 and _detalle(r)["codigo"] == "ocupada"
     finally:
         sesion.app.state.agente_ocupacion.soltar(0, None)
+    assert not sesion.app.state.agente_ocupacion.usuarios  # lo que esperó no quedó reservado
+
+
+@pytest.mark.parametrize("caso", ["este_proceso", "otro_proceso", "otra_conversacion", "confirmacion"])
+def test_un_turno_que_se_esta_cerrando_no_da_409(sesion, falsas, monkeypatch, caso):
+    """Regresión del CI (test_flujo_real_por_partes_y_detener en una máquina lenta): tras «Detener», el mensaje
+    siguiente llegaba antes de que el turno cortado soltara sus candados y recibía 409 «ocupada». Ahora espera a que se
+    suelten. El turno que se cierra los suelta recién DESPUÉS de que el turno nuevo los encontró tomados, así que la
+    prueba no depende de la velocidad de la máquina. Casos: el turno que se cierra corre en este proceso (la reserva en
+    memoria y el candado de MongoDB) o en otro (solo el de MongoDB); ocupa otra conversación de la persona (el mensaje
+    nuevo empieza una); o lo que llega es la aprobación de una tarjeta."""
+    db = sesion.app.state.db
+    ocupacion = bucle.ocupacion_de(sesion.app)
+    if caso == "confirmacion":
+        pid = persona(db, nombre="LUCIA INVENTADA DE PRUEBA")
+        encender(sesion.app, sse(TU("toolu_c", "nota_falsa", {"persona_id": pid, "texto": "Llamar el lunes"}),
+                                 stop="tool_use"))
+        r, ev = enviar(sesion, "Anota que la llame el lunes")
+        assert ev[-1]["motivo"] == "confirmacion", ev
+        cid = ev[0]["conversacion"]
+    else:
+        cid = _conversacion(sesion)
+    vio = threading.Event()  # el turno nuevo encontró tomado el candado que espera
+
+    def espiar(funcion, ocupado):
+        def espia(*a):
+            r = funcion(*a)
+            if ocupado(r):
+                vio.set()
+            return r
+        return espia
+
+    if caso == "este_proceso":
+        assert ocupacion.reservar(0, cid) is None
+        monkeypatch.setattr(bucle.Ocupacion, "reservar", espiar(bucle.Ocupacion.reservar, lambda r: r == "ocupada"))
+    elif caso == "otra_conversacion":
+        monkeypatch.setattr(conv_db, "otra_ocupada", espiar(conv_db.otra_ocupada, lambda r: r is True))
+    else:
+        monkeypatch.setattr(conv_db, "tomar", espiar(conv_db.tomar, lambda r: r is None))
+    # El turno que se cierra: el candado de MongoDB (y, en este proceso, la reserva)
+    db[conv_db.CONVERSACIONES].update_one({"_id": cid}, {"$set": {
+        "ocupada_hasta": datetime.now(timezone.utc) + timedelta(minutes=5), "turno": "cerrando"}})
+
+    def cerrar():
+        assert vio.wait(10)
+        conv_db.soltar(db, cid, "cerrando")
+        if caso == "este_proceso":
+            ocupacion.soltar(0, cid)
+
+    hilo = threading.Thread(target=cerrar, daemon=True)
+    hilo.start()
+    if caso == "confirmacion":
+        encender(sesion.app, sse(T("Quedó sin anotar.")))
+        r, ev = decidir(sesion, cid, toolu_c=False)
+    else:
+        encender(sesion.app, sse(T("Aquí sigo.")))
+        r, ev = enviar(sesion, "¿Sigues?", conversacion=None if caso == "otra_conversacion" else cid)
+    hilo.join(15)
+    assert vio.is_set() and r.status_code == 200, (r.status_code, r.text[:300])
+    assert ev[-1]["motivo"] == "listo"
+    assert not ocupacion.usuarios and not ocupacion.conversaciones
+
+
+def test_el_turno_que_se_cierra_deja_la_conversacion_larga_409(sesion, falsas, monkeypatch):
+    """Lo que se leyó antes de esperar puede haber cambiado: si el turno que se cerraba dejó la conversación larga, el
+    mensaje nuevo recibe 409 «larga» (y no queda nada tomado)."""
+    db = sesion.app.state.db
+    cid = _conversacion(sesion)
+    vio = threading.Event()
+    tomar = conv_db.tomar
+
+    def espia(*a):
+        r = tomar(*a)
+        if r is None:
+            vio.set()
+        return r
+
+    monkeypatch.setattr(conv_db, "tomar", espia)
+    db[conv_db.CONVERSACIONES].update_one({"_id": cid}, {"$set": {
+        "ocupada_hasta": datetime.now(timezone.utc) + timedelta(minutes=5), "turno": "cerrando"}})
+
+    def cerrar():
+        assert vio.wait(10)
+        db[conv_db.CONVERSACIONES].update_one({"_id": cid}, {"$set": {"n_mensajes": conv_db.TOPE_MENSAJES}})
+        conv_db.soltar(db, cid, "cerrando")
+
+    hilo = threading.Thread(target=cerrar, daemon=True)
+    hilo.start()
+    encender(sesion.app, sse(T("No debería.")))
+    r, _ = enviar(sesion, "¿Sigues?", conversacion=cid)
+    hilo.join(15)
+    assert r.status_code == 409 and _detalle(r)["codigo"] == "larga"
+    conv = db[conv_db.CONVERSACIONES].find_one({"_id": cid})
+    assert conv["ocupada_hasta"] is None and not bucle.ocupacion_de(sesion.app).usuarios
 
 
 def test_tope_de_turnos_del_proceso_503(sesion, falsas):
@@ -487,6 +609,49 @@ def test_desconectarse_suelta_el_candado_y_no_guarda_a_medias(servido, cfg):
         encender_lento(panel, sse(T("Aquí sigo.")), pausa=0)
         r = c.post("/panel/api/agente/mensajes", json={"conversacion": cid, "texto": "¿Sigues?"})
         assert r.status_code == 200 and ndjson(r.text)[-1]["motivo"] == "listo"
+
+
+def test_detener_y_escribir_enseguida_no_da_409(servido, cfg, monkeypatch):
+    """Lo que falló en el CI, en el servidor de verdad: la persona pulsa «Detener» (el navegador corta la respuesta) y
+    manda otro mensaje al instante. El turno cortado tarda en soltar sus candados a propósito: los suelta recién cuando
+    el mensaje nuevo ya los encontró tomados (así no depende de la velocidad de la máquina). El mensaje nuevo espera y
+    entra; antes recibía 409 «ocupada»."""
+    base, panel = servido
+    encender_lento(panel, sse(*[T(f"parte {i}. ") for i in range(40)]), pausa=0.2)
+    vio = threading.Event()
+    reservar, soltar = bucle.Ocupacion.reservar, conv_db.soltar
+
+    def espiar(self, uid, cid):
+        motivo = reservar(self, uid, cid)
+        if motivo == "ocupada":
+            vio.set()
+        return motivo
+
+    def soltar_tarde(db, cid, turno):
+        vio.wait(10)
+        soltar(db, cid, turno)
+
+    monkeypatch.setattr(bucle.Ocupacion, "reservar", espiar)
+    monkeypatch.setattr(conv_db, "soltar", soltar_tarde)
+    with httpx.Client(base_url=base, timeout=30) as c:
+        _entrar(c, cfg)
+        with c.stream("POST", "/panel/api/agente/mensajes", json={"texto": "Cuéntame algo largo"}) as r:
+            for linea in r.iter_lines():
+                e = json.loads(linea)
+                if e["tipo"] == "inicio":
+                    cid = e["conversacion"]
+                if e["tipo"] == "texto":
+                    break  # «Detener»
+        encender_lento(panel, sse(T("Aquí sigo.")), pausa=0)
+        r = c.post("/panel/api/agente/mensajes", json={"conversacion": cid, "texto": "¿Sigues?"})
+        assert r.status_code == 200, r.text
+        ev = ndjson(r.text)
+    assert vio.is_set() and ev[-1]["motivo"] == "listo"
+    assert "".join(e["texto"] for e in ev if e["tipo"] == "texto") == "Aquí sigo."
+    db = panel.state.db
+    assert [m["rol"] for m in db[conv_db.MENSAJES].find({"conversacion": cid}, sort=[("seq", 1)])] == [
+        "user", "user", "assistant"]  # lo cortado no se guardó a medias
+    assert _esperar(lambda: not panel.state.agente_ocupacion.usuarios, 10)
 
 
 # ───────────────────────────── Cupos del servidor ─────────────────────────────

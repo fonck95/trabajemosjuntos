@@ -5,7 +5,7 @@ El panel tiene cuatro roles:
 - El **administrador** entra con la credencial de Railway (`ADMIN` y `password`). Puede todo.
 - Los **coordinadores** los crea el administrador. Tienen **todos los permisos del administrador** (importar, unir,
   suprimir, mapa y zonas, tablero, calidad, auditoría, ver los datos políticos, la cédula completa y los sensibles,
-  crear planilleros y consultores…) **salvo** cuatro cosas que son solo del administrador:
+  crear planilleros y consultores…) **salvo** cinco cosas que son solo del administrador:
   - **descargar** datos de personas: la base única y lo filtrado en Excel, y los asistentes de una reunión en CSV.
     Los demás consultan en pantalla (la plantilla vacía de la planilla sigue disponible);
   - crear, editar, desactivar, reactivar o restablecer la clave de un **coordinador**;
@@ -13,7 +13,10 @@ El panel tiene cuatro roles:
   - cambiar los **ajustes que son permisos**: presupuestos diarios, sesiones, política de contacto del consultor,
     datos sensibles, tope de cédulas dictadas, versión del compromiso, qué campos propios son sensibles y los del
     asistente (quiénes lo usan, si propone cambios, Mnemo para coordinadores, retención y mensajes por día). El
-    coordinador los ve en **Ajustes**, en solo lectura.
+    coordinador los ve en **Ajustes**, en solo lectura;
+  - **conectar o desconectar Mnemo** (Ajustes → Asistente): la cuenta de Mnemo cuyos modelos y créditos usa el
+    asistente es la del administrador. El coordinador ve el estado de la conexión, sin el nombre ni el correo de esa
+    cuenta (`agente.conectar`).
 - Los **planilleros** (trabajo de campo) y los **consultores** (llaman y escriben) los crean el administrador o un
   coordinador en **Usuarios**.
 
@@ -72,7 +75,8 @@ Cambiar la clave del administrador en Railway cierra **todas** las sesiones, tam
 
 El servidor decide: cada ruta de la API declara sus permisos (`app/acceso.py`, `PERMISOS`) y la interfaz solo oculta.
 El permiso `agente.usar` (planilleros y consultores) deja entrar al asistente, pero solo si su rol está marcado en
-**Ajustes → Asistente** (ver [`agente.md`](agente.md)).
+**Ajustes → Asistente** (ver [`agente.md`](agente.md)). Conectar el asistente con Mnemo pide `agente.conectar`, que es
+solo del administrador.
 
 | Rol | Menú |
 |---|---|

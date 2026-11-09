@@ -618,3 +618,18 @@ a.celda-p:hover .barra-p { filter: brightness(1.12); }
 
 /* Reunión */
 .acciones-asistente { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+
+/* Ajustes → Asistente: qué modelo usa y la conexión con Mnemo (vistas/ajustes.js) */
+.asistente-cabeza { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.mnemo-rige { margin: 0; font-size: 13.5px; color: var(--ink-2); }
+.mnemo-conexion { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--line-soft); border-radius: 12px;
+  padding: 14px 16px; background: var(--raised); min-width: 0; }
+.mnemo-conexion h3 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; font-weight: 750; margin: 0; }
+.mnemo-conexion p { margin: 0; font-size: 13.5px; color: var(--ink-2); overflow-wrap: anywhere; }
+.mnemo-conexion .mnemo-aviso, .mnemo-conexion .mnemo-ayuda { color: var(--muted); font-size: 12.5px; }
+.mnemo-conexion .form { margin-top: 4px; }
+.mnemo-botones { display: flex; gap: 8px; flex-wrap: wrap; }
+.mnemo-conexion .mnemo-nota { border-radius: 8px; padding: 8px 10px; color: var(--ink); }
+.mnemo-nota.ok { background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.mnemo-nota.alerta { background: color-mix(in srgb, var(--warn) 18%, transparent); }
+.mnemo-nota.error { background: color-mix(in srgb, var(--crit) 12%, transparent); }

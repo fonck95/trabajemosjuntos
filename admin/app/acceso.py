@@ -3,7 +3,8 @@ frecuencia e idempotencia.
 
 * Cuatro roles: el administrador (A, la credencial de `.env`, uid 0, que no vive en `usuarios`), el coordinador (K),
   el planillero (P) y el consultor (C). K tiene todos los permisos de A salvo `SOLO_ADMIN` (gestionar coordinadores,
-  cambiar roles y cambiar los ajustes que son permisos); lo que es de A en el manejo de datos se comprueba con
+  cambiar roles, cambiar los ajustes que son permisos, descargar datos de personas y conectar el asistente con la
+  cuenta de Mnemo del administrador); lo que es de A en el manejo de datos se comprueba con
   `quien.puede(...)` o `quien.administra`, nunca con el rol. Denegar por defecto: un rol desconocido no tiene permisos
   y una sesión con un rol inválido no vale.
 * `requiere(*permisos)` es la dependencia de cada ruta de la API: valida la sesión y el CSRF, arma el `Quien`,
@@ -49,8 +50,11 @@ log = logging.getLogger("panel")
 ROLES = {"admin", "coordinador", "planillero", "consultor"}
 # Lo único que el coordinador no puede (adenda 1): solo A crea, edita, desactiva, reactiva o restablece la clave de un
 # coordinador, cambia el rol de un usuario y cambia los ajustes que son permisos o límites de acceso. Adenda 2: toda
-# descarga con datos de personas (exportar.xlsx y asistentes.csv) es solo de A; los demás consultan en pantalla
-SOLO_ADMIN = frozenset({"usuarios.coordinadores", "usuarios.roles", "permisos.modificar", "exportar"})
+# descarga con datos de personas (exportar.xlsx y asistentes.csv) es solo de A; los demás consultan en pantalla.
+# `agente.conectar` (conectar o desconectar el panel con la cuenta de Mnemo, `api/agente_mnemo.py`): la conexión es
+# la cuenta de Mnemo del administrador, con sus modelos y sus créditos; `requiere("admin")` no basta, deja pasar a K
+SOLO_ADMIN = frozenset({"usuarios.coordinadores", "usuarios.roles", "permisos.modificar", "exportar",
+                        "agente.conectar"})
 ROLES_CAMPO = ("planillero", "consultor")  # con alcance, presupuesto diario y límite de frecuencia
 # `agente.usar` (el asistente, docs/agente.md) es necesario pero no basta: el rol también tiene que estar habilitado
 # en Ajustes (`agente.roles`), y planilleros y consultores no lo están por defecto. Así encenderlo para ellos es un
@@ -181,7 +185,7 @@ AJUSTES_DE_PERMISOS = frozenset({
     "politica", "contactar_pendientes", "dias_entre_intentos", "max_intentos_sin_exito", "seguimiento_activo",
     "dias_seguimiento", "horario",  # política de contacto del consultor
     "sensibles_activos", "tope_cedulas_dictadas", "compromiso_version",  # qué se ve y con qué condiciones se trabaja
-    # El asistente: qué roles lo usan, si propone escrituras, si los coordinadores usan Mnemo con el token de A,
+    # El asistente: qué roles lo usan, si propone escrituras, si los coordinadores usan Mnemo con la cuenta de A,
     # cuánto se guardan las conversaciones (traen datos de personas) y cuántos mensajes por día
     "agente", "agente_mensajes_diarios",
 })

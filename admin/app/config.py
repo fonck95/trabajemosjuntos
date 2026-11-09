@@ -3,9 +3,13 @@
 * `ADMIN` (usuario) y `password` (clave) del administrador, tal como están en Railway. También `admin` / `PASSWORD`.
 * `MONGODB_URI`: conexión a MongoDB (la del plugin de Railway o de Atlas). `MONGODB_DB` opcional; si la URI no trae
   base de datos se usa `panel_yondo`. En Railway es obligatoria; en local se usa un MongoDB en 127.0.0.1.
-* El asistente (`app/agente`, `docs/agente.md`): `ANTHROPIC_API_KEY` lo enciende; `AGENTE_MODELO` y `AGENTE_ESFUERZO`
-  son opcionales. `MNEMO_MCP_URL` y `MNEMO_TOKEN` (un token personal `mnemo_pat_…`) le dan las herramientas de Mnemo;
-  `MNEMO_HERRAMIENTAS` acota cuáles (lista separada por comas, o `*` para todas las que permita el token).
+* El asistente (`app/agente`, `docs/agente.md`): `ANTHROPIC_API_KEY` (opcional: el «modo directo», sin Mnemo),
+  `AGENTE_MODELO` y `AGENTE_ESFUERZO`. La conexión con Mnemo no es una variable: el administrador la hace desde
+  Ajustes → Asistente con OAuth (`agente/mnemo_conexion.py`), y los tokens quedan cifrados en la base. `MNEMO_MCP_URL`
+  (opcional) es solo la dirección que se le sugiere ahí; `MNEMO_MODELO` (opcional) elige el modelo de la cuenta de
+  Mnemo (`principal`, `ligero` o `<proveedor>/<modelo>`; vacía, el de la cuenta) y `MNEMO_HERRAMIENTAS` acota qué
+  herramientas de Mnemo se ofrecen (lista separada por comas, o `*` para todas las que permita la conexión).
+  `MNEMO_TOKEN` ya no se usa: si está definida se ignora con un aviso en el registro.
 """
 from __future__ import annotations
 
@@ -92,28 +96,46 @@ class Config:
     anthropic_api_key: str = field(default="", repr=False)
     agente_modelo: str = MODELO_AGENTE
     agente_esfuerzo: str = "medium"
+    # Mnemo: la dirección MCP que se sugiere al conectar en Ajustes (la conexión, con sus tokens, vive en la base)
     mnemo_url: str = ""
-    mnemo_token: str = field(default="", repr=False)
     mnemo_herramientas: str = ""
+    mnemo_modelo: str = ""  # «» (el de la cuenta), «principal», «ligero» o «<proveedor>/<modelo>»
 
     @property
     def agente_configurado(self) -> bool:
         return bool(self.anthropic_api_key)
 
-    @property
-    def mnemo_configurado(self) -> bool:
-        return bool(self.mnemo_url and self.mnemo_token)
-
 
 def _url_mnemo(v: str) -> str:
-    """La dirección del servidor MCP de Mnemo (`https://<host>/mcp`). Solo https, salvo en la propia máquina: el token
-    personal viaja en cada petición. Una dirección que no cumple se descarta con un aviso, sin cortar el arranque."""
+    """La dirección del servidor MCP de Mnemo que se sugiere al conectar (`https://<host>/mcp`). Solo https, salvo en
+    la propia máquina. Una dirección que no cumple se descarta con un aviso, sin cortar el arranque: el administrador
+    puede escribir otra en Ajustes."""
     v = v.strip().rstrip("/")
     if not v:
         return ""
     if re.match(r"^https://[^\s/]+(/\S*)?$", v) or re.match(r"^http://(127\.0\.0\.1|localhost)(:\d+)?(/\S*)?$", v):
         return v
-    log.warning("MNEMO_MCP_URL debe ser una dirección https://…/mcp: se ignora y el asistente queda sin Mnemo")
+    log.warning("MNEMO_MCP_URL debe ser una dirección https://…/mcp: se ignora (es solo la dirección que se sugiere "
+                "para conectar Mnemo en Ajustes)")
+    return ""
+
+
+_MODELO_MNEMO = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}/[A-Za-z0-9][A-Za-z0-9._:@/+-]{0,159}")
+
+
+def _modelo_mnemo(v: str) -> str:
+    """`MNEMO_MODELO`: `principal`, `ligero` o `<proveedor>/<modelo>` (como los nombra Mnemo: proveedor de hasta 64
+    caracteres, modelo de hasta 160). Vacía o con otra forma, el modelo por defecto de la cuenta (lo segundo con un
+    aviso en el registro, sin el valor: no se sabe qué se pegó ahí)."""
+    v = v.strip()
+    if not v:
+        return ""
+    if v.lower() in ("principal", "ligero"):
+        return v.lower()
+    if _MODELO_MNEMO.fullmatch(v):
+        return v
+    log.warning("MNEMO_MODELO debe ser principal, ligero o <proveedor>/<modelo>: se ignora y se usa el modelo por "
+                "defecto de la cuenta de Mnemo")
     return ""
 
 
@@ -133,6 +155,9 @@ def cargar() -> Config:
             raise RuntimeError(msg)
         log.warning("MONGODB_URI no está definida: se usa el MongoDB local %s", MONGO_LOCAL)
         uri = MONGO_LOCAL
+    if _primera("MNEMO_TOKEN"):
+        log.warning("MNEMO_TOKEN ya no se usa y se ignora: el administrador conecta Mnemo desde Ajustes → Asistente "
+                    "(inicia sesión en Mnemo y da permiso). Puede borrar la variable")
     esfuerzo = _primera("AGENTE_ESFUERZO").strip().lower() or "medium"
     if esfuerzo not in ESFUERZOS:
         log.warning("AGENTE_ESFUERZO vale %r y debe ser uno de %s: se usa medium", esfuerzo, ", ".join(ESFUERZOS))
@@ -149,6 +174,6 @@ def cargar() -> Config:
         agente_modelo=_primera("AGENTE_MODELO").strip() or MODELO_AGENTE,
         agente_esfuerzo=esfuerzo,
         mnemo_url=_url_mnemo(_primera("MNEMO_MCP_URL")),
-        mnemo_token=_primera("MNEMO_TOKEN").strip(),
         mnemo_herramientas=_primera("MNEMO_HERRAMIENTAS").strip(),
+        mnemo_modelo=_modelo_mnemo(_primera("MNEMO_MODELO")),
     )

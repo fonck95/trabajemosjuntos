@@ -21,12 +21,16 @@ from app.agente import conversaciones as conv_db
 BETAS = "server-side-fallback-2026-07-01,thinking-display-updates-2026-08-18,thinking-binding-controls-2026-08-01"
 
 
+async def _sin_espera(segundos):  # las rondas que fallan de paso se repiten sin esperar de verdad
+    return None
+
+
 @pytest.fixture
 def falsas(monkeypatch):
     """El catálogo fijo del asistente con las herramientas inventadas; sin esperas entre reintentos."""
     lista, registro = herramientas_falsas()
     con_herramientas(monkeypatch, lista)
-    monkeypatch.setattr(bucle, "ESPERA_REINTENTO_S", 0)
+    monkeypatch.setattr(bucle, "dormir", _sin_espera)
     return registro
 
 
@@ -560,6 +564,17 @@ def test_reintentable():
     assert not llm.reintentable(RuntimeError("x"))
 
 
+def test_proveedor_de_anthropic_reintenta_lo_pasajero_tras_1_y_2_segundos():
+    from types import SimpleNamespace
+    p = llm.ProveedorAnthropic(None, SimpleNamespace(agente_modelo="claude-opus-5-5"))
+    corte = httpx2.ReadError("corte")
+    assert [p.reintento(corte, n) for n in (0, 1)] == [1.0, 2.0]
+    assert p.reintento(RuntimeError("x"), 0) is None and p.reintento(ValueError("otra cosa"), 0) is None
+    assert p.explicar(corte) == llm.explicar(corte) == (
+        "No se pudo conectar con el servicio del modelo. Intente de nuevo en un rato.", "llm_conexion")
+    assert (p.clave, p.modelo, p.max_tokens, p.tope_imagenes) == ("anthropic", "claude-opus-5-5", 32_000, 8_000_000)
+
+
 def test_contexto_del_panel_se_limpia_y_se_acota():
     ahora = datetime(2026, 11, 7, 15, 30, tzinfo=timezone.utc)  # 10:30 en Colombia
     t = sistema.contexto_del_panel({
@@ -706,7 +721,7 @@ def mnemo_falso(monkeypatch):
     monkeypatch.setattr(mnemo, "disponible_para", lambda quien, ajustes, cfg: quien.es_admin)
     monkeypatch.setattr(mnemo, "definiciones", definiciones)
     monkeypatch.setattr(mnemo, "desde_definiciones", desde_definiciones)
-    monkeypatch.setattr(mnemo_cliente, "cliente_de", lambda app, cfg: cliente)
+    monkeypatch.setattr(mnemo_cliente, "cliente_de", lambda app: cliente)
     return cliente, llamadas, falla
 
 

@@ -3,11 +3,13 @@
 Nunca se llama a Mnemo ni a Anthropic de verdad; solo datos inventados.
 
 Qué se prueba: el protocolo (cabeceras, `initialize` una vez, SSE con keepalive y JSON en varias líneas, JSON plano,
-paginación, caché, sesión, plazos de verdad por red), los errores (401, 406, -32602, `isError`, validación en texto
-plano, HTTP, red) sin el token en ningún mensaje ni registro, las definiciones (lista blanca, limpieza, nombres,
-tipos, esquemas), la tarjeta de las escrituras, quién las usa, los resultados (imágenes, enlaces, aprobaciones con
-enlace absoluto, recortes) y un turno completo del asistente con Mnemo. Al final, una prueba de punta a punta contra
-el Mnemo real levantado en local, que se salta si no hay un checkout preparado (`MNEMO_E2E_DIR`)."""
+paginación, caché, sesión, plazos de verdad por red, el avance con `notifications/progress`), los errores (401, 406,
+-32602, `isError`, validación en texto plano, HTTP, red) sin el token en ningún mensaje ni registro, las definiciones
+(lista blanca, limpieza, nombres, tipos, esquemas, alcances), la tarjeta de las escrituras, quién las usa, los
+resultados (imágenes, enlaces, aprobaciones con enlace absoluto, recortes) y un turno completo del asistente con Mnemo
+conectado (OAuth falso, `ayudas_agente.conectar_mnemo`). El cliente se prueba con un token fijo (como un token
+personal); la conexión OAuth y su `FuenteTokens`, en `test_agente_conexion.py`. Al final, una prueba de punta a punta
+contra el Mnemo real levantado en local, que se salta si no hay un checkout preparado (`MNEMO_E2E_DIR`)."""
 from __future__ import annotations
 
 import asyncio
@@ -26,7 +28,7 @@ import pytest
 from pydantic import ValidationError
 from starlette.datastructures import State
 
-from ayudas_mcp import JPEG_2x3, PNG_1x1, TOKEN, EnHilo, MnemoFalso, b64
+from ayudas_mcp import JPEG_2x3, PNG_1x1, TOKEN, EnHilo, MnemoFalso, b64, correcto
 
 from app import acceso
 from app.agente import mnemo_cliente as mc
@@ -46,8 +48,7 @@ def correr(coro):
 
 def _cfg(**kw) -> Config:
     base = dict(usuario="admin", clave="clave-de-prueba-larga", mongodb_uri="mongodb://127.0.0.1:27017",
-                mongodb_db="prueba_mnemo", horas_sesion=1, cookie_segura=False, max_subida_mb=5, mnemo_url=URL,
-                mnemo_token=TOKEN)
+                mongodb_db="prueba_mnemo", horas_sesion=1, cookie_segura=False, max_subida_mb=5, mnemo_url=URL)
     return Config(**{**base, **kw})
 
 
@@ -226,11 +227,15 @@ def test_version_del_protocolo_desconocida():
 
 # ───────────────────────────── Errores ─────────────────────────────
 
-def test_401_el_token_no_es_valido_o_vencio():
+def test_401_la_conexion_vencio_o_se_revoco():
     falso = MnemoFalso(token="mnemo_pat_ffffffffffffffffffffffff_" + "x" * 43)
     e = correr(_fallo(_cliente(falso).herramientas()))
     assert e.codigo == mc.COD_TOKEN and e.estado == 401 and not e.fatal
-    assert "no es válido o venció" in e.mensaje and "MNEMO_TOKEN" in e.mensaje
+    assert e.mensaje == ("La conexión con Mnemo venció o se revocó: el administrador tiene que volver a conectarla en "
+                         "Ajustes → Asistente.")
+    assert falso.contar("initialize") == 1  # con un token fijo no hay nada que renovar: no se repite
+    for m in (mc.MENSAJE_TOKEN, mc.MENSAJE_ALCANCE, mc.MENSAJE_RED):
+        assert "MNEMO_TOKEN" not in m and "MNEMO_MCP_URL" not in m and "cree" not in m.lower()
 
 
 def test_406_si_falta_accept(monkeypatch):
@@ -335,7 +340,7 @@ def test_ruta_que_no_es_mcp():
     falso = MnemoFalso()
     c = mc.ClienteMnemo(URL.replace("/mcp", "/mcp/otra"), TOKEN, transporte=falso.transporte())
     e = correr(_fallo(c.herramientas()))
-    assert e.estado == 404 and "MNEMO_MCP_URL" in e.mensaje
+    assert e.estado == 404 and "debe terminar en /mcp" in e.mensaje and "MNEMO_MCP_URL" not in e.mensaje
 
 
 def test_sin_red():
@@ -414,17 +419,130 @@ def test_el_token_no_aparece_en_ningun_error_ni_registro(caplog, monkeypatch):
     assert SECRETO not in repr(c) and SECRETO not in repr(vars(c).get("_http"))
 
 
+# ───────────────────────────── Avance (notifications/progress) ─────────────────────────────
+
+def _con_avance(falso: MnemoFalso, trozos: list[str], pausa: float = 0.0, nombre: str = "lento") -> None:
+    """La herramienta `nombre` manda cada trozo como un aviso de avance (cada `pausa` segundos) y al final el texto."""
+    async def manejador(args, avisar):
+        for i, t in enumerate(trozos, 1):
+            if pausa:
+                await asyncio.sleep(pausa)
+            await avisar(i, t)
+        return correcto({"texto": "".join(trozos)})
+
+    falso.manejadores[nombre] = manejador
+
+
+def test_llamar_con_avance_pasa_cada_aviso_en_orden():
+    falso = MnemoFalso()
+    _con_avance(falso, ["Hola, ", "esto es ", "inventado."])
+    recibidos: list = []
+
+    async def asincrono(aviso):
+        await asyncio.sleep(0)
+        recibidos.append(("asíncrono", aviso["message"]))
+
+    async def prueba():
+        c = _cliente(falso)
+        res = await c.llamar("lento", {}, 10, recibidos.append)
+        await c.llamar("lento", {}, 10, asincrono)
+        return res, await c.llamar("lento", {}, 10)  # sin `al_progreso` no se pide avance
+
+    res, sin = correr(prueba())
+    assert res["structuredContent"] == sin["structuredContent"] == {"texto": "Hola, esto es inventado."}
+    assert recibidos == [{"progress": 1, "total": None, "message": "Hola, "},
+                         {"progress": 2, "total": None, "message": "esto es "},
+                         {"progress": 3, "total": None, "message": "inventado."},
+                         ("asíncrono", "Hola, "), ("asíncrono", "esto es "), ("asíncrono", "inventado.")]
+    llamadas = [p["json"]["params"] for p in falso.peticiones if p["json"].get("method") == "tools/call"]
+    tokens = [(ll.get("_meta") or {}).get("progressToken") for ll in llamadas]
+    assert tokens[0] and tokens[1] and tokens[0] != tokens[1] and "_meta" not in llamadas[2]
+    assert [a["progressToken"] for a in falso.avisos] == [tokens[0]] * 3 + [tokens[1]] * 3
+
+
+def test_solo_los_avisos_de_esta_llamada():
+    """Un aviso de otra llamada no llega al callback; uno con otra forma llega con None donde no sirve."""
+    def atender(req: httpx2.Request) -> httpx2.Response:
+        cuerpo = json.loads(req.content)
+        if "id" not in cuerpo:
+            return httpx2.Response(202)
+        if cuerpo["method"] == "initialize":
+            return httpx2.Response(200, json={"jsonrpc": "2.0", "id": cuerpo["id"], "result": {
+                "protocolVersion": "2025-11-25", "capabilities": {}}})
+        token = cuerpo["params"]["_meta"]["progressToken"]
+        avisos = [{"progressToken": "de-otra-llamada", "progress": 1, "message": "ajeno"},
+                  {"progressToken": token, "progress": "uno", "message": 7},
+                  {"progressToken": token, "progress": 2, "total": 3, "message": "propio"}]
+        flujo = "".join("event: message\ndata: " + json.dumps({"jsonrpc": "2.0", "method": "notifications/progress",
+                                                               "params": a}) + "\n\n" for a in avisos)
+        flujo += "event: message\ndata: " + json.dumps({"jsonrpc": "2.0", "id": cuerpo["id"],
+                                                        "result": {"content": []}}) + "\n\n"
+        return httpx2.Response(200, headers={"content-type": "text/event-stream"}, content=flujo.encode())
+
+    recibidos: list = []
+    c = mc.ClienteMnemo(URL, TOKEN, transporte=httpx2.MockTransport(atender))
+    assert correr(c.llamar("lo_que_sea", {}, 5, recibidos.append)) == {"content": []}
+    assert recibidos == [{"progress": None, "total": None, "message": None},
+                         {"progress": 2, "total": 3, "message": "propio"}]
+
+
+def test_un_callback_que_lanza_corta_la_llamada():
+    falso = MnemoFalso()
+    _con_avance(falso, ["a", "b"])
+
+    def corta(aviso):
+        raise RuntimeError("corte inventado")
+
+    with pytest.raises(RuntimeError, match="corte inventado"):
+        correr(_cliente(falso).llamar("lento", {}, 5, corta))
+
+
+def test_por_red_el_avance_renueva_el_plazo_sin_pasar_del_tope():
+    """Con uvicorn de verdad y sin keepalives: con avance, el plazo es de inactividad (cada aviso lo renueva) y el
+    tope es de la llamada entera; sin avance, el plazo es el total."""
+    falso = MnemoFalso(intervalo=30, keepalives=0)
+    _con_avance(falso, ["a"] * 8, pausa=0.2)  # 1,6 s en total, un aviso cada 0,2 s
+
+    async def sin_fin(args, avisar):
+        i = 0
+        while True:
+            i += 1
+            await asyncio.sleep(0.1)
+            await avisar(i, ".")
+
+    falso.manejadores["mnemo_get_job"] = sin_fin
+    with EnHilo(falso) as servidor:
+        async def prueba():
+            c = mc.ClienteMnemo(servidor.url, TOKEN, transporte=httpx2.AsyncHTTPTransport())
+            avisos: list = []
+            bien = await c.llamar("lento", {}, 0.6, avisos.append)
+            sin = await _fallo(c.llamar("lento", {}, 0.6))
+            t0 = time.monotonic()
+            tope = await _fallo(c.llamar("mnemo_get_job", {"job_id": "job_1"}, 0.6, avisos.append, tope=1.0))
+            dt = time.monotonic() - t0
+            await c.cerrar()
+            return bien, avisos, sin, tope, dt
+
+        bien, avisos, sin, tope, dt = correr(prueba())
+    assert bien["structuredContent"] == {"texto": "a" * 8} and [a["message"] for a in avisos][:8] == ["a"] * 8
+    assert sin.codigo == mc.COD_PLAZO and "no respondió en 0.6 segundos" in sin.mensaje
+    assert tope.codigo == mc.COD_PLAZO and "no terminó en 1 segundos" in tope.mensaje and 0.9 < dt < 2.5
+
+
 # ───────────────────────────── Un cliente por aplicación ─────────────────────────────
 
-def test_cliente_de_uno_por_aplicacion():
-    app = SimpleNamespace(state=State())
-    assert mc.cliente_de(app, _cfg(mnemo_url="", mnemo_token="")) is None
-    assert mc.cliente_de(app, _cfg(mnemo_token="")) is None
-    c = mc.cliente_de(app, _cfg())
-    assert isinstance(c, mc.ClienteMnemo) and mc.cliente_de(app, _cfg()) is c and app.state.mnemo_cliente is c
-    otro = mc.cliente_de(app, _cfg(mnemo_token=TOKEN + "z"))
-    assert otro is not c and app.state.mnemo_cliente is otro
-    assert c.origen == ORIGEN and SECRETO not in repr(c)
+def test_cliente_de_uno_por_aplicacion(cliente):
+    """El cliente sale de la conexión guardada, no de variables (detalle en `test_agente_conexion.py`)."""
+    from ayudas_agente import conectar_mnemo
+    app = cliente.app
+    assert mc.cliente_de(SimpleNamespace(state=State())) is None  # sin base
+    assert mc.cliente_de(app) is None  # sin conexión, aunque haya dirección sugerida
+    app.state.cfg = replace(app.state.cfg, mnemo_url=URL)
+    assert mc.cliente_de(app) is None
+    conectar_mnemo(app)
+    c = mc.cliente_de(app)
+    assert isinstance(c, mc.ClienteMnemo) and mc.cliente_de(app) is c and app.state.mnemo_cliente is c
+    assert c.origen == ORIGEN and c.url == URL and SECRETO not in repr(c)
 
 
 # ───────────────────────────── Definiciones ─────────────────────────────
@@ -443,6 +561,19 @@ def test_lista_blanca_por_defecto_todas_o_las_pedidas():
     # En el orden del servidor, con nombres remotos o del panel, y sin las que Mnemo no ofrece
     assert correr(nombres(" mnemo_get_job, mnemo_search ,no_existe")) == ["search", "mnemo_get_job"]
     assert correr(mnemo.definiciones(None, "")) == []
+
+
+def test_la_herramienta_de_modelo_nunca_se_ofrece_al_modelo():
+    """`mnemo_model_complete` es el modelo (la usa el proveedor), no una herramienta para él: ni con `*` ni nombrada."""
+    from ayudas_mcp import LECTURA, herramienta
+    falso = MnemoFalso()
+    falso.herramientas.append(herramienta("mnemo_model_complete", "Get a model response", {}, [], LECTURA))
+
+    async def nombres(filtro):
+        return [d["name"] for d in await mnemo.definiciones(_cliente(falso), filtro)]
+
+    assert "mnemo_model_complete" not in correr(nombres("*"))
+    assert correr(nombres("mnemo_model_complete,search")) == ["search"]
 
 
 def test_definiciones_limpias_y_json():
@@ -568,7 +699,7 @@ def test_la_tarjeta_muestra_el_titulo_y_los_argumentos():
     valores = dict(conf.detalle)
     assert valores["title"] == "Reunión inventada" and valores["zeta"] == "sí" and valores["vacio"] == "(vacío)"
     assert valores["extra"] == '{"a": [1, 2]}' and valores["notes"].endswith("(2000 caracteres en total)")
-    assert conf.aviso == "Lo hace Mnemo con el token del administrador."
+    assert conf.aviso == "Lo hace Mnemo con la cuenta de Mnemo del administrador."
     assert conf.para_interfaz()["detalle"][0] == ["title", "Reunión inventada"]
     pedido = correr(hs["mnemo_request_share"].confirmar(_ctx(CON_MNEMO), hs["mnemo_request_share"].validar(
         {"id": "doc_acta1", "with": "equipo@example.org"})))
@@ -619,8 +750,22 @@ def test_disponible_para_por_rol_y_ajuste():
     assert mnemo.disponible_para(coord, None, cfg) is False
     for q in (plan, cons, otro_admin):
         assert mnemo.disponible_para(q, si, cfg) is False
-    sin = _cfg(mnemo_token="")
-    assert mnemo.disponible_para(admin, si, sin) is False and mnemo.disponible_para(coord, si, sin) is False
+    # Que haya conexión no lo decide esto (lo decide `mnemo_cliente.cliente_de`): no mira la configuración
+    assert mnemo.disponible_para(admin, no, None) is True and mnemo.disponible_para(coord, si, None) is True
+
+
+def test_alcances_de_las_herramientas_que_se_ofrecen():
+    """Lo que la conexión le pide a Mnemo sale de las herramientas que el panel ofrece (su catálogo)."""
+    assert mnemo.alcances("") == ["mnemo:read", "mnemo:memory.write", "mnemo:publish", "mnemo:share",
+                                  "mnemo:workspace.write"]
+    assert mnemo.alcances(None) == mnemo.alcances("")
+    assert mnemo.alcances("search, fetch") == ["mnemo:read"]
+    assert mnemo.alcances("mnemo_create_event,mnemo_request_delete") == ["mnemo:read", "mnemo:delete",
+                                                                         "mnemo:workspace.write"]
+    todas = mnemo.alcances("*")
+    assert "mnemo:study.write" in todas and "mnemo:business.write" in todas
+    assert "mnemo:forms.responses" not in todas and "mnemo:model" not in todas
+    assert set(mnemo.ALCANCES) >= {n for n in mnemo.POR_DEFECTO if n in mnemo.TITULOS}  # toda escritura conocida
 
 
 # ───────────────────────────── Resultados ─────────────────────────────
@@ -750,14 +895,13 @@ def test_resumen_por_estado(estado, resumen):
 
 @pytest.fixture
 def con_mnemo(sesion, monkeypatch):
-    """El asistente encendido con Mnemo configurado y su cliente sobre el servidor falso; sin herramientas fijas (así
-    se prueba solo lo de Mnemo, con el bucle de verdad)."""
-    from ayudas_agente import con_herramientas
-    falso = MnemoFalso()
+    """El asistente con Mnemo conectado (OAuth falso, la conexión cifrada en la base) y su `/mcp` falso; sin
+    herramientas fijas (así se prueba solo lo de Mnemo, con el bucle de verdad). Devuelve el `MnemoFalso`. La conexión
+    va sin `mnemo:model`: el modelo sigue siendo la Messages API simulada (con ese alcance lo pondría Mnemo, ver
+    `test_agente_modelo_mnemo.py`)."""
+    from ayudas_agente import ALCANCES_PANEL, con_herramientas, conectar_mnemo
     con_herramientas(monkeypatch, [])
-    sesion.app.state.cfg = replace(sesion.app.state.cfg, mnemo_url=URL, mnemo_token=TOKEN)
-    sesion.app.state.mnemo_cliente = mc.ClienteMnemo(URL, TOKEN, transporte=falso.transporte())
-    return falso
+    return conectar_mnemo(sesion.app, alcances=[a for a in ALCANCES_PANEL if a != "mnemo:model"]).mcp
 
 
 def test_turno_con_una_lectura_de_mnemo(sesion, con_mnemo):
@@ -805,7 +949,8 @@ def test_turno_con_una_escritura_de_mnemo_aprobada(sesion, con_mnemo):
 
 def test_estado_dice_si_mnemo_esta_activo_por_rol_y_ajuste(sesion, con_mnemo):
     from ayudas_g3 import coordinador
-    assert sesion.get("/api/agente/estado").json()["mnemo"] == {"activo": True, "origen": ORIGEN}
+    e = sesion.get("/api/agente/estado").json()["mnemo"]
+    assert e["activo"] is True and e["origen"] == ORIGEN and e["conexion"]["estado"] == "conectada"
     k = coordinador(sesion.app, sesion.app.state.db)
     assert k.get("/api/agente/estado").json()["mnemo"]["activo"] is False
     sesion.app.state.db.meta.update_one({"_id": "ajustes"}, {"$set": {"agente": {
@@ -876,7 +1021,7 @@ def test_punta_a_punta_con_mnemo_real(mnemo_real):
     """Contra el `/mcp` de Mnemo de verdad: inicio, catálogo, lista blanca, lecturas, una escritura, el pedido de
     borrarla (aprobación en Mnemo, con su enlace vuelto absoluto) y los errores de Mnemo y del SDK."""
     url, token = mnemo_real
-    cfg = _cfg(mnemo_url=url, mnemo_token=token)
+    cfg = _cfg(mnemo_url=url)
     origen = url.rsplit("/mcp", 1)[0]
 
     async def prueba():
@@ -900,6 +1045,10 @@ def test_punta_a_punta_con_mnemo_real(mnemo_real):
         out["no"] = await _fallo(usar("mnemo_fetch", {"id": "doc_000000000000000000000000"}))
         out["invalido"] = await _fallo(usar("mnemo_fetch", {"id": 7}))
         out["inexistente"] = await _fallo(c.llamar("mnemo_no_existe", {}))
+        # Sin `mnemo:model` (el token no lo tiene), Mnemo no registra su herramienta del modelo: el error JSON-RPC del
+        # SDK («Tool mnemo_model_complete not found»), que el proveedor del modelo explica como «volver a conectar»
+        out["sin_modelo"] = await _fallo(c.llamar("mnemo_model_complete", {"messages": [
+            {"role": "user", "content": "Hola"}]}))
         await c.cerrar()
         return c, todas, defs, hs, out
 
@@ -922,3 +1071,7 @@ def test_punta_a_punta_con_mnemo_real(mnemo_real):
     assert out["no"].codigo == "mnemo" and out["no"].detalle["code"] == "NOT_FOUND"
     assert out["invalido"].codigo == "mnemo" and "Input validation error" in out["invalido"].mensaje
     assert out["inexistente"].codigo == mc.COD_NO_DISPONIBLE
+    from app.agente.modelo_mnemo import ProveedorMnemo
+    assert out["sin_modelo"].codigo == mc.COD_NO_DISPONIBLE
+    mensaje, codigo = ProveedorMnemo(None, cfg).explicar(out["sin_modelo"])
+    assert codigo == "mnemo_sin_modelo" and "volver a conectarla en Ajustes → Asistente" in mensaje

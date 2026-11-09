@@ -181,7 +181,7 @@ AJUSTES_POR_DEFECTO: dict[str, Any] = {
     # El asistente (docs/agente.md). Dos claves de un nivel porque el PUT de Ajustes mezcla un solo nivel: con los
     # topes anidados en `agente`, cambiar el de un rol borraría los de los demás. Denegar por defecto: sin
     # planilleros ni consultores. `roles` va ordenada, como la deja la validación, porque un cambio se detecta
-    # comparando listas. Las escrituras siempre piden aprobación; Mnemo usa el token del administrador (los
+    # comparando listas. Las escrituras siempre piden aprobación; Mnemo usa la cuenta del administrador (los
     # coordinadores, solo si él lo permite); las conversaciones se borran solas a los `retencion_dias`
     "agente": {"roles": ["admin", "coordinador"], "escritura": True, "mnemo_coordinadores": False,
                "retencion_dias": 30},

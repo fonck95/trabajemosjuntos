@@ -6,12 +6,17 @@
   herramientas llaman a la API por ASGI y tienen que correr en el mismo bucle que la aplicación.
 * `FakeAPI`, `cliente_falso` y `sse`: la Messages API simulada con `httpx2.MockTransport` (el SDK de verdad, sin red),
   con turnos SSE realistas. `T`, `TH` y `TU` arman bloques de texto, de razonamiento o progreso y de `tool_use`.
+* `conectar_mnemo(app, alcances=…, cuenta=…)`: deja la aplicación conectada a un Mnemo falso (`ayudas_mcp.OAuthFalso`,
+  sin red), con la conexión cifrada en la base como la dejaría Ajustes → Asistente (los tokens y, atadas a ellos, las
+  direcciones a las que se mandan).
+* `encender_mnemo(app, *respuestas)` y `R(*bloques, stop=…, uso=…)`: el asistente con el modelo de Mnemo (la conexión
+  falsa con `mnemo:model` y `mnemo_model_complete` guionizada, `ayudas_mcp.ModeloFalso`).
 """
 from __future__ import annotations
 
 import json
 from collections import deque
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 import anthropic
 import httpx2
@@ -313,3 +318,67 @@ def encender_lento(app, *guion, pausa: float = 0.3) -> FakeAPILenta:
     http = httpx2.AsyncClient(transport=httpx2.MockTransport(api))
     app.state.agente_cliente = anthropic.AsyncAnthropic(api_key="clave-falsa", http_client=http, max_retries=0)
     return api
+
+
+# ───────────────────────────── Mnemo conectado (OAuth falso) ─────────────────────────────
+
+# Lo que concede por defecto la conexión falsa: lo que pide el panel (con `mnemo:model`)
+ALCANCES_PANEL = ("mnemo:model", "mnemo:read", "mnemo:memory.write", "mnemo:publish", "mnemo:share",
+                  "mnemo:workspace.write")
+
+
+def conectar_mnemo(app, *, alcances: Iterable[str] = ALCANCES_PANEL, cuenta: dict | None = None, falso=None,
+                   vence_en: int | None = None, redirect_uri: str = "http://testserver/ajustes",
+                   ofrece_modelo: bool = True):
+    """Conecta `app` con un Mnemo falso sin pasar por el navegador: registra un cliente en el `OAuthFalso` (`falso`, o
+    uno nuevo en https://mnemo.example.org), le hace emitir tokens inventados para `cuenta` (las claims de OpenID:
+    `{"sub", "name", "email"}`; por defecto `ayudas_mcp.CUENTA`) con `alcances`, y guarda la conexión «conectada» y
+    cifrada en la base con `mnemo_conexion.instalar`, como la dejaría `volver`: con los tokens van, cifradas, las
+    direcciones a las que se mandan (la de `/mcp`, el recurso y los endpoints de tokens y de revocación del falso), así
+    que una prueba que las cambie en la base ve la conexión caer («alterada») sin que salga nada. `vence_en`
+    (segundos, distinto de 0) fija cuánto le queda al access para el panel: con menos de 5 minutos (o negativo) la
+    primera llamada lo renueva. `ofrece_modelo=False`: la conexión de un Mnemo que no ofrece `mnemo:model` (la que se
+    permite con `ANTHROPIC_API_KEY`). Deja `app.state.mnemo_transporte` apuntando al falso (así
+    `mnemo_cliente.cliente_de(app)` y la renovación no usan red) y devuelve el `OAuthFalso`: `falso.mcp` es su
+    `MnemoFalso` (herramientas, `llamadas`, `peticiones`)."""
+    from ayudas_mcp import OAuthFalso
+
+    from app.agente import mnemo_conexion
+    falso = falso or OAuthFalso()
+    cid = falso.registrar(redirect_uri)
+    tokens = falso.conceder(cid, alcances, cuenta)
+    g = falso.concesion_de(tokens["access_token"])
+    claims = g["cuenta"]
+    datos = {"url_mcp": falso.recurso, "recurso": falso.recurso, "emisor": falso.base, "endpoints": falso.endpoints(),
+             "client_id": cid, "redirect_uri": redirect_uri, "alcances": tokens["scope"].split(),
+             "ofrece_modelo": ofrece_modelo,
+             "cuenta": {"sub": claims["sub"], **({"nombre": claims["name"]} if claims.get("name") else {}),
+                        **({"correo": claims["email"]} if claims.get("email") else {})}}
+    mnemo_conexion.instalar(app.state.db, app.state.cfg, datos, {
+        "access": tokens["access_token"], "refresh": tokens["refresh_token"],
+        "expira": falso.vida if vence_en is None else vence_en})
+    app.state.mnemo_transporte = falso.transporte()
+    return falso
+
+
+# ───────────────────────────── El modelo de Mnemo (falso) ─────────────────────────────
+
+def R(*bloques: dict, stop: str = "end_turn", uso: dict | None = None, modelo: dict | None = None,
+      avance: list[str] | None = None) -> dict:
+    """Una respuesta de `mnemo_model_complete` para `encender_mnemo`: bloques `T`, `TU` y `TH` (que viaja en la forma
+    de Mnemo, `{"type": "thinking", "text", "signature"}`), `stop` (su `stop_reason`), `uso` (`usage`: por defecto 900
+    de entrada y 50 de salida; con `credits` si la pagó el plan), `modelo` (`{"provider", "model"}`, inventado por
+    defecto) y `avance` (los trozos de texto que llegan antes por `notifications/progress`; por defecto, el texto de
+    cada bloque en dos mitades; [] ninguno). Ver `ayudas_mcp.respuesta_modelo`."""
+    from ayudas_mcp import respuesta_modelo
+    return respuesta_modelo(*bloques, stop=stop, uso=uso, modelo=modelo, avance=avance)
+
+
+def encender_mnemo(app, *respuestas, alcances: Iterable[str] = ALCANCES_PANEL, **conectar):
+    """El asistente de `app` con el modelo de Mnemo: la conecta a un Mnemo falso (`conectar_mnemo`, con `mnemo:model`
+    por defecto) y le pone `mnemo_model_complete` guionizada: cada ronda contesta con lo siguiente de `respuestas`
+    (`R(...)`, un error de Mnemo con `ayudas_mcp.fallo(...)` o una función, ver `ayudas_mcp.ModeloFalso`). Devuelve el
+    `ModeloFalso` (`pedidos`: los argumentos de cada ronda; `agregar`; `oauth` y `mcp`: los servidores falsos)."""
+    from ayudas_mcp import ModeloFalso
+    falso = conectar_mnemo(app, alcances=alcances, **conectar)
+    return ModeloFalso(falso.mcp, *respuestas, oauth=falso)
