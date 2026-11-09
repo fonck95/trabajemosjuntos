@@ -3,8 +3,9 @@
 * GET /api/agente/estado — si el asistente está disponible para quien pregunta y por qué no (`requiere("cuenta")`:
   cualquier rol lo consulta para saber si mostrar el botón), y con qué proveedor del modelo empezaría una conversación
   nueva (`proveedor`: «mnemo», «anthropic» o None; ver `agente/proveedores.py`). Para el administrador y el
-  coordinador trae además la conexión con Mnemo (`mnemo.conexion`, `mnemo_conexion.vista`); conectarla y
-  desconectarla está en `api/agente_mnemo.py`.
+  coordinador trae además la conexión con Mnemo (`mnemo.conexion`, `mnemo_conexion.vista`; al coordinador, sin la
+  cuenta personal de Mnemo del administrador ni la dirección sugerida); conectarla y desconectarla está en
+  `api/agente_mnemo.py`.
 * GET /api/agente/conversaciones, GET y DELETE /api/agente/conversaciones/{cid} — las conversaciones propias: solo
   su dueño las ve o las borra (de otra persona es un 404, como si no existiera).
 * POST /api/agente/mensajes y POST /api/agente/confirmaciones — un turno en flujo (NDJSON, `bucle.py`). Lo que impide
@@ -64,7 +65,7 @@ def _exigir_rol(quien: Quien, agente: dict) -> None:
 
 
 SIN_CONEXION = {"estado": "sin_conectar", "motivo": None, "url": None, "cuenta": None, "alcances": [],
-                "modelo": False, "desde": None}
+                "modelo": False, "ofrece_modelo": None, "desde": None}
 
 
 def _conexion(db: Database, cfg: Any) -> dict:
@@ -112,7 +113,9 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
     `configurado` es `proveedor` no None. `mnemo`: `{"activo": bool (esta persona usa las herramientas de Mnemo),
     "origen": scheme://host de Mnemo | None}` para todos y, para el administrador y el coordinador (que la ve en solo
     lectura en Ajustes), `"conexion"`: `mnemo_conexion.vista(db, cfg)` (`estado`, `motivo`, `url`, `cuenta`,
-    `alcances`, `modelo`, `desde` y `url_sugerida`)."""
+    `alcances`, `modelo`, `ofrece_modelo`, `desde` y `url_sugerida`). Al coordinador le llegan `cuenta` y
+    `url_sugerida` en None: la cuenta es la personal del administrador (nombre y correo) y la dirección sugerida solo
+    le sirve a quien conecta."""
     cfg = request.app.state.cfg
     ajustes, agente = politica.leer(db)
     sesion = (request.scope.get("state") or {}).get("sesion")
@@ -122,7 +125,7 @@ def estado(request: Request, db: Database = Depends(obtener_db), quien: Quien = 
     activo = _mnemo_activo(quien, agente, cfg, conexion)
     mnemo: dict[str, Any] = {"activo": activo, "origen": politica.origen_mnemo(conexion.get("url")) if activo else None}
     if quien.administra:
-        mnemo["conexion"] = conexion
+        mnemo["conexion"] = conexion if quien.es_admin else {**conexion, "cuenta": None, "url_sugerida": None}
     return {"disponible": motivo is None, "motivo": motivo, "configurado": proveedor is not None,
             "proveedor": proveedor, "es_admin": quien.es_admin, "escritura": agente["escritura"],
             "limite": {"usados": conv_db.uso_de(db, quien.uid), "maximo": politica.mensajes_diarios(ajustes, quien.rol)},

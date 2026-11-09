@@ -6,14 +6,15 @@ Mnemo, da permiso y vuelve.
 Interfaz (la usan `api/agente_mnemo.py`, `mnemo_cliente.cliente_de`, `api/agente.py` y el proveedor del modelo):
 
 * `vista(db, cfg=None) -> dict` — la conexión para mostrar, sin descifrar nada: `{"estado": "sin_conectar" |
-  "conectada" | "caida", "motivo": "revocada" | "clave" | "error" | None, "url": str | None, "cuenta": str | None,
-  "alcances": [str], "modelo": bool, "desde": iso | None}`; con `cfg`, además `"url_sugerida": str | None`
-  (`MNEMO_MCP_URL`, o la última dirección con que se conectó).
+  "conectada" | "caida", "motivo": "revocada" | "clave" | "alterada" | "error" | None, "url": str | None, "cuenta":
+  str | None, "alcances": [str], "modelo": bool, "ofrece_modelo": bool | None, "desde": iso | None}`; con `cfg`,
+  además `"url_sugerida": str | None` (`MNEMO_MCP_URL`, o la última dirección con que se conectó).
 * `con_modelo(db) -> bool` — ¿hay una conexión «conectada» con `mnemo:model` (Mnemo puede poner el modelo)?
 * `conectada(db) -> dict | None` — `{"version", "conexion", "url_mcp"}` de la conexión «conectada» (lo que usa
   `mnemo_cliente.cliente_de` para armar y rehacer el cliente), o None.
-* `FuenteTokens(app, conexion=None)` — los access tokens de la conexión para `mnemo_cliente.ClienteMnemo`:
-  `await token()` y `await invalidar(usado)` (ver la clase).
+* `FuenteTokens(app, conexion=None, url_mcp=None)` — los access tokens de la conexión para
+  `mnemo_cliente.ClienteMnemo`: `await token(destino=None)` y `await invalidar(usado)` (ver la clase).
+* `mensaje_caida(motivo) -> str` — lo que se le dice a quien conversa si la conexión está «caida».
 * `async iniciar(app, quien, *, url, redirect_uri, sesion) -> str` — descubre, registra el cliente si hace falta,
   guarda el pendiente y devuelve la URL de autorización de Mnemo.
 * `async volver(app, quien, *, sesion, state, code, iss, error, error_description) -> dict` — canjea el código,
@@ -26,11 +27,12 @@ Interfaz (la usan `api/agente_mnemo.py`, `mnemo_cliente.cliente_de`, `api/agente
 Dónde vive: un documento de `meta` (`_id: "mnemo_conexion"`), sin índices nuevos:
 
     {_id, version: int, estado: "conectada" | "caida", motivo, conexion (id de esta conexión), url_mcp, recurso,
-     emisor, endpoints: {authorize, token, register, revoke}, client_id, redirect_uri, alcances, cuenta: {sub,
-     nombre?, correo?}, cifrado (access + refresh), vence (del access), renovando_hasta, renovador, conectada_por:
-     {uid, usuario}, conectada_en, renovada_en, caida_en, ultima_url,
-     pendiente: {state_h, sesion, verificador_cifrado, url_mcp, recurso, emisor, endpoints, client_id, redirect_uri,
-                 pedidos, iss_requerido, expira} | None,
+     emisor, endpoints: {authorize, token, register, revoke}, client_id, redirect_uri, alcances, ofrece_modelo,
+     cuenta: {sub, nombre?, correo?}, cifrado (access + refresh + direcciones: {url_mcp, recurso, token, revoke}),
+     vence (del access), renovando_hasta, renovador, conectada_por: {uid, usuario}, conectada_en, renovada_en,
+     caida_en, ultima_url,
+     pendiente: {state_h, sesion, verificador_cifrado (el verificador + una copia de lo que sigue), url_mcp, recurso,
+                 emisor, endpoints, client_id, redirect_uri, pedidos, iss_requerido, ofrece_modelo, expira} | None,
      clientes: [{emisor, redirect_uri, client_id}]}
 
 Por qué está hecho así (verificado contra Mnemo en local):
@@ -39,6 +41,15 @@ Por qué está hecho así (verificado contra Mnemo en local):
   (`cifrado.py`) con una clave que no está en la base (`seguridad.llave_mnemo`), atados a `emisor|client_id`. El
   verificador PKCE del pendiente, también. El `state` se guarda como hash. Al registro van códigos de estado y tipos
   de excepción, nunca URLs con secretos ni cuerpos.
+* Con escribir en la base no se desvía ningún secreto: las direcciones que los reciben van también dentro de lo
+  cifrado (en la conexión, `url_mcp`, `recurso` y los endpoints de tokens y de revocación; en el pendiente, además el
+  emisor, el cliente y la vuelta) y para mandar un access, un refresh, un código o un verificador se usa solo esa
+  copia. Si la de la base no coincide, la conexión queda «caida» con motivo «alterada» (y el pendiente no se canjea)
+  sin mandar nada; `FuenteTokens` además solo entrega el access para la `url_mcp` atada (la del `ClienteMnemo` que lo
+  pide). Al revocar se usa el endpoint atado: la concesión se revoca de verdad aunque la base mienta.
+* Un Mnemo anterior a `mnemo:model` no lo anuncia en sus metadatos (`scopes_supported`) y lo descarta sin avisar si
+  se pide: el panel no conecta con él (`sin_modelo`, hay que actualizar Mnemo), salvo que haya `ANTHROPIC_API_KEY`
+  (el modelo lo pone Anthropic y Mnemo solo sus herramientas; `ofrece_modelo` lo dice en la vista).
 * El pendiente es uno solo (un «Conectar» nuevo lo reemplaza) y está atado a la sesión que lo pidió (`s["_id"]`, el
   hash de la cookie): se toma y se borra en un solo paso (`find_one_and_update`), así un `code` nunca se canjea dos
   veces (Mnemo revocaría la conexión entera). La conexión vieja sigue viva hasta que la nueva termina.
@@ -60,7 +71,8 @@ Por qué está hecho así (verificado contra Mnemo en local):
   `version` y `renovador`. El refresh nuevo se guarda ANTES de usar el access nuevo. `invalid_grant` (caducada,
   reusada, revocada o cuenta desactivada: Mnemo no las distingue) deja la conexión «caida». Un error de red suelta el
   arriendo: si Mnemo alcanzó a rotar, el siguiente intento dará `invalid_grant` (no se puede evitar).
-* Si lo cifrado no descifra (cambiaron `ADMIN` o `password`), la conexión queda «caida» con motivo «clave».
+* Si lo cifrado no descifra (cambiaron `ADMIN` o `password`, o alguien tocó `emisor` o `client_id`), la conexión
+  queda «caida» con motivo «clave».
 * Las llamadas salientes son asíncronas (httpx2), con plazos cortos, sin seguir redirecciones y con cuerpos acotados.
   Las pruebas inyectan un transporte en `app.state.mnemo_transporte` (sin red), como `app.state.agente_cliente` en
   `llm.py`.
@@ -118,12 +130,25 @@ GUARDAR_INTENTOS = 3
 
 # Qué se quita de la conexión al desconectar (se quedan `version`, `clientes`, `ultima_url` y el pendiente)
 CAMPOS_CONEXION = ("estado", "motivo", "conexion", "url_mcp", "recurso", "emisor", "endpoints", "client_id",
-                   "redirect_uri", "alcances", "cuenta", "cifrado", "vence", "renovando_hasta", "renovador",
-                   "renovada_en", "caida_en", "conectada_por", "conectada_en")
+                   "redirect_uri", "alcances", "ofrece_modelo", "cuenta", "cifrado", "vence", "renovando_hasta",
+                   "renovador", "renovada_en", "caida_en", "conectada_por", "conectada_en")
+# Las direcciones de una conexión que reciben sus secretos: el access va a `url_mcp`; el refresh, a los endpoints de
+# tokens (con el `recurso`) y de revocación. Van también dentro de lo cifrado, y solo esa copia se usa
+DIRECCIONES = ("url_mcp", "recurso", "token", "revoke")
+# Lo del pendiente que va también dentro de lo cifrado, con el verificador: lo que recibe el código y el verificador
+# (y lo que pasará a ser la conexión). `volver` usa solo esa copia
+ATADO_PENDIENTE = ("url_mcp", "recurso", "emisor", "endpoints", "client_id", "redirect_uri", "pedidos",
+                   "iss_requerido", "ofrece_modelo")
 
 MENSAJE_SIN_CONEXION = "Mnemo no está conectado: el administrador lo conecta en Ajustes → Asistente."
 MENSAJE_CLAVE = ("La conexión con Mnemo dejó de valer porque cambió la clave del administrador del panel: hay que "
                  "volver a conectarla en Ajustes → Asistente.")
+MENSAJE_ALTERADA = ("La conexión con Mnemo dejó de valer porque sus datos en la base no coinciden con los que se "
+                    "guardaron cifrados (o se guardó con una versión anterior del panel): hay que volver a conectarla "
+                    "en Ajustes → Asistente.")
+MENSAJE_SIN_MODELO = ("Este Mnemo todavía no ofrece «Usar tus modelos de IA y tus créditos», que es lo que usa el "
+                      "asistente: hay que actualizar Mnemo (desplegar su última versión) y volver a conectar.")
+MENSAJE_PENDIENTE = "La autorización ya no se puede completar: vuelva a conectar desde Ajustes → Asistente."
 MENSAJE_CAMBIO = "La conexión con Mnemo cambió mientras el asistente trabajaba: vuelva a intentarlo."
 MENSAJE_URL = "La dirección MCP de Mnemo no es válida: tiene que ser https://…/mcp."
 MENSAJE_URL_LOCAL = ("La dirección MCP de Mnemo no es válida: tiene que ser https://…/mcp (en local, también "
@@ -139,8 +164,8 @@ _LOOPBACK = ("127.0.0.1", "localhost", "::1")
 class ErrorConexion(Exception):
     """Un paso de conectar, volver o desconectar que no se pudo hacer: un `codigo` estable, el `mensaje` para el
     administrador (en español, sin secretos) y el `estado` HTTP con que lo responde la API (400; 502 si Mnemo no
-    respondió). Códigos: `url`, `descubrimiento`, `recurso`, `sin_oauth`, `servidor`, `registro`, `red`, `estado`,
-    `emisor`, `denegada`, `autorizacion`, `canje` y `conflicto` (409)."""
+    respondió). Códigos: `url`, `descubrimiento`, `recurso`, `sin_oauth`, `servidor`, `sin_modelo`, `registro`, `red`,
+    `estado`, `emisor`, `denegada`, `autorizacion`, `canje` y `conflicto` (409)."""
 
     def __init__(self, codigo: str, mensaje: str, estado: int = 400):
         super().__init__(mensaje)
@@ -225,6 +250,60 @@ def _contexto(emisor: str, client_id: str) -> str:
 
 def _contexto_pendiente(state_h: str) -> str:
     return f"mnemo_pendiente|{state_h}"
+
+
+def _direcciones(datos: dict) -> dict:
+    """Las direcciones que reciben los secretos de una conexión (`DIRECCIONES`), como están en `datos`: el documento
+    guardado (su copia en claro) o lo que se va a guardar."""
+    endpoints = datos.get("endpoints") if isinstance(datos.get("endpoints"), dict) else {}
+    return {"url_mcp": datos.get("url_mcp"), "recurso": datos.get("recurso"), "token": endpoints.get("token"),
+            "revoke": endpoints.get("revoke")}
+
+
+def _atadas(tokens: Any) -> dict | None:
+    """La copia de las direcciones que va dentro de lo cifrado (la autenticada), o None si no está completa: lo cifró
+    una versión del panel que no la guardaba, y no hay de dónde sacarla sin confiar en la base."""
+    d = tokens.get("direcciones") if isinstance(tokens, dict) else None
+    if not isinstance(d, dict) or not all(isinstance(d.get(k), str) and d[k] for k in DIRECCIONES):
+        return None
+    return {k: d[k] for k in DIRECCIONES}
+
+
+def _alterada(doc: dict, atadas: dict, *destinos: str | None) -> bool:
+    """¿La copia en claro de `doc` no coincide con la cifrada, o el access iría a otra parte? `destinos`: las
+    direcciones a las que se va a mandar (la del `ClienteMnemo`), que tienen que ser la `url_mcp` atada."""
+    if _direcciones(doc) != atadas:
+        return True
+    return any(d is not None and str(d).rstrip("/") != atadas["url_mcp"].rstrip("/") for d in destinos)
+
+
+def _pendiente_valido(atado: Any) -> dict | None:
+    """Lo que se cifró con el verificador (`{"v", **ATADO_PENDIENTE}`), si trae todo lo que hace falta para canjear el
+    código y guardar la conexión; None si no (otra clave, alterado o de una versión anterior del panel)."""
+    if not isinstance(atado, dict) or not isinstance(atado.get("v"), str) or not atado["v"]:
+        return None
+    endpoints = atado.get("endpoints")
+    if (not all(isinstance(atado.get(k), str) and atado[k] for k in ("url_mcp", "recurso", "emisor", "client_id",
+                                                                      "redirect_uri"))
+            or not isinstance(endpoints, dict)
+            or not all(isinstance(endpoints.get(k), str) and endpoints[k] for k in ("token", "revoke"))
+            or not isinstance(atado.get("pedidos"), list) or not isinstance(atado.get("iss_requerido"), bool)
+            or not isinstance(atado.get("ofrece_modelo"), bool)):
+        return None
+    return atado
+
+
+def mensaje_caida(motivo: Any) -> str:
+    """Lo que se le dice a quien conversa cuando la conexión está «caida», según su motivo (viene de la base: puede
+    no ser un texto)."""
+    if not isinstance(motivo, str):
+        return mc.MENSAJE_TOKEN
+    return {"clave": MENSAJE_CLAVE, "alterada": MENSAJE_ALTERADA}.get(motivo, mc.MENSAJE_TOKEN)
+
+
+def _caida(motivo: str) -> ErrorHerramienta:
+    """El error de una conexión que se acaba de caer (o que no se puede usar) por `motivo`."""
+    return ErrorHerramienta(mensaje_caida(motivo), mc.COD_TOKEN, detalle={"conexion": motivo})
 
 
 def _token_valido(t: Any) -> bool:
@@ -327,10 +406,12 @@ def _sugerida(doc: dict, cfg: Any) -> str | None:
 def vista(db: Any, cfg: Any = None) -> dict:
     """La conexión para mostrar (Ajustes, `GET /api/agente/estado`), sin descifrar nada ni secretos:
 
-    `{"estado": "sin_conectar" | "conectada" | "caida", "motivo": "revocada" | "clave" | "error" | None (solo en
-    «caida»), "url": la dirección MCP | None, "cuenta": «Nombre (correo)» | None, "alcances": [los concedidos],
-    "modelo": bool (conectada y con `mnemo:model`), "desde": iso de cuando se conectó | None}`. Con `cfg`, además
-    `"url_sugerida"`: `MNEMO_MCP_URL` o la última dirección con que se conectó (None si ninguna)."""
+    `{"estado": "sin_conectar" | "conectada" | "caida", "motivo": "revocada" | "clave" | "alterada" | "error" | None
+    (solo en «caida»), "url": la dirección MCP | None, "cuenta": «Nombre (correo)» | None, "alcances": [los
+    concedidos], "modelo": bool (conectada y con `mnemo:model`), "ofrece_modelo": bool | None (False: ese Mnemo no
+    ofrece `mnemo:model`, hay que actualizarlo; no es una casilla que faltó marcar; None sin conexión), "desde": iso
+    de cuando se conectó | None}`. Con `cfg`, además `"url_sugerida"`: `MNEMO_MCP_URL` o la última dirección con que
+    se conectó (None si ninguna)."""
     doc = db.meta.find_one({"_id": ID}, {"cifrado": 0, "pendiente": 0, "clientes": 0}) or {}
     estado = doc.get("estado") if doc.get("estado") in ESTADOS else "sin_conectar"
     hay = estado != "sin_conectar"
@@ -341,6 +422,7 @@ def vista(db: Any, cfg: Any = None) -> dict:
            "cuenta": _cuenta_legible(doc.get("cuenta")) if hay else None,
            "alcances": alcances,
            "modelo": estado == "conectada" and ALCANCE_MODELO in alcances,
+           "ofrece_modelo": doc.get("ofrece_modelo") is not False if hay else None,
            "desde": _iso(doc.get("conectada_en")) if hay else None}
     if cfg is not None:
         out["url_sugerida"] = _sugerida(doc, cfg)
@@ -372,7 +454,8 @@ def url_sugerida(db: Any, cfg: Any) -> str | None:
 
 async def _descubrir(app: Any, url_mcp: str, cfg: Any) -> dict:
     """El recurso protegido (RFC 9728) y su servidor de autorización (RFC 8414): `{recurso, emisor, endpoints,
-    iss_requerido}`. El recurso tiene que ser la dirección que se dio (salvo una barra final)."""
+    iss_requerido, ofrece_modelo}`. El recurso tiene que ser la dirección que se dio (salvo una barra final). Un
+    servidor que no ofrece `mnemo:model` da `sin_modelo`, salvo que haya `ANTHROPIC_API_KEY`."""
     origen, ruta = _origen(url_mcp), urlsplit(url_mcp).path.rstrip("/")
     prm = await _json_de(app, f"{origen}/.well-known/oauth-protected-resource{ruta}")
     if prm is None:
@@ -417,9 +500,19 @@ async def _descubrir(app: Any, url_mcp: str, cfg: Any) -> dict:
             raise ErrorConexion("servidor", f"El servidor de autorización de Mnemo no ofrece {campo}: el panel lo "
                                             "necesita.")
         endpoints[clave] = v
+    # Un Mnemo anterior a `mnemo:model` no lo anuncia y, si se pide, lo descarta sin avisar: quedaría conectado sin
+    # modelo y mandando a marcar una casilla que su página de permisos no tiene. Sin la lista, se supone que sí. Sin
+    # el modelo de Mnemo solo sirve si el modelo lo pone Anthropic (modo directo): entonces Mnemo da sus herramientas
+    soportados = meta.get("scopes_supported")
+    ofrece_modelo = not isinstance(soportados, list) or ALCANCE_MODELO in soportados
+    if not ofrece_modelo:
+        if not getattr(cfg, "anthropic_api_key", ""):
+            raise ErrorConexion("sin_modelo", MENSAJE_SIN_MODELO)
+        log.info("Mnemo: no ofrece mnemo:model; se conecta solo para sus herramientas (el modelo, en modo directo)")
     # El `resource` se manda tal como lo anuncia Mnemo: lo compara byte a byte (si no, `invalid_target`)
     return {"recurso": recurso, "emisor": emisor, "endpoints": endpoints,
-            "iss_requerido": meta.get("authorization_response_iss_parameter_supported") is True}
+            "iss_requerido": meta.get("authorization_response_iss_parameter_supported") is True,
+            "ofrece_modelo": ofrece_modelo}
 
 
 async def _metadatos(app: Any, emisor: str) -> dict | None:
@@ -497,11 +590,11 @@ async def _client_id(app: Any, db: Any, d: dict, redirect_uri: str) -> str:
     return cid
 
 
-def _pedidos(cfg: Any) -> list[str]:
-    """Los alcances que se piden: OpenID (para saber la cuenta), `mnemo:model` y los de las herramientas que ofrece
-    el panel (`MNEMO_HERRAMIENTAS`, o la lista blanca)."""
+def _pedidos(cfg: Any, modelo: bool = True) -> list[str]:
+    """Los alcances que se piden: OpenID (para saber la cuenta), `mnemo:model` (si ese Mnemo lo ofrece: `modelo`) y
+    los de las herramientas que ofrece el panel (`MNEMO_HERRAMIENTAS`, o la lista blanca)."""
     from .herramientas import mnemo as hmnemo  # aquí y no arriba: el catálogo de herramientas se carga al usarlo
-    return [*ALCANCES_OIDC, ALCANCE_MODELO,
+    return [*ALCANCES_OIDC, *((ALCANCE_MODELO,) if modelo else ()),
             *(a for a in hmnemo.alcances(getattr(cfg, "mnemo_herramientas", "")) if a != ALCANCE_MODELO)]
 
 
@@ -524,15 +617,18 @@ async def iniciar(app: Any, quien: Any, *, url: str | None, redirect_uri: str, s
     client_id = await _client_id(app, db, d, redirect_uri)
     verificador, reto = _pkce()
     state = secrets.token_urlsafe(32)
-    pedidos = _pedidos(cfg)
+    pedidos = _pedidos(cfg, d["ofrece_modelo"])
     state_h = _hash(state)
-    pendiente = {"state_h": state_h, "sesion": sesion, "url_mcp": url_mcp, "recurso": d["recurso"],
-                 "emisor": d["emisor"], "endpoints": d["endpoints"], "client_id": client_id,
-                 "redirect_uri": redirect_uri, "pedidos": pedidos, "iss_requerido": d["iss_requerido"],
-                 "uid": getattr(quien, "uid", None), "expira": _ahora() + VIGENCIA_PENDIENTE}
+    atado = {"url_mcp": url_mcp, "recurso": d["recurso"], "emisor": d["emisor"], "endpoints": d["endpoints"],
+             "client_id": client_id, "redirect_uri": redirect_uri, "pedidos": pedidos,
+             "iss_requerido": d["iss_requerido"], "ofrece_modelo": d["ofrece_modelo"]}
+    pendiente = {"state_h": state_h, "sesion": sesion, **atado, "uid": getattr(quien, "uid", None),
+                 "expira": _ahora() + VIGENCIA_PENDIENTE}
 
     def guardar() -> None:
-        pendiente["verificador_cifrado"] = cifrado.cifrar(seguridad.llave_mnemo(cfg), {"v": verificador},
+        # Con el verificador va una copia de lo que recibe el código y el verificador (y de lo que será la conexión):
+        # `volver` usa solo esa copia. La de la base queda para mirarla
+        pendiente["verificador_cifrado"] = cifrado.cifrar(seguridad.llave_mnemo(cfg), {"v": verificador, **atado},
                                                           _contexto_pendiente(state_h))
         db.meta.update_one({"_id": ID}, {"$set": {"pendiente": pendiente}, "$setOnInsert": {"version": 0}},
                            upsert=True)
@@ -614,14 +710,20 @@ def _cuenta(id_token: str | None, emisor: str, client_id: str) -> dict:
 
 
 def _campos(cfg: Any, datos: dict, tokens: dict, quien: Any, ahora: datetime) -> dict:
-    """Lo que se guarda de una conexión nueva (los tokens, cifrados)."""
+    """Lo que se guarda de una conexión nueva: los tokens, cifrados, y con ellos la copia de las direcciones a las que
+    se mandan (`DIRECCIONES`), la única que se usa para mandarlos."""
     llave = seguridad.llave_mnemo(cfg)
+    datos = {**datos, "recurso": datos.get("recurso") or datos["url_mcp"], "endpoints": dict(datos["endpoints"])}
+    direcciones = _direcciones(datos)
+    if not all(isinstance(direcciones[k], str) and direcciones[k] for k in DIRECCIONES):
+        raise ValueError("A la conexión con Mnemo le falta una dirección (url_mcp, recurso o endpoints token y revoke)")
     return {"estado": "conectada", "motivo": None, "conexion": secrets.token_hex(12),
-            "url_mcp": datos["url_mcp"], "recurso": datos.get("recurso") or datos["url_mcp"],
-            "emisor": datos["emisor"], "endpoints": dict(datos["endpoints"]), "client_id": datos["client_id"],
+            "url_mcp": datos["url_mcp"], "recurso": datos["recurso"],
+            "emisor": datos["emisor"], "endpoints": datos["endpoints"], "client_id": datos["client_id"],
             "redirect_uri": datos["redirect_uri"], "alcances": list(datos.get("alcances") or []),
-            "cuenta": dict(datos.get("cuenta") or {}),
-            "cifrado": cifrado.cifrar(llave, {"access": tokens["access"], "refresh": tokens["refresh"]},
+            "ofrece_modelo": datos.get("ofrece_modelo") is not False, "cuenta": dict(datos.get("cuenta") or {}),
+            "cifrado": cifrado.cifrar(llave, {"access": tokens["access"], "refresh": tokens["refresh"],
+                                              "direcciones": direcciones},
                                       _contexto(datos["emisor"], datos["client_id"])),
             "vence": ahora + timedelta(seconds=int(tokens.get("expira") or VIDA_POR_DEFECTO_S)),
             "renovando_hasta": None, "renovada_en": None, "caida_en": None,
@@ -638,10 +740,13 @@ def _escribir(db: Any, cfg: Any, filtro: dict, datos: dict, tokens: dict, quien:
 
 
 def instalar(db: Any, cfg: Any, datos: dict, tokens: dict, quien: Any = None) -> None:
-    """Guarda una conexión «conectada» sin pasar por el flujo (para las pruebas: `ayudas_agente.conectar_mnemo`).
-    `datos`: `{url_mcp, emisor, endpoints: {authorize, token, register, revoke}, client_id, redirect_uri, alcances,
-    cuenta?: {sub, nombre?, correo?}, recurso?}`; `tokens`: `{access, refresh, expira (segundos)}`. Reemplaza la que
-    hubiera (sin revocarla)."""
+    """Guarda una conexión «conectada» sin pasar por el flujo (para las pruebas: `ayudas_agente.conectar_mnemo`), como
+    la guarda `volver`: los tokens cifrados y, dentro de lo cifrado, las direcciones a las que se mandan (`url_mcp`,
+    `recurso` y los endpoints `token` y `revoke`: si después alguien las cambia en la base, la conexión queda
+    «caida» con motivo «alterada» sin mandar nada). `datos`: `{url_mcp, emisor, endpoints: {authorize, token,
+    register, revoke}, client_id, redirect_uri, alcances, cuenta?: {sub, nombre?, correo?}, recurso?,
+    ofrece_modelo?}`; `tokens`: `{access, refresh, expira (segundos)}`. Reemplaza la que hubiera (sin revocarla).
+    Lanza `ValueError` si falta una de esas direcciones."""
     _escribir(db, cfg, {"_id": ID}, datos, tokens, quien, upsert=True)
 
 
@@ -686,9 +791,10 @@ def _misma_concesion(viejo: dict, datos: dict) -> bool:
 async def volver(app: Any, quien: Any, *, sesion: str, state: str, code: str | None = None, iss: str | None = None,
                  error: str | None = None, error_description: str | None = None) -> dict:
     """POST /api/agente/mnemo/volver: la vuelta de Mnemo (`/ajustes?code=…&state=…&iss=…`, o `error=…`). Toma el
-    pendiente (mismo `state`, misma sesión, no vencido; nunca dos veces), exige `iss` igual al emisor, canjea el
-    código en `/oauth/token` (PKCE, `redirect_uri`, `resource`), guarda la conexión cifrada (sin pisar una renovación
-    en vuelo) y, si la vieja era otra concesión (otra cuenta, otro cliente u otro Mnemo), revoca su refresh. Audita
+    pendiente (mismo `state`, misma sesión, no vencido; nunca dos veces) y, de él, solo la copia cifrada con el
+    verificador (si la de la base no coincide, no se canjea nada); exige `iss` igual al emisor, canjea el código en
+    `/oauth/token` (PKCE, `redirect_uri`, `resource`), guarda la conexión cifrada (sin pisar una renovación en
+    vuelo) y, si la vieja era otra concesión (otra cuenta, otro cliente u otro Mnemo), revoca su refresh. Audita
     `mnemo_conectar` y devuelve `vista(db, cfg)`. Lanza `ErrorConexion` (`estado`, `emisor`, `denegada`,
     `autorizacion`, `canje`, `red` o `conflicto`)."""
     db, cfg = app.state.db, app.state.cfg
@@ -696,7 +802,15 @@ async def volver(app: Any, quien: Any, *, sesion: str, state: str, code: str | N
     if p is None:
         raise ErrorConexion("estado", "La autorización no corresponde a esta sesión o ya venció: vuelva a conectar "
                                       "desde Ajustes → Asistente.")
-    if (iss is not None and iss != p.get("emisor")) or (iss is None and p.get("iss_requerido")):
+    atado = _pendiente_valido(await run_in_threadpool(lambda: cifrado.descifrar(
+        seguridad.llave_mnemo(cfg), p.get("verificador_cifrado"), _contexto_pendiente(p.get("state_h") or ""))))
+    if atado is None:
+        raise ErrorConexion("estado", MENSAJE_PENDIENTE)
+    if any(p.get(k) != atado[k] for k in ATADO_PENDIENTE):
+        log.warning("Mnemo: el pendiente de la base no coincide con el cifrado; no se canjea nada")
+        raise ErrorConexion("estado", MENSAJE_PENDIENTE)
+    # De aquí en adelante, solo la copia cifrada: la de la base no está autenticada
+    if (iss is not None and iss != atado["emisor"]) or (iss is None and atado["iss_requerido"]):
         log.warning("Mnemo: la vuelta trae un emisor que no es el de la conexión")
         raise ErrorConexion("emisor", "La respuesta no vino del servidor de autorización de Mnemo con que se empezó: "
                                       "no se conectó nada.")
@@ -707,15 +821,10 @@ async def volver(app: Any, quien: Any, *, sesion: str, state: str, code: str | N
         raise ErrorConexion("autorizacion", f"Mnemo no autorizó la conexión ({dice}).")
     if not code:
         raise ErrorConexion("canje", "Mnemo no devolvió un código de autorización: vuelva a conectar.")
-    verificador = await run_in_threadpool(lambda: cifrado.descifrar(
-        seguridad.llave_mnemo(cfg), p.get("verificador_cifrado"), _contexto_pendiente(p.get("state_h") or "")))
-    if not verificador or not isinstance(verificador.get("v"), str):
-        raise ErrorConexion("estado", "La autorización ya no se puede completar: vuelva a conectar desde Ajustes → "
-                                      "Asistente.")
     try:
-        r = await _pedir(app, "POST", p["endpoints"]["token"], plazo=PLAZO_TOKEN_S, data={
-            "grant_type": "authorization_code", "code": code, "redirect_uri": p["redirect_uri"],
-            "client_id": p["client_id"], "code_verifier": verificador["v"], "resource": p["recurso"]})
+        r = await _pedir(app, "POST", atado["endpoints"]["token"], plazo=PLAZO_TOKEN_S, data={
+            "grant_type": "authorization_code", "code": code, "redirect_uri": atado["redirect_uri"],
+            "client_id": atado["client_id"], "code_verifier": atado["v"], "resource": atado["recurso"]})
     except _SinRed:
         raise ErrorConexion("red", MENSAJE_RED, 502) from None
     tokens = _tokens(r)
@@ -723,10 +832,11 @@ async def volver(app: Any, quien: Any, *, sesion: str, state: str, code: str | N
         log.warning("Mnemo: no aceptó el canje del código (HTTP %s)", r.estado)
         raise ErrorConexion("canje", "Mnemo no aceptó el código de autorización (venció o ya se usó): vuelva a "
                                      "conectar.")
-    datos = {"url_mcp": p["url_mcp"], "recurso": p["recurso"], "emisor": p["emisor"], "endpoints": p["endpoints"],
-             "client_id": p["client_id"], "redirect_uri": p["redirect_uri"],
-             "alcances": _alcances(tokens["scope"], p.get("pedidos")),
-             "cuenta": _cuenta(tokens["id_token"], p["emisor"], p["client_id"])}
+    datos = {"url_mcp": atado["url_mcp"], "recurso": atado["recurso"], "emisor": atado["emisor"],
+             "endpoints": atado["endpoints"], "client_id": atado["client_id"], "redirect_uri": atado["redirect_uri"],
+             "alcances": _alcances(tokens["scope"], atado["pedidos"]),
+             "cuenta": _cuenta(tokens["id_token"], atado["emisor"], atado["client_id"]),
+             "ofrece_modelo": atado["ofrece_modelo"]}
     viejo = await _con_arriendo(db, lambda filtro: _escribir(db, cfg, filtro, datos, tokens, quien))
     otra = viejo.get("estado") in ESTADOS and not _misma_concesion(viejo, datos)
     if otra and viejo.get("cifrado"):
@@ -754,15 +864,20 @@ async def _revocar(app: Any, endpoint: str, client_id: str, refresh: str) -> boo
 
 
 async def _revocar_doc(app: Any, cfg: Any, doc: dict) -> bool:
-    endpoints = doc.get("endpoints") if isinstance(doc.get("endpoints"), dict) else {}
-    endpoint, client_id = endpoints.get("revoke"), doc.get("client_id")
-    if not isinstance(endpoint, str) or not isinstance(client_id, str):
+    """Revoca la concesión de `doc` (una conexión guardada) en el endpoint de revocación atado a sus tokens: el que va
+    dentro de lo cifrado, nunca el de la base. Así, aunque alguien lo haya cambiado en la base, el refresh va al Mnemo
+    que lo emitió y la concesión se revoca de verdad. False si no hay nada que mandar."""
+    client_id = doc.get("client_id")
+    if not isinstance(client_id, str):
         return False
     tokens = await run_in_threadpool(lambda: cifrado.descifrar(
         seguridad.llave_mnemo(cfg), doc.get("cifrado"), _contexto(str(doc.get("emisor")), client_id)))
-    if not tokens or not _token_valido(tokens.get("refresh")):
+    atadas = _atadas(tokens)
+    if not tokens or not _token_valido(tokens.get("refresh")) or atadas is None:
         return False
-    return await _revocar(app, endpoint, client_id, tokens["refresh"])
+    if _alterada(doc, atadas):
+        log.warning("Mnemo: la conexión de la base no coincide con la cifrada; se revoca en la dirección cifrada")
+    return await _revocar(app, atadas["revoke"], client_id, tokens["refresh"])
 
 
 def _quitar(db: Any, filtro: dict) -> bool:
@@ -815,26 +930,31 @@ def _leer(db: Any) -> dict | None:
 class FuenteTokens:
     """Los access tokens de la conexión guardada, para `mnemo_cliente.ClienteMnemo` (que pide uno en cada envío).
 
-    * `await token() -> str` — un access vigente: el guardado si le quedan más de `MARGEN` (descifrado una vez por
-      `version`); si no, o si Mnemo lo rechazó (`invalidar`), lo renueva con una sola renovación a la vez en el
-      proceso y entre procesos. Si no hay conexión, se cayó, la reemplazó otra (otra `conexion` que la de esta
-      fuente) o no se puede descifrar, lanza `ErrorHerramienta` con `mnemo_cliente.COD_TOKEN` y `detalle={"conexion":
-      "sin_conectar" | "caida" | "revocada" | "clave" | "error" | "cambio"}` (y deja la conexión «caida» cuando
-      corresponde); si Mnemo no responde al renovar, con `COD_RED` o `COD_PLAZO`; si responde otro error (un 5xx),
-      con `COD_MNEMO` y su `estado`.
+    * `await token(destino=None) -> str` — un access vigente: el guardado si le quedan más de `MARGEN` (descifrado
+      una vez por `version`); si no, o si Mnemo lo rechazó (`invalidar`), lo renueva con una sola renovación a la vez
+      en el proceso y entre procesos. Solo lo entrega para la `url_mcp` atada a los tokens (la copia cifrada):
+      `destino` (la dirección a la que lo va a mandar el `ClienteMnemo`) y la `url_mcp` de esta fuente tienen que ser
+      esa, y la copia en claro de la base tiene que coincidir con la cifrada. Si no hay conexión, se cayó, la
+      reemplazó otra (otra `conexion` que la de esta fuente), no se puede descifrar o no coincide, lanza
+      `ErrorHerramienta` con `mnemo_cliente.COD_TOKEN` y `detalle={"conexion": "sin_conectar" | "caida" | "revocada"
+      | "clave" | "alterada" | "error" | "cambio"}` (y deja la conexión «caida» cuando corresponde), sin mandar nada;
+      si Mnemo no responde al renovar, con `COD_RED` o `COD_PLAZO`; si responde otro error (un 5xx), con `COD_MNEMO` y
+      su `estado`.
     * `await invalidar(usado: str)` — Mnemo respondió 401 con `usado`: el próximo `token()` renueva si el guardado
       sigue siendo ese (si otro ya renovó, da el nuevo sin pedir nada).
 
     `app` es la aplicación (o cualquier objeto con `state.db`, `state.cfg` y, en las pruebas, `state.mnemo_transporte`)
     y se lee en cada llamada: un cambio de clave del administrador se nota al instante. `conexion` es el id de la
-    conexión que sirve (None: la que esté)."""
+    conexión que sirve (None: la que esté) y `url_mcp`, la dirección del cliente al que sirve (`cliente_de` pone las
+    dos; None: no se mira). El refresh va solo al endpoint de tokens atado, con el `recurso` atado."""
 
-    def __init__(self, app: Any, conexion: str | None = None):
+    def __init__(self, app: Any, conexion: str | None = None, url_mcp: str | None = None):
         self.app, self.conexion = app, conexion or None
-        self._cache: tuple[int, str, datetime] | None = None  # (version, access, vence)
-        self._invalidado: str | None = None                  # huella del access que Mnemo rechazó
+        self.url_mcp = url_mcp if isinstance(url_mcp, str) and url_mcp else None
+        self._cache: tuple[int, str, datetime, dict] | None = None  # (version, access, vence, direcciones atadas)
+        self._invalidado: str | None = None                        # huella del access que Mnemo rechazó
         self._tarea: tuple[asyncio.AbstractEventLoop, asyncio.Task] | None = None
-        self.renovaciones = 0                                 # las que pidió esta fuente
+        self.renovaciones = 0                                       # las que pidió esta fuente
 
     def __repr__(self) -> str:  # sin tokens: el repr sale en trazas
         return f"FuenteTokens(conexion={self.conexion!r})"
@@ -851,16 +971,21 @@ class FuenteTokens:
         if isinstance(usado, str) and usado:
             self._invalidado = _huella(usado)
 
-    async def token(self) -> str:
+    async def token(self, destino: str | None = None) -> str:
         for _ in range(4):
             doc = await run_in_threadpool(_leer, self._db)
             self._exigir(doc)
-            acceso, vence = await self._acceso(doc)
+            version = int(doc.get("version") or 0)
+            acceso, vence, atadas = await self._acceso(doc)
+            # En el mismo documento que se acaba de leer: lo de la base, la copia cifrada y adónde va el access
+            if _alterada(doc, atadas, self.url_mcp, destino):
+                await run_in_threadpool(_caer, self._db, {"_id": ID, "version": version}, "alterada")
+                raise _caida("alterada")
             if vence - _ahora() >= MARGEN and not (
                     self._invalidado and hmac.compare_digest(self._invalidado, _huella(acceso))):
                 return acceso
             try:
-                return await self._renovacion(int(doc.get("version") or 0))
+                return await self._renovacion(version)
             except _OtraVez:
                 continue
         raise ErrorHerramienta(MENSAJE_CAMBIO, mc.COD_TOKEN, detalle={"conexion": "cambio"})
@@ -869,23 +994,29 @@ class FuenteTokens:
         if not doc or doc.get("estado") != "conectada":
             caida = bool(doc and doc.get("estado") == "caida")
             motivo = doc.get("motivo") if caida else None
-            mensaje = (MENSAJE_CLAVE if motivo == "clave" else mc.MENSAJE_TOKEN) if caida else MENSAJE_SIN_CONEXION
+            mensaje = mensaje_caida(motivo) if caida else MENSAJE_SIN_CONEXION
             raise ErrorHerramienta(mensaje, mc.COD_TOKEN, detalle={"conexion": motivo if caida and isinstance(
                 motivo, str) else ("caida" if caida else "sin_conectar")})
         if self.conexion and doc.get("conexion") != self.conexion:
             raise ErrorHerramienta(MENSAJE_CAMBIO, mc.COD_TOKEN, detalle={"conexion": "cambio"})
 
-    async def _acceso(self, doc: dict) -> tuple[str, datetime]:
+    async def _acceso(self, doc: dict) -> tuple[str, datetime, dict]:
+        """El access guardado, cuándo vence y las direcciones atadas a él (lo cifrado se descifra una vez por
+        `version`). Si no descifra, la conexión cae con motivo «clave»; si no trae las direcciones, con «alterada»."""
         version = int(doc.get("version") or 0)
         vence = _utc(doc.get("vence")) or _ahora()
         if self._cache is not None and self._cache[0] == version:
-            return self._cache[1], self._cache[2]
+            return self._cache[1], self._cache[2], self._cache[3]
         tokens = await run_in_threadpool(self._descifrar, doc)
         if tokens is None or not _token_valido(tokens.get("access")):
             await run_in_threadpool(_caer, self._db, {"_id": ID, "version": version}, "clave")
-            raise ErrorHerramienta(MENSAJE_CLAVE, mc.COD_TOKEN, detalle={"conexion": "clave"})
-        self._cache = (version, tokens["access"], vence)
-        return tokens["access"], vence
+            raise _caida("clave")
+        atadas = _atadas(tokens)
+        if atadas is None:  # sin la copia cifrada de las direcciones no hay a quién mandarle el access con confianza
+            await run_in_threadpool(_caer, self._db, {"_id": ID, "version": version}, "alterada")
+            raise _caida("alterada")
+        self._cache = (version, tokens["access"], vence, atadas)
+        return tokens["access"], vence, atadas
 
     def _descifrar(self, doc: dict) -> dict | None:
         return cifrado.descifrar(seguridad.llave_mnemo(self._cfg), doc.get("cifrado"),
@@ -917,13 +1048,17 @@ class FuenteTokens:
         tokens = await run_in_threadpool(self._descifrar, tomado)
         if tokens is None or not _token_valido(tokens.get("refresh")):
             await run_in_threadpool(_caer, db, mio, "clave")
-            raise ErrorHerramienta(MENSAJE_CLAVE, mc.COD_TOKEN, detalle={"conexion": "clave"})
-        endpoints = tomado.get("endpoints") if isinstance(tomado.get("endpoints"), dict) else {}
+            raise _caida("clave")
+        # El refresh va solo al endpoint de tokens atado (con el recurso atado), y solo si la base no se alteró
+        atadas = _atadas(tokens)
+        if atadas is None or _alterada(tomado, atadas, self.url_mcp):
+            await run_in_threadpool(_caer, db, mio, "alterada")
+            raise _caida("alterada")
         try:
             self.renovaciones += 1
-            r = await _pedir(self.app, "POST", str(endpoints.get("token")), plazo=PLAZO_TOKEN_S, data={
+            r = await _pedir(self.app, "POST", atadas["token"], plazo=PLAZO_TOKEN_S, data={
                 "grant_type": "refresh_token", "refresh_token": tokens["refresh"],
-                "client_id": str(tomado.get("client_id")), "resource": str(tomado.get("recurso") or "")})
+                "client_id": str(tomado.get("client_id")), "resource": atadas["recurso"]})
         except BaseException as e:
             # No se sabe si Mnemo alcanzó a rotar: se suelta el arriendo y el siguiente intento lo dirá (si rotó, el
             # refresh viejo dará invalid_grant y la conexión quedará caída)
@@ -937,19 +1072,21 @@ class FuenteTokens:
             error = r.datos.get("error") if isinstance(r.datos, dict) else None
             if r.estado in (400, 401) and error in ("invalid_grant", "invalid_client"):
                 await run_in_threadpool(_caer, db, mio, "revocada")
-                raise ErrorHerramienta(mc.MENSAJE_TOKEN, mc.COD_TOKEN, detalle={"conexion": "revocada"})
+                raise _caida("revocada")
             if r.estado == 200:  # Mnemo rotó y respondió algo que no sirve: el refresh viejo ya no vale
                 await run_in_threadpool(_caer, db, mio, "error")
-                raise ErrorHerramienta(mc.MENSAJE_TOKEN, mc.COD_TOKEN, detalle={"conexion": "error"})
+                raise _caida("error")
             await run_in_threadpool(db.meta.update_one, mio, {"$set": {"renovando_hasta": None},
                                                               "$unset": {"renovador": ""}})
             log.warning("Mnemo: no se pudo renovar la conexión (HTTP %s)", r.estado)
             raise ErrorHerramienta(f"Mnemo no pudo renovar la conexión (HTTP {r.estado}). Intente de nuevo en un rato.",
                                    mc.COD_MNEMO, estado=r.estado)
-        # El refresh nuevo se guarda ANTES de usar el access nuevo: perderlo sería reusar el viejo la próxima vez
+        # El refresh nuevo se guarda ANTES de usar el access nuevo: perderlo sería reusar el viejo la próxima vez. Las
+        # direcciones atadas siguen con él
         vence = _ahora() + timedelta(seconds=nuevos["expira"])
         campos = {"cifrado": cifrado.cifrar(seguridad.llave_mnemo(self._cfg), {"access": nuevos["access"],
-                                                                              "refresh": nuevos["refresh"]},
+                                                                              "refresh": nuevos["refresh"],
+                                                                              "direcciones": atadas},
                                             _contexto(str(tomado.get("emisor")), str(tomado.get("client_id")))),
                   "vence": vence, "renovada_en": _ahora(), "renovando_hasta": None}
         if nuevos["scope"]:
@@ -968,23 +1105,20 @@ class FuenteTokens:
         if hecho is None or hecho.matched_count != 1:
             log.warning("Mnemo: la conexión cambió mientras se renovaba; se descarta lo renovado")
             raise _OtraVez
-        self._cache, self._invalidado = (version + 1, nuevos["access"], vence), None
+        self._cache, self._invalidado = (version + 1, nuevos["access"], vence, atadas), None
         log.info("Mnemo: se renovó la conexión")
         return nuevos["access"]
 
     async def _esperar_otro(self, version: int) -> str:
-        """Otro (proceso o fuente) tiene el arriendo: se espera a que suba la `version` y se usa lo que guardó. Si
-        suelta el arriendo sin renovar, se vuelve a intentar."""
+        """Otro (proceso o fuente) tiene el arriendo: se espera a que suba la `version` (o a que lo suelte) y se vuelve
+        a leer la conexión (`_OtraVez`), con las mismas comprobaciones que cualquier lectura."""
         bucle = asyncio.get_running_loop()
         fin = bucle.time() + ESPERA_OTRO_S
         while bucle.time() < fin:
             await asyncio.sleep(SONDEO_S)
             doc = await run_in_threadpool(_leer, self._db)
             self._exigir(doc)
-            if int(doc.get("version") or 0) != version:
-                acceso, _ = await self._acceso(doc)
-                return acceso
-            if _libre(doc, _ahora()):
+            if int(doc.get("version") or 0) != version or _libre(doc, _ahora()):
                 raise _OtraVez
         raise ErrorHerramienta("Mnemo tardó demasiado en renovar la conexión. Intente de nuevo en un rato.",
                                mc.COD_PLAZO)

@@ -12,10 +12,11 @@ contra Mnemo levantado en local):
   keepalive cada 15 s) o como JSON plano (los rechazos previos: 400, 405, 406, 413, 415). Se decide por Content-Type
   y se lee con un tope de tamaño: una imagen grande cabe, un servidor desbocado no llena la memoria.
 * El token: en el panel, una `mnemo_conexion.FuenteTokens` (la conexión OAuth que el administrador hizo en Ajustes →
-  Asistente), que se pide en CADA envío (así una renovación vale al instante). Ante un 401 se le avisa
-  (`invalidar(usado)`: renueva si el guardado sigue siendo ese) y el envío se repite UNA vez; si vuelve el 401, la
-  conexión venció o se revocó y hay que volver a conectarla. Las pruebas (y un token personal de Mnemo) pasan un
-  texto fijo, que no se renueva.
+  Asistente), que se pide en CADA envío (así una renovación vale al instante) diciéndole adónde va: la fuente solo
+  lo entrega para la dirección atada a los tokens (la que va cifrada con ellos), así que cambiar la dirección en la
+  base no desvía el access. Ante un 401 se le avisa (`invalidar(usado)`: renueva si el guardado sigue siendo ese) y
+  el envío se repite UNA vez; si vuelve el 401, la conexión venció o se revocó y hay que volver a conectarla. Las
+  pruebas (y un token personal de Mnemo) pasan un texto fijo, que no se renueva.
 * `initialize` y `notifications/initialized` van una vez por cliente: el modo sin estado no los exige, pero traen las
   instrucciones del servidor (van al `system` del asistente) y la versión acordada. `tools/list` se pide con el bucle
   de `nextCursor` (Mnemo hoy lo da todo de una vez) y se guarda 10 minutos: depende de la conexión (alcances y plan),
@@ -280,8 +281,9 @@ class ClienteMnemo:
         self._iniciado, self._sesion, self._catalogo, self._vence = False, None, None, 0.0
 
     async def _token(self) -> str:
-        """El token de este envío: el fijo, o uno vigente de la conexión (que puede renovarse en el camino)."""
-        token = self._fijo if self._fuente is None else await self._fuente.token()
+        """El token de este envío: el fijo, o uno vigente de la conexión (que puede renovarse en el camino) para esta
+        dirección: la fuente no lo da si no es la atada a la conexión."""
+        token = self._fijo if self._fuente is None else await self._fuente.token(destino=self.url)
         if not isinstance(token, str) or not _CABECERA_SEGURA.fullmatch(token):
             raise ErrorHerramienta("El token de Mnemo tiene caracteres que no pueden ir en una cabecera HTTP.",
                                    COD_TOKEN)
@@ -673,11 +675,12 @@ _CANDADO = threading.Lock()
 
 def cliente_de(app: Any) -> ClienteMnemo | None:
     """El cliente de Mnemo de la aplicación (uno, en `app.state.mnemo_cliente`), armado con la conexión guardada
-    (`mnemo_conexion`): su dirección MCP y una `FuenteTokens` de esa conexión. None si no hay una conexión
-    «conectada». Se rehace cuando cambia la `version` de la conexión (se conectó otra vez, se renovó, se cayó o se
-    desconectó); el viejo se retira (cierra sus conexiones cuando termine lo que tenga en curso). Las pruebas inyectan
-    el transporte en `app.state.mnemo_transporte`. Lee un documento de MongoDB por `_id`: desde código asíncrono, mejor
-    con `run_in_threadpool`."""
+    (`mnemo_conexion`): su dirección MCP y una `FuenteTokens` de esa conexión y de esa dirección (que solo da el access
+    si la dirección es la atada a los tokens: una cambiada en la base deja la conexión «caida» sin mandar nada). None
+    si no hay una conexión «conectada». Se rehace cuando cambia la `version` de la conexión (se conectó otra vez, se
+    renovó, se cayó o se desconectó) o su dirección; el viejo se retira (cierra sus conexiones cuando termine lo que
+    tenga en curso). Las pruebas inyectan el transporte en `app.state.mnemo_transporte`. Lee un documento de MongoDB
+    por `_id`: desde código asíncrono, mejor con `run_in_threadpool`."""
     estado = getattr(app, "state", None)
     db = getattr(estado, "db", None) if estado is not None else None
     if db is None:
@@ -692,8 +695,8 @@ def cliente_de(app: Any) -> ClienteMnemo | None:
                 and actual.url == vigente["url_mcp"].rstrip("/")):
             return actual
         try:
-            nuevo = ClienteMnemo(vigente["url_mcp"], mnemo_conexion.FuenteTokens(app, vigente["conexion"]),
-                                 transporte=mnemo_conexion.transporte_de(app))
+            nuevo = ClienteMnemo(vigente["url_mcp"], mnemo_conexion.FuenteTokens(
+                app, vigente["conexion"], vigente["url_mcp"]), transporte=mnemo_conexion.transporte_de(app))
         except ValueError:
             log.warning("Mnemo: la dirección de la conexión no es válida; el asistente sigue sin Mnemo")
             return None

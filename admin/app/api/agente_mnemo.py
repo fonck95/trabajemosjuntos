@@ -12,9 +12,12 @@ las rutas son solo del administrador (`requiere("agente.conectar")`, en `acceso.
 * DELETE /api/agente/mnemo → la vista más `"revocada": bool | None` (¿Mnemo revocó la concesión?).
 
 Errores: 400, 409 o 502 con `{"codigo", "mensaje"}` (`mnemo_conexion.ErrorConexion`): `url`, `descubrimiento`,
-`recurso`, `sin_oauth`, `servidor`, `registro`, `red` (502), `estado`, `emisor`, `denegada`, `autorizacion`, `canje` y
-`conflicto` (409). La vuelta (`redirect_uri`) sale de la petición: `{esquema}://{host}{base}/ajustes` (uvicorn corre
-con `--proxy-headers`: en Railway, https).
+`recurso`, `sin_oauth`, `servidor`, `sin_modelo` (ese Mnemo no ofrece usar sus modelos: hay que actualizarlo; con
+`ANTHROPIC_API_KEY` sí se conecta, para sus herramientas), `registro`, `red` (502), `estado`, `emisor`, `denegada`,
+`autorizacion`, `canje` y `conflicto` (409). La vuelta (`redirect_uri`) sale de la petición:
+`{esquema}://{host}{base}/ajustes`. Detrás de HTTPS (`cookie_segura`, como en Railway) el esquema es siempre https:
+uvicorn (`--proxy-headers`) solo lo cambia si `X-Forwarded-Proto` es exactamente un valor conocido, y con la cabecera
+ausente, en mayúsculas o con una lista (proxies encadenados) quedaría en http, que Mnemo no acepta fuera de loopback.
 
 El módulo de la conexión se importa al usarlo, como el bucle en `api/agente.py`: `crear_app` no depende de que el
 catálogo de herramientas cargue."""
@@ -43,8 +46,15 @@ class VolverIn(BaseModel):
 
 
 def _redirect_uri(request: Request) -> str:
-    """La vuelta de Mnemo: la vista de Ajustes del panel, en el mismo origen y con el prefijo con que está montado."""
-    return f"{request.url.scheme}://{request.url.netloc}{base_de(request)}/ajustes"
+    """La vuelta de Mnemo: la vista de Ajustes del panel, en el mismo origen y con el prefijo con que está montado.
+    Con `cookie_segura` el panel solo funciona por HTTPS (la cookie es Secure): la vuelta es https aunque el esquema
+    que vio uvicorn sea http (sin el puerto 80 de http, si el proxy lo dejó en `Host`). En local, el de la petición."""
+    esquema, netloc = request.url.scheme, request.url.netloc
+    if request.app.state.cfg.cookie_segura and esquema != "https":
+        esquema = "https"
+        if netloc.endswith(":80"):
+            netloc = netloc[:-3]
+    return f"{esquema}://{netloc}{base_de(request)}/ajustes"
 
 
 async def _sesion(request: Request) -> str:

@@ -3,7 +3,9 @@
 
 * La clave no está en la base: es `seguridad.llave_mnemo(cfg)`, un HMAC de la derivación lenta de `ADMIN` y `password`
   con una etiqueta propia (nunca la salida de `huella()`, que se guarda en `sesiones`). Una fuga solo de la base (un
-  respaldo, la URI) no da acceso al Mnemo del administrador ni a sus créditos.
+  respaldo, la URI) no da acceso al Mnemo del administrador ni a sus créditos. Tampoco escribir en ella: lo cifrado
+  lleva también las direcciones a las que se mandan los tokens (y el código y el verificador del pendiente), y
+  `mnemo_conexion` usa solo esa copia para mandarlos.
 * Cada texto lleva la versión del formato, un nonce aleatorio de 12 bytes y lo cifrado con su etiqueta de 16 bytes, en
   base64 url. Los datos asociados son el `contexto` (`"mnemo_conexion|<emisor>|<client_id>"`): lo cifrado para una
   conexión no se puede pegar en otra.

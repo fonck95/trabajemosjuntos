@@ -481,7 +481,9 @@ class OAuthFalso:
 
     * `GET /.well-known/oauth-protected-resource[/mcp]` (PRM: `resource` = `<base>/mcp`, `authorization_servers` =
       [`<base>`]; `prm_extra` lo cambia) y `GET /.well-known/oauth-authorization-server` u `openid-configuration`
-      (los metadatos; `metadatos_extra` los cambia). El 401 de `/mcp` anuncia `ruta_prm` en `resource_metadata`.
+      (los metadatos, con `mnemo:model` en `scopes_supported`; `metadatos_extra` los cambia). El 401 de `/mcp`
+      anuncia `ruta_prm` en `resource_metadata`. `anuncia_modelo=False` es un Mnemo anterior a `mnemo:model`: no lo
+      anuncia en sus metadatos y, si se pide, lo descarta sin avisar.
     * `POST /oauth/register` (JSON, RFC 7591): 201 con un `client_id` nuevo. `solo_loopback_http=True` rechaza una
       vuelta http que no sea de loopback, como Mnemo.
     * `GET /oauth/authorize`: cliente y vuelta registrados (si no, 400 con una página HTML que no vuelve); exige
@@ -516,6 +518,7 @@ class OAuthFalso:
         self.marcar: set[str] | None = None
         self.demora = 0.0
         self.solo_loopback_http = False
+        self.anuncia_modelo = True
         self.prm_extra: dict = {}
         self.ruta_prm = "/.well-known/oauth-protected-resource/mcp"  # la que anuncia el 401 de /mcp
         self.metadatos_extra: dict = {}
@@ -545,6 +548,10 @@ class OAuthFalso:
                 "scopes_supported": [a for a in ALCANCES_MNEMO if a != "mnemo:model"],
                 "bearer_methods_supported": ["header"], "resource_name": "Mnemo", **self.prm_extra}
 
+    def ofrecidos(self) -> tuple[str, ...]:
+        """Los alcances de Mnemo que ofrece este servidor (sin `mnemo:model` si es uno anterior: `anuncia_modelo`)."""
+        return tuple(a for a in ALCANCES_MNEMO if self.anuncia_modelo or a != "mnemo:model")
+
     def metadatos(self) -> dict:
         e = self.endpoints()
         return {"issuer": self.base, "authorization_endpoint": e["authorize"], "token_endpoint": e["token"],
@@ -554,7 +561,7 @@ class OAuthFalso:
                 "token_endpoint_auth_methods_supported": ["none", "client_secret_post"],
                 "grant_types_supported": ["authorization_code", "refresh_token"], "response_types_supported": ["code"],
                 "response_modes_supported": ["query"], "authorization_response_iss_parameter_supported": True,
-                "client_id_metadata_document_supported": True, "scopes_supported": [*ALCANCES_MNEMO, *OIDC],
+                "client_id_metadata_document_supported": True, "scopes_supported": [*self.ofrecidos(), *OIDC],
                 "id_token_signing_alg_values_supported": ["ES256"], **self.metadatos_extra}
 
     def transporte(self) -> httpx2.AsyncBaseTransport:
@@ -650,7 +657,9 @@ class OAuthFalso:
         if recurso is not None and recurso != self.recurso:
             return volver(error="invalid_target")
         pedidos = (consulta.get("scope") or "").split()
-        mnemo = [a for a in pedidos if a in ALCANCES_MNEMO] or [a for a in ALCANCES_MNEMO if a != "mnemo:model"]
+        # Lo que este servidor no ofrece se descarta sin avisar (un Mnemo anterior, con `mnemo:model`)
+        ofrecidos = self.ofrecidos()
+        mnemo = [a for a in pedidos if a in ofrecidos] or [a for a in ofrecidos if a != "mnemo:model"]
         elegidos = [a for a in mnemo if self.marcar is None or a in self.marcar]
         if self.decision != "allow" or not elegidos:
             return volver(error="access_denied")

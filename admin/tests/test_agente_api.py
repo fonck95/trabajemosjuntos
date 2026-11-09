@@ -86,7 +86,7 @@ def test_sin_sesion_401(cliente):
 # ───────────────────────────── Estado ─────────────────────────────
 
 SIN_CONECTAR = {"estado": "sin_conectar", "motivo": None, "url": None, "cuenta": None, "alcances": [],
-                "modelo": False, "desde": None, "url_sugerida": None}
+                "modelo": False, "ofrece_modelo": None, "desde": None, "url_sugerida": None}
 
 
 def test_estado_sin_clave(sesion):

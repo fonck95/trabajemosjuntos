@@ -3,13 +3,14 @@
 red), los tokens cifrados, la renovación sin carreras, la revocación, el cliente MCP que sale de la conexión y lo que
 ve el estado. Nunca se llama a Mnemo de verdad; solo datos inventados.
 
-Qué se prueba: el descubrimiento (PRM, metadatos, recurso ajeno, http fuera de loopback, sin OAuth, por el 401), el
-registro dinámico guardado y reutilizado (y otra vez ante `invalid_client`), la URL de autorización (S256, `resource`,
-`scope`, la vuelta a Ajustes), la vuelta (state ajeno, de otra sesión, vencido o repetido, otro `iss`,
-`access_denied`, el canje), que nada quede en claro en MongoDB ni en el registro, la auditoría, los permisos (el
-coordinador y sin CSRF: 403), la renovación (20 a la vez, dos procesos, cancelación a mitad, `invalid_grant`, cambio
-de clave del administrador, red caída), el 401 que renueva y repite, reconectar la misma cuenta u otra, y
-desconectar."""
+Qué se prueba: el descubrimiento (PRM, metadatos, recurso ajeno, http fuera de loopback, sin OAuth, por el 401, un
+Mnemo que no ofrece `mnemo:model`), el registro dinámico guardado y reutilizado (y otra vez ante `invalid_client`), la
+URL de autorización (S256, `resource`, `scope`, la vuelta a Ajustes, siempre https detrás de HTTPS), la vuelta (state
+ajeno, de otra sesión, vencido o repetido, otro `iss`, `access_denied`, el canje), que nada quede en claro en MongoDB
+ni en el registro, la auditoría, los permisos (el coordinador y sin CSRF: 403), la renovación (20 a la vez, dos
+procesos, cancelación a mitad, `invalid_grant`, cambio de clave del administrador, red caída), el 401 que renueva y
+repite, reconectar la misma cuenta u otra, desconectar, lo que ve el coordinador, y que escribir solo en la base
+(cambiar una dirección de la conexión o del pendiente) no desvíe ningún secreto."""
 from __future__ import annotations
 
 import asyncio
@@ -22,6 +23,7 @@ from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 from urllib.parse import parse_qs, urlsplit
 
+import httpx2
 import pytest
 from starlette.datastructures import State
 
@@ -37,6 +39,7 @@ from app.agente.herramientas.base import ErrorHerramienta
 
 URL = "https://mnemo.example.org/mcp"
 VUELTA = "http://testserver/ajustes"
+ATACANTE = "atacante.example"
 
 
 def correr(coro):
@@ -94,6 +97,35 @@ async def _fallo(coro) -> ErrorHerramienta:
     return e.value
 
 
+class _Desvio(httpx2.AsyncBaseTransport):
+    """Delante del transporte del Mnemo falso: lo que vaya a `ATACANTE` se anota en `capturadas` (URL, `Authorization`
+    y cuerpo) y se contesta 503; lo demás pasa al falso."""
+
+    def __init__(self, normal: httpx2.AsyncBaseTransport):
+        self.normal, self.capturadas = normal, []
+
+    async def handle_async_request(self, request: httpx2.Request) -> httpx2.Response:
+        if request.url.host == ATACANTE:
+            self.capturadas.append({"url": str(request.url), "auth": request.headers.get("authorization"),
+                                    "cuerpo": (await request.aread()).decode()})
+            return httpx2.Response(503, json={})
+        return await self.normal.handle_async_request(request)
+
+
+def _desviar(app, falso) -> _Desvio:
+    app.state.mnemo_transporte = d = _Desvio(falso.transporte())
+    return d
+
+
+def _cayo_alterada(app) -> None:
+    """La conexión quedó «caida» con motivo «alterada», sin los tokens, auditado y sin cliente."""
+    doc = _doc(app)
+    assert doc["estado"] == "caida" and doc["motivo"] == "alterada" and "cifrado" not in doc, doc
+    a = app.state.db.auditoria.find_one({"accion": "mnemo_caida"})
+    assert a["usuario"] == "sistema" and json.loads(a["detalle"]) == {"motivo": "alterada"}
+    assert mcx.vista(app.state.db)["motivo"] == "alterada" and mc.cliente_de(app) is None
+
+
 # ───────────────────────────── Conectar: descubrimiento y autorización ─────────────────────────────
 
 def test_conectar_descubre_registra_y_arma_la_autorizacion(sesion, falso):
@@ -124,10 +156,15 @@ def test_conectar_descubre_registra_y_arma_la_autorizacion(sesion, falso):
     assert p["state_h"] == hashlib.sha256(q["state"].encode()).hexdigest() and p["sesion"] == sesion_h
     assert p["client_id"] == q["client_id"] and p["redirect_uri"] == VUELTA and p["emisor"] == falso.base
     assert q["state"] not in json.dumps(doc, default=str)
-    verificador = cifrado.descifrar(seguridad.llave_mnemo(sesion.app.state.cfg), p["verificador_cifrado"],
-                                    f"mnemo_pendiente|{p['state_h']}")["v"]
+    atado = cifrado.descifrar(seguridad.llave_mnemo(sesion.app.state.cfg), p["verificador_cifrado"],
+                              f"mnemo_pendiente|{p['state_h']}")
+    verificador = atado["v"]
     reto = base64.urlsafe_b64encode(hashlib.sha256(verificador.encode()).digest()).rstrip(b"=").decode()
     assert reto == q["code_challenge"] and verificador not in json.dumps(doc, default=str)
+    # Con el verificador va, cifrada, la copia de lo que recibirá el código y el verificador: `volver` usa solo esa
+    assert {k: atado[k] for k in mcx.ATADO_PENDIENTE} == {k: p[k] for k in mcx.ATADO_PENDIENTE}
+    assert atado["endpoints"]["token"] == falso.endpoints()["token"] and atado["client_id"] == q["client_id"]
+    assert atado["ofrece_modelo"] is True
     assert doc["clientes"][0]["client_id"] == q["client_id"] and "estado" not in doc  # aún no hay conexión
 
 
@@ -141,8 +178,33 @@ def test_la_vuelta_lleva_el_origen_y_el_prefijo_de_la_peticion(sesion, falso):
     # Dentro del sitio (servidor.py monta el panel en /panel) y detrás del proxy de Railway (https)
     scope = {"type": "http", "method": "POST", "scheme": "https", "server": ("panel.example.org", 443),
              "path": "/panel/api/agente/mnemo/conectar", "root_path": "/panel", "query_string": b"",
-             "headers": [(b"host", b"panel.example.org")]}
+             "headers": [(b"host", b"panel.example.org")], "app": sesion.app}
     assert agente_mnemo._redirect_uri(Request(scope)) == "https://panel.example.org/panel/ajustes"
+
+
+@pytest.mark.parametrize("host", ["panel.example.org", "panel.example.org:80"])
+def test_detras_de_https_la_vuelta_es_https_aunque_uvicorn_vea_http(sesion, falso, host):
+    """uvicorn (`--proxy-headers`) solo pasa a https con un `X-Forwarded-Proto` exacto: sin la cabecera, en mayúsculas
+    o con una lista (proxies encadenados, «https,http») el esquema queda en http, y Mnemo no registra una vuelta http
+    fuera de loopback. Con `cookie_segura` el panel solo funciona por HTTPS: la vuelta es https igual."""
+    from starlette.requests import Request
+
+    from app.api import agente_mnemo
+    sesion.app.state.cfg = replace(sesion.app.state.cfg, cookie_segura=True)
+    scope = {"type": "http", "method": "POST", "scheme": "http", "server": ("panel.example.org", 80),
+             "path": "/panel/api/agente/mnemo/conectar", "root_path": "/panel", "query_string": b"",
+             "headers": [(b"host", host.encode()), (b"x-forwarded-proto", b"https,http")], "app": sesion.app}
+    assert agente_mnemo._redirect_uri(Request(scope)) == "https://panel.example.org/panel/ajustes"
+    # Por la API, contra un Mnemo que (como el de verdad) solo acepta http de loopback: el registro pasa
+    falso.solo_loopback_http = True
+    r = _conectar(sesion, host=host)
+    assert r.status_code == 200, r.text
+    assert _consulta(r.json()["autorizar"])["redirect_uri"] == "https://panel.example.org/ajustes"
+    assert falso.peticiones[-1]["json"]["redirect_uris"] == ["https://panel.example.org/ajustes"]
+    # En local (sin HTTPS) sigue el esquema de la petición
+    sesion.app.state.cfg = replace(sesion.app.state.cfg, cookie_segura=False)
+    assert agente_mnemo._redirect_uri(Request({**scope, "headers": [(b"host", b"127.0.0.1:8000")]})) == \
+        "http://127.0.0.1:8000/panel/ajustes"
 
 
 @pytest.mark.parametrize("url", ["http://mnemo.example.org/mcp", "ftp://mnemo.example.org/mcp", "mnemo",
@@ -187,6 +249,43 @@ def test_mnemo_sin_oauth(sesion, falso):
     assert r.status_code == 400 and _detalle(r) == {"codigo": "sin_oauth", "mensaje": "Mnemo no tiene OAuth: falta "
                                                                                       "PUBLIC_BASE_URL en su "
                                                                                       "despliegue."}
+
+
+def test_un_mnemo_que_no_ofrece_sus_modelos_no_se_conecta(sesion, falso):
+    """Un Mnemo anterior a `mnemo:model` no lo anuncia y, si se pide, lo descarta sin avisar: el panel quedaría
+    conectado sin modelo, mandando a marcar una casilla que esa página de permisos no tiene. Sin `ANTHROPIC_API_KEY`
+    no se conecta, y el mensaje dice que hay que actualizar Mnemo."""
+    falso.anuncia_modelo = False
+    r = _conectar(sesion)
+    assert r.status_code == 400 and _detalle(r) == {"codigo": "sin_modelo", "mensaje": mcx.MENSAJE_SIN_MODELO}
+    assert "actualizar Mnemo" in mcx.MENSAJE_SIN_MODELO and "«Usar tus modelos de IA y tus créditos»" in \
+        mcx.MENSAJE_SIN_MODELO
+    assert not any(p["ruta"] == "/oauth/register" for p in falso.peticiones)  # ni se registra
+    assert not _doc(sesion.app).get("pendiente") and mcx.vista(sesion.app.state.db)["estado"] == "sin_conectar"
+    # Sin `scopes_supported` en los metadatos no se sabe: se supone que sí (como antes)
+    falso.anuncia_modelo, falso.metadatos_extra = True, {"scopes_supported": None}
+    r = _conectar(sesion)
+    assert r.status_code == 200 and "mnemo:model" in _consulta(r.json()["autorizar"])["scope"].split()
+
+
+def test_con_la_clave_de_anthropic_un_mnemo_sin_sus_modelos_se_conecta_para_sus_herramientas(sesion, falso):
+    """Con `ANTHROPIC_API_KEY` el modelo lo pone Anthropic (modo directo): ese Mnemo se conecta igual para sus
+    herramientas, sin pedirle lo que no ofrece, y la vista lo dice (`ofrece_modelo`: no es una casilla sin marcar)."""
+    falso.anuncia_modelo = False
+    sesion.app.state.cfg = replace(sesion.app.state.cfg, anthropic_api_key="clave-falsa")
+    r = _conectar(sesion)
+    assert r.status_code == 200, r.text
+    assert "mnemo:model" not in _consulta(r.json()["autorizar"])["scope"].split()
+    v = sesion.post("/api/agente/mnemo/volver", json=falso.seguir(r.json()["autorizar"])).json()
+    assert v["estado"] == "conectada" and v["modelo"] is False and v["ofrece_modelo"] is False
+    assert "mnemo:read" in v["alcances"] and "mnemo:model" not in v["alcances"]
+    e = sesion.get("/api/agente/estado").json()
+    assert e["proveedor"] == "anthropic" and e["mnemo"]["conexion"]["ofrece_modelo"] is False
+    # Ya actualizado, se vuelve a conectar: ahora Mnemo pone el modelo
+    falso.anuncia_modelo = True
+    v = _conectado(sesion, falso)
+    assert v["modelo"] is True and v["ofrece_modelo"] is True
+    assert sesion.get("/api/agente/estado").json()["proveedor"] == "mnemo"
 
 
 @pytest.mark.parametrize("extra", [{"issuer": "https://otro.example.org"},
@@ -262,7 +361,7 @@ def test_volver_conecta_sin_tokens_en_claro(sesion, falso, caplog):
     v = r.json()
     assert v == {"estado": "conectada", "motivo": None, "url": URL,
                  "cuenta": "Ana Inventada (ana.inventada@example.org)", "alcances": v["alcances"], "modelo": True,
-                 "desde": v["desde"], "url_sugerida": URL}
+                 "ofrece_modelo": True, "desde": v["desde"], "url_sugerida": URL}
     assert set(v["alcances"]) == {"mnemo:model", "mnemo:read", "mnemo:workspace.write", "mnemo:memory.write",
                                   "mnemo:share", "mnemo:publish"}
     assert datetime.fromisoformat(v["desde"]) > datetime.now(timezone.utc) - timedelta(minutes=1)
@@ -280,6 +379,9 @@ def test_volver_conecta_sin_tokens_en_claro(sesion, falso, caplog):
         assert s not in guardado and s not in caplog.text and s not in r.text and s not in auditoria
     tokens = _tokens_guardados(sesion.app)
     assert falso.vigente(tokens["access"]) and tokens["refresh"] in falso.refrescos
+    # Con los tokens van, cifradas, las direcciones a las que se mandan (la única copia que se usa para mandarlos)
+    assert tokens["direcciones"] == {"url_mcp": URL, "recurso": URL, "token": falso.endpoints()["token"],
+                                     "revoke": falso.endpoints()["revoke"]}
     assert doc["pendiente"] is None and doc["estado"] == "conectada" and doc["cuenta"]["sub"] == CUENTA["sub"]
     assert doc["conectada_por"] == {"uid": 0, "usuario": "admin"} and doc["redirect_uri"] == VUELTA
     a = sesion.app.state.db.auditoria.find_one({"accion": "mnemo_conectar"})
@@ -361,15 +463,20 @@ def test_el_estado_muestra_la_conexion_al_administrador_y_al_coordinador(sesion,
     e = sesion.get("/api/agente/estado").json()["mnemo"]
     assert e == {"activo": False, "origen": None, "conexion": {
         "estado": "sin_conectar", "motivo": None, "url": None, "cuenta": None, "alcances": [], "modelo": False,
-        "desde": None, "url_sugerida": None}}
+        "ofrece_modelo": None, "desde": None, "url_sugerida": None}}
     sesion.app.state.cfg = replace(sesion.app.state.cfg, mnemo_url=URL)
     assert sesion.get("/api/agente/estado").json()["mnemo"]["conexion"]["url_sugerida"] == URL
     conectar_mnemo(sesion.app, falso=falso)
     e = sesion.get("/api/agente/estado").json()["mnemo"]
     assert e["activo"] is True and e["origen"] == "https://mnemo.example.org"
     assert e["conexion"]["estado"] == "conectada" and e["conexion"]["modelo"] is True
+    assert e["conexion"]["cuenta"] == "Ana Inventada (ana.inventada@example.org)"
+    assert e["conexion"]["url_sugerida"] == URL and e["conexion"]["ofrece_modelo"] is True
+    # El coordinador la ve en solo lectura, sin la cuenta personal de Mnemo del administrador (su nombre y su correo)
+    # ni la dirección sugerida (solo le sirve a quien conecta)
     k = coordinador(sesion.app, sesion.app.state.db).get("/api/agente/estado").json()["mnemo"]
-    assert k["activo"] is False and k["conexion"]["estado"] == "conectada"  # lo ve, en solo lectura
+    assert k["activo"] is False and k["conexion"] == {**e["conexion"], "cuenta": None, "url_sugerida": None}
+    assert "Ana Inventada" not in json.dumps(k) and "ana.inventada@example.org" not in json.dumps(k)
     p = como("planillero").get("/api/agente/estado").json()["mnemo"]
     assert p == {"activo": False, "origen": None}
 
@@ -408,6 +515,7 @@ def test_veinte_a_la_vez_una_sola_renovacion(cliente):
     assert doc["version"] == version + 1 and doc["renovando_hasta"] is None and "renovador" not in doc
     nuevos = _tokens_guardados(app)
     assert nuevos["access"] == tokens[0] and nuevos["refresh"] != viejos["refresh"]  # el refresh rotó y se guardó
+    assert nuevos["direcciones"] == viejos["direcciones"]  # y las direcciones atadas siguen con los tokens nuevos
     assert correr(fuente.token()) == tokens[0] and falso.renovaciones == 1  # vigente: no se renueva otra vez
 
 
@@ -571,7 +679,7 @@ def test_desconectar_revoca_con_el_refresh(sesion, falso):
     r = sesion.delete("/api/agente/mnemo")
     assert r.status_code == 200, r.text
     assert r.json() == {"estado": "sin_conectar", "motivo": None, "url": None, "cuenta": None, "alcances": [],
-                        "modelo": False, "desde": None, "url_sugerida": URL, "revocada": True}
+                        "modelo": False, "ofrece_modelo": None, "desde": None, "url_sugerida": URL, "revocada": True}
     assert falso.revocaciones == [{"token": tokens["refresh"], "token_type_hint": "refresh_token",
                                    "client_id": clientes[0]["client_id"], "tipo": "refresh"}]  # nunca con el access
     g = falso.concesion_de(tokens["refresh"])
@@ -623,6 +731,161 @@ def test_desconectar_espera_a_la_renovacion_en_vuelo(cliente):
     assert falso.revocaciones[-1]["token"] in falso.refrescos and not falso.refrescos[
         falso.revocaciones[-1]["token"]]["usado"]  # se revocó el refresh vigente, el que dejó la renovación
     assert all(g["revocada"] for g in falso.concesiones.values()) and not falso.vigente(renovado)
+
+
+# ───────────────────────────── Escribir solo en la base no desvía secretos ─────────────────────────────
+#
+# Quien solo tiene la base (la URI de MongoDB, que da lectura y escritura) cambia una dirección que recibe secretos.
+# Las direcciones van también dentro de lo cifrado y solo esa copia se usa: no sale nada hacia el otro host.
+
+def test_una_url_mcp_cambiada_en_la_base_no_recibe_el_access(cliente):
+    app = cliente.app
+    falso = conectar_mnemo(app)
+    desvio = _desviar(app, falso)
+    app.state.db.meta.update_one({"_id": mcx.ID}, {"$set": {"url_mcp": f"https://{ATACANTE}/mcp"}})
+    c = mc.cliente_de(app)
+    assert c.url == f"https://{ATACANTE}/mcp"  # el cliente sale de la base…
+    e = correr(_fallo(c.llamar("mnemo_get_briefing", {})))
+    assert desvio.capturadas == [] and falso.mcp.peticiones == []  # …pero el access no sale a ninguna parte
+    assert e.codigo == mc.COD_TOKEN and e.detalle == {"conexion": "alterada"} and e.mensaje == mcx.MENSAJE_ALTERADA
+    _cayo_alterada(app)
+
+
+@pytest.mark.parametrize("ajeno", ["cliente", "fuente"])
+def test_el_access_solo_sale_hacia_la_url_atada(cliente, ajeno):
+    """Aunque la base esté bien, la fuente no le da el access a un cliente que lo mandaría a otra dirección (lo que
+    pasaría si la base cambiara entre la lectura de `cliente_de` y la de la fuente): se compara con la copia cifrada
+    del mismo documento que se descifra, sin ventana entre lecturas."""
+    app = cliente.app
+    falso = conectar_mnemo(app)
+    desvio = _desviar(app, falso)
+    conexion, otra = _doc(app)["conexion"], f"https://{ATACANTE}/mcp"
+    if ajeno == "cliente":  # la fuente es la de la conexión, pero el cliente que la usa apunta a otra parte
+        c = mc.ClienteMnemo(otra, mcx.FuenteTokens(app, conexion, URL), transporte=desvio)
+        e = correr(_fallo(c.llamar("search", {"query": "acta"})))
+    else:  # la fuente se armó para otra dirección (y quien pide el token no dice adónde va)
+        e = correr(_fallo(mcx.FuenteTokens(app, conexion, otra).token()))
+    assert desvio.capturadas == [] and falso.mcp.peticiones == [] and e.detalle == {"conexion": "alterada"}
+    _cayo_alterada(app)
+
+
+@pytest.mark.parametrize("campo, valor", [("endpoints.token", f"https://{ATACANTE}/oauth/token"),
+                                          ("recurso", f"https://{ATACANTE}/mcp")])
+def test_un_endpoint_de_tokens_o_un_recurso_cambiado_en_la_base_no_recibe_el_refresh(cliente, campo, valor):
+    app = cliente.app
+    falso = conectar_mnemo(app, vence_en=60)  # le queda 1 minuto: el próximo uso renueva
+    desvio = _desviar(app, falso)
+    app.state.db.meta.update_one({"_id": mcx.ID}, {"$set": {campo: valor}})
+    fuente = mcx.FuenteTokens(app)
+    e = correr(_fallo(fuente.token()))
+    assert desvio.capturadas == [] and falso.renovaciones == 0 and fuente.renovaciones == 0
+    assert e.codigo == mc.COD_TOKEN and e.detalle == {"conexion": "alterada"}
+    _cayo_alterada(app)
+
+
+@pytest.mark.parametrize("campo, valor", [("emisor", f"https://{ATACANTE}"), ("client_id", "cliente-del-atacante")])
+def test_un_emisor_o_un_cliente_cambiado_en_la_base_no_deja_descifrar(cliente, campo, valor):
+    """`emisor` y `client_id` son los datos asociados de lo cifrado: cambiados, no descifra («clave») y no sale nada."""
+    app = cliente.app
+    falso = conectar_mnemo(app, vence_en=60)
+    desvio = _desviar(app, falso)
+    app.state.db.meta.update_one({"_id": mcx.ID}, {"$set": {campo: valor}})
+    e = correr(_fallo(mc.cliente_de(app).llamar("search", {"query": "acta"})))
+    assert desvio.capturadas == [] and falso.mcp.peticiones == [] and falso.renovaciones == 0
+    assert e.detalle == {"conexion": "clave"} and _doc(app)["motivo"] == "clave" and "cifrado" not in _doc(app)
+
+
+def test_la_base_cambiada_entre_la_lectura_y_el_arriendo_no_recibe_el_refresh(cliente, monkeypatch):
+    """La renovación vuelve a comparar en el documento que toma con el arriendo: si la base cambió justo después de
+    leerla, el refresh tampoco sale."""
+    app = cliente.app
+    falso = conectar_mnemo(app, vence_en=60)
+    desvio = _desviar(app, falso)
+    leer = mcx._leer
+
+    def leer_y_cambiar(db):
+        doc = leer(db)
+        db.meta.update_one({"_id": mcx.ID}, {"$set": {"endpoints.token": f"https://{ATACANTE}/oauth/token"}})
+        return doc
+
+    monkeypatch.setattr(mcx, "_leer", leer_y_cambiar)
+    fuente = mcx.FuenteTokens(app)
+    e = correr(_fallo(fuente.token()))
+    monkeypatch.setattr(mcx, "_leer", leer)
+    assert desvio.capturadas == [] and falso.renovaciones == 0 and fuente.renovaciones == 0
+    assert e.detalle == {"conexion": "alterada"}
+    _cayo_alterada(app)
+
+
+def test_un_endpoint_de_revocacion_cambiado_en_la_base_no_recibe_el_refresh(sesion):
+    """Desconectar revoca en el endpoint atado: el refresh va al Mnemo que lo emitió y la concesión se revoca de
+    verdad (con el de la base, el refresh se iría y la concesión seguiría viva)."""
+    app = sesion.app
+    falso = conectar_mnemo(app)
+    desvio = _desviar(app, falso)
+    tokens, client_id = _tokens_guardados(app), _doc(app)["client_id"]
+    app.state.db.meta.update_one({"_id": mcx.ID}, {"$set": {"endpoints.revoke": f"https://{ATACANTE}/oauth/revoke"}})
+    r = sesion.delete("/api/agente/mnemo")
+    assert r.status_code == 200 and r.json()["revocada"] is True and r.json()["estado"] == "sin_conectar"
+    assert desvio.capturadas == []
+    assert falso.revocaciones == [{"token": tokens["refresh"], "token_type_hint": "refresh_token",
+                                   "client_id": client_id, "tipo": "refresh"}]
+    assert falso.concesion_de(tokens["refresh"])["revocada"] is True
+
+
+def test_una_conexion_cifrada_sin_sus_direcciones_no_se_usa(cliente):
+    """Lo cifrado por una versión anterior del panel no trae las direcciones: no hay una copia en que confiar, así que
+    no se manda nada y hay que volver a conectar."""
+    app = cliente.app
+    falso = conectar_mnemo(app)
+    desvio = _desviar(app, falso)
+    d, viejos = _doc(app), _tokens_guardados(app)
+    app.state.db.meta.update_one({"_id": mcx.ID}, {"$set": {"cifrado": cifrado.cifrar(
+        seguridad.llave_mnemo(app.state.cfg), {"access": viejos["access"], "refresh": viejos["refresh"]},
+        f"mnemo_conexion|{d['emisor']}|{d['client_id']}")}})
+    e = correr(_fallo(mc.cliente_de(app).llamar("search", {"query": "acta"})))
+    assert desvio.capturadas == [] and falso.mcp.peticiones == [] and e.detalle == {"conexion": "alterada"}
+    _cayo_alterada(app)
+
+
+@pytest.mark.parametrize("campo, valor", [
+    ("pendiente.endpoints.token", f"https://{ATACANTE}/oauth/token"),
+    ("pendiente.endpoints.revoke", f"https://{ATACANTE}/oauth/revoke"),
+    ("pendiente.url_mcp", f"https://{ATACANTE}/mcp"),
+    ("pendiente.recurso", f"https://{ATACANTE}/mcp"),
+    ("pendiente.emisor", f"https://{ATACANTE}"),
+    ("pendiente.client_id", "cliente-del-atacante"),
+    ("pendiente.redirect_uri", f"https://{ATACANTE}/vuelta"),
+    ("pendiente.iss_requerido", False),
+])
+def test_un_pendiente_cambiado_en_la_base_no_canjea_nada(sesion, falso, campo, valor):
+    """Mientras el administrador está en la página de Mnemo, quien solo tiene la base cambia el pendiente: a la vuelta
+    no se manda el código ni el verificador a ninguna parte (con ellos se canjea la cuenta en el Mnemo de verdad)."""
+    desvio = _desviar(sesion.app, falso)
+    r = _conectar(sesion)
+    assert r.status_code == 200, r.text
+    sesion.app.state.db.meta.update_one({"_id": mcx.ID}, {"$set": {campo: valor}})
+    vuelta = falso.seguir(r.json()["autorizar"])
+    r = sesion.post("/api/agente/mnemo/volver", json=vuelta)
+    assert r.status_code == 400 and _detalle(r) == {"codigo": "estado", "mensaje": mcx.MENSAJE_PENDIENTE}
+    assert desvio.capturadas == []
+    assert not any(p["ruta"] == "/oauth/token" and p["form"]["grant_type"] == "authorization_code"
+                   for p in falso.peticiones)
+    assert mcx.vista(sesion.app.state.db)["estado"] == "sin_conectar" and _doc(sesion.app)["pendiente"] is None
+
+
+def test_un_pendiente_cifrado_sin_su_copia_no_canjea_nada(sesion, falso):
+    """Un pendiente que guardó solo el verificador (una versión anterior del panel) no tiene copia en que confiar."""
+    r = _conectar(sesion)
+    p = _doc(sesion.app)["pendiente"]
+    atado = cifrado.descifrar(seguridad.llave_mnemo(sesion.app.state.cfg), p["verificador_cifrado"],
+                              f"mnemo_pendiente|{p['state_h']}")
+    sesion.app.state.db.meta.update_one({"_id": mcx.ID}, {"$set": {"pendiente.verificador_cifrado": cifrado.cifrar(
+        seguridad.llave_mnemo(sesion.app.state.cfg), {"v": atado["v"]}, f"mnemo_pendiente|{p['state_h']}")}})
+    r = sesion.post("/api/agente/mnemo/volver", json=falso.seguir(r.json()["autorizar"]))
+    assert r.status_code == 400 and _detalle(r)["codigo"] == "estado"
+    assert not any(p["ruta"] == "/oauth/token" and p["form"]["grant_type"] == "authorization_code"
+                   for p in falso.peticiones)
 
 
 # ───────────────────────────── Cifrado y configuración ─────────────────────────────

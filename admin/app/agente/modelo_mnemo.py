@@ -27,7 +27,9 @@ Por qué está hecho así:
   herramientas de servidor) no viaja, y las herramientas van sin `eager_input_streaming`.
 * Lo que devuelve se guarda en la forma de Mnemo (`text`, `tool_use`, `thinking{text, signature}`) y se le reenvía
   tal cual, razonamiento incluido (Mnemo descarta el que ya no vale). El razonamiento no se muestra: con Mnemo son
-  resúmenes del modelo, no notas para la persona.
+  resúmenes del modelo, no notas para la persona. Un `tool_use` cuyo id ya está en la conversación, o se repite en la
+  misma respuesta (Mnemo numera `call_0`, `call_1`… en cada respuesta cuando el proveedor no da ids), recibe uno nuevo
+  antes de anunciarlo y de guardarlo (`ids_unicos`): el bucle y el widget distinguen las llamadas por id.
 * El texto llega en vivo: cada aviso de avance es un evento `texto`. Al llegar el resultado, si el texto final de la
   ronda no empieza por lo que ya se mostró, un evento `texto_ronda` con el texto completo de la ronda lo reemplaza en
   el widget (si solo falta el final, el final va como `texto`). Los `tool_use` se anuncian al final (`herramienta`).
@@ -35,12 +37,14 @@ Por qué está hecho así:
   viejos se cambian por un aviso, de la más vieja a la más nueva, y si aun así no cabe, la conversación es «larga».
   Por eso el tope de imágenes de una ronda es más bajo que con Anthropic (`TOPE_IMAGENES`).
 * Reintentos (`reintento`): un corte de red, un plazo vencido o un 5xx esperan 1 y 2 s; `RATE_LIMITED` (o un 429),
-  10 y 20 s, o de 2 a 5 s si es el tope de llamadas a la vez; una conexión que cambió a mitad (otra cuenta, otra
-  vuelta), medio segundo. El bucle no repite si con la espera se pasaría del tope del turno.
+  10 y 20 s, o de 2 a 5 s si es el tope de llamadas a la vez; `UNAVAILABLE` (el proveedor de la cuenta falló, o la
+  cuenta no tiene modelo), una vez tras 1 s; una conexión que cambió a mitad (otra cuenta, otra vuelta), medio
+  segundo. El bucle no repite si con la espera se pasaría del tope del turno.
 * Los errores se explican sin datos ni nombres de variables (`explicar`), con códigos que el widget distingue:
-  `mnemo_conexion` (sin conexión, caída, revocada o el 401 que sigue tras renovar), `mnemo_plan`, `mnemo_creditos`,
-  `mnemo_sin_modelo` (sin modelo disponible en la cuenta, o la conexión sin `mnemo:model`), `larga`, `llm_peticion`,
-  `llm_limite`, `llm_conexion`, `llm_no_disponible` y `llm_respuesta`.
+  `mnemo_conexion` (sin conexión, caída, revocada, alterada o el 401 que sigue tras renovar), `mnemo_plan` (el plan
+  no incluye usar sus modelos desde el panel, o no incluye el modelo de frontera elegido para el panel),
+  `mnemo_creditos`, `mnemo_sin_modelo` (sin modelo disponible en la cuenta, o la conexión sin `mnemo:model`),
+  `larga`, `llm_peticion`, `llm_limite`, `llm_conexion`, `llm_no_disponible` y `llm_respuesta`.
 * Nada del contenido va al registro: solo códigos y tipos de excepción.
 """
 from __future__ import annotations
@@ -83,13 +87,19 @@ ESPERA_A_LA_VEZ_S = (2.0, 5.0)  # RATE_LIMITED por llamadas a la vez: una de las
 ESPERA_CAMBIO_S = 0.5          # la conexión cambió a mitad: se repite con la nueva
 
 _NOMBRE = re.compile(r"[a-zA-Z0-9_-]{1,64}")
+# Un id de `tool_use` que sirve tal cual: el widget y la API de confirmaciones lo toman hasta 100 caracteres, y la regla
+# de la Messages API (a la que Mnemo lo reenvía si la cuenta usa Anthropic) es [a-zA-Z0-9_-]
+_ID = re.compile(r"[a-zA-Z0-9_-]{1,100}")
 
 MENSAJE_SIN_PERMISO = ("La conexión con Mnemo no tiene permiso para usar sus modelos: el administrador tiene que "
-                       "volver a conectarla en Ajustes → Asistente y marcar esa casilla en Mnemo.")
+                       "volver a conectarla en Ajustes → Asistente dejando marcado «Usar tus modelos de IA y tus "
+                       "créditos» (si Mnemo no muestra esa casilla, hay que actualizar Mnemo).")
 MENSAJE_URL = ("La dirección de la conexión con Mnemo no es válida: el administrador tiene que volver a conectarla en "
                "Ajustes → Asistente.")
 MENSAJE_PLAN = ("El plan de la cuenta de Mnemo conectada no incluye usar sus modelos desde el panel. Avise al "
                 "administrador: puede revisarlo en Mnemo.")
+MENSAJE_PLAN_MODELO = ("El plan de la cuenta de Mnemo conectada no incluye el modelo que tiene elegido el panel. Avise "
+                       "al administrador: puede usar el modelo por defecto de la cuenta o ampliar el plan en Mnemo.")
 MENSAJE_CREDITOS = ("Se acabaron los créditos de Mnemo de esta semana de la cuenta conectada. Avise al administrador: "
                     "puede esperar a la semana siguiente o ampliar el plan en Mnemo.")
 MENSAJE_SIN_MODELO = ("La cuenta de Mnemo conectada no tiene un modelo disponible ahora (sin un modelo configurado, "
@@ -306,8 +316,48 @@ def ajustar(args: dict, tope: int | None = None) -> dict:
 
 # ───────────────────────────── De la respuesta de Mnemo a lo que se guarda ─────────────────────────────
 
+def _id_nuevo() -> str:
+    return "toolu_mnemo_" + secrets.token_hex(8)
+
+
 def _id_herramienta(v: Any) -> str:
-    return v if isinstance(v, str) and 0 < len(v) <= 128 else "toolu_mnemo_" + secrets.token_hex(8)
+    """El id tal cual si sirve (`_ID`); si no (vacío, largo o con caracteres raros), uno nuevo: con uno de más de 100
+    caracteres el widget recortaría el de su tarjeta y la aprobación no encontraría la llamada."""
+    return v if isinstance(v, str) and _ID.fullmatch(v) else _id_nuevo()
+
+
+def ids_usados(mensajes: list[dict]) -> set[str]:
+    """Los ids de `tool_use` (y de sus `tool_result`) que ya están en el historial."""
+    usados: set[str] = set()
+    for m in mensajes:
+        contenido = m.get("content") if isinstance(m, dict) else None
+        for b in contenido if isinstance(contenido, list) else []:
+            if not isinstance(b, dict):
+                continue
+            if b.get("type") == "tool_use" and isinstance(b.get("id"), str):
+                usados.add(b["id"])
+            elif b.get("type") == "tool_result" and isinstance(b.get("tool_use_id"), str):
+                usados.add(b["tool_use_id"])
+    return usados
+
+
+def ids_unicos(contenido: list[dict], usados: set[str]) -> list[dict]:
+    """`contenido` (de `contenido_de`) con un id nuevo en cada `tool_use` cuyo id ya está en la conversación
+    (`usados`) o se repite en la misma respuesta. Cuando el proveedor de la cuenta no da ids, Mnemo los numera en cada
+    respuesta (`call_0`, `call_1`…): repetidos, el bucle juntaría sus resultados y el widget, que pinta la conversación
+    por id, no mostraría la tarjeta de aprobación nueva. No toca `contenido`."""
+    vistos = set(usados)
+    out = []
+    for b in contenido:
+        if b.get("type") == "tool_use":
+            if b["id"] in vistos:
+                nuevo = _id_nuevo()
+                while nuevo in vistos:  # pragma: no cover - 64 bits al azar
+                    nuevo = _id_nuevo()
+                b = {**b, "id": nuevo}
+            vistos.add(b["id"])
+        out.append(b)
+    return out
 
 
 def _nombre_herramienta(v: Any) -> str:
@@ -364,8 +414,8 @@ def _sin_cliente(db: Any) -> ErrorHerramienta:
     """Por qué no hay cliente de Mnemo ahora (la conexión se cayó, se desconectó o su dirección no sirve)."""
     v = mnemo_conexion.vista(db)
     if v["estado"] == "caida":
-        mensaje = mnemo_conexion.MENSAJE_CLAVE if v.get("motivo") == "clave" else mc.MENSAJE_TOKEN
-        return ErrorHerramienta(mensaje, mc.COD_TOKEN, detalle={"conexion": v.get("motivo") or "caida"})
+        return ErrorHerramienta(mnemo_conexion.mensaje_caida(v.get("motivo")), mc.COD_TOKEN,
+                                detalle={"conexion": v.get("motivo") or "caida"})
     if v["estado"] == "conectada":
         return ErrorHerramienta(MENSAJE_URL, mc.COD_TOKEN, detalle={"conexion": "error"})
     return ErrorHerramienta(mnemo_conexion.MENSAJE_SIN_CONEXION, mc.COD_TOKEN, detalle={"conexion": "sin_conectar"})
@@ -417,7 +467,8 @@ class ProveedorMnemo:
         if not isinstance(datos, dict) or not isinstance(datos.get("content"), list):
             log.warning("Mnemo: la respuesta del modelo no trae structuredContent")
             raise ErrorProveedor(MENSAJE_ILEGIBLE, "llm_respuesta")
-        contenido = contenido_de(datos["content"])
+        # Antes de anunciar y de guardar: cada `tool_use` con un id que no esté ya en la conversación
+        contenido = ids_unicos(contenido_de(datos["content"]), ids_usados(mensajes))
         fin = datos.get("stop_reason") if datos.get("stop_reason") in FINES else "other"
         final, ya = "".join(b["text"] for b in contenido if b["type"] == "text"), "".join(emitido)
         if final != ya:
@@ -452,6 +503,10 @@ class ProveedorMnemo:
             return ESPERA_RITMO_S * 2 ** intento
         if codigo is None and isinstance(e.estado, int) and e.estado >= 500:
             return ESPERA_RED_S * 2 ** intento
+        if codigo == "UNAVAILABLE" and intento == 0:
+            # Mnemo lo da también cuando el proveedor de la cuenta falló (ya tras sus propios reintentos): se repite
+            # una vez. Si la cuenta no tiene modelo, vuelve a fallar al instante y sin gastar
+            return ESPERA_RED_S
         return None
 
     def explicar(self, e: BaseException) -> tuple[str, str]:
@@ -469,6 +524,9 @@ class ProveedorMnemo:
             return MENSAJE_PLAZO, "llm_conexion"
         codigo, detalles = _de_mnemo(e)
         if codigo == "PLAN_REQUIRED":
+            # Un modelo de frontera elegido para el panel que el plan no incluye: sin él, el modelo por defecto sirve
+            if detalles.get("feature") == "frontier_models":
+                return MENSAJE_PLAN_MODELO, "mnemo_plan"
             return MENSAJE_PLAN, "mnemo_plan"
         if codigo == "CREDITS_EXHAUSTED":
             return MENSAJE_CREDITOS, "mnemo_creditos"

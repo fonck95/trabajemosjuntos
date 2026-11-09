@@ -4,10 +4,12 @@ API: la conexión OAuth falsa con `mnemo:model` y `mnemo_model_complete` guioniz
 
 Qué se prueba: la forma de lo que se manda (`system` y herramientas sin `eager_input_streaming`, las imágenes fuera del
 `tool_result`, sin los bloques que Mnemo no conoce, el esfuerzo y `MNEMO_MODELO`), el texto en vivo por avance y
-`texto_ronda` cuando no coincide, las herramientas del panel y las confirmaciones con Mnemo como modelo, los cortes
-(`other` y `max_tokens`), los créditos en el uso, el razonamiento reenviado tal cual y no mostrado, el tope de 4 MB,
-los reintentos (con un reloj falso: nadie espera de verdad), la renovación tras un 401, cada código de fin, el
-proveedor congelado en la conversación (409 `proveedor`), Mnemo antes que `ANTHROPIC_API_KEY` y el estado."""
+`texto_ronda` cuando no coincide, las herramientas del panel y las confirmaciones con Mnemo como modelo, los ids de
+`tool_use` repetidos (entre rondas o en la misma respuesta), los cortes (`other` y `max_tokens`), los créditos en el
+uso, el razonamiento reenviado tal cual y no mostrado, el tope de 4 MB, los reintentos (con un reloj falso: nadie
+espera de verdad; `UNAVAILABLE` una vez), la renovación tras un 401, cada código de fin (el plan sin el modelo de
+frontera elegido, aparte), una conexión alterada a mitad, el proveedor congelado en la conversación (409
+`proveedor`), Mnemo antes que `ANTHROPIC_API_KEY` y el estado."""
 import asyncio
 import json
 import time
@@ -216,6 +218,31 @@ def test_lo_que_devuelve_mnemo_se_guarda_en_una_forma_que_se_pueda_reenviar():
     assert modelo_mnemo.modelo_pedido("sin-barra") is None
 
 
+def test_ids_unicos_cambia_los_repetidos():
+    historial = [{"role": "user", "content": "Hola"},
+                 {"role": "assistant", "content": [{"type": "tool_use", "id": "call_0", "name": "x", "input": {}}]},
+                 {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "call_9", "content": "x"}]}]
+    contenido = [{"type": "text", "text": "Miro."},
+                 {"type": "tool_use", "id": "call_0", "name": "x", "input": {}},
+                 {"type": "tool_use", "id": "call_1", "name": "x", "input": {}},
+                 {"type": "tool_use", "id": "call_1", "name": "x", "input": {"b": 2}},
+                 {"type": "tool_use", "id": "call_9", "name": "x", "input": {}}]
+    assert modelo_mnemo.ids_usados(historial) == {"call_0", "call_9"}
+    out = modelo_mnemo.ids_unicos(contenido, modelo_mnemo.ids_usados(historial))
+    ids = [b["id"] for b in out if b["type"] == "tool_use"]
+    assert ids[1] == "call_1" and len(set(ids)) == 4 and not {ids[0], ids[2], ids[3]} & {"call_0", "call_1", "call_9"}
+    assert out[3]["input"] == {"b": 2} and out[0] == contenido[0]
+    assert contenido[1]["id"] == "call_0" and contenido[3]["id"] == "call_1"  # no toca lo que recibe
+    assert modelo_mnemo.ids_unicos(contenido[2:3], set()) == contenido[2:3]  # sin repetidos, tal cual
+    # Un id que el widget recortaría (más de 100 caracteres) o con caracteres que la Messages API no acepta: uno nuevo
+    largo, raro = "x" * 101, "call:0 a"
+    for malo in (largo, raro):
+        (b,) = modelo_mnemo.contenido_de([{"type": "tool_use", "id": malo, "name": "x", "input": {}}])
+        assert b["id"] != malo and b["id"].startswith("toolu_mnemo_")
+    (b,) = modelo_mnemo.contenido_de([{"type": "tool_use", "id": "y" * 100, "name": "x", "input": {}}])
+    assert b["id"] == "y" * 100
+
+
 # ───────────────────────────── El texto en vivo ─────────────────────────────
 
 def test_el_texto_llega_por_avance(sesion, falsas):
@@ -341,6 +368,53 @@ def test_una_escritura_con_mnemo_espera_la_aprobacion(sesion, falsas):
     assert len(db.personas.find_one({"_id": pid})["notas"]) == 1
     assert modelo.pedidos[1]["messages"][-1]["content"] == [
         {"type": "tool_result", "tool_use_id": "toolu_n", "content": json.dumps({"ok": True})}]
+
+
+def test_un_id_repetido_entre_rondas_se_cambia_y_su_aprobacion_llega(sesion, falsas):
+    """Sin ids del proveedor de la cuenta, Mnemo numera las llamadas en cada respuesta (`call_0`…). La segunda escritura
+    traería el mismo id que la primera: el widget (que pinta la conversación por id) no le mostraría la tarjeta de
+    aprobación y la clave de idempotencia de la nota sería la misma. Recibe un id nuevo antes de anunciarse y de
+    guardarse, y todo sigue con ese id."""
+    db = sesion.app.state.db
+    pid = persona(db, nombre="ANA INVENTADA DE PRUEBA", consentimiento="si")
+    modelo = encender_mnemo(sesion.app,
+                            R(TU("call_0", "nota_falsa", {"persona_id": pid, "texto": "Primera"}), stop="tool_use"),
+                            R(T("Listo.")),
+                            R(TU("call_0", "nota_falsa", {"persona_id": pid, "texto": "Segunda"}), stop="tool_use"),
+                            R(T("Listo otra vez.")))
+    _, ev = enviar(sesion, "Agrega una nota")
+    cid = ev[0]["conversacion"]
+    assert [e["id"] for e in ev if e["tipo"] == "confirmar"] == ["call_0"]  # el primero queda tal cual
+    _, ev = decidir(sesion, cid, call_0=True)
+    assert ev[-1]["motivo"] == "listo"
+    _, ev = enviar(sesion, "Agrega otra nota", conversacion=cid)
+    (confirmar,) = [e for e in ev if e["tipo"] == "confirmar"]
+    nuevo = confirmar["id"]
+    assert nuevo != "call_0" and nuevo.startswith("toolu_mnemo_") and ev[-1]["motivo"] == "confirmacion"
+    assert {e["id"] for e in ev if "id" in e} == {nuevo}  # la herramienta y su tarjeta, con el id nuevo
+    _, ev = decidir(sesion, cid, **{nuevo: True})
+    assert ev[-1]["motivo"] == "listo" and texto_de(ev) == "Listo otra vez."
+    assert [n["texto"] for n in db.personas.find_one({"_id": pid})["notas"]] == ["Primera", "Segunda"]
+    # Lo que vuelve a Mnemo: cada tool_use con su resultado, sin ids repetidos
+    ultimo = modelo.pedidos[-1]["messages"]
+    usos = [b["id"] for m in ultimo for b in m["content"] if b["type"] == "tool_use"]
+    resultados = [b["tool_use_id"] for m in ultimo for b in m["content"] if b["type"] == "tool_result"]
+    assert usos == resultados == ["call_0", nuevo]
+
+
+def test_un_id_repetido_en_la_misma_respuesta_se_cambia(sesion, falsas):
+    modelo = encender_mnemo(sesion.app,
+                            R(TU("call_0", "contar_falsa", {"lugar": "Casco"}),
+                              TU("call_0", "contar_falsa", {"lugar": "Tigre"}), stop="tool_use"),
+                            R(T("Hay 3 en cada uno.")))
+    _, ev = enviar(sesion, "¿Cuántas hay en el casco y en el Tigre?")
+    assert ev[-1]["motivo"] == "listo"
+    ids = [e["id"] for e in ev if e["tipo"] == "herramienta" and e["estado"] == "inicio"]
+    assert ids[0] == "call_0" and len(set(ids)) == 2
+    assert [(f[1]["lugar"], f[3]) for f in falsas] == [("Casco", ids[0]), ("Tigre", ids[1])]  # corren las dos
+    segunda = modelo.pedidos[1]["messages"]
+    assert [b["id"] for b in segunda[1]["content"] if b["type"] == "tool_use"] == ids
+    assert [b["tool_use_id"] for b in segunda[2]["content"]] == ids
 
 
 def test_el_coordinador_usa_los_modelos_de_la_cuenta_conectada(sesion, falsas):
@@ -584,11 +658,17 @@ def test_reintento_y_explicar_de_mnemo():
     assert p.reintento(de_mnemo("RATE_LIMITED"), 0) == 10.0
     assert 2.0 <= p.reintento(de_mnemo("RATE_LIMITED", detalles={"reason": "concurrency"}), 1) <= 5.0
     assert p.reintento(ErrorHerramienta("x", mc.COD_TOKEN, detalle={"conexion": "cambio"}), 0) == 0.5
+    # UNAVAILABLE (el proveedor de la cuenta falló, o no tiene modelo): una vez, tras 1 s
+    assert p.reintento(de_mnemo("UNAVAILABLE"), 0) == 1.0 and p.reintento(de_mnemo("UNAVAILABLE"), 1) is None
     for e in (ErrorHerramienta("x", mc.COD_TOKEN, estado=401), ErrorHerramienta("x", mc.COD_TOKEN, detalle={
-            "conexion": "revocada"}), ErrorHerramienta("x", mc.COD_NO_DISPONIBLE), de_mnemo("PLAN_REQUIRED"),
-            de_mnemo("UNAVAILABLE"), de_mnemo("TIMEOUT"), de_mnemo(estado=404), de_mnemo(estado=413), ValueError("x"),
-            proveedores.ErrorProveedor("x", "larga")):
+            "conexion": "revocada"}), ErrorHerramienta("x", mc.COD_TOKEN, detalle={"conexion": "alterada"}),
+            ErrorHerramienta("x", mc.COD_NO_DISPONIBLE), de_mnemo("PLAN_REQUIRED"), de_mnemo("TIMEOUT"),
+            de_mnemo(estado=404), de_mnemo(estado=413), ValueError("x"), proveedores.ErrorProveedor("x", "larga")):
         assert p.reintento(e, 0) is None, e
+    assert p.explicar(de_mnemo("PLAN_REQUIRED", detalles={"feature": "chat"})) == (modelo_mnemo.MENSAJE_PLAN,
+                                                                                    "mnemo_plan")
+    assert p.explicar(de_mnemo("PLAN_REQUIRED", detalles={"feature": "frontier_models"})) == (
+        modelo_mnemo.MENSAJE_PLAN_MODELO, "mnemo_plan")
     assert p.explicar(de_mnemo(estado=413)) == (modelo_mnemo.MENSAJE_LARGA, "larga")
     assert p.explicar(de_mnemo(estado=404))[1] == "mnemo_conexion" and p.explicar(de_mnemo(estado=302))[1] == (
         "mnemo_conexion")
@@ -606,10 +686,11 @@ def test_reintento_y_explicar_de_mnemo():
 @pytest.mark.parametrize("error, codigo, mensaje", [
     (fallo("PLAN_REQUIRED", "The person's Mnemo plan does not include using its models from here.",
            {"feature": "chat"}), "mnemo_plan", modelo_mnemo.MENSAJE_PLAN),
+    # El modelo de frontera que eligió el panel (`MNEMO_MODELO`) no está en el plan: no es que no haya chat
+    (fallo("PLAN_REQUIRED", "The person's Mnemo plan does not include frontier models.",
+           {"feature": "frontier_models"}), "mnemo_plan", modelo_mnemo.MENSAJE_PLAN_MODELO),
     (fallo("CREDITS_EXHAUSTED", "The person has no Mnemo credits left this week.", {"reason": "credit"}),
      "mnemo_creditos", modelo_mnemo.MENSAJE_CREDITOS),
-    (fallo("UNAVAILABLE", "The person's Mnemo has no usable model right now."), "mnemo_sin_modelo",
-     modelo_mnemo.MENSAJE_SIN_MODELO),
     (fallo("INVALID_ARGUMENT", "The conversation is longer than the model's context window.",
            {"reason": "context_window"}), "larga", modelo_mnemo.MENSAJE_LARGA),
     (fallo("INVALID_ARGUMENT", "x/y is not one of the person's models in Mnemo.",
@@ -628,6 +709,30 @@ def test_cada_error_de_mnemo_tiene_su_codigo_de_fin(sesion, falsas, reloj, error
     assert ev[-2] == {"tipo": "error", "codigo": codigo, "mensaje": mensaje} and ev[-1]["motivo"] == "error"
     assert len(modelo.pedidos) == 1 and reloj["esperas"] == []  # no se repite
     assert [m["rol"] for m in _mensajes(sesion, ev[0]["conversacion"])] == ["user"]
+    assert "MNEMO_" not in mensaje and "ANTHROPIC" not in mensaje  # sin nombres de variables
+
+
+def test_unavailable_a_mitad_se_repite_una_vez(sesion, falsas, reloj):
+    """Mnemo da UNAVAILABLE también cuando el proveedor de la cuenta falló a mitad de la respuesta (después de sus
+    propios reintentos): la ronda se repite una vez tras 1 s y lo que alcanzó a llegar se descarta."""
+    async def a_medias(args, avisar):
+        await avisar(1, "Estoy revisando la base y ")
+        return fallo("UNAVAILABLE", "The model provider failed. Try again in a moment.")
+
+    modelo = encender_mnemo(sesion.app, a_medias, R(T("En la base hay 3 personas.")))
+    _, ev = enviar(sesion, "¿Cómo va la base?")
+    assert tipos(ev) == ["inicio", "texto", "descartar", "texto", "fin"] and ev[-1]["motivo"] == "listo"
+    assert reloj["esperas"] == [1.0] and len(modelo.pedidos) == 2
+    assert texto_de(ev[ev.index({"tipo": "descartar"}):]) == "En la base hay 3 personas."
+
+
+def test_unavailable_que_sigue_termina_con_mnemo_sin_modelo(sesion, falsas, reloj):
+    """Si vuelve a fallar (la cuenta no tiene modelo: falla al instante y sin gastar), no se insiste."""
+    sin_modelo = fallo("UNAVAILABLE", "The person's Mnemo has no usable model right now.")
+    modelo = encender_mnemo(sesion.app, sin_modelo, sin_modelo, R(T("No debería llegar.")))
+    _, ev = enviar(sesion, "Hola")
+    assert ev[-2] == {"tipo": "error", "codigo": "mnemo_sin_modelo", "mensaje": modelo_mnemo.MENSAJE_SIN_MODELO}
+    assert reloj["esperas"] == [1.0] and len(modelo.pedidos) == 2 and ev[-1]["motivo"] == "error"
 
 
 def test_sin_la_herramienta_del_modelo_es_mnemo_sin_modelo(sesion, falsas):
@@ -660,6 +765,25 @@ def test_la_conexion_se_cae_entre_dos_rondas(sesion, falsas):
     _, ev = enviar(sesion, "Hola")
     assert ev[-2] == {"tipo": "error", "codigo": "mnemo_conexion", "mensaje": mnemo_conexion.MENSAJE_CLAVE}
     assert len(modelo.pedidos) == 1 and len(falsas) == 1  # la herramienta de la primera ronda sí corrió
+
+
+def test_una_conexion_alterada_a_mitad_no_manda_el_access(sesion, falsas):
+    """Mientras responde, quien solo tiene la base cambia la dirección MCP: la ronda siguiente no sale (el access iría a
+    otro host), la conexión cae («alterada») y el turno lo explica sin datos."""
+    db = sesion.app.state.db
+
+    async def y_la_cambian(args, avisar):
+        db.meta.update_one({"_id": mnemo_conexion.ID}, {"$set": {"url_mcp": "https://atacante.example/mcp"}})
+        return correcto(R(TU("toolu_1", "contar_falsa", {"lugar": "Casco"}), stop="tool_use")["datos"])
+
+    modelo = encender_mnemo(sesion.app, y_la_cambian, R(T("No debería llegar.")))
+    _, ev = enviar(sesion, "Hola")
+    assert ev[-2] == {"tipo": "error", "codigo": "mnemo_conexion", "mensaje": mnemo_conexion.MENSAJE_ALTERADA}
+    assert len(modelo.pedidos) == 1 and len(falsas) == 1
+    llamadas = [p for p in modelo.mcp.peticiones if (p["json"] or {}).get("method") == "tools/call"]
+    assert len(llamadas) == 1  # la segunda ronda no llegó a ninguna parte (el transporte falso no mira el host)
+    e = sesion.get("/api/agente/estado").json()
+    assert e["mnemo"]["conexion"]["estado"] == "caida" and e["mnemo"]["conexion"]["motivo"] == "alterada"
 
 
 # ───────────────────────────── Qué proveedor rige ─────────────────────────────
