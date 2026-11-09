@@ -7,12 +7,13 @@ Cómo corre un turno (docs/agente.md):
   no está (409), sin pendientes (409) o el tope diario de mensajes (429). Ahí también se elige el proveedor del modelo
   (`proveedores.py`: Mnemo o Anthropic; el de una conversación existente es el suyo, congelado) y se toman los
   candados: uno por persona y por conversación en este proceso (`Ocupacion`, con un tope de turnos a la vez) y el de
-  MongoDB (`ocupada_hasta`, que vale entre procesos y vence solo).
+  MongoDB (`ocupada_hasta`, que vale entre procesos y vence solo). Si están tomados, se espera unos segundos a que se
+  suelten antes de responder 409 (`_ocupar`): el turno anterior puede estar cerrándose tras «Detener».
 * El turno corre en una tarea propia (el productor) que escribe eventos en una cola; la respuesta (`Turno.eventos`)
   los lee y, si en 15 s no llega nada, manda un `latido`. Si el navegador se desconecta, Starlette cancela la respuesta:
   se cancela la tarea, la petición al modelo se corta (el flujo del SDK o la llamada a Mnemo) y el productor suelta
-  los candados y cierra la API interna. Solo se guardan mensajes completos: lo que el modelo estaba escribiendo se
-  pierde.
+  los candados, lo primero, y cierra la API interna. Solo se guardan mensajes completos: lo que el modelo estaba
+  escribiendo se pierde.
 * Una ronda es una petición al modelo (`Proveedor.generar`). El productor emite `progreso`, `texto` (y, con Mnemo,
   `texto_ronda`) y `herramienta inicio` mientras llega, guarda el mensaje del asistente al final y ejecuta las
   herramientas en orden: las de lectura e interfaz en el acto; las de escritura quedan pendientes de aprobación
@@ -58,6 +59,10 @@ PLAZO_MNEMO_S = 20.0
 TOPE_IMAGENES = 8_000_000
 LATIDO_S = 15.0
 ESPERA_ARRANQUE_S = 30.0     # si la respuesta no empieza a leerse en este tiempo, el turno no corre
+# Un turno nuevo que encuentra ocupada a la persona o la conversación espera hasta esto a que el anterior se suelte
+# (tras «Detener», el turno cortado tarda un momento en notar la desconexión y soltar sus candados), probando cada tanto
+ESPERA_OCUPADA_S = 5.0
+SONDEO_OCUPADA_S = 0.1
 REINTENTOS = 2               # repeticiones de una ronda tras fallos pasajeros (cuáles y cuánto esperar: el proveedor)
 TURNOS_POR_PROCESO = 4
 # Cómo termina una ronda que se cortó: con `tool_use` no se ejecuta (la entrada puede estar a medias), sin él se avisa
@@ -83,6 +88,7 @@ SATURADO = {"codigo": "saturado", "mensaje": "El asistente está atendiendo much
                                             "nuevo en unos segundos."}
 PROVEEDOR = {"codigo": "proveedor", "mensaje": "Esta conversación se empezó con un modelo que ya no está disponible: "
                                               "empiece una nueva."}
+LARGA = {"codigo": "larga", "mensaje": "La conversación es demasiado larga: empiece una nueva."}
 
 
 class FinDelTurno(Exception):
@@ -334,20 +340,22 @@ class Turno:
             self.cola.put_nowait(None)
 
     async def _soltar(self) -> None:
-        if self.expira is not None:
-            try:
-                # Si el administrador bajó la retención mientras corría el turno, lo guardado en él venía con el plazo
-                # viejo (se leyó al empezar): se vuelve a fijar con el vigente
-                _, agente = await run_in_threadpool(politica.leer, self.db)
-                if agente["retencion_dias"] < self.agente["retencion_dias"]:
-                    await run_in_threadpool(conv_db.renovar, self.db, self.cid, agente["retencion_dias"])
-            except Exception as e:  # noqa: BLE001 - el próximo turno lo vuelve a fijar
-                log.warning("Asistente: no se pudo revisar la retención al terminar (%s)", type(e).__name__)
+        # Los candados antes que nada (el de MongoDB y después la reserva de este proceso): tras «Detener», el navegador
+        # ya puede estar mandando el mensaje siguiente, que espera a que esto pase (`_ocupar`)
         try:
             await run_in_threadpool(conv_db.soltar, self.db, self.cid, self.turno)
         except Exception as e:  # noqa: BLE001 - el candado de MongoDB vence solo
             log.warning("Asistente: no se pudo soltar la conversación (%s)", type(e).__name__)
         self.ocupacion.soltar(self.quien.uid, self.cid)
+        if self.expira is not None:
+            try:
+                # Si el administrador bajó la retención mientras corría el turno, lo guardado en él venía con el plazo
+                # viejo (se leyó al empezar): se vuelve a fijar con el vigente (un turno que empiece ya fija ese mismo)
+                _, agente = await run_in_threadpool(politica.leer, self.db)
+                if agente["retencion_dias"] < self.agente["retencion_dias"]:
+                    await run_in_threadpool(conv_db.renovar, self.db, self.cid, agente["retencion_dias"])
+            except Exception as e:  # noqa: BLE001 - el próximo turno lo vuelve a fijar
+                log.warning("Asistente: no se pudo revisar la retención al terminar (%s)", type(e).__name__)
         try:
             await self.api.cerrar()
         except Exception as e:  # noqa: BLE001
@@ -818,16 +826,41 @@ def _respuesta(turno: Turno) -> StreamingResponse:
     return StreamingResponse(turno.eventos(), media_type="application/x-ndjson", headers=FLUJO)
 
 
-def _reservar(app: Any, uid: Any, cid: int | None) -> None:
-    motivo = ocupacion_de(app).reservar(uid, cid)
-    if motivo == "saturado":
-        raise HTTPException(503, dict(SATURADO), headers={"Retry-After": "5"})
-    if motivo is not None:
-        raise HTTPException(409, dict(OCUPADA))
+async def _ocupar(app: Any, uid: Any, cid: int | None, turno: str) -> dict | None:
+    """Toma los candados del turno: la reserva de este proceso (`Ocupacion`) y, si la conversación ya existe, el de
+    MongoDB (`conv_db.tomar`, que la devuelve fresca; si es nueva, None), después de comprobar que la persona no tiene
+    un turno en otra conversación (`otra_ocupada`, que vale entre procesos).
+
+    Si la persona o la conversación están ocupadas no responde 409 en el acto: el turno anterior puede estar
+    cerrándose. Pasa tras «Detener»: el navegador corta la respuesta y manda el mensaje siguiente, y en una máquina
+    lenta ese mensaje llega antes de que el servidor note la desconexión y el turno cortado suelte sus candados. Se
+    vuelve a probar cada `SONDEO_OCUPADA_S` hasta `ESPERA_OCUPADA_S`, sin retener nada mientras tanto, y recién
+    entonces 409 `ocupada`. Un proceso lleno no espera: 503 `saturado`, con `Retry-After`."""
+    db, ocupacion = app.state.db, ocupacion_de(app)
+    limite = time.monotonic() + ESPERA_OCUPADA_S
+    while True:
+        motivo = ocupacion.reservar(uid, cid)
+        if motivo == "saturado":
+            raise HTTPException(503, dict(SATURADO), headers={"Retry-After": "5"})
+        if motivo is None:
+            try:
+                libre = not await run_in_threadpool(conv_db.otra_ocupada, db, uid, cid)
+                conv = (await run_in_threadpool(conv_db.tomar, db, cid, uid, turno)
+                        if libre and cid is not None else None)
+            except BaseException:
+                ocupacion.soltar(uid, cid)
+                raise
+            if libre and (cid is None or conv is not None):
+                return conv
+            ocupacion.soltar(uid, cid)
+        if time.monotonic() >= limite:
+            raise HTTPException(409, dict(OCUPADA))
+        await asyncio.sleep(SONDEO_OCUPADA_S)
 
 
-async def _liberar(app: Any, uid: Any, cid: int | None, turno: str, tomada: bool) -> None:
-    if tomada and cid is not None:
+async def _liberar(app: Any, uid: Any, cid: int | None, turno: str) -> None:
+    """Suelta lo que tomó `_ocupar` cuando el turno no llega a lanzarse (un 429, un fallo de MongoDB…)."""
+    if cid is not None:
         try:
             await run_in_threadpool(conv_db.soltar, app.state.db, cid, turno)
         except Exception as e:  # noqa: BLE001 - vence solo
@@ -863,24 +896,19 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
         if conv is None:
             raise HTTPException(404, {"codigo": "no_existe", "mensaje": "No existe esa conversación."})
         if conv_db.larga(conv):
-            raise HTTPException(409, {"codigo": "larga", "mensaje": "La conversación es demasiado larga: empiece "
-                                                                    "una nueva."})
+            raise HTTPException(409, dict(LARGA))
     proveedor = await _proveedor(app, conv)
-    turno_id, tomada = secrets.token_hex(8), False
-    _reservar(app, quien.uid, cid)
+    turno_id = secrets.token_hex(8)
+    fresca = await _ocupar(app, quien.uid, cid, turno_id)
     try:
-        if await run_in_threadpool(conv_db.otra_ocupada, db, quien.uid, cid):
-            raise HTTPException(409, dict(OCUPADA))
-        if conv is not None:
-            conv = await run_in_threadpool(conv_db.tomar, db, cid, quien.uid, turno_id)
-            if conv is None:
-                raise HTTPException(409, dict(OCUPADA))
-            tomada = True
-            titulo = conv.get("titulo") or "Conversación"
+        if cid is not None:
+            if conv_db.larga(fresca):  # el turno que se estaba cerrando la dejó larga
+                raise HTTPException(409, dict(LARGA))
+            conv, titulo = fresca, fresca.get("titulo") or "Conversación"
         else:  # la conversación se crea al empezar el flujo (con Mnemo, si toca): aquí solo se reserva su id
             cid = await run_in_threadpool(bd.siguiente_id, db, conv_db.CONVERSACIONES)
             ocupacion_de(app).agregar(cid)
-            tomada, titulo = True, conv_db.titulo_de(texto)
+            titulo = conv_db.titulo_de(texto)
         maximo = politica.mensajes_diarios(ajustes, quien.rol)
         usados = await run_in_threadpool(conv_db.contar_mensaje, db, quien.uid, maximo)
         if usados is None:
@@ -891,7 +919,7 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
                       proveedor=proveedor)
         turno.lanzar(lambda: turno.mensaje(texto, contexto))
     except BaseException:
-        await _liberar(app, quien.uid, cid, turno_id, tomada)
+        await _liberar(app, quien.uid, cid, turno_id)
         raise
     return _respuesta(turno)
 
@@ -911,15 +939,9 @@ async def abrir_confirmacion(request: Any, quien: Any, cid: int, decisiones: dic
         raise sin_pendientes
     # Antes de ejecutar nada de lo aprobado: sin el proveedor de la conversación, el turno no podría seguir
     proveedor = await _proveedor(app, conv)
-    turno_id, tomada = secrets.token_hex(8), False
-    _reservar(app, quien.uid, cid)
+    turno_id = secrets.token_hex(8)
+    conv = await _ocupar(app, quien.uid, cid, turno_id)
     try:
-        if await run_in_threadpool(conv_db.otra_ocupada, db, quien.uid, cid):
-            raise HTTPException(409, dict(OCUPADA))
-        conv = await run_in_threadpool(conv_db.tomar, db, cid, quien.uid, turno_id)
-        if conv is None:
-            raise HTTPException(409, dict(OCUPADA))
-        tomada = True
         if conv_db.pendiente_de(conv) is None:  # otro turno lo atendió entre la lectura y el candado
             raise sin_pendientes
         maximo = politica.mensajes_diarios(ajustes, quien.rol)
@@ -929,6 +951,6 @@ async def abrir_confirmacion(request: Any, quien: Any, cid: int, decisiones: dic
                       limite={"usados": usados, "maximo": maximo}, proveedor=proveedor)
         turno.lanzar(lambda: turno.confirmacion(decisiones))
     except BaseException:
-        await _liberar(app, quien.uid, cid, turno_id, tomada)
+        await _liberar(app, quien.uid, cid, turno_id)
         raise
     return _respuesta(turno)
