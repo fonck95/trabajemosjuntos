@@ -5,8 +5,9 @@ llama con `run_in_threadpool`.
   de herramientas con que se creó (la caché del proveedor y el razonamiento conservado exigen que el prefijo no
   cambie), las definiciones de Mnemo, el proveedor del modelo (`proveedor`: «mnemo» o «anthropic»; las de antes, sin
   el campo, son de Anthropic) y el modelo que se le pidió (`modelo`), `personas` (los ids de las personas cuyos datos
-  vio el modelo: si alguna se suprime, la conversación se borra entera), lo que espera aprobación (`pendiente`) y el
-  candado del turno en curso (`ocupada_hasta`, que vence solo: un proceso caído no deja la conversación tomada).
+  vio el modelo: si alguna se suprime o deja de autorizar, la conversación se borra entera), lo que espera aprobación
+  (`pendiente`) y el candado del turno en curso (`ocupada_hasta`: el turno lo renueva mientras corre y vence solo en
+  `ARRIENDO`, así un proceso caído no deja la conversación tomada más de un minuto y medio).
 * `agente_mensajes`: un documento por mensaje, con `seq` creciente; nunca se edita lo guardado (append-only). Los
   bloques van como texto JSON (`contenido`): vuelven idénticos al reenviarlos y aceptan cualquier clave que escriba el
   modelo (también «$x» o «a.b»). `replay` dice si el mensaje se le reenvía al modelo (un rechazo o un aviso, no).
@@ -30,7 +31,7 @@ from .. import modelo
 from .llm import CENTINELA
 
 CONVERSACIONES, MENSAJES, USO = "agente_conversaciones", "agente_mensajes", "agente_uso"
-ARRIENDO = timedelta(minutes=11)  # más que el tope absoluto de un turno (bucle.TOPE_ABSOLUTO_S)
+ARRIENDO = timedelta(seconds=90)  # el turno lo renueva cada `bucle.RENOVAR_S` mientras corre
 LISTA_MAX = 30
 TITULO_MAX = 80
 TOPE_TOKENS = 300_000  # entrada de la última ronda: pasado esto la conversación no admite más (409 «larga»)
@@ -136,6 +137,13 @@ def tomar(db: Database, cid: int, uid: int, turno: str) -> dict | None:
         {"$set": {"ocupada_hasta": t + ARRIENDO, "turno": turno}}, return_document=ReturnDocument.AFTER)
 
 
+def renovar_candado(db: Database, cid: int, turno: str) -> bool:
+    """Alarga el candado mientras su turno sigue vivo: si el proceso muere, vence solo en `ARRIENDO`. False si ya
+    no es de ese turno."""
+    r = db[CONVERSACIONES].update_one({"_id": cid, "turno": turno}, {"$set": {"ocupada_hasta": ahora() + ARRIENDO}})
+    return r.matched_count == 1
+
+
 def soltar(db: Database, cid: int, turno: str) -> None:
     db[CONVERSACIONES].update_one({"_id": cid, "turno": turno}, {"$set": {"ocupada_hasta": None, "turno": None}})
 
@@ -164,6 +172,11 @@ def renovar(db: Database, cid: int, dias: int) -> datetime:
 def sumar_personas(db: Database, cid: int, ids: set[int]) -> None:
     if ids:
         db[CONVERSACIONES].update_one({"_id": cid}, {"$addToSet": {"personas": {"$each": sorted(ids)}}})
+
+
+def suprimidas(db: Database, ids: set[int]) -> list[int]:
+    """Las de `ids` que ya se suprimieron (la supresión pudo llegar mientras una herramienta las leía)."""
+    return [p["_id"] for p in db.personas.find({"_id": {"$in": sorted(ids)}, "eliminado": True}, {"_id": 1})]
 
 
 def borrar(db: Database, cid: int, uid: int) -> bool:
@@ -207,8 +220,10 @@ def guardar(db: Database, cid: int, uid: int, expira: datetime, rol: str, conten
                                                projection={"n_mensajes": 1}, return_document=ReturnDocument.AFTER)
     if c is None:
         raise ConversacionBorrada()
+    # Los campos también sin sustitutos sueltos: un resumen de herramienta puede citar un texto remoto cortado a mitad
+    # de un emoji, y MongoDB solo guarda UTF-8 válido
     doc: dict[str, Any] = {"conversacion": cid, "uid": uid, "seq": c["n_mensajes"], "rol": rol, "replay": replay,
-                           "ts": t, "expira": expira, **(campos or {})}
+                           "ts": t, "expira": expira, **limpio(campos or {})}
     if contenido is not None:
         doc["contenido"] = a_json(contenido)
     db[MENSAJES].insert_one(doc)

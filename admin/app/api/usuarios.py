@@ -6,7 +6,9 @@ compromiso de confidencialidad e indicadores) e indicadores por usuario (5.1) y 
   coordinadores, no toca la cuenta de otro coordinador y no cambia roles (403 `permiso`). Eso es solo de A.
 * Los coordinadores no tienen asignación: como A, trabajan sobre toda la base.
 * Los usuarios nunca se borran: se desactivan. Desactivar, cambiar el rol, restablecer la clave y «Cerrar sesiones»
-  suben su `version`, y sus sesiones caen en la petición siguiente.
+  suben su `version`, y sus sesiones caen en la petición siguiente. Desactivar, reactivar, cambiar el rol o la
+  asignación borra además sus conversaciones con el asistente: lo que el modelo le mostró era de su rol o su zona de
+  antes.
 * La clave temporal se muestra una sola vez (en la respuesta del alta o del restablecimiento), vence a las 72 h y no
   va a la auditoría ni a ningún GET.
 * Los indicadores de varios usuarios se calculan con un `$group` por usuario, no con una consulta por usuario:
@@ -547,6 +549,10 @@ def editar(uid: int, body: UsuarioCambio, request: Request, db: Database = Depen
     db.usuarios.update_one({"_id": uid}, actualizacion)
     if cierra:
         db.sesiones.delete_many({"uid": uid})
+    if cierra or "asignacion" in cambios:
+        # Lo que el asistente le mostró era de su rol o su zona de antes, y se le reenvía al modelo en cada ronda:
+        # sus conversaciones se borran (como al suprimir a una persona)
+        bd.borrar_conversaciones(db, {"uid": uid})
     bd.auditar(db, adm, "editar_usuario", "usuario", uid,
                {k: {"antes": u.get(k), "despues": v} for k, v in cambios.items()})
     return _detalle(db, _usuario(db, uid))

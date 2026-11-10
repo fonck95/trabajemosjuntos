@@ -719,13 +719,16 @@ def crear_solicitud(db: Database, pid: int | None, tipo: str, quien: Quien | Non
 
 def derivar_autorizacion(db: Database, pid: int) -> dict:
     """Escribe en la ficha los campos derivados de sus eventos (`consentimiento_vigente`) y recalcula el abordaje (que
-    pasa a «no contactar» con un «no»). Con «no», borra los sensibles."""
+    pasa a «no contactar» con un «no»). Con «no», borra los sensibles y, si antes no lo tenía, las conversaciones del
+    asistente que vieron a la persona (`bd.olvidar_en_conversaciones`)."""
     eventos = list(db.autorizaciones.find({"persona_id": pid}))
     d = modelo.consentimiento_vigente(eventos)
     cambios = dict(d)
     if d["consentimiento"] == "no":
         cambios.update(sensibles={}, sensibles_autorizados=[])
-    db.personas.update_one({"_id": pid}, {"$set": cambios})
+    antes = db.personas.find_one_and_update({"_id": pid}, {"$set": cambios}, projection={"consentimiento": 1})
+    if d["consentimiento"] == "no" and (antes or {}).get("consentimiento") != "no":
+        bd.olvidar_en_conversaciones(db, [pid])
     from . import acercamientos as ac  # aquí: acercamientos importa este módulo
     ac.recalcular_abordaje(db, pid)
     return d
