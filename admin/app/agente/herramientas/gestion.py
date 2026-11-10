@@ -5,12 +5,18 @@ Por qué está hecho así:
 
 * Todo lo que toca personas o la gestión va por `ctx.api` (las mismas rutas que usa la interfaz, con la sesión del
   usuario): los permisos, el alcance del planillero, el presupuesto diario y las lecturas, la proyección por rol, el
-  bloqueo de quien no autorizó, la idempotencia y la auditoría son exactamente los del panel. Solo el nomenclátor de
-  lugares, que no son personas, se lee directo de `db.lugares`.
+  bloqueo de quien no autorizó, la idempotencia y la auditoría son exactamente los del panel. Solo lo que no es de
+  personas se lee directo de la base: el nomenclátor (`db.lugares`), las etiquetas y, para no crear dos veces la misma
+  reunión, las reuniones del propio usuario en esa fecha (`db.reuniones`).
 * Al modelo le llega lo mínimo: conteos y resúmenes en vez de listas, y las personas que aparecen (asistentes, la cola
   de llamadas) pasan por `minimizar`, con sus ids en `Resultado.personas`. De los indicadores nunca salen las listas de
   origen, los datos sensibles, los líderes, la base con cédula ni la actividad del equipo (auditoría): el modelo es un
   tercero (Ley 1581) y esos datos revelan afiliación política o salud.
+* De quien no autorizó el tratamiento, nada más que quién es: los indicadores se calculan siempre sin esas personas
+  (`tratables`) y la lista de asistentes de una reunión no las trae ni suma sus necesidades. Un desglose de un grupo
+  pequeño, o la resta de dos conteos, diría su sexo, su edad o sus necesidades. Por eso los conteos de las reuniones,
+  de mi trabajo, de lo pendiente del trabajo y del equipo (lo que hizo cada usuario y el avance de cada lugar) tampoco
+  las cuentan (`tratables` en la API).
 * Las entradas vienen de un LLM: modelos pydantic con `extra="forbid"` (una clave mal escrita es un error visible, no
   un filtro que se ignora), los topes y valores de la API y una lista blanca de filtros. Fuera de esa lista quedan los
   que revelan datos políticos o de salud y la búsqueda por texto o número: contar con `q` dejaría reconstruir, dígito a
@@ -26,6 +32,7 @@ Por qué está hecho así:
 from __future__ import annotations
 
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from typing import Annotated, Any, Awaitable, Callable, Literal
@@ -167,8 +174,10 @@ def seguro(e: ErrorHerramienta) -> ErrorHerramienta:
 
 async def pedir(ctx: Contexto, metodo: str, ruta: str, *, params: dict | None = None, cuerpo: Any = None,
                 clave: str | None = None, respuesta: bool = False) -> Any:
+    plazo = ctx.plazo_escritura() if metodo != "GET" else None
     try:
-        return await ctx.api.pedir(metodo, ruta, params=params, json_=cuerpo, clave=clave, respuesta=respuesta)
+        return await ctx.api.pedir(metodo, ruta, params=params, json_=cuerpo, clave=clave, respuesta=respuesta,
+                                   plazo=plazo)
     except ErrorHerramienta as e:
         raise seguro(e) from None
 
@@ -191,6 +200,12 @@ def exigir_permiso(ctx: Contexto, permiso: str, mensaje: str) -> None:
 
 def _sensibles(db: Any) -> minimizar.Sensibles:
     return minimizar.sensibles_de(db)
+
+
+def _nombres_de_necesidades(db: Any) -> frozenset[str]:
+    """Los nombres de las etiquetas del grupo «necesidad» (la API manda las de cada asistente por nombre)."""
+    return frozenset(e["nombre"] for e in db.etiquetas.find({"grupo": "necesidad"}, {"nombre": 1})
+                     if isinstance(e.get("nombre"), str))
 
 
 def _nombres_sensibles(db: Any) -> tuple[frozenset[int], frozenset[str]]:
@@ -641,12 +656,27 @@ def compactar_indicadores(d: dict, sens_ids: frozenset[int], sens_nombres: froze
     return out
 
 
+SIN_NO_AUTORIZARON = ("No cuentan a quienes no autorizaron el tratamiento de sus datos: de ellos el asistente solo "
+                      "sabe quiénes son. Para saber cuántos son, use buscar_personas con consentimiento «no» (y, si "
+                      "hace falta, su barrio o vereda): su total.")
+NO_AUTORIZO_EN_INDICADORES = ("Los indicadores no cuentan a quienes no autorizaron el tratamiento de sus datos: de "
+                              "ellos solo se sabe quiénes son. Use buscar_personas con consentimiento «no» (y, si "
+                              "hace falta, su barrio o vereda): su total dice cuántos son.")
+
+
 async def _indicadores(ctx: Contexto, a: IndicadoresEntrada) -> Resultado:
+    # Siempre sin quienes no autorizaron: un desglose de un grupo pequeño (una vereda, un filtro que deja a una sola
+    # persona) diría su sexo, su edad o sus necesidades, y restar dos conteos con y sin ellos, también
+    if a.filtros is not None and a.filtros.consentimiento == "no":
+        raise ErrorHerramienta(NO_AUTORIZO_EN_INDICADORES, "invalido", estado=422)
     params, legible = await preparar_filtros(ctx, a.filtros, Perezosa(ctx))  # con area_id, si lo trae
-    d = await pedir(ctx, "GET", "/api/indicadores", params={**params, "alcance": a.alcance})
+    d = await pedir(ctx, "GET", "/api/indicadores", params={**params, "tratables": "1", "alcance": a.alcance})
     sens_ids, sens_nombres = await run_in_threadpool(_nombres_sensibles, ctx.db)
     out = {"alcance": a.alcance, "filtros": legible, **compactar_indicadores(d if isinstance(d, dict) else {},
                                                                               sens_ids, sens_nombres)}
+    if isinstance(out.get("autorizacion"), dict):
+        out["autorizacion"].pop("no", None)  # siempre 0 aquí: no es que nadie haya dicho que no
+    out["nota_autorizacion"] = SIN_NO_AUTORIZARON
     n = (out.get("kpi") or {}).get("personas")
     resumen = "Zona con menos de 10 personas" if out.get("pocas") else (
         _plural(n, "persona", "personas") if isinstance(n, int) else "Indicadores")
@@ -667,9 +697,16 @@ def _fila_reunion(x: dict) -> dict:
             "ruta": f"/reuniones/{x.get('id')}"}
 
 
+SIN_NO_AUTORIZARON_REUNION = ("Los asistentes y las personas nuevas no cuentan a quienes no autorizaron el "
+                              "tratamiento de sus datos, ni se listan: que asistieron es un dato suyo. En Reuniones "
+                              "del panel sí salen.")
+
+
 async def _reuniones(ctx: Contexto) -> tuple[list[dict], int | None]:
-    """Las reuniones que el rol puede ver (más recientes primero) y, para el planillero, cuántas otras hay."""
-    r = await pedir(ctx, "GET", "/api/reuniones", respuesta=True)
+    """Las reuniones que el rol puede ver (más recientes primero) y, para el planillero, cuántas otras hay. Sus conteos
+    de asistentes y de personas nuevas son sin quienes no autorizaron (`tratables`): restando dos conteos, o
+    comparando con ver_reunion, se sabría que alguien que no se lista asistió."""
+    r = await pedir(ctx, "GET", "/api/reuniones", params={"tratables": "1"}, respuesta=True)
     try:
         datos = r.json()
     except ValueError:
@@ -706,7 +743,8 @@ async def _listar_reuniones(ctx: Contexto, a: ListarReunionesEntrada) -> Resulta
                 continue
         elegidas.append(x)
     filas = [_fila_reunion(x) for x in elegidas[:a.limite]]
-    out: dict[str, Any] = {"total": len(elegidas), "mostradas": len(filas), "reuniones": filas}
+    out: dict[str, Any] = {"total": len(elegidas), "mostradas": len(filas), "reuniones": filas,
+                           "nota_autorizacion": SIN_NO_AUTORIZARON_REUNION}
     if ajenas:
         out["ajenas"] = ajenas
         out["nota"] = f"Hay {_plural(ajenas, 'reunión', 'reuniones')} de otras personas del equipo que su rol no ve."
@@ -732,7 +770,7 @@ async def _resumen_reunion(ctx: Contexto, rid: int) -> Resultado:
     # En la lista, «asistentes» es el conteo: aquí va como asistentes_total, y la lista de personas, vacía
     out = {**_fila_reunion(x), "asistentes_total": x.get("asistentes"), "asistentes": [],
            "nota": "Sin consultar personas: para la descripción, los compromisos, las necesidades y los asistentes, "
-                   "pida asistentes mayor que 0."}
+                   "pida asistentes mayor que 0.", "nota_autorizacion": SIN_NO_AUTORIZARON_REUNION}
     return Resultado({k: v for k, v in out.items() if v is not None},
                      _plural(int(x.get("asistentes") or 0), "asistente", "asistentes"))
 
@@ -747,23 +785,29 @@ async def _ver_reunion(ctx: Contexto, a: VerReunionEntrada) -> Resultado:
             raise ErrorHerramienta(f"No existe la reunión #{a.reunion_id}.", "no_existe", estado=404) from None
         raise
     d = d if isinstance(d, dict) else {}
-    asistentes = _lista(d.get("asistentes"))
-    filas = minimizar.filas(asistentes[:a.asistentes])
+    # Quien no autorizó no se lista (que asistió es un dato suyo, como lo sería filtrar por reunion_id en
+    # buscar_personas), ni se cuenta, ni suma en las necesidades: la API se las cuenta al administrador. Un total o un
+    # aviso con ellos diría que alguien que no se lista vino
+    tratables = [x for x in _lista(d.get("asistentes")) if x.get("consentimiento") != "no"]
+    filas = minimizar.filas(tratables[:a.asistentes])
     _, sens_nombres = await run_in_threadpool(_nombres_sensibles, ctx.db)  # la API manda las necesidades por nombre
+    de_necesidad = await run_in_threadpool(_nombres_de_necesidades, ctx.db)
+    necesidades = Counter(n for x in tratables for n in dict.fromkeys(x.get("etiquetas") or [])
+                          if n in de_necesidad and n not in sens_nombres)
     lugar = d.get("lugar_nombre") or d.get("lugar_texto")
     out = {"id": d.get("id", a.reunion_id), "titulo": _texto(d.get("titulo"), 160), "fecha": d.get("fecha"),
            "hora": d.get("hora"), "lugar": _texto(lugar, 120), "lugar_id": d.get("lugar_id"),
            "sitio": _texto(d.get("lugar_texto"), 160) if d.get("lugar_texto") != d.get("lugar_nombre") else None,
            "tema": _texto(d.get("tema"), 160), "descripcion": _texto(d.get("descripcion"), 800),
            "compromisos": _texto(d.get("compromisos"), 800), "abierta_a_equipo": d.get("abierta_a_equipo"),
-           "propia": d.get("propia"), "asistentes_total": len(asistentes), "asistentes": filas,
-           "necesidades": [{"nombre": x.get("nombre"), "n": x.get("n")} for x in _lista(d.get("necesidades"))
-                           if x.get("nombre") not in sens_nombres][:TOP],
-           "ruta": f"/reuniones/{d.get('id', a.reunion_id)}"}
-    if len(asistentes) > len(filas) and a.asistentes:
-        out["aviso"] = f"Se muestran {len(filas)} de {len(asistentes)} asistentes."
+           "propia": d.get("propia"), "asistentes_total": len(tratables), "asistentes": filas,
+           "necesidades": [{"nombre": n, "n": c} for n, c in necesidades.most_common(TOP)],
+           "ruta": f"/reuniones/{d.get('id', a.reunion_id)}", "nota_autorizacion": SIN_NO_AUTORIZARON_REUNION}
+    if len(tratables) > len(filas):
+        out["aviso"] = (f"Se muestran {len(filas)} de {len(tratables)} asistentes: para ver más, pida un número mayor "
+                        "en asistentes.")
     out = {k: v for k, v in out.items() if v is not None}
-    return Resultado(out, _plural(len(asistentes), "asistente", "asistentes"), personas=minimizar.ids_de(filas))
+    return Resultado(out, _plural(len(tratables), "asistente", "asistentes"), personas=minimizar.ids_de(filas))
 
 
 def _fecha_legible(f: str | None) -> str:
@@ -819,22 +863,30 @@ def _exigir_apertura(ctx: Contexto, a: CrearReunionEntrada) -> None:
                                "abierta_a_equipo.", "permiso", estado=403)
 
 
-def _igual(x: dict, a: CrearReunionEntrada) -> bool:
-    """¿Es la misma reunión? Del mismo usuario, con el mismo título (sin tildes ni mayúsculas), fecha y hora. El lugar
-    no cuenta: dos reuniones con el mismo título a la misma hora son la misma, aunque una diga el barrio y otra no."""
-    return (bool(x.get("propia")) and tx.limpiar(x.get("titulo")) == tx.limpiar(a.titulo)
-            and x.get("fecha") == a.fecha and (x.get("hora") or None) == (a.hora or None))
+def _misma(db: Any, uid: Any, a: CrearReunionEntrada, lugar: Lugar | None) -> dict | None:
+    """La reunión de `uid` que es la misma que se pide (de la base: no es de personas), o None. Cuenta todo lo que la
+    tarjeta muestra y distingue a una reunión de otra: el título (sin tildes ni mayúsculas), la fecha, la hora, el
+    barrio o vereda, el sitio (sin sitio, la API guarda el nombre del lugar) y el tema. Dos reuniones del mismo día y
+    título en sitios distintos son dos; la misma llamada repetida (un reintento) encuentra la que ya creó."""
+    sitio = a.sitio or (lugar.nombre if lugar else None)
+    pedida = (tx.limpiar(a.titulo), a.hora or None, lugar.id if lugar else None, tx.limpiar(sitio), tx.limpiar(a.tema))
+    for x in db.reuniones.find({"creado_por_uid": uid, "fecha": a.fecha},
+                               {"titulo": 1, "fecha": 1, "hora": 1, "lugar_id": 1, "lugar_texto": 1, "tema": 1}):
+        if (tx.limpiar(x.get("titulo")), x.get("hora") or None, x.get("lugar_id") or None,
+                tx.limpiar(x.get("lugar_texto")), tx.limpiar(x.get("tema"))) == pedida:
+            return {"id": x["_id"], "titulo": x.get("titulo"), "fecha": x.get("fecha"), "hora": x.get("hora"),
+                    "tema": x.get("tema"), "lugar": x.get("lugar_texto"), "propia": True}
+    return None
 
 
-async def _igual_existente(ctx: Contexto, a: CrearReunionEntrada) -> dict | None:
-    reus, _ = await _reuniones(ctx)
-    return next((x for x in reus if _igual(x, a)), None)
+async def _igual_existente(ctx: Contexto, a: CrearReunionEntrada, lugar: Lugar | None) -> dict | None:
+    return await run_in_threadpool(_misma, ctx.db, ctx.quien.uid, a, lugar)
 
 
 async def _preparar_reunion(ctx: Contexto, a: CrearReunionEntrada) -> Confirmacion:
     _exigir_apertura(ctx, a)
     lugar = await _lugar_de_reunion(ctx, a)
-    ya = await _igual_existente(ctx, a)
+    ya = await _igual_existente(ctx, a, lugar)
     if ya is not None:
         raise ErrorHerramienta(f"Ya existe una reunión suya igual: «{_texto(ya.get('titulo'), 160)}» del "
                                f"{ya.get('fecha')} (#{ya.get('id')}). Use esa; no se crea otra.", "duplicada",
@@ -855,8 +907,9 @@ async def _preparar_reunion(ctx: Contexto, a: CrearReunionEntrada) -> Confirmaci
 async def _crear_reunion(ctx: Contexto, a: CrearReunionEntrada) -> Resultado:
     _exigir_apertura(ctx, a)
     lugar = await _lugar_de_reunion(ctx, a)
-    # La API no tiene idempotencia al crear reuniones: si esta misma llamada ya la creó (un reintento), no se repite
-    ya = await _igual_existente(ctx, a)
+    # La API no tiene idempotencia al crear reuniones: si esta misma llamada ya la creó (un reintento), no se repite.
+    # Una igual de antes de la tarjeta no puede ser: la tarjeta no se habría armado («duplicada»)
+    ya = await _igual_existente(ctx, a, lugar)
     if ya is not None:
         return Resultado({"ok": True, "ya_existia": True, "reunion": _fila_reunion(ya)},
                          f"Ya existía la reunión #{ya.get('id')}", acciones=[{"tipo": "recargar"}])
@@ -940,8 +993,9 @@ async def _agregar_asistente(ctx: Contexto, a: AgregarAsistenteEntrada) -> Resul
     asistentes = _lista(d.get("asistentes"))
     fila = next((minimizar.fila(x) for x in asistentes if x.get("id") == a.persona_id), {"id": a.persona_id})
     persona = {k: fila[k] for k in ("id", "nombre", "consentimiento") if k in fila}
+    tratables = sum(1 for x in asistentes if x.get("consentimiento") != "no")  # como en ver_reunion
     return Resultado({"ok": True, "reunion": {"id": d.get("id", a.reunion_id), "titulo": _texto(d.get("titulo"), 160),
-                                              "fecha": d.get("fecha"), "asistentes_total": len(asistentes),
+                                              "fecha": d.get("fecha"), "asistentes_total": tratables,
                                               "ruta": f"/reuniones/{a.reunion_id}"},
                       "persona": persona}, "Asistente registrado", acciones=[{"tipo": "recargar"}],
                      personas={a.persona_id})
@@ -967,7 +1021,8 @@ def _que_trabajo(quien: Any) -> str:
 
 async def _pendientes(ctx: Contexto, _: SinEntrada) -> Resultado:
     quien = ctx.quien
-    ins = await pedir(ctx, "GET", "/api/insignias")
+    # `tratables`: el trabajo y las situaciones sin quienes no autorizaron, como mi_trabajo y buscar_personas
+    ins = await pedir(ctx, "GET", "/api/insignias", params={"tratables": "1"})
     ins = ins if isinstance(ins, dict) else {}
     out: dict[str, Any] = {"trabajo": {"n": ins.get("trabajo", 0), "que": _que_trabajo(quien), "ruta": "/trabajo"}}
     partes = [f"Trabajo: {miles(ins.get('trabajo', 0))}"]
@@ -979,8 +1034,10 @@ async def _pendientes(ctx: Contexto, _: SinEntrada) -> Resultado:
         por_tipo: dict[str, int] = {}
         for s in sols:
             por_tipo[str(s.get("tipo"))] = por_tipo.get(str(s.get("tipo")), 0) + 1
-        proximas = [{k: s.get(k) for k in ("id", "tipo", "canal", "estado", "vence", "dias_restantes", "vencida",
-                                           "persona_id")} for s in sols if s.get("vence")][:5]
+        # Sin de quién es: que alguien pidió, por ejemplo, la supresión de sus datos es un dato suyo (y de quien no
+        # autorizó, el modelo no recibe nada). El caso se atiende en Calidad del panel
+        proximas = [{k: s.get(k) for k in ("id", "tipo", "canal", "estado", "vence", "dias_restantes", "vencida")}
+                    for s in sols if s.get("vence")][:5]
         calidad: dict[str, Any] = {
             "coincidencias_por_revisar": ins.get("calidad", 0), "conflictos_cedula": ins.get("conflictos", 0),
             "situaciones_por_confirmar": ins.get("situaciones", 0),
@@ -1004,9 +1061,7 @@ async def _pendientes(ctx: Contexto, _: SinEntrada) -> Resultado:
                                                                else ""))
         out["nota"] = ("Para atender cada caso abra Calidad de datos (abrir_vista). Las solicitudes de los titulares "
                        "tienen plazo legal: atienda primero las vencidas.")
-    personas = {s["persona_id"] for s in (out.get("calidad") or {}).get("solicitudes", {}).get("proximas", [])
-                if isinstance(s.get("persona_id"), int) and not isinstance(s.get("persona_id"), bool)}
-    return Resultado(out, " · ".join(partes), personas=personas)
+    return Resultado(out, " · ".join(partes))
 
 
 # ───────────────────────────── mi_trabajo ─────────────────────────────
@@ -1020,6 +1075,10 @@ class MiTrabajoEntrada(_Entrada):
     pagina: int = Field(1, ge=1, le=10, description="Página de la cola (20 por página)")
     uid: IdOCero | None = Field(None, description="Ver las listas de otro usuario (solo administrador y "
                                                   "coordinador; sin la cola)")
+
+
+SIN_NO_AUTORIZARON_TRABAJO = ("Las listas, la cola y lo de hoy y la semana no cuentan a quienes no autorizaron el "
+                              "tratamiento de sus datos: en Mi trabajo del panel algunas cifras pueden ser mayores.")
 
 
 def _sin_numero(f: dict) -> dict:
@@ -1036,21 +1095,25 @@ async def _mi_trabajo(ctx: Contexto, a: MiTrabajoEntrada) -> Resultado:
     if a.lista and not quien.puede("trabajo.cola"):
         raise ErrorHerramienta("Su rol no trabaja la cola de llamadas: sus listas son las de Mi trabajo.", "permiso",
                                estado=403)
-    t = await pedir(ctx, "GET", "/api/trabajo", params={"uid": a.uid if otro else None})
+    # `tratables`: las listas y lo de hoy y la semana sin quienes no autorizaron (que alguien del equipo los llamó o
+    # los registró hoy es un dato suyo)
+    t = await pedir(ctx, "GET", "/api/trabajo", params={"uid": a.uid if otro else None, "tratables": "1"})
     t = t if isinstance(t, dict) else {}
     listas = [{"clave": x.get("clave"), "titulo": x.get("titulo"), "n": x.get("n"), "ruta": x.get("enlace")}
               for x in _lista(t.get("listas"))]
     # «listas_de_trabajo», no «listas»: en el panel «listas» son las listas de origen (políticas), que nunca salen
     out: dict[str, Any] = {"rol": t.get("rol"), "listas_de_trabajo": listas,
                            "pendientes_sin_autorizacion": t.get("pendientes_sin_autorizacion"),
-                           "hoy": _dict_numeros(t.get("hoy")), "semana": _dict_numeros(t.get("semana"))}
+                           "hoy": _dict_numeros(t.get("hoy")), "semana": _dict_numeros(t.get("semana")),
+                           "nota_autorizacion": SIN_NO_AUTORIZARON_TRABAJO}
     if isinstance(t.get("alcance"), dict):
         out["zona_asignada"] = {k: [{"id": x.get("id"), "nombre": x.get("nombre")} for x in _lista(t["alcance"].get(k))]
                                 for k in ("lugares", "areas")}
     personas: set[int] = set()
     resumen = _plural(len(listas), "lista", "listas")
     if a.lista:
-        c = await pedir(ctx, "GET", "/api/trabajo/cola", params={"lista": a.lista, "pagina": a.pagina})
+        c = await pedir(ctx, "GET", "/api/trabajo/cola", params={"lista": a.lista, "pagina": a.pagina,
+                                                                  "tratables": "1"})
         c = c if isinstance(c, dict) else {}
         filas = [_sin_numero(minimizar.fila(f)) for f in _lista(c.get("filas"))]
         out["cola"] = {"nombre": a.lista, "total": c.get("total", 0), "pagina": a.pagina, "filas": filas,
@@ -1082,11 +1145,17 @@ CLAVES_PLANILLERO = ("creadas_netas", "actualizadas", "con_datos_nuevos", "corre
 CLAVES_CONSULTOR = ("acercamientos", "personas", "contactadas", "no_contactar", "autorizaciones_obtenidas",
                     "cedulas_dictadas", "fuera_de_horario")
 MAX_USUARIOS = 60
+# Lo que cada usuario hizo con las personas (fichas, teléfonos, asistencias, acercamientos…) y el avance de cada lugar
+# (personas y porcentajes) se piden sin quienes no autorizaron (`tratables`): las demás herramientas no los cuentan, y
+# la resta diría algo de ellos (que a alguien de una vereda lo llamaron hoy, o que tiene cédula)
+SIN_NO_AUTORIZARON_EQUIPO = ("Lo que hizo cada usuario con las personas y las cifras de cada lugar no cuentan a "
+                             "quienes no autorizaron el tratamiento de sus datos: en Usuarios del panel algunas cifras "
+                             "pueden ser mayores.")
 
 
 def _usuario(u: dict) -> dict:
-    """Lo que el modelo necesita de cada usuario: quién es, sus alertas y lo que hizo. Nunca su teléfono, sesiones,
-    direcciones IP ni nada de su clave."""
+    """Lo que el modelo necesita de cada usuario: quién es, sus alertas, su asignación, lo que hizo y lo que administró.
+    Nunca su teléfono, sesiones, direcciones IP ni nada de su clave."""
     ind = u.get("indicadores") if isinstance(u.get("indicadores"), dict) else {}
     p = ind.get("planillero") if isinstance(ind.get("planillero"), dict) else {}
     c = ind.get("consultor") if isinstance(ind.get("consultor"), dict) else {}
@@ -1110,7 +1179,7 @@ def _usuario(u: dict) -> dict:
         out["planillero"] = plan
     if u.get("rol") == "consultor" or any(cons.values()):
         out["consultor"] = cons
-    hechos = {k: v for k, v in _dict_numeros(adm).items() if v}
+    hechos = {k: v for k, v in _dict_numeros(adm).items() if v}  # importaciones, exportaciones, uniones…
     if hechos:
         out["administracion"] = hechos
     return out
@@ -1120,9 +1189,10 @@ async def _equipo(ctx: Contexto, a: EquipoEntrada) -> Resultado:
     hoy = modelo.hoy_local()
     hasta = a.hasta or hoy.isoformat()
     desde = a.desde or (date.fromisoformat(hasta) - timedelta(days=29)).isoformat()
-    us = _lista(await pedir(ctx, "GET", "/api/usuarios", params={"desde": desde, "hasta": hasta}))
+    us = _lista(await pedir(ctx, "GET", "/api/usuarios", params={"desde": desde, "hasta": hasta, "tratables": "1"}))
     elegidos = [u for u in us if (a.incluir_inactivos or u.get("activo")) and (a.rol is None or u.get("rol") == a.rol)]
     filas = [_usuario(u) for u in elegidos]
+
     def activos(rol: str) -> int:
         return sum(1 for u in us if u.get("activo") and u.get("rol") == rol)
 
@@ -1137,11 +1207,12 @@ async def _equipo(ctx: Contexto, a: EquipoEntrada) -> Resultado:
                                                       "autorizaciones_obtenidas")})
     out: dict[str, Any] = {"periodo": {"desde": desde, "hasta": hasta}, "totales": totales,
                            "usuarios": filas[:MAX_USUARIOS],
-                           "con_alertas": [f["usuario"] for f in filas if f["alertas"]]}
+                           "con_alertas": [f["usuario"] for f in filas if f["alertas"]],
+                           "nota_autorizacion": SIN_NO_AUTORIZARON_EQUIPO}
     if len(filas) > MAX_USUARIOS:
         out["aviso"] = f"Se muestran {MAX_USUARIOS} de {len(filas)} usuarios: filtre por rol."
     if a.avance:
-        av = await pedir(ctx, "GET", "/api/usuarios/avance", params={"por": a.avance})
+        av = await pedir(ctx, "GET", "/api/usuarios/avance", params={"por": a.avance, "tratables": "1"})
         av = av if isinstance(av, dict) else {}
         out["avance"] = {"por": a.avance, "filas": [
             {"id": x.get("id"), "nombre": x.get("nombre"), "personas": x.get("personas"),
@@ -1275,26 +1346,29 @@ D_INDICADORES = (
     "con más personas, las necesidades más frecuentes, los puestos de votación, la cobertura de cédula por lugar y las "
     "reuniones recientes. Acepta los filtros de Habitantes (zona, lugar por nombre o id, sexo, edad, autorización, "
     "abordaje, datos que faltan…) y un área de trabajo (area_id, con alcance «zona»). Úsela para preguntas de cuántos, "
-    "cómo va o qué falta: no lista personas. Nunca trae datos sensibles, listas de origen ni actividad del equipo. "
-    "Solo administrador y coordinador.")
+    "cómo va o qué falta: no lista personas. Nunca trae datos sensibles, listas de origen ni actividad del equipo, y "
+    "no cuenta a quienes no autorizaron el tratamiento de sus datos (cuántos son: buscar_personas con consentimiento "
+    "«no»). Solo administrador y coordinador.")
 D_LISTAR_REUNIONES = (
     "Lista las reuniones que su rol puede ver (el planillero: las suyas y las abiertas al equipo), de la más reciente "
     "a la más vieja, con fecha, hora, tema, lugar, cuántos asistentes tuvo y cuántas personas nuevas se registraron en "
-    "ella. Filtra por fechas (desde y hasta, AAAA-MM-DD), por palabras del título, el tema o el lugar y por las suyas. "
-    "No trae los asistentes: para eso use ver_reunion.")
+    "ella (sin contar a quienes no autorizaron el tratamiento de sus datos). Filtra por fechas (desde y hasta, "
+    "AAAA-MM-DD), por palabras del título, el tema o el lugar y por las suyas. No trae los asistentes: para eso use "
+    "ver_reunion.")
 D_VER_REUNION = (
     "Detalle de una reunión: título, fecha, hora, lugar, tema, descripción, compromisos, las necesidades más "
     "mencionadas por los asistentes y la lista de asistentes con datos mínimos (nombre, barrio o vereda, autorización, "
-    "completitud; cédulas y teléfonos enmascarados). Abrir el detalle cuenta como consulta de todos sus asistentes (el "
-    "planillero tiene un tope diario): para saber solo cuándo fue o cuántos vinieron, use `asistentes: 0`, que no "
+    "completitud; cédulas y teléfonos enmascarados), sin quienes no autorizaron el tratamiento de sus datos (ni se "
+    "listan, ni se cuentan, ni suman sus necesidades). Abrir el detalle cuenta como consulta de todos sus asistentes "
+    "(el planillero tiene un tope diario): para saber solo cuándo fue o cuántos vinieron, use `asistentes: 0`, que no "
     "consulta a nadie.")
 D_CREAR_REUNION = (
     "Prepara una reunión nueva en el panel: no queda guardada hasta que la persona la aprueba en la tarjeta. Necesita "
     "título y fecha (AAAA-MM-DD; puede ser pasada, para registrar una que ya ocurrió); opcionales: hora (HH:MM de 24 "
     "horas), barrio o vereda (por nombre en `lugar` o con `lugar_id` de buscar_lugar), el sitio exacto (caseta "
     "comunal, escuela…), tema y descripción. Si el nombre del lugar es ambiguo devuelve los candidatos: pregunte "
-    "cuál. Solo el administrador y el coordinador la abren al equipo. Si ya hay una reunión suya igual (título, fecha "
-    "y hora) no se crea otra.")
+    "cuál. Solo el administrador y el coordinador la abren al equipo. Si ya hay una reunión suya igual (título, fecha, "
+    "hora, lugar, sitio y tema) no se crea otra.")
 D_AGREGAR_ASISTENTE = (
     "Prepara el registro de una persona como asistente de una reunión: se guarda cuando la persona del equipo lo "
     "aprueba en la tarjeta. Necesita reunion_id y persona_id (de listar_reuniones, ver_reunion o buscar_personas); "
@@ -1305,22 +1379,25 @@ D_PENDIENTES = (
     "Lo pendiente según su rol, en conteos: lo de su trabajo (fichas por actualizar o, para el consultor, a quién "
     "volver a llamar) y, para administrador y coordinador, las colas de Calidad de datos: coincidencias por revisar, "
     "conflictos de cédula, situaciones reportadas (fallecidas o que ya no viven en Yondó), solicitudes de los "
-    "titulares (abiertas, vencidas y por vencer, con su plazo) y barrios o veredas sin punto en el mapa. No trae "
-    "datos de personas: para atender cada caso abra Calidad de datos con abrir_vista.")
+    "titulares (abiertas, vencidas y por vencer, con su plazo) y barrios o veredas sin punto en el mapa. Lo del "
+    "trabajo y las situaciones no cuentan a quienes no autorizaron el tratamiento de sus datos. No trae datos de "
+    "personas: para atender cada caso abra Calidad de datos con abrir_vista.")
 D_MI_TRABAJO = (
     "Mi trabajo: las listas de trabajo de su rol con cuántas personas tiene cada una y la ruta para abrirla "
     "(planillero: sin cédula, sin puesto o mesa, por actualizar, para visitar…; consultor: por llamar, volver a "
-    "llamar, seguimiento y hoy), su zona asignada y lo que hizo hoy y esta semana. Con `lista` (consultor, "
-    "administrador y coordinador) trae además una página de 20 personas de esa cola con datos mínimos y sin números "
-    "de teléfono; cada una cuenta para el tope diario de personas consultadas. Con `uid`, el administrador y el "
-    "coordinador ven las listas de otro usuario.")
+    "llamar, seguimiento y hoy), su zona asignada y lo que hizo hoy y esta semana, sin contar a quienes no autorizaron "
+    "el tratamiento de sus datos. Con `lista` (consultor, administrador y coordinador) trae además una página de 20 "
+    "personas de esa cola con datos mínimos y sin números de teléfono; cada una cuenta para el tope diario de personas "
+    "consultadas. Con `uid`, el administrador y el coordinador ven las listas de otro usuario.")
 D_EQUIPO = (
     "Cómo va el equipo en un periodo (por defecto los últimos 30 días; desde y hasta en AAAA-MM-DD, hasta 2 años): "
     "por usuario, lo que hizo (fichas creadas y actualizadas, cédulas, puestos y mesas completados, teléfonos, "
-    "autorizaciones y asistencias; para consultores, acercamientos, contactos, «no contactar» y cédulas dictadas) y "
-    "sus alertas (bloqueo, tope diario alcanzado, ingresos raros, clave vencida); los totales; y, con `avance`, el "
-    "avance por barrio o vereda asignada o por área (personas y porcentaje con cédula, puesto y mesa, teléfono y "
-    "contactadas). Sin sesiones, direcciones IP ni claves. Solo administrador y coordinador.")
+    "autorizaciones y asistencias; para consultores, acercamientos, contactos, «no contactar» y cédulas dictadas), lo "
+    "que administró (importaciones, exportaciones, uniones, supresiones y usuarios creados), cuántos barrios, veredas "
+    "o áreas tiene asignados y sus alertas (bloqueo, tope diario alcanzado, ingresos raros, clave vencida); los "
+    "totales; y, con `avance`, el avance por barrio o vereda asignada o por área (responsables, personas y porcentaje "
+    "con cédula, puesto y mesa, teléfono y contactadas). Las cifras no cuentan a quienes no autorizaron el tratamiento "
+    "de sus datos. Sin sesiones, direcciones IP ni claves. Solo administrador y coordinador.")
 D_BUSCAR_LUGAR = (
     "Busca un barrio, vereda, sector, caserío, centro poblado o corregimiento de Yondó en el nomenclátor del panel y "
     "devuelve su id, tipo, zona, a qué pertenece y si tiene punto o polígono en el mapa. Úsela para conseguir el "

@@ -245,8 +245,10 @@ def indicadores(f: Filtros = Depends(filtros_query), alcance: Literal["tablero",
         reus = list(db.reuniones.find({}, {"titulo": 1, "fecha": 1}).sort([("fecha", -1), ("_id", -1)]).limit(6))
         asist = Counter()
         if reus:
-            for p in db.personas.find({**ACTIVA, "asistencias.reunion_id": {"$in": [x["_id"] for x in reus]}},
-                                      {"asistencias.reunion_id": 1}):
+            # Con `tratables` (el asistente), sin quien no autorizó: que asistió es un dato suyo (como en Reuniones)
+            tratable = {"consentimiento": {"$ne": "no"}} if f.tratables else {}
+            de_estas = {"asistencias.reunion_id": {"$in": [x["_id"] for x in reus]}}
+            for p in db.personas.find({**ACTIVA, **tratable, **de_estas}, {"asistencias.reunion_id": 1}):
                 asist.update(a["reunion_id"] for a in p["asistencias"])
         out["tramites_mes"] = [{"mes": m, "n": n} for m, n in sorted(s["meses"].items())]
         out["reuniones"] = [{"id": x["_id"], "titulo": x["titulo"], "fecha": x["fecha"], "n": asist[x["_id"]]} for x in reus]

@@ -9,10 +9,14 @@ errores.
 * La entrada se valida con su modelo pydantic antes de ejecutar: con `eager_input_streaming` la API de Anthropic no
   valida la entrada y el analizador tolerante del SDK puede entregar un objeto truncado.
 * `ejecutar` y `confirmar` son asíncronas y nunca bloquean el bucle: lo síncrono (pymongo) va con `run_in_threadpool`.
+* Una escritura del panel tiene su propio plazo (`Contexto.plazo_escritura`), algo menor que el de la herramienta en
+  el bucle: si vence, la herramienta avisa que no se sabe si alcanzó a guardarse antes de que el bucle la corte con
+  un «tardó demasiado» que no lo dice (la ruta sigue en su hilo y puede terminar la escritura).
 """
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Literal
 
@@ -28,6 +32,10 @@ if TYPE_CHECKING:  # solo para los tipos: evita importar la app al cargar el mó
 Tipo = Literal["lectura", "escritura", "interfaz"]
 # Lo que el modelo recibe de una herramienta se recorta a esto (en caracteres del JSON)
 MAX_CONTENIDO = 40_000
+# El plazo de una herramienta del panel en el bucle (`bucle.PLAZO_HERRAMIENTA_S`: una prueba los compara) y lo que se
+# le deja al aviso de una escritura que vence para llegar antes de que el bucle corte la herramienta
+PLAZO_HERRAMIENTA_S = 60.0
+MARGEN_PLAZO_S = 5.0
 
 
 class ErrorHerramienta(Exception):
@@ -102,6 +110,13 @@ class Contexto:
     conversacion_id: int
     tool_use_id: str = ""
     mnemo: Any = None  # mnemo.ClienteMnemo | None
+    # Cuándo empezó la herramienta: el bucle arma el contexto justo antes de correrla
+    inicio: float = field(default_factory=time.monotonic)
+
+    def plazo_escritura(self) -> float:
+        """Los segundos que le quedan a una escritura del panel para terminar antes de que el bucle corte la
+        herramienta, con margen para avisar que pudo quedar hecha (`interno.ApiInterna.pedir`)."""
+        return self.inicio + PLAZO_HERRAMIENTA_S - MARGEN_PLAZO_S - time.monotonic()
 
 
 Ejecutar = Callable[[Contexto, Any], Awaitable[Resultado]]

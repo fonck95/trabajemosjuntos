@@ -34,6 +34,13 @@ Por qué está hecho así:
 * Las usa el administrador (la conexión es con su cuenta de Mnemo) y, si él lo permite en Ajustes
   (`mnemo_coordinadores`), los coordinadores. Se decide en cada turno: el ajuste pudo cambiar desde que se creó la
   conversación.
+* Una escritura se intenta una sola vez por `tool_use`: antes de llamar a Mnemo se anota en la conversación
+  (`mnemo_intentadas`), de forma atómica. Si el turno se corta después de que Mnemo la hizo, la tarjeta sigue
+  pendiente y se puede aprobar otra vez; esa segunda vez no llama a Mnemo (que no tiene clave de idempotencia) y
+  responde que ya se intentó, para revisarlo allá.
+* `fetch` lee los documentos, mazos y lienzos largos por ventanas (`metadata.offset` y `next_offset`). Si la ventana
+  no cabe en lo que el modelo recibe, se recorta su texto y `next_offset` pasa a donde de verdad quedó (en unidades
+  UTF-16, como cuenta Mnemo; en un lienzo, en bloques completos): seguirlo no salta nada.
 * El resultado: los datos (`structuredContent` o el texto) recortados sin romper su estructura, las imágenes como
   bloques `image` (validadas: un bloque roto dañaría la conversación entera, porque el historial se reenvía en cada
   ronda), los `resource_link` como texto, y los enlaces relativos de Mnemo (`approval_url`, descargas) con el origen
@@ -50,6 +57,7 @@ import re
 from typing import Any
 
 from pydantic import RootModel, model_validator
+from starlette.concurrency import run_in_threadpool
 
 from .. import mnemo_cliente as mc
 from .base import MAX_CONTENIDO, Confirmacion, Contexto, ErrorHerramienta, Herramienta, Resultado
@@ -80,9 +88,11 @@ IMAGEN_MAX_B64 = 2_500_000  # ~1,9 MB: se guarda con la conversación y se reenv
 IMAGENES_MAX = 2
 DIMENSION_MAX = 8_000      # la API rechaza imágenes de más de 8000 px de lado
 TIPOS_IMAGEN = ("image/png", "image/jpeg", "image/gif", "image/webp")
-DETALLE_FILAS = 30
-DETALLE_VALOR = 1_500
-DETALLE_TOTAL = 12_000
+# La tarjeta de una escritura: los topes de la del bucle (`bucle.TARJETA_FILAS` y `TARJETA_VALOR`), que rechaza lo que
+# no se ve entero. Lo que pase de aquí se marca como recortado y la escritura no se ofrece: nunca se aprueba a medias
+DETALLE_FILAS = 40
+DETALLE_VALOR = 4_000
+DETALLE_TOTAL = DETALLE_FILAS * DETALLE_VALOR
 MAX_BLOQUES = 50           # Mnemo da 1–3 bloques por resultado
 MAX_EXTRAS = 4_000         # las notas sobre imágenes y enlaces que van tras los datos
 
@@ -363,6 +373,9 @@ def _herramienta(d: dict, nombre: str) -> Herramienta:
 # ───────────────────────────── Escrituras: la tarjeta ─────────────────────────────
 
 def _valor(v: Any) -> str:
+    """El valor de un argumento como se manda: un texto tal cual (con sus caracteres de control, si los trae: la tarjeta
+    no lo ofrece, `bucle._tarjeta`, en vez de mostrar otra cosa que lo que se escribe), lo demás en JSON. Lo que pasa
+    de `DETALLE_VALOR` se marca como recortado y tampoco se ofrece."""
     if isinstance(v, str):
         t = v
     elif isinstance(v, bool):
@@ -371,13 +384,12 @@ def _valor(v: Any) -> str:
         t = "(vacío)"
     else:
         t = json.dumps(v, ensure_ascii=False)
-    t = _CONTROL.sub(" ", t)
     return t if len(t) <= DETALLE_VALOR else f"{t[:DETALLE_VALOR]}… ({len(t)} caracteres en total)"
 
 
 def confirmacion(d: dict, argumentos: dict) -> Confirmacion:
     """La tarjeta de una escritura de Mnemo: qué herramienta y los argumentos exactos que se mandarán, en el orden del
-    esquema (los largos, recortados con su tamaño total)."""
+    esquema, con sus nombres enteros (los largos, recortados con su tamaño total: la tarjeta no se ofrece)."""
     remoto, anot = d["name"], d["annotations"]
     props = d["inputSchema"].get("properties") or {}
     claves = [k for k in props if k in argumentos] + sorted(k for k in argumentos if k not in props)
@@ -388,7 +400,7 @@ def confirmacion(d: dict, argumentos: dict) -> Confirmacion:
             detalle.append(("…", f"y {len(claves) - len(detalle)} argumentos más"))
             break
         v = _valor(argumentos[k])
-        detalle.append((str(k)[:80], v))
+        detalle.append((str(k), v))
         total += len(v)
     if not detalle:
         detalle.append(("Argumentos", "(ninguno)"))
@@ -436,10 +448,33 @@ def _origen(ctx: Contexto, cliente: Any) -> str | None:
     return origen if isinstance(origen, str) and origen else None
 
 
+YA_INTENTADA = ("Esta acción ya se intentó en Mnemo en este mismo paso (el turno se cortó después): no se volvió a "
+                "mandar, porque Mnemo podría hacerla dos veces. Revise en Mnemo si quedó hecha antes de pedirla de "
+                "nuevo.")
+SIN_CONVERSACION = "La conversación ya no existe: no se hizo nada en Mnemo."
+
+
+def _reclamar(db: Any, cid: int, tid: str) -> str:
+    """Anota en la conversación, de forma atómica, que esta escritura (`tool_use`) se va a mandar a Mnemo: «nueva» si
+    nadie la había intentado, «intentada» si ya, «sin_conversacion» si la conversación ya no está."""
+    from ..conversaciones import CONVERSACIONES
+    r = db[CONVERSACIONES].update_one({"_id": cid, "mnemo_intentadas": {"$ne": tid}},
+                                      {"$push": {"mnemo_intentadas": tid}})
+    if r.modified_count:
+        return "nueva"
+    return "intentada" if db[CONVERSACIONES].count_documents({"_id": cid}, limit=1) else "sin_conversacion"
+
+
 async def _ejecutar(ctx: Contexto, args: EntradaMnemo, d: dict) -> Resultado:
     cliente = _cliente(ctx)
     escritura = not _lectura(d)
     plazo = mc.PLAZO_ESCRITURA_S if escritura else mc.PLAZO_LECTURA_S
+    if escritura and ctx.db is not None and ctx.tool_use_id:
+        estado = await run_in_threadpool(_reclamar, ctx.db, ctx.conversacion_id, ctx.tool_use_id)
+        if estado == "intentada":
+            raise ErrorHerramienta(YA_INTENTADA, "ya_intentada", estado=409)
+        if estado == "sin_conversacion":
+            raise ErrorHerramienta(SIN_CONVERSACION, "no_existe", estado=404)
     try:
         res = await cliente.llamar(d["name"], _argumentos(args.root, d["inputSchema"]), plazo)
     except ErrorHerramienta as e:
@@ -502,6 +537,65 @@ def _ajustar(datos: Any, tope: int) -> str:
         if len(texto) <= tope:
             return texto
     return texto[:tope] + "… [recortado]"
+
+
+_BLOQUE = re.compile(r"\[[^\]\s]+\] ")  # una línea de bloque del esquema de un lienzo: «[blk_1] párrafo: …»
+_ENCABEZADO_LIENZO = re.compile(r"documento de \d+ bloques?\b")
+
+
+def _utf16(texto: str) -> int:
+    """Lo que mide un texto para Mnemo (JavaScript): unidades UTF-16, no caracteres."""
+    return len(texto.encode("utf-16-le", "surrogatepass")) // 2
+
+
+def _bloques_completos(texto: str) -> int:
+    """Cuántas líneas de bloque completas trae el esquema recortado de un lienzo (la última, si quedó a medias, no
+    cuenta: se vuelve a leer en la ventana siguiente)."""
+    lineas = texto.split("\n")
+    completas = lineas[1:-1] if len(lineas) > 1 else []
+    return sum(1 for x in completas if _BLOQUE.match(x))
+
+
+def _ventana(datos: Any, tope: int) -> Any:
+    """Una ventana de `fetch` (`{id, text, metadata}` de un documento, mazo o lienzo) que no cabe en `tope`: su texto,
+    recortado justo lo necesario (no a 20 000 como los demás textos), y `next_offset` donde de verdad quedó, como
+    hace el `fitItem` de Mnemo. Los documentos y mazos cuentan en unidades UTF-16; los lienzos, en bloques completos
+    (si el esquema no se reconoce, se avisa en vez de dejar un `next_offset` que salte). Lo demás, tal cual."""
+    if not (isinstance(datos, dict) and isinstance(datos.get("text"), str) and isinstance(datos.get("metadata"), dict)
+            and isinstance(datos.get("id"), str) and datos["id"].startswith(("doc_", "deck_", "canvas_"))):
+        return datos
+    texto, meta = datos["text"], dict(datos["metadata"])
+    if len(json.dumps(datos, ensure_ascii=False, default=str)) <= tope:
+        return datos
+    lienzo = datos["id"].startswith("canvas_")
+    offset = meta.get("offset") if isinstance(meta.get("offset"), int) and not isinstance(meta.get("offset"), bool) \
+        else None
+    siguiente = meta.get("next_offset")
+    if offset is None and not lienzo:  # sin offset: el que deja next_offset detrás del texto entero (o el comienzo)
+        offset = max(0, siguiente - _utf16(texto)) if isinstance(siguiente, int) and not isinstance(siguiente, bool) \
+            else 0
+    meta["clipped"] = True
+    conservado = texto
+    for _ in range(8):
+        if lienzo:
+            n = _bloques_completos(conservado)
+            if offset is not None and n and _ENCABEZADO_LIENZO.match(texto):
+                meta["next_offset"] = offset + n
+                meta.pop("nota_panel", None)
+            else:
+                meta.pop("next_offset", None)
+                meta["nota_panel"] = ("El panel recortó esta ventana del lienzo y no puede decir en qué bloque "
+                                      "seguir: ábralo en Mnemo para verlo completo.")
+        else:
+            meta["next_offset"] = offset + _utf16(conservado)
+        prueba = {**datos, "text": conservado, "metadata": meta}
+        sobra = len(json.dumps(prueba, ensure_ascii=False, default=str)) - tope
+        if sobra <= 0:
+            return prueba
+        conservado = conservado[:max(0, len(conservado) - sobra - 64)]
+        if lienzo and "\n" in conservado:  # en un lienzo se corta entre bloques
+            conservado = conservado[:conservado.rfind("\n") + 1]
+    return {**datos, "text": conservado, "metadata": meta}
 
 
 def _firma(crudo: bytes) -> str | None:
@@ -646,7 +740,7 @@ def resultado_de(res: dict, origen: str | None) -> Resultado:
     cola = ("\n" + "\n".join(extras))[:MAX_EXTRAS] if extras else ""
     tope = MAX_CONTENIDO - len(cola) - 200
     if isinstance(datos, (dict, list)):
-        datos = _absolutas(datos, origen)
+        datos = _ventana(_absolutas(datos, origen), tope)
         cuerpo = _ajustar(datos, tope)
     else:
         cuerpo = _absolutas_texto(texto, origen)

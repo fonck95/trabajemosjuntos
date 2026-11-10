@@ -213,7 +213,7 @@ CUPOS_AGENTE = 4     # turnos del asistente en flujo a la vez: cupos propios, pa
 ESPERA_CUPO_S = 2    # sin cupo en este tiempo, 503
 # Las respuestas en flujo del asistente (app/api/agente.py): retienen la conexión todo el turno (hasta minutos)
 RUTAS_AGENTE = frozenset({"/api/agente/mensajes", "/api/agente/confirmaciones"})
-PLAZO_CUERPO_S = 10  # el cuerpo de una petición sin sesión (el ingreso) llega entero en este tiempo, o 408
+PLAZO_CUERPO_S = 10  # el cuerpo del ingreso o de un turno del asistente llega entero en este tiempo, o 408
 SIN_CACHE = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex", "X-Content-Type-Options": "nosniff"}
 
 
@@ -309,7 +309,10 @@ class LimitePanel:
 
     Los turnos del asistente (`RUTAS_AGENTE`) retienen su conexión mientras el modelo responde: tienen sus propios
     `cupos_agente`, así unos chats largos no dejan la API en 503 (16 + 4 cupos caben en los 40 hilos: un turno en
-    flujo no retiene ninguno mientras espera)."""
+    flujo no retiene ninguno mientras espera). Como son pocos, su cuerpo también se lee entero antes de pedir cupo (con
+    el mismo plazo y tope): si no, cualquier sesión, aun de un rol sin el asistente, los retenía con 4 cuerpos que no
+    terminaban de llegar. Con el cuerpo leído, el panel responde al instante lo que impide el turno (rol apagado,
+    tope, uno suyo en curso…): solo retiene cupo un turno de verdad, uno por persona."""
 
     def __init__(self, app, cupos: int, espera_s: float, sin_sesion=frozenset(), limite: int = 0,
                  plazo_s: float = PLAZO_CUERPO_S, *, cupos_agente: int = CUPOS_AGENTE):
@@ -325,7 +328,9 @@ class LimitePanel:
         ruta = (ruta[len(raiz):] or "/") if raiz and ruta.startswith(raiz) else ruta  # como seguridad.ruta_interna
         if not ruta.startswith("/api/") and ruta != "/salud":
             return await self.app(scope, receive, send)
-        if ruta in self.sin_sesion:
+        # El cuerpo entero antes del cupo: el del ingreso y el de un turno del asistente (sin tope, el panel no se
+        # pudo importar y en /panel/ queda el aviso 503, que no lee nada)
+        if ruta in self.sin_sesion or (ruta in RUTAS_AGENTE and self.limite):
             cabeceras = Headers(scope=scope)
             if cabeceras.get("content-length", "0") != "0" or "transfer-encoding" in cabeceras:
                 receive = await self._cuerpo_entero(scope, receive, send, cabeceras)

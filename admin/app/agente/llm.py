@@ -4,10 +4,12 @@ el cliente, la forma de cada petición, el flujo de cada ronda y las reglas para
 * El cliente es `app.state.agente_cliente` si existe (las pruebas inyectan uno falso, sin red) o un `AsyncAnthropic`
   que se crea en la primera petición: nunca al importar ni en `crear_app`, que corren sin red y sin clave.
 * Cada petición lleva el `system` y las herramientas congelados de la conversación (el razonamiento conservado y la
-  caché exigen que ese prefijo no cambie), caché automática, pensamiento adaptativo y, en los modelos que lo admiten
-  (`CAPACIDADES`), las notas de progreso (`display: "updates"`), el modelo de respaldo ante un rechazo
-  (`fallbacks: "default"`) y el descarte de razonamiento que ya no casa (`block_binding: drop_block`), en vez de un 400.
-  Con otro modelo solo va `thinking: {type: adaptive}`: sin betas ni respaldo.
+  caché exigen que ese prefijo no cambie), caché automática y, en los modelos que lo admiten (`CAPACIDADES`), el
+  pensamiento adaptativo con el esfuerzo de `AGENTE_ESFUERZO`, las notas de progreso (`display: "updates"`), el modelo
+  de respaldo ante un rechazo (`fallbacks: "default"`) y el descarte de razonamiento que ya no casa
+  (`block_binding: drop_block`), en vez de un 400. Con otro modelo no va nada de eso: ni `thinking` ni
+  `output_config` (un modelo anterior, como Claude Haiku 4.5, rechaza los dos con un 400), y el modelo razona como
+  venga por defecto.
 * `reenviable`, `para_peticion` y `reintentable` vienen de la receta probada con el SDK 2.6.0 (ver docs/agente.md).
 * `ProveedorAnthropic.generar` es una ronda en flujo: emite el texto, las notas de progreso (`Notas`), el inicio de
   cada herramienta y el aviso de un modelo de respaldo mientras llegan, y arma la `Respuesta` con el mensaje final.
@@ -41,17 +43,19 @@ PLAZO = httpx2.Timeout(120.0, connect=10.0)
 
 @dataclass(frozen=True)
 class Capacidades:
-    respaldo: bool = False   # fallbacks="default" (beta server-side-fallback-2026-07-01)
-    novedades: bool = False  # thinking.display="updates" (beta thinking-display-updates-2026-08-18)
-    vinculo: bool = False    # thinking.block_binding (beta thinking-binding-controls-2026-08-01)
+    adaptativo: bool = False  # thinking={"type": "adaptive"}
+    esfuerzo: bool = False    # output_config.effort, con low, medium, high, xhigh y max
+    respaldo: bool = False    # fallbacks="default" (beta server-side-fallback-2026-07-01)
+    novedades: bool = False   # thinking.display="updates" (beta thinking-display-updates-2026-08-18)
+    vinculo: bool = False     # thinking.block_binding (beta thinking-binding-controls-2026-08-01)
 
 
 # Opus 5 no escribe notas de progreso (su texto entre herramientas llega como `text`), así que no lleva `display`
 CAPACIDADES = {
-    "claude-opus-5-5": Capacidades(respaldo=True, novedades=True, vinculo=True),
-    "claude-sonnet-5-5": Capacidades(respaldo=True, novedades=True, vinculo=True),
-    "claude-fable-5-1": Capacidades(respaldo=True, novedades=True, vinculo=True),
-    "claude-opus-5": Capacidades(respaldo=True, vinculo=True),
+    "claude-opus-5-5": Capacidades(adaptativo=True, esfuerzo=True, respaldo=True, novedades=True, vinculo=True),
+    "claude-sonnet-5-5": Capacidades(adaptativo=True, esfuerzo=True, respaldo=True, novedades=True, vinculo=True),
+    "claude-fable-5-1": Capacidades(adaptativo=True, esfuerzo=True, respaldo=True, novedades=True, vinculo=True),
+    "claude-opus-5": Capacidades(adaptativo=True, esfuerzo=True, respaldo=True, vinculo=True),
 }
 
 
@@ -73,9 +77,12 @@ def parametros(cfg: Any, *, max_tokens: int = MAX_TOKENS, esfuerzo: str | None =
     if cap.vinculo:
         pensar["block_binding"] = {"prefix_mismatch_behavior": "drop_block"}
         betas.append(BETA_VINCULO)
-    p: dict[str, Any] = {"model": cfg.agente_modelo, "max_tokens": max_tokens, "thinking": pensar,
-                         "output_config": {"effort": esfuerzo or cfg.agente_esfuerzo},
-                         "cache_control": {"type": "ephemeral"}, "timeout": PLAZO}
+    p: dict[str, Any] = {"model": cfg.agente_modelo, "max_tokens": max_tokens, "cache_control": {"type": "ephemeral"},
+                         "timeout": PLAZO}
+    if cap.adaptativo:
+        p["thinking"] = pensar
+    if cap.esfuerzo:
+        p["output_config"] = {"effort": esfuerzo or cfg.agente_esfuerzo}
     if cap.respaldo:
         p["fallbacks"] = "default"
     if betas:
@@ -166,6 +173,8 @@ def explicar(e: BaseException) -> tuple[str, str]:
         return "El servicio del modelo rechazó la petición. Si se repite, empiece otra conversación.", "llm_peticion"
     if isinstance(e, anthropic.APIStatusError) and e.status_code == 402:
         return "La cuenta de Anthropic del panel no tiene saldo. Avise al administrador.", "llm_cuota"
+    if isinstance(e, anthropic.APIStatusError) and e.status_code == 413:  # `request_too_large`: no pasa esperando
+        return "La conversación ya es demasiado grande para el modelo: empiece una nueva.", "larga"
     if isinstance(e, anthropic.APIStatusError):
         return "El modelo no está disponible en este momento. Intente de nuevo en un rato.", "llm_no_disponible"
     if isinstance(e, (anthropic.APIConnectionError, httpx2.TransportError)):

@@ -74,7 +74,7 @@ def test_turno_con_progreso_texto_herramienta_y_respuesta(sesion, falsas):
 
 def test_lo_que_se_le_manda_al_modelo(sesion, falsas):
     api = encender(sesion.app, sse(T("Hola.")), sse(T("Otra vez.")))
-    contexto = {"ruta": "/personas/12", "vista": "personas", "persona_id": 12, "filtros": {"lugar": "7"},
+    contexto = {"ruta": "/personas/12", "vista": "personas", "persona_id": 12, "filtros": {"lugar_id": "7"},
                 "mapa": {"centro": [-73.91, 7.0], "zoom": 13.4}}
     _, ev = enviar(sesion, "Hola", contexto=contexto)
     cid = ev[0]["conversacion"]
@@ -96,7 +96,7 @@ def test_lo_que_se_le_manda_al_modelo(sesion, falsas):
     ctx = primero[0]["text"]
     assert ctx.startswith("<contexto_del_panel>\nFecha y hora en Colombia: ") and ctx.endswith("</contexto_del_panel>")
     assert "Vista abierta: personas (/personas/12)" in ctx and "Ficha abierta: persona 12" in ctx
-    assert 'Filtros de la URL: {"lugar": "7"}' in ctx and "Mapa: centro lat 7.0, lon -73.91, zoom 13.4" in ctx
+    assert 'Filtros de la URL: {"lugar_id": "7"}' in ctx and "Mapa: centro lat 7.0, lon -73.91, zoom 13.4" in ctx
     # Segundo turno: el mismo system y las mismas herramientas, y el prefijo de mensajes idéntico (append-only)
     _, ev2 = enviar(sesion, "Sigue", conversacion=cid)
     assert ev2[-1]["motivo"] == "listo"
@@ -112,7 +112,8 @@ def test_modelo_sin_capacidades_va_sin_betas_ni_respaldo(sesion, falsas):
     assert ev[-1]["motivo"] == "listo"
     p = api.peticiones[0]
     assert "anthropic-beta" not in p["cabeceras"]
-    assert p["json"]["thinking"] == {"type": "adaptive"} and "fallbacks" not in p["json"]
+    # Ni pensamiento adaptativo ni esfuerzo: un modelo anterior (Haiku 4.5) rechaza los dos con un 400
+    assert "thinking" not in p["json"] and "output_config" not in p["json"] and "fallbacks" not in p["json"]
     assert p["json"]["model"] == "claude-haiku-4-5"
 
 
@@ -189,7 +190,7 @@ def test_confirmacion_aprobada_ejecuta_una_vez(sesion, falsas):
         ("aprobada", None), ("ok", "Nota guardada")]
     assert {"tipo": "accion", "accion": {"tipo": "recargar"}} in ev
     assert texto_de(ev) == "Listo, quedó la nota." and ev[-1]["motivo"] == "listo"
-    assert ev[-1]["limite"] == {"usados": 1, "maximo": 300}  # confirmar no cuenta como mensaje
+    assert ev[-1]["limite"] == {"usados": 2, "maximo": 300}  # aprobar también cuenta: el modelo vuelve a trabajar
     assert falsas == [("nota_falsa", {"persona_id": pid, "texto": "Llamar el lunes"}, cid, "toolu_n")]
     assert len(db.personas.find_one({"_id": pid})["notas"]) == 1
     assert _conv(sesion, cid)["pendiente"] is None
@@ -470,7 +471,7 @@ def test_tope_de_tokens_en_el_turno(sesion, falsas):
     api = encender(sesion.app, sse(TU("toolu_k", "contar_falsa", {"lugar": "Casco"}), stop="tool_use",
                                    uso={"input_tokens": 299_500, "cache_read_input_tokens": 1000}))
     _, ev = enviar(sesion, "Hola")
-    assert ev[-2] == {"tipo": "aviso", "texto": bucle.AVISO_LARGA, "nivel": "alerta"} and ev[-1]["motivo"] == "pasos"
+    assert ev[-2] == {"tipo": "error", "mensaje": bucle.AVISO_LARGA, "codigo": "larga"} and ev[-1]["motivo"] == "error"
     assert len(api.peticiones) == 1
     r, _ = enviar(sesion, "Más", conversacion=ev[0]["conversacion"])
     assert r.status_code == 409 and r.json()["detail"]["codigo"] == "larga"

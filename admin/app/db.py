@@ -166,6 +166,9 @@ def _indices() -> dict[str, list[IndexModel]]:
         "agente_mensajes": [i([("conversacion", ASCENDING), ("seq", ASCENDING)], unique=True),
                             i("expira", expireAfterSeconds=0)],
         "agente_uso": [i("ts", expireAfterSeconds=180 * 24 * 3600), i([("uid", ASCENDING), ("dia", ASCENDING)])],
+        # Quién dejó de autorizar (`olvidar_en_conversaciones`): solo hace falta mientras dura una herramienta que la
+        # estaba leyendo (un turno nunca pasa de 10 minutos)
+        "agente_olvidos": [i("ts", expireAfterSeconds=3600), i("persona_id")],
     }
 
 
@@ -610,6 +613,7 @@ def derivar(db: Database, ids: Iterable[int], reconciliar: bool = True) -> None:
         acerc.setdefault(a["persona_id"], []).append(a)
     necesidades = ids_necesidad(db)
     ops = []
+    dejaron = []  # las que pasan a «no»: el asistente las olvida
     for p in db.personas.find({"_id": {"$in": ids}, **ACTIVA}):
         nuevo: dict = {}
         if p.get("edad") is not None or not modelo.vacio(p.get("fecha_nacimiento")) or p.get("nac_aprox"):
@@ -621,6 +625,8 @@ def derivar(db: Database, ids: Iterable[int], reconciliar: bool = True) -> None:
             nuevo.update(modelo.consentimiento_vigente(eventos[p["_id"]]))
             if nuevo["consentimiento"] == "no":
                 nuevo.update(sensibles={}, sensibles_autorizados=[])
+                if p.get("consentimiento") != "no":
+                    dejaron.append(p["_id"])
         nuevo["nombre_fon"] = modelo.claves_foneticas(p.get("nombre"))
         nuevo["completitud"] = completitud({**p, **nuevo}, necesidades)
         cambios = {k: v for k, v in nuevo.items() if p.get(k) != v}
@@ -632,6 +638,8 @@ def derivar(db: Database, ids: Iterable[int], reconciliar: bool = True) -> None:
             ops.append(UpdateOne({"_id": p["_id"], "abordaje_seq": p.get("abordaje_seq")}, {"$set": {"abordaje": ab}}))
     for k in range(0, len(ops), 1000):
         db.personas.bulk_write(ops[k:k + 1000], ordered=False)
+    if dejaron:
+        olvidar_en_conversaciones(db, dejaron)
 
 
 # ───────────────────────────── Unión de fichas (2.6) ─────────────────────────────
@@ -828,6 +836,8 @@ def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | No
             nota=f"Unión con la ficha {origen}"))
     if estado == "no":
         db.personas.update_one({"_id": destino}, {"$set": {"sensibles": {}, "sensibles_autorizados": []}})
+        if o.get("consentimiento") != "no":  # lo que el modelo vio del origen es ahora de quien no autoriza
+            olvidar_en_conversaciones(db, [destino])
     derivar(db, [destino], reconciliar=False)
     from .pipeline.importar import georreferenciar  # aquí: el pipeline usa este módulo
     georreferenciar(db, [destino])
@@ -1007,19 +1017,46 @@ def cedulas_de(p: dict) -> set[str]:
     return {c for c in out if c}
 
 
-def limpiar_ligados(db: Database, ids: list[int], cedulas: Iterable[str] = ()) -> None:
-    """Lo ligado a fichas suprimidas: borra coincidencias, conflictos e idempotencia; anonimiza acercamientos y
-    autorizaciones (conservan uid, canal, resultado, efectivo y fecha para los indicadores) y deja las solicitudes
-    como constancia, sin su texto. Borra enteras las conversaciones del asistente en que el modelo vio a alguna de
-    esas personas (sus mensajes guardan lo que las herramientas le sirvieron): los mensajes antes y después de las
-    conversaciones, así un corte en el medio deja la conversación (la reconciliación la vuelve a encontrar) y un turno
-    que alcance a guardar un mensaje en el medio no deja mensajes sueltos."""
-    cedulas = [c for c in cedulas if c]
-    conversaciones = [c["_id"] for c in db.agente_conversaciones.find({"personas": {"$in": list(ids)}}, {"_id": 1})]
+def borrar_conversaciones(db: Database, filtro: dict) -> int:
+    """Borra enteras las conversaciones del asistente que casan con `filtro` (sus mensajes guardan lo que las
+    herramientas le sirvieron al modelo): los mensajes antes y después de las conversaciones, así un corte en el medio
+    deja la conversación (la reconciliación la vuelve a encontrar) y un turno que alcance a guardar un mensaje en el
+    medio no deja mensajes sueltos. Devuelve cuántas borró."""
+    conversaciones = [c["_id"] for c in db.agente_conversaciones.find(filtro, {"_id": 1})]
     if conversaciones:
         db.agente_mensajes.delete_many({"conversacion": {"$in": conversaciones}})
         db.agente_conversaciones.delete_many({"_id": {"$in": conversaciones}})
         db.agente_mensajes.delete_many({"conversacion": {"$in": conversaciones}})
+    return len(conversaciones)
+
+
+def olvidar_en_conversaciones(db: Database, ids: Iterable[int]) -> int:
+    """Quien deja de autorizar (un «no» o una revocatoria, por el panel, una importación o una unión) no sigue en el
+    historial que se le reenvía al modelo en cada ronda: se borran las conversaciones en que el modelo vio a alguna de
+    esas fichas (activas) o de las que se unieron con ellas, como en la supresión. Las unidas se buscan de una vez por
+    nivel, no ficha por ficha: una importación puede traer miles de «no». Antes de borrar se anota quiénes dejaron de
+    autorizar (`agente_olvidos`, una hora): un turno que las estaba leyendo todavía no las tenía anotadas y las busca
+    ahí al anotarlas (`agente.conversaciones.dejaron_de_autorizar`). Devuelve cuántas conversaciones borró."""
+    grupo = set(ids)
+    frontera = list(grupo)
+    while frontera:
+        hijas = [x["_id"] for x in db.personas.find({"fusionada_en": {"$in": frontera}}, {"_id": 1})]
+        frontera = [h for h in hijas if h not in grupo]
+        grupo.update(frontera)
+    if not grupo:
+        return 0
+    ts = datetime.now(timezone.utc)  # una fecha (no el texto de `ahora`): la compara el turno y la vence el índice TTL
+    db.agente_olvidos.insert_many([{"persona_id": p, "ts": ts} for p in sorted(grupo)], ordered=False)
+    return borrar_conversaciones(db, {"personas": {"$in": sorted(grupo)}})
+
+
+def limpiar_ligados(db: Database, ids: list[int], cedulas: Iterable[str] = ()) -> None:
+    """Lo ligado a fichas suprimidas: borra coincidencias, conflictos e idempotencia; anonimiza acercamientos y
+    autorizaciones (conservan uid, canal, resultado, efectivo y fecha para los indicadores) y deja las solicitudes
+    como constancia, sin su texto. Borra enteras las conversaciones del asistente en que el modelo vio a alguna de
+    esas personas (`borrar_conversaciones`)."""
+    cedulas = [c for c in cedulas if c]
+    borrar_conversaciones(db, {"personas": {"$in": list(ids)}})
     db.coincidencias.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"candidato_id": {"$in": ids}}]})
     db.conflictos_cedula.delete_many({"$or": [{"persona_id": {"$in": ids}}, {"cedula": {"$in": cedulas}}]})
     db.idempotencia.delete_many({"persona_id": {"$in": ids}})

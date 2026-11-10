@@ -4,20 +4,23 @@ Cómo corre un turno (docs/agente.md):
 
 * Antes de abrir el flujo, `abrir_mensaje` y `abrir_confirmacion` responden con JSON normal lo que impide el turno:
   sin modelo (503), rol apagado (403), conversación ajena o inexistente (404), larga, ocupada o de un proveedor que ya
-  no está (409), sin pendientes (409) o el tope diario de mensajes (429). Ahí también se elige el proveedor del modelo
+  no está (409), sin pendientes o con decisiones sobre algo que ya no está pendiente (409) o el tope diario de mensajes
+  (429: cuenta cada turno, también aprobar o rechazar). Ahí también se elige el proveedor del modelo
   (`proveedores.py`: Mnemo o Anthropic; el de una conversación existente es el suyo, congelado) y se toman los
   candados: uno por persona y por conversación en este proceso (`Ocupacion`, con un tope de turnos a la vez) y el de
-  MongoDB (`ocupada_hasta`, que vale entre procesos y vence solo). Si están tomados, se espera unos segundos a que se
-  suelten antes de responder 409 (`_ocupar`): el turno anterior puede estar cerrándose tras «Detener».
+  MongoDB (`ocupada_hasta`, que vale entre procesos: el turno lo renueva mientras corre y, si el proceso muere, vence
+  solo en un minuto y medio). Si los tiene un turno que sigue vivo, 409 en el acto; solo se espera unos segundos a que
+  se suelten si el turno anterior se está cerrando, como tras «Detener» (`_ocupar`).
 * El turno corre en una tarea propia (el productor) que escribe eventos en una cola; la respuesta (`Turno.eventos`)
   los lee y, si en 15 s no llega nada, manda un `latido`. Si el navegador se desconecta, Starlette cancela la respuesta:
-  se cancela la tarea, la petición al modelo se corta (el flujo del SDK o la llamada a Mnemo) y el productor suelta
-  los candados, lo primero, y cierra la API interna. Solo se guardan mensajes completos: lo que el modelo estaba
-  escribiendo se pierde.
+  se marca el turno como «cerrándose» (`Ocupacion.cerrar`), se cancela la tarea, la petición al modelo se corta (el
+  flujo del SDK o la llamada a Mnemo) y el productor suelta los candados, lo primero, y cierra la API interna. Solo se
+  guardan mensajes completos: lo que el modelo estaba escribiendo se pierde.
 * Una ronda es una petición al modelo (`Proveedor.generar`). El productor emite `progreso`, `texto` (y, con Mnemo,
   `texto_ronda`) y `herramienta inicio` mientras llega, guarda el mensaje del asistente al final y ejecuta las
-  herramientas en orden: las de lectura e interfaz en el acto; las de escritura quedan pendientes de aprobación
-  (`confirmar`) y el turno termina hasta que la persona decide. Un fallo pasajero repite la ronda (`descartar`) tras la
+  herramientas en orden (como mucho `MAX_HERRAMIENTAS_RONDA` por ronda): las de lectura e interfaz en el acto; las
+  de escritura quedan pendientes de aprobación (`confirmar`, con los valores enteros y solo si se ven como se van a
+  escribir) y el turno termina hasta que la persona decide. Un fallo pasajero repite la ronda (`descartar`) tras la
   espera que dice el proveedor, si cabe en el tope del turno.
 * Nada lanza fuera del flujo una vez abierto: cualquier fallo sale como `error` + `fin`, y al registro va solo el tipo
   de la excepción (nunca datos de personas ni lo que escribió el modelo).
@@ -27,10 +30,12 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 import secrets
 import threading
 import time
-from datetime import datetime, timezone
+import unicodedata
+from datetime import datetime, timedelta, timezone
 from typing import Any, AsyncIterator, Awaitable, Callable
 
 from fastapi import HTTPException
@@ -43,7 +48,9 @@ from .. import db as bd
 from ..seguridad import SIN_BASE
 from . import conversaciones as conv_db
 from . import politica, proveedores, sistema
-from .herramientas.base import (Confirmacion, Contexto, ErrorHerramienta, Herramienta, Resultado,
+# El plazo de una herramienta del panel es uno solo: el de `herramientas/base.py` (con él calcula una escritura cuánto
+# le queda, `Contexto.plazo_escritura`)
+from .herramientas.base import (PLAZO_HERRAMIENTA_S, Confirmacion, Contexto, ErrorHerramienta, Herramienta, Resultado,
                                 errores_de_validacion)
 from .interno import ApiInterna
 
@@ -51,18 +58,58 @@ log = logging.getLogger("panel")
 
 MAX_RONDAS = 12
 TOPE_TURNO_S = 240.0         # pasado esto no empieza otra ronda (la que va termina): `fin pasos`
-TOPE_ABSOLUTO_S = 600.0      # un turno nunca dura más que esto (el candado de MongoDB vence a los 11 min)
-PLAZO_HERRAMIENTA_S = 60.0
+TOPE_ABSOLUTO_S = 600.0      # un turno nunca dura más que esto
+RENOVAR_S = 20.0             # cada cuánto renueva el turno su candado de MongoDB (vence en `conv_db.ARRIENDO`)
 PLAZO_MNEMO_S = 20.0
 # Lo que suman las imágenes (en base64) de los resultados de una ronda: van en un solo mensaje guardado en MongoDB,
 # que no admite documentos de más de 16 MB (y cada proveedor tiene además su tope: `Proveedor.tope_imagenes`)
 TOPE_IMAGENES = 8_000_000
+# Lo que acumula una conversación: todo el historial se reenvía en cada ronda. Con más de 20 imágenes la API exige
+# dimensiones menores a cada una (y Mnemo las da de hasta 8000 px), y cada petición tiene un tope de tamaño
+TOPE_IMAGENES_CONVERSACION = 20_000_000
+MAX_IMAGENES_CONVERSACION = 20
+# Una respuesta del modelo no vuelca la base: herramientas por ronda y caracteres de resultados que se le pasan al
+# modelo en un turno (con 40 000 por resultado, unas cinco lecturas grandes)
+MAX_HERRAMIENTAS_RONDA = 8
+TOPE_RESULTADOS_TURNO = 200_000
+# La tarjeta de aprobación muestra los valores enteros: lo que no cabe no se ofrece (el texto más largo que escribe
+# una herramienta del panel es la descripción de una reunión, de 4000). Las etiquetas también van enteras: en Mnemo
+# son los nombres de los argumentos que se mandan
+TARJETA_VALOR = 4_000
+TARJETA_FILAS = 40
+TARJETA_ETIQUETA = 80
+# Cómo marca una herramienta lo que su tarjeta no muestra entero (Mnemo, en `herramientas/mnemo.py`: un valor largo
+# termina en «… (N caracteres en total)» y los argumentos de más van en una fila «…»): esa tarjeta tampoco se ofrece
+_RECORTADO = re.compile(r"…\s*\(\d+ caracteres en total\)\s*$")
+# Ni la que no se vería como se va a escribir (`_se_ve_como_es`): un dato con caracteres invisibles o que cambian cómo
+# se ve el resto (de formato, como las marcas de dirección o el espacio de ancho cero; de control, salvo el tabulador
+# y los saltos de línea; los separadores de línea y de párrafo, los sustitutos sueltos, los sin asignar, los de uso
+# privado, los rellenos que se ven como nada y los demás que Unicode da por ignorables, que el navegador pinta sin
+# ancho) o con una tirada que esconde el final: más de TARJETA_SALTOS saltos de línea seguidos (aunque haya espacios en
+# el medio), TARJETA_ESPACIOS espacios seguidos o más de TARJETA_MARCAS marcas apiladas sobre una letra
+TARJETA_SALTOS = 3
+TARJETA_ESPACIOS = 20
+TARJETA_MARCAS = 4
+_INVISIBLES = frozenset({"Cf", "Cs", "Cn", "Co", "Zl", "Zp"})
+_RELLENOS = frozenset("\u034f\u115f\u1160\u2800\u3164\uffa0")
+# Los ignorables por defecto de Unicode (Default_Ignorable_Code_Point) que no son de formato ni rellenos: las vocales
+# inherentes jemer, los selectores de Mongolia y los de variante (VS1–VS256, con la etiqueta y los reservados del plano
+# 14). Un selector de texto o de emoji (VS15, VS16) vale solo uno y justo tras un símbolo (un emoji: «❤️») o en un
+# keycap («1️⃣»): tras una letra o un dígito no cambia nada de lo que se ve
+_IGNORABLES = re.compile("[\u17b4\u17b5\u180b-\u180f\ufe00-\ufe0f\U000e0000-\U000e0fff]")
+_DE_EMOJI = frozenset("\ufe0e\ufe0f")
+_KEYCAP, _ENCIERRA_KEYCAP = frozenset("0123456789#*"), "\u20e3"
+_TIRADA = re.compile(rf"(?:[^\S\r\n]*(?:\r\n?|\n)){{{TARJETA_SALTOS + 1},}}|[^\S\r\n]{{{TARJETA_ESPACIOS},}}")
 LATIDO_S = 15.0
 ESPERA_ARRANQUE_S = 30.0     # si la respuesta no empieza a leerse en este tiempo, el turno no corre
-# Un turno nuevo que encuentra ocupada a la persona o la conversación espera hasta esto a que el anterior se suelte
-# (tras «Detener», el turno cortado tarda un momento en notar la desconexión y soltar sus candados), probando cada tanto
+# Un turno nuevo que encuentra a la persona o la conversación con un turno que se está cerrando (tras «Detener», el
+# turno cortado tarda un momento en soltar sus candados) o con el candado de MongoDB de otro proceso espera hasta esto
+# a que se suelte, probando cada tanto (`_ocupar`)
 ESPERA_OCUPADA_S = 5.0
 SONDEO_OCUPADA_S = 0.1
+# Un «no» que llega mientras una herramienta lee (`Turno._anotar`) se busca desde que empezó, con este margen: MongoDB
+# guarda las fechas en milisegundos y otro proceso tiene su propio reloj
+MARGEN_OLVIDO = timedelta(seconds=2)
 REINTENTOS = 2               # repeticiones de una ronda tras fallos pasajeros (cuáles y cuánto esperar: el proveedor)
 TURNOS_POR_PROCESO = 4
 # Cómo termina una ronda que se cortó: con `tool_use` no se ejecuta (la entrada puede estar a medias), sin él se avisa
@@ -74,6 +121,21 @@ RECHAZADA = "La persona rechazó esta acción: no la vuelvas a proponer salvo qu
 NO_APROBADA = "La persona no aprobó esta acción: escribió otro mensaje. No la vuelvas a proponer salvo que lo pida."
 INTERRUMPIDA = ("Interrumpida: el turno se cortó y esta herramienta no devolvió resultado. Si todavía hace falta, "
                 "vuelve a llamarla.")
+INTERRUMPIDA_ESCRITURA = ("Interrumpida: el turno se cortó y esta escritura no devolvió resultado. Puede que ya se "
+                          "haya hecho: verifícalo (por ejemplo, leyendo la ficha o la reunión) antes de volver a "
+                          "proponerla.")
+DEMASIADAS = (f"No se ejecutó: una ronda admite como mucho {MAX_HERRAMIENTAS_RONDA} herramientas. Si todavía hace "
+              "falta, llámala en la ronda siguiente.")
+TOPE_TURNO = ("No se te pasó el resultado: en este turno ya se leyó mucha información. Responde con lo que ya tienes; "
+              "si hace falta más, que la persona lo pida en otro mensaje, mejor acotado (filtros o una página).")
+NO_CABE = ("No se puede proponer así: la tarjeta de aprobación muestra entero lo que se va a escribir y esto no cabe "
+           f"(un dato de más de {format(TARJETA_VALOR, ',').replace(',', '.')} caracteres o más de {TARJETA_FILAS} "
+           "datos). Divídelo en partes o acórtalo.")
+OCULTO = ("No se puede proponer así: la tarjeta de aprobación tiene que mostrar lo que se va a escribir tal como es, y "
+          "un dato trae caracteres invisibles o de control, o muchos saltos de línea, espacios o acentos seguidos, que "
+          "esconderían o cambiarían parte del texto. Escríbelo sin ellos; si vienen de la ficha, que la persona lo "
+          "corrija en el panel.")
+MNEMO_YA_NO = "Su rol o los ajustes del asistente ya no permiten las herramientas de Mnemo."
 SIN_EJECUTAR = "No se ejecutó: el turno terminó por un error anterior."
 CORTADA = "No ejecutada: la entrada se cortó por max_tokens. Reintenta con una entrada más corta."
 INCOMPLETA = ("No ejecutada: la respuesta del modelo terminó antes de tiempo y la entrada puede estar incompleta. Si "
@@ -82,6 +144,9 @@ AVISO_RECHAZO = "El asistente no puede continuar con esta solicitud. Puede refor
 AVISO_LARGA = "La conversación ya es muy larga: empiece una nueva para seguir."
 AVISO_CORTADA = "La respuesta se cortó por larga. Pida que continúe o que lo resuma."
 AVISO_INCOMPLETA = "La respuesta del modelo terminó antes de tiempo. Pida que continúe o intente de nuevo."
+AVISO_VACIA = "El asistente no respondió nada. Intente de nuevo o reformule la pregunta."
+SUPRIMIDA = ("La conversación se borró: tenía datos de una persona que se suprimió o que dejó de autorizar mientras el "
+             "asistente respondía. Empiece una nueva.")
 OCUPADA = {"codigo": "ocupada", "mensaje": "El asistente todavía está respondiendo otro mensaje suyo. Espere a que "
                                           "termine."}
 SATURADO = {"codigo": "saturado", "mensaje": "El asistente está atendiendo muchas conversaciones a la vez. Intente de "
@@ -89,6 +154,12 @@ SATURADO = {"codigo": "saturado", "mensaje": "El asistente está atendiendo much
 PROVEEDOR = {"codigo": "proveedor", "mensaje": "Esta conversación se empezó con un modelo que ya no está disponible: "
                                               "empiece una nueva."}
 LARGA = {"codigo": "larga", "mensaje": "La conversación es demasiado larga: empiece una nueva."}
+DESACTUALIZADA = {"codigo": "sin_pendientes", "mensaje": "Lo que decidió ya no es lo que espera su aprobación (se "
+                                                         "atendió en otra pestaña o llegó otra propuesta). Vuelva a "
+                                                         "abrir la conversación para verlo."}
+VIEJA = {"codigo": "sin_pendientes", "mensaje": "Lo que esperaba su aprobación se preparó con una versión anterior del "
+                                               "panel, que no mostraba los datos enteros: no se hizo y quedó como "
+                                               "rechazado. Pídale al asistente que lo vuelva a proponer."}
 
 
 class FinDelTurno(Exception):
@@ -104,14 +175,18 @@ class FinDelTurno(Exception):
 class Ocupacion:
     """Un turno a la vez por persona y por conversación, y como mucho `maximo` turnos a la vez en el proceso (cada
     uno retiene una conexión con el navegador y otra con el modelo, Mnemo o Anthropic). Complementa el candado de
-    MongoDB, que es el que vale entre procesos. Lo protege un candado de hilos: las pruebas atienden peticiones desde
-    varios bucles."""
+    MongoDB, que es el que vale entre procesos. Lleva además qué turnos se están cerrando (`cerrar`: el navegador se fue
+    o la persona pulsó «Detener») y qué personas tienen un mensaje esperando a que se suelten (`esperar`). Lo protege un
+    candado de hilos: las pruebas atienden peticiones desde varios bucles."""
 
     def __init__(self, maximo: int = TURNOS_POR_PROCESO):
         self.maximo = maximo
         self._candado = threading.Lock()
         self.usuarios: set = set()
         self.conversaciones: set = set()
+        self.usuarios_cerrando: set = set()
+        self.conversaciones_cerrando: set = set()
+        self.esperando: set = set()
 
     def reservar(self, uid: Any, cid: int | None) -> str | None:
         """None si quedó reservado; si no, «ocupada» (esa persona o conversación ya tiene turno) o «saturado»."""
@@ -134,14 +209,51 @@ class Ocupacion:
         with self._candado:
             return cid in self.conversaciones
 
+    def cerrar(self, uid: Any, cid: int | None) -> None:
+        """El turno de `uid` en `cid` se está cerrando: suelta sus candados en un momento, así que quien llegue mientras
+        tanto puede esperarlo (`viva`)."""
+        with self._candado:
+            if uid in self.usuarios:
+                self.usuarios_cerrando.add(uid)
+            if cid is not None and cid in self.conversaciones:
+                self.conversaciones_cerrando.add(cid)
+
+    def viva(self, uid: Any, cid: int | None) -> bool:
+        """¿Tiene `uid` o `cid` un turno en este proceso que sigue vivo (reservado y sin cerrarse)?"""
+        with self._candado:
+            return (uid in self.usuarios and uid not in self.usuarios_cerrando) or (
+                cid is not None and cid in self.conversaciones and cid not in self.conversaciones_cerrando)
+
+    def esperar(self, uid: Any) -> bool:
+        """Anota que un mensaje de `uid` espera a que se suelte un turno; False si ya había otro esperando (uno solo
+        por persona: cada uno retiene un cupo del servidor)."""
+        with self._candado:
+            if uid in self.esperando:
+                return False
+            self.esperando.add(uid)
+            return True
+
+    def dejar_de_esperar(self, uid: Any) -> None:
+        with self._candado:
+            self.esperando.discard(uid)
+
     def soltar(self, uid: Any, cid: int | None) -> None:
         with self._candado:
             self.usuarios.discard(uid)
             self.conversaciones.discard(cid)
+            self.usuarios_cerrando.discard(uid)
+            self.conversaciones_cerrando.discard(cid)
 
 
 _CREAR = threading.Lock()
 _TAREAS: set[asyncio.Task] = set()  # referencia fuerte a los productores: asyncio solo guarda una débil
+
+
+def _en_fondo(coro: Awaitable[Any]) -> asyncio.Task:
+    t = asyncio.create_task(coro)
+    _TAREAS.add(t)
+    t.add_done_callback(_TAREAS.discard)
+    return t
 
 
 def ocupacion_de(app: Any) -> Ocupacion:
@@ -177,6 +289,18 @@ def _imagenes(imgs: Any) -> list[dict]:
     """Solo bloques `image` con fuente: lo demás no se le manda al modelo (sería un 400)."""
     return [i for i in imgs if isinstance(i, dict) and i.get("type") == "image" and isinstance(i.get("source"), dict)
             ] if isinstance(imgs, list) else []
+
+
+def _peso_imagenes(mensajes: list[dict]) -> tuple[int, int]:
+    """(base64 total, cantidad) de las imágenes que ya lleva la conversación: se reenvían en cada ronda."""
+    peso = n = 0
+    for m in mensajes:
+        for b in m.get("content") if isinstance(m.get("content"), list) else []:
+            dentro = b.get("content") if isinstance(b, dict) and b.get("type") == "tool_result" else [b]
+            for img in _imagenes(dentro):
+                peso += len(str(img["source"].get("data") or ""))
+                n += 1
+    return peso, n
 
 
 def _acciones(acciones: Any) -> list[dict]:
@@ -222,10 +346,54 @@ def _personas_de_entrada(args: Any) -> set[int]:
     return _personas(ids)
 
 
+def _de_emoji(v: str, i: int) -> bool:
+    """¿Es `v[i]` (VS15 o VS16) el selector de un emoji? Uno solo, justo tras un símbolo o en un keycap («1️⃣»)."""
+    previo = v[i - 1] if i else ""
+    if previo in _KEYCAP:
+        return v[i + 1:i + 2] == _ENCIERRA_KEYCAP
+    return bool(previo) and unicodedata.category(previo) == "So"
+
+
+def _se_ve_como_es(v: str) -> bool:
+    """¿Se ve `v` en la tarjeta tal como se va a escribir? No con caracteres invisibles o que cambian cómo se ve el
+    resto (`_INVISIBLES`, los de control salvo el tabulador y los saltos de línea, `_RELLENOS`, `_IGNORABLES` salvo el
+    selector de un emoji) ni con una tirada que esconde el final (`_TIRADA`, más de `TARJETA_MARCAS` marcas combinadas
+    seguidas)."""
+    if _TIRADA.search(v):
+        return False
+    marcas = 0
+    for i, c in enumerate(v):
+        categoria = unicodedata.category(c)
+        if categoria in _INVISIBLES or (categoria == "Cc" and c not in "\t\n\r") or c in _RELLENOS:
+            return False
+        if _IGNORABLES.match(c) and not (c in _DE_EMOJI and _de_emoji(v, i)):
+            return False
+        marcas = marcas + 1 if categoria in ("Mn", "Me") else 0
+        if marcas > TARJETA_MARCAS:
+            return False
+    return True
+
+
+def _etiqueta_se_ve_como_es(k: str) -> bool:
+    """Una etiqueta se pinta sin conservar los espacios (a diferencia del valor): tiene que venir ya con espacios
+    sueltos entre las palabras, sin tabuladores ni saltos de línea."""
+    return " ".join(k.split()) == k and _se_ve_como_es(k)
+
+
 def _tarjeta(conf: Confirmacion) -> dict:
+    """La tarjeta de una escritura con los valores y las etiquetas enteros: lo que se aprueba es exactamente lo que se
+    escribe. Si no cabe (un valor de más de `TARJETA_VALOR` caracteres, una etiqueta de más de `TARJETA_ETIQUETA`, más
+    de `TARJETA_FILAS` filas o algo que la herramienta ya recortó, `_RECORTADO`) o algo no se vería como se va a
+    escribir (`_se_ve_como_es`, también en las etiquetas: en Mnemo son los nombres de los argumentos),
+    `ErrorHerramienta`: la escritura no se ofrece. Nunca se recorta ni se limpia en silencio."""
     t = conf.para_interfaz()
-    return {"titulo": _corto(t.get("titulo"), 200) or "Confirmar acción",
-            "detalle": [[_corto(k, 80), str(v)[:500]] for k, v in list(t.get("detalle") or [])[:30]],
+    filas = [(str(k), str(v)) for k, v in list(t.get("detalle") or [])]
+    if len(filas) > TARJETA_FILAS or any(k == "…" or len(k) > TARJETA_ETIQUETA or len(v) > TARJETA_VALOR
+                                         or _RECORTADO.search(v) for k, v in filas):
+        raise ErrorHerramienta(NO_CABE, "no_cabe")
+    if not all(_etiqueta_se_ve_como_es(k) and _se_ve_como_es(v) for k, v in filas):
+        raise ErrorHerramienta(OCULTO, "oculto")
+    return {"titulo": _corto(t.get("titulo"), 200) or "Confirmar acción", "detalle": [[k, v] for k, v in filas],
             "aviso": _corto(t.get("aviso"), 500) or None}
 
 
@@ -264,6 +432,7 @@ class Turno:
         self.arrancado = asyncio.Event()
         self.tarea: asyncio.Task | None = None
         self.ocupacion = ocupacion_de(app)
+        self.suelto = False  # ya soltó la reserva de este proceso: otro turno pudo tomarla
         self.mnemo = None
         self.herramientas: dict[str, Herramienta] = {}
         self.permitidas: set[str] = set()
@@ -272,13 +441,13 @@ class Turno:
         self.expira = None
         self.tokens = int((conv or {}).get("tokens_ultima") or 0)
         self.imagenes_ronda = 0  # base64 de imágenes en los resultados de la ronda en curso (TOPE_IMAGENES)
+        # Lo que ya lleva la conversación (TOPE_IMAGENES_CONVERSACION y MAX_IMAGENES_CONVERSACION): base64 y cantidad
+        self.imagenes_conv = self.imagenes_n = 0
+        self.servido = 0  # caracteres de resultados de herramientas que se le pasaron al modelo en el turno
 
     # ── El productor y la respuesta ──
     def lanzar(self, trabajo: Callable[[], Awaitable[str]]) -> None:
-        t = asyncio.create_task(self._correr(trabajo))
-        _TAREAS.add(t)
-        t.add_done_callback(_TAREAS.discard)
-        self.tarea = t
+        self.tarea = _en_fondo(self._correr(trabajo))
 
     def emitir(self, ev: dict) -> None:
         self.cola.put_nowait(ev)
@@ -302,12 +471,20 @@ class Turno:
                     continue
                 yield datos
         finally:
-            # El navegador se fue (o la respuesta terminó): el productor no sigue gastando en un turno sin lector
+            # El navegador se fue (o la respuesta terminó): el productor no sigue gastando en un turno sin lector.
+            # Antes, el turno queda como «cerrándose»: tras «Detener», el mensaje siguiente puede llegar antes de que
+            # suelte sus candados, y ese sí espera (`_ocupar`)
             if self.tarea is not None and not self.tarea.done():
+                self._cerrandose()
                 self.tarea.cancel()
+
+    def _cerrandose(self) -> None:
+        if not self.suelto:  # si ya soltó, la reserva puede ser de otro turno
+            self.ocupacion.cerrar(self.quien.uid, self.cid)
 
     async def _correr(self, trabajo: Callable[[], Awaitable[str]]) -> None:
         motivo, error = "error", None
+        sostener = _en_fondo(self._sostener())
         try:
             try:
                 await asyncio.wait_for(self.arrancado.wait(), ESPERA_ARRANQUE_S)
@@ -328,7 +505,10 @@ class Turno:
             log.error("Asistente: el turno falló (%s)", type(e).__name__)
             error = ("El asistente falló al responder. Intente de nuevo.", "error")
         finally:
-            # Primero los candados: cuando el navegador ve `fin`, ya puede mandar otro mensaje
+            # Primero los candados: cuando el navegador ve `fin`, ya puede mandar otro mensaje (y lo que llegue antes,
+            # de otra pestaña, espera el momento que tarda en soltarlos en vez de recibir 409)
+            self._cerrandose()
+            sostener.cancel()
             await self._soltar()
             if error is not None:
                 self.emitir({"tipo": "error", "mensaje": error[0], "codigo": error[1]})
@@ -339,14 +519,28 @@ class Turno:
             self.emitir(fin)
             self.cola.put_nowait(None)
 
+    async def _sostener(self) -> None:
+        """Renueva el candado de MongoDB cada `RENOVAR_S` mientras el turno corre: si el proceso muere (un despliegue,
+        una caída), vence solo en `conv_db.ARRIENDO` y la persona no queda sin asistente."""
+        while True:
+            await asyncio.sleep(RENOVAR_S)
+            try:
+                await run_in_threadpool(conv_db.renovar_candado, self.db, self.cid, self.turno)
+            except Exception as e:  # noqa: BLE001 - la vuelta siguiente lo intenta otra vez
+                log.warning("Asistente: no se pudo renovar el candado de la conversación (%s)", type(e).__name__)
+
     async def _soltar(self) -> None:
         # Los candados antes que nada (el de MongoDB y después la reserva de este proceso): tras «Detener», el navegador
-        # ya puede estar mandando el mensaje siguiente, que espera a que esto pase (`_ocupar`)
+        # ya puede estar mandando el mensaje siguiente, que espera a que esto pase (`_ocupar`). La reserva se suelta
+        # aunque el navegador se vaya justo ahora (la cancelación llega en medio): si no, la persona quedaría sin
+        # asistente hasta que el proceso se reinicie (el candado de MongoDB lo termina de soltar su hilo, o vence solo)
         try:
             await run_in_threadpool(conv_db.soltar, self.db, self.cid, self.turno)
         except Exception as e:  # noqa: BLE001 - el candado de MongoDB vence solo
             log.warning("Asistente: no se pudo soltar la conversación (%s)", type(e).__name__)
-        self.ocupacion.soltar(self.quien.uid, self.cid)
+        finally:
+            self.ocupacion.soltar(self.quien.uid, self.cid)
+            self.suelto = True
         if self.expira is not None:
             try:
                 # Si el administrador bajó la retención mientras corría el turno, lo guardado en él venía con el plazo
@@ -444,7 +638,8 @@ class Turno:
             await run_in_threadpool(conv_db.guardar, self.db, self.cid, self.quien.uid, self.expira, rol, contenido,
                                     replay, campos, tokens)
         except conv_db.ConversacionBorrada:
-            raise FinDelTurno("La conversación se borró mientras el asistente respondía.", "borrada") from None
+            raise FinDelTurno("La conversación se borró mientras el asistente respondía (por ejemplo, porque tenía "
+                              "datos de una persona que se suprimió o que dejó de autorizar).", "borrada") from None
 
     async def _avisar(self, texto: str, nivel: str, emitir: bool = True) -> None:
         """Un aviso para la persona (y en el historial, para que se vea igual al reabrir la conversación)."""
@@ -469,17 +664,23 @@ class Turno:
             self.expira = await run_in_threadpool(conv_db.renovar, self.db, self.cid, self.agente["retencion_dias"])
         await self._preparar()
         historial = await run_in_threadpool(conv_db.historial, self.db, self.cid)
+        self.imagenes_conv, self.imagenes_n = _peso_imagenes(historial)
         pend, crudo = conv_db.pendiente_de(self.conv), self.conv.get("pendiente")
         if pend is not None:
-            # Primero se quita lo pendiente y después se guardan sus resultados: si algo se corta en el medio, el
-            # siguiente turno ve un `tool_use` sin resultado (interrumpido) y nunca dos resultados para el mismo
-            if not await run_in_threadpool(conv_db.quitar_pendiente, self.db, self.cid, crudo):
+            # Primero se quita lo pendiente (queda como no aprobado) y después se guardan sus resultados: si algo se
+            # corta en el medio, el siguiente turno ve un `tool_use` sin resultado y nunca dos resultados para el mismo
+            if not await run_in_threadpool(conv_db.quitar_pendiente, self.db, self.cid, crudo,
+                                           [str(ll.get("id")) for ll in pend["llamadas"]]):
                 raise FinDelTurno("Otro turno atendió lo pendiente de esta conversación. Intente de nuevo.", "ocupada")
             bloques, ui = self._rechazar(pend, NO_APROBADA)
         else:
             bloques, ui = self._interrumpidas(historial)
-        bloques = conv_db.limpio(bloques + [{"type": "text", "text": sistema.contexto_del_panel(contexto, _ahora())},
-                                            {"type": "text", "text": texto}])
+        # El filtro de etiqueta de la vista va solo si la etiqueta existe y no es sensible: eso lo dice la base
+        filtros = contexto.get("filtros") if isinstance(contexto, dict) else None
+        etiquetas = (await run_in_threadpool(sistema.etiquetas_del_contexto, self.db)
+                     if isinstance(filtros, dict) and filtros.get("etiqueta") else None)
+        contexto_panel = sistema.contexto_del_panel(contexto, _ahora(), etiquetas)
+        bloques = conv_db.limpio(bloques + [{"type": "text", "text": contexto_panel}, {"type": "text", "text": texto}])
         await self._guardar("user", bloques, texto=texto, herramientas=ui)
         historial.append({"role": "user", "content": bloques})
         if aviso:
@@ -487,8 +688,9 @@ class Turno:
         return await self._rondas(historial)
 
     async def confirmacion(self, decisiones: dict[str, bool]) -> str:
-        """Las decisiones de la persona sobre lo pendiente: lo aprobado se ejecuta (con su clave de idempotencia), lo
-        rechazado o sin decisión vuelve como rechazo, y el bucle sigue con todos los resultados en un mensaje."""
+        """Las decisiones de la persona sobre lo pendiente (`abrir_confirmacion` ya comprobó que son sobre lo de ahora):
+        lo aprobado se ejecuta (con su clave de idempotencia), lo rechazado o sin decisión vuelve como rechazo, y el
+        bucle sigue con todos los resultados en un mensaje."""
         self.emitir({"tipo": "inicio", "conversacion": self.cid, "titulo": self.titulo})
         self.expira = await run_in_threadpool(conv_db.renovar, self.db, self.cid, self.agente["retencion_dias"])
         await self._preparar()
@@ -498,6 +700,15 @@ class Turno:
         historial = await run_in_threadpool(conv_db.historial, self.db, self.cid)
         resultados = {r.get("tool_use_id"): r for r in pend.get("resultados") or [] if isinstance(r, dict)}
         ui = {h.get("id"): h for h in pend.get("ui") or [] if isinstance(h, dict)}
+        self.imagenes_conv, self.imagenes_n = _peso_imagenes(
+            [*historial, {"role": "user", "content": list(resultados.values())}])
+        # Lo pendiente se quita antes de ejecutar nada: si el turno se corta a mitad (el navegador se va, el proceso se
+        # reinicia), lo que alcanzó a hacerse no vuelve a quedar aprobable (se haría dos veces). Con él se guarda lo que
+        # la persona no aprobó: el turno siguiente ve esas escrituras sin resultado y le dice al modelo que lo rechazado
+        # se rechazó (`RECHAZADA`) y que lo aprobado pudo hacerse (`INTERRUMPIDA_ESCRITURA`)
+        rechazadas = [str(ll.get("id")) for ll in pend["llamadas"] if decisiones.get(str(ll.get("id"))) is not True]
+        if not await run_in_threadpool(conv_db.quitar_pendiente, self.db, self.cid, crudo, rechazadas):
+            raise FinDelTurno("Otro turno atendió lo pendiente de esta conversación.", "sin_pendientes")
         fatal: ErrorHerramienta | None = None
         self.imagenes_ronda = 0
         for ll in pend["llamadas"]:
@@ -516,8 +727,6 @@ class Turno:
                 self._herramienta(tid, nombre, etiqueta, "rechazada", "Rechazada")
         orden = [i for i in pend.get("orden") or [] if i in resultados]
         bloques = conv_db.limpio([resultados[i] for i in orden] + [r for i, r in resultados.items() if i not in orden])
-        if not await run_in_threadpool(conv_db.quitar_pendiente, self.db, self.cid, crudo):
-            raise FinDelTurno("Otro turno atendió lo pendiente de esta conversación.", "sin_pendientes")
         await self._guardar("user", bloques, herramientas=list(ui.values()))
         historial.append({"role": "user", "content": bloques})
         if fatal is not None:
@@ -537,15 +746,26 @@ class Turno:
         orden = [i for i in pend.get("orden") or [] if i in resultados]
         return [resultados[i] for i in orden] + [r for i, r in resultados.items() if i not in orden], ui
 
-    @staticmethod
-    def _interrumpidas(historial: list[dict]) -> tuple[list[dict], list[dict]]:
-        """Resultados «interrumpido» para los `tool_use` del último mensaje del asistente que no tienen resultado (un
-        turno cortado): la API exige un resultado por cada uno antes del mensaje nuevo."""
+    def _interrumpidas(self, historial: list[dict]) -> tuple[list[dict], list[dict]]:
+        """Resultados para los `tool_use` del último mensaje del asistente que no tienen resultado (un turno cortado):
+        la API exige un resultado por cada uno antes del mensaje nuevo. Lo que la persona no aprobó al decidir vuelve
+        como rechazado (`rechazadas`, que se guardan al quitar lo pendiente); otra escritura pudo hacerse (se cortó
+        después de aprobarla): el modelo la verifica antes de proponerla otra vez; lo demás, «interrumpido»."""
         if not historial or historial[-1]["role"] != "assistant":
             return [], []
         usos = [b for b in historial[-1]["content"] if isinstance(b, dict) and b.get("type") == "tool_use"]
-        return ([_resultado(str(u.get("id")), INTERRUMPIDA, True) for u in usos],
-                [{"id": str(u.get("id")), "estado": "error", "resumen": "Interrumpida"} for u in usos])
+        rechazadas = {r for r in (self.conv or {}).get("rechazadas") or [] if isinstance(r, str)}
+        bloques, ui = [], []
+        for u in usos:
+            tid, h = str(u.get("id")), self.herramientas.get(u.get("name"))
+            if tid in rechazadas:
+                bloques.append(_resultado(tid, RECHAZADA, True))
+                ui.append({"id": tid, "estado": "rechazada", "resumen": "Rechazada"})
+                continue
+            motivo = INTERRUMPIDA_ESCRITURA if h is not None and h.tipo == "escritura" else INTERRUMPIDA
+            bloques.append(_resultado(tid, motivo, True))
+            ui.append({"id": tid, "estado": "error", "resumen": "Interrumpida"})
+        return bloques, ui
 
     # ── Las rondas ──
     async def _rondas(self, historial: list[dict]) -> str:
@@ -554,8 +774,10 @@ class Turno:
             if rondas >= MAX_RONDAS or (rondas and ahora_s() - inicio >= TOPE_TURNO_S):
                 return "pasos"
             if self.tokens > conv_db.TOPE_TOKENS:
-                await self._avisar(AVISO_LARGA, "alerta")
-                return "pasos"
+                # La conversación ya no admite más mensajes (409 «larga»): el turno termina con ese código, así el
+                # widget ofrece una conversación nueva y no «Continuar». El aviso queda en el historial
+                await self._avisar(AVISO_LARGA, "alerta", emitir=False)
+                raise FinDelTurno(AVISO_LARGA, "larga")
             anunciadas: list[tuple[str, str, str]] = []
             try:
                 respuesta = await self._pedir(historial, anunciadas)
@@ -616,7 +838,9 @@ class Turno:
     async def _cerrar_ronda(self, r: proveedores.Respuesta, historial: list[dict],
                             anunciadas: list[tuple[str, str, str]]) -> str | None:
         """Guarda la ronda y ejecuta sus herramientas. Devuelve el motivo de fin, o None para seguir con otra."""
-        contenido = conv_db.limpio(list(r.contenido))
+        # Sin bloques de texto vacíos: la API los rechaza al reenviarlos
+        contenido = [b for b in conv_db.limpio(list(r.contenido))
+                     if not (b.get("type") == "text" and not b.get("text"))]
         u = r.uso
         self.tokens = u.entrada + u.cache_lectura + u.cache_escritura
         await run_in_threadpool(conv_db.sumar_uso, self.db, self.quien.uid, u.entrada, u.salida, u.cache_lectura,
@@ -639,6 +863,14 @@ class Turno:
             self.emitir({"tipo": "descartar"})
             await self._avisar(AVISO_RECHAZO, "alerta")
             return "rechazo"
+        if not contenido:
+            # El modelo a veces termina sin bloques (sobre todo tras resultados de herramientas): queda solo para
+            # auditoría. Reenviarlo sería un 400 en cada petición siguiente (solo el último mensaje del asistente puede
+            # ir vacío) y la conversación quedaría inservible
+            await self._guardar("assistant", contenido, replay=False, tokens=self.tokens, **meta)
+            aviso = AVISO_VACIA if r.fin not in CORTES else AVISO_INCOMPLETA if r.fin == "other" else AVISO_CORTADA
+            await self._avisar(aviso, "info")
+            return "listo"
         await self._guardar("assistant", contenido, tokens=self.tokens, **meta)
         historial.append({"role": "assistant", "content": contenido})
         for texto in r.respaldos:  # ya se avisó al llegar el bloque: aquí queda en el historial
@@ -683,13 +915,16 @@ class Turno:
         llamadas: list[dict] = []
         fatal: ErrorHerramienta | None = None
         self.imagenes_ronda = 0
-        for u in usos:
+        for n, u in enumerate(usos):
             tid, nombre = str(u.get("id")), _corto(u.get("name"), 64)
             h = self.herramientas.get(u.get("name"))
             etiqueta = h.etiqueta if h else nombre
             if fatal is not None:
                 bloque, estado, resumen = self._fallo(tid, nombre, etiqueta, ErrorHerramienta(SIN_EJECUTAR,
                                                                                              "sin_ejecutar"))[:3]
+            elif n >= MAX_HERRAMIENTAS_RONDA:
+                bloque, estado, resumen = self._fallo(tid, nombre, etiqueta, ErrorHerramienta(DEMASIADAS,
+                                                                                             "demasiadas"))[:3]
             elif h is None:
                 bloque, estado, resumen = self._fallo(tid, nombre, etiqueta, ErrorHerramienta(
                     f"La herramienta «{nombre}» no existe en esta conversación.", "no_existe"))[:3]
@@ -732,9 +967,39 @@ class Turno:
         self._herramienta(tid, nombre, etiqueta, "error", resumen)
         return _resultado(tid, e.para_modelo(), True), "error", resumen, (e if e.fatal else None)
 
+    async def _mnemo_vigente(self, h: Herramienta) -> None:
+        """Antes de cada herramienta de Mnemo, que no pasa por la API del panel (va con la cuenta del administrador):
+        la sesión de quien conversa sigue valiendo (una petición a la API: un 401 termina el turno) y los ajustes de
+        ahora todavía se la dan. Las del panel no lo necesitan: cada llamada a la API vuelve a revisarlo todo."""
+        estado = await self.api.get("/api/agente/estado")
+        _, agente = await run_in_threadpool(politica.leer, self.db)
+        if not (isinstance(estado, dict) and estado.get("disponible")) or not politica.ofrecida(h, self.quien, agente,
+                                                                                                self.cfg):
+            raise ErrorHerramienta(MNEMO_YA_NO, "permiso")
+
+    async def _anotar(self, personas: set[int], desde: datetime, anotadas: set[int] = frozenset()) -> None:
+        """Anota en la conversación a las personas cuyos datos recibió el modelo (o mostró una tarjeta) y después
+        comprueba que ninguna se haya suprimido ni, desde que se empezaron a leer (`desde`), dejado de autorizar: la
+        supresión y el «no» borran las conversaciones que ya las tienen anotadas, así que uno que llegó mientras la
+        herramienta las leía no encontró esta. Si pasó, la conversación se borra como lo habrían hecho ellos y el turno
+        termina sin mandarle esos datos al modelo. En lo que devuelve una escritura aprobada, las personas de su
+        tarjeta (`anotadas`) no se miran así: ya estaban anotadas (su «no» borró la conversación), y una revocatoria
+        aprobada es la escritura misma; las demás sí (las parecidas que devuelve crear_persona)."""
+        await run_in_threadpool(conv_db.sumar_personas, self.db, self.cid, personas)
+        if await run_in_threadpool(conv_db.suprimidas, self.db, personas) or (
+                personas - anotadas and await run_in_threadpool(conv_db.dejaron_de_autorizar, self.db,
+                                                                personas - anotadas, desde)):
+            await run_in_threadpool(bd.borrar_conversaciones, self.db, {"_id": self.cid})
+            raise FinDelTurno(SUPRIMIDA, "borrada")
+
     async def _correr_herramienta(self, h: Herramienta, tid: str, args: Any) -> tuple:
         """Ejecuta una herramienta con plazo: (tool_result, estado, resumen, error fatal o None)."""
+        if h.tipo != "escritura" and self.servido >= TOPE_RESULTADOS_TURNO:  # ni se lee: el modelo no lo recibiría
+            return self._fallo(tid, h.nombre, h.etiqueta, ErrorHerramienta(TOPE_TURNO, "tope_turno"))
+        desde = _ahora() - MARGEN_OLVIDO
         try:
+            if h.nombre_remoto:
+                await self._mnemo_vigente(h)
             res = await asyncio.wait_for(h.ejecutar(self._contexto(tid), args), _plazo(h))
             if not isinstance(res, Resultado):
                 raise TypeError("la herramienta no devolvió un Resultado")
@@ -750,26 +1015,40 @@ class Turno:
             log.error("Asistente: la herramienta %s falló (%s)", h.nombre, type(e).__name__)
             return self._fallo(tid, h.nombre, h.etiqueta, ErrorHerramienta(
                 "La herramienta falló por un error interno del panel.", "error"))
-        imagenes, omitidas, pesadas = [], 0, 0
+        # Lo que lee un turno tiene tope: pasado, el resultado no se le pasa al modelo (las escrituras sí: son cortas
+        # y el modelo tiene que saber que se hicieron)
+        if h.tipo != "escritura" and self.servido + len(texto) > TOPE_RESULTADOS_TURNO:
+            self.servido = TOPE_RESULTADOS_TURNO  # lo que siga en el turno ya ni se lee
+            return self._fallo(tid, h.nombre, h.etiqueta, ErrorHerramienta(TOPE_TURNO, "tope_turno"))
+        self.servido += len(texto)
+        imagenes, omitidas, pesadas, de_mas = [], 0, 0, 0
         tope = min(TOPE_IMAGENES, self.proveedor.tope_imagenes)
         for img in _imagenes(res.imagenes):
             peso = len(str((img.get("source") or {}).get("data") or ""))
             if peso > tope:  # sola ya no cabe: pedirla otra vez no sirve
                 pesadas += 1
                 continue
+            if self.imagenes_n >= MAX_IMAGENES_CONVERSACION or self.imagenes_conv + peso > TOPE_IMAGENES_CONVERSACION:
+                de_mas += 1
+                continue
             if self.imagenes_ronda + peso > tope:
                 omitidas += 1
                 continue
             self.imagenes_ronda += peso
+            self.imagenes_conv += peso
+            self.imagenes_n += 1
             imagenes.append(img)
         if omitidas:
             texto += (f"\n[{omitidas} imagen(es) omitida(s): esta ronda ya llevaba demasiadas. Pídelas de a una en "
                       "otra llamada.]")
         if pesadas:
             texto += f"\n[{pesadas} imagen(es) omitida(s): pesa(n) demasiado para mandársela(s) al modelo.]"
+        if de_mas:
+            texto += (f"\n[{de_mas} imagen(es) omitida(s): la conversación ya lleva demasiadas imágenes. Si hace falta "
+                      "verlas, que la persona empiece una conversación nueva.]")
         personas = _personas(res.personas)
         if personas:
-            await run_in_threadpool(conv_db.sumar_personas, self.db, self.cid, personas)
+            await self._anotar(personas, desde, _personas_de_entrada(args) if h.tipo == "escritura" else frozenset())
         resumen = _corto(res.resumen) or "Listo"
         self._herramienta(tid, h.nombre, h.etiqueta, "ok", resumen)
         for a in _acciones(res.acciones):
@@ -779,6 +1058,7 @@ class Turno:
 
     async def _preparar_escritura(self, h: Herramienta, tid: str, uso: dict, args: Any) -> tuple:
         """Arma la tarjeta de una escritura: (llamada pendiente, None) o (None, fallo) si `confirmar` falla."""
+        desde = _ahora() - MARGEN_OLVIDO  # la tarjeta también lee la ficha (lo de «antes → después»)
         try:
             conf = await asyncio.wait_for(h.confirmar(self._contexto(tid), args), PLAZO_HERRAMIENTA_S)
             if not isinstance(conf, Confirmacion):
@@ -797,11 +1077,14 @@ class Turno:
                 "No se pudo preparar la acción por un error interno del panel.", "error"))
         personas = _personas_de_entrada(args)
         if personas:
-            await run_in_threadpool(conv_db.sumar_personas, self.db, self.cid, personas)
+            await self._anotar(personas, desde)
         self._herramienta(tid, h.nombre, h.etiqueta, "pendiente")
         self.emitir({"tipo": "confirmar", "id": tid, "nombre": h.nombre, "etiqueta": h.etiqueta, **tarjeta})
+        # Lo pendiente se guarda con la marca de que su tarjeta muestra los valores enteros: lo que guardó una versión
+        # anterior (que los cortaba a 500 caracteres sin decirlo) no se aprueba (`abrir_confirmacion`)
         return {"id": tid, "nombre": h.nombre, "etiqueta": h.etiqueta,
-                "entrada": conv_db.a_json(_entrada_pendiente(h, args, uso.get("input"))), "confirmacion": tarjeta}, None
+                "entrada": conv_db.a_json(_entrada_pendiente(h, args, uso.get("input"))),
+                "confirmacion": {**tarjeta, "entera": True}}, None
 
     async def _aprobada(self, ll: dict) -> tuple:
         """Una escritura aprobada: se vuelven a comprobar los permisos (pudieron cambiar) y se ejecuta."""
@@ -822,6 +1105,13 @@ class Turno:
 
 # ───────────────────────────── Apertura del turno (antes del flujo) ─────────────────────────────
 
+def _entera(llamada: dict) -> bool:
+    """¿La tarjeta guardada de esta escritura pendiente muestra los valores enteros? Las de una versión anterior del
+    panel no llevan la marca (`Turno._preparar_escritura`)."""
+    tarjeta = llamada.get("confirmacion")
+    return isinstance(tarjeta, dict) and tarjeta.get("entera") is True
+
+
 def _respuesta(turno: Turno) -> StreamingResponse:
     return StreamingResponse(turno.eventos(), media_type="application/x-ndjson", headers=FLUJO)
 
@@ -831,31 +1121,41 @@ async def _ocupar(app: Any, uid: Any, cid: int | None, turno: str) -> dict | Non
     MongoDB (`conv_db.tomar`, que la devuelve fresca; si es nueva, None), después de comprobar que la persona no tiene
     un turno en otra conversación (`otra_ocupada`, que vale entre procesos).
 
-    Si la persona o la conversación están ocupadas no responde 409 en el acto: el turno anterior puede estar
-    cerrándose. Pasa tras «Detener»: el navegador corta la respuesta y manda el mensaje siguiente, y en una máquina
-    lenta ese mensaje llega antes de que el servidor note la desconexión y el turno cortado suelte sus candados. Se
-    vuelve a probar cada `SONDEO_OCUPADA_S` hasta `ESPERA_OCUPADA_S`, sin retener nada mientras tanto, y recién
-    entonces 409 `ocupada`. Un proceso lleno no espera: 503 `saturado`, con `Retry-After`."""
+    Si la persona o la conversación tienen un turno vivo en este proceso, 409 `ocupada` en el acto: mientras se espera
+    se retiene uno de los cupos del asistente en el servidor, y ese turno no los va a soltar pronto (si no, quien tiene
+    un turno largo dejaría a los demás en 503 mandando mensajes). Solo se espera si el turno anterior se está cerrando
+    (`Ocupacion.cerrar`): tras «Detener», el navegador corta la respuesta y manda el mensaje siguiente, que en una
+    máquina lenta llega antes de que el turno cortado suelte sus candados. También si lo que estorba es el candado de
+    MongoDB de otro proceso, que no dice si su turno sigue vivo. Se vuelve a probar cada `SONDEO_OCUPADA_S` hasta
+    `ESPERA_OCUPADA_S`, sin retener nada mientras tanto, y recién entonces 409; espera un solo mensaje por persona (otro
+    recibe 409 enseguida). Un proceso lleno no espera: 503 `saturado`, con `Retry-After`."""
     db, ocupacion = app.state.db, ocupacion_de(app)
     limite = time.monotonic() + ESPERA_OCUPADA_S
-    while True:
-        motivo = ocupacion.reservar(uid, cid)
-        if motivo == "saturado":
-            raise HTTPException(503, dict(SATURADO), headers={"Retry-After": "5"})
-        if motivo is None:
-            try:
-                libre = not await run_in_threadpool(conv_db.otra_ocupada, db, uid, cid)
-                conv = (await run_in_threadpool(conv_db.tomar, db, cid, uid, turno)
-                        if libre and cid is not None else None)
-            except BaseException:
+    espera = False  # este mensaje es el que espera por esta persona
+    try:
+        while True:
+            motivo = ocupacion.reservar(uid, cid)
+            if motivo == "saturado":
+                raise HTTPException(503, dict(SATURADO), headers={"Retry-After": "5"})
+            if motivo is None:
+                try:
+                    libre = not await run_in_threadpool(conv_db.otra_ocupada, db, uid, cid)
+                    conv = (await run_in_threadpool(conv_db.tomar, db, cid, uid, turno)
+                            if libre and cid is not None else None)
+                except BaseException:
+                    ocupacion.soltar(uid, cid)
+                    raise
+                if libre and (cid is None or conv is not None):
+                    return conv
                 ocupacion.soltar(uid, cid)
-                raise
-            if libre and (cid is None or conv is not None):
-                return conv
-            ocupacion.soltar(uid, cid)
-        if time.monotonic() >= limite:
-            raise HTTPException(409, dict(OCUPADA))
-        await asyncio.sleep(SONDEO_OCUPADA_S)
+            elif ocupacion.viva(uid, cid):
+                raise HTTPException(409, dict(OCUPADA))
+            if time.monotonic() >= limite or not (espera or (espera := ocupacion.esperar(uid))):
+                raise HTTPException(409, dict(OCUPADA))
+            await asyncio.sleep(SONDEO_OCUPADA_S)
+    finally:
+        if espera:
+            ocupacion.dejar_de_esperar(uid)
 
 
 async def _liberar(app: Any, uid: Any, cid: int | None, turno: str) -> None:
@@ -881,6 +1181,17 @@ async def _proveedor(app: Any, conv: dict | None) -> proveedores.Proveedor:
     if proveedor is None:
         raise HTTPException(503, dict(politica.SIN_CONFIGURAR))
     return proveedor
+
+
+async def _contar(db: Any, quien: Any, ajustes: dict) -> dict:
+    """Suma el turno al día de la persona: un mensaje, una aprobación o un rechazo (cada uno pone a trabajar al
+    modelo). 429 `volumen` si ya llegó al tope. Devuelve el `limite` del evento `fin`."""
+    maximo = politica.mensajes_diarios(ajustes, quien.rol)
+    usados = await run_in_threadpool(conv_db.contar_mensaje, db, quien.uid, maximo)
+    if usados is None:
+        raise HTTPException(429, {"codigo": "volumen", "mensaje": f"Llegó al tope de {maximo} mensajes al asistente "
+                                                                  "por hoy. Podrá seguir mañana."})
+    return {"usados": usados, "maximo": maximo}
 
 
 async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, contexto: Any) -> StreamingResponse:
@@ -909,14 +1220,9 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
             cid = await run_in_threadpool(bd.siguiente_id, db, conv_db.CONVERSACIONES)
             ocupacion_de(app).agregar(cid)
             titulo = conv_db.titulo_de(texto)
-        maximo = politica.mensajes_diarios(ajustes, quien.rol)
-        usados = await run_in_threadpool(conv_db.contar_mensaje, db, quien.uid, maximo)
-        if usados is None:
-            raise HTTPException(429, {"codigo": "volumen", "mensaje": f"Llegó al tope de {maximo} mensajes al "
-                                                                      "asistente por hoy. Podrá seguir mañana."})
+        limite = await _contar(db, quien, ajustes)
         turno = Turno(app=app, quien=quien, ajustes=ajustes, agente=agente, api=ApiInterna.desde_peticion(request),
-                      conv=conv, cid=cid, titulo=titulo, turno=turno_id, limite={"usados": usados, "maximo": maximo},
-                      proveedor=proveedor)
+                      conv=conv, cid=cid, titulo=titulo, turno=turno_id, limite=limite, proveedor=proveedor)
         turno.lanzar(lambda: turno.mensaje(texto, contexto))
     except BaseException:
         await _liberar(app, quien.uid, cid, turno_id)
@@ -925,7 +1231,11 @@ async def abrir_mensaje(request: Any, quien: Any, cid: int | None, texto: str, c
 
 
 async def abrir_confirmacion(request: Any, quien: Any, cid: int, decisiones: dict[str, bool]) -> StreamingResponse:
-    """POST /api/agente/confirmaciones: las comprobaciones previas y el turno que sigue tras la decisión."""
+    """POST /api/agente/confirmaciones: las comprobaciones previas y el turno que sigue tras la decisión. Cada decisión
+    tiene que ser sobre algo que espera aprobación ahora (si no, 409): una pestaña vieja (o un «Reintentar» cuya
+    respuesta no llegó) decide sobre tarjetas que ya no están, y lo nuevo, sin decisión, quedaría rechazado sin que la
+    persona lo viera. Lo aprobado tiene que tener una tarjeta que mostró los valores enteros (`_entera`): lo que guardó
+    una versión anterior del panel queda rechazado, con 409."""
     app = request.app
     db, cfg = app.state.db, app.state.cfg
     ajustes, agente = await run_in_threadpool(politica.leer, db)
@@ -942,13 +1252,23 @@ async def abrir_confirmacion(request: Any, quien: Any, cid: int, decisiones: dic
     turno_id = secrets.token_hex(8)
     conv = await _ocupar(app, quien.uid, cid, turno_id)
     try:
-        if conv_db.pendiente_de(conv) is None:  # otro turno lo atendió entre la lectura y el candado
+        pend = conv_db.pendiente_de(conv)
+        if pend is None:  # otro turno lo atendió entre la lectura y el candado
             raise sin_pendientes
-        maximo = politica.mensajes_diarios(ajustes, quien.rol)
-        usados = await run_in_threadpool(conv_db.uso_de, db, quien.uid)
+        if not set(decisiones) <= {str(ll.get("id")) for ll in pend["llamadas"] if isinstance(ll, dict)}:
+            raise HTTPException(409, dict(DESACTUALIZADA))
+        if any(decisiones.get(str(ll.get("id"))) is True and not _entera(ll) for ll in pend["llamadas"]
+               if isinstance(ll, dict)):
+            # Lo guardó una versión anterior del panel, que cortaba cada valor de la tarjeta a 500 caracteres (y a 30
+            # filas) sin marcarlo: no se aprueba sin haberlo visto entero. Queda como rechazado (el modelo lo sabe en
+            # el mensaje siguiente, `_interrumpidas`) y el asistente lo vuelve a proponer si se le pide
+            await run_in_threadpool(conv_db.quitar_pendiente, db, cid, conv.get("pendiente"),
+                                    [str(ll.get("id")) for ll in pend["llamadas"] if isinstance(ll, dict)])
+            raise HTTPException(409, dict(VIEJA))
+        limite = await _contar(db, quien, ajustes)
         turno = Turno(app=app, quien=quien, ajustes=ajustes, agente=agente, api=ApiInterna.desde_peticion(request),
-                      conv=conv, cid=cid, titulo=conv.get("titulo") or "Conversación", turno=turno_id,
-                      limite={"usados": usados, "maximo": maximo}, proveedor=proveedor)
+                      conv=conv, cid=cid, titulo=conv.get("titulo") or "Conversación", turno=turno_id, limite=limite,
+                      proveedor=proveedor)
         turno.lanzar(lambda: turno.confirmacion(decisiones))
     except BaseException:
         await _liberar(app, quien.uid, cid, turno_id)

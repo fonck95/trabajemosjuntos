@@ -878,7 +878,8 @@ def test_minimizar_filas_de_cada_rol_sin_agregar_nada():
     assert minimizar.fila(cola) == {"id": 4, "nombre": "ANA", "telefono_indice": 0, "whatsapp": True,
                                     "canales_permitidos": ["llamada"], "consentimiento": "si",
                                     "telefono_mascara": "···0011"}
-    assert minimizar.fila({**fila_a, "consentimiento": "no"}) == {
+    # Las filas del administrador traen `lugar_tipo`: de quien no autorizó va su barrio o vereda (sin él, ningún lugar)
+    assert minimizar.fila({**fila_a, "consentimiento": "no", "lugar_tipo": "barrio"}) == {
         "id": 4, "nombre": "ANA INVENTADA", "lugar": "EL PRADO", "consentimiento": "no",
         "aviso": minimizar.AVISO_NO_AUTORIZO}
     assert minimizar.filas([fila_c, None, "x"]) == [fila_c] and minimizar.ids_de([fila_c, {"id": True}]) == {4}

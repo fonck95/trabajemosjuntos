@@ -15,10 +15,15 @@
 .agente-boton[data-senal="trabajando"] .agente-senal { background: var(--s1); animation: agente-latido 1.4s ease-in-out infinite; }
 .agente-boton[data-senal="pendiente"] .agente-senal { background: var(--warn); }
 @keyframes agente-latido { 50% { transform: scale(.6); opacity: .55; } }
-/* En el mapa de escritorio, a la izquierda de los controles de navegación de MapLibre (abajo a la derecha) */
-body:has(#vista.lleno) .agente-boton { right: 71px; }
+/* En el mapa de escritorio, a la izquierda de los controles de navegación de MapLibre (abajo a la derecha) y encima de
+   la atribución, que al desplegarse se extiende por el borde de abajo */
+body:has(#vista.lleno) .agente-boton { right: 71px; bottom: 44px; }
 /* Los avisos del panel suben para no quedar debajo del botón */
 body:has(#agente-boton:not([hidden])) #avisos { bottom: 92px; }
+@media (min-width: 901px) { body:has(#vista.lleno):has(#agente-boton:not([hidden])) #avisos { bottom: 112px; } }
+/* Con el botón a la vista, lo último de cada vista (la paginación, «Guardar cambios») queda por encima de él al llegar
+   al final de la página */
+body:has(#agente-boton:not([hidden])) .contenido:not(.lleno) { padding-bottom: 100px; }
 
 /* ───────── Panel ───────── */
 .agente-panel { position: fixed; right: 24px; bottom: 24px; z-index: 28; display: flex; flex-direction: column;
@@ -135,7 +140,21 @@ body:has(#franja-llamada) .agente-panel {
   font-size: 13.5px; }
 .agente-tarjeta dl > div { display: contents; }
 .agente-tarjeta dt { color: var(--muted); font-weight: 650; font-size: 12.5px; }
-.agente-tarjeta dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Cada dato va entero (agente.js no recorta nada): uno más alto que su recuadro se desplaza dentro de él */
+.agente-tarjeta dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: min(15em, 40vh);
+  overflow-y: auto; }
+/* El que no se ve entero (`data-mas`, lo pone agente.js) lleva una sombra arriba o abajo mientras queda texto por ver
+   (las capas `local` siguen al texto y la tapan al llegar a cada borde), y la tarjeta pide desplazarlo antes de
+   aprobar */
+.agente-tarjeta dd[data-mas] { border-radius: 4px;
+  background: linear-gradient(var(--surface) 30%, transparent) top / 100% 32px no-repeat local,
+    linear-gradient(transparent, var(--surface) 70%) bottom / 100% 32px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, color-mix(in srgb, var(--ink) 40%, transparent), transparent)
+      top / 100% 14px no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, color-mix(in srgb, var(--ink) 40%, transparent), transparent)
+      bottom / 100% 14px no-repeat scroll; }
+.agente-tarjeta-largo { display: none; margin: 0; font-size: 12.5px; color: var(--ink-2); }
+.agente-tarjeta[data-estado="pendiente"]:has(dd[data-mas]) .agente-tarjeta-largo { display: block; }
 .agente-tarjeta-aviso { margin: 0; display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink-2);
   background: color-mix(in srgb, var(--warn) 14%, transparent); border-radius: 8px; padding: 8px 10px; }
 .agente-tarjeta-aviso svg { width: 16px; height: 16px; flex: none; margin-top: 1px;
@@ -217,10 +236,11 @@ body:has(#franja-llamada) .agente-panel {
 .agente-historial-pie { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 
 /* ───────── Escritorio estrecho y celular ───────── */
-/* Entre 901 y 1100 px la ficha va en una columna y su barra «Guardar cambios» llega al borde: el botón sube */
+/* Entre 901 y 1100 px la ficha va en una columna y su barra «Guardar cambios», pegada abajo, llega al borde: sus
+   botones le dejan lugar al botón (subirlo lo pondría encima de la barra al final de la página, donde ya no va
+   pegada) */
 @media (min-width: 901px) and (max-width: 1100px) {
-  body:has(#vista .guardar-ficha) .agente-boton { bottom: 84px; }
-  body:has(#vista .guardar-ficha):has(#agente-boton:not([hidden])) #avisos { bottom: 152px; }
+  body:has(#agente-boton:not([hidden])) #vista .guardar-ficha { padding-right: 76px; }
 }
 /* Con el panel abierto en escritorio, los avisos se corren a su izquierda */
 @media (min-width: 901px) {
@@ -228,6 +248,11 @@ body:has(#franja-llamada) .agente-panel {
 }
 @media (max-width: 900px) {
   .agente-boton { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); }
+  /* Lo que se reserva abajo para el botón; con la barra fija de la ficha, la de esa barra (el botón va arriba) */
+  body:has(#agente-boton:not([hidden])) .contenido:not(.lleno) {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+  body:has(#agente-boton:not([hidden])) .contenido:has(.barra-acciones) {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
   /* Abajo están la barra de la ficha («Llamar», «Guardar cambios»…) o los paneles del mapa: el botón va a la barra de arriba */
   body:has(#vista.lleno) .agente-boton, body:has(#vista .barra-acciones) .agente-boton { top: 10px; bottom: auto; right: 12px;
     width: 40px; height: 40px; background: transparent; border: 1px solid rgb(255 255 255 / .22); box-shadow: none; }

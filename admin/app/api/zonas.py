@@ -12,6 +12,9 @@
   también lo que se cambió desde Usuarios. Solo se asignan planilleros y consultores: K y A no tienen asignación.
 * Borrar quita el área de la asignación de todos. La auditoría guarda el área completa (con el polígono codificado):
   nada se pierde.
+* Lo que cambia el alcance de un usuario le borra sus conversaciones con el asistente, como en Usuarios: lo que el
+  modelo le mostró era de su zona de antes. Al crear o editar, a los que ganan o pierden el área; al redibujarla o
+  borrarla, a todos los que la tenían o la tienen. El nombre, la descripción y el color no borran nada.
 """
 from __future__ import annotations
 
@@ -110,6 +113,18 @@ def _sincronizar(db: Database, aid: int, uids: list[int]) -> None:
         "$mergeObjects": ["$asignacion", {"areas": _sin_area(aid)}]}}}])
 
 
+def _con_area(db: Database, aid: int) -> set[int]:
+    """Quienes tienen el área en su alcance (`usuarios.asignacion.areas`, de donde sale)."""
+    return {u["_id"] for u in db.usuarios.find({"asignacion.areas": aid}, {"_id": 1})}
+
+
+def _olvidar(db: Database, uids: set[int]) -> None:
+    """Borra las conversaciones con el asistente de quienes cambió el alcance (`usuarios.editar` hace lo mismo): el
+    historial se le reenvía al modelo en cada ronda con fichas de la zona de antes."""
+    if uids:
+        bd.borrar_conversaciones(db, {"uid": {"$in": sorted(uids)}})
+
+
 def _asignados(db: Database, ids: list[int]) -> dict[int, list[dict]]:
     """Por área, los usuarios que la tienen asignada (de `usuarios`, la fuente del alcance)."""
     out: dict[int, list[dict]] = {i: [] for i in ids}
@@ -176,6 +191,7 @@ def crear(a: AreaNueva, db: Database = Depends(obtener_db), quien: Quien = Depen
     except DuplicateKeyError:
         raise HTTPException(409, f"Ya hay una zona llamada «{nombre}»") from None
     _sincronizar(db, doc["_id"], uids)
+    _olvidar(db, set(uids))
     bd.auditar(db, quien, "crear_area", "area", doc["_id"], _para_auditoria(doc))
     return _salida(doc, _asignados(db, [doc["_id"]])[doc["_id"]])
 
@@ -215,12 +231,16 @@ def editar(aid: int, c: AreaCambio, db: Database = Depends(obtener_db), quien: Q
             cambios["asignada_a"] = uids
     if cambios:
         cambios["actualizado_en"] = bd.ahora()
+        tenian = _con_area(db, aid)
         try:
             db.areas.update_one({"_id": aid}, {"$set": cambios})
         except DuplicateKeyError:
             raise HTTPException(409, f"Ya hay una zona llamada «{cambios.get('nombre')}»") from None
         if uids is not None:
             _sincronizar(db, aid, uids)
+        tienen = set(uids) if uids is not None else tenian
+        # Redibujarla cambia el alcance de todos los que la tienen; asignarla, el de los que la ganan o la pierden
+        _olvidar(db, (tenian | tienen) if "poligono" in cambios else (tenian ^ tienen))
         campos = sorted(k for k in cambios if k not in ("actualizado_en", "area_m2", "perimetro_m"))
         previo = _para_auditoria(antes)
         bd.auditar(db, quien, "editar_area", "area", aid,
@@ -235,7 +255,9 @@ def editar(aid: int, c: AreaCambio, db: Database = Depends(obtener_db), quien: Q
 def borrar(aid: int, db: Database = Depends(obtener_db), quien: Quien = Depends(GESTIONAR)):
     a = _cargar(db, aid)
     asignados = [u["id"] for u in _asignados(db, [aid])[aid]]
+    tenian = _con_area(db, aid)
     db.areas.delete_one({"_id": aid})
     _sincronizar(db, aid, [])
+    _olvidar(db, tenian)
     bd.auditar(db, quien, "borrar_area", "area", aid, {**_para_auditoria(a), "asignada_a": asignados})
     return {"ok": True, "desasignados": len(asignados)}

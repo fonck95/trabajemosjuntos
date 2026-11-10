@@ -48,8 +48,9 @@ def test_editar_por_el_bucle_no_escribe_si_la_ficha_cambio_entre_la_tarjeta_y_la
 
 
 def test_una_busqueda_por_numero_no_trae_los_digitos_enmascarados(sesion):
-    """La API compara la cédula por prefijo: con los últimos dígitos en la fila, unas pocas búsquedas por prefijo
-    reconstruirían la cédula enmascarada. Por nombre, la fila sí los trae."""
+    """Desde el asistente un número se busca entero (la cédula o el teléfono completos): una parte no trae a nadie,
+    y la fila de una búsqueda por número no suma los dígitos enmascarados (con prefijos y finales se reconstruiría la
+    cédula). Por nombre, la fila sí los trae."""
     from app.agente.herramientas import por_nombre
     db = sesion.app.state.db
     persona(db, nombre="HERMENEGILDA NUMERICA INVENTADA", cedula="1023456789", telefono="3104445566",
@@ -57,15 +58,18 @@ def test_una_busqueda_por_numero_no_trae_los_digitos_enmascarados(sesion):
     h = por_nombre()["buscar_personas"]
     ctx = aa.contexto(sesion.app, sesion)
     try:
-        por_numero = aa.correr(sesion, aa.ejecutar, h, ctx, {"q": "102345"}).contenido
+        por_numero = aa.correr(sesion, aa.ejecutar, h, ctx, {"q": "1023456789"}).contenido
         por_nombre_ = aa.correr(sesion, aa.ejecutar, h, ctx, {"q": "HERMENEGILDA"}).contenido
-        con_filtros = aa.correr(sesion, aa.ejecutar, h, ctx, {"q": "3104445", "filtros": {"con_cedula": 1}}).contenido
+        con_filtros = aa.correr(sesion, aa.ejecutar, h, ctx, {"q": "310 444 5566",
+                                                              "filtros": {"con_cedula": 1}}).contenido
+        partes = [aa.correr(sesion, aa.ejecutar, h, ctx, {"q": q}).contenido for q in ("102345", "3104445")]
     finally:
         aa.correr(sesion, ctx.api.cerrar)
     assert por_numero["filas"] and "nota" in por_numero
     assert all("cedula_ult3" not in f and "telefono_mascara" not in f for f in por_numero["filas"])
     assert con_filtros["filas"] and all("cedula_ult3" not in f for f in con_filtros["filas"]) and "nota" in con_filtros
     assert por_nombre_["filas"][0]["cedula_ult3"] == "···789" and "nota" not in por_nombre_
+    assert all(not p["filas"] for p in partes)
     assert "1023456789" not in json.dumps([por_numero, por_nombre_, con_filtros])
 
 
