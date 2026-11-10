@@ -363,11 +363,11 @@ def test_ver_reunion_con_asistentes_minimizados(sesion, como, ctx_de):
     ctx = ctx_de(sesion)
     r = _ej(sesion, ctx, "ver_reunion", {"reunion_id": rid})
     c = r.contenido
-    assert c["asistentes_total"] == 2 and r.personas == {rica, no} and r.resumen == "2 asistentes"
+    assert c["asistentes_total"] == 2 and r.personas == {rica} and r.resumen == "2 asistentes"
     fila = next(f for f in c["asistentes"] if f["id"] == rica)
     assert fila["nombre"] == "CRESCENCIA INVENTADA RICA" and fila["cedula_ult3"] == "···777"
-    assert set(next(f for f in c["asistentes"] if f["id"] == no)) == {"id", "nombre", "lugar", "consentimiento",
-                                                                       "aviso"}
+    # Quien no autorizó no se lista: que asistió a la reunión es un dato suyo
+    assert [f["id"] for f in c["asistentes"]] == [rica] and "no se listan" in c["aviso"]
     assert c["descripcion"] == "Avisar al ···022" and c["compromisos"] == "Arreglar la vía"
     assert {x["nombre"] for x in c["necesidades"]} == {"Vivienda"}  # sin Discapacidad ni Líder comunitario
     sin_datos(_modelo(r), "93000888", "3001231234", "Líder")

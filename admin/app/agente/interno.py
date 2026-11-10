@@ -8,9 +8,16 @@ de quien pregunta. Va directo a la app del panel (`request.app`), no al servidor
 `LimitePanel` y no puede interbloquearse con el turno que la llama.
 
 Las respuestas que no son 2xx se convierten en `ErrorHerramienta` con el `detail` de la API, que el modelo le explica a
-la persona. Un 401 o un 503 terminan el turno (`fatal`)."""
+la persona. Un 401 o un 503 terminan el turno (`fatal`).
+
+Las escrituras (todo lo que no es GET) corren en una tarea propia y protegida (`asyncio.shield`): por ASGI no hay
+plazo de red (el `timeout` del cliente no se aplica) y una ruta síncrona sigue en su hilo aunque se cancele quien la
+espera. Así, si vence su plazo (`plazo`, el que le queda a la herramienta) o el bucle corta el turno, la petición
+termina igual y guarda su respuesta de idempotencia (un reintento del mismo `tool_use` la devuelve en vez de repetir la
+escritura), y el modelo sabe que no se sabe si alcanzó a guardarse."""
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import Any
@@ -23,6 +30,12 @@ from .herramientas.base import ErrorHerramienta
 log = logging.getLogger("panel")
 BASE_INTERNA = "http://panel.interno"
 PLAZO_S = 60.0
+LECTURAS = frozenset({"GET", "HEAD", "OPTIONS"})
+MINIMO_ESCRITURA_S = 1.0  # con menos que esto para el plazo, una escritura no empieza
+INCIERTA = ("La API del panel tardó demasiado en responder y no se sabe si alcanzó a guardarse: revise la ficha (o "
+            "la reunión) antes de repetirlo. No lo proponga de nuevo sin revisar.")
+SIN_TIEMPO = ("No quedó tiempo para guardar antes del plazo de la herramienta: no se guardó nada. Se puede intentar "
+              "de nuevo.")
 # httpx2 (lo trae anthropic) registra a INFO cada petición con su URL completa, y el servidor único deja el registro en
 # INFO: las búsquedas del asistente llevan cédulas, teléfonos y nombres en la consulta (`/api/parecidas?cedula=…`).
 # Nada de httpx2 por debajo de WARNING llega al registro de Railway.
@@ -78,6 +91,7 @@ class ApiInterna:
         self._cliente = httpx2.AsyncClient(
             transport=httpx2.ASGITransport(app=app, raise_app_exceptions=False), base_url=BASE_INTERNA,
             headers=cabeceras, timeout=PLAZO_S, trust_env=False, follow_redirects=False)
+        self._escrituras: set[asyncio.Task] = set()  # las que siguen después de que venció su plazo
 
     @classmethod
     def desde_peticion(cls, request: Any) -> "ApiInterna":
@@ -87,15 +101,21 @@ class ApiInterna:
         return cls(request.app, request.cookies.get(COOKIE, ""), str(sesion.get("csrf") or ""), ip_de(request))
 
     async def pedir(self, metodo: str, ruta: str, *, params: dict | None = None, json_: Any = None,
-                    clave: str | None = None, respuesta: bool = False) -> Any:
+                    clave: str | None = None, respuesta: bool = False, plazo: float | None = None) -> Any:
         """`metodo` y `ruta` (`/api/...`) de una ruta existente; `params` sin vacíos; `clave` = Idempotency-Key de una
-        escritura (la misma para el mismo `tool_use`). Devuelve el JSON (o la respuesta entera con `respuesta`)."""
+        escritura (la misma para el mismo `tool_use`); `plazo`: los segundos que puede esperar una escritura (el que le
+        queda a la herramienta, `Contexto.plazo_escritura`). Devuelve el JSON (o la respuesta entera con
+        `respuesta`)."""
         if not ruta.startswith("/api/"):
             raise ValueError("Solo rutas de la API del panel")
         limpio = {k: v for k, v in (params or {}).items() if v is not None and v != ""}
         cab = {"idempotency-key": clave} if clave else None
         try:
-            r = await self._cliente.request(metodo, ruta, params=limpio or None, json=json_, headers=cab)
+            if metodo.upper() in LECTURAS:
+                r = await self._cliente.request(metodo, ruta, params=limpio or None, json=json_, headers=cab)
+            else:
+                r = await self._escribir(lambda: self._cliente.request(metodo, ruta, params=limpio or None, json=json_,
+                                                                       headers=cab), plazo)
         except httpx2.TimeoutException:
             raise ErrorHerramienta("La API del panel tardó demasiado en responder.", "plazo") from None
         except httpx2.HTTPError as e:
@@ -111,6 +131,20 @@ class ApiInterna:
             return r.json()
         except (json.JSONDecodeError, ValueError):
             raise ErrorHerramienta("La API del panel respondió algo que no es JSON.", "error") from None
+
+    async def _escribir(self, hacer: Any, plazo: float | None) -> httpx2.Response:
+        """Una escritura en su propia tarea: si vence `plazo` (o cancelan a quien espera), la petición sigue hasta el
+        final y guarda su respuesta de idempotencia; al modelo le llega que no se sabe si alcanzó a guardarse."""
+        if plazo is not None and plazo < MINIMO_ESCRITURA_S:
+            raise ErrorHerramienta(SIN_TIEMPO, "plazo")
+        tarea = asyncio.ensure_future(hacer())
+        self._escrituras.add(tarea)
+        tarea.add_done_callback(self._escrituras.discard)
+        try:
+            return await asyncio.wait_for(asyncio.shield(tarea), plazo)
+        except TimeoutError:
+            log.warning("Asistente: una escritura de la API interna venció su plazo y sigue en curso")
+            raise ErrorHerramienta(INCIERTA, "plazo", detalle={"motivo": "puede_haberse_guardado"}) from None
 
     async def get(self, ruta: str, params: dict | None = None, **kw: Any) -> Any:
         return await self.pedir("GET", ruta, params=params, **kw)

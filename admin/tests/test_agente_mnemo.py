@@ -690,7 +690,7 @@ def test_la_entrada_es_un_objeto_que_cabe():
 def test_la_tarjeta_muestra_el_titulo_y_los_argumentos():
     _, hs = correr(_herramientas(MnemoFalso()))
     h = hs["mnemo_create_event"]
-    args = {"zeta": True, "notes": "n" * 2000, "start": "2026-11-09T09:00:00-05:00", "title": "Reunión inventada",
+    args = {"zeta": True, "notes": "n" * 5000, "start": "2026-11-09T09:00:00-05:00", "title": "Reunión inventada",
             "extra": {"a": [1, 2]}, "vacio": None}
     conf = correr(h.confirmar(_ctx(CON_MNEMO), h.validar(args)))
     assert conf.titulo == "Crear un evento en el calendario de Mnemo"
@@ -698,7 +698,7 @@ def test_la_tarjeta_muestra_el_titulo_y_los_argumentos():
     assert claves == ["title", "start", "notes", "extra", "vacio", "zeta"]  # el orden del esquema, luego el resto
     valores = dict(conf.detalle)
     assert valores["title"] == "Reunión inventada" and valores["zeta"] == "sí" and valores["vacio"] == "(vacío)"
-    assert valores["extra"] == '{"a": [1, 2]}' and valores["notes"].endswith("(2000 caracteres en total)")
+    assert valores["extra"] == '{"a": [1, 2]}' and valores["notes"].endswith("(5000 caracteres en total)")
     assert conf.aviso == "Lo hace Mnemo con la cuenta de Mnemo del administrador."
     assert conf.para_interfaz()["detalle"][0] == ["title", "Reunión inventada"]
     pedido = correr(hs["mnemo_request_share"].confirmar(_ctx(CON_MNEMO), hs["mnemo_request_share"].validar(
@@ -835,7 +835,9 @@ def test_texto_largo_se_recorta_sin_romper_la_estructura():
     t = correr(prueba()).texto_para_modelo()
     assert len(t) <= MAX_CONTENIDO
     datos = json.loads(t)  # sigue siendo JSON: el recorte fue dentro del texto
-    assert datos["metadata"]["next_offset"] == 90000 and "[recortado: 96000 caracteres en total]" in datos["text"]
+    # Una ventana de un documento: el texto se recorta limpio y next_offset sigue donde de verdad quedó
+    assert ("palabra " * 12_000).startswith(datos["text"]) and len(datos["text"]) > 30_000
+    assert datos["metadata"]["next_offset"] == len(datos["text"]) and datos["metadata"]["clipped"] is True
 
 
 def test_escritura_cortada_avisa_que_pudo_hacerse(monkeypatch):

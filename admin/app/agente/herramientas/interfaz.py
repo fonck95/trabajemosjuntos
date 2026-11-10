@@ -10,8 +10,10 @@ docs/agente.md) que el widget aplica con `accionesMapa` o con `ir`. Por qué est
 * Las coordenadas y los nombres de las personas que se resaltan van solo al navegador. Al modelo le vuelve un resumen
   con cifras (cuántas cumplen los filtros, cuántas están ubicadas, cuántas se resaltaron y cuáles no tienen punto),
   nunca coordenadas ni nombres de personas.
-* Las cifras salen de `GET /api/mapa/puntos` por `ctx.api`, con los permisos del panel: son las mismas que pintará el
-  mapa con esos filtros.
+* Las cifras salen de `GET /api/mapa/puntos` por `ctx.api`, con los permisos del panel y sin quienes no autorizaron
+  el tratamiento de sus datos (`tratables`): cuántas de un lugar o de un filtro tienen ubicación diría algo de ellas.
+  Con `consentimiento: no` el mapa se mueve igual, pero al modelo no le llegan cifras. El navegador recibe los filtros
+  tal cual: la persona del equipo ve en el mapa a todos los que su rol ve.
 * Los permisos son los del panel: `mapa.ver` para el mapa, `zonas.gestionar` para abrir zonas y el de cada vista (la
   tabla `RUTAS` de `web/js/app.js`) para navegar. Como varias acciones no consultan la API, se comprueban aquí con la
   misma tabla (`acceso.PERMISOS`).
@@ -31,7 +33,10 @@ from .gestion import (FiltrosBase, Id, IdOCero, Lugar, Nomenclatura, Perezosa, T
 
 # Rango de coordenadas de Yondó que acepta el servidor (`RANGO_YONDO` de mapa3d.js, `ReunionIn`)
 LAT_MIN, LAT_MAX, LON_MIN, LON_MAX = 6.3, 7.5, -74.6, -73.6
-MAX_RESALTAR = 500  # puntos de un resalte (y el tope de `ids` de la API)
+MAX_RESALTAR = 500  # puntos de un resalte (`MAX_IDS` de mapa3d.js) y el tope de `ids` de la API
+# Lo más largo que el widget acepta en la consulta de una ruta del panel (`destinoEnlace` de agente.js, con el «?»):
+# una más larga no se abre. Una prueba lo compara con agente.js
+MAX_CONSULTA = 600
 LOTE_IDS = 200  # ids por consulta: `ids` de la API admite hasta 4000 caracteres
 COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
 NOMBRE_BASE = {"auto": "según el tema", "oscuro": "oscuro", "claro": "claro", "satelite": "satélite"}
@@ -203,16 +208,23 @@ class _Plan:
     filtros: dict[str, str] = field(default_factory=dict)
 
 
+SIN_CIFRAS = ("Son quienes no autorizaron el tratamiento de sus datos: el mapa del panel los muestra, pero al "
+              "asistente no le llegan sus cifras.")
+
+
 class _Cuentas:
-    """`GET /api/mapa/puntos` (total y ubicadas) por parámetros, una vez por llamada."""
+    """`GET /api/mapa/puntos` (total y ubicadas) por parámetros, una vez por llamada, sin quienes no autorizaron. None
+    si los filtros son justo los de quienes no autorizaron: de ellos no se dan cifras."""
 
     def __init__(self, ctx: Contexto):
         self.ctx, self._hechas = ctx, {}
 
-    async def __call__(self, params: dict[str, str]) -> tuple[int, int]:
+    async def __call__(self, params: dict[str, str]) -> tuple[int, int] | None:
+        if params.get("consentimiento") == "no":
+            return None
         clave = tuple(sorted(params.items()))
         if clave not in self._hechas:
-            d = await pedir(self.ctx, "GET", "/api/mapa/puntos", params=params)
+            d = await pedir(self.ctx, "GET", "/api/mapa/puntos", params={**params, "tratables": "1"})
             d = d if isinstance(d, dict) else {}
             self._hechas[clave] = (_entero(d.get("total")), _entero(d.get("ubicadas")))
         return self._hechas[clave]
@@ -243,14 +255,16 @@ async def _coordenadas(ctx: Contexto, ids: list[int]) -> dict[int, tuple[float, 
     return out
 
 
-async def _nombres(ctx: Contexto, ids: list[int]) -> dict[int, str]:
-    """Los nombres para las etiquetas del mapa (con la proyección del rol). Solo para el navegador."""
-    out: dict[int, str] = {}
+async def _filas(ctx: Contexto, ids: list[int]) -> dict[int, dict]:
+    """El nombre (para las etiquetas del mapa, solo para el navegador) y la autorización de cada persona, con la
+    proyección del rol."""
+    out: dict[int, dict] = {}
     for lote in _lotes(ids):
         d = await pedir(ctx, "GET", "/api/personas", params={"ids": ",".join(map(str, lote)), "por_pagina": LOTE_IDS})
         for f in (d.get("filas") if isinstance(d, dict) else None) or []:
-            if isinstance(f, dict) and isinstance(f.get("id"), int) and isinstance(f.get("nombre"), str):
-                out[f["id"]] = f["nombre"][:80]
+            if isinstance(f, dict) and isinstance(f.get("id"), int):
+                out[f["id"]] = {"nombre": f["nombre"][:80] if isinstance(f.get("nombre"), str) else None,
+                                "no_autorizo": f.get("consentimiento") == "no"}
     return out
 
 
@@ -290,8 +304,18 @@ def _camara(a: AccionVolar) -> dict:
     return {k: v for k, v in (("zoom", a.zoom), ("pitch", a.pitch), ("bearing", a.bearing)) if v is not None}
 
 
-def _cifras(total: int, ubicadas: int) -> str:
+def _cifras(cuentas: tuple[int, int] | None) -> str:
+    if cuentas is None:
+        return "sin cifras de quienes no autorizaron"
+    total, ubicadas = cuentas
     return f"{miles(total)} {'persona' if total == 1 else 'personas'}, {miles(ubicadas)} con ubicación"
+
+
+def _con_cifras(out: dict, cuentas: tuple[int, int] | None, total: str, ubicadas: str | None = "ubicadas") -> dict:
+    """`out` con las cifras para el modelo (o la nota de que no las hay)."""
+    if cuentas is None:
+        return {**out, "nota_cifras": SIN_CIFRAS}
+    return {**out, total: cuentas[0], **({ubicadas: cuentas[1]} if ubicadas else {})}
 
 
 async def _volar(ctx: Contexto, a: AccionVolar, plan: _Plan, nom: Perezosa, cuentas: _Cuentas) -> None:
@@ -302,18 +326,18 @@ async def _volar(ctx: Contexto, a: AccionVolar, plan: _Plan, nom: Perezosa, cuen
         return
     lg, otros, parecido = await _resolver(nom, a.lugar, a.lugar_id, a.tipo_lugar)
     plan.navegador.append({"tipo": "volar", "lugar": _destino(lg), **_camara(a)})
-    total, ubicadas = await cuentas({**plan.filtros, "lugar_id": str(lg.id)})
-    plan.modelo.append({"tipo": "volar", **_para_modelo(lg, otros, parecido), "personas_del_lugar": total,
-                        "ubicadas": ubicadas})
-    plan.frases.append(f"Volé a {lg.nombre.title()} ({_cifras(total, ubicadas)})")
+    c = await cuentas({**plan.filtros, "lugar_id": str(lg.id)})
+    plan.modelo.append(_con_cifras({"tipo": "volar", **_para_modelo(lg, otros, parecido)}, c, "personas_del_lugar"))
+    plan.frases.append(f"Volé a {lg.nombre.title()} ({_cifras(c)})")
 
 
 async def _filtros(ctx: Contexto, a: AccionFiltros, plan: _Plan, nom: Perezosa, cuentas: _Cuentas) -> None:
     params, legible = await preparar_filtros(ctx, a.valores, nom)
     plan.navegador.append({"tipo": "filtros", "valores": params, "reemplazar": a.reemplazar})
-    total, ubicadas = await cuentas(params)
-    out: dict[str, Any] = {"tipo": "filtros", "filtros": legible, "reemplazar": a.reemplazar, "personas": total,
-                           "ubicadas": ubicadas}
+    c = await cuentas(params)
+    out: dict[str, Any] = _con_cifras({"tipo": "filtros", "filtros": legible, "reemplazar": a.reemplazar}, c,
+                                      "personas")
+    total, ubicadas = c or (0, 0)
     if total and not ubicadas:
         out["aviso"] = ("Ninguna tiene ubicación: no se verán en el mapa. Para verlas en lista, abra Habitantes con "
                         "los mismos filtros (abrir_vista).")
@@ -323,7 +347,7 @@ async def _filtros(ctx: Contexto, a: AccionFiltros, plan: _Plan, nom: Perezosa, 
         plan.filtros = dict(params)
     plan.modelo.append(out)
     accion = "Quité los filtros" if not params and a.reemplazar else "Filtré"
-    plan.frases.append(f"{accion}: {_cifras(total, ubicadas)}")
+    plan.frases.append(f"{accion}: {_cifras(c)}")
 
 
 async def _capas(ctx: Contexto, a: AccionCapas, plan: _Plan, *_: Any) -> None:
@@ -369,14 +393,19 @@ async def _resaltar(ctx: Contexto, a: AccionResaltar, plan: _Plan, nom: Perezosa
     ids = list(a.persona_ids or [])
     puntos: list[dict] = []
     sin_ubicacion: list[int] = []
+    no_autorizo: set[int] = set()
+    coords: dict[int, tuple[float, float]] = {}
     if ids:
         coords = await _coordenadas(ctx, ids)
-        nombres = await _nombres(ctx, [i for i in ids if i in coords]) if a.etiquetas else {}
+        filas = await _filas(ctx, ids)
+        # De quien no autorizó, el modelo no sabe si tiene ubicación: el mapa la marca si la tiene, pero no cuenta
+        no_autorizo = {i for i, f in filas.items() if f["no_autorizo"]}
         for i in ids:
             if i in coords:
                 lat, lon = coords[i]
-                puntos.append({"id": i, "lat": lat, "lon": lon, **({"etiqueta": nombres[i]} if i in nombres else {})})
-            else:
+                nombre = (filas.get(i) or {}).get("nombre") if a.etiquetas else None
+                puntos.append({"id": i, "lat": lat, "lon": lon, **({"etiqueta": nombre} if nombre else {})})
+            elif i not in no_autorizo:
                 sin_ubicacion.append(i)
         plan.personas |= set(ids)
     out: dict[str, Any] = {"tipo": "resaltar"}
@@ -384,14 +413,22 @@ async def _resaltar(ctx: Contexto, a: AccionResaltar, plan: _Plan, nom: Perezosa
     if a.lugar is not None or a.lugar_id is not None:
         lg, otros, parecido = await _resolver(nom, a.lugar, a.lugar_id, a.tipo_lugar)
         destino = _destino(lg)
-        if lg.tiene_punto:
+        if lg.tiene_punto and len(puntos) < MAX_RESALTAR:
             puntos.append({"lat": lg.lat, "lon": lg.lon, "etiqueta": lg.nombre})
+        elif lg.tiene_punto:  # el mapa rechaza un resalte de más de MAX_RESALTAR puntos (entero, no solo el lugar)
+            out["lugar_sin_marca"] = (f"El lugar no quedó marcado: el mapa resalta como mucho {MAX_RESALTAR} puntos y "
+                                      "ya eran personas. Para marcarlo, pida menos personas.")
         if lg.poligono_en_mapa and not ids:  # resaltar una vereda es encuadrarla completa, no ir a su punto
             volar = {"tipo": "volar", "lugar": destino}
         out.update(_para_modelo(lg, otros, parecido))
     if ids:
-        out.update(pedidas=len(ids), resaltadas=len(ids) - len(sin_ubicacion), sin_ubicacion=sin_ubicacion[:100])
-    if not puntos and volar is None:
+        out.update(pedidas=len(ids), resaltadas=sum(1 for i in ids if i in coords and i not in no_autorizo),
+                   sin_ubicacion=sin_ubicacion[:100])
+        if no_autorizo:
+            out.update(no_autorizaron=len(no_autorizo), nota_autorizacion=(
+                "De quienes no autorizaron el tratamiento de sus datos no se dice si tienen ubicación: el mapa del "
+                "panel las marca si la tienen."))
+    if not puntos and volar is None and not no_autorizo:
         raise ErrorHerramienta("Ninguna de esas personas tiene ubicación en el mapa: no hay nada que resaltar. Se "
                                "ubican desde su ficha.", "sin_ubicacion", estado=409,
                                detalle={"sin_ubicacion": sin_ubicacion[:100]})
@@ -401,8 +438,9 @@ async def _resaltar(ctx: Contexto, a: AccionResaltar, plan: _Plan, nom: Perezosa
         plan.navegador.append({"tipo": "resaltar", "puntos": puntos, **({"color": a.color} if a.color else {}),
                                "encuadrar": a.encuadrar and volar is None, "sumar": a.sumar})
     plan.modelo.append(out)
-    frase = f"Resalté {miles(len(ids) - len(sin_ubicacion))} de {miles(len(ids))}" if ids else "Resalté el lugar"
-    plan.frases.append(frase + (f" ({miles(len(sin_ubicacion))} sin ubicación)" if sin_ubicacion else ""))
+    marcadas = sum(1 for i in ids if i in coords)  # para la interfaz (no va al modelo): lo que de verdad se ve
+    frase = f"Resalté {miles(marcadas)} de {miles(len(ids))}" if ids else "Resalté el lugar"
+    plan.frases.append(frase + (f" ({miles(len(ids) - marcadas)} sin ubicación)" if len(ids) > marcadas else ""))
 
 
 async def _zona(ctx: Contexto, a: AccionZona, plan: _Plan, nom: Perezosa, cuentas: _Cuentas) -> None:
@@ -420,10 +458,11 @@ async def _zona(ctx: Contexto, a: AccionZona, plan: _Plan, nom: Perezosa, cuenta
             raise ErrorHerramienta(f"No existe el área de trabajo #{a.area_id}.", "no_existe", estado=404, detalle={
                 "areas": [{"id": x.get("id"), "nombre": x.get("nombre")} for x in areas[:20]]} if areas else None)
         plan.navegador.append({"tipo": "zona", "area_id": a.area_id})
-        total, ubicadas = await cuentas({**plan.filtros, "area_id": str(a.area_id)})
-        plan.modelo.append({"tipo": "zona", "area": {"id": a.area_id, "nombre": area.get("nombre")},
-                            "personas_dentro": total, "nota": "Dentro del área solo cuentan las personas ubicadas."})
-        plan.frases.append(f"Abrí la zona {area.get('nombre')} ({miles(total)} personas)")
+        c = await cuentas({**plan.filtros, "area_id": str(a.area_id)})
+        plan.modelo.append(_con_cifras({"tipo": "zona", "area": {"id": a.area_id, "nombre": area.get("nombre")},
+                                        "nota": "Dentro del área solo cuentan las personas ubicadas."}, c,
+                                       "personas_dentro", None))
+        plan.frases.append(f"Abrí la zona {area.get('nombre')}" + (f" ({miles(c[0])} personas)" if c else ""))
         return
     lg, otros, parecido = await _resolver(nom, a.lugar, a.lugar_id, a.tipo_lugar)
     if not lg.poligono_en_mapa:
@@ -434,10 +473,9 @@ async def _zona(ctx: Contexto, a: AccionZona, plan: _Plan, nom: Perezosa, cuenta
                                    "como zona. Use volar para ir a su punto.", "invalido", estado=422)
         lg, otros = con_poligono[0], [o for o in (lg, *otros) if o.id != con_poligono[0].id]
     plan.navegador.append({"tipo": "zona", "lugar_id": lg.id})
-    total, ubicadas = await cuentas({**plan.filtros, "lugar_id": str(lg.id)})
-    plan.modelo.append({"tipo": "zona", **_para_modelo(lg, otros, parecido), "personas_del_lugar": total,
-                        "ubicadas": ubicadas})
-    plan.frases.append(f"Abrí {lg.nombre.title()} como zona ({_cifras(total, ubicadas)})")
+    c = await cuentas({**plan.filtros, "lugar_id": str(lg.id)})
+    plan.modelo.append(_con_cifras({"tipo": "zona", **_para_modelo(lg, otros, parecido)}, c, "personas_del_lugar"))
+    plan.frases.append(f"Abrí {lg.nombre.title()} como zona ({_cifras(c)})")
 
 
 MANEJADORES = {"volar": _volar, "filtros": _filtros, "capas": _capas, "base": _base, "hexagono": _hexagono,
@@ -525,7 +563,8 @@ class AbrirVistaEntrada(_Entrada):
     orden: Literal[ORDENES] | None = Field(None, description="habitantes: orden de la lista")
     area_id: Id | None = Field(None, description="habitantes y mapa: un área de trabajo (en el mapa se abre como zona)")
     ids: list[Id] | None = Field(None, min_length=1, max_length=500, description="habitantes: solo estas personas "
-                                                                                "(administrador y coordinador)")
+                                                                                "(administrador y coordinador; caben "
+                                                                                "unas 60: para más, filtros o el mapa)")
     pestana: Literal[PESTANAS] | None = Field(None, description="calidad: la pestaña")
     uid: IdOCero | None = Field(None, description="trabajo: el de otro usuario (administrador y coordinador)")
 
@@ -599,7 +638,13 @@ async def _abrir_vista(ctx: Contexto, a: AbrirVistaEntrada) -> Resultado:
         params = {"uid": str(a.uid)}
     if not any(re.fullmatch(p, ruta) for p in RUTAS_PANEL):  # nunca debería pasar: las rutas son las de la tabla
         raise ErrorHerramienta("Esa vista no existe en el panel.", "invalido", estado=422)
-    completa = ruta + (f"?{urlencode(params)}" if params else "")
+    consulta = f"?{urlencode(params)}" if params else ""
+    if len(consulta) > MAX_CONSULTA:  # el widget no la abriría: mejor decirlo que dar por abierta la vista
+        raise ErrorHerramienta(
+            "La vista no cabe en la dirección del panel (demasiadas personas en ids o una búsqueda muy larga): no se "
+            "abrió nada. Use filtros en vez de la lista de ids, o el mapa con resaltar para mostrarlas.", "invalido",
+            estado=422, detalle={"caracteres": len(consulta), "maximo": MAX_CONSULTA})
+    completa = ruta + consulta
     contenido = {"ruta": completa, "vista": v.nombre,
                  "nota": "La vista se abre en el panel de la persona; lo que muestra no llega al asistente."}
     return Resultado(contenido, f"Abrí {v.nombre}", acciones=[{"tipo": "navegar", "ruta": completa}])
@@ -615,7 +660,8 @@ D_MAPA = (
     "auto, 150, 400 o 1000 m); recorrido (municipio, casco, tigre); giro; resaltar personas (persona_ids, de "
     "buscar_personas) o un lugar, con un color #rrggbb; limpiar; zona (abrir un área de trabajo o una vereda como "
     "zona, o cerrarla). Devuelve qué quedó en pantalla y cuántas personas cumplen los filtros y cuántas tienen "
-    "ubicación (solo esas se ven). Si un lugar es ambiguo o no existe no mueve nada y devuelve los candidatos. Los "
+    "ubicación (solo esas se ven), sin contar a quienes no autorizaron el tratamiento de sus datos (de ellos no "
+    "llegan cifras). Si un lugar es ambiguo o no existe no mueve nada y devuelve los candidatos. Los "
     "nombres y coordenadas de las personas van solo al mapa, nunca a usted. Solo administrador y coordinador.")
 D_ABRIR_VISTA = (
     "Abre una vista del panel en el navegador de la persona: panel (indicadores), mapa (con filtros o un área), "

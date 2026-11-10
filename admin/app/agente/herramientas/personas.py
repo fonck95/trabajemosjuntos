@@ -19,7 +19,9 @@ Por qué está hecho así:
   tarjeta deja en la entrada huellas (HMAC) de los valores que mostró, nunca los valores: la entrada pendiente se
   guarda con la conversación.
 * De quien no autorizó el tratamiento el asistente no escribe nada salvo su autorización: sus datos no se le pasan al
-  modelo, y escribirlos sería tratarlos a través de él. Se hace en la ficha del panel.
+  modelo, y escribirlos sería tratarlos a través de él. Se hace en la ficha del panel. Al aprobar se vuelve a leer la
+  ficha (pudo dejar de autorizar después de la tarjeta), salvo en un reintento de lo ya hecho (`_ya_hecha`). Tampoco
+  sale en una búsqueda con filtros o con un orden que diría algo de ella (`revela_datos`).
 * Las entradas vienen de un LLM: modelos pydantic con los topes y los valores válidos de la API, `extra="forbid"` (una
   clave mal escrita es un error visible, no una búsqueda sin filtros que gasta el presupuesto) y validaciones cruzadas
   con mensajes que dicen cómo corregir.
@@ -230,10 +232,22 @@ def _seguro(e: ErrorHerramienta) -> ErrorHerramienta:
 
 async def _pedir(ctx: Contexto, metodo: str, ruta: str, *, params: dict | None = None, cuerpo: Any = None,
                  clave: str | None = None) -> Any:
+    plazo = ctx.plazo_escritura() if metodo != "GET" else None
     try:
-        return await ctx.api.pedir(metodo, ruta, params=params, json_=cuerpo, clave=clave)
+        return await ctx.api.pedir(metodo, ruta, params=params, json_=cuerpo, clave=clave, plazo=plazo)
     except ErrorHerramienta as e:
         raise _seguro(e) from None
+
+
+def _hecha(db: Any, uid: Any, clave: str) -> bool:
+    return db.idempotencia.find_one({"_id": f"{uid}:{clave}", "estado": "hecho"}, {"_id": 1}) is not None
+
+
+async def _ya_hecha(ctx: Contexto, clave: str | None) -> bool:
+    """¿La API ya guardó la respuesta de esta escritura (`acceso.idempotencia_previa`, la misma clave del mismo
+    `tool_use`)? Entonces es un reintento (la aprobación se repitió tras un turno cortado): se manda tal cual y la API
+    devuelve lo guardado, sin volver a revisar una ficha que la primera ejecución pudo cambiar."""
+    return bool(clave) and await run_in_threadpool(_hecha, ctx.db, ctx.quien.uid, clave)
 
 
 async def _ficha(ctx: Contexto, pid: int) -> dict:
@@ -497,6 +511,33 @@ def _busca_lista(a: BuscarEntrada) -> bool:
         a.model_fields_set or not a.q
 
 
+# De quien no autorizó al modelo le llega solo quién es y su barrio o vereda (`minimizar.no_autorizo`). Una lista con
+# otro filtro (sexo, edad, una necesidad, lo que le falta…) o con un orden que no sea por nombre o por lugar le diría
+# más: cada filtro que casa es un dato suyo. Por eso, con esos filtros u órdenes, la lista va sin quienes no
+# autorizaron (`tratables`), y combinarlos con `consentimiento: no` no se puede
+FILTROS_SIN_DATOS = frozenset({"consentimiento", "lugar_id", "zona"})
+ORDENES_SIN_DATOS = (None, "nombre", "lugar")
+SIN_NO_AUTORIZARON = ("Sin quienes no autorizaron el tratamiento de sus datos: con filtros (o con ese orden) el "
+                      "asistente no los cuenta ni los ve. En Habitantes del panel sí salen.")
+NO_AUTORIZO_CON_FILTROS = ("De quien no autorizó el tratamiento de sus datos el asistente solo sabe quién es y su "
+                           "barrio o vereda: con consentimiento «no» use solo lugar_id o zona, ordenado por nombre o "
+                           "por lugar. Para lo demás, la persona del equipo abre Habitantes en el panel.")
+
+
+def revela_datos(campos: set[str], orden: str | None, sin_datos: frozenset[str] = FILTROS_SIN_DATOS) -> bool:
+    """¿Esos filtros (los nombres de los que trae la entrada) o ese orden dirían algo de quien no autorizó?"""
+    return bool(campos - sin_datos) or orden not in ORDENES_SIN_DATOS
+
+
+def campos_de(f: Any) -> set[str]:
+    """Los filtros que de verdad trae una entrada de filtros: sin los vacíos ni las banderas que solo valen con true
+    (`tratables: false` no filtra nada)."""
+    if f is None:
+        return set()
+    return {k for k, v in f.model_dump(exclude_none=True).items()
+            if v not in ([], "") and not (k in _SOLO_SI and v is False)}
+
+
 def _resumen_conteo(n: int, pagina: int | None = None, paginas: int | None = None) -> str:
     base = "Sin resultados" if n == 0 else "1 persona" if n == 1 else f"{_miles(n)} personas"
     return f"{base} · página {pagina} de {paginas}" if n and paginas and paginas > 1 else base
@@ -513,8 +554,13 @@ async def _buscar(ctx: Contexto, a: BuscarEntrada) -> Resultado:
             raise ErrorHerramienta(
                 "Su rol no lista ni filtra la base: busque por nombre (3 letras o más) o por el número completo de 10 "
                 "dígitos, o trabaje su cola en Mi trabajo.", "permiso", estado=403)
+        sin_ellos = revela_datos(campos_de(a.filtros), a.orden)
+        if sin_ellos and a.filtros is not None and a.filtros.consentimiento == "no":
+            raise ErrorHerramienta(NO_AUTORIZO_CON_FILTROS, "invalido", estado=422)
         params = {"q": a.q, **params_filtros(a.filtros), "orden": a.orden or "nombre", "pagina": a.pagina,
                   "por_pagina": a.por_pagina}
+        if sin_ellos:
+            params["tratables"] = 1
         d = await _pedir(ctx, "GET", "/api/personas", params=params)
         d = d if isinstance(d, dict) else {}
         fs, numerica = _sin_digitos_enmascarados(minimizar.filas(d.get("filas") or []), a.q)
@@ -524,6 +570,8 @@ async def _buscar(ctx: Contexto, a: BuscarEntrada) -> Resultado:
                      "paginas": paginas, "filas": fs}
         if numerica:
             contenido["nota"] = SIN_DIGITOS_ENMASCARADOS
+        if sin_ellos:
+            contenido["nota_autorizacion"] = SIN_NO_AUTORIZARON
         if not quien.administra:
             contenido["alcance"] = "Solo personas de su zona asignada (si tiene una)."
         return Resultado(contenido, _resumen_conteo(total, contenido["pagina"], paginas), personas=minimizar.ids_de(fs))
@@ -558,7 +606,9 @@ BUSCAR = Herramienta(
         "con el `total`; el planillero solo ve su zona asignada.\n"
         "Devuelve {tipo, total, pagina, filas}. Cada fila trae id, nombre, lugar, autorización, abordaje, completitud "
         "y lo que le falta; cédula y teléfono enmascarados («···123», «···2233»): no intentes reconstruirlos. De quien "
-        "no autorizó solo sale que no autorizó. `por_pagina` de 10 a 50. Cada persona mostrada cuenta en el tope "
+        "no autorizó solo sale que no autorizó: con filtros (salvo barrio o vereda) o con un orden que no sea por "
+        "nombre o por lugar, la lista no lo trae ni lo cuenta; para saber quiénes no autorizaron, filtra solo por "
+        "`consentimiento: no` (y su barrio o vereda). `por_pagina` de 10 a 50. Cada persona mostrada cuenta en el tope "
         "diario de consultas del planillero y del consultor: pide solo lo necesario y, para saber cuántas son, usa el "
         "total de la primera página en vez de recorrerlas."),
     entrada=BuscarEntrada, tipo="lectura", permisos=("personas.buscar",), etiqueta="Buscando habitantes",
@@ -745,7 +795,8 @@ async def _confirmar_crear(ctx: Contexto, a: CrearEntrada) -> Confirmacion:
 async def _crear(ctx: Contexto, a: CrearEntrada) -> Resultado:
     await _revisar_crear(ctx, a)
     try:
-        d = await ctx.api.pedir("POST", "/api/personas", json_=_cuerpo_crear(a), clave=_clave(ctx))
+        d = await ctx.api.pedir("POST", "/api/personas", json_=_cuerpo_crear(a), clave=_clave(ctx),
+                                plazo=ctx.plazo_escritura())
     except ErrorHerramienta as e:
         if e.codigo != "parecidas":
             raise _seguro(e) from None
@@ -909,16 +960,24 @@ def _vacio(v: Any) -> bool:
     return v is None or (isinstance(v, str) and not v.strip()) or v in ([], {})
 
 
-def _igual(campo: str, actual: Any, nuevo: Any) -> bool:
+def _igual(campo: str, actual: Any, nuevo: Any, exacto: bool = False) -> bool:
+    """¿El cambio deja el valor como ya está? Con `exacto` (modo reemplazar, una corrección) se compara como la API
+    (`poner`): el nombre como se guarda (`nombre_visible`, con sus tildes) y los demás textos tal cual, así se pueden
+    corregir tildes y mayúsculas. Sin él (modo completar) una variante con otras tildes o mayúsculas no es un dato
+    nuevo: ni lo llena ni queda como alterno."""
     if _vacio(actual):
         return False
     if campo == "nombre":
+        if exacto:
+            return tx.nombre_visible(actual) == tx.nombre_visible(nuevo)
         return tx.nombre_norm(actual) == tx.nombre_norm(nuevo)
     if campo == "cedula":
         return re.sub(r"[\W_]", "", str(actual)).upper() == re.sub(r"[\W_]", "", str(nuevo)).upper()
     if campo == "mesa":
         return str(actual).strip() == str(nuevo) or modelo.normalizar_mesa(actual) == nuevo
     if isinstance(actual, str) and isinstance(nuevo, str):
+        if exacto and campo != "puesto_texto":  # el puesto escrito se reconoce contra el catálogo: no es literal
+            return actual.strip() == nuevo.strip()
         return tx.limpiar(actual) == tx.limpiar(nuevo)
     if isinstance(actual, bool) or isinstance(nuevo, bool):
         return actual is nuevo
@@ -976,10 +1035,12 @@ def _plan(d: dict, a: EditarEntrada, nombres_et: dict[int, str] | None = None,
             continue
         actual = _actual(d, campo)
         despues = nombre_puesto if (campo == "puesto_id" and nombre_puesto) else _mostrar(campo, nuevo)
+        if campo == "nombre":
+            despues = tx.nombre_visible(nuevo)  # como queda guardado (`_limpiar_simple` de la API)
         antes = _mostrar(campo, actual, antes=True)
         if campo == "puesto_id" and not _vacio(actual):
             antes = _mostrar(campo, _votacion(d).get("puesto_nombre") or actual)
-        if _igual(campo, actual, nuevo):
+        if _igual(campo, actual, nuevo, exacto=a.modo == "reemplazar"):
             efecto = "igual"
         elif _vacio(actual):
             efecto = "llenar"
@@ -1153,10 +1214,22 @@ async def _confirmar_nota(ctx: Contexto, a: NotaEntrada) -> Confirmacion:
     return Confirmacion(f"Agregar una nota a {_persona(d)}", detalle)
 
 
+async def _tratable_al_escribir(ctx: Contexto, pid: int, clave: str | None) -> dict | None:
+    """La ficha recién leída, si la persona sigue tratable al aprobar (pudo decir que no autoriza después de la
+    tarjeta; la API no frena a A ni a K). None si es un reintento de una escritura ya hecha (`_ya_hecha`)."""
+    if await _ya_hecha(ctx, clave):
+        return None
+    d = await _ficha(ctx, pid)
+    _exigir_tratable(d)
+    return d
+
+
 async def _nota(ctx: Contexto, a: NotaEntrada) -> Resultado:
-    await _reunion_visible(ctx, a.reunion_id)  # la API guarda el id sin revisar que la reunión sea visible
+    clave = _clave(ctx)
+    if await _tratable_al_escribir(ctx, a.persona_id, clave) is not None:
+        await _reunion_visible(ctx, a.reunion_id)  # la API guarda el id sin revisar que la reunión sea visible
     d = await _pedir(ctx, "POST", f"/api/personas/{a.persona_id}/notas",
-                     cuerpo={"texto": a.texto, "reunion_id": a.reunion_id}, clave=_clave(ctx))
+                     cuerpo={"texto": a.texto, "reunion_id": a.reunion_id}, clave=clave)
     d = d if isinstance(d, dict) else {}
     notas = d.get("notas") if isinstance(d.get("notas"), list) else None
     contenido = {"guardada": True, "persona": _breve(d) or {"id": a.persona_id},
@@ -1195,12 +1268,21 @@ class AcercamientoEntrada(_Entrada):
     proximo_franja: Literal[tuple(modelo.FRANJAS)] | None = Field(None, description="Con volver_llamar")
     se_fue_del_municipio: bool = Field(False, description="Con no_vive_aqui: ya no vive en Yondó")
     solicitud_tipo: Literal["consulta", "correccion", "supresion", "otro"] | None = Field(
-        None, description="Con solicitud_derechos: qué pidió sobre sus datos")
+        None, description="Obligatorio con solicitud_derechos: qué pidió sobre sus datos (consulta, correccion, "
+                          "supresion u otro); pregúntalo si no lo dijeron")
+    # La huella del número que mostró la tarjeta: la pone `confirmar` (el modelo no la ve). Al aprobar se marca ese
+    # número, aunque su `indice` haya cambiado
+    huellas: SkipJsonSchema[dict[str, str] | None] = None
 
     @field_validator("proximo")
     @classmethod
     def _p(cls, v):
         return _fecha(v, futura=True)
+
+    @field_validator("huellas")
+    @classmethod
+    def _h(cls, v):
+        return _huellas_validas(v, frozenset({"telefono"}))
 
     @model_validator(mode="after")
     def _coherente(self):
@@ -1223,6 +1305,9 @@ class AcercamientoEntrada(_Entrada):
             raise ValueError("se_fue_del_municipio solo va con resultado no_vive_aqui")
         if self.solicitud_tipo and r != "solicitud_derechos":
             raise ValueError("solicitud_tipo solo va con resultado solicitud_derechos")
+        if r == "solicitud_derechos" and not self.solicitud_tipo:
+            raise ValueError("Con solicitud_derechos indique solicitud_tipo (consulta, correccion, supresion u otro): "
+                             "el tipo decide el plazo legal. Si no lo dijeron, pregúntelo")
         if self.confirma_numero and (r != "contesto" or self.telefono_indice is None):
             raise ValueError("confirma_numero solo va con resultado contesto y telefono_indice")
         return self
@@ -1253,21 +1338,30 @@ def _exigir_canal(ctx: Contexto, a: AcercamientoEntrada) -> None:
         raise ErrorHerramienta("El consultor registra llamadas y mensajes.", "permiso", estado=403)
 
 
+def _usables(d: dict) -> list[dict]:
+    """Los teléfonos usables de la ficha, con su `indice` (el de `_telefono_elegido` de la API)."""
+    return [t for t in d.get("telefonos") or [] if isinstance(t, dict) and isinstance(t.get("indice"), int)]
+
+
+MENSAJE_NUMERO_CAMBIADO = ("El número que mostró la tarjeta ya no está entre los que se pueden usar en la ficha (otra "
+                           "persona lo cambió): no se registró nada. Vuelva a leer la ficha y, si hace falta, proponga "
+                           "el acercamiento de nuevo.")
+
+
 async def _confirmar_acercamiento(ctx: Contexto, a: AcercamientoEntrada) -> Confirmacion:
     _exigir_canal(ctx, a)
     d = await _ficha(ctx, a.persona_id)
     _exigir_tratable(d)
     detalle = [("Persona", _persona(d)), ("Canal", modelo.CANALES[a.canal])]
     if a.telefono_indice is not None:
-        t = next((t for t in d.get("telefonos") or [] if isinstance(t, dict) and t.get("indice") == a.telefono_indice),
-                 None)
+        t = next((t for t in _usables(d) if t.get("indice") == a.telefono_indice), None)
         if t is None:
-            usables = sorted(t.get("indice") for t in d.get("telefonos") or []
-                             if isinstance(t, dict) and isinstance(t.get("indice"), int))
+            usables = sorted(t.get("indice") for t in _usables(d))
             raise ErrorHerramienta(f"La ficha no tiene un número usable con indice {a.telefono_indice}"
                                    + (f" (los usables: {usables})." if usables else ": no tiene números usables."),
                                    "invalido", estado=422)
         detalle.append(("Número", acceso.enmascarar_telefono(t.get("numero")) or "(sin número)"))
+        a.huellas = {"telefono": _huella(await _clave_huellas(ctx), "telefono", t.get("numero"))}
     detalle.append(("Resultado", modelo.etiqueta_resultado(a.resultado, a.canal)))
     if a.confirma_numero:
         detalle.append(("Confirmó que el número es suyo", "Sí"))
@@ -1279,19 +1373,36 @@ async def _confirmar_acercamiento(ctx: Contexto, a: AcercamientoEntrada) -> Conf
     if a.se_fue_del_municipio:
         detalle.append(("Se fue del municipio", "Sí"))
     if a.solicitud_tipo:
-        detalle.append(("Qué pidió", a.solicitud_tipo))
+        detalle.append(("Qué pidió", f"{modelo.TIPOS_SOLICITUD[a.solicitud_tipo]} · plazo de "
+                                     f"{modelo.PLAZOS_SOLICITUD[a.solicitud_tipo]} días hábiles"))
     if a.nota:
         detalle.append(("Nota", a.nota))
     return Confirmacion(f"Registrar un acercamiento con {_persona(d)}", detalle, _aviso_acercamiento(a))
 
 
+async def _numero_de_la_tarjeta(ctx: Contexto, d: dict, huella: str) -> str:
+    """El número usable de la ficha recién leída que mostró la tarjeta (por su huella): su `indice` pudo correrse
+    entre la tarjeta y la aprobación (un número nuevo como principal, otro marcado como equivocado)."""
+    clave = await _clave_huellas(ctx)
+    t = next((t for t in _usables(d) if _huella(clave, "telefono", t.get("numero")) == huella), None)
+    if t is None or not t.get("numero"):
+        raise ErrorHerramienta(MENSAJE_NUMERO_CAMBIADO, "cambiada", estado=409, detalle={"campos": ["telefono"]})
+    return str(t["numero"])
+
+
 async def _acercamiento(ctx: Contexto, a: AcercamientoEntrada) -> Resultado:
     _exigir_canal(ctx, a)
-    cuerpo = a.model_dump(exclude_none=True, exclude={"persona_id"})
+    clave = _clave(ctx)
+    cuerpo = a.model_dump(exclude_none=True, exclude={"persona_id", "huellas"})
     for k in ("confirma_numero", "se_fue_del_municipio"):
         if not cuerpo.get(k):
             cuerpo.pop(k, None)
-    d = await _pedir(ctx, "POST", f"/api/personas/{a.persona_id}/acercamientos", cuerpo=cuerpo, clave=_clave(ctx))
+    d = await _tratable_al_escribir(ctx, a.persona_id, clave)
+    if d is not None and a.telefono_indice is not None and (a.huellas or {}).get("telefono"):
+        # Se manda el número (la API lo acepta en `telefono`), no el índice: es el que la persona vio y aprobó
+        cuerpo.pop("telefono_indice")
+        cuerpo["telefono"] = await _numero_de_la_tarjeta(ctx, d, a.huellas["telefono"])
+    d = await _pedir(ctx, "POST", f"/api/personas/{a.persona_id}/acercamientos", cuerpo=cuerpo, clave=clave)
     d = d if isinstance(d, dict) else {}
     f = minimizar.ficha(d)
     contenido = {"registrado": True, "acercamiento_id": d.get("acercamiento_id"), "persona": _breve(d),
@@ -1308,7 +1419,8 @@ ACERCAMIENTO = Herramienta(
         "registra visitas y reuniones; el consultor, llamadas y mensajes, solo a personas de su trabajo que se puedan "
         "contactar. "
         "En llamada, WhatsApp o SMS indica `telefono_indice` (el `indice` del teléfono en ver_persona). `no_contactar` "
-        "exige `alcance`; `proximo` y `proximo_franja` solo van con «volver_llamar». Para una nota suelta usa "
+        "exige `alcance`; `solicitud_derechos`, `solicitud_tipo` (consulta, correccion, supresion u otro: pregúntalo "
+        "si no lo dijeron); `proximo` y `proximo_franja` solo van con «volver_llamar». Para una nota suelta usa "
         "agregar_nota. Devuelve el abordaje actualizado."),
     entrada=AcercamientoEntrada, tipo="escritura", permisos=("acercamientos.registrar",),
     etiqueta="Registrando el acercamiento", ejecutar=_acercamiento, confirmar=_confirmar_acercamiento,
@@ -1321,8 +1433,9 @@ class AutorizacionEntrada(_Entrada):
     persona_id: Id
     estado: Literal["si", "no", "revocada", "pendiente"] = Field(
         ..., description="si, no, revocada o pendiente (pendiente solo administrador y coordinador)")
-    medio: Literal[MEDIOS] | None = Field(None, description="Cómo autorizó: planillero escrito, verbal_presencial o "
-                                                            "formulario; consultor verbal_telefono o mensaje")
+    medio: Literal[MEDIOS] | None = Field(None, description="Cómo autorizó (obligatorio con si): planillero escrito, "
+                                                            "verbal_presencial o formulario; consultor "
+                                                            "verbal_telefono o mensaje")
     canales: list[Literal[tuple(modelo.CANALES_AUTORIZACION)]] = Field(
         default_factory=list, max_length=len(modelo.CANALES_AUTORIZACION), description="Canales que autorizó (con si)")
     evidencia: str | None = Field(None, min_length=3, max_length=500, description="Dónde consta: planilla y folio, "
@@ -1344,9 +1457,19 @@ class AutorizacionEntrada(_Entrada):
 
 def _exigir_autorizacion(ctx: Contexto, a: AutorizacionEntrada) -> None:
     """Las reglas de `validar_autorizacion` para P y C que dependen solo de la entrada: si falta algo, el modelo lo
-    pregunta en vez de proponer algo que la API rechazaría ya aprobado."""
+    pregunta en vez de proponer algo que la API rechazaría ya aprobado. A y K también dicen el medio y los canales de
+    un «sí»: sin ellos la API lo registraría como «del panel» con llamada, WhatsApp y SMS implícitos, canales que nadie
+    dictó ni vio en la tarjeta."""
     q = ctx.quien
     if q.administra:
+        faltan = []
+        if a.estado == "si" and a.medio is None:
+            faltan.append("el medio (" + ", ".join(MEDIOS) + ")")
+        if a.estado == "si" and not a.canales:
+            faltan.append("al menos un canal autorizado")
+        if faltan:
+            raise ErrorHerramienta("Para registrar el «sí» falta " + "; ".join(faltan) + ". Pregúntelo; no lo "
+                                   "suponga.", "invalido", estado=422)
         return
     if a.estado == "pendiente":
         raise ErrorHerramienta("Solo el administrador o el coordinador corrigen una autorización a «pendiente».",
@@ -1414,10 +1537,11 @@ AUTORIZACION = Herramienta(
         "Propone registrar la autorización de tratamiento de datos del titular (Ley 1581): «si», «no», «revocada» o "
         "«pendiente» (esta, solo administrador y coordinador). Registra SOLO lo que la persona del equipo te dicte "
         "que el titular declaró: nunca inventes ni supongas el medio, la evidencia, los canales ni que es mayor de "
-        "edad. Un «si» del planillero o del consultor exige el medio de su rol (planillero: escrito, "
-        "verbal_presencial o formulario; consultor: verbal_telefono o mensaje), `evidencia`, al menos un canal y "
-        "`mayor_declarado: true` solo si lo declaró; si falta algo, pregúntalo antes. Es lo único que se puede "
-        "registrar de quien no autorizó (su «sí»). Se registra solo si la persona del equipo lo aprueba."),
+        "edad. Todo «si» exige el `medio` y al menos un canal en `canales`; el del planillero o del consultor, además, "
+        "el medio de su rol (planillero: escrito, verbal_presencial o formulario; consultor: verbal_telefono o "
+        "mensaje), `evidencia` y `mayor_declarado: true` solo si lo declaró; si falta algo, pregúntalo antes. Es lo "
+        "único que se puede registrar de quien no autorizó (su «sí»). Se registra solo si la persona del equipo lo "
+        "aprueba."),
     entrada=AutorizacionEntrada, tipo="escritura", permisos=("personas.autorizacion",),
     etiqueta="Registrando la autorización", ejecutar=_autorizacion, confirmar=_confirmar_autorizacion,
     esquema=esquema(AutorizacionEntrada))
@@ -1552,8 +1676,10 @@ async def _confirmar_telefono(ctx: Contexto, a: TelefonoEntrada) -> Confirmacion
 
 
 async def _telefono(ctx: Contexto, a: TelefonoEntrada) -> Resultado:
+    clave = _clave(ctx)
+    await _tratable_al_escribir(ctx, a.persona_id, clave)
     cuerpo = a.model_dump(exclude_none=True, exclude={"persona_id"})
-    d = await _pedir(ctx, "POST", f"/api/personas/{a.persona_id}/telefonos", cuerpo=cuerpo, clave=_clave(ctx))
+    d = await _pedir(ctx, "POST", f"/api/personas/{a.persona_id}/telefonos", cuerpo=cuerpo, clave=clave)
     d = d if isinstance(d, dict) else {}
     f = minimizar.ficha(d)
     contenido = {"agregado": True, "persona": _breve(d) or {"id": a.persona_id},
