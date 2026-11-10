@@ -363,17 +363,18 @@ def test_ver_reunion_con_asistentes_minimizados(sesion, como, ctx_de):
     ctx = ctx_de(sesion)
     r = _ej(sesion, ctx, "ver_reunion", {"reunion_id": rid})
     c = r.contenido
-    assert c["asistentes_total"] == 2 and r.personas == {rica} and r.resumen == "2 asistentes"
+    assert c["asistentes_total"] == 1 and r.personas == {rica} and r.resumen == "1 asistente"
     fila = next(f for f in c["asistentes"] if f["id"] == rica)
     assert fila["nombre"] == "CRESCENCIA INVENTADA RICA" and fila["cedula_ult3"] == "···777"
-    # Quien no autorizó no se lista: que asistió a la reunión es un dato suyo
-    assert [f["id"] for f in c["asistentes"]] == [rica] and "no se listan" in c["aviso"]
+    # Quien no autorizó no se lista ni se cuenta: que asistió a la reunión es un dato suyo (la nota va siempre)
+    assert [f["id"] for f in c["asistentes"]] == [rica] and "aviso" not in c
+    assert "ni se listan" in c["nota_autorizacion"]
     assert c["descripcion"] == "Avisar al ···022" and c["compromisos"] == "Arreglar la vía"
     assert {x["nombre"] for x in c["necesidades"]} == {"Vivienda"}  # sin Discapacidad ni Líder comunitario
     sin_datos(_modelo(r), "93000888", "3001231234", "Líder")
     # Con asistentes=0: los datos básicos y los conteos, sin servir ni consultar a nadie
     r = _ej(sesion, ctx, "ver_reunion", {"reunion_id": rid, "asistentes": 0})
-    assert r.contenido["asistentes"] == [] and r.contenido["asistentes_total"] == 2 and r.personas == set()
+    assert r.contenido["asistentes"] == [] and r.contenido["asistentes_total"] == 1 and r.personas == set()
     assert r.contenido["titulo"] == "Reunión con asistentes inventados" and "descripcion" not in r.contenido
     assert _falla_ej(sesion, ctx, "ver_reunion", {"reunion_id": 9999}).codigo == "no_existe"
     assert _falla_ej(sesion, ctx, "ver_reunion", {"reunion_id": 9999, "asistentes": 0}).codigo == "no_existe"
@@ -528,7 +529,9 @@ def test_pendientes_por_rol_en_conteos(sesion, como, ctx_de):
         assert [x["id"] for x in s["proximas"]][:2] == [ids[0], ids[1]] and s["proximas"][0]["vencida"] is True
         assert c["calidad"]["lugares_sin_punto"]["lugares"] == 1
         assert c["calidad"]["lugares_sin_punto"]["principales"][0]["nombre"] == "LA PAZ"
-        assert "lugares_sin_reconocer" in c["calidad"] and r.personas == {pid}
+        # Sin de quién es cada solicitud: es un dato de esa persona (test_remate_herramientas)
+        assert "lugares_sin_reconocer" in c["calidad"] and r.personas == set()
+        assert not any("persona_id" in x for x in s["proximas"])
         assert r.resumen.startswith("Solicitudes: 3 (1 vencidas)")
         sin_datos(_modelo(r), "3107778899", "SOLICITANTE", "Corrijan")
     # Planillero y consultor: solo lo de su trabajo
@@ -586,11 +589,14 @@ def test_equipo_sin_sesiones_ip_ni_telefonos(sesion, como, ctx_de):
     for cli in (sesion, coordinador(app, db)):
         r = _ej(sesion, ctx_de(cli), "equipo", {"avance": "lugar"})
         usuarios = {u["usuario"]: u for u in r.contenido["usuarios"]}
+        # Lo que hizo cada uno con las personas y las cifras de cada lugar, sin contar a quienes no autorizaron
+        # (test_remate_cierre)
         assert usuarios[p.usuario]["planillero"]["creadas_netas"] == 1 and "consultor" in usuarios[c.usuario]
         assert usuarios[p.usuario]["asignacion"] == {"lugares": 1, "areas": 0}
         assert r.contenido["totales"]["planilleros_activos"] == 1 and r.contenido["totales"]["creadas_netas"] == 1
         fila = next(f for f in r.contenido["avance"]["filas"] if f["id"] == lugar)
         assert fila["personas"] == 1 and fila["pct_cedula"] == 100 and p.usuario in fila["responsables"]
+        assert "no autorizaron" in r.contenido["nota_autorizacion"]
         texto = r.texto_para_modelo()
         assert "3201112233" not in texto and "ultimo_ingreso" not in texto
         sin_datos(_modelo(r))

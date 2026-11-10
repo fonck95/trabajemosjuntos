@@ -4,7 +4,8 @@ La asistencia vive dentro de cada persona (`asistencias`), así su historial se 
 acercamiento (4.4): agregar a alguien crea un acercamiento automático y quitarlo (o borrar la reunión) lo anula.
 
 * A y K ven y editan todas; A (o K) marca `abierta_a_equipo`. P ve las suyas y las abiertas al equipo y, de las demás,
-  solo cuántas hay (cabecera `X-Reuniones-Ajenas`). La lista de asistentes usa la proyección de fila del rol.
+  solo cuántas hay (cabecera `X-Reuniones-Ajenas`). La lista de asistentes usa la proyección de fila del rol. El
+  asistente lista las reuniones con `tratables`: sus conteos no cuentan a quien no autorizó.
 * Toda escritura sobre la persona exige que la ficha siga activa y que se pueda tratar (`exigir_tratable`).
 """
 from __future__ import annotations
@@ -109,11 +110,16 @@ def _reunion(db: Database, rid: int, quien: Quien) -> dict:
 
 
 @r.get("")
-def listar(response: Response, db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("reuniones.ver"))):
+def listar(response: Response, tratables: int = 0, db: Database = Depends(obtener_db),
+           quien: Quien = Depends(requiere("reuniones.ver"))):
+    """Las reuniones que el rol ve, con cuántos asistieron y cuántas personas nuevas se registraron en cada una. Con
+    `tratables` (el asistente), los conteos no cuentan a quien no autorizó: que asistió es un dato suyo."""
     conteo = Counter()
     nuevos = Counter()  # personas que se registraron en esa reunión (no en otra a la que también asistieron)
     proy = {"asistencias.reunion_id": 1, "asistencias.creado_en": 1, "fuentes": 1, "reunion_origen": 1}
-    for p in db.personas.find({**bd.ACTIVA, "asistencias.0": {"$exists": True}}, proy):
+    asistieron = {**bd.ACTIVA, "asistencias.0": {"$exists": True},
+                  **({"consentimiento": {"$ne": "no"}} if tratables else {})}
+    for p in db.personas.find(asistieron, proy):
         for a in p["asistencias"]:
             conteo[a["reunion_id"]] += 1
         origen = p.get("reunion_origen")

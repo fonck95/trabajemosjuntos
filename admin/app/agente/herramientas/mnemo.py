@@ -373,6 +373,9 @@ def _herramienta(d: dict, nombre: str) -> Herramienta:
 # ───────────────────────────── Escrituras: la tarjeta ─────────────────────────────
 
 def _valor(v: Any) -> str:
+    """El valor de un argumento como se manda: un texto tal cual (con sus caracteres de control, si los trae: la tarjeta
+    no lo ofrece, `bucle._tarjeta`, en vez de mostrar otra cosa que lo que se escribe), lo demás en JSON. Lo que pasa
+    de `DETALLE_VALOR` se marca como recortado y tampoco se ofrece."""
     if isinstance(v, str):
         t = v
     elif isinstance(v, bool):
@@ -381,13 +384,12 @@ def _valor(v: Any) -> str:
         t = "(vacío)"
     else:
         t = json.dumps(v, ensure_ascii=False)
-    t = _CONTROL.sub(" ", t)
     return t if len(t) <= DETALLE_VALOR else f"{t[:DETALLE_VALOR]}… ({len(t)} caracteres en total)"
 
 
 def confirmacion(d: dict, argumentos: dict) -> Confirmacion:
     """La tarjeta de una escritura de Mnemo: qué herramienta y los argumentos exactos que se mandarán, en el orden del
-    esquema (los largos, recortados con su tamaño total)."""
+    esquema, con sus nombres enteros (los largos, recortados con su tamaño total: la tarjeta no se ofrece)."""
     remoto, anot = d["name"], d["annotations"]
     props = d["inputSchema"].get("properties") or {}
     claves = [k for k in props if k in argumentos] + sorted(k for k in argumentos if k not in props)
@@ -398,7 +400,7 @@ def confirmacion(d: dict, argumentos: dict) -> Confirmacion:
             detalle.append(("…", f"y {len(claves) - len(detalle)} argumentos más"))
             break
         v = _valor(argumentos[k])
-        detalle.append((str(k)[:80], v))
+        detalle.append((str(k), v))
         total += len(v)
     if not detalle:
         detalle.append(("Argumentos", "(ninguno)"))

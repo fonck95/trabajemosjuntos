@@ -7,6 +7,8 @@ MongoDB, y el alcance de cada usuario.
   exige que el área esté asignada y suma el alcance obligatorio (3.6).
 * `alcance_de(db, quien)`: personas de los lugares y áreas asignados a un planillero o consultor; None si no tiene
   asignación (toda la base, con el presupuesto diario).
+* `estricta=1` (`Filtros._estricta`, lo pone la ruta) es la búsqueda del asistente (`q_estricta`): las palabras de `q`
+  casan solo con el nombre y un número, solo entero. La interfaz no lo manda y busca como siempre.
 """
 from __future__ import annotations
 
@@ -95,6 +97,7 @@ class Filtros(BaseModel):
     _eleccion: str | None = PrivateAttr(default=modelo.AJUSTES_POR_DEFECTO["eleccion_vigente"])
     _dias_dato: int = PrivateAttr(default=modelo.AJUSTES_POR_DEFECTO["dias_reintento_dato"])
     _uid: int | None = PrivateAttr(default=None)
+    _estricta: bool = PrivateAttr(default=False)  # `q` como la busca el asistente (`q_estricta`)
 
 
 def geometria_de_area(a: dict | None) -> dict | None:
@@ -229,11 +232,32 @@ def _sino(v: int | None, si: dict, no: dict) -> dict | None:
     return si if v else no
 
 
+def q_estricta(q: str) -> list[dict]:
+    """`q` como la busca el asistente: cada palabra casa solo con el nombre, y un número (con o sin separadores)
+    solo entero, con la cédula o con un teléfono, y nunca con quien no autorizó el tratamiento de sus datos. La
+    búsqueda de Habitantes compara además la dirección, el sitio escrito, el correo y partes de los números: desde el
+    asistente, que una búsqueda case o no sería un dato que el modelo no recibe (la dirección o el correo de quien no
+    autorizó, los dígitos enmascarados de una cédula o un teléfono), y con búsquedas sucesivas se reconstruiría. Sin
+    nada que buscar, no trae a nadie."""
+    y: list[dict] = []
+    for tok in tx.limpiar(q).split()[:6]:
+        letras, digitos = re.sub(r"[^A-Z]", "", tok), re.sub(r"\D", "", tok)
+        if letras:
+            y.append({"nombre_norm": {"$regex": re.escape(letras)}})
+        elif digitos:
+            y.append({"$or": [{"cedula": digitos}, {"telefonos.numero": digitos}, {"telefono": digitos},
+                              {"telefono2": digitos}]})
+            y.append({"consentimiento": {"$ne": "no"}})
+    return y or [{"_id": {"$in": []}}]
+
+
 def filtro(f: Filtros, hoy: date | None = None) -> dict:
     """Documento de consulta de MongoDB para los filtros dados (solo personas activas). No consulta la base."""
     hoy = hoy or modelo.hoy_local()
     y: list[dict] = [dict(ACTIVA)]
-    if f.q:
+    if f.q and f._estricta:
+        y += q_estricta(f.q)
+    elif f.q:
         for tok in tx.limpiar(f.q).split()[:6]:
             digitos = re.sub(r"\D", "", tok)
             if digitos and len(digitos) >= 4 and digitos == tok:

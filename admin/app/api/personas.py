@@ -118,7 +118,9 @@ def exigir_listas_del_dia(db: Database, quien: Quien) -> None:
 
 @r.get("/personas")
 def listar(f: Filtros = Depends(filtros_query), orden: str = "nombre", pagina: int = 1, por_pagina: int = 50,
-           db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("personas.listar", limitar=True))):
+           estricta: int = 0, db: Database = Depends(obtener_db),
+           quien: Quien = Depends(requiere("personas.listar", limitar=True))):
+    f._estricta = bool(estricta)  # el asistente: `q` solo por el nombre o por un número entero (`filtros.q_estricta`)
     q = consulta(db, quien, f, con_alcance=True)  # vedados (403) y alcance obligatorio para P
     exigir_listas_del_dia(db, quien)
     por_pagina = max(10, min(por_pagina, 200))
@@ -132,15 +134,18 @@ def listar(f: Filtros = Depends(filtros_query), orden: str = "nombre", pagina: i
             "filas": proyeccion.filas_para(quien, [proyeccion.fila_completa(p, ctx) for p in docs])}
 
 
-def _buscar_consultor(db: Database, quien: Quien, q: str) -> list[dict]:
+def _buscar_consultor(db: Database, quien: Quien, q: str, estricta: bool = False) -> list[dict]:
     """Búsqueda del consultor (3.6): solo por nombre (3 letras o más, 10 resultados y campos reducidos); con dígitos,
-    422, salvo un número completo de 10 dígitos (llamada entrante: coincidencia exacta, 3 resultados, auditada)."""
+    422, salvo un número completo de 10 dígitos (llamada entrante: coincidencia exacta, 3 resultados, auditada). Con
+    `estricta` (el asistente), el número nunca trae a quien no autorizó: diría que ese número es suyo."""
     digitos = re.sub(r"\D", "", q)
     if digitos:
         if len(digitos) != 10 or re.sub(r"[\d\s+()-]", "", q):
             raise HTTPException(422, "Busque por nombre, o por el número completo de 10 dígitos")
-        docs = list(db.personas.find({**bd.ACTIVA, "$or": [{"telefonos.numero": digitos}, {"telefono": digitos},
-                                                            {"telefono2": digitos}]}, proyeccion.CAMPOS_PARA_FILA).limit(3))
+        tratable = {"consentimiento": {"$ne": "no"}} if estricta else {}
+        docs = list(db.personas.find({**bd.ACTIVA, **tratable, "$or": [
+            {"telefonos.numero": digitos}, {"telefono": digitos}, {"telefono2": digitos}]},
+            proyeccion.CAMPOS_PARA_FILA).limit(3))
         bd.auditar(db, quien, "buscar_telefono", None, None, {"resultados": len(docs)})
     else:
         toks = [t for t in tx.limpiar(q).split() if re.sub(r"[^A-Z]", "", t)][:6]
@@ -155,16 +160,23 @@ def _buscar_consultor(db: Database, quien: Quien, q: str) -> list[dict]:
 
 
 @r.get("/buscar")
-def buscar(q: str = Query(..., max_length=120), db: Database = Depends(obtener_db),
+def buscar(q: str = Query(..., max_length=120), estricta: int = 0, db: Database = Depends(obtener_db),
            quien: Quien = Depends(requiere("personas.buscar", limitar=True))):
-    """Autocompletar rápido (registro de asistentes, alta, llamada entrante). P busca en toda la base."""
+    """Autocompletar rápido (registro de asistentes, alta, llamada entrante). P busca en toda la base. `estricta`: la
+    búsqueda del asistente (`filtros.q_estricta`)."""
     if _es_consultor(quien):
-        return _buscar_consultor(db, quien, q)
+        return _buscar_consultor(db, quien, q, bool(estricta))
     if len(q.strip()) < 2:
         return []
     inicio = tx.limpiar(q)
-    docs = list(db.personas.find(filtro(Filtros(q=q)), proyeccion.CAMPOS_PARA_FILA).limit(60))
-    docs.sort(key=lambda p: (not (p.get("nombre_norm") or "").startswith(inicio), -p.get("completitud", 0)))
+    f = Filtros(q=q)
+    f._estricta = bool(estricta)
+    docs = list(db.personas.find(filtro(f), proyeccion.CAMPOS_PARA_FILA).limit(60))
+    if estricta:  # por nombre: el puesto de quien no autorizó entre las más completas diría cuán completa está la suya
+        docs.sort(key=lambda p: (not (p.get("nombre_norm") or "").startswith(inicio), p.get("nombre_norm") or "",
+                                 p["_id"]))
+    else:
+        docs.sort(key=lambda p: (not (p.get("nombre_norm") or "").startswith(inicio), -p.get("completitud", 0)))
     docs = docs[:12]
     acceso.registrar_lecturas(db, quien, [p["_id"] for p in docs])
     ctx = proyeccion.contexto(db)
@@ -1125,9 +1137,11 @@ class NuevaPersona(PersonaIn):
 
 
 def _parecidas(db: Database, nombre: str, telefonos: list[str] | None = None, cedula: str | None = None,
-               excluir: int | None = None) -> list[tuple[dict, float]]:
+               excluir: int | None = None, estricta: bool = False) -> list[tuple[dict, float]]:
     """Fichas parecidas (2.4): candidatas por clave fonética, por cualquiera de sus números, por la cédula o por la
-    palabra más rara del nombre; puntaje con `ComparadorNombres`. Corte: 0,80, o mismo teléfono y 0,60."""
+    palabra más rara del nombre; puntaje con `ComparadorNombres`. Corte: 0,80, o mismo teléfono y 0,60. Con
+    `estricta` (el asistente), a quien no autorizó solo lo trae el nombre (0,80): que coincida en un número diría que
+    ese número es suyo."""
     toks = tx.tokens_nombre(nombre)
     if not toks:
         return []
@@ -1136,16 +1150,25 @@ def _parecidas(db: Database, nombre: str, telefonos: list[str] | None = None, ce
     nums = [t for t in telefonos or [] if t]
     raro = max(toks, key=len)
     o: list[dict] = [{"nombre_fon": {"$in": claves}}, {"nombre_norm": {"$regex": re.escape(raro)}}]
+    por_numero: list[dict] = []
     if nums:
-        o += [{"telefonos.numero": {"$in": nums}}, {"telefono": {"$in": nums}}, {"telefono2": {"$in": nums}}]
+        por_numero += [{"telefonos.numero": {"$in": nums}}, {"telefono": {"$in": nums}}, {"telefono2": {"$in": nums}}]
     if cedula:
-        o.append({"cedula": cedula})
+        por_numero.append({"cedula": cedula})
+    if por_numero and estricta:
+        o.append({"$or": por_numero, "consentimiento": {"$ne": "no"}})
+    else:
+        o += por_numero
     cand = list(db.personas.find({**bd.ACTIVA, "_id": {"$ne": excluir}, "$or": o}, proyeccion.CAMPOS_PARA_FILA).limit(400))
     comp = ComparadorNombres([tx.tokens_nombre(c.get("nombre")) for c in cand] + [toks])
     out = []
     for c in cand:
         s = comp.puntaje(toks, tx.tokens_nombre(c.get("nombre")))[0]
         s = max(s, fuzz.token_set_ratio(n, c.get("nombre_norm") or "") / 100 * 0.95)
+        if estricta and c.get("consentimiento") == "no":
+            if s >= 0.80:
+                out.append((c, s))
+            continue
         mismo_tel = bool(set(nums) & {t.get("numero") for t in modelo.telefonos_de(c)})
         if s >= 0.80 or (mismo_tel and s >= 0.60) or (cedula and c.get("cedula") == cedula):
             out.append((c, s))
@@ -1310,21 +1333,25 @@ def crear(body: NuevaPersona, request: Request, db: Database = Depends(obtener_d
 
 @r.get("/parecidas")
 def parecidas_alta(nombre: str = Query("", max_length=160), cedula: str | None = Query(None, max_length=20),
-                   telefono: str | None = Query(None, max_length=60), db: Database = Depends(obtener_db),
+                   telefono: str | None = Query(None, max_length=60), estricta: int = 0,
+                   db: Database = Depends(obtener_db),
                    quien: Quien = Depends(requiere("personas.parecidas", limitar=True))):
-    """Búsqueda en vivo del alta (7.6): filas del rol."""
+    """Búsqueda en vivo del alta (7.6): filas del rol. `estricta`: la del asistente (ver `_parecidas`)."""
     if len(tx.nombre_norm(nombre)) < 3:
         return []
     c = tx.cedula(cedula) or None
-    return filas_parecidas(db, quien, _parecidas(db, nombre, tx.telefonos(telefono) if telefono else [], c), c)
+    return filas_parecidas(db, quien, _parecidas(db, nombre, tx.telefonos(telefono) if telefono else [], c,
+                                                 estricta=bool(estricta)), c)
 
 
 @r.get("/personas/{pid}/parecidas")
-def parecidas(pid: int, db: Database = Depends(obtener_db),
+def parecidas(pid: int, estricta: int = 0, db: Database = Depends(obtener_db),
               quien: Quien = Depends(requiere("personas.parecidas", limitar=True))):
     p = proyeccion.cargar(db, pid)
-    nums = [t.get("numero") for t in modelo.telefonos_de(p)]
-    return filas_parecidas(db, quien, _parecidas(db, p["nombre"], nums, p.get("cedula"), pid), p.get("cedula"))
+    nums, cedula = [t.get("numero") for t in modelo.telefonos_de(p)], p.get("cedula")
+    if estricta and p.get("consentimiento") == "no":  # el asistente: de quien no autorizó, solo su nombre
+        nums, cedula = [], None
+    return filas_parecidas(db, quien, _parecidas(db, p["nombre"], nums, cedula, pid, estricta=bool(estricta)), cedula)
 
 
 # ───────────────────────────── Teléfonos ─────────────────────────────

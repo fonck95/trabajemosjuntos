@@ -6,18 +6,21 @@
 * Lo variable (fecha y hora de Colombia, la vista abierta, la ficha o reunión abierta, los filtros y el encuadre del
   mapa) va al comienzo de cada mensaje de la persona, entre `<contexto_del_panel>`. Es una pista que manda el
   navegador: se limpia y se acota aquí y las herramientas vuelven a leer todo con los permisos de la persona. Como
-  sale del panel, va lo mínimo aunque el navegador mande más: solo los filtros que el asistente también puede usar
-  (`CLAVES_FILTRO`), la búsqueda sin números ni correos y el centro del mapa solo de lejos y redondeado.
+  sale del panel, va lo mínimo aunque el navegador mande más: la ruta sin la consulta ni el fragmento y solo si es
+  una del panel (`RUTAS_PANEL`), la vista solo con un nombre del menú (`VISTAS_MENU`), solo los filtros que el
+  asistente también puede usar (`CLAVES_FILTRO`; la etiqueta, si existe y no es sensible), la búsqueda sin números ni
+  correos y el centro del mapa solo de lejos y redondeado.
 """
 from __future__ import annotations
 
 import json
 import re
 from datetime import datetime
-from typing import Any, Iterable
+from typing import Any, Container, Iterable
 
 from .. import modelo
 from . import minimizar
+from .herramientas.interfaz import RUTAS_PANEL
 
 INSTRUCCIONES_MNEMO_MAX = 2500
 NOMBRE_MAX = 80
@@ -42,7 +45,8 @@ _CONTROL = re.compile(r"[\x00-\x1f\x7f<>]")
 # asistente también puede usar (`FiltrosEntrada` de herramientas/personas.py) y el estado de algunas vistas (orden y
 # página, la persona de «Mi trabajo», el periodo y la agrupación de Usuarios). Nunca `lista`, `lider` ni
 # `regimen_salud` (datos políticos o de salud), `ids` ni `poligono` (la selección y el dibujo del mapa), ni lo que no
-# es un filtro (la vuelta de Mnemo trae `code` y `state`)
+# es un filtro (la vuelta de Mnemo trae `code` y `state`). La etiqueta, solo si existe y no es sensible
+# (`etiquetas_del_contexto`)
 CLAVES_FILTRO = frozenset({
     "q", "zona", "lugar_id", "area_id", "fuente", "etiqueta", "con_cedula", "con_telefono", "precision", "reunion_id",
     "asistio", "consentimiento", "tratables", "sexo", "edad_min", "edad_max", "tipo_documento", "cedula_verificada",
@@ -55,6 +59,12 @@ CLAVES_FILTRO = frozenset({
     "ids_total", "orden", "pagina", "p", "uid", "desde", "hasta", "por", "agrupar"})
 FUENTES = frozenset({"tramites", "reunion", "manual", "planilla"})  # «cedulas» y «ambas» revelan una base política
 FILTROS_MAX, FILTRO_MAX, Q_MAX = 30, 200, 120
+# La vista abierta: la entrada marcada del menú (las claves `nav` de la tabla de rutas de web/js/app.js), y la ruta,
+# sin la consulta ni el fragmento (lo que la consulta trae va, si va, en `filtros`) y solo si es una de las del panel
+VISTAS_MENU = frozenset({"panel", "mapa", "personas", "trabajo", "reuniones", "calidad", "importar", "usuarios",
+                         "ajustes", "cuenta"})
+_RUTAS = tuple(re.compile(p) for p in RUTAS_PANEL)
+RUTA_MAX = 40
 # El buscador de Habitantes acepta nombre, cédula, teléfono, dirección o ficha: con números o un correo, lo escrito ahí
 # (no al asistente) no viaja; el modelo sabe que hay una búsqueda y puede pedir el nombre
 Q_CON_NUMEROS = "[búsqueda por número o correo: no se envía al asistente]"
@@ -185,13 +195,24 @@ def _mapa(m: Any) -> str:
     return ", ".join(partes)
 
 
-def _filtros(filtros: Any) -> dict[str, str]:
-    """Los filtros de la dirección que pueden llegar al modelo (`CLAVES_FILTRO`), limpios, acotados y con los números
-    largos y los correos tapados (por si un valor trae uno)."""
+def etiquetas_del_contexto(db: Any) -> frozenset[int]:
+    """Las etiquetas que pueden ir en el filtro `etiqueta` del contexto (pymongo, síncrono: correr con
+    `run_in_threadpool`): las que existen y no son sensibles, con la regla de la proyección. Una sensible diría un dato
+    sensible de la persona cuya ficha se abrió desde esa lista."""
+    from .. import proyeccion  # aquí: proyeccion importa la base y FastAPI, que no hacen falta para lo demás
+    return frozenset(e["_id"] for e in db.etiquetas.find({}, {"nombre": 1, "sensible": 1})
+                     if not proyeccion.etiqueta_sensible(e))
+
+
+def _filtros(filtros: Any, etiquetas: Container[int] | None) -> dict[str, str]:
+    """Los filtros de la dirección que pueden llegar al modelo (`CLAVES_FILTRO`; la etiqueta, solo si está en
+    `etiquetas`), limpios, acotados y con los números largos y los correos tapados (por si un valor trae uno)."""
     limpios: dict[str, str] = {}
     for k, v in list(filtros.items())[:FILTROS_MAX] if isinstance(filtros, dict) else []:
         valor = _limpio(v, FILTRO_MAX) if k in CLAVES_FILTRO else ""
         if not valor or (k == "fuente" and valor not in FUENTES):
+            continue
+        if k == "etiqueta" and (etiquetas is None or _id(valor) not in etiquetas):
             continue
         if k == "q":
             valor = Q_CON_NUMEROS if re.search(r"[\d@]", valor) else valor[:Q_MAX]
@@ -199,13 +220,20 @@ def _filtros(filtros: Any) -> dict[str, str]:
     return limpios
 
 
-def contexto_del_panel(contexto: Any, ahora: datetime) -> str:
-    """El bloque de texto con el contexto del panel para el comienzo del mensaje de la persona."""
+def _ruta(v: Any) -> str:
+    """La ruta de la vista sin la consulta ni el fragmento, si es una de las del panel; si no, nada."""
+    ruta = v.split("?", 1)[0].split("#", 1)[0] if isinstance(v, str) else ""
+    return ruta if len(ruta) <= RUTA_MAX and any(r.fullmatch(ruta) for r in _RUTAS) else ""
+
+
+def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int] | None = None) -> str:
+    """El bloque de texto con el contexto del panel para el comienzo del mensaje de la persona. `etiquetas`: las que
+    pueden ir en el filtro de etiqueta (`etiquetas_del_contexto`); sin ellas, ese filtro no va (ante la duda, no se
+    manda)."""
     c = contexto if isinstance(contexto, dict) else {}
     lineas = [f"Fecha y hora en Colombia: {_fecha(ahora)}"]
-    ruta = _limpio(c.get("ruta"), 300)
-    ruta = ruta if ruta.startswith("/") else ""
-    vista = _limpio(c.get("vista"), 60)
+    ruta = _ruta(c.get("ruta"))
+    vista = c.get("vista") if isinstance(c.get("vista"), str) and c.get("vista") in VISTAS_MENU else ""
     if vista or ruta:
         lineas.append(f"Vista abierta: {vista or 'sin nombre'}" + (f" ({ruta})" if ruta else ""))
     pid, rid = _id(c.get("persona_id")), _id(c.get("reunion_id"))
@@ -213,7 +241,7 @@ def contexto_del_panel(contexto: Any, ahora: datetime) -> str:
         lineas.append(f"Ficha abierta: persona {pid} (/personas/{pid})")
     if rid:
         lineas.append(f"Reunión abierta: {rid} (/reuniones/{rid})")
-    filtros = _filtros(c.get("filtros"))
+    filtros = _filtros(c.get("filtros"), etiquetas)
     if filtros:
         lineas.append(f"Filtros de la URL: {json.dumps(filtros, ensure_ascii=False)}")
     mapa = _mapa(c.get("mapa"))

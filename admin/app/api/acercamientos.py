@@ -7,6 +7,8 @@
   `resumen_abordaje` y se escribe con el filtro `{_id, abordaje_seq: leído}` (hasta 3 intentos).
 * `BASE_COLA` es una sola y la usan todas las listas, `siguiente` y `tomar`. `siguiente` es atómico: dos consultores
   nunca reciben a la misma persona.
+* «Mi trabajo», la cola y las insignias aceptan `tratables=1`, que manda el asistente: sus listas y conteos no
+  cuentan a quien no autorizó el tratamiento de sus datos (`sin_no_autorizo`). La interfaz no lo manda.
 """
 from __future__ import annotations
 
@@ -53,6 +55,18 @@ def _iso(d: datetime) -> str:
 def _inicio_dia(d: date) -> str:
     """Comienzo del día `d` de Colombia, en texto ISO UTC (como `ts`)."""
     return _iso(datetime.combine(d, datetime.min.time(), modelo.ZONA))
+
+
+TRATABLE = {"consentimiento": {"$ne": "no"}}
+
+
+def sin_no_autorizo(db: Database, ids: list[int]) -> list[int]:
+    """`ids` (con sus repeticiones y en su orden) sin quienes no autorizaron el tratamiento de sus datos: lo que el
+    asistente cuenta (`tratables`). Que alguien del equipo los llamó o los registró hoy es un dato de ellos."""
+    if not ids:
+        return ids
+    no = set(db.personas.distinct("_id", {"_id": {"$in": list(set(ids))}, "consentimiento": "no"}))
+    return [i for i in ids if i not in no]
 
 
 # ───────────────────────────── Resumen ─────────────────────────────
@@ -509,14 +523,16 @@ def _mis_hoy(db: Database, quien: Quien, hoy: date) -> list[int]:
 
 
 @r.get("/trabajo/cola")
-def cola(lista: str = "por_llamar", pagina: int = Query(1, ge=1, le=PAGINAS_COLA), db: Database = Depends(obtener_db),
-         quien: Quien = Depends(requiere("trabajo.cola", limitar=True))):
+def cola(lista: str = "por_llamar", pagina: int = Query(1, ge=1, le=PAGINAS_COLA), tratables: int = 0,
+         db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("trabajo.cola", limitar=True))):
     per.exigir_listas_del_dia(db, quien)
     hoy, aj = modelo.hoy_local(), modelo.leer_ajustes(db)
     ctx = proyeccion.contexto(db)
     salto = (pagina - 1) * POR_PAGINA_COLA
-    if lista == "mis_hoy":
+    if lista == "mis_hoy":  # las demás listas (BASE_COLA) nunca traen a quien no autorizó
         ids = _mis_hoy(db, quien, hoy)
+        if tratables:
+            ids = sin_no_autorizo(db, ids)
         total = len(ids)
         ids = ids[salto:salto + POR_PAGINA_COLA]
         por_id = {p["_id"]: p for p in db.personas.find({"_id": {"$in": ids}, **bd.ACTIVA}, proyeccion.CAMPOS_PARA_FILA)}
@@ -626,18 +642,27 @@ def _listas_p(hoy: date, aj: dict) -> list[tuple[str, str, dict, str]]:
     ]
 
 
-def _conteo_periodo(db: Database, quien: Quien, desde: date) -> dict:
+def _conteo_periodo(db: Database, quien: Quien, desde: date, tratables: bool = False) -> dict:
     inicio = _inicio_dia(desde)
+    suyos = {"uid": quien.uid, "ts": {"$gte": inicio}, "anulado": {"$ne": True}}
     if quien.rol == "consultor" and not quien.administra:
-        acs = list(db.acercamientos.find({"uid": quien.uid, "ts": {"$gte": inicio}, "anulado": {"$ne": True}},
-                                         {"persona_id": 1, "efectivo": 1}))
+        acs = list(db.acercamientos.find(suyos, {"persona_id": 1, "efectivo": 1}))
+        if tratables:
+            vale = set(sin_no_autorizo(db, [a["persona_id"] for a in acs]))
+            acs = [a for a in acs if a["persona_id"] in vale]
         return {"acercamientos": len(acs), "personas": len({a["persona_id"] for a in acs}),
                 "contactadas": len({a["persona_id"] for a in acs if a.get("efectivo")})}
     q = {"uid": quien.uid, "entidad": "persona", "ts": {"$gte": inicio}}
+    edicion = {**q, "accion": {"$in": list(modelo.ACCIONES_EDICION)}}
+    if tratables:
+        creadas = [a["entidad_id"] for a in db.auditoria.find({**q, "accion": "crear"}, {"entidad_id": 1})]
+        acs = [a["persona_id"] for a in db.acercamientos.find(suyos, {"persona_id": 1})]
+        return {"creadas": len(sin_no_autorizo(db, creadas)),
+                "actualizadas": len(sin_no_autorizo(db, db.auditoria.distinct("entidad_id", edicion))),
+                "acercamientos": len(sin_no_autorizo(db, acs))}
     return {"creadas": db.auditoria.count_documents({**q, "accion": "crear"}),
-            "actualizadas": len(db.auditoria.distinct("entidad_id", {**q, "accion": {"$in": list(modelo.ACCIONES_EDICION)}})),
-            "acercamientos": db.acercamientos.count_documents({"uid": quien.uid, "ts": {"$gte": inicio},
-                                                               "anulado": {"$ne": True}})}
+            "actualizadas": len(db.auditoria.distinct("entidad_id", edicion)),
+            "acercamientos": db.acercamientos.count_documents(suyos)}
 
 
 def _como_usuario(db: Database, uid: int) -> Quien:
@@ -653,8 +678,11 @@ def _como_usuario(db: Database, uid: int) -> Quien:
 
 
 @r.get("/trabajo")
-def trabajo(uid: int | None = None, db: Database = Depends(obtener_db),
+def trabajo(uid: int | None = None, tratables: int = 0, db: Database = Depends(obtener_db),
             quien: Quien = Depends(requiere("trabajo.ver"))):
+    """Las listas de trabajo del rol con cuántas tiene cada una, la política de la cola y lo que hizo hoy y en la
+    semana. Las listas ya son sin quienes no autorizaron, salvo «hoy» del consultor y «mis registros recientes»; con
+    `tratables` (el asistente), esas y los conteos de hoy y la semana tampoco los cuentan."""
     if uid is not None and uid != quien.uid:
         if not quien.administra:
             raise per._prohibido("Solo ve su propio trabajo")
@@ -671,7 +699,8 @@ def trabajo(uid: int | None = None, db: Database = Depends(obtener_db),
     if not quien.administra and quien.rol == "consultor":
         for clave, titulo in LISTAS_C.items():
             if clave == "mis_hoy":
-                n = len(_mis_hoy(db, quien, hoy))
+                ids = _mis_hoy(db, quien, hoy)
+                n = len(sin_no_autorizo(db, ids) if tratables else ids)
             else:
                 q = consulta_lista(db, quien, clave, hoy, aj)
                 if q is None:
@@ -684,16 +713,16 @@ def trabajo(uid: int | None = None, db: Database = Depends(obtener_db),
             listas.append({"clave": clave, "titulo": titulo, "n": n,
                            "enlace": f"/personas?situacion=vigentes&tratables=1&{enlace}"})
         if not quien.administra:
-            n = db.personas.count_documents({"$and": [dict(bd.ACTIVA), {"$or": [{"creado_por.uid": quien.uid},
-                                                                                 {"actualizado_por.uid": quien.uid}]}]})
+            mios = [dict(bd.ACTIVA), {"$or": [{"creado_por.uid": quien.uid}, {"actualizado_por.uid": quien.uid}]}]
+            n = db.personas.count_documents({"$and": [*mios, *([TRATABLE] if tratables else [])]})
             listas.append({"clave": "mis_recientes", "titulo": "Mis registros recientes", "n": n,
                            "enlace": "/personas?mios=1&orden=reciente"})
     semana = hoy - timedelta(days=hoy.weekday())
     return {"rol": quien.rol, "alcance": asig, "listas": listas,
             "politica": {k: aj.get(k) for k in ("contactar_pendientes", "dias_entre_intentos", "max_intentos_sin_exito",
                                                  "seguimiento_activo", "dias_seguimiento")},
-            "pendientes_sin_autorizacion": pendientes, "hoy": _conteo_periodo(db, quien, hoy),
-            "semana": _conteo_periodo(db, quien, semana)}
+            "pendientes_sin_autorizacion": pendientes, "hoy": _conteo_periodo(db, quien, hoy, bool(tratables)),
+            "semana": _conteo_periodo(db, quien, semana, bool(tratables))}
 
 
 def per_asignacion(db: Database, quien: Quien) -> dict | None:
@@ -711,17 +740,19 @@ def per_asignacion(db: Database, quien: Quien) -> dict | None:
 # ───────────────────────────── Insignias (5.4) ─────────────────────────────
 
 @r.get("/insignias")
-def insignias(db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("insignias"))):
-    """Conteos livianos para el menú. Reemplaza pedir todos los indicadores."""
+def insignias(tratables: int = 0, db: Database = Depends(obtener_db), quien: Quien = Depends(requiere("insignias"))):
+    """Conteos livianos para el menú. Reemplaza pedir todos los indicadores. Con `tratables` (el asistente), el trabajo
+    y las situaciones no cuentan a quien no autorizó: mi_trabajo y buscar_personas tampoco, y la resta lo diría."""
     out = {"calidad": 0, "conflictos": 0, "solicitudes": 0, "situaciones": 0, "trabajo": 0}
     hoy, aj = modelo.hoy_local(), modelo.leer_ajustes(db)
-    vigente_req = {"$and": [modelo.filtro_vigente(), {"requiere_actualizacion": {"$ne": None}}]}
+    tratable = TRATABLE if tratables else {}
+    vigente_req = {"$and": [modelo.filtro_vigente(), {"requiere_actualizacion": {"$ne": None}, **tratable}]}
     if quien.administra:
         out["calidad"] = len(db.coincidencias.distinct("persona_id", {"estado": "pendiente"}))
         out["conflictos"] = db.conflictos_cedula.count_documents({"estado": "pendiente"})
         out["solicitudes"] = db.solicitudes.count_documents({"estado": {"$in": ["pendiente", "en_tramite"]}})
         out["situaciones"] = db.personas.count_documents({**bd.ACTIVA, "situacion.estado": {"$in": ["fallecida", "no_reside"]},
-                                                          "situacion.confirmada": {"$ne": True}})
+                                                          "situacion.confirmada": {"$ne": True}, **tratable})
         out["trabajo"] = db.personas.count_documents(vigente_req)
     elif quien.rol == "planillero":
         alcance = alcance_de(db, quien)

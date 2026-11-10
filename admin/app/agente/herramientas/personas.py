@@ -21,7 +21,10 @@ Por qué está hecho así:
 * De quien no autorizó el tratamiento el asistente no escribe nada salvo su autorización: sus datos no se le pasan al
   modelo, y escribirlos sería tratarlos a través de él. Se hace en la ficha del panel. Al aprobar se vuelve a leer la
   ficha (pudo dejar de autorizar después de la tarjeta), salvo en un reintento de lo ya hecho (`_ya_hecha`). Tampoco
-  sale en una búsqueda con filtros o con un orden que diría algo de ella (`revela_datos`).
+  sale en una búsqueda con filtros o con un orden que diría algo de ella (`revela_datos`), ni por un número.
+* La búsqueda libre (`q`) y las parecidas no son un oráculo: las palabras buscan solo en el nombre y un número solo
+  entero (`_q_del_asistente`, `estricta=1` en la API); de quien no autorizó, las parecidas solo usan el nombre, también
+  las del alta (las que salen por un número no se muestran), y una cédula ocupada por ella no dice de quién es.
 * Las entradas vienen de un LLM: modelos pydantic con los topes y los valores válidos de la API, `extra="forbid"` (una
   clave mal escrita es un error visible, no una búsqueda sin filtros que gasta el presupuesto) y validaciones cruzadas
   con mensajes que dicen cómo corregir.
@@ -230,13 +233,30 @@ def _seguro(e: ErrorHerramienta) -> ErrorHerramienta:
     return ErrorHerramienta(mensaje, codigo, estado=e.estado, detalle=detalle, fatal=e.fatal)
 
 
+CEDULA_DE_QUIEN_NO_AUTORIZO = ("La cédula ya pertenece a otra ficha activa que el asistente no puede mostrar: que la "
+                               "persona del equipo la revise en Habitantes del panel antes de seguir.")
+
+
+def _no_autorizo(db: Any, pid: int) -> bool:
+    return db.personas.find_one({"_id": pid, "consentimiento": "no"}, {"_id": 1}) is not None
+
+
+async def _sin_quien_no_autorizo(ctx: Contexto, e: ErrorHerramienta) -> ErrorHerramienta:
+    """`e` (ya pasado por `_seguro`) sin el número de la ficha de quien no autorizó: con él y ver_persona, el modelo
+    sabría que esa cédula es de esa persona (una búsqueda por el número ya no la trae)."""
+    otro = e.detalle.get("id") if e.codigo == "cedula_ocupada" and isinstance(e.detalle, dict) else None
+    if isinstance(otro, int) and await run_in_threadpool(_no_autorizo, ctx.db, otro):
+        return ErrorHerramienta(CEDULA_DE_QUIEN_NO_AUTORIZO, e.codigo, estado=e.estado, fatal=e.fatal)
+    return e
+
+
 async def _pedir(ctx: Contexto, metodo: str, ruta: str, *, params: dict | None = None, cuerpo: Any = None,
                  clave: str | None = None) -> Any:
     plazo = ctx.plazo_escritura() if metodo != "GET" else None
     try:
         return await ctx.api.pedir(metodo, ruta, params=params, json_=cuerpo, clave=clave, plazo=plazo)
     except ErrorHerramienta as e:
-        raise _seguro(e) from None
+        raise await _sin_quien_no_autorizo(ctx, _seguro(e)) from None
 
 
 def _hecha(db: Any, uid: Any, clave: str) -> bool:
@@ -265,6 +285,13 @@ async def _ficha(ctx: Contexto, pid: int) -> dict:
 
 async def _sensibles(ctx: Contexto) -> minimizar.Sensibles:
     return await run_in_threadpool(minimizar.sensibles_de, ctx.db)
+
+
+async def _lugares(ctx: Contexto) -> frozenset[str] | None:
+    """Los nombres del nomenclátor (`minimizar.lugares_de`): con ellos se reconoce el barrio o vereda de quien no
+    autorizó en las filas y la ficha de planilleros y consultores, que no dicen si `lugar` es del nomenclátor o el
+    texto libre. Las del administrador y el coordinador lo dicen: no hacen falta."""
+    return None if ctx.quien.administra else await run_in_threadpool(minimizar.lugares_de, ctx.db)
 
 
 def _huella(clave: bytes, campo: str, v: Any) -> str:
@@ -479,8 +506,8 @@ def params_filtros(f: FiltrosEntrada | None) -> dict[str, Any]:
 
 
 class BuscarEntrada(_Entrada):
-    q: str | None = Field(None, max_length=120, description="Nombre, cédula o teléfono (o parte); varias palabras se "
-                                                            "combinan")
+    q: str | None = Field(None, max_length=120, description="Nombre (o parte; varias palabras se combinan) o un número "
+                                                            "entero: la cédula o el teléfono completos")
     filtros: FiltrosEntrada | None = Field(None, description="Filtros de Habitantes (no para el consultor)")
     orden: Literal[ORDENES] | None = Field(
         None, description="nombre (A-Z), completitud (más completas), -completitud (más incompletas), reciente "
@@ -493,14 +520,40 @@ class BuscarEntrada(_Entrada):
 NUMERO_EN_BUSQUEDA = re.compile(r"\d{4,}")
 SIN_DIGITOS_ENMASCARADOS = ("Búsqueda por número: las filas no traen los dígitos enmascarados de cédula ni teléfono "
                             "(abra la ficha si hace falta).")
+NUMERO_INCOMPLETO = ("Un número se busca entero y solo: la cédula completa o el teléfono completo (10 dígitos, o 7 si "
+                     "es fijo), sin letras ni partes de otro número. Para buscar por nombre, escriba solo el nombre. "
+                     "La búsqueda no mira la dirección ni el sitio escrito: para un barrio o vereda, use "
+                     "filtros.lugar_id (con buscar_lugar).")
+# Unas palabras que no encuentran a nadie: no es que no haya nadie, es que `q` busca solo en el nombre (Habitantes del
+# panel también busca en la dirección y el sitio escrito: si la vista trae esa búsqueda, ahí sí salen)
+SOLO_EN_EL_NOMBRE = ("`q` busca las palabras solo en el nombre: no mira la dirección, el sitio escrito ni el correo. "
+                     "Para un barrio o vereda, use filtros.lugar_id (con buscar_lugar); para una dirección, la persona "
+                     "del equipo la busca en Habitantes del panel.")
+
+
+def _q_del_asistente(q: str | None) -> tuple[str | None, bool]:
+    """(`q` como va a la API, si es un número). La API la busca con `estricta=1` (`filtros.q_estricta`): las palabras,
+    solo en el nombre, y un número, solo entero, nunca con quien no autorizó. La búsqueda libre de Habitantes compara
+    además la dirección, el correo y partes de los números: desde el asistente, que una búsqueda case o no sería una
+    respuesta sobre un dato que el modelo no recibe (la dirección o el correo de quien no autorizó, los dígitos
+    enmascarados de una cédula o un teléfono), y unas cuantas búsquedas lo reconstruirían. Un número escrito por
+    grupos o con el indicativo se junta; uno incompleto, o con letras, es un error que dice cómo buscar."""
+    if not q or not re.search(r"\d", q):
+        return q, False
+    if re.sub(r"[\d\s.()+\-]", "", q):
+        raise ErrorHerramienta(NUMERO_INCOMPLETO, "invalido", estado=422)
+    telefonos = tx.telefonos(q)
+    numero = telefonos[0] if len(telefonos) == 1 else tx.cedula(re.sub(r"\D", "", q))
+    if not numero:
+        raise ErrorHerramienta(NUMERO_INCOMPLETO, "invalido", estado=422)
+    return numero, True
 
 
 def _sin_digitos_enmascarados(fs: list[dict], q: str | None) -> tuple[list[dict], bool]:
-    """En una búsqueda con un número (4 dígitos o más) la API compara la cédula por prefijo y los teléfonos por
-    contenido. Si además las filas traen los últimos dígitos enmascarados (`cedula_ult3`, `telefono_mascara`), unas
-    pocas búsquedas por prefijo bastarían para reconstruir una cédula o un teléfono que se enmascaró a propósito. Por
-    eso, en esas búsquedas, las filas van sin esos dígitos: el resultado sigue diciendo quién coincide con el número
-    que escribió la persona, sin sumarle el final."""
+    """En una búsqueda con un número las filas van sin los últimos dígitos enmascarados (`cedula_ult3`,
+    `telefono_mascara`). La API ya compara el número entero (`_q_del_asistente`), así que no le suman nada al que
+    escribió la persona; pero si alguna vez casara una parte, juntarla con el final reconstruiría una cédula o un
+    teléfono que se enmascaró a propósito. El resultado sigue diciendo quién coincide con el número."""
     if not NUMERO_EN_BUSQUEDA.search(q or ""):
         return fs, False
     return [{k: v for k, v in f.items() if k not in ("cedula_ult3", "telefono_mascara")} for f in fs], True
@@ -512,16 +565,18 @@ def _busca_lista(a: BuscarEntrada) -> bool:
 
 
 # De quien no autorizó al modelo le llega solo quién es y su barrio o vereda (`minimizar.no_autorizo`). Una lista con
-# otro filtro (sexo, edad, una necesidad, lo que le falta…) o con un orden que no sea por nombre o por lugar le diría
-# más: cada filtro que casa es un dato suyo. Por eso, con esos filtros u órdenes, la lista va sin quienes no
-# autorizaron (`tratables`), y combinarlos con `consentimiento: no` no se puede
+# otro filtro (sexo, edad, una necesidad, lo que le falta…), con un orden que no sea por nombre o con un número le
+# diría más: cada filtro que casa es un dato suyo, el número, que es suyo, y su puesto en la lista, cuán completa está
+# su ficha o entre qué direcciones queda la suya (el orden «lugar» ordena por la dirección dentro del lugar). Por eso,
+# con esos filtros, órdenes o números, la lista va sin quienes no autorizaron (`tratables`), y combinarlos con
+# `consentimiento: no` no se puede. Su nombre sí: es quién es
 FILTROS_SIN_DATOS = frozenset({"consentimiento", "lugar_id", "zona"})
-ORDENES_SIN_DATOS = (None, "nombre", "lugar")
-SIN_NO_AUTORIZARON = ("Sin quienes no autorizaron el tratamiento de sus datos: con filtros (o con ese orden) el "
-                      "asistente no los cuenta ni los ve. En Habitantes del panel sí salen.")
+ORDENES_SIN_DATOS = (None, "nombre")
+SIN_NO_AUTORIZARON = ("Sin quienes no autorizaron el tratamiento de sus datos: con filtros, con ese orden o con un "
+                      "número, el asistente no los cuenta ni los ve. En Habitantes del panel sí salen.")
 NO_AUTORIZO_CON_FILTROS = ("De quien no autorizó el tratamiento de sus datos el asistente solo sabe quién es y su "
-                           "barrio o vereda: con consentimiento «no» use solo lugar_id o zona, ordenado por nombre o "
-                           "por lugar. Para lo demás, la persona del equipo abre Habitantes en el panel.")
+                           "barrio o vereda: con consentimiento «no» busque solo por el nombre, con lugar_id o zona, "
+                           "ordenado por nombre. Para lo demás, la persona del equipo abre Habitantes en el panel.")
 
 
 def revela_datos(campos: set[str], orden: str | None, sin_datos: frozenset[str] = FILTROS_SIN_DATOS) -> bool:
@@ -545,6 +600,7 @@ def _resumen_conteo(n: int, pagina: int | None = None, paginas: int | None = Non
 
 async def _buscar(ctx: Contexto, a: BuscarEntrada) -> Resultado:
     quien = ctx.quien
+    q, por_numero = _q_del_asistente(a.q)
     if a.filtros is not None and a.filtros.etiqueta is not None:
         if a.filtros.etiqueta in (await _sensibles(ctx)).etiquetas:
             raise ErrorHerramienta("Esa etiqueta revela un dato sensible: el asistente no filtra por ella.", "permiso",
@@ -554,32 +610,38 @@ async def _buscar(ctx: Contexto, a: BuscarEntrada) -> Resultado:
             raise ErrorHerramienta(
                 "Su rol no lista ni filtra la base: busque por nombre (3 letras o más) o por el número completo de 10 "
                 "dígitos, o trabaje su cola en Mi trabajo.", "permiso", estado=403)
-        sin_ellos = revela_datos(campos_de(a.filtros), a.orden)
+        sin_ellos = por_numero or revela_datos(campos_de(a.filtros), a.orden)
         if sin_ellos and a.filtros is not None and a.filtros.consentimiento == "no":
             raise ErrorHerramienta(NO_AUTORIZO_CON_FILTROS, "invalido", estado=422)
-        params = {"q": a.q, **params_filtros(a.filtros), "orden": a.orden or "nombre", "pagina": a.pagina,
-                  "por_pagina": a.por_pagina}
+        params = {"q": q, "estricta": 1 if q else None, **params_filtros(a.filtros), "orden": a.orden or "nombre",
+                  "pagina": a.pagina, "por_pagina": a.por_pagina}
         if sin_ellos:
             params["tratables"] = 1
         d = await _pedir(ctx, "GET", "/api/personas", params=params)
         d = d if isinstance(d, dict) else {}
-        fs, numerica = _sin_digitos_enmascarados(minimizar.filas(d.get("filas") or []), a.q)
+        fs, numerica = _sin_digitos_enmascarados(minimizar.filas(d.get("filas") or [], await _lugares(ctx)), q)
         total, pp = int(d.get("total") or 0), int(d.get("por_pagina") or a.por_pagina)
         paginas = max(1, math.ceil(total / pp)) if pp else 1
         contenido = {"tipo": "lista", "total": total, "pagina": d.get("pagina", a.pagina), "por_pagina": pp,
                      "paginas": paginas, "filas": fs}
         if numerica:
             contenido["nota"] = SIN_DIGITOS_ENMASCARADOS
+        elif q and not total:
+            contenido["nota"] = SOLO_EN_EL_NOMBRE
         if sin_ellos:
             contenido["nota_autorizacion"] = SIN_NO_AUTORIZARON
         if not quien.administra:
             contenido["alcance"] = "Solo personas de su zona asignada (si tiene una)."
         return Resultado(contenido, _resumen_conteo(total, contenido["pagina"], paginas), personas=minimizar.ids_de(fs))
-    d = await _pedir(ctx, "GET", "/api/buscar", params={"q": a.q})
-    fs, numerica = _sin_digitos_enmascarados(minimizar.filas(d if isinstance(d, list) else []), a.q)
+    d = await _pedir(ctx, "GET", "/api/buscar", params={"q": q, "estricta": 1})
+    fs, numerica = _sin_digitos_enmascarados(minimizar.filas(d if isinstance(d, list) else [], await _lugares(ctx)), q)
     contenido = {"tipo": "busqueda_rapida", "total": len(fs), "pagina": 1, "filas": fs}
     if numerica:
         contenido["nota"] = SIN_DIGITOS_ENMASCARADOS
+    elif not fs and len((a.q or "").strip()) >= 2:
+        contenido["nota"] = SOLO_EN_EL_NOMBRE
+    if por_numero:
+        contenido["nota_autorizacion"] = SIN_NO_AUTORIZARON
     consultor = not quien.administra and quien.rol == "consultor"
     digitos = re.sub(r"\D", "", a.q or "")
     tope = (3 if digitos else 10) if consultor else TOPE_BUSQUEDA
@@ -597,20 +659,21 @@ async def _buscar(ctx: Contexto, a: BuscarEntrada) -> Resultado:
 BUSCAR = Herramienta(
     nombre="buscar_personas",
     descripcion=(
-        "Busca habitantes en la base. Úsala para encontrar a una persona por nombre, cédula o teléfono, o para listar "
-        "y contar personas con filtros (barrio o vereda, autorización, abordaje, datos que faltan, edad, votación…). "
-        "No la uses para ver el detalle de una persona (ver_persona) ni para indicadores generales del tablero.\n"
-        "- Solo `q`: búsqueda rápida en toda la base; hasta 12 coincidencias, las más parecidas primero (el "
-        "consultor: hasta 10 por nombre de 3 letras o más, o 3 por un número completo de 10 dígitos; no usa filtros).\n"
+        "Busca habitantes en la base. Úsala para encontrar a una persona por su nombre o por su cédula o teléfono "
+        "completos, o para listar y contar personas con filtros (barrio o vereda, autorización, abordaje, datos que "
+        "faltan, edad, votación…). No la uses para ver el detalle de una persona (ver_persona) ni para indicadores "
+        "del tablero. `q` busca las palabras solo en el nombre y un número solo entero, nunca una parte.\n"
+        "- Solo `q`: búsqueda rápida en toda la base; hasta 12 coincidencias, por nombre (el consultor: hasta 10 "
+        "por nombre de 3 letras o más, o 3 por un número completo de 10 dígitos; no usa filtros).\n"
         "- Con `filtros`, `orden`, `pagina` o `por_pagina` (administrador, coordinador y planillero): lista paginada "
         "con el `total`; el planillero solo ve su zona asignada.\n"
         "Devuelve {tipo, total, pagina, filas}. Cada fila trae id, nombre, lugar, autorización, abordaje, completitud "
         "y lo que le falta; cédula y teléfono enmascarados («···123», «···2233»): no intentes reconstruirlos. De quien "
-        "no autorizó solo sale que no autorizó: con filtros (salvo barrio o vereda) o con un orden que no sea por "
-        "nombre o por lugar, la lista no lo trae ni lo cuenta; para saber quiénes no autorizaron, filtra solo por "
-        "`consentimiento: no` (y su barrio o vereda). `por_pagina` de 10 a 50. Cada persona mostrada cuenta en el tope "
-        "diario de consultas del planillero y del consultor: pide solo lo necesario y, para saber cuántas son, usa el "
-        "total de la primera página en vez de recorrerlas."),
+        "no autorizó solo sale que no autorizó: con un número, con filtros (salvo barrio o vereda) o con un orden que "
+        "no sea por nombre, la lista no lo trae ni lo cuenta; para saber quiénes no autorizaron, filtra solo por "
+        "`consentimiento: no` (y su barrio o vereda). `por_pagina` de 10 a 50. Cada persona mostrada cuenta "
+        "en el tope diario de consultas del planillero y del consultor: pide solo lo necesario y, para saber cuántas "
+        "son, usa el total de la primera página en vez de recorrerlas."),
     entrada=BuscarEntrada, tipo="lectura", permisos=("personas.buscar",), etiqueta="Buscando habitantes",
     ejecutar=_buscar, esquema=esquema(BuscarEntrada))
 
@@ -623,7 +686,7 @@ class VerEntrada(_Entrada):
 
 async def _ver(ctx: Contexto, a: VerEntrada) -> Resultado:
     d = await _ficha(ctx, a.persona_id)
-    f = minimizar.ficha(d, await _sensibles(ctx))
+    f = minimizar.ficha(d, await _sensibles(ctx), await _lugares(ctx))
     resumen = f"#{f.get('id')}: no autorizó" if f.get("consentimiento") == "no" else _persona(f)
     return Resultado(f, resumen, personas={a.persona_id} | minimizar.ids_de([f]))
 
@@ -660,12 +723,15 @@ class ParecidasEntrada(_Entrada):
 
 
 async def _parecidas(ctx: Contexto, a: ParecidasEntrada) -> Resultado:
+    # `estricta`: a quien no autorizó solo lo trae su nombre, y de ella solo se usa su nombre. Que saliera porque su
+    # cédula o su teléfono coinciden con los escritos (o que otra ficha saliera porque comparte los suyos) diría que
+    # ese número es suyo: con un número tras otro, el modelo los probaría
     if a.persona_id is not None:
-        d = await _pedir(ctx, "GET", f"/api/personas/{a.persona_id}/parecidas")
+        d = await _pedir(ctx, "GET", f"/api/personas/{a.persona_id}/parecidas", params={"estricta": 1})
     else:
         d = await _pedir(ctx, "GET", "/api/parecidas", params={"nombre": a.nombre, "cedula": a.cedula,
-                                                                "telefono": a.telefono})
-    fs = minimizar.filas(d if isinstance(d, list) else [])
+                                                                "telefono": a.telefono, "estricta": 1})
+    fs = minimizar.filas(d if isinstance(d, list) else [], await _lugares(ctx))
     contenido = {"total": len(fs), "parecidas": fs,
                  "nota": "parecido va de 0 a 100; cedula_distinta: true quiere decir que son personas distintas."}
     n = len(fs)
@@ -679,8 +745,10 @@ PARECIDAS = Herramienta(
     descripcion=(
         "Busca fichas que podrían ser la misma persona (posibles duplicados): con `persona_id`, las parecidas a esa "
         "ficha; con `nombre` (y `cedula` y `telefono` si los tienes), antes de crear una ficha nueva. Devuelve hasta 8 "
-        "filas con `parecido` (0 a 100), `tiene_cedula` y `cedula_distinta`. Úsala antes de crear_persona si no estás "
-        "seguro de que la persona no exista. Unir fichas no se hace aquí: es del administrador, en Calidad."),
+        "filas con `parecido` (0 a 100), `tiene_cedula` y `cedula_distinta`. Quien no autorizó el tratamiento de sus "
+        "datos sale solo por un nombre muy parecido, nunca por la cédula o el teléfono. Úsala antes de crear_persona "
+        "si no estás seguro de que la persona no exista. Unir fichas no se hace aquí: es del administrador, en "
+        "Calidad."),
     entrada=ParecidasEntrada, tipo="lectura", permisos=("personas.parecidas",), etiqueta="Buscando fichas parecidas",
     ejecutar=_parecidas, esquema=esquema(ParecidasEntrada))
 
@@ -792,6 +860,19 @@ async def _confirmar_crear(ctx: Contexto, a: CrearEntrada) -> Confirmacion:
     return Confirmacion(f"Crear la ficha de {tx.nombre_visible(a.nombre)}", detalle, aviso)
 
 
+# Desde 0,80 la API da una parecida por el nombre (`api.personas._parecidas`); `parecido` llega redondeado de 0 a 100,
+# y un 80 puede ser 0,795: ante la duda, no se muestra
+PARECIDO_NOMBRE = 80
+PARECIDA_OCULTA = ("Hay una coincidencia que el asistente no puede mostrar (de quien no autorizó el tratamiento de sus "
+                   "datos): antes de proponer forzar: true, que la persona del equipo la revise en Habitantes del "
+                   "panel con los datos que dictó.")
+
+
+def _por_el_nombre(c: dict) -> bool:
+    p = c.get("parecido")
+    return isinstance(p, (int, float)) and not isinstance(p, bool) and p > PARECIDO_NOMBRE
+
+
 async def _crear(ctx: Contexto, a: CrearEntrada) -> Resultado:
     await _revisar_crear(ctx, a)
     try:
@@ -799,15 +880,24 @@ async def _crear(ctx: Contexto, a: CrearEntrada) -> Resultado:
                                 plazo=ctx.plazo_escritura())
     except ErrorHerramienta as e:
         if e.codigo != "parecidas":
-            raise _seguro(e) from None
+            raise await _sin_quien_no_autorizo(ctx, _seguro(e)) from None
         candidatas = e.detalle.get("parecidas") if isinstance(e.detalle, dict) else None
-        fs = minimizar.filas(candidatas if isinstance(candidatas, list) else [])
+        candidatas = [c for c in candidatas if isinstance(c, dict)] if isinstance(candidatas, list) else []
+        # La API (sin `estricta`: el alta no crea un duplicado por no mostrarlo) trae también a quien no autorizó por
+        # coincidir en un número: que saliera diría que ese número es suyo. Como en personas_parecidas, de ella solo
+        # cuenta un nombre muy parecido; la que salió por el número no se muestra y la persona del equipo la revisa
+        ocultas = [c for c in candidatas if c.get("consentimiento") == "no" and not _por_el_nombre(c)]
+        fs = minimizar.filas([c for c in candidatas if c not in ocultas], await _lugares(ctx))
         contenido = {"creada": False, "codigo": "parecidas", "parecidas": fs, "mensaje": (
             "No se creó: ya hay fichas parecidas. Muéstrelas y pregunte si es alguna de ellas; solo si la persona del "
-            "equipo confirma que es otra persona, proponga crearla de nuevo con forzar: true.")}
+            "equipo confirma que es otra persona, proponga crearla de nuevo con forzar: true." if fs else
+            "No se creó: el panel encontró una ficha parecida que el asistente no puede mostrar.")}
+        if ocultas:
+            contenido["nota"] = PARECIDA_OCULTA
         n = len(fs)
-        return Resultado(contenido, f"No se creó: {n} ficha{'s' if n != 1 else ''} parecida{'s' if n != 1 else ''}",
-                         personas=minimizar.ids_de(fs))
+        resumen = (f"No se creó: {n} ficha{'s' if n != 1 else ''} parecida{'s' if n != 1 else ''}" if n else
+                   "No se creó: hay una ficha parecida")
+        return Resultado(contenido, resumen, personas=minimizar.ids_de(fs))
     if not isinstance(d, dict) or not isinstance(d.get("id"), int):
         raise ErrorHerramienta("La API del panel no devolvió la ficha creada.", "error")
     return Resultado({"creada": True, "persona": _breve(d)}, f"Ficha creada (#{d['id']})", list(ACCIONES_ESCRITURA),

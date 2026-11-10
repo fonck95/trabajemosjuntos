@@ -15,6 +15,10 @@ compromiso de confidencialidad e indicadores) e indicadores por usuario (5.1) y 
   planilleros sobre `auditoria` (lo suyo y lo que capturaron en planillas), consultores sobre `acercamientos` (sin los
   anulados; los anonimizados por una supresión se siguen contando) y fichas vistas sobre `lecturas`. El bloque
   `administracion` (importaciones, exportaciones, uniones, supresiones y usuarios creados) sale de `auditoria`.
+* `tratables=1` (lo manda el asistente) en la lista de usuarios y en el avance: lo que cada uno hizo con las personas y
+  las cifras de cada lugar sin contar a quienes no autorizaron el tratamiento de sus datos. Las demás herramientas del
+  asistente no los cuentan, y la resta diría algo de ellos (que a alguien de una vereda lo llamaron hoy, o que tiene
+  cédula). La interfaz no lo manda y cuenta a todos.
 """
 from __future__ import annotations
 
@@ -94,11 +98,12 @@ def _vacio_administracion() -> dict:
     return {k: 0 for k in dict.fromkeys(ACCIONES_ADMINISTRACION.values())}
 
 
-def _base_auditoria(uids: list[int], ts_desde: str, ts_hasta: str) -> list[dict]:
-    """Entradas sobre personas del periodo, atribuidas a quien capturó la planilla o, si no hay, a quien actuó."""
+def _base_auditoria(uids: list[int], ts_desde: str, ts_hasta: str, sin: list[int] = ()) -> list[dict]:
+    """Entradas sobre personas del periodo, atribuidas a quien capturó la planilla o, si no hay, a quien actuó. `sin`:
+    personas que no cuentan (`tratables`)."""
     return [
         {"$match": {"$or": [{"uid": {"$in": uids}}, {"capturado_por": {"$in": uids}}], "entidad": "persona",
-                    "ts": {"$gte": ts_desde, "$lt": ts_hasta}}},
+                    "ts": {"$gte": ts_desde, "$lt": ts_hasta}, **({"entidad_id": {"$nin": sin}} if sin else {})}},
         {"$set": {"_q": {"$ifNull": ["$capturado_por", "$uid"]}, "_campos": _lista("$campos"),
                   "_compl": _lista("$completados")}},
         {"$match": {"_q": {"$in": uids}}},
@@ -109,21 +114,30 @@ def _efectivo() -> dict:
     return {"$ifNull": ["$efectivo", {"$in": ["$resultado", sorted(modelo.EFECTIVOS)]}]}
 
 
-def _base_acercamientos(uids: list[int], ts_desde: str, ts_hasta: str) -> dict:
-    return {"$match": {"uid": {"$in": uids}, "ts": {"$gte": ts_desde, "$lt": ts_hasta}, "anulado": {"$ne": True}}}
+def _base_acercamientos(uids: list[int], ts_desde: str, ts_hasta: str, sin: list[int] = ()) -> dict:
+    return {"$match": {"uid": {"$in": uids}, "ts": {"$gte": ts_desde, "$lt": ts_hasta}, "anulado": {"$ne": True},
+                       **({"persona_id": {"$nin": sin}} if sin else {})}}
 
 
-def indicadores(db: Database, uids: list[int], d: date, h: date, ts_desde: str, ts_hasta: str) -> dict[int, dict]:
+def _no_autorizaron(db: Database) -> list[int]:
+    """Quienes no autorizaron el tratamiento de sus datos: lo que no cuentan las cifras con `tratables`."""
+    return db.personas.distinct("_id", {"consentimiento": "no"})
+
+
+def indicadores(db: Database, uids: list[int], d: date, h: date, ts_desde: str, ts_hasta: str,
+                tratables: bool = False) -> dict[int, dict]:
     """Indicadores del periodo de cada usuario de `uids`: `{uid: {planillero: {...}, consultor: {...},
-    administracion: {...}}}`."""
+    administracion: {...}}}`. Con `tratables`, lo que hizo con las personas no cuenta a quienes no autorizaron (lo que
+    administró, sí: no es de una persona)."""
     uids = list(dict.fromkeys(uids))
     out = {u: {"planillero": _vacio_planillero(), "consultor": _vacio_consultor(),
                "administracion": _vacio_administracion()} for u in uids}
     if not uids:
         return out
+    sin = _no_autorizaron(db) if tratables else []
     edicion = list(modelo.ACCIONES_EDICION)
     es_crear = {"$eq": ["$accion", "crear"]}
-    facetas = next(db.auditoria.aggregate(_base_auditoria(uids, ts_desde, ts_hasta) + [{"$facet": {
+    facetas = next(db.auditoria.aggregate(_base_auditoria(uids, ts_desde, ts_hasta, sin) + [{"$facet": {
         "personas": [
             {"$group": {"_id": {"q": "$_q", "p": "$entidad_id"},
                         "creadas": _cuenta(es_crear),
@@ -169,12 +183,15 @@ def indicadores(db: Database, uids: list[int], d: date, h: date, ts_desde: str, 
     for u in uids:
         p = out[u]["planillero"]
         p["creadas_netas"] = p["creadas"] - p["calidad"]["duplicados_unidos"]
-    for x in db.lecturas.aggregate([{"$match": {"uid": {"$in": uids}, "dia": {"$gte": d.isoformat(), "$lte": h.isoformat()}}},
+    leidas = {"uid": {"$in": uids}, "dia": {"$gte": d.isoformat(), "$lte": h.isoformat()},
+              **({"pid": {"$nin": sin}} if sin else {})}
+    for x in db.lecturas.aggregate([{"$match": leidas},
                                     {"$group": {"_id": "$uid", "n": {"$sum": 1}, "fichas": _cuenta({"$eq": ["$ficha", True]})}}]):
         out[x["_id"]]["planillero"].update(personas_vistas=x["n"], fichas_vistas=x["fichas"])
     malos = ["equivocado", "inexistente"]
     for x in db.personas.aggregate([
-            {"$match": {"telefonos": {"$elemMatch": {"agregado_por": {"$in": uids}, "estado": {"$in": malos}}}}},
+            {"$match": {"telefonos": {"$elemMatch": {"agregado_por": {"$in": uids}, "estado": {"$in": malos}}},
+                        **({"consentimiento": {"$ne": "no"}} if tratables else {})}},
             {"$unwind": "$telefonos"},
             {"$match": {"telefonos.agregado_por": {"$in": uids}, "telefonos.estado": {"$in": malos}}},
             {"$group": {"_id": "$telefonos.agregado_por", "n": {"$sum": 1}}}]):
@@ -184,12 +201,13 @@ def indicadores(db: Database, uids: list[int], d: date, h: date, ts_desde: str, 
     for x in db.conflictos_cedula.aggregate([
             {"$match": {"$or": [{"registro.capturado_por": {"$in": uids}}, {"registro.uid": {"$in": uids}},
                                 {"creado_por.uid": {"$in": uids}}, {"creado_por": {"$in": uids}}],
-                        "creado_en": {"$gte": ts_desde, "$lt": ts_hasta}}},
+                        "creado_en": {"$gte": ts_desde, "$lt": ts_hasta},
+                        **({"persona_id": {"$nin": sin}} if sin else {})}},
             {"$group": {"_id": autor, "n": {"$sum": 1}}}]):
         if x["_id"] in out:
             out[x["_id"]]["planillero"]["calidad"]["cedulas_en_conflicto"] = x["n"]
     dictadas = {"$in": ["cedula", _lista("$datos_dictados")]}
-    facetas = next(db.acercamientos.aggregate([_base_acercamientos(uids, ts_desde, ts_hasta), {"$facet": {
+    facetas = next(db.acercamientos.aggregate([_base_acercamientos(uids, ts_desde, ts_hasta, sin), {"$facet": {
         "personas": [
             {"$group": {"_id": {"u": "$uid", "p": "$persona_id"}, "n": {"$sum": 1}, "efectivo": {"$max": _efectivo()},
                         "no_contactar": _cuenta({"$eq": ["$resultado", "no_contactar"]}),
@@ -387,11 +405,13 @@ def _detalle(db: Database, u: dict) -> dict:
 
 
 @r.get("/usuarios")
-def listar(desde: str | None = None, hasta: str | None = None, db: Database = Depends(obtener_db),
+def listar(desde: str | None = None, hasta: str | None = None, tratables: int = 0, db: Database = Depends(obtener_db),
            _: Quien = Depends(GESTIONAR)):
+    """Los usuarios con sus indicadores del periodo; con `tratables` (el asistente), sin contar a quienes no
+    autorizaron."""
     d, h, td, th = periodo(desde, hasta)
     usuarios = list(db.usuarios.find({}, {"clave": 0}).sort([("activo", -1), ("usuario", 1)]))
-    ind = indicadores(db, [u["_id"] for u in usuarios], d, h, td, th)
+    ind = indicadores(db, [u["_id"] for u in usuarios], d, h, td, th, bool(tratables))
     est = _estado(db, usuarios)
     return [_fila(u, est, ind.get(u["_id"])) for u in usuarios]
 
@@ -451,8 +471,10 @@ def indicadores_todos(desde: str | None = None, hasta: str | None = None, db: Da
 
 
 @r.get("/usuarios/avance")
-def avance(por: Literal["lugar", "area"] = "lugar", db: Database = Depends(obtener_db), _: Quien = Depends(GESTIONAR)):
-    """Avance por cada barrio, vereda o área asignada (5.3): responsables, personas vigentes y porcentajes."""
+def avance(por: Literal["lugar", "area"] = "lugar", tratables: int = 0, db: Database = Depends(obtener_db),
+           _: Quien = Depends(GESTIONAR)):
+    """Avance por cada barrio, vereda o área asignada (5.3): responsables, personas vigentes y porcentajes. Con
+    `tratables` (el asistente), sin quienes no autorizaron."""
     clave = "lugares" if por == "lugar" else "areas"
     responsables: dict[int, list] = {}
     for u in db.usuarios.find({"activo": True}, {"usuario": 1, "nombre": 1, "rol": 1, "asignacion": 1}).sort("usuario", 1):
@@ -468,7 +490,7 @@ def avance(por: Literal["lugar", "area"] = "lugar", db: Database = Depends(obten
         "contactadas": _cuenta({"$eq": [{"$ifNull": ["$abordaje.estado", None]}, "contactado"]}),
     }
     ids = sorted(responsables)
-    vigente = modelo.filtro_vigente()
+    vigente = {**modelo.filtro_vigente(), **({"consentimiento": {"$ne": "no"}} if tratables else {})}
     datos, nombres = {}, {}
     if por == "lugar":
         nombres = {x["_id"]: x.get("nombre") for x in db.lugares.find({"_id": {"$in": ids}}, {"nombre": 1})}

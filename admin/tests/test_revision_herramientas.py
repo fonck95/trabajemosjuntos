@@ -464,11 +464,11 @@ def test_25_volver_a_aprobar_tras_un_turno_cortado_no_repite_la_escritura_en_mne
     cid = ev[0]["conversacion"]
     original, veces = conv_db.quitar_pendiente, []
 
-    def se_corta_una_vez(db, c, crudo):
+    def se_corta_una_vez(db, c, crudo, *resto):  # `resto`: lo rechazado, si el bucle lo pasa
         veces.append(1)
         if len(veces) == 1:
             raise RuntimeError("corte inventado")
-        return original(db, c, crudo)
+        return original(db, c, crudo, *resto)
 
     monkeypatch.setattr(conv_db, "quitar_pendiente", se_corta_una_vez)
     r, ev = aa.decidir(sesion, cid, toolu_ev=True)
