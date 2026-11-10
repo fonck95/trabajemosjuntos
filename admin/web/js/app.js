@@ -230,8 +230,13 @@ async function render() {
     const motivo = e instanceof ErrorApi && e.estado === 403 && e.codigo === 'permiso' ? 'Sin acceso' : 'No se pudo cargar';
     montar(vista, html`<div class="vacio"><b>${motivo}</b>${e.message}</div>`);
   }
-  // El foco va al campo con autofocus de la vista (buscador de la reunión) o, si no hay, a la vista
-  (vista.querySelector('[autofocus]') || vista).focus({ preventScroll: true });
+  // El foco va al campo con autofocus de la vista (buscador de la reunión) o, si no hay, a la vista. Salvo que esté en
+  // algo que vive fuera de #raiz y sobrevive a la vista (el asistente, un diálogo): la persona escribía ahí mientras
+  // la vista cargaba, y lo que siguiera escribiendo se perdería
+  const activo = document.activeElement;
+  if (!activo || activo === document.body || $('#raiz').contains(activo)) {
+    (vista.querySelector('[autofocus]') || vista).focus({ preventScroll: true });
+  }
   avisarVista(ruta, r, ok);
 }
 

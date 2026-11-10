@@ -35,6 +35,9 @@ const esNumero = (x) => typeof x === 'number' && Number.isFinite(x);
 const MAX_ACCIONES = 20;
 const PLAZO_ACCION_MS = 25000; // red de seguridad: una acción que se cuelga no deja la cola esperando para siempre
 const VUELO_MS = 2400;
+// Lo mínimo de mapa a la vista (px de ancho) entre el panel izquierdo y el del asistente abierto: con menos, se pliega
+// el izquierdo
+const HUECO_AGENTE = 300;
 const COLOR_AGENTE = '#e3141b';
 const COLOR_OK = /^#[0-9a-fA-F]{6}$/;
 const BASES_OK = ['auto', 'oscuro', 'claro', 'satelite'];
@@ -546,19 +549,30 @@ export async function vistaMapa(el, { q, ir }) {
     map.stop();
   }
   const lugarTigre = () => estado.capasGeo?.lugares?.features?.find((f) => f.properties?.nombre?.includes('SAN MIGUEL DEL TIGRE'));
-  /** Recorridos de la barra de abajo (municipio, casco, tigre): false si no hay con qué (el límite o el punto). */
-  function irVista(k) {
+  /** Recorridos de la barra de abajo (municipio, casco, tigre): false si no hay con qué (el límite o el punto). Con
+   * `hueco` (el relleno que pide el asistente: rellenoAgente()), el destino queda en lo que dejan libre los paneles. */
+  function irVista(k, hueco = null) {
     pararGiro();
+    const aPunto = (centro, { zoom, ...op }) => (hueco ? volarAlPunto(centro, zoom, op, hueco)
+      : map.flyTo({ ...op, center: centro, zoom }));
     if (k === 'municipio') {
       if (!estado.capasGeo?.limite) return false;
-      map.fitBounds(cajaDe(estado.capasGeo.limite), { padding: 50, pitch: estado.plano ? 0 : 50, bearing: -15, duration: 2500 });
-    } else if (k === 'casco') map.flyTo({ ...CASCO, ...(estado.plano ? { pitch: 0 } : {}), duration: 2600 });
-    else if (k === 'tigre') {
+      map.fitBounds(cajaDe(estado.capasGeo.limite), { padding: hueco || 50, pitch: estado.plano ? 0 : 50, bearing: -15,
+        duration: 2500 });
+    } else if (k === 'casco') {
+      aPunto(CASCO.center, { zoom: CASCO.zoom, pitch: estado.plano ? 0 : CASCO.pitch, bearing: CASCO.bearing,
+        duration: 2600 });
+    } else if (k === 'tigre') {
       const t = lugarTigre();
       if (!t) return false;
-      map.flyTo({ center: t.geometry.coordinates, zoom: 15, pitch: estado.plano ? 0 : 60, bearing: 20, duration: 2600 });
+      aPunto(t.geometry.coordinates, { zoom: 15, pitch: estado.plano ? 0 : 60, bearing: 20, duration: 2600 });
     } else return false;
     return true;
+  }
+  /** Vuela a `punto` con `zoom` y lo deja en medio de lo que deja libre `relleno` (los paneles): se encuadra el punto
+   * solo, así el centro se corre según el relleno. Funciona también con el movimiento reducido (salta sin animar). */
+  function volarAlPunto(punto, zoom, op, relleno) {
+    map.fitBounds([punto, punto], { ...op, padding: relleno, maxZoom: zoom });
   }
   // Mapa base: auto (según el tema), oscuro, claro o satelite. Solo recarga si cambia el estilo que se ve: setStyle borra
   // fuentes, capas, relieve y cielo (agregarCapas los rehace en style.load) y vuelve a pedir todas las teselas
@@ -1183,16 +1197,28 @@ export async function vistaMapa(el, { q, ir }) {
   const trasMover = (ms) => (map.isMoving() ? esperar('moveend', ms) : Promise.resolve(true));
   const camara = () => ({ centro: map.getCenter().toArray().map((x) => +x.toFixed(6)), zoom: +map.getZoom().toFixed(2),
     pitch: Math.round(map.getPitch()), bearing: Math.round(map.getBearing()) });
-  // El relleno de los paneles (relleno()) y, en el escritorio, el del asistente si está abierto sobre el mapa. Nunca
-  // tanto que no quepa el encuadre: MapLibre no mueve la cámara si el relleno no deja espacio
+  /** El rectángulo del panel del asistente si está abierto sobre el mapa (en el escritorio), o null. */
+  function chatEncima() {
+    const chat = document.getElementById('agente-panel');
+    if (!chat || chat.hidden || movil.matches) return null;
+    const c = chat.getBoundingClientRect(), caja = map.getContainer().getBoundingClientRect();
+    const encima = c.width > 0 && c.left < caja.right && c.right > caja.left && c.top < caja.bottom && c.bottom > caja.top;
+    return encima ? c : null;
+  }
+  // El relleno de los paneles (relleno()) y, en el escritorio, el del asistente si está abierto sobre el mapa. En un
+  // escritorio angosto, entre el panel izquierdo y el del asistente casi no queda mapa: el izquierdo se pliega (vuelve
+  // con «Capas y filtros»). Nunca tanto que no quepa el encuadre: MapLibre no mueve la cámara si el relleno no deja
+  // espacio
   function rellenoAgente() {
     const r = { ...relleno() };
     const caja = map.getContainer().getBoundingClientRect();
-    const chat = document.getElementById('agente-panel');
-    if (chat && !chat.hidden && !movil.matches) {
-      const c = chat.getBoundingClientRect();
-      const encima = c.width > 0 && c.left < caja.right && c.right > caja.left && c.top < caja.bottom && c.bottom > caja.top;
-      if (encima && c.left > caja.left + caja.width / 2) r.right = Math.max(r.right, caja.right - c.left + 16);
+    const c = chatEncima();
+    if (c) {
+      r.right = Math.max(r.right, caja.right - c.left + 16);
+      if (caja.width - r.left - r.right < HUECO_AGENTE && !izq.classList.contains('plegado')) {
+        plegarIzq(true);
+        r.left = relleno().left;
+      }
     }
     const fx = Math.min(1, (caja.width * 0.7) / Math.max(1, r.left + r.right));
     const fy = Math.min(1, (caja.height * 0.7) / Math.max(1, r.top + r.bottom));
@@ -1232,6 +1258,7 @@ export async function vistaMapa(el, { q, ir }) {
     estado.foco = poligono ? { type: 'Feature', geometry: poligono.geometry, properties: { color: COLOR_AGENTE } } : null;
     pintarAgente();
     if (poligono) map.fitBounds(cajaDe(poligono), { ...vista, padding: rellenoAgente(), maxZoom: zoom ?? 15.5 });
+    else if (chatEncima()) volarAlPunto(centro, zoom ?? zoomPunto, vista, rellenoAgente());
     else map.flyTo({ ...vista, center: centro, zoom: zoom ?? zoomPunto });
     await trasMover(VUELO_MS + 4000);
     exigirVista();
@@ -1305,7 +1332,7 @@ export async function vistaMapa(el, { q, ir }) {
     if (a.nombre === 'municipio' && !estado.capasGeo?.limite) fallo('El límite del municipio no está en el mapa');
     if (a.nombre === 'tigre' && !lugarTigre()) fallo('San Miguel del Tigre no tiene coordenada en el mapa');
     tomarCamara();
-    irVista(a.nombre);
+    irVista(a.nombre, chatEncima() ? rellenoAgente() : null);
     await trasMover(7000);
     exigirVista();
     return camara();

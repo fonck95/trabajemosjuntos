@@ -429,7 +429,7 @@ def test_codigos_del_proveedor_del_modelo_en_el_widget():
     # En un evento `error`, «Reintentar» no depende de «Nueva conversación»: `llm_peticion` ofrece las dos
     en_error = cerrar[cerrar.index("} else if (t.error) {"):cerrar.index("} else if (!t.fin) {")]
     assert ("if (t.tipo === 'mensaje' && !SIN_REINTENTO.has(t.error.codigo)) acciones.push(reintento(null));\n"
-            "      if (CON_NUEVA.has(t.error.codigo)) acciones.push(otra);") in en_error, en_error
+            "      if (CON_NUEVA.has(t.error.codigo)) acciones.push(otra(t.error.codigo));") in en_error, en_error
     # El evento nuevo `texto_ronda` reemplaza el texto de la ronda en curso
     assert ("case 'texto_ronda': if (typeof ev.texto === 'string') textoRonda(texto(ev.texto, MAX_TEXTO_RONDA)); "
             "break;") in codigo
