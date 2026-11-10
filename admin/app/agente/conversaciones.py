@@ -6,13 +6,19 @@ llama con `run_in_threadpool`.
   cambie), las definiciones de Mnemo, el proveedor del modelo (`proveedor`: «mnemo» o «anthropic»; las de antes, sin
   el campo, son de Anthropic) y el modelo que se le pidió (`modelo`), `personas` (los ids de las personas cuyos datos
   vio el modelo: si alguna se suprime o deja de autorizar, la conversación se borra entera), lo que espera aprobación
-  (`pendiente`) y el candado del turno en curso (`ocupada_hasta`: el turno lo renueva mientras corre y vence solo en
-  `ARRIENDO`, así un proceso caído no deja la conversación tomada más de un minuto y medio).
+  (`pendiente`), lo que la persona no aprobó al quitarlo (`rechazadas`: los `tool_use` que vuelven como rechazados si
+  el turno se corta antes de guardar sus resultados), las escrituras de Mnemo ya mandadas (`mnemo_intentadas`, que
+  anota `herramientas/mnemo.py`: Mnemo no tiene clave de idempotencia) y el candado del turno en curso
+  (`ocupada_hasta`: el turno lo renueva mientras corre y vence solo en `ARRIENDO`, así un proceso caído no deja la
+  conversación tomada más de un minuto y medio).
 * `agente_mensajes`: un documento por mensaje, con `seq` creciente; nunca se edita lo guardado (append-only). Los
   bloques van como texto JSON (`contenido`): vuelven idénticos al reenviarlos y aceptan cualquier clave que escriba el
   modelo (también «$x» o «a.b»). `replay` dice si el mensaje se le reenvía al modelo (un rechazo o un aviso, no).
 * `agente_uso`: mensajes, tokens y (con Mnemo) créditos por persona y día (hora de Colombia), para el tope diario y
   para ver el gasto.
+* `agente_olvidos`: quién dejó de autorizar en la última hora (`persona_id` y `ts`, nada más; lo anota
+  `db.olvidar_en_conversaciones`). Un turno que leía a esa persona cuando llegó el «no» todavía no la tenía anotada:
+  la busca ahí al anotarla (`dejaron_de_autorizar`).
 * Retención: `expira` (fecha) de la conversación y de sus mensajes se renueva en cada turno; los índices TTL de
   `db._indices()` los borran solos al vencer.
 """
@@ -30,7 +36,7 @@ from pymongo.errors import DuplicateKeyError
 from .. import modelo
 from .llm import CENTINELA
 
-CONVERSACIONES, MENSAJES, USO = "agente_conversaciones", "agente_mensajes", "agente_uso"
+CONVERSACIONES, MENSAJES, USO, OLVIDOS = "agente_conversaciones", "agente_mensajes", "agente_uso", "agente_olvidos"
 ARRIENDO = timedelta(seconds=90)  # el turno lo renueva cada `bucle.RENOVAR_S` mientras corre
 LISTA_MAX = 30
 TITULO_MAX = 80
@@ -119,9 +125,9 @@ def larga(conv: dict) -> bool:
 
 
 def listar(db: Database, uid: int) -> list[dict]:
-    """Las 30 más recientes de `uid`, sin cargar lo pesado."""
+    """Las 30 más recientes de `uid`, sin cargar lo pesado (dos del mismo milisegundo: primero la más nueva)."""
     filas = db[CONVERSACIONES].aggregate([
-        {"$match": {"uid": uid}}, {"$sort": {"actualizada": -1}}, {"$limit": LISTA_MAX},
+        {"$match": {"uid": uid}}, {"$sort": {"actualizada": -1, "_id": -1}}, {"$limit": LISTA_MAX},
         {"$project": {"titulo": 1, "actualizada": 1, "pendiente": {"$ne": [{"$ifNull": ["$pendiente", None]}, None]}}},
     ])
     return [{"id": f["_id"], "titulo": f.get("titulo") or "Conversación",
@@ -179,6 +185,13 @@ def suprimidas(db: Database, ids: set[int]) -> list[int]:
     return [p["_id"] for p in db.personas.find({"_id": {"$in": sorted(ids)}, "eliminado": True}, {"_id": 1})]
 
 
+def dejaron_de_autorizar(db: Database, ids: set[int], desde: datetime) -> list[int]:
+    """Las de `ids` que dejaron de autorizar desde `desde` (`db.olvidar_en_conversaciones` lo anota en `OLVIDOS` antes
+    de borrar las conversaciones que ya las tenían): el «no» pudo llegar mientras una herramienta las leía."""
+    q = {"persona_id": {"$in": sorted(ids)}, "ts": {"$gte": desde}}
+    return sorted({d["persona_id"] for d in db[OLVIDOS].find(q, {"persona_id": 1})})
+
+
 def borrar(db: Database, cid: int, uid: int) -> bool:
     """Borra la conversación de `uid` y sus mensajes (los mensajes antes y después: no queda ninguno huérfano aunque un
     turno de otro proceso alcance a guardar uno en el medio)."""
@@ -201,9 +214,12 @@ def poner_pendiente(db: Database, cid: int, pendiente: dict) -> None:
     db[CONVERSACIONES].update_one({"_id": cid}, {"$set": {"pendiente": a_json(pendiente)}})
 
 
-def quitar_pendiente(db: Database, cid: int, crudo: str) -> bool:
-    """Quita `crudo` (el texto guardado) solo si sigue siendo lo pendiente: así dos turnos no lo atienden dos veces."""
-    r = db[CONVERSACIONES].update_one({"_id": cid, "pendiente": crudo}, {"$set": {"pendiente": None}})
+def quitar_pendiente(db: Database, cid: int, crudo: str, rechazadas: list[str] = ()) -> bool:
+    """Quita `crudo` (el texto guardado) solo si sigue siendo lo pendiente: así dos turnos no lo atienden dos veces. En
+    el mismo paso guarda lo que la persona no aprobó (`rechazadas`, ids de `tool_use`): si el turno se corta antes de
+    guardar los resultados, el siguiente se lo devuelve al modelo como rechazado."""
+    r = db[CONVERSACIONES].update_one({"_id": cid, "pendiente": crudo},
+                                      {"$set": {"pendiente": None, "rechazadas": list(rechazadas)}})
     return r.modified_count == 1
 
 
@@ -246,7 +262,8 @@ def mensajes_de(db: Database, cid: int) -> list[dict]:
 
 def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> dict:
     """La conversación como la pinta el widget: `mensajes` de la persona (su texto, sin el contexto del panel) y del
-    asistente (partes: texto, notas de progreso, herramientas con su estado y avisos), lo que espera aprobación y su
+    asistente (partes: texto, notas de progreso, herramientas con su estado y avisos), lo que espera aprobación (con
+    `vieja` si su tarjeta la guardó una versión anterior del panel, que no mostraba los valores enteros) y su
     `proveedor`. Las notas de progreso son los `thinking` de Anthropic (con `display: "updates"`); los de Mnemo son
     resúmenes del razonamiento del modelo y no se muestran."""
     proveedor = proveedor_de(conv)
@@ -303,10 +320,15 @@ def para_interfaz(conv: dict, docs: list[dict], etiquetas: dict[str, str]) -> di
                 continue
             if ll.get("id") in partes:
                 partes[ll["id"]]["estado"], partes[ll["id"]]["resumen"] = "pendiente", ""
-            tarjeta = ll.get("confirmacion") or {}
-            pendientes.append({"id": ll.get("id"), "nombre": ll.get("nombre"),
-                               "etiqueta": ll.get("etiqueta") or ll.get("nombre"), "titulo": tarjeta.get("titulo"),
-                               "detalle": tarjeta.get("detalle") or [], "aviso": tarjeta.get("aviso")})
+            tarjeta = ll.get("confirmacion") if isinstance(ll.get("confirmacion"), dict) else {}
+            p = {"id": ll.get("id"), "nombre": ll.get("nombre"), "etiqueta": ll.get("etiqueta") or ll.get("nombre"),
+                 "titulo": tarjeta.get("titulo"), "detalle": tarjeta.get("detalle") or [],
+                 "aviso": tarjeta.get("aviso")}
+            if tarjeta.get("entera") is not True:
+                # La guardó una versión anterior del panel, que cortaba cada valor a 500 caracteres sin marcarlo: el
+                # widget no ofrece aprobarla (y el servidor no la aprueba, `bucle.abrir_confirmacion`)
+                p["vieja"] = True
+            pendientes.append(p)
     return {"id": conv["_id"], "titulo": conv.get("titulo") or "Conversación", "mensajes": mensajes,
             "pendientes": pendientes, "proveedor": proveedor}
 

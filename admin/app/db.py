@@ -166,6 +166,9 @@ def _indices() -> dict[str, list[IndexModel]]:
         "agente_mensajes": [i([("conversacion", ASCENDING), ("seq", ASCENDING)], unique=True),
                             i("expira", expireAfterSeconds=0)],
         "agente_uso": [i("ts", expireAfterSeconds=180 * 24 * 3600), i([("uid", ASCENDING), ("dia", ASCENDING)])],
+        # Quién dejó de autorizar (`olvidar_en_conversaciones`): solo hace falta mientras dura una herramienta que la
+        # estaba leyendo (un turno nunca pasa de 10 minutos)
+        "agente_olvidos": [i("ts", expireAfterSeconds=3600), i("persona_id")],
     }
 
 
@@ -1031,14 +1034,20 @@ def olvidar_en_conversaciones(db: Database, ids: Iterable[int]) -> int:
     """Quien deja de autorizar (un «no» o una revocatoria, por el panel, una importación o una unión) no sigue en el
     historial que se le reenvía al modelo en cada ronda: se borran las conversaciones en que el modelo vio a alguna de
     esas fichas (activas) o de las que se unieron con ellas, como en la supresión. Las unidas se buscan de una vez por
-    nivel, no ficha por ficha: una importación puede traer miles de «no». Devuelve cuántas borró."""
+    nivel, no ficha por ficha: una importación puede traer miles de «no». Antes de borrar se anota quiénes dejaron de
+    autorizar (`agente_olvidos`, una hora): un turno que las estaba leyendo todavía no las tenía anotadas y las busca
+    ahí al anotarlas (`agente.conversaciones.dejaron_de_autorizar`). Devuelve cuántas conversaciones borró."""
     grupo = set(ids)
     frontera = list(grupo)
     while frontera:
         hijas = [x["_id"] for x in db.personas.find({"fusionada_en": {"$in": frontera}}, {"_id": 1})]
         frontera = [h for h in hijas if h not in grupo]
         grupo.update(frontera)
-    return borrar_conversaciones(db, {"personas": {"$in": sorted(grupo)}}) if grupo else 0
+    if not grupo:
+        return 0
+    ts = datetime.now(timezone.utc)  # una fecha (no el texto de `ahora`): la compara el turno y la vence el índice TTL
+    db.agente_olvidos.insert_many([{"persona_id": p, "ts": ts} for p in sorted(grupo)], ordered=False)
+    return borrar_conversaciones(db, {"personas": {"$in": sorted(grupo)}})
 
 
 def limpiar_ligados(db: Database, ids: list[int], cedulas: Iterable[str] = ()) -> None:

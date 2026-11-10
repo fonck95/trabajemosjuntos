@@ -140,7 +140,21 @@ body:has(#franja-llamada) .agente-panel {
   font-size: 13.5px; }
 .agente-tarjeta dl > div { display: contents; }
 .agente-tarjeta dt { color: var(--muted); font-weight: 650; font-size: 12.5px; }
-.agente-tarjeta dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Cada dato va entero (agente.js no recorta nada): uno más alto que su recuadro se desplaza dentro de él */
+.agente-tarjeta dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: min(15em, 40vh);
+  overflow-y: auto; }
+/* El que no se ve entero (`data-mas`, lo pone agente.js) lleva una sombra arriba o abajo mientras queda texto por ver
+   (las capas `local` siguen al texto y la tapan al llegar a cada borde), y la tarjeta pide desplazarlo antes de
+   aprobar */
+.agente-tarjeta dd[data-mas] { border-radius: 4px;
+  background: linear-gradient(var(--surface) 30%, transparent) top / 100% 32px no-repeat local,
+    linear-gradient(transparent, var(--surface) 70%) bottom / 100% 32px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, color-mix(in srgb, var(--ink) 40%, transparent), transparent)
+      top / 100% 14px no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, color-mix(in srgb, var(--ink) 40%, transparent), transparent)
+      bottom / 100% 14px no-repeat scroll; }
+.agente-tarjeta-largo { display: none; margin: 0; font-size: 12.5px; color: var(--ink-2); }
+.agente-tarjeta[data-estado="pendiente"]:has(dd[data-mas]) .agente-tarjeta-largo { display: block; }
 .agente-tarjeta-aviso { margin: 0; display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink-2);
   background: color-mix(in srgb, var(--warn) 14%, transparent); border-radius: 8px; padding: 8px 10px; }
 .agente-tarjeta-aviso svg { width: 16px; height: 16px; flex: none; margin-top: 1px;

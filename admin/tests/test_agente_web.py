@@ -393,8 +393,12 @@ def test_el_contexto_solo_lleva_claves_de_filtro_conocidas():
                         json.dumps(consultas)], cwd=RAIZ, capture_output=True, text=True, timeout=30)
     assert r.returncode == 0, r.stderr
     salida = json.loads(r.stdout)
-    # Pasan los filtros de Habitantes y el mapa y el estado conocido de las vistas; nada de la vuelta de Mnemo
-    assert set(salida["claves"]) == filtros | CLAVES_DE_VISTA, set(salida["claves"]) ^ (filtros | CLAVES_DE_VISTA)
+    # Pasan las que el servidor deja llegar al modelo (sistema.CLAVES_FILTRO: los filtros de Habitantes y el mapa que el
+    # asistente también usa y el estado conocido de las vistas); nada de la vuelta de Mnemo, ni la lista de origen, el
+    # liderazgo, el régimen de salud, la selección o el dibujo del mapa
+    from app.agente.sistema import CLAVES_FILTRO
+    assert set(salida["claves"]) == set(CLAVES_FILTRO), set(salida["claves"]) ^ set(CLAVES_FILTRO)
+    assert not {"lista", "lider", "regimen_salud", "ids", "poligono"} & set(salida["claves"])
     a, b, c, d = salida["consultas"]
     assert a == {"zona": "rural", "q": "Ana", "orden": "nombre", "p": "solicitudes"}
     assert b == {"zona": "urbana"}  # la primera vez que aparece cada clave

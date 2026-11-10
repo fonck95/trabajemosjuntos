@@ -250,8 +250,9 @@ def test_un_turno_que_se_esta_cerrando_no_da_409(sesion, falsas, monkeypatch, ca
     siguiente llegaba antes de que el turno cortado soltara sus candados y recibía 409 «ocupada». Ahora espera a que se
     suelten. El turno que se cierra los suelta recién DESPUÉS de que el turno nuevo los encontró tomados, así que la
     prueba no depende de la velocidad de la máquina. Casos: el turno que se cierra corre en este proceso (la reserva en
-    memoria y el candado de MongoDB) o en otro (solo el de MongoDB); ocupa otra conversación de la persona (el mensaje
-    nuevo empieza una); o lo que llega es la aprobación de una tarjeta."""
+    memoria, marcada como cerrándose, y el candado de MongoDB; sin la marca es un turno vivo y el 409 llega en el acto,
+    test_remate_nucleo.py) o en otro (solo el de MongoDB); ocupa otra conversación de la persona (el mensaje nuevo
+    empieza una); o lo que llega es la aprobación de una tarjeta."""
     db = sesion.app.state.db
     ocupacion = bucle.ocupacion_de(sesion.app)
     if caso == "confirmacion":
@@ -275,6 +276,7 @@ def test_un_turno_que_se_esta_cerrando_no_da_409(sesion, falsas, monkeypatch, ca
 
     if caso == "este_proceso":
         assert ocupacion.reservar(0, cid) is None
+        ocupacion.cerrar(0, cid)  # lo que hace el turno cortado al notar que el navegador se fue
         monkeypatch.setattr(bucle.Ocupacion, "reservar", espiar(bucle.Ocupacion.reservar, lambda r: r == "ocupada"))
     elif caso == "otra_conversacion":
         monkeypatch.setattr(conv_db, "otra_ocupada", espiar(conv_db.otra_ocupada, lambda r: r is True))

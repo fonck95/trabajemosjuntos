@@ -27,7 +27,7 @@ en **Ajustes → Asistente**.
 
 | Rol | Qué le puede pedir |
 |---|---|
-| Administrador y coordinador | Indicadores del tablero (también de una zona o con filtros), buscar y ver habitantes, fichas parecidas, reuniones (listar, ver, crear, agregar asistentes), pendientes de calidad (solicitudes por vencer, situaciones, conflictos, coincidencias, lugares sin punto), su trabajo, el equipo (indicadores y avance por zona, sin sesiones ni IP), barrios y veredas, catálogos, el mapa y cualquier vista. Propone crear y editar fichas, notas, acercamientos, autorizaciones, ubicación y teléfonos. Con Mnemo, el administrador (y el coordinador, si se le permite): documentos, calendario, formularios y memoria |
+| Administrador y coordinador | Indicadores del tablero (también de una zona o con filtros), buscar y ver habitantes, fichas parecidas, reuniones (listar, ver, crear, agregar asistentes), pendientes de calidad (solicitudes por vencer, situaciones, conflictos, coincidencias, lugares sin punto), su trabajo y el de cada usuario, el equipo (lo que hizo cada usuario, alertas, asignación y el avance de cada zona, sin sesiones ni IP), barrios y veredas, catálogos, el mapa y cualquier vista. Propone crear y editar fichas, notas, acercamientos, autorizaciones, ubicación y teléfonos. Con Mnemo, el administrador (y el coordinador, si se le permite): documentos, calendario, formularios y memoria |
 | Planillero | Buscar y ver habitantes (en su zona y con su presupuesto diario), parecidas, sus reuniones y las abiertas al equipo, su trabajo y sus pendientes, barrios y veredas, catálogos y sus vistas. Propone crear y editar fichas, notas, acercamientos (visita o reunión), autorizaciones, ubicación, teléfonos, reuniones y asistentes. Sin tablero, mapa ni equipo |
 | Consultor | Su cola de llamadas y su trabajo, buscar por nombre (3 letras o más) o por un número completo de 10 dígitos, y ver las fichas de las personas que tiene en curso. Propone acercamientos (llamada, WhatsApp, SMS…), autorizaciones y teléfonos |
 
@@ -39,11 +39,11 @@ Las herramientas del panel (`app/agente/herramientas/`):
 
 | Herramienta | Tipo | Quién | Qué hace |
 |---|---|---|---|
-| `buscar_personas`, `ver_persona` | lectura | todos | Habitantes y fichas, con la proyección de cada rol |
-| `personas_parecidas` | lectura | A, K, P | Posibles duplicados por nombre, cédula o teléfono |
+| `buscar_personas`, `ver_persona` | lectura | todos | Habitantes (por nombre, por la cédula o el teléfono completos o con filtros) y fichas, con la proyección de cada rol |
+| `personas_parecidas` | lectura | A, K, P | Posibles duplicados por nombre, cédula o teléfono (a quien no autorizó, solo por el nombre) |
 | `crear_persona`, `editar_persona`, `agregar_nota`, `ubicar_persona` | escritura | A, K, P | Ficha nueva (avisa si hay parecidas), cambios con «antes → después», notas y ubicación |
 | `registrar_acercamiento`, `registrar_autorizacion`, `agregar_telefono` | escritura | todos | Lo que la persona del equipo dicta: nunca inventa evidencias, autorizaciones ni números. Un «sí» va siempre con su medio y sus canales, y una solicitud de derechos con su tipo (y su plazo) |
-| `indicadores`, `equipo` | lectura | A, K | Tablero compacto (sin listas ni sensibles, y sin contar a quien no autorizó) e indicadores del equipo |
+| `indicadores`, `equipo` | lectura | A, K | Tablero compacto (sin listas ni sensibles, y sin contar a quien no autorizó) y el equipo: lo que hizo y administró cada usuario, alertas, asignación y el avance de cada zona (también sin contar a quien no autorizó) |
 | `listar_reuniones`, `ver_reunion` | lectura | A, K, P | Agenda y asistentes |
 | `crear_reunion`, `agregar_asistente` | escritura | A, K, P | Reunión nueva y asistentes |
 | `pendientes`, `mi_trabajo`, `buscar_lugar`, `catalogos` | lectura | todos | Insignias y colas, listas de trabajo, nomenclátor de barrios y veredas, catálogos no sensibles |
@@ -53,10 +53,26 @@ Las herramientas del panel (`app/agente/herramientas/`):
 A = administrador, K = coordinador, P = planillero. Las de Mnemo (`mnemo_…`) se describen [más abajo](#conectar-con-mnemo).
 
 De quien no autorizó el tratamiento, las herramientas solo dan quién es y su barrio o vereda. Una búsqueda con otros
-filtros (o con un orden que no sea por nombre o por lugar), los indicadores, las cifras del mapa y la lista de
-asistentes de una reunión no lo traen ni lo cuentan: cada filtro que casa sería un dato suyo. Para saber quiénes no
-autorizaron, el asistente busca solo por esa autorización (con su barrio o vereda, si hace falta). En el panel salen
-todos, como siempre.
+filtros (o con un orden que no sea por nombre) o por un número, los indicadores, las cifras del mapa, los
+asistentes de una reunión (la lista y los conteos), Mi trabajo, lo pendiente del trabajo, lo que cada usuario del
+equipo hizo con las personas y las cifras del avance por zona no lo traen ni lo cuentan: cada filtro que casa, o la
+resta de dos conteos, sería un dato suyo. Para saber quiénes no autorizaron, el asistente busca solo por esa
+autorización (con su barrio o vereda, o su nombre, si hace falta). En el panel salen todos, como siempre.
+
+La búsqueda del asistente no es la de Habitantes: compara las palabras solo con el nombre, y un número solo entero (la
+cédula o el teléfono completos, también escritos por grupos o con el +57). No busca por dirección ni por correo, ni
+por una parte de un número: cada búsqueda que casa o no sería una respuesta sobre un dato que el modelo no ve (la
+dirección o el correo de quien no autorizó, los dígitos enmascarados de una cédula o un teléfono), y unas cuantas
+bastarían para reconstruirlo. Si unas palabras no encuentran a nadie, el resultado dice que solo se buscó en el nombre
+(y cómo buscar por barrio o vereda): la dirección o el sitio escrito se buscan en Habitantes. El orden tampoco dice
+nada: la búsqueda rápida va por nombre (no primero las fichas más completas) y el orden «lugar», que dentro del lugar
+ordena por la dirección, deja fuera a quien no autorizó. Las parecidas, por lo mismo, traen a quien no autorizó solo
+por un nombre muy parecido, nunca por la cédula o el teléfono; también las del alta (`crear_persona`): si una
+coincide solo por un número, no se muestra, la ficha no se crea y el asistente pide revisarla en Habitantes antes de
+proponer crearla igual. Una cédula que ya es de quien no autorizó tampoco dice de quién es. Lo pendiente da el tipo y
+el plazo de las solicitudes de los titulares, no de quién es cada una. La API lo hace con `estricta=1` y los conteos
+sin quien no autorizó con `tratables=1` (en reuniones, Mi trabajo, las insignias y Usuarios): la interfaz no los manda
+y sigue igual.
 
 ## Cómo se usa
 
@@ -75,9 +91,10 @@ todos, como siempre.
   filtros de la vista que están en la dirección (solo los que el asistente también puede usar) y el encuadre del mapa.
   Por eso «¿qué le falta a esta ficha?» funciona. Es solo una pista: las herramientas vuelven a leer todo con los
   permisos de la persona. Lo que no le corresponde no viaja aunque esté en la dirección (ver [Qué va al
-  modelo](#privacidad-y-protección-de-datos-ley-1581-de-2012)): lo buscado en Habitantes con números o un correo (el
-  asistente sabe que hay una búsqueda, no qué se buscó), la lista de origen, el liderazgo, el régimen de salud, la
-  selección o el dibujo del mapa, ni el centro del mapa visto de cerca.
+  modelo](#privacidad-y-protección-de-datos-ley-1581-de-2012)): la consulta de la ruta (lo que va tras «?» o «#»), lo
+  buscado en Habitantes con números o un correo (el asistente sabe que hay una búsqueda, no qué se buscó), la lista de
+  origen, el liderazgo, el régimen de salud, una etiqueta sensible, la selección o el dibujo del mapa, ni el centro del
+  mapa visto de cerca.
 - **Aprobar.** Cuando el asistente propone escribir, aparece una tarjeta con lo que va a hacer y los valores exactos
   (al editar, «antes → después») y los botones **Aprobar** y **Rechazar**. Nada se guarda sin aprobar. Lo rechazado no
   lo vuelve a proponer salvo que se le pida, y escribir otro mensaje sin decidir cuenta como rechazo (si ese mensaje se
@@ -89,8 +106,16 @@ todos, como siempre.
   (salvo registrar su autorización), ni siquiera para el administrador, y si deja de autorizar entre la tarjeta y la
   aprobación, no escribe. La tarjeta muestra los valores enteros: lo que no cabe en ella (un dato de más de 4.000
   caracteres, más de 40 datos o algo que la herramienta tendría que recortar, como un documento largo de Mnemo) no se
-  propone, y el asistente lo divide o lo acorta. Una decisión que llega desde una pestaña que ya no está al día (otra
-  pestaña aprobó y llegó otra propuesta) no decide nada: hay que volver a abrir la conversación.
+  propone, y el asistente lo divide o lo acorta. Tampoco lo que no se vería como se va a escribir: un dato con
+  caracteres invisibles o de control, o que cambian cómo se ve el resto del texto (como las marcas de dirección, el
+  espacio de ancho cero o un selector de variante que no es parte de un emoji), sin asignar o de uso privado, o con
+  muchos saltos de línea o espacios seguidos que esconderían el final. Un dato largo se lee entero desplazándolo dentro
+  de su recuadro (una sombra marca que sigue y la tarjeta pide leerlo antes de aprobar); el panel nunca lo recorta, y
+  si una tarjeta trajera más de lo que puede mostrar, no tiene **Aprobar**: solo se rechaza. Lo mismo lo que quedó
+  esperando aprobación con una versión anterior del panel (que no mostraba los valores enteros): se rechaza y se le
+  pide al asistente que lo vuelva a proponer. Una decisión que llega desde una pestaña que ya no está al día (otra
+  pestaña aprobó y llegó otra propuesta) no decide nada: el asistente vuelve a traer la conversación, con lo que espera
+  aprobación ahora.
 - **El mapa** (administrador y coordinador). «Muéstrame en el mapa a las personas de La Paz sin cédula»: abre el mapa
   si hace falta, vuela al lugar, aplica los filtros y las capas y resalta los puntos. En el celular el panel se pliega
   para que se vea el cambio. Los nombres de las etiquetas del mapa los pone el navegador: al modelo solo le vuelve un
@@ -108,8 +133,9 @@ todos, como siempre.
   o borrarlas. Cada una es solo de su dueño: ni el administrador ve las de los demás. Se borran solas tras los días
   de **Ajustes** sin usarse. Una conversación muy larga deja de admitir mensajes: hay que empezar otra (también sale
   más barato). Cada conversación sigue con el modelo con que empezó (Mnemo o el modo directo): si ese ya no está, el
-  asistente ofrece **Nueva conversación**. Si a un usuario le cambian el rol o la zona, o lo desactivan, sus
-  conversaciones se borran: lo que el asistente le mostró era de su rol de antes.
+  asistente ofrece **Nueva conversación**. Si a un usuario le cambian el rol o la zona (en **Usuarios**, o en
+  **Zonas** al asignarle o quitarle un área, redibujarla o borrarla), o lo desactivan, sus conversaciones se borran: lo
+  que el asistente le mostró era de su rol o su zona de antes.
 - **Tope diario.** El panel muestra cuántos mensajes quedan hoy. Al llegar al tope, se sigue al día siguiente (hora de
   Colombia). Aprobar o rechazar tarjetas también cuenta como un mensaje: el asistente vuelve a trabajar con lo
   decidido. Lo que queda pendiente al llegar al tope se puede aprobar al día siguiente.
@@ -224,9 +250,10 @@ hacen todos los roles habilitados, y no lee ni escribe nada del Mnemo del admini
 
 **Cómo se controla.**
 
-- Toda escritura en Mnemo pasa primero por la tarjeta de aprobación del panel, que muestra los argumentos exactos. Lo
-  que Mnemo no hace sin permiso (compartir, publicar) pide además su propia aprobación en Mnemo, con la sesión del
-  administrador: el asistente devuelve el enlace y no da nada por hecho antes de que se apruebe.
+- Toda escritura en Mnemo pasa primero por la tarjeta de aprobación del panel, que muestra los argumentos exactos (sus
+  nombres y sus valores enteros, como se mandan: lo que no se vería así no se propone). Lo que Mnemo no hace sin
+  permiso (compartir, publicar) pide además su propia aprobación en Mnemo, con la sesión del administrador: el
+  asistente devuelve el enlace y no da nada por hecho antes de que se apruebe.
 - Cada escritura aprobada se manda a Mnemo una sola vez: Mnemo no tiene clave de idempotencia, así que si la misma
   tarjeta llegara a aprobarse otra vez (un turno cortado), el asistente no la repite y pide revisarla en Mnemo.
 - Lo que solo lee (buscar, leer, listar, el calendario y los formularios, exportar un documento) corre sin tarjeta,
@@ -273,18 +300,22 @@ proyección por rol de la API (`app/agente/minimizar.py`).
 
 **Qué va al modelo.**
 
-- Lo que escribe la persona y el contexto de la vista (`app/agente/sistema.py`): la ruta, el número de la ficha o la
-  reunión abierta, los filtros de la dirección que el asistente también puede usar y el encuadre del mapa. Lo decide
-  el servidor, mande lo que mande el navegador: la búsqueda de Habitantes va solo si no lleva números ni un correo
-  (si no, el asistente sabe que hay una búsqueda, no qué se buscó), y del mapa va el zoom y, solo de lejos (zoom de
-  14 o menos), el centro con dos decimales (unos 1,1 km).
+- Lo que escribe la persona y el contexto de la vista (`app/agente/sistema.py`): la ruta (sin la consulta ni el
+  fragmento, y solo si es una del panel), la entrada del menú que está abierta, el número de la ficha o la reunión
+  abierta, los filtros de la dirección que el asistente también puede usar y el encuadre del mapa. Lo decide el
+  servidor, mande lo que mande el navegador: la búsqueda de Habitantes va solo si no lleva números ni un correo (si
+  no, el asistente sabe que hay una búsqueda, no qué se buscó), una etiqueta solo si existe y no es sensible, y del
+  mapa va el zoom y, solo de lejos (zoom de 14 o menos), el centro con dos decimales (unos 1,1 km).
 - El nombre y el rol de quien conversa, en las instrucciones del asistente.
 - Lo que devuelven las herramientas, recortado: de cada habitante, lo necesario para la tarea (nombre, barrio o
   vereda, sexo y edad, si es menor, estudios, ocupación y hogar, puesto y mesa, autorización y abordaje, qué le falta
   a la ficha…), con la cédula y los teléfonos enmascarados («···123», «···2233») también para el administrador, y las
-  notas, la dirección, las observaciones y los campos propios recortados y con los correos y los números de 7 o más
-  dígitos tapados («···233»), también escritos por grupos («300 111 22 33», «(604) 832 12 34», «71.234.567»); las
-  fechas y los periodos («2018-2022») quedan. Indicadores agregados y reuniones.
+  notas, la dirección, las observaciones, el lugar escrito a mano (el que queda cuando el panel no reconoce el barrio
+  o vereda, también en las filas de una búsqueda, una cola o una reunión) y los campos propios recortados y con los
+  correos y los números de 7 o más dígitos tapados («···233»), también escritos por grupos, con espacios, guiones o
+  puntos entre ellos («300 111 22 33», «604 - 832 12 34», «(604) 832 12 34», «71.234.567»). Las fechas, los periodos
+  y las direcciones quedan como están («07 / 11 / 2026», «2018 - 2022», «calle 50 # 48 - 21»). Indicadores agregados
+  y reuniones.
 - Con Mnemo, lo que lee del espacio del administrador.
 - En cada ronda, las instrucciones del asistente, las herramientas que ofrece el panel y la conversación: con Mnemo, eso
   es lo que reciben Mnemo y su proveedor de modelos.
@@ -295,14 +326,21 @@ proyección por rol de la API (`app/agente/minimizar.py`).
   las etiquetas o campos propios marcados como sensibles.
 - La cédula y los teléfonos completos, el correo, el punto exacto, la fecha de nacimiento exacta, el número de ficha,
   los trámites, la procedencia y el historial de cada dato, ni quién registró qué.
-- Del contexto de la vista: lo buscado en Habitantes con números o un correo (se escribió en el panel, no al
-  asistente), los filtros de lista de origen, liderazgo, régimen de salud o fuente de cédulas, la selección (`ids`) y
-  el dibujo (`poligono`) del mapa, lo que no es un filtro (como lo que trae la vuelta de Mnemo) y el centro del mapa
-  visto de cerca: al resaltar a una sola persona, el mapa se encuadra en ella y el centro sería su punto.
-- De quien marcó **No autorizó**, nada más que quién es y que no autorizó, ni siquiera para el administrador: para
-  verla, se abre la ficha en el panel.
-- En una búsqueda por número (cédula, teléfono o ficha), las filas van sin los dígitos enmascarados: la API compara
-  la cédula por su comienzo, y juntar ese comienzo con los últimos dígitos dejaría reconstruirla.
+- Del contexto de la vista: la consulta y el fragmento de la ruta (lo que va después de «?» o «#»: lo que sirve va,
+  si va, como filtro), una ruta que no es del panel o un nombre de vista que no es del menú (lo que mande el
+  navegador), lo buscado en Habitantes con números o un correo (se escribió en el panel, no al asistente), los
+  filtros de lista de origen, liderazgo, régimen de salud o fuente de cédulas, una etiqueta sensible o que no existe
+  (con la ficha abierta desde esa lista, diría un dato sensible de esa persona), la selección (`ids`) y el dibujo
+  (`poligono`) del mapa, lo que no es un filtro (como lo que trae la vuelta de Mnemo) y el centro del mapa visto de
+  cerca: al resaltar a una sola persona, el mapa se encuadra en ella y el centro sería su punto.
+- De quien marcó **No autorizó**, nada más que quién es, que no autorizó y su barrio o vereda del nomenclátor, ni
+  siquiera para el administrador. Nunca el lugar escrito a mano, que puede traer un número, una dirección o a quién
+  preguntar: si la herramienta no puede comprobar que el lugar es un barrio o vereda del nomenclátor, va sin lugar.
+  Las búsquedas, los conteos, el mapa, las reuniones y Mi trabajo tampoco dejan deducir nada más de esa persona (ver
+  [Qué puede hacer](#qué-puede-hacer)). Para verla, se abre la ficha en el panel.
+- En una búsqueda por número (la cédula o el teléfono completos), las filas van sin los dígitos enmascarados: no le
+  suman nada a lo que se escribió, y si alguna vez casara una parte del número, juntarla con el final lo
+  reconstruiría.
 - La clave de Anthropic, los tokens de la conexión con Mnemo, las claves de los usuarios, las sesiones ni las IP.
 
 **Retención.** Las conversaciones se guardan en MongoDB (`agente_conversaciones` y `agente_mensajes`) y se borran
@@ -315,8 +353,11 @@ tarjeta). Al **suprimir** a una persona, se borran enteras las conversaciones do
 cada arranque repasa las que hayan quedado); si la supresión llega mientras el asistente la está leyendo, el turno
 termina y esa conversación también se borra. Lo mismo cuando deja de autorizar (un «no» o una revocatoria, por el
 panel, con «no contactar», por una importación o al unir su ficha con la de quien no autorizó): sus datos no siguen en
-el historial que se le reenvía al modelo en cada ronda, aunque la conversación sea la que registró la revocatoria. Al
-cambiarle el rol o la zona a un usuario, o al desactivarlo, se borran sus conversaciones.
+el historial que se le reenvía al modelo en cada ronda, aunque la conversación sea la que registró la revocatoria, y si
+el «no» llega mientras el asistente la está leyendo (también entre las fichas que devuelve una escritura, como las
+parecidas del alta), el turno termina y esa conversación se borra (para eso queda una hora en `agente_olvidos` quién
+dejó de autorizar, sin ningún otro dato). Al cambiarle el rol o la zona a un usuario (también desde **Zonas**), o al
+desactivarlo, se borran sus conversaciones.
 
 **Transferencia al proveedor del modelo.** Mandar datos personales a Mnemo y al proveedor de modelos de esa cuenta
 (o a Anthropic, en modo directo), terceros posiblemente en el exterior, es una transmisión internacional de datos
@@ -393,7 +434,9 @@ muestra el gasto de la clave; ponga ahí un límite mensual.
 - Un turno a la vez por persona y por conversación, y como mucho 4 a la vez por proceso del servidor («El asistente
   está atendiendo muchas conversaciones a la vez»). En el servicio único, los turnos tienen 4 cupos propios: no le
   quitan cupos a la API del panel. Cada mensaje o decisión pide su cupo con el cuerpo de la petición ya recibido
-  (entero en 10 segundos, o 408): una conexión lenta no retiene cupos, y solo los retiene un turno de verdad. El turno
+  (entero en 10 segundos, o 408): una conexión lenta no retiene cupos, y solo los retiene un turno de verdad. Un
+  mensaje de quien ya tiene un turno en curso recibe 409 `ocupada` en el acto, sin retener un cupo; solo si ese turno se
+  está cerrando (tras **Detener**) espera unos segundos a que suelte la conversación, y un mensaje por persona. El turno
   renueva su candado mientras corre: si el proceso se cae a mitad (un despliegue, una caída), la persona puede volver a
   usar el asistente en un minuto y medio.
 
@@ -498,8 +541,9 @@ se suba.
 2. Antes de abrir el flujo, el servidor responde con JSON normal lo que impide el turno: 503 `sin_configurar` (no hay
    modelo: ni Mnemo conectado con permiso para usar sus modelos ni clave de Anthropic) o `saturado` (ya hay 4 turnos
    en este proceso; trae `Retry-After`), 403 `agente_apagado` (su rol no está habilitado), 429 `volumen` (tope diario),
-   409 `ocupada` (ya hay un turno suyo en curso; si el anterior se está cerrando, como tras **Detener**, antes espera
-   hasta 5 segundos a que suelte la conversación), `larga` (conversación demasiado larga) o `proveedor` (la
+   409 `ocupada` (ya hay un turno suyo en curso: en el acto; solo si ese turno se está cerrando, como tras
+   **Detener**, antes espera hasta 5 segundos a que suelte la conversación), `larga` (conversación demasiado larga) o
+   `proveedor` (la
    conversación es de un modelo que ya no está: hay que empezar otra), y 404 si la conversación no es suya o no
    existe.
 3. Abre el flujo y pide una ronda al modelo de la conversación (a Mnemo, con `mnemo_model_complete`, o a Anthropic) con
@@ -508,12 +552,15 @@ se suba.
    Una respuesta sin nada (pasa) queda solo para auditoría, con un aviso: reenviarla rompería la conversación.
 4. Ejecuta las herramientas en orden, como mucho 8 por ronda: las de lectura y de interfaz en el acto (con la API
    interna; las de Mnemo, que no pasan por ella, vuelven a revisar antes la sesión y los ajustes); las de escritura
-   quedan pendientes, emite una tarjeta por cada una (con los valores enteros) y termina con `fin` `confirmacion`.
+   quedan pendientes, emite una tarjeta por cada una (con los valores enteros, si se ven como se van a escribir) y
+   termina con `fin` `confirmacion`.
 5. Al aprobar o rechazar, `POST /api/agente/confirmaciones` con `{conversacion, decisiones: [{id, aprobar}]}` (cuenta
-   en el tope diario; 409 `sin_pendientes` si alguna decisión es sobre algo que ya no está pendiente) quita lo
-   pendiente, ejecuta lo aprobado (con su clave de idempotencia), devuelve al modelo todos los resultados juntos y
-   sigue el turno. Si el turno se corta a mitad, lo aprobado no vuelve a quedar aprobable (se haría dos veces): en el
-   turno siguiente el modelo sabe que pudo hacerse y lo verifica antes de proponerlo otra vez.
+   en el tope diario; 409 `sin_pendientes` si alguna decisión es sobre algo que ya no está pendiente, o si aprueba lo
+   que guardó una versión anterior del panel, que queda como rechazado) quita lo pendiente (y guarda lo que no se
+   aprobó), ejecuta lo aprobado (con su clave de idempotencia), devuelve al modelo todos los resultados juntos y sigue
+   el turno. Si el turno se corta a mitad, lo aprobado no vuelve a quedar aprobable (se haría dos veces): en el turno
+   siguiente el modelo sabe que pudo hacerse y lo verifica antes de proponerlo otra vez, y lo rechazado le llega como
+   rechazado.
 6. Termina con `fin` y el uso del día.
 
 **Eventos** (una línea JSON por evento, con `tipo`):
@@ -525,7 +572,7 @@ se suba.
 | `texto_ronda` | `texto`: el texto final de la ronda en curso cuando no coincide con lo que llegó por partes (con Mnemo, los trozos son un adelanto). Reemplaza el de la ronda |
 | `herramienta` | `id`, `nombre`, `etiqueta`, `estado` (`inicio`, `ok`, `error`, `pendiente`, `aprobada`, `rechazada`) y `resumen` |
 | `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias` o `mapa` (acciones del mapa) |
-| `confirmar` | La tarjeta de una escritura: `id`, `titulo`, `detalle` (pares etiqueta y valor) y `aviso` |
+| `confirmar` | La tarjeta de una escritura: `id`, `titulo`, `detalle` (pares etiqueta y valor, enteros: el widget no recorta nada, y si llegan más de 40 o uno de más de 4.000 caracteres no ofrece **Aprobar**) y `aviso`. Lo pendiente al abrir una conversación lleva lo mismo y, si lo guardó una versión anterior del panel, `vieja` (tampoco ofrece **Aprobar**) |
 | `descartar` | La ronda se repite tras un error pasajero: se borra lo que se pintó de ella |
 | `aviso` | `texto` y `nivel` (`info` o `alerta`): un rechazo del modelo, el paso a un modelo de respaldo |
 | `latido` | Cada 15 s sin otros eventos, para mantener viva la conexión |
@@ -540,7 +587,8 @@ se suba.
 | `llm_peticion` | Ofrece **Reintentar** y **Nueva conversación**: puede ser pasajero (con Mnemo, una sobrecarga del proveedor a mitad de la respuesta llega así) o no tener arreglo en esta conversación |
 | `mnemo_sin_modelo` | Ofrece **Reintentar** y vuelve a leer el estado: puede ser pasajero (el proveedor de la cuenta se cayó un momento) |
 | `mnemo_conexion`, `sin_configurar`, `agente_apagado` | Vuelve a leer el estado: si ya no hay modelo, al administrador le explica qué falta, con un enlace a Ajustes |
-| `mnemo_plan`, `mnemo_creditos`, `volumen`, `permiso`, `sin_pendientes` | Nada más |
+| `sin_pendientes` | Al decidir tarjetas: vuelve a traer la conversación (en vez del mensaje), con lo que espera aprobación ahora y una nota de por qué cambió |
+| `mnemo_plan`, `mnemo_creditos`, `volumen`, `permiso` | Nada más |
 
 Salvo `llm_peticion` y `mnemo_sin_modelo`, ninguno de esos ofrece **Reintentar**: repetir el mismo mensaje no lo
 arregla. Los demás (la red, un plazo vencido, el modelo saturado o caído un momento) sí. Los de Mnemo como modelo:
@@ -552,10 +600,11 @@ El texto de una ronda puede llegar en un solo trozo largo (con Mnemo, si el prov
 partes): el widget lo pinta entero, con el mismo tope que `texto_ronda`.
 
 **En MongoDB**: `agente_conversaciones` (dueño, título, proveedor del modelo con que empezó, instrucciones y
-herramientas congeladas, personas vistas, lo pendiente de aprobar, candado del turno y fecha de borrado),
-`agente_mensajes` (un documento por mensaje, con su número de orden), `agente_uso` (mensajes, tokens y créditos por
-persona y día) y, en `meta`, `mnemo_conexion` (la conexión con Mnemo, con los tokens cifrados). Los índices TTL borran
-lo vencido.
+herramientas congeladas, personas vistas, lo pendiente de aprobar y lo que no se aprobó, las escrituras de Mnemo ya
+mandadas, candado del turno y fecha de borrado), `agente_mensajes` (un documento por mensaje, con su número de orden),
+`agente_uso` (mensajes, tokens y créditos por persona y día), `agente_olvidos` (quién dejó de autorizar en la última
+hora: solo el número de la ficha y la hora) y, en `meta`, `mnemo_conexion` (la conexión con Mnemo, con los tokens
+cifrados). Los índices TTL borran lo vencido.
 
 ## Probar en local
 

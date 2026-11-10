@@ -33,21 +33,33 @@ const CON_NUEVA = new Set(['larga', 'no_existe', 'borrada', 'proveedor', 'llm_pe
 // Errores tras los que pudo cambiar el estado del asistente (el rol apagado, sin proveedor del modelo, la conexión con
 // Mnemo caída o sin permiso para usar sus modelos): se vuelve a leer, y al administrador se le explica qué hacer
 const RELEER_ESTADO = new Set(['agente_apagado', 'sin_configurar', 'mnemo_conexion', 'mnemo_sin_modelo']);
-// Las claves de la dirección que viajan al modelo como filtros de la vista: las de Habitantes y el mapa (`Filtros` de
-// api/filtros.py) y el estado de algunas vistas (orden y página del directorio, pestaña de Calidad, la persona de «Mi
-// trabajo», el periodo de Usuarios). Ninguna otra: la vuelta de Mnemo a Ajustes trae en la dirección `code`, `state`
-// e `iss` (o `error`), y una clave desconocida tampoco es asunto del modelo
-const CLAVES_CONTEXTO = new Set(['q', 'zona', 'lugar_id', 'fuente', 'lista', 'etiqueta', 'con_cedula', 'con_telefono',
-  'precision', 'reunion_id', 'asistio', 'consentimiento', 'lider', 'sexo', 'completitud_max', 'ids', 'edad_min', 'edad_max',
-  'tipo_documento', 'cedula_verificada', 'puesto_id', 'con_puesto', 'con_mesa', 'votacion_estado', 'donde', 'abordado',
+// Las claves de la dirección que viajan al modelo como filtros de la vista: las que deja pasar el servidor
+// (`CLAVES_FILTRO` de app/agente/sistema.py, que decide mande lo que mande el navegador): los filtros de Habitantes y
+// el mapa que el asistente también puede usar y el estado de algunas vistas (orden y página del directorio, pestaña de
+// Calidad, la persona de «Mi trabajo», el periodo de Usuarios). Ninguna otra: ni la lista de origen, el liderazgo o el
+// régimen de salud, ni la selección o el dibujo del mapa (`ids`, `poligono`); tampoco lo que trae la vuelta de Mnemo a
+// Ajustes en la dirección (`code`, `state` e `iss`, o `error`) ni una clave desconocida
+const CLAVES_CONTEXTO = new Set(['q', 'zona', 'lugar_id', 'area_id', 'fuente', 'etiqueta', 'con_cedula', 'con_telefono',
+  'precision', 'reunion_id', 'asistio', 'consentimiento', 'tratables', 'sexo', 'edad_min', 'edad_max', 'tipo_documento',
+  'cedula_verificada', 'completitud_max', 'puesto_id', 'con_puesto', 'con_mesa', 'votacion_estado', 'donde', 'abordado',
   'contactado', 'abordaje_estado', 'ultimo_resultado', 'sin_acercamiento_dias', 'proximo_vencido', 'canal_autorizado',
-  'situacion', 'creado_por', 'actualizado_por', 'menor', 'requiere_actualizacion', 'varios_telefonos', 'telefono_estado',
-  'estado_civil', 'nivel_educativo', 'situacion_laboral', 'estrato', 'tenencia_vivienda', 'regimen_salud', 'tratables',
-  'mios', 'poligono', 'area_id',
+  'situacion', 'requiere_actualizacion', 'varios_telefonos', 'telefono_estado', 'estado_civil', 'nivel_educativo',
+  'situacion_laboral', 'tenencia_vivienda', 'estrato', 'mios', 'creado_por', 'actualizado_por', 'menor',
   ...['cedula', 'telefono', 'sexo', 'edad', 'lugar', 'puesto', 'mesa', 'direccion', 'puesto_mesa'].map((c) => `sin_${c}`),
   'ids_total', 'orden', 'pagina', 'p', 'uid', 'desde', 'hasta', 'por', 'agrupar']);
 const MAX_FILTROS = 30;
+// El encuadre del mapa en el contexto, como lo deja pasar el servidor (`sistema._mapa`): el centro solo de lejos (zoom
+// de 14 o menos), con 2 decimales (unos 1,1 km), y el zoom con uno. De cerca, el centro de la pantalla puede ser el
+// punto de una persona: al resaltar a una sola, el mapa se encuadra en ella
+const MAPA_ZOOM_CENTRO = 14;
+const MAPA_DECIMALES = 2;
 const MAX_TEXTO_RONDA = 100000;           // `texto_ronda`: el texto final de una ronda (como en una conversación guardada)
+// La tarjeta de aprobación muestra entero lo que se va a escribir: el servidor manda los valores enteros y no ofrece lo
+// que no cabe en estos topes (`TARJETA_VALOR` y `TARJETA_FILAS` de app/agente/bucle.py; las etiquetas, de hasta 80).
+// Aquí no se recorta nada: si llega algo que no se puede mostrar entero, la tarjeta no deja aprobar
+const TARJETA_VALOR = 4000;
+const TARJETA_FILAS = 40;
+const TARJETA_ETIQUETA = 80;
 // Por qué se cayó la conexión con Mnemo (`mnemo.conexion.motivo` del estado)
 const CAIDA_MNEMO = {
   revocada: 'Mnemo ya no la acepta: se revocó en Mnemo, venció por no usarse o la cuenta se desactivó.',
@@ -131,6 +143,67 @@ export function filtrosDe(consulta) {
     if (CLAVES_CONTEXTO.has(k) && !Object.hasOwn(filtros, k)) { filtros[k] = v.slice(0, 200); n++; }
   }
   return filtros;
+}
+
+/** El encuadre del mapa que va en el contexto de cada mensaje, de `c` ({centro: [lon, lat] o {lat, lon|lng}, zoom}, lo
+ * que da el mapa): el zoom con un decimal y, solo con el zoom de MAPA_ZOOM_CENTRO o menos, el centro redondeado a
+ * MAPA_DECIMALES. Sin un zoom válido no va el centro (podría ser de cerca). null si no queda nada que mandar. */
+export function encuadreMapa(c) {
+  if (!c || typeof c !== 'object') return null;
+  const centro = c.centro ?? c.center;
+  let lon = null, lat = null;
+  if (Array.isArray(centro) && centro.length === 2) [lon, lat] = centro;
+  else if (centro && typeof centro === 'object') { lat = centro.lat; lon = centro.lon ?? centro.lng; }
+  const ok = (v, min, max) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
+  const r = (v, d) => Math.round(v * 10 ** d) / 10 ** d;
+  if (!ok(c.zoom, 0, 24)) return null;
+  const zoom = r(c.zoom, 1);
+  if (zoom > MAPA_ZOOM_CENTRO || !ok(lon, -180, 180) || !ok(lat, -90, 90)) return { zoom };
+  return { centro: [r(lon, MAPA_DECIMALES), r(lat, MAPA_DECIMALES)], zoom };
+}
+
+/** ¿Tiene `s` más de `max` caracteres? Contados como el servidor, por puntos de código (un emoji es uno). */
+function pasaDe(s, max) {
+  if (s.length <= max) return false;
+  let n = 0;
+  for (const _ of s) if (++n > max) return true;
+  return false;
+}
+
+/** Las filas [etiqueta, valor] de una tarjeta de aprobación (`detalle` del evento `confirmar` o de lo pendiente al
+ * abrir una conversación), todas y enteras, o null si no se pueden mostrar enteras: más de TARJETA_FILAS filas, un
+ * valor de más de TARJETA_VALOR caracteres, una etiqueta de más de TARJETA_ETIQUETA o una fila que no es un par de
+ * textos (el servidor manda siempre textos). Nunca se recorta ni se descarta una fila en silencio: lo que se aprueba es
+ * lo que se ve. */
+export function filasTarjeta(detalle) {
+  if (detalle == null) return [];
+  if (!Array.isArray(detalle) || detalle.length > TARJETA_FILAS) return null;
+  const filas = [];
+  for (const p of detalle) {
+    if (!Array.isArray(p) || p.length !== 2) return null;
+    const [k, v] = p;
+    if (typeof k !== 'string' || typeof v !== 'string' || pasaDe(k, TARJETA_ETIQUETA) || pasaDe(v, TARJETA_VALOR)) {
+      return null;
+    }
+    filas.push([k, v]);
+  }
+  return filas;
+}
+
+/** Por qué no se puede aprobar una tarjeta (el evento `confirmar` o lo pendiente al abrir una conversación), o null si
+ * se puede: la guardó una versión anterior del panel (`vieja`, que pone el servidor: cortaba cada valor a 500
+ * caracteres sin marcarlo, y el servidor tampoco la aprueba) o trae más de lo que puede mostrar entero
+ * (filasTarjeta() da null). Rechazarla, sí. */
+export function bloqueoTarjeta(ev) {
+  if (ev?.vieja === true) {
+    return 'No se puede aprobar: se preparó con una versión anterior del panel, que no mostraba los datos enteros. '
+      + 'Rechácela y pídale al asistente que la vuelva a proponer.';
+  }
+  if (filasTarjeta(ev?.detalle) === null) {
+    return 'No se puede aprobar: trae más de lo que la tarjeta puede mostrar entero. Rechácela y pídale al asistente '
+      + 'que lo divida en partes o lo acorte.';
+  }
+  return null;
 }
 
 /** El origen de Mnemo que da el estado, solo si es `https://host[:puerto]` (si no, ningún enlace sale del panel). */
@@ -836,6 +909,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     sucias.clear();
     chips.clear();
     tarjetas.clear();
+    largos?.disconnect();
     actual = ultima = null;
     nuevaRonda();
     log.replaceChildren();
@@ -1034,14 +1108,24 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   // ── Tarjetas de aprobación ──
   const pendientesSinEnviar = () => [...tarjetas.values()].filter((t) => !t.final && !t.enviada);
 
-  function pares(detalle) {
-    return (Array.isArray(detalle) ? detalle : []).slice(0, 30)
-      .filter((p) => Array.isArray(p) && p.length >= 2)
-      .map(([k, v]) => [texto(k, 80), texto(typeof v === 'string' ? v : v == null ? '' : String(v), 500)])
-      .filter(([k]) => k);
+  // Un dato más alto que su recuadro se desplaza dentro de él (agente.css): se marca (`data-mas`), la tarjeta pide
+  // leerlo entero antes de aprobar y se puede recorrer con el teclado. Se mide cuando se ve y cada vez que cambia de
+  // tamaño (se abre el panel, cambia el ancho); la marca va en el cuadro siguiente, así no realimenta al observador
+  const largos = typeof ResizeObserver === 'function' ? new ResizeObserver((es) => {
+    const dds = es.map((e) => e.target);
+    requestAnimationFrame(() => dds.forEach(marcarLargo));
+  }) : null;
+  function marcarLargo(dd) {
+    if (!dd.isConnected) return;
+    const mas = dd.scrollHeight - dd.clientHeight > 1;
+    dd.toggleAttribute('data-mas', mas);
+    if (mas) dd.tabIndex = 0;
+    else dd.removeAttribute('tabindex');
   }
 
-  function crearTarjeta({ id, titulo: t, detalle, aviso }) {
+  /** `detalle`: las filas de filasTarjeta() (o null si no se pueden mostrar enteras); `bloqueo`: por qué no se puede
+   * aprobar (bloqueoTarjeta()), o null: con él no hay «Aprobar». */
+  function crearTarjeta({ id, titulo: t, detalle, aviso, bloqueo }) {
     const n = ++numTarjeta;
     const art = el('article', 'agente-tarjeta');
     art.dataset.estado = 'pendiente';
@@ -1049,14 +1133,23 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     const h = el('h3', null, t);
     h.id = `agente-tarjeta-${n}`;
     art.append(el('p', 'agente-tarjeta-et', 'Necesita su aprobación'), h);
-    if (detalle.length) {
+    const bloqueada = bloqueo != null;
+    if (detalle?.length) {
       const dl = el('dl');
       for (const [k, v] of detalle) {
         const fila = el('div');
-        fila.append(el('dt', null, k), el('dd', null, v || '—'));
+        const dd = el('dd', null, v || '—');
+        fila.append(el('dt', null, k || '—'), dd);
         dl.append(fila);
+        largos?.observe(dd);
       }
-      art.append(dl);
+      const largo = el('p', 'agente-tarjeta-largo', 'Desplace los datos largos para leerlos enteros antes de aprobar.');
+      art.append(dl, largo);
+    }
+    if (bloqueada) {
+      const b = el('p', 'agente-tarjeta-aviso agente-tarjeta-no-cabe');
+      b.append(ico('alerta'), el('span', null, bloqueo));
+      art.append(b);
     }
     if (aviso) {
       const a = el('p', 'agente-tarjeta-aviso');
@@ -1069,11 +1162,12 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     si.type = no.type = 'button';
     si.setAttribute('aria-pressed', 'false');
     no.setAttribute('aria-pressed', 'false');
+    si.hidden = si.disabled = bloqueada;
     botones.append(si, no);
     const linea = el('p', 'agente-tarjeta-estado');
     linea.setAttribute('aria-live', 'polite');
     art.append(botones, linea);
-    const tarjeta = { id, el: art, si, no, botones, linea, decision: null, enviada: false, final: false };
+    const tarjeta = { id, el: art, si, no, botones, linea, bloqueada, decision: null, enviada: false, final: false };
     si.addEventListener('click', () => decidir(tarjeta, true));
     no.addEventListener('click', () => decidir(tarjeta, false));
     return tarjeta;
@@ -1082,8 +1176,8 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   function alConfirmar(ev, { dentro = null } = {}) {
     const id = texto(ev.id, 100);
     if (!id || tarjetas.has(id)) return;
-    const t = crearTarjeta({ id, titulo: texto(ev.titulo, 200) || 'Confirmar acción', detalle: pares(ev.detalle),
-      aviso: texto(ev.aviso, 500) });
+    const t = crearTarjeta({ id, titulo: texto(ev.titulo, 200) || 'Confirmar acción', detalle: filasTarjeta(ev.detalle),
+      aviso: texto(ev.aviso, 500), bloqueo: bloqueoTarjeta(ev) });
     tarjetas.set(id, t);
     (dentro || enAsistente()).append(t.el);
     nuevaRonda();
@@ -1097,13 +1191,14 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     notaPendiente.hidden = !hay || !!turno;
     for (const t of tarjetas.values()) {
       if (t.final) continue;
-      t.si.disabled = t.no.disabled = t.enviada || !!turno;
+      t.no.disabled = t.enviada || !!turno;
+      t.si.disabled = t.bloqueada || t.no.disabled;
     }
     senal();
   }
 
   function decidir(t, aprobar) {
-    if (t.final || t.enviada || turno) return;
+    if (t.final || t.enviada || turno || (aprobar && t.bloqueada)) return;
     t.decision = aprobar;
     t.si.setAttribute('aria-pressed', String(aprobar));
     t.no.setAttribute('aria-pressed', String(!aprobar));
@@ -1398,7 +1493,19 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     return caja;
   }
 
+  /** Las decisiones llegaron cuando eso ya no esperaba aprobación (`sin_pendientes`: se atendió en otra pestaña o
+   * llegó otra propuesta) y el servidor no hizo nada con ellas: se vuelve a traer la conversación, que muestra lo que
+   * espera su aprobación ahora, y se dice por qué cambió. */
+  async function traerLoPendiente() {
+    if (!conv || !(await abrirConversacion(conv, { silencioso: true }))) return;
+    nota('Lo que decidió ya no estaba esperando su aprobación (se atendió en otra pestaña o llegó otra propuesta) y no '
+      + 'se hizo nada con su decisión. Así está ahora la conversación.', 'alerta', { dentro: log });
+    alFinal(true);
+  }
+
   function cerrarTurno(t, terminado) {
+    const codigoFinal = t.excepcion ? (t.excepcion instanceof ErrorApi ? t.excepcion.codigo : null) : t.error?.codigo;
+    if (t.tipo === 'confirmacion' && codigoFinal === 'sin_pendientes') { traerLoPendiente(); return; }
     const dentro = t.msj || actual?.el || null;
     const reintento = (reusar) => ['Reintentar', () => {
       entrada.focus({ preventScroll: true });
@@ -1429,12 +1536,10 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
         if (reintentable) acciones.unshift(reintento({ burbuja: t.burbuja, msj: t.msj }));
       } else if (t.tipo === 'mensaje' && reintentable) {
         acciones.unshift(reintento(null));
-      } else if (t.tipo === 'confirmacion' && !t.inicio && codigo !== 'sin_pendientes') {
+      } else if (t.tipo === 'confirmacion' && !t.inicio) {
         // Las decisiones no llegaron: las tarjetas quedan listas otra vez, con la misma decisión marcada
         for (const x of t.lote) { x.enviada = false; x.linea.textContent = ''; }
         if (reintentable) acciones.unshift(['Reintentar', () => enviarDecisiones(t.lote.filter((x) => !x.final))]);
-      } else if (codigo === 'sin_pendientes') {
-        duda = 'ya no estaba pendiente';
       }
     } else if (!terminado) {
       nota('Detuvo la respuesta.', 'info', { dentro });
@@ -1473,22 +1578,15 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   }
 
   // ── Contexto de la vista: se toma al enviar (las vistas cambian su URL con replaceState, sin avisar) ──
+  /** El encuadre del mapa abierto, minimizado con encuadreMapa() (el centro solo de lejos y redondeado), o null. */
   function camara() {
     let s = null;
     try { s = estadoMapa(); } catch { s = null; }
-    const c = s && typeof s === 'object' ? (s.camara && typeof s.camara === 'object' ? s.camara : s) : null;
-    let centro = c?.centro ?? c?.center;
-    let zoom = c?.zoom;
-    if (centro == null && rutaActual() === '/mapa' && window.__mapa) {
-      try { centro = window.__mapa.getCenter().toArray(); zoom = window.__mapa.getZoom(); } catch { centro = null; }
+    let c = s && typeof s === 'object' ? (s.camara && typeof s.camara === 'object' ? s.camara : s) : null;
+    if ((c?.centro ?? c?.center) == null && rutaActual() === '/mapa' && window.__mapa) {
+      try { c = { centro: window.__mapa.getCenter().toArray(), zoom: window.__mapa.getZoom() }; } catch { c = null; }
     }
-    let lon = null, lat = null;
-    if (Array.isArray(centro) && centro.length === 2) [lon, lat] = centro;
-    else if (centro && typeof centro === 'object') { lat = centro.lat; lon = centro.lon ?? centro.lng; }
-    const ok = (v, lim) => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= lim;
-    if (!ok(lon, 180) || !ok(lat, 90)) return null;
-    const r = (v, d) => Math.round(v * 10 ** d) / 10 ** d;
-    return { centro: [r(lon, 6), r(lat, 6)], zoom: ok(zoom, 24) ? r(zoom, 2) : null };
+    return encuadreMapa(c);
   }
 
   function contexto() {
@@ -1705,8 +1803,9 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     (listaHist.querySelector('button') || volverBtn).focus({ preventScroll: true });
   }
 
+  /** Trae y pinta la conversación `id`. true si quedó pintada (no si falló o mientras tanto se pidió otra). */
   async function abrirConversacion(id, { silencioso = false } = {}) {
-    if (turno || cargando) return;
+    if (turno || cargando) return false;
     if (historialAbierto) verHistorial(false);
     limpiarConversacion();
     log.append(el('p', 'agente-cargando', 'Cargando la conversación…'));
@@ -1716,23 +1815,24 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     try {
       d = await api.get(`/api/agente/conversaciones/${id}`);
     } catch (e) {
-      if (esta !== vez) return; // mientras tanto se pidió otra (o una nueva)
+      if (esta !== vez) return false; // mientras tanto se pidió otra (o una nueva)
       cargando = false;
       if (e instanceof ErrorApi && e.estado === 404) {
         pintarBienvenida();
         if (!silencioso) nota('Esa conversación ya no existe: se borró o venció.', 'info', { dentro: log });
-        return;
+        return false;
       }
       limpiarConversacion();
       conv = id;
       const acciones = [['Reintentar', () => abrirConversacion(id)], ['Nueva conversación', () => nuevaConversacion()]];
       mostrarError(explicar(e), acciones, log);
-      return;
+      return false;
     }
-    if (esta !== vez) return;
+    if (esta !== vez) return false;
     cargando = false;
     pintarConversacion(d);
     if (!silencioso) entrada.focus({ preventScroll: true });
+    return true;
   }
 
   function pintarConversacion(d) {
