@@ -5,7 +5,9 @@
   cada petición. Depende de quién conversa (nombre y rol) y de las herramientas que se le ofrecieron.
 * Lo variable (fecha y hora de Colombia, la vista abierta, la ficha o reunión abierta, los filtros y el encuadre del
   mapa) va al comienzo de cada mensaje de la persona, entre `<contexto_del_panel>`. Es una pista que manda el
-  navegador: se limpia y se acota aquí y las herramientas vuelven a leer todo con los permisos de la persona.
+  navegador: se limpia y se acota aquí y las herramientas vuelven a leer todo con los permisos de la persona. Como
+  sale del panel, va lo mínimo aunque el navegador mande más: solo los filtros que el asistente también puede usar
+  (`CLAVES_FILTRO`), la búsqueda sin números ni correos y el centro del mapa solo de lejos y redondeado.
 """
 from __future__ import annotations
 
@@ -15,6 +17,7 @@ from datetime import datetime
 from typing import Any, Iterable
 
 from .. import modelo
+from . import minimizar
 
 INSTRUCCIONES_MNEMO_MAX = 2500
 NOMBRE_MAX = 80
@@ -35,7 +38,29 @@ MESES = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto
          "noviembre", "diciembre")
 
 _CONTROL = re.compile(r"[\x00-\x1f\x7f<>]")
-_CLAVE = re.compile(r"[A-Za-z0-9_.-]{1,40}")
+# Los filtros de la dirección que llegan al modelo, aunque el navegador mande otros: los de Habitantes y el mapa que el
+# asistente también puede usar (`FiltrosEntrada` de herramientas/personas.py) y el estado de algunas vistas (orden y
+# página, la persona de «Mi trabajo», el periodo y la agrupación de Usuarios). Nunca `lista`, `lider` ni
+# `regimen_salud` (datos políticos o de salud), `ids` ni `poligono` (la selección y el dibujo del mapa), ni lo que no
+# es un filtro (la vuelta de Mnemo trae `code` y `state`)
+CLAVES_FILTRO = frozenset({
+    "q", "zona", "lugar_id", "area_id", "fuente", "etiqueta", "con_cedula", "con_telefono", "precision", "reunion_id",
+    "asistio", "consentimiento", "tratables", "sexo", "edad_min", "edad_max", "tipo_documento", "cedula_verificada",
+    "completitud_max", "puesto_id", "con_puesto", "con_mesa", "votacion_estado", "donde", "abordado", "contactado",
+    "abordaje_estado", "ultimo_resultado", "sin_acercamiento_dias", "proximo_vencido", "canal_autorizado", "situacion",
+    "requiere_actualizacion", "varios_telefonos", "telefono_estado", "estado_civil", "nivel_educativo",
+    "situacion_laboral", "tenencia_vivienda", "estrato", "mios", "creado_por", "actualizado_por", "menor",
+    *(f"sin_{c}" for c in ("cedula", "telefono", "sexo", "edad", "lugar", "puesto", "mesa", "direccion",
+                           "puesto_mesa")),
+    "ids_total", "orden", "pagina", "p", "uid", "desde", "hasta", "por", "agrupar"})
+FUENTES = frozenset({"tramites", "reunion", "manual", "planilla"})  # «cedulas» y «ambas» revelan una base política
+FILTROS_MAX, FILTRO_MAX, Q_MAX = 30, 200, 120
+# El buscador de Habitantes acepta nombre, cédula, teléfono, dirección o ficha: con números o un correo, lo escrito ahí
+# (no al asistente) no viaja; el modelo sabe que hay una búsqueda y puede pedir el nombre
+Q_CON_NUMEROS = "[búsqueda por número o correo: no se envía al asistente]"
+# El encuadre del mapa: el zoom y, de lejos (zoom de 14 o menos), el centro con 2 decimales (unos 1,1 km). De cerca no
+# va el centro: al resaltar a una persona el mapa se encuadra en ella y el centro de la pantalla es su punto
+MAPA_DECIMALES, MAPA_ZOOM_CENTRO = 2, 14
 
 
 def _limpio(v: Any, n: int) -> str:
@@ -139,7 +164,7 @@ def _numero(v: Any, minimo: float, maximo: float) -> float | None:
 
 def _mapa(m: Any) -> str:
     """El encuadre del mapa: `centro` como [lon, lat] (lo que da MapLibre con `getCenter().toArray()`) o como
-    {lat, lon|lng}, y `zoom`. Lo que no cumple se descarta."""
+    {lat, lon|lng}, y `zoom`. Lo que no cumple se descarta; el centro, solo de lejos y redondeado (MAPA_ZOOM_CENTRO)."""
     if not isinstance(m, dict):
         return ""
     camara = m.get("camara") if isinstance(m.get("camara"), dict) else m
@@ -151,12 +176,27 @@ def _mapa(m: Any) -> str:
         lat = _numero(centro.get("lat"), -90, 90)
         lon = _numero(centro.get("lon", centro.get("lng")), -180, 180)
     zoom = _numero(camara.get("zoom"), 0, 24)
+    zoom = round(zoom, 1) if zoom is not None else None
     partes = []
-    if lat is not None and lon is not None:
-        partes.append(f"centro lat {lat}, lon {lon}")
+    if lat is not None and lon is not None and (zoom is None or zoom <= MAPA_ZOOM_CENTRO):
+        partes.append(f"centro lat {round(lat, MAPA_DECIMALES)}, lon {round(lon, MAPA_DECIMALES)}")
     if zoom is not None:
-        partes.append(f"zoom {round(zoom, 1)}")
+        partes.append(f"zoom {zoom}")
     return ", ".join(partes)
+
+
+def _filtros(filtros: Any) -> dict[str, str]:
+    """Los filtros de la dirección que pueden llegar al modelo (`CLAVES_FILTRO`), limpios, acotados y con los números
+    largos y los correos tapados (por si un valor trae uno)."""
+    limpios: dict[str, str] = {}
+    for k, v in list(filtros.items())[:FILTROS_MAX] if isinstance(filtros, dict) else []:
+        valor = _limpio(v, FILTRO_MAX) if k in CLAVES_FILTRO else ""
+        if not valor or (k == "fuente" and valor not in FUENTES):
+            continue
+        if k == "q":
+            valor = Q_CON_NUMEROS if re.search(r"[\d@]", valor) else valor[:Q_MAX]
+        limpios[k] = minimizar.texto_libre(valor, FILTRO_MAX)
+    return limpios
 
 
 def contexto_del_panel(contexto: Any, ahora: datetime) -> str:
@@ -173,16 +213,9 @@ def contexto_del_panel(contexto: Any, ahora: datetime) -> str:
         lineas.append(f"Ficha abierta: persona {pid} (/personas/{pid})")
     if rid:
         lineas.append(f"Reunión abierta: {rid} (/reuniones/{rid})")
-    filtros = c.get("filtros")
-    if isinstance(filtros, dict):
-        limpios = {}
-        for k, v in list(filtros.items())[:30]:
-            if isinstance(k, str) and _CLAVE.fullmatch(k):
-                valor = _limpio(v, 200)
-                if valor:
-                    limpios[k] = valor
-        if limpios:
-            lineas.append(f"Filtros de la URL: {json.dumps(limpios, ensure_ascii=False)}")
+    filtros = _filtros(c.get("filtros"))
+    if filtros:
+        lineas.append(f"Filtros de la URL: {json.dumps(filtros, ensure_ascii=False)}")
     mapa = _mapa(c.get("mapa"))
     if mapa:
         lineas.append(f"Mapa: {mapa}")

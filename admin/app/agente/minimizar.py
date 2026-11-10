@@ -13,9 +13,10 @@ ya mandó, nunca de la base), así que un planillero o un consultor nunca recibe
   que pide `registrar_acercamiento`) y el número enmascarado («···2233»).
 * De quien no autorizó el tratamiento («No autorizó») solo sale quién es y que no autorizó: ni para el administrador
   se le pasan sus datos al modelo. Para verla, la persona del equipo abre la ficha en el panel.
-* Los textos libres (notas, observaciones, dirección) van recortados y con los números largos y los correos
-  enmascarados: los escriben personas del equipo, pueden traer un teléfono o una cédula copiados, y el modelo los trata
-  como datos, nunca como instrucciones.
+* Los textos libres (notas, observaciones, dirección, campos propios) van recortados y con los números largos (7 o
+  más dígitos, también escritos por grupos: «300 111 22 33», «71.234.567») y los correos enmascarados: los escriben
+  personas del equipo, pueden traer un teléfono o una cédula copiados, y el modelo los trata como datos, nunca como
+  instrucciones. Las fechas y los periodos («2018-2022») quedan como están.
 * Las etiquetas y los campos propios se filtran con `Sensibles` (lo que la base marca como sensible). Sin ese dato la
   ficha sale sin etiquetas ni campos propios: ante la duda, no se manda.
 """
@@ -54,9 +55,16 @@ CLAVES_ABORDAJE = ("estado", "n", "efectivos", "intentos_sin_exito", "ultimo_fec
 CLAVES_VOTACION = ("puesto_id", "puesto_nombre", "puesto_texto", "puesto_codigo", "mesa", "mesa_texto", "donde",
                    "municipio")
 
-# Números de 7 o más dígitos seguidos (cédulas, teléfonos), teléfonos con separadores («300 111 2233») y cédulas con
-# puntos de miles («71.234.000»). Las fechas (2026-11-07, 07/11/2026) no casan: sus grupos son cortos.
-_NUMEROS = re.compile(r"(?<!\d)(?:\d{7,}|\d{3}[ .-]\d{3}[ .-]\d{4}|\d{1,3}(?:[.,]\d{3}){2,3})(?!\d)")
+# Números de 7 o más dígitos (cédulas, teléfonos), también escritos por grupos: con espacios, puntos, comas, guiones,
+# barras o paréntesis («300 111 22 33», «(604) 832 12 34», «71.234.567», «+57 300 111-2233»). Entre dos grupos va un
+# solo separador: «calle 50 # 48 - 21» no es un número.
+_SEP = r"[ \t\u00a0\u2007\u202f.,/\-\u2010-\u2015]"
+_NUMEROS = re.compile(rf"(?<!\d)\+?(?:\(\d+\)|\d+)(?:{_SEP}?\(\d+\)|{_SEP}\d+|(?<=\))\d+)*")
+DIGITOS_MIN = 7
+# Las fechas (2026-11-07, 07/11/2026) y los periodos (2018-2022) quedan como están
+_FECHAS = re.compile(r"(?<!\d)(?:(?P<a>\d{4})(?P<s>[-./])(?P<m>\d{1,2})(?P=s)(?P<d>\d{1,2})"
+                     r"|(?P<d2>\d{1,2})(?P<s2>[-./])(?P<m2>\d{1,2})(?P=s2)(?P<a2>\d{4})"
+                     r"|(?P<desde>(?:19|20)\d\d)[-/\u2010-\u2015](?P<hasta>(?:19|20)\d\d))(?!\d)")
 _CORREOS = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 
 
@@ -76,14 +84,38 @@ def sensibles_de(db: Any) -> Sensibles:
 
 def _enmascarar_numero(m: re.Match) -> str:
     digitos = re.sub(r"\D", "", m.group(0))
-    return f"{acceso.MASCARA}{digitos[-3:]}"
+    return f"{acceso.MASCARA}{digitos[-3:]}" if len(digitos) >= DIGITOS_MIN else m.group(0)
+
+
+def _es_fecha(m: re.Match) -> bool:
+    if m.group("desde"):
+        return int(m.group("desde")) <= int(m.group("hasta"))
+    a, mes, dia = (m.group("a"), m.group("m"), m.group("d")) if m.group("a") else (m.group("a2"), m.group("m2"),
+                                                                                       m.group("d2"))
+    return 1900 <= int(a) <= 2099 and 1 <= int(mes) <= 12 and 1 <= int(dia) <= 31
+
+
+def _sin_numeros(t: str) -> str:
+    """`t` con los números largos enmascarados («···233»), sin tocar las fechas ni los periodos."""
+    partes, desde = [], 0
+    for f in _FECHAS.finditer(t):
+        if _es_fecha(f):
+            partes += [_NUMEROS.sub(_enmascarar_numero, t[desde:f.start()]), f.group(0)]
+            desde = f.end()
+    partes.append(_NUMEROS.sub(_enmascarar_numero, t[desde:]))
+    return "".join(partes)
 
 
 def texto_libre(v: Any, n: int = TEXTO_MAX) -> Any:
-    """Un texto escrito por el equipo, recortado a `n` caracteres y sin números largos ni correos completos."""
+    """Un texto escrito por el equipo, recortado a `n` caracteres y sin números largos ni correos completos. Un número
+    (un campo propio numérico) sale igual, salvo que sea largo: puede ser un teléfono o una cédula."""
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        t = str(int(v)) if isinstance(v, float) and v.is_integer() else str(v)  # 3001112233.0, de un Excel
+        tapado = _sin_numeros(t)
+        return v if tapado == t else tapado
     if not isinstance(v, str):
         return v
-    t = _CORREOS.sub("[correo]", _NUMEROS.sub(_enmascarar_numero, v))
+    t = _sin_numeros(_CORREOS.sub("[correo]", v))  # primero los correos: un número dentro de uno no deja su comienzo
     return t[:n] + "…" if len(t) > n else t
 
 
@@ -219,8 +251,9 @@ def ficha(d: dict, sensibles: Sensibles | None = None) -> dict:
         if ets is not None:
             out["etiquetas"] = [{k: e.get(k) for k in ("id", "nombre", "grupo")} for e in ets
                                 if e.get("id") not in sensibles.etiquetas]
-        if isinstance(d.get("extra"), dict):
-            out["extra"] = {k: texto_libre(v, 120) for k, v in d["extra"].items() if k not in sensibles.campos}
+        if isinstance(d.get("extra"), dict):  # texto, número o sí/no; otra cosa, como texto (pasa por las máscaras)
+            out["extra"] = {k: texto_libre(v if v is None or isinstance(v, (str, int, float)) else str(v), 120)
+                            for k, v in d["extra"].items() if k not in sensibles.campos}
     return out
 
 
