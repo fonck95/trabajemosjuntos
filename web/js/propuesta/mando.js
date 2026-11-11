@@ -175,6 +175,13 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   });
   let tMedir = 0;
   ventana.addEventListener('resize', () => { clearTimeout(tMedir); tMedir = setTimeout(medir, 120); });
+  // El ancho de la leyenda y del panel cambia sin `resize` (otra leyenda al cambiar de paso, el iframe que se angosta o se
+  // ensancha cuando se abre o se pliega el asistente, una letra que termina de cargar): se vuelve a medir en el acto, antes
+  // de pintar, y el subtítulo nunca queda un cuadro encima de la leyenda con la medida vieja
+  if (typeof ventana.ResizeObserver === 'function') {
+    const ro = new ventana.ResizeObserver(() => medir());
+    for (const x of [pres, leyenda, panel]) if (x) ro.observe(x);
+  }
   if (caps[estado.ci]) { listo = true; enviar({ tipo: 'listo', ...actual() }); }
   return { subtitulo, estado: actual };
 }
