@@ -584,10 +584,19 @@ async function protocolo(page, op, caso) {
     await page.waitForSelector('#agente-panel:not([hidden]) .agente-md', espera);
     v.restaura_la_conversacion = await page.evaluate(() => document.querySelector('.agente-md').textContent === 'Encontré dos.'
       && document.querySelector('.agente-herr').dataset.estado === 'ok' && document.querySelector('#agente-sub').textContent.startsWith('¿Quiénes'));
-    // Tema oscuro, para mirar
-    await page.click('#cambiar-tema');
+    // Tema oscuro, para mirar: #cambiar-tema es el grupo Sistema / Claro / Oscuro (un clic en el grupo cae en su centro,
+    // «Claro»), así que se elige «Oscuro» y se comprueba que el panel del asistente cambió; luego se vuelve a «Sistema»
+    const temaPanel = () => page.evaluate(() => ({ tema: document.documentElement.dataset.theme || null, guardado: localStorage.getItem('tema'),
+      fondo: getComputedStyle(document.querySelector('#agente-panel')).backgroundColor }));
+    const antes = await temaPanel();
+    await page.click('#cambiar-tema [data-tema="dark"]');
+    const oscuro = await temaPanel();
     await page.screenshot({ path: `${capturas}/agente-${caso.nombre}-oscuro.png` });
-    await page.click('#cambiar-tema');
+    await page.click('#cambiar-tema [data-tema=""]');
+    const sistema = await temaPanel();
+    caso.datos.tema = { antes, oscuro, sistema };
+    v.tema_oscuro = antes.tema === null && oscuro.tema === 'dark' && oscuro.guardado === 'dark' && oscuro.fondo !== antes.fondo
+      && sistema.tema === null && sistema.guardado === null && sistema.fondo === antes.fondo;
   }
 
   // ── Historial: abrir una conversación con algo pendiente y borrarla ──

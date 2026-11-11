@@ -13,10 +13,13 @@ Railway) con personas, coincidencias y reuniones inventadas. Lo de la auditoría
   caben pasan a «Más», que las ofrece y las ejecuta), «Unir» y «Suprimir» en el menú ⋯, los avisos encima de la barra,
   y «Cerrar sesión» y el tema alcanzables con el menú abierto (P1, P6, P9).
 * Un diálogo con algo escrito pide confirmar antes de descartarlo al tocar el fondo o con Escape; sin nada escrito se
-  cierra sin preguntar; el botón de cerrar mide 44×44 (P5).
-* El menú lateral cerrado del celular es inerte (fuera del tabulador), al abrirse el foco entra en él y la vista de
-  atrás queda inerte; Escape lo cierra y devuelve el foco; en escritorio nunca es inerte, tampoco al ensanchar la
-  ventana (P8).
+  cierra sin preguntar; el botón de cerrar mide 44×44 (P5). Mientras «Completar» guarda (el PATCH retenido hasta que
+  la prueba lo suelta, sin relojes), Escape, el fondo y dos Escape seguidos no preguntan ni cierran, y al terminar se
+  cierra sin preguntar ni dejar una pregunta suelta. «Nueva persona» que el navegador cerró solo (Escape repetido) y
+  `dialogo` volvió a abrir sigue contando como pendiente: un 401 abre el ingreso en un diálogo en vez de recargar.
+* El menú lateral cerrado del celular es inerte (fuera del tabulador), al abrirse el foco entra en él y queda atrapado:
+  lo que tapa el velo (la vista, la barra de arriba y el botón del asistente) queda inerte; Escape lo cierra y devuelve
+  el foco; en escritorio nunca es inerte, tampoco al ensanchar la ventana (P8).
 * El tema Sistema / Claro / Oscuro y la tarjeta destacada del panel visible en oscuro (P11).
 * Sin violaciones de CSP ni errores de consola en ningún caso.
 
@@ -64,6 +67,9 @@ def _sembrar(db) -> dict:
     }], fuente="tramites")[0]
     db.personas.update_one({"_id": ficha}, {"$set": {"fuentes": ["tramites", "cedulas"]}})
     otro = ids[30]
+    # Dos fichas de trámites sin cédula y fuera de las coincidencias: «Completar» guarda una en cada tamaño
+    sin_cedula = {"w390": ids[6], "w1400": ids[9]}
+    assert all(tramites[i]["cedula"] is None for i in (6, 9))
     pares = [(ficha, otro, 0.91, "nombre_telefono"), (ids[1], ids[25], 0.86, "cruce_cedula"),
              (ids[2], ids[3], 0.74, "homonimo"), (ids[4], ids[5], 0.7, "variante")]
     db.coincidencias.insert_many([{"_id": i + 1, "persona_id": a, "candidato_id": b, "estado": "pendiente",
@@ -77,7 +83,7 @@ def _sembrar(db) -> dict:
     } for i, (t, f, tema) in enumerate([("Reunión inventada con la junta de acción comunal del barrio", "2026-11-03", "Agua"),
                                         ("Reunión inventada de vivienda", "2026-10-21", "Vivienda"),
                                         ("Reunión inventada rural", "2026-09-30", None)])])
-    return {"persona": ficha, "png": base64.b64encode(_png_plano()).decode()}
+    return {"persona": ficha, "sin_cedula": sin_cedula, "png": base64.b64encode(_png_plano()).decode()}
 
 
 @pytest.fixture(scope="module")
@@ -180,6 +186,18 @@ def test_la_barra_de_la_tableta_muestra_todas_las_acciones(resultados):
 @pytest.mark.parametrize("tamano", ["w390", "w1400"])
 def test_dialogo_con_algo_escrito_pide_confirmar(resultados, tamano):
     _revisar(resultados, f"dialogo_{tamano}")
+
+
+@requiere_navegador
+@pytest.mark.parametrize("tamano", ["w390", "w1400"])
+def test_dialogo_guardando_no_pregunta_ni_cierra(resultados, tamano):
+    """Lo escrito ya va al servidor: preguntar «¿Descartar?» sería falso y descartar dejaría la ficha sin lo guardado."""
+    _revisar(resultados, f"guardando_{tamano}")
+
+
+@requiere_navegador
+def test_nueva_persona_reabierta_sigue_pendiente(resultados):
+    _revisar(resultados, "pendiente")
 
 
 @requiere_navegador
@@ -592,12 +610,111 @@ async function dialogo(nav, caso, op) {
   await ctx.close();
 }
 
+// ── Guardar con la red lenta: Escape y el fondo no preguntan ni cierran ──
+async function guardando(nav, caso, op, id) {
+  const v = caso.revisiones, d = caso.datos;
+  const tactil = !!op.hasTouch;
+  const { ctx, page } = await abrir(nav, caso, op);
+  await ingresar(page);
+  await ir(page, `/personas/${id}`);
+  // El PATCH de «Completar» queda retenido hasta que la prueba lo suelta: «guardando» dura lo que haga falta
+  let soltar, llego;
+  const retenido = new Promise((ok) => { soltar = ok; });
+  const enCamino = new Promise((ok) => { llego = ok; });
+  await page.route((u) => u.pathname === `${pref}/api/personas/${id}` && u.searchParams.get('modo') === 'completar',
+    async (r) => { llego(); await retenido; await r.continue(); });
+  await page.evaluate(() => { window.__cierres = 0; document.addEventListener('close', () => { window.__cierres++; }, true); });
+  if (await page.isVisible('.barra-acciones [data-completar]')) await tocar(page, '.barra-acciones [data-completar]', tactil);
+  else await page.evaluate(() => document.querySelector('.barra-acciones [data-completar]').click());
+  await page.waitForSelector('dialog[open] #f-completar', espera);
+  const cedula = String(1098765400 + id);
+  await page.fill('dialog[open] [name=cedula]', cedula);
+  await page.fill('dialog[open] [name=cedula_confirmacion]', cedula);
+  await tocar(page, 'dialog[open] [data-guardar="uno"]', tactil);
+  await enCamino;
+  const abiertos = () => page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map((x) => x.querySelector('h2').textContent));
+  const solo = (l) => l.length === 1 && l[0].startsWith('Completar');
+  const fondo = async () => {
+    const r = await page.evaluate(() => [...document.querySelectorAll('dialog[open]')].pop().getBoundingClientRect().toJSON());
+    const [x, y] = r.top >= 6 ? [op.viewport.width / 2, r.top / 2] : [r.left / 2, r.top + r.height / 2];
+    if (tactil) await page.touchscreen.tap(x, y); else await page.mouse.click(x, y);
+    await dormir(250);
+  };
+  await page.keyboard.press('Escape');
+  await dormir(250);
+  d.escape = await abiertos();
+  v.guardando_escape_no_pregunta = solo(d.escape);
+  await fondo();
+  d.fondo = await abiertos();
+  v.guardando_fondo_no_pregunta = solo(d.fondo);
+  // Dos Escape seguidos: Chromium ya no deja cancelar el segundo y cierra el diálogo, que `dialogo` vuelve a abrir
+  for (let i = 0; i < 2; i++) { await page.keyboard.press('Escape'); await dormir(250); }
+  d.escapes = await abiertos();
+  d.cierres_del_navegador = await page.evaluate(() => window.__cierres);
+  v.guardando_escapes_seguidos_no_cierran = solo(d.escapes);
+  // El fondo otra vez, lo último antes de terminar: si preguntara, la pregunta quedaría suelta al cerrarse el formulario
+  await fondo();
+  d.fondo_al_final = await abiertos();
+  v.guardando_fondo_al_final_no_pregunta = solo(d.fondo_al_final);
+  // Al terminar de guardar se cierra sin preguntar: el aviso queda en la página (no en una pregunta que sobró) y la
+  // ficha muestra lo guardado
+  soltar();
+  await page.waitForFunction(() => [...document.querySelectorAll('.aviso')].some((a) => a.textContent.includes('datos guardados')), null, espera);
+  d.tras_guardar = await abiertos();
+  v.al_guardar_cierra_sin_preguntar = d.tras_guardar.length === 0;
+  d.cedula_en_la_ficha = await page.inputValue('#f-datos [name=cedula]');
+  v.ficha_con_lo_guardado = d.cedula_en_la_ficha === cedula;
+  await ctx.close();
+}
+
+// ── «Nueva persona» cerrada por el navegador y vuelta a abrir: sigue pendiente y un 401 no recarga ──
+async function pendiente(nav, caso) {
+  const v = caso.revisiones, d = caso.datos;
+  const { ctx, page } = await abrir(nav, caso, TAMANOS.w1400);
+  await ingresar(page);
+  await ir(page, '/personas');
+  const abiertos = () => page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map((x) => x.querySelector('h2').textContent));
+  await page.evaluate(() => { window.__cierres = 0; document.addEventListener('close', () => { window.__cierres++; }, true); });
+  await page.click('#nueva');
+  await page.waitForSelector('dialog[open] #f-nueva', espera);
+  const nombre = 'PERSONA INVENTADA DE PRUEBA';
+  await page.fill('#f-nueva [name=nombre]', nombre);
+  // Tres Escape seguidos: el primero pregunta, el segundo cierra la pregunta y el tercero ya no se puede cancelar
+  // (Chromium cierra el diálogo y `dialogo` lo vuelve a abrir preguntando); «Seguir escribiendo» lo conserva
+  for (let i = 0; i < 3; i++) { await page.keyboard.press('Escape'); await dormir(300); }
+  d.cierres_del_navegador = await page.evaluate(() => window.__cierres);
+  if ((await abiertos()).length > 1) await page.click('dialog[open]:last-of-type [data-cerrar]:not(.cerrar-dialogo)');
+  await dormir(200);
+  d.abiertos = await abiertos();
+  v.sigue_abierta_con_lo_escrito = JSON.stringify(d.abiertos) === '["Nueva persona"]' && await page.inputValue('#f-nueva [name=nombre]') === nombre;
+  v.sigue_pendiente = await page.evaluate(async (p) => (await import(`${p}/static/js/api.js`)).hayCambiosSinGuardar(), pref);
+  // La sesión vence: la búsqueda en vivo de parecidas (un GET) recibe un 401 y se ingresa en un diálogo, sin recargar
+  let recargo = false;
+  page.on('framenavigated', (f) => { if (f === page.mainFrame()) recargo = true; });
+  await ctx.clearCookies();
+  await page.fill('#f-nueva [name=nombre]', nombre + ' X');
+  d.reingreso = await page.waitForSelector('dialog[open] #f-reingreso', { timeout: 8000 }).then(() => true, () => false);
+  d.recargo = recargo;
+  v.un_401_abre_el_ingreso = d.reingreso && !recargo;
+  if (d.reingreso) {
+    await page.fill('dialog[open] #f-reingreso [name=clave]', clave);
+    await page.click('dialog[open] button[type=submit][form=f-reingreso]');
+    await page.waitForSelector('#f-reingreso', { state: 'detached', ...espera });
+    d.tras_ingresar = { valor: await page.inputValue('#f-nueva [name=nombre]'), abiertos: await abiertos() };
+    v.conserva_lo_escrito = !recargo && d.tras_ingresar.valor === nombre + ' X';
+  }
+  await ctx.close();
+}
+
 // ── Menú lateral ──
 async function menu(nav, caso) {
   const v = caso.revisiones, d = caso.datos;
   const { ctx, page } = await abrir(nav, caso, TAMANOS.w390);
   await ingresar(page);
   await ir(page, '/personas');
+  // El botón del asistente, a la vista: es lo que el tabulador alcanzaba debajo del velo
+  await page.waitForSelector('#agente-boton:not([hidden])', espera);
+  const tapado = () => page.evaluate(() => ['#vista', '.barra-movil', '#agente'].map((s) => document.querySelector(s)?.inert ?? 'falta'));
   const estado = () => page.evaluate(() => ({ menu: document.querySelector('#menu-lateral').inert, vista: document.querySelector('#vista').inert,
     abierto: document.querySelector('#app').classList.contains('menu-abierto'), foco: document.activeElement?.closest('#menu-lateral') ? 'menu' : document.activeElement?.id || document.activeElement?.tagName }));
   d.cerrado = await estado();
@@ -618,10 +735,25 @@ async function menu(nav, caso) {
     && await page.evaluate(() => document.activeElement?.getAttribute('aria-current') === 'page');
   await dormir(400);
   await page.screenshot({ path: `${capturas}/responsivo-menu-abierto.png` });
+  // Abierto, el foco queda atrapado en el menú: lo que tapa el velo es inerte (también el asistente, que vive en
+  // document.body), así que desde «Cerrar sesión» el tabulador solo recorre el menú (o sale de la página y vuelve)
+  d.tapado_abierto = await tapado();
+  v.lo_tapado_es_inerte = d.tapado_abierto.every((x) => x === true);
+  await page.focus('#salir');
+  const fuera = [];
+  for (let i = 0; i < 30; i++) {
+    await page.keyboard.press('Tab');
+    const f = await page.evaluate(() => { const a = document.activeElement; return !a || a === document.body || a.closest('#menu-lateral') ? null : a.id || a.tagName; });
+    if (f) fuera.push(f);
+  }
+  d.tabulador_abierto = fuera;
+  v.tabulador_atrapado_en_el_menu = fuera.length === 0;
   await page.keyboard.press('Escape');
   await dormir(100);
   d.escape = await estado();
   v.escape_cierra_y_devuelve_el_foco = d.escape.abierto === false && d.escape.menu === true && d.escape.foco === 'abrir-menu';
+  d.tapado_cerrado = await tapado();
+  v.cerrado_nada_tapado = d.tapado_cerrado.every((x) => x === false);
   // El velo también lo cierra
   await page.tap('#abrir-menu');
   await page.waitForFunction(() => document.querySelector('#app').classList.contains('menu-abierto'));
@@ -681,6 +813,8 @@ async function tema(nav, caso) {
     for (const [nombre, op] of Object.entries(TAMANOS)) await correr(nombre, (c) => tamano(nav, c, op));
     for (const t of ['w320', 'w390', 'w820']) await correr(`ficha_${t}`, (c) => ficha(nav, c, TAMANOS[t]));
     for (const t of ['w390', 'w1400']) await correr(`dialogo_${t}`, (c) => dialogo(nav, c, TAMANOS[t]));
+    for (const t of ['w390', 'w1400']) await correr(`guardando_${t}`, (c) => guardando(nav, c, TAMANOS[t], D.sin_cedula[t]));
+    await correr('pendiente', (c) => pendiente(nav, c));
     await correr('menu', (c) => menu(nav, c));
     await correr('tema', (c) => tema(nav, c));
   } finally {

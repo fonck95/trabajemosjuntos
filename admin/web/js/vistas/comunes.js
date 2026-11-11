@@ -210,8 +210,10 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
       </details>
     </form>`,
     pie: html`<button class="btn" data-cerrar>Cancelar</button>${siguiente ? html`<button class="btn oscuro" data-guardar="siguiente">Guardar y siguiente</button>` : ''}<button class="btn primario" data-guardar="uno">Guardar</button>`,
-    // Tocar el fondo o Escape con algo escrito pregunta antes de perderlo (los chips de «Más datos» también cuentan)
+    // Tocar el fondo o Escape con algo escrito pregunta antes de perderlo (los chips de «Más datos» también cuentan);
+    // mientras se guarda no hacen nada: lo escrito ya va al servidor y al terminar se cierra solo
     sucio: () => tocado,
+    ocupado: () => enCurso,
   });
   const form = $('#f-completar', el);
   enlazarVotacion(form, cat);
@@ -304,7 +306,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   const necesidades = (cat.etiquetas || []).filter((e) => e.grupo === 'necesidad');
   const ini = { nombre: nombreInicial, ...prellenado };
   let clave = nuevaClave();
-  const { el, cerrar } = dialogo({
+  const { el, cerrar, listo } = dialogo({
     titulo: reunionId ? 'Registrar asistente nuevo' : hogar ? 'Nueva persona en este hogar' : 'Nueva persona',
     cuerpo: html`<form class="form una-columna" id="f-nueva" novalidate>
       ${hogar ? html`<p class="aviso-legal ancho">Se copian la dirección, el barrio${hogar.ficha ? ', la ficha del hogar' : ''}${hogar.lat != null ? ' y la ubicación' : ''} de ${titulo(hogar.nombre || 'la otra persona')}.</p>` : ''}
@@ -329,13 +331,13 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     </form>`,
     pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="guardar">Guardar</button>`,
     sucio: () => tocado,
+    ocupado: () => enCurso,
   });
   const form = $('#f-nueva', el);
   enlazarVotacion(form, cat);
   enlazarAutorizacion(form);
   let tocado = !!(ini.nombre || ini.cedula || ini.telefono);
   const quitarPendiente = registrarPendiente(() => tocado && el.isConnected);
-  el.addEventListener('close', () => quitarPendiente());
   form.addEventListener('click', (e) => { const c = e.target.closest('[data-et]'); if (c) { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') !== 'true'); tocado = true; } });
 
   // Búsqueda en vivo (400 ms, 3 caracteres o más en nombre, documento o celular): «¿Es alguna de estas?» antes de seguir
@@ -362,7 +364,9 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     tocado = true;
     if (['nombre', 'cedula', 'telefono'].includes(e.target.name)) buscarParecidas();
   });
-  el.addEventListener('close', () => buscarParecidas.cancel());
+  // Deja de contar como pendiente (y se cancela la búsqueda por salir) cuando el diálogo termina de verdad (`listo`): si
+  // el navegador lo cierra solo, `dialogo` lo vuelve a abrir con lo escrito y un 401 debe seguir sin recargar
+  listo.then(() => { quitarPendiente(); buscarParecidas.cancel(); });
   if (ini.nombre || ini.cedula || ini.telefono) buscarParecidas();
 
   let forzar = false, enCurso = false;

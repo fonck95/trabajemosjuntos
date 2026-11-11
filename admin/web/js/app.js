@@ -151,8 +151,10 @@ function avisarVista(ruta, r, ok) {
 
 /**
  * Abre o cierra el menú lateral. En el celular el menú cerrado solo se corre fuera de la pantalla: queda inerte para
- * que el tabulador y el lector de pantalla no entren en él; abierto, la vista de atrás es la inerte (el velo la tapa) y
- * el foco entra al primer enlace. Si el foco quedó en el menú que se cierra, vuelve al botón que lo abre.
+ * que el tabulador y el lector de pantalla no entren en él; abierto, lo que el velo tapa es lo inerte y el foco entra al
+ * primer enlace: así queda atrapado en el menú (Escape o el velo lo cierran). Lo tapado es la vista, la barra de arriba
+ * (el menú cubre su botón) y el asistente, que vive en document.body: con el tabulador se llegaba a su botón sin verlo y
+ * Enter abría el panel debajo del velo. Si el foco quedó en el menú que se cierra, vuelve al botón que lo abre.
  */
 function abrirMenu(abrir) {
   const app = $('#app'), menu = $('#menu-lateral'), vista = $('#vista');
@@ -162,7 +164,7 @@ function abrirMenu(abrir) {
   $('#abrir-menu')?.setAttribute('aria-expanded', abrir);
   const movil = esMovil();
   menu.inert = movil && !abrir;
-  vista.inert = movil && abrir;
+  for (const x of [vista, $('.barra-movil', app), document.getElementById('agente')]) if (x) x.inert = movil && abrir;
   if (movil && abrir && !estaba) {
     (menu.querySelector('#nav a[aria-current="page"]') || menu.querySelector('#nav a') || menu.querySelector('a, button'))?.focus({ preventScroll: true });
   }
