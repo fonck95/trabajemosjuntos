@@ -1,9 +1,13 @@
 /* Vista Presentación (web/js/vistas/presentacion.js): la propuesta 2028–2031 del sitio público en un iframe, con una
    barra mínima arriba. La carga la vista (no index.html) y usa los tokens de app.css, así sigue el tema claro u oscuro.
-   * En pantallas anchas, con el asistente abierto, el iframe le deja libre su ancho (el panel del asistente no tapa la
-     presentación) y el botón del asistente va a la barra de la vista (abajo a la derecha está la leyenda de la maqueta).
+   * En escritorio (desde 901 px), con el asistente abierto, el iframe le deja libre su ancho (el panel del asistente no
+     tapa la presentación; entre 901 y 1199 px se acopla más angosto) y el botón del asistente va a la barra de la vista
+     (abajo a la derecha está la leyenda de la maqueta).
    * /presentacion?pantalla=1 (modo proyector): sin menú, sin barra y sin asistente; la presentación ocupa la ventana. */
-.presentacion { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--bg); }
+/* Contenedor: la barra se compacta por el ancho de la vista, no el de la ventana (con el asistente abierto entre 901 y
+   1199 px la vista mide unos 330 a 500 px y la barra, en tres filas, le quitaba casi 200 px de alto a la presentación) */
+.presentacion { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--bg);
+  container-type: inline-size; }
 .pres-barra { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 8px 14px; min-height: 58px;
   background: var(--surface); border-bottom: 1px solid var(--line-soft); }
 .pres-donde { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -27,15 +31,21 @@
   body:has(#vista .presentacion:not(.proyector)):has(#agente) .agente-boton svg { width: 22px; height: 22px; }
   body:has(#vista .presentacion:not(.proyector)):has(#agente-boton:not([hidden])) .pres-barra { padding-right: 72px; }
 }
-/* Con el asistente abierto en pantalla ancha, la presentación queda a su izquierda (el panel mide hasta 420 px y está a
-   24 px del borde) */
-@media (min-width: 1200px) {
-  body:has(#agente-panel:not([hidden])) #vista .presentacion:not(.proyector) {
-    padding-right: calc(min(420px, 100vw - var(--side-w) - 48px) + 36px); }
+/* Con el asistente abierto en escritorio, la presentación queda a su izquierda: el iframe le deja libre su ancho (el
+   panel está a 24 px del borde) y el asistente nunca tapa el paso ni su explicación. En esta vista el asistente mide
+   420 px desde unos 1064 px de ancho y, más angosto, se acopla de 300 px en adelante: así entre 901 y 1199 px (un
+   portátil chico, una tableta en horizontal) a la presentación le quedan al menos unos 330 px, con su diseño de
+   celular o de tableta. Los avisos del panel se corren a su izquierda, como en agente.css */
+@media (min-width: 901px) {
+  body:has(#vista .presentacion:not(.proyector)) { --pres-agente-w: min(420px, max(300px, 100vw - var(--side-w) - 408px)); }
+  body:has(#vista .presentacion:not(.proyector)) .agente-panel { width: var(--pres-agente-w); }
+  body:has(#vista .presentacion:not(.proyector)):has(#agente-panel:not([hidden])) #avisos {
+    right: calc(var(--pres-agente-w) + 40px); }
+  body:has(#agente-panel:not([hidden])) #vista .presentacion:not(.proyector) { padding-right: calc(var(--pres-agente-w) + 36px); }
 }
-/* En el celular, una sola fila: la presentación trae abajo su propio control (anterior y siguiente), así que aquí solo
-   quedan el capítulo y los dos botones de pantalla, sin texto */
-@media (max-width: 640px) {
+/* En el celular (o con la vista angosta), una sola fila: la presentación trae abajo su propio control (anterior y
+   siguiente), así que aquí solo quedan el capítulo y los dos botones de pantalla, sin texto */
+@container (max-width: 640px) {
   .pres-barra { flex-wrap: nowrap; padding: 6px 10px; gap: 8px; min-height: 0; }
   .pres-donde { flex: 1 1 auto; }
   .pres-donde b { font-size: 16px; }
@@ -45,6 +55,12 @@
   .pres-botones .btn span { display: none; }
 }
 @media (pointer: coarse) { .pres-botones .btn { min-height: 44px; min-width: 44px; } }
+/* El celular en horizontal: debajo de la barra del panel quedan menos de 330 px de alto, y esta barra se llevaba 60 de
+   ellos (la maqueta, el panel de la presentación y su explicación no cabían). Se oculta, como en el modo proyector: la
+   presentación trae abajo su capítulo y su anterior y siguiente */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 560px) {
+  .presentacion:not(.proyector) .pres-barra { display: none; }
+}
 
 /* Modo proyector: la ventana entera es la presentación */
 html[data-proyector] .lateral, html[data-proyector] .barra-movil, html[data-proyector] #agente { display: none; }

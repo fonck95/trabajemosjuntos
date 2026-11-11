@@ -6,6 +6,12 @@
 // anuncia por BroadcastChannel con un latido. Mientras haya un proyector vivo, esta pestaña le manda a él las órdenes en
 // vez de abrir la vista aquí (si la vista está abierta aquí también, la sigue), y el proyector devuelve su estado. Todo
 // mensaje del canal se valida: lo manda otra pestaña del mismo origen, pero sigue siendo una entrada.
+// * Al abrirse, el proyector se anuncia como recién llegado y la pestaña que tiene la vista abierta le manda su capítulo,
+//   su paso y la explicación que muestra: las dos pantallas arrancan iguales (si no, el proyector empezaría en la
+//   Portada y los botones relativos de esta pestaña moverían cada una desde su paso).
+// * El proyector acusa recibo de cada orden en el acto, antes de aplicarla. Una ventana que se cerró sin avisar (el
+//   «adios» de `pagehide` no siempre llega) o que se colgó no acusa: en ESPERA_ACUSE_MS se da por cerrada y la orden se
+//   aplica en esta pestaña, sin esperar el plazo entero de la respuesta.
 //
 // Solo importa base.js y `navegar` (el `ir` de app.js) llega por parámetro: así no depende de app.js y se prueba con
 // Node (admin/tests/test_agente_presentacion.py).
@@ -13,21 +19,28 @@ import { sinBase } from './base.js';
 
 export const CANAL = 'yondo-presentacion';
 export const VERSION = 1;
-export const MAX_EXPLICACION = 400;   // `MAX_EXPLICACION` de la herramienta y de mando.js: una prueba los compara
+export const MAX_EXPLICACION = 220;   // `MAX_EXPLICACION` de la herramienta y de mando.js: una prueba los compara
 const ESPERA_MS = 30000;              // la presentación carga datos y la maqueta 3D: en un equipo lento, varios segundos
 const ESPERA_MAX_MS = 120000;
 const LATIDO_MS = 2000;               // el proyector se anuncia cada tanto
 const VIVO_MS = 6500;                 // sin anuncios en este tiempo, se da por cerrado
-const ESPERA_PROYECTOR_MS = 15000;    // lo que se espera la respuesta del proyector a una orden
+const ESPERA_ACUSE_MS = 2500;         // lo que se espera el acuse del proyector (llega en milisegundos si está vivo)
+const ESPERA_PROYECTOR_MS = 15000;    // lo que se espera, después del acuse, la respuesta del proyector a una orden
 const OPS = new Set(['ir', 'siguiente', 'anterior', 'explicar', 'quitar_explicacion']);
 const CLAVES = new Set(['tipo', 'op', 'capitulo', 'paso', 'explicacion']);
 const ID = /^[a-z_]{2,40}$/;
 const ID_VENTANA = /^[a-z0-9]{8,40}$/;
-// Lo que la explicación no puede traer (`_explicacion_visible` de la herramienta, `textoVisible` de mando.js): se
-// proyecta ante una sala
+// Lo que la explicación no puede traer (`_explicacion_visible` de la herramienta, `textoVisible` de mando.js, con las
+// mismas reglas): se proyecta ante una sala. La «@» y los números se buscan en la forma NFKC del texto (la «＠» de
+// ancho completo, los dígitos en superíndice o de ancho completo y los guiones de compatibilidad cuentan como los
+// comunes); TIRADA son los dígitos con lo que los separa al escribir un teléfono o una cédula, y PERIODO y RANGO lo
+// único que puede pasar de 6 dígitos (un periodo y un rango de cifras de la propuesta, de menor a mayor)
 const NO_SE_VE = /[\p{Cc}\p{Cf}\p{Cs}\p{Co}\p{Cn}\p{Zl}\p{Zp}\u{34f}\u{115f}\u{1160}\u{17b4}\u{17b5}\u{2800}\u{3164}\u{ffa0}\u{180b}-\u{180f}\u{fe00}-\u{fe0f}\u{e0000}-\u{e0fff}]/u;
 const ACENTOS = /[\p{Mn}\p{Me}]{3,}/u;
-const DIGITOS = /\p{Nd}(?:[ .-]?\p{Nd}){6,}/u;
+const TIRADA = /\p{Nd}+(?:(?:[.,_\u00b7(]|\) ?|\)? ?[\-\u2010-\u2015\u2212\/] ?\(?| )\p{Nd}+)*/gu;
+const PERIODO = /^((?:19|20)[0-9]{2}) ?[\-\u2010-\u2015\u2212\/] ?((?:19|20)[0-9]{2})$/u;
+const RANGO = /^([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?) ?[\-\u2010-\u2015\u2212] ?([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?)$/u;
+const DIGITOS_MAX = 6;
 
 /** La acción `presentacion` del servidor, normalizada, o null si no tiene la forma estricta: un objeto con solo las
  * claves conocidas, `op` de la lista, `capitulo` como id (obligatorio para `ir`), `paso` entero de 1 a 60 (solo con
@@ -57,11 +70,28 @@ export function accionPresentacion(a) {
   return out;
 }
 
+const cifra = (t) => Number(t.replace(/\./g, '').replace(',', '.'));
+
+/** ¿Trae `t` (en NFKC y con los espacios en uno) un número de más de DIGITOS_MAX dígitos que no es un periodo ni un rango
+ * de cifras? (`numero_largo` de la herramienta) */
+function numeroLargo(t) {
+  for (const [tirada] of t.matchAll(TIRADA)) {
+    if (tirada.match(/\p{Nd}/gu).length <= DIGITOS_MAX) continue;
+    const p = PERIODO.exec(tirada);
+    if (p && Number(p[1]) <= Number(p[2])) continue;
+    const r = RANGO.exec(tirada);
+    if (r && cifra(r[1]) <= cifra(r[2])) continue;
+    return true;
+  }
+  return false;
+}
+
 function explicacionVisible(v) {
   if (typeof v !== 'string' || NO_SE_VE.test(v) || ACENTOS.test(v)) return null;
   const t = v.replace(/\s+/g, ' ').trim();
-  if (!t || [...t].length > MAX_EXPLICACION || DIGITOS.test(t) || t.includes('@')) return null;
-  return t;
+  if (!t || [...t].length > MAX_EXPLICACION) return null;
+  const k = t.normalize('NFKC').replace(/\s+/g, ' ').trim();
+  return k.includes('@') || numeroLargo(k) ? null : t;
 }
 
 /** El estado que manda la presentación, solo con lo que se espera: {capitulo, paso, total, nombre, titulo, explicacion}
@@ -80,6 +110,7 @@ export function estadoValido(e) {
 const cola = [];
 let control = null;   // {aplicar(lista) → Promise<resultados>, estado() → estado | null, proyector?: true}
 let cadena = Promise.resolve();
+let enPantalla = null;   // la última explicación que se mandó a la vista de esta pestaña (para pasársela al proyector)
 
 const enPresentacion = () => {
   try { return (sinBase(location.pathname).replace(/\/+$/, '') || '/') === '/presentacion'; } catch { return false; }
@@ -88,6 +119,10 @@ const enPresentacion = () => {
 function enOrden(lista) {
   const p = cadena.then(() => {
     if (!control) throw new Error('La presentación se cerró antes de aplicar el cambio');
+    for (const a of lista) {
+      if (a?.explicacion) enPantalla = a.explicacion;
+      else if (a?.op === 'quitar_explicacion') enPantalla = null;
+    }
     return control.aplicar(lista);
   });
   cadena = p.catch(() => {});
@@ -143,24 +178,40 @@ function publicar(msj) {
   try { canal?.postMessage({ canal: CANAL, v: VERSION, ...msj }); } catch { /* canal cerrado */ }
 }
 
-function anunciar() {
+function anunciar(recien = false) {
   if (!control?.proyector) return;
   let e = null;
   try { e = estadoValido(control.estado()); } catch { e = null; }
-  publicar({ tipo: 'proyector', id: yo, estado: e });
+  publicar({ tipo: 'proyector', id: yo, estado: e, ...(recien ? { recien: true } : {}) });
+}
+
+/** Un proyector que se acaba de abrir: si esta pestaña tiene la vista abierta, le manda su capítulo, su paso y la
+ * explicación que está en pantalla (la vista de aquí la muestra si `explicacion` es true en su estado). */
+function sincronizar(id) {
+  if (!control || control.proyector) return;
+  let e = null;
+  try { e = estadoValido(control.estado()); } catch { e = null; }
+  if (!e) return;
+  const ir = { tipo: 'presentacion', op: 'ir', capitulo: e.capitulo, paso: e.paso };
+  const t = e.explicacion && enPantalla ? accionPresentacion({ ...ir, explicacion: enPantalla }) : null;
+  alProyector([t || ir], { para: id }).catch(() => {});
 }
 
 async function alMensaje(m) {
   if (!m || typeof m !== 'object' || Array.isArray(m) || m.canal !== CANAL || m.v !== VERSION) return;
   if (m.tipo === 'proyector' && typeof m.id === 'string' && ID_VENTANA.test(m.id) && m.id !== yo) {
     proyectores.set(m.id, { visto: Date.now(), estado: m.estado == null ? null : estadoValido(m.estado) });
+    if (m.recien === true) sincronizar(m.id);
   } else if (m.tipo === 'adios' && typeof m.id === 'string') {
     proyectores.delete(m.id);
   } else if (m.tipo === 'quien') {
     anunciar();
   } else if (m.tipo === 'ordenes' && control?.proyector && typeof m.de === 'string' && ID_VENTANA.test(m.de)
-             && Number.isInteger(m.nro) && Array.isArray(m.acciones) && m.acciones.length >= 1 && m.acciones.length <= 20) {
-    // Soy el proyector: aplico (lo que no tiene la forma de una acción vuelve como error, sin aplicarse) y respondo
+             && Number.isInteger(m.nro) && Array.isArray(m.acciones) && m.acciones.length >= 1 && m.acciones.length <= 20
+             && (m.para === undefined || m.para === yo)) {
+    // Soy el proyector: acuso recibo en el acto (la otra pestaña sabe que sigo aquí), aplico (lo que no tiene la forma
+    // de una acción vuelve como error, sin aplicarse) y respondo
+    publicar({ tipo: 'recibido', id: yo, para: m.de, nro: m.nro });
     const acciones = m.acciones.map(accionPresentacion);
     let resultados;
     try {
@@ -177,6 +228,16 @@ async function alMensaje(m) {
     let estado = null;
     try { estado = estadoValido(control?.estado()); } catch { estado = null; }
     publicar({ tipo: 'hecho', id: yo, para: m.de, nro: m.nro, resultados, estado });
+  } else if (m.tipo === 'recibido' && m.para === yo && esperando.has(m.nro)) {
+    // El proyector está vivo y aplicándola: ahora se espera su respuesta, con el plazo largo
+    const it = esperando.get(m.nro);
+    clearTimeout(it.reloj);
+    it.reloj = setTimeout(() => {
+      esperando.delete(m.nro);
+      it.mal(new Error('La pantalla del proyector no respondió'));
+    }, ESPERA_PROYECTOR_MS);
+    const p = typeof m.id === 'string' ? proyectores.get(m.id) : null;
+    if (p) p.visto = Date.now();
   } else if (m.tipo === 'hecho' && m.para === yo && esperando.has(m.nro)) {
     const it = esperando.get(m.nro);
     esperando.delete(m.nro);
@@ -215,15 +276,19 @@ export function proyectorVivo() {
   return false;
 }
 
-function alProyector(lista) {
+/** Manda `lista` al proyector (a todos, o solo a `para`). Si nadie acusa recibo en ESPERA_ACUSE_MS, los proyectores
+ * se dan por cerrados y la promesa falla con `sinProyector` (quien llamó la aplica aquí). */
+function alProyector(lista, { para } = {}) {
   return new Promise((ok, mal) => {
     const n = ++nro;
-    const reloj = setTimeout(() => {
+    const it = { ok, mal };
+    it.reloj = setTimeout(() => {
       esperando.delete(n);
-      mal(new Error('La pantalla del proyector no respondió'));
-    }, ESPERA_PROYECTOR_MS);
-    esperando.set(n, { ok, mal, reloj });
-    publicar({ tipo: 'ordenes', de: yo, nro: n, acciones: lista });
+      for (const id of para ? [para] : [...proyectores.keys()]) proyectores.delete(id);
+      mal(Object.assign(new Error('La pantalla del proyector no respondió'), { sinProyector: true }));
+    }, ESPERA_ACUSE_MS);
+    esperando.set(n, it);
+    publicar({ tipo: 'ordenes', de: yo, nro: n, acciones: lista, ...(para ? { para } : {}) });
   });
 }
 
@@ -238,7 +303,7 @@ export function registrarPresentacion(c) {
     clearInterval(latido);
     latido = setInterval(anunciar, LATIDO_MS);
     latido?.unref?.();
-    anunciar();
+    anunciar(true);   // recién abierto: la pestaña con la vista abierta le pasa dónde está
   }
   vaciar();
   return () => {
@@ -276,13 +341,22 @@ export function estadoPresentacion() {
 
 /** Aplica `acciones` (las de `accionPresentacion`) y resuelve con un resultado por acción ({op, ok, error?}). Con un
  * proyector vivo van a él (y a la vista de esta pestaña, si está abierta); si no, a la vista, y si no está abierta se
- * navega con `navegar` a /presentacion y se aplican al quedar lista. */
+ * navega con `navegar` a /presentacion y se aplican al quedar lista. Un proyector que no acusa recibo (se cerró sin
+ * avisar) se da por cerrado y la lista va a esta pestaña, como si no hubiera habido proyector. */
 export function accionesPresentacion(acciones, { navegar, espera = ESPERA_MS } = {}) {
   const lista = (Array.isArray(acciones) ? acciones : acciones ? [acciones] : []).slice(0, 20);
   if (proyectorVivo()) {
-    if (control) enOrden(lista).catch(() => {});   // la vista de aquí acompaña; lo que vale es lo del proyector
-    return alProyector(lista);
+    const aqui = control ? enOrden(lista) : null;   // la vista de aquí acompaña; lo que vale es lo del proyector
+    aqui?.catch(() => {});
+    return alProyector(lista).catch((e) => {
+      if (!e?.sinProyector) throw e;
+      return aqui || enLaVista(lista, { navegar, espera });
+    });
   }
+  return enLaVista(lista, { navegar, espera });
+}
+
+function enLaVista(lista, { navegar, espera }) {
   if (control) return enOrden(lista);
   const plazo = typeof espera === 'number' && espera > 0 ? Math.min(espera, ESPERA_MAX_MS) : ESPERA_MS;
   return new Promise((ok, mal) => {

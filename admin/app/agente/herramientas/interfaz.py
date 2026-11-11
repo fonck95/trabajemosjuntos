@@ -663,22 +663,63 @@ async def _abrir_vista(ctx: Contexto, a: AbrirVistaEntrada) -> Resultado:
 # ───────────────────────────── presentacion ─────────────────────────────
 
 OPS_PRESENTACION = ("indice", "ir", "siguiente", "anterior", "explicar", "quitar_explicacion")
-MAX_EXPLICACION = 400  # `MAX_EXPLICACION` de agente-presentacion.js y de mando.js: una prueba los compara
+# Una o dos frases cortas: lo que el subtítulo de la presentación muestra entero en cualquier pantalla, del celular al
+# proyector (web/propuesta.html no lo recorta). `MAX_EXPLICACION` de agente-presentacion.js y de mando.js: una prueba
+# los compara
+MAX_EXPLICACION = 220
 MAX_PASO = guion_presentacion.MAX_PASOS
 # Lo que la explicación no puede traer: la ve una sala entera en un proyector. Caracteres que no se ven o que cambian
 # cómo se ve el resto (de control, de formato como las marcas de dirección o el espacio de ancho cero, separadores de
 # línea, sustitutos sueltos, de uso privado, sin asignar, los rellenos que se ven como nada y los selectores de
-# variante), más de dos acentos apilados, una tirada de 7 o más dígitos (aunque vaya con espacios, puntos o guiones: una
-# cédula, un teléfono) o una «@» (un correo, un usuario)
+# variante), más de dos acentos apilados, una «@» (un correo, un usuario) o un número de 7 o más dígitos (una cédula, un
+# teléfono, un código), también escrito por grupos. Las dos últimas se buscan en la forma NFKC del texto: así la «@» de
+# ancho completo (＠) o la pequeña (﹫), los dígitos de ancho completo o en superíndice y los guiones de compatibilidad
+# cuentan como los comunes. Las mismas reglas, en `explicacionVisible` de agente-presentacion.js y en `textoVisible` de
+# mando.js
 _NO_SE_VEN = frozenset({"Cc", "Cf", "Cs", "Co", "Cn", "Zl", "Zp"})
 _RELLENOS = frozenset("\U0000034f\U0000115f\U00001160\U000017b4\U000017b5\U00002800\U00003164\U0000ffa0")
 _SELECTORES = re.compile("[\U0000180b-\U0000180f\U0000fe00-\U0000fe0f\U000e0000-\U000e0fff]")
-_DIGITOS = re.compile(r"\d(?:[ .\-]?\d){6,}")
+# Una tirada de dígitos con lo que los separa al escribir un teléfono o una cédula: un espacio, un guion, una raya, el
+# signo menos o una barra (con un espacio a cada lado o sin él), un paréntesis que cierra («(604) 832 12 34»), y pegados
+# entre dos dígitos el punto, la coma, el «_», el punto medio o el paréntesis que abre («71.234.567», «1,023,456,789»).
+# Un paréntesis que abre después de un espacio no une («en 2018 (3.383)»), ni el punto o la coma seguidos de un espacio
+# («en 2031. 300 familias», «2028, 2029 y 2030»)
+_GUIONES = "\\-\u2010-\u2015\u2212"
+_TIRADA = re.compile(rf"\d+(?:(?:[.,_\u00b7(]|\) ?|\)? ?[{_GUIONES}/] ?\(?| )\d+)*")
+DIGITOS_MAX = 6
+# Lo que sí puede tener 7 dígitos o más: un periodo («2028–2031», «2028-2031», «2028/2031») y un rango de dos cifras
+# como las de la propuesta («$116.294 – 210.000 M», «1.346–1.500 kWh»), de menor a mayor. Solo con dígitos ASCII
+_PERIODO = re.compile(rf"((?:19|20)[0-9]{{2}}) ?[{_GUIONES}/] ?((?:19|20)[0-9]{{2}})")
+_CIFRA = r"[0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?"
+_RANGO = re.compile(rf"({_CIFRA}) ?[{_GUIONES}] ?({_CIFRA})")
+
+
+def _cifra(t: str) -> float:
+    """«116.294» → 116294; «1,62» → 1.62 (el punto de miles y la coma decimal de la presentación)."""
+    return float(t.replace(".", "").replace(",", "."))
+
+
+def numero_largo(t: str) -> str | None:
+    """La primera tirada de más de DIGITOS_MAX dígitos de `t` (ya en NFKC y con los espacios en uno) que no es un
+    periodo ni un rango de cifras, o None."""
+    for m in _TIRADA.finditer(t):
+        tirada = m.group(0)
+        if len(re.findall(r"\d", tirada)) <= DIGITOS_MAX:
+            continue
+        p = _PERIODO.fullmatch(tirada)
+        if p and int(p.group(1)) <= int(p.group(2)):
+            continue
+        r = _RANGO.fullmatch(tirada)
+        if r and _cifra(r.group(1)) <= _cifra(r.group(2)):
+            continue
+        return tirada
+    return None
 
 
 def _explicacion_visible(v: str) -> str:
     """La explicación para la pantalla: un solo renglón que se ve tal cual es (los espacios seguidos quedan en uno, como
-    los pinta el navegador), sin datos que identifiquen a nadie."""
+    los pinta el navegador), sin datos que identifiquen a nadie. Se devuelve como la escribió el modelo (sin NFKC: «m²»
+    no pasa a «m2»); la forma NFKC solo sirve para buscar la «@» y los números."""
     marcas = 0
     for c in v:
         cat = unicodedata.category(c)
@@ -690,9 +731,16 @@ def _explicacion_visible(v: str) -> str:
     v = " ".join(v.split())
     if not v:
         raise ValueError("La explicación está vacía")
-    if _DIGITOS.search(v) or "@" in v:
-        raise ValueError("La explicación se proyecta: no lleve números de 7 o más dígitos ni «@» (cédulas, teléfonos o "
-                         "correos). Escriba las cifras grandes en palabras («1,5 millones»)")
+    k = " ".join(unicodedata.normalize("NFKC", v).split())
+    if "@" in k:
+        raise ValueError("La explicación se proyecta ante la sala: no puede llevar «@» (un correo o un usuario). "
+                         "Escríbala sin ella y, si hace falta, dé el dato en el chat")
+    if numero_largo(k):
+        raise ValueError("La explicación se proyecta ante la sala: no puede llevar números de 7 o más dígitos "
+                         "(cédulas, teléfonos o códigos como el BPIN), tampoco con espacios, puntos, guiones o barras. "
+                         "Escriba los montos como los trae el guion («$106.271 M», «$1,2 – 1,4 billones») y un periodo "
+                         "como «2028–2031», separe dos números seguidos con una palabra o una coma («en 2028, 300 "
+                         "viviendas») y deje los códigos para el chat")
     return v
 
 
@@ -719,12 +767,13 @@ class PresentacionEntrada(_Entrada):
     op: Literal[OPS_PRESENTACION] = Field(..., description=(
         "indice: los capítulos y los títulos de sus pasos; ir: a un capítulo y paso (devuelve lo que muestra ese paso); "
         "siguiente o anterior: un paso (con capitulo y paso de partida, los del contexto del panel, devuelve el paso "
-        "de destino); explicar: muestra una frase en pantalla; quitar_explicacion: la quita"))
+        "de destino); explicar: muestra una o dos frases cortas en pantalla; quitar_explicacion: la quita"))
     capitulo: str | None = Field(None, min_length=2, max_length=60, description=(
         "Id o nombre del capítulo (del índice o del contexto del panel)"))
     paso: PasoNumero | PasoId | None = Field(None, description="Número del paso desde 1, o su id (del índice)")
     explicacion: Explicacion | None = Field(None, description=(
-        "Una frase corta para la pantalla (se proyecta): sin datos de habitantes ni números de 7 o más dígitos"))
+        "Una o dos frases cortas para la pantalla (se proyecta; hasta 220 caracteres): sin datos de habitantes, «@» ni "
+        "números de 7 o más dígitos"))
 
     @model_validator(mode="after")
     def _segun_op(self):
@@ -822,7 +871,7 @@ async def _presentacion(ctx: Contexto, a: PresentacionEntrada) -> Resultado:
         "capitulo": _cap_para_modelo(c), "paso": pi + 1, "de": n,
         "posicion": f"Paso {pi + 1} de {n} del capítulo {c['nombre']}", "guion": c["pasos"][pi],
         "nota": ("Es lo que muestra la presentación en ese paso: explíquelo en el chat con esos datos (no invente "
-                 "otros). En pantalla, si hace falta, solo una frase corta (explicar).")}
+                 "otros). En pantalla, si hace falta, solo una o dos frases cortas (explicar, hasta 220 caracteres).")}
     if aviso:
         contenido["aviso"] = aviso
     return Resultado(contenido, f"Mostré {c['nombre']} · paso {pi + 1} de {n}",
@@ -855,9 +904,10 @@ D_PRESENTACION = (
     "indice devuelve los capítulos (id y nombre) y los títulos de sus pasos; ir lleva a un capítulo y paso y devuelve "
     "lo que ese paso muestra (textos, cifras, costos, plazos y lo que se ve en la maqueta 3D) para que lo explique con "
     "esos datos; siguiente y anterior avanzan un paso (con capitulo y paso de partida, los del contexto del panel, "
-    "también devuelven el destino); explicar muestra en pantalla una frase corta y quitar_explicacion la quita. Si el "
-    "capítulo no existe o es ambiguo, o el paso no está, no mueve nada y devuelve los candidatos. La explicación se "
-    "proyecta ante otras personas: nunca datos de habitantes ni números de 7 o más dígitos. No toca la base de datos.")
+    "también devuelven el destino); explicar muestra en pantalla una o dos frases cortas (hasta 220 caracteres) y "
+    "quitar_explicacion la quita. Si el capítulo no existe o es ambiguo, o el paso no está, no mueve nada y devuelve "
+    "los candidatos. La explicación se proyecta ante otras personas: nunca datos de habitantes, «@» ni números de 7 o "
+    "más dígitos. No toca la base de datos.")
 
 HERRAMIENTAS: list[Herramienta] = [
     Herramienta("mapa", D_MAPA, MapaEntrada, "interfaz", ("mapa.ver",), "Moviendo el mapa", _mapa,

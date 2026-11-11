@@ -24,7 +24,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import unquote, urlsplit
 
 R = Path(__file__).resolve().parent.parent
 VERSION_THREE = '0.160.0'
@@ -236,14 +236,14 @@ def construir(src: Path = R / 'web', out: Path = R / 'site') -> None:
     # en el mismo origen (/panel/) basta location.origin; si vive en otro servicio, su origen va en una <meta> que leen
     # web/js/propuesta/mando.js (las órdenes que acepta y a quién responde) y admin/servidor.py (frame-ancestors). Una
     # <meta> no cambia los hashes de la CSP del sitio
-    origen_panel = re.match(r'https://[A-Za-z0-9.-]+(?::\d{1,5})?(?=/|$)', panel) if panel else None
+    origen_panel = origen_https(panel)
     presentacion = out / 'propuesta.html'
     if origen_panel and presentacion.exists():
         p = presentacion.read_text(encoding='utf-8')
         if '<meta charset="utf-8">' in p:
             presentacion.write_text(p.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta name="panel-origen" '
-                                              f'content="{escape(origen_panel.group(0))}">', 1), encoding='utf-8')
-            print('la presentación acepta órdenes del panel en', origen_panel.group(0))
+                                              f'content="{escape(origen_panel)}">', 1), encoding='utf-8')
+            print('la presentación acepta órdenes del panel en', origen_panel)
         else:
             print('aviso: propuesta.html no trae <meta charset="utf-8">; el panel de otro origen no podrá manejarla')
     malos = revisar(out) + [f'falta {local} (vea web/vendor/LEEME.md)' for local in sorted(usados) if not (out / local).is_file()]
@@ -251,6 +251,24 @@ def construir(src: Path = R / 'web', out: Path = R / 'site') -> None:
         sys.exit('ERROR: en site/ quedaría código de fuera del repositorio o que la CSP del sitio bloquea:\n  '
                  + '\n  '.join(malos))
     print('site/ listo:', sum(1 for _ in out.rglob('*')), 'archivos')
+
+
+def origen_https(url: str) -> str:
+    """El origen de una dirección https:// absoluta tal como lo entrega el navegador en `e.origin` (el que compara
+    web/js/propuesta/mando.js): el esquema y el host en minúsculas y sin el puerto de https («HTTPS://Panel.Yondo.co:443/x»
+    → «https://panel.yondo.co»); '' si no es una dirección https limpia. Escrito tal cual, con mayúsculas o «:443», la
+    presentación avisaría «listo» al panel pero ninguna orden suya pasaría el filtro de orígenes."""
+    if not url or not re.fullmatch(r'https://[A-Za-z0-9.-]+(?::\d{1,5})?(?:/[^\s"<>]*)?', url, re.IGNORECASE):
+        return ''
+    try:
+        u = urlsplit(url)
+        puerto = u.port
+    except ValueError:  # un puerto de más de 65535
+        return ''
+    host = (u.hostname or '').lower()
+    if not host or host.startswith('.') or '..' in host:
+        return ''
+    return f'https://{host}' + (f':{puerto}' if puerto not in (None, 443) else '')
 
 
 def vendorizar_three(paquete: Path) -> None:

@@ -15,7 +15,11 @@ Por qué está hecho así:
   Otra prueba compara los nombres fijos con los de main.js.
 * Cada paso trae lo que su panel muestra (`RENDER` de main.js, con los mismos títulos y textos de respaldo), en texto
   plano: sin HTML y sin los espacios que no se cortan ni las uniones de palabras (U+2060) que pone build_propuesta.py
-  para el panel. Los textos se acotan (`MAX_TEXTO`) para que un paso le llegue al modelo en un par de KB.
+  para el panel. También lo que el modelo necesita para explicarlo sin inventar: las fuentes de financiación por su
+  nombre (con qué financia cada una y su requisito), a quién se le pide, los siguientes pasos y los hitos, los plazos
+  enteros, las especificaciones y las metas. Cada paso pesa a lo sumo `MAX_BYTES_PASO` (unos 3 KB): si no cabe, se
+  acortan primero sus textos más largos (la prosa), así los nombres, los montos y los plazos, que son cortos, llegan
+  enteros (`_encoger`).
 * Solo usa la biblioteca estándar: build_propuesta.py lo carga por su ruta, sin las dependencias del panel. El panel lo
   lee con `cargar` (con caché por la fecha del archivo; pymongo no interviene, pero es lectura de disco: desde una
   corrutina va con `run_in_threadpool`).
@@ -39,6 +43,8 @@ MAX_TEXTO = 1500     # el texto principal de un paso
 MAX_DETALLE = 600    # un texto secundario (nota, antes y después, lo que se pide)
 MAX_CORTO = 240      # una línea de una lista, un rótulo de la leyenda o una cifra
 MAX_LISTA = 12       # elementos de cada lista de un paso
+MAX_BYTES_PASO = 3000  # lo que pesa a lo sumo un paso para el modelo (su JSON en UTF-8)
+MIN_RECORTE = 60     # `_encoger` no acorta un texto por debajo de esto
 MAX_PASOS = 60       # el tope de `paso` en la herramienta y en el navegador
 # Los capítulos que no salen de `modulos`, con los nombres que tienen fijos en web/js/propuesta/main.js (`caps`)
 FIJOS_ANTES = (("portada", "Portada", "Portada"),)
@@ -212,12 +218,84 @@ def _inversion_total(datos: dict) -> str:
     return rango(lo, hi) if inv else ""
 
 
-def _componente(x: dict) -> dict:
-    """El componente de un paso `componente`: lo que dice su ficha en el panel."""
+def _tipos(v: Any) -> list[str]:
+    """Los nombres de los proyectos tipo y referentes (`chipsTipo` de main.js)."""
+    return [t for t in (plano(x.get("nombre"), MAX_CORTO) for x in (v if isinstance(v, list) else [])
+                        if isinstance(x, dict)) if t][:MAX_LISTA]
+
+
+def _componente(x: dict, fuentes: dict[str, dict]) -> dict:
+    """El componente de un paso `componente`: lo que dice su ficha en el panel (especificaciones, costo, proyectos tipo,
+    fuentes de financiación por su nombre, dónde y el plazo entero)."""
+    specs = [plano(f"{e[0]}: {e[1]}", MAX_CORTO) for e in x.get("especificaciones") or []
+             if isinstance(e, (list, tuple)) and len(e) == 2]
     out = {"nombre": plano(x.get("nombre"), MAX_CORTO), "resumen": plano(x.get("resumen"), MAX_DETALLE),
-           "costo": rango_de(x.get("costo")), "plazo": plano(x.get("plazo"), 80),
+           "costo": rango_de(x.get("costo")), "plazo": plano(x.get("plazo"), MAX_DETALLE),
+           "especificaciones": [e for e in specs if e][:MAX_LISTA],
+           "fuentes": [_nombre_fuente(fuentes, f) for f in x.get("fuentes") or []][:MAX_LISTA],
+           "proyectos_tipo": _tipos(x.get("proyecto_tipo")),
            "ubicacion": plano(x.get("ubicacion"), MAX_DETALLE)}
     return {k: v for k, v in out.items() if v}
+
+
+def _meta(x: Any) -> str:
+    """Una meta del módulo como la escriben las fichas de main.js: «indicador: base → meta»."""
+    if not isinstance(x, dict) or not x.get("indicador"):
+        return ""
+    return plano(f"{x.get('indicador')}: {x.get('base') or '—'} → {x.get('meta') or '—'}", MAX_CORTO)
+
+
+# Lo que `_encoger` nunca acorta: el id, el tipo y el título (los del índice y la pantalla). Y lo que acorta solo si
+# acortar la prosa no alcanzó: los datos cortos que el modelo no debe adivinar (plazos, montos, nombres, fuentes)
+_SIN_RECORTE = frozenset({"id", "tipo", "titulo"})
+_DATOS = frozenset({"plazo", "costo", "monto", "inversion", "inversion_total", "fuente", "fuentes", "entidad", "nombre",
+                    "corto", "madurez", "modulos", "v"})
+
+
+def _salvo(k: str, x: Any, salvo: frozenset) -> bool:
+    """¿Queda `x` (el valor de la clave `k`) sin acortar? Solo un texto o una lista de textos: dentro de una lista de
+    objetos (las fuentes del paso «fuentes») se mira clave por clave."""
+    return k in salvo and (isinstance(x, str) or isinstance(x, list) and all(isinstance(i, str) for i in x))
+
+
+def _cadenas(v: Any, salvo: frozenset):
+    if isinstance(v, str):
+        yield v
+    elif isinstance(v, dict):
+        for k, x in v.items():
+            if not _salvo(k, x, salvo):
+                yield from _cadenas(x, salvo)
+    elif isinstance(v, list):
+        for x in v:
+            yield from _cadenas(x, salvo)
+
+
+def _recortar(v: Any, largo: int, salvo: frozenset) -> Any:
+    if isinstance(v, str):
+        return plano(v, largo) if len(v) > largo else v
+    if isinstance(v, dict):
+        return {k: x if _salvo(k, x, salvo) else _recortar(x, largo, salvo) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_recortar(x, largo, salvo) for x in v]
+    return v
+
+
+def bytes_de(paso: dict) -> int:
+    """Lo que pesa un paso para el modelo: su JSON en UTF-8 (como lo manda `Resultado.texto_para_modelo`)."""
+    return len(json.dumps(paso, ensure_ascii=False).encode("utf-8"))
+
+
+def _encoger(paso: dict) -> dict:
+    """El paso en `MAX_BYTES_PASO`: si pesa más, se acortan (en una palabra, con «…») los textos más largos, cada vez un
+    poco más, hasta que quepa. Primero la prosa (el texto del paso, las descripciones, los pedidos, los pasos que
+    siguen) y, solo si no alcanza, también los datos cortos (`_DATOS`): así los plazos, los montos y los nombres llegan
+    enteros. Siempre el mismo resultado para el mismo paso."""
+    for salvo in (_SIN_RECORTE | _DATOS, _SIN_RECORTE):
+        largo = max((len(t) for t in _cadenas(paso, salvo)), default=0)
+        while bytes_de(paso) > MAX_BYTES_PASO and largo > MIN_RECORTE:
+            largo = max(MIN_RECORTE, int(largo * 0.9))
+            paso = _recortar(paso, largo, salvo)
+    return paso
 
 
 # El título de un paso que no trae el suyo, según su tipo (los respaldos de `RENDER` en main.js)
@@ -237,7 +315,7 @@ def _paso(datos: dict, c: dict, p: dict, fuentes: dict[str, dict]) -> dict:
     texto = p.get("texto") or {"portada": c.get("lema"), "portadilla": c.get("problema"),
                                "componente": (x or {}).get("descripcion")}.get(tipo)
     out: dict[str, Any] = {"id": p.get("id"), "tipo": tipo, "titulo": titulo, "texto": plano(texto, MAX_TEXTO)}
-    comp = _componente(x) if x else {}
+    comp = _componente(x, fuentes) if x else {}
     cifras = _cifras(p.get("cifras") or (c.get("cifras") if tipo in ("portada", "portadilla") else None))
     if cifras:
         out["cifras"] = cifras
@@ -250,9 +328,13 @@ def _paso(datos: dict, c: dict, p: dict, fuentes: dict[str, dict]) -> dict:
     elif tipo == "portadilla":
         out.update({k: v for k, v in (("propuesta", plano(c.get("propuesta"), MAX_DETALLE)),
                                       ("inversion", rango_de(c.get("inversion")))) if v})
+        metas = [t for t in map(_meta, c.get("metas") or []) if t][:MAX_LISTA]
+        if metas:
+            out["metas"] = metas
     elif tipo == "componentes":
         out["componentes"] = [{k: v for k, v in (("nombre", plano(x.get("nombre"), MAX_CORTO)),
-                                                 ("costo", rango_de(x.get("costo")))) if v}
+                                                 ("costo", rango_de(x.get("costo"))),
+                                                 ("resumen", plano(x.get("resumen"), MAX_CORTO))) if v}
                               for x in c.get("componentes") or [] if isinstance(x, dict)][:MAX_LISTA]
         if c.get("inversion"):
             out["inversion"] = rango_de(c.get("inversion"))
@@ -269,22 +351,31 @@ def _paso(datos: dict, c: dict, p: dict, fuentes: dict[str, dict]) -> dict:
         if mezcla:
             out["mezcla"] = mezcla
         out.update({k: v for k, v in (("madurez", plano(g.get("madurez"), 40)),
-                                      ("pedido", plano(g.get("pedido"), MAX_DETALLE))) if v})
+                                      ("madurez_nota", plano(g.get("madurez_nota"), MAX_DETALLE)),
+                                      ("pedido", plano(g.get("pedido"), MAX_DETALLE)),
+                                      ("a_quien", _lista(g.get("a_quien"))),
+                                      ("siguientes_pasos", _lista(g.get("pasos")))) if v})
     elif tipo == "matriz":
         out["por_fuente"] = _por_fuente(datos, fuentes)
         out["inversion_total"] = _inversion_total(datos)
     elif tipo == "fuentes":
-        out["fuentes"] = [{k: v for k, v in (("nombre", plano(f.get("nombre"), 120)), ("tipo", plano(f.get("tipo"), 80)))
-                           if v} for f in c.get("fuentes") or [] if isinstance(f, dict)][:MAX_LISTA]
+        out["fuentes"] = [{k: v for k, v in (("nombre", plano(f.get("nombre"), 120)),
+                                             ("corto", plano(f.get("corto"), 40)), ("tipo", plano(f.get("tipo"), 80)),
+                                             ("que_financia", plano(f.get("que_financia"), MAX_DETALLE)),
+                                             ("requisito", plano(f.get("requisito"), MAX_DETALLE))) if v}
+                          for f in c.get("fuentes") or [] if isinstance(f, dict)][:MAX_LISTA]
     elif tipo == "ruta":
         out["fases"] = [plano(f"{f.get('nombre')} ({_anio(f.get('desde'))}–{_anio(f.get('hasta'))})", MAX_CORTO)
                         for f in c.get("fases") or [] if isinstance(f, dict)][:MAX_LISTA]
         out["hitos"] = [plano(f"{h.get('fecha')}: {h.get('texto')}", MAX_CORTO)
                         for h in c.get("hitos") or [] if isinstance(h, dict)][:MAX_LISTA]
     elif tipo == "pedidos":
+        nombres = {m.get("id"): plano(m.get("nombre"), 80) for m in datos.get("modulos") or [] if isinstance(m, dict)}
         out["entidades"] = [{k: v for k, v in (("entidad", plano(e.get("entidad"), 120)),
                                                 ("monto", aproximado(e.get("monto")) if e.get("monto") else ""),
-                                                ("pedido", plano(e.get("pedido"), MAX_DETALLE))) if v}
+                                                ("pedido", plano(e.get("pedido"), MAX_DETALLE)),
+                                                ("modulos", [nombres[i] for i in e.get("modulos") or []
+                                                             if isinstance(i, str) and nombres.get(i)])) if v}
                             for e in c.get("entidades") or [] if isinstance(e, dict)][:MAX_LISTA]
     lista = _lista(p.get("lista"))
     if lista:
@@ -295,7 +386,7 @@ def _paso(datos: dict, c: dict, p: dict, fuentes: dict[str, dict]) -> dict:
     leyenda = _leyenda(p.get("leyenda"))
     if leyenda:
         out["leyenda"] = leyenda
-    return out
+    return _encoger(out)
 
 
 def _anio(v: Any) -> str:
@@ -333,8 +424,8 @@ def derivar(datos: dict) -> dict:
 
 def problemas(g: dict) -> list[str]:
     """Lo que impediría usar el guion (lo revisa build_propuesta.py antes de escribirlo y `Guion.desde` al cargarlo):
-    ids de capítulo o de paso que no cumplen la forma que aceptan la herramienta y el navegador, repetidos, o capítulos
-    con más pasos que el tope."""
+    ids de capítulo o de paso que no cumplen la forma que aceptan la herramienta y el navegador, repetidos, capítulos
+    con más pasos que el tope o un paso que pesa más de `MAX_BYTES_PASO`."""
     out = []
     caps = g.get("capitulos") if isinstance(g, dict) else None
     if not isinstance(caps, list) or not caps:
@@ -361,6 +452,8 @@ def problemas(g: dict) -> list[str]:
         for p in pasos:
             if isinstance(p, dict) and not p.get("titulo"):
                 out.append(f"{cid}/{p.get('id')}: paso sin título")
+            elif isinstance(p, dict) and bytes_de(p) > MAX_BYTES_PASO:
+                out.append(f"{cid}/{p.get('id')}: el paso pesa {bytes_de(p)} bytes (el tope es {MAX_BYTES_PASO})")
     return out
 
 

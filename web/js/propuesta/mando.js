@@ -16,40 +16,70 @@
 // módulo no depende de la escena 3D y se prueba con Node (admin/tests/test_agente_presentacion.py).
 export const CANAL = 'yondo-presentacion';
 export const VERSION = 1;
-export const MAX_EXPLICACION = 400;   // `MAX_EXPLICACION` de la herramienta y del puente del panel: una prueba los compara
+export const MAX_EXPLICACION = 220;   // `MAX_EXPLICACION` de la herramienta y del puente del panel: una prueba los compara
 const ID = /^[a-z_]{2,40}$/;
 const ORIGEN = /^https?:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/;
-const ORIGEN_HTTPS = /^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/;
-// Lo que el subtítulo no muestra (`_explicacion_visible` de admin/app/agente/herramientas/interfaz.py): de control, de
-// formato (marcas de dirección, ancho cero), separadores de línea, sustitutos sueltos, de uso privado, sin asignar, los
-// rellenos que se ven como nada y los selectores de variante; más de dos acentos apilados; 7 dígitos o más; «@»
+const ORIGEN_HTTPS = /^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/i;
+// Lo que el subtítulo no muestra (`_explicacion_visible` de admin/app/agente/herramientas/interfaz.py, con las mismas
+// reglas): de control, de formato (marcas de dirección, ancho cero), separadores de línea, sustitutos sueltos, de uso
+// privado, sin asignar, los rellenos que se ven como nada y los selectores de variante; más de dos acentos apilados; y,
+// en la forma NFKC del texto (así «＠», los dígitos en superíndice o de ancho completo y los guiones de compatibilidad
+// cuentan como los comunes), una «@» o un número de 7 dígitos o más, también por grupos (TIRADA: con espacios, guiones,
+// rayas, barras, paréntesis, o pegados con punto, coma o «_»), salvo un periodo («2028-2031») o un rango de cifras de la
+// propuesta de menor a mayor («$116.294 – 210.000 M»)
 const NO_SE_VE = /[\p{Cc}\p{Cf}\p{Cs}\p{Co}\p{Cn}\p{Zl}\p{Zp}\u{34f}\u{115f}\u{1160}\u{17b4}\u{17b5}\u{2800}\u{3164}\u{ffa0}\u{180b}-\u{180f}\u{fe00}-\u{fe0f}\u{e0000}-\u{e0fff}]/u;
 const ACENTOS = /[\p{Mn}\p{Me}]{3,}/u;
-const DIGITOS = /\p{Nd}(?:[ .-]?\p{Nd}){6,}/u;
+const TIRADA = /\p{Nd}+(?:(?:[.,_\u00b7(]|\) ?|\)? ?[\-\u2010-\u2015\u2212\/] ?\(?| )\p{Nd}+)*/gu;
+const PERIODO = /^((?:19|20)[0-9]{2}) ?[\-\u2010-\u2015\u2212\/] ?((?:19|20)[0-9]{2})$/u;
+const RANGO = /^([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?) ?[\-\u2010-\u2015\u2212] ?([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?)$/u;
+const DIGITOS_MAX = 6;
 // Claves que admite cada orden (además de canal, v, orden e id)
 const CLAVES = new Map([
   ['ir', ['capitulo', 'paso', 'explicacion']], ['avanzar', ['d', 'explicacion']], ['explicar', ['explicacion']],
   ['quitar_explicacion', []], ['estado', []],
 ]);
 
-/** La explicación lista para el subtítulo (los espacios seguidos quedan en uno, como los pinta el navegador), o null si
- * no se puede mostrar tal cual: no es texto, está vacía, pasa de MAX_EXPLICACION o trae lo que NO_SE_VE, ACENTOS o
- * DIGITOS prohíben, o una «@». */
+const cifra = (t) => Number(t.replace(/\./g, '').replace(',', '.'));
+
+/** ¿Trae `t` (en NFKC y con los espacios en uno) un número de más de DIGITOS_MAX dígitos que no es un periodo ni un rango
+ * de cifras? */
+function numeroLargo(t) {
+  for (const [tirada] of t.matchAll(TIRADA)) {
+    if (tirada.match(/\p{Nd}/gu).length <= DIGITOS_MAX) continue;
+    const p = PERIODO.exec(tirada);
+    if (p && Number(p[1]) <= Number(p[2])) continue;
+    const r = RANGO.exec(tirada);
+    if (r && cifra(r[1]) <= cifra(r[2])) continue;
+    return true;
+  }
+  return false;
+}
+
+/** La explicación lista para el subtítulo (los espacios seguidos quedan en uno, como los pinta el navegador; sin NFKC:
+ * se muestra como vino), o null si no se puede mostrar tal cual: no es texto, está vacía, pasa de MAX_EXPLICACION o trae
+ * lo que NO_SE_VE o ACENTOS prohíben, una «@» o un número largo. */
 export function textoVisible(v) {
   if (typeof v !== 'string' || NO_SE_VE.test(v) || ACENTOS.test(v)) return null;
   const t = v.replace(/\s+/g, ' ').trim();
-  if (!t || [...t].length > MAX_EXPLICACION || DIGITOS.test(t) || t.includes('@')) return null;
-  return t;
+  if (!t || [...t].length > MAX_EXPLICACION) return null;
+  const k = t.normalize('NFKC').replace(/\s+/g, ' ').trim();
+  return k.includes('@') || numeroLargo(k) ? null : t;
 }
 
 /** Los orígenes de los que se aceptan órdenes y a los que se responde: el de la página (si es http o https; nunca
- * «null») y el del panel de <meta name="panel-origen"> si es un origen https limpio. */
+ * «null») y el del panel de <meta name="panel-origen"> si es un origen https limpio, escrito como lo entrega el
+ * navegador en `e.origin` (el host en minúsculas y sin «:443»; build_site.py ya lo escribe así): con «Panel.example» o
+ * «:443» tal cual, ninguna orden pasaría el filtro y la presentación igual avisaría «listo». */
 export function origenesPermitidos(ventana, documento) {
   const out = new Set();
   const propio = ventana?.location?.origin;
   if (typeof propio === 'string' && ORIGEN.test(propio)) out.add(propio);
   const panel = documento?.querySelector?.('meta[name="panel-origen"]')?.content;
-  if (typeof panel === 'string' && ORIGEN_HTTPS.test(panel)) out.add(panel);
+  if (typeof panel === 'string' && ORIGEN_HTTPS.test(panel)) {
+    let origen = null;
+    try { origen = new URL(panel).origin; } catch { origen = null; }
+    if (typeof origen === 'string' && ORIGEN_HTTPS.test(origen)) out.add(origen);
+  }
   return out;
 }
 
@@ -94,7 +124,9 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   const responder = (id, tipo, origen, extra = {}) => enviar({ tipo, ...(id !== undefined ? { id } : {}), ...actual(), ...extra }, origen);
 
   // Junto a la leyenda (abajo a la derecha en pantalla grande): el subtítulo le deja su ancho o, si así no le queda
-  // lugar, se pone encima de ella
+  // lugar o la explicación pasaría de tres renglones (una columna angosta y alta), se pone encima de ella, con todo el
+  // ancho. Y dice si está a la vista y cuánto mide (.con-sub, --sub-h): en el celular la hoja inferior y, en horizontal,
+  // el panel de lado le ceden ese alto (propuesta.html), así se ve entero sin taparlos
   function medir() {
     if (!pres) return;
     const conLeyenda = !!leyenda?.childElementCount && !chica?.matches;
@@ -103,7 +135,22 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
     pres.style.setProperty('--ley-h', l ? `${Math.ceil(l.height)}px` : '0px');
     const p = panel && !pres.classList.contains('sin-panel') ? panel.getBoundingClientRect() : null;
     const libre = (ventana.innerWidth || 0) - (p ? p.right + 16 : 100) - (l ? l.width + 28 : 16);
-    pres.classList.toggle('sub-sobre-leyenda', !!l && libre < 320);
+    const visible = !!sub?.classList.contains('visible');
+    let sobre = !!l && libre < 320;
+    if (l && !sobre && visible) {
+      // se mide al lado de la leyenda (sin la clase), así la decisión no depende de dónde estaba
+      pres.classList.remove('sub-sobre-leyenda');
+      sobre = renglones() > 3;
+    }
+    pres.classList.toggle('sub-sobre-leyenda', sobre);
+    pres.classList.toggle('con-sub', visible);
+    const alto = visible ? sub.getBoundingClientRect?.().height || 0 : 0;
+    pres.style.setProperty('--sub-h', `${Math.ceil(alto)}px`);
+  }
+  function renglones() {
+    const alto = texto?.getBoundingClientRect?.().height || 0;
+    const linea = parseFloat(ventana.getComputedStyle?.(texto)?.lineHeight) || 0;
+    return linea ? Math.round(alto / linea) : 0;
   }
   function subtitulo(t, paso = clave()) {
     if (!sub || !texto) return;
@@ -177,10 +224,11 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   ventana.addEventListener('resize', () => { clearTimeout(tMedir); tMedir = setTimeout(medir, 120); });
   // El ancho de la leyenda y del panel cambia sin `resize` (otra leyenda al cambiar de paso, el iframe que se angosta o se
   // ensancha cuando se abre o se pliega el asistente, una letra que termina de cargar): se vuelve a medir en el acto, antes
-  // de pintar, y el subtítulo nunca queda un cuadro encima de la leyenda con la medida vieja
+  // de pintar, y el subtítulo nunca queda un cuadro encima de la leyenda con la medida vieja. También el alto del
+  // subtítulo (la letra que carga lo hace crecer): la hoja o el panel que le ceden lugar siguen su medida
   if (typeof ventana.ResizeObserver === 'function') {
     const ro = new ventana.ResizeObserver(() => medir());
-    for (const x of [pres, leyenda, panel]) if (x) ro.observe(x);
+    for (const x of [pres, leyenda, panel, sub]) if (x) ro.observe(x);
   }
   if (caps[estado.ci]) { listo = true; enviar({ tipo: 'listo', ...actual() }); }
   return { subtitulo, estado: actual };
