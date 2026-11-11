@@ -920,10 +920,41 @@ def reparar_fusiones(db: Database) -> int:
     return n
 
 
+def _raices_activas(db: Database, ids: Iterable[int]) -> dict[int, tuple[int, Any]]:
+    """De las fichas `ids` que se unieron con otra, (ficha activa en que terminaron, su cédula). Las suprimidas, o
+    unidas en una que ya no está activa, no aparecen. `fusionada_en` apunta a la raíz (`_unir_en` reencadena), pero ese
+    paso es el último de la unión: mientras otra unión está en curso puede haber un eslabón más, así que se sube por
+    niveles (una consulta por nivel, sean cuantas sean las fichas)."""
+    raiz: dict[int, tuple[int, Any]] = {}
+    frente = {p["_id"]: p["fusionada_en"] for p in db.personas.find(
+        {"_id": {"$in": list(ids)}, "eliminado": {"$ne": True}, "fusionada_en": {"$ne": None}}, {"fusionada_en": 1})}
+    for _ in range(4):
+        if not frente:
+            break
+        arriba = {p["_id"]: p for p in db.personas.find(
+            {"_id": {"$in": list(set(frente.values()))}, "eliminado": {"$ne": True}}, {"fusionada_en": 1, "cedula": 1})}
+        sigue = {}
+        for i, d in frente.items():
+            if d not in arriba:
+                continue
+            if arriba[d].get("fusionada_en") is None:
+                raiz[i] = (d, arriba[d].get("cedula"))
+            else:
+                sigue[i] = arriba[d]["fusionada_en"]
+        frente = sigue
+    return raiz
+
+
 def cerrar_coincidencias_imposibles(db: Database, ids: Iterable[int] | None = None) -> int:
-    """Cierra las coincidencias pendientes que ya no se pueden aceptar: una de las dos fichas ya no está activa (se
-    unió con otra o se suprimió) o las dos tienen cédulas distintas. Quedan con estado «cerrada» (no se borran, así
-    una importación no las vuelve a proponer)."""
+    """Cierra las coincidencias pendientes que ya no se pueden aceptar: una de las dos fichas se suprimió, las dos
+    terminaron en la misma ficha o tienen cédulas distintas. Quedan con estado «cerrada» (no se borran, así una
+    importación no las vuelve a proponer). Devuelve cuántas cerró.
+
+    Las de una ficha que se unió con otra no se cierran: pasan a la ficha activa en que terminó, como hace
+    `_reapuntar_coincidencias` al unir (y se cierran si ese par ya existía). Si esto corre en medio de una unión (el
+    origen ya figura como unido y sus pares todavía no se reapuntaron), cerrarlas perdía para siempre el candidato que
+    la unión iba a pasar al destino; y corre seguido: lo llaman el tablero, la lista de grupos y `/api/insignias` en
+    cada vista de A y K."""
     q: dict = {"estado": "pendiente"}
     if ids is not None:
         ids = list(ids)
@@ -931,16 +962,26 @@ def cerrar_coincidencias_imposibles(db: Database, ids: Iterable[int] | None = No
     pendientes = list(db.coincidencias.find(q, {"persona_id": 1, "candidato_id": 1}))
     if not pendientes:
         return 0
-    pids = list({c["persona_id"] for c in pendientes} | {c["candidato_id"] for c in pendientes})
-    cedulas = {p["_id"]: p.get("cedula") for p in db.personas.find({"_id": {"$in": pids}, **ACTIVA}, {"cedula": 1})}
-
-    def imposible(c: dict) -> bool:
-        if c["persona_id"] not in cedulas or c["candidato_id"] not in cedulas:
-            return True
-        a, b = cedulas[c["persona_id"]], cedulas[c["candidato_id"]]
-        return bool(a and b and a != b)
-
-    cerrar = [c["_id"] for c in pendientes if imposible(c)]
+    pids = {c["persona_id"] for c in pendientes} | {c["candidato_id"] for c in pendientes}
+    cedulas = {p["_id"]: p.get("cedula") for p in db.personas.find({"_id": {"$in": list(pids)}, **ACTIVA},
+                                                                   {"cedula": 1})}
+    raiz = {i: i for i in cedulas}
+    if pids - set(cedulas):
+        for i, (r, cedula) in _raices_activas(db, pids - set(cedulas)).items():
+            raiz[i], cedulas[r] = r, cedula
+    cerrar, mover = [], []
+    for c in pendientes:
+        a, b = raiz.get(c["persona_id"]), raiz.get(c["candidato_id"])
+        if a is None or b is None or a == b or (cedulas[a] and cedulas[b] and cedulas[a] != cedulas[b]):
+            cerrar.append(c["_id"])
+        elif (a, b) != (c["persona_id"], c["candidato_id"]):
+            mover.append((c["_id"], a, b))
+    for cid, a, b in mover:
+        try:
+            db.coincidencias.update_one({"_id": cid, "estado": "pendiente"},
+                                        {"$set": {"persona_id": a, "candidato_id": b}})
+        except DuplicateKeyError:  # ese par ya existía con la ficha activa
+            cerrar.append(cid)
     if cerrar:
         db.coincidencias.update_many({"_id": {"$in": cerrar}, "estado": "pendiente"},
                                      {"$set": {"estado": "cerrada", "resuelto_por": "sistema", "resuelto_en": ahora()}})

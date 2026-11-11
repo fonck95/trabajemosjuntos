@@ -50,14 +50,17 @@ El panel las **cruza por nombre**, **normaliza las direcciones**, **georreferenc
   el mismo puesto, el nombre y que una sola tenga cédula; en contra, sexo distinto, edades o fechas que no casan, otro
   nombre de pila (DANIEL/DANIELA, JUAN/CARLOS, con las mismas reglas del cruce), un homónimo sin nada en común y dos
   filas de la misma base sin cédula. Cada grupo queda en un nivel: **muy probable** (nada en contra y un nombre muy
-  parecido con una señal fuerte, o dos señales fuertes), **probable**, **dudoso** (algo en contra, también entre dos
-  fichas del grupo sin coincidencia directa, o más de 6 fichas) o **bloqueado** (dos cédulas distintas o un par que una
-  persona ya marcó como distinto, aunque una de las dos se haya unido después). La ficha que se conserva es la que
-  tiene cédula (si no, la más completa) y la vista previa muestra qué valor queda en cada campo y cuáles pasan a
-  alternos. Al resolver en lote, cada grupo se vuelve a validar entero antes de tocarlo (pares todavía pendientes, una
-  sola cédula, ningún rechazo anterior, las fichas que quedan conectadas sin las excluidas), las fichas se unen en
-  estrella en la que se conserva, las marcadas como «no es la misma» quedan como personas distintas, y la ubicación se
-  recalcula una sola vez al final. Unir en lote toma el mismo turno que la importación: no corren a la vez.
+  parecido con una señal fuerte, o dos señales fuertes), **probable** (también, como mucho, si una ficha no autorizó
+  y otra sí o está pendiente: al unir gana el «no» y se borran los datos sensibles de la otra, así que nunca entra en
+  «Unir las N muy probables»), **dudoso** (algo en contra, también entre dos fichas del grupo sin coincidencia
+  directa, o más de 6 fichas) o **bloqueado** (dos cédulas distintas o un par que una persona ya marcó como distinto,
+  aunque una de las dos se haya unido después). El mismo par en los dos órdenes (el de la importación y el reporte de alguien del equipo) se
+  evalúa junto: cuentan los motivos y las notas de los dos. La ficha que se conserva es la que tiene cédula (si no, la
+  más completa) y la vista previa muestra qué valor queda en cada campo y cuáles pasan a alternos. Al resolver en lote,
+  cada grupo se vuelve a validar entero antes de tocarlo (pares todavía pendientes, una sola cédula, ningún rechazo
+  anterior, las fichas que quedan conectadas sin las excluidas), las fichas se unen en estrella en la que se conserva,
+  las marcadas como «no es la misma» quedan como personas distintas, y la ubicación se recalcula una sola vez al final.
+  Unir en lote toma el mismo turno que la importación: no corren a la vez.
 - **Normalización de direcciones** (`app/pipeline/direcciones.py`). «BARRIO TRES DE OCTUBRE CALLE 49 # 45  12» →
   `CL 49 # 45-12, B. TRES DE OCTUBRE`; «CLL 52 N 4610» → `CL 52 # 46-10`; «VEREDA X-10» y «K-5» se reconocen; corrige
   palabras pegadas («ESPERANZAMANZANA»), manzana/lote, fincas y referencias («FRENTE AL PARQUE»). Las referencias

@@ -350,12 +350,17 @@ def _lugar(p: dict, lugares: dict) -> str | None:
 
 
 def _edad(p: dict) -> int | None:
-    """La edad declarada llevada a hoy: es la que la unión pasa (la fecha de nacimiento va en su propio campo)."""
+    """La edad declarada llevada a hoy, la que se muestra (la fecha de nacimiento va en su propio campo). La unión no
+    compara esta sino la declarada (ver `_valor`), pero la ficha unida se queda con la edad y la `edad_ref` de la misma
+    ficha, así que la edad de hoy de la ficha unida es justo esta."""
     return modelo.edad_efectiva({"edad": p.get("edad"), "edad_ref": p.get("edad_ref"), "creado_en": p.get("creado_en")})
 
 
 def _valor(p: dict, campo: str) -> Any:
-    v = _edad(p) if campo == "edad" else p.get(campo)
+    """El valor de `campo` tal como lo compara la unión (`_pipeline_fusion` con `modelo.comparable`): lo guardado. En
+    la edad es la declarada, no la llevada a hoy: 40 años declarados en 2016 y 40 declarados hoy no dejan alterno
+    aunque hoy sean 50 y 40, y 40 de 2020 y 46 de hoy sí lo dejan aunque hoy sean los mismos 46."""
+    v = p.get(campo)
     return None if modelo.vacio(v) else v
 
 
@@ -366,6 +371,16 @@ def _texto(v: Any) -> str | None:
 def _telefonos(p: dict) -> list[str]:
     """Los números de la lista de la ficha, con los heredados que el código viejo dejó fuera (como los ve la unión)."""
     return list(dict.fromkeys(str(t["numero"]) for t in modelo.reconciliar_telefonos(p) if t.get("numero")))
+
+
+def _fuente_telefonos(p: dict) -> str | None:
+    """La fuente de los teléfonos de la ficha: la primera de su número principal (el primero de la lista) o, si ese
+    número no anota ninguna, la de la ficha (`_fuente`). None si no tiene teléfonos. Los teléfonos no van en
+    `procedencia`: cada número lleva sus `fuentes`."""
+    for t in modelo.reconciliar_telefonos(p):
+        if t.get("numero"):
+            return (t.get("fuentes") or [None])[0] or _fuente(p, "telefonos")
+    return None
 
 
 def vista_previa(miembros: Iterable[dict], destino: int, lugares: dict | None = None) -> list[dict]:
@@ -390,11 +405,8 @@ def vista_previa(miembros: Iterable[dict], destino: int, lugares: dict | None = 
                     if n not in todos:
                         todos.append(n)
                         primero = primero or p
-            if todos:
-                fuentes_tel = next((t.get("fuentes") for t in modelo.reconciliar_telefonos(primero)
-                                    if str(t.get("numero")) == todos[0]), None) or []
-                fila.update(valor=", ".join(todos), fuente=fuentes_tel[0] if fuentes_tel else _fuente(primero, campo),
-                            de=primero["_id"])
+            if todos:  # el primer número es el principal de `primero`: la fuente es la suya
+                fila.update(valor=", ".join(todos), fuente=_fuente_telefonos(primero), de=primero["_id"])
         elif campo == "lugar":
             # La ubicación pasa en bloque si la otra está mejor ubicada (`_rango_ubicacion`), como en la unión
             mejor = orden[0]
@@ -404,25 +416,32 @@ def vista_previa(miembros: Iterable[dict], destino: int, lugares: dict | None = 
             if _lugar(mejor, lugares):
                 fila.update(valor=_lugar(mejor, lugares), fuente=_fuente(mejor, campo), de=mejor["_id"])
         else:
-            queda = None
+            vistos: set[str] = set()  # lo que ya quedó o ya pasa a alternos, comparado como la unión
             for p in orden:
                 v = _valor(p, campo)
                 if v is None:
                     continue
-                if queda is None:
-                    queda = p
-                    fila.update(valor=_texto(v), fuente=_fuente(p, campo), de=p["_id"])
-                elif campo in CON_ALTERNOS and _texto(v) != fila["valor"] \
-                        and _texto(v) not in [o["valor"] for o in fila["otros"]]:
+                if not vistos:
+                    # La edad se muestra llevada a hoy (si no se puede calcular, la escrita)
+                    hoy = _edad(p) if campo == "edad" else None
+                    fila.update(valor=_texto(v if hoy is None else hoy), fuente=_fuente(p, campo), de=p["_id"])
+                elif campo in CON_ALTERNOS and _texto(v) not in vistos:
+                    # Pasa a alternos lo que la unión guarda: el valor tal cual (la edad, la declarada)
                     fila["otros"].append({"valor": _texto(v), "fuente": _fuente(p, campo), "de": p["_id"]})
+                vistos.add(_texto(v))
         salida.append(fila)
     return salida
 
 
 def miembro(p: dict, lugares: dict) -> dict:
     """Una ficha del grupo tal como la compara la interfaz (columnas lado a lado). `procedencia` lleva solo la fuente de
-    cada campo (sin quién ni cuándo)."""
+    cada campo (sin quién ni cuándo) y, como la interfaz la busca ahí para pintar su insignia, también la de los
+    teléfonos (`_fuente_telefonos`) y la del barrio o vereda (la ubicación no anota procedencia: la de la ficha), con
+    la misma regla de la vista previa. Sin ellas, esas dos filas eran las únicas sin la fuente de cada ficha."""
     prov = {k: v["fuente"] for k, v in (p.get("procedencia") or {}).items() if isinstance(v, dict) and v.get("fuente")}
+    for campo, fuente in (("telefonos", _fuente_telefonos(p)), ("lugar", _lugar(p, lugares) and _fuente(p, "lugar"))):
+        if fuente:  # None sin teléfonos o sin barrio: no se inventa una fuente para lo que no hay
+            prov.setdefault(campo, fuente)
     return {"id": p["_id"], "nombre": p.get("nombre"), "cedula": p.get("cedula") or None, "telefonos": _telefonos(p),
             "correo": p.get("correo") or None, "direccion": p.get("direccion") or None, "lugar": _lugar(p, lugares),
             "edad": modelo.edad_efectiva(p), "sexo": p.get("sexo") or None,
@@ -435,8 +454,10 @@ def miembro(p: dict, lugares: dict) -> dict:
 
 def _pares_unicos(coincidencias: Iterable[dict], fichas: dict) -> dict[frozenset, list[dict]]:
     """Los pares con las dos fichas activas, sin repetir: (a, b) y (b, a) pueden estar pendientes a la vez (el índice
-    único depende del orden y `_reapuntar_coincidencias` solo choca con el mismo orden). El primero de cada lista (el de
-    menor id) representa al par; los demás se resuelven con él."""
+    único depende del orden y `_reapuntar_coincidencias` solo choca con el mismo orden). Pasa seguido: la importación
+    crea (ficha nueva, existente) y el reporte de un duplicado, (menor, mayor). El primero de cada lista (el de menor
+    id) da el id del par (en la clave del grupo) y los demás se resuelven con él, pero se evalúan todos juntos
+    (`evaluar_par`): el motivo, la nota y el puntaje de cada uno cuentan."""
     pares: dict[frozenset, list[dict]] = {}
     for c in sorted(coincidencias, key=lambda c: c["_id"]):
         a, b = c["persona_id"], c["candidato_id"]
@@ -462,27 +483,47 @@ def _nombre(p: dict) -> str:
     return p.get("nombre") or f"la ficha {p['_id']}"
 
 
+def _menor_conocido(valores: Iterable[float | None]) -> float | None:
+    """El menor de los puntajes que hay (None si ninguno): un reporte sin puntaje no tapa el del cruce."""
+    hay = [v for v in valores if v is not None]
+    return min(hay) if hay else None
+
+
+def evaluar_par(lista: list[dict], fichas: dict) -> tuple[dict, set[str]]:
+    """Un par del grupo con sus señales y su nivel, y los motivos de todos sus repetidos. `lista`: el par y el mismo
+    en orden inverso (`_pares_unicos`), que se evalúan juntos: el reporte de alguien del equipo sobre un par que la
+    importación ya había propuesto no se pierde (su motivo cuenta en el grupo y en el filtro, y su nota se ve), un
+    «homonimo» en cualquiera de los dos cuenta para `homonimo_sin_evidencia` y el puntaje es el menor que haya. El
+    primero (el de menor id) da el id y el orden de las fichas."""
+    c = lista[0]
+    a, b = fichas[c["persona_id"]], fichas[c["candidato_id"]]
+    # `senales` solo mira el motivo de la coincidencia: el homónimo, si alguno lo es
+    favor, contra = senales(a, b, next((x for x in lista if x.get("motivo") == "homonimo"), c))
+    n = nivel_par(_menor_conocido(puntaje_del_nombre(x) for x in lista), favor, contra)
+    notas = list(dict.fromkeys(nota for x in lista if (nota := detalle_y_nota(x.get("detalle"))[1])))
+    return ({"id": c["_id"], "a": c["persona_id"], "b": c["candidato_id"],
+             "puntaje": _menor_conocido(x.get("puntaje") for x in lista), "motivo": c.get("motivo"), "nivel": n,
+             "nota": " · ".join(notas) or None, "a_favor": favor, "en_contra": contra},
+            {x.get("motivo") for x in lista})
+
+
 def evaluar_grupo(pares: dict[frozenset, list[dict]], fichas: dict, rechazos: set[frozenset],
                   lugares: dict) -> dict:
     """Un grupo con la forma de `GET /api/coincidencias/grupos`: miembros (el destino primero), pares con sus señales
-    y su nivel, nivel del grupo y avisos que explican por qué bajó o por qué está bloqueado, y la vista previa.
-    `rechazos`: los pares marcados antes como distintos (de `rechazos_entre`; basta con los de este grupo)."""
+    y su nivel (`evaluar_par`), nivel del grupo y avisos que explican por qué bajó o por qué está bloqueado, y la vista
+    previa. `rechazos`: los pares marcados antes como distintos (de `rechazos_entre`; basta con los de este grupo)."""
     ids = sorted({i for par in pares for i in par})
     fs = [fichas[i] for i in ids]
     destino = destino_de(fs)
     orden = orden_union(fs, destino)
     salida_pares = []
+    motivos: set = set()
     nivel = "alta"
-    for par, lista in sorted(pares.items(), key=lambda kv: kv[1][0]["_id"]):
-        c = lista[0]
-        a, b = fichas[c["persona_id"]], fichas[c["candidato_id"]]
-        favor, contra = senales(a, b, c)
-        n = nivel_par(puntaje_del_nombre(c), favor, contra)
-        nivel = _peor(nivel, n)
-        _, nota = detalle_y_nota(c.get("detalle"))
-        salida_pares.append({"id": c["_id"], "a": c["persona_id"], "b": c["candidato_id"], "puntaje": c.get("puntaje"),
-                             "motivo": c.get("motivo"), "nivel": n, "nota": nota, "a_favor": favor,
-                             "en_contra": contra})
+    for lista in sorted(pares.values(), key=lambda lista: lista[0]["_id"]):
+        salida, de_este = evaluar_par(lista, fichas)
+        salida_pares.append(salida)
+        motivos |= de_este
+        nivel = _peor(nivel, salida["nivel"])
     avisos = []
     cedulas = sorted({p["cedula"] for p in fs if p.get("cedula")})
     bloqueada = False
@@ -509,10 +550,13 @@ def evaluar_grupo(pares: dict[frozenset, list[dict]], fichas: dict, rechazos: se
                     avisos.append(f"{_nombre(x)} y {_nombre(y)} no tienen una coincidencia directa y quedarían unidas: "
                                   + "; ".join(s["texto"].lower() for s in contra) + ".")
     if any(p.get("consentimiento") == "no" for p in fs) and not all(p.get("consentimiento") == "no" for p in fs):
+        # Al unir gana el «no» y se borran los datos sensibles que las otras autorizaron: con un falso positivo eso
+        # no se deshace. Nunca «alta», así no entra en «Unir las N muy probables» sin que nadie vea el aviso
+        nivel = _peor(nivel, "media")
         avisos.append("Una de las fichas no autorizó el tratamiento de sus datos: la ficha unida quedará sin "
-                      "autorización («no» gana).")
+                      "autorización («no» gana) y sin los datos sensibles de las otras. Por eso no se une con las muy "
+                      "probables: revíselo.")
     puntajes = [p["puntaje"] for p in salida_pares if p["puntaje"] is not None]
-    motivos = {p["motivo"] for p in salida_pares}
     return {"clave": "-".join(str(p["id"]) for p in sorted(salida_pares, key=lambda p: p["id"])),
             "nivel": "bloqueada" if bloqueada else nivel,
             # El puntaje del grupo es el del par más débil: un grupo vale lo que su eslabón más flojo
