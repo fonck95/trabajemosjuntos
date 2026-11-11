@@ -579,6 +579,9 @@ def politica_panel(origen_sitio: str = "") -> str:
 
 class CabecerasSeguras(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
+        # La ruta antes de seguir: el montaje de /static/ cambia el root_path del mismo scope y, leída después,
+        # «/static/js/ui.js» quedaría como «/js/ui.js»
+        ruta = ruta_interna(request.scope)
         resp = await call_next(request)
         h = resp.headers
         h["Content-Security-Policy"] = politica_panel(getattr(request.app.state.cfg, "origen_sitio", ""))
@@ -590,6 +593,11 @@ class CabecerasSeguras(BaseHTTPMiddleware):
         h["Cross-Origin-Opener-Policy"] = "same-origin"
         if request.app.state.cfg.cookie_segura:
             h["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        if ruta_interna(request.scope).startswith("/api/"):
+        if ruta.startswith("/api/"):
             h["Cache-Control"] = "no-store"
+        elif ruta.startswith("/static/"):
+            # Los módulos se cargan por separado (cada vista al abrirla). Sin Cache-Control el navegador reusa sin
+            # preguntar los que tiene guardados, y tras un despliegue junta un ui.js viejo con un personas.js nuevo:
+            # «does not provide an export named …». Con «no-cache» revalida cada uno con su ETag (304 si no cambió).
+            h["Cache-Control"] = "no-cache"
         return resp

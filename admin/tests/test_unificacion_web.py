@@ -540,7 +540,7 @@ async function ingresar(page, ruta) {
 }
 async function ir(page, ruta) {
   const n = await page.evaluate(() => window.__vistas.length);
-  await page.evaluate(async ([p, r]) => (await import(`${p}/static/js/app.js`)).ir(r), [pref, ruta]);
+  await page.evaluate(async (r) => (await import(new URL('app.js', document.querySelector('script[type=module]').src).href)).ir(r), ruta);
   await page.waitForFunction((n) => window.__vistas.length > n, n, espera);
 }
 async function abrirCoincidencias(page, q = '') {

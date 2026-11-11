@@ -105,9 +105,11 @@ def test_panel_bajo_el_prefijo(servido, cfg):
     assert r.status_code == 308 and r.headers["location"] == "/panel/"
     r = c.get("/panel/personas/12")  # rutas del navegador: devuelven la aplicación con el prefijo
     assert r.status_code == 200 and '<meta name="panel-base" content="/panel">' in r.text
-    assert '"/panel/static/js/app.js"' in r.text and '"/static/' not in r.text
+    from app.main import VERSION
+    assert f'"/panel/static/{VERSION}/js/app.js"' in r.text and '"/static/' not in r.text
     assert r.headers["content-security-policy"] == CSP  # la del panel, no la del sitio
     assert c.get("/panel/static/js/base.js").status_code == 200
+    assert c.get(f"/panel/static/{VERSION}/js/base.js").status_code == 200
     assert c.get("/panel/api/yo").status_code == 401
     # Sin sesión, la API se corta antes de leer el cuerpo, también bajo el prefijo
     assert c.post("/panel/api/importar", content=b"x" * 2048, headers={"Content-Type": "application/octet-stream"}).status_code == 401

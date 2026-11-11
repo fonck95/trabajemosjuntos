@@ -1168,7 +1168,7 @@ async function entrar(page, ruta) {
   await page.waitForSelector('#app #vista > .vista', espera);
   await page.waitForSelector('#agente-boton:not([hidden])', espera);
   if (ruta !== '/') { await page.goto(base + ruta, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('#app #vista > .vista', espera); }
-  await page.evaluate(async (p) => { window.__P = await import(p + '/static/js/agente-presentacion.js'); }, pref);
+  await page.evaluate(async () => { window.__P = await import(new URL('agente-presentacion.js', document.querySelector('script[type=module]').src).href); });
 }
 
 async function enviar(page, texto) {
