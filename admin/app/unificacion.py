@@ -447,7 +447,10 @@ def miembro(p: dict, lugares: dict) -> dict:
             "edad": modelo.edad_efectiva(p), "sexo": p.get("sexo") or None,
             "fecha_nacimiento": p.get("fecha_nacimiento") or None, "fuentes": list(p.get("fuentes") or []),
             "procedencia": prov, "tramites": len(p.get("tramites") or []), "listas": "; ".join(p.get("listas") or []),
-            "completitud": p.get("completitud") or 0, "consentimiento": p.get("consentimiento")}
+            "completitud": p.get("completitud") or 0, "consentimiento": p.get("consentimiento"),
+            # Con él, la vista previa que la interfaz calcula al elegir otra ficha sabe de cuál pasa la ubicación en
+            # bloque (la mejor ubicada), como en la unión
+            "rango_ubicacion": bd._rango_ubicacion(p)}
 
 
 # ───────────────────────────── Grupos ─────────────────────────────

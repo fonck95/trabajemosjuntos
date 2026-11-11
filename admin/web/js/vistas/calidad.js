@@ -4,8 +4,8 @@ import { api } from '../api.js';
 import { refrescarInsignias } from '../app.js';
 import { SEXOS, SITUACIONES } from '../modelo.js';
 import {
-  $, $$, aviso, avisoError, confirmar, datosForm, dialogo, fecha, fuentesVisibles, html, icono, insigniaFuente, insigniasFuentes,
-  leyendaFuentes, montar, nombreFuente, num, titulo,
+  $, $$, aviso, avisoError, confirmar, datosForm, dialogo, fecha, fuentesVisibles, hayEscrito, html, icono, insigniaFuente,
+  insigniasFuentes, leyendaFuentes, montar, nombreFuente, num, titulo,
 } from '../ui.js';
 import { elegirPunto } from './comunes.js';
 import { url } from '../base.js';
@@ -28,6 +28,8 @@ const NIVEL = Object.fromEntries(NIVELES.map(([k, , t]) => [k, t]));
 const MOTIVOS_COINCIDENCIA = { cruce_cedula: 'Cruce con la base con cédula', nombre_telefono: 'Nombre y teléfono',
   homonimo: 'Mismo nombre', variante: 'Nombre parecido', reporte: 'Reportada por el equipo', alta_simultanea: 'Alta simultánea' };
 const POR_PAGINA_GRUPOS = 25;
+// La última página que acepta GET /api/coincidencias/grupos (422 si se pasa): un enlace con otra se acota aquí
+const PAGINA_MAX = 100000;
 // Topes de POST /api/coincidencias/lote (422 si se pasan): grupos por petición, pares por grupo y fichas excluidas
 const LOTE_GRUPOS = 50;
 const MAX_PARES_GRUPO = 60;
@@ -73,6 +75,10 @@ function destinoPorDefecto(ms) {
   if (conCedula.length === 1) return conCedula[0].id;
   return [...ms].sort((a, b) => (b.completitud || 0) - (a.completitud || 0) || a.id - b.id)[0]?.id ?? null;
 }
+/** La que se conserva si nadie elige otra: la que manda el servidor o, si no viene, la misma regla aquí. */
+const conservadaPorDefecto = (g) => g.destino ?? destinoPorDefecto(g.miembros);
+/** ¿Se cambió algo en la tarjeta del grupo (otra ficha para conservar o alguna «No es la misma»)? */
+const conMarcas = (g, e) => e.excluir.size > 0 || e.conservar !== conservadaPorDefecto(g);
 /** Orden en que se unen: la conservada primero y después las demás por (tiene cédula, completitud), de mayor a menor. */
 function ordenUnion(ms, destino) {
   const resto = ms.filter((m) => m.id !== destino)
@@ -81,14 +87,34 @@ function ordenUnion(ms, destino) {
   return d ? [d, ...resto] : resto;
 }
 
+/** El barrio o vereda que quedaría. La unión no lo trata como un campo más: la ubicación pasa en bloque desde la ficha
+ * mejor ubicada (`db._rango_ubicacion`, que el servidor manda como `rango_ubicacion`: punto marcado a mano, dirección,
+ * lugar elegido a mano, centro del lugar) y, con empate, queda la primera en el orden de unión. Sin el rango de alguna
+ * ficha solo se promete el lugar si todas dicen el mismo; si no, `incierto` (la celda no nombra ningún barrio). */
+function lugarQuedaria(orden) {
+  const nada = { campo: 'lugar', valor: null, fuente: null, de: null, otros: [] };
+  if (!orden.length) return nada;
+  if (orden.every((m) => Number.isFinite(m.rango_ubicacion))) {
+    const mejor = orden.reduce((a, m) => (m.rango_ubicacion > a.rango_ubicacion ? m : a));
+    return vacio(mejor.lugar) ? nada
+      : { ...nada, valor: String(mejor.lugar), fuente: fuenteDato(mejor, 'lugar'), de: mejor.id };
+  }
+  // Todas con el mismo lugar: ese queda, venga de la ficha que venga (por eso sin fuente ni ficha de origen)
+  if (new Set(orden.map((m) => (vacio(m.lugar) ? '' : comparable(m.lugar)))).size === 1) {
+    return vacio(orden[0].lugar) ? nada : { ...nada, valor: String(orden[0].lugar) };
+  }
+  return { ...nada, incierto: true };
+}
+
 /** Lo que quedaría en la ficha unida, campo por campo, con la elección hecha en la pantalla (otra ficha conservada o
  * fichas excluidas): una copia aproximada de la `vista_previa` del servidor. Queda el valor de la conservada si lo
  * tiene y si no el primero en el orden de unión; lo distinto pasa a alternos (en los campos que los llevan); los
- * teléfonos se juntan todos. */
+ * teléfonos se juntan todos y el lugar sale de la ficha mejor ubicada (`lugarQuedaria`). */
 function vistaPreviaLocal(ms, destino) {
   const orden = ordenUnion(ms, destino);
   const out = {};
   for (const campo of CAMPOS_VISTA) {
+    if (campo === 'lugar') { out[campo] = lugarQuedaria(orden); continue; }
     if (campo === 'telefonos') {
       const numeros = [...new Set(orden.flatMap((m) => m.telefonos || []))];
       const de = orden.find((m) => (m.telefonos || []).length);
@@ -258,7 +284,12 @@ function celdaQuedaria(k, vp, inc, letras) {
       const ps = [pieza(vp.edad, edadTexto), pieza(vp.fecha_nacimiento, fechaTexto), pieza(vp.sexo, sexoTexto)].filter(Boolean);
       return ps.length ? html`<span class="piezas">${ps}</span>${alternos(vp.edad, vp.fecha_nacimiento, vp.sexo)}` : FALTA;
     }
-    case 'lugar': return pieza(vp.lugar, titulo) ? html`${pieza(vp.lugar, titulo)}${alternos(vp.lugar)}` : FALTA;
+    case 'lugar':
+      // Sin saber cuál está mejor ubicada no se promete un barrio que la unión podría no dejar
+      if (vp.lugar?.incierto) {
+        return html`<span class="falta" title="La ubicación pasa entera desde la ficha mejor ubicada (punto en el mapa, dirección…)">El de la ficha mejor ubicada</span>`;
+      }
+      return pieza(vp.lugar, titulo) ? html`${pieza(vp.lugar, titulo)}${alternos(vp.lugar)}` : FALTA;
     default: return pieza(vp[k]) ? html`${pieza(vp[k])}${alternos(vp[k])}` : FALTA;
   }
 }
@@ -338,15 +369,30 @@ export async function vistaCalidad(el, { q }) {
   const vigente = (t) => t === turno && el.isConnected;
   const VISTAS = { coincidencias, conflictos, solicitudes, situaciones, lugares, sin: sinReconocer };
   // Filtros de Coincidencias: viajan en la URL (el enlace «revisar» de la ficha trae `persona`). Ninguno es una clave
-  // que el asistente lea de la dirección (agente.js, CLAVES_CONTEXTO): las coincidencias no le llegan
+  // que el asistente lea de la dirección (agente.js, CLAVES_CONTEXTO): las coincidencias no le llegan. Solo valores que
+  // el servidor acepta: un enlace viejo o mal copiado (otro motivo, una página de más) no deja la pestaña en un 422
   const filtroC = {
     nivel: NIVELES.some(([k]) => k === q.get('nivel')) ? q.get('nivel') : '',
-    motivo: /^[a-z_]{1,40}$/.test(q.get('motivo') || '') ? q.get('motivo') : '',
+    motivo: Object.hasOwn(MOTIVOS_COINCIDENCIA, q.get('motivo') || '') ? q.get('motivo') : '',
     persona: /^\d{1,12}$/.test(q.get('persona') || '') ? q.get('persona') : '',
-    pagina: Math.max(1, Number.parseInt(q.get('pagina') || '1', 10) || 1),
+    pagina: Math.min(PAGINA_MAX, Math.max(1, Number.parseInt(q.get('pagina') || '1', 10) || 1)),
   };
   let quitarTeclas = null; // los atajos de Coincidencias: se quitan al cambiar de pestaña o salir de la vista
   let detenerLote = null;  // «Unir las N muy probables» en curso
+  // Dónde fue el último clic o foco, para los atajos: un clic en un texto del asistente (que no recibe el foco) deja el
+  // foco en <body>, y sin esto lo que se siguiera escribiendo «al asistente» uniría o separaría grupos. La vista es todo
+  // #vista (el foco cae ahí al abrirla); los diálogos no cuentan (se miran aparte) y <html> o <body> tampoco (la barra
+  // de desplazamiento de la página)
+  const zonaVista = () => el.closest('#vista') || el;
+  const neutro = (t) => t === document.body || t === document.documentElement;
+  let ultimoFuera = false;
+  const anotarLugar = (e) => {
+    const t = e.target;
+    if (!(t instanceof Element) || neutro(t) || t.closest('dialog')) return;
+    ultimoFuera = !zonaVista().contains(t);
+  };
+  document.addEventListener('pointerdown', anotarLugar, true);
+  document.addEventListener('focusin', anotarLugar, true);
 
   async function pintar() {
     quitarTeclas?.();
@@ -358,10 +404,37 @@ export async function vistaCalidad(el, { q }) {
     c.onclick = null;
     c.onchange = null;
     const t = ++turno;
-    try { await VISTAS[pestana](c, t); } catch (err) { if (vigente(t)) montar(c, html`<div class="aviso-legal">${err.message}</div>`); }
+    try {
+      await VISTAS[pestana](c, t);
+    } catch (err) {
+      if (!vigente(t)) return;
+      if (pestana === 'coincidencias') errorCoincidencias(c, err);
+      else montar(c, html`<div class="aviso-legal">${err.message}</div>`);
+    }
   }
   // Vuelve a cargar la pestaña después de una acción, solo si el usuario sigue en ella
   const recargar = (fn, nombre, c) => { if (pestana === nombre && el.isConnected) fn(c, ++turno); };
+
+  // Coincidencias con su turno. Si la carga falla (la red, o algo que el servidor rechaza), el error trae una salida:
+  // volver a todos los grupos, sin filtros, o reintentar. Antes quedaba solo el texto del error, sin ningún botón
+  function cargarCoincidencias(c, op) {
+    const t = ++turno;
+    return coincidencias(c, t, op).catch((err) => { if (vigente(t)) errorCoincidencias(c, err); });
+  }
+  function errorCoincidencias(c, err) {
+    quitarTeclas?.();
+    quitarTeclas = null;
+    const f = filtroC;
+    const conFiltro = !!(f.nivel || f.motivo || f.persona || f.pagina > 1);
+    montar(c, html`<div class="aviso-legal error-carga" role="alert"><span>${err?.message || 'No se pudieron cargar las coincidencias.'}</span>
+      <button type="button" class="btn chico" data-salida>${conFiltro ? 'Ver todos los grupos' : 'Reintentar'}</button></div>`);
+    c.onchange = null;
+    c.onclick = (e) => {
+      if (!e.target.closest('[data-salida]')) return;
+      Object.assign(filtroC, { nivel: '', motivo: '', persona: '', pagina: 1 });
+      cargarCoincidencias(c);
+    };
+  }
 
   const lado = (p, otro, rotulo) => {
     const tb = new Set((otro?.nombre || '').split(/\s+/));
@@ -377,7 +450,9 @@ export async function vistaCalidad(el, { q }) {
   const textoCuenta = (d) => `${plural(d.total, 'grupo', 'grupos')} con ${plural(d.pares, 'coincidencia', 'coincidencias')} entre ${plural(d.personas, 'ficha', 'fichas')}.`;
   const textoUnirAlta = (n) => (n === 1 ? 'Unir la muy probable' : `Unir las ${num(n)} muy probables`);
 
-  async function coincidencias(c, mio) {
+  // `vistos`: las claves que mostraba esta misma página antes de volver a pedirla (ver «Siguiente →»); el foco va al
+  // primer grupo que no estaba
+  async function coincidencias(c, mio, { vistos = null } = {}) {
     quitarTeclas?.();
     quitarTeclas = null;
     const f = filtroC;
@@ -393,10 +468,10 @@ export async function vistaCalidad(el, { q }) {
     if (!(d.grupos || []).length && f.pagina > 1 && d.total > 0) {
       const ultima = Math.max(1, Math.ceil(d.total / porPagina));
       f.pagina = ultima < f.pagina ? ultima : 1;
-      return coincidencias(c, mio);
+      return coincidencias(c, mio, { vistos });
     }
     const grupos = d.grupos || [];
-    const estados = new Map(grupos.map((g) => [g.clave, { conservar: g.destino ?? destinoPorDefecto(g.miembros), excluir: new Set(), sel: false }]));
+    const estados = new Map(grupos.map((g) => [g.clave, { conservar: conservadaPorDefecto(g), excluir: new Set(), sel: false }]));
     const est = (g) => estados.get(g.clave);
     const porClave = new Map(grupos.map((g) => [g.clave, g]));
     const resueltos = new Set();
@@ -438,18 +513,14 @@ export async function vistaCalidad(el, { q }) {
           </div>
         </div>
         <div class="lista-grupos">${grupos.map((g) => tarjetaGrupo(g, est(g)))}</div>
-        ${paginas > 1 ? html`<div class="paginacion"><span>Página ${num(f.pagina)} de ${num(paginas)}</span>
+        ${paginas > 1 ? html`<div class="paginacion"><span data-pagina-texto>Página ${num(f.pagina)} de ${num(paginas)}</span>
           <span class="botones-pagina"><button type="button" class="btn chico" data-pagina="${f.pagina - 1}" ${f.pagina <= 1 ? 'disabled' : ''}>← Anterior</button>
-          <button type="button" class="btn chico" data-pagina="${f.pagina + 1}" ${f.pagina >= paginas ? 'disabled' : ''}>Siguiente →</button></span></div>` : ''}`
+          <button type="button" class="btn chico" data-pagina="${f.pagina + 1}" data-siguiente ${f.pagina >= paginas ? 'disabled' : ''}>Siguiente →</button></span></div>` : ''}`
       : html`<div class="tarjeta vacio"><b>${f.persona ? 'Esa ficha ya no tiene coincidencias pendientes' : 'Ningún grupo con estos filtros'}</b>${f.persona ? '' : 'Pruebe con otro nivel o motivo.'}
         <div class="volver-todos"><button type="button" class="btn" data-ver-todos>Ver todos los grupos</button></div></div>`}
     </section>`);
 
-    const recargarC = () => {
-      if (pestana !== 'coincidencias' || !el.isConnected) return;
-      const t = ++turno;
-      coincidencias(c, t).catch((err) => { if (vigente(t)) montar(c, html`<div class="aviso-legal">${err.message}</div>`); });
-    };
+    const recargarC = (op) => { if (pestana === 'coincidencias' && el.isConnected) cargarCoincidencias(c, op); };
     const tarjetaDe = (g) => c.querySelector(`.grupo-coinc[data-clave="${CSS.escape(g.clave)}"]`);
     const vivos = () => grupos.filter((g) => !resueltos.has(g.clave));
     let ocupado = false;
@@ -488,7 +559,15 @@ export async function vistaCalidad(el, { q }) {
       if (cu) cu.textContent = textoCuenta(d);
       const sm = $('[data-motivo]', c);
       if (sm) for (const o of sm.options) if (o.value) o.textContent = etiquetaMotivo(o.value, d);
+      // La paginación con la cuenta nueva. «Siguiente» sigue mientras quede algo después de lo que se ve: con 26 grupos,
+      // resolver uno de la primera página deja 25 (una página) y el que seguía aún no se mostró
+      const pt = $('[data-pagina-texto]', c);
+      if (pt) pt.textContent = `Página ${num(f.pagina)} de ${num(Math.max(f.pagina, Math.ceil(d.total / porPagina)))}`;
+      const sig = $('[data-siguiente]', c);
+      if (sig) sig.disabled = !hayMas();
     }
+    // ¿Hay grupos después de los de esta página que siguen a la vista?
+    const hayMas = () => d.total > (f.pagina - 1) * porPagina + vivos().length;
 
     // ── Foco y recorrido con el teclado ──
     function enfocar(t, { desplazar = true } = {}) {
@@ -623,18 +702,47 @@ export async function vistaCalidad(el, { q }) {
     }
 
     // ── «Unir las N muy probables»: pide de a 50, las une con la ficha por defecto y sigue hasta que no queden ──
+    // Con los filtros de la vista (el motivo y, desde el enlace «revisar» de una ficha, `persona`): el botón cuenta lo
+    // de aquí y no puede unir grupos que no se ven. Lo marcado en las tarjetas a la vista se respeta: esos grupos se
+    // unen con la ficha elegida y sin las que «No es la misma»; si lo marcado no deja unirlo, el grupo queda sin tocar
     async function unirMuyProbables() {
       if (ocupado || enLote) return;
+      const filtros = { nivel: 'alta', motivo: f.motivo, persona: f.persona };
       let info;
-      try { info = await api.get('/api/coincidencias/grupos', { nivel: 'alta', motivo: f.motivo, por_pagina: 1 }); } catch (err) { avisoError(err); return; }
+      try { info = await api.get('/api/coincidencias/grupos', { ...filtros, por_pagina: 1 }); } catch (err) { avisoError(err); return; }
       if (!vigente(mio)) return;
-      const n = info.total || 0;
-      if (!n) { aviso('Ya no quedan grupos muy probables'); recargarC(); return; }
-      const texto = n === 1
-        ? `Se unirán las ${num(info.personas)} fichas del grupo muy probable en una sola.`
-        : `Se unirán las fichas de ${num(n)} grupos muy probables: ${num(info.personas)} fichas quedarán en ${num(n)}.`;
-      if (!await confirmar(`${texto} En cada grupo se conserva la ficha con cédula (o la más completa) y lo distinto queda como dato alterno. Cada unión queda en la auditoría.`,
-        { si: n === 1 ? 'Unir' : `Unir ${num(n)} grupos` })) return;
+      const marcados = new Map(); // clave → estado elegido en la tarjeta
+      const sinTocar = new Map(); // clave → por qué lo marcado no deja unirlo
+      for (const g of vivos()) {
+        if (g.nivel !== 'alta' || !conMarcas(g, est(g))) continue;
+        const motivo = bloqueoUnir(g, est(g));
+        if (motivo) sinTocar.set(g.clave, motivo);
+        else marcados.set(g.clave, { conservar: est(g).conservar, excluir: new Set(est(g).excluir) });
+      }
+      const n = Math.max(0, (info.total || 0) - sinTocar.size);
+      if (!info.total) { aviso('Ya no quedan grupos muy probables'); recargarC(); return; }
+      if (!n) {
+        aviso(sinTocar.size === 1 ? 'Lo que marcó en la tarjeta no deja unir ese grupo: vea el aviso en ella.'
+          : 'Lo que marcó en las tarjetas no deja unir ninguno: vea el aviso en cada una.', 'error', 6000);
+        return;
+      }
+      // Fichas que se juntan: las de todos los grupos menos los que quedan sin tocar y las marcadas «No es la misma»
+      const fuera = [...sinTocar.keys()].reduce((a, k) => a + (porClave.get(k)?.miembros.length || 0), 0)
+        + [...marcados.values()].reduce((a, s) => a + s.excluir.size, 0);
+      const fichas = Math.max(0, (info.personas || 0) - fuera);
+      const partes = [n === 1
+        ? `Se unirán las ${num(fichas)} fichas del grupo muy probable en una sola.`
+        : `Se unirán las fichas de ${num(n)} grupos muy probables: ${num(fichas)} fichas quedarán en ${num(n)}.`];
+      if (marcados.size) {
+        partes.push(marcados.size === 1 ? 'Uno se une con lo que usted marcó en su tarjeta (la ficha que se conserva o las que no son la misma).'
+          : `${num(marcados.size)} se unen con lo que usted marcó en sus tarjetas (la ficha que se conserva o las que no son la misma).`);
+      }
+      partes.push(`${marcados.size ? 'En los demás' : 'En cada grupo'} se conserva la ficha con cédula (o la más completa) y lo distinto queda como dato alterno. Cada unión queda en la auditoría.`);
+      if (sinTocar.size) {
+        partes.push(sinTocar.size === 1 ? 'Uno queda sin unir: lo que marcó en su tarjeta no deja unirlo.'
+          : `${num(sinTocar.size)} quedan sin unir: lo que marcó en sus tarjetas no deja unirlos.`);
+      }
+      if (!await confirmar(partes.join(' '), { si: n === 1 ? 'Unir' : `Unir ${num(n)} grupos` })) return;
       if (!vigente(mio)) return;
       enLote = true;
       let detenido = false;
@@ -676,23 +784,27 @@ export async function vistaCalidad(el, { q }) {
         let pagina = 1;
         // Tope de vueltas: cada una une o descarta al menos un grupo, o avanza de página
         for (let vuelta = 0; vuelta < Math.ceil(n / LOTE_GRUPOS) * 4 + 20 && !detenido; vuelta++) {
-          const r = await api.get('/api/coincidencias/grupos', { nivel: 'alta', motivo: f.motivo, pagina, por_pagina: LOTE_GRUPOS });
-          const todos = (r.grupos || []).filter((g) => g.nivel === 'alta' && !fallidas.has(g.clave));
-          for (const g of todos.filter((x) => x.pares.length > MAX_PARES_GRUPO)) {
+          const r = await api.get('/api/coincidencias/grupos', { ...filtros, pagina, por_pagina: LOTE_GRUPOS });
+          const todos = (r.grupos || []).filter((g) => g.nivel === 'alta' && !fallidas.has(g.clave) && !sinTocar.has(g.clave));
+          const tanda = [];
+          for (const g of todos) {
+            // Lo marcado se vuelve a mirar con el grupo recién leído (la misma clave: los mismos pares y fichas)
+            const motivo = g.pares.length > MAX_PARES_GRUPO ? bloqueoSeparar(g) : marcados.has(g.clave) ? bloqueoUnir(g, marcados.get(g.clave)) : null;
+            if (!motivo) { tanda.push(g); continue; }
             fallidas.add(g.clave);
             cuenta.errores++; cuenta.hechos++;
-            errores.push({ nombres: g.miembros.map((m) => m.nombre).join(' y '), error: bloqueoSeparar(g) });
+            errores.push({ nombres: g.miembros.map((m) => m.nombre).join(' y '), error: motivo });
           }
-          const tanda = todos.filter((g) => g.pares.length <= MAX_PARES_GRUPO);
           if (!tanda.length) {
-            // Lo que queda en esta página ya falló una vez: se sigue con la siguiente, si hay
+            // Lo que queda en esta página ya falló una vez (o se deja sin tocar): se sigue con la siguiente, si hay
             if (pagina * LOTE_GRUPOS < (r.total || 0)) { pagina++; continue; }
             break;
           }
           if (detenido) break;
           pintarAvance(`Uniendo ${plural(tanda.length, 'grupo', 'grupos')}…`);
-          const res = await api.post('/api/coincidencias/lote', { grupos: tanda.map((g) => ({ pares: g.pares.map((p) => p.id), decision: 'unir' })) },
-            { timeout: ESPERA_LOTE });
+          const cuerpos = tanda.map((g) => (marcados.has(g.clave) ? cuerpoGrupo(g, marcados.get(g.clave), 'unir')
+            : { pares: g.pares.map((p) => p.id), decision: 'unir' }));
+          const res = await api.post('/api/coincidencias/lote', { grupos: cuerpos }, { timeout: ESPERA_LOTE });
           const rs = Array.isArray(res?.resultados) ? res.resultados : [];
           tanda.forEach((g, i) => {
             cuenta.hechos++;
@@ -731,7 +843,17 @@ export async function vistaCalidad(el, { q }) {
       if (t.closest('[data-ver-todos]')) { Object.assign(f, { nivel: '', motivo: '', persona: '', pagina: 1 }); recargarC(); return; }
       if (t.closest('[data-unir-alta]')) { unirMuyProbables(); return; }
       const pg = t.closest('[data-pagina]');
-      if (pg) { if (!pg.disabled) { f.pagina = Number(pg.dataset.pagina); recargarC(); el.scrollIntoView(); } return; }
+      if (pg) {
+        if (pg.disabled) return;
+        // La página es un tramo de una lista que el servidor recalcula: lo resuelto aquí corrió el resto hacia atrás y
+        // la página siguiente empezaría tantos grupos más adelante como se resolvieron, que no se verían nunca. Se pide
+        // otra vez esta misma, que ahora termina con esos, y el foco va al primero de ellos
+        if (pg.matches('[data-siguiente]') && resueltos.size) { recargarC({ vistos: new Set(grupos.map((g) => g.clave)) }); return; }
+        f.pagina = Number(pg.dataset.pagina);
+        recargarC();
+        el.scrollIntoView();
+        return;
+      }
       if (t.closest('[data-sel-todos]')) { for (const g of vivos()) seleccionar(g, true); pintarBarra(); $('[data-sel-unir]', c)?.focus(); return; }
       if (t.closest('[data-sel-quitar]')) { for (const g of vivos()) seleccionar(g, false); pintarBarra(); $('[data-sel-todos]', c)?.focus(); return; }
       if (t.closest('[data-sel-unir]')) { resolverSeleccion('unir'); return; }
@@ -772,14 +894,18 @@ export async function vistaCalidad(el, { q }) {
       montar($('.grupo-acciones', tarjeta), accionesGrupo(g, s));
       $(selector, tarjeta)?.focus();
     };
-    // Atajos (escritorio): no con el foco en un campo de texto ni con un diálogo abierto o el asistente
+    // Atajos (escritorio): solo en la vista. No con un diálogo abierto, ni con el foco o el último clic fuera de ella (el
+    // asistente, el menú, la franja de la llamada), ni en un campo. Con mayúscula tampoco (quien escribe «Una…» creyendo
+    // estar en el asistente) ni al dejar la tecla apretada: una letra de más uniría o separaría otro grupo
     const teclas = (e) => {
-      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.key.length !== 1) return;
       const k = e.key.toLowerCase();
       if (!'jkxud'.includes(k) || !c.isConnected || pestana !== 'coincidencias') return;
+      if (e.repeat && k !== 'j' && k !== 'k') return;
       if (document.querySelector('dialog[open]')) return;
       const a = e.target instanceof Element ? e.target : null;
-      if (a?.closest('textarea, select, [contenteditable]:not([contenteditable="false"]), #agente-panel')) return;
+      if (ultimoFuera || (a && !neutro(a) && !zonaVista().contains(a))) return;
+      if (a?.closest('dialog, #agente, textarea, select, [contenteditable]:not([contenteditable="false"])')) return;
       if (a?.matches('input') && !['checkbox', 'radio', 'button', 'submit', 'reset'].includes(a.type)) return;
       const lista = $$('.grupo-coinc:not(.resuelta)', c);
       if (!lista.length) return;
@@ -799,6 +925,14 @@ export async function vistaCalidad(el, { q }) {
     };
     document.addEventListener('keydown', teclas);
     quitarTeclas = () => document.removeEventListener('keydown', teclas);
+    // Volvió a pedir esta página tras resolver («Siguiente →»): el foco va al primer grupo que no se había visto
+    if (vistos) {
+      const nuevos = grupos.filter((g) => !vistos.has(g.clave));
+      if (nuevos.length) {
+        enfocar(tarjetaDe(nuevos[0]));
+        aviso(nuevos.length === 1 ? 'La página se completó con el grupo que seguía' : `La página se completó con los ${num(nuevos.length)} grupos que seguían`);
+      } else el.scrollIntoView();
+    }
   }
 
   async function conflictos(c, mio) {
@@ -861,7 +995,9 @@ export async function vistaCalidad(el, { q }) {
         <label class="campo"><span>Cédula correcta</span><input name="cedula" inputmode="numeric" autocomplete="off" required pattern="[0-9]{5,11}" value="${sugerida}"></label>
         <label class="campo"><span>Repita la cédula</span><input name="repetida" inputmode="numeric" autocomplete="off" required pattern="[0-9]{5,11}"></label>
         <label class="campo ancho"><span>Motivo</span><input name="motivo" maxlength="300" value="Corrección de un posible error de digitación"></label></form>`,
-      pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Corregir</button>` });
+      pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Corregir</button>`,
+      // Tocar el fondo o Escape con algo escrito pregunta antes de perderlo, como en el resto del panel
+      sucio: hayEscrito });
     $('#g', d).onclick = async () => {
       const f = $('#f-ced', d);
       if (!f.reportValidity()) return;
@@ -900,7 +1036,7 @@ export async function vistaCalidad(el, { q }) {
         cuerpo: html`<form class="form" id="f-sol"><p class="ancho" style="margin:0;white-space:pre-wrap">${s.descripcion || ''}</p>
           <label class="campo"><span>Estado</span><select name="estado">${Object.entries(ESTADOS_SOLICITUD).map(([k, t]) => html`<option value="${k}" ${k === s.estado ? 'selected' : ''}>${t}</option>`)}</select></label>
           <label class="campo ancho"><span>Respuesta al titular</span><textarea name="respuesta" maxlength="2000">${s.respuesta || ''}</textarea></label></form>`,
-        pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Guardar</button>` });
+        pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Guardar</button>`, sucio: hayEscrito });
       $('#g', d).onclick = async () => {
         try {
           await api.patch(`/api/solicitudes/${s.id}`, datosForm($('#f-sol', d)));
@@ -964,7 +1100,7 @@ export async function vistaCalidad(el, { q }) {
         const l = ls.find((x) => x.id === Number(a.dataset.alias));
         const { el: d, cerrar } = dialogo({ titulo: `Otros nombres de ${titulo(l.nombre)}`,
           cuerpo: html`<p class="sec" style="margin-top:0">Uno por línea: cómo lo escribe la gente en las direcciones.</p><textarea class="entrada" id="alias" style="min-height:140px">${l.alias.join('\n')}</textarea>`,
-          pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Guardar</button>` });
+          pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Guardar</button>`, sucio: hayEscrito });
         $('#g', d).onclick = async () => {
           try {
             await api.patch(`/api/lugares/${l.id}`, { alias: $('#alias', d).value.split('\n').map((s) => s.trim()).filter(Boolean) });
@@ -1012,7 +1148,9 @@ export async function vistaCalidad(el, { q }) {
           <option value="caserio">Caserío</option><option value="centro_poblado">Centro poblado</option><option value="corregimiento">Corregimiento</option></select></label>
         <label class="campo"><span>Zona</span><select name="zona"><option value="urbana">Urbana</option><option value="rural">Rural</option></select></label>
         <div class="ancho"><button type="button" class="btn chico" id="p">Marcar en el mapa</button> <span class="sec" id="pt"></span></div></form>`,
-      pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Crear</button>` });
+      pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Crear</button>`,
+      // El punto marcado en el mapa también es trabajo que se perdería (como en «Nueva reunión»)
+      sucio: (x) => !!punto || hayEscrito(x) });
     $('#p', d).onclick = async () => { punto = await elegirPunto({ titulo: 'Punto del lugar' }); if (punto) $('#pt', d).textContent = `${punto[1].toFixed(5)}, ${punto[0].toFixed(5)}`; };
     $('#g', d).onclick = async () => {
       const f = $('#f-lugar', d);
@@ -1036,6 +1174,12 @@ export async function vistaCalidad(el, { q }) {
     }
   });
   pintar();
-  // Al salir de la vista: fuera los atajos de teclado y se detiene «Unir las N muy probables» (su diálogo vive en <body>)
-  return () => { quitarTeclas?.(); detenerLote?.(); };
+  // Al salir de la vista: fuera los atajos de teclado (y lo que anota dónde fue el último clic) y se detiene «Unir las N
+  // muy probables» (su diálogo vive en <body>)
+  return () => {
+    quitarTeclas?.();
+    detenerLote?.();
+    document.removeEventListener('pointerdown', anotarLugar, true);
+    document.removeEventListener('focusin', anotarLugar, true);
+  };
 }

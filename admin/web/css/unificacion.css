@@ -35,6 +35,8 @@ button.nivel-filtro[aria-pressed="true"] { border-color: var(--ink); }
 .ayuda-atajos kbd { display: inline-block; min-width: 20px; text-align: center; font: 600 11.5px/1.4 var(--f-mono); color: var(--ink-2);
   background: var(--surface); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 0 4px; }
 .volver-todos { margin-top: 12px; }
+/* La carga falló (un enlace viejo, la red): el error con su salida al lado */
+.error-carga { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 
 /* ───────── Barra de selección: pegada arriba en escritorio, fija abajo en el celular ───────── */
 .barra-seleccion { position: sticky; top: 0; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
@@ -44,6 +46,11 @@ button.nivel-filtro[aria-pressed="true"] { border-color: var(--ink); }
 .cuenta-sel { font-weight: 650; font-size: 14px; min-width: 0; }
 .botones-sel { display: flex; flex-wrap: wrap; gap: 6px; }
 .botones-sel .btn svg { width: 15px; height: 15px; }
+/* Con la franja «Llamada sin registrar» a la vista (app.css: fija arriba, por encima de todo, unos 50 px de alto; el
+   contenido ya le deja 76), la barra se pega debajo de ella y no detrás, donde «Unir» no se ve ni se puede tocar. Las
+   tarjetas que enfocan J y K bajan lo mismo. En el celular la franja va bajo la barra superior (ver más abajo) */
+body:has(#franja-llamada) .barra-seleccion { top: 64px; }
+body:has(#franja-llamada) .grupo-coinc { scroll-margin-top: 150px; }
 
 /* ───────── Tarjeta de un grupo ───────── */
 .lista-grupos { display: flex; flex-direction: column; min-width: 0; }
@@ -186,6 +193,9 @@ button.nivel-filtro[aria-pressed="true"] { border-color: var(--ink); }
   body:has(#barra-sel.con-seleccion) #vista.contenido { padding-bottom: calc(180px + env(safe-area-inset-bottom)); }
   body:has(#barra-sel.con-seleccion) #avisos.avisos { bottom: calc(150px + env(safe-area-inset-bottom)); }
   .grupo-coinc { scroll-margin-top: calc(var(--barra-movil) + 12px); scroll-margin-bottom: 160px; }
+  /* La barra fija abajo no se corre por la franja (que aquí va arriba, bajo la barra del celular); las tarjetas sí */
+  body:has(#franja-llamada) .barra-seleccion.con-seleccion { top: auto; }
+  body:has(#franja-llamada) .grupo-coinc { scroll-margin-top: calc(var(--barra-movil) + 76px); }
   .motivo-unif, .unir-alta { flex: 1 1 100%; }
   .unir-alta .btn { width: 100%; justify-content: center; }
 }

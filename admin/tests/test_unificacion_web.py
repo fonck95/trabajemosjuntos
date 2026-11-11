@@ -10,8 +10,11 @@ css/unificacion.css; las insignias del directorio y de la ficha).
   «Unir las N muy probables» con su progreso (sin reintentar un grupo que falló) y «Detener», los atajos de teclado,
   el celular (sin desborde de la página en 390×844 y 320×568, la grilla que se desplaza dentro de la tarjeta con los
   rótulos fijos, la barra fija abajo y blancos de 44 px), el modo oscuro y el contraste de las insignias en los dos
-  temas; y, con la API real, las insignias de la ficha, el enlace «revisar» y las del directorio. Sin violaciones de la
-  CSP ni errores de consola.
+  temas; y, con la API real, las insignias de la ficha, el enlace «revisar» y las del directorio. También lo que la
+  revisión encontró: el botón masivo respeta lo marcado en las tarjetas y el filtro de una ficha, «Siguiente» no se salta
+  grupos tras resolver, la vista previa estimada deja el lugar de la mejor ubicada, un enlace viejo o una falla dejan
+  salida, los atajos no corren fuera de la vista, «Nuevo lugar» pregunta antes de perder lo escrito y la barra de
+  selección no queda bajo la franja «Llamada sin registrar». Sin violaciones de la CSP ni errores de consola.
 
 Las capturas quedan en CAPTURAS_UNIFICACION si se define (para mirarlas a mano). Se salta si no hay Node con
 Playwright, salvo en el CI (allí falla en vez de pasar en silencio).
@@ -98,6 +101,33 @@ def test_las_vistas_usan_el_catalogo_de_ui_js():
     assert "api.post(`/api/coincidencias/${" not in calidad
     ficha = (WEB / "js" / "vistas" / "ficha.js").read_text(encoding="utf-8")
     assert 'href="/calidad?p=coincidencias&persona=${p.id}"' in ficha
+
+
+def _llamadas_a_dialogo(js: str) -> list[str]:
+    """El texto de cada `dialogo({...})` del módulo, de la llave que abre a la que cierra (las `${…}` de las plantillas
+    están balanceadas)."""
+    salida = []
+    for m in re.finditer(r"\bdialogo\(\{", js):
+        nivel, i = 0, m.end() - 1
+        while True:
+            nivel += {"{": 1, "}": -1}.get(js[i], 0)
+            if nivel == 0:
+                break
+            i += 1
+        salida.append(js[m.start():i + 1])
+    return salida
+
+
+def test_los_dialogos_con_campos_de_calidad_preguntan_antes_de_descartar():
+    """Como en el resto del panel: tocar el fondo o Escape con algo escrito pregunta (`sucio`), en vez de perderlo."""
+    calidad = (WEB / "js" / "vistas" / "calidad.js").read_text(encoding="utf-8")
+    dialogos = _llamadas_a_dialogo(calidad)
+    con_campos = [d for d in dialogos if re.search(r"<(input|textarea|select)\b", d)]
+    # Corregir cédula, la solicitud, otros nombres de un lugar y nuevo lugar (el progreso de la unión no tiene campos)
+    assert len(dialogos) == 5 and len(con_campos) == 4
+    sin_sucio = [re.search(r"titulo:\s*([^,]+),", d).group(1) for d in con_campos if not re.search(r"\bsucio:", d)]
+    assert not sin_sucio, sin_sucio
+    assert re.search(r"\bhayEscrito\b", re.search(r"import \{([^}]*)\} from '\.\./ui\.js'", calidad).group(1))
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="sin Node para cargar web/js/ui.js")
@@ -295,6 +325,55 @@ def test_insignias_de_la_ficha_el_directorio_y_el_enlace_revisar(resultados):
     _revisar(resultados, "ficha")
 
 
+@requiere_navegador
+def test_unir_las_muy_probables_respeta_lo_marcado_en_las_tarjetas(resultados):
+    caso = _revisar(resultados, "marcas")
+    # El grupo con la «No es la misma» que lo deja de una ficha no va; el de «Conservar esta» lleva su ficha y el de tres,
+    # la excluida. Los demás, con la conservada por defecto (sin `conservar`)
+    assert caso["datos"]["posts"] == [{"grupos": [
+        {"pares": [7001], "decision": "unir", "conservar": 5003},
+        {"pares": [7002], "decision": "unir"},
+        {"pares": [7003], "decision": "unir"},
+        {"pares": [7100, 7101], "decision": "unir", "conservar": 6001, "excluir": [6003]},
+    ]}]
+
+
+@requiere_navegador
+def test_unir_las_muy_probables_con_el_filtro_de_una_ficha(resultados):
+    caso = _revisar(resultados, "persona")
+    assert caso["datos"]["posts"] == [{"grupos": [{"pares": [7002], "decision": "unir"}]}]
+
+
+@requiere_navegador
+def test_la_paginacion_tras_resolver_no_se_salta_grupos(resultados):
+    _revisar(resultados, "paginacion")
+
+
+@requiere_navegador
+def test_la_vista_previa_estimada_sigue_la_mejor_ubicacion(resultados):
+    _revisar(resultados, "lugar")
+
+
+@requiere_navegador
+def test_un_enlace_viejo_o_una_falla_dejan_una_salida(resultados):
+    _revisar(resultados, "url")
+
+
+@requiere_navegador
+def test_atajos_fuera_de_la_vista_y_con_mayuscula(resultados):
+    _revisar(resultados, "atajos-fuera")
+
+
+@requiere_navegador
+def test_nuevo_lugar_pregunta_antes_de_perder_lo_escrito(resultados):
+    _revisar(resultados, "dialogos")
+
+
+@requiere_navegador
+def test_la_barra_de_seleccion_no_queda_bajo_la_franja_de_llamada(resultados):
+    _revisar(resultados, "franja")
+
+
 GUION = r"""// Revisión en bloque de coincidencias y color por fuente, en Chromium. Uso: node <guion> <base del panel> <usuario>
 // <clave> <datos.json> <capturas>
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
@@ -311,7 +390,8 @@ const captura = (page, nombre, op = {}) => (capturas ? page.screenshot({ path: p
 // ── Grupos inventados con la forma exacta del contrato (A.2) ──
 function miembro(id, nombre, extra = {}) {
   return { id, nombre, cedula: null, telefonos: [], correo: null, direccion: null, lugar: null, edad: null, sexo: null,
-    fecha_nacimiento: null, fuentes: ['tramites'], procedencia: {}, tramites: 1, listas: '', completitud: 40, consentimiento: 'pendiente', ...extra };
+    fecha_nacimiento: null, fuentes: ['tramites'], procedencia: {}, tramites: 1, listas: '', completitud: 40, consentimiento: 'pendiente',
+    rango_ubicacion: 0, ...extra };
 }
 const par = (id, a, b, puntaje, motivo, nivel, a_favor = [], en_contra = [], nota = null) => ({ id, a, b, puntaje, motivo, nivel, nota,
   a_favor: a_favor.map(([clave, texto]) => ({ clave, texto })), en_contra: en_contra.map(([clave, texto]) => ({ clave, texto })) });
@@ -325,6 +405,12 @@ function vistaPrevia(miembros, destino) {
     if (campo === 'telefonos') {
       const nums = [...new Set(orden.flatMap((m) => m.telefonos))];
       return { campo, etiqueta: ETIQUETAS[campo], valor: nums.length ? nums.join(', ') : null, fuente: null, de: destino, otros: [] };
+    }
+    // La ubicación pasa en bloque de la mejor ubicada (`rango_ubicacion`; con empate, la primera en el orden)
+    if (campo === 'lugar') {
+      const mejor = orden.reduce((a, m) => ((m.rango_ubicacion ?? 0) > (a.rango_ubicacion ?? 0) ? m : a));
+      return mejor.lugar ? { campo, etiqueta: ETIQUETAS[campo], valor: mejor.lugar, fuente: fuente(mejor, campo), de: mejor.id, otros: [] }
+        : { campo, etiqueta: ETIQUETAS[campo], valor: null, fuente: null, de: null, otros: [] };
     }
     const con = orden.filter((m) => m[campo] != null && m[campo] !== '');
     if (!con.length) return { campo, etiqueta: ETIQUETAS[campo], valor: null, fuente: null, de: null, otros: [] };
@@ -374,8 +460,10 @@ function muchosAlta(n) {
 
 // ── El «servidor» de las dos rutas: lleva el estado de los grupos pendientes, filtra, cuenta y pagina como A.2 ──
 const ORDEN_NIVEL = { alta: 0, media: 1, baja: 2, bloqueada: 3 };
+const MOTIVOS = ['cruce_cedula', 'nombre_telefono', 'homonimo', 'variante', 'reporte', 'alta_simultanea'];
 async function servirGrupos(ctx, grupos, { fallar = {}, demora = 0 } = {}) {
-  const reg = { grupos: grupos.slice(), gets: [], posts: [], resueltos: new Set() };
+  // `fallarGet`: cuántas lecturas siguientes contestan 500 (la red o el servidor caídos)
+  const reg = { grupos: grupos.slice(), gets: [], posts: [], resueltos: new Set(), fallarGet: 0 };
   const json = (d, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify(d) });
   await ctx.route((u) => u.pathname === pref + '/api/coincidencias/grupos' || u.pathname === pref + '/api/coincidencias/lote', async (route) => {
     const req = route.request();
@@ -384,6 +472,10 @@ async function servirGrupos(ctx, grupos, { fallar = {}, demora = 0 } = {}) {
       if (u.pathname.endsWith('/grupos')) {
         const q = Object.fromEntries(u.searchParams);
         reg.gets.push(q);
+        if (reg.fallarGet > 0) { reg.fallarGet--; return await route.fulfill(json({ detail: 'Falla inventada del servidor' }, 500)); }
+        // Como la API real: 422 con un motivo desconocido o una página de más
+        if (q.motivo && !MOTIVOS.includes(q.motivo)) return await route.fulfill(json({ detail: `Motivo desconocido: use ${MOTIVOS.join(', ')}` }, 422));
+        if (Number(q.pagina || 1) > 100000) return await route.fulfill(json({ detail: 'pagina: Input should be less than or equal to 100000' }, 422));
         let vivos = reg.grupos.filter((g) => !reg.resueltos.has(g.clave));
         if (q.persona) vivos = vivos.filter((g) => g.miembros.some((m) => String(m.id) === q.persona));
         const conMotivo = vivos.filter((g) => !q.motivo || g.motivos.includes(q.motivo));
@@ -969,6 +1061,284 @@ async function cFicha(nav, caso) {
   await ctx.close();
 }
 
+// Mide cuando el diseño quedó quieto: la misma medida en dos cuadros seguidos (un desplazamiento suave, una transición),
+// en vez de esperar un tiempo fijo
+async function medirEstable(page, fn, arg) {
+  let antes = null;
+  for (let i = 0; i < 60; i++) {
+    await page.evaluate(() => new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok))));
+    const ahora = await page.evaluate(fn, arg ?? null);
+    if (antes && JSON.stringify(ahora) === JSON.stringify(antes)) return ahora;
+    antes = ahora;
+  }
+  return antes;
+}
+const focoGrupo = (page) => page.evaluate(() => document.activeElement?.closest('.grupo-coinc')?.dataset.clave ?? null);
+
+// ── marcas: «Unir las N muy probables» respeta lo marcado en las tarjetas a la vista (conservar y excluir) ──
+async function cMarcas(nav, caso) {
+  const { ctx, page, v, d } = await abrir(nav, caso);
+  // Un grupo de tres muy probable: sin la C, la A y la B siguen unidas por su par
+  const tres = grupo({ nivel: 'alta', puntaje: 0.95, destino: 6001, miembros: [
+    miembro(6001, 'ROSA INVENTADA LOPEZ', { cedula: '43555666', fuentes: ['cedulas'], completitud: 60 }),
+    miembro(6002, 'ROSA LOPEZ', { telefonos: ['3005550001'] }), miembro(6003, 'ROSALBA LOPEZ', { telefonos: ['3005550002'] }),
+  ], pares: [par(7100, 6001, 6002, 0.95, 'nombre_telefono', 'alta'), par(7101, 6001, 6003, 0.93, 'nombre_telefono', 'alta')] });
+  const reg = await servirGrupos(ctx, [...muchosAlta(4), tres, ...gruposBase().slice(2)]);
+  await abrirCoincidencias(page);
+  // 7000: «No es la misma» en la B lo deja con una sola ficha (no se une); 7001: se conserva la B; el de tres, sin la C
+  await page.check('.grupo-coinc[data-clave="7000"] [data-excluir][value="5001"]');
+  await page.check('.grupo-coinc[data-clave="7001"] [data-conservar][value="5003"]');
+  await page.check('.grupo-coinc[data-clave="7100-7101"] [data-excluir][value="6003"]');
+  await page.click('[data-unir-alta]');
+  await page.waitForSelector('dialog[open] [data-si]', espera);
+  d.boton = await page.$eval('dialog[open] [data-si]', (x) => x.textContent.trim());
+  d.confirmacion = await confirmarDialogo(page);
+  v.confirma_sin_el_bloqueado = d.confirmacion.startsWith('Se unirán las fichas de 4 grupos muy probables: 8 fichas quedarán en 4.') && d.boton === 'Unir 4 grupos';
+  v.dice_cuantos_llevan_lo_marcado = d.confirmacion.includes('2 se unen con lo que usted marcó en sus tarjetas')
+    && d.confirmacion.includes('En los demás se conserva la ficha con cédula')
+    && d.confirmacion.endsWith('Uno queda sin unir: lo que marcó en su tarjeta no deja unirlo.');
+  await page.waitForFunction(() => /^Listo/.test(document.querySelector('dialog[open] [data-estado]')?.textContent || ''), null, espera);
+  d.estado = await page.$eval('dialog[open] [data-estado]', (x) => x.textContent);
+  v.resumen = d.estado === 'Listo: 4 fichas unidas en 4 grupos.';
+  d.posts = reg.posts;
+  await page.click('dialog[open] .pie [data-cerrar]');
+  await page.waitForFunction(() => document.querySelectorAll('.grupo-coinc').length === 3, null, espera);
+  v.el_bloqueado_sigue_pendiente = (await tarjetas(page)).join() === '7000,20-21,30-31';
+  await ctx.close();
+}
+
+// ── persona: desde el enlace «revisar» de una ficha, el botón solo une el grupo de esa ficha ──
+async function cPersona(nav, caso) {
+  const { ctx, page, v, d } = await abrir(nav, caso);
+  const reg = await servirGrupos(ctx, muchosAlta(30));
+  await abrirCoincidencias(page, '&persona=5004');
+  v.solo_su_grupo = (await tarjetas(page)).join() === '7002' && await page.$eval('[data-texto-alta]', (x) => x.textContent) === 'Unir la muy probable';
+  await page.click('[data-unir-alta]');
+  d.confirmacion = await confirmarDialogo(page);
+  v.confirma_lo_filtrado = d.confirmacion.startsWith('Se unirán las 2 fichas del grupo muy probable en una sola.');
+  await page.waitForFunction(() => /^Listo/.test(document.querySelector('dialog[open] [data-estado]')?.textContent || ''), null, espera);
+  const altas = reg.gets.filter((q) => q.nivel === 'alta');
+  d.gets = altas;
+  v.pide_con_la_ficha = altas.length >= 2 && altas.every((q) => q.persona === '5004');
+  v.las_demas_siguen = reg.resueltos.size === 1;
+  d.posts = reg.posts;
+  await ctx.close();
+}
+
+// ── paginacion: tras resolver en la página 1, «Siguiente» no se salta los que pasaron a ella ──
+async function cPaginacion(nav, caso) {
+  const { ctx, page, v, d } = await abrir(nav, caso);
+  const reg = await servirGrupos(ctx, muchosAlta(51));
+  await abrirCoincidencias(page);
+  const texto = () => page.$eval('.unificacion .paginacion > span', (x) => x.textContent);
+  const vistos = new Set(await tarjetas(page));
+  v.primera = vistos.size === 25 && await texto() === 'Página 1 de 3';
+  for (const k of ['7000', '7001', '7002']) await page.check(`.grupo-coinc[data-clave="${k}"] [data-sel]`);
+  await page.click('[data-sel-unir]');
+  await confirmarDialogo(page);
+  await page.waitForFunction(() => document.querySelectorAll('.grupo-coinc').length === 22, null, espera);
+  // Quedan 48: la cuenta de páginas se rehace y «Siguiente» sigue activo (hay grupos después de los que se ven)
+  d.texto = await texto();
+  v.cuenta_al_dia = d.texto === 'Página 1 de 2' && !await page.$eval('[data-siguiente]', (x) => x.disabled);
+  await page.click('.unificacion [data-siguiente]');
+  await page.waitForSelector('.grupo-coinc[data-clave="7025"]', espera);
+  v.pide_otra_vez_la_misma = reg.gets.at(-1).pagina === '1' && !(await page.evaluate(() => location.search)).includes('pagina');
+  const ahora = await tarjetas(page);
+  d.nuevas = ahora.filter((k) => !vistos.has(k));
+  v.completa_con_los_que_seguian = d.nuevas.join() === '7025,7026,7027' && ahora.length === 25;
+  v.foco_en_el_primero_nuevo = await focoGrupo(page) === '7025';
+  for (const k of ahora) vistos.add(k);
+  // Ahora sí, la página 2: empieza justo después del último que se vio
+  await page.click('.unificacion [data-siguiente]');
+  await page.waitForFunction(() => document.querySelector('.unificacion .paginacion > span')?.textContent === 'Página 2 de 2', null, espera);
+  const p2 = await tarjetas(page);
+  d.p2 = [p2[0], p2.length];
+  for (const k of p2) vistos.add(k);
+  v.ninguno_saltado = p2[0] === '7028' && p2.length === 23 && vistos.size === 51;
+  await ctx.close();
+}
+
+// ── lugar: la vista previa estimada deja el barrio de la ficha mejor ubicada, como la unión ──
+async function cLugar(nav, caso) {
+  const { ctx, page, v, d } = await abrir(nav, caso);
+  // A con cédula y un punto marcado a mano en BATALLON (rango 4); B ubicada solo por el centro de LA CONDOR (rango 1)
+  const conRango = grupo({ nivel: 'alta', puntaje: 0.93, destino: 3001, miembros: [
+    miembro(3001, 'CARLOS INVENTADO DIAZ', { cedula: '71222333', fuentes: ['cedulas'], lugar: 'BATALLON', rango_ubicacion: 4, completitud: 60 }),
+    miembro(3002, 'CARLOS DIAZ', { lugar: 'LA CONDOR', rango_ubicacion: 1, direccion: 'VEREDA LA CONDOR CASA 9' }),
+  ], pares: [par(40, 3001, 3002, 0.93, 'nombre_telefono', 'alta')] });
+  // Lo mismo sin el rango (un servidor anterior): no se sabe cuál está mejor ubicada
+  const ms = [miembro(3101, 'LUIS INVENTADO ROA', { cedula: '71444555', fuentes: ['cedulas'], lugar: 'BATALLON', completitud: 60 }),
+    miembro(3102, 'LUIS ROA', { lugar: 'LA CONDOR' })];
+  for (const m of ms) delete m.rango_ubicacion;
+  const sinRango = grupo({ nivel: 'alta', puntaje: 0.9, destino: 3101, miembros: ms, pares: [par(41, 3101, 3102, 0.9, 'nombre_telefono', 'alta')] });
+  await servirGrupos(ctx, [conRango, sinRango]);
+  await abrirCoincidencias(page);
+  const lugar = (clave) => page.evaluate((c) => {
+    const t = document.querySelector(`.grupo-coinc[data-clave="${c}"]`);
+    const celda = t.querySelector('tr[data-fila="lugar"] td.quedaria');
+    const p = celda.querySelector('.pieza');
+    return { texto: celda.textContent.replace(/\s+/g, ' ').trim(), cabeza: t.querySelector('thead .quedaria').textContent.replace(/\s+/g, ' ').trim(),
+      valor: p ? [...p.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim() : null,
+      de: p?.querySelector('.de-ficha')?.textContent.replace('de la ficha ', '') ?? null };
+  }, clave);
+  d.servidor = await lugar('40');
+  v.la_del_servidor = d.servidor.valor === 'Batallon' && d.servidor.de === 'A';
+  // Conservar la peor ubicada no le quita el lugar a la mejor: la ubicación pasa en bloque
+  await page.check('.grupo-coinc[data-clave="40"] [data-conservar][value="3002"]');
+  d.otra = await lugar('40');
+  v.sigue_la_mejor_ubicada = d.otra.valor === 'Batallon' && d.otra.de === 'A'
+    && d.otra.cabeza.startsWith('Quedaría Se conserva la ficha B · estimado con su elección');
+  // Sin el rango no promete un barrio
+  await page.check('.grupo-coinc[data-clave="41"] [data-conservar][value="3102"]');
+  d.sin = await lugar('41');
+  v.sin_rango_no_promete = d.sin.valor === null && d.sin.texto === 'El de la ficha mejor ubicada' && d.sin.cabeza.includes('estimado con su elección');
+  await ctx.close();
+}
+
+// ── url: un motivo desconocido o una página de más en la dirección, y una carga que falla, dejan salida ──
+async function cUrl(nav, caso) {
+  const { ctx, page, v, d } = await abrir(nav, caso);
+  const reg = await servirGrupos(ctx, gruposBase());
+  await abrirCoincidencias(page, '&motivo=duplicado_viejo');
+  await page.waitForSelector('.grupo-coinc', espera);
+  v.motivo_desconocido = !reg.gets.some((q) => q.motivo) && (await tarjetas(page)).length === 4
+    && !(await page.evaluate(() => location.search)).includes('motivo');
+  await ir(page, '/calidad?p=coincidencias&pagina=200000');
+  await page.waitForSelector('.grupo-coinc', espera);
+  d.paginas = reg.gets.map((q) => q.pagina);
+  v.pagina_de_mas = reg.gets.every((q) => Number(q.pagina) <= 100000) && reg.gets.at(-1).pagina === '1' && (await tarjetas(page)).length === 4
+    && !(await page.evaluate(() => location.search)).includes('pagina');
+  // Con un filtro, la falla ofrece volver a todos los grupos
+  reg.fallarGet = 1;
+  await page.click('[data-nivel-filtro="baja"]');
+  await page.waitForSelector('#cuerpo .error-carga [data-salida]', espera);
+  d.error = await page.$eval('#cuerpo .error-carga', (x) => x.textContent.replace(/\s+/g, ' ').trim());
+  v.error_con_salida = d.error === 'Falla inventada del servidor Ver todos los grupos';
+  await page.click('#cuerpo [data-salida]');
+  await page.waitForFunction(() => document.querySelectorAll('.grupo-coinc').length === 4, null, espera);
+  v.vuelve_a_todos = !reg.gets.at(-1).nivel && await page.$eval('[data-nivel-filtro=""]', (x) => x.getAttribute('aria-pressed')) === 'true';
+  // Sin filtros, la salida es reintentar (aquí, al volver a la pestaña)
+  await page.click('[data-tab="conflictos"]');
+  await page.waitForSelector('[data-k]', espera);
+  reg.fallarGet = 1;
+  await page.click('[data-tab="coincidencias"]');
+  await page.waitForSelector('#cuerpo .error-carga [data-salida]', espera);
+  v.reintentar = await page.$eval('#cuerpo [data-salida]', (x) => x.textContent.trim()) === 'Reintentar';
+  await page.click('#cuerpo [data-salida]');
+  await page.waitForFunction(() => document.querySelectorAll('.grupo-coinc').length === 4, null, espera);
+  await ctx.close();
+}
+
+// ── atajos-fuera: no con el asistente (aunque el clic caiga en un texto que no toma el foco), ni tras un clic fuera de la
+// vista, ni con mayúscula; sí de vuelta en la vista ──
+async function cAtajosFuera(nav, caso) {
+  const { ctx, page, v, d } = await abrir(nav, caso);
+  const reg = await servirGrupos(ctx, gruposBase());
+  await abrirCoincidencias(page);
+  const sel = () => page.$$eval('.grupo-coinc [data-sel]:checked', (x) => x.length);
+  const actual = () => page.evaluate(() => document.querySelector('.grupo-coinc.actual')?.dataset.clave ?? null);
+  // Un clic en la tarjeta la deja como la actual: desde ahí una letra la resolvería
+  await page.click('.grupo-coinc[data-clave="12"] .grupo-titulo');
+  await page.click('#agente-boton');
+  await page.waitForSelector('#agente-panel:not([hidden])', espera);
+  await page.click('#agente-panel .agente-titulos h2');
+  d.foco_en_el_panel = await page.evaluate(() => document.activeElement?.tagName);
+  await page.keyboard.type('jxud');
+  await page.keyboard.press('Shift+U');
+  v.no_con_el_asistente = reg.posts.length === 0 && await sel() === 0 && await actual() === '12';
+  await page.click('#agente-cerrar');
+  await page.waitForFunction(() => document.querySelector('#agente-panel')?.hidden, null, espera);
+  // De vuelta en la tarjeta: con mayúscula (quien escribe «Una…») no, y una tecla que se repite tampoco
+  await page.click('.grupo-coinc[data-clave="12"] .grupo-titulo');
+  await page.keyboard.press('Shift+U');
+  await page.keyboard.press('Shift+D');
+  await page.keyboard.down('x');
+  await page.keyboard.down('x'); // la segunda llega con `repeat`
+  await page.keyboard.up('x');
+  d.sel_repetida = await sel();
+  v.no_con_mayuscula_ni_repetida = reg.posts.length === 0 && d.sel_repetida === 1;
+  await page.keyboard.press('x');
+  // Un clic fuera de la vista (el nombre de la sesión, en el menú) deja el foco en <body>: tampoco
+  await page.click('#usuario');
+  await page.keyboard.press('j');
+  await page.keyboard.press('x');
+  v.no_tras_un_clic_fuera = await sel() === 0 && await actual() === '12';
+  // Con un diálogo abierto, tampoco
+  await page.click('.grupo-coinc[data-clave="12"] .grupo-titulo');
+  await page.check('.grupo-coinc[data-clave="12"] [data-sel]');
+  await page.click('[data-sel-separar]');
+  await page.waitForSelector('dialog[open] [data-si]', espera);
+  await page.keyboard.press('u');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('dialog[open]'), null, espera);
+  v.no_con_un_dialogo = reg.posts.length === 0;
+  // De vuelta en la vista, sí
+  await page.click('.grupo-coinc[data-clave="13"] .grupo-titulo');
+  await page.keyboard.press('x');
+  v.en_la_vista_si = await page.$eval('.grupo-coinc[data-clave="13"] [data-sel]', (x) => x.checked);
+  await ctx.close();
+}
+
+// ── dialogos: «Nuevo lugar» con algo escrito pregunta antes de cerrarse por Escape (sin nada, se cierra) ──
+async function cDialogos(nav, caso) {
+  const { ctx, page, v, d } = await abrir(nav, caso);
+  await ingresar(page, '/calidad?p=lugares');
+  await page.waitForSelector('#nuevo-lugar', espera);
+  await page.click('#nuevo-lugar');
+  await page.waitForSelector('dialog[open] #f-lugar', espera);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('dialog[open]'), null, espera);
+  await page.click('#nuevo-lugar');
+  await page.waitForSelector('dialog[open] #f-lugar', espera);
+  await page.fill('dialog[open] #f-lugar [name=nombre]', 'VEREDA INVENTADA');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.querySelectorAll('dialog[open]').length === 2, null, espera);
+  d.titulos = await page.$$eval('dialog[open] h2', (x) => x.map((h) => h.textContent));
+  v.pregunta = d.titulos.join('|') === 'Nuevo lugar|Confirmar';
+  await page.getByRole('button', { name: 'Seguir escribiendo' }).click();
+  await page.waitForFunction(() => document.querySelectorAll('dialog[open]').length === 1, null, espera);
+  v.sigue_lo_escrito = await page.$eval('dialog[open] #f-lugar [name=nombre]', (x) => x.value) === 'VEREDA INVENTADA';
+  await page.click('dialog[open] .pie [data-cerrar]');
+  await page.waitForFunction(() => !document.querySelector('dialog[open]'), null, espera);
+  await ctx.close();
+}
+
+// ── franja: con «Llamada sin registrar» a la vista, la barra de selección queda debajo de ella y se puede tocar ──
+async function cFranja(nav, caso) {
+  for (const [ancho, alto, movil] of [[1280, 600, false], [390, 844, true]]) {
+    const op = movil ? { viewport: { width: ancho, height: alto }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } : { viewport: { width: ancho, height: alto } };
+    const { ctx, page, v, d } = await abrir(nav, caso, op);
+    await servirGrupos(ctx, gruposBase());
+    await ingresar(page);
+    await page.evaluate(() => sessionStorage.setItem('yj_llamada', JSON.stringify({ pid: 1, indice: 0, canal: 'llamada', t: Date.now() })));
+    await ir(page, '/calidad?p=coincidencias');
+    await page.waitForSelector('#franja-llamada', espera);
+    await page.waitForSelector('.unificacion .grupo-coinc', espera);
+    if (movil) await page.tap('.grupo-coinc[data-clave="12"] .sel-grupo');
+    else await page.check('.grupo-coinc[data-clave="12"] [data-sel]');
+    await page.waitForSelector('#barra-sel.con-seleccion', espera);
+    // Bajar hasta el tercer grupo: la barra queda pegada arriba (escritorio) y la tarjeta, debajo de la barra
+    await page.evaluate(() => document.querySelector('.grupo-coinc[data-clave="20-21"]').scrollIntoView({ block: 'start' }));
+    const r = await medirEstable(page, () => {
+      const caja = (s) => { const x = document.querySelector(s).getBoundingClientRect(); return { top: Math.round(x.top), bottom: Math.round(x.bottom), h: Math.round(x.height) }; };
+      const unir = document.querySelector('[data-sel-unir]').getBoundingClientRect();
+      const tocado = document.elementFromPoint(unir.left + unir.width / 2, unir.top + unir.height / 2);
+      return { franja: caja('#franja-llamada'), barra: caja('#barra-sel'), tarjeta: caja('.grupo-coinc[data-clave="20-21"]'),
+        pos: getComputedStyle(document.querySelector('#barra-sel')).position, alto: innerHeight, unir_a_la_mano: !!tocado?.closest('[data-sel-unir]') };
+    });
+    d[movil ? 'movil' : 'escritorio'] = r;
+    if (movil) {
+      // Fija abajo y de su alto (no estirada desde la franja hasta el fondo)
+      v.movil_barra_abajo = r.pos === 'fixed' && Math.abs(r.barra.bottom - r.alto) <= 1 && r.barra.top > r.franja.bottom && r.barra.h < r.alto / 3 && r.unir_a_la_mano;
+    } else {
+      v.barra_debajo_de_la_franja = r.pos === 'sticky' && r.barra.top >= r.franja.bottom && r.barra.top <= r.franja.bottom + 40 && r.unir_a_la_mano;
+      v.tarjeta_debajo_de_la_barra = r.tarjeta.top >= r.barra.bottom;
+    }
+    await captura(page, `franja-${ancho}x${alto}`);
+    await ctx.close();
+  }
+}
+
 (async () => {
   const nav = await chromium.launch();
   const casos = [];
@@ -987,6 +1357,14 @@ async function cFicha(nav, caso) {
     for (const [a, h] of [[820, 1180], [390, 844], [320, 568]]) await correr(`movil-${a}x${h}`, (c) => cMovil(nav, c, a, h));
     await correr('oscuro', (c) => cOscuro(nav, c));
     await correr('ficha', (c) => cFicha(nav, c));
+    await correr('marcas', (c) => cMarcas(nav, c));
+    await correr('persona', (c) => cPersona(nav, c));
+    await correr('paginacion', (c) => cPaginacion(nav, c));
+    await correr('lugar', (c) => cLugar(nav, c));
+    await correr('url', (c) => cUrl(nav, c));
+    await correr('atajos-fuera', (c) => cAtajosFuera(nav, c));
+    await correr('dialogos', (c) => cDialogos(nav, c));
+    await correr('franja', (c) => cFranja(nav, c));
   } finally {
     await nav.close();
   }

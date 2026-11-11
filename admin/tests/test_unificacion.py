@@ -288,6 +288,21 @@ def test_miembros_traen_la_fuente_de_sus_telefonos_y_de_su_barrio(sesion):
     assert (vista["telefonos"]["fuente"], vista["lugar"]["fuente"]) == (prov[a]["telefonos"], prov[a]["lugar"])
 
 
+def test_miembro_lleva_el_rango_de_ubicacion():
+    """La interfaz rehace la vista previa al elegir otra ficha o excluir alguna: sin el rango no sabría de cuál pasa la
+    ubicación en bloque y prometería el barrio de la conservada (que la unión no deja si otra está mejor ubicada)."""
+    lugares = {1: "BATALLON", 2: "LA CONDOR"}
+    rangos = [un.miembro(_p(i, **geo), lugares)["rango_ubicacion"] for i, geo in enumerate([
+        {"geo_manual": "punto", "lat": 6.9, "lugar_id": 1}, {"geo_precision": "direccion", "lat": 6.9},
+        {"geo_manual": "lugar", "lugar_id": 2}, {"geo_precision": "centro", "lat": 6.9, "lugar_id": 2}, {}], 1)]
+    assert rangos == [4, 3, 2, 1, 0]
+    # El mismo criterio de la vista previa del servidor: conservar la peor ubicada no le quita el lugar a la mejor
+    a = _p(1, cedula="90007030", geo_manual="punto", lat=6.9, lugar_id=1)
+    b = _p(2, geo_precision="centro", lat=6.9, lugar_id=2)
+    lugar = next(f for f in un.vista_previa([a, b], 2, lugares) if f["campo"] == "lugar")
+    assert (lugar["valor"], lugar["de"]) == ("BATALLON", 1)
+
+
 def test_detalle_y_nota():
     assert un.detalle_y_nota(None) == ({}, None)
     assert un.detalle_y_nota("  Es la misma  ") == ({}, "Es la misma")
@@ -319,7 +334,7 @@ def test_grupos_son_componentes_conexos_y_sin_pares_repetidos(sesion):
     m = g["miembros"][0]
     assert set(m) == {"id", "nombre", "cedula", "telefonos", "correo", "direccion", "lugar", "edad", "sexo",
                       "fecha_nacimiento", "fuentes", "procedencia", "tramites", "listas", "completitud",
-                      "consentimiento"}
+                      "consentimiento", "rango_ubicacion"}
     assert m["telefonos"] == ["3007100001"] and m["fuentes"] == ["cedulas"]
     assert {f["campo"] for f in g["vista_previa"]} == {c for c, _ in un.CAMPOS_VISTA}
     otro = next(x for x in res["grupos"] if x["destino"] != a)
