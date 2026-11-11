@@ -57,6 +57,9 @@ const fechaTexto = (v) => (/^\d{4}-\d{2}-\d{2}/.test(String(v)) ? fecha(String(v
 const sexoTexto = (v) => SEXOS[v] || String(v);
 const plural = (n, uno, varios) => `${num(n)} ${n === 1 ? uno : varios}`;
 const sinMovimiento = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** ¿El panel del asistente está abierto? (agente.js lo muestra y lo oculta con `hidden`, que app.css vuelve `display:
+ * none`). Se lee del DOM: es el estado real, el mismo que miran los estilos. */
+const asistenteAbierto = () => !!document.querySelector('#agente-panel:not([hidden])');
 
 /** La fuente que la procedencia de la ficha anota para un campo (el contrato la manda como texto; se acepta también
  * `{fuente}`), o null. */
@@ -106,10 +109,25 @@ function lugarQuedaria(orden) {
   return { ...nada, incierto: true };
 }
 
+/** Un campo de una ficha tal como lo compara la unión (`unificacion._valor`, en texto como `_texto`), o null si no lo
+ * tiene: lo guardado, tal cual. Sin igualar mayúsculas ni tildes (`comparable`): «Calle 1» y «CALLE 1» dejan alterno al
+ * unir. La edad es la declarada (`edad_declarada`), no la de hoy (`edad`, que también sale de la fecha de nacimiento):
+ * 40 años declarados en 2016 y 40 declarados hoy no dejan alterno aunque hoy sean 50 y 40, y 40 de 2020 y 46 de hoy sí
+ * lo dejan aunque hoy sean los mismos 46. Un servidor que no la mande: la de hoy, como antes. */
+function valorUnion(m, campo) {
+  const v = campo === 'edad' && Object.hasOwn(m, 'edad_declarada') ? m.edad_declarada : m[campo];
+  return vacio(v) ? null : String(v);
+}
+/** Lo que se muestra del valor que queda: el mismo, salvo la edad, que va llevada a hoy (`edad_declarada_hoy`; si no
+ * se puede calcular, la escrita), como en la vista previa del servidor. */
+const valorQueda = (m, campo) => (campo === 'edad' && m.edad_declarada_hoy != null ? String(m.edad_declarada_hoy)
+  : valorUnion(m, campo));
+
 /** Lo que quedaría en la ficha unida, campo por campo, con la elección hecha en la pantalla (otra ficha conservada o
- * fichas excluidas): una copia aproximada de la `vista_previa` del servidor. Queda el valor de la conservada si lo
- * tiene y si no el primero en el orden de unión; lo distinto pasa a alternos (en los campos que los llevan); los
- * teléfonos se juntan todos y el lugar sale de la ficha mejor ubicada (`lugarQuedaria`). */
+ * fichas excluidas): una copia de la `vista_previa` del servidor, con su mismo criterio. Queda el valor de la
+ * conservada si lo tiene y si no el primero en el orden de unión; lo distinto (comparado como la unión, `valorUnion`)
+ * pasa a alternos (en los campos que los llevan); los teléfonos se juntan todos y el lugar sale de la ficha mejor
+ * ubicada (`lugarQuedaria`). La tarjeta muestra esta o la del servidor según la elección: no pueden contradecirse. */
 function vistaPreviaLocal(ms, destino) {
   const orden = ordenUnion(ms, destino);
   const out = {};
@@ -122,17 +140,18 @@ function vistaPreviaLocal(ms, destino) {
         de: de?.id ?? null, otros: [] };
       continue;
     }
-    const con = orden.filter((m) => !vacio(m[campo]));
+    const con = orden.filter((m) => valorUnion(m, campo) != null);
     const queda = con[0];
-    const vistos = new Set(queda ? [comparable(queda[campo])] : []);
+    // Lo que ya quedó o ya pasa a alternos, con la clave de la unión (y de `vista_previa`): pasa lo que ella guarda
+    const vistos = new Set(queda ? [valorUnion(queda, campo)] : []);
     const otros = [];
     for (const m of CON_ALTERNOS.has(campo) ? con.slice(1) : []) {
-      const k = comparable(m[campo]);
+      const k = valorUnion(m, campo);
       if (vistos.has(k)) continue;
       vistos.add(k);
-      otros.push({ valor: String(m[campo]), fuente: fuenteDato(m, campo), de: m.id });
+      otros.push({ valor: k, fuente: fuenteDato(m, campo), de: m.id });
     }
-    out[campo] = queda ? { campo, valor: String(queda[campo]), fuente: fuenteDato(queda, campo), de: queda.id, otros }
+    out[campo] = queda ? { campo, valor: valorQueda(queda, campo), fuente: fuenteDato(queda, campo), de: queda.id, otros }
       : { campo, valor: null, fuente: null, de: null, otros: [] };
   }
   return out;
@@ -379,10 +398,11 @@ export async function vistaCalidad(el, { q }) {
   };
   let quitarTeclas = null; // los atajos de Coincidencias: se quitan al cambiar de pestaña o salir de la vista
   let detenerLote = null;  // «Unir las N muy probables» en curso
-  // Dónde fue el último clic o foco, para los atajos: un clic en un texto del asistente (que no recibe el foco) deja el
-  // foco en <body>, y sin esto lo que se siguiera escribiendo «al asistente» uniría o separaría grupos. La vista es todo
-  // #vista (el foco cae ahí al abrirla); los diálogos no cuentan (se miran aparte) y <html> o <body> tampoco (la barra
-  // de desplazamiento de la página)
+  // Dónde fue el último clic o foco, para los atajos: un clic en un texto fuera de la vista que no recibe el foco (el
+  // nombre de la sesión en el menú) deja el foco en <body>, y sin esto lo que se siguiera escribiendo uniría o separaría
+  // grupos. Del asistente no basta (esto vuelve a empezar con cada vista nueva): los atajos miran si está abierto. La
+  // vista es todo #vista (el foco cae ahí al abrirla); los diálogos no cuentan (se miran aparte) y <html> o <body>
+  // tampoco (la barra de desplazamiento de la página)
   const zonaVista = () => el.closest('#vista') || el;
   const neutro = (t) => t === document.body || t === document.documentElement;
   let ultimoFuera = false;
@@ -501,7 +521,7 @@ export async function vistaCalidad(el, { q }) {
         <button type="button" class="btn chico" data-ver-todos>Ver todos los grupos</button></div>` : ''}
       <p class="cuenta-unif"><b id="cuenta-grupos">${textoCuenta(d)}</b> <span class="explica">Si son la misma persona, se unen: nada se pierde (lo distinto queda como dato alterno).</span></p>
       ${grupos.length ? html`
-        <p class="ayuda-atajos" id="ayuda-atajos">Con el teclado: <kbd>J</kbd> y <kbd>K</kbd> pasan al grupo siguiente o al anterior, <kbd>X</kbd> lo selecciona, <kbd>U</kbd> lo une y <kbd>D</kbd> lo marca como personas distintas.</p>
+        <p class="ayuda-atajos" id="ayuda-atajos">Con el teclado, si el asistente está cerrado: <kbd>J</kbd> y <kbd>K</kbd> pasan al grupo siguiente o al anterior, <kbd>X</kbd> lo selecciona, <kbd>U</kbd> lo une y <kbd>D</kbd> lo marca como personas distintas.</p>
         <p class="leyenda-comparar"><span class="igual-dato">Verde</span>: el mismo dato en dos o más fichas. <span class="choca">Rojo ondulado</span>: un dato que choca.</p>
         <div class="barra-seleccion" id="barra-sel">
           <span class="cuenta-sel" id="cuenta-sel" aria-live="polite"></span>
@@ -559,12 +579,14 @@ export async function vistaCalidad(el, { q }) {
       if (cu) cu.textContent = textoCuenta(d);
       const sm = $('[data-motivo]', c);
       if (sm) for (const o of sm.options) if (o.value) o.textContent = etiquetaMotivo(o.value, d);
-      // La paginación con la cuenta nueva. «Siguiente» sigue mientras quede algo después de lo que se ve: con 26 grupos,
-      // resolver uno de la primera página deja 25 (una página) y el que seguía aún no se mostró
+      // La paginación con la cuenta nueva. «Siguiente» sigue mientras quede algo después de lo que se ve, y el texto dice
+      // lo mismo: con 26 grupos, resolver uno de la primera página deja 25 (una página por la cuenta), pero el que
+      // seguía aún no se mostró. Queda «Página 1 de 2» con «Siguiente» (que completa esta), no «1 de 1» con «Siguiente»
+      const mas = hayMas();
       const pt = $('[data-pagina-texto]', c);
-      if (pt) pt.textContent = `Página ${num(f.pagina)} de ${num(Math.max(f.pagina, Math.ceil(d.total / porPagina)))}`;
+      if (pt) pt.textContent = `Página ${num(f.pagina)} de ${num(Math.max(f.pagina + (mas ? 1 : 0), Math.ceil(d.total / porPagina)))}`;
       const sig = $('[data-siguiente]', c);
-      if (sig) sig.disabled = !hayMas();
+      if (sig) sig.disabled = !mas;
     }
     // ¿Hay grupos después de los de esta página que siguen a la vista?
     const hayMas = () => d.total > (f.pagina - 1) * porPagina + vivos().length;
@@ -894,15 +916,20 @@ export async function vistaCalidad(el, { q }) {
       montar($('.grupo-acciones', tarjeta), accionesGrupo(g, s));
       $(selector, tarjeta)?.focus();
     };
-    // Atajos (escritorio): solo en la vista. No con un diálogo abierto, ni con el foco o el último clic fuera de ella (el
-    // asistente, el menú, la franja de la llamada), ni en un campo. Con mayúscula tampoco (quien escribe «Una…» creyendo
-    // estar en el asistente) ni al dejar la tecla apretada: una letra de más uniría o separaría otro grupo
+    // Atajos (escritorio): solo en la vista. No con un diálogo abierto, ni con el asistente abierto, ni con el foco o el
+    // último clic fuera de la vista (el menú, la franja de la llamada), ni en un campo. Con mayúscula tampoco (quien
+    // escribe «Una…» creyendo estar en el asistente) ni al dejar la tecla apretada: una letra de más uniría o separaría
+    // otro grupo
     const teclas = (e) => {
       if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.key.length !== 1) return;
       const k = e.key.toLowerCase();
       if (!'jkxud'.includes(k) || !c.isConnected || pestana !== 'coincidencias') return;
       if (e.repeat && k !== 'j' && k !== 'k') return;
       if (document.querySelector('dialog[open]')) return;
+      // El asistente se mira como está en esta tecla, no por dónde cayó el último clic: un clic en un texto suyo deja el
+      // foco en <body>, y su «recargar» o «navegar» crea la vista de nuevo (sin ese clic) con el foco en #vista. En los
+      // dos casos quien sigue escribiéndole uniría o separaría grupos sin confirmar
+      if (asistenteAbierto()) return;
       const a = e.target instanceof Element ? e.target : null;
       if (ultimoFuera || (a && !neutro(a) && !zonaVista().contains(a))) return;
       if (a?.closest('dialog, #agente, textarea, select, [contenteditable]:not([contenteditable="false"])')) return;

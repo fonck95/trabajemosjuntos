@@ -15,6 +15,10 @@ css/unificacion.css; las insignias del directorio y de la ficha).
   grupos tras resolver, la vista previa estimada deja el lugar de la mejor ubicada, un enlace viejo o una falla dejan
   salida, los atajos no corren fuera de la vista, «Nuevo lugar» pregunta antes de perder lo escrito y la barra de
   selección no queda bajo la franja «Llamada sin registrar». Sin violaciones de la CSP ni errores de consola.
+* En Chromium, con la unión de verdad (otro panel, con su propia base y sin `route.fulfill` para los grupos), lo que la
+  segunda verificación reprodujo así: la vista previa estimada al conservar otra ficha promete lo que la unión deja en
+  la base (la edad declarada en otro año, una dirección con otras mayúsculas), los atajos no corren con el asistente
+  abierto ni cuando él recarga la vista o lleva a ella, y la paginación tras resolver no dice «1 de 1» con «Siguiente».
 
 Las capturas quedan en CAPTURAS_UNIFICACION si se define (para mirarlas a mano). Se salta si no hay Node con
 Playwright, salvo en el CI (allí falla en vez de pasar en silencio).
@@ -28,6 +32,8 @@ import subprocess
 import threading
 import time
 import uuid
+from contextlib import contextmanager
+from datetime import timedelta
 from pathlib import Path
 
 import pymongo
@@ -213,16 +219,61 @@ def _sembrar(db) -> dict:
     return {"persona": a, "otra": b}
 
 
-@pytest.fixture(scope="module")
-def resultados(tmp_path_factory):
-    """El panel de verdad en un puerto libre y el guion de Chromium con todos los casos: {caso: resultado}."""
+# Nombres de pila para los 26 grupos «muy probables» de la base de verdad (un nombre distinto por grupo)
+PILAS = ["ANA", "BEATRIZ", "CARMEN", "DIANA", "ELENA", "FABIOLA", "GLORIA", "HILDA", "INES", "JUANA", "KAREN", "LUCIA",
+         "MARTA", "NORA", "OLGA", "PAULA", "QUIRINA", "ROSA", "SARA", "TERESA", "URSULA", "VILMA", "WILMA", "XIMENA",
+         "YOLANDA", "ZORAIDA"]
+
+
+def _sembrar_reales(db) -> dict:
+    """Para los casos con la unión de verdad, como los armó la verificación: 26 grupos «muy probables» (una ficha de la
+    base con cédula y otra de trámites con el mismo nombre y teléfono, puntaje 0,95) y tres pares para la vista previa
+    estimada, cada uno con la ficha A de la base con cédula (la que se conserva por defecto) y la B de trámites:
+    40 años declarados hace diez días frente a 40 declarados diez años antes (hoy 40 y 50), 40 declarados seis años antes
+    frente a 46 de hoy (hoy los dos 46) y la misma dirección con otras mayúsculas. Esos tres no tienen ninguna señal
+    fuerte: no son «muy probables» y no cambian la cuenta de los 26."""
+    from app import modelo
+    ids = iter(range(910001, 911000))
+    coinc = []
+
+    def par(a, b, puntaje):
+        coinc.append({"_id": next(ids), "persona_id": a, "candidato_id": b, "estado": "pendiente", "puntaje": puntaje,
+                      "motivo": "cruce_cedula", "detalle": {"puntaje_nombre": puntaje}})
+        return coinc[-1]["_id"]
+
+    for i, pila in enumerate(PILAS):
+        nombre = f"{pila} INVENTADA PAGINA PRUEBA"
+        x, = insertar_personas(db, [{"nombre": nombre, "cedula": str(1090000100 + i), "telefono": str(3120000000 + i),
+                                     "sexo": "F"}], fuente="cedulas")
+        y, = insertar_personas(db, [{"nombre": nombre, "telefono": str(3120000000 + i), "sexo": "F"}], fuente="tramites")
+        par(x, y, round(0.95 - i * 0.0005, 4))
+    hace10 = (modelo.hoy_local() - timedelta(days=10)).isoformat()
+    antes = lambda anios: modelo._restar_anios(modelo.hoy_local() - timedelta(days=10), anios).isoformat()  # noqa: E731
+    vista = []
+    for i, (clave, fila, de_a, de_b) in enumerate((
+        ("misma_declarada", "edad", {"edad": 40, "edad_ref": hace10}, {"edad": 40, "edad_ref": antes(10)}),
+        ("misma_de_hoy", "edad", {"edad": 40, "edad_ref": antes(6)}, {"edad": 46, "edad_ref": hace10}),
+        ("mayusculas", "direccion", {"direccion": "CALLE 10 # 5-20"}, {"direccion": "Calle 10 # 5-20"}),
+    )):
+        nombre = f"EUFEMIA {'ABC'[i]} INVENTADA VISTA PREVIA"
+        a, = insertar_personas(db, [{"nombre": nombre, "cedula": str(1095000100 + i), **de_a}], fuente="cedulas")
+        b, = insertar_personas(db, [{"nombre": nombre, **de_b}], fuente="tramites")
+        vista.append({"clave": clave, "fila": fila, "a": a, "b": b, "par": par(b, a, 0.9), "de_b": de_b})
+    db.coincidencias.insert_many(coinc)
+    return {"vista": vista}
+
+
+@contextmanager
+def _panel_con_guion(tmp_path_factory, sembrar, conjunto: str):
+    """El panel de verdad en un puerto libre, con lo que siembra `sembrar(db)`, y el guion de Chromium con los casos de
+    `conjunto` («simulado» o «real»): ({caso: resultado}, la base, lo sembrado). Cada conjunto con su propia base."""
     if not MONGO:
         pytest.skip("No hay MongoDB para las pruebas con navegador")
     import servidor
     from app.config import Config
     cfg = Config(usuario="admin", clave="clave-de-prueba-larga", mongodb_uri=URI,
                  mongodb_db=f"prueba_{uuid.uuid4().hex[:10]}", horas_sesion=1, cookie_segura=False, max_subida_mb=5)
-    tmp = tmp_path_factory.mktemp("unificacion_web")
+    tmp = tmp_path_factory.mktemp(f"unificacion_web_{conjunto}")
     sitio = tmp / "site"
     sitio.mkdir()
     (sitio / "index.html").write_text("<!doctype html><title>Inicio</title>INICIO", encoding="utf-8")
@@ -239,24 +290,40 @@ def resultados(tmp_path_factory):
                                          and getattr(app.state.panel.state, "listo", False)):
             time.sleep(0.05)
         assert srv.started and app.state.panel is not None, "el servidor no arrancó"
-        datos = _sembrar(app.state.panel.state.db)
+        db = app.state.panel.state.db
+        datos = sembrar(db)
         (tmp / "datos.json").write_text(json.dumps(datos), encoding="utf-8")
         (tmp / "guion.cjs").write_text(GUION, encoding="utf-8")
         capturas = os.environ.get("CAPTURAS_UNIFICACION") or str(tmp)
         base = f"http://127.0.0.1:{sock.getsockname()[1]}/panel"
-        r = subprocess.run(["node", str(tmp / "guion.cjs"), base, cfg.usuario, cfg.clave, str(tmp / "datos.json"), capturas],
-                           capture_output=True, text=True, timeout=900)
+        r = subprocess.run(["node", str(tmp / "guion.cjs"), base, cfg.usuario, cfg.clave, str(tmp / "datos.json"), capturas,
+                            conjunto], capture_output=True, text=True, timeout=900)
         assert r.returncode == 0, (r.stdout[-3000:], r.stderr[-3000:])
         salida = json.loads(r.stdout.strip().splitlines()[-1])
         if os.environ.get("CAPTURAS_UNIFICACION"):
-            (Path(capturas) / "resultado.json").write_text(json.dumps(salida, ensure_ascii=False, indent=1), encoding="utf-8")
-        yield {c["nombre"]: c for c in salida["casos"]}
+            nombre = "resultado.json" if conjunto == "simulado" else f"resultado-{conjunto}.json"
+            (Path(capturas) / nombre).write_text(json.dumps(salida, ensure_ascii=False, indent=1), encoding="utf-8")
+        yield {c["nombre"]: c for c in salida["casos"]}, db, datos
     finally:
         srv.should_exit = True
         hilo.join(15)
         sock.close()
         with pymongo.MongoClient(URI) as m:
             m.drop_database(cfg.mongodb_db)
+
+
+@pytest.fixture(scope="module")
+def resultados(tmp_path_factory):
+    """Los casos con las rutas de la unión en lote contestadas desde el navegador: {caso: resultado}."""
+    with _panel_con_guion(tmp_path_factory, _sembrar, "simulado") as (casos, _, _):
+        yield casos
+
+
+@pytest.fixture(scope="module")
+def reales(tmp_path_factory):
+    """Los casos con la unión de verdad: ({caso: resultado}, la base, lo sembrado), para mirar en la base lo que dejó."""
+    with _panel_con_guion(tmp_path_factory, _sembrar_reales, "real") as r:
+        yield r
 
 
 def _revisar(resultados: dict, nombre: str) -> dict:
@@ -374,12 +441,70 @@ def test_la_barra_de_seleccion_no_queda_bajo_la_franja_de_llamada(resultados):
     _revisar(resultados, "franja")
 
 
+# ── Con la unión de verdad ──
+
+# Lo que dice la celda «Quedaría» de cada par de `_sembrar_reales`: con la ficha A conservada (la vista previa del
+# servidor), con la B (la que calcula el navegador) y los alternos de ese campo que la unión deja en la B. `pasan` es el
+# `title` de «y N valores pasan a alternos» (None: no pasa ninguno)
+VISTAS = {
+    "misma_declarada": ({"valor": "40 años", "fuente": "cedulas", "de": "A", "pasan": None},
+                        {"valor": "50 años", "fuente": "tramites", "de": "B", "pasan": None}, []),
+    "misma_de_hoy": ({"valor": "46 años", "fuente": "cedulas", "de": "A", "pasan": "46 (Trámites, ficha B)"},
+                     {"valor": "46 años", "fuente": "tramites", "de": "B", "pasan": "40 (Base con cédula, ficha A)"},
+                     ["40"]),
+    "mayusculas": ({"valor": "CALLE 10 # 5-20", "fuente": "cedulas", "de": "A", "pasan": "Calle 10 # 5-20 (Trámites, ficha B)"},
+                   {"valor": "Calle 10 # 5-20", "fuente": "tramites", "de": "B",
+                    "pasan": "CALLE 10 # 5-20 (Base con cédula, ficha A)"}, ["CALLE 10 # 5-20"]),
+}
+
+
+@requiere_navegador
+def test_la_vista_previa_estimada_promete_lo_que_la_union_deja(reales):
+    """Al conservar la ficha B, la tarjeta pasa a la vista previa que calcula el navegador. Compara como la unión (la edad
+    declarada y no la llevada a hoy, el texto tal cual) y no contradice la del servidor: lo que dice que queda y lo que
+    pasa a alternos es lo que «Es la misma persona» deja en la base. Antes, con 40 años declarados hace diez días (A) y
+    40 declarados diez años antes (B, hoy 50), prometía que el 40 de la A pasaba a alternos y la unión no dejaba ninguno;
+    con 40 de hace seis años y 46 de hoy (hoy los dos 46), al revés."""
+    from app import modelo
+    casos, db, datos = reales
+    caso = _revisar(casos, "edad")
+    for x in datos["vista"]:
+        servidor, estimada, alternos = VISTAS[x["clave"]]
+        c = caso["datos"]["casos"][x["clave"]]
+        assert {k: c["servidor"][k] for k in servidor} == servidor, (x["clave"], c["servidor"])
+        assert {k: c["estimada"][k] for k in estimada} == estimada, (x["clave"], c["estimada"])
+        assert c["post"] == {"grupos": [{"pares": [x["par"]], "decision": "unir", "conservar": x["b"]}]}
+        unida = db.personas.find_one({"_id": x["b"]})
+        assert [str(a["valor"]) for a in unida.get("alternos") or [] if a["campo"] == x["fila"]] == alternos, \
+            (x["clave"], unida.get("alternos"))
+        if x["fila"] == "edad":
+            # La B se queda con su edad y su referencia: la de hoy es la que la tarjeta dijo que quedaba
+            assert (unida["edad"], unida["edad_ref"]) == (x["de_b"]["edad"], x["de_b"]["edad_ref"])
+            assert f"{modelo.edad_efectiva(unida)} años" == c["estimada"]["valor"]
+        else:
+            assert unida["direccion"] == c["estimada"]["valor"]
+
+
+@requiere_navegador
+def test_atajos_con_el_asistente_abierto_tras_recargar_o_navegar(reales):
+    """Con el asistente abierto los atajos no corren, aunque un clic en un texto suyo deje el foco en <body> y él recargue
+    la vista o lleve a ella (la vista se crea de nuevo con el foco en #vista): «ju» no une nada."""
+    _revisar(reales[0], "atajos-recarga")
+
+
+@requiere_navegador
+def test_la_paginacion_tras_resolver_dice_lo_mismo_que_siguiente(reales):
+    """Con 26 grupos muy probables, resolver el primero deja 25 en la cuenta y uno sin ver: «Página 1 de 2» con
+    «Siguiente», que completa la página (y la paginación se va). Antes decía «Página 1 de 1» con «Siguiente» activo."""
+    _revisar(reales[0], "pagina26")
+
+
 GUION = r"""// Revisión en bloque de coincidencias y color por fuente, en Chromium. Uso: node <guion> <base del panel> <usuario>
-// <clave> <datos.json> <capturas>
+// <clave> <datos.json> <capturas> [simulado|real] (los casos con las rutas de la unión contestadas aquí, o con la de verdad)
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const fs = require('fs');
 const path = require('path');
-const [base, usuario, clave, rutaDatos, capturas] = process.argv.slice(2);
+const [base, usuario, clave, rutaDatos, capturas, conjunto = 'simulado'] = process.argv.slice(2);
 const D = JSON.parse(fs.readFileSync(rutaDatos, 'utf8'));
 const origen = new URL(base).origin;
 const pref = new URL(base).pathname.replace(/\/+$/, '');
@@ -389,9 +514,11 @@ const captura = (page, nombre, op = {}) => (capturas ? page.screenshot({ path: p
 
 // ── Grupos inventados con la forma exacta del contrato (A.2) ──
 function miembro(id, nombre, extra = {}) {
+  // La edad de la vista previa como la manda `unificacion.miembro`: aquí la declarada es la de hoy (sin fecha de nacimiento)
+  const edad = extra.edad ?? null;
   return { id, nombre, cedula: null, telefonos: [], correo: null, direccion: null, lugar: null, edad: null, sexo: null,
     fecha_nacimiento: null, fuentes: ['tramites'], procedencia: {}, tramites: 1, listas: '', completitud: 40, consentimiento: 'pendiente',
-    rango_ubicacion: 0, ...extra };
+    rango_ubicacion: 0, edad_declarada: edad == null ? null : String(edad), edad_declarada_hoy: edad, ...extra };
 }
 const par = (id, a, b, puntaje, motivo, nivel, a_favor = [], en_contra = [], nota = null) => ({ id, a, b, puntaje, motivo, nivel, nota,
   a_favor: a_favor.map(([clave, texto]) => ({ clave, texto })), en_contra: en_contra.map(([clave, texto]) => ({ clave, texto })) });
@@ -1339,10 +1466,127 @@ async function cFranja(nav, caso) {
   }
 }
 
+// ══ Con la unión de verdad (conjunto «real»): sin `route.fulfill` para los grupos, como lo reprodujo la verificación ══
+
+// ── atajos-recarga: con el asistente abierto no corren, tampoco cuando él recarga la vista o lleva a ella ──
+async function cAtajosRecarga(nav, caso) {
+  const { ctx, page, v, d } = await abrir(nav, caso);
+  // Nada se une de verdad: si un atajo corriera, el lote queda anotado y se contesta como fallido
+  const lotes = [];
+  await ctx.route((u) => u.pathname === pref + '/api/coincidencias/lote', (route) => {
+    const b = route.request().postDataJSON();
+    lotes.push(b);
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ resultados: b.grupos.map(() => ({ ok: false,
+      decision: b.decision, codigo: 'cambio', error: 'simulado' })), unidas: 0, separadas: 0, errores: b.grupos.length }) });
+  });
+  await abrirCoincidencias(page);
+  // Lo que «j», «u» o «x» dejan en el acto (sus manejadores no esperan nada): un grupo actual, uno enviándose o seleccionado
+  const huella = () => page.evaluate(() => ({ actual: document.querySelectorAll('.grupo-coinc.actual').length,
+    enviando: document.querySelectorAll('.grupo-coinc.enviando').length, sel: document.querySelectorAll('.grupo-coinc [data-sel]:checked').length }));
+  await page.click('#agente-boton');
+  await page.waitForSelector('#agente-panel:not([hidden])', espera);
+  // Como agente.js: recargar() es ir(rutaActual() + location.search, { reemplazar: true }) y navegar(), ir(ruta)
+  const comoElAsistente = async (ruta, op) => {
+    const n = await page.evaluate(() => window.__vistas.length);
+    await page.evaluate(async ([p, r, o]) => (await import(`${p}/static/js/app.js`)).ir(r, o), [pref, ruta, op]);
+    await page.waitForFunction((n) => window.__vistas.length > n, n, espera);
+  };
+  d.pasos = {};
+  for (const [paso, desde, op] of [['recargar', null, { reemplazar: true }], ['navegar', '/personas', {}]]) {
+    if (desde) await comoElAsistente(desde, {});
+    // Un clic en el título del panel: no toma el foco (queda en <body>)
+    await page.click('#agente-panel .agente-titulos h2');
+    const focoClic = await page.evaluate(() => document.activeElement?.tagName);
+    await comoElAsistente('/calidad?p=coincidencias', op);
+    await page.waitForSelector('.unificacion .grupo-coinc', espera);
+    const antes = await page.evaluate(() => ({ panel: !document.querySelector('#agente-panel').hidden,
+      foco: `${document.activeElement?.tagName}#${document.activeElement?.id}` }));
+    // Quien sigue escribiéndole al asistente
+    await page.keyboard.type('ju');
+    d.pasos[paso] = { focoClic, ...antes, ...(await huella()) };
+    // El caso de la verificación: el panel sigue abierto y el foco pasó a la vista
+    v[`${paso}_deja_el_panel_abierto_y_el_foco_en_la_vista`] = focoClic === 'BODY' && antes.panel && antes.foco === 'MAIN#vista';
+    v[`${paso}_sin_atajos`] = !d.pasos[paso].actual && !d.pasos[paso].enviando && !d.pasos[paso].sel;
+  }
+  // Cerrado el asistente, en la vista sí corren
+  await page.click('#agente-cerrar');
+  await page.waitForFunction(() => document.querySelector('#agente-panel')?.hidden, null, espera);
+  await page.click('.grupo-coinc .grupo-titulo');
+  await page.keyboard.press('x');
+  d.cerrado = await huella();
+  v.cerrado_si = d.cerrado.sel === 1;
+  d.lotes = lotes;
+  v.ningun_lote = lotes.length === 0;
+  await ctx.close();
+}
+
+// ── pagina26: con 26 muy probables, resolver el primero deja el texto de la paginación de acuerdo con «Siguiente» ──
+async function cPagina26(nav, caso) {
+  const { ctx, page, v, d } = await abrir(nav, caso);
+  await abrirCoincidencias(page, '&nivel=alta');
+  const pag = () => page.evaluate(() => ({ texto: document.querySelector('.unificacion [data-pagina-texto]')?.textContent ?? null,
+    siguiente: document.querySelector('.unificacion [data-siguiente]')?.disabled ?? null,
+    tarjetas: document.querySelectorAll('.grupo-coinc:not(.resuelta)').length, cuenta: document.querySelector('#cuenta-grupos')?.textContent ?? null }));
+  // «Página n de m» con «Siguiente» activo si y solo si m > n
+  const deAcuerdo = (x) => { const m = /^Página (\d+) de (\d+)$/.exec(x.texto || ''); return !!m && (x.siguiente === false) === (Number(m[2]) > Number(m[1])); };
+  d.antes = await pag();
+  v.antes = d.antes.texto === 'Página 1 de 2' && d.antes.siguiente === false && d.antes.tarjetas === 25 && deAcuerdo(d.antes);
+  const primero = await page.$eval('.grupo-coinc', (x) => x.dataset.clave);
+  const respuesta = page.waitForResponse((r) => new URL(r.url()).pathname === pref + '/api/coincidencias/lote', espera);
+  await page.click(`.grupo-coinc[data-clave="${primero}"] [data-unir]`);
+  d.lote = await (await respuesta).json();
+  v.unio_de_verdad = d.lote.unidas === 1;
+  await page.waitForFunction(() => document.querySelectorAll('.grupo-coinc').length === 24, null, espera);
+  d.tras_unir = await pag();
+  v.tras_unir = d.tras_unir.texto === 'Página 1 de 2' && d.tras_unir.siguiente === false && d.tras_unir.tarjetas === 24
+    && /^25 grupos /.test(d.tras_unir.cuenta) && deAcuerdo(d.tras_unir);
+  // «Siguiente» completa la página: ahora caben todos en una y la paginación se va
+  await page.click('.unificacion [data-siguiente]');
+  await page.waitForFunction(() => document.querySelectorAll('.grupo-coinc').length === 25 && !document.querySelector('.unificacion .paginacion'), null, espera);
+  d.tras_siguiente = await pag();
+  v.tras_siguiente = d.tras_siguiente.texto === null && d.tras_siguiente.tarjetas === 25;
+  await ctx.close();
+}
+
+// ── edad: conservar la ficha B rehace la vista previa en el navegador; «Es la misma persona» une de verdad ──
+async function cEdad(nav, caso) {
+  const { ctx, page, v, d } = await abrir(nav, caso);
+  await ingresar(page);
+  // La celda «Quedaría» de una fila: el valor que queda, su fuente, la ficha de donde sale y lo que pasa a alternos
+  const celda = (fila) => page.evaluate((f) => {
+    const t = document.querySelector('.grupo-coinc');
+    const c = t.querySelector(`tr[data-fila="${f}"] td.quedaria`);
+    const p = c.querySelector('.pieza');
+    return { valor: p ? [...p.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim() : null,
+      fuente: p?.querySelector(':scope > .fuente')?.dataset.fuente ?? null, de: p?.querySelector('.de-ficha')?.textContent.replace('de la ficha ', '') ?? null,
+      pasan: c.querySelector('.pasan')?.title ?? null, cabeza: t.querySelector('thead .quedaria').textContent.replace(/\s+/g, ' ').trim() };
+  }, fila);
+  d.casos = {};
+  for (const x of D.vista) {
+    await ir(page, `/calidad?p=coincidencias&persona=${x.a}`);
+    await page.waitForSelector('.unificacion .grupo-coinc', espera);
+    const servidor = await celda(x.fila);
+    await page.check(`.grupo-coinc [data-conservar][value="${x.b}"]`);
+    await page.waitForFunction(() => document.querySelector('.grupo-coinc thead .quedaria')?.textContent.includes('estimado con su elección'), null, espera);
+    const estimada = await celda(x.fila);
+    const respuesta = page.waitForResponse((r) => new URL(r.url()).pathname === pref + '/api/coincidencias/lote', espera);
+    await page.click('.grupo-coinc [data-unir]');
+    const r = await respuesta;
+    d.casos[x.clave] = { servidor, estimada, post: r.request().postDataJSON(), lote: await r.json() };
+    v[`${x.clave}_servidor`] = servidor.cabeza.startsWith('Quedaría Se conserva la ficha A') && !servidor.cabeza.includes('estimado');
+    v[`${x.clave}_estimada`] = estimada.cabeza.startsWith('Quedaría Se conserva la ficha B · estimado con su elección');
+    v[`${x.clave}_unida`] = d.casos[x.clave].lote.unidas === 1;
+  }
+  await ctx.close();
+}
+
 (async () => {
   const nav = await chromium.launch();
   const casos = [];
+  // Los casos con la unión de verdad van en su propio conjunto (otro panel y otra base): cada uno corre solo en el suyo
+  const REALES = new Set(['atajos-recarga', 'pagina26', 'edad']);
   const correr = async (nombre, f) => {
+    if (REALES.has(nombre) !== (conjunto === 'real')) return;
     const caso = { nombre, revisiones: {}, datos: {}, errores: [], csp: [] };
     casos.push(caso);
     try { await f(caso); } catch (e) { caso.fallo = String(e && e.stack || e).slice(0, 2000); }
@@ -1365,6 +1609,11 @@ async function cFranja(nav, caso) {
     await correr('atajos-fuera', (c) => cAtajosFuera(nav, c));
     await correr('dialogos', (c) => cDialogos(nav, c));
     await correr('franja', (c) => cFranja(nav, c));
+    // En este orden: los atajos no unen nada (el lote se contesta aquí), «pagina26» cuenta los 26 y une uno, y los pares
+    // de la vista previa (que no son muy probables) se filtran por su ficha
+    await correr('atajos-recarga', (c) => cAtajosRecarga(nav, c));
+    await correr('pagina26', (c) => cPagina26(nav, c));
+    await correr('edad', (c) => cEdad(nav, c));
   } finally {
     await nav.close();
   }

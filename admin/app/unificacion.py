@@ -450,7 +450,13 @@ def miembro(p: dict, lugares: dict) -> dict:
             "completitud": p.get("completitud") or 0, "consentimiento": p.get("consentimiento"),
             # Con él, la vista previa que la interfaz calcula al elegir otra ficha sabe de cuál pasa la ubicación en
             # bloque (la mejor ubicada), como en la unión
-            "rango_ubicacion": bd._rango_ubicacion(p)}
+            "rango_ubicacion": bd._rango_ubicacion(p),
+            # La edad de la vista previa, como la arma `vista_previa`: la unión compara la declarada tal cual (`_valor`,
+            # en el mismo texto con que la compara `vista_previa`) y se muestra la declarada llevada a hoy (`_edad`).
+            # `edad` es otra: la de hoy, también por la fecha de nacimiento. Con solo ella, la vista previa estimada
+            # decía que 40 años declarados en 2016 (hoy 50) y 40 de hoy dejaban un alterno que la unión no deja, y
+            # callaba el de 40 de 2020 frente a 46 de hoy (hoy los dos 46), que la unión sí deja
+            "edad_declarada": _texto(_valor(p, "edad")), "edad_declarada_hoy": _edad(p)}
 
 
 # ───────────────────────────── Grupos ─────────────────────────────

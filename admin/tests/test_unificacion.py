@@ -303,6 +303,30 @@ def test_miembro_lleva_el_rango_de_ubicacion():
     assert (lugar["valor"], lugar["de"]) == ("BATALLON", 1)
 
 
+def test_miembro_lleva_la_edad_que_compara_la_union():
+    """La interfaz rehace la vista previa al elegir otra ficha: con solo `edad` (la de hoy, también por la fecha de
+    nacimiento) comparaba la edad llevada a hoy, y la unión compara la declarada. `edad_declarada` es lo que compara
+    `vista_previa` (el texto de la guardada) y `edad_declarada_hoy`, lo que muestra de la que queda."""
+    from datetime import timedelta
+    from app import modelo
+    ref = modelo.hoy_local() - timedelta(days=10)
+    # 40 declarados hace diez días y 40 declarados diez años antes (hoy 50): la unión no deja alterno
+    a = _p(1, cedula="90007040", edad=40, edad_ref=ref.isoformat())
+    b = _p(2, edad=40, edad_ref=modelo._restar_anios(ref, 10).isoformat())
+    # Con fecha de nacimiento, `edad` sale de ella; la vista previa sigue mostrando la declarada llevada a hoy
+    c = _p(3, edad=40, edad_ref=ref.isoformat(), fecha_nacimiento="1970-01-01")
+    ma, mb, mc = (un.miembro(p, {}) for p in (a, b, c))
+    assert (ma["edad_declarada"], ma["edad_declarada_hoy"], ma["edad"]) == ("40", 40, 40)
+    assert (mb["edad_declarada"], mb["edad_declarada_hoy"], mb["edad"]) == ("40", 50, 50)
+    assert (mc["edad_declarada"], mc["edad_declarada_hoy"]) == ("40", 40) and mc["edad"] == modelo.edad_efectiva(c) != 40
+    assert (un.miembro(_p(4), {})["edad_declarada"], un.miembro(_p(4), {})["edad_declarada_hoy"]) == (None, None)
+    # Lo mismo que usa `vista_previa`, con cualquiera de las dos conservada: muestra la declarada llevada a hoy de la que
+    # queda y no pasa nada a alternos (las dos declararon «40»)
+    for destino, queda in ((1, ma), (2, mb)):
+        edad = next(f for f in un.vista_previa([a, b], destino) if f["campo"] == "edad")
+        assert (edad["valor"], edad["de"], edad["otros"]) == (str(queda["edad_declarada_hoy"]), queda["id"], [])
+
+
 def test_detalle_y_nota():
     assert un.detalle_y_nota(None) == ({}, None)
     assert un.detalle_y_nota("  Es la misma  ") == ({}, "Es la misma")
@@ -334,7 +358,7 @@ def test_grupos_son_componentes_conexos_y_sin_pares_repetidos(sesion):
     m = g["miembros"][0]
     assert set(m) == {"id", "nombre", "cedula", "telefonos", "correo", "direccion", "lugar", "edad", "sexo",
                       "fecha_nacimiento", "fuentes", "procedencia", "tramites", "listas", "completitud",
-                      "consentimiento", "rango_ubicacion"}
+                      "consentimiento", "rango_ubicacion", "edad_declarada", "edad_declarada_hoy"}
     assert m["telefonos"] == ["3007100001"] and m["fuentes"] == ["cedulas"]
     assert {f["campo"] for f in g["vista_previa"]} == {c for c, _ in un.CAMPOS_VISTA}
     otro = next(x for x in res["grupos"] if x["destino"] != a)
