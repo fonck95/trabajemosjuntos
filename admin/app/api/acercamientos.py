@@ -748,6 +748,8 @@ def insignias(tratables: int = 0, db: Database = Depends(obtener_db), quien: Qui
     tratable = TRATABLE if tratables else {}
     vigente_req = {"$and": [modelo.filtro_vigente(), {"requiere_actualizacion": {"$ne": None}, **tratable}]}
     if quien.administra:
+        # Como en el tablero: las que ya no se pueden aceptar (una ficha unida o suprimida, dos cédulas) no cuentan
+        bd.cerrar_coincidencias_imposibles(db)
         out["calidad"] = len(db.coincidencias.distinct("persona_id", {"estado": "pendiente"}))
         out["conflictos"] = db.conflictos_cedula.count_documents({"estado": "pendiente"})
         out["solicitudes"] = db.solicitudes.count_documents({"estado": {"$in": ["pendiente", "en_tramite"]}})
