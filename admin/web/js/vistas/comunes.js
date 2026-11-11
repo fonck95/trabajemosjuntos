@@ -4,7 +4,7 @@ import { api, ErrorApi, nuevaClave, registrarPendiente, sesion } from '../api.js
 import { BASES, CASCO, baseSegunTema, cargarMapLibre, dentroDeYondo } from '../mapa3d.js';
 import {
   CAMPOS_FALTAN, CAMPOS_NO_DISPONIBLE, CANALES_AUTORIZACION, ETIQUETAS_CAMPOS, MAS_DATOS, MEDIOS_AUTORIZACION,
-  MEDIOS_POR_ROL, MOTIVOS_NO_DISPONIBLE, SEXOS, TIPOS_DOCUMENTO,
+  MEDIOS_POR_ROL, MOTIVOS_NO_DISPONIBLE, SEXOS, TIPOS_DOCUMENTO, edadDesde,
 } from '../modelo.js';
 import { $, $$, aviso, avisoError, datosForm, debounce, dialogo, hoy, html, titulo } from '../ui.js';
 
@@ -162,6 +162,36 @@ export const chipsFaltan = (faltan) => (faltan?.length
 
 // ───────── «No lo tiene / No sabe» ─────────
 
+/** La fecha de nacimiento y, al lado, la edad: se calcula con la fecha o se escribe si no se sabe la fecha (`enlazarEdad`). */
+const camposEdad = () => html`<input type="date" name="fecha_nacimiento" max="${hoy()}" aria-label="Fecha de nacimiento">
+  <input type="number" name="edad" min="0" max="120" inputmode="numeric" placeholder="o la edad" aria-label="Edad (se calcula con la fecha de nacimiento)">`;
+
+/**
+ * Fecha de nacimiento y edad de un formulario: con la fecha, la edad se calcula sola (años cumplidos, de solo lectura)
+ * y no se envía: el servidor la saca de la fecha. Sin fecha se escribe la edad, para quien solo sabe cuántos años
+ * tiene. Al borrar la fecha vuelve la edad que había antes.
+ */
+export function enlazarEdad(raiz) {
+  const fecha = raiz.querySelector('[name="fecha_nacimiento"]'), edad = raiz.querySelector('[name="edad"]');
+  if (!fecha || !edad) return;
+  let previa = edad.value;
+  const ajustar = () => {
+    const e = edadDesde(fecha.value);
+    if (e == null) {
+      if (edad.dataset.calculada) { edad.value = previa; edad.readOnly = false; delete edad.dataset.calculada; edad.title = ''; }
+      return;
+    }
+    if (!edad.dataset.calculada) previa = edad.value;
+    edad.value = String(e);
+    edad.readOnly = true;
+    edad.dataset.calculada = '1';
+    edad.title = 'Calculada con la fecha de nacimiento';
+  };
+  fecha.addEventListener('input', ajustar);
+  fecha.addEventListener('change', ajustar);
+  ajustar();
+}
+
 const noSabe = (campo) => (CAMPOS_NO_DISPONIBLE.includes(campo)
   ? html`<label class="no-sabe"><select name="nd_${campo}" aria-label="Si no lo tiene o no lo sabe"><option value="">Lo tiene</option>${Object.entries(MOTIVOS_NO_DISPONIBLE).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select></label>` : '');
 
@@ -192,14 +222,13 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
       ${faltan.length ? '' : html`<p class="sec ancho">No le falta ningún dato básico. Puede agregar «Más datos».</p>`}
       ${hay('cedula') ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Documento</span>
         <div class="fila-campos"><select name="tipo_documento" aria-label="Tipo de documento">${Object.entries(TIPOS_DOCUMENTO).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select>
-        <input name="cedula" inputmode="numeric" autocomplete="off" placeholder="Número" aria-label="Número de documento" maxlength="15">
-        <input name="cedula_confirmacion" inputmode="numeric" autocomplete="off" placeholder="Repita el número" aria-label="Repita el número" maxlength="15"></div>
+        <input name="cedula" inputmode="numeric" autocomplete="off" placeholder="Número" aria-label="Número de documento" maxlength="15"></div>
         <label class="casilla"><input type="checkbox" name="cedula_verificada"> Vi el documento</label>${noSabe('cedula')}</div>` : ''}
       ${hay('telefono') ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Teléfono</span>
         <div class="fila-campos"><input name="telefono" inputmode="tel" placeholder="Celular" aria-label="Celular" maxlength="30"><input name="telefono2" inputmode="tel" placeholder="Otro teléfono" aria-label="Otro teléfono" maxlength="30"></div>${noSabe('telefono')}</div>` : ''}
       ${hay('sexo') ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Sexo</span><div class="opciones-radio">${Object.entries(SEXOS).map(([k, t]) => html`<label class="chip opcion"><input type="radio" name="sexo" value="${k}"> ${t}</label>`)}</div>${noSabe('sexo')}</div>` : ''}
-      ${hay('edad') ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Fecha de nacimiento o edad</span>
-        <div class="fila-campos"><input type="date" name="fecha_nacimiento" max="${hoy()}" aria-label="Fecha de nacimiento"><input type="number" name="edad" min="0" max="120" inputmode="numeric" placeholder="Edad" aria-label="Edad"></div>${noSabe('edad')}</div>` : ''}
+      ${hay('edad') ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Fecha de nacimiento</span>
+        <div class="fila-campos">${camposEdad()}</div>${noSabe('edad')}</div>` : ''}
       ${hay('lugar') ? html`<label class="campo ancho"><span>Barrio o vereda</span><select name="lugar_id">${opcionesLugares(cat)}</select></label>` : ''}
       ${hay('direccion') ? html`<label class="campo ancho"><span>Dirección</span><input name="direccion" maxlength="240" placeholder="CL 49 # 45-12"></label>` : ''}
       ${hay('puesto') || hay('mesa') ? html`<div class="grupo-campo ancho"><span class="titulo-campo">Puesto y mesa</span><div class="form">${camposVotacion(cat, v)}</div>${noSabe(hay('puesto') ? 'puesto' : 'mesa')}</div>` : ''}
@@ -216,6 +245,7 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
   const form = $('#f-completar', el);
   enlazarVotacion(form, cat);
   enlazarAutorizacion(form);
+  enlazarEdad(form);
   let tocado = false, enCurso = false, resultado = null;
   const quitarPendiente = registrarPendiente(() => tocado);
   form.addEventListener('input', () => { tocado = true; });
@@ -235,6 +265,7 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
       if (d[k] != null && d[k] !== '' && d[k] !== false) c[k] = d[k];
     }
     if (!c.cedula) { delete c.tipo_documento; delete c.cedula_verificada; }
+    if (c.fecha_nacimiento) delete c.edad;
     const sexo = form.querySelector('[name="sexo"]:checked')?.value;
     if (sexo) c.sexo = sexo;
     if (d.lugar_id) c.lugar_id = Number(d.lugar_id);
@@ -254,7 +285,6 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
   async function guardar(seguir) {
     if (enCurso) return;
     const { c, d } = cuerpo();
-    if (c.cedula && c.cedula !== d.cedula_confirmacion) { aviso('Los dos números del documento no coinciden', 'error'); return; }
     const { aut, error } = form.querySelector('[name="aut_estado"]') ? leerAutorizacion(form) : { aut: null };
     if (error) { aviso(error, 'error'); return; }
     enCurso = true;
@@ -311,15 +341,14 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
       <label class="campo ancho"><span>Nombre completo *</span><input name="nombre" required minlength="3" maxlength="160" autocomplete="off" value="${ini.nombre || ''}"></label>
       <div class="grupo-campo ancho"><span class="titulo-campo">Documento</span>
         <div class="fila-campos"><select name="tipo_documento" aria-label="Tipo de documento">${Object.entries(TIPOS_DOCUMENTO).map(([k, t]) => html`<option value="${k}">${t}</option>`)}</select>
-        <input name="cedula" inputmode="numeric" autocomplete="off" placeholder="Número" aria-label="Número de documento" maxlength="15" value="${ini.cedula || ''}">
-        <input name="cedula_confirmacion" inputmode="numeric" autocomplete="off" placeholder="Repita el número" aria-label="Repita el número" maxlength="15"></div>
+        <input name="cedula" inputmode="numeric" autocomplete="off" placeholder="Número" aria-label="Número de documento" maxlength="15" value="${ini.cedula || ''}"></div>
         <label class="casilla"><input type="checkbox" name="cedula_verificada"> Vi el documento</label></div>
       <div class="grupo-campo ancho"><span class="titulo-campo">Teléfonos</span>
         <div class="fila-campos"><input name="telefono" inputmode="tel" placeholder="Celular" aria-label="Celular" maxlength="30" value="${ini.telefono || ''}"><input name="telefono2" inputmode="tel" placeholder="Otro teléfono" aria-label="Otro teléfono" maxlength="30"></div></div>
       <div class="ancho" id="parecidas" aria-live="polite"></div>
       <div class="grupo-campo ancho"><span class="titulo-campo">Sexo</span><div class="opciones-radio">${Object.entries(SEXOS).map(([k, t]) => html`<label class="chip opcion"><input type="radio" name="sexo" value="${k}"> ${t}</label>`)}</div></div>
-      <div class="grupo-campo ancho"><span class="titulo-campo">Fecha de nacimiento o edad</span>
-        <div class="fila-campos"><input type="date" name="fecha_nacimiento" max="${hoy()}" aria-label="Fecha de nacimiento"><input name="edad" type="number" min="0" max="120" inputmode="numeric" placeholder="Edad" aria-label="Edad"></div></div>
+      <div class="grupo-campo ancho"><span class="titulo-campo">Fecha de nacimiento</span>
+        <div class="fila-campos">${camposEdad()}</div></div>
       <label class="campo ancho"><span>Barrio o vereda</span><select name="lugar_id">${opcionesLugares(cat, hogar?.lugar_id)}</select></label>
       <label class="campo ancho"><span>Dirección</span><input name="direccion" maxlength="240" placeholder="CL 49 # 45-12" value="${hogar?.direccion || ''}"></label>
       <div class="grupo-campo ancho"><span class="titulo-campo">Puesto y mesa</span><div class="form">${camposVotacion(cat, {})}</div></div>
@@ -333,6 +362,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   const form = $('#f-nueva', el);
   enlazarVotacion(form, cat);
   enlazarAutorizacion(form);
+  enlazarEdad(form);
   let tocado = !!(ini.nombre || ini.cedula || ini.telefono);
   const quitarPendiente = registrarPendiente(() => tocado && el.isConnected);
   el.addEventListener('close', () => quitarPendiente());
@@ -374,6 +404,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     for (const k of ['tipo_documento', 'cedula', 'telefono', 'telefono2', 'fecha_nacimiento', 'edad', 'direccion']) if (d[k] != null) c[k] = d[k];
     if (!c.cedula) delete c.tipo_documento;
     else c.cedula_verificada = !!d.cedula_verificada;
+    if (c.fecha_nacimiento) delete c.edad;
     const sexo = form.querySelector('[name="sexo"]:checked')?.value;
     if (sexo) c.sexo = sexo;
     c.lugar_id = d.lugar_id ? Number(d.lugar_id) : null;
@@ -426,7 +457,6 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
     // Un doble clic (o Enter y clic) no debe crear dos fichas: una sola petición a la vez
     if (enCurso || !form.reportValidity()) return;
     const { c, d } = cuerpo();
-    if (c.cedula && c.cedula !== d.cedula_confirmacion) { aviso('Los dos números del documento no coinciden', 'error'); form.cedula_confirmacion.focus(); return; }
     const { aut, error } = leerAutorizacion(form);
     if (!aut) { aviso('Indique si la persona autoriza el tratamiento de sus datos', 'error'); return; }
     if (error) { aviso(error, 'error'); return; }

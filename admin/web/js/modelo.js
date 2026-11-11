@@ -350,6 +350,18 @@ const ZONA_MS = 5 * 3600 * 1000; // Colombia: UTC−5, sin horario de verano
 /** Fecha de negocio «AAAA-MM-DD» en hora de Colombia (0.2.11). */
 export const hoyColombia = (ahora = new Date()) => new Date(ahora.getTime() - ZONA_MS).toISOString().slice(0, 10);
 
+/** Años cumplidos el día `hoy` por quien nació en `nacimiento` (las dos «AAAA-MM-DD»), como `edad_efectiva` de
+ * app/modelo.py con fecha de nacimiento. null si la fecha no existe (1985-02-30) o es posterior a hoy. */
+export function edadDesde(nacimiento, hoy = hoyColombia()) {
+  const n = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(nacimiento ?? '').trim()), h = /^(\d{4})-(\d{2})-(\d{2})$/.exec(hoy);
+  if (!n || !h) return null;
+  const [a, m, d] = n.slice(1).map(Number), [ha, hm, hd] = h.slice(1).map(Number);
+  const f = new Date(Date.UTC(a, m - 1, d));
+  if (a < 1000 || f.getUTCFullYear() !== a || f.getUTCMonth() !== m - 1 || f.getUTCDate() !== d) return null;
+  const e = ha - a - (hm < m || (hm === m && hd < d) ? 1 : 0);
+  return e >= 0 ? e : null;
+}
+
 /** «3 nov» de una fecha «AAAA-MM-DD…». */
 export function diaCorto(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');

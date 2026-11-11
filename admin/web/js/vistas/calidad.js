@@ -857,16 +857,14 @@ export async function vistaCalidad(el, { q }) {
     const sugerida = x.registro?.cedula_repetida || x.cedula || '';
     const { el: d, cerrar } = dialogo({ titulo: 'Corregir cédula',
       cuerpo: html`<form class="form" id="f-ced">
-        <p class="sec ancho" style="margin:0">Escriba la cédula correcta dos veces. La cédula actual de la ficha (si tiene) pasa a sus cédulas anteriores.</p>
+        <p class="sec ancho" style="margin:0">Escriba la cédula correcta. La cédula actual de la ficha (si tiene) pasa a sus cédulas anteriores.</p>
         <label class="campo"><span>Cédula correcta</span><input name="cedula" inputmode="numeric" autocomplete="off" required pattern="[0-9]{5,11}" value="${sugerida}"></label>
-        <label class="campo"><span>Repita la cédula</span><input name="repetida" inputmode="numeric" autocomplete="off" required pattern="[0-9]{5,11}"></label>
         <label class="campo ancho"><span>Motivo</span><input name="motivo" maxlength="300" value="Corrección de un posible error de digitación"></label></form>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Corregir</button>` });
     $('#g', d).onclick = async () => {
       const f = $('#f-ced', d);
       if (!f.reportValidity()) return;
       const datos = datosForm(f);
-      if (datos.cedula !== datos.repetida) { aviso('Las dos cédulas no coinciden', 'error'); return; }
       try { await resolver({ decision: 'corregir', cedula_correcta: datos.cedula, motivo: datos.motivo }); cerrar(); } catch (err) { avisoError(err); }
     };
   }

@@ -121,7 +121,6 @@ def anular_automatico(db: Database, pid: int, rid: int, quien: Any, motivo: str)
 
 class DictadosIn(BaseModel):
     cedula: str | None = Field(None, max_length=20)
-    cedula_confirmacion: str | None = Field(None, max_length=20)
     puesto_id: int | None = None
     mesa: str | int | None = None
 
@@ -208,8 +207,6 @@ def _cedula_dictada(db: Database, p: dict, quien: Quien, d: DictadosIn, aj: dict
     if p.get("cedula"):
         raise HTTPException(422, "Esta ficha ya tiene cédula")
     c = per.validar_documento(d.cedula, "CC")
-    if c != per.validar_documento(d.cedula_confirmacion, "CC"):
-        raise HTTPException(422, "La cédula y su confirmación no coinciden")
     tope = int(aj.get("tope_cedulas_dictadas") or 0)
     hechas = db.conflictos_cedula.count_documents({"motivo": "dictada", "creado_por.uid": quien.uid,
                                                    "creado_en": {"$gte": _inicio_dia(modelo.hoy_local())}})
