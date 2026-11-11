@@ -69,33 +69,86 @@ export function avisoError(err, ms = 6000) {
   aviso(err?.message || 'Error inesperado', 'error', ms);
 }
 
-/** Diálogo modal. `cuerpo` es HTML (crudo); devuelve {el, cerrar, listo} donde `listo` resuelve al cerrar. */
-export function dialogo({ titulo: t, cuerpo, pie = '', ancho = false, alAbrir }) {
+/**
+ * Diálogo modal. `cuerpo` es HTML (crudo); devuelve {el, cerrar, listo} donde `listo` resuelve al cerrar.
+ *
+ * `sucio(el)` dice si hay algo escrito que se perdería: con eso, tocar el fondo o Escape (gestos que se hacen sin
+ * querer, sobre todo en el celular, donde la hoja deja a la vista una franja del fondo) preguntan antes de descartar.
+ * Cerrar con un botón (✕, «Cancelar») es a propósito y no pregunta. Para formularios simples sirve `hayEscrito`.
+ */
+export function dialogo({ titulo: t, cuerpo, pie = '', ancho = false, alAbrir, sucio = null }) {
   const d = document.createElement('dialog');
   if (ancho) d.classList.add('ancho');
-  d.innerHTML = String(html`<div class="cab"><h2>${t}</h2><button class="btn fantasma chico" data-cerrar aria-label="Cerrar">✕</button></div>
+  // Sin pie, lo último del diálogo es el cuerpo: en el celular deja el margen de la barra de inicio del iPhone
+  if (!pie) d.classList.add('sin-pie');
+  d.innerHTML = String(html`<div class="cab"><h2>${t}</h2><button type="button" class="btn fantasma cerrar-dialogo" data-cerrar aria-label="Cerrar">${icono('cerrar')}</button></div>
     <div class="cuerpo">${cuerpo}</div>${pie ? html`<div class="pie">${pie}</div>` : ''}<div class="avisos" role="status" aria-live="polite"></div>`);
   document.body.append(d);
   let resolver;
   const listo = new Promise((r) => (resolver = r));
-  const cerrar = (v) => { d.close(); d.remove(); resolver(v); };
+  let cerrado = false, preguntando = false;
+  const cerrar = (v) => { cerrado = true; d.close(); d.remove(); resolver(v); };
+  const hayAlgo = () => { try { return typeof sucio === 'function' && !!sucio(d); } catch { return false; } };
+  // Fondo o Escape: si hay algo escrito, se confirma antes de perderlo (una sola pregunta a la vez)
+  async function descartar() {
+    if (cerrado || preguntando) return;
+    if (hayAlgo()) {
+      preguntando = true;
+      const si = await confirmar('¿Descartar lo escrito? Se pierde lo que anotó en este formulario.', { si: 'Descartar', no: 'Seguir escribiendo', peligro: true });
+      preguntando = false;
+      if (!si || cerrado) return;
+    }
+    cerrar(null);
+  }
   d.addEventListener('click', (e) => {
-    if (e.target === d || e.target.closest('[data-cerrar]')) cerrar(null);
+    if (e.target.closest('[data-cerrar]')) cerrar(null);
+    else if (e.target === d) descartar();
   });
-  d.addEventListener('cancel', (e) => { e.preventDefault(); cerrar(null); });
+  d.addEventListener('cancel', (e) => {
+    // Chromium deja de permitir que se cancele un Escape repetido sin otro gesto de por medio (`cancelable` falso):
+    // ahí el diálogo se cierra igual y lo atiende 'close', más abajo
+    if (!e.cancelable) return;
+    e.preventDefault();
+    descartar();
+  });
+  d.addEventListener('close', () => {
+    if (cerrado) return;
+    // Lo cerró el navegador (no `cerrar`): con algo escrito se vuelve a abrir tal cual y se pregunta; si no, se termina
+    if (hayAlgo()) { d.showModal(); descartar(); } else cerrar(null);
+  });
   d.showModal();
   alAbrir?.(d, cerrar);
   return { el: d, cerrar, listo };
 }
 
-export function confirmar(texto, { si = 'Confirmar', peligro = false } = {}) {
+export function confirmar(texto, { si = 'Confirmar', no = 'Cancelar', peligro = false } = {}) {
   const { el, cerrar, listo } = dialogo({
     titulo: 'Confirmar',
     cuerpo: html`<p>${texto}</p>`,
-    pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn ${peligro ? 'primario' : 'oscuro'}" data-si>${si}</button>`,
+    pie: html`<button class="btn" data-cerrar>${no}</button><button class="btn ${peligro ? 'primario' : 'oscuro'}" data-si>${si}</button>`,
   });
   el.querySelector('[data-si]').addEventListener('click', () => cerrar(true));
   return listo.then((v) => v === true);
+}
+
+/**
+ * ¿Algún campo de `raiz` tiene un valor distinto del que traía al pintarse? (texto escrito, casilla marcada, otra
+ * opción elegida). Es el `sucio` de los diálogos con un formulario simple, que no llevan la cuenta de lo tocado.
+ */
+export function hayEscrito(raiz) {
+  return $$('input, select, textarea', raiz).some((x) => {
+    if (x.disabled || x.type === 'hidden') return false;
+    if (x.type === 'file') return x.files?.length > 0;
+    if (x.type === 'checkbox' || x.type === 'radio') return x.checked !== x.defaultChecked;
+    if (x.tagName === 'SELECT') {
+      const ops = [...x.options];
+      if (x.multiple) return ops.some((o) => o.selected !== o.defaultSelected);
+      // Sin `selected` en el HTML, la elegida al pintar es la primera
+      const inicial = ops.reduce((k, o, i) => (o.defaultSelected ? i : k), ops.length ? 0 : -1);
+      return x.selectedIndex !== inicial;
+    }
+    return x.value !== x.defaultValue;
+  });
 }
 
 export function datosForm(form) {
@@ -137,6 +190,11 @@ const P = {
   hogar: '<path d="m3 11 9-7 9 7M5 9.5V20h5v-6h4v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
   completar: '<path d="M4 20h4L19 9l-4-4L4 16zm9-13 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
   filtro: '<path d="M3 5h18l-7 8v6l-4 2v-8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+  // La presentación de la propuesta (web/js/vistas/presentacion.js)
+  presentacion: '<path d="M3 4h18M5 4v11h14V4M12 15v3m-4 3 4-3 4 3M9 11l2-2 2 2 3-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  anterior: '<path d="M19 12H6m5-6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+  pantalla: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  proyector: '<path d="M4 5h16v11H4zM8 20h8M12 16v4M14 3h6v6M20 3l-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   // Asistente del panel (web/js/agente.js)
   agente: '<path d="M10 2.5 12 8l5.5 2L12 12l-2 5.5L8 12l-5.5-2L8 8zM18 13l1.1 2.9L22 17l-2.9 1.1L18 21l-1.1-2.9L14 17l2.9-1.1z"/>',
   enviar: '<path d="M12 19V5m0 0-6 6m6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -169,6 +227,70 @@ export const FUENTES = {
   tramites: 'Trámites', cedulas: 'Base con cédula', reunion: 'Reunión', manual: 'Registro manual',
   planilla: 'Planilla de campo', consultor: 'Consultor', otra_base: 'Otra base', panel: 'Panel',
 };
+
+// ───────── Código de color por fuente (css/fuentes.css) ─────────
+/** Fuentes visibles de un dato, en orden de confianza (la más segura primero, como `modelo.CONFIANZA`): nombre, letra
+ * de la insignia, grupo y una línea para la leyenda. El grupo da la forma, que no depende del color (daltonismo):
+ * «equipo» (lo capturó una persona: insignia rellena), «base» (una base importada: solo borde) u «otra» (la ficha
+ * unida o una fuente sin catalogar: borde punteado). La letra va siempre: el color nunca es la única señal. */
+export const FUENTES_INFO = {
+  titular: { nombre: 'Titular en la Registraduría', letra: '✓', grupo: 'equipo', ayuda: 'votación verificada con el titular en la Registraduría.' },
+  equipo: { nombre: 'Equipo (panel)', letra: 'E', grupo: 'equipo', ayuda: 'lo escribió una persona del equipo en el panel.' },
+  reunion: { nombre: 'Reunión', letra: 'R', grupo: 'equipo', ayuda: 'ficha dada de alta en una reunión.' },
+  consultor: { nombre: 'Consultor', letra: 'C', grupo: 'equipo', ayuda: 'lo dictó el titular a un consultor.' },
+  planilla: { nombre: 'Planilla de campo', letra: 'P', grupo: 'equipo', ayuda: 'planilla que llenó el equipo en campo.' },
+  cedulas: { nombre: 'Base con cédula', letra: 'B', grupo: 'base', ayuda: 'base unificada con cédula, importada.' },
+  otra_base: { nombre: 'Otra base', letra: 'O', grupo: 'base', ayuda: 'una base importada.' },
+  tramites: { nombre: 'Trámites', letra: 'T', grupo: 'base', ayuda: 'base de trámites por vereda, sin cédula.' },
+  fusion: { nombre: 'Ficha unida', letra: 'U', grupo: 'otra', ayuda: 'vino de una ficha que se unió a esta.' },
+  otra: { nombre: 'Otra fuente', letra: '?', grupo: 'otra', ayuda: 'una fuente que el panel no conoce.' },
+};
+const ORDEN_FUENTES = Object.keys(FUENTES_INFO);
+
+/** Clave visible de una fuente tal como se guarda: `manual` y `panel` son lo mismo (lo escribió el equipo, sin
+ * distinguir rol), `fusion:<id>` es «ficha unida» (la fusión no guarda la fuente original del valor) y lo que el panel
+ * no conoce (`cruce`, que es un método, o una clave nueva) es `otra`. Sin fuente, null: no se pinta nada. */
+export function claveFuente(f) {
+  if (f == null || f === '') return null;
+  const s = String(f);
+  if (s === 'manual' || s === 'panel') return 'equipo';
+  if (s === 'fusion' || s.startsWith('fusion:')) return 'fusion';
+  return Object.hasOwn(FUENTES_INFO, s) ? s : 'otra';
+}
+export const nombreFuente = (f) => FUENTES_INFO[claveFuente(f)]?.nombre ?? '';
+
+/** Insignia de una fuente: círculo con su letra y su color, con el nombre completo en `title` y `aria-label`; con
+ * `conNombre`, chip con la letra y el nombre a la vista. '' si no hay fuente. */
+export function insigniaFuente(f, { conNombre = false } = {}) {
+  const k = claveFuente(f);
+  if (!k) return '';
+  const { nombre, letra, grupo } = FUENTES_INFO[k];
+  if (conNombre) {
+    return html`<span class="fuente con-nombre" data-fuente="${k}" data-grupo="${grupo}" title="Fuente: ${nombre}"><span class="letra" aria-hidden="true">${letra}</span><span class="sr">Fuente: </span>${nombre}</span>`;
+  }
+  return html`<span class="fuente" data-fuente="${k}" data-grupo="${grupo}" role="img" title="Fuente: ${nombre}" aria-label="Fuente: ${nombre}">${letra}</span>`;
+}
+
+/** Las insignias de una lista de fuentes, sin repetidos (`manual` y `panel` dan una sola) y en orden de confianza. */
+export function insigniasFuentes(lista, { conNombre = false } = {}) {
+  const claves = [...new Set((Array.isArray(lista) ? lista : []).map(claveFuente).filter(Boolean))]
+    .sort((a, b) => ORDEN_FUENTES.indexOf(a) - ORDEN_FUENTES.indexOf(b));
+  return claves.length ? html`<span class="fuentes">${claves.map((k) => insigniaFuente(k, { conNombre }))}</span>` : '';
+}
+
+/** Las fuentes que cada rol puede ver: A y K ven «cedulas» tal cual; P la recibe como «otra_base»
+ * (`proyeccion.neutralizar_fuente`), porque esa base trae listas de origen y partido. */
+export const fuentesVisibles = (administra) => ORDEN_FUENTES.filter((k) => (administra ? k !== 'otra_base' : k !== 'cedulas'));
+
+/** Leyenda plegable de los colores, solo con las fuentes de `claves` (las que el rol puede ver: `fuentesVisibles`). */
+export function leyendaFuentes(claves) {
+  const ks = [...new Set((claves || []).map(claveFuente).filter(Boolean))]
+    .sort((a, b) => ORDEN_FUENTES.indexOf(a) - ORDEN_FUENTES.indexOf(b));
+  if (!ks.length) return '';
+  return html`<details class="leyenda-fuentes"><summary>¿Qué significan los colores?</summary>
+    <ul>${ks.map((k) => html`<li data-fuente="${k}">${insigniaFuente(k)}<span><b>${FUENTES_INFO[k].nombre}</b>: ${FUENTES_INFO[k].ayuda}</span></li>`)}</ul>
+    <p class="nota-fuentes">Rellena: la capturó el equipo. Solo con borde: una base importada. Borde punteado: ficha unida u otra fuente. La letra dice siempre cuál es.</p></details>`;
+}
 
 /** Chip de abordaje de una fila o ficha (4.6). */
 export const chipAbordaje = (ab) => {

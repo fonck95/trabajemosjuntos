@@ -4,6 +4,7 @@
 // data/propuesta/ por scripts/build_data.py); lo 3D de cada módulo vive en js/propuesta/modulos/<id>.js.
 import { gsap, reducedMotion, countUp } from '../core.js';
 import { crearEscena } from './escena.js';
+import { montarMando } from './mando.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -292,12 +293,18 @@ function desdeHash() {
   return [ci, Math.min(Math.max(0, (parseInt(n, 10) || 1) - 1), caps[ci].pasos.length - 1)];
 }
 function ir(ci, pi, opts = {}) { cola = cola.then(() => mostrar(ci, pi, opts)).catch((e) => console.error(e)); return cola; }
-function avanzar(d) {
-  let { ci, pi } = estado;
-  if (tlTelon?.isActive()) { tlTelon.progress(1); return; }
+// el paso vecino (d = 1, el siguiente; −1, el anterior): al terminar un capítulo se pasa al primero del siguiente (o al
+// último del anterior) y en el último paso de la presentación (o en el primero) se queda. Solo calcula: lo usan las
+// flechas y el mando del panel (mando.js), que no espera a que termine el telón
+function vecino(ci, pi, d) {
   pi += d;
   if (pi >= caps[ci].pasos.length) { if (ci < caps.length - 1) { ci++; pi = 0; } else pi = caps[ci].pasos.length - 1; }
   if (pi < 0) { if (ci > 0) { ci--; pi = caps[ci].pasos.length - 1; } else pi = 0; }
+  return [ci, pi];
+}
+function avanzar(d) {
+  if (tlTelon?.isActive()) { tlTelon.progress(1); return; }
+  const [ci, pi] = vecino(estado.ci, estado.pi, d);
   ir(ci, pi, { dir: d });
 }
 
@@ -316,6 +323,9 @@ async function mostrar(ci, pi, { dir = 1, primera = false } = {}) {
   $$('i', progreso).forEach((el, i) => el.style.setProperty('--p', i < ci ? 1 : i > ci ? 0 : (pi + 1) / c.pasos.length));
   leyenda.innerHTML = (p.leyenda || []).map((l) => `<span><i class="${l.forma || ''}" style="--c:${l.color || 'var(--mc)'}"></i><em>${esc(l.texto)}</em></span>`).join('');
   leyenda.classList.remove('abierta');
+  // cada cambio de paso se anuncia, venga del teclado, de un clic, de la dirección o del mando del panel: mando.js le avisa
+  // al panel (y acomoda el subtítulo junto a la leyenda nueva) y la hoja de ruta deja de girar al salir de su capítulo
+  dispatchEvent(new CustomEvent('propuesta:paso', { detail: { capitulo: c.id, paso: pi + 1, total: c.pasos.length } }));
   // telón al cambiar de capítulo (no en la primera carga)
   if (cambia && !primera && gsap && !reducedMotion) telonDe(c);
   await pintarPanel(c, p, dir, cambia && !primera);
@@ -535,3 +545,6 @@ addEventListener('hashchange', () => { const [ci, pi] = desdeHash(); ir(ci, pi);
 // arranque: la vista que pide la dirección (o la portada)
 const [ci0, pi0] = desdeHash();
 ir(ci0, pi0, { primera: true });
+// mando a distancia: dentro de la vista Presentación del panel (un iframe), el asistente lleva la presentación por
+// postMessage y muestra su explicación en el subtítulo. Fuera de un iframe no escucha nada
+montarMando({ caps, estado, ir, vecino, abrirIndice, reencuadrar });

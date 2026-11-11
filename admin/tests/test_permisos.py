@@ -95,6 +95,8 @@ NUEVAS = [
     ("GET", "/api/plantillas/planilla.xlsx", {"plantillas"}, "G1"),
     ("GET", "/api/areas", A, "G5"), ("POST", "/api/areas", A, "G5"), ("GET", "/api/areas/{}", A, "G5"),
     ("PATCH", "/api/areas/{}", A, "G5"), ("DELETE", "/api/areas/{}", A, "G5"),
+    # Unificación en bloque: grupos de coincidencias y resolución en lote (como las coincidencias: A y K)
+    ("GET", "/api/coincidencias/grupos", A, "unificacion"), ("POST", "/api/coincidencias/lote", A, "unificacion"),
     # El asistente: conectar y desconectar la cuenta de Mnemo del administrador (ni el coordinador)
     ("POST", "/api/agente/mnemo/conectar", {"agente.conectar"}, "agente"),
     ("POST", "/api/agente/mnemo/volver", {"agente.conectar"}, "agente"),

@@ -1,7 +1,7 @@
 // Modo reunión (7.13): buscar o registrar asistentes en segundos y completar su perfil en el momento con «Completar»
 // (el mismo de Habitantes). La lista de asistentes llega con la proyección de fila del rol.
 import { api, descargar, nuevaClave, puede, sesion } from '../api.js';
-import { $, aviso, avisoError, confirmar, datosForm, debounce, dialogo, fecha, html, icono, montar, num, titulo } from '../ui.js';
+import { $, aviso, avisoError, confirmar, datosForm, debounce, dialogo, fecha, hayEscrito, html, icono, montar, num, titulo } from '../ui.js';
 import { administra, dialogoCompletar, formularioNuevaPersona, textoCedula, textoTelefono } from './comunes.js';
 
 export async function vistaReunion(el, { params, ir }) {
@@ -120,6 +120,7 @@ export async function vistaReunion(el, { params, ir }) {
       cuerpo: html`<label class="campo"><span>Lo que dijo o pidió en la reunión</span><textarea name="nota" maxlength="4000" placeholder="Queda en su historial, ligado a esta reunión"></textarea>
         <small class="nota-sensibles">No anote salud, política, religión ni otros datos sensibles.</small></label>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" data-ok>Guardar</button>`,
+      sucio: hayEscrito,
     });
     const clave = nuevaClave();
     d.querySelector('[data-ok]').addEventListener('click', async (ev) => {
@@ -182,6 +183,7 @@ export async function vistaReunion(el, { params, ir }) {
         ${adm ? html`<label class="casilla ancho"><input type="checkbox" name="abierta_a_equipo" ${r.abierta_a_equipo ? 'checked' : ''}> Permitir que planilleros registren asistentes</label>` : ''}
       </form>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g-ed">Guardar</button>`,
+      sucio: hayEscrito,
     });
     $('#g-ed', d).addEventListener('click', async (ev) => {
       const f = $('#f-ed', d);

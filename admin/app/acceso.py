@@ -59,7 +59,9 @@ ROLES_CAMPO = ("planillero", "consultor")  # con alcance, presupuesto diario y l
 # `agente.usar` (el asistente, docs/agente.md) es necesario pero no basta: el rol también tiene que estar habilitado
 # en Ajustes (`agente.roles`), y planilleros y consultores no lo están por defecto. Así encenderlo para ellos es un
 # ajuste del administrador, sin desplegar, y el asistente nunca les abre nada: sus herramientas piden a la API con su
-# sesión, con estos mismos permisos, su alcance y su presupuesto diario
+# sesión, con estos mismos permisos, su alcance y su presupuesto diario.
+# `presentacion.ver` (la vista /presentacion: la propuesta 2028–2031, pública, dentro del panel, y la herramienta
+# `presentacion` del asistente) es de todos: no muestra nada de la base
 PERMISOS: dict[str, frozenset[str]] = {
     "admin": frozenset({"*"}),
     "coordinador": frozenset({"*"}),  # «*» menos SOLO_ADMIN: lo resta `Quien.puede`
@@ -68,12 +70,13 @@ PERMISOS: dict[str, frozenset[str]] = {
         "personas.crear", "personas.editar", "personas.parecidas", "personas.notas", "personas.ubicar",
         "personas.telefonos", "personas.autorizacion", "personas.duplicado", "personas.situacion",
         "personas.no_disponible", "acercamientos.registrar", "acercamientos.ver", "reuniones.ver", "reuniones.crear",
-        "reuniones.asistentes", "puestos.ver", "plantillas", "solicitudes.crear", "agente.usar",
+        "reuniones.asistentes", "puestos.ver", "plantillas", "solicitudes.crear", "agente.usar", "presentacion.ver",
     }),
     "consultor": frozenset({
         "cuenta", "catalogos.ver", "insignias", "trabajo.ver", "trabajo.cola", "personas.buscar", "personas.ver",
         "personas.telefonos", "personas.autorizacion", "personas.situacion", "personas.no_disponible",
         "acercamientos.registrar", "acercamientos.ver", "puestos.ver", "solicitudes.crear", "agente.usar",
+        "presentacion.ver",
     }),
 }
 

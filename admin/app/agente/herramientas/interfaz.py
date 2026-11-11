@@ -1,4 +1,5 @@
-"""Herramientas de interfaz del asistente: mover el Mapa 3D (`mapa`) y abrir una vista del panel (`abrir_vista`).
+"""Herramientas de interfaz del asistente: mover el Mapa 3D (`mapa`), abrir una vista del panel (`abrir_vista`) y
+presentar la propuesta 2028–2031 (`presentacion`: la presentación pública web/propuesta.html dentro del panel).
 
 No escriben en la base: devuelven acciones para el navegador (`Resultado.acciones`, con la forma del §6 de
 docs/agente.md) que el widget aplica con `accionesMapa` o con `ir`. Por qué está hecho así:
@@ -14,19 +15,27 @@ docs/agente.md) que el widget aplica con `accionesMapa` o con `ir`. Por qué est
   el tratamiento de sus datos (`tratables`): cuántas de un lugar o de un filtro tienen ubicación diría algo de ellas.
   Con `consentimiento: no` el mapa se mueve igual, pero al modelo no le llegan cifras. El navegador recibe los filtros
   tal cual: la persona del equipo ve en el mapa a todos los que su rol ve.
-* Los permisos son los del panel: `mapa.ver` para el mapa, `zonas.gestionar` para abrir zonas y el de cada vista (la
-  tabla `RUTAS` de `web/js/app.js`) para navegar. Como varias acciones no consultan la API, se comprueban aquí con la
-  misma tabla (`acceso.PERMISOS`).
+* Los permisos son los del panel: `mapa.ver` para el mapa, `zonas.gestionar` para abrir zonas, `presentacion.ver` para
+  la presentación y el de cada vista (la tabla `RUTAS` de `web/js/app.js`) para navegar. Como varias acciones no
+  consultan la API, se comprueban aquí con la misma tabla (`acceso.PERMISOS`).
+* La presentación es pública y no toca la base: el modelo recibe el guion del paso al que la lleva (`guion.py`, lo mismo
+  que se ve en pantalla) para explicarlo con datos reales, y el navegador, el capítulo y el paso exactos. Lo que el
+  modelo escribe para la pantalla (`explicacion`) se proyecta ante otras personas: se rechaza con caracteres que no se
+  ven o que cambian cómo se ve el resto, con números largos o con «@» (una cédula, un teléfono o un correo no llegan
+  ahí ni por descuido).
 """
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from typing import Annotated, Any, Literal, Union
 from urllib.parse import urlencode
 
-from pydantic import BeforeValidator, Field, field_validator, model_validator
+from pydantic import AfterValidator, BeforeValidator, Field, field_validator, model_validator
+from starlette.concurrency import run_in_threadpool
 
+from .. import guion as guion_presentacion
 from .base import Contexto, ErrorHerramienta, Herramienta, Resultado
 from .gestion import (FiltrosBase, Id, IdOCero, Lugar, Nomenclatura, Perezosa, TipoLugar, _Entrada, error_de_busqueda,
                       esquema, exigir_permiso, miles, orden_lugar, pedir, preparar_filtros)
@@ -532,11 +541,12 @@ VISTAS = {
     "ajustes": Vista("/ajustes", "ajustes.gestionar", "Ajustes"),
     "importar": Vista("/importar", "importar", "Importar y exportar"),
     "cuenta": Vista("/cuenta", "cuenta", "Mi cuenta"),
+    "presentacion": Vista("/presentacion", "presentacion.ver", "la presentación de la propuesta"),
 }
 # Copia de las rutas de la tabla `RUTAS` de web/js/app.js (una prueba las compara): el widget solo navega a estas
 RUTAS_PANEL = (r"^/$", r"^/mapa$", r"^/personas$", r"^/personas/(\d+)$", r"^/reuniones$", r"^/reuniones/(\d+)$",
                r"^/calidad$", r"^/importar$", r"^/ajustes$", r"^/trabajo$", r"^/usuarios$", r"^/usuarios/(\d+)$",
-               r"^/cuenta$")
+               r"^/cuenta$", r"^/presentacion$")
 ORDENES = ("nombre", "completitud", "-completitud", "reciente", "contacto", "por_llamar", "abordaje_reciente", "lugar")
 PESTANAS = ("coincidencias", "conflictos", "solicitudes", "situaciones", "lugares", "sin")
 # Los filtros que Habitantes lee de la URL (`FILTROS` de web/js/vistas/personas.js): los demás los ignoraría
@@ -650,6 +660,175 @@ async def _abrir_vista(ctx: Contexto, a: AbrirVistaEntrada) -> Resultado:
     return Resultado(contenido, f"Abrí {v.nombre}", acciones=[{"tipo": "navegar", "ruta": completa}])
 
 
+# ───────────────────────────── presentacion ─────────────────────────────
+
+OPS_PRESENTACION = ("indice", "ir", "siguiente", "anterior", "explicar", "quitar_explicacion")
+MAX_EXPLICACION = 400  # `MAX_EXPLICACION` de agente-presentacion.js y de mando.js: una prueba los compara
+MAX_PASO = guion_presentacion.MAX_PASOS
+# Lo que la explicación no puede traer: la ve una sala entera en un proyector. Caracteres que no se ven o que cambian
+# cómo se ve el resto (de control, de formato como las marcas de dirección o el espacio de ancho cero, separadores de
+# línea, sustitutos sueltos, de uso privado, sin asignar, los rellenos que se ven como nada y los selectores de
+# variante), más de dos acentos apilados, una tirada de 7 o más dígitos (aunque vaya con espacios, puntos o guiones: una
+# cédula, un teléfono) o una «@» (un correo, un usuario)
+_NO_SE_VEN = frozenset({"Cc", "Cf", "Cs", "Co", "Cn", "Zl", "Zp"})
+_RELLENOS = frozenset("\U0000034f\U0000115f\U00001160\U000017b4\U000017b5\U00002800\U00003164\U0000ffa0")
+_SELECTORES = re.compile("[\U0000180b-\U0000180f\U0000fe00-\U0000fe0f\U000e0000-\U000e0fff]")
+_DIGITOS = re.compile(r"\d(?:[ .\-]?\d){6,}")
+
+
+def _explicacion_visible(v: str) -> str:
+    """La explicación para la pantalla: un solo renglón que se ve tal cual es (los espacios seguidos quedan en uno, como
+    los pinta el navegador), sin datos que identifiquen a nadie."""
+    marcas = 0
+    for c in v:
+        cat = unicodedata.category(c)
+        if (cat in _NO_SE_VEN and c not in "\t\n\r") or c in _RELLENOS or _SELECTORES.match(c):
+            raise ValueError("La explicación trae caracteres invisibles o de control: escríbala sin ellos")
+        marcas = marcas + 1 if cat in ("Mn", "Me") else 0
+        if marcas > 2:
+            raise ValueError("La explicación trae demasiados acentos seguidos sobre una letra")
+    v = " ".join(v.split())
+    if not v:
+        raise ValueError("La explicación está vacía")
+    if _DIGITOS.search(v) or "@" in v:
+        raise ValueError("La explicación se proyecta: no lleve números de 7 o más dígitos ni «@» (cédulas, teléfonos o "
+                         "correos). Escriba las cifras grandes en palabras («1,5 millones»)")
+    return v
+
+
+def _paso_id(v: str) -> str:
+    if not guion_presentacion.ID_PASO.fullmatch(v):
+        raise ValueError("El id del paso va en minúsculas, con números o «_» (el del índice)")
+    return v
+
+
+def _paso_no_booleano(v: Any) -> Any:
+    """`True` es un `int` en Python: pydantic lo tomaría por el paso 1."""
+    if isinstance(v, bool):
+        raise ValueError("El paso es un número entero desde 1 (o el id del paso), no verdadero o falso")
+    return v
+
+
+# Los topes van antes del validador: así el esquema dice «minimum/maximum»
+PasoNumero = Annotated[int, Field(ge=1, le=MAX_PASO), BeforeValidator(_paso_no_booleano)]
+PasoId = Annotated[str, Field(min_length=1, max_length=40), AfterValidator(_paso_id)]
+Explicacion = Annotated[str, Field(min_length=1, max_length=MAX_EXPLICACION), AfterValidator(_explicacion_visible)]
+
+
+class PresentacionEntrada(_Entrada):
+    op: Literal[OPS_PRESENTACION] = Field(..., description=(
+        "indice: los capítulos y los títulos de sus pasos; ir: a un capítulo y paso (devuelve lo que muestra ese paso); "
+        "siguiente o anterior: un paso (con capitulo y paso de partida, los del contexto del panel, devuelve el paso "
+        "de destino); explicar: muestra una frase en pantalla; quitar_explicacion: la quita"))
+    capitulo: str | None = Field(None, min_length=2, max_length=60, description=(
+        "Id o nombre del capítulo (del índice o del contexto del panel)"))
+    paso: PasoNumero | PasoId | None = Field(None, description="Número del paso desde 1, o su id (del índice)")
+    explicacion: Explicacion | None = Field(None, description=(
+        "Una frase corta para la pantalla (se proyecta): sin datos de habitantes ni números de 7 o más dígitos"))
+
+    @model_validator(mode="after")
+    def _segun_op(self):
+        sobran = {"indice": ("capitulo", "paso", "explicacion"), "quitar_explicacion": ("capitulo", "paso", "explicacion"),
+                  "explicar": ("capitulo", "paso")}.get(self.op, ())
+        malos = [k for k in sobran if getattr(self, k) is not None]
+        if malos:
+            raise ValueError(f"La operación {self.op} no usa: {', '.join(malos)}")
+        if self.op == "ir" and self.capitulo is None:
+            raise ValueError("Para ir, indique el capítulo (id o nombre, del índice)")
+        if self.op in ("siguiente", "anterior") and (self.capitulo is None) != (self.paso is None):
+            raise ValueError("Para avanzar desde un paso, indique capitulo y paso de partida (los del contexto del "
+                             "panel), o ninguno de los dos")
+        if self.op == "explicar" and self.explicacion is None:
+            raise ValueError("Para explicar, escriba la explicacion")
+        return self
+
+
+def _esquema_presentacion() -> dict:
+    """El esquema de la entrada sin la rama «null» del paso (número o id): el modelo simplemente omite la clave."""
+    s = esquema(PresentacionEntrada)
+    paso = s["properties"]["paso"]
+    if "anyOf" in paso:
+        paso["anyOf"] = [r for r in paso["anyOf"] if r != {"type": "null"}]
+        paso.pop("default", None)
+    return s
+
+
+def _cap_para_modelo(c: dict) -> dict:
+    return {"id": c["id"], "nombre": c["nombre"]}
+
+
+def _resolver_capitulo(g: guion_presentacion.Guion, texto: str) -> int:
+    r = g.buscar(texto)
+    if r.indice is not None:
+        return r.indice
+    if r.candidatos:
+        raise ErrorHerramienta(f"«{texto}» puede ser más de un capítulo: elija uno por su id.", "ambiguo", estado=422,
+                               detalle={"candidatos": [_cap_para_modelo(g.capitulos[i]) for i in r.candidatos]})
+    raise ErrorHerramienta(f"La presentación no tiene un capítulo «{texto}».", "no_existe", estado=404,
+                           detalle={"capitulos": [_cap_para_modelo(c) for c in g.capitulos]})
+
+
+def _resolver_paso(g: guion_presentacion.Guion, ci: int, paso: int | str | None) -> int:
+    pi = g.paso(ci, paso)
+    if pi is not None:
+        return pi
+    c = g.capitulos[ci]
+    raise ErrorHerramienta(f"El capítulo {c['nombre']} no tiene el paso {paso}: tiene {len(c['pasos'])}.", "invalido",
+                           estado=422, detalle={"capitulo": c["id"], "pasos": len(c["pasos"]),
+                                                "ids": [p["id"] for p in c["pasos"]]})
+
+
+async def _presentacion(ctx: Contexto, a: PresentacionEntrada) -> Resultado:
+    exigir_permiso(ctx, "presentacion.ver", "Su rol no abre la presentación en el panel.")
+    try:
+        g = await run_in_threadpool(guion_presentacion.cargar)
+    except ValueError:
+        g = None
+    if g is None:
+        raise ErrorHerramienta("La presentación de la propuesta no está disponible en este servidor.", "no_existe",
+                               estado=404)
+    if a.op == "indice":
+        return Resultado({**g.indice(), "nota": (
+            "Para mostrar un paso, op ir con su capitulo (id) y paso (número desde 1). Lo que se ve en cada paso le "
+            "llega al ir.")}, f"Índice de la presentación ({len(g)} capítulos)")
+    extra = {"explicacion": a.explicacion} if a.explicacion else {}
+    if a.op == "explicar":
+        return Resultado({"en_pantalla": a.explicacion, "nota": (
+            "Se muestra sobre la presentación, en el paso que esté abierto. Explique en el chat con más detalle.")},
+            "Mostré una explicación en la presentación",
+            acciones=[{"tipo": "presentacion", "op": "explicar", **extra}])
+    if a.op == "quitar_explicacion":
+        return Resultado({"nota": "Se quitó la explicación de la pantalla."}, "Quité la explicación de la presentación",
+                         acciones=[{"tipo": "presentacion", "op": "quitar_explicacion"}])
+    if a.op in ("siguiente", "anterior") and a.capitulo is None:
+        # Sin el punto de partida la presentación calcula el paso; el modelo lo ve en el contexto del próximo mensaje
+        return Resultado({"nota": (
+            f"La presentación pasa al paso {'siguiente' if a.op == 'siguiente' else 'anterior'} desde donde esté. Para "
+            "saber cuál es (y recibir lo que muestra), use ir o indique capitulo y paso de partida.")},
+            f"Pasé al paso {'siguiente' if a.op == 'siguiente' else 'anterior'} de la presentación",
+            acciones=[{"tipo": "presentacion", "op": a.op, **extra}])
+    ci = _resolver_capitulo(g, a.capitulo or "")
+    pi = _resolver_paso(g, ci, a.paso)   # sin paso, `ir` va al primero (siguiente y anterior lo traen siempre)
+    aviso = None
+    if a.op in ("siguiente", "anterior"):
+        destino = g.vecino(ci, pi, 1 if a.op == "siguiente" else -1)
+        if destino == (ci, pi):
+            aviso = ("Ya era el último paso de la presentación: queda en él." if a.op == "siguiente"
+                     else "Ya era el primer paso de la presentación: queda en él.")
+        ci, pi = destino
+    c = g.capitulos[ci]
+    n = len(c["pasos"])
+    contenido: dict[str, Any] = {
+        "capitulo": _cap_para_modelo(c), "paso": pi + 1, "de": n,
+        "posicion": f"Paso {pi + 1} de {n} del capítulo {c['nombre']}", "guion": c["pasos"][pi],
+        "nota": ("Es lo que muestra la presentación en ese paso: explíquelo en el chat con esos datos (no invente "
+                 "otros). En pantalla, si hace falta, solo una frase corta (explicar).")}
+    if aviso:
+        contenido["aviso"] = aviso
+    return Resultado(contenido, f"Mostré {c['nombre']} · paso {pi + 1} de {n}",
+                     acciones=[{"tipo": "presentacion", "op": "ir", "capitulo": c["id"], "paso": pi + 1, **extra}])
+
+
 # ───────────────────────────── Catálogo de herramientas ─────────────────────────────
 
 D_MAPA = (
@@ -667,12 +846,27 @@ D_ABRIR_VISTA = (
     "Abre una vista del panel en el navegador de la persona: panel (indicadores), mapa (con filtros o un área), "
     "habitantes (con filtros, búsqueda `q`, orden, un área o ids de personas), ficha (id de la persona), reuniones, "
     "reunion (id), calidad (con su pestaña), trabajo (o el de otro usuario con uid, solo administrador y "
-    "coordinador), usuarios (o uno con su id), ajustes, importar o cuenta. Solo abre lo que su rol puede ver. No "
-    "devuelve datos: después diga en una frase qué quedó en pantalla.")
+    "coordinador), usuarios (o uno con su id), ajustes, importar, cuenta o presentacion (la propuesta 2028–2031; "
+    "para manejarla, la herramienta presentacion). Solo abre lo que su rol puede ver. No devuelve datos: después diga "
+    "en una frase qué quedó en pantalla.")
+D_PRESENTACION = (
+    "Presenta la propuesta de inversión Yondó 2028–2031 (la presentación pública: portada, siete módulos, "
+    "financiación, hoja de ruta y pedidos) en el panel de la persona o en su proyector, y la explica paso a paso. "
+    "indice devuelve los capítulos (id y nombre) y los títulos de sus pasos; ir lleva a un capítulo y paso y devuelve "
+    "lo que ese paso muestra (textos, cifras, costos, plazos y lo que se ve en la maqueta 3D) para que lo explique con "
+    "esos datos; siguiente y anterior avanzan un paso (con capitulo y paso de partida, los del contexto del panel, "
+    "también devuelven el destino); explicar muestra en pantalla una frase corta y quitar_explicacion la quita. Si el "
+    "capítulo no existe o es ambiguo, o el paso no está, no mueve nada y devuelve los candidatos. La explicación se "
+    "proyecta ante otras personas: nunca datos de habitantes ni números de 7 o más dígitos. No toca la base de datos.")
 
 HERRAMIENTAS: list[Herramienta] = [
     Herramienta("mapa", D_MAPA, MapaEntrada, "interfaz", ("mapa.ver",), "Moviendo el mapa", _mapa,
                 esquema=esquema(MapaEntrada)),
     Herramienta("abrir_vista", D_ABRIR_VISTA, AbrirVistaEntrada, "interfaz", ("cuenta",), "Abriendo la vista",
                 _abrir_vista, esquema=esquema(AbrirVistaEntrada)),
+    # Sin el guion (un despliegue que no lo trae) no se ofrece: no habría qué explicar
+    Herramienta("presentacion", D_PRESENTACION, PresentacionEntrada, "interfaz", ("presentacion.ver",),
+                "Presentando la propuesta", _presentacion,
+                disponible=lambda quien, ajustes, cfg: guion_presentacion.hay_guion(),
+                esquema=_esquema_presentacion()),
 ]

@@ -210,6 +210,8 @@ export async function dialogoCompletar(p, cat, { siguiente = false } = {}) {
       </details>
     </form>`,
     pie: html`<button class="btn" data-cerrar>Cancelar</button>${siguiente ? html`<button class="btn oscuro" data-guardar="siguiente">Guardar y siguiente</button>` : ''}<button class="btn primario" data-guardar="uno">Guardar</button>`,
+    // Tocar el fondo o Escape con algo escrito pregunta antes de perderlo (los chips de «Más datos» también cuentan)
+    sucio: () => tocado,
   });
   const form = $('#f-completar', el);
   enlazarVotacion(form, cat);
@@ -326,6 +328,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
       <div class="ancho" id="conflicto" aria-live="polite"></div>
     </form>`,
     pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="guardar">Guardar</button>`,
+    sucio: () => tocado,
   });
   const form = $('#f-nueva', el);
   enlazarVotacion(form, cat);

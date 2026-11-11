@@ -13,7 +13,7 @@
 // recargar la página.
 import { api, puede } from '../api.js';
 import { url } from '../base.js';
-import { $, aviso, avisoError, confirmar, datosForm, dialogo, fecha, html, montar, num } from '../ui.js';
+import { $, aviso, avisoError, confirmar, datosForm, dialogo, fecha, hayEscrito, html, montar, num } from '../ui.js';
 
 const TIPOS = { texto: 'Texto', numero: 'Número', si_no: 'Sí / No', opcion: 'Lista de opciones', fecha: 'Fecha' };
 const GRUPOS = { necesidad: 'Necesidades', interes: 'Grupos e intereses', rol: 'Roles' };
@@ -440,7 +440,7 @@ export async function vistaAjustes(el, { q } = {}) {
         <label class="campo ancho"><span>Otros nombres (uno por línea)</span><textarea name="alias">${(p.alias || []).join('\n')}</textarea></label>
         <label class="campo ancho"><span>Nombres ambiguos (no se reconocen solos)</span><textarea name="alias_ambiguos">${(p.alias_ambiguos || []).join('\n')}</textarea></label>
         ${casilla('activo', p.activo !== false, 'Activo')}</form>`,
-      pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Guardar</button>` });
+      pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Guardar</button>`, sucio: hayEscrito });
     $('#g', d).onclick = async () => {
       const f = $('#f-puesto', d);
       if (!f.reportValidity()) return;

@@ -1,4 +1,5 @@
-"""Genera web/data/propuesta.json para la presentación de la propuesta integral 2028–2031 (web/propuesta.html).
+"""Genera web/data/propuesta.json para la presentación de la propuesta integral 2028–2031 (web/propuesta.html) y el
+guion que usa el asistente del panel para presentarla (admin/app/agente/propuesta_guion.json).
 
 Entradas (data/propuesta/):
   general.json        portada, catálogo de fuentes de financiación, hoja de ruta, pedidos y el orden de los módulos
@@ -11,6 +12,7 @@ enlace y su imagen; avisa lo que no cuadra sin detener la construcción.
 Uso: python3 scripts/build_propuesta.py   (también lo llama scripts/build_data.py)
      python3 scripts/build_propuesta.py --estricto   (la CI: termina con error si hay avisos)
 """
+import importlib.util
 import json
 import re
 import sys
@@ -151,6 +153,22 @@ dest.parent.mkdir(parents=True, exist_ok=True)
 dest.write_text(json.dumps(out, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
 total = sum((m.get('inversion') or {}).get('central') or 0 for m in modulos)
 print(f'propuesta.json {dest.stat().st_size / 1024:.0f} KB: {len(modulos)} módulos, inversión central {total:,.0f} M'.replace(',', '.'))
+
+# El guion para el asistente del panel (la herramienta `presentacion`): lo que muestra cada paso, en texto plano. Va
+# versionado dentro de admin/ (así lo tiene también el panel desplegado aparte, que no trae web/) y lo arma
+# admin/app/agente/guion.py con lo mismo que lee la presentación; una prueba del panel los compara. guion.py solo usa la
+# biblioteca estándar: se carga por su ruta, sin las dependencias del panel.
+spec = importlib.util.spec_from_file_location('guion_propuesta', R / 'admin/app/agente/guion.py')
+guion_py = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = guion_py  # dataclasses lo busca ahí
+spec.loader.exec_module(guion_py)
+guion = guion_py.derivar(json.loads(dest.read_text(encoding='utf-8')))
+for p in guion_py.problemas(guion):
+    aviso(f'guion del asistente: {p} (data/propuesta/)')
+destino_guion = R / 'admin/app/agente/propuesta_guion.json'
+destino_guion.write_text(json.dumps(guion, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+print(f'propuesta_guion.json {destino_guion.stat().st_size / 1024:.0f} KB: {len(guion["capitulos"])} capítulos, '
+      f'{sum(len(c["pasos"]) for c in guion["capitulos"])} pasos')
 print(f'Textos con cifras unidas a su unidad: {cambios}')
 print(f'Avisos de la propuesta: {len(avisos)}')
 for a in avisos:

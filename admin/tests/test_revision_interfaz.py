@@ -6,8 +6,8 @@ POST /api/agente/confirmaciones en el caso 37, que va al servidor de verdad (su 
 Ajustes, el mapa) es el panel real; los mapas base se contestan con un estilo y teselas falsas (aquí no hay internet).
 El guion corre una vez por módulo (cada caso en su propio contexto del navegador) y cada prueba revisa el suyo.
 
-* 36: con la ficha editada sin guardar, `navegar` y `mapa` no cambian de vista (`recargar` ya no lo hacía): queda
-  una nota con «Abrir de todos modos», que sí la abre.
+* 36: con la ficha editada sin guardar, `navegar`, `mapa` y `presentacion` no cambian de vista (`recargar` ya no lo
+  hacía): queda una nota con «Abrir de todos modos», que sí la abre.
 * 37: el bucle no deja más escrituras pendientes de las que POST /confirmaciones acepta decidir juntas, y un 422 de
   /confirmaciones no se explica como un problema del texto del mensaje.
 * 38: lo escrito mientras se trae una conversación del historial no se borra ni se pierde: se envía después.
@@ -292,7 +292,8 @@ const foco = (page) => page.evaluate(() => {
 async function c36(nav, caso) {
   const { ctx, page, v, d } = await abrir(nav, caso);
   const pedidas = [{ tipo: 'recargar' }, { tipo: 'navegar', ruta: '/reuniones' },
-    { tipo: 'mapa', acciones: [{ tipo: 'volar', lat: D.casco[1], lon: D.casco[0], zoom: 15 }] }];
+    { tipo: 'mapa', acciones: [{ tipo: 'volar', lat: D.casco[1], lon: D.casco[0], zoom: 15 }] },
+    { tipo: 'presentacion', op: 'ir', capitulo: 'vivienda', paso: 2 }];
   await servirAgente(ctx, (ruta, metodo, route, reg) => {
     if (metodo !== 'POST' || ruta !== '/api/agente/mensajes') return null;
     const n = reg.mensajes.length;

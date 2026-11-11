@@ -1,0 +1,74 @@
+/* Código de color por fuente de los datos (ui.js: FUENTES_INFO, insigniaFuente, insigniasFuentes, leyendaFuentes).
+   Los colores son los tokens de app.css, ya validados en claro y oscuro: aquí no hay ningún color propio. La forma
+   separa los grupos sin depender del color (azul y morado, o los dos verdes, se confunden con daltonismo): rellena lo
+   que capturó el equipo, solo borde las bases importadas y borde punteado la ficha unida u otra fuente. La letra va
+   siempre, con el nombre en title y aria-label.
+   Los selectores llevan [data-fuente] a propósito: las reglas de contexto de app.css sobre `span` (como
+   `.datos div span`, que apaga el color y cambia la letra) no deben pisar la insignia. */
+.fuente[data-fuente] {
+  --fx: var(--muted);
+  /* La letra mezcla el color con la tinta a partes iguales: con el 70 % de color, reunión, planilla, consultor y
+     ficha unida no llegan a 4,5:1 sobre blanco; con el 50 % todas pasan de 5:1 en los dos temas, sobre --surface y
+     --raised (y sobre su propio relleno). El borde lleva un cuarto de tinta para que el contorno se vea (≥ 3:1). */
+  --fx-tinta: color-mix(in srgb, var(--fx) 50%, var(--ink));
+  --fx-borde: color-mix(in srgb, var(--fx) 75%, var(--ink));
+  display: inline-grid; place-items: center; flex: none; box-sizing: border-box; width: 18px; height: 18px; margin: 0;
+  border-radius: 50%; border: 1px solid var(--fx-borde); background: transparent; color: var(--fx-tinta);
+  font: 800 10.5px/1 var(--f-body); letter-spacing: 0; text-transform: none; vertical-align: -3px; white-space: nowrap;
+  cursor: default; user-select: none;
+}
+.fuente[data-grupo="equipo"] { background: color-mix(in srgb, var(--fx) 16%, transparent); }
+.fuente[data-grupo="base"] { border-width: 1.5px; }
+.fuente[data-grupo="otra"] { border-style: dashed; }
+
+.fuente[data-fuente="equipo"] { --fx: var(--s1); }
+.fuente[data-fuente="reunion"] { --fx: var(--s5); }
+.fuente[data-fuente="planilla"] { --fx: var(--s3); }
+.fuente[data-fuente="consultor"] { --fx: var(--s4); }
+.fuente[data-fuente="titular"] { --fx: var(--ok); }
+.fuente[data-fuente="tramites"] { --fx: var(--s7); }
+.fuente[data-fuente="cedulas"] { --fx: var(--s2); }
+.fuente[data-fuente="otra_base"], .fuente[data-fuente="otra"] { --fx: var(--muted); }
+.fuente[data-fuente="fusion"] { --fx: var(--axis); }
+
+/* Con el nombre a la vista (cabecera de la ficha, pestaña Origen, «Otra fuente dice»): chip con la letra en su círculo */
+.fuente.con-nombre[data-fuente] { display: inline-flex; align-items: center; gap: 5px; width: auto; height: 22px; border-radius: 99px;
+  padding: 0 9px 0 2px; font-size: 12.5px; font-weight: 650; vertical-align: middle; color: var(--fx-tinta); }
+.fuente[data-fuente] .letra { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; flex: none;
+  font-size: 10px; font-weight: 800; color: inherit; background: color-mix(in srgb, var(--fx) 24%, transparent); }
+.fuente[data-grupo="base"] .letra, .fuente[data-grupo="otra"] .letra { background: transparent; border: 1px solid var(--fx-borde); }
+.fuente[data-grupo="otra"] .letra { border-style: dashed; }
+
+/* Varias insignias juntas (una fila del directorio, un teléfono, una ficha de la comparación) */
+.fuentes { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 3px; vertical-align: middle; }
+.chips .fuentes { gap: 4px; }
+.chips .fuente.con-nombre { white-space: nowrap; }
+
+/* La etiqueta de un campo de la ficha con la fuente de su dato */
+.campo > span .fuente, details.bloque > summary .fuente { margin-left: 6px; }
+.marca-cruce { margin-left: 5px; font-size: 11px; font-weight: 700; color: var(--muted); border-bottom: 1px dotted var(--muted);
+  cursor: help; }
+.tel-num .fuentes { margin-left: 2px; }
+.alterno .fuente.con-nombre[data-fuente] { height: 20px; font-size: 12px; }
+.sub-origen .fuente { margin-right: 7px; vertical-align: -2px; }
+/* Pestaña Origen, «Procedencia de cada dato»: la fuente y, debajo, cuándo llegó */
+.datos .fecha-fuente { display: block; margin-top: 3px; font-size: 12px; font-weight: 500; color: var(--muted); }
+
+/* Leyenda plegable: qué letra y qué color es cada fuente */
+.leyenda-fuentes { font-size: 13px; color: var(--ink-2); margin: 0 0 12px; }
+.leyenda-fuentes > summary { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; cursor: pointer; font-weight: 650;
+  color: var(--muted); list-style: none; }
+.leyenda-fuentes > summary::-webkit-details-marker { display: none; }
+.leyenda-fuentes > summary::before { content: ""; width: 6px; height: 6px; border: solid currentColor; border-width: 0 2px 2px 0;
+  transform: rotate(-45deg); transition: transform .15s; margin: 0 3px 0 1px; }
+.leyenda-fuentes[open] > summary::before { transform: rotate(45deg); }
+.leyenda-fuentes > summary:hover { color: var(--ink); }
+.leyenda-fuentes ul { list-style: none; margin: 6px 0 0; padding: 12px 14px; display: grid; gap: 8px 18px;
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); background: var(--surface); border: 1px solid var(--line-soft);
+  border-radius: var(--r-s); }
+.leyenda-fuentes li { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
+.leyenda-fuentes li .fuente { margin-top: 1px; }
+.leyenda-fuentes li b { color: var(--ink); font-weight: 650; }
+.leyenda-fuentes .nota-fuentes { margin: 8px 2px 0; font-size: 12.5px; color: var(--muted); }
+@media (pointer: coarse) { .leyenda-fuentes > summary { min-height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .leyenda-fuentes > summary::before { transition: none; } }

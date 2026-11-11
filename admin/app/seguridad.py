@@ -547,11 +547,15 @@ class GuardiaApi:
         await self.app(scope, recibir, send)
 
 
-CSP = "; ".join([
+# `frame-src 'self'`: la vista Presentación muestra la propuesta del sitio público en un iframe (en el servicio único,
+# /propuesta del mismo origen; sin esta directiva regiría `child-src blob:` y el iframe quedaría bloqueado). El panel
+# enmarca, pero nadie lo enmarca a él: `frame-ancestors 'none'` y X-Frame-Options siguen
+_DIRECTIVAS_CSP = [
     "default-src 'self'",
     "script-src 'self'",
     "worker-src 'self' blob:",
     "child-src blob:",
+    "frame-src 'self'",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://tiles.openfreemap.org https://server.arcgisonline.com https://s3.amazonaws.com",
@@ -560,14 +564,24 @@ CSP = "; ".join([
     "base-uri 'none'",
     "form-action 'self'",
     "object-src 'none'",
-])
+]
+CSP = "; ".join(_DIRECTIVAS_CSP)
+
+
+@lru_cache(maxsize=4)
+def politica_panel(origen_sitio: str = "") -> str:
+    """La CSP del panel: `CSP` y, con el panel desplegado aparte y `SITIO_URL` configurada, también el origen del sitio
+    en `frame-src` (de ahí viene la presentación). El origen ya viene validado (`config._url_sitio`)."""
+    if not origen_sitio:
+        return CSP
+    return "; ".join(f"frame-src 'self' {origen_sitio}" if d == "frame-src 'self'" else d for d in _DIRECTIVAS_CSP)
 
 
 class CabecerasSeguras(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         resp = await call_next(request)
         h = resp.headers
-        h["Content-Security-Policy"] = CSP
+        h["Content-Security-Policy"] = politica_panel(getattr(request.app.state.cfg, "origen_sitio", ""))
         h["X-Content-Type-Options"] = "nosniff"
         h["X-Frame-Options"] = "DENY"
         h["Referrer-Policy"] = "no-referrer"

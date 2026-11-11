@@ -5,7 +5,7 @@
 import { api, ErrorApi, nombreRol, puede } from '../api.js';
 import { url } from '../base.js';
 import { CANALES, ETIQUETAS_CAMPOS, RESULTADOS } from '../modelo.js';
-import { $, aviso, avisoError, confirmar, dialogo, fecha, html, montar, num, titulo } from '../ui.js';
+import { $, aviso, avisoError, confirmar, dialogo, fecha, hayEscrito, html, montar, num, titulo } from '../ui.js';
 
 const ROLES = { coordinador: 'Coordinador', planillero: 'Planillero', consultor: 'Consultor' };
 const DE_CAMPO = ['planillero', 'consultor'];
@@ -197,6 +197,7 @@ async function dialogoUsuario(u = null) {
         <div class="error ancho" role="alert"></div>
       </form>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" type="submit" form="f-usuario">${u ? 'Guardar' : 'Crear usuario'}</button>`,
+      sucio: (x) => hayEscrito(x.querySelector('#f-usuario')),
     });
     enlazarFiltroLugares(el);
     listo.then((v) => resolver(!!v));

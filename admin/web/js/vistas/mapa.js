@@ -8,7 +8,7 @@ import { temaOscuro } from '../app.js';
 import { BASES, BBOX_YONDO, CASCO, MAX_IDS, RANGO_YONDO, anilloMayor, baseSegunTema, cajaDe, cargarMapLibre, decorar, dentroDeYondo, dispersar, hexagonos, rampa } from '../mapa3d.js';
 import { apilada, barras, piramide } from '../graficos.js';
 import { ESTADOS_ABORDAJE, ESTADOS_AUTORIZACION, ETIQUETAS_CAMPOS, SEXOS } from '../modelo.js';
-import { $, $$, aviso, avisoError, confirmar, dialogo, html, icono, montar, num, pct, titulo } from '../ui.js';
+import { $, $$, aviso, avisoError, confirmar, dialogo, hayEscrito, html, icono, montar, num, pct, titulo } from '../ui.js';
 import { url } from '../base.js';
 import { registrarMapa } from '../agente-mapa.js';
 import { MAX_VERTICES, PALETA, cargarEstilos, codificar, crearHerramientaZona, decodificar, dentro, formatoArea, formatoLargo, seCruza, simplificar } from '../zona.js';
@@ -935,6 +935,7 @@ export async function vistaMapa(el, { q, ir }) {
         <p class="sec">${formatoArea(i.area)} · ${formatoLargo(i.perimetro)} de perímetro · ${i.n} puntos</p>
       </form>`,
       pie: html`<button class="btn" type="button" data-cerrar>Cancelar</button><button class="btn primario" type="submit" form="f-zona">Guardar</button>`,
+      sucio: hayEscrito,
     });
     const f = $('#f-zona', d);
     f.nombre.focus();

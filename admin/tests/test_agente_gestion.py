@@ -33,8 +33,8 @@ ESCRITURAS = {"crear_reunion", "agregar_asistente"}
 DEL_ROL = {
     "admin": MIAS, "coordinador": MIAS,
     "planillero": {"listar_reuniones", "ver_reunion", "crear_reunion", "agregar_asistente", "pendientes", "mi_trabajo",
-                   "buscar_lugar", "catalogos", "abrir_vista"},
-    "consultor": {"pendientes", "mi_trabajo", "buscar_lugar", "catalogos", "abrir_vista"},
+                   "buscar_lugar", "catalogos", "abrir_vista", "presentacion"},
+    "consultor": {"pendientes", "mi_trabajo", "buscar_lugar", "catalogos", "abrir_vista", "presentacion"},
 }
 
 # Lo que nunca llega al modelo, venga de donde venga
@@ -192,7 +192,7 @@ def _objetos(s):
 
 
 def test_definiciones_son_json_schema_validos_para_la_messages_api():
-    assert len(H) == 12
+    assert len(H) == 13
     for h in hg.HERRAMIENTAS + hi.HERRAMIENTAS:
         d = h.definicion()
         assert set(d) == {"name", "description", "input_schema", "eager_input_streaming"}, h.nombre

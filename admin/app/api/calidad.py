@@ -1,18 +1,19 @@
-"""Calidad de datos: coincidencias por nombre, conflictos de cédula, solicitudes de los titulares, situaciones
-reportadas, confirmación de autorizaciones de planilla y nomenclátor de lugares."""
+"""Calidad de datos: coincidencias por nombre (también agrupadas, para revisarlas y resolverlas en bloque:
+`app/unificacion.py`), conflictos de cédula, solicitudes de los titulares, situaciones reportadas, confirmación de
+autorizaciones de planilla y nomenclátor de lugares."""
 from __future__ import annotations
 
 from collections import Counter
 from datetime import date
-from typing import Literal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field, model_validator
 from pymongo.database import Database
 from pymongo.errors import DuplicateKeyError
 
 from .. import db as bd
-from .. import modelo
+from .. import modelo, unificacion
 from ..acceso import Quien, requiere
 from ..pipeline import texto as tx
 from ..pipeline.importar import aplicar_registro, georreferenciar
@@ -43,10 +44,67 @@ def coincidencias(estado: str = "pendiente", db: Database = Depends(obtener_db),
     personas = {p["_id"]: p for p in db.personas.find({"_id": {"$in": list(ids)}, **bd.ACTIVA},
                                                       {"notas": 0, "origen": 0, "asistencias": 0})}
     lugares = mapa_lugares(db)
-    return [{"id": c["_id"], "puntaje": c["puntaje"], "detalle": c.get("detalle", {}), "estado": c["estado"],
-             "motivo": c.get("motivo"), "persona": _resumen(personas[c["persona_id"]], lugares),
-             "candidato": _resumen(personas[c["candidato_id"]], lugares)}
-            for c in lista if c["persona_id"] in personas and c["candidato_id"] in personas]
+    salida = []
+    for c in lista:
+        if c["persona_id"] not in personas or c["candidato_id"] not in personas:
+            continue
+        # `detalle` siempre como dict y la nota aparte: un reporte sin nota lo guarda en None (y la pestaña se caía)
+        detalle, nota = unificacion.detalle_y_nota(c.get("detalle"))
+        salida.append({"id": c["_id"], "puntaje": c["puntaje"], "detalle": detalle, "nota": nota,
+                       "estado": c["estado"], "motivo": c.get("motivo"),
+                       "persona": _resumen(personas[c["persona_id"]], lugares),
+                       "candidato": _resumen(personas[c["candidato_id"]], lugares)})
+    return salida
+
+
+def _opcion(valor: str | None, validos: tuple[str, ...], nombre: str) -> str | None:
+    """Un filtro de la consulta: vacío es «sin filtro» (la interfaz manda `nivel=`); otro valor desconocido, 422."""
+    if valor is None or not valor.strip():
+        return None
+    if valor.strip() not in validos:
+        raise HTTPException(422, f"{nombre} desconocido: use {', '.join(validos)}")
+    return valor.strip()
+
+
+@r.get("/coincidencias/grupos")
+def grupos_de_coincidencias(nivel: str | None = None, motivo: str | None = None, persona: str | None = None,
+                            pagina: int = Query(1, ge=1, le=100_000),
+                            por_pagina: int = Query(25, ge=1, le=unificacion.TOPE_POR_PAGINA),
+                            db: Database = Depends(obtener_db), _: Admin = Depends(requiere_admin)):
+    """Las coincidencias pendientes agrupadas por persona (componentes conexos), con sus señales, su nivel de
+    confianza y la vista previa de la ficha unida, para revisarlas en bloque (`app/unificacion.py`). Solo A y K: lleva
+    las fuentes reales, las listas y la procedencia de cada campo. `persona=<id>`: solo el grupo que la contiene."""
+    pid = None
+    if persona is not None and persona.strip():
+        if not persona.strip().isdigit():
+            raise HTTPException(422, "persona debe ser el número de una ficha")
+        pid = int(persona.strip())
+    return unificacion.listar_grupos(db, _opcion(nivel, unificacion.NIVELES, "Nivel"),
+                                     _opcion(motivo, unificacion.MOTIVOS, "Motivo"), pid, pagina, por_pagina)
+
+
+Id = Annotated[int, Field(ge=1)]
+
+
+class GrupoLote(BaseModel):
+    pares: list[Id] = Field(..., min_length=1, max_length=unificacion.MAX_PARES_GRUPO)
+    decision: Literal["unir", "separar"]
+    conservar: Id | None = None
+    excluir: list[Id] = Field(default_factory=list, max_length=unificacion.MAX_EXCLUIR)
+
+
+class LoteIn(BaseModel):
+    grupos: list[GrupoLote] = Field(..., min_length=1, max_length=unificacion.MAX_GRUPOS_LOTE)
+
+
+@r.post("/coincidencias/lote")
+def resolver_en_lote(body: LoteIn, db: Database = Depends(obtener_db), adm: Admin = Depends(requiere_admin)):
+    """Resuelve varios grupos de una vez: «unir» (en estrella, en la ficha que se conserva, menos las excluidas, que
+    quedan como distintas) o «separar» (todos sus pares como personas distintas). Cada grupo se valida entero antes
+    de tocarlo y su resultado va aparte: uno que cambió o que no se puede unir no frena a los demás. Con una
+    importación o con otra unión en lote en curso, 409 `importando` sin tocar nada (`unificacion.resolver_lote`).
+    Va antes de `/coincidencias/{cid}`: si no, «lote» se leería como el número de una coincidencia."""
+    return unificacion.resolver_lote(db, [g.model_dump() for g in body.grupos], adm)
 
 
 class Decision(BaseModel):
@@ -77,7 +135,8 @@ def resolver(cid: int, body: Decision, db: Database = Depends(obtener_db), adm: 
         destino, origen = (a, b) if conservar == "persona" else (b, a)
         db.coincidencias.update_one({"_id": cid}, {"$set": {"estado": "aceptada", "conservada": destino["_id"], **marca}})
         try:
-            bd.fusionar(db, destino["_id"], origen["_id"], adm, adm.ip)
+            # Se ubica una sola vez, aquí abajo: `georreferenciar` recorre toda la colección
+            bd.fusionar(db, destino["_id"], origen["_id"], adm, adm.ip, georef=False)
         except bd.FusionImposible:
             db.coincidencias.update_one({"_id": cid}, {"$set": {"estado": "pendiente"}})
             raise

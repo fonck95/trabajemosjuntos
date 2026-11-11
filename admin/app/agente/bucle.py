@@ -114,7 +114,7 @@ REINTENTOS = 2               # repeticiones de una ronda tras fallos pasajeros (
 TURNOS_POR_PROCESO = 4
 # Cómo termina una ronda que se cortó: con `tool_use` no se ejecuta (la entrada puede estar a medias), sin él se avisa
 CORTES = frozenset({"max_tokens", "model_context_window_exceeded", "other"})
-ACCIONES = frozenset({"navegar", "recargar", "insignias", "mapa"})
+ACCIONES = frozenset({"navegar", "recargar", "insignias", "mapa", "presentacion"})
 FLUJO = {"X-Accel-Buffering": "no", "Cache-Control": "no-store"}
 
 RECHAZADA = "La persona rechazó esta acción: no la vuelvas a proponer salvo que lo pida."
@@ -679,7 +679,10 @@ class Turno:
         filtros = contexto.get("filtros") if isinstance(contexto, dict) else None
         etiquetas = (await run_in_threadpool(sistema.etiquetas_del_contexto, self.db)
                      if isinstance(filtros, dict) and filtros.get("etiqueta") else None)
-        contexto_panel = sistema.contexto_del_panel(contexto, _ahora(), etiquetas)
+        # La presentación abierta (capítulo y paso) se dice solo si es del guion: el capítulo, el paso y su título
+        guion = (await run_in_threadpool(sistema.guion_del_contexto)
+                 if isinstance(contexto, dict) and contexto.get("presentacion") else None)
+        contexto_panel = sistema.contexto_del_panel(contexto, _ahora(), etiquetas, guion)
         bloques = conv_db.limpio(bloques + [{"type": "text", "text": contexto_panel}, {"type": "text", "text": texto}])
         await self._guardar("user", bloques, texto=texto, herramientas=ui)
         historial.append({"role": "user", "content": bloques})

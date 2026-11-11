@@ -1,7 +1,7 @@
 // Importación de los Excel (se procesan y se descartan; solo quedan los datos) y exportación de la base única.
 import { api, descargar, puede } from '../api.js';
 import { refrescarInsignias } from '../app.js';
-import { $, aviso, avisoError, dialogo, fecha, html, icono, montar, num } from '../ui.js';
+import { $, aviso, avisoError, dialogo, fecha, hayEscrito, html, icono, montar, num } from '../ui.js';
 
 const MAX_ARCHIVOS = 6; // el servidor procesa como máximo 6 archivos por importación
 const TIPOS = { tramites: 'trámites', cedulas: 'base con cédula', planilla: 'planilla de campo' };
@@ -119,7 +119,7 @@ export async function vistaImportar(el) {
     const { el: d, cerrar } = dialogo({ titulo: 'Confirmar autorizaciones de esta planilla',
       cuerpo: html`<p class="sec" style="margin-top:0">${num(Number(b.dataset.n))} personas declararon en la planilla que autorizan. Al confirmarlas, se podrán contactar por los canales que eligieron. Solo se confirman las que siguen vigentes (no las revocadas después).</p>
         <label class="campo"><span>Evidencia física</span><textarea id="evidencia" maxlength="500" placeholder="Por ejemplo: planillas firmadas archivadas en la sede, carpeta 3"></textarea></label>`,
-      pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Confirmar</button>` });
+      pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g">Confirmar</button>`, sucio: hayEscrito });
     $('#g', d).onclick = async () => {
       const evidencia = $('#evidencia', d).value.trim();
       if (evidencia.length < 5) { aviso('Describa dónde está la evidencia', 'error'); return; }

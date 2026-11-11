@@ -10,14 +10,18 @@ export function crear(esc, datos) {
     esc.st.controls.autoRotate = on; esc.st.controls.autoRotateSpeed = 0.35;
     return on;
   });
-  const parar = () => { girando = false; };
-  addEventListener('hashchange', parar);
+  // el giro dura mientras se está en este capítulo: lo dice el aviso de cada cambio de paso de main.js (`propuesta:paso`).
+  // Antes se apagaba con `hashchange`, pero main.js cambia la dirección con replaceState (que no lo dispara): tras pasar
+  // por aquí con las flechas, el riel o el mando del panel, la cámara seguía girando en los capítulos siguientes
+  // (el módulo se carga en paralelo con el primer paso: si ese aviso ya pasó, la dirección dice dónde se está)
+  let aqui = location.hash.startsWith('#ruta');
+  addEventListener('propuesta:paso', (e) => { aqui = e.detail?.capitulo === 'ruta'; if (!aqui) girando = false; });
   return {
     completo: [],
     pasos: {
       '*': {
         todos: true,
-        vista: () => { esc.encuadrar(pts.length ? pts : [[-600, -400], [700, 800]], { rumbo: 160, elev: 38, margen: 0.9, duracion: 2.4 }); setTimeout(() => { girando = location.hash.startsWith('#ruta'); }, 2600); },
+        vista: () => { esc.encuadrar(pts.length ? pts : [[-600, -400], [700, 800]], { rumbo: 160, elev: 38, margen: 0.9, duracion: 2.4 }); setTimeout(() => { girando = aqui; }, 2600); },
       },
     },
   };

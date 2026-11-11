@@ -813,8 +813,12 @@ def _reapuntar_coincidencias(db: Database, origen: int, destino: int, marca: dic
             db.coincidencias.update_one({"_id": c["_id"]}, cerrar)
 
 
-def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | None = None) -> None:
-    """Pasos 3 a 7 de la unión: se pueden repetir sin daño (la reparación al arrancar los repite)."""
+def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | None = None, georef: bool = True) -> None:
+    """Pasos 3 a 7 de la unión: se pueden repetir sin daño (la reparación al arrancar los repite).
+
+    `georef=False` omite volver a ubicar el destino: `georreferenciar` recorre toda la colección (barrios sin punto y
+    el conteo final), así que quien une muchas fichas seguidas (la resolución en lote) lo llama una sola vez al final
+    con todos los destinos. Lo demás no cambia: la ubicación del destino solo queda sin recalcular hasta esa llamada."""
     origen = o["_id"]
     uid = _uid_de(quien)
     r = db.personas.update_one({"_id": destino, **ACTIVA}, _pipeline_fusion(o, origen, uid))
@@ -839,8 +843,9 @@ def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | No
         if o.get("consentimiento") != "no":  # lo que el modelo vio del origen es ahora de quien no autoriza
             olvidar_en_conversaciones(db, [destino])
     derivar(db, [destino], reconciliar=False)
-    from .pipeline.importar import georreferenciar  # aquí: el pipeline usa este módulo
-    georreferenciar(db, [destino])
+    if georef:
+        from .pipeline.importar import georreferenciar  # aquí: el pipeline usa este módulo
+        georreferenciar(db, [destino])
     cerrar_coincidencias_imposibles(db, [destino])
     db.personas.replace_one({"_id": origen, "fusionada_en": destino},
                             {**persona_vacia(), "_id": origen, "nombre": "FUSIONADA", "fusionada_en": destino,
@@ -848,13 +853,14 @@ def _unir_en(db: Database, destino: int, o: dict, quien: Any, d_antes: dict | No
     db.personas.update_many({"fusionada_en": origen}, {"$set": {"fusionada_en": destino}})
 
 
-def fusionar(db: Database, destino: int, origen: int, quien: Any, ip: str | None = None) -> None:
+def fusionar(db: Database, destino: int, origen: int, quien: Any, ip: str | None = None, georef: bool = True) -> None:
     """Une `origen` en `destino` (2.6): completa vacíos (lo distinto va a `alternos`), junta trámites, teléfonos,
     listas, etiquetas, reuniones, notas y fuentes, reasigna lo ligado y combina la autorización («no» gana).
 
     El origen se marca primero como unido (una sola operación) y queda solo como enlace, sin datos personales. Sin
     transacciones: si se corta a mitad, la reparación al arrancar repite los pasos que faltan. 409 si una de las dos
-    ya no está activa o tienen cédulas distintas: dos cédulas distintas nunca se unen."""
+    ya no está activa o tienen cédulas distintas: dos cédulas distintas nunca se unen. Con `georef=False` el destino
+    no se vuelve a ubicar (ver `_unir_en`): quien llama debe hacer después `georreferenciar` con los destinos."""
     if destino == origen:
         return
     reconciliar_consentimiento(db, [destino, origen])
@@ -876,7 +882,7 @@ def fusionar(db: Database, destino: int, origen: int, quien: Any, ip: str | None
             raise FusionImposible("Las dos fichas tienen cédulas distintas: son personas diferentes")
         raise FusionImposible("La ficha ya se unió o se suprimió")
     try:
-        _unir_en(db, destino, o, quien, d)
+        _unir_en(db, destino, o, quien, d, georef=georef)
     except FusionImposible:
         # El destino dejó de estar activo entre la lectura y la escritura: el origen vuelve a quedar como estaba
         db.personas.update_one({"_id": origen, "fusionada_en": destino},

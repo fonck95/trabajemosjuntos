@@ -3,13 +3,15 @@
 * El `system` se arma una vez, al crear la conversación, y se guarda con ella: no lleva fecha ni nada que cambie,
   porque la caché del proveedor y el razonamiento conservado exigen que el prefijo de la conversación sea idéntico en
   cada petición. Depende de quién conversa (nombre y rol) y de las herramientas que se le ofrecieron.
-* Lo variable (fecha y hora de Colombia, la vista abierta, la ficha o reunión abierta, los filtros y el encuadre del
-  mapa) va al comienzo de cada mensaje de la persona, entre `<contexto_del_panel>`. Es una pista que manda el
-  navegador: se limpia y se acota aquí y las herramientas vuelven a leer todo con los permisos de la persona. Como
-  sale del panel, va lo mínimo aunque el navegador mande más: la ruta sin la consulta ni el fragmento y solo si es
-  una del panel (`RUTAS_PANEL`), la vista solo con un nombre del menú (`VISTAS_MENU`), solo los filtros que el
-  asistente también puede usar (`CLAVES_FILTRO`; la etiqueta, si existe y no es sensible), la búsqueda sin números ni
-  correos y el centro del mapa solo de lejos y redondeado.
+* Lo variable (fecha y hora de Colombia, la vista abierta, la ficha o reunión abierta, los filtros, el encuadre del
+  mapa y el paso de la presentación abierta) va al comienzo de cada mensaje de la persona, entre
+  `<contexto_del_panel>`. Es una pista que manda el navegador: se limpia y se acota aquí y las herramientas vuelven a
+  leer todo con los permisos de la persona. Como sale del panel, va lo mínimo aunque el navegador mande más: la ruta
+  sin la consulta ni el fragmento y solo si es una del panel (`RUTAS_PANEL`), la vista solo con un nombre del menú
+  (`VISTAS_MENU`), solo los filtros que el asistente también puede usar (`CLAVES_FILTRO`; la etiqueta, si existe y no
+  es sensible), la búsqueda sin números ni correos, el centro del mapa solo de lejos y redondeado y, de la
+  presentación, un capítulo y un paso que existan en el guion (`guion.py`), con el nombre y el título que dice el
+  guion y no el navegador.
 """
 from __future__ import annotations
 
@@ -19,6 +21,7 @@ from datetime import datetime
 from typing import Any, Container, Iterable
 
 from .. import modelo
+from . import guion as guion_presentacion
 from . import minimizar
 from .herramientas.interfaz import RUTAS_PANEL
 
@@ -62,7 +65,7 @@ FILTROS_MAX, FILTRO_MAX, Q_MAX = 30, 200, 120
 # La vista abierta: la entrada marcada del menú (las claves `nav` de la tabla de rutas de web/js/app.js), y la ruta,
 # sin la consulta ni el fragmento (lo que la consulta trae va, si va, en `filtros`) y solo si es una de las del panel
 VISTAS_MENU = frozenset({"panel", "mapa", "personas", "trabajo", "reuniones", "calidad", "importar", "usuarios",
-                         "ajustes", "cuenta"})
+                         "ajustes", "cuenta", "presentacion"})
 _RUTAS = tuple(re.compile(p) for p in RUTAS_PANEL)
 RUTA_MAX = 40
 # El buscador de Habitantes acepta nombre, cédula, teléfono, dirección o ficha: con números o un correo, lo escrito ahí
@@ -108,6 +111,12 @@ def texto(quien: Any, herramientas: Iterable[Any], instrucciones_mnemo: str | No
     if vistas:
         frase = "; ".join(vistas)
         lineas.append(f"- {frase[0].upper()}{frase[1:]}. Luego di en una frase qué quedó en pantalla.")
+    if "presentacion" in nombres:
+        lineas.append(
+            "- Para mostrar y explicar la propuesta Yondó 2028–2031 (la presentación pública del proyecto) usa "
+            "`presentacion`: `indice` si no conoces los capítulos y luego `ir` al capítulo y paso. Explica en el chat "
+            "con detalle y solo con los datos que te devuelve; en pantalla (`explicacion`), una frase corta. Esa frase "
+            "se proyecta ante otras personas: nunca lleva datos de habitantes ni de la base.")
     lineas.append("- Enlaza a las personas y reuniones que nombres: [Nombre](/personas/123), [Reunión](/reuniones/45). "
                   "Solo rutas internas del panel.")
     if any(h.tipo == "escritura" for h in hs):
@@ -226,10 +235,38 @@ def _ruta(v: Any) -> str:
     return ruta if len(ruta) <= RUTA_MAX and any(r.fullmatch(ruta) for r in _RUTAS) else ""
 
 
-def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int] | None = None) -> str:
+def guion_del_contexto() -> Any:
+    """El guion de la presentación para validar su capítulo y su paso en el contexto (lectura de disco con caché:
+    correr con `run_in_threadpool`), o None si no está o no se puede leer (entonces esa línea no va)."""
+    try:
+        return guion_presentacion.cargar()
+    except ValueError:
+        return None
+
+
+def _presentacion(p: Any, guion: Any) -> str:
+    """«Vivienda (vivienda), paso 3 de 6: <título>» si `p` ({capitulo, paso}) es un capítulo y un paso del guion; si no,
+    nada. El nombre y el título salen del guion: del navegador solo se acepta un id y un número."""
+    if not isinstance(p, dict) or guion is None:
+        return ""
+    cid, paso = p.get("capitulo"), p.get("paso")
+    if not isinstance(cid, str) or not guion_presentacion.ID.fullmatch(cid):
+        return ""
+    if isinstance(paso, bool) or not isinstance(paso, int):
+        return ""
+    ci = guion.por_id(cid)
+    if ci is None or not 1 <= paso <= len(guion.capitulos[ci]["pasos"]):
+        return ""
+    c = guion.capitulos[ci]
+    titulo = _limpio(c["pasos"][paso - 1].get("titulo"), 160)
+    return f"{_limpio(c['nombre'], 80)} ({cid}), paso {paso} de {len(c['pasos'])}" + (f": {titulo}" if titulo else "")
+
+
+def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int] | None = None,
+                       guion: Any = None) -> str:
     """El bloque de texto con el contexto del panel para el comienzo del mensaje de la persona. `etiquetas`: las que
     pueden ir en el filtro de etiqueta (`etiquetas_del_contexto`); sin ellas, ese filtro no va (ante la duda, no se
-    manda)."""
+    manda). `guion`: el de la presentación (`guion_del_contexto`); sin él, la presentación abierta no va."""
     c = contexto if isinstance(contexto, dict) else {}
     lineas = [f"Fecha y hora en Colombia: {_fecha(ahora)}"]
     ruta = _ruta(c.get("ruta"))
@@ -247,4 +284,7 @@ def contexto_del_panel(contexto: Any, ahora: datetime, etiquetas: Container[int]
     mapa = _mapa(c.get("mapa"))
     if mapa:
         lineas.append(f"Mapa: {mapa}")
+    presentacion = _presentacion(c.get("presentacion"), guion)
+    if presentacion:
+        lineas.append(f"Presentación abierta: {presentacion}")
     return "<contexto_del_panel>\n" + "\n".join(lineas) + "\n</contexto_del_panel>"

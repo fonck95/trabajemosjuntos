@@ -12,8 +12,8 @@ import {
   etiquetaResultado, marcable, telefonosUsables,
 } from '../modelo.js';
 import {
-  $, $$, FUENTES, aviso, avisoError, chipAbordaje, chipAutorizacion, chipPrecision, confirmar, dialogo, esMovil, fecha, html,
-  icono, iniciales, montar, num, titulo,
+  $, $$, aviso, avisoError, chipAbordaje, chipAutorizacion, chipPrecision, confirmar, dialogo, esMovil, fecha, fuentesVisibles,
+  hayEscrito, html, icono, iniciales, insigniaFuente, insigniasFuentes, leyendaFuentes, montar, nombreFuente, num, titulo,
 } from '../ui.js';
 import { dialogoAcercamiento, mensajeNoContactable } from './acercamiento.js';
 import {
@@ -39,8 +39,6 @@ const ACCIONES_TEL = [
   ['principal', 'Hacer principal', 'principal'],
   ['retirar', 'Retirar', 'retirar'],
 ];
-
-const fuentesTel = (t) => (t.fuentes || []).map((f) => FUENTES[f] || f).join(', ');
 
 export async function vistaFicha(el, { params, ir }) {
   const id = Number(params[0]);
@@ -106,16 +104,23 @@ export async function vistaFicha(el, { params, ir }) {
   const alternosDe = (k) => {
     const lista = (p.alternos || []).filter((a) => a.campo === k && a.valor != null && String(a.valor) !== String(p[k] ?? '')).slice(-2);
     if (!lista.length || !ed(k)) return '';
-    return html`${lista.map((a) => html`<small class="alterno">Otra fuente dice: <b>${String(a.valor)}</b>${a.fuente ? ` (${FUENTES[a.fuente] || a.fuente})` : ''}
+    return html`${lista.map((a) => html`<small class="alterno">Otra fuente dice: <b>${String(a.valor)}</b>${insigniaFuente(a.fuente, { conNombre: true })}
       <button type="button" class="btn fantasma chico" data-usar-alterno="${k}" data-valor="${String(a.valor)}">Usar este</button></small>`)}`;
   };
-  const entrada = (k, t, { tipo = 'text', min = null, max = null, modo = null, ancho = false, valor = p[k], ayuda = '', largo = null } = {}) => html`<label class="campo${ancho ? ' ancho' : ''}" data-campo="${k}"><span>${t}</span>
+  // La fuente del dato junto a su etiqueta: solo A y K reciben `procedencia`; un campo vacío no lleva insignia
+  const insigniaCampo = (k) => {
+    if (!adm || p[k] == null || p[k] === '') return '';
+    const cruce = k === 'cedula' && p.cedula_origen === 'cruce'
+      ? html`<span class="marca-cruce" title="La cédula llegó por un cruce de nombres con otra base">por cruce</span>` : '';
+    return html`${insigniaFuente(p.procedencia?.[k]?.fuente)}${cruce}`;
+  };
+  const entrada = (k, t, { tipo = 'text', min = null, max = null, modo = null, ancho = false, valor = p[k], ayuda = '', largo = null } = {}) => html`<label class="campo${ancho ? ' ancho' : ''}" data-campo="${k}"><span>${t}${insigniaCampo(k)}</span>
     <input name="${k}" type="${tipo}" value="${valor ?? ''}" ${min != null ? html`min="${min}"` : ''} ${max != null ? html`max="${max}"` : ''} ${modo ? html`inputmode="${modo}"` : ''} ${largo ? html`maxlength="${largo}"` : ''} ${ed(k) ? '' : 'disabled'}>
     ${ayuda ? html`<small class="nota">${ayuda}</small>` : ''}${alternosDe(k)}</label>`;
   const selector = (k, t, opciones, { valor = p[k], nombre = k, editable = ed(k) } = {}) => {
     const v = valor == null ? '' : String(valor);
     const conocido = v === '' || opciones.some(([o]) => String(o) === v);
-    return html`<label class="campo" data-campo="${k}"><span>${t}</span><select name="${nombre}" data-guardado="${conocido ? '' : v}" ${editable ? '' : 'disabled'}>
+    return html`<label class="campo" data-campo="${k}"><span>${t}${insigniaCampo(k)}</span><select name="${nombre}" data-guardado="${conocido ? '' : v}" ${editable ? '' : 'disabled'}>
       ${opciones.map(([o, tx]) => html`<option value="${o}" ${String(o) === v ? 'selected' : ''}>${tx}</option>`)}</select>${alternosDe(k)}</label>`;
   };
   const lista = (arr) => [['', '—'], ...arr.map((x) => [x, x])];
@@ -145,11 +150,12 @@ export async function vistaFicha(el, { params, ir }) {
         </div>
         <div class="acciones">
           <div class="anillo" style="--p:${Number(p.completitud) || 0}" title="Completitud del perfil"><span>${Number(p.completitud) || 0}%</span></div>
-          ${adm ? html`<button class="btn" id="unir">Unir con otra ficha</button><button class="btn peligro" id="suprimir">Suprimir datos</button>` : ''}
+          ${adm ? html`<button class="btn en-menu" id="unir">Unir con otra ficha</button><button class="btn peligro en-menu" id="suprimir">Suprimir datos</button>
+            <button class="btn mas-ficha" id="mas-ficha" aria-haspopup="dialog" aria-label="Más acciones de la ficha">${icono('puntos')}</button>` : ''}
         </div>
       </div>
       ${bloqueSeguimiento()}
-      ${(p.coincidencias || []).length && adm ? html`<div class="aviso-legal" style="margin-bottom:16px">Posible misma persona que ${p.coincidencias.map((c) => html`<a href="/personas/${c.otro_id}" data-ruta>${c.otro_nombre}</a> (${Math.round(c.puntaje * 100)} %) `)} — <a href="/calidad" data-ruta>revisar</a></div>` : ''}
+      ${(p.coincidencias || []).length && adm ? html`<div class="aviso-legal" style="margin-bottom:16px">Posible misma persona que ${p.coincidencias.map((c) => html`<a href="/personas/${c.otro_id}" data-ruta>${c.otro_nombre}</a>${c.puntaje != null ? ` (${Math.round(c.puntaje * 100)} %)` : ''} `)} — <a href="/calidad?p=coincidencias&persona=${p.id}" data-ruta data-revisar-coincidencias>revisar</a></div>` : ''}
       ${barraAcciones()}
       <div class="ficha">
         <div class="tarjeta principal-ficha">
@@ -169,7 +175,7 @@ export async function vistaFicha(el, { params, ir }) {
                 ${noDisponible('cedula', 'No la dio')}
                 ${adm && (p.cedulas_anteriores || []).length ? html`<p class="sec ancho">Cédulas anteriores: ${p.cedulas_anteriores.join(', ')}</p>` : ''}
               </div></details>
-              <details class="bloque" ${esMovil() ? '' : 'open'}><summary>Votación ${v.estado ? html`<span class="chip ${v.estado === 'verificado' ? 'verde' : v.estado === 'por_confirmar' ? 'ambar' : 'borde'}">${ESTADOS_VOTACION[v.estado] || v.estado}</span>` : ''}</summary><div class="form">
+              <details class="bloque" ${esMovil() ? '' : 'open'}><summary>Votación ${v.estado ? html`<span class="chip ${v.estado === 'verificado' ? 'verde' : v.estado === 'por_confirmar' ? 'ambar' : 'borde'}">${ESTADOS_VOTACION[v.estado] || v.estado}</span>` : ''}${adm && (v.puesto_id || v.puesto_texto || v.mesa || v.donde) ? insigniaFuente(v.fuente || p.procedencia?.votacion?.fuente) : ''}</summary><div class="form">
                 ${camposVotacion(cat, v)}
                 ${noDisponible('puesto', 'No sabe')}
                 ${cat.enlace_consulta_puesto ? html`<a class="btn chico" href="${cat.enlace_consulta_puesto}" target="_blank" rel="noopener noreferrer">Consultar en la Registraduría ↗</a>` : ''}
@@ -265,6 +271,7 @@ export async function vistaFicha(el, { params, ir }) {
           </section>
         </div>
       </div>`);
+    vigilarBarra();
     formInicial = leerForm();
     sucio = false;
     // Un dato guardado que su campo no puede mostrar (una fecha que no existe, como 1985-02-30, o una opción que ya no
@@ -312,7 +319,7 @@ export async function vistaFicha(el, { params, ir }) {
       ${p.menor ? html`<span class="chip rojo">Menor de edad</span>` : ''}
       ${p.requiere_actualizacion ? html`<span class="chip ambar">Pendiente de actualizar</span>` : ''}
       ${sit ? html`<span class="chip rojo">${SITUACIONES[sit.estado] || sit.estado}${sit.confirmada ? '' : ' (sin confirmar)'}</span>` : ''}
-      ${adm ? html`${(p.fuentes || []).map((f) => html`<span class="chip borde">${FUENTES[f] || f}</span>`)}${p.lider ? html`<span class="chip rojo">Líder</span>` : ''}${(p.listas || []).map((l) => html`<span class="chip azul">${l}</span>`)}` : ''}
+      ${adm ? html`${insigniasFuentes(p.fuentes, { conNombre: true })}${p.lider ? html`<span class="chip rojo">Líder</span>` : ''}${(p.listas || []).map((l) => html`<span class="chip azul">${l}</span>`)}` : ''}
     </div>`;
   }
 
@@ -328,22 +335,87 @@ export async function vistaFicha(el, { params, ir }) {
       ${faltan.length ? html`<div class="faltan-ficha"><span class="sec">Faltan:</span> ${chipsFaltan(faltan)}</div>` : ''}`;
   }
 
-  // Barra de acciones por rol, fija abajo en el celular: P visita y completa; C llama y registra; A y K, todo
+  // Barra de acciones por rol, fija abajo en el celular: P visita y completa; C llama y registra; A y K, todo. Van de la
+  // más a la menos usada: en una pantalla angosta las últimas pasan a «Más» (`acomodarBarra`). Cada una dice su ícono
+  // (`data-icono`) para repetirse en ese diálogo
   function barraAcciones() {
     const usables = telefonosUsables(p);
     const t0 = usables[0];
     const llamar = (adm || esC) && t0;
     const b = [];
     if (llamar) {
-      b.push(html`<a class="btn" href="tel:${marcable(t0.numero)}" data-llamar="0" data-canal="llamada">${icono('telefono')}<span>Llamar</span></a>`);
+      b.push(html`<a class="btn" href="tel:${marcable(t0.numero)}" data-llamar="0" data-canal="llamada" data-icono="telefono">${icono('telefono')}<span>Llamar</span></a>`);
       const cel = usables.findIndex((t) => esCelular(t.numero));
-      if (cel >= 0) b.push(html`<a class="btn" href="${enlaceWhatsapp(usables[cel].numero)}" target="_blank" rel="noopener noreferrer" data-llamar="${cel}" data-canal="whatsapp">${icono('whatsapp')}<span>WhatsApp</span></a>`);
+      if (cel >= 0) b.push(html`<a class="btn" href="${enlaceWhatsapp(usables[cel].numero)}" target="_blank" rel="noopener noreferrer" data-llamar="${cel}" data-canal="whatsapp" data-icono="whatsapp">${icono('whatsapp')}<span>WhatsApp</span></a>`);
     }
-    if (puede('acercamientos.registrar')) b.push(html`<button class="btn primario" data-registrar>${icono('acercamiento')}<span>${esP ? 'Registrar visita' : 'Registrar'}</span></button>`);
-    if (puede('personas.editar')) b.push(html`<button class="btn" data-completar>${icono('completar')}<span>Completar</span></button>`);
-    if (puede('personas.crear')) b.push(html`<button class="btn" data-hogar>${icono('hogar')}<span>Nueva en este hogar</span></button>`);
-    if (puede('personas.ubicar')) b.push(html`<button class="btn" data-gps>${icono('gps')}<span>Estoy en su casa</span></button>`);
-    return b.length ? html`<nav class="barra-acciones" aria-label="Acciones">${b}</nav>` : '';
+    if (puede('acercamientos.registrar')) b.push(html`<button class="btn primario" data-registrar data-icono="acercamiento">${icono('acercamiento')}<span>${esP ? 'Registrar visita' : 'Registrar'}</span></button>`);
+    if (puede('personas.editar')) b.push(html`<button class="btn" data-completar data-icono="completar">${icono('completar')}<span>Completar</span></button>`);
+    if (puede('personas.crear')) b.push(html`<button class="btn" data-hogar data-icono="hogar">${icono('hogar')}<span>Nueva en este hogar</span></button>`);
+    if (puede('personas.ubicar')) b.push(html`<button class="btn" data-gps data-icono="gps">${icono('gps')}<span>Estoy en su casa</span></button>`);
+    return b.length ? html`<nav class="barra-acciones" aria-label="Acciones">${b}<button type="button" class="btn mas-acciones" data-mas-acciones aria-haspopup="dialog" hidden>${icono('puntos')}<span>Más</span></button></nav>` : '';
+  }
+
+  // En el celular la barra va fija abajo en una sola fila y no siempre caben todas: sin desplazarla de costado (nadie
+  // sabría que hay más), las que no caben se esconden desde la última y se ofrecen en «Más». La principal («Registrar»)
+  // se esconde al final y la primera nunca. En escritorio la barra se envuelve y nunca desborda: se ven todas. Se mide
+  // de nuevo cada vez que cambia su ancho (girar el celular)
+  const obsBarra = typeof ResizeObserver === 'function' ? new ResizeObserver(() => acomodarBarra()) : null;
+  function acomodarBarra() {
+    const nav = $('.barra-acciones', el);
+    if (!nav) return;
+    const mas = $('.mas-acciones', nav);
+    const acciones = [...nav.children].filter((x) => x !== mas);
+    for (const a of acciones) a.hidden = false;
+    mas.hidden = true;
+    const cabe = () => nav.scrollWidth <= nav.clientWidth + 1;
+    if (cabe()) return;
+    mas.hidden = false;
+    const resto = acciones.slice(1).reverse();
+    for (const a of [...resto.filter((x) => !x.matches('.primario')), ...resto.filter((x) => x.matches('.primario'))]) {
+      if (cabe()) break;
+      a.hidden = true;
+    }
+  }
+  function vigilarBarra() {
+    obsBarra?.disconnect();
+    const nav = $('.barra-acciones', el);
+    if (!nav) return;
+    acomodarBarra();
+    obsBarra?.observe(nav);
+  }
+  // «Más»: las acciones que no cupieron. Cada botón del diálogo toca la acción escondida de la barra, así llamar o
+  // escribir por WhatsApp siguen anotando la llamada y cada acción hace exactamente lo mismo que en la barra
+  function masAcciones() {
+    const nav = $('.barra-acciones', el);
+    const ocultas = nav ? [...nav.children].filter((x) => x.hidden && !x.matches('.mas-acciones')) : [];
+    if (!ocultas.length) return;
+    const { el: d, cerrar } = dialogo({
+      titulo: 'Más acciones',
+      cuerpo: html`<div class="lista-mas-acciones">${ocultas.map((x, i) => html`<button type="button" class="btn" data-otra-accion="${i}">${icono(x.dataset.icono)}<span>${x.textContent.trim()}</span></button>`)}</div>`,
+    });
+    d.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-otra-accion]');
+      if (!b) return;
+      const accion = ocultas[Number(b.dataset.otraAccion)];
+      cerrar();
+      if (accion?.isConnected) accion.click();
+    });
+  }
+
+  // Cabecera en el celular: «Unir con otra ficha» y «Suprimir datos» (destructivo) no quedan como botones grandes
+  // bajo el nombre, donde cae el pulgar, sino en el menú ⋯
+  function masFicha() {
+    const { el: d, cerrar } = dialogo({
+      titulo: 'Más acciones de la ficha',
+      cuerpo: html`<div class="lista-mas-acciones"><button type="button" class="btn" data-ficha="unir">Unir con otra ficha</button>
+        <button type="button" class="btn peligro" data-ficha="suprimir">${icono('basura')}<span>Suprimir datos</span></button></div>`,
+    });
+    d.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-ficha]');
+      if (!b) return;
+      cerrar();
+      if (b.dataset.ficha === 'unir') unir(); else suprimir();
+    });
   }
 
   function noDisponible(campo, texto) {
@@ -402,11 +474,11 @@ export async function vistaFicha(el, { params, ir }) {
   function panelOrigen() {
     const alt = p.alternos || [];
     const proc = Object.entries(p.procedencia || {});
-    return html`
+    return html`${leyendaFuentes(fuentesVisibles(true))}
       ${alt.length ? html`<h3 class="sub-origen">Otros valores (${alt.length})</h3><div class="envoltura-tabla"><table class="tabla"><thead><tr><th>Dato</th><th>Valor</th><th>Fuente</th><th>Fecha</th></tr></thead>
-        <tbody>${alt.slice().reverse().map((a) => html`<tr style="cursor:default"><td>${ETIQUETAS_CAMPOS[a.campo] || a.campo}</td><td>${typeof a.valor === 'object' ? JSON.stringify(a.valor) : String(a.valor)}</td><td>${FUENTES[a.fuente] || a.fuente || '—'}</td><td>${fecha(a.ts)}</td></tr>`)}</tbody></table></div>` : ''}
-      ${proc.length ? html`<h3 class="sub-origen">Procedencia de cada dato</h3><div class="datos">${proc.map(([k, x]) => html`<div><span>${ETIQUETAS_CAMPOS[k] || k.replace(/_/g, ' ')}</span><b>${FUENTES[x?.fuente] || x?.fuente || '—'} · ${fecha(x?.ts)}</b></div>`)}</div>` : ''}
-      ${(p.origen || []).map((o) => html`<h3 class="sub-origen">${FUENTES[o.fuente] || o.fuente}</h3><div class="datos">
+        <tbody>${alt.slice().reverse().map((a) => html`<tr style="cursor:default"><td>${ETIQUETAS_CAMPOS[a.campo] || a.campo}</td><td>${typeof a.valor === 'object' ? JSON.stringify(a.valor) : String(a.valor)}</td><td>${insigniaFuente(a.fuente, { conNombre: true }) || '—'}</td><td>${fecha(a.ts)}</td></tr>`)}</tbody></table></div>` : ''}
+      ${proc.length ? html`<h3 class="sub-origen">Procedencia de cada dato</h3><div class="datos">${proc.map(([k, x]) => html`<div><span>${ETIQUETAS_CAMPOS[k] || k.replace(/_/g, ' ')}</span><b>${insigniaFuente(x?.fuente, { conNombre: true }) || '—'}<small class="fecha-fuente">${fecha(x?.ts)}</small></b></div>`)}</div>` : ''}
+      ${(p.origen || []).map((o) => html`<h3 class="sub-origen">${insigniaFuente(o.fuente)}${nombreFuente(o.fuente) || 'Sin fuente'}</h3><div class="datos">
         ${Object.entries(o.datos || {}).filter(([k]) => k !== 'extra').map(([k, val]) => html`<div><span>${k.replace(/_/g, ' ')}</span><b>${Array.isArray(val) ? val.join(', ') : String(val ?? '')}</b></div>`)}</div>`)}
       <h3 class="sub-origen">Trámites (${(p.tramites || []).length})</h3>
       ${(p.tramites || []).length ? html`<div class="envoltura-tabla"><table class="tabla"><thead><tr><th>Fecha</th><th>Trámite</th><th>Ficha</th><th>Dirección</th><th>Teléfono</th></tr></thead>
@@ -435,7 +507,7 @@ export async function vistaFicha(el, { params, ir }) {
           <span class="chip borde">${TIPOS_TELEFONO[t.tipo] || (esCelular(t.numero) ? 'Celular' : 'Fijo')}</span>
           <span class="chip tel-estado estado-${t.estado || 'sin_verificar'}">${ESTADOS_TELEFONO[t.estado || 'sin_verificar']}</span>
           ${t.whatsapp ? html`<span class="chip verde">WhatsApp</span>` : ''}${t.no_contactar ? html`<span class="chip rojo">No contactar</span>` : ''}
-          ${t.fuentes?.length ? html`<small class="sec">${fuentesTel(t)}</small>` : ''}</div>
+          ${insigniasFuentes(t.fuentes)}</div>
         <div class="tel-acciones">
           ${llama && usable && i >= 0 ? html`<a class="btn chico" href="tel:${marcable(t.numero)}" data-llamar="${i}" data-canal="llamada" aria-label="Llamar al ${t.numero}">${icono('telefono')}</a>` : ''}
           ${llama && usable && i >= 0 && esCelular(t.numero) ? html`<a class="btn chico" href="${enlaceWhatsapp(t.numero)}" target="_blank" rel="noopener noreferrer" data-llamar="${i}" data-canal="whatsapp" aria-label="WhatsApp al ${t.numero}">${icono('whatsapp')}</a>` : ''}
@@ -460,6 +532,7 @@ export async function vistaFicha(el, { params, ir }) {
       titulo: `Número ${numero}`,
       cuerpo: html`<div class="lista-acciones-tel">${visibles.map(([k, tx]) => html`<button class="btn ${k === 'retirar' ? 'peligro' : ''}" data-accion-tel="${k}">${tx}</button>`)}</div>
         <label class="campo" style="margin-top:12px"><span>Nota (opcional)</span><input name="nota" maxlength="300" placeholder="Por ejemplo: contestó la hermana"></label>`,
+      sucio: hayEscrito,
     });
     d.addEventListener('click', async (e) => {
       const b = e.target.closest('[data-accion-tel]');
@@ -494,6 +567,7 @@ export async function vistaFicha(el, { params, ir }) {
         <label class="campo"><span>Nota</span><input name="nota" maxlength="300"></label>
       </form>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g-tel">Agregar</button>`,
+      sucio: hayEscrito,
     });
     const f = $('#f-tel', d);
     const enviar = async () => {
@@ -554,6 +628,7 @@ export async function vistaFicha(el, { params, ir }) {
           </div></section>
         <section class="tarjeta c-12"><h2>Acercamientos</h2>${lineaTiempo(eventosHistorial())}</section>
       </div>`);
+    vigilarBarra();
   }
 
   async function recargar() {
@@ -577,6 +652,7 @@ export async function vistaFicha(el, { params, ir }) {
         <label class="campo"><span>Descripción *</span><textarea name="descripcion" required maxlength="2000"></textarea><small class="nota-sensibles">No anote salud, política, religión ni otros datos sensibles.</small></label>
       </form>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g-sol">Registrar solicitud</button>`,
+      sucio: hayEscrito,
     });
     const f = $('#f-sol', d);
     let clave = nuevaClave();
@@ -596,6 +672,7 @@ export async function vistaFicha(el, { params, ir }) {
       titulo: 'Marcar como atendido',
       cuerpo: html`<label class="campo"><span>¿Qué se actualizó?</span><textarea name="nota" maxlength="1000" placeholder="Se confirmó la dirección y el celular nuevo"></textarea></label>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" data-ok>Marcar como atendido</button>`,
+      sucio: hayEscrito,
     });
     d.querySelector('[data-ok]').addEventListener('click', () => cerrar($('[name="nota"]', d).value.trim()));
     const nota = await listo;
@@ -722,14 +799,17 @@ export async function vistaFicha(el, { params, ir }) {
       try { p = await api.del(`/api/personas/${id}/ubicacion`); pintar(); } catch (err) { avisoError(err); }
       return;
     }
-    if (e.target.closest('#suprimir')) {
-      if (await confirmar(`Se borrarán todos los datos personales de ${p.nombre} (derecho de supresión, Ley 1581), también de las fichas que se unieron con ella y del detalle de su auditoría. Las próximas importaciones la omitirán: queda solo una huella cifrada para reconocerla. ¿Continuar?`, { si: 'Suprimir', peligro: true })) {
-        try { await api.del(`/api/personas/${id}`); aviso('Datos suprimidos'); sucio = false; ir('/personas'); } catch (err) { avisoError(err); }
-      }
-      return;
-    }
+    if (e.target.closest('[data-mas-acciones]')) return masAcciones();
+    if (e.target.closest('#mas-ficha')) return masFicha();
+    if (e.target.closest('#suprimir')) return suprimir();
     if (e.target.closest('#unir')) unir();
   });
+
+  async function suprimir() {
+    if (await confirmar(`Se borrarán todos los datos personales de ${p.nombre} (derecho de supresión, Ley 1581), también de las fichas que se unieron con ella y del detalle de su auditoría. Las próximas importaciones la omitirán: queda solo una huella cifrada para reconocerla. ¿Continuar?`, { si: 'Suprimir', peligro: true })) {
+      try { await api.del(`/api/personas/${id}`); aviso('Datos suprimidos'); sucio = false; ir('/personas'); } catch (err) { avisoError(err); }
+    }
+  }
 
   el.addEventListener('input', (e) => {
     if (!e.target.closest('#f-datos') || e.target.name?.startsWith('aut_')) return;
@@ -847,6 +927,9 @@ export async function vistaFicha(el, { params, ir }) {
     $('#res-unir', d).addEventListener('click', async (ev) => {
       const b = ev.target.closest('[data-con]');
       if (!b) return;
+      // Un solo toque no une dos fichas: el botón queda abajo de la hoja, donde cae el pulgar
+      const otra = b.closest('.resultado')?.querySelector('b')?.textContent || 'la otra ficha';
+      if (!await confirmar(`¿Unir la ficha de ${otra} con la de ${p.nombre}? Esta conserva sus datos y recibe lo que le falte, más los trámites, reuniones y notas de la otra, que deja de aparecer por separado.`, { si: 'Unir las fichas' })) return;
       try {
         p = await api.post(`/api/personas/${id}/fusionar`, { con_id: Number(b.dataset.con) });
         cerrar(); aviso('Fichas unidas'); pintar(); refrescarInsignias();
@@ -855,7 +938,7 @@ export async function vistaFicha(el, { params, ir }) {
   }
 
   pintar();
-  return () => { turnoMini++; quitarPendiente(); mini?.remove(); mini = null; };
+  return () => { turnoMini++; quitarPendiente(); obsBarra?.disconnect(); mini?.remove(); mini = null; };
 }
 
 function resumenDetalle(txt) {
