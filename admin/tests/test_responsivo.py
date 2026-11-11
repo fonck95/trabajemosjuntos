@@ -197,6 +197,9 @@ def test_dialogo_guardando_no_pregunta_ni_cierra(resultados, tamano):
 
 @requiere_navegador
 def test_nueva_persona_reabierta_sigue_pendiente(resultados):
+    caso = resultados["pendiente"]
+    # Con lo que se vio (diálogos abiertos, cierres del navegador), un fallo dice en qué paso se perdió lo pendiente
+    assert caso["revisiones"].get("sigue_pendiente") is True, caso.get("datos")
     _revisar(resultados, "pendiente")
 
 
@@ -688,6 +691,7 @@ async function pendiente(nav, caso) {
   d.abiertos = await abiertos();
   v.sigue_abierta_con_lo_escrito = JSON.stringify(d.abiertos) === '["Nueva persona"]' && await page.inputValue('#f-nueva [name=nombre]') === nombre;
   v.sigue_pendiente = await page.evaluate(async (p) => (await import(`${p}/static/js/api.js`)).hayCambiosSinGuardar(), pref);
+  if (!v.sigue_pendiente) d.dialogos = await page.evaluate(() => [...document.querySelectorAll('dialog')].map((x) => ({ abierto: x.open, titulo: x.querySelector('h2')?.textContent, valor: x.querySelector('[name=nombre]')?.value })));
   // La sesión vence: la búsqueda en vivo de parecidas (un GET) recibe un 401 y se ingresa en un diálogo, sin recargar
   let recargo = false;
   page.on('framenavigated', (f) => { if (f === page.mainFrame()) recargo = true; });

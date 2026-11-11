@@ -134,10 +134,22 @@ export async function vistaPresentacion(el, { q } = {}) {
     return res;
   }
 
+  // Si tarda (un equipo lento arma la maqueta 3D con la CPU), se dice, pero el iframe se queda: su `listo` vale aunque
+  // llegue tarde. Antes se quitaba y la presentación ya no se podía usar hasta recargar
+  let lista = false;
   const tListo = setTimeout(() => {
-    if (!estado) sinPresentacion('La presentación no respondió', 'No terminó de cargar. Recargue la página; si sigue igual, ábrala desde el sitio público.');
+    if (!lista) pasoEl.textContent = 'La presentación está tardando en cargar… (si no aparece, recargue la página)';
   }, ESPERA_LISTO_MS);
   limpiezas.push(() => clearTimeout(tListo));
+  // Y se le pregunta en qué paso está al cargar y cada poco hasta que conteste: si su `listo` salió antes de que esta
+  // vista escuchara (o se perdió), la respuesta a «estado» la da por lista igual
+  let tPedir = 0;
+  const pedirEstado = () => {
+    if (lista || !iframe.isConnected) return;
+    try { iframe.contentWindow?.postMessage({ canal: CANAL, v: VERSION, orden: 'estado' }, d.origen); } catch { /* aún no */ }
+    tPedir = setTimeout(pedirEstado, 2000);
+  };
+  limpiezas.push(() => clearTimeout(tPedir));
 
   function alMensaje(e) {
     if (e.source !== iframe.contentWindow || e.origin !== d.origen) return;
@@ -151,8 +163,10 @@ export async function vistaPresentacion(el, { q } = {}) {
       pendientes.delete(m.id);
       resolver({ ok: m.tipo === 'estado', ...(m.tipo === 'error' ? { error: typeof m.error === 'string' ? m.error.slice(0, 160) : 'No se pudo' } : {}) });
     }
-    if (m.tipo === 'listo') {
+    if (!lista && (m.tipo === 'listo' || (m.tipo === 'estado' && nuevo))) {
+      lista = true;
       clearTimeout(tListo);
+      clearTimeout(tPedir);
       anterior.disabled = siguiente.disabled = false;
       quitarRegistro ||= registrarPresentacion({ aplicar, estado: () => estado, ...(proyector ? { proyector: true } : {}) });
       if (proyector) iframe.focus({ preventScroll: true });   // las flechas del teclado van a la presentación
@@ -169,8 +183,9 @@ export async function vistaPresentacion(el, { q } = {}) {
   iframe.addEventListener('load', () => {
     try {
       const doc = iframe.contentDocument;
-      if (doc && !doc.getElementById('pres')) sinPresentacion('La presentación no está en este servidor', 'El sitio público no trae la presentación de la propuesta (propuesta.html).');
+      if (doc && !doc.getElementById('pres')) { sinPresentacion('La presentación no está en este servidor', 'El sitio público no trae la presentación de la propuesta (propuesta.html).'); return; }
     } catch { /* de otro origen: no se puede mirar */ }
+    pedirEstado();
   });
 
   const mover = (op) => {

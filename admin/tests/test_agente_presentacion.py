@@ -1418,7 +1418,15 @@ const PANTALLAS = [
     for (const [nombre, opciones] of PANTALLAS) {
       const { ctx, page } = await contexto(nav, opciones);
       await entrar(page, '/presentacion');
-      await page.waitForFunction(() => window.__P.presentacionLista(), null, espera);
+      await page.waitForFunction(() => window.__P.presentacionLista(), null, espera).catch(async (e) => {
+        // Para que un fallo diga dónde quedó: en qué pantalla, qué dice la barra de la vista y en qué va el iframe
+        const vista = await page.evaluate(() => ({ barra: document.querySelector('#pres-paso')?.textContent,
+          iframe: !!document.querySelector('#pres-iframe') })).catch(() => null);
+        const f = marco(page);
+        const dentro = f ? await f.evaluate(() => ({ hash: location.hash, listo: document.readyState,
+          paso: document.querySelector('.panel h2')?.textContent || null })).catch((x) => String(x)) : null;
+        throw new Error(`${nombre}: la presentación no quedó lista (${e.message.split('\n')[0]}): ${JSON.stringify({ vista, dentro, errores: salida.errores.slice(-5) })}`);
+      });
       const caso = salida.casos[nombre] = {};
       caso.resultado = await page.evaluate((t) => window.__P.accionesPresentacion([{ tipo: 'presentacion', op: 'ir', capitulo: 'vivienda', paso: 3, explicacion: t }]), D.larga);
       let f = await enPresentacion(page, '#vivienda/3', D.larga);
@@ -1530,3 +1538,104 @@ def test_la_explicacion_se_ve_entera_en_cada_pantalla(panel_con_sitio, cfg, tmp_
     assert v["ruta"] == "/panel/personas" and len(v["notas"]) == 1 and v["botones"] == 1, v
     assert v["despues"]["ruta"] == "/panel/presentacion" and v["despues"]["hash"] == "#vivienda/2", v
     assert v["despues"]["texto"] == CORTA and v["despues"]["botones"] == 0 and v["despues"]["fallas"] == [], v
+
+
+# ───────────────────────────── Una presentación que no avisa `listo` ─────────────────────────────
+
+PROPUESTA_MUDA = """<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Muda</title></head><body>
+<div id="pres"><h2>Portada</h2></div>
+<script>
+// No manda `listo` (como si se hubiera perdido, o como si hubiera llegado antes de que el panel escuchara): solo
+// contesta cuando le preguntan en qué paso está
+addEventListener('message', (e) => {
+  if (e.source !== parent || e.origin !== location.origin) return;
+  const m = e.data;
+  if (!m || m.canal !== 'yondo-presentacion' || m.v !== 1 || m.orden !== 'estado') return;
+  window.__preguntas = (window.__preguntas || 0) + 1;
+  parent.postMessage({ canal: 'yondo-presentacion', v: 1, tipo: 'estado', capitulo: 'portada', paso: 1, total: 1,
+    nombre: 'Portada', titulo: 'Yondó 2028–2031', explicacion: false }, e.origin);
+});
+</script></body></html>"""
+
+GUION_MUDA = r"""// La vista queda lista con la respuesta a «estado», sin `listo`. Uso: node <guion> <base del panel> <usuario> <clave>
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const [base, usuario, clave] = process.argv.slice(2);
+const pref = new URL(base).pathname.replace(/\/+$/, '');
+(async () => {
+  const nav = await chromium.launch();
+  const salida = { csp: [], errores: [] };
+  try {
+    const ctx = await nav.newContext({ viewport: { width: 1280, height: 800 } });
+    await ctx.route((u) => u.origin !== new URL(base).origin, (r) => r.abort());
+    await ctx.exposeBinding('__csp', (_, v) => salida.csp.push(v));
+    await ctx.addInitScript(() => { addEventListener('securitypolicyviolation', (e) => window.__csp(`${location.pathname} ${e.effectiveDirective}`), true); });
+    const page = await ctx.newPage();
+    page.on('pageerror', (e) => salida.errores.push(String(e)));
+    await page.goto(base + '/', { waitUntil: 'domcontentloaded' });
+    await page.fill('#f-login [name=usuario]', usuario);
+    await page.fill('#f-login [name=clave]', clave);
+    await page.click('#f-login button[type=submit]');
+    await page.waitForSelector('#app #vista > .vista', { timeout: 30000 });
+    await page.goto(base + '/presentacion', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#pres-iframe', { timeout: 30000 });
+    await page.evaluate(async (p) => { window.__P = await import(p + '/static/js/agente-presentacion.js'); }, pref);
+    const t0 = Date.now();
+    salida.lista = await page.waitForFunction(() => window.__P.presentacionLista(), null, { timeout: 20000 }).then(() => true, () => false);
+    salida.segundos = (Date.now() - t0) / 1000;
+    salida.barra = await page.textContent('#pres-paso');
+    salida.siguiente_activo = await page.isEnabled('#pres-siguiente');
+    const f = page.frames().find((x) => /\/propuesta(#|$)/.test(x.url()));
+    salida.preguntas = f ? await f.evaluate(() => window.__preguntas || 0) : null;
+    await ctx.close();
+  } finally {
+    await nav.close();
+  }
+  console.log(JSON.stringify(salida));
+})().catch((e) => { console.error(e); process.exit(1); });
+"""
+
+
+@requiere_navegador
+def test_la_vista_queda_lista_aunque_no_llegue_el_listo(cfg, tmp_path):
+    """Si el `listo` de la presentación se pierde (salió antes de que la vista escuchara) o tarda más que el plazo, la
+    vista no se rinde: le pregunta su estado al cargar y cada poco, y con la respuesta queda lista; el plazo solo avisa
+    que tarda y deja el iframe (antes lo quitaba, y en un equipo lento la presentación no se podía usar sin recargar)."""
+    from conftest import MONGO, URI
+    if not MONGO:
+        pytest.skip("No hay MongoDB para las pruebas con navegador")
+    import pymongo
+    import uvicorn
+
+    import servidor
+    sitio = tmp_path / "site"
+    sitio.mkdir()
+    (sitio / "index.html").write_text("<!doctype html><title>Inicio</title>INICIO", encoding="utf-8")
+    (sitio / "propuesta.html").write_text(PROPUESTA_MUDA, encoding="utf-8")
+    app = servidor.crear_servidor(cfg, sitio)
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", 0))
+    srv = uvicorn.Server(uvicorn.Config(app, http="h11", lifespan="on", log_level="warning", access_log=False,
+                                        server_header=False, timeout_graceful_shutdown=2))
+    hilo = threading.Thread(target=srv.run, kwargs={"sockets": [sock]}, daemon=True)
+    hilo.start()
+    try:
+        fin = time.time() + 20
+        while time.time() < fin and not (srv.started and app.state.panel is not None
+                                         and getattr(app.state.panel.state, "listo", False)):
+            time.sleep(0.05)
+        assert srv.started and app.state.panel is not None, "el servidor no arrancó"
+        (tmp_path / "muda.cjs").write_text(GUION_MUDA, encoding="utf-8")
+        base = f"http://127.0.0.1:{sock.getsockname()[1]}/panel"
+        r = subprocess.run(["node", str(tmp_path / "muda.cjs"), base, cfg.usuario, cfg.clave],
+                           capture_output=True, text=True, timeout=180)
+        assert r.returncode == 0, (r.stdout[-3000:], r.stderr[-3000:])
+        s = json.loads(r.stdout.strip().splitlines()[-1])
+        assert s["csp"] == [] and s["errores"] == [], s
+        assert s["lista"] and s["preguntas"] >= 1, s
+        assert s["barra"].startswith("Paso 1 de 1") and s["siguiente_activo"], s
+    finally:
+        srv.should_exit = True
+        hilo.join(15)
+        sock.close()
+        with pymongo.MongoClient(URI) as m:
+            m.drop_database(cfg.mongodb_db)

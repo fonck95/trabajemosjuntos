@@ -337,7 +337,10 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   enlazarVotacion(form, cat);
   enlazarAutorizacion(form);
   let tocado = !!(ini.nombre || ini.cedula || ini.telefono);
-  const quitarPendiente = registrarPendiente(() => tocado && el.isConnected);
+  // Pendiente hasta que el diálogo termina de verdad (`listo`, más abajo): no se mira si sigue en la página, porque el
+  // navegador puede cerrarlo solo y `dialogo` lo vuelve a abrir con lo escrito
+  let terminado = false;
+  const quitarPendiente = registrarPendiente(() => tocado && !terminado);
   form.addEventListener('click', (e) => { const c = e.target.closest('[data-et]'); if (c) { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') !== 'true'); tocado = true; } });
 
   // Búsqueda en vivo (400 ms, 3 caracteres o más en nombre, documento o celular): «¿Es alguna de estas?» antes de seguir
@@ -366,7 +369,7 @@ export function formularioNuevaPersona({ cat, reunionId = null, nombreInicial = 
   });
   // Deja de contar como pendiente (y se cancela la búsqueda por salir) cuando el diálogo termina de verdad (`listo`): si
   // el navegador lo cierra solo, `dialogo` lo vuelve a abrir con lo escrito y un 401 debe seguir sin recargar
-  listo.then(() => { quitarPendiente(); buscarParecidas.cancel(); });
+  listo.then(() => { terminado = true; quitarPendiente(); buscarParecidas.cancel(); });
   if (ini.nombre || ini.cedula || ini.telefono) buscarParecidas();
 
   let forzar = false, enCurso = false;
