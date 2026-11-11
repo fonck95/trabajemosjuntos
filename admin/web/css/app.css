@@ -667,6 +667,11 @@ details.bloque > summary .chip { font-weight: 650; }
 @media (min-width: 1261px) and (max-width: 1520px) {
   .tabla-personas th:nth-child(4), .tabla-personas td[data-titulo="Edad y sexo"],
   .tabla-personas th:nth-child(6), .tabla-personas td[data-titulo="Puesto y mesa"] { display: none; }
+  /* Con la letra de respaldo del sistema (más ancha que Public Sans) las 7 columnas pedían 6 px más que la caja a
+     1280: «Faltan» envuelve sus chips en un ancho fijo y las celdas pierden un poco de relleno, un margen para cualquier
+     letra */
+  .tabla-personas th, .tabla-personas td { padding-left: 8px; padding-right: 8px; }
+  .tabla-personas td[data-titulo="Faltan"] { width: 136px; max-width: 136px; }
 }
 @media (min-width: 641px) and (max-width: 1260px) { .tabla-tarjetas tr { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 

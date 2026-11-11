@@ -198,7 +198,11 @@ button.nivel-filtro[aria-pressed="true"] { border-color: var(--ink); }
   .cifras-lote dd { font-size: 20px; }
   .cuenta-unif .explica { display: none; }
   /* En la barra fija de una pantalla angosta, «Seleccionar todos» y «Quitar»: cada botón en una línea */
-  .barra-seleccion.con-seleccion .mas-texto { display: none; }
+  .barra-seleccion .mas-texto { display: none; }
+  /* Los botones de la barra parten su texto antes que ensanchar la página (con la letra de respaldo del sistema, más
+     ancha, «Seleccionar todos» no cabía en 320 px) */
+  .botones-sel { min-width: 0; max-width: 100%; }
+  .botones-sel .btn { white-space: normal; text-align: center; line-height: 1.2; }
   /* Los niveles en una sola fila que se desplaza (con un degradado que avisa que hay más): la primera tarjeta queda
      más arriba */
   .niveles-unif { position: relative; flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: -16px; padding-right: 28px;
@@ -211,6 +215,8 @@ button.nivel-filtro[aria-pressed="true"] { border-color: var(--ink); }
 @media (pointer: coarse) {
   .opcion-ficha { min-height: 44px; }
   .nivel-filtro, .motivo-unif select { min-height: 44px; }
+  /* El nombre de cada ficha en la cabecera de la grilla también es un enlace que se toca */
+  .ficha-id a { display: inline-flex; align-items: center; min-height: 44px; }
 }
 @media (hover: hover) {
   .grupo-coinc:not(.resuelta):hover { border-color: var(--line); border-left-color: var(--nv); }
