@@ -3,7 +3,10 @@
 import { api, descargar, puede, sesion } from '../api.js';
 import { url } from '../base.js';
 import { ESTADOS_ABORDAJE, ESTADOS_VOTACION, ETIQUETAS_CAMPOS, RANGOS_EDAD, SEXOS, SITUACIONES, enmascarar, rangoAParams, telefonosUsables } from '../modelo.js';
-import { $, $$, FUENTES, aviso, avisoError, chipAbordaje, chipAutorizacion, debounce, html, icono, montar, num, titulo } from '../ui.js';
+import {
+  $, $$, aviso, avisoError, chipAbordaje, chipAutorizacion, debounce, fuentesVisibles, html, icono, insigniasFuentes, leyendaFuentes, montar,
+  num, titulo,
+} from '../ui.js';
 import { administra, chipsFaltan, dialogoCompletar, faltanDe, formularioNuevaPersona, textoCedula, textoTelefono } from './comunes.js';
 
 // Filtros que viajan en la URL (también los que solo llegan por enlace: Mi trabajo, tablero, mapa)
@@ -106,6 +109,7 @@ export async function vistaPersonas(el, { q, ir }) {
       </div>
       <div class="chips" id="chips-ocultos"></div>
     </div>
+    ${adm ? leyendaFuentes(fuentesVisibles(true)) : ''}
     <div class="envoltura-tabla"><table class="tabla tabla-tarjetas tabla-personas"><thead><tr>
       <th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Edad y sexo</th><th>Barrio / vereda</th><th>Puesto y mesa</th><th>Faltan</th><th>Perfil</th>${completa ? html`<th><span class="sr">Acciones</span></th>` : ''}
     </tr></thead><tbody id="filas"></tbody></table></div>
@@ -132,7 +136,7 @@ export async function vistaPersonas(el, { q, ir }) {
         <div class="chips chips-fila">${ced ? '' : html`<span class="chip ambar">Sin cédula</span>`}${p.abordaje !== undefined ? chipAbordaje(p.abordaje) : ''}${p.consentimiento ? chipAutorizacion(p, { conCanales: false }) : ''}
           ${p.requiere_actualizacion ? html`<span class="chip ambar">Pendiente de actualizar</span>` : ''}${p.menor ? html`<span class="chip rojo">Menor</span>` : ''}
           ${sit ? html`<span class="chip rojo">${SITUACIONES[sit] || sit}</span>` : ''}${p.lider ? html`<span class="chip rojo">Líder</span>` : ''}
-          ${adm ? (p.fuentes || []).map((x) => html`<span class="chip borde">${FUENTES[x] || x}</span>`) : ''}</div></td>
+          ${adm ? insigniasFuentes(p.fuentes) : ''}</div></td>
       <td data-titulo="Cédula">${ced || html`<span class="sec">—</span>`}</td>
       <td data-titulo="Teléfono">${tel || html`<span class="sec">—</span>`}${p.telefonos_n > 1 ? html` <span class="chip borde" title="Números usables">${p.telefonos_n}</span>` : ''}</td>
       <td data-titulo="Edad y sexo">${[p.rango_edad || (p.edad != null ? `${p.edad} años` : null), SEXOS[p.sexo]].filter(Boolean).join(' · ') || html`<span class="sec">—</span>`}</td>

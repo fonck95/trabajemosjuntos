@@ -1,0 +1,220 @@
+/* Calidad → Coincidencias: revisión en bloque de grupos de fichas que serían la misma persona (vistas/calidad.js).
+   Solo tokens de app.css, así sigue el tema claro u oscuro sin reglas propias. Lo que se ve de un vistazo: el nivel en
+   el borde de cada tarjeta, las señales a favor (✓) y en contra (✕), los datos alineados con su fuente y lo que
+   quedaría; nada depende solo del color (las señales llevan su ícono y los datos iguales o en choque, su subrayado). */
+.unificacion { display: flex; flex-direction: column; min-width: 0; }
+.unificacion [data-nivel="alta"] { --nv: var(--ok); }
+.unificacion [data-nivel="media"] { --nv: var(--seq-400); }
+.unificacion [data-nivel="baja"] { --nv: var(--warn); }
+.unificacion [data-nivel="bloqueada"] { --nv: var(--crit); }
+
+/* ───────── Resumen: un chip por nivel con su número, el motivo y «Unir las N muy probables» ───────── */
+.resumen-unif { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 18px; margin-bottom: 12px; }
+.niveles-unif { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 560px; min-width: 0; }
+.nivel-filtro { gap: 7px; padding: 6px 12px; font-size: 13.5px; min-height: 38px; border-color: var(--line); background: var(--surface); }
+.nivel-filtro:hover { border-color: var(--axis); }
+.nivel-filtro b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.punto-nivel { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--nv);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--nv) 25%, transparent); }
+button.nivel-filtro[aria-pressed="true"] { border-color: var(--ink); }
+.motivo-unif { flex: 0 1 260px; min-width: 200px; }
+.motivo-unif select { min-height: 38px; }
+.unir-alta { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; flex: 0 1 340px; min-width: 0; }
+.unir-alta .btn { white-space: normal; text-align: left; }
+.unir-alta .btn svg { width: 20px; height: 20px; flex: none; }
+.unir-alta small { color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+.filtro-persona { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 12px; }
+.cuenta-unif { margin: 0 0 8px; color: var(--muted); font-size: 13.5px; }
+.cuenta-unif b { color: var(--ink); font-weight: 650; }
+.leyenda-comparar { margin: 0 0 12px; color: var(--muted); font-size: 12.5px; }
+.leyenda-comparar span { color: var(--ink-2); }
+.ayuda-atajos { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .ayuda-atajos { display: block; margin: 0 0 6px; color: var(--muted); font-size: 12.5px; }
+}
+.ayuda-atajos kbd { display: inline-block; min-width: 20px; text-align: center; font: 600 11.5px/1.4 var(--f-mono); color: var(--ink-2);
+  background: var(--surface); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 0 4px; }
+.volver-todos { margin-top: 12px; }
+
+/* ───────── Barra de selección: pegada arriba en escritorio, fija abajo en el celular ───────── */
+.barra-seleccion { position: sticky; top: 0; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 8px 14px; margin: 0 0 14px; padding: 8px 10px 8px 14px; background: var(--vidrio); border: 1px solid var(--line-soft);
+  border-radius: 12px; backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3); }
+.barra-seleccion.con-seleccion { border-color: var(--ink-2); box-shadow: var(--sombra); }
+.cuenta-sel { font-weight: 650; font-size: 14px; min-width: 0; }
+.botones-sel { display: flex; flex-wrap: wrap; gap: 6px; }
+.botones-sel .btn svg { width: 15px; height: 15px; }
+
+/* ───────── Tarjeta de un grupo ───────── */
+.lista-grupos { display: flex; flex-direction: column; min-width: 0; }
+.grupo-coinc { --nv: var(--line); position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "cab acciones" "senales acciones" "avisos avisos" "comparar comparar"; column-gap: 18px; min-width: 0;
+  background: var(--surface); border: 1px solid var(--line-soft); border-left: 5px solid var(--nv); border-radius: var(--r);
+  padding: 12px 18px 16px 14px; margin-bottom: 14px; scroll-margin-top: 86px; scroll-margin-bottom: 24px;
+  transition: opacity .22s ease, transform .22s ease, box-shadow .15s ease; }
+.grupo-coinc:focus { outline: none; }
+/* La tarjeta en curso (la de los atajos J y K): su contorno, solo con teclado y ratón (al tocar no hace falta) */
+.grupo-coinc:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .grupo-coinc.actual:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; } }
+.grupo-coinc.seleccionada { box-shadow: 0 0 0 2px var(--ink-2); background: color-mix(in srgb, var(--ink) 3%, var(--surface)); }
+.grupo-coinc.enviando { opacity: .62; }
+.grupo-coinc.con-error { border-color: color-mix(in srgb, var(--crit) 45%, var(--line-soft)); border-left-color: var(--nv); }
+.grupo-coinc.resuelta { opacity: 0; transform: translateX(28px); pointer-events: none; }
+.grupo-coinc.plegada { overflow: hidden; padding-top: 0; padding-bottom: 0; margin-bottom: 0; border-top-width: 0; border-bottom-width: 0;
+  transition: height .22s ease, padding .22s ease, margin .22s ease, opacity .22s ease; }
+
+.grupo-cab { grid-area: cab; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
+.sel-grupo { display: grid; place-items: center; width: 44px; height: 44px; margin: -4px -4px -4px -8px; border-radius: 10px; cursor: pointer; flex: none; }
+.sel-grupo:hover { background: var(--sunken); }
+.sel-grupo input { width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: var(--accent); }
+.grupo-titulo { display: inline-flex; align-items: center; gap: 9px; margin: 0; font-size: 15px; }
+.chip.nivel { background: color-mix(in srgb, var(--nv) 16%, transparent); color: color-mix(in srgb, var(--nv) 45%, var(--ink));
+  border-color: color-mix(in srgb, var(--nv) 45%, transparent); }
+.puntaje-grupo { font-size: 21px; font-weight: 800; letter-spacing: -.015em; font-variant-numeric: tabular-nums; }
+.puntaje-grupo.sin-puntaje { color: var(--muted); font-weight: 600; cursor: help; }
+.motivos-grupo { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.motivos-grupo .chip { font-size: 12px; }
+.n-fichas { color: var(--muted); font-size: 13px; }
+
+/* Señales: ✓ a favor y ✕ en contra (el ícono distingue sin el color) */
+.senales { grid-area: senales; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; min-width: 0; }
+.senal { display: inline-flex; align-items: center; gap: 4px; border-radius: 99px; padding: 2px 9px 2px 6px; font-size: 12.5px; font-weight: 650;
+  border: 1px solid transparent; }
+.senal svg { width: 13px; height: 13px; flex: none; }
+.senal.a-favor { background: color-mix(in srgb, var(--ok) 13%, transparent); color: var(--ok-text); }
+.senal.en-contra { background: var(--accent-soft); color: var(--accent-text); border-color: color-mix(in srgb, var(--crit) 35%, transparent); }
+.senales-pares { flex-direction: column; align-items: stretch; gap: 6px; }
+.senales-pares li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.par-letras { font: 700 12px/1 var(--f-mono); background: var(--sunken); color: var(--ink-2); border-radius: 6px; padding: 5px 6px; }
+.puntaje-par { min-width: 38px; font-size: 13px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.nota-par { font-size: 13px; font-style: italic; color: var(--ink-2); }
+.unificacion .falta { color: var(--muted); }
+
+.avisos-grupo { grid-area: avisos; list-style: none; margin: 10px 0 0; padding: 9px 12px; display: flex; flex-direction: column; gap: 4px;
+  border-radius: var(--r-s); background: color-mix(in srgb, var(--warn) 14%, transparent); font-size: 13.5px; color: var(--ink); }
+.grupo-coinc[data-nivel="bloqueada"] .avisos-grupo { background: color-mix(in srgb, var(--crit) 11%, transparent); }
+.avisos-grupo li { display: flex; align-items: flex-start; gap: 8px; }
+.avisos-grupo svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: color-mix(in srgb, var(--nv) 60%, var(--ink)); }
+
+/* ───────── La grilla de comparación: filas = campos, columnas = fichas y «Quedaría» ───────── */
+/* `position: relative`: los textos para lector de pantalla (.sr, absolutos) de las columnas de la derecha quedan dentro
+   del desplazamiento; si no, se escapan y el celular ensancha la página hasta ellos */
+.comparar-envoltura { grid-area: comparar; position: relative; margin-top: 12px; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain;
+  border: 1px solid var(--line-soft); border-radius: var(--r-s); background: var(--surface); }
+.comparar { --rot: 118px; --col: 150px; --qued: 170px; width: 100%; min-width: calc(var(--rot) + var(--n, 2) * var(--col) + var(--qued));
+  table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+.comparar col.col-rotulo { width: var(--rot); }
+.comparar col.col-quedaria { width: max(var(--qued), 24%); }
+.comparar th, .comparar td { text-align: left; vertical-align: top; padding: 8px 10px; border-top: 1px solid var(--line-soft);
+  overflow-wrap: anywhere; font-weight: 400; }
+.comparar thead tr:first-child > * { border-top: 0; vertical-align: bottom; }
+/* Rótulos de las filas, fijos a la izquierda al desplazar de costado */
+.comparar tbody th, .comparar .fila-elegir th, .comparar .esquina { position: sticky; left: 0; z-index: 1; background: var(--surface);
+  color: var(--muted); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; box-shadow: 1px 0 0 var(--line-soft); }
+.comparar .ficha-col { font-size: 14px; }
+.ficha-id { display: flex; align-items: flex-start; gap: 7px; min-width: 0; }
+.ficha-id a { font-weight: 750; text-decoration: none; color: var(--ink); }
+.ficha-id a:hover { text-decoration: underline; }
+.letra-ficha { display: inline-grid; place-items: center; width: 22px; height: 22px; flex: none; border-radius: 6px; background: var(--ink);
+  color: var(--bg); font: 800 12px/1 var(--f-body); }
+.comparar .ficha-col .chip { margin-top: 6px; font-size: 11.5px; }
+.comparar .fila-elegir td { padding-top: 4px; padding-bottom: 6px; }
+.opcion-ficha { display: flex; align-items: center; gap: 7px; min-height: 30px; font-size: 13px; cursor: pointer; }
+.opcion-ficha input { width: 17px; height: 17px; margin: 0; flex: none; accent-color: var(--accent); cursor: pointer; }
+.opcion-ficha:has(input:disabled) { color: var(--muted); cursor: default; }
+.comparar .quedaria { background: var(--raised); border-left: 1px solid var(--line); }
+.comparar thead .quedaria { color: var(--ink); }
+.quedaria-t { display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.comparar thead .quedaria small { display: block; color: var(--muted); font-size: 12px; font-weight: 500; margin-top: 2px; }
+.comparar thead .quedaria small.queda-no { color: var(--accent-text); font-weight: 650; }
+.pieza { display: inline; }
+.pieza .fuente, .piezas > .fuente { margin-left: 5px; }
+.piezas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.de-ficha { display: inline-grid; place-items: center; min-width: 16px; height: 16px; margin-left: 4px; padding: 0 3px; border-radius: 4px;
+  border: 1px solid var(--line); color: var(--muted); font: 700 10px/1 var(--f-body); vertical-align: 1px; }
+.pasan { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; cursor: help; }
+/* Dato repetido en otra ficha (subrayado lleno) y dato que choca (subrayado ondulado): forma y color a la vez */
+.unificacion .igual-dato { background: color-mix(in srgb, var(--ok) 15%, transparent); border-radius: 4px; padding: 0 4px;
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--ok) 65%, transparent); }
+.unificacion .choca { background: color-mix(in srgb, var(--crit) 11%, transparent); border-radius: 4px; padding: 0 4px;
+  text-decoration: underline wavy color-mix(in srgb, var(--crit) 80%, transparent); text-underline-offset: 3px; text-decoration-skip-ink: none; }
+.comparar .igual { padding: 0 2px; }
+/* La ficha marcada «No es la misma»: atenuada (sus controles siguen a mano para desmarcarla) */
+.comparar tbody td.excluida > *, .comparar th.excluida .ficha-id { opacity: .45; }
+.comparar th.excluida .ficha-id a { text-decoration: line-through; }
+
+/* ───────── Acciones del grupo ───────── */
+.grupo-acciones { grid-area: acciones; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 0; padding-top: 2px; }
+.botones-grupo { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.bloqueo { display: flex; align-items: flex-start; gap: 6px; max-width: 340px; margin: 0; font-size: 13px; font-weight: 600; color: var(--accent-text); }
+.bloqueo svg, .error-grupo svg { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+.error-grupo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 420px; padding: 8px 10px; border-radius: var(--r-s);
+  background: var(--accent-soft); color: var(--accent-text); font-size: 13.5px; font-weight: 600; }
+
+/* ───────── Progreso de «Unir las N muy probables» ───────── */
+.progreso-lote { display: flex; flex-direction: column; gap: 14px; }
+.estado-lote { margin: 0; font-weight: 600; }
+.barra-progreso { height: 12px; border-radius: 99px; background: var(--sunken); overflow: hidden; }
+.barra-progreso i { display: block; width: 0; height: 100%; border-radius: 99px; background: var(--ok); transition: width .3s ease; }
+.cifras-lote { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.cifras-lote div { background: var(--raised); border-radius: var(--r-s); padding: 10px 12px; min-width: 0; }
+.cifras-lote dt { color: var(--muted); font-size: 12px; font-weight: 650; }
+.cifras-lote dd { margin: 2px 0 0; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.errores-lote { margin: 0; padding-left: 18px; max-height: 180px; overflow: auto; font-size: 13px; color: var(--ink-2); }
+
+/* ───────── Tableta y celular ───────── */
+@media (max-width: 1100px) {
+  .grupo-coinc { grid-template-columns: minmax(0, 1fr); grid-template-areas: "cab" "senales" "avisos" "comparar" "acciones"; }
+  .grupo-acciones { align-items: stretch; padding-top: 12px; }
+  .botones-grupo { justify-content: stretch; }
+  .botones-grupo .btn { flex: 1 1 180px; min-height: 44px; }
+  .bloqueo, .error-grupo { max-width: none; }
+}
+@media (max-width: 900px) {
+  .barra-seleccion { position: static; }
+  /* Con algo seleccionado, la barra va fija abajo (debajo del velo y del menú: «Cerrar sesión» nunca queda tapado) */
+  .barra-seleccion.con-seleccion { position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 27; margin: 0; border-radius: 16px 16px 0 0;
+    border-width: 1px 0 0; padding: 10px max(12px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+  /* La cuenta arriba y los botones en dos columnas: «Unir» y «Marcar distintas» primero, al alcance del pulgar */
+  .barra-seleccion.con-seleccion { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .barra-seleccion.con-seleccion .cuenta-sel { grid-column: 1 / -1; }
+  .barra-seleccion.con-seleccion .botones-sel { display: contents; }
+  .barra-seleccion.con-seleccion .botones-sel .btn { min-height: 44px; white-space: normal; line-height: 1.2; }
+  .barra-seleccion.con-seleccion .cuenta-sel { font-size: 13.5px; }
+  /* El botón del asistente queda encima, a la derecha: la barra le deja su lugar */
+  body:has(#agente-boton:not([hidden])) #barra-sel.con-seleccion { padding-right: 84px; }
+  body:has(#barra-sel.con-seleccion) #vista.contenido { padding-bottom: calc(180px + env(safe-area-inset-bottom)); }
+  body:has(#barra-sel.con-seleccion) #avisos.avisos { bottom: calc(150px + env(safe-area-inset-bottom)); }
+  .grupo-coinc { scroll-margin-top: calc(var(--barra-movil) + 12px); scroll-margin-bottom: 160px; }
+  .motivo-unif, .unir-alta { flex: 1 1 100%; }
+  .unir-alta .btn { width: 100%; justify-content: center; }
+}
+@media (max-width: 640px) {
+  .grupo-coinc { padding: 10px 12px 14px 10px; border-left-width: 4px; }
+  .comparar { --rot: 84px; --col: 132px; --qued: 140px; font-size: 13px; }
+  .comparar th, .comparar td { padding: 7px 8px; }
+  .comparar tbody th, .comparar .fila-elegir th { font-size: 10.5px; letter-spacing: .02em; }
+  .puntaje-grupo { font-size: 18px; }
+  .cifras-lote dd { font-size: 20px; }
+  .cuenta-unif .explica { display: none; }
+  /* En la barra fija de una pantalla angosta, «Seleccionar todos» y «Quitar»: cada botón en una línea */
+  .barra-seleccion.con-seleccion .mas-texto { display: none; }
+  /* Los niveles en una sola fila que se desplaza (con un degradado que avisa que hay más): la primera tarjeta queda
+     más arriba */
+  .niveles-unif { position: relative; flex: 1 1 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: -16px; padding-right: 28px;
+    -webkit-mask-image: linear-gradient(90deg, black calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, black calc(100% - 28px), transparent); }
+  .niveles-unif::-webkit-scrollbar { display: none; }
+  .nivel-filtro { flex: none; }
+  .resumen-unif { gap: 10px; }
+}
+/* Dedo: blancos de 44 px */
+@media (pointer: coarse) {
+  .opcion-ficha { min-height: 44px; }
+  .nivel-filtro, .motivo-unif select { min-height: 44px; }
+}
+@media (hover: hover) {
+  .grupo-coinc:not(.resuelta):hover { border-color: var(--line); border-left-color: var(--nv); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .grupo-coinc, .grupo-coinc.plegada, .barra-progreso i { transition: none; }
+}

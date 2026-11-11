@@ -170,6 +170,70 @@ export const FUENTES = {
   planilla: 'Planilla de campo', consultor: 'Consultor', otra_base: 'Otra base', panel: 'Panel',
 };
 
+// ───────── Código de color por fuente (css/fuentes.css) ─────────
+/** Fuentes visibles de un dato, en orden de confianza (la más segura primero, como `modelo.CONFIANZA`): nombre, letra
+ * de la insignia, grupo y una línea para la leyenda. El grupo da la forma, que no depende del color (daltonismo):
+ * «equipo» (lo capturó una persona: insignia rellena), «base» (una base importada: solo borde) u «otra» (la ficha
+ * unida o una fuente sin catalogar: borde punteado). La letra va siempre: el color nunca es la única señal. */
+export const FUENTES_INFO = {
+  titular: { nombre: 'Titular en la Registraduría', letra: '✓', grupo: 'equipo', ayuda: 'votación verificada con el titular en la Registraduría.' },
+  equipo: { nombre: 'Equipo (panel)', letra: 'E', grupo: 'equipo', ayuda: 'lo escribió una persona del equipo en el panel.' },
+  reunion: { nombre: 'Reunión', letra: 'R', grupo: 'equipo', ayuda: 'ficha dada de alta en una reunión.' },
+  consultor: { nombre: 'Consultor', letra: 'C', grupo: 'equipo', ayuda: 'lo dictó el titular a un consultor.' },
+  planilla: { nombre: 'Planilla de campo', letra: 'P', grupo: 'equipo', ayuda: 'planilla que llenó el equipo en campo.' },
+  cedulas: { nombre: 'Base con cédula', letra: 'B', grupo: 'base', ayuda: 'base unificada con cédula, importada.' },
+  otra_base: { nombre: 'Otra base', letra: 'O', grupo: 'base', ayuda: 'una base importada.' },
+  tramites: { nombre: 'Trámites', letra: 'T', grupo: 'base', ayuda: 'base de trámites por vereda, sin cédula.' },
+  fusion: { nombre: 'Ficha unida', letra: 'U', grupo: 'otra', ayuda: 'vino de una ficha que se unió a esta.' },
+  otra: { nombre: 'Otra fuente', letra: '?', grupo: 'otra', ayuda: 'una fuente que el panel no conoce.' },
+};
+const ORDEN_FUENTES = Object.keys(FUENTES_INFO);
+
+/** Clave visible de una fuente tal como se guarda: `manual` y `panel` son lo mismo (lo escribió el equipo, sin
+ * distinguir rol), `fusion:<id>` es «ficha unida» (la fusión no guarda la fuente original del valor) y lo que el panel
+ * no conoce (`cruce`, que es un método, o una clave nueva) es `otra`. Sin fuente, null: no se pinta nada. */
+export function claveFuente(f) {
+  if (f == null || f === '') return null;
+  const s = String(f);
+  if (s === 'manual' || s === 'panel') return 'equipo';
+  if (s === 'fusion' || s.startsWith('fusion:')) return 'fusion';
+  return Object.hasOwn(FUENTES_INFO, s) ? s : 'otra';
+}
+export const nombreFuente = (f) => FUENTES_INFO[claveFuente(f)]?.nombre ?? '';
+
+/** Insignia de una fuente: círculo con su letra y su color, con el nombre completo en `title` y `aria-label`; con
+ * `conNombre`, chip con la letra y el nombre a la vista. '' si no hay fuente. */
+export function insigniaFuente(f, { conNombre = false } = {}) {
+  const k = claveFuente(f);
+  if (!k) return '';
+  const { nombre, letra, grupo } = FUENTES_INFO[k];
+  if (conNombre) {
+    return html`<span class="fuente con-nombre" data-fuente="${k}" data-grupo="${grupo}" title="Fuente: ${nombre}"><span class="letra" aria-hidden="true">${letra}</span><span class="sr">Fuente: </span>${nombre}</span>`;
+  }
+  return html`<span class="fuente" data-fuente="${k}" data-grupo="${grupo}" role="img" title="Fuente: ${nombre}" aria-label="Fuente: ${nombre}">${letra}</span>`;
+}
+
+/** Las insignias de una lista de fuentes, sin repetidos (`manual` y `panel` dan una sola) y en orden de confianza. */
+export function insigniasFuentes(lista, { conNombre = false } = {}) {
+  const claves = [...new Set((Array.isArray(lista) ? lista : []).map(claveFuente).filter(Boolean))]
+    .sort((a, b) => ORDEN_FUENTES.indexOf(a) - ORDEN_FUENTES.indexOf(b));
+  return claves.length ? html`<span class="fuentes">${claves.map((k) => insigniaFuente(k, { conNombre }))}</span>` : '';
+}
+
+/** Las fuentes que cada rol puede ver: A y K ven «cedulas» tal cual; P la recibe como «otra_base»
+ * (`proyeccion.neutralizar_fuente`), porque esa base trae listas de origen y partido. */
+export const fuentesVisibles = (administra) => ORDEN_FUENTES.filter((k) => (administra ? k !== 'otra_base' : k !== 'cedulas'));
+
+/** Leyenda plegable de los colores, solo con las fuentes de `claves` (las que el rol puede ver: `fuentesVisibles`). */
+export function leyendaFuentes(claves) {
+  const ks = [...new Set((claves || []).map(claveFuente).filter(Boolean))]
+    .sort((a, b) => ORDEN_FUENTES.indexOf(a) - ORDEN_FUENTES.indexOf(b));
+  if (!ks.length) return '';
+  return html`<details class="leyenda-fuentes"><summary>¿Qué significan los colores?</summary>
+    <ul>${ks.map((k) => html`<li data-fuente="${k}">${insigniaFuente(k)}<span><b>${FUENTES_INFO[k].nombre}</b>: ${FUENTES_INFO[k].ayuda}</span></li>`)}</ul>
+    <p class="nota-fuentes">Rellena: la capturó el equipo. Solo con borde: una base importada. Borde punteado: ficha unida u otra fuente. La letra dice siempre cuál es.</p></details>`;
+}
+
 /** Chip de abordaje de una fila o ficha (4.6). */
 export const chipAbordaje = (ab) => {
   const { clase, texto } = textoAbordaje(ab);
