@@ -10,9 +10,8 @@ import {
 import { elegirPunto } from './comunes.js';
 import { url } from '../base.js';
 
-const PESTANAS = [['coincidencias', 'Coincidencias por revisar'], ['conflictos', 'Conflictos de cédula'],
-  ['solicitudes', 'Solicitudes de titulares'], ['situaciones', 'Situaciones reportadas'], ['lugares', 'Barrios y veredas'],
-  ['sin', 'Lugares sin reconocer']];
+const PESTANAS = [['coincidencias', 'Coincidencias'], ['conflictos', 'Conflictos de cédula'], ['solicitudes', 'Solicitudes'],
+  ['situaciones', 'Situaciones'], ['lugares', 'Barrios y veredas'], ['sin', 'Sin reconocer']];
 const MOTIVOS_CONFLICTO = { nombre_distinto: 'Misma cédula, otro nombre', cedula_anterior: 'Cédula anterior de una ficha',
   posible_digitacion: 'Posible error de digitación', dictada: 'Cédula dictada al consultor' };
 const TIPOS_SOLICITUD = { consulta: 'Consulta', correccion: 'Corrección', supresion: 'Supresión', revocatoria: 'Revocatoria',

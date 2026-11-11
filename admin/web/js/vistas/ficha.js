@@ -13,7 +13,7 @@ import {
 } from '../modelo.js';
 import {
   $, $$, aviso, avisoError, chipAbordaje, chipAutorizacion, chipPrecision, confirmar, dialogo, esMovil, fecha, fuentesVisibles,
-  html, icono, iniciales, insigniaFuente, insigniasFuentes, leyendaFuentes, montar, nombreFuente, num, titulo,
+  hayEscrito, html, icono, iniciales, insigniaFuente, insigniasFuentes, leyendaFuentes, montar, nombreFuente, num, titulo,
 } from '../ui.js';
 import { dialogoAcercamiento, mensajeNoContactable } from './acercamiento.js';
 import {
@@ -150,7 +150,8 @@ export async function vistaFicha(el, { params, ir }) {
         </div>
         <div class="acciones">
           <div class="anillo" style="--p:${Number(p.completitud) || 0}" title="Completitud del perfil"><span>${Number(p.completitud) || 0}%</span></div>
-          ${adm ? html`<button class="btn" id="unir">Unir con otra ficha</button><button class="btn peligro" id="suprimir">Suprimir datos</button>` : ''}
+          ${adm ? html`<button class="btn en-menu" id="unir">Unir con otra ficha</button><button class="btn peligro en-menu" id="suprimir">Suprimir datos</button>
+            <button class="btn mas-ficha" id="mas-ficha" aria-haspopup="dialog" aria-label="Más acciones de la ficha">${icono('puntos')}</button>` : ''}
         </div>
       </div>
       ${bloqueSeguimiento()}
@@ -270,6 +271,7 @@ export async function vistaFicha(el, { params, ir }) {
           </section>
         </div>
       </div>`);
+    vigilarBarra();
     formInicial = leerForm();
     sucio = false;
     // Un dato guardado que su campo no puede mostrar (una fecha que no existe, como 1985-02-30, o una opción que ya no
@@ -333,22 +335,87 @@ export async function vistaFicha(el, { params, ir }) {
       ${faltan.length ? html`<div class="faltan-ficha"><span class="sec">Faltan:</span> ${chipsFaltan(faltan)}</div>` : ''}`;
   }
 
-  // Barra de acciones por rol, fija abajo en el celular: P visita y completa; C llama y registra; A y K, todo
+  // Barra de acciones por rol, fija abajo en el celular: P visita y completa; C llama y registra; A y K, todo. Van de la
+  // más a la menos usada: en una pantalla angosta las últimas pasan a «Más» (`acomodarBarra`). Cada una dice su ícono
+  // (`data-icono`) para repetirse en ese diálogo
   function barraAcciones() {
     const usables = telefonosUsables(p);
     const t0 = usables[0];
     const llamar = (adm || esC) && t0;
     const b = [];
     if (llamar) {
-      b.push(html`<a class="btn" href="tel:${marcable(t0.numero)}" data-llamar="0" data-canal="llamada">${icono('telefono')}<span>Llamar</span></a>`);
+      b.push(html`<a class="btn" href="tel:${marcable(t0.numero)}" data-llamar="0" data-canal="llamada" data-icono="telefono">${icono('telefono')}<span>Llamar</span></a>`);
       const cel = usables.findIndex((t) => esCelular(t.numero));
-      if (cel >= 0) b.push(html`<a class="btn" href="${enlaceWhatsapp(usables[cel].numero)}" target="_blank" rel="noopener noreferrer" data-llamar="${cel}" data-canal="whatsapp">${icono('whatsapp')}<span>WhatsApp</span></a>`);
+      if (cel >= 0) b.push(html`<a class="btn" href="${enlaceWhatsapp(usables[cel].numero)}" target="_blank" rel="noopener noreferrer" data-llamar="${cel}" data-canal="whatsapp" data-icono="whatsapp">${icono('whatsapp')}<span>WhatsApp</span></a>`);
     }
-    if (puede('acercamientos.registrar')) b.push(html`<button class="btn primario" data-registrar>${icono('acercamiento')}<span>${esP ? 'Registrar visita' : 'Registrar'}</span></button>`);
-    if (puede('personas.editar')) b.push(html`<button class="btn" data-completar>${icono('completar')}<span>Completar</span></button>`);
-    if (puede('personas.crear')) b.push(html`<button class="btn" data-hogar>${icono('hogar')}<span>Nueva en este hogar</span></button>`);
-    if (puede('personas.ubicar')) b.push(html`<button class="btn" data-gps>${icono('gps')}<span>Estoy en su casa</span></button>`);
-    return b.length ? html`<nav class="barra-acciones" aria-label="Acciones">${b}</nav>` : '';
+    if (puede('acercamientos.registrar')) b.push(html`<button class="btn primario" data-registrar data-icono="acercamiento">${icono('acercamiento')}<span>${esP ? 'Registrar visita' : 'Registrar'}</span></button>`);
+    if (puede('personas.editar')) b.push(html`<button class="btn" data-completar data-icono="completar">${icono('completar')}<span>Completar</span></button>`);
+    if (puede('personas.crear')) b.push(html`<button class="btn" data-hogar data-icono="hogar">${icono('hogar')}<span>Nueva en este hogar</span></button>`);
+    if (puede('personas.ubicar')) b.push(html`<button class="btn" data-gps data-icono="gps">${icono('gps')}<span>Estoy en su casa</span></button>`);
+    return b.length ? html`<nav class="barra-acciones" aria-label="Acciones">${b}<button type="button" class="btn mas-acciones" data-mas-acciones aria-haspopup="dialog" hidden>${icono('puntos')}<span>Más</span></button></nav>` : '';
+  }
+
+  // En el celular la barra va fija abajo en una sola fila y no siempre caben todas: sin desplazarla de costado (nadie
+  // sabría que hay más), las que no caben se esconden desde la última y se ofrecen en «Más». La principal («Registrar»)
+  // se esconde al final y la primera nunca. En escritorio la barra se envuelve y nunca desborda: se ven todas. Se mide
+  // de nuevo cada vez que cambia su ancho (girar el celular)
+  const obsBarra = typeof ResizeObserver === 'function' ? new ResizeObserver(() => acomodarBarra()) : null;
+  function acomodarBarra() {
+    const nav = $('.barra-acciones', el);
+    if (!nav) return;
+    const mas = $('.mas-acciones', nav);
+    const acciones = [...nav.children].filter((x) => x !== mas);
+    for (const a of acciones) a.hidden = false;
+    mas.hidden = true;
+    const cabe = () => nav.scrollWidth <= nav.clientWidth + 1;
+    if (cabe()) return;
+    mas.hidden = false;
+    const resto = acciones.slice(1).reverse();
+    for (const a of [...resto.filter((x) => !x.matches('.primario')), ...resto.filter((x) => x.matches('.primario'))]) {
+      if (cabe()) break;
+      a.hidden = true;
+    }
+  }
+  function vigilarBarra() {
+    obsBarra?.disconnect();
+    const nav = $('.barra-acciones', el);
+    if (!nav) return;
+    acomodarBarra();
+    obsBarra?.observe(nav);
+  }
+  // «Más»: las acciones que no cupieron. Cada botón del diálogo toca la acción escondida de la barra, así llamar o
+  // escribir por WhatsApp siguen anotando la llamada y cada acción hace exactamente lo mismo que en la barra
+  function masAcciones() {
+    const nav = $('.barra-acciones', el);
+    const ocultas = nav ? [...nav.children].filter((x) => x.hidden && !x.matches('.mas-acciones')) : [];
+    if (!ocultas.length) return;
+    const { el: d, cerrar } = dialogo({
+      titulo: 'Más acciones',
+      cuerpo: html`<div class="lista-mas-acciones">${ocultas.map((x, i) => html`<button type="button" class="btn" data-otra-accion="${i}">${icono(x.dataset.icono)}<span>${x.textContent.trim()}</span></button>`)}</div>`,
+    });
+    d.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-otra-accion]');
+      if (!b) return;
+      const accion = ocultas[Number(b.dataset.otraAccion)];
+      cerrar();
+      if (accion?.isConnected) accion.click();
+    });
+  }
+
+  // Cabecera en el celular: «Unir con otra ficha» y «Suprimir datos» (destructivo) no quedan como botones grandes
+  // bajo el nombre, donde cae el pulgar, sino en el menú ⋯
+  function masFicha() {
+    const { el: d, cerrar } = dialogo({
+      titulo: 'Más acciones de la ficha',
+      cuerpo: html`<div class="lista-mas-acciones"><button type="button" class="btn" data-ficha="unir">Unir con otra ficha</button>
+        <button type="button" class="btn peligro" data-ficha="suprimir">${icono('basura')}<span>Suprimir datos</span></button></div>`,
+    });
+    d.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-ficha]');
+      if (!b) return;
+      cerrar();
+      if (b.dataset.ficha === 'unir') unir(); else suprimir();
+    });
   }
 
   function noDisponible(campo, texto) {
@@ -465,6 +532,7 @@ export async function vistaFicha(el, { params, ir }) {
       titulo: `Número ${numero}`,
       cuerpo: html`<div class="lista-acciones-tel">${visibles.map(([k, tx]) => html`<button class="btn ${k === 'retirar' ? 'peligro' : ''}" data-accion-tel="${k}">${tx}</button>`)}</div>
         <label class="campo" style="margin-top:12px"><span>Nota (opcional)</span><input name="nota" maxlength="300" placeholder="Por ejemplo: contestó la hermana"></label>`,
+      sucio: hayEscrito,
     });
     d.addEventListener('click', async (e) => {
       const b = e.target.closest('[data-accion-tel]');
@@ -499,6 +567,7 @@ export async function vistaFicha(el, { params, ir }) {
         <label class="campo"><span>Nota</span><input name="nota" maxlength="300"></label>
       </form>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g-tel">Agregar</button>`,
+      sucio: hayEscrito,
     });
     const f = $('#f-tel', d);
     const enviar = async () => {
@@ -559,6 +628,7 @@ export async function vistaFicha(el, { params, ir }) {
           </div></section>
         <section class="tarjeta c-12"><h2>Acercamientos</h2>${lineaTiempo(eventosHistorial())}</section>
       </div>`);
+    vigilarBarra();
   }
 
   async function recargar() {
@@ -582,6 +652,7 @@ export async function vistaFicha(el, { params, ir }) {
         <label class="campo"><span>Descripción *</span><textarea name="descripcion" required maxlength="2000"></textarea><small class="nota-sensibles">No anote salud, política, religión ni otros datos sensibles.</small></label>
       </form>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="g-sol">Registrar solicitud</button>`,
+      sucio: hayEscrito,
     });
     const f = $('#f-sol', d);
     let clave = nuevaClave();
@@ -601,6 +672,7 @@ export async function vistaFicha(el, { params, ir }) {
       titulo: 'Marcar como atendido',
       cuerpo: html`<label class="campo"><span>¿Qué se actualizó?</span><textarea name="nota" maxlength="1000" placeholder="Se confirmó la dirección y el celular nuevo"></textarea></label>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" data-ok>Marcar como atendido</button>`,
+      sucio: hayEscrito,
     });
     d.querySelector('[data-ok]').addEventListener('click', () => cerrar($('[name="nota"]', d).value.trim()));
     const nota = await listo;
@@ -727,14 +799,17 @@ export async function vistaFicha(el, { params, ir }) {
       try { p = await api.del(`/api/personas/${id}/ubicacion`); pintar(); } catch (err) { avisoError(err); }
       return;
     }
-    if (e.target.closest('#suprimir')) {
-      if (await confirmar(`Se borrarán todos los datos personales de ${p.nombre} (derecho de supresión, Ley 1581), también de las fichas que se unieron con ella y del detalle de su auditoría. Las próximas importaciones la omitirán: queda solo una huella cifrada para reconocerla. ¿Continuar?`, { si: 'Suprimir', peligro: true })) {
-        try { await api.del(`/api/personas/${id}`); aviso('Datos suprimidos'); sucio = false; ir('/personas'); } catch (err) { avisoError(err); }
-      }
-      return;
-    }
+    if (e.target.closest('[data-mas-acciones]')) return masAcciones();
+    if (e.target.closest('#mas-ficha')) return masFicha();
+    if (e.target.closest('#suprimir')) return suprimir();
     if (e.target.closest('#unir')) unir();
   });
+
+  async function suprimir() {
+    if (await confirmar(`Se borrarán todos los datos personales de ${p.nombre} (derecho de supresión, Ley 1581), también de las fichas que se unieron con ella y del detalle de su auditoría. Las próximas importaciones la omitirán: queda solo una huella cifrada para reconocerla. ¿Continuar?`, { si: 'Suprimir', peligro: true })) {
+      try { await api.del(`/api/personas/${id}`); aviso('Datos suprimidos'); sucio = false; ir('/personas'); } catch (err) { avisoError(err); }
+    }
+  }
 
   el.addEventListener('input', (e) => {
     if (!e.target.closest('#f-datos') || e.target.name?.startsWith('aut_')) return;
@@ -852,6 +927,9 @@ export async function vistaFicha(el, { params, ir }) {
     $('#res-unir', d).addEventListener('click', async (ev) => {
       const b = ev.target.closest('[data-con]');
       if (!b) return;
+      // Un solo toque no une dos fichas: el botón queda abajo de la hoja, donde cae el pulgar
+      const otra = b.closest('.resultado')?.querySelector('b')?.textContent || 'la otra ficha';
+      if (!await confirmar(`¿Unir la ficha de ${otra} con la de ${p.nombre}? Esta conserva sus datos y recibe lo que le falte, más los trámites, reuniones y notas de la otra, que deja de aparecer por separado.`, { si: 'Unir las fichas' })) return;
       try {
         p = await api.post(`/api/personas/${id}/fusionar`, { con_id: Number(b.dataset.con) });
         cerrar(); aviso('Fichas unidas'); pintar(); refrescarInsignias();
@@ -860,7 +938,7 @@ export async function vistaFicha(el, { params, ir }) {
   }
 
   pintar();
-  return () => { turnoMini++; quitarPendiente(); mini?.remove(); mini = null; };
+  return () => { turnoMini++; quitarPendiente(); obsBarra?.disconnect(); mini?.remove(); mini = null; };
 }
 
 function resumenDetalle(txt) {

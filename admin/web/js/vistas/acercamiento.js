@@ -7,7 +7,7 @@ import {
   RESULTADOS, RESULTADOS_DE_NUMERO, RESULTADOS_RAPIDOS, TIPOS_TELEFONO, autorizacionDe, canalesPermitidos, enlaceWhatsapp,
   esCelular, etiquetaResultado, fueraDeHorario, hoyColombia, telefonosUsables,
 } from '../modelo.js';
-import { $, $$, aviso, avisoError, dialogo, html, icono, titulo } from '../ui.js';
+import { $, $$, aviso, avisoError, dialogo, hayEscrito, html, icono, titulo } from '../ui.js';
 
 const ICONO_CANAL = { llamada: 'telefono', whatsapp: 'whatsapp', sms: 'acercamiento', visita: 'hogar', correo: 'acercamiento', otro: 'puntos' };
 const TELEFONICOS = ['llamada', 'whatsapp', 'sms'];
@@ -168,6 +168,8 @@ export async function dialogoAcercamiento(p, { canal = null, indice = null, resu
     </form>`,
     pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="guardar-acerc" hidden>Guardar</button>`,
     alAbrir: (d) => d.classList.add('dialogo-acercamiento'),
+    // Un resultado elegido (que pide detalle) o algo escrito no se pierde por tocar el fondo o Escape
+    sucio: (d) => resultado != null || hayEscrito(d),
   });
   const form = $('#f-acerc', el);
   const boton = $('#guardar-acerc', el);

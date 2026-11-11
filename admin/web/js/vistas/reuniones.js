@@ -2,7 +2,7 @@
 // suyas y las abiertas al equipo; de las demás, solo cuántas hay. El administrador y el coordinador deciden si una
 // reunión queda abierta para que los planilleros registren asistentes.
 import { api, puede, sesion } from '../api.js';
-import { $, aviso, avisoError, datosForm, dialogo, hoy, html, icono, montar, num, titulo } from '../ui.js';
+import { $, aviso, avisoError, datosForm, dialogo, hayEscrito, hoy, html, icono, montar, num, titulo } from '../ui.js';
 import { administra, elegirPunto, opcionesLugares } from './comunes.js';
 
 const MES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
@@ -47,6 +47,7 @@ export async function vistaReuniones(el, { ir }) {
         <div class="ancho"><button type="button" class="btn chico" id="punto">${icono('pin')} Marcar el sitio exacto en el mapa</button> <span class="sec" id="punto-t"></span></div>
       </form>`,
       pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn primario" id="crear">Crear y registrar asistentes</button>`,
+      sucio: (x) => !!punto || hayEscrito(x),
     });
     $('#punto', d).addEventListener('click', async () => {
       punto = await elegirPunto({ titulo: 'Sitio de la reunión' });

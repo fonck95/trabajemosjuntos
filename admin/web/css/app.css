@@ -33,13 +33,14 @@
   --vidrio: rgb(255 255 255 / .82);
   --side-w: 236px;
   --barra-movil: 60px; /* alto de la barra superior del celular: 40 px del botón del menú + 10 px arriba y abajo */
+  --kpi-acento: #111111; /* tarjeta destacada del panel: en claro, la tinta del menú */
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
     --bg: #0d0d0d; --surface: #161616; --raised: #1d1d1d; --sunken: #111111; --ink: #f3f3f0; --ink-2: #d4d4ce;
     --muted: #a5a59f; --line: #2e2e2b; --line-soft: #242422; --accent: #ff4545; --accent-text: #ff6b6b;
-    --accent-soft: #3a1414; --side: #080808; --ok-text: #0ca30c;
+    --accent-soft: #3a1414; --side: #080808; --ok-text: #0ca30c; --kpi-acento: #2b2b28;
     --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9;
     --grid: #2c2c2a; --axis: #383835; --vidrio: rgb(22 22 22 / .84);
     --sombra: 0 18px 44px -20px rgb(0 0 0 / .8), 0 2px 8px rgb(0 0 0 / .3);
@@ -49,7 +50,7 @@
   color-scheme: dark;
   --bg: #0d0d0d; --surface: #161616; --raised: #1d1d1d; --sunken: #111111; --ink: #f3f3f0; --ink-2: #d4d4ce;
   --muted: #a5a59f; --line: #2e2e2b; --line-soft: #242422; --accent: #ff4545; --accent-text: #ff6b6b;
-  --accent-soft: #3a1414; --side: #080808; --ok-text: #0ca30c;
+  --accent-soft: #3a1414; --side: #080808; --ok-text: #0ca30c; --kpi-acento: #2b2b28;
   --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9;
   --grid: #2c2c2a; --axis: #383835; --vidrio: rgb(22 22 22 / .84);
   --sombra: 0 18px 44px -20px rgb(0 0 0 / .8), 0 2px 8px rgb(0 0 0 / .3);
@@ -66,12 +67,18 @@ h1, h2, h3 { margin: 0; line-height: 1.15; }
 [hidden] { display: none !important; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Utilidades: `.sec` es texto secundario en todo el panel (antes solo en algunos contextos: en Calidad salía en tinta
+   plena); `.pila` apila con separación sin un style="" por vista; una fila de tabla que no abre nada no muestra la mano */
+.sec { color: var(--muted); }
+.pila { display: flex; flex-direction: column; gap: 12px; }
+.tabla .sin-clic { cursor: default; }
+@media (hover: hover) { .tabla tbody tr.sin-clic:hover { background: none; } }
 
 /* ───────── Estructura ───────── */
 .app { display: grid; grid-template-columns: var(--side-w) 1fr; min-height: 100vh; }
 .lateral {
   position: sticky; top: 0; height: 100vh; height: 100dvh; background: var(--side); color: var(--side-ink); display: flex;
-  flex-direction: column; padding: 22px 14px max(16px, env(safe-area-inset-bottom)); gap: 6px; z-index: 30;
+  flex-direction: column; padding: 22px 14px max(16px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); gap: 6px; z-index: 30;
   /* En una pantalla baja (celular en horizontal, iPhone SE con las barras de Safari) el menú no cabe: se desplaza solo
      él, sin arrastrar la página, y «Cerrar sesión» siempre se alcanza */
   overflow-y: auto; overscroll-behavior: contain;
@@ -84,7 +91,7 @@ h1, h2, h3 { margin: 0; line-height: 1.15; }
 .nav { display: flex; flex-direction: column; gap: 2px; }
 .nav a { display: flex; align-items: center; gap: 11px; padding: 9px 11px; border-radius: 10px; text-decoration: none;
   color: var(--side-muted); font-weight: 600; font-size: 14.5px; position: relative; }
-.nav a:hover { color: var(--side-ink); background: rgb(255 255 255 / .06); }
+@media (hover: hover) { .nav a:hover { color: var(--side-ink); background: rgb(255 255 255 / .06); } }
 .nav a[aria-current="page"] { color: #fff; background: rgb(255 255 255 / .09); }
 .nav a[aria-current="page"]::before { content: ""; position: absolute; left: -14px; top: 8px; bottom: 8px; width: 4px;
   border-radius: 0 4px 4px 0; background: var(--accent); }
@@ -95,10 +102,10 @@ h1, h2, h3 { margin: 0; line-height: 1.15; }
   border-top: 1px solid rgb(255 255 255 / .08); font-size: 13px; color: var(--side-muted); }
 .lateral .pie button { background: none; border: 1px solid rgb(255 255 255 / .14); color: var(--side-ink); border-radius: 9px;
   padding: 7px 10px; cursor: pointer; text-align: left; display: flex; gap: 8px; align-items: center; }
-.lateral .pie button:hover { background: rgb(255 255 255 / .06); }
+@media (hover: hover) { .lateral .pie button:hover { background: rgb(255 255 255 / .06); } }
 .lateral .pie svg { width: 16px; height: 16px; flex: none; }
 
-.contenido { min-width: 0; padding: 26px clamp(16px, 3vw, 40px) 60px; }
+.contenido { min-width: 0; padding: 26px max(clamp(16px, 3vw, 40px), env(safe-area-inset-right)) 60px clamp(16px, 3vw, 40px); }
 .contenido.lleno { padding: 0; height: 100vh; height: 100dvh; position: relative; overflow: hidden; }
 .cabecera { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
 .cabecera h1 { font: 38px/1 var(--f-display); text-transform: uppercase; letter-spacing: .01em; }
@@ -106,21 +113,21 @@ h1, h2, h3 { margin: 0; line-height: 1.15; }
 .cabecera .acciones { display: flex; gap: 8px; flex-wrap: wrap; }
 .miga { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
 .miga a { text-decoration: none; color: var(--muted); }
-.miga a:hover { color: var(--ink); }
+@media (hover: hover) { .miga a:hover { color: var(--ink); } }
 
 .barra-movil, .velo { display: none; }
 @media (max-width: 900px) {
   .app { grid-template-columns: 1fr; }
-  .lateral { position: fixed; inset: 0 auto 0 0; height: auto; width: 270px; transform: translateX(-100%); transition: transform .25s; }
+  .lateral { position: fixed; inset: 0 auto 0 0; height: auto; width: calc(270px + env(safe-area-inset-left)); transform: translateX(-100%); transition: transform .25s; }
   .app.menu-abierto .lateral { transform: none; box-shadow: var(--sombra); }
   .barra-movil { display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 25; background: var(--side);
-    color: #fff; padding: 10px 16px; height: var(--barra-movil); }
+    color: #fff; padding: 10px max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left)); height: var(--barra-movil); }
   .barra-movil b { font: 19px/1 var(--f-display); text-transform: uppercase; }
   .barra-movil button { background: none; border: 0; color: #fff; padding: 4px; cursor: pointer; min-width: 40px; min-height: 40px;
     display: grid; place-items: center; }
   .barra-movil svg { width: 24px; height: 24px; display: block; }
   .app.menu-abierto .velo { display: block; position: fixed; inset: 0; z-index: 29; background: rgb(0 0 0 / .45); }
-  .contenido { padding: 18px 16px 50px; }
+  .contenido { padding: 18px max(16px, env(safe-area-inset-right)) 50px max(16px, env(safe-area-inset-left)); }
   /* La vista del mapa ocupa lo que deja la barra. dvh cuenta la barra de direcciones visible del navegador del celular;
      la línea con vh queda para los navegadores sin dvh */
   .contenido.lleno { height: calc(100vh - var(--barra-movil)); height: calc(100dvh - var(--barra-movil)); }
@@ -143,13 +150,13 @@ h1, h2, h3 { margin: 0; line-height: 1.15; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 16px; }
 .kpi { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r); padding: 16px 18px 14px; position: relative;
   overflow: hidden; text-decoration: none; display: block; }
-a.kpi:hover { border-color: var(--line); box-shadow: var(--sombra); }
+@media (hover: hover) { a.kpi:hover { border-color: var(--line); box-shadow: var(--sombra); } }
 .kpi .t { color: var(--muted); font-size: 12.5px; font-weight: 650; letter-spacing: .02em; text-transform: uppercase; }
 .kpi .v { font-size: 34px; font-weight: 800; letter-spacing: -.025em; line-height: 1.1; margin-top: 6px; }
 .kpi .d { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .kpi .medidor { height: 6px; border-radius: 99px; background: var(--sunken); margin-top: 12px; overflow: hidden; }
 .kpi .medidor i { display: block; height: 100%; border-radius: 99px; background: var(--s1); }
-.kpi.acento { background: var(--side); color: #fff; border-color: transparent; }
+.kpi.acento { background: var(--kpi-acento); color: #fff; border-color: transparent; }
 .kpi.acento .t, .kpi.acento .d { color: #b5b5ae; }
 .kpi.acento .medidor { background: rgb(255 255 255 / .12); }
 .kpi.acento .medidor i { background: var(--accent); }
@@ -158,12 +165,12 @@ a.kpi:hover { border-color: var(--line); box-shadow: var(--sombra); }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border-radius: 10px; padding: 8px 14px;
   border: 1px solid var(--line); background: var(--surface); font-weight: 650; font-size: 14px; cursor: pointer; text-decoration: none;
   white-space: nowrap; line-height: 1.3; }
-.btn:hover { background: var(--raised); border-color: var(--axis); }
+@media (hover: hover) { .btn:hover { background: var(--raised); border-color: var(--axis); } }
 .btn.primario { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.btn.primario:hover { filter: brightness(1.06); }
+@media (hover: hover) { .btn.primario:hover { filter: brightness(1.06); } }
 .btn.oscuro { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 .btn.fantasma { border-color: transparent; background: transparent; }
-.btn.fantasma:hover { background: var(--sunken); }
+@media (hover: hover) { .btn.fantasma:hover { background: var(--sunken); } }
 .btn.peligro { color: var(--crit); }
 .btn.chico { padding: 5px 10px; font-size: 13px; border-radius: 8px; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -202,11 +209,11 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
   padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; position: sticky; top: 0; background: var(--surface); }
 .tabla td { padding: 10px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
 .tabla tbody tr { cursor: pointer; }
-.tabla tbody tr:hover { background: var(--raised); }
+@media (hover: hover) { .tabla tbody tr:hover { background: var(--raised); } }
 .tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
 .tabla .nombre { font-weight: 650; }
 .tabla a.nombre { display: block; color: inherit; text-decoration: none; }
-.tabla a.nombre:hover { text-decoration: underline; }
+@media (hover: hover) { .tabla a.nombre:hover { text-decoration: underline; } }
 .tabla .sec { color: var(--muted); font-size: 12.5px; }
 .envoltura-tabla { overflow-x: auto; border-radius: var(--r); border: 1px solid var(--line-soft); background: var(--surface); }
 .paginacion { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 4px; color: var(--muted); font-size: 13.5px; }
@@ -225,7 +232,8 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
 @keyframes brillo { to { background-position: -200% 0; } }
 
 /* Avisos */
-.avisos { position: fixed; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 200; }
+.avisos { position: fixed; right: max(18px, env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); display: flex;
+  flex-direction: column; gap: 8px; z-index: 200; }
 .aviso { background: var(--ink); color: var(--bg); padding: 11px 16px; border-radius: 11px; box-shadow: var(--sombra); font-weight: 600;
   font-size: 14px; max-width: 380px; animation: entra .2s ease-out; display: flex; gap: 10px; align-items: flex-start; }
 .aviso.error { background: var(--crit); color: #fff; }
@@ -265,7 +273,7 @@ dialog .pie { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 
 .grafico .rejilla-l { stroke: var(--grid); stroke-width: 1; }
 .grafico .eje { stroke: var(--axis); stroke-width: 1; }
 .grafico .golpe { fill: transparent; cursor: pointer; }
-.grafico .marca-h:hover, .grafico .golpe:hover + .marca-h { opacity: .82; }
+@media (hover: hover) { .grafico .marca-h:hover, .grafico .golpe:hover + .marca-h { opacity: .82; } }
 .leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--ink-2); margin-top: 10px; }
 .leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
 .globo { position: fixed; pointer-events: none; z-index: 300; background: var(--ink); color: var(--bg); border-radius: 9px;
@@ -280,7 +288,7 @@ dialog .pie { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 
 .lista-barras .f > span:nth-child(2) { display: block; min-width: 0; }
 .lista-barras .f .b { display: block; height: 10px; border-radius: 0 4px 4px 0; background: var(--s1); min-width: 2px; }
 .lista-barras .f .n { font-variant-numeric: tabular-nums; font-weight: 650; min-width: 40px; text-align: right; }
-.lista-barras a.f:hover .b { filter: brightness(1.12); }
+@media (hover: hover) { .lista-barras a.f:hover .b { filter: brightness(1.12); } }
 
 /* ───────── Mapa ───────── */
 .mapa { position: absolute; inset: 0; }
@@ -351,7 +359,7 @@ dialog .pie { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 
 /* ───────── Reuniones ───────── */
 .reuniones { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .reunion-t { text-decoration: none; display: flex; flex-direction: column; gap: 10px; }
-.reunion-t:hover { border-color: var(--line); box-shadow: var(--sombra); }
+@media (hover: hover) { .reunion-t:hover { border-color: var(--line); box-shadow: var(--sombra); } }
 .fecha-bloque { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 54px; height: 58px;
   border-radius: 12px; background: var(--side); color: #fff; flex: none; }
 .fecha-bloque b { font: 24px/1 var(--f-display); }
@@ -368,7 +376,7 @@ dialog .pie { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 
 .asistente:last-child { border-bottom: 0; }
 .asistente .q { flex: 1; min-width: 0; }
 .asistente .q a { font-weight: 700; text-decoration: none; }
-.asistente .q a:hover { text-decoration: underline; }
+@media (hover: hover) { .asistente .q a:hover { text-decoration: underline; } }
 
 /* ───────── Calidad ───────── */
 .par { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: stretch; }
@@ -466,7 +474,7 @@ body:has(#franja-llamada) .contenido:not(.lleno) { padding-top: 76px; }
 .resultado-btn { min-height: 48px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); font-weight: 650;
   font-size: 14px; padding: 8px 10px; cursor: pointer; text-align: center; line-height: 1.2; }
 .resultado-btn.rapido { background: var(--raised); }
-.resultado-btn:hover { border-color: var(--axis); }
+@media (hover: hover) { .resultado-btn:hover { border-color: var(--axis); } }
 .resultado-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .resultado-btn:disabled { opacity: .5; }
 .ayuda-rapido { margin: 0; font-size: 12.5px; color: var(--muted); }
@@ -482,8 +490,9 @@ body:has(#franja-llamada) .contenido:not(.lleno) { padding-top: 76px; }
 .avisos-acercamiento .aviso-legal { margin: 0 0 6px; }
 
 /* Ficha (7.4): contacto primero en el celular, bloques plegables y barra de acciones por rol */
-.nombre-ficha { font-size: 32px; overflow-wrap: anywhere; }
-@media (max-width: 640px) { .nombre-ficha { font-size: 24px; } .perfil { gap: 12px; } .perfil .avatar { width: 48px; height: 48px; font-size: 20px; border-radius: 14px; } }
+.nombre-ficha, .cabecera h1.nombre-ficha { font-size: 32px; overflow-wrap: anywhere; }
+@media (max-width: 900px) { .cabecera h1.nombre-ficha { font-size: 28px; } }
+@media (max-width: 640px) { .cabecera h1.nombre-ficha { font-size: 24px; } .perfil { gap: 12px; } .perfil .avatar { width: 48px; height: 48px; font-size: 20px; border-radius: 14px; } }
 .lateral-ficha { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 @media (max-width: 1100px) { .ficha > .lateral-ficha { order: -1; } }
 details.bloque { margin-bottom: 12px; }
@@ -495,10 +504,11 @@ details.bloque > summary .chip { font-weight: 650; }
 .barra-acciones { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; }
 .barra-acciones .btn svg { width: 18px; height: 18px; }
 @media (max-width: 900px) {
-  .barra-acciones { position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; margin: 0; flex-wrap: nowrap; overflow-x: auto; gap: 6px;
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: var(--vidrio); backdrop-filter: blur(14px) saturate(1.4);
+  .barra-acciones { position: fixed; z-index: 27; left: 0; right: 0; bottom: 0; margin: 0; flex-wrap: nowrap; overflow-x: auto; gap: 6px;
+    padding: 8px max(10px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+    background: var(--vidrio); backdrop-filter: blur(14px) saturate(1.4);
     -webkit-backdrop-filter: blur(14px) saturate(1.4); border-top: 1px solid var(--line); scrollbar-width: none; }
-  .barra-acciones .btn { flex: 1 0 auto; flex-direction: column; gap: 2px; padding: 6px 8px; min-height: 54px; font-size: 12px; min-width: 72px; }
+  .barra-acciones .btn { flex: 1 0 auto; flex-direction: column; gap: 2px; padding: 6px; min-height: 54px; font-size: 12px; min-width: 64px; }
   .contenido:has(.barra-acciones) { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
   .contenido:has(.barra-acciones) .guardar-ficha { bottom: calc(70px + env(safe-area-inset-bottom)); }
 }
@@ -557,9 +567,10 @@ details.bloque > summary .chip { font-weight: 650; }
 .tabla-personas tr.recien td { background: color-mix(in srgb, var(--ok) 10%, transparent); transition: background 1s; }
 .aviso-tope { color: var(--accent-text); font-weight: 650; }
 .botones-pagina { display: flex; gap: 6px; }
-@media (max-width: 640px) {
-  .paginacion { flex-wrap: wrap; }
-  /* 5. Filas como tarjetas: cada celda lleva su título encima */
+@media (max-width: 640px) { .paginacion { flex-wrap: wrap; } }
+@media (max-width: 1260px) {
+  /* 5. Filas como tarjetas: cada celda lleva su título encima. Hasta 1260 px: con el menú fijo, la tableta y el portátil
+     chico tampoco tienen lugar para las columnas (medido: aun sin las secundarias la tabla pide unos 920 px) */
   .tabla-tarjetas, .tabla-tarjetas tbody { display: block; width: 100%; }
   .tabla-tarjetas thead { display: none; }
   .tabla-tarjetas tr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
@@ -610,7 +621,7 @@ details.bloque > summary .chip { font-weight: 650; }
 .mujeres .barra-p { background: var(--s2); border-radius: 4px 0 0 4px; }
 .hombres .barra-p { background: var(--s1); border-radius: 0 4px 4px 0; }
 .sin-sexo .barra-p { background: var(--axis); border-radius: 4px; }
-a.celda-p:hover .barra-p { filter: brightness(1.12); }
+@media (hover: hover) { a.celda-p:hover .barra-p { filter: brightness(1.12); } }
 .celda-p.cero .barra-p { min-width: 0; }
 .celda-p.cero .sec { visibility: hidden; }
 .rango-p { text-align: center; font-weight: 650; }
@@ -633,3 +644,95 @@ a.celda-p:hover .barra-p { filter: brightness(1.12); }
 .mnemo-nota.ok { background: color-mix(in srgb, var(--ok) 12%, transparent); }
 .mnemo-nota.alerta { background: color-mix(in srgb, var(--warn) 18%, transparent); }
 .mnemo-nota.error { background: color-mix(in srgb, var(--crit) 12%, transparent); }
+
+/* ═════════ Cualquier dispositivo: celular, tableta, portátil y escritorio ═════════
+   Fronteras: ≤640 celular, 641–900 tableta vertical, 901–1260 tableta horizontal o portátil chico (menú fijo), >1260. */
+
+/* Tema en el pie del menú: Sistema, Claro u Oscuro (sobre el menú, que es oscuro en los dos temas) */
+.lateral .pie .tema { display: flex; flex-direction: column; gap: 6px; }
+.lateral .pie .tema > span { display: flex; align-items: center; gap: 8px; }
+.lateral .pie .tema .segmentado { background: rgb(255 255 255 / .07); }
+.lateral .pie .tema button { border: 0; justify-content: center; padding: 5px 6px; color: var(--side-muted); font-size: 12.5px; }
+.lateral .pie .tema button[aria-pressed="true"] { background: rgb(255 255 255 / .16); color: #fff; box-shadow: none; }
+
+/* Habitantes (P3): los chips de una fila no se parten en dos líneas (el ancho automático de la tabla encogía Nombre a
+   108 px y cada fila llegaba a 222 px) y Nombre tiene un mínimo. Las 9 columnas piden unos 1 150 px: entre 1261 y
+   1520 px, con el menú fijo, se ocultan las secundarias (la edad y el puesto siguen en la ficha y en los filtros).
+   Hasta 1260, tarjetas (de tres columnas desde 641) */
+.chips-fila .chip, .faltan .chip { white-space: nowrap; }
+@media (min-width: 1261px) {
+  .tabla-personas th, .tabla-personas td { padding-left: 10px; padding-right: 10px; }
+  .tabla-personas td:first-child { min-width: 200px; }
+}
+@media (min-width: 1261px) and (max-width: 1520px) {
+  .tabla-personas th:nth-child(4), .tabla-personas td[data-titulo="Edad y sexo"],
+  .tabla-personas th:nth-child(6), .tabla-personas td[data-titulo="Puesto y mesa"] { display: none; }
+}
+@media (min-width: 641px) and (max-width: 1260px) { .tabla-tarjetas tr { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Los bloques plegables de la ficha: el chip del título («Sí autoriza (por confirmar)») baja de línea en vez de
+   ensanchar la página en 320 px */
+details.bloque > summary, .mas-datos > summary { flex-wrap: wrap; }
+details.bloque > summary .chip { white-space: normal; }
+
+/* Pestañas (P4): con ratón no hay cómo desplazarlas de costado (sin rueda horizontal «Lugares sin reconocer» nunca se
+   veía entera): se envuelven en dos filas, sin el degradado. En pantalla táctil siguen desplazables */
+@media (hover: hover) and (pointer: fine) {
+  .pestanas { flex-wrap: wrap; overflow-x: visible; -webkit-mask-image: none; mask-image: none; padding-right: 0; scroll-snap-type: none; }
+}
+
+/* Diálogos (P5): el botón de cerrar es un ícono de 44 × 44 en la esquina; el título largo baja de línea */
+dialog .cab { gap: 8px; }
+dialog .cab h2 { min-width: 0; overflow-wrap: anywhere; }
+dialog .cab .cerrar-dialogo { width: 44px; height: 44px; padding: 0; margin: -10px -14px -10px 0; flex: none; border-radius: 12px; color: var(--muted); }
+dialog .cab .cerrar-dialogo svg { width: 20px; height: 20px; }
+/* «No lo tiene / No sabe» de «Completar»: a 13 px iOS ampliaba la página al tocarlo */
+@media (max-width: 900px) { .no-sabe select { font-size: 16px; min-height: 44px; } }
+/* Sin pie, lo último es el cuerpo: deja el margen de la barra de inicio del iPhone */
+@media (max-width: 640px) { dialog.sin-pie .cuerpo { padding-bottom: calc(16px + env(safe-area-inset-bottom)); } }
+
+/* Ficha (P6): en el celular «Unir» y «Suprimir» van en el menú ⋯ de la cabecera; las acciones que no caben en la barra
+   de abajo, en «Más» (ficha.js las mide) */
+.cabecera .mas-ficha { display: none; }
+@media (max-width: 640px) {
+  .cabecera .acciones .en-menu { display: none; }
+  .cabecera .mas-ficha { display: inline-flex; }
+}
+.lista-mas-acciones { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+.lista-mas-acciones .btn { min-height: 48px; justify-content: flex-start; white-space: normal; text-align: left; }
+.lista-mas-acciones .btn svg { width: 18px; height: 18px; flex: none; }
+
+/* Los avisos son solo texto: no atajan el toque ni el clic a lo que tapan mientras se ven («Guardar cambios», el pie
+   del menú abierto) */
+.avisos { pointer-events: none; }
+/* Avisos (P9): en la ficha del celular van encima de la barra de acciones, no sobre ella. agente.css los baja a 18 px
+   cuando su botón sube a la barra de arriba: esta regla le gana (con el panel del asistente abierto manda la suya) */
+@media (max-width: 900px) {
+  body:has(#vista .barra-acciones):not(:has(#agente-panel:not([hidden]))) #avisos.avisos { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+
+/* Dedo (P7): todo lo que se toca mide 44 px o más en una pantalla táctil (los botones chicos, los chips, las pestañas y
+   las casillas ya lo tenían, arriba) */
+@media (pointer: coarse) {
+  :where(input:not([type=checkbox], [type=radio], [type=range], [type=color], [type=hidden], [type=file]), select) { min-height: 44px; }
+  .btn, .campo input, .campo select, .entrada, .fila-campos input, .fila-campos select, .selector-usuario select, .no-sabe select,
+  .boton-filtros, details.bloque > summary, .mas-datos > summary, .bloque-autorizacion summary, .bloque-dictados summary,
+  .interruptor, .nav a, .lateral .pie button { min-height: 44px; }
+  .btn, button.chip { min-width: 44px; }
+  button.chip { justify-content: center; }
+  .barra-movil button { min-width: 44px; min-height: 44px; }
+  .leyenda a, .tarjeta > header a { display: inline-flex; align-items: center; min-height: 44px; }
+  .tarjeta > header a { margin-block: -12px; }
+  /* La miga de pan y el nombre de cada fila crecen hacia arriba y abajo sin mover lo demás */
+  .miga a { display: inline-flex; align-items: center; min-height: 44px; margin-block: -12px; }
+  .tabla a.nombre { padding-block: 10px; margin-block: -10px; }
+  .lista-barras { gap: 0; }
+  .lista-barras .f, .celda-p { min-height: 44px; }
+}
+
+/* Movimiento reducido (P11): sin deslizar el menú ni los avisos; la rueda de carga gira lenta */
+@media (prefers-reduced-motion: reduce) {
+  .lateral, .tabla-personas tr.recien td, .interruptor input, .interruptor input::after, .zona-subida, .cargador-mapa { transition: none; }
+  .aviso, .barra-deshacer, .esqueleto { animation: none; }
+  .giro { animation-duration: 2.4s; }
+}

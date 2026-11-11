@@ -69,33 +69,86 @@ export function avisoError(err, ms = 6000) {
   aviso(err?.message || 'Error inesperado', 'error', ms);
 }
 
-/** Diálogo modal. `cuerpo` es HTML (crudo); devuelve {el, cerrar, listo} donde `listo` resuelve al cerrar. */
-export function dialogo({ titulo: t, cuerpo, pie = '', ancho = false, alAbrir }) {
+/**
+ * Diálogo modal. `cuerpo` es HTML (crudo); devuelve {el, cerrar, listo} donde `listo` resuelve al cerrar.
+ *
+ * `sucio(el)` dice si hay algo escrito que se perdería: con eso, tocar el fondo o Escape (gestos que se hacen sin
+ * querer, sobre todo en el celular, donde la hoja deja a la vista una franja del fondo) preguntan antes de descartar.
+ * Cerrar con un botón (✕, «Cancelar») es a propósito y no pregunta. Para formularios simples sirve `hayEscrito`.
+ */
+export function dialogo({ titulo: t, cuerpo, pie = '', ancho = false, alAbrir, sucio = null }) {
   const d = document.createElement('dialog');
   if (ancho) d.classList.add('ancho');
-  d.innerHTML = String(html`<div class="cab"><h2>${t}</h2><button class="btn fantasma chico" data-cerrar aria-label="Cerrar">✕</button></div>
+  // Sin pie, lo último del diálogo es el cuerpo: en el celular deja el margen de la barra de inicio del iPhone
+  if (!pie) d.classList.add('sin-pie');
+  d.innerHTML = String(html`<div class="cab"><h2>${t}</h2><button type="button" class="btn fantasma cerrar-dialogo" data-cerrar aria-label="Cerrar">${icono('cerrar')}</button></div>
     <div class="cuerpo">${cuerpo}</div>${pie ? html`<div class="pie">${pie}</div>` : ''}<div class="avisos" role="status" aria-live="polite"></div>`);
   document.body.append(d);
   let resolver;
   const listo = new Promise((r) => (resolver = r));
-  const cerrar = (v) => { d.close(); d.remove(); resolver(v); };
+  let cerrado = false, preguntando = false;
+  const cerrar = (v) => { cerrado = true; d.close(); d.remove(); resolver(v); };
+  const hayAlgo = () => { try { return typeof sucio === 'function' && !!sucio(d); } catch { return false; } };
+  // Fondo o Escape: si hay algo escrito, se confirma antes de perderlo (una sola pregunta a la vez)
+  async function descartar() {
+    if (cerrado || preguntando) return;
+    if (hayAlgo()) {
+      preguntando = true;
+      const si = await confirmar('¿Descartar lo escrito? Se pierde lo que anotó en este formulario.', { si: 'Descartar', no: 'Seguir escribiendo', peligro: true });
+      preguntando = false;
+      if (!si || cerrado) return;
+    }
+    cerrar(null);
+  }
   d.addEventListener('click', (e) => {
-    if (e.target === d || e.target.closest('[data-cerrar]')) cerrar(null);
+    if (e.target.closest('[data-cerrar]')) cerrar(null);
+    else if (e.target === d) descartar();
   });
-  d.addEventListener('cancel', (e) => { e.preventDefault(); cerrar(null); });
+  d.addEventListener('cancel', (e) => {
+    // Chromium deja de permitir que se cancele un Escape repetido sin otro gesto de por medio (`cancelable` falso):
+    // ahí el diálogo se cierra igual y lo atiende 'close', más abajo
+    if (!e.cancelable) return;
+    e.preventDefault();
+    descartar();
+  });
+  d.addEventListener('close', () => {
+    if (cerrado) return;
+    // Lo cerró el navegador (no `cerrar`): con algo escrito se vuelve a abrir tal cual y se pregunta; si no, se termina
+    if (hayAlgo()) { d.showModal(); descartar(); } else cerrar(null);
+  });
   d.showModal();
   alAbrir?.(d, cerrar);
   return { el: d, cerrar, listo };
 }
 
-export function confirmar(texto, { si = 'Confirmar', peligro = false } = {}) {
+export function confirmar(texto, { si = 'Confirmar', no = 'Cancelar', peligro = false } = {}) {
   const { el, cerrar, listo } = dialogo({
     titulo: 'Confirmar',
     cuerpo: html`<p>${texto}</p>`,
-    pie: html`<button class="btn" data-cerrar>Cancelar</button><button class="btn ${peligro ? 'primario' : 'oscuro'}" data-si>${si}</button>`,
+    pie: html`<button class="btn" data-cerrar>${no}</button><button class="btn ${peligro ? 'primario' : 'oscuro'}" data-si>${si}</button>`,
   });
   el.querySelector('[data-si]').addEventListener('click', () => cerrar(true));
   return listo.then((v) => v === true);
+}
+
+/**
+ * ¿Algún campo de `raiz` tiene un valor distinto del que traía al pintarse? (texto escrito, casilla marcada, otra
+ * opción elegida). Es el `sucio` de los diálogos con un formulario simple, que no llevan la cuenta de lo tocado.
+ */
+export function hayEscrito(raiz) {
+  return $$('input, select, textarea', raiz).some((x) => {
+    if (x.disabled || x.type === 'hidden') return false;
+    if (x.type === 'file') return x.files?.length > 0;
+    if (x.type === 'checkbox' || x.type === 'radio') return x.checked !== x.defaultChecked;
+    if (x.tagName === 'SELECT') {
+      const ops = [...x.options];
+      if (x.multiple) return ops.some((o) => o.selected !== o.defaultSelected);
+      // Sin `selected` en el HTML, la elegida al pintar es la primera
+      const inicial = ops.reduce((k, o, i) => (o.defaultSelected ? i : k), ops.length ? 0 : -1);
+      return x.selectedIndex !== inicial;
+    }
+    return x.value !== x.defaultValue;
+  });
 }
 
 export function datosForm(form) {

@@ -1,6 +1,6 @@
 // Arranque del panel: sesión, menú lateral según el rol y enrutado en el navegador.
 import { api, borrarBorrador, configurar, ErrorApi, nombreRol, olvidarCatalogos, puede, sesion } from './api.js';
-import { $, aviso, html, icono, montar } from './ui.js';
+import { $, aviso, esMovil, html, icono, montar } from './ui.js';
 import { dialogoIngreso, vistaLogin } from './vistas/login.js';
 import { sinBase, url } from './base.js';
 import { olvidarLlamada, revisarLlamadasPendientes } from './llamadas.js';
@@ -39,16 +39,26 @@ const TITULOS_INSIGNIA = { calidad: 'Personas con coincidencias por revisar', tr
 let limpiarVista = null;
 let generacion = 0;
 
+// Tema: «Sistema» (sin elección guardada: sigue al del dispositivo, también si cambia con la hora), «Claro» u «Oscuro»
+const TEMAS = ['light', 'dark'];
 function tema() {
-  try { return localStorage.getItem('tema'); } catch { return null; }
+  try { const t = localStorage.getItem('tema'); return TEMAS.includes(t) ? t : null; } catch { return null; }
 }
 function aplicarTema(t) {
+  if (!TEMAS.includes(t)) t = null;
   if (t) document.documentElement.dataset.theme = t;
   else delete document.documentElement.dataset.theme;
   try { t ? localStorage.setItem('tema', t) : localStorage.removeItem('tema'); } catch { /* sin almacenamiento */ }
+  marcarTema(t);
   window.dispatchEvent(new CustomEvent('tema'));
 }
+// El selector del menú muestra la elección vigente (si ya está pintado)
+function marcarTema(t = tema()) {
+  for (const b of document.querySelectorAll('#cambiar-tema [data-tema]')) b.setAttribute('aria-pressed', String((b.dataset.tema || null) === t));
+}
 export const temaOscuro = () => (document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
+// Siguiendo al sistema, el mapa y los gráficos se enteran cuando el dispositivo cambia de tema
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { if (!tema()) window.dispatchEvent(new CustomEvent('tema')); });
 
 // Estilos de usuarios, cuenta e ingreso (web/css/acceso.css): se cargan aquí porque index.html no los enlaza
 function cargarEstilos() {
@@ -83,7 +93,8 @@ function armarEstructura() {
         <nav class="nav" id="nav">${nav.map(([k, t, href]) => html`<a href="${href}" data-ruta data-nav="${k}">${icono(k)}<span>${t}</span>${INSIGNIAS[k] ? html`<span class="insignia oculto" id="insignia-${k}" title="${TITULOS_INSIGNIA[k]}"></span>` : ''}</a>`)}</nav>
         <div class="pie">
           <span>Sesión: <b id="usuario"></b></span>
-          <button id="cambiar-tema">${icono('luna')} Cambiar tema</button>
+          <div class="tema" id="cambiar-tema" role="group" aria-label="Tema de la pantalla"><span>${icono('luna')} Tema</span>
+            <div class="segmentado">${[['', 'Sistema'], ['light', 'Claro'], ['dark', 'Oscuro']].map(([k, t]) => html`<button type="button" data-tema="${k}" aria-pressed="false">${t}</button>`)}</div></div>
           <button id="salir">${icono('salir')} Cerrar sesión</button>
         </div>
       </aside>
@@ -96,7 +107,8 @@ function armarEstructura() {
     olvidar();
     location.href = url('/');
   };
-  $('#cambiar-tema').onclick = () => aplicarTema(temaOscuro() ? 'light' : 'dark');
+  $('#cambiar-tema').onclick = (e) => { const b = e.target.closest('[data-tema]'); if (b) aplicarTema(b.dataset.tema || null); };
+  marcarTema();
   $('#abrir-menu').onclick = () => abrirMenu(!$('#app').classList.contains('menu-abierto'));
   // En el celular el menú abierto tapa su botón: se cierra tocando fuera o con Escape
   $('#velo').onclick = () => abrirMenu(false);
@@ -137,10 +149,27 @@ function avisarVista(ruta, r, ok) {
   window.dispatchEvent(new CustomEvent('vista', { detail: { ruta, nav: r?.nav ?? null, ok } }));
 }
 
+/**
+ * Abre o cierra el menú lateral. En el celular el menú cerrado solo se corre fuera de la pantalla: queda inerte para
+ * que el tabulador y el lector de pantalla no entren en él; abierto, la vista de atrás es la inerte (el velo la tapa) y
+ * el foco entra al primer enlace. Si el foco quedó en el menú que se cierra, vuelve al botón que lo abre.
+ */
 function abrirMenu(abrir) {
-  $('#app')?.classList.toggle('menu-abierto', abrir);
+  const app = $('#app'), menu = $('#menu-lateral'), vista = $('#vista');
+  if (!app || !menu || !vista) return;
+  const estaba = app.classList.contains('menu-abierto');
+  app.classList.toggle('menu-abierto', abrir);
   $('#abrir-menu')?.setAttribute('aria-expanded', abrir);
+  const movil = esMovil();
+  menu.inert = movil && !abrir;
+  vista.inert = movil && abrir;
+  if (movil && abrir && !estaba) {
+    (menu.querySelector('#nav a[aria-current="page"]') || menu.querySelector('#nav a') || menu.querySelector('a, button'))?.focus({ preventScroll: true });
+  }
+  if (menu.inert && menu.contains(document.activeElement)) $('#abrir-menu')?.focus({ preventScroll: true });
 }
+// Al pasar de celular a escritorio (o al revés: girar la tableta, ensanchar la ventana) el menú vuelve a su estado
+matchMedia('(max-width: 900px)').addEventListener?.('change', () => abrirMenu(false));
 
 function insignia(nav, n) {
   const b = $(`#insignia-${nav}`);
