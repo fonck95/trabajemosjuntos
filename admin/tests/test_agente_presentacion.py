@@ -1328,7 +1328,7 @@ async function entrar(page, ruta) {
   await page.waitForSelector('#agente-boton:not([hidden])', espera);
   await page.goto(base + ruta, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('#app #vista > .vista', espera);
-  await page.evaluate(async (p) => { window.__P = await import(p + '/static/js/agente-presentacion.js'); }, pref);
+  await page.evaluate(async () => { window.__P = await import(new URL('agente-presentacion.js', document.querySelector('script[type=module]').src).href); });
 }
 
 const marco = (page) => page.frames().find((f) => /\/propuesta(#|$)/.test(f.url()));
@@ -1459,7 +1459,7 @@ const PANTALLAS = [
     {
       const { ctx, page } = await contexto(nav, { viewport: { width: 1400, height: 900 } });
       await entrar(page, '/personas');
-      await page.evaluate(async (p) => { const a = await import(p + '/static/js/api.js'); window.__sucio = true; a.registrarPendiente(() => window.__sucio); }, pref);
+      await page.evaluate(async () => { const a = await import(new URL('api.js', document.querySelector('script[type=module]').src).href); window.__sucio = true; a.registrarPendiente(() => window.__sucio); });
       if (await page.locator('#agente-panel').isHidden()) await page.click('#agente-boton');
       await page.fill('#agente-texto', 'Muestra la vivienda y explícala');
       await page.press('#agente-texto', 'Enter');
@@ -1578,7 +1578,7 @@ const pref = new URL(base).pathname.replace(/\/+$/, '');
     await page.waitForSelector('#app #vista > .vista', { timeout: 30000 });
     await page.goto(base + '/presentacion', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#pres-iframe', { timeout: 30000 });
-    await page.evaluate(async (p) => { window.__P = await import(p + '/static/js/agente-presentacion.js'); }, pref);
+    await page.evaluate(async () => { window.__P = await import(new URL('agente-presentacion.js', document.querySelector('script[type=module]').src).href); });
     const t0 = Date.now();
     salida.lista = await page.waitForFunction(() => window.__P.presentacionLista(), null, { timeout: 20000 }).then(() => true, () => false);
     salida.segundos = (Date.now() - t0) / 1000;

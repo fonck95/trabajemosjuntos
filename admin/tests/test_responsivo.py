@@ -690,7 +690,7 @@ async function pendiente(nav, caso) {
   await dormir(200);
   d.abiertos = await abiertos();
   v.sigue_abierta_con_lo_escrito = JSON.stringify(d.abiertos) === '["Nueva persona"]' && await page.inputValue('#f-nueva [name=nombre]') === nombre;
-  v.sigue_pendiente = await page.evaluate(async (p) => (await import(`${p}/static/js/api.js`)).hayCambiosSinGuardar(), pref);
+  v.sigue_pendiente = await page.evaluate(async () => (await import(new URL('api.js', document.querySelector('script[type=module]').src).href)).hayCambiosSinGuardar());
   if (!v.sigue_pendiente) d.dialogos = await page.evaluate(() => [...document.querySelectorAll('dialog')].map((x) => ({ abierto: x.open, titulo: x.querySelector('h2')?.textContent, valor: x.querySelector('[name=nombre]')?.value })));
   // La sesión vence: la búsqueda en vivo de parecidas (un GET) recibe un 401 y se ingresa en un diálogo, sin recargar
   let recargo = false;
