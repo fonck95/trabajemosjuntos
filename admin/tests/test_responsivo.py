@@ -315,7 +315,7 @@ async function ingresar(page) {
 // Abre una vista con el enrutador del panel y espera a que termine de pintarse y de cargar sus datos
 async function ir(page, ruta) {
   const n = await page.evaluate(() => window.__vistas.length);
-  await page.evaluate(async ([p, r]) => (await import(`${p}/static/js/app.js`)).ir(r), [pref, ruta]);
+  await page.evaluate(async (r) => (await import(new URL('app.js', document.querySelector('script[type=module]').src).href)).ir(r), ruta);
   await page.waitForFunction((n) => window.__vistas.length > n, n, espera);
   await page.waitForFunction(() => !document.querySelector('#vista .cargando, #vista .esqueleto-fila, #vista .giro'), null, espera);
   await dormir(350);
@@ -520,7 +520,7 @@ async function ficha(nav, caso, op) {
   await page.tap('dialog[open] [data-cerrar]');
   await page.waitForFunction(() => !document.querySelector('dialog[open]'));
   // Un aviso no tapa la barra de acciones
-  await page.evaluate(async (p) => (await import(`${p}/static/js/ui.js`)).aviso('Aviso de prueba inventado', 'ok', 8000), pref);
+  await page.evaluate(async () => (await import(new URL('ui.js', document.querySelector('script[type=module]').src).href)).aviso('Aviso de prueba inventado', 'ok', 8000));
   await dormir(300);
   const av = await page.evaluate(() => ({ aviso: document.querySelector('#avisos .aviso').getBoundingClientRect().toJSON(),
     barra: document.querySelector('#vista .barra-acciones').getBoundingClientRect().toJSON() }));

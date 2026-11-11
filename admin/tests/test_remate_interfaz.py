@@ -609,13 +609,13 @@ async function cContexto(nav, caso) {
     ? { flujo: [inicio(54), { tipo: 'texto', texto: 'Hola.' }, fin()] } : null));
   await ingresar(page);
   // Un mapa «abierto» (el puente del asistente con la cámara que se le diga) y filtros sensibles en la dirección
-  await page.evaluate(async (p) => {
-    const m = await import(`${p}/static/js/agente-mapa.js`);
+  await page.evaluate(async () => {
+    const m = await import(new URL('agente-mapa.js', document.querySelector('script[type=module]').src).href);
     window.__camara = { centro: [-73.912345, 6.987654], zoom: 16.5, base: 'auto' };
     window.__quitarMapa = m.registrarMapa({ aplicar: async () => [], estado: () => window.__camara });
     history.replaceState(history.state, '', `${location.pathname}?zona=rural&lista=7&lider=1&regimen_salud=subsidiado&ids=1,2,3`
       + '&poligono=-73.9,7.0,-73.8,7.1,-73.8,7.0&q=Ana&fuente=planilla');
-  }, pref);
+  });
   await enviar(page, 'Hola de cerca');
   await listo(page);
   await page.evaluate(() => { window.__camara = { centro: [-73.912345, 6.987654], zoom: 12.34 }; });
