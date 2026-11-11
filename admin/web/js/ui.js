@@ -137,6 +137,11 @@ const P = {
   hogar: '<path d="m3 11 9-7 9 7M5 9.5V20h5v-6h4v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
   completar: '<path d="M4 20h4L19 9l-4-4L4 16zm9-13 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
   filtro: '<path d="M3 5h18l-7 8v6l-4 2v-8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+  // La presentación de la propuesta (web/js/vistas/presentacion.js)
+  presentacion: '<path d="M3 4h18M5 4v11h14V4M12 15v3m-4 3 4-3 4 3M9 11l2-2 2 2 3-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  anterior: '<path d="M19 12H6m5-6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
+  pantalla: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  proyector: '<path d="M4 5h16v11H4zM8 20h8M12 16v4M14 3h6v6M20 3l-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   // Asistente del panel (web/js/agente.js)
   agente: '<path d="M10 2.5 12 8l5.5 2L12 12l-2 5.5L8 12l-5.5-2L8 8zM18 13l1.1 2.9L22 17l-2.9 1.1L18 21l-1.1-2.9L14 17l2.9-1.1z"/>',
   enviar: '<path d="M12 19V5m0 0-6 6m6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',

@@ -10,6 +10,9 @@
   Mnemo (`principal`, `ligero` o `<proveedor>/<modelo>`; vacía, el de la cuenta) y `MNEMO_HERRAMIENTAS` acota qué
   herramientas de Mnemo se ofrecen (lista separada por comas, o `*` para todas las que permita la conexión).
   `MNEMO_TOKEN` ya no se usa: si está definida se ignora con un aviso en el registro.
+* `SITIO_URL` (opcional): la dirección https:// del sitio público cuando el panel se despliega aparte (Root Directory =
+  admin). La vista Presentación muestra de ahí la propuesta 2028–2031 en un iframe, y la CSP del panel lo permite
+  (`frame-src`). En el servicio único (`servidor.py`) no hace falta: el sitio está en la raíz del mismo origen.
 """
 from __future__ import annotations
 
@@ -100,10 +103,18 @@ class Config:
     mnemo_url: str = ""
     mnemo_herramientas: str = ""
     mnemo_modelo: str = ""  # «» (el de la cuenta), «principal», «ligero» o «<proveedor>/<modelo>»
+    # El sitio público si vive en otro origen (el panel desplegado aparte): «https://sitio.example» o con una ruta
+    sitio_url: str = ""
 
     @property
     def agente_configurado(self) -> bool:
         return bool(self.anthropic_api_key)
+
+    @property
+    def origen_sitio(self) -> str:
+        """El origen de `sitio_url` («https://sitio.example:8443»), o «» sin él."""
+        m = re.match(r"^(https?://[^/]+)", self.sitio_url)
+        return m.group(1) if m else ""
 
 
 def _url_mnemo(v: str) -> str:
@@ -117,6 +128,22 @@ def _url_mnemo(v: str) -> str:
         return v
     log.warning("MNEMO_MCP_URL debe ser una dirección https://…/mcp: se ignora (es solo la dirección que se sugiere "
                 "para conectar Mnemo en Ajustes)")
+    return ""
+
+
+def _url_sitio(v: str) -> str:
+    """`SITIO_URL`: la dirección del sitio público (`https://<host>[:puerto][/ruta]`; en la propia máquina también
+    http://127.0.0.1 o http://localhost). Sin consulta, fragmento, usuario ni espacios: va a la CSP del panel y al src de
+    un iframe. Otra cosa se descarta con un aviso (el panel sigue: la vista Presentación dice que no hay sitio)."""
+    v = v.strip().rstrip("/")
+    if not v:
+        return ""
+    ruta = r"(/[A-Za-z0-9._~%-]*)*"
+    if (re.fullmatch(rf"https://[A-Za-z0-9.-]+(:\d{{1,5}})?{ruta}", v)
+            or re.fullmatch(rf"http://(127\.0\.0\.1|localhost)(:\d{{1,5}})?{ruta}", v)):
+        return v
+    log.warning("SITIO_URL debe ser la dirección https://… del sitio público: se ignora (la vista Presentación queda "
+                "sin la propuesta)")
     return ""
 
 
@@ -176,4 +203,5 @@ def cargar() -> Config:
         mnemo_url=_url_mnemo(_primera("MNEMO_MCP_URL")),
         mnemo_herramientas=_primera("MNEMO_HERRAMIENTAS").strip(),
         mnemo_modelo=_modelo_mnemo(_primera("MNEMO_MODELO")),
+        sitio_url=_url_sitio(_primera("SITIO_URL")),
     )

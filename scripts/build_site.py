@@ -232,6 +232,20 @@ def construir(src: Path = R / 'web', out: Path = R / 'site') -> None:
         elif panel:
             print('aviso: PANEL_URL debe ser una dirección https://… o una ruta como /panel/; no se agregó el enlace')
         home.write_text(h.replace(marca, enlace), encoding='utf-8')
+    # El asistente del panel maneja la presentación por postMessage desde la vista Presentación (un iframe). Con el panel
+    # en el mismo origen (/panel/) basta location.origin; si vive en otro servicio, su origen va en una <meta> que leen
+    # web/js/propuesta/mando.js (las órdenes que acepta y a quién responde) y admin/servidor.py (frame-ancestors). Una
+    # <meta> no cambia los hashes de la CSP del sitio
+    origen_panel = re.match(r'https://[A-Za-z0-9.-]+(?::\d{1,5})?(?=/|$)', panel) if panel else None
+    presentacion = out / 'propuesta.html'
+    if origen_panel and presentacion.exists():
+        p = presentacion.read_text(encoding='utf-8')
+        if '<meta charset="utf-8">' in p:
+            presentacion.write_text(p.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<meta name="panel-origen" '
+                                              f'content="{escape(origen_panel.group(0))}">', 1), encoding='utf-8')
+            print('la presentación acepta órdenes del panel en', origen_panel.group(0))
+        else:
+            print('aviso: propuesta.html no trae <meta charset="utf-8">; el panel de otro origen no podrá manejarla')
     malos = revisar(out) + [f'falta {local} (vea web/vendor/LEEME.md)' for local in sorted(usados) if not (out / local).is_file()]
     if malos:
         sys.exit('ERROR: en site/ quedaría código de fuera del repositorio o que la CSP del sitio bloquea:\n  '

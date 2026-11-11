@@ -366,6 +366,10 @@ export function crearEscena(el, datos) {
     }
     const riel = document.querySelector('.riel')?.getBoundingClientRect();
     if (riel && riel.width > W * 0.7) { y0 = Math.max(y0, riel.bottom - r.top + 4); yTecho = Math.max(yTecho, riel.bottom - r.top + 4); }
+    // el subtítulo del asistente (mando.js) va siempre abajo (sobre el control o acoplado sobre la hoja del celular, que
+    // puede estar en la mitad de arriba de la pantalla): recorta lo libre por abajo. Con la hoja grande está oculto
+    const elSub = document.querySelector('.subtitulo.visible'), sub = elSub?.getBoundingClientRect();
+    if (sub?.height && getComputedStyle(elSub).visibility === 'visible') y1 = Math.min(y1, sub.top - r.top - 8);
     if (x1 - x0 < W * 0.25) { x0 = 0; x1 = W; }
     // con la hoja inferior del celular la franja libre puede ser baja, pero nunca se encuadra en la pantalla entera: la
     // obra quedaría debajo del texto. Se deja una franja mínima de 90 px.

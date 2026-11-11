@@ -1,7 +1,7 @@
 // El asistente del panel (docs/agente.md): un botón flotante que abre una conversación con el modelo. Las respuestas
 // llegan en flujo (NDJSON, `flujo` de api.js) y se pintan por partes; lo que escribe en la base espera la aprobación de
-// la persona en una tarjeta; las acciones que pide el servidor (navegar, recargar, insignias, mapa) se validan aquí
-// antes de hacerse. Vive en document.body, fuera de #raiz y de #vista: sobrevive a cada cambio de vista.
+// la persona en una tarjeta; las acciones que pide el servidor (navegar, recargar, insignias, mapa, presentacion) se
+// validan aquí antes de hacerse. Vive en document.body, fuera de #raiz y de #vista: sobrevive a cada cambio de vista.
 //
 // Seguridad: nada de lo que escribe el modelo se pinta como HTML. Entra con textContent o como nodos de texto, y el
 // Markdown se convierte a nodos con una lista cerrada de elementos (lo demás, también «<img …>», queda como texto). Los
@@ -9,8 +9,14 @@
 // de Mnemo que da /api/agente/estado. Las plantillas `html` de este archivo solo llevan íconos de la tabla fija de ui.js.
 import { api, ErrorApi, FLUJO_CORTADO, flujo, hayCambiosSinGuardar, registrarPendiente, sesion } from './api.js';
 import { accionesMapa, estadoMapa, mapaListo } from './agente-mapa.js';
+import { accionesPresentacion, accionPresentacion, estadoPresentacion, presentacionLista, proyectorVivo }
+  from './agente-presentacion.js';
 import { sinBase, url } from './base.js';
 import { confirmar as preguntar, esMovil, fecha, html, icono, montar, num } from './ui.js';
+
+// El validador de la acción `presentacion` (forma estricta, op en lista blanca, capítulo como id, paso de 1 a 60 y una
+// explicación que se ve tal cual): vive en el puente, que también valida lo que llega por el canal del proyector
+export { accionPresentacion };
 
 const GUARDADO = 'yj_agente';             // sessionStorage: {abierto, conversacion, uid}; se borra en olvidar() de app.js
 const MAX_TEXTO = 4000;                   // el tope de MensajeIn.texto en la API
@@ -1249,6 +1255,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
     else if (a.tipo === 'recargar') recargar();
     else if (a.tipo === 'insignias') { try { insignias(); } catch (e) { console.error(e); } }
     else if (a.tipo === 'mapa') mapa(a);
+    else if (a.tipo === 'presentacion') presentacion(a);
   }
 
   function navegar(a) {
@@ -1320,6 +1327,35 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       nota(`${cuantos} en el mapa${motivos ? `: ${motivos}` : ''}.`, 'alerta', { dentro });
     }, (e) => {
       nota(`El mapa no aplicó los cambios: ${texto(e?.message, 160) || 'no terminó de cargar'}.`, 'alerta', { dentro });
+    });
+  }
+
+  /** La presentación de la propuesta (vistas/presentacion.js, por el puente agente-presentacion.js). Con una ventana de
+   * proyector abierta la acción va allá y esta pestaña no cambia de vista; si no, se abre /presentacion (con cambios
+   * sin guardar, solo si la persona lo pide). */
+  function presentacion(a) {
+    const p = accionPresentacion(a);
+    if (!p) {
+      nota('El asistente pidió algo que la presentación no hace: no lo apliqué.', 'alerta');
+      return;
+    }
+    const dentro = enAsistente();
+    const aplicar = () => aplicarPresentacion(p, dentro);
+    if (proyectorVivo() || presentacionLista() || rutaActual() === '/presentacion' || vistaLibre('la presentación', aplicar)) aplicar();
+  }
+
+  function aplicarPresentacion(p, dentro) {
+    // En el celular el asistente tapa la vista: se pliega para que se vea la presentación entera (con proyector, no
+    // hace falta: se ve en la otra pantalla)
+    if (!proyectorVivo()) {
+      if (esMovil()) plegar();
+      else if (rutaActual() !== '/presentacion') devolverFoco = panel.contains(document.activeElement);
+    }
+    accionesPresentacion([p], { navegar: ir }).then((res) => {
+      const mala = (Array.isArray(res) ? res : []).find((r) => r && r.ok === false);
+      if (mala) nota(`La presentación no aplicó el cambio: ${texto(mala.error, 160) || 'no se pudo'}.`, 'alerta', { dentro });
+    }, (e) => {
+      nota(`La presentación no aplicó el cambio: ${texto(e?.message, 160) || 'no terminó de cargar'}.`, 'alerta', { dentro });
     });
   }
 
@@ -1599,7 +1635,15 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
       reunion_id: m?.[1] === 'reuniones' ? Number(m[2]) : null,
       filtros: filtrosDe(location.search),
       mapa: camara(),
+      presentacion: pasoPresentacion(),
     };
+  }
+
+  /** El capítulo y el paso de la presentación abierta (aquí o en el proyector), solo el id y el número: el servidor
+   * los valida contra el guion y pone el nombre y el título. null si no hay una abierta. */
+  function pasoPresentacion() {
+    const e = estadoPresentacion();
+    return e ? { capitulo: e.capitulo, paso: e.paso } : null;
   }
 
   // ── Bienvenida, explicación y tope de mensajes ──

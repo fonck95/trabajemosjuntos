@@ -2,8 +2,9 @@
 
 El panel tiene un **asistente**: un agente de IA que, una vez se ingresa, aparece en un botón flotante. Se le escribe
 en español y responde con datos de la base: busca personas, resume los indicadores, revisa los pendientes, prepara
-reuniones, muestra cosas en el mapa, abre vistas y fichas y propone cambios (una nota, un acercamiento, una ficha
-nueva…) que la persona aprueba antes de que se guarden.
+reuniones, muestra cosas en el mapa, abre vistas y fichas, presenta y explica la propuesta 2028–2031 (en la vista
+**Presentación** o en un proyector) y propone cambios (una nota, un acercamiento, una ficha nueva…) que la persona
+aprueba antes de que se guarden.
 
 **Los modelos los pone Mnemo.** El administrador conecta el panel con su cuenta de Mnemo en **Ajustes → Asistente**:
 inicia sesión en Mnemo, da permiso y vuelve. Nadie copia claves. Desde ahí el asistente usa los modelos y los créditos
@@ -27,9 +28,9 @@ en **Ajustes → Asistente**.
 
 | Rol | Qué le puede pedir |
 |---|---|
-| Administrador y coordinador | Indicadores del tablero (también de una zona o con filtros), buscar y ver habitantes, fichas parecidas, reuniones (listar, ver, crear, agregar asistentes), pendientes de calidad (solicitudes por vencer, situaciones, conflictos, coincidencias, lugares sin punto), su trabajo y el de cada usuario, el equipo (lo que hizo cada usuario, alertas, asignación y el avance de cada zona, sin sesiones ni IP), barrios y veredas, catálogos, el mapa y cualquier vista. Propone crear y editar fichas, notas, acercamientos, autorizaciones, ubicación y teléfonos. Con Mnemo, el administrador (y el coordinador, si se le permite): documentos, calendario, formularios y memoria |
-| Planillero | Buscar y ver habitantes (en su zona y con su presupuesto diario), parecidas, sus reuniones y las abiertas al equipo, su trabajo y sus pendientes, barrios y veredas, catálogos y sus vistas. Propone crear y editar fichas, notas, acercamientos (visita o reunión), autorizaciones, ubicación, teléfonos, reuniones y asistentes. Sin tablero, mapa ni equipo |
-| Consultor | Su cola de llamadas y su trabajo, buscar por nombre (3 letras o más) o por un número completo de 10 dígitos, y ver las fichas de las personas que tiene en curso. Propone acercamientos (llamada, WhatsApp, SMS…), autorizaciones y teléfonos |
+| Administrador y coordinador | Indicadores del tablero (también de una zona o con filtros), buscar y ver habitantes, fichas parecidas, reuniones (listar, ver, crear, agregar asistentes), pendientes de calidad (solicitudes por vencer, situaciones, conflictos, coincidencias, lugares sin punto), su trabajo y el de cada usuario, el equipo (lo que hizo cada usuario, alertas, asignación y el avance de cada zona, sin sesiones ni IP), barrios y veredas, catálogos, el mapa, la presentación de la propuesta y cualquier vista. Propone crear y editar fichas, notas, acercamientos, autorizaciones, ubicación y teléfonos. Con Mnemo, el administrador (y el coordinador, si se le permite): documentos, calendario, formularios y memoria |
+| Planillero | Buscar y ver habitantes (en su zona y con su presupuesto diario), parecidas, sus reuniones y las abiertas al equipo, su trabajo y sus pendientes, barrios y veredas, catálogos, la presentación de la propuesta y sus vistas. Propone crear y editar fichas, notas, acercamientos (visita o reunión), autorizaciones, ubicación, teléfonos, reuniones y asistentes. Sin tablero, mapa ni equipo |
+| Consultor | Su cola de llamadas y su trabajo, buscar por nombre (3 letras o más) o por un número completo de 10 dígitos, ver las fichas de las personas que tiene en curso y la presentación de la propuesta. Propone acercamientos (llamada, WhatsApp, SMS…), autorizaciones y teléfonos |
 
 Nunca, para nadie: exportar o descargar, importar, unir o suprimir fichas, crear usuarios o cambiar claves y roles,
 cambiar ajustes, ver los datos sensibles o las listas de origen, ni la cédula o el teléfono completos. Para eso está el
@@ -49,6 +50,7 @@ Las herramientas del panel (`app/agente/herramientas/`):
 | `pendientes`, `mi_trabajo`, `buscar_lugar`, `catalogos` | lectura | todos | Insignias y colas, listas de trabajo, nomenclátor de barrios y veredas, catálogos no sensibles |
 | `mapa` | interfaz | A, K | Vuela a un lugar, filtra, cambia capas y mapa base, resalta personas, abre una zona |
 | `abrir_vista` | interfaz | todos | Abre una vista o una ficha que su rol puede ver |
+| `presentacion` | interfaz | todos | La presentación de la propuesta 2028–2031: el índice (capítulos y pasos), ir a un capítulo y paso (le vuelve lo que muestra ese paso para explicarlo), siguiente y anterior, y una frase en pantalla (`explicar`, `quitar_explicacion`). No toca la base |
 
 A = administrador, K = coordinador, P = planillero. Las de Mnemo (`mnemo_…`) se describen [más abajo](#conectar-con-mnemo).
 
@@ -88,7 +90,9 @@ y sigue igual.
   que llega por partes es un adelanto: al terminar cada ronda queda el texto final). En modo directo, además, notas de
   progreso en gris (qué está haciendo). Una conversación vacía muestra sugerencias para el rol.
 - **Sabe dónde está.** Con cada mensaje viaja la vista abierta: la ruta, la ficha o la reunión que se está viendo, los
-  filtros de la vista que están en la dirección (solo los que el asistente también puede usar) y el encuadre del mapa.
+  filtros de la vista que están en la dirección (solo los que el asistente también puede usar), el encuadre del mapa y
+  el capítulo y el paso de la presentación abierta (aquí o en el proyector; el nombre y el título los pone el servidor
+  con el guion).
   Por eso «¿qué le falta a esta ficha?» funciona. Es solo una pista: las herramientas vuelven a leer todo con los
   permisos de la persona. Lo que no le corresponde no viaja aunque esté en la dirección (ver [Qué va al
   modelo](#privacidad-y-protección-de-datos-ley-1581-de-2012)): la consulta de la ruta (lo que va tras «?» o «#»), lo
@@ -124,9 +128,22 @@ y sigue igual.
   mapa; y si se abre otra vista mientras el mapa carga, lo que esperaba aplicarse se descarta con un aviso. En un
   escritorio angosto, con el panel del asistente abierto, el panel izquierdo del mapa se pliega para que lo que muestra
   quede a la vista (vuelve con **Capas y filtros**).
+- **La presentación** (todos los roles). «Preséntame la propuesta» o «muéstrame las viviendas nuevas»: el asistente
+  abre la vista **Presentación** (la presentación pública de la propuesta 2028–2031, `web/propuesta.html`, dentro del
+  panel), va al capítulo y paso y la explica en el chat con lo que ese paso muestra (textos, cifras, costos, plazos y lo
+  que se ve en la maqueta), que le devuelve la herramienta; en pantalla, si hace falta, pone una frase corta como
+  subtítulo (abajo, junto a la leyenda; en el celular, sobre la hoja inferior) que se quita al cambiar de paso. Esa frase
+  se proyecta ante otras personas: nunca lleva datos de habitantes, números de 7 o más dígitos ni «@», ni caracteres que
+  no se ven. «Siguiente» y «anterior» siguen desde el paso que dice el contexto. La barra de la vista muestra el
+  capítulo y el paso, avanza y retrocede, pone la presentación a **Pantalla completa** y la **Abre en otra pantalla**:
+  una ventana del panel (`/presentacion?pantalla=1`) sin menú ni asistente, para el proyector. Mientras esa ventana
+  está abierta, el asistente (y los botones de la vista) la manejan desde la pestaña del chat, que ya no cambia de
+  vista. En pantalla ancha, con el asistente abierto, la presentación le deja su ancho; en el celular el asistente se
+  pliega al aplicar el cambio. Sin el sitio público en el mismo servidor (el panel desplegado aparte sin `SITIO_URL`),
+  la vista lo dice.
 - **Cambios sin guardar.** Si la vista tiene cambios sin guardar (la ficha a medio editar, un formulario abierto), el
-  asistente no la recarga, no abre otra ni abre el mapa: lo dice en la conversación y, para abrir lo que pidió, ofrece
-  **Abrir de todos modos** (lo que no se guardó se pierde).
+  asistente no la recarga, no abre otra, ni el mapa ni la presentación: lo dice en la conversación y, para abrir lo que
+  pidió, ofrece **Abrir de todos modos** (lo que no se guardó se pierde).
 - **Enlaces.** Las personas y reuniones que nombra enlazan a su ficha dentro del panel (`/personas/123`,
   `/reuniones/45`). Las aprobaciones de Mnemo abren Mnemo en otra pestaña. Ningún otro enlace se vuelve clicable.
 - **Conversaciones.** **Nueva conversación** empieza otra; **Conversaciones** lista las 30 más recientes para abrirlas
@@ -454,6 +471,7 @@ El asistente no necesita ninguna variable: se conecta con Mnemo desde **Ajustes 
 | `ANTHROPIC_API_KEY` | El [modo directo](#modo-directo-sin-mnemo): una clave de la consola de Anthropic, que se usa solo sin Mnemo con permiso para usar sus modelos |
 | `AGENTE_MODELO` | Solo en modo directo: `claude-opus-5-5` por defecto |
 | `AGENTE_ESFUERZO` | `medium` por defecto; `low`, `medium`, `high`, `xhigh` o `max` (otro valor usa `medium` y lo avisa en el registro). Vale con Mnemo y en modo directo |
+| `SITIO_URL` | Solo con el panel desplegado aparte (Root Directory = `admin`): la dirección `https://…` del sitio público, de donde la vista **Presentación** toma la propuesta (y la CSP del panel la deja enmarcar). En el servicio único no hace falta. Para que la presentación acepte las órdenes de ese panel, el sitio se construye con `PANEL_URL` = la dirección del panel |
 
 Pasos:
 
@@ -501,7 +519,17 @@ se suba.
   permisos ni escribir sin aprobación.
 - **La respuesta se pinta como texto**, nunca como HTML: solo enlaza rutas del panel y el origen de Mnemo, y las
   acciones que puede pedirle al navegador son una lista cerrada (abrir una ruta del panel, recargar la vista, refrescar
-  las insignias, mover el mapa).
+  las insignias, mover el mapa, manejar la presentación).
+- **La presentación** es pública y no toca la base: el modelo recibe el guion del paso (lo mismo que se ve). Va en un
+  iframe sin `sandbox` (con él no cargaría sus módulos; el límite es la CSP del sitio, que solo corre sus propios
+  scripts). La CSP del panel la deja enmarcar con `frame-src 'self'` (y el origen de `SITIO_URL`, si el panel vive
+  aparte), y la del sitio solo deja que la enmarquen su origen y el del panel (`frame-ancestors`); el panel mismo sigue
+  sin poder enmarcarse (`frame-ancestors 'none'`, `X-Frame-Options: DENY`). Panel y presentación hablan por
+  `postMessage` con el origen exacto (nunca `'*'`) y cada lado acepta solo mensajes de la otra ventana y de su origen,
+  con una forma estricta: órdenes de una lista, capítulos y pasos que existen, nada de claves de más. El subtítulo se
+  pinta como texto y su frase se rechaza (en la herramienta, en el navegador y en la presentación) con caracteres que
+  no se ven, números de 7 o más dígitos o «@». El modo proyector se abre con un enlace (no con `window.open`) y habla
+  con la pestaña del chat por `BroadcastChannel`, del mismo origen, con mensajes que también se validan.
 - **El flujo.** `POST` con CSRF y respuesta en flujo NDJSON (una línea JSON por evento, con un latido cada 15 s), sin
   GZip en esas dos rutas (lo retendría hasta el final) y con cupos propios en el servicio único, que se piden con el
   cuerpo ya leído (con el plazo y el tope del ingreso).
@@ -532,6 +560,10 @@ se suba.
 | `app/agente/mnemo_cliente.py` | El cliente del servidor MCP de Mnemo |
 | `web/js/agente.js`, `web/css/agente.css` | El botón y el panel del asistente |
 | `web/js/agente-mapa.js` | El puente entre el asistente y la vista del mapa |
+| `app/agente/guion.py`, `app/agente/propuesta_guion.json` | El guion de la presentación (lo que muestra cada paso, en texto plano): lo genera `scripts/build_propuesta.py` desde `web/data/propuesta.json` y va versionado dentro de `admin/` (también lo tiene el panel desplegado aparte) |
+| `web/js/agente-presentacion.js` | El puente entre el asistente y la vista Presentación: la cola, la navegación a `/presentacion`, el validador de la acción y el canal con la ventana del proyector |
+| `web/js/vistas/presentacion.js`, `web/css/presentacion.css` | La vista Presentación: el iframe de la propuesta, su barra y el modo proyector (`?pantalla=1`) |
+| `web/js/propuesta/mando.js` (del sitio) | En la presentación: recibe las órdenes del panel, le avisa cada cambio de paso y pinta el subtítulo |
 | `web/js/api.js` (`flujo`) | Lee la respuesta NDJSON con el CSRF de la sesión |
 | `app/api/ajustes.py`, `web/js/vistas/ajustes.js` | Los ajustes del asistente y, en la vista, la conexión con Mnemo (conectar, la vuelta y desconectar) |
 
@@ -571,7 +603,7 @@ se suba.
 | `progreso`, `texto` | Trozos de una nota de progreso o de la respuesta |
 | `texto_ronda` | `texto`: el texto final de la ronda en curso cuando no coincide con lo que llegó por partes (con Mnemo, los trozos son un adelanto). Reemplaza el de la ronda |
 | `herramienta` | `id`, `nombre`, `etiqueta`, `estado` (`inicio`, `ok`, `error`, `pendiente`, `aprobada`, `rechazada`) y `resumen` |
-| `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias` o `mapa` (acciones del mapa) |
+| `accion` | Una acción para el navegador: `navegar` (una ruta del panel), `recargar`, `insignias`, `mapa` (acciones del mapa) o `presentacion` (`op`: `ir` con `capitulo` y `paso` desde 1, `siguiente`, `anterior`, `explicar` o `quitar_explicacion`; `explicacion`, la frase para la pantalla, en todas salvo la última) |
 | `confirmar` | La tarjeta de una escritura: `id`, `titulo`, `detalle` (pares etiqueta y valor, enteros: el widget no recorta nada, y si llegan más de 40 o uno de más de 4.000 caracteres no ofrece **Aprobar**) y `aviso`. Lo pendiente al abrir una conversación lleva lo mismo y, si lo guardó una versión anterior del panel, `vieja` (tampoco ofrece **Aprobar**) |
 | `descartar` | La ronda se repite tras un error pasajero: se borra lo que se pintó de ella |
 | `aviso` | `texto` y `nivel` (`info` o `alerta`): un rechazo del modelo, el paso a un modelo de respaldo |
@@ -624,7 +656,10 @@ la Messages API simulada; `sse(...)` arma una respuesta del modelo con bloques `
 `encender_mnemo(app, *respuestas)` además le pone el modelo de Mnemo guionizado (cada ronda, un `R(...)` con bloques
 `T` y `TU`); `enviar` y `decidir` hacen un turno por la API y devuelven los eventos. `tests/test_agente_navegador.py`
 conecta Mnemo de punta a punta en Chromium (Ajustes, la página de permisos de un Mnemo falso y la vuelta) y revisa que
-el asistente se entere sin recargar la página.
+el asistente se entere sin recargar la página. `tests/test_agente_presentacion.py` arma el sitio con `build_site.py` en
+una carpeta temporal y, con el modelo simulado, lleva la presentación de verdad (en el iframe de la vista) a un paso y
+le pone el subtítulo, en escritorio y en el celular; con Node prueba el puente, el proyector y el mando sin navegador.
+Si cambia `data/propuesta/`, `python3 scripts/build_propuesta.py` regenera también el guion del asistente.
 
 ```python
 from ayudas_agente import T, encender, enviar, sse

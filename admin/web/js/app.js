@@ -20,6 +20,7 @@ const RUTAS = [
   { re: /^\/usuarios$/, nav: 'usuarios', permiso: 'usuarios.gestionar', carga: () => import('./vistas/usuarios.js').then((m) => m.vistaUsuarios) },
   { re: /^\/usuarios\/(\d+)$/, nav: 'usuarios', permiso: 'usuarios.gestionar', carga: () => import('./vistas/usuarios.js').then((m) => m.vistaUsuario) },
   { re: /^\/cuenta$/, nav: 'cuenta', permiso: 'cuenta', carga: () => import('./vistas/cuenta.js').then((m) => m.vistaCuenta) },
+  { re: /^\/presentacion$/, nav: 'presentacion', permiso: 'presentacion.ver', lleno: true, carga: () => import('./vistas/presentacion.js').then((m) => m.vistaPresentacion) },
 ];
 // [clave, texto, ruta, permiso]: el menú muestra solo lo que el rol puede abrir, en este orden. El coordinador ve el
 // mismo menú que el administrador; lo que no puede (coordinadores, roles, ajustes de permisos) se oculta en cada vista
@@ -27,6 +28,7 @@ const NAV = [
   ['panel', 'Panel', '/', 'tablero.ver'], ['mapa', 'Mapa 3D', '/mapa', 'mapa.ver'],
   ['personas', 'Habitantes', '/personas', 'personas.listar'], ['trabajo', 'Mi trabajo', '/trabajo', 'trabajo.ver'],
   ['reuniones', 'Reuniones', '/reuniones', 'reuniones.ver'], ['calidad', 'Calidad de datos', '/calidad', 'calidad.ver'],
+  ['presentacion', 'Presentación', '/presentacion', 'presentacion.ver'],
   ['importar', 'Importar y exportar', '/importar', 'importar'], ['usuarios', 'Usuarios', '/usuarios', 'usuarios.gestionar'],
   ['ajustes', 'Ajustes', '/ajustes', 'ajustes.gestionar'], ['cuenta', 'Mi cuenta', '/cuenta', 'cuenta'],
 ];

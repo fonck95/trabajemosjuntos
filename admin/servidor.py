@@ -45,6 +45,7 @@ if str(AQUI) not in sys.path:
 import base64
 import errno
 import hashlib
+import re
 from html.parser import HTMLParser
 
 from starlette.exceptions import HTTPException
@@ -122,13 +123,32 @@ def hashes_en_linea(directorio: Path) -> list[str]:
     return sorted(hashes)
 
 
+_META_PANEL = re.compile(r'<meta\s+name="panel-origen"\s+content="([^"]*)"\s*/?>', re.I)
+_ORIGEN_HTTPS = re.compile(r"https://[A-Za-z0-9.-]+(:\d{1,5})?")
+
+
+def origen_del_panel(directorio: Path) -> str:
+    """El origen https del panel que puede enmarcar la presentación, si vive en otro servicio: el que
+    scripts/build_site.py escribió en <meta name="panel-origen"> de site/propuesta.html a partir de PANEL_URL (el mismo
+    que acepta web/js/propuesta/mando.js). «» si no hay (en el servicio único el panel es del mismo origen) o si no es
+    un origen https limpio."""
+    pagina = directorio / "propuesta.html"
+    try:
+        m = _META_PANEL.search(pagina.read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return ""
+    return m.group(1) if m and _ORIGEN_HTTPS.fullmatch(m.group(1)) else ""
+
+
 def politica_sitio(directorio: Path) -> str:
     """CSP del sitio público, calculada al arrancar a partir de site/. Solo corren los scripts del propio origen y los
     <script> en línea que trae site/ (por su hash): ni CDN ni un <script> inyectado. 'wasm-unsafe-eval' deja compilar los
     decodificadores WebAssembly de Draco y meshopt y no habilita eval de JavaScript. Por eso aquí no corre el
     transcodificador Basis de KTX2Loader (embind arma funciones con new Function, también en su worker blob:, que hereda
     esta política): web/js/assets.js no registra KTX2 si no se puede evaluar código y avisa con un GLB que lo exige.
-    blob: y data: son las texturas, mallas y workers que arma three (DRACOLoader corre en workers blob:)."""
+    blob: y data: son las texturas, mallas y workers que arma three (DRACOLoader corre en workers blob:).
+    `frame-ancestors`: lo enmarca su propio origen (la vista Presentación del panel en /panel/) y, si el panel vive en
+    otro servicio, el origen que dice site/propuesta.html (`origen_del_panel`)."""
     return "; ".join([
         "default-src 'self'",
         "script-src " + " ".join(["'self'", "'wasm-unsafe-eval'", *hashes_en_linea(directorio)]),
@@ -141,7 +161,7 @@ def politica_sitio(directorio: Path) -> str:
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
-        "frame-ancestors 'self'",
+        " ".join(["frame-ancestors 'self'", origen_del_panel(directorio)]).strip(),
     ])
 
 

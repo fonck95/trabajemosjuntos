@@ -1,0 +1,57 @@
+/* Vista Presentación (web/js/vistas/presentacion.js): la propuesta 2028–2031 del sitio público en un iframe, con una
+   barra mínima arriba. La carga la vista (no index.html) y usa los tokens de app.css, así sigue el tema claro u oscuro.
+   * En pantallas anchas, con el asistente abierto, el iframe le deja libre su ancho (el panel del asistente no tapa la
+     presentación) y el botón del asistente va a la barra de la vista (abajo a la derecha está la leyenda de la maqueta).
+   * /presentacion?pantalla=1 (modo proyector): sin menú, sin barra y sin asistente; la presentación ocupa la ventana. */
+.presentacion { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--bg); }
+.pres-barra { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 8px 14px; min-height: 58px;
+  background: var(--surface); border-bottom: 1px solid var(--line-soft); }
+.pres-donde { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pres-donde b { font: 19px/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .02em; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+.pres-donde small { color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pres-botones { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pres-botones .btn svg { width: 18px; height: 18px; }
+.pres-remoto { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 14px; font-size: 13.5px; color: var(--ink-2);
+  background: var(--accent-soft); border-bottom: 1px solid var(--line-soft); }
+.pres-remoto svg { width: 18px; height: 18px; flex: none; color: var(--accent-text); }
+.pres-marco { position: relative; flex: 1; min-height: 0; background: var(--sunken); }
+.pres-marco iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+.pres-marco:fullscreen { background: #000; }
+.pres-sin { max-width: 560px; margin: 0 auto; }
+
+/* El botón del asistente, en la barra de la vista (en el celular ya va en la barra de arriba: agente.css) */
+@media (min-width: 901px) {
+  body:has(#vista .presentacion:not(.proyector)):has(#agente) .agente-boton { top: 9px; bottom: auto; right: 16px;
+    width: 42px; height: 42px; }
+  body:has(#vista .presentacion:not(.proyector)):has(#agente) .agente-boton svg { width: 22px; height: 22px; }
+  body:has(#vista .presentacion:not(.proyector)):has(#agente-boton:not([hidden])) .pres-barra { padding-right: 72px; }
+}
+/* Con el asistente abierto en pantalla ancha, la presentación queda a su izquierda (el panel mide hasta 420 px y está a
+   24 px del borde) */
+@media (min-width: 1200px) {
+  body:has(#agente-panel:not([hidden])) #vista .presentacion:not(.proyector) {
+    padding-right: calc(min(420px, 100vw - var(--side-w) - 48px) + 36px); }
+}
+/* En el celular, una sola fila: la presentación trae abajo su propio control (anterior y siguiente), así que aquí solo
+   quedan el capítulo y los dos botones de pantalla, sin texto */
+@media (max-width: 640px) {
+  .pres-barra { flex-wrap: nowrap; padding: 6px 10px; gap: 8px; min-height: 0; }
+  .pres-donde { flex: 1 1 auto; }
+  .pres-donde b { font-size: 16px; }
+  #pres-anterior, #pres-siguiente { display: none; }
+  .pres-botones { flex-wrap: nowrap; }
+  .pres-botones .btn { padding: 8px 10px; }
+  .pres-botones .btn span { display: none; }
+}
+@media (pointer: coarse) { .pres-botones .btn { min-height: 44px; min-width: 44px; } }
+
+/* Modo proyector: la ventana entera es la presentación */
+html[data-proyector] .lateral, html[data-proyector] .barra-movil, html[data-proyector] #agente { display: none; }
+html[data-proyector] .app { grid-template-columns: 1fr; }
+html[data-proyector] .contenido.lleno { height: 100vh; height: 100dvh; }
+.presentacion.proyector .pres-barra, .presentacion.proyector .pres-remoto { display: none; }
+.presentacion.proyector .pres-marco { background: #000; }
+/* abajo a la izquierda: arriba están las herramientas de la presentación y abajo al centro su control */
+.pres-completa { position: fixed; z-index: 5; left: 14px; bottom: 14px; box-shadow: var(--sombra); }
+.pres-completa[hidden] { display: none; }

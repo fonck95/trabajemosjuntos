@@ -43,14 +43,16 @@ class LoginIn(BaseModel):
 
 def datos_sesion(cfg, s: dict, csrf: str | None = None, u: dict | None = None, ajustes: dict | None = None) -> dict:
     """Lo que devuelven /api/login y /api/yo: quién es, su rol y permisos (con `excepto`, lo que el coordinador no
-    tiene aunque tenga «*»), el CSRF y lo que tiene pendiente."""
+    tiene aunque tenga «*»), el CSRF y lo que tiene pendiente. Y `sitio_url`, la dirección del sitio público si el panel
+    vive aparte (`SITIO_URL`; null si no): de ahí la vista Presentación muestra la propuesta."""
     expira = s["expira"].isoformat() if isinstance(s.get("expira"), datetime) else s.get("expira")
+    sitio = getattr(cfg, "sitio_url", "") or None
     if u is None:
         q = acceso.quien_admin(cfg)
         return {"uid": 0, "usuario": q.usuario, "nombre": q.nombre, "rol": "admin", "permisos": sorted(q.permisos),
                 "excepto": acceso.excepto("admin"), "csrf": csrf or s["csrf"], "expira": expira,
                 "debe_cambiar_clave": False,
-                "compromiso_pendiente": False, "compromiso": None}
+                "compromiso_pendiente": False, "compromiso": None, "sitio_url": sitio}
     aj = ajustes or {}
     vigente = aj.get("compromiso_version")
     return {"uid": u["_id"], "usuario": u["usuario"], "nombre": u.get("nombre"), "rol": u["rol"],
@@ -59,7 +61,8 @@ def datos_sesion(cfg, s: dict, csrf: str | None = None, u: dict | None = None, a
             "debe_cambiar_clave": bool(u.get("debe_cambiar_clave")),
             "compromiso_pendiente": u.get("compromiso_version") != vigente,
             "compromiso": {"version": vigente, "puntos": acceso.texto_compromiso(vigente),
-                           "aceptado": u.get("compromiso_version") == vigente, "aceptado_en": u.get("compromiso_en")}}
+                           "aceptado": u.get("compromiso_version") == vigente, "aceptado_en": u.get("compromiso_en")},
+            "sitio_url": sitio}
 
 
 def _inicio_del_dia_utc() -> str:
