@@ -335,7 +335,7 @@ async function entrar(page, ruta = '/') {
   await page.click('#f-login button[type=submit]');
   await page.waitForSelector('#app');
   if (ruta !== '/') { await page.goto(base + ruta, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('#app'); }
-  await page.evaluate(async (p) => { window.__P = await import(p + '/static/js/agente-mapa.js'); window.__A = await import(p + '/static/js/app.js'); }, pref);
+  await page.evaluate(async () => { window.__P = await import(new URL('agente-mapa.js', document.querySelector('script[type=module]').src).href); window.__A = await import(new URL('app.js', document.querySelector('script[type=module]').src).href); });
 }
 
 const listo = (page) => page.waitForFunction(() => window.__P.mapaListo(), null, { timeout: 90000, polling: 200 });

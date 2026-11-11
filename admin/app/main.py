@@ -6,7 +6,10 @@ o en admin/.env)
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
+import os
+import re
 from html import escape
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -27,6 +30,31 @@ from .seguridad import (CabecerasSeguras, Cortacircuitos, GuardiaApi, base_de, l
 
 WEB = Path(__file__).resolve().parents[1] / "web"
 INDICE = (WEB / "index.html").read_text(encoding="utf-8")
+
+
+def huella_web(carpeta: Path = WEB) -> str:
+    """«v-» y 12 cifras de la huella del contenido de web/: cambia con cada despliegue que toque un archivo del panel."""
+    h = hashlib.sha256()
+    for f in sorted(f for f in carpeta.rglob("*") if f.is_file()):
+        h.update(f.relative_to(carpeta).as_posix().encode() + b"\0" + f.read_bytes() + b"\0")
+    return "v-" + h.hexdigest()[:12]
+
+
+# La página pide sus archivos bajo /static/<VERSION>/. Los módulos se importan entre sí con rutas relativas («../ui.js»),
+# así que todos quedan bajo la versión: tras un despliegue el navegador (o un proxy) no tiene ninguno guardado y no
+# puede juntar un ui.js viejo con un vistas/personas.js nuevo. Calculada una vez al arrancar: web/ no cambia en marcha.
+VERSION = huella_web()
+_SEGMENTO_VERSION = re.compile(r"v-[0-9a-f]{12}")
+
+
+class Estaticos(StaticFiles):
+    """web/ en /static/ y en /static/<versión>/. Cualquier versión sirve los archivos de ahora: una pestaña abierta antes
+    del despliegue (con la versión anterior) sigue cargando vistas en vez de recibir 404 hasta que recargue."""
+
+    def get_path(self, scope) -> str:
+        ruta = super().get_path(scope)
+        primero, sep, resto = ruta.partition(os.sep)
+        return resto if sep and _SEGMENTO_VERSION.fullmatch(primero) else ruta
 log = logging.getLogger("panel")
 INTENTOS_ARRANQUE = 3  # panel solo: intentos de conectar a MongoDB (2 s entre uno y otro) antes de cortar el arranque
 # Las respuestas en flujo del asistente (NDJSON): cada evento tiene que llegar en cuanto sale
@@ -126,7 +154,7 @@ def crear_app(cfg: config.Config | None = None) -> FastAPI:
             return JSONResponse({"ok": False, "detail": "Sin conexión a MongoDB"}, status_code=503)
         return {"ok": True}
 
-    app.mount("/static", StaticFiles(directory=WEB), name="static")
+    app.mount("/static", Estaticos(directory=WEB), name="static")
 
     @app.get("/{ruta:path}", include_in_schema=False)
     def spa(ruta: str, request: Request):
@@ -136,7 +164,7 @@ def crear_app(cfg: config.Config | None = None) -> FastAPI:
         # El panel puede ir montado bajo un prefijo (/panel dentro del sitio): las rutas absolutas de la página lo
         # llevan, y el navegador lo lee de <meta name="panel-base"> para la API y el enrutado
         base = base_de(request)
-        pagina = INDICE.replace('"/static/', f'"{base}/static/').replace(
+        pagina = INDICE.replace('"/static/', f'"{base}/static/{VERSION}/').replace(
             '<meta charset="utf-8">', f'<meta charset="utf-8">\n<meta name="panel-base" content="{escape(base)}">')
         return HTMLResponse(pagina, headers={"Cache-Control": "no-cache"})
 

@@ -265,7 +265,7 @@ async function ingresar(page, ruta = null) {
 // Abre una vista con el enrutador del panel y espera a que termine de pintarse
 async function ir(page, ruta) {
   const n = await page.evaluate(() => window.__vistas.length);
-  await page.evaluate(async ([p, r]) => (await import(`${p}/static/js/app.js`)).ir(r), [pref, ruta]);
+  await page.evaluate(async (r) => (await import(new URL('app.js', document.querySelector('script[type=module]').src).href)).ir(r), ruta);
   await page.waitForFunction((n) => window.__vistas.length > n, n, espera);
 }
 
@@ -404,7 +404,7 @@ async function c39(nav, caso) {
   const { ctx, page, v, d } = await abrir(nav, caso, { viewport: { width: 1400, height: 760 }, reducedMotion: 'reduce' });
   await servirAgente(ctx, () => null);
   await ingresar(page, '/mapa');
-  await page.evaluate(async (p) => { window.__P = await import(`${p}/static/js/agente-mapa.js`); }, pref);
+  await page.evaluate(async () => { window.__P = await import(new URL('agente-mapa.js', document.querySelector('script[type=module]').src).href); });
   await page.waitForFunction(() => window.__P.mapaListo(), null, { timeout: 120000, polling: 200 });
   await page.evaluate(() => window.__P.accionesMapa([{ tipo: 'capas', valores: { relieve: false, edificios: false } }]));
   await page.click('#agente-boton');
@@ -638,7 +638,7 @@ async function c44(nav, caso) {
     for (const ruta of [`/personas/${D.persona}`, '/personas', ...(movil ? [] : ['/mapa'])]) {
       await ir(page, ruta);
       if (ruta === '/mapa') {
-        await page.evaluate(async (p) => { window.__P = await import(`${p}/static/js/agente-mapa.js`); }, pref);
+        await page.evaluate(async () => { window.__P = await import(new URL('agente-mapa.js', document.querySelector('script[type=module]').src).href); });
         await page.waitForFunction(() => window.__P.mapaListo(), null, { timeout: 120000, polling: 200 });
         // La atribución desplegada (como al abrir el mapa)
         await page.evaluate(() => document.querySelector('.maplibregl-ctrl-attrib')?.classList.add('maplibregl-compact-show'));
