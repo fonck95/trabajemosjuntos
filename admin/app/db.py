@@ -542,6 +542,18 @@ _EXPR_RANGO = {"$switch": {"branches": [
     {"case": {"$ne": [{"$ifNull": ["$lat", None]}, None]}, "then": 1}], "default": 0}}
 
 
+def llave_ubicacion(rango: int, direccion: Any) -> int:
+    """Con qué se compara la ubicación de dos fichas al unirlas: el rango (`_rango_ubicacion`) y, a igual rango, la que
+    tiene dirección. La ubicación pasa en bloque con la dirección de la que sale (`georreferenciar` la vuelve a calcular
+    con ella): sin el desempate, una ficha sin dirección ni barrio se quedaba con la dirección de la otra pero no con su
+    ubicación, y al volver a ubicarla aparecía un barrio que nadie había anunciado."""
+    return 2 * rango + (0 if modelo.vacio(direccion) else 1)
+
+
+# Gemelo de llave_ubicacion sobre la ficha guardada (expresión)
+_EXPR_LLAVE = {"$add": [{"$multiply": [2, _EXPR_RANGO]}, {"$cond": [modelo.expr_vacio("direccion"), 0, 1]}]}
+
+
 # ───────────────────────────── Autorizaciones ─────────────────────────────
 
 ESTADO_EFECTIVO = {"si": "si", "no": "no", "revocada": "no", "pendiente": "pendiente", None: "pendiente"}
@@ -693,6 +705,9 @@ def _pipeline_fusion(o: dict, origen: int, uid: Any) -> list[dict]:
     alt: list = []
     cedula_o = o.get("cedula") or o.get("cedula_en_traspaso")
     valores = {**o, "cedula": cedula_o}
+    # ¿La ubicación del origen pasa en bloque? Si está mejor ubicado (`llave_ubicacion`, sobre lo guardado del destino)
+    pasa_geo = {"$gt": [llave_ubicacion(_rango_ubicacion(o), o.get("direccion")), _EXPR_LLAVE]}
+    dir_o = None if modelo.vacio(o.get("direccion")) else o["direccion"]
     for campo in modelo.CAMPOS_PROCEDENCIA:
         v = valores.get(campo)
         if campo == "votacion" and not isinstance(v, dict):  # ficha vieja: el puesto y la mesa escritos
@@ -701,6 +716,18 @@ def _pipeline_fusion(o: dict, origen: int, uid: Any) -> list[dict]:
         if modelo.vacio(v):
             continue
         vacio = modelo.expr_vacio(campo)
+        if campo == "direccion":
+            # Va con la ubicación: si la del origen pasa en bloque, también su dirección, y la del destino queda en
+            # alternos (con su fuente). Si no, `georreferenciar` (al final de la unión) volvía a ubicar la dirección del
+            # destino con la ubicación del origen: una que no se ubica borraba el barrio y el punto que habían llegado
+            s[campo] = {"$cond": [{"$or": [vacio, pasa_geo]}, _lit(v), "$direccion"]}
+            distinta = {"$and": [{"$not": [vacio]}, {"$ne": ["$direccion", _lit(v)]}]}
+            alt.append({"$cond": [distinta, {"$cond": [
+                pasa_geo,
+                [{"campo": campo, "valor": "$direccion",
+                  "fuente": {"$ifNull": ["$procedencia.direccion.fuente", "panel"]}, "ts": ts, "uid": uid}],
+                [{"campo": campo, "valor": _lit(v), "fuente": fuente, "ts": ts, "uid": uid}]]}, []]})
+            continue
         s[campo] = {"$cond": [vacio, _lit(v), f"${campo}"]}
         if campo != "cedula":
             alt.append({"$cond": [{"$and": [{"$not": [vacio]}, {"$ne": [modelo.expr_comparable(campo),
@@ -713,18 +740,26 @@ def _pipeline_fusion(o: dict, origen: int, uid: Any) -> list[dict]:
                                             {"$or": ["$cedula_verificada", {"$and": [
                                                 {"$eq": ["$cedula", _lit(cedula_o)]}, _lit(bool(o.get("cedula_verificada")))]}]}]}
     if o.get("edad") is not None:
-        s["edad_ref"] = {"$cond": [modelo.expr_vacio("edad"), _lit(o.get("edad_ref")), "$edad_ref"]}
+        # La edad llega con su referencia (sin ella, la de `edad_efectiva`: la fecha en que se creó) y con una
+        # `nac_base` que la nombra: `derivar` toma una edad distinta de la de `nac_base` como declarada hoy, y un
+        # destino con fecha de nacimiento y sin edad (nac_base.edad None) perdía los años desde la declaración que la
+        # vista previa contaba
+        ref = modelo._fecha_de(o.get("edad_ref")) or modelo._fecha_de(o.get("creado_en"))
+        sin_edad = modelo.expr_vacio("edad")
+        s["edad_ref"] = {"$cond": [sin_edad, _lit(ref.isoformat() if ref else None), "$edad_ref"]}
+        s["nac_base"] = {"$cond": [sin_edad, {"$mergeObjects": [{"$ifNull": ["$nac_base", {}]},
+                                                                _lit({"edad": o["edad"]})]}, "$nac_base"]}
     if o.get("jefe_hogar") is not None:
         s["jefe_hogar"] = {"$ifNull": ["$jefe_hogar", _lit(o["jefe_hogar"])]}
     for campo in FUSION_SIMPLES:
         if not modelo.vacio(o.get(campo)):
             s[campo] = {"$cond": [modelo.expr_vacio(campo), _lit(o[campo]), f"${campo}"]}
-    # La ubicación pasa en bloque (no mezclar el barrio de una con las coordenadas de la otra)
-    rango_o = _rango_ubicacion(o)
+    # La ubicación pasa en bloque (no mezclar el barrio de una con las coordenadas de la otra), con su dirección
+    # (en `CAMPOS_PROCEDENCIA`, arriba)
     geo_o = {k: o.get(k, PERSONA_VACIA.get(k)) for k in GEO}
     geo_o["punto"] = modelo.punto(o.get("lat"), o.get("lon"))
     for campo in GEO:
-        s[campo] = {"$cond": [{"$gt": [rango_o, _EXPR_RANGO]}, _lit(geo_o[campo]), f"${campo}"]}
+        s[campo] = {"$cond": [pasa_geo, _lit(geo_o[campo]), f"${campo}"]}
     # Listas sin repetir
     claves = [c for c in [o.get("clave_tramites"), *(o.get("claves_tramites") or [])] if c]
     listas = {k: list(o.get(k) or []) for k in _LISTAS_UNION}
@@ -755,6 +790,18 @@ def _pipeline_fusion(o: dict, origen: int, uid: Any) -> list[dict]:
     for k in ("procedencia", "extra", "no_disponible", "sensibles", "avance"):
         if o.get(k):
             s[k] = {"$mergeObjects": [_lit(o[k]), {"$ifNull": [f"${k}", {}]}]}
+    if dir_o is not None:
+        # Si la dirección del origen pasa con su ubicación, también su procedencia (o ninguna, si no la anota): la del
+        # destino era la de la dirección que pasó a alternos
+        prov_o = o.get("procedencia") if isinstance(o.get("procedencia"), dict) else {}
+        actual = {"$ifNull": ["$procedencia", {}]}
+        sin_dir = {"$arrayToObject": {"$filter": {"input": {"$objectToArray": actual}, "as": "x",
+                                                  "cond": {"$ne": ["$$x.k", "direccion"]}}}}
+        con_la_del_origen = {"$mergeObjects": [
+            _lit({k: v for k, v in prov_o.items() if k != "direccion"}), sin_dir,
+            _lit({"direccion": prov_o["direccion"]} if "direccion" in prov_o else {})]}
+        s["procedencia"] = {"$cond": [{"$and": [pasa_geo, {"$ne": [{"$ifNull": ["$direccion", None]}, _lit(dir_o)]}]},
+                                      con_la_del_origen, s.get("procedencia", "$procedencia")]}
     if o.get("requiere_actualizacion"):
         s["requiere_actualizacion"] = {"$ifNull": ["$requiere_actualizacion", _lit(o["requiere_actualizacion"])]}
     for k in ("reclamo_en_tramite", "lider"):
@@ -920,10 +967,41 @@ def reparar_fusiones(db: Database) -> int:
     return n
 
 
+def _raices_activas(db: Database, ids: Iterable[int]) -> dict[int, tuple[int, Any]]:
+    """De las fichas `ids` que se unieron con otra, (ficha activa en que terminaron, su cédula). Las suprimidas, o
+    unidas en una que ya no está activa, no aparecen. `fusionada_en` apunta a la raíz (`_unir_en` reencadena), pero ese
+    paso es el último de la unión: mientras otra unión está en curso puede haber un eslabón más, así que se sube por
+    niveles (una consulta por nivel, sean cuantas sean las fichas)."""
+    raiz: dict[int, tuple[int, Any]] = {}
+    frente = {p["_id"]: p["fusionada_en"] for p in db.personas.find(
+        {"_id": {"$in": list(ids)}, "eliminado": {"$ne": True}, "fusionada_en": {"$ne": None}}, {"fusionada_en": 1})}
+    for _ in range(4):
+        if not frente:
+            break
+        arriba = {p["_id"]: p for p in db.personas.find(
+            {"_id": {"$in": list(set(frente.values()))}, "eliminado": {"$ne": True}}, {"fusionada_en": 1, "cedula": 1})}
+        sigue = {}
+        for i, d in frente.items():
+            if d not in arriba:
+                continue
+            if arriba[d].get("fusionada_en") is None:
+                raiz[i] = (d, arriba[d].get("cedula"))
+            else:
+                sigue[i] = arriba[d]["fusionada_en"]
+        frente = sigue
+    return raiz
+
+
 def cerrar_coincidencias_imposibles(db: Database, ids: Iterable[int] | None = None) -> int:
-    """Cierra las coincidencias pendientes que ya no se pueden aceptar: una de las dos fichas ya no está activa (se
-    unió con otra o se suprimió) o las dos tienen cédulas distintas. Quedan con estado «cerrada» (no se borran, así
-    una importación no las vuelve a proponer)."""
+    """Cierra las coincidencias pendientes que ya no se pueden aceptar: una de las dos fichas se suprimió, las dos
+    terminaron en la misma ficha o tienen cédulas distintas. Quedan con estado «cerrada» (no se borran, así una
+    importación no las vuelve a proponer). Devuelve cuántas cerró.
+
+    Las de una ficha que se unió con otra no se cierran: pasan a la ficha activa en que terminó, como hace
+    `_reapuntar_coincidencias` al unir (y se cierran si ese par ya existía). Si esto corre en medio de una unión (el
+    origen ya figura como unido y sus pares todavía no se reapuntaron), cerrarlas perdía para siempre el candidato que
+    la unión iba a pasar al destino; y corre seguido: lo llaman el tablero, la lista de grupos y `/api/insignias` en
+    cada vista de A y K."""
     q: dict = {"estado": "pendiente"}
     if ids is not None:
         ids = list(ids)
@@ -931,16 +1009,26 @@ def cerrar_coincidencias_imposibles(db: Database, ids: Iterable[int] | None = No
     pendientes = list(db.coincidencias.find(q, {"persona_id": 1, "candidato_id": 1}))
     if not pendientes:
         return 0
-    pids = list({c["persona_id"] for c in pendientes} | {c["candidato_id"] for c in pendientes})
-    cedulas = {p["_id"]: p.get("cedula") for p in db.personas.find({"_id": {"$in": pids}, **ACTIVA}, {"cedula": 1})}
-
-    def imposible(c: dict) -> bool:
-        if c["persona_id"] not in cedulas or c["candidato_id"] not in cedulas:
-            return True
-        a, b = cedulas[c["persona_id"]], cedulas[c["candidato_id"]]
-        return bool(a and b and a != b)
-
-    cerrar = [c["_id"] for c in pendientes if imposible(c)]
+    pids = {c["persona_id"] for c in pendientes} | {c["candidato_id"] for c in pendientes}
+    cedulas = {p["_id"]: p.get("cedula") for p in db.personas.find({"_id": {"$in": list(pids)}, **ACTIVA},
+                                                                   {"cedula": 1})}
+    raiz = {i: i for i in cedulas}
+    if pids - set(cedulas):
+        for i, (r, cedula) in _raices_activas(db, pids - set(cedulas)).items():
+            raiz[i], cedulas[r] = r, cedula
+    cerrar, mover = [], []
+    for c in pendientes:
+        a, b = raiz.get(c["persona_id"]), raiz.get(c["candidato_id"])
+        if a is None or b is None or a == b or (cedulas[a] and cedulas[b] and cedulas[a] != cedulas[b]):
+            cerrar.append(c["_id"])
+        elif (a, b) != (c["persona_id"], c["candidato_id"]):
+            mover.append((c["_id"], a, b))
+    for cid, a, b in mover:
+        try:
+            db.coincidencias.update_one({"_id": cid, "estado": "pendiente"},
+                                        {"$set": {"persona_id": a, "candidato_id": b}})
+        except DuplicateKeyError:  # ese par ya existía con la ficha activa
+            cerrar.append(cid)
     if cerrar:
         db.coincidencias.update_many({"_id": {"$in": cerrar}, "estado": "pendiente"},
                                      {"$set": {"estado": "cerrada", "resuelto_por": "sistema", "resuelto_en": ahora()}})

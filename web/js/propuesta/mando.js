@@ -11,45 +11,97 @@
 // * El subtítulo se pinta con textContent (nunca como HTML) y con las mismas reglas que pone el panel: sin caracteres que
 //   no se ven, sin números de 7 o más dígitos ni «@» (se proyecta ante una sala).
 // * Cada cambio de paso (también por el teclado o un clic) se le avisa al panel con el estado: capítulo, paso, total,
-//   nombre del capítulo y título del paso. main.js lo anuncia con el evento `propuesta:paso`.
+//   nombre del capítulo, título del paso y la explicación a la vista. main.js lo anuncia con el evento `propuesta:paso`.
 // main.js le entrega sus piezas (caps, estado, ir, vecino, abrirIndice, reencuadrar) al final del arranque: así este
 // módulo no depende de la escena 3D y se prueba con Node (admin/tests/test_agente_presentacion.py).
 export const CANAL = 'yondo-presentacion';
 export const VERSION = 1;
-export const MAX_EXPLICACION = 400;   // `MAX_EXPLICACION` de la herramienta y del puente del panel: una prueba los compara
+export const MAX_EXPLICACION = 220;   // `MAX_EXPLICACION` de la herramienta y del puente del panel: una prueba los compara
 const ID = /^[a-z_]{2,40}$/;
 const ORIGEN = /^https?:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/;
-const ORIGEN_HTTPS = /^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/;
-// Lo que el subtítulo no muestra (`_explicacion_visible` de admin/app/agente/herramientas/interfaz.py): de control, de
-// formato (marcas de dirección, ancho cero), separadores de línea, sustitutos sueltos, de uso privado, sin asignar, los
-// rellenos que se ven como nada y los selectores de variante; más de dos acentos apilados; 7 dígitos o más; «@»
+const ORIGEN_HTTPS = /^https:\/\/[A-Za-z0-9.-]+(:\d{1,5})?$/i;
+// Lo que el subtítulo no muestra (`_explicacion_visible` de admin/app/agente/herramientas/interfaz.py, con las mismas
+// reglas): de control, de formato (marcas de dirección, ancho cero), separadores de línea, sustitutos sueltos, de uso
+// privado, sin asignar, los rellenos que se ven como nada y los selectores de variante; más de dos acentos apilados; y,
+// en la forma NFKC del texto (así «＠», los dígitos en superíndice o de ancho completo y los guiones de compatibilidad
+// cuentan como los comunes), una «@» o un número de 7 dígitos o más, también por grupos (TIRADA: con espacios, guiones,
+// rayas, barras, paréntesis, o pegados con punto, coma o «_»), salvo un periodo («2028-2031») o un rango de cifras de la
+// propuesta de menor a mayor («$116.294 – 210.000 M»). Antes se quitan las fechas que existen (FECHA: «15/11/2026»,
+// «2026-11-15», de 1900 a 2099): cada una corta la tirada
 const NO_SE_VE = /[\p{Cc}\p{Cf}\p{Cs}\p{Co}\p{Cn}\p{Zl}\p{Zp}\u{34f}\u{115f}\u{1160}\u{17b4}\u{17b5}\u{2800}\u{3164}\u{ffa0}\u{180b}-\u{180f}\u{fe00}-\u{fe0f}\u{e0000}-\u{e0fff}]/u;
 const ACENTOS = /[\p{Mn}\p{Me}]{3,}/u;
-const DIGITOS = /\p{Nd}(?:[ .-]?\p{Nd}){6,}/u;
+const TIRADA = /\p{Nd}+(?:(?:[.,_\u00b7(]|\) ?|\)? ?[\-\u2010-\u2015\u2212\/] ?\(?| )\p{Nd}+)*/gu;
+const PERIODO = /^((?:19|20)[0-9]{2}) ?[\-\u2010-\u2015\u2212\/] ?((?:19|20)[0-9]{2})$/u;
+const RANGO = /^([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?) ?[\-\u2010-\u2015\u2212] ?([0-9]{1,3}(?:\.[0-9]{3})?(?:,[0-9]{1,2})?)$/u;
+const FECHA = /(?<!\p{Nd})(?:([0-9]{4}) ?([.\-\u2010-\u2015\u2212\/]) ?([0-9]{1,2}) ?\2 ?([0-9]{1,2})|([0-9]{1,2}) ?([.\-\u2010-\u2015\u2212\/]) ?([0-9]{1,2}) ?\6 ?([0-9]{4}))(?!\p{Nd})/gu;
+// Un monto en pesos con su signo y sus puntos de miles («$1.156.350», el costo por habitante del guion): la tirada
+// va justo después de «$», en grupos de tres y con 7 cifras enteras a lo sumo (`_MONTO` de la herramienta): una cédula
+// o un teléfono de 8 o más dígitos no pasa por llevar «$» delante
+const MONTO = /^(?:[0-9]{1,3}|[0-9]\.[0-9]{3})\.[0-9]{3}(?:,[0-9]{1,2})?$/u;
+const DIGITOS_MAX = 6;
+// La pantalla chica (`acomodar`): la franja mínima donde escena.js encuadra la obra (`zonaPx`), el alto mínimo de la
+// hoja inferior con el subtítulo (el de propuesta.html: el título del paso a la vista), el que no se pasa nunca (el
+// asa y el comienzo del título) y los pasos de la letra del subtítulo, de la suya a la más chica
+const FRANJA = 90;
+const HOJA_MIN = 96;
+const HOJA_PISO = 56;
+const ESCALAS = [1, 0.93, 0.86, 0.8, 0.75];
 // Claves que admite cada orden (además de canal, v, orden e id)
 const CLAVES = new Map([
   ['ir', ['capitulo', 'paso', 'explicacion']], ['avanzar', ['d', 'explicacion']], ['explicar', ['explicacion']],
   ['quitar_explicacion', []], ['estado', []],
 ]);
 
-/** La explicación lista para el subtítulo (los espacios seguidos quedan en uno, como los pinta el navegador), o null si
- * no se puede mostrar tal cual: no es texto, está vacía, pasa de MAX_EXPLICACION o trae lo que NO_SE_VE, ACENTOS o
- * DIGITOS prohíben, o una «@». */
+const cifra = (t) => Number(t.replace(/\./g, '').replace(',', '.'));
+
+/** ¿Es la fecha de FECHA un día que existe, de 1900 a 2099? («31/02/2026» no: se mira como cualquier número) */
+function esFecha(m) {
+  const [a, mes, dia] = (m[1] ? [m[1], m[3], m[4]] : [m[8], m[7], m[5]]).map(Number);
+  const f = new Date(Date.UTC(a, mes - 1, dia));
+  return a >= 1900 && a <= 2099 && f.getUTCFullYear() === a && f.getUTCMonth() === mes - 1 && f.getUTCDate() === dia;
+}
+
+/** ¿Trae `t` (en NFKC y con los espacios en uno) un número de más de DIGITOS_MAX dígitos que no es un periodo, un rango
+ * de cifras, una fecha ni un monto en pesos? (las fechas que existen se quitan antes y cortan la tirada) */
+function numeroLargo(t) {
+  t = t.replace(FECHA, (...m) => (esFecha(m) ? ' | ' : m[0]));
+  for (const { 0: tirada, index } of t.matchAll(TIRADA)) {
+    if (tirada.match(/\p{Nd}/gu).length <= DIGITOS_MAX) continue;
+    if (/\$ ?$/u.test(t.slice(0, index)) && MONTO.test(tirada)) continue;
+    const p = PERIODO.exec(tirada);
+    if (p && Number(p[1]) <= Number(p[2])) continue;
+    const r = RANGO.exec(tirada);
+    if (r && cifra(r[1]) <= cifra(r[2])) continue;
+    return true;
+  }
+  return false;
+}
+
+/** La explicación lista para el subtítulo (los espacios seguidos quedan en uno, como los pinta el navegador; sin NFKC:
+ * se muestra como vino), o null si no se puede mostrar tal cual: no es texto, está vacía, pasa de MAX_EXPLICACION o trae
+ * lo que NO_SE_VE o ACENTOS prohíben, una «@» o un número largo. */
 export function textoVisible(v) {
   if (typeof v !== 'string' || NO_SE_VE.test(v) || ACENTOS.test(v)) return null;
   const t = v.replace(/\s+/g, ' ').trim();
-  if (!t || [...t].length > MAX_EXPLICACION || DIGITOS.test(t) || t.includes('@')) return null;
-  return t;
+  if (!t || [...t].length > MAX_EXPLICACION) return null;
+  const k = t.normalize('NFKC').replace(/\s+/g, ' ').trim();
+  return k.includes('@') || numeroLargo(k) ? null : t;
 }
 
 /** Los orígenes de los que se aceptan órdenes y a los que se responde: el de la página (si es http o https; nunca
- * «null») y el del panel de <meta name="panel-origen"> si es un origen https limpio. */
+ * «null») y el del panel de <meta name="panel-origen"> si es un origen https limpio, escrito como lo entrega el
+ * navegador en `e.origin` (el host en minúsculas y sin «:443»; build_site.py ya lo escribe así): con «Panel.example» o
+ * «:443» tal cual, ninguna orden pasaría el filtro y la presentación igual avisaría «listo». */
 export function origenesPermitidos(ventana, documento) {
   const out = new Set();
   const propio = ventana?.location?.origin;
   if (typeof propio === 'string' && ORIGEN.test(propio)) out.add(propio);
   const panel = documento?.querySelector?.('meta[name="panel-origen"]')?.content;
-  if (typeof panel === 'string' && ORIGEN_HTTPS.test(panel)) out.add(panel);
+  if (typeof panel === 'string' && ORIGEN_HTTPS.test(panel)) {
+    let origen = null;
+    try { origen = new URL(panel).origin; } catch { origen = null; }
+    if (typeof origen === 'string' && ORIGEN_HTTPS.test(origen)) out.add(origen);
+  }
   return out;
 }
 
@@ -69,7 +121,10 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   if (!permitidos.size) return null;
   const pres = documento.querySelector('#pres'), sub = documento.querySelector('.subtitulo'), texto = sub?.querySelector('p');
   const leyenda = documento.querySelector('.leyenda3d'), panel = documento.querySelector('.panel');
+  const barra = documento.querySelector('.barra'), riel = documento.querySelector('.riel'), herr = documento.querySelector('.herr');
   const chica = ventana.matchMedia?.('(max-width: 1080px)');   // la misma frontera de propuesta.html y escena.js
+  // el celular o la tableta en horizontal: el panel va de lado (propuesta.html)
+  const deLado = ventana.matchMedia?.('(max-width: 1080px) and (orientation: landscape) and (max-height: 560px)');
   let listo = false;
   let origenPadre = null;       // el del panel que mandó la última orden válida: a él van los avisos siguientes
   let pasoDelSubtitulo = null;  // «capitulo/paso» al que corresponde la explicación en pantalla
@@ -79,12 +134,15 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   for (const a of documento.querySelectorAll('.barra a[href]')) { a.target = '_blank'; a.rel = 'noopener'; }
 
   const clave = () => (caps[estado.ci] ? `${caps[estado.ci].id}/${estado.pi + 1}` : null);
+  // El estado lleva la explicación que está a la vista (`texto`, la que pintó `subtitulo`): la pestaña del chat que sigue
+  // a la ventana del proyector pone la misma, no la última que mandó ella (podía ser vieja o de otra pestaña)
   function actual() {
     const c = caps[estado.ci];
-    if (!c) return { capitulo: null, paso: null, total: null, nombre: null, titulo: null, explicacion: false };
+    if (!c) return { capitulo: null, paso: null, total: null, nombre: null, titulo: null, explicacion: false, texto: null };
     const p = c.pasos[estado.pi] || {};
+    const visible = !!sub?.classList.contains('visible');
     return { capitulo: c.id, paso: estado.pi + 1, total: c.pasos.length, nombre: limpio(c.nombre, 80),
-      titulo: limpio(p.titulo || c.nombre, 200), explicacion: !!sub?.classList.contains('visible') };
+      titulo: limpio(p.titulo || c.nombre, 200), explicacion: visible, texto: visible ? texto?.textContent ?? null : null };
   }
   function enviar(msj, origen = null) {
     const destinos = origen ? [origen] : origenPadre ? [origenPadre] : [...permitidos];
@@ -94,16 +152,89 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   const responder = (id, tipo, origen, extra = {}) => enviar({ tipo, ...(id !== undefined ? { id } : {}), ...actual(), ...extra }, origen);
 
   // Junto a la leyenda (abajo a la derecha en pantalla grande): el subtítulo le deja su ancho o, si así no le queda
-  // lugar, se pone encima de ella
+  // lugar o la explicación pasaría de tres renglones (una columna angosta y alta), se pone encima de ella, con todo el
+  // ancho. Y dice si está a la vista y cuánto mide (.con-sub, --sub-h): en el celular la hoja inferior le cede ese alto
+  // (propuesta.html), así se ve entero sin taparla. En la pantalla chica, además, se acomoda (`acomodar`)
   function medir() {
     if (!pres) return;
     const conLeyenda = !!leyenda?.childElementCount && !chica?.matches;
     const l = conLeyenda ? leyenda.getBoundingClientRect() : null;
     pres.style.setProperty('--ley-w', l ? `${Math.ceil(l.width + 12)}px` : '0px');
     pres.style.setProperty('--ley-h', l ? `${Math.ceil(l.height)}px` : '0px');
-    const p = panel && !pres.classList.contains('sin-panel') ? panel.getBoundingClientRect() : null;
-    const libre = (ventana.innerWidth || 0) - (p ? p.right + 16 : 100) - (l ? l.width + 28 : 16);
-    pres.classList.toggle('sub-sobre-leyenda', !!l && libre < 320);
+    // el borde derecho del panel donde queda (sin el transform con que vuelve al quitar «Solo 3D»)
+    const p = panel && !pres.classList.contains('sin-panel') ? panel.offsetLeft + panel.offsetWidth : null;
+    const libre = (ventana.innerWidth || 0) - (p !== null ? p + 16 : 100) - (l ? l.width + 28 : 16);
+    const visible = !!sub?.classList.contains('visible');
+    let sobre = !!l && libre < 320;
+    if (l && !sobre && visible) {
+      // se mide al lado de la leyenda (sin la clase), así la decisión no depende de dónde estaba
+      pres.classList.remove('sub-sobre-leyenda');
+      sobre = renglones() > 3;
+    }
+    pres.classList.toggle('sub-sobre-leyenda', sobre);
+    pres.classList.toggle('con-sub', visible);
+    if (chica?.matches) acomodar(visible);
+    else for (const v of ['--sub-esc', '--hoja-min', '--sobre-sub', '--herr-w']) pres.style.removeProperty(v);
+    const alto = visible ? sub.offsetHeight || 0 : 0;
+    pres.style.setProperty('--sub-h', `${Math.ceil(alto)}px`);
+  }
+
+  // En la pantalla chica la explicación no puede tapar la franja donde escena.js encuadra la obra (`zonaPx`: bajo la
+  // barra, la fila de capítulos y la leyenda de arriba, y nunca menos de FRANJA de alto). Se le reserva esa franja
+  // encima (--sobre-sub: la hoja inferior baja lo que haga falta, propuesta.html) y, si así no cabe entera (la hoja en su
+  // mínimo o, de lado, el alto entre esa franja y el control), se achica su letra un paso cada vez (--sub-esc). Si ni
+  // con la más chica cabe, en vertical la hoja baja de su mínimo (--hoja-min): la obra y la explicación entera mandan.
+  // Las medidas son las del lugar donde quedan el panel y el subtítulo, no las de un cuadro de sus transiciones (ver
+  // `bajoPanel` y `pisoFinal`): se mide en el acto, a veces con todo en movimiento (el giro del celular, «Solo 3D»), y
+  // al terminar la transición nada cambia de tamaño, así que nadie vuelve a medir
+  function acomodar(visible) {
+    for (const v of ['--sub-esc', '--hoja-min']) pres.style.removeProperty(v);
+    const lado = !!deLado?.matches;
+    // De lado, la leyenda plegada va en la barra, a la izquierda de las herramientas
+    pres.style.setProperty('--herr-w', lado && herr ? `${Math.ceil(herr.getBoundingClientRect().width)}px` : '0px');
+    const H = ventana.innerHeight || 0, W = ventana.innerWidth || 0;
+    const caja = (el) => el?.getBoundingClientRect?.() || null;
+    let y0 = 0;
+    const b = caja(barra);
+    if (b?.height) y0 = b.bottom + 6;
+    const l = leyenda?.childElementCount ? caja(leyenda) : null;
+    if (l?.height && l.top < H / 2) y0 = Math.max(y0, l.bottom + 6);
+    const r = caja(riel);
+    if (r?.width > W * 0.7 && r.height) y0 = Math.max(y0, r.bottom + 4);
+    // la franja, los 8 px que escena.js deja sobre el subtítulo y 4 de margen (los bordes caen en fracciones de píxel)
+    const reserva = Math.ceil(y0 + FRANJA + 12);
+    pres.style.setProperty('--sobre-sub', `${reserva}px`);
+    if (!visible) return;
+    const enHoja = !lado && !pres.classList.contains('sin-panel');
+    // el borde de abajo del subtítulo: sobre la hoja en su mínimo, o el suyo (fijo, sobre el control o al pie)
+    const piso = enHoja ? bajoPanel() - HOJA_MIN - 8 : pisoFinal();
+    for (const e of ESCALAS) {
+      if (e < 1) pres.style.setProperty('--sub-esc', String(e));
+      if (sub.offsetHeight <= piso - reserva) return;
+    }
+    if (enHoja) {
+      const hoja = Math.floor(bajoPanel() - 8 - reserva - sub.offsetHeight);
+      pres.style.setProperty('--hoja-min', `${Math.max(HOJA_PISO, hoja)}px`);
+    }
+  }
+  // El borde de abajo de la hoja: el de su caja sin el transform con que entra y sale («Solo 3D»), que es fijo (sobre
+  // el control) aunque su alto esté en transición. offsetTop es el de la ventana: el panel es `position: fixed`
+  function bajoPanel() { return panel ? panel.offsetTop + panel.offsetHeight : ventana.innerHeight || 0; }
+  // El borde de abajo del subtítulo cuando termine de moverse. Su `bottom` tiene transición (sigue a la hoja, baja
+  // hasta el control con «Solo 3D», pasa al pie al girar el celular) y offsetTop la sigue cuadro a cuadro: medido a
+  // mitad de camino, el piso quedaba más arriba y la letra se achicaba de más, para siempre. El destino lo dice la
+  // transición
+  function pisoFinal() {
+    const piso = sub.offsetTop + sub.offsetHeight;
+    const t = sub.getAnimations?.().find((a) => a.transitionProperty === 'bottom');
+    const k = t?.effect?.getKeyframes?.() || [];
+    const hasta = parseFloat(k[k.length - 1]?.bottom);
+    return Number.isFinite(hasta) ? piso + (parseFloat(ventana.getComputedStyle(sub).bottom) || 0) - hasta : piso;
+  }
+  function renglones() {
+    const alto = texto?.getBoundingClientRect?.().height || 0;
+    const linea = parseFloat(ventana.getComputedStyle?.(texto)?.lineHeight) || 0;
+    return linea ? Math.round(alto / linea) : 0;
   }
   function subtitulo(t, paso = clave()) {
     if (!sub || !texto) return;
@@ -177,10 +308,21 @@ export function montarMando({ caps, estado, ir, vecino, abrirIndice = () => {}, 
   ventana.addEventListener('resize', () => { clearTimeout(tMedir); tMedir = setTimeout(medir, 120); });
   // El ancho de la leyenda y del panel cambia sin `resize` (otra leyenda al cambiar de paso, el iframe que se angosta o se
   // ensancha cuando se abre o se pliega el asistente, una letra que termina de cargar): se vuelve a medir en el acto, antes
-  // de pintar, y el subtítulo nunca queda un cuadro encima de la leyenda con la medida vieja
+  // de pintar, y el subtítulo nunca queda un cuadro encima de la leyenda con la medida vieja. También el alto del
+  // subtítulo (la letra que carga lo hace crecer): la hoja o el panel que le ceden lugar siguen su medida
   if (typeof ventana.ResizeObserver === 'function') {
     const ro = new ventana.ResizeObserver(() => medir());
-    for (const x of [pres, leyenda, panel]) if (x) ro.observe(x);
+    for (const x of [pres, leyenda, panel, sub]) if (x) ro.observe(x);
+  }
+  // «Solo 3D» y la altura de la hoja (main.js: sin-panel, hoja-mini, panel-grande) mueven el subtítulo sin cambiar el
+  // tamaño de nada observado (en vertical el panel sale y vuelve con transform): sin esto, al volver el panel la
+  // explicación medida sin él tapaba la franja de la obra, y al ocultarlo quedaba con la letra achicada. Solo esas tres
+  // clases: las que pone `medir` no lo vuelven a llamar
+  if (pres && typeof ventana.MutationObserver === 'function') {
+    const DE_MAIN = ['sin-panel', 'hoja-mini', 'panel-grande'];
+    const de = (c) => { const s = String(c ?? '').split(/\s+/); return DE_MAIN.filter((x) => s.includes(x)).join(); };
+    new ventana.MutationObserver((cambios) => { if (de(cambios[0].oldValue) !== de(pres.className)) medir(); })
+      .observe(pres, { attributes: true, attributeFilter: ['class'], attributeOldValue: true });
   }
   if (caps[estado.ci]) { listo = true; enviar({ tipo: 'listo', ...actual() }); }
   return { subtitulo, estado: actual };

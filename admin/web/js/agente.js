@@ -667,6 +667,7 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
   let ultima = null;          // la última parte (texto o nota de progreso) que sigue recibiendo trozos
   let ronda = { partes: [], recortes: new Map() }; // lo pintado en la ronda en curso (para `descartar`)
   let turno = null;           // el turno en curso: {control, tipo, inicio, fin, error, …}
+  let presEnEspera = null;    // las órdenes de la presentación de este turno que esperan «Abrir de todos modos»
   let novedad = false;        // llegó algo con el panel cerrado
   let devolverFoco = false;   // tras una navegación pedida por el asistente, el foco vuelve al cuadro de texto
   let ultimaRuta = rutaActual();
@@ -1332,28 +1333,47 @@ export function montarAgente({ ir, rutaPanel = () => null, insignias = () => {} 
 
   /** La presentación de la propuesta (vistas/presentacion.js, por el puente agente-presentacion.js). Con una ventana de
    * proyector abierta la acción va allá y esta pestaña no cambia de vista; si no, se abre /presentacion (con cambios
-   * sin guardar, solo si la persona lo pide). */
+   * sin guardar, solo si la persona lo pide). Las órdenes de un mismo turno que esperan ese permiso van en una sola
+   * nota (`presEnEspera`) y su «Abrir de todos modos» las aplica todas, en orden: el asistente suele mandar `ir` y
+   * después `explicar`, y con una nota por orden el primer botón abría el paso sin su explicación y el segundo, tocado
+   * más tarde, la ponía sobre el paso que estuviera en pantalla. */
   function presentacion(a) {
     const p = accionPresentacion(a);
     if (!p) {
       nota('El asistente pidió algo que la presentación no hace: no lo apliqué.', 'alerta');
       return;
     }
+    // Detrás de las que ya esperan en este turno, aunque ahora se pudiera: se aplican en el orden en que llegaron
+    if (presEnEspera && turno && presEnEspera.turno === turno) {
+      presEnEspera.lista.push(p);
+      return;
+    }
     const dentro = enAsistente();
-    const aplicar = () => aplicarPresentacion(p, dentro);
-    if (proyectorVivo() || presentacionLista() || rutaActual() === '/presentacion' || vistaLibre('la presentación', aplicar)) aplicar();
+    const lista = [p];
+    const abrir = () => {
+      if (presEnEspera?.lista === lista) presEnEspera = null;
+      aplicarPresentacion(lista, dentro, { forzar: true });
+    };
+    if (proyectorVivo() || presentacionLista() || rutaActual() === '/presentacion') aplicarPresentacion(lista, dentro);
+    else if (vistaLibre('la presentación', abrir)) aplicarPresentacion(lista, dentro);
+    else presEnEspera = { lista, turno };
   }
 
-  function aplicarPresentacion(p, dentro) {
+  /** Aplica `lista` (acciones ya validadas). Sin `forzar` (la persona no tocó «Abrir de todos modos»), si hay que abrir
+   * la vista aquí porque el proyector se cerró sin avisar, se respetan los cambios sin guardar como en `presentacion`. */
+  function aplicarPresentacion(lista, dentro, { forzar = false } = {}) {
     // En el celular el asistente tapa la vista: se pliega para que se vea la presentación entera (con proyector, no
     // hace falta: se ve en la otra pantalla)
     if (!proyectorVivo()) {
       if (esMovil()) plegar();
       else if (rutaActual() !== '/presentacion') devolverFoco = panel.contains(document.activeElement);
     }
-    accionesPresentacion([p], { navegar: ir }).then((res) => {
-      const mala = (Array.isArray(res) ? res : []).find((r) => r && r.ok === false);
-      if (mala) nota(`La presentación no aplicó el cambio: ${texto(mala.error, 160) || 'no se pudo'}.`, 'alerta', { dentro });
+    const navegar = forzar ? ir : (ruta) => { if (vistaLibre('la presentación', () => ir(ruta))) ir(ruta); };
+    accionesPresentacion(lista, { navegar }).then((res) => {
+      const malas = (Array.isArray(res) ? res : []).filter((r) => r && r.ok === false);
+      if (!malas.length) return;
+      const motivos = [...new Set(malas.map((r) => texto(r.error, 160) || 'no se pudo'))].join('; ');
+      nota(`La presentación no aplicó ${malas.length === 1 ? 'el cambio' : `${malas.length} cambios`}: ${motivos}.`, 'alerta', { dentro });
     }, (e) => {
       nota(`La presentación no aplicó el cambio: ${texto(e?.message, 160) || 'no terminó de cargar'}.`, 'alerta', { dentro });
     });

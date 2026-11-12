@@ -47,11 +47,14 @@ UMBRAL_DIGITACION = 0.93     # otra ficha con una cédula a un dígito y casi el
 
 
 class ImportacionEnCurso(HTTPException):
-    """Otra importación tiene el turno: 409 `importando` (la API lo responde tal cual)."""
+    """Otra importación o una unión en lote tiene el turno (`unificacion.resolver_lote` toma el mismo, porque la
+    importación carga las fichas en memoria y no vería las uniones): 409 `importando` (la API lo responde tal cual).
+    El mensaje nombra las dos tareas, como el del lote: quien importa durante una unión en lote no debe creer que una
+    importación quedó trabada."""
 
     def __init__(self):
-        super().__init__(409, {"mensaje": "Ya hay una importación en curso. Intente de nuevo cuando termine.",
-                               "codigo": "importando"})
+        super().__init__(409, {"mensaje": "Hay una importación o una unión en lote en curso. Intente de nuevo cuando "
+                                          "termine.", "codigo": "importando"})
 
 
 @dataclass

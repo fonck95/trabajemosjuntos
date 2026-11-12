@@ -13,10 +13,23 @@ Railway) con personas, coincidencias y reuniones inventadas. Lo de la auditoría
   caben pasan a «Más», que las ofrece y las ejecuta), «Unir» y «Suprimir» en el menú ⋯, los avisos encima de la barra,
   y «Cerrar sesión» y el tema alcanzables con el menú abierto (P1, P6, P9).
 * Un diálogo con algo escrito pide confirmar antes de descartarlo al tocar el fondo o con Escape; sin nada escrito se
-  cierra sin preguntar; el botón de cerrar mide 44×44 (P5).
-* El menú lateral cerrado del celular es inerte (fuera del tabulador), al abrirse el foco entra en él y la vista de
-  atrás queda inerte; Escape lo cierra y devuelve el foco; en escritorio nunca es inerte, tampoco al ensanchar la
-  ventana (P8).
+  cierra sin preguntar; el botón de cerrar mide 44×44 (P5). Mientras «Completar» guarda (el PATCH retenido hasta que
+  la prueba lo suelta, sin relojes), Escape, el fondo y dos Escape seguidos no preguntan ni cierran, y al terminar se
+  cierra sin preguntar ni dejar una pregunta suelta. Igual en «Nueva persona» cuando guarda por «Es esta» (el nombre de
+  una que ya está y otro teléfono, en escritorio) o por «Completar esa ficha con lo que escribí» (su cédula, en el
+  celular): con el PATCH retenido no hay pregunta, y al soltarlo se abre esa ficha con lo escrito y sin diálogos.
+  «Nueva persona» que el navegador cerró solo (Escape repetido) y `dialogo` volvió a abrir sigue contando como
+  pendiente: un 401 abre el ingreso en un diálogo en vez de recargar.
+* El menú lateral cerrado del celular es inerte (fuera del tabulador), al abrirse el foco entra en él y queda atrapado:
+  lo que tapa el velo (la vista, la barra de arriba y el botón del asistente) queda inerte; Escape lo cierra y devuelve
+  el foco; en escritorio nunca es inerte, tampoco al ensanchar la ventana (P8). Con agente.js retenido (red lenta) y el
+  menú ya abierto, el asistente que se monta después también queda inerte y el tabulador no llega a su botón. Dentro
+  del menú, solo en el celular, «Cerrar menú» (44 px, a la vista, sin montarse con la marca) está en el árbol de
+  accesibilidad con el menú abierto (la barra de arriba no) y lo cierra devolviendo el foco a «Menú». Con una llamada
+  sin registrar, la franja (fija en document.body, encima de la vista) queda debajo del velo e inerte mientras el menú
+  está abierto: no tapa «Panel» ni la marca y el tabulador no sale del menú hacia sus botones; lo mismo la barra
+  «Deshacer», y un aviso sigue a la vista sin llevarse el foco. Al cerrarlo, la franja vuelve tal cual y responde; en
+  escritorio no cambia.
 * El tema Sistema / Claro / Oscuro y la tarjeta destacada del panel visible en oscuro (P11).
 * Sin violaciones de CSP ni errores de consola en ningún caso.
 
@@ -64,6 +77,9 @@ def _sembrar(db) -> dict:
     }], fuente="tramites")[0]
     db.personas.update_one({"_id": ficha}, {"$set": {"fuentes": ["tramites", "cedulas"]}})
     otro = ids[30]
+    # Dos fichas de trámites sin cédula y fuera de las coincidencias: «Completar» guarda una en cada tamaño
+    sin_cedula = {"w390": ids[6], "w1400": ids[9]}
+    assert all(tramites[i]["cedula"] is None for i in (6, 9))
     pares = [(ficha, otro, 0.91, "nombre_telefono"), (ids[1], ids[25], 0.86, "cruce_cedula"),
              (ids[2], ids[3], 0.74, "homonimo"), (ids[4], ids[5], 0.7, "variante")]
     db.coincidencias.insert_many([{"_id": i + 1, "persona_id": a, "candidato_id": b, "estado": "pendiente",
@@ -77,7 +93,15 @@ def _sembrar(db) -> dict:
     } for i, (t, f, tema) in enumerate([("Reunión inventada con la junta de acción comunal del barrio", "2026-11-03", "Agua"),
                                         ("Reunión inventada de vivienda", "2026-10-21", "Vivienda"),
                                         ("Reunión inventada rural", "2026-09-30", None)])])
-    return {"persona": ficha, "png": base64.b64encode(_png_plano()).decode()}
+    # «Nueva persona» que guarda en una ficha que ya está: por «Es esta» (escritorio, el nombre y otro teléfono, como lo
+    # reprodujo la revisión) o por «Completar esa ficha con lo que escribí» (celular, su cédula). Fuera de las
+    # coincidencias y de «Completar», con nombre único y sin segundo teléfono: lo que se guarde se ve
+    es_esta = {"w1400": {"id": ids[11], "nombre": tramites[11]["nombre"], "telefono2": "3001112233"},
+               "w390": {"id": ids[13], "cedula": tramites[13]["cedula"], "telefono2": "3001112234"}}
+    for i in (11, 13):
+        assert sum(x["nombre"] == tramites[i]["nombre"] for x in tramites + cedulas) == 1 and not tramites[i].get("telefono2")
+    assert tramites[13]["cedula"]
+    return {"persona": ficha, "sin_cedula": sin_cedula, "es_esta": es_esta, "png": base64.b64encode(_png_plano()).decode()}
 
 
 @pytest.fixture(scope="module")
@@ -183,8 +207,51 @@ def test_dialogo_con_algo_escrito_pide_confirmar(resultados, tamano):
 
 
 @requiere_navegador
+@pytest.mark.parametrize("tamano", ["w390", "w1400"])
+def test_dialogo_guardando_no_pregunta_ni_cierra(resultados, tamano):
+    """Lo escrito ya va al servidor: preguntar «¿Descartar?» sería falso y descartar dejaría la ficha sin lo guardado."""
+    _revisar(resultados, f"guardando_{tamano}")
+
+
+@requiere_navegador
+@pytest.mark.parametrize("tamano", ["w1400", "w390"])
+def test_nueva_persona_es_esta_guardando_no_pregunta(resultados, tamano):
+    """«Es esta» (escritorio) y «Completar esa ficha con lo que escribí» (celular) también guardan: mientras el PATCH va
+    al servidor, Escape y el fondo no preguntan «¿Descartar?» (la ficha se completa igual y la página se va a ella)."""
+    _revisar(resultados, f"es_esta_{tamano}")
+
+
+@requiere_navegador
+def test_nueva_persona_reabierta_sigue_pendiente(resultados):
+    caso = resultados["pendiente"]
+    # Con lo que se vio (diálogos abiertos, cierres del navegador), un fallo dice en qué paso se perdió lo pendiente
+    assert caso["revisiones"].get("sigue_pendiente") is True, caso.get("datos")
+    _revisar(resultados, "pendiente")
+
+
+@requiere_navegador
 def test_menu_cerrado_inerte_y_foco(resultados):
     _revisar(resultados, "menu")
+
+
+@requiere_navegador
+def test_menu_abierto_antes_del_asistente(resultados):
+    """El asistente llega tarde (agente.js retenido) con el menú abierto: también queda tapado e inerte."""
+    _revisar(resultados, "menu_tarde")
+
+
+@requiere_navegador
+def test_menu_se_cierra_con_su_boton(resultados):
+    """Con el menú abierto la barra de arriba es inerte: «Cerrar menú», dentro del menú, es el control con nombre que
+    queda para cerrarlo sin teclado (lector de pantalla táctil)."""
+    _revisar(resultados, "cerrar_menu")
+
+
+@requiere_navegador
+def test_menu_abierto_tapa_la_franja_de_llamada(resultados):
+    """La franja «Llamada sin registrar» (z-index 150, en document.body) quedaba encima del menú abierto del celular,
+    tapando «Panel», y el tabulador salía del menú a sus botones."""
+    _revisar(resultados, "menu_llamada")
 
 
 @requiere_navegador
@@ -324,6 +391,19 @@ async function ir(page, ruta) {
 const tocar = (page, sel, tactil) => (tactil ? page.tap(sel) : page.click(sel));
 const caja = (r) => r && { x: Math.round(r.left), y: Math.round(r.top), d: Math.round(r.right), a: Math.round(r.bottom) };
 const cruzan = (a, b) => !!a && !!b && a.x < b.d && b.x < a.d && a.y < b.a && b.y < a.a;
+// Sin relojes: lo que dispara un gesto (una tecla, un toque) ya está hecho cuando pasan dos cuadros de la página
+const quieto = (page) => page.evaluate(() => new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok))));
+// El menú del celular, abierto o cerrado del todo: la clase puesta, sin transición en curso y en su sitio
+const menuQuieto = (page, abierto) => page.waitForFunction((abierto) => {
+  const m = document.querySelector('#menu-lateral'), r = m.getBoundingClientRect();
+  return document.querySelector('#app').classList.contains('menu-abierto') === abierto && !m.getAnimations().length
+    && (abierto ? Math.abs(r.left) < 0.5 : r.right <= 0.5);
+}, abierto, espera);
+// Los botones y enlaces vivos del árbol de accesibilidad de Chromium (lo que recorre un lector de pantalla con el dedo)
+async function arbolAccesible(cdp) {
+  const { nodes } = await cdp.send('Accessibility.getFullAXTree');
+  return nodes.filter((n) => !n.ignored && ['button', 'link'].includes(n.role?.value)).map((n) => `${n.role.value}:${(n.name?.value || '').trim()}`);
+}
 
 // ¿Algo de la página es más ancho que la pantalla? En el celular un contenido más ancho no da barra: el navegador
 // agranda la ventana de diseño (innerWidth), así que también se compara con el ancho pedido
@@ -592,12 +672,205 @@ async function dialogo(nav, caso, op) {
   await ctx.close();
 }
 
+// ── Guardar con la red lenta: Escape y el fondo no preguntan ni cierran ──
+async function guardando(nav, caso, op, id) {
+  const v = caso.revisiones, d = caso.datos;
+  const tactil = !!op.hasTouch;
+  const { ctx, page } = await abrir(nav, caso, op);
+  await ingresar(page);
+  await ir(page, `/personas/${id}`);
+  // El PATCH de «Completar» queda retenido hasta que la prueba lo suelta: «guardando» dura lo que haga falta
+  let soltar, llego;
+  const retenido = new Promise((ok) => { soltar = ok; });
+  const enCamino = new Promise((ok) => { llego = ok; });
+  await page.route((u) => u.pathname === `${pref}/api/personas/${id}` && u.searchParams.get('modo') === 'completar',
+    async (r) => { llego(); await retenido; await r.continue(); });
+  await page.evaluate(() => { window.__cierres = 0; document.addEventListener('close', () => { window.__cierres++; }, true); });
+  if (await page.isVisible('.barra-acciones [data-completar]')) await tocar(page, '.barra-acciones [data-completar]', tactil);
+  else await page.evaluate(() => document.querySelector('.barra-acciones [data-completar]').click());
+  await page.waitForSelector('dialog[open] #f-completar', espera);
+  const cedula = String(1098765400 + id);
+  await page.fill('dialog[open] [name=cedula]', cedula);
+  await page.fill('dialog[open] [name=cedula_confirmacion]', cedula);
+  await tocar(page, 'dialog[open] [data-guardar="uno"]', tactil);
+  await enCamino;
+  const abiertos = () => page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map((x) => x.querySelector('h2').textContent));
+  const solo = (l) => l.length === 1 && l[0].startsWith('Completar');
+  const fondo = async () => {
+    const r = await page.evaluate(() => [...document.querySelectorAll('dialog[open]')].pop().getBoundingClientRect().toJSON());
+    const [x, y] = r.top >= 6 ? [op.viewport.width / 2, r.top / 2] : [r.left / 2, r.top + r.height / 2];
+    if (tactil) await page.touchscreen.tap(x, y); else await page.mouse.click(x, y);
+    await dormir(250);
+  };
+  await page.keyboard.press('Escape');
+  await dormir(250);
+  d.escape = await abiertos();
+  v.guardando_escape_no_pregunta = solo(d.escape);
+  await fondo();
+  d.fondo = await abiertos();
+  v.guardando_fondo_no_pregunta = solo(d.fondo);
+  // Dos Escape seguidos: Chromium ya no deja cancelar el segundo y cierra el diálogo, que `dialogo` vuelve a abrir
+  for (let i = 0; i < 2; i++) { await page.keyboard.press('Escape'); await dormir(250); }
+  d.escapes = await abiertos();
+  d.cierres_del_navegador = await page.evaluate(() => window.__cierres);
+  v.guardando_escapes_seguidos_no_cierran = solo(d.escapes);
+  // El fondo otra vez, lo último antes de terminar: si preguntara, la pregunta quedaría suelta al cerrarse el formulario
+  await fondo();
+  d.fondo_al_final = await abiertos();
+  v.guardando_fondo_al_final_no_pregunta = solo(d.fondo_al_final);
+  // Al terminar de guardar se cierra sin preguntar: el aviso queda en la página (no en una pregunta que sobró) y la
+  // ficha muestra lo guardado
+  soltar();
+  await page.waitForFunction(() => [...document.querySelectorAll('.aviso')].some((a) => a.textContent.includes('datos guardados')), null, espera);
+  d.tras_guardar = await abiertos();
+  v.al_guardar_cierra_sin_preguntar = d.tras_guardar.length === 0;
+  d.cedula_en_la_ficha = await page.inputValue('#f-datos [name=cedula]');
+  v.ficha_con_lo_guardado = d.cedula_en_la_ficha === cedula;
+  await ctx.close();
+}
+
+// ── «Nueva persona» que guarda en una ficha que ya está («Es esta» o «Completar esa ficha con lo que escribí»), con
+// la red lenta: Escape y el fondo no preguntan, y al terminar se abre esa ficha sin diálogos y con lo escrito ──
+async function esEsta(nav, caso, op, { id, nombre, cedula, telefono2 }) {
+  const v = caso.revisiones, d = caso.datos;
+  const tactil = !!op.hasTouch;
+  const { ctx, page } = await abrir(nav, caso, op);
+  await ingresar(page);
+  await ir(page, '/personas');
+  // El PATCH ?modo=completar de esa ficha queda retenido hasta que la prueba lo suelta: «guardando» dura lo que haga falta
+  let soltar, llego;
+  const retenido = new Promise((ok) => { soltar = ok; });
+  const enCamino = new Promise((ok) => { llego = ok; });
+  await page.route((u) => u.pathname === `${pref}/api/personas/${id}` && u.searchParams.get('modo') === 'completar',
+    async (r) => { if (r.request().method() !== 'PATCH') return r.continue(); llego(); await retenido; await r.continue(); });
+  await page.evaluate(() => { window.__cierres = 0; document.addEventListener('close', () => { window.__cierres++; }, true); });
+  await tocar(page, '#nueva', tactil);
+  await page.waitForSelector('dialog[open] #f-nueva', espera);
+  const abiertos = () => page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map((x) => x.querySelector('h2').textContent));
+  const solo = (l) => l.length === 1 && l[0] === 'Nueva persona';
+  // Si apareció la pregunta, «Seguir escribiendo» la quita: cada gesto se prueba solo, con el formulario como estaba
+  const quitarPregunta = async () => {
+    if ((await abiertos()).length < 2) return;
+    await tocar(page, 'dialog[open]:last-of-type [data-cerrar]:not(.cerrar-dialogo)', tactil);
+    await page.waitForFunction(() => document.querySelectorAll('dialog[open]').length === 1, null, espera);
+  };
+  if (cedula) {
+    // La cédula de esa ficha: «Guardar» responde 409 cedula_ocupada y ofrece «Completar esa ficha con lo que escribí»
+    await page.fill('#f-nueva [name=nombre]', 'PERSONA INVENTADA CON CEDULA AJENA');
+    await page.fill('#f-nueva [name=cedula]', cedula);
+    await page.fill('#f-nueva [name=cedula_confirmacion]', cedula);
+    await page.fill('#f-nueva [name=telefono2]', telefono2);
+    await tocar(page, '#f-nueva label.chip.opcion:has(input[name=aut_estado][value=pendiente])', tactil);
+    await tocar(page, 'dialog[open] #guardar', tactil);
+    await page.waitForSelector(`dialog[open] [data-completar-otra="${id}"]`, espera);
+    d.camino = 'Completar esa ficha con lo que escribí';
+    await tocar(page, `dialog[open] [data-completar-otra="${id}"]`, tactil);
+  } else {
+    // Como lo reprodujo la revisión: el nombre de una que ya está y otro teléfono; «¿Es alguna de estas?» → «Es esta»
+    await page.fill('#f-nueva [name=nombre]', nombre);
+    await page.fill('#f-nueva [name=telefono2]', telefono2);
+    await page.waitForSelector(`dialog[open] [data-elegir="${id}"]`, espera);
+    d.camino = 'Es esta';
+    await tocar(page, `dialog[open] [data-elegir="${id}"]`, tactil);
+  }
+  await enCamino;
+  // Escape (en Android, también el gesto de volver): no pregunta
+  await page.keyboard.press('Escape');
+  await quieto(page);
+  d.escape = await abiertos();
+  v.es_esta_escape_no_pregunta = solo(d.escape);
+  await quitarPregunta();
+  // El fondo, en un punto fuera de la hoja o del diálogo cuando su caja ya no se mueve (dos cuadros iguales)
+  const p = await page.evaluate(() => new Promise((ok) => {
+    let antes = '';
+    const mirar = () => {
+      const dl = [...document.querySelectorAll('dialog[open]')].pop(), r = dl.getBoundingClientRect(), ahora = JSON.stringify(r);
+      if (ahora !== antes) { antes = ahora; requestAnimationFrame(mirar); return; }
+      const [x, y] = r.top >= 6 ? [innerWidth / 2, r.top / 2] : [r.left / 2, r.top + r.height / 2];
+      ok({ x, y, fondo: document.elementFromPoint(x, y) === dl && (x < r.left || x > r.right || y < r.top || y > r.bottom) });
+    };
+    requestAnimationFrame(mirar);
+  }));
+  d.punto_del_fondo = p;
+  v.es_esta_el_toque_cae_en_el_fondo = p.fondo;
+  if (tactil) await page.touchscreen.tap(p.x, p.y); else await page.mouse.click(p.x, p.y);
+  await quieto(page);
+  d.fondo = await abiertos();
+  v.es_esta_fondo_no_pregunta = solo(d.fondo);
+  await quitarPregunta();
+  // Dos Escape seguidos: Chromium ya no deja cancelar el segundo y cierra el diálogo, que `dialogo` vuelve a abrir al
+  // atender su 'close' (sin preguntar, guardando). Se espera a que esté abierto otra vez, no a un reloj
+  for (let i = 0; i < 2; i++) await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.querySelector('#f-nueva')?.closest('dialog')?.open, null, espera);
+  await quieto(page);
+  d.escapes = await abiertos();
+  d.cierres_del_navegador = await page.evaluate(() => window.__cierres);
+  v.es_esta_escapes_seguidos_no_preguntan = solo(d.escapes);
+  await quitarPregunta();
+  // Al terminar se cierra sin preguntar y se abre esa ficha, con el teléfono escrito guardado
+  soltar();
+  await page.waitForFunction((id) => window.__vistas.includes(`/personas/${id}`), id, espera);
+  await page.waitForFunction(() => !document.querySelector('#vista .cargando, #vista .esqueleto-fila, #vista .giro'), null, espera);
+  await quieto(page);
+  d.tras_guardar = await abiertos();
+  v.es_esta_al_guardar_cierra_sin_preguntar = d.tras_guardar.length === 0;
+  d.guardado = await page.evaluate(async (id) => {
+    const p = await (await import(new URL('api.js', document.querySelector('script[type=module]').src).href)).api.get(`/api/personas/${id}`);
+    return [p.telefono, p.telefono2, ...(p.telefonos || []).map((t) => t.numero)].filter(Boolean);
+  }, id);
+  v.es_esta_ficha_con_lo_escrito = d.guardado.includes(telefono2);
+  await ctx.close();
+}
+
+// ── «Nueva persona» cerrada por el navegador y vuelta a abrir: sigue pendiente y un 401 no recarga ──
+async function pendiente(nav, caso) {
+  const v = caso.revisiones, d = caso.datos;
+  const { ctx, page } = await abrir(nav, caso, TAMANOS.w1400);
+  await ingresar(page);
+  await ir(page, '/personas');
+  const abiertos = () => page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map((x) => x.querySelector('h2').textContent));
+  await page.evaluate(() => { window.__cierres = 0; document.addEventListener('close', () => { window.__cierres++; }, true); });
+  await page.click('#nueva');
+  await page.waitForSelector('dialog[open] #f-nueva', espera);
+  const nombre = 'PERSONA INVENTADA DE PRUEBA';
+  await page.fill('#f-nueva [name=nombre]', nombre);
+  // Tres Escape seguidos: el primero pregunta, el segundo cierra la pregunta y el tercero ya no se puede cancelar
+  // (Chromium cierra el diálogo y `dialogo` lo vuelve a abrir preguntando); «Seguir escribiendo» lo conserva
+  for (let i = 0; i < 3; i++) { await page.keyboard.press('Escape'); await dormir(300); }
+  d.cierres_del_navegador = await page.evaluate(() => window.__cierres);
+  if ((await abiertos()).length > 1) await page.click('dialog[open]:last-of-type [data-cerrar]:not(.cerrar-dialogo)');
+  await dormir(200);
+  d.abiertos = await abiertos();
+  v.sigue_abierta_con_lo_escrito = JSON.stringify(d.abiertos) === '["Nueva persona"]' && await page.inputValue('#f-nueva [name=nombre]') === nombre;
+  v.sigue_pendiente = await page.evaluate(async () => (await import(new URL('api.js', document.querySelector('script[type=module]').src).href)).hayCambiosSinGuardar());
+  if (!v.sigue_pendiente) d.dialogos = await page.evaluate(() => [...document.querySelectorAll('dialog')].map((x) => ({ abierto: x.open, titulo: x.querySelector('h2')?.textContent, valor: x.querySelector('[name=nombre]')?.value })));
+  // La sesión vence: la búsqueda en vivo de parecidas (un GET) recibe un 401 y se ingresa en un diálogo, sin recargar
+  let recargo = false;
+  page.on('framenavigated', (f) => { if (f === page.mainFrame()) recargo = true; });
+  await ctx.clearCookies();
+  await page.fill('#f-nueva [name=nombre]', nombre + ' X');
+  d.reingreso = await page.waitForSelector('dialog[open] #f-reingreso', { timeout: 8000 }).then(() => true, () => false);
+  d.recargo = recargo;
+  v.un_401_abre_el_ingreso = d.reingreso && !recargo;
+  if (d.reingreso) {
+    await page.fill('dialog[open] #f-reingreso [name=clave]', clave);
+    await page.click('dialog[open] button[type=submit][form=f-reingreso]');
+    await page.waitForSelector('#f-reingreso', { state: 'detached', ...espera });
+    d.tras_ingresar = { valor: await page.inputValue('#f-nueva [name=nombre]'), abiertos: await abiertos() };
+    v.conserva_lo_escrito = !recargo && d.tras_ingresar.valor === nombre + ' X';
+  }
+  await ctx.close();
+}
+
 // ── Menú lateral ──
 async function menu(nav, caso) {
   const v = caso.revisiones, d = caso.datos;
   const { ctx, page } = await abrir(nav, caso, TAMANOS.w390);
   await ingresar(page);
   await ir(page, '/personas');
+  // El botón del asistente, a la vista: es lo que el tabulador alcanzaba debajo del velo
+  await page.waitForSelector('#agente-boton:not([hidden])', espera);
+  const tapado = () => page.evaluate(() => ['#vista', '.barra-movil', '#agente'].map((s) => document.querySelector(s)?.inert ?? 'falta'));
   const estado = () => page.evaluate(() => ({ menu: document.querySelector('#menu-lateral').inert, vista: document.querySelector('#vista').inert,
     abierto: document.querySelector('#app').classList.contains('menu-abierto'), foco: document.activeElement?.closest('#menu-lateral') ? 'menu' : document.activeElement?.id || document.activeElement?.tagName }));
   d.cerrado = await estado();
@@ -618,10 +891,25 @@ async function menu(nav, caso) {
     && await page.evaluate(() => document.activeElement?.getAttribute('aria-current') === 'page');
   await dormir(400);
   await page.screenshot({ path: `${capturas}/responsivo-menu-abierto.png` });
+  // Abierto, el foco queda atrapado en el menú: lo que tapa el velo es inerte (también el asistente, que vive en
+  // document.body), así que desde «Cerrar sesión» el tabulador solo recorre el menú (o sale de la página y vuelve)
+  d.tapado_abierto = await tapado();
+  v.lo_tapado_es_inerte = d.tapado_abierto.every((x) => x === true);
+  await page.focus('#salir');
+  const fuera = [];
+  for (let i = 0; i < 30; i++) {
+    await page.keyboard.press('Tab');
+    const f = await page.evaluate(() => { const a = document.activeElement; return !a || a === document.body || a.closest('#menu-lateral') ? null : a.id || a.tagName; });
+    if (f) fuera.push(f);
+  }
+  d.tabulador_abierto = fuera;
+  v.tabulador_atrapado_en_el_menu = fuera.length === 0;
   await page.keyboard.press('Escape');
   await dormir(100);
   d.escape = await estado();
   v.escape_cierra_y_devuelve_el_foco = d.escape.abierto === false && d.escape.menu === true && d.escape.foco === 'abrir-menu';
+  d.tapado_cerrado = await tapado();
+  v.cerrado_nada_tapado = d.tapado_cerrado.every((x) => x === false);
   // El velo también lo cierra
   await page.tap('#abrir-menu');
   await page.waitForFunction(() => document.querySelector('#app').classList.contains('menu-abierto'));
@@ -639,6 +927,196 @@ async function menu(nav, caso) {
   const e = await abrir(nav, caso, TAMANOS.w1400);
   await ingresar(e.page);
   v.escritorio_de_entrada = await e.page.evaluate(() => !document.querySelector('#menu-lateral').inert && !document.querySelector('#vista').inert);
+  await e.ctx.close();
+}
+
+// ── El menú abierto antes de que llegue el asistente (red lenta al cargar en el celular) ──
+async function menuTarde(nav, caso) {
+  const v = caso.revisiones, d = caso.datos;
+  const { ctx, page } = await abrir(nav, caso, TAMANOS.w390);
+  // agente.js (se importa después del primer render) queda retenido hasta que la prueba lo suelta
+  let soltar, llego;
+  const retenido = new Promise((ok) => { soltar = ok; });
+  const enCamino = new Promise((ok) => { llego = ok; });
+  await ctx.route((u) => u.pathname.endsWith('/js/agente.js'), async (r) => { llego(); await retenido; await r.continue(); });
+  await ingresar(page);
+  await enCamino;
+  d.agente_al_abrir = await page.evaluate(() => !!document.getElementById('agente'));
+  v.el_asistente_aun_no_esta = d.agente_al_abrir === false;
+  await page.tap('#abrir-menu');
+  await menuQuieto(page, true);
+  // Llega el asistente con el menú abierto
+  soltar();
+  await page.waitForSelector('#agente-boton:not([hidden])', espera);
+  await quieto(page);
+  d.con_el_asistente = await page.evaluate(() => ({ abierto: document.querySelector('#app').classList.contains('menu-abierto'),
+    tapado: ['#vista', '.barra-movil', '#agente'].map((s) => document.querySelector(s)?.inert ?? 'falta') }));
+  v.sigue_abierto = d.con_el_asistente.abierto === true;
+  v.el_asistente_tardio_es_inerte = d.con_el_asistente.tapado.every((x) => x === true);
+  // Desde «Cerrar sesión» el tabulador solo recorre el menú (o sale de la página y vuelve): nunca el botón del asistente
+  await page.focus('#salir');
+  const fuera = [];
+  for (let i = 0; i < 30; i++) {
+    await page.keyboard.press('Tab');
+    const f = await page.evaluate(() => { const a = document.activeElement; return !a || a === document.body || a.closest('#menu-lateral') ? null : a.id || a.tagName; });
+    if (f) fuera.push(f);
+  }
+  d.tabulador = fuera;
+  v.tabulador_no_llega_al_asistente = fuera.length === 0;
+  // Cerrado, nada queda tapado y el vigía se fue: lo que se agregue después a la página no vuelve inerte la vista
+  await page.keyboard.press('Escape');
+  await menuQuieto(page, false);
+  await page.evaluate(() => document.body.append(Object.assign(document.createElement('div'), { id: 'prueba-agregado' })));
+  await quieto(page);
+  d.cerrado = await page.evaluate(() => ['#vista', '.barra-movil', '#agente'].map((s) => document.querySelector(s)?.inert ?? 'falta'));
+  v.cerrado_nada_tapado = d.cerrado.every((x) => x === false);
+  await ctx.close();
+}
+
+// ── «Cerrar menú»: el control con nombre que queda en el menú abierto del celular ──
+async function cerrarMenu(nav, caso) {
+  const v = caso.revisiones, d = caso.datos;
+  const { ctx, page } = await abrir(nav, caso, TAMANOS.w390);
+  await ingresar(page);
+  await ir(page, '/personas');
+  await page.waitForSelector('#agente-boton:not([hidden])', espera);
+  const cdp = await ctx.newCDPSession(page);
+  d.arbol_cerrado = await arbolAccesible(cdp);
+  v.cerrado_no_esta_en_el_arbol = !d.arbol_cerrado.includes('button:Cerrar menú');
+  await page.tap('#abrir-menu');
+  await menuQuieto(page, true);
+  // Abierto: «Cerrar menú» está en el árbol; la barra de arriba (con «Menú») sigue inerte, el foco no sale del menú
+  d.arbol_abierto = await arbolAccesible(cdp);
+  v.abierto_esta_en_el_arbol = d.arbol_abierto.includes('button:Cerrar menú');
+  v.la_barra_sigue_inerte = !d.arbol_abierto.some((b) => b.startsWith('button:Menú'));
+  const g = await page.evaluate(() => {
+    const b = document.querySelector('#cerrar-menu'), r = b.getBoundingClientRect();
+    const caja = (r) => ({ x: r.left, y: r.top, d: r.right, a: r.bottom });
+    const e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    // Lo que se lee de la marca (el sello y el texto), no la caja del enlace entero
+    const marca = [...document.querySelectorAll('.marca > *')].map((x) => caja(x.getBoundingClientRect()));
+    return { ancho: r.width, alto: r.height, caja: caja(r), a_la_vista: !!e && b.contains(e) && r.left >= 0 && r.right <= innerWidth && r.top >= 0,
+      marca, menu: caja(document.querySelector('#menu-lateral').getBoundingClientRect()) };
+  });
+  d.boton = g;
+  v.mide_44 = g.ancho >= 44 && g.alto >= 44;
+  v.a_la_vista_dentro_del_menu = g.a_la_vista && g.caja.x >= g.menu.x && g.caja.d <= g.menu.d;
+  v.no_se_monta_con_la_marca = g.marca.length > 0 && g.marca.every((m) => !cruzan(m, g.caja));
+  await page.screenshot({ path: `${capturas}/responsivo-cerrar-menu.png` });
+  // Lo cierra y devuelve el foco al botón «Menú»
+  await page.tap('#cerrar-menu');
+  await menuQuieto(page, false);
+  d.tras = await page.evaluate(() => ({ menu: document.querySelector('#menu-lateral').inert, expandido: document.querySelector('#abrir-menu').getAttribute('aria-expanded'),
+    foco: document.activeElement?.id || document.activeElement?.tagName, tapado: ['#vista', '.barra-movil', '#agente'].map((s) => document.querySelector(s)?.inert ?? 'falta') }));
+  v.cierra_y_devuelve_el_foco = d.tras.menu === true && d.tras.expandido === 'false' && d.tras.foco === 'abrir-menu' && d.tras.tapado.every((x) => x === false);
+  await ctx.close();
+  // En escritorio el menú está siempre a la vista: no hay botón de cerrarlo
+  const e = await abrir(nav, caso, TAMANOS.w1400);
+  await ingresar(e.page);
+  const cdpe = await e.ctx.newCDPSession(e.page);
+  d.escritorio = { display: await e.page.evaluate(() => getComputedStyle(document.querySelector('#cerrar-menu')).display), arbol: (await arbolAccesible(cdpe)).filter((b) => b === 'button:Cerrar menú') };
+  v.escritorio_sin_boton = d.escritorio.display === 'none' && d.escritorio.arbol.length === 0;
+  await e.ctx.close();
+}
+
+// ── El menú abierto con una llamada sin registrar: la franja (y «Deshacer») viven en document.body, fijas encima de la
+// vista; con el menú abierto en el celular quedan debajo del velo e inertes, y al cerrarlo vuelven tal cual ──
+// Cómo está `sel`: inerte (él o su contenedor), si su botón `boton` es lo que hay en su centro (no lo tapa nada), su
+// z-index calculado y si se ve
+const mirarFijo = (page, sel, boton) => page.evaluate(([sel, boton]) => {
+  const f = document.querySelector(sel), b = f?.querySelector(boton);
+  if (!f || !b) return { falta: sel };
+  const r = b.getBoundingClientRect(), e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+  const c = f.getBoundingClientRect();
+  return { inerte: !!f.closest('[inert]'), arriba: !!e && f.contains(e), en_su_lugar: e ? `${e.tagName.toLowerCase()}#${e.id}.${e.className}` : null,
+    capa: getComputedStyle(f).zIndex, visible: f.checkVisibility(), caja: { x: Math.round(c.left), y: Math.round(c.top), d: Math.round(c.right), a: Math.round(c.bottom) } };
+}, [sel, boton]);
+const llamadaPendiente = (page) => page.evaluate((pid) => sessionStorage.setItem('yj_llamada', JSON.stringify({ pid, indice: 0, canal: 'llamada', t: Date.now() })), D.persona);
+
+async function menuLlamada(nav, caso) {
+  const v = caso.revisiones, d = caso.datos;
+  const { ctx, page } = await abrir(nav, caso, TAMANOS.w390);
+  await ingresar(page);
+  // Se tocó «Llamar» hace un momento y no se registró: la franja aparece al cargar la vista siguiente
+  await llamadaPendiente(page);
+  await ir(page, '/personas');
+  await page.waitForSelector('#franja-llamada', espera);
+  await page.waitForSelector('#agente-boton:not([hidden])', espera);
+  const franja = () => mirarFijo(page, '#franja-llamada', '[data-registrar]');
+  const antes = d.cerrado_la_franja_se_ve = await franja();
+  v.cerrado_la_franja_se_ve = antes.visible === true && antes.arriba === true && antes.inerte === false;
+  await page.tap('#abrir-menu');
+  await menuQuieto(page, true);
+  // Abierto: en el centro de «Panel», de la marca y de lo que se lee de ella está el menú, no la franja
+  d.abierto_panel_y_marca_a_la_vista = await page.evaluate(() => ['#nav a[data-nav="panel"]', '.marca', '.marca > .sello', '.marca > span:last-child'].map((s) => {
+    const r = document.querySelector(s).getBoundingClientRect(), e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return e?.closest('#menu-lateral') ? true : `${s}: ${e?.tagName.toLowerCase()}#${e?.id}.${e?.className}`;
+  }));
+  v.abierto_panel_y_marca_a_la_vista = d.abierto_panel_y_marca_a_la_vista.every((x) => x === true);
+  const abierta = d.abierto_la_franja_tapada = await franja();
+  v.abierto_la_franja_tapada = (abierta.inerte === true || abierta.visible === false) && abierta.arriba === false;
+  // «Deshacer» (10 s tras un registro de un toque, como la arma acercamiento.js) que aparece con el menú ya abierto:
+  // también queda tapada e inerte
+  await page.evaluate(() => {
+    const b = Object.assign(document.createElement('div'), { id: 'barra-deshacer', className: 'barra-deshacer' });
+    b.setAttribute('role', 'status');
+    b.innerHTML = '<span>Registro inventado guardado</span><button class="btn chico" data-deshacer>Deshacer</button>';
+    document.body.append(b);
+  });
+  await quieto(page);
+  const deshacer = d.abierto_deshacer_tapada = await mirarFijo(page, '#barra-deshacer', '[data-deshacer]');
+  v.abierto_deshacer_tapada = (deshacer.inerte === true || deshacer.visible === false) && deshacer.arriba === false;
+  // Un aviso (solo texto, no ataja el toque) sigue a la vista y anunciándose, sin llevarse el foco del menú
+  await page.evaluate(async () => (await import(new URL('ui.js', document.querySelector('script[type=module]').src).href)).aviso('Aviso de prueba inventado', 'ok', 8000));
+  await quieto(page);
+  const aviso = d.abierto_el_aviso_se_ve_sin_el_foco = await page.evaluate(() => ({ inerte: !!document.querySelector('#avisos').closest('[inert]'),
+    visible: !!document.querySelector('#avisos > .aviso')?.checkVisibility(), foco_en_el_menu: !!document.activeElement?.closest('#menu-lateral') }));
+  v.abierto_el_aviso_se_ve_sin_el_foco = aviso.inerte === false && aviso.visible === true && aviso.foco_en_el_menu === true;
+  await page.screenshot({ path: `${capturas}/responsivo-menu-llamada.png` });
+  // Desde lo último del menú, el tabulador solo recorre el menú (o sale de la página y vuelve): nunca la franja
+  const ultimo = await page.evaluate(() => {
+    const u = [...document.querySelectorAll('#menu-lateral a[href], #menu-lateral button')].filter((x) => x.checkVisibility()).pop();
+    u.focus();
+    return document.activeElement === u ? u.id || u.textContent.trim() : null;
+  });
+  const fuera = [];
+  for (let i = 0; i < 30; i++) {
+    await page.keyboard.press('Tab');
+    const f = await page.evaluate(() => {
+      const a = document.activeElement, caja = a?.parentElement?.closest('[id]:not(#raiz)');
+      return !a || a === document.body || a.closest('#menu-lateral') ? null : `${a.id || a.tagName}${caja ? ' en #' + caja.id : ''}`;
+    });
+    if (f) fuera.push(f);
+  }
+  d.abierto_tabulador_atrapado = { ultimo, fuera };
+  v.abierto_tabulador_atrapado = !!ultimo && fuera.length === 0;
+  // Cerrado con «Cerrar menú»: la franja y «Deshacer» vuelven a verse en su lugar y su capa de siempre, y responden
+  await page.tap('#cerrar-menu');
+  await menuQuieto(page, false);
+  await quieto(page);
+  const tras = d.cerrado_la_franja_vuelve_tal_cual = await franja();
+  v.cerrado_la_franja_vuelve_tal_cual = tras.visible === true && tras.arriba === true && tras.inerte === false && tras.capa === antes.capa
+    && JSON.stringify(tras.caja) === JSON.stringify(antes.caja);
+  const deshacerTras = d.cerrado_deshacer_vuelve = await mirarFijo(page, '#barra-deshacer', '[data-deshacer]');
+  v.cerrado_deshacer_vuelve = deshacerTras.arriba === true && deshacerTras.inerte === false && deshacerTras.capa === '210';
+  await page.evaluate(() => document.getElementById('barra-deshacer')?.remove());
+  await page.focus('#franja-llamada [data-registrar]');
+  const responde = d.cerrado_la_franja_responde = { foco: await page.evaluate(() => !!document.activeElement?.matches('#franja-llamada [data-registrar]')) };
+  // Tocar ✕ (Playwright comprueba que el toque le llega a él y no a lo que lo tape) la descarta
+  responde.descartada = await page.tap('#franja-llamada [data-descartar]', { timeout: 5000 })
+    .then(() => page.waitForSelector('#franja-llamada', { state: 'detached', timeout: 5000 })).then(() => true, () => false);
+  responde.olvidada = await page.evaluate(() => sessionStorage.getItem('yj_llamada') === null);
+  v.cerrado_la_franja_responde = responde.foco && responde.descartada && responde.olvidada;
+  await ctx.close();
+  // En escritorio no cambia nada: la franja a la derecha del menú, en su capa y viva
+  const e = await abrir(nav, caso, TAMANOS.w1400);
+  await ingresar(e.page);
+  await llamadaPendiente(e.page);
+  await ir(e.page, '/personas');
+  await e.page.waitForSelector('#franja-llamada', espera);
+  const escritorio = d.escritorio_igual = await mirarFijo(e.page, '#franja-llamada', '[data-registrar]');
+  escritorio.menu = await e.page.evaluate(() => Math.round(document.querySelector('#menu-lateral').getBoundingClientRect().right));
+  v.escritorio_igual = escritorio.arriba === true && escritorio.inerte === false && escritorio.capa === '150' && escritorio.caja.x >= escritorio.menu;
   await e.ctx.close();
 }
 
@@ -681,7 +1159,13 @@ async function tema(nav, caso) {
     for (const [nombre, op] of Object.entries(TAMANOS)) await correr(nombre, (c) => tamano(nav, c, op));
     for (const t of ['w320', 'w390', 'w820']) await correr(`ficha_${t}`, (c) => ficha(nav, c, TAMANOS[t]));
     for (const t of ['w390', 'w1400']) await correr(`dialogo_${t}`, (c) => dialogo(nav, c, TAMANOS[t]));
+    for (const t of ['w390', 'w1400']) await correr(`guardando_${t}`, (c) => guardando(nav, c, TAMANOS[t], D.sin_cedula[t]));
+    for (const t of ['w1400', 'w390']) await correr(`es_esta_${t}`, (c) => esEsta(nav, c, TAMANOS[t], D.es_esta[t]));
+    await correr('pendiente', (c) => pendiente(nav, c));
     await correr('menu', (c) => menu(nav, c));
+    await correr('menu_tarde', (c) => menuTarde(nav, c));
+    await correr('cerrar_menu', (c) => cerrarMenu(nav, c));
+    await correr('menu_llamada', (c) => menuLlamada(nav, c));
     await correr('tema', (c) => tema(nav, c));
   } finally {
     await nav.close();

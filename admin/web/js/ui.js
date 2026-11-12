@@ -75,8 +75,15 @@ export function avisoError(err, ms = 6000) {
  * `sucio(el)` dice si hay algo escrito que se perdería: con eso, tocar el fondo o Escape (gestos que se hacen sin
  * querer, sobre todo en el celular, donde la hoja deja a la vista una franja del fondo) preguntan antes de descartar.
  * Cerrar con un botón (✕, «Cancelar») es a propósito y no pregunta. Para formularios simples sirve `hayEscrito`.
+ *
+ * `ocupado(el)` dice si se está guardando: mientras tanto el fondo y Escape no preguntan ni cierran, porque lo escrito
+ * ya va en camino al servidor (preguntar «¿Descartar?» sería falso, y descartar dejaría la vista sin lo que sí se
+ * guardó). Al terminar, el formulario se cierra con `cerrar`, que también quita la pregunta si quedó alguna abierta.
+ *
+ * El evento 'close' llega a los demás oyentes solo cuando el diálogo terminó: si lo cerró el navegador y se vuelve a
+ * abrir, no se propaga (un formulario que se desregistra al cerrarse seguiría a la vista sin contar como pendiente).
  */
-export function dialogo({ titulo: t, cuerpo, pie = '', ancho = false, alAbrir, sucio = null }) {
+export function dialogo({ titulo: t, cuerpo, pie = '', ancho = false, alAbrir, sucio = null, ocupado = null }) {
   const d = document.createElement('dialog');
   if (ancho) d.classList.add('ancho');
   // Sin pie, lo último del diálogo es el cuerpo: en el celular deja el margen de la barra de inicio del iPhone
@@ -86,16 +93,17 @@ export function dialogo({ titulo: t, cuerpo, pie = '', ancho = false, alAbrir, s
   document.body.append(d);
   let resolver;
   const listo = new Promise((r) => (resolver = r));
-  let cerrado = false, preguntando = false;
-  const cerrar = (v) => { cerrado = true; d.close(); d.remove(); resolver(v); };
-  const hayAlgo = () => { try { return typeof sucio === 'function' && !!sucio(d); } catch { return false; } };
-  // Fondo o Escape: si hay algo escrito, se confirma antes de perderlo (una sola pregunta a la vez)
+  let cerrado = false, pregunta = null;
+  const cerrar = (v) => { cerrado = true; pregunta?.cerrar(null); d.close(); d.remove(); resolver(v); };
+  const segun = (fn) => { try { return typeof fn === 'function' && !!fn(d); } catch { return false; } };
+  const hayAlgo = () => segun(sucio), guardando = () => segun(ocupado);
+  // Fondo o Escape: si hay algo escrito, se confirma antes de perderlo (una sola pregunta a la vez); guardando, nada
   async function descartar() {
-    if (cerrado || preguntando) return;
+    if (cerrado || pregunta || guardando()) return;
     if (hayAlgo()) {
-      preguntando = true;
-      const si = await confirmar('¿Descartar lo escrito? Se pierde lo que anotó en este formulario.', { si: 'Descartar', no: 'Seguir escribiendo', peligro: true });
-      preguntando = false;
+      pregunta = abrirConfirmacion('¿Descartar lo escrito? Se pierde lo que anotó en este formulario.', { si: 'Descartar', no: 'Seguir escribiendo', peligro: true });
+      const si = (await pregunta.listo) === true;
+      pregunta = null;
       if (!si || cerrado) return;
     }
     cerrar(null);
@@ -111,24 +119,30 @@ export function dialogo({ titulo: t, cuerpo, pie = '', ancho = false, alAbrir, s
     e.preventDefault();
     descartar();
   });
-  d.addEventListener('close', () => {
+  d.addEventListener('close', (e) => {
     if (cerrado) return;
-    // Lo cerró el navegador (no `cerrar`): con algo escrito se vuelve a abrir tal cual y se pregunta; si no, se termina
-    if (hayAlgo()) { d.showModal(); descartar(); } else cerrar(null);
+    // Lo cerró el navegador (no `cerrar`): guardando o con algo escrito se vuelve a abrir tal cual (y con algo escrito
+    // se pregunta); si no, se termina. Este oyente es el primero: reabierto, el 'close' no sigue a los demás
+    if (guardando() || hayAlgo()) { e.stopImmediatePropagation(); d.showModal(); descartar(); } else cerrar(null);
   });
   d.showModal();
   alAbrir?.(d, cerrar);
   return { el: d, cerrar, listo };
 }
 
-export function confirmar(texto, { si = 'Confirmar', no = 'Cancelar', peligro = false } = {}) {
-  const { el, cerrar, listo } = dialogo({
+/** La confirmación como diálogo ({el, cerrar, listo}): `dialogo` la necesita para quitarla si el formulario se cierra. */
+function abrirConfirmacion(texto, { si = 'Confirmar', no = 'Cancelar', peligro = false } = {}) {
+  const c = dialogo({
     titulo: 'Confirmar',
     cuerpo: html`<p>${texto}</p>`,
     pie: html`<button class="btn" data-cerrar>${no}</button><button class="btn ${peligro ? 'primario' : 'oscuro'}" data-si>${si}</button>`,
   });
-  el.querySelector('[data-si]').addEventListener('click', () => cerrar(true));
-  return listo.then((v) => v === true);
+  c.el.querySelector('[data-si]').addEventListener('click', () => c.cerrar(true));
+  return c;
+}
+
+export function confirmar(texto, op) {
+  return abrirConfirmacion(texto, op).listo.then((v) => v === true);
 }
 
 /**

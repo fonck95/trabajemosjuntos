@@ -50,7 +50,7 @@ Las herramientas del panel (`app/agente/herramientas/`):
 | `pendientes`, `mi_trabajo`, `buscar_lugar`, `catalogos` | lectura | todos | Insignias y colas, listas de trabajo, nomenclátor de barrios y veredas, catálogos no sensibles |
 | `mapa` | interfaz | A, K | Vuela a un lugar, filtra, cambia capas y mapa base, resalta personas, abre una zona |
 | `abrir_vista` | interfaz | todos | Abre una vista o una ficha que su rol puede ver |
-| `presentacion` | interfaz | todos | La presentación de la propuesta 2028–2031: el índice (capítulos y pasos), ir a un capítulo y paso (le vuelve lo que muestra ese paso para explicarlo), siguiente y anterior, y una frase en pantalla (`explicar`, `quitar_explicacion`). No toca la base |
+| `presentacion` | interfaz | todos | La presentación de la propuesta 2028–2031: el índice (capítulos y pasos), ir a un capítulo y paso (le vuelve lo que muestra ese paso para explicarlo: textos, cifras, costos, plazos, fuentes de financiación por su nombre, a quién se pide, siguientes pasos, hitos y metas, todo entero: nada se acorta, y un paso pesa a lo sumo 12 KB), siguiente y anterior, y una o dos frases en pantalla, de hasta 220 caracteres (`explicar`, `quitar_explicacion`). No toca la base |
 
 A = administrador, K = coordinador, P = planillero. Las de Mnemo (`mnemo_…`) se describen [más abajo](#conectar-con-mnemo).
 
@@ -128,22 +128,45 @@ y sigue igual.
   mapa; y si se abre otra vista mientras el mapa carga, lo que esperaba aplicarse se descarta con un aviso. En un
   escritorio angosto, con el panel del asistente abierto, el panel izquierdo del mapa se pliega para que lo que muestra
   quede a la vista (vuelve con **Capas y filtros**).
-- **La presentación** (todos los roles). «Preséntame la propuesta» o «muéstrame las viviendas nuevas»: el asistente
-  abre la vista **Presentación** (la presentación pública de la propuesta 2028–2031, `web/propuesta.html`, dentro del
-  panel), va al capítulo y paso y la explica en el chat con lo que ese paso muestra (textos, cifras, costos, plazos y lo
-  que se ve en la maqueta), que le devuelve la herramienta; en pantalla, si hace falta, pone una frase corta como
-  subtítulo (abajo, junto a la leyenda; en el celular, sobre la hoja inferior) que se quita al cambiar de paso. Esa frase
-  se proyecta ante otras personas: nunca lleva datos de habitantes, números de 7 o más dígitos ni «@», ni caracteres que
-  no se ven. «Siguiente» y «anterior» siguen desde el paso que dice el contexto. La barra de la vista muestra el
-  capítulo y el paso, avanza y retrocede, pone la presentación a **Pantalla completa** y la **Abre en otra pantalla**:
-  una ventana del panel (`/presentacion?pantalla=1`) sin menú ni asistente, para el proyector. Mientras esa ventana
-  está abierta, el asistente (y los botones de la vista) la manejan desde la pestaña del chat, que ya no cambia de
-  vista. En pantalla ancha, con el asistente abierto, la presentación le deja su ancho; en el celular el asistente se
-  pliega al aplicar el cambio. Sin el sitio público en el mismo servidor (el panel desplegado aparte sin `SITIO_URL`),
-  la vista lo dice.
+- **La presentación** (todos los roles). «Preséntame la propuesta» o «muéstrame las viviendas nuevas»: el asistente abre
+  la vista **Presentación** (la presentación pública de la propuesta 2028–2031, `web/propuesta.html`, dentro del panel),
+  va al capítulo y paso y la explica en el chat con lo que ese paso muestra (textos, cifras, costos, plazos y lo que se
+  ve en la maqueta, y también las fuentes de financiación por su nombre, a quién se le pide, los siguientes pasos, los
+  hitos y las metas, todo entero: nada se acorta), que le devuelve la herramienta; en pantalla, si hace falta, pone una
+  o dos frases cortas (hasta 220 caracteres) como subtítulo, que se quita al cambiar de paso. El subtítulo se ve siempre
+  entero, sin recortes, del celular al proyector: en escritorio va abajo junto a la leyenda (o encima de ella, con todo
+  el ancho, si al lado no le caben tres renglones); en el celular y la tableta en vertical, sobre la hoja inferior, que
+  le cede el alto que haga falta; con el celular en horizontal, sobre la maqueta, abajo a la derecha del panel de la
+  presentación (que conserva su alto, con el control a su pie). En el celular nunca tapa la franja donde la cámara
+  encuadra la obra (al menos 90 px): si no cabe, su letra se achica y, en vertical, la hoja inferior cede más. Se vuelve
+  a acomodar, con la letra más grande que cabe donde queda, al girar el celular, al ocultar o mostrar el panel («Solo
+  3D») y al cambiar la altura de la hoja, sin esperar a que termine de moverse. Esa frase
+  se proyecta ante otras personas: nunca lleva datos de habitantes, «@» (tampoco «＠» ni «﹫») ni números de 7 o más
+  dígitos, también escritos por grupos (con espacios, puntos, guiones, rayas, barras o paréntesis), ni caracteres que no
+  se ven; sí un periodo («2028-2031», «2028–2031», «2028/2031»), una fecha que existe («15/11/2026», «2026-11-15») y los
+  montos de la propuesta («$106.271 M», «$116.294 – 210.000 M», «$1.156.350»; con «$» y puntos de miles, hasta 7 cifras
+  enteras: «$1.023.456.789» o «$71.234.567» no pasan, son una cédula o un teléfono). «Siguiente» y «anterior» siguen
+  desde el paso que dice el contexto. La barra de la vista muestra el capítulo y el paso, avanza y retrocede, pone la
+  presentación a **Pantalla completa** y la **Abre en otra pantalla**: una ventana del panel
+  (`/presentacion?pantalla=1`) sin menú ni asistente, para el proyector, que arranca en el capítulo, el paso y con la
+  explicación de la pestaña del chat. Mientras esa ventana está abierta, manda ella: el asistente (y los botones de la
+  vista) la manejan desde la pestaña del chat, que ya no cambia de vista; la barra de la vista muestra su paso y la
+  presentación de la pestaña del chat la sigue, con la explicación que se ve allá, también cuando el paso cambia allá
+  (el control remoto, el teclado), y lo que se haga en la de aquí va allá. Sigue respondiendo aunque quede detrás de la
+  pestaña del chat (oculta, el navegador no le da cuadros: el paso cambia sin esperar sus animaciones), y una orden que
+  espera en su fila detrás de otras no vence por ellas. Con dos ventanas de proyector (un doble clic en el enlace) manda
+  la última que se abrió y la otra la sigue, así que cualquiera de las dos muestra lo mismo; si se cierra la que manda,
+  vuelve a mandar la otra. Si la ventana se cierra sin avisar (o se cuelga), la siguiente orden se aplica en la pestaña
+  del chat a los pocos segundos, sin esperar el plazo entero; y si se cierra con una orden en curso, esa orden también
+  se aplica aquí (o en la otra ventana de proyector), no se pierde. En escritorio, con el asistente abierto, la
+  presentación le deja su ancho (entre 901 y 1199 px el asistente se acopla más angosto en esta vista); en el celular el
+  asistente se pliega al aplicar el cambio, y en horizontal la barra de la vista se oculta para dejarle el alto a la
+  presentación. Sin el sitio público en el mismo servidor (el panel desplegado aparte sin `SITIO_URL`), la vista lo
+  dice.
 - **Cambios sin guardar.** Si la vista tiene cambios sin guardar (la ficha a medio editar, un formulario abierto), el
   asistente no la recarga, no abre otra, ni el mapa ni la presentación: lo dice en la conversación y, para abrir lo que
-  pidió, ofrece **Abrir de todos modos** (lo que no se guardó se pierde).
+  pidió, ofrece **Abrir de todos modos** (lo que no se guardó se pierde). Las órdenes de la presentación de un mismo
+  turno (ir a un paso y explicarlo) van en una sola nota, y su botón las aplica todas, en orden.
 - **Enlaces.** Las personas y reuniones que nombra enlazan a su ficha dentro del panel (`/personas/123`,
   `/reuniones/45`). Las aprobaciones de Mnemo abren Mnemo en otra pestaña. Ningún otro enlace se vuelve clicable.
 - **Conversaciones.** **Nueva conversación** empieza otra; **Conversaciones** lista las 30 más recientes para abrirlas
@@ -527,9 +550,18 @@ se suba.
   sin poder enmarcarse (`frame-ancestors 'none'`, `X-Frame-Options: DENY`). Panel y presentación hablan por
   `postMessage` con el origen exacto (nunca `'*'`) y cada lado acepta solo mensajes de la otra ventana y de su origen,
   con una forma estricta: órdenes de una lista, capítulos y pasos que existen, nada de claves de más. El subtítulo se
-  pinta como texto y su frase se rechaza (en la herramienta, en el navegador y en la presentación) con caracteres que
-  no se ven, números de 7 o más dígitos o «@». El modo proyector se abre con un enlace (no con `window.open`) y habla
-  con la pestaña del chat por `BroadcastChannel`, del mismo origen, con mensajes que también se validan.
+  pinta como texto y su frase se rechaza (en la herramienta, en el navegador y en la presentación, con las mismas
+  reglas y sobre su forma NFKC) con caracteres que no se ven, «@» o números de 7 o más dígitos, también por grupos;
+  solo pasan un periodo, un rango de cifras de menor a mayor, una fecha que existe y un monto en pesos con su signo y
+  hasta 7 cifras enteras.
+  El origen del panel que escribe `build_site.py` (de
+  `PANEL_URL`) va como lo entrega el navegador, en minúsculas y sin «:443», y `mando.js` lo vuelve a normalizar: si
+  no, la presentación diría «listo» y no aceptaría ninguna orden. El modo proyector se abre con un enlace (no con
+  `window.open`) y habla con la pestaña del chat por `BroadcastChannel`, del mismo origen, con mensajes que también se
+  validan: acusa recibo de cada orden en el acto, avisa al empezarla (el plazo de la respuesta corre desde ahí) y
+  responde al terminarla; una ventana que no acusa, que deja de latir o que se despide con órdenes en curso se da por
+  cerrada y esas órdenes se aplican en la pestaña del chat. Su estado trae la explicación que está a la vista, y solo
+  manda la ventana de proyector abierta más recientemente.
 - **El flujo.** `POST` con CSRF y respuesta en flujo NDJSON (una línea JSON por evento, con un latido cada 15 s), sin
   GZip en esas dos rutas (lo retendría hasta el final) y con cupos propios en el servicio único, que se piden con el
   cuerpo ya leído (con el plazo y el tope del ingreso).

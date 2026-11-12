@@ -133,6 +133,17 @@ h1, h2, h3 { margin: 0; line-height: 1.15; }
   .contenido.lleno { height: calc(100vh - var(--barra-movil)); height: calc(100dvh - var(--barra-movil)); }
   .cabecera h1 { font-size: 30px; }
 }
+/* «Cerrar menú», dentro del menú y solo en el celular: con el menú abierto la barra de arriba (y su botón «Menú») queda
+   inerte bajo el velo y sin teclado no hay Escape, así que un lector de pantalla táctil necesita aquí un control con
+   nombre para cerrarlo. Arriba a la derecha, a la altura de la marca, que le deja su sitio para no montarse con ella */
+.cerrar-menu { display: none; }
+@media (max-width: 900px) {
+  .cerrar-menu { display: grid; place-items: center; position: absolute; top: 19px; right: 8px; width: 44px; height: 44px;
+    padding: 0; background: none; border: 0; border-radius: 10px; color: var(--side-ink); cursor: pointer; }
+  .cerrar-menu svg { width: 22px; height: 22px; display: block; }
+  .lateral .marca { margin-right: 44px; }
+}
+@media (hover: hover) { .cerrar-menu:hover { background: rgb(255 255 255 / .06); } }
 
 /* ───────── Piezas ───────── */
 .tarjeta { background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r); padding: 18px 20px; min-width: 0; }
@@ -465,6 +476,12 @@ body:has(#franja-llamada) .contenido:not(.lleno) { padding-top: 76px; }
   box-shadow: var(--sombra); font-weight: 600; max-width: calc(100vw - 32px); animation: entra .2s ease-out; }
 .barra-deshacer .btn { background: transparent; color: var(--warn); border-color: transparent; font-weight: 800; }
 @media (min-width: 901px) { .barra-deshacer { bottom: 24px; } }
+/* Con el menú abierto en el celular, la franja y «Deshacer» (fijas en document.body, sobre la vista) quedan debajo del
+   velo (29) y del menú (30), como lo demás que el velo tapa; app.js (taparConElMenu) las vuelve inertes. Al cerrarlo
+   vuelven a su capa. Los avisos no bajan: son solo texto, no atajan el toque ni se enfocan */
+@media (max-width: 900px) {
+  body:has(.app.menu-abierto) :is(.franja-pendiente, .barra-deshacer) { z-index: 28; }
+}
 
 /* Diálogo de acercamiento (7.5) */
 .acercamiento { display: flex; flex-direction: column; gap: 14px; }

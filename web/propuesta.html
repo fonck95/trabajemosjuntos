@@ -258,14 +258,14 @@ a.chip:hover { border-color: var(--ink); }
 .leyenda3d i.dash { height: 4px; border: 0; background: repeating-linear-gradient(90deg, var(--c) 0 5px, transparent 5px 8px); }
 
 /* ---------- subtítulo del asistente del panel (js/propuesta/mando.js): la frase con que explica el paso. Abajo, a la
-   derecha del panel y junto a la leyenda (mando.js mide su ancho en --ley-w; si así no cabe, va encima de ella), con la
-   franja del color del capítulo; en el celular, acoplado sobre la hoja inferior. Debajo del telón, del índice y de las
-   fichas, que lo tapan. Siempre texto (textContent) */
-/* la caja va centrada en lo que queda libre (left y right fijos, ancho del texto y márgenes automáticos); el recorte a
-   tres renglones es del párrafo, sin relleno: así no asoma el cuarto */
+   derecha del panel y junto a la leyenda (mando.js mide su ancho en --ley-w; si así no le caben tres renglones, va
+   encima de ella, con todo el ancho), con la franja del color del capítulo; en el celular, acoplado sobre la hoja
+   inferior. Debajo del telón, del índice y de las fichas, que lo tapan. Siempre texto (textContent) y siempre entero:
+   son una o dos frases (hasta 220 caracteres, el tope de la herramienta y de mando.js), sin recorte de renglones */
+/* la caja va centrada en lo que queda libre (left y right fijos, ancho del texto y márgenes automáticos) */
 .subtitulo { position: fixed; z-index: 9; left: calc(max(14px, env(safe-area-inset-left, 0px)) + var(--riel) + 10px + min(452px, 36vw) + 16px); right: calc(max(16px, env(safe-area-inset-right, 0px)) + var(--ley-w, 0px)); bottom: calc(var(--control) + 22px); width: fit-content; margin: 0 auto; padding: 10px 18px 11px 22px; border-radius: 14px; background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); box-shadow: inset 6px 0 0 var(--mc, var(--accent)), var(--sombra); pointer-events: none; visibility: hidden; opacity: 0; transform: translateY(8px); transition: opacity 0.25s, transform 0.25s, visibility 0s 0.25s; }
 .subtitulo.visible { visibility: visible; opacity: 1; transform: none; transition: opacity 0.25s, transform 0.25s; }
-.subtitulo p { margin: 0; max-width: 62ch; color: var(--ink); font: 500 clamp(1rem, 1.25vw, 1.3rem)/1.4 var(--f-body); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.subtitulo p { margin: 0; max-width: 62ch; color: var(--ink); font: 500 clamp(1rem, 1.25vw, 1.3rem)/1.4 var(--f-body); overflow-wrap: anywhere; }
 .pres.sin-panel .subtitulo { left: calc(max(14px, env(safe-area-inset-left, 0px)) + var(--riel) + 26px); }
 .pres.sub-sobre-leyenda .subtitulo { right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(var(--control) + 22px + var(--ley-h, 0px) + 10px); margin-right: 0; }
 
@@ -295,8 +295,15 @@ a.chip:hover { border-color: var(--ink); }
   .riel button::before { left: 10px; right: 10px; top: auto; bottom: -1px; width: auto; height: 3px; border-radius: 3px 3px 0 0; }
   .riel button .tip, .riel .sep { display: none; }
   .riel button:hover, .riel button[aria-current="step"] { transform: none; }
-  /* hoja inferior: tres alturas (mini, media y grande) que fija main.js en --hoja; se arrastra o se toca desde el asa */
-  .panel { left: 10px; right: 10px; width: auto; top: auto; bottom: calc(var(--control) + 12px); height: var(--hoja, min(40vh, 380px)); max-height: none; transition: transform 0.45s cubic-bezier(.2,.7,.2,1), opacity 0.35s, height 0.32s cubic-bezier(.2,.7,.2,1); }
+  /* hoja inferior: tres alturas (mini, media y grande) que fija main.js en --hoja; se arrastra o se toca desde el asa.
+     Con el subtítulo a la vista (mando.js pone .con-sub y su alto en --sub-h), la hoja cede lo que haga falta para que
+     el subtítulo entero quepa sobre ella sin tapar la obra: encima del subtítulo queda la franja donde escena.js
+     encuadra la maqueta (bajo la barra y la leyenda, al menos 90 px; mando.js la mide en --sobre-sub). Si con la hoja en
+     su mínimo no cabe, mando.js achica la letra del subtítulo (--sub-esc) y, como último recurso, baja ese mínimo
+     (--hoja-min). Con la hoja grande, no: la persona está leyendo y el subtítulo se oculta */
+  .pres { --hoja-ef: var(--hoja, min(40vh, 380px)); }
+  .pres.con-sub:not(.panel-grande) { --hoja-ef: min(var(--hoja, min(40vh, 380px)), max(var(--hoja-min, 96px), 100% - var(--control) - 20px - var(--sub-h, 0px) - var(--sobre-sub, calc(var(--barra) + 140px)))); }
+  .panel { left: 10px; right: 10px; width: auto; top: auto; bottom: calc(var(--control) + 12px); height: var(--hoja-ef); max-height: none; transition: transform 0.45s cubic-bezier(.2,.7,.2,1), opacity 0.35s, height 0.32s cubic-bezier(.2,.7,.2,1); }
   .pres.arrastrando .panel { transition: none; }
   .pres.sin-panel .panel { transform: translateY(calc(100% + 120px)); }
   /* toda la hoja se desplaza (título, entrada y cuerpo): con la altura media la entrada no siempre cabe */
@@ -322,16 +329,19 @@ a.chip:hover { border-color: var(--ink); }
   .leyenda3d:not(.abierta) i, .leyenda3d:not(.abierta) i.area, .leyenda3d:not(.abierta) i.pt { margin: 0; }
   .leyenda3d:not(.abierta)::after { content: "Leyenda ▾"; font-weight: 700; margin-left: 2px; }
   .leyenda3d.abierta::after { content: "Cerrar ▴"; font-weight: 700; justify-self: end; margin-top: 2px; }
+  /* desplegada, encima de todo lo de la pantalla hasta que se vuelve a tocar: de lado baja desde la barra sobre la
+     columna del panel, y debajo de él no se leían sus renglones */
+  .leyenda3d.abierta { z-index: 11; }
   .escena::after { background: linear-gradient(0deg, color-mix(in srgb, var(--bg) 55%, transparent) 0, transparent 50%); }
   .control .donde b { max-width: 40vw; }
   /* subtítulo: sobre el borde de la hoja, que sube y baja con ella (--hoja, también al arrastrarla); con la hoja grande
      la persona está leyendo y no queda lugar: se oculta hasta que la hoja vuelve */
-  .subtitulo { left: max(10px, env(safe-area-inset-left, 0px)); right: max(10px, env(safe-area-inset-right, 0px)); bottom: calc(var(--control) + 12px + var(--hoja, min(40vh, 380px)) + 8px); width: auto; padding: 8px 14px 9px 18px; transition: opacity 0.25s, transform 0.25s, visibility 0s 0.25s, bottom 0.32s cubic-bezier(.2,.7,.2,1); }
+  .subtitulo { left: max(10px, env(safe-area-inset-left, 0px)); right: max(10px, env(safe-area-inset-right, 0px)); bottom: calc(var(--control) + 12px + var(--hoja-ef) + 8px); width: auto; padding: 8px 14px 9px 18px; transition: opacity 0.25s, transform 0.25s, visibility 0s 0.25s, bottom 0.32s cubic-bezier(.2,.7,.2,1); }
   .subtitulo.visible { transition: opacity 0.25s, transform 0.25s, bottom 0.32s cubic-bezier(.2,.7,.2,1); }
   .pres.arrastrando .subtitulo { transition: none; }
   .pres.sin-panel .subtitulo { left: max(10px, env(safe-area-inset-left, 0px)); bottom: calc(var(--control) + 12px); }
   .pres.panel-grande .subtitulo { visibility: hidden; opacity: 0; }
-  .subtitulo p { max-width: none; font-size: 0.98rem; }
+  .subtitulo p { max-width: none; font-size: calc(0.98rem * var(--sub-esc, 1)); }
 }
 @media (max-width: 640px) {
   :root { --barra: 54px; }
@@ -357,7 +367,7 @@ a.chip:hover { border-color: var(--ink); }
   .kv { grid-template-columns: minmax(0, 1fr); gap: 0 0; } .kv dd { margin-bottom: 6px; }
   .fichas article .cols { grid-template-columns: minmax(0, 1fr); }
   .compara { grid-template-columns: minmax(0, 1fr); }
-  .subtitulo p { -webkit-line-clamp: 2; font-size: 0.92rem; line-height: 1.38; }
+  .subtitulo p { font-size: calc(0.92rem * var(--sub-esc, 1)); line-height: 1.38; }
 }
 /* celular o tableta en horizontal: el panel vuelve a ir de lado (la hoja inferior dejaría una franja de maqueta) */
 @media (max-width: 1080px) and (orientation: landscape) and (max-height: 560px) {
@@ -374,9 +384,24 @@ a.chip:hover { border-color: var(--ink); }
   :root { --barra: 52px; }
   .marca span, .herr .txt, .herr .opc { display: none; }
   .herr button, .herr a { padding: 0 10px; }
-  /* el subtítulo, abajo a la derecha del panel de lado (la leyenda va arriba) */
-  .subtitulo { left: calc(max(10px, env(safe-area-inset-left, 0px)) + min(44vw, 380px) + 10px); bottom: calc(var(--control) + 10px); }
-  .pres.sin-panel .subtitulo { bottom: calc(var(--control) + 10px); }
+  /* La columna de la izquierda es la del panel y, a su pie, el control (sin los puntos de los pasos); la derecha, de
+     arriba abajo, la de la maqueta. Así el panel conserva su alto (antes le cedía el suyo al subtítulo y, con una
+     explicación larga, quedaba en 2 px) y el subtítulo va sobre la maqueta, abajo a la derecha, hasta el borde: encima
+     de él queda la franja donde escena.js encuadra la obra (al menos 90 px). Para eso también la leyenda plegada sube a
+     la barra, entre la marca y las herramientas (mando.js mide su ancho en --herr-w). Si aun así no cabe entera,
+     mando.js le achica la letra (--sub-esc) */
+  .control { left: max(10px, env(safe-area-inset-left, 0px)); right: auto; width: min(44vw, 380px); transform: none; justify-content: space-between; }
+  .control .puntos { display: none; }
+  /* En el último paso el botón lleva el nombre del capítulo siguiente («Financiación», «Agroindustria»): en esta
+     columna angosta va entero y con su flecha, y el nombre del capítulo actual (que el panel ya muestra en su ceja) se
+     queda con lo que sobre, cortado con «…». Solo si ni así cabe, el del botón también se corta con «…» */
+  .control .donde { flex: 1 1 0; padding: 0 4px; text-align: center; }
+  .control button.sig { min-width: 0; padding: 0 12px; }
+  .control button.sig span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .control button.sig svg { flex: none; }
+  .subtitulo, .pres.sin-panel .subtitulo { left: calc(max(10px, env(safe-area-inset-left, 0px)) + min(44vw, 380px) + 16px); right: max(10px, env(safe-area-inset-right, 0px)); width: auto; margin: 0; bottom: max(14px, env(safe-area-inset-bottom, 0px)); padding: 6px 12px 7px 16px; }
+  .subtitulo p { font-size: calc(0.86rem * var(--sub-esc, 1)); line-height: 1.3; }
+  .leyenda3d { top: calc(env(safe-area-inset-top, 0px) + 11px); right: calc(max(16px, env(safe-area-inset-right, 0px)) + var(--herr-w, 180px) + 10px); max-width: calc(100vw - var(--herr-w, 180px) - 120px); }
 }
 @media (prefers-reduced-motion: reduce) { .panel, .riel, .progreso i b, .comp, .subtitulo, .subtitulo.visible { transition: none; } .subtitulo { transform: none; } }
 </style>

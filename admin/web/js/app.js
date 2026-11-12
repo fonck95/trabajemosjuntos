@@ -90,6 +90,7 @@ function armarEstructura() {
       <div class="barra-movil"><button id="abrir-menu" aria-label="Menú" aria-expanded="false" aria-controls="menu-lateral">${icono('menu')}</button><b>Yondó · Base única</b></div>
       <aside class="lateral" id="menu-lateral" aria-label="Navegación">
         <a class="marca" href="${inicio()}" data-ruta><span class="sello">Y</span><span><b>Yondó</b><small>Base única · Panel</small></span></a>
+        <button type="button" class="cerrar-menu" id="cerrar-menu" aria-label="Cerrar menú">${icono('cerrar')}</button>
         <nav class="nav" id="nav">${nav.map(([k, t, href]) => html`<a href="${href}" data-ruta data-nav="${k}">${icono(k)}<span>${t}</span>${INSIGNIAS[k] ? html`<span class="insignia oculto" id="insignia-${k}" title="${TITULOS_INSIGNIA[k]}"></span>` : ''}</a>`)}</nav>
         <div class="pie">
           <span>Sesión: <b id="usuario"></b></span>
@@ -110,8 +111,12 @@ function armarEstructura() {
   $('#cambiar-tema').onclick = (e) => { const b = e.target.closest('[data-tema]'); if (b) aplicarTema(b.dataset.tema || null); };
   marcarTema();
   $('#abrir-menu').onclick = () => abrirMenu(!$('#app').classList.contains('menu-abierto'));
-  // En el celular el menú abierto tapa su botón: se cierra tocando fuera o con Escape
+  // En el celular el menú abierto tapa su botón: se cierra tocando fuera, con Escape o con «Cerrar menú», su propio
+  // botón (solo se ve en el celular). Ese es el que sirve sin teclado: con el menú abierto la barra de arriba y su botón
+  // quedan inertes y el velo no tiene nombre, así que un lector de pantalla táctil no tendría otra forma de cerrarlo.
+  // Como Escape, devuelve el foco al botón «Menú»
   $('#velo').onclick = () => abrirMenu(false);
+  $('#cerrar-menu').onclick = () => { abrirMenu(false); $('#abrir-menu').focus(); };
 }
 
 // Al cerrar sesión no queda nada de ella en el navegador
@@ -151,8 +156,11 @@ function avisarVista(ruta, r, ok) {
 
 /**
  * Abre o cierra el menú lateral. En el celular el menú cerrado solo se corre fuera de la pantalla: queda inerte para
- * que el tabulador y el lector de pantalla no entren en él; abierto, la vista de atrás es la inerte (el velo la tapa) y
- * el foco entra al primer enlace. Si el foco quedó en el menú que se cierra, vuelve al botón que lo abre.
+ * que el tabulador y el lector de pantalla no entren en él; abierto, lo que el velo tapa es lo inerte y el foco entra al
+ * primer enlace: así queda atrapado en el menú (Escape, el velo o su botón «Cerrar menú» lo cierran). Lo tapado es la
+ * vista, la barra de arriba (el menú cubre su botón) y lo que vive en document.body sobre la vista (TAPADO_POR_EL_MENU):
+ * con el tabulador se llegaba al botón del asistente sin verlo y Enter abría el panel debajo del velo. Si el foco quedó
+ * en el menú que se cierra, vuelve al botón que lo abre.
  */
 function abrirMenu(abrir) {
   const app = $('#app'), menu = $('#menu-lateral'), vista = $('#vista');
@@ -162,11 +170,38 @@ function abrirMenu(abrir) {
   $('#abrir-menu')?.setAttribute('aria-expanded', abrir);
   const movil = esMovil();
   menu.inert = movil && !abrir;
-  vista.inert = movil && abrir;
+  taparConElMenu();
   if (movil && abrir && !estaba) {
     (menu.querySelector('#nav a[aria-current="page"]') || menu.querySelector('#nav a') || menu.querySelector('a, button'))?.focus({ preventScroll: true });
   }
   if (menu.inert && menu.contains(document.activeElement)) $('#abrir-menu')?.focus({ preventScroll: true });
+}
+
+// Lo que el velo tapa en el celular. Además de la vista y la barra de arriba, lo que vive en document.body sobre la
+// vista con botones: el asistente, la franja «Llamada sin registrar» (llamadas.js) y la barra «Deshacer»
+// (acercamiento.js). Las dos últimas tienen un z-index sobre el menú: app.css las baja debajo del velo mientras el menú
+// está abierto, porque si no la franja tapaba «Panel» y el tabulador salía del menú a sus botones. Los avisos (#avisos)
+// quedan a la vista y vivos: son solo texto (sin nada que enfocar, no atajan el toque) y duran segundos; inertes, su
+// región viva dejaría de anunciar lo que pasó (un error, «Registro anulado») mientras el menú está abierto
+const TAPADO_POR_EL_MENU = ['#vista', '#app .barra-movil', '#agente', '#franja-llamada', '#barra-deshacer'];
+
+// Lo tapado no es solo lo que existe al abrir el menú: el asistente se monta tarde (el import de agente.js va después
+// del primer render, y con la red lenta llega con el menú ya abierto) y quedaba vivo debajo del velo, con el tabulador
+// otra vez en su botón; la franja aparece al volver a la pestaña (o al terminar de cargar la vista) y «Deshacer» se
+// reemplaza por una nueva. Por eso, mientras el menú está abierto en el celular, se vigila lo que se agrega a
+// document.body y se vuelve a marcar lo tapado. El vigía mira el estado real (no el que había al abrir): si el menú ya
+// no está abierto (otra estructura, otro ancho), suelta lo tapado y se desconecta
+let vigiaMenu = null;
+function taparConElMenu() {
+  const tapar = !!$('#app')?.classList.contains('menu-abierto') && esMovil();
+  for (const s of TAPADO_POR_EL_MENU) { const x = $(s); if (x) x.inert = tapar; }
+  if (tapar && !vigiaMenu) {
+    vigiaMenu = new MutationObserver(taparConElMenu);
+    vigiaMenu.observe(document.body, { childList: true });
+  } else if (!tapar && vigiaMenu) {
+    vigiaMenu.disconnect();
+    vigiaMenu = null;
+  }
 }
 // Al pasar de celular a escritorio (o al revés: girar la tableta, ensanchar la ventana) el menú vuelve a su estado
 matchMedia('(max-width: 900px)').addEventListener?.('change', () => abrirMenu(false));
