@@ -691,7 +691,6 @@ async function guardando(nav, caso, op, id) {
   await page.waitForSelector('dialog[open] #f-completar', espera);
   const cedula = String(1098765400 + id);
   await page.fill('dialog[open] [name=cedula]', cedula);
-  await page.fill('dialog[open] [name=cedula_confirmacion]', cedula);
   await tocar(page, 'dialog[open] [data-guardar="uno"]', tactil);
   await enCamino;
   const abiertos = () => page.evaluate(() => [...document.querySelectorAll('dialog[open]')].map((x) => x.querySelector('h2').textContent));
@@ -758,7 +757,6 @@ async function esEsta(nav, caso, op, { id, nombre, cedula, telefono2 }) {
     // La cédula de esa ficha: «Guardar» responde 409 cedula_ocupada y ofrece «Completar esa ficha con lo que escribí»
     await page.fill('#f-nueva [name=nombre]', 'PERSONA INVENTADA CON CEDULA AJENA');
     await page.fill('#f-nueva [name=cedula]', cedula);
-    await page.fill('#f-nueva [name=cedula_confirmacion]', cedula);
     await page.fill('#f-nueva [name=telefono2]', telefono2);
     await tocar(page, '#f-nueva label.chip.opcion:has(input[name=aut_estado][value=pendiente])', tactil);
     await tocar(page, 'dialog[open] #guardar', tactil);
